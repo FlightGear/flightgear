@@ -189,12 +189,7 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file,
         airportInfo.file = aptdb_file;
         airportInfo.rowCode = rowCode;
         airportInfo.firstLineNum = line_num;
-        airportInfo.firstLineTokens =
-#if __cplusplus >= 201103L
-          std::move(tokens);    // requires C++11, untested
-#else
-          tokens;
-#endif
+        airportInfo.firstLineTokens = std::move(tokens);
       }
     } else if ( rowCode == 99 ) {
       SG_LOG( SG_GENERAL, SG_DEBUG,
@@ -203,12 +198,8 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file,
     } else if ( !skipAirport ) {
       // Line belonging to an already started, and not skipped airport entry;
       // just append it.
-      airportInfoMap[currentAirportId].otherLines.
-#if __cplusplus >= 201103L
-        emplace_back(line_num, rowCode, line); // requires C++11, untested
-#else
-        push_back(Line(line_num, rowCode, line));
-#endif
+      airportInfoMap[currentAirportId].otherLines.emplace_back(
+        line_num, rowCode, line);
     }
   } // of file reading loop
 

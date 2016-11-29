@@ -27,12 +27,7 @@
 
 #include <string>
 #include <vector>
-
-#if __cplusplus >= 201103L
-  #include <unordered_map>
-#else
-  #include <map>
-#endif
+#include <unordered_map>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -91,12 +86,7 @@ private:
     LinesList otherLines;
   };
 
-#if __cplusplus >= 201103L
   typedef std::unordered_map<std::string, RawAirportInfo> AirportInfoMapType;
-#else
-  typedef           std::map<std::string, RawAirportInfo> AirportInfoMapType;
-#endif
-
   typedef SGSharedPtr<FGPavement> FGPavementPtr;
 
   APTLoader(const APTLoader&);            // disable copy constructor
