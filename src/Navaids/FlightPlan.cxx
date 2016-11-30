@@ -225,6 +225,12 @@ void FlightPlan::deleteIndex(int aIndex)
   
 void FlightPlan::clear()
 {
+    // some badly behaved CDU implementations call clear on a Nasal timer
+    // during startup.
+    if (_legs.empty() && (_currentIndex < 0)) {
+        return;
+    }
+
   lockDelegate();
   _waypointsChanged = true;
   _currentWaypointChanged = true;
