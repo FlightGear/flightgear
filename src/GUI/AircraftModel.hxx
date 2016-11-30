@@ -31,6 +31,8 @@
 
 #include <simgear/package/Delegate.hxx>
 #include <simgear/package/Root.hxx>
+#include <simgear/package/Catalog.hxx>
+#include <simgear/package/Package.hxx>
 
 const int AircraftPathRole = Qt::UserRole + 1;
 const int AircraftAuthorsRole = Qt::UserRole + 2;
@@ -50,6 +52,7 @@ const int AircraftThumbnailSizeRole = Qt::UserRole + 15;
 const int AircraftIsHelicopterRole = Qt::UserRole + 16;
 const int AircraftIsSeaplaneRole = Qt::UserRole + 17;
 const int AircraftCurrentThumbnailRole = Qt::UserRole + 18;
+const int AircraftPackageRefRole = Qt::UserRole + 19;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -60,6 +63,8 @@ class QDataStream;
 class PackageDelegate;
 struct AircraftItem;
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
+
+Q_DECLARE_METATYPE(simgear::pkg::PackageRef)
 
 struct AircraftItem
 {

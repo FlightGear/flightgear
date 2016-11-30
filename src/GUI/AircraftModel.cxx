@@ -606,6 +606,8 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
             return ex.valid() ? ex->downloadedPercent() : 0;
         } else if (role == AircraftInstallDownloadedSizeRole) {
             return static_cast<quint64>(ex.valid() ? ex->downloadedBytes() : 0);
+        } else if (role == AircraftPackageRefRole ) {
+            return QVariant::fromValue(pkg);
         }
 
         return dataFromPackage(pkg, m_delegateStates.at(row), role);

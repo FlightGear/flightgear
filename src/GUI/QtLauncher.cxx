@@ -352,6 +352,13 @@ public:
     void setAircraftFilterString(QString s)
     {
         m_filterString = s;
+
+        m_filterProps = new SGPropertyNode;
+        int index = 0;
+        Q_FOREACH(QString term, s.split(' ')) {
+            m_filterProps->getNode("all-of/text", index++, true)->setStringValue(term.toStdString());
+        }
+
         invalidate();
     }
 
@@ -416,6 +423,11 @@ private:
             return true;
         }
 
+        simgear::pkg::PackageRef pkg = sourceIndex.data(AircraftPackageRefRole).value<simgear::pkg::PackageRef>();
+        if (pkg) {
+            return pkg->matches(m_filterProps.ptr());
+        }
+
         QString baseName = sourceIndex.data(Qt::DisplayRole).toString();
         if (baseName.contains(m_filterString, Qt::CaseInsensitive)) {
             return true;
@@ -441,6 +453,7 @@ private:
     bool m_onlyShowInstalled;
     int m_ratings[4];
     QString m_filterString;
+    SGPropertyNode_ptr m_filterProps;
 };
 
 class NoOfficialHangarMessage : public QWidget
