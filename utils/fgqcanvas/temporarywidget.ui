@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TemporaryWidget</class>
+ <widget class="QWidget" name="TemporaryWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>983</width>
+    <height>864</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>TemporaryWidget</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTabWidget" name="stack">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="stackPage1">
+      <attribute name="title">
+       <string>Connect</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Enter root property path: (eg '/canvas/by-index/texture[2]/')</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Enter a web-socket URL: (eg 'ws://localhost:8080/PropertyTreeMirror/')</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QTreeView" name="treeView"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLineEdit" name="socketURL"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="connectButton">
+         <property name="text">
+          <string>Connect</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLineEdit" name="propertyPath"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="stackPage2">
+      <attribute name="title">
+       <string>Canvas</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="FGCanvasWidget" name="canvas" native="true"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>FGCanvasWidget</class>
+   <extends>QWidget</extends>
+   <header>fgcanvaswidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
