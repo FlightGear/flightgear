@@ -160,7 +160,7 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 	ss >> index;
 	if (ss.fail()) {
 		SG_LOG(SG_TERRAIN, SG_ALERT,
-				"Unable to determine bucket from STG filename " << ss);
+				"Unable to determine bucket from STG filename " << ss.rdbuf());
 		return EXIT_FAILURE;
 	}
 
