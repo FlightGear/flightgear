@@ -27,6 +27,7 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <vector>
+#include <memory>
 
 namespace flightgear {
 namespace http {
