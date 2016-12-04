@@ -1,16 +1,6 @@
-find_package(PNG)
-find_package(OpenGL)
-find_package(GLEW)
-find_package(Freetype)
-
-if ((NOT PNG_FOUND) OR (NOT OPENGL_FOUND) OR (NOT GLEW_FOUND) OR (NOT FREETYPE_FOUND))
-  message(WARNING "FGPanel enabled, but some dependencies are missing")
-  message(STATUS "libPNG: ${PNG_FOUND}")
-  message(STATUS "OpenGL: ${OPENGL_FOUND}")
-  message(STATUS "GLEW: ${GLEW_FOUND}")
-  message(STATUS "Freetype: ${FREETYPE_FOUND}")
-  return()
-endif()
+find_package(PNG REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(Freetype REQUIRED)
 
 find_path(BCMHOST_INCLUDE_DIR
   NAMES bcm_host.h
@@ -23,8 +13,7 @@ include_directories(
   ${PNG_INCLUDE_DIR}
   )
 
-if(${BCMHOST_INCLUDE_DIR} STREQUAL "BCMHOST_INCLUDE_DIR-NOTFOUND")
-else()
+if(BCMHOST_INCLUDE_DIR)
   # CMAKE > 3.1 : target_sources(fgpanel
   set(TARGET_SOURCES
     GLES_utils.cxx
@@ -78,33 +67,13 @@ add_executable(fgpanel
   )
 
 target_link_libraries(fgpanel
-  SimGearCore
   ${PNG_LIBRARIES}
+  SimGearCore
   ${FREETYPE_LIBRARIES}
   )
 
-if(${BCMHOST_INCLUDE_DIR} STREQUAL "BCMHOST_INCLUDE_DIR-NOTFOUND")
-  find_package(GLUT REQUIRED)
-  if(GLUT_FOUND)
-    message(STATUS "found GLUT inc ${GLUT_INCLUDE_DIR}, lib ${GLUT_LIBRARIES} ")
-    if (MSVC)
-        add_definitions( -DFREEGLUT_LIB_PRAGMAS=0 )
-    endif ()
-
-    target_link_libraries(fgpanel
-      ${OPENGL_LIBRARIES}
-      ${GLUT_LIBRARIES}
-      GLEW::GLEW
-      )
-  else(GLUT_FOUND)
-    message(STATUS "glut NOT found, can't build fgpanel")
-  endif(GLUT_FOUND)
-else()
+if(BCMHOST_INCLUDE_DIR)
   message(STATUS "found Raspberry Pi")
-
-  target_link_libraries(fgpanel
-    -lGLESv2 -lEGL -lm -lbcm_host -L/opt/vc/lib
-    )
 
   include_directories(
     ${BCMHOST_INCLUDE_DIR}
@@ -112,7 +81,40 @@ else()
     ${BCMHOST_INCLUDE_DIR}/interface/vmcs_host/linux
     )
 
+  target_link_libraries(fgpanel
+    -lGLESv2 -lEGL -lm -lbcm_host -L/opt/vc/lib
+    )
+
   add_definitions(-D_GLES2 -D_RPI)
+else()
+  find_package(GLUT)
+  if(GLUT_FOUND)
+
+    find_package(GLEW)
+    if(GLEW_FOUND)
+
+      include_directories(
+        ${GLEW_INCLUDE_DIRS}
+        )
+
+      target_link_libraries(fgpanel
+        ${GLUT_LIBRARIES}
+        ${GLEW_LIBRARIES}
+        ${OPENGL_LIBRARIES}
+        )
+    else(GLEW_FOUND)
+      message(WARNING "GLEW NOT found, can't build FGPanel")
+      set(WITH_FGPANEL 0)
+    endif(GLEW_FOUND)
+  else(GLUT_FOUND)
+    message(WARNING "GLUT NOT found, can't build FGPanel")
+    set(WITH_FGPANEL 0)
+  endif(GLUT_FOUND)
 endif()
 
-install(TARGETS fgpanel RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(WITH_FGPANEL)
+  message(STATUS "FGPanel : ENABLED")
+  install(TARGETS fgpanel RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+else()
+  message(WARNING "FGPanel : DISABLED")
+endif()

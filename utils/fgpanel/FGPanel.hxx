@@ -51,8 +51,7 @@ using namespace std;
  * redraw themselves when necessary, and will pass mouse clicks on to
  * the appropriate instruments for processing.
  */
-class FGPanel : public SGSubsystem
-{
+class FGPanel : public SGSubsystem {
 public:
     FGPanel (const SGPropertyNode_ptr root);
     virtual ~FGPanel ();

@@ -94,7 +94,7 @@ FGPanel::init () {
     "attribute vec2 a_tex_coord;                \n"
     "varying vec2 v_tex_coord;                  \n"
 #else
-    "#version 330                               \n"
+    "#version 130                               \n"
     "in vec4 a_position;                        \n"
     "in vec2 a_tex_coord;                       \n"
     "out vec2 v_tex_coord;                      \n"
@@ -110,9 +110,8 @@ FGPanel::init () {
     "precision mediump float;                                \n"
     "varying vec2 v_tex_coord;                               \n"
 #else
-    "#version 330                                            \n"
+    "#version 130                                            \n"
     "in vec2 v_tex_coord;                                    \n"
-    "out vec4 gl_FragColor;                                  \n"
 #endif
     "uniform sampler2D u_texture;                            \n"
     "void main () {                                          \n"
