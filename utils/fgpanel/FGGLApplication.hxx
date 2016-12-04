@@ -5,7 +5,7 @@
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
 //  License, or (at your option) any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -20,28 +20,32 @@
 
 class FGGLApplication {
 public:
-  FGGLApplication( const char * name, int argc, char ** argv );
-  virtual ~FGGLApplication();
-  void Run( int glutMode, bool gameMode, int widht=-1, int height=-1, int bpp = 32 );
+  FGGLApplication (const char *a_name, int argc, char **argv);
+  virtual ~FGGLApplication ();
+  void Run (const int glutMode,
+            const bool gameMode,
+            int widht = -1,
+            int height = -1,
+            const int bpp = 32);
 protected:
-  virtual void Key( unsigned char key, int x, int y ) {}
-  virtual void Idle() {}
-  virtual void Display() {}
-  virtual void Reshape( int width, int height ) {}
+  virtual void Key (const unsigned char key, const int x, const int y) {}
+  virtual void Idle () {}
+  virtual void Display () {}
+  virtual void Reshape (const int width, const int height) {}
 
-  virtual void Init() {}
+  virtual void Init () {}
 
   int windowId;
   bool gameMode;
 
-  const char * name;
+  const char *name;
 
-  static FGGLApplication * application;
+  static FGGLApplication *application;
 private:
-  static void KeyCallback( unsigned char key, int x, int y );
-  static void IdleCallback();
-  static void DisplayCallback();
-  static void ReshapeCallback( int width, int height );
+  static void KeyCallback (const unsigned char key, const int x, const int y);
+  static void IdleCallback ();
+  static void DisplayCallback ();
+  static void ReshapeCallback (const int width, const int height);
 
 };
 

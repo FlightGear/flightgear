@@ -1,4 +1,3 @@
-//  panel_io.cxx - I/O for 2D panel.
 //
 //  Written by David Megginson, started January 2000.
 //
@@ -16,24 +15,27 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-//  $Id: panel_io.hxx,v 1.2 2016/07/20 22:01:32 allaert Exp $
 
-#ifndef __PANEL_IO_HXX
-#define __PANEL_IO_HXX
+#include "FGDummyTextureLoader.hxx"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+GLuint
+FGDummyTextureLoader::loadTexture (const string& filename) {
+  GLuint texture;
+  glGenTextures (1, &texture);
+  glBindTexture (GL_TEXTURE_2D, texture);
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
+  GLubyte image[ 2 * 2 * 3 ];
 
-#include "FGPanel.hxx"
+  /* Red and white chequerboard */
+  image [ 0] = 255; image [ 1] =   0; image [ 2] =   0;
+  image [ 3] = 255; image [ 4] = 255; image [ 5] = 255;
+  image [ 6] = 255; image [ 7] = 255; image [ 8] = 255;
+  image [ 9] = 255; image [10] =   0; image [11] =   0;
 
-class FGReadablePanel : public FGPanel {
-public:
-  static SGSharedPtr<FGPanel> read (SGPropertyNode_ptr root);
-};
+  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0,
+                GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*) image);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-#endif // __PANEL_IO_HXX
+  return texture;
+}

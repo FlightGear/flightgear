@@ -5,7 +5,7 @@
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
 //  License, or (at your option) any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -17,16 +17,19 @@
 //
 #ifndef __APPLICATION_PROPERTIES
 #define __APPLICATION_PROPERTIES
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
-#include "FGFontCache.hxx"
+
+using namespace std;
+
 class ApplicationProperties {
 public:
-  static double getDouble( const char * name, double def = 0.0 );
-  static SGPath GetRootPath( const char * subDir = NULL );
-  static SGPath GetCwd();
+  static double getDouble (const char *name, const double def = 0.0);
+  static SGPath GetRootPath (const char *subDir = NULL);
+  static SGPath GetCwd ();
   static SGPropertyNode_ptr Properties;
-  static std::string root;
-  static FGFontCache fontCache;
+  static string root;
 };
+
 #endif

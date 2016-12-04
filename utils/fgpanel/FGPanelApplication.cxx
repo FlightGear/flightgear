@@ -5,7 +5,7 @@
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
 //  License, or (at your option) any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -29,15 +29,22 @@
 #  include <CoreFoundation/CoreFoundation.h>
 #endif
 
-#include "FGGLApplication.hxx"
-#include "FGPanelApplication.hxx"
+#include <iostream>
+
 #if defined (SG_MAC)
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
+#elif defined (_GLES2)
+#include <GLES2/gl2.h>
+#include "GLES_utils.hxx"
 #else
+#include <GL/glew.h> // Must be included before <GL/gl.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
 #endif
+
+#include "FGGLApplication.hxx"
+#include "FGPanelApplication.hxx"
 
 #include <simgear/math/SGMisc.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -45,229 +52,215 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 
-#include <iostream>
-
 #include "panel_io.hxx"
 #include "ApplicationProperties.hxx"
 
 using namespace std;
 
-inline static string ParseArgs( int argc, char ** argv, const string & token )
-{
-  for( int i = 0; i < argc; i++ ) {
-    string arg = argv[i];
-    if( arg.find( token ) == 0 )
-      return arg.substr( token.length() );
+inline static string
+ParseArgs (int argc, char **argv, const string &token) {
+  for (int i = 0; i < argc; i++) {
+    const string arg (argv[i]);
+    if (arg.find (token) == 0) {
+      return arg.substr (token.length ());
+    }
   }
   return "";
 }
 
-inline static string ParseArgs( int argc, char ** argv, const char * token )
-{
-  string s = token;
-  return ParseArgs( argc, argv, s );
-}
-
-
 // define default location of fgdata (use the same as for fgfs)
+inline static SGPath
+platformDefaultRoot () {
 #if defined(__CYGWIN__)
-inline static SGPath platformDefaultRoot()
-{
-  return SGPath("../data");
-}
-
+  return SGPath ("../data");
 #elif defined(_WIN32)
-inline static SGPath platformDefaultRoot()
-{
-  return SGPath("..\\data");
-}
+  return SGPath ("..\\data");
 #elif defined(__APPLE__)
-inline static SGPath platformDefaultRoot()
-{
   /*
    The following code looks for the base package inside the application
    bundle, in the standard Contents/Resources location.
    */
-  CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+  CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL (CFBundleGetMainBundle ());
 
   // look for a 'data' subdir
-  CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
+  CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent (NULL, resourcesUrl, CFSTR ("data"), true);
 
   // now convert down to a path, and the a c-string
-  CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
-  string root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
+  CFStringRef path = CFURLCopyFileSystemPath (dataDir, kCFURLPOSIXPathStyle);
+  string root = CFStringGetCStringPtr (path, CFStringGetSystemEncoding ());
 
-  CFRelease(resourcesUrl);
-  CFRelease(dataDir);
-  CFRelease(path);
+  CFRelease (resourcesUrl);
+  CFRelease (dataDir);
+  CFRelease (path);
 
-  return SGPath(root);
-}
+  return SGPath (root);
 #else
-inline static SGPath platformDefaultRoot()
-{
-  return SGPath(PKGLIBDIR);
-}
+  return SGPath (PKGLIBDIR);
 #endif
+}
 
 #include "FGPNGTextureLoader.hxx"
 #include "FGRGBTextureLoader.hxx"
+
 static FGPNGTextureLoader pngTextureLoader;
 static FGRGBTextureLoader rgbTextureLoader;
 
-FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
-  FGGLApplication( "FlightGear Panel", argc, argv )
-{
-  sglog().setLogLevels( SG_ALL, SG_WARN );
-  FGCroppedTexture::registerTextureLoader( "png", &pngTextureLoader );
-  FGCroppedTexture::registerTextureLoader( "rgb", &rgbTextureLoader );
+FGPanelApplication::FGPanelApplication (int argc, char **argv) :
+  FGGLApplication ("FlightGear Panel", argc, argv) {
+  sglog().setLogLevels (SG_ALL, SG_WARN);
+  FGCroppedTexture::registerTextureLoader ("png", &pngTextureLoader);
+  FGCroppedTexture::registerTextureLoader ("rgb", &rgbTextureLoader);
 
-  ApplicationProperties::root = platformDefaultRoot().local8BitStr();
+  ApplicationProperties::root = platformDefaultRoot ().local8BitStr ();
 
-  string panelFilename;
-  string fgRoot;
+  const string panelFilename (ParseArgs (argc, argv, "--panel="));
+  const string fgRoot        (ParseArgs (argc, argv, "--fg-root="));
 
-  for( int i = 1; i < argc; i++ ) {
-    panelFilename = ParseArgs( argc, argv, "--panel=" );
-    fgRoot        = ParseArgs( argc, argv, "--fg-root=" );
-  }
-
-  if( fgRoot.length() > 0 )
+  if (fgRoot.length () > 0) {
     ApplicationProperties::root = fgRoot;
+  }
+  simgear::ResourceManager::instance ()->addBasePath (ApplicationProperties::root);
 
-  simgear::ResourceManager::instance()->addBasePath(ApplicationProperties::root);
-
-  if( panelFilename.length() == 0 ) {
-    cerr << "Need a panel filename. Use --panel=path_to_filename" << endl; 
-    throw exception();
+  if (panelFilename.length () == 0 ) {
+    cerr << "Need a panel filename. Use --panel=path_to_filename" << endl;
+    throw exception ();
   }
 
   // see if we got a valid fgdata path
-  SGPath BaseCheck(ApplicationProperties::root);
-  BaseCheck.append("version");
-  if (!BaseCheck.exists())
-  {
-      cerr << "Missing base package. Use --fg-root=path_to_fgdata" << endl; 
-      throw exception();
+  SGPath BaseCheck (ApplicationProperties::root);
+  BaseCheck.append ("version");
+  if (!BaseCheck.exists ()) {
+    cerr << "Missing base package. Use --fg-root=path_to_fgdata" << endl;
+    throw exception ();
   }
 
   try {
-    SGPath tpath = ApplicationProperties::GetRootPath( panelFilename.c_str() );
-    readProperties( tpath, ApplicationProperties::Properties );
+    const SGPath tpath (ApplicationProperties::GetRootPath (panelFilename.c_str ()));
+    readProperties (tpath, ApplicationProperties::Properties);
   }
-  catch( sg_io_exception & e ) {
-    cerr << e.getFormattedMessage() << endl;
+  catch (sg_io_exception & e) {
+    cerr << e.getFormattedMessage () << endl;
     throw;
   }
 
-  for( int i = 1; i < argc; i++ ) {
-    string arg = argv[i];
-    if( arg.find( "--prop:" ) == 0 ) {
-      string s2 = arg.substr( 7 );
-      string::size_type p = s2.find( "=" );
-      if( p != string::npos ) {
-        string propertyName = s2.substr( 0, p );
-        string propertyValue = s2.substr( p+1 );
-        ApplicationProperties::Properties->getNode( propertyName.c_str(), true )->setValue( propertyValue.c_str() );
+  for (int i = 1; i < argc; i++) {
+    const string arg (argv[i]);
+    if (arg.find ("--prop:") == 0 ) {
+      const string s2 (arg.substr (7));
+      string::size_type p (s2.find ("="));
+      if (p != string::npos) {
+        const string propertyName (s2.substr (0, p));
+        const string propertyValue (s2.substr (p + 1));
+        ApplicationProperties::Properties->getNode (propertyName.c_str (), true )->setValue (propertyValue.c_str ());
       }
     }
   }
 
-  SGPropertyNode_ptr n;
-  if( (n = ApplicationProperties::Properties->getNode( "panel" )) != NULL )
-    panel = FGReadablePanel::read( n );
-
-  protocol = new FGPanelProtocol( ApplicationProperties::Properties->getNode( "communication", true ) );
-  protocol->init();
+  const SGPropertyNode_ptr n (ApplicationProperties::Properties->getNode ("panel"));
+  if (n != NULL) {
+    panel = FGReadablePanel::read (n);
+  }
+  protocol = new FGPanelProtocol (ApplicationProperties::Properties->getNode ("communication", true));
+  protocol->init ();
 }
 
-FGPanelApplication::~FGPanelApplication()
-{
+FGPanelApplication::~FGPanelApplication () {
 }
 
-void FGPanelApplication::Run()
-{
-  int mode = GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE;
-  int w = panel == NULL ? 0 : panel->getWidth();
-  int h = panel == NULL ? 0 : panel->getHeight();
-  if( w == 0 && h == 0 ) {
+void
+FGPanelApplication::Run () {
+#ifdef _GLES2
+  const int mode (0);
+#else
+  const int mode (GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+#endif
+  int w (panel == NULL ? 0 : panel->getWidth ());
+  int h (panel == NULL ? 0 : panel->getHeight ());
+  if (w == 0 && h == 0) {
     w = 1024;
     h = 768;
-  } else if( w == 0 ) {
+  } else if (w == 0) {
     w = h / 0.75;
-  } else if( h == 0 ) { 
+  } else if (h == 0) {
     h = w * 0.75;
   }
-  
-  bool gameMode = ApplicationProperties::Properties->getNode( "game-mode", true )->getBoolValue();
-  FGGLApplication::Run( mode, gameMode, w, h );
+
+  const bool gameMode (ApplicationProperties::Properties->getNode ( "game-mode", true)->getBoolValue ());
+  FGGLApplication::Run (mode, gameMode, w, h);
 }
 
-void FGPanelApplication::Init()
-{
-  glAlphaFunc(GL_GREATER, 0.1);
-  glutSetCursor( GLUT_CURSOR_NONE );
-  ApplicationProperties::fontCache.initializeFonts();
+void
+FGPanelApplication::Init () {
+#ifndef _GLES2
+  glutSetCursor (GLUT_CURSOR_NONE);
+#endif
+  if (panel != NULL) {
+    panel->init ();
+  }
 }
 
-void FGPanelApplication::Reshape( int width, int height )
-{
+void
+FGPanelApplication::Reshape (const int width, const int height) {
   this->width = width;
   this->height = height;
-  glViewport(0, 0, (GLsizei) width, (GLsizei) height);
+  glViewport (0, 0, GLsizei (width), GLsizei (height));
 }
 
-void FGPanelApplication::Idle()
-{
-  double d = glutGet(GLUT_ELAPSED_TIME);
-
-  double dt = Sleep();
-  if( dt == 0 )
+void
+FGPanelApplication::Idle () {
+#ifndef _GLES2
+  const double d (glutGet (GLUT_ELAPSED_TIME));
+#endif
+  const double dt (Sleep ());
+  if (dt == 0) {
     return;
-
-  if( panel != NULL )
-    panel->update( dt );
-
-  glutSwapBuffers();
-
-  if( protocol != NULL )
-    protocol->update( dt );
-
+  }
+  if (panel != NULL) {
+    panel->update (dt);
+  }
+#ifndef _GLES2
+  glutSwapBuffers ();
+#endif
+  if (protocol != NULL) {
+    protocol->update (dt);
+  }
+#ifndef _GLES2
   static double dsum = 0.0;
   static unsigned cnt = 0;
-  dsum += glutGet(GLUT_ELAPSED_TIME)-d;
+  dsum += glutGet (GLUT_ELAPSED_TIME) - d;
   cnt++;
-  if( dsum > 1000.0 ) {
-    ApplicationProperties::Properties->getNode( "/sim/frame-rate", true )->setDoubleValue(cnt*1000.0/dsum );
+  if (dsum > 1000.0) {
+    ApplicationProperties::Properties->getNode ("/sim/frame-rate", true)->setDoubleValue (cnt * 1000.0 / dsum);
     dsum = 0.0;
     cnt = 0;
   }
+#endif
 }
 
-void FGPanelApplication::Key( unsigned char key, int x, int y )
-{
-  switch( key ) {
-    case 0x1b:
-      exit(0);
-      break;
+void
+FGPanelApplication::Key (const unsigned char key, const int x, const int y) {
+  switch (key) {
+  case 0x1b:
+    exit(0);
+    break;
   }
 }
 
-double FGPanelApplication::Sleep()
-{
+double
+FGPanelApplication::Sleep () {
   SGTimeStamp current_time_stamp;
   static SGTimeStamp last_time_stamp;
 
-  if ( last_time_stamp.get_seconds() == 0 )
-    last_time_stamp.stamp();
-
-  double model_hz = 60;
-  double throttle_hz = ApplicationProperties::getDouble("/sim/frame-rate-throttle-hz", 0.0);
-  if ( throttle_hz > 0.0 ) {
+  if (last_time_stamp.get_seconds () == 0) {
+    last_time_stamp.stamp ();
+  }
+  const double model_hz (60);
+  const double throttle_hz (ApplicationProperties::getDouble ("/sim/frame-rate-throttle-hz", 0.0));
+  if (throttle_hz > 0.0) {
     // optionally throttle the frame rate (to get consistent frame
     // rates or reduce cpu usage.
 
-    double frame_us = 1.0e6 / throttle_hz;
+    double frame_us (1.0e6 / throttle_hz);
 
     // sleep based timing loop.
     //
@@ -292,19 +285,19 @@ double FGPanelApplication::Sleep()
     // sleep() will always overshoot by a bit so undersleep by
     // 2000us in the hopes of never oversleeping.
     frame_us -= 2000.0;
-    if ( frame_us < 0.0 ) {
+    if (frame_us < 0.0) {
       frame_us = 0.0;
     }
-    current_time_stamp.stamp();
+    current_time_stamp.stamp ();
 
     /* Convert to ms */
-    double elapsed_us = (current_time_stamp - last_time_stamp).toUSecs();
-    if ( elapsed_us < frame_us ) {
-      double requested_us = frame_us - elapsed_us;
+    const double elapsed_us ((current_time_stamp - last_time_stamp).toUSecs ());
+    if (elapsed_us < frame_us) {
+      const double requested_us (frame_us - elapsed_us);
 #ifdef _WIN32
-      ::Sleep ((int)(requested_us / 1000.0)) ;
+      ::Sleep (int (requested_us / 1000.0));
 #else
-      usleep ( (useconds_t)(requested_us ) ) ;
+      usleep (useconds_t (requested_us));
 #endif
     }
     // busy wait timing loop.
@@ -312,82 +305,27 @@ double FGPanelApplication::Sleep()
     // This yields the most accurate timing.  If the previous
     // usleep() call is omitted this will peg the cpu
     // (which is just fine if FG is the only app you care about.)
-    current_time_stamp.stamp();
-    SGTimeStamp next_time_stamp = last_time_stamp;
-    next_time_stamp += SGTimeStamp::fromSec(1e-6*frame_us);
-    while ( current_time_stamp < next_time_stamp ) {
-      current_time_stamp.stamp();
+    current_time_stamp.stamp ();
+    const SGTimeStamp next_time_stamp (last_time_stamp + SGTimeStamp::fromSec (1e-6*frame_us));
+    while (current_time_stamp < next_time_stamp) {
+      current_time_stamp.stamp ();
     }
 
   } else {
-    current_time_stamp.stamp();
+    current_time_stamp.stamp ();
   }
 
-  double real_delta_time_sec = double(current_time_stamp.toUSecs() - last_time_stamp.toUSecs()) / 1000000.0;
+  static double reminder = 0.0;
+  static long global_multi_loop = 0;
+  const double real_delta_time_sec ((double (current_time_stamp.toUSecs () - last_time_stamp.toUSecs ()) / 1000000.0) + reminder);
   last_time_stamp = current_time_stamp;
 //fprintf(stdout,"\r%4.1lf ", 1/real_delta_time_sec );
 //fflush(stdout);
 
   // round the real time down to a multiple of 1/model-hz.
   // this way all systems are updated the _same_ amount of dt.
-  static double reminder = 0.0;
-  static long global_multi_loop = 0;
-  real_delta_time_sec += reminder;
-  global_multi_loop = long(floor(real_delta_time_sec*model_hz));
-  global_multi_loop = SGMisc<long>::max(0, global_multi_loop);
-  reminder = real_delta_time_sec - double(global_multi_loop)/double(model_hz);
-  return double(global_multi_loop)/double(model_hz);
+  global_multi_loop = long (floor (real_delta_time_sec * model_hz));
+  global_multi_loop = SGMisc<long>::max (0, global_multi_loop);
+  reminder = real_delta_time_sec - double (global_multi_loop) / double (model_hz);
+  return double (global_multi_loop) / double (model_hz);
 }
-
-double ApplicationProperties::getDouble( const char * name, double def )
-{
-  SGPropertyNode_ptr n = ApplicationProperties::Properties->getNode( name, false );
-  if( n == NULL ) return def;
-  return n->getDoubleValue();
-}
-
-SGPath ApplicationProperties::GetCwd()
-{
-  SGPath path(".");
-  char buf[512], *cwd = getcwd(buf, 511);
-  buf[511] = '\0';
-  if (cwd)
-  {
-      path = SGPath::fromLocal8Bit(cwd);
-  }
-  return path;
-}
-
-SGPath ApplicationProperties::GetRootPath( const char * sub )
-{
-  if( sub != NULL )
-  {
-    SGPath subpath( sub );
-
-    // relative path to current working dir?
-    if (subpath.isRelative())
-    {
-      SGPath path = GetCwd();
-      path.append( sub );
-      if (path.exists())
-        return path;
-    }
-    else
-    if ( subpath.exists() )
-    {
-      // absolute path
-      return subpath;
-    }
-  }
-
-  // default: relative path to FGROOT
-  SGPath path( ApplicationProperties::root );
-  if( sub != NULL )
-    path.append( sub );
-
-  return path;
-}
-
-std::string ApplicationProperties::root = ".";
-SGPropertyNode_ptr ApplicationProperties::Properties = new SGPropertyNode;
-FGFontCache ApplicationProperties::fontCache;

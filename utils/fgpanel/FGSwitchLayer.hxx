@@ -1,5 +1,6 @@
 //
-//  Written and (c) Torsten Dreyer - Torsten(at)t3r_dot_de
+//  Written by David Megginson, started January 2000.
+//  Adopted for standalone fgpanel application by Torsten Dreyer, August 2009
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License as
@@ -15,27 +16,23 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifndef __FGTEXTURELOADERINTERFACE_HXX
-#define __FGTEXTURELOADERINTERFACE_HXX
 
-#include <string>
+#ifndef FGSWITCHLAYER_HXX
+#define FGSWITCHLAYER_HXX
 
-#if defined (SG_MAC)
-#include <OpenGL/gl.h>
-#elif defined (_GLES2)
-#include <GLES2/gl2.h>
-#else
-#include <GL/glew.h> // Must be included before <GL/gl.h>
-#include <GL/gl.h>
-#endif
+#include "FGGroupLayer.hxx"
 
-#include <simgear/compiler.h>
-
-using namespace std;
-
-class FGTextureLoaderInterface {
+/**
+ * A group layer that switches among its children.
+ *
+ * The first layer that passes its condition will be drawn, and
+ * any following layers will be ignored.
+ */
+class FGSwitchLayer : public FGGroupLayer {
 public:
-  virtual GLuint loadTexture (const string &filename) = 0;
+  // Transfer pointers!!
+  FGSwitchLayer ();
+  virtual void draw ();
 };
 
 #endif

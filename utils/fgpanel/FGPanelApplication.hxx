@@ -5,7 +5,7 @@
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
 //  License, or (at your option) any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -18,32 +18,28 @@
 #ifndef __FGPANELAPPLICATION_HXX
 #define __FGPANELAPPLICATION_HXX
 
-#include "FGGLApplication.hxx"
-#include "FGPanelProtocol.hxx"
-
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/props/props.hxx>
 
-#include <string>
-
-#include "panel.hxx"
+#include "FGGLApplication.hxx"
+#include "FGPanel.hxx"
+#include "FGPanelProtocol.hxx"
 
 class FGPanelApplication : public FGGLApplication {
 public:
-  FGPanelApplication( int argc, char ** argv );
-  ~FGPanelApplication();
+  FGPanelApplication (int argc, char **argv);
+  ~FGPanelApplication ();
 
-  void Run();
+  void Run ();
 
 protected:
-  virtual void Key( unsigned char key, int x, int y );
-  virtual void Idle();
-//  virtual void Display();
-  virtual void Reshape( int width, int height );
+  virtual void Key (const unsigned char key, const int x, const int y);
+  virtual void Idle ();
+  // !!! virtual void Display ();
+  virtual void Reshape (const int width, const int height);
 
-  virtual void Init();
+  virtual void Init ();
 
-  double Sleep();
+  double Sleep ();
 
   SGSharedPtr<FGPanel> panel;
   SGSharedPtr<FGPanelProtocol> protocol;

@@ -5,7 +5,7 @@
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
 //  License, or (at your option) any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -17,25 +17,31 @@
 //
 #ifndef __FGPANELPROTOCOL_HXX
 #define __FGPANELPROTOCOL_HXX
+
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/io/iochannel.hxx>
+
+using namespace std;
+
 class PropertySetter;
 
-typedef std::vector<PropertySetter*> PropertySetterVector;
+typedef vector<PropertySetter*> PropertySetterVector;
+
 class FGPanelProtocol : public SGSubsystem {
 public:
-  FGPanelProtocol( SGPropertyNode_ptr root );
-  virtual ~FGPanelProtocol();
-  virtual void init();
-  virtual void reinit();
-  virtual void update( double dt );
+  FGPanelProtocol (SGPropertyNode_ptr a_Root);
+  virtual ~FGPanelProtocol ();
+  virtual void init ();
+  virtual void reinit ();
+  virtual void update (double dt);
 
 protected:
 
 private:
   SGPropertyNode_ptr root;
-  SGIOChannel * io;
+  SGIOChannel *io;
   PropertySetterVector propertySetterVector;
 };
+
 #endif

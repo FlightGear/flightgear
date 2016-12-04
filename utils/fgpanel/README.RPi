@@ -1,0 +1,44 @@
+This is the FGPanel for the Raspberry Pi running Raspbian.
+It should work with other Linux distributions but it has not been tested.
+
+INSTALLATION
+============
+
+1. Build SimGear as usual.
+   OSG, Plib, GLUT,... will be required even they are not strictly needed to run FGPanel.
+
+2. Configure FlightGear using CMake as usual.
+   CMakeLists.txt is used to compile FGPanel with OpenGL 2.0.
+   This should make FGPanel faster on modern graphics cards.
+
+   CMakeLists.txt is used to compile FGPanel with OpenGL ES 2.0 for the Raspberry Pi.
+   The source code of FGPanel can easily be adapted to other embedded devices supporting OpenGL ES 2.0.
+
+3. Build FGPanel only (don't build all components on the Raspberry Pi as this will take ages!!!):
+        make -- fgpanel
+
+USAGE
+=====
+
+1. Increase the amount of GPU memory by editing the /boot/config.txt file.
+   Add the following line (this is for Raspberry Pi model 1B with 512 Mb of memory):
+        gpu_mem_512=256
+
+2. Reboot and check the amount of GPU memory:
+        vcgencmd get_mem gpu
+
+3. Stop X server. FGPanel runs in the console (Linux framebuffer).
+
+4. Start FGPanel as usual but as ROOT or use the 'sudo' command (see README):
+        sudo -- utils/fgpanel/fgpanel --fg-root=/path/to/fg/data --panel=Aircraft/MyAircraft/Panels/MyPanel.xml
+
+   ROOT privileges are required to access the GPU of the Raspberry Pi.
+
+FEATURES
+========
+
+- Use OpenGL 2.0 instead of OpenGL 1.0 (fixed pipeline) using CMakeLists.txt.
+- Use OpenGL ES 2.0 to run on the Raspberry Pi using CMakeLists.txt.
+- Use VideoCore 4 graphics hardware acceleration (GPU) of the Raspberry Pi.
+- Run at 30 frames per second.
+- Don't use PLib anymore for the font rendering.

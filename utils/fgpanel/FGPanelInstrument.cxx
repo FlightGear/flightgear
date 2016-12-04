@@ -1,6 +1,6 @@
-//  panel_io.cxx - I/O for 2D panel.
 //
 //  Written by David Megginson, started January 2000.
+//  Adopted for standalone fgpanel application by Torsten Dreyer, August 2009
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License as
@@ -16,24 +16,50 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-//  $Id: panel_io.hxx,v 1.2 2016/07/20 22:01:32 allaert Exp $
 
-#ifndef __PANEL_IO_HXX
-#define __PANEL_IO_HXX
+#include "FGPanelInstrument.hxx"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+FGPanelInstrument::FGPanelInstrument () {
+  setPosition (0, 0);
+  setSize (0, 0);
+}
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
+FGPanelInstrument::FGPanelInstrument (const int x, const int y, const int w, const int h) {
+  setPosition (x, y);
+  setSize (w, h);
+}
 
-#include "FGPanel.hxx"
+FGPanelInstrument::~FGPanelInstrument () {
+}
 
-class FGReadablePanel : public FGPanel {
-public:
-  static SGSharedPtr<FGPanel> read (SGPropertyNode_ptr root);
-};
+void
+FGPanelInstrument::setPosition (const int x, const int y) {
+  m_x = x;
+  m_y = y;
+}
 
-#endif // __PANEL_IO_HXX
+void
+FGPanelInstrument::setSize (const int w, const int h) {
+  m_w = w;
+  m_h = h;
+}
+
+int
+FGPanelInstrument::getXPos () const {
+  return m_x;
+}
+
+int
+FGPanelInstrument::getYPos () const {
+  return m_y;
+}
+
+int
+FGPanelInstrument::getWidth () const {
+  return m_w;
+}
+
+int
+FGPanelInstrument::getHeight () const {
+  return m_h;
+}
