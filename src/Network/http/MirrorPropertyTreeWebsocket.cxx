@@ -44,7 +44,7 @@ using std::string;
     struct PropertyValue
     {
         PropertyValue(SGPropertyNode* cur = nullptr) :
-            type(simgear::props::UNSPECIFIED)
+            type(simgear::props::NONE)
         {
             if (!cur) {
                 return;
@@ -70,8 +70,11 @@ using std::string;
                 stringValue = cur->getStringValue();
                 break;
 
+            case simgear::props::NONE:
+                break;
+
             default:
-                SG_LOG(SG_NETWORK, SG_INFO, "implement me!");
+                SG_LOG(SG_NETWORK, SG_INFO, "implement me!" << type);
                 break;
             }
         }
@@ -91,6 +94,9 @@ using std::string;
             case simgear::props::STRING:
             case simgear::props::UNSPECIFIED:
                 return stringValue == other.stringValue;
+
+            case simgear::props::NONE:
+                return true;
 
             default:
                 break;
@@ -144,6 +150,19 @@ using std::string;
         virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child) override
         {
             removedNodes.insert(idForProperty(child));
+        }
+
+        void registerSubtree(SGPropertyNode* node)
+        {
+            if (node->getType() != simgear::props::NONE) {
+                valueChanged(node);
+            }
+
+            // and recurse
+            int child = 0;
+            for (; child < node->nChildren(); ++child) {
+                registerSubtree(node->getChild(child));
+            }
         }
 
         std::set<SGPropertyNode*> newNodes;
@@ -281,7 +300,7 @@ MirrorPropertyTreeWebsocket::MirrorPropertyTreeWebsocket(const std::string& path
 {
     _subtreeRoot = globals->get_props()->getNode(path, true);
     _subtreeRoot->addChangeListener(_listener.get());
-    _subtreeRoot->fireCreatedRecursive();
+    _listener->registerSubtree(_subtreeRoot);
 }
 
 MirrorPropertyTreeWebsocket::~MirrorPropertyTreeWebsocket()
