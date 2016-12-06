@@ -38,9 +38,9 @@ namespace flightgear
 {
   
 // load and initialize the navigational databases
-bool navDBInit(const SGPath& path);
+void navDBInit(const SGPath& path);
   
-bool loadCarrierNav(const SGPath& path);
+void loadCarrierNav(const SGPath& path);
   
 bool loadTacan(const SGPath& path, FGTACANList *channellist);
 

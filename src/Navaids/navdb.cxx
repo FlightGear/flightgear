@@ -24,6 +24,13 @@
 #  include "config.h"
 #endif
 
+#include <string>
+#include <vector>
+#include <istream>
+#include <cmath>
+#include <cstddef>              // std::size_t
+#include <cerrno>
+
 #include "navdb.hxx"
 
 #include <simgear/compiler.h>
@@ -48,6 +55,19 @@
 
 using std::string;
 using std::vector;
+
+static void throwExceptionIfStreamError(const std::istream& inputStream,
+                                        const SGPath& path)
+{
+  if (inputStream.bad()) {
+    const std::string errMsg = simgear::strutils::error_string(errno);
+
+    SG_LOG(SG_NAVAID, SG_ALERT,
+           "Error while reading '" << path.utf8Str() << "': " << errMsg);
+    throw sg_io_exception("Error reading file (" + errMsg + ")",
+                          sg_location(path));
+  }
+}
 
 static FGPositioned::Type
 mapRobinTypeToFGPType(int aTy)
@@ -134,37 +154,87 @@ static double defaultNavRange(const string& ident, FGPositioned::Type type)
 namespace flightgear
 {
 
-static PositionedID readNavFromStream(std::istream& aStream,
-                                        FGPositioned::Type type = FGPositioned::INVALID)
+// Parse a line from a file such as nav.dat or carrier_nav.dat. Load the
+// corresponding data into the NavDataCache.
+static PositionedID processNavLine(
+  string& line, const string& utf8Path, unsigned int lineNum,
+  FGPositioned::Type type = FGPositioned::INVALID)
 {
   NavDataCache* cache = NavDataCache::instance();
-  
-  int rawType;
-  aStream >> rawType;
-  if( aStream.eof() || (rawType == 99) || (rawType == 0) )
-    return 0; // happens with, eg, carrier_nav.dat
-  
-  double lat, lon, elev_ft, multiuse;
-  int freq, range;
-  std::string name, ident;
-  aStream >> lat >> lon >> elev_ft >> freq >> range >> multiuse >> ident;
-  getline(aStream, name);
-  
-  SGGeod pos(SGGeod::fromDegFt(lon, lat, elev_ft));
-  name = simgear::strutils::strip(name);
+  int rowCode, elev_ft, freq, range;
+  // 'multiuse': different meanings depending on the record's row code
+  double lat, lon, multiuse;
+  // Short identifier and longer name for a navaid (e.g., 'OLN' and
+  // 'LFPO 02 OM')
+  string ident, name;
 
-// the type can be forced by our caller, but normally we use th value
-// supplied in the .dat file
+  if (simgear::strutils::starts_with(line, "#")) {
+    // carrier_nav.dat has a comment line using this syntax...
+    return 0;
+  }
+
+  // At most 9 fields (the ninth field may contain spaces)
+  vector<string> fields(simgear::strutils::split(line, 0, 8));
+  vector<string>::size_type nbFields = fields.size();
+  static const string endOfData = "99"; // special code in the nav.dat spec
+
+  if (nbFields == 0) {       // blank line
+    return 0;
+  } else if (nbFields == 1) {
+    if (fields[0] != endOfData) {
+      SG_LOG( SG_NAVAID, SG_WARN,
+              utf8Path << ":" << lineNum << ": malformed line: only one "
+              "field, but it is not '99'" );
+    }
+
+    return 0;
+  } else if (nbFields < 9) {
+    SG_LOG( SG_NAVAID, SG_WARN,
+            utf8Path << ":"  << lineNum << ": invalid line "
+            "(at least 9 fields are required)" );
+    return 0;
+  }
+
+  // When their string argument can't be properly converted, std::stoi(),
+  // std::stof() and std::stod() all raise an exception which is always a
+  // subclass of std::logic_error.
+  try {
+    rowCode = std::stoi(fields[0]);
+    lat = std::stod(fields[1]);
+    lon = std::stod(fields[2]);
+    elev_ft = std::stoi(fields[3]);
+    // The input data is a floating point number, but we are going to feed it
+    // to NavDataCache::insertNavaid(), which takes an int.
+    freq = static_cast<int>(std::lround(std::stof(fields[4])));
+    range = std::stoi(fields[5]);
+    multiuse = std::stod(fields[6]);
+    ident = fields[7];
+    name = simgear::strutils::strip(fields[8]);
+  } catch (const std::logic_error& exc) {
+    // On my system using GNU libstdc++, exc.what() is limited to the function
+    // name (e.g., 'stod')!
+    SG_LOG( SG_NAVAID, SG_WARN,
+            utf8Path << ":"  << lineNum << ": unable to parse (" <<
+            exc.what() << "): '" <<
+            simgear::strutils::stripTrailingNewlines(line) << "'" );
+    return 0;
+  }
+
+  SGGeod pos(SGGeod::fromDegFt(lon, lat, static_cast<double>(elev_ft)));
+
+  // The type can be forced by our caller, but normally we use the value
+  // supplied in the .dat file.
   if (type == FGPositioned::INVALID) {
-    type = mapRobinTypeToFGPType(rawType);
+    type = mapRobinTypeToFGPType(rowCode);
   }
   if (type == FGPositioned::INVALID) {
     return 0;
   }
 
+  // Note: for these types, the XP NAV810 and XP NAV1100 specs differ.
   if ((type >= FGPositioned::OM) && (type <= FGPositioned::IM)) {
     AirportRunwayPair arp(cache->findAirportRunway(name));
-    if (arp.second && (elev_ft < 0.01)) {
+    if (arp.second && (elev_ft <= 0)) {
     // snap to runway elevation
       FGPositioned* runway = cache->loadById(arp.second);
       assert(runway);
@@ -225,8 +295,8 @@ static PositionedID readNavFromStream(std::istream& aStream,
       assert(runway);
 #if 0
       // code is disabled since it's causing some problems, see
-      // http://code.google.com/p/flightgear-bugs/issues/detail?id=926
-      if (elev_ft < 0.01) {
+      // https://sourceforge.net/p/flightgear/codetickets/926/
+      if (elev_ft <= 0) {
         // snap to runway elevation
         pos.setElevationFt(runway->geod().getElevationFt());
       }
@@ -259,63 +329,69 @@ static PositionedID readNavFromStream(std::istream& aStream,
   return r;
 }
 
-// generated by wc -l on uncomrpessed nav.dat
-const unsigned int LINES_IN_NAV_DAT = 26775;
-  
 // load and initialize the navigational databases
-bool navDBInit(const SGPath& path)
+void navDBInit(const SGPath& path)
 {
-    sg_gzifstream in( path );
-    if ( !in.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
-      return false;
-    }
+  NavDataCache* cache = NavDataCache::instance();
+  const string utf8Path = path.utf8Str();
+  const std::size_t fileSize = path.sizeInBytes();
+  sg_gzifstream in(path);
+
+  if ( !in.is_open() ) {
+    throw sg_io_exception(
+      "Cannot open file (" + simgear::strutils::error_string(errno) + ")",
+      sg_location(path));
+  }
 
   autoAlignLocalizers = fgGetBool("/sim/navdb/localizers/auto-align", true);
   autoAlignThreshold = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
-    NavDataCache* cache = NavDataCache::instance();
 
-    // skip first two lines
+  // Skip the first two lines
+  for (int i = 0; i < 2; i++) {
     in >> skipeol;
-    in >> skipeol;
-    unsigned int lineNumber = 2;
+    throwExceptionIfStreamError(in, path);
+  }
 
-    while (!in.eof()) {
-      readNavFromStream(in);
-      in >> skipcomment;
+  string line;
+  unsigned int lineNumber;
 
-        ++lineNumber;
-        if ((lineNumber % 100) == 0) {
-            // every 100 lines
-            unsigned int percent = (lineNumber * 100) / LINES_IN_NAV_DAT;
-            cache->setRebuildPhaseProgress(NavDataCache::REBUILD_NAVAIDS, percent);
-        }
+  for (lineNumber = 3; std::getline(in, line); lineNumber++) {
+    processNavLine(line, utf8Path, lineNumber);
 
-    } // of stream data loop
-  
-  return true;
-}
-  
-  
-bool loadCarrierNav(const SGPath& path)
-{    
-    SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path );
-    sg_gzifstream incarrier( path );
-    
-    if ( !incarrier.is_open() ) {
-        SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
-      return false;
-    }
-    
-    while ( ! incarrier.eof() ) {
-      incarrier >> skipcomment;
-      // force the type to be MOBILE_TACAN
-      readNavFromStream(incarrier, FGPositioned::MOBILE_TACAN);
+    if ((lineNumber % 100) == 0) {
+      // every 100 lines
+      unsigned int percent = (in.approxOffset() * 100) / fileSize;
+      cache->setRebuildPhaseProgress(NavDataCache::REBUILD_NAVAIDS, percent);
     }
 
-  return true;
+  } // of stream data loop
+
+  throwExceptionIfStreamError(in, path);
 }
-  
+
+void loadCarrierNav(const SGPath& path)
+{
+  SG_LOG( SG_NAVAID, SG_DEBUG, "Opening file: " << path );
+  const string utf8Path = path.utf8Str();
+  sg_gzifstream in(path);
+
+  if ( !in.is_open() ) {
+    throw sg_io_exception(
+      "Cannot open file (" + simgear::strutils::error_string(errno) + ")",
+      sg_location(path));
+  }
+
+  string line;
+  unsigned int lineNumber;
+
+  for (lineNumber = 1; std::getline(in, line); lineNumber++) {
+    // Force the navaid type to be MOBILE_TACAN
+    processNavLine(line, utf8Path, lineNumber, FGPositioned::MOBILE_TACAN);
+  }
+
+  throwExceptionIfStreamError(in, path);
+}
+
 bool loadTacan(const SGPath& path, FGTACANList *channellist)
 {
     SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path );
