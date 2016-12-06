@@ -113,6 +113,27 @@ using std::string;
         std::string stringValue;
     };
 
+
+    struct RecentlyRemovedNode
+    {
+        RecentlyRemovedNode() : type(simgear::props::NONE), id(0) { }
+
+        RecentlyRemovedNode(SGPropertyNode* node, unsigned int aId) :
+            type(node->getType()),
+            path(node->getPath()),
+            id(aId)
+        {}
+
+        simgear::props::Type type;
+        std::string path;
+        unsigned int id;
+
+        bool operator==(const RecentlyRemovedNode& other) const
+        {
+            return (type == other.type) && (path == other.path);
+        }
+    };
+
     class MirrorTreeListener : public SGPropertyChangeListener
     {
     public:
@@ -144,12 +165,37 @@ using std::string;
 
         virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child) override
         {
+            // this works becuase customer operator== overload on RecentlyRemovedNode
+            // ignores the ID value.
+            RecentlyRemovedNode m(child, 0);
+            auto rrIt = std::find(recentlyRemoved.begin(), recentlyRemoved.end(), m);
+            if (rrIt != recentlyRemoved.end()) {
+                SG_LOG(SG_NETWORK, SG_INFO, "recycling recently removed:" << rrIt->path);
+                removedNodes.erase(rrIt->id); // don't remove it!
+                idHash.insert(std::make_pair(child, rrIt->id));
+                changedNodes.insert(child);
+                recentlyRemoved.erase(rrIt);
+                return;
+            }
+
             newNodes.insert(child);
         }
 
         virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child) override
         {
-            removedNodes.insert(idForProperty(child));
+            changedNodes.erase(child); // have to do this here with the pointer valid
+            newNodes.erase(child);
+
+            auto it = idHash.find(child);
+            if (it != idHash.end()) {
+                removedNodes.insert(it->second);
+                idHash.erase(it);
+
+                // record so we can map removed+add of the same property into
+                // a simple value change (this happens commonly with the canvas
+                // due to lazy Nasal scripting)
+                recentlyRemoved.push_back(RecentlyRemovedNode(child, it->second));
+            }
         }
 
         void registerSubtree(SGPropertyNode* node)
@@ -181,7 +227,14 @@ using std::string;
 
         cJSON* makeJSONData()
         {
+            SGTimeStamp st;
+            st.stamp();
+
             cJSON* result = cJSON_CreateObject();
+
+            int newSize = newNodes.size();
+            int changedSize = changedNodes.size();
+            int removedSize = removedNodes.size();
 
             if (!newNodes.empty()) {
                 cJSON * newNodesArray = cJSON_CreateArray();
@@ -196,11 +249,20 @@ using std::string;
                     cJSON_AddItemToObject(newPropData, "value", JSON::valueToJson(prop));
 
                     cJSON_AddItemToArray(newNodesArray, newPropData);
-
                 }
 
                 newNodes.clear();
                 cJSON_AddItemToObject(result, "created", newNodesArray);
+            }
+
+
+            if (!removedNodes.empty()) {
+                cJSON * deletedNodesArray = cJSON_CreateArray();
+                for (auto propId : removedNodes) {
+                    cJSON_AddItemToArray(deletedNodesArray, cJSON_CreateNumber(propId));
+                }
+                cJSON_AddItemToObject(result, "removed", deletedNodesArray);
+                removedNodes.clear();
             }
 
             if (!changedNodes.empty()) {
@@ -217,14 +279,8 @@ using std::string;
                 cJSON_AddItemToObject(result, "changed", changedNodesArray);
             }
 
-            if (!removedNodes.empty()) {
-                cJSON * deletedNodesArray = cJSON_CreateArray();
-                for (auto propId : removedNodes) {
-                    cJSON_AddItemToArray(deletedNodesArray, cJSON_CreateNumber(propId));
-                }
-                removedNodes.clear();
-                cJSON_AddItemToObject(result, "removed", deletedNodesArray);
-            }
+            SG_LOG(SG_NETWORK, SG_INFO, "making JSON data took:" << st.elapsedMSec() << " for " << newSize << "/" << changedSize << "/" << removedSize);
+            recentlyRemoved.clear();
 
             return result;
         }
@@ -237,6 +293,11 @@ using std::string;
         PropertyId nextPropertyId = 1;
         std::unordered_map<SGPropertyNode*, PropertyId> idHash;
         std::vector<PropertyValue> previousValues;
+
+        /// track recently removed nodes in case they are re-created imemdiately
+        /// after with the same type, since we can make this much more efficient
+        /// when sending over the wire.
+        std::vector<RecentlyRemovedNode> recentlyRemoved;
     };
 
 #if 0
