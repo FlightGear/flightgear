@@ -20,7 +20,7 @@
 #ifndef FG_GUI_COCOA_MOUSE_CURSOR_HXX
 #define FG_GUI_COCOA_MOUSE_CURSOR_HXX
 
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 #include "MouseCursor.hxx"
 
@@ -40,7 +40,7 @@ public:
 
 private:
     class CocoaMouseCursorPrivate;
-    std::auto_ptr<CocoaMouseCursorPrivate> d;
+    std::unique_ptr<CocoaMouseCursorPrivate> d;
 };
 
 

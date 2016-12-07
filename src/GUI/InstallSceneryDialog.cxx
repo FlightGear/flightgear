@@ -122,7 +122,7 @@ private:
 
     QString m_extractDir;
     QStringList m_remainingPaths;
-    std::auto_ptr<simgear::TarExtractor> m_untar;
+    std::unique_ptr<simgear::TarExtractor> m_untar;
     bool m_error;
     quint64 m_totalBytes;
     quint64 m_bytesRead;

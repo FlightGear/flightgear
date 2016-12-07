@@ -58,7 +58,7 @@ public:
   
   class WindowsMenuBarPrivate;
 private:
-  std::auto_ptr<WindowsMenuBarPrivate> p;
+  std::unique_ptr<WindowsMenuBarPrivate> p;
 };
 
 #endif // __MENUBAR_HXX

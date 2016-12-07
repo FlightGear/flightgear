@@ -34,7 +34,7 @@
 // FGFontCache class.
 ////////////////////////////////////////////////////////////////////////
 
-static std::auto_ptr<FGFontCache> global_fontCacheInstance;
+static std::unique_ptr<FGFontCache> global_fontCacheInstance;
 
 
 extern puFont FONT_HELVETICA_14;

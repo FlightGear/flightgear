@@ -41,6 +41,7 @@
 #include <FDM/SP/ACMS.hxx>
 #include <FDM/SP/MagicCarpet.hxx>
 #include <FDM/SP/Balloon.h>
+#include <FDM/SP/AISim.hpp>
 #endif
 #include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/ExternalPipe/ExternalPipe.hxx>
@@ -319,9 +320,11 @@ void FDMShell::createImplementation()
         _impl = new FGBalloonSim( dt );
     } else if ( model == "magic" ) {
         _impl = new FGMagicCarpet( dt );
+//  } else if ( model == "aisim" ) {
+//      _impl = new FGAISim( dt );
     }
 #else
-    else if (( model == "ada" )||(model == "acms")||( model == "balloon" )||( model == "magic" ))
+    else if (( model == "ada" )||(model == "acms")||( model == "balloon" )||( model == "magic" )||( model == "aisim" ))
     {
         fdmUnavailable = true;
     }

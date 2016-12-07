@@ -58,7 +58,7 @@ public:
   
   class CocoaMenuBarPrivate;
 private:
-  std::auto_ptr<CocoaMenuBarPrivate> p;
+  std::unique_ptr<CocoaMenuBarPrivate> p;
   
 };
 

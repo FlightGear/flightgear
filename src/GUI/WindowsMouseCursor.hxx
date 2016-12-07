@@ -20,7 +20,7 @@
 #ifndef FG_GUI_WINDOWS_MOUSE_CURSOR_HXX
 #define FG_GUI_WINDOWS_MOUSE_CURSOR_HXX
 
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 #include "MouseCursor.hxx"
 
@@ -40,7 +40,7 @@ public:
 
 private:
     class WindowsMouseCursorPrivate;
-    std::auto_ptr<WindowsMouseCursorPrivate> d;
+    std::unique_ptr<WindowsMouseCursorPrivate> d;
 };
 
 

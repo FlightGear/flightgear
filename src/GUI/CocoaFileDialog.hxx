@@ -34,7 +34,7 @@ public:
     virtual void close();
 private:
     class CocoaFileDialogPrivate;
-    std::auto_ptr<CocoaFileDialogPrivate> d;
+    std::unique_ptr<CocoaFileDialogPrivate> d;
 };
 
 #endif // FG_COCOA_FILE_DIALOG_HXX

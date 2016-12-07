@@ -9,7 +9,7 @@
 
 #include <vector>
 #include <map>
-#include <memory> // for auto_ptr on some systems
+#include <memory> // for unique_ptr on some systems
 #include <cstring> // for strcmp in lstr() (in this header, alas)
 
 class FGMenuBar;
@@ -222,7 +222,7 @@ private:
     // Read all the configuration files in a directory.
     void readDir (const SGPath& path);
 
-    std::auto_ptr<FGMenuBar> _menubar;
+    std::unique_ptr<FGMenuBar> _menubar;
     FGDialog * _active_dialog;
     typedef std::map<std::string,FGDialog *> DialogDict;
     DialogDict _active_dialogs;

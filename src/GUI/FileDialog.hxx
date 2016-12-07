@@ -3,7 +3,7 @@
 #ifndef FG_GUI_FILE_DIALOG_HXX
 #define FG_GUI_FILE_DIALOG_HXX 1
 
-#include <memory> // for std::auto_ptr
+#include <memory> // for std::unique_ptr
 
 #include <simgear/misc/strutils.hxx> // for string_list
 #include <simgear/misc/sg_path.hxx>
@@ -79,7 +79,7 @@ protected:
     string_list _filterPatterns;
     std::string _placeholder;
     bool _showHidden;
-    std::auto_ptr<Callback> _callback;
+    std::unique_ptr<Callback> _callback;
 };
 
 #endif // FG_GUI_FILE_DIALOG_HXX
