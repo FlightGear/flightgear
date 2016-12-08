@@ -97,7 +97,7 @@ FGAISim::init() {
     UVW_body[U] = fgGetFloat("sim/presets/uBody-fps");
     UVW_body[V] = fgGetFloat("sim/presets/vBody-fps");
     UVW_body[W] = fgGetFloat("sim/presets/wBody-fps");
-    set_velocity_fps( simd4::magnitude(UVW_body) );
+    set_velocity_fps( UVW_body[U] );
 }
 
 void
@@ -120,17 +120,17 @@ FGAISim::update(double ddt)
 
     // Earth-to-Body-Axis Transformation Matrix
     // body = pitch, roll, yaw
-    simd4_t<float,3> angles = euler;
+    simd4_t<float,4> angles = euler;
     float angle = simd4::normalize(angles);
     simd4x4_t<float,4> EBM = simd4x4::rotation_matrix<float>(angle, angles);
 
     // Body-Axis Gravity Components
-    simd4_t<float,4> gb = EBM*simd4_t<float,4>(gravity);
-    simd4_t<float,4> windb = EBM*simd4_t<float,4>(wind_ned);
+    simd4_t<float,4> gb = EBM*gravity;
+    simd4_t<float,4> windb = EBM*wind_ned;
 
     // Air-Relative velocity vector
-    simd4_t<float,3> Va = UVW_body + simd4_t<float,3>(windb);
-    update_UVW_body(simd4::magnitude(Va));
+    simd4_t<float,3> Va = UVW_body + windb;
+    set_velocity_fps(Va[U]);
     if (std::abs(velocity) > 1.0f) {
         set_alpha_rad( std::atan(Va[3]/std::abs(Va[1])) );
         set_beta_rad( std::asin(Va[2]/velocity) );
@@ -178,15 +178,15 @@ FGAISim::update(double ddt)
     FXYZ += FThrust;
 //  MlmnT += MThrust;
 
-    // Gear forces - http://tutorial.math.lamar.edu/Classes/DE/Vibrations.aspx
-    if (0) { // WoW
-        simd4_t<float,3> FLMLG = 0.0f, FRLMG = 0.0f, FNLG = 0.0f;
-        float gear_comp = 1.0f + _MINMAX(agl/gear[Z], -1.0f, 0.0f);
-        FNLG[Z] = FLMLG[Z] = FRLMG[Z] = Cgear*gear_comp;
-        simd4_t<float,3> FLGear = 0.0f, MLGear = 0.0f;
+    // Gear forces
+    float gear_comp = 0.2f + _MINMAX(agl/gear[Z], -0.2f, 0.0f);
+printf("agl: %7.6f, gear-z: %7.6f, comp: %f\n", agl, gear[Z], gear_comp);
+    if (gear_comp > 0.1f) {
+        simd4_t<float,3> FLGear = 0.0f; FLGear[Z] = Cgear*gear_comp;
+//      simd4_t<float,3> MLGear = 0.0f;
 
         FXYZ += FLGear;
-        MlmnT +=  MLGear;
+//      MlmnT +=  MLGear;
     }
     FXYZ /= m;
 
@@ -205,7 +205,7 @@ printf("UVW: %5.4f, %5.4f, %5.4f\n", dUVW[U], dUVW[V], dUVW[W]);
 
     /* position of center of mass wrt earth: north, east, down */
     simd4_t<float,4> dNED_cm;
-    dNED_cm = simd4x4::transpose(EBM)*simd4_t<float,4>(UVW_body);
+    dNED_cm = simd4x4::transpose(EBM)*UVW_body;
 
     double az2, dist = simd4::magnitude(dNED_cm);
     SGGeod pos2, pos = getPosition();

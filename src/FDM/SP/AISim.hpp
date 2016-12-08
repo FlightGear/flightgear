@@ -160,14 +160,14 @@ private:
     float  br;				/* brake			*/
 
     /* aircraft state */
-    simd4_t<float,3> NED_cm;		/* lat, lon, altitude           */
-    simd4_t<float,3> UVW_body;		/* fwd, up, side speed          */
+    simd4_t<float,4> NED_cm;		/* lat, lon, altitude           */
+    simd4_t<float,4> UVW_body;		/* fwd, up, side speed          */
     simd4_t<float,3> PQR_body;		/* P, Q, R rate			*/
     simd4_t<float,3> PQR_dot;		/* Pdot, Qdot, Rdot accel.	*/
     simd4_t<float,3> ABY_body;		/* alpha, beta, gamma		*/
     simd4_t<float,3> ABY_dot;		/* adot, bdot, ydot		*/
     simd4_t<float,3> euler;		/* phi, theta, psi		*/
-    simd4_t<float,3> wind_ned;
+    simd4_t<float,4> wind_ned;
     float agl, velocity;
 
     /* history, these change between every call to update() */
@@ -209,7 +209,7 @@ private:
 
     /* static environment  data */
     static float env[101][2];
-    simd4_t<float,3> gravity;
+    simd4_t<float,4> gravity;
     float dt2_2m;
 };
 
