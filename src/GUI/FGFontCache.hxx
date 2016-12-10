@@ -78,6 +78,7 @@ private:
 public:
     // note this accesor is NOT thread-safe
     static FGFontCache* instance();
+    static void shutdown();
 
     ~FGFontCache();
 

@@ -85,6 +85,11 @@ FGFontCache* FGFontCache::instance()
     return global_fontCacheInstance.get();
 }
 
+void FGFontCache::shutdown()
+{
+    global_fontCacheInstance.reset();
+}
+
 FGFontCache::FGFontCache() :
     _initialized(false)
 {

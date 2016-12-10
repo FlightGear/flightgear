@@ -54,6 +54,7 @@
 #include <Navaids/navlist.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/viewmgr.hxx>
+#include <GUI/FGFontCache.hxx>
 
 #include "globals.hxx"
 #include "locale.hxx"
@@ -222,6 +223,9 @@ FGGlobals::~FGGlobals()
 
     // renderer touches subsystems during its destruction
     set_renderer(NULL);
+
+    FGFontCache::shutdown();
+    fgCancelSnapShot();
 
     delete subsystem_mgr;
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL

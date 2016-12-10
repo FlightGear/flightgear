@@ -47,6 +47,8 @@ extern void guiErrorMessage(const char *txt);
 extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);
 
 extern bool fgDumpSnapShot();
+void fgCancelSnapShot();
+
 extern void fgDumpSceneGraph();
 extern void fgDumpTerrainBranch();
 extern void fgPrintVisibleSceneInfoCommand();

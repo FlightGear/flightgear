@@ -483,6 +483,11 @@ namespace
             return true;
         }
 
+        static void cancel()
+        {
+            _snapShotOp = nullptr;
+        }
+
     private:
         // constructor to be executed in main loop's thread
         GUISnapShotOperation() :
@@ -565,6 +570,11 @@ bool fgDumpSnapShot ()
     // start snap shot operation, while needs to be executed in
     // graphics context
     return GUISnapShotOperation::start();
+}
+
+void fgCancelSnapShot()
+{
+    GUISnapShotOperation::cancel();
 }
 
 // do an entire scenegraph dump
