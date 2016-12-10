@@ -157,7 +157,7 @@ namespace flightgear
 // Parse a line from a file such as nav.dat or carrier_nav.dat. Load the
 // corresponding data into the NavDataCache.
 static PositionedID processNavLine(
-  string& line, const string& utf8Path, unsigned int lineNum,
+  const string& line, const string& utf8Path, unsigned int lineNum,
   FGPositioned::Type type = FGPositioned::INVALID)
 {
   NavDataCache* cache = NavDataCache::instance();
@@ -279,11 +279,16 @@ static PositionedID processNavLine(
         if ( simgear::strutils::uppercase(navaid_part[0]) == simgear::strutils::uppercase(dme_part[0]) ) {
           navaid_dme = ref.get()->guid();
         } else {
-            SG_LOG(SG_NAVAID, SG_WARN, "DME " << ident << " (" << name << "), closest match has wrong name:"
-                   << ref->ident() << " (" << ref->name() << ")");
+            SG_LOG(SG_NAVAID, SG_INFO,
+                   utf8Path << ":" << lineNum << ": DME '" << ident << "' (" <<
+                   name << "): while looking for a colocated navaid, found " <<
+                   "that the closest match has wrong name: '" <<
+                   ref->ident() << "' (" << ref->name() << ")");
         }
       } else {
-          SG_LOG(SG_NAVAID, SG_WARN, "Couldn't find navaid for DME:" << ident << " (" << name << ")");
+          SG_LOG(SG_NAVAID, SG_INFO,
+                 utf8Path << ":" << lineNum << ": couldn't find any colocated "
+                 "navaid for DME '" << ident << "' (" << name << ")");
       }
     } // of have a co-located navaid to locate
   }
