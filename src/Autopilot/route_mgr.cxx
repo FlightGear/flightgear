@@ -66,14 +66,14 @@ using std::string;
 static bool commandLoadFlightPlan(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
-  SGPath path(arg->getStringValue("path"));
+  SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
   return self->loadRoute(path);
 }
 
 static bool commandSaveFlightPlan(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
-  SGPath path(arg->getStringValue("path"));
+  SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
   return self->saveRoute(path);
 }
 
@@ -360,7 +360,7 @@ void FGRouteMgr::postinit()
 {
   setFlightPlan(new FlightPlan());
   
-  SGPath path(_pathNode->getStringValue());
+  SGPath path = SGPath::fromUtf8(_pathNode->getStringValue());
   if (!path.isNull()) {
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path);
     loadRoute(path);
@@ -708,10 +708,10 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
     else if (!strcmp(s, "@ACTIVATE"))
         mgr->activate();
     else if (!strcmp(s, "@LOAD")) {
-      SGPath path(mgr->_pathNode->getStringValue());
+      SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
       mgr->loadRoute(path);
     } else if (!strcmp(s, "@SAVE")) {
-      SGPath path(mgr->_pathNode->getStringValue());
+      SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
       SGPath authorizedPath = fgValidatePath(path, true /* write */);
 
       if (!authorizedPath.isNull()) {
