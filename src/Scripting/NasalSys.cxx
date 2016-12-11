@@ -97,9 +97,7 @@ public:
     _sys(sys),
     _func(f),
     _self(self),
-    _isRunning(false),
-    _interval(interval),
-    _singleShot(false)
+    _interval(interval)
   {
     char nm[128];
     snprintf(nm, 128, "nasal-timer-%p", this);
@@ -124,7 +122,19 @@ public:
       _isRunning = false;
     }
   }
-  
+
+  bool isSimTime() const { return _isSimTime; }
+
+  void setSimTime(bool value)
+  {
+      if (_isRunning) {
+          SG_LOG(SG_NASAL, SG_WARN, "can't change type of running timer!");
+          return;
+      }
+
+      _isSimTime = value;
+  }
+
   void start()
   {
     if (_isRunning) {
@@ -133,10 +143,11 @@ public:
     
     _isRunning = true;
     if (_singleShot) {
-      globals->get_event_mgr()->addEvent(_name, this, &TimerObj::invoke, _interval);
+      globals->get_event_mgr()->addEvent(_name, this, &TimerObj::invoke, _interval, _isSimTime);
     } else {
       globals->get_event_mgr()->addTask(_name, this, &TimerObj::invoke,
-                                        _interval, _interval /* delay */);
+                                        _interval, _interval /* delay */,
+                                        _isSimTime);
     }
   }
   
@@ -172,13 +183,24 @@ private:
   FGNasalSys* _sys;
   naRef _func, _self;
   int _gcRoot, _gcSelf;
-  bool _isRunning;
+  bool _isRunning = false;
   double _interval;
-  bool _singleShot;
+  bool _singleShot = false;
+  bool _isSimTime = false;
 };
 
 typedef SGSharedPtr<TimerObj> TimerObjRef;
 typedef nasal::Ghost<TimerObjRef> NasalTimerObj;
+
+static void f_timerObj_setSimTime(TimerObj& timer, naContext c, naRef value)
+{
+    if (timer.isRunning()) {
+        naRuntimeError(c, "Timer is running, cannot change type between real/sim time");
+        return;
+    }
+
+    timer.setSimTime(nasal::from_nasal<bool>(c, value));
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -884,7 +906,9 @@ void FGNasalSys::init()
       .method("stop", &TimerObj::stop)
       .method("restart", &TimerObj::restart)
       .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
+      .member("simulatedTime", &TimerObj::isSimTime, &f_timerObj_setSimTime)
       .member("isRunning", &TimerObj::isRunning);
+
 
     // Set allowed paths for Nasal I/O
     fgInitAllowedPaths();
