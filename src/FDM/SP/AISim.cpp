@@ -182,8 +182,8 @@ FGAISim::update(double ddt)
     float gear_comp = 0.2f + _MINMAX(agl/gear[Z], -0.2f, 0.0f);
 printf("agl: %7.6f, gear-z: %7.6f, comp: %f\n", agl, gear[Z], gear_comp);
     if (gear_comp > 0.1f) {
-        simd4_t<float,3> FLGear = 0.0f; FLGear[Z] = Cgear*gear_comp;
-//      simd4_t<float,3> MLGear = 0.0f;
+        simd4_t<float,4> FLGear = 0.0f; FLGear[Z] = Cgear*gear_comp;
+//      simd4_t<float,4> MLGear = 0.0f;
 
         FXYZ += FLGear;
 //      MlmnT +=  MLGear;

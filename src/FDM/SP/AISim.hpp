@@ -180,7 +180,7 @@ private:
     /* run 20 to 60 times (or more) per second				*/
 
     /* cache, values that don't change very often */
-    simd4_t<float,3> FThrust, MThrust;
+    simd4_t<float,4> FThrust, MThrust;
     float b_2U, cbar_2U;
 
     /* dynamic coefficients (already multiplied with their value) */
