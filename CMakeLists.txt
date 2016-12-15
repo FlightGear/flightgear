@@ -116,6 +116,8 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     if(UDEV_FOUND)
         set(EVENT_INPUT_DEFAULT 1)
     endif(UDEV_FOUND)
+
+    list(APPEND PLATFORM_LIBS X11)
 endif()
 
 find_package(Git)

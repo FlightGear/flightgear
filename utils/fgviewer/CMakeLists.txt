@@ -48,5 +48,6 @@ target_link_libraries(fgviewer
 	${OPENGL_LIBRARIES}
 	${FGVIEWER_RTI_LIBRARIES}
         ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+        ${PLATFORM_LIBS}
 )
 install(TARGETS fgviewer RUNTIME DESTINATION bin)
