@@ -196,7 +196,7 @@ printf("agl: %7.6f, gear-z: %7.6f, comp: %f\n", agl, gear[Z], gear_comp);
     float u = UVW_body[U];
     float v = UVW_body[V];
     float w = UVW_body[W];
-    simd4_t<float,3> dUVW = FXYZ + gb;
+    simd4_t<float,4> dUVW = FXYZ + gb;
     dUVW[U] +=  r*v - q*w;
     dUVW[V] += -r*u + p*w;
     dUVW[W] +=  q*u - p*v;
