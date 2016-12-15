@@ -47,6 +47,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
 
+#include <Main/globals.hxx>
 #include "Main/fg_props.hxx"
 #include "Navaids/positioned.hxx"
 #include <Navaids/waypoint.hxx>
@@ -57,6 +58,8 @@
 #include "Airports/runways.hxx"
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
+#include <Main/util.hxx>        // fgValidatePath()
+#include <GUI/MessageBox.hxx>
 
 #define RM "/autopilot/route-manager/"
 
@@ -712,7 +715,23 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
       mgr->loadRoute(path);
     } else if (!strcmp(s, "@SAVE")) {
       SGPath path(mgr->_pathNode->getStringValue());
-      mgr->saveRoute(path);
+      const std::string authorizedPath = fgValidatePath(path.str(),
+                                                        true /* write */);
+
+      if (!authorizedPath.empty()) {
+        mgr->saveRoute(authorizedPath);
+      } else {
+        const SGPath proposedPath = SGPath(globals->get_fg_home()) / "Export";
+        std::string msg =
+          "The route manager was asked to write the flightplan to '" +
+          path.str() + "', but this path is not authorized for writing. " +
+          "Please choose another location, for instance in the $FG_HOME/Export "
+          "folder (" + proposedPath.str() + ").";
+
+        SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
+        modalMessageBox("FlightGear", "Unable to write to the specified file",
+                        msg);
+      }
     } else if (!strcmp(s, "@NEXT")) {
       mgr->jumpToIndex(mgr->currentIndex() + 1);
     } else if (!strcmp(s, "@PREVIOUS")) {
