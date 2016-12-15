@@ -124,6 +124,8 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     if(HTS_ENGINE_FOUND)
         set(SYSTEM_HTS_ENGINE_DEFAULT 1)
     endif()
+
+    list(APPEND PLATFORM_LIBS X11)
 endif()
 
 find_package(Git)
