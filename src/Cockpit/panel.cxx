@@ -44,6 +44,7 @@
 #include <osg/Matrixf>
 #include <osg/TexEnv>
 #include <osg/PolygonOffset>
+#include <osgDB/ReadFile>
 
 #include <simgear/compiler.h>
 
@@ -63,6 +64,7 @@
 #include <GUI/FGFontCache.hxx>
 #include <Instrumentation/dclgps.hxx>
 
+
 #define WIN_X 0
 #define WIN_Y 0
 #define WIN_W 1024
@@ -77,6 +79,7 @@ const double MOUSE_ACTION_REPEAT_DELAY = 0.5; // 500msec initial delay
 const double MOUSE_ACTION_REPEAT_INTERVAL = 0.1; // 10Hz repeat rate
 
 using std::map;
+namespace sc = simgear::canvas;
 
 ////////////////////////////////////////////////////////////////////////
 // Local functions.
@@ -802,7 +805,17 @@ FGPanelInstrument::doMouseAction (int button, int updown, int x, int y)
   return false;
 }
 
+void FGPanelInstrument::update()
+{
+    bool vis = test();
+    if (vis != element()->isVisible()) {
+        element()->setVisible(vis);
+    }
 
+    if (vis) {
+        doUpdate();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGLayeredInstrument.
@@ -862,7 +875,20 @@ FGLayeredInstrument::addTransformation (FGPanelTransformation * transformation)
   _layers[layer]->addTransformation(transformation);
 }
 
+void FGLayeredInstrument::setCanvasParent(simgear::canvas::Group* parent)
+{
+    _canvasGroup = static_cast<sc::Group*>(parent->createChild("group").get());
+    for (auto layer : _layers) {
+        layer->setCanvasParent(_canvasGroup);
+    }
+}
 
+void FGLayeredInstrument::doUpdate()
+{
+    for (auto layer : _layers) {
+        layer->update();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGSpecialInstrument.
@@ -884,7 +910,14 @@ FGSpecialInstrument::draw (osg::State& state)
   complex->draw(state);
 }
 
+void FGSpecialInstrument::doUpdate()
+{
+}
 
+void FGSpecialInstrument::setCanvasParent(simgear::canvas::Group* parent)
+{
+    // no-op
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGInstrumentLayer.
@@ -946,7 +979,7 @@ FGInstrumentLayer::transform () const
   }
 }
 
-void FGInstrumentLayer::applyTransformsToElement(simgear::canvas::Element* element)
+void FGInstrumentLayer::applyTransforms()
 {
     unsigned int tIndex = 0;
     for (auto t : _transformations) {
@@ -954,7 +987,7 @@ void FGInstrumentLayer::applyTransformsToElement(simgear::canvas::Element* eleme
 
         if (t->_wasEnabled != enabled) {
             t->_wasEnabled = enabled;
-            element->setTransformEnabled(tIndex, enabled);
+            element()->setTransformEnabled(tIndex, enabled);
         }
 
         // FIXME - only recompute if t has a property node. Otherwise
@@ -972,13 +1005,13 @@ void FGInstrumentLayer::applyTransformsToElement(simgear::canvas::Element* eleme
 
             switch (t->type) {
             case FGPanelTransformation::XSHIFT:
-                element->setTranslation(tIndex, val, 0.0);
+                element()->setTranslation(tIndex, val, 0.0);
                 break;
             case FGPanelTransformation::YSHIFT:
-                element->setTranslation(tIndex, 0.0, val);
+                element()->setTranslation(tIndex, 0.0, val);
                 break;
             case FGPanelTransformation::ROTATION:
-                element->setRotation(tIndex, val);
+                element()->setRotation(tIndex, val);
                 break;
             }
         } // of transformation enabled
@@ -993,14 +1026,23 @@ FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
   _transformations.push_back(transformation);
 }
 
+void FGInstrumentLayer::setVisible(bool vis)
+{
+    element()->setVisible(vis);
+}
+
+
 void FGInstrumentLayer::update()
 {
-    // test
-    // set visiblit
+    bool enabled = test();
+    if (enabled != element()->isVisible()) {
+        setVisible(enabled);
+    }
 
-    // if visible, update transforms
-
-//    applyTransformsToElement();
+    if (enabled) {
+        applyTransforms();
+        doUpdate();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1009,7 +1051,6 @@ void FGInstrumentLayer::update()
 
 FGGroupLayer::FGGroupLayer ()
 {
-   // _group = new simgear::canvas::Group;
 }
 
 FGGroupLayer::~FGGroupLayer ()
@@ -1036,15 +1077,22 @@ FGGroupLayer::addLayer (FGInstrumentLayer * layer)
 }
 
 
-void FGGroupLayer::update()
+void FGGroupLayer::doUpdate()
 {
-    // outer test
     int nLayers = _layers.size();
     for (int i = 0; i < nLayers; i++) {
         _layers[i]->update();
     }
 }
-
+
+void FGGroupLayer::setCanvasParent(sc::Group* parent)
+{
+    _canvasGroup = static_cast<sc::Group*>(parent->createChild("group").ptr());
+    for (auto layer : _layers) {
+        layer->setCanvasParent(_canvasGroup);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGTexturedLayer.
 ////////////////////////////////////////////////////////////////////////
@@ -1055,17 +1103,6 @@ FGTexturedLayer::FGTexturedLayer (const FGCroppedTexture &texture, int w, int h)
     _emissive(false)
 {
   setTexture(texture);
-
-    _canvasImage = new simgear::Canvas::Image;
-
-    SGRect<float> sourceRect(texture.getMinX(), texture.getMinY(),
-                             texture.getMaxX(), texture.getMaxY());
-    _canvasImage->setSourceRect(sourceRect);
-
-    SGPath tpath = globals->resolve_aircraft_path(texture.getPath());
-    osg::Image* osgImage = osgDB::readImageFile(tpath.utf8Str());
-
-    _canvasImage->setImage(osgImage);
 }
 
 
@@ -1074,18 +1111,27 @@ FGTexturedLayer::~FGTexturedLayer ()
 }
 
 void
-FGTexturedLayer::update()
+FGTexturedLayer::doUpdate()
 {
-    bool visible = test();
-    if (visible != _canvasImage->isVisible()) {
-        _canvasImage->setVisible(visible);
-    }
-
     if (_emissive) {
 //        _canvasImage->setFill(emissive_panel_color);
     } else {
   //      _canvasImage->setFill(panel_color);
     }
+}
+
+void FGTexturedLayer::setCanvasParent(sc::Group* parent)
+{
+    _canvasImage = static_cast<sc::Image*>(parent->createChild("image").get());
+    SGRect<float> sourceRect(_texture.getMinX(), _texture.getMinY(),
+                             _texture.getMaxX(), _texture.getMaxY());
+    _canvasImage->setSourceRect(sourceRect);
+
+    SGPath tpath = globals->resolve_aircraft_path(_texture.getPath());
+    osg::Image* osgImage = osgDB::readImageFile(tpath.utf8Str());
+
+    _canvasImage->setImage(osgImage);
+
 }
 
 void
@@ -1245,8 +1291,16 @@ FGTextLayer::recalc_value () const
   }
 }
 
+void FGTextLayer::doUpdate()
+{
 
-
+}
+
+void FGTextLayer::setCanvasParent(simgear::canvas::Group* parent)
+{
+   // _canvasImage = parent->createChild("image");
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGTextLayer::Chunk.
 ////////////////////////////////////////////////////////////////////////

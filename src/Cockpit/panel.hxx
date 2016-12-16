@@ -36,7 +36,7 @@
 #include <simgear/canvas/elements/CanvasElement.hxx>
 #include <simgear/canvas/elements/CanvasGroup.hxx>
 #include <simgear/canvas/elements/CanvasImage.hxx>
-
+#include <simgear/canvas/Canvas.hxx>
 
 #include <cmath>
 #include <vector>
@@ -345,15 +345,23 @@ public:
 				// DEPRECATED
   virtual void addTransformation (FGPanelTransformation * transformation);
 
-    virtual void update();
+    virtual void setCanvasParent(simgear::canvas::Group* parent) = 0;
+
+    void update();
+
+    virtual void doUpdate() = 0;
     virtual void setVisible(bool vis);
+
+    virtual simgear::canvas::Element* element() const
+    { return nullptr; }
+
 protected:
   int _w, _h;
 
   typedef std::vector<FGPanelTransformation *> transformation_list;
   transformation_list _transformations;
 
-    void applyTransformsToElement(simgear::canvas::Element* element);
+    void applyTransforms();
 };
 
 
@@ -398,7 +406,14 @@ public:
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
   void extendRect(IntRect& r) const;
+
+    void update();
+    virtual void setCanvasParent(simgear::canvas::Group* parent) = 0;
+    virtual simgear::canvas::Group* element() const = 0;
+
 protected:
+    virtual void doUpdate() = 0;
+
   int _x, _y, _w, _h;
   typedef std::vector<FGPanelAction *> action_list_type;
   action_list_type _actions;
@@ -426,7 +441,13 @@ public:
 				// Transfer pointer ownership!!
   virtual void addTransformation (FGPanelTransformation * transformation);
 
+    virtual void setCanvasParent(simgear::canvas::Group* parent) override;
+
+    virtual simgear::canvas::Group* element() const override
+    { return _canvasGroup; }
 protected:
+    virtual void doUpdate() override;
+
   typedef std::vector<FGInstrumentLayer *> layer_list;
   layer_list _layers;
 
@@ -450,8 +471,14 @@ public:
   virtual ~FGSpecialInstrument ();
 
   virtual void draw (osg::State& state);
-  
+
+    virtual void setCanvasParent(simgear::canvas::Group* parent) override;
+
+    virtual simgear::canvas::Group* element() const override
+    { return nullptr; }
 protected:
+    virtual void doUpdate() override;
+
   DCLGPS* complex;
 };
 
@@ -472,10 +499,12 @@ public:
 				// transfer pointer ownership
   virtual void addLayer (FGInstrumentLayer * layer);
 
-    virtual void update();
+    virtual void doUpdate() override;
+
+    virtual void setCanvasParent(simgear::canvas::Group* parent) override;
 protected:
   std::vector<FGInstrumentLayer *> _layers;
-    simgear::canvas::Group* _canvasGroup;
+    simgear::canvas::GroupPtr _canvasGroup;
 };
 
 
@@ -503,7 +532,11 @@ public:
 
   void setEmissive(bool e) { _emissive = e; }
 
-    virtual void update();
+    virtual void doUpdate() override;
+
+    virtual void setCanvasParent(simgear::canvas::Group* parent) override;
+    virtual simgear::canvas::Element* element() const override
+    { return _canvasImage; }
 private:
   FGCroppedTexture _texture;
   bool _emissive;
@@ -560,6 +593,9 @@ public:
   virtual void setFontName ( const std::string &name );
   virtual void setFont (fntFont * font);
 
+    virtual void setCanvasParent(simgear::canvas::Group* parent) override;
+
+    virtual void doUpdate() override;
 private:
 
   void recalc_value () const;
