@@ -33,6 +33,11 @@
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
+#include <simgear/canvas/elements/CanvasElement.hxx>
+#include <simgear/canvas/elements/CanvasGroup.hxx>
+#include <simgear/canvas/elements/CanvasImage.hxx>
+
+
 #include <cmath>
 #include <vector>
 #include <map>
@@ -301,6 +306,9 @@ public:
   float factor;
   float offset;
   SGInterpTable * table;
+
+
+    bool _wasEnabled;
 };
 
 
@@ -337,11 +345,15 @@ public:
 				// DEPRECATED
   virtual void addTransformation (FGPanelTransformation * transformation);
 
+    virtual void update();
+    virtual void setVisible(bool vis);
 protected:
   int _w, _h;
 
   typedef std::vector<FGPanelTransformation *> transformation_list;
   transformation_list _transformations;
+
+    void applyTransformsToElement(simgear::canvas::Element* element);
 };
 
 
@@ -417,6 +429,8 @@ public:
 protected:
   typedef std::vector<FGInstrumentLayer *> layer_list;
   layer_list _layers;
+
+    simgear::canvas::Group* _canvasGroup;
 };
 
 
@@ -457,8 +471,11 @@ public:
   virtual void draw (osg::State& state);
 				// transfer pointer ownership
   virtual void addLayer (FGInstrumentLayer * layer);
+
+    virtual void update();
 protected:
   std::vector<FGInstrumentLayer *> _layers;
+    simgear::canvas::Group* _canvasGroup;
 };
 
 
@@ -486,9 +503,12 @@ public:
 
   void setEmissive(bool e) { _emissive = e; }
 
+    virtual void update();
 private:
   FGCroppedTexture _texture;
   bool _emissive;
+
+    simgear::canvas::Image* _canvasImage;
 };
 
 
@@ -568,6 +588,8 @@ public:
 				// Transfer pointers!!
   FGSwitchLayer ();
   virtual void draw (osg::State& state);
+
+    virtual void update();
 
 };
 #endif // __PANEL_HXX

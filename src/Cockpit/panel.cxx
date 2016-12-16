@@ -946,13 +946,62 @@ FGInstrumentLayer::transform () const
   }
 }
 
+void FGInstrumentLayer::applyTransformsToElement(simgear::canvas::Element* element)
+{
+    unsigned int tIndex = 0;
+    for (auto t : _transformations) {
+        bool enabled = t->test();
+
+        if (t->_wasEnabled != enabled) {
+            t->_wasEnabled = enabled;
+            element->setTransformEnabled(tIndex, enabled);
+        }
+
+        // FIXME - only recompute if t has a property node. Otherwise
+        // the value is constant
+        if (enabled) {
+            float val = (t->node == 0 ? 0.0 : t->node->getFloatValue());
+            if (t->has_mod)
+                val = fmod(val, t->mod);
+            SG_CLAMP_RANGE(val, t->min, t->max);
+            if (t->table==nullptr) {
+                val = val * t->factor + t->offset;
+            } else {
+                val = t->table->interpolate(val) * t->factor + t->offset;
+            }
+
+            switch (t->type) {
+            case FGPanelTransformation::XSHIFT:
+                element->setTranslation(tIndex, val, 0.0);
+                break;
+            case FGPanelTransformation::YSHIFT:
+                element->setTranslation(tIndex, 0.0, val);
+                break;
+            case FGPanelTransformation::ROTATION:
+                element->setRotation(tIndex, val);
+                break;
+            }
+        } // of transformation enabled
+
+        ++tIndex;
+    }
+}
+
 void
 FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
 {
   _transformations.push_back(transformation);
 }
 
+void FGInstrumentLayer::update()
+{
+    // test
+    // set visiblit
 
+    // if visible, update transforms
+
+//    applyTransformsToElement();
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGGroupLayer.
@@ -960,6 +1009,7 @@ FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
 
 FGGroupLayer::FGGroupLayer ()
 {
+   // _group = new simgear::canvas::Group;
 }
 
 FGGroupLayer::~FGGroupLayer ()
@@ -986,6 +1036,14 @@ FGGroupLayer::addLayer (FGInstrumentLayer * layer)
 }
 
 
+void FGGroupLayer::update()
+{
+    // outer test
+    int nLayers = _layers.size();
+    for (int i = 0; i < nLayers; i++) {
+        _layers[i]->update();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGTexturedLayer.
@@ -997,6 +1055,17 @@ FGTexturedLayer::FGTexturedLayer (const FGCroppedTexture &texture, int w, int h)
     _emissive(false)
 {
   setTexture(texture);
+
+    _canvasImage = new simgear::Canvas::Image;
+
+    SGRect<float> sourceRect(texture.getMinX(), texture.getMinY(),
+                             texture.getMaxX(), texture.getMaxY());
+    _canvasImage->setSourceRect(sourceRect);
+
+    SGPath tpath = globals->resolve_aircraft_path(texture.getPath());
+    osg::Image* osgImage = osgDB::readImageFile(tpath.utf8Str());
+
+    _canvasImage->setImage(osgImage);
 }
 
 
@@ -1004,6 +1073,20 @@ FGTexturedLayer::~FGTexturedLayer ()
 {
 }
 
+void
+FGTexturedLayer::update()
+{
+    bool visible = test();
+    if (visible != _canvasImage->isVisible()) {
+        _canvasImage->setVisible(visible);
+    }
+
+    if (_emissive) {
+//        _canvasImage->setFill(emissive_panel_color);
+    } else {
+  //      _canvasImage->setFill(panel_color);
+    }
+}
 
 void
 FGTexturedLayer::draw (osg::State& state)
@@ -1245,5 +1328,26 @@ FGSwitchLayer::draw (osg::State& state)
   }
 }
 
+void FGSwitchLayer::update()
+{
+    // outer test ..
+
+    int nLayers = _layers.size();
+    bool seenVisible = false;
+
+    for (int i = 0; i < nLayers; i++) {
+        if (seenVisible) {
+            _layers[i]->setVisible(false);
+            continue;
+        }
+
+        const bool layerVisible = _layers[i]->test();
+        _layers[i]->setVisible(layerVisible);
+        if (layerVisible) {
+            _layers[i]->update();
+            seenVisible = true;
+        }
+    }
+}
 
 // end of panel.cxx
