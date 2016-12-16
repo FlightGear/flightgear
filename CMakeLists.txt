@@ -168,6 +168,7 @@ option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite 
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
 option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
 option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
+option(ENABLE_SIMD       "Enable SSE/SSE2 support for x86 compilers" ON)
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
@@ -183,6 +184,8 @@ option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
+
+include (DetectArch)
 
 # when building an OSG with commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
 # applied, we can use better link options
@@ -332,8 +335,15 @@ endif(ENABLE_RTI)
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_CXX "-Wall")
     set(WARNING_FLAGS_C   "-Wall")
+
     if (CMAKE_VERSION VERSION_LESS 3.1)
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif()
+
+    if(ENABLE_SIMD)
+      if (X86 OR X86_64)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3 -mfpmath=sse")
+      endif()
     endif()
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
@@ -356,6 +366,12 @@ if(WIN32)
 
     if(MSVC)
         set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP")
+        if(ENABLE_SIMD)
+          if (X86 OR X86_64)
+            set(MSVC_FLAGS "${MSVC_FLAGS} /arch:SSE /arch:SSE2 /Ox")
+          endif()
+        endif()
+
         if (NOT OSG_FSTREAM_EXPORT_FIXED AND ${MSVC_VERSION} GREATER 1599)
           message(STATUS "For better linking performance, use OSG with fixed fstream header")
           # needed to avoid link errors on multiply-defined standard C++
