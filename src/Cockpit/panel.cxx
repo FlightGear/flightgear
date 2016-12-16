@@ -54,6 +54,9 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/scene/model/model.hxx>
+
+#include <simgear/canvas/CanvasSystemAdapter.hxx>
+
 #include <osg/GLU>
 
 #include <Main/globals.hxx>
@@ -1293,12 +1296,20 @@ FGTextLayer::recalc_value () const
 
 void FGTextLayer::doUpdate()
 {
-
+    recalc_value();
+    _canvasText->setText(_value.c_str());
 }
 
-void FGTextLayer::setCanvasParent(simgear::canvas::Group* parent)
+void FGTextLayer::setCanvasParent(sc::Group* parent)
 {
-   // _canvasImage = parent->createChild("image");
+    _canvasText = static_cast<sc::Text*>(parent->createChild("text").ptr());
+  //  _canvasText->setPointSize(_pointSize);
+    _canvasText->setFont(_font_name.c_str());
+}
+
+simgear::canvas::Element* FGTextLayer::element() const
+{
+    return _canvasText;
 }
 
 ////////////////////////////////////////////////////////////////////////

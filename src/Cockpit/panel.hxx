@@ -36,6 +36,7 @@
 #include <simgear/canvas/elements/CanvasElement.hxx>
 #include <simgear/canvas/elements/CanvasGroup.hxx>
 #include <simgear/canvas/elements/CanvasImage.hxx>
+#include <simgear/canvas/elements/CanvasText.hxx>
 #include <simgear/canvas/Canvas.hxx>
 
 #include <cmath>
@@ -595,6 +596,8 @@ public:
 
     virtual void setCanvasParent(simgear::canvas::Group* parent) override;
 
+    virtual simgear::canvas::Element* element() const override;
+
     virtual void doUpdate() override;
 private:
 
@@ -609,6 +612,8 @@ private:
   mutable std::string _value;
   mutable SGTimeStamp _then;
   mutable SGTimeStamp _now;
+
+    simgear::canvas::Text* _canvasText;
 };
 
 
