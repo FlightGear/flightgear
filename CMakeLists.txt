@@ -357,6 +357,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
      endif()
 
+     if(ENABLE_SIMD)
+      if (X86 OR X86_64)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3 -mfpmath=sse")
+      endif()
+    endif()
+
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
    set(WARNING_FLAGS_C "-Wall")
@@ -365,10 +371,10 @@ endif()
 if(WIN32)
 
     if(MSVC)
-        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP")
+        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP /Ox")
         if(ENABLE_SIMD)
-          if (X86 OR X86_64)
-            set(MSVC_FLAGS "${MSVC_FLAGS} /arch:SSE /arch:SSE2 /Ox")
+          if (X86)
+            set(MSVC_FLAGS "${MSVC_FLAGS} /arch:SSE /arch:SSE2")
           endif()
         endif()
 
