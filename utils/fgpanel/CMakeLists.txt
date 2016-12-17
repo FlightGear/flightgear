@@ -66,6 +66,7 @@ add_executable(fgpanel
   )
 
 target_link_libraries(fgpanel
+  SimGearCore
   ${PNG_LIBRARIES}
   ${SIMGEAR_CORE_LIBRARIES}
   ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
