@@ -1,5 +1,7 @@
 find_package(PNG REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(Freetype REQUIRED)
 find_path(BCMHOST_INCLUDE_DIR
   NAMES bcm_host.h
   PATHS /opt/vc/include
