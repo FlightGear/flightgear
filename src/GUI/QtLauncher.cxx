@@ -1344,12 +1344,12 @@ void QtLauncher::onPopupAircraftHistory()
 
     QMenu m;
     Q_FOREACH(QUrl uri, m_recentAircraft) {
-        QModelIndex index = sourceIndexForAircraftURI(uri);
-        if (!index.isValid()) {
-            // not scanned yet
+        QString nm = m_aircraftModel->nameForAircraftURI(uri);
+        if (nm.isEmpty()) {
             continue;
         }
-        QAction* act = m.addAction(index.data(Qt::DisplayRole).toString());
+        
+        QAction* act = m.addAction(nm);
         act->setData(uri);
     }
 

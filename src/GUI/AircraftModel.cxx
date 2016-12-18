@@ -934,10 +934,40 @@ void AircraftItemModel::selectVariantForAircraftURI(QUrl uri)
     }
 
     if (modelIndex.isValid()) {
-        qDebug() << "selected variant index" << variantIndex << "at" << modelIndex
-        << "for variant" << uri;
         setData(modelIndex, variantIndex, AircraftVariantRole);
     }
+}
+
+QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
+{
+    if (uri.isLocalFile()) {
+        QString path = uri.toLocalFile();
+        for (int row=0; row <m_items.size(); ++row) {
+            const AircraftItemPtr item(m_items.at(row));
+            if (item->path == path) {
+                return item->description;
+            }
+
+            // check variants too
+            for (int vr=0; vr < item->variants.size(); ++vr) {
+                if (item->variants.at(vr)->path == path) {
+                    return item->description;
+                }
+            }
+        }
+    } else if (uri.scheme() == "package") {
+        QString ident = uri.path();
+        PackageRef pkg = m_packageRoot->getPackageById(ident.toStdString());
+        if (pkg) {
+            int variantIndex = pkg->indexOfVariant(ident.toStdString());
+            return QString::fromStdString(pkg->nameForVariant(variantIndex));
+        }
+    } else {
+        qWarning() << "Unknown aircraft URI scheme" << uri << uri.scheme();
+        return QString();
+    }
+
+    return QString();
 }
 
 void AircraftItemModel::onScanResults()

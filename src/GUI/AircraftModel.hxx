@@ -146,6 +146,12 @@ public:
     bool isIndexRunnable(const QModelIndex& index) const;
 
     /**
+     * Retrieve the display name for an aircraft specified by URI, without
+     * changing the current variant state
+     */
+    QString nameForAircraftURI(QUrl uri) const;
+
+    /**
      * should we show reserve index 0 for a message widget? Which is set
      * by the layer above via setIndexWidget
      */
