@@ -33,15 +33,11 @@ protected:
 
     virtual void markStyleDirty() override;
 private:
-    void markClipDirty();
     void markCachedSymbolDirty();
     int indexOfChildWithProp(LocalProp *prop) const;
 
 private:
     mutable FGCanvasElementVec _children;
-    mutable bool _clipDirty = true;
-    mutable bool _hasClip = false;
-    mutable QRectF _clipRect;
     mutable bool _zIndicesDirty = false;
     mutable bool _cachedSymbolDirty = false;
 };

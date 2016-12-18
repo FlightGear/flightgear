@@ -21,7 +21,7 @@ void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
 
     context->painter()->setFont(_font);
     context->painter()->setPen(fillColor());
-
+    context->painter()->setBrush(Qt::NoBrush);
     QRectF rect(0, 0, 1000, 1000);
 
     if (_alignment & Qt::AlignBottom) {

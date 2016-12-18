@@ -19,10 +19,13 @@ private:
     bool onChildAdded(LocalProp *prop) override;
 
     void rebuildImage() const;
+
+    void markImageDirty();
 private:
     mutable bool _imageDirty;
     mutable QPixmap _image;
     QString _source;
+    mutable QSizeF _destSize;
 };
 
 #endif // FGQCANVASIMAGE_H

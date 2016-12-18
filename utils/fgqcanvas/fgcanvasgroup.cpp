@@ -53,26 +53,6 @@ unsigned int FGCanvasGroup::indexOfChild(const FGCanvasElement *e) const
 
 void FGCanvasGroup::doPaint(FGCanvasPaintContext *context) const
 {
-    if (_clipDirty) {
-        // re-calculate clip
-        QVariant clipSpec = _propertyRoot->value("clip", QVariant());
-        if (clipSpec.isNull()) {
-            _hasClip = false;
-        } else {
-            // https://www.w3.org/wiki/CSS/Properties/clip for the stupid order here
-            QStringList clipRectDesc = clipSpec.toString().split(',');
-            int top = clipRectDesc.at(0).toInt();
-            int right = clipRectDesc.at(1).toInt();
-            int bottom = clipRectDesc.at(2).toInt();
-            int left = clipRectDesc.at(3).toInt();
-
-            _clipRect = QRectF(left, top, right - left, bottom - top);
-            _hasClip = true;
-        }
-
-        _clipDirty = false;
-    }
-
     if (_zIndicesDirty) {
         std::sort(_children.begin(), _children.end(), [](const FGCanvasElement* a, FGCanvasElement* b)
                  { return a->zIndex() < b->zIndex(); });
@@ -84,23 +64,8 @@ void FGCanvasGroup::doPaint(FGCanvasPaintContext *context) const
         _cachedSymbolDirty = false;
     }
 
-    if (_hasClip) {
-        context->painter()->save();
-        context->painter()->setPen(Qt::yellow);
-        context->painter()->setBrush(QBrush(Qt::yellow, Qt::DiagCrossPattern));
-        context->painter()->drawRect(_clipRect);
-        context->painter()->restore();
-
-       // context->painter()->setClipRect(_clipRect);
-       // context->painter()->setClipping(true);
-    }
-
     for (FGCanvasElement* element : _children) {
         element->paint(context);
-    }
-
-    if (_hasClip) {
-        context->painter()->setClipping(false);
     }
 }
 
@@ -133,9 +98,6 @@ bool FGCanvasGroup::onChildAdded(LocalProp *prop)
     } else if (nm == "map") {
         _children.push_back(new FGQCanvasMap(this, prop));
         newChildCount++;
-        return true;
-    } else if (nm == "clip") {
-        connect(prop, &LocalProp::valueChanged, this, &FGCanvasGroup::markClipDirty);
         return true;
     } else if (nm == "symbol-type") {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasGroup::markCachedSymbolDirty);
@@ -197,11 +159,6 @@ void FGCanvasGroup::markStyleDirty()
     for (FGCanvasElement* element : _children) {
         element->markStyleDirty();
     }
-}
-
-void FGCanvasGroup::markClipDirty()
-{
-    _clipDirty = true;
 }
 
 void FGCanvasGroup::markCachedSymbolDirty()

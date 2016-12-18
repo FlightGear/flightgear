@@ -344,7 +344,7 @@ bool FGCanvasPath::rebuildFromRect(std::vector<int>& commands, std::vector<float
     LocalProp* rectProp = _propertyRoot->getWithPath("rect");
     if (hasComplexBorderRadius(_propertyRoot)) {
         // build a full path
-        qWarning() << "implement me";
+        qWarning() << Q_FUNC_INFO << "implement me";
         _paintType = Path;
     } else {
         float top = rectProp->value("top", 0.0).toFloat();
@@ -622,6 +622,8 @@ static Qt::PenCapStyle qtCapFromCanvas(QString s)
         return Qt::FlatCap;
     } else if (s == "round") {
         return Qt::RoundCap;
+    } else if (s == "square")  {
+        return Qt::SquareCap;
     } else {
         qDebug() << Q_FUNC_INFO << s;
     }

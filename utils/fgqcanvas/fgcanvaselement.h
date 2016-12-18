@@ -57,6 +57,8 @@ private:
 
     void onVisibleChanged(QVariant value);
 
+    void markClipDirty();
+
 private:
     friend class FGCanvasGroup;
 
@@ -71,6 +73,10 @@ private:
     mutable QColor _fillColor;
     int _zIndex = 0;
     QByteArray _svgElementId;
+
+    mutable bool _clipDirty = true;
+    mutable bool _hasClip = false;
+    mutable QRectF _clipRect;
 };
 
 using FGCanvasElementVec = std::vector<FGCanvasElement*>;

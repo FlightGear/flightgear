@@ -27,7 +27,7 @@ QTransform qTransformFromCanvas(LocalProp* prop)
 bool FGCanvasElement::isStyleProperty(QByteArray name)
 {
     if ((name == "font") || (name == "line-height") || (name == "alignment")
-        || (name == "character-size") || (name == "fill"))
+        || (name == "character-size") || (name == "fill") || (name == "background"))
     {
         return true;
     }
@@ -61,10 +61,30 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
         return;
     }
 
-  //  qDebug() << "painting" << _svgElementId << "at" << _propertyRoot->path();
+    QPainter* p = context->painter();
 
-    context->painter()->save();
-    context->painter()->setTransform(combinedTransform(), true /* combine */);
+    if (_clipDirty) {
+        // re-calculate clip
+        QVariant clipSpec = _propertyRoot->value("clip", QVariant());
+        if (clipSpec.isNull()) {
+            _hasClip = false;
+        } else {
+            // https://www.w3.org/wiki/CSS/Properties/clip for the stupid order here
+            QStringList clipRectDesc = clipSpec.toString().split(',');
+            int top = clipRectDesc.at(0).toInt();
+            int right = clipRectDesc.at(1).toInt();
+            int bottom = clipRectDesc.at(2).toInt();
+            int left = clipRectDesc.at(3).toInt();
+
+            _clipRect = QRectF(left, top, right - left, bottom - top);
+            _hasClip = true;
+        }
+
+        _clipDirty = false;
+    }
+
+    p->save();
+    p->setTransform(combinedTransform(), true /* combine */);
 
     if (_styleDirty) {
         _fillColor = parseColorValue(getCascadedStyle("fill"));
@@ -72,14 +92,29 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
     }
 
     if (!_fillColor.isValid()) {
-        context->painter()->setBrush(Qt::NoBrush);
+        p->setBrush(Qt::NoBrush);
     } else {
-        context->painter()->setBrush(_fillColor);
+        p->setBrush(_fillColor);
+    }
+
+    if (_hasClip) {
+        p->save();
+        p->setPen(Qt::yellow);
+        p->setBrush(QBrush(Qt::yellow, Qt::DiagCrossPattern));
+        p->drawRect(_clipRect);
+        p->restore();
+
+       // context->painter()->setClipRect(_clipRect);
+       // context->painter()->setClipping(true);
     }
 
     doPaint(context);
 
-    context->painter()->restore();
+    if (_hasClip) {
+        p->setClipping(false);
+    }
+
+    p->restore();
 }
 
 void FGCanvasElement::doPaint(FGCanvasPaintContext* context) const
@@ -132,10 +167,10 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
     } else if (nm == "visible") {
         return true;
     } else if (nm == "tf-rot-index") {
-        connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markTransformsDirty);
+        // ignored, this is noise from the Nasal SVG parswer
         return true;
     } else if (nm.startsWith("center-offset-")) {
-        connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markTransformsDirty);
+        // ignored, this is noise from the Nasal SVG parswer
         return true;
     } else if (nm == "center") {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::onCenterChanged);
@@ -155,6 +190,9 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
         return true;
     } else if (prop->name() == "update") {
         // disable updates optionally?
+        return true;
+    } else if (nm == "clip") {
+        connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markClipDirty);
         return true;
     }
 
@@ -206,6 +244,11 @@ void FGCanvasElement::onCenterChanged(QVariant value)
 void FGCanvasElement::markTransformsDirty()
 {
     _transformsDirty = true;
+}
+
+void FGCanvasElement::markClipDirty()
+{
+    _clipDirty = true;
 }
 
 QColor FGCanvasElement::parseColorValue(QVariant value) const
