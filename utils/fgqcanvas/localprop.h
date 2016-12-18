@@ -90,6 +90,8 @@ public:
     QVariant value(const char* path, QVariant defaultValue) const;
 
     void removeChild(LocalProp* prop);
+
+    bool hasChild(const char* name) const;
 signals:
     void valueChanged(QVariant val);
 

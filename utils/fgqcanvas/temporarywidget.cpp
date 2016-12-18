@@ -61,6 +61,7 @@ void TemporaryWidget::onStartConnect()
 
     qDebug() << "starting connection to:" << url;
     m_webSocket.open(url);
+    m_webSocket.sendTextMessage("nothing"); // forces Mongoose to respond quicker
 }
 
 void TemporaryWidget::onConnected()

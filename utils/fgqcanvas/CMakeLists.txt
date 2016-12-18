@@ -13,17 +13,28 @@ endif()
 
 set(SOURCES
   temporarywidget.cpp
+  temporarywidget.h
   main.cpp
   localprop.cpp
+  localprop.h
   fgcanvaselement.cpp
+  fgcanvaselement.h
   fgcanvasgroup.cpp
+  fgcanvasgroup.h
   fgcanvaspaintcontext.cpp
+  fgcanvaspaintcontext.h
   fgcanvaspath.cpp
+  fgcanvaspath.h
   fgcanvastext.cpp
+  fgcanvastext.h
   fgqcanvasimage.cpp
+  fgqcanvasimage.h
   fgqcanvasmap.cpp
+  fgqcanvasmap.h
   fgcanvaswidget.cpp
+  fgcanvaswidget.h
   canvastreemodel.cpp
+  canvastreemodel.h
 )
 
 if (Qt5Widgets_FOUND)

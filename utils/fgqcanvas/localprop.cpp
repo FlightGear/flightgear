@@ -86,6 +86,12 @@ LocalProp *LocalProp::childWithNameAndIndex(const NameIndexTuple& ni) const
     return nullptr;
 }
 
+bool LocalProp::hasChild(const char* name) const
+{
+    return childWithNameAndIndex(QByteArray::fromRawData(name, strlen(name))) != nullptr;
+}
+
+
 LocalProp *LocalProp::getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni)
 {
     auto it = std::lower_bound(_children.begin(), _children.end(), ni, lessThanPropNameIndex);

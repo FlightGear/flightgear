@@ -24,6 +24,8 @@ private:
     void rebuildPath() const;
     void rebuildPen() const;
 
+    void rebuildPathFromCommands(const std::vector<int>& commands, const std::vector<float>& coords) const;
+    bool rebuildFromSVGData(std::vector<int>& commands, std::vector<float>& coords) const;
 private:
     mutable bool _pathDirty = true;
     mutable QPainterPath _painterPath;

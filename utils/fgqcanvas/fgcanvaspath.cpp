@@ -192,7 +192,7 @@ bool FGCanvasPath::onChildAdded(LocalProp *prop)
         return true;
     }
 
-    if ((prop->name() == "cmd") || (prop->name() == "coord")) {
+    if ((prop->name() == "cmd") || (prop->name() == "coord") || (prop->name() == "svg")) {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasPath::markPathDirty);
         return true;
     }
@@ -250,16 +250,180 @@ void FGCanvasPath::rebuildPath() const
     std::vector<float> coords;
     std::vector<int> commands;
 
-    for (QVariant v : _propertyRoot->valuesOfChildren("coord")) {
-        coords.push_back(v.toFloat());
+    if (_propertyRoot->hasChild("svg")) {
+        if (!rebuildFromSVGData(commands, coords)) {
+            qWarning() << "failed to parse SVG path data" << _propertyRoot->value("svg", QVariant());
+        }
+    } else {
+        for (QVariant v : _propertyRoot->valuesOfChildren("coord")) {
+            coords.push_back(v.toFloat());
+        }
+
+        for (QVariant v : _propertyRoot->valuesOfChildren("cmd")) {
+            commands.push_back(v.toInt());
+        }
     }
 
-    for (QVariant v : _propertyRoot->valuesOfChildren("cmd")) {
-        commands.push_back(v.toInt());
+    rebuildPathFromCommands(commands, coords);
+}
+
+QByteArrayList splitSVGPathData(QByteArray d)
+{
+    QByteArrayList result;
+    size_t pos = 0;
+    std::string strData(d.data());
+    const char* seperators = "\n\r\t ,";
+    size_t startPos = strData.find_first_not_of(seperators, 0);
+    for(;;)
+    {
+        pos = strData.find_first_of(seperators, startPos);
+        if (pos == std::string::npos) {
+            result.push_back(QByteArray::fromStdString(strData.substr(startPos)));
+            break;
+        }
+        result.push_back(QByteArray::fromStdString(strData.substr(startPos, pos - startPos)));
+        startPos = strData.find_first_not_of(seperators, pos);
+        if (startPos == std::string::npos) {
+            break;
+        }
     }
 
+    return result;
+}
+
+bool FGCanvasPath::rebuildFromSVGData(std::vector<int>& commands, std::vector<float>& coords) const
+{
+    QByteArrayList tokens = splitSVGPathData(_propertyRoot->value("svg", QVariant()).toByteArray());
+    PathCommands currentCommand = PathClose;
+    bool isRelative = false;
+    int numCoordsTokens = 0;
+    const int totalTokens = tokens.size();
+
+    for (int index = 0; index < totalTokens; /* no increment */) {
+        const QByteArray& tk = tokens.at(index);
+        if ((tk.length() == 1) && std::isalpha(tk.at(0))) {
+            // new command token
+            const char svgCommand = std::toupper(tk.at(0));
+            isRelative = std::islower(tk.at(0));
+
+            switch (svgCommand) {
+            case 'Z':
+                currentCommand = PathClose;
+                numCoordsTokens = 0;
+                break;
+            case 'M':
+                currentCommand = PathMoveTo;
+                numCoordsTokens = 2;
+                break;
+            case 'L':
+                currentCommand = PathLineTo;
+                numCoordsTokens = 2;
+                break;
+            case 'H':
+                currentCommand = PathHLineTo;
+                numCoordsTokens = 1;
+                break;
+            case 'V':
+                currentCommand = PathVLineTo;
+                numCoordsTokens = 1;
+                break;
+            case 'C':
+                currentCommand = PathCubicTo;
+                numCoordsTokens = 6;
+                break;
+            case 'S':
+                currentCommand = PathSmoothCubicTo;
+                numCoordsTokens = 4;
+                break;
+            case 'Q':
+                currentCommand = PathQuadTo;
+                numCoordsTokens = 4;
+                break;
+            case 'T':
+                currentCommand = PathSmoothQuadTo;
+                numCoordsTokens = 2;
+                break;
+            case 'A':
+                currentCommand = PathShortCWArc;
+                numCoordsTokens = 0; // handled specially below
+                break;
+            default:
+                qWarning() << "unrecognized SVG command" << svgCommand;
+                return false;
+            }
+            ++index;
+        }
+
+        switch (currentCommand) {
+        case PathMoveTo:
+            commands.push_back(PathMoveTo | (isRelative ? 1 : 0));
+            currentCommand = PathLineTo;
+            break;
+
+        case PathClose:
+        case PathLineTo:
+        case PathHLineTo:
+        case PathVLineTo:
+        case PathQuadTo:
+        case PathCubicTo:
+        case PathSmoothQuadTo:
+        case PathSmoothCubicTo:
+            commands.push_back(currentCommand | (isRelative ? 1 : 0));
+            break;
+
+        case PathShortCWArc:
+        case PathShortCCWArc:
+        case PathLongCWArc:
+        case PathLongCCWArc:
+        {
+            // decode the actual arc type
+            coords.push_back(tokens.at(index++).toFloat()); // rx
+            coords.push_back(tokens.at(index++).toFloat()); // ry
+            coords.push_back(tokens.at(index++).toFloat()); // x-axis rotation
+
+            const bool isLargeArc = (tokens.at(index++).toInt() != 0); // large-angle
+            const bool isCCW = (tokens.at(index++).toInt() != 0); // sweep-flag
+            if (isLargeArc) {
+                commands.push_back(isCCW ? PathLongCCWArc : PathLongCWArc);
+            } else {
+                commands.push_back(isCCW ? PathShortCCWArc : PathShortCWArc);
+            }
+
+            if (isRelative) {
+                commands.back() |= 1;
+            }
+
+            coords.push_back(tokens.at(index++).toFloat());
+            coords.push_back(tokens.at(index++).toFloat());
+            break;
+        }
+
+        default:
+            qWarning() << "invalid path command";
+            return false;
+        } // of current command switch
+
+        // copy over tokens according to the active command.
+        if (index + numCoordsTokens > totalTokens) {
+            qWarning() << "insufficent remaining tokens for SVG command" << currentCommand;
+            qWarning() << index << numCoordsTokens << totalTokens;
+            return false;
+        }
+
+        for (int c = 0; c < numCoordsTokens; ++c) {
+            coords.push_back(tokens.at(index + c).toFloat());
+        }
+
+        index += numCoordsTokens;
+    } // of tokens iteration
+
+    return true;
+}
+
+void FGCanvasPath::rebuildPathFromCommands(const std::vector<int>& commands, const std::vector<float>& coords) const
+{
     QPainterPath newPath;
-    float* coord = coords.data();
+    const float* coord = coords.data();
     QPointF lastControlPoint; // for smooth cubics / quadric
     size_t currentCoord = 0;
 
@@ -271,7 +435,7 @@ void FGCanvasPath::rebuildPath() const
         const float baseY = isRelative ? newPath.currentPosition().y() : 0.0f;
 
         if ((currentCoord + CoordsPerCommand[cmdIndex]) > coords.size()) {
-            qWarning() << "insufficient path data";
+            qWarning() << "insufficient path data" << currentCoord << cmdIndex << CoordsPerCommand[cmdIndex] << coords.size();
             break;
         }
 
