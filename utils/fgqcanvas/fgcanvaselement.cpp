@@ -93,7 +93,6 @@ QTransform FGCanvasElement::combinedTransform() const
         _combinedTransform.reset();
 
         for (LocalProp* tfProp : _propertyRoot->childrenWithName("tf")) {
-      //      qDebug() << "tf" << tfProp->index() << qTransformFromCanvas(tfProp);
             _combinedTransform *= qTransformFromCanvas(tfProp);
         }
 

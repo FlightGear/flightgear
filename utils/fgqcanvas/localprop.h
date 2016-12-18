@@ -81,6 +81,9 @@ public:
 
     LocalProp* parent() const;
 
+    std::vector<LocalProp*> children() const
+    { return _children; }
+
     std::vector<QVariant> valuesOfChildren(const char* name) const;
 
     std::vector<LocalProp*> childrenWithName(const char* name) const;

@@ -26,11 +26,24 @@ private:
 
     void rebuildPathFromCommands(const std::vector<int>& commands, const std::vector<float>& coords) const;
     bool rebuildFromSVGData(std::vector<int>& commands, std::vector<float>& coords) const;
+    bool rebuildFromRect(std::vector<int> &commands, std::vector<float> &coords) const;
 private:
+    enum PaintType
+    {
+        Path,
+        Rect,
+        RoundRect
+    };
+
     mutable bool _pathDirty = true;
     mutable QPainterPath _painterPath;
     mutable bool _penDirty = true;
     mutable QPen _stroke;
+    bool _isRect = false;
+
+    mutable PaintType _paintType = Path;
+    mutable QRectF _rect;
+    mutable QSizeF _roundRectRadius;
 };
 
 #endif // FGCANVASPATH_H

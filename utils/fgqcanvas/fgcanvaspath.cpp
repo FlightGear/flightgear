@@ -168,7 +168,20 @@ void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
     }
 
     context->painter()->setPen(_stroke);
-    context->painter()->drawPath(_painterPath);
+
+    switch (_paintType) {
+    case Rect:
+        context->painter()->drawRect(_rect);
+        break;
+    case RoundRect:
+        context->painter()->drawRoundRect(_rect, _roundRectRadius.width(), _roundRectRadius.height());
+        break;
+
+    case Path:
+        context->painter()->drawPath(_painterPath);
+        break;
+    }
+
 }
 
 void FGCanvasPath::markStyleDirty()
@@ -193,6 +206,23 @@ bool FGCanvasPath::onChildAdded(LocalProp *prop)
     }
 
     if ((prop->name() == "cmd") || (prop->name() == "coord") || (prop->name() == "svg")) {
+        connect(prop, &LocalProp::valueChanged, this, &FGCanvasPath::markPathDirty);
+        return true;
+    }
+
+    if (prop->name() == "rect") {
+        _isRect = true;
+        connect(prop, &LocalProp::childAdded, this, &FGCanvasPath::onChildAdded);
+        return true;
+    }
+
+    // handle rect property changes
+    if (prop->parent()->name() == "rect") {
+        connect(prop, &LocalProp::valueChanged, this, &FGCanvasPath::markPathDirty);
+        return true;
+    }
+
+    if (prop->name().startsWith("border-")) {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasPath::markPathDirty);
         return true;
     }
@@ -250,7 +280,9 @@ void FGCanvasPath::rebuildPath() const
     std::vector<float> coords;
     std::vector<int> commands;
 
-    if (_propertyRoot->hasChild("svg")) {
+    if (_isRect) {
+        rebuildFromRect(commands, coords);
+    } else if (_propertyRoot->hasChild("svg")) {
         if (!rebuildFromSVGData(commands, coords)) {
             qWarning() << "failed to parse SVG path data" << _propertyRoot->value("svg", QVariant());
         }
@@ -289,6 +321,64 @@ QByteArrayList splitSVGPathData(QByteArray d)
     }
 
     return result;
+}
+
+bool hasComplexBorderRadius(const LocalProp* prop)
+{
+    for (auto childProp : prop->children()) {
+        QByteArray name = childProp->name();
+        if (!name.startsWith("border-") || !name.endsWith("-radius")) {
+            continue;
+        }
+
+        if (name != "border-radius") {
+            return true;
+        }
+    } // of child prop iteration
+
+    return false;
+}
+
+bool FGCanvasPath::rebuildFromRect(std::vector<int>& commands, std::vector<float>& coords) const
+{
+    LocalProp* rectProp = _propertyRoot->getWithPath("rect");
+    if (hasComplexBorderRadius(_propertyRoot)) {
+        // build a full path
+        qWarning() << "implement me";
+        _paintType = Path;
+    } else {
+        float top = rectProp->value("top", 0.0).toFloat();
+        float left = rectProp->value("left", 0.0).toFloat();
+        float width = rectProp->value("width", 0.0).toFloat();
+        float height = rectProp->value("height", 0.0).toFloat();
+
+        if (rectProp->hasChild("right")) {
+            width = rectProp->value("right", 0.0).toFloat() - left;
+        }
+
+        if (rectProp->hasChild("bottom")) {
+            height = rectProp->value("bottom", 0.0).toFloat() - top;
+        }
+
+        _rect = QRectF(left, top, width, height);
+
+        if (_propertyRoot->hasChild("border-radius")) {
+            // round-rect
+            float xR = _propertyRoot->value("border-radius", 0.0).toFloat();
+            float yR = xR;
+            if (_propertyRoot->hasChild("border-radius[1]")) {
+                yR = _propertyRoot->value("border-radius[1]", 0.0).toFloat();
+            }
+
+            _roundRectRadius = QSizeF(xR, yR);
+            _paintType = RoundRect;
+        } else {
+            // simple rect
+            _paintType = Rect;
+        }
+    }
+
+    return true;
 }
 
 bool FGCanvasPath::rebuildFromSVGData(std::vector<int>& commands, std::vector<float>& coords) const
