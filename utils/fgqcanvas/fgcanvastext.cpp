@@ -91,6 +91,7 @@ void FGCanvasText::rebuildAlignment(QVariant var) const
 {
     QByteArray alignString = var.toByteArray();
     if (alignString.isEmpty()) {
+        _alignment = Qt::AlignBaseline | Qt::AlignLeft;
         return;
     }
 
