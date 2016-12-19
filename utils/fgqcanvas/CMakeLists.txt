@@ -4,12 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 project(FGQCanvas)
 
-find_package(Qt5 5.1 COMPONENTS Widgets WebSockets)
-if (Qt5Widgets_FOUND)
-  message(STATUS "  Qt5 version: ${Qt5Widgets_VERSION_STRING}")
-  message(STATUS "  Qt5 include dir: ${Qt5Widgets_INCLUDE_DIRS}")
-endif()
-
+find_package(Qt5 5.3 REQUIRED COMPONENTS Widgets WebSockets)
 
 set(SOURCES
   temporarywidget.cpp
@@ -37,7 +32,6 @@ set(SOURCES
   canvastreemodel.h
 )
 
-if (Qt5Widgets_FOUND)
 qt5_wrap_ui(uic_sources temporarywidget.ui)
 
 add_executable(fgqcanvas ${SOURCES} ${uic_sources})
@@ -49,4 +43,3 @@ target_include_directories(fgqcanvas PRIVATE ${PROJECT_SOURCE_DIR})
 
 # so ui_foo.h files are found
 target_include_directories(fgqcanvas PRIVATE ${PROJECT_BINARY_DIR})
-endif()

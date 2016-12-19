@@ -184,6 +184,7 @@ option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
+option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" ON)
 
 include (DetectArch)
 
@@ -301,7 +302,13 @@ if (ENABLE_QT)
 		message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
 		message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
 		set(HAVE_QT 1)
+  else()
+    # don't try to build FGQCanvas if Qt wasn't found correctly
+    set(ENABLE_FGQCANVAS OFF)
 	endif()
+else()
+  message(STATUS "Qt support disabled")
+  set(ENABLE_FGQCANVAS OFF)
 endif (ENABLE_QT)
 ##############################################################################
 

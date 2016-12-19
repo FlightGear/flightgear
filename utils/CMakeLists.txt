@@ -35,4 +35,6 @@ if(ENABLE_TRAFFIC)
     add_subdirectory(traffic)
 endif()
 
-add_subdirectory(fgqcanvas)
+if (ENABLE_FGQCANVAS)
+  add_subdirectory(fgqcanvas)
+endif()
