@@ -1,5 +1,7 @@
 #include "fgcanvaspath.h"
 
+#include <cctype>
+
 #include <QPainter>
 #include <QDebug>
 #include <QtMath>
