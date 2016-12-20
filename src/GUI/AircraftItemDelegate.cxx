@@ -338,15 +338,7 @@ bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
             return true;
         }
     } else if ( event->type() == QEvent::MouseMove ) {
-#if 0
-        QMouseEvent* me = static_cast< QMouseEvent* >( event );
-        QModelIndex index = m_view->indexAt( me->pos() );
-        QRect vr = m_view->visualRect(index);
 
-        if (packageButtonRect(vr, index).contains(me->pos())) {
-            qDebug() << "mouse inside button";
-        }
-#endif
     }
     
     return false;
