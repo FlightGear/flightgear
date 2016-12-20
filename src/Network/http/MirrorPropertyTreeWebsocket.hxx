@@ -49,7 +49,7 @@ private:
 
     SGPropertyNode_ptr _subtreeRoot;
     std::unique_ptr<MirrorTreeListener> _listener;
-    unsigned int _minSendInterval;
+    int _minSendInterval;
     SGTimeStamp _lastSendTime;
 };
 

@@ -221,6 +221,7 @@ private:
   int poll(struct mg_connection * connection);
   int auth(struct mg_connection * connection);
   int request(struct mg_connection * connection);
+  int onConnect(struct mg_connection * connection);
   void close(struct mg_connection * connection);
 
   static int staticRequestHandler(struct mg_connection *, mg_event event);
@@ -245,6 +246,7 @@ public:
   virtual void close(struct mg_connection * connection) = 0;
   virtual int poll(struct mg_connection * connection) = 0;
   virtual int request(struct mg_connection * connection) = 0;
+  virtual int onConnect(struct mg_connection * connection) {return 0;}
   virtual void write(const char * data, size_t len)
   {
     if (_connection) mg_send_data(_connection, data, len);
@@ -297,6 +299,7 @@ public:
   virtual void close(struct mg_connection * connection);
   virtual int poll(struct mg_connection * connection);
   virtual int request(struct mg_connection * connection);
+  virtual int onConnect(struct mg_connection * connection);
 
 private:
   class MongooseWebsocketWriter: public WebsocketWriter {
@@ -406,15 +409,28 @@ int WebsocketConnection::poll(struct mg_connection * connection)
   return MG_MORE;
 }
 
+int WebsocketConnection::onConnect(struct mg_connection * connection)
+{
+  setConnection(connection);
+  MongooseHTTPRequest request(connection);
+  SG_LOG(SG_NETWORK, SG_INFO, "WebsocketConnection::connect for " << request.Uri);
+  if ( NULL == _websocket) _websocket = _httpd->newWebsocket(request.Uri);
+  if ( NULL == _websocket) {
+    SG_LOG(SG_NETWORK, SG_WARN, "httpd: unhandled websocket uri: " << request.Uri);
+    return 0;
+  }
+
+  return 0;
+}
+
 int WebsocketConnection::request(struct mg_connection * connection)
 {
   setConnection(connection);
   MongooseHTTPRequest request(connection);
   SG_LOG(SG_NETWORK, SG_INFO, "WebsocketConnection::request for " << request.Uri);
 
-  if ( NULL == _websocket) _websocket = _httpd->newWebsocket(request.Uri);
   if ( NULL == _websocket) {
-    SG_LOG(SG_NETWORK, SG_WARN, "httpd: unhandled websocket uri: " << request.Uri);
+    SG_LOG(SG_NETWORK, SG_ALERT, "httpd: unhandled websocket uri: " << request.Uri);
     return MG_TRUE; // close connection - good bye
   }
 
@@ -577,6 +593,11 @@ int MongooseHttpd::request(struct mg_connection * connection)
   return MongooseConnection::getConnection(this, connection)->request(connection);
 }
 
+int MongooseHttpd::onConnect(struct mg_connection * connection)
+{
+  return MongooseConnection::getConnection(this, connection)->onConnect(connection);
+}
+
 void MongooseHttpd::close(struct mg_connection * connection)
 {
   MongooseConnection * c = MongooseConnection::getConnection(this, connection);
@@ -618,6 +639,9 @@ int MongooseHttpd::staticRequestHandler(struct mg_connection * connection, mg_ev
     case MG_CONNECT:     // If callback returns MG_FALSE, connect fails
     case MG_REPLY:       // If callback returns MG_FALSE, Mongoose closes connection
       return MG_FALSE;
+
+    case MG_WS_CONNECT: // New websocket connection established, return value ignored
+      return static_cast<MongooseHttpd*>(connection->server_param)->onConnect(connection);
 
     default:
       return MG_FALSE; // keep compiler happy..
