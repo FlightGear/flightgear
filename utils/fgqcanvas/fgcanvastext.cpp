@@ -5,11 +5,16 @@
 
 #include "fgcanvaspaintcontext.h"
 #include "localprop.h"
+#include "fgqcanvasfontcache.h"
 
 FGCanvasText::FGCanvasText(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop),
     _metrics(QFont())
 {
+    // this signal fires infrequently enough, it's simpler just to have
+    // all texts watch it.
+    connect(FGQCanvasFontCache::instance(), &FGQCanvasFontCache::fontLoaded,
+            this, &FGCanvasText::onFontLoaded);
 }
 
 void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
@@ -131,10 +136,25 @@ void FGCanvasText::markFontDirty()
     _fontDirty = true;
 }
 
+void FGCanvasText::onFontLoaded(QByteArray name)
+{
+    QByteArray fontName = getCascadedStyle("font", QString()).toByteArray();
+    if (name != fontName) {
+        return; // not our font
+    }
+
+    markFontDirty();
+}
+
 void FGCanvasText::rebuildFont() const
 {
-    QString fontName = getCascadedStyle("font", QString()).toString();
-    QFont f(fontName);
+    QByteArray fontName = getCascadedStyle("font", QString()).toByteArray();
+    bool ok;
+    QFont f = FGQCanvasFontCache::instance()->fontForName(fontName, &ok);
+    if (!ok) {
+        // wait for the correct font
+    }
+
     f.setPixelSize(getCascadedStyle("character-size", 16).toInt());
     _font = f;
     _metrics = QFontMetricsF(_font);

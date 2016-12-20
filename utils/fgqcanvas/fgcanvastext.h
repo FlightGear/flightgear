@@ -24,6 +24,8 @@ private:
     void setDrawMode(QVariant var);
 
     void markFontDirty();
+
+    void onFontLoaded(QByteArray name);
 private:
     void rebuildFont() const;
     void rebuildAlignment(QVariant var) const;
