@@ -362,6 +362,7 @@ MirrorPropertyTreeWebsocket::MirrorPropertyTreeWebsocket(const std::string& path
     _subtreeRoot = globals->get_props()->getNode(path, true);
     _subtreeRoot->addChangeListener(_listener.get());
     _listener->registerSubtree(_subtreeRoot);
+    _lastSendTime = SGTimeStamp::now();
 }
 
 MirrorPropertyTreeWebsocket::~MirrorPropertyTreeWebsocket()
