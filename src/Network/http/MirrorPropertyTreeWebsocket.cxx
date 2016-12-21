@@ -170,7 +170,8 @@ using std::string;
             RecentlyRemovedNode m(child, 0);
             auto rrIt = std::find(recentlyRemoved.begin(), recentlyRemoved.end(), m);
             if (rrIt != recentlyRemoved.end()) {
-                SG_LOG(SG_NETWORK, SG_INFO, "recycling recently removed:" << rrIt->path);
+                // recycle nodes which get thrashed from Nasal (deleted + re-created
+                // each time a Nasal timer fires)
                 removedNodes.erase(rrIt->id); // don't remove it!
                 idHash.insert(std::make_pair(child, rrIt->id));
                 changedNodes.insert(child);
