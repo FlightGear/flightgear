@@ -32,6 +32,8 @@ set(SOURCES
   canvastreemodel.h
   fgqcanvasfontcache.cpp
   fgqcanvasfontcache.h
+  fgqcanvasimageloader.cpp
+  fgqcanvasimageloader.h
 )
 
 qt5_wrap_ui(uic_sources temporarywidget.ui)

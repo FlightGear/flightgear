@@ -7,8 +7,8 @@
 #include <QJsonValue>
 #include <QSettings>
 
-// ws://localhost:8080/PropertyTreeMirror/canvas/by-index/texture[3]
-
+#include "fgqcanvasfontcache.h"
+#include "fgqcanvasimageloader.h"
 #include "canvastreemodel.h"
 #include "localprop.h"
 
@@ -24,24 +24,21 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
 
 TemporaryWidget::~TemporaryWidget()
 {
+    disconnect(&m_webSocket, &QWebSocket::disconnected, this, &TemporaryWidget::onSocketClosed);
+    m_webSocket.close();
     delete ui;
 }
 
 void TemporaryWidget::onStartConnect()
 {
-    QString wsUrl = ui->socketURL->text();
-    if (!wsUrl.startsWith("ws")) {
-        qWarning() << "Not a web-socket URL" << wsUrl;
-        return;
-    }
+    QUrl wsUrl;
+    wsUrl.setScheme("ws");
+    wsUrl.setHost(ui->hostName->text());
+    wsUrl.setPort(ui->portEdit->text().toInt());
 
 // string clean up, to ensure our root path has a leading slash but
 // no trailing slash
     QString propPath = ui->propertyPath->text();
-    if (wsUrl.endsWith('/')) {
-        wsUrl.truncate(wsUrl.size() - 1);
-    }
-
     QString rootPath = propPath;
     if (!propPath.startsWith('/')) {
         rootPath = '/' + propPath;
@@ -51,7 +48,7 @@ void TemporaryWidget::onStartConnect()
         rootPath.chop(1);
     }
 
-    QUrl url = QUrl(wsUrl + rootPath);
+    wsUrl.setPath("/PropertyTreeMirror" + rootPath);
     rootPropertyPath = rootPath.toUtf8();
 
     connect(&m_webSocket, &QWebSocket::connected, this, &TemporaryWidget::onConnected);
@@ -59,9 +56,8 @@ void TemporaryWidget::onStartConnect()
 
     saveSettings();
 
-    qDebug() << "starting connection to:" << url;
-    m_webSocket.open(url);
-    m_webSocket.sendTextMessage("nothing"); // forces Mongoose to respond quicker
+    qDebug() << "starting connection to:" << wsUrl;
+    m_webSocket.open(wsUrl);
 }
 
 void TemporaryWidget::onConnected()
@@ -78,6 +74,12 @@ void TemporaryWidget::onConnected()
 
     m_canvasModel = new CanvasTreeModel(ui->canvas->rootElement());
     ui->treeView->setModel(m_canvasModel);
+
+    FGQCanvasFontCache::instance()->setHost(ui->hostName->text(),
+                                            ui->portEdit->text().toInt());
+    FGQCanvasImageLoader::instance()->setHost(ui->hostName->text(),
+                                              ui->portEdit->text().toInt());
+    m_webSocket.sendTextMessage("nonsense");
 }
 
 void TemporaryWidget::onTextMessageReceived(QString message)
@@ -158,14 +160,16 @@ void TemporaryWidget::onSocketClosed()
 void TemporaryWidget::saveSettings()
 {
     QSettings settings;
-    settings.setValue("ws-host", ui->socketURL->text());
+    settings.setValue("ws-host", ui->hostName->text());
+    settings.setValue("ws-port", ui->portEdit->text());
     settings.setValue("prop-path", ui->propertyPath->text());
 }
 
 void TemporaryWidget::restoreSettings()
 {
     QSettings settings;
-    ui->socketURL->setText(settings.value("ws-host").toString());
+    ui->hostName->setText(settings.value("ws-host").toString());
+    ui->portEdit->setText(settings.value("ws-port").toString());
     ui->propertyPath->setText(settings.value("prop-path").toString());
 }
 

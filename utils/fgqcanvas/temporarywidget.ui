@@ -23,7 +23,7 @@
       <attribute name="title">
        <string>Connect</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
        <item row="2" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
@@ -34,15 +34,12 @@
        <item row="0" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Enter a web-socket URL: (eg 'ws://localhost:8080/PropertyTreeMirror/')</string>
+          <string>Enter FlightGear host-name and port</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QTreeView" name="treeView"/>
-       </item>
        <item row="1" column="0">
-        <widget class="QLineEdit" name="socketURL"/>
+        <widget class="QLineEdit" name="hostName"/>
        </item>
        <item row="4" column="0">
         <widget class="QPushButton" name="connectButton">
@@ -51,8 +48,14 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="portEdit"/>
+       </item>
+       <item row="3" column="0" colspan="2">
         <widget class="QLineEdit" name="propertyPath"/>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QTreeView" name="treeView"/>
        </item>
       </layout>
      </widget>

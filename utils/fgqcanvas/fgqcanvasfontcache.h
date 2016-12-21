@@ -20,6 +20,7 @@ public:
     static void initialise(QNetworkAccessManager* nam);
     static FGQCanvasFontCache* instance();
 
+    void setHost(QString hostName, int portNumber);
 signals:
     void fontLoaded(QByteArray name);
 
@@ -30,6 +31,8 @@ private slots:
 private:
     QNetworkAccessManager* m_downloader;
     QHash<QByteArray, QFont> m_cache;
+    QString m_hostName;
+    int m_port;
 
     void lookupFile(QByteArray name);
 

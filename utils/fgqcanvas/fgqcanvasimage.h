@@ -7,6 +7,7 @@
 
 class FGQCanvasImage : public FGCanvasElement
 {
+    Q_OBJECT
 public:
     FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop);
 
@@ -15,12 +16,15 @@ protected:
 
     virtual void markStyleDirty() override;
 
+private slots:
+    void markImageDirty();
+
 private:
     bool onChildAdded(LocalProp *prop) override;
 
     void rebuildImage() const;
 
-    void markImageDirty();
+
 private:
     mutable bool _imageDirty;
     mutable QPixmap _image;

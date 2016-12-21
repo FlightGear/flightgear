@@ -2,8 +2,11 @@
 
 #include <QApplication>
 #include <QNetworkAccessManager>
+#include <QNetworkDiskCache>
+#include <QStandardPaths>
 
 #include "fgqcanvasfontcache.h"
+#include "fgqcanvasimageloader.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,10 +18,18 @@ int main(int argc, char *argv[])
 
     QNetworkAccessManager* downloader = new QNetworkAccessManager;
 
+    QNetworkDiskCache* cache = new QNetworkDiskCache;
+    cache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    downloader->setCache(cache); // takes ownership
+
     FGQCanvasFontCache::initialise(downloader);
+    FGQCanvasImageLoader::initialise(downloader);
 
     TemporaryWidget w;
     w.show();
 
-    return a.exec();
+    int result = a.exec();
+    delete downloader;
+
+    return result;
 }

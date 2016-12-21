@@ -52,6 +52,12 @@ FGQCanvasFontCache *FGQCanvasFontCache::instance()
     return s_instance;
 }
 
+void FGQCanvasFontCache::setHost(QString hostName, int portNumber)
+{
+    m_hostName = hostName;
+    m_port = portNumber;
+}
+
 void FGQCanvasFontCache::onFontDownloadFinished()
 {
     QByteArray fontPath = sender()->property("font").toByteArray();
@@ -90,7 +96,11 @@ void FGQCanvasFontCache::lookupFile(QByteArray name)
 {
     QString path = QStandardPaths::locate(QStandardPaths::CacheLocation, name);
     if (path.isEmpty()) {
-        QUrl url = QUrl("http://localhost:8080/Fonts/" + name);
+        QUrl url;
+        url.setScheme("http");
+        url.setHost(m_hostName);
+        url.setPort(m_port);
+        url.setPath("/Fonts/" + name);
 
         Q_FOREACH (QNetworkReply* transfer, m_transfers) {
             if (transfer->url() == url) {
