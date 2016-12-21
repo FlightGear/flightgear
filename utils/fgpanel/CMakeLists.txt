@@ -1,7 +1,17 @@
-find_package(PNG REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(Freetype REQUIRED)
+find_package(PNG)
+find_package(OpenGL)
+find_package(GLEW )
+find_package(Freetype)
+
+if ((NOT PNG_FOUND) OR (NOT OPENGL_FOUND) OR (NOT GLEW_FOUND) OR (NOT FREETYPE_FOUND))
+  message(WARNING "FGPanel enabled, but some dependencies are missing")
+  message(STATUS "libPNG: ${PNG_FOUND}")
+  message(STATUS "OpenGL: ${OPENGL_FOUND}")
+  message(STATUS "GLEW: ${GLEW_FOUND}")
+  message(STATUS "Freetype: ${FREETYPE_FOUND}")
+  return()
+endif()
+
 find_path(BCMHOST_INCLUDE_DIR
   NAMES bcm_host.h
   PATHS /opt/vc/include
