@@ -64,26 +64,24 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
     QPainter* p = context->painter();
 
     if (_clipDirty) {
-        // re-calculate clip
-        QVariant clipSpec = _propertyRoot->value("clip", QVariant());
-        if (clipSpec.isNull()) {
-            _hasClip = false;
-        } else {
-            // https://www.w3.org/wiki/CSS/Properties/clip for the stupid order here
-            QStringList clipRectDesc = clipSpec.toString().split(',');
-            int top = clipRectDesc.at(0).toInt();
-            int right = clipRectDesc.at(1).toInt();
-            int bottom = clipRectDesc.at(2).toInt();
-            int left = clipRectDesc.at(3).toInt();
-
-            _clipRect = QRectF(left, top, right - left, bottom - top);
-            _hasClip = true;
-        }
-
+        parseCSSClip(_propertyRoot->value("clip", QVariant()).toByteArray());
         _clipDirty = false;
     }
 
     p->save();
+
+    if (_hasClip) {
+#if 0
+        p->save();
+        p->setPen(Qt::yellow);
+        p->setBrush(QBrush(Qt::yellow, Qt::DiagCrossPattern));
+        p->drawRect(_clipRect);
+        p->restore();
+#endif
+        context->painter()->setClipRect(_clipRect);
+        context->painter()->setClipping(true);
+    }
+
     p->setTransform(combinedTransform(), true /* combine */);
 
     if (_styleDirty) {
@@ -97,16 +95,7 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
         p->setBrush(_fillColor);
     }
 
-    if (_hasClip) {
-        p->save();
-        p->setPen(Qt::yellow);
-        p->setBrush(QBrush(Qt::yellow, Qt::DiagCrossPattern));
-        p->drawRect(_clipRect);
-        p->restore();
 
-       // context->painter()->setClipRect(_clipRect);
-       // context->painter()->setClipping(true);
-    }
 
     doPaint(context);
 
@@ -251,6 +240,24 @@ void FGCanvasElement::markClipDirty()
     _clipDirty = true;
 }
 
+float FGCanvasElement::parseCSSValue(QByteArray value) const
+{
+    value = value.trimmed();
+    // deal with %, px suffixes
+    if (value.indexOf('%') >= 0) {
+        qWarning() << Q_FUNC_INFO << "extend parsing to deal with:" << value;
+    }
+    if (value.endsWith("px")) {
+        value.truncate(value.length() - 2);
+    }
+    bool ok = false;
+    float v = value.toFloat(&ok);
+    if (!ok) {
+        qWarning() << "failed to parse:" << value;
+    }
+    return v;
+}
+
 QColor FGCanvasElement::parseColorValue(QVariant value) const
 {
     QString colorString = value.toString();
@@ -346,4 +353,34 @@ void FGCanvasElement::markZIndexDirty(QVariant value)
 void FGCanvasElement::onVisibleChanged(QVariant value)
 {
     _visible = value.toBool();
+}
+
+void FGCanvasElement::parseCSSClip(QByteArray value) const
+{
+    if (value.isEmpty()) {
+        _hasClip = false;
+        return;
+    }
+
+    // https://www.w3.org/wiki/CSS/Properties/clip for the stupid order here
+    if (value.startsWith("rect(")) {
+        int closingParen = value.indexOf(')');
+        value = value.mid(5, closingParen - 5); // trim front portion
+    }
+
+    QByteArrayList clipRectDesc = value.split(',');
+    const int parts = clipRectDesc.size();
+    if (parts != 4) {
+        qWarning() << "implement parsing for non-standard clip" << value;
+        return;
+    }
+
+    const float top = parseCSSValue(clipRectDesc.at(0));
+    const float right = parseCSSValue(clipRectDesc.at(1));
+    const float bottom = parseCSSValue(clipRectDesc.at(2));
+    const float left = parseCSSValue(clipRectDesc.at(3));
+
+    _clipRect = QRectF(left, top, right - left, bottom - top);
+    qDebug() << "final clip rect:" << _clipRect << "from" << value;
+    _hasClip = true;
 }

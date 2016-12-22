@@ -77,6 +77,9 @@ private:
     mutable bool _clipDirty = true;
     mutable bool _hasClip = false;
     mutable QRectF _clipRect;
+
+    void parseCSSClip(QByteArray value) const;
+    float parseCSSValue(QByteArray value) const;
 };
 
 using FGCanvasElementVec = std::vector<FGCanvasElement*>;
