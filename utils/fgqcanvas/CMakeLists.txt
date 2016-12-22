@@ -40,6 +40,8 @@ set(SOURCES
   fgqcanvasfontcache.h
   fgqcanvasimageloader.cpp
   fgqcanvasimageloader.h
+  elementdatamodel.cpp
+  elementdatamodel.h
 )
 
 qt5_wrap_ui(uic_sources temporarywidget.ui)

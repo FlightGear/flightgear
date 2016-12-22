@@ -23,7 +23,10 @@
       <attribute name="title">
        <string>Connect</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
+      <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,1,0" columnstretch="1,0">
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="portEdit"/>
+       </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_2">
          <property name="text">
@@ -41,6 +44,9 @@
        <item row="1" column="0">
         <widget class="QLineEdit" name="hostName"/>
        </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QLineEdit" name="propertyPath"/>
+       </item>
        <item row="4" column="0">
         <widget class="QPushButton" name="connectButton">
          <property name="text">
@@ -48,14 +54,38 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="portEdit"/>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QLineEdit" name="propertyPath"/>
-       </item>
        <item row="5" column="0" colspan="2">
-        <widget class="QTreeView" name="treeView"/>
+        <widget class="QWidget" name="widget" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>10</width>
+           <height>100</height>
+          </size>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSplitter" name="splitter">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <widget class="QTreeView" name="treeView"/>
+            <widget class="QTableView" name="elementData"/>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>

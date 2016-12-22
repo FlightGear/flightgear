@@ -8,6 +8,16 @@ CanvasTreeModel::CanvasTreeModel(FGCanvasGroup* root) :
     connect(_root, &FGCanvasGroup::childAdded, this, &CanvasTreeModel::onGroupChildAdded);
 }
 
+FGCanvasElement* CanvasTreeModel::elementFromIndex(const QModelIndex &index) const
+{
+    if (!index.isValid()) {
+        return nullptr;
+    }
+
+    FGCanvasElement* e = static_cast<FGCanvasElement*>(index.internalPointer());
+    return e;
+}
+
 int CanvasTreeModel::rowCount(const QModelIndex &parent) const
 {
     FGCanvasElement* e = static_cast<FGCanvasElement*>(parent.internalPointer());

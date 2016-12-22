@@ -10,6 +10,8 @@ class CanvasTreeModel : public QAbstractItemModel
 public:
     CanvasTreeModel(FGCanvasGroup* root);
 
+    FGCanvasElement* elementFromIndex(const QModelIndex& index) const;
+
 protected:
     virtual int rowCount(const QModelIndex &parent) const override;
     virtual int columnCount(const QModelIndex &parent) const override;

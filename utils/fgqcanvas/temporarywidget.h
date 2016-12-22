@@ -11,6 +11,7 @@ class TemporaryWidget;
 
 class LocalProp;
 class CanvasTreeModel;
+class ElementDataModel;
 
 class TemporaryWidget : public QWidget
 {
@@ -27,6 +28,9 @@ private Q_SLOTS:
     void onTextMessageReceived(QString message);
 
     void onSocketClosed();
+
+    void onCanvasTreeElementClicked(const QModelIndex& index);
+
 private:
     void saveSettings();
     void restoreSettings();
@@ -40,6 +44,7 @@ private:
     LocalProp* m_localPropertyRoot = nullptr;
     QHash<int, LocalProp*> idPropertyDict;
     CanvasTreeModel* m_canvasModel;
+    ElementDataModel* m_elementModel;
 };
 
 #endif // TEMPORARYWIDGET_H

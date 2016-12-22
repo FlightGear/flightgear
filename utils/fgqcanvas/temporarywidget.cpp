@@ -11,6 +11,7 @@
 #include "fgqcanvasimageloader.h"
 #include "canvastreemodel.h"
 #include "localprop.h"
+#include "elementdatamodel.h"
 
 TemporaryWidget::TemporaryWidget(QWidget *parent) :
     QWidget(parent),
@@ -20,6 +21,7 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
     connect(ui->connectButton, &QPushButton::clicked, this, &TemporaryWidget::onStartConnect);
     restoreSettings();
 
+    connect(ui->treeView, &QAbstractItemView::clicked, this, &TemporaryWidget::onCanvasTreeElementClicked);
 }
 
 TemporaryWidget::~TemporaryWidget()
@@ -74,6 +76,9 @@ void TemporaryWidget::onConnected()
 
     m_canvasModel = new CanvasTreeModel(ui->canvas->rootElement());
     ui->treeView->setModel(m_canvasModel);
+
+    m_elementModel = new ElementDataModel(this);
+    ui->elementData->setModel(m_elementModel);
 
     FGQCanvasFontCache::instance()->setHost(ui->hostName->text(),
                                             ui->portEdit->text().toInt());
@@ -155,6 +160,12 @@ void TemporaryWidget::onSocketClosed()
     idPropertyDict.clear();
 
     ui->stack->setCurrentIndex(0);
+}
+
+void TemporaryWidget::onCanvasTreeElementClicked(const QModelIndex &index)
+{
+    FGCanvasElement* e = m_canvasModel->elementFromIndex(index);
+    m_elementModel->setElement(e);
 }
 
 void TemporaryWidget::saveSettings()
