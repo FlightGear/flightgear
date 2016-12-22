@@ -38,11 +38,12 @@ public:
     void setWinchMinTowLength(float length);
     void setMpAutoConnectPeriod(float dt);
     void setForceIsCalculatedByOther(bool b);
-    
+
     void setGlobalGround(double *global_ground, float *global_vel);
 
     void getPosition(float* out);
     float getTowLength(void);
+    float getRopeAngleDeg(void);
 
     void calcForce(Ground *g_cb, RigidBody* body, State* s);
 
@@ -59,6 +60,7 @@ private:
     bool _open;
     bool _oldOpen;
     float _towLength;
+    float _autoReleaseAngle;
     float _towElasticConstant;
     float _towBrakeForce;
     float _towWeightPerM;

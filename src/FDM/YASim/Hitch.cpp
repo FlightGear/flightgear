@@ -7,6 +7,7 @@
 #include "RigidBody.hpp"
 #include <string.h>
 #include <sstream>
+#include <simgear/constants.h>
 
 
 
@@ -31,6 +32,7 @@ Hitch::Hitch(const char *name)
     _open=true;
     _oldOpen=_open;
     _towLength=60;
+    _autoReleaseAngle=0;
     _towElasticConstant=1e5;
     _towBrakeForce=100000;
     _towWeightPerM=1;
@@ -73,6 +75,7 @@ Hitch::Hitch(const char *name)
     {
 #define TIE(x,v) _tiedProperties.Tie(_node->getNode(x, true),v)
         TIE("tow/length", SGRawValuePointer<float>(&_towLength));
+        TIE("automatic-release-angle-deg",SGRawValuePointer<float>(&_autoReleaseAngle));
         TIE("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
         TIE("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
         TIE("tow/brake-force",SGRawValuePointer<float>(&_towBrakeForce));
@@ -546,6 +549,11 @@ void Hitch::getForce(float* force, float* off)
     Math::set3(_pos, off);
 }
 
+float Hitch::getRopeAngleDeg()
+{
+    return -atan2(_force[2] , _force[0] ) * SG_RADIANS_TO_DEGREES;
+}
+
 void Hitch::integrate (float dt)
 {
     //check if hitch has opened or closed, if yes: message
@@ -709,6 +717,17 @@ void Hitch::integrate (float dt)
 
     if (_open) return;
     if (_winchRelSpeed==0) return;
+
+    float forceMagnitude = Math::mag3(_towEndForce);
+    if (forceMagnitude > 100 && _autoReleaseAngle && (this->getRopeAngleDeg() > _autoReleaseAngle))
+    {
+        std::stringstream message;
+        message<<"Cable autoreleased";
+        fgSetString("/sim/messages/pilot", message.str().c_str());
+        _open=true;
+        return;
+    }
+
     float factor=1,offset=0;
     if (_winchActualForce>_winchMaxForce)
         offset=-(_winchActualForce-_winchMaxForce)/_winchMaxForce*20;
