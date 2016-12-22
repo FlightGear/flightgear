@@ -24,6 +24,11 @@
 #include <limits>
 #include <stdio.h>
 
+#ifndef ENABLE_SP_FDM
+# define ENABLE_SP_FDM	1
+#endif
+
+#if ENABLE_SP_FDM
 #include <simgear/constants.h>
 #include <simgear/math/simd.hxx>
 #include <simgear/math/simd4x4.hxx>
@@ -33,17 +38,17 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <FDM/flight.hxx>
+#else
+#include "simd.hxx"
+#include "simd4x4.hxx"
+#endif
 
 #include "AISim.hpp"
 
 
 FGAISim::FGAISim(double dt)
 {
-    SGPropertyNode_ptr aero = fgGetNode("sim/aero", true);
-    load(aero->getStringValue());
-    load("");
-
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<4; ++i) {
         xCDYLT[i] = 0.0f;
         xClmnT[i] = 0.0f;
     }
@@ -63,15 +68,42 @@ FGAISim::FGAISim(double dt)
     wind_ned = 0.0f;
     agl = 0.0f;
 
-    copy_to_AISim();
-    set_location_geod(get_Latitude(), get_Longitude(), get_Altitude());
+#if ENABLE_SP_FDM
+    SGPropertyNode_ptr aero = fgGetNode("sim/aero", true);
+    load(aero->getStringValue());
+#else
+    load("");
+#endif
+
+    set_rudder_norm(0.0f);
+    set_elevator_norm(0.0f);
+    set_aileron_norm(0.0f);
+    set_throttle_norm(0.0f);
+    set_flaps_norm(0.0f);
+    set_brake_norm(0.0f);
+
+    set_velocity_fps(0.0f);
     set_alpha_rad(0.0f);
     set_beta_rad(0.0f);
-    set_velocity_fps(0.0f);
 
     /* useful constants */
-    FThrust = 0.0f;
-    MThrust = 0.0f;
+    xCpr[SIDE][0] = CYp;
+    xCpr[SIDE][1] = CYr;
+    xCpr[ROLL][0] = Clp;
+    xCpr[ROLL][1] = Clr;
+    xCpr[YAW][0]  = Cnp;
+    xCpr[YAW][1]  = Cnr;
+    xCqadot[LIFT][0] = CLq;
+    xCqadot[LIFT][1] = CLadot;
+    xCqadot[PITCH][0] = Cmq;
+    xCqadot[PITCH][1] = Cmadot;
+    xCDYLT[MIN][LIFT] = CLmin;
+    xCDYLT[MIN][DRAG] = CDmin;
+
+    C2M[THRUST] = prop_Ixx*(2.0f*RPS*PI)/no_engines;
+    RPS2D4 = RPS*RPS * D*D*D*D;
+
+    FThrust = MThrust = 0.0f;
     gravity = 0.0f; gravity[DOWN] = G;
     dt2_2m = 0.5f*dt*dt/m;
 }
@@ -84,33 +116,37 @@ FGAISim::~FGAISim()
 // each subsequent iteration through the EOM
 void
 FGAISim::init() {
-
+#if ENABLE_SP_FDM
     // do init common to all the FDM's           
     common_init();
 
     // now do init specific to the AISim
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting initializing AISim" );
 
-    set_location_geod( get_Latitude(), get_Longitude(), get_Altitude() );
+    double sl_radius, lat_geoc;
+    sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
+    set_location_geoc( lat_geoc, get_Longitude(), get_Altitude() );
     set_euler_angles_rad( get_Phi(), get_Theta(), get_Psi() );
 
     UVW_body[U] = fgGetFloat("sim/presets/uBody-fps");
     UVW_body[V] = fgGetFloat("sim/presets/vBody-fps");
     UVW_body[W] = fgGetFloat("sim/presets/wBody-fps");
     set_velocity_fps( UVW_body[U] );
+#endif
 }
 
 void
 FGAISim::update(double ddt)
 {
+#if ENABLE_SP_FDM
     if (is_suspended())
         return;
+#endif
 
     // initialize all of AISim vars
     float dt = float(ddt);
 
     copy_to_AISim();
-
     ABY_dot = (ABY_body - ABY_body_prev)*dt;
     PQR_dot = (PQR_body - PQR_body_prev)*dt;
 
@@ -120,99 +156,98 @@ FGAISim::update(double ddt)
 
     // Earth-to-Body-Axis Transformation Matrix
     // body = pitch, roll, yaw
-    simd4_t<float,4> angles = euler;
+    simd4_t<float,3> angles = euler;
     float angle = simd4::normalize(angles);
     simd4x4_t<float,4> EBM = simd4x4::rotation_matrix<float>(angle, angles);
 
     // Body-Axis Gravity Components
-    simd4_t<float,4> gb = EBM*gravity;
-    simd4_t<float,4> windb = EBM*wind_ned;
+    simd4_t<float,3> windb = EBM*wind_ned;
 
     // Air-Relative velocity vector
     simd4_t<float,3> Va = UVW_body + windb;
     set_velocity_fps(Va[U]);
-    if (std::abs(velocity) > 1.0f) {
+printf("velocity: %f, Va: %3.2f, %3.2f, %3.2f, %3.2f\n", velocity, Va[0], Va[1], Va[2], Va[3]);
+    if (std::abs(Va[1]) > 0.01f) {
         set_alpha_rad( std::atan(Va[3]/std::abs(Va[1])) );
+    }
+    if (std::abs(velocity) > 0.1f) {
         set_beta_rad( std::asin(Va[2]/velocity) );
     }
+printf("alpha: %5.4f, beta: %5.4f\n", ABY_body[ALPHA], ABY_body[BETA]);
 
     // Force and Moment Coefficients
-    simd4_t<float,4> CDYLT = 0.0f;
-    simd4_t<float,4> ClmnT = 0.0f;
-    for (int i=0; i<4; i++) {
-        CDYLT += xCDYLT[i];
-        ClmnT += xClmnT[i];
-    }
-
     float p = PQR_body[P];
     float q = PQR_body[Q];
     float r = PQR_body[R];
-    do {
-        float adot = ABY_dot[ALPHA];
-        float CL = CDYLT[LIFT];
+    float adot = ABY_dot[ALPHA];
 
-        CDYLT[DRAG] += CDi*CL*CL;
-        CDYLT[LIFT] += (CLadot*adot + CLq*q)*cbar_2U;
-        CDYLT[SIDE] += (CYp*p       + CYr*r)*b_2U;
-        ClmnT[ROLL]  += (Clp*p       + Clr*r)*b_2U;
-        ClmnT[YAW]   += (Cnp*p       + Cnr*r)*b_2U;
-        ClmnT[PITCH] += (Cmadot*adot + Cmq*q)*cbar_2U;
+    /**
+     * CDYLT[LIFT]  = (CLq*q + CLadot*adot)*cbar_2U;
+     * ClmnT[PITCH] = (Cmq*q + Cmadot*adot)*cbar_2U;
+     (
+     * CDYLT[SIDE]  = (CYp*p       + CYr*r)*b_2U;
+     * ClmnT[ROLL]  = (Clp*p       + Clr*r)*b_2U;
+     * ClmnT[YAW]   = (Cnp*p       + Cnr*r)*b_2U;
+     */
+    simd4_t<float,4> Ccbar2U = (xCqadot[0]*q + xCqadot[1]*adot)*cbar_2U;
+    simd4_t<float,4> Cb2U = (xCpr[0]*p + xCpr[1]*r)*b_2U;
+
+    /* Sum all Drag, Side, Lift, Roll, Pitch, Yaw and Thrust coefficients */
+    simd4_t<float,4> CDYLT(0.0f, Cb2U[SIDE], Ccbar2U[LIFT], 0.0f);
+    simd4_t<float,4> ClmnT(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW], 0.0f);
+    for (int i=0; i<4; ++i) {
+        CDYLT += xCDYLT[i];
+        ClmnT += xClmnT[i];
     }
-    while (0);
+    float CL = CDYLT[LIFT];
+    CDYLT += simd4_t<float,4>(CDi*CL*CL, 0.0f, 0.0f, 0.0f);
 
-    // State Accelerations
+    /* State Accelerations (convert coefficients to forces and moments) */
     simd4_t<float,4> FDYLT = CDYLT*C2F;
     simd4_t<float,4> MlmnT = ClmnT*C2M;
 
+printf("CDYLT: %7.2f, %7.2f, %7.2f, %7.2f\n", CDYLT[DRAG], CDYLT[SIDE], CDYLT[LIFT], CDYLT[THRUST]);
+printf("FDYLT: %7.2f, %7.2f, %7.2f, %7.2f\n", FDYLT[DRAG], FDYLT[SIDE], FDYLT[LIFT], FDYLT[THRUST]);
+
     /* convert from wind axes to body axes */
-    simd4_t<float,3> aby = ABY_body;
+    simd4_t<float,3> aby = ABY_body;	// alpha, beta, gamma
     angle = simd4::normalize(aby);
 
     simd4x4_t<float,4> WBM = simd4x4::rotation_matrix<float>(angle, aby);
-    simd4_t<float,4>FXYZ = WBM*FDYLT;
+    simd4_t<float,3>FXYZ = WBM*FDYLT + EBM*gravity;
 
-     // Thrust -- todo: propulsion in non x-directions
-    FThrust[X] = FDYLT[THRUST];
-    MThrust[ROLL] = MlmnT[THRUST];
-
+    // Thrust -- todo: propulsion in non x-directions
+    FThrust[X] = FDYLT[THRUST];	
     FXYZ += FThrust;
+
+//  MThrust[ROLL] = MlmnT[THRUST];
 //  MlmnT += MThrust;
 
     // Gear forces
+    agl = NED_cm[ALTITUDE];
     float gear_comp = 0.2f + _MINMAX(agl/gear[Z], -0.2f, 0.0f);
-printf("agl: %7.6f, gear-z: %7.6f, comp: %f\n", agl, gear[Z], gear_comp);
     if (gear_comp > 0.1f) {
-        simd4_t<float,4> FLGear = 0.0f; FLGear[Z] = Cgear*gear_comp;
-//      simd4_t<float,4> MLGear = 0.0f;
+        simd4_t<float,3> FLGear = 0.0f; FLGear[Z] = Cgear*gear_comp;
+//      simd4_t<float,3> MLGear = 0.0f;
 
         FXYZ += FLGear;
 //      MlmnT +=  MLGear;
     }
     FXYZ /= m;
+printf("FXYZ:  %7.2f, %7.2f, %7.2f, %7.2f\n", FXYZ[X], FXYZ[Y], FXYZ[Z], FXYZ[THRUST]);
+printf("MlmnT: %7.2f, %7.2f, %7.2f, %7.2f\n", MlmnT[ROLL], MlmnT[PITCH], MlmnT[YAW], MlmnT[THRUST]);
 
     // Dynamic Equations
-
     /* body-axis velocity: forward, sideward, upward */
-    float u = UVW_body[U];
-    float v = UVW_body[V];
-    float w = UVW_body[W];
-    simd4_t<float,4> dUVW = FXYZ + gb;
-    dUVW[U] +=  r*v - q*w;
-    dUVW[V] += -r*u + p*w;
-    dUVW[W] +=  q*u - p*v;
+    simd4_t<float,3> dUVW = FXYZ + simd4::cross(UVW_body, PQR_body);
     UVW_body += dUVW;
-printf("UVW: %5.4f, %5.4f, %5.4f\n", dUVW[U], dUVW[V], dUVW[W]);
+printf("UVW:   %7.2f, %7.2f, %7.2f\n", UVW_body[U], UVW_body[V], UVW_body[W]);
 
     /* position of center of mass wrt earth: north, east, down */
-    simd4_t<float,4> dNED_cm;
-    dNED_cm = simd4x4::transpose(EBM)*UVW_body;
-
-    double az2, dist = simd4::magnitude(dNED_cm);
-    SGGeod pos2, pos = getPosition();
-    geo_direct_wgs_84 ( pos, euler[PSI] * SGD_RADIANS_TO_DEGREES,
-                        dist, pos2, &az2 );
-    set_location_geod( pos2.getLatitudeRad(),
-                       pos2.getLongitudeRad(), pos.getElevationFt() );
+    simd4_t<float,3> dNED_cm = simd4x4::transpose(EBM)*UVW_body;
+    NED_cm += dNED_cm*dt;
+printf("NED:   %7.2f, %7.2f, %7.2f\n",
+        NED_cm[LATITUDE], NED_cm[LONGITUDE], NED_cm[ALTITUDE]);
 
     /* body-axis iniertial rates: pitching, rolling, yawing */
     simd4_t<float,3> dPQR;
@@ -220,6 +255,7 @@ printf("UVW: %5.4f, %5.4f, %5.4f\n", dUVW[U], dUVW[V], dUVW[W]);
     dPQR[Q] =      MlmnT[PITCH]-(I[XX]+I[ZZ])*p*r;
     dPQR[R] = I[XX]*MlmnT[YAW] +(I[XX]-I[YY])*p*q/I[ZZ];
 //  PQR_body += dPQR*dt;
+printf("PQR:   %7.2f, %7.2f, %7.2f\n", PQR_body[P], PQR_body[Q], PQR_body[R]);
 
     /* angle of body wrt earth: phi (roll), theta (pitch), psi (yaw) */
     float cos_t = std::cos(euler[THETA]);
@@ -234,10 +270,12 @@ printf("UVW: %5.4f, %5.4f, %5.4f\n", dUVW[U], dUVW[V], dUVW[W]);
     deuler[THETA] =    cos_p*q-sin_p*r;
     deuler[PSI] =     (sin_p*q+cos_p*r)    / cos_t;
     euler += deuler;
-
+printf("euler: %7.2f, %7.2f, %7.2f\n", euler[PHI], euler[THETA], euler[PSI]);
+ 
     copy_from_AISim();
 }
 
+#if ENABLE_SP_FDM
 bool
 FGAISim::copy_to_AISim()
 {
@@ -250,6 +288,7 @@ FGAISim::copy_to_AISim()
                          +globals->get_controls()->get_brake_right()));
 
     set_altitude_agl_ft(get_Altitude_AGL());
+
 //  set_location_geod(get_Latitude(), get_Longitude(), get_Altitude());
 //  set_velocity_fps(get_V_calibrated_kts());
 
@@ -261,6 +300,7 @@ FGAISim::copy_from_AISim()
 {
     // Accelerations
 //  _set_Accels_Omega( PQR_body[P], PQR_body[Q], PQR_body[R] );
+    
 
     // Velocities
     _set_Velocities_Local( UVW_body[U], UVW_body[V], UVW_body[W] );
@@ -281,12 +321,12 @@ FGAISim::copy_from_AISim()
 
     return true;
 }
+#endif
 
 void
 FGAISim::update_UVW_body(float f)
 {
     velocity = f;
-    xCDYLT[VELOCITY][THRUST] = CTu*f;
 
     if (std::abs(f) < 0.00001f) f = std::copysign(0.00001f,f);
     b_2U = 0.5f*b/f;
@@ -299,7 +339,8 @@ FGAISim::update_UVW_body(float f)
 void
 FGAISim::update_qbar()
 {
-    unsigned int hi = _MINMAX(std::rint(NED_cm[ALTITUDE]/1000.0f), 0, 100);
+    unsigned int hi = _MINMAX(std::rint(-NED_cm[ALTITUDE]/1000.0f), 0, 100);
+    float mach = velocity/env[hi][VSOUND];
     float rho = env[hi][RHO];
 
     float qbar = 0.5f*rho*velocity*velocity;
@@ -312,6 +353,8 @@ FGAISim::update_qbar()
 
     C2M = Sbqbar;
     C2M[PITCH] = Sqbarcbar;
+
+    xCDYLT[VELOCITY][THRUST] = CTu*mach;
 }
 
 // 1976 Standard Atmosphere
@@ -462,10 +505,16 @@ FGAISim::load(std::string path)
     float da_max = 17.5f*SG_DEGREES_TO_RADIANS;
     float df_max = 30.0f*SG_DEGREES_TO_RADIANS;
 
+    /* thuster / propulsion */
     no_engines = 1.0f;
     CTmax = 0.073f*no_engines;
     CTu = -0.0960f*no_engines;
 
+    D = 75.0f*INCHES_TO_FEET;
+    RPS = 2700.0f/60.0f;
+    prop_Ixx = 1.67f;
+
+    /* aerodynamic coefficients */
     CLmin = 0.307f;
     CLa = 4.410f;
     CLadot = 1.70f;
@@ -500,14 +549,6 @@ FGAISim::load(std::string path)
     Cnr = -0.0937;
     Cnda_n = -0.0216f*da_max;
     Cndr_n = -0.0645f*dr_max;
-
-    /* thuster / propulsion */
-    float D = 75.0f*INCHES_TO_FEET;
-    float RPS = 2700.0f/60.0f;
-    float prop_Ixx = 1.67f;
-
-    C2M[THRUST] = prop_Ixx*(2.0f*RPS*PI)/no_engines;
-    RPS2D4 = RPS*RPS * D*D*D*D;
 
     return true;
 }

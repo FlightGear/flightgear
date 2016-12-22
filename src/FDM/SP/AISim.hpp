@@ -27,13 +27,14 @@
 #include <string>
 
 #include <simgear/math/SGVec3.hxx>
-#include <FDM/flight.hxx>
+#include <simgear/math/simd.hxx>
+//nclude <FDM/flight.hxx>
 
+#define SG_DEGREES_TO_RADIANS 0.0174532925f
 
 #define G		32.174f
 #define PI		3.1415926535f
 #define INCHES_TO_FEET	0.0833333333f
-#define FPS_TO_KTS	0.592484313161f
 #ifndef _MINMAX
 # define _MINMAX(a,b,c)	(((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
 #endif
@@ -44,7 +45,7 @@ private:
     enum { X=0, Y=1, Z=2 };
     enum { XX=0, YY=1, ZZ=2, XZ=3 };
     enum { LATITUDE=0, LONGITUDE=1, ALTITUDE=2 };
-    enum { NORTH=0, EAST=2, DOWN=3, N=0, E=2, D=3 };
+    enum { NORTH=0, EAST=2, DOWN=3 };
     enum { LEFT=0, RIGHT=1 };
     enum { MAX=0, VELOCITY=1 };
     enum { PROPULSION=0, FLAPS=2, RUDDER=2, MIN=3, AILERON=3, ELEVATOR=3 };
@@ -100,21 +101,18 @@ public:
     inline void set_brake_norm(float f) { br = f; }
 
     /* (initial) state, local frame */
-    inline void set_location_geod(const SGVec3f& p) {
-        NED_cm = p.simd3(); update_qbar();
-    }
-    inline void set_location_geod(float lat, float lon, float alt) {
-        NED_cm[LATITUDE] = lat;
+    inline void set_location_geoc(const SGVec3f& p) { NED_cm = p.simd3(); }
+    inline void set_location_geoc(float lat_geoc, float lon, float alt) {
+        NED_cm[LATITUDE] = lat_geoc;
         NED_cm[LONGITUDE] = lon;
         NED_cm[ALTITUDE] = alt;
-        update_qbar();
     }
     inline void set_altitude_asl_ft(float f) { NED_cm[DOWN] = -f; };
     inline void set_altitude_agl_ft(float f) { agl = _MINMAX(f, 0.0f, 100000.0f); }
 
-    inline void set_pitch_rad(float f) { euler[PHI] = f; }
-    inline void set_roll_rad(float f) { euler[THETA] = f; }
-    inline void set_yaw_rad(float f) { euler[PSI] = f; }
+    inline void set_pitch(float f) { euler[PHI] = f; }
+    inline void set_roll(float f) { euler[THETA] = f; }
+    inline void set_yaw(float f) { euler[PSI] = f; }
     inline void set_euler_angles_rad(const SGVec3f& o) { euler = o.simd3(); }
     inline void set_euler_angles_rad(float phi, float theta, float psi) {
         euler[PHI] = phi;
@@ -159,15 +157,18 @@ private:
     /* aircraft normalized controls */
     float  br;				/* brake			*/
 
+    /* thuster / propulsion */
+    float D, RPS, prop_Ixx;
+
     /* aircraft state */
-    simd4_t<float,4> NED_cm;		/* lat, lon, altitude           */
-    simd4_t<float,4> UVW_body;		/* fwd, up, side speed          */
+    simd4_t<float,3> NED_cm;		/* lat, lon, altitude           */
+    simd4_t<float,3> UVW_body;		/* fwd, up, side speed          */
     simd4_t<float,3> PQR_body;		/* P, Q, R rate			*/
     simd4_t<float,3> PQR_dot;		/* Pdot, Qdot, Rdot accel.	*/
     simd4_t<float,3> ABY_body;		/* alpha, beta, gamma		*/
     simd4_t<float,3> ABY_dot;		/* adot, bdot, ydot		*/
     simd4_t<float,3> euler;		/* phi, theta, psi		*/
-    simd4_t<float,4> wind_ned;
+    simd4_t<float,3> wind_ned;
     float agl, velocity;
 
     /* history, these change between every call to update() */
@@ -180,10 +181,11 @@ private:
     /* run 20 to 60 times (or more) per second				*/
 
     /* cache, values that don't change very often */
-    simd4_t<float,4> FThrust, MThrust;
+    simd4_t<float,3> FThrust, MThrust;
     float b_2U, cbar_2U;
 
     /* dynamic coefficients (already multiplied with their value) */
+    simd4_t<float,4> xCqadot[2], xCpr[2];
     simd4_t<float,4> xCDYLT[4];
     simd4_t<float,4> xClmnT[4];
     simd4_t<float,4> C2F, C2M;
@@ -209,7 +211,7 @@ private:
 
     /* static environment  data */
     static float env[101][2];
-    simd4_t<float,4> gravity;
+    simd4_t<float,3> gravity;
     float dt2_2m;
 };
 
