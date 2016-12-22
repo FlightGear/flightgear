@@ -185,6 +185,21 @@ void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
         break;
     }
 
+    if (isHighlighted()) {
+        context->painter()->setPen(QPen(Qt::red, 1));
+        context->painter()->setBrush(Qt::NoBrush);
+        switch (_paintType) {
+        case Rect:
+        case RoundRect:
+            context->painter()->drawRect(_rect);
+            break;
+
+        case Path:
+            context->painter()->drawRect(_painterPath.boundingRect());
+            break;
+        }
+    }
+
 }
 
 void FGCanvasPath::markStyleDirty()

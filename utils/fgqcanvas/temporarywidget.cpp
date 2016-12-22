@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QSettings>
+#include <QItemSelectionModel>
 
 #include "fgqcanvasfontcache.h"
 #include "fgqcanvasimageloader.h"
@@ -21,7 +22,7 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
     connect(ui->connectButton, &QPushButton::clicked, this, &TemporaryWidget::onStartConnect);
     restoreSettings();
 
-    connect(ui->treeView, &QAbstractItemView::clicked, this, &TemporaryWidget::onCanvasTreeElementClicked);
+    connect(ui->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, &TemporaryWidget::onTreeCurrentChanged);
 }
 
 TemporaryWidget::~TemporaryWidget()
@@ -162,10 +163,18 @@ void TemporaryWidget::onSocketClosed()
     ui->stack->setCurrentIndex(0);
 }
 
-void TemporaryWidget::onCanvasTreeElementClicked(const QModelIndex &index)
+void TemporaryWidget::onTreeCurrentChanged(const QModelIndex &previous, const QModelIndex &current)
 {
-    FGCanvasElement* e = m_canvasModel->elementFromIndex(index);
+    FGCanvasElement* prev = m_canvasModel->elementFromIndex(previous);
+    if (prev) {
+        prev->setHighlighted(false);
+    }
+
+    FGCanvasElement* e = m_canvasModel->elementFromIndex(current);
     m_elementModel->setElement(e);
+    if (e) {
+        e->setHighlighted(true);
+    }
 }
 
 void TemporaryWidget::saveSettings()

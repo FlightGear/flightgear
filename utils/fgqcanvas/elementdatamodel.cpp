@@ -58,9 +58,10 @@ void ElementDataModel::computeKeys()
     QByteArrayList directProps = QByteArrayList() << "fill" << "stroke" <<
                                                      "background" <<
                                                      "text" <<
-                                                     "clip" << "file" <<
+                                                     "clip" << "file" << "src"
                                                      "font" << "character-size" <<
-                                                     "z-index" << "visible";
+                                                     "z-index" << "visible" <<
+                                                     "stroke";
 
     Q_FOREACH (QByteArray b, directProps) {
         if (prop->hasChild(b)) {

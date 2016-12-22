@@ -29,8 +29,7 @@ private Q_SLOTS:
 
     void onSocketClosed();
 
-    void onCanvasTreeElementClicked(const QModelIndex& index);
-
+    void onTreeCurrentChanged(const QModelIndex &previous, const QModelIndex &current);
 private:
     void saveSettings();
     void restoreSettings();

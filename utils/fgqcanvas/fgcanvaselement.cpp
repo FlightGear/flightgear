@@ -40,6 +40,16 @@ LocalProp *FGCanvasElement::property() const
     return const_cast<LocalProp*>(_propertyRoot);
 }
 
+void FGCanvasElement::setHighlighted(bool hilighted)
+{
+    _highlighted = hilighted;
+}
+
+bool FGCanvasElement::isHighlighted() const
+{
+    return _highlighted;
+}
+
 FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
     QObject(pr),
     _propertyRoot(prop),
@@ -94,8 +104,6 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
     } else {
         p->setBrush(_fillColor);
     }
-
-
 
     doPaint(context);
 

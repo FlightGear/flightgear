@@ -23,6 +23,10 @@ protected:
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const override;
 
     virtual QModelIndex parent(const QModelIndex &child) const override;
+
+    virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    virtual bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 private:
     QModelIndex indexForGroup(FGCanvasGroup *group) const;
 

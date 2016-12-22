@@ -35,7 +35,7 @@ int CanvasTreeModel::rowCount(const QModelIndex &parent) const
 
 int CanvasTreeModel::columnCount(const QModelIndex &parent) const
 {
-    return 2;
+    return 1;
 }
 
 QVariant CanvasTreeModel::data(const QModelIndex &index, int role) const
@@ -48,6 +48,12 @@ QVariant CanvasTreeModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case Qt::DisplayRole:
         return e->property()->value("id", QVariant("<noid>"));
+
+    case Qt::CheckStateRole:
+        return e->property()->value("visible", true);
+
+    default:
+        break;
     }
 
     return QVariant();
@@ -98,6 +104,27 @@ QModelIndex CanvasTreeModel::parent(const QModelIndex &child) const
     }
 
     return indexForGroup(const_cast<FGCanvasGroup*>(e->parentGroup()));
+}
+
+Qt::ItemFlags CanvasTreeModel::flags(const QModelIndex &index) const
+{
+    return QAbstractItemModel::flags(index) | Qt::ItemIsUserCheckable;
+}
+
+bool CanvasTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    FGCanvasElement* e = static_cast<FGCanvasElement*>(index.internalPointer());
+    if (!e) {
+        return false;
+    }
+
+    if (role == Qt::CheckStateRole) {
+        e->property()->setProperty("visible", value);
+        emit dataChanged(index, index, QVector<int>() << Qt::CheckStateRole);
+        return true;
+    }
+
+    return false;
 }
 
 QModelIndex CanvasTreeModel::indexForGroup(FGCanvasGroup* group) const

@@ -31,6 +31,9 @@ public:
     static bool isStyleProperty(QByteArray name);
 
     LocalProp* property() const;
+
+    void setHighlighted(bool hilighted);
+    bool isHighlighted() const;
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const;
 
@@ -63,6 +66,8 @@ private:
     friend class FGCanvasGroup;
 
     bool _visible = true;
+    bool _highlighted = false;
+
     mutable bool _transformsDirty = true;
     mutable bool _styleDirty = true;
 
