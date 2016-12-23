@@ -214,7 +214,7 @@ printf("FDYLT: %7.2f, %7.2f, %7.2f, %7.2f\n", FDYLT[DRAG], FDYLT[SIDE], FDYLT[LI
     angle = simd4::normalize(aby);
 
     simd4x4_t<float,4> WBM = simd4x4::rotation_matrix<float>(angle, aby);
-    simd4_t<float,3>FXYZ = WBM*FDYLT + EBM*gravity;
+    simd4_t<float,3>FXYZ = EBM*gravity + WBM*FDYLT;
 
     // Thrust -- todo: propulsion in non x-directions
     FThrust[X] = FDYLT[THRUST];	
