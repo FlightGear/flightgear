@@ -136,6 +136,11 @@ void Model::initIteration()
         _turb->offset(toff);
     }
 
+    for(i=0; i<_gears.size(); i++) {
+        Gear* g = (Gear*)_gears.get(i);
+        g->integrate(_integrator.getInterval());
+    }
+
     for(i=0; i<_hitches.size(); i++) {
         Hitch* h = (Hitch*)_hitches.get(i);
         h->integrate(_integrator.getInterval());

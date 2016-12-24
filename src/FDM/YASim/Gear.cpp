@@ -20,7 +20,7 @@ Gear::Gear()
 {
     int i;
     for(i=0; i<3; i++)
-	_pos[i] = _cmpr[i] = 0;
+        _pos[i] = _cmpr[i] = 0;
     _spring = 1;
     _damp = 0;
     _sfric = 0.8f;
@@ -48,7 +48,7 @@ Gear::Gear()
     _ignoreWhileSolving = 0;
 
     for(i=0; i<3; i++)
-	_global_ground[i] = _global_vel[i] = 0;
+        _global_ground[i] = _global_vel[i] = 0;
     _global_ground[2] = 1;
     _global_ground[3] = -1e3;
 }
@@ -181,7 +181,7 @@ void Gear::setGlobalGround(double *global_ground, float* global_vel,
     _global_x = globalX;
     _global_y = globalY;
 
-    }
+}
 
 void Gear::getPosition(float* out)
 {
@@ -192,7 +192,7 @@ void Gear::getPosition(float* out)
 void Gear::getCompression(float* out)
 {
     int i;
-    for(i=0; i<3; i++) out[i] = _cmpr[i];    
+    for(i=0; i<3; i++) out[i] = _cmpr[i];
 }
 
 void Gear::getGlobalGround(double* global_ground)
@@ -278,8 +278,20 @@ float Gear::getBumpAltitude()
     //values
     float h = Math::sin(x)+Math::sin(7*x)+Math::sin(8*x)+Math::sin(13*x);
     h += Math::sin(2*y)+Math::sin(5*y)+Math::sin(9*y*x)+Math::sin(17*y);
-    
+
     return h*(1/8.)*_ground_bumpiness*maxGroundBumpAmplitude;
+}
+
+void Gear::integrate(float dt)
+{
+    // Slowly spin down wheel
+    if (_rollSpeed > 0) {
+        // The brake factor of 13.0 * dt was copied from JSBSim's FGLGear.cpp and seems to work reasonably.
+        // If more precise control is needed, then we need wheel mass and diameter parameters.
+        _rollSpeed -= (13.0 * dt + 1300 * _brake * dt);
+        if (_rollSpeed < 0) _rollSpeed = 0;
+    }
+    return;
 }
 
 void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
@@ -288,7 +300,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     int i;
     for(i=0; i<3; i++) _force[i] = _contact[i] = 0;
 
-    // Don't bother if it's not down
+    // Don't bother if gear is retracted
     if(_extension < 1)
     {
         _wow = 0;
@@ -309,7 +321,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     // The ground plane transformed to the local frame.
     float ground[4];
     s->planeGlobalToLocal(_global_ground, ground);
-        
+
     // The velocity of the contact patch transformed to local coordinates.
     float glvel[3];
     s->velGlobalToLocal(_global_vel, glvel);
@@ -325,12 +337,11 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     }
     _compressDist = -a;
     if(a > 0) {
-	_wow = 0;
-	_frac = 0;
+        _wow = 0;
+        _frac = 0;
         _compressDist = 0;
-        _rollSpeed = 0;
         _casterAngle = 0;
-	return;
+        return;
     }
 
     // Now a is the distance from the tip to ground, so make b the
@@ -347,7 +358,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     else
         _frac = a/(a-b);
     for(i=0; i<3; i++)
-	_contact[i] = _pos[i] + _frac*_cmpr[i];
+        _contact[i] = _pos[i] + _frac*_cmpr[i];
 
     // Turn _cmpr into a unit vector and a magnitude
     float cmpr[3];
@@ -416,7 +427,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     Math::cross3(skid, gup, steer); // skid cross up == steer
 
     if(_rot != 0) {
-	// Correct for a rotation
+        // Correct for a rotation
         float srot = Math::sin(_rot);
         float crot = Math::cos(_rot);
         float tx = steer[0];
@@ -462,7 +473,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     }
     if(vsteer > 0) fsteer = -fsteer;
     if(vskid > 0) fskid = -fskid;
-    
+
     //reduce friction if wanted by _reduceFrictionByExtension
     float factor = (1-_frac)*(1-_reduceFrictionByExtension)+_frac*1;
     factor = Math::clamp(factor,0,1);
