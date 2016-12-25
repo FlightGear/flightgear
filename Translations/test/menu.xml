@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!-- FlightGear menu: Test language resource -->
+
+<!-- Test character encoding.
+     Intentionally incomplete resource (test fallback to default text).
+ -->
+
+<PropertyList>
+
+	<!-- File menu -->
+	<file>Datei</file>
+	<reset>Rest ÙÚÛÜÝßàáâãäåç</reset>
+	<sound-config>Sound Configuration èéêëìíîïñòóôõöø</sound-config>
+
+	<!-- View menu -->
+	<view>View ÈÉÊËÌÍÎÏ</view>
+
+	<!-- Location menu -->
+	<location>Location ÑÒÓÔÕÖØ</location>
+
+	<!-- Autopilot menu -->
+	<autopilot>Autopilot ùúûüýÿ</autopilot>
+
+	<!-- Environment menu -->
+	<environment>Environment</environment>
+
+	<!-- AI menu -->
+	<!--
+	<ai>AI</ai>
+	-->
+
+	<!-- Equipment -->
+	<!--
+	<equipment>Equipment</equipment>
+	-->
+
+	<!-- Multiplayer -->
+	<multiplayer>Multiplayer</multiplayer>
+
+	<!-- Debug menu -->
+	<debug>Debug</debug>
+
+	<!-- Help menu -->
+	<help>Help</help>
+
+</PropertyList>

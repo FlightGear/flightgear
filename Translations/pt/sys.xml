@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!-- FlightGear system messages: Portuguese language resource -->
+
+<!-- ###
+### This file is automatically synchronized with the master (=English language) resource.
+### Please do not add comments, change order or restructure the file.
+###
+### To translate:
+###    * Replace "???" entries with appropriate translation.
+###    * Keep untranslated items unmodified (leave the "???"). English original is the
+###      automatic default.
+###    * Remove enclosing "<!-_ ... _->" tags for completed translations.
+###    * Keep the original English text unmodified (the '<!-_ English: "..." -_>)',
+###      so we know which version of the English original the translation is based upon
+###      (and we can identify translations which need to be updated, when the original changes).
+###    * Replace "-_" occurences with a double "-" in all translations (XML does not allow
+###      consecutive "-" characters in comments).
+###
+### Last synchronized with English master resource on 2012-September-21 for FlightGear 2.9.0
+### -->
+<PropertyList>
+
+	<splash>
+		<init>inicializando</init>   <!-- English: "initializing" -->
+		<loading-aircraft-list>carregando lista de aeronaves</loading-aircraft-list>   <!-- English: "loading aircraft list" -->
+		<loading-aircraft>carregando aeronaves</loading-aircraft>   <!-- English: "loading aircraft" -->
+		<loading-nav-dat>carregando dados de navegacao</loading-nav-dat>   <!-- English: "loading navigation data" -->
+		<init-scenery>inicializando cenarios</init-scenery>   <!-- English: "initializing scenery" -->
+		<creating-subsystems>criando subsistemas</creating-subsystems>   <!-- English: "creating subsystems" -->
+		<init-subsystems>inicializando subsistemas</init-subsystems>   <!-- English: "initializing subsystems" -->
+		<binding-subsystems>ligando subsistemas</binding-subsystems>   <!-- English: "binding subsystems" -->
+		<finishing-subsystems>finalizando subsistemas</finishing-subsystems>   <!-- English: "finalizing subsystems" -->
+		<init-graphics>inicializando o motor grafico</init-graphics>   <!-- English: "initializing graphics engine" -->
+		<loading-scenery>carregando cenarios</loading-scenery>   <!-- English: "loading scenery" -->
+		<finalize-position>finalizando posicao</finalize-position>   <!-- English: "finalizing position" -->
+	</splash>
+
+</PropertyList>

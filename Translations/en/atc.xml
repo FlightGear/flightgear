@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+
+<!-- FlightGear atc messages: English (=default) language resource -->
+
+<PropertyList>
+  <!-- tag names must not start with a digit :-( -->
+
+  <!-- spoken numbers -->
+  <n0>zero</n0>
+  <n1>one</n1>
+  <n2>two</n2>
+  <n3>three</n3>
+  <n4>four</n4>
+  <n5>five</n5>
+  <n6>six</n6>
+  <n7>seven</n7>
+  <n8>eight</n8>
+  <n9>niner</n9>
+
+  <n100>hundret</n100>
+  <n1000>thousand</n1000>
+
+  <minus>minus</minus>
+  <plus>plus</plus>
+
+  <!-- spoken letters -->
+  <a>alpha</a>
+  <b>bravo</b>
+  <c>charlie</c>
+  <d>delta</d>
+  <e>echo</e>
+  <f>foxtrot</f>
+  <g>golf</g>
+  <h>hotel</h>
+  <i>india</i>
+  <j>juliet</j>
+  <k>kilo</k>
+  <l>lima</l>
+  <m>mike</m>
+  <n>november</n>
+  <o>oscar</o>
+  <p>papa</p>
+  <q>quebec</q>
+  <r>romeo</r>
+  <s>sierra</s>
+  <t>tango</t>
+  <u>uniform</u>
+  <v>victor</v>
+  <w>whiskey</w>
+  <x>x-ray</x>
+  <y>yankee</y>
+  <z>zulu</z>
+
+  <cavok>cavok</cavok>
+  <meters>meters</meters>
+  <kilometers>kilometers</kilometers>
+  <miles>miles</miles>
+  <ormore>or more</ormore>
+  <feet>feet</feet>
+  <dp>decimal</dp> <!-- the decimal point, sometimes 'point' -->
+
+  <approach>approach</approach>
+  <ils>i l s </ils>
+  <localizer>localizer</localizer>
+  <glidepath>glidepath</glidepath>
+  <vor>v o r</vor>
+  <dme>d m e</dme>
+  <ndb>n d b</ndb>
+  <visual>visual</visual>
+
+</PropertyList>
+

@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!-- FlightGear options: Portuguese language resource -->
+
+<!-- ###
+### This file is automatically synchronized with the master (=English language) resource.
+### Please do not add comments, change order or restructure the file.
+###
+### To translate:
+###    * Replace "???" entries with appropriate translation.
+###    * Keep untranslated items unmodified (leave the "???"). English original is the
+###      automatic default.
+###    * Remove enclosing "<!-_ ... _->" tags for completed translations.
+###    * Keep the original English text unmodified (the '<!-_ English: "..." -_>)',
+###      so we know which version of the English original the translation is based upon
+###      (and we can identify translations which need to be updated, when the original changes).
+###    * Replace "-_" occurences with a double "-" in all translations (XML does not allow
+###      consecutive "-" characters in comments).
+###
+### Last synchronized with English master resource on 2012-July-15 for FlightGear 2.8.0
+### -->
+<PropertyList>
+
+ 	<usage>Uso: fgfs [ opcao ... ]</usage>    <!-- English: "Usage: fgfs [ option ... ]" -->
+ 	<verbose-help>Para obter uma lista completa de opcoes use --help --verbose</verbose-help>    <!-- English: "For a complete list of options use -_help -_verbose" -->
+
+	<!-- General options -->
+	<general-options>Opcoes Gerais</general-options>   <!-- English: "General Options" -->
+	<help-desc>Exibe as opcoes mais relevantes da linha de comando</help-desc>   <!-- English: "Show the most relevant command line options" -->
+	<verbose-desc>Exibe todas as opcoes da linha de comando quando combinado com --help ou -h</verbose-desc>   <!-- English: "Show all command line options when combined with -_help or -h" -->
+	<version-desc>Exibe a versao atual do FlightGear</version-desc>   <!-- English: "Display the current FlightGear version" -->
+	<fg-root-desc>Especifica a pasta de dados raiz</fg-root-desc>   <!-- English: "Specify the root data path" -->
+	<fg-scenery-desc n="0">Especifica o caminho da pasta de cenario(s);</fg-scenery-desc>   <!-- English: "Specify the scenery path(s);" -->
+	<fg-scenery-desc n="1">Por padrao e $FG_ROOT/Scenery</fg-scenery-desc>   <!-- English: "Defaults to $FG_ROOT/Scenery" -->
+	<fg-aircraft-desc>Especifica o caminho do diretorio de aeronaves adicionais</fg-aircraft-desc>   <!-- English: "Specify additional aircraft directory path(s)" -->
+	<language-desc>Seleciona o idioma para esta sessao</language-desc>   <!-- English: "Select the language for this session" -->
+	<disable-splash-screen-desc>Desativa tela de abertura</disable-splash-screen-desc>   <!-- English: "Disable splash screen" -->
+	<enable-splash-screen-desc>Ativa tela de abertura</enable-splash-screen-desc>   <!-- English: "Enable splash screen" -->
+	<restore-defaults-desc>Restaurar todas as configuracoes do usuario para seus padroes (opcoes de renderizacao etc)</restore-defaults-desc>   <!-- English: "Reset all user settings to their defaults (rendering options etc)" -->
+	<disable-save-on-exit>Nao salvar preferencias ao sair do programa</disable-save-on-exit>   <!-- English: "Don't save preferences upon program exit" -->
+	<enable-save-on-exit>Permitir salvar preferencias ao sair do programa</enable-save-on-exit>   <!-- English: "Allow saving preferences at program exit" -->
+	<disable-mouse-pointer-desc>Desativar ponteiro adicional do mouse</disable-mouse-pointer-desc>   <!-- English: "Disable extra mouse pointer" -->
+	<enable-mouse-pointer-desc n="0">Ativar ponteiro adicional do mouse</enable-mouse-pointer-desc>   <!-- English: "Enable extra mouse pointer" -->
+	<enable-mouse-pointer-desc n="1">(i.e. para placas do tipo Voodoo tela cheia)</enable-mouse-pointer-desc>   <!-- English: "(i.e. for full screen Voodoo based cards)" -->
+	<disable-random-objects-desc>Excluir objetos aleatorios do cenario</disable-random-objects-desc>   <!-- English: "Exclude random scenery objects" -->
+	<enable-random-objects-desc>Adicionar objetos aleatorios do cenario</enable-random-objects-desc>   <!-- English: "Include random scenery objects" -->
+	<disable-random-vegetation-desc>Excluir objetos aleatorios de vegetacao</disable-random-vegetation-desc>   <!-- English: "Exclude random vegetation objects" -->
+	<enable-random-vegetation-desc>Adicionar objetos aleatorios de vegetacao</enable-random-vegetation-desc>   <!-- English: "Include random vegetation objects" -->
+	<disable-random-buildings-desc>Excluir edificios aleatorios</disable-random-buildings-desc>   <!-- English: "Exclude random buildings objects" -->
+	<enable-random-buildings-desc>Adicionar edificios aleatorios</enable-random-buildings-desc> -->   <!-- English: "Include random buildings objects" -->
+	<disable-real-weather-fetch-desc>Desativar a busca de clima real baseada em METAR</disable-real-weather-fetch-desc>   <!-- English: "Disable METAR based real weather fetching" -->
+	<enable-real-weather-fetch-desc>Ativar a busca de clima real baseada em METAR (isto requer uma conexao a Internet)</enable-real-weather-fetch-desc>   <!-- English: "Enable METAR based real weather fetching (this requires an open internet connection)" -->
+	<metar-desc>Passar um METAR para configurar clima estatico</metar-desc>   <!-- English: "Pass a METAR to set up static weather" -->
+	<random-objects-desc>(edificios, etc.)</random-objects-desc>   <!-- English: "(buildings, etc.)" -->
+	<disable-ai-models-desc>Opcao em desuso (desativa o sistema de trafego interativo)</disable-ai-models-desc>   <!-- English: "Deprecated option (disable internal AI subsystem)" -->
+	<enable-ai-models-desc>Ativar trafego interativo (necessario para multi-jogador, trafego IA e muitas outras animacoes)</enable-ai-models-desc>   <!-- English: "Enable AI subsystem (required for multi-player, AI traffic and many other animations)" -->
+	<disable-ai-traffic-desc>Desativar trafego artificial.</disable-ai-traffic-desc>   <!-- English: "Disable artificial traffic." -->
+	<enable-ai-traffic-desc>Ativar trafego artificial.</enable-ai-traffic-desc>   <!-- English: "Enable artificial traffic." -->
+	<ai-scenario>Adiciona e habilita um novo cenario. Multiplas opcoes sao permitidas.</ai-scenario>   <!-- English: "Add and enable a new scenario. Multiple options are allowed." -->
+	<disable-freeze-desc>Comece em um estado de funcionamento</disable-freeze-desc>   <!-- English: "Start in a running state" -->
+	<enable-freeze-desc>Comece em um estado congelado</enable-freeze-desc>   <!-- English: "Start in a frozen state" -->
+	<disable-fuel-freeze-desc>O combustivel e consumido normalmente</disable-fuel-freeze-desc>   <!-- English: "Fuel is consumed normally" -->
+	<enable-fuel-freeze-desc>Quantidade do tanque de combustivel forcada a permanecer constante</enable-fuel-freeze-desc>   <!-- English: "Fuel tank quantity forced to remain constant" -->
+	<disable-clock-freeze-desc>Relogio avanca normalmente</disable-clock-freeze-desc>   <!-- English: "Clock advances normally" -->
+	<enable-clock-freeze-desc>Nao avanca o relogio</enable-clock-freeze-desc>   <!-- English: "Do not advance clock" -->
+	<enable-auto-coordination-desc>Ativa a auto-coordenacao</enable-auto-coordination-desc>   <!-- English: "Enable auto coordination" -->
+	<disable-auto-coordination-desc>Desativa a auto-coordenacao</disable-auto-coordination-desc>   <!-- English: "Disable auto coordination" -->
+	<browser-app-desc>Especifica o caminho do navegador web</browser-app-desc>   <!-- English: "Specify path to your web browser" -->
+	<prop-desc>Define a propriedade e&lt;nome&gt; para &lt;valor&gt;. O &lt;tipo&gt; pode ser uma cadeia de caracteres (string), duplo (double), flutuante (float), longo (long), inteiro (int), booleano (bool).</prop-desc>   <!-- English: "Set property &lt;name&gt; to &lt;value&gt;. &lt;type&gt; can be one of string, double, float, long, int, or bool." -->
+	<config-desc>Carrega propriedades adicionais do caminho</config-desc>   <!-- English: "Load additional properties from path" -->
+	<units-feet-desc>Usar pes para distancias</units-feet-desc>   <!-- English: "Use feet for distances" -->
+	<units-meters-desc>Usar metros para distancias</units-meters-desc>   <!-- English: "Use meters for distances" -->
+
+	<!-- Features options -->
+	<environment-options>Opcoes de ambiente</environment-options>   <!-- English: "Environment Options" -->
+	<features-options>Caracteristicas</features-options>   <!-- English: "Features" -->
+	<disable-hud-desc>Desativa visor holografico (HUD)</disable-hud-desc>   <!-- English: "Disable Heads Up Display (HUD)" -->
+	<enable-hud-desc>Ativa visor holografico (HUD)</enable-hud-desc>   <!-- English: "Enable Heads Up Display (HUD)" -->
+	<disable-panel-desc>Desativa o painel de instrumentos</disable-panel-desc>   <!-- English: "Disable instrument panel" -->
+	<enable-panel-desc>Ativa o painel de instrumentos</enable-panel-desc>   <!-- English: "Enable instrument panel" -->
+	<disable-anti-alias-hud-desc>Desativa o visor holografico (HUD) com anti-serrilhado</disable-anti-alias-hud-desc>   <!-- English: "Disable anti-aliased HUD" -->
+	<enable-anti-alias-hud-desc>Ativa o visor holografico (HUD) com anti-serrilhado</enable-anti-alias-hud-desc>   <!-- English: "Enable anti-aliased HUD" -->
+	<disable-hud-3d-desc>Desativa o visor holografico (HUD) 3D</disable-hud-3d-desc>   <!-- English: "Disable 3D HUD" -->
+	<enable-hud-3d-desc>Ativa o visor holografico (HUD) 3D</enable-hud-3d-desc>   <!-- English: "Enable 3D HUD" -->
+
+	<!-- Aircraft options -->
+	<aircraft-options>Aeronave</aircraft-options>   <!-- English: "Aircraft" -->
+	<aircraft-desc>Selecionar um perfil de aeronave definido por um &lt;nome&gt;-set.xml de nivel superior</aircraft-desc>   <!-- English: "Select an aircraft profile as defined by a top level &lt;name&gt;-set.xml" -->
+	<show-aircraft-desc>Exibe uma lista dos tipos de aeronaves disponiveis atualmente</show-aircraft-desc>   <!-- English: "Print a list of the currently available aircraft types" -->
+	<min-aircraft-status>Permite definir um nivel minimo de status (=status de desenvolvimento) para todas as aeronaves listadas</min-aircraft-status>   <!-- English: "Allows you to define a minimum status level (=development status) for all listed aircraft" -->
+	<vehicle-desc>Selecionar um perfil de veiculo definido por um &lt;nome&gt;-set.xml de nivel superior</vehicle-desc>   <!-- English: "Select an vehicle profile as defined by a top level &lt;name&gt;-set.xml" -->
+	<livery-desc>Seleciona a pintura da aeronave</livery-desc>   <!-- English: "Select aircraft livery" -->
+
+	<!-- Flight Dynamics Model options -->
+	<fdm-options>Modelo de Voo</fdm-options>   <!-- English: "Flight Model" -->
+	<fdm-desc n="0">Seleciona o nucleo dos modelos de dinamica de voo</fdm-desc>   <!-- English: "Select the core flight dynamics model" -->
+	<fdm-desc n="1">Pode ser: jsb, larcsim, yasim, magic, balloon, ada, external, ou nulo</fdm-desc>   <!-- English: "Can be one of jsb, larcsim, yasim, magic, balloon, ada, external, or null" -->
+	<aero-desc>Seleciona o modelo da aerodinamica da aeronave para carregar</aero-desc>   <!-- English: "Select aircraft aerodynamics model to load" -->
+	<model-hz-desc>Executar o MDV com esta taxa (interacoes por segundo)</model-hz-desc>   <!-- English: "Run the FDM this rate (iterations per second)" -->
+	<speed-desc>Executar o MDV 'n' vezes mais rapido que o tempo real</speed-desc>   <!-- English: "Run the FDM 'n' times faster than real time" -->
+	<notrim-desc n="0">NAO tentar compensar o modelo</notrim-desc>   <!-- English: "Do NOT attempt to trim the model" -->
+	<notrim-desc n="1">(apenas com MDV=jsbsim)</notrim-desc>   <!-- English: "(only with fdm=jsbsim)" -->
+	<trim-desc n="0">Compensar o modelo</trim-desc>   <!-- English: "Trim the model" -->
+	<trim-desc n="1">(apenas com MDV=jsbsim)</trim-desc>   <!-- English: "(only with fdm=jsbsim)" -->
+	<on-ground-desc>Iniciar no nivel do chao (padrao)</on-ground-desc>   <!-- English: "Start at ground level (default)" -->
+	<in-air-desc>iniciar no ar (implicado a usar --altitude)</in-air-desc>   <!-- English: "Start in air (implied when using -_altitude)" -->
+	<wind-desc>Especifica o vento vindo da DIRECAO (graus) e VELOCIDADE (nos)</wind-desc>   <!-- English: "Specify wind coming from DIR (degrees) at SPEED (knots)" -->
+	<random-wind-desc>Especifica uma direcao e velocidade do vento aleatoria</random-wind-desc>   <!-- English: "Set up random wind direction and speed" -->
+	<turbulence-desc>Especifica turbulencias desde 0.0 (calmas) ate 1.0 (severas)</turbulence-desc>   <!-- English: "Specify turbulence from 0.0 (calm) to 1.0 (severe)" -->
+	<ceiling-desc>Criar um teto nublado, opcionalmente, com uma espessura especifica (o padrao e 2000 pes).</ceiling-desc>   <!-- English: "Create an overcast ceiling, optionally with a specific thickness (defaults to 2000 ft)." -->
+	<aircraft-dir-desc>Diretorio das aeronaves relativo ao caminho do executavel</aircraft-dir-desc>   <!-- English: "Aircraft directory relative to the path of the executable" -->
+
+	<aircraft-model-options>Diretorio dos modelos de aeronaves (APENAS UIUC MDV)</aircraft-model-options>   <!-- English: "Aircraft model directory (UIUC FDM ONLY)" -->
+
+	<!-- Position and Orientation options -->
+	<position-options>Posicao e Orientacao Iniciais</position-options>   <!-- English: "Initial Position and Orientation" -->
+	<airport-desc>Especifica a posicao inicial relativa ao aeroporto</airport-desc>   <!-- English: "Specify starting position relative to an airport" -->
+	<parking-id-desc>Especifica a posicao de estacionamento de um aeroporto (tambem deve especificar um aeroporto)</parking-id-desc>   <!-- English: "Specify parking position at an airport (must also specify an airport)" -->
+	<carrier-desc>Especifica a posicao inicial em um porta-avioes IA</carrier-desc>   <!-- English: "Specify starting position on an AI carrier" -->
+	<parkpos-desc>Especifica em que posicao inicia em um porta-avioes IA (precisa especificar o porta-avioes)</parkpos-desc>   <!-- English: "Specify which starting position on an AI carrier (must also specify a carrier)" -->
+	<vor-desc>Especifica a posicao inicial relativa a um VOR</vor-desc>   <!-- English: "Specify starting position relative to a VOR" -->
+<!-- 	<vor-freq-desc>???</vor-freq-desc> -->   <!-- English: "Specify the frequency of the VOR. Use with -_vor=ID" -->
+	<ndb-desc>Especifica a posicao inicial relativa a um NDB</ndb-desc>   <!-- English: "Specify starting position relative to an NDB" -->
+<!-- 	<ndb-freq-desc>???</ndb-freq-desc> -->   <!-- English: "Specify the frequency of the NDB. Use with -_ndb=ID" -->
+	<fix-desc>Especifica a posicao inicial relativa a um fixo</fix-desc>   <!-- English: "Specify starting position relative to a fix" -->
+	<runway-no-desc>Especifica o inicio na pista (e necessario escolher um aeroporto)</runway-no-desc>   <!-- English: "Specify starting runway (must also specify an airport)" -->
+	<offset-distance-desc>Especifica a distancia para um ponto de referencia (em milhas estatutarias)</offset-distance-desc>   <!-- English: "Specify distance to reference point (statute miles)" -->
+	<offset-azimuth-desc>Especifica aa direcao para o pontode referencia</offset-azimuth-desc>   <!-- English: "Specify heading to reference point" -->
+	<lon-desc>Longitude inicial (oeste = -)</lon-desc>   <!-- English: "Starting longitude (west = -)" -->
+	<lat-desc>Latitude inicial (sul = -)</lat-desc>   <!-- English: "Starting latitude (south = -)" -->
+	<altitude-desc>Altitude inicial</altitude-desc>   <!-- English: "Starting altitude" -->
+	<heading-desc>Especifica o angulo da direcao (rota) (Psi)</heading-desc>   <!-- English: "Specify heading (yaw) angle (Psi)" -->
+	<roll-desc>Especifica o angulo de rolagem (Phi)</roll-desc>   <!-- English: "Specify roll angle (Phi)" -->
+	<pitch-desc>Especifica o angulo de inclinacao (Theta)</pitch-desc>   <!-- English: "Specify pitch angle (Theta)" -->
+	<uBody-desc>Especifica a velocidade ao longo do eixo X do corpo</uBody-desc>   <!-- English: "Specify velocity along the body X axis" -->
+	<vBody-desc>Especifica a velocidade ao longo do eixo Y do corpo</vBody-desc>   <!-- English: "Specify velocity along the body Y axis" -->
+	<wBody-desc>Especifica a velocidade ao longo do eixo Z do corpo</wBody-desc>   <!-- English: "Specify velocity along the body Z axis" -->
+	<vNorth-desc>Especifica a velocidade ao longo de um eixo Sul-Norte</vNorth-desc>   <!-- English: "Specify velocity along a South-North axis" -->
+	<vEast-desc>Especifica a velocidade ao longo de um eixo Oeste-Este</vEast-desc>   <!-- English: "Specify velocity along a West-East axis" -->
+	<vDown-desc>Especifica a velocidade ao longo de um eixo vertical</vDown-desc>   <!-- English: "Specify velocity along a vertical axis" -->
+	<vc-desc>Especifica a velocidade inicial do vento</vc-desc>   <!-- English: "Specify initial airspeed" -->
+	<mach-desc>Especifica o numero MACH inicial</mach-desc>   <!-- English: "Specify initial mach number" -->
+	<glideslope-desc>Especifica o angulo da trajetoria de voo (pode ser positivo)</glideslope-desc>   <!-- English: "Specify flight path angle (can be positive)" -->
+	<roc-desc>Especifica a taxa de subida inicial (pode ser negativa)</roc-desc>   <!-- English: "Specify initial climb rate (can be negative)" -->
+
+	<!-- sound options -->
+	<audio-options>Opcoes de Audio</audio-options>   <!-- English: "Audio Options" -->
+	<disable-sound-desc>Desativa efeitos sonoros</disable-sound-desc>   <!-- English: "Disable sound effects" -->
+	<enable-sound-desc>Ativa efeitos sonoros</enable-sound-desc>   <!-- English: "Enable sound effects" -->
+	<show-sound-devices-desc>Exibe uma lista de dispositivos de audio disponiveis</show-sound-devices-desc>   <!-- English: "Show a list of available audio device" -->
+	<sound-device-desc>Especifica expressamente o dispositivo de audio para usar</sound-device-desc>   <!-- English: "Explicitly specify the audio device to use" -->
+
+	<!-- Rendering options -->
+	<rendering-options>Opcoes de Renderizacao</rendering-options>   <!-- English: "Rendering Options" -->
+	<bpp-desc>Especifica os bits por pixel</bpp-desc>   <!-- English: "Specify the bits per pixel" -->
+	<fog-disable-desc>Desativa nevoeiro/neblina</fog-disable-desc>   <!-- English: "Disable fog/haze" -->
+	<fog-fastest-desc>Ativar rapido nevoeiro/neblina</fog-fastest-desc>   <!-- English: "Enable fastest fog/haze" -->
+	<fog-nicest-desc>Ativar o melhor nevoeiro/neblina</fog-nicest-desc>   <!-- English: "Enable nicest fog/haze" -->
+	<disable-horizon-effect>Desativa a ilusao do crescimento de corpos celestes perto do horizonte</disable-horizon-effect>   <!-- English: "Disable celestial body growth illusion near the horizon" -->
+	<enable-horizon-effect>Ativa a ilusao do crescimento de corpos celestes perto do horizonte</enable-horizon-effect>   <!-- English: "Enable celestial body growth illusion near the horizon" -->
+	<disable-enhanced-lighting>Desativa a iluminacao melhorada das pistas</disable-enhanced-lighting>   <!-- English: "Disable enhanced runway lighting" -->
+	<enable-enhanced-lighting>Ativa a iluminacao melhorada das pistas</enable-enhanced-lighting>   <!-- English: "Enable enhanced runway lighting" -->
+	<disable-distance-attenuation>Desativa a atenuacao da distancia das luzes da pista</disable-distance-attenuation>   <!-- English: "Disable runway light distance attenuation" -->
+	<enable-distance-attenuation>Ativa a atenuacao da distancia das luzes da pista</enable-distance-attenuation>   <!-- English: "Enable runway light distance attenuation" -->
+	<disable-specular-highlight>Desativa a reflexao especular sobre objetos texturizados</disable-specular-highlight>   <!-- English: "Disable specular reflections on textured objects" -->
+	<enable-specular-highlight>Ativa a reflexao especular sobre objetos texturizados</enable-specular-highlight>   <!-- English: "Enable specular reflections on textured objects" -->
+	<enable-clouds-desc>Ativar as camadas de nuvens 2D (planas)</enable-clouds-desc>   <!-- English: "Enable 2D (flat) cloud layers" -->
+	<disable-clouds-desc>Desativar as camadas de nuvens 2D (planas)</disable-clouds-desc>   <!-- English: "Disable 2D (flat) cloud layers" -->
+	<enable-clouds3d-desc>Ativar as camadas de nuvens 3D (volumetricas)</enable-clouds3d-desc>   <!-- English: "Enable 3D (volumetric) cloud layers" -->
+	<disable-clouds3d-desc>Desativar as camadas de nuvens 3D (volumetricas)</disable-clouds3d-desc>   <!-- English: "Disable 3D (volumetric) cloud layers" -->
+	<fov-desc>Especifica o campo do angulo de visao</fov-desc>   <!-- English: "Specify field of view angle" -->
+	<arm-desc>Especificar um multiplicador para a taxa de proporcao.</arm-desc>   <!-- English: "Specify a multiplier for the aspect ratio." -->
+	<disable-fullscreen-desc>Desativa o modo tela cheia</disable-fullscreen-desc>   <!-- English: "Disable fullscreen mode" -->
+	<enable-fullscreen-desc>Ativa o modo tela cheia</enable-fullscreen-desc>   <!-- English: "Enable fullscreen mode" -->
+	<shading-flat-desc>Ativa o sombreamento plano</shading-flat-desc>   <!-- English: "Enable flat shading" -->
+	<shading-smooth-desc>Ativa o sombreamento suavizado</shading-smooth-desc>   <!-- English: "Enable smooth shading" -->
+	<disable-textures-desc>Desativa as texturas</disable-textures-desc>   <!-- English: "Disable textures" -->
+	<enable-textures-desc>Ativa as texturas</enable-textures-desc>   <!-- English: "Enable textures" -->
+	<materials-file-desc>Especifica o arquivo de materiais utilizados para renderizar o cenario (por padrao: materials.xml)</materials-file-desc>   <!-- English: "Specify the materials file used to render the scenery (default: materials.xml)" -->
+	<texture-filtering-desc>Filtragem de textura anisotropica: os valores devem ser 1 (padrao),2,4,8 ou 16</texture-filtering-desc>   <!-- English: "Anisotropic Texture Filtering: values should be 1 (default),2,4,8 or 16" -->
+	<disable-wireframe-desc>Desativa o modo de desenho aramado</disable-wireframe-desc>   <!-- English: "Disable wireframe drawing mode" -->
+	<enable-wireframe-desc>Ativa o modo de desenho aramado</enable-wireframe-desc>   <!-- English: "Enable wireframe drawing mode" -->
+	<geometry-desc>Especifica a geometria das janelas (640x480, etc)</geometry-desc>   <!-- English: "Specify window geometry (640x480, etc)" -->
+	<view-offset-desc>Especifica a direcao padrao da visao a frente, com um incremento adiante. Os valores validos sao LEFT (esq.), RIGHT (dir.), CENTER (centro), ou um numero especifico em graus</view-offset-desc>   <!-- English: "Specify the default forward view direction as an offset from straight ahead. Allowable values are LEFT, RIGHT, CENTER, or a specific number in degrees" -->
+	<visibility-desc>Especifica a visibilidade inicial</visibility-desc>   <!-- English: "Specify initial visibility" -->
+	<visibility-miles-desc>Especifica a visibilidade inicial em milhas</visibility-miles-desc>   <!-- English: "Specify initial visibility in miles" -->
+<!-- 	<max-fps-desc>???</max-fps-desc> -->   <!-- English: "Maximum frame rate in Hz." -->
+
+	<!-- Hud options -->
+	<hud-options>Opcoes do HUD</hud-options>   <!-- English: "Hud Options" -->
+	<hud-tris-desc>HUD exibe o numero de triangulos renderizados</hud-tris-desc>   <!-- English: "Hud displays number of triangles rendered" -->
+	<hud-culled-desc>HUD exibe uma porcentagem dos triangulos perdidos</hud-culled-desc>   <!-- English: "Hud displays percentage of triangles culled" -->
+
+	<!-- Time options -->
+	<time-options>Opcoes de Tempo</time-options>   <!-- English: "Time Options" -->
+	<timeofday-desc>Especifica a hora do dia</timeofday-desc>   <!-- English: "Specify a time of day" -->
+	<season-desc>Especifica a estacao inicial</season-desc>   <!-- English: "Specify the startup season" -->
+	<time-offset-desc>Adiciona um incremento de tempo</time-offset-desc>   <!-- English: "Add this time offset" -->
+	<time-match-real-desc>Sincronizar hora com a hora do mundo real</time-match-real-desc>   <!-- English: "Synchronize time with real-world time" -->
+	<time-match-local-desc>Sincronizar hora com a hora local</time-match-local-desc>   <!-- English: "Synchronize time with local real-world time" -->
+	<start-date-desc>Especifica uma data/tempo inicial com respeito a</start-date-desc>   <!-- English: "Specify a starting date/time with respect to" -->
+
+	<!-- Network options -->
+	<network-options>Opcoes de rede</network-options>   <!-- English: "Network Options" -->
+	<httpd-desc>Ativa o servidor http na porta especificada</httpd-desc>   <!-- English: "Enable http server on the specified port" -->
+	<proxy-desc>Especifica qual servidor proxy (e porta) serao utilizados. O nome de usuario e senha sao opcionais e precisam ter codificacao MD5. Esta opcao e util apenas quando utilizada em conjunto com a opcao real-weather-fetch.</proxy-desc>   <!-- English: "Specify which proxy server (and port) to use. The username and password are optional and should be MD5 encoded already. This option is only useful when used in conjunction with the real-weather-fetch option." -->
+	<telnet-desc>Ativa o servidor telnet na porta especificada</telnet-desc>   <!-- English: "Enable telnet server on the specified port" -->
+	<jpg-httpd-desc>Ativa captura de tela no servidor http na porta especificada (replaced by --httpd)</jpg-httpd-desc>   <!-- English: "Enable screen shot http server on the specified port" -->
+	<disable-terrasync-desc>Desativa o download/atualizacao automatica de cenarios</disable-terrasync-desc>   <!-- English: "Disable automatic scenery downloads/updates" -->
+	<enable-terrasync-desc>Ativa o download/atualizacao automatica de cenarios</enable-terrasync-desc>   <!-- English: "Enable automatic scenery downloads/updates" -->
+	<terrasync-dir-desc>Especifica o diretorio para download de cenarios</terrasync-dir-desc>   <!-- English: "Set target directory for scenery downloads" -->
+
+	<!-- MultiPlayer options -->
+	<multiplayer-options>Opcoes de Multijugador</multiplayer-options>   <!-- English: "MultiPlayer Options" -->
+	<multiplay-desc>Especifica a configuracao das comunicacoes multipiloto</multiplay-desc>   <!-- English: "Specify multipilot communication settings" -->
+	<callsign-desc>Atribui um nome unico para um jogador</callsign-desc>   <!-- English: "assign a unique name to a player" -->
+
+	<!-- Route/Way Point Options -->
+	<route-options>Opcoes de Rota/Way Point</route-options>   <!-- English: "Route/Way Point Options" -->
+	<wp-desc>Especifica o waypoint para o piloto automatico GC;</wp-desc>   <!-- English: "Specify a waypoint for the GC autopilot;" -->
+	<flight-plan-desc>Ler todos os waypoints de um arquivo</flight-plan-desc>   <!-- English: "Read all waypoints from a file" -->
+
+	<!-- IO Options -->
+	<io-options>Opcoes ES</io-options>   <!-- English: "IO Options" -->
+	<AV400-desc>Emite o protocolo Garmin AV400 requerido para utilizar um GPS Garmin 196/296 series</AV400-desc>   <!-- English: "Emit the Garmin AV400 protocol required to drive a Garmin 196/296 series GPS" -->
+	<AV400Sim-desc>Emite um conjunto de caracteres de texto AV400 requeridos para usar um GPS Garmin 400-series no FlightGear</AV400Sim-desc>   <!-- English: "Emit the set of AV400 strings required to drive a Garmin 400-series GPS from FlightGear" -->
+	<atlas-desc>Abrir conexao usando o protocolo Atlas</atlas-desc>   <!-- English: "Open connection using the Atlas protocol" -->
+	<atcsim-desc>Abrir conexao usando o protocolo ATC sim(atc610x)</atcsim-desc>   <!-- English: "Open connection using the ATC sim protocol (atc610x)" -->
+	<garmin-desc>Abrir conexao usando o protocolo Garmin GPS</garmin-desc>   <!-- English: "Open connection using the Garmin GPS protocol" -->
+	<joyclient-desc>Abrir conexao para um joystick Agwagon</joyclient-desc>   <!-- English: "Open connection to an Agwagon joystick" -->
+	<jsclient-desc>Abrir conexao para um  joystick remoto</jsclient-desc>   <!-- English: "Open connection to a remote joystick" -->
+	<native-ctrls-desc>Abrir conexao usando o protocolo FG Native Controls</native-ctrls-desc>   <!-- English: "Open connection using the FG Native Controls protocol" -->
+	<native-fdm-desc>Abrir conexao usando o protocolo FG Native FDM</native-fdm-desc>   <!-- English: "Open connection using the FG Native FDM protocol" -->
+	<native-gui-desc>Abrir conexao usando o protocolo FG Native GUI</native-gui-desc>   <!-- English: "Open connection using the FG Native GUI protocol" -->
+	<native-desc>Abrir conexao usando o protocolo FG Native</native-desc>   <!-- English: "Open connection using the FG Native protocol" -->
+	<nmea-desc>Abrir conexao usando o protocolo NMEA</nmea-desc>   <!-- English: "Open connection using the NMEA protocol" -->
+	<generic-desc>Abrir conexao usando uma interface predefinida de comunicacao e um protocolo pre selecionado de comunicacao</generic-desc>   <!-- English: "Open connection using a predefined communication interface and a preselected communication protocol" -->
+	<opengc-desc>Abrir conexao usando o protocolo OpenGC</opengc-desc>   <!-- English: "Open connection using the OpenGC protocol" -->
+	<props-desc>Abrir conexao usando o gerenciador interativo de propriedades</props-desc>   <!-- English: "Open connection using the interactive property manager" -->
+	<pve-desc>Abrir conexao usando o protocolo PVE</pve-desc>   <!-- English: "Open connection using the PVE protocol" -->
+	<ray-desc>Abrir conexao usando o protocolo Ray Woodworth motion chair</ray-desc>   <!-- English: "Open connection using the Ray Woodworth motion chair protocol" -->
+	<rul-desc>Abrir conexao usando o protocolo RUL</rul-desc>   <!-- English: "Open connection using the RUL protocol" -->
+
+	<!-- Avionics Options -->
+	<avionics-options>Opciones dos Avionicos</avionics-options>   <!-- English: "Avionics Options" -->
+	<com1-desc>Define a frequencia de radio COM1</com1-desc>   <!-- English: "Set the COM1 radio frequency" -->
+	<com2-desc>Define a frequencia de radio COM2</com2-desc>   <!-- English: "Set the COM2 radio frequency" -->
+	<nav1-desc>Define a frequencia de radio NAV1, opcionalmente precedida por um radial.</nav1-desc>   <!-- English: "Set the NAV1 radio frequency, optionally preceded by a radial." -->
+	<nav2-desc>Define a frequencia de radio NAV2, opcionalmente precedida por um radial.</nav2-desc>   <!-- English: "Set the NAV2 radio frequency, optionally preceded by a radial." -->
+	<adf1-desc>Define a frequencia de radio ADF1, opcionalmente precedido por uma rotacao de carta.</adf1-desc>   <!-- English: "Set the ADF1 radio frequency, optionally preceded by a card rotation." -->
+	<adf2-desc>Define a frequencia de radio ADF2, opcionalmente precedido por uma rotacao de carta.</adf2-desc>   <!-- English: "Set the ADF2 radio frequency, optionally preceded by a card rotation." -->
+	<dme-desc>Define como escravo o ADF para uma das radios NAV, ou define sua frequencia interna.</dme-desc>   <!-- English: "Slave the ADF to one of the NAV radios, or set its internal frequency." -->
+
+	<situation-options>Opcoes de Emergencias</situation-options>   <!-- English: "Situation Options" -->
+	<failure-desc>Falhar o sistema de pitot, vacuo, estatico, ou sistema eletrico (repetir a opcao para multiplas falhas do sistema).</failure-desc>   <!-- English: "Fail the pitot, static, vacuum, or electrical system (repeat the option for multiple system failures)." -->
+
+	<!-- Debugging Options -->
+	<debugging-options>Opcoes de Depuracao</debugging-options>   <!-- English: "Debugging Options" -->
+	<fpe-desc>Abortar ao encontrar uma excecao de ponto flutuante;</fpe-desc>   <!-- English: "Abort on encountering a floating point exception;" -->
+	<fgviewer-desc>Utilizar um visualizador do modelo, em vez de carregar o simulador inteiro;</fgviewer-desc>   <!-- English: "Use a model viewer rather than load the entire simulator;" -->
+	<trace-read-desc>Traca as leituras de uma propriedade;</trace-read-desc>   <!-- English: "Trace the reads for a property;" -->
+	<trace-write-desc>Traca as escritas de uma propriedade;</trace-write-desc>   <!-- English: "Trace the writes for a property;" -->
+	<log-level-desc>Especifica que nivel de registro de log utilizar</log-level-desc>   <!-- English: "Specify which logging level to use" -->
+	<log-class-desc>Especifica que classe(s) de registro de log utilizar</log-class-desc>   <!-- English: "Specify which logging class(es) to use" -->
+
+</PropertyList>

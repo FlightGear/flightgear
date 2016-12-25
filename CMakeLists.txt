@@ -459,6 +459,8 @@ add_subdirectory(3rdparty)
 add_subdirectory(utils)
 add_subdirectory(src)
 add_subdirectory(man)
+install(DIRECTORY Translations DESTINATION share/flightgear)
+install(FILES options.xml DESTINATION share/flightgear)
 
 #-----------------------------------------------------------------------------
 ### uninstall target

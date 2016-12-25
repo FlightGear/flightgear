@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+
+<!-- FlightGear menu: English (=default) language resource -->
+
+<PropertyList>
+
+	<!-- File menu -->
+	<file>File</file>
+	<reset>Reset                              </reset>
+	<load-tape>Load Flight Recorder Tape</load-tape>
+	<save-tape>Save Flight Recorder Tape</save-tape>
+	<snap-shot>Screenshot                      </snap-shot>
+	<snap-shot-dir>Screenshot Directory</snap-shot-dir>
+	<sound-config>Sound Configuration</sound-config>
+	<input-config>Mouse Configuration</input-config>
+	<joystick-config>Joystick Configuration</joystick-config>
+	<terrasync>Scenery Download</terrasync>
+	<aircraft-center>Aircraft Center (Experimental)</aircraft-center>
+	<exit>Quit</exit>
+
+	<!-- View menu -->
+	<view>View</view>
+	<toggle-fullscreen>Toggle Fullscreen</toggle-fullscreen>
+	<rendering-options>Rendering Options</rendering-options>
+	<view-options>View Options</view-options>
+	<cockpit-view-options>Cockpit View Options</cockpit-view-options>
+	<adjust-lod>Adjust LOD Ranges</adjust-lod>
+	<pilot-offset>Adjust View Position</pilot-offset>
+	<adjust-hud>Adjust HUD Properties</adjust-hud>
+	<toggle-glide-slope>Toggle Glide Slope Tunnel</toggle-glide-slope>
+	<replay>Instant Replay</replay>
+	<stereoscopic-options>Stereoscopic View Options</stereoscopic-options>
+
+	<!-- Location menu -->
+	<location>Location</location>
+	<position-in-air>Position Aircraft In Air</position-in-air>
+	<goto-airport>Select Airport</goto-airport>
+	<random-attitude>Random Attitude</random-attitude>
+	<tower-position>Tower Position</tower-position>
+
+	<!-- Autopilot menu -->
+	<autopilot>Autopilot</autopilot>
+	<autopilot-settings>Autopilot Settings</autopilot-settings>
+	<route-manager>Route Manager</route-manager>
+	<previous-waypoint>Previous Waypoint</previous-waypoint>
+	<next-waypoint>Next Waypoint</next-waypoint>
+
+	<!-- Environment menu -->
+	<environment>Environment</environment>
+	<global-weather>Weather</global-weather>
+	<environment-settings>Environment Settings</environment-settings>
+	<time-settings>Time Settings</time-settings>
+	<wildfire-settings>Wildfire Settings</wildfire-settings>
+
+	<!-- Equipment menu -->
+	<equipment>Equipment</equipment>
+	<map>Map</map>
+	<map-canvas>Map (Canvas)</map-canvas>
+	<map-browser>Map (opens in browser)</map-browser>
+	<stopwatch>Stopwatch</stopwatch>
+	<fuel-and-payload>Fuel and Payload</fuel-and-payload>
+	<radio>Radio Settings</radio>
+	<gps>GPS Settings</gps>
+	<instrument-settings>Instrument Settings</instrument-settings>
+	<failure-submenu> --- Failures ---</failure-submenu>
+	<random-failures>Random Failures</random-failures>
+	<system-failures>System Failures</system-failures>
+	<instrument-failures>Instrument Failures</instrument-failures>
+
+	<!-- AI menu -->
+	<ai>AI</ai>
+	<scenario>Traffic and Scenario Settings</scenario>
+	<atc-in-range>ATC Services in Range</atc-in-range>
+	<wingman>Wingman Controls</wingman>
+	<tanker>Tanker Controls</tanker>
+	<carrier>Carrier Controls</carrier>
+	<jetway>Jetway Settings</jetway>
+
+	<!-- Multiplayer menu -->
+	<multiplayer>Multiplayer</multiplayer>
+	<mp-settings>Multiplayer Settings</mp-settings>
+	<fgcom-settings>FGCom Settings</fgcom-settings>
+	<mp-chat>Chat Dialog</mp-chat>
+	<mp-chat-menu>Chat Menu</mp-chat-menu>
+	<mp-list>Pilot List</mp-list>
+	<mp-carrier>MPCarrier Selection</mp-carrier>
+	<lag-adjust>Lag Settings</lag-adjust>
+
+	<!-- Debug menu -->
+	<debug>Debug</debug>
+	<!-- Note: Debug menu items may not need to be translated
+	     since these options are not useful to end users anyway. -->
+	<reload-gui>Reload GUI</reload-gui>
+	<reload-input>Reload Input</reload-input>
+	<reload-hud>Reload HUD</reload-hud>
+	<reload-panel>Reload Panel</reload-panel>
+	<reload-autopilot>Reload Autopilot</reload-autopilot>
+	<reload-network>Reload Network</reload-network>
+	<reload-model>Reload Aircraft Model</reload-model>
+	<reload-materials>Reload Materials</reload-materials>
+	<reload-scenery>Reload Scenery</reload-scenery>
+	<nasal-console>Nasal Console</nasal-console>
+	<nasal-repl-interpreter>Nasal REPL Interpreter</nasal-repl-interpreter>
+	<development-keys>Development Keys</development-keys>
+	<configure-dev-extension>Configure Development Extensions</configure-dev-extension>
+	<display-marker>Display Tutorial Marker</display-marker>
+	<dump-scene-graph>Dump Scene Graph</dump-scene-graph>
+	<print-rendering-statistics>Print Rendering Statistics</print-rendering-statistics>
+	<statistics-display>Cycle On-Screen Statistics</statistics-display>
+	<performance-monitor>Monitor System Performance</performance-monitor>
+        <write-video-config>Save Video Configuration</write-video-config>
+	<property-browser>Browse Internal Properties</property-browser>
+	<logging>Logging</logging>
+	<local_weather>Local Weather (Test)</local_weather>
+	<print-scene-info>Print Visible Scene Info</print-scene-info>
+	<rendering-buffers>Hide/Show Rendering Buffers</rendering-buffers>
+	<rembrandt-buffers-choice>Select Rendering Buffers</rembrandt-buffers-choice>
+	<interface-config>User-interface options</interface-config>
+
+	<!-- Help menu -->
+	<help>Help</help>
+	<help-browser>Help  (opens in browser)</help-browser>
+	<doc-browser>Documentation Browser</doc-browser>
+	<aircraft-keys>Aircraft Help</aircraft-keys>
+	<aircraft-checklists>Aircraft Checklists</aircraft-checklists>
+	<common-keys>Common Aircraft Keys</common-keys>
+	<basic-keys>Basic Simulator Keys</basic-keys>
+	<joystick-info>Joystick Information</joystick-info>
+	<tutorial-start>Tutorials</tutorial-start>
+	<menu-about>About</menu-about>
+
+	<!-- Aircraft menu (only frequent/common custom menu entries are supported) -->
+	<select-livery>Select livery</select-livery>
+	<show-hide-yokes>Show/hide yokes</show-hide-yokes>
+	<immatriculation>Immatriculation</immatriculation>
+	<pushback>Pushback</pushback>
+	<autostart>Autostart</autostart>
+	<tiller-steering>Tiller Steering</tiller-steering>
+
+</PropertyList>

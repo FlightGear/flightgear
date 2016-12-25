@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<!-- FlightGear options: Dutch language resource -->
+
+<!-- ###
+### This file is automatically synchronized with the master (=English language) resource.
+### Please do not add comments, change order or restructure the file.
+###
+### To translate:
+###    * Replace "???" entries with appropriate translation.
+###    * Keep untranslated items unmodified (leave the "???"). English original is the
+###      automatic default.
+###    * Remove enclosing "<!-_ ... _->" tags for completed translations.
+###    * Keep the original English text unmodified (the '<!-_ English: "..." -_>)',
+###      so we know which version of the English original the translation is based upon
+###      (and we can identify translations which need to be updated, when the original changes).
+###    * Replace "-_" occurences with a double "-" in all translations (XML does not allow
+###      consecutive "-" characters in comments).
+###
+### Last synchronized with English master resource on 2012-July-15 for FlightGear 2.8.0
+### -->
+<PropertyList>
+
+	<usage>Gebruik: fgfs [ opties ... ]</usage>   <!-- English: "Usage: fgfs [ option ... ]" -->
+	<verbose-help>Gebruik -_help -_verbose voor een complete lijst van de opties </verbose-help>   <!-- English: "For a complete list of options use -_help -_verbose" -->
+
+	<!-- General options -->
+	<general-options>Standaard opties</general-options>   <!-- English: "General Options" -->
+	<help-desc>Geef de belangrijkste instellingen weer</help-desc>   <!-- English: "Show the most relevant command line options" -->
+	<verbose-desc>Laat alle opties zien, wanneer gebruikt in combinatie met -_help of -h</verbose-desc>   <!-- English: "Show all command line options when combined with -_help or -h" -->
+	<version-desc>Geef de huidige FlightGear versie weer</version-desc>   <!-- English: "Display the current FlightGear version" -->
+	<fg-root-desc>Definiëer de locatie van de hoofd directory</fg-root-desc>   <!-- English: "Specify the root data path" -->
+	<fg-scenery-desc n="0">Definiëer de locatie van de scenery directory;</fg-scenery-desc>   <!-- English: "Specify the scenery path(s);" -->
+	<fg-scenery-desc n="1">Standaard is dit $FG_ROOT/Scenery</fg-scenery-desc>   <!-- English: "Defaults to $FG_ROOT/Scenery" -->
+	<fg-aircraft-desc>Definiëer extra vliegtuigmappen</fg-aircraft-desc>   <!-- English: "Specify additional aircraft directory path(s)" -->
+	<language-desc>Kies de taal voor deze sessie</language-desc>   <!-- English: "Select the language for this session" -->
+	<disable-game-mode-desc>Schermvullende spelode uitschakelen</disable-game-mode-desc>   <!-- English: "Disable full-screen game mode" -->
+	<enable-game-mode-desc>Schermvullende spelmode inschakelen</enable-game-mode-desc>   <!-- English: "Enable full-screen game mode" -->
+	<disable-splash-screen-desc>Introductie scherm overslaan</disable-splash-screen-desc>   <!-- English: "Disable splash screen" -->
+	<enable-splash-screen-desc>Introductie scherm laten zien</enable-splash-screen-desc>   <!-- English: "Enable splash screen" -->
+ 	<restore-defaults-desc>Reset alle instellingen naar de fabrieksinstellingen (weergave opties etc.)</restore-defaults-desc>   <!-- English: "Reset all user settings to their defaults (rendering options etc)" -->
+	<disable-save-on-exit>Sla de instellingen niet op bij het afsluiten</disable-save-on-exit>   <!-- English: "Don't save preferences upon program exit" -->
+	<enable-save-on-exit>Sla instellingen op bij het afsluiten</enable-save-on-exit>   <!-- English: "Allow saving preferences at program exit" -->
+	<disable-intro-music-desc>Introductie muziek overslaan</disable-intro-music-desc>   <!-- English: "Disable introduction music" -->
+	<enable-intro-music-desc>Introductie muziek laten horen</enable-intro-music-desc>   <!-- English: "Enable introduction music" -->
+	<disable-mouse-pointer-desc>Extra cursor uitschakelen</disable-mouse-pointer-desc>   <!-- English: "Disable extra mouse pointer" -->
+	<enable-mouse-pointer-desc n="0">Extra cursor inschakelen</enable-mouse-pointer-desc>   <!-- English: "Enable extra mouse pointer" -->
+	<enable-mouse-pointer-desc n="1">(voor Voodoo kaarten in volledige scherm mode)</enable-mouse-pointer-desc>   <!-- English: "(i.e. for full screen Voodoo based cards)" -->
+	<disable-random-objects-desc>Willekeurig geplaatste objecten verbergen</disable-random-objects-desc>   <!-- English: "Exclude random scenery objects" -->
+	<enable-random-objects-desc>Willekeurig geplaatste objecten tonen</enable-random-objects-desc>   <!-- English: "Include random scenery objects" -->
+ 	<disable-random-vegetation-desc>Willekeurig geplaatste flora verbergen</disable-random-vegetation-desc>   <!-- English: "Exclude random vegetation objects" -->
+ 	<enable-random-vegetation-desc>Willekeurig geplaatste flora tonen</enable-random-vegetation-desc>   <!-- English: "Include random vegetation objects" -->
+ 	<disable-random-buildings-desc>Willekeurig geplaatste gebouwen verbergen</disable-random-buildings-desc>   <!-- English: "Exclude random buildings objects" -->
+ 	<enable-random-buildings-desc>Willekeurig geplaatste gebouwen tonen</enable-random-buildings-desc>   <!-- English: "Include random buildings objects" -->
+	<disable-real-weather-fetch-desc>Schakel live weer op basis van METAR uit</disable-real-weather-fetch-desc>   <!-- English: "Disable METAR based real weather fetching" -->
+	<enable-real-weather-fetch-desc>Schakel live weer op basis van METAR in (hiervoor is een internetverbinding vereist)</enable-real-weather-fetch-desc>   <!-- English: "Enable METAR based real weather fetching (this requires an open internet connection)" -->
+	<metar-desc>Geef een METAR om statisch weer in te stellen</metar-desc>   <!-- English: "Pass a METAR to set up static weather" -->
+	<random-objects-desc>(huizen, gebouwen, etc.)</random-objects-desc>   <!-- English: "(buildings, etc.)" -->
+	<disable-ai-models-desc>Verouderde optie (schakel het interne AI systeem uit)</disable-ai-models-desc>   <!-- English: "Deprecated option (disable internal AI subsystem)" -->
+	<enable-ai-models-desc>?Schakel het AI systeem in (vereiste voor multiplayer, kunstmatig verkeer en veel andere animaties)</enable-ai-models-desc>   <!-- English: "Enable AI subsystem (required for multi-player, AI traffic and many other animations)" -->
+	<disable-ai-traffic-desc>Schakel kunstmatig verkeer uit</disable-ai-traffic-desc>   <!-- English: "Disable artificial traffic." -->
+	<enable-ai-traffic-desc>Schakel kunstmatig verkeer in</enable-ai-traffic-desc>   <!-- English: "Enable artificial traffic." -->
+	<disable-ai-scenarios>Schakel alle scenarios uit</disable-ai-scenarios>   <!-- English: "Disable all AI scenarios." -->
+	<ai-scenario>Voeg een nieuw scenario toe en schakel het in. Meerdere opties zijn toegestaan.</ai-scenario>   <!-- English: "Add and enable a new scenario. Multiple options are allowed." -->
+	<disable-freeze-desc>Start in een normale situatie</disable-freeze-desc>   <!-- English: "Start in a running state" -->
+	<enable-freeze-desc>Start in een bevroren situatie</enable-freeze-desc>   <!-- English: "Start in a frozen state" -->
+	<disable-fuel-freeze-desc>Brandstof vebruik is normaal</disable-fuel-freeze-desc>   <!-- English: "Fuel is consumed normally" -->
+	<enable-fuel-freeze-desc>Vebruik geen brandstof</enable-fuel-freeze-desc>   <!-- English: "Fuel tank quantity forced to remain constant" -->
+	<disable-clock-freeze-desc>Laat de klok normaal lopen</disable-clock-freeze-desc>   <!-- English: "Clock advances normally" -->
+	<enable-clock-freeze-desc>Zet de klok stil</enable-clock-freeze-desc>   <!-- English: "Do not advance clock" -->
+	<enable-auto-coordination-desc>Automatische coördinatie inschakelen</enable-auto-coordination-desc>   <!-- English: "Enable auto coordination" -->
+	<disable-auto-coordination-desc>Automatische coördinatie uitschakelen</disable-auto-coordination-desc>   <!-- English: "Disable auto coordination" -->
+	<browser-app-desc>Definiëer het pad naar de web bowser</browser-app-desc>   <!-- English: "Specify path to your web browser" -->
+	<prop-desc>Geef de instelling &lt;naam&gt; de waarde &lt;waarde&gt;</prop-desc>   <!-- English: "Set property &lt;name&gt; to &lt;value&gt;. &lt;type&gt; can be one of string, double, float, long, int, or bool." -->
+	<config-desc>Voeg extra properties toe uit het bestand</config-desc>   <!-- English: "Load additional properties from path" -->
+	<units-feet-desc>Definiëer de afstanden in voeten</units-feet-desc>   <!-- English: "Use feet for distances" -->
+	<units-meters-desc>Definiëer de afstanden in meters</units-meters-desc>   <!-- English: "Use meters for distances" -->
+
+	<!-- Features options -->
+	<environment-options>Omgevingsinstellingen</environment-options>   <!-- English: "Environment Options" -->
+	<features-options>Eigenschappen</features-options>   <!-- English: "Features" -->
+	<disable-hud-desc>Heads Up Display (HUD) verbergen</disable-hud-desc>   <!-- English: "Disable Heads Up Display (HUD)" -->
+	<enable-hud-desc>Heads Up Display (HUD) tonen</enable-hud-desc>   <!-- English: "Enable Heads Up Display (HUD)" -->
+	<disable-panel-desc>Insturmenten paneel verbergen</disable-panel-desc>   <!-- English: "Disable instrument panel" -->
+	<enable-panel-desc>Insturmenten paneel tonen</enable-panel-desc>   <!-- English: "Enable instrument panel" -->
+	<disable-anti-alias-hud-desc>Korrelige HUD gebruiken</disable-anti-alias-hud-desc>   <!-- English: "Disable anti-aliased HUD" -->
+	<enable-anti-alias-hud-desc>Scherpe gerande HUD gebruiken</enable-anti-alias-hud-desc>   <!-- English: "Enable anti-aliased HUD" -->
+	<disable-hud-3d-desc>Schakel 3D HUD uit</disable-hud-3d-desc>   <!-- English: "Disable 3D HUD" -->
+	<enable-hud-3d-desc>Schakel 3D HUD in</enable-hud-3d-desc>   <!-- English: "Enable 3D HUD" -->
+
+	<!-- Aircraft options -->
+	<aircraft-options>Vliegtuig</aircraft-options>   <!-- English: "Aircraft" -->
+	<aircraft-desc>Selecteer een vliegtuig zoals gedefiniëerd in een van de &lt;naam&gt;-set.xml bestanden</aircraft-desc>   <!-- English: "Select an aircraft profile as defined by a top level &lt;name&gt;-set.xml" -->
+	<show-aircraft-desc>Laat een lijst zien van de beschikbare vliegtuig typen</show-aircraft-desc>   <!-- English: "Print a list of the currently available aircraft types" -->
+	<min-aircraft-status>Specifeer een minimale ontwikkelingsstatus voor alle genoemde vliegtuigen</min-aircraft-status>   <!-- English: "Allows you to define a minimum status level (=development status) for all listed aircraft" -->
+	<vehicle-desc>Kies een voertuig op basis van een &lt;naam&gt;-set.xml</vehicle-desc>   <!-- English: "Select an vehicle profile as defined by a top level &lt;name&gt;-set.xml" -->
+	<livery-desc>Kies een verfuitvoering</livery-desc>   <!-- English: "Select aircraft livery" -->
+
+	<!-- Flight Dynamics Model options -->
+	<fdm-options>Vliegeigenschappen</fdm-options>   <!-- English: "Flight Model" -->
+	<fdm-desc n="0">Bepaal het standaard simulatie model</fdm-desc>   <!-- English: "Select the core flight dynamics model" -->
+	<fdm-desc n="1">Dit kan een van de volgende modellen zijn: jsb, larcsim, yasim, magic, balloon, ada, external, of null</fdm-desc>   <!-- English: "Can be one of jsb, larcsim, yasim, magic, balloon, ada, external, or null" -->
+	<aero-desc>Bepaal welk aerodynamica model geladen wordt</aero-desc>   <!-- English: "Select aircraft aerodynamics model to load" -->
+	<model-hz-desc>Voer de FDM uit met deze snelheid</model-hz-desc>   <!-- English: "Run the FDM this rate (iterations per second)" -->
+	<speed-desc>Voer de FDM 'n' keer sneller uit dan normaal</speed-desc>   <!-- English: "Run the FDM 'n' times faster than real time" -->
+	<notrim-desc n="0">Probeer het model niet uit te trimmen</notrim-desc>   <!-- English: "Do NOT attempt to trim the model" -->
+	<notrim-desc n="1">(alleen met fdm=jsbsim)</notrim-desc>   <!-- English: "(only with fdm=jsbsim)" -->
+	<trim-desc n="0">Trim het model</trim-desc>   <!-- English: "Trim the model" -->
+	<trim-desc n="1">(alleen met fdm=jsbsim)</trim-desc>   <!-- English: "(only with fdm=jsbsim)" -->
+	<on-ground-desc>Start op de grond (standaard)</on-ground-desc>   <!-- English: "Start at ground level (default)" -->
+	<in-air-desc>Start in de lucht (wordt ook gekozen als -_altitude is opgegeven)</in-air-desc>   <!-- English: "Start in air (implied when using -_altitude)" -->
+	<wind-desc>Specificeer wind uit de richting DIR (graden) met snelheid SPEED (knopen)</wind-desc>   <!-- English: "Specify wind coming from DIR (degrees) at SPEED (knots)" -->
+	<random-wind-desc>Kies een willekeurige windrichting en -snelheid)</random-wind-desc>   <!-- English: "Set up random wind direction and speed" -->
+	<turbulence-desc>Specificeer de turbulentie waarde. 0.0 is kalm. 1.0 is hevig</turbulence-desc>   <!-- English: "Specify turbulence from 0.0 (calm) to 1.0 (severe)" -->
+	<ceiling-desc>Start met een overtrokken wolkendek, eventuaal met een aangegeven dokte (standaard 2000 feet)</ceiling-desc>   <!-- English: "Create an overcast ceiling, optionally with a specific thickness (defaults to 2000 ft)." -->
+	<aircraft-dir-desc>De locatie van het vliegtuig configuratiebestand relatief tot de locatie van het hoofdprogramma</aircraft-dir-desc>   <!-- English: "Aircraft directory relative to the path of the executable" -->
+
+	<aircraft-model-options>Vliegtuig model locatie (Alleen voor de UIUC FDM)</aircraft-model-options>   <!-- English: "Aircraft model directory (UIUC FDM ONLY)" -->
+
+	<!-- Position and Orientation options -->
+	<position-options>Beginpositie en -oriëntatie</position-options>   <!-- English: "Initial Position and Orientation" -->
+	<airport-desc>Kies de startpositie ten opzichte van een vliegveld</airport-desc>   <!-- English: "Specify starting position relative to an airport" -->
+	<parking-id-desc>Kies een parkeerplaats op een vliegtuig (een vliegveld dient ook te worden gekozen)</parking-id-desc>   <!-- English: "Specify parking position at an airport (must also specify an airport)" -->
+	<carrier-desc>Kies een startpositie op een vliegdekschip</carrier-desc>   <!-- English: "Specify starting position on an AI carrier" -->
+	<parkpos-desc>Kies een startpositie op een vliegdekschip (een vliegdekschip dient ook te worden gekozen)</parkpos-desc>   <!-- English: "Specify which starting position on an AI carrier (must also specify a carrier)" -->
+	<vor-desc>Kies de startpositie ten opzichte van een VOR</vor-desc>   <!-- English: "Specify starting position relative to a VOR" -->
+	<vor-freq-desc>Kies de frequentie van de VOR. Gebruik met -_vor=ID</vor-freq-desc>   <!-- English: "Specify the frequency of the VOR. Use with -_vor=ID" -->
+	<ndb-desc>Kies de startpositie ten opzichte van een NDB</ndb-desc>   <!-- English: "Specify starting position relative to an NDB" -->
+	<ndb-freq-desc>Kies de frequentie van de NDB. Gebruik met -_ndb=ID</ndb-freq-desc>   <!-- English: "Specify the frequency of the NDB. Use with -_ndb=ID" -->
+	<fix-desc>Kies de startpositie ten opzichte van een fix</fix-desc>   <!-- English: "Specify starting position relative to a fix" -->
+	<runway-no-desc>Kies een startbaan nummer (er moet ook een vliegveld worden opgegeven)</runway-no-desc>   <!-- English: "Specify starting runway (must also specify an airport)" -->
+	<offset-distance-desc>Specificeer de afstand tot de baandrempel</offset-distance-desc>   <!-- English: "Specify distance to reference point (statute miles)" -->
+	<offset-azimuth-desc>Specificeer de richting van de baandrempel</offset-azimuth-desc>   <!-- English: "Specify heading to reference point" -->
+	<lon-desc>Geografische lengte aan de start (west = -)</lon-desc>   <!-- English: "Starting longitude (west = -)" -->
+	<lat-desc>Geografische breedte aan de start (zuid = -)</lat-desc>   <!-- English: "Starting latitude (south = -)" -->
+	<altitude-desc>Specificeer de aanvang hoogte</altitude-desc>   <!-- English: "Starting altitude" -->
+	<heading-desc>Kiesde aanvang koers (Psi)</heading-desc>   <!-- English: "Specify heading (yaw) angle (Psi)" -->
+	<roll-desc>Kies de aanvang rolhoek (Phi)</roll-desc>   <!-- English: "Specify roll angle (Phi)" -->
+	<pitch-desc>Kies de aanvang hellingshoek (Theta)</pitch-desc>   <!-- English: "Specify pitch angle (Theta)" -->
+	<uBody-desc>Kies de aanvang snelheid langs de X-as</uBody-desc>   <!-- English: "Specify velocity along the body X axis" -->
+	<vBody-desc>Kies de aanvang snelheid langs de Y-as</vBody-desc>   <!-- English: "Specify velocity along the body Y axis" -->
+	<wBody-desc>Kies de aanvang snelheid lang de Z-as</wBody-desc>   <!-- English: "Specify velocity along the body Z axis" -->
+	<vNorth-desc>Kies de snelheid langs een noord-zuid as</vNorth-desc>   <!-- English: "Specify velocity along a South-North axis" -->
+	<vEast-desc>Kies de snelheid langs een west-oost as</vEast-desc>   <!-- English: "Specify velocity along a West-East axis" -->
+	<vDown-desc>Kies de snelheid langs een verticale as</vDown-desc>   <!-- English: "Specify velocity along a vertical axis" -->
+	<vc-desc>Specificeer de aanvang snelheid</vc-desc>   <!-- English: "Specify initial airspeed" -->
+	<mach-desc>Specificeer de de start snelheid als mach nummer</mach-desc>   <!-- English: "Specify initial mach number" -->
+	<glideslope-desc>Specificeer het glijpad bij de start (mag positief zijn)</glideslope-desc>   <!-- English: "Specify flight path angle (can be positive)" -->
+	<roc-desc>Specificeer de klimsnelheid bij de start (mag negatief zijn)</roc-desc>   <!-- English: "Specify initial climb rate (can be negative)" -->
+
+	<!-- sound options -->
+	<audio-options>Geluidsintellingen</audio-options>   <!-- English: "Audio Options" -->
+	<disable-sound-desc>Geluidseffecten uitschakelen</disable-sound-desc>   <!-- English: "Disable sound effects" -->
+	<enable-sound-desc>Geluidseffecten inschakelen</enable-sound-desc>   <!-- English: "Enable sound effects" -->
+	<show-sound-devices-desc>Geef de beschikbare audio-apparaten weer</show-sound-devices-desc>   <!-- English: "Show a list of available audio device" -->
+	<sound-device-desc>Specifeer expliciet het te gebruiken audio-apparaat</sound-device-desc>   <!-- English: "Explicitly specify the audio device to use" -->
+
+	<!-- Rendering options -->
+	<rendering-options>Weergave instellingen</rendering-options>   <!-- English: "Rendering Options" -->
+	<bpp-desc>Definiëer het aantal bits per schermpunt</bpp-desc>   <!-- English: "Specify the bits per pixel" -->
+	<fog-disable-desc>Laat geen mist zien</fog-disable-desc>   <!-- English: "Disable fog/haze" -->
+	<fog-fastest-desc>Selecteer de snelste mist generator</fog-fastest-desc>   <!-- English: "Enable fastest fog/haze" -->
+	<fog-nicest-desc>Selecteer de beste mist generator</fog-nicest-desc>   <!-- English: "Enable nicest fog/haze" -->
+	<disable-horizon-effect>Laat hemellichamen niet groter zien als ze dicht bij de horizon staan</disable-horizon-effect>   <!-- English: "Disable celestial body growth illusion near the horizon" -->
+	<enable-horizon-effect>Laat hemellichamen wel groter zien als ze dicht bij de horizon staan</enable-horizon-effect>   <!-- English: "Enable celestial body growth illusion near the horizon" -->
+	<disable-enhanced-lighting>Standaard startbaan verlichting</disable-enhanced-lighting>   <!-- English: "Disable enhanced runway lighting" -->
+	<enable-enhanced-lighting>Verbeterde startbaan verlichting</enable-enhanced-lighting>   <!-- English: "Enable enhanced runway lighting" -->
+	<disable-distance-attenuation>Lichtpunt verkleining voor voor verre lichten niet gebruiken</disable-distance-attenuation>   <!-- English: "Disable runway light distance attenuation" -->
+	<enable-distance-attenuation>Lichtpunt verkleining voor voor verre lichten wel gebruiken</enable-distance-attenuation>   <!-- English: "Enable runway light distance attenuation" -->
+	<disable-specular-highlight>Laat geen zon reflecties zien op voorwerpen met textures</disable-specular-highlight>   <!-- English: "Disable specular reflections on textured objects" -->
+	<enable-specular-highlight>Laat de directe zonlicht reflecties op voorwerpen met een texture wel zien</enable-specular-highlight>   <!-- English: "Enable specular reflections on textured objects" -->
+	<enable-clouds-desc>2D (vlakke) bewolking tonen</enable-clouds-desc>   <!-- English: "Enable 2D (flat) cloud layers" -->
+	<disable-clouds-desc>2D (vlakke) bewolking verbergen</disable-clouds-desc>   <!-- English: "Disable 2D (flat) cloud layers" -->
+	<enable-clouds3d-desc>3D (natuurlijke) bewolking tonen</enable-clouds3d-desc>   <!-- English: "Enable 3D (volumetric) cloud layers" -->
+	<disable-clouds3d-desc>3D (natuurlijke) bewolking verbergen</disable-clouds3d-desc>   <!-- English: "Disable 3D (volumetric) cloud layers" -->
+	<fov-desc>Specificeer het zichtveld</fov-desc>   <!-- English: "Specify field of view angle" -->
+	<arm-desc>Kies een vermenigvuldigingsfactor voor de beelverhouding</arm-desc>   <!-- English: "Specify a multiplier for the aspect ratio." -->
+	<disable-fullscreen-desc>Volledige scherm modus niet gebruiken</disable-fullscreen-desc>   <!-- English: "Disable fullscreen mode" -->
+	<enable-fullscreen-desc>In volledige scherm modus uitvoeren</enable-fullscreen-desc>   <!-- English: "Enable fullscreen mode" -->
+	<shading-flat-desc>Gebruik scherpe schaduwen</shading-flat-desc>   <!-- English: "Enable flat shading" -->
+	<shading-smooth-desc>Gebruik natuurlijke schaduwen</shading-smooth-desc>   <!-- English: "Enable smooth shading" -->
+	<disable-skyblend-desc>Hemel opbouw verbergen</disable-skyblend-desc>   <!-- English: "Disable sky blending" -->
+	<enable-skyblend-desc>Hemel opbouw tonen</enable-skyblend-desc>   <!-- English: "Enable sky blending" -->
+	<disable-textures-desc>Textures gebruiken</disable-textures-desc>   <!-- English: "Disable textures" -->
+	<enable-textures-desc>Textures niet gebruiken</enable-textures-desc>   <!-- English: "Enable textures" -->
+	<materials-file-desc>Kies het te gebruiken materialen bestand om de scenery weer te geven (standaard: materials.xml)</materials-file-desc>   <!-- English: "Specify the materials file used to render the scenery (default: materials.xml)" -->
+	<texture-filtering-desc>Anisotropische texture filtering: waardes moeten 1 (standaard), 2, 4, 8 of 16 zijn</texture-filtering-desc>   <!-- English: "Anisotropic Texture Filtering: values should be 1 (default),2,4,8 or 16" -->
+	<disable-wireframe-desc>Model frame opbouw niet gebruiken</disable-wireframe-desc>   <!-- English: "Disable wireframe drawing mode" -->
+	<enable-wireframe-desc>Model frame opbouw wel gebruiken</enable-wireframe-desc>   <!-- English: "Enable wireframe drawing mode" -->
+	<geometry-desc>Specificeer de scherm resolutie (640x480, etc)</geometry-desc>   <!-- English: "Specify window geometry (640x480, etc)" -->
+	<view-offset-desc>Specificeer de kijkrichting aan ten opzichte van recht vooruit. Beschikbare typen zijn: LEFT, RIGHT, CENTER, of een waarde in graden</view-offset-desc>   <!-- English: "Specify the default forward view direction as an offset from straight ahead. Allowable values are LEFT, RIGHT, CENTER, or a specific number in degrees" -->
+	<visibility-desc>Maximale zichtafstand</visibility-desc>   <!-- English: "Specify initial visibility" -->
+	<visibility-miles-desc>Maximale zichtafstand in mijlen</visibility-miles-desc>   <!-- English: "Specify initial visibility in miles" -->
+	<max-fps-desc>Maximale framerate in Hz</max-fps-desc>   <!-- English: "Maximum frame rate in Hz." -->
+
+	<!-- Hud options -->
+	<hud-options>HUD instellingen</hud-options>   <!-- English: "Hud Options" -->
+	<hud-tris-desc>HUD geeft het aantal weergegeven driekhoeken</hud-tris-desc>   <!-- English: "Hud displays number of triangles rendered" -->
+	<hud-culled-desc>HUD geeft het percentage verborgen driehoeken</hud-culled-desc>   <!-- English: "Hud displays percentage of triangles culled" -->
+
+	<!-- Time options -->
+	<time-options>Tijdsinstellingen</time-options>   <!-- English: "Time Options" -->
+	<timeofday-desc>Specificeer de tijd op de dag</timeofday-desc>   <!-- English: "Specify a time of day" -->
+	<season-desc>Kies een start seizoen</season-desc>   <!-- English: "Specify the startup season" -->
+	<time-offset-desc>Verhoog de tijd met deze waarde</time-offset-desc>   <!-- English: "Add this time offset" -->
+	<time-match-real-desc>Synchronizeer de tijd met de huidige tijd</time-match-real-desc>   <!-- English: "Synchronize time with real-world time" -->
+	<time-match-local-desc>Synchronizeer de tijd met de lokale tijd</time-match-local-desc>   <!-- English: "Synchronize time with local real-world time" -->
+	<start-date-desc>Geef een start tijd/datum relatief tot</start-date-desc>   <!-- English: "Specify a starting date/time with respect to" -->
+
+	<!-- Network options -->
+	<network-options>Netwerk Instellingen</network-options>   <!-- English: "Network Options" -->
+	<httpd-desc>Activeer de http server op dit poortnummer</httpd-desc>   <!-- English: "Enable http server on the specified port" -->
+	<proxy-desc>Kies een proxy server (en poort) om te gebruiken. De gebruikersnaam en het wachtwoord zijn optioneel en dienen al MD5 gecodeerd te zijn. Deze optie is alleen nuttig in samenwerking met de live-weer optie.</proxy-desc>   <!-- English: "Specify which proxy server (and port) to use. The username and password are optional and should be MD5 encoded already. This option is only useful when used in conjunction with the real-weather-fetch option." -->
+	<telnet-desc>Activeer de telnet server op dit poortnummer</telnet-desc>   <!-- English: "Enable telnet server on the specified port" -->
+	<jpg-httpd-desc>Activeer de schermafdruk server op dit poortnummer (replaced by --httpd)</jpg-httpd-desc>   <!-- English: "Enable screen shot http server on the specified port" -->
+	<disable-terrasync-desc>Schakel het automatisch downloaden/updaten van scenery uit</disable-terrasync-desc>   <!-- English: "Disable automatic scenery downloads/updates" -->
+	<enable-terrasync-desc>Schakel het automatisch downloaden/updaten van scenery in</enable-terrasync-desc>   <!-- English: "Enable automatic scenery downloads/updates" -->
+	<terrasync-dir-desc>Kies een doelmap voor scenery downloads</terrasync-dir-desc>   <!-- English: "Set target directory for scenery downloads" -->
+
+	<!-- MultiPlayer options -->
+	<multiplayer-options>MultiPlayer Instellingen</multiplayer-options>   <!-- English: "MultiPlayer Options" -->
+	<multiplay-desc>Definiëer de multipilot communicatie instellingen</multiplay-desc>   <!-- English: "Specify multipilot communication settings" -->
+	<callsign-desc>Geef een speler een unieke naam</callsign-desc>   <!-- English: "assign a unique name to a player" -->
+
+	<!-- Route/Way Point Options -->
+	<route-options>Route/Tussen station Instellingen</route-options>   <!-- English: "Route/Way Point Options" -->
+	<wp-desc>Definiëer een tussenstation voor de automatische piloot;</wp-desc>   <!-- English: "Specify a waypoint for the GC autopilot;" -->
+	<flight-plan-desc>Lees alle tussenstations uit een bestand</flight-plan-desc>   <!-- English: "Read all waypoints from a file" -->
+
+	<!-- IO Options -->
+	<io-options>Invoer/Uitvoer Instellingen</io-options>   <!-- English: "IO Options" -->
+	<AV400-desc>Gebruik het Garmin AV400 protocol, vereist om een Garmin 196/296 GPS aan te sturen</AV400-desc>   <!-- English: "Emit the Garmin AV400 protocol required to drive a Garmin 196/296 series GPS" -->
+	<AV400Sim-desc>Gebruik het AV400 protocol, vereist om een Garmin 400 GPS aan te sturen</AV400Sim-desc>   <!-- English: "Emit the set of AV400 strings required to drive a Garmin 400-series GPS from FlightGear" -->
+	<atlas-desc>Open een verbinding met het Atlas protocol</atlas-desc>   <!-- English: "Open connection using the Atlas protocol" -->
+	<atcsim-desc>Open een verbinding met het ATC sim protocol (atc610x)</atcsim-desc>   <!-- English: "Open connection using the ATC sim protocol (atc610x)" -->
+	<garmin-desc>Open een verbinding met het Garmin GPS protocol</garmin-desc>   <!-- English: "Open connection using the Garmin GPS protocol" -->
+	<joyclient-desc>Open een verbinding met de Agwagon joystick</joyclient-desc>   <!-- English: "Open connection to an Agwagon joystick" -->
+	<jsclient-desc>Open een verbinding met een externe joystick</jsclient-desc>   <!-- English: "Open connection to a remote joystick" -->
+	<native-ctrls-desc>Open een verbinding met het eigen FG besturings protocol</native-ctrls-desc>   <!-- English: "Open connection using the FG Native Controls protocol" -->
+	<native-fdm-desc>Open een verbinding met het eigen FG FDM protocol</native-fdm-desc>   <!-- English: "Open connection using the FG Native FDM protocol" -->
+	<native-gui-desc>Open een verbinding met het eigen FG GUI protocol</native-gui-desc>   <!-- English: "Open connection using the FG Native GUI protocol" -->
+	<native-desc>Open een verbinding met het eigen FG protocol</native-desc>   <!-- English: "Open connection using the FG Native protocol" -->
+	<nmea-desc>Open een verbinding met het NMEA protocol</nmea-desc>   <!-- English: "Open connection using the NMEA protocol" -->
+	<generic-desc>Open een verbindingmet een voorop aangegeven communicatie interface een een voorgeselecteerde communicatie protocol</generic-desc>   <!-- English: "Open connection using a predefined communication interface and a preselected communication protocol" -->
+	<opengc-desc>Open een verbinding met het OpenGC protocol</opengc-desc>   <!-- English: "Open connection using the OpenGC protocol" -->
+	<props-desc>Open een verbinding met de interactive instelling manager</props-desc>   <!-- English: "Open connection using the interactive property manager" -->
+	<pve-desc>Open een verbinding met het PVE protocol</pve-desc>   <!-- English: "Open connection using the PVE protocol" -->
+	<ray-desc>Open een verbinding met het Ray Woodworth bewegende stoel protocol</ray-desc>   <!-- English: "Open connection using the Ray Woodworth motion chair protocol" -->
+	<rul-desc>Open een verbinding met het RUL protocol</rul-desc>   <!-- English: "Open connection using the RUL protocol" -->
+
+	<!-- Avionics Options -->
+	<avionics-options>Avionica Opties</avionics-options>   <!-- English: "Avionics Options" -->
+	<com1-desc>Kies de COM1 radiofrequentie</com1-desc>   <!-- English: "Set the COM1 radio frequency" -->
+	<com2-desc>Kies de COM2 radiofrequentie</com2-desc>   <!-- English: "Set the COM2 radio frequency" -->
+	<nav1-desc>Zet de NAV1 radio frequentie, eventueel voorafgegaand door een radial</nav1-desc>   <!-- English: "Set the NAV1 radio frequency, optionally preceded by a radial." -->
+	<nav2-desc>Zet de NAV2 radio frequentie, eventueel voorafgegaand door een radial</nav2-desc>   <!-- English: "Set the NAV2 radio frequency, optionally preceded by a radial." -->
+	<adf1-desc>Zet de ADF1 radio frequentie, eventueel voorafgegaand door een kaart verdraaing</adf1-desc>   <!-- English: "Set the ADF1 radio frequency, optionally preceded by a card rotation." -->
+	<adf2-desc>Zet de ADF2 radio frequentie, eventueel voorafgegaand door een kaart verdraaing</adf2-desc>   <!-- English: "Set the ADF2 radio frequency, optionally preceded by a card rotation." -->
+	<dme-desc>Maak de ADF afhankelijk van een van de radio's, of zet zijn interne frequentie</dme-desc>   <!-- English: "Slave the ADF to one of the NAV radios, or set its internal frequency." -->
+
+	<situation-options>Situatie opties</situation-options>   <!-- English: "Situation Options" -->
+	<failure-desc>Zorg dat de pitot, static, vacuum, of het elektrische systeem niet werkt (herhaal de optie voor meerdere systeem fouten)</failure-desc>   <!-- English: "Fail the pitot, static, vacuum, or electrical system (repeat the option for multiple system failures)." -->
+
+	<!-- Debugging Options -->
+	<debugging-options>Foutopsporings Instellingen</debugging-options>   <!-- English: "Debugging Options" -->
+	<fpe-desc>Sluit af bij een floating point exception</fpe-desc>   <!-- English: "Abort on encountering a floating point exception;" -->
+	<fgviewer-desc>Gebruik een model weergave, in plaats van de hele simulator te laden</fgviewer-desc>   <!-- English: "Use a model viewer rather than load the entire simulator;" -->
+	<trace-read-desc>Bewaak de uitlezingen van een instelling;</trace-read-desc>   <!-- English: "Trace the reads for a property;" -->
+	<trace-write-desc>Bewaak de veranderingen van een instelling;</trace-write-desc>   <!-- English: "Trace the writes for a property;" -->
+	<log-level-desc>Kies een log level om te gebruiken</log-level-desc>   <!-- English: "Specify which logging level to use" -->
+	<log-class-desc>Kies welke log class(es) gebruikt moeten worden</log-class-desc>   <!-- English: "Specify which logging class(es) to use" -->
+
+</PropertyList>
