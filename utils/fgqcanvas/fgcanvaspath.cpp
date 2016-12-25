@@ -2,6 +2,7 @@
 
 #include <cctype>
 
+#include <QByteArrayList>
 #include <QPainter>
 #include <QDebug>
 #include <QtMath>
