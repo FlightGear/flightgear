@@ -83,6 +83,7 @@
 
 using namespace flightgear;
 using namespace simgear::pkg;
+using std::string;
 
 const int MAX_RECENT_AIRCRAFT = 20;
 const int DEFAULT_MP_PORT = 5000;
@@ -505,7 +506,9 @@ static void initQtResources()
 namespace flightgear
 {
 
-void initApp(int& argc, char** argv)
+// Only requires FGGlobals to be initialized if 'doInitQSettings' is true.
+// Safe to call several times.
+void initApp(int& argc, char** argv, bool doInitQSettings)
 {
     static bool qtInitDone = false;
     static int s_argc;
@@ -525,22 +528,45 @@ void initApp(int& argc, char** argv)
         app->setApplicationName("FlightGear");
         app->setOrganizationDomain("flightgear.org");
 
-        QSettings::setDefaultFormat(QSettings::IniFormat);
-        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope,
-                           QString::fromStdString(globals->get_fg_home().utf8Str()));
-
         // reset numeric / collation locales as described at:
         // http://doc.qt.io/qt-5/qcoreapplication.html#details
         ::setlocale(LC_NUMERIC, "C");
         ::setlocale(LC_COLLATE, "C");
-
-        Qt::KeyboardModifiers mods = app->queryKeyboardModifiers();
-        if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
-            qWarning() << "Alt/shift pressed during launch";
-            QSettings settings;
-            settings.setValue("fg-root", "!ask");
-        }
     }
+
+    if (doInitQSettings) {
+        initQSettings();
+    }
+}
+
+// Requires FGGlobals to be initialized. Safe to call several times.
+void initQSettings()
+{
+    static bool qSettingsInitDone = false;
+
+    if (!qSettingsInitDone) {
+        qSettingsInitDone = true;
+        string fgHome = globals->get_fg_home().utf8Str();
+
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope,
+                           QString::fromStdString(fgHome));
+    }
+}
+
+bool checkKeyboardModifiersForSettingFGRoot()
+{
+    initQSettings();
+
+    Qt::KeyboardModifiers mods = qApp->queryKeyboardModifiers();
+    if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
+        qWarning() << "Alt/shift pressed during launch";
+        QSettings settings;
+        settings.setValue("fg-root", "!ask");
+        return true;
+    }
+
+    return false;
 }
 
 bool runLauncherDialog()

@@ -23,7 +23,15 @@
 
 namespace flightgear
 {
-  void initApp(int& argc, char** argv);
+  // Only requires FGGlobals to be initialized if 'doInitQSettings' is true.
+  // Safe to call several times.
+  void initApp(int& argc, char** argv, bool doInitQSettings = true);
+  // Requires FGGlobals to be initialized. Safe to call several times.
+  void initQSettings();
+
+  // Set 'fg-root' in QSettings to the special value "!ask" if either Alt or
+  // Shift is pressed. Return true in this case, false otherwise.
+  bool checkKeyboardModifiersForSettingFGRoot();
 
   bool runLauncherDialog();
 

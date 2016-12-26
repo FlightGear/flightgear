@@ -40,9 +40,12 @@ void QtFileDialog::exec()
     int fakeargc = 1;
     static char fakeargv0[] = "fgfs";
     static char * fakeargv[2] = {fakeargv0, 0};
-    // This does nothing if it has already been run, so the fake argc/argv
-    // are only used if run without launcher
-    flightgear::initApp(fakeargc, fakeargv);
+    // This does nothing if it has already been run, so the fake argc/argv are
+    // only used if run without launcher. Don't attempt to initialize the
+    // QSettings, because this would require FGGlobals to be initialized (for
+    // globals->get_fg_home()), which would prevent using this function at
+    // early startup.
+    flightgear::initApp(fakeargc, fakeargv, false /* doInitQSettings */);
     
     // concatenate filter patterns, as Qt uses a single string
     std::string filter="";
