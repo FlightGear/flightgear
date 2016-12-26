@@ -35,9 +35,9 @@
 #include <3rdparty/cjson/cJSON.h>
 
 #include <cmath>        // rint()
-#include <stdio.h>
-#include <stdlib.h>     // atof(), atoi()
-#include <string.h>     // strcmp()
+#include <cstdio>
+#include <cstdlib>      // atof(), atoi()
+#include <cstring>      // strcmp()
 #include <algorithm>
 
 #include <iostream>
@@ -322,8 +322,8 @@ private:
 
     int getNumMaturity(const char * str)
     {
-        // changes should also be reflected in $FG_ROOT/data/options.xml &
-        // $FG_ROOT/data/Translations/string-default.xml
+        // Changes should also be reflected in
+        // $FG_INSTALL_PREFIX/share/flightgear/options.xml.
         const char* levels[] = {"alpha","beta","early-production","production"};
 
         if (!strcmp(str, "all")) {
@@ -2470,7 +2470,7 @@ void Options::showUsage() const
   SGPropertyNode *options = options_root.getNode("options");
   if (!options) {
     SG_LOG( SG_GENERAL, SG_ALERT,
-           "Error reading options.xml: <options> directive not found." );
+           "Error reading options.xml: <options> element not found." );
     exit(-1);
   }
 
