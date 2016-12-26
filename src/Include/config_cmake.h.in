@@ -33,6 +33,7 @@
 #cmakedefine ENABLE_JSBSIM
 
 #define PKGLIBDIR "@FG_DATA_DIR@"
+#define FG_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
 #define WEB_BROWSER "@WEB_BROWSER@"
 
 // Ensure FG_HAVE_xxx always have a value
