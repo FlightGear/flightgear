@@ -21,8 +21,6 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->connectButton, &QPushButton::clicked, this, &TemporaryWidget::onStartConnect);
     restoreSettings();
-
-    connect(ui->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, &TemporaryWidget::onTreeCurrentChanged);
 }
 
 TemporaryWidget::~TemporaryWidget()
@@ -80,6 +78,8 @@ void TemporaryWidget::onConnected()
 
     m_elementModel = new ElementDataModel(this);
     ui->elementData->setModel(m_elementModel);
+
+    connect(ui->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, &TemporaryWidget::onTreeCurrentChanged);
 
     FGQCanvasFontCache::instance()->setHost(ui->hostName->text(),
                                             ui->portEdit->text().toInt());

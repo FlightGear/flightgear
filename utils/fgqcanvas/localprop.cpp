@@ -91,6 +91,13 @@ bool LocalProp::hasChild(const char* name) const
     return childWithNameAndIndex(QByteArray::fromRawData(name, strlen(name))) != nullptr;
 }
 
+void LocalProp::changeValue(const char *path, QVariant value)
+{
+    LocalProp* p = getOrCreateWithPath(path);
+    p->_value = value;
+    p->valueChanged(value);
+}
+
 
 LocalProp *LocalProp::getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni)
 {

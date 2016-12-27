@@ -60,8 +60,7 @@ void ElementDataModel::computeKeys()
                                                      "text" <<
                                                      "clip" << "file" << "src"
                                                      "font" << "character-size" <<
-                                                     "z-index" << "visible" <<
-                                                     "stroke";
+                                                     "z-index" << "visible";
 
     Q_FOREACH (QByteArray b, directProps) {
         if (prop->hasChild(b)) {

@@ -1,5 +1,7 @@
 #include "canvastreemodel.h"
 
+#include <QDebug>
+
 #include "localprop.h"
 
 CanvasTreeModel::CanvasTreeModel(FGCanvasGroup* root) :
@@ -50,7 +52,7 @@ QVariant CanvasTreeModel::data(const QModelIndex &index, int role) const
         return e->property()->value("id", QVariant("<noid>"));
 
     case Qt::CheckStateRole:
-        return e->property()->value("visible", true);
+        return e->property()->value("visible", true).toBool() ? Qt::Checked : Qt::Unchecked;
 
     default:
         break;
@@ -108,7 +110,7 @@ QModelIndex CanvasTreeModel::parent(const QModelIndex &child) const
 
 Qt::ItemFlags CanvasTreeModel::flags(const QModelIndex &index) const
 {
-    return QAbstractItemModel::flags(index) | Qt::ItemIsUserCheckable;
+    return QAbstractItemModel::flags(index) | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
 }
 
 bool CanvasTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -118,8 +120,9 @@ bool CanvasTreeModel::setData(const QModelIndex &index, const QVariant &value, i
         return false;
     }
 
+    qDebug() << Q_FUNC_INFO;
     if (role == Qt::CheckStateRole) {
-        e->property()->setProperty("visible", value);
+        e->property()->changeValue("visible", (value.toInt() == Qt::Checked));
         emit dataChanged(index, index, QVector<int>() << Qt::CheckStateRole);
         return true;
     }
