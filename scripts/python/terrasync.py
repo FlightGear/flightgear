@@ -26,7 +26,7 @@ from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, join
 import re
-import optparse
+import argparse
 
 #################################################################################################################################
 class HTTPGetCallback:
@@ -156,7 +156,7 @@ class DownloadBoundaries:
         if top < bottom:
             raise ValueError("top cannot be less than bottom")
         if right < left:
-            raise ValueError("left cannot be less than right")
+            raise ValueError("right cannot be less than left")
 
         if top > 90 or bottom < -90:
             raise ValueError("top and bottom must be a valid latitude")
@@ -279,28 +279,28 @@ class TerraSync:
 #################################################################################################################################
 
 
-parser = optparse.OptionParser()
-parser.add_option("-u", "--url", dest="url", metavar="URL",
-        default="http://flightgear.sourceforge.net/scenery", help="Server URL [default: %default]")
-parser.add_option("-t", "--target", dest="target", metavar="DIR",
+parser = argparse.ArgumentParser()
+parser.add_argument("-u", "--url", dest="url", metavar="URL",
+        default="http://flightgear.sourceforge.net/scenery", help="Server URL [default: %(default)s]")
+parser.add_argument("-t", "--target", dest="target", metavar="DIR",
         default=".", help="Directory to store the files [default: current directory]")
-parser.add_option("-q", "--quick", dest="quick", action="store_true",
+parser.add_argument("-q", "--quick", dest="quick", action="store_true",
         default=False, help="Quick")
-parser.add_option("-r", "--remove-orphan", dest="removeOrphan", action="store_true",
+parser.add_argument("-r", "--remove-orphan", dest="removeOrphan", action="store_true",
         default=False, help="Remove old scenery files")
 
-parser.add_option("--top", dest="top",
-        default=90, help="Maximum latitude to include in download")
-parser.add_option("--bottom", dest="bottom",
-        default=-90, help="Minimum latitude to include in download")
-parser.add_option("--left", dest="left",
-        default=-180, help="Minimum longitude to include in download")
-parser.add_option("--right", dest="right",
-        default=180, help="Maximum longitude to include in download")
+parser.add_argument("--top", dest="top", type=int,
+        default=90, help="Maximum latitude to include in download [default: %(default)d]")
+parser.add_argument("--bottom", dest="bottom", type=int,
+        default=-90, help="Minimum latitude to include in download [default: %(default)d]")
+parser.add_argument("--left", dest="left", type=int,
+        default=-180, help="Minimum longitude to include in download [default: %(default)d]")
+parser.add_argument("--right", dest="right", type=int,
+        default=180, help="Maximum longitude to include in download [default: %(default)d]")
 
-(opts, args) = parser.parse_args()
+args = parser.parse_args()
 
-terraSync = TerraSync(opts.url, opts.target, opts.quick, opts.removeOrphan,
-        DownloadBoundaries(opts.top, opts.bottom, opts.left, opts.right))
+terraSync = TerraSync(args.url, args.target, args.quick, args.removeOrphan,
+        DownloadBoundaries(args.top, args.left, args.bottom, args.right))
 
 terraSync.start()
