@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, join
+import re
 
 #################################################################################################################################
 class HTTPGetCallback:
@@ -143,13 +144,55 @@ def hash_of_file(fname):
     return hash.hexdigest()
 
 #################################################################################################################################
+
+class Coordinate:
+    def __init__(self, lat, lon):
+        self.lat = lat
+        self.lon = lon
+
+class DownloadBoundaries:
+    def __init__(self, top, left, bottom, right):
+        if top < bottom:
+            raise ValueError("top cannot be less than bottom")
+        if right < left:
+            raise ValueError("left cannot be less than right")
+
+        if top > 90 or bottom < -90:
+            raise ValueError("top and bottom must be a valid latitude")
+        if left < -180 or right > 180:
+            raise ValueError("left and right must be a valid longitude")
+        self.top = top
+        self.left = left
+        self.bottom = bottom
+        self.right = right
+
+    def is_coordinate_inside_boundaries(self, coordinate):
+        if coordinate.lat < self.bottom or coordinate.lat > self.top:
+            return False
+        if coordinate.lon < self.left or coordinate.lon > self.right:
+            return False
+        return True
+
+def parse_terrasync_coordinate(coordinate):
+    matches = re.match("(w|e)(\d{3})(n|s)(\d{2})", coordinate)
+    if not matches:
+        return None
+    lon = int(matches.group(2))
+    if matches.group(1) == "w":
+        lon *= -1
+    lat = int(matches.group(4))
+    if matches.group(3) == "s":
+        lat *= -1
+    return Coordinate(lat, lon)
+
 class TerraSync:
 
-    def __init__(self, url="http://flightgear.sourceforge.net/scenery", target=".", quick=False, removeOrphan=False):
+    def __init__(self, url="http://flightgear.sourceforge.net/scenery", target=".", quick=False, removeOrphan=False, downloadBoundaries=DownloadBoundaries(90, -180, -90, 180)):
         self.setUrl(url).setTarget(target)
         self.quick = quick
         self.removeOrphan = removeOrphan
         self.httpGetter = None
+        self.downloadBoundaries = downloadBoundaries
 
     def setUrl(self, url):
         self.url = url.rstrip('/').strip()
@@ -177,6 +220,12 @@ class TerraSync:
 
     def updateDirectory(self, serverPath, localPath, dirIndexHash):
         print("processing ", serverPath)
+
+        if len(serverPath) > 0:
+            serverFolderName = serverPath[serverPath.rfind('/') + 1:]
+            coordinate = parse_terrasync_coordinate(serverFolderName)
+            if coordinate and not self.downloadBoundaries.is_coordinate_inside_boundaries(coordinate):
+                return
 
         localFullPath = join(self.target, localPath)
         if not os.path.exists( localFullPath ):
