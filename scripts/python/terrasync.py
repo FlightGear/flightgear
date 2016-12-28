@@ -22,7 +22,7 @@
 
 import urllib, os, hashlib
 from urllib.parse import urlparse
-from http.client import HTTPConnection, _CS_IDLE
+from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, join
 
@@ -54,7 +54,7 @@ class HTTPGetter:
 
         try:
             self.doGet(httpGetCallback)
-        except:
+        except HTTPException:
             # try to reconnect once
             #print("reconnect")
             self.httpConnection.close()
@@ -117,6 +117,9 @@ class HTTPDownloadRequest(HTTPGetCallback):
         self.mycallback = callback
 
     def callback(self):
+        if self.result.status != 200:
+            return
+
         with open(self.dst, 'wb') as f:
             f.write(self.result.read())
 
