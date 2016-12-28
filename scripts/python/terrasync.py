@@ -26,6 +26,7 @@ from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, join
 import re
+import optparse
 
 #################################################################################################################################
 class HTTPGetCallback:
@@ -187,7 +188,7 @@ def parse_terrasync_coordinate(coordinate):
 
 class TerraSync:
 
-    def __init__(self, url="http://flightgear.sourceforge.net/scenery", target=".", quick=False, removeOrphan=False, downloadBoundaries=DownloadBoundaries(90, -180, -90, 180)):
+    def __init__(self, url, target, quick, removeOrphan, downloadBoundaries):
         self.setUrl(url).setTarget(target)
         self.quick = quick
         self.removeOrphan = removeOrphan
@@ -276,26 +277,30 @@ class TerraSync:
             self.httpGetter.update()
 
 #################################################################################################################################
-import getopt, sys
-try:
-  opts, args = getopt.getopt(sys.argv[1:], "u:t:qr", [ "url=", "target=", "quick", "remove-orphan" ])
 
-except getopt.GetoptError:
-  print("terrasync.py [--url=http://some.server.org/scenery] [--target=/some/path] [-q|--quick] [-r|--remove-orphan]")
-  sys.exit(2)
 
-terraSync = TerraSync()
-for opt, arg in opts:
-  if opt in("-u", "--url"):
-    terraSync.url = arg
+parser = optparse.OptionParser()
+parser.add_option("-u", "--url", dest="url", metavar="URL",
+        default="http://flightgear.sourceforge.net/scenery", help="Server URL [default: %default]")
+parser.add_option("-t", "--target", dest="target", metavar="DIR",
+        default=".", help="Directory to store the files [default: current directory]")
+parser.add_option("-q", "--quick", dest="quick", action="store_true",
+        default=False, help="Quick")
+parser.add_option("-r", "--remove-orphan", dest="removeOrphan", action="store_true",
+        default=False, help="Remove old scenery files")
 
-  elif opt in ("-t", "--target"):
-    terraSync.target = arg
+parser.add_option("--top", dest="top",
+        default=90, help="Maximum latitude to include in download")
+parser.add_option("--bottom", dest="bottom",
+        default=-90, help="Minimum latitude to include in download")
+parser.add_option("--left", dest="left",
+        default=-180, help="Minimum longitude to include in download")
+parser.add_option("--right", dest="right",
+        default=180, help="Maximum longitude to include in download")
 
-  elif opt in ("-q", "--quick"):
-    terraSync.quick = True
+(opts, args) = parser.parse_args()
 
-  elif opt in ("-r", "--remove-orphan"):
-    terraSync.removeOrphan = True
+terraSync = TerraSync(opts.url, opts.target, opts.quick, opts.removeOrphan,
+        DownloadBoundaries(opts.top, opts.bottom, opts.left, opts.right))
 
 terraSync.start()
