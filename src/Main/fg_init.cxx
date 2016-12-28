@@ -349,10 +349,18 @@ private:
 #ifdef _WIN32
 static SGPath platformDefaultDataPath()
 {
-  char *envp = ::getenv( "APPDATA" );
-  SGPath config( envp );
-  config.append( "flightgear.org" );
-  return config;
+  SGPath appDataPath = SGPath::fromEnv("APPDATA");
+
+  if (appDataPath.isNull()) {
+    flightgear::fatalMessageBox(
+      "FlightGear", "Unable to get the value of APPDATA.",
+      "FlightGear is unable to retrieve the value of the APPDATA environment "
+      "variable. This is quite unexpected on Windows platforms, and FlightGear "
+      "can't continue its execution without this value, sorry.");
+    exit(EXIT_FAILURE);
+  }
+
+  return appDataPath / "flightgear.org";
 }
 
 #elif defined(SG_MAC)
