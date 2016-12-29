@@ -26,7 +26,8 @@ using std::string;
 TurnIndicator::TurnIndicator ( SGPropertyNode *node) :
     _last_rate(0),
     _name(node->getStringValue("name", "turn-indicator")),
-    _num(node->getIntValue("number", 0))
+    _num(node->getIntValue("number", 0)),
+    _electrical(node->getIntValue("electrical", 0))
 {
 }
 
@@ -44,7 +45,7 @@ TurnIndicator::init ()
     _roll_rate_node = fgGetNode("/orientation/roll-rate-degps", true);
     _yaw_rate_node = fgGetNode("/orientation/yaw-rate-degps", true);
     _electric_current_node = 
-        fgGetNode("/systems/electrical/outputs/turn-coordinator", true);
+        fgGetNode("/systems/electrical/outputs/turn-coordinator", _electrical, true);
     _rate_out_node = node->getChild("indicated-turn-rate", 0, true);
 
     reinit();

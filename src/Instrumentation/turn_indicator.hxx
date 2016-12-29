@@ -55,7 +55,7 @@ private:
     double _last_rate;
 
     std::string _name;
-    int _num;
+    int _num, _electrical;
 
     SGPropertyNode_ptr _roll_rate_node;
     SGPropertyNode_ptr _yaw_rate_node;
