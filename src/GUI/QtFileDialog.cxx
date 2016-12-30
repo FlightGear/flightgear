@@ -24,6 +24,7 @@
 
 // Qt
 #include <QFileDialog>
+#include <QDir>
 #include <QString>
 #include <QStringList>
 
@@ -68,7 +69,7 @@ void QtFileDialog::exec()
     dlg.setLabelText(QFileDialog::Accept,QString::fromStdString(_buttonText));
     dlg.selectFile(QString::fromStdString(_placeholder));
     if(_showHidden){
-        SG_LOG(SG_GENERAL, SG_ALERT, "QtFileDialog: can't show hidden files in Qt");
+        dlg.setFilter(dlg.filter() | QDir::Hidden);
     }
     if(dlg.exec()){
         QStringList result = dlg.selectedFiles();
