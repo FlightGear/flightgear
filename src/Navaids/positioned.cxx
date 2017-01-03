@@ -126,6 +126,8 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
   
   const NameTypeEntry names[] = {
     {"airport", AIRPORT},
+    {"heliport", HELIPORT},
+    {"seaport", SEAPORT},
     {"vor", VOR},
     {"loc", LOC},
     {"ils", ILS},
@@ -141,13 +143,24 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"ground", FREQ_GROUND},
     {"approach", FREQ_APP_DEP},
     {"departure", FREQ_APP_DEP},
+    {"clearance", FREQ_CLEARANCE},
+    {"unicom", FREQ_UNICOM},
     {"runway", RUNWAY},
     {"helipad", HELIPAD},
     {"country", COUNTRY},
     {"city", CITY},
     {"town", TOWN},
     {"village", VILLAGE},
-      
+    {"taxiway", TAXIWAY},
+    {"pavement", PAVEMENT},
+    {"om", OM},
+    {"mm", MM},
+    {"im", IM},
+    {"mobile-tacan", MOBILE_TACAN},
+    {"obstacle", OBSTACLE},
+    {"parking", PARKING},
+    {"taxi-node",TAXI_NODE},
+
   // aliases
     {"localizer", LOC},
     {"gnd", FREQ_GROUND},
