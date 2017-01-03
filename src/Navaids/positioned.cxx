@@ -171,7 +171,11 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"rwy", RUNWAY},
     {"any", INVALID},
     {"all", INVALID},
-    
+    {"outer-marker", OM},
+    {"middle-marker", MM},
+    {"inner-marker", IM},
+    {"parking-stand", PARKING},
+
     {NULL, INVALID}
   };
   
