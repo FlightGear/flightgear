@@ -1875,7 +1875,7 @@ public:
 
     for (const SGPath& path : pl) {
       cJSON *pathNode = cJSON_CreateString(path.utf8Str().c_str());
-      cJSON *prevNode;
+      cJSON *prevNode = nullptr;
 
       if (isFirst) {
         isFirst = false;
