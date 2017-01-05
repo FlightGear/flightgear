@@ -285,7 +285,8 @@ void FGAIMultiplayer::update(double dt)
       double intervalStart = prevIt->second.time;
       double intervalEnd = nextIt->second.time;
       double intervalLen = intervalEnd - intervalStart;
-      double tau = (tInterp - intervalStart)/intervalLen;
+      double tau = 0.0;
+      if (intervalLen != 0.0) tau = (tInterp - intervalStart)/intervalLen;
 
       SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle interpolation: ["
              << intervalStart << ", " << intervalEnd << "], intervalLen = "
