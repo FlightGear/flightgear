@@ -78,6 +78,7 @@ tar \
 		data/Models \
 		data/MP \
 		data/N* \
+		data/options.xml \
 		data/preferences.xml \
 		data/Protocol \
 		data/README \

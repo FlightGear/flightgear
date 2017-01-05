@@ -322,8 +322,7 @@ private:
 
     int getNumMaturity(const char * str)
     {
-        // Changes should also be reflected in
-        // $FG_INSTALL_PREFIX/share/flightgear/options.xml.
+        // Changes should also be reflected in $FG_ROOT/options.xml
         const char* levels[] = {"alpha","beta","early-production","production"};
 
         if (!strcmp(str, "all")) {
