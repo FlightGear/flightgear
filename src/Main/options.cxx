@@ -2711,15 +2711,18 @@ void Options::setupRoot(int argc, char **argv)
   }
 
   globals->set_fg_root(root);
-    static char required_version[] = FLIGHTGEAR_VERSION;
     string base_version = fgBasePackageVersion(root);
 
+
 #if defined(HAVE_QT)
+    // only compare major and minor version, not the patch level.
+    const int versionComp = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, base_version, 2);
+
     // note we never end up here if restoring a user selected root via
     // the Qt GUI, since that code pre-validates the path. But if we're using
     // a command-line, env-var or default root this check can fail and
     // we still want to use the GUI in that case
-    if (base_version != required_version) {
+    if (versionComp != 0) {
         flightgear::initApp(argc, argv);
         SetupRootDialog::runDialog(usingDefaultRoot);
     }
@@ -2733,12 +2736,14 @@ void Options::setupRoot(int argc, char **argv)
         exit(-1);
     }
 
-    if (base_version != required_version) {
+    // only compare major and minor version, not the patch level.
+    const int versionComp = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, base_version, 2);
+    if (versionComp != 0) {
       flightgear::fatalMessageBox("Base package version mismatch",
                                   "Version check failed: please check your installation.",
                                   "Found data files for version '" + base_version +
                                   "' at '" + globals->get_fg_root().str() + "', version '"
-                                  + required_version + "' is required.");
+                                  + std::string(FLIGHTGEAR_VERSION) + "' is required.");
 
     exit(-1);
   }

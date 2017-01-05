@@ -314,8 +314,17 @@ endif (ENABLE_QT)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 
-# FlightGear and SimGear versions need to match
-find_package(SimGear ${FLIGHTGEAR_VERSION} CONFIG REQUIRED)
+# FlightGear and SimGear versions need to match major + minor
+# split version string into components, note CMAKE_MATCH_0 is the entire regexp match
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" VERSION_REGEX ${FLIGHTGEAR_VERSION} )
+set(FG_VERSION_MAJOR ${CMAKE_MATCH_1})
+set(FG_VERSION_MINOR ${CMAKE_MATCH_2})
+set(FG_VERSION_PATCH ${CMAKE_MATCH_3})
+
+set(MIN_SIMGEAR_VERSION "${FG_VERSION_MAJOR}.${FG_VERSION_MINOR}.0")
+message(STATUS "Min Simgear version is ${MIN_SIMGEAR_VERSION}")
+
+find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
 
 ##############################################################################
 
