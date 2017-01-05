@@ -27,7 +27,6 @@
 #endif
 
 #include <cstdio>
-#include <cstdlib>
 #include <boost/foreach.hpp>
 
 #include <simgear/props/props_io.hxx>
@@ -35,7 +34,6 @@
 
 #include "fg_props.hxx"
 #include "locale.hxx"
-#include <GUI/MessageBox.hxx>
 
 using std::vector;
 using std::string;
@@ -44,25 +42,6 @@ FGLocale::FGLocale(SGPropertyNode* root) :
     _intl(root->getNode("/sim/intl",0, true)),
     _defaultLocale(_intl->getChild("locale",0, true))
 {
-    // Load locale.xml under _intl (which corresponds to /sim/intl). I don't
-    // pretend it is very useful to have this in the Global Property Tree; I
-    // am just making it visible under /sim/intl to preserve the previous
-    // behavior (when locale.xml was in FGData and automatically loaded under
-    // /sim/intl via an <intl include=... /> in $FG_ROOT/preferences.xml).
-    SGPath localeXML =
-        SGPath(FG_INSTALL_PREFIX) / "share/flightgear/Translations/locale.xml";
-
-    try {
-        readProperties(localeXML, _intl);
-    } catch (const sg_exception &e) {
-        string msg = "Unable to load '" + localeXML.utf8Str() + "'. "
-            "Please check that this file exists and is readable.\n\n" +
-            "Exception information: " + e.getFormattedMessage();
-        SG_LOG( SG_GENERAL, SG_ALERT, msg );
-        flightgear::fatalMessageBox(
-            "FlightGear", "Unable to load translation data.", msg);
-        exit(EXIT_FAILURE);
-    }
 }
 
 FGLocale::~FGLocale()
@@ -223,7 +202,7 @@ FGLocale::selectLanguage(const char *language)
 bool
 FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
 {
-    SGPath path = SGPath(FG_INSTALL_PREFIX) / "share/flightgear";
+    SGPath path( globals->get_fg_root() );
 
     SGPropertyNode* stringNode = localeNode->getNode("strings", 0, true);
 

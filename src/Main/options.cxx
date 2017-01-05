@@ -2451,18 +2451,14 @@ void Options::showUsage() const
   simgear::requestConsole(); // ensure console is shown on Windows
   cout << endl;
 
-  SGPath optionsXML =
-    SGPath(FG_INSTALL_PREFIX) / "share/flightgear/options.xml";
-
   try {
-    readProperties(optionsXML, &options_root);
-  } catch (const sg_exception &e) {
-    string msg = "Unable to load '" + optionsXML.utf8Str() + "'. "
-      "Please check that this file exists and is readable.\n\n" +
-      "Exception information: " + e.getFormattedMessage();
-    SG_LOG( SG_GENERAL, SG_ALERT, msg );
-    flightgear::fatalMessageBox(
-      "FlightGear", "Unable to load the command-line help file.", msg);
+    fgLoadProps("options.xml", &options_root);
+  } catch (const sg_exception &) {
+    cout << "Unable to read the help file." << endl;
+    cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
+    cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
+    cout << "by adding --fg-root=path as a program argument." << endl;
+
     exit(-1);
   }
 
@@ -2475,8 +2471,7 @@ void Options::showUsage() const
 
   if (!locale->loadResource("options"))
   {
-      SG_LOG( SG_GENERAL, SG_ALERT,
-              "Unable to read the 'options' language resource." );
+      cout << "Unable to read the language resource." << endl;
       exit(-1);
   }
 
