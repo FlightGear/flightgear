@@ -141,11 +141,39 @@ static void fg_terminate()
     flightgear::fatalMessageBox("Fatal exception", "Uncaught exception on some thread");
 }
 
+// Detect SSE2 support for x86, it is always available for x86_64
+#if defined(__i386__)
+# if defined(SG_WINDOWS)
+#  include <intrin.h>
+#  define get_cpuid(a,b)	__cpuid(a,b)
+# else
+#  include <cpuid.h>
+#  define get_cpuid(a,b)	__cpuid(b,a[0],a[1],a[2],a[3])
+# endif
+# define CPUID_GETFEATURES	1
+# define CPUID_FEAT_EDX_SSE2	(1 << 26)
+bool detectSIMD()
+{
+   static int regs[4] = {0,0,0,0};
+   get_cpuid(regs, CPUID_GETFEATURES);
+   return (regs[3] & CPUID_FEAT_EDX_SSE2);
+}
+#else
+bool detectSIMD() { return true; }
+#endif
+
 int _bootstrap_OSInit;
 
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv )
 {
+#ifdef ENABLE_SIMD
+  if (!detectSIMD()) {
+    flightgear::fatalMessageBox("Fatal error","SSE2 support not detetcted but this version of FlightGear requires SSE2 hardware support.");
+    return -1;
+  }
+#endif
+
 #if defined(SG_WINDOWS)
   // Don't show blocking "no disk in drive" error messages on Windows 7,
   // silently return errors to application instead.
@@ -162,7 +190,7 @@ int main ( int argc, char **argv )
   signal(SIGPIPE, SIG_IGN);
 #endif
 
-    _bootstrap_OSInit = 0;
+  _bootstrap_OSInit = 0;
 
 #if defined(HAVE_CRASHRPT)
 	// Define CrashRpt configuration parameters
