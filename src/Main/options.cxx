@@ -1870,11 +1870,11 @@ public:
   cJSON *createJSONArrayFromPathList(const PathList& pl) const
   {
     cJSON *resultNode = cJSON_CreateArray();
+    cJSON *prevNode = nullptr;
     bool isFirst = true;
 
     for (const SGPath& path : pl) {
       cJSON *pathNode = cJSON_CreateString(path.utf8Str().c_str());
-      cJSON *prevNode = nullptr;
 
       if (isFirst) {
         isFirst = false;
