@@ -17,6 +17,7 @@
 //
 
 #include <unistd.h>
+#include <dirent.h>
 
 #include "ApplicationProperties.hxx"
 
