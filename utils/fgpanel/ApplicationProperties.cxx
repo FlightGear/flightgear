@@ -16,8 +16,12 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#include <unistd.h>
-#include <dirent.h>
+
+#ifdef _WIN32
+# include <direct.h> // for getcwd()
+#else // !_WIN32
+# include <unistd.h>
+#endif
 
 #include "ApplicationProperties.hxx"
 

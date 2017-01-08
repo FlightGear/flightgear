@@ -80,19 +80,21 @@ add_executable(fgpanel
 target_link_libraries(fgpanel
   SimGearCore
   ${PNG_LIBRARIES}
-  ${SIMGEAR_CORE_LIBRARIES}
-  ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
-  -lfreetype
+  ${FREETYPE_LIBRARIES}
   )
 
 if(${BCMHOST_INCLUDE_DIR} STREQUAL "BCMHOST_INCLUDE_DIR-NOTFOUND")
   find_package(GLUT REQUIRED)
   if(GLUT_FOUND)
-    message(STATUS "found glut")
+    message(STATUS "found GLUT inc ${GLUT_INCLUDE_DIR}, lib ${GLUT_LIBRARIES} ")
+    if (MSVC)
+        add_definitions( -DFREEGLUT_LIB_PRAGMAS=0 )
+    endif ()
 
     target_link_libraries(fgpanel
+      ${OPENGL_LIBRARIES}
       ${GLUT_LIBRARIES}
-      -lGLEW ${OPENGL_LIBRARIES}
+      ${GLEW_LIBRARIES}
       )
   else(GLUT_FOUND)
     message(STATUS "glut NOT found, can't build fgpanel")
