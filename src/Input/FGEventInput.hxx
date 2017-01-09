@@ -290,6 +290,7 @@ public:
   virtual void init();
   virtual void postinit();
   virtual void update( double dt );
+  virtual void shutdown() override;
 
   const static unsigned MAX_DEVICES = 1000;
   const static unsigned INVALID_DEVICE_INDEX = MAX_DEVICES + 1;

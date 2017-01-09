@@ -153,8 +153,8 @@ public:
 
     virtual ~FGMacOSXInputDevice();
 
-    void Open();
-    void Close();
+    void Open() override;
+    void Close() override;
     
     virtual void update(double dt);
     virtual const char *TranslateEventName(FGEventData &eventData);
@@ -169,7 +169,7 @@ private:
     void buildElementNameDictionary();
 
     std::string nameForHIDElement(IOHIDElementRef element) const;
-
+    
     IOHIDDeviceRef _hid;
     IOHIDQueueRef _queue;
     FGMacOSXEventInputPrivate* _subsystem;
@@ -227,6 +227,11 @@ void FGMacOSXEventInput::postinit()
 
 void FGMacOSXEventInput::shutdown()
 {
+    FGEventInput::shutdown();
+
+    IOHIDManagerRegisterDeviceMatchingCallback(d->hidManager, nullptr, nullptr);
+    IOHIDManagerRegisterDeviceRemovalCallback(d->hidManager, nullptr, nullptr);
+
     IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
     IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     CFRelease(d->hidManager);
@@ -259,6 +264,12 @@ void FGMacOSXEventInputPrivate::matchedDevice(IOHIDDeviceRef device)
 
 void FGMacOSXEventInputPrivate::removedDevice(IOHIDDeviceRef device)
 {
+    std::string productName = getDeviceStringProperty(device, CFSTR(kIOHIDProductKey));
+    std::string manufacturer = getDeviceStringProperty(device, CFSTR(kIOHIDManufacturerKey));
+
+    SG_LOG(SG_INPUT, SG_INFO, "removed device:" << productName << " from " << manufacturer);
+
+
     // see if we have an entry for the device
 }
 
@@ -327,20 +338,15 @@ FGMacOSXInputDevice::FGMacOSXInputDevice(IOHIDDeviceRef hidRef,
 
 FGMacOSXInputDevice::~FGMacOSXInputDevice()
 {
-    NameElementDict::iterator it;
-    for (it = namedElements.begin(); it != namedElements.end(); ++it) {
-        CFRelease(it->second);
-    }
-
     CFRelease(_queue);
     CFRelease(_hid);
 }
 
 void FGMacOSXInputDevice::Open()
 {
+
     IOHIDDeviceOpen(_hid, kIOHIDOptionsTypeNone);
     IOHIDDeviceScheduleWithRunLoop(_hid, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-
 
     // IOHIDQueueRegisterValueAvailableCallback(_queue, valueAvailableCallback, this);
 
@@ -431,8 +437,11 @@ void FGMacOSXInputDevice::buildElementNameDictionary()
             namedElements[os.str()] = namedElements[name];
             CFRetain(namedElements[os.str()]);
         }
+
     }
-#if 1
+
+// HID debugging code
+#if 0
     NameElementDict::const_iterator it;
     for (it = namedElements.begin(); it != namedElements.end(); ++it) {
         int report = IOHIDElementGetReportID(it->second);
@@ -457,15 +466,25 @@ void FGMacOSXInputDevice::buildElementNameDictionary()
 
 void FGMacOSXInputDevice::Close()
 {
+    // leaking these otherwise we get a crash shutting down the HID-manager
+    // object. Don't understand why that should be the case
+#if 0
+    for (auto it : namedElements) {
+        CFRelease(it.second);
+    }
+#endif
+    namedElements.clear();
+
     IOHIDQueueStop(_queue);
+    IOHIDQueueUnscheduleFromRunLoop(_queue, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+
     IOHIDDeviceUnscheduleFromRunLoop(_hid, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     IOHIDDeviceClose(_hid, kIOHIDOptionsTypeNone);
 }
 
 void FGMacOSXInputDevice::AddHandledEvent( FGInputEvent_ptr handledEvent )
 {
-    SG_LOG(SG_INPUT, SG_INFO, "adding event:" << handledEvent->GetName());
-
+    SG_LOG(SG_INPUT, SG_DEBUG, "adding event:" << handledEvent->GetName());
     if (namedElements.empty()) {
         buildElementNameDictionary();
     }
@@ -475,6 +494,7 @@ void FGMacOSXInputDevice::AddHandledEvent( FGInputEvent_ptr handledEvent )
         SG_LOG(SG_INPUT, SG_WARN, "device does not have any element with name:" << handledEvent->GetName());
         return;
     }
+
 
     IOHIDQueueAddElement(_queue, it->second);
     FGInputDevice::AddHandledEvent(handledEvent);

@@ -321,9 +321,16 @@ FGEventInput::FGEventInput() :
 
 FGEventInput::~FGEventInput()
 {
-  for( map<int,FGInputDevice*>::iterator it = input_devices.begin(); it != input_devices.end(); ++it )
-    delete (*it).second;
-  input_devices.clear();
+
+}
+
+void FGEventInput::shutdown()
+{
+    for (auto it : input_devices) {
+        it.second->Close();
+        delete it.second;
+    }
+    input_devices.clear();
 }
 
 void FGEventInput::init( )
@@ -339,9 +346,9 @@ void FGEventInput::postinit ()
 
 void FGEventInput::update( double dt )
 {
-  // call each associated device's update() method
-  for( map<int,FGInputDevice*>::iterator it =  input_devices.begin(); it != input_devices.end(); ++it )
-    (*it).second->update( dt );
+    for (auto it : input_devices) {
+        it.second->update(dt);
+    }
 }
 
 unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
@@ -402,6 +409,7 @@ void FGEventInput::RemoveDevice( unsigned index )
 
   FGInputDevice *inputDevice = input_devices[index];
   if (inputDevice) {
+    inputDevice->Close();
     input_devices.erase(index);
     delete inputDevice;
     
