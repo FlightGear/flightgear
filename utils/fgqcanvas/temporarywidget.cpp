@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 James Turner  zakalawe@mac.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 #include "temporarywidget.h"
 #include "ui_temporarywidget.h"
 
@@ -7,20 +24,35 @@
 #include <QJsonValue>
 #include <QSettings>
 #include <QItemSelectionModel>
+#include <QNetworkRequest>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 #include "fgqcanvasfontcache.h"
 #include "fgqcanvasimageloader.h"
 #include "canvastreemodel.h"
 #include "localprop.h"
 #include "elementdatamodel.h"
+#include "fgcanvastext.h"
+#include "fgqcanvasimage.h"
 
 TemporaryWidget::TemporaryWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::TemporaryWidget)
 {
     ui->setupUi(this);
-    connect(ui->connectButton, &QPushButton::clicked, this, &TemporaryWidget::onStartConnect);
+    connect(ui->connectButton, &QPushButton::clicked, this, &TemporaryWidget::onConnect);
     restoreSettings();
+
+    ui->quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    ui->quickWidget->setSource(QUrl("root.qml"));
+
+    FGCanvasText::setEngine(ui->quickWidget->engine());
+    FGQCanvasImage::setEngine(ui->quickWidget->engine());
+
+    connect(ui->canvasSelectCombo, SIGNAL(activated(int)),
+            this, SLOT(onCanvasSelected(int)));
+    ui->canvasSelectCombo->hide();
 }
 
 TemporaryWidget::~TemporaryWidget()
@@ -30,48 +62,76 @@ TemporaryWidget::~TemporaryWidget()
     delete ui;
 }
 
-void TemporaryWidget::onStartConnect()
+void TemporaryWidget::setNetworkAccess(QNetworkAccessManager *dl)
 {
-    QUrl wsUrl;
-    wsUrl.setScheme("ws");
-    wsUrl.setHost(ui->hostName->text());
-    wsUrl.setPort(ui->portEdit->text().toInt());
-
-// string clean up, to ensure our root path has a leading slash but
-// no trailing slash
-    QString propPath = ui->propertyPath->text();
-    QString rootPath = propPath;
-    if (!propPath.startsWith('/')) {
-        rootPath = '/' + propPath;
-    }
-
-    if (propPath.endsWith('/')) {
-        rootPath.chop(1);
-    }
-
-    wsUrl.setPath("/PropertyTreeMirror" + rootPath);
-    rootPropertyPath = rootPath.toUtf8();
-
-    connect(&m_webSocket, &QWebSocket::connected, this, &TemporaryWidget::onConnected);
-    connect(&m_webSocket, &QWebSocket::disconnected, this, &TemporaryWidget::onSocketClosed);
-
-    saveSettings();
-
-    qDebug() << "starting connection to:" << wsUrl;
-    m_webSocket.open(wsUrl);
+    m_netAccess = dl;
 }
 
-void TemporaryWidget::onConnected()
+void TemporaryWidget::onConnect()
 {
-    qDebug() << "connected";
+    QUrl queryUrl;
+    queryUrl.setScheme("http");
+    queryUrl.setHost(ui->hostName->text());
+    queryUrl.setPort(ui->portEdit->text().toInt());
+    queryUrl.setPath("/json/canvas/by-index");
+    queryUrl.setQuery("d=2");
+
+    QNetworkReply* reply = m_netAccess->get(QNetworkRequest(queryUrl));
+    connect(reply, &QNetworkReply::finished, this, &TemporaryWidget::onFinishedGetCanvasList);
+
+    ui->connectButton->setEnabled(false);
+}
+
+QJsonObject jsonPropNodeFindChild(QJsonObject obj, QByteArray name)
+{
+    Q_FOREACH (QJsonValue v, obj.value("children").toArray()) {
+        QJsonObject vo = v.toObject();
+        if (vo.value("name").toString() == name) {
+            return vo;
+        }
+    }
+
+    return QJsonObject();
+}
+
+void TemporaryWidget::onFinishedGetCanvasList()
+{
+    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    reply->deleteLater();
+    ui->connectButton->setEnabled(true);
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qWarning() << "failed to get canvases";
+        // reset some state
+        return;
+    }
+
+    ui->connectButton->hide();
+    ui->canvasSelectCombo->show();
+
+    QJsonDocument json = QJsonDocument::fromJson(reply->readAll());
+
+    ui->canvasSelectCombo->clear();
+    QJsonArray canvasArray = json.object().value("children").toArray();
+    Q_FOREACH (QJsonValue canvasValue, canvasArray) {
+        QJsonObject canvas = canvasValue.toObject();
+        QString canvasName = jsonPropNodeFindChild(canvas, "name").value("value").toString();
+        QString propPath = canvas.value("path").toString();
+        ui->canvasSelectCombo->addItem(canvasName, propPath);
+    }
+}
+
+void TemporaryWidget::onWebSocketConnected()
+{
     connect(&m_webSocket, &QWebSocket::textMessageReceived,
             this, &TemporaryWidget::onTextMessageReceived);
-    m_webSocket.sendTextMessage(QStringLiteral("Hello, world!"));
 
     m_localPropertyRoot = new LocalProp(nullptr, NameIndexTuple(""));
 
     ui->canvas->setRootProperty(m_localPropertyRoot);
     ui->stack->setCurrentIndex(1);
+
+    ui->canvas->rootElement()->createQuickItem(ui->quickWidget->rootObject());
 
     m_canvasModel = new CanvasTreeModel(ui->canvas->rootElement());
     ui->treeView->setModel(m_canvasModel);
@@ -85,7 +145,26 @@ void TemporaryWidget::onConnected()
                                             ui->portEdit->text().toInt());
     FGQCanvasImageLoader::instance()->setHost(ui->hostName->text(),
                                               ui->portEdit->text().toInt());
-    m_webSocket.sendTextMessage("nonsense");
+}
+
+void TemporaryWidget::onCanvasSelected(int index)
+{
+    QString path = ui->canvasSelectCombo->itemData(index).toString();
+
+    QUrl wsUrl;
+    wsUrl.setScheme("ws");
+    wsUrl.setHost(ui->hostName->text());
+    wsUrl.setPort(ui->portEdit->text().toInt());
+    wsUrl.setPath("/PropertyTreeMirror" + path);
+    m_rootPropertyPath = path.toUtf8();
+
+    connect(&m_webSocket, &QWebSocket::connected, this, &TemporaryWidget::onWebSocketConnected);
+    connect(&m_webSocket, &QWebSocket::disconnected, this, &TemporaryWidget::onSocketClosed);
+
+    saveSettings();
+
+    qDebug() << "starting connection to:" << wsUrl;
+    m_webSocket.open(wsUrl);
 }
 
 void TemporaryWidget::onTextMessageReceived(QString message)
@@ -98,12 +177,12 @@ void TemporaryWidget::onTextMessageReceived(QString message)
             QJsonObject newProp = v.toObject();
 
             QByteArray nodePath = newProp.value("path").toString().toUtf8();
-            if (nodePath.indexOf(rootPropertyPath) != 0) {
+            if (nodePath.indexOf(m_rootPropertyPath) != 0) {
                 qWarning() << "not a property path we are mirroring:" << nodePath;
                 continue;
             }
 
-            QByteArray localPath = nodePath.mid(rootPropertyPath.size() + 1);
+            QByteArray localPath = nodePath.mid(m_rootPropertyPath.size() + 1);
             LocalProp* newNode = propertyFromPath(localPath);
             newNode->setPosition(newProp.value("position").toInt());
             // store in the global dict
@@ -163,7 +242,7 @@ void TemporaryWidget::onSocketClosed()
     ui->stack->setCurrentIndex(0);
 }
 
-void TemporaryWidget::onTreeCurrentChanged(const QModelIndex &previous, const QModelIndex &current)
+void TemporaryWidget::onTreeCurrentChanged(const QModelIndex &current, const QModelIndex &previous)
 {
     FGCanvasElement* prev = m_canvasModel->elementFromIndex(previous);
     if (prev) {
@@ -182,7 +261,7 @@ void TemporaryWidget::saveSettings()
     QSettings settings;
     settings.setValue("ws-host", ui->hostName->text());
     settings.setValue("ws-port", ui->portEdit->text());
-    settings.setValue("prop-path", ui->propertyPath->text());
+    //settings.setValue("prop-path", ui->propertyPath->text());
 }
 
 void TemporaryWidget::restoreSettings()
@@ -190,7 +269,7 @@ void TemporaryWidget::restoreSettings()
     QSettings settings;
     ui->hostName->setText(settings.value("ws-host").toString());
     ui->portEdit->setText(settings.value("ws-port").toString());
-    ui->propertyPath->setText(settings.value("prop-path").toString());
+  //  ui->propertyPath->setText(settings.value("prop-path").toString());
 }
 
 LocalProp *TemporaryWidget::propertyFromPath(QByteArray path) const

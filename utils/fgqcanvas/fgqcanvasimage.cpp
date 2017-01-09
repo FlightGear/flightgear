@@ -1,16 +1,43 @@
+//
+// Copyright (C) 2017 James Turner  zakalawe@mac.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 #include "fgqcanvasimage.h"
 
 #include <QPainter>
 #include <QDebug>
+#include <QQmlComponent>
 
 #include "fgcanvaspaintcontext.h"
 #include "localprop.h"
 #include "fgqcanvasimageloader.h"
+#include "canvasitem.h"
+
+static QQmlComponent* static_imageComponent = nullptr;
 
 FGQCanvasImage::FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop)
 {
 
+}
+
+void FGQCanvasImage::setEngine(QQmlEngine *engine)
+{
+    static_imageComponent = new QQmlComponent(engine, QUrl("image.qml"));
+    qDebug() << static_imageComponent->errorString();
 }
 
 void FGQCanvasImage::doPaint(FGCanvasPaintContext *context) const
@@ -116,4 +143,18 @@ void FGQCanvasImage::rebuildImage() const
 
 void FGQCanvasImage::markStyleDirty()
 {
+}
+
+
+CanvasItem *FGQCanvasImage::createQuickItem(QQuickItem *parent)
+{
+    Q_ASSERT(static_imageComponent);
+    _quickItem = qobject_cast<CanvasItem*>(static_imageComponent->create());
+    _quickItem->setParentItem(parent);
+    return _quickItem;
+}
+
+CanvasItem *FGQCanvasImage::quickItem() const
+{
+    return _quickItem;
 }
