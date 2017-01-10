@@ -78,6 +78,7 @@
 #include <Airports/parking.hxx>
 #include <Airports/gnnode.hxx>
 #include "CacheSchema.h"
+#include <GUI/MessageBox.hxx>
 
 using std::string;
 
@@ -257,16 +258,23 @@ public:
 
   void init()
   {
-    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
+      SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
 
       readOnly = fgGetBool("/sim/fghome-readonly", false);
 
       int openFlags = readOnly ? SQLITE_OPEN_READONLY :
         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-      // see http://code.google.com/p/flightgear-bugs/issues/detail?id=1055
-      // for the UTF8 / path logic here
       std::string pathUtf8 = path.utf8Str();
-    sqlite3_open_v2(pathUtf8.c_str(), &db, openFlags, NULL);
+      int result = sqlite3_open_v2(pathUtf8.c_str(), &db, openFlags, NULL);
+      if (result == SQLITE_MISUSE) {
+          // docs state sqlite3_errmsg may not work in this case
+          SG_LOG(SG_NAVCACHE, SG_WARN, "Failed to open DB at " << path << ": misuse of Sqlite API");
+          throw sg_exception("Navcache failed to open: Sqlite API misuse");
+      } else if (result != SQLITE_OK) {
+          std::string errMsg = sqlite3_errmsg(db);
+          SG_LOG(SG_NAVCACHE, SG_WARN, "Failed to open DB at " << path << " with error:\n\t" << errMsg);
+          throw sg_exception("Navcache failed to open:" + errMsg);
+      }
 
     sqlite3_stmt_ptr checkTables =
       prepare("SELECT count(*) FROM sqlite_master WHERE name='properties'");
@@ -1181,48 +1189,62 @@ const string NavDataCache::defaultDatFile[] = {
 
 NavDataCache::NavDataCache()
 {
-  const int MAX_TRIES = 3;
-  SGPath homePath(globals->get_fg_home());
+    const int MAX_TRIES = 3;
+    SGPath homePath(globals->get_fg_home());
 
-  std::ostringstream os;
-  string_list versionParts = simgear::strutils::split(VERSION, ".");
-  if (versionParts.size() < 2) {
-    os << "navdata.cache";
-  } else {
-    os << "navdata_" << versionParts[0] << "_" << versionParts[1] << ".cache";
-  }
+    std::ostringstream os;
+    string_list versionParts = simgear::strutils::split(VERSION, ".");
+    if (versionParts.size() < 2) {
+        os << "navdata.cache";
+    } else {
+        os << "navdata_" << versionParts[0] << "_" << versionParts[1] << ".cache";
+    }
 
-  homePath.append(os.str());
+    homePath.append(os.str());
 
     // permit additional DB connections from the same process
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
-  for (int t=0; t < MAX_TRIES; ++t) {
-    try {
-      d.reset(new NavDataCachePrivate(homePath, this));
-      d->init();
-      //d->checkCacheFile();
-    // reached this point with no exception, success
-      break;
-    } catch (sg_exception& e) {
-      SG_LOG(SG_NAVCACHE, t == 0 ? SG_WARN : SG_ALERT, "NavCache: init failed:" << e.what()
-             << " (attempt " << t << ")");
-      d.reset();
+    for (int t=0; t < MAX_TRIES; ++t) {
+        try {
+            d.reset(new NavDataCachePrivate(homePath, this));
+            d->init();
+            //d->checkCacheFile();
+            // reached this point with no exception, success
+            break;
+        } catch (sg_exception& e) {
+            SG_LOG(SG_NAVCACHE, t == 0 ? SG_WARN : SG_ALERT, "NavCache: init failed:" << e.what()
+                   << " (attempt " << t << ")");
 
-        // only wipe the existing if not readonly
-        if (!fgGetBool("/sim/fghome-readonly", false)) {
-            homePath.remove();
+            if (t == (MAX_TRIES - 1)) {
+                // final attempt still failed, we are busted
+                flightgear::fatalMessageBox("Unable to open navigation cache",
+                                            std::string("The navigation data cache could not be opened:") + e.getMessage(),
+                                            e.getOrigin());
+            }
+
+            d.reset();
+
+            // only wipe the existing if not readonly
+            if (!fgGetBool("/sim/fghome-readonly", false)) {
+                bool ok = homePath.remove();
+                if (!ok) {
+                    SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: failed to remove previous cache file");
+                    flightgear::fatalMessageBox("Unable to re-create navigation cache",
+                                                "Attempting to remove the old cache failed.",
+                                                "Location: "  + homePath.utf8Str());
+                }
+            }
         }
-    }
-  } // of retry loop
-
-  double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
-  SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
-  Octree::global_spatialOctree =
+    } // of retry loop
+    
+    double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
+    SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
+    Octree::global_spatialOctree =
     new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1);
-
-  // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath, etc.
-  updateListsOfDatFiles();
+    
+    // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath, etc.
+    updateListsOfDatFiles();
 }
 
 NavDataCache::~NavDataCache()
