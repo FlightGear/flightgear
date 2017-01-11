@@ -395,15 +395,12 @@ do_panel_load (const SGPropertyNode * arg)
 static bool
 do_preferences_load (const SGPropertyNode * arg)
 {
-  try {
-    fgLoadProps(arg->getStringValue("path", "preferences.xml"),
-                globals->get_props());
-  } catch (const sg_exception &e) {
-    guiErrorMessage("Error reading global preferences: ", e);
+    // disabling this command which was formerly used to reload 'preferences.xml'
+    // reloading the defaults doesn't make sense (better to reset the simulator),
+    // and loading arbitrary XML docs into the property-tree can be done via
+    // the standard load-xml command.
+    SG_LOG(SG_GENERAL, SG_ALERT, "preferences-load command is deprecated and non-functional");
     return false;
-  }
-  SG_LOG(SG_INPUT, SG_INFO, "Successfully read global preferences.");
-  return true;
 }
 
 static void

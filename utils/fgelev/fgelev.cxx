@@ -124,7 +124,7 @@ main(int argc, char** argv)
     SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
     try {
         SGPath preferencesFile = fg_root;
-        preferencesFile.append("preferences.xml");
+        preferencesFile.append("defaults.xml");
         readProperties(preferencesFile, props);
     } catch (...) {
         // In case of an error, at least make summer :)

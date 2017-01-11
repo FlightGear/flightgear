@@ -472,10 +472,17 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
         options->init(argc, argv, dataPath);
     }
 
-    // Read global preferences from $FG_ROOT/preferences.xml
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading global preferences");
-    fgLoadProps("preferences.xml", globals->get_props());
-    SG_LOG(SG_GENERAL, SG_INFO, "Finished Reading global preferences");
+    // Read global defaults from $FG_ROOT/defaults
+    SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
+    SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
+    if (!defaultsXML.exists()) {
+        flightgear::fatalMessageBox("Missing files",
+                                    "Couldn't load an essential simulator data file",
+                                    defaultsXML.utf8Str());
+    }
+    
+    fgLoadProps("defaults.xml", globals->get_props());
+    SG_LOG(SG_GENERAL, SG_INFO, "Finished Reading global defaults");
 
     // do not load user settings when reset to default is requested, or if
     // told to explicitly ignore

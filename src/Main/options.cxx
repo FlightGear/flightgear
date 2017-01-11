@@ -112,7 +112,7 @@ static int fgSetupProxy( const char *arg );
 /**
  * Set a few fail-safe default property values.
  *
- * These should all be set in $FG_ROOT/preferences.xml, but just
+ * These should all be set in $FG_ROOT/defaults.xml, but just
  * in case, we provide some initial sane values here. This method
  * should be invoked *before* reading any init files.
  */
