@@ -163,7 +163,7 @@ bool FGSoundManager::stationaryView() const
 // Actual sound update is triggered by the subsystem manager.
 void FGSoundManager::update(double dt)
 {
-    if (_is_initialized && _sound_working->getBoolValue())
+    if (is_active() && _is_initialized && _sound_working->getBoolValue())
     {
         bool enabled = _sound_enabled->getBoolValue();
         if (enabled != _enabled)
