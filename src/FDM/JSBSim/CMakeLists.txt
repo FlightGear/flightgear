@@ -197,4 +197,16 @@ set(SOURCES
 add_library(JSBSim STATIC ${SOURCES} ${HEADERS})
 
 target_link_libraries(JSBSim SimGearCore)
-target_include_directories(JSBSim PRIVATE ${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
+target_include_directories(JSBSim PRIVATE ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)
+
+add_executable(JSBsim_bin JSBSim.cpp )
+set_target_properties(JSBsim_bin PROPERTIES OUTPUT_NAME "JSBSim" )
+target_Link_libraries(JSBsim_bin JSBSim)
+target_include_directories(JSBsim_bin PRIVATE ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)
+
+if (MSVC)
+    set_target_properties(JSBsim_bin PROPERTIES DEBUG_POSTFIX d)
+endif ()
+install(TARGETS JSBsim_bin RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# eof
