@@ -167,7 +167,7 @@ FGFlightRecorder::getDefault(void)
     const char* Path = m_RecorderNode->getStringValue("default-config",NULL);
     if (!Path)
     {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "FlightRecorder: No default flight recorder specified! Check preferences.xml!");
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "FlightRecorder: No default flight recorder specified! Check defaults.xml!");
     }
     else
     {

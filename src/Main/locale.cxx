@@ -190,7 +190,7 @@ FGLocale::selectLanguage(const char *language)
     if (!_currentLocale)
     {
        SG_LOG(SG_GENERAL, SG_ALERT,
-              "System locale not found or no internationalization settings specified in preferences.xml. Using default (en)." );
+              "System locale not found or no internationalization settings specified in defaults.xml. Using default (en)." );
        return false;
     }
 

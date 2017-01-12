@@ -126,7 +126,7 @@ bool SetupRootDialog::validatePath(QString path)
     // no harm
     QStringList files = QStringList()
         << "version"
-        << "preferences.xml"
+        << "defaults.xml"
         << "Materials/base/materials-base.xml"
         << "gui/menubar.xml"
         << "Timezone/zone.tab";

@@ -104,7 +104,7 @@ void Transponder::init()
     
     _idCode_node = node->getChild("id-code", 0, true);
     _idCode_node->addChangeListener(this);
-    // set default, but don't overwrite value from preferences.xml or -set.xml
+    // set default, but don't overwrite value from defaults.xml or -set.xml
     if (!_idCode_node->hasValue()) { 
         _idCode_node->setIntValue(1200);
     }
