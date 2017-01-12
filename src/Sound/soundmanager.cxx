@@ -59,7 +59,8 @@ void Listener::valueChanged(SGPropertyNode * node)
 }
 
 FGSoundManager::FGSoundManager()
-  : _is_initialized(false),
+  : _active_dt(0.0),
+    _is_initialized(false),
     _enabled(false),
     _listener(new Listener(this))
 {
@@ -189,7 +190,13 @@ void FGSoundManager::update(double dt)
 
             set_velocity( velocity );
 
-            set_volume(_volume->getFloatValue());
+            float vf = 1.0f;
+            if (_active_dt < 5.0) {
+                _active_dt += dt;
+                vf = std::min(std::pow(_active_dt*0.2, 5.0), 1.0);
+            }
+
+            set_volume(vf*_volume->getFloatValue());
             SGSoundMgr::update(dt);
         }
     }
