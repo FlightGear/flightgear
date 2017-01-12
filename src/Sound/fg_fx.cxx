@@ -33,11 +33,11 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Sound/soundmanager.hxx>
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/sound/soundmgr.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
 FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
@@ -61,10 +61,11 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
     _internal = _props->getNode("sim/current-view/internal", true);
 
-    _smgr = globals->get_subsystem<SGSoundMgr>();
+    _smgr = globals->get_subsystem<FGSoundManager>();
     if (!_smgr) {
       return;
     }
+    _active = _smgr->is_active();
   
     _refname = refname;
     _smgr->add(this, refname);
@@ -162,6 +163,15 @@ FGFX::update (double dt)
     if (!_smgr) {
         return;
     }
+
+    if (!_active && _smgr->is_active())
+    {
+        _active = true;
+        for ( unsigned int i = 0; i < _sound.size(); i++ ) {
+            _sound[i]->start();
+        }
+    }
+
       
     if ( _enabled->getBoolValue() ) {
         if ( _avionics_enabled->getBoolValue())
