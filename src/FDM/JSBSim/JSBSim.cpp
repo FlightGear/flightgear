@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
   _clearfp();
   _controlfp(_controlfp(0, 0) & ~(_EM_INVALID | _EM_ZERODIVIDE | _EM_OVERFLOW),
            _MCW_EM);
-#elif defined(__GNUC__) && !defined(sgi)
+#elif defined(__GNUC__) && !defined(sgi) && !defined(__APPLE__)
   feenableexcept(FE_DIVBYZERO | FE_INVALID);
 #endif
 
