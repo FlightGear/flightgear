@@ -930,7 +930,12 @@ RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
   d(new RoutePathPrivate)
 {
     for (int l=0; l<fp->numLegs(); ++l) {
-        d->waypoints.push_back(WayptData(fp->legAtIndex(l)->waypoint()));
+        Waypt *wpt = fp->legAtIndex(l)->waypoint();
+        if (!wpt) {
+            SG_LOG(SG_NAVAID, SG_ALERT, "Waypoint " << l << " of " << fp->numLegs() << "is NULL");
+            break;
+        }
+        d->waypoints.push_back(WayptData(wpt));
     }
 
     d->aircraftCategory = fp->icaoAircraftCategory()[0];
