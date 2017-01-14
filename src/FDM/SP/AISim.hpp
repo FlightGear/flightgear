@@ -2,7 +2,7 @@
 //
 // Written by Erik Hofman, started November 2016
 //
-// Copyright (C) 2016  Erik Hofman <erik@ehofman.com>
+// Copyright (C) 2016,2017  Erik Hofman <erik@ehofman.com>
 //
 //
 // This program is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@
 # include <FDM/flight.hxx>
 #else
 # include "simd.hxx"
+# include "simd4x4.hxx"
 # define SG_METER_TO_FEET		3.2808399
 # define SG_FEET_TO_METER		(1/SG_METER_TO_FEET)
 # define SGD_DEGREES_TO_RADIANS		0.0174532925
@@ -64,7 +65,7 @@ private:
     enum { MAX=0, VELOCITY=1, PROPULSION=2 };
     enum { FLAPS=2, RUDDER=2, MIN=3, AILERON=3, ELEVATOR=3 };
     enum { DRAG=0, SIDE=1, LIFT=2 };
-    enum { ROLL=0, PITCH=1, YAW=2 };
+    enum { ROLL=0, PITCH=1, YAW=2, THRUST=3 };
     enum { ALPHA=0, BETA=1 };
     enum { PHI, THETA, PSI };
     enum { P=0, Q=1, R=2 };
@@ -92,21 +93,21 @@ public:
 
     /* controls */
     inline void set_rudder_norm(float f) {
-        xCDYL[RUDDER][SIDE] = CYdr_n*f;
-        xClmn[RUDDER][ROLL] = Cldr_n*f;
-        xClmn[RUDDER][YAW] = Cndr_n*f;
+        xCDYLT.ptr()[RUDDER][SIDE] = CYdr_n*f;
+        xClmnT.ptr()[RUDDER][ROLL] = Cldr_n*f;
+        xClmnT.ptr()[RUDDER][YAW] = Cndr_n*f;
     }
     inline void set_elevator_norm(float f) {
-        xClmn[ELEVATOR][PITCH] = Cmde_n*f;
+        xClmnT.ptr()[ELEVATOR][PITCH] = Cmde_n*f;
     }
     inline void set_aileron_norm(float f) {
-        xClmn[AILERON][ROLL] = Clda_n*f;
-        xClmn[AILERON][YAW] = Cnda_n*f;
+        xClmnT.ptr()[AILERON][ROLL] = Clda_n*f;
+        xClmnT.ptr()[AILERON][YAW] = Cnda_n*f;
     }
     inline void set_flaps_norm(float f) { 
-        xCDYL[FLAPS][LIFT] = CLdf_n*f;
-        xCDYL[FLAPS][DRAG] = CDdf_n*f;
-        xClmn[FLAPS][PITCH] = Cmdf_n*f;
+        xCDYLT.ptr()[FLAPS][LIFT] = CLdf_n*f;
+        xCDYLT.ptr()[FLAPS][DRAG] = CDdf_n*std::abs(f);
+        xClmnT.ptr()[FLAPS][PITCH] = Cmdf_n*f;
     }
     inline void set_throttle_norm(float f) { th = f; }
     inline void set_brake_norm(float f) { br = f; }
@@ -122,21 +123,21 @@ public:
     inline void set_altitude_agl_ft(float f) { agl = f; }
 
     inline void set_euler_angles_rad(const simd4_t<float,3>& e) {
-        euler_body = e;
+        euler = e;
      }
     inline void set_euler_angles_rad(float phi, float theta, float psi) {
-        euler_body = simd4_t<float,3>(phi, theta, psi);
+        euler = simd4_t<float,3>(phi, theta, psi);
     }
-    inline void set_pitch_rad(float f) { euler_body[PHI] = f; }
-    inline void set_roll_rad(float f) { euler_body[THETA] = f; }
-    inline void set_heading_rad(float f) { euler_body[PSI] = f; }
+    inline void set_pitch_rad(float f) { euler[PHI] = f; }
+    inline void set_roll_rad(float f) { euler[THETA] = f; }
+    inline void set_heading_rad(float f) { euler[PSI] = f; }
 
-    void set_velocity_fps(const simd4_t<float,3>& v) { UVW_body = v; }
+    void set_velocity_fps(const simd4_t<float,3>& v) { vUVW = v; }
     void set_velocity_fps(float u, float v, float w) {
-        UVW_body = simd4_t<float,3>(u, v, w);
+        vUVW = simd4_t<float,3>(u, v, w);
     }
     void set_velocity_fps(float u) {
-        UVW_body = simd4_t<float,3>(u, 0.0f, 0.0f);
+        vUVW = simd4_t<float,3>(u, 0.0f, 0.0f);
     }
 
     inline void set_wind_ned_fps(const simd4_t<float,3>& w) { wind_ned = w; }
@@ -145,27 +146,28 @@ public:
     }
 
     inline void set_alpha_rad(float f) {
-        xCDYL[ALPHA][DRAG] = CDa*std::abs(f);
-        xCDYL[ALPHA][LIFT] = CLa*f;
-        xClmn[ALPHA][PITCH] = Cma*f;
-        AOA_body[ALPHA] = f;
+        xCDYLT.ptr()[ALPHA][DRAG] = CDa*std::abs(f);
+        xCDYLT.ptr()[ALPHA][LIFT] = -CLa*f;
+        xClmnT.ptr()[ALPHA][PITCH] = Cma*f;
+        AOA[ALPHA] = f;
     }
     inline void set_beta_rad(float f) {
-        xCDYL[BETA][DRAG] = CDb*std::abs(f);
-        xCDYL[BETA][SIDE] = CYb*f;
-        xClmn[BETA][ROLL] = Clb*f; 
-        xClmn[BETA][YAW] = Cnb*f;
-        AOA_body[BETA] = f;
+        xCDYLT.ptr()[BETA][DRAG] = CDb*std::abs(f);
+        xCDYLT.ptr()[BETA][SIDE] = CYb*f;
+        xClmnT.ptr()[BETA][ROLL] = Clb*f; 
+        xClmnT.ptr()[BETA][YAW] = Cnb*f;
+        AOA[BETA] = f;
     }
     inline float get_alpha_rad() {
-        return AOA_body[ALPHA];
+        return AOA[ALPHA];
     }
     inline float get_beta_rad() {
-        return AOA_body[BETA];
+        return AOA[BETA];
     }
 
 private:
     void update_velocity(float v);
+    simd4x4_t<float,4> invert_inertia(simd4x4_t<float,4> mtx);
 
     /* aircraft normalized controls */
     float th;				/* throttle command		*/
@@ -173,15 +175,15 @@ private:
 
     /* aircraft state */
     simd4_t<double,3> location_geod;	/* lat, lon, altitude		*/
-    simd4_t<float,5> NED_distance;	/* North, East, Down rel. pos.	*/
-    simd4_t<float,3> NED_body;		/* North, East, Down speeds	*/
-    simd4_t<float,3> UVW_body;		/* fwd, up, side speed		*/
-    simd4_t<float,3> UVW_dot;           /* fwd, up, side accelerations	*/
-    simd4_t<float,3> PQR_body;		/* P, Q, R rate			*/
-    simd4_t<float,3> PQR_dot;		/* P, Q, R accelerations 	*/
-    simd4_t<float,2> AOA_body;		/* alpha, beta			*/
-    simd4_t<float,2> AOA_dot;		/* adot, bdot      		*/
-    simd4_t<float,3> euler_body;	/* phi, theta, psi		*/
+    simd4_t<float,3> aXYZ;		/* local body accelrations	*/
+    simd4_t<float,3> NEDdot;		/* North, East, Down velocity	*/
+    simd4_t<float,3> vUVW;		/* fwd, side, down velocity	*/
+    simd4_t<float,3> vUVWdot;           /* fwd, side, down accel.	*/
+    simd4_t<float,3> vPQR;		/* roll, pitch, yaw rate	*/
+    simd4_t<float,3> vPQRdot;		/* roll, pitch, yaw accel. 	*/
+    simd4_t<float,3> AOA;		/* alpha, beta			*/
+    simd4_t<float,3> AOAdot;		/* adot, bdot      		*/
+    simd4_t<float,3> euler;		/* phi, theta, psi		*/
     simd4_t<float,3> euler_dot;		/* change in phi, theta, psi	*/
     simd4_t<float,3> wind_ned;		/* wind north, east, down	*/
 
@@ -191,27 +193,30 @@ private:
     /* run 20 to 60 times (or more) per second				*/
 
     /* cache */
-    simd4_t<float,3> UVW_aero;		/* airmass relative to the body */
+    simd4_t<float,3> vUVWaero;		/* airmass relative to the body */
     simd4_t<float,3> FT[AISIM_MAX];	/* thrust force			*/
     simd4_t<float,3> FTM[AISIM_MAX];	/* thrust due to mach force	*/
     simd4_t<float,3> MT[AISIM_MAX];	/* thrust moment		*/
-    simd4_t<float,3> IQR_dot_fact;
-    float agl, velocity, mach;
-    float b_2U, cbar_2U;
+    simd4_t<float,3> b_2U, cbar_2U;
+    simd4_t<float,3> inv_m;
+    float velocity, mach;
+    float agl;
     bool WoW;
 
     /* dynamic coefficients (already multiplied with their value) */
-    simd4_t<float,3> xCqadot[2], xCpr[2];
-    simd4_t<float,3> xCDYL[4];
-    simd4_t<float,3> xClmn[4];
-    simd4_t<float,3> C2F, C2M;
+    simd4_t<float,3> xCq, xCadot, xCp, xCr;
+    simd4x4_t<float,4> xCDYLT;
+    simd4x4_t<float,4> xClmnT;
+    simd4_t<float,4> Coef2Force;
+    simd4_t<float,4> Coef2Moment;
 
     /* ---------------------------------------------------------------- */
     /* aircraft static data */
     int no_engines, no_gears;
+    simd4x4_t<float,4> mI, mIinv;	/* inertia matrix		*/
     simd4_t<float,3> gear_pos[AISIM_MAX]; /* pos in structural frame	*/
     simd4_t<float,3> cg;	/* center of gravity			*/
-    simd4_t<float,3> I;		/* inertia				*/
+    simd4_t<float,4> I;		/* inertia				*/
     float S, cbar, b;		/* wing area, mean average chord, span	*/
     float m;                    /* mass					*/
 
