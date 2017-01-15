@@ -238,8 +238,8 @@ printf("agl: %5.4f, alpha: %5.4f, beta: %5.4f, adot: %5.4f, bdot: %5.4f\n", agl,
     simd4_t<float,3> CDYL(0.0f, Cb2U[SIDE], Ccbar2U[LIFT]);
     simd4_t<float,3> Clmn(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW]);
     for (int i=0; i<4; ++i) {
-        CDYL.v4() += xCDYLT.m4x4()[i];
-        Clmn.v4() += xClmnT.m4x4()[i];
+        CDYL += simd4_t<float,3>(xCDYLT.m4x4()[i]);
+        Clmn += simd4_t<float,3>(xClmnT.m4x4()[i]);
     }
     float CL = CDYL[LIFT];
     CDYL += simd4_t<float,3>(CDi*CL*CL, 0.0f, 0.0f);
