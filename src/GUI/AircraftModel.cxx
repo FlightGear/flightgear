@@ -153,7 +153,7 @@ QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
             m_thumbnail.load(dir.filePath("thumbnail.jpg"));
             // resize to the standard size
             if (m_thumbnail.height() > STANDARD_THUMBNAIL_HEIGHT) {
-                m_thumbnail = m_thumbnail.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);
+                m_thumbnail = m_thumbnail.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
             }
         }
     }
@@ -400,7 +400,7 @@ protected:
 
         QPixmap pix = QPixmap::fromImage(img);
         if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
-            pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);
+            pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
         }
         m_model->m_thumbnailPixmapCache.insert(QString::fromStdString(aThumbnailUrl), pix);
 
