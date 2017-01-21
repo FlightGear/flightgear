@@ -211,7 +211,7 @@ FGFDMExec::~FGFDMExec()
   
   SetGroundCallback(0);
 
-  if (FDMctr > 0) (*FDMctr)--;
+  if (FDMctr != 0) (*FDMctr)--;
 
   Debug(1);
 }
