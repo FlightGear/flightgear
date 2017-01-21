@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Start FlightGear</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/app-icon-large</normaloff>:/app-icon-large</iconset>
+  </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <property name="leftMargin">
     <number>6</number>
@@ -681,6 +685,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
