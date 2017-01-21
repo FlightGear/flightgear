@@ -183,7 +183,6 @@ void FGTileMgr::reinit()
     _options->setPluginStringData("SimGear::LOD_RANGE_BARE", fgGetString("/sim/rendering/static-lod/bare", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
     _options->setPluginStringData("SimGear::LOD_RANGE_ROUGH", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
     _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
-    _options->setPluginStringData("SimGear::RENDER_BUILDING_MESH", fgGetBool("/sim/rendering/building-mesh", false) ? "true" : "false");
 
     string_list scenerySuffixes;
     for (auto node : fgGetNode("/sim/rendering/", true)->getChildren("scenery-path-suffix")) {
