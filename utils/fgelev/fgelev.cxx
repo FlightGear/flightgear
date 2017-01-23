@@ -100,7 +100,7 @@ main(int argc, char** argv)
     } else expire = 10;
 
     bool printSolidness = arguments.read("--print-solidness");
-    
+
     std::string fg_root;
     if (arguments.read("--fg-root", fg_root)) {
     } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
@@ -169,6 +169,10 @@ main(int argc, char** argv)
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
     // And we only want terrain, no objects on top.
     options->setPluginStringData("SimGear::FG_ONLY_TERRAIN", "ON");
+
+    string_list scenerySuffixes = {"Terrain"}; // Just Terrain
+    options->setSceneryPathSuffixes(scenerySuffixes);
+
     props->getNode("sim/rendering/random-objects", true)->setBoolValue(false);
     props->getNode("sim/rendering/random-vegetation", true)->setBoolValue(false);
 
