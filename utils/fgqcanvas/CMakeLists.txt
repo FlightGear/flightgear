@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 project(FGQCanvas)
 
-find_package(Qt5 5.3 COMPONENTS Widgets WebSockets)
+find_package(Qt5 5.4 COMPONENTS Widgets WebSockets)
 
 if (NOT Qt5WebSockets_FOUND)
   message(WARNING "FGQCanvas utility requested, but QtWebSockets not found")

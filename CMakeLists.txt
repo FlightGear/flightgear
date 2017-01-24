@@ -186,7 +186,7 @@ option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
-option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" ON)
+option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" OFF)
 
 include (DetectArch)
 
