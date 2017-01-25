@@ -74,9 +74,11 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/SHPParser.hxx>
+#include <Airports/airport.hxx>
 
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/AircraftDirVisitorBase.hxx>
 #include <Viewer/WindowBuilder.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Network/RemoteXMLRequest.hxx>
@@ -503,6 +505,74 @@ static void initQtResources()
     Q_INIT_RESOURCE(resources);
 }
 
+static SGPropertyNode_ptr loadXMLDefaults()
+{
+    SGPropertyNode_ptr root(new SGPropertyNode);
+    const SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
+    readProperties(defaultsXML, root);
+
+    if (!root->hasChild("sim")) {
+        qWarning() << "Failed to find /sim node in defaults.xml, broken";
+        return SGPropertyNode_ptr();
+    }
+
+    return root;
+}
+
+static std::string defaultAirportICAO()
+{
+    SGPropertyNode_ptr root = loadXMLDefaults();
+    if (!root) {
+        return std::string();
+    }
+
+    std::string airportCode = root->getStringValue("/sim/presets/airport-id");
+    return airportCode;
+}
+
+/**
+ * we don't want to rely on the main AircraftModel threaded scan, to find the
+ * default aircraft, so we do a synchronous scan here, on the assumption that
+ * FG_DATA/Aircraft only contains a handful of entries.
+ */
+class DefaultAircraftLocator : public AircraftDirVistorBase
+{
+public:
+    DefaultAircraftLocator()
+    {
+        SGPropertyNode_ptr root = loadXMLDefaults();
+        if (root) {
+            _aircraftId = root->getStringValue("/sim/aircraft");
+        } else {
+            qWarning() << "failed to load default aircraft identifier";
+            _aircraftId = "ufo"; // last ditch fallback
+        }
+
+        _aircraftId += "-set.xml";
+        const SGPath rootAircraft = globals->get_fg_root() / "Aircraft";
+        visitDir(rootAircraft, 0);
+    }
+
+    SGPath foundPath() const
+    {
+        return _foundPath;
+    }
+
+private:
+    virtual VisitResult visit(const SGPath& p) override
+    {
+        if (p.file() == _aircraftId) {
+            _foundPath = p;
+            return VISIT_DONE;
+        }
+
+        return VISIT_CONTINUE;
+    }
+    
+    std::string _aircraftId;
+    SGPath _foundPath;
+};
+
 namespace flightgear
 {
 
@@ -854,7 +924,14 @@ void QtLauncher::restoreSettings()
     if (!m_recentAircraft.empty()) {
         m_selectedAircraft = m_recentAircraft.front();
     } else {
-        // select the default C172p
+        // select the default aircraft specified in defaults.xml
+        DefaultAircraftLocator da;
+        if (da.foundPath().exists()) {
+            m_selectedAircraft = QUrl::fromLocalFile(QString::fromStdString(da.foundPath().utf8Str()));
+            qDebug() << "Restored default aircraft:" << m_selectedAircraft;
+        } else {
+            qWarning() << "Completely failed to find the default aircraft";
+        }
     }
 
     if (!m_inAppMode) {
@@ -863,9 +940,22 @@ void QtLauncher::restoreSettings()
 
     m_ui->location->restoreSettings();
     m_recentLocations = settings.value("recent-location-sets").toList();
-    if (!m_recentLocations.isEmpty()) {
-        m_ui->location->restoreLocation(m_recentLocations.front().toMap());
+    QVariantMap currentLocation;
+    if (m_recentLocations.isEmpty()) {
+        // use the default
+        std::string defaultAirport = defaultAirportICAO();
+        FGAirportRef apt = FGAirport::findByIdent(defaultAirport);
+        if (apt) {
+            currentLocation["location-id"] = static_cast<qlonglong>(apt->guid());
+            currentLocation["location-apt-runway"] = "active";
+            qDebug() << "restored default airport:" << QString::fromStdString(defaultAirport);
+        } // otherwise we failed to find the default airport in the nav-db :(
+    } else {
+        // we have a valid current location
+        currentLocation = m_recentLocations.front().toMap();
     }
+
+    m_ui->location->restoreLocation(currentLocation);
 
     // rating filters
     m_ui->onlyShowInstalledCheck->setChecked(settings.value("only-show-installed", false).toBool());
