@@ -16,6 +16,10 @@
   <property name="windowTitle">
    <string>Setup required data files</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/app-icon-large</normaloff>:/app-icon-large</iconset>
+  </property>
   <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
    <item row="7" column="1">
     <spacer name="verticalSpacer">
@@ -135,6 +139,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
