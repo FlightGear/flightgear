@@ -304,7 +304,14 @@
         </layout>
        </item>
        <item>
-        <widget class="QListView" name="aircraftList"/>
+        <widget class="QListView" name="aircraftList">
+         <property name="verticalScrollMode">
+          <enum>QAbstractItemView::ScrollPerPixel</enum>
+         </property>
+         <property name="horizontalScrollMode">
+          <enum>QAbstractItemView::ScrollPerPixel</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
