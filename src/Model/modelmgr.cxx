@@ -129,6 +129,17 @@ FGModelMgr::add_model (SGPropertyNode * node)
   else
     model->setHeadingDeg(node->getDoubleValue("heading-deg"));
 
+
+    if (node->hasChild("enable-hot")) {
+        osg::Node::NodeMask mask = model->getSceneGraph()->getNodeMask();
+        if (node->getBoolValue("enable-hot")) {
+            mask |= SG_NODEMASK_TERRAIN_BIT;
+        } else {
+            mask &= ~SG_NODEMASK_TERRAIN_BIT;
+        }
+        model->getSceneGraph()->setNodeMask(mask);
+    }
+
       			// Add this model to the global scene graph
   globals->get_scenery()->get_scene_graph()->addChild(model->getSceneGraph());
 
