@@ -66,7 +66,7 @@
 
 double uiuc_convert( int conversionType )
 {
-  double factor;
+  double factor = 1;
 
   switch(conversionType)
     {

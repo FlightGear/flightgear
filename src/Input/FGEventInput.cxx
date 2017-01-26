@@ -280,13 +280,13 @@ void FGInputDevice::update( double dt )
   for( map<string,FGInputEvent_ptr>::iterator it = handledEvents.begin(); it != handledEvents.end(); it++ )
     (*it).second->update( dt );
 
-    report_setting_list_t::const_iterator it;
-    for (it = reportSettings.begin(); it != reportSettings.end(); ++it) {
-        if ((*it)->Test()) {
-            std::string reportData = (*it)->reportBytes(nasalModule);
-            SendFeatureReport((*it)->getReportId(), reportData);
-        }
+  report_setting_list_t::const_iterator it;
+  for (it = reportSettings.begin(); it != reportSettings.end(); ++it) {
+    if ((*it)->Test()) {
+      std::string reportData = (*it)->reportBytes(nasalModule);
+      SendFeatureReport((*it)->getReportId(), reportData);
     }
+  }
 }
 
 void FGInputDevice::HandleEvent( FGEventData & eventData )
