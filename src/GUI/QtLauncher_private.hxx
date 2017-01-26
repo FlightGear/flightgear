@@ -21,7 +21,7 @@
 #ifndef FG_QTLAUNCHER_PRIVATE_HXX
 #define FG_QTLAUNCHER_PRIVATE_HXX
 
-#include <QDialog>
+#include <QMainWindow>
 #include <QScopedPointer>
 #include <QStringList>
 #include <QModelIndex>
@@ -43,21 +43,22 @@ class QCheckBox;
 class CatalogListModel;
 class RemoteXMLRequest;
 
-class QtLauncher : public QDialog
+class QtLauncher : public QMainWindow
 {
     Q_OBJECT
 public:
     QtLauncher();
     virtual ~QtLauncher();
 
-    void setInAppMode();
+    bool execInApp();
 
     static void setSceneryPaths();
 
     static void restartTheApp(QStringList fgArgs);
+
+    bool wasRejected();
 protected:
-    virtual void closeEvent(QCloseEvent *event);
-    virtual void reject();
+    virtual void closeEvent(QCloseEvent *event) override;
 
 private slots:
     // run is used when the launcher is invoked before the main app is
@@ -152,7 +153,9 @@ private:
     QUrl m_selectedAircraft;
     QList<QUrl> m_recentAircraft;
     QTimer* m_subsystemIdleTimer;
-    bool m_inAppMode;
+    bool m_inAppMode = false;
+    bool m_runInApp = false;
+    bool m_accepted = false;
 
     int m_ratingFilters[4];
 

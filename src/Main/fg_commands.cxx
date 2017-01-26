@@ -995,7 +995,7 @@ do_open_launcher(const SGPropertyNode *)
         // start a full reset
         fgResetIdleState();
     }
-    return ok;
+    return true; // don't report failure
 #else
     return false;
 #endif

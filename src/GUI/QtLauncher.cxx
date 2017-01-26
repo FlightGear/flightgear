@@ -687,9 +687,8 @@ bool runLauncherDialog()
 bool runInAppLauncherDialog()
 {
     QtLauncher dlg;
-    dlg.setInAppMode();
-    dlg.exec();
-    if (dlg.result() != QDialog::Accepted) {
+    bool accepted = dlg.execInApp();
+    if (!accepted) {
         return false;
     }
 
@@ -699,10 +698,9 @@ bool runInAppLauncherDialog()
 } // of namespace flightgear
 
 QtLauncher::QtLauncher() :
-    QDialog(),
+    QMainWindow(),
     m_ui(NULL),
     m_subsystemIdleTimer(NULL),
-    m_inAppMode(false),
     m_doRestoreMPServer(false)
 {
     m_ui.reset(new Ui::Launcher);
@@ -890,7 +888,7 @@ void QtLauncher::setSceneryPaths() // static method
 
 }
 
-void QtLauncher::setInAppMode()
+bool QtLauncher::execInApp()
 {
   m_inAppMode = true;
   m_ui->tabWidget->removeTab(3);
@@ -901,6 +899,15 @@ void QtLauncher::setInAppMode()
 
   disconnect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
   connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onApply()));
+    m_runInApp = true;
+
+    show();
+
+    while (m_runInApp) {
+        qApp->processEvents();
+    }
+
+    return m_accepted;
 }
 
 void QtLauncher::restoreSettings()
@@ -1041,11 +1048,6 @@ void QtLauncher::setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString nam
 }
 
 void QtLauncher::closeEvent(QCloseEvent *event)
-{
-    qApp->exit(-1);
-}
-
-void QtLauncher::reject()
 {
     qApp->exit(-1);
 }
@@ -1193,8 +1195,6 @@ void QtLauncher::onRun()
 
 void QtLauncher::onApply()
 {
-    accept();
-
     // aircraft
     if (!m_selectedAircraft.isEmpty()) {
         std::string aircraftPropValue,
@@ -1230,6 +1230,8 @@ void QtLauncher::onApply()
     m_ui->location->setLocationProperties();
 
     saveSettings();
+    m_accepted = true;
+    m_runInApp = false;
 }
 
 void QtLauncher::updateLocationHistory()
@@ -1251,7 +1253,11 @@ void QtLauncher::updateLocationHistory()
 
 void QtLauncher::onQuit()
 {
-    qApp->exit(-1);
+    if (m_inAppMode) {
+        m_runInApp = false;
+    } else {
+        qApp->exit(-1);
+    }
 }
 
 void QtLauncher::onToggleTerrasync(bool enabled)
