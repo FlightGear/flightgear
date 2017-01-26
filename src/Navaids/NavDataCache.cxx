@@ -261,6 +261,9 @@ public:
       SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
 
       readOnly = fgGetBool("/sim/fghome-readonly", false);
+      if (!readOnly && !path.canWrite()) {
+          throw sg_exception("Nav-cache file is not writeable");
+      }
 
       int openFlags = readOnly ? SQLITE_OPEN_READONLY :
         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
@@ -274,6 +277,10 @@ public:
           std::string errMsg = sqlite3_errmsg(db);
           SG_LOG(SG_NAVCACHE, SG_WARN, "Failed to open DB at " << path << " with error:\n\t" << errMsg);
           throw sg_exception("Navcache failed to open:" + errMsg);
+      }
+
+      if (!readOnly && (sqlite3_db_readonly(db, nullptr) != 0)) {
+          throw sg_exception("Nav-cache file opened but is not writeable");
       }
 
     sqlite3_stmt_ptr checkTables =
