@@ -9,6 +9,20 @@
 #include "fgqcanvasmap.h"
 #include "fgqcanvasimage.h"
 
+class ChildOrderingFunction
+{
+public:
+    bool operator()(const FGCanvasElement* a, FGCanvasElement* b)
+    {
+        if (a->zIndex() == b->zIndex()) {
+            // use prop node positions in the parent
+            return a->property()->position() < b->property()->position();
+        }
+
+        return a->zIndex() < b->zIndex();
+    }
+};
+
 FGCanvasGroup::FGCanvasGroup(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop)
 {
@@ -54,8 +68,7 @@ unsigned int FGCanvasGroup::indexOfChild(const FGCanvasElement *e) const
 void FGCanvasGroup::doPaint(FGCanvasPaintContext *context) const
 {
     if (_zIndicesDirty) {
-        std::sort(_children.begin(), _children.end(), [](const FGCanvasElement* a, FGCanvasElement* b)
-                 { return a->zIndex() < b->zIndex(); });
+        std::sort(_children.begin(), _children.end(), ChildOrderingFunction());
         _zIndicesDirty = false;
     }
 
@@ -82,23 +95,18 @@ bool FGCanvasGroup::onChildAdded(LocalProp *prop)
     if (nm == "group") {
         _children.push_back(new FGCanvasGroup(this, prop));
         newChildCount++;
-        return true;
     } else if (nm == "path") {
         _children.push_back(new FGCanvasPath(this, prop));
         newChildCount++;
-        return true;
     } else if (nm == "text") {
         _children.push_back(new FGCanvasText(this, prop));
         newChildCount++;
-        return true;
     } else if (nm == "image") {
         _children.push_back(new FGQCanvasImage(this, prop));
         newChildCount++;
-        return true;
     } else if (nm == "map") {
         _children.push_back(new FGQCanvasMap(this, prop));
         newChildCount++;
-        return true;
     } else if (nm == "symbol-type") {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasGroup::markCachedSymbolDirty);
         return true;
@@ -112,7 +120,9 @@ bool FGCanvasGroup::onChildAdded(LocalProp *prop)
     }
 
     if (newChildCount > 0) {
+        markChildZIndicesDirty();
         emit childAdded();
+        return true;
     }
 
     qDebug() << "saw unknown group child" << prop->name();

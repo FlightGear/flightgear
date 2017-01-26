@@ -40,6 +40,10 @@ QVariant ElementDataModel::data(const QModelIndex &index, int role) const
             return key;
         }
 
+        if (key == "position") {
+            return m_element->property()->position();
+        }
+
         return m_element->property()->value(key.constData(), QVariant());
     }
 
@@ -67,4 +71,6 @@ void ElementDataModel::computeKeys()
             m_keys.append(b);
         }
     }
+
+    m_keys.append("position");
 }

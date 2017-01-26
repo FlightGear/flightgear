@@ -57,6 +57,8 @@ class LocalProp : public QObject
 public:
     LocalProp(LocalProp* parent, const NameIndexTuple& ni);
 
+    virtual ~LocalProp();
+
     void processChange(QJsonValue newValue);
 
     const NameIndexTuple& id() const;
@@ -78,6 +80,16 @@ public:
     QByteArray name() const;
 
     unsigned int index() const;
+
+    /// position in the main FG propery tree. Normally
+    /// irrelevant but unfortunately necessary for correct
+    /// z-ordering of Canvas elements
+    unsigned int position() const
+    {
+        return _position;
+    }
+
+    void setPosition(unsigned int pos);
 
     LocalProp* parent() const;
 
@@ -108,6 +120,7 @@ private:
     const LocalProp* _parent;
     std::vector<LocalProp*> _children;
     QVariant _value;
+    unsigned int _position = 0;
 };
 
 #endif // LOCALPROP_H

@@ -105,7 +105,7 @@ void TemporaryWidget::onTextMessageReceived(QString message)
 
             QByteArray localPath = nodePath.mid(rootPropertyPath.size() + 1);
             LocalProp* newNode = propertyFromPath(localPath);
-
+            newNode->setPosition(newProp.value("position").toInt());
             // store in the global dict
             unsigned int propId = newProp.value("id").toInt();
             if (idPropertyDict.contains(propId)) {
@@ -119,7 +119,7 @@ void TemporaryWidget::onTextMessageReceived(QString message)
         }
 
         // process removes
-        QJsonArray removed = json.object().value("remvoed").toArray();
+        QJsonArray removed = json.object().value("removed").toArray();
         Q_FOREACH (QJsonValue v, removed) {
             unsigned int propId = v.toInt();
             if (idPropertyDict.contains(propId)) {

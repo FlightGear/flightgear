@@ -165,7 +165,7 @@ using std::string;
 
         virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child) override
         {
-            // this works becuase customer operator== overload on RecentlyRemovedNode
+            // this works becuase custom operator== overload on RecentlyRemovedNode
             // ignores the ID value.
             RecentlyRemovedNode m(child, 0);
             auto rrIt = std::find(recentlyRemoved.begin(), recentlyRemoved.end(), m);
@@ -201,9 +201,7 @@ using std::string;
 
         void registerSubtree(SGPropertyNode* node)
         {
-            if (node->getType() != simgear::props::NONE) {
-                valueChanged(node);
-            }
+            valueChanged(node);
 
             // and recurse
             int child = 0;
@@ -248,8 +246,9 @@ using std::string;
                     cJSON_AddItemToObject(newPropData, "index", cJSON_CreateNumber(prop->getIndex()));
                     cJSON_AddItemToObject(newPropData, "position", cJSON_CreateNumber(prop->getPosition()));
                     cJSON_AddItemToObject(newPropData, "id", cJSON_CreateNumber(idForProperty(prop)));
-                    cJSON_AddItemToObject(newPropData, "value", JSON::valueToJson(prop));
-
+                    if (prop->getType() != simgear::props::NONE) {
+                        cJSON_AddItemToObject(newPropData, "value", JSON::valueToJson(prop));
+                    }
                     cJSON_AddItemToArray(newNodesArray, newPropData);
                 }
 

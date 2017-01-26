@@ -53,6 +53,10 @@ LocalProp::LocalProp(LocalProp *pr, const NameIndexTuple& ni) :
 {
 }
 
+LocalProp::~LocalProp()
+{
+}
+
 void LocalProp::processChange(QJsonValue json)
 {
     QVariant newValue = json.toVariant();
@@ -130,6 +134,11 @@ QByteArray LocalProp::name() const
 unsigned int LocalProp::index() const
 {
     return _id.index;
+}
+
+void LocalProp::setPosition(unsigned int pos)
+{
+    _position = pos;
 }
 
 LocalProp *LocalProp::parent() const
