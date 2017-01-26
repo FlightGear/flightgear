@@ -246,6 +246,7 @@ using std::string;
                     cJSON_AddItemToObject(newPropData, "path", cJSON_CreateString(prop->getPath(true).c_str()));
                     cJSON_AddItemToObject(newPropData, "type", cJSON_CreateString(JSON::getPropertyTypeString(prop->getType())));
                     cJSON_AddItemToObject(newPropData, "index", cJSON_CreateNumber(prop->getIndex()));
+                    cJSON_AddItemToObject(newPropData, "position", cJSON_CreateNumber(prop->getPosition()));
                     cJSON_AddItemToObject(newPropData, "id", cJSON_CreateNumber(idForProperty(prop)));
                     cJSON_AddItemToObject(newPropData, "value", JSON::valueToJson(prop));
 
