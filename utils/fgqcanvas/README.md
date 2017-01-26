@@ -9,7 +9,7 @@ any canvas in real-time.
 Start FlightGear with the '--httpd' option, passing a port number. This can be
 done in the 'additional options' box if using the launcher.
 
-* `--httpd 8080`
+* `--httpd=8080`
 
 Start FGQCanvas and enter the WebSocket url, with a suitable host-name and port.
 Provide the path to the Canvas you want to display (this part will become
