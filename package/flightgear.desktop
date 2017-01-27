@@ -2,7 +2,7 @@
 Name=FlightGear
 GenericName=Flight Simulator
 Comment=An Open Source Flight Simulator
-Exec=fgfs --geometry=1024x768
+Exec=fgfs --launcher --geometry=1024x768
 Icon=flightgear
 Terminal=false
 Type=Application

@@ -2,6 +2,6 @@
 Type=Application
 Name=FlightGear
 Comment=FlightGear Flight Simulator
-Exec=fgfs
+Exec=fgfs --launcher
 Icon=FlightGear
 Categories=Game;Simulation;

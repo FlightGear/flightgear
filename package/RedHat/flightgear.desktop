@@ -3,6 +3,6 @@ Encoding=UTF-8
 Type=Application
 Name=FlightGear
 Comment=FlightGear Flight Simulator
-Exec=fgfs
+Exec=fgfs --launcher
 Icon=flightgear
 Categories=Game;Simulation
