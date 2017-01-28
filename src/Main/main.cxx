@@ -55,7 +55,6 @@ extern bool global_crashRptEnabled;
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
-#include <simgear/scene/tgdb/GroundLightManager.hxx>
 
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
@@ -555,9 +554,6 @@ int fgMainInit( int argc, char **argv )
     // delete the NavCache here. This will cause the destruction of many cached
     // objects (eg, airports, navaids, runways).
     delete flightgear::NavDataCache::instance();
-    simgear::GroundLightManager::instance()->getRunwayLightStateSet()->clear();
-    simgear::GroundLightManager::instance()->getTaxiLightStateSet()->clear();
-    simgear::GroundLightManager::instance()->getGroundLightStateSet()->clear();
   
     return result;
 }

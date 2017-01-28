@@ -54,6 +54,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
+#include <simgear/scene/tgdb/GroundLightManager.hxx>
 
 #include <osg/Texture>
 #include <osg/BufferObject>
@@ -310,6 +311,10 @@ void fgExitCleanup() {
     // on the common exit path globals is already deleted, and NULL,
     // so this only happens on error paths.
     delete globals;
+    // avoid crash on exit (https://sourceforge.net/p/flightgear/codetickets/1935/)
+    simgear::GroundLightManager::instance()->getRunwayLightStateSet()->clear();
+    simgear::GroundLightManager::instance()->getTaxiLightStateSet()->clear();
+    simgear::GroundLightManager::instance()->getGroundLightStateSet()->clear();
 
     simgear::shutdownLogging();
 }
