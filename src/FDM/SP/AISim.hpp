@@ -167,6 +167,7 @@ public:
 
 private:
     void update_velocity(float v);
+    simd4x4_t<float,4> matrix_inverse(simd4x4_t<float,4> mtx);
     simd4x4_t<float,4> invert_inertia(simd4x4_t<float,4> mtx);
 
     /* aircraft normalized controls */

@@ -41,6 +41,7 @@
 # include "simd4x4.hxx"
 #endif
 
+#define INCHES_TO_FEET	0.08333333333f
 #ifndef _MINMAX
 # define _MINMAX(a,b,c)  (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
 #endif
@@ -133,20 +134,28 @@ FGAISim::FGAISim(double dt) :
     // calculate the initial c.g. position above ground level to position
     // the aircraft on it's wheels.
     for (int i=0; i<no_gears; ++i) {
+        // convert from structural frame to body frame
+        gear_pos[i] = simd4_t<float,3>(cg[X]-gear_pos[i][X], gear_pos[i][Y]-cg[Y], cg[Z]-gear_pos[i][Z])*INCHES_TO_FEET;
         if (gear_pos[i][Z] < agl) agl = gear_pos[i][Z];
     }
-    // Genter of Gravity
+    // Contact point at the Genter of Gravity
     if (no_gears > (AISIM_MAX-1)) no_gears = AISIM_MAX-1;
-    gear_pos[no_gears] = 0.0f;
+    gear_pos[no_gears] = cg*INCHES_TO_FEET;
     Cg_spring[no_gears] = 20000.0f;
     Cg_damp[no_gears] = 2000.0f;
     no_gears++;
+
+    simd4x4_t<float,4> mcg;
+    simd4x4::unit(mcg);
+    simd4x4::translate(mcg, cg);
 
     mI = simd4x4_t<float,4>( I[XX],  0.0f, -I[XZ], 0.0f,
                               0.0f, I[YY],   0.0f, 0.0f,
                             -I[XZ],  0.0f,  I[ZZ], 0.0f,
                               0.0f,  0.0f,   0.0f, 0.0f);
     mIinv = invert_inertia(mI);
+//  mI *= mcg;
+//  mIinv *= matrix_inverse(mcg);
 }
 
 FGAISim::~FGAISim()
@@ -232,14 +241,14 @@ printf("agl: %5.4f, alpha: %5.4f, beta: %5.4f, adot: %5.4f, bdot: %5.4f\n", agl,
      * Clmn[ROLL]  = (Clp*p       + Clr*r)*b_2U;
      * Clmn[YAW]   = (Cnp*p       + Cnr*r)*b_2U;
      */
-    simd4_t<float,3> Ccbar2U = (xCq*q + xCadot*adot)*cbar_2U;
-    simd4_t<float,3> Cb2U    = (xCp*p + xCr*r      )*b_2U;
+    simd4_t<float,4> Ccbar2U = (xCq*q + xCadot*adot)*cbar_2U;
+    simd4_t<float,4> Cb2U    = (xCp*p + xCr*r      )*b_2U;
 
-    simd4_t<float,3> CDYL(0.0f, Cb2U[SIDE], Ccbar2U[LIFT]);
-    simd4_t<float,3> Clmn(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW]);
+    simd4_t<float,4> CDYL(0.0f, Cb2U[SIDE], Ccbar2U[LIFT]);
+    simd4_t<float,4> Clmn(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW]);
     for (int i=0; i<4; ++i) {
-        CDYL += simd4_t<float,3>(xCDYLT.m4x4()[i]);
-        Clmn += simd4_t<float,3>(xClmnT.m4x4()[i]);
+        CDYL += simd4_t<float,4>(xCDYLT.m4x4()[i]);
+        Clmn += simd4_t<float,4>(xClmnT.m4x4()[i]);
     }
     float CL = CDYL[LIFT];
     CDYL += simd4_t<float,3>(CDi*CL*CL, 0.0f, 0.0f);
@@ -369,7 +378,7 @@ printf("GEOD:    %7.2f, %7.2f, %7.2f\n", location_geod[0], location_geod[1], loc
     euler_dot[THETA] =    q*cos_p - r*sin_p;
 //  euler_dot[PHI] = p + (q*sin_p + r*cos_p)*sin_t/cos_t;
     euler_dot[PHI] = p + euler_dot[PSI]*sin_t;
-    euler += euler_dot;
+    euler += euler_dot*dt;
 printf("euler:   %7.2f, %7.2f, %7.2f\n", euler[PHI], euler[THETA], euler[PSI]);
 
 #ifdef ENABLE_SP_FDM
@@ -441,7 +450,6 @@ FGAISim::copy_from_AISim()
 
 // ----------------------------------------------------------------------------
 
-#define INCHES_TO_FEET	0.08333333333f
 #ifndef _MINMAX
 # define _MINMAX(a,b,c) (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
 #endif
@@ -527,6 +535,27 @@ FGAISim::update_velocity(float v)
 }
 
 simd4x4_t<float,4>
+FGAISim::matrix_inverse(simd4x4_t<float,4> mtx)
+{
+    simd4x4_t<float,4> dst;
+    simd4_t<float,4> v1, v2;
+
+    dst = simd4x4::transpose(mtx);
+
+    v1 = mtx.m4x4()[3];
+    v2 = mtx.m4x4()[0];
+    dst.ptr()[3][0] = -simd4::dot(v1, v2);
+
+    v2 = mtx.m4x4()[1];
+    dst.ptr()[3][1] = -simd4::dot(v1, v2);
+
+    v2 = mtx.m4x4()[2];
+    dst.ptr()[3][2] = -simd4::dot(v1, v2);
+
+    return dst;
+}
+
+simd4x4_t<float,4>
 FGAISim::invert_inertia(simd4x4_t<float,4> mtx)
 {
     float Ixx, Iyy, Izz, Ixz;
@@ -563,32 +592,38 @@ FGAISim::load(std::string path)
     b = 35.8f;
 
     m = 2267.0f/AISIM_G;	// max: 2650.0f;
-    cg[X] =  0.0f;
-    cg[Y] =  0.0f;
-    cg[Z] = -8.1f*INCHES_TO_FEET;
 
     I[XX] = 948.0f;
     I[YY] = 1346.0f;
     I[ZZ] = 1967.0f;
 
+    // Center of Gravity and gears are in the structural frame
+    //  X-axis is directed afterwards,
+    //  Y-axis is directed towards the right,
+    //  Z-axis is directed upwards
+    //  positions are in inches
+    cg[X] =  -2.2f;
+    cg[Y] =   0.0f;
+    cg[Z] = -22.5f;
+
     // gear ground contact points relative tot aero ref. pt. at (0,0,0)
     no_gears = 3;
     /* nose */
-    gear_pos[0][X] = -47.8f*INCHES_TO_FEET;
-    gear_pos[0][Y] =   0.0f*INCHES_TO_FEET;
-    gear_pos[0][Z] = -54.4f*INCHES_TO_FEET;
+    gear_pos[0][X] = -50.0f;
+    gear_pos[0][Y] =   0.0f;
+    gear_pos[0][Z] = -78.9f;
     Cg_spring[0] = 1800.0f;
     Cg_damp[0] = 600.0f;
     /* left */
-    gear_pos[1][X] =  17.2f*INCHES_TO_FEET;
-    gear_pos[1][Y] = -43.0f*INCHES_TO_FEET;
-    gear_pos[1][Z] = -54.4f*INCHES_TO_FEET;
+    gear_pos[1][X] =  15.0f;
+    gear_pos[1][Y] = -43.0f;
+    gear_pos[1][Z] = -74.9f;
     Cg_spring[1] = 5400.0f;
     Cg_damp[1] = 1600.0f;
     /* right */
-    gear_pos[2][X] =  17.2f*INCHES_TO_FEET;
-    gear_pos[2][Y] =  43.0f*INCHES_TO_FEET;
-    gear_pos[2][Z] = -54.4f*INCHES_TO_FEET;
+    gear_pos[2][X] =  15.0f;
+    gear_pos[2][Y] =  43.0f;
+    gear_pos[2][Z] = -74.9f;
     Cg_spring[2] = 5400.0f;
     Cg_damp[2] = 1600.0f;
 
@@ -648,19 +683,11 @@ FGAISim::load(std::string path)
     Cldr_n =  0.0f*dr_max;
 #endif
 
-#if 0
     Cma    = -1.0f;
     Cmadot = -4.42f;
     Cmq    = -10.5f;
     Cmde_n = -1.05f*de_max;
     Cmdf_n = -0.059f*df_max;
-#else
-    Cma    =  0.0f;
-    Cmadot =  0.0f;
-    Cmq    =  0.0f;
-    Cmde_n = -1.05f*de_max;
-    Cmdf_n =  0.0f*df_max;
-#endif
 
 #if 0
     Cnb    =  0.0630f;
