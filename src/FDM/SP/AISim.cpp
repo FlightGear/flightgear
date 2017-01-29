@@ -542,14 +542,14 @@ FGAISim::matrix_inverse(simd4x4_t<float,4> mtx)
 
     dst = simd4x4::transpose(mtx);
 
-    v1 = mtx.m4x4()[3];
-    v2 = mtx.m4x4()[0];
+    v1 = simd4_t<float,4>(mtx.m4x4()[3]);
+    v2 = simd4_t<float,4>(mtx.m4x4()[0]);
     dst.ptr()[3][0] = -simd4::dot(v1, v2);
 
-    v2 = mtx.m4x4()[1];
+    v2 = simd4_t<float,4>(mtx.m4x4()[1]);
     dst.ptr()[3][1] = -simd4::dot(v1, v2);
 
-    v2 = mtx.m4x4()[2];
+    v2 = simd4_t<float,4>(mtx.m4x4()[2]);
     dst.ptr()[3][2] = -simd4::dot(v1, v2);
 
     return dst;
