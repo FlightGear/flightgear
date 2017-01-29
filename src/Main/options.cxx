@@ -48,6 +48,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/sound/soundmgr.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -1054,6 +1055,50 @@ fgOptLogClasses( const char *arg )
 }
 
 static int
+fgOptLogFile(const char* arg)
+{
+    SGPath dirPath;
+    if (!strcmp(arg, "desktop")) {
+        dirPath = SGPath::desktop();
+    } else {
+        dirPath = SGPath::fromLocal8Bit(arg);
+    }
+
+    if (!dirPath.isDir()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "cannot find logging location " << dirPath);
+        return FG_OPTIONS_ERROR;
+    }
+
+    if (!dirPath.canWrite()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "cannot write to logging location " << dirPath);
+        return FG_OPTIONS_ERROR;
+    }
+
+    // generate the log file name
+    SGPath logFile;
+    {
+        char fileNameBuffer[100];
+        time_t now;
+        time(&now);
+        strftime(fileNameBuffer, 99, "FlightGear_%F", localtime(&now));
+
+        unsigned int logsTodayCount = 0;
+        while (true) {
+            std::ostringstream os;
+            os << fileNameBuffer << "_" << logsTodayCount++ << ".log";
+            logFile = dirPath / os.str();
+            if (!logFile.exists()) {
+                break;
+            }
+        }
+    }
+
+    sglog().logToFile(logFile, sglog().get_log_classes(), sglog().get_log_priority());
+
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptTraceWrite( const char *arg )
 {
     string name = arg;
@@ -1660,6 +1705,7 @@ struct OptionDesc {
     {"trace-write",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
     {"log-class",                    true,  OPTION_FUNC,   "", false, "", fgOptLogClasses },
+    {"log-file",                     true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptLogFile },
     {"view-offset",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },

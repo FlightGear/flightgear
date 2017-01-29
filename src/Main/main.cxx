@@ -364,6 +364,8 @@ static void fgIdleFunction ( void ) {
     }
 
     if ( idle_state == 1000 ) {
+        sglog().setStartupLoggingEnabled(false);
+
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/sceneryloaded", false);
@@ -410,7 +412,7 @@ extern "C" {
 }
 #endif
 
-static void logToFile()
+static void logToHome()
 {
     SGPath logPath = globals->get_fg_home();
     logPath.append("fgfs.log");
@@ -437,8 +439,10 @@ static void logToFile()
 // Main top level initialization
 int fgMainInit( int argc, char **argv )
 {
-    // set default log levels
-    sglog().setLogLevels( SG_ALL, SG_ALERT );
+    // set default log level to 'info' for startup, we will revert to a lower
+    // level once startup is done.
+    sglog().setLogLevels( SG_ALL, SG_INFO );
+    sglog().setStartupLoggingEnabled(true);
 
     globals = new FGGlobals;
     if (!fgInitHome()) {
@@ -447,7 +451,7 @@ int fgMainInit( int argc, char **argv )
     
     if (!fgGetBool("/sim/fghome-readonly")) {
         // now home is initialised, we can log to a file inside it
-        logToFile();
+        logToHome();
     }
     
     std::string version(FLIGHTGEAR_VERSION);
