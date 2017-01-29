@@ -58,6 +58,7 @@
 #include <simgear/package/Catalog.hxx>
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Install.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include "ui_Launcher.h"
 #include "ui_NoOfficialHangar.h"
@@ -573,6 +574,25 @@ private:
     SGPath _foundPath;
 };
 
+static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    sgDebugPriority mappedPriority = SG_WARN;
+    switch (type) {
+    case QtDebugMsg:    mappedPriority = SG_DEBUG; break;
+    case QtInfoMsg:     mappedPriority = SG_INFO; break;
+    case QtWarningMsg:  mappedPriority = SG_WARN; break;
+    case QtCriticalMsg: mappedPriority = SG_ALERT; break;
+    case QtFatalMsg:    mappedPriority = SG_POPUP; break;
+    }
+
+    static const char* nullFile = "";
+    const char* file = context.file ? context.file : nullFile;
+    sglog().log(SG_GUI, mappedPriority, file, context.line, msg.toStdString());
+    if (type == QtFatalMsg) {
+        abort();
+    }
+}
+
 namespace flightgear
 {
 
@@ -592,6 +612,10 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         s_argc = argc; // QApplication only stores a reference to argc,
         // and may crash if it is freed
         // http://doc.qt.io/qt-5/qguiapplication.html#QGuiApplication
+
+        // log to simgear instead of the console from Qt, so we go to
+        // whichever log locations SimGear has configured
+        qInstallMessageHandler(simgearMessageOutput);
 
         QApplication* app = new QApplication(s_argc, argv);
         app->setOrganizationName("FlightGear");
