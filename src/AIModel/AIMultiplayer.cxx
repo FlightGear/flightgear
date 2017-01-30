@@ -319,35 +319,53 @@ void FGAIMultiplayer::update(double dt)
           
             int ival;
             float val;
-            switch ((*prevPropIt)->type) {
-              case props::INT:
-              case props::BOOL:
-              case props::LONG:
-                ival = (int) (0.5+(1-tau)*((double) (*prevPropIt)->int_value) +
-                  tau*((double) (*nextPropIt)->int_value));
-                pIt->second->setIntValue(ival);
-                //cout << "Int: " << ival << "\n";
-                break;
-              case props::FLOAT:
-              case props::DOUBLE:
-                val = (1-tau)*(*prevPropIt)->float_value +
-                  tau*(*nextPropIt)->float_value;
-                //cout << "Flo: " << val << "\n";
-                pIt->second->setFloatValue(val);
-                break;
-              case props::STRING:
-              case props::UNSPECIFIED:
-                //cout << "Str: " << (*nextPropIt)->string_value << "\n";
-                pIt->second->setStringValue((*nextPropIt)->string_value);
-                break;
-              default:
-                // FIXME - currently defaults to float values
-                val = (1-tau)*(*prevPropIt)->float_value +
-                  tau*(*nextPropIt)->float_value;
-                //cout << "Unk: " << val << "\n";
-                pIt->second->setFloatValue(val);
-                break;
-            }            
+			/*
+			 * RJH - 2017-01-25 
+			 * During multiplayer operations a series of crashes were encountered that affected all players
+			 * within range of each other and resulting in an exception being thrown at exactly the same moment in time
+			 * (within case props::STRING: ref http://i.imgur.com/y6MBoXq.png)
+			 * Investigation showed that the nextPropIt and prevPropIt were pointing to different properties
+			 * which may be caused due to certain models that have overloaded mp property transmission and
+			 * these craft have their properties truncated due to packet size. However the result of this
+			 * will be different contents in the previous and current packets, so here we protect against
+			 * this by only considering properties where the previous and next id are the same.
+			 * It might be a better solution to search the previous and next lists to locate the matching id's
+			 */
+			if (*nextPropIt && (*nextPropIt)->id == (*prevPropIt)->id ) {
+				switch ((*prevPropIt)->type) {
+				case props::INT:
+				case props::BOOL:
+				case props::LONG:
+					ival = (int)(0.5 + (1 - tau)*((double)(*prevPropIt)->int_value) +
+						tau*((double)(*nextPropIt)->int_value));
+					pIt->second->setIntValue(ival);
+					//cout << "Int: " << ival << "\n";
+					break;
+				case props::FLOAT:
+				case props::DOUBLE:
+					val = (1 - tau)*(*prevPropIt)->float_value +
+						tau*(*nextPropIt)->float_value;
+					//cout << "Flo: " << val << "\n";
+					pIt->second->setFloatValue(val);
+					break;
+				case props::STRING:
+				case props::UNSPECIFIED:
+					//cout << "Str: " << (*nextPropIt)->string_value << "\n";
+					pIt->second->setStringValue((*nextPropIt)->string_value);
+					break;
+				default:
+					// FIXME - currently defaults to float values
+					val = (1 - tau)*(*prevPropIt)->float_value +
+						tau*(*nextPropIt)->float_value;
+					//cout << "Unk: " << val << "\n";
+					pIt->second->setFloatValue(val);
+					break;
+				}
+			}
+			else
+			{
+				SG_LOG(SG_AI, SG_WARN, "MP packet mismatch during lag interpolation: " << (*prevPropIt)->id << " != " << (*nextPropIt)->id << "\n");
+			}
           }
           else
           {
