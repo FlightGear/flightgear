@@ -151,7 +151,7 @@ void segfault_handler(int sig) {
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
 
-  strs = backtrace_symbols(callstack, size);
+  strs = backtrace_symbols(array, size);
   for (i=0; i<size; ++i) {
     printf("  %s\n", strs[i]);
   }
