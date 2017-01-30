@@ -1,701 +1,802 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-  <class>Launcher</class>
-  <widget class="QMainWindow" name="Launcher">
-    <property name="geometry">
-      <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>642</width>
-        <height>600</height>
-      </rect>
+ <class>Launcher</class>
+ <widget class="QMainWindow" name="Launcher">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>642</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Start FlightGear</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/app-icon-large</normaloff>:/app-icon-large</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <property name="leftMargin">
+     <number>6</number>
     </property>
-    <property name="windowTitle">
-      <string>Start FlightGear</string>
+    <property name="topMargin">
+     <number>8</number>
     </property>
-    <property name="windowIcon">
-      <iconset resource="resources.qrc">
-        <normaloff>:/app-icon-large</normaloff>:/app-icon-large</iconset>
+    <property name="rightMargin">
+     <number>6</number>
+    </property>
+    <property name="bottomMargin">
+     <number>4</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>4</number>
       </property>
-      <widget class="QWidget" name="centralwidget">
-        <layout class="QGridLayout" name="gridLayout_2">
-          <property name="leftMargin">
-            <number>6</number>
+      <widget class="QWidget" name="summaryTab">
+       <attribute name="title">
+        <string>Summary</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0,0,0,0,2,0,0" columnstretch="0,0,0,1,0">
+        <item row="6" column="2">
+         <widget class="QLabel" name="label_5">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Settings:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2">
+         <widget class="QLabel" name="label_3">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Location:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QPushButton" name="aircraftHistory">
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <spacer name="verticalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="label_4">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Aircraft:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="3" colspan="2">
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>294</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="3" column="3">
+         <widget class="QLabel" name="aircraftName">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>aircraft</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3" colspan="2">
+         <widget class="QLabel" name="aircraftDescription">
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="4">
+         <widget class="QPushButton" name="locationHistory">
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="3" colspan="2">
+         <widget class="QLabel" name="settingsDescription">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>settings</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="3">
+         <widget class="QLabel" name="locationDescription">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>location</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3" colspan="2">
+         <widget class="QLabel" name="thumbnail">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>171</width>
+            <height>128</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="aircraftTab">
+       <attribute name="title">
+        <string>Aircraft</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0">
+        <property name="spacing">
+         <number>4</number>
+        </property>
+        <property name="leftMargin">
+         <number>4</number>
+        </property>
+        <property name="topMargin">
+         <number>8</number>
+        </property>
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>4</number>
           </property>
           <property name="topMargin">
-            <number>8</number>
+           <number>4</number>
           </property>
-          <property name="rightMargin">
-            <number>6</number>
-          </property>
-          <property name="bottomMargin">
-            <number>4</number>
-          </property>
-          <item row="0" column="0">
-            <widget class="QTabWidget" name="tabWidget">
-              <property name="currentIndex">
-                <number>0</number>
-              </property>
-              <widget class="QWidget" name="summaryTab">
-                <attribute name="title">
-                  <string>Summary</string>
-                </attribute>
-                <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0,0,0,0,2,0,0" columnstretch="0,0,0,1,0">
-                  <item row="6" column="2">
-                    <widget class="QLabel" name="label_5">
-                      <property name="font">
-                        <font>
-                          <pointsize>16</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>Settings:</string>
-                      </property>
-                      <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="5" column="2">
-                    <widget class="QLabel" name="label_3">
-                      <property name="font">
-                        <font>
-                          <pointsize>16</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>Location:</string>
-                      </property>
-                      <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="3" column="4">
-                    <widget class="QPushButton" name="aircraftHistory">
-                      <property name="autoDefault">
-                        <bool>false</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="0" column="3">
-                    <spacer name="verticalSpacer_3">
-                      <property name="orientation">
-                        <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                        <size>
-                          <width>20</width>
-                          <height>40</height>
-                        </size>
-                      </property>
-                    </spacer>
-                  </item>
-                  <item row="3" column="2">
-                    <widget class="QLabel" name="label_4">
-                      <property name="font">
-                        <font>
-                          <pointsize>16</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>Aircraft:</string>
-                      </property>
-                      <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="9" column="3" colspan="2">
-                    <spacer name="verticalSpacer_2">
-                      <property name="orientation">
-                        <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                        <size>
-                          <width>20</width>
-                          <height>294</height>
-                        </size>
-                      </property>
-                    </spacer>
-                  </item>
-                  <item row="3" column="3">
-                    <widget class="QLabel" name="aircraftName">
-                      <property name="font">
-                        <font>
-                          <pointsize>16</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>aircraft</string>
-                      </property>
-                      <property name="wordWrap">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="4" column="3" colspan="2">
-                    <widget class="QLabel" name="aircraftDescription">
-                      <property name="font">
-                        <font>
-                          <pointsize>11</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>TextLabel</string>
-                      </property>
-                      <property name="wordWrap">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="5" column="4">
-                    <widget class="QPushButton" name="locationHistory">
-                      <property name="autoDefault">
-                        <bool>false</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="6" column="3" colspan="2">
-                    <widget class="QLabel" name="settingsDescription">
-                      <property name="font">
-                        <font>
-                          <pointsize>16</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>settings</string>
-                      </property>
-                      <property name="alignment">
-                        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-                      </property>
-                      <property name="wordWrap">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="5" column="3">
-                    <widget class="QLabel" name="locationDescription">
-                      <property name="font">
-                        <font>
-                          <pointsize>16</pointsize>
-                        </font>
-                      </property>
-                      <property name="text">
-                        <string>location</string>
-                      </property>
-                      <property name="wordWrap">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="2" column="3" colspan="2">
-                    <widget class="QLabel" name="thumbnail">
-                      <property name="sizePolicy">
-                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                          <horstretch>0</horstretch>
-                          <verstretch>0</verstretch>
-                        </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                        <size>
-                          <width>171</width>
-                          <height>128</height>
-                        </size>
-                      </property>
-                      <property name="text">
-                        <string>TextLabel</string>
-                      </property>
-                    </widget>
-                  </item>
-                </layout>
-              </widget>
-              <widget class="QWidget" name="aircraftTab">
-                <attribute name="title">
-                  <string>Aircraft</string>
-                </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0">
-                  <property name="spacing">
-                    <number>4</number>
-                  </property>
-                  <property name="leftMargin">
-                    <number>4</number>
-                  </property>
-                  <property name="topMargin">
-                    <number>8</number>
-                  </property>
-                  <property name="rightMargin">
-                    <number>4</number>
-                  </property>
-                  <property name="bottomMargin">
-                    <number>4</number>
-                  </property>
-                  <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_2">
-                      <property name="spacing">
-                        <number>4</number>
-                      </property>
-                      <property name="topMargin">
-                        <number>4</number>
-                      </property>
-                      <item>
-                        <widget class="QLabel" name="label_2">
-                          <property name="text">
-                            <string>Search:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QLineEdit" name="aircraftFilter">
-                          <property name="placeholderText">
-                            <string>Search aircraft (press Enter to search)</string>
-                          </property>
-                        </widget>
-                      </item>
-                    </layout>
-                  </item>
-                  <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_5">
-                      <item>
-                        <widget class="QCheckBox" name="onlyShowInstalledCheck">
-                          <property name="text">
-                            <string>Only show installed aircraft</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <spacer name="horizontalSpacer_3">
-                          <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                            <size>
-                              <width>40</width>
-                              <height>20</height>
-                            </size>
-                          </property>
-                        </spacer>
-                      </item>
-                      <item>
-                        <widget class="QCheckBox" name="ratingsFilterCheck">
-                          <property name="sizePolicy">
-                            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Hide aircraft based on completeness (rating)</string>
-                          </property>
-                          <property name="checked">
-                            <bool>true</bool>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QPushButton" name="editRatingFilter">
-                          <property name="text">
-                            <string>Edit...</string>
-                          </property>
-                          <property name="autoDefault">
-                            <bool>false</bool>
-                          </property>
-                        </widget>
-                      </item>
-                    </layout>
-                  </item>
-                  <item>
-                    <widget class="QListView" name="aircraftList">
-                      <property name="verticalScrollMode">
-                        <enum>QAbstractItemView::ScrollPerPixel</enum>
-                      </property>
-                      <property name="horizontalScrollMode">
-                        <enum>QAbstractItemView::ScrollPerPixel</enum>
-                      </property>
-                    </widget>
-                  </item>
-                </layout>
-              </widget>
-              <widget class="QWidget" name="locationTab">
-                <attribute name="title">
-                  <string>Location</string>
-                </attribute>
-                <layout class="QVBoxLayout" name="verticalLayout_4">
-                  <property name="leftMargin">
-                    <number>4</number>
-                  </property>
-                  <property name="rightMargin">
-                    <number>4</number>
-                  </property>
-                  <property name="bottomMargin">
-                    <number>4</number>
-                  </property>
-                  <item>
-                    <widget class="LocationWidget" name="location" native="true"/>
-                  </item>
-                </layout>
-              </widget>
-              <widget class="QWidget" name="settingsTab">
-                <attribute name="title">
-                  <string>Settings</string>
-                </attribute>
-                <layout class="QGridLayout" name="gridLayout_5">
-                  <property name="leftMargin">
-                    <number>8</number>
-                  </property>
-                  <property name="rightMargin">
-                    <number>8</number>
-                  </property>
-                  <property name="bottomMargin">
-                    <number>8</number>
-                  </property>
-                  <item row="6" column="0" colspan="2">
-                    <widget class="QGroupBox" name="mpBox">
-                      <property name="minimumSize">
-                        <size>
-                          <width>0</width>
-                          <height>100</height>
-                        </size>
-                      </property>
-                      <property name="title">
-                        <string>Multi-player</string>
-                      </property>
-                      <property name="checkable">
-                        <bool>true</bool>
-                      </property>
-                      <property name="checked">
-                        <bool>false</bool>
-                      </property>
-                      <layout class="QGridLayout" name="gridLayout" columnstretch="1,2,0">
-                        <item row="0" column="0">
-                          <widget class="QLabel" name="label_9">
-                            <property name="text">
-                              <string>Callsign:</string>
-                            </property>
-                            <property name="alignment">
-                              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                            </property>
-                          </widget>
-                        </item>
-                        <item row="1" column="0">
-                          <widget class="QLabel" name="label_10">
-                            <property name="text">
-                              <string>Server:</string>
-                            </property>
-                            <property name="alignment">
-                              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                            </property>
-                          </widget>
-                        </item>
-                        <item row="0" column="1">
-                          <widget class="QLineEdit" name="mpCallsign">
-                            <property name="maxLength">
-                              <number>10</number>
-                            </property>
-                            <property name="placeholderText">
-                              <string>G-FGFS</string>
-                            </property>
-                          </widget>
-                        </item>
-                        <item row="0" column="2">
-                          <widget class="QLabel" name="label_11">
-                            <property name="text">
-                              <string>(Ten characters maximum)</string>
-                            </property>
-                          </widget>
-                        </item>
-                        <item row="1" column="1" colspan="2">
-                          <widget class="QComboBox" name="mpServerCombo"/>
-                        </item>
-                      </layout>
-                    </widget>
-                  </item>
-                  <item row="7" column="0" colspan="2">
-                    <widget class="QGroupBox" name="groupBox_2">
-                      <property name="title">
-                        <string>Additional options</string>
-                      </property>
-                      <property name="startupOnly" stdset="0">
-                        <bool>true</bool>
-                      </property>
-                      <layout class="QVBoxLayout" name="verticalLayout_7">
-                        <property name="leftMargin">
-                          <number>4</number>
-                        </property>
-                        <property name="topMargin">
-                          <number>4</number>
-                        </property>
-                        <property name="rightMargin">
-                          <number>4</number>
-                        </property>
-                        <property name="bottomMargin">
-                          <number>4</number>
-                        </property>
-                        <item>
-                          <widget class="QPlainTextEdit" name="commandLineArgs"/>
-                        </item>
-                      </layout>
-                    </widget>
-                  </item>
-                  <item row="4" column="1">
-                    <widget class="QCheckBox" name="fullScreenCheckbox">
-                      <property name="text">
-                        <string>Start full-screen</string>
-                      </property>
-                      <property name="startupOnly" stdset="0">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="1" column="0">
-                    <widget class="QCheckBox" name="msaaCheckbox">
-                      <property name="text">
-                        <string>Enable Multi-sample anti-aliasing</string>
-                      </property>
-                      <property name="startupOnly" stdset="0">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="4" column="0">
-                    <widget class="QCheckBox" name="fetchRealWxrCheckbox">
-                      <property name="text">
-                        <string>Fetch real weather online</string>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="5" column="0">
-                    <widget class="QCheckBox" name="startPausedCheck">
-                      <property name="text">
-                        <string>Start paused</string>
-                      </property>
-                      <property name="startupOnly" stdset="0">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="8" column="0">
-                    <widget class="QPushButton" name="restoreDefaultsButton">
-                      <property name="text">
-                        <string>Restore Defaults...</string>
-                      </property>
-                      <property name="autoDefault">
-                        <bool>false</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="0" column="0">
-                    <layout class="QHBoxLayout" name="horizontalLayout_4">
-                      <item>
-                        <widget class="QLabel" name="label">
-                          <property name="text">
-                            <string>Time of day:</string>
-                          </property>
-                          <property name="alignment">
-                            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QComboBox" name="timeOfDayCombo">
-                          <item>
-                            <property name="text">
-                              <string>Current time</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Dawn</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Morning</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Noon</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Afternoon</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Dusk</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Evening</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Midnight</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                    </layout>
-                  </item>
-                  <item row="1" column="1">
-                    <widget class="QCheckBox" name="rembrandtCheckbox">
-                      <property name="text">
-                        <string>Enable deferred rendering (Rembrandt)</string>
-                      </property>
-                      <property name="startupOnly" stdset="0">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="2" column="0" colspan="2">
-                    <widget class="QCheckBox" name="terrasyncCheck">
-                      <property name="text">
-                        <string>Enable automatic scenery downloading (TerraSync)</string>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="8" column="1">
-                    <widget class="QLabel" name="label_8">
-                      <property name="text">
-                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For information on additional options, please &lt;a href=&quot;http://flightgear.sourceforge.net/getstart-en/getstart-enpa2.html#x5-450004.5&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;see here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                      <property name="textFormat">
-                        <enum>Qt::RichText</enum>
-                      </property>
-                      <property name="openExternalLinks">
-                        <bool>true</bool>
-                      </property>
-                    </widget>
-                  </item>
-                  <item row="3" column="0" colspan="2">
-                    <layout class="QHBoxLayout" name="horizontalLayout_7">
-                      <item>
-                        <spacer name="horizontalSpacer_2">
-                          <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
-                          </property>
-                          <property name="sizeType">
-                            <enum>QSizePolicy::Fixed</enum>
-                          </property>
-                          <property name="sizeHint" stdset="0">
-                            <size>
-                              <width>40</width>
-                              <height>20</height>
-                            </size>
-                          </property>
-                        </spacer>
-                      </item>
-                      <item>
-                        <widget class="QLabel" name="label_6">
-                          <property name="text">
-                            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If scenery download is disabled, you may need to download additional files from &lt;a href=&quot;http://www.flightgear.org/download/scenery/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this page&lt;/span&gt;&lt;/a&gt; and install them in a scenery location; otherwise some objects may be missing from the world.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                          </property>
-                          <property name="wordWrap">
-                            <bool>true</bool>
-                          </property>
-                          <property name="openExternalLinks">
-                            <bool>true</bool>
-                          </property>
-                        </widget>
-                      </item>
-                    </layout>
-                  </item>
-                  <item row="0" column="1">
-                    <layout class="QHBoxLayout" name="horizontalLayout_8">
-                      <item>
-                        <widget class="QLabel" name="label_7">
-                          <property name="text">
-                            <string>Season:</string>
-                          </property>
-                          <property name="alignment">
-                            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QComboBox" name="seasonCombo">
-                          <item>
-                            <property name="text">
-                              <string>Summer</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Winter</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                    </layout>
-                  </item>
-                </layout>
-              </widget>
-            </widget>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Search:</string>
+            </property>
+           </widget>
           </item>
-          <item row="1" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout">
-              <property name="spacing">
-                <number>0</number>
-              </property>
-              <item>
-                <widget class="QPushButton" name="quitButton">
-                  <property name="text">
-                    <string>Quit</string>
-                  </property>
-                  <property name="autoDefault">
-                    <bool>false</bool>
-                  </property>
-                </widget>
-              </item>
-              <item>
-                <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                    <size>
-                      <width>412</width>
-                      <height>20</height>
-                    </size>
-                  </property>
-                </spacer>
-              </item>
-              <item>
-                <widget class="QPushButton" name="runButton">
-                  <property name="text">
-                    <string>Run</string>
-                  </property>
-                  <property name="autoDefault">
-                    <bool>false</bool>
-                  </property>
-                  <property name="default">
-                    <bool>false</bool>
-                  </property>
-                  <property name="flat">
-                    <bool>false</bool>
-                  </property>
-                </widget>
-              </item>
-            </layout>
+          <item>
+           <widget class="QLineEdit" name="aircraftFilter">
+            <property name="placeholderText">
+             <string>Search aircraft (press Enter to search)</string>
+            </property>
+           </widget>
           </item>
-        </layout>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="onlyShowInstalledCheck">
+            <property name="text">
+             <string>Only show installed aircraft</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="ratingsFilterCheck">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Hide aircraft based on completeness (rating)</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="editRatingFilter">
+            <property name="text">
+             <string>Edit...</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QListView" name="aircraftList">
+          <property name="verticalScrollMode">
+           <enum>QAbstractItemView::ScrollPerPixel</enum>
+          </property>
+          <property name="horizontalScrollMode">
+           <enum>QAbstractItemView::ScrollPerPixel</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
-    </widget>
-    <customwidgets>
-      <customwidget>
-        <class>LocationWidget</class>
-        <extends>QWidget</extends>
-        <header location="global">GUI/LocationWidget.hxx</header>
-        <container>1</container>
-      </customwidget>
-    </customwidgets>
-    <resources>
-      <include location="resources.qrc"/>
-    </resources>
-    <connections/>
-  </ui>
+      <widget class="QWidget" name="locationTab">
+       <attribute name="title">
+        <string>Location</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <property name="leftMargin">
+         <number>4</number>
+        </property>
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
+        <item>
+         <widget class="LocationWidget" name="location" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="settingsTab">
+       <attribute name="title">
+        <string>Settings</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <property name="leftMargin">
+         <number>8</number>
+        </property>
+        <property name="rightMargin">
+         <number>8</number>
+        </property>
+        <property name="bottomMargin">
+         <number>8</number>
+        </property>
+        <item row="6" column="0" colspan="2">
+         <widget class="QGroupBox" name="mpBox">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>100</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Multi-player</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <layout class="QGridLayout" name="gridLayout" columnstretch="1,2,0">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Callsign:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>Server:</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="mpCallsign">
+             <property name="maxLength">
+              <number>10</number>
+             </property>
+             <property name="placeholderText">
+              <string>G-FGFS</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>(Ten characters maximum)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" colspan="2">
+            <widget class="QComboBox" name="mpServerCombo"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="7" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="title">
+           <string>Additional options</string>
+          </property>
+          <property name="startupOnly" stdset="0">
+           <bool>true</bool>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <property name="leftMargin">
+            <number>4</number>
+           </property>
+           <property name="topMargin">
+            <number>4</number>
+           </property>
+           <property name="rightMargin">
+            <number>4</number>
+           </property>
+           <property name="bottomMargin">
+            <number>4</number>
+           </property>
+           <item>
+            <widget class="QPlainTextEdit" name="commandLineArgs"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QCheckBox" name="fullScreenCheckbox">
+          <property name="text">
+           <string>Start full-screen</string>
+          </property>
+          <property name="startupOnly" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="msaaCheckbox">
+          <property name="text">
+           <string>Enable Multi-sample anti-aliasing</string>
+          </property>
+          <property name="startupOnly" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QCheckBox" name="fetchRealWxrCheckbox">
+          <property name="text">
+           <string>Fetch real weather online</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QCheckBox" name="startPausedCheck">
+          <property name="text">
+           <string>Start paused</string>
+          </property>
+          <property name="startupOnly" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QPushButton" name="restoreDefaultsButton">
+          <property name="text">
+           <string>Restore Defaults...</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Time of day:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="timeOfDayCombo">
+            <item>
+             <property name="text">
+              <string>Current time</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Dawn</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Morning</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Noon</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Afternoon</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Dusk</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Evening</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Midnight</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="rembrandtCheckbox">
+          <property name="text">
+           <string>Enable deferred rendering (Rembrandt)</string>
+          </property>
+          <property name="startupOnly" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QCheckBox" name="terrasyncCheck">
+          <property name="text">
+           <string>Enable automatic scenery downloading (TerraSync)</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For information on additional options, please &lt;a href=&quot;http://flightgear.sourceforge.net/getstart-en/getstart-enpa2.html#x5-450004.5&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;see here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::RichText</enum>
+          </property>
+          <property name="openExternalLinks">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If scenery download is disabled, you may need to download additional files from &lt;a href=&quot;http://www.flightgear.org/download/scenery/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this page&lt;/span&gt;&lt;/a&gt; and install them in a scenery location; otherwise some objects may be missing from the world.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="openExternalLinks">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_8">
+          <item>
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Season:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="seasonCombo">
+            <item>
+             <property name="text">
+              <string>Summer</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Winter</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="settings2Tab">
+       <attribute name="title">
+        <string>New Settings</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="leftMargin">
+         <number>4</number>
+        </property>
+        <property name="topMargin">
+         <number>4</number>
+        </property>
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scrollArea">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="settingsScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>614</width>
+             <height>507</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <widget class="QLabel" name="label_12">
+                <property name="font">
+                 <font>
+                  <pointsize>16</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Settings contents</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="lineEdit">
+                <property name="placeholderText">
+                 <string>Search...</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>471</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="quitButton">
+        <property name="text">
+         <string>Quit</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>412</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="runButton">
+        <property name="text">
+         <string>Run</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LocationWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">GUI/LocationWidget.hxx</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -84,6 +84,11 @@
 #include <Network/HTTPClient.hxx>
 #include <Network/RemoteXMLRequest.hxx>
 
+#include "renderingsettings.h"
+#include "ViewSettings.h"
+#include "MPSettings.h"
+#include "DownloadSettings.h"
+
 using namespace flightgear;
 using namespace simgear::pkg;
 using std::string;
@@ -874,6 +879,19 @@ QtLauncher::QtLauncher() :
     restoreSettings();
 
     onRefreshMPServers();
+
+    RenderingSettings* renderSettings = new RenderingSettings(m_ui->settingsScrollContents);
+    QVBoxLayout* settingsVBox = static_cast<QVBoxLayout*>(m_ui->settingsScrollContents->layout());
+    settingsVBox->insertWidget(1, renderSettings);
+
+    ViewSettings* viewSettings = new ViewSettings(m_ui->settingsScrollContents);
+    settingsVBox->insertWidget(1, viewSettings);
+
+    MPSettings* mpSettings = new MPSettings(m_ui->settingsScrollContents);
+    settingsVBox->insertWidget(1, mpSettings);
+
+    DownloadSettings* downloadSettings = new DownloadSettings(m_ui->settingsScrollContents);
+    settingsVBox->insertWidget(2, downloadSettings);
 }
 
 QtLauncher::~QtLauncher()

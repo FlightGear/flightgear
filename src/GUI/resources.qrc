@@ -19,5 +19,6 @@
         <file alias="ndb-large-icon">ndb-large-icon.png</file>
         <file alias="airplane-icon">airplane-icon.png</file>
         <file alias="airport-closed-icon">airport-closed-icon.png</file>
+        <file alias="settings-gear-white">settings-gear-white.png</file>
     </qresource>
 </RCC>

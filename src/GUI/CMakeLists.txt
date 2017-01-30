@@ -80,6 +80,10 @@ if (HAVE_QT)
                             InstallSceneryDialog.ui
                             EditCustomMPServerDialog.ui
                             UpdateAllAircraft.ui
+                            RenderingSettings.ui
+                            ViewSettings.ui
+                            MPSettings.ui
+                            DownloadSettings.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
@@ -117,6 +121,18 @@ if (HAVE_QT)
                             InstallSceneryDialog.cxx
                             EditCustomMPServerDialog.cxx
                             EditCustomMPServerDialog.hxx
+                            SettingsSection.cpp
+                            SettingsSection.h
+                            renderingsettings.cpp
+                            renderingsettings.h
+                            ViewSettings.cpp
+                            ViewSettings.h
+                            MPSettings.cpp
+                            MPSettings.h
+                            AdvancedSettingsButton.h
+                            AdvancedSettingsButton.cpp
+                            DownloadSettings.cpp
+                            DownloadSettings.h
                             ${uic_sources}
                             ${qrc_sources})
 
