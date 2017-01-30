@@ -139,23 +139,49 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #if defined(__GNUC__)
 #include <execinfo.h>
-void segfault_handler(int sig) {
+#include <cxxabi.h>
+void segfault_handler(int signo) {
   void *array[128];
-  size_t size, i;
-  char** strs;
+  size_t size;
 
-  // get void*'s for all entries on the stack
+  fprintf(stderr, "Error: caught signal %d:\n", signo);
+
   size = backtrace(array, 128);
+  if (size) {
+    char** list = backtrace_symbols(array, size);
+    size_t fnlen = 256;
+    char* fname = (char*)malloc(fnlen);
 
-  // print out all the frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
+    for (size_t i=1; i<size; i++) {
+	char *begin = 0, *offset = 0, *end = 0;
+	for (char *p = list[i]; *p; ++p) {
+	    if (*p == '(') begin = p;
+	    else if (*p == '+') offset = p;
+	    else if (*p == ')' && offset) {
+		end = p;
+		break;
+	    }
+	}
 
-  strs = backtrace_symbols(array, size);
-  for (i=0; i<size; ++i) {
-    printf("  %s\n", strs[i]);
+	if (begin && offset && end && begin<offset) {
+	    *begin++ = '\0'; *offset++ = '\0'; *end = '\0';
+
+	    int status;
+	    char* ret = abi::__cxa_demangle(begin, fname, &fnlen, &status);
+	    if (status == 0) {
+		fname = ret;
+		fprintf(stderr, "  %s : %s+%s\n", list[i], fname, offset);
+	    }
+	    else
+		fprintf(stderr, "  %s : %s()+%s\n", list[i], begin, offset);
+	}
+	else
+	    fprintf(stderr, "  %s\n", list[i]);
+    }
+
+    free(fname);
+    free(list);
   }
-  free(strs);
 
   exit(1);
 }
