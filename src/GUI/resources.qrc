@@ -20,6 +20,13 @@
         <file alias="airplane-icon">airplane-icon.png</file>
         <file alias="airport-closed-icon">airport-closed-icon.png</file>
         <file alias="preview-icon">preview-icon.png</file>
+        <file alias="settings-gear-white">settings-gear-white.png</file>
+        <file alias="toolbox-aircraft">toolbox-aircraft.png</file>
+        <file alias="toolbox-environment">toolbox-environment.png</file>
+        <file alias="toolbox-fly">toolbox-fly.png</file>
+        <file alias="toolbox-location">toolbox-location.png</file>
+        <file alias="toolbox-settings">toolbox-settings.png</file>
+        <file alias="toolbox-summary">toolbox-summary.png</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>
