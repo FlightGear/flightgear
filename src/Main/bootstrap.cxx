@@ -137,6 +137,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 #endif
 
+#if defined(__GNUC__)
+#include <execinfo.h>
+void segfault_handler(int sig) {
+  void *array[128];
+  size_t size, i;
+  char** strs;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 128);
+
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+
+  strs = backtrace_symbols(callstack, size);
+  for (i=0; i<size; ++i) {
+    printf("  %s\n", strs[i]);
+  }
+  free(strs);
+
+  exit(1);
+}
+#endif
+
 static void fg_terminate()
 {
     flightgear::fatalMessageBox("Fatal exception", "Uncaught exception on some thread");
@@ -189,6 +213,9 @@ int main ( int argc, char **argv )
   hostname = _hostname;
     
   signal(SIGPIPE, SIG_IGN);
+# ifndef NDEBUG
+  signal(SIGSEGV, segfault_handler);
+# endif
 #endif
 
   _bootstrap_OSInit = 0;
