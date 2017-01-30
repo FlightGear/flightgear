@@ -876,10 +876,15 @@ bool geodFromHash(naRef ref, SGGeod& result)
   if (hashIsCoord(ref)) {
     naRef lat = naHash_cget(ref, (char*) "_lat");
     naRef lon = naHash_cget(ref, (char*) "_lon");
-    if (naIsNum(lat) && naIsNum(lon)) {
-      result = SGGeod::fromRad(naNumValue(lon).num, naNumValue(lat).num);
-      return true;
-    }
+	naRef alt_feet = naHash_cget(ref, (char*) "_alt");
+	if (naIsNum(lat) && naIsNum(lon) && naIsNil(alt_feet)) {
+		result = SGGeod::fromRad(naNumValue(lon).num, naNumValue(lat).num);
+		return true;
+	}
+	if (naIsNum(lat) && naIsNum(lon) && naIsNum(alt_feet)) {
+		result = SGGeod::fromRadFt(naNumValue(lon).num, naNumValue(lat).num, naNumValue(alt_feet).num);
+		return true;
+	}
   }
     
 // check for any synonyms?
@@ -940,7 +945,22 @@ static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
   
   return 0;
 }
+bool vec3dFromHash(naRef ref, SGVec3d& result)
+{
+	if (!naIsHash(ref)) {
+		return false;
+	}
 
+	// check for manual latitude / longitude names
+	naRef x = naHash_cget(ref, (char*) "x");
+	naRef y = naHash_cget(ref, (char*) "y");
+	naRef z = naHash_cget(ref, (char*) "z");
+	if (naIsNum(x) && naIsNum(y) && naIsNum(z)) {
+		result = SGVec3d(naNumValue(x).num, naNumValue(y).num, naNumValue(z).num);
+		return true;
+	}
+	return false;
+}
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
 {
@@ -972,6 +992,45 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
   naVec_append(vec, naNum(xyz[1]));
   naVec_append(vec, naNum(xyz[2]));
   return vec;
+}
+
+// takes 2 parameters, vec3d(x,y,z) start, vec3d(x,y,z) direction - returns geod hash
+static naRef f_get_cart_ground_intersection(naContext c, naRef me, int argc, naRef* args)
+{
+	SGVec3d dir;
+	SGVec3d pos;
+
+	if (argc != 2)
+		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects 2 arguments");
+
+	if (!vec3dFromHash(args[0], dir))
+		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position:hash{x,y,z}, direction:hash{x,y,z}) expects argument(0) to be hash of position containing x,y,z");
+
+	if (vec3dFromHash(args[1], pos))
+		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects argument(1) to be hash of direction containing x,y,z");
+
+	SGVec3d nearestHit;
+
+	if (!globals->get_scenery()->get_cart_ground_intersection(pos, dir, nearestHit))
+		return naNil();
+
+	double xyz[3];
+	xyz[0] = nearestHit[0];
+	xyz[1] = nearestHit[1];
+	xyz[2] = nearestHit[2];
+
+	double lat_rad, lon_rad, alt_m;
+	sgCartToGeod(xyz, &lat_rad, &lon_rad, &alt_m);
+
+	double lat_deg = lat_rad * SG_RADIANS_TO_DEGREES;
+	double lon_deg = lon_rad * SG_RADIANS_TO_DEGREES;
+
+	// build a hash for returned intersection
+	naRef intersection_h = naNewHash(c);
+	hashset(c, intersection_h, "lat", naNum(lat_deg));
+	hashset(c, intersection_h, "lon", naNum(lon_deg));
+	hashset(c, intersection_h, "elevation", naNum(alt_m));
+	return intersection_h;
 }
 
 // For given geodetic point return array with elevation, and a material data
@@ -2503,6 +2562,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "carttogeod", f_carttogeod },
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
+  { "get_cart_ground_intersection", f_get_cart_ground_intersection },
   { "airportinfo", f_airportinfo },
   { "findAirportsWithinRange", f_findAirportsWithinRange },
   { "findAirportsByICAO", f_findAirportsByICAO },
