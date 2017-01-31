@@ -55,5 +55,3 @@ target_include_directories(fgqcanvas PRIVATE ${PROJECT_SOURCE_DIR})
 
 # so ui_foo.h files are found
 target_include_directories(fgqcanvas PRIVATE ${PROJECT_BINARY_DIR})
-
-install(TARGETS fgqcanvas RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
