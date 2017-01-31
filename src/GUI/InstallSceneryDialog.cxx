@@ -87,6 +87,8 @@ signals:
     void extractionError(QString file, QString msg);
 
     void progress(int percent);
+
+    void extractingArchive(QString archiveName);
 private:
     void extractNextArchive()
     {
@@ -96,6 +98,8 @@ private:
         QString path = m_remainingPaths.front();
         m_remainingPaths.pop_front();
         QFileInfo finfo(path);
+
+        emit extractingArchive(path);
 
         QFile f(path);
         f.open(QIODevice::ReadOnly);
@@ -168,6 +172,7 @@ void InstallSceneryDialog::updateUi()
     case STATE_EXTRACTING:
         b->setEnabled(false);
         cancel->setEnabled(false);
+        ui->progressText->setText(tr("Extracting"));
         ui->stack->setCurrentIndex(1);
         break;
 
@@ -234,6 +239,8 @@ void InstallSceneryDialog::pickFiles()
                 this, &InstallSceneryDialog::onExtractError);
         connect(m_thread.data(), &InstallSceneryThread::progress,
                 this, &InstallSceneryDialog::onExtractProgress);
+        connect(m_thread.data(), &InstallSceneryThread::extractingArchive,
+                this, &InstallSceneryDialog::onExtractFile);
         updateUi();
         m_thread->start();
     } else {
@@ -258,6 +265,11 @@ void InstallSceneryDialog::onExtractError(QString file, QString msg)
 void InstallSceneryDialog::onExtractProgress(int percent)
 {
     ui->progressBar->setValue(percent);
+}
+
+void InstallSceneryDialog::onExtractFile(QString file)
+{
+    ui->progressText->setText(tr("Extracting %1").arg(file));
 }
 
 QString InstallSceneryDialog::sceneryPath()
