@@ -130,31 +130,29 @@ public:
         out[2] = x*m[2] + y*m[5] + z*m[8];
     }
 
-    // Invert matrix
-    static void invert33(float* m, float* out) {
+    /// Invert symmetric matrix; ~1/3 less calculations due to symmetry
+    static void invert33_sym(float* m, float* out) {
         // Compute the inverse as the adjoint matrix times 1/(det M).
         // A, B ... I are the cofactors of a b c
         //                                 d e f
         //                                 g h i
+        // symetric: d=b, g=c, h=f
         float a=m[0], b=m[1], c=m[2];
-        float d=m[3], e=m[4], f=m[5];
-        float g=m[6], h=m[7], i=m[8];
+        float         e=m[4], f=m[5];
+        float                 i=m[8];
 
-        float A =  (e*i - h*f);
-        float B = -(d*i - g*f);
-        float C =  (d*h - g*e);
-        float D = -(b*i - h*c);
-        float E =  (a*i - g*c);
-        float F = -(a*h - g*b);
-        float G =  (b*f - e*c);
-        float H = -(a*f - d*c);
-        float I =  (a*e - d*b);
+        float A =  (e*i - f*f);
+        float B = -(b*i - c*f);
+        float C =  (b*f - c*e);
+        float E =  (a*i - c*c);
+        float F = -(a*f - c*b);
+        float I =  (a*e - b*b);
 
         float id = 1/(a*A + b*B + c*C);
 
-        out[0] = id*A; out[1] = id*D; out[2] = id*G;
-        out[3] = id*B; out[4] = id*E; out[5] = id*H;
-        out[6] = id*C; out[7] = id*F; out[8] = id*I;
+        out[0] = id*A;   out[1] = id*B;   out[2] = id*C;
+        out[3] = out[1]; out[4] = id*E;   out[5] = id*F;
+        out[6] = out[2]; out[7] = out[5]; out[8] = id*I;
     }
 
     // Transpose matrix (for an orthonormal orientation matrix, this

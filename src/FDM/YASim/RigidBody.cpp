@@ -82,6 +82,12 @@ void RigidBody::setGyro(float* angularMomentum)
     Math::set3(angularMomentum, _gyro);
 }
 
+/// calculate the total mass, centre of gravity and inertia tensor
+/**
+  recalc is used when compiling the model but more important it is called in
+  Model::iterate() e.g. at FDM rate (120 Hz)
+  We can save some CPU due to the symmetry of the tensor.
+ */
 void RigidBody::recalc()
 {
     // Calculate the c.g and total mass:
@@ -102,22 +108,29 @@ void RigidBody::recalc()
 	_tI[i] = 0;
 
     for(i=0; i<_nMasses; i++) {
-	float m = _masses[i].m;
+      float m = _masses[i].m;
 
-	float x = _masses[i].p[0] - _cg[0];
-	float y = _masses[i].p[1] - _cg[1];
-	float z = _masses[i].p[2] - _cg[2];
+      float x = _masses[i].p[0] - _cg[0];
+      float y = _masses[i].p[1] - _cg[1];
+      float z = _masses[i].p[2] - _cg[2];
+      float mx = m*x;
+      float my = m*y;
+      float mz = m*z;
+      
+      float xy = mx*y; float yz = my*z; float zx = mz*x;
+      float x2 = mx*x; float y2 = my*y; float z2 = mz*z;
 
-	float xy = m*x*y; float yz = m*y*z; float zx = m*z*x;
-	float x2 = m*x*x; float y2 = m*y*y; float z2 = m*z*z;
-
-	_tI[0] += y2+z2;  _tI[1] -=    xy;  _tI[2] -=    zx;
-	_tI[3] -=    xy;  _tI[4] += x2+z2;  _tI[5] -=    yz;
-	_tI[6] -=    zx;   _tI[7] -=   yz;  _tI[8] += x2+y2;
+      _tI[0] += y2+z2;  _tI[1] -=    xy;  _tI[2] -=    zx;
+                        _tI[4] += x2+z2;  _tI[5] -=    yz;
+                                          _tI[8] += x2+y2;
     }
+    // copy symmetric elements 
+    _tI[3] = _tI[1];
+    _tI[6] = _tI[2];
+    _tI[7] = _tI[5];
 
-    // And its inverse
-    Math::invert33(_tI, _invI);
+    //calculate inverse
+    Math::invert33_sym(_tI, _invI);
 }
 
 void RigidBody::reset()
