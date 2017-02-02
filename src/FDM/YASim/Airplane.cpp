@@ -839,6 +839,17 @@ void Airplane::setupWeights(bool isApproach)
     }
 }
 
+/// load values for controls as defined in cruise configuration
+void Airplane::loadCruiseControls()
+{
+  _controls.reset();
+  for(int i=0; i<_cruiseControls.size(); i++) {
+    Control* c = (Control*)_cruiseControls.get(i);
+    _controls.setInput(c->control, c->val);
+  }
+  _controls.applyControls(); 
+}
+
 void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
@@ -847,14 +858,8 @@ void Airplane::runCruise()
                   Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
 
     // The control configuration
-    _controls.reset();
-    int i;
-    for(i=0; i<_cruiseControls.size(); i++) {
-	Control* c = (Control*)_cruiseControls.get(i);
-	_controls.setInput(c->control, c->val);
-    }
-    _controls.applyControls(1000000); // Huge dt value
-
+    loadCruiseControls();
+    
     // The local wind
     float wind[3];
     Math::mul3(-1, _cruiseState.v, wind);
@@ -865,7 +870,7 @@ void Airplane::runCruise()
    
     // Set up the thruster parameters and iterate until the thrust
     // stabilizes.
-    for(i=0; i<_thrusters.size(); i++) {
+    for(int i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
 	t->setAir(_cruiseP, _cruiseT,
@@ -882,6 +887,17 @@ void Airplane::runCruise()
     _model.calcForces(&_cruiseState);
 }
 
+/// load values for controls as defined in approach configuration
+void Airplane::loadApproachControls()
+{
+  _controls.reset();
+  for(int i=0; i<_approachControls.size(); i++) {
+    Control* c = (Control*)_approachControls.get(i);
+    _controls.setInput(c->control, c->val);
+  }
+  _controls.applyControls();
+}
+
 void Airplane::runApproach()
 {
     setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
@@ -890,14 +906,8 @@ void Airplane::runApproach()
                   Atmosphere::calcStdDensity(_approachP, _approachT));
 
     // The control configuration
-    _controls.reset();
-    int i;
-    for(i=0; i<_approachControls.size(); i++) {
-	Control* c = (Control*)_approachControls.get(i);
-	_controls.setInput(c->control, c->val);
-    }
-    _controls.applyControls(1000000);
-
+    loadApproachControls();
+    
     // The local wind
     float wind[3];
     Math::mul3(-1, _approachState.v, wind);
@@ -909,7 +919,7 @@ void Airplane::runApproach()
 
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.
-    for(i=0; i<_thrusters.size(); i++) {
+    for(int i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
 	t->setAir(_approachP, _approachT,

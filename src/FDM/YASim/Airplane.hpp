@@ -95,6 +95,8 @@ public:
     const char* getFailureMsg();
 
     static void setupState(float aoa, float speed, float gla, State* s); // utility
+    void loadApproachControls();
+    void loadCruiseControls();
 
 private:
     struct Tank { float pos[3]; float cap; float fill;

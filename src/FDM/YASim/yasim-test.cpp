@@ -9,6 +9,7 @@
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
+#include "RigidBody.hpp"
 #include "Airplane.hpp"
 
 using namespace yasim;
@@ -30,6 +31,13 @@ static const float DEG2RAD = 0.0174532925199;
 static const float KTS2MPS = 0.514444444444;
 
 
+enum Config 
+{
+	CONFIG_NONE,
+	CONFIG_APPROACH,
+	CONFIG_CRUISE,
+};
+
 // Generate a graph of lift, drag and L/D against AoA at the specified
 // speed and altitude.  The result is a space-separated file of
 // numbers: "aoa lift drag LD" (aoa in degrees, lift and drag in
@@ -40,15 +48,29 @@ static const float KTS2MPS = 0.514444444444;
       "dat" using 1:3 with lines title 'drag', \ 
       "dat" using 1:4 with lines title 'LD'
 */
-void yasim_graph(Airplane* a, float alt, float kts)
+void yasim_graph(Airplane* a, float alt, float kts, int cfg = CONFIG_NONE)
 {
     Model* m = a->getModel();
     State s;
-
+	
     m->setAir(Atmosphere::getStdPressure(alt),
               Atmosphere::getStdTemperature(alt),
               Atmosphere::getStdDensity(alt));
-    m->getBody()->recalc();
+
+	switch (cfg) {
+		case CONFIG_APPROACH:
+			a->loadApproachControls();
+			break;
+		case CONFIG_CRUISE:
+			a->loadCruiseControls();
+			break;
+		case CONFIG_NONE:
+			break;
+	}
+	//if we fake the properties we could also use FGFDM::getExternalInput()
+
+
+	m->getBody()->recalc();
 
     for(int deg=-179; deg<=179; deg++) {
         float aoa = deg * DEG2RAD;
@@ -58,7 +80,7 @@ void yasim_graph(Airplane* a, float alt, float kts)
         m->calcForces(&s);
 
         float acc[3];
-	m->getBody()->getAccel(acc);
+		m->getBody()->getAccel(acc);
         Math::tmul33(s.orient, acc, acc);
 
         float drag = acc[0] * (-1/9.8);
@@ -68,11 +90,32 @@ void yasim_graph(Airplane* a, float alt, float kts)
     }
 }
 
+void yasim_masses(Airplane* a)
+{
+	RigidBody* body = a->getModel()->getBody();
+	int i, N = body->numMasses();
+	float pos[3];
+	float m, mass = 0;
+	printf("id posx posy posz mass\n");
+	for (i = 0; i < N; i++)
+	{
+		body->getMassPosition(i, pos);
+		m = body->getMass(i);
+		printf("%d %.3f %.3f %.3f %.3f\n", i, pos[0], pos[1], pos[2], m);
+		mass += m;
+	}
+	printf("Total mass: %g", mass);	
+}
+
 int usage()
 {
-    fprintf(stderr, "Usage: yasim <ac.xml> [-g [-a alt] [-s kts]]\n");
+    fprintf(stderr, "Usage: yasim <ac.xml> [-g [-a alt] [-s kts] [-approach | -cruise] ]\n");
+    fprintf(stderr, "       yasim <ac.xml> [-m]\n");
+    fprintf(stderr, "       -g print lift/drag table: aoa, lift, drag, lift/drag \n");
+    fprintf(stderr, "       -m print mass distribution table: id, x, y, z, mass \n");
     return 1;
 }
+
 
 int main(int argc, char** argv)
 {
@@ -80,7 +123,6 @@ int main(int argc, char** argv)
     Airplane* a = fdm->getAirplane();
 
     if(argc < 2) return usage();
-
     // Read
     try {
         string file = argv[1];
@@ -94,38 +136,51 @@ int main(int argc, char** argv)
     a->compile();
     if(a->getFailureMsg())
         printf("SOLUTION FAILURE: %s\n", a->getFailureMsg());
-
-    if(!a->getFailureMsg() && argc > 2 && strcmp(argv[2], "-g") == 0) {
-        float alt = 5000, kts = 100;
-        for(int i=3; i<argc; i++) {
-            if     (std::strcmp(argv[i], "-a") == 0) alt = std::atof(argv[++i]);
-            else if(std::strcmp(argv[i], "-s") == 0) kts = std::atof(argv[++i]);
-            else return usage();
+    if(!a->getFailureMsg() && argc > 2 ) {
+		if(strcmp(argv[2], "-g") == 0) {
+			float alt = 5000, kts = 100;
+			int cfg = CONFIG_NONE;
+			for(int i=3; i<argc; i++) {
+				if (std::strcmp(argv[i], "-a") == 0) {
+          if (i+1 < argc) alt = std::atof(argv[++i]);
         }
-        yasim_graph(a, alt, kts);
-    } else {
-        float aoa = a->getCruiseAoA() * RAD2DEG;
-        float tail = -1 * a->getTailIncidence() * RAD2DEG;
-        float drag = 1000 * a->getDragCoefficient();
-        float cg[3];
-        a->getModel()->getBody()->getCG(cg);
-        a->getModel()->getBody()->recalc();
+				else if(std::strcmp(argv[i], "-s") == 0) {
+          if(i+1 < argc) kts = std::atof(argv[++i]);
+        }
+				else if(std::strcmp(argv[i], "-approach") == 0) cfg = CONFIG_APPROACH;
+				else if(std::strcmp(argv[i], "-cruise") == 0) cfg = CONFIG_CRUISE;
+				else return usage();
+			}
+			yasim_graph(a, alt, kts, cfg);
+		} 
+		else if(strcmp(argv[2], "-m") == 0) {
+			yasim_masses(a);
+		}
+	}
+	else {
+		printf("Solution results:");
+		float aoa = a->getCruiseAoA() * RAD2DEG;
+		float tail = -1 * a->getTailIncidence() * RAD2DEG;
+		float drag = 1000 * a->getDragCoefficient();
+		float cg[3];
+		a->getModel()->getBody()->getCG(cg);
+		a->getModel()->getBody()->recalc();
 
-        float SI_inertia[9];
-        a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
-        
-        printf("Solution results:");
-        printf("       Iterations: %d\n", a->getSolutionIterations());
-        printf(" Drag Coefficient: %f\n", drag);
-        printf("       Lift Ratio: %f\n", a->getLiftRatio());
-        printf("       Cruise AoA: %f\n", aoa);
-        printf("   Tail Incidence: %f\n", tail);
-        printf("Approach Elevator: %f\n", a->getApproachElevator());
-        printf("               CG: x:%.3f, y:%.3f, z:%.3f\n\n", cg[0], cg[1], cg[2]);
-        printf("  Inertia tensor : %.3f, %.3f, %.3f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
-        printf("        [kg*m^2]   %.3f, %.3f, %.3f\n", SI_inertia[3], SI_inertia[4], SI_inertia[5]);
-        printf("     Origo at CG   %.3f, %.3f, %.3f\n", SI_inertia[6], SI_inertia[7], SI_inertia[8]);
-    }
+		float SI_inertia[9];
+		a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
+		
+		printf("       Iterations: %d\n", a->getSolutionIterations());
+		printf(" Drag Coefficient: %f\n", drag);
+		printf("       Lift Ratio: %f\n", a->getLiftRatio());
+		printf("       Cruise AoA: %f\n", aoa);
+		printf("   Tail Incidence: %f\n", tail);
+		printf("Approach Elevator: %f\n", a->getApproachElevator());
+		printf("               CG: x:%.3f, y:%.3f, z:%.3f\n\n", cg[0], cg[1], cg[2]);
+		printf("Inertia tensor [kg*m^2], origo at CG:\n");
+		printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
+		printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[3], SI_inertia[4], SI_inertia[5]);
+		printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[6], SI_inertia[7], SI_inertia[8]);
+	}
     delete fdm;
     return 0;
 }

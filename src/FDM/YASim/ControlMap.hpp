@@ -49,8 +49,9 @@ public:
     // specified value.
     void setInput(int input, float value);
 
-    // Calculates and applies the settings received since the last reset().
-    void applyControls(float dt);
+    /// Calculates and applies the settings received since the last reset(). 
+    /// dt defaults to a large value used at solve time.
+    void applyControls(float dt=1e6);
 
     // Returns the input/output range appropriate for the given
     // control.  Ailerons go from -1 to 1, while throttles are never
