@@ -482,7 +482,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	w->setStallWidth(attrf(a, "width", 2) * DEG2RAD);
 	w->setStallPeak(attrf(a, "peak", 1.5));
     } else if(eq(name, "flap0")) {
-	((Wing*)_currObj)->setFlap0(attrf(a, "start"), attrf(a, "end"),
+	((Wing*)_currObj)->setFlap0Params(attrf(a, "start"), attrf(a, "end"),
 				    attrf(a, "lift"), attrf(a, "drag"));
     } else if(eq(name, "flap1")) {
 	((Wing*)_currObj)->setFlap1(attrf(a, "start"), attrf(a, "end"),

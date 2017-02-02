@@ -135,7 +135,7 @@ void Wing::setIncidence(float incidence)
         ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence);
 }
 
-void Wing::setFlap0(float start, float end, float lift, float drag)
+void Wing::setFlap0Params(float start, float end, float lift, float drag)
 {
     _flap0Start = start;
     _flap0End = end;
@@ -167,7 +167,7 @@ void Wing::setSpoilerParams(float start, float end, float lift, float drag)
     _spoilerDrag = drag;
 }
 
-void Wing::setFlap0(float lval, float rval)
+void Wing::setFlap0Pos(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
     rval = Math::clamp(rval, -1, 1);

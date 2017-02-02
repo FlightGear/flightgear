@@ -33,13 +33,13 @@ public:
     void setIncidence(float incidence);
     void setInducedDrag(float drag) { _inducedDrag = drag; }
     
-    void setFlap0(float start, float end, float lift, float drag);
+    void setFlap0Params(float start, float end, float lift, float drag);
     void setFlap1(float start, float end, float lift, float drag);
     void setSpoilerParams(float start, float end, float lift, float drag);
     void setSlat(float start, float end, float aoa, float drag);
 
     // Set the control axes for the sub-surfaces
-    void setFlap0(float lval, float rval);
+    void setFlap0Pos(float lval, float rval);
     void setFlap1(float lval, float rval);
     void setSpoilerPos(float lval, float rval);
     void setSlat(float val);
