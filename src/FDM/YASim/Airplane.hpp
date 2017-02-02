@@ -16,6 +16,7 @@ class Launchbar;
 class Thruster;
 class Hitch;
 
+/// The Airplane class ties together the different components
 class Airplane : public Version {
 public:
     Airplane();
@@ -32,7 +33,7 @@ public:
 
     void getPilotAccel(float* out);
 
-    void setWeight(float weight);
+    void setEmptyWeight(float weight);
 
     void setWing(Wing* wing);
     void setTail(Wing* tail);

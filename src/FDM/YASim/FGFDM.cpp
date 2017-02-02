@@ -227,7 +227,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
     char buf[64];
 
     if(eq(name, "airplane")) {
-	_airplane.setWeight(attrf(a, "mass") * LBS2KG);
+	_airplane.setEmptyWeight(attrf(a, "mass") * LBS2KG);
         if(a->hasAttribute("version")) {
           _airplane.setVersion( a->getValue("version") );
         }

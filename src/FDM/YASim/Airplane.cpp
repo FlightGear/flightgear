@@ -272,7 +272,7 @@ float Airplane::getTankCapacity(int tank)
     return ((Tank*)_tanks.get(tank))->cap;
 }
 
-void Airplane::setWeight(float weight)
+void Airplane::setEmptyWeight(float weight)
 {
     _emptyWeight = weight;
 }
