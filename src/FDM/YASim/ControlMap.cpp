@@ -210,7 +210,7 @@ void ControlMap::applyControls(float dt)
 	case LEXTEND:  ((Launchbar*)obj)->setExtension(lval);      break;
     case LACCEL:   ((Launchbar*)obj)->setAcceleration(lval);   break;
 	case CASTERING:((Gear*)obj)->setCastering(lval != 0);      break;
-	case SLAT:     ((Wing*)obj)->setSlat(lval);                break;
+	case SLAT:     ((Wing*)obj)->setSlatPos(lval);                break;
 	case FLAP0:    ((Wing*)obj)->setFlap0Pos(lval, rval);         break;
 	case FLAP0EFFECTIVENESS: ((Wing*)obj)->setFlap0Effectiveness(lval); break;
 	case FLAP1:    ((Wing*)obj)->setFlap1Pos(lval, rval);         break;

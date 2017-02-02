@@ -151,7 +151,7 @@ void Wing::setFlap1Params(float start, float end, float lift, float drag)
     _flap1Drag = drag;
 }
 
-void Wing::setSlat(float start, float end, float aoa, float drag)
+void Wing::setSlatParams(float start, float end, float aoa, float drag)
 {
     _slatStart = start;
     _slatEnd = end;
@@ -220,7 +220,7 @@ void Wing::setSpoilerPos(float lval, float rval)
     }
 }
 
-void Wing::setSlat(float val)
+void Wing::setSlatPos(float val)
 {
     val = Math::clamp(val, 0, 1);
     int i;

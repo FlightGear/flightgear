@@ -488,7 +488,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	((Wing*)_currObj)->setFlap1Params(attrf(a, "start"), attrf(a, "end"),
 				    attrf(a, "lift"), attrf(a, "drag"));
     } else if(eq(name, "slat")) {
-	((Wing*)_currObj)->setSlat(attrf(a, "start"), attrf(a, "end"),
+	((Wing*)_currObj)->setSlatParams(attrf(a, "start"), attrf(a, "end"),
 				   attrf(a, "aoa"), attrf(a, "drag"));
     } else if(eq(name, "spoiler")) {
 	((Wing*)_currObj)->setSpoilerParams(attrf(a, "start"), attrf(a, "end"),
