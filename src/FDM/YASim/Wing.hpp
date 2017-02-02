@@ -35,13 +35,13 @@ public:
     
     void setFlap0(float start, float end, float lift, float drag);
     void setFlap1(float start, float end, float lift, float drag);
-    void setSpoiler(float start, float end, float lift, float drag);
+    void setSpoilerParams(float start, float end, float lift, float drag);
     void setSlat(float start, float end, float aoa, float drag);
 
     // Set the control axes for the sub-surfaces
     void setFlap0(float lval, float rval);
     void setFlap1(float lval, float rval);
-    void setSpoiler(float lval, float rval);
+    void setSpoilerPos(float lval, float rval);
     void setSlat(float val);
     void setFlap0Effectiveness(float lval);
     void setFlap1Effectiveness(float lval);

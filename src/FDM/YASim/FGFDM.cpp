@@ -491,7 +491,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	((Wing*)_currObj)->setSlat(attrf(a, "start"), attrf(a, "end"),
 				   attrf(a, "aoa"), attrf(a, "drag"));
     } else if(eq(name, "spoiler")) {
-	((Wing*)_currObj)->setSpoiler(attrf(a, "start"), attrf(a, "end"),
+	((Wing*)_currObj)->setSpoilerParams(attrf(a, "start"), attrf(a, "end"),
 				      attrf(a, "lift"), attrf(a, "drag"));
     /* } else if(eq(name, "collective")) {
         ((Rotor*)_currObj)->setcollective(attrf(a, "min"), attrf(a, "max"));
