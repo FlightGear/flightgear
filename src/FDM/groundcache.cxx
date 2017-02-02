@@ -331,7 +331,7 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
     // Don't blow away the cache ground_radius and stuff if there's no
     // scenery
     if (!globals->get_tile_mgr()->schedule_scenery(geodPt, rad, 1.0)) {
-        SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): scenery_available "
+        SG_LOG(SG_FLIGHT, SG_BULK, "prepare_ground_cache(): scenery_available "
                "returns false at " << geodPt << " " << pt << " " << rad);
         return false;
     }
