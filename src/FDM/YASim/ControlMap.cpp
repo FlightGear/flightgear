@@ -213,7 +213,7 @@ void ControlMap::applyControls(float dt)
 	case SLAT:     ((Wing*)obj)->setSlat(lval);                break;
 	case FLAP0:    ((Wing*)obj)->setFlap0Pos(lval, rval);         break;
 	case FLAP0EFFECTIVENESS: ((Wing*)obj)->setFlap0Effectiveness(lval); break;
-	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);         break;
+	case FLAP1:    ((Wing*)obj)->setFlap1Pos(lval, rval);         break;
 	case FLAP1EFFECTIVENESS: ((Wing*)obj)->setFlap1Effectiveness(lval); break;
 	case SPOILER:  ((Wing*)obj)->setSpoilerPos(lval, rval);       break;
         case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);     break;

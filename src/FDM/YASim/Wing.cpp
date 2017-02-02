@@ -143,7 +143,7 @@ void Wing::setFlap0Params(float start, float end, float lift, float drag)
     _flap0Drag = drag;
 }
 
-void Wing::setFlap1(float start, float end, float lift, float drag)
+void Wing::setFlap1Params(float start, float end, float lift, float drag)
 {
     _flap1Start = start;
     _flap1End = end;
@@ -188,7 +188,7 @@ void Wing::setFlap0Effectiveness(float lval)
     }
 }
 
-void Wing::setFlap1(float lval, float rval)
+void Wing::setFlap1Pos(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
     rval = Math::clamp(rval, -1, 1);
