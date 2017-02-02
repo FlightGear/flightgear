@@ -1010,27 +1010,50 @@ static naRef f_get_cart_ground_intersection(naContext c, naRef me, int argc, naR
 		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects argument(1) to be hash of direction containing x,y,z");
 
 	SGVec3d nearestHit;
-
 	if (!globals->get_scenery()->get_cart_ground_intersection(pos, dir, nearestHit))
 		return naNil();
 
-	double xyz[3];
-	xyz[0] = nearestHit[0];
-	xyz[1] = nearestHit[1];
-	xyz[2] = nearestHit[2];
-
-	double lat_rad, lon_rad, alt_m;
-	sgCartToGeod(xyz, &lat_rad, &lon_rad, &alt_m);
-
-	double lat_deg = lat_rad * SG_RADIANS_TO_DEGREES;
-	double lon_deg = lon_rad * SG_RADIANS_TO_DEGREES;
+    const SGGeod geodHit = SGGeod::fromCart(nearestHit);
 
 	// build a hash for returned intersection
 	naRef intersection_h = naNewHash(c);
-	hashset(c, intersection_h, "lat", naNum(lat_deg));
-	hashset(c, intersection_h, "lon", naNum(lon_deg));
-	hashset(c, intersection_h, "elevation", naNum(alt_m));
+	hashset(c, intersection_h, "lat", naNum(geodHit.getLatitudeDeg()));
+	hashset(c, intersection_h, "lon", naNum(geodHit.getLongitudeDeg()));
+	hashset(c, intersection_h, "elevation", naNum(geodHit.getElevationM()));
 	return intersection_h;
+}
+
+// convert from aircraft reference frame to global (ECEF) cartesian
+static naRef f_aircraftToCart(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc != 1)
+        naRuntimeError(c, "hash{x,y,z} aircraftToCart(position: hash{x,y,z}) expects one argument");
+
+    SGVec3d offset;
+    if (!vec3dFromHash(args[0], offset))
+        naRuntimeError(c, "aircraftToCart expects argument(0) to be a hash containing x,y,z");
+
+    double heading, pitch, roll;
+    globals->get_aircraft_orientation(heading, pitch, roll);
+
+    // Transform that one to the horizontal local coordinate system.
+    SGQuatd hlTrans = SGQuatd::fromLonLat(globals->get_aircraft_position());
+
+    // post-rotate the orientation of the aircraft wrt the horizontal local frame
+    hlTrans *= SGQuatd::fromYawPitchRollDeg(heading, pitch, roll);
+
+    // The offset converted to the usual body fixed coordinate system
+    // rotated to the earth fiexed coordinates axis
+    offset = hlTrans.backTransform(offset);
+
+    SGVec3d v = globals->get_aircraft_position_cart() + offset;
+
+    // build a hash for returned location
+    naRef pos_h = naNewHash(c);
+    hashset(c, pos_h, "x", naNum(v.x()));
+    hashset(c, pos_h, "y", naNum(v.y()));
+    hashset(c, pos_h, "z", naNum(v.z()));
+    return pos_h;
 }
 
 // For given geodetic point return array with elevation, and a material data
@@ -2563,6 +2586,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
   { "get_cart_ground_intersection", f_get_cart_ground_intersection },
+  { "aircraftToCart", f_aircraftToCart },
   { "airportinfo", f_airportinfo },
   { "findAirportsWithinRange", f_findAirportsWithinRange },
   { "findAirportsByICAO", f_findAirportsByICAO },
