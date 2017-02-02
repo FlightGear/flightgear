@@ -38,6 +38,8 @@ endif()
 if (ENABLE_FGQCANVAS)
   add_subdirectory(fgqcanvas)
 
-  # do this here so standalone build of FGQCanvas works
-  install(TARGETS fgqcanvas RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  if (TARGET fgqcanvas)
+    # do this here so standalone build of FGQCanvas works
+    install(TARGETS fgqcanvas RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif()
 endif()
