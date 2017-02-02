@@ -173,8 +173,8 @@ void Wing::setFlap0Pos(float lval, float rval)
     rval = Math::clamp(rval, -1, 1);
     int i;
     for(i=0; i<_flap0Surfs.size(); i++) {
-	((Surface*)_flap0Surfs.get(i))->setFlap(lval);
-	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlap(rval);
+	((Surface*)_flap0Surfs.get(i))->setFlapPos(lval);
+	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapPos(rval);
     }
 }
 
@@ -194,8 +194,8 @@ void Wing::setFlap1Pos(float lval, float rval)
     rval = Math::clamp(rval, -1, 1);
     int i;
     for(i=0; i<_flap1Surfs.size(); i++) {
-	((Surface*)_flap1Surfs.get(i))->setFlap(lval);
-	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
+	((Surface*)_flap1Surfs.get(i))->setFlapPos(lval);
+	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlapPos(rval);
     }
 }
 
@@ -215,8 +215,8 @@ void Wing::setSpoilerPos(float lval, float rval)
     rval = Math::clamp(rval, 0, 1);
     int i;
     for(i=0; i<_spoilerSurfs.size(); i++) {
-	((Surface*)_spoilerSurfs.get(i))->setSpoiler(lval);
-	if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoiler(rval);
+	((Surface*)_spoilerSurfs.get(i))->setSpoilerPos(lval);
+	if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoilerPos(rval);
     }
 }
 
@@ -225,7 +225,7 @@ void Wing::setSlatPos(float val)
     val = Math::clamp(val, 0, 1);
     int i;
     for(i=0; i<_slatSurfs.size(); i++)
-	((Surface*)_slatSurfs.get(i))->setSlat(val);
+	((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
 float Wing::getGroundEffect(float* posOut)

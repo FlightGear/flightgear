@@ -32,9 +32,9 @@ public:
 
     // Positions for the controls, in the range [0:1].  [-1:1] for
     // flaps, with positive meaning "force goes towards positive Z"
-    void setFlap(float pos);
-    void setSlat(float pos);
-    void setSpoiler(float pos);
+    void setFlapPos(float pos);
+    void setSlatPos(float pos);
+    void setSpoilerPos(float pos);
 
     // Modifier for flap lift coefficient, useful for simulating flap blowing etc.
     void setFlapEffectiveness(float effectiveness);

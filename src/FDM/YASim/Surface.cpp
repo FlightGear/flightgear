@@ -134,7 +134,7 @@ void Surface::setSpoilerParams(float liftPenalty, float dragPenalty)
     _spoilerDrag = dragPenalty;
 }
 
-void Surface::setFlap(float pos)
+void Surface::setFlapPos(float pos)
 {
     _flapPos = pos;
 }
@@ -150,12 +150,12 @@ double Surface::getFlapEffectiveness()
 }
 
 
-void Surface::setSlat(float pos)
+void Surface::setSlatPos(float pos)
 {
     _slatPos = pos;
 }
 
-void Surface::setSpoiler(float pos)
+void Surface::setSpoilerPos(float pos)
 {
     _spoilerPos = pos;
 }
@@ -257,9 +257,9 @@ void Surface::test()
     float rho = Atmosphere::getStdDensity(0);
     float spd = 30;
 
-    setFlap(0);
-    setSlat(0);
-    setSpoiler(0);
+    setFlapPos(0);
+    setSlatPos(0);
+    setSpoilerPos(0);
 
     for(float angle = -90; angle<90; angle += 0.01) {
         float rad = angle * DEG2RAD;
