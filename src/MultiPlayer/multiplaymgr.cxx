@@ -51,6 +51,9 @@
 #include "MPServerResolver.hxx"
 #include <FDM/flightProperties.hxx>
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#include <WS2tcpip.h>
+#endif
 using namespace std;
 
 #define MAX_PACKET_SIZE 1200
@@ -949,7 +952,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   }
   if (msgLen>0)
       mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
-  SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition");
+  SG_LOG(SG_NETWORK, SG_BULK, "FGMultiplayMgr::SendMyPosition");
 } // FGMultiplayMgr::SendMyPosition()
 
 //////////////////////////////////////////////////////////////////////
@@ -1051,9 +1054,17 @@ FGMultiplayMgr::update(double dt)
 
     if (RecvStatus<0)
     {
-        SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
+#ifdef _WIN32
+		if (::WSAGetLastError() != WSAEWOULDBLOCK) // this is normal on a receive when there is no data
+		{
+			// with Winsock the error will not be the actual problem.
+			SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. WSAGetLastError=" << ::WSAGetLastError());
+		}
+#else
+		SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
                << strerror(errno) << "(errno " << errno << ")");
-        break;
+#endif
+		break;
     }
 
     // status is positive: bytes received
