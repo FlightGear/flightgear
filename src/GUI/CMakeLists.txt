@@ -133,6 +133,8 @@ if (HAVE_QT)
                             AdvancedSettingsButton.cpp
                             DownloadSettings.cpp
                             DownloadSettings.h
+                            ToolboxButton.cpp
+                            ToolboxButton.h
                             ${uic_sources}
                             ${qrc_sources})
 

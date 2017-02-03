@@ -768,8 +768,15 @@ QtLauncher::QtLauncher() :
     connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
             m_aircraftProxy, &AircraftProxyModel::setAircraftFilterString);
 
-    connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
-    connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
+    connect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onRun()));
+    QStackedWidget* stack = m_ui->stack;
+    connect(m_ui->summaryButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(0); });
+    connect(m_ui->aircraftButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(1); });
+    connect(m_ui->locationButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(2); });
+    connect(m_ui->settingsButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(4); });
+
+
+   // connect(m_ui->quitButton, SIGNAL(clicked()), this, SLOT(onQuit()));
 
     connect(m_ui->aircraftHistory, &QPushButton::clicked,
           this, &QtLauncher::onPopupAircraftHistory);
@@ -862,7 +869,7 @@ QtLauncher::QtLauncher() :
     connect(addOnsPage, &AddOnsPage::sceneryPathsChanged,
             this, &QtLauncher::setSceneryPaths);
 
-    m_ui->tabWidget->addTab(addOnsPage, tr("Add-ons"));
+  //  m_ui->tabWidget->addTab(addOnsPage, tr("Add-ons"));
     // after any kind of reset, try to restore selection and scroll
     // to match the m_selectedAircraft. This needs to be delayed
     // fractionally otherwise the scrollTo seems to be ignored,
@@ -935,14 +942,14 @@ void QtLauncher::setSceneryPaths() // static method
 bool QtLauncher::execInApp()
 {
   m_inAppMode = true;
-  m_ui->tabWidget->removeTab(3);
-  m_ui->tabWidget->removeTab(3);
+ // m_ui->tabWidget->removeTab(3);
+ // m_ui->tabWidget->removeTab(3);
 
-  m_ui->runButton->setText(tr("Apply"));
-  m_ui->quitButton->setText(tr("Cancel"));
+ // m_ui->runButton->setText(tr("Apply"));
+ // m_ui->quitButton->setText(tr("Cancel"));
 
-  disconnect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onRun()));
-  connect(m_ui->runButton, SIGNAL(clicked()), this, SLOT(onApply()));
+  disconnect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onRun()));
+  connect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onApply()));
     m_runInApp = true;
 
     show();
@@ -1458,7 +1465,7 @@ void QtLauncher::updateSelectedAircraft()
 
         int status = index.data(AircraftPackageStatusRole).toInt();
         bool canRun = (status == PackageInstalled);
-        m_ui->runButton->setEnabled(canRun);
+        m_ui->flyButton->setEnabled(canRun);
 
         LauncherAircraftType aircraftType = Airplane;
         if (index.data(AircraftIsHelicopterRole).toBool()) {
@@ -1472,7 +1479,7 @@ void QtLauncher::updateSelectedAircraft()
         m_ui->thumbnail->setPixmap(QPixmap());
         m_ui->aircraftName->setText("");
         m_ui->aircraftDescription->hide();
-        m_ui->runButton->setEnabled(false);
+        m_ui->flyButton->setEnabled(false);
     }
 }
 
