@@ -27,6 +27,8 @@ public:
         return m_title;
     }
 
+    void insertSettingsHeader();
+
 public slots:
     void setShowAdvanced(bool showAdvanced);
 
@@ -37,9 +39,6 @@ signals:
     void showAdvancedChanged(bool showAdvanced);
 
     void titleChanged(QString title);
-
-protected:
-    void insertSettingsHeader();
 
 private:
     void internalUpdateAdvanced();

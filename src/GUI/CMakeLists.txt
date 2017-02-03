@@ -84,6 +84,8 @@ if (HAVE_QT)
                             ViewSettings.ui
                             MPSettings.ui
                             DownloadSettings.ui
+                            EnvironmentPage.ui
+                            AdditionalSettings.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
@@ -135,6 +137,10 @@ if (HAVE_QT)
                             DownloadSettings.h
                             ToolboxButton.cpp
                             ToolboxButton.h
+                            EnvironmentPage.cpp
+                            EnvironmentPage.h
+                            AdditionalSettings.cpp
+                            AdditionalSettings.h
                             ${uic_sources}
                             ${qrc_sources})
 

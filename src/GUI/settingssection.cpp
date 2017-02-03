@@ -101,5 +101,9 @@ void SettingsSection::internalUpdateAdvanced()
         if (w->property("advanced").toBool()) {
             w->setVisible(m_showAdvanced);
         }
+
+        if (w->property("simple").toBool()) {
+            w->setVisible(!m_showAdvanced);
+        }
     }
 }

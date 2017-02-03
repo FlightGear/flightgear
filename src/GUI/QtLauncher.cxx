@@ -88,6 +88,7 @@
 #include "ViewSettings.h"
 #include "MPSettings.h"
 #include "DownloadSettings.h"
+#include "AdditionalSettings.h"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -739,7 +740,7 @@ QtLauncher::QtLauncher() :
 
 #if QT_VERSION >= 0x050300
     // don't require Qt 5.3
-    m_ui->commandLineArgs->setPlaceholderText("--option=value --prop:/sim/name=value");
+    //m_ui->commandLineArgs->setPlaceholderText("--option=value --prop:/sim/name=value");
 #endif
 
 #if QT_VERSION >= 0x050200
@@ -773,6 +774,7 @@ QtLauncher::QtLauncher() :
     connect(m_ui->summaryButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(0); });
     connect(m_ui->aircraftButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(1); });
     connect(m_ui->locationButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(2); });
+    connect(m_ui->environmentButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(3); });
     connect(m_ui->settingsButton, &QAbstractButton::clicked, [stack]() { stack->setCurrentIndex(4); });
 
 
@@ -800,6 +802,7 @@ QtLauncher::QtLauncher() :
     m_ui->aircraftHistory->setIcon(historyIcon);
     m_ui->locationHistory->setIcon(historyIcon);
 
+#if 0
     connect(m_ui->timeOfDayCombo, SIGNAL(currentIndexChanged(int)),
             this, SLOT(updateSettingsSummary()));
     connect(m_ui->seasonCombo, SIGNAL(currentIndexChanged(int)),
@@ -824,11 +827,14 @@ QtLauncher::QtLauncher() :
             this, SLOT(onRembrandtToggled(bool)));
     connect(m_ui->terrasyncCheck, &QCheckBox::toggled,
             this, &QtLauncher::onToggleTerrasync);
+#endif
+
     updateSettingsSummary();
 
+#if 0
     connect(m_ui->mpServerCombo, SIGNAL(activated(int)),
             this, SLOT(onMPServerActivated(int)));
-
+#endif
     m_aircraftModel = new AircraftItemModel(this);
     m_aircraftProxy->setSourceModel(m_aircraftModel);
 
@@ -859,9 +865,10 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onAircraftInstallFailed);
     connect(m_aircraftModel, &AircraftItemModel::scanCompleted,
             this, &QtLauncher::updateSelectedAircraft);
+#if 0
     connect(m_ui->restoreDefaultsButton, &QPushButton::clicked,
             this, &QtLauncher::onRestoreDefaults);
-
+#endif
 
     AddOnsPage* addOnsPage = new AddOnsPage(NULL, globals->packageRoot());
     connect(addOnsPage, &AddOnsPage::downloadDirChanged,
@@ -889,16 +896,21 @@ QtLauncher::QtLauncher() :
 
     RenderingSettings* renderSettings = new RenderingSettings(m_ui->settingsScrollContents);
     QVBoxLayout* settingsVBox = static_cast<QVBoxLayout*>(m_ui->settingsScrollContents->layout());
-    settingsVBox->insertWidget(1, renderSettings);
+    settingsVBox->addWidget(renderSettings);
 
     ViewSettings* viewSettings = new ViewSettings(m_ui->settingsScrollContents);
-    settingsVBox->insertWidget(1, viewSettings);
+    settingsVBox->addWidget(viewSettings);
 
     MPSettings* mpSettings = new MPSettings(m_ui->settingsScrollContents);
-    settingsVBox->insertWidget(1, mpSettings);
+    settingsVBox->addWidget(mpSettings);
 
     DownloadSettings* downloadSettings = new DownloadSettings(m_ui->settingsScrollContents);
-    settingsVBox->insertWidget(2, downloadSettings);
+    settingsVBox->addWidget(downloadSettings);
+
+    AdditionalSettings* addSettings = new AdditionalSettings(m_ui->settingsScrollContents);
+    settingsVBox->addWidget(addSettings);
+
+    settingsVBox->addStretch(1);
 }
 
 QtLauncher::~QtLauncher()
@@ -967,6 +979,7 @@ void QtLauncher::restoreSettings()
 
     restoreGeometry(settings.value("window-geometry").toByteArray());
 
+#if 0
     m_ui->rembrandtCheckbox->setChecked(settings.value("enable-rembrandt", false).toBool());
     m_ui->terrasyncCheck->setChecked(settings.value("enable-terrasync", true).toBool());
     m_ui->fullScreenCheckbox->setChecked(settings.value("start-fullscreen", false).toBool());
@@ -975,7 +988,7 @@ void QtLauncher::restoreSettings()
     m_ui->startPausedCheck->setChecked(settings.value("start-paused", false).toBool());
     m_ui->timeOfDayCombo->setCurrentIndex(settings.value("timeofday", 0).toInt());
     m_ui->seasonCombo->setCurrentIndex(settings.value("season", 0).toInt());
-
+#endif
     // full paths to -set.xml files
     m_recentAircraft = QUrl::fromStringList(settings.value("recent-aircraft").toStringList());
 
@@ -1032,11 +1045,12 @@ void QtLauncher::restoreSettings()
 
     updateSelectedAircraft();
     maybeRestoreAircraftSelection();
-
+#if 0
     m_ui->commandLineArgs->setPlainText(settings.value("additional-args").toString());
 
     m_ui->mpBox->setChecked(settings.value("mp-enabled").toBool());
     m_ui->mpCallsign->setText(settings.value("mp-callsign").toString());
+#endif
     // don't restore MP server here, we do it after a refresh
     m_doRestoreMPServer = true;
 }
@@ -1065,17 +1079,21 @@ void QtLauncher::maybeRestoreAircraftSelection()
 void QtLauncher::saveSettings()
 {
     QSettings settings;
+#if 0
     settings.setValue("enable-rembrandt", m_ui->rembrandtCheckbox->isChecked());
     settings.setValue("enable-terrasync", m_ui->terrasyncCheck->isChecked());
     settings.setValue("enable-msaa", m_ui->msaaCheckbox->isChecked());
     settings.setValue("start-fullscreen", m_ui->fullScreenCheckbox->isChecked());
     settings.setValue("enable-realwx", m_ui->fetchRealWxrCheckbox->isChecked());
     settings.setValue("start-paused", m_ui->startPausedCheck->isChecked());
+#endif
+
     settings.setValue("ratings-filter", m_ui->ratingsFilterCheck->isChecked());
     settings.setValue("only-show-installed", m_ui->onlyShowInstalledCheck->isChecked());
     settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
     settings.setValue("recent-location-sets", m_recentLocations);
 
+#if 0
     settings.setValue("timeofday", m_ui->timeOfDayCombo->currentIndex());
     settings.setValue("season", m_ui->seasonCombo->currentIndex());
     settings.setValue("additional-args", m_ui->commandLineArgs->toPlainText());
@@ -1083,7 +1101,7 @@ void QtLauncher::saveSettings()
     settings.setValue("mp-callsign", m_ui->mpCallsign->text());
     settings.setValue("mp-server", m_ui->mpServerCombo->currentData());
     settings.setValue("mp-enabled", m_ui->mpBox->isChecked());
-
+#endif
     settings.setValue("window-geometry", saveGeometry());
 }
 
@@ -1106,6 +1124,7 @@ void QtLauncher::closeEvent(QCloseEvent *event)
 void QtLauncher::onRun()
 {
     flightgear::Options* opt = flightgear::Options::sharedInstance();
+#if 0
     setEnableDisableOptionFromCheckbox(m_ui->terrasyncCheck, "terrasync");
     setEnableDisableOptionFromCheckbox(m_ui->fetchRealWxrCheckbox, "real-weather-fetch");
     setEnableDisableOptionFromCheckbox(m_ui->rembrandtCheckbox, "rembrandt");
@@ -1117,7 +1136,9 @@ void QtLauncher::onRun()
     if (startPaused) {
         opt->addOption("enable-freeze", "");
     }
+#endif
 
+#if 0
     // MSAA is more complex
     if (!m_ui->rembrandtCheckbox->isChecked()) {
         if (m_ui->msaaCheckbox->isChecked()) {
@@ -1127,6 +1148,7 @@ void QtLauncher::onRun()
             globals->get_props()->setIntValue("/sim/rendering/multi-sample-buffers", 0);
         }
     }
+#endif
 
     // aircraft
     if (!m_selectedAircraft.isEmpty()) {
@@ -1154,6 +1176,7 @@ void QtLauncher::onRun()
           m_recentAircraft.pop_back();
     }
 
+#if 0
     if (m_ui->mpBox->isChecked()) {
         std::string callSign = m_ui->mpCallsign->text().toStdString();
         if (!callSign.empty()) {
@@ -1175,10 +1198,12 @@ void QtLauncher::onRun()
         globals->get_props()->setStringValue("/sim/multiplay/txhost", host.toStdString());
         globals->get_props()->setIntValue("/sim/multiplay/txport", port);
     }
+#endif
 
     m_ui->location->setLocationProperties();
     updateLocationHistory();
 
+#if 0
     // time of day
     if (m_ui->timeOfDayCombo->currentIndex() != 0) {
         QString dayval = m_ui->timeOfDayCombo->currentText().toLower();
@@ -1189,6 +1214,7 @@ void QtLauncher::onRun()
         QString seasonName = m_ui->seasonCombo->currentText().toLower();
         opt->addOption("season", seasonName.toStdString());
     }
+#endif
 
     QSettings settings;
     QString downloadDir = settings.value("download-dir").toString();
@@ -1222,6 +1248,7 @@ void QtLauncher::onRun()
     }
 
     // additional arguments
+#if 0
     ArgumentsTokenizer tk;
     Q_FOREACH(ArgumentsTokenizer::Arg a, tk.tokenize(m_ui->commandLineArgs->toPlainText())) {
         if (a.arg.startsWith("prop:")) {
@@ -1231,6 +1258,7 @@ void QtLauncher::onRun()
             opt->addOption(a.arg.toStdString(), a.value.toStdString());
         }
     }
+#endif
 
     if (settings.contains("restore-defaults-on-run")) {
         settings.remove("restore-defaults-on-run");
@@ -1330,7 +1358,7 @@ void QtLauncher::onToggleTerrasync(bool enabled)
             int result = msg.exec();
 
             if (result == QMessageBox::Cancel) {
-                m_ui->terrasyncCheck->setChecked(false);
+                //m_ui->terrasyncCheck->setChecked(false);
                 return;
             }
 
@@ -1582,6 +1610,7 @@ void QtLauncher::onEditRatingsFilter()
 void QtLauncher::updateSettingsSummary()
 {
     QStringList summary;
+#if 0
     if (m_ui->timeOfDayCombo->currentIndex() > 0) {
         summary.append(QString(m_ui->timeOfDayCombo->currentText().toLower()));
     }
@@ -1615,12 +1644,13 @@ void QtLauncher::updateSettingsSummary()
     QString s = summary.join(", ");
     s[0] = s[0].toUpper();
     m_ui->settingsDescription->setText(s);
+#endif
 }
 
 void QtLauncher::onRembrandtToggled(bool b)
 {
     // Rembrandt and multi-sample are exclusive
-    m_ui->msaaCheckbox->setEnabled(!b);
+  //  m_ui->msaaCheckbox->setEnabled(!b);
 }
 
 void QtLauncher::onShowInstalledAircraftToggled(bool b)
@@ -1735,6 +1765,7 @@ void QtLauncher::onRefreshMPServers()
 
 void QtLauncher::onRefreshMPServersDone(simgear::HTTP::Request*)
 {
+#if 0
     // parse the properties
     SGPropertyNode *targetnode = fgGetNode("/sim/multiplay/server-list", true);
     m_ui->mpServerCombo->clear();
@@ -1758,7 +1789,7 @@ void QtLauncher::onRefreshMPServersDone(simgear::HTTP::Request*)
 
     EditCustomMPServerDialog::addCustomItem(m_ui->mpServerCombo);
     restoreMPServerSelection();
-
+#endif
     m_mpServerRequest.clear();
 }
 
@@ -1766,12 +1797,15 @@ void QtLauncher::onRefreshMPServersFailed(simgear::HTTP::Request*)
 {
     qWarning() << "refreshing MP servers failed:" << QString::fromStdString(m_mpServerRequest->responseReason());
     m_mpServerRequest.clear();
+#if 0
     EditCustomMPServerDialog::addCustomItem(m_ui->mpServerCombo);
     restoreMPServerSelection();
+#endif
 }
 
 void QtLauncher::restoreMPServerSelection()
 {
+#if 0
     if (m_doRestoreMPServer) {
         QSettings settings;
         int index = m_ui->mpServerCombo->findData(settings.value("mp-server"));
@@ -1780,10 +1814,12 @@ void QtLauncher::restoreMPServerSelection()
         }
         m_doRestoreMPServer = false;
     }
+#endif
 }
 
 void QtLauncher::onMPServerActivated(int index)
 {
+#if 0
     if (m_ui->mpServerCombo->itemData(index) == "custom") {
         EditCustomMPServerDialog dlg(this);
         dlg.exec();
@@ -1791,6 +1827,7 @@ void QtLauncher::onMPServerActivated(int index)
             m_ui->mpServerCombo->setItemText(index, tr("Custom - %1").arg(dlg.hostname()));
         }
     }
+#endif
 }
 
 int QtLauncher::findMPServerPort(const std::string& host)

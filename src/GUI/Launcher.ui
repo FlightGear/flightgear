@@ -198,10 +198,10 @@
     <item>
      <widget class="QStackedWidget" name="stack">
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
-      <widget class="QWidget" name="summaryPage" native="true">
-       <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,0,0">
+      <widget class="QWidget" name="summaryPage">
+       <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0,0,0,1" columnstretch="0,0,0,1,0">
         <item row="5" column="2">
          <widget class="QLabel" name="label_3">
           <property name="font">
@@ -289,19 +289,6 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="3">
-         <spacer name="verticalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
         <item row="5" column="3">
          <widget class="QLabel" name="locationDescription">
           <property name="font">
@@ -369,9 +356,43 @@
           </property>
          </widget>
         </item>
+        <item row="0" column="3" colspan="2">
+         <widget class="QLabel" name="label">
+          <property name="font">
+           <font>
+            <pointsize>48</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>FlightGear 2017.1.0</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3" colspan="2">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>©2017, Curtis L Olson. Licensed under the GNU Public License (GPL) version 2. See &lt;here&gt; for more information</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2" rowspan="2">
+         <widget class="QLabel" name="logoIcon">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap resource="resources.qrc">:/app-icon-large</pixmap>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="aircraftPage" native="true">
+      <widget class="QWidget" name="aircraftPage">
        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0">
         <property name="spacing">
          <number>4</number>
@@ -474,323 +495,9 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="locationPage" native="true">
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="LocationWidget" name="location" native="true"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="settingsPage" native="true">
-       <layout class="QGridLayout" name="gridLayout_5">
-        <property name="leftMargin">
-         <number>8</number>
-        </property>
-        <property name="rightMargin">
-         <number>8</number>
-        </property>
-        <property name="bottomMargin">
-         <number>8</number>
-        </property>
-        <item row="6" column="0" colspan="2">
-         <widget class="QGroupBox" name="mpBox">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>100</height>
-           </size>
-          </property>
-          <property name="title">
-           <string>Multi-player</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-          <layout class="QGridLayout" name="gridLayout" columnstretch="1,2,0">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Callsign:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>Server:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLineEdit" name="mpCallsign">
-             <property name="maxLength">
-              <number>10</number>
-             </property>
-             <property name="placeholderText">
-              <string>G-FGFS</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>(Ten characters maximum)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" colspan="2">
-            <widget class="QComboBox" name="mpServerCombo"/>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="7" column="0" colspan="2">
-         <widget class="QGroupBox" name="groupBox_2">
-          <property name="title">
-           <string>Additional options</string>
-          </property>
-          <property name="startupOnly" stdset="0">
-           <bool>true</bool>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_7">
-           <property name="leftMargin">
-            <number>4</number>
-           </property>
-           <property name="topMargin">
-            <number>4</number>
-           </property>
-           <property name="rightMargin">
-            <number>4</number>
-           </property>
-           <property name="bottomMargin">
-            <number>4</number>
-           </property>
-           <item>
-            <widget class="QPlainTextEdit" name="commandLineArgs"/>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QCheckBox" name="fullScreenCheckbox">
-          <property name="text">
-           <string>Start full-screen</string>
-          </property>
-          <property name="startupOnly" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="msaaCheckbox">
-          <property name="text">
-           <string>Enable Multi-sample anti-aliasing</string>
-          </property>
-          <property name="startupOnly" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QCheckBox" name="fetchRealWxrCheckbox">
-          <property name="text">
-           <string>Fetch real weather online</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QCheckBox" name="startPausedCheck">
-          <property name="text">
-           <string>Start paused</string>
-          </property>
-          <property name="startupOnly" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="QPushButton" name="restoreDefaultsButton">
-          <property name="text">
-           <string>Restore Defaults...</string>
-          </property>
-          <property name="autoDefault">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Time of day:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="timeOfDayCombo">
-            <item>
-             <property name="text">
-              <string>Current time</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Dawn</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Morning</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Noon</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Afternoon</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Dusk</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Evening</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Midnight</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="1">
-         <widget class="QCheckBox" name="rembrandtCheckbox">
-          <property name="text">
-           <string>Enable deferred rendering (Rembrandt)</string>
-          </property>
-          <property name="startupOnly" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" colspan="2">
-         <widget class="QCheckBox" name="terrasyncCheck">
-          <property name="text">
-           <string>Enable automatic scenery downloading (TerraSync)</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For information on additional options, please &lt;a href=&quot;http://flightgear.sourceforge.net/getstart-en/getstart-enpa2.html#x5-450004.5&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;see here&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="textFormat">
-           <enum>Qt::RichText</enum>
-          </property>
-          <property name="openExternalLinks">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0" colspan="2">
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If scenery download is disabled, you may need to download additional files from &lt;a href=&quot;http://www.flightgear.org/download/scenery/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this page&lt;/span&gt;&lt;/a&gt; and install them in a scenery location; otherwise some objects may be missing from the world.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-            <property name="openExternalLinks">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="0" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
-          <item>
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Season:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="seasonCombo">
-            <item>
-             <property name="text">
-              <string>Summer</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Winter</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="newSettingsPage" native="true">
+      <widget class="LocationWidget" name="location"/>
+      <widget class="EnvironmentPage" name="environmentPage"/>
+      <widget class="QWidget" name="newSettingsPage">
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="leftMargin">
          <number>4</number>
@@ -814,8 +521,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>613</width>
-             <height>624</height>
+             <width>631</width>
+             <height>644</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -869,19 +576,6 @@
               </item>
              </layout>
             </item>
-            <item>
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>471</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
            </layout>
           </widget>
          </widget>
@@ -904,6 +598,12 @@
    <class>ToolboxButton</class>
    <extends>QPushButton</extends>
    <header location="global">GUI/ToolboxButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>EnvironmentPage</class>
+   <extends>QWidget</extends>
+   <header location="global">GUI/EnvironmentPage.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>
