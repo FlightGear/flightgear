@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
+include(GNUInstallDirs)
+
 project(FGQCanvas)
 
 find_package(Qt5 5.4 COMPONENTS Widgets WebSockets)
@@ -55,3 +57,5 @@ target_include_directories(fgqcanvas PRIVATE ${PROJECT_SOURCE_DIR})
 
 # so ui_foo.h files are found
 target_include_directories(fgqcanvas PRIVATE ${PROJECT_BINARY_DIR})
+
+install(TARGETS fgqcanvas RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -265,7 +265,7 @@ if (MSVC)
 	if (CRASHRPT_FOUND)
 		set(HAVE_CRASHRPT 1)
 		message(STATUS "Using CrashRpt")
-        include_directories( ${CRASHRPT_INCLUDE_DIR})
+    include_directories( ${CRASHRPT_INCLUDE_DIR})
 	endif()
 endif()
 
