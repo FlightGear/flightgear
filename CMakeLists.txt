@@ -178,7 +178,6 @@ option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite 
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
 option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
 option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
-option(ENABLE_SIMD       "Enable SSE/SSE2 support for x86 compilers" ON)
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
@@ -357,6 +356,20 @@ if(ENABLE_RTI)
 else()
     message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)
+
+# Check if the flag ENABLE_SIMD was enabled during the compilation of SimGear.
+# The same value has to be carried over for FlightGear to prevent crashes.
+try_run(ENABLE_SIMD COMPILE_RESULT_TEST_SIMD ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-simd-enabled.c)
+
+if (COMPILE_RESULT_TEST_SIMD AND ENABLE_SIMD
+    AND NOT (ENABLE_SIMD EQUAL FAILED_TO_RUN))
+  set(ENABLE_SIMD ON)
+  message(STATUS "SSE/SSE2 support: ENABLED")
+else()
+  set(ENABLE_SIMD OFF)
+  message(STATUS "SSE/SSE2 support: DISABLED")
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_CXX "-Wall")
