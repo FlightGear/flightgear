@@ -1,4 +1,4 @@
-#include <simgear/simgear_config.h>
+#include "simgear/simgear_config.h"
 
 int main(void) {
   #ifdef ENABLE_SIMD
