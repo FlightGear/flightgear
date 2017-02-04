@@ -100,7 +100,10 @@ private:
   // and the property nodes
   typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
-  
+
+  typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
+  PropertyDefinitionMap mPropertyDefinition;
+
   bool mPropertiesChanged;
   MPPropertyListener* mListener;
   

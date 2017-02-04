@@ -59,267 +59,284 @@ using namespace std;
 #define MAX_PACKET_SIZE 1200
 #define MAX_TEXT_SIZE 128
 
+enum TransmissionType {
+	TT_BOOL,
+	TT_BOOLARRAY,
+	TT_CHAR,
+	TT_INT,
+	TT_FLOAT,
+	TT_STRING,
+};
+
+
 struct IdPropertyList {
   unsigned id;
   const char* name;
   simgear::props::Type type;
+  TransmissionType TransmitAs;
+  int version;
+  int(*convert)(int direction, xdr_data_t*, FGPropertyData*);
 };
  
 static const IdPropertyList* findProperty(unsigned id);
-  
+static int convert_launchbar_state(int direction, xdr_data_t*, FGPropertyData*)
+{
+	return 0; // no conversion performed
+}
 // A static map of protocol property id values to property paths,
 // This should be extendable dynamically for every specific aircraft ...
 // For now only that static list
 static const IdPropertyList sIdPropertyList[] = {
-  {100, "surface-positions/left-aileron-pos-norm",  simgear::props::FLOAT},
-  {101, "surface-positions/right-aileron-pos-norm", simgear::props::FLOAT},
-  {102, "surface-positions/elevator-pos-norm",      simgear::props::FLOAT},
-  {103, "surface-positions/rudder-pos-norm",        simgear::props::FLOAT},
-  {104, "surface-positions/flap-pos-norm",          simgear::props::FLOAT},
-  {105, "surface-positions/speedbrake-pos-norm",    simgear::props::FLOAT},
-  {106, "gear/tailhook/position-norm",              simgear::props::FLOAT},
-  {107, "gear/launchbar/position-norm",             simgear::props::FLOAT},
-  {108, "gear/launchbar/state",                     simgear::props::STRING},
-  {109, "gear/launchbar/holdback-position-norm",    simgear::props::FLOAT},
-  {110, "canopy/position-norm",                     simgear::props::FLOAT},
-  {111, "surface-positions/wing-pos-norm",          simgear::props::FLOAT},
-  {112, "surface-positions/wing-fold-pos-norm",     simgear::props::FLOAT},
+	{ 100, "surface-positions/left-aileron-pos-norm",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 101, "surface-positions/right-aileron-pos-norm", simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 102, "surface-positions/elevator-pos-norm",      simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 103, "surface-positions/rudder-pos-norm",        simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 104, "surface-positions/flap-pos-norm",          simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 105, "surface-positions/speedbrake-pos-norm",    simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 106, "gear/tailhook/position-norm",              simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 107, "gear/launchbar/position-norm",             simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	//  {108, "gear/launchbar/state",                     simgear::props::STRING, TT_STRING,  1, NULL},
+	{ 109, "gear/launchbar/holdback-position-norm",    simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 110, "canopy/position-norm",                     simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 111, "surface-positions/wing-pos-norm",          simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 112, "surface-positions/wing-fold-pos-norm",     simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 113, "gear/launchbar/state",                     simgear::props::STRING, TT_STRING,  2, convert_launchbar_state},
 
-  {200, "gear/gear[0]/compression-norm",           simgear::props::FLOAT},
-  {201, "gear/gear[0]/position-norm",              simgear::props::FLOAT},
-  {210, "gear/gear[1]/compression-norm",           simgear::props::FLOAT},
-  {211, "gear/gear[1]/position-norm",              simgear::props::FLOAT},
-  {220, "gear/gear[2]/compression-norm",           simgear::props::FLOAT},
-  {221, "gear/gear[2]/position-norm",              simgear::props::FLOAT},
-  {230, "gear/gear[3]/compression-norm",           simgear::props::FLOAT},
-  {231, "gear/gear[3]/position-norm",              simgear::props::FLOAT},
-  {240, "gear/gear[4]/compression-norm",           simgear::props::FLOAT},
-  {241, "gear/gear[4]/position-norm",              simgear::props::FLOAT},
+	{ 200, "gear/gear[0]/compression-norm",           simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 201, "gear/gear[0]/position-norm",              simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 210, "gear/gear[1]/compression-norm",           simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 211, "gear/gear[1]/position-norm",              simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 220, "gear/gear[2]/compression-norm",           simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 221, "gear/gear[2]/position-norm",              simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 230, "gear/gear[3]/compression-norm",           simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 231, "gear/gear[3]/position-norm",              simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 240, "gear/gear[4]/compression-norm",           simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 241, "gear/gear[4]/position-norm",              simgear::props::FLOAT, TT_FLOAT,  1, NULL },
 
-  {300, "engines/engine[0]/n1",  simgear::props::FLOAT},
-  {301, "engines/engine[0]/n2",  simgear::props::FLOAT},
-  {302, "engines/engine[0]/rpm", simgear::props::FLOAT},
-  {310, "engines/engine[1]/n1",  simgear::props::FLOAT},
-  {311, "engines/engine[1]/n2",  simgear::props::FLOAT},
-  {312, "engines/engine[1]/rpm", simgear::props::FLOAT},
-  {320, "engines/engine[2]/n1",  simgear::props::FLOAT},
-  {321, "engines/engine[2]/n2",  simgear::props::FLOAT},
-  {322, "engines/engine[2]/rpm", simgear::props::FLOAT},
-  {330, "engines/engine[3]/n1",  simgear::props::FLOAT},
-  {331, "engines/engine[3]/n2",  simgear::props::FLOAT},
-  {332, "engines/engine[3]/rpm", simgear::props::FLOAT},
-  {340, "engines/engine[4]/n1",  simgear::props::FLOAT},
-  {341, "engines/engine[4]/n2",  simgear::props::FLOAT},
-  {342, "engines/engine[4]/rpm", simgear::props::FLOAT},
-  {350, "engines/engine[5]/n1",  simgear::props::FLOAT},
-  {351, "engines/engine[5]/n2",  simgear::props::FLOAT},
-  {352, "engines/engine[5]/rpm", simgear::props::FLOAT},
-  {360, "engines/engine[6]/n1",  simgear::props::FLOAT},
-  {361, "engines/engine[6]/n2",  simgear::props::FLOAT},
-  {362, "engines/engine[6]/rpm", simgear::props::FLOAT},
-  {370, "engines/engine[7]/n1",  simgear::props::FLOAT},
-  {371, "engines/engine[7]/n2",  simgear::props::FLOAT},
-  {372, "engines/engine[7]/rpm", simgear::props::FLOAT},
-  {380, "engines/engine[8]/n1",  simgear::props::FLOAT},
-  {381, "engines/engine[8]/n2",  simgear::props::FLOAT},
-  {382, "engines/engine[8]/rpm", simgear::props::FLOAT},
-  {390, "engines/engine[9]/n1",  simgear::props::FLOAT},
-  {391, "engines/engine[9]/n2",  simgear::props::FLOAT},
-  {392, "engines/engine[9]/rpm", simgear::props::FLOAT},
+	{ 300, "engines/engine[0]/n1",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 301, "engines/engine[0]/n2",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 302, "engines/engine[0]/rpm", simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 310, "engines/engine[1]/n1",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 311, "engines/engine[1]/n2",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 312, "engines/engine[1]/rpm", simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 320, "engines/engine[2]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 321, "engines/engine[2]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 322, "engines/engine[2]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 330, "engines/engine[3]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 331, "engines/engine[3]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 332, "engines/engine[3]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 340, "engines/engine[4]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 341, "engines/engine[4]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 342, "engines/engine[4]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 350, "engines/engine[5]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 351, "engines/engine[5]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 352, "engines/engine[5]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 360, "engines/engine[6]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 361, "engines/engine[6]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 362, "engines/engine[6]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 370, "engines/engine[7]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 371, "engines/engine[7]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 372, "engines/engine[7]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 380, "engines/engine[8]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 381, "engines/engine[8]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 382, "engines/engine[8]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 390, "engines/engine[9]/n1",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 391, "engines/engine[9]/n2",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 392, "engines/engine[9]/rpm", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
 
-  {800, "rotors/main/rpm", simgear::props::FLOAT},
-  {801, "rotors/tail/rpm", simgear::props::FLOAT},
-  {810, "rotors/main/blade[0]/position-deg",  simgear::props::FLOAT},
-  {811, "rotors/main/blade[1]/position-deg",  simgear::props::FLOAT},
-  {812, "rotors/main/blade[2]/position-deg",  simgear::props::FLOAT},
-  {813, "rotors/main/blade[3]/position-deg",  simgear::props::FLOAT},
-  {820, "rotors/main/blade[0]/flap-deg",  simgear::props::FLOAT},
-  {821, "rotors/main/blade[1]/flap-deg",  simgear::props::FLOAT},
-  {822, "rotors/main/blade[2]/flap-deg",  simgear::props::FLOAT},
-  {823, "rotors/main/blade[3]/flap-deg",  simgear::props::FLOAT},
-  {830, "rotors/tail/blade[0]/position-deg",  simgear::props::FLOAT},
-  {831, "rotors/tail/blade[1]/position-deg",  simgear::props::FLOAT},
+	{ 800, "rotors/main/rpm", simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 801, "rotors/tail/rpm", simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 810, "rotors/main/blade[0]/position-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 811, "rotors/main/blade[1]/position-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 812, "rotors/main/blade[2]/position-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 813, "rotors/main/blade[3]/position-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 820, "rotors/main/blade[0]/flap-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 821, "rotors/main/blade[1]/flap-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 822, "rotors/main/blade[2]/flap-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 823, "rotors/main/blade[3]/flap-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 830, "rotors/tail/blade[0]/position-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 831, "rotors/tail/blade[1]/position-deg",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
 
-  {900, "sim/hitches/aerotow/tow/length",                       simgear::props::FLOAT},
-  {901, "sim/hitches/aerotow/tow/elastic-constant",             simgear::props::FLOAT},
-  {902, "sim/hitches/aerotow/tow/weight-per-m-kg-m",            simgear::props::FLOAT},
-  {903, "sim/hitches/aerotow/tow/dist",                         simgear::props::FLOAT},
-  {904, "sim/hitches/aerotow/tow/connected-to-property-node",   simgear::props::BOOL},
-  {905, "sim/hitches/aerotow/tow/connected-to-ai-or-mp-callsign",   simgear::props::STRING},
-  {906, "sim/hitches/aerotow/tow/brake-force",                  simgear::props::FLOAT},
-  {907, "sim/hitches/aerotow/tow/end-force-x",                  simgear::props::FLOAT},
-  {908, "sim/hitches/aerotow/tow/end-force-y",                  simgear::props::FLOAT},
-  {909, "sim/hitches/aerotow/tow/end-force-z",                  simgear::props::FLOAT},
-  {930, "sim/hitches/aerotow/is-slave",                         simgear::props::BOOL},
-  {931, "sim/hitches/aerotow/speed-in-tow-direction",           simgear::props::FLOAT},
-  {932, "sim/hitches/aerotow/open",                             simgear::props::BOOL},
-  {933, "sim/hitches/aerotow/local-pos-x",                      simgear::props::FLOAT},
-  {934, "sim/hitches/aerotow/local-pos-y",                      simgear::props::FLOAT},
-  {935, "sim/hitches/aerotow/local-pos-z",                      simgear::props::FLOAT},
+	{ 900, "sim/hitches/aerotow/tow/length",                       simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 901, "sim/hitches/aerotow/tow/elastic-constant",             simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 902, "sim/hitches/aerotow/tow/weight-per-m-kg-m",            simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 903, "sim/hitches/aerotow/tow/dist",                         simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 904, "sim/hitches/aerotow/tow/connected-to-property-node",   simgear::props::BOOL, TT_BOOL,  1, NULL },
+	{ 905, "sim/hitches/aerotow/tow/connected-to-ai-or-mp-callsign",   simgear::props::STRING, TT_STRING,  1, NULL },
+	{ 906, "sim/hitches/aerotow/tow/brake-force",                  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 907, "sim/hitches/aerotow/tow/end-force-x",                  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 908, "sim/hitches/aerotow/tow/end-force-y",                  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 909, "sim/hitches/aerotow/tow/end-force-z",                  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 930, "sim/hitches/aerotow/is-slave",                         simgear::props::BOOL, TT_BOOL,  1, NULL },
+	{ 931, "sim/hitches/aerotow/speed-in-tow-direction",           simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 932, "sim/hitches/aerotow/open",                             simgear::props::BOOL, TT_BOOL,  1, NULL },
+	{ 933, "sim/hitches/aerotow/local-pos-x",                      simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 934, "sim/hitches/aerotow/local-pos-y",                      simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 935, "sim/hitches/aerotow/local-pos-z",                      simgear::props::FLOAT, TT_FLOAT,  1, NULL },
 
-  {1001, "controls/flight/slats",  simgear::props::FLOAT},
-  {1002, "controls/flight/speedbrake",  simgear::props::FLOAT},
-  {1003, "controls/flight/spoilers",  simgear::props::FLOAT},
-  {1004, "controls/gear/gear-down",  simgear::props::FLOAT},
-  {1005, "controls/lighting/nav-lights",  simgear::props::FLOAT},
-  {1006, "controls/armament/station[0]/jettison-all",  simgear::props::BOOL},
+	{ 1001, "controls/flight/slats",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 1002, "controls/flight/speedbrake",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 1003, "controls/flight/spoilers",  simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 1004, "controls/gear/gear-down",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 1005, "controls/lighting/nav-lights",  simgear::props::FLOAT, TT_FLOAT,  1, NULL },
+	{ 1006, "controls/armament/station[0]/jettison-all",  simgear::props::BOOL, TT_BOOL,  2, NULL },
 
-  {1100, "sim/model/variant", simgear::props::INT},
-  {1101, "sim/model/livery/file", simgear::props::STRING},
+	{ 1100, "sim/model/variant", simgear::props::INT, TT_INT,  2, NULL },
+	{ 1101, "sim/model/livery/file", simgear::props::STRING, TT_STRING,  2, NULL },
 
-  {1200, "environment/wildfire/data", simgear::props::STRING},
-  {1201, "environment/contrail", simgear::props::INT},
+	{ 1200, "environment/wildfire/data", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 1201, "environment/contrail", simgear::props::INT, TT_INT,  2, NULL },
 
-  {1300, "tanker", simgear::props::INT},
+	{ 1300, "tanker", simgear::props::INT, TT_INT,  1, NULL },
 
-  {1400, "scenery/events", simgear::props::STRING},
+	{ 1400, "scenery/events", simgear::props::STRING, TT_STRING,  2, NULL },
 
-  {1500, "instrumentation/transponder/transmitted-id", simgear::props::INT},
-  {1501, "instrumentation/transponder/altitude", simgear::props::INT},
-  {1502, "instrumentation/transponder/ident", simgear::props::BOOL},
-  {1503, "instrumentation/transponder/inputs/mode", simgear::props::INT},
+	{ 1500, "instrumentation/transponder/transmitted-id", simgear::props::INT, TT_INT,  1, NULL },
+	{ 1501, "instrumentation/transponder/altitude", simgear::props::INT, TT_INT,  1, NULL },
+	{ 1502, "instrumentation/transponder/ident", simgear::props::BOOL, TT_BOOL,  1, NULL },
+	{ 1503, "instrumentation/transponder/inputs/mode", simgear::props::INT, TT_INT,  1, NULL },
 
-  {10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING},
-  {10002, "sim/multiplay/chat",  simgear::props::STRING},
+	{ 10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10002, "sim/multiplay/chat",  simgear::props::STRING, TT_STRING,  1, NULL },
 
-  {10100, "sim/multiplay/generic/string[0]", simgear::props::STRING},
-  {10101, "sim/multiplay/generic/string[1]", simgear::props::STRING},
-  {10102, "sim/multiplay/generic/string[2]", simgear::props::STRING},
-  {10103, "sim/multiplay/generic/string[3]", simgear::props::STRING},
-  {10104, "sim/multiplay/generic/string[4]", simgear::props::STRING},
-  {10105, "sim/multiplay/generic/string[5]", simgear::props::STRING},
-  {10106, "sim/multiplay/generic/string[6]", simgear::props::STRING},
-  {10107, "sim/multiplay/generic/string[7]", simgear::props::STRING},
-  {10108, "sim/multiplay/generic/string[8]", simgear::props::STRING},
-  {10109, "sim/multiplay/generic/string[9]", simgear::props::STRING},
-  {10110, "sim/multiplay/generic/string[10]", simgear::props::STRING},
-  {10111, "sim/multiplay/generic/string[11]", simgear::props::STRING},
-  {10112, "sim/multiplay/generic/string[12]", simgear::props::STRING},
-  {10113, "sim/multiplay/generic/string[13]", simgear::props::STRING},
-  {10114, "sim/multiplay/generic/string[14]", simgear::props::STRING},
-  {10115, "sim/multiplay/generic/string[15]", simgear::props::STRING},
-  {10116, "sim/multiplay/generic/string[16]", simgear::props::STRING},
-  {10117, "sim/multiplay/generic/string[17]", simgear::props::STRING},
-  {10118, "sim/multiplay/generic/string[18]", simgear::props::STRING},
-  {10119, "sim/multiplay/generic/string[19]", simgear::props::STRING},
+	{ 10100, "sim/multiplay/generic/string[0]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10101, "sim/multiplay/generic/string[1]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10102, "sim/multiplay/generic/string[2]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10103, "sim/multiplay/generic/string[3]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10104, "sim/multiplay/generic/string[4]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10105, "sim/multiplay/generic/string[5]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10106, "sim/multiplay/generic/string[6]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10107, "sim/multiplay/generic/string[7]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10108, "sim/multiplay/generic/string[8]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10109, "sim/multiplay/generic/string[9]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10110, "sim/multiplay/generic/string[10]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10111, "sim/multiplay/generic/string[11]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10112, "sim/multiplay/generic/string[12]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10113, "sim/multiplay/generic/string[13]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10114, "sim/multiplay/generic/string[14]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10115, "sim/multiplay/generic/string[15]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10116, "sim/multiplay/generic/string[16]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10117, "sim/multiplay/generic/string[17]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10118, "sim/multiplay/generic/string[18]", simgear::props::STRING, TT_STRING,  2, NULL },
+	{ 10119, "sim/multiplay/generic/string[19]", simgear::props::STRING, TT_STRING,  2, NULL },
 
-  {10200, "sim/multiplay/generic/float[0]", simgear::props::FLOAT},
-  {10201, "sim/multiplay/generic/float[1]", simgear::props::FLOAT},
-  {10202, "sim/multiplay/generic/float[2]", simgear::props::FLOAT},
-  {10203, "sim/multiplay/generic/float[3]", simgear::props::FLOAT},
-  {10204, "sim/multiplay/generic/float[4]", simgear::props::FLOAT},
-  {10205, "sim/multiplay/generic/float[5]", simgear::props::FLOAT},
-  {10206, "sim/multiplay/generic/float[6]", simgear::props::FLOAT},
-  {10207, "sim/multiplay/generic/float[7]", simgear::props::FLOAT},
-  {10208, "sim/multiplay/generic/float[8]", simgear::props::FLOAT},
-  {10209, "sim/multiplay/generic/float[9]", simgear::props::FLOAT},
-  {10210, "sim/multiplay/generic/float[10]", simgear::props::FLOAT},
-  {10211, "sim/multiplay/generic/float[11]", simgear::props::FLOAT},
-  {10212, "sim/multiplay/generic/float[12]", simgear::props::FLOAT},
-  {10213, "sim/multiplay/generic/float[13]", simgear::props::FLOAT},
-  {10214, "sim/multiplay/generic/float[14]", simgear::props::FLOAT},
-  {10215, "sim/multiplay/generic/float[15]", simgear::props::FLOAT},
-  {10216, "sim/multiplay/generic/float[16]", simgear::props::FLOAT},
-  {10217, "sim/multiplay/generic/float[17]", simgear::props::FLOAT},
-  {10218, "sim/multiplay/generic/float[18]", simgear::props::FLOAT},
-  {10219, "sim/multiplay/generic/float[19]", simgear::props::FLOAT},
+	{ 10200, "sim/multiplay/generic/float[0]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10201, "sim/multiplay/generic/float[1]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10202, "sim/multiplay/generic/float[2]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10203, "sim/multiplay/generic/float[3]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10204, "sim/multiplay/generic/float[4]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10205, "sim/multiplay/generic/float[5]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10206, "sim/multiplay/generic/float[6]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10207, "sim/multiplay/generic/float[7]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10208, "sim/multiplay/generic/float[8]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10209, "sim/multiplay/generic/float[9]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10210, "sim/multiplay/generic/float[10]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10211, "sim/multiplay/generic/float[11]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10212, "sim/multiplay/generic/float[12]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10213, "sim/multiplay/generic/float[13]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10214, "sim/multiplay/generic/float[14]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10215, "sim/multiplay/generic/float[15]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10216, "sim/multiplay/generic/float[16]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10217, "sim/multiplay/generic/float[17]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10218, "sim/multiplay/generic/float[18]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
+	{ 10219, "sim/multiplay/generic/float[19]", simgear::props::FLOAT, TT_FLOAT,  2, NULL },
 
-  { 10220, "sim/multiplay/generic/float[20]", simgear::props::FLOAT },
-  { 10221, "sim/multiplay/generic/float[21]", simgear::props::FLOAT },
-  { 10222, "sim/multiplay/generic/float[22]", simgear::props::FLOAT },
-  { 10223, "sim/multiplay/generic/float[23]", simgear::props::FLOAT },
-  { 10224, "sim/multiplay/generic/float[24]", simgear::props::FLOAT },
-  { 10225, "sim/multiplay/generic/float[25]", simgear::props::FLOAT },
-  { 10226, "sim/multiplay/generic/float[26]", simgear::props::FLOAT },
-  { 10227, "sim/multiplay/generic/float[27]", simgear::props::FLOAT },
-  { 10228, "sim/multiplay/generic/float[28]", simgear::props::FLOAT },
-  { 10229, "sim/multiplay/generic/float[29]", simgear::props::FLOAT },
-  { 10230, "sim/multiplay/generic/float[30]", simgear::props::FLOAT },
-  { 10231, "sim/multiplay/generic/float[31]", simgear::props::FLOAT },
-  { 10232, "sim/multiplay/generic/float[32]", simgear::props::FLOAT },
-  { 10233, "sim/multiplay/generic/float[33]", simgear::props::FLOAT },
-  { 10234, "sim/multiplay/generic/float[34]", simgear::props::FLOAT },
-  { 10235, "sim/multiplay/generic/float[35]", simgear::props::FLOAT },
-  { 10236, "sim/multiplay/generic/float[36]", simgear::props::FLOAT },
-  { 10237, "sim/multiplay/generic/float[37]", simgear::props::FLOAT },
-  { 10238, "sim/multiplay/generic/float[38]", simgear::props::FLOAT },
-  { 10239, "sim/multiplay/generic/float[39]", simgear::props::FLOAT },
+	{ 10220, "sim/multiplay/generic/float[20]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10221, "sim/multiplay/generic/float[21]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10222, "sim/multiplay/generic/float[22]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10223, "sim/multiplay/generic/float[23]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10224, "sim/multiplay/generic/float[24]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10225, "sim/multiplay/generic/float[25]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10226, "sim/multiplay/generic/float[26]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10227, "sim/multiplay/generic/float[27]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10228, "sim/multiplay/generic/float[28]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10229, "sim/multiplay/generic/float[29]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10230, "sim/multiplay/generic/float[30]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10231, "sim/multiplay/generic/float[31]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10232, "sim/multiplay/generic/float[32]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10233, "sim/multiplay/generic/float[33]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10234, "sim/multiplay/generic/float[34]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10235, "sim/multiplay/generic/float[35]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10236, "sim/multiplay/generic/float[36]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10237, "sim/multiplay/generic/float[37]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10238, "sim/multiplay/generic/float[38]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
+	{ 10239, "sim/multiplay/generic/float[39]", simgear::props::FLOAT, TT_FLOAT ,  2, NULL },
 
-  {10300, "sim/multiplay/generic/int[0]", simgear::props::INT},
-  {10301, "sim/multiplay/generic/int[1]", simgear::props::INT},
-  {10302, "sim/multiplay/generic/int[2]", simgear::props::INT},
-  {10303, "sim/multiplay/generic/int[3]", simgear::props::INT},
-  {10304, "sim/multiplay/generic/int[4]", simgear::props::INT},
-  {10305, "sim/multiplay/generic/int[5]", simgear::props::INT},
-  {10306, "sim/multiplay/generic/int[6]", simgear::props::INT},
-  {10307, "sim/multiplay/generic/int[7]", simgear::props::INT},
-  {10308, "sim/multiplay/generic/int[8]", simgear::props::INT},
-  {10309, "sim/multiplay/generic/int[9]", simgear::props::INT},
-  {10310, "sim/multiplay/generic/int[10]", simgear::props::INT},
-  {10311, "sim/multiplay/generic/int[11]", simgear::props::INT},
-  {10312, "sim/multiplay/generic/int[12]", simgear::props::INT},
-  {10313, "sim/multiplay/generic/int[13]", simgear::props::INT},
-  {10314, "sim/multiplay/generic/int[14]", simgear::props::INT},
-  {10315, "sim/multiplay/generic/int[15]", simgear::props::INT},
-  {10316, "sim/multiplay/generic/int[16]", simgear::props::INT},
-  {10317, "sim/multiplay/generic/int[17]", simgear::props::INT},
-  {10318, "sim/multiplay/generic/int[18]", simgear::props::INT},
-  {10319, "sim/multiplay/generic/int[19]", simgear::props::INT},
+	{ 10300, "sim/multiplay/generic/int[0]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10301, "sim/multiplay/generic/int[1]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10302, "sim/multiplay/generic/int[2]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10303, "sim/multiplay/generic/int[3]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10304, "sim/multiplay/generic/int[4]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10305, "sim/multiplay/generic/int[5]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10306, "sim/multiplay/generic/int[6]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10307, "sim/multiplay/generic/int[7]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10308, "sim/multiplay/generic/int[8]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10309, "sim/multiplay/generic/int[9]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10310, "sim/multiplay/generic/int[10]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10311, "sim/multiplay/generic/int[11]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10312, "sim/multiplay/generic/int[12]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10313, "sim/multiplay/generic/int[13]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10314, "sim/multiplay/generic/int[14]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10315, "sim/multiplay/generic/int[15]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10316, "sim/multiplay/generic/int[16]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10317, "sim/multiplay/generic/int[17]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10318, "sim/multiplay/generic/int[18]", simgear::props::INT, TT_INT,  2, NULL },
+	{ 10319, "sim/multiplay/generic/int[19]", simgear::props::INT, TT_INT,  2, NULL },
 
-  { 10320, "sim/multiplay/generic/int[20]", simgear::props::INT },
-  { 10321, "sim/multiplay/generic/int[21]", simgear::props::INT },
-  { 10322, "sim/multiplay/generic/int[22]", simgear::props::INT },
-  { 10323, "sim/multiplay/generic/int[23]", simgear::props::INT },
-  { 10324, "sim/multiplay/generic/int[24]", simgear::props::INT },
-  { 10325, "sim/multiplay/generic/int[25]", simgear::props::INT },
-  { 10326, "sim/multiplay/generic/int[26]", simgear::props::INT },
-  { 10327, "sim/multiplay/generic/int[27]", simgear::props::INT },
-  { 10328, "sim/multiplay/generic/int[28]", simgear::props::INT },
-  { 10329, "sim/multiplay/generic/int[29]", simgear::props::INT },
-  { 10320, "sim/multiplay/generic/int[20]", simgear::props::INT },
-  { 10321, "sim/multiplay/generic/int[21]", simgear::props::INT },
-  { 10322, "sim/multiplay/generic/int[22]", simgear::props::INT },
-  { 10323, "sim/multiplay/generic/int[23]", simgear::props::INT },
-  { 10324, "sim/multiplay/generic/int[24]", simgear::props::INT },
-  { 10325, "sim/multiplay/generic/int[25]", simgear::props::INT },
-  { 10326, "sim/multiplay/generic/int[26]", simgear::props::INT },
-  { 10327, "sim/multiplay/generic/int[27]", simgear::props::INT },
-  { 10328, "sim/multiplay/generic/int[28]", simgear::props::INT },
-  { 10329, "sim/multiplay/generic/int[29]", simgear::props::INT },
-  { 10330, "sim/multiplay/generic/int[30]", simgear::props::INT },
-  { 10331, "sim/multiplay/generic/int[31]", simgear::props::INT },
-  { 10332, "sim/multiplay/generic/int[32]", simgear::props::INT },
-  { 10333, "sim/multiplay/generic/int[33]", simgear::props::INT },
-  { 10334, "sim/multiplay/generic/int[34]", simgear::props::INT },
-  { 10335, "sim/multiplay/generic/int[35]", simgear::props::INT },
-  { 10336, "sim/multiplay/generic/int[36]", simgear::props::INT },
-  { 10337, "sim/multiplay/generic/int[37]", simgear::props::INT },
-  { 10338, "sim/multiplay/generic/int[38]", simgear::props::INT },
-  { 10339, "sim/multiplay/generic/int[39]", simgear::props::INT },
+	{ 10320, "sim/multiplay/generic/int[20]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10321, "sim/multiplay/generic/int[21]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10322, "sim/multiplay/generic/int[22]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10323, "sim/multiplay/generic/int[23]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10324, "sim/multiplay/generic/int[24]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10325, "sim/multiplay/generic/int[25]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10326, "sim/multiplay/generic/int[26]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10327, "sim/multiplay/generic/int[27]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10328, "sim/multiplay/generic/int[28]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10329, "sim/multiplay/generic/int[29]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10320, "sim/multiplay/generic/int[20]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10321, "sim/multiplay/generic/int[21]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10322, "sim/multiplay/generic/int[22]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10323, "sim/multiplay/generic/int[23]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10324, "sim/multiplay/generic/int[24]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10325, "sim/multiplay/generic/int[25]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10326, "sim/multiplay/generic/int[26]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10327, "sim/multiplay/generic/int[27]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10328, "sim/multiplay/generic/int[28]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10329, "sim/multiplay/generic/int[29]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10330, "sim/multiplay/generic/int[30]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10331, "sim/multiplay/generic/int[31]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10332, "sim/multiplay/generic/int[32]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10333, "sim/multiplay/generic/int[33]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10334, "sim/multiplay/generic/int[34]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10335, "sim/multiplay/generic/int[35]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10336, "sim/multiplay/generic/int[36]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10337, "sim/multiplay/generic/int[37]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10338, "sim/multiplay/generic/int[38]", simgear::props::INT, TT_INT ,  2, NULL },
+	{ 10339, "sim/multiplay/generic/int[39]", simgear::props::INT, TT_INT ,  2, NULL },
 
 
-  { 12100, "sim/multiplay/generic/string[20]", simgear::props::STRING },
-  { 12101, "sim/multiplay/generic/string[21]", simgear::props::STRING },
-  { 12102, "sim/multiplay/generic/string[22]", simgear::props::STRING },
-  { 12103, "sim/multiplay/generic/string[23]", simgear::props::STRING },
-  { 12104, "sim/multiplay/generic/string[24]", simgear::props::STRING },
-  { 12105, "sim/multiplay/generic/string[25]", simgear::props::STRING },
-  { 12106, "sim/multiplay/generic/string[26]", simgear::props::STRING },
-  { 12107, "sim/multiplay/generic/string[27]", simgear::props::STRING },
-  { 12108, "sim/multiplay/generic/string[28]", simgear::props::STRING },
-  { 12109, "sim/multiplay/generic/string[29]", simgear::props::STRING },
-  { 12110, "sim/multiplay/generic/string[20]", simgear::props::STRING },
-  { 12111, "sim/multiplay/generic/string[31]", simgear::props::STRING },
-  { 12112, "sim/multiplay/generic/string[32]", simgear::props::STRING },
-  { 12113, "sim/multiplay/generic/string[33]", simgear::props::STRING },
-  { 12114, "sim/multiplay/generic/string[34]", simgear::props::STRING },
-  { 12115, "sim/multiplay/generic/string[35]", simgear::props::STRING },
-  { 12116, "sim/multiplay/generic/string[36]", simgear::props::STRING },
-  { 12117, "sim/multiplay/generic/string[37]", simgear::props::STRING },
-  { 12118, "sim/multiplay/generic/string[38]", simgear::props::STRING },
-  { 12119, "sim/multiplay/generic/string[39]", simgear::props::STRING },
-	
+	{ 12100, "sim/multiplay/generic/string[20]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12101, "sim/multiplay/generic/string[21]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12102, "sim/multiplay/generic/string[22]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12103, "sim/multiplay/generic/string[23]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12104, "sim/multiplay/generic/string[24]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12105, "sim/multiplay/generic/string[25]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12106, "sim/multiplay/generic/string[26]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12107, "sim/multiplay/generic/string[27]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12108, "sim/multiplay/generic/string[28]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12109, "sim/multiplay/generic/string[29]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12110, "sim/multiplay/generic/string[20]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12111, "sim/multiplay/generic/string[31]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12112, "sim/multiplay/generic/string[32]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12113, "sim/multiplay/generic/string[33]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12114, "sim/multiplay/generic/string[34]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12115, "sim/multiplay/generic/string[35]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12116, "sim/multiplay/generic/string[36]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12117, "sim/multiplay/generic/string[37]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12118, "sim/multiplay/generic/string[38]", simgear::props::STRING, TT_STRING ,  2, NULL },
+	{ 12119, "sim/multiplay/generic/string[39]", simgear::props::STRING, TT_STRING ,  2, NULL },
 };
+const int MAX_PARTITIONS = 2;
 const int NEW_STRING_ENCODING_START = 12000; // anything below this uses the old string encoding scheme
 const unsigned int numProperties = (sizeof(sIdPropertyList)
                                  / sizeof(sIdPropertyList[0]));
@@ -457,7 +474,6 @@ private:
 
 void hexdump(void *mem, unsigned int len)
 {
-	return;
 	unsigned int i, j;
 
 	for (i = 0; i < len + ((len % HEXDUMP_COLS) ? (HEXDUMP_COLS - len % HEXDUMP_COLS) : 0); i++)
@@ -855,12 +871,12 @@ union FGMultiplayMgr::MsgBuf
      */
     xdr_data_t* propsRecvdEnd()
     {
-        return reinterpret_cast<xdr_data_t*>(Msg + Header.MsgLen);
-    }
+		return reinterpret_cast<xdr_data_t*>(Msg + Header.MsgLen + Header.MsgLen2);
+	}
 
     const xdr_data_t* propsRecvdEnd() const
     {
-        return reinterpret_cast<const xdr_data_t*>(Msg + Header.MsgLen);
+		return reinterpret_cast<const xdr_data_t*>(Msg + Header.MsgLen + Header.MsgLen2);
     }
     
     xdr_data2_t double_val;
@@ -964,183 +980,206 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
       }
       xdr_data_t* ptr = msgBuf.properties();
 	  xdr_data_t* data = ptr;
-      std::vector<FGPropertyData*>::const_iterator it;
-      it = motionInfo.properties.begin();
-      //cout << "OUTPUT PROPERTIES\n";
-      xdr_data_t* msgEnd = msgBuf.propsEnd();
-      while (it != motionInfo.properties.end()) {
 
-        if (ptr + 2 >= msgEnd)
-        {
-            SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: " << (*it)->id);
-            break;
-        }
-		//printf("[SEND] %8x: buf[%d] type %d\n", ptr, ((unsigned int)ptr) - ((unsigned int)data), (*it)->id);
-
-        // First element is the ID. Write it out when we know we have room for
-        // the whole property.
-        xdr_data_t id =  XDR_encode_uint32((*it)->id);
-        // The actual data representation depends on the type
-        switch ((*it)->type) {
-          case simgear::props::INT:
-          case simgear::props::BOOL:
-          case simgear::props::LONG:
-            *ptr++ = id;
-            *ptr++ = XDR_encode_uint32((*it)->int_value);
-            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
-            break;
-          case simgear::props::FLOAT:
-          case simgear::props::DOUBLE:
-            *ptr++ = id;
-            *ptr++ = XDR_encode_float((*it)->float_value);
-            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
-            break;
-          case simgear::props::STRING:
-          case simgear::props::UNSPECIFIED:
-            {
-			  if ((*it)->id >= NEW_STRING_ENCODING_START) {
-				  // New string encoding:
-				  // The length of the string (int32)
-				  // The string itself (char[length])
-				  const char* lcharptr = (*it)->string_value;
-
-				  if (lcharptr != 0)
+	  xdr_data_t* msgEnd = msgBuf.propsEnd();
+	  int previous_partitions_len = 0;
+	  for (int partition = 1; partition <= MAX_PARTITIONS; partition++)
+	  {
+		  std::vector<FGPropertyData*>::const_iterator it = motionInfo.properties.begin();
+		  while (it != motionInfo.properties.end()) {
+			  const struct IdPropertyList* propDef = mPropertyDefinition[(*it)->id];
+			  if (propDef->version == partition)
+			  {
+				  if (ptr + 2 >= msgEnd)
 				  {
-					  uint32_t len = strlen(lcharptr);
+					  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: " << (*it)->id);
+					  break;
+				  }
+//				  printf("[SEND] %8x: buf[%d] type %d : p%d TA:%d\n", ptr, ((unsigned int)ptr) - ((unsigned int)data), (*it)->id, propDef->version, propDef->TransmitAs);
 
-					  if (len >= MAX_TEXT_SIZE)
-					  {
-						  len = MAX_TEXT_SIZE - 1;
-						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
-					  }
-
-					  char *encodeStart = (char*)ptr;
-					  char *msgEndbyte = (char*)msgEnd;
-
-					  if (encodeStart + 2 + len  >= msgEndbyte)
-					  {
-						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
-						  goto escape;
-					  }
-
+				  // First element is the ID. Write it out when we know we have room for
+				  // the whole property.
+				  xdr_data_t id = XDR_encode_uint32((*it)->id);
+				  // The actual data representation depends on the type
+				  switch ((*it)->type) {
+				  case simgear::props::INT:
+				  case simgear::props::BOOL:
+				  case simgear::props::LONG:
 					  *ptr++ = id;
-					  *ptr++ = XDR_encode_uint32(len);
-					  encodeStart = (char*)ptr;
-					  if (len != 0)
-					  {
-						  int lcount = 0;
-						  while (*lcharptr && (lcount < MAX_TEXT_SIZE))
+					  *ptr++ = XDR_encode_uint32((*it)->int_value);
+					  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
+					  break;
+				  case simgear::props::FLOAT:
+				  case simgear::props::DOUBLE:
+					  *ptr++ = id;
+					  *ptr++ = XDR_encode_float((*it)->float_value);
+					  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
+					  break;
+				  case simgear::props::STRING:
+				  case simgear::props::UNSPECIFIED:
+				  {
+					  if ((*it)->id >= NEW_STRING_ENCODING_START) {
+						  // New string encoding:
+						  // The length of the string (int32)
+						  // The string itself (char[length])
+						  const char* lcharptr = (*it)->string_value;
+
+						  if (lcharptr != 0)
 						  {
-							  if (encodeStart + 2 >= msgEndbyte)
+							  uint32_t len = strlen(lcharptr);
+
+							  if (len >= MAX_TEXT_SIZE)
 							  {
-								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
-								  break;
+								  len = MAX_TEXT_SIZE - 1;
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
 							  }
-							  *encodeStart++ = *lcharptr++;
-							  lcount++;
+
+							  char *encodeStart = (char*)ptr;
+							  char *msgEndbyte = (char*)msgEnd;
+
+							  if (encodeStart + 2 + len >= msgEndbyte)
+							  {
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
+								  goto escape;
+							  }
+
+							  *ptr++ = id;
+							  *ptr++ = XDR_encode_uint32(len);
+							  encodeStart = (char*)ptr;
+							  if (len != 0)
+							  {
+								  int lcount = 0;
+								  while (*lcharptr && (lcount < MAX_TEXT_SIZE))
+								  {
+									  if (encodeStart + 2 >= msgEndbyte)
+									  {
+										  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
+										  break;
+									  }
+									  *encodeStart++ = *lcharptr++;
+									  lcount++;
+								  }
+							  }
+							  ptr = (xdr_data_t*)encodeStart;
+						  }
+						  else
+						  {
+							  // empty string, just send the id and a zero length
+							  *ptr++ = id;
+							  *ptr++ = XDR_encode_uint32(0);
 						  }
 					  }
-					  ptr = (xdr_data_t*)encodeStart;
+					  else {
+
+						  // String is complicated. It consists of
+						  // The length of the string
+						  // The string itself
+						  // Padding to the nearest 4-bytes.        
+						  const char* lcharptr = (*it)->string_value;
+
+						  if (lcharptr != 0)
+						  {
+							  // Add the length         
+							  ////cout << "String length: " << strlen(lcharptr) << "\n";
+							  uint32_t len = strlen(lcharptr);
+							  if (len >= MAX_TEXT_SIZE)
+							  {
+								  len = MAX_TEXT_SIZE - 1;
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
+							  }
+
+							  // XXX This should not be using 4 bytes per character!
+							  // If there's not enough room for this property, drop it
+							  // on the floor.
+							  if (ptr + 2 + ((len + 3) & ~3) >= msgEnd)
+							  {
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
+								  goto escape;
+							  }
+							  //cout << "String length unint32: " << len << "\n";
+							  *ptr++ = id;
+							  *ptr++ = XDR_encode_uint32(len);
+							  if (len != 0)
+							  {
+								  // Now the text itself
+								  // XXX This should not be using 4 bytes per character!
+								  int lcount = 0;
+								  while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE))
+								  {
+									  if (ptr + 2 >= msgEnd)
+									  {
+										  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
+										  break;
+									  }
+									  *ptr++ = XDR_encode_int8(*lcharptr);
+									  lcharptr++;
+									  lcount++;
+								  }
+								  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
+
+								  // Now pad if required
+								  while ((lcount % 4) != 0)
+								  {
+									  if (ptr + 2 >= msgEnd)
+									  {
+										  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
+										  break;
+									  }
+									  *ptr++ = XDR_encode_int8(0);
+									  lcount++;
+									  //cout << "0";
+								  }
+
+								  //cout << "\n";
+							  }
+						  }
+						  else
+						  {
+							  // Nothing to encode
+							  *ptr++ = id;
+							  *ptr++ = XDR_encode_uint32(0);
+							  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
+						  }
+					  }
 				  }
-				  else
-				  {
-					  // empty string, just send the id and a zero length
+				  break;
+
+				  default:
+					  //cout << " Unknown Type: " << (*it)->type << "\n";
 					  *ptr++ = id;
-					  *ptr++ = XDR_encode_uint32(0);
+					  *ptr++ = XDR_encode_float((*it)->float_value);;
+					  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
+					  break;
 				  }
 			  }
-			  else {
-
-				  // String is complicated. It consists of
-				  // The length of the string
-				  // The string itself
-				  // Padding to the nearest 4-bytes.        
-				  const char* lcharptr = (*it)->string_value;
-
-				  if (lcharptr != 0)
-				  {
-					  // Add the length         
-					  ////cout << "String length: " << strlen(lcharptr) << "\n";
-					  uint32_t len = strlen(lcharptr);
-					  if (len >= MAX_TEXT_SIZE)
-					  {
-						  len = MAX_TEXT_SIZE - 1;
-						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
-					  }
-
-					  // XXX This should not be using 4 bytes per character!
-					  // If there's not enough room for this property, drop it
-					  // on the floor.
-					  if (ptr + 2 + ((len + 3) & ~3) >= msgEnd)
-					  {
-						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
-						  goto escape;
-					  }
-					  //cout << "String length unint32: " << len << "\n";
-					  *ptr++ = id;
-					  *ptr++ = XDR_encode_uint32(len);
-					  if (len != 0)
-					  {
-						  // Now the text itself
-						  // XXX This should not be using 4 bytes per character!
-						  int lcount = 0;
-						  while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE))
-						  {
-							  if (ptr + 2 >= msgEnd)
-							  {
-								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
-								  break;
-							  }
-							  *ptr++ = XDR_encode_int8(*lcharptr);
-							  lcharptr++;
-							  lcount++;
-						  }
-						  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
-
-						  // Now pad if required
-						  while ((lcount % 4) != 0)
-						  {
-							  if (ptr + 2 >= msgEnd)
-							  {
-								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
-								  break;
-							  }
-							  *ptr++ = XDR_encode_int8(0);
-							  lcount++;
-							  //cout << "0";
-						  }
-
-						  //cout << "\n";
-					  }
-				  }
-				  else
-				  {
-					  // Nothing to encode
-					  *ptr++ = id;
-					  *ptr++ = XDR_encode_uint32(0);
-					  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
-				  }
-			  }
-            }
-            break;
-            
-          default:
-            //cout << " Unknown Type: " << (*it)->type << "\n";
-            *ptr++ = id;
-            *ptr++ = XDR_encode_float((*it)->float_value);;
-            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
-            break;
-        }
-            
-        ++it;
-      }
-  escape:
-      msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
-      FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
-	  //printf("[SEND] %8x: buf[%d]\n", ptr, ((unsigned int)ptr) - ((unsigned int)data));
-	  hexdump(data, (ptr - data) * sizeof(*ptr));
-//	  long stamp = SGTimeStamp::now().getSeconds();
-//	  ProcessPosMsg(msgBuf, mServer, stamp);
+			  ++it;
+		  }
+	  escape:
+		  msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
+		  /*
+		   * 2017.x MP changes:
+		   * The buffer is partitioned into two logical sections; the first contains the backwards compatible section, which
+		   * is only to be read by older clients.
+		   * The second partition (in the buf) contains all of the rest of the data for all other versions
+		   */
+		  if (partition == 1)
+		  {
+			  FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
+			  previous_partitions_len += msgLen;
+		  }
+		  else
+		  {
+			  int ml2 = msgLen - previous_partitions_len;
+			  //previous_partitions_len += ml2;
+			  msgBuf.msgHdr()->MsgLen2 = XDR_encode_int32(ml2);
+		  }
+		  //printf("[SEND] %d: %8x: buf[%d] p1l %4d p2 %4d\n", partition, ptr, ((unsigned int)ptr) - ((unsigned int)data), 
+			 //XDR_decode_int32(msgBuf.msgHdr()->MsgLen), 
+			 // XDR_decode_int32(msgBuf.msgHdr()->MsgLen2));
+		  //hexdump(data, (ptr - data) * sizeof(*ptr));
+		  //	  long stamp = SGTimeStamp::now().getSeconds();
+		  //	  ProcessPosMsg(msgBuf, mServer, stamp);
+	  }
   }
   if (msgLen>0)
       mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
@@ -1330,133 +1369,132 @@ FGMultiplayMgr::update(double dt)
 void
 FGMultiplayMgr::Send()
 {
-  using namespace simgear;
-  
-  findProperties();
-    
-  // smooth the send rate, by adjusting based on the 'remainder' time, which
-  // is how -ve mTimeUntilSend is. Watch for large values and ignore them,
-  // however.
-    if ((mTimeUntilSend < 0.0) && (fabs(mTimeUntilSend) < mDt)) {
-      mTimeUntilSend = mDt + mTimeUntilSend;
-    } else {
-      mTimeUntilSend = mDt;
-    }
+	using namespace simgear;
 
-    double sim_time = globals->get_sim_time_sec();
-//    static double lastTime = 0.0;
-    
-   // SG_LOG(SG_GENERAL, SG_INFO, "actual dt=" << sim_time - lastTime);
-//    lastTime = sim_time;
-    
-    FlightProperties ifce;
+	findProperties();
 
-    // put together a motion info struct, you will get that later
-    // from FGInterface directly ...
-    FGExternalMotionData motionInfo;
+	// smooth the send rate, by adjusting based on the 'remainder' time, which
+	// is how -ve mTimeUntilSend is. Watch for large values and ignore them,
+	// however.
+	if ((mTimeUntilSend < 0.0) && (fabs(mTimeUntilSend) < mDt)) {
+		mTimeUntilSend = mDt + mTimeUntilSend;
+	}
+	else {
+		mTimeUntilSend = mDt;
+	}
 
-    // The current simulation time we need to update for,
-    // note that the simulation time is updated before calling all the
-    // update methods. Thus it contains the time intervals *end* time.
-    // The FDM is already run, so the states belong to that time.
-    motionInfo.time = sim_time;
-    motionInfo.lag = mDt;
+	double sim_time = globals->get_sim_time_sec();
+	//    static double lastTime = 0.0;
 
-    // These are for now converted from lat/lon/alt and euler angles.
-    // But this should change in FGInterface ...
-    double lon = ifce.get_Longitude();
-    double lat = ifce.get_Latitude();
-    // first the aprioriate structure for the geodetic one
-    SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce.get_Altitude());
-    // Convert to cartesion coordinate
-    motionInfo.position = SGVec3d::fromGeod(geod);
-    
-    // The quaternion rotating from the earth centered frame to the
-    // horizontal local frame
-    SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)lon, (float)lat);
-    // The orientation wrt the horizontal local frame
-    float heading = ifce.get_Psi();
-    float pitch = ifce.get_Theta();
-    float roll = ifce.get_Phi();
-    SGQuatf hlOr = SGQuatf::fromYawPitchRoll(heading, pitch, roll);
-    // The orientation of the vehicle wrt the earth centered frame
-    motionInfo.orientation = qEc2Hl*hlOr;
+	   // SG_LOG(SG_GENERAL, SG_INFO, "actual dt=" << sim_time - lastTime);
+	//    lastTime = sim_time;
 
-    if (!globals->get_subsystem("flight")->is_suspended()) {
-      // velocities
-      motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce.get_uBody(),
-                                                      ifce.get_vBody(),
-                                                      ifce.get_wBody());
-      motionInfo.angularVel = SGVec3f(ifce.get_P_body(),
-                                      ifce.get_Q_body(),
-                                      ifce.get_R_body());
-      
-      // accels, set that to zero for now.
-      // Angular accelerations are missing from the interface anyway,
-      // linear accelerations are screwed up at least for JSBSim.
-//  motionInfo.linearAccel = SG_FEET_TO_METER*SGVec3f(ifce.get_U_dot_body(),
-//                                                    ifce.get_V_dot_body(),
-//                                                    ifce.get_W_dot_body());
-      motionInfo.linearAccel = SGVec3f::zeros();
-      motionInfo.angularAccel = SGVec3f::zeros();
-    } else {
-      // if the interface is suspendend, prevent the client from
-      // wild extrapolations
-      motionInfo.linearVel = SGVec3f::zeros();
-      motionInfo.angularVel = SGVec3f::zeros();
-      motionInfo.linearAccel = SGVec3f::zeros();
-      motionInfo.angularAccel = SGVec3f::zeros();
-    }
+	FlightProperties ifce;
 
-    // now send the properties
-    PropertyMap::iterator it;
-    for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
-      FGPropertyData* pData = new FGPropertyData;
-      pData->id = it->first;
-      pData->type = findProperty(pData->id)->type;
+	// put together a motion info struct, you will get that later
+	// from FGInterface directly ...
+	FGExternalMotionData motionInfo;
 
-      switch (pData->type) {
-        case props::INT:
-        case props::LONG:
-        case props::BOOL:
-          pData->int_value = it->second->getIntValue();
-          break;
-        case props::FLOAT:
-        case props::DOUBLE:
-          pData->float_value = it->second->getFloatValue();
-          break;
-        case props::STRING:
-        case props::UNSPECIFIED:
-          {
-            // FIXME: We assume unspecified are strings for the moment.
+	// The current simulation time we need to update for,
+	// note that the simulation time is updated before calling all the
+	// update methods. Thus it contains the time intervals *end* time.
+	// The FDM is already run, so the states belong to that time.
+	motionInfo.time = sim_time;
+	motionInfo.lag = mDt;
 
-            const char* cstr = it->second->getStringValue();
-            int len = strlen(cstr);
-            
-            if (len > 0)
-            {            
-              pData->string_value = new char[len + 1];
-              strcpy(pData->string_value, cstr);
-            }
-            else
-            {
-              // Size 0 - ignore
-              pData->string_value = 0;            
-            }
+	// These are for now converted from lat/lon/alt and euler angles.
+	// But this should change in FGInterface ...
+	double lon = ifce.get_Longitude();
+	double lat = ifce.get_Latitude();
+	// first the aprioriate structure for the geodetic one
+	SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce.get_Altitude());
+	// Convert to cartesion coordinate
+	motionInfo.position = SGVec3d::fromGeod(geod);
 
-            //cout << " Sending property " << pData->id << " " << pData->type << " " <<  pData->string_value << "\n";
-            break;        
-          }
-        default:
-          // FIXME Currently default to a float. 
-          //cout << "Unknown type when iterating through props: " << pData->type << "\n";
-          pData->float_value = it->second->getFloatValue();
-          break;
-      }
-      
-      motionInfo.properties.push_back(pData);
-    }
+	// The quaternion rotating from the earth centered frame to the
+	// horizontal local frame
+	SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)lon, (float)lat);
+	// The orientation wrt the horizontal local frame
+	float heading = ifce.get_Psi();
+	float pitch = ifce.get_Theta();
+	float roll = ifce.get_Phi();
+	SGQuatf hlOr = SGQuatf::fromYawPitchRoll(heading, pitch, roll);
+	// The orientation of the vehicle wrt the earth centered frame
+	motionInfo.orientation = qEc2Hl*hlOr;
 
+	if (!globals->get_subsystem("flight")->is_suspended()) {
+		// velocities
+		motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce.get_uBody(),
+			ifce.get_vBody(),
+			ifce.get_wBody());
+		motionInfo.angularVel = SGVec3f(ifce.get_P_body(),
+			ifce.get_Q_body(),
+			ifce.get_R_body());
+
+		// accels, set that to zero for now.
+		// Angular accelerations are missing from the interface anyway,
+		// linear accelerations are screwed up at least for JSBSim.
+  //  motionInfo.linearAccel = SG_FEET_TO_METER*SGVec3f(ifce.get_U_dot_body(),
+  //                                                    ifce.get_V_dot_body(),
+  //                                                    ifce.get_W_dot_body());
+		motionInfo.linearAccel = SGVec3f::zeros();
+		motionInfo.angularAccel = SGVec3f::zeros();
+	}
+	else {
+		// if the interface is suspendend, prevent the client from
+		// wild extrapolations
+		motionInfo.linearVel = SGVec3f::zeros();
+		motionInfo.angularVel = SGVec3f::zeros();
+		motionInfo.linearAccel = SGVec3f::zeros();
+		motionInfo.angularAccel = SGVec3f::zeros();
+	}
+
+	PropertyMap::iterator it;
+	for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
+		FGPropertyData* pData = new FGPropertyData;
+		pData->id = it->first;
+		pData->type = findProperty(pData->id)->type;
+		switch (pData->type) {
+		case props::INT:
+		case props::LONG:
+		case props::BOOL:
+			pData->int_value = it->second->getIntValue();
+			break;
+		case props::FLOAT:
+		case props::DOUBLE:
+			pData->float_value = it->second->getFloatValue();
+			break;
+		case props::STRING:
+		case props::UNSPECIFIED:
+		{
+			// FIXME: We assume unspecified are strings for the moment.
+
+			const char* cstr = it->second->getStringValue();
+			int len = strlen(cstr);
+
+			if (len > 0)
+			{
+				pData->string_value = new char[len + 1];
+				strcpy(pData->string_value, cstr);
+			}
+			else
+			{
+				// Size 0 - ignore
+				pData->string_value = 0;
+			}
+
+			//cout << " Sending property " << pData->id << " " << pData->type << " " <<  pData->string_value << "\n";
+			break;
+		}
+		default:
+			// FIXME Currently default to a float. 
+			//cout << "Unknown type when iterating through props: " << pData->type << "\n";
+			pData->float_value = it->second->getFloatValue();
+			break;
+		}
+
+		motionInfo.properties.push_back(pData);
+	}
     SendMyPosition(motionInfo);
 }
 
@@ -1689,7 +1727,7 @@ FGMultiplayMgr::FillMsgHdr(T_MsgHdr *MsgHdr, int MsgId, unsigned _len)
   MsgHdr->Version         = XDR_encode_uint32(PROTO_VER);
   MsgHdr->MsgId           = XDR_encode_uint32(MsgId);
   MsgHdr->MsgLen          = XDR_encode_uint32(len);
-  MsgHdr->ReplyAddress    = 0; // Are obsolete, keep them for the server for
+  MsgHdr->MsgLen2         = 0; // Used to be ReplyAddress; repurposed with MP2017.x changes
   MsgHdr->ReplyPort       = 0; // now
   strncpy(MsgHdr->Callsign, mCallsign.c_str(), MAX_CALLSIGN_LEN);
   MsgHdr->Callsign[MAX_CALLSIGN_LEN - 1] = '\0';
@@ -1750,6 +1788,7 @@ FGMultiplayMgr::findProperties()
       }
       
       mPropertyMap[id] = pNode;
+	  mPropertyDefinition[id] = &sIdPropertyList[i];
       SG_LOG(SG_NETWORK, SG_DEBUG, "activating MP property:" << pNode->getPath());
     }
 }

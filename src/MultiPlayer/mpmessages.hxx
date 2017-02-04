@@ -55,6 +55,7 @@ const uint32_t PROTO_VER = 0x00010001;  // 1.1
 #define OLD_PROP_MSG_ID         5
 #define RESET_DATA_ID           6
 #define POS_DATA_ID             7
+#define MP_2017_DATA_ID         8
 
 // XDR demands 4 byte alignment, but some compilers use8 byte alignment
 // so it's safe to let the overall size of a network message be a 
@@ -70,7 +71,7 @@ struct T_MsgHdr {
     xdr_data_t  Version;                // Protocoll version
     xdr_data_t  MsgId;                  // Message identifier 
     xdr_data_t  MsgLen;                 // absolute length of message
-    xdr_data_t  ReplyAddress;           // (player's receiver address
+	xdr_data_t  MsgLen2;                // Used to be - ReplyAddress;           // (player's receiver address
     xdr_data_t  ReplyPort;              // player's receiver port
     char Callsign[MAX_CALLSIGN_LEN];    // Callsign used by the player
 };
