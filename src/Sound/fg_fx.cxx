@@ -70,11 +70,13 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _refname = refname;
     _smgr->add(this, refname);
 
-    if (!_is_aimodel)
-    {
-        _avionics = _smgr->find("avionics", true);
-        _avionics->tie_to_listener();
-    }
+	if (!_is_aimodel)
+	{
+		_avionics = _smgr->find("avionics", true);
+		_avionics->tie_to_listener();
+	}
+	else
+		_avionics = NULL;
 }
 
 void FGFX::unbind()
@@ -174,7 +176,7 @@ FGFX::update (double dt)
 
       
     if ( _enabled->getBoolValue() ) {
-        if ( _avionics_enabled->getBoolValue())
+        if ( _avionics && _avionics_enabled->getBoolValue())
         {
             if (_avionics_ext->getBoolValue() || _internal->getBoolValue()) {
                 // avionics sound is enabled
