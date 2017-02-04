@@ -224,6 +224,27 @@ static const IdPropertyList sIdPropertyList[] = {
   {10218, "sim/multiplay/generic/float[18]", simgear::props::FLOAT},
   {10219, "sim/multiplay/generic/float[19]", simgear::props::FLOAT},
 
+  { 10220, "sim/multiplay/generic/float[20]", simgear::props::FLOAT },
+  { 10221, "sim/multiplay/generic/float[21]", simgear::props::FLOAT },
+  { 10222, "sim/multiplay/generic/float[22]", simgear::props::FLOAT },
+  { 10223, "sim/multiplay/generic/float[23]", simgear::props::FLOAT },
+  { 10224, "sim/multiplay/generic/float[24]", simgear::props::FLOAT },
+  { 10225, "sim/multiplay/generic/float[25]", simgear::props::FLOAT },
+  { 10226, "sim/multiplay/generic/float[26]", simgear::props::FLOAT },
+  { 10227, "sim/multiplay/generic/float[27]", simgear::props::FLOAT },
+  { 10228, "sim/multiplay/generic/float[28]", simgear::props::FLOAT },
+  { 10229, "sim/multiplay/generic/float[29]", simgear::props::FLOAT },
+  { 10230, "sim/multiplay/generic/float[30]", simgear::props::FLOAT },
+  { 10231, "sim/multiplay/generic/float[31]", simgear::props::FLOAT },
+  { 10232, "sim/multiplay/generic/float[32]", simgear::props::FLOAT },
+  { 10233, "sim/multiplay/generic/float[33]", simgear::props::FLOAT },
+  { 10234, "sim/multiplay/generic/float[34]", simgear::props::FLOAT },
+  { 10235, "sim/multiplay/generic/float[35]", simgear::props::FLOAT },
+  { 10236, "sim/multiplay/generic/float[36]", simgear::props::FLOAT },
+  { 10237, "sim/multiplay/generic/float[37]", simgear::props::FLOAT },
+  { 10238, "sim/multiplay/generic/float[38]", simgear::props::FLOAT },
+  { 10239, "sim/multiplay/generic/float[39]", simgear::props::FLOAT },
+
   {10300, "sim/multiplay/generic/int[0]", simgear::props::INT},
   {10301, "sim/multiplay/generic/int[1]", simgear::props::INT},
   {10302, "sim/multiplay/generic/int[2]", simgear::props::INT},
@@ -243,9 +264,63 @@ static const IdPropertyList sIdPropertyList[] = {
   {10316, "sim/multiplay/generic/int[16]", simgear::props::INT},
   {10317, "sim/multiplay/generic/int[17]", simgear::props::INT},
   {10318, "sim/multiplay/generic/int[18]", simgear::props::INT},
-  {10319, "sim/multiplay/generic/int[19]", simgear::props::INT}
-};
+  {10319, "sim/multiplay/generic/int[19]", simgear::props::INT},
 
+  { 10320, "sim/multiplay/generic/int[20]", simgear::props::INT },
+  { 10321, "sim/multiplay/generic/int[21]", simgear::props::INT },
+  { 10322, "sim/multiplay/generic/int[22]", simgear::props::INT },
+  { 10323, "sim/multiplay/generic/int[23]", simgear::props::INT },
+  { 10324, "sim/multiplay/generic/int[24]", simgear::props::INT },
+  { 10325, "sim/multiplay/generic/int[25]", simgear::props::INT },
+  { 10326, "sim/multiplay/generic/int[26]", simgear::props::INT },
+  { 10327, "sim/multiplay/generic/int[27]", simgear::props::INT },
+  { 10328, "sim/multiplay/generic/int[28]", simgear::props::INT },
+  { 10329, "sim/multiplay/generic/int[29]", simgear::props::INT },
+  { 10320, "sim/multiplay/generic/int[20]", simgear::props::INT },
+  { 10321, "sim/multiplay/generic/int[21]", simgear::props::INT },
+  { 10322, "sim/multiplay/generic/int[22]", simgear::props::INT },
+  { 10323, "sim/multiplay/generic/int[23]", simgear::props::INT },
+  { 10324, "sim/multiplay/generic/int[24]", simgear::props::INT },
+  { 10325, "sim/multiplay/generic/int[25]", simgear::props::INT },
+  { 10326, "sim/multiplay/generic/int[26]", simgear::props::INT },
+  { 10327, "sim/multiplay/generic/int[27]", simgear::props::INT },
+  { 10328, "sim/multiplay/generic/int[28]", simgear::props::INT },
+  { 10329, "sim/multiplay/generic/int[29]", simgear::props::INT },
+  { 10330, "sim/multiplay/generic/int[30]", simgear::props::INT },
+  { 10331, "sim/multiplay/generic/int[31]", simgear::props::INT },
+  { 10332, "sim/multiplay/generic/int[32]", simgear::props::INT },
+  { 10333, "sim/multiplay/generic/int[33]", simgear::props::INT },
+  { 10334, "sim/multiplay/generic/int[34]", simgear::props::INT },
+  { 10335, "sim/multiplay/generic/int[35]", simgear::props::INT },
+  { 10336, "sim/multiplay/generic/int[36]", simgear::props::INT },
+  { 10337, "sim/multiplay/generic/int[37]", simgear::props::INT },
+  { 10338, "sim/multiplay/generic/int[38]", simgear::props::INT },
+  { 10339, "sim/multiplay/generic/int[39]", simgear::props::INT },
+
+
+  { 12100, "sim/multiplay/generic/string[20]", simgear::props::STRING },
+  { 12101, "sim/multiplay/generic/string[21]", simgear::props::STRING },
+  { 12102, "sim/multiplay/generic/string[22]", simgear::props::STRING },
+  { 12103, "sim/multiplay/generic/string[23]", simgear::props::STRING },
+  { 12104, "sim/multiplay/generic/string[24]", simgear::props::STRING },
+  { 12105, "sim/multiplay/generic/string[25]", simgear::props::STRING },
+  { 12106, "sim/multiplay/generic/string[26]", simgear::props::STRING },
+  { 12107, "sim/multiplay/generic/string[27]", simgear::props::STRING },
+  { 12108, "sim/multiplay/generic/string[28]", simgear::props::STRING },
+  { 12109, "sim/multiplay/generic/string[29]", simgear::props::STRING },
+  { 12110, "sim/multiplay/generic/string[20]", simgear::props::STRING },
+  { 12111, "sim/multiplay/generic/string[31]", simgear::props::STRING },
+  { 12112, "sim/multiplay/generic/string[32]", simgear::props::STRING },
+  { 12113, "sim/multiplay/generic/string[33]", simgear::props::STRING },
+  { 12114, "sim/multiplay/generic/string[34]", simgear::props::STRING },
+  { 12115, "sim/multiplay/generic/string[35]", simgear::props::STRING },
+  { 12116, "sim/multiplay/generic/string[36]", simgear::props::STRING },
+  { 12117, "sim/multiplay/generic/string[37]", simgear::props::STRING },
+  { 12118, "sim/multiplay/generic/string[38]", simgear::props::STRING },
+  { 12119, "sim/multiplay/generic/string[39]", simgear::props::STRING },
+	
+};
+const int NEW_STRING_ENCODING_START = 12000; // anything below this uses the old string encoding scheme
 const unsigned int numProperties = (sizeof(sIdPropertyList)
                                  / sizeof(sIdPropertyList[0]));
 
@@ -295,7 +370,8 @@ namespace
       const IdPropertyList* plist = findProperty(id);
     
       if (plist) {
-        xdr++;
+//		  printf("[VRFY] %8x: buf[%d] type %d\n", xdr, ((char*)xdr) - ((char*)data), plist->id);
+		  xdr++;
         // How we decode the remainder of the property depends on the type
         switch (plist->type) {
         case props::INT:
@@ -315,26 +391,33 @@ namespace
         case props::STRING:
         case props::UNSPECIFIED:
           {
-            // String is complicated. It consists of
-            // The length of the string
-            // The string itself
-            // Padding to the nearest 4-bytes.
-            // XXX Yes, each byte is padded out to a word! Too late
-            // to change...
-            uint32_t length = XDR_decode_uint32(*xdr);
-            xdr++;
-            // Old versions truncated the string but left the length
-            // unadjusted.
-            if (length > MAX_TEXT_SIZE)
-              length = MAX_TEXT_SIZE;
-            xdr += length;
-            // Now handle the padding
-            while ((length % 4) != 0)
-              {
-                xdr++;
-                length++;
-                //cout << "0";
-              }
+			if (id >= NEW_STRING_ENCODING_START) {
+				uint32_t length = XDR_decode_uint32(*xdr);
+				xdr++;
+				xdr = (xdr_data_t*)(((char*)xdr) + length);
+			}
+			else {
+				// String is complicated. It consists of
+				// The length of the string
+				// The string itself
+				// Padding to the nearest 4-bytes.
+				// XXX Yes, each byte is padded out to a word! Too late
+				// to change...
+				uint32_t length = XDR_decode_uint32(*xdr);
+				xdr++;
+				// Old versions truncated the string but left the length
+				// unadjusted.
+				if (length > MAX_TEXT_SIZE)
+					length = MAX_TEXT_SIZE;
+				xdr += length;
+				// Now handle the padding
+				while ((length % 4) != 0)
+				{
+					xdr++;
+					length++;
+					//cout << "0";
+				}
+			}
           }
           break;
         default:
@@ -368,6 +451,55 @@ public:
 private:
   FGMultiplayMgr* _multiplay;
 };
+#ifndef HEXDUMP_COLS
+#define HEXDUMP_COLS 16
+#endif
+
+void hexdump(void *mem, unsigned int len)
+{
+	return;
+	unsigned int i, j;
+
+	for (i = 0; i < len + ((len % HEXDUMP_COLS) ? (HEXDUMP_COLS - len % HEXDUMP_COLS) : 0); i++)
+	{
+		/* print offset */
+		if (i % HEXDUMP_COLS == 0)
+		{
+			printf("0x%06x: ", i);
+		}
+
+		/* print hex data */
+		if (i < len)
+		{
+			printf("%02x ", 0xFF & ((char*)mem)[i]);
+		}
+		else /* end of block, just aligning for ASCII dump */
+		{
+			printf("   ");
+		}
+
+		/* print ASCII dump */
+		if (i % HEXDUMP_COLS == (HEXDUMP_COLS - 1))
+		{
+			for (j = i - (HEXDUMP_COLS - 1); j <= i; j++)
+			{
+				if (j >= len) /* end of block, not really printing */
+				{
+					putchar(' ');
+				}
+				else if (isprint(((char*)mem)[j])) /* printable char */
+				{
+					putchar(0xFF & ((char*)mem)[j]);
+				}
+				else /* other char */
+				{
+					putchar('.');
+				}
+			}
+			putchar('\n');
+		}
+	}
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -831,6 +963,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
           PosMsg->angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i) * timeAccel * timeAccel);
       }
       xdr_data_t* ptr = msgBuf.properties();
+	  xdr_data_t* data = ptr;
       std::vector<FGPropertyData*>::const_iterator it;
       it = motionInfo.properties.begin();
       //cout << "OUTPUT PROPERTIES\n";
@@ -842,6 +975,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
             SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: " << (*it)->id);
             break;
         }
+		//printf("[SEND] %8x: buf[%d] type %d\n", ptr, ((unsigned int)ptr) - ((unsigned int)data), (*it)->id);
 
         // First element is the ID. Write it out when we know we have room for
         // the whole property.
@@ -864,75 +998,129 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
           case simgear::props::STRING:
           case simgear::props::UNSPECIFIED:
             {
-              // String is complicated. It consists of
-              // The length of the string
-              // The string itself
-              // Padding to the nearest 4-bytes.        
-              const char* lcharptr = (*it)->string_value;
-              
-              if (lcharptr != 0)
-              {
-                // Add the length         
-                ////cout << "String length: " << strlen(lcharptr) << "\n";
-                uint32_t len = strlen(lcharptr);
-                if (len >= MAX_TEXT_SIZE)
-                {
-                  len = MAX_TEXT_SIZE - 1;
-                  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
-                }
+			  if ((*it)->id >= NEW_STRING_ENCODING_START) {
+				  // New string encoding:
+				  // The length of the string (int32)
+				  // The string itself (char[length])
+				  const char* lcharptr = (*it)->string_value;
 
-                // XXX This should not be using 4 bytes per character!
-                // If there's not enough room for this property, drop it
-                // on the floor.
-                if (ptr + 2 + ((len + 3) & ~3) >= msgEnd)
-                {
-                    SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
-                    goto escape;
-                }
-                //cout << "String length unint32: " << len << "\n";
-                *ptr++ = id;
-                *ptr++ = XDR_encode_uint32(len);
-                if (len != 0)
-                {
-                  // Now the text itself
-                  // XXX This should not be using 4 bytes per character!
-                  int lcount = 0;
-                  while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
-                  {
-                    if (ptr + 2 >= msgEnd)
-                    {
-                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
-                      break;
-                    }
-                    *ptr++ = XDR_encode_int8(*lcharptr);
-                    lcharptr++;
-                    lcount++;          
-                  }
-                  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
-    
-                  // Now pad if required
-                  while ((lcount % 4) != 0)
-                  {
-                    if (ptr + 2 >= msgEnd)
-                    {
-                      SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
-                      break;
-                    }
-                    *ptr++ = XDR_encode_int8(0);
-                    lcount++;          
-                    //cout << "0";
-                  }
+				  if (lcharptr != 0)
+				  {
+					  uint32_t len = strlen(lcharptr);
 
-                  //cout << "\n";
-                }
-              }
-              else
-              {
-                // Nothing to encode
-                *ptr++ = id;
-                *ptr++ = XDR_encode_uint32(0);
-                //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
-              }
+					  if (len >= MAX_TEXT_SIZE)
+					  {
+						  len = MAX_TEXT_SIZE - 1;
+						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
+					  }
+
+					  char *encodeStart = (char*)ptr;
+					  char *msgEndbyte = (char*)msgEnd;
+
+					  if (encodeStart + 2 + len  >= msgEndbyte)
+					  {
+						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
+						  goto escape;
+					  }
+
+					  *ptr++ = id;
+					  *ptr++ = XDR_encode_uint32(len);
+					  encodeStart = (char*)ptr;
+					  if (len != 0)
+					  {
+						  int lcount = 0;
+						  while (*lcharptr && (lcount < MAX_TEXT_SIZE))
+						  {
+							  if (encodeStart + 2 >= msgEndbyte)
+							  {
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
+								  break;
+							  }
+							  *encodeStart++ = *lcharptr++;
+							  lcount++;
+						  }
+					  }
+					  ptr = (xdr_data_t*)encodeStart;
+				  }
+				  else
+				  {
+					  // empty string, just send the id and a zero length
+					  *ptr++ = id;
+					  *ptr++ = XDR_encode_uint32(0);
+				  }
+			  }
+			  else {
+
+				  // String is complicated. It consists of
+				  // The length of the string
+				  // The string itself
+				  // Padding to the nearest 4-bytes.        
+				  const char* lcharptr = (*it)->string_value;
+
+				  if (lcharptr != 0)
+				  {
+					  // Add the length         
+					  ////cout << "String length: " << strlen(lcharptr) << "\n";
+					  uint32_t len = strlen(lcharptr);
+					  if (len >= MAX_TEXT_SIZE)
+					  {
+						  len = MAX_TEXT_SIZE - 1;
+						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property truncated at MAX_TEXT_SIZE in string " << (*it)->id);
+					  }
+
+					  // XXX This should not be using 4 bytes per character!
+					  // If there's not enough room for this property, drop it
+					  // on the floor.
+					  if (ptr + 2 + ((len + 3) & ~3) >= msgEnd)
+					  {
+						  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer property not sent (no room) string " << (*it)->id);
+						  goto escape;
+					  }
+					  //cout << "String length unint32: " << len << "\n";
+					  *ptr++ = id;
+					  *ptr++ = XDR_encode_uint32(len);
+					  if (len != 0)
+					  {
+						  // Now the text itself
+						  // XXX This should not be using 4 bytes per character!
+						  int lcount = 0;
+						  while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE))
+						  {
+							  if (ptr + 2 >= msgEnd)
+							  {
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
+								  break;
+							  }
+							  *ptr++ = XDR_encode_int8(*lcharptr);
+							  lcharptr++;
+							  lcount++;
+						  }
+						  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
+
+						  // Now pad if required
+						  while ((lcount % 4) != 0)
+						  {
+							  if (ptr + 2 >= msgEnd)
+							  {
+								  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated in string " << (*it)->id << " lcount " << lcount);
+								  break;
+							  }
+							  *ptr++ = XDR_encode_int8(0);
+							  lcount++;
+							  //cout << "0";
+						  }
+
+						  //cout << "\n";
+					  }
+				  }
+				  else
+				  {
+					  // Nothing to encode
+					  *ptr++ = id;
+					  *ptr++ = XDR_encode_uint32(0);
+					  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
+				  }
+			  }
             }
             break;
             
@@ -949,6 +1137,10 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   escape:
       msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
       FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
+	  //printf("[SEND] %8x: buf[%d]\n", ptr, ((unsigned int)ptr) - ((unsigned int)data));
+	  hexdump(data, (ptr - data) * sizeof(*ptr));
+//	  long stamp = SGTimeStamp::now().getSeconds();
+//	  ProcessPosMsg(msgBuf, mServer, stamp);
   }
   if (msgLen>0)
       mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
@@ -1222,7 +1414,7 @@ FGMultiplayMgr::Send()
       FGPropertyData* pData = new FGPropertyData;
       pData->id = it->first;
       pData->type = findProperty(pData->id)->type;
-      
+
       switch (pData->type) {
         case props::INT:
         case props::LONG:
@@ -1331,6 +1523,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
   // padding looking like a valid property, so verifyProperties() is
   // strict about the validity of the property values.
   const xdr_data_t* xdr = Msg.properties();
+  const xdr_data_t* data = xdr;
   if (PosMsg->pad != 0) {
     if (verifyProperties(&PosMsg->pad, Msg.propsRecvdEnd()))
       xdr = &PosMsg->pad;
@@ -1343,7 +1536,8 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
     // First element is always the ID
     unsigned id = XDR_decode_uint32(*xdr);
     //cout << pData->id << " ";
-    xdr++;
+//	printf("[RECV] %8x: buf[%d] type %d\n", xdr, ((char*)xdr) - ((char*)data), id);
+	xdr++;
     
     // Check the ID actually exists and get the type
     const IdPropertyList* plist = findProperty(id);
@@ -1353,7 +1547,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
       FGPropertyData* pData = new FGPropertyData;
       pData->id = id;
       pData->type = plist->type;
-      // How we decode the remainder of the property depends on the type
+	  // How we decode the remainder of the property depends on the type
       switch (pData->type) {
         case simgear::props::INT:
         case simgear::props::BOOL:
@@ -1370,37 +1564,53 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
           break;
         case simgear::props::STRING:
         case simgear::props::UNSPECIFIED:
-          {
-            // String is complicated. It consists of
-            // The length of the string
-            // The string itself
-            // Padding to the nearest 4-bytes.    
-            uint32_t length = XDR_decode_uint32(*xdr);
-            xdr++;
-            //cout << length << " ";
-            // Old versions truncated the string but left the length unadjusted.
-            if (length > MAX_TEXT_SIZE)
-              length = MAX_TEXT_SIZE;
-            pData->string_value = new char[length + 1];
-            //cout << " String: ";
-            for (unsigned i = 0; i < length; i++)
-              {
-                pData->string_value[i] = (char) XDR_decode_int8(*xdr);
-                xdr++;
-                //cout << pData->string_value[i];
-              }
+		{
+			if (pData->id >= NEW_STRING_ENCODING_START) {
+				uint32_t length = XDR_decode_uint32(*xdr);
+				xdr++;
+				pData->string_value = new char[length + 1];
 
-            pData->string_value[length] = '\0';
+				char *cptr = (char*)xdr;
+				for (unsigned i = 0; i < length; i++)
+				{
+					pData->string_value[i] = *cptr++;
+				}
+				pData->string_value[length] = '\0';
+//				printf(">> string recv %s\n", pData->string_value);
+				xdr = (xdr_data_t*)cptr;
+			}
+			else {
+				// String is complicated. It consists of
+				// The length of the string
+				// The string itself
+				// Padding to the nearest 4-bytes.    
+				uint32_t length = XDR_decode_uint32(*xdr);
+				xdr++;
+				//cout << length << " ";
+				// Old versions truncated the string but left the length unadjusted.
+				if (length > MAX_TEXT_SIZE)
+					length = MAX_TEXT_SIZE;
+				pData->string_value = new char[length + 1];
+				//cout << " String: ";
+				for (unsigned i = 0; i < length; i++)
+				{
+					pData->string_value[i] = (char)XDR_decode_int8(*xdr);
+					xdr++;
+					//cout << pData->string_value[i];
+				}
 
-            // Now handle the padding
-            while ((length % 4) != 0)
-              {
-                xdr++;
-                length++;
-                //cout << "0";
-              }
-            //cout << "\n";
-          }
+				pData->string_value[length] = '\0';
+
+				// Now handle the padding
+				while ((length % 4) != 0)
+				{
+					xdr++;
+					length++;
+					//cout << "0";
+				}
+				//cout << "\n";
+			}
+		}
           break;
 
         default:
@@ -1418,6 +1628,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
       SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::ProcessPosMsg - "
              "message from " << MsgHdr->Callsign << " has unknown property id "
              << id); 
+	  break; // C     TESTING ONLY AS PROBABLY INDICATES BAD PACKET.
     }
   }
  noprops:
