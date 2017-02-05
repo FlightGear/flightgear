@@ -359,9 +359,14 @@ endif(ENABLE_RTI)
 
 # Check if the flag ENABLE_SIMD was enabled during the compilation of SimGear.
 # The same value has to be carried over for FlightGear to prevent crashes.
+set(INCLUDE_DIRECTORIES "${SIMGEAR_INCLUDE_DIRS}")
+foreach(dir ${CMAKE_PREFIX_PATH})
+  set(INCLUDE_DIRECTORIES "${dir}/include;${INCLUDE_DIRECTORIES}")
+endforeach()
+
 try_run(ENABLE_SIMD COMPILE_RESULT_TEST_SIMD ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/tests/test-simd-enabled.c
-  CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${SIMGEAR_INCLUDE_DIRS}")
+  CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${INCLUDE_DIRECTORIES}")
 
 if (COMPILE_RESULT_TEST_SIMD AND ENABLE_SIMD
     AND NOT (ENABLE_SIMD EQUAL FAILED_TO_RUN))
