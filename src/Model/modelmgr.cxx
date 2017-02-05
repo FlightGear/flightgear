@@ -277,11 +277,6 @@ FGModelMgr::Instance::~Instance ()
 void
 FGModelMgr::Listener::childAdded(SGPropertyNode * parent, SGPropertyNode * child)
 {
-    if (!strcmp(parent->getName(), "models") && !strcmp(child->getName(), "model")) {
-        child->addChangeListener(this);
-        return;
-    }
-
   if (strcmp(parent->getName(), "model") || strcmp(child->getName(), "load"))
     return;
 

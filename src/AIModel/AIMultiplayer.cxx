@@ -293,10 +293,10 @@ void FGAIMultiplayer::update(double dt)
              << intervalLen << ", interpolation parameter = " << tau);
 
       // Here we do just linear interpolation on the position
-      ecPos = ((1-tau)*prevIt->second.position + tau*nextIt->second.position);
+      ecPos = interpolate(tau, prevIt->second.position, nextIt->second.position);
       ecOrient = interpolate((float)tau, prevIt->second.orientation,
                              nextIt->second.orientation);
-      ecLinearVel = ((1-tau)*prevIt->second.linearVel + tau*nextIt->second.linearVel);
+      ecLinearVel = interpolate((float)tau, prevIt->second.linearVel, nextIt->second.linearVel);
       speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
 
       if (prevIt->second.properties.size()

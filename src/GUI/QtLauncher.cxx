@@ -579,7 +579,9 @@ static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &conte
     sgDebugPriority mappedPriority = SG_WARN;
     switch (type) {
     case QtDebugMsg:    mappedPriority = SG_DEBUG; break;
+#if QT_VERSION >= 0x050500
     case QtInfoMsg:     mappedPriority = SG_INFO; break;
+#endif
     case QtWarningMsg:  mappedPriority = SG_WARN; break;
     case QtCriticalMsg: mappedPriority = SG_ALERT; break;
     case QtFatalMsg:    mappedPriority = SG_POPUP; break;

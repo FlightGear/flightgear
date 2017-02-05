@@ -40,8 +40,8 @@ public:
 
     QString sceneryPath();
 private slots:
-    virtual void reject();
-    virtual void accept();
+    virtual void reject() override;
+    virtual void accept() override;
 
 private:
     void updateUi();
@@ -51,6 +51,7 @@ private:
     void onThreadFinished();
     void onExtractError(QString file, QString msg);
     void onExtractProgress(int percent);
+    void onExtractFile(QString file);
 
     enum State {
         STATE_START = 0, // awaiting user input on first screen
