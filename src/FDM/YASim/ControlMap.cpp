@@ -21,25 +21,29 @@ namespace yasim {
 
 ControlMap::~ControlMap()
 {
-    int i;
-    for(i=0; i<_inputs.size(); i++) {
-	Vector* v = (Vector*)_inputs.get(i);
-	int j;
-	for(j=0; j<v->size(); j++)
+  int i;
+  for(i=0; i<_inputs.size(); i++) {
+    Vector* v = (Vector*)_inputs.get(i);
+    int j;
+    for(j=0; j<v->size(); j++)
 	    delete (MapRec*)v->get(j);
-	delete v;
-    }
+    delete v;
+  }
 
-    for(i=0; i<_outputs.size(); i++)
-	delete (OutRec*)_outputs.get(i);
+  for(i=0; i<_outputs.size(); i++)
+    delete (OutRec*)_outputs.get(i);
+   
+	for(i=0; i<_properties.size(); i++) {
+    PropHandle* p = (PropHandle*)_properties.get(i);
+    delete[] p->name;
+    delete p;
+  }  
 }
 
-int ControlMap::newInput()
-{
-    Vector* v = new Vector();
-    return _inputs.add(v);
-}
-
+/**
+	input : index to _inputs
+	type: identifier (see enum OutputType)
+*/
 void ControlMap::addMapping(int input, int type, void* object, int options,
 			    float src0, float src1, float dst0, float dst1)
 {
@@ -55,6 +59,10 @@ void ControlMap::addMapping(int input, int type, void* object, int options,
     m->dst1 = dst1;
 }
 
+/**
+	input : index to _inputs
+	type: identifier (see enum OutputType)
+*/
 void ControlMap::addMapping(int input, int type, void* object, int options)
 {
     // See if the output object already exists
@@ -276,6 +284,47 @@ float ControlMap::rangeMax(int type)
     case FLAP1EFFECTIVENESS: return 10;//  [0:10]
     default:       return 1; // [0:1]
     }
+}
+
+/// duplicate null-terminated string
+char* ControlMap::dup(const char* s)
+{
+    int len=0;
+    while(s[len++]);
+    char* s2 = new char[len+1];
+    char* p = s2;
+    while((*p++ = *s++));
+    s2[len] = 0;
+    return s2;
+}
+
+/// compare null-terminated strings
+bool ControlMap::eq(const char* a, const char* b)
+{
+	while(*a && *b && *a == *b) { a++; b++; }
+	// equal if both a and b points to null chars
+	return !(*a || *b);
+}
+
+/// register property name, return ID (int)
+int ControlMap::propertyHandle(const char* name)
+{
+	for(int i=0; i < _properties.size(); i++) {
+		PropHandle* p = (PropHandle*)_properties.get(i);
+		if(eq(p->name, name))
+			return p->handle;
+	}
+
+	// create new
+	PropHandle* p = new PropHandle();
+	p->name = dup(name);
+	
+	fgGetNode(p->name, true); 
+
+	Vector* v = new Vector();
+	p->handle = _inputs.add(v);
+	_properties.add(p);
+	return p->handle;
 }
 
 } // namespace yasim

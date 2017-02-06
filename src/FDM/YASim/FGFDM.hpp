@@ -31,7 +31,6 @@ public:
     float getVehicleRadius(void) const { return _vehicle_radius; }
 
 private:
-    struct AxisRec { char* name; int handle; };
     struct EngRec { char* prefix; Thruster* eng; };
     struct WeightRec { char* prop; float size; int handle; };
     struct PropOut { SGPropertyNode* prop; int handle, type; bool left;
@@ -41,7 +40,6 @@ private:
 
     Rotor* parseRotor(XMLAttributes* a, const char* name);
     Wing* parseWing(XMLAttributes* a, const char* name, Version * version);
-    int parseAxis(const char* name);
     int parseOutput(const char* name);
     void parseWeight(XMLAttributes* a);
     void parseTurbineEngine(XMLAttributes* a);
@@ -63,10 +61,6 @@ private:
 
     // Aerodynamic turbulence model
     Turbulence* _turb;
-
-    // The list of "axes" that we expect to find as input.  These are
-    // typically property names.
-    Vector _axes;
 
     // Settable weights
     Vector _weights;

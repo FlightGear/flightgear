@@ -59,7 +59,7 @@ FGFDM::FGFDM()
     // Map /controls/flight/elevator to the approach elevator control.  This
     // should probably be settable, but there are very few aircraft
     // who trim their approaches using things other than elevator.
-    _airplane.setElevatorControl(parseAxis("/controls/flight/elevator-trim"));
+    _airplane.setElevatorControl(_airplane.getControlMap()->propertyHandle("/controls/flight/elevator-trim"));
 
     // FIXME: read seed from somewhere?
     int seed = 0;
@@ -68,12 +68,6 @@ FGFDM::FGFDM()
 
 FGFDM::~FGFDM()
 {
-    for(int i=0; i<_axes.size(); i++) {
-        AxisRec* a = (AxisRec*)_axes.get(i);
-        delete[] a->name;
-        delete a;
-    }
-
     for(int i=0; i<_thrusters.size(); i++) {
         EngRec* er = (EngRec*)_thrusters.get(i);
         delete[] er->prefix;
@@ -113,7 +107,7 @@ void FGFDM::iterate(float dt)
         _airplane.setFuel(i, LBS2KG * _tank_level_lbs[i]->getFloatValue());
     }
     _airplane.calcFuelWeights();
-
+    
     setOutputProperties(dt);
 }
 
@@ -320,7 +314,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	    j->setVMax(attrf(a, "exhaust-speed") * KTS2MPS);
 	if(a->hasAttribute("spool-time"))
 	    j->setSpooling(attrf(a, "spool-time"));
-
+	
 	j->setPosition(v);
 	_airplane.addThruster(j, mass, v);
 	sprintf(buf, "/engines/engine[%d]", _nextEngine++);
@@ -459,14 +453,14 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         float cy = attrf(a, "cy", 1);
         float cz = attrf(a, "cz", 1);
 	float idrag = attrf(a, "idrag", 1);
-	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid,
+	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid, 
             cx, cy, cz, idrag);
     } else if(eq(name, "tank")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	float density = 6.0; // gasoline, in lbs/gal
-	if(a->hasAttribute("jet")) density = 6.72;
+	if(a->hasAttribute("jet")) density = 6.72; 
 	density *= LBS2KG*CM2GALS;
 	_airplane.addTank(v, attrf(a, "capacity") * LBS2KG, density);
     } else if(eq(name, "ballast")) {
@@ -497,7 +491,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         ((Rotor*)_currObj)->setcollective(attrf(a, "min"), attrf(a, "max"));
     } else if(eq(name, "cyclic")) {
         ((Rotor*)_currObj)->setcyclic(attrf(a, "ail"), attrf(a, "ele"));
-    */
+    */                               
     } else if(eq(name, "actionpt")) {
  	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
@@ -508,33 +502,32 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	((Thruster*)_currObj)->setDirection(v);
-    } else if(eq(name, "control-setting")) {
-	// A cruise or approach control setting
-	const char* axis = a->getValue("axis");
-	float value = attrf(a, "value", 0);
-	if(_cruiseCurr)
-	    _airplane.addCruiseControl(parseAxis(axis), value);
-	else
-	    _airplane.addApproachControl(parseAxis(axis), value);
-    } else if(eq(name, "control-input")) {
-
-	// A mapping of input property to a control
-        int axis = parseAxis(a->getValue("axis"));
-	int control = parseOutput(a->getValue("control"));
-	int opt = 0;
-	opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
-	opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
-	opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
-
-	ControlMap* cm = _airplane.getControlMap();
-	if(a->hasAttribute("src0")) {
-                           cm->addMapping(axis, control, _currObj, opt,
-			   attrf(a, "src0"), attrf(a, "src1"),
+  } else if(eq(name, "control-setting")) {
+    // A cruise or approach control setting
+    const char* axis = a->getValue("axis");
+    float value = attrf(a, "value", 0);
+    ControlMap* cm = _airplane.getControlMap();
+    if(_cruiseCurr)
+        _airplane.addCruiseControl(cm->propertyHandle(axis), value);
+    else
+	    _airplane.addApproachControl(cm->propertyHandle(axis), value);
+  } else if(eq(name, "control-input")) {
+    ControlMap* cm = _airplane.getControlMap();
+    // A mapping of input property to a control
+    int axis = cm->propertyHandle(a->getValue("axis"));
+    int control = parseOutput(a->getValue("control"));
+    int opt = 0;
+    opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
+    opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
+    opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
+    if(a->hasAttribute("src0")) {
+       cm->addMapping(axis, control, _currObj, opt,
+			   attrf(a, "src0"), attrf(a, "src1"), 
 			   attrf(a, "dst0"), attrf(a, "dst1"));
-	} else {
-            cm->addMapping(axis, control, _currObj, opt);
-	}
-    } else if(eq(name, "control-output")) {
+    } else {
+      cm->addMapping(axis, control, _currObj, opt);
+    }
+  } else if(eq(name, "control-output")) {
         // A property output for a control on the current object
         ControlMap* cm = _airplane.getControlMap();
         int type = parseOutput(a->getValue("control"));
@@ -555,7 +548,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         int type = parseOutput(a->getValue("control"));
         int handle = cm->getOutputHandle(_currObj, type);
         float time = attrf(a, "transition-time", 0);
-
+        
         cm->setTransitionTime(handle, time);
     } else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"Unexpected tag '"
@@ -575,10 +568,10 @@ void FGFDM::getExternalInput(float dt)
     ControlMap* cm = _airplane.getControlMap();
     cm->reset();
 
-    for(int i=0; i<_axes.size(); i++) {
-        AxisRec* a = (AxisRec*)_axes.get(i);
-        float val = fgGetFloat(a->name, 0);
-        cm->setInput(a->handle, val);
+    for(int i=0; i < cm->numProperties(); i++) {
+        ControlMap::PropHandle *p = cm->getProperty(i);
+        float val = fgGetFloat(p->name, 0);
+        cm->setInput(p->handle, val);
     }
     cm->applyControls(dt);
 
@@ -716,7 +709,7 @@ void FGFDM::setOutputProperties(float dt)
             // cockpit code can scale them to the right values.
             float pnorm = j->getPerfNorm();
             moveprop(node, "oilp-norm", pnorm, dt/3); // 3s seek time
-            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s
+            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s 
             moveprop(node, "itt-norm", pnorm, dt/1); // 1s
         }
     }
@@ -824,9 +817,9 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setTiltCenterZ(attrf(a,"tiltcenterz",0.0));
     w->setDownwashFactor(attrf(a, "downwashfactor", 1));
     if(attrb(a,"ccw"))
-       w->setCcw(1);
+       w->setCcw(1); 
     if(attrb(a,"sharedflaphinge"))
-       w->setSharedFlapHinge(true);
+       w->setSharedFlapHinge(true); 
 
     if(a->hasAttribute("name"))
        w->setName(a->getValue("name") );
@@ -845,7 +838,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setPowerAtPitch0(attrf(a, "poweratpitch-0", 300));
     w->setPowerAtPitchB(attrf(a, "poweratpitch-b", 3000));
     if(attrb(a,"notorque"))
-       w->setNotorque(1);
+       w->setNotorque(1); 
 
 #define p(x) if (a->hasAttribute(#x)) w->setParameter((char *)#x,attrf(a,#x) );
 #define p2(x,y) if (a->hasAttribute(y)) w->setParameter((char *)#x,attrf(a,y) );
@@ -893,7 +886,7 @@ void FGFDM::parsePistonEngine(XMLAttributes* a)
         eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
 
     if(a->hasAttribute("compression"))
-        eng->setCompression(attrf(a, "compression"));
+        eng->setCompression(attrf(a, "compression"));        
 
     if(a->hasAttribute("min-throttle"))
         eng->setMinThrottle(attrf(a, "min-throttle"));
@@ -944,7 +937,7 @@ void FGFDM::parsePropeller(XMLAttributes* a)
         if(a->hasAttribute("displacement"))
             eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
         if(a->hasAttribute("compression"))
-            eng->setCompression(attrf(a, "compression"));
+            eng->setCompression(attrf(a, "compression"));        
         if(a->hasAttribute("turbo-mul")) {
             float mul = attrf(a, "turbo-mul");
             float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
@@ -1005,26 +998,7 @@ void FGFDM::parsePropeller(XMLAttributes* a)
     _currObj = thruster;
 }
 
-// Turns a string axis name into an integer for use by the
-// ControlMap.  Creates a new axis if this one hasn't been defined
-// yet.
-int FGFDM::parseAxis(const char* name)
-{
-    for(int i=0; i<_axes.size(); i++) {
-        AxisRec* a = (AxisRec*)_axes.get(i);
-        if(eq(a->name, name))
-            return a->handle;
-    }
-
-    // Not there, make a new one.
-    AxisRec* a = new AxisRec();
-    a->name = dup(name);
-    fgGetNode( a->name, true ); // make sure the property name exists
-    a->handle = _airplane.getControlMap()->newInput();
-    _axes.add(a);
-    return a->handle;
-}
-
+/// map identifier (string) to int (enum in ControlMap)
 int FGFDM::parseOutput(const char* name)
 {
     if(eq(name, "THROTTLE"))  return ControlMap::THROTTLE;
@@ -1061,7 +1035,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "TILTYAW")) return ControlMap::TILTYAW;
     if(eq(name, "ROTORGEARENGINEON")) return ControlMap::ROTORENGINEON;
     if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
-    if(eq(name, "ROTORENGINEMAXRELTORQUE"))
+    if(eq(name, "ROTORENGINEMAXRELTORQUE")) 
         return ControlMap::ROTORENGINEMAXRELTORQUE;
     if(eq(name, "ROTORRELTARGET")) return ControlMap::ROTORRELTARGET;
     if(eq(name, "ROTORBALANCE")) return ControlMap::ROTORBALANCE;
@@ -1143,7 +1117,7 @@ float FGFDM::attrf(XMLAttributes* atts, const char* attr, float def)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
-    else         return (float)atof(val);
+    else         return (float)atof(val);    
 }
 
 double FGFDM::attrd(XMLAttributes* atts, const char* attr)
