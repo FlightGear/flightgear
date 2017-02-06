@@ -40,28 +40,18 @@
 // FlightGear
 #include <Main/globals.hxx>
 
-
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
 const int STANDARD_THUMBNAIL_WIDTH = 172;
+static quint32 CACHE_VERSION = 6;
 
 using namespace simgear::pkg;
 
-AircraftItem::AircraftItem() :
-    excluded(false),
-    usesHeliports(false),
-    usesSeaports(false)
+AircraftItem::AircraftItem()
 {
-    // oh for C++11 initialisers
-    for (int i=0; i<4; ++i) ratings[i] = 0;
 }
 
-AircraftItem::AircraftItem(QDir dir, QString filePath) :
-    excluded(false),
-    usesHeliports(false),
-    usesSeaports(false)
+AircraftItem::AircraftItem(QDir dir, QString filePath)
 {
-    for (int i=0; i<4; ++i) ratings[i] = 0;
-
     SGPropertyNode root;
     readProperties(filePath.toStdString(), &root);
 
@@ -113,6 +103,16 @@ AircraftItem::AircraftItem(QDir dir, QString filePath) :
             }
         } // of tags iteration
     } // of set-xml has tags
+
+    if (sim->hasChild("previews")) {
+        SGPropertyNode_ptr previewsNode = sim->getChild("previews");
+        for (auto previewNode : previewsNode->getChildren("preview")) {
+            // add file path as url
+            QString pathInXml = QString::fromStdString(previewNode->getStringValue("path"));
+            QString previewPath = dir.absoluteFilePath(pathInXml);
+            previews.append(QUrl::fromLocalFile(previewPath));
+        }
+    }
 }
 
 QString AircraftItem::baseName() const
@@ -131,6 +131,7 @@ void AircraftItem::fromDataStream(QDataStream& ds)
 
     ds >> description >> longDescription >> authors >> variantOf;
     for (int i=0; i<4; ++i) ds >> ratings[i];
+    ds >> previews;
 }
 
 void AircraftItem::toDataStream(QDataStream& ds) const
@@ -142,6 +143,7 @@ void AircraftItem::toDataStream(QDataStream& ds) const
 
     ds << description << longDescription << authors << variantOf;
     for (int i=0; i<4; ++i) ds << ratings[i];
+    ds << previews;
 }
 
 QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
@@ -160,9 +162,6 @@ QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
 
     return m_thumbnail;
 }
-
-
-static quint32 CACHE_VERSION = 5;
 
 class AircraftScanThread : public QThread
 {
@@ -402,14 +401,22 @@ protected:
         if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
             pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
         }
-        m_model->m_thumbnailPixmapCache.insert(QString::fromStdString(aThumbnailUrl), pix);
 
-        // notify any affected items. Linear scan here avoids another map/dict
-        // structure.
+        m_model->m_downloadedPixmapCache.insert(QString::fromStdString(aThumbnailUrl), pix);
+
+        // notify any affected items. Linear scan here avoids another map/dict structure.
         for (auto pkg : m_model->m_packages) {
-            const string_list& urls(pkg->thumbnailUrls());
-            auto cit = std::find(urls.begin(), urls.end(), aThumbnailUrl);
-            if (cit != urls.end()) {
+            const int variantCount = pkg->variants().size();
+            bool notifyChanged = false;
+
+            for (int v=0; v < variantCount; ++v) {
+                const Package::Thumbnail& thumb(pkg->thumbnailForVariant(v));
+                if (thumb.url == aThumbnailUrl) {
+                    notifyChanged = true;
+                }
+            }
+
+            if (notifyChanged) {
                 QModelIndex mi = indexForPackage(pkg);
                 m_model->dataChanged(mi, mi);
             }
@@ -432,7 +439,7 @@ private:
     AircraftItemModel* m_model;
 };
 
-AircraftItemModel::AircraftItemModel(QObject* pr ) :
+AircraftItemModel::AircraftItemModel(QObject* pr) :
     QAbstractListModel(pr)
 {
 }
@@ -593,10 +600,6 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
         return m_delegateStates.at(row).variant;
     }
 
-    if (role == AircraftCurrentThumbnailRole) {
-        return m_delegateStates.at(row).thumbnail;
-    }
-
     if (row >= m_items.size()) {
         quint32 packageIndex = row - m_items.size();
         const PackageRef& pkg(m_packages[packageIndex]);
@@ -623,20 +626,7 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
         return item->variants.count();
     }
 
-    if (role == AircraftThumbnailCountRole) {
-        QPixmap p = item->thumbnail();
-        return p.isNull() ? 0 : 1;
-    }
-
-    if (role == AircraftThumbnailSizeRole) {
-        QPixmap pm = item->thumbnail(false);
-        if (pm.isNull()) {
-            return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
-        }
-        return pm.size();
-    }
-
-    if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
+    if (role >= AircraftVariantDescriptionRole) {
         int variantIndex = role - AircraftVariantDescriptionRole;
         return item->variants.at(variantIndex)->description;
     }
@@ -646,6 +636,14 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
             // show the selected variant
             item = item->variants.at(state.variant - 1);
         }
+    }
+
+    if (role == AircraftThumbnailSizeRole) {
+        QPixmap pm = item->thumbnail(false);
+        if (pm.isNull()) {
+            return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
+        }
+        return pm.size();
     }
 
     if (role == Qt::DisplayRole) {
@@ -662,7 +660,13 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
         return item->authors;
     } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
         return item->ratings[role - AircraftRatingRole];
-    } else if (role >= AircraftThumbnailRole) {
+    } else if (role == AircraftPreviewsRole) {
+        QVariantList result;
+        Q_FOREACH(QUrl u, item->previews) {
+            result.append(u);
+        }
+        return result;
+    } else if (role == AircraftThumbnailRole) {
         return item->thumbnail();
     } else if (role == AircraftPackageIdRole) {
         // can we fake an ID? otherwise fall through to a null variant
@@ -692,10 +696,10 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
 QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const DelegateState& state, int role) const
 {
     if (role == Qt::DecorationRole) {
-        role = AircraftThumbnailRole; // use first thumbnail
+        role = AircraftThumbnailRole;
     }
 
-    if ((role >= AircraftVariantDescriptionRole) && (role < AircraftThumbnailRole)) {
+    if (role >= AircraftVariantDescriptionRole) {
         int variantIndex = role - AircraftVariantDescriptionRole;
         QString desc = QString::fromStdString(item->nameForVariant(variantIndex));
         if (desc.isEmpty()) {
@@ -743,11 +747,10 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         if (pm.isNull())
             return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
         return pm.size();
-    } else if (role >= AircraftThumbnailRole) {
-        DelegateState changedState(state);
-        // override the current thumbnail as required
-        changedState.thumbnail = (role - AircraftThumbnailRole);
-        return packageThumbnail(item, changedState);
+    } else if (role == AircraftThumbnailRole) {
+        return packageThumbnail(item, state);
+    } else if (role == AircraftPreviewsRole) {
+        return packagePreviews(item, state);
     } else if (role == AircraftAuthorsRole) {
         std::string authors = item->getLocalisedProp("author", state.variant);
         if (!authors.empty()) {
@@ -776,44 +779,67 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
 
 QVariant AircraftItemModel::packageThumbnail(PackageRef p, const DelegateState& ds, bool download) const
 {
-    const string_list& thumbnails(p->thumbnailUrls());
-    if (ds.thumbnail >= static_cast<int>(thumbnails.size())) {
+    const Package::Thumbnail& thumb(p->thumbnailForVariant(ds.variant));
+    if (thumb.url.empty()) {
         return QVariant();
     }
 
-    std::string thumbnailUrl = thumbnails.at(ds.thumbnail);
-    QString urlQString(QString::fromStdString(thumbnailUrl));
-    if (m_thumbnailPixmapCache.contains(urlQString)) {
+    QString urlQString(QString::fromStdString(thumb.url));
+    if (m_downloadedPixmapCache.contains(urlQString)) {
         // cache hit, easy
-        return m_thumbnailPixmapCache.value(urlQString);
+        return m_downloadedPixmapCache.value(urlQString);
     }
 
-// check the on-disk store. This relies on the order of thumbnails in the
-// results of thumbnailUrls and thumbnails corresponding
+// check the on-disk store.
     InstallRef ex = p->existingInstall();
     if (ex.valid()) {
-        const string_list& thumbNames(p->thumbnails());
-        if (!thumbNames.empty()) {
-            SGPath path(ex->path());
-            path.append(p->thumbnails()[ds.thumbnail]);
-            if (path.exists()) {
-                QPixmap pix;
-                pix.load(QString::fromStdString(path.utf8Str()));
-                // resize to the standard size
-                if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
-                    pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);
-                }
-                m_thumbnailPixmapCache[urlQString] = pix;
-                return pix;
+        SGPath thumbPath = ex->path() / thumb.path;
+        if (thumbPath.exists()) {
+            QPixmap pix;
+            pix.load(QString::fromStdString(thumbPath.utf8Str()));
+            // resize to the standard size
+            if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
+                pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);
             }
-        } // of have thumbnail file names
+            m_downloadedPixmapCache[urlQString] = pix;
+            return pix;
+        }
     } // of have existing install
 
     if (download) {
-        m_packageRoot->requestThumbnailData(thumbnailUrl);
+        m_packageRoot->requestThumbnailData(thumb.url);
     }
 
     return QVariant();
+}
+
+QVariant AircraftItemModel::packagePreviews(PackageRef p, const DelegateState& ds) const
+{
+    const Package::PreviewVec& previews = p->previewsForVariant(ds.variant);
+    if (previews.empty()) {
+        return QVariant();
+    }
+
+    QVariantList result;
+    // if we have an install, return file URLs, not remote (http) ones
+    InstallRef ex = p->existingInstall();
+    if (ex.valid()) {
+        for (auto p : previews) {
+            SGPath localPreviewPath = ex->path() / p.path;
+            if (!localPreviewPath.exists()) {
+                qWarning() << "missing local preview" << QString::fromStdString(localPreviewPath.utf8Str());
+                continue;
+            }
+            result.append(QUrl::fromLocalFile(QString::fromStdString(localPreviewPath.utf8Str())));
+        }
+    }
+
+    // return remote urls
+    for (auto p : previews) {
+        result.append(QUrl(QString::fromStdString(p.url)));
+    }
+
+    return result;
 }
 
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -827,16 +853,6 @@ bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value,
           }
 
           m_delegateStates[row].variant = newValue;
-          emit dataChanged(index, index);
-          return true;
-      }
-
-      if (role == AircraftCurrentThumbnailRole) {
-          if (m_delegateStates[row].thumbnail == newValue) {
-              return true;
-          }
-
-          m_delegateStates[row].thumbnail = newValue;
           emit dataChanged(index, index);
           return true;
       }

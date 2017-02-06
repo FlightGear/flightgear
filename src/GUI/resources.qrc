@@ -19,5 +19,11 @@
         <file alias="ndb-large-icon">ndb-large-icon.png</file>
         <file alias="airplane-icon">airplane-icon.png</file>
         <file alias="airport-closed-icon">airport-closed-icon.png</file>
+        <file alias="preview-icon">preview-icon.png</file>
+    </qresource>
+    <qresource prefix="/preview">
+        <file alias="close-icon">preview-close.png</file>
+        <file alias="left-arrow-icon">preview-left-arrow.png</file>
+        <file alias="right-arrow-icon">preview-right-arrow.png</file>
     </qresource>
 </RCC>

@@ -69,6 +69,7 @@
 #include "AircraftModel.hxx"
 #include "PathsDialog.hxx"
 #include "EditCustomMPServerDialog.hxx"
+#include "previewwindow.h"
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -854,6 +855,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onRequestPackageUninstall);
     connect(delegate, &AircraftItemDelegate::cancelDownload,
             this, &QtLauncher::onCancelDownload);
+    connect(delegate, &AircraftItemDelegate::showPreviews,
+            this, &QtLauncher::onShowPreviews);
 
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
             this, &QtLauncher::onAircraftInstalledCompleted);
@@ -1399,6 +1402,14 @@ void QtLauncher::onRequestPackageUninstall(const QModelIndex& index)
         qDebug() << "uninstalling" << pkg;
         pref->existingInstall()->uninstall();
     }
+}
+
+void QtLauncher::onShowPreviews(const QModelIndex &index)
+{
+    QVariant urls = index.data(AircraftPreviewsRole);
+
+    PreviewWindow* previewWindow = new PreviewWindow;
+    previewWindow->setUrls(urls.toList());
 }
 
 void QtLauncher::onCancelDownload(const QModelIndex& index)

@@ -117,11 +117,13 @@ if (HAVE_QT)
                             InstallSceneryDialog.cxx
                             EditCustomMPServerDialog.cxx
                             EditCustomMPServerDialog.hxx
+                            PreviewWindow.cpp
+                            PreviewWindow.h
                             ${uic_sources}
                             ${qrc_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets SimGearCore)
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network SimGearCore)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
 

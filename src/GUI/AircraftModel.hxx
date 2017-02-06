@@ -38,7 +38,6 @@ const int AircraftPathRole = Qt::UserRole + 1;
 const int AircraftAuthorsRole = Qt::UserRole + 2;
 const int AircraftVariantRole = Qt::UserRole + 3;
 const int AircraftVariantCountRole = Qt::UserRole + 4;
-const int AircraftThumbnailCountRole = Qt::UserRole + 5;
 const int AircraftPackageIdRole = Qt::UserRole + 6;
 const int AircraftPackageStatusRole = Qt::UserRole + 7;
 const int AircraftPackageProgressRole = Qt::UserRole + 8;
@@ -51,12 +50,12 @@ const int AircraftURIRole = Qt::UserRole + 14;
 const int AircraftThumbnailSizeRole = Qt::UserRole + 15;
 const int AircraftIsHelicopterRole = Qt::UserRole + 16;
 const int AircraftIsSeaplaneRole = Qt::UserRole + 17;
-const int AircraftCurrentThumbnailRole = Qt::UserRole + 18;
 const int AircraftPackageRefRole = Qt::UserRole + 19;
+const int AircraftThumbnailRole = Qt::UserRole + 20;
+const int AircraftPreviewsRole = Qt::UserRole + 21;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
-const int AircraftThumbnailRole = Qt::UserRole + 300;
 
 class AircraftScanThread;
 class QDataStream;
@@ -81,17 +80,18 @@ struct AircraftItem
 
     QPixmap thumbnail(bool loadIfRequired = true) const;
 
-    bool excluded;
+    bool excluded = false;
     QString path;
     QString description;
     QString longDescription;
     QString authors;
-    int ratings[4];
+    int ratings[4] = {0, 0, 0, 0};
     QString variantOf;
     QDateTime pathModTime;
     QList<AircraftItemPtr> variants;
-    bool usesHeliports;
-    bool usesSeaports;
+    bool usesHeliports = false;
+    bool usesSeaports = false;
+    QList<QUrl> previews;
 private:
     mutable QPixmap m_thumbnail;
 };
@@ -199,6 +199,8 @@ private:
     QVariant packageThumbnail(simgear::pkg::PackageRef p,
                               const DelegateState& state, bool download = true) const;
 
+    QVariant packagePreviews(simgear::pkg::PackageRef p, const DelegateState &ds) const;
+
     void abandonCurrentScan();
     void refreshPackages();
     
@@ -217,7 +219,7 @@ private:
     simgear::pkg::RootRef m_packageRoot;
     simgear::pkg::PackageList m_packages;
         
-    mutable QHash<QString, QPixmap> m_thumbnailPixmapCache;
+    mutable QHash<QString, QPixmap> m_downloadedPixmapCache;
 };
 
 #endif // of FG_GUI_AIRCRAFT_MODEL
