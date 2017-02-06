@@ -224,6 +224,12 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     
     // Diddle the Z force according to our configuration
     float stallMul = stallFunc(out);
+    if (_surfN != 0) {
+      _surfN->getNode("wind-loc-x", true)->setFloatValue(lwind[0]);
+      _surfN->getNode("wind-loc-y", true)->setFloatValue(lwind[1]);
+      _surfN->getNode("wind-loc-z", true)->setFloatValue(lwind[2]);
+      _surfN->getNode("stall-base-factor", true)->setFloatValue(stallMul);
+    }
     stallMul *= 1 + _spoilerPos * (_spoilerLift - 1);
     float stallLift = (stallMul - 1) * _cz * out[2];
     float flaplift = flapLift(out[2]);
@@ -305,11 +311,15 @@ float Surface::stallFunc(float* v)
     if(v[0] == 0) return 1;
 
     float alpha = Math::abs(v[2]/v[0]);
+    if (_surfN != 0) 
+      _surfN->getNode("alpha-deg", true)->setFloatValue(alpha*57.295779513);
 
     // Wacky use of indexing, see setStall*() methods.
     int fwdBak = v[0] > 0; // set if this is "backward motion"
     int posNeg = v[2] < 0; // set if the airflow is toward -z
     int i = (fwdBak<<1) | posNeg;
+    if (_surfN != 0) 
+      _surfN->getNode("mode", true)->setValue(i);
 
     float stallAlpha = _stalls[i];
     if(stallAlpha == 0)

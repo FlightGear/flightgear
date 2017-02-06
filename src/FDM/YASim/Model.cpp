@@ -19,6 +19,7 @@
 #include "Hitch.hpp"
 #include "Glue.hpp"
 #include "Ground.hpp"
+#include <simgear/props/props.hxx>
 
 #include "Model.hpp"
 namespace yasim {
@@ -416,6 +417,9 @@ void Model::calcForces(State* s)
     // point is different due to rotation.
     float faero[3];
     faero[0] = faero[1] = faero[2] = 0;
+    int id = 0;
+    SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/surfaces", true);
+    SGPropertyNode_ptr surfN;
     for(i=0; i<_surfaces.size(); i++) {
 	Surface* sf = (Surface*)_surfaces.get(i);
 
@@ -426,11 +430,27 @@ void Model::calcForces(State* s)
 
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
+    id = sf->getID();
+    if (n != 0) {
+      surfN = n->getChild("surface", id, true);
+      surfN->getNode("f-abs", true)->setFloatValue(Math::mag3(force));
+      surfN->getNode("f-x", true)->setFloatValue(force[0]);
+      surfN->getNode("f-y", true)->setFloatValue(force[1]);
+      surfN->getNode("f-z", true)->setFloatValue(force[2]);
+    }
 	Math::add3(faero, force, faero);
 
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
     }
+    float ld0 = faero[2]/faero[0];
+    n = fgGetNode("/fdm/yasim/forces", true);
+    if (n != 0) {
+      n->getNode("f0-aero-x-drag", true)->setFloatValue(faero[0]);
+      n->getNode("f0-aero-y-side", true)->setFloatValue(faero[1]);
+      n->getNode("f0-aero-z-lift", true)->setFloatValue(faero[2]);
+    }
+
     for (j=0; j<_rotorgear.getRotors()->size();j++)
     {
         Rotor* r = (Rotor *)_rotorgear.getRotors()->get(j);
@@ -482,9 +502,18 @@ void Model::calcForces(State* s)
         fz *= _groundEffect;
         Math::mul3(fz, ground, geForce);
         _body.addForce(geForce);
-      }      
+      }
+      n = fgGetNode("/fdm/yasim/forces", true);
+      if (n != 0) {
+        float ld = (geForce[2]+faero[2])/(geForce[0]+faero[0]);
+        n->getNode("gndeff-f-x", true)->setFloatValue(geForce[0]);
+        n->getNode("gndeff-f-y", true)->setFloatValue(geForce[1]);
+        n->getNode("gndeff-f-z", true)->setFloatValue(geForce[2]);
+        n->getNode("wing-gnd-dist", true)->setFloatValue(dist);
+        n->getNode("gndeff-ld-ld0", true)->setFloatValue(ld/ld0);
+        
+      }
     }
-    
     // Convert the velocity and rotation vectors to local coordinates
     float lrot[3], lv[3];
     Math::vmul33(s->orient, s->rot, lrot);
