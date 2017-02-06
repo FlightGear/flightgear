@@ -442,14 +442,14 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     s->setStallWidth(0, _stallWidth);
     s->setStallPeak(0, _stallPeak);
 
-    // The negative AoA stall is the same if we're using an uncambered
-    // airfoil, otherwise a "little badder".
+    // The negative AoA stall is the same if we're using an symmetric
+    // airfoil, otherwise a "little worse".
     if(_camber > 0) {
         s->setStall(1, stallAoA * 0.8f);
         s->setStallWidth(1, _stallWidth * 0.5f);
     } else {
         s->setStall(1, stallAoA);
-        s->setStall(1, _stallWidth);
+        s->setStallWidth(1, _stallWidth);
     }
 
     // The "reverse" stalls are unmeasurable junk.  Just use 13deg and
