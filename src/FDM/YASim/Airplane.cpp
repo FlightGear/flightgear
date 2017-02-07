@@ -57,6 +57,7 @@ Airplane::Airplane()
     _tailIncidence = 0;
 
     _failureMsg = 0;
+    _wingsN = 0;
 }
 
 Airplane::~Airplane()
@@ -475,6 +476,11 @@ float Airplane::compileWing(Wing* w)
         tip[1] *= -1;
         addContactPoint(tip);
     }
+    if (_wingsN != 0) {
+      _wingsN->getNode("tip-x", true)->setFloatValue(tip[0]);
+      _wingsN->getNode("tip-y", true)->setFloatValue(tip[1]);
+      _wingsN->getNode("tip-z", true)->setFloatValue(tip[2]);
+    }
 
     // Make sure it's initialized.  The surfaces will pop out with
     // total drag coefficients equal to their areas, which is what we
@@ -482,12 +488,11 @@ float Airplane::compileWing(Wing* w)
     w->compile();
 
     float wgt = 0;
-    int i;
-    for(i=0; i<w->numSurfaces(); i++) {
+    float dragSum = 0;
+    for(int i=0; i<w->numSurfaces(); i++) {
         Surface* s = (Surface*)w->getSurface(i);
-
-	float td = s->getTotalDrag();
-	s->setTotalDrag(td);
+        float td = s->getTotalDrag();
+        int sid = s->getID();
 
         _model.addSurface(s);
 
@@ -495,8 +500,18 @@ float Airplane::compileWing(Wing* w)
         mass = mass * Math::sqrt(mass);
         float pos[3];
         s->getPosition(pos);
-        _model.getBody()->addMass(mass, pos);
+        int mid = _model.getBody()->addMass(mass, pos);
+        if (_wingsN != 0) {
+          SGPropertyNode_ptr n = _wingsN->getNode("surfaces", true)->getChild("surface", sid, true);
+          n->getNode("drag", true)->setFloatValue(td);
+          n->getNode("mass-id", true)->setIntValue(mid);
+        }
         wgt += mass;
+        dragSum += td;
+    }
+    if (_wingsN != 0)  {
+      _wingsN->getNode("weight", true)->setFloatValue(wgt);	
+      _wingsN->getNode("drag", true)->setFloatValue(dragSum);	
     }
     return wgt;
 }
@@ -674,6 +689,8 @@ void Airplane::compile()
 {
     RigidBody* body = _model.getBody();
     int firstMass = body->numMasses();
+    SGPropertyNode_ptr baseN = fgGetNode("/fdm/yasim/model/wings", true);
+    SGPropertyNode_ptr n;
 
     // Generate the point masses for the plane.  Just use unitless
     // numbers for a first pass, then go back through and rescale to
@@ -682,13 +699,21 @@ void Airplane::compile()
 
     // The Wing objects
     if (_wing)
+    {
+      if (baseN != 0) _wingsN = baseN->getChild("wing", 0, true);
       aeroWgt += compileWing(_wing);
+    }
     if (_tail)
+    {
+      if (baseN != 0) _wingsN = baseN->getChild("tail", 0, true);
       aeroWgt += compileWing(_tail);
+    }
     int i;
     for(i=0; i<_vstabs.size(); i++)
-        aeroWgt += compileWing((Wing*)_vstabs.get(i)); 
-
+    {
+      if (baseN != 0) _wingsN = baseN->getChild("stab", i, true);
+      aeroWgt += compileWing((Wing*)_vstabs.get(i));
+    }
 
     // The fuselage(s)
     for(i=0; i<_fuselages.size(); i++)

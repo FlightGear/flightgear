@@ -7,6 +7,7 @@
 #include "Rotor.hpp"
 #include "Vector.hpp"
 #include "Version.hpp"
+#include <simgear/props/props.hxx>
 
 namespace yasim {
 
@@ -18,6 +19,7 @@ class Hitch;
 
 /// The Airplane class ties together the different components
 class Airplane : public Version {
+    SGPropertyNode_ptr _wingsN;
 public:
     Airplane();
     ~Airplane();
