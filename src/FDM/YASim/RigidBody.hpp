@@ -1,5 +1,7 @@
 #ifndef _RIGIDBODY_HPP
 #define _RIGIDBODY_HPP
+#include <simgear/props/props.hxx>
+#include "Vector.hpp"
 
 namespace yasim {
 
@@ -20,18 +22,19 @@ namespace yasim {
 //
 class RigidBody
 {
+    SGPropertyNode_ptr _bodyN;
 public:
     RigidBody();
     ~RigidBody();
 
     // Adds a point mass to the system.  Returns a handle so the gyro
     // can be later modified via setMass().
-    int addMass(float mass, float* pos);
+    int addMass(float mass, float* pos, bool isStatic = false);
 
     // Modifies a previously-added point mass (fuel tank running dry,
     // gear going up, swing wing swinging, pilot bailing out, etc...)
     void setMass(int handle, float mass);
-    void setMass(int handle, float mass, float* pos);
+    void setMass(int handle, float mass, float* pos, bool isStatic = false);
 
     int numMasses();
     float getMass(int handle);
@@ -54,7 +57,7 @@ public:
     // When masses are moved or changed, this object needs to
     // regenerate its internal tables.  This step is expensive, so
     // it's exposed to the client who can amortize the call across
-    // multiple changes.
+    // multiple changes. see also _recalcStatic() 
     void recalc();
 
     // Resets the current force/torque parameters to zero.
@@ -102,17 +105,24 @@ public:
     void getInertiaMatrix(float* inertiaOut);
 
 private:
-    struct Mass { float m; float p[3]; };
+    /** 
+    Most of the mass points do not change after compilation of the aircraft so
+    they can be replaced by one aggregated mass at the c.g. of the static masses.
+    The isStatic flag is used to mark those masses.
+    */
+    struct Mass { float m; float p[3]; bool isStatic; };
+    void _recalcStatic(); /// aggregate static masses
+    Mass  _staticMass;		/// aggregated static masses, calculated once
+    Mass* _masses;        /// mass elements
+    int   _nMasses;       /// number of masses
+    int   _massesAlloced; /// counter for memory allocation
 
-    // Internal "rotational structure"
-    Mass* _masses;
-    int   _nMasses;
-    int   _massesAlloced;
     float _totalMass;
     float _cg[3];
     float _gyro[3];
 
     // Inertia tensor, and its inverse.  Computed from the above.
+    float _tI_static[9];
     float _tI[9];
     float _invI[9];
 

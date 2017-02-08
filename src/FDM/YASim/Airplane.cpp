@@ -358,12 +358,14 @@ void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
     _thrusters.add(t);
 }
 
+/// Use ballast to redistribute mass, this is NOT added to empty weight.
 void Airplane::addBallast(float* pos, float mass)
 {
-    _model.getBody()->addMass(mass, pos);
+    _model.getBody()->addMass(mass, pos, true);
     _ballast += mass;
 }
 
+/// Masses configurable at runtime, e.g. cargo, pax
 int Airplane::addWeight(float* pos, float size)
 {
     WeightRec* wr = new WeightRec();
@@ -378,6 +380,7 @@ int Airplane::addWeight(float* pos, float size)
     return _weights.add(wr);
 }
 
+/// Change weight of a previously added mass point
 void Airplane::setWeight(int handle, float mass)
 {
     WeightRec* wr = (WeightRec*)_weights.get(handle);
@@ -500,7 +503,7 @@ float Airplane::compileWing(Wing* w)
         mass = mass * Math::sqrt(mass);
         float pos[3];
         s->getPosition(pos);
-        int mid = _model.getBody()->addMass(mass, pos);
+        int mid = _model.getBody()->addMass(mass, pos, true);
         if (_wingsN != 0) {
           SGPropertyNode_ptr n = _wingsN->getNode("surfaces", true)->getChild("surface", sid, true);
           n->getNode("drag", true)->setFloatValue(td);
@@ -562,7 +565,7 @@ float Airplane::compileFuselage(Fuselage* f)
 
         // _Mass_ weighting goes as surface area^(3/2)
         float mass = scale*segWgt * Math::sqrt(scale*segWgt);
-        _model.getBody()->addMass(mass, pos);
+        _model.getBody()->addMass(mass, pos, true);
         wgt += mass;
 
         // Make a Surface too
@@ -732,7 +735,7 @@ void Airplane::compile()
     // Add the thruster masses
     for(i=0; i<_thrusters.size(); i++) {
         ThrustRec* t = (ThrustRec*)_thrusters.get(i);
-        body->addMass(t->mass, t->cg);
+        body->addMass(t->mass, t->cg, true);
     }
 
     // Add the tanks, empty for now.
