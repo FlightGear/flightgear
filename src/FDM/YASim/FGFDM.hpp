@@ -101,6 +101,8 @@ private:
     SGPropertyNode_ptr _cg_x;
     SGPropertyNode_ptr _cg_y;
     SGPropertyNode_ptr _cg_z;
+    SGPropertyNode_ptr _yasimN;
+
     std::vector<SGPropertyNode_ptr> _tank_level_lbs;
     std::vector<ThrusterProps> _thrust_props;
     std::vector<FuelProps> _fuel_props;
