@@ -249,6 +249,7 @@ void RigidBody::addForce(float* pos, float* force)
     addTorque(t);
 }
 
+/// not used (?)
 void RigidBody::setBodySpin(float* rotation)
 {
     Math::set3(rotation, _spin);
@@ -259,33 +260,36 @@ void RigidBody::getCG(float* cgOut)
     Math::set3(_cg, cgOut);
 }
 
+/// return acceleration at c.g.
 void RigidBody::getAccel(float* accelOut)
 {
     Math::mul3(1/_totalMass, _force, accelOut);
 }
 
+/// return acceleration at pos (unused?)
 void RigidBody::getAccel(float* pos, float* accelOut)
 {
     getAccel(accelOut);
-
-    // Turn the "spin" vector into a normalized spin axis "a" and a
-    // radians/sec scalar "rate".
-    float a[3];
+    // centripetal accelerations
+    // Calculate normalized spin axis "a" and rate (radians/sec) from spin vector.
     float rate = Math::mag3(_spin);
-    Math::set3(_spin, a);
-    if (rate !=0 )
-        Math::mul3(1/rate, a, a);
-    //an else branch is not neccesary. a, which is a=(0,0,0) in the else case, is only used in a dot product
-    float v[3];
-    Math::sub3(_cg, pos, v);             // v = cg - pos
-    Math::mul3(Math::dot3(v, a), a, a);  // a = a * (v dot a)
-    Math::add3(v, a, v);                 // v = v + a
+    if (rate != 0) {
+      float a[3], v[3];
+      Math::sub3(_cg, pos, v); // distance = cg - pos; 
+      if (v[0] == 0 && v[1] == 0 && v[2] == 0) // nothing to do
+        return;
+      Math::mul3(1/rate, _spin, a);
+      // d_a  = a * (distance dot a); (projection of distance vector on a, |a|=1)
+      Math::mul3(Math::dot3(v, a), a, a);  
+      Math::add3(v, a, v);                 // v = distance + projection;
 
-    // Now v contains the vector from pos to the rotation axis.
-    // Multiply by the square of the rotation rate to get the linear
-    // acceleration.
-    Math::mul3(rate*rate, v, v);
-    Math::add3(v, accelOut, accelOut);
+      // Now v contains the vector from pos to the rotation axis.
+      // Multiply by the square of the rotation rate to get the linear
+      // acceleration.
+      // nothing to do in the next two lines, if rate == 0
+      Math::mul3(rate*rate, v, v);		
+      Math::add3(v, accelOut, accelOut);
+    }
 }
 
 void RigidBody::getAngularAccel(float* accelOut)

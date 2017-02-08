@@ -448,6 +448,7 @@ void Airplane::setupState(const float aoa, const float speed, const float gla, S
     s->orient[3] =       0; s->orient[4] = 1; s->orient[5] =      0;
     s->orient[6] = -sinAoA; s->orient[7] = 0; s->orient[8] = cosAoA;
 
+    //? what is gla? v[1]=y, v[2]=z? should sin go to v2 instead v1?
     s->v[0] = speed*Math::cos(gla); s->v[1] = -speed*Math::sin(gla); s->v[2] = 0;
 
     int i;
@@ -976,6 +977,7 @@ void Airplane::runApproach()
     _model.calcForces(&_approachState);
 }
 
+// used in the solve methods
 void Airplane::applyDragFactor(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
