@@ -31,7 +31,7 @@
 #include <simgear/constants.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/misc/gzcontainerfile.hxx>
+#include <simgear/io/iostreams/gzcontainerfile.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/stdint.hxx>
 #include <simgear/misc/strutils.hxx>

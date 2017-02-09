@@ -39,7 +39,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/xml/easyxml.hxx>

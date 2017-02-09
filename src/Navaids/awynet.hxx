@@ -30,7 +30,7 @@
 #include <map>
 #include <vector>
 
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 
 
 //#include "parking.hxx"

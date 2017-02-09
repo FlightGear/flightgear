@@ -2,7 +2,7 @@
 #include <fstream>
 
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_init.hxx>
