@@ -7,6 +7,7 @@ foreach( mylibfolder
 		Airports
 		Aircraft
 		ATC
+		EmbeddedResources
 		Canvas
 		Radio
 		Autopilot
