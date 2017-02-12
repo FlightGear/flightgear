@@ -31,6 +31,8 @@
 
 #define MULTIPLAYTXMGR_HID "$Id$"
 
+const int MIN_MP_PROTOCOL_VERSION = 1;
+const int MAX_MP_PROTOCOL_VERSION = 2;
 
 #include <string>
 #include <vector>
@@ -70,7 +72,18 @@ private:
   {
     mPropertiesChanged = true;
   }
-  
+  int getProtocolToUse()
+  {
+	  return mProtocolVersion;
+  }
+  void setProtocolToUse(int protocolVersion)
+  {
+	  if (protocolVersion >= MIN_MP_PROTOCOL_VERSION && protocolVersion <= MAX_MP_PROTOCOL_VERSION)
+		  mProtocolVersion = protocolVersion;
+	  else
+		  mProtocolVersion = MIN_MP_PROTOCOL_VERSION;
+  }
+
   void findProperties();
   
   void Send();
@@ -105,6 +118,8 @@ private:
   PropertyDefinitionMap mPropertyDefinition;
 
   bool mPropertiesChanged;
+  int mProtocolVersion;
+
   MPPropertyListener* mListener;
   
   double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
