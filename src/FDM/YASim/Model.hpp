@@ -96,9 +96,9 @@ private:
     Launchbar* _launchbar;
     Vector _hitches;
 
-    float _groundEffectSpan;
+    float _wingSpan;
     float _groundEffect;
-    float _wingCenter[3];
+    float _geRefPoint[3];
 
     Ground* _ground_cb;
     double _global_ground[4];

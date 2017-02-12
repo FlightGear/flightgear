@@ -66,9 +66,9 @@ Model::Model()
     _hook = 0;
     _launchbar = 0;
 
-    _groundEffectSpan = 0;
+    _wingSpan = 0;
     _groundEffect = 0;
-    for(i=0; i<3; i++) _wingCenter[i] = 0;
+    for(i=0; i<3; i++) _geRefPoint[i] = 0;
 
     _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
     _global_ground[3] = -100000;
@@ -289,8 +289,8 @@ Ground* Model::getGroundCallback(void)
 
 void Model::setGroundEffect(float* pos, float span, float mul)
 {
-    Math::set3(pos, _wingCenter);
-    _groundEffectSpan = span;
+    Math::set3(pos, _geRefPoint);
+    _wingSpan = span;
     _groundEffect = mul;
 }
 
@@ -470,16 +470,19 @@ void Model::calcForces(State* s)
     // Account for ground effect by multiplying the vertical force
     // component by an amount linear with the fraction of the wingspan
     // above the ground.
-    if ((_groundEffectSpan != 0) && (_groundEffect != 0 ))
+    if ((_wingSpan != 0) && (_groundEffect != 0 ))
     {
-        float dist = ground[3] - Math::dot3(ground, _wingCenter);
-        if(dist > 0 && dist < _groundEffectSpan) {
-        float fz = Math::dot3(faero, ground);
-            fz *= (_groundEffectSpan - dist) / _groundEffectSpan;
-            fz *= _groundEffect;
-        Math::mul3(fz, ground, faero);
-        _body.addForce(faero);
-        }
+      // distance between ground and wing ref. point
+      float dist = ground[3] - Math::dot3(ground, _geRefPoint); 
+      float fz = 0;
+      float geForce[3];
+      if(dist > 0 && dist < _wingSpan) {
+        fz = Math::dot3(faero, ground);
+        fz *= (_wingSpan - dist) / _wingSpan;
+        fz *= _groundEffect;
+        Math::mul3(fz, ground, geForce);
+        _body.addForce(geForce);
+      }      
     }
     
     // Convert the velocity and rotation vectors to local coordinates

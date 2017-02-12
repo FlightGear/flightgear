@@ -1,4 +1,3 @@
-#include "Math.hpp"
 #include "Surface.hpp"
 #include "Wing.hpp"
 
@@ -228,30 +227,6 @@ void Wing::setSlatPos(float val)
 	((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
-float Wing::getGroundEffect(float* posOut)
-{
-    int i;
-    for(i=0; i<3; i++) posOut[i] = _base[i];
-    float span = _length * Math::cos(_sweep) * Math::cos(_dihedral);
-    span = 2*(span + Math::abs(_base[2]));
-    return span;
-}
-
-void Wing::getTip(float* tip)
-{
-    tip[0] = -Math::tan(_sweep);
-    tip[1] = Math::cos(_dihedral);
-    tip[2] = Math::sin(_dihedral);
-    Math::unit3(tip, tip);
-    Math::mul3(_length, tip, tip);
-    Math::add3(_base, tip, tip);
-}
-
-bool Wing::isMirrored()
-{
-    return _mirror;
-}
-
 void Wing::compile()
 {
     // Have we already been compiled?
@@ -306,12 +281,13 @@ void Wing::compile()
     Math::unit3(left, left);
 
     // Calculate coordinates for the root and tip of the wing
-    float root[3], tip[3];
+    float root[3];
     Math::set3(_base, root);
-    Math::set3(left, tip);
-    Math::mul3(_length, tip, tip);
-    Math::add3(root, tip, tip);
-
+    Math::set3(left, _tip);
+    Math::mul3(_length, _tip, _tip);
+    Math::add3(root, _tip, _tip);
+    _wingspan = Math::abs(2*_tip[1]);
+    
     // The wing's Y axis will be the "left" vector.  The Z axis will
     // be perpendicular to this and the local (!) X axis, because we
     // want motion along the local X axis to be zero AoA (i.e. in the
@@ -363,7 +339,7 @@ void Wing::compile()
         for(j=0; j<nSegs; j++) {
             float frac = start + (j+0.5f) * (end-start)/nSegs;
             float pos[3];
-            interp(root, tip, frac, pos);
+            interp(root, _tip, frac, pos);
 
             float chord = _chord * (1 - (1-_taper)*frac);
 

@@ -471,24 +471,32 @@ void Airplane::addContactPoint(float* pos)
 
 float Airplane::compileWing(Wing* w)
 {
+    // Make sure it's initialized.  The surfaces will pop out with
+    // total drag coefficients equal to their areas, which is what we
+    // want.
+    w->compile();
+
     // The tip of the wing is a contact point
     float tip[3];
+    // need compile() before getTip()!
     w->getTip(tip);
     addContactPoint(tip);
     if(w->isMirrored()) {
         tip[1] *= -1;
         addContactPoint(tip);
+        tip[1] *= -1; //undo mirror
     }
     if (_wingsN != 0) {
       _wingsN->getNode("tip-x", true)->setFloatValue(tip[0]);
       _wingsN->getNode("tip-y", true)->setFloatValue(tip[1]);
       _wingsN->getNode("tip-z", true)->setFloatValue(tip[2]);
+      w->getBase(tip);
+      _wingsN->getNode("base-x", true)->setFloatValue(tip[0]);
+      _wingsN->getNode("base-y", true)->setFloatValue(tip[1]);
+      _wingsN->getNode("base-z", true)->setFloatValue(tip[2]);
+      _wingsN->getNode("wingspan", true)->setFloatValue(w->getWingSpan());
+      _wingsN->getNode("wingarea", true)->setFloatValue(w->getWingArea());
     }
-
-    // Make sure it's initialized.  The surfaces will pop out with
-    // total drag coefficients equal to their areas, which is what we
-    // want.
-    w->compile();
 
     float wgt = 0;
     float dragSum = 0;
@@ -764,7 +772,9 @@ void Airplane::compile()
     if(_wing) {
         float gepos[3];
         float gespan = 0;
-        gespan = _wing->getGroundEffect(gepos);
+        gespan = _wing->getWingSpan();
+	_wing->getBase(gepos);
+        // where does the hard coded factor 0.15 come from?
         _model.setGroundEffect(gepos, gespan, 0.15f);
     }
 

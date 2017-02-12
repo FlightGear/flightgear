@@ -3,6 +3,7 @@
 
 #include "Vector.hpp"
 #include "Version.hpp"
+#include "Math.hpp"
 
 namespace yasim {
 
@@ -24,7 +25,13 @@ public:
     void setTaper(float taper);       // fraction, 0-1
     void setSweep(float sweep);       // radians
     void setDihedral(float dihedral); // radians, positive is "up"
-
+    void getBase(float* base) { Math::set3(_base, base); };
+    float getLength() { return _length; };
+    float getChord() { return _chord; };
+    float getTaper() { return _taper; };
+    float getSweep() { return _sweep; };
+    float getDihedral() { return _dihedral; };
+    
     void setStall(float aoa);
     void setStallWidth(float angle);
     void setStallPeak(float fraction);
@@ -48,13 +55,11 @@ public:
 
     // Compile the thing into a bunch of Surface objects
     void compile();
-
-    void getTip(float* tip);
-
-    bool isMirrored();
-
-    // Ground effect information
-    float getGroundEffect(float* posOut);
+    void getTip(float* tip) { Math::set3(_tip, tip);};
+    bool isMirrored() { return _mirror; };
+    // Used for ground effect 
+    float getWingSpan() { return _wingspan; };
+    float getWingArea() {return 0.5f*_wingspan*_chord*(1+_taper); };
     
     // Query the list of Surface objects
     int numSurfaces();
@@ -92,6 +97,10 @@ private:
     float _taper;
     float _sweep;
     float _dihedral;
+    
+    // calculated from above
+    float _tip[3];
+    float _wingspan;
 
     float _stall;
     float _stallWidth;
