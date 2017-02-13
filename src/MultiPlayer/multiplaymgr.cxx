@@ -1133,8 +1133,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 				  switch (transmit_type) {
 				  case TT_SHORTINT:
 				  {
-					  static int value = ((*it)->id << 16) | ((*it)->int_value & 0xffff);
-					  *ptr++ = XDR_encode_uint32(value);
+					  *ptr++ = XDR_encode_uint32((((*it)->id & 0xffff) << 16) | ((*it)->int_value & 0xffff));
 					  break;
 				  }
 				  case simgear::props::INT:
@@ -1312,8 +1311,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 			 //XDR_decode_int32(msgBuf.msgHdr()->MsgLen), 
 			 // XDR_decode_int32(msgBuf.msgHdr()->MsgLen2));
 		  //hexdump(data, (ptr - data) * sizeof(*ptr));
-		  	  long stamp = SGTimeStamp::now().getSeconds();
-		  	  ProcessPosMsg(msgBuf, mServer, stamp);
+		  	  //long stamp = SGTimeStamp::now().getSeconds();
+		  	  //ProcessPosMsg(msgBuf, mServer, stamp);
 	  }
   }
   if (msgLen>0)
@@ -1587,57 +1586,48 @@ FGMultiplayMgr::Send()
 	PropertyMap::iterator it;
 	for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
 		FGPropertyData* pData = new FGPropertyData;
-		// if the top 16 bits are set then this is the property ID
-		if (it->first & 0xffff0000)
-		{
-			pData->id = (it->first & 0xffff0000) >> 16;
-			pData->int_value = it->first & 0xffff;
-		}
-		else
-		{
-			pData->id = it->first;
-			pData->type = findProperty(pData->id)->type;
+		pData->id = it->first;
+		pData->type = findProperty(pData->id)->type;
 
-			switch (pData->type) {
-			case props::INT:
-			case props::LONG:
-			case props::BOOL:
-				pData->int_value = it->second->getIntValue();
-				break;
-			case props::FLOAT:
-			case props::DOUBLE:
-				pData->float_value = it->second->getFloatValue();
-				break;
-			case props::STRING:
-			case props::UNSPECIFIED:
+		switch (pData->type) {
+		case TT_SHORTINT:
+		case props::INT:
+		case props::LONG:
+		case props::BOOL:
+			pData->int_value = it->second->getIntValue();
+			break;
+		case props::FLOAT:
+		case props::DOUBLE:
+			pData->float_value = it->second->getFloatValue();
+			break;
+		case props::STRING:
+		case props::UNSPECIFIED:
+		{
+			// FIXME: We assume unspecified are strings for the moment.
+
+			const char* cstr = it->second->getStringValue();
+			int len = strlen(cstr);
+
+			if (len > 0)
 			{
-				// FIXME: We assume unspecified are strings for the moment.
-
-				const char* cstr = it->second->getStringValue();
-				int len = strlen(cstr);
-
-				if (len > 0)
-				{
-					pData->string_value = new char[len + 1];
-					strcpy(pData->string_value, cstr);
-				}
-				else
-				{
-					// Size 0 - ignore
-					pData->string_value = 0;
-				}
-
-				//cout << " Sending property " << pData->id << " " << pData->type << " " <<  pData->string_value << "\n";
-				break;
+				pData->string_value = new char[len + 1];
+				strcpy(pData->string_value, cstr);
 			}
-			default:
-				// FIXME Currently default to a float. 
-				//cout << "Unknown type when iterating through props: " << pData->type << "\n";
-				pData->float_value = it->second->getFloatValue();
-				break;
+			else
+			{
+				// Size 0 - ignore
+				pData->string_value = 0;
 			}
+
+			//cout << " Sending property " << pData->id << " " << pData->type << " " <<  pData->string_value << "\n";
+			break;
 		}
-
+		default:
+			// FIXME Currently default to a float. 
+			//cout << "Unknown type when iterating through props: " << pData->type << "\n";
+			pData->float_value = it->second->getFloatValue();
+			break;
+		}
 		motionInfo.properties.push_back(pData);
 	}
     SendMyPosition(motionInfo);
