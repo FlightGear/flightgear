@@ -66,6 +66,16 @@ FGODGauge::~FGODGauge()
 
 }
 
+/*
+ * Used to remember the located groups that require modification
+ */
+typedef struct {
+	typedef osg::ref_ptr<osg::Group> GroupPtr;
+	GroupPtr parent;
+	GroupPtr node;
+	int unit;
+}GroupListItem;
+
 /**
  * Replace a texture in the airplane model with the gauge texture.
  */
@@ -182,40 +192,62 @@ class ReplaceStaticTextureVisitor:
           if( !osgDB::equalCaseInsensitive(_tex_name, tex_name_simple) )
             continue;
         }
-
-        // insert a new group between the geode an it's parent which overrides
-        // the texture
-        GroupPtr group = new osg::Group;
-        group->setName("canvas texture group");
-        group->addChild(eg);
-        parent->removeChild(eg);
-        parent->addChild(group);
-
-        if( _cull_callback )
-          group->setCullCallback(_cull_callback);
-
-        osg::StateSet* stateSet = group->getOrCreateStateSet();
-        stateSet->setTextureAttribute( unit, _new_texture,
-                                             osg::StateAttribute::OVERRIDE );
-        stateSet->setTextureMode( unit, GL_TEXTURE_2D,
-                                        osg::StateAttribute::ON );
-
-        _placements.push_back( simgear::canvas::PlacementPtr(
-          new simgear::canvas::ObjectPlacement(_node, group, _canvas)
-        ));
-
-        SG_LOG
-        (
-          SG_GL,
-          SG_INFO,
-             "Replaced texture '" << _tex_name << "'"
-          << " for object '" << parent->getName() << "'"
-          << (!_parent_name.empty() ? " with parent '" + _parent_name + "'"
-                                    : "")
-        );
-        return;
+        /*
+         * remember this group for modification once the scenegraph has been traversed
+         */
+		GroupListItem gli;
+		gli.node = eg;
+		gli.parent = parent;
+		gli.unit = unit;
+		groups_to_modify.push_back(gli);
+		return;
       }
     }
+    /*
+     * this section of code used to be in the apply method above, however to work this requires modification of the scenegraph nodes
+     * that are currently iterating, so instead the apply method will locate the groups to be modified and when finished then the 
+     * nodes can actually be modified safely. Initially found thanks to the debug RTL in MSVC2015 throwing an exception.
+     */
+    void modify_groups()
+	{
+		for (GroupList::iterator group_iterator = groups_to_modify.begin(); group_iterator != groups_to_modify.end(); group_iterator++) {
+			GroupPtr eg = group_iterator->node;
+			GroupPtr parent = group_iterator->parent;
+			int unit = group_iterator->unit;
+
+			// insert a new group between the geode an it's parent which overrides
+			// the texture
+			GroupPtr group = new osg::Group;
+			group->setName("canvas texture group");
+			group->addChild(eg);
+			parent->removeChild(eg);
+			parent->addChild(group);
+
+			if (_cull_callback)
+				group->setCullCallback(_cull_callback);
+
+			osg::StateSet* stateSet = group->getOrCreateStateSet();
+			stateSet->setTextureAttribute(unit, _new_texture,
+				osg::StateAttribute::OVERRIDE);
+			stateSet->setTextureMode(unit, GL_TEXTURE_2D,
+				osg::StateAttribute::ON);
+
+			_placements.push_back(simgear::canvas::PlacementPtr(
+				new simgear::canvas::ObjectPlacement(_node, group, _canvas)
+			));
+
+			SG_LOG
+			(
+				SG_GL,
+				SG_INFO,
+				"Replaced texture '" << _tex_name << "'"
+				<< " for object '" << parent->getName() << "'"
+				<< (!_parent_name.empty() ? " with parent '" + _parent_name + "'"
+					: "")
+			);
+		}
+		groups_to_modify.clear();
+	}
 
   protected:
 
@@ -227,7 +259,8 @@ class ReplaceStaticTextureVisitor:
     SGPropertyNode_ptr  _node;
     osg::Texture2D     *_new_texture;
     osg::NodeCallback  *_cull_callback;
-
+	typedef std::vector<GroupListItem> GroupList;
+	GroupList groups_to_modify;
     simgear::canvas::CanvasWeakPtr  _canvas;
     simgear::canvas::Placements     _placements;
 
@@ -255,6 +288,7 @@ FGODGauge::set_texture( osg::Node* branch,
 {
   ReplaceStaticTextureVisitor visitor(name, new_texture);
   branch->accept(visitor);
+  visitor.modify_groups();
   return visitor.getPlacements();
 }
 
@@ -284,6 +318,7 @@ FGODGauge::set_texture( osg::Node* branch,
                                        cull_callback,
                                        canvas );
   branch->accept(visitor);
+  visitor.modify_groups();
   return visitor.getPlacements();
 }
 
