@@ -772,6 +772,8 @@ void Airplane::compile()
     }
 
     // Ground effect
+    // If a double tapered wing is modelled with wing and mstab, wing must 
+    // be outboard to get correct wingspan.
     if(_wing) {
         float gepos[3];
         float gespan = 0;
@@ -868,6 +870,7 @@ void Airplane::stabilizeThrust()
 	_model.getThruster(i)->stabilize();
 }
 
+/// Setup weights for cruise or approach during solve.
 void Airplane::setupWeights(bool isApproach)
 {
     int i;
@@ -891,6 +894,7 @@ void Airplane::loadCruiseControls()
   _controls.applyControls(); 
 }
 
+/// Helper for solve()
 void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
@@ -939,6 +943,7 @@ void Airplane::loadApproachControls()
   _controls.applyControls();
 }
 
+/// Helper for solve()
 void Airplane::runApproach()
 {
     setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
@@ -977,7 +982,7 @@ void Airplane::runApproach()
     _model.calcForces(&_approachState);
 }
 
-// used in the solve methods
+/// Used only in Airplane::solve() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
@@ -1023,6 +1028,7 @@ void Airplane::applyDragFactor(float factor)
     }
 }
 
+/// Used only in Airplane::solve() and solveHelicopter(), not at runtime
 void Airplane::applyLiftRatio(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
@@ -1038,6 +1044,7 @@ void Airplane::applyLiftRatio(float factor)
     }
 }
 
+/// Helper for solve()
 float Airplane::clamp(float val, float min, float max)
 {
     if(val < min) return min;
@@ -1045,6 +1052,7 @@ float Airplane::clamp(float val, float min, float max)
     return val;
 }
 
+/// Helper for solve()
 float Airplane::normFactor(float f)
 {
     if(f < 0) f = -f;
