@@ -58,7 +58,7 @@
 #include <simgear/structure/SGPerfMon.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>

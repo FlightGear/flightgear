@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <Scenery/scenery.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 
 #include "antenna.hxx"
 

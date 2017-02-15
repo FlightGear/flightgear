@@ -52,7 +52,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGGeodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>

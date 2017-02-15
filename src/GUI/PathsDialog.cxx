@@ -102,6 +102,25 @@ void AddOnsPage::onAddSceneryPath()
 {
     QString path = QFileDialog::getExistingDirectory(this, tr("Choose scenery folder"));
     if (!path.isEmpty()) {
+        // validation
+
+        SGPath p(path.toStdString());
+        SGPath objectsPath = p / "Objects";
+        SGPath terrainPath = p / "Terrain";
+
+        if (!objectsPath.exists() && !terrainPath.exists()) {
+            QMessageBox mb;
+            mb.setText(QString("The folder '%1' doesn't appear to contain scenery - add anyway?").arg(path));
+            mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+            mb.setDefaultButton(QMessageBox::No);
+            mb.setInformativeText("Added scenery should contain folders called 'Objects' and / or 'Terrain'");
+            mb.exec();
+
+            if (mb.result() == QMessageBox::No) {
+                return;
+            }
+        }
+
         m_ui->sceneryPathsList->addItem(path);
         saveSceneryPaths();
     }

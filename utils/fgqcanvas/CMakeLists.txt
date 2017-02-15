@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
+include(GNUInstallDirs)
+
 project(FGQCanvas)
 
 find_package(Qt5 5.4 COMPONENTS Widgets WebSockets)

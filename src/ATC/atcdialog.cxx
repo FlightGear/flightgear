@@ -31,7 +31,7 @@
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>

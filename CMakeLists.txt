@@ -178,7 +178,6 @@ option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite 
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
 option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
 option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
-option(ENABLE_SIMD       "Enable SSE/SSE2 support for x86 compilers" ON)
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
@@ -265,7 +264,7 @@ if (MSVC)
 	if (CRASHRPT_FOUND)
 		set(HAVE_CRASHRPT 1)
 		message(STATUS "Using CrashRpt")
-        include_directories( ${CRASHRPT_INCLUDE_DIR})
+    include_directories( ${CRASHRPT_INCLUDE_DIR})
 	endif()
 endif()
 
@@ -357,6 +356,12 @@ if(ENABLE_RTI)
 else()
     message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)
+
+if (ENABLE_SIMD)
+  message(STATUS "SSE/SSE2 support: ENABLED")
+else()
+  message(STATUS "SSE/SSE2 support: DISABLED")
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_CXX "-Wall")

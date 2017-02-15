@@ -24,7 +24,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/misc/SimpleMarkdown.hxx>
