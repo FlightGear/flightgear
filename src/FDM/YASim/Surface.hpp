@@ -1,6 +1,7 @@
 #ifndef _SURFACE_HPP
 #define _SURFACE_HPP
 
+#include <simgear/props/props.hxx>
 #include "Version.hpp"
 
 namespace yasim {
@@ -10,8 +11,14 @@ namespace yasim {
 // front, and flaps act (in both lift and drag) toward the back.
 class Surface
 {
+    static int s_idGenerator;
+    int _id;        //index for property tree
+
 public:
     Surface( Version * version );
+
+    int getID() { return _id; };
+    static void resetIDgen() { s_idGenerator = 0; };
 
     // Position of this surface in local coords
     void setPosition(float* p);
@@ -75,6 +82,8 @@ public:
     void calcForce(float* v, float rho, float* forceOut, float* torqueOut);
 
 private:
+    SGPropertyNode_ptr _surfN;
+    
     float stallFunc(float* v);
     float flapLift(float alpha);
     float controlDrag(float lift, float drag);

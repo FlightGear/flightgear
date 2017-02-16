@@ -1,10 +1,15 @@
+#include <Main/fg_props.hxx>
 #include "Math.hpp"
 #include "Surface.hpp"
+
 namespace yasim {
+int Surface::s_idGenerator = 0;
 
 Surface::Surface( Version * version ) :
     _version(version)
 {
+    // create id for surface
+    _id = s_idGenerator++;
     // Start in a "sane" mode, so unset stuff doesn't freak us out
     _c0 = 1;
     _cx = _cy = _cz = 1;
@@ -30,12 +35,21 @@ Surface::Surface( Version * version ) :
     _slatAlpha = 0;
     _spoilerLift = 1;
     _inducedDrag = 1;
+    _surfN = fgGetNode("/fdm/yasim/surfaces", true);
+    if (_surfN != 0) 
+      _surfN = _surfN->getChild("surface", _id, true);
 }
+
 
 void Surface::setPosition(float* p)
 {
     int i;
     for(i=0; i<3; i++) _pos[i] = p[i];
+    if (_surfN != 0) {
+      _surfN->getNode("pos-x", true)->setFloatValue(p[0]);
+      _surfN->getNode("pos-y", true)->setFloatValue(p[1]);
+      _surfN->getNode("pos-z", true)->setFloatValue(p[2]);	
+    }
 }
 
 void Surface::getPosition(float* out)
@@ -136,7 +150,10 @@ void Surface::setSpoilerParams(float liftPenalty, float dragPenalty)
 
 void Surface::setFlapPos(float pos)
 {
+	if (_flapPos != pos) {
     _flapPos = pos;
+		if (_surfN != 0) _surfN->getNode("flap-pos", true)->setFloatValue(pos);
+	}
 }
 
 void Surface::setFlapEffectiveness(float effectiveness)
@@ -152,12 +169,18 @@ double Surface::getFlapEffectiveness()
 
 void Surface::setSlatPos(float pos)
 {
+	if (_slatPos != pos) {
     _slatPos = pos;
+		if (_surfN != 0) _surfN->getNode("slat-pos", true)->setFloatValue(pos);
+	}
 }
 
 void Surface::setSpoilerPos(float pos)
 {
+	if (_spoilerPos != pos) {
     _spoilerPos = pos;
+		if (_surfN != 0) _surfN->getNode("spoiler-pos", true)->setFloatValue(pos);
+	}
 }
 
 // Calculate the aerodynamic force given a wind vector v (in the

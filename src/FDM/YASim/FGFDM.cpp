@@ -21,6 +21,7 @@
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
 #include "Hitch.hpp"
+#include "Surface.hpp"
 
 #include "FGFDM.hpp"
 
@@ -118,6 +119,8 @@ Airplane* FGFDM::getAirplane()
 
 void FGFDM::init()
 {
+    //reset id generator, needed on simulator reset/re-init
+    Surface::resetIDgen();
     _turb_magnitude_norm = fgGetNode("/environment/turbulence/magnitude-norm", true);
     _turb_rate_hz        = fgGetNode("/environment/turbulence/rate-hz", true);
 
