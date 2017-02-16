@@ -616,6 +616,26 @@ void FGFDM::setOutputProperties(float dt)
     _cg_y->setFloatValue(cg[1]);
     _cg_z->setFloatValue(cg[2]);
 
+    State* s = _airplane.getModel()->getState();
+    float v[3], acc[3], rot[3], racc[3];
+    Math::vmul33(s->orient, s->v, v);
+    Math::vmul33(s->orient, s->acc, acc);
+    Math::vmul33(s->orient, s->rot, rot);
+    Math::vmul33(s->orient, s->racc, racc);
+
+    _yasimN->getNode("velocities/v-x", true)->setFloatValue(v[0]);
+    _yasimN->getNode("velocities/v-y", true)->setFloatValue(v[1]);
+    _yasimN->getNode("velocities/v-z", true)->setFloatValue(v[2]);
+    _yasimN->getNode("velocities/vrot-x", true)->setFloatValue(rot[0]);
+    _yasimN->getNode("velocities/vrot-y", true)->setFloatValue(rot[1]);
+    _yasimN->getNode("velocities/vrot-z", true)->setFloatValue(rot[2]);
+    _yasimN->getNode("accelerations/a-x", true)->setFloatValue(acc[0]);
+    _yasimN->getNode("accelerations/a-y", true)->setFloatValue(acc[1]);
+    _yasimN->getNode("accelerations/a-z", true)->setFloatValue(acc[2]);
+    _yasimN->getNode("accelerations/arot-x", true)->setFloatValue(racc[0]);
+    _yasimN->getNode("accelerations/arot-y", true)->setFloatValue(racc[1]);
+    _yasimN->getNode("accelerations/arot-z", true)->setFloatValue(racc[2]);
+
     ControlMap* cm = _airplane.getControlMap();
     for(int i=0; i<_controlProps.size(); i++) {
         PropOut* p = (PropOut*)_controlProps.get(i);
