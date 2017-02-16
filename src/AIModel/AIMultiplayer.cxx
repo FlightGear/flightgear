@@ -281,107 +281,114 @@ void FGAIMultiplayer::update(double dt)
       MotionInfo::iterator prevIt = nextIt;
       --prevIt;
 
-      // Interpolation coefficient is between 0 and 1
-      double intervalStart = prevIt->second.time;
-      double intervalEnd = nextIt->second.time;
-      double intervalLen = intervalEnd - intervalStart;
-      double tau = 0.0;
-      if (intervalLen != 0.0) tau = (tInterp - intervalStart)/intervalLen;
+      /*
+      * RJH: 2017-02-16 another exception thrown here when running under debug (and hence huge frame delays)
+      * the value of nextIt was already end(); which I think means that we cannot run the entire next section of code.
+      */
+      if (nextIt != prevIt && nextIt != mMotionInfo.end()) {
+          // Interpolation coefficient is between 0 and 1
+          double intervalStart = prevIt->second.time;
+          double intervalEnd = nextIt->second.time;
 
-      SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle interpolation: ["
-             << intervalStart << ", " << intervalEnd << "], intervalLen = "
-             << intervalLen << ", interpolation parameter = " << tau);
+          double intervalLen = intervalEnd - intervalStart;
+          double tau = 0.0;
+          if (intervalLen != 0.0) tau = (tInterp - intervalStart) / intervalLen;
 
-      // Here we do just linear interpolation on the position
-      ecPos = interpolate(tau, prevIt->second.position, nextIt->second.position);
-      ecOrient = interpolate((float)tau, prevIt->second.orientation,
-                             nextIt->second.orientation);
-      ecLinearVel = interpolate((float)tau, prevIt->second.linearVel, nextIt->second.linearVel);
-      speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
+          SG_LOG(SG_AI, SG_DEBUG, "Multiplayer vehicle interpolation: ["
+              << intervalStart << ", " << intervalEnd << "], intervalLen = "
+              << intervalLen << ", interpolation parameter = " << tau);
 
-      if (prevIt->second.properties.size()
-          == nextIt->second.properties.size()) {
-        std::vector<FGPropertyData*>::const_iterator prevPropIt;
-        std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
-        std::vector<FGPropertyData*>::const_iterator nextPropIt;
-        std::vector<FGPropertyData*>::const_iterator nextPropItEnd;
-        prevPropIt = prevIt->second.properties.begin();
-        prevPropItEnd = prevIt->second.properties.end();
-        nextPropIt = nextIt->second.properties.begin();
-        nextPropItEnd = nextIt->second.properties.end();
-        while (prevPropIt != prevPropItEnd) {
-          PropertyMap::iterator pIt = mPropertyMap.find((*prevPropIt)->id);
-          //cout << " Setting property..." << (*prevPropIt)->id;
-          
-          if (pIt != mPropertyMap.end())
-          {
-            //cout << "Found " << pIt->second->getPath() << ":";
-          
-            int ival;
-            float val;
-			/*
-			 * RJH - 2017-01-25 
-			 * During multiplayer operations a series of crashes were encountered that affected all players
-			 * within range of each other and resulting in an exception being thrown at exactly the same moment in time
-			 * (within case props::STRING: ref http://i.imgur.com/y6MBoXq.png)
-			 * Investigation showed that the nextPropIt and prevPropIt were pointing to different properties
-			 * which may be caused due to certain models that have overloaded mp property transmission and
-			 * these craft have their properties truncated due to packet size. However the result of this
-			 * will be different contents in the previous and current packets, so here we protect against
-			 * this by only considering properties where the previous and next id are the same.
-			 * It might be a better solution to search the previous and next lists to locate the matching id's
-			 */
-			if (*nextPropIt && (*nextPropIt)->id == (*prevPropIt)->id ) {
-				switch ((*prevPropIt)->type) {
-				case props::INT:
-				case props::BOOL:
-				case props::LONG:
-					ival = (int)(0.5 + (1 - tau)*((double)(*prevPropIt)->int_value) +
-						tau*((double)(*nextPropIt)->int_value));
-					pIt->second->setIntValue(ival);
-					//cout << "Int: " << ival << "\n";
-					break;
-				case props::FLOAT:
-				case props::DOUBLE:
-					val = (1 - tau)*(*prevPropIt)->float_value +
-						tau*(*nextPropIt)->float_value;
-					//cout << "Flo: " << val << "\n";
-					pIt->second->setFloatValue(val);
-					break;
-				case props::STRING:
-				case props::UNSPECIFIED:
-					//cout << "Str: " << (*nextPropIt)->string_value << "\n";
-					pIt->second->setStringValue((*nextPropIt)->string_value);
-					break;
-				default:
-					// FIXME - currently defaults to float values
-					val = (1 - tau)*(*prevPropIt)->float_value +
-						tau*(*nextPropIt)->float_value;
-					//cout << "Unk: " << val << "\n";
-					pIt->second->setFloatValue(val);
-					break;
-				}
-			}
-			else
-			{
-				SG_LOG(SG_AI, SG_WARN, "MP packet mismatch during lag interpolation: " << (*prevPropIt)->id << " != " << (*nextPropIt)->id << "\n");
-			}
+          // Here we do just linear interpolation on the position
+          ecPos = interpolate(tau, prevIt->second.position, nextIt->second.position);
+          ecOrient = interpolate((float)tau, prevIt->second.orientation,
+              nextIt->second.orientation);
+          ecLinearVel = interpolate((float)tau, prevIt->second.linearVel, nextIt->second.linearVel);
+          speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
+
+          if (prevIt->second.properties.size()
+              == nextIt->second.properties.size()) {
+              std::vector<FGPropertyData*>::const_iterator prevPropIt;
+              std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
+              std::vector<FGPropertyData*>::const_iterator nextPropIt;
+              std::vector<FGPropertyData*>::const_iterator nextPropItEnd;
+              prevPropIt = prevIt->second.properties.begin();
+              prevPropItEnd = prevIt->second.properties.end();
+              nextPropIt = nextIt->second.properties.begin();
+              nextPropItEnd = nextIt->second.properties.end();
+              while (prevPropIt != prevPropItEnd) {
+                  PropertyMap::iterator pIt = mPropertyMap.find((*prevPropIt)->id);
+                  //cout << " Setting property..." << (*prevPropIt)->id;
+
+                  if (pIt != mPropertyMap.end())
+                  {
+                      //cout << "Found " << pIt->second->getPath() << ":";
+
+                      int ival;
+                      float val;
+                      /*
+                       * RJH - 2017-01-25
+                       * During multiplayer operations a series of crashes were encountered that affected all players
+                       * within range of each other and resulting in an exception being thrown at exactly the same moment in time
+                       * (within case props::STRING: ref http://i.imgur.com/y6MBoXq.png)
+                       * Investigation showed that the nextPropIt and prevPropIt were pointing to different properties
+                       * which may be caused due to certain models that have overloaded mp property transmission and
+                       * these craft have their properties truncated due to packet size. However the result of this
+                       * will be different contents in the previous and current packets, so here we protect against
+                       * this by only considering properties where the previous and next id are the same.
+                       * It might be a better solution to search the previous and next lists to locate the matching id's
+                       */
+                      if (*nextPropIt && (*nextPropIt)->id == (*prevPropIt)->id) {
+                          switch ((*prevPropIt)->type) {
+                          case props::INT:
+                          case props::BOOL:
+                          case props::LONG:
+                              ival = (int)(0.5 + (1 - tau)*((double)(*prevPropIt)->int_value) +
+                                  tau*((double)(*nextPropIt)->int_value));
+                              pIt->second->setIntValue(ival);
+                              //cout << "Int: " << ival << "\n";
+                              break;
+                          case props::FLOAT:
+                          case props::DOUBLE:
+                              val = (1 - tau)*(*prevPropIt)->float_value +
+                                  tau*(*nextPropIt)->float_value;
+                              //cout << "Flo: " << val << "\n";
+                              pIt->second->setFloatValue(val);
+                              break;
+                          case props::STRING:
+                          case props::UNSPECIFIED:
+                              //cout << "Str: " << (*nextPropIt)->string_value << "\n";
+                              pIt->second->setStringValue((*nextPropIt)->string_value);
+                              break;
+                          default:
+                              // FIXME - currently defaults to float values
+                              val = (1 - tau)*(*prevPropIt)->float_value +
+                                  tau*(*nextPropIt)->float_value;
+                              //cout << "Unk: " << val << "\n";
+                              pIt->second->setFloatValue(val);
+                              break;
+                          }
+                      }
+                      else
+                      {
+                          SG_LOG(SG_AI, SG_WARN, "MP packet mismatch during lag interpolation: " << (*prevPropIt)->id << " != " << (*nextPropIt)->id << "\n");
+                      }
+                  }
+                  else
+                  {
+                      SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
+                  }
+
+                  ++prevPropIt;
+                  ++nextPropIt;
+              }
           }
-          else
-          {
-            SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
-          }
-          
-          ++prevPropIt;
-          ++nextPropIt;
-        }
-      }
 
-      // Now throw away too old data
-      if (prevIt != mMotionInfo.begin()) 
-      {
-        --prevIt;
-        mMotionInfo.erase(mMotionInfo.begin(), prevIt);
+          // Now throw away too old data
+          if (prevIt != mMotionInfo.begin())
+          {
+              --prevIt;
+              mMotionInfo.erase(mMotionInfo.begin(), prevIt);
+          }
       }
     }
   } else {
