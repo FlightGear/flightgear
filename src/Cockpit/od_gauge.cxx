@@ -70,9 +70,16 @@ FGODGauge::~FGODGauge()
  * Used to remember the located groups that require modification
  */
 typedef struct {
-	typedef osg::ref_ptr<osg::Group> GroupPtr;
-	GroupPtr parent;
-	GroupPtr node;
+    // could be:
+    //typedef osg::ref_ptr<osg::Group> GroupPtr;
+    //GroupPtr parent;
+    //GroupPtr node;
+    // However this gives compile errors on linux; 
+    // so change to use good old fashioned pointers. 
+    // This means that the pointer may become invalid; however provided that this is a short lived operation 
+    // and that modify is called immediately after visit it should work.
+    osg::Group *parent;
+    osg::Group *node;
 	int unit;
 }GroupListItem;
 
@@ -207,6 +214,7 @@ class ReplaceStaticTextureVisitor:
      * this section of code used to be in the apply method above, however to work this requires modification of the scenegraph nodes
      * that are currently iterating, so instead the apply method will locate the groups to be modified and when finished then the 
      * nodes can actually be modified safely. Initially found thanks to the debug RTL in MSVC2015 throwing an exception.
+     * should be called immediately after the visitor to ensure that the groups are still valid and that nothing else has modified these groups.
      */
     void modify_groups()
 	{
