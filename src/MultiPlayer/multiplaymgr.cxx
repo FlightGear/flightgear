@@ -1418,6 +1418,9 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
       SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::ProcessPosMsg - "
              "message from " << MsgHdr->Callsign << " has unknown property id "
              << id); 
+      // At this point the packet must be considered to be unreadable 
+      // as we have no way of knowing the length of this property (it could be a string)
+      break; 
     }
   }
  noprops:
