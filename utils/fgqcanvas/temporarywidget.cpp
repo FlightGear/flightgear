@@ -34,7 +34,6 @@
 #include "localprop.h"
 #include "elementdatamodel.h"
 #include "fgcanvastext.h"
-#include "fgqcanvasimage.h"
 
 TemporaryWidget::TemporaryWidget(QWidget *parent) :
     QWidget(parent),
@@ -48,7 +47,6 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
     ui->quickWidget->setSource(QUrl("root.qml"));
 
     FGCanvasText::setEngine(ui->quickWidget->engine());
-    FGQCanvasImage::setEngine(ui->quickWidget->engine());
 
     connect(ui->canvasSelectCombo, SIGNAL(activated(int)),
             this, SLOT(onCanvasSelected(int)));

@@ -148,8 +148,8 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
 
     if (_hasClip)
     {
-        // clip is define in parent's coordinate system
-#if 1
+        // clip is definef in the global coordinate system
+#if 0
         p->save();
         p->setTransform(context->globalCoordinateTransform());
         p->setPen(Qt::yellow);

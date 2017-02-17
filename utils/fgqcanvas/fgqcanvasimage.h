@@ -23,13 +23,13 @@
 
 #include "fgcanvaselement.h"
 
+class ImageQuickItem;
+
 class FGQCanvasImage : public FGCanvasElement
 {
     Q_OBJECT
 public:
     FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop);
-
-    static void setEngine(QQmlEngine* engine);
 
     CanvasItem* createQuickItem(QQuickItem *parent) override;
     CanvasItem* quickItem() const override;
@@ -58,7 +58,7 @@ private:
     mutable QSizeF _destSize;
     mutable QRectF _sourceRect;
 
-    CanvasItem* _quickItem = nullptr;
+    ImageQuickItem* _quickItem = nullptr;
 };
 
 #endif // FGQCANVASIMAGE_H

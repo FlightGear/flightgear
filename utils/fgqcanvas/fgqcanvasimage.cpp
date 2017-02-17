@@ -27,20 +27,85 @@
 #include "canvasitem.h"
 #include "canvasconnection.h"
 
-static QQmlComponent* static_imageComponent = nullptr;
+
+#include <QSGGeometry>
+#include <QSGGeometryNode>
+#include <QSGFlatColorMaterial>
+#include <QSGTexture>
+#include <QSGSimpleTextureNode>
+#include <QQuickWindow>
+
+class ImageQuickItem : public CanvasItem
+{
+    Q_OBJECT
+
+
+
+public:
+    ImageQuickItem(QQuickItem* parent)
+        : CanvasItem(parent)
+    {
+        setFlag(ItemHasContents);
+    }
+
+    void setSourceRect(const QRectF& sourceRect)
+    {
+        m_sourceRect = sourceRect;
+        update();
+    }
+
+    void setSize(const QSizeF &size)
+    {
+        m_size = size;
+        update();
+    }
+
+    void setPixmap(QPixmap pixmap)
+    {
+         m_texture = window()->createTextureFromImage(pixmap.toImage(), QQuickWindow::TextureCanUseAtlas);
+         update();
+    }
+
+    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
+    {
+        QSGSimpleTextureNode* texNode = static_cast<QSGSimpleTextureNode*>(oldNode);
+        if (!texNode) {
+            texNode = new QSGSimpleTextureNode;
+            texNode->setOwnsTexture(true);
+        }
+
+        texNode->setRect(QRectF(QPointF(), m_size));
+        texNode->setSourceRect(m_sourceRect);
+        texNode->setTexture(m_texture);
+
+        return texNode;
+    }
+
+protected:
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+    {
+        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        update();
+    }
+
+    QRectF boundingRect() const
+    {
+        if ((width() == 0.0) || (height() == 0.0)) {
+            return QRectF(QPointF(), m_size);
+        }
+
+        return QQuickItem::boundingRect();
+    }
+
+private:
+    QRectF m_sourceRect;
+    QSGTexture* m_texture;
+    QSizeF m_size;
+};
 
 FGQCanvasImage::FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop)
 {
-
-}
-
-void FGQCanvasImage::setEngine(QQmlEngine *engine)
-{
-    static_imageComponent = new QQmlComponent(engine, QUrl("qrc:///qml/image.qml"));
-    if (!static_imageComponent || !static_imageComponent->errors().empty()) {
-        qWarning() << static_imageComponent->errorString();
-    }
 }
 
 void FGQCanvasImage::doPolish()
@@ -120,6 +185,10 @@ void FGQCanvasImage::recomputeSourceRect() const
 
     _sourceRect =  QRectF(left, top, right - left, bottom - top);
     _sourceRectDirty = false;
+
+    if (_quickItem) {
+        _quickItem->setSourceRect(_sourceRect);
+    }
 }
 
 void FGQCanvasImage::rebuildImage() const
@@ -147,6 +216,11 @@ void FGQCanvasImage::rebuildImage() const
                        _propertyRoot->value("size[1]", 0.0).toFloat());
 
     _imageDirty = false;
+
+    if (_quickItem) {
+        _quickItem->setSize(_destSize);
+        _quickItem->setPixmap(_image);
+    }
 }
 
 void FGQCanvasImage::markStyleDirty()
@@ -156,9 +230,12 @@ void FGQCanvasImage::markStyleDirty()
 
 CanvasItem *FGQCanvasImage::createQuickItem(QQuickItem *parent)
 {
-    Q_ASSERT(static_imageComponent);
-    _quickItem = qobject_cast<CanvasItem*>(static_imageComponent->create());
-    _quickItem->setParentItem(parent);
+    _quickItem = new ImageQuickItem(parent);
+
+    _quickItem->setSourceRect(_sourceRect);
+    _quickItem->setSize(_destSize);
+    _quickItem->setPixmap(_image);
+
     return _quickItem;
 }
 
@@ -166,3 +243,5 @@ CanvasItem *FGQCanvasImage::quickItem() const
 {
     return _quickItem;
 }
+
+#include "fgqcanvasimage.moc"
