@@ -70,18 +70,10 @@ FGODGauge::~FGODGauge()
  * Used to remember the located groups that require modification
  */
 typedef struct {
-    // could be:
-    //typedef osg::ref_ptr<osg::Group> GroupPtr;
-    //GroupPtr parent;
-    //GroupPtr node;
-    // However this gives compile errors on linux; 
-    // so change to use good old fashioned pointers. 
-    // This means that the pointer may become invalid; however provided that this is a short lived operation 
-    // and that modify is called immediately after visit it should work.
-    osg::Group *parent;
-    osg::Group *node;
+    osg::ref_ptr<osg::Group> parent;
+    osg::ref_ptr<osg::Node> node;
 	int unit;
-}GroupListItem;
+} GroupListItem;
 
 /**
  * Replace a texture in the airplane model with the gauge texture.
@@ -141,10 +133,10 @@ class ReplaceStaticTextureVisitor:
 
     virtual void apply(osg::Geode& node)
     {
-      simgear::EffectGeode* eg = dynamic_cast<simgear::EffectGeode*>(&node);
-      if( !eg )
+      simgear::EffectGeode* effectGeode = dynamic_cast<simgear::EffectGeode*>(&node);
+      if( !effectGeode )
         return;
-      simgear::Effect* eff = eg->getEffect();
+      simgear::Effect* eff = effectGeode->getEffect();
       if (!eff)
           return;
       osg::StateSet* ss = eff->getDefaultStateSet();
@@ -182,7 +174,7 @@ class ReplaceStaticTextureVisitor:
           return;
       }
 
-      for( size_t unit = 0; unit < ss->getNumTextureAttributeLists(); ++unit )
+      for( int unit = 0; unit < ss->getNumTextureAttributeLists(); ++unit )
       {
         osg::Texture2D* tex = dynamic_cast<osg::Texture2D*>
         (
@@ -202,11 +194,7 @@ class ReplaceStaticTextureVisitor:
         /*
          * remember this group for modification once the scenegraph has been traversed
          */
-		GroupListItem gli;
-		gli.node = eg;
-		gli.parent = parent;
-		gli.unit = unit;
-		groups_to_modify.push_back(gli);
+		groups_to_modify.push_back({parent, effectGeode->asNode(), unit});
 		return;
       }
     }
@@ -218,26 +206,22 @@ class ReplaceStaticTextureVisitor:
      */
     void modify_groups()
 	{
-		for (GroupList::iterator group_iterator = groups_to_modify.begin(); group_iterator != groups_to_modify.end(); group_iterator++) {
-			GroupPtr eg = group_iterator->node;
-			GroupPtr parent = group_iterator->parent;
-			int unit = group_iterator->unit;
-
-			// insert a new group between the geode an it's parent which overrides
+        for (auto g : groups_to_modify) {
+            // insert a new group between the geode an it's parent which overrides
 			// the texture
 			GroupPtr group = new osg::Group;
 			group->setName("canvas texture group");
-			group->addChild(eg);
-			parent->removeChild(eg);
-			parent->addChild(group);
+			group->addChild(g.node);
+			g.parent->removeChild(g.node);
+			g.parent->addChild(group);
 
 			if (_cull_callback)
 				group->setCullCallback(_cull_callback);
 
 			osg::StateSet* stateSet = group->getOrCreateStateSet();
-			stateSet->setTextureAttribute(unit, _new_texture,
+			stateSet->setTextureAttribute(g.unit, _new_texture,
 				osg::StateAttribute::OVERRIDE);
-			stateSet->setTextureMode(unit, GL_TEXTURE_2D,
+			stateSet->setTextureMode(g.unit, GL_TEXTURE_2D,
 				osg::StateAttribute::ON);
 
 			_placements.push_back(simgear::canvas::PlacementPtr(
@@ -249,7 +233,7 @@ class ReplaceStaticTextureVisitor:
 				SG_GL,
 				SG_INFO,
 				"Replaced texture '" << _tex_name << "'"
-				<< " for object '" << parent->getName() << "'"
+				<< " for object '" << g.parent->getName() << "'"
 				<< (!_parent_name.empty() ? " with parent '" + _parent_name + "'"
 					: "")
 			);
