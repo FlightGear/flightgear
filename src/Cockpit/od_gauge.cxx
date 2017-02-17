@@ -71,14 +71,15 @@ FGODGauge::~FGODGauge()
  */
 typedef struct {
     osg::ref_ptr<osg::Group> parent;
-    osg::ref_ptr<osg::Node> node;
-	int unit;
+    osg::ref_ptr<osg::Geode> node;
+    unsigned int unit;
 } GroupListItem;
 
 /**
  * Replace a texture in the airplane model with the gauge texture.
  */
 class ReplaceStaticTextureVisitor:
+
   public osg::NodeVisitor
 {
   public:
@@ -174,7 +175,7 @@ class ReplaceStaticTextureVisitor:
           return;
       }
 
-      for( int unit = 0; unit < ss->getNumTextureAttributeLists(); ++unit )
+      for( unsigned int unit = 0; unit < ss->getNumTextureAttributeLists(); ++unit )
       {
         osg::Texture2D* tex = dynamic_cast<osg::Texture2D*>
         (
@@ -194,8 +195,8 @@ class ReplaceStaticTextureVisitor:
         /*
          * remember this group for modification once the scenegraph has been traversed
          */
-		groups_to_modify.push_back({parent, effectGeode->asNode(), unit});
-		return;
+        groups_to_modify.push_back({ parent, &node, unit });
+        return;
       }
     }
     /*
