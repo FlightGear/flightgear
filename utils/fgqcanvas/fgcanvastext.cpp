@@ -145,6 +145,10 @@ void FGCanvasText::rebuildAlignment(QVariant var) const
         return;
     }
 
+    if (_quickItem) {
+        _quickItem->setProperty("canvasAlignment", alignString);
+    }
+
     if (alignString == "center") {
         _alignment = Qt::AlignCenter;
         return;

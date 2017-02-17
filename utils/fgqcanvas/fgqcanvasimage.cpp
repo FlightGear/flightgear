@@ -39,8 +39,6 @@ class ImageQuickItem : public CanvasItem
 {
     Q_OBJECT
 
-
-
 public:
     ImageQuickItem(QQuickItem* parent)
         : CanvasItem(parent)
