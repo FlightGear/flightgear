@@ -75,12 +75,20 @@ public:
             QTransform transform;
             QTriangleSet triangles = qTriangulate(m_path, transform);
 
-            // TODO, handle > 2^16 indices
-            Q_ASSERT(triangles.indices.type() == QVertexIndexVector::UnsignedShort);
+            int indexType = QSGGeometry::UnsignedShortType;
+            if (triangles.indices.type() == QVertexIndexVector::UnsignedShort) {
+                // default is fine
+            } else if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
+                indexType = QSGGeometry::UnsignedIntType;
+            } else {
+                qFatal("Unsupported triangle index type");
+            }
 
             QSGGeometry* sgGeom = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),
                                                   triangles.vertices.size() >> 1,
-                                                  triangles.indices.size());
+                                                  triangles.indices.size(),
+                                                  indexType);
+
             sgGeom->setIndexDataPattern(QSGGeometry::StaticPattern);
             sgGeom->setDrawingMode(GL_TRIANGLES);
 
@@ -92,8 +100,13 @@ public:
                 (points++)->set(vx, vy);
             }
 
-            quint16* indices = sgGeom->indexDataAsUShort();
-            ::memcpy(indices, triangles.indices.data(), sizeof(unsigned short) * triangles.indices.size());
+            if (triangles.indices.type() == QVertexIndexVector::UnsignedShort) {
+                quint16* indices = sgGeom->indexDataAsUShort();
+                ::memcpy(indices, triangles.indices.data(), sizeof(unsigned short) * triangles.indices.size());
+            } else {
+                quint32* indices = sgGeom->indexDataAsUInt();
+                ::memcpy(indices, triangles.indices.data(), sizeof(quint32) * triangles.indices.size());
+            }
 
             // create the node now, pretty trivial
             fillGeom = new QSGGeometryNode;
