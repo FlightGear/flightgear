@@ -143,6 +143,10 @@ if (HAVE_QT)
                             EnvironmentPage.h
                             AdditionalSettings.cpp
                             AdditionalSettings.h
+                            LauncherArgumentTokenizer.cxx
+                            LauncherArgumentTokenizer.hxx
+                            AircraftSearchFilterModel.cxx
+                            AircraftSearchFilterModel.hxx
                             ${uic_sources}
                             ${qrc_sources})
 

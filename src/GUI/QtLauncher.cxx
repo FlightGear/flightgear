@@ -35,7 +35,6 @@
 #include <QCompleter>
 #include <QListView>
 #include <QSettings>
-#include <QSortFilterProxyModel>
 #include <QMenu>
 #include <QDesktopServices>
 #include <QUrl>
@@ -70,6 +69,8 @@
 #include "PathsDialog.hxx"
 #include "EditCustomMPServerDialog.hxx"
 #include "previewwindow.h"
+#include "LauncherArgumentTokenizer.hxx"
+#include "AircraftSearchFilterModel.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -162,119 +163,6 @@ void initNavCache()
     }
 }
 
-class ArgumentsTokenizer
-{
-public:
-    class Arg
-    {
-    public:
-        explicit Arg(QString k, QString v = QString()) : arg(k), value(v) {}
-
-        QString arg;
-        QString value;
-    };
-
-    QList<Arg> tokenize(QString in) const
-    {
-        int index = 0;
-        const int len = in.count();
-        QChar c, nc;
-        State state = Start;
-        QString key, value;
-        QList<Arg> result;
-
-        for (; index < len; ++index) {
-            c = in.at(index);
-            nc = index < (len - 1) ? in.at(index + 1) : QChar();
-
-            switch (state) {
-            case Start:
-                if (c == QChar('-')) {
-                    if (nc == QChar('-')) {
-                        state = Key;
-                        key.clear();
-                        ++index;
-                    } else {
-                        // should we pemit single hyphen arguments?
-                        // choosing to fail for now
-                        return QList<Arg>();
-                    }
-                } else if (c == QChar('#')) {
-                    state = Comment;
-                    break;
-                } else if (c.isSpace()) {
-                    break;
-                }
-                break;
-
-            case Key:
-                if (c == QChar('=')) {
-                    state = Value;
-                    value.clear();
-                } else if (c.isSpace()) {
-                    state = Start;
-                    result.append(Arg(key));
-                } else {
-                    // could check for illegal charatcers here
-                    key.append(c);
-                }
-                break;
-
-            case Value:
-                if (c == QChar('"')) {
-                    state = Quoted;
-                } else if (c.isSpace()) {
-                    state = Start;
-                    result.append(Arg(key, value));
-                } else {
-                    value.append(c);
-                }
-                break;
-
-            case Quoted:
-                if (c == QChar('\\')) {
-                    // check for escaped double-quote inside quoted value
-                    if (nc == QChar('"')) {
-                        ++index;
-                    }
-                } else if (c == QChar('"')) {
-                    state = Value;
-                } else {
-                    value.append(c);
-                }
-                break;
-
-            case Comment:
-                if ((c == QChar('\n')) || (c == QChar('\r'))) {
-                    state = Start;
-                    break;
-                } else {
-                    // nothing to do, eat comment chars
-                }
-                break;
-            } // of state switch
-        } // of character loop
-
-        // ensure last argument isn't lost
-        if (state == Key) {
-            result.append(Arg(key));
-        } else if (state == Value) {
-            result.append(Arg(key, value));
-        }
-
-        return result;
-    }
-
-private:
-    enum State {
-        Start = 0,
-        Key,
-        Value,
-        Quoted,
-        Comment
-    };
-};
-
 class NaturalEarthDataLoaderThread : public QThread
 {
     Q_OBJECT
@@ -333,139 +221,13 @@ private:
         flightgear::PolyLineList lines;
         flightgear::SHPParser::parsePolyLines(path, aType, m_parsedLines, areClosed);
     }
-    
+
     flightgear::PolyLineList m_parsedLines;
     unsigned int m_lineInsertCount;
 };
 
 } // of anonymous namespace
 
-class AircraftProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-public:
-    AircraftProxyModel(QObject* pr) :
-        QSortFilterProxyModel(pr),
-        m_ratingsFilter(true),
-        m_onlyShowInstalled(false)
-    {
-        for (int i=0; i<4; ++i) {
-            m_ratings[i] = 3;
-        }
-    }
-
-    void setRatings(int* ratings)
-    {
-        ::memcpy(m_ratings, ratings, sizeof(int) * 4);
-        invalidate();
-    }
-
-    void setAircraftFilterString(QString s)
-    {
-        m_filterString = s;
-
-        m_filterProps = new SGPropertyNode;
-        int index = 0;
-        Q_FOREACH(QString term, s.split(' ')) {
-            m_filterProps->getNode("all-of/text", index++, true)->setStringValue(term.toStdString());
-        }
-
-        invalidate();
-    }
-
-public slots:
-    void setRatingFilterEnabled(bool e)
-    {
-        if (e == m_ratingsFilter) {
-            return;
-        }
-
-        m_ratingsFilter = e;
-        invalidate();
-    }
-
-    void setInstalledFilterEnabled(bool e)
-    {
-        if (e == m_onlyShowInstalled) {
-            return;
-        }
-
-        m_onlyShowInstalled = e;
-        invalidate();
-    }
-
-protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
-    {
-        QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
-        QVariant v = index.data(AircraftPackageStatusRole);
-        AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-        if (status == MessageWidget) {
-            return true;
-        }
-
-        if (!filterAircraft(index)) {
-            return false;
-        }
-
-        if (m_onlyShowInstalled) {
-            QVariant v = index.data(AircraftPackageStatusRole);
-            AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-            if (status == PackageNotInstalled) {
-                return false;
-            }
-        }
-
-        if (!m_onlyShowInstalled && m_ratingsFilter) {
-            for (int i=0; i<4; ++i) {
-                if (m_ratings[i] > index.data(AircraftRatingRole + i).toInt()) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-private:
-    bool filterAircraft(const QModelIndex& sourceIndex) const
-    {
-        if (m_filterString.isEmpty()) {
-            return true;
-        }
-
-        simgear::pkg::PackageRef pkg = sourceIndex.data(AircraftPackageRefRole).value<simgear::pkg::PackageRef>();
-        if (pkg) {
-            return pkg->matches(m_filterProps.ptr());
-        }
-
-        QString baseName = sourceIndex.data(Qt::DisplayRole).toString();
-        if (baseName.contains(m_filterString, Qt::CaseInsensitive)) {
-            return true;
-        }
-
-        QString longDesc = sourceIndex.data(AircraftLongDescriptionRole).toString();
-        if (longDesc.contains(m_filterString, Qt::CaseInsensitive)) {
-            return true;
-        }
-
-        const int variantCount = sourceIndex.data(AircraftVariantCountRole).toInt();
-        for (int variant = 0; variant < variantCount; ++variant) {
-            QString desc = sourceIndex.data(AircraftVariantDescriptionRole + variant).toString();
-            if (desc.contains(m_filterString, Qt::CaseInsensitive)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    bool m_ratingsFilter;
-    bool m_onlyShowInstalled;
-    int m_ratings[4];
-    QString m_filterString;
-    SGPropertyNode_ptr m_filterProps;
-};
 
 class NoOfficialHangarMessage : public QWidget
 {
@@ -576,7 +338,7 @@ private:
 
         return VISIT_CONTINUE;
     }
-    
+
     std::string _aircraftId;
     SGPath _foundPath;
 };
@@ -1589,7 +1351,7 @@ void QtLauncher::onPopupAircraftHistory()
         if (nm.isEmpty()) {
             continue;
         }
-        
+
         QAction* act = m.addAction(nm);
         act->setData(uri);
     }
