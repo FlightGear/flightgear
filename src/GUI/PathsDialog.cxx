@@ -10,8 +10,8 @@
 #include "CatalogListModel.hxx"
 #include "AddCatalogDialog.hxx"
 #include "AircraftModel.hxx"
-#include "QtLauncher_private.hxx"
 #include "InstallSceneryDialog.hxx"
+#include "QtLauncher.hxx"
 
 #include <Main/options.hxx>
 #include <Main/globals.hxx>
@@ -358,7 +358,7 @@ void AddOnsPage::onChangeDataDir()
         settings.setValue("fg-root", "!ask");
     } // scope the ensure settings are written nicely
 
-    QtLauncher::restartTheApp(QStringList());
+    flightgear::restartTheApp();
 }
 
 void AddOnsPage::onInstallScenery()

@@ -92,7 +92,8 @@ if (HAVE_QT)
 
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
-                            QtLauncher_private.hxx
+                            LauncherMainWindow.hxx
+                            LauncherMainWindow.cxx
                             BaseDiagram.cxx
                             BaseDiagram.hxx
                             AirportDiagram.cxx
@@ -147,6 +148,8 @@ if (HAVE_QT)
                             LauncherArgumentTokenizer.hxx
                             AircraftSearchFilterModel.cxx
                             AircraftSearchFilterModel.hxx
+                            DefaultAircraftLocator.cxx
+                            DefaultAircraftLocator.hxx
                             ${uic_sources}
                             ${qrc_sources})
 

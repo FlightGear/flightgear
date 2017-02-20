@@ -24,6 +24,11 @@
 #ifndef FG_MAIN_AIRCRAFT_DIR_VISITOR_HXX
 #define FG_MAIN_AIRCRAFT_DIR_VISITOR_HXX
 
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sg_path.hxx>
+
+#include <Main/globals.hxx>
+
 class AircraftDirVistorBase
 {
 public:
@@ -43,8 +48,8 @@ protected:
     
     VisitResult visitAircraftPaths()
     {
-        const PathList& paths(globals->get_aircraft_paths());
-        PathList::const_iterator it = paths.begin();
+        const simgear::PathList& paths(globals->get_aircraft_paths());
+        simgear::PathList::const_iterator it = paths.begin();
         for (; it != paths.end(); ++it) {
             VisitResult vr = visitDir(*it, 0);
             if (vr != VISIT_CONTINUE) {

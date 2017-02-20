@@ -1,4 +1,4 @@
-// QtLauncher_private.hxx - GUI launcher dialog using Qt5
+// LauncherMainWindow.hxx - GUI launcher dialog using Qt5
 //
 // Written by James Turner, started October 2015.
 //
@@ -18,8 +18,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef FG_QTLAUNCHER_PRIVATE_HXX
-#define FG_QTLAUNCHER_PRIVATE_HXX
+#ifndef LAUNCHER_MAIN_WINDOW_HXX
+#define LAUNCHER_MAIN_WINDOW_HXX
 
 #include <QMainWindow>
 #include <QScopedPointer>
@@ -43,18 +43,14 @@ class QCheckBox;
 class CatalogListModel;
 class RemoteXMLRequest;
 
-class QtLauncher : public QMainWindow
+class LauncherMainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    QtLauncher();
-    virtual ~QtLauncher();
+    LauncherMainWindow();
+    virtual ~LauncherMainWindow();
 
     bool execInApp();
-
-    static void setSceneryPaths();
-
-    static void restartTheApp(QStringList fgArgs);
 
     bool wasRejected();
 protected:
@@ -110,6 +106,8 @@ private slots:
     void onPackagesNeedUpdate(bool yes);
 
     void onClickToolboxButton();
+
+    void setSceneryPaths();
     void onAircraftPathsChanged();
 private:
 
@@ -167,4 +165,4 @@ private:
     QVariantList m_recentLocations;
 };
 
-#endif // of FG_QTLAUNCHER_PRIVATE_HXX
+#endif // of LAUNCHER_MAIN_WINDOW_HXX

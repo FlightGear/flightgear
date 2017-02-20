@@ -36,6 +36,14 @@ namespace flightgear
   bool runLauncherDialog();
 
   bool runInAppLauncherDialog();
+
+  /**
+   * @brief restartTheApp quit the application and relaunch it, passing the
+   * --launcher flag explicitly.
+   */
+  void restartTheApp();
+
+  void launcherSetSceneryPaths();
 }
 
 #endif // of FG_QTLAUNCHER_HXX
