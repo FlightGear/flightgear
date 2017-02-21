@@ -53,26 +53,12 @@ AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
     connect(m_ui->removeAircraftPath, &QToolButton::clicked,
             this, &AddOnsPage::onRemoveAircraftPath);
 
-    connect(m_ui->changeDownloadDir, &QPushButton::clicked,
-            this, &AddOnsPage::onChangeDownloadDir);
-
-    connect(m_ui->clearDownloadDir, &QPushButton::clicked,
-            this, &AddOnsPage::onClearDownloadDir);
-
-    connect(m_ui->changeDataDir, &QPushButton::clicked,
-            this, &AddOnsPage::onChangeDataDir);
     connect(m_ui->installSceneryButton, &QPushButton::clicked,
             this, &AddOnsPage::onInstallScenery);
 
     m_ui->sceneryPathsList->setToolTip(
       tr("After changing this list, please restart the launcher to avoid "
          "possibly inconsistent behavior."));
-    m_ui->changeDownloadDir->setToolTip(
-      tr("After changing this location, you may have to restart the launcher "
-         "to avoid inconsistent behavior."));
-    m_ui->clearDownloadDir->setToolTip(
-      tr("If you use this button, you may have to restart the launcher "
-         "to avoid inconsistent behavior."));
     m_ui->installSceneryButton->setToolTip(
       tr("After installing scenery, you may have to restart the launcher "
          "to avoid inconsistent behavior."));
@@ -84,11 +70,6 @@ AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
 
     QStringList aircraftPaths = settings.value("aircraft-paths").toStringList();
     m_ui->aircraftPathsList->addItems(aircraftPaths);
-
-    QVariant downloadDir = settings.value("download-dir");
-    if (downloadDir.isValid()) {
-        m_downloadDir = downloadDir.toString();
-    }
 
     updateUi();
 }
@@ -294,76 +275,11 @@ void AddOnsPage::onRemoveCatalog()
     updateUi();
 }
 
-void AddOnsPage::onChangeDownloadDir()
-{
-    QString path = QFileDialog::getExistingDirectory(this,
-                                                     tr("Choose downloads folder"),
-                                                     m_downloadDir);
-    if (path.isEmpty()) {
-        return; // user cancelled
-    }
-
-    m_downloadDir = path;
-    setDownloadDir();
-}
-
-void AddOnsPage::onClearDownloadDir()
-{
-    // does this need an 'are you sure'?
-    m_downloadDir.clear();
-
-    setDownloadDir();
-}
-
-void AddOnsPage::setDownloadDir()
-{
-    QSettings settings;
-    if (m_downloadDir.isEmpty()) {
-        settings.remove("download-dir");
-    } else {
-        settings.setValue("download-dir", m_downloadDir);
-    }
-
-    if (m_downloadDir.isEmpty()) {
-        flightgear::Options::sharedInstance()->clearOption("download-dir");
-    } else {
-        flightgear::Options::sharedInstance()->setOption("download-dir", m_downloadDir.toStdString());
-    }
-
-    emit downloadDirChanged();
-    updateUi();
-}
-
-void AddOnsPage::onChangeDataDir()
-{
-    QMessageBox mbox(this);
-    mbox.setText(tr("Change the data files used by FlightGear?"));
-    mbox.setInformativeText(tr("FlightGear requires additional files to operate. "
-                               "(Also called the base package, or fg-data) "
-                               "You can restart FlightGear and choose a "
-                               "different data files location, or restore the default setting."));
-    QPushButton* quitButton = mbox.addButton(tr("Restart FlightGear now"), QMessageBox::YesRole);
-    mbox.addButton(QMessageBox::Cancel);
-    mbox.setDefaultButton(QMessageBox::Cancel);
-    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
-
-    mbox.exec();
-    if (mbox.clickedButton() != quitButton) {
-        return;
-    }
-
-    {
-        QSettings settings;
-        // set the option to the magic marker value
-        settings.setValue("fg-root", "!ask");
-    } // scope the ensure settings are written nicely
-
-    flightgear::restartTheApp();
-}
-
 void AddOnsPage::onInstallScenery()
 {
-    InstallSceneryDialog dlg(this, m_downloadDir);
+    QSettings settings;
+    QString downloadDir = settings.value("download-dir").toString();
+    InstallSceneryDialog dlg(this, downloadDir);
     if (dlg.exec() == QDialog::Accepted) {
         if (!haveSceneryPath(dlg.sceneryPath())) {
             m_ui->sceneryPathsList->addItem(dlg.sceneryPath());
@@ -374,30 +290,6 @@ void AddOnsPage::onInstallScenery()
 
 void AddOnsPage::updateUi()
 {
-    QString s = m_downloadDir;
-    if (s.isEmpty()) {
-        s = QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
-        s.append(tr(" (default)"));
-        m_ui->clearDownloadDir->setEnabled(false);
-    } else {
-        m_ui->clearDownloadDir->setEnabled(true);
-    }
-
-    QString m = tr("Download location: %1").arg(s);
-    m_ui->downloadLocation->setText(m);
-
-    QString dataLoc;
-    QSettings settings;
-    QString root = settings.value("fg-root").toString();
-    if (root.isNull()) {
-        dataLoc = tr("built-in");
-    } else {
-        dataLoc = root;
-    }
-
-    m_ui->dataLocation->setText(tr("Data location: %1").arg(dataLoc));
-
-
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
     m_ui->addDefaultCatalogButton->setEnabled(!http->isDefaultCatalogInstalled());
 }

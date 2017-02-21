@@ -6,6 +6,8 @@
 
 #include <Main/AircraftDirVisitorBase.hxx>
 
+#include <QAbstractListModel>
+
 namespace flightgear
 {
 
@@ -28,6 +30,38 @@ private:
 
     std::string _aircraftId;
     SGPath _foundPath;
+};
+
+class WeatherScenariosModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    WeatherScenariosModel(QObject* pr = nullptr);
+
+    int rowCount(const QModelIndex& index) const override;
+
+    QVariant data(const QModelIndex& index, int role) const override;
+
+    QHash<int, QByteArray> roleNames() const override;
+
+    Q_INVOKABLE QString metarForItem(int index) const;
+
+    Q_INVOKABLE QString descriptionForItem(int index) const;
+private:
+    struct WeatherScenario
+    {
+        QString name;
+        QString description;
+        QString metar;
+    };
+
+    std::vector<WeatherScenario> m_scenarios;
+
+    enum {
+        NameRole = Qt::UserRole + 1,
+        DescriptionRole,
+        MetarRole
+    };
 };
 
 }

@@ -156,6 +156,14 @@ public:
   static bool checkForArg(int argc, char* argv[], const char* arg);
 
       SGPath platformDefaultRoot() const;
+
+      /**
+       * @brief extractOptions - extract the currently set options as
+       * a string array. This can be used to examine what options were
+       * requested / set so far.
+       * @return
+       */
+      string_list extractOptions() const;
 private:
   void showUsage() const;
   void showVersion() const;

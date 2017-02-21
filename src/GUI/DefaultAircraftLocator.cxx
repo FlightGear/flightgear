@@ -65,4 +65,82 @@ DefaultAircraftLocator::visit(const SGPath& p)
     return VISIT_CONTINUE;
 }
 
+WeatherScenariosModel::WeatherScenariosModel(QObject *pr) :
+    QAbstractListModel(pr)
+{
+    SGPropertyNode_ptr root = loadXMLDefaults();
+    if (root) {
+        SGPropertyNode_ptr scenarios = root->getNode("environment/weather-scenarios");
+        Q_ASSERT(scenarios);
+        int nChildren = scenarios->nChildren();
+        for (int i = 0; i < nChildren; i++) {
+            SGPropertyNode_ptr scenario = scenarios->getChild(i);
+            if (strcmp(scenario->getName(), "scenario") != 0) {
+                continue;
+            }
+
+            if (scenario->getStringValue("local-weather/tile-type") == std::string("live")) {
+                continue;
+            }
+
+            WeatherScenario ws;
+            ws.name = QString::fromStdString(scenario->getStringValue("name"));
+            ws.description = QString::fromStdString(scenario->getStringValue("description")).simplified();
+            ws.metar = QString::fromStdString(scenario->getStringValue("metar"));
+            m_scenarios.push_back(ws);
+        }
+    }
+}
+
+int WeatherScenariosModel::rowCount(const QModelIndex &index) const
+{
+    return m_scenarios.size();
+}
+
+QVariant WeatherScenariosModel::data(const QModelIndex &index, int role) const
+{
+    const int row = index.row();
+    if ((row < 0) || (row >= m_scenarios.size())) {
+           return QVariant();
+    }
+
+    const WeatherScenario& scenario(m_scenarios.at(row));
+    if ((role == Qt::DisplayRole) || (role == NameRole)) {
+        return scenario.name;
+    } else if (role == DescriptionRole) {
+        return scenario.description;
+    } else if (role == MetarRole) {
+        return scenario.metar;
+    }
+
+    return QVariant();
+}
+
+QHash<int, QByteArray> WeatherScenariosModel::roleNames() const
+{
+    QHash<int, QByteArray> result;
+    result[NameRole] = "name";
+    result[DescriptionRole] = "description";
+    result[MetarRole] = "metar";
+    return result;
+}
+
+QString WeatherScenariosModel::metarForItem(int index) const
+{
+    if ((index < 0) || (index >= m_scenarios.size())) {
+        return QString();
+    }
+
+    return m_scenarios.at(index).metar;
+}
+
+QString WeatherScenariosModel::descriptionForItem(int index) const
+{
+    if ((index < 0) || (index >= m_scenarios.size())) {
+        return QString();
+    }
+
+    return m_scenarios.at(index).description;
+}
+
 } // of namespace flightgear

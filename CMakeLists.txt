@@ -311,7 +311,7 @@ endif (USE_DBUS)
 ## Qt5 setup setup
 if (ENABLE_QT)
 	message(STATUS "Qt launcher enabled, checking for Qt 5.1 / qmake")
-        find_package(Qt5 5.1 COMPONENTS Widgets Network)
+  find_package(Qt5 5.1 COMPONENTS Widgets Network Qml)
 	if (Qt5Widgets_FOUND)
 		message(STATUS "Will enable Qt launcher GUI")
 		message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")

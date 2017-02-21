@@ -31,6 +31,7 @@
 
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
+#include "LaunchConfig.hxx"
 
 #include <Airports/airport.hxx>
 #include <Airports/groundnetwork.hxx>
@@ -423,6 +424,12 @@ LocationWidget::~LocationWidget()
     delete m_ui;
 }
 
+void LocationWidget::setLaunchConfig(LaunchConfig *config)
+{
+    m_config = config;
+    connect(m_config, &LaunchConfig::collect, this, &LocationWidget::onCollectConfig);
+}
+
 void LocationWidget::restoreSettings()
 {
     QSettings settings;
@@ -489,8 +496,6 @@ bool LocationWidget::shouldStartPaused() const
         // navaid, start paused
         return true;
     }
-
-    return false;
 }
 
 QVariantMap LocationWidget::saveLocation() const
@@ -646,42 +651,120 @@ void LocationWidget::setLocationProperties()
 
 void LocationWidget::applyPositionOffset()
 {
-    fgSetDouble("/sim/presets/altitude-ft", m_ui->altitudeSpinbox->value());
-    fgSetBool("/sim/presets/on-ground", m_ui->altitudeSpinbox->value() > 0);
+    if (m_ui->altitudeSpinbox->value() > 0) {
+        m_config->setArg("altitude", QString::number(m_ui->altitudeSpinbox->value()));
+    }
 
-    fgSetString("/sim/presets/speed-set", "knots");
-    fgSetDouble("/sim/presets/airspeed-kt", m_ui->airspeedSpinbox->value());
-
-    fgSetDouble("/sim/presets/heading-deg", m_ui->headingSpinbox->value());
+    m_config->setArg("vc", QString::number(m_ui->airspeedSpinbox->value()));
+    m_config->setArg("heading", QString::number(m_ui->headingSpinbox->value()));
     
     if (m_ui->offsetGroup->isChecked()) {
         // flip direction of azimuth to balance the flip done in fgApplyStartOffset
         // I don't know why that flip exists but changing it there will break
         // command-line compatability so compensating here instead
         int offsetAzimuth = m_ui->offsetBearingSpinbox->value() - 180;
-
-        fgSetDouble("/sim/presets/offset-azimuth-deg", offsetAzimuth);
-        fgSetDouble("/sim/presets/offset-distance-nm", m_ui->offsetNmSpinbox->value());
+        m_config->setArg("offset-azimuth", QString::number(offsetAzimuth));
+        m_config->setArg("offset-distance", QString::number(m_ui->offsetNmSpinbox->value()));
     }
+}
+
+void LocationWidget::onCollectConfig()
+{
+    if (m_locationIsLatLon) {
+        m_config->setArg("lat", QString::number(m_geodLocation.getLatitudeDeg()));
+        m_config->setArg("lon", QString::number(m_geodLocation.getLongitudeDeg()));
+        applyPositionOffset();
+        return;
+    }
+
+    if (!m_location) {
+        return;
+    }
+
+    if (FGAirport::isAirportType(m_location.ptr())) {
+        FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
+        m_config->setArg("airport", QString::fromStdString(apt->ident()));
+
+        if (m_ui->runwayRadio->isChecked()) {
+            if (apt->type() == FGPositioned::AIRPORT) {
+                int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
+                if (index >= 0) {
+                    // explicit runway choice
+                    FGRunwayRef runway = apt->getRunwayByIndex(index);
+                    m_config->setArg("runway", QString::fromStdString(runway->ident()));
+
+                    // set nav-radio 1 based on selected runway
+                    if (runway->ILS()) {
+                        double mhz = runway->ILS()->get_freq() / 100.0;
+                        m_config->setArg("nav1", QString("%1:%2").arg(runway->headingDeg()).arg(mhz));
+                    }
+                }
+
+                if (m_ui->onFinalCheckbox->isChecked()) {
+                    m_config->setArg("glideslope", std::string("3.0"));
+                    m_config->setArg("offset-distance", QString::number(m_ui->approachDistanceSpin->value()));
+                    m_config->setArg("on-ground", std::string("false"));
+                }
+            } else if (apt->type() == FGPositioned::HELIPORT) {
+                int index = m_ui->runwayCombo->itemData(m_ui->runwayCombo->currentIndex()).toInt();
+                if (index >= 0)  {
+                    // explicit pad choice
+                    FGHelipadRef pad = apt->getHelipadByIndex(index);
+                    m_config->setArg("runway", pad->ident());
+                }
+            } else {
+                qWarning() << Q_FUNC_INFO << "implement me";
+            }
+
+        } else if (m_ui->parkingRadio->isChecked()) {
+            // parking selection
+            m_config->setArg("parkpos", m_ui->parkingCombo->currentText());
+        }
+        // of location is an airport
+    } else {
+        // location is a navaid
+        // note setting the ident here is ambigious, we really only need and
+        // want the 'navaid-id' property. However setting the 'real' option
+        // gives a better UI experience (eg existing Position in Air dialog)
+        FGPositioned::Type ty = m_location->type();
+        switch (ty) {
+            case FGPositioned::VOR:
+                m_config->setArg("vor", m_location->ident());
+                setNavRadioOption();
+                break;
+
+            case FGPositioned::NDB:
+                m_config->setArg("ndb", m_location->ident());
+                setNavRadioOption();
+                break;
+
+            case FGPositioned::FIX:
+                 m_config->setArg("fix", m_location->ident());
+                break;
+            default:
+                break;
+        };
+
+        // set disambiguation property
+        m_config->setProperty("/sim/presets/navaid-id", QString::number(m_location->guid()));
+        applyPositionOffset();
+    } // of navaid location
 }
 
 void LocationWidget::setNavRadioOption()
 {
-    flightgear::Options* opt = flightgear::Options::sharedInstance();
-
     if (m_location->type() == FGPositioned::VOR) {
         FGNavRecordRef nav(static_cast<FGNavRecord*>(m_location.ptr()));
         double mhz = nav->get_freq() / 100.0;
         int heading = 0; // add heading support
         QString navOpt = QString("%1:%2").arg(heading).arg(mhz);
-        opt->addOption("nav1", navOpt.toStdString());
+        m_config->setArg("nav1", navOpt);
     } else {
         FGNavRecordRef nav(static_cast<FGNavRecord*>(m_location.ptr()));
         int khz = nav->get_freq() / 100;
         int heading = 0;
         QString adfOpt = QString("%1:%2").arg(heading).arg(khz);
-        qDebug() << "ADF opt is:" << adfOpt;
-        opt->addOption("adf1", adfOpt.toStdString());
+        m_config->setArg("adf1", adfOpt);
     }
 }
 

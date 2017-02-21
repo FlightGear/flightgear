@@ -23,7 +23,6 @@ public:
     static void addDefaultCatalog(QWidget* pr, bool silent);
     
 signals:
-    void downloadDirChanged();
     void sceneryPathsChanged();
     void aircraftPathsChanged();
 
@@ -38,14 +37,9 @@ private slots:
     void onRemoveCatalog();
     void onAddDefaultCatalog();
 
-    void onChangeDownloadDir();
-    void onClearDownloadDir();
-
-    void onChangeDataDir();
     void onInstallScenery();
 private:
     void updateUi();
-    void setDownloadDir();
 
     void saveAircraftPaths();
     void saveSceneryPaths();
@@ -54,7 +48,6 @@ private:
     Ui::AddOnsPage* m_ui;
     CatalogListModel* m_catalogsModel;
     simgear::pkg::RootRef m_packageRoot;
-    QString m_downloadDir;
     
 };
 

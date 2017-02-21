@@ -28,6 +28,7 @@
 #include <Navaids/positioned.hxx>
 #include <Airports/airports_fwd.hxx>
 
+#include "LaunchConfig.hxx"
 #include "QtLauncher_fwd.hxx"
 
 namespace Ui {
@@ -43,6 +44,8 @@ class LocationWidget : public QWidget
 public:
     explicit LocationWidget(QWidget *parent = 0);
     ~LocationWidget();
+
+    void setLaunchConfig(LaunchConfig* config);
 
     QString locationDescription() const;
 
@@ -66,6 +69,8 @@ private Q_SLOTS:
     void onLocationChanged();
     void onOffsetDataChanged();
     void onHeadingChanged();
+
+    void onCollectConfig();
 private:
 
     void onSearch();
@@ -98,6 +103,8 @@ private:
 
     FGPositionedList m_recentLocations;
     LauncherAircraftType m_aircraftType;
+
+    LaunchConfig* m_config = nullptr;
 };
 
 #endif // LOCATIONWIDGET_H

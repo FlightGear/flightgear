@@ -6,8 +6,12 @@
 #include <QPalette>
 #include <QPushButton>
 #include <QVariant>
+#include <QDebug>
+#include <QSettings>
 
 #include "AdvancedSettingsButton.h"
+#include "SettingsWidgets.hxx"
+#include "LaunchConfig.hxx"
 
 SettingsSection::SettingsSection(QWidget* pr) :
     QFrame(pr)
@@ -21,6 +25,16 @@ SettingsSection::SettingsSection(QWidget* pr) :
     QPalette pal = palette();
     pal.setColor(QPalette::Normal, QPalette::WindowText, Qt::white);
     m_titleLabel->setPalette(pal);
+
+    if (!layout()) {
+        QVBoxLayout* vbox = new QVBoxLayout(this);
+        setLayout(vbox);
+    }
+}
+
+void SettingsSection::setLaunchConfig(LaunchConfig* config)
+{
+    connect(config, &LaunchConfig::collect, this, &SettingsSection::doApply);
 }
 
 void SettingsSection::setShowAdvanced(bool showAdvanced)
@@ -76,34 +90,25 @@ void SettingsSection::insertSettingsHeader()
 
     m_advancedModeToggle = new AdvancedSettingsButton;
     connect(m_advancedModeToggle, &QPushButton::toggled, this, &SettingsSection::toggleShowAdvanced);
-
     hbox->addWidget(m_advancedModeToggle);
 
-    QFont helpLabelFont;
-    helpLabelFont.setPointSize(helpLabelFont.pointSize() - 1);
-
-    QPalette pal = palette();
-    pal.setColor(QPalette::Normal, QPalette::WindowText, QColor(0x3f, 0x3f, 0x3f));
-
-    Q_FOREACH(QLabel* w,  findChildren<QLabel*>()) {
-        if (w->property("help").toBool()) {
-            w->setFont(helpLabelFont);
-            w->setPalette(pal);
-        }
-    }
-
+    updateShowAdvanced();
     internalUpdateAdvanced();
 }
 
 void SettingsSection::internalUpdateAdvanced()
 {
-    Q_FOREACH(QWidget* w,  findChildren<QWidget*>()) {
-        if (w->property("advanced").toBool()) {
-            w->setVisible(m_showAdvanced);
-        }
+}
 
-        if (w->property("simple").toBool()) {
-            w->setVisible(!m_showAdvanced);
-        }
-    }
+
+void SettingsSection::saveState(QSettings &settings) const
+{
+}
+
+void SettingsSection::restoreState(QSettings &settings)
+{
+}
+
+void SettingsSection::updateShowAdvanced()
+{
 }

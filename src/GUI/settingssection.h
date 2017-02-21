@@ -5,6 +5,8 @@
 #include <QLabel>
 
 class AdvancedSettingsButton;
+class QSettings;
+class LaunchConfig;
 
 class SettingsSection : public QFrame
 {
@@ -16,6 +18,8 @@ class SettingsSection : public QFrame
 
 public:
     SettingsSection(QWidget* pr = nullptr);
+
+    virtual void setLaunchConfig(LaunchConfig* config);
 
     bool showAdvanced() const
     {
@@ -29,19 +33,31 @@ public:
 
     void insertSettingsHeader();
 
+    virtual void saveState(QSettings& settings) const;
+
+    virtual void restoreState(QSettings& settings);
+
+    virtual void doApply() = 0;
+
+    virtual QString summary() const = 0;
+
 public slots:
     void setShowAdvanced(bool showAdvanced);
 
     void setTitle(QString title);
 
     void toggleShowAdvanced();
+
 signals:
     void showAdvancedChanged(bool showAdvanced);
 
     void titleChanged(QString title);
 
-private:
-    void internalUpdateAdvanced();
+    void summaryChanged(QString summary);
+
+protected:
+    virtual void internalUpdateAdvanced();
+    virtual void updateShowAdvanced();
 
     QString m_title;
     bool m_showAdvanced = false;

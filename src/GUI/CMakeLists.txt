@@ -78,14 +78,7 @@ if (HAVE_QT)
                             LocationWidget.ui
                             NoOfficialHangar.ui
                             InstallSceneryDialog.ui
-                            EditCustomMPServerDialog.ui
                             UpdateAllAircraft.ui
-                            RenderingSettings.ui
-                            ViewSettings.ui
-                            MPSettings.ui
-                            DownloadSettings.ui
-                            EnvironmentPage.ui
-                            AdditionalSettings.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
@@ -102,6 +95,8 @@ if (HAVE_QT)
                             NavaidDiagram.hxx
                             EditRatingsFilterDialog.cxx
                             EditRatingsFilterDialog.hxx
+                            ExtraSettingsSection.cxx
+                            ExtraSettingsSection.hxx
                             SetupRootDialog.cxx
                             SetupRootDialog.hxx
                             AircraftItemDelegate.hxx
@@ -122,40 +117,37 @@ if (HAVE_QT)
                             QtFileDialog.hxx
                             InstallSceneryDialog.hxx
                             InstallSceneryDialog.cxx
-                            EditCustomMPServerDialog.cxx
-                            EditCustomMPServerDialog.hxx
                             previewwindow.cpp
                             previewwindow.h
                             SettingsSection.cpp
                             SettingsSection.h
-                            renderingsettings.cpp
-                            renderingsettings.h
-                            ViewSettings.cpp
-                            ViewSettings.h
-                            MPSettings.cpp
-                            MPSettings.h
+                            SettingsSectionQML.cxx
+                            SettingsSectionQML.hxx
                             AdvancedSettingsButton.h
                             AdvancedSettingsButton.cpp
-                            DownloadSettings.cpp
-                            DownloadSettings.h
                             ToolboxButton.cpp
                             ToolboxButton.h
-                            EnvironmentPage.cpp
-                            EnvironmentPage.h
-                            AdditionalSettings.cpp
-                            AdditionalSettings.h
                             LauncherArgumentTokenizer.cxx
                             LauncherArgumentTokenizer.hxx
                             AircraftSearchFilterModel.cxx
                             AircraftSearchFilterModel.hxx
                             DefaultAircraftLocator.cxx
                             DefaultAircraftLocator.hxx
+                            SettingsWidgets.cxx
+                            SettingsWidgets.hxx
+                            LaunchConfig.cxx
+                            LaunchConfig.hxx
+                            ViewCommandLinePage.cxx
+                            ViewCommandLinePage.hxx
+                            MPServersModel.cpp
+                            MPServersModel.h
                             ${uic_sources}
                             ${qrc_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network SimGearCore)
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml SimGearCore)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
+    target_include_directories(fglauncher PRIVATE ${Qt5Qml_PRIVATE_INCLUDE_DIRS})
 
 
 endif()

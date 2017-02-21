@@ -199,6 +199,20 @@
         </widget>
        </item>
        <item>
+        <widget class="ToolboxButton" name="addOnsButton">
+         <property name="text">
+          <string>Add-ons</string>
+         </property>
+         <property name="icon">
+          <iconset resource="resources.qrc">
+           <normaloff>:/toolbox-addons</normaloff>:/toolbox-addons</iconset>
+         </property>
+         <property name="pageIndex" stdset="0">
+          <number>5</number>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -227,6 +241,9 @@
     </item>
     <item>
      <widget class="QStackedWidget" name="stack">
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
@@ -403,9 +420,12 @@
         <item row="1" column="3" colspan="2">
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>©2017, Curtis L Olson. Licensed under the GNU Public License (GPL) version 2. See &lt;here&gt; for more information</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;©2017 FlightGear contributiors. Licensed under the GNU Public License. See &lt;a href=&quot;http://www.flightgear.org&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;here&lt;/span&gt;&lt;/a&gt; for more information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="openExternalLinks">
            <bool>true</bool>
           </property>
          </widget>
@@ -428,16 +448,16 @@
          <number>4</number>
         </property>
         <property name="leftMargin">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="topMargin">
-         <number>2</number>
+         <number>4</number>
         </property>
         <property name="rightMargin">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="bottomMargin">
-         <number>2</number>
+         <number>4</number>
         </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -526,7 +546,39 @@
        </layout>
       </widget>
       <widget class="LocationWidget" name="location"/>
-      <widget class="EnvironmentPage" name="environmentPage"/>
+      <widget class="QWidget" name="environmentPage">
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <property name="leftMargin">
+         <number>4</number>
+        </property>
+        <property name="topMargin">
+         <number>4</number>
+        </property>
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
+        <item>
+         <widget class="QScrollArea" name="scrollArea_2">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="environmentScrollContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>643</width>
+             <height>644</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="newSettingsPage">
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="leftMargin">
@@ -551,8 +603,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>173</width>
-             <height>28</height>
+             <width>643</width>
+             <height>644</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -598,7 +650,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="QLineEdit" name="lineEdit">
+               <widget class="QLineEdit" name="settingsSearchEdit">
                 <property name="placeholderText">
                  <string>Search...</string>
                 </property>
@@ -628,12 +680,6 @@
    <class>ToolboxButton</class>
    <extends>QPushButton</extends>
    <header location="global">GUI/ToolboxButton.h</header>
-  </customwidget>
-  <customwidget>
-   <class>EnvironmentPage</class>
-   <extends>QWidget</extends>
-   <header location="global">GUI/EnvironmentPage.h</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

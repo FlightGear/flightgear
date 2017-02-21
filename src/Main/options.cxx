@@ -2773,9 +2773,30 @@ SGPath Options::platformDefaultRoot() const
 #else
 SGPath Options::platformDefaultRoot() const
 {
-  return SGPath::fromUtf8(PKGLIBDIR);
+    return SGPath::fromUtf8(PKGLIBDIR);
 }
+
 #endif
+
+string_list Options::extractOptions() const
+{
+    string_list result;
+    for (auto opt : p->values) {
+        if (opt.desc == nullptr) {
+            continue;
+        }
+
+        if (!strcmp(opt.desc->option,"prop")) {
+            result.push_back("prop:" + opt.value);
+        } else if (opt.value.empty()) {
+            result.push_back(opt.desc->option);
+        } else {
+            result.push_back(std::string(opt.desc->option) + "=" + opt.value);
+        }
+    }
+
+    return result;
+}
 
 void Options::setupRoot(int argc, char **argv)
 {

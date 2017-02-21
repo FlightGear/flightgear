@@ -27,10 +27,22 @@
         <file alias="toolbox-location">toolbox-location.png</file>
         <file alias="toolbox-settings">toolbox-settings.png</file>
         <file alias="toolbox-summary">toolbox-summary.png</file>
+        <file alias="toolbox-addons">toolbox-addons.png</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>
         <file alias="left-arrow-icon">preview-left-arrow.png</file>
         <file alias="right-arrow-icon">preview-right-arrow.png</file>
+    </qresource>
+    <qresource prefix="/settings">
+        <file alias="downloads">DownloadSettings.qml</file>
+        <file alias="general">GeneralSettings.qml</file>
+        <file alias="mp">MPSettings.qml</file>
+        <file alias="render">RenderSettings.qml</file>
+        <file alias="view">ViewSettings.qml</file>
+    </qresource>
+    <qresource prefix="/environment">
+        <file alias="time">TimeSettings.qml</file>
+        <file alias="weather">Weather.qml</file>
     </qresource>
 </RCC>

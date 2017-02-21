@@ -5,6 +5,7 @@
 
 class ToolboxButton : public QAbstractButton
 {
+    Q_OBJECT
 public:
     ToolboxButton(QWidget* pr = nullptr);
 

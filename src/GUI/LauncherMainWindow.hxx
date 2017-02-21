@@ -41,7 +41,11 @@ class AircraftProxyModel;
 class AircraftItemModel;
 class QCheckBox;
 class CatalogListModel;
-class RemoteXMLRequest;
+class QQmlEngine;
+class LaunchConfig;
+class ExtraSettingsSection;
+class ViewCommandLinePage;
+class MPServersModel;
 
 class LauncherMainWindow : public QMainWindow
 {
@@ -67,7 +71,6 @@ private slots:
 
     void onQuit();
 
-
     void onAircraftSelected(const QModelIndex& index);
     void onRequestPackageInstall(const QModelIndex& index);
     void onRequestPackageUninstall(const QModelIndex& index);
@@ -81,10 +84,6 @@ private slots:
 
     void updateSettingsSummary();
 
-
-    void onRembrandtToggled(bool b);
-    void onToggleTerrasync(bool enabled);
-
     void onSubsytemIdleTimeout();
 
     void onAircraftInstalledCompleted(QModelIndex index);
@@ -95,11 +94,9 @@ private slots:
     void maybeRestoreAircraftSelection();
 
     void onRestoreDefaults();
+    void onViewCommandLine();
 
-    void onDownloadDirChanged();
-
-    void onRefreshMPServers();
-    void onMPServerActivated(int index);
+    Q_INVOKABLE void onDownloadDirChanged();
 
     void onUpdateAllAircraft();
 
@@ -109,6 +106,8 @@ private slots:
 
     void setSceneryPaths();
     void onAircraftPathsChanged();
+
+    void onChangeDataDir();
 private:
 
     /**
@@ -124,19 +123,11 @@ private:
     QModelIndex proxyIndexForAircraftURI(QUrl uri) const;
     QModelIndex sourceIndexForAircraftURI(QUrl uri) const;
 
-    void setEnableDisableOptionFromCheckbox(QCheckBox* cbox, QString name) const;
-
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
 
     void checkOfficialCatalogMessage();
     void onOfficialCatalogMessageLink(QUrl link);
-
     void checkUpdateAircraft();
-
-    void onRefreshMPServersDone(simgear::HTTP::Request*);
-    void onRefreshMPServersFailed(simgear::HTTP::Request*);
-    int findMPServerPort(const std::string& host);
-    void restoreMPServerSelection();
 
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
@@ -146,9 +137,15 @@ private:
     void updateLocationHistory();
     bool shouldShowOfficialCatalogMessage() const;
 
+    void buildSettingsSections();
+    void buildEnvironmentSections();
+    void collectAircraftArgs();
+    void initQML();
+
     QScopedPointer<Ui::Launcher> m_ui;
     AircraftProxyModel* m_aircraftProxy;
     AircraftItemModel* m_aircraftModel;
+    MPServersModel* m_serversModel = nullptr;
 
     QUrl m_selectedAircraft;
     QList<QUrl> m_recentAircraft;
@@ -156,13 +153,12 @@ private:
     bool m_inAppMode = false;
     bool m_runInApp = false;
     bool m_accepted = false;
-
-    int m_ratingFilters[4];
-
-    SGSharedPtr<RemoteXMLRequest> m_mpServerRequest;
-    bool m_doRestoreMPServer;
-
+    int m_ratingFilters[4] = {3, 3, 3, 3};
     QVariantList m_recentLocations;
+    QQmlEngine* m_qmlEngine = nullptr;
+    LaunchConfig* m_config = nullptr;
+    ExtraSettingsSection* m_extraSettings = nullptr;
+    ViewCommandLinePage* m_viewCommandLinePage = nullptr;
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX
