@@ -870,6 +870,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onDownloadDirChanged);
     connect(addOnsPage, &AddOnsPage::sceneryPathsChanged,
             this, &QtLauncher::setSceneryPaths);
+    connect(addOnsPage, &AddOnsPage::aircraftPathsChanged,
+            this, &QtLauncher::onAircraftPathsChanged);
 
     m_ui->tabWidget->addTab(addOnsPage, tr("Add-ons"));
     // after any kind of reset, try to restore selection and scroll
@@ -1635,8 +1637,9 @@ void QtLauncher::onDownloadDirChanged()
 
     globals->get_subsystem<FGHTTPClient>()->init();
 
-    QSettings settings;
     // re-scan the aircraft list
+    QSettings settings;
+
     m_aircraftModel->setPackageRoot(globals->packageRoot());
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
     m_aircraftModel->scanDirs();
@@ -1645,6 +1648,13 @@ void QtLauncher::onDownloadDirChanged()
 
     // re-set scenery dirs
     setSceneryPaths();
+}
+
+void QtLauncher::onAircraftPathsChanged()
+{
+    QSettings settings;
+    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+    m_aircraftModel->scanDirs();
 }
 
 bool QtLauncher::shouldShowOfficialCatalogMessage() const

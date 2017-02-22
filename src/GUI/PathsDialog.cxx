@@ -124,11 +124,6 @@ void AddOnsPage::onAddSceneryPath()
         m_ui->sceneryPathsList->addItem(path);
         saveSceneryPaths();
     }
-
-    // work around a Qt OS-X bug - this dialog is ending ordered
-    // behind the main settings dialog (consequence of modal-dialog
-    // showing a modla dialog showing a modial dialog)
-    window()->raise();
 }
 
 void AddOnsPage::onRemoveSceneryPath()
@@ -175,11 +170,8 @@ void AddOnsPage::onAddAircraftPath()
         }
 
         saveAircraftPaths();
+        emit aircraftPathsChanged();
     }
-    // work around a Qt OS-X bug - this dialog is ending ordered
-    // behind the main settings dialog (consequence of modal-dialog
-    // showing a modla dialog showing a modial dialog)
-    window()->raise();
 }
 
 void AddOnsPage::onRemoveAircraftPath()
@@ -187,6 +179,7 @@ void AddOnsPage::onRemoveAircraftPath()
     if (m_ui->aircraftPathsList->currentItem()) {
         delete m_ui->aircraftPathsList->currentItem();
         saveAircraftPaths();
+        emit aircraftPathsChanged();
     }
 }
 

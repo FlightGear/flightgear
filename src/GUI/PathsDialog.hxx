@@ -25,7 +25,8 @@ public:
 signals:
     void downloadDirChanged();
     void sceneryPathsChanged();
-    
+    void aircraftPathsChanged();
+
 private slots:
     void onAddSceneryPath();
     void onRemoveSceneryPath();

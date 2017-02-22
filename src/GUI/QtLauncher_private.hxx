@@ -109,6 +109,7 @@ private slots:
 
     void onPackagesNeedUpdate(bool yes);
 
+    void onAircraftPathsChanged();
 private:
 
     /**
