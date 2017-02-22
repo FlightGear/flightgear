@@ -74,14 +74,11 @@ private:
   }
   int getProtocolToUse()
   {
-	  return mProtocolVersion;
-  }
-  void setProtocolToUse(int protocolVersion)
-  {
-	  if (protocolVersion >= MIN_MP_PROTOCOL_VERSION && protocolVersion <= MAX_MP_PROTOCOL_VERSION)
-		  mProtocolVersion = protocolVersion;
-	  else
-		  mProtocolVersion = MIN_MP_PROTOCOL_VERSION;
+      int protocolVersion = pProtocolVersion->getIntValue();
+      if (protocolVersion >= MIN_MP_PROTOCOL_VERSION && protocolVersion <= MAX_MP_PROTOCOL_VERSION)
+          return protocolVersion;
+      else
+          return MIN_MP_PROTOCOL_VERSION;
   }
 
   void findProperties();
@@ -113,12 +110,15 @@ private:
   // and the property nodes
   typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
+  SGPropertyNode *pProtocolVersion;
+  SGPropertyNode *pXmitLen;
+  SGPropertyNode *pMultiPlayDebugLevel;
+  SGPropertyNode *pMultiPlayRange;
 
   typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
   PropertyDefinitionMap mPropertyDefinition;
 
   bool mPropertiesChanged;
-  int mProtocolVersion;
 
   MPPropertyListener* mListener;
   

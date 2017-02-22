@@ -71,7 +71,7 @@ struct T_MsgHdr {
     xdr_data_t  Version;                // Protocoll version
     xdr_data_t  MsgId;                  // Message identifier 
     xdr_data_t  MsgLen;                 // absolute length of message
-	xdr_data_t  MsgLen2;                // Used to be - ReplyAddress;           // (player's receiver address
+	xdr_data_t  RequestedRangeNm;       // start of second partition of message 
     xdr_data_t  ReplyPort;              // player's receiver port
     char Callsign[MAX_CALLSIGN_LEN];    // Callsign used by the player
 };
