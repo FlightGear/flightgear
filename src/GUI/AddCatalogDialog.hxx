@@ -42,6 +42,13 @@ public:
 
     simgear::pkg::CatalogRef addedCatalog();
 
+    /**
+     * @brief setNonInteractiveMode - display progres but don't wait for user
+     * interaction at all. (Hides the buttons, closes autoamtically on success
+     * or failure)
+     */
+    void setNonInteractiveMode();
+
     void setUrlAndDownload(QUrl url);
 private slots:
     virtual void reject();
@@ -69,6 +76,7 @@ private:
     simgear::pkg::RootRef m_packageRoot;
     QUrl m_catalogUrl;
     simgear::pkg::CatalogRef m_result;
+    bool m_nonInteractiveMode = false;
 };
 
 #endif // FG_GUI_ADDCATALOGDIALOG_HXX
