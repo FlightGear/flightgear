@@ -696,6 +696,20 @@ bool runLauncherDialog()
     // try to initialise various Cocoa structures.
     flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
 
+    if (!settings.contains("initial-default-hangar-added")) {
+        settings.setValue("initial-default-hangar-added", true);
+
+        // ensure subsystems get updated while the dialog is running; we don't
+        // yet have the QtLauncher window's pump installed
+        QTimer subsystemPump;
+        subsystemPump.setInterval(0);
+        QObject::connect(&subsystemPump, &QTimer::timeout, [](){ globals->get_subsystem_mgr()->update(0.0); });
+        subsystemPump.start();
+
+        // will only add if needed
+        AddOnsPage::addDefaultCatalog(nullptr, true /* silent */);
+    }
+
     QtLauncher dlg;
     dlg.show();
 
@@ -1663,7 +1677,7 @@ void QtLauncher::onOfficialCatalogMessageLink(QUrl link)
         QSettings settings;
         settings.setValue("hide-official-catalog-message", true);
     } else if (s == "action:add-official") {
-        AddOnsPage::addDefaultCatalog(this);
+        AddOnsPage::addDefaultCatalog(this, false /* not silent */);
     }
 
     checkOfficialCatalogMessage();

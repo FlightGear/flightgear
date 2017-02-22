@@ -59,6 +59,12 @@ CatalogRef AddCatalogDialog::addedCatalog()
     return m_result;
 }
 
+void AddCatalogDialog::setNonInteractiveMode()
+{
+    m_nonInteractiveMode = true;
+     ui->buttonBox->hide();
+}
+
 void AddCatalogDialog::setUrlAndDownload(QUrl url)
 {
     m_catalogUrl = url;
@@ -199,6 +205,10 @@ void AddCatalogDialog::onCatalogStatusChanged(Catalog* cat)
     }
 
     ui->stack->setCurrentIndex(STATE_FINISHED);
+    if (m_nonInteractiveMode) {
+        QDialog::accept(); // we're done
+    }
+
     updateUi();
 }
 

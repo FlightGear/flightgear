@@ -237,13 +237,13 @@ void AddOnsPage::onAddCatalog()
 
 void AddOnsPage::onAddDefaultCatalog()
 {
-    addDefaultCatalog(this);
+    addDefaultCatalog(this, false /* not silent */);
 
     m_catalogsModel->refresh();
     updateUi();
 }
 
-void AddOnsPage::addDefaultCatalog(QWidget* pr)
+void AddOnsPage::addDefaultCatalog(QWidget* pr, bool silent)
 {
     // check it's not a duplicate somehow
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
@@ -252,6 +252,9 @@ void AddOnsPage::addDefaultCatalog(QWidget* pr)
 
     QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(pr, globals->packageRoot()));
     QUrl url(QString::fromStdString(http->getDefaultCatalogUrl()));
+    if (silent) {
+        dlg->setNonInteractiveMode();
+    }
     dlg->setUrlAndDownload(url);
     dlg->exec();
 
