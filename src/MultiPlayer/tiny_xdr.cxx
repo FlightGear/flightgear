@@ -73,7 +73,7 @@ XDR_encode_int32 ( const int32_t & n_Val )
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
-static short convert_int_to_short(int v1)
+static short XDR_convert_int_to_short(int v1)
 {
 	if (v1 < -32767)
 		v1 = -32767;
@@ -89,7 +89,7 @@ static short convert_int_to_short(int v1)
  */
 xdr_data_t XDR_encode_shortints32(const int v1, const int v2)
 {
-	return XDR_encode_uint32( (convert_int_to_short(v1) << 16) | (convert_int_to_short(v2)));
+	return XDR_encode_uint32( ((XDR_convert_int_to_short(v1) << 16) & 0xffff0000) | ((XDR_convert_int_to_short(v2)) & 0xffff));
 }
 /* Decode packed shorts into two ints. V1 in the highword ($V1..V2..)*/
 void            XDR_decode_shortints32(const xdr_data_t & n_Val, int &v1, int &v2)

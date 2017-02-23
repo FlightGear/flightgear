@@ -85,6 +85,7 @@ private:
   
   void Send();
   void SendMyPosition(const FGExternalMotionData& motionInfo);
+  short get_scaled_short(double v, double scale);
 
   union MsgBuf;
   FGAIMultiplayer* addMultiplayer(const std::string& callsign,
