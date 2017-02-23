@@ -75,7 +75,7 @@ private slots:
     void onAircraftSelected(const QModelIndex& index);
     void onRequestPackageInstall(const QModelIndex& index);
     void onRequestPackageUninstall(const QModelIndex& index);
-
+    void onShowPreviews(const QModelIndex& index);
     void onCancelDownload(const QModelIndex& index);
 
     void onPopupAircraftHistory();
@@ -109,6 +109,7 @@ private slots:
 
     void onPackagesNeedUpdate(bool yes);
 
+    void onAircraftPathsChanged();
 private:
 
     /**

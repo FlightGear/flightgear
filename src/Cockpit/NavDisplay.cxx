@@ -183,7 +183,7 @@ private:
 class SymbolRule
 {
 public:
-  SymbolRule()
+  SymbolRule() : enabled(false)
     {
         
     }

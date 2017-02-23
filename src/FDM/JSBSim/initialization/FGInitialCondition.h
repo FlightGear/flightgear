@@ -49,12 +49,13 @@ INCLUDES
 
 #include "math/FGLocation.h"
 #include "math/FGQuaternion.h"
+#include "simgear/misc/sg_path.hxx"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_INITIALCONDITION "$Id: FGInitialCondition.h,v 1.46 2016/07/03 17:20:55 bcoconni Exp $"
+#define ID_INITIALCONDITION "$Id: FGInitialCondition.h,v 1.48 2017/02/25 14:23:18 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -220,7 +221,7 @@ CLASS DOCUMENTATION
    @property ic/r-rad_sec (read/write) Yaw rate initial condition in radians/second
 
    @author Tony Peden
-   @version "$Id: FGInitialCondition.h,v 1.46 2016/07/03 17:20:55 bcoconni Exp $"
+   @version "$Id: FGInitialCondition.h,v 1.48 2017/02/25 14:23:18 bcoconni Exp $"
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -311,6 +312,13 @@ public:
       @param lat Initial latitude in degrees */
   void SetLatitudeDegIC(double lat) { SetLatitudeRadIC(lat*degtorad); }
 
+  /** Sets the initial geodetic latitude.
+      This method modifies the geodetic altitude in order to keep the altitude
+      above sea level unchanged.
+      @param glat Initial geodetic latitude in degrees */
+  void SetGeodLatitudeDegIC(double glat)
+  { SetGeodLatitudeRadIC(glat*degtorad); }
+
   /** Sets the initial longitude.
       @param lon Initial longitude in degrees */
   void SetLongitudeDegIC(double lon) { SetLongitudeRadIC(lon*degtorad); }
@@ -368,6 +376,11 @@ public:
   /** Gets the initial latitude.
       @return Initial geocentric latitude in degrees */
   double GetLatitudeDegIC(void) const { return position.GetLatitudeDeg(); }
+
+  /** Gets the initial geodetic latitude.
+      @return Initial geodetic latitude in degrees */
+  double GetGeodLatitudeDegIC(void) const
+  { return position.GetGeodLatitudeDeg(); }
 
   /** Gets the initial longitude.
       @return Initial longitude in degrees */
@@ -628,6 +641,11 @@ public:
       @return Initial latitude in radians */
   double GetLatitudeRadIC(void) const { return position.GetLatitude(); }
 
+  /** Gets the initial geodetic latitude.
+      @return Initial geodetic latitude in radians */
+  double GetGeodLatitudeRadIC(void) const
+  { return position.GetGeodLatitudeRad(); }
+
   /** Gets the initial longitude.
       @return Initial longitude in radians */
   double GetLongitudeRadIC(void) const { return position.GetLongitude(); }
@@ -660,7 +678,7 @@ public:
       @param rstname The name of an initial conditions file
       @param useStoredPath true if the stored path to the IC file should be used
       @return true if successful */
-  bool Load(std::string rstname, bool useStoredPath = true );
+  bool Load(const SGPath& rstname, bool useStoredPath = true );
 
   /** Is an engine running ?
       @param index of the engine to be checked

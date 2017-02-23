@@ -26,8 +26,13 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+
+#ifdef FG_TESTLIB
+#include <tests/fake_sgSky.hxx>
+#else
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/model/particles.hxx>
+#endif
 #include <simgear/structure/event_mgr.hxx>
 
 #include <Main/main.hxx>
@@ -47,6 +52,7 @@
 #include "gravity.hxx"
 #include "magvarmanager.hxx"
 
+#ifndef FG_TESTLIB
 class FG3DCloudsListener : public SGPropertyChangeListener {
 public:
   FG3DCloudsListener( FGClouds * fgClouds );
@@ -60,7 +66,7 @@ private:
 };
 
 FG3DCloudsListener::FG3DCloudsListener( FGClouds * fgClouds ) :
-    _fgClouds( fgClouds ) 
+    _fgClouds( fgClouds )
 {
   _enableNode = fgGetNode( "/sim/rendering/clouds3d-enable", true );
   _enableNode->addChangeListener( this );
@@ -77,21 +83,28 @@ void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
 {
   _fgClouds->set_3dClouds( _enableNode->getBoolValue() );
 }
+#endif
 
 FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
-  fgClouds(new FGClouds()),
+  fgClouds(nullptr),
   _cloudLayersDirty(true),
-  _3dCloudsEnableListener(new FG3DCloudsListener(fgClouds) ),
+  _3dCloudsEnableListener(nullptr),
   _sky(globals->get_renderer()->getSky())
 {
+#ifndef FG_TESTLIB
+  fgClouds = new FGClouds;
+  _3dCloudsEnableListener = new FG3DCloudsListener(fgClouds);
+#endif
   set_subsystem("controller", Environment::LayerInterpolateController::createInstance( fgGetNode("/environment/config", true ) ));
-  set_subsystem("realwx", Environment::RealWxController::createInstance( fgGetNode("/environment/realwx", true ) ), 1.0 );
 
   set_subsystem("precipitation", new FGPrecipitationMgr);
+#ifndef FG_TESTLIB
+  set_subsystem("realwx", Environment::RealWxController::createInstance( fgGetNode("/environment/realwx", true ) ), 1.0 );
   set_subsystem("terrainsampler", Environment::TerrainSampler::createInstance( fgGetNode("/environment/terrain", true ) ));
+#endif
   set_subsystem("ridgelift", new FGRidgeLift);
-  
+
   set_subsystem("magvar", new FGMagVarManager);
 }
 
@@ -103,23 +116,26 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   remove_subsystem("realwx");
   remove_subsystem("controller");
   remove_subsystem("magvar");
-  
-  delete fgClouds;
-  delete _environment;
 
+#ifndef FG_TESTLIB
+  delete fgClouds;
   delete _3dCloudsEnableListener;
+#endif
+  delete _environment;
 }
 
 SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
 {
-  
+
   InitStatus r = SGSubsystemGroup::incrementalInit();
   if (r == INIT_DONE) {
+#ifndef FG_TESTLIB
     fgClouds->Init();
+#endif
     globals->get_event_mgr()->addTask("updateClosestAirport", this,
                                       &FGEnvironmentMgr::updateClosestAirport, 30 );
   }
-  
+
   return r;
 }
 
@@ -148,10 +164,11 @@ FGEnvironmentMgr::bind ()
   _tiedProperties.Tie( "effective-visibility-m", _sky,
           &SGSky::get_visibility );
 
+#ifndef FG_TESTLIB
   _tiedProperties.Tie("rebuild-layers", fgClouds,
           &FGClouds::get_update_event,
           &FGClouds::set_update_event);
-
+#endif
 //  _tiedProperties.Tie("turbulence/use-cloud-turbulence", &sgEnviro,
 //          &SGEnviro::get_turbulence_enable_state,
 //          &SGEnviro::set_turbulence_enable_state);
@@ -221,7 +238,6 @@ FGEnvironmentMgr::bind ()
   _tiedProperties.Tie("clouds3d-use-impostors", _sky,
           &SGSky::get_3dCloudUseImpostors,
           &SGSky::set_3dCloudUseImpostors);
-
 }
 
 void
@@ -240,15 +256,16 @@ FGEnvironmentMgr::update (double dt)
     SGGeod aircraftPos(globals->get_aircraft_position());
   _environment->set_elevation_ft( aircraftPos.getElevationFt() );
 
+#ifndef FG_TESTLIB
   simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
                                    _environment->get_wind_speed_kt() );
   if( _cloudLayersDirty ) {
     _cloudLayersDirty = false;
     fgClouds->set_update_event( fgClouds->get_update_event()+1 );
   }
+#endif
 
-
-  fgSetDouble( "/environment/gravitational-acceleration-mps2", 
+  fgSetDouble( "/environment/gravitational-acceleration-mps2",
     Environment::Gravity::instance()->getGravity(aircraftPos));
 }
 
@@ -256,7 +273,7 @@ void
 FGEnvironmentMgr::updateClosestAirport()
 {
   SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "FGEnvironmentMgr::update: updating closest airport");
-  
+
   SGGeod pos = globals->get_aircraft_position();
   FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
   if( nearestAirport == NULL )

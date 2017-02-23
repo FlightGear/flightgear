@@ -212,7 +212,7 @@ void FGSubmodelMgr::update(double dt)
         if (trigger && (*submodel_iterator)->count != 0) {
             //int id = (*submodel_iterator)->id;
             //const string& name = (*submodel_iterator)->name;
-            
+
             SG_LOG(SG_AI, SG_DEBUG,
             "Submodels release:  " << (*submodel_iterator)->id
             << " name " << (*submodel_iterator)->name
@@ -345,7 +345,7 @@ void FGSubmodelMgr::transform(submodel *sm)
     if (sm->speed_node != 0)
         sm->speed = sm->speed_node->getDoubleValue();
 
-    // set the Initial Conditions for the types of submodel parent 
+    // set the Initial Conditions for the types of submodel parent
 
     if (_impact || _hit || _expiry) {
         _count++;
@@ -576,11 +576,9 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
             sm->pitch_offset = new FGXMLAutopilot::InputValue(*prop_root, b ? *b : n);
             if (b) old = true;
 
-#if defined(ENABLE_DEV_WARNINGS)
             if (old) {
-                SG_LOG(SG_AI, SG_WARN, "Submodels: <*-offset> is deprecated. Use <offsets> instead");
+                SG_LOG(SG_AI, SG_DEV_WARN, "Submodels: <*-offset> is deprecated. Use <offsets> instead");
             }
-#endif
         }
 
         // Randomness
@@ -716,7 +714,7 @@ SGVec3d FGSubmodelMgr::getCartOffsetPos() const
     // And postrotate the orientation of the user model wrt the horizontal
     // local frame
     hlTrans *= SGQuatd::fromYawPitchRollDeg(
-       IC.azimuth,            
+       IC.azimuth,
        IC.elevation,
        IC.roll);
 

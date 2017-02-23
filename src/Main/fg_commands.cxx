@@ -15,32 +15,24 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/io/iostreams/sgstream.hxx>
-#include <simgear/scene/material/mat.hxx>
-#include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/event_mgr.hxx>
-#include <simgear/sound/soundmgr.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <Network/RemoteXMLRequest.hxx>
 
 #include <FDM/flight.hxx>
-#include <GUI/gui.h>
-#include <GUI/new_gui.hxx>
-#include <GUI/dialog.hxx>
 #include <Aircraft/replay.hxx>
-#include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Viewer/view.hxx>
 #include <Environment/presets.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <GUI/gui.h>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -57,10 +49,6 @@
 
 #if FG_HAVE_GPERFTOOLS
 # include <google/profiler.h>
-#endif
-
-#if defined(HAVE_QT)
-#include <GUI/QtLauncher.hxx>
 #endif
 
 using std::string;
@@ -122,7 +110,7 @@ limit_value (double * value, const SGPropertyNode * arg)
 
     if (min_node == 0 || max_node == 0)
         wrap = false;
-  
+
     if (wrap) {                 // wrap such that min <= x < max
         double min_val = min_node->getDoubleValue();
         double max_val = max_node->getDoubleValue();
@@ -190,54 +178,6 @@ do_nasal (const SGPropertyNode * arg)
 }
 
 /**
- * Built-in command: exit FlightGear.
- *
- * status: the exit status to return to the operating system (defaults to 0)
- */
-static bool
-do_exit (const SGPropertyNode * arg)
-{
-    SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
-    fgSetBool("/sim/signals/exit", true);
-    globals->saveUserSettings();
-    fgOSExit(arg->getIntValue("status", 0));
-    return true;
-}
-
-
-/**
- * Reset FlightGear (Shift-Escape or Menu->File->Reset)
- */
-static bool
-do_reset (const SGPropertyNode * arg)
-{
-    fgResetIdleState();
-    return true;
-}
-
-
-/**
- * Change aircraft
- */
-static bool
-do_switch_aircraft (const SGPropertyNode * arg)
-{
-    fgSetString("/sim/aircraft", arg->getStringValue("aircraft"));
-    // start a reset
-    fgResetIdleState();
-    return true;
-}
-
-/**
- */
-static bool
-do_reposition (const SGPropertyNode * arg)
-{
-  fgStartReposition();
-  return true;
-}
-
-/**
  * Built-in command: replay the FDR buffer
  */
 static bool
@@ -270,7 +210,7 @@ do_pause (const SGPropertyNode * arg)
         fgSetBool("/sim/freeze/master",!paused);
         fgSetBool("/sim/freeze/clock",!paused);
     }
-  
+
     syncPausePopupState();
     return true;
 }
@@ -367,42 +307,6 @@ do_load_tape (const SGPropertyNode * arg)
     return true;
 }
 
-/**
- * Built-in command: (re)load the panel.
- *
- * path (optional): the file name to load the panel from 
- * (relative to FG_ROOT).  Defaults to the value of /sim/panel/path,
- * and if that's unspecified, to "Panels/Default/default.xml".
- */
-static bool
-do_panel_load (const SGPropertyNode * arg)
-{
-  string panel_path = arg->getStringValue("path");
-  if (!panel_path.empty()) {
-    // write to the standard property, which will force a load
-    fgSetString("/sim/panel/path", panel_path.c_str());
-  }
-  
-  return true;
-}
-
-/**
- * Built-in command: (re)load preferences.
- *
- * path (optional): the file name to load the panel from (relative
- * to FG_ROOT). Defaults to "preferences.xml".
- */
-static bool
-do_preferences_load (const SGPropertyNode * arg)
-{
-    // disabling this command which was formerly used to reload 'preferences.xml'
-    // reloading the defaults doesn't make sense (better to reset the simulator),
-    // and loading arbitrary XML docs into the property-tree can be done via
-    // the standard load-xml command.
-    SG_LOG(SG_GENERAL, SG_ALERT, "preferences-load command is deprecated and non-functional");
-    return false;
-}
-
 static void
 do_view_next(bool do_it)
 {
@@ -426,17 +330,6 @@ do_view_prev(bool do_it)
 }
 
 /**
- * An fgcommand to toggle fullscreen mode.
- * No parameters.
- */
-static bool
-do_toggle_fullscreen(const SGPropertyNode *arg)
-{
-    fgOSFullScreen();
-    return true;
-}
-
-/**
  * Built-in command: cycle view.
  */
 static bool
@@ -445,112 +338,6 @@ do_view_cycle (const SGPropertyNode * arg)
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
   return true;
-}
-
-/**
- * Built-in command: capture screen.
- */
-static bool
-do_screen_capture (const SGPropertyNode * arg)
-{
-  return fgDumpSnapShot();
-}
-
-static bool
-do_reload_shaders (const SGPropertyNode*)
-{
-    simgear::reload_shaders();
-    return true;
-}
-
-static bool
-do_dump_scene_graph (const SGPropertyNode*)
-{
-    fgDumpSceneGraph();
-    return true;
-}
-
-static bool
-do_dump_terrain_branch (const SGPropertyNode*)
-{
-    fgDumpTerrainBranch();
-
-    double lon_deg = fgGetDouble("/position/longitude-deg");
-    double lat_deg = fgGetDouble("/position/latitude-deg");
-    SGGeod geodPos = SGGeod::fromDegFt(lon_deg, lat_deg, 0.0);
-    SGVec3d zero = SGVec3d::fromGeod(geodPos);
-
-    SG_LOG(SG_INPUT, SG_INFO, "Model parameters:");
-    SG_LOG(SG_INPUT, SG_INFO, "Center: " << zero.x() << ", " << zero.y() << ", " << zero.z() );
-    SG_LOG(SG_INPUT, SG_INFO, "Rotation: " << lat_deg << ", " << lon_deg );
-
-    return true;
-}
-
-static bool
-do_print_visible_scene_info(const SGPropertyNode*)
-{
-    fgPrintVisibleSceneInfoCommand();
-    return true;
-}
-
-/**
- * Built-in command: hires capture screen.
- */
-static bool
-do_hires_screen_capture (const SGPropertyNode * arg)
-{
-  fgHiResDump();
-  return true;
-}
-
-
-/**
- * Reload the tile cache.
- */
-static bool
-do_tile_cache_reload (const SGPropertyNode * arg)
-{
-    SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
-    bool freeze = master_freeze->getBoolValue();
-    SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
-    if ( !freeze ) {
-        master_freeze->setBoolValue(true);
-    }
-
-    globals->get_subsystem("tile-manager")->reinit();
-
-    if ( !freeze ) {
-        master_freeze->setBoolValue(false);
-    }
-    return true;
-}
-
-/**
- * Reload the materials definition
- */
-static bool
-do_materials_reload (const SGPropertyNode * arg)
-{
-    SG_LOG(SG_INPUT, SG_INFO, "Reloading Materials");
-    SGMaterialLib* new_matlib =  new SGMaterialLib;
-    SGPath mpath( globals->get_fg_root() );
-    mpath.append( fgGetString("/sim/rendering/materials-file") );
-    bool loaded = new_matlib->load(globals->get_fg_root().local8BitStr(),
-                                  mpath.local8BitStr(),
-                                  globals->get_props());
-
-    if ( ! loaded ) {
-       SG_LOG( SG_GENERAL, SG_ALERT,
-               "Error loading materials file " << mpath );
-       return false;
-    }  
-
-    globals->set_matlib(new_matlib);    
-    FGTileMgr* tileManager = static_cast<FGTileMgr*>(globals->get_subsystem("tile-manager"));
-    tileManager->materialLibChanged();
-    
-    return true;
 }
 
 /**
@@ -600,12 +387,12 @@ do_property_assign (const SGPropertyNode * arg)
  *
  * property: the name of the property to increment or decrement.
  * step: the amount of the increment or decrement (default: 0).
- * offset: offset from the current setting (used for the mouse; multiplied 
+ * offset: offset from the current setting (used for the mouse; multiplied
  *         by factor)
  * factor: scaling amount for the offset (defaults to 1).
  * min: the minimum allowed value (default: no minimum).
  * max: the maximum allowed value (default: no maximum).
- * mask: 'integer' to apply only to the left of the decimal point, 
+ * mask: 'integer' to apply only to the left of the decimal point,
  *       'decimal' to apply only to the right of the decimal point,
  *       or 'all' to apply to the whole number (the default).
  * wrap: true if the value should be wrapped when it passes min or max;
@@ -623,7 +410,7 @@ do_property_adjust (const SGPropertyNode * arg)
   else
       amount = (arg->getDoubleValue("factor", 1)
                 * arg->getDoubleValue("offset"));
-          
+
   double unmodifiable, modifiable;
   split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
               &unmodifiable, &modifiable);
@@ -643,7 +430,7 @@ do_property_adjust (const SGPropertyNode * arg)
  * factor: the amount by which to multiply.
  * min: the minimum allowed value (default: no minimum).
  * max: the maximum allowed value (default: no maximum).
- * mask: 'integer' to apply only to the left of the decimal point, 
+ * mask: 'integer' to apply only to the left of the decimal point,
  *       'decimal' to apply only to the right of the decimal point,
  *       or 'all' to apply to the whole number (the default).
  * wrap: true if the value should be wrapped when it passes min or max;
@@ -744,11 +531,11 @@ do_property_cycle (const SGPropertyNode * arg)
 {
     SGPropertyNode * prop = get_prop(arg);
     std::vector<SGPropertyNode_ptr> values = arg->getChildren("value");
-    
+
     bool wrap = arg->getBoolValue("wrap", true);
     // compatible with knob/pick animations
     int offset = arg->getIntValue("offset", 1);
-    
+
     int selection = -1;
     int nSelections = values.size();
 
@@ -775,7 +562,7 @@ do_property_cycle (const SGPropertyNode * arg)
             SG_CLAMP_RANGE(selection, 0, nSelections - 1);
         }
     }
-    
+
     prop->setUnspecifiedValue(values[selection]->getStringValue());
     return true;
 }
@@ -896,188 +683,6 @@ do_data_logging_commit (const SGPropertyNode * arg)
 }
 
 /**
- * Built-in command: Add a dialog to the GUI system.  Does *not*
- * display the dialog.  The property node should have the same format
- * as a dialog XML configuration.  It must include:
- *
- * name: the name of the GUI dialog for future reference.
- */
-static bool
-do_dialog_new (const SGPropertyNode * arg)
-{
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    if (!gui) {
-      return false;
-    }
-  
-    // Note the casting away of const: this is *real*.  Doing a
-    // "dialog-apply" command later on will mutate this property node.
-    // I'm not convinced that this isn't the Right Thing though; it
-    // allows client to create a node, pass it to dialog-new, and get
-    // the values back from the dialog by reading the same node.
-    // Perhaps command arguments are not as "const" as they would
-    // seem?
-    gui->newDialog((SGPropertyNode*)arg);
-    return true;
-}
-
-/**
- * Built-in command: Show an XML-configured dialog.
- *
- * dialog-name: the name of the GUI dialog to display.
- */
-static bool
-do_dialog_show (const SGPropertyNode * arg)
-{
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    gui->showDialog(arg->getStringValue("dialog-name"));
-    return true;
-}
-
-
-/**
- * Built-in Command: Hide the active XML-configured dialog.
- */
-static bool
-do_dialog_close (const SGPropertyNode * arg)
-{
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    if(arg->hasValue("dialog-name"))
-        return gui->closeDialog(arg->getStringValue("dialog-name"));
-    return gui->closeActiveDialog();
-}
-
-
-/**
- * Update a value in the active XML-configured dialog.
- *
- * object-name: The name of the GUI object(s) (all GUI objects if omitted).
- */
-static bool
-do_dialog_update (const SGPropertyNode * arg)
-{
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    FGDialog * dialog;
-    if (arg->hasValue("dialog-name"))
-        dialog = gui->getDialog(arg->getStringValue("dialog-name"));
-    else
-        dialog = gui->getActiveDialog();
-
-    if (dialog != 0) {
-        dialog->updateValues(arg->getStringValue("object-name"));
-        return true;
-    } else {
-        return false;
-    }
-}
-
-static bool
-do_open_browser (const SGPropertyNode * arg)
-{
-    string path;
-    if (arg->hasValue("path"))
-        path = arg->getStringValue("path");
-    else
-    if (arg->hasValue("url"))
-        path = arg->getStringValue("url");
-    else
-        return false;
-
-    return openBrowser(path);
-}
-
-static bool
-do_open_launcher(const SGPropertyNode *)
-{
-#if defined(HAVE_QT)
-    bool ok = flightgear::runInAppLauncherDialog();
-    if (ok) {
-        // start a full reset
-        fgResetIdleState();
-    }
-    return true; // don't report failure
-#else
-    return false;
-#endif
-}
-
-/**
- * Apply a value in the active XML-configured dialog.
- *
- * object-name: The name of the GUI object(s) (all GUI objects if omitted).
- */
-static bool
-do_dialog_apply (const SGPropertyNode * arg)
-{
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    FGDialog * dialog;
-    if (arg->hasValue("dialog-name"))
-        dialog = gui->getDialog(arg->getStringValue("dialog-name"));
-    else
-        dialog = gui->getActiveDialog();
-
-    if (dialog != 0) {
-        dialog->applyValues(arg->getStringValue("object-name"));
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-/**
- * Redraw GUI (applying new widget colors). Doesn't reload the dialogs,
- * unlike reinit().
- */
-static bool
-do_gui_redraw (const SGPropertyNode * arg)
-{
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    gui->redraw();
-    return true;
-}
-
-
-/**
- * Adds model to the scenery. The path to the added branch (/models/model[*])
- * is returned in property "property".
- */
-static bool
-do_add_model (const SGPropertyNode * arg)
-{
-    SGPropertyNode * model = fgGetNode("models", true);
-    int i;
-    for (i = 0; model->hasChild("model",i); i++);
-    model = model->getChild("model", i, true);
-    copyProperties(arg, model);
-    if (model->hasValue("elevation-m"))
-        model->setDoubleValue("elevation-ft", model->getDoubleValue("elevation-m")
-                * SG_METER_TO_FEET);
-    model->getNode("load", true);
-    model->removeChildren("load");
-    const_cast<SGPropertyNode *>(arg)->setStringValue("property", model->getPath());
-    return true;
-}
-
-/**
- * Built-in command: commit presets (read from in /sim/presets/)
- */
-static bool
-do_presets_commit (const SGPropertyNode * arg)
-{
-    if (fgGetBool("/sim/initialized", false)) {
-      fgResetIdleState();
-    } else {
-      // Nasal can trigger this during initial init, which confuses
-      // the logic in ReInitSubsystems, since initial state has not been
-      // saved at that time. Short-circuit everything here.
-      flightgear::initPosition();
-    }
-    
-    return true;
-}
-
-/**
  * Built-in command: set log level (0 ... 7)
  */
 static bool
@@ -1088,21 +693,6 @@ do_log_level (const SGPropertyNode * arg)
    return true;
 }
 
-/*
-static bool
-do_decrease_visibility (const SGPropertyNode * arg)
-{
-    Environment::Presets::VisibilitySingleton::instance()->adjust( 0.9 );
-    return true;
-}
- 
-static bool
-do_increase_visibility (const SGPropertyNode * arg)
-{
-    Environment::Presets::VisibilitySingleton::instance()->adjust( 1.1 );
-    return true;
-}
-*/
 /**
  * An fgcommand to allow loading of xml files via nasal,
  * the xml file's structure will be made available within
@@ -1124,7 +714,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
 
     if (file.extension() != "xml")
         file.concat(".xml");
-    
+
     std::string icao = arg->getStringValue("icao");
     if (icao.empty()) {
         if (file.isRelative()) {
@@ -1133,7 +723,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
               file = absPath;
           else
           {
-              SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '"  
+              SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '"
                           << file << "'.");
               return false;
           }
@@ -1145,7 +735,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
           return false;
         }
     }
-    
+
     SGPath validated_path = fgValidatePath(file, false);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file << "' denied "
@@ -1177,30 +767,30 @@ do_load_xml_from_url(const SGPropertyNode * arg)
         SG_LOG(SG_IO, SG_ALERT, "xmlhttprequest: HTTP client not running");
         return false;
     }
-  
+
     std::string url(arg->getStringValue("url"));
     if (url.empty())
         return false;
-        
+
     SGPropertyNode *targetnode;
     if (arg->hasValue("targetnode"))
         targetnode = fgGetNode(arg->getStringValue("targetnode"), true);
     else
         targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
-    
+
     RemoteXMLRequest* req = new RemoteXMLRequest(url, targetnode);
-    
+
     if (arg->hasChild("body"))
         req->setBodyData(arg->getChild("body"));
-    
+
 // connect up optional reporting properties
-    if (arg->hasValue("complete")) 
+    if (arg->hasValue("complete"))
         req->setCompletionProp(fgGetNode(arg->getStringValue("complete"), true));
-    if (arg->hasValue("failure")) 
+    if (arg->hasValue("failure"))
         req->setFailedProp(fgGetNode(arg->getStringValue("failure"), true));
-    if (arg->hasValue("status")) 
+    if (arg->hasValue("status"))
         req->setStatusProp(fgGetNode(arg->getStringValue("status"), true));
-        
+
     http->makeRequest(req);
     return true;
 }
@@ -1252,49 +842,6 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
     }
 
     return true;
-}
-
-static bool
-do_press_cockpit_button (const SGPropertyNode *arg)
-{
-  const char *prefix = arg->getStringValue("prefix");
-
-  if (arg->getBoolValue("guarded") && fgGetDouble((string(prefix) + "-guard").c_str()) < 1)
-    return true;
-
-  string prop = string(prefix) + "-button";
-  double value;
-
-  if (arg->getBoolValue("latching"))
-    value = fgGetDouble(prop.c_str()) > 0 ? 0 : 1;
-  else
-    value = 1;
-
-  fgSetDouble(prop.c_str(), value);
-  fgSetBool(arg->getStringValue("discrete"), value > 0);
-
-  return true;
-}
-
-static bool
-do_release_cockpit_button (const SGPropertyNode *arg)
-{
-  const char *prefix = arg->getStringValue("prefix");
-
-  if (arg->getBoolValue("guarded")) {
-    string prop = string(prefix) + "-guard";
-    if (fgGetDouble(prop.c_str()) < 1) {
-      fgSetDouble(prop.c_str(), 1);
-      return true;
-    }
-  }
-
-  if (! arg->getBoolValue("latching")) {
-    fgSetDouble((string(prefix) + "-button").c_str(), 0);
-    fgSetBool(arg->getStringValue("discrete"), false);
-  }
-
-  return true;
 }
 
 // Optional profiling commands using gperftools:
@@ -1356,22 +903,12 @@ static struct {
 } built_ins [] = {
     { "null", do_null },
     { "nasal", do_nasal },
-    { "exit", do_exit },
-    { "reset", do_reset },
-    { "reposition", do_reposition },
-    { "switch-aircraft", do_switch_aircraft },
     { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },
     { "save-tape", do_save_tape },
     { "load-tape", do_load_tape },
-    { "panel-load", do_panel_load },
-    { "preferences-load", do_preferences_load },
-    { "toggle-fullscreen", do_toggle_fullscreen },
     { "view-cycle", do_view_cycle },
-    { "screen-capture", do_screen_capture },
-    { "hires-screen-capture", do_hires_screen_capture },
-    { "tile-cache-reload", do_tile_cache_reload },
     /*
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },
@@ -1388,18 +925,8 @@ static struct {
     { "property-randomize", do_property_randomize },
     { "property-interpolate", do_property_interpolate },
     { "data-logging-commit", do_data_logging_commit },
-    { "dialog-new", do_dialog_new },
-    { "dialog-show", do_dialog_show },
-    { "dialog-close", do_dialog_close },
-    { "dialog-update", do_dialog_update },
-    { "dialog-apply", do_dialog_apply },
-    { "open-browser", do_open_browser },
-    { "gui-redraw", do_gui_redraw },
-    { "add-model", do_add_model },
-    { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
-    { "open-launcher", do_open_launcher },
     /*
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
@@ -1407,14 +934,7 @@ static struct {
     { "loadxml", do_load_xml_to_proptree},
     { "savexml", do_save_xml_from_proptree },
     { "xmlhttprequest", do_load_xml_from_url },
-    { "press-cockpit-button", do_press_cockpit_button },
-    { "release-cockpit-button", do_release_cockpit_button },
-    { "dump-scenegraph", do_dump_scene_graph },
-    { "dump-terrainbranch", do_dump_terrain_branch },
-    { "print-visible-scene", do_print_visible_scene_info },
-    { "reload-shaders", do_reload_shaders },
-    { "reload-materials", do_materials_reload },
-  
+
     { "profiler-start", do_profiler_start },
     { "profiler-stop",  do_profiler_stop },
 

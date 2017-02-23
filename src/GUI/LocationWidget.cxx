@@ -536,7 +536,7 @@ void LocationWidget::setLocationProperties()
     QStringList props = QStringList() << "vor-id" << "fix" << "ndb-id" <<
         "runway-requested" << "navaid-id" << "offset-azimuth-deg" <<
         "offset-distance-nm" << "glideslope-deg" <<
-        "speed-set" << "on-ground" << "airspeed-kt" << "heading-deg" <<
+        "speed-set" << "on-ground" << "airspeed-kt" <<
         "airport-id" << "runway" << "parkpos";
 
     Q_FOREACH(QString s, props) {
@@ -556,10 +556,10 @@ void LocationWidget::setLocationProperties()
         return;
     }
 
-    fgSetDouble("/sim/presets/latitude-deg", -9999.0);
-    fgSetDouble("/sim/presets/longitude-deg", -9999.0);
+    fgSetDouble("/sim/presets/latitude-deg", 9999.0);
+    fgSetDouble("/sim/presets/longitude-deg", 9999.0);
     fgSetDouble("/sim/presets/altitude-ft", -9999.0);
-
+    fgSetDouble("/sim/presets/heading-deg", 9999.0);
 
     if (!m_location) {
         return;
@@ -569,6 +569,7 @@ void LocationWidget::setLocationProperties()
         FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
         fgSetString("/sim/presets/airport-id", apt->ident());
         fgSetBool("/sim/presets/on-ground", true);
+        fgSetBool("/sim/presets/airport-requested", true);
 
         if (m_ui->runwayRadio->isChecked()) {
             if (apt->type() == FGPositioned::AIRPORT) {

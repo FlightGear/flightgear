@@ -259,38 +259,38 @@ void FGRouteMgr::init() {
   magvar = fgGetNode("/environment/magnetic-variation-deg", true);
      
   departure = fgGetNode(RM "departure", true);
-  departure->tie("airport", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+  departure->tie("airport", SGStringValueMethods<FGRouteMgr>(*this, 
     &FGRouteMgr::getDepartureICAO, &FGRouteMgr::setDepartureICAO));
-  departure->tie("runway", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
-                                                                       &FGRouteMgr::getDepartureRunway, 
-                                                                      &FGRouteMgr::setDepartureRunway));
-  departure->tie("sid", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
-                                                                      &FGRouteMgr::getSID, 
-                                                                      &FGRouteMgr::setSID));
+  departure->tie("runway", SGStringValueMethods<FGRouteMgr>(*this, 
+                                                            &FGRouteMgr::getDepartureRunway,
+                                                            &FGRouteMgr::setDepartureRunway));
+  departure->tie("sid", SGStringValueMethods<FGRouteMgr>(*this, 
+                                                         &FGRouteMgr::getSID,
+                                                         &FGRouteMgr::setSID));
   
-  departure->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+  departure->tie("name", SGStringValueMethods<FGRouteMgr>(*this, 
     &FGRouteMgr::getDepartureName, NULL));
   departure->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
-                                                                               &FGRouteMgr::getDepartureFieldElevation, NULL));
+                                                                             &FGRouteMgr::getDepartureFieldElevation, NULL));
   departure->getChild("etd", 0, true);
   departure->getChild("takeoff-time", 0, true);
 
   destination = fgGetNode(RM "destination", true);
   destination->getChild("airport", 0, true);
   
-  destination->tie("airport", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+  destination->tie("airport", SGStringValueMethods<FGRouteMgr>(*this, 
     &FGRouteMgr::getDestinationICAO, &FGRouteMgr::setDestinationICAO));
-  destination->tie("runway", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+  destination->tie("runway", SGStringValueMethods<FGRouteMgr>(*this, 
                              &FGRouteMgr::getDestinationRunway, 
                             &FGRouteMgr::setDestinationRunway));
-  destination->tie("star", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
-                                                                        &FGRouteMgr::getSTAR, 
-                                                                        &FGRouteMgr::setSTAR));
-  destination->tie("approach", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
-                                                                        &FGRouteMgr::getApproach, 
-                                                                        &FGRouteMgr::setApproach));
+  destination->tie("star", SGStringValueMethods<FGRouteMgr>(*this, 
+                                                            &FGRouteMgr::getSTAR,
+                                                            &FGRouteMgr::setSTAR));
+  destination->tie("approach", SGStringValueMethods<FGRouteMgr>(*this, 
+                                                                &FGRouteMgr::getApproach,
+                                                                &FGRouteMgr::setApproach));
   
-  destination->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+  destination->tie("name", SGStringValueMethods<FGRouteMgr>(*this, 
     &FGRouteMgr::getDestinationName, NULL));
   destination->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
                                                                       &FGRouteMgr::getDestinationFieldElevation, NULL));
@@ -637,7 +637,7 @@ void FGRouteMgr::update_mirror()
     SGPropertyNode *prop = mirror->getChild("wp", i, 1);
 
     const SGGeod& pos(wp->position());
-    prop->setStringValue("id", wp->ident().c_str());
+    prop->setStringValue("id", wp->ident());
     prop->setDoubleValue("longitude-deg", pos.getLongitudeDeg());
     prop->setDoubleValue("latitude-deg",pos.getLatitudeDeg());
    
@@ -797,64 +797,64 @@ void FGRouteMgr::currentWaypointChanged()
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route manager, current-wp is now " << currentIndex());
 }
 
-const char* FGRouteMgr::getDepartureICAO() const
+std::string FGRouteMgr::getDepartureICAO() const
 {
   if (!_plan || !_plan->departureAirport()) {
     return "";
   }
   
-  return _plan->departureAirport()->ident().c_str();
+  return _plan->departureAirport()->ident();
 }
 
-const char* FGRouteMgr::getDepartureName() const
+std::string FGRouteMgr::getDepartureName() const
 {
   if (!_plan || !_plan->departureAirport()) {
     return "";
   }
   
-  return _plan->departureAirport()->name().c_str();
+  return _plan->departureAirport()->name();
 }
 
-const char* FGRouteMgr::getDepartureRunway() const
+std::string FGRouteMgr::getDepartureRunway() const
 {
   if (_plan && _plan->departureRunway()) {
-    return _plan->departureRunway()->ident().c_str();
+    return _plan->departureRunway()->ident();
   }
   
   return "";
 }
 
-void FGRouteMgr::setDepartureRunway(const char* aIdent)
+void FGRouteMgr::setDepartureRunway(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
   FGAirport* apt = _plan->departureAirport();
-  if (!apt || (aIdent == NULL)) {
+  if (!apt || aIdent.empty()) {
     _plan->setDeparture(apt);
   } else if (apt->hasRunwayWithIdent(aIdent)) {
     _plan->setDeparture(apt->getRunwayByIdent(aIdent));
   }
 }
 
-void FGRouteMgr::setDepartureICAO(const char* aIdent)
+void FGRouteMgr::setDepartureICAO(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
-  if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
+  if (aIdent.length() < 4) {
     _plan->setDeparture((FGAirport*) NULL);
   } else {
     _plan->setDeparture(FGAirport::findByIdent(aIdent));
   }
 }
 
-const char* FGRouteMgr::getSID() const
+std::string FGRouteMgr::getSID() const
 {
   if (_plan && _plan->sid()) {
-    return _plan->sid()->ident().c_str();
+    return _plan->sid()->ident();
   }
   
   return "";
@@ -923,19 +923,19 @@ flightgear::SID* createDefaultSID(FGRunway* aRunway, double enrouteCourse)
   return flightgear::SID::createTempSID("DEFAULT", aRunway, wpts);
 }
 
-void FGRouteMgr::setSID(const char* aIdent)
+void FGRouteMgr::setSID(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
   FGAirport* apt = _plan->departureAirport();
-  if (!apt || (aIdent == NULL)) {
+  if (!apt || aIdent.empty()) {
     _plan->setSID((flightgear::SID*) NULL);
     return;
   } 
   
-  if (!strcmp(aIdent, "DEFAULT")) {
+  if (aIdent == "DEFAULT") {
     double enrouteCourse = -1.0;
     if (_plan->destinationAirport()) {
       enrouteCourse = SGGeodesy::courseDeg(apt->geod(), _plan->destinationAirport()->geod());
@@ -945,11 +945,10 @@ void FGRouteMgr::setSID(const char* aIdent)
     return;
   }
   
-  string ident(aIdent);
-  size_t hyphenPos = ident.find('-');
+  size_t hyphenPos = aIdent.find('-');
   if (hyphenPos != string::npos) {
-    string sidIdent = ident.substr(0, hyphenPos);
-    string transIdent = ident.substr(hyphenPos + 1);
+    string sidIdent = aIdent.substr(0, hyphenPos);
+    string transIdent = aIdent.substr(hyphenPos + 1);
     
     flightgear::SID* sid = apt->findSIDWithIdent(sidIdent);
     Transition* trans = sid ? sid->findTransitionByName(transIdent) : NULL;
@@ -959,64 +958,64 @@ void FGRouteMgr::setSID(const char* aIdent)
   }
 }
 
-const char* FGRouteMgr::getDestinationICAO() const
+std::string FGRouteMgr::getDestinationICAO() const
 {
   if (!_plan || !_plan->destinationAirport()) {
     return "";
   }
   
-  return _plan->destinationAirport()->ident().c_str();
+  return _plan->destinationAirport()->ident();
 }
 
-const char* FGRouteMgr::getDestinationName() const
+std::string FGRouteMgr::getDestinationName() const
 {
   if (!_plan || !_plan->destinationAirport()) {
     return "";
   }
   
-  return _plan->destinationAirport()->name().c_str();
+  return _plan->destinationAirport()->name();
 }
 
-void FGRouteMgr::setDestinationICAO(const char* aIdent)
+void FGRouteMgr::setDestinationICAO(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
-  if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
+  if (aIdent.length() < 4) {
     _plan->setDestination((FGAirport*) NULL);
   } else {
     _plan->setDestination(FGAirport::findByIdent(aIdent));
   }
 }
 
-const char* FGRouteMgr::getDestinationRunway() const
+std::string FGRouteMgr::getDestinationRunway() const
 {
   if (_plan && _plan->destinationRunway()) {
-    return _plan->destinationRunway()->ident().c_str();
+    return _plan->destinationRunway()->ident();
   }
   
   return "";
 }
 
-void FGRouteMgr::setDestinationRunway(const char* aIdent)
+void FGRouteMgr::setDestinationRunway(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
   FGAirport* apt = _plan->destinationAirport();
-  if (!apt || (aIdent == NULL)) {
+  if (!apt || aIdent.empty()) {
     _plan->setDestination(apt);
   } else if (apt->hasRunwayWithIdent(aIdent)) {
     _plan->setDestination(apt->getRunwayByIdent(aIdent));
   }
 }
 
-const char* FGRouteMgr::getApproach() const
+std::string FGRouteMgr::getApproach() const
 {
   if (_plan && _plan->approach()) {
-    return _plan->approach()->ident().c_str();
+    return _plan->approach()->ident();
   }
   
   return "";
@@ -1082,14 +1081,14 @@ flightgear::Approach* createDefaultApproach(FGRunway* aRunway, double aEnrouteCo
   return Approach::createTempApproach("DEFAULT", aRunway, wpts);
 }
 
-void FGRouteMgr::setApproach(const char* aIdent)
+void FGRouteMgr::setApproach(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
   FGAirport* apt = _plan->destinationAirport();
-  if (!strcmp(aIdent, "DEFAULT")) {
+  if (aIdent == "DEFAULT") {
     double enrouteCourse = -1.0;
     if (_plan->departureAirport()) {
       enrouteCourse = SGGeodesy::courseDeg(_plan->departureAirport()->geod(), apt->geod());
@@ -1099,30 +1098,30 @@ void FGRouteMgr::setApproach(const char* aIdent)
     return;
   }
   
-  if (!apt || (aIdent == NULL)) {
+  if (!apt || aIdent.empty()) {
     _plan->setApproach(NULL);
   } else {
     _plan->setApproach(apt->findApproachWithIdent(aIdent));
   }
 }
 
-const char* FGRouteMgr::getSTAR() const
+std::string FGRouteMgr::getSTAR() const
 {
   if (_plan && _plan->star()) {
-    return _plan->star()->ident().c_str();
+    return _plan->star()->ident();
   }
   
   return "";
 }
 
-void FGRouteMgr::setSTAR(const char* aIdent)
+void FGRouteMgr::setSTAR(const std::string& aIdent)
 {
     if (!_plan) {
         return;
     }
     
   FGAirport* apt = _plan->destinationAirport();
-  if (!apt || (aIdent == NULL)) {
+  if (!apt || aIdent.empty()) {
     _plan->setSTAR((STAR*) NULL);
     return;
   } 

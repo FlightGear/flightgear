@@ -1078,7 +1078,11 @@ double View::getOrientation_z() const{
 
 double View::get_aspect_ratio() const
 {
+#ifdef FG_TESTLIB
+    return 4.0 / 3.0;
+#else
     return flightgear::CameraGroup::getDefault()->getMasterAspectRatio();
+#endif
 }
 
 double View::getLon_deg() const

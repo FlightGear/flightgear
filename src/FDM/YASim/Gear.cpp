@@ -53,98 +53,6 @@ Gear::Gear()
     _global_ground[3] = -1e3;
 }
 
-void Gear::setPosition(float* position)
-{
-    int i;
-    for(i=0; i<3; i++) _pos[i] = position[i];
-}
-
-void Gear::setCompression(float* compression)
-{
-    int i;
-    for(i=0; i<3; i++) _cmpr[i] = compression[i];
-}
-
-void Gear::setSpring(float spring)
-{
-    _spring = spring;
-}
-
-void Gear::setDamping(float damping)
-{
-    _damp = damping;
-}
-
-void Gear::setStaticFriction(float sfric)
-{
-    _sfric = sfric;
-}
-
-void Gear::setDynamicFriction(float dfric)
-{
-    _dfric = dfric;
-}
-
-void Gear::setBrake(float brake)
-{
-    _brake = Math::clamp(brake, 0, 1);
-}
-
-void Gear::setRotation(float rotation)
-{
-    _rot = rotation;
-}
-
-void Gear::setExtension(float extension)
-{
-    _extension = Math::clamp(extension, 0, 1);
-}
-
-void Gear::setCastering(bool c)
-{
-    _castering = c;
-}
-
-void Gear::setContactPoint(bool c)
-{
-    _isContactPoint=c;
-}
-
-void Gear::setOnWater(bool c)
-{
-    _onWater = c;
-}
-
-void Gear::setOnSolid(bool c)
-{
-    _onSolid = c;
-}
-
-void Gear::setIgnoreWhileSolving(bool c)
-{
-    _ignoreWhileSolving = c;
-}
-
-void Gear::setSpringFactorNotPlaning(float f)
-{
-    _spring_factor_not_planing = f;
-}
-
-void Gear::setSpeedPlaning(float s)
-{
-    _speed_planing = s;
-}
-
-void Gear::setReduceFrictionByExtension(float s)
-{
-    _reduceFrictionByExtension = s;
-}
-
-void Gear::setInitialLoad(float l)
-{
-    _initialLoad = l;
-}
-
 void Gear::setGlobalGround(double *global_ground, float* global_vel,
                            double globalX, double globalY,
                            const simgear::BVHMaterial *material)
@@ -183,57 +91,9 @@ void Gear::setGlobalGround(double *global_ground, float* global_vel,
 
 }
 
-void Gear::getPosition(float* out)
-{
-    int i;
-    for(i=0; i<3; i++) out[i] = _pos[i];
-}
-
-void Gear::getCompression(float* out)
-{
-    int i;
-    for(i=0; i<3; i++) out[i] = _cmpr[i];
-}
-
 void Gear::getGlobalGround(double* global_ground)
 {
-    int i;
-    for(i=0; i<4; i++) global_ground[i] = _global_ground[i];
-}
-
-float Gear::getSpring()
-{
-    return _spring;
-}
-
-float Gear::getDamping()
-{
-    return _damp;
-}
-
-float Gear::getStaticFriction()
-{
-    return _sfric;
-}
-
-float Gear::getDynamicFriction()
-{
-    return _dfric;
-}
-
-float Gear::getBrake()
-{
-    return _brake;
-}
-
-float Gear::getRotation()
-{
-    return _rot;
-}
-
-float Gear::getExtension()
-{
-    return _extension;
+    for(int i=0; i<4; i++) global_ground[i] = _global_ground[i];
 }
 
 void Gear::getForce(float* force, float* contact)
@@ -242,25 +102,6 @@ void Gear::getForce(float* force, float* contact)
     Math::set3(_contact, contact);
 }
 
-float Gear::getWoW()
-{
-    return _wow;
-}
-
-float Gear::getCompressFraction()
-{
-    return _frac;
-}
-
-bool Gear::getCastering()
-{
-    return _castering;
-}
-
-bool Gear::getGroundIsSolid()
-{
-    return _ground_isSolid;
-}
 
 float Gear::getBumpAltitude()
 {

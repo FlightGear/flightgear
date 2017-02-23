@@ -1072,10 +1072,13 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
   if(!globals->get_scenery()->get_elevation_m(geod, elev, &material))
     return naNil();
-  const SGMaterial *mat = dynamic_cast<const SGMaterial *>(material);
+
   naRef vec = naNewVector(c);
   naVec_append(vec, naNum(elev));
   naRef matdata = naNil();
+
+#ifndef FG_TESTLIB
+  const SGMaterial *mat = dynamic_cast<const SGMaterial *>(material);
   if(mat) {
     matdata = naNewHash(c);
     naRef names = naNewVector(c);
@@ -1091,6 +1094,7 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
     HASHSET("light_coverage", 14, naNum(mat->get_light_coverage()));
   }
   naVec_append(vec, matdata);
+#endif
   return vec;
 #undef HASHSET
 }

@@ -11,10 +11,12 @@ public:
   typedef enum {
     YASIM_VERSION_ORIGINAL = 0,
     YASIM_VERSION_32,
-    YASIM_VERSION_CURRENT = YASIM_VERSION_32
+    YASIM_VERSION_2017_2,
+    YASIM_VERSION_CURRENT = YASIM_VERSION_2017_2
   } YASIM_VERSION;
 
   void setVersion( const char * version );
+  int getVersion() { return _version; }
   bool isVersion( YASIM_VERSION version );
   bool isVersionOrNewer( YASIM_VERSION version );
 

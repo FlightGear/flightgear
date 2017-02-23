@@ -1,6 +1,7 @@
+All utilities in this directory rely on the ZeroXML library.
 
 The xmlgrep utility is part op the ZeroXML package which is now hosted at:
 http://www.adalin.com
 
-Any further development will take place there.
+Any further development on ZeroXML will take place there.
 

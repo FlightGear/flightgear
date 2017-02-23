@@ -58,7 +58,6 @@ extern bool global_crashRptEnabled;
 
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
 #include <GUI/gui.h>
@@ -126,16 +125,16 @@ static void initTerrasync()
     // (even if we are in read-only mode)
     SGPath terraSyncDir(globals->get_terrasync_dir());
     globals->append_data_path(terraSyncDir);
-    
+
     if (fgGetBool("/sim/fghome-readonly", false)) {
         return;
     }
-    
+
     // start TerraSync up now, so it can be synchronizing shared models
     // and airports data in parallel with a nav-cache rebuild.
     SGPath tsyncCache(terraSyncDir);
     tsyncCache.append("terrasync-cache.xml");
-    
+
     // wipe the cache file if requested
     if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
         SG_LOG(SG_GENERAL, SG_INFO, "restore-defaults requested, wiping terrasync update cache at " <<
@@ -144,7 +143,7 @@ static void initTerrasync()
             tsyncCache.remove();
         }
     }
-    
+
     fgSetString("/sim/terrasync/cache-path", tsyncCache.utf8Str());
 
     // make fg-root dir available so existing Scenery data can be copied, and
@@ -154,7 +153,7 @@ static void initTerrasync()
     simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
     terra_sync->setRoot(globals->get_props());
     globals->add_subsystem("terrasync", terra_sync);
-    
+
     terra_sync->bind();
     terra_sync->init();
 }
@@ -204,7 +203,7 @@ static void checkOpenGLVersion()
     // versions doesn't help them much
     return;
 #endif
-    
+
     // format of these strings is not standardised, so be careful about
     // parsing them.
     std::string versionString(fgGetString("/sim/rendering/gl-version"));
@@ -249,7 +248,7 @@ static void fgIdleFunction ( void ) {
     // Specify our current idle function state.  This is used to run all
     // our initializations out of the idle callback so that we can get a
     // splash screen up and running right away.
-    
+
     if ( idle_state == 0 ) {
         if (guiInit())
         {
@@ -266,7 +265,7 @@ static void fgIdleFunction ( void ) {
         fgSplashProgress("loading-nav-dat");
 
     } else if ( idle_state == 3 ) {
-        
+
         bool done = fgInitNav();
         if (done) {
           ++idle_state;
@@ -277,7 +276,7 @@ static void fgIdleFunction ( void ) {
 
         TimeManager* t = new TimeManager;
         globals->add_subsystem("time", t, SGSubsystemMgr::INIT);
-        
+
         // Do some quick general initializations
         if( !fgInitGeneral()) {
             throw sg_exception("General initialization failed");
@@ -287,6 +286,7 @@ static void fgIdleFunction ( void ) {
         // Initialize the property-based built-in commands
         ////////////////////////////////////////////////////////////////////
         fgInitCommands();
+				fgInitSceneCommands();
 
         flightgear::registerSubsystemCommands(globals->get_commands());
 
@@ -295,26 +295,25 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
         simgear::SGModelLib::setPanelFunc(FGPanelNode::load);
- 
+
     } else if (( idle_state == 5 ) || (idle_state == 2005)) {
         idle_state+=2;
         flightgear::initPosition();
         flightgear::initTowerLocationListener();
-        
+
         simgear::SGModelLib::init(globals->get_fg_root().local8BitStr(), globals->get_props());
-        
+
         TimeManager* timeManager = (TimeManager*) globals->get_subsystem("time");
         timeManager->init();
-        
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
-        
+
         globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
         globals->get_scenery()->init();
         globals->get_scenery()->bind();
-        globals->add_new_subsystem<FGTileMgr>(SGSubsystemMgr::DISPLAY);
-        
+
         fgSplashProgress("creating-subsystems");
     } else if (( idle_state == 7 ) || (idle_state == 2007)) {
         bool isReset = (idle_state == 2007);
@@ -324,7 +323,7 @@ static void fgIdleFunction ( void ) {
         fgCreateSubsystems(isReset);
         SG_LOG(SG_GENERAL, SG_INFO, "Creating subsystems took:" << st.elapsedMSec());
         fgSplashProgress("binding-subsystems");
-      
+
     } else if ( idle_state == 8 ) {
         idle_state++;
         SGTimeStamp st;
@@ -341,14 +340,14 @@ static void fgIdleFunction ( void ) {
         } else {
           fgSplashProgress("init-subsystems");
         }
-      
+
     } else if ( idle_state == 10 ) {
         idle_state = 900;
         fgPostInitSubsystems();
         fgSplashProgress("finalize-position");
     } else if ( idle_state == 900 ) {
         idle_state = 1000;
-        
+
         // setup OpenGL view parameters
         globals->get_renderer()->setupView();
 
@@ -371,7 +370,7 @@ static void fgIdleFunction ( void ) {
         fgSetBool("sim/sceneryloaded", false);
         registerMainLoop();
     }
-    
+
     if ( idle_state == 2000 ) {
         fgStartNewReset();
         idle_state = 2005;
@@ -448,15 +447,16 @@ int fgMainInit( int argc, char **argv )
     if (!fgInitHome()) {
         return EXIT_FAILURE;
     }
-    
+
     if (!fgGetBool("/sim/fghome-readonly")) {
         // now home is initialised, we can log to a file inside it
         logToHome();
     }
-    
+
     std::string version(FLIGHTGEAR_VERSION);
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
+    SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Build Type " << FG_BUILD_TYPE );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
 			<< HUDSON_BUILD_ID);
@@ -504,6 +504,10 @@ int fgMainInit( int argc, char **argv )
             return EXIT_SUCCESS;
         }
     }
+#else
+    if (showLauncher) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "\n!Launcher requested, but FlightGear was compiled without Qt support!");
+    }
 #endif
     fgInitAircraftPaths(false);
 
@@ -513,14 +517,14 @@ int fgMainInit( int argc, char **argv )
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
         return EXIT_SUCCESS;
     }
-    
+
     configResult = flightgear::Options::sharedInstance()->processOptions();
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
         return EXIT_SUCCESS;
     }
-    
+
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
@@ -533,31 +537,30 @@ int fgMainInit( int argc, char **argv )
     // Clouds3D requires an alpha channel
     fgOSOpenWindow(true /* request stencil buffer */);
     fgOSResetProperties();
-    
-    // Initialize the splash screen right away
+
     fntInit();
-    fgSplashInit();
+    globals->get_renderer()->preinit();
 
     fgOutputSettings();
-    
+
     //try to disable the screensaver
     fgOSDisableScreensaver();
-    
+
     // pass control off to the master event handler
     int result = fgOSMainLoop();
     frame_signal.clear();
     fgOSCloseWindow();
-    
+
     simgear::clearEffectCache();
-    
+
     // clean up here; ensure we null globals to avoid
     // confusing the atexit() handler
     delete globals;
     globals = NULL;
-    
+
     // delete the NavCache here. This will cause the destruction of many cached
     // objects (eg, airports, navaids, runways).
     delete flightgear::NavDataCache::instance();
-  
+
     return result;
 }

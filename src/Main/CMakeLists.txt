@@ -6,6 +6,7 @@ endif (MSVC)
 set(SOURCES
 	bootstrap.cxx
 	fg_commands.cxx
+	fg_scene_commands.cxx
 	fg_init.cxx
 	fg_io.cxx
 	fg_os_common.cxx
@@ -110,6 +111,12 @@ else()
 	set(HLA_LIBRARIES "")
 endif()
 
+if(GDAL_FOUND)
+	set(GDAL_LIBRARIES ${GDAL_LIBRARY})
+else()
+	set(GDAL_LIBRARIES "")
+endif()
+
 if(ENABLE_JSBSIM)
     # FIXME - remove once JSBSim doesn't expose private headers
     include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
@@ -141,6 +148,7 @@ target_link_libraries(fgfs
 	${OPENGL_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${HLA_LIBRARIES}
+	${GDAL_LIBRARIES}
 	${EVENT_INPUT_LIBRARIES}
 	${PLATFORM_LIBS}
 )
@@ -157,6 +165,10 @@ if (Qt5Core_FOUND)
     target_link_libraries(fgfs Qt5::Widgets fglauncher)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    target_link_libraries(fgfs execinfo)
+endif()
+
 if (APPLE)
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()
@@ -171,4 +183,8 @@ if(ENABLE_METAR)
     )
 
     install(TARGETS metar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if (ENABLE_TESTS)
+	flightgear_test(posinit test_posinit.cxx)
 endif()

@@ -50,7 +50,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCS "$Id: FGFCS.h,v 1.53 2016/05/18 08:06:57 ehofman Exp $"
+#define ID_FCS "$Id: FGFCS.h,v 1.55 2017/03/03 23:03:20 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -168,7 +168,7 @@ CLASS DOCUMENTATION
     @property gear/tailhook-pos-norm
 
     @author Jon S. Berndt
-    @version $Revision: 1.53 $
+    @version $Revision: 1.55 $
     @see FGActuator
     @see FGDeadBand
     @see FGFCSFunction
@@ -430,7 +430,7 @@ public:
 
   /** Sets the propeller pitch command for the specified engine
       @param engine engine ID number
-      @param cmd mixture command in percent (0.0 - 1.0)*/
+      @param cmd pitch command in percent (0.0 - 1.0)*/
   void SetPropAdvanceCmd(int engine, double cmd);
 
    /** Sets the propeller feather command for the specified engine
@@ -544,7 +544,7 @@ public:
       @return true if succesful */
   bool Load(Element* el);
 
-  std::string FindFullPathName(const std::string& system_filename) const;
+  SGPath FindFullPathName(const SGPath& path) const;
 
   void AddThrottle(void);
   double GetDt(void) const;

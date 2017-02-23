@@ -45,7 +45,7 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGPropeller.cpp,v 1.58 2016/06/04 11:06:51 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGPropeller.cpp,v 1.60 2017/03/03 23:00:39 bcoconni Exp $");
 IDENT(IdHdr,ID_PROPELLER);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,8 +80,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
     Ixx = max(prop_element->FindElementValueAsNumberConvertTo("ixx", "SLUG*FT2"), 0.001);
 
   Sense_multiplier = 1.0;
-  if (prop_element->HasAttribute("version"))
-    if  (prop_element->GetAttributeValueAsNumber("version") > 1.0)
+  if (prop_element->HasAttribute("version")
+      && prop_element->GetAttributeValueAsNumber("version") > 1.0)
       Sense_multiplier = -1.0;
 
   if (prop_element->FindElement("diameter"))
@@ -146,6 +146,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   Type = ttPropeller;
   RPM = 0;
   vTorque.InitMatrix();
+  vH.InitMatrix();
   D4 = Diameter*Diameter*Diameter*Diameter;
   D5 = D4*Diameter;
   Pitch = MinPitch;
@@ -187,6 +188,14 @@ FGPropeller::~FGPropeller()
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropeller::ResetToIC(void)
+{
+  FGThruster::ResetToIC();
+  Vinduced = 0.0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //
 // We must be getting the aerodynamic velocity here, NOT the inertial velocity.
 // We need the velocity with respect to the wind.
@@ -211,10 +220,10 @@ double FGPropeller::Calculate(double EnginePower)
   double Vtip = RPS * Diameter * M_PI;
   HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / in.Soundspeed;
 
-  PowerAvailable = EnginePower - GetPowerRequired();
-
   if (RPS > 0.0) J = Vel / (Diameter * RPS); // Calculate J normally
   else           J = Vel / Diameter;
+
+  PowerAvailable = EnginePower - GetPowerRequired();
 
   if (MaxPitch == MinPitch) {    // Fixed pitch prop
     ThrustCoeff = cThrust->GetValue(J);
@@ -265,8 +274,6 @@ double FGPropeller::Calculate(double EnginePower)
   // FGForce::GetBodyForces() function.
 
   vH(eX) = Ixx*omega*Sense*Sense_multiplier;
-  vH(eY) = 0.0;
-  vH(eZ) = 0.0;
 
   if (omega > 0.0) ExcessTorque = PowerAvailable / omega;
   else             ExcessTorque = PowerAvailable / 1.0;
@@ -277,7 +284,7 @@ double FGPropeller::Calculate(double EnginePower)
 
   // Transform Torque and momentum first, as PQR is used in this
   // equation and cannot be transformed itself.
-  vMn = in.PQR*(Transform()*vH) + Transform()*vTorque;
+  vMn = in.PQRi*(Transform()*vH) + Transform()*vTorque;
 
   return Thrust; // return thrust in pounds
 }
@@ -286,13 +293,7 @@ double FGPropeller::Calculate(double EnginePower)
 
 double FGPropeller::GetPowerRequired(void)
 {
-  double cPReq, J;
-  double rho = in.Density;
-  double Vel = in.AeroUVW(eU) + Vinduced;
-  double RPS = RPM / 60.0;
-
-  if (RPS != 0.0) J = Vel / (Diameter * RPS);
-  else            J = Vel / Diameter;
+  double cPReq;
 
   if (MaxPitch == MinPitch) {   // Fixed pitch prop
     cPReq = cPower->GetValue(J);
@@ -303,7 +304,7 @@ double FGPropeller::GetPowerRequired(void)
 
       // do normal calculation when propeller is neither feathered nor reversed
       // Note:  This method of feathering and reversing was added to support the
-      //        turboprop model.  It's left here for backward compatablity, but
+      //        turboprop model.  It's left here for backward compatiblity, but
       //        now feathering and reversing should be done in Manual Pitch Mode.
       if (!Feathered) {
         if (!Reversed) {
@@ -349,9 +350,10 @@ double FGPropeller::GetPowerRequired(void)
   // Apply optional Mach effects from CP_MACH table
   if (CpMach) cPReq *= CpMach->GetValue(HelicalTipMach);
 
+  double RPS = RPM / 60.0;
   double local_RPS = RPS < 0.01 ? 0.01 : RPS; 
 
-  PowerRequired = cPReq*local_RPS*local_RPS*local_RPS*D5*rho;
+  PowerRequired = cPReq*local_RPS*local_RPS*local_RPS*D5*in.Density;
   vTorque(eX) = -Sense*PowerRequired / (local_RPS*2.0*M_PI);
 
   return PowerRequired;

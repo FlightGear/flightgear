@@ -19,7 +19,7 @@ find_path(BCMHOST_INCLUDE_DIR
   )
 
 include_directories(
-  /usr/include/freetype2
+  ${FREETYPE_INCLUDE_DIRS}
   ${PNG_INCLUDE_DIR}
   )
 

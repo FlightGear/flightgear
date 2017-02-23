@@ -26,7 +26,6 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/bucket/newbucket.hxx>
 #include "SceneryPager.hxx"
 #include "tilecache.hxx"
@@ -42,7 +41,7 @@ class SGTerraSync;
 class SGReaderWriterOptions;
 }
 
-class FGTileMgr : public SGSubsystem {
+class FGTileMgr {
 
 private:
 
@@ -93,17 +92,16 @@ private:
     osg::ref_ptr<flightgear::SceneryPager> _pager;
 
     /// is caching of expired tiles enabled or not?
-    bool _enableCache;
+    bool _enableCache;    
 public:
     FGTileMgr();
     ~FGTileMgr();
 
     // Initialize the Tile Manager
-    virtual void init();
-    virtual void reinit();
-    virtual void shutdown();
-
-    virtual void update(double dt);
+    void init();
+    void reinit();
+    void shutdown();
+    void update(double dt);
 
     const SGBucket& get_current_bucket () const { return current_bucket; }
 
@@ -118,9 +116,6 @@ public:
     // notify the tile manahger the material library was reloaded,
     // so it can pass this through to its options object
     void materialLibChanged();
-
-    static const char* subsystemName() { return "tile-manager"; }
 };
-
 
 #endif // _TILEMGR_HXX

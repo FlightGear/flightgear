@@ -23,7 +23,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sound/readwav.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <OpenThreads/Thread>
+#include <simgear/threads/SGThread.hxx>
+
 #include <flite_hts_engine.h>
 
 using std::string;
@@ -33,7 +34,8 @@ static const char * VOICE_FILES[] = {
   "cstr_uk_female-1.0.htsvoice"
 };
 
-class FLITEVoiceSynthesizer::WorkerThread: public OpenThreads::Thread {
+class FLITEVoiceSynthesizer::WorkerThread : public SGThread
+{
 public:
   WorkerThread(FLITEVoiceSynthesizer * synthesizer)
       : _synthesizer(synthesizer)
@@ -48,11 +50,26 @@ void FLITEVoiceSynthesizer::WorkerThread::run()
 {
   for (;;) {
     SynthesizeRequest request = _synthesizer->_requests.pop();
+
+    // marker value indicating termination requested
+    if ((request.speed < 0.0) && (request.volume < 0.0)) {
+      SG_LOG(SG_SOUND, SG_INFO, "FLITE synthesis thread exiting");
+      return;
+    }
+
     if ( NULL != request.listener) {
       SGSharedPtr<SGSoundSample> sample = _synthesizer->synthesize(request.text, request.volume, request.speed, request.pitch);
       request.listener->SoundSampleReady( sample );
     }
   }
+}
+
+SynthesizeRequest SynthesizeRequest::cancelThreadRequest()
+{
+  SynthesizeRequest marker;
+  marker.volume = -999.0;
+  marker.speed = -999.0;
+  return marker;
 }
 
 string FLITEVoiceSynthesizer::getVoicePath( voice_t voice )
@@ -86,8 +103,10 @@ FLITEVoiceSynthesizer::FLITEVoiceSynthesizer(const std::string & voice)
 
 FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
 {
-  _worker->cancel();
+  // push the special marker value
+  _requests.push(SynthesizeRequest::cancelThreadRequest());
   _worker->join();
+  SG_LOG(SG_SOUND, SG_INFO, "FLITE synthesis thread joined OK");
   Flite_HTS_Engine_clear(_engine);
 }
 

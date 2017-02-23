@@ -20,12 +20,13 @@ public:
     explicit AddOnsPage(QWidget *parent, simgear::pkg::RootRef root);
     ~AddOnsPage();
 
-    static void addDefaultCatalog(QWidget* pr);
+    static void addDefaultCatalog(QWidget* pr, bool silent);
     
 signals:
     void downloadDirChanged();
     void sceneryPathsChanged();
-    
+    void aircraftPathsChanged();
+
 private slots:
     void onAddSceneryPath();
     void onRemoveSceneryPath();

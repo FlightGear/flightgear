@@ -25,6 +25,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+if(NOT FG_BUILD_TYPE)
+  message(STATUS "Setting build type to 'Dev' as none was specified.")
+  set(FG_BUILD_TYPE Dev CACHE STRING "Choose the FlightGear build type" FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE FG_BUILD_TYPE PROPERTY STRINGS "Dev" "Nightly" "Release")
+endif()
+
 if(APPLE)
 	set(CMAKE_INSTALL_RPATH "@loader_path/../Frameworks")
 	# when building, don't use the install RPATH already
@@ -176,8 +183,6 @@ option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex a
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
-option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
-option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
@@ -194,6 +199,7 @@ option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
 option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" OFF)
+option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
 
 include (DetectArch)
 
@@ -305,7 +311,7 @@ endif (USE_DBUS)
 ## Qt5 setup setup
 if (ENABLE_QT)
 	message(STATUS "Qt launcher enabled, checking for Qt 5.1 / qmake")
-	find_package(Qt5 5.1 COMPONENTS Widgets)
+        find_package(Qt5 5.1 COMPONENTS Widgets Network)
 	if (Qt5Widgets_FOUND)
 		message(STATUS "Will enable Qt launcher GUI")
 		message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
@@ -356,6 +362,24 @@ if(ENABLE_RTI)
 else()
     message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)
+
+if(ENABLE_GDAL)
+    find_package(GDAL 2.0.0 REQUIRED)
+endif(ENABLE_GDAL)
+include_directories(${GDAL_INCLUDE_DIR})
+
+if (ENABLE_OPENMP)
+    find_package(OpenMP)
+    if(OPENMP_FOUND)
+        message(STATUS "OpenMP: ENABLED")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    else()
+        message(STATUS "OpenMP: NOT FOUND")
+    endif()
+else()
+    message(STATUS "OpenMP: DISABLED")
+endif()
 
 if (ENABLE_SIMD)
   message(STATUS "SSE/SSE2 support: ENABLED")
@@ -485,6 +509,23 @@ configure_file (
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
+
+if(ENABLE_TESTS)
+    # enable CTest / make test target
+    message(STATUS "Tests: ENABLED")
+
+    include (Dart)
+    enable_testing()
+    if(WIN32)
+      # tests disabled until shared library export is fixed on Windows
+      message(STATUS "Tests disabled on Windows for the moment")
+    else()
+      add_subdirectory(tests)
+    endif()
+else()
+    message(STATUS "Tests: DISABLED")
+endif(ENABLE_TESTS)
+
 add_subdirectory(src)
 add_subdirectory(man)
 

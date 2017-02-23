@@ -58,7 +58,8 @@
 
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
-#if defined(HAVE_QT)
+
+#if defined(HAVE_QT) && !defined(FG_TESTLIB)
 #include <GUI/QtLauncher.hxx>
 #include <GUI/SetupRootDialog.hxx>
 #endif
@@ -94,7 +95,7 @@ using namespace flightgear;
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
-static flightgear::Options* shared_instance = NULL;
+static flightgear::Options* shared_instance = nullptr;
 
 static double
 atof( const string& str )
@@ -120,17 +121,17 @@ static int fgSetupProxy( const char *arg );
 void fgSetDefaults ()
 {
 
-				// Position (deliberately out of range)
+    // Position (deliberately out of range)
     fgSetDouble("/position/longitude-deg", 9999.0);
     fgSetDouble("/position/latitude-deg", 9999.0);
     fgSetDouble("/position/altitude-ft", -9999.0);
 
-				// Orientation
+    // Orientation
     fgSetDouble("/orientation/heading-deg", 9999.0);
     fgSetDouble("/orientation/roll-deg", 0.0);
     fgSetDouble("/orientation/pitch-deg", 0.424);
 
-				// Velocities
+    // Velocities
     fgSetDouble("/velocities/uBody-fps", 0.0);
     fgSetDouble("/velocities/vBody-fps", 0.0);
     fgSetDouble("/velocities/wBody-fps", 0.0);
@@ -140,7 +141,7 @@ void fgSetDefaults ()
     fgSetDouble("/velocities/airspeed-kt", 0.0);
     fgSetDouble("/velocities/mach", 0.0);
 
-                                // Presets
+    // Presets
     fgSetDouble("/sim/presets/longitude-deg", 9999.0);
     fgSetDouble("/sim/presets/latitude-deg", 9999.0);
     fgSetDouble("/sim/presets/altitude-ft", -9999.0);
@@ -162,7 +163,7 @@ void fgSetDefaults ()
     fgSetBool("/sim/presets/onground", true);
     fgSetBool("/sim/presets/trim", false);
 
-				// Miscellaneous
+    // Miscellaneous
     fgSetBool("/sim/startup/splash-screen", true);
     // we want mouse-pointer to have an undefined value if nothing is
     // specified so we can do the right thing for voodoo-1/2 cards.
@@ -170,7 +171,7 @@ void fgSetDefaults ()
     fgSetBool("/controls/flight/auto-coordination", false);
     fgSetString("/sim/logging/priority", "alert");
 
-				// Features
+    // Features
     fgSetBool("/sim/hud/color/antialiased", false);
     fgSetBool("/sim/hud/enable3d[1]", true);
     fgSetBool("/sim/hud/visibility[1]", false);
@@ -179,13 +180,21 @@ void fgSetDefaults ()
     fgSetBool("/sim/sound/working", true);
     fgSetBool("/sim/fgcom/enabled", false);
 
-				// Flight Model options
+    // Flight Model options
     fgSetString("/sim/flight-model", "jsb");
     fgSetString("/sim/aero", "c172");
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetDouble("/sim/speed-up", 1.0);
 
-				// Rendering options
+    // Scenery
+    fgSetString("/sim/scenery/engine", "tilecache");
+
+    // ( scenery = pagedLOD )
+    fgSetString("/sim/scenery/lod-levels", "1 3 5 7 9");
+    fgSetString("/sim/scenery/lod-res", "1");
+    fgSetString("/sim/scenery/lod-texturing", "bluemarble");
+
+    // Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
     fgSetBool("/environment/clouds/status", true);
     fgSetBool("/sim/startup/fullscreen", false);
@@ -204,16 +213,16 @@ void fgSetDefaults ()
     fgSetString("/sim/view-mode", "pilot");
     fgSetDouble("/sim/current-view/heading-offset-deg", 0);
 
-				// HUD options
+    // HUD options
     fgSetString("/sim/startup/units", "feet");
     fgSetString("/sim/hud/frame-stat-type", "tris");
 
-				// Time options
+    // Time options
     fgSetInt("/sim/startup/time-offset", 0);
     fgSetString("/sim/startup/time-offset-type", "system-offset");
     fgSetLong("/sim/time/cur-time-override", 0);
 
-                                // Freeze options
+    // Freeze options
     fgSetBool("/sim/freeze/master", false);
     fgSetBool("/sim/freeze/position", false);
     fgSetBool("/sim/freeze/clock", false);
@@ -228,18 +237,18 @@ void fgSetDefaults ()
     SGPropertyNode* v = globals->get_props()->getNode("/sim/version", true);
     v->setValueReadOnly("flightgear", FLIGHTGEAR_VERSION);
     v->setValueReadOnly("simgear", SG_STRINGIZE(SIMGEAR_VERSION));
+#ifndef FG_TESTLIB
     v->setValueReadOnly("openscenegraph", osgGetVersion());
+#if OSG_VERSION_LESS_THAN(3,5,2)
     v->setValueReadOnly("openscenegraph-thread-safe-reference-counting",
                          osg::Referenced::getThreadSafeReferenceCounting());
+#endif
+#endif
     v->setValueReadOnly("revision", REVISION);
     v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
     v->setValueReadOnly("build-id", HUDSON_BUILD_ID);
     v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
-#if defined(FG_NIGHTLY)
-    v->setValueReadOnly("nightly-build", true);
-#else
-    v->setValueReadOnly("nightly-build", false);
-#endif
+    v->setValueReadOnly("build-type", FG_BUILD_TYPE);
 
     char* envp = ::getenv( "http_proxy" );
     if( envp != NULL )
@@ -985,12 +994,14 @@ fgOptJpgHttpd( const char * arg )
 static int
 fgOptHttpd( const char * arg )
 {
+#ifndef FG_TESTLIB
     // port may be any valid address:port notation
     // like 127.0.0.1:8080
     // or just the port 8080
     string port = simgear::strutils::strip(string(arg));
     if( port.empty() ) return FG_OPTIONS_ERROR;
     fgSetString( string(flightgear::http::PROPERTY_ROOT).append("/options/listening-port").c_str(), port );
+#endif
     return FG_OPTIONS_OK;
 }
 
@@ -1055,7 +1066,7 @@ fgOptLogClasses( const char *arg )
 }
 
 static int
-fgOptLogFile(const char* arg)
+fgOptLogDir(const char* arg)
 {
     SGPath dirPath;
     if (!strcmp(arg, "desktop")) {
@@ -1349,6 +1360,14 @@ fgOptScenario( const char *arg )
 }
 
 static int
+fgOptAirport( const char *arg )
+{
+    fgSetString("/sim/presets/airport-id", arg );
+    fgSetBool("/sim/presets/airport-requested", true );
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptRunway( const char *arg )
 {
     fgSetString("/sim/presets/runway", arg );
@@ -1580,7 +1599,7 @@ struct OptionDesc {
     {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/working", false, "", 0 },
     {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/working", true, "", 0 },
     {"sound-device",                 true,  OPTION_STRING, "/sim/sound/device-name", false, "", 0 },
-    {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
+    {"airport",                      true,  OPTION_FUNC,   "", false, "", fgOptAirport },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
     {"vor-frequency",                true,  OPTION_DOUBLE, "/sim/presets/vor-freq", false, "", fgOptVOR },
@@ -1609,6 +1628,11 @@ struct OptionDesc {
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
     {"fg-root",                      true,  OPTION_IGNORE,   "", false, "", 0 },
     {"fg-scenery",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFgScenery },
+    {"terrain-engine",               true,  OPTION_STRING, "/sim/scenery/engine", false, "tilecache", 0 },
+    {"lod-levels",                   true,  OPTION_STRING, "/sim/scenery/lod-levels", false, "1 3 5 7", 0 },
+    {"lod-res",                      true,  OPTION_STRING, "/sim/scenery/lod-res", false, "1", 0 },
+    {"lod-texturing",                true,  OPTION_STRING, "/sim/scenery/lod-texturing", false, "bluemarble", 0 },
+    {"lod-range-mult",               true,  OPTION_STRING, "/sim/scenery/lod-range-mult", false, "2", 0 },
     {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
@@ -1705,7 +1729,7 @@ struct OptionDesc {
     {"trace-write",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
     {"log-class",                    true,  OPTION_FUNC,   "", false, "", fgOptLogClasses },
-    {"log-file",                     true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptLogFile },
+    {"log-dir",                      true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptLogDir },
     {"view-offset",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
@@ -1742,6 +1766,7 @@ struct OptionDesc {
     {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
+    {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {0}
 };
 
@@ -1956,6 +1981,14 @@ Options* Options::sharedInstance()
   return shared_instance;
 }
 
+void Options::reset()
+{
+    if (shared_instance != nullptr) {
+        delete shared_instance;
+        shared_instance = nullptr;
+    }
+}
+
 Options::Options() :
   p(new OptionsPrivate())
 {
@@ -2011,7 +2044,9 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
   if (!p->shouldLoadDefaultConfig) {
+#if !defined(FG_TESTLIB)
     setupRoot(argc, argv);
+#endif
     return;
   }
 
@@ -2521,8 +2556,8 @@ void Options::showUsage() const
       exit(-1);
   }
 
-  const char* usage = locale->getLocalizedString(options->getStringValue("usage"), "options");
-  if (usage) {
+  std::string usage = locale->getLocalizedString(options->getStringValue("usage"), "options");
+  if (!usage.empty()) {
     cout << usage << endl;
   }
 
@@ -2600,8 +2635,8 @@ void Options::showUsage() const
       }
     }
 
-    const char* name = locale->getLocalizedString(section[j]->getStringValue("name"),"options");
-    if (!msg.empty() && name) {
+    std::string name = locale->getLocalizedString(section[j]->getStringValue("name"),"options");
+    if (!msg.empty() && !name.empty()) {
       cout << endl << name << ":" << endl;
       cout << msg;
       msg.erase();
@@ -2609,8 +2644,8 @@ void Options::showUsage() const
   }
 
   if ( !p->verbose ) {
-    const char* verbose_help = locale->getLocalizedString(options->getStringValue("verbose-help"),"options");
-    if (verbose_help)
+    std::string verbose_help = locale->getLocalizedString(options->getStringValue("verbose-help"),"options");
+    if (!verbose_help.empty())
         cout << endl << verbose_help << endl;
   }
 #ifdef _MSC_VER
@@ -2624,6 +2659,7 @@ void Options::showVersion() const
     cout << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
     cout << "Revision: " << REVISION << endl;
     cout << "Build-Id: " << HUDSON_BUILD_ID << endl;
+    cout << "Build-Type: " << FG_BUILD_TYPE << endl;
     cout << "FG_ROOT=" << globals->get_fg_root().utf8Str() << endl;
     cout << "FG_HOME=" << globals->get_fg_home().utf8Str() << endl;
     cout << "FG_SCENERY=";
@@ -2631,7 +2667,9 @@ void Options::showVersion() const
     PathList scn = globals->get_fg_scenery();
     cout << SGPath::join(scn, &SGPath::pathListSep) << endl;
     cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
+#ifndef FG_TESTLIB
     cout << "OSG version: " << osgGetVersion() << endl;
+#endif
     cout << "PLIB version: " << PLIB_VERSION << endl;
 }
 
@@ -2660,6 +2698,7 @@ void Options::printJSONReport() const
   cJSON_AddStringToObject(generalNode, "name", "FlightGear");
   cJSON_AddStringToObject(generalNode, "version", FLIGHTGEAR_VERSION);
   cJSON_AddStringToObject(generalNode, "build ID", HUDSON_BUILD_ID);
+  cJSON_AddStringToObject(generalNode, "build type", FG_BUILD_TYPE);
 
   cJSON *configNode = cJSON_CreateObject();
   cJSON_AddItemToObject(rootNode, "config", configNode);
@@ -2684,22 +2723,27 @@ void Options::printJSONReport() const
   cJSON_AddStringToObject(configNode, "autosave file",
                           globals->autosaveFilePath().utf8Str().c_str());
 
-  // Get the ordered list of apt.dat files used by the NavCache
+  // Get the ordered lists of apt.dat, fix.dat and nav.dat files used by the
+  // NavCache
   NavDataCache* cache = NavDataCache::instance();
   if (!cache) {
     cache = NavDataCache::createInstance();
   }
 
-  // For this method, it doesn't matter if the cache is out-of-date
-  NavDataCache::DatFilesGroupInfo aptDatFilesInfo =
-    cache->getDatFilesInfo(NavDataCache::DATFILETYPE_APT);
-
-  // Write the list to the JSON tree
   cJSON *navDataNode = cJSON_CreateObject();
   cJSON_AddItemToObject(rootNode, "navigation data", navDataNode);
-  cJSON *aptDatPathsNode = p->createJSONArrayFromPathList(
-    aptDatFilesInfo.paths);
-  cJSON_AddItemToObject(navDataNode, "apt.dat files", aptDatPathsNode);
+
+  // Write each list to the JSON tree
+  for (const auto& datType: {NavDataCache::DATFILETYPE_APT,
+                             NavDataCache::DATFILETYPE_FIX,
+                             NavDataCache::DATFILETYPE_NAV}) {
+    // For this method, it doesn't matter if the cache is out-of-date
+    const NavDataCache::DatFilesGroupInfo& datFilesInfo =
+      cache->getDatFilesInfo(datType);
+    cJSON *datPathsNode = p->createJSONArrayFromPathList(datFilesInfo.paths);
+    string key = NavDataCache::datTypeStr[datType] + ".dat files";
+    cJSON_AddItemToObject(navDataNode, key.c_str(), datPathsNode);
+  }
 
   // Print the JSON tree to the standard output
   char *report = cJSON_Print(rootNode);
@@ -2742,7 +2786,7 @@ void Options::setupRoot(int argc, char **argv)
         root = SGPath::fromLocal8Bit(envp);
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
-#if defined(HAVE_QT)
+#if defined(HAVE_QT) && !defined(FG_TESTLIB)
         flightgear::initApp(argc, argv);
         root = SetupRootDialog::restoreUserSelectedRoot();
 #endif
@@ -2760,7 +2804,7 @@ void Options::setupRoot(int argc, char **argv)
     string base_version = fgBasePackageVersion(root);
 
 
-#if defined(HAVE_QT)
+#if defined(HAVE_QT) && !defined(FG_TESTLIB)
     // only compare major and minor version, not the patch level.
     const int versionComp = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, base_version, 2);
 

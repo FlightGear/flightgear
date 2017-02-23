@@ -50,17 +50,23 @@ Q_SIGNALS:
     void requestUninstall(const QModelIndex& index);
 
     void cancelDownload(const QModelIndex& index);
+
+    void showPreviews(const QModelIndex& index);
+
 private:
     QRect leftCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
     QRect rightCycleArrowRect(const QRect& visualRect, const QModelIndex& index) const;
 
     QRect packageButtonRect(const QRect& visualRect, const QModelIndex& index) const;
 
+    QRect showPreviewsRect(const QRect& visualRect, const QModelIndex& index) const;
+
     void drawRating(QPainter* painter, QString label, const QRect& box, int value) const;
 
     QListView* m_view;
     QPixmap m_leftArrowIcon,
-        m_rightArrowIcon;
+        m_rightArrowIcon,
+        m_openPreviewsIcon;
 };
 
 #endif

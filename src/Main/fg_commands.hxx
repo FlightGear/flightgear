@@ -8,6 +8,8 @@
  */
 void fgInitCommands ();
 
+void fgInitSceneCommands();
+
 // end of fg_commands.hxx
 
 #endif

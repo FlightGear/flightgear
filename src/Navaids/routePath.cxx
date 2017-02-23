@@ -641,9 +641,10 @@ public:
   
   void computeDynamicPosition(int index)
   {
-    const WayptData& previous(previousValidWaypoint(index));
+    auto previous(previousValidWaypoint(index));
     WayptRef wpt = waypoints[index].wpt;
-    assert(previous.posValid);
+    assert(previous != waypoints.end());
+    assert(previous->posValid);
 
     const std::string& ty(wpt->type());
     if (ty == "hdgToAlt") {
@@ -662,17 +663,17 @@ public:
       }
 
       double distanceM = timeToChangeSec * speedMSec;
-      double hdg = h->headingDegMagnetic() + magVarFor(previous.pos);
-      waypoints[index].pos = SGGeodesy::direct(previous.turnExitPos, hdg, distanceM);
+      double hdg = h->headingDegMagnetic() + magVarFor(previous->pos);
+      waypoints[index].pos = SGGeodesy::direct(previous->turnExitPos, hdg, distanceM);
       waypoints[index].posValid = true;
     } else if (ty == "radialIntercept") {
       // start from previous.turnExit
       RadialIntercept* i = (RadialIntercept*) wpt.get();
       
-      SGGeoc prevGc = SGGeoc::fromGeod(previous.turnExitPos);
+      SGGeoc prevGc = SGGeoc::fromGeod(previous->turnExitPos);
       SGGeoc navid = SGGeoc::fromGeod(wpt->position());
       SGGeoc rGc;
-      double magVar = magVarFor(previous.pos);
+      double magVar = magVarFor(previous->pos);
       
       double radial = i->radialDegMagnetic() + magVar;
       double track = i->courseDegMagnetic() + magVar;
@@ -687,7 +688,7 @@ public:
         ok = geocRadialIntersection(prevGc, track, navidAdjusted, radial, rGc);
         if (!ok) {
           SG_LOG(SG_NAVAID, SG_WARN, "couldn't compute interception for radial:"
-               << previous.turnExitPos << " / " << track << "/" << wpt->position()
+               << previous->turnExitPos << " / " << track << "/" << wpt->position()
                << "/" << radial);
           waypoints[index].pos = wpt->position(); // horrible fallback
 
@@ -702,7 +703,7 @@ public:
     } else if (ty == "dmeIntercept") {
       DMEIntercept* di = (DMEIntercept*) wpt.get();
       
-      SGGeoc prevGc = SGGeoc::fromGeod(previous.turnExitPos);
+      SGGeoc prevGc = SGGeoc::fromGeod(previous->turnExitPos);
       SGGeoc navid = SGGeoc::fromGeod(wpt->position());
       double distRad = di->dmeDistanceNm() * SG_NM_TO_RAD;
       SGGeoc rGc;
@@ -716,12 +717,12 @@ public:
         SG_LOG(SG_NAVAID, SG_WARN, "dmeIntercept failed");
         waypoints[index].pos = wpt->position(); // horrible fallback
       } else {
-        waypoints[index].pos = SGGeodesy::direct(previous.turnExitPos, crs, dNm * SG_NM_TO_METER);
+        waypoints[index].pos = SGGeodesy::direct(previous->turnExitPos, crs, dNm * SG_NM_TO_METER);
       }
       
       waypoints[index].posValid = true;
     } else if (ty == "vectors") {
-      waypoints[index].legCourseTrue = SGGeodesy::courseDeg(previous.turnExitPos, waypoints[index].pos);
+      waypoints[index].legCourseTrue = SGGeodesy::courseDeg(previous->turnExitPos, waypoints[index].pos);
       waypoints[index].legCourseValid = true;
       // no turn data
     }
@@ -914,16 +915,43 @@ public:
       }
   }
 
-    const WayptData& previousValidWaypoint(int index) const
+    WayptDataVec::iterator previousValidWaypoint(unsigned int index)
     {
-        assert(index > 0);
-        if (waypoints[index-1].skipped) {
-            return waypoints[index-2];
+        if (index == 0) {
+            return waypoints.end();
         }
 
-        return waypoints[index-1];
+        while (waypoints[--index].skipped) {
+            // waypoint zero should be unskippable, this assert verified that
+            assert(index > 0);
+        }
+
+        return waypoints.begin() + index;
     }
 
+    WayptDataVec::iterator previousValidWaypoint(WayptDataVec::iterator it)
+    {
+        return previousValidWaypoint(std::distance(waypoints.begin(), it));
+    }
+
+
+    WayptDataVec::iterator nextValidWaypoint(int index)
+    {
+        return nextValidWaypoint(waypoints.begin() + index);
+    }
+
+    WayptDataVec::iterator nextValidWaypoint(WayptDataVec::iterator it)
+    {
+        if (it == waypoints.end()) {
+            return it;
+        }
+
+        ++it;
+        while ((it != waypoints.end()) && it->skipped) {
+            ++it;
+        }
+        return it;
+    }
 }; // of RoutePathPrivate class
 
 RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
@@ -932,7 +960,7 @@ RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
     for (int l=0; l<fp->numLegs(); ++l) {
         Waypt *wpt = fp->legAtIndex(l)->waypoint();
         if (!wpt) {
-            SG_LOG(SG_NAVAID, SG_ALERT, "Waypoint " << l << " of " << fp->numLegs() << "is NULL");
+            SG_LOG(SG_NAVAID, SG_DEV_ALERT, "Waypoint " << l << " of " << fp->numLegs() << "is NULL");
             break;
         }
         d->waypoints.push_back(WayptData(wpt));
@@ -971,27 +999,24 @@ void RoutePath::commonInit()
       double radiusM = ((360.0 / d->pathTurnRate) * gs * SG_KT_TO_MPS) / SGMiscd::twopi();
 
       if (i > 0) {
-          const WayptData& prev(d->previousValidWaypoint(i));
-          d->waypoints[i].computeLegCourse(prev, radiusM);
+          auto prevIt = d->previousValidWaypoint(i);
+          assert(prevIt != d->waypoints.end());
+          d->waypoints[i].computeLegCourse(*prevIt, radiusM);
           d->computeDynamicPosition(i);
       }
 
-    if (i < (d->waypoints.size() - 1)) {
-        int nextIndex = i + 1;
-        if (d->waypoints[nextIndex].skipped) {
-            nextIndex++;
-        }
-        WayptData& next(d->waypoints[nextIndex]);
-        next.computeLegCourse(d->waypoints[i], radiusM);
+      auto nextIt = d->nextValidWaypoint(i);
+      if (nextIt != d->waypoints.end()) {
+          nextIt->computeLegCourse(d->waypoints[i], radiusM);
 
-      if (next.legCourseValid) {
-        d->waypoints[i].computeTurn(radiusM, d->constrainLegCourses, next);
-      } else {
-        // next waypoint has indeterminate course. Let's create a sharp turn
-        // this can happen when the following point is ATC vectors, for example.
-        d->waypoints[i].turnEntryPos = d->waypoints[i].pos;
-        d->waypoints[i].turnExitPos = d->waypoints[i].pos;
-      }
+          if (nextIt->legCourseValid) {
+              d->waypoints[i].computeTurn(radiusM, d->constrainLegCourses, *nextIt);
+          } else {
+            // next waypoint has indeterminate course. Let's create a sharp turn
+            // this can happen when the following point is ATC vectors, for example.
+            d->waypoints[i].turnEntryPos = d->waypoints[i].pos;
+            d->waypoints[i].turnExitPos = d->waypoints[i].pos;
+          }
     } else {
       // final waypt, fix up some data
       d->waypoints[i].turnExitPos = d->waypoints[i].pos;
@@ -1030,12 +1055,12 @@ SGGeodVec RoutePath::pathForIndex(int index) const
     return pathForHold((Hold*) d->waypoints[index].wpt.get());
   }
 
-    if (index > 0) {
-      const WayptData& prev(d->previousValidWaypoint(index));
-      prev.turnExitPath(r);
+    auto prevIt = d->previousValidWaypoint(index);
+    if (prevIt != d->waypoints.end()) {
+        prevIt->turnExitPath(r);
       
-      SGGeod from = prev.turnExitPos,
-        to = w.turnEntryPos;
+        SGGeod from = prevIt->turnExitPos,
+            to = w.turnEntryPos;
       
       // compute rounding offset, we want to round towards the direction of travel
       // which depends on the east/west sign of the longitude change
@@ -1089,16 +1114,17 @@ SGGeod RoutePath::positionForIndex(int index) const
 SGGeodVec RoutePath::pathForVia(Via* via, int index) const
 {
     // previous waypoint must be valid for a VIA
-    if ((index == 0) || !d->waypoints[index-1].posValid) {
+    auto prevIt = d->previousValidWaypoint(index);
+    if (prevIt == d->waypoints.end()) {
         return SGGeodVec();
+
     }
 
-    const WayptData& prev(d->waypoints[index-1]);
-    WayptVec enrouteWaypoints = via->expandToWaypoints(prev.wpt);
+    WayptVec enrouteWaypoints = via->expandToWaypoints(prevIt->wpt);
     SGGeodVec r;
 
     WayptVec::const_iterator it;
-    SGGeod legStart = prev.wpt->position();
+    SGGeod legStart = prevIt->wpt->position();
     for (it = enrouteWaypoints.begin(); it != enrouteWaypoints.end(); ++it) {
         // interpolate directly into the result vector
         interpolateGreatCircle(legStart, (*it)->position(), r);
@@ -1110,94 +1136,90 @@ SGGeodVec RoutePath::pathForVia(Via* via, int index) const
 
 SGGeodVec RoutePath::pathForHold(Hold* hold) const
 {
-  int turnSteps = 16;
-  double hdg = hold->inboundRadial();
-  double turnDelta = 180.0 / turnSteps;
-  double altFt = 0.0; // FIXME
-  double gsKts = d->groundSpeedForAltitude(altFt);
-  
-  SGGeodVec r;
-  double az2;
-  double stepTime = turnDelta / d->pathTurnRate; // in seconds
-  double stepDist = gsKts * (stepTime / 3600.0) * SG_NM_TO_METER;
-  double legDist = hold->isDistance() ? 
-    hold->timeOrDistance() 
-    : gsKts * (hold->timeOrDistance() / 3600.0);
-  legDist *= SG_NM_TO_METER;
-  
-  if (hold->isLeftHanded()) {
-    turnDelta = -turnDelta;
-  }  
-  SGGeod pos = hold->position();
-  r.push_back(pos);
+    int turnSteps = 16;
+    double hdg = hold->inboundRadial();
+    double turnDelta = 180.0 / turnSteps;
+    double altFt = 0.0; // FIXME
+    double gsKts = d->groundSpeedForAltitude(altFt);
 
-  // turn+leg sides are a mirror
-  for (int j=0; j < 2; ++j) {
-  // turn
-    for (int i=0;i<turnSteps; ++i) {
-      hdg += turnDelta;
-      SGGeodesy::direct(pos, hdg, stepDist, pos, az2);
-      r.push_back(pos);
+    SGGeodVec r;
+    double az2;
+    double stepTime = turnDelta / d->pathTurnRate; // in seconds
+    double stepDist = gsKts * (stepTime / 3600.0) * SG_NM_TO_METER;
+    double legDist = hold->isDistance() ?
+    hold->timeOrDistance()
+    : gsKts * (hold->timeOrDistance() / 3600.0);
+    legDist *= SG_NM_TO_METER;
+
+    if (hold->isLeftHanded()) {
+        turnDelta = -turnDelta;
     }
-    
-  // leg
-    SGGeodesy::direct(pos, hdg, legDist, pos, az2);
+    SGGeod pos = hold->position();
     r.push_back(pos);
-  } // of leg+turn duplication
-  
-  return r;
+
+    // turn+leg sides are a mirror
+    for (int j=0; j < 2; ++j) {
+        // turn
+        for (int i=0;i<turnSteps; ++i) {
+            hdg += turnDelta;
+            SGGeodesy::direct(pos, hdg, stepDist, pos, az2);
+            r.push_back(pos);
+        }
+
+        // leg
+        SGGeodesy::direct(pos, hdg, legDist, pos, az2);
+        r.push_back(pos);
+    } // of leg+turn duplication
+    
+    return r;
 }
 
 double RoutePath::computeDistanceForIndex(int index) const
 {
-  if ((index < 0) || (index >= (int) d->waypoints.size())) {
-    throw sg_range_exception("waypt index out of range",
-                             "RoutePath::computeDistanceForIndex");
-  }
-  
-  if (index == 0) {
-    // first waypoint, distance is 0
-    return 0.0;
-  }
+    if ((index < 0) || (index >= (int) d->waypoints.size())) {
+        throw sg_range_exception("waypt index out of range",
+                                 "RoutePath::computeDistanceForIndex");
+    }
 
-    if (d->waypoints[index].skipped) {
+    auto it = d->waypoints.begin() + index;
+    if ((index == 0) || it->skipped) {
+        // first waypoint, distance is 0
         return 0.0;
     }
 
-
-    if (d->waypoints[index].wpt->type() == "via") {
-        return distanceForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
+    if (it->wpt->type() == "via") {
+        return distanceForVia(static_cast<Via*>(it->wpt.get()), index);
     }
 
-    const WayptData& prev(d->previousValidWaypoint(index));
-  double dist = SGGeodesy::distanceM(prev.turnExitPos,
-                              d->waypoints[index].turnEntryPos);
-  dist += prev.turnDistanceM();
-  
-  if (!d->waypoints[index].flyOver) {
-    // add entry distance
-    dist += d->waypoints[index].turnDistanceM();
-  }
-  
-  return dist;
+    auto prevIt = d->previousValidWaypoint(index);
+    assert(prevIt != d->waypoints.end());
+
+    double dist = SGGeodesy::distanceM(prevIt->turnExitPos, it->turnEntryPos);
+    dist += prevIt->turnDistanceM();
+
+    if (!it->flyOver) {
+        // add entry distance
+        dist += it->turnDistanceM();
+    }
+    
+    return dist;
 }
 
 double RoutePath::distanceForVia(Via* via, int index) const
 {
-    // previous waypoint must be valid for a VIA
-    if ((index == 0) || !d->waypoints[index-1].posValid) {
+    auto prevIt = d->previousValidWaypoint(index);
+    if (prevIt == d->waypoints.end()) {
         return 0.0;
     }
 
-    const WayptData& prev(d->waypoints[index-1]);
-    WayptVec enrouteWaypoints = via->expandToWaypoints(prev.wpt);
+    WayptVec enrouteWaypoints = via->expandToWaypoints(prevIt->wpt);
     double dist = 0.0;
 
     WayptVec::const_iterator it;
-    SGGeod legStart = prev.wpt->position();
-    for (it = enrouteWaypoints.begin(); it != enrouteWaypoints.end(); ++it) {
-        dist += SGGeodesy::distanceM(legStart, (*it)->position());
-        legStart = (*it)->position();
+    SGGeod legStart = prevIt->wpt->position();
+    for (auto wp : enrouteWaypoints) {
+        dist += SGGeodesy::distanceM(legStart, wp->position());
+        legStart = wp->position();
     }
 
     return dist;
@@ -1205,7 +1227,6 @@ double RoutePath::distanceForVia(Via* via, int index) const
 
 double RoutePath::trackForIndex(int index) const
 {
-
     if (d->waypoints[index].skipped)
         return trackForIndex(index - 1);
 

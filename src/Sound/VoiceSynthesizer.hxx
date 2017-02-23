@@ -64,6 +64,10 @@ struct SynthesizeRequest {
     return *this;
   }
 
+  // return a special marker request used to indicate the synthesis thread
+  // should be exited.
+  static SynthesizeRequest cancelThreadRequest();
+
   std::string text;
   double speed;
   double volume;

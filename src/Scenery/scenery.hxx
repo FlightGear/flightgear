@@ -38,18 +38,21 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include "SceneryPager.hxx"
+#include "terrain.hxx"
 
 namespace simgear {
 class BVHMaterial;
 }
+
+class FGTerrain;
 
 // Define a structure containing global scenery parameters
 class FGScenery : public SGSubsystem
 {
     class ScenerySwitchListener;
     friend class ScenerySwitchListener;
-  
 
+    
     // scene graph
     osg::ref_ptr<osg::Switch> scene_graph;
     osg::ref_ptr<osg::Group> terrain_branch;
@@ -61,13 +64,14 @@ class FGScenery : public SGSubsystem
     
     osg::ref_ptr<flightgear::SceneryPager> _pager;
     ScenerySwitchListener* _listener;
-public:
 
+public:
     FGScenery();
     ~FGScenery();
 
     // Implementation of SGSubsystem.
     void init ();
+    void reinit();
     void shutdown ();
     void bind ();
     void unbind ();
@@ -129,17 +133,21 @@ public:
     // the scenery is initialized.
     static flightgear::SceneryPager* getPagerSingleton();
     static void resetPagerSingleton();
-    
-    flightgear::SceneryPager* getPager() { return _pager.get(); }
 
+    flightgear::SceneryPager* getPager() { return _pager.get(); }
+    
+    // tile mgr api
+    bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
+    void materialLibChanged();
+    
     static const char* subsystemName() { return "scenery"; }
 
 private:
-    // The state of the scene graph.
+    // the terrain engine
+    FGTerrain* _terrain;
+
+    // The state of the scene graph.    
     bool _inited;
 };
 
-
 #endif // _SCENERY_HXX
-
-

@@ -1,10 +1,14 @@
-#include "Math.hpp"
+#include <Main/fg_props.hxx>
 #include "Surface.hpp"
+
 namespace yasim {
+int Surface::s_idGenerator = 0;
 
 Surface::Surface( Version * version ) :
     _version(version)
 {
+    // create id for surface
+    _id = s_idGenerator++;
     // Start in a "sane" mode, so unset stuff doesn't freak us out
     _c0 = 1;
     _cx = _cy = _cz = 1;
@@ -30,91 +34,40 @@ Surface::Surface( Version * version ) :
     _slatAlpha = 0;
     _spoilerLift = 1;
     _inducedDrag = 1;
+    _stallAlpha = 0;
+    _alpha = 0;
+    _surfN = fgGetNode("/fdm/yasim/surfaces", true);
+    if (_surfN != 0) {
+      _surfN = _surfN->getChild("surface", _id, true);
+      _fxN = _surfN->getNode("f-x", true);
+      _fyN = _surfN->getNode("f-y", true);
+      _fzN = _surfN->getNode("f-z", true);
+      _fabsN = _surfN->getNode("f-abs", true);
+      _alphaN = _surfN->getNode("alpha", true);
+      _stallAlphaN = _surfN->getNode("stall-alpha", true);
+      _flapN = _surfN->getNode("flap-pos", true);
+      _slatN = _surfN->getNode("slat-pos", true);
+      _spoilerN = _surfN->getNode("spoiler-pos", true);
+    }
 }
 
-void Surface::setPosition(float* p)
+
+void Surface::setPosition(const float* p)
 {
     int i;
     for(i=0; i<3; i++) _pos[i] = p[i];
+    if (_surfN != 0) {
+      _surfN->getNode("pos-x", true)->setFloatValue(p[0]);
+      _surfN->getNode("pos-y", true)->setFloatValue(p[1]);
+      _surfN->getNode("pos-z", true)->setFloatValue(p[2]);
+    }
 }
 
-void Surface::getPosition(float* out)
+void Surface::setOrientation(const float* o)
 {
-    int i;
-    for(i=0; i<3; i++) out[i] = _pos[i];
+  for(int i=0; i<9; i++) _orient[i] = o[i];
 }
 
-void Surface::setChord(float chord)
-{
-    _chord = chord;
-}
-
-void Surface::setTotalDrag(float c0)
-{
-    _c0 = c0;
-}
-
-float Surface::getTotalDrag()
-{
-    return _c0;
-}
-
-void Surface::setXDrag(float cx)
-{
-    _cx = cx;
-}
-
-void Surface::setYDrag(float cy)
-{
-    _cy = cy;
-}
-
-void Surface::setZDrag(float cz)
-{
-    _cz = cz;
-}
-
-float Surface::getXDrag()
-{
-    return _cx;
-}
-
-void Surface::setBaseZDrag(float cz0)
-{
-    _cz0 = cz0;
-}
-
-void Surface::setStallPeak(int i, float peak)
-{
-    _peaks[i] = peak;
-}
-
-void Surface::setStall(int i, float alpha)
-{
-    _stalls[i] = alpha;
-}
-
-void Surface::setStallWidth(int i, float width)
-{
-    _widths[i] = width;
-}
-
-void Surface::setOrientation(float* o)
-{
-    int i;
-    for(i=0; i<9; i++)
-        _orient[i] = o[i];
-}
-
-void Surface::setIncidence(float angle)
-{
-    _incidence = angle;
-}
-
-void Surface::setTwist(float angle)
-{
-    _twist = angle;
-}
 
 void Surface::setSlatParams(float stallDelta, float dragPenalty)
 {
@@ -134,42 +87,39 @@ void Surface::setSpoilerParams(float liftPenalty, float dragPenalty)
     _spoilerDrag = dragPenalty;
 }
 
-void Surface::setFlap(float pos)
+void Surface::setFlapPos(float pos)
 {
-    _flapPos = pos;
+  if (_flapPos != pos) {
+      _flapPos = pos;
+    if (_surfN != 0) _flapN->setFloatValue(pos);
+  }
 }
 
-void Surface::setFlapEffectiveness(float effectiveness)
+void Surface::setSlatPos(float pos)
 {
-    _flapEffectiveness = effectiveness;
-}
-
-double Surface::getFlapEffectiveness()
-{
-    return _flapEffectiveness;
-}
-
-
-void Surface::setSlat(float pos)
-{
+  if (_slatPos != pos) {
     _slatPos = pos;
+    if (_surfN != 0) _slatN->setFloatValue(pos);
+  }
 }
 
-void Surface::setSpoiler(float pos)
+void Surface::setSpoilerPos(float pos)
 {
+  if (_spoilerPos != pos) {
     _spoilerPos = pos;
+    if (_surfN != 0) _spoilerN->setFloatValue(pos);
+  }
 }
 
 // Calculate the aerodynamic force given a wind vector v (in the
 // aircraft's "local" coordinates) and an air density rho.  Returns a
 // torque about the Y axis, too.
-void Surface::calcForce(float* v, float rho, float* out, float* torque)
+void Surface::calcForce(const float* v, const float rho, float* out, float* torque)
 {
     // Split v into magnitude and direction:
     float vel = Math::mag3(v);
 
-    // Handle the blowup condition.  Zero velocity means zero force by
-    // definition.
+    // Zero velocity means zero force by definition (also prevents div0).
     if(vel == 0) {
         int i;
 	for(i=0; i<3; i++) out[i] = torque[i] = 0;
@@ -182,10 +132,9 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
         for(int i=0; i<3; i++) out[i] = torque[i] = 0.;
         return;
     }
-
+    
+    // Normalize wind and convert to the surface's coordinates
     Math::mul3(1/vel, v, out);
-
-    // Convert to the surface's coordinates
     Math::vmul33(_orient, out, out);
 
     // "Rotate" by the incidence angle.  Assume small angles, so we
@@ -247,6 +196,15 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     float scale = 0.5f*rho*vel*vel*_c0;
     Math::mul3(scale, out, out);
     Math::mul3(scale, torque, torque);
+    // if we have a property tree, export info
+    if (_surfN != 0) {
+      _fabsN->setFloatValue(Math::mag3(out));
+      _fxN->setFloatValue(out[0]);
+      _fyN->setFloatValue(out[1]);
+      _fzN->setFloatValue(out[2]);
+      _alphaN->setFloatValue(_alpha);
+      _stallAlphaN->setFloatValue(_stallAlpha);      
+    }
 }
 
 #if 0
@@ -257,9 +215,9 @@ void Surface::test()
     float rho = Atmosphere::getStdDensity(0);
     float spd = 30;
 
-    setFlap(0);
-    setSlat(0);
-    setSpoiler(0);
+    setFlapPos(0);
+    setSlatPos(0);
+    setSpoilerPos(0);
 
     for(float angle = -90; angle<90; angle += 0.01) {
         float rad = angle * DEG2RAD;
@@ -281,39 +239,40 @@ float Surface::stallFunc(float* v)
     // Sanity check to treat FPU psychopathology
     if(v[0] == 0) return 1;
 
-    float alpha = Math::abs(v[2]/v[0]);
+    _alpha = Math::abs(v[2]/v[0]);
 
     // Wacky use of indexing, see setStall*() methods.
     int fwdBak = v[0] > 0; // set if this is "backward motion"
     int posNeg = v[2] < 0; // set if the airflow is toward -z
     int i = (fwdBak<<1) | posNeg;
 
-    float stallAlpha = _stalls[i];
-    if(stallAlpha == 0)
+    _stallAlpha = _stalls[i];
+    if(_stallAlpha == 0)
         return 1;
 
+    // consider slat position, moves the stall aoa some degrees
     if(i == 0) {
 	if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
-	    stallAlpha += _slatPos * _slatAlpha;
+	    _stallAlpha += _slatPos * _slatAlpha;
 	} else {
-	    stallAlpha += _slatAlpha;
+	    _stallAlpha += _slatAlpha;
 	}
     }
 
     // Beyond the stall
-    if(alpha > stallAlpha+_widths[i])
+    if(_alpha > _stallAlpha+_widths[i])
 	return 1;
 
     // (note mask: we want to use the "positive" stall angle here)
     float scale = 0.5f*_peaks[fwdBak]/_stalls[i&2];
 
     // Before the stall
-    if(alpha <= stallAlpha)
+    if(_alpha <= _stallAlpha)
 	return scale;
 
     // Inside the stall.  Compute a cubic interpolation between the
     // pre-stall "scale" value and the post-stall unity.
-    float frac = (alpha - stallAlpha) / _widths[i];
+    float frac = (_alpha - _stallAlpha) / _widths[i];
     frac = frac*frac*(3-2*frac);
 
     return scale*(1-frac) + frac;

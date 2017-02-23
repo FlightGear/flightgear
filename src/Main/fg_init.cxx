@@ -111,7 +111,6 @@
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/SceneryPager.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/voice.hxx>
 #include <Sound/soundmanager.hxx>
@@ -397,6 +396,26 @@ bool fgInitHome()
         return true;
     }
     
+	bool result = false;
+#if defined(SG_WINDOWS)
+	// don't use a PID file on Windows, because deleting on close is
+	// unreliable and causes false-positives. Instead, use a named
+	// mutex.
+
+	HANDLE hMutex = CreateMutexA(nullptr, FALSE, "org.flightgear.fgfs.primary");
+	if (hMutex == nullptr) {
+		printf("CreateMutex error: %d\n", GetLastError());
+		SG_LOG(SG_GENERAL, SG_POPUP, "Failed to create mutex for multi-app protection");
+		return false;
+	} else if (GetLastError() == ERROR_ALREADY_EXISTS) {
+		SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
+		fgSetBool("/sim/fghome-readonly", true);
+		return true;
+	} else {
+		SG_LOG(SG_GENERAL, SG_INFO, "Created multi-app mutex, we are in writeable mode");
+		result = true;
+	}
+#else
 // write our PID, and check writeability
     SGPath pidPath(dataPath, "fgfs.pid");
     if (pidPath.exists()) {
@@ -407,26 +426,10 @@ bool fgInitHome()
         return true;
     }
     
-    char buf[16];
-    bool result = false;
-    std::string ps = pidPath.local8BitStr();
-#if defined(SG_WINDOWS)
-    size_t len = snprintf(buf, 16, "%d", _getpid());
+	char buf[16];
+	std::string ps = pidPath.local8BitStr();
 
-    HANDLE f = CreateFileA(ps.c_str(), GENERIC_READ | GENERIC_WRITE,
-						   FILE_SHARE_READ, /* sharing */
-                           NULL, /* security attributes */
-                           CREATE_NEW, /* error if already exists */
-                           FILE_FLAG_DELETE_ON_CLOSE,
-						   NULL /* template */);
-    
-    result = (f != INVALID_HANDLE_VALUE);
-    if (result) {
-		DWORD written;
-        WriteFile(f, buf, len, &written, NULL /* overlapped */);
-    }
-#else
-    // POSIX, do open+unlink trick to the file is deleted on exit, even if we
+    // do open+unlink trick to the file is deleted on exit, even if we
     // crash or exit(-1)
     ssize_t len = snprintf(buf, 16, "%d", getpid());
     int fd = ::open(ps.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
@@ -435,16 +438,15 @@ bool fgInitHome()
         if( ::unlink(ps.c_str()) != 0 ) // delete file when app quits
           result = false;
     }
+
+	if (!result) {
+		flightgear::fatalMessageBox("File permissions problem",
+			"Can't write to user-data storage folder, check file permissions and FG_HOME.",
+			"User-data at:" + dataPath.utf8Str());
+	}
 #endif
-
     fgSetBool("/sim/fghome-readonly", false);
-
-    if (!result) {
-        flightgear::fatalMessageBox("File permissions problem",
-                                    "Can't write to user-data storage folder, check file permissions and FG_HOME.",
-                                    "User-data at:" + dataPath.utf8Str());
-    }
-    return result;
+	return result;
 }
 
 // Read in configuration (file and command line)
@@ -471,6 +473,21 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     if (!reinit) {
         options->init(argc, argv, dataPath);
     }
+
+    // establish default for developer-mode based upon compiled build types
+    bool developerMode = true;
+    if (!strcmp(FG_BUILD_TYPE, "Release")) {
+        developerMode = false;
+    }
+
+    // allow command line to override
+    if (options->isOptionSet("developer")) {
+        string s = options->valueForOption("developer", "yes");
+        developerMode = simgear::strutils::to_bool(s);
+    }
+
+    fgSetBool("/sim/developer-mode", developerMode);
+    sglog().setDeveloperMode(developerMode);
 
     // Read global defaults from $FG_ROOT/defaults
     SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
@@ -632,7 +649,7 @@ fgInitNav ()
   
   SGPath path(globals->get_fg_root());
   path.append( "Navaids/TACAN_freq.dat" );
-  flightgear::loadTacan(path, channellist);
+  flightgear::NavLoader().loadTacan(path, channellist);
   
   return true;
 }
@@ -1029,7 +1046,7 @@ void fgStartNewReset()
         string_list::const_iterator it;
         for (it = names.begin(); it != names.end(); ++it) {
             if ((*it == "time") || (*it == "terrasync") || (*it == "events")
-                || (*it == "lighting") || (*it == FGTileMgr::subsystemName()) || (*it == FGScenery::subsystemName()))
+                || (*it == "lighting") || (*it == FGScenery::subsystemName()))
             {
                 continue;
             }
@@ -1052,7 +1069,6 @@ void fgStartNewReset()
     
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
-    subsystemManger->remove(FGTileMgr::subsystemName());
     subsystemManger->remove(FGScenery::subsystemName());
 
     FGScenery::getPagerSingleton()->clearRequests();
@@ -1111,9 +1127,9 @@ void fgStartNewReset()
 
     viewer->getDatabasePager()->setUpThreads(1, 1);
     
-    // must do this before splashinit for Rembrandt
+    // must do this before preinit for Rembrandt
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());
-    render->splashinit();
+    render->preinit();
     viewer->startThreading();
     
     fgOSResetProperties();

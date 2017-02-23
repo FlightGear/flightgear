@@ -183,7 +183,8 @@ void segfault_handler(int signo) {
     free(list);
   }
 
-  exit(1);
+  signal(signo, SIG_DFL);
+  kill(getpid(), signo);
 }
 #endif
 
@@ -237,7 +238,7 @@ int main ( int argc, char **argv )
   char _hostname[256];
   gethostname(_hostname, 256);
   hostname = _hostname;
-    
+
   signal(SIGPIPE, SIG_IGN);
 # ifndef NDEBUG
   signal(SIGSEGV, segfault_handler);
@@ -248,36 +249,36 @@ int main ( int argc, char **argv )
 
 #if defined(HAVE_CRASHRPT)
 	// Define CrashRpt configuration parameters
-	CR_INSTALL_INFO info;  
-	memset(&info, 0, sizeof(CR_INSTALL_INFO));  
-	info.cb = sizeof(CR_INSTALL_INFO);    
+	CR_INSTALL_INFO info;
+	memset(&info, 0, sizeof(CR_INSTALL_INFO));
+	info.cb = sizeof(CR_INSTALL_INFO);
 	info.pszAppName = "FlightGear";
 	info.pszAppVersion = FLIGHTGEAR_VERSION;
 	info.pszEmailSubject = "FlightGear " FLIGHTGEAR_VERSION " crash report";
 	info.pszEmailTo = "fgcrash@goneabitbursar.com";
 	info.pszUrl = "http://fgfs.goneabitbursar.com/crashreporter/crashrpt.php";
-	info.uPriorities[CR_HTTP] = 3; 
-	info.uPriorities[CR_SMTP] = 2;  
+	info.uPriorities[CR_HTTP] = 3;
+	info.uPriorities[CR_SMTP] = 2;
 	info.uPriorities[CR_SMAPI] = 1;
 
 	// Install all available exception handlers
 	info.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
-  
-	// Restart the app on crash 
-	info.dwFlags |= CR_INST_SEND_QUEUED_REPORTS; 
+
+	// Restart the app on crash
+	info.dwFlags |= CR_INST_SEND_QUEUED_REPORTS;
 
 	// automatically install handlers for all threads
 	info.dwFlags |= CR_INST_AUTO_THREAD_HANDLERS;
 
-	// Define the Privacy Policy URL 
-	info.pszPrivacyPolicyURL = "http://flightgear.org/crash-privacypolicy.html"; 
-  
+	// Define the Privacy Policy URL
+	info.pszPrivacyPolicyURL = "http://flightgear.org/crash-privacypolicy.html";
+
 	// Install crash reporting
-	int nResult = crInstall(&info);    
+	int nResult = crInstall(&info);
 	if(nResult!=0) {
 		char buf[1024];
 		crGetLastErrorMsg(buf, 1024);
-		flightgear::modalMessageBox("CrashRpt setup failed", 
+		flightgear::modalMessageBox("CrashRpt setup failed",
 			"Failed to setup crash-reporting engine, check the installation is not damaged.",
 			buf);
 	} else {
@@ -287,10 +288,8 @@ int main ( int argc, char **argv )
 		char buf[16];
 		::snprintf(buf, 16, "%d", HUDSON_BUILD_NUMBER);
 		crAddProperty("hudson-build-number", buf);
-        crAddProperty("git-revision", REVISION);
-#if defined(FG_NIGHTLY)
-        crAddProperty("nightly-build", "true");
-#endif
+    crAddProperty("git-revision", REVISION);
+    crAddProperty("build-type", FG_BUILD_TYPE);
 	}
 #endif
 
@@ -324,7 +323,7 @@ int main ( int argc, char **argv )
             fgviewerMain(argc, argv);
         else
             fgMainInit(argc, argv);
-           
+
     } catch (const sg_throwable &t) {
         std::string info;
         if (std::strlen(t.getOrigin()) != 0)
@@ -360,7 +359,7 @@ void fgExitCleanup() {
 
         fgOSCloseWindow();
     }
-    
+
     // on the common exit path globals is already deleted, and NULL,
     // so this only happens on error paths.
     delete globals;
@@ -371,4 +370,3 @@ void fgExitCleanup() {
 
     simgear::shutdownLogging();
 }
-

@@ -1069,8 +1069,8 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
 
   SGGeod basePosition;
   if (_legs.empty()) {
-    // route is empty, use current position
-    basePosition = globals->get_aircraft_position();
+    // route is empty, use departure position / aircraft position
+    basePosition = _departure ? _departure->geod() : globals->get_aircraft_position();
   } else {
     basePosition = _legs.back()->waypoint()->position();
   }

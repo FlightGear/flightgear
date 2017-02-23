@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class ATCSpeech {
 public:
-    static const char * getSpokenDigit( int i );
+    static std::string getSpokenDigit( int i );
     static std::string getSpokenNumber( std::string number );
     static std::string getSpokenNumber( int number, bool leadingZero = false, int digits = 1 );
     static std::string getSpokenAltitude( int altitude );

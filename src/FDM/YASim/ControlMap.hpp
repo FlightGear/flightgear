@@ -1,6 +1,7 @@
 #ifndef _CONTROL_MAP_HPP
 #define _CONTROL_MAP_HPP
 
+#include <simgear/props/props.hxx>
 #include "Vector.hpp"
 
 namespace yasim {
@@ -26,9 +27,7 @@ public:
            OPT_INVERT = 0x02,
            OPT_SQUARE = 0x04 };
 
-    // Returns a new, not-yet-used "input handle" for addMapping and
-    // setInput.  This typically corresponds to one user axis.
-    int newInput();
+    struct PropHandle { char* name; int handle; };
 
     // Adds a mapping to between input handle and a particular setting
     // on an output object.  The value of output MUST match the type
@@ -45,12 +44,13 @@ public:
     // setInput() invokations.
     void reset();
 
-    // Sets the specified input (as returned by newInput) to the
+    // Sets the specified input (as returned by propertyHandle) to the
     // specified value.
-    void setInput(int input, float value);
+    void setInput(int propHandle, float value);
 
-    // Calculates and applies the settings received since the last reset().
-    void applyControls(float dt);
+    /// Calculates and applies the settings received since the last reset(). 
+    /// dt defaults to a large value used at solve time.
+    void applyControls(float dt=1e6);
 
     // Returns the input/output range appropriate for the given
     // control.  Ailerons go from -1 to 1, while throttles are never
@@ -72,6 +72,15 @@ public:
     float getOutput(int handle);
     float getOutputR(int handle);
 
+    // register property name, return handle
+    int propertyHandle(const char* name);
+    int numProperties() { return _properties.size(); }
+    PropHandle* getProperty(const int i) { return ((PropHandle*)_properties.get(i)); }
+
+    // helper
+    char* dup(const char* s);
+    bool eq(const char* a, const char* b);
+
 private:
     struct OutRec { int type; void* object; Vector maps;
                     float oldL, oldR, time; };
@@ -84,6 +93,8 @@ private:
 
     // An unordered list of output settings.
     Vector _outputs;
+    // control properties
+    Vector _properties;
 };
 
 }; // namespace yasim

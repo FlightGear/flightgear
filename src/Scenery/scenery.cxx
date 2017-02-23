@@ -21,9 +21,8 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
+#include <simgear/simgear_config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -57,8 +56,12 @@
 #include <Main/fg_props.hxx>
 #include <GUI/MouseCursor.hxx>
 
-#include "tilemgr.hxx"
 #include "scenery.hxx"
+#include "terrain_stg.hxx"
+
+#ifdef ENABLE_GDAL
+#include "terrain_pgt.hxx"
+#endif
 
 using namespace flightgear;
 using namespace simgear;
@@ -298,7 +301,7 @@ FGScenery::~FGScenery()
 
 
 // Initialize the Scenery Management system
-void FGScenery::init() {
+void FGScenery::init() {    
     // Already set up.
     if (_inited)
         return;
@@ -345,14 +348,36 @@ void FGScenery::init() {
     precipitation_branch->setName("Precipitation");
     scene_graph->addChild(precipitation_branch.get());
 
+    // initialize the terrian based on selected engine
+    std::string engine = fgGetString("/sim/scenery/engine", "tilecache" );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Selected scenery is " << engine );
+
+    if ( engine == "pagedLOD" ) {
+#ifdef ENABLE_GDAL
+        _terrain = new FGPgtTerrain();
+#else
+        _terrain = new FGStgTerrain();
+#endif
+    } else {
+        _terrain = new FGStgTerrain();
+    }
+    _terrain->init( terrain_branch.get() );
+
     _listener = new ScenerySwitchListener(this);
 
     // Toggle the setup flag.
     _inited = true;
 }
 
+void FGScenery::reinit()
+{
+    _terrain->reinit();
+}
+
 void FGScenery::shutdown()
 {
+    _terrain->shutdown();
+    
     scene_graph = NULL;
     terrain_branch = NULL;
     models_branch = NULL;
@@ -366,16 +391,12 @@ void FGScenery::shutdown()
 
 
 void FGScenery::update(double dt)
-{
-    SG_UNUSED(dt);
-    // nothing here, don't call again
-    suspend();
+{    
+    _terrain->update(dt);
 }
-
 
 void FGScenery::bind() {
 }
-
 
 void FGScenery::unbind() {
 }
@@ -386,9 +407,8 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
                                 const simgear::BVHMaterial** material,
                                 const osg::Node* butNotFrom)
 {
-  SGGeod geod = SGGeod::fromCart(pos);
-  geod.setElevationM(geod.getElevationM() + max_altoff);
-  return get_elevation_m(geod, alt, material, butNotFrom);
+    return _terrain->get_cart_elevation_m(pos, max_altoff, alt,
+                                          material, butNotFrom);
 }
 
 bool
@@ -396,25 +416,8 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
                            const simgear::BVHMaterial** material,
                            const osg::Node* butNotFrom)
 {
-  SGVec3d start = SGVec3d::fromGeod(geod);
-
-  SGGeod geodEnd = geod;
-  geodEnd.setElevationM(SGMiscd::min(geod.getElevationM() - 10, -10000));
-  SGVec3d end = SGVec3d::fromGeod(geodEnd);
-
-  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
-  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  get_scene_graph()->accept(intersectVisitor);
-
-  if (!intersectVisitor.getHaveHit())
-      return false;
-
-  geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
-  alt = geodEnd.getElevationM();
-  if (material)
-      *material = intersectVisitor.getMaterial();
-
-  return true;
+    return _terrain->get_elevation_m( geod, alt, material, 
+                                      butNotFrom );
 }
 
 bool
@@ -422,50 +425,22 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
                                         SGVec3d& nearestHit,
                                         const osg::Node* butNotFrom)
 {
-  // We assume that starting positions in the center of the earth are invalid
-  if ( norm1(pos) < 1 )
-    return false;
-
-  // Make really sure the direction is normalized, is really cheap compared to
-  // computation of ground intersection.
-  SGVec3d start = pos;
-  SGVec3d end = start + 1e5*normalize(dir); // FIXME visibility ???
-
-  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
-  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  get_scene_graph()->accept(intersectVisitor);
-
-  if (!intersectVisitor.getHaveHit())
-      return false;
-
-  nearestHit = intersectVisitor.getLineSegment().getEnd();
-  return true;
+    return _terrain->get_cart_ground_intersection( pos, dir, nearestHit, butNotFrom );
 }
 
 bool FGScenery::scenery_available(const SGGeod& position, double range_m)
 {
-  if(globals->get_tile_mgr()->schedule_scenery(position, range_m, 0.0))
-  {
-    double elev;
-    if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
-      return false;
-    SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
-    osg::FrameStamp* framestamp
-            = globals->get_renderer()->getViewer()->getFrameStamp();
-    simgear::CheckSceneryVisitor csnv(_pager, toOsg(p), range_m, framestamp);
-    // currently the PagedLODs will not be loaded by the DatabasePager
-    // while the splashscreen is there, so CheckSceneryVisitor force-loads
-    // missing objects in the main thread
-    get_scene_graph()->accept(csnv);
-    if(!csnv.isLoaded()) {
-        SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on CheckSceneryVisitor");
-        return false;
-    }
-    return true;
-  } else {
-    SG_LOG(SG_TERRAIN, SG_DEBUG, "FGScenery::scenery_available: waiting on tile manager");
-  }
-  return false;
+    return _terrain->scenery_available( position, range_m );
+}
+
+bool FGScenery::schedule_scenery(const SGGeod& position, double range_m, double duration)
+{
+    return _terrain->schedule_scenery( position, range_m, duration );
+}
+    
+void FGScenery::materialLibChanged()
+{
+    _terrain->materialLibChanged();
 }
 
 static osg::ref_ptr<SceneryPager> pager;
@@ -481,4 +456,3 @@ void FGScenery::resetPagerSingleton()
 {
     pager = NULL;
 }
-

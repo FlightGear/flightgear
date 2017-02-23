@@ -105,15 +105,24 @@ void AddOnsPage::onAddSceneryPath()
         // validation
 
         SGPath p(path.toStdString());
-        SGPath objectsPath = p / "Objects";
-        SGPath terrainPath = p / "Terrain";
+        bool isValid = false;
 
-        if (!objectsPath.exists() && !terrainPath.exists()) {
+        for (const auto& dir: {"Objects", "Terrain", "Buildings", "Roads",
+                               "Pylons", "NavData"}) {
+            if ((p / dir).exists()) {
+                isValid = true;
+                break;
+            }
+        }
+
+        if (!isValid) {
             QMessageBox mb;
             mb.setText(QString("The folder '%1' doesn't appear to contain scenery - add anyway?").arg(path));
             mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
             mb.setDefaultButton(QMessageBox::No);
-            mb.setInformativeText("Added scenery should contain folders called 'Objects' and / or 'Terrain'");
+            mb.setInformativeText(
+                "Added scenery should contain at least one of the following "
+                "folders: Objects, Terrain, Buildings, Roads, Pylons, NavData.");
             mb.exec();
 
             if (mb.result() == QMessageBox::No) {
@@ -124,11 +133,6 @@ void AddOnsPage::onAddSceneryPath()
         m_ui->sceneryPathsList->addItem(path);
         saveSceneryPaths();
     }
-
-    // work around a Qt OS-X bug - this dialog is ending ordered
-    // behind the main settings dialog (consequence of modal-dialog
-    // showing a modla dialog showing a modial dialog)
-    window()->raise();
 }
 
 void AddOnsPage::onRemoveSceneryPath()
@@ -175,11 +179,8 @@ void AddOnsPage::onAddAircraftPath()
         }
 
         saveAircraftPaths();
+        emit aircraftPathsChanged();
     }
-    // work around a Qt OS-X bug - this dialog is ending ordered
-    // behind the main settings dialog (consequence of modal-dialog
-    // showing a modla dialog showing a modial dialog)
-    window()->raise();
 }
 
 void AddOnsPage::onRemoveAircraftPath()
@@ -187,6 +188,7 @@ void AddOnsPage::onRemoveAircraftPath()
     if (m_ui->aircraftPathsList->currentItem()) {
         delete m_ui->aircraftPathsList->currentItem();
         saveAircraftPaths();
+        emit aircraftPathsChanged();
     }
 }
 
@@ -237,13 +239,13 @@ void AddOnsPage::onAddCatalog()
 
 void AddOnsPage::onAddDefaultCatalog()
 {
-    addDefaultCatalog(this);
+    addDefaultCatalog(this, false /* not silent */);
 
     m_catalogsModel->refresh();
     updateUi();
 }
 
-void AddOnsPage::addDefaultCatalog(QWidget* pr)
+void AddOnsPage::addDefaultCatalog(QWidget* pr, bool silent)
 {
     // check it's not a duplicate somehow
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
@@ -252,6 +254,9 @@ void AddOnsPage::addDefaultCatalog(QWidget* pr)
 
     QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(pr, globals->packageRoot()));
     QUrl url(QString::fromStdString(http->getDefaultCatalogUrl()));
+    if (silent) {
+        dlg->setNonInteractiveMode();
+    }
     dlg->setUrlAndDownload(url);
     dlg->exec();
 

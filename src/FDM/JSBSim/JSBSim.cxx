@@ -188,6 +188,11 @@ FGJSBsim::FGJSBsim( double dt )
         case SG_POPUP:
             FGJSBBase::debug_lvl = 0x00;
             break;
+
+        default:
+            // silence warning about unhandled cases
+            FGJSBBase::debug_lvl = 0x00;
+            break;
         }
     } else {
                                 // if flight is excluded, don't bother
@@ -234,9 +239,7 @@ FGJSBsim::FGJSBsim( double dt )
 
     fdmex->Setdt( dt );
 
-    result = fdmex->LoadModel( aircraft_path.local8BitStr(),
-                               engine_path.local8BitStr(),
-                               systems_path.local8BitStr(),
+    result = fdmex->LoadModel( aircraft_path, engine_path, systems_path,
                                fgGetString("/sim/aero"), false );
 
     if (result) {

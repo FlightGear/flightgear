@@ -17,9 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "config.h"
 
 #include "airways.hxx"
 
@@ -271,13 +269,11 @@ void Airway::Network::addEdge(int aWay, const SGGeod& aStartPos,
   if (!start) {
     SG_LOG(SG_NAVAID, SG_DEBUG, "unknown airways start pt: '" << aStartIdent << "'");
     start = FGPositioned::createUserWaypoint(aStartIdent, aStartPos);
-    return;
   }
   
   if (!end) {
     SG_LOG(SG_NAVAID, SG_DEBUG, "unknown airways end pt: '" << aEndIdent << "'");
     end = FGPositioned::createUserWaypoint(aEndIdent, aEndPos);
-    return;
   }
   
   NavDataCache::instance()->insertEdge(_networkID, aWay, start->guid(), end->guid());

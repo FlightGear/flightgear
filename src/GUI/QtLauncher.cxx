@@ -69,6 +69,7 @@
 #include "AircraftModel.hxx"
 #include "PathsDialog.hxx"
 #include "EditCustomMPServerDialog.hxx"
+#include "previewwindow.h"
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -696,6 +697,20 @@ bool runLauncherDialog()
     // try to initialise various Cocoa structures.
     flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
 
+    if (!settings.contains("initial-default-hangar-added")) {
+        settings.setValue("initial-default-hangar-added", true);
+
+        // ensure subsystems get updated while the dialog is running; we don't
+        // yet have the QtLauncher window's pump installed
+        QTimer subsystemPump;
+        subsystemPump.setInterval(0);
+        QObject::connect(&subsystemPump, &QTimer::timeout, [](){ globals->get_subsystem_mgr()->update(0.0); });
+        subsystemPump.start();
+
+        // will only add if needed
+        AddOnsPage::addDefaultCatalog(nullptr, true /* silent */);
+    }
+
     QtLauncher dlg;
     dlg.show();
 
@@ -840,6 +855,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onRequestPackageUninstall);
     connect(delegate, &AircraftItemDelegate::cancelDownload,
             this, &QtLauncher::onCancelDownload);
+    connect(delegate, &AircraftItemDelegate::showPreviews,
+            this, &QtLauncher::onShowPreviews);
 
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
             this, &QtLauncher::onAircraftInstalledCompleted);
@@ -856,6 +873,8 @@ QtLauncher::QtLauncher() :
             this, &QtLauncher::onDownloadDirChanged);
     connect(addOnsPage, &AddOnsPage::sceneryPathsChanged,
             this, &QtLauncher::setSceneryPaths);
+    connect(addOnsPage, &AddOnsPage::aircraftPathsChanged,
+            this, &QtLauncher::onAircraftPathsChanged);
 
     m_ui->tabWidget->addTab(addOnsPage, tr("Add-ons"));
     // after any kind of reset, try to restore selection and scroll
@@ -1202,6 +1221,11 @@ void QtLauncher::onRun()
         if (a.arg.startsWith("prop:")) {
             QString v = a.arg.mid(5) + "=" + a.value;
             opt->addOption("prop", v.toStdString());
+        } else if (a.arg == "console") {
+            // this option is handled very early, in normal startup. If the user
+            // requests it via the launcher, parseOptions never sees it, so
+            // achieve the same result manually.
+            simgear::requestConsole();
         } else {
             opt->addOption(a.arg.toStdString(), a.value.toStdString());
         }
@@ -1383,6 +1407,14 @@ void QtLauncher::onRequestPackageUninstall(const QModelIndex& index)
         qDebug() << "uninstalling" << pkg;
         pref->existingInstall()->uninstall();
     }
+}
+
+void QtLauncher::onShowPreviews(const QModelIndex &index)
+{
+    QVariant urls = index.data(AircraftPreviewsRole);
+
+    PreviewWindow* previewWindow = new PreviewWindow;
+    previewWindow->setUrls(urls.toList());
 }
 
 void QtLauncher::onCancelDownload(const QModelIndex& index)
@@ -1621,8 +1653,9 @@ void QtLauncher::onDownloadDirChanged()
 
     globals->get_subsystem<FGHTTPClient>()->init();
 
-    QSettings settings;
     // re-scan the aircraft list
+    QSettings settings;
+
     m_aircraftModel->setPackageRoot(globals->packageRoot());
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
     m_aircraftModel->scanDirs();
@@ -1631,6 +1664,13 @@ void QtLauncher::onDownloadDirChanged()
 
     // re-set scenery dirs
     setSceneryPaths();
+}
+
+void QtLauncher::onAircraftPathsChanged()
+{
+    QSettings settings;
+    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+    m_aircraftModel->scanDirs();
 }
 
 bool QtLauncher::shouldShowOfficialCatalogMessage() const
@@ -1663,7 +1703,7 @@ void QtLauncher::onOfficialCatalogMessageLink(QUrl link)
         QSettings settings;
         settings.setValue("hide-official-catalog-message", true);
     } else if (s == "action:add-official") {
-        AddOnsPage::addDefaultCatalog(this);
+        AddOnsPage::addDefaultCatalog(this, false /* not silent */);
     }
 
     checkOfficialCatalogMessage();

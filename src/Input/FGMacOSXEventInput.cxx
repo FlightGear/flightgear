@@ -229,12 +229,11 @@ void FGMacOSXEventInput::shutdown()
 {
     FGEventInput::shutdown();
 
-    IOHIDManagerRegisterDeviceMatchingCallback(d->hidManager, nullptr, nullptr);
-    IOHIDManagerRegisterDeviceRemovalCallback(d->hidManager, nullptr, nullptr);
-
-    IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
-    IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    CFRelease(d->hidManager);
+    if (d->hidManager) {
+      IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
+      IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+      CFRelease(d->hidManager);
+    }
 }
 
 //

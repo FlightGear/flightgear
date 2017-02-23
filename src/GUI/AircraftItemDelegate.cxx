@@ -46,6 +46,8 @@ AircraftItemDelegate::AircraftItemDelegate(QListView* view) :
 
     m_leftArrowIcon.load(":/left-arrow-icon");
     m_rightArrowIcon.load(":/right-arrow-icon");
+    m_openPreviewsIcon.load(":/preview-icon");
+    m_openPreviewsIcon = m_openPreviewsIcon.scaled(32, 32, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 }
 
 void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem & option,
@@ -79,15 +81,22 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         painter->drawLine(option.rect.topLeft(), option.rect.topRight());
     }
 
-
+    // thumbnail
     QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
     quint32 yPos = contentRect.center().y() - (thumbnail.height() / 2);
     painter->drawPixmap(contentRect.left(), yPos, thumbnail);
 
     // draw 1px frame
+    QRect thumbFrame(contentRect.left(), yPos, thumbnail.width(), thumbnail.height());
     painter->setPen(QColor(0x7f, 0x7f, 0x7f));
     painter->setBrush(Qt::NoBrush);
-    painter->drawRect(contentRect.left(), yPos, thumbnail.width(), thumbnail.height());
+    painter->drawRect(thumbFrame);
+
+    if (!index.data(AircraftPreviewsRole).toList().empty()) {
+        QRect previewIconRect = m_openPreviewsIcon.rect();
+        previewIconRect.moveBottomLeft(thumbFrame.bottomLeft());
+        painter->drawPixmap(previewIconRect, m_openPreviewsIcon);
+    }
 
     // draw bottom dividing line
     painter->drawLine(contentRect.left(), contentRect.bottom() + MARGIN,
@@ -337,6 +346,13 @@ bool AircraftItemDelegate::eventFilter( QObject*, QEvent* event )
             
             return true;
         }
+
+        if ((event->type() == QEvent::MouseButtonRelease) &&
+            !index.data(AircraftPreviewsRole).toList().empty() &&
+            showPreviewsRect(vr, index).contains(me->pos()))
+        {
+            emit showPreviews(index);
+        }
     } else if ( event->type() == QEvent::MouseMove ) {
 
     }
@@ -379,6 +395,18 @@ QRect AircraftItemDelegate::packageButtonRect(const QRect& visualRect, const QMo
 
     return QRect(contentRect.left() + ARROW_SIZE, contentRect.bottom() - BUTTON_HEIGHT,
                  BUTTON_WIDTH, BUTTON_HEIGHT);
+}
+
+QRect AircraftItemDelegate::showPreviewsRect(const QRect& visualRect, const QModelIndex& index) const
+{
+    QRect contentRect = visualRect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN);
+    QPixmap thumbnail = index.data(Qt::DecorationRole).value<QPixmap>();
+    const quint32 yPos = contentRect.center().y() - (thumbnail.height() / 2);
+    QRect thumbFrame(contentRect.left(), yPos, thumbnail.width(), thumbnail.height());
+
+    QRect previewIconRect = m_openPreviewsIcon.rect();
+    previewIconRect.moveBottomLeft(thumbFrame.bottomLeft());
+    return previewIconRect;
 }
 
 void AircraftItemDelegate::drawRating(QPainter* painter, QString label, const QRect& box, int value) const

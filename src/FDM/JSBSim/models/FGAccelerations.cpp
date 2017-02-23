@@ -104,6 +104,8 @@ bool FGAccelerations::InitModel(void)
   vGravAccel.InitMatrix();
   vBodyAccel.InitMatrix();
 
+  maxiter = 50;
+  matrixSize = iter = 0;
   return true;
 }
 
@@ -255,6 +257,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   FGColumnVector3 vdot, wdot;
   vector<LagrangeMultiplier*>& multipliers = *in.MultipliersList;
   size_t n = multipliers.size();
+  matrixSize = n;
 
   vFrictionForces.InitMatrix();
   vFrictionMoments.InitMatrix();
@@ -303,7 +306,7 @@ void FGAccelerations::ResolveFrictionForces(double dt)
   }
 
   // Resolve the Lagrange multipliers with the projected Gauss-Seidel method
-  for (int iter=0; iter < 50; iter++) {
+  for (iter=0; iter < maxiter; iter = iter+1) {
     double norm = 0.;
 
     for (unsigned int i=0; i < n; i++) {
@@ -384,6 +387,10 @@ void FGAccelerations::bind(void)
   PropertyManager->Tie("forces/fbx-gear-lbs", this, eX, (PMF)&FGAccelerations::GetGroundForces);
   PropertyManager->Tie("forces/fby-gear-lbs", this, eY, (PMF)&FGAccelerations::GetGroundForces);
   PropertyManager->Tie("forces/fbz-gear-lbs", this, eZ, (PMF)&FGAccelerations::GetGroundForces);
+
+  iter = PropertyManager->CreatePropertyObject<int>("numerical/friction-resolver/iterations");
+  maxiter = PropertyManager->CreatePropertyObject<int>("numerical/friction-resolver/max-iterations");
+  matrixSize = PropertyManager->CreatePropertyObject<int>("numerical/friction-resolver/matrix-size");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

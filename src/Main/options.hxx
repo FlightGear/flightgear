@@ -67,6 +67,13 @@ private:
 public:
   static Options* sharedInstance();
 
+    /**
+     * Delete the entire options object. Use with a degree of care, no code
+     * should ever be caching the Options pointer but this has not actually been
+     * checked across the whole code :)
+     */
+    static void reset();
+
   ~Options();
   
   /**
