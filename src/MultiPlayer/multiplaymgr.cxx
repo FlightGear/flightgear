@@ -1269,21 +1269,25 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
       * Informational:
       * Save the last packet length sent, and
       * if the property is set then dump the packet length to the console.
-      * This should be sufficient for rudimentary debugging - at this point I don't want
-      * to spend ages creating some sort of fancy and configurable MP debugging suite that
-      * would have limited uses; so what's here is what I would have like to be able to view when
-      * developing MP model elements.
+      * ----------------------------
+      * This should be sufficient for rudimentary debugging (in order of useful ness)
+      *  1. loopback your own craft. fantastic for resolving animations and property transmission issues.
+      *  2. see what properties are being sent
+      *  3. see how much space it takes up
+      *  4. dump the packet as it goes out
+      *  5. dump incoming packets
       */
-      pXmitLen->setIntValue(msgLen);
-      if (pMultiPlayDebugLevel->getIntValue() & 4)
+      pXmitLen->setIntValue(msgLen); // 2. store the size of the properties as transmitted
+
+      if (pMultiPlayDebugLevel->getIntValue() & 2) // and dump it to the console
       {
           SG_LOG(SG_NETWORK, SG_INFO,
               "[SEND] Packet len " << msgLen);
       }
-      if (pMultiPlayDebugLevel->getIntValue() & 2)
+      if (pMultiPlayDebugLevel->getIntValue() & 4) // 4. hexdump the packet
           SG_LOG_HEXDUMP(SG_NETWORK, SG_INFO, data, (ptr - data) * sizeof(*ptr));
       /*
-       * simple loopback of ourselves - to enable easy MP debug for model developers.
+       * simple loopback of ourselves - to enable easy MP debug for model developers; see (1) above
        */
       if (pMultiPlayDebugLevel->getIntValue() & 1)
       {
