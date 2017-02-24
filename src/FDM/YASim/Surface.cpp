@@ -224,12 +224,6 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     
     // Diddle the Z force according to our configuration
     float stallMul = stallFunc(out);
-    if (_surfN != 0) {
-      _surfN->getNode("wind-loc-x", true)->setFloatValue(lwind[0]);
-      _surfN->getNode("wind-loc-y", true)->setFloatValue(lwind[1]);
-      _surfN->getNode("wind-loc-z", true)->setFloatValue(lwind[2]);
-      _surfN->getNode("stall-base-factor", true)->setFloatValue(stallMul);
-    }
     stallMul *= 1 + _spoilerPos * (_spoilerLift - 1);
     float stallLift = (stallMul - 1) * _cz * out[2];
     float flaplift = flapLift(out[2]);
@@ -310,43 +304,40 @@ float Surface::stallFunc(float* v)
     // Sanity check to treat FPU psychopathology
     if(v[0] == 0) return 1;
 
-    float alpha = Math::abs(v[2]/v[0]);
-    if (_surfN != 0) 
-      _surfN->getNode("alpha-deg", true)->setFloatValue(alpha*57.295779513);
+    _alpha = Math::abs(v[2]/v[0]);
 
     // Wacky use of indexing, see setStall*() methods.
     int fwdBak = v[0] > 0; // set if this is "backward motion"
     int posNeg = v[2] < 0; // set if the airflow is toward -z
     int i = (fwdBak<<1) | posNeg;
-    if (_surfN != 0) 
-      _surfN->getNode("mode", true)->setValue(i);
 
-    float stallAlpha = _stalls[i];
-    if(stallAlpha == 0)
+    _stallAlpha = _stalls[i];
+    if(_stallAlpha == 0)
         return 1;
 
+    // consider slat position, moves the stall aoa some degrees
     if(i == 0) {
 	if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
-	    stallAlpha += _slatPos * _slatAlpha;
+	    _stallAlpha += _slatPos * _slatAlpha;
 	} else {
-	    stallAlpha += _slatAlpha;
+	    _stallAlpha += _slatAlpha;
 	}
     }
 
     // Beyond the stall
-    if(alpha > stallAlpha+_widths[i])
+    if(_alpha > _stallAlpha+_widths[i])
 	return 1;
 
     // (note mask: we want to use the "positive" stall angle here)
     float scale = 0.5f*_peaks[fwdBak]/_stalls[i&2];
 
     // Before the stall
-    if(alpha <= stallAlpha)
+    if(_alpha <= _stallAlpha)
 	return scale;
 
     // Inside the stall.  Compute a cubic interpolation between the
     // pre-stall "scale" value and the post-stall unity.
-    float frac = (alpha - stallAlpha) / _widths[i];
+    float frac = (_alpha - _stallAlpha) / _widths[i];
     frac = frac*frac*(3-2*frac);
 
     return scale*(1-frac) + frac;

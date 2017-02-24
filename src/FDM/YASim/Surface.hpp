@@ -114,6 +114,10 @@ private:
     float _incidence;
     float _twist;
     float _inducedDrag;
+    
+    // used during calculations
+    float _stallAlpha;
+    float _alpha;
 
     Version * _version;
 };
