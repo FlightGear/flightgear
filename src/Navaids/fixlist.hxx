@@ -26,6 +26,9 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/math/SGGeod.hxx>
+#include <unordered_map>
+#include <string>
 
 class SGPath;
 class sg_gzifstream;
@@ -48,6 +51,7 @@ namespace flightgear
                                      const SGPath& path);
 
     NavDataCache* _cache;
+    std::unordered_multimap<std::string, SGGeod> _loadedFixes;
   };
 }
 

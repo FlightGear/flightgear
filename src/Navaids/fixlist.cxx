@@ -35,12 +35,19 @@
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx> // simgear::strutils::split()
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGGeod.hxx>
+#include <simgear/math/SGMathFwd.hxx>
+#include <simgear/math/SGVec3.hxx>
+#include <simgear/constants.h>
 #include <simgear/structure/exception.hxx>
 
 #include "fixlist.hxx"
 #include <Navaids/fix.hxx>
 #include <Navaids/NavDataCache.hxx>
+
+// A navaid with the same ident as an existing navaid not more distant than
+// this will be considered duplicate.
+static const double DUPLICATE_DETECTION_RADIUS_NM = 15;
 
 FGFix::FGFix(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos) :
   FGPositioned(aGuid, FIX, aIdent, aPos)
@@ -84,7 +91,6 @@ void FixesLoader::loadFixes(const SGPath& path)
     std::vector<std::string> fields = simgear::strutils::split(line);
     std::vector<std::string>::size_type nb_fields = fields.size();
     const std::string endOfData = "99"; // special code in the fix.dat spec
-    double lat, lon;
 
     if (nb_fields == 0) {       // blank line
       continue;
@@ -96,16 +102,51 @@ void FixesLoader::loadFixes(const SGPath& path)
                lineNumber << ": only one field, but it is not '99'");
         continue;
       }
-    } else if (nb_fields != 3) {
+    } else if (nb_fields < 3) {
       SG_LOG(SG_NAVAID, SG_WARN, utf8path << ": malformed line #" <<
-             lineNumber << ": expected 3 fields, but got " << fields.size());
+             lineNumber << ": expected at least 3 fields, but got " <<
+             fields.size());
       continue;
+    } else if (nb_fields != 3 && nb_fields != 5 && nb_fields != 6) {
+      // XP FIX1101 format calls for 6 fields, the last being optional.
+      // XP FIX1100 has 5 fields.
+      // Earlier formats have 3 fields.
+      // In all these cases we need the first three only.
+      SG_LOG(SG_NAVAID, SG_INFO, utf8path << ": line #" <<
+             lineNumber << ": ignoring extra fields, past the first three " <<
+             "(expected 3 or 5 or 6 fields, but got " << fields.size() << ")");
     }
 
-    lat = atof(fields[0].c_str());
-    lon = atof(fields[1].c_str());
+    std::string ident = fields[2];
+    double lat, lon;
+    try {
+      lat = std::stod(fields[0]);
+      lon = std::stod(fields[1]);
+    } catch (const std::exception& e) {
+      SG_LOG(SG_NAVAID, SG_WARN, utf8path << ": malformed line #" <<
+             lineNumber << ": error parsing coordinates: " << fields[0] <<
+             " " << fields[1]);
+      continue;
+    }
+    SGGeod pos(SGGeod::fromDeg(lon, lat));
+    bool duplicate = false;
+    auto range = _loadedFixes.equal_range(ident);
+    for (auto it = range.first; it != range.second; ++it) {
+      double distNm = dist(SGVec3d::fromGeod(pos),
+                           SGVec3d::fromGeod(it->second)) * SG_METER_TO_NM;
+      if (distNm < DUPLICATE_DETECTION_RADIUS_NM) {
+        SG_LOG(SG_NAVAID, SG_INFO,
+               utf8path << ":"  << lineNumber << ": skipping fix " <<
+               ident << " (already defined nearby)");
+        duplicate = true;
+        break;
+      }
+    }
 
-    _cache->insertFix(fields[2], SGGeod::fromDeg(lon, lat));
+    if (!duplicate) {
+      _cache->insertFix(ident, pos);
+      _loadedFixes.insert({ident, pos});
+    }
 
     if ((lineNumber % 100) == 0) {
       // every 100 lines
