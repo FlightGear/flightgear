@@ -133,7 +133,7 @@ static string cleanRunwayNo(const string& aRwyNo)
   }
 
   string result(aRwyNo);
-  // canonicalise runway ident
+  // canonicalise runway ident to two digits and one optional uppercase letter
   if ((aRwyNo.size() == 1) || !isdigit(aRwyNo[1])) {
     result = "0" + aRwyNo;
   }

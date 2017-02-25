@@ -724,7 +724,7 @@ void FGAirport::validateILSData()
     
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "ils", path)) {
-    return; // no XML tower data
+    return; // no XML ILS data
   }
   
   try {
