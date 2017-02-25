@@ -229,9 +229,11 @@ void FGMacOSXEventInput::shutdown()
 {
     FGEventInput::shutdown();
 
-    IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
-    IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    CFRelease(d->hidManager);
+    if (d->hidManager) {
+      IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
+      IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+      CFRelease(d->hidManager);
+    }
 }
 
 //
