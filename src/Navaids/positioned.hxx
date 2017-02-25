@@ -269,7 +269,7 @@ public:
    */
   static const char* nameForType(Type aTy);
 
-  static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
+  static FGPositionedRef createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
   static bool deleteUserWaypoint(const std::string& aIdent);
 protected:
   friend class flightgear::NavDataCache;
