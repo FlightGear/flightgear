@@ -155,7 +155,7 @@ public:
 
     void Open() override;
     void Close() override;
-    
+
     virtual void update(double dt);
     virtual const char *TranslateEventName(FGEventData &eventData);
     virtual void Send( const char * eventName, double value );
@@ -169,7 +169,7 @@ private:
     void buildElementNameDictionary();
 
     std::string nameForHIDElement(IOHIDElementRef element) const;
-    
+
     IOHIDDeviceRef _hid;
     IOHIDQueueRef _queue;
     FGMacOSXEventInputPrivate* _subsystem;
@@ -229,12 +229,11 @@ void FGMacOSXEventInput::shutdown()
 {
     FGEventInput::shutdown();
 
-    IOHIDManagerRegisterDeviceMatchingCallback(d->hidManager, nullptr, nullptr);
-    IOHIDManagerRegisterDeviceRemovalCallback(d->hidManager, nullptr, nullptr);
-
-    IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
-    IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    CFRelease(d->hidManager);
+    if (d->hidManager) {
+      IOHIDManagerClose(d->hidManager, kIOHIDOptionsTypeNone);
+      IOHIDManagerUnscheduleFromRunLoop(d->hidManager, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+      CFRelease(d->hidManager);
+    }
 }
 
 //
@@ -560,7 +559,7 @@ void FGMacOSXInputDevice::handleValue(IOHIDValueRef value)
                                 _subsystem->currentDt,
                                 _subsystem->currentModifiers);
     HandleEvent(eventData);
-    
+
 }
 
 std::string FGMacOSXInputDevice::nameForHIDElement(IOHIDElementRef element) const
@@ -624,7 +623,7 @@ void FGMacOSXInputDevice::SendFeatureReport(unsigned int reportId, const std::st
                                kIOHIDReportTypeFeature,
                                reportId, /* Report ID*/
                                bytes, len);
-    
+
     if (res != kIOReturnSuccess) {
         SG_LOG(SG_INPUT, SG_WARN, "failed to send feature report" << reportId);
     }
