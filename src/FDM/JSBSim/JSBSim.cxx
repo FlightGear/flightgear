@@ -234,9 +234,7 @@ FGJSBsim::FGJSBsim( double dt )
 
     fdmex->Setdt( dt );
 
-    result = fdmex->LoadModel( aircraft_path.local8BitStr(),
-                               engine_path.local8BitStr(),
-                               systems_path.local8BitStr(),
+    result = fdmex->LoadModel( aircraft_path, engine_path, systems_path,
                                fgGetString("/sim/aero"), false );
 
     if (result) {
