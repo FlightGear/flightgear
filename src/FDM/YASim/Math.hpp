@@ -44,17 +44,17 @@ public:
 
     // Some 3D vector stuff.  In all cases, it is permissible for the
     // "out" vector to be the same as one of the inputs.
-    static inline void  set3(float* v, float* out) {
+    static inline void  set3(const float* v, float* out) {
         out[0] = v[0];
         out[1] = v[1];
         out[2] = v[2];
     }
 
-    static inline float dot3(float* a, float* b) {
+    static inline float dot3(const float* a, const float* b) {
         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
     }
 
-    static inline void  cross3(float* a, float* b, float* out) {
+    static inline void  cross3(const float* a, const float* b, float* out) {
         float ax=a[0], ay=a[1], az=a[2];
         float bx=b[0], by=b[1], bz=b[2];
         out[0] = ay*bz - by*az;
@@ -62,30 +62,30 @@ public:
         out[2] = ax*by - bx*ay;
     }
 
-    static inline void  mul3(float scalar, float* v, float* out)
+    static inline void  mul3(const float scalar, const float* v, float* out)
     {
         out[0] = scalar * v[0];
         out[1] = scalar * v[1];
         out[2] = scalar * v[2];
     }
 
-    static inline void  add3(float* a, float* b, float* out){
+    static inline void  add3(const float* a, const float* b, float* out){
         out[0] = a[0] + b[0];
         out[1] = a[1] + b[1];
         out[2] = a[2] + b[2];
     }
 
-    static inline void  sub3(float* a, float* b, float* out) {
+    static inline void  sub3(const float* a, const float* b, float* out) {
         out[0] = a[0] - b[0];
         out[1] = a[1] - b[1];
         out[2] = a[2] - b[2];
     }
 
-    static inline float mag3(float* v) {
+    static inline float mag3(const float* v) {
         return sqrt(dot3(v, v));
     }
 
-    static inline void  unit3(float* v, float* out) {
+    static inline void  unit3(const float* v, float* out) {
         float imag = 1/mag3(v);
         mul3(imag, v, out);
     }
@@ -95,7 +95,7 @@ public:
     //                          6 7 8
 
     // Multiply two matrices
-    static void mmul33(float* a, float* b, float* out) {
+    static void mmul33(const float* a, const float* b, float* out) {
         float tmp[9];
         tmp[0] = a[0]*b[0] + a[1]*b[3] + a[2]*b[6];
         tmp[3] = a[3]*b[0] + a[4]*b[3] + a[5]*b[6];
@@ -114,7 +114,7 @@ public:
     }
 
     // Multiply by vector
-    static inline void vmul33(float* m, float* v, float* out) {
+    static inline void vmul33(const float* m, const float* v, float* out) {
         float x = v[0], y = v[1], z = v[2];
         out[0] = x*m[0] + y*m[1] + z*m[2];
         out[1] = x*m[3] + y*m[4] + z*m[5];
@@ -123,7 +123,7 @@ public:
 
     // Multiply the vector by the matrix transpose.  Or pre-multiply the
     // matrix by v as a row vector.  Same thing.
-    static inline void tmul33(float* m, float* v, float* out) {
+    static inline void tmul33(const float* m, const float* v, float* out) {
         float x = v[0], y = v[1], z = v[2];
         out[0] = x*m[0] + y*m[3] + z*m[6];
         out[1] = x*m[1] + y*m[4] + z*m[7];
@@ -131,7 +131,7 @@ public:
     }
 
     /// Invert symmetric matrix; ~1/3 less calculations due to symmetry
-    static void invert33_sym(float* m, float* out) {
+    static void invert33_sym(const float* m, float* out) {
         // Compute the inverse as the adjoint matrix times 1/(det M).
         // A, B ... I are the cofactors of a b c
         //                                 d e f
@@ -157,7 +157,7 @@ public:
 
     // Transpose matrix (for an orthonormal orientation matrix, this
     // is the same as the inverse).
-    static inline void trans33(float* m, float* out) {
+    static inline void trans33(const float* m, float* out) {
         // 0 1 2   Elements 0, 4, and 8 are the same
         // 3 4 5   Swap elements 1/3, 2/6, and 5/7
         // 6 7 8
@@ -182,7 +182,7 @@ public:
     //   xOut becomes the unit vector in the direction of x
     //   yOut is perpendicular to xOut in the x/y plane
     //   zOut becomes the unit vector: (xOut cross yOut)
-    static void ortho33(float* x, float* y,
+    static void ortho33(const float* x, const float* y,
                         float* xOut, float* yOut, float* zOut) {
         float x0[3], y0[3];
         set3(x, x0);
