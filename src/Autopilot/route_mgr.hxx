@@ -183,28 +183,28 @@ private:
     virtual void currentWaypointChanged();
     
 // tied getters and setters
-    const char* getDepartureICAO() const;
-    const char* getDepartureName() const;
-    void setDepartureICAO(const char* aIdent);
+    std::string getDepartureICAO() const;
+    std::string getDepartureName() const;
+    void setDepartureICAO(const std::string& aIdent);
     
-    const char* getDepartureRunway() const;
-    void setDepartureRunway(const char* aIdent);
+    std::string getDepartureRunway() const;
+    void setDepartureRunway(const std::string& aIdent);
   
-    const char* getSID() const;
-    void setSID(const char* aIdent);
+    std::string getSID() const;
+    void setSID(const std::string& aIdent);
   
-    const char* getDestinationICAO() const;
-    const char* getDestinationName() const;
-    void setDestinationICAO(const char* aIdent);
+    std::string getDestinationICAO() const;
+    std::string getDestinationName() const;
+    void setDestinationICAO(const std::string& aIdent);
 
-    const char* getDestinationRunway() const;
-    void setDestinationRunway(const char* aIdent);
+    std::string getDestinationRunway() const;
+    void setDestinationRunway(const std::string& aIdent);
   
-    const char* getApproach() const;
-    void setApproach(const char* aIdent);
+    std::string getApproach() const;
+    void setApproach(const std::string& aIdent);
   
-    const char* getSTAR() const;
-    void setSTAR(const char* aIdent);
+    std::string getSTAR() const;
+    void setSTAR(const std::string& aIdent);
   
     double getDepartureFieldElevation() const;  
     double getDestinationFieldElevation() const;  
