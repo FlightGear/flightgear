@@ -1412,6 +1412,8 @@ void NavDataCache::loadDatFiles(
 
 void NavDataCache::doRebuild()
 {
+  rebuildInProgress = true;
+
   try {
     d->close(); // completely close the sqlite object
     d->path.remove(); // remove the file on disk
@@ -1498,6 +1500,8 @@ void NavDataCache::doRebuild()
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVCACHE, SG_ALERT, "caught exception rebuilding navCache:" << e.what());
   }
+
+  rebuildInProgress = false;
 }
 
 int NavDataCache::readIntProperty(const string& key)
@@ -1719,6 +1723,12 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
 
   sqlite3_int64 aptId;
   FGPositionedRef pos = d->loadById(rowid, aptId);
+  if (rebuildInProgress) {
+    // Do not cache and apply ILS adjustment while rebuilding the cache.
+    // The adjustment process requires all ILS navaids to be present,
+    // which is not true during the cache rebuild.
+    return pos;
+  }
   d->cache.insert(it, PositionedCache::value_type(rowid, pos));
   d->cacheMisses++;
 

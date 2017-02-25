@@ -338,6 +338,8 @@ private:
 
   class NavDataCachePrivate;
   std::unique_ptr<NavDataCachePrivate> d;
+
+  bool rebuildInProgress = false;
 };
 
 } // of namespace flightgear
