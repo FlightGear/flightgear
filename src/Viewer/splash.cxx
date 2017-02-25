@@ -191,6 +191,14 @@ void SplashScreen::createNodes()
             osgText::Text::RIGHT_BOTTOM,
             fgGetNode("/sim/startup/splash-progress-spinner", true));
 
+
+#if defined(FG_NIGHTLY)
+    addText(geode, osg::Vec2(0.5, 0.5), 0.03,
+            "Unstable nightly build - some features may be under active development",
+            osgText::Text::CENTER_CENTER,
+            nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
+#endif
+
     ///////////
 
     geometry = new osg::Geometry;
@@ -318,7 +326,8 @@ void SplashScreen::addText(osg::Geode* geode ,
                            const osg::Vec2& pos, double size, const std::string& text,
                            const osgText::Text::AlignmentType alignment,
                            SGPropertyNode* dynamicValue,
-                           double maxWidthFraction)
+                           double maxWidthFraction,
+                           const osg::Vec4& textColor)
 {
     SGPath path = globals->resolve_resource_path("Fonts/LiberationFonts/LiberationSans-BoldItalic.ttf");
 
@@ -326,7 +335,7 @@ void SplashScreen::addText(osg::Geode* geode ,
     osg::ref_ptr<osgText::Text> t = new osgText::Text;
     item.textNode = t;
     t->setFont(path.utf8Str());
-    t->setColor(osg::Vec4(1, 1, 1, 1));
+    t->setColor(textColor);
     t->setFontResolution(64, 64);
     t->setText(text);
     t->setBackdropType(osgText::Text::OUTLINE);

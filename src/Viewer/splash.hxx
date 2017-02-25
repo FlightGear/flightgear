@@ -62,7 +62,8 @@ private:
     void addText(osg::Geode* geode, const osg::Vec2& pos, double size, const std::string& text,
                  const osgText::Text::AlignmentType alignment,
                  SGPropertyNode* dynamicValue = nullptr,
-                 double maxWidthFraction = -1.0);
+                 double maxWidthFraction = -1.0,
+                 const osg::Vec4& textColor = osg::Vec4(1, 1, 1, 1));
 
     bool _legacySplashScreenMode = false;
     SGPropertyNode_ptr _splashAlphaNode;
