@@ -44,7 +44,8 @@ namespace flightgear
     ~FixesLoader();
 
     // Load fixes from the specified fix.dat (or fix.dat.gz) file
-    void loadFixes(const SGPath& path);
+    void loadFixes(const SGPath& path, std::size_t bytesReadSoFar,
+                   std::size_t totalSizeOfAllDatFiles);
 
   private:
     void throwExceptionIfStreamError(const sg_gzifstream& input_stream,

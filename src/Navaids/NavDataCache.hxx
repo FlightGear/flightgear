@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <cstddef>                   // for std::size_t
+#include <functional>
 
 #include <simgear/misc/strutils.hxx> // for string_list
 #include <Navaids/positioned.hxx>
@@ -73,7 +74,8 @@ public:
       DATFILETYPE_FIX,
       DATFILETYPE_POI,
       DATFILETYPE_CARRIER,
-      DATFILETYPE_TACAN_FREQ
+      DATFILETYPE_TACAN_FREQ,
+      DATFILETYPE_LAST
     };
 
     struct DatFilesGroupInfo {
@@ -82,12 +84,11 @@ public:
       std::size_t totalSize;        // total size of all these files, in bytes
     };
 
-    // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath,
-    // d->fixDatPath, d->poiDatPath, etc. by looking into
-    // $scenery_path/NavData for each scenery path.
+    // Update d->datFilesInfo and legacy d->metarDatPath, d->poiDatPath,
+    // etc. by looking into $scenery_path/NavData for each scenery path.
     void updateListsOfDatFiles();
-    // Return d->aptDatFilesInfo if datFileType == DATFILETYPE_APT, etc.
-    DatFilesGroupInfo getDatFilesInfo(DatFileType datFileType) const;
+    // Returns datFilesInfo for the given type.
+    const DatFilesGroupInfo& getDatFilesInfo(DatFileType datFileType) const;
 
   /**
    * predicate - check if the cache needs to be rebuilt.
@@ -313,6 +314,12 @@ private:
   NavDataCache();
 
   friend class RebuildThread;
+
+  // A generic function for loading all navigation data files of the
+  // specified type (apt/fix/nav etc.) using the passed type-specific loader.
+  void loadDatFiles(DatFileType type,
+                    std::function<void(const SGPath&, std::size_t, std::size_t)> loader);
+
   void doRebuild();
 
   friend class Transaction;

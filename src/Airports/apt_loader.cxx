@@ -99,7 +99,6 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file,
                           sg_location(aptdb_file));
   }
 
-  SG_LOG( SG_GENERAL, SG_INFO, "Opened apt.dat file: '" << apt_dat << "'" );
   string line;
 
   unsigned int rowCode = 0;     // terminology used in the apt.dat format spec

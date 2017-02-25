@@ -649,7 +649,7 @@ fgInitNav ()
   
   SGPath path(globals->get_fg_root());
   path.append( "Navaids/TACAN_freq.dat" );
-  flightgear::loadTacan(path, channellist);
+  flightgear::NavLoader().loadTacan(path, channellist);
   
   return true;
 }

@@ -58,8 +58,6 @@ FGFix::FGFix(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos) 
 namespace flightgear
 {
 
-const unsigned int LINES_IN_FIX_DAT = 119724;
-
 FixesLoader::FixesLoader() : _cache(NavDataCache::instance())
 { }
 
@@ -67,7 +65,8 @@ FixesLoader::~FixesLoader()
 { }
 
 // Load fixes from the specified fix.dat (or fix.dat.gz) file
-void FixesLoader::loadFixes(const SGPath& path)
+void FixesLoader::loadFixes(const SGPath& path, std::size_t bytesReadSoFar,
+                            std::size_t totalSizeOfAllDatFiles)
 {
   sg_gzifstream in( path );
   const std::string utf8path = path.utf8Str();
@@ -150,7 +149,8 @@ void FixesLoader::loadFixes(const SGPath& path)
 
     if ((lineNumber % 100) == 0) {
       // every 100 lines
-      unsigned int percent = (lineNumber * 100) / LINES_IN_FIX_DAT;
+      unsigned int percent = ((bytesReadSoFar + in.approxOffset()) * 100)
+        / totalSizeOfAllDatFiles;
       _cache->setRebuildPhaseProgress(NavDataCache::REBUILD_FIXES, percent);
     }
   }

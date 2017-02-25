@@ -351,10 +351,9 @@ public:
   }
 
   bool isCachedFileModified(const SGPath& path, bool verbose);
-  NavDataCache::DatFilesGroupInfo findDatFiles(
-    NavDataCache::DatFileType datFileType) const;
+  void findDatFiles(NavDataCache::DatFileType datFileType);
   bool areDatFilesModified(
-    const NavDataCache::DatFilesGroupInfo& datFilesGroupInfo,
+    NavDataCache::DatFileType datFileType,
     bool verbose);
 
   void callSqlite(int result, const string& sql)
@@ -872,8 +871,8 @@ public:
   bool transactionAborted;
   sqlite3_stmt_ptr beginTransactionStmt, commitTransactionStmt, rollbackTransactionStmt;
 
-  NavDataCache::DatFilesGroupInfo aptDatFilesInfo;
-  SGPath metarDatPath, navDatPath, fixDatPath, poiDatPath,
+  std::map<DatFileType, NavDataCache::DatFilesGroupInfo> datFilesInfo;
+  SGPath metarDatPath, poiDatPath,
   carrierDatPath, airwayDatPath;
 
   sqlite3_stmt_ptr readPropertyQuery, writePropertyQuery,
@@ -1039,8 +1038,9 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
 // $FG_ROOT/Airports/apt.dat.gz for the 'apt' type).
 // Also compute the total size of all these files (in bytes), which is useful
 // for progress information.
-NavDataCache::DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
-  NavDataCache::DatFileType datFileType) const
+// The result is stored in the datFilesInfo field.
+void NavDataCache::NavDataCachePrivate::findDatFiles(
+  NavDataCache::DatFileType datFileType)
 {
   NavDataCache::DatFilesGroupInfo result;
   SGPath visitedPath;           // to avoid duplicates and time wasting
@@ -1093,7 +1093,7 @@ NavDataCache::DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
     result.totalSize += defaultDatFile.sizeInBytes();
   }
 
-  return result;
+  datFilesInfo[datFileType] = result;
 }
 
 // Compare:
@@ -1105,12 +1105,14 @@ NavDataCache::DatFilesGroupInfo NavDataCache::NavDataCachePrivate::findDatFiles(
 // This comparison is sensitive to the number and order of the files,
 // their respective SGPath::realpath() and SGPath::modTime().
 bool NavDataCache::NavDataCachePrivate::areDatFilesModified(
-  const NavDataCache::DatFilesGroupInfo& datFilesGroupInfo,
+  NavDataCache::DatFileType datFileType,
   bool verbose)
 {
   // 'apt' or 'metar' or 'fix' or...
+  const NavDataCache::DatFilesGroupInfo& datFilesGroupInfo =
+        datFilesInfo[datFileType];
   const string datTypeStr =
-                       NavDataCache::datTypeStr[datFilesGroupInfo.datFileType];
+                       NavDataCache::datTypeStr[datFileType];
   const string_list cachedFiles = outer->readOrderedStringListProperty(
     datTypeStr + ".dat files", &SGPath::pathListSep);
   const PathList& datFiles = datFilesGroupInfo.paths;
@@ -1279,22 +1281,17 @@ NavDataCache* NavDataCache::instance()
 void NavDataCache::updateListsOfDatFiles() {
   // All $scenery_path/NavData/apt/*.dat[.gz] files found inside scenery
   // paths, plus $FG_ROOT/Airports/apt.dat.gz (order matters).
-  d->aptDatFilesInfo = d->findDatFiles(DATFILETYPE_APT);
-  // Trivial extension to the other types of dat files:
-  // d->navDatFilesInfo = d->findDatFiles(DATFILETYPE_NAV);
-  // d->fixDatFilesInfo = d->findDatFiles(DATFILETYPE_FIX);
-  // etc.
-  //
+  d->findDatFiles(DATFILETYPE_APT);
+
+  // All $scenery_path/NavData/{nav,fix}/*.dat[.gz] files found inside scenery
+  // paths, plus $FG_ROOT/Navaids/{nav,fix}.dat.gz (order matters).
+  d->findDatFiles(DATFILETYPE_NAV);
+  d->findDatFiles(DATFILETYPE_FIX);
+
   // These ones are still managed the "old" way (no search through scenery
   // paths).
   d->metarDatPath = SGPath(globals->get_fg_root());
   d->metarDatPath.append("Airports/metar.dat.gz");
-
-  d->navDatPath = SGPath(globals->get_fg_root());
-  d->navDatPath.append("Navaids/nav.dat.gz");
-
-  d->fixDatPath = SGPath(globals->get_fg_root());
-  d->fixDatPath.append("Navaids/fix.dat.gz");
 
   d->poiDatPath = SGPath(globals->get_fg_root());
   d->poiDatPath.append("Navaids/poi.dat.gz");
@@ -1306,20 +1303,16 @@ void NavDataCache::updateListsOfDatFiles() {
   d->airwayDatPath.append("Navaids/awy.dat.gz");
 }
 
-NavDataCache::DatFilesGroupInfo
+const NavDataCache::DatFilesGroupInfo&
 NavDataCache::getDatFilesInfo(DatFileType datFileType) const
 {
-  switch (datFileType) {
-    case DATFILETYPE_APT:
-      return d->aptDatFilesInfo;
-    default:
-      SG_LOG(SG_NAVCACHE, SG_ALERT,
-             "NavCache: requesting info about the list of " <<
-             datTypeStr[datFileType] << " dat files, however this is not "
-             "implemented yet!");
-      assert(false);
-      return DatFilesGroupInfo();
+  auto iter = d->datFilesInfo.find(datFileType);
+  if (iter == d->datFilesInfo.end()) {
+    throw sg_error("NavCache: requesting info about the list of " +
+           datTypeStr[datFileType] + " dat files, however this is not "
+           "implemented yet!");
   }
+  return iter->second;
 }
 
 bool NavDataCache::isRebuildRequired()
@@ -1333,10 +1326,10 @@ bool NavDataCache::isRebuildRequired()
         return true;
     }
 
-  if (d->areDatFilesModified(d->aptDatFilesInfo, true) ||
+  if (d->areDatFilesModified(DATFILETYPE_APT, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
-      d->isCachedFileModified(d->navDatPath, true) ||
-      d->isCachedFileModified(d->fixDatPath, true) ||
+      d->areDatFilesModified(DATFILETYPE_NAV, true) ||
+      d->areDatFilesModified(DATFILETYPE_FIX, true) ||
       d->isCachedFileModified(d->carrierDatPath, true) ||
 // since POI loading is disabled on Windows, don't check for it
 // this caused: https://code.google.com/p/flightgear-bugs/issues/detail?id=1227
@@ -1386,6 +1379,37 @@ void NavDataCache::setRebuildPhaseProgress(RebuildPhase ph, unsigned int percent
     d->rebuilder->setProgress(ph, percent);
 }
 
+void NavDataCache::loadDatFiles(
+    DatFileType type,
+    std::function<void(const SGPath&, std::size_t, std::size_t)> loader)
+{
+  SGTimeStamp st;
+  string typeStr = datTypeStr[type];
+  string_list datFiles;
+  NavDataCache::DatFilesGroupInfo datFilesInfo = getDatFilesInfo(type);
+  const PathList datPaths = datFilesInfo.paths;
+  std::size_t bytesReadSoFar = 0;
+
+  st.stamp();
+  for (PathList::const_iterator it = datPaths.begin();
+       it != datPaths.end(); it++) {
+    string path = it->realpath().utf8Str();
+    datFiles.push_back(path);
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "Loading " + typeStr + ".dat file: '" << path << "'");
+    loader(*it, bytesReadSoFar, datFilesInfo.totalSize);
+    bytesReadSoFar += it->sizeInBytes();
+    stampCacheFile(*it); // this uses the realpath() of the file
+  }
+
+  // Store the list of .dat files we have loaded
+  writeOrderedStringListProperty(typeStr + ".dat files", datFiles,
+                                 &SGPath::pathListSep);
+  SG_LOG(SG_NAVCACHE, SG_INFO,
+         typeStr + ".dat files load took: " <<
+         st.elapsedMSec());
+}
+
 void NavDataCache::doRebuild()
 {
   try {
@@ -1400,45 +1424,30 @@ void NavDataCache::doRebuild()
     {
         Transaction txn(this);
         APTLoader aptLoader;
-        string_list aptDatFiles;
-        const PathList aptDatPaths = d->aptDatFilesInfo.paths;
-        std::size_t bytesReadSoFar = 0;
+        FixesLoader fixesLoader;
+        NavLoader navLoader;
+
+        using namespace std::placeholders;  // for _1, _2, _3...
+
+        loadDatFiles(DATFILETYPE_APT,
+                     std::bind(&APTLoader::readAptDatFile, &aptLoader, _1, _2, _3));
 
         st.stamp();
-        for (PathList::const_iterator it = aptDatPaths.begin();
-             it != aptDatPaths.end(); it++) {
-            aptDatFiles.push_back(it->realpath().utf8Str());
-            aptLoader.readAptDatFile(*it, bytesReadSoFar,
-                                     d->aptDatFilesInfo.totalSize);
-            bytesReadSoFar += it->sizeInBytes();
-            stampCacheFile(*it); // this uses the realpath() of the file
-        }
-
         setRebuildPhaseProgress(REBUILD_UNKNOWN);
-        SG_LOG(SG_NAVCACHE, SG_DEBUG, "Loading airports");
-
+        SG_LOG(SG_NAVCACHE, SG_DEBUG, "Processing airports");
         aptLoader.loadAirports(); // load airport data into the NavCache
-        // Store the list of apt.dat files we have loaded
-        writeOrderedStringListProperty(
-          datTypeStr[DATFILETYPE_APT] + ".dat files", aptDatFiles,
-          &SGPath::pathListSep);
         SG_LOG(SG_NAVCACHE, SG_INFO,
-               datTypeStr[DATFILETYPE_APT] + ".dat files load took:" <<
+               "processing airports took:" <<
                st.elapsedMSec());
 
         setRebuildPhaseProgress(REBUILD_UNKNOWN);
         metarDataLoad(d->metarDatPath);
         stampCacheFile(d->metarDatPath);
 
-        st.stamp();
-        FixesLoader().loadFixes(d->fixDatPath);
-        stampCacheFile(d->fixDatPath);
-        SG_LOG(SG_NAVCACHE, SG_INFO, "fix.dat load took:" << st.elapsedMSec());
-
-        st.stamp();
-        navDBInit(d->navDatPath);
-        stampCacheFile(d->navDatPath);
-        SG_LOG(SG_NAVCACHE, SG_INFO, "nav.dat load took:" << st.elapsedMSec());
+        loadDatFiles(DATFILETYPE_FIX,
+                     std::bind(&FixesLoader::loadFixes, &fixesLoader, _1, _2, _3));
+        loadDatFiles(DATFILETYPE_NAV,
+                     std::bind(&NavLoader::loadNav, &navLoader, _1, _2, _3));
 
         setRebuildPhaseProgress(REBUILD_UNKNOWN);
         st.stamp();
@@ -1466,7 +1475,8 @@ void NavDataCache::doRebuild()
 
       {
           Transaction txn(this);
-          loadCarrierNav(d->carrierDatPath);
+          NavLoader navLoader;
+          navLoader.loadCarrierNav(d->carrierDatPath);
           stampCacheFile(d->carrierDatPath);
 
           st.stamp();

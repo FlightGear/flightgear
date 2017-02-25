@@ -31,7 +31,6 @@
 #include <cstddef>              // std::size_t
 #include <cerrno>
 #include <limits>
-#include <map>
 
 #include "navdb.hxx"
 
@@ -116,10 +115,10 @@ void alignLocaliserWithRunway(FGRunway* rwy, const string& ident, SGGeod& pos, d
   
   // back project that distance along the runway center line
   SGGeod newPos = rwy->pointOnCenterline(dist);
-  
+
   double hdg_diff = heading - rwy->headingDeg();
   SG_NORMALIZE_RANGE(hdg_diff, -180.0, 180.0);
-  
+
   if ( fabs(hdg_diff) <= autoAlignThreshold ) {
     pos = SGGeod::fromGeodFt(newPos, pos.getElevationFt());
     heading = rwy->headingDeg();
@@ -139,12 +138,12 @@ static double defaultNavRange(const string& ident, FGPositioned::Type type)
     case FGPositioned::NDB:
     case FGPositioned::VOR:
       return FG_NAV_DEFAULT_RANGE;
-      
+
     case FGPositioned::LOC:
     case FGPositioned::ILS:
     case FGPositioned::GS:
       return FG_LOC_DEFAULT_RANGE;
-      
+
     case FGPositioned::DME:
       return FG_DME_DEFAULT_RANGE;
 
@@ -186,9 +185,9 @@ static bool canBeDuplicate(FGPositionedRef ref, FGPositioned::Type type,
 
 // Parse a line from a file such as nav.dat or carrier_nav.dat. Load the
 // corresponding data into the NavDataCache.
-static PositionedID processNavLine(
+PositionedID NavLoader::processNavLine(
   const string& line, const string& utf8Path, unsigned int lineNum,
-  FGPositioned::Type type = FGPositioned::INVALID, unsigned long version = 810)
+  FGPositioned::Type type, unsigned long version)
 {
   NavDataCache* cache = NavDataCache::instance();
   int rowCode, elev_ft, freq, range;
@@ -325,11 +324,8 @@ static PositionedID processNavLine(
   //
 
   // First, eliminate nearby with the same name, type and ident.
-  static std::multimap<std::tuple<FGPositioned::Type, std::string,
-      std::string>, SGGeod> loadedNavs;  // Maps (type, ident, name) tuples
-                                         // already loaded to their locations.
   auto loadedNavsKey = std::make_tuple(type, ident, name);
-  auto matchingNavs = loadedNavs.equal_range(loadedNavsKey);
+  auto matchingNavs = _loadedNavs.equal_range(loadedNavsKey);
   for (auto it = matchingNavs.first; it != matchingNavs.second; ++it) {
     if (isNearby(pos, it->second)) {
       SG_LOG(SG_NAVAID, SG_INFO,
@@ -338,7 +334,7 @@ static PositionedID processNavLine(
       return 0;
     }
   }
-  loadedNavs.emplace(loadedNavsKey, pos);
+  _loadedNavs.emplace(loadedNavsKey, pos);
 
   // Then, eliminate nearby with the same type and ident.
   FGPositioned::TypeFilter dupTypeFilter(type);
@@ -374,11 +370,11 @@ static PositionedID processNavLine(
     return cache->insertNavaid(type, string(), name, pos, 0, 0, 0,
                                arp.first, arp.second);
   }
-  
+
   if (range < 1) {
     range = defaultNavRange(ident, type);
   }
-  
+
   AirportRunwayPair arp;
   FGRunwayRef runway;
   PositionedID navaid_dme = 0;
@@ -444,7 +440,7 @@ static PositionedID processNavLine(
 #endif
     } // of found runway in the DB
   } // of type is runway-related
-  
+
   bool isLoc = (type == FGPositioned::ILS) || (type == FGPositioned::LOC);
   if (runway && autoAlignLocalizers && isLoc) {
     alignLocaliserWithRunway(runway, ident, pos, multiuse);
@@ -452,7 +448,7 @@ static PositionedID processNavLine(
 
   PositionedID r = cache->insertNavaid(type, ident, name, pos, freq, range, multiuse,
                              arp.first, arp.second);
-  
+
   if (isLoc) {
     cache->setRunwayILS(arp.second, r);
   }
@@ -460,16 +456,16 @@ static PositionedID processNavLine(
   if (navaid_dme) {
     cache->setNavaidColocated(navaid_dme, r);
   }
-  
+
   return r;
 }
 
 // load and initialize the navigational databases
-void navDBInit(const SGPath& path)
+void NavLoader::loadNav(const SGPath& path, std::size_t bytesReadSoFar,
+                        std::size_t totalSizeOfAllDatFiles)
 {
   NavDataCache* cache = NavDataCache::instance();
   const string utf8Path = path.utf8Str();
-  const std::size_t fileSize = path.sizeInBytes();
   sg_gzifstream in(path);
 
   if ( !in.is_open() ) {
@@ -507,7 +503,8 @@ void navDBInit(const SGPath& path)
 
     if ((lineNumber % 100) == 0) {
       // every 100 lines
-      unsigned int percent = (in.approxOffset() * 100) / fileSize;
+      unsigned int percent = ((bytesReadSoFar + in.approxOffset()) * 100)
+        / totalSizeOfAllDatFiles;
       cache->setRebuildPhaseProgress(NavDataCache::REBUILD_NAVAIDS, percent);
     }
 
@@ -516,7 +513,7 @@ void navDBInit(const SGPath& path)
   throwExceptionIfStreamError(in, path);
 }
 
-void loadCarrierNav(const SGPath& path)
+void NavLoader::loadCarrierNav(const SGPath& path)
 {
   SG_LOG( SG_NAVAID, SG_DEBUG, "Opening file: " << path );
   const string utf8Path = path.utf8Str();
@@ -539,26 +536,26 @@ void loadCarrierNav(const SGPath& path)
   throwExceptionIfStreamError(in, path);
 }
 
-bool loadTacan(const SGPath& path, FGTACANList *channellist)
+bool NavLoader::loadTacan(const SGPath& path, FGTACANList *channellist)
 {
     SG_LOG( SG_NAVAID, SG_DEBUG, "opening file: " << path );
     sg_gzifstream inchannel( path );
-    
+
     if ( !inchannel.is_open() ) {
         SG_LOG( SG_NAVAID, SG_ALERT, "Cannot open file: " << path );
       return false;
     }
-    
+
     // skip first line
     inchannel >> skipeol;
     while ( ! inchannel.eof() ) {
         FGTACANRecord *r = new FGTACANRecord;
         inchannel >> (*r);
         channellist->add ( r );
- 	
+
     } // end while
 
     return true;
 }
-  
+
 } // of namespace flightgear
