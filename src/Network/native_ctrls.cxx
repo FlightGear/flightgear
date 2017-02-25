@@ -428,8 +428,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
 //    node->setDoubleValue( net->brake_right );
 
     node = fgGetNode( "/controls/switches", true );
-    node->setBoolValue( "master-bat", net->master_bat != 0 );
-    node->setBoolValue( "master-alt", net->master_alt != 0 );
+    node->setBoolValue( "master-bat", net->master_bat[0] != 0 );
+    node->setBoolValue( "master-alt", net->master_alt[0] != 0 );
     node->setBoolValue( "master-avionics", net->master_avionics > 0 );
 
     node = fgGetNode( "/environment", true );

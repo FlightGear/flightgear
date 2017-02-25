@@ -85,7 +85,7 @@ FGPositioned::~FGPositioned()
 {
 }
 
-FGPositioned*
+FGPositionedRef
 FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
 {
   NavDataCache* cache = NavDataCache::instance();
@@ -93,7 +93,7 @@ FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
   FGPositionedList existing = cache->findAllWithIdent(aIdent, &filter, true);
   if (!existing.empty()) {
     SG_LOG(SG_NAVAID, SG_WARN, "attempt to insert duplicate WAYPOINT:" << aIdent);
-    return existing.front().ptr();
+    return existing.front();
   }
   
   PositionedID id = cache->createPOI(WAYPOINT, aIdent, aPos);

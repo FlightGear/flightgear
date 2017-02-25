@@ -1706,7 +1706,7 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
   }
 
   sqlite3_int64 aptId;
-  FGPositioned* pos = d->loadById(rowid, aptId);
+  FGPositionedRef pos = d->loadById(rowid, aptId);
   d->cache.insert(it, PositionedCache::value_type(rowid, pos));
   d->cacheMisses++;
 
@@ -1933,7 +1933,7 @@ FGPositionedRef NavDataCache::findClosestWithIdent( const string& aIdent,
   FGPositionedRef result;
 
   while (d->stepSelect(d->findClosestWithIdent)) {
-    FGPositioned* pos = loadById(sqlite3_column_int64(d->findClosestWithIdent, 0));
+    FGPositionedRef pos = loadById(sqlite3_column_int64(d->findClosestWithIdent, 0));
     if (aFilter && !aFilter->pass(pos)) {
       continue;
     }
@@ -2073,7 +2073,7 @@ NavDataCache::findCommByFreq(int freqKhz, const SGGeod& aPos, FGPositioned::Filt
   FGPositionedRef result;
 
   while (d->execSelect(d->findCommByFreq)) {
-    FGPositioned* p = loadById(sqlite3_column_int64(d->findCommByFreq, 0));
+    FGPositionedRef p = loadById(sqlite3_column_int64(d->findCommByFreq, 0));
     if (aFilter && !aFilter->pass(p)) {
       continue;
     }
