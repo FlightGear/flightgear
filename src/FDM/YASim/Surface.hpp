@@ -45,7 +45,7 @@ public:
 
     // Modifier for flap lift coefficient, useful for simulating flap blowing etc.
     void setFlapEffectiveness(float effectiveness);
-	double getFlapEffectiveness();
+    double getFlapEffectiveness();
 
     // local -> Surface coords
     void setOrientation(float* o);
@@ -79,8 +79,11 @@ public:
     // Induced drag multiplier
     void setInducedDrag(float mul) { _inducedDrag = mul; }
 
-    void calcForce(float* v, float rho, float* forceOut, float* torqueOut);
+    void calcForce(const float* v, const float rho, float* out, float* torque);
 
+    float getAlpha() { return _alpha; };
+    float getStallAlpha() { return _stallAlpha; };
+    
 private:
     SGPropertyNode_ptr _surfN;
     
@@ -120,6 +123,15 @@ private:
     float _alpha;
 
     Version * _version;
+    SGPropertyNode* _fxN;
+    SGPropertyNode* _fyN;
+    SGPropertyNode* _fzN;
+    SGPropertyNode* _stallAlphaN;
+    SGPropertyNode* _alphaN;
+    SGPropertyNode* _flapN;
+    SGPropertyNode* _slatN;
+    SGPropertyNode* _spoilerN;
+    SGPropertyNode* _fabsN;
 };
 
 }; // namespace yasim

@@ -391,11 +391,11 @@ void Model::calcForces(State* s)
     _body.addTorque(_torque);
     int i,j;
     for(i=0; i<_thrusters.size(); i++) {
-	Thruster* t = (Thruster*)_thrusters.get(i);
-	float thrust[3], pos[3];
-	t->getThrust(thrust);
-	t->getPosition(pos);
-	_body.addForce(pos, thrust);
+      Thruster* t = (Thruster*)_thrusters.get(i);
+      float thrust[3], pos[3];
+      t->getThrust(thrust);
+      t->getPosition(pos);
+      _body.addForce(pos, thrust);
     }
 
     // Get a ground plane in local coordinates.  The first three
@@ -417,34 +417,23 @@ void Model::calcForces(State* s)
     // point is different due to rotation.
     float faero[3];
     faero[0] = faero[1] = faero[2] = 0;
-    int id = 0;
-    SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/surfaces", true);
-    SGPropertyNode_ptr surfN;
     for(i=0; i<_surfaces.size(); i++) {
-	Surface* sf = (Surface*)_surfaces.get(i);
+      Surface* sf = (Surface*)_surfaces.get(i);
 
-	// Vsurf = wind - velocity + (rot cross (cg - pos))
-	float vs[3], pos[3];
-	sf->getPosition(pos);
-        localWind(pos, s, vs, alt);
+      // Vsurf = wind - velocity + (rot cross (cg - pos))
+      float vs[3], pos[3];
+      sf->getPosition(pos);
+      localWind(pos, s, vs, alt);
 
-	float force[3], torque[3];
-	sf->calcForce(vs, _rho, force, torque);
-    id = sf->getID();
-    if (n != 0) {
-      surfN = n->getChild("surface", id, true);
-      surfN->getNode("f-abs", true)->setFloatValue(Math::mag3(force));
-      surfN->getNode("f-x", true)->setFloatValue(force[0]);
-      surfN->getNode("f-y", true)->setFloatValue(force[1]);
-      surfN->getNode("f-z", true)->setFloatValue(force[2]);
-    }
-	Math::add3(faero, force, faero);
+      float force[3], torque[3];
+      sf->calcForce(vs, _rho, force, torque);
+      Math::add3(faero, force, faero);
 
-	_body.addForce(pos, force);
-	_body.addTorque(torque);
+      _body.addForce(pos, force);
+      _body.addTorque(torque);
     }
     float ld0 = faero[2]/faero[0];
-    n = fgGetNode("/fdm/yasim/forces", true);
+    SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/forces", true);
     if (n != 0) {
       n->getNode("f0-aero-x-drag", true)->setFloatValue(faero[0]);
       n->getNode("f0-aero-y-side", true)->setFloatValue(faero[1]);

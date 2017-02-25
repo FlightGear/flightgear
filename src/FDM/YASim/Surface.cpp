@@ -35,9 +35,21 @@ Surface::Surface( Version * version ) :
     _slatAlpha = 0;
     _spoilerLift = 1;
     _inducedDrag = 1;
+    _stallAlpha = 0;
+    _alpha = 0;
     _surfN = fgGetNode("/fdm/yasim/surfaces", true);
-    if (_surfN != 0) 
+    if (_surfN != 0) {
       _surfN = _surfN->getChild("surface", _id, true);
+      _fxN = _surfN->getNode("f-x", true);
+      _fyN = _surfN->getNode("f-y", true);
+      _fzN = _surfN->getNode("f-z", true);
+      _fabsN = _surfN->getNode("f-abs", true);
+      _alphaN = _surfN->getNode("alpha", true);
+      _stallAlphaN = _surfN->getNode("stall-alpha", true);
+      _flapN = _surfN->getNode("flap-pos", true);
+      _slatN = _surfN->getNode("slat-pos", true);
+      _spoilerN = _surfN->getNode("spoiler-pos", true);
+    }
 }
 
 
@@ -48,7 +60,7 @@ void Surface::setPosition(float* p)
     if (_surfN != 0) {
       _surfN->getNode("pos-x", true)->setFloatValue(p[0]);
       _surfN->getNode("pos-y", true)->setFloatValue(p[1]);
-      _surfN->getNode("pos-z", true)->setFloatValue(p[2]);	
+      _surfN->getNode("pos-z", true)->setFloatValue(p[2]);
     }
 }
 
@@ -150,10 +162,10 @@ void Surface::setSpoilerParams(float liftPenalty, float dragPenalty)
 
 void Surface::setFlapPos(float pos)
 {
-	if (_flapPos != pos) {
-    _flapPos = pos;
-		if (_surfN != 0) _surfN->getNode("flap-pos", true)->setFloatValue(pos);
-	}
+  if (_flapPos != pos) {
+      _flapPos = pos;
+    if (_surfN != 0) _flapN->setFloatValue(pos);
+  }
 }
 
 void Surface::setFlapEffectiveness(float effectiveness)
@@ -169,24 +181,24 @@ double Surface::getFlapEffectiveness()
 
 void Surface::setSlatPos(float pos)
 {
-	if (_slatPos != pos) {
+  if (_slatPos != pos) {
     _slatPos = pos;
-		if (_surfN != 0) _surfN->getNode("slat-pos", true)->setFloatValue(pos);
-	}
+    if (_surfN != 0) _slatN->setFloatValue(pos);
+  }
 }
 
 void Surface::setSpoilerPos(float pos)
 {
-	if (_spoilerPos != pos) {
+  if (_spoilerPos != pos) {
     _spoilerPos = pos;
-		if (_surfN != 0) _surfN->getNode("spoiler-pos", true)->setFloatValue(pos);
-	}
+    if (_surfN != 0) _spoilerN->setFloatValue(pos);
+  }
 }
 
 // Calculate the aerodynamic force given a wind vector v (in the
 // aircraft's "local" coordinates) and an air density rho.  Returns a
 // torque about the Y axis, too.
-void Surface::calcForce(float* v, float rho, float* out, float* torque)
+void Surface::calcForce(const float* v, const float rho, float* out, float* torque)
 {
     // Split v into magnitude and direction:
     float vel = Math::mag3(v);
@@ -270,6 +282,15 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     float scale = 0.5f*rho*vel*vel*_c0;
     Math::mul3(scale, out, out);
     Math::mul3(scale, torque, torque);
+    // if we have a property tree, export info
+    if (_surfN != 0) {
+      _fabsN->setFloatValue(Math::mag3(out));
+      _fxN->setFloatValue(out[0]);
+      _fyN->setFloatValue(out[1]);
+      _fzN->setFloatValue(out[2]);
+      _alphaN->setFloatValue(_alpha);
+      _stallAlphaN->setFloatValue(_stallAlpha);      
+    }
 }
 
 #if 0

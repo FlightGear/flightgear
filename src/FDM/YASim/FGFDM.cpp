@@ -133,7 +133,19 @@ void FGFDM::init()
     _cg_x = _yasimN->getNode("cg-x-m", true);
     _cg_y = _yasimN->getNode("cg-y-m", true);
     _cg_z = _yasimN->getNode("cg-z-m", true);
-
+    _vxN = _yasimN->getNode("velocities/v-x", true);
+    _vyN = _yasimN->getNode("velocities/v-y", true);
+    _vzN = _yasimN->getNode("velocities/v-z", true);
+    _vrxN = _yasimN->getNode("velocities/vrot-x", true);
+    _vryN = _yasimN->getNode("velocities/vrot-y", true);
+    _vrzN = _yasimN->getNode("velocities/vrot-z", true);
+    _axN = _yasimN->getNode("accelerations/a-x", true);
+    _ayN = _yasimN->getNode("accelerations/a-y", true);
+    _azN = _yasimN->getNode("accelerations/a-z", true);
+    _arxN = _yasimN->getNode("accelerations/arot-x", true);
+    _aryN = _yasimN->getNode("accelerations/arot-y", true);
+    _arzN = _yasimN->getNode("accelerations/arot-z", true);
+    
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
@@ -626,18 +638,18 @@ void FGFDM::setOutputProperties(float dt)
     Math::vmul33(s->orient, s->rot, rot);
     Math::vmul33(s->orient, s->racc, racc);
 
-    _yasimN->getNode("velocities/v-x", true)->setFloatValue(v[0]);
-    _yasimN->getNode("velocities/v-y", true)->setFloatValue(v[1]);
-    _yasimN->getNode("velocities/v-z", true)->setFloatValue(v[2]);
-    _yasimN->getNode("velocities/vrot-x", true)->setFloatValue(rot[0]);
-    _yasimN->getNode("velocities/vrot-y", true)->setFloatValue(rot[1]);
-    _yasimN->getNode("velocities/vrot-z", true)->setFloatValue(rot[2]);
-    _yasimN->getNode("accelerations/a-x", true)->setFloatValue(acc[0]);
-    _yasimN->getNode("accelerations/a-y", true)->setFloatValue(acc[1]);
-    _yasimN->getNode("accelerations/a-z", true)->setFloatValue(acc[2]);
-    _yasimN->getNode("accelerations/arot-x", true)->setFloatValue(racc[0]);
-    _yasimN->getNode("accelerations/arot-y", true)->setFloatValue(racc[1]);
-    _yasimN->getNode("accelerations/arot-z", true)->setFloatValue(racc[2]);
+    _vxN->setFloatValue(v[0]);
+    _vyN->setFloatValue(v[1]);
+    _vzN->setFloatValue(v[2]);
+    _vrxN->setFloatValue(rot[0]);
+    _vryN->setFloatValue(rot[1]);
+    _vrzN->setFloatValue(rot[2]);
+    _axN->setFloatValue(acc[0]);
+    _ayN->setFloatValue(acc[1]);
+    _azN->setFloatValue(acc[2]);
+    _arxN->setFloatValue(racc[0]);
+    _aryN->setFloatValue(racc[1]);
+    _arzN->setFloatValue(racc[2]);
 
     ControlMap* cm = _airplane.getControlMap();
     for(int i=0; i<_controlProps.size(); i++) {

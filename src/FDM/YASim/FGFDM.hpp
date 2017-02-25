@@ -106,6 +106,18 @@ private:
     std::vector<SGPropertyNode_ptr> _tank_level_lbs;
     std::vector<ThrusterProps> _thrust_props;
     std::vector<FuelProps> _fuel_props;
+    SGPropertyNode* _vxN;
+    SGPropertyNode* _vyN;
+    SGPropertyNode* _vzN;
+    SGPropertyNode* _vrxN;
+    SGPropertyNode* _vryN;
+    SGPropertyNode* _vrzN;
+    SGPropertyNode* _axN;
+    SGPropertyNode* _ayN;
+    SGPropertyNode* _azN;
+    SGPropertyNode* _arxN;
+    SGPropertyNode* _aryN;
+    SGPropertyNode* _arzN;
 };
 
 }; // namespace yasim
