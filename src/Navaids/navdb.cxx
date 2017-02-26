@@ -30,12 +30,17 @@
 #include <cmath>
 #include <cstddef>              // std::size_t
 #include <cerrno>
+#include <limits>
+#include <map>
 
 #include "navdb.hxx"
 
 #include <simgear/compiler.h>
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGGeod.hxx>
+#include <simgear/math/SGMathFwd.hxx>
+#include <simgear/math/SGVec3.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/exception.hxx>
@@ -43,7 +48,6 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/sg_inlines.h>
 
-#include "navrecord.hxx"
 #include "navlist.hxx"
 #include <Main/globals.hxx>
 #include <Navaids/markerbeacon.hxx>
@@ -52,9 +56,15 @@
 #include <Airports/xmlloader.hxx>
 #include <Main/fg_props.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <Navaids/navrecord.hxx>
 
 using std::string;
 using std::vector;
+
+// Duplicate navaids with the same ident will be removed if the disance
+// between them is less than this.
+static const double DUPLICATE_DETECTION_RADIUS_NM = 10;
+
 
 static void throwExceptionIfStreamError(const std::istream& inputStream,
                                         const SGPath& path)
@@ -73,7 +83,6 @@ static FGPositioned::Type
 mapRobinTypeToFGPType(int aTy)
 {
   switch (aTy) {
- // case 1:
   case 2: return FGPositioned::NDB;
   case 3: return FGPositioned::VOR;
   case 4: return FGPositioned::ILS;
@@ -84,9 +93,7 @@ mapRobinTypeToFGPType(int aTy)
   case 9: return FGPositioned::IM;
   case 12:
   case 13: return FGPositioned::DME;
-  case 99: return FGPositioned::INVALID; // end-of-file code
-  default:
-    throw sg_range_exception("Got a nav.dat type we don't recognize", "FGNavRecord::createFromStream");
+  default: return FGPositioned::INVALID;
   }
 }
 
@@ -154,11 +161,34 @@ static double defaultNavRange(const string& ident, FGPositioned::Type type)
 namespace flightgear
 {
 
+static bool isNearby(const SGGeod& pos1, const SGGeod& pos2) {
+  double distNm = dist(SGVec3d::fromGeod(pos1),
+                       SGVec3d::fromGeod(pos2)) * SG_METER_TO_NM;
+  return distNm <= DUPLICATE_DETECTION_RADIUS_NM;
+}
+
+static bool canBeDuplicate(FGPositionedRef ref, FGPositioned::Type type,
+                           const std::string& name,
+                           const SGGeod& pos, int freq)
+{
+  if ((type >= FGPositioned::ILS) && (type <= FGPositioned::IM)) {
+    NavDataCache* cache = NavDataCache::instance();
+    AirportRunwayPair AR = cache->findAirportRunway(name);
+    PositionedID navaidId = cache->findNavaidForRunway(AR.second, type);
+    return navaidId != 0;
+  } else if (type == FGPositioned::DME) {
+    FGNavRecord* navRecord = dynamic_cast<FGNavRecord*>(ref.ptr());
+    return navRecord->get_freq() == freq;
+  } else {
+    return true;
+  }
+}
+
 // Parse a line from a file such as nav.dat or carrier_nav.dat. Load the
 // corresponding data into the NavDataCache.
 static PositionedID processNavLine(
   const string& line, const string& utf8Path, unsigned int lineNum,
-  FGPositioned::Type type = FGPositioned::INVALID)
+  FGPositioned::Type type = FGPositioned::INVALID, unsigned long version = 810)
 {
   NavDataCache* cache = NavDataCache::instance();
   int rowCode, elev_ft, freq, range;
@@ -166,15 +196,23 @@ static PositionedID processNavLine(
   double lat, lon, multiuse;
   // Short identifier and longer name for a navaid (e.g., 'OLN' and
   // 'LFPO 02 OM')
-  string ident, name;
+  string ident, name, arpt_code;
 
   if (simgear::strutils::starts_with(line, "#")) {
     // carrier_nav.dat has a comment line using this syntax...
     return 0;
   }
 
-  // At most 9 fields (the ninth field may contain spaces)
-  vector<string> fields(simgear::strutils::split(line, 0, 8));
+  int num_splits;
+  if (version < 1100) {
+    // At most 9 fields (the ninth field may contain spaces)
+    num_splits = 8;
+  } else {
+    // At most 11 fields (the eleventh field may contain spaces)
+    num_splits = 10;
+  }
+
+  vector<string> fields(simgear::strutils::split(line, 0, num_splits));
   vector<string>::size_type nbFields = fields.size();
   static const string endOfData = "99"; // special code in the nav.dat spec
 
@@ -209,7 +247,25 @@ static PositionedID processNavLine(
     range = std::stoi(fields[5]);
     multiuse = std::stod(fields[6]);
     ident = fields[7];
-    name = simgear::strutils::strip(fields[8]);
+    if (version >= 1100) {
+      // Convert names to the format present in 810 version.
+
+      // 1. fields[9] is ICAO region code, we skip over it.
+      // 2. For NDB, VOR and DMEs not associated with ILS,
+      //    fields[8] is always ENRT, we skip over this too, to match
+      //    the naming with version 810.
+      if ((rowCode == 2 || rowCode == 3 || rowCode == 12 || rowCode == 13)
+          && fields[8] == "ENRT") {
+        name = fields[10];
+      } else {
+        name = fields[8] + " " + fields[10];
+      }
+    } else {
+      name = fields[8];
+    }
+    // Canonicalize name, removing whitespace from the beginning, the end
+    // and extraneous spaces between tokens.
+    name = simgear::strutils::simplify(name);
   } catch (const std::logic_error& exc) {
     // On my system using GNU libstdc++, exc.what() is limited to the function
     // name (e.g., 'stod')!
@@ -226,17 +282,91 @@ static PositionedID processNavLine(
   // supplied in the .dat file.
   if (type == FGPositioned::INVALID) {
     type = mapRobinTypeToFGPType(rowCode);
-  }
-  if (type == FGPositioned::INVALID) {
-    return 0;
+    if (type == FGPositioned::INVALID) {
+      static std::set<int> ignoredCodes;
+      if (ignoredCodes.insert(rowCode).second) {
+        SG_LOG(SG_NAVAID, SG_WARN,
+               utf8Path << ":"  << lineNum << ": unrecognized row code "
+               << rowCode << ", ignoring this line and all further lines "
+               << "with the same code");
+      }
+      return 0;
+    }
   }
 
-  // Note: for these types, the XP NAV810 and XP NAV1100 specs differ.
+  // Silently multiply ADF frequencies by 100 so that ADF
+  // vs. NAV/LOC frequency lookups can use the same code.
+  if (type == FGPositioned::NDB) {
+    freq *= 100;
+  }
+
+  //
+  // Deduplication rules:
+  //
+  // 1. Navaid files are loaded according to the order in $FG_SCENERY,
+  //    followed by the default file in $FG_ROOT/Navaids.
+  //
+  // 2. Navaids from each of these files are considered one by one and added
+  //    to the cache, except a navaid is *not* added if another one lies within
+  //    DUPLICATE_DETECTION_RADIUS_NM and:
+  //
+  //     - it has the same name, type and ident, or
+  //     - it has the same type and ident, and:
+  //       * is either attached to the same runway (for navaid types LOC, ILS,
+  //         GS, IM, MM, OM), or
+  //       * has type FGPositioned::DME and the same frequency
+  //         (this ensures that colocated DMEs and TACANs are *not* considered
+  //          as duplicates, since they normally have different frequencies)
+  //
+  // For this logic to work reasonably, each set of nav.dat files in a given
+  // scenery path must be self-contained regarding the colocated navaids --
+  // if one of the colocated navaids is present, the other one must be too,
+  // and the files must be sorted by row codes as mandated in XP-NAV1100 spec.
+  //
+
+  // First, eliminate nearby with the same name, type and ident.
+  static std::multimap<std::tuple<FGPositioned::Type, std::string,
+      std::string>, SGGeod> loadedNavs;  // Maps (type, ident, name) tuples
+                                         // already loaded to their locations.
+  auto loadedNavsKey = std::make_tuple(type, ident, name);
+  auto matchingNavs = loadedNavs.equal_range(loadedNavsKey);
+  for (auto it = matchingNavs.first; it != matchingNavs.second; ++it) {
+    if (isNearby(pos, it->second)) {
+      SG_LOG(SG_NAVAID, SG_INFO,
+             utf8Path << ":"  << lineNum << ": skipping navaid '" <<
+             name << "' (already defined nearby)");
+      return 0;
+    }
+  }
+  loadedNavs.emplace(loadedNavsKey, pos);
+
+  // Then, eliminate nearby with the same type and ident.
+  FGPositioned::TypeFilter dupTypeFilter(type);
+  FGPositionedRef ref = FGPositioned::findClosestWithIdent(ident, pos,
+                                                           &dupTypeFilter);
+  if (ref.valid()) {
+    if (isNearby(pos, ref->geod())
+        && canBeDuplicate(ref, type, name, pos, freq)) {
+      SG_LOG(SG_NAVAID, SG_INFO,
+             utf8Path << ":"  << lineNum << ": skipping navaid '" <<
+             name << "' (nearby suspected duplicate '" << ref->name() << "')");
+      return 0;
+    }
+  }
+
   if ((type >= FGPositioned::OM) && (type <= FGPositioned::IM)) {
     AirportRunwayPair arp(cache->findAirportRunway(name));
+
+    if (!arp.first || !arp.second) {
+      SG_LOG(SG_NAVAID, SG_INFO,
+             utf8Path << ":" << lineNum << ": couldn't find matching runway " <<
+             "for marker '" << name << "', skipping.");
+      return 0;
+    }
+
     if (arp.second && (elev_ft <= 0)) {
-    // snap to runway elevation
-      FGPositioned* runway = cache->loadById(arp.second);
+      // snap to runway elevation
+      FGPositionedRef runway = cache->loadById(arp.second);
       assert(runway);
       pos.setElevationFt(runway->geod().getElevationFt());
     }
@@ -250,7 +380,7 @@ static PositionedID processNavLine(
   }
   
   AirportRunwayPair arp;
-  FGRunway* runway = NULL;
+  FGRunwayRef runway;
   PositionedID navaid_dme = 0;
 
   if (type == FGPositioned::DME) {
@@ -295,6 +425,12 @@ static PositionedID processNavLine(
 
   if ((type >= FGPositioned::ILS) && (type <= FGPositioned::GS)) {
     arp = cache->findAirportRunway(name);
+    if (!arp.first || !arp.second) {
+      SG_LOG(SG_NAVAID, SG_INFO,
+             utf8Path << ":" << lineNum << ": couldn't find matching runway " <<
+             "for ILS/LOC/GS navaid '" << name << "', ignoring it.");
+      return 0;
+    }
     if (arp.second) {
       runway = FGPositioned::loadById<FGRunway>(arp.second);
       assert(runway);
@@ -313,13 +449,7 @@ static PositionedID processNavLine(
   if (runway && autoAlignLocalizers && isLoc) {
     alignLocaliserWithRunway(runway, ident, pos, multiuse);
   }
-    
-  // silently multiply adf frequencies by 100 so that adf
-  // vs. nav/loc frequency lookups can use the same code.
-  if (type == FGPositioned::NDB) {
-    freq *= 100;
-  }
-  
+
   PositionedID r = cache->insertNavaid(type, ident, name, pos, freq, range, multiuse,
                              arp.first, arp.second);
   
@@ -351,17 +481,29 @@ void navDBInit(const SGPath& path)
   autoAlignLocalizers = fgGetBool("/sim/navdb/localizers/auto-align", true);
   autoAlignThreshold = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
 
+  string line;
+
   // Skip the first two lines
   for (int i = 0; i < 2; i++) {
-    in >> skipeol;
+    std::getline(in, line);
     throwExceptionIfStreamError(in, path);
   }
 
-  string line;
   unsigned int lineNumber;
+  unsigned long version;
+
+  try {
+    vector<string> fields(simgear::strutils::split(line, 0, 1));
+    version = std::stoul(fields[0]);
+  } catch (const std::logic_error& exc) {
+    std::string errMsg = utf8Path + ": unable to parse version from header";
+    std::string strippedLine = simgear::strutils::stripTrailingNewlines(line);
+    SG_LOG(SG_NAVAID, SG_ALERT, errMsg << ": " << strippedLine );
+    throw sg_format_exception(errMsg, strippedLine);
+  }
 
   for (lineNumber = 3; std::getline(in, line); lineNumber++) {
-    processNavLine(line, utf8Path, lineNumber);
+    processNavLine(line, utf8Path, lineNumber, FGPositioned::INVALID, version);
 
     if ((lineNumber % 100) == 0) {
       // every 100 lines
