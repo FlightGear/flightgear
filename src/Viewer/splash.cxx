@@ -34,6 +34,7 @@
 #include <osg/Switch>
 #include <osg/Texture2D>
 #include <osg/TextureRectangle>
+#include <osg/Version>
 
 #include <osgText/Text>
 #include <osgDB/ReadFile>
@@ -91,31 +92,15 @@ void SplashScreen::createNodes()
     splashTexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
     splashTexture->setImage(_splashImage);
 
-    _splashFBOCamera = new osg::Camera;
-    _splashFBOCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    _splashFBOCamera->setViewMatrix(osg::Matrix::identity());
-    _splashFBOCamera->setClearMask( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    _splashFBOCamera->setClearColor( osg::Vec4( 0., 0., 0., 0. ) );
-    _splashFBOCamera->setAllowEventFocus(false);
-    _splashFBOCamera->setCullingActive(false);
 
     _splashFBOTexture = new osg::Texture2D;
     _splashFBOTexture->setInternalFormat(GL_RGB);
     _splashFBOTexture->setResizeNonPowerOfTwoHint(false);
     _splashFBOTexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
     _splashFBOTexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-    _splashFBOCamera->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
-    _splashFBOCamera->setRenderOrder(osg::Camera::PRE_RENDER);
-    _splashFBOCamera->attach(osg::Camera::COLOR_BUFFER, _splashFBOTexture);
 
+    _splashFBOCamera = createFBOCamera();
     addChild(_splashFBOCamera);
-    
-    osg::StateSet* stateSet = _splashFBOCamera->getOrCreateStateSet();
-    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
-    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-    stateSet->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 0, 1, false));
-    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
     osg::Geometry* geometry = new osg::Geometry;
     geometry->setSupportsDisplayList(false);
@@ -139,7 +124,7 @@ void SplashScreen::createNodes()
     geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
     geometry->addPrimitiveSet(new osg::DrawArrays(GL_POLYGON, 0, 4));
 
-    stateSet = geometry->getOrCreateStateSet();
+    osg::StateSet* stateSet = geometry->getOrCreateStateSet();
     stateSet->setTextureMode(0, GL_TEXTURE_RECTANGLE, osg::StateAttribute::ON);
     stateSet->setTextureAttribute(0, splashTexture);
 
@@ -268,6 +253,29 @@ void SplashScreen::createNodes()
 
     _splashQuadCamera->addChild(geode);
     addChild(_splashQuadCamera);
+}
+
+osg::ref_ptr<osg::Camera> SplashScreen::createFBOCamera()
+{
+    osg::ref_ptr<osg::Camera> c = new osg::Camera;
+    c->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    c->setViewMatrix(osg::Matrix::identity());
+    c->setClearMask( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    c->setClearColor( osg::Vec4( 0., 0., 0., 0. ) );
+    c->setAllowEventFocus(false);
+    c->setCullingActive(false);
+    c->setRenderTargetImplementation( osg::Camera::FRAME_BUFFER_OBJECT );
+    c->setRenderOrder(osg::Camera::PRE_RENDER);
+    c->attach(osg::Camera::COLOR_BUFFER, _splashFBOTexture);
+
+    osg::StateSet* stateSet = c->getOrCreateStateSet();
+    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    stateSet->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 0, 1, false));
+    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+
+    return c;
 }
 
 void SplashScreen::setupLogoImage()
@@ -422,7 +430,7 @@ std::string SplashScreen::selectSplashImage()
 
     // no splash screen specified - select random image
     SGPath tpath = globals->get_fg_root() / "Textures";
-    int num = (int)(sg_random() * 5.0 + 1.0);
+    int num = (int)(sg_random() * 3.0 + 1.0);
     std::ostringstream oss;
     oss << "Splash" << num << ".png";
     tpath.append(oss.str());
@@ -502,6 +510,24 @@ void SplashScreen::updateSplashSpinner()
     _splashSpinnerVertexArray->dirty();
 }
 
+// remove once we require OSG 3.4
+void SplashScreen::manuallyResizeFBO(int width, int height)
+{
+    _splashFBOTexture->setTextureSize(width, height);
+    _splashFBOTexture->dirtyTextureObject();
+
+    osg::ref_ptr<osg::Camera> newCam = createFBOCamera();
+
+    // swap everything around
+    for (int i=0; i<_splashFBOCamera->getNumChildren(); ++i) {
+        newCam->addChild(_splashFBOCamera->getChild(i));
+    }
+
+    addChild(newCam);
+    removeChild(_splashFBOCamera);
+    _splashFBOCamera = newCam;
+}
+
 void SplashScreen::resize( int width, int height )
 {
     if (getNumChildren() == 0) {
@@ -510,12 +536,16 @@ void SplashScreen::resize( int width, int height )
 
     _width = width;
     _height = height;
+
+    _splashQuadCamera->setViewport(0, 0, width, height);
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    manuallyResizeFBO(width, height);
+#else
+    _splashFBOCamera->resizeAttachments(width, height);
+#endif
     _splashFBOCamera->setViewport(0, 0, width, height);
     _splashFBOCamera->setProjectionMatrixAsOrtho2D(-width * 0.5, width * 0.5,
                                                    -height * 0.5, height * 0.5);
-
-    _splashQuadCamera->setViewport(0, 0, width, height);
-    _splashFBOCamera->resizeAttachments(width, height);
 
     double halfWidth = width * 0.5;
     double halfHeight = height * 0.5;

@@ -65,6 +65,9 @@ private:
                  double maxWidthFraction = -1.0,
                  const osg::Vec4& textColor = osg::Vec4(1, 1, 1, 1));
 
+    osg::ref_ptr<osg::Camera> createFBOCamera();
+    void manuallyResizeFBO(int width, int height);
+
     bool _legacySplashScreenMode = false;
     SGPropertyNode_ptr _splashAlphaNode;
     osg::ref_ptr<osg::Camera> _splashFBOCamera;
