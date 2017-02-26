@@ -56,7 +56,8 @@ private:
 
     void doUpdate();
     void updateSplashSpinner();
-
+    void updateText();
+    
     std::string selectSplashImage();
 
     void addText(osg::Geode* geode, const osg::Vec2& pos, double size, const std::string& text,
@@ -99,6 +100,7 @@ private:
 
     std::vector<TextItem> _items;
     SGTimeStamp _splashStartTime;
+    bool _haveSetStartupTip = false;
 };
 
 /** Set progress information.

@@ -36,7 +36,7 @@ static string NO_ATIS("nil");
 static string EMPTY("");
 #define SPACE append(1,' ')
 
-const char * ATCSpeech::getSpokenDigit( int i )
+std::string ATCSpeech::getSpokenDigit( int i )
 {
   string key = "n" + boost::lexical_cast<std::string>( i );
   return globals->get_locale()->getLocalizedString(key.c_str(), "atc", "" );
@@ -55,7 +55,7 @@ string ATCSpeech::getSpokenNumber( string number )
 
 string ATCSpeech::getSpokenNumber( int number, bool leadingZero, int digits )
 {
-  vector<const char *> spokenDigits;
+  string_list spokenDigits;
   bool negative = false;
   if( number < 0 ) {
     negative = true;

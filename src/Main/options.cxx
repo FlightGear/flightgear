@@ -2531,8 +2531,8 @@ void Options::showUsage() const
       exit(-1);
   }
 
-  const char* usage = locale->getLocalizedString(options->getStringValue("usage"), "options");
-  if (usage) {
+  std::string usage = locale->getLocalizedString(options->getStringValue("usage"), "options");
+  if (!usage.empty()) {
     cout << usage << endl;
   }
 
@@ -2610,8 +2610,8 @@ void Options::showUsage() const
       }
     }
 
-    const char* name = locale->getLocalizedString(section[j]->getStringValue("name"),"options");
-    if (!msg.empty() && name) {
+    std::string name = locale->getLocalizedString(section[j]->getStringValue("name"),"options");
+    if (!msg.empty() && !name.empty()) {
       cout << endl << name << ":" << endl;
       cout << msg;
       msg.erase();
@@ -2619,8 +2619,8 @@ void Options::showUsage() const
   }
 
   if ( !p->verbose ) {
-    const char* verbose_help = locale->getLocalizedString(options->getStringValue("verbose-help"),"options");
-    if (verbose_help)
+    std::string verbose_help = locale->getLocalizedString(options->getStringValue("verbose-help"),"options");
+    if (!verbose_help.empty())
         cout << endl << verbose_help << endl;
   }
 #ifdef _MSC_VER

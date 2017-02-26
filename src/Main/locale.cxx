@@ -187,6 +187,8 @@ FGLocale::selectLanguage(const char *language)
     // load resource for atc messages
     loadResource("atc");
 
+    loadResource("tips");
+
     if (!_currentLocale)
     {
        SG_LOG(SG_GENERAL, SG_ALERT,
@@ -250,32 +252,67 @@ FGLocale::loadResource(const char* resource)
     return Ok;
 }
 
-const char*
-FGLocale::getLocalizedString(SGPropertyNode *localeNode, const char* id, const char* context)
+std::string
+FGLocale::getLocalizedString(SGPropertyNode *localeNode, const char* id, const char* context, int index) const
 {
     SGPropertyNode *n = localeNode->getNode("strings",0, true)->getNode(context);
-    if (n)
-        return n->getStringValue(id, NULL);
-    return NULL;
+    if (!n) {
+        return std::string();
+    }
+
+    n = n->getNode(id, index);
+    if (n && n->hasValue()) {
+        return std::string(n->getStringValue());
+    }
+
+    return std::string();
 }
 
-const char*
+std::string
 FGLocale::getLocalizedString(const char* id, const char* resource, const char* Default)
 {
     if (id && resource)
     {
-        const char* s = NULL;
-        if (_currentLocale)
-            s = getLocalizedString(_currentLocale, id, resource);
-        if (s && s[0]!=0)
-            return s;
+        std::string s;
+        if (_currentLocale) {
+            s = getLocalizedString(_currentLocale, id, resource, 0);
+            if (!s.empty()) {
+                return s;
+            }
+        }
 
-        if (_defaultLocale)
-            s = getLocalizedString(_defaultLocale, id, resource);
-        if (s && s[0]!=0)
-            return s;
+        if (_defaultLocale) {
+            s = getLocalizedString(_defaultLocale, id, resource, 0);
+            if (!s.empty()) {
+                return s;
+            }
+        }
     }
-    return Default;
+
+    return (Default == nullptr) ? std::string() : std::string(Default);
+}
+
+std::string
+FGLocale::getLocalizedStringWithIndex(const char* id, const char* resource, unsigned int index) const
+{
+    if (id && resource) {
+        std::string s;
+        if (_currentLocale) {
+            s = getLocalizedString(_currentLocale, id, resource, index);
+            if (!s.empty()) {
+                return s;
+            }
+        }
+
+        if (_defaultLocale) {
+            s = getLocalizedString(_defaultLocale, id, resource, index);
+            if (!s.empty()) {
+                return s;
+            }
+        }
+    }
+
+    return std::string();
 }
 
 simgear::PropertyList
@@ -287,6 +324,28 @@ FGLocale::getLocalizedStrings(SGPropertyNode *localeNode, const char* id, const 
         return n->getChildren(id);
     }
     return simgear::PropertyList();
+}
+
+size_t FGLocale::getLocalizedStringCount(const char* id, const char* resource) const
+{
+    if (_currentLocale) {
+        SGPropertyNode* resourceNode = _currentLocale->getNode("strings",0, true)->getNode(resource);
+        if (resourceNode) {
+            const size_t count = resourceNode->getChildren(id).size();
+            if (count > 0) {
+                return count;
+            }
+        }
+    }
+
+    if (_defaultLocale) {
+        size_t count = _defaultLocale->getNode("strings",0, true)->getNode(resource)->getChildren(id).size();
+        if (count > 0) {
+            return count;
+        }
+    }
+
+    return 0;
 }
 
 simgear::PropertyList
@@ -343,10 +402,10 @@ std::string FGLocale::localizedPrintf(const char* id, const char* resource, ... 
 
 std::string FGLocale::vlocalizedPrintf(const char* id, const char* resource, va_list args)
 {
-    const char* format = getLocalizedString(id, resource);
-    int len = ::vsprintf(NULL, format, args);
+    std::string format = getLocalizedString(id, resource);
+    int len = ::vsprintf(NULL, format.c_str(), args);
     char* buf = (char*) alloca(len);
-    ::vsprintf(buf, format, args);
+    ::vsprintf(buf, format.c_str(), args);
     return std::string(buf);
 }
 
@@ -400,7 +459,7 @@ void FGLocale::utf8toLatin1(string& s)
     }
 }
 
-const char* fgTrMsg(const char* key)
+std::string fgTrMsg(const char* key)
 {
     return globals->get_locale()->getLocalizedString(key, "message");
 }

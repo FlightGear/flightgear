@@ -54,7 +54,7 @@ public:
      * Obtain a single string from the localized resource matching the given identifier.
      * Selected context refers to "menu", "options", "dialog" etc.
      */
-    const char* getLocalizedString  (const char* id, const char* resource, const char* Default=NULL);
+    std::string getLocalizedString  (const char* id, const char* resource, const char* Default=NULL);
 
     /**
       * Obtain a list of strings from the localized resource matching the given identifier.
@@ -62,6 +62,17 @@ public:
       * Returns a list of (string) properties.
       */
     simgear::PropertyList getLocalizedStrings(const char* id, const char* resource);
+
+
+    /**
+     * Obtain a single string from the resource matching an identifier and ID.
+     */
+    std::string getLocalizedStringWithIndex(const char* id, const char* resource, unsigned int index) const;
+
+    /**
+     * Return the number of strings matching a resource
+     */
+    size_t getLocalizedStringCount(const char* id, const char* resource) const;
 
     /**
      * Obtain default font for current locale.
@@ -97,7 +108,7 @@ protected:
     /**
      * Obtain a single string from locale node matching the given identifier and context.
      */
-    const char*     getLocalizedString  (SGPropertyNode *localeNode, const char* id, const char* context);
+    std::string     getLocalizedString  (SGPropertyNode *localeNode, const char* id, const char* context, int index) const;
 
     /**
      * Obtain a list of strings from locale node matching the given identifier and context.
@@ -116,7 +127,7 @@ protected:
 
 // global translation wrappers
 
-const char* fgTrMsg(const char* key);
+std::string fgTrMsg(const char* key);
 std::string fgTrPrintfMsg(const char* key, ...);
 
 

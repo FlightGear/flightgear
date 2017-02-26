@@ -142,11 +142,14 @@ void SplashScreen::createNodes()
     } else {
         setupLogoImage();
 
-        addText(geode, osg::Vec2(0.025, 0.025), 0.10, std::string("FlightGear ") + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
+        // order here is important so we can re-write first item with the
+        // startup tip.
         addText(geode, osg::Vec2(0.025, 0.15), 0.03, LICENSE_URL_TEXT,
                 osgText::Text::LEFT_TOP,
                 nullptr,
                 0.6);
+
+        addText(geode, osg::Vec2(0.025, 0.025), 0.10, std::string("FlightGear ") + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
 
         if (!_aircraftLogoVertexArray) {
             addText(geode, osg::Vec2(0.025, 0.935), 0.10,
@@ -177,8 +180,9 @@ void SplashScreen::createNodes()
             fgGetNode("/sim/startup/splash-progress-spinner", true));
 
     if (!strcmp(FG_BUILD_TYPE, "Nightly")) {
-      addText(geode, osg::Vec2(0.5, 0.5), 0.03,
-              "Unstable nightly build - some features may be under active development",
+        std::string unstableWarningText = globals->get_locale()->getLocalizedString("splash/unstable-warning", "sys", "unstable!");
+        addText(geode, osg::Vec2(0.5, 0.5), 0.03,
+              unstableWarningText,
               osgText::Text::CENTER_CENTER,
               nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
     }
@@ -460,6 +464,7 @@ void SplashScreen::doUpdate()
         }
 
         updateSplashSpinner();
+        updateText();
     }
 }
 
@@ -507,6 +512,26 @@ void SplashScreen::updateSplashSpinner()
     }
 
     _splashSpinnerVertexArray->dirty();
+}
+
+void SplashScreen::updateText()
+{
+    if (!_haveSetStartupTip && (_splashStartTime.elapsedMSec() > 5000)) {
+        // switch to show tooltip
+        _haveSetStartupTip = true;
+        FGLocale* locale = globals->get_locale();
+        const int tipCount = locale->getLocalizedStringCount("tip", "tips");
+
+        time_t now;
+        ::time(&now);
+        struct tm* currentTime = ::localtime(&now);
+        int tipIndex = currentTime->tm_yday % tipCount;
+
+        std::string tipText = locale->getLocalizedStringWithIndex("tip", "tips", tipIndex);
+
+        // find the item to switch
+        _items.front().textNode->setText(tipText);
+    }
 }
 
 // remove once we require OSG 3.4
