@@ -57,9 +57,12 @@ public:
     void compile();
     void getTip(float* tip) { Math::set3(_tip, tip);};
     bool isMirrored() { return _mirror; };
-    // Used for ground effect 
-    float getWingSpan() { return _wingspan; };
-    float getWingArea() {return 0.5f*_wingspan*_chord*(1+_taper); };
+    
+    // valid only after Wing::compile() was called
+    float getSpan() { return _wingspan; };
+    float getArea() { return _wingspan*_meanChord; };
+    float getAspectRatio() { return _aspectRatio; };
+    float getMAC() { return _meanChord; };
     
     // Query the list of Surface objects
     int numSurfaces();
@@ -100,7 +103,9 @@ private:
     
     // calculated from above
     float _tip[3];
+    float _meanChord;
     float _wingspan;
+    float _aspectRatio;
 
     float _stall;
     float _stallWidth;

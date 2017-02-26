@@ -2,7 +2,8 @@
 #include "Wing.hpp"
 
 namespace yasim {
-
+static const float RAD2DEG = 57.2957795131;
+  
 Wing::Wing( Version * version ) :
   _version(version)
 {
@@ -38,6 +39,9 @@ Wing::Wing( Version * version ) :
     _slatEnd = 0;
     _slatAoA = 0;
     _slatDrag = 0;
+    _meanChord = 0;
+    _wingspan = 0;
+    _aspectRatio = 1;
 }
 
 Wing::~Wing()
@@ -172,8 +176,8 @@ void Wing::setFlap0Pos(float lval, float rval)
     rval = Math::clamp(rval, -1, 1);
     int i;
     for(i=0; i<_flap0Surfs.size(); i++) {
-	((Surface*)_flap0Surfs.get(i))->setFlapPos(lval);
-	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapPos(rval);
+      ((Surface*)_flap0Surfs.get(i))->setFlapPos(lval);
+      if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapPos(rval);
     }
 }
 
@@ -183,7 +187,6 @@ void Wing::setFlap0Effectiveness(float lval)
     int i;
     for(i=0; i<_flap0Surfs.size(); i++) {
         ((Surface*)_flap0Surfs.get(i))->setFlapEffectiveness(lval);
-//	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapEffectiveness(rval);
     }
 }
 
@@ -193,8 +196,8 @@ void Wing::setFlap1Pos(float lval, float rval)
     rval = Math::clamp(rval, -1, 1);
     int i;
     for(i=0; i<_flap1Surfs.size(); i++) {
-	((Surface*)_flap1Surfs.get(i))->setFlapPos(lval);
-	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlapPos(rval);
+      ((Surface*)_flap1Surfs.get(i))->setFlapPos(lval);
+      if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlapPos(rval);
     }
 }
 
@@ -204,7 +207,6 @@ void Wing::setFlap1Effectiveness(float lval)
     int i;
     for(i=0; i<_flap1Surfs.size(); i++) {
         ((Surface*)_flap1Surfs.get(i))->setFlapEffectiveness(lval);
-//	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
     }
 }
 
@@ -214,8 +216,8 @@ void Wing::setSpoilerPos(float lval, float rval)
     rval = Math::clamp(rval, 0, 1);
     int i;
     for(i=0; i<_spoilerSurfs.size(); i++) {
-	((Surface*)_spoilerSurfs.get(i))->setSpoilerPos(lval);
-	if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoilerPos(rval);
+      ((Surface*)_spoilerSurfs.get(i))->setSpoilerPos(lval);
+      if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoilerPos(rval);
     }
 }
 
@@ -224,7 +226,7 @@ void Wing::setSlatPos(float val)
     val = Math::clamp(val, 0, 1);
     int i;
     for(i=0; i<_slatSurfs.size(); i++)
-	((Surface*)_slatSurfs.get(i))->setSlatPos(val);
+      ((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
 void Wing::compile()
@@ -247,17 +249,17 @@ void Wing::compile()
     // Sort in increasing order
     int i;
     for(i=0; i<10; i++) {
-        int minIdx = i;
-	float minVal = bounds[i];
-        int j;
-        for(j=i+1; j<10; j++) {
-            if(bounds[j] < minVal) {
-                minIdx = j;
-		minVal = bounds[j];
-	    }
-	}
-        float tmp = bounds[i];
-        bounds[i] = minVal; bounds[minIdx] = tmp;
+      int minIdx = i;
+      float minVal = bounds[i];
+      int j;
+      for(j=i+1; j<10; j++) {
+        if(bounds[j] < minVal) {
+          minIdx = j;
+          minVal = bounds[j];
+        }
+      }
+      float tmp = bounds[i];
+      bounds[i] = minVal; bounds[minIdx] = tmp;
     }
 
     // Uniqify
@@ -269,9 +271,6 @@ void Wing::compile()
         last = bounds[i];
     }
 
-    // Calculate a "nominal" segment length equal to an average chord,
-    // normalized to lie within 0-1 over the length of the wing.
-    float segLen = _chord * (0.5f*(_taper+1)) / _length;
 
     // Generating a unit vector pointing out the left wing.
     float left[3];
@@ -286,7 +285,10 @@ void Wing::compile()
     Math::set3(left, _tip);
     Math::mul3(_length, _tip, _tip);
     Math::add3(root, _tip, _tip);
+    _meanChord = _chord*(_taper+1)*0.5f;
+    // wingspan in y-direction (not for vstab)
     _wingspan = Math::abs(2*_tip[1]);
+    _aspectRatio = _wingspan / _meanChord;
     
     // The wing's Y axis will be the "left" vector.  The Z axis will
     // be perpendicular to this and the local (!) X axis, because we
@@ -302,18 +304,22 @@ void Wing::compile()
     Math::cross3(y, z, x);
 
     if(_mirror) {
-	// Derive the right side orientation matrix from this one.
-        int i;
-        for(i=0; i<9; i++)  rightOrient[i] = orient[i];
+      // Derive the right side orientation matrix from this one.
+      int i;
+      for(i=0; i<9; i++)  rightOrient[i] = orient[i];
 
-	// Negate all Y coordinates, this gets us a valid basis, but
-	// it's left handed!  So...
-        for(i=1; i<9; i+=3) rightOrient[i] = -rightOrient[i];
+      // Negate all Y coordinates, this gets us a valid basis, but
+      // it's left handed!  So...
+      for(i=1; i<9; i+=3) rightOrient[i] = -rightOrient[i];
 
-	// Change the direction of the Y axis to get back to a
-	// right-handed system.
-	for(i=3; i<6; i++)  rightOrient[i] = -rightOrient[i];
+      // Change the direction of the Y axis to get back to a
+      // right-handed system.
+      for(i=3; i<6; i++)  rightOrient[i] = -rightOrient[i];
     }
+
+    // Calculate a "nominal" segment length equal to an average chord,
+    // normalized to lie within 0-1 over the length of the wing.
+    float segLen = _meanChord / _length;
 
     // Now go through each boundary and make segments
     for(i=0; i<(nbounds-1); i++) {
@@ -354,7 +360,7 @@ void Wing::compile()
             _surfs.add(sr);
 
             if(_mirror) {
-		pos[1] = -pos[1];
+                pos[1] = -pos[1];
                 s = newSurface(pos, rightOrient, chord,
                                flap0, flap1, slat, spoiler);
                 sr = new SurfRec();

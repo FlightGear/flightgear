@@ -96,7 +96,7 @@ public:
     float getApproachElevator() { return _approachElevator.val; }
     const char* getFailureMsg();
 
-    static void setupState(float aoa, float speed, float gla, State* s); // utility
+    static void setupState(const float aoa, const float speed, const float gla, yasim::State* s); // utility
     void loadApproachControls();
     void loadCruiseControls();
 

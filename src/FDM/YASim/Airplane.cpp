@@ -440,7 +440,7 @@ int Airplane::getSolutionIterations()
     return _solutionIterations;
 }
 
-void Airplane::setupState(float aoa, float speed, float gla, State* s)
+void Airplane::setupState(const float aoa, const float speed, const float gla, State* s)
 {
     float cosAoA = Math::cos(aoa);
     float sinAoA = Math::sin(aoa);
@@ -494,8 +494,10 @@ float Airplane::compileWing(Wing* w)
       _wingsN->getNode("base-x", true)->setFloatValue(tip[0]);
       _wingsN->getNode("base-y", true)->setFloatValue(tip[1]);
       _wingsN->getNode("base-z", true)->setFloatValue(tip[2]);
-      _wingsN->getNode("wingspan", true)->setFloatValue(w->getWingSpan());
-      _wingsN->getNode("wingarea", true)->setFloatValue(w->getWingArea());
+      _wingsN->getNode("wing-span", true)->setFloatValue(w->getSpan());
+      _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
+      _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
+      _wingsN->getNode("mean-chord", true)->setFloatValue(w->getMAC());
     }
 
     float wgt = 0;
@@ -772,8 +774,8 @@ void Airplane::compile()
     if(_wing) {
         float gepos[3];
         float gespan = 0;
-        gespan = _wing->getWingSpan();
-	_wing->getBase(gepos);
+        gespan = _wing->getSpan();
+        _wing->getBase(gepos);
         // where does the hard coded factor 0.15 come from?
         _model.setGroundEffect(gepos, gespan, 0.15f);
     }
