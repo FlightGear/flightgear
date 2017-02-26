@@ -107,13 +107,15 @@ void AddOnsPage::onAddSceneryPath()
         SGPath p(path.toStdString());
         SGPath objectsPath = p / "Objects";
         SGPath terrainPath = p / "Terrain";
+        SGPath navdataPath = p / "NavData";
 
-        if (!objectsPath.exists() && !terrainPath.exists()) {
+        if (!objectsPath.exists() && !terrainPath.exists() && !navdataPath.exists()) {
             QMessageBox mb;
             mb.setText(QString("The folder '%1' doesn't appear to contain scenery - add anyway?").arg(path));
             mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
             mb.setDefaultButton(QMessageBox::No);
-            mb.setInformativeText("Added scenery should contain folders called 'Objects' and / or 'Terrain'");
+            mb.setInformativeText("Added scenery should contain folders called "
+                                  "'Objects' and / or 'Terrain' and / or 'NavData'");
             mb.exec();
 
             if (mb.result() == QMessageBox::No) {
