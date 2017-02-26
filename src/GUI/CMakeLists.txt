@@ -117,8 +117,8 @@ if (HAVE_QT)
                             InstallSceneryDialog.cxx
                             EditCustomMPServerDialog.cxx
                             EditCustomMPServerDialog.hxx
-                            PreviewWindow.cpp
-                            PreviewWindow.h
+                            previewwindow.cpp
+                            previewwindow.h
                             ${uic_sources}
                             ${qrc_sources})
 
