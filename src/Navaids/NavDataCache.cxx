@@ -261,6 +261,8 @@ public:
       SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache at:" << path);
 
       readOnly = fgGetBool("/sim/fghome-readonly", false);
+      SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache read-only flags is:" << readOnly);
+
       if (!readOnly && !path.canWrite()) {
           throw sg_exception("Nav-cache file is not writeable");
       }
