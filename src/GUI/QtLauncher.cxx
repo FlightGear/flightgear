@@ -1221,7 +1221,7 @@ void QtLauncher::onRun()
         if (a.arg.startsWith("prop:")) {
             QString v = a.arg.mid(5) + "=" + a.value;
             opt->addOption("prop", v.toStdString());
-        } else if (a.arg == "--console") {
+        } else if (a.arg == "console") {
             // this option is handled very early, in normal startup. If the user
             // requests it via the launcher, parseOptions never sees it, so
             // achieve the same result manually.
