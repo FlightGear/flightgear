@@ -203,8 +203,7 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
     // Split v into magnitude and direction:
     float vel = Math::mag3(v);
 
-    // Handle the blowup condition.  Zero velocity means zero force by
-    // definition.
+    // Zero velocity means zero force by definition (also prevents div0).
     if(vel == 0) {
         int i;
 	for(i=0; i<3; i++) out[i] = torque[i] = 0;
@@ -217,10 +216,9 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
         for(int i=0; i<3; i++) out[i] = torque[i] = 0.;
         return;
     }
-
+    
+    // Normalize wind and convert to the surface's coordinates
     Math::mul3(1/vel, v, out);
-
-    // Convert to the surface's coordinates
     Math::vmul33(_orient, out, out);
 
     // "Rotate" by the incidence angle.  Assume small angles, so we
