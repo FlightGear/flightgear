@@ -28,6 +28,7 @@ bool fgSetDouble (const char * name, double defaultValue = 0.0) { return 0; }
 
 static const float RAD2DEG = 57.2957795131;
 static const float DEG2RAD = 0.0174532925199;
+/// knots 2 meters per second
 static const float KTS2MPS = 0.514444444444;
 
 
@@ -48,7 +49,7 @@ enum Config
       "dat" using 1:3 with lines title 'drag', \ 
       "dat" using 1:4 with lines title 'LD'
 */
-void yasim_graph(Airplane* a, float alt, float kts, int cfg = CONFIG_NONE)
+void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG_NONE)
 {
   Model* m = a->getModel();
   State s;
@@ -69,10 +70,11 @@ void yasim_graph(Airplane* a, float alt, float kts, int cfg = CONFIG_NONE)
   }
   //if we fake the properties we could also use FGFDM::getExternalInput()
 
-
   m->getBody()->recalc();
+  float cl_max = 0, cd_min = 1e6, ld_max = 0;
+  int cl_max_deg = 0, cd_min_deg = 0, ld_max_deg = 0;
 
-  for(int deg=-179; deg<=179; deg++) {
+  for(int deg=-15; deg<=90; deg++) {
     float aoa = deg * DEG2RAD;
     Airplane::setupState(aoa, kts * KTS2MPS, 0 ,&s);
     m->getBody()->reset();
@@ -85,9 +87,25 @@ void yasim_graph(Airplane* a, float alt, float kts, int cfg = CONFIG_NONE)
 
     float drag = acc[0] * (-1/9.8);
     float lift = 1 + acc[2] * (1/9.8);
-
-    printf("%d %g %g %g\n", deg, lift, drag, lift/drag);
+    float ld = lift/drag;
+    
+    if (cd_min > drag) {
+      cd_min = drag;
+      cd_min_deg = deg;
+    }
+    if (cl_max < lift) {
+      cl_max = lift;
+      cl_max_deg = deg;
+    }
+    if (ld_max < ld) {
+      ld_max= ld;
+      ld_max_deg = deg;
+    }    
+    printf("%d %g %g %g\n", deg, lift, drag, ld);
   }
+  printf("# cl_max %g at %d deg\n", cl_max, cl_max_deg);
+  printf("# cd_min %g at %d deg\n", cd_min, cd_min_deg);
+  printf("# ld_max %g at %d deg\n", ld_max, ld_max_deg);  
 }
 
 void yasim_masses(Airplane* a)
@@ -107,11 +125,60 @@ void yasim_masses(Airplane* a)
   printf("Total mass: %g", mass); 
 }
 
+void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_NONE)
+{
+  fprintf(stderr,"yasim_drag");
+  Model* m = a->getModel();
+  State s;
+  
+  m->setAir(Atmosphere::getStdPressure(alt),
+	    Atmosphere::getStdTemperature(alt),
+	    Atmosphere::getStdDensity(alt));
+  
+  switch (cfg) {
+    case CONFIG_APPROACH:
+      a->loadApproachControls();
+      break;
+    case CONFIG_CRUISE:
+      a->loadCruiseControls();
+      break;
+    case CONFIG_NONE:
+      break;
+  }
+  
+  m->getBody()->recalc();
+  float cd_min = 1e6;
+  int cd_min_kts = 0;
+  printf("#kts, drag\n");
+  
+  for(int kts=15; kts<=150; kts++) {
+    Airplane::setupState(aoa, kts * KTS2MPS, 0 ,&s);
+    m->getBody()->reset();
+    m->initIteration();
+    m->calcForces(&s);
+    
+    float acc[3];
+    m->getBody()->getAccel(acc);
+    Math::tmul33(s.orient, acc, acc);
+    
+    float drag = acc[0] * (-1/9.8);
+    
+    if (cd_min > drag) {
+      cd_min = drag;
+      cd_min_kts = kts;
+    }
+    printf("%d %g\n", kts, drag);
+  }
+  printf("# cd_min %g at %d kts\n", cd_min, cd_min_kts);
+}
+
 int usage()
 {
   fprintf(stderr, "Usage: yasim <ac.xml> [-g [-a alt] [-s kts] [-approach | -cruise] ]\n");
+  fprintf(stderr, "       yasim <ac.xml> [-d [-a alt] [-approach | -cruise] ]\n");
   fprintf(stderr, "       yasim <ac.xml> [-m]\n");
   fprintf(stderr, "       -g print lift/drag table: aoa, lift, drag, lift/drag \n");
+  fprintf(stderr, "       -d print drag over TAS: kts, drag\n");
   fprintf(stderr, "       -m print mass distribution table: id, x, y, z, mass \n");
   return 1;
 }
@@ -119,24 +186,24 @@ int usage()
 
 int main(int argc, char** argv)
 {
-    FGFDM* fdm = new FGFDM();
-    Airplane* a = fdm->getAirplane();
+  FGFDM* fdm = new FGFDM();
+  Airplane* a = fdm->getAirplane();
 
-    if(argc < 2) return usage();
-    // Read
-    try {
-        string file = argv[1];
-        readXML(SGPath(file), *fdm);
-    } catch (const sg_exception &e) {
-        printf("XML parse error: %s (%s)\n",
-               e.getFormattedMessage().c_str(), e.getOrigin());
-    }
+  if(argc < 2) return usage();
+  // Read
+  try {
+    string file = argv[1];
+    readXML(SGPath(file), *fdm);
+  } 
+  catch (const sg_exception &e) {
+    printf("XML parse error: %s (%s)\n", e.getFormattedMessage().c_str(), e.getOrigin());
+  }
 
-    // ... and run
-    a->compile();
-    if(a->getFailureMsg())
-        printf("SOLUTION FAILURE: %s\n", a->getFailureMsg());
-    if(!a->getFailureMsg() && argc > 2 ) {
+  // ... and run
+  a->compile();
+  if(a->getFailureMsg())
+      printf("SOLUTION FAILURE: %s\n", a->getFailureMsg());
+  if(!a->getFailureMsg() && argc > 2 ) {
     if(strcmp(argv[2], "-g") == 0) {
       float alt = 5000, kts = 100;
       int cfg = CONFIG_NONE;
@@ -152,6 +219,19 @@ int main(int argc, char** argv)
         else return usage();
       }
       yasim_graph(a, alt, kts, cfg);
+    } 
+    else if(strcmp(argv[2], "-d") == 0) {
+      float alt = 2000, aoa = a->getCruiseAoA();
+      int cfg = CONFIG_NONE;
+      for(int i=3; i<argc; i++) {
+	if (std::strcmp(argv[i], "-a") == 0) {
+	  if (i+1 < argc) alt = std::atof(argv[++i]);
+	}
+	else if(std::strcmp(argv[i], "-approach") == 0) cfg = CONFIG_APPROACH;
+	else if(std::strcmp(argv[i], "-cruise") == 0) cfg = CONFIG_CRUISE;
+	else return usage();
+      }
+      yasim_drag(a, aoa, alt, cfg);
     } 
     else if(strcmp(argv[2], "-m") == 0) {
       yasim_masses(a);
