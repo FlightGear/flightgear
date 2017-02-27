@@ -1,7 +1,6 @@
 
 
 #cmakedefine FG_NDEBUG
-#cmakedefine FG_NIGHTLY
 
 #cmakedefine ENABLE_SIMD
 #cmakedefine ENABLE_SP_FDM
@@ -52,4 +51,4 @@
 
 #cmakedefine HAVE_QT
 
-#cmakedefine ENABLE_DEV_WARNINGS
+#define FG_BUILD_TYPE "@FG_BUILD_TYPE@"

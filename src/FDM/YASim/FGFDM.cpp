@@ -113,7 +113,7 @@ void FGFDM::iterate(float dt)
         _airplane.setFuel(i, LBS2KG * _tank_level_lbs[i]->getFloatValue());
     }
     _airplane.calcFuelWeights();
-    
+
     setOutputProperties(dt);
 }
 
@@ -231,11 +231,9 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         if(a->hasAttribute("version")) {
           _airplane.setVersion( a->getValue("version") );
         }
-#if defined(ENABLE_DEV_WARNINGS)
         if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
-          SG_LOG(SG_FLIGHT,SG_ALERT, "This aircraft does not use the latest yasim configuration version.");
+          SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
         }
-#endif
     } else if(eq(name, "approach")) {
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt", 0) * FT2M;
@@ -322,7 +320,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	    j->setVMax(attrf(a, "exhaust-speed") * KTS2MPS);
 	if(a->hasAttribute("spool-time"))
 	    j->setSpooling(attrf(a, "spool-time"));
-	
+
 	j->setPosition(v);
 	_airplane.addThruster(j, mass, v);
 	sprintf(buf, "/engines/engine[%d]", _nextEngine++);
@@ -461,14 +459,14 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         float cy = attrf(a, "cy", 1);
         float cz = attrf(a, "cz", 1);
 	float idrag = attrf(a, "idrag", 1);
-	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid, 
+	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid,
             cx, cy, cz, idrag);
     } else if(eq(name, "tank")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	float density = 6.0; // gasoline, in lbs/gal
-	if(a->hasAttribute("jet")) density = 6.72; 
+	if(a->hasAttribute("jet")) density = 6.72;
 	density *= LBS2KG*CM2GALS;
 	_airplane.addTank(v, attrf(a, "capacity") * LBS2KG, density);
     } else if(eq(name, "ballast")) {
@@ -499,7 +497,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         ((Rotor*)_currObj)->setcollective(attrf(a, "min"), attrf(a, "max"));
     } else if(eq(name, "cyclic")) {
         ((Rotor*)_currObj)->setcyclic(attrf(a, "ail"), attrf(a, "ele"));
-    */                               
+    */
     } else if(eq(name, "actionpt")) {
  	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
@@ -527,11 +525,11 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
 	opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
 	opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
-	
+
 	ControlMap* cm = _airplane.getControlMap();
 	if(a->hasAttribute("src0")) {
                            cm->addMapping(axis, control, _currObj, opt,
-			   attrf(a, "src0"), attrf(a, "src1"), 
+			   attrf(a, "src0"), attrf(a, "src1"),
 			   attrf(a, "dst0"), attrf(a, "dst1"));
 	} else {
             cm->addMapping(axis, control, _currObj, opt);
@@ -557,7 +555,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         int type = parseOutput(a->getValue("control"));
         int handle = cm->getOutputHandle(_currObj, type);
         float time = attrf(a, "transition-time", 0);
-        
+
         cm->setTransitionTime(handle, time);
     } else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"Unexpected tag '"
@@ -718,7 +716,7 @@ void FGFDM::setOutputProperties(float dt)
             // cockpit code can scale them to the right values.
             float pnorm = j->getPerfNorm();
             moveprop(node, "oilp-norm", pnorm, dt/3); // 3s seek time
-            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s 
+            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s
             moveprop(node, "itt-norm", pnorm, dt/1); // 1s
         }
     }
@@ -826,9 +824,9 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setTiltCenterZ(attrf(a,"tiltcenterz",0.0));
     w->setDownwashFactor(attrf(a, "downwashfactor", 1));
     if(attrb(a,"ccw"))
-       w->setCcw(1); 
+       w->setCcw(1);
     if(attrb(a,"sharedflaphinge"))
-       w->setSharedFlapHinge(true); 
+       w->setSharedFlapHinge(true);
 
     if(a->hasAttribute("name"))
        w->setName(a->getValue("name") );
@@ -847,7 +845,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setPowerAtPitch0(attrf(a, "poweratpitch-0", 300));
     w->setPowerAtPitchB(attrf(a, "poweratpitch-b", 3000));
     if(attrb(a,"notorque"))
-       w->setNotorque(1); 
+       w->setNotorque(1);
 
 #define p(x) if (a->hasAttribute(#x)) w->setParameter((char *)#x,attrf(a,#x) );
 #define p2(x,y) if (a->hasAttribute(y)) w->setParameter((char *)#x,attrf(a,y) );
@@ -895,7 +893,7 @@ void FGFDM::parsePistonEngine(XMLAttributes* a)
         eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
 
     if(a->hasAttribute("compression"))
-        eng->setCompression(attrf(a, "compression"));        
+        eng->setCompression(attrf(a, "compression"));
 
     if(a->hasAttribute("min-throttle"))
         eng->setMinThrottle(attrf(a, "min-throttle"));
@@ -946,7 +944,7 @@ void FGFDM::parsePropeller(XMLAttributes* a)
         if(a->hasAttribute("displacement"))
             eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
         if(a->hasAttribute("compression"))
-            eng->setCompression(attrf(a, "compression"));        
+            eng->setCompression(attrf(a, "compression"));
         if(a->hasAttribute("turbo-mul")) {
             float mul = attrf(a, "turbo-mul");
             float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
@@ -1063,7 +1061,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "TILTYAW")) return ControlMap::TILTYAW;
     if(eq(name, "ROTORGEARENGINEON")) return ControlMap::ROTORENGINEON;
     if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
-    if(eq(name, "ROTORENGINEMAXRELTORQUE")) 
+    if(eq(name, "ROTORENGINEMAXRELTORQUE"))
         return ControlMap::ROTORENGINEMAXRELTORQUE;
     if(eq(name, "ROTORRELTARGET")) return ControlMap::ROTORRELTARGET;
     if(eq(name, "ROTORBALANCE")) return ControlMap::ROTORBALANCE;
@@ -1145,7 +1143,7 @@ float FGFDM::attrf(XMLAttributes* atts, const char* attr, float def)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
-    else         return (float)atof(val);    
+    else         return (float)atof(val);
 }
 
 double FGFDM::attrd(XMLAttributes* atts, const char* attr)

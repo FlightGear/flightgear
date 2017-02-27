@@ -455,6 +455,7 @@ int fgMainInit( int argc, char **argv )
     std::string version(FLIGHTGEAR_VERSION);
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
             << version );
+    SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Build Type " << FG_BUILD_TYPE );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
 			<< HUDSON_BUILD_ID);

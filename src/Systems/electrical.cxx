@@ -85,7 +85,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
     }
 
     _rpm_node = fgGetNode( rpm_src.c_str(), true);
-}  
+}
 
 
 float FGElectricalSupplier::apply_load( float amps, float dt ) {
@@ -200,7 +200,7 @@ FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
             add_prop( prop );
         }
     }
-}  
+}
 
 
 FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
@@ -222,7 +222,7 @@ FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
             add_prop( prop );
         }
     }
-}  
+}
 
 
 FGElectricalSwitch::FGElectricalSwitch( SGPropertyNode *node ) :
@@ -248,7 +248,7 @@ FGElectricalSwitch::FGElectricalSwitch( SGPropertyNode *node ) :
             rating_amps = atof( cval.c_str() );
             circuit_breaker = true;
             // cout << "initial state = " << initial_state << endl;
-        }            
+        }
     }
 
     switch_node->setBoolValue( initial_state );
@@ -276,11 +276,11 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                     s->add_output( this );
                 } else {
                     SG_LOG( SG_SYSTEMS, SG_ALERT,
-                            "Attempt to connect to something that can't provide an output: " 
+                            "Attempt to connect to something that can't provide an output: "
                             << child->getStringValue() );
                 }
             } else {
-                SG_LOG( SG_SYSTEMS, SG_ALERT, "Can't find named source: " 
+                SG_LOG( SG_SYSTEMS, SG_ALERT, "Can't find named source: "
                         << child->getStringValue() );
             }
         } else if ( cname == "output" ) {
@@ -297,11 +297,11 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                     s->add_output( this );
                 } else {
                     SG_LOG( SG_SYSTEMS, SG_ALERT,
-                            "Attempt to connect to something that can't provide an input: " 
+                            "Attempt to connect to something that can't provide an input: "
                             << child->getStringValue() );
                 }
             } else {
-                SG_LOG( SG_SYSTEMS, SG_ALERT, "Can't find named source: " 
+                SG_LOG( SG_SYSTEMS, SG_ALERT, "Can't find named source: "
                         << child->getStringValue() );
             }
         } else if ( cname == "switch" ) {
@@ -310,7 +310,7 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
             add_switch( s );
         }
     }
-}  
+}
 
 
 // set all switches to the specified state
@@ -375,12 +375,10 @@ void FGElectricalSystem::init () {
 
     if ( path.length() ) {
         SGPath config = globals->resolve_aircraft_path(path);
-#if defined(ENABLE_DEV_WARNINGS)
         // load an obsolete xml configuration
-        SG_LOG( SG_SYSTEMS, SG_WARN,
+        SG_LOG( SG_SYSTEMS, SG_DEV_WARN,
                 "Reading deprecated xml electrical system model from\n    "
                 << config.str() );
-#endif
         try {
             readProperties( config, config_props );
 
@@ -388,7 +386,7 @@ void FGElectricalSystem::init () {
                 enabled = true;
             } else {
                 throw sg_exception("Logic error in electrical system file.");
-            }        
+            }
         } catch (const sg_exception&) {
             SG_LOG( SG_SYSTEMS, SG_ALERT,
                     "Failed to load electrical system model: "
@@ -454,7 +452,7 @@ void FGElectricalSystem::update (double dt) {
                 SG_LOG(SG_SYSTEMS, SG_ALERT,
                        "Error drawing more current than available!");
             }
-        }     
+        }
     }
 
     // for each "alternator" supplier, propagate the electrical
@@ -474,7 +472,7 @@ void FGElectricalSystem::update (double dt) {
                 SG_LOG(SG_SYSTEMS, SG_ALERT,
                        "Error drawing more current than available!");
             }
-        }     
+        }
     }
 
     // for each "battery" supplier, propagate the electrical
@@ -495,7 +493,7 @@ void FGElectricalSystem::update (double dt) {
                 SG_LOG(SG_SYSTEMS, SG_ALERT,
                        "Error drawing more current than available!");
             }
-        }     
+        }
     }
 
     float alt_norm
@@ -575,7 +573,7 @@ bool FGElectricalSystem::build (SGPropertyNode* config_props) {
                 new FGElectricalConnector( node, this );
             connectors.push_back( c );
         } else {
-            SG_LOG( SG_SYSTEMS, SG_ALERT, "Unknown component type specified: " 
+            SG_LOG( SG_SYSTEMS, SG_ALERT, "Unknown component type specified: "
                     << name );
             return false;
         }
@@ -591,7 +589,7 @@ float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
                                      float input_volts, float input_amps,
                                      string s ) {
     s += " ";
-    
+
     float total_load = 0.0;
 
     // determine the current to carry forward

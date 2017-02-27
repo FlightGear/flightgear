@@ -243,11 +243,7 @@ void fgSetDefaults ()
     v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
     v->setValueReadOnly("build-id", HUDSON_BUILD_ID);
     v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
-#if defined(FG_NIGHTLY)
-    v->setValueReadOnly("nightly-build", true);
-#else
-    v->setValueReadOnly("nightly-build", false);
-#endif
+    v->setValueReadOnly("build-type", FG_BUILD_TYPE);
 
     char* envp = ::getenv( "http_proxy" );
     if( envp != NULL )
@@ -1755,6 +1751,7 @@ struct OptionDesc {
     {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
+    {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {0}
 };
 
@@ -2637,6 +2634,7 @@ void Options::showVersion() const
     cout << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
     cout << "Revision: " << REVISION << endl;
     cout << "Build-Id: " << HUDSON_BUILD_ID << endl;
+    cout << "Build-Type: " << FG_BUILD_TYPE << endl;
     cout << "FG_ROOT=" << globals->get_fg_root().utf8Str() << endl;
     cout << "FG_HOME=" << globals->get_fg_home().utf8Str() << endl;
     cout << "FG_SCENERY=";
@@ -2673,6 +2671,7 @@ void Options::printJSONReport() const
   cJSON_AddStringToObject(generalNode, "name", "FlightGear");
   cJSON_AddStringToObject(generalNode, "version", FLIGHTGEAR_VERSION);
   cJSON_AddStringToObject(generalNode, "build ID", HUDSON_BUILD_ID);
+  cJSON_AddStringToObject(generalNode, "build type", FG_BUILD_TYPE);
 
   cJSON *configNode = cJSON_CreateObject();
   cJSON_AddItemToObject(rootNode, "config", configNode);

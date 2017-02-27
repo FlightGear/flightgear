@@ -176,13 +176,12 @@ void SplashScreen::createNodes()
             osgText::Text::RIGHT_BOTTOM,
             fgGetNode("/sim/startup/splash-progress-spinner", true));
 
-
-#if defined(FG_NIGHTLY)
-    addText(geode, osg::Vec2(0.5, 0.5), 0.03,
-            "Unstable nightly build - some features may be under active development",
-            osgText::Text::CENTER_CENTER,
-            nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
-#endif
+    if (!strcmp(FG_BUILD_TYPE, "Nightly")) {
+      addText(geode, osg::Vec2(0.5, 0.5), 0.03,
+              "Unstable nightly build - some features may be under active development",
+              osgText::Text::CENTER_CENTER,
+              nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
+    }
 
     ///////////
 
@@ -349,7 +348,7 @@ void SplashScreen::addText(osg::Geode* geode ,
     t->setBackdropType(osgText::Text::OUTLINE);
     t->setBackdropColor(osg::Vec4(0.2, 0.2, 0.2, 1));
     t->setBackdropOffset(0.04);
-    
+
     item.fractionalCharSize = size;
     item.fractionalPosition = pos;
     item.dynamicContent = dynamicValue;

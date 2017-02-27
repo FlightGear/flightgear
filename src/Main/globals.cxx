@@ -82,14 +82,12 @@ public:
     string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
     if (!aircraftDirPieces.empty() && (aircraftDirPieces.back() == pieces[1])) {
         // disable this warning for release builds
-#if defined(ENABLE_DEV_WARNINGS)
         SGPath betterPath;
         for (unsigned int i=2; i<pieces.size(); ++i) {
             betterPath.append(pieces[i]);
         }
-        SG_LOG(SG_AIRCRAFT, SG_WARN, "resolved path:" << aResource << " using /sim/aircraft-dir.\n"
+        SG_LOG(SG_AIRCRAFT, SG_DEV_WARN, "resolved path:" << aResource << " using /sim/aircraft-dir.\n"
                "This is legacy behaviour, change to an aircraft relative path:" << betterPath);
-#endif
 
         // current aircraft-dir matches resource aircraft
         SGPath r(aircraftDir);
@@ -375,7 +373,7 @@ void FGGlobals::append_fg_scenery (const SGPath &path)
     SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
     n->setStringValue(abspath.utf8Str());
     n->setAttribute(SGPropertyNode::WRITE, false);
-    
+
     // temporary fix so these values survive reset
     n->setAttribute(SGPropertyNode::PRESERVE, true);
 }

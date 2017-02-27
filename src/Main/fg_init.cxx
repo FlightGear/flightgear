@@ -474,6 +474,21 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
         options->init(argc, argv, dataPath);
     }
 
+    // establish default for developer-mode based upon compiled build types
+    bool developerMode = true;
+    if (!strcmp(FG_BUILD_TYPE, "Release")) {
+        developerMode = false;
+    }
+
+    // allow command line to override
+    if (options->isOptionSet("developer")) {
+        string s = options->valueForOption("developer", "yes");
+        developerMode = simgear::strutils::to_bool(s);
+    }
+
+    fgSetBool("/sim/developer-mode", developerMode);
+    sglog().setDeveloperMode(developerMode);
+
     // Read global defaults from $FG_ROOT/defaults
     SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
     SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";

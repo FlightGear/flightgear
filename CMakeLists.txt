@@ -25,6 +25,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+if(NOT FG_BUILD_TYPE)
+  message(STATUS "Setting build type to 'Dev' as none was specified.")
+  set(FG_BUILD_TYPE Dev CACHE STRING "Choose the FlightGear build type" FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE FG_BUILD_TYPE PROPERTY STRINGS "Dev" "Nightly" "Release")
+endif()
+
 if(APPLE)
 	set(CMAKE_INSTALL_RPATH "@loader_path/../Frameworks")
 	# when building, don't use the install RPATH already
@@ -176,8 +183,6 @@ option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex a
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
-option(FG_NIGHTLY        "Set to ON to mark this as a nightly build" OFF)
-option(ENABLE_DEV_WARNINGS "Set to ON to include developer-warnings" OFF)
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
