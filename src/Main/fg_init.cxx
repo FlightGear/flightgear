@@ -396,6 +396,26 @@ bool fgInitHome()
         return true;
     }
     
+	bool result = false;
+#if defined(SG_WINDOWS)
+	// don't use a PID file on Windows, because deleting on close is
+	// unreliable and causes false-positives. Instead, use a named
+	// mutex.
+
+	HANDLE hMutex = CreateMutexA(nullptr, FALSE, "org.flightgear.fgfs.primary");
+	if (hMutex == nullptr) {
+		printf("CreateMutex error: %d\n", GetLastError());
+		SG_LOG(SG_GENERAL, SG_POPUP, "Failed to create mutex for multi-app protection");
+		return false;
+	} else if (GetLastError() == ERROR_ALREADY_EXISTS) {
+		SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
+		fgSetBool("/sim/fghome-readonly", true);
+		return true;
+	} else {
+		SG_LOG(SG_GENERAL, SG_INFO, "Created multi-app mutex, we are in writeable mode");
+		result = true;
+	}
+#else
 // write our PID, and check writeability
     SGPath pidPath(dataPath, "fgfs.pid");
     if (pidPath.exists()) {
@@ -406,26 +426,10 @@ bool fgInitHome()
         return true;
     }
     
-    char buf[16];
-    bool result = false;
-    std::string ps = pidPath.local8BitStr();
-#if defined(SG_WINDOWS)
-    size_t len = snprintf(buf, 16, "%d", _getpid());
+	char buf[16];
+	std::string ps = pidPath.local8BitStr();
 
-    HANDLE f = CreateFileA(ps.c_str(), GENERIC_READ | GENERIC_WRITE,
-						   FILE_SHARE_READ, /* sharing */
-                           NULL, /* security attributes */
-                           CREATE_NEW, /* error if already exists */
-                           FILE_FLAG_DELETE_ON_CLOSE,
-						   NULL /* template */);
-    
-    result = (f != INVALID_HANDLE_VALUE);
-    if (result) {
-		DWORD written;
-        WriteFile(f, buf, len, &written, NULL /* overlapped */);
-    }
-#else
-    // POSIX, do open+unlink trick to the file is deleted on exit, even if we
+    // do open+unlink trick to the file is deleted on exit, even if we
     // crash or exit(-1)
     ssize_t len = snprintf(buf, 16, "%d", getpid());
     int fd = ::open(ps.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
@@ -434,16 +438,15 @@ bool fgInitHome()
         if( ::unlink(ps.c_str()) != 0 ) // delete file when app quits
           result = false;
     }
+
+	if (!result) {
+		flightgear::fatalMessageBox("File permissions problem",
+			"Can't write to user-data storage folder, check file permissions and FG_HOME.",
+			"User-data at:" + dataPath.utf8Str());
+	}
 #endif
-
     fgSetBool("/sim/fghome-readonly", false);
-
-    if (!result) {
-        flightgear::fatalMessageBox("File permissions problem",
-                                    "Can't write to user-data storage folder, check file permissions and FG_HOME.",
-                                    "User-data at:" + dataPath.utf8Str());
-    }
-    return result;
+	return result;
 }
 
 // Read in configuration (file and command line)
