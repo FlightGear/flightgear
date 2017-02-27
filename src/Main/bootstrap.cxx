@@ -183,7 +183,7 @@ void segfault_handler(int signo) {
     free(list);
   }
 
-  exit(1);
+  kill(getpid(), signo);
 }
 #endif
 
