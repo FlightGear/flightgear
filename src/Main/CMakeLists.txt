@@ -164,6 +164,10 @@ if (Qt5Core_FOUND)
     target_link_libraries(fgfs Qt5::Widgets fglauncher)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    target_link_libraries(fgfs execinfo)
+endif()
+
 if (APPLE)
     install(TARGETS fgfs BUNDLE DESTINATION .)
 else()
