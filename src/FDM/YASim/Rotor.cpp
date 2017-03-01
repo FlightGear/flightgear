@@ -7,7 +7,7 @@
 
 #include "Math.hpp"
 #include <Main/fg_props.hxx>
-#include "Surface.hpp"
+//#include "Surface.hpp"
 #include "Rotorpart.hpp"
 #include "Glue.hpp"
 #include "Ground.hpp"
