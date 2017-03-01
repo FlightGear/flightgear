@@ -962,7 +962,7 @@ float Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s,
         );
 }
 
-void Rotor::getDownWash(float *pos, float *v_heli, float *downwash)
+void Rotor::getDownWash(const float *pos, const float *v_heli, float *downwash)
 {
     float pos2rotor[3],tmp[3];
     Math::sub3(_base,pos,pos2rotor);
@@ -1632,7 +1632,7 @@ void Rotorgear::compile()
     }
 }
 
-void Rotorgear::getDownWash(float *pos, float * v_heli, float *downwash)
+void Rotorgear::getDownWash(const float *pos, const float * v_heli, float *downwash)
 {
     float tmp[3];
     downwash[0]=downwash[1]=downwash[2]=0;

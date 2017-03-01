@@ -1,5 +1,4 @@
 #include <Main/fg_props.hxx>
-#include "Math.hpp"
 #include "RigidBody.hpp"
 
 namespace yasim {
@@ -54,7 +53,7 @@ void RigidBody::setMass(int handle, float mass)
       _bodyN->getChild("mass", handle, true)->getNode("mass", true)->setFloatValue(mass);
 }
 
-void RigidBody::setMass(int handle, float mass, float* pos, bool isStatic)
+void RigidBody::setMass(int handle, float mass, const float* pos, bool isStatic)
 {
     _masses[handle].m = mass;
     _masses[handle].isStatic = isStatic;
@@ -69,16 +68,6 @@ void RigidBody::setMass(int handle, float mass, float* pos, bool isStatic)
     }
 }
 
-int RigidBody::numMasses()
-{
-    return _nMasses;
-}
-
-float RigidBody::getMass(int handle)
-{
-    return _masses[handle].m;
-}
-
 void RigidBody::getMassPosition(int handle, float* out)
 {
     out[0] = _masses[handle].p[0];
@@ -86,22 +75,12 @@ void RigidBody::getMassPosition(int handle, float* out)
     out[2] = _masses[handle].p[2];
 }
 
-float RigidBody::getTotalMass()
-{
-    return _totalMass;
-}
-
 // Calcualtes the rotational velocity of a particular point.  All
 // coordinates are local!
-void RigidBody::pointVelocity(float* pos, float* rot, float* out)
+void RigidBody::pointVelocity(const float* pos, const float* rot, float* out)
 {
     Math::sub3(pos, _cg, out);   //  out = pos-cg
     Math::cross3(rot, out, out); //      = rot cross (pos-cg)
-}
-
-void RigidBody::setGyro(float* angularMomentum)
-{
-    Math::set3(angularMomentum, _gyro);
 }
 
 void RigidBody::_recalcStatic()
@@ -227,17 +206,7 @@ void RigidBody::reset()
     _force[0] = _force[1] = _force[2] = 0;
 }
 
-void RigidBody::addForce(float* force)
-{
-    Math::add3(_force, force, _force);
-}
-
-void RigidBody::addTorque(float* torque)
-{
-    Math::add3(_torque, torque, _torque);
-}
-
-void RigidBody::addForce(float* pos, float* force)
+void RigidBody::addForce(const float* pos, const float* force)
 {
     addForce(force);
     
@@ -249,47 +218,28 @@ void RigidBody::addForce(float* pos, float* force)
     addTorque(t);
 }
 
-/// not used (?)
-void RigidBody::setBodySpin(float* rotation)
-{
-    Math::set3(rotation, _spin);
-}
-
-void RigidBody::getCG(float* cgOut)
-{
-    Math::set3(_cg, cgOut);
-}
-
-/// return acceleration at c.g.
-void RigidBody::getAccel(float* accelOut)
-{
-    Math::mul3(1/_totalMass, _force, accelOut);
-}
-
-/// return acceleration at pos (unused?)
 void RigidBody::getAccel(float* pos, float* accelOut)
 {
     getAccel(accelOut);
-    // centripetal accelerations
-    // Calculate normalized spin axis "a" and rate (radians/sec) from spin vector.
-    float rate = Math::mag3(_spin);
-    if (rate != 0) {
-      float a[3], v[3];
-      Math::sub3(_cg, pos, v); // distance = cg - pos; 
-      if (v[0] == 0 && v[1] == 0 && v[2] == 0) // nothing to do
-        return;
-      Math::mul3(1/rate, _spin, a);
-      // d_a  = a * (distance dot a); (projection of distance vector on a, |a|=1)
-      Math::mul3(Math::dot3(v, a), a, a);  
-      Math::add3(v, a, v);                 // v = distance + projection;
 
-      // Now v contains the vector from pos to the rotation axis.
-      // Multiply by the square of the rotation rate to get the linear
-      // acceleration.
-      // nothing to do in the next two lines, if rate == 0
-      Math::mul3(rate*rate, v, v);		
-      Math::add3(v, accelOut, accelOut);
-    }
+    // Turn the "spin" vector into a normalized spin axis "a" and a
+    // radians/sec scalar "rate".
+    float a[3];
+    float rate = Math::mag3(_spin);
+    Math::set3(_spin, a);
+    if (rate !=0 )
+        Math::mul3(1/rate, a, a);
+    //an else branch is not neccesary. a, which is a=(0,0,0) in the else case, is only used in a dot product
+    float v[3];
+    Math::sub3(_cg, pos, v);             // v = cg - pos
+    Math::mul3(Math::dot3(v, a), a, a);  // a = a * (v dot a)
+    Math::add3(v, a, v);                 // v = v + a
+
+    // Now v contains the vector from pos to the rotation axis.
+    // Multiply by the square of the rotation rate to get the linear
+    // acceleration.
+    Math::mul3(rate*rate, v, v);
+    Math::add3(v, accelOut, accelOut);
 }
 
 void RigidBody::getAngularAccel(float* accelOut)

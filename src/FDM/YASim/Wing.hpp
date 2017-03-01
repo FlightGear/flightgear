@@ -16,29 +16,41 @@ public:
     ~Wing();
 
     // Do we mirror ourselves about the XZ plane?
-    void setMirror(bool mirror);
-
-    // Wing geometry:
-    void setBase(float* base);        // in local coordinates
-    void setLength(float length);     // dist. ALONG wing (not span!)     
-    void setChord(float chord);       // at base, measured along X axis
-    void setTaper(float taper);       // fraction, 0-1
-    void setSweep(float sweep);       // radians
-    void setDihedral(float dihedral); // radians, positive is "up"
+    void setMirror(bool mirror) { _mirror = mirror; }
+    bool isMirrored() { return _mirror; };
+    
+    // Wing geometry in local coordinates:
+    
+    // base point of wing
+    void setBase(const float* base) { Math::set3(base, _base); }
     void getBase(float* base) { Math::set3(_base, base); };
+    // dist. ALONG wing (not span!)     
+    void setLength(float length) { _length = length; }
     float getLength() { return _length; };
+    // at base, measured along X axis
+    void setChord(float chord) { _chord = chord; }
     float getChord() { return _chord; };
+    // fraction of chord at wing tip, 0..1
+    void setTaper(float taper) { _taper = taper; }
     float getTaper() { return _taper; };
+    // radians
+    void setSweep(float sweep) { _sweep = sweep; }
     float getSweep() { return _sweep; };
+    // radians, positive is "up"
+    void setDihedral(float dihedral) { _dihedral = dihedral; }
     float getDihedral() { return _dihedral; };
     
-    void setStall(float aoa);
-    void setStallWidth(float angle);
-    void setStallPeak(float fraction);
-    void setTwist(float angle);
-    void setCamber(float camber);
     void setIncidence(float incidence);
+    void setTwist(float angle) { _twist = angle; }
+    
+    
+    // parameters for stall curve
+    void setStall(float aoa) { _stall = aoa; }
+    void setStallWidth(float angle) { _stallWidth = angle; }
+    void setStallPeak(float fraction) { _stallPeak = fraction; }
+    void setCamber(float camber) { _camber = camber; }
     void setInducedDrag(float drag) { _inducedDrag = drag; }
+    
     
     void setFlap0Params(float start, float end, float lift, float drag);
     void setFlap1Params(float start, float end, float lift, float drag);
@@ -56,7 +68,6 @@ public:
     // Compile the thing into a bunch of Surface objects
     void compile();
     void getTip(float* tip) { Math::set3(_tip, tip);};
-    bool isMirrored() { return _mirror; };
     
     // valid only after Wing::compile() was called
     float getSpan() { return _wingspan; };
@@ -64,20 +75,19 @@ public:
     float getAspectRatio() { return _aspectRatio; };
     float getMAC() { return _meanChord; };
     
-    // Query the list of Surface objects
-    int numSurfaces();
-    Surface* getSurface(int n);
-    float getSurfaceWeight(int n);
+    int numSurfaces() { return _surfs.size(); }
+    Surface* getSurface(int n) { return ((SurfRec*)_surfs.get(n))->surface; }
+    float getSurfaceWeight(int n) { return ((SurfRec*)_surfs.get(n))->weight; }
 
     // The overall drag coefficient for the wing as a whole.  Units are
     // arbitrary.
     void setDragScale(float scale);
-    float getDragScale();
+    float getDragScale() { return _dragScale; }
 
     // The ratio of force along the Z (lift) direction of each wing
     // segment to that along the X (drag) direction.
     void setLiftRatio(float ratio);
-    float getLiftRatio();
+    float getLiftRatio() { return _liftRatio; }
 
 private:
     void interp(float* v1, float* v2, float frac, float* out);

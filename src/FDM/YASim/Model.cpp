@@ -176,106 +176,12 @@ void Model::iterate()
     _integrator.calcNewInterval();
 }
 
-bool Model::isCrashed()
-{
-    return _crashed;
-}
-
-void Model::setCrashed(bool crashed)
-{
-    _crashed = crashed;
-}
-
-float Model::getAGL()
-{
-    return _agl;
-}
-
-State* Model::getState()
-{
-    return _s;
-}
-
 void Model::setState(State* s)
 {
     _integrator.setState(s);
     _s = _integrator.getState();
 }
 
-RigidBody* Model::getBody()
-{
-    return &_body;
-}
-
-Integrator* Model::getIntegrator()
-{
-    return &_integrator;
-}
-
-Surface* Model::getSurface(int handle)
-{
-    return (Surface*)_surfaces.get(handle);
-}
-
-Rotorgear* Model::getRotorgear(void)
-{
-    return &_rotorgear;
-}
-
-int Model::addThruster(Thruster* t)
-{
-    return _thrusters.add(t);
-}
-
-Hook* Model::getHook(void)
-{
-    return _hook;
-}
-
-Launchbar* Model::getLaunchbar(void)
-{
-    return _launchbar;
-}
-
-int Model::numThrusters()
-{
-    return _thrusters.size();
-}
-
-Thruster* Model::getThruster(int handle)
-{
-    return (Thruster*)_thrusters.get(handle);
-}
-
-void Model::setThruster(int handle, Thruster* t)
-{
-    _thrusters.set(handle, t);
-}
-
-int Model::addSurface(Surface* surf)
-{
-    return _surfaces.add(surf);
-}
-
-int Model::addGear(Gear* gear)
-{
-    return _gears.add(gear);
-}
-
-void Model::addHook(Hook* hook)
-{
-    _hook = hook;
-}
-
-void Model::addLaunchbar(Launchbar* launchbar)
-{
-    _launchbar = launchbar;
-}
-
-int Model::addHitch(Hitch* hitch)
-{
-    return _hitches.add(hitch);
-}
 
 void Model::setGroundCallback(Ground* ground_cb)
 {
@@ -283,28 +189,18 @@ void Model::setGroundCallback(Ground* ground_cb)
     _ground_cb = ground_cb;
 }
 
-Ground* Model::getGroundCallback(void)
-{
-    return _ground_cb;
-}
-
-void Model::setGroundEffect(float* pos, float span, float mul)
+void Model::setGroundEffect(const float* pos, const float span, const float mul)
 {
     Math::set3(pos, _geRefPoint);
     _wingSpan = span;
     _groundEffect = mul;
 }
 
-void Model::setAir(float pressure, float temp, float density)
+void Model::setAir(const float pressure, const float temp, const float density)
 {
     _pressure = pressure;
     _temp = temp;
     _rho = density;
-}
-
-void Model::setWind(float* wind)
-{
-    Math::set3(wind, _wind);
 }
 
 void Model::updateGround(State* s)
@@ -582,7 +478,7 @@ void Model::newState(State* s)
 
 // Calculates the airflow direction at the given point and for the
 // specified aircraft velocity.
-void Model::localWind(float* pos, State* s, float* out, float alt, bool is_rotor)
+void Model::localWind(const float* pos, yasim::State* s, float* out, float alt, bool is_rotor)
 {
     float tmp[3], lwind[3], lrot[3], lv[3];
 

@@ -3,6 +3,7 @@
 
 #include <simgear/props/props.hxx>
 #include "Version.hpp"
+#include "Math.hpp"
 
 namespace yasim {
 
@@ -21,11 +22,11 @@ public:
     static void resetIDgen() { s_idGenerator = 0; };
 
     // Position of this surface in local coords
-    void setPosition(float* p);
-    void getPosition(float* out);
+    void setPosition(const float* p);
+    void getPosition(float* out) { Math::set3(_pos, out); }
 
     // Distance scale along the X axis
-    void setChord(float chord);
+    void setChord(float chord) { _chord = chord; }
 
     // Slats act to move the stall peak by the specified angle, and
     // increase drag by the multiplier specified.
@@ -44,37 +45,37 @@ public:
     void setSpoilerPos(float pos);
 
     // Modifier for flap lift coefficient, useful for simulating flap blowing etc.
-    void setFlapEffectiveness(float effectiveness);
-    double getFlapEffectiveness();
+    void setFlapEffectiveness(float effectiveness) { _flapEffectiveness = effectiveness; }
+    double getFlapEffectiveness() { return _flapEffectiveness; }
 
     // local -> Surface coords
-    void setOrientation(float* o);
+    void setOrientation(const float* o);
 
     // For variable-incidence control surfaces.  The angle is a
     // negative rotation about the surface's Y axis, in radians, so
     // positive is "up" (i.e. "positive AoA")
-    void setIncidence(float angle);
+    void setIncidence(float angle) { _incidence = angle; }
 
     // The offset from base incidence for this surface.
-    void setTwist(float angle);
+    void setTwist(float angle) { _twist = angle; }
 
-    void setTotalDrag(float c0);
-    float getTotalDrag();
-
-    void setXDrag(float cx);
-    void setYDrag(float cy);
-    void setZDrag(float cz);
-    float getXDrag();
+    void setTotalDrag(float c0) { _c0 = c0; }
+    float getTotalDrag() { return _c0; }
+    
+    void setXDrag(float cx) { _cx = cx; }
+    void setYDrag(float cy) { _cy = cy; }
+    void setZDrag(float cz) { _cz = cz; }
+    float getXDrag() { return _cx; }
 
     // zero-alpha Z drag ("camber") specified as a fraction of cz
-    void setBaseZDrag(float cz0);
+    void setBaseZDrag(float cz0) { _cz0 = cz0; }
 
     // i: 0 == forward, 1 == backwards
-    void setStallPeak(int i, float peak);
+    void setStallPeak(int i, float peak) { _peaks[i] = peak; }
 
     // i: 0 == fwd/+z, 1 == fwd/-z, 2 == rev/+z, 3 == rev/-z
-    void setStall(int i, float alpha);
-    void setStallWidth(int i, float width);
+    void setStall(int i, float alpha) { _stalls[i] = alpha; }
+    void setStallWidth(int i, float width) { _widths[i] = width; }
 
     // Induced drag multiplier
     void setInducedDrag(float mul) { _inducedDrag = mul; }

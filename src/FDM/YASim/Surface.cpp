@@ -1,5 +1,4 @@
 #include <Main/fg_props.hxx>
-#include "Math.hpp"
 #include "Surface.hpp"
 
 namespace yasim {
@@ -53,7 +52,7 @@ Surface::Surface( Version * version ) :
 }
 
 
-void Surface::setPosition(float* p)
+void Surface::setPosition(const float* p)
 {
     int i;
     for(i=0; i<3; i++) _pos[i] = p[i];
@@ -64,83 +63,11 @@ void Surface::setPosition(float* p)
     }
 }
 
-void Surface::getPosition(float* out)
+void Surface::setOrientation(const float* o)
 {
-    int i;
-    for(i=0; i<3; i++) out[i] = _pos[i];
+  for(int i=0; i<9; i++) _orient[i] = o[i];
 }
 
-void Surface::setChord(float chord)
-{
-    _chord = chord;
-}
-
-void Surface::setTotalDrag(float c0)
-{
-    _c0 = c0;
-}
-
-float Surface::getTotalDrag()
-{
-    return _c0;
-}
-
-void Surface::setXDrag(float cx)
-{
-    _cx = cx;
-}
-
-void Surface::setYDrag(float cy)
-{
-    _cy = cy;
-}
-
-void Surface::setZDrag(float cz)
-{
-    _cz = cz;
-}
-
-float Surface::getXDrag()
-{
-    return _cx;
-}
-
-void Surface::setBaseZDrag(float cz0)
-{
-    _cz0 = cz0;
-}
-
-void Surface::setStallPeak(int i, float peak)
-{
-    _peaks[i] = peak;
-}
-
-void Surface::setStall(int i, float alpha)
-{
-    _stalls[i] = alpha;
-}
-
-void Surface::setStallWidth(int i, float width)
-{
-    _widths[i] = width;
-}
-
-void Surface::setOrientation(float* o)
-{
-    int i;
-    for(i=0; i<9; i++)
-        _orient[i] = o[i];
-}
-
-void Surface::setIncidence(float angle)
-{
-    _incidence = angle;
-}
-
-void Surface::setTwist(float angle)
-{
-    _twist = angle;
-}
 
 void Surface::setSlatParams(float stallDelta, float dragPenalty)
 {
@@ -167,17 +94,6 @@ void Surface::setFlapPos(float pos)
     if (_surfN != 0) _flapN->setFloatValue(pos);
   }
 }
-
-void Surface::setFlapEffectiveness(float effectiveness)
-{
-    _flapEffectiveness = effectiveness;
-}
-
-double Surface::getFlapEffectiveness()
-{
-    return _flapEffectiveness;
-}
-
 
 void Surface::setSlatPos(float pos)
 {

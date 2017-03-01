@@ -54,82 +54,6 @@ Wing::~Wing()
     }
 }
 
-int Wing::numSurfaces()
-{
-    return _surfs.size();
-}
-
-Surface* Wing::getSurface(int n)
-{
-    return ((SurfRec*)_surfs.get(n))->surface;
-}
-
-float Wing::getSurfaceWeight(int n)
-{
-    return ((SurfRec*)_surfs.get(n))->weight;
-}
-
-void Wing::setMirror(bool mirror)
-{
-    _mirror = mirror;
-}
-
-void Wing::setBase(float* base)
-{
-    int i;
-    for(i=0; i<3; i++) _base[i] = base[i];
-}
-
-void Wing::setLength(float length)
-{
-    _length = length;
-}
-
-void Wing::setChord(float chord)
-{
-    _chord = chord;
-}
-
-void Wing::setTaper(float taper)
-{
-    _taper = taper;
-}
-
-void Wing::setSweep(float sweep)
-{
-    _sweep = sweep;
-}
-
-void Wing::setDihedral(float dihedral)
-{
-    _dihedral = dihedral;
-}
-
-void Wing::setStall(float aoa)
-{
-    _stall = aoa;
-}
-
-void Wing::setStallWidth(float angle)
-{
-    _stallWidth = angle;
-}
-
-void Wing::setStallPeak(float fraction)
-{
-    _stallPeak = fraction;
-}
-
-void Wing::setTwist(float angle)
-{
-    _twist = angle;
-}
-
-void Wing::setCamber(float camber)
-{
-    _camber = camber;
-}
-
 void Wing::setIncidence(float incidence)
 {
     _incidence = incidence;
@@ -372,22 +296,16 @@ void Wing::compile()
             }
         }
     }
-
     // Last of all, re-set the incidence in case setIncidence() was
     // called before we were compiled.
     setIncidence(_incidence);
 }
 
-float Wing::getDragScale()
-{
-    return _dragScale;
-}
 
 void Wing::setDragScale(float scale)
 {
     _dragScale = scale;
-    int i;
-    for(i=0; i<_surfs.size(); i++) {
+    for(int i=0; i<_surfs.size(); i++) {
         SurfRec* s = (SurfRec*)_surfs.get(i);
         s->surface->setTotalDrag(scale * s->weight);
     }
@@ -396,14 +314,8 @@ void Wing::setDragScale(float scale)
 void Wing::setLiftRatio(float ratio)
 {
     _liftRatio = ratio;
-    int i;
-    for(i=0; i<_surfs.size(); i++)
+    for(int i=0; i<_surfs.size(); i++)
         ((SurfRec*)_surfs.get(i))->surface->setZDrag(ratio);
-}
-
-float Wing::getLiftRatio()
-{
-    return _liftRatio;
 }
 
 Surface* Wing::newSurface(float* pos, float* orient, float chord,

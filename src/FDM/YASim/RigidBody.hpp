@@ -2,6 +2,7 @@
 #define _RIGIDBODY_HPP
 #include <simgear/props/props.hxx>
 #include "Vector.hpp"
+#include "Math.hpp"
 
 namespace yasim {
 
@@ -34,16 +35,16 @@ public:
     // Modifies a previously-added point mass (fuel tank running dry,
     // gear going up, swing wing swinging, pilot bailing out, etc...)
     void setMass(int handle, float mass);
-    void setMass(int handle, float mass, float* pos, bool isStatic = false);
+    void setMass(int handle, float mass, const float* pos, bool isStatic = false);
 
-    int numMasses();
-    float getMass(int handle);
+    int numMasses() { return _nMasses; }
+    float getMass(int handle) { return _masses[handle].m; }
     void getMassPosition(int handle, float* out);
-    float getTotalMass();
+    float getTotalMass() { return _totalMass; }
 
     // The velocity, in local coordinates, of the specified point on a
     // body rotating about its c.g. with velocity rot.
-    void pointVelocity(float* pos, float* rot, float* out);
+    void pointVelocity(const float* pos, const float* rot, float* out);
 
     // Sets the "gyroscope" for the body.  This is the total
     // "intrinsic" angular momentum of the body; that is, rotations of
@@ -51,7 +52,7 @@ public:
     // frame.  Because angular momentum is additive in this way, we
     // don't need to specify specific gyro objects; just add all their
     // momenta together and set it here.
-    void setGyro(float* angularMomentum);
+    void setGyro(const float* angularMomentum) { Math::set3(angularMomentum, _gyro); }
 
 
     // When masses are moved or changed, this object needs to
@@ -63,15 +64,14 @@ public:
     // Resets the current force/torque parameters to zero.
     void reset();
 
-
-    // Applies a force at the specified position.
-    void addForce(float* pos, float* force);
-
     // Applies a force at the center of gravity.
-    void addForce(float* force);
-
+    void addForce(const float* force) { Math::add3(_force, force, _force); }
+    
+    // Applies a force at the specified position.
+    void addForce(const float* pos, const float* force); 
+    
     // Adds a torque with the specified axis and magnitude
-    void addTorque(float* torque);
+    void addTorque(const float* torque) { Math::add3(_torque, torque, _torque); }
 
     // Sets the rotation rate of the body (about its c.g.) within the
     // surrounding environment.  This is needed to compute torque on
@@ -79,17 +79,15 @@ public:
     // rotation.  NOTE: the rotation vector, like all other
     // coordinates used here, is specified IN THE LOCAL COORDINATE
     // SYSTEM.
-    void setBodySpin(float* rotation);
-
-
+    void setBodySpin(const float* rotation) { Math::set3(rotation, _spin); }
 
     // Returns the center of gravity of the masses, in the body
     // coordinate system.
-    void getCG(float* cgOut);
+    void getCG(float* cgOut) { Math::set3(_cg, cgOut); }
 
     // Returns the acceleration of the body's c.g. relative to the
     // rest of the world, specified in local coordinates.
-    void getAccel(float* accelOut);
+    void getAccel(float* accelOut) { Math::mul3(1/_totalMass, _force, accelOut); }
 
     // Returns the acceleration of a specific location in local
     // coordinates.  If the body is rotating, this will be different
