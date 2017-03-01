@@ -504,6 +504,10 @@ int fgMainInit( int argc, char **argv )
             return EXIT_SUCCESS;
         }
     }
+#else
+    if (showLauncher) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "\n!Launcher requested, but FlightGear was compiled without Qt support!");
+    }
 #endif
     fgInitAircraftPaths(false);
 
