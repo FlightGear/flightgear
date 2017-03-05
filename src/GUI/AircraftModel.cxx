@@ -42,7 +42,7 @@
 
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
 const int STANDARD_THUMBNAIL_WIDTH = 172;
-static quint32 CACHE_VERSION = 6;
+static quint32 CACHE_VERSION = 7;
 
 using namespace simgear::pkg;
 
@@ -87,6 +87,12 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
 
     if (sim->hasChild("variant-of")) {
         variantOf = sim->getStringValue("variant-of");
+    } else {
+        isPrimary = true;
+    }
+
+    if (sim->hasChild("primary-set")) {
+        isPrimary = sim->getBoolValue("primary-set");
     }
 
     if (sim->hasChild("tags")) {
@@ -113,6 +119,12 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
             previews.append(QUrl::fromLocalFile(previewPath));
         }
     }
+
+    if (sim->hasChild("thumbnail")) {
+        thumbnailPath = sim->getStringValue("thumbnail");
+    } else {
+        thumbnailPath = "thumbnail.jpg";
+    }
 }
 
 QString AircraftItem::baseName() const
@@ -129,9 +141,10 @@ void AircraftItem::fromDataStream(QDataStream& ds)
         return;
     }
 
-    ds >> description >> longDescription >> authors >> variantOf;
+    ds >> description >> longDescription >> authors >> variantOf >> isPrimary;
     for (int i=0; i<4; ++i) ds >> ratings[i];
     ds >> previews;
+    ds >> thumbnailPath;
 }
 
 void AircraftItem::toDataStream(QDataStream& ds) const
@@ -141,9 +154,10 @@ void AircraftItem::toDataStream(QDataStream& ds) const
         return;
     }
 
-    ds << description << longDescription << authors << variantOf;
+    ds << description << longDescription << authors << variantOf << isPrimary;
     for (int i=0; i<4; ++i) ds << ratings[i];
     ds << previews;
+    ds << thumbnailPath;
 }
 
 QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
@@ -151,8 +165,8 @@ QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
     if (m_thumbnail.isNull() && loadIfRequired) {
         QFileInfo info(path);
         QDir dir = info.dir();
-        if (dir.exists("thumbnail.jpg")) {
-            m_thumbnail.load(dir.filePath("thumbnail.jpg"));
+        if (dir.exists(thumbnailPath)) {
+            m_thumbnail.load(dir.filePath(thumbnailPath));
             // resize to the standard size
             if (m_thumbnail.height() > STANDARD_THUMBNAIL_HEIGHT) {
                 m_thumbnail = m_thumbnail.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
@@ -283,7 +297,7 @@ private:
                         continue;
                     }
 
-                    if (item->variantOf.isNull()) {
+                    if (item->isPrimary) {
                         baseAircraft.insert(item->baseName(), item);
                     } else {
                         variants.append(item);

@@ -92,6 +92,8 @@ struct AircraftItem
     bool usesHeliports = false;
     bool usesSeaports = false;
     QList<QUrl> previews;
+    bool isPrimary = false;
+    QString thumbnailPath;
 private:
     mutable QPixmap m_thumbnail;
 };
