@@ -188,6 +188,11 @@ FGJSBsim::FGJSBsim( double dt )
         case SG_POPUP:
             FGJSBBase::debug_lvl = 0x00;
             break;
+
+        default:
+            // silence warning about unhandled cases
+            FGJSBBase::debug_lvl = 0x00;
+            break;
         }
     } else {
                                 // if flight is excluded, don't bother
