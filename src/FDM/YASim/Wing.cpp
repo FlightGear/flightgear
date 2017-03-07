@@ -341,8 +341,14 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
         s->setStall(1, stallAoA * 0.8f);
         s->setStallWidth(1, _stallWidth * 0.5f);
     } else {
-        s->setStall(1, stallAoA);
+      s->setStall(1, stallAoA);
+      if( _version->isVersionOrNewer( Version::YASIM_VERSION_2017_2 )) {
+        // what was presumably meant
         s->setStallWidth(1, _stallWidth);
+      } else {
+        // old code; presumably a copy&paste error
+        s->setStall(1, _stallWidth);
+      }
     }
 
     // The "reverse" stalls are unmeasurable junk.  Just use 13deg and
