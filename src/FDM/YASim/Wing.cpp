@@ -195,7 +195,9 @@ void Wing::compile()
         last = bounds[i];
     }
 
-
+    // prepare wing coordinate system, ignoring incidence and twist for now
+    // (tail incidence is varied by the solver)
+    
     // Generating a unit vector pointing out the left wing.
     float left[3];
     left[0] = -Math::tan(_sweep);
@@ -204,11 +206,8 @@ void Wing::compile()
     Math::unit3(left, left);
 
     // Calculate coordinates for the root and tip of the wing
-    float root[3];
-    Math::set3(_base, root);
-    Math::set3(left, _tip);
-    Math::mul3(_length, _tip, _tip);
-    Math::add3(root, _tip, _tip);
+    Math::mul3(_length, left, _tip);
+    Math::add3(_base, _tip, _tip);
     _meanChord = _chord*(_taper+1)*0.5f;
     // wingspan in y-direction (not for vstab)
     _wingspan = Math::abs(2*_tip[1]);
@@ -269,7 +268,7 @@ void Wing::compile()
         for(j=0; j<nSegs; j++) {
             float frac = start + (j+0.5f) * (end-start)/nSegs;
             float pos[3];
-            interp(root, _tip, frac, pos);
+            interp(_base, _tip, frac, pos);
 
             float chord = _chord * (1 - (1-_taper)*frac);
 
@@ -370,7 +369,7 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     return s;
 }
 
-void Wing::interp(float* v1, float* v2, float frac, float* out)
+void Wing::interp(const float* v1, const float* v2, const float frac, float* out)
 {
     out[0] = v1[0] + frac*(v2[0]-v1[0]);
     out[1] = v1[1] + frac*(v2[1]-v1[1]);

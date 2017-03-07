@@ -90,7 +90,7 @@ public:
     float getLiftRatio() { return _liftRatio; }
 
 private:
-    void interp(float* v1, float* v2, float frac, float* out);
+    void interp(const float* v1, const float* v2, const float frac, float* out);
     Surface* newSurface(float* pos, float* orient, float chord,
                         bool flap0, bool flap1, bool slat, bool spoiler);
 
