@@ -130,6 +130,7 @@ void FGFDM::init()
     // alias to older name
     fgGetNode("/yasim/gross-weight-lbs", true)->alias(_gross_weight_lbs);
 
+    _yasimN->getNode("config-version",true)->setIntValue(_airplane.getVersion());
     _cg_x = _yasimN->getNode("cg-x-m", true);
     _cg_y = _yasimN->getNode("cg-y-m", true);
     _cg_z = _yasimN->getNode("cg-z-m", true);
