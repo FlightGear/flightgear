@@ -2696,22 +2696,27 @@ void Options::printJSONReport() const
   cJSON_AddStringToObject(configNode, "autosave file",
                           globals->autosaveFilePath().utf8Str().c_str());
 
-  // Get the ordered list of apt.dat files used by the NavCache
+  // Get the ordered lists of apt.dat, fix.dat and nav.dat files used by the
+  // NavCache
   NavDataCache* cache = NavDataCache::instance();
   if (!cache) {
     cache = NavDataCache::createInstance();
   }
 
-  // For this method, it doesn't matter if the cache is out-of-date
-  NavDataCache::DatFilesGroupInfo aptDatFilesInfo =
-    cache->getDatFilesInfo(NavDataCache::DATFILETYPE_APT);
-
-  // Write the list to the JSON tree
   cJSON *navDataNode = cJSON_CreateObject();
   cJSON_AddItemToObject(rootNode, "navigation data", navDataNode);
-  cJSON *aptDatPathsNode = p->createJSONArrayFromPathList(
-    aptDatFilesInfo.paths);
-  cJSON_AddItemToObject(navDataNode, "apt.dat files", aptDatPathsNode);
+
+  // Write each list to the JSON tree
+  for (const auto& datType: {NavDataCache::DATFILETYPE_APT,
+                             NavDataCache::DATFILETYPE_FIX,
+                             NavDataCache::DATFILETYPE_NAV}) {
+    // For this method, it doesn't matter if the cache is out-of-date
+    const NavDataCache::DatFilesGroupInfo& datFilesInfo =
+      cache->getDatFilesInfo(datType);
+    cJSON *datPathsNode = p->createJSONArrayFromPathList(datFilesInfo.paths);
+    string key = NavDataCache::datTypeStr[datType] + ".dat files";
+    cJSON_AddItemToObject(navDataNode, key.c_str(), datPathsNode);
+  }
 
   // Print the JSON tree to the standard output
   char *report = cJSON_Print(rootNode);
