@@ -240,9 +240,7 @@ PositionedID NavLoader::processNavLine(
     lat = std::stod(fields[1]);
     lon = std::stod(fields[2]);
     elev_ft = std::stoi(fields[3]);
-    // The input data is a floating point number, but we are going to feed it
-    // to NavDataCache::insertNavaid(), which takes an int.
-    freq = static_cast<int>(std::lround(std::stof(fields[4])));
+    freq = std::stoi(fields[4]);
     range = std::stoi(fields[5]);
     multiuse = std::stod(fields[6]);
     ident = fields[7];
