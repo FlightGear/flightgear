@@ -1059,7 +1059,7 @@ fgOptLogClasses( const char *arg )
 }
 
 static int
-fgOptLogFile(const char* arg)
+fgOptLogDir(const char* arg)
 {
     SGPath dirPath;
     if (!strcmp(arg, "desktop")) {
@@ -1714,7 +1714,7 @@ struct OptionDesc {
     {"trace-write",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
     {"log-class",                    true,  OPTION_FUNC,   "", false, "", fgOptLogClasses },
-    {"log-file",                     true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptLogFile },
+    {"log-dir",                      true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptLogDir },
     {"view-offset",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
