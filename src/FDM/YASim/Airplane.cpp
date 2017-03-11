@@ -17,7 +17,6 @@
 namespace yasim {
 
 // gadgets
-inline float norm(float f) { return f<1 ? 1/f : f; }
 inline float abs(float f) { return f<0 ? -f : f; }
 
 // Solver threshold.  How close to the solution are we trying
@@ -114,16 +113,6 @@ void Airplane::calcFuelWeights()
     }
 }
 
-ControlMap* Airplane::getControlMap()
-{
-    return &_controls;
-}
-
-Model* Airplane::getModel()
-{
-    return &_model;
-}
-
 void Airplane::getPilotAccel(float* out)
 {
     State* s = _model.getState();
@@ -144,43 +133,6 @@ void Airplane::getPilotAccel(float* out)
     Math::add3(tmp, out, out);
 
     // FIXME: rotational & centripetal acceleration needed
-}
-
-void Airplane::setPilotPos(float* pos)
-{
-    int i;
-    for(i=0; i<3; i++) _pilotPos[i] = pos[i];
-}
-
-void Airplane::getPilotPos(float* out)
-{
-    int i;
-    for(i=0; i<3; i++) out[i] = _pilotPos[i];
-}
-
-int Airplane::numGear()
-{
-    return _gears.size();
-}
-
-Gear* Airplane::getGear(int g)
-{
-    return ((GearRec*)_gears.get(g))->gear;
-}
-
-Hook* Airplane::getHook()
-{
-    return _model.getHook();
-}
-
-Launchbar* Airplane::getLaunchbar()
-{
-    return _model.getLaunchbar();
-}
-
-Rotorgear* Airplane::getRotorgear()
-{
-    return _model.getRotorgear();
 }
 
 void Airplane::updateGearState()
@@ -248,51 +200,6 @@ void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
     _solveWeights.add(w);
 }
 
-int Airplane::numTanks()
-{
-    return _tanks.size();
-}
-
-float Airplane::getFuel(int tank)
-{
-    return ((Tank*)_tanks.get(tank))->fill;
-}
-
-float Airplane::setFuel(int tank, float fuel)
-{
-    return ((Tank*)_tanks.get(tank))->fill = fuel;
-}
-
-float Airplane::getFuelDensity(int tank)
-{
-    return ((Tank*)_tanks.get(tank))->density;
-}
-
-float Airplane::getTankCapacity(int tank)
-{
-    return ((Tank*)_tanks.get(tank))->cap;
-}
-
-void Airplane::setEmptyWeight(float weight)
-{
-    _emptyWeight = weight;
-}
-
-void Airplane::setWing(Wing* wing)
-{
-    _wing = wing;
-}
-
-void Airplane::setTail(Wing* tail)
-{
-    _tail = tail;
-}
-
-void Airplane::addVStab(Wing* vstab)
-{
-    _vstabs.add(vstab);
-}
-
 void Airplane::addFuselage(float* front, float* back, float width,
                            float taper, float mid, 
                            float cx, float cy, float cz, float idrag)
@@ -331,21 +238,6 @@ void Airplane::addGear(Gear* gear)
     g->gear = gear;
     g->surf = 0;
     _gears.add(g);
-}
-
-void Airplane::addHook(Hook* hook)
-{
-    _model.addHook(hook);
-}
-
-void Airplane::addHitch(Hitch* hitch)
-{
-    _model.addHitch(hitch);
-}
-
-void Airplane::addLaunchbar(Launchbar* launchbar)
-{
-    _model.addLaunchbar(launchbar);
 }
 
 void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
@@ -402,42 +294,11 @@ void Airplane::setWeight(int handle, float mass)
 
 void Airplane::setFuelFraction(float frac)
 {
-    int i;
-    for(i=0; i<_tanks.size(); i++) {
+    for(int i=0; i<_tanks.size(); i++) {
         Tank* t = (Tank*)_tanks.get(i);
         t->fill = frac * t->cap;
         _model.getBody()->setMass(t->handle, t->cap * frac);
     }
-}
-
-float Airplane::getDragCoefficient()
-{
-    return _dragFactor;
-}
-
-float Airplane::getLiftRatio()
-{
-    return _liftRatio;
-}
-
-float Airplane::getCruiseAoA()
-{
-    return _cruiseAoA;
-}
-
-float Airplane::getTailIncidence()
-{
-    return _tailIncidence;
-}
-
-const char* Airplane::getFailureMsg()
-{
-    return _failureMsg;
-}
-
-int Airplane::getSolutionIterations()
-{
-    return _solutionIterations;
 }
 
 void Airplane::setupState(const float aoa, const float speed, const float gla, State* s)
@@ -451,8 +312,7 @@ void Airplane::setupState(const float aoa, const float speed, const float gla, S
     //? what is gla? v[1]=y, v[2]=z? should sin go to v2 instead v1?
     s->v[0] = speed*Math::cos(gla); s->v[1] = -speed*Math::sin(gla); s->v[2] = 0;
 
-    int i;
-    for(i=0; i<3; i++)
+    for(int i=0; i<3; i++)
 	s->pos[i] = s->rot[i] = s->acc[i] = s->racc[i] = 0;
 
     // Put us 1m above the origin, or else the gravity computation in
@@ -464,9 +324,7 @@ void Airplane::addContactPoint(float* pos)
 {
     ContactRec* c = new ContactRec;
     c->gear = 0;
-    c->p[0] = pos[0];
-    c->p[1] = pos[1];
-    c->p[2] = pos[2];
+    Math::set3(pos, c->p);
     _contacts.add(c);
 }
 
@@ -677,8 +535,7 @@ void Airplane::compileContactPoints()
     float spring = (1/DIST) * 9.8f * 10.0f * mass;
     float damp = 2 * Math::sqrt(spring * mass);
 
-    int i;
-    for(i=0; i<_contacts.size(); i++) {
+    for(int i=0; i<_contacts.size(); i++) {
         ContactRec* c = (ContactRec*)_contacts.get(i);
 
         Gear* g = new Gear();
@@ -865,8 +722,7 @@ void Airplane::initEngines()
 
 void Airplane::stabilizeThrust()
 {
-    int i;
-    for(i=0; i<_thrusters.size(); i++)
+    for(int i=0; i<_thrusters.size(); i++)
 	_model.getThruster(i)->stabilize();
 }
 
@@ -1045,14 +901,6 @@ void Airplane::applyLiftRatio(float factor)
 }
 
 /// Helper for solve()
-float Airplane::clamp(float val, float min, float max)
-{
-    if(val < min) return min;
-    if(val > max) return max;
-    return val;
-}
-
-/// Helper for solve()
 float Airplane::normFactor(float f)
 {
     if(f < 0) f = -f;
@@ -1162,8 +1010,8 @@ void Airplane::solve()
 	_cruiseAoA += SOLVE_TWEAK*aoaDelta;
 	_tailIncidence += SOLVE_TWEAK*tailDelta;
 	
-	_cruiseAoA = clamp(_cruiseAoA, -0.175f, 0.175f);
-	_tailIncidence = clamp(_tailIncidence, -0.175f, 0.175f);
+	_cruiseAoA = Math::clamp(_cruiseAoA, -0.175f, 0.175f);
+	_tailIncidence = Math::clamp(_tailIncidence, -0.175f, 0.175f);
 
         if(abs(xforce/_cruiseWeight) < STHRESH*0.0001 &&
            abs(alift/_approachWeight) < STHRESH*0.0001 &&

@@ -27,30 +27,30 @@ public:
     void iterate(float dt);
     void calcFuelWeights();
 
-    ControlMap* getControlMap();
-    Model* getModel();
+    ControlMap* getControlMap() { return &_controls; }
+    Model* getModel() { return &_model; }
 
-    void setPilotPos(float* pos);
-    void getPilotPos(float* out);
+    void setPilotPos(float* pos) { Math::set3(pos, _pilotPos); }
+    void getPilotPos(float* out) { Math::set3(_pilotPos, out); }
 
     void getPilotAccel(float* out);
 
-    void setEmptyWeight(float weight);
+    void setEmptyWeight(float weight) {  _emptyWeight = weight; }
 
-    void setWing(Wing* wing);
-    void setTail(Wing* tail);
-    void addVStab(Wing* vstab);
+    void setWing(Wing* wing) { _wing = wing; }
+    void setTail(Wing* tail) { _tail = tail; }
+    void addVStab(Wing* vstab) { _vstabs.add(vstab); }
 
     void addFuselage(float* front, float* back, float width,
                      float taper=1, float mid=0.5,
                      float cx=1, float cy=1, float cz=1, float idrag=1);
     int addTank(float* pos, float cap, float fuelDensity);
     void addGear(Gear* g);
-    void addHook(Hook* h);
-    void addLaunchbar(Launchbar* l);
+    void addHook(Hook* h) { _model.addHook(h); }
+    void addLaunchbar(Launchbar* l) { _model.addLaunchbar(l); }
     void addThruster(Thruster* t, float mass, float* cg);
     void addBallast(float* pos, float mass);
-    void addHitch(Hitch* h);
+    void addHitch(Hitch* h) { _model.addHitch(h); }
 
     int addWeight(float* pos, float size);
     void setWeight(int handle, float mass);
@@ -64,37 +64,40 @@ public:
 
     void addSolutionWeight(bool approach, int idx, float wgt);
 
-    int numGear();
-    Gear* getGear(int g);
-    Hook* getHook();
+    int numGear() { return _gears.size(); }
+    Gear* getGear(int g) { return ((GearRec*)_gears.get(g))->gear; }
+    Hook* getHook() { return _model.getHook(); }
     int numHitches() { return _hitches.size(); }
     Hitch* getHitch(int h);
-    Rotorgear* getRotorgear();
-    Launchbar* getLaunchbar();
+    Rotorgear* getRotorgear() { return _model.getRotorgear(); }
+    Launchbar* getLaunchbar() { return _model.getLaunchbar(); }
 
     int numThrusters() { return _thrusters.size(); }
     Thruster* getThruster(int n) {
         return ((ThrustRec*)_thrusters.get(n))->thruster; }
     
-    int numTanks();
+    int numTanks() { return _tanks.size(); }
     void setFuelFraction(float frac); // 0-1, total amount of fuel
-    float getFuel(int tank); // in kg!
-    float setFuel(int tank, float fuel); // in kg!
-    float getFuelDensity(int tank); // kg/m^3
-    float getTankCapacity(int tank);
+    // get fuel in kg
+    float getFuel(int tank) { return ((Tank*)_tanks.get(tank))->fill; }
+    // set fuel in kg
+    float setFuel(int tank, float fuel) { return ((Tank*)_tanks.get(tank))->fill = fuel; }
+    // get fuel density in kg/m^3
+    float getFuelDensity(int tank) { return ((Tank*)_tanks.get(tank))->density; }
+    float getTankCapacity(int tank) { return ((Tank*)_tanks.get(tank))->cap; }
 
     void compile(); // generate point masses & such, then solve
     void initEngines();
     void stabilizeThrust();
 
     // Solution output values
-    int getSolutionIterations();
-    float getDragCoefficient();
-    float getLiftRatio();
-    float getCruiseAoA();
-    float getTailIncidence();
+    int getSolutionIterations() { return _solutionIterations; }
+    float getDragCoefficient() { return _dragFactor; }
+    float getLiftRatio() { return _liftRatio; }
+    float getCruiseAoA() { return _cruiseAoA; }
+    float getTailIncidence() { return _tailIncidence; }
     float getApproachElevator() { return _approachElevator.val; }
-    const char* getFailureMsg();
+    const char* getFailureMsg() { return _failureMsg; }
 
     static void setupState(const float aoa, const float speed, const float gla, yasim::State* s); // utility
     void loadApproachControls();
@@ -124,7 +127,6 @@ private:
     void compileGear(GearRec* gr);
     void applyDragFactor(float factor);
     void applyLiftRatio(float factor);
-    float clamp(float val, float min, float max);
     void addContactPoint(float* pos);
     void compileContactPoints();
     float normFactor(float f);
