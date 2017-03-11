@@ -130,7 +130,12 @@ void FGFDM::init()
     // alias to older name
     fgGetNode("/yasim/gross-weight-lbs", true)->alias(_gross_weight_lbs);
 
+    // write some compile time information to property tree
     _yasimN->getNode("config-version",true)->setIntValue(_airplane.getVersion());
+    _yasimN->getNode("model/cg-x-min",true)->setFloatValue(_airplane.getCGMinX());
+    _yasimN->getNode("model/cg-x-max",true)->setFloatValue(_airplane.getCGMaxX());
+    
+    // prepare nodes for write at runtime
     _cg_x = _yasimN->getNode("cg-x-m", true);
     _cg_y = _yasimN->getNode("cg-y-m", true);
     _cg_z = _yasimN->getNode("cg-z-m", true);

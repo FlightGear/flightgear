@@ -102,7 +102,10 @@ public:
     static void setupState(const float aoa, const float speed, const float gla, yasim::State* s); // utility
     void loadApproachControls();
     void loadCruiseControls();
-
+    
+    float getCGMinX() { return _cgMinX; }
+    float getCGMaxX() { return _cgMaxX; }
+    
 private:
     struct Tank { float pos[3]; float cap; float fill;
 	          float density; int handle; };
@@ -182,6 +185,10 @@ private:
     float _tailIncidence;
     Control _approachElevator;
     const char* _failureMsg;
+
+    // hard limits for cg from gear positions
+    float _cgMaxX;
+    float _cgMinX;
 };
 
 }; // namespace yasim

@@ -57,6 +57,8 @@ Airplane::Airplane()
 
     _failureMsg = 0;
     _wingsN = 0;
+    _cgMaxX = -1e6;
+    _cgMinX = 1e6;
 }
 
 Airplane::~Airplane()
@@ -238,6 +240,10 @@ void Airplane::addGear(Gear* gear)
     g->gear = gear;
     g->surf = 0;
     _gears.add(g);
+    float pos[3];
+    g->gear->getPosition(pos);
+    if (pos[0] > _cgMaxX) _cgMaxX = pos[0];
+    if (pos[0] < _cgMinX) _cgMinX = pos[0];
 }
 
 void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
@@ -319,6 +325,14 @@ void Airplane::setupState(const float aoa, const float speed, const float gla, S
     // Model goes nuts
     s->pos[2] = 1;
 }
+
+/**
+ * @brief add contact point for crash detection 
+ * used to add wingtips and fuselage nose and tail
+ * 
+ * @param pos ...
+ * @return void
+ */
 
 void Airplane::addContactPoint(float* pos)
 {
@@ -521,6 +535,13 @@ void Airplane::compileGear(GearRec* gr)
     _model.addSurface(s);
     _surfs.add(s);
 }
+
+/**
+ * @brief add "fake gear" per contact point
+ * 
+ * 
+ * @return void
+ */
 
 void Airplane::compileContactPoints()
 {
