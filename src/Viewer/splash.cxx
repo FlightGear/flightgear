@@ -543,7 +543,7 @@ void SplashScreen::manuallyResizeFBO(int width, int height)
     osg::ref_ptr<osg::Camera> newCam = createFBOCamera();
 
     // swap everything around
-    for (int i=0; i<_splashFBOCamera->getNumChildren(); ++i) {
+    for (unsigned int i=0; i < _splashFBOCamera->getNumChildren(); ++i) {
         newCam->addChild(_splashFBOCamera->getChild(i));
     }
 
