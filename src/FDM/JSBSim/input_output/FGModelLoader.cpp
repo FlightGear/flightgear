@@ -89,7 +89,7 @@ Element_ptr FGModelLoader::Open(Element *el)
 SGPath CheckPathName(const SGPath& path, const SGPath& filename) {
   SGPath fullName = path/filename.utf8Str();
 
-  if (fullName.extension().empty())
+  if (fullName.extension() != "xml")
     fullName.concat(".xml");
 
   return fullName.exists() ? fullName : SGPath();
