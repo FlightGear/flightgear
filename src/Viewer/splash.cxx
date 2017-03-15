@@ -614,8 +614,13 @@ void SplashScreen::resize( int width, int height )
     if (_aircraftLogoVertexArray) {
         float logoWidth = fgGetDouble("/sim/startup/splash-logo-width", 0.6) * width;
         float logoHeight = _logoImage->t() * (logoWidth / _logoImage->s());
-        float originX = width * -0.5;
-        float originY = height * ((1.0 - 0.935) - 0.5);
+
+        float logoX = fgGetDouble("/sim/startup/splash-logo-x-norm", 0.0) * (width - logoWidth);
+        float logoY = fgGetDouble("/sim/startup/splash-logo-y-norm", 1.0 - 0.935) * (height - logoHeight);
+
+        float originX = logoX - (width * 0.5);
+        float originY = logoY - (height * 0.5);
+
         osg::Vec3 positions[4] = {
             osg::Vec3(originX, originY, 0.0),
             osg::Vec3(originX + logoWidth, originY, 0.0),
