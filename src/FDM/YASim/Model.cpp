@@ -19,7 +19,6 @@
 #include "Hitch.hpp"
 #include "Glue.hpp"
 #include "Ground.hpp"
-#include <simgear/props/props.hxx>
 
 #include "Model.hpp"
 namespace yasim {
@@ -73,7 +72,14 @@ Model::Model()
 
     _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
     _global_ground[3] = -100000;
-
+    _modelN = fgGetNode("/fdm/yasim/forces", true);
+    _f0xN = _modelN->getNode("f0-aero-x-drag", true);
+    _f0yN = _modelN->getNode("f0-aero-y-side", true);
+    _f0zN = _modelN->getNode("f0-aero-z-lift", true);
+    _gefxN = _modelN->getNode("gndeff-f-x", true);
+    _gefyN = _modelN->getNode("gndeff-f-y", true);
+    _gefzN = _modelN->getNode("gndeff-f-z", true);
+    _wgdistN = _modelN->getNode("wing-gnd-dist", true);    
 }
 
 Model::~Model()
@@ -328,12 +334,10 @@ void Model::calcForces(State* s)
       _body.addForce(pos, force);
       _body.addTorque(torque);
     }
-    float ld0 = faero[2]/faero[0];
-    SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/forces", true);
-    if (n != 0) {
-      n->getNode("f0-aero-x-drag", true)->setFloatValue(faero[0]);
-      n->getNode("f0-aero-y-side", true)->setFloatValue(faero[1]);
-      n->getNode("f0-aero-z-lift", true)->setFloatValue(faero[2]);
+    if (_modelN != 0) {
+      _f0xN->setFloatValue(faero[0]);
+      _f0yN->setFloatValue(faero[1]);
+      _f0zN->setFloatValue(faero[2]);
     }
 
     for (j=0; j<_rotorgear.getRotors()->size();j++)
@@ -388,14 +392,14 @@ void Model::calcForces(State* s)
         Math::mul3(fz, ground, geForce);
         _body.addForce(geForce);
       }
-      n = fgGetNode("/fdm/yasim/forces", true);
-      if (n != 0) {
-        float ld = (geForce[2]+faero[2])/(geForce[0]+faero[0]);
-        n->getNode("gndeff-f-x", true)->setFloatValue(geForce[0]);
-        n->getNode("gndeff-f-y", true)->setFloatValue(geForce[1]);
-        n->getNode("gndeff-f-z", true)->setFloatValue(geForce[2]);
-        n->getNode("wing-gnd-dist", true)->setFloatValue(dist);
-        n->getNode("gndeff-ld-ld0", true)->setFloatValue(ld/ld0);
+      if (_modelN != 0) {
+        _gefxN->setFloatValue(geForce[0]);
+        _gefyN->setFloatValue(geForce[1]);
+        _gefzN->setFloatValue(geForce[2]);
+        _wgdistN->setFloatValue(dist);
+        //float ld0 = faero[2]/faero[0];
+        //float ld = (geForce[2]+faero[2])/(geForce[0]+faero[0]);
+        //n->getNode("gndeff-ld-ld0", true)->setFloatValue(ld/ld0);
         
       }
     }
