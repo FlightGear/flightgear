@@ -657,6 +657,14 @@ void Airplane::compile()
         float gespan = 0;
         gespan = _wing->getSpan();
         _wing->getBase(gepos);
+        if(!isVersionOrNewer( Version::YASIM_VERSION_2017_2 )) {
+          //old code
+          //float span = _length * Math::cos(_sweep) * Math::cos(_dihedral);
+          //span = 2*(span + Math::abs(_base[2]));
+          gespan -= 2*gepos[1]; // cut away base (y-distance)
+          gespan += 2*Math::abs(gepos[2]); // add (wrong) z-distance
+        }
+        baseN->getChild("wing", 0)->getNode("gnd-eff-span", true)->setFloatValue(gespan);
         // where does the hard coded factor 0.15 come from?
         _model.setGroundEffect(gepos, gespan, 0.15f);
     }
