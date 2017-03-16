@@ -277,7 +277,7 @@ bool FGGeneric::gen_message_binary() {
         case FG_INT:
         {
             val = _out_message[i].offset +
-                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
             int32_t intVal = val;
             if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
                 intVal = (int32_t) sg_bswap_32((uint32_t)intVal);
@@ -339,7 +339,7 @@ bool FGGeneric::gen_message_binary() {
         case FG_BYTE:
         {
             val = _out_message[i].offset +
-                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
             int8_t byteVal = val;
             memcpy(&buf[length], &byteVal, sizeof(int8_t));
             length += sizeof(int8_t);
@@ -349,7 +349,7 @@ bool FGGeneric::gen_message_binary() {
         case FG_WORD:
         {
             val = _out_message[i].offset +
-                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
             int16_t wordVal = val;
             memcpy(&buf[length], &wordVal, sizeof(int16_t));
             length += sizeof(int16_t);
@@ -426,7 +426,7 @@ bool FGGeneric::gen_message_ascii() {
         case FG_WORD:
         case FG_INT:
             val = _out_message[i].offset +
-                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
             snprintf(tmp, 255, format.c_str(), (int)val);
             break;
 
