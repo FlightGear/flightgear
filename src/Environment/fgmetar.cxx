@@ -160,7 +160,7 @@ FGMetar::FGMetar(const string& icao) :
 
 long FGMetar::getAge_min() const
 {
-	time_t now = _x_proxy ? _rq_time : sgGMTime();
+	time_t now = _x_proxy ? _rq_time : time(nullptr);
 	return (now - _time) / 60;
 }
 
