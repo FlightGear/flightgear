@@ -73,7 +73,7 @@ public:
     float getSpan() { return _wingspan; };
     float getArea() { return _wingspan*_meanChord; };
     float getAspectRatio() { return _aspectRatio; };
-    float getMAC() { return _meanChord; };
+    float getSMC() { return _meanChord; };
     
     int numSurfaces() { return _surfs.size(); }
     Surface* getSurface(int n) { return ((SurfRec*)_surfs.get(n))->surface; }
@@ -113,7 +113,7 @@ private:
     
     // calculated from above
     float _tip[3];
-    float _meanChord;
+    float _meanChord; // std. mean chord
     float _wingspan;
     float _aspectRatio;
 

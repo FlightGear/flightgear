@@ -370,7 +370,7 @@ float Airplane::compileWing(Wing* w)
       _wingsN->getNode("wing-span", true)->setFloatValue(w->getSpan());
       _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
       _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
-      _wingsN->getNode("mean-chord", true)->setFloatValue(w->getMAC());
+      _wingsN->getNode("standard-mean-chord", true)->setFloatValue(w->getSMC());
     }
 
     float wgt = 0;
