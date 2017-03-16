@@ -587,6 +587,17 @@ void BaseDiagram::doComputeBounds()
 
 void BaseDiagram::extendBounds(const QPointF& p)
 {
+    // this check added after a bug where apt.dat reports SCSL as
+    // https://airportguide.com/airport/info/AG0003 (British Columbia)
+    // but the groundnet is for
+    // https://en.wikipedia.org/wiki/Salar_de_Atacama_Airport
+    // causing a rather large airport boundary.
+    QPointF v = (p - m_bounds.center());
+    if (v.manhattanLength() > 20000) {
+        qWarning() << "Excessively distant point" << p << v.manhattanLength();
+        return;
+    }
+
     extendRect(m_bounds, p);
 }
 
