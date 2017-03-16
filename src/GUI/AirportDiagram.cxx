@@ -189,7 +189,8 @@ void AirportDiagram::addRunway(FGRunwayRef rwy)
     r.runway = rwy;
     m_runways.append(r);
 
-    recomputeBounds(false);
+    extendBounds(r.p1);
+    extendBounds(r.p2);
     update();
 }
 
@@ -224,7 +225,7 @@ void AirportDiagram::addParking(FGParkingRef park)
 {
     ParkingData pd = { project(park->geod()), park };
     m_parking.push_back(pd);
-    recomputeBounds(false);
+    extendBounds(pd.pt);
     update();
 }
 
@@ -232,7 +233,7 @@ void AirportDiagram::addHelipad(FGHelipadRef pad)
 {
     HelipadData pd = { project(pad->geod()), pad };
     m_helipads.push_back(pd);
-    recomputeBounds(false);
+    extendBounds(pd.pt);
     update();
 }
 
