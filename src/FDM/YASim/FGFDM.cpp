@@ -29,6 +29,7 @@ namespace yasim {
 
 // Some conversion factors
 static const float KTS2MPS = 0.514444444444;
+static const float KMH2MPS = 1/3.6;
 static const float FT2M = 0.3048;
 static const float DEG2RAD = 0.0174532925199;
 static const float RPM2RAD = 0.10471975512;
@@ -240,32 +241,64 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
     XMLAttributes* a = (XMLAttributes*)&atts;
     float v[3];
     char buf[64];
-
+    float f = 0;
+    
     if(eq(name, "airplane")) {
-	_airplane.setEmptyWeight(attrf(a, "mass") * LBS2KG);
-        if(a->hasAttribute("version")) {
-          _airplane.setVersion( a->getValue("version") );
-        }
-        if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
-          SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
-        }
+      if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; } 
+      else if (a->hasAttribute("mass-lbs")) { f = attrf(a, "mass-lbs") * LBS2KG; } 
+      else if (a->hasAttribute("mass-kg")) { f = attrf(a, "mass-kg"); }
+      else {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, airplane needs one of {mass-lbs, mass-kg}");
+        exit(1);       
+      }
+      _airplane.setEmptyWeight(f);
+      if(a->hasAttribute("version")) {
+        _airplane.setVersion( a->getValue("version") );
+      }
+      if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
+        SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
+      }
     } else if(eq(name, "approach")) {
-	float spd = attrf(a, "speed") * KTS2MPS;
-	float alt = attrf(a, "alt", 0) * FT2M;
-	float aoa = attrf(a, "aoa", 0) * DEG2RAD;
-        float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
-	_airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2),gla);
-	_cruiseCurr = false;
+      float spd, alt = 0;
+      if (a->hasAttribute("speed")) { spd = attrf(a, "speed") * KTS2MPS; }
+      else if (a->hasAttribute("speed-kt")) { spd = attrf(a, "speed-kt") * KTS2MPS; }
+      else if (a->hasAttribute("speed-kmh")) { spd = attrf(a, "speed-kmh") * KMH2MPS; }
+      else {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, approach needs one of {speed-kt, speed-kmh}");
+        exit(1);       
+      }
+      if (a->hasAttribute("alt")) { alt = attrf(a, "alt") * FT2M; }
+      else if (a->hasAttribute("alt-ft")) { alt = attrf(a, "alt-ft") * FT2M; }
+      else if (a->hasAttribute("alt-m")) { alt = attrf(a, "alt-m"); }
+      float aoa = attrf(a, "aoa", 0) * DEG2RAD;
+      float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
+      _airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2), gla);
+      _cruiseCurr = false;
     } else if(eq(name, "cruise")) {
-	float spd = attrf(a, "speed") * KTS2MPS;
-	float alt = attrf(a, "alt") * FT2M;
-        float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
-	_airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5),gla);
-	_cruiseCurr = true;
+      float spd, alt = 0;
+      if (a->hasAttribute("speed")) { spd = attrf(a, "speed") * KTS2MPS; }
+      else if (a->hasAttribute("speed-kt")) { spd = attrf(a, "speed-kt") * KTS2MPS; }
+      else if (a->hasAttribute("speed-kmh")) { spd = attrf(a, "speed-kmh") * KMH2MPS; }
+      else {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, approach needs one of {speed-kt, speed-kmh}");
+        exit(1);       
+      }
+      if (a->hasAttribute("alt")) { alt = attrf(a, "alt") * FT2M; }
+      else if (a->hasAttribute("alt-ft")) { alt = attrf(a, "alt-ft") * FT2M; }
+      else if (a->hasAttribute("alt-m")) { alt = attrf(a, "alt-m"); }
+      float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
+      _airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5),gla);
+      _cruiseCurr = true;
     } else if(eq(name, "solve-weight")) {
         int idx = attri(a, "idx");
-        float wgt = attrf(a, "weight") * LBS2KG;
-        _airplane.addSolutionWeight(!_cruiseCurr, idx, wgt);
+        if(a->hasAttribute("weight")) { f = attrf(a, "weight") * LBS2KG; }
+        else if(a->hasAttribute("weight-lbs")) { f = attrf(a, "weight-lbs") * LBS2KG; }
+        else if(a->hasAttribute("weight-kg")) { f = attrf(a, "weight-kg"); }
+        else {
+          SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, solve-weight needs one of {weight-lbs, weight-kg}");
+          exit(1);       
+        }
+        _airplane.addSolutionWeight(!_cruiseCurr, idx, f);
     } else if(eq(name, "cockpit")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
@@ -315,8 +348,15 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
-	float mass = attrf(a, "mass") * LBS2KG;
-	j->setMaxThrust(attrf(a, "thrust") * LBS2N,
+	float mass;
+        if(a->hasAttribute("mass")) { mass = attrf(a, "mass") * LBS2KG; }
+        else if(a->hasAttribute("mass-lbs")) { mass = attrf(a, "mass-lbs") * LBS2KG; }
+        else if(a->hasAttribute("mass-kg")) { mass = attrf(a, "mass-kg"); }
+        else {
+          SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, jet needs one of {mass-lbs, mass-kg}");
+          exit(1);       
+        }       
+        j->setMaxThrust(attrf(a, "thrust") * LBS2N,
 			attrf(a, "afterburner", 0) * LBS2N);
 	j->setVectorAngle(attrf(a, "rotate", 0) * DEG2RAD);
         j->setReverseThrust(attrf(a, "reverse", 0.2));
@@ -483,12 +523,27 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	float density = 6.0; // gasoline, in lbs/gal
 	if(a->hasAttribute("jet")) density = 6.72; 
 	density *= LBS2KG*CM2GALS;
-	_airplane.addTank(v, attrf(a, "capacity") * LBS2KG, density);
+        float capacity = 0;
+        if(a->hasAttribute("capacity")) { capacity = attrf(a, "capacity") * LBS2KG; }
+        else if(a->hasAttribute("capacity-lbs")) { capacity = attrf(a, "capacity-lbs") * LBS2KG; }
+        else if(a->hasAttribute("capacity-kg")) { capacity = attrf(a, "capacity-kg"); }
+        else {
+          SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, tank needs one of {capacity-lbs, capacity-kg}");
+          exit(1);                 
+        }
+        _airplane.addTank(v, capacity, density);
     } else if(eq(name, "ballast")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
-	_airplane.addBallast(v, attrf(a, "mass") * LBS2KG);
+        if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; } 
+        else if (a->hasAttribute("mass-lbs")) { f = attrf(a, "mass-lbs") * LBS2KG; } 
+        else if (a->hasAttribute("mass-kg")) { f = attrf(a, "mass-kg"); }
+        else {
+          SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, airplane needs one of {mass-lbs, mass-kg}");
+          exit(1);       
+        }
+        _airplane.addBallast(v, f);
     } else if(eq(name, "weight")) {
 	parseWeight(a);
     } else if(eq(name, "stall")) {
