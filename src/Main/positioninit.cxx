@@ -698,10 +698,6 @@ bool initPosition()
   
 bool finalizeMetar()
 {
-  if (!fgGetBool("/environment/realwx/enabled")) {
-    return true;
-  }
-  
   double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
   string apt = fgGetString("/sim/presets/airport-id");
   double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
