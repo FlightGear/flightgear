@@ -1353,6 +1353,14 @@ fgOptScenario( const char *arg )
 }
 
 static int
+fgOptAirport( const char *arg )
+{
+    fgSetString("/sim/presets/airport-id", arg );
+    fgSetBool("/sim/presets/airport-requested", true );
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptRunway( const char *arg )
 {
     fgSetString("/sim/presets/runway", arg );
@@ -1584,7 +1592,7 @@ struct OptionDesc {
     {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/working", false, "", 0 },
     {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/working", true, "", 0 },
     {"sound-device",                 true,  OPTION_STRING, "/sim/sound/device-name", false, "", 0 },
-    {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
+    {"airport",                      true,  OPTION_FUNC,   "", false, "", fgOptAirport },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
     {"vor-frequency",                true,  OPTION_DOUBLE, "/sim/presets/vor-freq", false, "", fgOptVOR },

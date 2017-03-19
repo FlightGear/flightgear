@@ -548,6 +548,7 @@ bool initPosition()
   }
   
   string apt = fgGetString("/sim/presets/airport-id");
+  const bool apt_req = fgGetBool("/sim/presets/airport-requested");
   string rwy_no = fgGetString("/sim/presets/runway");
   bool rwy_req = fgGetBool("/sim/presets/runway-requested");
   string vor = fgGetString("/sim/presets/vor-id");
@@ -580,7 +581,15 @@ bool initPosition()
   
   if (hdg > 9990.0)
     hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
-  
+
+  if (apt_req && !rwy_req) {
+      // ensure that if the users asks for a specific airport, but not a runway,
+      // presumably because they want automatic selection, we do not look
+      // for the default runway (from $FGDATA/location-preset.xml) which is
+      // likely missing.
+      rwy_no.clear();
+  }
+
   if ( !set_pos && !apt.empty() && !parkpos.empty() ) {
     // An airport + parking position is requested
     // since this depends on parking, which is part of dynamics, and hence
@@ -695,13 +704,17 @@ bool finalizeMetar()
   
   double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
   string apt = fgGetString("/sim/presets/airport-id");
-  string rwy = fgGetString("/sim/presets/runway");
   double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
   string parkpos = fgGetString( "/sim/presets/parkpos" );
   bool onground = fgGetBool( "/sim/presets/onground", false );
+  const bool rwy_req = fgGetBool("/sim/presets/runway-requested");
   // this logic is taken from former startup.nas
-  bool needMetar = (hdg < 360.0) && !apt.empty() && (strthdg > 360.0) &&
-  rwy.empty() && onground && parkpos.empty();
+  bool needMetar = (hdg < 360.0) &&
+    !apt.empty() &&
+    (strthdg > 360.0) &&
+    !rwy_req &&
+    onground &&
+    parkpos.empty();
   
   if (needMetar) {
     // timeout so we don't spin forever if the network is down
