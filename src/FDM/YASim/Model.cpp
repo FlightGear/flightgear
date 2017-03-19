@@ -66,13 +66,20 @@ Model::Model()
     _hook = 0;
     _launchbar = 0;
 
-    _groundEffectSpan = 0;
+    _wingSpan = 0;
     _groundEffect = 0;
-    for(i=0; i<3; i++) _wingCenter[i] = 0;
+    for(i=0; i<3; i++) _geRefPoint[i] = 0;
 
     _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
     _global_ground[3] = -100000;
-
+    _modelN = fgGetNode("/fdm/yasim/forces", true);
+    _f0xN = _modelN->getNode("f0-aero-x-drag", true);
+    _f0yN = _modelN->getNode("f0-aero-y-side", true);
+    _f0zN = _modelN->getNode("f0-aero-z-lift", true);
+    _gefxN = _modelN->getNode("gndeff-f-x", true);
+    _gefyN = _modelN->getNode("gndeff-f-y", true);
+    _gefzN = _modelN->getNode("gndeff-f-z", true);
+    _wgdistN = _modelN->getNode("wing-gnd-dist", true);    
 }
 
 Model::~Model()
@@ -175,106 +182,12 @@ void Model::iterate()
     _integrator.calcNewInterval();
 }
 
-bool Model::isCrashed()
-{
-    return _crashed;
-}
-
-void Model::setCrashed(bool crashed)
-{
-    _crashed = crashed;
-}
-
-float Model::getAGL()
-{
-    return _agl;
-}
-
-State* Model::getState()
-{
-    return _s;
-}
-
 void Model::setState(State* s)
 {
     _integrator.setState(s);
     _s = _integrator.getState();
 }
 
-RigidBody* Model::getBody()
-{
-    return &_body;
-}
-
-Integrator* Model::getIntegrator()
-{
-    return &_integrator;
-}
-
-Surface* Model::getSurface(int handle)
-{
-    return (Surface*)_surfaces.get(handle);
-}
-
-Rotorgear* Model::getRotorgear(void)
-{
-    return &_rotorgear;
-}
-
-int Model::addThruster(Thruster* t)
-{
-    return _thrusters.add(t);
-}
-
-Hook* Model::getHook(void)
-{
-    return _hook;
-}
-
-Launchbar* Model::getLaunchbar(void)
-{
-    return _launchbar;
-}
-
-int Model::numThrusters()
-{
-    return _thrusters.size();
-}
-
-Thruster* Model::getThruster(int handle)
-{
-    return (Thruster*)_thrusters.get(handle);
-}
-
-void Model::setThruster(int handle, Thruster* t)
-{
-    _thrusters.set(handle, t);
-}
-
-int Model::addSurface(Surface* surf)
-{
-    return _surfaces.add(surf);
-}
-
-int Model::addGear(Gear* gear)
-{
-    return _gears.add(gear);
-}
-
-void Model::addHook(Hook* hook)
-{
-    _hook = hook;
-}
-
-void Model::addLaunchbar(Launchbar* launchbar)
-{
-    _launchbar = launchbar;
-}
-
-int Model::addHitch(Hitch* hitch)
-{
-    return _hitches.add(hitch);
-}
 
 void Model::setGroundCallback(Ground* ground_cb)
 {
@@ -282,28 +195,18 @@ void Model::setGroundCallback(Ground* ground_cb)
     _ground_cb = ground_cb;
 }
 
-Ground* Model::getGroundCallback(void)
+void Model::setGroundEffect(const float* pos, const float span, const float mul)
 {
-    return _ground_cb;
-}
-
-void Model::setGroundEffect(float* pos, float span, float mul)
-{
-    Math::set3(pos, _wingCenter);
-    _groundEffectSpan = span;
+    Math::set3(pos, _geRefPoint);
+    _wingSpan = span;
     _groundEffect = mul;
 }
 
-void Model::setAir(float pressure, float temp, float density)
+void Model::setAir(const float pressure, const float temp, const float density)
 {
     _pressure = pressure;
     _temp = temp;
     _rho = density;
-}
-
-void Model::setWind(float* wind)
-{
-    Math::set3(wind, _wind);
 }
 
 void Model::updateGround(State* s)
@@ -390,11 +293,11 @@ void Model::calcForces(State* s)
     _body.addTorque(_torque);
     int i,j;
     for(i=0; i<_thrusters.size(); i++) {
-	Thruster* t = (Thruster*)_thrusters.get(i);
-	float thrust[3], pos[3];
-	t->getThrust(thrust);
-	t->getPosition(pos);
-	_body.addForce(pos, thrust);
+      Thruster* t = (Thruster*)_thrusters.get(i);
+      float thrust[3], pos[3];
+      t->getThrust(thrust);
+      t->getPosition(pos);
+      _body.addForce(pos, thrust);
     }
 
     // Get a ground plane in local coordinates.  The first three
@@ -417,20 +320,26 @@ void Model::calcForces(State* s)
     float faero[3];
     faero[0] = faero[1] = faero[2] = 0;
     for(i=0; i<_surfaces.size(); i++) {
-	Surface* sf = (Surface*)_surfaces.get(i);
+      Surface* sf = (Surface*)_surfaces.get(i);
 
-	// Vsurf = wind - velocity + (rot cross (cg - pos))
-	float vs[3], pos[3];
-	sf->getPosition(pos);
-        localWind(pos, s, vs, alt);
+      // Vsurf = wind - velocity + (rot cross (cg - pos))
+      float vs[3], pos[3];
+      sf->getPosition(pos);
+      localWind(pos, s, vs, alt);
 
-	float force[3], torque[3];
-	sf->calcForce(vs, _rho, force, torque);
-	Math::add3(faero, force, faero);
+      float force[3], torque[3];
+      sf->calcForce(vs, _rho, force, torque);
+      Math::add3(faero, force, faero);
 
-	_body.addForce(pos, force);
-	_body.addTorque(torque);
+      _body.addForce(pos, force);
+      _body.addTorque(torque);
     }
+    if (_modelN != 0) {
+      _f0xN->setFloatValue(faero[0]);
+      _f0yN->setFloatValue(faero[1]);
+      _f0zN->setFloatValue(faero[2]);
+    }
+
     for (j=0; j<_rotorgear.getRotors()->size();j++)
     {
         Rotor* r = (Rotor *)_rotorgear.getRotors()->get(j);
@@ -470,18 +379,30 @@ void Model::calcForces(State* s)
     // Account for ground effect by multiplying the vertical force
     // component by an amount linear with the fraction of the wingspan
     // above the ground.
-    if ((_groundEffectSpan != 0) && (_groundEffect != 0 ))
+    if ((_wingSpan != 0) && (_groundEffect != 0 ))
     {
-        float dist = ground[3] - Math::dot3(ground, _wingCenter);
-        if(dist > 0 && dist < _groundEffectSpan) {
-        float fz = Math::dot3(faero, ground);
-            fz *= (_groundEffectSpan - dist) / _groundEffectSpan;
-            fz *= _groundEffect;
-        Math::mul3(fz, ground, faero);
-        _body.addForce(faero);
-        }
+      // distance between ground and wing ref. point
+      float dist = ground[3] - Math::dot3(ground, _geRefPoint); 
+      float fz = 0;
+      float geForce[3];
+      if(dist > 0 && dist < _wingSpan) {
+        fz = Math::dot3(faero, ground);
+        fz *= (_wingSpan - dist) / _wingSpan;
+        fz *= _groundEffect;
+        Math::mul3(fz, ground, geForce);
+        _body.addForce(geForce);
+      }
+      if (_modelN != 0) {
+        _gefxN->setFloatValue(geForce[0]);
+        _gefyN->setFloatValue(geForce[1]);
+        _gefzN->setFloatValue(geForce[2]);
+        _wgdistN->setFloatValue(dist);
+        //float ld0 = faero[2]/faero[0];
+        //float ld = (geForce[2]+faero[2])/(geForce[0]+faero[0]);
+        //n->getNode("gndeff-ld-ld0", true)->setFloatValue(ld/ld0);
+        
+      }
     }
-    
     // Convert the velocity and rotation vectors to local coordinates
     float lrot[3], lv[3];
     Math::vmul33(s->orient, s->rot, lrot);
@@ -561,7 +482,7 @@ void Model::newState(State* s)
 
 // Calculates the airflow direction at the given point and for the
 // specified aircraft velocity.
-void Model::localWind(float* pos, State* s, float* out, float alt, bool is_rotor)
+void Model::localWind(const float* pos, yasim::State* s, float* out, float alt, bool is_rotor)
 {
     float tmp[3], lwind[3], lrot[3], lv[3];
 

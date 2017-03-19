@@ -1,5 +1,6 @@
 #ifndef _GEAR_HPP
 #define _GEAR_HPP
+#include "Math.hpp"
 
 namespace simgear {
 class BVHMaterial;
@@ -33,42 +34,43 @@ public:
     Gear();
 
     // Externally set values
-    void setPosition(float* position);
-    void setCompression(float* compression);
-    void setSpring(float spring);
-    void setDamping(float damping);
-    void setStaticFriction(float sfric);
-    void setDynamicFriction(float dfric);
-    void setBrake(float brake);
-    void setRotation(float rotation);
-    void setExtension(float extension);
-    void setCastering(bool castering);
-    void setOnWater(bool c);
-    void setOnSolid(bool c);
-    void setSpringFactorNotPlaning(float f);
-    void setSpeedPlaning(float s);
-    void setReduceFrictionByExtension(float s);
-    void setInitialLoad(float l);
-    void setIgnoreWhileSolving(bool c);
+    void setPosition(float* position) { Math::set3(position, _pos); }
+    void getPosition(float* out) { Math::set3(_pos, out); }
+    void setCompression(float* compression) { Math::set3(compression, _cmpr); }
+    void getCompression(float* out) { Math::set3(_cmpr, out); }
+    void setSpring(float spring) { _spring = spring; }
+    float getSpring() { return _spring; }
+    void setDamping(float damping) { _damp = damping; }
+    float getDamping() {return _damp; }
+    void setStaticFriction(float sfric) { _sfric = sfric; }
+    float getStaticFriction() { return _sfric; }
+    void setDynamicFriction(float dfric) { _dfric = dfric; }
+    float getDynamicFriction() { return _dfric; }
+    void setBrake(float brake) { _brake = Math::clamp(brake, 0, 1); }
+    float getBrake() { return _brake; }
+    void setRotation(float rotation) { _rot = rotation; }
+    float getRotation() { return _rot; }
+    void setExtension(float extension) { _extension = Math::clamp(extension, 0, 1); }  
+    float getExtension() { return _extension; }
+    void setCastering(bool c) { _castering = c; }
+    bool getCastering() { return _castering; }
+    void setOnWater(bool c) { _onWater = c; }
+    void setOnSolid(bool c) { _onSolid = c; }
+    void setSpringFactorNotPlaning(float f) { _spring_factor_not_planing = f; }
+    void setSpeedPlaning(float s) { _speed_planing = s; }
+    void setReduceFrictionByExtension(float s) { _reduceFrictionByExtension = s; }
+    void setInitialLoad(float l) { _initialLoad = l; }
+    float getInitialLoad() {return _initialLoad; }
+    void setIgnoreWhileSolving(bool c) { _ignoreWhileSolving = c; }
+
     void setGlobalGround(double* global_ground, float* global_vel,
         double globalX, double globalY,
-                         const simgear::BVHMaterial *material);
-    void getPosition(float* out);
-    void getCompression(float* out);
+        const simgear::BVHMaterial *material);
     void getGlobalGround(double* global_ground);
-    float getSpring();
-    float getDamping();
-    float getStaticFriction();
-    float getDynamicFriction();
-    float getBrake();
-    float getRotation();
-    float getExtension();
-    float getInitialLoad() {return _initialLoad; }
-    bool getCastering();
     float getCasterAngle() { return _casterAngle; }
     float getRollSpeed() { return _rollSpeed; }
     float getBumpAltitude();
-    bool getGroundIsSolid();
+    bool getGroundIsSolid() { return _ground_isSolid; }
     float getGroundFrictionFactor() { return (float)_ground_frictionFactor; }
     void integrate(float dt);
 
@@ -81,12 +83,12 @@ public:
     // Computed values: total force, weight-on-wheels (force normal to
     // ground) and compression fraction.
     void getForce(float* force, float* contact);
-    float getWoW();
-    float getCompressFraction();
+    float getWoW() { return _wow; }
+    float getCompressFraction() { return _frac; }
     float getCompressDist() { return _compressDist; }
     bool getSubmergable() {return (!_ground_isSolid)&&(!_isContactPoint); }
     bool getIgnoreWhileSolving() {return _ignoreWhileSolving; }
-    void setContactPoint(bool c);
+    void setContactPoint(bool c) { _isContactPoint=c; }
 
 private:
     float calcFriction(float wgt, float v);

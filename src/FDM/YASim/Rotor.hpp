@@ -9,7 +9,7 @@
 
 namespace yasim {
 
-class Surface;
+//class Surface;
 class Rotorpart;
 class Ground;
 const float rho_null=1.184f; //25DegC, 101325Pa
@@ -107,7 +107,7 @@ public:
     void updateDirectionsAndPositions(float *rot);
     void getTip(float* tip);
     void calcLiftFactor(float* v, float rho, State *s);
-    void getDownWash(float *pos, float * v_heli, float *downwash);
+    void getDownWash(const float* pos, const float* v_heli, float* downwash);
     int getNumberOfBlades(){return _number_of_blades;}
     void setDownwashFactor(float value);
 
@@ -287,7 +287,7 @@ public:
     float getEnginePropFactor() {return _engine_prop_factor;}
     Vector* getRotors() { return &_rotors;}
     void initRotorIteration(float *lrot,float dt);
-    void getDownWash(float *pos, float * v_heli, float *downwash);
+    void getDownWash(const float* pos, const float* v_heli, float* downwash);
     int getValueforFGSet(int j,char *b,float *f);
 };
 

@@ -31,7 +31,6 @@ public:
     float getVehicleRadius(void) const { return _vehicle_radius; }
 
 private:
-    struct AxisRec { char* name; int handle; };
     struct EngRec { char* prefix; Thruster* eng; };
     struct WeightRec { char* prop; float size; int handle; };
     struct PropOut { SGPropertyNode* prop; int handle, type; bool left;
@@ -41,7 +40,6 @@ private:
 
     Rotor* parseRotor(XMLAttributes* a, const char* name);
     Wing* parseWing(XMLAttributes* a, const char* name, Version * version);
-    int parseAxis(const char* name);
     int parseOutput(const char* name);
     void parseWeight(XMLAttributes* a);
     void parseTurbineEngine(XMLAttributes* a);
@@ -63,10 +61,6 @@ private:
 
     // Aerodynamic turbulence model
     Turbulence* _turb;
-
-    // The list of "axes" that we expect to find as input.  These are
-    // typically property names.
-    Vector _axes;
 
     // Settable weights
     Vector _weights;
@@ -107,9 +101,23 @@ private:
     SGPropertyNode_ptr _cg_x;
     SGPropertyNode_ptr _cg_y;
     SGPropertyNode_ptr _cg_z;
+    SGPropertyNode_ptr _yasimN;
+
     std::vector<SGPropertyNode_ptr> _tank_level_lbs;
     std::vector<ThrusterProps> _thrust_props;
     std::vector<FuelProps> _fuel_props;
+    SGPropertyNode_ptr _vxN;
+    SGPropertyNode_ptr _vyN;
+    SGPropertyNode_ptr _vzN;
+    SGPropertyNode_ptr _vrxN;
+    SGPropertyNode_ptr _vryN;
+    SGPropertyNode_ptr _vrzN;
+    SGPropertyNode_ptr _axN;
+    SGPropertyNode_ptr _ayN;
+    SGPropertyNode_ptr _azN;
+    SGPropertyNode_ptr _arxN;
+    SGPropertyNode_ptr _aryN;
+    SGPropertyNode_ptr _arzN;
 };
 
 }; // namespace yasim

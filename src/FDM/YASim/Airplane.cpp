@@ -17,7 +17,6 @@
 namespace yasim {
 
 // gadgets
-inline float norm(float f) { return f<1 ? 1/f : f; }
 inline float abs(float f) { return f<0 ? -f : f; }
 
 // Solver threshold.  How close to the solution are we trying
@@ -57,6 +56,9 @@ Airplane::Airplane()
     _tailIncidence = 0;
 
     _failureMsg = 0;
+    _wingsN = 0;
+    _cgMaxX = -1e6;
+    _cgMinX = 1e6;
 }
 
 Airplane::~Airplane()
@@ -113,16 +115,6 @@ void Airplane::calcFuelWeights()
     }
 }
 
-ControlMap* Airplane::getControlMap()
-{
-    return &_controls;
-}
-
-Model* Airplane::getModel()
-{
-    return &_model;
-}
-
 void Airplane::getPilotAccel(float* out)
 {
     State* s = _model.getState();
@@ -143,43 +135,6 @@ void Airplane::getPilotAccel(float* out)
     Math::add3(tmp, out, out);
 
     // FIXME: rotational & centripetal acceleration needed
-}
-
-void Airplane::setPilotPos(float* pos)
-{
-    int i;
-    for(i=0; i<3; i++) _pilotPos[i] = pos[i];
-}
-
-void Airplane::getPilotPos(float* out)
-{
-    int i;
-    for(i=0; i<3; i++) out[i] = _pilotPos[i];
-}
-
-int Airplane::numGear()
-{
-    return _gears.size();
-}
-
-Gear* Airplane::getGear(int g)
-{
-    return ((GearRec*)_gears.get(g))->gear;
-}
-
-Hook* Airplane::getHook()
-{
-    return _model.getHook();
-}
-
-Launchbar* Airplane::getLaunchbar()
-{
-    return _model.getLaunchbar();
-}
-
-Rotorgear* Airplane::getRotorgear()
-{
-    return _model.getRotorgear();
 }
 
 void Airplane::updateGearState()
@@ -247,51 +202,6 @@ void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
     _solveWeights.add(w);
 }
 
-int Airplane::numTanks()
-{
-    return _tanks.size();
-}
-
-float Airplane::getFuel(int tank)
-{
-    return ((Tank*)_tanks.get(tank))->fill;
-}
-
-float Airplane::setFuel(int tank, float fuel)
-{
-    return ((Tank*)_tanks.get(tank))->fill = fuel;
-}
-
-float Airplane::getFuelDensity(int tank)
-{
-    return ((Tank*)_tanks.get(tank))->density;
-}
-
-float Airplane::getTankCapacity(int tank)
-{
-    return ((Tank*)_tanks.get(tank))->cap;
-}
-
-void Airplane::setWeight(float weight)
-{
-    _emptyWeight = weight;
-}
-
-void Airplane::setWing(Wing* wing)
-{
-    _wing = wing;
-}
-
-void Airplane::setTail(Wing* tail)
-{
-    _tail = tail;
-}
-
-void Airplane::addVStab(Wing* vstab)
-{
-    _vstabs.add(vstab);
-}
-
 void Airplane::addFuselage(float* front, float* back, float width,
                            float taper, float mid, 
                            float cx, float cy, float cz, float idrag)
@@ -330,21 +240,10 @@ void Airplane::addGear(Gear* gear)
     g->gear = gear;
     g->surf = 0;
     _gears.add(g);
-}
-
-void Airplane::addHook(Hook* hook)
-{
-    _model.addHook(hook);
-}
-
-void Airplane::addHitch(Hitch* hitch)
-{
-    _model.addHitch(hitch);
-}
-
-void Airplane::addLaunchbar(Launchbar* launchbar)
-{
-    _model.addLaunchbar(launchbar);
+    float pos[3];
+    g->gear->getPosition(pos);
+    if (pos[0] > _cgMaxX) _cgMaxX = pos[0];
+    if (pos[0] < _cgMinX) _cgMinX = pos[0];
 }
 
 void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
@@ -357,12 +256,14 @@ void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
     _thrusters.add(t);
 }
 
+/// Use ballast to redistribute mass, this is NOT added to empty weight.
 void Airplane::addBallast(float* pos, float mass)
 {
-    _model.getBody()->addMass(mass, pos);
+    _model.getBody()->addMass(mass, pos, true);
     _ballast += mass;
 }
 
+/// Masses configurable at runtime, e.g. cargo, pax
 int Airplane::addWeight(float* pos, float size)
 {
     WeightRec* wr = new WeightRec();
@@ -377,6 +278,7 @@ int Airplane::addWeight(float* pos, float size)
     return _weights.add(wr);
 }
 
+/// Change weight of a previously added mass point
 void Airplane::setWeight(int handle, float mass)
 {
     WeightRec* wr = (WeightRec*)_weights.get(handle);
@@ -398,45 +300,14 @@ void Airplane::setWeight(int handle, float mass)
 
 void Airplane::setFuelFraction(float frac)
 {
-    int i;
-    for(i=0; i<_tanks.size(); i++) {
+    for(int i=0; i<_tanks.size(); i++) {
         Tank* t = (Tank*)_tanks.get(i);
         t->fill = frac * t->cap;
         _model.getBody()->setMass(t->handle, t->cap * frac);
     }
 }
 
-float Airplane::getDragCoefficient()
-{
-    return _dragFactor;
-}
-
-float Airplane::getLiftRatio()
-{
-    return _liftRatio;
-}
-
-float Airplane::getCruiseAoA()
-{
-    return _cruiseAoA;
-}
-
-float Airplane::getTailIncidence()
-{
-    return _tailIncidence;
-}
-
-const char* Airplane::getFailureMsg()
-{
-    return _failureMsg;
-}
-
-int Airplane::getSolutionIterations()
-{
-    return _solutionIterations;
-}
-
-void Airplane::setupState(float aoa, float speed, float gla, State* s)
+void Airplane::setupState(const float aoa, const float speed, const float gla, State* s)
 {
     float cosAoA = Math::cos(aoa);
     float sinAoA = Math::sin(aoa);
@@ -444,10 +315,10 @@ void Airplane::setupState(float aoa, float speed, float gla, State* s)
     s->orient[3] =       0; s->orient[4] = 1; s->orient[5] =      0;
     s->orient[6] = -sinAoA; s->orient[7] = 0; s->orient[8] = cosAoA;
 
+    //? what is gla? v[1]=y, v[2]=z? should sin go to v2 instead v1?
     s->v[0] = speed*Math::cos(gla); s->v[1] = -speed*Math::sin(gla); s->v[2] = 0;
 
-    int i;
-    for(i=0; i<3; i++)
+    for(int i=0; i<3; i++)
 	s->pos[i] = s->rot[i] = s->acc[i] = s->racc[i] = 0;
 
     // Put us 1m above the origin, or else the gravity computation in
@@ -455,39 +326,59 @@ void Airplane::setupState(float aoa, float speed, float gla, State* s)
     s->pos[2] = 1;
 }
 
+/**
+ * @brief add contact point for crash detection 
+ * used to add wingtips and fuselage nose and tail
+ * 
+ * @param pos ...
+ * @return void
+ */
+
 void Airplane::addContactPoint(float* pos)
 {
     ContactRec* c = new ContactRec;
     c->gear = 0;
-    c->p[0] = pos[0];
-    c->p[1] = pos[1];
-    c->p[2] = pos[2];
+    Math::set3(pos, c->p);
     _contacts.add(c);
 }
 
 float Airplane::compileWing(Wing* w)
 {
-    // The tip of the wing is a contact point
-    float tip[3];
-    w->getTip(tip);
-    addContactPoint(tip);
-    if(w->isMirrored()) {
-        tip[1] *= -1;
-        addContactPoint(tip);
-    }
-
     // Make sure it's initialized.  The surfaces will pop out with
     // total drag coefficients equal to their areas, which is what we
     // want.
     w->compile();
 
-    float wgt = 0;
-    int i;
-    for(i=0; i<w->numSurfaces(); i++) {
-        Surface* s = (Surface*)w->getSurface(i);
+    // The tip of the wing is a contact point
+    float tip[3];
+    // need compile() before getTip()!
+    w->getTip(tip);
+    addContactPoint(tip);
+    if(w->isMirrored()) {
+        tip[1] *= -1;
+        addContactPoint(tip);
+        tip[1] *= -1; //undo mirror
+    }
+    if (_wingsN != 0) {
+      _wingsN->getNode("tip-x", true)->setFloatValue(tip[0]);
+      _wingsN->getNode("tip-y", true)->setFloatValue(tip[1]);
+      _wingsN->getNode("tip-z", true)->setFloatValue(tip[2]);
+      w->getBase(tip);
+      _wingsN->getNode("base-x", true)->setFloatValue(tip[0]);
+      _wingsN->getNode("base-y", true)->setFloatValue(tip[1]);
+      _wingsN->getNode("base-z", true)->setFloatValue(tip[2]);
+      _wingsN->getNode("wing-span", true)->setFloatValue(w->getSpan());
+      _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
+      _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
+      _wingsN->getNode("standard-mean-chord", true)->setFloatValue(w->getSMC());
+    }
 
-	float td = s->getTotalDrag();
-	s->setTotalDrag(td);
+    float wgt = 0;
+    float dragSum = 0;
+    for(int i=0; i<w->numSurfaces(); i++) {
+        Surface* s = (Surface*)w->getSurface(i);
+        float td = s->getTotalDrag();
+        int sid = s->getID();
 
         _model.addSurface(s);
 
@@ -495,8 +386,18 @@ float Airplane::compileWing(Wing* w)
         mass = mass * Math::sqrt(mass);
         float pos[3];
         s->getPosition(pos);
-        _model.getBody()->addMass(mass, pos);
+        int mid = _model.getBody()->addMass(mass, pos, true);
+        if (_wingsN != 0) {
+          SGPropertyNode_ptr n = _wingsN->getNode("surfaces", true)->getChild("surface", sid, true);
+          n->getNode("drag", true)->setFloatValue(td);
+          n->getNode("mass-id", true)->setIntValue(mid);
+        }
         wgt += mass;
+        dragSum += td;
+    }
+    if (_wingsN != 0)  {
+      _wingsN->getNode("weight", true)->setFloatValue(wgt);	
+      _wingsN->getNode("drag", true)->setFloatValue(dragSum);	
     }
     return wgt;
 }
@@ -547,7 +448,7 @@ float Airplane::compileFuselage(Fuselage* f)
 
         // _Mass_ weighting goes as surface area^(3/2)
         float mass = scale*segWgt * Math::sqrt(scale*segWgt);
-        _model.getBody()->addMass(mass, pos);
+        _model.getBody()->addMass(mass, pos, true);
         wgt += mass;
 
         // Make a Surface too
@@ -635,6 +536,13 @@ void Airplane::compileGear(GearRec* gr)
     _surfs.add(s);
 }
 
+/**
+ * @brief add "fake gear" per contact point
+ * 
+ * 
+ * @return void
+ */
+
 void Airplane::compileContactPoints()
 {
     // Figure it will compress by 20cm
@@ -648,8 +556,7 @@ void Airplane::compileContactPoints()
     float spring = (1/DIST) * 9.8f * 10.0f * mass;
     float damp = 2 * Math::sqrt(spring * mass);
 
-    int i;
-    for(i=0; i<_contacts.size(); i++) {
+    for(int i=0; i<_contacts.size(); i++) {
         ContactRec* c = (ContactRec*)_contacts.get(i);
 
         Gear* g = new Gear();
@@ -674,6 +581,8 @@ void Airplane::compile()
 {
     RigidBody* body = _model.getBody();
     int firstMass = body->numMasses();
+    SGPropertyNode_ptr baseN = fgGetNode("/fdm/yasim/model/wings", true);
+    SGPropertyNode_ptr n;
 
     // Generate the point masses for the plane.  Just use unitless
     // numbers for a first pass, then go back through and rescale to
@@ -682,13 +591,21 @@ void Airplane::compile()
 
     // The Wing objects
     if (_wing)
+    {
+      if (baseN != 0) _wingsN = baseN->getChild("wing", 0, true);
       aeroWgt += compileWing(_wing);
+    }
     if (_tail)
+    {
+      if (baseN != 0) _wingsN = baseN->getChild("tail", 0, true);
       aeroWgt += compileWing(_tail);
+    }
     int i;
     for(i=0; i<_vstabs.size(); i++)
-        aeroWgt += compileWing((Wing*)_vstabs.get(i)); 
-
+    {
+      if (baseN != 0) _wingsN = baseN->getChild("stab", i, true);
+      aeroWgt += compileWing((Wing*)_vstabs.get(i));
+    }
 
     // The fuselage(s)
     for(i=0; i<_fuselages.size(); i++)
@@ -707,7 +624,7 @@ void Airplane::compile()
     // Add the thruster masses
     for(i=0; i<_thrusters.size(); i++) {
         ThrustRec* t = (ThrustRec*)_thrusters.get(i);
-        body->addMass(t->mass, t->cg);
+        body->addMass(t->mass, t->cg, true);
     }
 
     // Add the tanks, empty for now.
@@ -733,10 +650,23 @@ void Airplane::compile()
     }
 
     // Ground effect
+    // If a double tapered wing is modelled with wing and mstab, wing must 
+    // be outboard to get correct wingspan.
     if(_wing) {
         float gepos[3];
         float gespan = 0;
-        gespan = _wing->getGroundEffect(gepos);
+        gespan = _wing->getSpan();
+        _wing->getBase(gepos);
+        if(!isVersionOrNewer( Version::YASIM_VERSION_2017_2 )) {
+          //old code
+          //float span = _length * Math::cos(_sweep) * Math::cos(_dihedral);
+          //span = 2*(span + Math::abs(_base[2]));
+          gespan -= 2*gepos[1]; // cut away base (y-distance)
+          gespan += 2*Math::abs(gepos[2]); // add (wrong) z-distance
+        }
+        if (baseN != 0)
+          baseN->getChild("wing", 0)->getNode("gnd-eff-span", true)->setFloatValue(gespan);
+        // where does the hard coded factor 0.15 come from?
         _model.setGroundEffect(gepos, gespan, 0.15f);
     }
 
@@ -822,11 +752,11 @@ void Airplane::initEngines()
 
 void Airplane::stabilizeThrust()
 {
-    int i;
-    for(i=0; i<_thrusters.size(); i++)
+    for(int i=0; i<_thrusters.size(); i++)
 	_model.getThruster(i)->stabilize();
 }
 
+/// Setup weights for cruise or approach during solve.
 void Airplane::setupWeights(bool isApproach)
 {
     int i;
@@ -839,6 +769,18 @@ void Airplane::setupWeights(bool isApproach)
     }
 }
 
+/// load values for controls as defined in cruise configuration
+void Airplane::loadCruiseControls()
+{
+  _controls.reset();
+  for(int i=0; i<_cruiseControls.size(); i++) {
+    Control* c = (Control*)_cruiseControls.get(i);
+    _controls.setInput(c->control, c->val);
+  }
+  _controls.applyControls(); 
+}
+
+/// Helper for solve()
 void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
@@ -847,14 +789,8 @@ void Airplane::runCruise()
                   Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
 
     // The control configuration
-    _controls.reset();
-    int i;
-    for(i=0; i<_cruiseControls.size(); i++) {
-	Control* c = (Control*)_cruiseControls.get(i);
-	_controls.setInput(c->control, c->val);
-    }
-    _controls.applyControls(1000000); // Huge dt value
-
+    loadCruiseControls();
+    
     // The local wind
     float wind[3];
     Math::mul3(-1, _cruiseState.v, wind);
@@ -865,7 +801,7 @@ void Airplane::runCruise()
    
     // Set up the thruster parameters and iterate until the thrust
     // stabilizes.
-    for(i=0; i<_thrusters.size(); i++) {
+    for(int i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
 	t->setAir(_cruiseP, _cruiseT,
@@ -882,6 +818,18 @@ void Airplane::runCruise()
     _model.calcForces(&_cruiseState);
 }
 
+/// load values for controls as defined in approach configuration
+void Airplane::loadApproachControls()
+{
+  _controls.reset();
+  for(int i=0; i<_approachControls.size(); i++) {
+    Control* c = (Control*)_approachControls.get(i);
+    _controls.setInput(c->control, c->val);
+  }
+  _controls.applyControls();
+}
+
+/// Helper for solve()
 void Airplane::runApproach()
 {
     setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
@@ -890,14 +838,8 @@ void Airplane::runApproach()
                   Atmosphere::calcStdDensity(_approachP, _approachT));
 
     // The control configuration
-    _controls.reset();
-    int i;
-    for(i=0; i<_approachControls.size(); i++) {
-	Control* c = (Control*)_approachControls.get(i);
-	_controls.setInput(c->control, c->val);
-    }
-    _controls.applyControls(1000000);
-
+    loadApproachControls();
+    
     // The local wind
     float wind[3];
     Math::mul3(-1, _approachState.v, wind);
@@ -909,7 +851,7 @@ void Airplane::runApproach()
 
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.
-    for(i=0; i<_thrusters.size(); i++) {
+    for(int i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
 	t->setAir(_approachP, _approachT,
@@ -926,6 +868,7 @@ void Airplane::runApproach()
     _model.calcForces(&_approachState);
 }
 
+/// Used only in Airplane::solve() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
@@ -971,6 +914,7 @@ void Airplane::applyDragFactor(float factor)
     }
 }
 
+/// Used only in Airplane::solve() and solveHelicopter(), not at runtime
 void Airplane::applyLiftRatio(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
@@ -986,13 +930,7 @@ void Airplane::applyLiftRatio(float factor)
     }
 }
 
-float Airplane::clamp(float val, float min, float max)
-{
-    if(val < min) return min;
-    if(val > max) return max;
-    return val;
-}
-
+/// Helper for solve()
 float Airplane::normFactor(float f)
 {
     if(f < 0) f = -f;
@@ -1102,8 +1040,8 @@ void Airplane::solve()
 	_cruiseAoA += SOLVE_TWEAK*aoaDelta;
 	_tailIncidence += SOLVE_TWEAK*tailDelta;
 	
-	_cruiseAoA = clamp(_cruiseAoA, -0.175f, 0.175f);
-	_tailIncidence = clamp(_tailIncidence, -0.175f, 0.175f);
+	_cruiseAoA = Math::clamp(_cruiseAoA, -0.175f, 0.175f);
+	_tailIncidence = Math::clamp(_tailIncidence, -0.175f, 0.175f);
 
         if(abs(xforce/_cruiseWeight) < STHRESH*0.0001 &&
            abs(alift/_approachWeight) < STHRESH*0.0001 &&

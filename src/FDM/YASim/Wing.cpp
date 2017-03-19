@@ -1,9 +1,9 @@
-#include "Math.hpp"
 #include "Surface.hpp"
 #include "Wing.hpp"
 
 namespace yasim {
-
+static const float RAD2DEG = 57.2957795131;
+  
 Wing::Wing( Version * version ) :
   _version(version)
 {
@@ -39,6 +39,9 @@ Wing::Wing( Version * version ) :
     _slatEnd = 0;
     _slatAoA = 0;
     _slatDrag = 0;
+    _meanChord = 0;
+    _wingspan = 0;
+    _aspectRatio = 1;
 }
 
 Wing::~Wing()
@@ -51,82 +54,6 @@ Wing::~Wing()
     }
 }
 
-int Wing::numSurfaces()
-{
-    return _surfs.size();
-}
-
-Surface* Wing::getSurface(int n)
-{
-    return ((SurfRec*)_surfs.get(n))->surface;
-}
-
-float Wing::getSurfaceWeight(int n)
-{
-    return ((SurfRec*)_surfs.get(n))->weight;
-}
-
-void Wing::setMirror(bool mirror)
-{
-    _mirror = mirror;
-}
-
-void Wing::setBase(float* base)
-{
-    int i;
-    for(i=0; i<3; i++) _base[i] = base[i];
-}
-
-void Wing::setLength(float length)
-{
-    _length = length;
-}
-
-void Wing::setChord(float chord)
-{
-    _chord = chord;
-}
-
-void Wing::setTaper(float taper)
-{
-    _taper = taper;
-}
-
-void Wing::setSweep(float sweep)
-{
-    _sweep = sweep;
-}
-
-void Wing::setDihedral(float dihedral)
-{
-    _dihedral = dihedral;
-}
-
-void Wing::setStall(float aoa)
-{
-    _stall = aoa;
-}
-
-void Wing::setStallWidth(float angle)
-{
-    _stallWidth = angle;
-}
-
-void Wing::setStallPeak(float fraction)
-{
-    _stallPeak = fraction;
-}
-
-void Wing::setTwist(float angle)
-{
-    _twist = angle;
-}
-
-void Wing::setCamber(float camber)
-{
-    _camber = camber;
-}
-
 void Wing::setIncidence(float incidence)
 {
     _incidence = incidence;
@@ -135,7 +62,7 @@ void Wing::setIncidence(float incidence)
         ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence);
 }
 
-void Wing::setFlap0(float start, float end, float lift, float drag)
+void Wing::setFlap0Params(float start, float end, float lift, float drag)
 {
     _flap0Start = start;
     _flap0End = end;
@@ -143,7 +70,7 @@ void Wing::setFlap0(float start, float end, float lift, float drag)
     _flap0Drag = drag;
 }
 
-void Wing::setFlap1(float start, float end, float lift, float drag)
+void Wing::setFlap1Params(float start, float end, float lift, float drag)
 {
     _flap1Start = start;
     _flap1End = end;
@@ -151,7 +78,7 @@ void Wing::setFlap1(float start, float end, float lift, float drag)
     _flap1Drag = drag;
 }
 
-void Wing::setSlat(float start, float end, float aoa, float drag)
+void Wing::setSlatParams(float start, float end, float aoa, float drag)
 {
     _slatStart = start;
     _slatEnd = end;
@@ -159,7 +86,7 @@ void Wing::setSlat(float start, float end, float aoa, float drag)
     _slatDrag = drag;
 }
 
-void Wing::setSpoiler(float start, float end, float lift, float drag)
+void Wing::setSpoilerParams(float start, float end, float lift, float drag)
 {
     _spoilerStart = start;
     _spoilerEnd = end;
@@ -167,14 +94,14 @@ void Wing::setSpoiler(float start, float end, float lift, float drag)
     _spoilerDrag = drag;
 }
 
-void Wing::setFlap0(float lval, float rval)
+void Wing::setFlap0Pos(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
     rval = Math::clamp(rval, -1, 1);
     int i;
     for(i=0; i<_flap0Surfs.size(); i++) {
-	((Surface*)_flap0Surfs.get(i))->setFlap(lval);
-	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlap(rval);
+      ((Surface*)_flap0Surfs.get(i))->setFlapPos(lval);
+      if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapPos(rval);
     }
 }
 
@@ -184,18 +111,17 @@ void Wing::setFlap0Effectiveness(float lval)
     int i;
     for(i=0; i<_flap0Surfs.size(); i++) {
         ((Surface*)_flap0Surfs.get(i))->setFlapEffectiveness(lval);
-//	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapEffectiveness(rval);
     }
 }
 
-void Wing::setFlap1(float lval, float rval)
+void Wing::setFlap1Pos(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
     rval = Math::clamp(rval, -1, 1);
     int i;
     for(i=0; i<_flap1Surfs.size(); i++) {
-	((Surface*)_flap1Surfs.get(i))->setFlap(lval);
-	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
+      ((Surface*)_flap1Surfs.get(i))->setFlapPos(lval);
+      if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlapPos(rval);
     }
 }
 
@@ -205,51 +131,26 @@ void Wing::setFlap1Effectiveness(float lval)
     int i;
     for(i=0; i<_flap1Surfs.size(); i++) {
         ((Surface*)_flap1Surfs.get(i))->setFlapEffectiveness(lval);
-//	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
     }
 }
 
-void Wing::setSpoiler(float lval, float rval)
+void Wing::setSpoilerPos(float lval, float rval)
 {
     lval = Math::clamp(lval, 0, 1);
     rval = Math::clamp(rval, 0, 1);
     int i;
     for(i=0; i<_spoilerSurfs.size(); i++) {
-	((Surface*)_spoilerSurfs.get(i))->setSpoiler(lval);
-	if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoiler(rval);
+      ((Surface*)_spoilerSurfs.get(i))->setSpoilerPos(lval);
+      if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoilerPos(rval);
     }
 }
 
-void Wing::setSlat(float val)
+void Wing::setSlatPos(float val)
 {
     val = Math::clamp(val, 0, 1);
     int i;
     for(i=0; i<_slatSurfs.size(); i++)
-	((Surface*)_slatSurfs.get(i))->setSlat(val);
-}
-
-float Wing::getGroundEffect(float* posOut)
-{
-    int i;
-    for(i=0; i<3; i++) posOut[i] = _base[i];
-    float span = _length * Math::cos(_sweep) * Math::cos(_dihedral);
-    span = 2*(span + Math::abs(_base[2]));
-    return span;
-}
-
-void Wing::getTip(float* tip)
-{
-    tip[0] = -Math::tan(_sweep);
-    tip[1] = Math::cos(_dihedral);
-    tip[2] = Math::sin(_dihedral);
-    Math::unit3(tip, tip);
-    Math::mul3(_length, tip, tip);
-    Math::add3(_base, tip, tip);
-}
-
-bool Wing::isMirrored()
-{
-    return _mirror;
+      ((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
 void Wing::compile()
@@ -272,17 +173,17 @@ void Wing::compile()
     // Sort in increasing order
     int i;
     for(i=0; i<10; i++) {
-        int minIdx = i;
-	float minVal = bounds[i];
-        int j;
-        for(j=i+1; j<10; j++) {
-            if(bounds[j] < minVal) {
-                minIdx = j;
-		minVal = bounds[j];
-	    }
-	}
-        float tmp = bounds[i];
-        bounds[i] = minVal; bounds[minIdx] = tmp;
+      int minIdx = i;
+      float minVal = bounds[i];
+      int j;
+      for(j=i+1; j<10; j++) {
+        if(bounds[j] < minVal) {
+          minIdx = j;
+          minVal = bounds[j];
+        }
+      }
+      float tmp = bounds[i];
+      bounds[i] = minVal; bounds[minIdx] = tmp;
     }
 
     // Uniqify
@@ -294,10 +195,9 @@ void Wing::compile()
         last = bounds[i];
     }
 
-    // Calculate a "nominal" segment length equal to an average chord,
-    // normalized to lie within 0-1 over the length of the wing.
-    float segLen = _chord * (0.5f*(_taper+1)) / _length;
-
+    // prepare wing coordinate system, ignoring incidence and twist for now
+    // (tail incidence is varied by the solver)
+    
     // Generating a unit vector pointing out the left wing.
     float left[3];
     left[0] = -Math::tan(_sweep);
@@ -306,12 +206,13 @@ void Wing::compile()
     Math::unit3(left, left);
 
     // Calculate coordinates for the root and tip of the wing
-    float root[3], tip[3];
-    Math::set3(_base, root);
-    Math::set3(left, tip);
-    Math::mul3(_length, tip, tip);
-    Math::add3(root, tip, tip);
-
+    Math::mul3(_length, left, _tip);
+    Math::add3(_base, _tip, _tip);
+    _meanChord = _chord*(_taper+1)*0.5f;
+    // wingspan in y-direction (not for vstab)
+    _wingspan = Math::abs(2*_tip[1]);
+    _aspectRatio = _wingspan / _meanChord;
+    
     // The wing's Y axis will be the "left" vector.  The Z axis will
     // be perpendicular to this and the local (!) X axis, because we
     // want motion along the local X axis to be zero AoA (i.e. in the
@@ -326,18 +227,22 @@ void Wing::compile()
     Math::cross3(y, z, x);
 
     if(_mirror) {
-	// Derive the right side orientation matrix from this one.
-        int i;
-        for(i=0; i<9; i++)  rightOrient[i] = orient[i];
+      // Derive the right side orientation matrix from this one.
+      int i;
+      for(i=0; i<9; i++)  rightOrient[i] = orient[i];
 
-	// Negate all Y coordinates, this gets us a valid basis, but
-	// it's left handed!  So...
-        for(i=1; i<9; i+=3) rightOrient[i] = -rightOrient[i];
+      // Negate all Y coordinates, this gets us a valid basis, but
+      // it's left handed!  So...
+      for(i=1; i<9; i+=3) rightOrient[i] = -rightOrient[i];
 
-	// Change the direction of the Y axis to get back to a
-	// right-handed system.
-	for(i=3; i<6; i++)  rightOrient[i] = -rightOrient[i];
+      // Change the direction of the Y axis to get back to a
+      // right-handed system.
+      for(i=3; i<6; i++)  rightOrient[i] = -rightOrient[i];
     }
+
+    // Calculate a "nominal" segment length equal to an average chord,
+    // normalized to lie within 0-1 over the length of the wing.
+    float segLen = _meanChord / _length;
 
     // Now go through each boundary and make segments
     for(i=0; i<(nbounds-1); i++) {
@@ -363,7 +268,7 @@ void Wing::compile()
         for(j=0; j<nSegs; j++) {
             float frac = start + (j+0.5f) * (end-start)/nSegs;
             float pos[3];
-            interp(root, tip, frac, pos);
+            interp(_base, _tip, frac, pos);
 
             float chord = _chord * (1 - (1-_taper)*frac);
 
@@ -378,7 +283,7 @@ void Wing::compile()
             _surfs.add(sr);
 
             if(_mirror) {
-		pos[1] = -pos[1];
+                pos[1] = -pos[1];
                 s = newSurface(pos, rightOrient, chord,
                                flap0, flap1, slat, spoiler);
                 sr = new SurfRec();
@@ -390,22 +295,16 @@ void Wing::compile()
             }
         }
     }
-
     // Last of all, re-set the incidence in case setIncidence() was
     // called before we were compiled.
     setIncidence(_incidence);
 }
 
-float Wing::getDragScale()
-{
-    return _dragScale;
-}
 
 void Wing::setDragScale(float scale)
 {
     _dragScale = scale;
-    int i;
-    for(i=0; i<_surfs.size(); i++) {
+    for(int i=0; i<_surfs.size(); i++) {
         SurfRec* s = (SurfRec*)_surfs.get(i);
         s->surface->setTotalDrag(scale * s->weight);
     }
@@ -414,14 +313,8 @@ void Wing::setDragScale(float scale)
 void Wing::setLiftRatio(float ratio)
 {
     _liftRatio = ratio;
-    int i;
-    for(i=0; i<_surfs.size(); i++)
+    for(int i=0; i<_surfs.size(); i++)
         ((SurfRec*)_surfs.get(i))->surface->setZDrag(ratio);
-}
-
-float Wing::getLiftRatio()
-{
-    return _liftRatio;
 }
 
 Surface* Wing::newSurface(float* pos, float* orient, float chord,
@@ -442,14 +335,20 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     s->setStallWidth(0, _stallWidth);
     s->setStallPeak(0, _stallPeak);
 
-    // The negative AoA stall is the same if we're using an uncambered
-    // airfoil, otherwise a "little badder".
+    // The negative AoA stall is the same if we're using an symmetric
+    // airfoil, otherwise a "little worse".
     if(_camber > 0) {
         s->setStall(1, stallAoA * 0.8f);
         s->setStallWidth(1, _stallWidth * 0.5f);
     } else {
-        s->setStall(1, stallAoA);
+      s->setStall(1, stallAoA);
+      if( _version->isVersionOrNewer( Version::YASIM_VERSION_2017_2 )) {
+        // what was presumably meant
+        s->setStallWidth(1, _stallWidth);
+      } else {
+        // old code; presumably a copy&paste error
         s->setStall(1, _stallWidth);
+      }
     }
 
     // The "reverse" stalls are unmeasurable junk.  Just use 13deg and
@@ -476,7 +375,7 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     return s;
 }
 
-void Wing::interp(float* v1, float* v2, float frac, float* out)
+void Wing::interp(const float* v1, const float* v2, const float frac, float* out)
 {
     out[0] = v1[0] + frac*(v2[0]-v1[0]);
     out[1] = v1[1] + frac*(v2[1]-v1[1]);
