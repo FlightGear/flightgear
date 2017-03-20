@@ -43,7 +43,7 @@ public:
   FGFestivalVoice(FGVoiceMgr *, const SGPropertyNode_ptr);
   virtual ~FGFestivalVoice();
   virtual void speak( const string & msg );
-  virtual void update();
+  virtual void update(double);
   void setVolume(double);
   void setPitch(double);
   void setSpeed(double);
@@ -129,14 +129,14 @@ void FGVoiceMgr::shutdown()
 }
 
 
-void FGVoiceMgr::update(double)
+void FGVoiceMgr::update(double dt)
 {
 	if (!_enabled)
 		return;
 
 	_paused = !_pausedNode->getBoolValue();
 	for (unsigned int i = 0; i < _voices.size(); i++) {
-		_voices[i]->update();
+		_voices[i]->update(dt);
 #if !defined(ENABLE_THREADS)
 		_voices[i]->speak();
 #endif
@@ -235,7 +235,7 @@ void FGFestivalVoice::speak( const string & msg )
 }
 
 
-void FGFestivalVoice::update(void)
+void FGFestivalVoice::update(double dt)
 {
 		double d;
 		d = _volumeNode->getDoubleValue();
@@ -333,5 +333,3 @@ void FGVoiceMgr::FGVoice::valueChanged(SGPropertyNode *node)
 
 	pushMessage(m);
 }
-
-

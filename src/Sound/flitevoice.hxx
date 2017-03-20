@@ -35,7 +35,7 @@ public:
   FGFLITEVoice(FGVoiceMgr *, const SGPropertyNode_ptr, const char * sampleGroupRefName = "flite-voice");
   virtual ~FGFLITEVoice();
   virtual void speak(const std::string & msg);
-  virtual void update();
+  virtual void update(double dt);
 
 private:
   FGFLITEVoice(const FGFLITEVoice & other);
@@ -45,6 +45,7 @@ private:
   VoiceSynthesizer * _synthesizer;
   SGLockedQueue<SGSharedPtr<SGSoundSample> > _sampleQueue;
   std::string _sampleName;
+  double _seconds_to_run;
 };
 
 #endif // _FLITEVOICE_HXX

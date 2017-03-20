@@ -33,7 +33,7 @@ using std::string;
 #include "VoiceSynthesizer.hxx"
 
 FGFLITEVoice::FGFLITEVoice(FGVoiceMgr * mgr, const SGPropertyNode_ptr node, const char * sampleGroupRefName)
-    : FGVoice(mgr), _synthesizer( NULL)
+    : FGVoice(mgr), _synthesizer( NULL), _seconds_to_run(0.0)
 {
 
   _sampleName = node->getStringValue("desc", node->getPath().c_str());
@@ -68,14 +68,21 @@ void FGFLITEVoice::speak(const string & msg)
   }
 }
 
-void FGFLITEVoice::update()
+void FGFLITEVoice::update(double dt)
 {
-  SGSharedPtr<SGSoundSample> sample = _sampleQueue.pop();
-  if (sample.valid()) {
-    _sgr->remove(_sampleName);
-    _sgr->add(sample, _sampleName);
-    _sgr->resume();
-    _sgr->play(_sampleName, false);
+  _seconds_to_run -= dt;
+
+  if (_seconds_to_run < 0.0) {
+    SGSharedPtr<SGSoundSample> sample = _sampleQueue.pop();
+    if (sample.valid()) {
+      _sgr->remove(_sampleName);
+      _sgr->add(sample, _sampleName);
+      _sgr->resume();
+      _sgr->play(_sampleName, false);
+
+      // Don't play any further TTS until we've finished playing this sample,
+      // allowing 500ms for a gap between transmissions.  Good radio comms!
+      _seconds_to_run = 0.5 +  ((float) sample->get_no_samples()) / ((float) sample->get_frequency());
+  }
   }
 }
-
