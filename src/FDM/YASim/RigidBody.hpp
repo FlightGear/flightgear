@@ -82,7 +82,7 @@ public:
     void setBodySpin(const float* rotation) { Math::set3(rotation, _spin); }
 
     // Returns the center of gravity of the masses, in the body
-    // coordinate system.
+    // coordinate system. valid only after recalc()
     void getCG(float* cgOut) { Math::set3(_cg, cgOut); }
 
     // Returns the acceleration of the body's c.g. relative to the
