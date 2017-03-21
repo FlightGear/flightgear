@@ -6,6 +6,7 @@ endif (MSVC)
 set(SOURCES
 	bootstrap.cxx
 	fg_commands.cxx
+	fg_scene_commands.cxx
 	fg_init.cxx
 	fg_io.cxx
 	fg_os_common.cxx
