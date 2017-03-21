@@ -242,8 +242,10 @@ setFreeze (bool f)
         }
     }
 
+#ifndef FG_TESTLIB
     // Pause the particle system
     simgear::Particles::setFrozen(f);
+#endif
 }
 
 

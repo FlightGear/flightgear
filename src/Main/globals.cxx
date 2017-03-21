@@ -20,25 +20,25 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <boost/foreach.hpp>
 #include <algorithm>
 
+#ifndef FG_TESTLIB
 #include <osgViewer/Viewer>
 #include <osgDB/Registry>
+#endif
 
 #include <simgear/structure/commands.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/event_mgr.hxx>
-#include <simgear/sound/soundmgr.hxx>
+
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/props/props_io.hxx>
@@ -48,13 +48,20 @@
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
 #include <Autopilot/route_mgr.hxx>
+#include <Navaids/navlist.hxx>
+
 #include <GUI/gui.h>
+#include <Viewer/viewmgr.hxx>
+
+#ifndef FG_TESTLIB
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Navaids/navlist.hxx>
 #include <Viewer/renderer.hxx>
-#include <Viewer/viewmgr.hxx>
 #include <GUI/FGFontCache.hxx>
+
+#include <simgear/sound/soundmgr.hxx>
+#include <simgear/scene/material/matlib.hxx>
+#endif
 
 #include "globals.hxx"
 #include "locale.hxx"
@@ -147,7 +154,9 @@ FGGlobals *globals = NULL;
 
 // Constructor
 FGGlobals::FGGlobals() :
+#ifndef FG_TESTLIB
     renderer( new FGRenderer ),
+#endif
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
@@ -195,7 +204,7 @@ FGGlobals::~FGGlobals()
 
     // stop OSG threading first, to avoid thread races while we tear down
     // scene-graph pieces
-
+#ifndef FG_TESTLIB
     osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
     if (vw) {
         // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
@@ -204,10 +213,11 @@ FGGlobals::~FGGlobals()
         // GraphicsContext)
         vw->stopThreading();
     }
-
+#endif
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
+#ifndef FG_TESTLIB
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
     if (vw && vw->getDatabasePager()) {
@@ -223,21 +233,24 @@ FGGlobals::~FGGlobals()
 
     FGFontCache::shutdown();
     fgCancelSnapShot();
+#endif
 
     delete subsystem_mgr;
     subsystem_mgr = NULL; // important so ::get_subsystem returns NULL
-    vw = 0; // don't delete the viewer until now
+#ifndef FG_TESTLIB
+    vw = nullptr; // don't delete the viewer until now
+    set_matlib(NULL);
+#endif
 
     delete time_params;
-    set_matlib(NULL);
-
     delete channel_options_list;
     delete initial_waypoints;
     delete channellist;
 
     simgear::PropertyObjectBase::setDefaultRoot(NULL);
+#ifndef FG_TESTLIB
     simgear::SGModelLib::resetPropertyRoot();
-
+#endif
     delete locale;
     locale = NULL;
 
@@ -509,12 +522,14 @@ FGGlobals::get_renderer () const
 
 void FGGlobals::set_renderer(FGRenderer *render)
 {
+  #ifndef FG_TESTLIB
     if (render == renderer) {
         return;
     }
 
     delete renderer;
     renderer = render;
+#endif
 }
 
 SGSubsystemMgr *
@@ -750,7 +765,11 @@ void FGGlobals::set_warp_delta( long int d )
 
 FGScenery* FGGlobals::get_scenery () const
 {
+#ifdef FG_TESTLIB
+    return nullptr;
+#else
     return get_subsystem<FGScenery>();
+#endif
 }
 
 FGViewMgr *FGGlobals::get_viewmgr() const
@@ -766,7 +785,9 @@ flightgear::View* FGGlobals::get_current_view () const
 
 void FGGlobals::set_matlib( SGMaterialLib *m )
 {
+#ifndef FG_TESTLIB
     matlib = m;
+#endif
 }
 
 FGControls *FGGlobals::get_controls() const

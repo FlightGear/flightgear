@@ -105,16 +105,16 @@ public:
     _gcRoot =  sys->gcSave(f);
     _gcSelf = sys->gcSave(self);
   }
-  
+
   virtual ~TimerObj()
   {
     stop();
     _sys->gcRelease(_gcRoot);
     _sys->gcRelease(_gcSelf);
   }
-  
+
   bool isRunning() const { return _isRunning; }
-    
+
   void stop()
   {
     if (_isRunning) {
@@ -140,7 +140,7 @@ public:
     if (_isRunning) {
       return;
     }
-    
+
     _isRunning = true;
     if (_singleShot) {
       globals->get_event_mgr()->addEvent(_name, this, &TimerObj::invoke, _interval, _isSimTime);
@@ -150,7 +150,7 @@ public:
                                         _isSimTime);
     }
   }
-  
+
   // stop and then start -
   void restart(double newInterval)
   {
@@ -158,7 +158,7 @@ public:
     stop();
     start();
   }
-  
+
   void invoke()
   {
     if( _singleShot )
@@ -170,12 +170,12 @@ public:
     naRef *args = NULL;
     _sys->callMethod(_func, _self, 0, args, naNil() /* locals */);
   }
-  
+
   void setSingleShot(bool aSingleShot)
   {
     _singleShot = aSingleShot;
   }
-  
+
   bool isSingleShot() const
   { return _singleShot; }
 private:
@@ -240,7 +240,7 @@ FGNasalSys::FGNasalSys() :
     _globals = naNil();
     _string = naNil();
     _wrappedNodeFunc = naNil();
-    
+
     _log = new simgear::BufferedLogCallback(SG_NASAL, SG_INFO);
     _log->truncateAt(255);
     sglog().addCallback(_log);
@@ -386,10 +386,10 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
           SG_LOG(SG_NASAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
           return naNil();
         }
-        
+
         return naNum(dv);
         }
-        
+
     case props::STRING:
     case props::UNSPECIFIED:
         {
@@ -421,11 +421,11 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
         else {
             if(!naIsNum(val))
                 naRuntimeError(c, "setprop() value is not string or number");
-                
+
             if (SGMisc<double>::isNaN(val.num)) {
                 naRuntimeError(c, "setprop() passed a NaN");
             }
-            
+
             result = p->setDoubleValue(val.num);
         }
     } catch (const string& err) {
@@ -457,7 +457,7 @@ static naRef f_logprint(naContext c, naRef me, int argc, naRef* args)
 {
   if (argc < 1)
     naRuntimeError(c, "no prioirty argument to logprint()");
-  
+
   naRef priority = args[0];
   string buf;
   int n = argc;
@@ -506,7 +506,7 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
   if (!naIsNum(args[0])) {
     naRuntimeError(c, "bad interval argument to maketimer");
   }
-    
+
   naRef func, self = naNil();
   if (naIsFunc(args[1])) {
     func = args[1];
@@ -514,7 +514,7 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
     self = args[1];
     func = args[2];
   }
-  
+
   TimerObj* timerObj = new TimerObj(nasalSys, func, self, args[0].num);
   return nasal::to_nasal(c, timerObj);
 }
@@ -618,7 +618,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
       std::string p = paths[i].file();
       naVec_append(result, naStr_fromdata(naNewString(c), p.c_str(), p.size()));
     }
-    
+
     return result;
 }
 
@@ -639,7 +639,7 @@ static naRef f_findDataDir(naContext c, naRef me, int argc, naRef* args)
 {
     if(argc != 1 || !naIsString(args[0]))
         naRuntimeError(c, "bad arguments to findDataDir()");
-    
+
     SGPath p = globals->find_data_dir(naStr_data(args[0]));
     std::string pdata = p.utf8Str();
     return naStr_fromdata(naNewString(c), const_cast<char*>(pdata.c_str()), pdata.length());
@@ -656,23 +656,23 @@ public:
         globals->get_commands()->addCommandObject(_name, this);
         _gcRoot =  sys->gcSave(f);
     }
-    
+
     virtual ~NasalCommand()
     {
         _sys->gcRelease(_gcRoot);
     }
-    
+
     virtual bool operator()(const SGPropertyNode* aNode)
     {
         _sys->setCmdArg(const_cast<SGPropertyNode*>(aNode));
         naRef args[1];
         args[0] = _sys->wrappedPropsNode(const_cast<SGPropertyNode*>(aNode));
-    
+
         _sys->callMethod(_func, naNil(), 1, args, naNil() /* locals */);
 
         return true;
     }
-    
+
 private:
     FGNasalSys* _sys;
     naRef _func;
@@ -684,7 +684,7 @@ static naRef f_addCommand(naContext c, naRef me, int argc, naRef* args)
 {
     if(argc != 2 || !naIsString(args[0]) || !naIsFunc(args[1]))
         naRuntimeError(c, "bad arguments to addcommand()");
-    
+
     nasalSys->addCommand(args[1], naStr_data(args[0]));
     return naNil();
 }
@@ -693,7 +693,7 @@ static naRef f_removeCommand(naContext c, naRef me, int argc, naRef* args)
 {
     if ((argc < 1) || !naIsString(args[0]))
         naRuntimeError(c, "bad argument to removecommand()");
-    
+
     globals->get_commands()->removeCommand(naStr_data(args[0]));
     return naNil();
 }
@@ -883,7 +883,7 @@ void FGNasalSys::init()
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
     nasal::Hash io_module = nasal::Hash(_globals, _context).get<nasal::Hash>("io");
     io_module.set("open", f_open);
-    
+
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
 
@@ -895,12 +895,14 @@ void FGNasalSys::init()
     initNasalPositioned(_globals, _context);
     initNasalPositioned_cppbind(_globals, _context);
     initNasalAircraft(_globals, _context);
+#ifndef FG_TESTLIB
     NasalClipboard::init(this);
     initNasalCanvas(_globals, _context);
+#endif
     initNasalCondition(_globals, _context);
     initNasalHTTP(_globals, _context);
     initNasalSGPath(_globals, _context);
-  
+
     NasalTimerObj::init("Timer")
       .method("start", &TimerObj::start)
       .method("stop", &TimerObj::stop)
@@ -912,7 +914,7 @@ void FGNasalSys::init()
 
     // Set allowed paths for Nasal I/O
     fgInitAllowedPaths();
-    
+
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);
@@ -934,11 +936,11 @@ void FGNasalSys::init()
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
-  
+
     // now Nasal modules are loaded, we can do some delayed work
     postinitNasalPositioned(_globals, _context);
     postinitNasalGUI(_globals, _context);
-    
+
     _inited = true;
 }
 
@@ -947,36 +949,36 @@ void FGNasalSys::shutdown()
     if (!_inited) {
         return;
     }
-    
+
     shutdownNasalPositioned();
-    
+
     map<int, FGNasalListener *>::iterator it, end = _listener.end();
     for(it = _listener.begin(); it != end; ++it)
         delete it->second;
     _listener.clear();
-    
+
     NasalCommandDict::iterator j = _commands.begin();
     for (; j != _commands.end(); ++j) {
         globals->get_commands()->removeCommand(j->first);
     }
     _commands.clear();
-    
+
     std::vector<FGNasalModuleListener*>::iterator k = _moduleListeners.begin();
     for(; k!= _moduleListeners.end(); ++k)
         delete *k;
     _moduleListeners.clear();
-    
+
     naClearSaved();
-    
+
     _string = naNil(); // will be freed by _context
     naFreeContext(_context);
-   
+
     //setWatchedRef(_globals);
-    
+
     // remove the recursive reference in globals
     hashset(_globals, "globals", naNil());
-    _globals = naNil();    
-    
+    _globals = naNil();
+
     naGC();
     _inited = false;
 }
@@ -987,7 +989,7 @@ naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
         nasal::Hash props = getGlobals().get<nasal::Hash>("props");
         _wrappedNodeFunc = props.get("wrapNode");
     }
-    
+
     naRef args[1];
     args[0] = propNodeGhost(aProps);
     naContext ctx = naNewContext();
@@ -998,15 +1000,17 @@ naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
 
 void FGNasalSys::update(double)
 {
+#ifndef FG_TESTLIB
     if( NasalClipboard::getInstance() )
         NasalClipboard::getInstance()->update();
-
+#endif
     if(!_dead_listener.empty()) {
         vector<FGNasalListener *>::iterator it, end = _dead_listener.end();
         for(it = _dead_listener.begin(); it != end; ++it) delete *it;
         _dead_listener.clear();
     }
 
+#ifndef FG_TESTLIB
     if (!_loadList.empty())
     {
         if( _delay_load )
@@ -1022,7 +1026,7 @@ void FGNasalSys::update(double)
         // (only unload one per update loop to avoid excessive lags)
         _unloadList.pop()->unload();
     }
-
+#endif
     // Destroy all queued ghosts
     nasal::ghostProcessDestroyList();
 
@@ -1045,7 +1049,7 @@ bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
   return p1.file() < p2.file();
 }
 
-// Loads all scripts in given directory 
+// Loads all scripts in given directory
 void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
 {
     simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
@@ -1211,7 +1215,7 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
         return false;
     }
 
-    
+
     // See if we already have a module hash to use.  This allows the
     // user to, for example, add functions to the built-in math
     // module.  Make a new one if necessary.
@@ -1228,7 +1232,7 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
     callWithContext(ctx, code, argc, args, locals);
     hashset(_globals, moduleName, locals);
-    
+
     naFreeContext(ctx);
     return true;
 }
@@ -1240,7 +1244,7 @@ void FGNasalSys::deleteModule(const char* moduleName)
         // subsystems having Nasal objects.
         return;
     }
-    
+
     naContext ctx = naNewContext();
     naRef modname = naNewString(ctx);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
@@ -1443,14 +1447,18 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 
 void FGNasalSys::registerToLoad(FGNasalModelData *data)
 {
+#ifndef FG_TESTLIB
   if( _loadList.empty() )
     _delay_load = true;
   _loadList.push(data);
+#endif
 }
 
 void FGNasalSys::registerToUnload(FGNasalModelData *data)
 {
+#ifndef FG_TESTLIB
     _unloadList.push(data);
+#endif
 }
 
 void FGNasalSys::addCommand(naRef func, const std::string& name)
@@ -1459,7 +1467,7 @@ void FGNasalSys::addCommand(naRef func, const std::string& name)
         SG_LOG(SG_NASAL, SG_WARN, "duplicate add of command:" << name);
         return;
     }
-    
+
     NasalCommand* cmd = new NasalCommand(this, func, name);
     _commands[name] = cmd;
 }
@@ -1626,5 +1634,3 @@ naRef NasalXMLVisitor::make_string(const char* s, int n)
     return naStr_fromdata(naNewString(_c), const_cast<char *>(s),
                           n < 0 ? strlen(s) : n);
 }
-
-
