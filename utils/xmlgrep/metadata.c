@@ -299,6 +299,195 @@ update_metadata_jsb(char *path, char *aero)
 
 /* -- Yasim ----------------------------------------------------------------- */
 
+const char*
+yasim_wing_tag(void *xid)
+{
+    void *xwid = xmlNodeGet(xid, "airplane/wing");
+    void *xcid = xmlNodeGet(xid, "airplane/cockpit");
+    double wing_z = 0.0;
+    double eye_z = 0.0;
+
+    if (xwid)
+    {
+        wing_z = xmlAttributeGetDouble(xwid, "z");
+        xmlFree(xwid);
+    }
+
+    if (xcid)
+    {
+       eye_z = xmlAttributeGetDouble(xcid, "z");
+        xmlFree(xcid);
+    }
+
+    if (wing_z > eye_z) return "high-wing";
+    else return "low-wing";
+}
+
+const char*
+yasim_gear_tag(void *xid)
+{
+    void *xaid = xmlNodeGet(xid, "airplane");
+    void *xgid = xmlMarkId(xaid);
+    double nose_x = 0.0;
+    double main_x = 0.0;
+    int gears = 0;
+    int i, num;
+
+    num = xmlNodeGetNum(xaid, "gear");
+    for (i=0; i<num; ++i)
+    {
+        if (xmlNodeGetPos(xaid, xgid, "gear", i) != 0)
+        {
+             if (xmlAttributeGetDouble(xgid, "y") == 0.0) {
+                 nose_x = xmlAttributeGetDouble(xgid, "x");
+             } else {
+                 main_x = xmlAttributeGetDouble(xgid, "x");
+             }
+             gears++;
+        }
+    }
+    xmlFree(xgid);
+    xmlFree(xaid);
+
+    if (gears < 3) return "skids";
+    else if (main_x > nose_x) return "tail-dragger";
+    return "tricycle";
+}
+
+const char*
+yasim_gear_retract_tag(void *xid)
+{
+    void *xaid = xmlNodeGet(xid, "airplane");
+    void *xgid = xmlMarkId(xaid);
+    char *rv = "fixed-gear";
+    int found = 0;
+    int i, num;
+
+    num = xmlNodeGetNum(xaid, "gear");
+    for (i=0; i<num; ++i)
+    {
+        if (xmlNodeGetPos(xaid, xgid, "gear", i) != 0)
+        {
+            void *xgcid = xmlMarkId(xgid);
+            int j, cnum = xmlNodeGetNum(xgid, "control-input");
+            for (j=0; j<cnum; ++j)
+            {
+                if (xmlNodeGetPos(xgid, xgcid, "control-input", j))
+                {
+                    if (!xmlAttributeCompareString(xgcid, "control", "EXTEND")) {
+                        rv = "retractable-gear";
+                        found = 1;
+                        break;
+                    }
+               } 
+            }
+            xmlFree(xgcid);
+        }
+    }
+    xmlFree(xgid);
+    xmlFree(xaid);
+    
+    return rv;
+}
+
+const char*
+yasim_gear_steering_tag(void *xid)
+{
+    void *xaid = xmlNodeGet(xid, "airplane");
+    void *xgid = xmlMarkId(xaid);
+    char *rv = "no-steering";
+    int found = 0;
+    int i, num;
+
+    num = xmlNodeGetNum(xaid, "gear");
+    for (i=0; i<num; ++i)
+    {
+        if (xmlNodeGetPos(xaid, xgid, "gear", i) != 0)
+        {
+            void *xgcid = xmlMarkId(xgid);
+            int j, cnum = xmlNodeGetNum(xgid, "control-input");
+            for (j=0; j<cnum; ++j)
+            {
+                if (xmlNodeGetPos(xgid, xgcid, "control-input", j))
+                {
+                    if (!xmlAttributeCompareString(xgcid, "control", "STEER")) {
+                        rv = "normal-steering";
+                        found = 1;
+                        break;
+                    }
+                    else if (!xmlAttributeCompareString(xgcid, "control", "CASTERING")) {
+                        rv = "castering-wheel";
+                        found = 1;
+                        break;
+                   }
+               }
+            }
+	    xmlFree(xgcid);
+        }
+    }
+    xmlFree(xgid);
+    xmlFree(xaid);
+
+    return rv;
+}
+
+const char*
+yasim_engines_tag(void *xid)
+{
+    void *xeid = xmlNodeGet(xid,  "/airplane");
+    const char* rv = "multi-engine";
+    int engines = 0;
+
+    if (xmlNodeTest(xeid, "propeller")) {
+        engines = xmlNodeGetNum(xeid, "propeller");
+    }
+    else if (xmlNodeTest(xeid, "jet")) {
+        engines = xmlNodeGetNum(xeid, "jet");
+    }
+
+    switch (engines)
+    {
+    case 0:
+        rv = "glider";
+        break;
+    case 1:
+        rv = "single-engine";
+        break;
+    case 2:
+        rv = "twin-engine";
+        break;
+    case 3:
+        rv = "three-engine";
+        break;
+    case 4:
+        rv = "four-engine";
+        break;
+    default:
+        break;
+    }
+    xmlFree(xeid);
+
+    return rv;
+}
+
+const char*
+yasim_engine_tag(void *xid, char *path)
+{
+    const char* rv = "jet";
+
+    if (xmlNodeTest(xid, "/airplane/propeller/piston-engine")) {
+        rv = "piston";
+    }
+    else if (xmlNodeTest(xid, "/airplane/propeller/turbine-engine")) {
+        rv = "turboprop";
+    }
+    else if (xmlNodeTest(xid, "/airplane/jet")) {
+        rv = "turbine";
+    }
+
+    return rv;
+}
+
 void
 update_metadata_yasim(char *path, char *aero)
 {
@@ -325,6 +514,12 @@ update_metadata_yasim(char *path, char *aero)
     
     printf("    <tags>\n");
     printf("      <tag>%s</tag>\n", strlwr(aero));
+    printf("      <tag>%s</tag>\n", yasim_wing_tag(xid));
+    printf("      <tag>%s</tag>\n", yasim_gear_tag(xid));
+    printf("      <tag>%s</tag>\n", yasim_gear_retract_tag(xid));
+    printf("      <tag>%s</tag>\n", yasim_gear_steering_tag(xid));
+    printf("      <tag>%s</tag>\n", yasim_engines_tag(xid));
+    printf("      <tag>%s</tag>\n", yasim_engine_tag(xid, path));
 
     printf("    </tags>\n");
     
