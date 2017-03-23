@@ -114,6 +114,55 @@ jsb_gear_tag(void *xid)
 }
 
 const char*
+jsb_gear_retract_tag(void *xid)
+{
+    int r = xmlNodeGetInt(xid, "/fdm_config/ground_reactions/contact/retractable");
+    if (r) return "retractable-gear";
+    else return "fixed-gear";
+}
+
+const char*
+jsb_gear_steering_tag(void *xid)
+{
+    void *xgid = xmlNodeGet(xid, "/fdm_config/ground_reactions");
+    void *xcid = xmlMarkId(xgid);
+    char *rv = "no-steering";
+    int found = 0;
+    int i, num;
+
+    num = xmlNodeGetNum(xgid, "contact");
+    for (i=0; i<num; ++i)
+    {
+        if (xmlNodeGetPos(xgid, xcid, "contact", i) != 0)
+        {
+            if (!xmlAttributeCompareString(xcid, "type", "BOGEY"))
+            {
+                if (xmlNodeGetDouble(xcid, "location/y") == 0.0)
+                {
+                    double m = xmlNodeGetDouble(xcid, "max_steer");
+                    int c = xmlNodeGetInt(xcid, "castered");
+
+                    if (c || (m == 360.0 && !c)) {
+                        rv = "castering-wheel";
+                        break;
+                    } else if (m > 0.0) {
+                        rv = "normal-steering";
+                        break;
+                    }
+                    else {
+                        rv = "no-steering";
+                    }
+                }
+            }
+        }
+    }
+    xmlFree(xcid);
+    xmlFree(xgid);
+
+    return rv;
+}
+
+const char*
 jsb_engines_tag(void *xid)
 {
     void *xpid = xmlNodeGet(xid, "/fdm_config/propulsion");
@@ -237,6 +286,8 @@ update_metadata_jsb(char *path, char *aero)
     printf("      <tag>%s</tag>\n", strlwr(aero));
     printf("      <tag>%s</tag>\n", jsb_wing_tag(xid));
     printf("      <tag>%s</tag>\n", jsb_gear_tag(xid));
+    printf("      <tag>%s</tag>\n", jsb_gear_retract_tag(xid));
+    printf("      <tag>%s</tag>\n", jsb_gear_steering_tag(xid));
     printf("      <tag>%s</tag>\n", jsb_engines_tag(xid));
     printf("      <tag>%s</tag>\n", jsb_engine_tag(xid, path));
 
