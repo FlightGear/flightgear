@@ -264,7 +264,7 @@ update_metadata_jsb(char *path, char *aero)
     char *fname;
     void *xid;
 
-    fname = malloc(strlen(path)+strlen(aero)+strlen(".xml"));
+    fname = calloc(1, strlen(path)+strlen(aero)+strlen(".xml")+1);
     if (!fname)
     {
         printf("Unable to allocate memory\n");
@@ -302,17 +302,25 @@ update_metadata_jsb(char *path, char *aero)
 const char*
 yasim_wing_tag(void *xid)
 {
-    void *xwid = xmlNodeGet(xid, "airplane/wing");
-    void *xcid = xmlNodeGet(xid, "airplane/cockpit");
+    void *xwid, *xcid;
     double wing_z = 0.0;
     double eye_z = 0.0;
 
+    xwid = xmlNodeGet(xid, "airplane/rotor");
+    if (xwid)
+    {
+        xmlFree(xwid);
+        return "helicopter";
+    }
+
+    xwid = xmlNodeGet(xid, "airplane/wing");
     if (xwid)
     {
         wing_z = xmlAttributeGetDouble(xwid, "z");
         xmlFree(xwid);
     }
 
+    xcid = xmlNodeGet(xid, "airplane/cockpit");
     if (xcid)
     {
        eye_z = xmlAttributeGetDouble(xcid, "z");
@@ -444,6 +452,9 @@ yasim_engines_tag(void *xid)
     else if (xmlNodeTest(xeid, "jet")) {
         engines = xmlNodeGetNum(xeid, "jet");
     }
+    else if (xmlNodeTest(xeid, "rotor")) {
+        engines = 1;
+    }
 
     switch (engines)
     {
@@ -473,7 +484,7 @@ yasim_engines_tag(void *xid)
 const char*
 yasim_engine_tag(void *xid, char *path)
 {
-    const char* rv = "jet";
+    const char* rv = "turbine";
 
     if (xmlNodeTest(xid, "/airplane/propeller/piston-engine")) {
         rv = "piston";
@@ -494,7 +505,7 @@ update_metadata_yasim(char *path, char *aero)
     char *fname;
     void *xid;
     
-    fname = malloc(strlen(path)+strlen(aero)+strlen(".xml"));
+    fname = calloc(1, strlen(path)+strlen(aero)+strlen(".xml")+1);
     if (!fname)
     {   
         printf("Unable to allocate memory\n");
@@ -548,8 +559,7 @@ update_metadata(const char *fname)
         return;
     }
 
-//  if (xmlNodeTest(xsid, "tags") == 0)
-if (1)
+    if (xmlNodeTest(xsid, "tags") == 0)
     {
         char *str = NULL;
         char *path, *pend;
@@ -610,6 +620,8 @@ main(int argc, char **argv)
         show_help();
     }
 
+    printf("%s\n", setFile);
     update_metadata(setFile);
+    printf("\n");
     return 0;
 }
