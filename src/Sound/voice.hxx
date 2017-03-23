@@ -99,7 +99,7 @@ public:
   FGVoice(FGVoiceMgr * mgr ) : _mgr(mgr) {}
   virtual ~FGVoice() {}
   virtual void speak( const std::string & msg ) = 0;
-  virtual void update() = 0;
+  virtual void update(double dt) = 0;
   void pushMessage( const std::string & m);
   bool speak();
 
