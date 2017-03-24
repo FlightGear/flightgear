@@ -219,11 +219,14 @@ const char*
 jsb_engine_tag(void *xid, char *path)
 {
     void *xeid = xmlNodeGet(xid, "/fdm_config/propulsion/engine");
-    char *engine = xmlAttributeGetString(xeid, "file");
-    char *fname = calloc(1, strlen(path)+strlen("Engines/")+
-                            strlen(engine)+strlen(".xml")+1);
+    char *engine, *fname;
     const char *rv = NULL;
 
+    if (!xeid) return rv;
+
+    engine = xmlAttributeGetString(xeid, "file");
+    fname = calloc(1, strlen(path)+strlen("Engines/")+
+                      strlen(engine)+strlen(".xml")+1);
     if (fname)
     {
         void *xfid;
@@ -262,11 +265,14 @@ const char*
 jsb_propulsion_tag(void *xid, char *path)
 {
     void *xeid = xmlNodeGet(xid, "fdm_config/propulsion/engine");
-    char *file = xmlAttributeGetString(xeid, "file");
-    char *fname = calloc(1, strlen(path)+strlen("Engines/")+
-                            strlen(file)+strlen(".xml")+1);
+    char *file, *fname;
     const char *rv = NULL;
 
+    if (!xeid) return rv;
+
+    file = xmlAttributeGetString(xeid, "file");
+    fname = calloc(1, strlen(path)+strlen("Engines/")+
+                      strlen(file)+strlen(".xml")+1);
     if (fname)
     {
         void *xfid;
@@ -302,11 +308,14 @@ const char*
 jsb_thruster_tag(void *xid, char *path)
 {
     void *xeid = xmlNodeGet(xid, "/fdm_config/propulsion/engine/thruster");
-    char *file = xmlAttributeGetString(xeid, "file");
-    char *fname = calloc(1, strlen(path)+strlen("Engines/")+
-                            strlen(file)+strlen(".xml")+1);
+    char *file, *fname;
     const char *rv = NULL;
 
+    if (!xeid) return rv;
+
+    file = xmlAttributeGetString(xeid, "file");
+    fname = calloc(1, strlen(path)+strlen("Engines/")+
+                      strlen(file)+strlen(".xml")+1);
     if (fname)
     {
         void *xfid;
@@ -399,18 +408,18 @@ yasim_wing_tag(void *xid)
     double wing_z = 0.0;
     double eye_z = 0.0;
 
-    if (xmlNodeTest(xid, "airplane/rotor")) {
+    if (xmlNodeTest(xid, "/airplane/rotor")) {
         return "helicopter";
     }
 
-    xwid = xmlNodeGet(xid, "airplane/wing");
+    xwid = xmlNodeGet(xid, "/airplane/wing");
     if (xwid)
     {
         wing_z = xmlAttributeGetDouble(xwid, "z");
         xmlFree(xwid);
     }
 
-    xcid = xmlNodeGet(xid, "airplane/cockpit");
+    xcid = xmlNodeGet(xid, "/airplane/cockpit");
     if (xcid)
     {
        eye_z = xmlAttributeGetDouble(xcid, "z");
@@ -424,7 +433,7 @@ yasim_wing_tag(void *xid)
 const char*
 yasim_gear_tag(void *xid)
 {
-    void *xaid = xmlNodeGet(xid, "airplane");
+    void *xaid = xmlNodeGet(xid, "/airplane");
     void *xgid = xmlMarkId(xaid);
     double nose_x = 0.0;
     double main_x = 0.0;
@@ -455,7 +464,7 @@ yasim_gear_tag(void *xid)
 const char*
 yasim_gear_retract_tag(void *xid)
 {
-    void *xaid = xmlNodeGet(xid, "airplane");
+    void *xaid = xmlNodeGet(xid, "/airplane");
     void *xgid = xmlMarkId(xaid);
     char *rv = "fixed-gear";
     int found = 0;
@@ -491,7 +500,7 @@ yasim_gear_retract_tag(void *xid)
 const char*
 yasim_gear_steering_tag(void *xid)
 {
-    void *xaid = xmlNodeGet(xid, "airplane");
+    void *xaid = xmlNodeGet(xid, "/airplane");
     void *xgid = xmlMarkId(xaid);
     char *rv = "no-steering";
     int found = 0;
