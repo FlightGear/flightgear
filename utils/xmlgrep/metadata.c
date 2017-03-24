@@ -222,7 +222,7 @@ jsb_engine_tag(void *xid, char *path)
     char *engine = xmlAttributeGetString(xeid, "file");
     char *fname = calloc(1, strlen(path)+strlen("Engines/")+
                             strlen(engine)+strlen(".xml")+1);
-    const char *rv = "unknown";
+    const char *rv = NULL;
 
     if (fname)
     {
@@ -236,7 +236,7 @@ jsb_engine_tag(void *xid, char *path)
         xfid = xmlOpen(fname);
         if (xfid)
         {
-            if (xmlNodeTest(xfid, "turbine_engine")) rv = "turbine";
+            if (xmlNodeTest(xfid, "turbine_engine")) rv = "jet";
             else if (xmlNodeTest(xfid, "turboprop_engine")) rv = "turboprop";
             else if (xmlNodeTest(xfid, "piston_engine")) rv = "piston";
             else if (xmlNodeTest(xfid, "electric_engine")) rv = "electric";
@@ -258,9 +258,94 @@ jsb_engine_tag(void *xid, char *path)
     return rv;
 }
 
+const char*
+jsb_propulsion_tag(void *xid, char *path)
+{
+    void *xeid = xmlNodeGet(xid, "fdm_config/propulsion/engine");
+    char *file = xmlAttributeGetString(xeid, "file");
+    char *fname = calloc(1, strlen(path)+strlen("Engines/")+
+                            strlen(file)+strlen(".xml")+1);
+    const char *rv = NULL;
+
+    if (fname)
+    {
+        void *xfid;
+
+        memcpy(fname, path, strlen(path));
+        memcpy(fname+strlen(path), "Engines/", strlen("Engines/"));
+        memcpy(fname+strlen(path)+strlen("Engines/"), file, strlen(file));
+        memcpy(fname+strlen(path)+strlen("Engines/")+strlen(file), ".xml", strlen(".xml"));
+
+        xfid = xmlOpen(fname);
+        if (xfid)
+        {
+            if (xmlNodeGetInt(xfid, "turbine_engine/augmented")) {
+                rv = "afterburner";
+            }
+            else if (xmlNodeGetInt(xfid, "piston_engine/numboostspeeds")) {
+                rv = "supercharged";
+            }
+            xmlClose(xfid);
+        }
+        else {
+            printf("JSBSim engine file not found: %s\n", fname);
+        }
+        free(fname);
+    }
+    xmlFree(xeid);
+    xmlFree(file);
+
+    return rv;
+}
+
+const char*
+jsb_thruster_tag(void *xid, char *path)
+{
+    void *xeid = xmlNodeGet(xid, "/fdm_config/propulsion/engine/thruster");
+    char *file = xmlAttributeGetString(xeid, "file");
+    char *fname = calloc(1, strlen(path)+strlen("Engines/")+
+                            strlen(file)+strlen(".xml")+1);
+    const char *rv = NULL;
+
+    if (fname)
+    {
+        void *xfid;
+
+        memcpy(fname, path, strlen(path));
+        memcpy(fname+strlen(path), "Engines/", strlen("Engines/"));
+        memcpy(fname+strlen(path)+strlen("Engines/"), file, strlen(file));
+        memcpy(fname+strlen(path)+strlen("Engines/")+strlen(file), ".xml", strlen(".xml"));
+
+        xfid = xmlOpen(fname);
+        if (xfid)
+        {
+            if (xmlNodeTest(xfid, "propeller"))
+            {
+                double min = xmlNodeGetDouble(xfid, "propeller/minpitch");
+                double max = xmlNodeGetDouble(xfid, "propeller/maxpitch");
+                if (min == max) rv = "fixed-pitch";
+                else rv = "variable-pitch";
+            }
+            xmlClose(xfid);
+        }
+        else {
+            printf("JSBSim thruster file not found: %s\n", fname);
+        }
+        free(fname);
+    }
+    else {
+        printf("Unable to allocate memory\n");
+    }
+    xmlFree(file);
+    xmlFree(xeid);
+
+    return rv;
+}
+
 void
 update_metadata_jsb(char *path, char *aero)
 {
+    const char *tag;
     char *fname;
     void *xid;
 
@@ -289,7 +374,15 @@ update_metadata_jsb(char *path, char *aero)
     printf("      <tag>%s</tag>\n", jsb_gear_retract_tag(xid));
     printf("      <tag>%s</tag>\n", jsb_gear_steering_tag(xid));
     printf("      <tag>%s</tag>\n", jsb_engines_tag(xid));
-    printf("      <tag>%s</tag>\n", jsb_engine_tag(xid, path));
+
+    tag = jsb_engine_tag(xid, path);
+    if (tag) printf("      <tag>%s</tag>\n", tag);
+
+    tag = jsb_propulsion_tag(xid, path);
+    if (tag) printf("      <tag>%s</tag>\n", tag);
+
+    tag = jsb_thruster_tag(xid, path);
+    if (tag) printf("      <tag>%s</tag>\n", tag);
 
     printf("    </tags>\n");
 
@@ -306,10 +399,7 @@ yasim_wing_tag(void *xid)
     double wing_z = 0.0;
     double eye_z = 0.0;
 
-    xwid = xmlNodeGet(xid, "airplane/rotor");
-    if (xwid)
-    {
-        xmlFree(xwid);
+    if (xmlNodeTest(xid, "airplane/rotor")) {
         return "helicopter";
     }
 
@@ -484,7 +574,7 @@ yasim_engines_tag(void *xid)
 const char*
 yasim_engine_tag(void *xid, char *path)
 {
-    const char* rv = "turbine";
+    const char* rv = NULL;
 
     if (xmlNodeTest(xid, "/airplane/propeller/piston-engine")) {
         rv = "piston";
@@ -493,15 +583,58 @@ yasim_engine_tag(void *xid, char *path)
         rv = "turboprop";
     }
     else if (xmlNodeTest(xid, "/airplane/jet")) {
-        rv = "turbine";
+        rv = "jet";
     }
 
+    return rv;
+}
+
+const char*
+yasim_propulsion_tag(void *xid, char *path)
+{
+    const char* rv = NULL;
+    void *xpid;
+
+    if ((xpid = xmlNodeGet(xid, "/airplane/jet")) != NULL)
+    {
+        if (xmlAttributeGetDouble(xpid, "afterburner") > 0.0) {
+            rv = "afterburner";
+        }
+        xmlFree(xpid);
+    }
+    else if ((xpid = xmlNodeGet(xid, "/airplane/propeller/piston-engine"))  != NULL)
+    {
+        if (xmlAttributeGetInt(xpid, "supercharger") > 0) {
+            rv = "supercharger";
+        }
+        xmlFree(xpid);
+    }
+
+    return rv;
+}
+
+const char*
+yasim_thruster_tag(void *xid, char *path)
+{
+    const char* rv = NULL;
+    void *xtid;
+
+    xtid = xmlNodeGet(xid, "/airplane/propeller/control-input");
+    if (xtid)
+    {
+        if (!xmlAttributeCompareString(xtid, "control", "ADVANCE")) {
+            rv = "variable-pitch";
+        } else rv = "fixed-pitch";
+        xmlFree(xtid);
+    }
+    
     return rv;
 }
 
 void
 update_metadata_yasim(char *path, char *aero)
 {
+    const char *tag;
     char *fname;
     void *xid;
     
@@ -530,7 +663,15 @@ update_metadata_yasim(char *path, char *aero)
     printf("      <tag>%s</tag>\n", yasim_gear_retract_tag(xid));
     printf("      <tag>%s</tag>\n", yasim_gear_steering_tag(xid));
     printf("      <tag>%s</tag>\n", yasim_engines_tag(xid));
-    printf("      <tag>%s</tag>\n", yasim_engine_tag(xid, path));
+
+    tag = yasim_engine_tag(xid, path);
+    if (tag) printf("      <tag>%s</tag>\n", tag);
+
+    tag = yasim_propulsion_tag(xid, path);
+    if (tag) printf("      <tag>%s</tag>\n", tag);
+
+    tag = yasim_thruster_tag(xid, path);
+    if (tag) printf("      <tag>%s</tag>\n", tag);
 
     printf("    </tags>\n");
     
