@@ -521,11 +521,7 @@ void SplashScreen::updateText()
         _haveSetStartupTip = true;
         FGLocale* locale = globals->get_locale();
         const int tipCount = locale->getLocalizedStringCount("tip", "tips");
-
-        time_t now;
-        ::time(&now);
-        struct tm* currentTime = ::localtime(&now);
-        int tipIndex = currentTime->tm_yday % tipCount;
+        int tipIndex = globals->get_props()->getIntValue("/sim/session",0) % tipCount;
 
         std::string tipText = locale->getLocalizedStringWithIndex("tip", "tips", tipIndex);
 
