@@ -90,16 +90,16 @@ set_target_properties (fgtestlib
   COMPILE_DEFINITIONS "FG_TESTLIB"
 )
 
-target_link_libraries(fgtestlib SimGearCore fgsqlite3 ${PLATFORM_LIBS})
+target_link_libraries(fgtestlib SimGearCore ${PLATFORM_LIBS})
 
 add_executable(fgtest fgTestDriver.cxx)
 target_link_libraries(fgtest fgtestlib)
 
 # repeat this section for each unit-test executable
 add_executable(testnavs test_navaids2.cxx)
-target_link_libraries(testnavs fgtestlib)
+target_link_libraries(testnavs fgtestlib fgsqlite3)
 add_test(testnavs ${EXECUTABLE_OUTPUT_PATH}/testnavs)
 
 add_executable(testflightplan test_flightplan.cxx)
-target_link_libraries(testflightplan fgtestlib)
+target_link_libraries(testflightplan fgtestlib fgsqlite3)
 add_test(testflightplan ${EXECUTABLE_OUTPUT_PATH}/testflightplan)

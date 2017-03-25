@@ -7,6 +7,7 @@
 #include <Main/options.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <GUI/MessageBox.hxx>
+#include <AIModel/AIAircraft.hxx>
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/GroundController.hxx>
 #include <Scenery/scenery.hxx>
@@ -183,7 +184,7 @@ void FGTowerController::signOff(int id)
 }
 
 std::string FGTowerController::getName()
-{	
+{
 	return "tower";
 }
 
@@ -380,3 +381,8 @@ void sgdMakeCoordMat4(sgdMat4 m, const SGDfloat x, const SGDfloat y, const SGDfl
 {
 }
 #endif
+
+FGTrafficRecord::~FGTrafficRecord()
+{
+
+}
