@@ -93,7 +93,7 @@ public:
       * so a position must be specified.
       */
     static FGNavRecordRef findByFreq( double freq, const SGGeod& position,
-                                   TypeFilter* filter = NULL);
+                                   TypeFilter* filter = nullptr);
 
     /**
      * Overloaded version above - no positioned supplied so can be used with

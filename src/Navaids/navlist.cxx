@@ -203,7 +203,7 @@ FGNavRecordRef FGNavList::findByFreq( double freq,
     
   BOOST_FOREACH(PositionedID id, stations) {
     FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
-    if (!filter->pass(station)) {
+    if (filter && !filter->pass(station)) {
       continue;
     }
     
