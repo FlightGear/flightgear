@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "gnnode.hxx"
 
 #include <boost/foreach.hpp>

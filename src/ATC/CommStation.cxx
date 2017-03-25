@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "CommStation.hxx"
 #include <Airports/airport.hxx>
 #include <Navaids/NavDataCache.hxx>
