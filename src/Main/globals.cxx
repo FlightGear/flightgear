@@ -88,14 +88,6 @@ public:
     const char* aircraftDir = fgGetString("/sim/aircraft-dir");
     string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
     if (!aircraftDirPieces.empty() && (aircraftDirPieces.back() == pieces[1])) {
-        // disable this warning for release builds
-        SGPath betterPath;
-        for (unsigned int i=2; i<pieces.size(); ++i) {
-            betterPath.append(pieces[i]);
-        }
-        SG_LOG(SG_AIRCRAFT, SG_DEV_WARN, "resolved path:" << aResource << " using /sim/aircraft-dir.\n"
-               "This is legacy behaviour, change to an aircraft relative path:" << betterPath);
-
         // current aircraft-dir matches resource aircraft
         SGPath r(aircraftDir);
         for (unsigned int i=2; i<pieces.size(); ++i) {
