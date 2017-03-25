@@ -6,6 +6,9 @@
 
 #include <xml.h>
 
+#define PRINT(a) \
+    tag = (a); if (tag) printf("      <tag>%s</tag>\n", tag)
+
 char *
 getCommandLineOption(int argc, char **argv, char const *option)
 {
@@ -54,12 +57,14 @@ char *strlwr(char *str)
 const char*
 jsb_wing_tag(void *xid)
 {
-    void *xmid = xmlNodeGet(xid, "/fdm_config/metrics");
-    void *xlid = xmlMarkId(xmid);
+    void *xlid, *xmid = xmlNodeGet(xid, "/fdm_config/metrics");
     double aero_z = 0.0;
     double eye_z = 0.0;
     int i, num;
 
+    if (!xmid) return NULL;
+
+    xlid = xmlMarkId(xmid);
     num = xmlNodeGetNum(xmid, "location");
     for (i=0; i<num; ++i)
     {
@@ -82,13 +87,15 @@ jsb_wing_tag(void *xid)
 const char*
 jsb_gear_tag(void *xid)
 {
-    void *xgid = xmlNodeGet(xid, "/fdm_config/ground_reactions");
-    void *xcid = xmlMarkId(xgid);
+    void *xcid, *xgid = xmlNodeGet(xid, "/fdm_config/ground_reactions");
     double nose_x = 0.0;
     double main_x = 0.0;
     int bogeys = 0;
     int i, num;
 
+    if (!xgid) return NULL;
+
+    xcid = xmlMarkId(xgid);
     num = xmlNodeGetNum(xgid, "contact");
     for (i=0; i<num; ++i)
     {
@@ -108,8 +115,8 @@ jsb_gear_tag(void *xid)
     xmlFree(xcid);
     xmlFree(xgid);
  
-    if (bogeys < 3) return "skids";
-    else if (main_x < nose_x) return "tail-dragger";
+    if (bogeys == 0) return "skids";
+    else if (bogeys < 3 || main_x < nose_x) return "tail-dragger";
     return "tricycle";
 }
 
@@ -124,12 +131,14 @@ jsb_gear_retract_tag(void *xid)
 const char*
 jsb_gear_steering_tag(void *xid)
 {
-    void *xgid = xmlNodeGet(xid, "/fdm_config/ground_reactions");
-    void *xcid = xmlMarkId(xgid);
-    char *rv = "no-steering";
+    void *xcid, *xgid = xmlNodeGet(xid, "/fdm_config/ground_reactions");
+    char *rv = NULL;
     int found = 0;
     int i, num;
 
+    if (!xgid) return NULL;
+
+    xcid = xmlMarkId(xgid);
     num = xmlNodeGetNum(xgid, "contact");
     for (i=0; i<num; ++i)
     {
@@ -143,14 +152,14 @@ jsb_gear_steering_tag(void *xid)
                     int c = xmlNodeGetInt(xcid, "castered");
 
                     if (c || (m == 360.0 && !c)) {
-                        rv = "castering-wheel";
+                        rv = "castering";
                         break;
                     } else if (m > 0.0) {
-                        rv = "normal-steering";
+//                      rv = "normal-steering";
                         break;
                     }
                     else {
-                        rv = "no-steering";
+//                      rv = "no-steering";
                     }
                 }
             }
@@ -165,12 +174,15 @@ jsb_gear_steering_tag(void *xid)
 const char*
 jsb_engines_tag(void *xid)
 {
-    void *xpid = xmlNodeGet(xid, "/fdm_config/propulsion");
-    void *xeid = xmlMarkId(xpid);
-    const char* rv = "multi-engine";
+    void *xeid, *xpid = xmlNodeGet(xid, "/fdm_config/propulsion");
+    const char* rv = NULL;
     int engines = 0;
     int i, num;
     char *main;
+
+    if (!xpid) return rv;
+
+    xeid = xmlMarkId(xpid);
 
     num = xmlNodeGetNum(xpid, "engine");
     for (i=0; i<num; ++i)
@@ -352,7 +364,7 @@ jsb_thruster_tag(void *xid, char *path)
 }
 
 void
-update_metadata_jsb(char *path, char *aero)
+update_metadata_jsb(char *path, char *aero, char *desc)
 {
     const char *tag;
     char *fname;
@@ -377,22 +389,15 @@ update_metadata_jsb(char *path, char *aero)
     }
 
     printf("    <tags>\n");
-    printf("      <tag>%s</tag>\n", strlwr(aero));
-    printf("      <tag>%s</tag>\n", jsb_wing_tag(xid));
-    printf("      <tag>%s</tag>\n", jsb_gear_tag(xid));
-    printf("      <tag>%s</tag>\n", jsb_gear_retract_tag(xid));
-    printf("      <tag>%s</tag>\n", jsb_gear_steering_tag(xid));
-    printf("      <tag>%s</tag>\n", jsb_engines_tag(xid));
-
-    tag = jsb_engine_tag(xid, path);
-    if (tag) printf("      <tag>%s</tag>\n", tag);
-
-    tag = jsb_propulsion_tag(xid, path);
-    if (tag) printf("      <tag>%s</tag>\n", tag);
-
-    tag = jsb_thruster_tag(xid, path);
-    if (tag) printf("      <tag>%s</tag>\n", tag);
-
+    PRINT(strlwr(desc ? desc : aero));
+    PRINT(jsb_wing_tag(xid));
+    PRINT(jsb_gear_tag(xid));
+    PRINT(jsb_gear_retract_tag(xid));
+    PRINT(jsb_gear_steering_tag(xid));
+    PRINT(jsb_engines_tag(xid));
+    PRINT(jsb_engine_tag(xid, path));
+    PRINT(jsb_propulsion_tag(xid, path));
+    PRINT(jsb_thruster_tag(xid, path));
     printf("    </tags>\n");
 
     xmlClose(xid);
@@ -404,30 +409,38 @@ update_metadata_jsb(char *path, char *aero)
 const char*
 yasim_wing_tag(void *xid)
 {
+    void *xaid = xmlNodeGet(xid, "/airplane");
     void *xwid, *xcid;
+    int n_wings;
     double wing_z = 0.0;
     double eye_z = 0.0;
 
-    if (xmlNodeTest(xid, "/airplane/rotor")) {
+    if (xmlNodeTest(xaid, "rotor")) {
         return "helicopter";
     }
 
-    xwid = xmlNodeGet(xid, "/airplane/wing");
+    xwid = xmlNodeGet(xaid, "wing");
     if (xwid)
     {
         wing_z = xmlAttributeGetDouble(xwid, "z");
         xmlFree(xwid);
     }
 
-    xcid = xmlNodeGet(xid, "/airplane/cockpit");
+    xcid = xmlNodeGet(xaid, "cockpit");
     if (xcid)
     {
        eye_z = xmlAttributeGetDouble(xcid, "z");
         xmlFree(xcid);
     }
 
+    n_wings = xmlNodeGetNum(xaid, "mstab");
+    xmlFree(xaid);
+
+//  if (n_wings == 2) return "triplane";
+//  if (n_wings == 1) return "biplane";
+
     if (wing_z > eye_z) return "high-wing";
-    else return "low-wing";
+    return "low-wing";
 }
 
 const char*
@@ -456,8 +469,8 @@ yasim_gear_tag(void *xid)
     xmlFree(xgid);
     xmlFree(xaid);
 
-    if (gears < 3) return "skids";
-    else if (main_x > nose_x) return "tail-dragger";
+    if (gears == 0) return "skids";
+    else if (gears < 3 || main_x > nose_x) return "tail-dragger";
     return "tricycle";
 }
 
@@ -502,7 +515,7 @@ yasim_gear_steering_tag(void *xid)
 {
     void *xaid = xmlNodeGet(xid, "/airplane");
     void *xgid = xmlMarkId(xaid);
-    char *rv = "no-steering";
+    char *rv = NULL;
     int found = 0;
     int i, num;
 
@@ -518,12 +531,12 @@ yasim_gear_steering_tag(void *xid)
                 if (xmlNodeGetPos(xgid, xgcid, "control-input", j))
                 {
                     if (!xmlAttributeCompareString(xgcid, "control", "STEER")) {
-                        rv = "normal-steering";
+//                      rv = "normal-steering";
                         found = 1;
                         break;
                     }
                     else if (!xmlAttributeCompareString(xgcid, "control", "CASTERING")) {
-                        rv = "castering-wheel";
+                        rv = "castering";
                         found = 1;
                         break;
                    }
@@ -641,7 +654,7 @@ yasim_thruster_tag(void *xid, char *path)
 }
 
 void
-update_metadata_yasim(char *path, char *aero)
+update_metadata_yasim(char *path, char *aero, char *desc)
 {
     const char *tag;
     char *fname;
@@ -666,22 +679,15 @@ update_metadata_yasim(char *path, char *aero)
     }
     
     printf("    <tags>\n");
-    printf("      <tag>%s</tag>\n", strlwr(aero));
-    printf("      <tag>%s</tag>\n", yasim_wing_tag(xid));
-    printf("      <tag>%s</tag>\n", yasim_gear_tag(xid));
-    printf("      <tag>%s</tag>\n", yasim_gear_retract_tag(xid));
-    printf("      <tag>%s</tag>\n", yasim_gear_steering_tag(xid));
-    printf("      <tag>%s</tag>\n", yasim_engines_tag(xid));
-
-    tag = yasim_engine_tag(xid, path);
-    if (tag) printf("      <tag>%s</tag>\n", tag);
-
-    tag = yasim_propulsion_tag(xid, path);
-    if (tag) printf("      <tag>%s</tag>\n", tag);
-
-    tag = yasim_thruster_tag(xid, path);
-    if (tag) printf("      <tag>%s</tag>\n", tag);
-
+    PRINT(strlwr(desc ? desc : aero));
+    PRINT(yasim_wing_tag(xid));
+    PRINT(yasim_gear_tag(xid));
+    PRINT(yasim_gear_retract_tag(xid));
+    PRINT(yasim_gear_steering_tag(xid));
+    PRINT(yasim_engines_tag(xid));
+    PRINT(yasim_engine_tag(xid, path));
+    PRINT(yasim_propulsion_tag(xid, path));
+    PRINT(yasim_thruster_tag(xid, path));
     printf("    </tags>\n");
     
     xmlClose(xid);
@@ -711,7 +717,7 @@ update_metadata(const char *fname)
 
     if (xmlNodeTest(xsid, "tags") == 0)
     {
-        char *str = NULL;
+        char *desc = NULL, *str = NULL;
         char *path, *pend;
 
         pend = strrchr(fname, '/');
@@ -724,15 +730,13 @@ update_metadata(const char *fname)
             memcpy(path, fname, pend-fname);
         }
 
-        if (!xmlNodeCompareString(xsid, "flight-model", "jsb"))
-        {
-            str = xmlNodeGetString(xsid, "aero");
-            update_metadata_jsb(path, str);
+        desc = xmlNodeGetString(xsid, "description");
+        str = xmlNodeGetString(xsid, "aero");
+        if (!xmlNodeCompareString(xsid, "flight-model", "jsb")) {
+            update_metadata_jsb(path, str, desc);
         }
-        else if (!xmlNodeCompareString(xsid, "flight-model", "yasim"))
-        {
-            str = xmlNodeGetString(xsid, "aero");
-            update_metadata_yasim(path, str);
+        else if (!xmlNodeCompareString(xsid, "flight-model", "yasim")) {
+            update_metadata_yasim(path, str, desc);
         }
         else
         {
@@ -742,6 +746,7 @@ update_metadata(const char *fname)
 
         xmlFree(xsid);
 
+        xmlFree(desc);
         xmlFree(str);
         free(path);
     }
