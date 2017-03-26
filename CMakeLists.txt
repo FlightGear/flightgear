@@ -509,8 +509,6 @@ configure_file (
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
-add_subdirectory(src)
-add_subdirectory(man)
 
 if(ENABLE_TESTS)
     # enable CTest / make test target
@@ -527,6 +525,9 @@ if(ENABLE_TESTS)
 else()
     message(STATUS "Tests: DISABLED")
 endif(ENABLE_TESTS)
+
+add_subdirectory(src)
+add_subdirectory(man)
 
 #-----------------------------------------------------------------------------
 ### uninstall target
