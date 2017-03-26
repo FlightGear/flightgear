@@ -231,7 +231,7 @@ do_tile_cache_reload (const SGPropertyNode * arg)
         master_freeze->setBoolValue(true);
     }
 
-    globals->get_subsystem("tile-manager")->reinit();
+    globals->get_subsystem("scenery")->reinit();
 
     if ( !freeze ) {
         master_freeze->setBoolValue(false);
