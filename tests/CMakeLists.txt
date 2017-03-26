@@ -90,6 +90,10 @@ set_target_properties (fgtestlib
   COMPILE_DEFINITIONS "FG_TESTLIB"
 )
 
+if(FG_HAVE_GPERFTOOLS)
+    include_directories(${GooglePerfTools_INCLUDE_DIR})
+    target_link_libraries(fgtestlib ${GooglePerfTools_LIBRARIES})
+endif()
 target_link_libraries(fgtestlib SimGearCore ${PLATFORM_LIBS})
 
 add_executable(fgtest fgTestDriver.cxx)
@@ -97,9 +101,9 @@ target_link_libraries(fgtest fgtestlib)
 
 # repeat this section for each unit-test executable
 add_executable(testnavs test_navaids2.cxx)
-target_link_libraries(testnavs fgtestlib fgsqlite3)
+target_link_libraries(testnavs fgtestlib ${SQLITE3_LIBRARY})
 add_test(testnavs ${EXECUTABLE_OUTPUT_PATH}/testnavs)
 
 add_executable(testflightplan test_flightplan.cxx)
-target_link_libraries(testflightplan fgtestlib fgsqlite3)
+target_link_libraries(testflightplan fgtestlib ${SQLITE3_LIBRARY})
 add_test(testflightplan ${EXECUTABLE_OUTPUT_PATH}/testflightplan)
