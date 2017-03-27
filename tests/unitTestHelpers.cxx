@@ -4,6 +4,8 @@
 #include "unitTestHelpers.hxx"
 
 #include <Main/globals.hxx>
+#include <Main/options.hxx>
+
 #include <Navaids/NavDataCache.hxx>
 #include <Time/TimeManager.hxx>
 
@@ -13,12 +15,20 @@
 
 #include <iostream>
 
+static SGPath tests_fgdata;
+
 namespace fgtest
 {
 
     bool looksLikeFGData(const SGPath& path)
     {
         return (path / "defaults.xml").exists();
+    }
+
+
+    SGPath fgdataPath()
+    {
+        return tests_fgdata;
     }
 
   void initTestGlobals(const std::string& testName)
@@ -58,14 +68,17 @@ namespace fgtest
             exit(EXIT_FAILURE);
         }
 
+      tests_fgdata = globals->get_fg_root();
 
       // current dir
-      SGPath homePath = simgear::Dir::current().path() / "test_home";
+      SGPath homePath = SGPath::fromUtf8(FGBUILDDIR) / "test_home";
       if (!homePath.exists()) {
           (homePath / "dummyFile").create_dir(0755);
       }
 
       globals->set_fg_home(homePath);
+
+      fgSetDefaults();
 
       flightgear::NavDataCache* cache = flightgear::NavDataCache::createInstance();
       if (cache->isRebuildRequired()) {

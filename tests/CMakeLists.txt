@@ -6,6 +6,7 @@ set(sources
   Main/globals.cxx
   Main/locale.cxx
   Main/util.cxx
+  Main/positioninit.cxx
   Aircraft/controls.cxx
   Aircraft/FlightHistory.cxx
   Aircraft/flightrecorder.cxx
@@ -91,7 +92,7 @@ set_target_properties (fgtestlib
 )
 
 if(FG_HAVE_GPERFTOOLS)
-    include_directories(${GooglePerfTools_INCLUDE_DIR})
+    target_include_directories(fgtestlib PRIVATE ${GooglePerfTools_INCLUDE_DIR})
     target_link_libraries(fgtestlib ${GooglePerfTools_LIBRARIES})
 endif()
 target_link_libraries(fgtestlib SimGearCore ${PLATFORM_LIBS} ${SQLITE3_LIBRARY})
@@ -101,6 +102,7 @@ target_link_libraries(fgtest fgtestlib)
 
 macro(flightgear_test name sources)
   add_executable(${name} ${sources})
+  target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}/tests)
   target_link_libraries(${name} fgtestlib)
   add_test(${name} ${EXECUTABLE_OUTPUT_PATH}/${name})
 endmacro()

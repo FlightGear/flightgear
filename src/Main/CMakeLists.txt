@@ -184,3 +184,7 @@ if(ENABLE_METAR)
 
     install(TARGETS metar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
+
+if (ENABLE_TESTS)
+	flightgear_test(posinit test_posinit.cxx)
+endif()

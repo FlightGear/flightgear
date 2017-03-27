@@ -46,7 +46,7 @@ using std::string;
 
 namespace flightgear
 {
-    
+
 /// to avoid blocking when metar-fetch is enabled, but the network is
 /// unresponsive, we need a timeout value. This value is reset on initPosition,
 /// and tracked through each call to finalizePosition.
@@ -54,7 +54,7 @@ static SGTimeStamp global_finalizeTime;
 static bool global_callbackRegistered = false;
 
 static void finalizePosition();
-  
+
 // Set current tower position lon/lat given an airport id
 static bool fgSetTowerPosFromAirportID( const string& id) {
   const FGAirport *a = fgFindAirportID( id);
@@ -67,11 +67,11 @@ static bool fgSetTowerPosFromAirportID( const string& id) {
   } else {
     return false;
   }
-  
+
 }
 
 class FGTowerLocationListener : public SGPropertyChangeListener {
-    
+
   void valueChanged(SGPropertyNode* node) {
     string id(node->getStringValue());
     if (fgGetBool("/sim/tower/auto-position",true))
@@ -104,12 +104,12 @@ class FGClosestTowerLocationListener : public SGPropertyChangeListener
 };
 
 void initTowerLocationListener() {
-    
+
   SGPropertyChangeListener* tll = new FGTowerLocationListener();
   globals->addListenerToCleanup(tll);
   fgGetNode("/sim/tower/airport-id",  true)
   ->addChangeListener( tll, true );
-    
+
   FGClosestTowerLocationListener* ntcl = new FGClosestTowerLocationListener();
   globals->addListenerToCleanup(ntcl);
   fgGetNode("/sim/airport/closest-airport-id", true)
@@ -144,7 +144,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
   if (aTargetHeading == HUGE_VAL) {
     aTargetHeading = aHeading;
   }
-  
+
   if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON ) {
     double offsetDistance = fgGetDouble("/sim/presets/offset-distance-nm");
     offsetDistance *= SG_NM_TO_METER;
@@ -153,13 +153,13 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
       offsetAzimuth = fgGetDouble("/sim/presets/offset-azimuth-deg");
       aHeading = aTargetHeading;
     }
-    
+
     SGGeod offset;
     double az2; // dummy
     SGGeodesy::direct(startPos, offsetAzimuth + 180, offsetDistance, offset, az2);
     startPos = offset;
   }
-  
+
     setInitialPosition(startPos, aHeading);
 }
 
@@ -176,7 +176,7 @@ boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
 
         FGGroundNetwork* groundNet = runway->airport()->groundNetwork();
         // add a margin, try to keep the entire aeroplane comfortable off the
-        // runway. 
+        // runway.
         double margin = startOffset + (runway->widthM() * 1.5);
         FGTaxiNodeRef taxiNode = groundNet ? groundNet->findNearestNodeOffRunway(pos, runway, margin) : 0;
         if (taxiNode) {
@@ -196,12 +196,12 @@ boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
 static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
   if ( id.empty() )
     return false;
-  
+
   // set initial position from runway and heading
   SG_LOG( SG_GENERAL, SG_INFO,
          "Attempting to set starting position from airport code "
          << id << " heading " << tgt_hdg );
-  
+
   const FGAirport* apt = fgFindAirportID(id);
   if (!apt) return false;
 
@@ -231,7 +231,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   SGPath acData;
   if ( id.empty() )
     return false;
-  
+
   const FGAirport* apt = fgFindAirportID(id);
   if (!apt) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
@@ -247,11 +247,11 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       setInitialPosition(apt->geod(), 0.0);
       return true;
   }
-  
+
   ParkingAssignment pka;
   double radius = fgGetDouble("/sim/dimensions/radius-m");
   if ((parkpos == "AVAILABLE") && (radius > 0)) {
-    
+
     try {
       acData = globals->get_fg_home();
       acData.append("aircraft-data");
@@ -265,7 +265,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_INFO,
              "Could not load aircraft aircrat type and operator information from: " << acData << ". Using defaults");
-      
+
       // cout << path.str() << endl;
     }
     if (fltType.empty() || fltType == "NONE") {
@@ -278,8 +278,8 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
              "Aircraft operator information not found in: " << acData << ". Using default value");
       acOperator = fgGetString("/sim/aircraft-operator"   );
     }
-    
-    
+
+
     pka = dcs->getAvailableParking(radius, fltType, acType, acOperator);
     if (pka.isValid()) {
         // why is the following line necessary?
@@ -291,7 +291,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       return false;
     }
   } else {
-      
+
     pka = dcs->getParkingByName(parkpos);
     if (!pka.isValid()) {
       SG_LOG( SG_GENERAL, SG_ALERT,
@@ -303,9 +303,9 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   fgGetString("/sim/presets/parkpos");
   fgSetString("/sim/presets/parkpos", pka.parking()->getName());
   // The problem is, this line doesn't work because the ParkingAssignment's refcounting mechanism:
-  // The parking will be released after this function returns. 
-  // As a temporary measure, I'll try to reserve the parking via the atc_manager, which should work, because it uses the same 
-  // mechanism as the AI traffic code. 
+  // The parking will be released after this function returns.
+  // As a temporary measure, I'll try to reserve the parking via the atc_manager, which should work, because it uses the same
+  // mechanism as the AI traffic code.
   dcs->setParkingAvailable(pka.parking(), false);
   fgApplyStartOffset(pka.parking()->geod(), pka.parking()->getHeading());
   return true;
@@ -316,12 +316,12 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
 static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bool rwy_req ) {
   if ( id.empty() )
     return false;
-  
+
   // set initial position from airport and runway number
   SG_LOG( SG_GENERAL, SG_INFO,
          "Attempting to set starting position for "
          << id << ":" << rwy );
-  
+
   const FGAirport* apt = fgFindAirportID(id);
   if (!apt) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport:" << id);
@@ -361,7 +361,7 @@ static void fgSetDistOrAltFromGlideSlope() {
   * SG_DEGREES_TO_RADIANS ;
   double od = fgGetDouble("/sim/presets/offset-distance-nm");
   double alt = fgGetDouble("/sim/presets/altitude-ft");
-  
+
   double apt_elev = 0.0;
   if ( ! apt_id.empty() ) {
     apt_elev = fgGetAirportElev( apt_id );
@@ -371,7 +371,7 @@ static void fgSetDistOrAltFromGlideSlope() {
   } else {
     apt_elev = 0.0;
   }
-  
+
   if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
     // set altitude from glideslope and offset-distance
     od *= SG_NM_TO_METER * SG_METER_TO_FEET;
@@ -448,20 +448,22 @@ static bool fgSetPosFromNAV( const string& id,
 
 // Set current_options lon/lat given an aircraft carrier id
 static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
-  
+
   // set initial position from runway and heading
   SGGeod geodPos;
   double heading;
   SGVec3d uvw;
+
+#ifndef FG_TESTLIB
   if (FGAIManager::getStartPosition(carrier, posid, geodPos, heading, uvw)) {
     double lon = geodPos.getLongitudeDeg();
     double lat = geodPos.getLatitudeDeg();
     double alt = geodPos.getElevationFt();
-    
+
     SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
            << carrier << " at lat = " << lat << ", lon = " << lon
            << ", alt = " << alt << ", heading = " << heading);
-    
+
     fgSetDouble("/sim/presets/longitude-deg",  lon);
     fgSetDouble("/sim/presets/latitude-deg",  lat);
     fgSetDouble("/sim/presets/altitude-ft", alt);
@@ -470,7 +472,7 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
     fgSetDouble("/position/latitude-deg",  lat);
     fgSetDouble("/position/altitude-ft", alt);
     fgSetDouble("/orientation/heading-deg", heading);
-    
+
     fgSetString("/sim/presets/speed-set", "UVW");
     fgSetDouble("/velocities/uBody-fps", uvw(0));
     fgSetDouble("/velocities/vBody-fps", uvw(1));
@@ -478,11 +480,13 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
     fgSetDouble("/sim/presets/uBody-fps", uvw(0));
     fgSetDouble("/sim/presets/vBody-fps", uvw(1));
     fgSetDouble("/sim/presets/wBody-fps", uvw(2));
-    
+
     fgSetBool("/sim/presets/onground", true);
-    
+
     return true;
-  } else {
+  } else
+#endif
+  {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
            << carrier );
     return false;
@@ -504,7 +508,7 @@ static bool fgSetPosFromFix( const string& id, PositionedID guid )
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate fix = " << id );
     return false;
   }
-  
+
   fgApplyStartOffset(fix->geod(), fgGetDouble("/sim/presets/heading-deg"));
   return true;
 }
@@ -517,22 +521,22 @@ bool initPosition()
     globals->get_event_mgr()->addTask("finalizePosition", &finalizePosition, 0.1);
     global_callbackRegistered = true;
   }
-    
+
   double gs = fgGetDouble("/sim/presets/glideslope-deg")
   * SG_DEGREES_TO_RADIANS ;
   double od = fgGetDouble("/sim/presets/offset-distance-nm");
   double alt = fgGetDouble("/sim/presets/altitude-ft");
-  
+
   bool set_pos = false;
-  
+
   // If glideslope is specified, then calculate offset-distance or
   // altitude relative to glide slope if either of those was not
   // specified.
   if ( fabs( gs ) > 0.01 ) {
     fgSetDistOrAltFromGlideSlope();
   }
-  
-  
+
+
   // If we have an explicit, in-range lon/lat, don't change it, just use it.
   // If not, check for an airport-id and use that.
   // If not, default to the middle of the KSFO field.
@@ -546,7 +550,7 @@ bool initPosition()
   {
     set_pos = true;
   }
-  
+
   string apt = fgGetString("/sim/presets/airport-id");
   const bool apt_req = fgGetBool("/sim/presets/airport-requested");
   string rwy_no = fgGetString("/sim/presets/runway");
@@ -564,21 +568,21 @@ bool initPosition()
 
   SGPropertyNode *hdg_preset = fgGetNode("/sim/presets/heading-deg", true);
   double hdg = hdg_preset->getDoubleValue();
-  
+
   // save some start parameters, so that we can later say what the
   // user really requested. TODO generalize that and move it to options.cxx
   static bool start_options_saved = false;
   if (!start_options_saved) {
     start_options_saved = true;
     SGPropertyNode *opt = fgGetNode("/sim/startup/options", true);
-    
+
     opt->setDoubleValue("latitude-deg", lat_deg);
     opt->setDoubleValue("longitude-deg", lon_deg);
     opt->setDoubleValue("heading-deg", hdg);
     opt->setStringValue("airport", apt.c_str());
     opt->setStringValue("runway", rwy_no.c_str());
   }
-  
+
   if (hdg > 9990.0)
     hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
 
@@ -602,7 +606,7 @@ bool initPosition()
       set_pos = true;
     }
   }
-  
+
   if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
     // An airport + runway is requested
     if ( fgSetPosFromAirportIDandRwy( apt, rwy_no, rwy_req ) ) {
@@ -613,7 +617,7 @@ bool initPosition()
       set_pos = true;
     }
   }
-  
+
   if ( !set_pos && !apt.empty() ) {
     // An airport is requested (find runway closest to hdg)
     if ( setPosFromAirportIDandHdg( apt, hdg ) ) {
@@ -624,38 +628,38 @@ bool initPosition()
       set_pos = true;
     }
   }
-  
+
   if (hdg_preset->getDoubleValue() > 9990.0)
     hdg_preset->setDoubleValue(hdg);
-  
+
   if ( !set_pos && !vor.empty() ) {
     // a VOR is requested
     if ( fgSetPosFromNAV( vor, vor_freq, FGPositioned::VOR, navaidId ) ) {
       set_pos = true;
     }
   }
-  
+
   if ( !set_pos && !ndb.empty() ) {
     // an NDB is requested
     if ( fgSetPosFromNAV( ndb, ndb_freq, FGPositioned::NDB, navaidId ) ) {
       set_pos = true;
     }
   }
-  
+
   if ( !set_pos && !carrier.empty() ) {
     // an aircraft carrier is requested
     if ( fgSetPosFromCarrier( carrier, parkpos ) ) {
       set_pos = true;
     }
   }
-  
+
   if ( !set_pos && !fix.empty() ) {
     // a Fix is requested
     if ( fgSetPosFromFix( fix, navaidId ) ) {
       set_pos = true;
     }
   }
-  
+
   if ( !set_pos ) {
     // No lon/lat specified, no airport specified, use the default airport
     // TODO: don't hardcode this. Really.
@@ -665,37 +669,37 @@ bool initPosition()
       fgSetDouble("/sim/presets/longitude-deg", airportGeod.getLongitudeDeg());
       fgSetDouble("/sim/presets/latitude-deg", airportGeod.getLatitudeDeg());
     } else {
-      // So, the default airport is unknown? We are in serious trouble. 
+      // So, the default airport is unknown? We are in serious trouble.
       // Let's hope KSFO still exists somehow
       fgSetDouble("/sim/presets/longitude-deg", -122.374843);
       fgSetDouble("/sim/presets/latitude-deg", 37.619002);
       SG_LOG(SG_GENERAL, SG_ALERT, "Sorry, the default airport seems to be unknown.");
     }
   }
-  
+
   fgSetDouble( "/position/longitude-deg",
               fgGetDouble("/sim/presets/longitude-deg") );
   fgSetDouble( "/position/latitude-deg",
               fgGetDouble("/sim/presets/latitude-deg") );
   fgSetDouble( "/orientation/heading-deg", hdg_preset->getDoubleValue());
-  
+
   // determine if this should be an on-ground or in-air start
   if ((fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1) && carrier.empty()) {
     fgSetBool("/sim/presets/onground", false);
   } else {
     fgSetBool("/sim/presets/onground", true);
   }
-  
+
   fgSetBool("/sim/position-finalized", false);
 
 // Initialize the longitude, latitude and altitude to the initial position
     fgSetDouble("/position/altitude-ft", fgGetDouble("/sim/presets/altitude-ft"));
     fgSetDouble("/position/longitude-deg", fgGetDouble("/sim/presets/longitude-deg"));
     fgSetDouble("/position/latitude-deg", fgGetDouble("/sim/presets/latitude-deg"));
-    
+
   return true;
 }
-  
+
 bool finalizeMetar()
 {
   double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
@@ -711,14 +715,14 @@ bool finalizeMetar()
     !rwy_req &&
     onground &&
     parkpos.empty();
-  
+
   if (needMetar) {
     // timeout so we don't spin forever if the network is down
     if (global_finalizeTime.elapsedMSec() > fgGetInt("/sim/startup/metar-fetch-timeout-msec", 6000)) {
       SG_LOG(SG_GENERAL, SG_WARN, "finalizePosition: timed out waiting for METAR fetch");
       return true;
     }
-    
+
     if (fgGetBool( "/environment/metar/failure" )) {
       SG_LOG(SG_ENVIRONMENT, SG_INFO, "metar download failed, not waiting");
       return true;
@@ -727,32 +731,32 @@ bool finalizeMetar()
     if (!fgGetBool( "/environment/metar/valid" )) {
       return false;
     }
-    
+
     SG_LOG(SG_ENVIRONMENT, SG_INFO,
            "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
     setPosFromAirportIDandHdg( apt, hdg );
     // fall through to return true
   } // of need-metar case
-  
+
   return true;
 }
-  
+
 void finalizePosition()
 {
   // first call to finalize after an initPosition call
   if (global_finalizeTime.get_usec() == 0) {
     global_finalizeTime = SGTimeStamp::now();
   }
-  
+
   bool done = true;
-  
+
     /* Scenarios require Nasal, so FGAIManager loads the scenarios,
      * including its models such as a/c carriers, in its 'postinit',
      * which is the very last thing we do.
      * flightgear::initPosition is called very early in main.cxx/fgIdleFunction,
      * one of the first things we do, long before scenarios/carriers are
      * loaded. => When requested "initial preset position" relates to a
-     * carrier, recalculate the 'initial' position here 
+     * carrier, recalculate the 'initial' position here
      */
     std::string carrier = fgGetString("/sim/presets/carrier");
     std::string parkpos = fgGetString("/sim/presets/parkpos");
@@ -772,12 +776,12 @@ void finalizePosition()
     } else {
         done = finalizeMetar();
     }
-  
+
     fgSetBool("/sim/position-finalized", done);
     if (done) {
         globals->get_event_mgr()->removeTask("finalizePosition");
         global_callbackRegistered = false;
     }
 }
-    
+
 } // of namespace flightgear
