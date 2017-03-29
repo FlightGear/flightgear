@@ -832,7 +832,12 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
     w->setSweep(attrf(a, "sweep", 0) * DEG2RAD);
     w->setTaper(attrf(a, "taper", 1));
     w->setDihedral(attrf(a, "dihedral", defDihed) * DEG2RAD);
-    w->setCamber(attrf(a, "camber", 0));
+    
+    float camber = attrf(a, "camber", 0);
+    if (!version->isVersionOrNewer(Version::YASIM_VERSION_2017_2) && (camber == 0)) {
+      SG_LOG(SG_FLIGHT, SG_DEV_WARN, "YASIM warning: versions before 2017.2 are buggy for wings with camber=0");
+    }
+    w->setCamber(camber);
 
     // These come in with positive indicating positive AoA, but the
     // internals expect a rotation about the left-pointing Y axis, so
