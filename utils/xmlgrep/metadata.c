@@ -11,6 +11,9 @@
 #define PRINT(a) \
     tag = (a); if (tag) { strncat(s, "      <tag>", TS-strlen(s)); strncat(s, tag, TS-strlen(s)); strncat(s, "</tag>\n", TS-strlen(s)); }
 
+static unsigned int tags_level = 0;
+static unsigned int print_tags = 0;
+
 char *
 getCommandLineOption(int argc, char **argv, char const *option)
 {
@@ -55,7 +58,6 @@ char *strlwr(char *str)
   return str;
 }
 
-static unsigned int tags_level = 0;
 void print_xml(FILE *fd, void *id, char *tags)
 {
     static int level = 1;
@@ -182,6 +184,106 @@ updateFile(char *fname, char *tags)
         xmlClose(rid);
         fclose(fd);
     }
+}
+
+const char*
+vendor_tag(char *desc)
+{
+    char *p = strlwr(desc);
+    if (strstr(p, "boeing")) return "boeing";
+    if (strstr(p, "airbus")) return "airbus";
+    if (strstr(p, "antonov")) return "antonov";
+    if (strstr(p, "tupolev")) return "tupolev";
+    if (strstr(p, "ilyoushin")) return "ilyoushin";
+    if (strstr(p, "bombardier")) return "bombardier";
+    if (strstr(p, "fokker")) return "fokker";
+    if (strstr(p, "lockheed")) return "lockheed";
+    if (strstr(p, "general-dynamics")) return "general-dynamics";
+    if (strstr(p, "general dynamics")) return "general-dynamics";
+    if (strstr(p, "mig")) return "mikoyan-gurevich";
+    if (strstr(p, "mikoyan gurevich")) return "mikoyan-gurevich";
+    if (strstr(p, "mikoyan-gurevich")) return "mikoyan-gurevich";
+    if (strstr(p, "sukoi")) return "sukoi";
+    if (strstr(p, "cessna")) return "cessna";
+    if (strstr(p, "fairchild")) return "fairchild";
+    if (strstr(p, "dassult")) return "dassult";
+    if (strstr(p, "dornier")) return "dornier";
+    if (strstr(p, "arado")) return "arado";
+    if (strstr(p, "schleicher")) return "schleicher";
+    if (strstr(p, "avro")) return "avro";
+    if (strstr(p, "saab")) return "saab";
+    if (strstr(p, "dassault")) return "dassault";
+    if (strstr(p, "aermacchi")) return "aermacchi";
+    if (strstr(p, "arsenal")) return "arsenal";
+    if (strstr(p, "rockwell")) return "rockwell";
+    if (strstr(p, "northrop")) return "northrop";
+    if (strstr(p, "grumman")) return "grumman";
+    if (strstr(p, "mc donnell") && strstr(p, "douglas")) return "mc-donnell-douglas";
+    if (strstr(p, "douglas")) return "douglas";
+    if (strstr(p, "mc donnell")) return "mc-donnell";
+    if (strstr(p, "mc-donnell")) return "mc-donnell";
+//  if (strstr(p, "jaguar")) return "jaguar";
+    if (strstr(p, "junkers")) return "junkers";
+    if (strstr(p, "kawasaki")) return "kawasaki";
+    if (strstr(p, "de havilland")) return "de-havilland";
+    if (strstr(p, "de-havilland")) return "de-havilland";
+    if (strstr(p, "diamond")) return "diamond";
+    if (strstr(p, "bell")) return "bell";
+    if (strstr(p, "hughes")) return "hughes";
+    if (strstr(p, "kamov")) return "kamov";
+    if (strstr(p, "mil")) return "mil";
+    if (strstr(p, "eurocopter")) return "eurocopter";
+    if (strstr(p, "alouette")) return "alouette";
+    if (strstr(p, "aerospatiale")) return "aerospatiale";
+    if (strstr(p, "sikorsky")) return "sikorsky";
+    if (strstr(p, "bernard")) return "bernard";
+    if (strstr(p, "bleriot")) return "bleriot";
+    if (strstr(p, "bristol")) return "bristol";
+    if (strstr(p, "breguet")) return "breguet";
+    if (strstr(p, "wright")) return "wright";
+    if (strstr(p, "breda")) return "breda";
+    if (strstr(p, "rutan")) return "rutan";
+    if (strstr(p, "vought")) return "vought";
+    if (strstr(p, "fiat")) return "fiat";
+    if (strstr(p, "focke wulf")) return "focke-wulf";
+    if (strstr(p, "focke-wulf")) return "focke-wulf";
+    if (strstr(p, "gloster")) return "gloster";
+    if (strstr(p, "hawker")) return "hawker";
+    if (strstr(p, "heinkel")) return "heinkel";
+    if (strstr(p, "messerschmitt")) return "messerschmitt";
+    if (strstr(p, "north american")) return "north-american";
+    if (strstr(p, "north-american")) return "north-american";
+    if (strstr(p, "piaggio")) return "piaggio";
+    if (strstr(p, "pilatus")) return "pilatus";
+    if (strstr(p, "supermarine")) return "supermarine";
+    if (strstr(p, "beechcraft")) return "beechcraft";
+    if (strstr(p, "beech")) return "beechcraft";
+    if (strstr(p, "vickers")) return "vickers";
+    if (strstr(p, "westland")) return "westland";
+    if (strstr(p, "yakovlev")) return "yakovlev";
+    if (strstr(p, "schweizer")) return "schweizer";
+
+    /* educated guess */
+    if (strstr(p, "b7")) return "boeing";
+    if (strstr(p, "airbus")) return "airbus";
+    if (strstr(p, "an-")) return "antonov";
+    if (strstr(p, "tu-")) return "tupolev";
+    if (strstr(p, "il-")) return "ilyoushin";
+    if (strstr(p, "su-")) return "sukoi";
+    if (strstr(p, "dc-")) return "douglas";
+    if (strstr(p, "md-")) return "mc-donnell-douglas";
+    if (strstr(p, "ju-")) return "junkers";
+    if (strstr(p, "ec-")) return "eurocopter";
+    if (strstr(p, "he-")) return "heinkel";
+    if (strstr(p, "as-")) return "aerospatiale";
+    if (strstr(p, "me-")) return "messerschmitt";
+    if (strstr(p, "fw-")) return "focke-wulf";
+    if (strstr(p, "yak-")) return "yakovlev";
+    if (strstr(p, "sgs-")) return "schweizer";
+    if (strstr(p, "ask-")) return "schleicher";
+    if (strstr(p, "mirage")) return "dassault";
+
+    return NULL;
 }
 
 /* -- JSBSim ---------------------------------------------------------------- */
@@ -554,6 +656,7 @@ update_metadata_jsb(char *sfname, char *path, char *aero, char *desc)
     {
         sprintf(s, "    <tags>\n");
         PRINT("auto-generated");
+        PRINT(vendor_tag(desc ? desc : aero));
         PRINT(strlwr(desc ? desc : aero));
         PRINT(jsb_wing_tag(xid, path));
         PRINT(jsb_gear_tag(xid));
@@ -565,7 +668,11 @@ update_metadata_jsb(char *sfname, char *path, char *aero, char *desc)
         PRINT(jsb_thruster_tag(xid, path));
         s = strncat(s, "    </tags>", TS-strlen(s));
 
-        updateFile(sfname, s);
+        if (print_tags) {
+           printf( "%s\n", s);
+        } else {
+           updateFile(sfname, s);
+        }
         free(s);
     }
     xmlClose(xid);
@@ -851,6 +958,7 @@ update_metadata_yasim(char *sfname, char *path, char *aero, char *desc)
     {
         sprintf(s, "    <tags>\n");
         PRINT("auto-generated");
+        PRINT(vendor_tag(desc ? desc : aero));
         PRINT(strlwr(desc ? desc : aero));
         PRINT(yasim_wing_tag(xid));
         PRINT(yasim_gear_tag(xid));
@@ -862,7 +970,11 @@ update_metadata_yasim(char *sfname, char *path, char *aero, char *desc)
         PRINT(yasim_thruster_tag(xid, path));
         s = strncat(s, "    </tags>", TS-strlen(s));
 
-        updateFile(sfname, s);
+        if (print_tags) {
+           printf( "%s\n", s);
+        } else {
+           updateFile(sfname, s);
+        }
         free(s);
     }
     xmlClose(xid);
@@ -940,6 +1052,11 @@ main(int argc, char **argv)
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
                      getCommandLineOption(argc, argv, "--help")) {
         show_help();
+    }
+
+    if (getCommandLineOption(argc, argv, "-p") ||
+        getCommandLineOption(argc, argv, "--print")) {
+        print_tags = 1;
     }
 
     setFile = getCommandLineOption(argc, argv, "-i");
