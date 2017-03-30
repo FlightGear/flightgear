@@ -6,8 +6,10 @@
 
 #include <xml.h>
 
+#define TS	(4*1024*1024)
+
 #define PRINT(a) \
-    tag = (a); if (tag) printf("      <tag>%s</tag>\n", tag)
+    tag = (a); if (tag) { strncat(s, "      <tag>", TS-strlen(s)); strncat(s, tag, TS-strlen(s)); strncat(s, "</tag>\n", TS-strlen(s)); }
 
 char *
 getCommandLineOption(int argc, char **argv, char const *option)
@@ -53,15 +55,174 @@ char *strlwr(char *str)
   return str;
 }
 
+static unsigned int tags_level = 0;
+void print_xml(FILE *fd, void *id, char *tags)
+{
+    static int level = 1;
+    void *xid = xmlMarkId(id);
+    unsigned int num;
+
+    num = xmlNodeGetNum(xid, "*");
+    if (num == 0)
+    {
+        char *s;
+        s = xmlGetString(xid);
+        if (s)
+        {
+            fprintf(fd, "%s", s);
+            free(s);
+        }
+    }
+    else
+    {
+        unsigned int i, q;
+        for (i=0; i<num; i++)
+        {
+            if (xmlNodeGetPos(id, xid, "*", i) != 0)
+            {
+                unsigned int anum, a;
+                char name[256];
+                xmlNodeCopyName(xid, (char *)&name, 256);
+
+                if (tags_level == 1 && !strcmp(name, "sim")) tags_level++;
+
+                fprintf(fd, "\n");
+                for(q=0; q<level; q++) fprintf(fd, "  ");
+                fprintf(fd, "<%s", name);
+
+                anum = xmlAttributeGetNum(xid);
+                for (a=0; a<anum; a++)
+                {
+                    char name[256], attrib[256];
+                    if (xmlAttributeCopyName(xid, (char *)&name, 256, a) != 0)
+                    {
+                        xmlAttributeCopyString(xid, name, (char *)&attrib, 256);
+                        fprintf(fd, " %s=\"%s\"", name, attrib);
+                    }
+                }
+                fprintf(fd, ">");
+
+                level++;
+                print_xml(fd, xid, tags);
+
+                level--;
+                fprintf(fd, "</%s>", name);
+
+                if (tags_level == 2 && !strcmp(name, "aero")) {
+                    fprintf(fd, "\n%s\n", tags);
+                }
+            }
+            else printf("error\n");
+        }
+        fprintf(fd, "\n");
+        for(q=1; q<level; q++) fprintf(fd, "  ");
+    }
+}
+
+void
+updateFile(char *fname, char *tags)
+{
+    char bfname[4096];
+    FILE *fd = NULL;
+    void *rid;
+
+    snprintf(bfname, 4096, "%s.bak", fname);
+    rename(fname, bfname);
+
+    rid = xmlOpen(bfname);
+    if (rid)
+    {
+        fd = fopen(fname, "w");
+        if (!fd)
+        {
+            xmlClose(rid);
+            rid = NULL;
+            rename(bfname, fname);
+        }
+    }
+
+    if (rid)
+    {
+        unsigned int i, num;
+        void *xid;
+
+        fprintf(fd, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n");
+
+        xid = xmlMarkId(rid);
+        num = xmlNodeGetNum(xid, "*");
+        for (i=0; i<num; i++)
+        {
+            if (xmlNodeGetPos(rid, xid, "*", i) != 0)
+            {
+                unsigned int anum, a;
+                char name[256];
+                xmlNodeCopyName(xid, (char *)&name, 256);
+
+                if (strcmp(name, "PropertyList")) break;
+
+                tags_level++;
+                fprintf(fd, "<%s", name);
+                anum = xmlAttributeGetNum(xid);
+                for (a=0; a<anum; a++)
+                {
+                    char name[256], attrib[256];
+                    if (xmlAttributeCopyName(xid, (char *)&name, 256, a) != 0)
+                    {
+                        xmlAttributeCopyString(xid, name, (char *)&attrib, 256);
+                        fprintf(fd, " %s=\"%s\"", name, attrib);
+                    }
+                }
+                fprintf(fd, ">");
+                print_xml(fd, xid, tags);
+                fprintf(fd, "\n</%s>\n", name);
+            }
+        }
+        free(xid);
+
+        xmlClose(rid);
+        fclose(fd);
+    }
+}
+
 /* -- JSBSim ---------------------------------------------------------------- */
 const char*
-jsb_wing_tag(void *xid)
+jsb_wing_tag(void *xid, void *path)
 {
-    void *xlid, *xmid = xmlNodeGet(xid, "/fdm_config/metrics");
+    void *xlid, *xmid, *xeid;
     double aero_z = 0.0;
     double eye_z = 0.0;
     int i, num;
 
+    xeid = xmlNodeGet(xid, "/fdm_config/propulsion/engine/thruster");
+    if (xeid)
+    {
+        char *rv = NULL;
+        char *file = xmlAttributeGetString(xeid, "file");
+        char *fname = calloc(1, strlen(path)+strlen("Engines/")+
+                                strlen(file)+strlen(".xml")+1);
+        if (fname)
+        {
+            void *xfid;
+
+            memcpy(fname, path, strlen(path));
+            memcpy(fname+strlen(path), "Engines/", strlen("Engines/"));
+            memcpy(fname+strlen(path)+strlen("Engines/"), file, strlen(file));
+            memcpy(fname+strlen(path)+strlen("Engines/")+strlen(file), ".xml", strlen(".xml"));
+
+            xfid = xmlOpen(fname);
+            if (xfid)
+            {
+                if (xmlNodeTest(xfid, "rotor")) rv = "helicopter";
+                xmlClose(xfid);
+            }
+            free(fname);
+        }
+        xmlFree(file);
+        xmlFree(xeid);
+        if (rv) return rv;
+    }
+
+    xmid = xmlNodeGet(xid, "/fdm_config/metrics");
     if (!xmid) return NULL;
 
     xlid = xmlMarkId(xmid);
@@ -364,10 +525,10 @@ jsb_thruster_tag(void *xid, char *path)
 }
 
 void
-update_metadata_jsb(char *path, char *aero, char *desc)
+update_metadata_jsb(char *sfname, char *path, char *aero, char *desc)
 {
     const char *tag;
-    char *fname;
+    char *s, *fname;
     void *xid;
 
     fname = calloc(1, strlen(path)+strlen(aero)+strlen(".xml")+1);
@@ -388,18 +549,25 @@ update_metadata_jsb(char *path, char *aero, char *desc)
         return;
     }
 
-    printf("    <tags>\n");
-    PRINT(strlwr(desc ? desc : aero));
-    PRINT(jsb_wing_tag(xid));
-    PRINT(jsb_gear_tag(xid));
-    PRINT(jsb_gear_retract_tag(xid));
-    PRINT(jsb_gear_steering_tag(xid));
-    PRINT(jsb_engines_tag(xid));
-    PRINT(jsb_engine_tag(xid, path));
-    PRINT(jsb_propulsion_tag(xid, path));
-    PRINT(jsb_thruster_tag(xid, path));
-    printf("    </tags>\n");
+    s = malloc(65*1024);
+    if (s)
+    {
+        sprintf(s, "    <tags>\n");
+        PRINT("auto-generated");
+        PRINT(strlwr(desc ? desc : aero));
+        PRINT(jsb_wing_tag(xid, path));
+        PRINT(jsb_gear_tag(xid));
+        PRINT(jsb_gear_retract_tag(xid));
+        PRINT(jsb_gear_steering_tag(xid));
+        PRINT(jsb_engines_tag(xid));
+        PRINT(jsb_engine_tag(xid, path));
+        PRINT(jsb_propulsion_tag(xid, path));
+        PRINT(jsb_thruster_tag(xid, path));
+        s = strncat(s, "    </tags>", TS-strlen(s));
 
+        updateFile(sfname, s);
+        free(s);
+    }
     xmlClose(xid);
     free(fname);
 }
@@ -654,10 +822,10 @@ yasim_thruster_tag(void *xid, char *path)
 }
 
 void
-update_metadata_yasim(char *path, char *aero, char *desc)
+update_metadata_yasim(char *sfname, char *path, char *aero, char *desc)
 {
     const char *tag;
-    char *fname;
+    char *s, *fname;
     void *xid;
     
     fname = calloc(1, strlen(path)+strlen(aero)+strlen(".xml")+1);
@@ -678,18 +846,25 @@ update_metadata_yasim(char *path, char *aero, char *desc)
         return;
     }
     
-    printf("    <tags>\n");
-    PRINT(strlwr(desc ? desc : aero));
-    PRINT(yasim_wing_tag(xid));
-    PRINT(yasim_gear_tag(xid));
-    PRINT(yasim_gear_retract_tag(xid));
-    PRINT(yasim_gear_steering_tag(xid));
-    PRINT(yasim_engines_tag(xid));
-    PRINT(yasim_engine_tag(xid, path));
-    PRINT(yasim_propulsion_tag(xid, path));
-    PRINT(yasim_thruster_tag(xid, path));
-    printf("    </tags>\n");
-    
+    s = malloc(65*1024);
+    if (s)
+    {
+        sprintf(s, "    <tags>\n");
+        PRINT("auto-generated");
+        PRINT(strlwr(desc ? desc : aero));
+        PRINT(yasim_wing_tag(xid));
+        PRINT(yasim_gear_tag(xid));
+        PRINT(yasim_gear_retract_tag(xid));
+        PRINT(yasim_gear_steering_tag(xid));
+        PRINT(yasim_engines_tag(xid));
+        PRINT(yasim_engine_tag(xid, path));
+        PRINT(yasim_propulsion_tag(xid, path));
+        PRINT(yasim_thruster_tag(xid, path));
+        s = strncat(s, "    </tags>", TS-strlen(s));
+
+        updateFile(sfname, s);
+        free(s);
+    }
     xmlClose(xid);
     free(fname);
 }
@@ -733,10 +908,10 @@ update_metadata(const char *fname)
         desc = xmlNodeGetString(xsid, "description");
         str = xmlNodeGetString(xsid, "aero");
         if (!xmlNodeCompareString(xsid, "flight-model", "jsb")) {
-            update_metadata_jsb(path, str, desc);
+            update_metadata_jsb(fname, path, str, desc);
         }
         else if (!xmlNodeCompareString(xsid, "flight-model", "yasim")) {
-            update_metadata_yasim(path, str, desc);
+            update_metadata_yasim(fname, path, str, desc);
         }
         else
         {
