@@ -34,6 +34,7 @@
 
 #define PKGLIBDIR "@FG_DATA_DIR@"
 #define FGSRCDIR "@PROJECT_SOURCE_DIR@"
+#define FGBUILDDIR "@PROJECT_BINARY_DIR@"
 #define WEB_BROWSER "@WEB_BROWSER@"
 
 // Ensure FG_HAVE_xxx always have a value

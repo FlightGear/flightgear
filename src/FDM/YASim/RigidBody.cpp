@@ -55,13 +55,12 @@ void RigidBody::setMass(int handle, float mass)
 
 void RigidBody::setMass(int handle, float mass, const float* pos, bool isStatic)
 {
-    _masses[handle].m = mass;
     _masses[handle].isStatic = isStatic;
     Math::set3(pos, _masses[handle].p);
+    setMass(handle, mass);
     if (_bodyN != 0) {
       SGPropertyNode_ptr n = _bodyN->getChild("mass", handle, true);
       n->getNode("isStatic", true)->setValue(isStatic);
-      n->getNode("mass", true)->setFloatValue(mass);
       n->getNode("pos-x", true)->setFloatValue(pos[0]);
       n->getNode("pos-y", true)->setFloatValue(pos[1]);
       n->getNode("pos-z", true)->setFloatValue(pos[2]);	

@@ -174,12 +174,15 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
 
 int usage()
 {
-  fprintf(stderr, "Usage: yasim <ac.xml> [-g [-a alt] [-s kts] [-approach | -cruise] ]\n");
-  fprintf(stderr, "       yasim <ac.xml> [-d [-a alt] [-approach | -cruise] ]\n");
-  fprintf(stderr, "       yasim <ac.xml> [-m]\n");
-  fprintf(stderr, "       -g print lift/drag table: aoa, lift, drag, lift/drag \n");
-  fprintf(stderr, "       -d print drag over TAS: kts, drag\n");
-  fprintf(stderr, "       -m print mass distribution table: id, x, y, z, mass \n");
+  fprintf(stderr, "Usage: \n");
+  fprintf(stderr, "  yasim <aircraft.xml> [-g [-a meters] [-s kts] [-approach | -cruise] ]\n");
+  fprintf(stderr, "  yasim <aircraft.xml> [-d [-a meters] [-approach | -cruise] ]\n");
+  fprintf(stderr, "  yasim <aircraft.xml> [-m]\n");
+  fprintf(stderr, "                       -g print lift/drag table: aoa, lift, drag, lift/drag \n");
+  fprintf(stderr, "                       -d print drag over TAS: kts, drag\n");
+  fprintf(stderr, "                       -a set altitude in meters!\n");
+  fprintf(stderr, "                       -s set speed in knots\n");
+  fprintf(stderr, "                       -m print mass distribution table: id, x, y, z, mass \n");
   return 1;
 }
 

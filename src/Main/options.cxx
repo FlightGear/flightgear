@@ -95,7 +95,7 @@ using namespace flightgear;
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
-static flightgear::Options* shared_instance = NULL;
+static flightgear::Options* shared_instance = nullptr;
 
 static double
 atof( const string& str )
@@ -1979,6 +1979,14 @@ Options* Options::sharedInstance()
   return shared_instance;
 }
 
+void Options::reset()
+{
+    if (shared_instance != nullptr) {
+        delete shared_instance;
+        shared_instance = nullptr;
+    }
+}
+
 Options::Options() :
   p(new OptionsPrivate())
 {
@@ -2034,7 +2042,9 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
   if (!p->shouldLoadDefaultConfig) {
+#if !defined(FG_TESTLIB)
     setupRoot(argc, argv);
+#endif
     return;
   }
 

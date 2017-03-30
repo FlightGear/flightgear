@@ -6,6 +6,7 @@ set(sources
   Main/globals.cxx
   Main/locale.cxx
   Main/util.cxx
+  Main/positioninit.cxx
   Aircraft/controls.cxx
   Aircraft/FlightHistory.cxx
   Aircraft/flightrecorder.cxx
@@ -90,16 +91,21 @@ set_target_properties (fgtestlib
   COMPILE_DEFINITIONS "FG_TESTLIB"
 )
 
-target_link_libraries(fgtestlib SimGearCore ${PLATFORM_LIBS})
+if(FG_HAVE_GPERFTOOLS)
+    target_include_directories(fgtestlib PRIVATE ${GooglePerfTools_INCLUDE_DIR})
+    target_link_libraries(fgtestlib ${GooglePerfTools_LIBRARIES})
+endif()
+target_link_libraries(fgtestlib SimGearCore ${PLATFORM_LIBS} ${SQLITE3_LIBRARY})
 
 add_executable(fgtest fgTestDriver.cxx)
 target_link_libraries(fgtest fgtestlib)
 
-# repeat this section for each unit-test executable
-add_executable(testnavs test_navaids2.cxx)
-target_link_libraries(testnavs fgtestlib fgsqlite3)
-add_test(testnavs ${EXECUTABLE_OUTPUT_PATH}/testnavs)
+macro(flightgear_test name sources)
+  add_executable(${name} ${sources})
+  target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+  target_link_libraries(${name} fgtestlib)
+  add_test(${name} ${EXECUTABLE_OUTPUT_PATH}/${name})
+endmacro()
 
-add_executable(testflightplan test_flightplan.cxx)
-target_link_libraries(testflightplan fgtestlib fgsqlite3)
-add_test(testflightplan ${EXECUTABLE_OUTPUT_PATH}/testflightplan)
+flightgear_test(test_navs test_navaids2.cxx)
+flightgear_test(test_flightplan test_flightplan.cxx)
