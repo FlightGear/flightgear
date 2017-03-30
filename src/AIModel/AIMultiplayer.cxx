@@ -286,7 +286,7 @@ void FGAIMultiplayer::update(double dt)
 			}
 
 		}
-		else {
+		else if (nextIt != mMotionInfo.end()) {
 			// Ok, we have really found something where our target time is in between
 			// do interpolation here
 			MotionInfo::iterator prevIt = nextIt;
