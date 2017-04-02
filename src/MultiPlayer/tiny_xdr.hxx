@@ -54,6 +54,9 @@ xdr_data2_t     XDR_encode_uint64   ( const uint64_t & n_Val );
 int64_t         XDR_decode_int64    ( const xdr_data2_t & n_Val );
 uint64_t        XDR_decode_uint64   ( const xdr_data2_t & n_Val );
 
+xdr_data_t      XDR_encode_shortints32(const int v1, const int v2);
+void            XDR_decode_shortints32(const xdr_data_t & n_Val, int &v1, int &v2);
+
 //////////////////////////////////////////////////
 //
 //  FIXME: #1 these funtions must be fixed for
