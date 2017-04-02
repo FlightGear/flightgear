@@ -1714,7 +1714,7 @@ FGPositionedRef NavDataCache::loadById(PositionedID rowid)
   if (rowid == 0) {
     return NULL;
   }
-
+  if (!d) return NULL;
   PositionedCache::iterator it = d->cache.find(rowid);
   if (it != d->cache.end()) {
     d->cacheHits++;
