@@ -239,8 +239,10 @@ void fgSetDefaults ()
     v->setValueReadOnly("simgear", SG_STRINGIZE(SIMGEAR_VERSION));
 #ifndef FG_TESTLIB
     v->setValueReadOnly("openscenegraph", osgGetVersion());
+#if OSG_VERSION_LESS_THAN(3,5,2)
     v->setValueReadOnly("openscenegraph-thread-safe-reference-counting",
                          osg::Referenced::getThreadSafeReferenceCounting());
+#endif
 #endif
     v->setValueReadOnly("revision", REVISION);
     v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
