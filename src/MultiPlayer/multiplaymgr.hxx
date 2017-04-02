@@ -31,6 +31,8 @@
 
 #define MULTIPLAYTXMGR_HID "$Id$"
 
+const int MIN_MP_PROTOCOL_VERSION = 1;
+const int MAX_MP_PROTOCOL_VERSION = 2;
 
 #include <string>
 #include <vector>
@@ -70,11 +72,20 @@ private:
   {
     mPropertiesChanged = true;
   }
-  
+  int getProtocolToUse()
+  {
+      int protocolVersion = pProtocolVersion->getIntValue();
+      if (protocolVersion >= MIN_MP_PROTOCOL_VERSION && protocolVersion <= MAX_MP_PROTOCOL_VERSION)
+          return protocolVersion;
+      else
+          return MIN_MP_PROTOCOL_VERSION;
+  }
+
   void findProperties();
   
   void Send();
   void SendMyPosition(const FGExternalMotionData& motionInfo);
+  short get_scaled_short(double v, double scale);
 
   union MsgBuf;
   FGAIMultiplayer* addMultiplayer(const std::string& callsign,
@@ -100,8 +111,16 @@ private:
   // and the property nodes
   typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
-  
+  SGPropertyNode *pProtocolVersion;
+  SGPropertyNode *pXmitLen;
+  SGPropertyNode *pMultiPlayDebugLevel;
+  SGPropertyNode *pMultiPlayRange;
+
+  typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
+  PropertyDefinitionMap mPropertyDefinition;
+
   bool mPropertiesChanged;
+
   MPPropertyListener* mListener;
   
   double mDt; // reciprocal of /sim/multiplay/tx-rate-hz

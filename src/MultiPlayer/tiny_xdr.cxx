@@ -73,6 +73,38 @@ XDR_encode_int32 ( const int32_t & n_Val )
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
+/*
+ * Safely convert from an int into a short. Anything outside the bounds of a short will
+ * simply be the max/min value of short (+/- 32767)
+ */
+static short XDR_convert_int_to_short(int v1)
+{
+    if (v1 < -32767)
+        v1 = -32767;
+
+    if (v1 > 32767)
+        v1 = 32767;
+
+    return (short)v1;
+}
+
+/*
+ * Pack two 16bit shorts into a 32 bit int. By convention v1 is packed in the highword
+ */
+xdr_data_t XDR_encode_shortints32(const int v1, const int v2)
+{
+    return XDR_encode_uint32(((XDR_convert_int_to_short(v1) << 16) & 0xffff0000) | ((XDR_convert_int_to_short(v2)) & 0xffff));
+}
+/* Decode packed shorts into two ints. V1 in the highword ($V1..V2..)*/
+void            XDR_decode_shortints32(const xdr_data_t & n_Val, int &v1, int &v2)
+{
+    int _v1 = XDR_decode_int32(n_Val);
+    short s2 = (short)(_v1 & 0xffff);
+    short s1 = (short)(_v1 >> 16);
+    v1 = s1;
+    v2 = s2;
+}
+
 xdr_data_t
 XDR_encode_uint32 ( const uint32_t & n_Val )
 {
