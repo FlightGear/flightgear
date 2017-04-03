@@ -115,9 +115,9 @@ private:
     bool _crashed;
     float _agl;
     SGPropertyNode_ptr _modelN;  
-    SGPropertyNode_ptr _f0xN;
-    SGPropertyNode_ptr _f0yN;
-    SGPropertyNode_ptr _f0zN;
+    SGPropertyNode_ptr _fAeroXN;
+    SGPropertyNode_ptr _fAeroYN;
+    SGPropertyNode_ptr _fAeroZN;
     SGPropertyNode_ptr _gefxN;
     SGPropertyNode_ptr _gefyN;
     SGPropertyNode_ptr _gefzN;
