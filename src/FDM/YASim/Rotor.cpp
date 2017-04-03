@@ -271,6 +271,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
 {
     if (_name[0]==0) return 0;
     if (4>numRotorparts()) return 0; //compile first!
+    
     if (j==0)
     {
         snprintf(text, 256, "/rotors/%s/cone-deg", _name);
@@ -280,96 +281,92 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
             +((Rotorpart*)getRotorpart(3*(_number_of_parts>>2)))->getrealAlpha()
             )/4*180/pi:0;
     }
+    else if (j==1)
+    {
+        snprintf(text, 256, "/rotors/%s/roll-deg", _name);
+        _roll = ( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
+            -((Rotorpart*)getRotorpart(2*(_number_of_parts>>2)))->getrealAlpha()
+            )/2*(_ccw?-1:1);
+        *f=(_balance1>-1)?_roll *180/pi:0;
+    }
+    else if (j==2)
+    {
+        snprintf(text, 256, "/rotors/%s/yaw-deg", _name);
+        _yaw=( ((Rotorpart*)getRotorpart(1*(_number_of_parts>>2)))->getrealAlpha()
+            -((Rotorpart*)getRotorpart(3*(_number_of_parts>>2)))->getrealAlpha()
+            )/2;
+        *f=(_balance1>-1)?_yaw*180/pi:0;
+    }
+    else if (j==3)
+    {
+        snprintf(text, 256, "/rotors/%s/rpm", _name);
+        *f=(_balance1>-1)?_omega/2/pi*60:0;
+    }
+    else if (j==4)
+    {
+        snprintf(text, 256, "/rotors/%s/tilt/pitch-deg",_name);
+        *f=_tilt_pitch*180/pi;
+    }
+    else if (j==5)
+    {
+        snprintf(text, 256, "/rotors/%s/tilt/roll-deg",_name);
+        *f=_tilt_roll*180/pi;
+    }
+    else if (j==6)
+    {
+        snprintf(text, 256, "/rotors/%s/tilt/yaw-deg",_name);
+        *f=_tilt_yaw*180/pi;
+    }
+    else if (j==7)
+    {
+        snprintf(text, 256, "/rotors/%s/balance", _name);
+        *f=_balance1;
+    }
+    else if (j==8)
+    {
+        snprintf(text, 256, "/rotors/%s/stall",_name);
+        *f=getOverallStall();
+    }
+    else if (j==9)
+    {
+        snprintf(text, 256, "/rotors/%s/torque",_name);
+        *f=-_torque;;
+    }
     else
-        if (j==1)
+    {
+        int b=(j-10)/3; 
+        if (b>=_number_of_blades) 
         {
-            snprintf(text, 256, "/rotors/%s/roll-deg", _name);
-            _roll = ( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
-                -((Rotorpart*)getRotorpart(2*(_number_of_parts>>2)))->getrealAlpha()
-                )/2*(_ccw?-1:1);
-            *f=(_balance1>-1)?_roll *180/pi:0;
+            return 0;
         }
-        else
-            if (j==2)
-            {
-                snprintf(text, 256, "/rotors/%s/yaw-deg", _name);
-                _yaw=( ((Rotorpart*)getRotorpart(1*(_number_of_parts>>2)))->getrealAlpha()
-                    -((Rotorpart*)getRotorpart(3*(_number_of_parts>>2)))->getrealAlpha()
-                    )/2;
-                *f=(_balance1>-1)?_yaw*180/pi:0;
-            }
-            else
-                if (j==3)
-                {
-                    snprintf(text, 256, "/rotors/%s/rpm", _name);
-                    *f=(_balance1>-1)?_omega/2/pi*60:0;
-                }
-                else
-                    if (j==4)
-                    {
-                        snprintf(text, 256, "/rotors/%s/tilt/pitch-deg",_name);
-                        *f=_tilt_pitch*180/pi;
-                    }
-                    else if (j==5)
-                    {
-                        snprintf(text, 256, "/rotors/%s/tilt/roll-deg",_name);
-                        *f=_tilt_roll*180/pi;
-                    }
-                    else if (j==6)
-                    {
-                        snprintf(text, 256, "/rotors/%s/tilt/yaw-deg",_name);
-                        *f=_tilt_yaw*180/pi;
-                    }
-                    else if (j==7)
-                    {
-                        snprintf(text, 256, "/rotors/%s/balance", _name);
-                        *f=_balance1;
-                    }
-                    else if (j==8)
-                    {
-                        snprintf(text, 256, "/rotors/%s/stall",_name);
-                        *f=getOverallStall();
-                    }
-                    else if (j==9)
-                    {
-                        snprintf(text, 256, "/rotors/%s/torque",_name);
-                        *f=-_torque;;
-                    }
-                    else
-                    {
-                        int b=(j-10)/3; 
-                        if (b>=_number_of_blades) 
-                        {
-                            return 0;
-                        }
-                        int w=j%3;
-                        snprintf(text, 256, "/rotors/%s/blade[%i]/%s",
-                            _name,b,
-                            w==0?"position-deg":(w==1?"flap-deg":"incidence-deg"));
-                        *f=((Rotorpart*)getRotorpart(0))->getPhi()*180/pi
-                            +360*b/_number_of_blades*(_ccw?1:-1);
-                        if (*f>360) *f-=360;
-                        if (*f<0) *f+=360;
-                        if (_balance1<=-1) *f=0;
-                        int k,l;
-                        float rk,rl,p;
-                        p=(*f/90);
-                        k=int(p);
-                        l=k+1;
-                        rk=l-p;
-                        rk=Math::clamp(rk,0,1);//Delete this
-                        rl=1-rk;
-                        if(w==2) {k+=2;l+=2;}
-                        else
-                            if(w==1) {k+=1;l+=1;}
-                            k%=4;
-                            l%=4;
-                            if (w==1) *f=rk*((Rotorpart*) getRotorpart(k*(_number_of_parts>>2)))->getrealAlpha()*180/pi
-                                +rl*((Rotorpart*) getRotorpart(l*(_number_of_parts>>2)))->getrealAlpha()*180/pi;
-                            else if(w==2) *f=rk*((Rotorpart*)getRotorpart(k*(_number_of_parts>>2)))->getIncidence()*180/pi
-                                +rl*((Rotorpart*)getRotorpart(l*(_number_of_parts>>2)))->getIncidence()*180/pi;
-                    }
-                    return j+1;
+        int w=j%3;
+        snprintf(text, 256, "/rotors/%s/blade[%i]/%s",
+            _name,b,
+            w==0?"position-deg":(w==1?"flap-deg":"incidence-deg"));
+        *f=((Rotorpart*)getRotorpart(0))->getPhi()*180/pi
+            +360*b/_number_of_blades*(_ccw?1:-1);
+        if (*f>360) *f-=360;
+        if (*f<0) *f+=360;
+        if (_balance1<=-1) *f=0;
+        int k,l;
+        float rk,rl,p;
+        p=(*f/90);
+        k=int(p);
+        l=k+1;
+        rk=l-p;
+        rk=Math::clamp(rk,0,1);//Delete this
+        rl=1-rk;
+        if(w==2) {k+=2;l+=2;}
+        else if(w==1) {k+=1;l+=1;}
+
+        k%=4;
+        l%=4;
+        if (w==1) *f=rk*((Rotorpart*) getRotorpart(k*(_number_of_parts>>2)))->getrealAlpha()*180/pi
+            +rl*((Rotorpart*) getRotorpart(l*(_number_of_parts>>2)))->getrealAlpha()*180/pi;
+        else if(w==2) *f=rk*((Rotorpart*)getRotorpart(k*(_number_of_parts>>2)))->getIncidence()*180/pi
+            +rl*((Rotorpart*)getRotorpart(l*(_number_of_parts>>2)))->getIncidence()*180/pi;
+    }
+    return j+1;
 }
 
 void Rotorgear::setEngineOn(int value)
