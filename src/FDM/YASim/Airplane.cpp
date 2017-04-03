@@ -57,8 +57,10 @@ Airplane::Airplane()
 
     _failureMsg = 0;
     _wingsN = 0;
-    _cgMaxX = -1e6;
-    _cgMinX = 1e6;
+    _cgMax = -1e6;
+    _cgMin = 1e6;
+    _cgDesiredMax = 0.33f; // FIXME find reasonable default value
+    _cgDesiredMin = 0.1f; // FIXME find reasonable default value
 }
 
 Airplane::~Airplane()
@@ -115,7 +117,7 @@ void Airplane::calcFuelWeights()
     }
 }
 
-void Airplane::getPilotAccel(float* out)
+const void Airplane::getPilotAccel(float* out)
 {
     State* s = _model.getState();
 
@@ -125,14 +127,13 @@ void Airplane::getPilotAccel(float* out)
     Math::vmul33(s->orient, out, out);
     out[0] = -out[0];
 
-    // The regular acceleration
-    float tmp[3];
+    float acceleration[3];
     // Convert to aircraft coordinates
-    Math::vmul33(s->orient, s->acc, tmp);
-    tmp[1] = -tmp[1];
-    tmp[2] = -tmp[2];
+    Math::vmul33(s->orient, s->acc, acceleration);
+    acceleration[1] = -acceleration[1];
+    acceleration[2] = -acceleration[2];
 
-    Math::add3(tmp, out, out);
+    Math::add3(acceleration, out, out);
 
     // FIXME: rotational & centripetal acceleration needed
 }
@@ -240,10 +241,6 @@ void Airplane::addGear(Gear* gear)
     g->gear = gear;
     g->surf = 0;
     _gears.add(g);
-    float pos[3];
-    g->gear->getPosition(pos);
-    if (pos[0] > _cgMaxX) _cgMaxX = pos[0];
-    if (pos[0] < _cgMinX) _cgMinX = pos[0];
 }
 
 void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
@@ -371,6 +368,9 @@ float Airplane::compileWing(Wing* w)
       _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
       _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
       _wingsN->getNode("standard-mean-chord", true)->setFloatValue(w->getSMC());
+      _wingsN->getNode("mac", true)->setFloatValue(w->getMAC());
+      _wingsN->getNode("mac-x", true)->setFloatValue(w->getMACx());
+      _wingsN->getNode("mac-y", true)->setFloatValue(w->getMACy());
     }
 
     float wgt = 0;
@@ -582,7 +582,6 @@ void Airplane::compile()
     RigidBody* body = _model.getBody();
     int firstMass = body->numMasses();
     SGPropertyNode_ptr baseN = fgGetNode("/fdm/yasim/model/wings", true);
-    SGPropertyNode_ptr n;
 
     // Generate the point masses for the plane.  Just use unitless
     // numbers for a first pass, then go back through and rescale to
@@ -594,6 +593,15 @@ void Airplane::compile()
     {
       if (baseN != 0) _wingsN = baseN->getChild("wing", 0, true);
       aeroWgt += compileWing(_wing);
+      
+      // convert % to absolute x coordinates
+      _cgDesiredFront = _wing->getMACx() - _wing->getMAC()*_cgDesiredMin;
+      _cgDesiredAft = _wing->getMACx() - _wing->getMAC()*_cgDesiredMax;
+      if (baseN != 0) {
+        SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
+        n->getNode("cg-range-front", true)->setFloatValue(_cgDesiredFront);
+        n->getNode("cg-range-aft", true)->setFloatValue(_cgDesiredAft);
+      }
     }
     if (_tail)
     {
@@ -648,33 +656,35 @@ void Airplane::compile()
         ThrustRec* tr = (ThrustRec*)_thrusters.get(i);
         tr->handle = _model.addThruster(tr->thruster);
     }
-
-    // Ground effect
-    // If a double tapered wing is modelled with wing and mstab, wing must 
-    // be outboard to get correct wingspan.
+    
     if(_wing) {
-        float gepos[3];
+        // Ground effect
+        // If a double tapered wing is modelled with wing and mstab, wing must 
+        // be outboard to get correct wingspan.
+        float pos[3];
         float gespan = 0;
         gespan = _wing->getSpan();
-        _wing->getBase(gepos);
+        _wing->getBase(pos);
         if(!isVersionOrNewer( Version::YASIM_VERSION_2017_2 )) {
           //old code
           //float span = _length * Math::cos(_sweep) * Math::cos(_dihedral);
           //span = 2*(span + Math::abs(_base[2]));
-          gespan -= 2*gepos[1]; // cut away base (y-distance)
-          gespan += 2*Math::abs(gepos[2]); // add (wrong) z-distance
+          gespan -= 2*pos[1]; // cut away base (y-distance)
+          gespan += 2*Math::abs(pos[2]); // add (wrong) z-distance
         }
         if (baseN != 0)
           baseN->getChild("wing", 0)->getNode("gnd-eff-span", true)->setFloatValue(gespan);
         // where does the hard coded factor 0.15 come from?
-        _model.setGroundEffect(gepos, gespan, 0.15f);
+        _model.setGroundEffect(pos, gespan, 0.15f);
     }
-
+    
     // solve function below resets failure message
     // so check if we have any problems and abort here
     if (_failureMsg) return;
 
     solveGear();
+    calculateCGHardLimits();
+    
     if(_wing && _tail) solve();
     else
     {
@@ -742,11 +752,24 @@ void Airplane::solveGear()
     }
 }
 
+void Airplane::calculateCGHardLimits()
+{
+    _cgMax = -1e6;
+    _cgMin = 1e6;
+    for (int i = 0; i < _gears.size(); i++) {
+        GearRec* gr = (GearRec*)_gears.get(i);
+        float pos[3];
+        gr->gear->getPosition(pos);
+        if (pos[0] > _cgMax) _cgMax = pos[0];
+        if (pos[0] < _cgMin) _cgMin = pos[0];
+    }
+}
+
 void Airplane::initEngines()
 {
     for(int i=0; i<_thrusters.size(); i++) {
         ThrustRec* tr = (ThrustRec*)_thrusters.get(i);
-	tr->thruster->init();
+        tr->thruster->init();
     }
 }
 
@@ -835,7 +858,6 @@ void Airplane::runApproach()
     Math::vmul33(_approachState.orient, wind, wind);
     
     setFuelFraction(_approachFuel);
-
     setupWeights(true);
 
     // Run the thrusters until they get to a stable setting.  FIXME:
@@ -1092,6 +1114,13 @@ void Airplane::solveHelicopter()
     _model.setAir(_cruiseP, _cruiseT,
                   Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
     
+}
+
+const float Airplane::getCGMAC()
+{ 
+    float cg[3];
+    _model.getBody()->getCG(cg);
+    return (_wing->getMACx() - cg[0]) / _wing->getMAC();
 }
 
 }; // namespace yasim

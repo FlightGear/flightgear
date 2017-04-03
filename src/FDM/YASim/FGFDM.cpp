@@ -133,11 +133,12 @@ void FGFDM::init()
 
     // write some compile time information to property tree
     _yasimN->getNode("config-version",true)->setIntValue(_airplane.getVersion());
-    _yasimN->getNode("model/cg-x-min",true)->setFloatValue(_airplane.getCGMinX());
-    _yasimN->getNode("model/cg-x-max",true)->setFloatValue(_airplane.getCGMaxX());
+    _yasimN->getNode("model/cg-x-min",true)->setFloatValue(_airplane.getCGHardLimitXMin());
+    _yasimN->getNode("model/cg-x-max",true)->setFloatValue(_airplane.getCGHardLimitXMax());
     
     // prepare nodes for write at runtime
     _cg_x = _yasimN->getNode("cg-x-m", true);
+    _cg_xmacN = _yasimN->getNode("cg-x-mac", true);
     _cg_y = _yasimN->getNode("cg-y-m", true);
     _cg_z = _yasimN->getNode("cg-z-m", true);
     _vxN = _yasimN->getNode("velocities/v-x", true);
@@ -257,6 +258,10 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
       }
       if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
+      }
+      _airplane.setDesiredCGRangeInPercentOfMAC(attrf(a, "cg-min", 0.1f), attrf(a, "cg-max", 0.3f)); //FIXME find reasonable defaults
+      if (attrb(a, "auto-ballast")) {
+        _airplane.setAutoBallast(true);
       }
     } else if(eq(name, "approach")) {
       float spd, alt = 0;
@@ -691,6 +696,7 @@ void FGFDM::setOutputProperties(float dt)
     _cg_x->setFloatValue(cg[0]);
     _cg_y->setFloatValue(cg[1]);
     _cg_z->setFloatValue(cg[2]);
+    _cg_xmacN->setFloatValue(_airplane.getCGMAC());
 
     State* s = _airplane.getModel()->getState();
     float v[3], acc[3], rot[3], racc[3];
