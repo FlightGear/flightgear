@@ -65,7 +65,7 @@ void testRoutePathBasic()
 
 
     RoutePath rtepath(fp1);
-    const unsigned int legCount = fp1->numLegs();
+    const int legCount = fp1->numLegs();
     for (int leg = 0; leg < legCount; ++leg) {
         rtepath.trackForIndex(leg);
         rtepath.pathForIndex(leg);
@@ -124,7 +124,7 @@ void testRoutePathTrivialFlightPlan()
 
 
     RoutePath rtepath(fp1);
-    const unsigned int legCount = fp1->numLegs();
+    const int legCount = fp1->numLegs();
     for (int leg = 0; leg < legCount; ++leg) {
         rtepath.trackForIndex(leg);
         rtepath.pathForIndex(leg);
