@@ -1,5 +1,7 @@
 #include "fake_sgSky.hxx"
 
+static const std::string sEmptyString;
+
 void SGSky::add_cloud_layer(SGCloudLayer *layer)
 {
     _cloudLayers.push_back(layer);
@@ -22,12 +24,12 @@ void SGSky::set_clouds_enabled(bool enabled)
 
 const std::string &SGCloudLayer::getCoverageString() const
 {
-    return std::string();
+    return sEmptyString;
 }
 
 const std::string &SGCloudLayer::getCoverageString(SGCloudLayer::Coverage coverage)
 {
-    return std::string();
+    return sEmptyString;
 }
 
 void SGCloudLayer::setCoverageString(const std::string &coverage)
