@@ -993,9 +993,10 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 
   naRef vec = naNewVector(c);
   naVec_append(vec, naNum(elev));
-  naRef matdata = naNil();
 
 #ifndef FG_TESTLIB
+  naRef matdata = naNil();
+  
   const SGMaterial *mat = dynamic_cast<const SGMaterial *>(material);
   if(mat) {
     matdata = naNewHash(c);

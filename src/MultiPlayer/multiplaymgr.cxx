@@ -1677,8 +1677,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
    // strict about the validity of the property values.
    const xdr_data_t* xdr = Msg.properties();
    const xdr_data_t* data = xdr;
-    int MsgLenBytes = Msg.Header.MsgLen;
-
+   
     /*
      * with V2 we use the pad to forcefully invoke older clients to verify (and discard)
      * our new protocol.

@@ -2817,6 +2817,8 @@ void Options::setupRoot(int argc, char **argv)
         SetupRootDialog::runDialog(usingDefaultRoot);
     }
 #else
+    SG_UNUSED(usingDefaultRoot);
+    
     // validate it
     if (base_version.empty()) {
         flightgear::fatalMessageBox("Base package not found",

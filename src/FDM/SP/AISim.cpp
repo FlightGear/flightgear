@@ -307,7 +307,7 @@ printf("FT:   %10.2f, %7.2f, MT: %7.2f\n", FT[i][X]*th, FTM[i][X]*mach, MT[i][X]
                 simd4_t<float,3> mu_body(-0.02f-0.7f*br, 0.8f, 0.0f);
 
                 simd4_t<float,3> FLGear = mNed2Body*Fn_lg + vUVWaero*mu_body;
-                simd4_t<float,3> MLGear = simd4::cross(gear_pos[i], FLGear);
+//              simd4_t<float,3> MLGear = simd4::cross(gear_pos[i], FLGear);
 #if 0
 printf("FLGear[%i]: %10.2f %10.2f %10.2f\n",i,FLGear[0], FLGear[1], FLGear[2]);
 printf("MLGear[%i]: %10.2f %10.2f %10.2f\n",i,MLGear[0], MLGear[1], MLGear[2]);

@@ -447,14 +447,16 @@ static bool fgSetPosFromNAV( const string& id,
 }
 
 // Set current_options lon/lat given an aircraft carrier id
-static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
+static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) 
+{
 
+#ifndef FG_TESTLIB
+    
   // set initial position from runway and heading
   SGGeod geodPos;
   double heading;
   SGVec3d uvw;
 
-#ifndef FG_TESTLIB
   if (FGAIManager::getStartPosition(carrier, posid, geodPos, heading, uvw)) {
     double lon = geodPos.getLongitudeDeg();
     double lat = geodPos.getLatitudeDeg();
