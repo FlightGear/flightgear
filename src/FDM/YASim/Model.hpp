@@ -70,6 +70,7 @@ public:
     void setGroundEffect(const float* pos, const float span, const float mul);
     void setWind(float* wind) { Math::set3(wind, _wind); }
     void setAir(const float pressure, const float temp, const float density);
+    void setAirFromStandardAtmosphere(const float altitude);
 
     void updateGround(State* s);
 

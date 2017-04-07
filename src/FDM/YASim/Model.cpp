@@ -210,6 +210,13 @@ void Model::setAir(const float pressure, const float temp, const float density)
     _rho = density;
 }
 
+void Model::setAirFromStandardAtmosphere(const float altitude)
+{
+    _pressure = Atmosphere::getStdPressure(altitude);
+    _temp = Atmosphere::getStdTemperature(altitude);
+    _rho = Atmosphere::getStdDensity(altitude);
+}
+
 void Model::updateGround(State* s)
 {
     float dummy[3];

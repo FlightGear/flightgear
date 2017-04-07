@@ -54,9 +54,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
   Model* m = a->getModel();
   State s;
 
-  m->setAir(Atmosphere::getStdPressure(alt),
-  Atmosphere::getStdTemperature(alt),
-  Atmosphere::getStdDensity(alt));
+  m->setAirFromStandardAtmosphere(alt);
 
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -131,9 +129,7 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   Model* m = a->getModel();
   State s;
   
-  m->setAir(Atmosphere::getStdPressure(alt),
-	    Atmosphere::getStdTemperature(alt),
-	    Atmosphere::getStdDensity(alt));
+  m->setAirFromStandardAtmosphere(alt);
   
   switch (cfg) {
     case CONFIG_APPROACH:
