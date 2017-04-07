@@ -770,11 +770,11 @@ void Airplane::setupWeights(bool isApproach)
 }
 
 /// load values for controls as defined in cruise configuration
-void Airplane::loadCruiseControls()
+void Airplane::loadControls(Vector& controls)
 {
   _controls.reset();
-  for(int i=0; i<_cruiseControls.size(); i++) {
-    Control* c = (Control*)_cruiseControls.get(i);
+  for(int i=0; i < controls.size(); i++) {
+    Control* c = (Control*)controls.get(i);
     _controls.setInput(c->control, c->val);
   }
   _controls.applyControls(); 
@@ -789,7 +789,7 @@ void Airplane::runCruise()
                   Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
 
     // The control configuration
-    loadCruiseControls();
+    loadControls(_cruiseControls);
     
     // The local wind
     float wind[3];
@@ -818,17 +818,6 @@ void Airplane::runCruise()
     _model.calcForces(&_cruiseState);
 }
 
-/// load values for controls as defined in approach configuration
-void Airplane::loadApproachControls()
-{
-  _controls.reset();
-  for(int i=0; i<_approachControls.size(); i++) {
-    Control* c = (Control*)_approachControls.get(i);
-    _controls.setInput(c->control, c->val);
-  }
-  _controls.applyControls();
-}
-
 /// Helper for solve()
 void Airplane::runApproach()
 {
@@ -838,7 +827,7 @@ void Airplane::runApproach()
                   Atmosphere::calcStdDensity(_approachP, _approachT));
 
     // The control configuration
-    loadApproachControls();
+    loadControls(_approachControls);
     
     // The local wind
     float wind[3];

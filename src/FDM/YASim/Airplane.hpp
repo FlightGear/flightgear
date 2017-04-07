@@ -100,8 +100,8 @@ public:
     const char* getFailureMsg() { return _failureMsg; }
 
     static void setupState(const float aoa, const float speed, const float gla, yasim::State* s); // utility
-    void loadApproachControls();
-    void loadCruiseControls();
+    void loadApproachControls() { loadControls(_approachControls); }
+    void loadCruiseControls() { loadControls(_cruiseControls); }
     
     float getCGMinX() { return _cgMinX; }
     float getCGMaxX() { return _cgMaxX; }
@@ -119,6 +119,7 @@ private:
     struct SolveWeight { bool approach; int idx; float wgt; };
     struct ContactRec { Gear* gear; float p[3]; };
 
+    void loadControls(Vector &controls);
     void runCruise();
     void runApproach();
     void solveGear();
