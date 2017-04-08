@@ -44,13 +44,13 @@
 #  include <unistd.h> // for gethostname()
 #endif
 
-#include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <cstring>
 #include <iostream>
-#include <locale.h>
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <clocale>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
@@ -188,9 +188,11 @@ void segfault_handler(int signo) {
 }
 #endif
 
-static void fg_terminate()
+[[noreturn]] static void fg_terminate()
 {
-    flightgear::fatalMessageBox("Fatal exception", "Uncaught exception on some thread");
+    cerr << "Running FlightGear's terminate handler. The program is going to "
+      "exit due to a fatal error condition, sorry." << std::endl;
+    std::abort();
 }
 
 // Detect SSE2 support for x86, it is always available for x86_64
