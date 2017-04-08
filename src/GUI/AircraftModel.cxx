@@ -420,10 +420,10 @@ protected:
 
         // notify any affected items. Linear scan here avoids another map/dict structure.
         for (auto pkg : m_model->m_packages) {
-            const int variantCount = pkg->variants().size();
+            const size_t variantCount = pkg->variants().size();
             bool notifyChanged = false;
 
-            for (int v=0; v < variantCount; ++v) {
+            for (size_t v=0; v < variantCount; ++v) {
                 const Package::Thumbnail& thumb(pkg->thumbnailForVariant(v));
                 if (thumb.url == aThumbnailUrl) {
                     notifyChanged = true;
@@ -446,7 +446,7 @@ private:
             return QModelIndex();
         }
 
-        size_t offset = it - m_model->m_packages.begin();
+        int offset = std::distance(m_model->m_packages.begin(), it);
         return m_model->index(offset + m_model->m_items.size());
     }
 
