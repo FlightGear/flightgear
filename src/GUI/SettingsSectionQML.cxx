@@ -17,13 +17,14 @@ SettingsSectionQML::SettingsSectionQML()
 
 void SettingsSectionQML::internalUpdateAdvanced()
 {
+    const bool showAdvanced = m_showAdvanced | m_forceShowAdvanced;
     Q_FOREACH (SettingsControl* w, controls()) {
         if (w->advanced()) {
-            w->setVisible(m_showAdvanced);
+            w->setVisible(showAdvanced);
         }
 
         if (w->property("simple").toBool()) {
-            w->setVisible(!m_showAdvanced);
+            w->setVisible(!showAdvanced);
         }
     }
 }
@@ -158,4 +159,14 @@ void SettingsSectionQML::setSummary(QString summary)
     m_summary = summary;
     emit qmlSummaryChanged(summary);
     emit summaryChanged(summary);
+}
+
+void SettingsSectionQML::setSearchTerm(QString search)
+{
+    m_forceShowAdvanced = false;
+    Q_FOREACH(SettingsControl* control, controls()) {
+        const bool matches = control->setSearchTerm(search);
+        m_forceShowAdvanced |= (matches && control->advanced());
+    }
+    internalUpdateAdvanced();
 }

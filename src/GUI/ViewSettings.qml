@@ -8,7 +8,7 @@ Section {
         id: fullscreen
         label: "Start full-screen"
         description: "Start the simulator in full-screen mode"
-        keywords: ["window", "full", "screen"]
+        keywords: ["window", "full", "screen", "maximize"]
         option: "fullscreen"
     }
 
@@ -21,6 +21,8 @@ Section {
         choices: ["640x480", "800x600", "1024x768", "1920x1080", "2560x1600" ]
         defaultIndex: 2
         readonly property bool isDefault: selectedIndex == defaultIndex
+        keywords: ["window", "geometry", "size", "resolution"]
+
     }
 
     onApply: {

@@ -42,7 +42,13 @@ public:
 
     virtual void restoreState(QSettings& settings) = 0;
 
-
+    /**
+     * @brief setSearchTerm - update the search term and decide if this control
+     * should e highlighted or not.
+     * @param search - the text being searched
+     * @return - if this control matched the search term or not
+     */
+    bool setSearchTerm(QString search);
 public slots:
     void setAdvanced(bool advanced);
 
@@ -70,6 +76,8 @@ protected:
     QString qmlName() const;
 
     QLabel* m_description = nullptr;
+
+    void paintEvent(QPaintEvent* pe) override;
 private:
     bool m_advanced = false;
     QStringList m_keywords;

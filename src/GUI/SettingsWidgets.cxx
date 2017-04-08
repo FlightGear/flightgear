@@ -14,64 +14,13 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QDateTimeEdit>
+#include <QPainter>
 
 #include "LaunchConfig.hxx"
 
-SettingsCheckbox::SettingsCheckbox(QWidget* parent) :
-    SettingsControl(parent)
-{
-    QVBoxLayout* vbox = new QVBoxLayout(this);
-    setLayout(vbox);
-    m_check = new QCheckBox(this);
-    vbox->addWidget(m_check);
-    createDescription();
-    vbox->addWidget(m_description);
-    connect(m_check, &QCheckBox::toggled, this, &SettingsCheckbox::checkedChanged);
-}
+const int MARGIN_HINT = 4;
 
-QString SettingsCheckbox::label() const
-{
-    return m_check->text();
-}
-
-bool SettingsCheckbox::isChecked() const
-{
-    return m_check->isChecked();
-}
-
-void SettingsCheckbox::setChecked(bool checked)
-{
-    if (checked == isChecked()) {
-        return;
-    }
-
-    m_check->setChecked(checked);
-    emit checkedChanged(checked);
-}
-
-void SettingsCheckbox::setLabel(QString label)
-{
-    m_check->setText(label);
-}
-
-void SettingsCheckbox::apply(LaunchConfig* lconfig) const
-{
-    if (option().isEmpty()) {
-        return;
-    }
-
-    lconfig->setEnableDisableOption(option(), isChecked());
-}
-
-void SettingsCheckbox::saveState(QSettings &settings) const
-{
-    settings.setValue(qmlName(), isChecked());
-}
-
-void SettingsCheckbox::restoreState(QSettings &settings)
-{
-    setChecked(settings.value(qmlName(), isChecked()).toBool());
-}
+/////////////////////////////////////////////////////////////////////////////////
 
 QString SettingsControl::label() const
 {
@@ -95,6 +44,24 @@ QStringList SettingsControl::keywords() const
 QString SettingsControl::option() const
 {
     return m_option;
+}
+
+bool SettingsControl::setSearchTerm(QString search)
+{
+    bool inSearch = false;
+    // only show matches when search string is at least three characters,
+    // to avoid many hits when the user starts typing
+    if (search.length() > 2) {
+        Q_FOREACH(QString k, m_keywords) {
+            if (k.indexOf(search, 0, Qt::CaseInsensitive) >= 0) {
+                inSearch = true;
+            }
+        }
+    }
+
+    setProperty("search-result", inSearch);
+    update();
+    return inSearch;
 }
 
 void SettingsControl::setAdvanced(bool advanced)
@@ -158,13 +125,91 @@ QString SettingsControl::qmlName() const
     return s;
 }
 
+void SettingsControl::paintEvent(QPaintEvent *pe)
+{
+    QWidget::paintEvent(pe);
+
+    if (property("search-result").toBool()) {
+        QPainter painter(this);
+        painter.setRenderHints(QPainter::Antialiasing);
+        QPen pen(QColor("#7f7f7fff"), 1);
+        painter.setPen(pen);
+        painter.setBrush(QColor("#2f7f7fff"));
+        painter.drawRoundedRect(rect(), 8, 8);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+SettingsCheckbox::SettingsCheckbox(QWidget* parent) :
+    SettingsControl(parent)
+{
+    QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(MARGIN_HINT);
+    setLayout(vbox);
+    m_check = new QCheckBox(this);
+    vbox->addWidget(m_check);
+    createDescription();
+    vbox->addWidget(m_description);
+    connect(m_check, &QCheckBox::toggled, this, &SettingsCheckbox::checkedChanged);
+}
+
+QString SettingsCheckbox::label() const
+{
+    return m_check->text();
+}
+
+bool SettingsCheckbox::isChecked() const
+{
+    return m_check->isChecked();
+}
+
+void SettingsCheckbox::setChecked(bool checked)
+{
+    if (checked == isChecked()) {
+        return;
+    }
+
+    m_check->setChecked(checked);
+    emit checkedChanged(checked);
+}
+
+void SettingsCheckbox::setLabel(QString label)
+{
+    m_check->setText(label);
+}
+
+void SettingsCheckbox::apply(LaunchConfig* lconfig) const
+{
+    if (option().isEmpty()) {
+        return;
+    }
+
+    lconfig->setEnableDisableOption(option(), isChecked());
+}
+
+void SettingsCheckbox::saveState(QSettings &settings) const
+{
+    settings.setValue(qmlName(), isChecked());
+}
+
+void SettingsCheckbox::restoreState(QSettings &settings)
+{
+    setChecked(settings.value(qmlName(), isChecked()).toBool());
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
 SettingsComboBox::SettingsComboBox(QWidget *pr) :
     SettingsControl(pr)
 {
     QVBoxLayout* vbox = new QVBoxLayout(this);
     setLayout(vbox);
+    vbox->setMargin(MARGIN_HINT);
 
     QHBoxLayout* hbox = new QHBoxLayout;
+    hbox->setMargin(MARGIN_HINT);
+
     vbox->addLayout(hbox);
     m_combo = new QComboBox(this);
 
@@ -274,9 +319,12 @@ SettingsIntSpinbox::SettingsIntSpinbox(QWidget *pr) :
     SettingsControl(pr)
 {
     QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(MARGIN_HINT);
     setLayout(vbox);
 
     QHBoxLayout* hbox = new QHBoxLayout;
+    hbox->setMargin(MARGIN_HINT);
+
     vbox->addLayout(hbox);
     m_spin = new QSpinBox(this);
 
@@ -362,9 +410,11 @@ SettingsText::SettingsText(QWidget *pr) :
     SettingsControl(pr)
 {
     QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(MARGIN_HINT);
     setLayout(vbox);
 
     QHBoxLayout* hbox = new QHBoxLayout;
+    hbox->setMargin(MARGIN_HINT);
     vbox->addLayout(hbox);
     m_edit = new QLineEdit(this);
 
@@ -442,9 +492,11 @@ SettingsPath::SettingsPath(QWidget *pr) :
     SettingsControl(pr)
 {
     QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(MARGIN_HINT);
     setLayout(vbox);
 
     QHBoxLayout* hbox = new QHBoxLayout;
+    hbox->setMargin(MARGIN_HINT);
     vbox->addLayout(hbox);
 
     m_changeButton = new QPushButton(tr("Change"), this);
@@ -581,9 +633,11 @@ SettingsDateTime::SettingsDateTime(QWidget *pr) :
     SettingsControl(pr)
 {
     QVBoxLayout* vbox = new QVBoxLayout(this);
+    vbox->setMargin(MARGIN_HINT);
     setLayout(vbox);
 
     QHBoxLayout* hbox = new QHBoxLayout;
+    hbox->setMargin(MARGIN_HINT);
     vbox->addLayout(hbox);
 
     m_edit = new QDateTimeEdit;

@@ -10,7 +10,7 @@ Section {
         description: "FlightGear can automatically download scenery as needed, and check for updates to "
             + "the scenery. If you disable this option, you will need to download & install scenery "
             + "using an alternative method."
-        keywords: ["terrasync", "download"]
+        keywords: ["terrasync", "download", "scenery"]
         option: "terrasync"
     }
 
@@ -27,6 +27,8 @@ Section {
         defaultPath: _config.defaultDownloadDir
         option: "download-dir"
         dialogPrompt: "Choose a location to store download files."
+
+        keywords: ["download", "storage", "disk"]
     }
 
     onApply: {

@@ -28,6 +28,7 @@ SettingsSection::SettingsSection(QWidget* pr) :
 
     if (!layout()) {
         QVBoxLayout* vbox = new QVBoxLayout(this);
+        vbox->setMargin(4);
         setLayout(vbox);
     }
 }

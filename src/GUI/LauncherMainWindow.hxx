@@ -108,6 +108,8 @@ private slots:
     void onAircraftPathsChanged();
 
     void onChangeDataDir();
+
+    void onSettingsSearchChanged();
 private:
 
     /**

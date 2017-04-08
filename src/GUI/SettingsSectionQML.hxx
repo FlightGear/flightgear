@@ -36,6 +36,7 @@ public:
 public slots:
     void setSummary(QString summary);
 
+    void setSearchTerm(QString search);
 signals:
     void controlsChanged();
 
@@ -63,6 +64,7 @@ private:
     void updateShowAdvanced() override;
     QString m_summary;
     QObjectList m_controls;
+    bool m_forceShowAdvanced; ///< overrides show-advanced when searching
 };
 
 #endif // SETTINGSSECTIONQML_HXX

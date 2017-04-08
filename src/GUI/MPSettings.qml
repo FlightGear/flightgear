@@ -12,7 +12,7 @@ Section {
         description: "Flightgear supporters maintain a network of server to enable global multi-user "
             + "flight. This requires a moderately fast Inernet connection to be usable. Your aircraft "
             + "will be visible to other users online, and you will see their aircraft."
-        keywords: ["network", "mp"]
+        keywords: ["network", "mp", "multiplay","online"]
     }
 
     LineEdit {
@@ -23,6 +23,7 @@ Section {
                      "how ATC services and other pilots will refer to you. " +
                      "(Maximum of ten charatcers permitted)"
         placeholder: "D-FGFS"
+        keywords: ["callsign", "handle", "name"]
     }
 
     Combo {
@@ -33,6 +34,8 @@ Section {
         model: _mpServers
 
         readonly property bool currentIsCustom: (model.serverForIndex(selectedIndex) == "__custom__")
+
+        keywords: ["server", "hostname"]
     }
 
     Connections

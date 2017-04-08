@@ -23,6 +23,8 @@ Section {
             "effects and more. However, not all aircraft appear correctly and performance will " +
             "depend greatly on your system hardware."
         ]
+
+        keywords: ["als", "rembrandt", "render", "shadow"]
     }
 
     Combo {
@@ -31,7 +33,7 @@ Section {
         description: "Anti-aliasing improves the appearance of high-contrast edges and lines." +
         "This is especially noticeable on sloping or diagonal egdes. " +
         "Higher settings can reduce performance."
-        keywords: ["msaa"]
+        keywords: ["msaa", "anti", "aliasing", "multi", "sample"]
         choices: ["Off", "2x", "4x"]
         enabled: !rembrandt
         property var data: [0, 2, 4];

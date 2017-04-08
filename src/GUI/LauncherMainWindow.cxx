@@ -311,8 +311,8 @@ void LauncherMainWindow::buildSettingsSections()
     settingsVBox->addWidget(m_extraSettings);
     settingsVBox->addStretch(1);
 
-    // disable search for the moment, not implemented
-    m_ui->settingsSearchEdit->hide();
+    connect(m_ui->settingsSearchEdit, &QLineEdit::textChanged,
+            this, &LauncherMainWindow::onSettingsSearchChanged);
 }
 
 void LauncherMainWindow::buildEnvironmentSections()
@@ -1087,5 +1087,12 @@ void LauncherMainWindow::onChangeDataDir()
     } // scope the ensure settings are written nicely
 
     flightgear::restartTheApp();
+}
+
+void LauncherMainWindow::onSettingsSearchChanged()
+{
+    Q_FOREACH(SettingsSectionQML* ss, findChildren<SettingsSectionQML*>()) {
+        ss->setSearchTerm(m_ui->settingsSearchEdit->text());
+    }
 }
 
