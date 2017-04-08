@@ -1,4 +1,5 @@
 #include <string>
+#include <cstdlib>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/exception.hxx>
@@ -112,11 +113,11 @@ namespace flightgear
 	  return MSG_BOX_OK;
   }
 
-  MessageBoxResult fatalMessageBox(const std::string& caption,
+  [[noreturn]] void fatalMessageBox(const std::string& caption,
       const std::string& msg,
       const std::string& moreText)
   {
-	  return MSG_BOX_OK;
+	  std::abort();
   }
 }
 

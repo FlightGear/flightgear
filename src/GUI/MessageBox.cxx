@@ -4,6 +4,8 @@
 
 #include <simgear/simgear_config.h>
 
+#include <cstdlib>
+
 #include "MessageBox.hxx"
 
 #include <Main/fg_props.hxx>
@@ -146,16 +148,16 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 #endif
 }
 
-MessageBoxResult fatalMessageBox(const std::string& caption,
-    const std::string& msg,
-    const std::string& moreText)
+[[noreturn]] void fatalMessageBox(const std::string& caption,
+                                  const std::string& msg,
+                                  const std::string& moreText)
 {
 #if defined(SG_WINDOWS)
-    return win32MessageBox(caption, msg, moreText);
+    win32MessageBox(caption, msg, moreText);
 #elif defined(SG_MAC)
-    return cocoaFatalMessage(msg, moreText);
+    cocoaFatalMessage(msg, moreText);
 #elif defined(HAVE_QT)
-    return QtMessageBox(caption, msg, moreText, true);
+    QtMessageBox(caption, msg, moreText, true);
 #else
     std::string s = "FATAL: "+ msg;
     if (!moreText.empty()) {
@@ -169,8 +171,9 @@ MessageBoxResult fatalMessageBox(const std::string& caption,
         dlg->setStringValue("text/label", s  );
         _gui->showDialog("popup");
     }
-    return MSG_BOX_OK;
 #endif
+
+    std::abort();
 }
 
 } // of namespace flightgear
