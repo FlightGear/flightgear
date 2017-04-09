@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QNetworkReply>
+#include <QDebug>
 
 const int BORDER_SIZE = 16;
 
