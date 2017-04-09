@@ -17,7 +17,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
     const std::string& msg,
     const std::string& moreText = std::string());
 
-[[noreturn]] void fatalMessageBox(const std::string& caption,
+MessageBoxResult fatalMessageBox(const std::string& caption,
     const std::string& msg,
     const std::string& moreText = std::string());
 

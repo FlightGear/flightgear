@@ -148,16 +148,16 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 #endif
 }
 
-[[noreturn]] void fatalMessageBox(const std::string& caption,
-                                  const std::string& msg,
-                                  const std::string& moreText)
+MessageBoxResult fatalMessageBox(const std::string& caption,
+    const std::string& msg,
+    const std::string& moreText)
 {
 #if defined(SG_WINDOWS)
-    win32MessageBox(caption, msg, moreText);
+    return win32MessageBox(caption, msg, moreText);
 #elif defined(SG_MAC)
-    cocoaFatalMessage(msg, moreText);
+    return cocoaFatalMessage(msg, moreText);
 #elif defined(HAVE_QT)
-    QtMessageBox(caption, msg, moreText, true);
+    return QtMessageBox(caption, msg, moreText, true);
 #else
     std::string s = "FATAL: "+ msg;
     if (!moreText.empty()) {
@@ -171,9 +171,8 @@ MessageBoxResult modalMessageBox(const std::string& caption,
         dlg->setStringValue("text/label", s  );
         _gui->showDialog("popup");
     }
+    return MSG_BOX_OK;
 #endif
-
-    std::abort();
 }
 
 } // of namespace flightgear

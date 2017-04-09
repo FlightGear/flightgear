@@ -113,11 +113,11 @@ namespace flightgear
 	  return MSG_BOX_OK;
   }
 
-  [[noreturn]] void fatalMessageBox(const std::string& caption,
+  MessageBoxResult fatalMessageBox(const std::string& caption,
       const std::string& msg,
       const std::string& moreText)
   {
-	  std::abort();
+	  return MSG_BOX_OK;
   }
 }
 
