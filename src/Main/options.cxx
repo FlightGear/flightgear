@@ -2079,25 +2079,31 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 
 // system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
-  std::string name_for_error = config.utf8Str();
+  std::string nameForError = config.utf8Str();
   if( ! hostname.empty() ) {
     config = globals->get_fg_root();
     config.append( "system.fgfsrc" );
     config.concat( "." );
     config.concat( hostname );
     if (config.exists()) {
-      flightgear::fatalMessageBox("Unsupported configuration",
-        "You have a " + config.utf8Str() + " file, which is no longer processed for security reasons",
-        "If you created this file intentionally, please move it to " + name_for_error);
+      flightgear::fatalMessageBoxThenExit(
+        "Unsupported configuration",
+        "You have a '" + config.utf8Str() + "' file, which is no longer "
+        "processed for security reasons.",
+        "If you created this file intentionally, please move it to '" +
+        nameForError + "'.");
     }
   }
 
   config = globals->get_fg_root();
   config.append( "system.fgfsrc" );
   if (config.exists()) {
-    flightgear::fatalMessageBox("Unsupported configuration",
-      "You have a " + config.utf8Str() + " file, which is no longer processed for security reasons",
-      "If you created this file intentionally, please move it to " + name_for_error);
+    flightgear::fatalMessageBoxThenExit(
+      "Unsupported configuration",
+      "You have a '" + config.utf8Str() + "' file, which is no longer "
+      "processed for security reasons.",
+      "If you created this file intentionally, please move it to '" +
+      nameForError + "'.");
   }
 }
 
@@ -2818,26 +2824,24 @@ void Options::setupRoot(int argc, char **argv)
     }
 #else
     SG_UNUSED(usingDefaultRoot);
-    
+
     // validate it
     if (base_version.empty()) {
-        flightgear::fatalMessageBox("Base package not found",
-                                    "Required data files not found, check your installation.",
-                                    "Looking for base-package files at: '" + root.str() + "'");
-
-        exit(-1);
+        flightgear::fatalMessageBoxThenExit(
+          "Base package not found",
+          "Required data files not found, please check your installation.",
+          "Looking for base-package files at: '" + root.str() + "'");
     }
 
     // only compare major and minor version, not the patch level.
     const int versionComp = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, base_version, 2);
     if (versionComp != 0) {
-      flightgear::fatalMessageBox("Base package version mismatch",
-                                  "Version check failed: please check your installation.",
-                                  "Found data files for version '" + base_version +
-                                  "' at '" + globals->get_fg_root().str() + "', version '"
-                                  + std::string(FLIGHTGEAR_VERSION) + "' is required.");
-
-    exit(-1);
+      flightgear::fatalMessageBoxThenExit(
+        "Base package version mismatch",
+        "Version check failed, please check your installation.",
+        "Found data files for version '" + base_version + "' at '" +
+        globals->get_fg_root().str() + "', version '" +
+        std::string(FLIGHTGEAR_VERSION) + "' is required.");
   }
 #endif
 }

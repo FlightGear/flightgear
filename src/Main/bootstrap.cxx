@@ -223,8 +223,10 @@ int main ( int argc, char **argv )
 {
 #ifdef ENABLE_SIMD
   if (!detectSIMD()) {
-    flightgear::fatalMessageBox("Fatal error","SSE2 support not detetcted but this version of FlightGear requires SSE2 hardware support.");
-    return -1;
+    flightgear::fatalMessageBoxThenExit(
+      "Fatal error",
+      "SSE2 support not detected, but this version of FlightGear requires "
+      "SSE2 hardware support.");
   }
 #endif
 
@@ -330,12 +332,13 @@ int main ( int argc, char **argv )
         std::string info;
         if (std::strlen(t.getOrigin()) != 0)
             info = std::string("received from ") + t.getOrigin();
-        flightgear::fatalMessageBox("Fatal exception", t.getFormattedMessage(), info);
+        flightgear::fatalMessageBoxWithoutExit(
+          "Fatal exception", t.getFormattedMessage(), info);
 
     } catch (const std::exception &e ) {
-        flightgear::fatalMessageBox("Fatal exception", e.what());
+        flightgear::fatalMessageBoxWithoutExit("Fatal exception", e.what());
     } catch (const std::string &s) {
-        flightgear::fatalMessageBox("Fatal exception", s);
+        flightgear::fatalMessageBoxWithoutExit("Fatal exception", s);
     } catch (const char *s) {
         std::cerr << "Fatal error (const char*): " << s << std::endl;
 

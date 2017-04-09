@@ -1229,9 +1229,10 @@ NavDataCache::NavDataCache()
 
             if (t == (MAX_TRIES - 1)) {
                 // final attempt still failed, we are busted
-                flightgear::fatalMessageBox("Unable to open navigation cache",
-                                            std::string("The navigation data cache could not be opened:") + e.getMessage(),
-                                            e.getOrigin());
+                flightgear::fatalMessageBoxThenExit(
+                  "Unable to open navigation cache",
+                  std::string("The navigation data cache could not be opened:")
+                  + e.getMessage(), e.getOrigin());
             }
 
             d.reset();
@@ -1241,9 +1242,10 @@ NavDataCache::NavDataCache()
                 bool ok = homePath.remove();
                 if (!ok) {
                     SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: failed to remove previous cache file");
-                    flightgear::fatalMessageBox("Unable to re-create navigation cache",
-                                                "Attempting to remove the old cache failed.",
-                                                "Location: "  + homePath.utf8Str());
+                    flightgear::fatalMessageBoxThenExit(
+                      "Unable to re-create navigation cache",
+                      "Attempting to remove the old cache failed.",
+                      "Location: "  + homePath.utf8Str());
                 }
             }
         }

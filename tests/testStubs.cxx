@@ -119,6 +119,14 @@ namespace flightgear
   {
 	  return MSG_BOX_OK;
   }
+
+  [[noreturn]] void fatalMessageBoxThenExit(const std::string& caption,
+      const std::string& msg,
+      const std::string& moreText,
+      int exitStatus)
+  {
+          exit(exitStatus);
+  }
 }
 
 #ifdef __APPLE__

@@ -85,10 +85,9 @@ void fgInitAllowedPaths()
         // Forbid using this version of fgValidatePath() with older
         // (not normalizing non-existent files) versions of realpath(),
         // as that would be a security hole
-        flightgear::fatalMessageBox("Nasal initialization error",
-                                    "Version mismatch - please update simgear",
-                                    "");
-        exit(-1);
+        flightgear::fatalMessageBoxThenExit(
+          "Nasal initialization error",
+          "Version mismatch - please update simgear");
     }
     read_allowed_paths.clear();
     write_allowed_paths.clear();
@@ -102,10 +101,10 @@ void fgInitAllowedPaths()
         // if we get the initialization order wrong, better to have an
         // obvious error than a can-read-everything security hole...
           if (it->isNull()) {
-              flightgear::fatalMessageBox("Nasal initialization error",
-                 "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT, FG_SCENERY or --allow-nasal-read",
-                                   "or fgInitAllowedPaths() called too early");
-              exit(-1);
+              flightgear::fatalMessageBoxThenExit(
+                "Nasal initialization error",
+                "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT, FG_SCENERY or "
+                "--allow-nasal-read, or fgInitAllowedPaths() called too early");
           }
           read_allowed_paths.push_back(it->realpath().utf8Str() + "/*");
           read_allowed_paths.push_back(it->realpath().utf8Str());
@@ -131,10 +130,12 @@ void fgInitAllowedPaths()
         !fgValidatePath(homePath + "\\..\\no.log",false).isNull() ||
         fgValidatePath(homePath + "/aircraft-data/yes..xml",true).isNull() ||
         fgValidatePath(homePath + "/.\\yes.bmp",false).isNull()) {
-            flightgear::fatalMessageBox("Nasal initialization error",
-                                    "The FG_HOME directory must not be inside any of the FG_ROOT, FG_AIRCRAFT, FG_SCENERY or --allow-nasal-read directories",
-                                    "(check that you have not accidentally included an extra :, as an empty part means the current directory)");
-            exit(-1);
+            flightgear::fatalMessageBoxThenExit(
+              "Nasal initialization error",
+              "The FG_HOME directory must not be inside any of the FG_ROOT, "
+              "FG_AIRCRAFT, FG_SCENERY or --allow-nasal-read directories",
+              "(check that you have not accidentally included an extra ':', "
+              "as an empty part means the current directory)");
     }
 }
 

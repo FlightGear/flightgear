@@ -2,6 +2,7 @@
 #define FG_GUI_MESSAGE_BOX_HXX
 
 #include <string>
+#include <cstdlib>
 
 namespace flightgear
 {
@@ -17,9 +18,17 @@ MessageBoxResult modalMessageBox(const std::string& caption,
     const std::string& msg,
     const std::string& moreText = std::string());
 
-MessageBoxResult fatalMessageBox(const std::string& caption,
+MessageBoxResult fatalMessageBoxWithoutExit(
+    const std::string& caption,
     const std::string& msg,
     const std::string& moreText = std::string());
+
+[[noreturn]] void fatalMessageBoxThenExit(
+    const std::string& caption,
+    const std::string& msg,
+    const std::string& moreText = std::string(),
+    int exitStatus = EXIT_FAILURE);
+
 
 } // of namespace flightgear
 

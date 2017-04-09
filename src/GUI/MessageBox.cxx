@@ -148,7 +148,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 #endif
 }
 
-MessageBoxResult fatalMessageBox(const std::string& caption,
+MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     const std::string& msg,
     const std::string& moreText)
 {
@@ -173,6 +173,16 @@ MessageBoxResult fatalMessageBox(const std::string& caption,
     }
     return MSG_BOX_OK;
 #endif
+}
+
+[[noreturn]] void fatalMessageBoxThenExit(
+    const std::string& caption,
+    const std::string& msg,
+    const std::string& moreText,
+    int exitStatus)
+{
+    fatalMessageBoxWithoutExit(caption, msg, moreText);
+    exit(exitStatus);
 }
 
 } // of namespace flightgear

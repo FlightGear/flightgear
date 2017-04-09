@@ -195,7 +195,8 @@ public:
   {
     std::string aircraft = fgGetString( "/sim/aircraft", "");
     if (aircraft.empty()) {
-        flightgear::fatalMessageBox("No aircraft", "No aircraft was specified");
+      flightgear::fatalMessageBoxWithoutExit("No aircraft",
+                                             "No aircraft was specified");
       SG_LOG(SG_GENERAL, SG_ALERT, "no aircraft specified");
       return false;
     }
@@ -212,10 +213,12 @@ public:
         try {
           readProperties(setFile, globals->get_props());
         } catch ( const sg_exception &e ) {
-          SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
-            flightgear::fatalMessageBox("Error reading aircraft",
-                                        "An error occured reading the requested aircraft (" + aircraft + ")",
-                                        e.getFormattedMessage());
+          SG_LOG(SG_INPUT, SG_ALERT,
+                 "Error reading aircraft: " << e.getFormattedMessage());
+          flightgear::fatalMessageBoxWithoutExit(
+            "Error reading aircraft",
+            "An error occured reading the requested aircraft (" + aircraft + ")",
+            e.getFormattedMessage());
           return false;
         }
           // apply state after the -set.xml, but before any options are are set
@@ -224,9 +227,11 @@ public:
       } else {
         SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
                "' not found in specified dir:" << aircraftDir);
-          flightgear::fatalMessageBox("Aircraft not found",
-                                      "The requested aircraft '" + aircraft + "' could not be found in the specified location.",
-                                      aircraftDir);
+        flightgear::fatalMessageBoxWithoutExit(
+          "Aircraft not found",
+          "The requested aircraft (" + aircraft + ") could not be found "
+          "in the specified location.",
+          aircraftDir);
         return false;
       }
     }
@@ -245,10 +250,12 @@ public:
     }
     
     if (_foundPath.isNull()) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Cannot find specified aircraft: " << aircraft );
-        flightgear::fatalMessageBox("Aircraft not found",
-                                    "The requested aircraft '" + aircraft + "' could not be found in any of the search paths");
-
+      SG_LOG(SG_GENERAL, SG_ALERT,
+             "Cannot find the specified aircraft: '" << aircraft << "'");
+      flightgear::fatalMessageBoxWithoutExit(
+        "Aircraft not found",
+        "The requested aircraft (" + aircraft + ") could not be found "
+        "in any of the search paths.");
       return false;
     }
     
@@ -262,10 +269,12 @@ public:
     try {
       readProperties(_foundPath, globals->get_props());
     } catch ( const sg_exception &e ) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
-        flightgear::fatalMessageBox("Error reading aircraft",
-                                    "An error occured reading the requested aircraft (" + aircraft + ")",
-                                    e.getFormattedMessage());
+      SG_LOG(SG_INPUT, SG_ALERT,
+             "Error reading aircraft: " << e.getFormattedMessage());
+      flightgear::fatalMessageBoxWithoutExit(
+        "Error reading aircraft",
+        "An error occured reading the requested aircraft (" + aircraft + ")",
+        e.getFormattedMessage());
       return false;
     }
 
@@ -351,12 +360,11 @@ static SGPath platformDefaultDataPath()
   SGPath appDataPath = SGPath::fromEnv("APPDATA");
 
   if (appDataPath.isNull()) {
-    flightgear::fatalMessageBox(
+    flightgear::fatalMessageBoxThenExit(
       "FlightGear", "Unable to get the value of APPDATA.",
       "FlightGear is unable to retrieve the value of the APPDATA environment "
       "variable. This is quite unexpected on Windows platforms, and FlightGear "
       "can't continue its execution without this value, sorry.");
-    exit(EXIT_FAILURE);
   }
 
   return appDataPath / "flightgear.org";
@@ -384,9 +392,10 @@ bool fgInitHome()
     }
     
     if (!fgHome.exists()) {
-        flightgear::fatalMessageBox("Problem setting up user data",
-                                    "Unable to create the user-data storage folder at: '"
-                                    + dataPath.utf8Str() + "'");
+        flightgear::fatalMessageBoxWithoutExit(
+          "Problem setting up user data",
+          "Unable to create the user-data storage folder at '" +
+          dataPath.utf8Str() + "'.");
         return false;
     }
     
@@ -425,9 +434,9 @@ bool fgInitHome()
         fgSetBool("/sim/fghome-readonly", true);
         return true;
     }
-    
-	char buf[16];
-	std::string ps = pidPath.local8BitStr();
+
+    char buf[16];
+    std::string ps = pidPath.local8BitStr();
 
     // do open+unlink trick to the file is deleted on exit, even if we
     // crash or exit(-1)
@@ -439,14 +448,17 @@ bool fgInitHome()
           result = false;
     }
 
-	if (!result) {
-		flightgear::fatalMessageBox("File permissions problem",
-			"Can't write to user-data storage folder, check file permissions and FG_HOME.",
-			"User-data at:" + dataPath.utf8Str());
-	}
+    if (!result) {
+        flightgear::fatalMessageBoxWithoutExit(
+            "File permissions problem",
+            "Can't write to user-data storage folder, check file permissions "
+            "and FG_HOME.",
+            "User-data at '" + dataPath.utf8Str() + "'.");
+        return false;
+    }
 #endif
     fgSetBool("/sim/fghome-readonly", false);
-	return result;
+    return result;
 }
 
 // Read in configuration (file and command line)
@@ -493,11 +505,12 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
     SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
     if (!defaultsXML.exists()) {
-        flightgear::fatalMessageBox("Missing files",
-                                    "Couldn't load an essential simulator data file",
-                                    defaultsXML.utf8Str());
+        flightgear::fatalMessageBoxThenExit(
+            "Missing file",
+            "Couldn't load an essential simulator data file.",
+            defaultsXML.utf8Str());
     }
-    
+
     fgLoadProps("defaults.xml", globals->get_props());
     SG_LOG(SG_GENERAL, SG_INFO, "Finished Reading global defaults");
 
@@ -582,9 +595,10 @@ int fgInitAircraft(bool reinit)
         } else {
 #if 0
             // naturally the better option would be to on-demand install it!
-            flightgear::fatalMessageBox("Aircraft not installed",
-                                        "Requested aircraft is not currently installed.",
-                                        aircraftId);
+            flightgear::fatalMessageBoxWithoutExit(
+                "Aircraft not installed",
+                "Requested aircraft is not currently installed.",
+                aircraftId);
 
             return flightgear::FG_OPTIONS_ERROR;
 #endif
