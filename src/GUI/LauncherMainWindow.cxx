@@ -12,8 +12,6 @@
 #include <QQmlComponent>
 #include <QQmlContext>
 
-#include <private/qqmlglobal_p.h>
-
 // simgear headers
 #include <simgear/package/Install.hxx>
 
