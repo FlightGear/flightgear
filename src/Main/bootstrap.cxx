@@ -307,6 +307,7 @@ int main ( int argc, char **argv )
     setlocale(LC_COLLATE, "C");
 
     bool fgviewer = flightgear::Options::checkForArg(argc, argv, "fgviewer");
+    int exitStatus = EXIT_FAILURE;
     try {
         // http://code.google.com/p/flightgear-bugs/issues/detail?id=1231
         // ensure sglog is inited before atexit() is registered, so logging
@@ -323,10 +324,11 @@ int main ( int argc, char **argv )
 #endif
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
-        if (fgviewer)
-            fgviewerMain(argc, argv);
-        else
-            fgMainInit(argc, argv);
+        if (fgviewer) {
+            exitStatus = fgviewerMain(argc, argv);
+        } else {
+            exitStatus = fgMainInit(argc, argv);
+        }
 
     } catch (const sg_throwable &t) {
         std::string info;
@@ -334,7 +336,6 @@ int main ( int argc, char **argv )
             info = std::string("received from ") + t.getOrigin();
         flightgear::fatalMessageBoxWithoutExit(
           "Fatal exception", t.getFormattedMessage(), info);
-
     } catch (const std::exception &e ) {
         flightgear::fatalMessageBoxWithoutExit("Fatal exception", e.what());
     } catch (const std::string &s) {
@@ -352,7 +353,7 @@ int main ( int argc, char **argv )
 	crUninstall();
 #endif
 
-    return 0;
+    return exitStatus;
 }
 
 // do some clean up on exit.  Specifically we want to delete the sound-manager,
