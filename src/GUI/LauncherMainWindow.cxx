@@ -34,7 +34,7 @@
 #include "AircraftSearchFilterModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "SettingsWidgets.hxx"
-#include "previewwindow.h"
+#include "PreviewWindow.hxx"
 #include "LaunchConfig.hxx"
 #include "SettingsSectionQML.hxx"
 #include "ExtraSettingsSection.hxx"
@@ -98,7 +98,6 @@ QQmlPrivate::AutoParentResult launcher_autoParent(QObject* thing, QObject* paren
     SettingsSection* ss = qobject_cast<SettingsSection*>(parent);
     SettingsControl* sc = qobject_cast<SettingsControl*>(thing);
     if (ss && sc) {
-        qInfo() << "let's do this!" << ss << sc;
         sc->setParent(ss);
         return QQmlPrivate::Parented;
     }
@@ -503,7 +502,7 @@ void LauncherMainWindow::onRun()
     flightgear::Options* opt = flightgear::Options::sharedInstance();
     m_config->reset();
     m_config->collect();
-    
+
     // aircraft
     if (!m_selectedAircraft.isEmpty()) {
       // manage aircraft history
@@ -1095,4 +1094,3 @@ void LauncherMainWindow::onSettingsSearchChanged()
         ss->setSearchTerm(m_ui->settingsSearchEdit->text());
     }
 }
-

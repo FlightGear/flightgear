@@ -1,4 +1,4 @@
-#include "previewwindow.h"
+#include "PreviewWindow.hxx"
 
 #include <QPainter>
 #include <QMouseEvent>

@@ -1,7 +1,7 @@
 #ifndef EXTRASETTINGSSECTION_HXX
 #define EXTRASETTINGSSECTION_HXX
 
-#include "settingssection.h"
+#include "SettingsSection.hxx"
 
 class QTextEdit;
 class LaunchConfig;

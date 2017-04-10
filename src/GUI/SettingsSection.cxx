@@ -1,4 +1,4 @@
-#include "settingssection.h"
+#include "SettingsSection.hxx"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>

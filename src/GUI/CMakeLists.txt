@@ -117,10 +117,10 @@ if (HAVE_QT)
                             QtFileDialog.hxx
                             InstallSceneryDialog.hxx
                             InstallSceneryDialog.cxx
-                            previewwindow.cpp
-                            previewwindow.h
-                            SettingsSection.cpp
-                            SettingsSection.h
+                            PreviewWindow.cxx
+                            PreviewWindow.hxx
+                            SettingsSection.cxx
+                            SettingsSection.hxx
                             SettingsSectionQML.cxx
                             SettingsSectionQML.hxx
                             AdvancedSettingsButton.h
@@ -143,6 +143,15 @@ if (HAVE_QT)
                             MPServersModel.h
                             ${uic_sources}
                             ${qrc_sources})
+
+    #HACK: CMake with broken Qt5Qml_PRIVATE_INCLUDE_DIRS
+    # This is needed for Qt 5.2, possibly 5.3. Can be removed if we raise
+    # the minimum version higher.
+    if(NOT "${Qt5Qml_PRIVATE_INCLUDE_DIRS}" MATCHES "/QtQml/")
+      list(APPEND Qt5Qml_PRIVATE_INCLUDE_DIRS "${_qt5Core_install_prefix}/include/QtCore/${Qt5Core_VERSION}/QtCore")
+      list(APPEND Qt5Qml_PRIVATE_INCLUDE_DIRS "${_qt5Qml_install_prefix}/include/QtQml/${Qt5Core_VERSION}/QtQml")
+      list(REMOVE_DUPLICATES Qt5Qml_PRIVATE_INCLUDE_DIRS)
+    endif()
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml SimGearCore)

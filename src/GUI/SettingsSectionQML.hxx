@@ -1,7 +1,7 @@
 #ifndef SETTINGSSECTIONQML_HXX
 #define SETTINGSSECTIONQML_HXX
 
-#include "settingssection.h"
+#include "SettingsSection.hxx"
 
 #include <QQmlListProperty>
 
@@ -14,7 +14,7 @@ class SettingsSectionQML : public SettingsSection
 
     Q_PROPERTY(QQmlListProperty<QObject> controls READ qmlControls)
     Q_PROPERTY(QString summary READ summary WRITE setSummary NOTIFY qmlSummaryChanged)
-    
+
     Q_CLASSINFO("DefaultProperty", "controls")
 public:
     SettingsSectionQML();
