@@ -675,6 +675,103 @@ SGPath FGGlobals::autosaveFilePath(SGPath userDataPath) const
     return simgear::Dir(userDataPath).file(autosaveName());
 }
 
+static void deleteProperties(SGPropertyNode* props, const string_list& blacklist)
+{
+    const std::string path(props->getPath());
+    auto it = std::find_if(blacklist.begin(), blacklist.end(), [path](const std::string& black)
+                           { return simgear::strutils::matchPropPathToTemplate(path, black); });
+    if (it != blacklist.end()) {
+        SGPropertyNode* pr = props->getParent();
+        pr->removeChild(props);
+        return;
+    }
+
+    // recurse
+    for (int c=0; c < props->nChildren(); ++c) {
+        deleteProperties(props->getChild(c), blacklist);
+    }
+
+}
+
+using VersionPair = std::pair<int, int>;
+
+static bool operator<(const VersionPair& a, const VersionPair& b)
+{
+    if (a.first == b.first) {
+        return a.second < b.second;
+    }
+
+    return a.first < b.first;
+}
+
+static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* props)
+{
+    const string_list versionParts = simgear::strutils::split(VERSION, ".");
+    if (versionParts.size() < 2) {
+        return;
+    }
+
+    simgear::Dir userDataDir(userDataPath);
+    SGPath migratePath;
+    VersionPair foundVersion(0, 0);
+    const VersionPair currentVersion(simgear::strutils::to_int(versionParts[0]),
+                                     simgear::strutils::to_int(versionParts[1]));
+
+    for (auto previousSave : userDataDir.children(simgear::Dir::TYPE_FILE, ".xml")) {
+        const std::string base = previousSave.file_base();
+        VersionPair v;
+        // extract version from name
+        const int matches = ::sscanf(base.c_str(), "autosave_%d_%d", &v.first, &v.second);
+        if (matches != 2) {
+            continue;
+        }
+        
+        if (currentVersion < v) {
+            // ignore autosaves from more recent versions; this happens when
+            // running unsable and stable at the same time
+            continue;
+        }
+
+        if (v.first < 2000) {
+            // ignore autosaves from older versions, too much change to deal
+            // with.
+            continue;
+        }
+
+        if (foundVersion < v) {
+            foundVersion = v;
+            migratePath = previousSave;
+        }
+    }
+
+    if (!migratePath.exists()) {
+        return;
+    }
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Migrating old autosave:" << migratePath);
+    SGPropertyNode oldProps;
+
+    try {
+        readProperties(migratePath, &oldProps, SGPropertyNode::USERARCHIVE);
+    } catch (sg_exception& e) {
+        SG_LOG(SG_GENERAL, SG_WARN, "failed to read previous user settings:" << e.getMessage()
+               << "(from " << e.getOrigin() << ")");
+        return;
+    }
+
+    // read migration blacklist
+    string_list blacklist;
+    for (auto node : fgGetNode("/sim/autosave-migration/blacklist")->getChildren("path")) {
+        blacklist.push_back(node->getStringValue());
+    }
+
+    // apply migration filters for each property in turn
+    deleteProperties(&oldProps, blacklist);
+
+    // copy remaining props out
+    copyProperties(&oldProps, props);
+}
+
 // Load user settings from the autosave file (normally in $FG_HOME)
 void
 FGGlobals::loadUserSettings(SGPath userDataPath)
@@ -697,6 +794,10 @@ FGGlobals::loadUserSettings(SGPath userDataPath)
           SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
             << "(from " << e.getOrigin() << ")");
       }
+    } else {
+#if 0
+        tryAutosaveMigration(userDataPath, &autosave);
+#endif
     }
     copyProperties(&autosave, globals->get_props());
 }
