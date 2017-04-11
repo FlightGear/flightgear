@@ -285,7 +285,7 @@ void LauncherMainWindow::buildSettingsSections()
 
     QStringList sections = QStringList() << "general" << "mp" << "downloads" << "view" << "render";
     Q_FOREACH (QString section, sections) {
-        QQmlComponent* comp = new QQmlComponent(m_qmlEngine, "qrc:/settings/" + section, this);
+        QQmlComponent* comp = new QQmlComponent(m_qmlEngine, QUrl("qrc:///settings/" + section), this);
         if (comp->isError()) {
             qWarning() << "Errors parsing settings section:" << section << "\n" << comp->errorString();
         } else {
@@ -319,7 +319,7 @@ void LauncherMainWindow::buildEnvironmentSections()
 
     QStringList sections = QStringList() << "time" << "weather";
     Q_FOREACH (QString section, sections) {
-        QQmlComponent* comp = new QQmlComponent(m_qmlEngine, "qrc:/environment/" + section, this);
+        QQmlComponent* comp = new QQmlComponent(m_qmlEngine, QUrl("qrc:///environment/" + section), this);
         if (comp->isError()) {
             qWarning() << "Errors parsing environment section:" << section << "\n" << comp->errorString();
         } else {
