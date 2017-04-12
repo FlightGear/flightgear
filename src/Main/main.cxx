@@ -404,6 +404,18 @@ static void upper_case_property(const char *name)
     p->addChangeListener(muc);
 }
 
+// this hack is needed to avoid weird viewport sizing within OSG on Windows.
+// still required as of March 2017, sad times.
+// see for example https://sourceforge.net/p/flightgear/codetickets/1958/
+static void ATIScreenSizeHack()
+{
+    osg::ref_ptr<osg::Camera> hackCam = new osg::Camera;
+    hackCam->setRenderOrder(osg::Camera::PRE_RENDER);
+    int prettyMuchAnyInt = 1;
+    hackCam->setViewport(0, 0, prettyMuchAnyInt, prettyMuchAnyInt);
+    globals->get_renderer()->addCamera(hackCam, false);
+}
+
 // Propose NVIDIA Optimus / AMD Xpress to use high-end GPU
 #if defined(SG_WINDOWS)
 extern "C" {
@@ -541,6 +553,11 @@ int fgMainInit( int argc, char **argv )
     // Initialize the splash screen right away
     fntInit();
     fgSplashInit();
+
+    if (fgGetBool("/sim/ati-viewport-hack", true)) {
+        SG_LOG(SG_GENERAL, SG_WARN, "Enabling ATI/AMD viewport hack");
+        ATIScreenSizeHack();
+    }
 
     fgOutputSettings();
     
