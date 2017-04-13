@@ -38,11 +38,14 @@ private slots:
     void onAddDefaultCatalog();
 
     void onInstallScenery();
-private:
-    void updateUi();
+
+    void onDraggedAircraftList();
 
     void saveAircraftPaths();
     void saveSceneryPaths();
+private:
+    void updateUi();
+
     bool haveSceneryPath(QString path) const;
 
     Ui::AddOnsPage* m_ui;

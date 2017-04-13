@@ -493,6 +493,18 @@ void LauncherMainWindow::collectAircraftArgs()
             qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
         }
     }
+
+
+    // scenery paths
+    QSettings settings;
+    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
+        m_config->setArg("fg-scenery", path);
+    }
+
+    // aircraft paths
+    Q_FOREACH(QString path, settings.value("aircraft-paths").toStringList()) {
+        m_config->setArg("fg-aircraft", path);
+    }
 }
 
 void LauncherMainWindow::onRun()
@@ -511,16 +523,16 @@ void LauncherMainWindow::onRun()
           m_recentAircraft.pop_back();
     }
 
-//    m_ui->location->setLocationProperties();
+    // aircraft paths
+    QSettings settings;
     updateLocationHistory();
 
-    QSettings settings;
-    QString downloadDir = settings.value("download-dir").toString();
+    QString downloadDir = settings.value("downloadSettings/downloadDir").toString();
     if (!downloadDir.isEmpty()) {
         QDir d(downloadDir);
         if (!d.exists()) {
             int result = QMessageBox::question(this, tr("Create download folder?"),
-                                  tr("The selected location for downloads does not exist. Create it?"),
+                                  tr("The selected location for downloads does not exist. (%1) Create it?").arg(downloadDir),
                                                QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
             if (result == QMessageBox::Cancel) {
                 return;
@@ -530,17 +542,6 @@ void LauncherMainWindow::onRun()
                 d.mkpath(downloadDir);
             }
         }
-    }
-
-    // scenery paths
-    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
-        opt->addOption("fg-scenery", path.toStdString());
-    }
-
-    // aircraft paths
-    Q_FOREACH(QString path, settings.value("aircraft-paths").toStringList()) {
-        // can't use fg-aircraft for this, as it is processed before the launcher is run
-        globals->append_aircraft_path(path.toStdString());
     }
 
     if (settings.contains("restore-defaults-on-run")) {

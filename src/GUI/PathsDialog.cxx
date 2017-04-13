@@ -68,8 +68,14 @@ AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
     QStringList sceneryPaths = settings.value("scenery-paths").toStringList();
     m_ui->sceneryPathsList->addItems(sceneryPaths);
 
+    connect(m_ui->sceneryPathsList->model(), &QAbstractItemModel::rowsMoved,
+            this, &AddOnsPage::saveSceneryPaths);
+
     QStringList aircraftPaths = settings.value("aircraft-paths").toStringList();
     m_ui->aircraftPathsList->addItems(aircraftPaths);
+
+    connect(m_ui->aircraftPathsList->model(), &QAbstractItemModel::rowsMoved,
+            this, &AddOnsPage::saveAircraftPaths);
 
     updateUi();
 }
@@ -160,7 +166,6 @@ void AddOnsPage::onAddAircraftPath()
         }
 
         saveAircraftPaths();
-        emit aircraftPathsChanged();
     }
 }
 
@@ -169,7 +174,6 @@ void AddOnsPage::onRemoveAircraftPath()
     if (m_ui->aircraftPathsList->currentItem()) {
         delete m_ui->aircraftPathsList->currentItem();
         saveAircraftPaths();
-        emit aircraftPathsChanged();
     }
 }
 
@@ -183,6 +187,7 @@ void AddOnsPage::saveAircraftPaths()
     }
 
     settings.setValue("aircraft-paths", paths);
+    emit aircraftPathsChanged();
 }
 
 void AddOnsPage::saveSceneryPaths()
@@ -292,4 +297,9 @@ void AddOnsPage::updateUi()
 {
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
     m_ui->addDefaultCatalogButton->setEnabled(!http->isDefaultCatalogInstalled());
+}
+
+void AddOnsPage::onDraggedAircraftList()
+{
+    qWarning() << "did drag aircraft list";
 }
