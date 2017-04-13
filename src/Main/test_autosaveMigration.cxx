@@ -22,7 +22,7 @@
 
 #include <simgear/misc/test_macros.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/misc/sgstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
 
 #include "Main/globals.hxx"
