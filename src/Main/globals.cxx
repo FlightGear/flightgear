@@ -774,7 +774,7 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
 
 // Load user settings from the autosave file (normally in $FG_HOME)
 void
-FGGlobals::loadUserSettings(SGPath userDataPath)
+FGGlobals::loadUserSettings(SGPath userDataPath, bool tryMigrate)
 {
     if (userDataPath.isNull()) {
         userDataPath = get_fg_home();
@@ -794,10 +794,8 @@ FGGlobals::loadUserSettings(SGPath userDataPath)
           SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
             << "(from " << e.getOrigin() << ")");
       }
-    } else {
-#if 0
+    } else if (tryMigrate) {
         tryAutosaveMigration(userDataPath, &autosave);
-#endif
     }
     copyProperties(&autosave, globals->get_props());
 }

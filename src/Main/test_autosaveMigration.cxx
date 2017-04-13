@@ -98,7 +98,6 @@ void writeLegacyAutosave2(SGPath userData, int majorVersion, int minorVersion)
     of.close();
 }
 
-
 void testMigration()
 {
     fgtest::initTestGlobals("autosaveMigration");
@@ -141,7 +140,7 @@ void testMigration()
     blacklist->addChild("path")->setStringValue("/sim[0]/gui");
 
     // execute method under test
-    globals->loadUserSettings(testUserDataPath);
+    globals->loadUserSettings(testUserDataPath, true /* try migration */);
 
     SG_CHECK_EQUAL(globals->get_props()->getNode("sim")->getChildren("presets").size(), 2);
     SG_CHECK_EQUAL(globals->get_props()->getNode("sim")->getChildren("gui").size(), 0);
