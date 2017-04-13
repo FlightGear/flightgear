@@ -115,6 +115,15 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->setupUi(this);
 
     QMenuBar* mb = menuBar();
+
+#if !defined(Q_OS_MAC)
+    QMenu* fileMenu = mb->addMenu(tr("File"));
+    QAction* quitAction = fileMenu->addAction(tr("Exit"));
+    connect(quitAction, &QAction::triggered,
+            this, &LauncherMainWindow::onQuit);
+
+#endif
+
     QMenu* toolsMenu = mb->addMenu(tr("Tools"));
     QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
     connect(restoreDefaultsAction, &QAction::triggered,
