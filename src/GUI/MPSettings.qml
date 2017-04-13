@@ -10,7 +10,7 @@ Section {
         id: enableMP
         label: "Connect to the multi-player network"
         description: "Flightgear supporters maintain a network of server to enable global multi-user "
-            + "flight. This requires a moderately fast Inernet connection to be usable. Your aircraft "
+            + "flight. This requires a moderately fast Internet connection to be usable. Your aircraft "
             + "will be visible to other users online, and you will see their aircraft."
         keywords: ["network", "mp", "multiplay","online"]
     }
