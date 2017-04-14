@@ -41,7 +41,6 @@
 
 #include "ui_Launcher.h"
 #include "ui_NoOfficialHangar.h"
-#include "ui_UpdateAllAircraft.h"
 
 const int MAX_RECENT_AIRCRAFT = 20;
 
