@@ -443,7 +443,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="aircraftPage">
-       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0">
+       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0">
         <property name="spacing">
          <number>4</number>
         </property>
@@ -534,6 +534,13 @@
          </layout>
         </item>
         <item>
+         <widget class="QLabel" name="updateAircraftLabel">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1 aircraft have updates available, &lt;a href=&quot;action:update&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;click here to update&lt;/span&gt;&lt;/a&gt; (Or &lt;a href=&quot;action:hide&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;hide this&lt;/span&gt;&lt;/a&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QListView" name="aircraftList">
           <property name="verticalScrollMode">
            <enum>QAbstractItemView::ScrollPerPixel</enum>
@@ -570,8 +577,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>643</width>
-             <height>644</height>
+             <width>90</width>
+             <height>20</height>
             </rect>
            </property>
           </widget>
@@ -603,8 +610,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>643</width>
-             <height>644</height>
+             <width>173</width>
+             <height>23</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_5">

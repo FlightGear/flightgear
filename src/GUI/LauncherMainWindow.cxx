@@ -69,26 +69,6 @@ private:
     Ui::NoOfficialHangarMessage* m_ui;
 };
 
-class UpdateAllAircraftMessage : public QWidget
-{
-    Q_OBJECT
-public:
-    UpdateAllAircraftMessage() :
-        m_ui(new Ui::UpdateAllAircraftMessage)
-    {
-        m_ui->setupUi(this);
-        // proxy this signal upwards
-        connect(m_ui->label, &QLabel::linkActivated, this, &UpdateAllAircraftMessage::linkActivated);
-        connect(m_ui->updateAllButton, &QPushButton::clicked, this, &UpdateAllAircraftMessage::updateAll);
-    }
-
-Q_SIGNALS:
-    void linkActivated(QUrl link);
-    void updateAll();
-private:
-    Ui::UpdateAllAircraftMessage* m_ui;
-};
-
 #include "LauncherMainWindow.moc"
 
 QQmlPrivate::AutoParentResult launcher_autoParent(QObject* thing, QObject* parent)
@@ -195,6 +175,8 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->locationHistory->setIcon(historyIcon);
 
     m_aircraftModel = new AircraftItemModel(this);
+    connect(m_aircraftModel, &AircraftItemModel::packagesNeedUpdating,
+            this, &LauncherMainWindow::onPackagesNeedUpdate);
     m_aircraftProxy->setSourceModel(m_aircraftModel);
 
     m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -241,6 +223,9 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(m_aircraftProxy, &AircraftProxyModel::modelReset,
             this, &LauncherMainWindow::delayedAircraftModelReset);
 
+    connect(m_ui->updateAircraftLabel, &QLabel::linkActivated,
+            this, &LauncherMainWindow::onUpdateAircraftLink);
+
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
     m_aircraftModel->setPackageRoot(globals->packageRoot());
@@ -254,6 +239,7 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->stack->addWidget(m_viewCommandLinePage);
 
     checkOfficialCatalogMessage();
+    checkUpdateAircraft();
     restoreSettings();
     updateSettingsSummary();
 }
@@ -833,14 +819,6 @@ void LauncherMainWindow::updateSelectedAircraft()
     }
 }
 
-void LauncherMainWindow::onUpdateAllAircraft()
-{
-    const PackageList& toBeUpdated = globals->packageRoot()->packagesNeedingUpdate();
-    std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
-        globals->packageRoot()->scheduleToUpdate(pkg->install());
-    });
-}
-
 void LauncherMainWindow::onPackagesNeedUpdate(bool yes)
 {
     Q_UNUSED(yes);
@@ -1034,22 +1012,28 @@ void LauncherMainWindow::onOfficialCatalogMessageLink(QUrl link)
 
 void LauncherMainWindow::checkUpdateAircraft()
 {
-    if (shouldShowOfficialCatalogMessage()) {
-        return; // don't interfere
-    }
+    const size_t numToUpdate = globals->packageRoot()->packagesNeedingUpdate().size();
+    const bool showUpdateMessage = (numToUpdate > 0);
 
-    const bool showUpdateMessage = !globals->packageRoot()->packagesNeedingUpdate().empty();
-    m_aircraftModel->setMessageWidgetVisible(showUpdateMessage);
-    if (showUpdateMessage) {
-        UpdateAllAircraftMessage* messageWidget = new UpdateAllAircraftMessage;
-       // connect(messageWidget, &UpdateAllAircraftMessage::linkActivated,
-      //        this, &LauncherMainWindow::onMessageLink);
-        connect(messageWidget, &UpdateAllAircraftMessage::updateAll, this, &LauncherMainWindow::onUpdateAllAircraft);
-        QModelIndex index = m_aircraftProxy->mapFromSource(m_aircraftModel->messageWidgetIndex());
-        m_ui->aircraftList->setIndexWidget(index, messageWidget);
-    }
+    static QString originalText = m_ui->updateAircraftLabel->text();
+    const QString t = originalText.arg(numToUpdate);
+    m_ui->updateAircraftLabel->setText(t);
+    m_ui->updateAircraftLabel->setVisible(showUpdateMessage);
 }
 
+void LauncherMainWindow::onUpdateAircraftLink(QUrl link)
+{
+    QString s = link.toString();
+    if (s == "action:hide") {
+        m_ui->updateAircraftLabel->hide();
+    } else if (s == "action:update") {
+        m_ui->updateAircraftLabel->hide();
+        const PackageList& toBeUpdated = globals->packageRoot()->packagesNeedingUpdate();
+        std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
+            globals->packageRoot()->scheduleToUpdate(pkg->install());
+        });
+    }
+}
 
 simgear::pkg::PackageRef LauncherMainWindow::packageForAircraftURI(QUrl uri) const
 {

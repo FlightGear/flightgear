@@ -78,7 +78,6 @@ if (HAVE_QT)
                             LocationWidget.ui
                             NoOfficialHangar.ui
                             InstallSceneryDialog.ui
-                            UpdateAllAircraft.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 

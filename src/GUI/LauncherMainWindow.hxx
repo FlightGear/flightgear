@@ -98,8 +98,6 @@ private slots:
 
     Q_INVOKABLE void onDownloadDirChanged();
 
-    void onUpdateAllAircraft();
-
     void onPackagesNeedUpdate(bool yes);
 
     void onClickToolboxButton();
@@ -110,6 +108,7 @@ private slots:
     void onChangeDataDir();
 
     void onSettingsSearchChanged();
+    void onUpdateAircraftLink(QUrl link);
 private:
 
     /**
