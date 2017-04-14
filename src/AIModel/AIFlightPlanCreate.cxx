@@ -292,7 +292,8 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     if ( runwayNode )
         taxiRoute = gn->findShortestRoute(node, runwayNode);
 
-    if (taxiRoute.empty()) {
+    // This may happen with buggy ground networks
+    if (taxiRoute.size() <= 1) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
         return true;
     }
