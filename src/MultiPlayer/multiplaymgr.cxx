@@ -231,9 +231,9 @@ static const IdPropertyList sIdPropertyList[] = {
     { 1400, "scenery/events", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL },
 
     { 1500, "instrumentation/transponder/transmitted-id", simgear::props::INT, TT_SHORTINT,  V1_1_PROP_ID, NULL },
-    { 1501, "instrumentation/transponder/altitude", simgear::props::INT, TT_ASIS,  TT_SHORTINT, NULL },
-    { 1502, "instrumentation/transponder/ident", simgear::props::BOOL, TT_ASIS,  TT_SHORTINT, NULL },
-    { 1503, "instrumentation/transponder/inputs/mode", simgear::props::INT, TT_ASIS,  TT_SHORTINT, NULL },
+    { 1501, "instrumentation/transponder/altitude", simgear::props::INT, TT_ASIS, V1_1_PROP_ID, NULL },
+    { 1502, "instrumentation/transponder/ident", simgear::props::BOOL, TT_SHORTINT, V1_1_PROP_ID, NULL },
+    { 1503, "instrumentation/transponder/inputs/mode", simgear::props::INT, TT_SHORTINT, V1_1_PROP_ID, NULL },
 
     { 10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL },
     { 10002, "sim/multiplay/chat",  simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL },
