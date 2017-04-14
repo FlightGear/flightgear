@@ -19,7 +19,6 @@
 
 #include <cstdlib>
 #include <cstring> // for strcmp
-#include <boost/foreach.hpp>
 
 #include "dynamicloader.hxx"
 
@@ -48,7 +47,7 @@ static double processPosition(const string &pos)
   subs    = subs.substr(1, subs.length());
   degree  = subs.substr(0, subs.find(" ",0));
   decimal = subs.substr(subs.find(" ",0), subs.length());
-  
+
   value = sign * (atof(degree.c_str()) + atof(decimal.c_str())/60.0);
   return value;
 }
@@ -65,7 +64,7 @@ void  FGGroundNetXMLLoader::startXML () {
 void  FGGroundNetXMLLoader::endXML ()
 {
   ParkingPushbackIndex::const_iterator it;
-  
+
   for (it = _parkingPushbacks.begin(); it != _parkingPushbacks.end(); ++it) {
     NodeIndexMap::const_iterator j = _indexMap.find(it->second);
     if (j == _indexMap.end()) {
@@ -74,13 +73,14 @@ void  FGGroundNetXMLLoader::endXML ()
     }
 
     it->first->setPushBackPoint(j->second);
-    
+
   }
-  
-  BOOST_FOREACH(FGTaxiNodeRef node, _unreferencedNodes) {
-    SG_LOG(SG_NAVAID, SG_DEV_WARN, "unreferenced groundnet node:" << node->ident());
+
+  for (const FGTaxiNodeRef& node: _unreferencedNodes) {
+    SG_LOG(SG_NAVAID, SG_DEV_WARN,
+           "unreferenced groundnet node: " << node->getIndex());
   }
-  
+
 }
 
 void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
@@ -93,7 +93,7 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
   double radius = 1.0;
   string airlineCodes;
   int pushBackRoute = 0;
-  
+
   for (int i = 0; i < atts.size(); i++)
 	{
     string attname(atts.getName(i));
@@ -120,12 +120,12 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
 	  else if (attname == "airlineCodes")
       airlineCodes = atts.getValue(i);
     else if (attname == "pushBackRoute") {
-      pushBackRoute = std::atoi(atts.getValue(i));      
+      pushBackRoute = std::atoi(atts.getValue(i));
     }
 	}
- 
+
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
-  
+
   FGParkingRef parking(new FGParking(index,
                                      pos, heading, radius,
                                      gateName + gateNumber,
@@ -133,7 +133,7 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
   if (pushBackRoute > 0) {
     _parkingPushbacks[parking] = pushBackRoute;
   }
-  
+
   _indexMap[index] = parking;
   _groundNetwork->addParking(parking);
 }
@@ -144,7 +144,7 @@ void FGGroundNetXMLLoader::startNode(const XMLAttributes &atts)
   string lat, lon;
   bool onRunway = false;
   int holdPointType = 0;
-  
+
   for (int i = 0; i < atts.size() ; i++)
 	{
 	  string attname(atts.getName(i));
@@ -171,11 +171,11 @@ void FGGroundNetXMLLoader::startNode(const XMLAttributes &atts)
       }
     }
 	}
-  
+
   if (_indexMap.find(index) != _indexMap.end()) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "duplicate ground-net index:" << index);
   }
-  
+
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
   FGTaxiNodeRef node(new FGTaxiNode(index, pos, onRunway, holdPointType));
   _indexMap[index] = node;
@@ -183,10 +183,10 @@ void FGGroundNetXMLLoader::startNode(const XMLAttributes &atts)
 }
 
 void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
-{  
+{
   int begin = 0, end = 0;
   bool isPushBackRoute = false;
-  
+
   for (int i = 0; i < atts.size() ; i++)
 	{
 	  string attname = atts.getName(i);
@@ -197,13 +197,13 @@ void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
     else if (attname == "isPushBackRoute")
 	    isPushBackRoute = std::atoi(atts.getValue(i)) != 0;
 	}
-  
+
   IntPair e(begin, end);
   if (_arcSet.find(e) != _arcSet.end()) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, _groundNetwork->airport()->ident() << " ground-net: skipping duplicate edge:" << begin << "->" << end);
     return;
   }
-  
+
   NodeIndexMap::const_iterator it;
   FGTaxiNodeRef fromNode, toNode;
   it = _indexMap.find(begin);
@@ -224,7 +224,7 @@ void FGGroundNetXMLLoader::startArc(const XMLAttributes &atts)
       toNode = it->second;
   }
 
-  _arcSet.insert(e);  
+  _arcSet.insert(e);
   _groundNetwork->addSegment(fromNode, toNode);
   if (isPushBackRoute) {
 //    toNode->setIsPushback();
