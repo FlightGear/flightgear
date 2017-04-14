@@ -105,10 +105,12 @@ void SettingsSection::internalUpdateAdvanced()
 
 void SettingsSection::saveState(QSettings &settings) const
 {
+    Q_UNUSED(settings)
 }
 
 void SettingsSection::restoreState(QSettings &settings)
 {
+    Q_UNUSED(settings)
 }
 
 void SettingsSection::updateShowAdvanced()

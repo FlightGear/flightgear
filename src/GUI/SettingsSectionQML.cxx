@@ -19,13 +19,7 @@ void SettingsSectionQML::internalUpdateAdvanced()
 {
     const bool showAdvanced = m_showAdvanced | m_forceShowAdvanced;
     Q_FOREACH (SettingsControl* w, controls()) {
-        if (w->advanced()) {
-            w->setVisible(showAdvanced);
-        }
-
-        if (w->property("simple").toBool()) {
-            w->setVisible(!showAdvanced);
-        }
+        w->updateWidgetVisibility(showAdvanced);
     }
 }
 
@@ -149,6 +143,11 @@ QVariant SettingsSectionQML::restoreSetting(QString key)
     QString s = context->nameForObject(const_cast<SettingsSectionQML*>(this));
     settings.beginGroup(s);
     return settings.value(key);
+}
+
+bool SettingsSectionQML::showAdvanced() const
+{
+    return m_showAdvanced | m_forceShowAdvanced;
 }
 
 void SettingsSectionQML::setSummary(QString summary)

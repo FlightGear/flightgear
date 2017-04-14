@@ -24,6 +24,9 @@ class SettingsControl : public QWidget
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
     Q_PROPERTY(QStringList keywords READ keywords WRITE setKeywords NOTIFY keywordsChanged)
     Q_PROPERTY(QString option READ option WRITE setOption NOTIFY optionChanged)
+
+    Q_PROPERTY(bool visible READ qmlVisible WRITE setQmlVisible NOTIFY qmlVisibleChanged)
+
 public:
 
     bool advanced() const
@@ -49,6 +52,9 @@ public:
      * @return - if this control matched the search term or not
      */
     bool setSearchTerm(QString search);
+    bool qmlVisible() const;
+
+    void updateWidgetVisibility(bool showAdvanced);
 public slots:
     void setAdvanced(bool advanced);
 
@@ -61,12 +67,16 @@ public slots:
 
     void setOption(QString option);
 
+    void setQmlVisible(bool visible);
+
 signals:
     void advancedChanged(bool advanced);
     void labelChanged();
     void descriptionChanged();
     void keywordsChanged(QStringList keywords);
     void optionChanged(QString option);
+
+    void qmlVisibleChanged(bool visible);
 
 protected:
     SettingsControl(QWidget* pr = nullptr);
@@ -78,10 +88,13 @@ protected:
     QLabel* m_description = nullptr;
 
     void paintEvent(QPaintEvent* pe) override;
+
+    void updateWidgetVisibility();
 private:
     bool m_advanced = false;
     QStringList m_keywords;
     QString m_option;
+    bool m_localVisible = true;
 };
 
 class SettingsCheckbox : public SettingsControl

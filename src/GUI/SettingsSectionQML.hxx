@@ -33,6 +33,8 @@ public:
 
     Q_INVOKABLE void saveSetting(QString key, QVariant value);
     Q_INVOKABLE QVariant restoreSetting(QString key);
+
+     bool showAdvanced() const override;
 public slots:
     void setSummary(QString summary);
 

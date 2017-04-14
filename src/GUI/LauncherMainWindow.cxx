@@ -284,6 +284,15 @@ void LauncherMainWindow::initQML()
     m_qmlEngine->rootContext()->setContextProperty("_launcher", this);
     m_qmlEngine->rootContext()->setContextProperty("_mpServers", m_serversModel);
 
+#if defined(Q_OS_WIN)
+    const QString osName("win");
+#elif defined(Q_OS_MAC)
+    const QString osName("mac");
+#else
+    const QString osName("unix");
+#endif
+    m_qmlEngine->rootContext()->setContextProperty("_osName", osName);
+
     flightgear::WeatherScenariosModel* weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
     m_qmlEngine->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
 }

@@ -17,6 +17,7 @@
 #include <QPainter>
 
 #include "LaunchConfig.hxx"
+#include "SettingsSection.hxx"
 
 const int MARGIN_HINT = 4;
 
@@ -64,6 +65,11 @@ bool SettingsControl::setSearchTerm(QString search)
     return inSearch;
 }
 
+bool SettingsControl::qmlVisible() const
+{
+    return m_localVisible;
+}
+
 void SettingsControl::setAdvanced(bool advanced)
 {
     if (m_advanced == advanced)
@@ -104,6 +110,17 @@ void SettingsControl::setOption(QString option)
     emit optionChanged(option);
 }
 
+void SettingsControl::setQmlVisible(bool visible)
+{
+    if (m_localVisible == visible)
+        return;
+
+    m_localVisible = visible;
+    SettingsSection* section = qobject_cast<SettingsSection*>(parent());
+    updateWidgetVisibility(section->showAdvanced());
+    emit qmlVisibleChanged(visible);
+}
+
 SettingsControl::SettingsControl(QWidget *pr) :
     QWidget(pr)
 {
@@ -136,6 +153,17 @@ void SettingsControl::paintEvent(QPaintEvent *pe)
         painter.setPen(pen);
         painter.setBrush(QColor("#2f7f7fff"));
         painter.drawRoundedRect(rect(), 8, 8);
+    }
+}
+
+void SettingsControl::updateWidgetVisibility(bool showAdvanced)
+{
+    if (advanced()) {
+        setVisible(m_localVisible & showAdvanced);
+    } else if (property("simple").toBool()) {
+        setVisible(m_localVisible & !showAdvanced);
+    } else {
+        setVisible(m_localVisible);
     }
 }
 

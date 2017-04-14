@@ -24,9 +24,22 @@ Section {
         option: "auto-coordination"
     }
 
+    Checkbox {
+        id: showConsoleWin
+        label: "Show debugging console"
+        description: "Open a console window showing debug output from the application."
+        advanced: true
+        visible: _osName == "win"
+        keywords: ["console"]
+    }
+
     onApply: {
         if (startPaused.checked) {
             _config.setArg("enable-freeze")
+        }
+
+        if (showConsoleWin.checked) {
+            _config.setArg("console")
         }
     }
 }

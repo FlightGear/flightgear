@@ -21,7 +21,7 @@ public:
 
     virtual void setLaunchConfig(LaunchConfig* config);
 
-    bool showAdvanced() const
+    virtual bool showAdvanced() const
     {
         return m_showAdvanced;
     }
