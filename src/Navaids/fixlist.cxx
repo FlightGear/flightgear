@@ -121,7 +121,7 @@ void FixesLoader::loadFixes(const SGPath& path, std::size_t bytesReadSoFar,
     try {
       lat = std::stod(fields[0]);
       lon = std::stod(fields[1]);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
       SG_LOG(SG_NAVAID, SG_WARN, utf8path << ": malformed line #" <<
              lineNumber << ": error parsing coordinates: " << fields[0] <<
              " " << fields[1]);

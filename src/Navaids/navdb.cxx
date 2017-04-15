@@ -489,7 +489,7 @@ void NavLoader::loadNav(const SGPath& path, std::size_t bytesReadSoFar,
   try {
     vector<string> fields(simgear::strutils::split(line, 0, 1));
     version = std::stoul(fields[0]);
-  } catch (const std::logic_error& exc) {
+  } catch (const std::logic_error&) {
     std::string errMsg = utf8Path + ": unable to parse version from header";
     std::string strippedLine = simgear::strutils::stripTrailingNewlines(line);
     SG_LOG(SG_NAVAID, SG_ALERT, errMsg << ": " << strippedLine );
