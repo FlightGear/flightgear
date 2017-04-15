@@ -35,17 +35,17 @@
 #include "QtLauncher_fwd.hxx"
 
 /* equatorial and polar earth radius */
-const float rec  = 6378137;          // earth radius, equator (?)
-const float rpol = 6356752.314f;      // earth radius, polar   (?)
+const double rec  = 6378137;          // earth radius, equator (?)
+const double rpol = 6356752.314;      // earth radius, polar   (?)
 
 const double MINIMUM_SCALE = 0.002;
 
 //Returns Earth radius at a given latitude (Ellipsoide equation with two equal axis)
-static float earth_radius_lat( float lat )
+static double earth_radius_lat( double lat )
 {
     double a = cos(lat)/rec;
     double b = sin(lat)/rpol;
-    return 1.0f / sqrt( a * a + b * b );
+    return 1.0 / sqrt( a * a + b * b );
 }
 
 BaseDiagram::BaseDiagram(QWidget* pr) :
@@ -98,7 +98,7 @@ void BaseDiagram::extendRect(QRectF &r, const QPointF &p)
     }
 }
 
-void BaseDiagram::paintEvent(QPaintEvent* pe)
+void BaseDiagram::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
     p.setRenderHints(QPainter::Antialiasing);
@@ -592,9 +592,9 @@ void BaseDiagram::extendBounds(const QPointF& p)
     // but the groundnet is for
     // https://en.wikipedia.org/wiki/Salar_de_Atacama_Airport
     // causing a rather large airport boundary.
-    QPointF v = (p - m_bounds.center());
-    if (v.manhattanLength() > 20000) {
-        qWarning() << "Excessively distant point" << p << v.manhattanLength();
+    QVector2D v(p - m_bounds.center());
+    if (v.length() > 100000.0f) {
+        qWarning() << "Excessively distant point" << p << v.length();
         return;
     }
 

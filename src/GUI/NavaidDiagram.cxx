@@ -104,10 +104,10 @@ void NavaidDiagram::doComputeBounds()
 {
     extendBounds(project(m_geod));
 
-// project three points around the base location at 40nm to give some
+// project four points around the base location at 20nm to give some
 // coverage
-    for (int i=0; i<3; ++i) {
-        SGGeod pt = SGGeodesy::direct(m_geod, i * 120, SG_NM_TO_METER * 40.0);
+    for (int i=0; i<4; ++i) {
+        SGGeod pt = SGGeodesy::direct(m_geod, i * 90, SG_NM_TO_METER * 20.0);
         extendBounds(project(pt));
     }
 
@@ -116,5 +116,4 @@ void NavaidDiagram::doComputeBounds()
         SGGeod offsetPos = SGGeodesy::direct(m_geod, m_offsetBearingDeg, d);
         extendBounds(project(offsetPos));
     }
-
 }
