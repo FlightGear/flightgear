@@ -869,6 +869,10 @@ void LocationWidget::onLocationChanged()
             } // of have parkings
         } // of was able to create dynamics
 
+        const QString airportName = QString::fromStdString(apt->name());
+        const QString icao = QString::fromStdString(apt->ident());
+
+        m_ui->titleLabel->setText(tr("%1 (%2)").arg(airportName).arg(icao));
     } else if (m_locationIsLatLon) {
         m_ui->stack->setCurrentIndex(1);
         m_ui->navaidDiagram->setGeod(m_geodLocation);
@@ -876,6 +880,10 @@ void LocationWidget::onLocationChanged()
         // navaid
         m_ui->stack->setCurrentIndex(1);
         m_ui->navaidDiagram->setNavaid(m_location);
+
+        const QString name = QString::fromStdString(m_location->name());
+        const QString ident = QString::fromStdString(m_location->ident());
+        m_ui->navTitleLabel->setText(tr("%1 (%2)").arg(name).arg(ident));
     }
 }
 

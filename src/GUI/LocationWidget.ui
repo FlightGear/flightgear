@@ -26,7 +26,7 @@
    <item>
     <widget class="QStackedWidget" name="stack">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="airportPage">
       <layout class="QGridLayout" name="gridLayout" columnstretch="1,0,0,0">
@@ -42,31 +42,34 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="4" column="0">
+       <item row="5" column="2">
+        <widget class="QSpinBox" name="approachDistanceSpin">
+         <property name="suffix">
+          <string>nm</string>
+         </property>
+         <property name="value">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
         <widget class="QRadioButton" name="parkingRadio">
          <property name="text">
           <string>Parking:</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="4" column="0">
         <widget class="QRadioButton" name="runwayRadio">
          <property name="text">
           <string>Runway:</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QCheckBox" name="onFinalCheckbox">
-         <property name="text">
-          <string>On final approach at distance:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1" colspan="3">
+       <item row="6" column="1" colspan="3">
         <widget class="QComboBox" name="parkingCombo"/>
        </item>
-       <item row="3" column="3">
+       <item row="5" column="3">
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -79,10 +82,27 @@
          </property>
         </spacer>
        </item>
-       <item row="2" column="1" colspan="3">
+       <item row="4" column="1" colspan="3">
         <widget class="QComboBox" name="runwayCombo"/>
        </item>
-       <item row="1" column="0" colspan="4">
+       <item row="5" column="1">
+        <widget class="QCheckBox" name="onFinalCheckbox">
+         <property name="text">
+          <string>On final approach at distance:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="4">
+        <widget class="QLabel" name="titleLabel">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="4">
         <widget class="AirportDiagram" name="airportDiagram" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -92,20 +112,10 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
-        <widget class="QSpinBox" name="approachDistanceSpin">
-         <property name="suffix">
-          <string>nm</string>
-         </property>
-         <property name="value">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="navaidPage">
-      <layout class="QGridLayout" name="gridLayout_3" rowstretch="1,0,0,0" columnstretch="1,0,0,1,0,1,0,0,0,0">
+      <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,1,0,0,0,0" columnstretch="1,0,0,1,0,1,0,0,0,0">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -118,20 +128,7 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="2" column="1" colspan="2">
-        <widget class="QSpinBox" name="airspeedSpinbox">
-         <property name="suffix">
-          <string>kts</string>
-         </property>
-         <property name="maximum">
-          <number>9999</number>
-         </property>
-         <property name="value">
-          <number>120</number>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="6" colspan="2">
+       <item row="4" column="6" colspan="2">
         <widget class="QSpinBox" name="altitudeSpinbox">
          <property name="suffix">
           <string>ft</string>
@@ -150,33 +147,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="5">
-        <widget class="QLabel" name="altitudeLabel">
-         <property name="text">
-          <string>Altitude:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" rowspan="2" colspan="10">
-        <widget class="NavaidDiagram" name="navaidDiagram" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>200</width>
-           <height>200</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="8" colspan="2">
+       <item row="4" column="8" colspan="2">
         <widget class="QComboBox" name="altitudeModeCombo">
          <item>
           <property name="text">
@@ -195,17 +166,17 @@
          </item>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="aispeedLabel">
+       <item row="4" column="5">
+        <widget class="QLabel" name="altitudeLabel">
          <property name="text">
-          <string>Airspeed:</string>
+          <string>Altitude:</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="10">
+       <item row="5" column="0" colspan="10">
         <widget class="QGroupBox" name="offsetGroup">
          <property name="title">
           <string>Offset</string>
@@ -288,7 +259,17 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="3">
+       <item row="4" column="0">
+        <widget class="QLabel" name="aispeedLabel">
+         <property name="text">
+          <string>Airspeed:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
         <widget class="QLabel" name="label">
          <property name="text">
           <string>Heading:</string>
@@ -298,13 +279,52 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="4">
+       <item row="4" column="4">
         <widget class="QSpinBox" name="headingSpinbox">
          <property name="wrapping">
           <bool>true</bool>
          </property>
          <property name="maximum">
           <number>359</number>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1" colspan="2">
+        <widget class="QSpinBox" name="airspeedSpinbox">
+         <property name="suffix">
+          <string>kts</string>
+         </property>
+         <property name="maximum">
+          <number>9999</number>
+         </property>
+         <property name="value">
+          <number>120</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="10">
+        <widget class="QLabel" name="navTitleLabel">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="10">
+        <widget class="NavaidDiagram" name="navaidDiagram" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>200</width>
+           <height>200</height>
+          </size>
          </property>
         </widget>
        </item>
