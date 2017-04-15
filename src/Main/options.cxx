@@ -2671,7 +2671,7 @@ void Options::showVersion() const
     cout << "FG_SCENERY=";
 
     PathList scn = globals->get_fg_scenery();
-    cout << SGPath::join(scn, &SGPath::pathListSep) << endl;
+    cout << SGPath::join(scn, SGPath::pathListSep) << endl;
     cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
 #ifndef FG_TESTLIB
     cout << "OSG version: " << osgGetVersion() << endl;

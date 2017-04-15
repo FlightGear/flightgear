@@ -1114,7 +1114,7 @@ bool NavDataCache::NavDataCachePrivate::areDatFilesModified(
   const string datTypeStr =
                        NavDataCache::datTypeStr[datFileType];
   const string_list cachedFiles = outer->readOrderedStringListProperty(
-    datTypeStr + ".dat files", &SGPath::pathListSep);
+    datTypeStr + ".dat files", SGPath::pathListSep);
   const PathList& datFiles = datFilesGroupInfo.paths;
   PathList::const_iterator datFilesIt = datFiles.begin();
   string_list::const_iterator cachedFilesIt = cachedFiles.begin();
@@ -1406,7 +1406,7 @@ void NavDataCache::loadDatFiles(
 
   // Store the list of .dat files we have loaded
   writeOrderedStringListProperty(typeStr + ".dat files", datFiles,
-                                 &SGPath::pathListSep);
+                                 SGPath::pathListSep);
   SG_LOG(SG_NAVCACHE, SG_INFO,
          typeStr + ".dat files load took: " <<
          st.elapsedMSec());
