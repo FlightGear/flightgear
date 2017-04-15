@@ -53,7 +53,11 @@ void ExtraSettingsSection::doApply()
     LauncherArgumentTokenizer tk;
 
     Q_FOREACH(auto arg, tk.tokenize(m_argsEdit->toPlainText())) {
-        m_config->setArg(arg.arg, arg.value);
+        if (arg.arg.startsWith("prop:")) {
+            m_config->setProperty(arg.arg.mid(5), arg.value);
+        } else {
+            m_config->setArg(arg.arg, arg.value);
+        }
     }
 }
 
