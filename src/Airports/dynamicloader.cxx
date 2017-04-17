@@ -17,6 +17,7 @@
 #  include <config.h>
 #endif
 
+#include <string>
 #include <cstdlib>
 #include <cstring> // for strcmp
 
@@ -26,6 +27,9 @@
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/groundnetwork.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 using std::string;
 
@@ -92,10 +96,12 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
   double heading = 0.0;
   double radius = 1.0;
   string airlineCodes;
-  int pushBackRoute = 0;
+  int pushBackRoute = -1;       // signals unseen attribute
+
+  savePosition();               // allows to retrieve the line number
 
   for (int i = 0; i < atts.size(); i++)
-	{
+  {
     string attname(atts.getName(i));
 	  if (attname == "index") {
       index = std::atoi(atts.getValue(i));
@@ -120,9 +126,17 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
 	  else if (attname == "airlineCodes")
       airlineCodes = atts.getValue(i);
     else if (attname == "pushBackRoute") {
-      pushBackRoute = std::atoi(atts.getValue(i));
+      const string attrVal = atts.getValue(i);
+      try {
+        pushBackRoute = simgear::strutils::readNonNegativeInt<int>(attrVal);
+      } catch (const sg_exception& e) {
+        SG_LOG(SG_NAVAID, SG_DEV_WARN,
+               getPath() << ":" << getLine() << ": " <<
+               "invalid value for 'pushBackRoute': " << e.what());
+        pushBackRoute = -2;
+      }
     }
-	}
+  }
 
   SGGeod pos(SGGeod::fromDeg(processPosition(lon), processPosition(lat)));
 
@@ -130,7 +144,7 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
                                      pos, heading, radius,
                                      gateName + gateNumber,
                                      type, airlineCodes));
-  if (pushBackRoute > 0) {
+  if (pushBackRoute >= 0) {
     _parkingPushbacks[parking] = pushBackRoute;
   }
 
