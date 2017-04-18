@@ -32,12 +32,12 @@ public:
 
     void setTurbulence(Turbulence* turb) { _turb = turb; }
 
-    State* getState() { return _s; }
+    State* getState() const { return _s; }
     void setState(State* s);
 
-    bool isCrashed() { return _crashed; } 
+    bool isCrashed() const { return _crashed; } 
     void setCrashed(bool crashed) { _crashed = crashed; }
-    float getAGL() { return _agl; }
+    float getAGL() const { return _agl; }
 
     void iterate();
 
@@ -47,19 +47,18 @@ public:
     int addGear(Gear* gear) { return _gears.add(gear); }
     void addHook(Hook* hook) { _hook = hook; }
     void addLaunchbar(Launchbar* launchbar) { _launchbar = launchbar; }
-    Surface* getSurface(int handle) { return (Surface*)_surfaces.get(handle); }
+    Surface* getSurface(int handle) const { return (Surface*)_surfaces.get(handle); }
     Rotorgear* getRotorgear(void) { return &_rotorgear; }
-    Gear* getGear(int handle);
-    Hook* getHook(void) { return _hook; }
+    Hook* getHook(void) const { return _hook; }
     int addHitch(Hitch* hitch) { return _hitches.add(hitch); }
-    Launchbar* getLaunchbar(void) { return _launchbar; }
+    Launchbar* getLaunchbar(void) const { return _launchbar; }
 
     // Semi-private methods for use by the Airplane solver.
-    int numThrusters() { return _thrusters.size(); }
+    int numThrusters() const { return _thrusters.size(); }
     Thruster* getThruster(int handle) { return (Thruster*)_thrusters.get(handle); }
     void setThruster(int handle, Thruster* t) { _thrusters.set(handle, t); }
     void initIteration();
-    void getThrust(float* out);
+    void getThrust(float* out) const;
 
     void setGroundCallback(Ground* ground_cb);
     Ground* getGroundCallback(void) { return _ground_cb; }
@@ -67,10 +66,10 @@ public:
     //
     // Per-iteration settables
     //
-    void setGroundEffect(const float* pos, const float span, const float mul);
+    void setGroundEffect(const float* pos, float span, float mul);
     void setWind(float* wind) { Math::set3(wind, _wind); }
-    void setAir(const float pressure, const float temp, const float density);
-    void setAirFromStandardAtmosphere(const float altitude);
+    void setAir(float pressure, float temp, float density);
+    void setAirFromStandardAtmosphere(float altitude);
 
     void updateGround(State* s);
 

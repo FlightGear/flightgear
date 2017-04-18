@@ -67,7 +67,7 @@ void RigidBody::setMass(int handle, float mass, const float* pos, bool isStatic)
     }
 }
 
-void RigidBody::getMassPosition(int handle, float* out)
+void RigidBody::getMassPosition(int handle, float* out) const
 {
     out[0] = _masses[handle].p[0];
     out[1] = _masses[handle].p[1];
@@ -217,7 +217,7 @@ void RigidBody::addForce(const float* pos, const float* force)
     addTorque(t);
 }
 
-void RigidBody::getAccel(float* pos, float* accelOut)
+void RigidBody::getAccel(float* pos, float* accelOut) const
 {
     getAccel(accelOut);
 
@@ -241,7 +241,7 @@ void RigidBody::getAccel(float* pos, float* accelOut)
     Math::add3(v, accelOut, accelOut);
 }
 
-void RigidBody::getAngularAccel(float* accelOut)
+void RigidBody::getAngularAccel(float* accelOut) const
 {
     // Compute "tau" as the externally applied torque, plus the
     // counter-torque due to the internal gyro.
@@ -258,7 +258,7 @@ void RigidBody::getAngularAccel(float* accelOut)
     Math::vmul33(_invI, v, v);   // v = invI*(tau + (omega X I*omega))
 }
 
-void RigidBody::getInertiaMatrix(float* inertiaOut)
+void RigidBody::getInertiaMatrix(float* inertiaOut) const
 {
     // valid only after a call to RigidBody::recalc()
     // See comment at top of RigidBody.hpp on units.

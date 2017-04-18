@@ -33,7 +33,7 @@ public:
     void setPilotPos(float* pos) { Math::set3(pos, _pilotPos); }
     void getPilotPos(float* out) { Math::set3(_pilotPos, out); }
 
-    const void getPilotAccel(float* out);
+    void getPilotAccel(float* out);
 
     void setEmptyWeight(float weight) {  _emptyWeight = weight; }
 
@@ -65,52 +65,52 @@ public:
 
     void addSolutionWeight(bool approach, int idx, float wgt);
 
-    const int numGear() { return _gears.size(); }
+    int numGear() const { return _gears.size(); }
     Gear* getGear(int g) { return ((GearRec*)_gears.get(g))->gear; }
-    Hook* getHook() { return _model.getHook(); }
-    const int numHitches() { return _hitches.size(); }
+    Hook* getHook() const { return _model.getHook(); }
+    int numHitches() const { return _hitches.size(); }
     Hitch* getHitch(int h);
     Rotorgear* getRotorgear() { return _model.getRotorgear(); }
-    Launchbar* getLaunchbar() { return _model.getLaunchbar(); }
+    Launchbar* getLaunchbar() const { return _model.getLaunchbar(); }
 
-    const int numThrusters() { return _thrusters.size(); }
+    int numThrusters() const { return _thrusters.size(); }
     Thruster* getThruster(int n) {
         return ((ThrustRec*)_thrusters.get(n))->thruster; }
     
-    const int numTanks() { return _tanks.size(); }
+    int numTanks() const { return _tanks.size(); }
     void setFuelFraction(float frac); // 0-1, total amount of fuel
     // get fuel in kg
-    const float getFuel(int tank) { return ((Tank*)_tanks.get(tank))->fill; }
+    float getFuel(int tank) const { return ((Tank*)_tanks.get(tank))->fill; }
     // set fuel in kg
     float setFuel(int tank, float fuel) { return ((Tank*)_tanks.get(tank))->fill = fuel; }
     // get fuel density in kg/m^3
-    const float getFuelDensity(int tank) { return ((Tank*)_tanks.get(tank))->density; }
-    const float getTankCapacity(int tank) { return ((Tank*)_tanks.get(tank))->cap; }
+    float getFuelDensity(int tank) const { return ((Tank*)_tanks.get(tank))->density; }
+    float getTankCapacity(int tank) const { return ((Tank*)_tanks.get(tank))->cap; }
 
     void compile(); // generate point masses & such, then solve
     void initEngines();
     void stabilizeThrust();
 
     // Solution output values
-    const int getSolutionIterations() { return _solutionIterations; }
-    const float getDragCoefficient() { return _dragFactor; }
-    const float getLiftRatio() { return _liftRatio; }
-    const float getCruiseAoA() { return _cruiseAoA; }
-    const float getTailIncidence() { return _tailIncidence; }
-    const float getApproachElevator() { return _approachElevator.val; }
-    const char* getFailureMsg() { return _failureMsg; }
+    int getSolutionIterations() const { return _solutionIterations; }
+    float getDragCoefficient() const { return _dragFactor; }
+    float getLiftRatio() const { return _liftRatio; }
+    float getCruiseAoA() const { return _cruiseAoA; }
+    float getTailIncidence() const { return _tailIncidence; }
+    float getApproachElevator() const { return _approachElevator.val; }
+    const char* getFailureMsg() const { return _failureMsg; }
 
     static void setupState(const float aoa, const float speed, const float gla, yasim::State* s); // utility
     void loadApproachControls() { loadControls(_approachControls); }
     void loadCruiseControls() { loadControls(_cruiseControls); }
     
-    const float getCGHardLimitXMin() { return _cgMin; } // get min x-coordinate for c.g (from main gear)
-    const float getCGHardLimitXMax() { return _cgMax; } // get max x-coordinate for c.g (from nose gear)
-    const float getCGMAC(); // return c.g. x as fraction of MAC
+    float getCGHardLimitXMin() const { return _cgMin; } // get min x-coordinate for c.g (from main gear)
+    float getCGHardLimitXMax() const { return _cgMax; } // get max x-coordinate for c.g (from nose gear)
+    float getCGMAC(); // return c.g. x as fraction of MAC
     // set desired range for C.G. in % of MAC, 0% = leading edge, 100% trailing edge
     void  setDesiredCGRangeInPercentOfMAC(float MACPercentMin, float MACPercentMax) { _cgDesiredMin = MACPercentMin; _cgDesiredMax = MACPercentMax; }
-    const float getCGSoftLimitXMin() { return _cgDesiredAft; }   // get x-coordinate limit calculated from MAC and setCGRange values
-    const float getCGSoftLimitXMax() { return _cgDesiredFront; } // get x-coordinate limit calculated from MAC and setCGRange values
+    float getCGSoftLimitXMin() const { return _cgDesiredAft; }   // get x-coordinate limit calculated from MAC and setCGRange values
+    float getCGSoftLimitXMax() const { return _cgDesiredFront; } // get x-coordinate limit calculated from MAC and setCGRange values
     void  setAutoBallast(bool allowed) { _autoBallast = allowed; }
     
 private:

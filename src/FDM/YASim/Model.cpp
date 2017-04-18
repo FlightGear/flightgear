@@ -94,7 +94,7 @@ Model::~Model()
 
 }
 
-void Model::getThrust(float* out)
+void Model::getThrust(float* out) const
 {
     float tmp[3];
     out[0] = out[1] = out[2] = 0;
@@ -196,21 +196,21 @@ void Model::setGroundCallback(Ground* ground_cb)
     _ground_cb = ground_cb;
 }
 
-void Model::setGroundEffect(const float* pos, const float span, const float mul)
+void Model::setGroundEffect(const float* pos, float span, float mul)
 {
     Math::set3(pos, _geRefPoint);
     _wingSpan = span;
     _groundEffect = mul;
 }
 
-void Model::setAir(const float pressure, const float temp, const float density)
+void Model::setAir(float pressure, float temp, float density)
 {
     _pressure = pressure;
     _temp = temp;
     _rho = density;
 }
 
-void Model::setAirFromStandardAtmosphere(const float altitude)
+void Model::setAirFromStandardAtmosphere(float altitude)
 {
     _pressure = Atmosphere::getStdPressure(altitude);
     _temp = Atmosphere::getStdTemperature(altitude);

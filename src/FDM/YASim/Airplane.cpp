@@ -117,7 +117,7 @@ void Airplane::calcFuelWeights()
     }
 }
 
-const void Airplane::getPilotAccel(float* out)
+void Airplane::getPilotAccel(float* out) 
 {
     State* s = _model.getState();
 
@@ -1116,7 +1116,7 @@ void Airplane::solveHelicopter()
     
 }
 
-const float Airplane::getCGMAC()
+float Airplane::getCGMAC()
 { 
     float cg[3];
     _model.getBody()->getCG(cg);

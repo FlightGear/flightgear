@@ -37,10 +37,10 @@ public:
     void setMass(int handle, float mass);
     void setMass(int handle, float mass, const float* pos, bool isStatic = false);
 
-    int numMasses() { return _nMasses; }
-    float getMass(int handle) { return _masses[handle].m; }
-    void getMassPosition(int handle, float* out);
-    float getTotalMass() { return _totalMass; }
+    int numMasses() const { return _nMasses; }
+    float getMass(int handle) const { return _masses[handle].m; }
+    void getMassPosition(int handle, float* out) const;
+    float getTotalMass() const { return _totalMass; }
 
     // The velocity, in local coordinates, of the specified point on a
     // body rotating about its c.g. with velocity rot.
@@ -83,24 +83,24 @@ public:
 
     // Returns the center of gravity of the masses, in the body
     // coordinate system. valid only after recalc()
-    void getCG(float* cgOut) { Math::set3(_cg, cgOut); }
+    void getCG(float* cgOut) const { Math::set3(_cg, cgOut); }
 
     // Returns the acceleration of the body's c.g. relative to the
     // rest of the world, specified in local coordinates.
-    void getAccel(float* accelOut) { Math::mul3(1/_totalMass, _force, accelOut); }
+    void getAccel(float* accelOut) const { Math::mul3(1/_totalMass, _force, accelOut); }
 
     // Returns the acceleration of a specific location in local
     // coordinates.  If the body is rotating, this will be different
     // from the c.g. acceleration due to the centripetal accelerations
     // of points not on the rotation axis.
-    void getAccel(float* pos, float* accelOut);
+    void getAccel(float* pos, float* accelOut) const;
 
     // Returns the instantaneous rate of change of the angular
     // velocity, as a vector in local coordinates.
-    void getAngularAccel(float* accelOut);
+    void getAngularAccel(float* accelOut) const;
     
     // Returns the intertia tensor in a float[9] allocated by caller.
-    void getInertiaMatrix(float* inertiaOut);
+    void getInertiaMatrix(float* inertiaOut) const;
 
 private:
     /** 

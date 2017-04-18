@@ -12,10 +12,10 @@ public:
     Vector();
     ~Vector();
     int   add(void* p);
-    void* get(int i);
+    void* get(int i) const;
     void  set(int i, void* p);
-    int   size();
-    bool  empty();
+    int   size() const;
+    bool  empty() const;
 private:
     void realloc();
 
@@ -44,7 +44,7 @@ inline int Vector::add(void* p)
     return _sz++;
 }
 
-inline void* Vector::get(int i)
+inline void* Vector::get(int i) const
 {
     return _array[i];
 }
@@ -54,12 +54,12 @@ inline void Vector::set(int i, void* p)
     _array[i] = p;
 }
 
-inline int Vector::size()
+inline int Vector::size() const
 {
     return _sz;
 }
 
-inline bool Vector::empty()
+inline bool Vector::empty() const
 {
     return _sz == 0;
 }

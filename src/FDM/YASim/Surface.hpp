@@ -18,12 +18,12 @@ class Surface
 public:
     Surface( Version * version );
 
-    int getID() { return _id; };
+    int getID() const { return _id; };
     static void resetIDgen() { s_idGenerator = 0; };
 
     // Position of this surface in local coords
     void setPosition(const float* p);
-    void getPosition(float* out) { Math::set3(_pos, out); }
+    void getPosition(float* out) const { Math::set3(_pos, out); }
 
     // Distance scale along the X axis
     void setChord(float chord) { _chord = chord; }
@@ -46,7 +46,7 @@ public:
 
     // Modifier for flap lift coefficient, useful for simulating flap blowing etc.
     void setFlapEffectiveness(float effectiveness) { _flapEffectiveness = effectiveness; }
-    double getFlapEffectiveness() { return _flapEffectiveness; }
+    double getFlapEffectiveness() const { return _flapEffectiveness; }
 
     // local -> Surface coords
     void setOrientation(const float* o);
@@ -60,12 +60,12 @@ public:
     void setTwist(float angle) { _twist = angle; }
 
     void setTotalDrag(float c0) { _c0 = c0; }
-    float getTotalDrag() { return _c0; }
+    float getTotalDrag() const { return _c0; }
     
     void setXDrag(float cx) { _cx = cx; }
     void setYDrag(float cy) { _cy = cy; }
     void setZDrag(float cz) { _cz = cz; }
-    float getXDrag() { return _cx; }
+    float getXDrag() const { return _cx; }
 
     // zero-alpha Z drag ("camber") specified as a fraction of cz
     void setBaseZDrag(float cz0) { _cz0 = cz0; }
@@ -82,8 +82,8 @@ public:
 
     void calcForce(const float* v, const float rho, float* out, float* torque);
 
-    float getAlpha() { return _alpha; };
-    float getStallAlpha() { return _stallAlpha; };
+    float getAlpha() const { return _alpha; };
+    float getStallAlpha() const { return _stallAlpha; };
     
 private:
     SGPropertyNode_ptr _surfN;
