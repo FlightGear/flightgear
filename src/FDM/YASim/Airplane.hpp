@@ -194,11 +194,11 @@ private:
     float _tailIncidence;
     Control _approachElevator;
     const char* _failureMsg;
-
-    float _cgMax;          // hard limits for cg from gear position
-    float _cgMin;          // hard limits for cg from gear position
-    float _cgDesiredMax;   // desired cg max in %MAC from config
-    float _cgDesiredMin;   // desired cg min in %MAC from config
+    
+    float _cgMax = -1e6;         // hard limits for cg from gear position
+    float _cgMin = 1e6;          // hard limits for cg from gear position
+    float _cgDesiredMax = 0.3f;  // desired cg max in %MAC from config
+    float _cgDesiredMin = 0.25f; // desired cg min in %MAC from config
     float _cgDesiredFront; // calculated desired cg x max
     float _cgDesiredAft;   // calculated desired cg x min 
     bool _autoBallast = false;

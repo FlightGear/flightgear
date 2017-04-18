@@ -259,7 +259,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
       if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
       }
-      _airplane.setDesiredCGRangeInPercentOfMAC(attrf(a, "cg-min", 0.1f), attrf(a, "cg-max", 0.3f)); //FIXME find reasonable defaults
+      _airplane.setDesiredCGRangeInPercentOfMAC(attrf(a, "cg-min", 0.25f), attrf(a, "cg-max", 0.3f)); //FIXME find reasonable defaults
       if (attrb(a, "auto-ballast")) {
         _airplane.setAutoBallast(true);
       }

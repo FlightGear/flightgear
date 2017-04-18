@@ -57,10 +57,6 @@ Airplane::Airplane()
 
     _failureMsg = 0;
     _wingsN = 0;
-    _cgMax = -1e6;
-    _cgMin = 1e6;
-    _cgDesiredMax = 0.33f; // FIXME find reasonable default value
-    _cgDesiredMin = 0.1f; // FIXME find reasonable default value
 }
 
 Airplane::~Airplane()
