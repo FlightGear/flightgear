@@ -73,13 +73,14 @@ Model::Model()
     _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
     _global_ground[3] = -100000;
     _modelN = fgGetNode("/fdm/yasim/forces", true);
-    _f0xN = _modelN->getNode("f0-aero-x-drag", true);
-    _f0yN = _modelN->getNode("f0-aero-y-side", true);
-    _f0zN = _modelN->getNode("f0-aero-z-lift", true);
-    _gefxN = _modelN->getNode("gndeff-f-x", true);
-    _gefyN = _modelN->getNode("gndeff-f-y", true);
-    _gefzN = _modelN->getNode("gndeff-f-z", true);
-    _wgdistN = _modelN->getNode("wing-gnd-dist", true);    
+    _fAeroXN = _modelN->getNode("f-x-drag", true);
+    _fAeroYN = _modelN->getNode("f-y-side", true);
+    _fAeroZN = _modelN->getNode("f-z-lift", true);
+    
+    _gefxN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-x", true);
+    _gefyN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-y", true);
+    _gefzN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-z", true);
+    _wgdistN = fgGetNode("/fdm/yasim/debug/ground-effect/wing-gnd-dist", true);
 }
 
 Model::~Model()
@@ -209,6 +210,13 @@ void Model::setAir(const float pressure, const float temp, const float density)
     _rho = density;
 }
 
+void Model::setAirFromStandardAtmosphere(const float altitude)
+{
+    _pressure = Atmosphere::getStdPressure(altitude);
+    _temp = Atmosphere::getStdTemperature(altitude);
+    _rho = Atmosphere::getStdDensity(altitude);
+}
+
 void Model::updateGround(State* s)
 {
     float dummy[3];
@@ -334,11 +342,6 @@ void Model::calcForces(State* s)
       _body.addForce(pos, force);
       _body.addTorque(torque);
     }
-    if (_modelN != 0) {
-      _f0xN->setFloatValue(faero[0]);
-      _f0yN->setFloatValue(faero[1]);
-      _f0zN->setFloatValue(faero[2]);
-    }
 
     for (j=0; j<_rotorgear.getRotors()->size();j++)
     {
@@ -384,7 +387,7 @@ void Model::calcForces(State* s)
       // distance between ground and wing ref. point
       float dist = ground[3] - Math::dot3(ground, _geRefPoint); 
       float fz = 0;
-      float geForce[3];
+      float geForce[3] = {0, 0, 0};
       if(dist > 0 && dist < _wingSpan) {
         fz = Math::dot3(faero, ground);
         fz *= (_wingSpan - dist) / _wingSpan;
@@ -397,11 +400,12 @@ void Model::calcForces(State* s)
         _gefyN->setFloatValue(geForce[1]);
         _gefzN->setFloatValue(geForce[2]);
         _wgdistN->setFloatValue(dist);
-        //float ld0 = faero[2]/faero[0];
-        //float ld = (geForce[2]+faero[2])/(geForce[0]+faero[0]);
-        //n->getNode("gndeff-ld-ld0", true)->setFloatValue(ld/ld0);
-        
       }
+    }
+    if (_modelN != 0) {
+      _fAeroXN->setFloatValue(faero[0]);
+      _fAeroYN->setFloatValue(faero[1]);
+      _fAeroZN->setFloatValue(faero[2]);
     }
     // Convert the velocity and rotation vectors to local coordinates
     float lrot[3], lv[3];

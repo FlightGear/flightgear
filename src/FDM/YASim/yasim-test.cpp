@@ -54,9 +54,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
   Model* m = a->getModel();
   State s;
 
-  m->setAir(Atmosphere::getStdPressure(alt),
-  Atmosphere::getStdTemperature(alt),
-  Atmosphere::getStdDensity(alt));
+  m->setAirFromStandardAtmosphere(alt);
 
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -131,9 +129,7 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   Model* m = a->getModel();
   State s;
   
-  m->setAir(Atmosphere::getStdPressure(alt),
-	    Atmosphere::getStdTemperature(alt),
-	    Atmosphere::getStdDensity(alt));
+  m->setAirFromStandardAtmosphere(alt);
   
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -241,7 +237,9 @@ int main(int argc, char** argv)
     }
   }
   else {
-    printf("Solution results:");
+    printf("==========================\n");
+    printf("= YASim solution results =\n");
+    printf("==========================\n");
     float aoa = a->getCruiseAoA() * RAD2DEG;
     float tail = -1 * a->getTailIncidence() * RAD2DEG;
     float drag = 1000 * a->getDragCoefficient();
@@ -251,18 +249,26 @@ int main(int argc, char** argv)
 
     float SI_inertia[9];
     a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
+    float MAC = a->getWing()->getMAC();
+    float MACx = a->getWing()->getMACx();
+    float MACy = a->getWing()->getMACy();
     
     printf("       Iterations: %d\n", a->getSolutionIterations());
     printf(" Drag Coefficient: %f\n", drag);
     printf("       Lift Ratio: %f\n", a->getLiftRatio());
-    printf("       Cruise AoA: %f\n", aoa);
-    printf("   Tail Incidence: %f\n", tail);
-    printf("Approach Elevator: %f\n", a->getApproachElevator());
-    printf("               CG: x:%.3f, y:%.3f, z:%.3f\n\n", cg[0], cg[1], cg[2]);
-    printf("Inertia tensor [kg*m^2], origo at CG:\n");
+    printf("       Cruise AoA: %f deg\n", aoa);
+    printf("   Tail Incidence: %f deg\n", tail);
+    printf("Approach Elevator: %f\n\n", a->getApproachElevator());
+    printf("               CG: x:%.3f, y:%.3f, z:%.3f\n", cg[0], cg[1], cg[2]);
+    printf("    Wing MAC (*1): x:%.2f, y:%.2f, length:%.1f \n", MACx, MACy, MAC);
+    printf("    CG-x rel. MAC: %.3f\n", a->getCGMAC());
+    printf("    CG-x  desired: %.3f < %.3f < %.3f \n", a->getCGSoftLimitXMin(), cg[0], a->getCGSoftLimitXMax());
+    
+    printf("\nInertia tensor [kg*m^2], origo at CG:\n\n");
     printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
     printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[3], SI_inertia[4], SI_inertia[5]);
     printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[6], SI_inertia[7], SI_inertia[8]);
+    printf("\n(*1) MAC calculation works on <wing> only! Numbers will be wrong for segmented wings, e.g. <wing>+<mstab>.\n");
   }
     delete fdm;
     return 0;

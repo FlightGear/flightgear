@@ -118,6 +118,7 @@ private:
     SGPropertyNode_ptr _arxN;
     SGPropertyNode_ptr _aryN;
     SGPropertyNode_ptr _arzN;
+    SGPropertyNode_ptr _cg_xmacN;
 };
 
 }; // namespace yasim

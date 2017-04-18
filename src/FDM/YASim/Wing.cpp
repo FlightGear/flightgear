@@ -212,6 +212,13 @@ void Wing::compile()
     // wingspan in y-direction (not for vstab)
     _wingspan = Math::abs(2*_tip[1]);
     _aspectRatio = _wingspan / _meanChord;
+
+    _netSpan = Math::abs(2*(_tip[1]-_base[1]));
+    // http://www.nasascale.org/p2/wp-content/uploads/mac-calculator.htm
+    const float commonFactor = _chord*(0.5+_taper)/(3*_chord*(1+_taper));
+    _mac = _chord-(2*_chord*(1-_taper)*commonFactor);
+    _macRootDistance = _netSpan*commonFactor;
+    _macX = _base[0]-Math::tan(_sweep) * _macRootDistance + _mac/2;
     
     // The wing's Y axis will be the "left" vector.  The Z axis will
     // be perpendicular to this and the local (!) X axis, because we

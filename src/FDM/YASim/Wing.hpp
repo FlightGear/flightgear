@@ -17,28 +17,28 @@ public:
 
     // Do we mirror ourselves about the XZ plane?
     void setMirror(bool mirror) { _mirror = mirror; }
-    bool isMirrored() { return _mirror; };
+    const bool isMirrored() { return _mirror; };
     
     // Wing geometry in local coordinates:
     
     // base point of wing
     void setBase(const float* base) { Math::set3(base, _base); }
-    void getBase(float* base) { Math::set3(_base, base); };
+    const void getBase(float* base) { Math::set3(_base, base); };
     // dist. ALONG wing (not span!)     
     void setLength(float length) { _length = length; }
-    float getLength() { return _length; };
+    const float getLength() { return _length; };
     // at base, measured along X axis
     void setChord(float chord) { _chord = chord; }
-    float getChord() { return _chord; };
+    const float getChord() { return _chord; };
     // fraction of chord at wing tip, 0..1
     void setTaper(float taper) { _taper = taper; }
-    float getTaper() { return _taper; };
+    const float getTaper() { return _taper; };
     // radians
     void setSweep(float sweep) { _sweep = sweep; }
-    float getSweep() { return _sweep; };
+    const float getSweep() { return _sweep; };
     // radians, positive is "up"
     void setDihedral(float dihedral) { _dihedral = dihedral; }
-    float getDihedral() { return _dihedral; };
+    const float getDihedral() { return _dihedral; };
     
     void setIncidence(float incidence);
     void setTwist(float angle) { _twist = angle; }
@@ -67,27 +67,31 @@ public:
 
     // Compile the thing into a bunch of Surface objects
     void compile();
-    void getTip(float* tip) { Math::set3(_tip, tip);};
+    const void getTip(float* tip) { Math::set3(_tip, tip);};
     
     // valid only after Wing::compile() was called
-    float getSpan() { return _wingspan; };
-    float getArea() { return _wingspan*_meanChord; };
-    float getAspectRatio() { return _aspectRatio; };
-    float getSMC() { return _meanChord; };
+    const float getSpan() { return _wingspan; };
+    const float getArea() { return _wingspan*_meanChord; };
+    const float getAspectRatio() { return _aspectRatio; };
+    const float getSMC() { return _meanChord; };
+    const float getMAC() { return _mac; }; // get length of MAC
+    const float getMACx() { return _macX; }; // get x-coord of MAC leading edge 
+    const float getMACy() { return _base[1]+_macRootDistance; }; // get y-coord of MAC leading edge 
     
-    int numSurfaces() { return _surfs.size(); }
+    
+    const int numSurfaces() { return _surfs.size(); }
     Surface* getSurface(int n) { return ((SurfRec*)_surfs.get(n))->surface; }
-    float getSurfaceWeight(int n) { return ((SurfRec*)_surfs.get(n))->weight; }
+    const float getSurfaceWeight(int n) { return ((SurfRec*)_surfs.get(n))->weight; }
 
     // The overall drag coefficient for the wing as a whole.  Units are
     // arbitrary.
     void setDragScale(float scale);
-    float getDragScale() { return _dragScale; }
+    const float getDragScale() { return _dragScale; }
 
     // The ratio of force along the Z (lift) direction of each wing
     // segment to that along the X (drag) direction.
     void setLiftRatio(float ratio);
-    float getLiftRatio() { return _liftRatio; }
+    const float getLiftRatio() { return _liftRatio; }
 
 private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
@@ -114,6 +118,10 @@ private:
     // calculated from above
     float _tip[3];
     float _meanChord; // std. mean chord
+    float _mac; // mean aerodynamic chord length
+    float _macRootDistance; // y-distance of mac from root
+    float _macX; // x-coordinate of mac (leading edge)
+    float _netSpan;
     float _wingspan;
     float _aspectRatio;
 
