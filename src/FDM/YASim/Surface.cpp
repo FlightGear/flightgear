@@ -36,7 +36,7 @@ Surface::Surface( Version * version ) :
     _inducedDrag = 1;
     _stallAlpha = 0;
     _alpha = 0;
-    _surfN = fgGetNode("/fdm/yasim/surfaces", true);
+    _surfN = fgGetNode("/fdm/yasim/debug/surfaces", true);
     if (_surfN != 0) {
       _surfN = _surfN->getChild("surface", _id, true);
       _fxN = _surfN->getNode("f-x", true);

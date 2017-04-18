@@ -599,8 +599,8 @@ void Airplane::compile()
       _cgDesiredAft = _wing->getMACx() - _wing->getMAC()*_cgDesiredMax;
       if (baseN != 0) {
         SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
-        n->getNode("cg-range-front", true)->setFloatValue(_cgDesiredFront);
-        n->getNode("cg-range-aft", true)->setFloatValue(_cgDesiredAft);
+        n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
+        n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
       }
     }
     if (_tail)
