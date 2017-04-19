@@ -234,6 +234,9 @@
           <iconset resource="resources.qrc">
            <normaloff>:/toolbox-fly</normaloff>:/toolbox-fly</iconset>
          </property>
+         <property name="pageIndex" stdset="0">
+          <number>99</number>
+         </property>
         </widget>
        </item>
       </layout>
