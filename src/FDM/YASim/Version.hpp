@@ -16,20 +16,20 @@ public:
   } YASIM_VERSION;
 
   void setVersion( const char * version );
-  int getVersion() { return _version; }
-  bool isVersion( YASIM_VERSION version );
-  bool isVersionOrNewer( YASIM_VERSION version );
+  int getVersion() const { return _version; }
+  bool isVersion( YASIM_VERSION version ) const;
+  bool isVersionOrNewer( YASIM_VERSION version ) const;
 
 private:
   YASIM_VERSION _version;
 };
 
-inline bool Version::isVersion( YASIM_VERSION version )
+inline bool Version::isVersion( YASIM_VERSION version ) const
 {
   return _version == version;
 }
 
-inline bool Version::isVersionOrNewer( YASIM_VERSION version )
+inline bool Version::isVersionOrNewer( YASIM_VERSION version ) const
 {
   return _version >= version;
 }
