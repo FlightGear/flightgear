@@ -1554,7 +1554,7 @@ FGMultiplayMgr::Send()
         pData->id = it->first;
         pData->type = findProperty(pData->id)->type;
 
-        switch (pData->type) {
+        switch (static_cast<int>(pData->type)) {
         case TT_SHORTINT:
         case TT_SHORT_FLOAT_1:
         case TT_SHORT_FLOAT_2:
