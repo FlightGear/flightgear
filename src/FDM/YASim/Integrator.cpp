@@ -2,43 +2,6 @@
 #include "Integrator.hpp"
 namespace yasim {
 
-void Integrator::setBody(RigidBody* body)
-{
-    _body = body;
-}
-
-void Integrator::setEnvironment(BodyEnvironment* env)
-{
-    _env = env;
-}
-
-void Integrator::setInterval(float dt)
-{
-    _dt = dt;
-}
-
-float Integrator::getInterval()
-{
-    return _dt;
-}
-
-void Integrator::setState(State* s)
-{
-    _s = *s;
-}
-
-State* Integrator::getState()
-{
-    return &_s;
-}
-
-// Transforms a "local" vector to a "global" vector (not coordinate!)
-// using the specified orientation.
-void Integrator::l2gVector(float* orient, float* v, float* out)
-{
-    Math::tmul33(orient, v, out);
-}
-
 // Updates a position vector for a body c.g. motion with velocity v
 // over time dt, from orientation o0 to o1.  Because the position
 // references the local coordinate origin, but the velocity is that of

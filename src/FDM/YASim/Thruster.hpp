@@ -1,5 +1,6 @@
 #ifndef _THRUSTER_HPP
 #define _THRUSTER_HPP
+#include "Math.hpp"
 
 namespace yasim {
 
@@ -22,15 +23,15 @@ public:
     virtual Engine* getEngine() { return 0; }
     
     // Static data
-    void getPosition(float* out);
-    void setPosition(float* pos);
-    void getDirection(float* out);
-    void setDirection(float* dir);
+    void getPosition(float* out) const { Math::set3(_pos, out); }
+    void setPosition(const float* pos) { Math::set3(pos, _pos); }
+    void getDirection(float* out) const { Math::set3(_dir, out); }
+    void setDirection(const float* dir) { Math::unit3(dir, _dir); }
 
     // Controls
-    void setThrottle(float throttle);
-    void setMixture(float mixture);
-    void setStarter(bool starter);
+    void setThrottle(float throttle) { _throttle = Math::clamp(throttle, -1, 1); }
+    void setMixture(float mixture) { _mixture = Math::clamp(mixture, 0, 1); }
+    void setStarter(bool starter) { _starter = starter; }
     void setFuelState(bool hasFuel) { _fuel = hasFuel; }
 
     // Dynamic output
@@ -42,7 +43,7 @@ public:
     virtual float getFuelFlow()=0; // in kg/s
 
     // Runtime instructions
-    void setWind(float* wind);
+    void setWind(const float* wind) { Math::set3(wind, _wind); };
     void setAir(float pressure, float temp, float density);
     virtual void init() {}
     virtual void integrate(float dt)=0;

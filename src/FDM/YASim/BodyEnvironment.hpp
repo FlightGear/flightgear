@@ -22,36 +22,34 @@ struct State {
 
     // Simple initialization
     State() {
-        int i;
-        for(i=0; i<3; i++) {
+        for(int i=0; i<3; i++) {
             pos[i] = v[i] = rot[i] = acc[i] = racc[i] = 0;
-            int j;
-            for(j=0; j<3; j++)
-                orient[3*i+j] = i==j ? 1.0f : 0.0f;
+            for(int j=0; j<3; j++)
+                orient[3*i+j] = (i==j) ? 1.0f : 0.0f;
         }
     }
 
-    void posLocalToGlobal(float* lpos, double *gpos) {
+    void posLocalToGlobal(const float* lpos, double *gpos) const {
         float tmp[3];
         Math::tmul33(orient, lpos, tmp);
         gpos[0] = tmp[0] + pos[0];
         gpos[1] = tmp[1] + pos[1];
         gpos[2] = tmp[2] + pos[2];
     }
-    void posGlobalToLocal(double* gpos, float *lpos) {
+    void posGlobalToLocal(const double* gpos, float *lpos) const {
         lpos[0] = (float)(gpos[0] - pos[0]);
         lpos[1] = (float)(gpos[1] - pos[1]);
         lpos[2] = (float)(gpos[2] - pos[2]);
         Math::vmul33(orient, lpos, lpos);
     }
-    void velLocalToGlobal(float* lvel, float *gvel) {
+    void velLocalToGlobal(const float* lvel, float *gvel) const {
         Math::tmul33(orient, lvel, gvel);
     }
-    void velGlobalToLocal(float* gvel, float *lvel) {
+    void velGlobalToLocal(const float* gvel, float *lvel) const {
         Math::vmul33(orient, gvel, lvel);
     }
 
-    void planeGlobalToLocal(double* gplane, float *lplane) {
+    void planeGlobalToLocal(const double* gplane, float *lplane) const {
       // First the normal vector transformed to local coordinates.
       lplane[0] = (float)-gplane[0];
       lplane[1] = (float)-gplane[1];
