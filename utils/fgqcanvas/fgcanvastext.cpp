@@ -21,6 +21,9 @@
 #include <QDebug>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QTextLayout>
+
+#include <private/qquicktextnode_p.h>
 
 #include "fgcanvaspaintcontext.h"
 #include "localprop.h"
@@ -28,7 +31,158 @@
 #include "canvasitem.h"
 #include "canvasconnection.h"
 
-static QQmlComponent* static_textComponent = nullptr;
+class TextCanvasItem : public CanvasItem
+{
+    Q_OBJECT
+
+public:
+    TextCanvasItem(QQuickItem* parent)
+        : CanvasItem(parent)
+    {
+        setFlag(ItemHasContents);
+    }
+
+    void setText(QString t)
+    {
+        if (t == m_text) {
+            return;
+        }
+
+        m_text = t;
+        updateTextLayout();
+        update();
+    }
+
+    void setColor(QColor c)
+    {
+        m_color = c;
+        update();
+    }
+
+    void setAlignment(Qt::Alignment textAlign)
+    {
+        m_alignment = textAlign;
+        updateTextLayout();
+        update();
+    }
+
+    void setFont(QFont font)
+    {
+        m_font = font;
+        updateTextLayout();
+        update();
+    }
+
+    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
+    {
+        if (!m_textNode) {
+            m_textNode = new QQuickTextNode(this);
+        }
+
+        m_textNode->deleteContent();
+        QPointF pos = posForAlignment();
+
+        m_textNode->addTextLayout(pos,
+                                  &m_layout,
+                                  m_color,
+                                  QQuickText::Normal);
+
+
+        return m_textNode;
+    }
+
+protected:
+    QPointF posForAlignment()
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+        const float itemWidth = width();
+        const float itemHeight = height();
+        const float textWidth = m_layout.boundingRect().width();
+        const float textHeight = m_layout.boundingRect().height();
+
+        switch (m_alignment & Qt::AlignHorizontal_Mask) {
+        case Qt::AlignLeft:
+        case Qt::AlignJustify:
+            break;
+        case Qt::AlignRight:
+            x = itemWidth - textWidth;
+            break;
+        case Qt::AlignHCenter:
+            x = (itemWidth - textWidth) / 2;
+            break;
+        }
+
+        switch (m_alignment & Qt::AlignVertical_Mask) {
+        case Qt::AlignTop:
+            break;
+        case Qt::AlignBottom:
+            y = itemHeight - textHeight;
+            break;
+        case Qt::AlignVCenter:
+            y = (itemHeight - textHeight) / 2;
+            break;
+        case Qt::AlignBaseline:
+            y = -m_baselineOffset;
+            break;
+        }
+
+        return QPointF(x,y);
+    }
+
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+    {
+        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        update();
+    }
+
+    QRectF boundingRect() const
+    {
+        if ((width() == 0.0) || (height() == 0.0)) {
+            return m_layout.boundingRect();
+        }
+
+        return QQuickItem::boundingRect();
+    }
+
+    void updateTextLayout()
+    {
+        QFontMetricsF fm(m_font);
+        m_baselineOffset = fm.ascent(); // for aligning to first base line
+
+        m_layout.setText(m_text);
+        QTextOption textOpt(m_alignment);
+        m_layout.setTextOption(textOpt);
+        m_layout.setFont(m_font);
+
+        m_layout.beginLayout();
+        float leading = fm.leading();
+        int lineCount = 0;
+        float y = 0.0;
+
+        QTextLine line = m_layout.createLine();
+        while (line.isValid()) {
+            int nextBreak = m_text.indexOf('\n', line.textStart());
+            int columnsToNextBreak = nextBreak >= 0 ? nextBreak : INT_MAX;
+            line.setNumColumns(columnsToNextBreak);
+            line.setPosition(QPointF(0.0, y));
+            ++lineCount;
+            y += leading + line.height();
+            line = m_layout.createLine();
+        }
+
+        m_layout.endLayout();
+    }
+
+private:
+    QQuickTextNode* m_textNode = nullptr;
+    QColor m_color;
+    QFont m_font;
+    QString m_text;
+    Qt::Alignment m_alignment = Qt::AlignCenter;
+    QTextLayout m_layout;
+    float m_baselineOffset;
+};
 
 FGCanvasText::FGCanvasText(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop),
@@ -38,9 +192,7 @@ FGCanvasText::FGCanvasText(FGCanvasGroup* pr, LocalProp* prop) :
 
 CanvasItem *FGCanvasText::createQuickItem(QQuickItem *parent)
 {
-    Q_ASSERT(static_textComponent);
-    _quickItem = qobject_cast<CanvasItem*>(static_textComponent->create());
-    _quickItem->setParentItem(parent);
+    _quickItem = new TextCanvasItem(parent);
     markFontDirty(); // so it gets set on the new item
     return _quickItem;
 }
@@ -48,12 +200,6 @@ CanvasItem *FGCanvasText::createQuickItem(QQuickItem *parent)
 CanvasItem *FGCanvasText::quickItem() const
 {
     return _quickItem;
-}
-
-void FGCanvasText::setEngine(QQmlEngine *engine)
-{
-    static_textComponent = new QQmlComponent(engine, QUrl("qrc:///qml/text.qml"));
-    qDebug() << static_textComponent->errorString();
 }
 
 void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
@@ -82,6 +228,9 @@ void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
     }
 
     context->painter()->drawText(rect, _alignment, _text);
+
+    context->painter()->setPen(Qt::cyan);
+    context->painter()->drawRect(rect);
 }
 
 void FGCanvasText::doPolish()
@@ -125,7 +274,7 @@ void FGCanvasText::onTextChanged(QVariant var)
 {
     _text = var.toString();
     if (_quickItem) {
-        _quickItem->setProperty("text", var);
+        _quickItem->setText(var.toString());
     }
 }
 
@@ -145,12 +294,12 @@ void FGCanvasText::rebuildAlignment(QVariant var) const
         return;
     }
 
-    if (_quickItem) {
-        _quickItem->setProperty("canvasAlignment", alignString);
-    }
-
     if (alignString == "center") {
         _alignment = Qt::AlignCenter;
+
+        if (_quickItem) {
+            _quickItem->setAlignment(_alignment);
+        }
         return;
     }
 
@@ -178,6 +327,9 @@ void FGCanvasText::rebuildAlignment(QVariant var) const
     }
 
     _alignment = newAlignment;
+    if (_quickItem) {
+        _quickItem->setAlignment(_alignment);
+    }
 }
 
 void FGCanvasText::markFontDirty()
@@ -216,11 +368,10 @@ void FGCanvasText::rebuildFont() const
     rebuildAlignment(getCascadedStyle("alignment"));
 
     if (_quickItem) {
-        _quickItem->setProperty("fontFamily", f.family());
-        _quickItem->setProperty("fontPixelSize", pixelSize);
-
-        QColor fill = fillColor();
-        _quickItem->setProperty("color", fill.name());
+        _quickItem->setFont(f);
+        _quickItem->setColor(fillColor());
+       // _quickItem->setProperty("fontPixelSize", pixelSize);
     }
 }
 
+#include "fgcanvastext.moc"

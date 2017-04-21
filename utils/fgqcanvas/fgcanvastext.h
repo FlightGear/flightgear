@@ -20,9 +20,10 @@
 
 #include <QFont>
 #include <QFontMetricsF>
-#include <QQmlEngine>
 
 #include "fgcanvaselement.h"
+
+class TextCanvasItem;
 
 class FGCanvasText : public FGCanvasElement
 {
@@ -32,7 +33,6 @@ public:
     CanvasItem* createQuickItem(QQuickItem *parent) override;
     CanvasItem* quickItem() const override;
 
-    static void setEngine(QQmlEngine* engine);
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
     void doPolish() override;
@@ -59,7 +59,7 @@ private:
     mutable QFont _font;
     mutable QFontMetricsF _metrics;
 
-    CanvasItem* _quickItem = nullptr;
+    TextCanvasItem* _quickItem = nullptr;
 };
 
 

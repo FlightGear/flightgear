@@ -69,5 +69,6 @@ target_include_directories(fgqcanvas PRIVATE ${PROJECT_SOURCE_DIR})
 target_include_directories(fgqcanvas PRIVATE ${PROJECT_BINARY_DIR})
 
 target_include_directories(fgqcanvas PRIVATE ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+target_include_directories(fgqcanvas PRIVATE ${Qt5Quick_PRIVATE_INCLUDE_DIRS})
 
 install(TARGETS fgqcanvas RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

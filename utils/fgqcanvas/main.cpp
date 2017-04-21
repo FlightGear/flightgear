@@ -20,8 +20,6 @@
 #include <QQuickView>
 #include <QQmlContext>
 
-#include "fgcanvastext.h"
-#include "fgqcanvasimage.h"
 #include "canvasitem.h"
 #include "applicationcontroller.h"
 #include "canvasdisplay.h"
@@ -47,9 +45,6 @@ int main(int argc, char *argv[])
     quickView.resize(1024, 768);
 
     quickView.rootContext()->setContextProperty("_application", &appController);
-
-    FGCanvasText::setEngine(quickView.engine());
-    FGQCanvasImage::setEngine(quickView.engine());
 
     quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
     quickView.setResizeMode(QQuickView::SizeRootObjectToView);

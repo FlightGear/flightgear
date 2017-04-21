@@ -1,5 +1,5 @@
 
-QT       += core gui gui-private quick websockets
+QT       += core gui gui-private quick websockets quick-private
 CONFIG += c++11
 
 !ios:!android

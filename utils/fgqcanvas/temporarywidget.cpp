@@ -46,8 +46,6 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
     ui->quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
     ui->quickWidget->setSource(QUrl("root.qml"));
 
-    FGCanvasText::setEngine(ui->quickWidget->engine());
-
     connect(ui->canvasSelectCombo, SIGNAL(activated(int)),
             this, SLOT(onCanvasSelected(int)));
     ui->canvasSelectCombo->hide();
