@@ -300,7 +300,8 @@ void Airplane::setFuelFraction(float frac)
     }
 }
 
-void Airplane::setupState(const float aoa, const float speed, const float gla, State* s)
+// used by runCruise, runApproach, solveHelicopter and in yasim-test
+void Airplane::setupState(const float aoa, const float speed, const float gla, State* s) const
 {
     float cosAoA = Math::cos(aoa);
     float sinAoA = Math::sin(aoa);
