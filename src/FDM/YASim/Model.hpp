@@ -7,6 +7,7 @@
 #include "Vector.hpp"
 #include "Turbulence.hpp"
 #include "Rotor.hpp"
+#include "Atmosphere.hpp"
 #include <simgear/props/props.hxx>
 
 namespace yasim {
@@ -68,8 +69,8 @@ public:
     //
     void setGroundEffect(const float* pos, float span, float mul);
     void setWind(float* wind) { Math::set3(wind, _wind); }
-    void setAir(float pressure, float temp, float density);
-    void setAirFromStandardAtmosphere(float altitude);
+    void setAtmosphere(Atmosphere a) { _atmo = a; };
+    void setStandardAtmosphere(float altitude);
 
     void updateGround(State* s);
 
@@ -81,7 +82,7 @@ private:
     void initRotorIteration();
     void calcGearForce(Gear* g, float* v, float* rot, float* ground);
     float gearFriction(float wgt, float v, Gear* g);
-    void localWind(const float* pos, State* s, float* out, float alt, bool is_rotor = false);
+    void localWind(const float* pos, const yasim::State* s, float* out, float alt, bool is_rotor = false);
 
     Integrator _integrator;
     RigidBody _body;
@@ -102,10 +103,9 @@ private:
 
     Ground* _ground_cb;
     double _global_ground[4];
-    float _pressure;
-    float _temp;
-    float _rho;
+    Atmosphere _atmo;
     float _wind[3];
+    
 
     // Accumulators for the total internal gyro and engine torque
     float _gyro[3];

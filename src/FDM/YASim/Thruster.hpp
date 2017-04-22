@@ -1,5 +1,7 @@
 #ifndef _THRUSTER_HPP
 #define _THRUSTER_HPP
+
+#include "Atmosphere.hpp"
 #include "Math.hpp"
 
 namespace yasim {
@@ -11,8 +13,8 @@ class Engine;
 
 class Thruster {
 public:
-    Thruster();
-    virtual ~Thruster();
+    Thruster() {};
+    virtual ~Thruster() {};
 
     // Typing info, these are the possible sub-type (or sub-parts)
     // that a thruster might have.  Any might return null.  A little
@@ -44,25 +46,22 @@ public:
 
     // Runtime instructions
     void setWind(const float* wind) { Math::set3(wind, _wind); };
-    void setAir(float pressure, float temp, float density);
+    void setAir(Atmosphere a) { _atmo = a; };
     virtual void init() {}
     virtual void integrate(float dt)=0;
     virtual void stabilize()=0;
 
 protected:
-    float _pos[3];
-    float _dir[3];
-    float _throttle;
-    float _mixture;
-    bool _starter; // true=engaged, false=disengaged
+    float _pos[3] {0, 0, 0};
+    float _dir[3] {1, 0, 0};
+    float _throttle = 0;
+    float _mixture = 0;
+    bool _starter = false; // true=engaged, false=disengaged
     bool _fuel; // true=available, false=out
 
-    float _wind[3];
-    float _pressure;
-    float _temp;
-    float _rho;
+    float _wind[3] {0, 0, 0};
+    Atmosphere _atmo;
 };
 
 }; // namespace yasim
 #endif // _THRUSTER_HPP
-

@@ -59,37 +59,12 @@ void Jet::setMaxThrust(float thrust, float afterburner)
     }
 }
 
-void Jet::setVMax(float spd)
-{
-    _vMax = spd;
-}
-
-void Jet::setTSFC(float tsfc)
-{
-    _tsfc = tsfc;
-}
-
-void Jet::setATSFC(float atsfc)
-{
-    _atsfc = atsfc;
-}
-
 void Jet::setRPMs(float idleN1, float maxN1, float idleN2, float maxN2)
 {
     _n1Min = idleN1;
     _n1Max = maxN1;
     _n2Min = idleN2;
     _n2Max = maxN2;
-}
-
-void Jet::setEGT(float takeoffEGT)
-{
-    _egt0 = takeoffEGT;
-}
-
-void Jet::setEPR(float takeoffEPR)
-{
-    _epr0 = takeoffEPR;
 }
 
 void Jet::setSpooling(float time)
@@ -100,11 +75,6 @@ void Jet::setSpooling(float time)
     _decay = 1.5f * 2.3f / time;
 }
 
-void Jet::setVectorAngle(float angle)
-{
-    _maxRot = angle;
-}
-
 void Jet::setReheat(float reheat)
 {
     _reheat = Math::clamp(reheat, 0, 1);
@@ -112,9 +82,7 @@ void Jet::setReheat(float reheat)
 
 void Jet::setRotation(float rot)
 {
-    if(rot < 0) rot = 0;
-    if(rot > 1) rot = 1;
-    _rotControl = rot;
+    _rotControl = Math::clamp(rot, 0, 1);
 }
 
 float Jet::getN1()
@@ -127,16 +95,12 @@ float Jet::getN2()
     return _n2 * _tempCorrect;
 }
 
-float Jet::getEPR()
-{
-    return _epr;
-}
-
 float Jet::getEGT()
 {
     // Exactly zero means "off" -- return the ambient temperature
-    if(_egt == 0) return _temp;
-
+    if(_egt == 0) {
+      return _atmo.getTemperature();
+    }
     return _egt * _tempCorrect * _tempCorrect;
 }
 
@@ -155,8 +119,7 @@ void Jet::integrate(float dt)
     float spd = -Math::dot3(_wind, _dir);
 
     float statT, statP, statD;
-    Atmosphere::calcStaticAir(_pressure, _temp, _rho, spd,
-                              &statP, &statT, &statD);
+    _atmo.calcStaticAir(spd, &statP, &statT, &statD);
     _pressureCorrect = statP/P0;
     _tempCorrect = Math::sqrt(statT/T0);
 
@@ -175,8 +138,8 @@ void Jet::integrate(float dt)
     // Now get a "beta" (i.e. EPR - 1) value.  The output values are
     // expressed as functions of beta.
     float ibeta0 = 1/(_epr0 - 1);
-    float betaTarget = (_epr0 - 1) * (setThrust/_maxThrust) * (P0/_pressure)
-	* (_temp/statT);
+    float betaTarget = (_epr0 - 1) * (setThrust/_maxThrust) * (P0/_atmo.getPressure())
+	* (_atmo.getTemperature()/statT);
     float n2Target = _n2Min + (betaTarget*ibeta0) * (_n2Max - _n2Min);
 
     // Note that this "first" beta value is used to compute a target
@@ -191,7 +154,7 @@ void Jet::integrate(float dt)
     // The actual thrust produced is keyed to the N1 speed.  Add the
     // afterburners in at the end.
     float betaN1 =  (_epr0-1) * (_n1 - _n1Min) / (_n1Max - _n1Min);
-    _thrust = _maxThrust * betaN1/((_epr0-1)*(P0/_pressure)*(_temp/statT));
+    _thrust = _maxThrust * betaN1/((_epr0-1)*(P0/_atmo.getPressure())*(_atmo.getTemperature()/statT));
     _thrust *= 1 + _reheat*(_abFactor-1);
 
     // Finally, calculate the output variables.   Use a 80/20 mix of
@@ -214,16 +177,6 @@ void Jet::integrate(float dt)
     if(_reverseThrust) _thrust *= -_reverseEff;
 }
 
-bool Jet::isRunning()
-{
-    return _running;
-}
-
-bool Jet::isCranking()
-{
-    return _cranking;
-}
-
 void Jet::getThrust(float* out)
 {
     Math::mul3(_thrust, _dir, out);
@@ -240,13 +193,11 @@ void Jet::getThrust(float* out)
 void Jet::getTorque(float* out)
 {
     out[0] = out[1] = out[2] = 0;
-    return;
 }
 
 void Jet::getGyro(float* out)
 {
     out[0] = out[1] = out[2] = 0;
-    return;
 }
 
 }; // namespace yasim

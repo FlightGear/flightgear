@@ -54,7 +54,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
   Model* m = a->getModel();
   State s;
 
-  m->setAirFromStandardAtmosphere(alt);
+  m->setStandardAtmosphere(alt);
 
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -129,7 +129,7 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   Model* m = a->getModel();
   State s;
   
-  m->setAirFromStandardAtmosphere(alt);
+  m->setStandardAtmosphere(alt);
   
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -254,11 +254,11 @@ int main(int argc, char** argv)
     float MACy = a->getWing()->getMACy();
     
     printf("       Iterations: %d\n", a->getSolutionIterations());
-    printf(" Drag Coefficient: %f\n", drag);
-    printf("       Lift Ratio: %f\n", a->getLiftRatio());
-    printf("       Cruise AoA: %f deg\n", aoa);
-    printf("   Tail Incidence: %f deg\n", tail);
-    printf("Approach Elevator: %f\n\n", a->getApproachElevator());
+    printf(" Drag Coefficient: %.3f\n", drag);
+    printf("       Lift Ratio: %.3f\n", a->getLiftRatio());
+    printf("       Cruise AoA: %.2f deg\n", aoa);
+    printf("   Tail Incidence: %.2f deg\n", tail);
+    printf("Approach Elevator: %.3f\n\n", a->getApproachElevator());
     printf("               CG: x:%.3f, y:%.3f, z:%.3f\n", cg[0], cg[1], cg[2]);
     printf("    Wing MAC (*1): x:%.2f, y:%.2f, length:%.1f \n", MACx, MACy, MAC);
     printf("    CG-x rel. MAC: %.3f\n", a->getCGMAC());

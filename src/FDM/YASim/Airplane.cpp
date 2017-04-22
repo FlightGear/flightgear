@@ -38,13 +38,9 @@ Airplane::Airplane()
     _wing = 0;
     _tail = 0;
     _ballast = 0;
-    _cruiseP = 0;
-    _cruiseT = 0;
     _cruiseSpeed = 0;
     _cruiseWeight = 0;
     _cruiseGlideAngle = 0;
-    _approachP = 0;
-    _approachT = 0;
     _approachSpeed = 0;
     _approachAoA = 0;
     _approachWeight = 0;
@@ -149,8 +145,7 @@ void Airplane::updateGearState()
 void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, float gla)
 {
     _approachSpeed = speed;
-    _approachP = Atmosphere::getStdPressure(altitude);
-    _approachT = Atmosphere::getStdTemperature(altitude);
+    _approachAtmo.setStandard(altitude);
     _approachAoA = aoa;
     _approachFuel = fuel;
     _approachGlideAngle = gla;
@@ -159,8 +154,7 @@ void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, f
 void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
 {
     _cruiseSpeed = speed;
-    _cruiseP = Atmosphere::getStdPressure(altitude);
-    _cruiseT = Atmosphere::getStdTemperature(altitude);
+    _cruiseAtmo.setStandard(altitude);
     _cruiseAoA = 0;
     _tailIncidence = 0;
     _cruiseFuel = fuel;
@@ -790,7 +784,7 @@ void Airplane::setupWeights(bool isApproach)
 }
 
 /// load values for controls as defined in cruise configuration
-void Airplane::loadControls(Vector& controls)
+void Airplane::loadControls(const Vector& controls)
 {
   _controls.reset();
   for(int i=0; i < controls.size(); i++) {
@@ -805,8 +799,7 @@ void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
     _model.setState(&_cruiseState);
-    _model.setAir(_cruiseP, _cruiseT,
-                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
+    _model.setAtmosphere(_cruiseAtmo);
 
     // The control configuration
     loadControls(_cruiseControls);
@@ -822,10 +815,10 @@ void Airplane::runCruise()
     // Set up the thruster parameters and iterate until the thrust
     // stabilizes.
     for(int i=0; i<_thrusters.size(); i++) {
-	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
-	t->setWind(wind);
-	t->setAir(_cruiseP, _cruiseT,
-                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
+        Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
+        t->setWind(wind);
+        t->setAir(_cruiseAtmo);
+                  //Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
     }
     stabilizeThrust();
 
@@ -843,8 +836,7 @@ void Airplane::runApproach()
 {
     setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
     _model.setState(&_approachState);
-    _model.setAir(_approachP, _approachT,
-                  Atmosphere::calcStdDensity(_approachP, _approachT));
+    _model.setAtmosphere(_approachAtmo);
 
     // The control configuration
     loadControls(_approachControls);
@@ -860,10 +852,9 @@ void Airplane::runApproach()
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.
     for(int i=0; i<_thrusters.size(); i++) {
-	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
-	t->setWind(wind);
-	t->setAir(_approachP, _approachT,
-                  Atmosphere::calcStdDensity(_approachP, _approachT));
+        Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
+        t->setWind(wind);
+        t->setAir(_approachAtmo);
     }
     stabilizeThrust();
 
@@ -1108,9 +1099,7 @@ void Airplane::solveHelicopter()
     setupWeights(true);
     _controls.reset();
     _model.getBody()->reset();
-    _model.setAir(_cruiseP, _cruiseT,
-                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
-    
+    _model.setAtmosphere(_cruiseAtmo);    
 }
 
 float Airplane::getCGMAC()

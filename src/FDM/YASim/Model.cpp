@@ -127,7 +127,7 @@ void Model::initIteration()
         localWind(pos, _s, v, alt);
 
 	t->setWind(v);
-	t->setAir(_pressure, _temp, _rho);
+	t->setAir(_atmo);
 	t->integrate(_integrator.getInterval());
 
 	t->getTorque(v);
@@ -186,7 +186,7 @@ void Model::iterate()
 void Model::setState(State* s)
 {
     _integrator.setState(s);
-    _s = _integrator.getState();
+    _s = s;
 }
 
 
@@ -203,18 +203,9 @@ void Model::setGroundEffect(const float* pos, float span, float mul)
     _groundEffect = mul;
 }
 
-void Model::setAir(float pressure, float temp, float density)
+void Model::setStandardAtmosphere(float altitude)
 {
-    _pressure = pressure;
-    _temp = temp;
-    _rho = density;
-}
-
-void Model::setAirFromStandardAtmosphere(float altitude)
-{
-    _pressure = Atmosphere::getStdPressure(altitude);
-    _temp = Atmosphere::getStdTemperature(altitude);
-    _rho = Atmosphere::getStdDensity(altitude);
+    _atmo.setStandard(altitude);
 }
 
 void Model::updateGround(State* s)
@@ -336,7 +327,7 @@ void Model::calcForces(State* s)
       localWind(pos, s, vs, alt);
 
       float force[3], torque[3];
-      sf->calcForce(vs, _rho, force, torque);
+      sf->calcForce(vs, _atmo.getDensity(), force, torque);
       Math::add3(faero, force, faero);
 
       _body.addForce(pos, force);
@@ -349,7 +340,7 @@ void Model::calcForces(State* s)
         float vs[3], pos[3];
         r->getPosition(pos);
         localWind(pos, s, vs, alt);
-        r->calcLiftFactor(vs, _rho,s);
+        r->calcLiftFactor(vs, _atmo.getDensity(), s);
         float tq=0; 
         // total torque of rotor (scalar) for calculating new rotor rpm
 
@@ -363,7 +354,7 @@ void Model::calcForces(State* s)
             localWind(pos, s, vs, alt,true);
 
             float force[3], torque[3];
-            rp->calcForce(vs, _rho, force, torque, &torque_scalar);
+            rp->calcForce(vs, _atmo.getDensity(), force, torque, &torque_scalar);
             tq+=torque_scalar;
             rp->getPositionForceAttac(pos);
 
@@ -486,7 +477,7 @@ void Model::newState(State* s)
 
 // Calculates the airflow direction at the given point and for the
 // specified aircraft velocity.
-void Model::localWind(const float* pos, yasim::State* s, float* out, float alt, bool is_rotor)
+void Model::localWind(const float* pos, const yasim::State* s, float* out, float alt, bool is_rotor)
 {
     float tmp[3], lwind[3], lrot[3], lv[3];
 
@@ -521,8 +512,6 @@ void Model::localWind(const float* pos, yasim::State* s, float* out, float alt, 
         _rotorgear.getDownWash(pos,lv,tmp);
         Math::add3(out,tmp, out);    //  + downwash
     }
-
-
 }
 
 }; // namespace yasim

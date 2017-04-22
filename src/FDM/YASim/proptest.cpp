@@ -71,9 +71,9 @@ int main(int argc, char** argv)
     eng->setBoost(1);
 
     float alt = (argc > 2 ? atof(argv[2]) : 0) * FT2M;
-    pe->setAir(Atmosphere::getStdPressure(alt),
-               Atmosphere::getStdTemperature(alt),
-               Atmosphere::getStdDensity(alt));
+    Atmosphere atmo;
+    atmo.setStandard(alt);
+    pe->setAir(atmo);
  
     float speed = (argc > 3 ? atof(argv[3]) : 0) * KTS2MPS;
     float wind[3];

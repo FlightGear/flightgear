@@ -22,7 +22,6 @@ set(COMMON
 	Rotorpart.cpp
 	SimpleJet.cpp
 	Surface.cpp
-	Thruster.cpp
 	TurbineEngine.cpp
 	Turbulence.cpp
 	Wing.cpp
@@ -40,6 +39,7 @@ flightgear_component(YASim  "${SOURCES}")
 if(ENABLE_TESTS)
 add_executable(yasim yasim-test.cpp ${COMMON})
 add_executable(yasim-proptest proptest.cpp ${COMMON})
+add_executable(yasim-atmotest yasim-atmotest.cpp Atmosphere.cpp )
 
 target_link_libraries(yasim SimGearCore)
 target_link_libraries(yasim-proptest SimGearCore)

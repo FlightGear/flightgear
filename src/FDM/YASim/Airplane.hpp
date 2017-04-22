@@ -126,7 +126,7 @@ private:
     struct SolveWeight { bool approach; int idx; float wgt; };
     struct ContactRec { Gear* gear; float p[3]; };
 
-    void loadControls(Vector &controls);
+    void loadControls(const Vector& controls);
     void runCruise();
     void runApproach();
     void solveGear();
@@ -170,8 +170,7 @@ private:
 
     Vector _cruiseControls;
     State _cruiseState;
-    float _cruiseP;
-    float _cruiseT;
+    Atmosphere _cruiseAtmo;
     float _cruiseSpeed;
     float _cruiseWeight;
     float _cruiseFuel;
@@ -179,8 +178,7 @@ private:
 
     Vector _approachControls;
     State _approachState;
-    float _approachP;
-    float _approachT;
+    Atmosphere _approachAtmo;
     float _approachSpeed;
     float _approachAoA;
     float _approachWeight;
