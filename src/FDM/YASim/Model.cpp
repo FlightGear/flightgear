@@ -203,11 +203,6 @@ void Model::setGroundEffect(const float* pos, float span, float mul)
     _groundEffect = mul;
 }
 
-void Model::setStandardAtmosphere(float altitude)
-{
-    _atmo.setStandard(altitude);
-}
-
 void Model::updateGround(State* s)
 {
     float dummy[3];
