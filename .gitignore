@@ -16,3 +16,7 @@ CTestTestfile.cmake
 .kdev4
 *.kdev4
 *.pyc
+build*/
+*.qmlc
+CMakeLists.txt.user
+*.pro.user
