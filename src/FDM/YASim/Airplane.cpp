@@ -33,26 +33,6 @@ const float SOLVE_TWEAK = 0.3226;
 
 Airplane::Airplane()
 {
-    _emptyWeight = 0;
-    _pilotPos[0] = _pilotPos[1] = _pilotPos[2] = 0;
-    _wing = 0;
-    _tail = 0;
-    _ballast = 0;
-    _cruiseSpeed = 0;
-    _cruiseWeight = 0;
-    _cruiseGlideAngle = 0;
-    _approachSpeed = 0;
-    _approachAoA = 0;
-    _approachWeight = 0;
-    _approachGlideAngle = 0;
-
-    _dragFactor = 1;
-    _liftRatio = 1;
-    _cruiseAoA = 0;
-    _tailIncidence = 0;
-
-    _failureMsg = 0;
-    _wingsN = 0;
 }
 
 Airplane::~Airplane()

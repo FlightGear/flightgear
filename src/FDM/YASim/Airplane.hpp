@@ -148,17 +148,17 @@ private:
     Model _model;
     ControlMap _controls;
 
-    float _emptyWeight;
-    float _pilotPos[3];
+    float _emptyWeight {0};
+    float _pilotPos[3] {0, 0, 0};
 
-    Wing* _wing;
-    Wing* _tail;
+    Wing* _wing {nullptr};
+    Wing* _tail {nullptr};
 
     Vector _fuselages;
     Vector _vstabs;
     Vector _tanks;
     Vector _thrusters;
-    float _ballast;
+    float _ballast {0};
 
     Vector _gears;
     Vector _contacts; // non-gear ground contact points
@@ -171,34 +171,34 @@ private:
     Vector _cruiseControls;
     State _cruiseState;
     Atmosphere _cruiseAtmo;
-    float _cruiseSpeed;
-    float _cruiseWeight;
-    float _cruiseFuel;
-    float _cruiseGlideAngle;
+    float _cruiseSpeed{0};
+    float _cruiseWeight{0};
+    float _cruiseFuel{0};
+    float _cruiseGlideAngle{0};
 
     Vector _approachControls;
     State _approachState;
     Atmosphere _approachAtmo;
-    float _approachSpeed;
-    float _approachAoA;
-    float _approachWeight;
-    float _approachFuel;
-    float _approachGlideAngle;
+    float _approachSpeed {0};
+    float _approachAoA {0};
+    float _approachWeight {0};
+    float _approachFuel {0};
+    float _approachGlideAngle {0};
 
-    int _solutionIterations;
-    float _dragFactor;
-    float _liftRatio;
-    float _cruiseAoA;
-    float _tailIncidence;
+    int _solutionIterations {0};
+    float _dragFactor {1};
+    float _liftRatio {1};
+    float _cruiseAoA {0};
+    float _tailIncidence {0};
     Control _approachElevator;
-    const char* _failureMsg;
+    const char* _failureMsg {0};
     
-    float _cgMax = -1e6;         // hard limits for cg from gear position
-    float _cgMin = 1e6;          // hard limits for cg from gear position
-    float _cgDesiredMax = 0.3f;  // desired cg max in %MAC from config
-    float _cgDesiredMin = 0.25f; // desired cg min in %MAC from config
-    float _cgDesiredFront; // calculated desired cg x max
-    float _cgDesiredAft;   // calculated desired cg x min 
+    float _cgMax {-1e6};         // hard limits for cg from gear position
+    float _cgMin {1e6};          // hard limits for cg from gear position
+    float _cgDesiredMax {0.3f};  // desired cg max in %MAC from config
+    float _cgDesiredMin {0.25f}; // desired cg min in %MAC from config
+    float _cgDesiredFront {0};   // calculated desired cg x max
+    float _cgDesiredAft {0};     // calculated desired cg x min 
     bool _autoBallast = false;
 };
 
