@@ -55,17 +55,22 @@ public:
     void setSize(const QSizeF &size)
     {
         m_size = size;
+        setImplicitSize(size.width(), size.height());
         update();
     }
 
     void setPixmap(QPixmap pixmap)
     {
-         m_texture = window()->createTextureFromImage(pixmap.toImage(), QQuickWindow::TextureCanUseAtlas);
+        m_pixmap = pixmap;
          update();
     }
 
     virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
     {
+        if (m_pixmap.isNull()) {
+            return nullptr;
+        }
+
         QSGSimpleTextureNode* texNode = static_cast<QSGSimpleTextureNode*>(oldNode);
         if (!texNode) {
             texNode = new QSGSimpleTextureNode;
@@ -74,8 +79,12 @@ public:
 
         texNode->setRect(QRectF(QPointF(), m_size));
         texNode->setSourceRect(m_sourceRect);
-        texNode->setTexture(m_texture);
 
+        if (m_texture) {
+            delete m_texture;
+        }
+        m_texture = window()->createTextureFromImage(m_pixmap.toImage(), QQuickWindow::TextureCanUseAtlas);
+        texNode->setTexture(m_texture);
         return texNode;
     }
 
@@ -88,7 +97,7 @@ protected:
 
     QRectF boundingRect() const
     {
-        if ((width() == 0.0) || (height() == 0.0)) {
+        if (!widthValid() || !heightValid()) {
             return QRectF(QPointF(), m_size);
         }
 
@@ -97,8 +106,9 @@ protected:
 
 private:
     QRectF m_sourceRect;
-    QSGTexture* m_texture;
+    QSGTexture* m_texture = nullptr;
     QSizeF m_size;
+    QPixmap m_pixmap;
 };
 
 FGQCanvasImage::FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop) :
