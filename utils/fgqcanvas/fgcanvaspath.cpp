@@ -168,6 +168,13 @@ public:
             strokeGeom->setFlag(QSGNode::OwnsMaterial);
         }
 
+        QSGClipNode* clip = getClipNode();
+        if (clip) {
+            if (fillGeom) clip->appendChildNode(fillGeom);
+            if (strokeGeom) clip->appendChildNode(strokeGeom);
+            return clip;
+        }
+
         if (fillGeom && strokeGeom) {
             QSGNode* groupNode = new QSGNode;
             groupNode->appendChildNode(fillGeom);

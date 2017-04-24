@@ -18,6 +18,7 @@
 #include "canvasitem.h"
 
 #include <QMatrix4x4>
+#include <QSGClipNode>
 
 class LocalTransform : public QQuickTransform
 {
@@ -46,6 +47,37 @@ CanvasItem::CanvasItem(QQuickItem* pr)
 void CanvasItem::setTransform(const QMatrix4x4 &mat)
 {
     m_localTransform->setTransform(mat);
+}
+
+void CanvasItem::setGlobalClip(const QRectF &clip)
+{
+    m_hasClip = true;
+    update();
+}
+
+void CanvasItem::setScaleToFit(const QSizeF &windowSize)
+{
+    const double verticalScaling = windowSize.height() / implicitHeight();
+    const double horizontalScaling = windowSize.width() / implicitWidth();
+    const double usedScale = std::min(verticalScaling, horizontalScaling);
+    setScale(usedScale);
+}
+
+QSGClipNode *CanvasItem::getClipNode()
+{
+    if (!m_hasClip) {
+        return nullptr;
+    }
+
+    if (!m_clipNode) {
+        m_clipNode = new QSGClipNode();
+    }
+
+    // transform global rect to local
+    QRectF localRect(mapFromGlobal(m_globalClipRect.topLeft()),
+                     mapFromGlobal(m_globalClipRect.bottomRight()));
+    m_clipNode->setClipRect(localRect);
+    return m_clipNode;
 }
 
 #include "canvasitem.moc"

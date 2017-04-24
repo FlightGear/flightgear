@@ -148,7 +148,7 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
 
     if (_hasClip)
     {
-        // clip is definef in the global coordinate system
+        // clip is defined in the global coordinate system
 #if 0
         p->save();
         p->setTransform(context->globalCoordinateTransform());

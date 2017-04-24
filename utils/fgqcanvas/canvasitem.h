@@ -21,6 +21,7 @@
 #include <QQuickItem>
 
 class LocalTransform;
+class QSGClipNode;
 
 class CanvasItem : public QQuickItem
 {
@@ -33,8 +34,14 @@ signals:
 
 public slots:
 
+protected:
+    QSGClipNode* getClipNode();
+
 private:
     LocalTransform* m_localTransform;
+    QRectF m_globalClipRect;
+    bool m_hasClip = false;
+    QSGClipNode* m_clipNode = nullptr;
 };
 
 #endif // CANVASITEM_H
