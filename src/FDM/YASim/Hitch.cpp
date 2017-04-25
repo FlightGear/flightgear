@@ -413,7 +413,7 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
                                   //With this trick, both player in aerotow get the same length
     Math::unit3(delta,deltaN);
     float lvel[3];
-    s->velGlobalToLocal(s->v,lvel);
+    s->globalToLocal(s->v,lvel);
     _speed_in_tow_direction=Math::dot3(lvel,deltaN);
     if (_towEndIsConnectedToProperty && _nodeIsMultiplayer)
     {
@@ -421,7 +421,7 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
         _timeLagCorrectedDist=_dist+mp_delta_dist_due_to_time_lag;
         if(_forceIsCalculatedByMaster && !_open)
         {
-            s->velGlobalToLocal(_mp_force,_force);
+            s->globalToLocal(_mp_force,_force);
             return;
         }
     }
@@ -528,7 +528,7 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
     //the same for the tow end:
     Math::mul3(grav_frac_tow_end*grav_force,ground,grav_force_v);
     Math::add3(grav_force_v,_towEndForce,_towEndForce);
-    s->velLocalToGlobal(_towEndForce,_towEndForce);
+    s->localToGlobal(_towEndForce,_towEndForce);
 
     if(_forceMagnitude>=_towBrakeForce)
     {

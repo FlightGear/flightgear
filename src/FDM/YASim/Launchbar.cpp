@@ -374,8 +374,8 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
     // Transform the velocities of the endpoints to the
     // local coordinate sytem.
     float lvel[2][3];
-    s->velGlobalToLocal(vel[0], lvel[0]);
-    s->velGlobalToLocal(vel[1], lvel[1]);
+    s->globalToLocal(vel[0], lvel[0]);
+    s->globalToLocal(vel[1], lvel[1]);
 
     // Compute the position of the launchbar tip relative to the cat.
     float tip_pos_on_cat = getPercentPosOnCat(llb_mount, 0.0, lend);

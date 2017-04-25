@@ -39,12 +39,12 @@ struct State {
         Math::vmul33(orient, lpos, lpos);
     }
     
-    void velLocalToGlobal(const float* lvel, float *gvel) const {
-        Math::tmul33(orient, lvel, gvel);
+    void localToGlobal(const float* local, float *global) const {
+        Math::tmul33(orient, local, global);
     }
     
-    void velGlobalToLocal(const float* gvel, float *lvel) const {
-        Math::vmul33(orient, gvel, lvel);
+    void globalToLocal(const float* global, float *local) const {
+        Math::vmul33(orient, global, local);
     }
 
     void planeGlobalToLocal(const double* gplane, float *lplane) const {
@@ -60,24 +60,32 @@ struct State {
     }
     
     // used by Airplane::runCruise, runApproach, solveHelicopter and in yasim-test
-    void setupState(float aoa, float speed, float gla) 
+    void setupOrientationFromAoa(float aoa) 
     {
       float cosAoA = Math::cos(aoa);
       float sinAoA = Math::sin(aoa);
       orient[0] =  cosAoA; orient[1] = 0; orient[2] = sinAoA;
       orient[3] =       0; orient[4] = 1; orient[5] =      0;
       orient[6] = -sinAoA; orient[7] = 0; orient[8] = cosAoA;
+    }
+    
+    void setupSpeedAndPosition(float speed, float gla) 
+    {
       
       // FIXME check axis, guess sin should go to 2 instead of 1?
       v[0] = speed*Math::cos(gla); 
       v[1] = -speed*Math::sin(gla); 
       v[2] = 0;
-      
       for(int i=0; i<3; i++) {
         pos[i] = rot[i] = acc[i] = racc[i] = 0;
       }
       
       pos[2] = 1;
+    }
+
+    void setupState(float aoa, float speed, float gla) {
+        setupOrientationFromAoa(aoa);
+        setupSpeedAndPosition(speed, gla);
     }
 };
 
