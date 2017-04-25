@@ -13,20 +13,15 @@ namespace yasim {
 // You can get local->global transformations by calling Math::tmul33()
 // and using the same matrix.
 struct State {
-    double pos[3];    // position
-    float  orient[9]; // global->local xform matrix
-    float  v[3];      // velocity
-    float  rot[3];    // rotational velocity
-    float  acc[3];    // acceleration
-    float  racc[3];   // rotational acceleration
+    double pos[3] {0, 0, 0};    // position
+    float  orient[9]  {1,0,0,  0,1,0,  0,0,1}; // global->local xform matrix
+    float  v[3] {0, 0, 0};      // velocity
+    float  rot[3] {0, 0, 0};    // rotational velocity
+    float  acc[3] {0, 0, 0};    // acceleration
+    float  racc[3] {0, 0, 0};   // rotational acceleration
 
     // Simple initialization
     State() {
-        for(int i=0; i<3; i++) {
-            pos[i] = v[i] = rot[i] = acc[i] = racc[i] = 0;
-            for(int j=0; j<3; j++)
-                orient[3*i+j] = (i==j) ? 1.0f : 0.0f;
-        }
     }
 
     void posLocalToGlobal(const float* lpos, double *gpos) const {
@@ -36,15 +31,18 @@ struct State {
         gpos[1] = tmp[1] + pos[1];
         gpos[2] = tmp[2] + pos[2];
     }
+    
     void posGlobalToLocal(const double* gpos, float *lpos) const {
         lpos[0] = (float)(gpos[0] - pos[0]);
         lpos[1] = (float)(gpos[1] - pos[1]);
         lpos[2] = (float)(gpos[2] - pos[2]);
         Math::vmul33(orient, lpos, lpos);
     }
+    
     void velLocalToGlobal(const float* lvel, float *gvel) const {
         Math::tmul33(orient, lvel, gvel);
     }
+    
     void velGlobalToLocal(const float* gvel, float *lvel) const {
         Math::vmul33(orient, gvel, lvel);
     }
@@ -60,7 +58,27 @@ struct State {
       lplane[3] = (float)(pos[0]*gplane[0] + pos[1]*gplane[1]
                           + pos[2]*gplane[2] - gplane[3]);
     }
-
+    
+    // used by Airplane::runCruise, runApproach, solveHelicopter and in yasim-test
+    void setupState(float aoa, float speed, float gla) 
+    {
+      float cosAoA = Math::cos(aoa);
+      float sinAoA = Math::sin(aoa);
+      orient[0] =  cosAoA; orient[1] = 0; orient[2] = sinAoA;
+      orient[3] =       0; orient[4] = 1; orient[5] =      0;
+      orient[6] = -sinAoA; orient[7] = 0; orient[8] = cosAoA;
+      
+      // FIXME check axis, guess sin should go to 2 instead of 1?
+      v[0] = speed*Math::cos(gla); 
+      v[1] = -speed*Math::sin(gla); 
+      v[2] = 0;
+      
+      for(int i=0; i<3; i++) {
+        pos[i] = rot[i] = acc[i] = racc[i] = 0;
+      }
+      
+      pos[2] = 1;
+    }
 };
 
 //

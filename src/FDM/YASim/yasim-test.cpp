@@ -74,7 +74,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
 
   for(int deg=-15; deg<=90; deg++) {
     float aoa = deg * DEG2RAD;
-    a->setupState(aoa, kts * KTS2MPS, 0 ,&s);
+    s.setupState(aoa, kts * KTS2MPS, 0);
     m->getBody()->reset();
     m->initIteration();
     m->calcForces(&s);
@@ -148,7 +148,7 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   printf("#kts, drag\n");
   
   for(int kts=15; kts<=150; kts++) {
-    a->setupState(aoa, kts * KTS2MPS, 0 ,&s);
+    s.setupState(aoa, kts * KTS2MPS, 0);
     m->getBody()->reset();
     m->initIteration();
     m->calcForces(&s);

@@ -274,32 +274,11 @@ void Airplane::setFuelFraction(float frac)
     }
 }
 
-// used by runCruise, runApproach, solveHelicopter and in yasim-test
-void Airplane::setupState(const float aoa, const float speed, const float gla, State* s) const
-{
-    float cosAoA = Math::cos(aoa);
-    float sinAoA = Math::sin(aoa);
-    s->orient[0] =  cosAoA; s->orient[1] = 0; s->orient[2] = sinAoA;
-    s->orient[3] =       0; s->orient[4] = 1; s->orient[5] =      0;
-    s->orient[6] = -sinAoA; s->orient[7] = 0; s->orient[8] = cosAoA;
-
-    //? what is gla? v[1]=y, v[2]=z? should sin go to v2 instead v1?
-    s->v[0] = speed*Math::cos(gla); s->v[1] = -speed*Math::sin(gla); s->v[2] = 0;
-
-    for(int i=0; i<3; i++)
-	s->pos[i] = s->rot[i] = s->acc[i] = s->racc[i] = 0;
-
-    // Put us 1m above the origin, or else the gravity computation in
-    // Model goes nuts
-    s->pos[2] = 1;
-}
-
 /**
  * @brief add contact point for crash detection 
  * used to add wingtips and fuselage nose and tail
  * 
  * @param pos ...
- * @return void
  */
 
 void Airplane::addContactPoint(float* pos)
@@ -777,7 +756,7 @@ void Airplane::loadControls(const Vector& controls)
 /// Helper for solve()
 void Airplane::runCruise()
 {
-    setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
+    _cruiseState.setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle);
     _model.setState(&_cruiseState);
     _model.setAtmosphere(_cruiseAtmo);
 
@@ -814,7 +793,7 @@ void Airplane::runCruise()
 /// Helper for solve()
 void Airplane::runApproach()
 {
-    setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
+    _approachState.setupState(_approachAoA, _approachSpeed,_approachGlideAngle);
     _model.setState(&_approachState);
     _model.setAtmosphere(_approachAtmo);
 
@@ -1074,7 +1053,7 @@ void Airplane::solveHelicopter()
         applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
         applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
     }
-    setupState(0,0,0, &_cruiseState);
+    _cruiseState.setupState(0,0,0);
     _model.setState(&_cruiseState);
     setupWeights(true);
     _controls.reset();
