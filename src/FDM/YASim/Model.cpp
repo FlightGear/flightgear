@@ -127,7 +127,7 @@ void Model::initIteration()
         localWind(pos, _s, v, alt);
 
 	t->setWind(v);
-	t->setAir(_atmo);
+	t->setAtmosphere(_atmo);
 	t->integrate(_integrator.getInterval());
 
 	t->getTorque(v);

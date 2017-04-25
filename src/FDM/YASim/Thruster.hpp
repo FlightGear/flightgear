@@ -46,7 +46,8 @@ public:
 
     // Runtime instructions
     void setWind(const float* wind) { Math::set3(wind, _wind); };
-    void setAir(Atmosphere a) { _atmo = a; };
+    void setAtmosphere(Atmosphere a) { _atmo = a; };
+    void setStandardAtmosphere(float altitude) { _atmo.setStandard(altitude); };
     virtual void init() {}
     virtual void integrate(float dt)=0;
     virtual void stabilize()=0;

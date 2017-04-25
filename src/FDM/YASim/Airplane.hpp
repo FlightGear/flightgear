@@ -169,7 +169,7 @@ private:
 
     Vector _cruiseControls;
     State _cruiseState;
-    Atmosphere _cruiseAtmo;
+    float _cruiseAltitude;
     float _cruiseSpeed{0};
     float _cruiseWeight{0};
     float _cruiseFuel{0};
@@ -177,7 +177,7 @@ private:
 
     Vector _approachControls;
     State _approachState;
-    Atmosphere _approachAtmo;
+    float _approachAltitude;
     float _approachSpeed {0};
     float _approachAoA {0};
     float _approachWeight {0};

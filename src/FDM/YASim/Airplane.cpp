@@ -125,7 +125,7 @@ void Airplane::updateGearState()
 void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, float gla)
 {
     _approachSpeed = speed;
-    _approachAtmo.setStandard(altitude);
+    _approachAltitude = altitude;
     _approachAoA = aoa;
     _approachFuel = fuel;
     _approachGlideAngle = gla;
@@ -134,7 +134,7 @@ void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, f
 void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
 {
     _cruiseSpeed = speed;
-    _cruiseAtmo.setStandard(altitude);
+    _cruiseAltitude = altitude;
     _cruiseAoA = 0;
     _tailIncidence = 0;
     _cruiseFuel = fuel;
@@ -758,7 +758,7 @@ void Airplane::runCruise()
 {
     _cruiseState.setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle);
     _model.setState(&_cruiseState);
-    _model.setAtmosphere(_cruiseAtmo);
+    _model.setStandardAtmosphere(_cruiseAltitude);
 
     // The control configuration
     loadControls(_cruiseControls);
@@ -776,8 +776,7 @@ void Airplane::runCruise()
     for(int i=0; i<_thrusters.size(); i++) {
         Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
         t->setWind(wind);
-        t->setAir(_cruiseAtmo);
-                  //Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
+        t->setStandardAtmosphere(_cruiseAltitude);
     }
     stabilizeThrust();
 
@@ -795,7 +794,7 @@ void Airplane::runApproach()
 {
     _approachState.setupState(_approachAoA, _approachSpeed,_approachGlideAngle);
     _model.setState(&_approachState);
-    _model.setAtmosphere(_approachAtmo);
+    _model.setStandardAtmosphere(_approachAltitude);
 
     // The control configuration
     loadControls(_approachControls);
@@ -813,7 +812,7 @@ void Airplane::runApproach()
     for(int i=0; i<_thrusters.size(); i++) {
         Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
         t->setWind(wind);
-        t->setAir(_approachAtmo);
+        t->setStandardAtmosphere(_approachAltitude);
     }
     stabilizeThrust();
 
@@ -1058,7 +1057,7 @@ void Airplane::solveHelicopter()
     setupWeights(true);
     _controls.reset();
     _model.getBody()->reset();
-    _model.setAtmosphere(_cruiseAtmo);    
+    _model.setStandardAtmosphere(_cruiseAltitude);    
 }
 
 float Airplane::getCGMAC()
