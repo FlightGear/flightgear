@@ -123,6 +123,13 @@ protected:
     SGPropertyNode_ptr _intl;
     SGPropertyNode_ptr _currentLocale;
     SGPropertyNode_ptr _defaultLocale;
+
+private:
+    /** Return a new string with the character encoding part of the locale
+     *  spec removed., i.e., "de_DE.UTF-8" becomes "de_DE". If there is no
+     *  such part, return a copy of the input string.
+     */
+    static std::string removeEncodingPart(const std::string& locale);
 };
 
 // global translation wrappers

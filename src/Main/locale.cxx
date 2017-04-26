@@ -27,6 +27,9 @@
 #endif
 
 #include <cstdio>
+#include <cstddef>              // std::size_t
+#include <cassert>
+
 #include <boost/foreach.hpp>
 
 #include <simgear/props/props_io.hxx>
@@ -46,6 +49,23 @@ FGLocale::FGLocale(SGPropertyNode* root) :
 
 FGLocale::~FGLocale()
 {
+}
+
+// Static method
+string FGLocale::removeEncodingPart(const string& locale)
+{
+    string res;
+    std::size_t pos = locale.find('.');
+
+    if (pos != string::npos)
+    {
+        assert(pos > 0);
+        res = locale.substr(0, pos);
+    } else {
+        res = locale;
+    }
+
+    return res;
 }
 
 #ifdef _WIN32
@@ -81,30 +101,29 @@ FGLocale::getUserLanguage()
 {
     string_list result;
     const char* langEnv = ::getenv("LANG");
+
     if (langEnv) {
-        result.push_back(langEnv);
+        // Remove character encoding from the locale spec, i.e. "de_DE.UTF-8"
+        // becomes "de_DE". This is for consistency with the Windows and MacOS
+        // implementations of this method.
+        result.push_back(removeEncodingPart(langEnv));
     }
-    
+
     return result;
 }
 #endif
 
 // Search property tree for matching locale description
 SGPropertyNode*
-FGLocale::findLocaleNode(const string& language)
+FGLocale::findLocaleNode(const string& localeSpec)
 {
     SGPropertyNode* node = NULL;
+    // Remove the character encoding part of the locale spec, i.e.,
+    // "de_DE.utf8" => "de_DE"
+    string language = removeEncodingPart(localeSpec);
 
-    // remove character encoding from the locale spec, i.e. "de_DE.utf8" => "de_DE"
-    size_t pos = language.find(".");
-    if ((pos != string::npos)&&(pos>0))
-    {
-        node = findLocaleNode(language.substr(0, pos));
-        if (node)
-            return node;
-    }
-
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Searching language resource for locale: " << language);
+    SG_LOG(SG_GENERAL, SG_DEBUG,
+           "Searching language resource for locale: '" << language << "'");
     // search locale using full string
     vector<SGPropertyNode_ptr> localeList = _intl->getChildren("locale");
 
@@ -123,8 +142,8 @@ FGLocale::findLocaleNode(const string& language)
     }
 
     // try country's default resource, i.e. "de_DE" => "de"
-    pos = language.find("_");
-    if ((pos != string::npos)&&(pos>0))
+    std::size_t pos = language.find('_');
+    if ((pos != string::npos) && (pos > 0))
     {
         node = findLocaleNode(language.substr(0, pos));
         if (node)
