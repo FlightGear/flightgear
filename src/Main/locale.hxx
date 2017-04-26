@@ -42,6 +42,18 @@ public:
      */
     bool        selectLanguage      (const char* language = NULL);
 
+    /** Return the preferred language according to user choice and/or settings.
+     *
+     *  Examples: 'fr_CA', 'de_DE'... or the empty string if nothing could be
+     *            found.
+     *
+     *  Note that this is not necessarily the same as the last value passed to
+     *  selectLanguage(), assuming it was non-null and non-empty, because the
+     *  latter may have an encoding specifier, while values returned by
+     *  getPreferredLanguage() never have that.
+     */
+    std::string getPreferredLanguage() const;
+
     /**
      * Load strings for requested resource, i.e. "menu", "options", "dialogs".
      * Loads data for current and default locale (the latter is the fallback).
@@ -119,10 +131,11 @@ protected:
      * Obtain user's default language setting.
      */
     string_list getUserLanguage();
-    
+
     SGPropertyNode_ptr _intl;
     SGPropertyNode_ptr _currentLocale;
     SGPropertyNode_ptr _defaultLocale;
+    std::string _currentLocaleString;
 
 private:
     /** Return a new string with the character encoding part of the locale

@@ -170,7 +170,11 @@ FGLocale::selectLanguage(const char *language)
         languages.insert(languages.begin(), string(language));
     }
 
-    
+    _currentLocaleString = removeEncodingPart(languages[0]);
+    if (_currentLocaleString == "C") {
+        _currentLocaleString.clear();
+    }
+
     _currentLocale = NULL;
     BOOST_FOREACH(string lang, languages) {
         SG_LOG(SG_GENERAL, SG_DEBUG, "trying to find locale for " << lang );
@@ -197,6 +201,14 @@ FGLocale::selectLanguage(const char *language)
     }
 
     return true;
+}
+
+// Return the preferred language according to user choice and/or settings
+// (e.g., 'fr_FR', or the empty string if nothing could be found).
+std::string
+FGLocale::getPreferredLanguage() const
+{
+    return _currentLocaleString;
 }
 
 // Load strings for requested resource and locale.
