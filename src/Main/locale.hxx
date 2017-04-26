@@ -37,10 +37,10 @@ public:
     virtual ~FGLocale();
 
     /**
-     * Select the locale's primary language. When no language is given (NULL),
-     * a default is determined matching the system locale.
+     * Select the locale's primary language. When no language is given
+     * (nullptr), a default is determined matching the system locale.
      */
-    bool        selectLanguage      (const char* language = NULL);
+    bool selectLanguage(const char* language = nullptr);
 
     /** Return the preferred language according to user choice and/or settings.
      *
@@ -66,7 +66,8 @@ public:
      * Obtain a single string from the localized resource matching the given identifier.
      * Selected context refers to "menu", "options", "dialog" etc.
      */
-    std::string getLocalizedString  (const char* id, const char* resource, const char* Default=NULL);
+    std::string getLocalizedString(const char* id, const char* resource,
+                                   const char* Default = nullptr);
 
     /**
       * Obtain a list of strings from the localized resource matching the given identifier.

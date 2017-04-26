@@ -27,10 +27,9 @@
 #endif
 
 #include <cstdio>
+#include <cstring>              // std::strlen()
 #include <cstddef>              // std::size_t
 #include <cassert>
-
-#include <boost/foreach.hpp>
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
@@ -75,18 +74,18 @@ string_list
 FGLocale::getUserLanguage()
 {
     string_list result;
-	static wchar_t localeNameBuf[LOCALE_NAME_MAX_LENGTH];
+    static wchar_t localeNameBuf[LOCALE_NAME_MAX_LENGTH];
 
     if (GetUserDefaultLocaleName(localeNameBuf, LOCALE_NAME_MAX_LENGTH)) {
-		std::wstring ws(localeNameBuf);
-		std::string localeNameUTF8 = simgear::strutils::convertWStringToUtf8(ws);
+        std::wstring ws(localeNameBuf);
+        std::string localeNameUTF8 = simgear::strutils::convertWStringToUtf8(ws);
 
         SG_LOG(SG_GENERAL, SG_INFO, "Detected user locale:" << localeNameUTF8);
         result.push_back(localeNameUTF8);
         return result;
-	} else {
-		SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected user locale");
-	}
+    } else {
+        SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected user locale");
+    }
 
     return result;
 }
@@ -117,7 +116,7 @@ FGLocale::getUserLanguage()
 SGPropertyNode*
 FGLocale::findLocaleNode(const string& localeSpec)
 {
-    SGPropertyNode* node = NULL;
+    SGPropertyNode* node = nullptr;
     // Remove the character encoding part of the locale spec, i.e.,
     // "de_DE.utf8" => "de_DE"
     string language = removeEncodingPart(localeSpec);
@@ -150,10 +149,10 @@ FGLocale::findLocaleNode(const string& localeSpec)
             return node;
     }
 
-    return NULL;
+    return nullptr;
 }
 
-// Select the language. When no language is given (NULL),
+// Select the language. When no language is given (nullptr),
 // a default is determined matching the system locale.
 bool
 FGLocale::selectLanguage(const char *language)
@@ -164,9 +163,9 @@ FGLocale::selectLanguage(const char *language)
         SG_LOG(SG_GENERAL, SG_WARN, "Unable to detect system language" );
         languages.push_back("C");
     }
-    
+
     // if we were passed a language option, try it first
-    if ((language != NULL) && (strlen(language) > 0)) {
+    if ((language != nullptr) && (std::strlen(language) > 0)) {
         languages.insert(languages.begin(), string(language));
     }
 
@@ -175,16 +174,21 @@ FGLocale::selectLanguage(const char *language)
         _currentLocaleString.clear();
     }
 
-    _currentLocale = NULL;
-    BOOST_FOREACH(string lang, languages) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "trying to find locale for " << lang );
+    _currentLocale = nullptr;
+
+    for (const string& lang: languages) {
+        SG_LOG(SG_GENERAL, SG_DEBUG,
+               "Trying to find locale for '" << lang << "'");
         _currentLocale = findLocaleNode(lang);
+
         if (_currentLocale) {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "found locale for " << lang << " at " << _currentLocale->getPath() );
+            SG_LOG(SG_GENERAL, SG_DEBUG,
+                   "Found locale for '" << lang << "' at '" <<
+                   _currentLocale->getPath() << "'");
             break;
         }
     }
-    
+
     // load resource for system messages (translations for fgfs internal messages)
     loadResource("sys");
 
@@ -220,7 +224,7 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
 
     SGPropertyNode* stringNode = localeNode->getNode("strings", 0, true);
 
-    const char *path_str = stringNode->getStringValue(resource, NULL);
+    const char *path_str = stringNode->getStringValue(resource, nullptr);
     if (!path_str)
     {
         SG_LOG(SG_GENERAL, SG_WARN, "No path in " << stringNode->getPath() << "/" << resource << ".");
@@ -386,7 +390,7 @@ FGLocale::getLocalizedStrings(const char* id, const char* resource)
 const char*
 FGLocale::getDefaultFont(const char* fallbackFont)
 {
-    const char* font = NULL;
+    const char* font = nullptr;
     if (_currentLocale)
     {
         font = _currentLocale->getStringValue("font", "");
@@ -415,7 +419,7 @@ std::string FGLocale::localizedPrintf(const char* id, const char* resource, ... 
 std::string FGLocale::vlocalizedPrintf(const char* id, const char* resource, va_list args)
 {
     std::string format = getLocalizedString(id, resource);
-    int len = ::vsprintf(NULL, format.c_str(), args);
+    int len = ::vsprintf(nullptr, format.c_str(), args);
     char* buf = (char*) alloca(len);
     ::vsprintf(buf, format.c_str(), args);
     return std::string(buf);
@@ -483,5 +487,4 @@ std::string fgTrPrintfMsg(const char* key, ...)
     string r = globals->get_locale()->vlocalizedPrintf(key, "message", args);
     va_end(args);
     return r;
-    
 }
