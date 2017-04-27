@@ -361,6 +361,11 @@ private:
   bool Magneto_Right;
   int Magnetos;
 
+  double Oil_Press_Relief_Valve;
+  double Oil_Press_RPM_Max;
+  double Design_Oil_Temp;         // degK
+  double Oil_Viscosity_Index;
+
   //
   // Outputs (in addition to those in FGEngine).
   //

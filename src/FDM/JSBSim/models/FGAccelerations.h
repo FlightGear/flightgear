@@ -40,7 +40,6 @@ INCLUDES
 
 #include <vector>
 
-#include "simgear/props/propertyObject.hxx"
 #include "models/FGModel.h"
 #include "math/FGColumnVector3.h"
 #include "math/LagrangeMultiplier.h"
@@ -392,7 +391,6 @@ private:
   FGColumnVector3 vGravAccel;
   FGColumnVector3 vFrictionForces;
   FGColumnVector3 vFrictionMoments;
-  simgear::PropertyObject<int> iter, maxiter, matrixSize;
 
   int gravType;
   bool gravTorque;
