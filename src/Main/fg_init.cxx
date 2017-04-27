@@ -60,6 +60,7 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
@@ -107,6 +108,7 @@
 #include <AIModel/submodel.hxx>
 #include <AIModel/AIManager.hxx>
 #include <AIModel/performancedb.hxx>
+#include <Main/locale.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
@@ -1117,7 +1119,14 @@ void fgStartNewReset()
     fgInitGeneral(); // all of this?
     
     flightgear::Options::sharedInstance()->processOptions();
-    
+
+    const auto& resMgr = simgear::EmbeddedResourceManager::instance();
+    // The language was (re)set in processOptions()
+    const string locale = globals->get_locale()->getPreferredLanguage();
+    resMgr->selectLocale(locale);
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "EmbeddedResourceManager: selected locale '" << locale << "'");
+
     // PRESERVED properties over-write state from options, intentionally
     if ( copyProperties(preserved, globals->get_props()) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Preserved state restored successfully" );

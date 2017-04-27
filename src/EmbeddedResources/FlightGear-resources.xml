@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Superset of the resource file format used by Qt.
+     cf. http://doc.qt.io/qt-5/resources.html and 'fgrcc dash-dash-help'
+     (I can't put a double dash inside an XML comment...) -->
+
+<FGRCC version="1.0">
+</FGRCC>

@@ -22,6 +22,7 @@ set(SOURCES
     subsystemFactory.cxx
     screensaver_control.cxx
 	${RESOURCE_FILE}
+	${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
 	)
 
 set(HEADERS
@@ -40,7 +41,16 @@ set(HEADERS
     subsystemFactory.hxx
     AircraftDirVisitorBase.hxx
     screensaver_control.hxx
+    ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
 	)
+
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
+         ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+  COMMAND fgrcc --root=${CMAKE_SOURCE_DIR} --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx --init-func-name=initFlightGearEmbeddedResources --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
+  DEPENDS
+    fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
+  )
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)

@@ -56,6 +56,7 @@ extern bool global_crashRptEnabled;
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
 
+#include <Main/locale.hxx>
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
 #include <Sound/soundmanager.hxx>
@@ -79,6 +80,9 @@ extern bool global_crashRptEnabled;
 #include "screensaver_control.hxx"
 #include "subsystemFactory.hxx"
 #include "options.hxx"
+
+#include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
+#include <EmbeddedResources/FlightGear-resources.hxx>
 
 #if defined(HAVE_QT)
 #include <GUI/QtLauncher.hxx>
@@ -536,6 +540,15 @@ int fgMainInit( int argc, char **argv )
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
         return EXIT_SUCCESS;
     }
+
+    const auto& resMgr = simgear::EmbeddedResourceManager::createInstance();
+    initFlightGearEmbeddedResources();
+    // The language was set in processOptions()
+    const std::string locale = globals->get_locale()->getPreferredLanguage();
+    // Must always be done after all resources have been added to 'resMgr'
+    resMgr->selectLocale(locale);
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "EmbeddedResourceManager: selected locale '" << locale << "'");
 
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
