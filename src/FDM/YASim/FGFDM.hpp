@@ -4,6 +4,7 @@
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/props/props.hxx>
 
+#include "yasim-common.hpp"
 #include "Airplane.hpp"
 #include "Vector.hpp"
 

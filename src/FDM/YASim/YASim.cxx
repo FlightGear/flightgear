@@ -15,6 +15,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
+#include "yasim-common.hpp"
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
 #include "Math.hpp"
@@ -33,22 +34,6 @@
 
 using namespace yasim;
 using std::string;
-
-static const float YASIM_PI = 3.14159265358979323846;
-static const float RAD2DEG = 180/YASIM_PI;
-static const float PI2 = YASIM_PI*2;
-static const float M2FT = 3.2808399;
-static const float FT2M = 0.3048;
-static const float MPS2KTS = 3600.0/1852.0;
-static const float INHG2PA = 3386.389;
-static const float SLUG2KG = 14.59390;
-
-#if 0 // unused constant values
-static const float RAD2RPM = 9.54929658551;
-static const float CM2GALS = 264.172037284; // gallons/cubic meter
-static const float KG2LBS = 2.20462262185;
-static const float W2HP = 1.3416e-3;
-#endif
 
 YASim::YASim(double dt) :
     _simTime(0)

@@ -7,6 +7,7 @@
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include "yasim-common.hpp"
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
 #include "RigidBody.hpp"
@@ -25,11 +26,6 @@ SGPropertyNode* fgGetNode (const char * path, int i, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
 double fgGetDouble (const char * name, double defaultValue = 0.0) { return 0; }
 bool fgSetDouble (const char * name, double defaultValue = 0.0) { return 0; }
-
-static const float RAD2DEG = 57.2957795131;
-static const float DEG2RAD = 0.0174532925199;
-/// knots 2 meters per second
-static const float KTS2MPS = 0.514444444444;
 
 
 enum Config 
