@@ -106,55 +106,55 @@ private:
     Vector _slatSurfs;
     Vector _spoilerSurfs;
 
-    bool _mirror;
+    bool _mirror {false};
 
-    float _base[3];
-    float _length;
-    float _chord;
-    float _taper;
-    float _sweep;
-    float _dihedral;
+    float _base[3] {0,0,0};
+    float _length {0};
+    float _chord {0};
+    float _taper {1};
+    float _sweep {0};
+    float _dihedral {0};
     
     // calculated from above
-    float _tip[3];
-    float _meanChord; // std. mean chord
-    float _mac; // mean aerodynamic chord length
-    float _macRootDistance; // y-distance of mac from root
-    float _macX; // x-coordinate of mac (leading edge)
-    float _netSpan;
-    float _wingspan;
-    float _aspectRatio;
+    float _tip[3] {0,0,0};
+    float _meanChord {0}; // std. mean chord
+    float _mac {0}; // mean aerodynamic chord length
+    float _macRootDistance {0}; // y-distance of mac from root
+    float _macX {0}; // x-coordinate of mac (leading edge)
+    float _netSpan {0};
+    float _wingspan {0};
+    float _aspectRatio {1};
 
-    float _stall;
-    float _stallWidth;
-    float _stallPeak;
-    float _twist;
-    float _camber;
-    float _incidence;
-    float _inducedDrag;
+    float _stall {0};
+    float _stallWidth {0};
+    float _stallPeak {0};
+    float _twist {0};
+    float _camber {0};
+    float _incidence {0};
+    float _inducedDrag {1};
 
-    float _dragScale;
-    float _liftRatio;
+    float _dragScale {1};
+    float _liftRatio {1};
 
-    float _flap0Start;
-    float _flap0End;
-    float _flap0Lift;
-    float _flap0Drag;
+    float _flap0Start {0};
+    float _flap0End {0};
+    float _flap0Lift {0};
+    float _flap0Drag {0};
 
-    float _flap1Start;
-    float _flap1End;
-    float _flap1Lift;
-    float _flap1Drag;
+    float _flap1Start {0};
+    float _flap1End {0};
+    float _flap1Lift {0};
+    float _flap1Drag {0};
 
-    float _spoilerStart;
-    float _spoilerEnd;
-    float _spoilerLift;
-    float _spoilerDrag;
+    float _spoilerStart {0};
+    float _spoilerEnd {0};
+    float _spoilerLift {0};
+    float _spoilerDrag {0};
 
-    float _slatStart;
-    float _slatEnd;
-    float _slatAoA;
-    float _slatDrag;
+    float _slatStart {0};
+    float _slatEnd {0};
+    float _slatAoA {0};
+    float _slatDrag {0};
 
     Version * _version;
 };

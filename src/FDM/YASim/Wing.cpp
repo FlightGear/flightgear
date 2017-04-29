@@ -7,47 +7,12 @@ static const float RAD2DEG = 57.2957795131;
 Wing::Wing( Version * version ) :
   _version(version)
 {
-    _mirror = false;
-    _base[0] = _base[1] = _base[2] = 0;
-    _length = 0;
-    _chord = 0;
-    _taper = 0;
-    _sweep = 0;
-    _dihedral = 0;
-    _stall = 0;
-    _stallWidth = 0;
-    _stallPeak = 0;
-    _twist = 0;
-    _camber = 0;
-    _incidence = 0;
-    _inducedDrag = 1;
-    _dragScale = 1;
-    _liftRatio = 1;
-    _flap0Start = 0;
-    _flap0End = 0;
-    _flap0Lift = 0;
-    _flap0Drag = 0;
-    _flap1Start = 0;
-    _flap1End = 0;
-    _flap1Lift = 0;
-    _flap1Drag = 0;
-    _spoilerStart = 0;
-    _spoilerEnd = 0;
-    _spoilerLift = 0;
-    _spoilerDrag = 0;
-    _slatStart = 0;
-    _slatEnd = 0;
-    _slatAoA = 0;
-    _slatDrag = 0;
-    _meanChord = 0;
-    _wingspan = 0;
-    _aspectRatio = 1;
+
 }
 
 Wing::~Wing()
 {
-    int i;
-    for(i=0; i<_surfs.size(); i++) {
+    for(int i=0; i<_surfs.size(); i++) {
         SurfRec* s = (SurfRec*)_surfs.get(i);
         delete s->surface;
         delete s;
@@ -57,8 +22,7 @@ Wing::~Wing()
 void Wing::setIncidence(float incidence)
 {
     _incidence = incidence;
-    int i;
-    for(i=0; i<_surfs.size(); i++)
+    for(int i=0; i<_surfs.size(); i++)
         ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence);
 }
 
