@@ -280,11 +280,14 @@ int main ( int argc, char **argv )
 	// Install crash reporting
 	int nResult = crInstall(&info);
 	if(nResult!=0) {
-		char buf[1024];
-		crGetLastErrorMsg(buf, 1024);
-		flightgear::modalMessageBox("CrashRpt setup failed",
-			"Failed to setup crash-reporting engine, check the installation is not damaged.",
-			buf);
+		// don't warn about missing CrashRpt in developer builds
+		if (strcmp(FG_BUILD_TYPE, "Dev") != 0) {
+			char buf[1024];
+			crGetLastErrorMsg(buf, 1024);
+			flightgear::modalMessageBox("CrashRpt setup failed",
+				"Failed to setup crash-reporting engine, check the installation is not damaged.",
+				buf);
+		}
 	} else {
 		global_crashRptEnabled = true;
 
