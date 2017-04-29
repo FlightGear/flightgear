@@ -50,28 +50,13 @@ void printState(State* s)
 
 Model::Model()
 {
-    int i;
-    for(i=0; i<3; i++) _wind[i] = 0;
-
     _integrator.setBody(&_body);
     _integrator.setEnvironment(this);
-
     // Default value of 30 Hz
     _integrator.setInterval(1.0f/30.0f);
 
-    _agl = 0;
-    _crashed = false;
-    _turb = 0;
     _ground_cb = new Ground();
-    _hook = 0;
-    _launchbar = 0;
 
-    _wingSpan = 0;
-    _groundEffect = 0;
-    for(i=0; i<3; i++) _geRefPoint[i] = 0;
-
-    _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
-    _global_ground[3] = -100000;
     _modelN = fgGetNode("/fdm/yasim/forces", true);
     _fAeroXN = _modelN->getNode("f-x-drag", true);
     _fAeroYN = _modelN->getNode("f-y-side", true);
@@ -98,11 +83,10 @@ void Model::getThrust(float* out) const
 {
     float tmp[3];
     out[0] = out[1] = out[2] = 0;
-    int i;
-    for(i=0; i<_thrusters.size(); i++) {
-	Thruster* t = (Thruster*)_thrusters.get(i);
-	t->getThrust(tmp);
-	Math::add3(tmp, out, out);
+    for(int i=0; i<_thrusters.size(); i++) {
+        Thruster* t = (Thruster*)_thrusters.get(i);
+        t->getThrust(tmp);
+        Math::add3(tmp, out, out);
     }
 }
 
@@ -153,8 +137,6 @@ void Model::initIteration()
         Hitch* h = (Hitch*)_hitches.get(i);
         h->integrate(_integrator.getInterval());
     }
-
-    
 }
 
 // This function initializes some variables for the rotor calculation
