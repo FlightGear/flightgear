@@ -7,35 +7,12 @@ int Surface::s_idGenerator = 0;
 Surface::Surface( Version * version ) :
     _version(version)
 {
-    // create id for surface
     _id = s_idGenerator++;
-    // Start in a "sane" mode, so unset stuff doesn't freak us out
-    _c0 = 1;
-    _cx = _cy = _cz = 1;
-    _cz0 = 0;
-    _peaks[0] = _peaks[1] = 1;
-    int i;
-    for(i=0; i<4; i++) {
-	_stalls[i] = 0;
-        _widths[i] = 0.01; // half a degree
-    }
+
     _orient[0] = 1; _orient[1] = 0; _orient[2] = 0;
     _orient[3] = 0; _orient[4] = 1; _orient[5] = 0;
     _orient[6] = 0; _orient[7] = 0; _orient[8] = 1;
     
-    _chord = 0;
-    _incidence = 0;
-    _twist = 0;
-    _slatPos = _spoilerPos = _flapPos = 0;
-    _slatDrag = _spoilerDrag = _flapDrag = 1;
-
-    _flapLift = 0;
-    _flapEffectiveness = 1;
-    _slatAlpha = 0;
-    _spoilerLift = 1;
-    _inducedDrag = 1;
-    _stallAlpha = 0;
-    _alpha = 0;
     _surfN = fgGetNode("/fdm/yasim/debug/surfaces", true);
     if (_surfN != 0) {
       _surfN = _surfN->getChild("surface", _id, true);

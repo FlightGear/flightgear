@@ -7,6 +7,7 @@
 #include "Vector.hpp"
 #include "Turbulence.hpp"
 #include "Rotor.hpp"
+#include "Atmosphere.hpp"
 #include <simgear/props/props.hxx>
 
 namespace yasim {
@@ -68,8 +69,8 @@ public:
     //
     void setGroundEffect(const float* pos, float span, float mul);
     void setWind(float* wind) { Math::set3(wind, _wind); }
-    void setAir(float pressure, float temp, float density);
-    void setAirFromStandardAtmosphere(float altitude);
+    void setAtmosphere(Atmosphere a) { _atmo = a; };
+    void setStandardAtmosphere(float altitude) { _atmo.setStandard(altitude); };
 
     void updateGround(State* s);
 
@@ -81,39 +82,38 @@ private:
     void initRotorIteration();
     void calcGearForce(Gear* g, float* v, float* rot, float* ground);
     float gearFriction(float wgt, float v, Gear* g);
-    void localWind(const float* pos, State* s, float* out, float alt, bool is_rotor = false);
+    void localWind(const float* pos, const yasim::State* s, float* out, float alt, bool is_rotor = false);
 
     Integrator _integrator;
     RigidBody _body;
 
-    Turbulence* _turb;
+    Turbulence* _turb {nullptr};
 
     Vector _thrusters;
     Vector _surfaces;
     Rotorgear _rotorgear;
     Vector _gears;
-    Hook* _hook;
-    Launchbar* _launchbar;
+    Hook* _hook {nullptr};
+    Launchbar* _launchbar {nullptr};
     Vector _hitches;
 
-    float _wingSpan;
-    float _groundEffect;
-    float _geRefPoint[3];
+    float _wingSpan {0};
+    float _groundEffect {0};
+    float _geRefPoint[3] {0,0,0};
 
     Ground* _ground_cb;
-    double _global_ground[4];
-    float _pressure;
-    float _temp;
-    float _rho;
-    float _wind[3];
+    double _global_ground[4] {0,0,1, -1e5};
+    Atmosphere _atmo;
+    float _wind[3] {0,0,0};
+    
 
     // Accumulators for the total internal gyro and engine torque
-    float _gyro[3];
-    float _torque[3];
+    float _gyro[3] {0,0,0};
+    float _torque[3] {0,0,0};
 
     State* _s;
-    bool _crashed;
-    float _agl;
+    bool _crashed {false};
+    float _agl {0};
     SGPropertyNode_ptr _modelN;  
     SGPropertyNode_ptr _fAeroXN;
     SGPropertyNode_ptr _fAeroYN;

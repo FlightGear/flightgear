@@ -7,6 +7,7 @@
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include "yasim-common.hpp"
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
 #include "RigidBody.hpp"
@@ -25,11 +26,6 @@ SGPropertyNode* fgGetNode (const char * path, int i, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
 double fgGetDouble (const char * name, double defaultValue = 0.0) { return 0; }
 bool fgSetDouble (const char * name, double defaultValue = 0.0) { return 0; }
-
-static const float RAD2DEG = 57.2957795131;
-static const float DEG2RAD = 0.0174532925199;
-/// knots 2 meters per second
-static const float KTS2MPS = 0.514444444444;
 
 
 enum Config 
@@ -54,7 +50,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
   Model* m = a->getModel();
   State s;
 
-  m->setAirFromStandardAtmosphere(alt);
+  m->setStandardAtmosphere(alt);
 
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -74,7 +70,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
 
   for(int deg=-15; deg<=90; deg++) {
     float aoa = deg * DEG2RAD;
-    Airplane::setupState(aoa, kts * KTS2MPS, 0 ,&s);
+    s.setupState(aoa, kts * KTS2MPS, 0);
     m->getBody()->reset();
     m->initIteration();
     m->calcForces(&s);
@@ -129,7 +125,7 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   Model* m = a->getModel();
   State s;
   
-  m->setAirFromStandardAtmosphere(alt);
+  m->setStandardAtmosphere(alt);
   
   switch (cfg) {
     case CONFIG_APPROACH:
@@ -148,7 +144,7 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   printf("#kts, drag\n");
   
   for(int kts=15; kts<=150; kts++) {
-    Airplane::setupState(aoa, kts * KTS2MPS, 0 ,&s);
+    s.setupState(aoa, kts * KTS2MPS, 0);
     m->getBody()->reset();
     m->initIteration();
     m->calcForces(&s);
@@ -254,11 +250,11 @@ int main(int argc, char** argv)
     float MACy = a->getWing()->getMACy();
     
     printf("       Iterations: %d\n", a->getSolutionIterations());
-    printf(" Drag Coefficient: %f\n", drag);
-    printf("       Lift Ratio: %f\n", a->getLiftRatio());
-    printf("       Cruise AoA: %f deg\n", aoa);
-    printf("   Tail Incidence: %f deg\n", tail);
-    printf("Approach Elevator: %f\n\n", a->getApproachElevator());
+    printf(" Drag Coefficient: %.3f\n", drag);
+    printf("       Lift Ratio: %.3f\n", a->getLiftRatio());
+    printf("       Cruise AoA: %.2f deg\n", aoa);
+    printf("   Tail Incidence: %.2f deg\n", tail);
+    printf("Approach Elevator: %.3f\n\n", a->getApproachElevator());
     printf("               CG: x:%.3f, y:%.3f, z:%.3f\n", cg[0], cg[1], cg[2]);
     printf("    Wing MAC (*1): x:%.2f, y:%.2f, length:%.1f \n", MACx, MACy, MAC);
     printf("    CG-x rel. MAC: %.3f\n", a->getCGMAC());

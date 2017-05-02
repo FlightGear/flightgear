@@ -50,28 +50,13 @@ void printState(State* s)
 
 Model::Model()
 {
-    int i;
-    for(i=0; i<3; i++) _wind[i] = 0;
-
     _integrator.setBody(&_body);
     _integrator.setEnvironment(this);
-
     // Default value of 30 Hz
     _integrator.setInterval(1.0f/30.0f);
 
-    _agl = 0;
-    _crashed = false;
-    _turb = 0;
     _ground_cb = new Ground();
-    _hook = 0;
-    _launchbar = 0;
 
-    _wingSpan = 0;
-    _groundEffect = 0;
-    for(i=0; i<3; i++) _geRefPoint[i] = 0;
-
-    _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
-    _global_ground[3] = -100000;
     _modelN = fgGetNode("/fdm/yasim/forces", true);
     _fAeroXN = _modelN->getNode("f-x-drag", true);
     _fAeroYN = _modelN->getNode("f-y-side", true);
@@ -98,11 +83,10 @@ void Model::getThrust(float* out) const
 {
     float tmp[3];
     out[0] = out[1] = out[2] = 0;
-    int i;
-    for(i=0; i<_thrusters.size(); i++) {
-	Thruster* t = (Thruster*)_thrusters.get(i);
-	t->getThrust(tmp);
-	Math::add3(tmp, out, out);
+    for(int i=0; i<_thrusters.size(); i++) {
+        Thruster* t = (Thruster*)_thrusters.get(i);
+        t->getThrust(tmp);
+        Math::add3(tmp, out, out);
     }
 }
 
@@ -127,7 +111,7 @@ void Model::initIteration()
         localWind(pos, _s, v, alt);
 
 	t->setWind(v);
-	t->setAir(_pressure, _temp, _rho);
+	t->setAtmosphere(_atmo);
 	t->integrate(_integrator.getInterval());
 
 	t->getTorque(v);
@@ -153,8 +137,6 @@ void Model::initIteration()
         Hitch* h = (Hitch*)_hitches.get(i);
         h->integrate(_integrator.getInterval());
     }
-
-    
 }
 
 // This function initializes some variables for the rotor calculation
@@ -186,7 +168,7 @@ void Model::iterate()
 void Model::setState(State* s)
 {
     _integrator.setState(s);
-    _s = _integrator.getState();
+    _s = s;
 }
 
 
@@ -201,20 +183,6 @@ void Model::setGroundEffect(const float* pos, float span, float mul)
     Math::set3(pos, _geRefPoint);
     _wingSpan = span;
     _groundEffect = mul;
-}
-
-void Model::setAir(float pressure, float temp, float density)
-{
-    _pressure = pressure;
-    _temp = temp;
-    _rho = density;
-}
-
-void Model::setAirFromStandardAtmosphere(float altitude)
-{
-    _pressure = Atmosphere::getStdPressure(altitude);
-    _temp = Atmosphere::getStdTemperature(altitude);
-    _rho = Atmosphere::getStdDensity(altitude);
 }
 
 void Model::updateGround(State* s)
@@ -336,7 +304,7 @@ void Model::calcForces(State* s)
       localWind(pos, s, vs, alt);
 
       float force[3], torque[3];
-      sf->calcForce(vs, _rho, force, torque);
+      sf->calcForce(vs, _atmo.getDensity(), force, torque);
       Math::add3(faero, force, faero);
 
       _body.addForce(pos, force);
@@ -349,7 +317,7 @@ void Model::calcForces(State* s)
         float vs[3], pos[3];
         r->getPosition(pos);
         localWind(pos, s, vs, alt);
-        r->calcLiftFactor(vs, _rho,s);
+        r->calcLiftFactor(vs, _atmo.getDensity(), s);
         float tq=0; 
         // total torque of rotor (scalar) for calculating new rotor rpm
 
@@ -363,7 +331,7 @@ void Model::calcForces(State* s)
             localWind(pos, s, vs, alt,true);
 
             float force[3], torque[3];
-            rp->calcForce(vs, _rho, force, torque, &torque_scalar);
+            rp->calcForce(vs, _atmo.getDensity(), force, torque, &torque_scalar);
             tq+=torque_scalar;
             rp->getPositionForceAttac(pos);
 
@@ -486,7 +454,7 @@ void Model::newState(State* s)
 
 // Calculates the airflow direction at the given point and for the
 // specified aircraft velocity.
-void Model::localWind(const float* pos, yasim::State* s, float* out, float alt, bool is_rotor)
+void Model::localWind(const float* pos, const yasim::State* s, float* out, float alt, bool is_rotor)
 {
     float tmp[3], lwind[3], lrot[3], lv[3];
 
@@ -521,8 +489,6 @@ void Model::localWind(const float* pos, yasim::State* s, float* out, float alt, 
         _rotorgear.getDownWash(pos,lv,tmp);
         Math::add3(out,tmp, out);    //  + downwash
     }
-
-
 }
 
 }; // namespace yasim

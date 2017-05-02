@@ -95,14 +95,13 @@ public:
     int getSolutionIterations() const { return _solutionIterations; }
     float getDragCoefficient() const { return _dragFactor; }
     float getLiftRatio() const { return _liftRatio; }
-    float getCruiseAoA() const { return _cruiseAoA; }
+    float getCruiseAoA() const { return _cruiseConfig.aoa; }
     float getTailIncidence() const { return _tailIncidence; }
     float getApproachElevator() const { return _approachElevator.val; }
     const char* getFailureMsg() const { return _failureMsg; }
 
-    static void setupState(const float aoa, const float speed, const float gla, yasim::State* s); // utility
-    void loadApproachControls() { loadControls(_approachControls); }
-    void loadCruiseControls() { loadControls(_cruiseControls); }
+    void loadApproachControls() { loadControls(_approachConfig.controls); }
+    void loadCruiseControls() { loadControls(_cruiseConfig.controls); }
     
     float getCGHardLimitXMin() const { return _cgMin; } // get min x-coordinate for c.g (from main gear)
     float getCGHardLimitXMax() const { return _cgMax; } // get max x-coordinate for c.g (from nose gear)
@@ -114,21 +113,60 @@ public:
     void  setAutoBallast(bool allowed) { _autoBallast = allowed; }
     
 private:
-    struct Tank { float pos[3]; float cap; float fill;
-        float density; int handle; };
-    struct Fuselage { float front[3], back[3], width, taper, mid, _cx, _cy, _cz, _idrag;
-        Vector surfs; };
-    struct GearRec { Gear* gear; Surface* surf; float wgt; };
-    struct ThrustRec { Thruster* thruster;
-        int handle; float cg[3]; float mass; };
-    struct Control { int control; float val; };
-    struct WeightRec { int handle; Surface* surf; };
-    struct SolveWeight { bool approach; int idx; float wgt; };
-    struct ContactRec { Gear* gear; float p[3]; };
+    struct Tank { 
+      float pos[3]; 
+      float cap, fill, density;
+      int handle;       
+    };
+    struct Fuselage { 
+      float  front[3], back[3];
+      float  width, taper, mid, _cx, _cy, _cz, _idrag;
+      Vector surfs;      
+    };
+    struct GearRec { 
+      Gear* gear;
+      Surface* surf;
+      float wgt;
+    };
+    struct ThrustRec { 
+      Thruster* thruster;
+      int handle;
+      float cg[3];
+      float mass;
+    };
+    struct Control { 
+      int control;
+      float val;
+    };
+    struct WeightRec { 
+      int handle;
+      Surface* surf;
+    };
+    struct SolveWeight { 
+      bool approach;
+      int idx;
+      float wgt;
+    };
+    struct ContactRec {
+      Gear* gear;
+      float p[3];
+    };
+    struct Config {
+      bool isApproach {false};
+      float speed {0};
+      float fuel {0};
+      float glideAngle {0};      
+      float aoa {0};
+      float altitude;
+      float weight;
+      State state;
+      Vector controls;
+    };
+    Config _cruiseConfig;
+    Config _approachConfig;
 
-    void loadControls(Vector &controls);
-    void runCruise();
-    void runApproach();
+    void loadControls(const Vector& controls);
+    void runConfig(Config &cfg);
     void solveGear();
     void solve();
     void solveHelicopter();
@@ -148,17 +186,17 @@ private:
     Model _model;
     ControlMap _controls;
 
-    float _emptyWeight;
-    float _pilotPos[3];
+    float _emptyWeight {0};
+    float _pilotPos[3] {0, 0, 0};
 
-    Wing* _wing;
-    Wing* _tail;
+    Wing* _wing {nullptr};
+    Wing* _tail {nullptr};
 
     Vector _fuselages;
     Vector _vstabs;
     Vector _tanks;
     Vector _thrusters;
-    float _ballast;
+    float _ballast {0};
 
     Vector _gears;
     Vector _contacts; // non-gear ground contact points
@@ -168,39 +206,19 @@ private:
 
     Vector _solveWeights;
 
-    Vector _cruiseControls;
-    State _cruiseState;
-    float _cruiseP;
-    float _cruiseT;
-    float _cruiseSpeed;
-    float _cruiseWeight;
-    float _cruiseFuel;
-    float _cruiseGlideAngle;
-
-    Vector _approachControls;
-    State _approachState;
-    float _approachP;
-    float _approachT;
-    float _approachSpeed;
-    float _approachAoA;
-    float _approachWeight;
-    float _approachFuel;
-    float _approachGlideAngle;
-
-    int _solutionIterations;
-    float _dragFactor;
-    float _liftRatio;
-    float _cruiseAoA;
-    float _tailIncidence;
+    int _solutionIterations {0};
+    float _dragFactor {1};
+    float _liftRatio {1};
+    float _tailIncidence {0};
     Control _approachElevator;
-    const char* _failureMsg;
+    const char* _failureMsg {0};
     
-    float _cgMax = -1e6;         // hard limits for cg from gear position
-    float _cgMin = 1e6;          // hard limits for cg from gear position
-    float _cgDesiredMax = 0.3f;  // desired cg max in %MAC from config
-    float _cgDesiredMin = 0.25f; // desired cg min in %MAC from config
-    float _cgDesiredFront; // calculated desired cg x max
-    float _cgDesiredAft;   // calculated desired cg x min 
+    float _cgMax {-1e6};         // hard limits for cg from gear position
+    float _cgMin {1e6};          // hard limits for cg from gear position
+    float _cgDesiredMax {0.3f};  // desired cg max in %MAC from config
+    float _cgDesiredMin {0.25f}; // desired cg min in %MAC from config
+    float _cgDesiredFront {0};   // calculated desired cg x max
+    float _cgDesiredAft {0};     // calculated desired cg x min 
     bool _autoBallast = false;
 };
 

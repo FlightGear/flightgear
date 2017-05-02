@@ -12,13 +12,13 @@ public:
     virtual Jet* getJet() { return this; }
     
     void setMaxThrust(float thrust, float afterburner=0);
-    void setVMax(float spd);
-    void setTSFC(float tsfc);
-    void setATSFC(float atsfc);
+    void setVMax(float spd) { _vMax = spd; };
+    void setTSFC(float tsfc) { _tsfc = tsfc; };
+    void setATSFC(float atsfc) { _atsfc = atsfc; };
     void setRPMs(float idleN1, float maxN1, float idleN2, float maxN2);
-    void setEGT(float takeoffEGT);
-    void setEPR(float takeoffEPR);
-    void setVectorAngle(float angle);
+    void setEGT(float takeoffEGT) { _egt0 = takeoffEGT; };
+    void setEPR(float takeoffEPR) { _epr0 = takeoffEPR; };
+    void setVectorAngle(float angle) { _maxRot = angle; };
 
     // The time it takes the engine to reach 90% thrust from idle
     void setSpooling(float time);
@@ -37,15 +37,15 @@ public:
 
     float getN1();
     float getN2();
-    float getEPR();
+    float getEPR() const { return _epr; };
     float getEGT();
 
     // Normalized "performance" number.  Used for fuzzy numbers in FGFDM
     float getPerfNorm() { return (_n1 - _n1Min) / (_n1Max - _n1Min); }
 
     // From Thruster:
-    virtual bool isRunning();
-    virtual bool isCranking();
+    virtual bool isRunning() { return _running; };
+    virtual bool isCranking() { return _cranking; };
     virtual void getThrust(float* out);
     virtual void getTorque(float* out);
     virtual void getGyro(float* out);

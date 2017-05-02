@@ -123,8 +123,8 @@ void PropEngine::stabilize()
     // If we cannot manage this in 100 iterations, give up.
     for (int n = 0; n < 100; n++) {
 	float ptau, thrust;
-	_prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &ptau);
-	_eng->calc(_pressure, _temp, _omega);
+	_prop->calc(_atmo.getDensity(), speed, _omega * _gearRatio, &thrust, &ptau);
+	_eng->calc(_atmo.getPressure(), _atmo.getTemperature(), _omega);
         _eng->stabilize();
 
         // Do it again -- the turbo sets the target MP in the first
@@ -133,7 +133,7 @@ void PropEngine::stabilize()
         // it works without side effects (other than solver
         // performance).  In the future, the Engine objects should
         // store state to allow them to do the work themselves.
-	_eng->calc(_pressure, _temp, _omega);
+	_eng->calc(_atmo.getPressure(), _atmo.getTemperature(), _omega);
 
         // Compute torque as seen by the engine's end of the gearbox.
         // The propeller will be moving more slowly (for gear ratios
@@ -185,11 +185,11 @@ void PropEngine::integrate(float dt)
     _eng->setMixture(_mixture);
     _eng->setFuelState(_fuel);
     
-    _prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &propTorque);
+    _prop->calc(_atmo.getDensity(), speed, _omega * _gearRatio, &thrust, &propTorque);
     if(_omega == 0.0)
         _omega = 0.001; // hack to get around reports of NaNs somewhere...
     propTorque *= _gearRatio;
-    _eng->calc(_pressure, _temp, _omega);
+    _eng->calc(_atmo.getPressure(), _atmo.getTemperature(), _omega);
     _eng->integrate(dt);
     engTorque = _eng->getTorque();
     _fuelFlow = _eng->getFuelFlow();

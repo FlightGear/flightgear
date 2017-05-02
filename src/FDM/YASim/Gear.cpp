@@ -165,7 +165,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 
     // The velocity of the contact patch transformed to local coordinates.
     float glvel[3];
-    s->velGlobalToLocal(_global_vel, glvel);
+    s->globalToLocal(_global_vel, glvel);
 
     // First off, make sure that the gear "tip" is below the ground.
     // If it's not, there's no force.

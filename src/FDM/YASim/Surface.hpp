@@ -92,36 +92,36 @@ private:
     float flapLift(float alpha);
     float controlDrag(float lift, float drag);
 
-    float _chord;     // X-axis size
-    float _c0;        // total force coefficient
-    float _cx;        // X-axis force coefficient
-    float _cy;        // Y-axis force coefficient
-    float _cz;        // Z-axis force coefficient
-    float _cz0;       // Z-axis force offset
-    float _peaks[2];  // Stall peak coefficients (fwd, back)
-    float _stalls[4]; // Stall angles (fwd/back, pos/neg)
-    float _widths[4]; // Stall widths  " "
+    float _chord {0};     // X-axis size
+    float _c0 {1};        // total force coefficient
+    float _cx {1};        // X-axis force coefficient
+    float _cy {1};        // Y-axis force coefficient
+    float _cz {1};        // Z-axis force coefficient
+    float _cz0 {0};       // Z-axis force offset
+    float _peaks[2] {1, 1};  // Stall peak coefficients (fwd, back)
+    float _stalls[4] {0, 0, 0, 0}; // Stall angles (fwd/back, pos/neg)
+    float _widths[4] {0.01, 0.01, 0.01, 0.01}; // Stall widths  " "
     float _pos[3];    // position in local coords
     float _orient[9]; // local->surface orthonormal matrix
 
-    float _slatAlpha;
-    float _slatDrag;
-    float _flapLift;
-    float _flapDrag;
-    float _flapEffectiveness;
-    float _spoilerLift;
-    float _spoilerDrag;
+    float _slatAlpha {0};
+    float _slatDrag {1};
+    float _flapLift {0};
+    float _flapDrag {1};
+    float _flapEffectiveness {1};
+    float _spoilerLift {1};
+    float _spoilerDrag {1};
 
-    float _slatPos;
-    float _flapPos;
-    float _spoilerPos;
-    float _incidence;
-    float _twist;
-    float _inducedDrag;
+    float _slatPos {0};
+    float _flapPos {0};
+    float _spoilerPos {0};
+    float _incidence {0};
+    float _twist {0};
+    float _inducedDrag {1};
     
     // used during calculations
-    float _stallAlpha;
-    float _alpha;
+    float _stallAlpha {0};
+    float _alpha {0};
 
     Version * _version;
     SGPropertyNode* _fxN;

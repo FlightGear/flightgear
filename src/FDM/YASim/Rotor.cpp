@@ -829,7 +829,7 @@ void Rotor::calcLiftFactor(float* v, float rho, State *s)
 
     //store the gravity direction
     Glue::geodUp(s->pos, _grav_direction);
-    s->velGlobalToLocal(_grav_direction, _grav_direction);
+    s->globalToLocal(_grav_direction, _grav_direction);
 }
 
 void Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s)

@@ -216,8 +216,8 @@ void Hook::calcForce(Ground* g_cb, RigidBody* body, State* s, float* lv, float* 
     float wire_lpos[2][3];
     s->posGlobalToLocal(dpos[0], wire_lpos[0]);
     s->posGlobalToLocal(dpos[1], wire_lpos[1]);
-    s->velGlobalToLocal(wire_vel[0], wire_vel[0]);
-    s->velGlobalToLocal(wire_vel[1], wire_vel[1]);
+    s->globalToLocal(wire_vel[0], wire_vel[0]);
+    s->globalToLocal(wire_vel[1], wire_vel[1]);
 
     // Compute the velocity of the hooks mount point in the local frame.
     float mount_vel[3];

@@ -15,6 +15,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
+#include "yasim-common.hpp"
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
 #include "Math.hpp"
@@ -33,22 +34,6 @@
 
 using namespace yasim;
 using std::string;
-
-static const float YASIM_PI = 3.14159265358979323846;
-static const float RAD2DEG = 180/YASIM_PI;
-static const float PI2 = YASIM_PI*2;
-static const float M2FT = 3.2808399;
-static const float FT2M = 0.3048;
-static const float MPS2KTS = 3600.0/1852.0;
-static const float INHG2PA = 3386.389;
-static const float SLUG2KG = 14.59390;
-
-#if 0 // unused constant values
-static const float RAD2RPM = 9.54929658551;
-static const float CM2GALS = 264.172037284; // gallons/cubic meter
-static const float KG2LBS = 2.20462262185;
-static const float W2HP = 1.3416e-3;
-#endif
 
 YASim::YASim(double dt) :
     _simTime(0)
@@ -312,7 +297,11 @@ void YASim::copyToYASim(bool copyState)
     float temp     = _temp_degc->getFloatValue() + 273.15;
     float dens     = _density_slugft3->getFloatValue() *
                             SLUG2KG * M2FT*M2FT*M2FT;
-
+    Atmosphere atmo;
+    atmo.setDensity(dens);
+    atmo.setTemperature(temp);
+    atmo.setPressure(pressure);
+                            
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
     State s;
@@ -332,7 +321,7 @@ void YASim::copyToYASim(bool copyState)
     Math::mmul33(s.orient, xyz2ned, s.orient);
 
     // Velocity
-    float v[3];
+    float v[3] {0, 0, 0};
     bool needCopy = false;
     switch (_speed_set) {
     case NED:
@@ -347,15 +336,14 @@ void YASim::copyToYASim(bool copyState)
         Math::tmul33(s.orient, v, v);
         break;
     case KNOTS:
-        v[0] = Atmosphere::spdFromVCAS(get_V_calibrated_kts()/MPS2KTS,
-                                       pressure, temp);
+        v[0] = atmo.spdFromVCAS(get_V_calibrated_kts()/MPS2KTS);
         v[1] = 0;
         v[2] = 0;
         Math::tmul33(s.orient, v, v);
         needCopy = true;
         break;
     case MACH:
-        v[0] = Atmosphere::spdFromMach(get_Mach_number(), temp);
+        v[0] = atmo.spdFromMach(get_Mach_number());
         v[1] = 0;
         v[2] = 0;
         Math::tmul33(s.orient, v, v);
@@ -374,20 +362,18 @@ void YASim::copyToYASim(bool copyState)
     if(copyState || needCopy)
         model->setState(&s);
 
-    // wind
     Math::tmul33(xyz2ned, wind, wind);
     model->setWind(wind);
-
-    // air
-    model->setAir(pressure, temp, dens);
+    model->setAtmosphere(atmo);
 
     // Query a ground plane for each gear/hook/launchbar and
     // write that value into the corresponding class.
     _fdm->getAirplane()->getModel()->updateGround(&s);
 
     Launchbar* l = model->getLaunchbar();
-    if (l)
+    if (l) {
         l->setLaunchCmd(0.0 < _catapult_launch_cmd->getFloatValue());
+    }
 }
 
 // All the settables:

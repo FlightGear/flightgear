@@ -1,6 +1,9 @@
 #ifndef _THRUSTER_HPP
 #define _THRUSTER_HPP
 
+#include "Atmosphere.hpp"
+#include "Math.hpp"
+
 namespace yasim {
 
 class Jet;
@@ -10,8 +13,8 @@ class Engine;
 
 class Thruster {
 public:
-    Thruster();
-    virtual ~Thruster();
+    Thruster() {};
+    virtual ~Thruster() {};
 
     // Typing info, these are the possible sub-type (or sub-parts)
     // that a thruster might have.  Any might return null.  A little
@@ -22,15 +25,15 @@ public:
     virtual Engine* getEngine() { return 0; }
     
     // Static data
-    void getPosition(float* out);
-    void setPosition(float* pos);
-    void getDirection(float* out);
-    void setDirection(float* dir);
+    void getPosition(float* out) const { Math::set3(_pos, out); }
+    void setPosition(const float* pos) { Math::set3(pos, _pos); }
+    void getDirection(float* out) const { Math::set3(_dir, out); }
+    void setDirection(const float* dir) { Math::unit3(dir, _dir); }
 
     // Controls
-    void setThrottle(float throttle);
-    void setMixture(float mixture);
-    void setStarter(bool starter);
+    void setThrottle(float throttle) { _throttle = Math::clamp(throttle, -1, 1); }
+    void setMixture(float mixture) { _mixture = Math::clamp(mixture, 0, 1); }
+    void setStarter(bool starter) { _starter = starter; }
     void setFuelState(bool hasFuel) { _fuel = hasFuel; }
 
     // Dynamic output
@@ -42,26 +45,24 @@ public:
     virtual float getFuelFlow()=0; // in kg/s
 
     // Runtime instructions
-    void setWind(float* wind);
-    void setAir(float pressure, float temp, float density);
+    void setWind(const float* wind) { Math::set3(wind, _wind); };
+    void setAtmosphere(Atmosphere a) { _atmo = a; };
+    void setStandardAtmosphere(float altitude) { _atmo.setStandard(altitude); };
     virtual void init() {}
     virtual void integrate(float dt)=0;
     virtual void stabilize()=0;
 
 protected:
-    float _pos[3];
-    float _dir[3];
-    float _throttle;
-    float _mixture;
-    bool _starter; // true=engaged, false=disengaged
+    float _pos[3] {0, 0, 0};
+    float _dir[3] {1, 0, 0};
+    float _throttle = 0;
+    float _mixture = 0;
+    bool _starter = false; // true=engaged, false=disengaged
     bool _fuel; // true=available, false=out
 
-    float _wind[3];
-    float _pressure;
-    float _temp;
-    float _rho;
+    float _wind[3] {0, 0, 0};
+    Atmosphere _atmo;
 };
 
 }; // namespace yasim
 #endif // _THRUSTER_HPP
-

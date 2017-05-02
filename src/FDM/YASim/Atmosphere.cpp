@@ -1,7 +1,8 @@
+#include <string>
 #include "Math.hpp"
 #include "Atmosphere.hpp"
-namespace yasim {
 
+namespace yasim {
 // Copied from McCormick, who got it from "The ARDC Model Atmosphere"
 // Note that there's an error in the text in the first entry,
 // McCormick lists 299.16/101325/1.22500, but those don't agree with
@@ -9,7 +10,7 @@ namespace yasim {
 // pretty hot for a "standard" atmosphere.
 // Numbers above 19000 meters calculated from src/Environment/environment.cxx
 //                             meters   kelvin      Pa   kg/m^3
-float Atmosphere::data[][4] = {{ -900.0f, 293.91f, 111679.0f, 1.32353f },
+float Atmosphere::data[][Atmosphere::numColumns] = {{ -900.0f, 293.91f, 111679.0f, 1.32353f },
                                {    0.0f, 288.11f, 101325.0f, 1.22500f },
 			       {   900.0f, 282.31f,  90971.0f, 1.12260f },
 			       {  1800.0f, 276.46f,  81494.0f, 1.02690f },
@@ -48,28 +49,34 @@ float Atmosphere::data[][4] = {{ -900.0f, 293.91f, 111679.0f, 1.32353f },
 
 // Universal gas constant for air, in SI units.  P = R * rho * T.
 // P in pascals (N/m^2), rho is kg/m^3, T in kelvin.
-const float R = 287.1f;
+const float R = 287.058f;
 
 // Specific heat ratio for air, at "low" temperatures.  
 const float GAMMA = 1.4f;
 
+void Atmosphere::setStandard(float altitude)
+{
+    _density = getStdDensity(altitude);
+    _pressure = getStdPressure(altitude);
+    _temperature = getStdTemperature(altitude);
+}
+
 float Atmosphere::getStdTemperature(float alt)
 {
-    return getRecord(alt, 1);
+    return getRecord(alt, TEMPERATURE);
 }
 
 float Atmosphere::getStdPressure(float alt)
 {
-    return getRecord(alt, 2);
+    return getRecord(alt, PRESSURE);
 }
 
 float Atmosphere::getStdDensity(float alt)
 {
-    return getRecord(alt, 3);
+    return getRecord(alt, DENSITY);
 }
 
-float Atmosphere::calcVEAS(float spd,
-                           float pressure, float temp, float density)
+float Atmosphere::calcVEAS(float spd, float pressure, float temp, float density)
 {
     static float rho0 = getStdDensity(0);
     float densityRatio = density / rho0;
@@ -122,9 +129,14 @@ float Atmosphere::spdFromMach(float mach, float temp)
     return mach * Math::sqrt(GAMMA * R * temp);
 }
 
+float Atmosphere::spdFromMach(float mach)
+{
+    return spdFromMach(mach, _temperature);
+}
+
 float Atmosphere::spdFromVCAS(float vcas, float pressure, float temp)
 {
-                                // FIXME: does not account for supersonic
+    // FIXME: does not account for supersonic
     float p0 = getStdPressure(0);
     float rho0 = getStdDensity(0);
 
@@ -134,6 +146,11 @@ float Atmosphere::spdFromVCAS(float vcas, float pressure, float temp)
     float m2 = (Math::pow(cp,(1/3.5))-1)/0.2;
     float vtas= spdFromMach(Math::sqrt(m2), temp);
     return vtas;
+}
+
+float Atmosphere::spdFromVCAS(float vcas)
+{
+    return spdFromVCAS(vcas, _pressure, _temperature);
 }
 
 void Atmosphere::calcStaticAir(float p0, float t0, float d0, float v,
@@ -147,14 +164,24 @@ void Atmosphere::calcStaticAir(float p0, float t0, float d0, float v,
     *pOut = (*dOut) * R * (*tOut);
 }
 
-float Atmosphere::getRecord(float alt, int recNum)
+void Atmosphere::calcStaticAir(float v, float* pOut, float* tOut, float* dOut)
 {
-    int hi = (sizeof(data) / (4*sizeof(float))) - 1;
+    return calcStaticAir(_pressure, _temperature, _density, v, pOut, tOut, dOut);
+}
+
+
+float Atmosphere::getRecord(float alt, Column recNum)
+{
+    int hi = maxTableIndex();
     int lo = 0;
 
     // safety valve, clamp to the edges of the table
-    if(alt < data[0][0])       hi=1;
-    else if(alt > data[hi][0]) lo = hi-1;
+    if(alt < data[0][ALTITUDE]) {
+      hi = 1;
+    }
+    else if(alt > data[hi][ALTITUDE]) {
+      lo = hi-1;
+    }
 
     // binary search
     while(1) {
@@ -165,10 +192,38 @@ float Atmosphere::getRecord(float alt, int recNum)
     }
 
     // interpolate
-    float frac = (alt - data[lo][0])/(data[hi][0] - data[lo][0]);
+    float frac = (alt - data[lo][ALTITUDE])/(data[hi][ALTITUDE] - data[lo][ALTITUDE]);
     float a = data[lo][recNum];
     float b = data[hi][recNum];
     return a + frac * (b-a);
+}
+
+int Atmosphere::maxTableIndex() {
+    return (sizeof(data) / (numColumns * sizeof(float))) - 1;
+}
+
+bool Atmosphere::test() {
+    bool passed = true;
+    int rows = maxTableIndex() + 1;
+    const float maxDeviation = 0.0002f;
+    
+    fprintf(stderr, "Atmosphere::test()\n");
+    fprintf(stderr, "Columns = %d\n", numColumns);
+    fprintf(stderr, "Rows = %d\n", rows);
+    
+    for (int alt = 0; alt < maxTableIndex(); alt++) {
+      float density = calcStdDensity(data[alt][PRESSURE], data[alt][TEMPERATURE]);
+      float delta = data[alt][DENSITY] - density;
+      fprintf(stderr, "%d : %f \n", alt, delta);
+      if (Math::abs(delta) > maxDeviation) { 
+        passed = false;       
+        fprintf(stderr,"FAIL: Deviation above limit of %1.6f\n", maxDeviation);
+      }
+    }
+    if (passed) {
+      fprintf(stderr,"Deviation below %1.6f for all rows.\n", maxDeviation);
+    }
+    return passed;
 }
 
 }; // namespace yasim

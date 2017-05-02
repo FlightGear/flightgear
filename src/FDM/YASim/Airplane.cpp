@@ -33,30 +33,7 @@ const float SOLVE_TWEAK = 0.3226;
 
 Airplane::Airplane()
 {
-    _emptyWeight = 0;
-    _pilotPos[0] = _pilotPos[1] = _pilotPos[2] = 0;
-    _wing = 0;
-    _tail = 0;
-    _ballast = 0;
-    _cruiseP = 0;
-    _cruiseT = 0;
-    _cruiseSpeed = 0;
-    _cruiseWeight = 0;
-    _cruiseGlideAngle = 0;
-    _approachP = 0;
-    _approachT = 0;
-    _approachSpeed = 0;
-    _approachAoA = 0;
-    _approachWeight = 0;
-    _approachGlideAngle = 0;
-
-    _dragFactor = 1;
-    _liftRatio = 1;
-    _cruiseAoA = 0;
-    _tailIncidence = 0;
-
-    _failureMsg = 0;
-    _wingsN = 0;
+    _approachConfig.isApproach = true;
 }
 
 Airplane::~Airplane()
@@ -82,10 +59,10 @@ Airplane::~Airplane()
     }
     for(i=0; i<_solveWeights.size(); i++)
         delete (SolveWeight*)_solveWeights.get(i);
-    for(i=0; i<_cruiseControls.size(); i++)
-        delete (Control*)_cruiseControls.get(i);
-    for(i=0; i<_approachControls.size(); i++) {
-        Control* c = (Control*)_approachControls.get(i);
+    for(i=0; i<_cruiseConfig.controls.size(); i++)
+        delete (Control*)_cruiseConfig.controls.get(i);
+    for(i=0; i<_approachConfig.controls.size(); i++) {
+        Control* c = (Control*)_approachConfig.controls.get(i);
         if(c != &_approachElevator)
             delete c;
     }
@@ -148,30 +125,29 @@ void Airplane::updateGearState()
 
 void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, float gla)
 {
-    _approachSpeed = speed;
-    _approachP = Atmosphere::getStdPressure(altitude);
-    _approachT = Atmosphere::getStdTemperature(altitude);
-    _approachAoA = aoa;
-    _approachFuel = fuel;
-    _approachGlideAngle = gla;
+    _approachConfig.speed = speed;
+    _approachConfig.altitude = altitude;
+    _approachConfig.state.setupOrientationFromAoa(aoa); // see runConfig()
+    _approachConfig.aoa = aoa; // not strictly needed, see runConfig()
+    _approachConfig.fuel = fuel;
+    _approachConfig.glideAngle = gla;
 }
  
 void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
 {
-    _cruiseSpeed = speed;
-    _cruiseP = Atmosphere::getStdPressure(altitude);
-    _cruiseT = Atmosphere::getStdTemperature(altitude);
-    _cruiseAoA = 0;
+    _cruiseConfig.speed = speed;
+    _cruiseConfig.altitude = altitude;
+    _cruiseConfig.aoa = 0;
     _tailIncidence = 0;
-    _cruiseFuel = fuel;
-    _cruiseGlideAngle = gla;
+    _cruiseConfig.fuel = fuel;
+    _cruiseConfig.glideAngle = gla;
 }
 
 void Airplane::setElevatorControl(int control)
 {
     _approachElevator.control = control;
     _approachElevator.val = 0;
-    _approachControls.add(&_approachElevator);
+    _approachConfig.controls.add(&_approachElevator);
 }
 
 void Airplane::addApproachControl(int control, float val)
@@ -179,7 +155,7 @@ void Airplane::addApproachControl(int control, float val)
     Control* c = new Control();
     c->control = control;
     c->val = val;
-    _approachControls.add(c);
+    _approachConfig.controls.add(c);
 }
 
 void Airplane::addCruiseControl(int control, float val)
@@ -187,7 +163,7 @@ void Airplane::addCruiseControl(int control, float val)
     Control* c = new Control();
     c->control = control;
     c->val = val;
-    _cruiseControls.add(c);
+    _cruiseConfig.controls.add(c);
 }
 
 void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
@@ -300,31 +276,11 @@ void Airplane::setFuelFraction(float frac)
     }
 }
 
-void Airplane::setupState(const float aoa, const float speed, const float gla, State* s)
-{
-    float cosAoA = Math::cos(aoa);
-    float sinAoA = Math::sin(aoa);
-    s->orient[0] =  cosAoA; s->orient[1] = 0; s->orient[2] = sinAoA;
-    s->orient[3] =       0; s->orient[4] = 1; s->orient[5] =      0;
-    s->orient[6] = -sinAoA; s->orient[7] = 0; s->orient[8] = cosAoA;
-
-    //? what is gla? v[1]=y, v[2]=z? should sin go to v2 instead v1?
-    s->v[0] = speed*Math::cos(gla); s->v[1] = -speed*Math::sin(gla); s->v[2] = 0;
-
-    for(int i=0; i<3; i++)
-	s->pos[i] = s->rot[i] = s->acc[i] = s->racc[i] = 0;
-
-    // Put us 1m above the origin, or else the gravity computation in
-    // Model goes nuts
-    s->pos[2] = 1;
-}
-
 /**
  * @brief add contact point for crash detection 
  * used to add wingtips and fuselage nose and tail
  * 
  * @param pos ...
- * @return void
  */
 
 void Airplane::addContactPoint(float* pos)
@@ -638,9 +594,10 @@ void Airplane::compile()
         t->handle = body->addMass(0, t->pos);
         totalFuel += t->cap;
     }
-    _cruiseWeight = _emptyWeight + totalFuel*_cruiseFuel;
-    _approachWeight = _emptyWeight + totalFuel*_approachFuel;
+    _cruiseConfig.weight = _emptyWeight + totalFuel*_cruiseConfig.fuel;
+    _approachConfig.weight = _emptyWeight + totalFuel*_approachConfig.fuel;
 
+    
     body->recalc();
 
     // Add surfaces for the landing gear.
@@ -723,12 +680,12 @@ void Airplane::solveGear()
     // The force at max compression should be sufficient to stop a
     // plane moving downwards at 2x the approach descent rate.  Assume
     // a 3 degree approach.
-    float descentRate = 2.0f*_approachSpeed/19.1f;
+    float descentRate = 2.0f*_approachConfig.speed/19.1f;
 
     // Spread the kinetic energy according to the gear weights.  This
     // will results in an equal compression fraction (not distance) of
     // each gear.
-    float energy = 0.5f*_approachWeight*descentRate*descentRate;
+    float energy = 0.5f*_approachConfig.weight*descentRate*descentRate;
 
     for(i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
@@ -743,7 +700,7 @@ void Airplane::solveGear()
         gr->gear->setSpring(k * gr->gear->getSpring());
 
         // Critically damped (too damped, too!)
-        gr->gear->setDamping(2*Math::sqrt(k*_approachWeight*gr->wgt)
+        gr->gear->setDamping(2*Math::sqrt(k*_approachConfig.weight*gr->wgt)
                              * gr->gear->getDamping());
     }
 }
@@ -789,7 +746,7 @@ void Airplane::setupWeights(bool isApproach)
 }
 
 /// load values for controls as defined in cruise configuration
-void Airplane::loadControls(Vector& controls)
+void Airplane::loadControls(const Vector& controls)
 {
   _controls.reset();
   for(int i=0; i < controls.size(); i++) {
@@ -800,81 +757,43 @@ void Airplane::loadControls(Vector& controls)
 }
 
 /// Helper for solve()
-void Airplane::runCruise()
+void Airplane::runConfig(Config &cfg)
 {
-    setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
-    _model.setState(&_cruiseState);
-    _model.setAir(_cruiseP, _cruiseT,
-                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
-
-    // The control configuration
-    loadControls(_cruiseControls);
-    
-    // The local wind
-    float wind[3];
-    Math::mul3(-1, _cruiseState.v, wind);
-    Math::vmul33(_cruiseState.orient, wind, wind);
- 
-    setFuelFraction(_cruiseFuel);
-    setupWeights(false);
-   
-    // Set up the thruster parameters and iterate until the thrust
-    // stabilizes.
-    for(int i=0; i<_thrusters.size(); i++) {
-	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
-	t->setWind(wind);
-	t->setAir(_cruiseP, _cruiseT,
-                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
-    }
-    stabilizeThrust();
-
-    updateGearState();
-
-    // Precompute thrust in the model, and calculate aerodynamic forces
-    _model.getBody()->recalc();
-    _model.getBody()->reset();
-    _model.initIteration();
-    _model.calcForces(&_cruiseState);
+  // aoa is consider to be given for approach so we calculate orientation 
+  // only once in setApproach()
+  if (!cfg.isApproach) {
+    cfg.state.setupOrientationFromAoa(cfg.aoa);
+  }
+  cfg.state.setupSpeedAndPosition(cfg.speed, cfg.glideAngle);
+  _model.setState(&cfg.state);
+  _model.setStandardAtmosphere(cfg.altitude);
+  loadControls(cfg.controls);
+  
+  // The local wind
+  float wind[3];
+  Math::mul3(-1, cfg.state.v, wind);
+  cfg.state.globalToLocal(wind, wind);
+  
+  setFuelFraction(cfg.fuel);
+  setupWeights(cfg.isApproach);
+  
+  // Set up the thruster parameters and iterate until the thrust
+  // stabilizes.
+  for(int i=0; i<_thrusters.size(); i++) {
+    Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
+    t->setWind(wind);
+    t->setStandardAtmosphere(cfg.altitude);
+  }
+  
+  stabilizeThrust();
+  updateGearState();
+  
+  // Precompute thrust in the model, and calculate aerodynamic forces
+  _model.getBody()->recalc();
+  _model.getBody()->reset();
+  _model.initIteration();
+  _model.calcForces(&cfg.state);
 }
-
-/// Helper for solve()
-void Airplane::runApproach()
-{
-    setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
-    _model.setState(&_approachState);
-    _model.setAir(_approachP, _approachT,
-                  Atmosphere::calcStdDensity(_approachP, _approachT));
-
-    // The control configuration
-    loadControls(_approachControls);
-    
-    // The local wind
-    float wind[3];
-    Math::mul3(-1, _approachState.v, wind);
-    Math::vmul33(_approachState.orient, wind, wind);
-    
-    setFuelFraction(_approachFuel);
-    setupWeights(true);
-
-    // Run the thrusters until they get to a stable setting.  FIXME:
-    // this is lots of wasted work.
-    for(int i=0; i<_thrusters.size(); i++) {
-	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
-	t->setWind(wind);
-	t->setAir(_approachP, _approachT,
-                  Atmosphere::calcStdDensity(_approachP, _approachT));
-    }
-    stabilizeThrust();
-
-    updateGearState();
-
-    // Precompute thrust in the model, and calculate aerodynamic forces
-    _model.getBody()->recalc();
-    _model.getBody()->reset();
-    _model.initIteration();
-    _model.calcForces(&_approachState);
-}
-
 /// Used only in Airplane::solve() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
 {
@@ -960,51 +879,51 @@ void Airplane::solve()
         }
 
 	// Run an iteration at cruise, and extract the needed numbers:
-	runCruise();
+	runConfig(_cruiseConfig);
 
 	_model.getThrust(tmp);
-        float thrust = tmp[0] + _cruiseWeight * Math::sin(_cruiseGlideAngle) * 9.81;
+        float thrust = tmp[0] + _cruiseConfig.weight * Math::sin(_cruiseConfig.glideAngle) * 9.81;
 
 	_model.getBody()->getAccel(tmp);
-        Math::tmul33(_cruiseState.orient, tmp, tmp);
-	float xforce = _cruiseWeight * tmp[0];
-	float clift0 = _cruiseWeight * tmp[2];
+        _cruiseConfig.state.localToGlobal(tmp, tmp);
+	float xforce = _cruiseConfig.weight * tmp[0];
+	float clift0 = _cruiseConfig.weight * tmp[2];
 
 	_model.getBody()->getAngularAccel(tmp);
-        Math::tmul33(_cruiseState.orient, tmp, tmp);
+        _cruiseConfig.state.localToGlobal(tmp, tmp);
 	float pitch0 = tmp[1];
 
 	// Run an approach iteration, and do likewise
-	runApproach();
+        runConfig(_approachConfig);
 
 	_model.getBody()->getAngularAccel(tmp);
-        Math::tmul33(_approachState.orient, tmp, tmp);
+        _approachConfig.state.localToGlobal(tmp, tmp);
 	double apitch0 = tmp[1];
 
 	_model.getBody()->getAccel(tmp);
-        Math::tmul33(_approachState.orient, tmp, tmp);
-	float alift = _approachWeight * tmp[2];
+        _approachConfig.state.localToGlobal(tmp, tmp);
+	float alift = _approachConfig.weight * tmp[2];
 
 	// Modify the cruise AoA a bit to get a derivative
-	_cruiseAoA += ARCMIN;
-	runCruise();
-	_cruiseAoA -= ARCMIN;
-
+	_cruiseConfig.aoa += ARCMIN;
+        runConfig(_cruiseConfig);
+        _cruiseConfig.aoa -= ARCMIN;
+        
 	_model.getBody()->getAccel(tmp);
-        Math::tmul33(_cruiseState.orient, tmp, tmp);
-	float clift1 = _cruiseWeight * tmp[2];
+        _cruiseConfig.state.localToGlobal(tmp, tmp);
+	float clift1 = _cruiseConfig.weight * tmp[2];
 
 	// Do the same with the tail incidence
 	_tail->setIncidence(_tailIncidence + ARCMIN);
-	runCruise();
-	_tail->setIncidence(_tailIncidence);
+        runConfig(_cruiseConfig);
+        _tail->setIncidence(_tailIncidence);
 
 	_model.getBody()->getAngularAccel(tmp);
-        Math::tmul33(_cruiseState.orient, tmp, tmp);
+        _cruiseConfig.state.localToGlobal(tmp, tmp);
 	float pitch1 = tmp[1];
 
 	// Now calculate:
-	float awgt = 9.8f * _approachWeight;
+	float awgt = 9.8f * _approachConfig.weight;
 
 	float dragFactor = thrust / (thrust-xforce);
 	float liftFactor = awgt / (awgt+alift);
@@ -1021,11 +940,11 @@ void Airplane::solve()
         // variable).
         const float ELEVDIDDLE = 0.001f;
         _approachElevator.val += ELEVDIDDLE;
-        runApproach();
+        runConfig(_approachConfig);
         _approachElevator.val -= ELEVDIDDLE;
 
 	_model.getBody()->getAngularAccel(tmp);
-        Math::tmul33(_approachState.orient, tmp, tmp);
+        _approachConfig.state.localToGlobal(tmp, tmp);
 	double apitch1 = tmp[1];
         float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
 
@@ -1044,14 +963,14 @@ void Airplane::solve()
 	}
 
 	// OK, now we can adjust the minor variables:
-	_cruiseAoA += SOLVE_TWEAK*aoaDelta;
+	_cruiseConfig.aoa += SOLVE_TWEAK*aoaDelta;
 	_tailIncidence += SOLVE_TWEAK*tailDelta;
 	
-	_cruiseAoA = Math::clamp(_cruiseAoA, -0.175f, 0.175f);
+	_cruiseConfig.aoa = Math::clamp(_cruiseConfig.aoa, -0.175f, 0.175f);
 	_tailIncidence = Math::clamp(_tailIncidence, -0.175f, 0.175f);
 
-        if(abs(xforce/_cruiseWeight) < STHRESH*0.0001 &&
-           abs(alift/_approachWeight) < STHRESH*0.0001 &&
+        if(abs(xforce/_cruiseConfig.weight) < STHRESH*0.0001 &&
+           abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
            abs(aoaDelta) < STHRESH*.000017 &&
            abs(tailDelta) < STHRESH*.000017)
         {
@@ -1074,7 +993,7 @@ void Airplane::solve()
     } else if(_liftRatio < 1e-04 || _liftRatio > 1e4) {
 	_failureMsg = "Lift ratio beyond reasonable bounds.";
 	return;
-    } else if(Math::abs(_cruiseAoA) >= .17453293) {
+    } else if(Math::abs(_cruiseConfig.aoa) >= .17453293) {
 	_failureMsg = "Cruise AoA > 10 degrees";
 	return;
     } else if(Math::abs(_tailIncidence) >= .17453293) {
@@ -1102,14 +1021,12 @@ void Airplane::solveHelicopter()
         applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
         applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
     }
-    setupState(0,0,0, &_cruiseState);
-    _model.setState(&_cruiseState);
+    _cruiseConfig.state.setupState(0,0,0);
+    _model.setState(&_cruiseConfig.state);
     setupWeights(true);
     _controls.reset();
     _model.getBody()->reset();
-    _model.setAir(_cruiseP, _cruiseT,
-                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
-    
+    _model.setStandardAtmosphere(_cruiseConfig.altitude);    
 }
 
 float Airplane::getCGMAC()
