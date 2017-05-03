@@ -100,7 +100,7 @@ private:
     float _cz0 {0};       // Z-axis force offset
     float _peaks[2] {1, 1};  // Stall peak coefficients (fwd, back)
     float _stalls[4] {0, 0, 0, 0}; // Stall angles (fwd/back, pos/neg)
-    float _widths[4] {0.01, 0.01, 0.01, 0.01}; // Stall widths  " "
+    float _widths[4] {0.01f, 0.01f, 0.01f, 0.01f}; // Stall widths
     float _pos[3];    // position in local coords
     float _orient[9]; // local->surface orthonormal matrix
 

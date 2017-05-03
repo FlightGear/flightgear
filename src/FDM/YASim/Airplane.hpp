@@ -43,7 +43,7 @@ public:
     void addVStab(Wing* vstab) { _vstabs.add(vstab); }
 
     void addFuselage(float* front, float* back, float width,
-                     float taper=1, float mid=0.5,
+                     float taper=1, float mid=0.5f,
                      float cx=1, float cy=1, float cz=1, float idrag=1);
     int addTank(float* pos, float cap, float fuelDensity);
     void addGear(Gear* g);
