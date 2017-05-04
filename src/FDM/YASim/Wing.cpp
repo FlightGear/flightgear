@@ -1,8 +1,8 @@
+#include "yasim-common.hpp"
 #include "Surface.hpp"
 #include "Wing.hpp"
 
 namespace yasim {
-static const float RAD2DEG = 57.2957795131;
   
 Wing::Wing( Version * version ) :
   _version(version)
@@ -62,8 +62,7 @@ void Wing::setFlap0Pos(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
     rval = Math::clamp(rval, -1, 1);
-    int i;
-    for(i=0; i<_flap0Surfs.size(); i++) {
+    for(int i=0; i<_flap0Surfs.size(); i++) {
       ((Surface*)_flap0Surfs.get(i))->setFlapPos(lval);
       if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapPos(rval);
     }
@@ -72,8 +71,7 @@ void Wing::setFlap0Pos(float lval, float rval)
 void Wing::setFlap0Effectiveness(float lval)
 {
     lval = Math::clamp(lval, 1, 10);
-    int i;
-    for(i=0; i<_flap0Surfs.size(); i++) {
+    for(int i=0; i<_flap0Surfs.size(); i++) {
         ((Surface*)_flap0Surfs.get(i))->setFlapEffectiveness(lval);
     }
 }
@@ -82,8 +80,7 @@ void Wing::setFlap1Pos(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
     rval = Math::clamp(rval, -1, 1);
-    int i;
-    for(i=0; i<_flap1Surfs.size(); i++) {
+    for(int i=0; i<_flap1Surfs.size(); i++) {
       ((Surface*)_flap1Surfs.get(i))->setFlapPos(lval);
       if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlapPos(rval);
     }
@@ -92,8 +89,7 @@ void Wing::setFlap1Pos(float lval, float rval)
 void Wing::setFlap1Effectiveness(float lval)
 {
     lval = Math::clamp(lval, 1, 10);
-    int i;
-    for(i=0; i<_flap1Surfs.size(); i++) {
+    for(int i=0; i<_flap1Surfs.size(); i++) {
         ((Surface*)_flap1Surfs.get(i))->setFlapEffectiveness(lval);
     }
 }
@@ -102,8 +98,7 @@ void Wing::setSpoilerPos(float lval, float rval)
 {
     lval = Math::clamp(lval, 0, 1);
     rval = Math::clamp(rval, 0, 1);
-    int i;
-    for(i=0; i<_spoilerSurfs.size(); i++) {
+    for(int i=0; i<_spoilerSurfs.size(); i++) {
       ((Surface*)_spoilerSurfs.get(i))->setSpoilerPos(lval);
       if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoilerPos(rval);
     }
@@ -112,8 +107,7 @@ void Wing::setSpoilerPos(float lval, float rval)
 void Wing::setSlatPos(float val)
 {
     val = Math::clamp(val, 0, 1);
-    int i;
-    for(i=0; i<_slatSurfs.size(); i++)
+    for(int i=0; i<_slatSurfs.size(); i++)
       ((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
@@ -221,11 +215,11 @@ void Wing::compile()
         float end = bounds[i+1];
         float mid = (start+end)/2;
 
-        bool flap0=0, flap1=0, slat=0, spoiler=0;
-        if(_flap0Start   < mid && mid < _flap0End)   flap0 = 1;
-        if(_flap1Start   < mid && mid < _flap1End)   flap1 = 1;
-        if(_slatStart    < mid && mid < _slatEnd)    slat = 1;
-        if(_spoilerStart < mid && mid < _spoilerEnd) spoiler = 1;
+        bool hasFlap0=0, hasFlap1=0, hasSlat=0, hasSpoiler=0;
+        if(_flap0Start   < mid && mid < _flap0End)   hasFlap0 = 1;
+        if(_flap1Start   < mid && mid < _flap1End)   hasFlap1 = 1;
+        if(_slatStart    < mid && mid < _slatEnd)    hasSlat = 1;
+        if(_spoilerStart < mid && mid < _spoilerEnd) hasSpoiler = 1;
 
         // FIXME: Should probably detect an error here if both flap0
         // and flap1 are set.  Right now flap1 overrides.
@@ -244,7 +238,7 @@ void Wing::compile()
             float chord = _chord * (1 - (1-_taper)*frac);
 
             Surface *s = newSurface(pos, orient, chord,
-                                    flap0, flap1, slat, spoiler);
+                                    hasFlap0, hasFlap1, hasSlat, hasSpoiler);
 
             SurfRec *sr = new SurfRec();
             sr->surface = s;
@@ -256,7 +250,7 @@ void Wing::compile()
             if(_mirror) {
                 pos[1] = -pos[1];
                 s = newSurface(pos, rightOrient, chord,
-                               flap0, flap1, slat, spoiler);
+                               hasFlap0, hasFlap1, hasSlat, hasSpoiler);
                 sr = new SurfRec();
                 sr->surface = s;
                 sr->weight = chord * segWid;
@@ -289,7 +283,7 @@ void Wing::setLiftRatio(float ratio)
 }
 
 Surface* Wing::newSurface(float* pos, float* orient, float chord,
-                          bool flap0, bool flap1, bool slat, bool spoiler)
+                          bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler)
 {
     Surface* s = new Surface(_version);
 
@@ -331,15 +325,15 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
         s->setStallWidth(i, 0.01);
     }
     
-    if(flap0)   s->setFlapParams(_flap0Lift, _flap0Drag);
-    if(flap1)   s->setFlapParams(_flap1Lift, _flap1Drag);
-    if(slat)    s->setSlatParams(_slatAoA, _slatDrag);
-    if(spoiler) s->setSpoilerParams(_spoilerLift, _spoilerDrag);    
+    if(hasFlap0)   s->setFlapParams(_flap0Lift, _flap0Drag);
+    if(hasFlap1)   s->setFlapParams(_flap1Lift, _flap1Drag);
+    if(hasSlat)    s->setSlatParams(_slatAoA, _slatDrag);
+    if(hasSpoiler) s->setSpoilerParams(_spoilerLift, _spoilerDrag);    
 
-    if(flap0)   _flap0Surfs.add(s);
-    if(flap1)   _flap1Surfs.add(s);
-    if(slat)    _slatSurfs.add(s);
-    if(spoiler) _spoilerSurfs.add(s);
+    if(hasFlap0)   _flap0Surfs.add(s);
+    if(hasFlap1)   _flap1Surfs.add(s);
+    if(hasSlat)    _slatSurfs.add(s);
+    if(hasSpoiler) _spoilerSurfs.add(s);
 
     s->setInducedDrag(_inducedDrag);
 

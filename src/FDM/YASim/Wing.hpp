@@ -96,7 +96,7 @@ public:
 private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
     Surface* newSurface(float* pos, float* orient, float chord,
-                        bool flap0, bool flap1, bool slat, bool spoiler);
+                        bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler);
 
     struct SurfRec { Surface * surface; float weight; };
 
