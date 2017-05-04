@@ -97,7 +97,9 @@ private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
     Surface* newSurface(float* pos, float* orient, float chord,
                         bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler);
-
+    void calculateSpan();
+    void calculateMAC();
+    
     struct SurfRec { Surface * surface; float weight; };
 
     Vector _surfs;
