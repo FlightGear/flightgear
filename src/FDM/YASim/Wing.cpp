@@ -4,10 +4,23 @@
 
 namespace yasim {
   
-Wing::Wing( Version * version ) :
-  _version(version)
+Wing::Wing(Version *ver, bool mirror, float* base, float chord, 
+        float length, float taper, float sweep, float dihedral, float twist) :
+    _version(ver),
+    _mirror(mirror),
+    _chord(chord),
+    _length(length),
+    _taper(taper),
+    _sweep(sweep),
+    _dihedral(dihedral),
+    _twist(twist)
 {
-
+    Math::set3(base, _base);
+    _meanChord = _chord*(_taper+1)*0.5f;
+    calculateWingCoordinateSystem();
+    calculateTip();
+    calculateSpan();
+    calculateMAC();
 }
 
 Wing::~Wing()
@@ -206,13 +219,6 @@ void Wing::compile()
             bounds[nbounds++] = bounds[i];
         last = bounds[i];
     }
-
-    calculateWingCoordinateSystem();
-    calculateTip();
-    _meanChord = _chord*(_taper+1)*0.5f;
-    
-    calculateSpan();
-    calculateMAC();
 
     // Calculate a "nominal" segment length equal to an average chord,
     // normalized to lie within 0-1 over the length of the wing.

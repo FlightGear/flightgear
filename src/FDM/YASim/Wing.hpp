@@ -12,7 +12,8 @@ class Surface;
 // FIXME: need to handle "inverted" controls for mirrored wings.
 class Wing {
 public:
-    Wing( Version * version );
+    Wing(Version *ver, bool mirror, float* base, float chord, float length, 
+        float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0);
     ~Wing();
 
     // Do we mirror ourselves about the XZ plane?
@@ -22,26 +23,20 @@ public:
     // Wing geometry in local coordinates:
     
     // base point of wing
-    void setBase(const float* base) { Math::set3(base, _base); }
     void getBase(float* base) const { Math::set3(_base, base); };
     // dist. ALONG wing (not span!)     
-    void setLength(float length) { _length = length; }
     float getLength() const { return _length; };
     // at base, measured along X axis
-    void setChord(float chord) { _chord = chord; }
     float getChord() const { return _chord; };
     // fraction of chord at wing tip, 0..1
-    void setTaper(float taper) { _taper = taper; }
     float getTaper() const { return _taper; };
     // radians
-    void setSweep(float sweep) { _sweep = sweep; }
     float getSweep() const { return _sweep; };
     // radians, positive is "up"
     void setDihedral(float dihedral) { _dihedral = dihedral; }
     float getDihedral() const { return _dihedral; };
     
     void setIncidence(float incidence);
-    void setTwist(float angle) { _twist = angle; }
     
     
     // parameters for stall curve
@@ -110,11 +105,11 @@ private:
     Vector _slatSurfs;
     Vector _spoilerSurfs;
 
+    Version * _version;
     bool _mirror {false};
-
     float _base[3] {0,0,0};
-    float _length {0};
     float _chord {0};
+    float _length {0};
     float _taper {1};
     float _sweep {0};
     float _dihedral {0};
@@ -161,8 +156,6 @@ private:
     float _slatEnd {0};
     float _slatAoA {0};
     float _slatDrag {0};
-
-    Version * _version;
 };
 
 }; // namespace yasim

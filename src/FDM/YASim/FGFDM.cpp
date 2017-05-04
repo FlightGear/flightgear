@@ -800,37 +800,40 @@ void FGFDM::setOutputProperties(float dt)
 
 Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
 {
-    Wing* w = new Wing(version);
-
     float defDihed = 0;
-    if(eq(type, "vstab"))
-	defDihed = 90;
-    else
-	w->setMirror(true);
+    bool mirror = true;
 
-    float pos[3];
-    pos[0] = attrf(a, "x");
-    pos[1] = attrf(a, "y");
-    pos[2] = attrf(a, "z");
-    w->setBase(pos);
-
-    w->setLength(attrf(a, "length"));
-    w->setChord(attrf(a, "chord"));
-    w->setSweep(attrf(a, "sweep", 0) * DEG2RAD);
-    w->setTaper(attrf(a, "taper", 1));
-    w->setDihedral(attrf(a, "dihedral", defDihed) * DEG2RAD);
-    
-    float camber = attrf(a, "camber", 0);
-    if (!version->isVersionOrNewer(Version::YASIM_VERSION_2017_2) && (camber == 0)) {
-      SG_LOG(SG_FLIGHT, SG_DEV_WARN, "YASIM warning: versions before 2017.2 are buggy for wings with camber=0");
+    if(eq(type, "vstab")) {
+      defDihed = 90;
+      mirror = false;
     }
-    w->setCamber(camber);
+
+    float base[3];
+    base[0] = attrf(a, "x");
+    base[1] = attrf(a, "y");
+    base[2] = attrf(a, "z");    
+
+    float length = attrf(a, "length");
+    float chord = attrf(a, "chord");
+    float sweep = attrf(a, "sweep", 0) * DEG2RAD;
+    float taper = attrf(a, "taper", 1);
+    float dihedral = attrf(a, "dihedral", defDihed) * DEG2RAD;
 
     // These come in with positive indicating positive AoA, but the
     // internals expect a rotation about the left-pointing Y axis, so
     // invert the sign.
-    w->setIncidence(attrf(a, "incidence", 0) * DEG2RAD * -1);
-    w->setTwist(attrf(a, "twist", 0) * DEG2RAD * -1);
+    float incidence = attrf(a, "incidence", 0) * DEG2RAD * -1;
+    float twist = attrf(a, "twist", 0) * DEG2RAD * -1;
+
+    float camber = attrf(a, "camber", 0);
+    if (!version->isVersionOrNewer(Version::YASIM_VERSION_2017_2) && (camber == 0)) {
+      SG_LOG(SG_FLIGHT, SG_DEV_WARN, "YASIM warning: versions before 2017.2 are buggy for wings with camber=0");
+    }
+    
+    Wing* w = new Wing(version, mirror, base, chord, length, 
+                       taper, sweep, dihedral, twist);
+    w->setIncidence(incidence);
+    w->setCamber(camber);
 
     // The 70% is a magic number that sorta kinda seems to match known
     // throttle settings to approach speed.
