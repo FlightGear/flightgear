@@ -96,6 +96,7 @@ private:
     void calculateTip();
     void calculateSpan();
     void calculateMAC();
+    void addSurface(Surface* s, float weight, float twist);
     
     struct SurfRec { Surface * surface; float weight; };
 

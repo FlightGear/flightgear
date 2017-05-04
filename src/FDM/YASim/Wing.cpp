@@ -251,27 +251,19 @@ void Wing::compile()
             interp(_base, _tip, frac, pos);
 
             float chord = _chord * (1 - (1-_taper)*frac);
+            float weight = chord * segWid;
+            float twist = _twist * frac;
 
             Surface *s = newSurface(pos, _orient, chord,
                                     hasFlap0, hasFlap1, hasSlat, hasSpoiler);
 
-            SurfRec *sr = new SurfRec();
-            sr->surface = s;
-            sr->weight = chord * segWid;
-            s->setTotalDrag(sr->weight);
-            s->setTwist(_twist * frac);
-            _surfs.add(sr);
+            addSurface(s, weight, twist);
 
             if(_mirror) {
                 pos[1] = -pos[1];
                 s = newSurface(pos, _rightOrient, chord,
                                hasFlap0, hasFlap1, hasSlat, hasSpoiler);
-                sr = new SurfRec();
-                sr->surface = s;
-                sr->weight = chord * segWid;
-                s->setTotalDrag(sr->weight);
-                s->setTwist(_twist * frac);
-                _surfs.add(sr);
+                addSurface(s, weight, twist);                
             }
         }
     }
@@ -280,6 +272,15 @@ void Wing::compile()
     setIncidence(_incidence);
 }
 
+void Wing::addSurface(Surface* s, float weight, float twist)
+{
+    SurfRec *sr = new SurfRec();
+    sr->surface = s;
+    sr->weight = weight;
+    s->setTotalDrag(sr->weight);
+    s->setTwist(twist);
+    _surfs.add(sr);
+}
 
 void Wing::setDragScale(float scale)
 {
