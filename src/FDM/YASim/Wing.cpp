@@ -111,6 +111,43 @@ void Wing::setSlatPos(float val)
       ((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
+void Wing::calculateWingCoordinateSystem() {
+  // prepare wing coordinate system, ignoring incidence and twist for now
+  // (tail incidence is varied by the solver)
+  // Generating a unit vector pointing out the left wing.
+  float left[3];
+  left[0] = -Math::tan(_sweep);
+  left[1] = Math::cos(_dihedral);
+  left[2] = Math::sin(_dihedral);
+  Math::unit3(left, left);
+  // The wing's Y axis will be the "left" vector.  The Z axis will
+  // be perpendicular to this and the local (!) X axis, because we
+  // want motion along the local X axis to be zero AoA (i.e. in the
+  // wing's XY plane) by definition.  Then the local X coordinate is
+  // just Y cross Z.
+  float *x = _orient, *y = _orient+3, *z = _orient+6;
+  x[0] = 1; x[1] = 0; x[2] = 0;
+  Math::set3(left, y);
+  Math::cross3(x, y, z);
+  Math::unit3(z, z);
+  Math::cross3(y, z, x);    
+  // Derive the right side orientation matrix from this one.
+  int i;
+  for(i=0; i<9; i++)  _rightOrient[i] = _orient[i];
+  // Negate all Y coordinates, this gets us a valid basis, but
+  // it's left handed!  So...
+  for(i=1; i<9; i+=3) _rightOrient[i] = -_rightOrient[i];
+  // Change the direction of the Y axis to get back to a
+  // right-handed system.
+  for(i=3; i<6; i++)  _rightOrient[i] = -_rightOrient[i];
+}
+
+void Wing::calculateTip() {
+    float *y = _orient+3;
+    Math::mul3(_length, y, _tip);
+    Math::add3(_base, _tip, _tip);
+}
+
 void Wing::calculateSpan()
 {
     // wingspan in y-direction (not for vstab)
@@ -170,50 +207,12 @@ void Wing::compile()
         last = bounds[i];
     }
 
-    // prepare wing coordinate system, ignoring incidence and twist for now
-    // (tail incidence is varied by the solver)
-    
-    // Generating a unit vector pointing out the left wing.
-    float left[3];
-    left[0] = -Math::tan(_sweep);
-    left[1] = Math::cos(_dihedral);
-    left[2] = Math::sin(_dihedral);
-    Math::unit3(left, left);
-
-    // Calculate coordinates for the root and tip of the wing
-    Math::mul3(_length, left, _tip);
-    Math::add3(_base, _tip, _tip);
+    calculateWingCoordinateSystem();
+    calculateTip();
     _meanChord = _chord*(_taper+1)*0.5f;
     
     calculateSpan();
     calculateMAC();
-    
-    // The wing's Y axis will be the "left" vector.  The Z axis will
-    // be perpendicular to this and the local (!) X axis, because we
-    // want motion along the local X axis to be zero AoA (i.e. in the
-    // wing's XY plane) by definition.  Then the local X coordinate is
-    // just Y cross Z.
-    float orient[9], rightOrient[9];
-    float *x = orient, *y = orient+3, *z = orient+6;
-    x[0] = 1; x[1] = 0; x[2] = 0;
-    Math::set3(left, y);
-    Math::cross3(x, y, z);
-    Math::unit3(z, z);
-    Math::cross3(y, z, x);
-
-    if(_mirror) {
-      // Derive the right side orientation matrix from this one.
-      int i;
-      for(i=0; i<9; i++)  rightOrient[i] = orient[i];
-
-      // Negate all Y coordinates, this gets us a valid basis, but
-      // it's left handed!  So...
-      for(i=1; i<9; i+=3) rightOrient[i] = -rightOrient[i];
-
-      // Change the direction of the Y axis to get back to a
-      // right-handed system.
-      for(i=3; i<6; i++)  rightOrient[i] = -rightOrient[i];
-    }
 
     // Calculate a "nominal" segment length equal to an average chord,
     // normalized to lie within 0-1 over the length of the wing.
@@ -247,7 +246,7 @@ void Wing::compile()
 
             float chord = _chord * (1 - (1-_taper)*frac);
 
-            Surface *s = newSurface(pos, orient, chord,
+            Surface *s = newSurface(pos, _orient, chord,
                                     hasFlap0, hasFlap1, hasSlat, hasSpoiler);
 
             SurfRec *sr = new SurfRec();
@@ -259,7 +258,7 @@ void Wing::compile()
 
             if(_mirror) {
                 pos[1] = -pos[1];
-                s = newSurface(pos, rightOrient, chord,
+                s = newSurface(pos, _rightOrient, chord,
                                hasFlap0, hasFlap1, hasSlat, hasSpoiler);
                 sr = new SurfRec();
                 sr->surface = s;

@@ -97,6 +97,8 @@ private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
     Surface* newSurface(float* pos, float* orient, float chord,
                         bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler);
+    void calculateWingCoordinateSystem();
+    void calculateTip();
     void calculateSpan();
     void calculateMAC();
     
@@ -118,6 +120,8 @@ private:
     float _dihedral {0};
     
     // calculated from above
+    float _orient[9];
+    float _rightOrient[9];
     float _tip[3] {0,0,0};
     float _meanChord {0}; // std. mean chord
     float _mac {0}; // mean aerodynamic chord length
