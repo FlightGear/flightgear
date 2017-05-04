@@ -38,9 +38,6 @@
     #include "CocoaFileDialog.hxx"
 #endif
 
-#if defined(SG_WINDOWS)
-    #include "WindowsFileDialog.hxx"
-#endif
 #if defined(HAVE_QT)
     #include "QtFileDialog.hxx"
 #endif
@@ -146,17 +143,15 @@ typedef nasal::Ghost<FileDialogPtr> NasalFileDialog;
 static naRef f_createFileDialog(const nasal::CallContext& ctx)
 {
     FGFileDialog::Usage usage = (FGFileDialog::Usage) ctx.requireArg<int>(0);
-  
+
 #if defined(SG_MAC)
     FileDialogPtr fd(new CocoaFileDialog(usage));
-#elif defined(SG_WINDOWS)
-	FileDialogPtr fd(new WindowsFileDialog(usage));
 #elif defined(HAVE_QT)
     FileDialogPtr fd(new QtFileDialog(usage));
 #else
     FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
-    
+
     return ctx.to_nasal(fd);
 }
 
