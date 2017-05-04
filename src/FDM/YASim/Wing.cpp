@@ -187,7 +187,8 @@ void Wing::compile()
     // and the wing itself into an array, sort them,
     // and remove duplicates.  This gives us the boundaries of our
     // segments.
-    float bounds[10];
+    const int NUM_BOUNDS {10};
+    float bounds[NUM_BOUNDS];
     bounds[0] = _flap0Start;   bounds[1] = _flap0End;
     bounds[2] = _flap1Start;   bounds[3] = _flap1End;
     bounds[4] = _spoilerStart; bounds[5] = _spoilerEnd;
@@ -197,11 +198,10 @@ void Wing::compile()
 
     // Sort in increasing order
     int i;
-    for(i=0; i<10; i++) {
+    for(i=0; i<NUM_BOUNDS; i++) {
       int minIdx = i;
       float minVal = bounds[i];
-      int j;
-      for(j=i+1; j<10; j++) {
+      for(int j=i+1; j<NUM_BOUNDS; j++) {
         if(bounds[j] < minVal) {
           minIdx = j;
           minVal = bounds[j];
@@ -214,7 +214,7 @@ void Wing::compile()
     // Uniqify
     float last = bounds[0];
     int nbounds = 1;
-    for(i=1; i<10; i++) {
+    for(i=1; i<NUM_BOUNDS; i++) {
         if(bounds[i] != last)
             bounds[nbounds++] = bounds[i];
         last = bounds[i];
