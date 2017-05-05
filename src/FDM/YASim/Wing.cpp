@@ -11,7 +11,7 @@ Wing::Wing(Version *ver, bool mirror, float* base, float chord,
     _chord(chord),
     _length(length),
     _taper(taper),
-    _sweep(sweep),
+    _sweepAngleCenterLine(sweep),
     _dihedral(dihedral),
     _twist(twist)
 {
@@ -129,7 +129,7 @@ void Wing::calculateWingCoordinateSystem() {
   // (tail incidence is varied by the solver)
   // Generating a unit vector pointing out the left wing.
   float left[3];
-  left[0] = -Math::tan(_sweep);
+  left[0] = -Math::tan(_sweepAngleCenterLine);
   left[1] = Math::cos(_dihedral);
   left[2] = Math::sin(_dihedral);
   Math::unit3(left, left);
@@ -175,8 +175,20 @@ void Wing::calculateMAC()
     const float commonFactor = _chord*(0.5+_taper)/(3*_chord*(1+_taper));
     _mac = _chord-(2*_chord*(1-_taper)*commonFactor);
     _macRootDistance = _netSpan*commonFactor;
-    _macX = _base[0]-Math::tan(_sweep) * _macRootDistance + _mac/2;
+    _macX = _base[0]-Math::tan(_sweepAngleCenterLine) * _macRootDistance + _mac/2;
 }
+
+float Wing::calculateSweepAngleLeadingEdge()
+{
+    if (_length == 0) {
+      return 0;
+    }
+    return Math::atan(
+      (sin(_sweepAngleCenterLine)+(1-_taper)*_chord/(2*_length)) /
+      cos(_sweepAngleCenterLine)
+    );  
+}
+
 
 void Wing::compile()
 {

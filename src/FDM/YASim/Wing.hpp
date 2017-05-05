@@ -31,7 +31,7 @@ public:
     // fraction of chord at wing tip, 0..1
     float getTaper() const { return _taper; };
     // radians
-    float getSweep() const { return _sweep; };
+    float getSweep() const { return _sweepAngleCenterLine; };
     // radians, positive is "up"
     void setDihedral(float dihedral) { _dihedral = dihedral; }
     float getDihedral() const { return _dihedral; };
@@ -96,6 +96,7 @@ private:
     void calculateTip();
     void calculateSpan();
     void calculateMAC();
+    float calculateSweepAngleLeadingEdge();
     void addSurface(Surface* s, float weight, float twist);
     
     struct SurfRec { Surface * surface; float weight; };
@@ -110,9 +111,11 @@ private:
     bool _mirror {false};
     float _base[3] {0,0,0};
     float _chord {0};
+    // length is distance from base to tip, not wing span
     float _length {0};
     float _taper {1};
-    float _sweep {0};
+    // sweep of center line, not leading edge!
+    float _sweepAngleCenterLine {0}; 
     float _dihedral {0};
     
     // calculated from above
