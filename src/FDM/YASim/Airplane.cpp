@@ -1031,9 +1031,12 @@ void Airplane::solveHelicopter()
 
 float Airplane::getCGMAC()
 { 
-    float cg[3];
-    _model.getBody()->getCG(cg);
-    return (_wing->getMACx() - cg[0]) / _wing->getMAC();
+    if (_wing) {
+      float cg[3];
+      _model.getBody()->getCG(cg);
+      return (_wing->getMACx() - cg[0]) / _wing->getMAC();
+    }
+    return 0;
 }
 
 }; // namespace yasim

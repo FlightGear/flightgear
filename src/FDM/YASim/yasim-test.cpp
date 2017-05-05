@@ -245,10 +245,13 @@ int main(int argc, char** argv)
 
     float SI_inertia[9];
     a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
-    float MAC = a->getWing()->getMAC();
-    float MACx = a->getWing()->getMACx();
-    float MACy = a->getWing()->getMACy();
-    
+    float MAC = 0, MACx = 0, MACy = 0;
+    Wing* wing = a->getWing();
+    if (wing) {
+      MAC = a->getWing()->getMAC();
+      MACx = a->getWing()->getMACx();
+      MACy = a->getWing()->getMACy();
+    }
     printf("       Iterations: %d\n", a->getSolutionIterations());
     printf(" Drag Coefficient: %.3f\n", drag);
     printf("       Lift Ratio: %.3f\n", a->getLiftRatio());
@@ -256,9 +259,11 @@ int main(int argc, char** argv)
     printf("   Tail Incidence: %.2f deg\n", tail);
     printf("Approach Elevator: %.3f\n\n", a->getApproachElevator());
     printf("               CG: x:%.3f, y:%.3f, z:%.3f\n", cg[0], cg[1], cg[2]);
-    printf("    Wing MAC (*1): x:%.2f, y:%.2f, length:%.1f \n", MACx, MACy, MAC);
-    printf("    CG-x rel. MAC: %.3f\n", a->getCGMAC());
-    printf("    CG-x  desired: %.3f < %.3f < %.3f \n", a->getCGSoftLimitXMin(), cg[0], a->getCGSoftLimitXMax());
+    if (wing) {
+      printf("    Wing MAC (*1): x:%.2f, y:%.2f, length:%.1f \n", MACx, MACy, MAC);
+      printf("    CG-x rel. MAC: %.3f\n", a->getCGMAC());
+      printf("    CG-x  desired: %.3f < %.3f < %.3f \n", a->getCGSoftLimitXMin(), cg[0], a->getCGSoftLimitXMax());
+    }
     
     printf("\nInertia tensor [kg*m^2], origo at CG:\n\n");
     printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
