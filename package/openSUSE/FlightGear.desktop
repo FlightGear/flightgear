@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=FlightGear
-Comment=FlightGear Flight Simulator
-Exec=fgfs --launcher
-Icon=FlightGear
-Categories=Game;Simulation;
