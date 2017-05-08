@@ -37,6 +37,7 @@
 #include <osg/Version>
 
 #include <osgText/Text>
+#include <osgText/String>
 #include <osgDB/ReadFile>
 
 #include <simgear/compiler.h>
@@ -348,7 +349,7 @@ void SplashScreen::addText(osg::Geode* geode ,
     t->setFont(path.utf8Str());
     t->setColor(textColor);
     t->setFontResolution(64, 64);
-    t->setText(text);
+    t->setText(text, osgText::String::Encoding::ENCODING_UTF8);
     t->setBackdropType(osgText::Text::OUTLINE);
     t->setBackdropColor(osg::Vec4(0.2, 0.2, 0.2, 1));
     t->setBackdropOffset(0.04);
@@ -459,7 +460,9 @@ void SplashScreen::doUpdate()
 
         for (const TextItem& item : _items) {
             if (item.dynamicContent) {
-                item.textNode->setText(item.dynamicContent->getStringValue());
+                item.textNode->setText(
+                  item.dynamicContent->getStringValue(),
+                  osgText::String::Encoding::ENCODING_UTF8);
             }
         }
 
@@ -526,7 +529,8 @@ void SplashScreen::updateText()
         std::string tipText = locale->getLocalizedStringWithIndex("tip", "tips", tipIndex);
 
         // find the item to switch
-        _items.front().textNode->setText(tipText);
+        _items.front().textNode->setText(
+          tipText, osgText::String::Encoding::ENCODING_UTF8);
     }
 }
 
