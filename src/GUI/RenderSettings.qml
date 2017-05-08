@@ -11,12 +11,12 @@ Section {
     Combo {
         id: renderer
         label: "Renderer"
-        choices: ["Default", "Atmospheric Light-Scattering", "Rembrandt"]
+        choices: ["Default", "Atmospheric Light Scattering", "Rembrandt"]
         description: descriptions[selectedIndex]
         defaultIndex: 0
 
         readonly property var descriptions: [
-            "The default renderer provides standard visuals with maximum compatability",
+            "The default renderer provides standard visuals with maximum compatibility.",
             "The ALS renderer uses a sophisticated physical atmospheric model and several " +
             "other effects to give realistic rendering of large distances.",
             "Rembrandt is a configurable multi-pass renderer which supports shadow-maps, cinematic " +

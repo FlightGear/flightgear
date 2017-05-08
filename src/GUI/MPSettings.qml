@@ -9,7 +9,7 @@ Section {
     Checkbox {
         id: enableMP
         label: "Connect to the multi-player network"
-        description: "Flightgear supporters maintain a network of server to enable global multi-user "
+        description: "FlightGear supporters maintain a network of servers to enable global multi-user "
             + "flight. This requires a moderately fast Internet connection to be usable. Your aircraft "
             + "will be visible to other users online, and you will see their aircraft."
         keywords: ["network", "mp", "multiplay","online"]
@@ -18,10 +18,10 @@ Section {
     LineEdit {
         id: callSign
         enabled: enableMP.checked
-        label: "Call-sign"
-        description: "Enter a call-sign you will use online. This is visible to all users and is " +
+        label: "Callsign"
+        description: "Enter a callsign you will use online. This is visible to all users and is " +
                      "how ATC services and other pilots will refer to you. " +
-                     "(Maximum of ten charatcers permitted)"
+                     "(Maximum of ten characters permitted)"
         placeholder: "D-FGFS"
         keywords: ["callsign", "handle", "name"]
     }
