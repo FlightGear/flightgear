@@ -10,6 +10,8 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <GUI/new_gui.hxx>
+#include <GUI/MessageBox.hxx>
+#include <Main/util.hxx>
 
 class PUIFileDialog::PathListener : public SGPropertyChangeListener
 {
@@ -89,5 +91,16 @@ void PUIFileDialog::close()
 
 void PUIFileDialog::pathChanged(const SGPath& aPath)
 {
-    _callback->onFileDialogDone(this, aPath);
+    SGPath validPath;
+    if (_requireSecureFromNasal){
+        validPath = fgValidatePath(aPath, _usage != USE_OPEN_FILE);
+    } else {
+        validPath = aPath;
+    }
+    if (!(aPath.isNull()) && validPath.isNull()){
+        flightgear::modalMessageBox("Nasal security error", "Access denied - try " + globals->get_fg_home().utf8Str() + "/Export");
+        // TODO - can we then re-open the dialog?
+    } else {
+        _callback->onFileDialogDone(this, validPath);
+    }
 }

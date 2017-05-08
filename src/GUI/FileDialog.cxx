@@ -89,6 +89,10 @@ void FGFileDialog::setShowHidden(bool show)
     _showHidden = show;
 }
 
+void FGFileDialog::setRequireSecureFromNasal(bool value)
+{
+    _requireSecureFromNasal = value;
+}
 class NasalCallback : public FGFileDialog::Callback
 {
 public:

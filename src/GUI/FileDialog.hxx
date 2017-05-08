@@ -53,6 +53,17 @@ public:
     void setShowHidden(bool show);
     
     /**
+     * Require that this path be safe to use without further Nasal security checks.
+     *
+     * On implementations that use Nasal/properties internally
+     * (i.e. PUIFileDialog), this does the Nasal security check in
+     * the dialog object, and only calls the callback on allowed paths.
+     *
+     * On other implementations, it has no effect.
+     */
+    void setRequireSecureFromNasal(bool value);
+    
+    /**
      * Destructor.
      */
     virtual ~FGFileDialog ();
@@ -79,6 +90,7 @@ protected:
     string_list _filterPatterns;
     std::string _placeholder;
     bool _showHidden;
+    bool _requireSecureFromNasal = false;
     std::unique_ptr<Callback> _callback;
 };
 
