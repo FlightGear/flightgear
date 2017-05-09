@@ -948,7 +948,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
-    TrafficVectorIterator current, closest;
+    TrafficVectorIterator closest;
     if (! activeTraffic.empty()) {
         //while ((i->getId() != id) && i != activeTraffic.end()) {
         while (i != activeTraffic.end()) {
@@ -958,15 +958,19 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
             i++;
         }
     }
-//    // update position of the current aircraft
+
+    setDt(getDt() + dt);
+
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
         SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
-    } else {
-        i->setPositionAndHeading(lat, lon, heading, speed, alt);
-        current = i;
+               "AI error: updating aircraft without traffic record at " <<
+               SG_ORIGIN);
+        return;
     }
-    setDt(getDt() + dt);
+
+    // Update the position of the current aircraft
+    FGTrafficRecord& current = *i;
+    current.setPositionAndHeading(lat, lon, heading, speed, alt);
 
     // see if we already have a clearance record for the currently active runway
     // NOTE: dd. 2011-08-07: Because the active runway has been constructed in the announcePosition function, we may safely assume that is
@@ -981,7 +985,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     
     rwy = activeRunways.begin();
     while (rwy != activeRunways.end()) {
-        if (rwy->getRunwayName() == current->getRunway()) {
+        if (rwy->getRunwayName() == current.getRunway()) {
             break;
         }
         rwy++;
@@ -989,12 +993,12 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
 
     // only bother running the following code if the current aircraft is the
     // first in line for depature
-    /* if (current->getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
+    /* if (current.getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
         if (rwy->getCleared()) {
             if (id == rwy->getCleared()) {
-                current->setHoldPosition(false);
+                current.setHoldPosition(false);
             } else {
-                current->setHoldPosition(true);
+                current.setHoldPosition(true);
             }
         } else {
             // For now. At later stages, this will probably be the place to check for inbound traffc.
@@ -1006,18 +1010,18 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     if (ac->getTakeOffStatus() == 1) {
         ac->setTakeOffStatus(2);
     }
-    if (current->getAircraft()->getTakeOffStatus() == 2) {
-        current -> setHoldPosition(false);
+    if (current.getAircraft()->getTakeOffStatus() == 2) {
+        current.setHoldPosition(false);
     } else {
-        current->setHoldPosition(true);
+        current.setHoldPosition(true);
     }
     int clearanceId = rwy->getCleared();
     if (clearanceId) {
         if (id == clearanceId) {
-            current->setHoldPosition(false);
+            current.setHoldPosition(false);
         }
     } else {
-        if (current->getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
+        if (current.getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
             rwy->setCleared(id);
             FGAIAircraft *ac = rwy->getFirstOfStatus(1);
             if (ac)
