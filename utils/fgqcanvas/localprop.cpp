@@ -20,6 +20,18 @@
 #include <QJsonValue>
 #include <QDebug>
 
+QDataStream& operator<<(QDataStream& stream, const NameIndexTuple& nameIndex)
+{
+    stream << nameIndex.name << nameIndex.index;
+    return stream;
+}
+
+QDataStream& operator>>(QDataStream& stream, NameIndexTuple& nameIndex)
+{
+    stream >> nameIndex.name >> nameIndex.index;
+    return stream;
+}
+
 LocalProp *LocalProp::getOrCreateWithPath(const QByteArray &path)
 {
     if (path.isEmpty()) {
@@ -119,6 +131,41 @@ void LocalProp::changeValue(const char *path, QVariant value)
     p->valueChanged(value);
 }
 
+void LocalProp::saveToStream(QDataStream &stream) const
+{
+    stream << _id << _position << _value;
+    stream << static_cast<int>(_children.size());
+    for (auto child : _children) {
+        child->saveToStream(stream);
+    }
+}
+
+LocalProp* LocalProp::restoreFromStream(QDataStream &stream, LocalProp* parent)
+{
+    NameIndexTuple id;
+    stream >> id;
+    LocalProp* prop = new LocalProp(parent, id);
+    stream >> prop->_position >> prop->_value;
+    int childCount;
+    stream >> childCount;
+    for (int c=0; c< childCount; ++c) {
+        prop->_children.push_back(restoreFromStream(stream, prop));
+    }
+
+    return prop;
+}
+
+void LocalProp::recursiveNotifyRestored()
+{
+    emit valueChanged(_value);
+    for (auto child : _children) {
+        emit childAdded(child);
+    }
+
+    for (auto child : _children) {
+        child->recursiveNotifyRestored();
+    }
+}
 
 LocalProp *LocalProp::getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni)
 {

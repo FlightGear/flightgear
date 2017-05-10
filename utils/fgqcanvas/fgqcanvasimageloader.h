@@ -50,6 +50,7 @@ signals:
 private:
 
     void onDownloadFinished();
+    void writeToDiskCache(QByteArray imagePath, QNetworkReply *reply);
 
 private:
     QNetworkAccessManager* m_downloader;

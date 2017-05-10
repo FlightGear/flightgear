@@ -22,11 +22,15 @@
 #include <QVariant>
 #include <QVector>
 #include <QObject>
+#include <QDataStream>
 
 struct NameIndexTuple
 {
     QByteArray name;
     unsigned int index = 0;
+
+    NameIndexTuple()
+    {}
 
     NameIndexTuple(const char* nm, unsigned int idx) :
         name(nm),
@@ -66,7 +70,11 @@ struct NameIndexTuple
 
         return name < other.name;
     }
+
 };
+
+QDataStream& operator<<(QDataStream& stream, const NameIndexTuple& nameIndex);
+QDataStream& operator>>(QDataStream& stream, NameIndexTuple& nameIndex);
 
 class LocalProp : public QObject
 {
@@ -126,6 +134,12 @@ public:
     bool hasChild(const char* name) const;
 
     void changeValue(const char* path, QVariant value);
+
+    void saveToStream(QDataStream& stream) const;
+
+    static LocalProp* restoreFromStream(QDataStream& stream, LocalProp *parent);
+
+    void recursiveNotifyRestored();
 signals:
     void valueChanged(QVariant val);
 

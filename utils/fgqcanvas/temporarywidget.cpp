@@ -27,6 +27,9 @@
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QQuickItem>
+#include <QAction>
+#include <QFileDialog>
 
 #include "fgqcanvasfontcache.h"
 #include "fgqcanvasimageloader.h"
@@ -49,6 +52,16 @@ TemporaryWidget::TemporaryWidget(QWidget *parent) :
     connect(ui->canvasSelectCombo, SIGNAL(activated(int)),
             this, SLOT(onCanvasSelected(int)));
     ui->canvasSelectCombo->hide();
+
+    QAction* saveTreeAction = new QAction("Save", this);
+    saveTreeAction->setShortcut(Qt::CTRL | Qt::Key_S);
+    connect(saveTreeAction, &QAction::triggered, this, &TemporaryWidget::onSave);
+    addAction(saveTreeAction);
+
+    QAction* openSnapshotAction = new QAction("Open snapshot", this);
+    openSnapshotAction->setShortcut(Qt::CTRL | Qt::Key_O);
+    connect(openSnapshotAction, &QAction::triggered, this, &TemporaryWidget::onLoadSnapshot);
+    addAction(openSnapshotAction);
 }
 
 TemporaryWidget::~TemporaryWidget()
@@ -117,13 +130,59 @@ void TemporaryWidget::onFinishedGetCanvasList()
     }
 }
 
-void TemporaryWidget::onWebSocketConnected()
+void TemporaryWidget::onSave()
 {
-    connect(&m_webSocket, &QWebSocket::textMessageReceived,
-            this, &TemporaryWidget::onTextMessageReceived);
+    qDebug() << "should save";
+    if (!m_localPropertyRoot) {
+        return;
+    }
 
-    m_localPropertyRoot = new LocalProp(nullptr, NameIndexTuple(""));
+    QString path = QFileDialog::getSaveFileName(this, tr("Choose name to save"));
+    if (path.isEmpty()) {
+        return;
+    }
 
+    QFile f(path);
+    f.open(QIODevice::ReadWrite);
+
+    {
+        QDataStream ds(&f);
+        m_localPropertyRoot->saveToStream(ds);
+    }
+
+    f.close();
+}
+
+void TemporaryWidget::onLoadSnapshot()
+{
+    qDebug() << "should load";
+
+    QString path = QFileDialog::getOpenFileName(this, tr("Select a saved snapshot"));
+    if (path.isEmpty()) {
+        return;
+    }
+
+    QFile f(path);
+    f.open(QIODevice::ReadOnly);
+
+    {
+        QDataStream ds(&f);
+        m_localPropertyRoot = LocalProp::restoreFromStream(ds, nullptr);
+
+        createdRootProperty();
+
+        m_localPropertyRoot->recursiveNotifyRestored();
+
+        // this is needed for either QtQuick or QPainter drawing
+        ui->canvas->rootElement()->update();
+
+        // this is the widget re-draw request (QtQuick draws all the time)
+        ui->canvas->update();
+    }
+}
+
+void TemporaryWidget::createdRootProperty()
+{
     ui->canvas->setRootProperty(m_localPropertyRoot);
     ui->stack->setCurrentIndex(1);
 
@@ -136,6 +195,16 @@ void TemporaryWidget::onWebSocketConnected()
     ui->elementData->setModel(m_elementModel);
 
     connect(ui->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, &TemporaryWidget::onTreeCurrentChanged);
+}
+
+void TemporaryWidget::onWebSocketConnected()
+{
+    connect(&m_webSocket, &QWebSocket::textMessageReceived,
+            this, &TemporaryWidget::onTextMessageReceived);
+
+    m_localPropertyRoot = new LocalProp(nullptr, NameIndexTuple(""));
+
+    createdRootProperty();
 
     FGQCanvasFontCache::instance()->setHost(ui->hostName->text(),
                                             ui->portEdit->text().toInt());

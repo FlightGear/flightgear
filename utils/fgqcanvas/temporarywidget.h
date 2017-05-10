@@ -52,11 +52,16 @@ private Q_SLOTS:
     void onCanvasSelected(int index);
 
     void onFinishedGetCanvasList();
+
+    void onSave();
+    void onLoadSnapshot();
 private:
     void saveSettings();
     void restoreSettings();
 
     LocalProp* propertyFromPath(QByteArray path) const;
+
+    void createdRootProperty();
 
     QNetworkAccessManager* m_netAccess;
     QWebSocket m_webSocket;

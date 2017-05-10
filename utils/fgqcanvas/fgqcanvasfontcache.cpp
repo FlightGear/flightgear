@@ -137,8 +137,8 @@ void FGQCanvasFontCache::lookupFile(QByteArray name)
     reply->setProperty("font", name);
 
     connect(reply, &QNetworkReply::finished, this, &FGQCanvasFontCache::onFontDownloadFinished);
-    // connect(reply, &QNetworkReply::error, this, &FGQCanvasFontCache::onFontDownloadError);
-
+    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),
+            this, SLOT(onFontDownloadError(QNetworkReply::NetworkError)));
     m_transfers.append(reply);
 }
 

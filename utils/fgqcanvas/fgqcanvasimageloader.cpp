@@ -19,6 +19,10 @@
 
 #include <QDebug>
 #include <QNetworkAccessManager>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 
 class TransferSignalHolder : public QObject
 {
@@ -43,8 +47,11 @@ void FGQCanvasImageLoader::onDownloadFinished()
     if (!pm.loadFromData(reply->readAll())) {
         qWarning() << "image loading failed";
     } else {
-        qDebug() << "did download:" << reply->property("image").toByteArray();
-        m_cache.insert(reply->property("image").toByteArray(), pm);
+        QByteArray imagePath = reply->property("image").toByteArray();
+        m_cache.insert(imagePath, pm);
+
+        // cache on disk also, so snapshots work
+        writeToDiskCache(imagePath, reply);
 
         TransferSignalHolder* signalHolder = reply->findChild<TransferSignalHolder*>("holder");
         if (signalHolder) {
@@ -55,6 +62,23 @@ void FGQCanvasImageLoader::onDownloadFinished()
 
     m_transfers.removeOne(reply);
     reply->deleteLater();
+}
+
+void FGQCanvasImageLoader::writeToDiskCache(QByteArray imagePath, QNetworkReply* reply)
+{
+    QDir cacheDir(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    QString absPath = cacheDir.absoluteFilePath(imagePath);
+
+    QFileInfo finfo(imagePath);
+    cacheDir.mkpath(finfo.dir().path());
+
+    QFile f(absPath);
+    if (!f.open(QIODevice::WriteOnly)) {
+        qWarning() << "failed to open cache file" << f.fileName();
+    }
+
+    f.write(reply->readAll());
+    f.close();
 }
 
 void FGQCanvasImageLoader::setHost(QString hostName, int portNumber)
@@ -70,6 +94,15 @@ QPixmap FGQCanvasImageLoader::getImage(const QByteArray &imagePath)
         return m_cache.value(imagePath);
     }
 
+    QString diskCachePath = QStandardPaths::locate(QStandardPaths::CacheLocation, imagePath);
+    if (!diskCachePath.isEmpty()) {
+        QPixmap pix;
+        pix.load(diskCachePath);
+        m_cache.insert(imagePath, pix);
+        qDebug() << "loaded from on-disk cache:" << imagePath;
+        return pix;
+    }
+
     QUrl url;
     url.setScheme("http");
     url.setHost(m_hostName);
@@ -82,7 +115,6 @@ QPixmap FGQCanvasImageLoader::getImage(const QByteArray &imagePath)
         }
     }
 
-    qDebug() << "requesting image" << url;
     QNetworkReply* reply = m_downloader->get(QNetworkRequest(url));
     reply->setProperty("image", imagePath);
 
