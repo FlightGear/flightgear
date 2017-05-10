@@ -168,7 +168,7 @@ void Model::iterate()
 void Model::setState(State* s)
 {
     _integrator.setState(s);
-    _s = s;
+    _s = _integrator.getState();
 }
 
 
