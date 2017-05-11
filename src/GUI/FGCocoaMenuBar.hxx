@@ -55,6 +55,14 @@ public:
    * Test whether the menu bar is visible.
    */
   virtual bool isVisible () const;
+    
+    /**
+     * This is a no-op on Cocoa - the menubar doesn't overlap the window
+     * when its drawn.
+     */
+    void setHideIfOverlapsWindow(bool hide) override;
+    
+    bool getHideIfOverlapsWindow() const override;
   
   class CocoaMenuBarPrivate;
 private:

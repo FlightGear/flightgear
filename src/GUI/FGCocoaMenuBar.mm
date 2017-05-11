@@ -9,6 +9,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/sg_inlines.h>
 
 #include <Main/fg_props.hxx>
 #include <GUI/CocoaHelpers_private.h>
@@ -323,5 +324,16 @@ void FGCocoaMenuBar::show()
 void FGCocoaMenuBar::hide()
 {
   // no-op
+}
+
+void FGCocoaMenuBar::setHideIfOverlapsWindow(bool hide)
+{
+    SG_UNUSED(hide);
+    // no-op
+}
+
+bool FGCocoaMenuBar::getHideIfOverlapsWindow() const
+{
+    return false;
 }
 

@@ -468,6 +468,11 @@ FGRenderer::preinit( void )
     _updateVisitor->setFrameStamp(_frameStamp.get());
     viewer->setUpdateVisitor(_updateVisitor.get());
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
+    
+    // hide the menubar if it overlaps the window, so the splash screen
+    // is completely visible. We reset this value when the splash screen
+    // is fading out.
+    fgSetBool("/sim/menubar/overlap-hide", true);
 }
 
 class ShadowMapSizeListener : public SGPropertyChangeListener {
@@ -1594,6 +1599,7 @@ FGRenderer::update( ) {
         _splash_alpha->setDoubleValue((sAlpha < 0) ? 0.0 : sAlpha);
 
         syncPausePopupState();
+        fgSetBool("/sim/menubar/overlap-hide", false);
     }
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));

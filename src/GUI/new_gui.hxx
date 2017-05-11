@@ -201,6 +201,8 @@ protected:
      */
     virtual void reset (bool reload);
 
+    bool getMenuBarOverlapHide() const;
+    void setMenuBarOverlapHide(bool hide);
 private:
     void createMenuBarImplementation();
     

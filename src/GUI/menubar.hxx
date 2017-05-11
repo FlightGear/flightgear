@@ -49,6 +49,19 @@ public:
     virtual bool isVisible () const = 0;
 
     /**
+     * Request the menubar to be hidden if its display overlays the main window content.
+     * (Which essentially means the PUI menubar at the moment). This is used to prevent
+     * the menubar overlapping the splash-screen during startup.
+     *
+     * The state of this flag is independant of the normal menubar visibility, i.e this
+     * flag and the normal visibility and AND-ed together inside the code.
+     */
+    virtual void setHideIfOverlapsWindow(bool hide) = 0;
+    
+    // corresponding getter to valye able.
+    virtual bool getHideIfOverlapsWindow() const = 0;
+    
+    /**
      * Read a menu label from the menu's property tree.
      * Take care of mapping it to the appropriate translation, if available.
      * Returns an UTF-8 encoded string.

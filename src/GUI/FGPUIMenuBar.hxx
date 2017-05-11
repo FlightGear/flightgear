@@ -69,7 +69,10 @@ public:
      */
     virtual bool isVisible () const;
 
+    void setHideIfOverlapsWindow(bool hide) override;
 
+    bool getHideIfOverlapsWindow() const override;
+    
     /**
      * IGNORE THIS METHOD!!!
      *
@@ -113,9 +116,12 @@ private:
     // Add <enabled> listener that enables/disables menu entries.
     void add_enabled_listener(SGPropertyNode * node);
 
+    void recomputeVisibility();
+    
     // Is the menu visible?
     bool _visible;
-
+    bool _hideOverlapping = false;
+    
     // The top-level menubar itself.
     puMenuBar * _menuBar;
 

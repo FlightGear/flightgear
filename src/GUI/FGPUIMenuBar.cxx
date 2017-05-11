@@ -111,23 +111,47 @@ FGPUIMenuBar::init ()
 void
 FGPUIMenuBar::show ()
 {
-    if (_menuBar != 0)
-        _menuBar->reveal();
     _visible = true;
+    recomputeVisibility();
 }
 
 void
 FGPUIMenuBar::hide ()
 {
-    if (_menuBar != 0)
-        _menuBar->hide();
     _visible = false;
+    recomputeVisibility();
 }
 
 bool
 FGPUIMenuBar::isVisible () const
 {
     return _visible;
+}
+
+void
+FGPUIMenuBar::setHideIfOverlapsWindow(bool hide)
+{
+    _hideOverlapping = hide;
+    recomputeVisibility();
+}
+
+bool
+FGPUIMenuBar::getHideIfOverlapsWindow() const
+{
+    return _hideOverlapping;
+}
+
+void
+FGPUIMenuBar::recomputeVisibility()
+{
+    if (_menuBar) {
+        const bool actualVis = _visible && (!_hideOverlapping);
+        if (actualVis) {
+            _menuBar->reveal();
+        } else {
+            _menuBar->hide();
+        }
+    }
 }
 
 void

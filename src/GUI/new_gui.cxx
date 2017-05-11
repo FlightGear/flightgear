@@ -71,6 +71,9 @@ NewGUI::init ()
     fgTie("/sim/menubar/visibility", this,
           &NewGUI::getMenuBarVisible, &NewGUI::setMenuBarVisible);
     
+    fgTie("/sim/menubar/overlap-hide", this,
+          &NewGUI::getMenuBarOverlapHide, &NewGUI::setMenuBarOverlapHide);
+
     setStyle();
     SGPath p(globals->get_fg_root(), "gui/dialogs");
     readDir(p);
@@ -303,6 +306,18 @@ NewGUI::setMenuBarVisible (bool visible)
         _menubar->show();
     else
         _menubar->hide();
+}
+
+bool
+NewGUI::getMenuBarOverlapHide() const
+{
+    return _menubar->getHideIfOverlapsWindow();
+}
+
+void
+NewGUI::setMenuBarOverlapHide(bool hide)
+{
+    _menubar->setHideIfOverlapsWindow(hide);
 }
 
 void
