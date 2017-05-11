@@ -1,9 +1,24 @@
 [Desktop Entry]
+Version=1.1
 Name=FlightGear
 GenericName=Flight Simulator
-Comment=An Open Source Flight Simulator
-Exec=fgfs --launcher --geometry=1024x768
+Comment=Practice flight training (airplanes, helicopters...)
+Comment[de]=Fliegen üben (Flugzeuge, Helikopter...)
+Comment[fr]=S’entraîner au pilotage (avions, hélicoptères...)
+Comment[it]=Addestrati al volo (aerei, elicotteri...)
+Comment[nl]=Beoefen Vlieglessen (vliegtuigen, helikopters...)
+Comment[pt]=Treinar pilotagem
+Comment[ro]=Exersarea pilotajului (avioane, elicoptere...)
+Exec=fgfs --launcher
 Icon=flightgear
 Terminal=false
 Type=Application
-Categories=Game;Simulation;
+Categories=Game;Simulation
+Keywords=aviation;pilot;piloting;aeronautics;simulation;aircraft;airplane;seaplane;sailplane;glider;helicopter;airship;gas balloon;parachute;paraglider;hang-glider;spacecraft;rocket;space shuttle
+Keywords[de]=Simulation;Luftfahrzeug;Flugzeug;Wasserflugzeug;Segelflugzeug;Gleiter;Helikopter;Luftschiff;Gasballon;Heißluftballon;Fallschirm;Gleitschirm;Hängegleiter;Raumfahrzeug;Rakete;Space Shuttle
+Keywords[fr]=aviation;vol;pilote;pilotage;simulation;simulateur;aéronautique;aéronef;avion;hydravion;planeur;hélicoptère;ballon dirigeable;montgolfière;parachute;parapente;deltaplane;véhicule spatial;fusée;navette spatiale
+Keywords[it]=simulazione;aeromobile;aereo;idrovolante;aliante;elicottero;dirigibile;mongolfiera;paracadute;parapendio;deltaplano;astronave;razzo;space shuttle
+Keywords[nl]=simulatie;luchtvaartuig;vliegtuig;watervliegtuig;zweefvliegtuig;helikopter;luchtschip;luchtballon;valscherm;glijscherm;deltavlieger;ruimteschip;raket;ruimteveer
+Keywords[pt]=simulação;aeronave;avião;helicóptero;dirigível;balão;paraquedas;parapente;asa-delta;espaçonave;foguete;vaivém espacial
+Keywords[pt_BR]=simulação;aeronave;avião;helicóptero;dirigível;balão;paraquedas;parapente;asa-delta;espaçonave;foguete;ônibus espacial
+Keywords[ro]=simulator;aeronavă;avion;aeroplan;hidroavion;elicopter;dirijabil;balon;parașută;parapantă;planor;deltaplan;navă spațială;rachetă;naveta spațială
