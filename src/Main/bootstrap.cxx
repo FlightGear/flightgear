@@ -183,8 +183,7 @@ void segfault_handler(int signo) {
     free(list);
   }
 
-  signal(signo, SIG_DFL);
-  kill(getpid(), signo);
+  std::abort();
 }
 #endif
 
