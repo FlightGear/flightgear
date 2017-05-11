@@ -876,14 +876,18 @@ bool geodFromHash(naRef ref, SGGeod& result)
   if (hashIsCoord(ref)) {
     naRef lat = naHash_cget(ref, (char*) "_lat");
     naRef lon = naHash_cget(ref, (char*) "_lon");
-    if (naIsNum(lat) && naIsNum(lon)) {
-      result = SGGeod::fromRad(naNumValue(lon).num, naNumValue(lat).num);
-      return true;
+    naRef alt_feet = naHash_cget(ref, (char*) "_alt");
+    if (naIsNum(lat) && naIsNum(lon) && naIsNil(alt_feet)) {
+        result = SGGeod::fromRad(naNumValue(lon).num, naNumValue(lat).num);
+        return true;
+    }
+    if (naIsNum(lat) && naIsNum(lon) && naIsNum(alt_feet)) {
+        result = SGGeod::fromRadFt(naNumValue(lon).num, naNumValue(lat).num, naNumValue(alt_feet).num);
+        return true;
     }
   }
-    
 // check for any synonyms?
-    // latitude + longitude?
+  // latitude + longitude?
   
   return false;
 }
@@ -941,6 +945,23 @@ static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
   return 0;
 }
 
+bool vec3dFromHash(naRef ref, SGVec3d& result)
+{
+    if (!naIsHash(ref)) {
+        return false;
+    }
+
+    // check for manual latitude / longitude names
+    naRef x = naHash_cget(ref, (char*) "x");
+    naRef y = naHash_cget(ref, (char*) "y");
+    naRef z = naHash_cget(ref, (char*) "z");
+    if (naIsNum(x) && naIsNum(y) && naIsNum(z)) {
+        result = SGVec3d(naNumValue(x).num, naNumValue(y).num, naNumValue(z).num);
+        return true;
+    }
+    return false;
+}
+
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
 {
@@ -972,6 +993,104 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
   naVec_append(vec, naNum(xyz[1]));
   naVec_append(vec, naNum(xyz[2]));
   return vec;
+}
+
+/**
+* @name    f_get_cart_ground_intersection
+* @brief   Returns where the given position in the specified direction will intersect with the ground
+*
+* Exposes the built in function to Nasal to allow a craft to ascertain
+* whether or not a certain position and direction pair intersect with
+* the ground.
+* 
+* Useful for radars, terrain avoidance (GPWS), etc.
+*
+* @param [in] vec3d(x,y,z) position
+* @param [in] vec3d(x,y,z) direction
+*
+* @retval geod hash (lat:rad,lon:rad,elevation:Meters) intersection
+* @retval nil  no intersection found.
+*
+* Example Usage:
+* @code
+*     var end = geo.Coord.new(start);
+*     end.apply_course_distance(heading, speed_horz_fps*FT2M);
+*     end.set_alt(end.alt() - speed_down_fps*FT2M);
+*
+*     var dir_x = end.x() - start.x();
+*     var dir_y = end.y() - start.y();
+*     var dir_z = end.z() - start.z();
+*     var xyz = { "x":start.x(),  "y" : start.y(),  "z" : start.z() };
+*     var dir = { "x":dir_x,      "y" : dir_y,      "z" : dir_z };
+*
+*     var geod = get_cart_ground_intersection(xyz, dir);
+*     if (geod != nil) {
+*         end.set_latlon(geod.lat, geod.lon, geod.elevation);
+          var dist = start.direct_distance_to(end)*M2FT;
+*         var time = dist / speed_fps;
+*         setprop("/sim/model/radar/time-until-impact", time);
+*     }
+* @endcode
+*/
+static naRef f_get_cart_ground_intersection(naContext c, naRef me, int argc, naRef* args)
+{
+	SGVec3d dir;
+	SGVec3d pos;
+
+	if (argc != 2)
+		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects 2 arguments");
+
+	if (!vec3dFromHash(args[0], pos))
+		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position:hash{x,y,z}, direction:hash{x,y,z}) expects argument(0) to be hash of position containing x,y,z");
+
+	if (!vec3dFromHash(args[1], dir))
+		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects argument(1) to be hash of direction containing x,y,z");
+
+	SGVec3d nearestHit;
+	if (!globals->get_scenery()->get_cart_ground_intersection(pos, dir, nearestHit))
+		return naNil();
+
+	const SGGeod geodHit = SGGeod::fromCart(nearestHit);
+
+	// build a hash for returned intersection
+	naRef intersection_h = naNewHash(c);
+	hashset(c, intersection_h, "lat", naNum(geodHit.getLatitudeDeg()));
+	hashset(c, intersection_h, "lon", naNum(geodHit.getLongitudeDeg()));
+	hashset(c, intersection_h, "elevation", naNum(geodHit.getElevationM()));
+	return intersection_h;
+}
+
+// convert from aircraft reference frame to global (ECEF) cartesian
+static naRef f_aircraftToCart(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc != 1)
+        naRuntimeError(c, "hash{x,y,z} aircraftToCart(position: hash{x,y,z}) expects one argument");
+
+    SGVec3d offset;
+    if (!vec3dFromHash(args[0], offset))
+        naRuntimeError(c, "aircraftToCart expects argument(0) to be a hash containing x,y,z");
+
+    double heading, pitch, roll;
+    globals->get_aircraft_orientation(heading, pitch, roll);
+
+    // Transform that one to the horizontal local coordinate system.
+    SGQuatd hlTrans = SGQuatd::fromLonLat(globals->get_aircraft_position());
+
+    // post-rotate the orientation of the aircraft wrt the horizontal local frame
+    hlTrans *= SGQuatd::fromYawPitchRollDeg(heading, pitch, roll);
+
+    // The offset converted to the usual body fixed coordinate system
+    // rotated to the earth fiexed coordinates axis
+    offset = hlTrans.backTransform(offset);
+
+    SGVec3d v = globals->get_aircraft_position_cart() + offset;
+
+    // build a hash for returned location
+    naRef pos_h = naNewHash(c);
+    hashset(c, pos_h, "x", naNum(v.x()));
+    hashset(c, pos_h, "y", naNum(v.y()));
+    hashset(c, pos_h, "z", naNum(v.z()));
+    return pos_h;
 }
 
 // For given geodetic point return array with elevation, and a material data
@@ -2508,6 +2627,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "carttogeod", f_carttogeod },
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
+  { "get_cart_ground_intersection", f_get_cart_ground_intersection },
+  { "aircraftToCart", f_aircraftToCart },
   { "airportinfo", f_airportinfo },
   { "findAirportsWithinRange", f_findAirportsWithinRange },
   { "findAirportsByICAO", f_findAirportsByICAO },
