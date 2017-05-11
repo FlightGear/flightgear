@@ -28,6 +28,8 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include <Navaids/FlightPlan.hxx>
+#include <memory> // std::unique_ptr
+#include <GUI/FileDialog.hxx>
 
 // forward decls
 class SGPath;
@@ -163,12 +165,13 @@ private:
     private:
         FGRouteMgr *mgr;
     };
-
+    
     SGPropertyNode_ptr input;
     SGPropertyNode_ptr weightOnWheels;
     SGPropertyNode_ptr groundSpeed;
   
     InputListener *listener;
+    std::shared_ptr<FGFileDialog> fileDialog;
     SGPropertyNode_ptr mirror;    
   
     /**

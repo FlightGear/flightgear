@@ -8,6 +8,7 @@
 #include <Main/options.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <GUI/MessageBox.hxx>
+#include <GUI/FileDialog.hxx>
 #include <AIModel/AIAircraft.hxx>
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/GroundController.hxx>
@@ -79,6 +80,31 @@ void fgOSExit(int code)
 void postinitNasalGUI(naRef globals, naContext c)
 {
 
+}
+void FGFileDialog::setRequireSecureFromNasal(bool value)
+{
+
+}
+
+void FGFileDialog::setTitle(const std::string& aTitle)
+{
+
+}
+void FGFileDialog::setShowHidden(bool show)
+{
+
+}
+void FGFileDialog::setButton(const std::string& aText)
+{
+
+}
+void FGFileDialog::setDirectory(const SGPath& aPath)
+{
+
+}
+std::shared_ptr<FGFileDialog> FGFileDialog::createFileDialog(FGFileDialog::Usage usage)
+{
+    return std::shared_ptr<FGFileDialog>();
 }
 
 void syncPausePopupState()

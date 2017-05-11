@@ -57,6 +57,7 @@
 #include <GUI/dialog.hxx>
 #include <Main/util.hxx>        // fgValidatePath()
 #include <GUI/MessageBox.hxx>
+#include <GUI/FileDialog.hxx>
 
 #define RM "/autopilot/route-manager/"
 
@@ -703,6 +704,35 @@ void FGRouteMgr::update_mirror()
   totalDistance->setDoubleValue(_plan->totalDistanceNm());
 }
 
+class LoadRouteCallback: public FGFileDialog::Callback {
+    public:
+        LoadRouteCallback(FGRouteMgr *m, SGCommandMgr* c) : mgr(m), cmdMgr(c) {}
+        virtual void onFileDialogDone(FGFileDialog* ins, const SGPath& result) {
+            mgr->loadRoute(result);
+            SGPropertyNode n;
+            n.getNode("dialog-name", true)->setStringValue("route-manager");
+            cmdMgr->execute("dialog-update", &n);
+        }
+    private:
+        FGRouteMgr *mgr;
+        SGCommandMgr* cmdMgr;
+};
+class SaveRouteCallback: public FGFileDialog::Callback {
+    public:
+        SaveRouteCallback(FGRouteMgr *m, SGCommandMgr* c) : mgr(m), cmdMgr(c) {}
+        virtual void onFileDialogDone(FGFileDialog* ins, const SGPath& result) {
+            mgr->saveRoute(result);
+            SGPropertyNode n;
+            n.getNode("dialog-name", true)->setStringValue("route-manager");
+            cmdMgr->execute("dialog-update", &n);
+        }
+    private:
+        FGRouteMgr *mgr;
+        SGCommandMgr* cmdMgr;
+};
+
+
+
 // command interface /autopilot/route-manager/input:
 //
 //   @CLEAR             ... clear route
@@ -724,23 +754,61 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
         mgr->activate();
     else if (!strcmp(s, "@LOAD")) {
       SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
-      mgr->loadRoute(path);
+      if (path.isNull()) {
+        mgr->fileDialog.reset(); // close any existing dialog before opening the new one
+        mgr->fileDialog=FGFileDialog::createFileDialog(FGFileDialog::USE_OPEN_FILE);
+        mgr->fileDialog->setRequireSecureFromNasal(true);
+        mgr->fileDialog->setCallback(new LoadRouteCallback(mgr, globals->get_commands()));
+        mgr->fileDialog->setTitle("Load flight-plan");
+        mgr->fileDialog->setButton("Load");
+        mgr->fileDialog->setShowHidden(true);
+        mgr->fileDialog->setDirectory(globals->get_fg_home() / "Export");
+        mgr->fileDialog->exec();
+      } else {
+        SGPath authorizedPath = fgValidatePath(path, false /* read */);
+
+        if (!authorizedPath.isNull()) {
+          mgr->loadRoute(authorizedPath);
+        } else {
+          std::string msg =
+            "The route manager was asked to load the flightplan '" +
+            path.utf8Str() + "', but this path is not authorized for reading. " +
+            "Please choose another location, for instance in the $FG_HOME/Export "
+            "folder (" + (globals->get_fg_home() / "Export").utf8Str() + ").";
+
+          SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
+          modalMessageBox("FlightGear", "Unable to read the specified file",
+                        msg);
+        }
+      }
     } else if (!strcmp(s, "@SAVE")) {
       SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
-      SGPath authorizedPath = fgValidatePath(path, true /* write */);
-
-      if (!authorizedPath.isNull()) {
-        mgr->saveRoute(authorizedPath);
+      if (path.isNull()) {
+        mgr->fileDialog.reset(); // close any existing dialog before opening the new one
+        mgr->fileDialog=FGFileDialog::createFileDialog(FGFileDialog::USE_SAVE_FILE);
+        mgr->fileDialog->setRequireSecureFromNasal(true);
+        mgr->fileDialog->setCallback(new SaveRouteCallback(mgr, globals->get_commands()));
+        mgr->fileDialog->setTitle("Save flight-plan");
+        mgr->fileDialog->setButton("Save");
+        mgr->fileDialog->setShowHidden(true);
+        mgr->fileDialog->setDirectory(globals->get_fg_home() / "Export");
+        mgr->fileDialog->exec();
       } else {
-        std::string msg =
-          "The route manager was asked to write the flightplan to '" +
-          path.utf8Str() + "', but this path is not authorized for writing. " +
-          "Please choose another location, for instance in the $FG_HOME/Export "
-          "folder (" + (globals->get_fg_home() / "Export").utf8Str() + ").";
+        SGPath authorizedPath = fgValidatePath(path, true /* write */);
 
-        SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
-        modalMessageBox("FlightGear", "Unable to write to the specified file",
-                        msg);
+        if (!authorizedPath.isNull()) {
+          mgr->saveRoute(authorizedPath);
+        } else {
+          std::string msg =
+            "The route manager was asked to write the flightplan to '" +
+            path.utf8Str() + "', but this path is not authorized for writing. " +
+            "Please choose another location, for instance in the $FG_HOME/Export "
+           "folder (" + (globals->get_fg_home() / "Export").utf8Str() + ").";
+
+          SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
+          modalMessageBox("FlightGear", "Unable to write to the specified file",
+                          msg);
+        }
       }
     } else if (!strcmp(s, "@NEXT")) {
       mgr->jumpToIndex(mgr->currentIndex() + 1);
