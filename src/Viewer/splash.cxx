@@ -218,13 +218,13 @@ void SplashScreen::createNodes()
     _splashQuadCamera->setAllowEventFocus(false);
     _splashQuadCamera->setCullingActive(false);
     _splashQuadCamera->setRenderOrder(osg::Camera::POST_RENDER, 20000);
-
+    
     stateSet = _splashQuadCamera->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setAttribute(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), osg::StateAttribute::ON);
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     stateSet->setRenderBinDetails(1, "RenderBin");
-
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
     geometry = new osg::Geometry;
     geometry->setSupportsDisplayList(false);
 
