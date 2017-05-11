@@ -22,6 +22,8 @@ public:
         USE_CHOOSE_DIR
     } Usage;
     
+    static std::shared_ptr<FGFileDialog> createFileDialog(FGFileDialog::Usage usage);
+    
     std::string getTitle() const
     { return _title; }
     

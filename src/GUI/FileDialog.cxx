@@ -142,6 +142,22 @@ typedef boost::shared_ptr<FGFileDialog> FileDialogPtr;
 typedef nasal::Ghost<FileDialogPtr> NasalFileDialog;
 
 /**
+ * Create new FGFileDialog from C++.
+ */
+std::shared_ptr<FGFileDialog> FGFileDialog::createFileDialog(FGFileDialog::Usage usage)
+{
+#if defined(SG_MAC)
+    std::shared_ptr<FGFileDialog> fd(new CocoaFileDialog(usage));
+#elif defined(SG_WINDOWS)
+    std::shared_ptr<FGFileDialog> fd(new WindowsFileDialog(usage));
+#elif defined(HAVE_QT)
+    std::shared_ptr<FGFileDialog> fd(new QtFileDialog(usage));
+#else
+    std::shared_ptr<FGFileDialog> fd(new PUIFileDialog(usage));
+#endif
+    return fd;
+}
+/**
  * Create new FGFileDialog and get ghost for it.
  */
 static naRef f_createFileDialog(const nasal::CallContext& ctx)
@@ -150,12 +166,14 @@ static naRef f_createFileDialog(const nasal::CallContext& ctx)
 
 #if defined(SG_MAC)
     FileDialogPtr fd(new CocoaFileDialog(usage));
+#elif defined(SG_WINDOWS)
+    FileDialogPtr fd(new WindowsFileDialog(usage));
 #elif defined(HAVE_QT)
     FileDialogPtr fd(new QtFileDialog(usage));
 #else
     FileDialogPtr fd(new PUIFileDialog(usage));
 #endif
-
+    // FileDialogPtr fd = FGFileDialog::createFileDialog(usage); doesn't work - Ghost needs a boost::shared_ptr, not a std::shared_ptr
     return ctx.to_nasal(fd);
 }
 
