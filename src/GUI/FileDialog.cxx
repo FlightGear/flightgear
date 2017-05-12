@@ -148,8 +148,6 @@ std::shared_ptr<FGFileDialog> FGFileDialog::createFileDialog(FGFileDialog::Usage
 {
 #if defined(SG_MAC)
     std::shared_ptr<FGFileDialog> fd(new CocoaFileDialog(usage));
-#elif defined(SG_WINDOWS)
-    std::shared_ptr<FGFileDialog> fd(new WindowsFileDialog(usage));
 #elif defined(HAVE_QT)
     std::shared_ptr<FGFileDialog> fd(new QtFileDialog(usage));
 #else
@@ -166,8 +164,6 @@ static naRef f_createFileDialog(const nasal::CallContext& ctx)
 
 #if defined(SG_MAC)
     FileDialogPtr fd(new CocoaFileDialog(usage));
-#elif defined(SG_WINDOWS)
-    FileDialogPtr fd(new WindowsFileDialog(usage));
 #elif defined(HAVE_QT)
     FileDialogPtr fd(new QtFileDialog(usage));
 #else
