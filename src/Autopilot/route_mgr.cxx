@@ -75,7 +75,24 @@ static bool commandSaveFlightPlan(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   SGPath path(arg->getStringValue("path"));
-  return self->saveRoute(path);
+  const std::string authorizedPath = fgValidatePath(path,
+                                                    true /* write */);
+
+  if (!authorizedPath.empty()) {
+    return self->saveRoute(SGPath(authorizedPath));
+  } else {
+    const SGPath proposedPath = SGPath(globals->get_fg_home()) / "Export";
+    std::string msg =
+      "The route manager was asked to write the flightplan to '" +
+      path.str() + "', but this path is not authorized for writing. " +
+      "Please choose another location, for instance in the $FG_HOME/Export "
+      "folder (" + proposedPath.str() + ").";
+
+    SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
+    modalMessageBox("FlightGear", "Unable to write to the specified file",
+                    msg);
+    return false;
+  }
 }
 
 static bool commandActivateFlightPlan(const SGPropertyNode* arg)
