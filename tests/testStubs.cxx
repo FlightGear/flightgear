@@ -104,6 +104,14 @@ bool FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
     return false;
 }
 
+bool FGScenery::get_cart_ground_intersection(const SGVec3d& start, const SGVec3d& dir,
+                     SGVec3d& nearestHit,
+                     const osg::Node* butNotFrom)
+{
+    return false;
+}
+
+
 namespace flightgear
 {
   MessageBoxResult modalMessageBox(const std::string& caption,
