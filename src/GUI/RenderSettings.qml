@@ -30,7 +30,7 @@ Section {
     Combo {
         id: msaa
         label: "Anti-aliasing"
-        description: "Anti-aliasing improves the appearance of high-contrast edges and lines." +
+        description: "Anti-aliasing improves the appearance of high-contrast edges and lines. " +
             "This is especially noticeable on sloping or diagonal edges. " +
             "Higher settings can reduce performance."
         keywords: ["msaa", "anti", "aliasing", "multi", "sample"]
