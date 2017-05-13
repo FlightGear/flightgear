@@ -31,8 +31,8 @@ Section {
         id: msaa
         label: "Anti-aliasing"
         description: "Anti-aliasing improves the appearance of high-contrast edges and lines." +
-        "This is especially noticeable on sloping or diagonal egdes. " +
-        "Higher settings can reduce performance."
+            "This is especially noticeable on sloping or diagonal edges. " +
+            "Higher settings can reduce performance."
         keywords: ["msaa", "anti", "aliasing", "multi", "sample"]
         choices: ["Off", "2x", "4x"]
         enabled: !rembrandt

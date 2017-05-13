@@ -20,7 +20,7 @@ Section {
         id: downloadDir
         label: "Download location"
         description: "FlightGear stores downloaded files (scenery and aircraft) in this location. "
-         + "Depending on your settings, it may grow to a considerable size (many gigabytes)."
+         + "Depending on your settings, it may grow to a considerable size (many gigabytes). "
          + "If you change the download location, files will need to be downloaded again."
         advanced: true
         chooseDirectory: true
