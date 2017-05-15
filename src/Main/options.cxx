@@ -39,6 +39,7 @@
 #include <cstdlib>      // atof(), atoi()
 #include <cstring>      // strcmp()
 #include <algorithm>
+#include <map>
 
 #include <iostream>
 #include <string>
@@ -2020,7 +2021,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
         continue;
       }
 
-      int result = parseOption(argv[i]);
+      int result = parseOption(argv[i], /* fromConfigFile */ false);
       processArgResult(result);
     } else {
     // XML properties file
@@ -2231,7 +2232,7 @@ void Options::readConfig(const SGPath& path)
         break;
     line = line.substr( 0, i );
 
-    if ( parseOption( line ) == FG_OPTIONS_ERROR ) {
+    if ( parseOption(line, /* fromConfigFile */ true) == FG_OPTIONS_ERROR ) {
       cerr << endl << "Config file parse error: " << path << " '"
       << line << "'" << endl;
 	    p->showHelp = true;
@@ -2242,7 +2243,7 @@ void Options::readConfig(const SGPath& path)
   p->insertGroupMarker(); // each config file is a group
 }
 
-int Options::parseOption(const string& s)
+int Options::parseOption(const string& s, bool fromConfigFile)
 {
   if ((s == "--help") || (s=="-h")) {
     return FG_OPTIONS_HELP;
@@ -2276,7 +2277,15 @@ int Options::parseOption(const string& s)
     SGPath path = s.substr(9);
     if (path.extension() == "xml") {
         p->propertyFiles.push_back(path);
-    } else {
+    } else if (fromConfigFile) {
+      flightgear::fatalMessageBoxThenExit(
+        "FlightGear",
+        "Invalid use of the --config option.",
+        "Sorry, it is currently not supported to load a configuration file "
+        "using --config from another configuration file.\n\n"
+        "Note: this does not apply to loading of XML PropertyList files "
+        "with --config.");
+    } else {                // the --config option comes from the command line
         p->configFiles.push_back(path);
     }
 

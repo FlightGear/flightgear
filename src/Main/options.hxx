@@ -171,8 +171,10 @@ private:
   // paths, etc. to stdout in JSON format, using the UTF-8 encoding.
   void printJSONReport() const;
 
-  int parseOption(const std::string& s);
-  
+  // The 'fromConfigFile' parameter indicates whether the option comes from a
+  // config file or directly from the command line.
+  int parseOption(const std::string& s, bool fromConfigFile);
+
   void processArgResult(int result);
 
     /**
