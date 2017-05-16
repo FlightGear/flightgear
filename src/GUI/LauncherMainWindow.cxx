@@ -22,6 +22,7 @@
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
+#include "version.h"
 
 // launcher headers
 #include "QtLauncher.hxx"
@@ -92,6 +93,8 @@ LauncherMainWindow::LauncherMainWindow() :
 {
     m_ui.reset(new Ui::Launcher);
     m_ui->setupUi(this);
+
+    m_ui->appTitleLabel->setText(tr("FlightGear %1").arg(FLIGHTGEAR_VERSION));
 
     QMenuBar* mb = menuBar();
 
