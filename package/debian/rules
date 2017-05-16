@@ -56,7 +56,7 @@ install: build
 	$(MAKE) install prefix=$(CURDIR)/debian/flightgear/usr
 	uudecode flightgear.png.uue
 	cp flightgear.png debian/flightgear/usr/share/icons/hicolor/48x48/apps
-	cp flightgear.desktop debian/flightgear/usr/share/applnk/Applications/Games
+	cp org.flightgear.FlightGear.desktop debian/flightgear/usr/share/applnk/Applications/Games
 
 # Build architecture-independent files here.
 binary-indep: build install
