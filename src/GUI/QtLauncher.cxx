@@ -23,6 +23,8 @@
 #include <locale.h>
 
 // Qt
+#include <QtGlobal>
+#include <QString>
 #include <QProgressDialog>
 #include <QDir>
 #include <QFileInfo>
@@ -255,6 +257,11 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         app->setOrganizationName("FlightGear");
         app->setApplicationName("FlightGear");
         app->setOrganizationDomain("flightgear.org");
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
+        app->setDesktopFileName(
+          QStringLiteral("org.flightgear.FlightGear.desktop"));
+#endif
 
         // reset numeric / collation locales as described at:
         // http://doc.qt.io/qt-5/qcoreapplication.html#details
