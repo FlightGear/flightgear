@@ -225,28 +225,16 @@ void SplashScreen::createNodes()
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     stateSet->setRenderBinDetails(1, "RenderBin");
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-    geometry = new osg::Geometry;
+    
+    geometry = osg::createTexturedQuadGeometry(osg::Vec3(0.0, 0.0, 0.0),
+                                               osg::Vec3(1.0, 0.0, 0.0),
+                                               osg::Vec3(0.0, 1.0, 0.0));
     geometry->setSupportsDisplayList(false);
-
-    osg::Vec3Array* splashFullscreenQuadVertices = new osg::Vec3Array;
-    splashFullscreenQuadVertices->push_back(osg::Vec3(0.0, 0.0, 0.0));
-    splashFullscreenQuadVertices->push_back(osg::Vec3(1.0, 0.0, 0.0));
-    splashFullscreenQuadVertices->push_back(osg::Vec3(1.0, 1.0, 0.0));
-    splashFullscreenQuadVertices->push_back(osg::Vec3(0.0, 1.0, 0.0));
-    geometry->setVertexArray(splashFullscreenQuadVertices);
-
-    osg::Vec2Array* quadTexCoords = new osg::Vec2Array;
-    quadTexCoords->push_back(osg::Vec2(0, 0));
-    quadTexCoords->push_back(osg::Vec2(1.0f, 0));
-    quadTexCoords->push_back(osg::Vec2(1.0f, 1.0f));
-    quadTexCoords->push_back(osg::Vec2(0, 1.0f));
-    geometry->setTexCoordArray(0, quadTexCoords);
 
     _splashFSQuadColor = new osg::Vec4Array;
     _splashFSQuadColor->push_back(osg::Vec4(1, 1.0f, 1, 1));
     geometry->setColorArray(_splashFSQuadColor);
     geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-    geometry->addPrimitiveSet(new osg::DrawArrays(GL_POLYGON, 0, 4));
 
     stateSet = geometry->getOrCreateStateSet();
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
