@@ -126,7 +126,7 @@ struct FGPropertyData {
     float float_value;
     char* string_value;
   }; 
-  
+  FGPropertyData() : string_value(nullptr) {}
   ~FGPropertyData() {
     if ((type == simgear::props::STRING) || (type == simgear::props::UNSPECIFIED))
     {
