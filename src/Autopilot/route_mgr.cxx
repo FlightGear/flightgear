@@ -77,7 +77,7 @@ static bool commandSaveFlightPlan(const SGPropertyNode* arg)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   SGPath path(arg->getStringValue("path"));
-  const std::string authorizedPath = fgValidatePath(path,
+  const std::string authorizedPath = fgValidatePath(path.realpath(),
                                                     true /* write */);
 
   if (!authorizedPath.empty()) {
