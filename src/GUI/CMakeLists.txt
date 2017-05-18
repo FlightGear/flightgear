@@ -81,6 +81,15 @@ if (HAVE_QT)
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
+    set(qml_sources
+        DownloadSettings.qml
+        GeneralSettings.qml
+        MPSettings.qml
+        RenderSettings.qml
+        TimeSettings.qml
+        ViewSettings.qml
+        Weather.qml
+        )
 
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
@@ -141,7 +150,8 @@ if (HAVE_QT)
                             MPServersModel.cpp
                             MPServersModel.h
                             ${uic_sources}
-                            ${qrc_sources})
+                            ${qrc_sources}
+                            ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml SimGearCore)

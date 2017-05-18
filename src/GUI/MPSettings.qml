@@ -21,9 +21,13 @@ Section {
         label: "Callsign"
         description: "Enter a callsign you will use online. This is visible to all users and is " +
                      "how ATC services and other pilots will refer to you. " +
-                     "(Maximum of ten characters permitted)"
+                     "(Maximum of seven characters permitted)"
         placeholder: "D-FGFS"
         keywords: ["callsign", "handle", "name"]
+
+        // between one and seven alphanumerics, underscores and or hypens
+        // spaces not permitted
+        validation: "[\\w-]{1,7}"
     }
 
     Combo {

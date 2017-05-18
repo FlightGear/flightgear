@@ -15,6 +15,7 @@
 #include <QQmlContext>
 #include <QDateTimeEdit>
 #include <QPainter>
+#include <QRegularExpressionValidator>
 
 #include "LaunchConfig.hxx"
 #include "SettingsSection.hxx"
@@ -504,6 +505,11 @@ QString SettingsText::placeholder() const
 #endif
 }
 
+QString SettingsText::validation() const
+{
+    return m_validation;
+}
+
 void SettingsText::setPlaceholder(QString hold)
 {
     if (placeholder() == hold)
@@ -514,6 +520,26 @@ void SettingsText::setPlaceholder(QString hold)
     m_edit->setPlaceholderText(hold);
 #endif
     emit placeholderChanged(hold);
+}
+
+void SettingsText::setValidation(QString validation)
+{
+    if (m_validation == validation)
+        return;
+
+    m_validation = validation;
+
+    QRegularExpression re(m_validation);
+    if (!re.isValid()) {
+        qWarning() << "invalid validation expression:" << re.errorString();
+        m_validation.clear();
+        validation.clear();
+        m_edit->setValidator(nullptr);
+    } else {
+        m_edit->setValidator(new QRegularExpressionValidator(re, this));
+    }
+
+    emit validationChanged(validation);
 }
 
 SettingsPath::SettingsPath(QWidget *pr) :

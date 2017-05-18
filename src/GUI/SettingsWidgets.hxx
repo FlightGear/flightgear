@@ -228,6 +228,9 @@ class SettingsText : public SettingsControl
 
     Q_PROPERTY(QString value READ value WRITE setValue NOTIFY valueChanged)
     Q_PROPERTY(QString placeholder READ placeholder WRITE setPlaceholder NOTIFY placeholderChanged)
+
+    Q_PROPERTY(QString validation READ validation WRITE setValidation NOTIFY validationChanged)
+
 public:
     SettingsText(QWidget *pr = nullptr);
 
@@ -243,19 +246,26 @@ public:
 
     QString placeholder() const;
 
+    QString validation() const;
+
 public slots:
     void setValue(QString value);
 
     void setPlaceholder(QString placeholder);
+
+    void setValidation(QString validation);
 
 signals:
     void valueChanged(QString value);
 
     void placeholderChanged(QString placeholder);
 
+    void validationChanged(QString validation);
+
 private:
     QLineEdit* m_edit;
     QLabel* m_label;
+    QString m_validation;
 };
 
 class SettingsPath : public SettingsControl
