@@ -57,6 +57,9 @@ public:
     bool execInApp();
 
     bool wasRejected();
+
+    Q_INVOKABLE bool validateMetarString(QString metar);
+
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
 

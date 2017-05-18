@@ -1,4 +1,5 @@
 import FlightGear.Launcher 1.0
+import QtQml 2.2
 
 Section {
     id: weatherSettings
@@ -23,11 +24,29 @@ Section {
 
     LineEdit {
         id: customMETAR
+
+        property bool __cachedValid: true
+
+        function revalidate() {
+            __cachedValid = _launcher.validateMetarString(value);
+        }
+
         visible: weatherScenario.isCustomMETAR
         enabled: !fetchMetar.checked
         label: "METAR"
         placeholder: "XXXX 012345Z 28035G50KT 250V300 9999 TSRA SCT022CB BKN030 13/09 Q1005"
-        description: "Enter a custom METAR string"
+        description: __cachedValid ? "Enter a custom METAR string"
+                                   : "The entered METAR string doesn't seem to be valid."
+
+        onValueChanged: {
+            validateTimeout.restart()
+        }
+    }
+
+    Timer {
+        id: validateTimeout
+        interval: 200
+        onTriggered: customMETAR.revalidate();
     }
 
     onApply: {

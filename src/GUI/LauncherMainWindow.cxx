@@ -14,6 +14,8 @@
 
 // simgear headers
 #include <simgear/package/Install.hxx>
+#include <simgear/environment/metar.hxx>
+#include <simgear/structure/exception.hxx>
 
 // FlightGear headers
 #include <Network/HTTPClient.hxx>
@@ -348,6 +350,8 @@ void LauncherMainWindow::buildEnvironmentSections()
 
 LauncherMainWindow::~LauncherMainWindow()
 {
+    m_qmlEngine->collectGarbage();
+    delete m_qmlEngine;
 }
 
 bool LauncherMainWindow::execInApp()
@@ -1096,4 +1100,20 @@ void LauncherMainWindow::onSettingsSearchChanged()
     Q_FOREACH(SettingsSectionQML* ss, findChildren<SettingsSectionQML*>()) {
         ss->setSearchTerm(m_ui->settingsSearchEdit->text());
     }
+}
+
+bool LauncherMainWindow::validateMetarString(QString metar)
+{
+    if (metar.isEmpty()) {
+        return true;
+    }
+
+    try {
+        std::string s = metar.toStdString();
+        SGMetar theMetar(s);
+    } catch (sg_io_exception&) {
+        return false;
+    }
+
+    return true;
 }
