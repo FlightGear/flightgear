@@ -59,18 +59,25 @@ Section {
         placeholder: "localhost:5001"
     }
 
+    readonly property int defaultMPPort: 5000
+
     onApply: {
         if (enableMP.checked) {
             if (mpServer.currentIsCustom) {
                 var pieces = mpCustomServer.value.split(':')
+                var port = defaultMPPort;
+                if (pieces.length > 1) {
+                    port = pieces[1];
+                }
+
                 _config.setProperty("/sim/multiplay/txhost", pieces[0]);
-                _config.setProperty("/sim/multiplay/txport", pieces[1]);
+                _config.setProperty("/sim/multiplay/txport", port);
             } else {
                 var sel = mpServer.selectedIndex
                 _config.setProperty("/sim/multiplay/txhost", _mpServers.serverForIndex(sel));
                 var port = _mpServers.portForIndex(sel);
                 if (port == 0) {
-                    port = 5000; // default MP port
+                    port = defaultMPPort;
                 }
 
                 _config.setProperty("/sim/multiplay/txport", port);
