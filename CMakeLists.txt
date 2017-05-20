@@ -527,7 +527,10 @@ else()
 endif(ENABLE_TESTS)
 
 add_subdirectory(src)
+add_subdirectory(icons)
 add_subdirectory(man)
+add_subdirectory(package)
+add_subdirectory(scripts)
 
 #-----------------------------------------------------------------------------
 ### uninstall target
