@@ -89,9 +89,12 @@ enum TransmissionType {
  * The pad magic is used to force older clients to use verifyProperties and as the first property transmitted is short int encoded it
  * will cause the rest of the packet to be discarded. This is the section of the packet that contains the properties defined in the list 
  * here - the basic motion properties remain compatible, so the older client will see just the model, not chat, not animations etc.
+ * The lower 16 bits of the prop_id (version) are the version and the upper 16bits are for meta data.
  */
 const int V1_1_PROP_ID = 1;
 const int V1_1_2_PROP_ID = 2;
+const int V2_PROP_ID_PROTOCOL = 0x10001;
+
 const int V2_PAD_MAGIC = 0x1face002;
 
 /*
@@ -200,7 +203,7 @@ static xdr_data_t *decode_received_launchbar_state(const IdPropertyList *propDef
 // This should be extendable dynamically for every specific aircraft ...
 // For now only that static list
 static const IdPropertyList sIdPropertyList[] = {
-    { 10,  "sim/multiplay/protocol-version",          simgear::props::INT,   TT_SHORTINT,  V1_1_PROP_ID, NULL, NULL },
+    { 10,  "sim/multiplay/protocol-version",          simgear::props::INT,   TT_SHORTINT,  V2_PROP_ID_PROTOCOL, NULL, NULL },
     { 100, "surface-positions/left-aileron-pos-norm",  simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
     { 101, "surface-positions/right-aileron-pos-norm", simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
     { 102, "surface-positions/elevator-pos-norm",      simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
@@ -1102,6 +1105,8 @@ FGMultiplayMgr::isSane(const FGExternalMotionData& motionInfo)
 void
 FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 {
+  int protocolToUse = getProtocolToUse();
+    
   if ((! mInitialised) || (! mHaveServer))
         return;
 
@@ -1130,7 +1135,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
    * MP2017(V2) (for V1 clients) will always have an unknown property because V2 transmits
    * the protocol version as the very first property as a shortint.
    */
-  if (getProtocolToUse() > 1)
+  if (protocolToUse > 1)
       PosMsg->pad = XDR_encode_int32(V2_PAD_MAGIC);
   else
       PosMsg->pad = 0;
@@ -1189,19 +1194,34 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
       xdr_data_t* data = ptr;
 
       xdr_data_t* msgEnd = msgBuf.propsEnd();
-      int protocolVersion = getProtocolToUse();
 
       //if (pMultiPlayDebugLevel->getIntValue())
       //    msgBuf.zero();
       struct BoolArrayBuffer boolBuffer[MAX_BOOL_BUFFERS];
       memset(&boolBuffer, 0, sizeof(boolBuffer));
 
-      for (int partition = 1; partition <= protocolVersion; partition++)
+      for (int partition = 1; partition <= protocolToUse; partition++)
       {
           std::vector<FGPropertyData*>::const_iterator it = motionInfo.properties.begin();
           while (it != motionInfo.properties.end()) {
               const struct IdPropertyList* propDef = mPropertyDefinition[(*it)->id];
-              if (propDef->version == partition || propDef->version > getProtocolToUse())
+
+              /*
+               * Excludes the 2017.2 property for the protocol version from V1 packets.
+               */
+              if (protocolToUse == 1 && propDef->version == V2_PROP_ID_PROTOCOL)
+              {
+                  ++it;
+                  continue;
+              }
+
+              /*
+               * 2017.2 partitions the buffer sent into protocol versions. Originally this was intended to allow
+               * compatability with older clients; however this will only work in the future or with support from fgms
+               * - so if a future version adds more properties to the protocol these can be transmitted in a third partition
+               *   that will be ignored by older clients (such as 2017.2).
+               */
+              if ( (propDef->version & 0xffff) == partition || (propDef->version & 0xffff)  > protocolToUse)
               {
                   if (ptr + 2 >= msgEnd)
                   {
@@ -1220,7 +1240,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                    */
                   int transmit_type = (*it)->type;
 
-                  if (propDef->TransmitAs != TT_ASIS && protocolVersion > 1)
+                  if (propDef->TransmitAs != TT_ASIS && protocolToUse > 1)
                   {
                       transmit_type = propDef->TransmitAs;
                   }
@@ -1233,7 +1253,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                           ": buf[" << (ptr - data) * sizeof(*ptr)
                           << "] id=" << (*it)->id << " type " << transmit_type);
 
-                  if (propDef->encode_for_transmit)
+                  if (propDef->encode_for_transmit && protocolToUse > 1)
                   {
                       ptr = (*propDef->encode_for_transmit)(propDef, ptr, (*it));
                   }
@@ -1241,6 +1261,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                   {
                       // The actual data representation depends on the type
                       switch (transmit_type) {
+                      case TT_NOSEND:
+                          break;
                       case TT_SHORTINT:
                       {
                           *ptr++ = XDR_encode_shortints32((*it)->id, (*it)->int_value);
@@ -1310,7 +1332,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                       case simgear::props::STRING:
                       case simgear::props::UNSPECIFIED:
                       {
-                          if (protocolVersion > 1)
+                          if (protocolToUse > 1)
                           {
                               // New string encoding:
                               // xdr[0] : ID length packed into 32 bit containing two shorts.
