@@ -137,6 +137,10 @@ CanvasMgr::getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const
 //----------------------------------------------------------------------------
 void CanvasMgr::handleModelReinit(SGPropertyNode*)
 {
-  for(size_t i = 0; i < _elements.size(); ++i)
-    static_cast<sc::Canvas*>(_elements[i].get())->reloadPlacements("object");
+    for (size_t i = 0; i < _elements.size(); ++i)
+    {
+        sc::Canvas* element = static_cast<sc::Canvas*>(_elements[i].get());
+        if (element)
+            element->reloadPlacements("object");
+    }
 }
