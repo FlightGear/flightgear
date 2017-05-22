@@ -253,6 +253,9 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         // whichever log locations SimGear has configured
         qInstallMessageHandler(simgearMessageOutput);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
         QApplication* app = new QApplication(s_argc, argv);
         app->setOrganizationName("FlightGear");
         app->setApplicationName("FlightGear");
