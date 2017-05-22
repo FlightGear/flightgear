@@ -49,43 +49,24 @@ FGLocale::~FGLocale()
 }
 
 #ifdef _WIN32
-/**
- * Determine locale/language settings on Windows.
- *
- * Copyright (C) 1997, 2002, 2003 Martin von Loewis
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted,
- * provided that the above copyright notice appear in all copies.
- *
- * This software comes with no warranty. Use at your own risk.
- */
+
+
 string_list
 FGLocale::getUserLanguage()
 {
     string_list result;
-    static char locale[100] = {0};
+	static wchar_t localeNameBuf[LOCALE_NAME_MAX_LENGTH];
 
-    if (GetLocaleInfo(LOCALE_USER_DEFAULT,
-                      LOCALE_SISO639LANGNAME,
-                      locale, sizeof(locale)))
-    {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Detected locale's language setting: " << locale);
-        size_t i = strlen(locale);
-        locale[i++] = '_';
-        if (GetLocaleInfo(LOCALE_USER_DEFAULT,
-                          LOCALE_SISO3166CTRYNAME,
-                          locale+i, (int)(sizeof(locale)-i)))
-        {
-            result.push_back(locale);
-            return result;
-        }
-        
-        locale[--i] = 0;
-        SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected locale's country setting.");
-        result.push_back(locale);
+    if (GetUserDefaultLocaleName(localeNameBuf, LOCALE_NAME_MAX_LENGTH)) {
+		std::wstring ws(localeNameBuf);
+		std::string localeNameUTF8 = simgear::strutils::convertWStringToUtf8(ws);
+
+        SG_LOG(SG_GENERAL, SG_INFO, "Detected user locale:" << localeNameUTF8);
+        result.push_back(localeNameUTF8);
         return result;
-    }
+	} else {
+		SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected user locale");
+	}
 
     return result;
 }
