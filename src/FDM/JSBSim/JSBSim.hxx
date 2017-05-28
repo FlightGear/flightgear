@@ -72,6 +72,7 @@ class FGInitialCondition;
 class FGLocation;
 class FGAccelerations;
 class FGPropertyManager;
+class FGColumnVector3;
 }
 
 // Adding it here will cause a namespace clash in FlightGear -EMH-
@@ -216,9 +217,9 @@ public:
     bool ToggleDataLogging(bool state);
     bool ToggleDataLogging(void);
 
-    bool get_agl_ft(double t, const double pt[3], double alt_off,
-                    double contact[3], double normal[3], double vel[3],
-                    double angularVel[3], double *agl);
+    double get_agl_ft(double t, const JSBSim::FGColumnVector3& loc,
+                      double alt_off, double contact[3], double normal[3],
+                      double vel[3], double angularVel[3]);
 private:
     JSBSim::FGFDMExec *fdmex;
     JSBSim::FGInitialCondition *fgic;
@@ -305,7 +306,7 @@ private:
 
     void do_trim(void);
 
-    bool update_ground_cache(const JSBSim::FGLocation& cart, double* cart_pos, double dt);
+    bool update_ground_cache(const JSBSim::FGLocation& cart, double dt);
     void init_gear(void);
     void update_gear(void);
 

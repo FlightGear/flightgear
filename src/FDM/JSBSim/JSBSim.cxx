@@ -103,10 +103,9 @@ public:
   virtual double GetAGLevel(double t, const FGLocation& l,
                             FGLocation& cont, FGColumnVector3& n,
                             FGColumnVector3& v, FGColumnVector3& w) const {
-    double loc_cart[3] = { l(FGJSBBase::eX), l(FGJSBBase::eY), l(FGJSBBase::eZ) };
-    double contact[3], normal[3], vel[3], angularVel[3], agl = 0;
-    mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
-                           vel, angularVel, &agl);
+    double contact[3], normal[3], vel[3], angularVel[3];
+    double agl = mInterface->get_agl_ft(t, l, SG_METER_TO_FEET*2, contact,
+                                        normal, vel, angularVel);
     n = FGColumnVector3( normal[0], normal[1], normal[2] );
     v = FGColumnVector3( vel[0], vel[1], vel[2] );
     w = FGColumnVector3( angularVel[0], angularVel[1], angularVel[2] );
@@ -115,10 +114,9 @@ public:
   }
 
   virtual double GetTerrainGeoCentRadius(double t, const FGLocation& l) const {
-    double loc_cart[3] = { l(FGJSBBase::eX), l(FGJSBBase::eY), l(FGJSBBase::eZ) };
-    double contact[3], normal[3], vel[3], angularVel[3], agl = 0;
-    mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
-                           vel, angularVel, &agl);
+    double contact[3], normal[3], vel[3], angularVel[3];
+    mInterface->get_agl_ft(t, l, SG_METER_TO_FEET*2, contact,
+                           normal, vel, angularVel);
     return sqrt(contact[0]*contact[0]+contact[1]*contact[1]+contact[2]*contact[2]);
   }
 
@@ -421,11 +419,11 @@ void FGJSBsim::init()
 
     if ( needTrim ) {
       const FGLocation& cart = fgic->GetPosition();
-      double cart_pos[3], contact[3], d[3], vel[3], agl;
-      update_ground_cache(cart, cart_pos, 0.01);
+      double contact[3], d[3], vel[3];
+      update_ground_cache(cart, 0.01);
 
-      get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
-                 d, vel, d, &agl);
+      get_agl_ft(fdmex->GetSimTime(), cart, SG_METER_TO_FEET*2, contact, d, vel,
+                 d);
       double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
                                 + contact[2]*contact[2]) - cart.GetSeaLevelRadius();
 
@@ -519,9 +517,8 @@ void FGJSBsim::update( double dt )
 
     int multiloop = _calc_multiloop(dt);
     FGLocation cart = Auxiliary->GetLocationVRP();
-    double cart_pos[3];
 
-    update_ground_cache(cart, cart_pos, dt);
+    update_ground_cache(cart, dt);
 
     copy_to_JSBsim();
 
@@ -801,10 +798,9 @@ bool FGJSBsim::copy_from_JSBsim()
 
     _set_Altitude_AGL( Propagate->GetDistanceAGL() );
     {
-      double loc_cart[3] = { l(FGJSBBase::eX), l(FGJSBBase::eY), l(FGJSBBase::eZ) };
       double contact[3], d[3], sd, t;
       is_valid_m(&t, d, &sd);
-      get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, d, d, d, &sd);
+      get_agl_ft(t, l, SG_METER_TO_FEET*2, contact, d, d, d);
       double rwrad
         = FGColumnVector3( contact[0], contact[1], contact[2] ).Magnitude();
       _set_Runway_altitude( rwrad - get_Sea_level_radius() );
@@ -1293,8 +1289,7 @@ void FGJSBsim::do_trim(void)
   SG_LOG( SG_FLIGHT, SG_INFO, "  Trim complete" );
 }
 
-bool FGJSBsim::update_ground_cache(const FGLocation& cart, double* cart_pos,
-                                   double dt)
+bool FGJSBsim::update_ground_cache(const FGLocation& cart, double dt)
 {
   // Compute the radius of the aircraft. That is the radius of a ball
   // where all gear units are in. At the moment it is at least 10ft ...
@@ -1311,9 +1306,7 @@ bool FGJSBsim::update_ground_cache(const FGLocation& cart, double* cart_pos,
   // ground in this area.
   double groundCacheRadius = acrad + 2*dt*Propagate->GetUVW().Magnitude();
 
-  cart_pos[0] = cart(1);
-  cart_pos[1] = cart(2);
-  cart_pos[2] = cart(3);
+  double cart_pos[3] {cart(1), cart(2), cart(3)};
   double t0 = fdmex->GetSimTime();
   bool cache_ok = prepare_ground_cache_ft( t0, t0 + dt, cart_pos,
                                            groundCacheRadius );
@@ -1337,22 +1330,22 @@ bool FGJSBsim::update_ground_cache(const FGLocation& cart, double* cart_pos,
   return cache_ok;
 }
 
-bool
-FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
+double
+FGJSBsim::get_agl_ft(double t, const FGColumnVector3& loc, double alt_off,
                      double contact[3], double normal[3], double vel[3],
-                     double angularVel[3], double *agl)
+                     double angularVel[3])
 {
   const simgear::BVHMaterial* material;
   simgear::BVHNode::Id id;
+  double pt[3] {loc(1), loc(2), loc(3)};
 
   // don't check the return value and continue above scenery discontinuity
   // see http://osdir.com/ml/flightgear-sim/2014-04/msg00145.html
   FGInterface::get_agl_ft(t, pt, alt_off, contact, normal, vel,
-                               angularVel, material, id);
+                          angularVel, material, id);
 
   SGGeod geodPt = SGGeod::fromCart(SG_FEET_TO_METER*SGVec3d(pt));
   SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
-  *agl = dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt));
 
 #ifdef JSBSIM_USE_GROUNDREACTIONS
   bool terrain_active = (terrain->getIntValue("override-level", -1) > 0) ? false : true;
@@ -1382,7 +1375,7 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
 #else
   terrain->setBoolValue("valid", false);
 #endif
-  return true;
+  return dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt));
 }
 
 inline static double sqr(double x)
@@ -1448,16 +1441,15 @@ void FGJSBsim::update_external_forces(double t_off)
     hook_tip_body(1) -= hook_length * cos_fi;
     hook_tip_body(3) += hook_length * sin_fi;    
     
-    double contact[3];
-    double ground_normal[3];
-    double ground_vel[3];
-    double ground_angular_vel[3];
-    double root_agl_ft;
-
     if (!got_wire) {
-        bool got = get_agl_ft(t_off, hook_area[1], 0, contact, ground_normal,
-                              ground_vel, ground_angular_vel, &root_agl_ft);
-        if (got && root_agl_ft > 0 && root_agl_ft < hook_length) {
+      double contact[3];
+      double ground_normal[3];
+      double ground_vel[3];
+      double ground_angular_vel[3];
+      double root_agl_ft = get_agl_ft(t_off, hook_root, 0, contact,
+                                      ground_normal, ground_vel,
+                                      ground_angular_vel);
+        if (root_agl_ft > 0 && root_agl_ft < hook_length) {
             FGColumnVector3 ground_normal_body = Tl2b * (Tec2l * FGColumnVector3(ground_normal[0], ground_normal[1], ground_normal[2]));
             FGColumnVector3 contact_body = Tl2b * Location.LocationToLocal(FGColumnVector3(contact[0], contact[1], contact[2]));
             double D = -DotProduct(contact_body, ground_normal_body);
