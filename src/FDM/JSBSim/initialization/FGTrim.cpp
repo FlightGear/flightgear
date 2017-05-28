@@ -402,8 +402,11 @@ void FGTrim::trimOnGround(void)
     FGColumnVector3 normal, vDummy;
     FGLocation lDummy;
     double height = gearLoc.GetContactPoint(lDummy, normal, vDummy, vDummy);
-    c.normal = Tec2b * normal;
 
+    if (gear->IsBogey() && !GroundReactions->GetSolid())
+      continue;
+
+    c.normal = Tec2b * normal;
     contacts.push_back(c);
 
     if (height < hmin) {

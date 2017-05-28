@@ -79,6 +79,9 @@ void FGSurface::resetValues(void)
   maximumForce = DBL_MAX;
   bumpiness = 0.0;
   isSolid = true;
+  pos[0] = 0.0;
+  pos[1] = 0.0;
+  pos[2] = 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
