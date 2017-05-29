@@ -26,7 +26,6 @@
 #include <simgear/ephemeris/ephemeris.hxx>
 
 #include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
 
 static void tieStar(const char* prop, Star* s, double (Star::*getter)() const)
 {
@@ -38,9 +37,7 @@ static void tieMoonPos(const char* prop, MoonPos* s, double (MoonPos::*getter)()
   fgGetNode(prop, true)->tie(SGRawValueMethods<MoonPos, double>(*s, getter, NULL));
 }
 
-Ephemeris::Ephemeris() :
-  _impl(NULL),
-  _latProp(NULL)
+Ephemeris::Ephemeris()
 {
 }
 
@@ -50,14 +47,14 @@ Ephemeris::~Ephemeris()
 
 SGEphemeris* Ephemeris::data()
 {
-    return _impl;
+    return _impl.get();
 }
 
 void Ephemeris::init()
 {
   SGPath ephem_data_path(globals->get_fg_root());
   ephem_data_path.append("Astro");
-  _impl = new SGEphemeris(ephem_data_path.local8BitStr());
+  _impl.reset(new SGEphemeris(ephem_data_path.local8BitStr()));
 
   tieStar("/ephemeris/sun/xs", _impl->get_sun(), &Star::getxs);
   tieStar("/ephemeris/sun/ys", _impl->get_sun(), &Star::getys);
@@ -82,8 +79,7 @@ void Ephemeris::init()
 
 void Ephemeris::shutdown()
 {
-    delete _impl;
-    _impl = NULL;
+    _impl.reset();
 }
 
 void Ephemeris::postinit()
@@ -97,6 +93,8 @@ void Ephemeris::bind()
 void Ephemeris::unbind()
 {
     _latProp = 0;
+    _latProp.reset();
+    _moonlight.reset();
 }
 
 void Ephemeris::update(double)

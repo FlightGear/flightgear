@@ -25,6 +25,8 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#include <Main/fg_props.hxx>
+
 class SGEphemeris;
 class SGPropertyNode;
 
@@ -49,9 +51,9 @@ public:
 
     SGEphemeris* data();
 private:
-  SGEphemeris* _impl;
-  SGPropertyNode* _latProp;
-  SGPropertyNode* _moonlight;
+  std::unique_ptr<SGEphemeris> _impl;
+  SGPropertyNode_ptr _latProp;
+  SGPropertyNode_ptr _moonlight;
 };
 
 #endif // of FG_ENVIRONMENT_EPHEMERIS_HXX
