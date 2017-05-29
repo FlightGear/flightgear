@@ -51,6 +51,7 @@ public:
 private:
   SGEphemeris* _impl;
   SGPropertyNode* _latProp;
+  SGPropertyNode* _moonlight;
 };
 
 #endif // of FG_ENVIRONMENT_EPHEMERIS_HXX
