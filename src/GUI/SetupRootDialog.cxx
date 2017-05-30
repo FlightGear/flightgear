@@ -109,8 +109,15 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
     if (validatePath(path) && validateVersion(path)) {
         return SGPath::fromUtf8(path.toStdString());
     } else {
-        // we have an existing path but it's invalid. Let's ask the
-        // user what they want
+        // we have an existing path but it's invalid.
+        // let's see if the default root is acceptable, in which case we will
+        // switch to it. (This gives a more friendly upgrade experience).
+        if (defaultRootAcceptable()) {
+            return std::string(); // use the default path
+        }
+
+        // okay, we don't have an acceptable FG_DATA anywhere we can find, we
+        // have to ask the user what they want to do.
         bool ok = runDialog(VersionCheckFailed);
         Q_ASSERT(ok);
         // run dialog either exit()s or sets fg_root, so this
