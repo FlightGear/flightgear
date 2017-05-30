@@ -1161,7 +1161,7 @@ fgOptVisibilityMiles( const char *arg )
 }
 
 static int
-fgOptMetar( const char *arg )
+fgOptMetar(const char *arg)
 {
     // The given METAR string cannot be effective without disabling
     // real weather fetching.
@@ -1169,6 +1169,17 @@ fgOptMetar( const char *arg )
     // The user-supplied METAR string
     fgSetString("/environment/metar/data", arg);
 
+    return FG_OPTIONS_OK;
+}
+static int
+fgOptConsole(const char *arg)
+{
+    static bool already_done = false;
+    if (!already_done)
+    {
+        already_done = true;
+        simgear::requestConsole();
+    }
     return FG_OPTIONS_OK;
 }
 
@@ -1558,7 +1569,7 @@ struct OptionDesc {
     } fgOptionArray[] = {
 
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
-	{"console",                      false, OPTION_IGNORE,   "", false, "", 0 },
+	{"console",                      false, OPTION_FUNC,   "", false, "", fgOptConsole },
     {"launcher",                     false, OPTION_IGNORE,   "", false, "", 0 },
     {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
     {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
@@ -2250,9 +2261,6 @@ int Options::parseOption(const string& s, bool fromConfigFile)
   } else if ( (s == "--verbose") || (s == "-v") ) {
     // verbose help/usage request
     return FG_OPTIONS_VERBOSE_HELP;
-  } else if ((s == "--console") || (s == "-c")) {
-	  simgear::requestConsole();
-	  return FG_OPTIONS_OK;
   } else if (s.find("-psn") == 0) {
     // on Mac, when launched from the GUI, we are passed the ProcessSerialNumber
     // as an argument (and no others). Silently ignore the argument here.
