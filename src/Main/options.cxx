@@ -2261,6 +2261,9 @@ int Options::parseOption(const string& s, bool fromConfigFile)
   } else if ( (s == "--verbose") || (s == "-v") ) {
     // verbose help/usage request
     return FG_OPTIONS_VERBOSE_HELP;
+  } else if ((s == "--console") || (s == "-c")) {
+      fgOptConsole(nullptr);
+	  return FG_OPTIONS_OK;
   } else if (s.find("-psn") == 0) {
     // on Mac, when launched from the GUI, we are passed the ProcessSerialNumber
     // as an argument (and no others). Silently ignore the argument here.
