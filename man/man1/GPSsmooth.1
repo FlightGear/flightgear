@@ -1,0 +1,69 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH GPSSMOOTH 1 2017-06-04 FlightGear "FlightGear man pages"
+.SH NAME
+GPSsmooth \- send NMEA-formatted GPS data to a FlightGear instance
+.SH SYNOPSIS
+\fBGPSsmooth\fR \fB\-\-help\fR | \fB\-\-file\fR \fIfile_name\fR
+[\fB\-\-hertz\fR \fIhertz\fR] [\fB\-\-host\fR \fIhostname\fR]
+[\fB\-\-broadcast\fR] [\fB\-\-fdm\-port\fR \fIport\fR] [\fB\-\-ctrls\-port\fR
+\fIport\fR]
+.SH DESCRIPTION
+.B GPSsmooth
+is a utility that reads a text file containing GPS data in NMEA format, parses
+it and sends it to a FlightGear instance for replaying.
+.SH OPTIONS
+.TP
+\fB\-\-help\fR
+Display usage information and exit.
+.TP
+\fB\-\-file\fR \fIfile_name\fR
+Read GPS data from \fIfile_name\fR. This option is mandatory if \fB\-\-help\fR
+is not specified.
+.TP
+\fB\-\-hertz\fR \fIhertz\fR
+Specify the frequency to use for sending data to the FlightGear instance.
+By default, events are sent at a frequency of \fB60\fR Hz.
+.TP
+\fB\-\-host\fR \fIhostname\fR
+Send the data to the FlightGear instance running on \fIhostname\fR.
+
+If \fB\-\-host\fR is not specified, the default is to send the data to
+\fBlocalhost\fR.
+.TP
+\fB\-\-broadcast\fR
+Send flight data model and control data as broadcast packets.
+.TP
+\fB\-\-fdm\-port\fR \fIport\fR
+Set the port flight data model data should be sent to. By default, data is sent
+to port \fB5505\fR.
+.TP
+\fB\-\-ctrls\-port\fR \fIport\fR
+Set the port control data should be sent to. By default, data is sent to port
+\fB5506\fR.
+.SH "EXIT STATUS"
+.B GPSsmooth
+exits with
+.B 0
+on success, with
+.B \-1
+if the syntax of the command-line arguments is wrong or an error occurs.
+.SH "SEE ALSO"
+.BR fgfs (1),
+.BR MIDGsmooth (1),
+.BR UGsmooth (1)
