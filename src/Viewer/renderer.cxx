@@ -557,7 +557,6 @@ FGRenderer::init( void )
     _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
     _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
-    _enhanced_lighting    = fgGetNode("/sim/rendering/enhanced-lighting", true);
     _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
     _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
 
@@ -567,11 +566,9 @@ FGRenderer::init( void )
     _visibility_m = fgGetNode("/environment/visibility-m", true);
     
     bool use_point_sprites = _point_sprites->getBoolValue();
-    bool enhanced_lighting = _enhanced_lighting->getBoolValue();
     bool distance_attenuation = _distance_attenuation->getBoolValue();
 
-    SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
-                                  distance_attenuation );
+    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation );
 
     if (const char* tc = fgGetString("/sim/rendering/texture-compression", NULL)) {
       if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||

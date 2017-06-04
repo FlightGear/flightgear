@@ -46,8 +46,6 @@ _fgfs_options=(
 	'--fog-disable[Disable fog/haze]' \
 	'--fog-fastest[Enable fastest fog/haze]' \
 	'--fog-nicest[Enable nicest fog/haze]' \
-	'--disable-enhanced-lighting[Disable enhanced runway lighting]' \
-	'--enable-enhanced-lighting[Enable enhanced runway lighting]' \
 	'--disable-distance-attenuation[Disable runway light distance attenuation]' \
 	'--enable-distance-attenuation[Enable runway light distance attenuation]' \
 	'--disable-specular-highlight[Disable specular reflections on textured objects]' \
@@ -134,7 +132,8 @@ _fgfs_options=(
 	'--flight-plan=[Read all waypoints from a file]:Waypoints file:_files' \
 	'--nav1=[Set the NAV1 radio frequency, optionally preceded by a radial]' \
 	'--nav2=[Set the NAV2 radio frequency, optionally preceded by a radial]' \
-	'--adf=[Set the ADF radio frequency, optionally preceded by a card rotation]' \
+	'--adf1=[Set the ADF1 radio frequency, optionally preceded by a card rotation]' \
+	'--adf2=[Set the ADF2 radio frequency, optionally preceded by a card rotation]' \
 	'--dme=[Slave the ADF to one of the NAV radios, or set its internal frequency]' \
 	'--visibility=[Specify initial visibility (in meters)]' \
 	'--visibility-miles=[Specify initial visibility (in miles)]' \

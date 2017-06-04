@@ -204,7 +204,6 @@ void fgSetDefaults ()
     fgSetInt("/sim/rendering/filtering", 1);
     fgSetBool("/sim/rendering/wireframe", false);
     fgSetBool("/sim/rendering/horizon-effect", false);
-    fgSetBool("/sim/rendering/enhanced-lighting", false);
     fgSetBool("/sim/rendering/distance-attenuation", false);
     fgSetBool("/sim/rendering/specular-highlight", true);
     fgSetString("/sim/rendering/materials-file", "materials.xml");
@@ -869,6 +868,16 @@ fgOptFgScenery( const char *arg )
 }
 
 static int
+fgOptEnhancedLighting( const char *arg )
+{
+    SG_LOG(SG_ALL,SG_ALERT,
+           "the options --enable-enhanced-lighting and "
+           "--disable-enhanced-lighting are no longer supported and will be "
+           "removed in a future FlightGear version! Please do not use them");
+    return FG_OPTIONS_EXIT;
+}
+
+static int
 fgOptAllowNasalRead( const char *arg )
 {
     PathList paths = SGPath::pathsFromLocal8Bit(arg);
@@ -1299,6 +1308,15 @@ fgOptNAV2( const char * arg )
 }
 
 static int
+fgOptADF( const char * arg )
+{
+    SG_LOG(SG_ALL,SG_ALERT,
+           "the option --adf is no longer supported! Please use --adf1 "
+           "instead.");
+    return FG_OPTIONS_EXIT;
+}
+
+static int
 fgOptADF1( const char * arg )
 {
     double rot, freq;
@@ -1662,8 +1680,8 @@ struct OptionDesc {
     {"fog-nicest",                   false, OPTION_STRING, "/sim/rendering/fog", false, "nicest", 0 },
     {"disable-horizon-effect",       false, OPTION_BOOL,   "/sim/rendering/horizon-effect", false, "", 0 },
     {"enable-horizon-effect",        false, OPTION_BOOL,   "/sim/rendering/horizon-effect", true, "", 0 },
-    {"disable-enhanced-lighting",    false, OPTION_BOOL,   "/sim/rendering/enhanced-lighting", false, "", 0 },
-    {"enable-enhanced-lighting",     false, OPTION_BOOL,   "/sim/rendering/enhanced-lighting", true, "", 0 },
+    {"disable-enhanced-lighting",    false, OPTION_FUNC,   "", false, "", fgOptEnhancedLighting },
+    {"enable-enhanced-lighting",     false, OPTION_FUNC,   "", false, "", fgOptEnhancedLighting },
     {"disable-distance-attenuation", false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", false, "", 0 },
     {"enable-distance-attenuation",  false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", true, "", 0 },
     {"disable-specular-highlight",   false, OPTION_BOOL,   "/sim/rendering/specular-highlight", false, "", 0 },
@@ -1763,7 +1781,7 @@ struct OptionDesc {
     {"com2",                         true,  OPTION_DOUBLE, "/instrumentation/comm[1]/frequencies/selected-mhz", false, "", 0 },
     {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },
     {"nav2",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV2 },
-    {"adf", /*legacy*/               true,  OPTION_FUNC,   "", false, "", fgOptADF1 },
+    {"adf", /*legacy*/               true,  OPTION_FUNC,   "", false, "", fgOptADF },
     {"adf1",                         true,  OPTION_FUNC,   "", false, "", fgOptADF1 },
     {"adf2",                         true,  OPTION_FUNC,   "", false, "", fgOptADF2 },
     {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
