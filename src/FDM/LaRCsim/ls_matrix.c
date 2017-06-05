@@ -223,13 +223,7 @@ int nr_gaussj(double **a, int n, double **b, int m)
 
             if (irow != icol)
                 {
-/*                    for (l=1;1<=n;l++) SWAP(a[irow][l],a[icol][l]) */
-                        for (l=1;l<=n;l++) 
-                          { 
-                                  temp=a[irow][l]; 
-                                  a[irow][l]=a[icol][l]; 
-                                  a[icol][l]=temp; 
-                          }
+                    for (l=1;l<=n;l++) SWAP(a[irow][l],a[icol][l])
                     if (bexists) for (l=1;l<=m;l++) SWAP(b[irow][l],b[icol][l])
                 }
             indxr[i] = irow;        /* We are now ready to divide the pivot row */
@@ -245,7 +239,7 @@ int nr_gaussj(double **a, int n, double **b, int m)
                         dum = a[ll][icol];
                         a[ll][icol] = 0.0;
                         for (l=1;l<=n;l++) a[ll][l] -= a[icol][l]*dum;
-           if (bexists) for (l=1;l<=m;l++) b[ll][i] -= b[icol][l]*dum;
+           if (bexists) for (l=1;l<=m;l++) b[ll][l] -= b[icol][l]*dum;
                     }
         }
 

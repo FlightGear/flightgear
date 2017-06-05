@@ -109,3 +109,7 @@ endmacro()
 
 flightgear_test(test_navs test_navaids2.cxx)
 flightgear_test(test_flightplan test_flightplan.cxx)
+
+add_executable(test_ls_matrix test_ls_matrix.cxx ${CMAKE_SOURCE_DIR}/src/FDM/LaRCsim/ls_matrix.c)
+target_link_libraries(test_ls_matrix SimGearCore)
+add_test(test_ls_matrix ${EXECUTABLE_OUTPUT_PATH}/test_ls_matrix)
