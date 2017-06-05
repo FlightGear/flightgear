@@ -39,6 +39,7 @@ INCLUDES
 #include <iostream>
 #include <string>
 
+#include "FGExternalForce.h"
 #include "FGExternalReactions.h"
 #include "input_output/FGXMLElement.h"
 
@@ -54,7 +55,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-IDENT(IdSrc,"$Id: FGExternalReactions.cpp,v 1.19 2014/11/25 01:42:27 dpculp Exp $");
+IDENT(IdSrc,"$Id: FGExternalReactions.cpp,v 1.25 2017/06/04 21:06:08 bcoconni Exp $");
 IDENT(IdHdr,ID_EXTERNALREACTIONS);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,8 +64,6 @@ CLASS IMPLEMENTATION
 
 FGExternalReactions::FGExternalReactions(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  NoneDefined = true;
-
   Debug(0);
 }
 
@@ -80,18 +79,25 @@ bool FGExternalReactions::Load(Element* el)
 
   // Parse force elements
 
-  int index=0;
   Element* force_element = el->FindElement("force");
   while (force_element) {
-    Forces.push_back( new FGExternalForce(FDMExec, force_element, index) );
-    NoneDefined = false;
-    index++; 
+    Forces.push_back(new FGExternalForce(FDMExec));
+    Forces.back()->setForce(force_element);
     force_element = el->FindNextElement("force");
+  }
+
+  // Parse moment elements
+
+  Element* moment_element = el->FindElement("moment");
+  while (moment_element) {
+    Forces.push_back(new FGExternalForce(FDMExec));
+    Forces.back()->setMoment(moment_element);
+    moment_element = el->FindNextElement("moment");
   }
 
   PostLoad(el, PropertyManager);
 
-  if (!NoneDefined) bind();
+  if (!Forces.empty()) bind();
 
   return true;
 }
@@ -101,7 +107,6 @@ bool FGExternalReactions::Load(Element* el)
 FGExternalReactions::~FGExternalReactions()
 {
   for (unsigned int i=0; i<Forces.size(); i++) delete Forces[i];
-  Forces.clear();
 
   Debug(1);
 }
@@ -124,7 +129,7 @@ bool FGExternalReactions::Run(bool Holding)
 {
   if (FGModel::Run(Holding)) return true;
   if (Holding) return false; // if paused don't execute
-  if (NoneDefined) return true;
+  if (Forces.empty()) return true;
 
   RunPreFunctions();
 
