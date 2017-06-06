@@ -1,0 +1,68 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGFSRC 5 2017-05-28 FlightGear "FlightGear man pages"
+.SH NAME
+fgfsrc \- FlightGear command-line options file
+.SH DESCRIPTION
+.B fgfsrc
+is a file containing command-line options read by
+.BR fgfs (1)
+at startup. This file is meant for those people who do not use a graphical
+launcher to run the simulator, so that they will be able to specify most
+preferences that do not change often there (for example, custom
+scenery/aircraft locations or screen size options), and only those frequently
+modified (like the starting airport) on the command line.
+
+The file must be in plain-text format and ASCII-encoded. It must contain one or
+more command-line options listed in
+.BR fgfs (1);
+each option must be given on a separate line.
+
+If the first non-whitespace character in a line is an octothorpe (\fB#\fR),
+.BR fgfs (1)
+treats the line as a comment and ignores it. Comments should not be added after
+an option, because that might cause the simulator to fail under some conditions
+(notably, when the command-line argument given on the line is of the form
+\fB\-\-prop=\fR).
+
+Variables in paths, like
+.B $HOME
+or \fB$FG_HOME\fR, are not expanded.
+.SH FILES
+.IP "\fI~/.fgfsrc.hostname\fR, \fI~/.fgfsrc\fR" 4
+Configuration files containing command-line options for
+.BR fgfs (1).
+The simulator parses command-line arguments first, then
+\fI~/.fgfsrc.hostname\fR (where
+.I hostname
+is the hostname of the machine) and then \fI~/.fgfsrc\fR, if they exist, in
+that order.
+.SH EXAMPLE
+The following example configuration file synchronizes the simulator clock with
+the local real-world time, loads real-world weather data, sets the window size
+to 1024x768 and enables random scenery objects and AI traffic:
+
+.nf
+\-\-time\-match\-local
+\-\-enable\-real\-weather\-fetch
+\-\-geometry=1024x768
+\-\-enable\-random\-objects
+\-\-enable\-ai\-traffic
+.fi
+.SH "SEE ALSO"
+.BR fgfs (1)

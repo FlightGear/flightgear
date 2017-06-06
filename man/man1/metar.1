@@ -1,0 +1,79 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH METAR 1 2017-05-27 FlightGear "FlightGear man pages"
+.SH NAME
+metar \- demo METAR utility for FlightGear
+.SH SYNOPSIS
+\fBmetar\fR \fB\-h\fR | \fB\-\-help\fR | [\fB\-v\fR | \fB\-\-verbose\fR]
+[\fB\-e\fR \fIelevation\fR | \fB\-\-elevation\fR \fIelevation\fR] [\fB\-r\fR |
+\fB\-\-report\fR | \fB\-c\fR | \fB\-\-command\-line\fR] \fI<list of ICAO airport
+IDs or METAR strings>\fR
+.SH DESCRIPTION
+.B metar
+is a demo utility for FlightGear that retrieves a METAR (encoded weather
+information) for one or more given airports from the Internet and displays it
+in a user-readable form. Optionally, it can also print the command-line
+arguments required to start
+.BR fgfs (1)
+at the current time and with the weather conditions in effect.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display usage information and exit.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Display debugging information while performing the required operation.
+.TP
+\fB\-e\fR \fIelevation\fR, \fB\-\-elevation\fR \fIelevation\fR
+Set the airport elevation to \fIelevation\fR meters.
+.TP
+\fB\-r\fR, \fB\-\-report\fR
+Print the weather information on the screen in a user-readable form.
+.TP
+\fB\-c\fR, \fB\-\-command\-line\fR
+Print the command-line arguments required to start FlightGear at the current
+time and with the weather conditions in effect.
+.SH "EXIT STATUS"
+.B metar
+exits with
+.B 0
+on success, with
+.B 1
+if the syntax of the command-line arguments is wrong or an error occurs.
+.SH ENVIRONMENT
+.IP "\fBHTTP_PROXY\fR" 4
+Specifies the HTTP proxy to use. Must be in the form
+\fBhttp://host:port/\fR.
+.SH EXAMPLE
+Print the current weather information for KSFO and KOAK:
+
+    $ \fBmetar KSFO KOAK\fR
+
+Print the current weather information for KSFO, as well as the command line
+required to start FlightGear with the weather conditions in effect:
+
+    $ \fBmetar -c KSFO -r KSFO\fR
+
+Print the given METAR string as a user-readable weather report:
+
+    $ \fBmetar "LOWL 161500Z 19004KT 160V240 9999 FEW035 SCT300 29/23 Q1006 NOSIG"\fR
+.SH "SEE ALSO"
+.BR fgfs (1),
+.UR http://\:wiki.flightgear.org/\:Weather_reports
+the FlightGear wiki "Weather reports" page
+.UE

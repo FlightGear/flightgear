@@ -1,0 +1,150 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGCOM 1 2017-06-04 FlightGear "FlightGear man pages"
+.SH NAME
+fgcom \- VoIP client for the FlightGear radio infrastructure
+.SH SYNOPSIS
+\fBfgcom\fR [\fB\-\-server=\fIserver\fR] [\fB\-\-host=\fIlisteninghost\fR]
+[\fB\-\-port=\fIport\fR] [\fB\-\-callsign=\fIcallsign\fR]
+[\fB\-\-frequency=\fIfrequency\fR] [\fB\-\-atis=\fIfrequency\fR]
+[\fB\-\-airport=\fIcode\fR] [\fB\-\-username=\fIuser\fR]
+[\fB\-\-password=\fIpass\fR] [\fB\-\-silence\-threshold=\fIthreshold\fR]
+[\fB\-\-debug\fR] [\fB\-\-help\fR] [\fB\-\-version\fR]
+.SH DESCRIPTION
+.B fgcom
+is the FlightGear utility used for connecting to multiplayer voice servers.
+.PP
+It is usually not necessary to run
+.B fgcom
+from the command line, as it is already integrated into FlightGear, with the
+exception of a few specific cases (such as recording ATIS messages or
+performing a radio check, see the
+.B EXAMPLE
+section).
+.SH OPTIONS
+.TP
+\fB\-\-server=\fIserver\fR
+Connect to the FGCom server \fIserver\fR. By default, FGCom tries to connect to
+\fBfgcom.flightgear.org\fR.
+.TP
+\fB\-\-host=\fIlisteninghost\fR, \fB\-\-port=\fIport\fR
+Listen on the network interface having the IP address \fIlisteninghost\fR, on
+port \fIport\fR. By default, FGCom listens on the loopback interface
+(\fB127.0.0.1\fR) on port \fB16661\fR.
+
+The specified port can be used by an instance of FlightGear to communicate with
+FGCom and update the pilot position as they fly.
+.TP
+\fB\-\-callsign=\fIcallsign\fR
+Use the callsign \fIcallsign\fR during the session. By default, FGCom uses
+\fBguest\fR as callsign.
+.TP
+\fB\-\-frequency=\fIfrequency\fR
+Set the active radio frequency to \fIfrequency\fR. The frequency must be
+written in the format \fIxxx.xxx\fR and must be given in MHz.
+.TP
+\fB\-\-atis=\fIfrequency\fR
+Record an ATIS message on \fIfrequency\fR MHz. The frequency must be written in
+the format \fIxxx.xxx\fR and must be given in MHz.
+.TP
+\fB\-\-airport=\fIcode\fR
+Position the pilot/controller to the airport having the ICAO code \fIcode\fR.
+
+Since some radio frequencies might be reused across the world, it is essential
+to set the pilot/controller position correctly to make the FGCom server able to
+determine the correct voice channel. Always use this flag if you are not
+connecting a FlightGear instance to FGCom.
+.TP
+\fB\-\-username=\fIuser\fR, \fB\-\-password=\fIpass\fR
+Log in to the FGCom server using the username \fIuser\fR and the password
+\fIpass\fR.
+.TP
+\fB\-\-silence-threshold=\fIthreshold\fR
+Set the silence threshold to \fIthreshold\fR dB. The value must be between
+\fB-60\fR and \fB0\fR. The default is \fB-35.0\fR dB.
+
+The silence threshold is the level below which the sound captured by the
+microphone is considered background noise (and, thus, filtered out by FGCom).
+Setting the silence threshold to \fB-60\fR turns the filter off; setting it
+to \fB0\fR filters everything (mutes the microphone).
+.TP
+\fB\-\-debug\fR
+Enable debug output for troubleshooting purposes.
+.TP
+\fB\-\-help\fR
+Display usage information and exit.
+.TP
+\fB\-\-version\fR
+Display the FGCom version and exit.
+.SH "EXIT STATUS"
+.B fgcom
+exits with
+.B EXIT_SUCCESS
+on success, with
+.B EXIT_FAILURE
+if the syntax of the command-line arguments is wrong or an error occurs.
+.SH NOTES
+FGCom understands several special frequencies used for testing purposes or
+general chatting:
+.IP \(bu 3
+\fB121.000 MHz\fR, \fB121.500 MHz\fR: "guard" frequencies reserved for
+emergency communications;
+.IP \(bu 3
+\fB123.450 MHz\fR, \fB123.500 MHz\fR, \fB122.750 MHz\fR: general chat
+frequencies;
+.IP \(bu 3
+\fB700.000 MHz\fR: radio station frequency. Depending on the FGCom server in
+use, a recorded radio message will be played;
+.IP \(bu 3
+\fB723.340 MHz\fR: French Air Patrol communication frequency;
+.IP \(bu 3
+\fB910.000 MHz\fR: echo test frequency. Your voice will be echoed back after a
+short delay, to allow you to check that your microphone, speakers/headset and
+that your connection to the FGCom server works. The test is limited to a
+maximum of 65 seconds, after which you will be automatically disconnected;
+.IP \(bu 3
+\fB911.000 MHz\fR: "music on hold". The frequency continuously plays background
+music, allowing you to check that your connection to the FGCom server works.
+.SH BUGS
+.IP \(bu 3
+At the time of writing, there is no mechanism in place to update the
+frequencies used by FGCom with the ones used in the real world, should those
+change. The former, thus, might not always correspond to the latter. Always use
+the frequencies listed in FlightGear under \fBAI\fR -> \fBATC Services in
+Range\fR instead of the ones published on aeronautical charts.
+.SH EXAMPLE
+Connect to the default FGCom server, switch to the San Francisco International
+Airport (\fIKSFO\fR) ground frequency (\fI121.800 MHz\fR) and allow FlightGear
+to update the current pilot position by sending it to port \fI16661\fR (the
+default one):
+
+    $ \fBfgcom --frequency=121.800 --airport=KSFO\fR
+
+Perform a radio check by connecting to the echo test frequency:
+
+    $ \fBfgcom --frequency=910.000\fR
+
+Record an ATIS message on the San Francisco International Airport (\fIKSFO\fR)
+ATIS frequency (\fI118.850 MHz\fR):
+
+    $ \fBfgcom --atis=118.850 --airport=KSFO\fR
+.SH "SEE ALSO"
+.BR fgfs (1),
+.UR http://\:wiki.flightgear.org/\:FGCom_3.0
+the FlightGear wiki "FGCom 3.0" page
+.UE

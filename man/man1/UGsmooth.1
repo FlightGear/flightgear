@@ -1,0 +1,114 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH UGSMOOTH 1 2017-06-04 FlightGear "FlightGear man pages"
+.SH NAME
+UGsmooth \- send UGear-formatted GPS data to a FlightGear instance
+.SH SYNOPSIS
+\fBUGsmooth\fR \fB\-\-help\fR
+    | \fB\-\-infile\fR \fIinfile_name\fR [\fIoptions\fR]...
+    | \fB\-\-flight\fR \fIflight_dir\fR [\fIoptions\fR]...
+    | \fB\-\-serial\fR \fIdev_name\fR \fB\-\-outfile\fR \fIoutfile_name\fR [\fIoptions\fR]...
+.SH DESCRIPTION
+.B UGsmooth
+is a utility that reads GPS data in UGear format from a text file, a directory
+containing flight data or from a device connected to the serial port, parses it
+and sends it to a FlightGear instance for replaying.
+.SH OPTIONS
+.TP
+\fB\-\-help\fR
+Display usage information and exit.
+.TP
+\fB\-\-infile\fR \fIinfile_name\fR
+Read GPS data from \fIfilename\fR.
+.TP
+\fB\-\-flight\fR \fIflight_dir\fR
+Read GPS data from the flight directory named \fIflight_dir\fR.
+.TP
+\fB\-\-serial\fR \fIdev_name\fR
+Read GPS data from the serial device named \fIdev_name\fR.
+.TP
+\fB\-\-outfile\fR \fIoutfile_name\fR
+Save the data retrieved from the device to \fIoutfile_name\fR.
+.TP
+\fB\-\-hertz\fR \fIfrequency\fR
+Specify the frequency to use for sending data to the FlightGear instance.
+By default, events are sent at a frequency of \fB60\fR Hz.
+.TP
+\fB\-\-host\fR \fIhostname\fR
+Send the data to the FlightGear instance running on \fIhostname\fR.
+
+If \fB\-\-host\fR is not specified, the default is to send the data to
+\fBlocalhost\fR.
+.TP
+\fB\-\-broadcast\fR
+Send flight data model and control data as broadcast packets.
+.TP
+\fB\-\-opengc\-port\fR \fIport\fR
+Set the port OpenGC data should be sent to. By default, data is sent to port
+\fB6000\fR.
+.TP
+\fB\-\-fdm\-port\fR \fIport\fR
+Set the port flight data model data should be sent to. By default, data is sent
+to port \fB5505\fR.
+.TP
+\fB\-\-ctrls\-port\fR \fIport\fR
+Set the port control data should be sent to. By default, data is sent to port
+\fB5506\fR.
+.TP
+\fB\-\-groundtrack\-heading\fR
+Calculate the aircraft heading from the GPS velocity instead of using the raw
+heading recorded by the device.
+.TP
+\fB\-\-ground\-speed\fR
+Calculate the ground speed from the GPS velocity instead of using the raw speed
+recorded by the device.
+.TP
+\fB\-\-estimate\-control\-deflections\fR
+Estimate control deflections from the angular velocities instead of using the
+raw deflections recorded by the device.
+.TP
+\fB\-\-altitude\-offset\fR \fImeters\fR
+Add the specified offset (in meters) to the altitude sent to FlightGear.
+.TP
+\fB\-\-skip\-seconds\fR \fIseconds\fR
+Do not transmit the first \fIseconds\fR seconds of data.
+
+This option is ignored when reading GPS data from a serial device.
+.TP
+\fB\-\-no\-real\-time\fR
+Do not update the elapsed time.
+.TP
+\fB\-\-ignore\-checksum\fR
+Do not discard data with invalid checksums.
+
+This option is ignored when reading GPS data from a flight directory.
+.TP
+\fB\-\-sg\-swap\fR
+Activate the special double swap logic for the (non-standard) stargate double
+format.
+.SH "EXIT STATUS"
+.B UGsmooth
+exits with
+.B 0
+on success, with
+.B \-1
+if the syntax of the command-line arguments is wrong or an error occurs.
+.SH "SEE ALSO"
+.BR fgfs (1),
+.BR GPSsmooth (1),
+.BR MIDGsmooth (1)

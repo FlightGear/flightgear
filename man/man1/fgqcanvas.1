@@ -1,4 +1,4 @@
-.\" Copyright (C) 2002 Cameron Moore
+.\" Copyright (C) 2017 Alessandro Menti
 .\"
 .\" This program is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU General Public License
@@ -15,21 +15,23 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.TH JS_DEMO 1 "January 2002" "@VERSION@" "@PACKAGE@"
+.TH FGQCANVAS 1 2017-02-28 FlightGear "FlightGear man pages"
 .SH NAME
-js_demo \- joystick test program for FlightGear
+fgqcanvas \- A Qt-based remote canvas application for FlightGear
 .SH SYNOPSIS
-.B js_demo
+\fBfgqcanvas\fR
 .SH DESCRIPTION
-.B js_demo
-is a joystick test program for the FlightGear Flight Simulator.
-For more information visit <http://wiki.flightgear.org/Joystick>.
-.SH BUGS
-Send bug reports to <flightgear\-devel@lists.sourceforge.net> or visit
-<http://code.google.com/p/flightgear\-bugs>.
-.SH SEE ALSO
-fgfs(1), fgjs(1), fgpanel(1), terrasync(1)
-.SH AUTHORS
-Tony Peden, et al.  See
-.I Thanks
-file for a list of contributors.
+.B fgqcanvas
+is a Qt-based application that can connect to any FlightGear instance having
+the built-in HTTPD server enabled and display any canvas in real time.
+.PP
+To use \fBfgqcanvas\fR, start it and enter the URL to the HTTP websocket, such
+as \fIws://localhost:8080/PropertyTreeMirror\fR, then enter the canvas path
+you would like to display, such as \fI/canvas/by-index/texture[0]/\fR.
+.SH "EXIT STATUS"
+.B fgqcanvas
+exits with
+.B 0
+on success, with an exit code other than zero if an error occurs.
+.SH "SEE ALSO"
+.BR fgfs (1)

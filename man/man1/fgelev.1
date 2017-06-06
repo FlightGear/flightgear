@@ -1,0 +1,126 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGELEV 1 2017-06-04 FlightGear "FlightGear man pages"
+.SH NAME
+fgelev \- Compute FlightGear scenery elevation for a given list of points
+.SH SYNOPSIS
+\fBfgelev\fR [\fB\-\-expire\fR \fInum\fR] [\fB\-\-print\-solidness\fR]
+[\fB\-\-fg\-root\fR \fIrootdir\fR] [\fB\-\-fg\-scenery\fR \fIscenerydir\fR]
+.SH DESCRIPTION
+.B fgelev
+is a standalone utility that, given a list of points on standard input, prints
+the corresponding elevation for each of them on standard output. It can also
+(optionally) print whether the material covering that point is solid or not.
+
+The list of points must be in the following form:
+
+    \fIid lon lat\fR
+
+where \fIid\fR is an arbitrary identifier for the point, \fIlon\fR is the
+longitude of the point and \fIlat\fR is the latitude of the point. Positive
+longitudes (latitudes) correspond to points located in the Eastern (Northern)
+hemisphere; negative ones correspond to points located in the Western
+(Southern) hemisphere.
+
+The list of elevations returned by
+.B fgelev
+is in the following form:
+
+    \fIid: elev solid\fR
+
+where \fIid\fR is the identifier of the point passed as input, \fIelev\fR is
+the elevation of the point in meters (or \fB-1000\fR if the elevation of the
+given point was not found) and \fIsolid\fR is:
+.IP \(bu 3
+the string
+.B solid
+if the parameter
+.B \-\-print\-solidness
+was passed to
+.B fgelev
+and the material covering the point is solid;
+.IP \(bu 3
+the string
+.B \-
+if the parameter
+.B \-\-print\-solidness
+was passed to
+.B fgelev
+and the material covering the point is not solid;
+.IP \(bu 3
+absent if the parameter
+.B \-\-print\-solidness
+was not passed to \fBfgelev\fR.
+.SH OPTIONS
+.TP
+\fB\-\-expire\fR \fInum\fR
+To speed up elevation data retrieval,
+.B fgelev
+uses an internal cache. This option lets the user specify the number of
+requests after which, if a point was not queried in them, it should be marked
+as expired. By default,
+.B fgelev
+expires points not queried in the last \fB10\fR requests.
+.TP
+\fB\-\-print\-solidness\fR
+Require
+.B fgelev
+to print the solidness of the material covering the queried point. See the
+.B DESCRIPTION
+section for more details.
+.TP
+\fB\-\-fg\-root\fR \fIrootdir\fR
+Set the FlightGear data root directory (\fB$FG_ROOT\fR) to \fIrootdir\fR. If
+this option is not set,
+.B fgelev
+uses the path specified in the
+.B FG_ROOT
+environment variable or, absent that, the FlightGear data directory chosen at
+the time the program was compiled.
+.TP
+\fB\-\-fg\-scenery\fR \fIscenerydir\fR
+Set the FlightGear scenery directory (\fB$FG_SCENERY\fR) to \fIscenerydir\fR.
+If this option is not set,
+.B fgelev
+uses the path specified in the
+.B FG_SCENERY
+environment variable or, absent that, the
+.B Scenery
+subdirectory inside \fB$FG_ROOT\fR.
+.SH "EXIT STATUS"
+.B fgelev
+exits with
+.B EXIT_SUCCESS
+on success, with
+.B EXIT_FAILURE
+if it is unable to read data from standard input or to load the scenery.
+.SH ENVIRONMENT
+.IP "\fBFG_ROOT\fR" 4
+If
+.B FG_ROOT
+is set and
+.B \-\-fg\-root
+is not set, it specifies the root data directory to use.
+.IP "\fBFG_SCENERY\fR" 4
+If
+.B FG_SCENERY
+is set and
+.B \-\-fg\-scenery
+is not set, it specifies the scenery directory to use.
+.SH "SEE ALSO"
+.BR fgfs (1)
