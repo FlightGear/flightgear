@@ -112,6 +112,9 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 
+#include <GUI/QQuickDrawable.hxx>
+#include <Viewer/GraphicsWindowQt5.hxx>
+
 #include <plib/pu.h>
 
 using namespace osg;
@@ -445,6 +448,7 @@ FGRenderer::preinit( void )
     _viewerSceneRoot->setName("viewerSceneRoot");
     viewer->setSceneData(_viewerSceneRoot);
 
+    _quickDrawable = nullptr;
     _splash = new SplashScreen;
     if (_classicalRenderer) {
         _viewerSceneRoot->addChild(_splash);
@@ -1540,13 +1544,24 @@ FGRenderer::setupView( void )
     // plug in the GUI
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
-      osg::Geode* geode = new osg::Geode;
-      geode->addDrawable(new SGHUDDrawable);
-      geode->addDrawable(new SGPuDrawable);
+        osg::Geode* geode = new osg::Geode;
+        geode->addDrawable(new SGHUDDrawable);
+        geode->addDrawable(new SGPuDrawable);
 
-      // Draw first (eg. before Canvas GUI)
-      guiCamera->insertChild(0, geode);
-      guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
+        std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
+        auto graphicsWindowQt = dynamic_cast<GraphicsWindowQt5*>(guiCamera->getGraphicsContext());
+
+        if (graphicsWindowQt && !rootQMLPath.empty()) {
+            _quickDrawable = new QQuickDrawable;
+            _quickDrawable->setup(graphicsWindowQt);
+
+            _quickDrawable->setSource(QUrl(QString::fromStdString(rootQMLPath)));
+            geode->addDrawable(_quickDrawable);
+        }
+
+        // Draw first (eg. before Canvas GUI)
+        guiCamera->insertChild(0, geode);
+        guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
     
     osg::Switch* sw = new osg::Switch;
@@ -1731,6 +1746,9 @@ FGRenderer::resize( int width, int height )
 
     // update splash node if present ?
     _splash->resize(width, height);
+    if (_quickDrawable) {
+        _quickDrawable->resize(width, height);
+    }
 }
 
 typedef osgUtil::LineSegmentIntersector::Intersection Intersection;

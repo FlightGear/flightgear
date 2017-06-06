@@ -44,6 +44,7 @@ class CameraGroup;
 class SGSky;
 class SGUpdateVisitor;
 class SplashScreen;
+class QQuickDrawable;
 
 typedef std::vector<SGSceneryPick> PickList;
 
@@ -191,6 +192,7 @@ protected:
     void setupRoot();
 
     SplashScreen* _splash;
+    QQuickDrawable* _quickDrawable;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
