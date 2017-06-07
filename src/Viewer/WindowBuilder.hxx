@@ -61,9 +61,18 @@ public:
     static void setPoseAsStandaloneApp(bool b);
 protected:
     WindowBuilder(bool stencil);
-    static osg::GraphicsContext::Traits* makeDefaultTraits(bool stencil);
+    
+    void setFullscreenTraits(const SGPropertyNode* winNode, osg::GraphicsContext::Traits* traits);
+    bool setWindowedTraits(const SGPropertyNode* winNode, osg::GraphicsContext::Traits* traits);
+    
+    void setMacPoseAsStandaloneApp(osg::GraphicsContext::Traits* traits);
+    
+    void makeDefaultTraits(bool stencil);
+    
     osg::ref_ptr<osg::GraphicsContext::Traits> defaultTraits;
     int defaultCounter;
+    bool usingQtGraphicsWindow = false;
+    
     static osg::ref_ptr<WindowBuilder> windowBuilder;
     static const std::string defaultWindowName;
     static bool poseAsStandaloneApp;

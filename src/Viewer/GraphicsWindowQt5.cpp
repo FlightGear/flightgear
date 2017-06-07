@@ -29,6 +29,8 @@
 #include <QOpenGLContext>
 #include <QSurfaceFormat>
 
+#include <Main/fg_props.hxx>
+
 using namespace flightgear;
 
 class QtKeyboardMap
@@ -155,8 +157,6 @@ void GLWindow::syncGeometryWithOSG()
         _gw->getEventQueue()->windowResize( x(), y(), scaled_width, scaled_height );
         _gw->requestRedraw();
         _gw->_updateContextNeeded = true;
-        
-        _gw->getEventQueue()->syncWindowRectangleWithGraphicsContext();
     }
 }
 
@@ -190,6 +190,15 @@ void GLWindow::processDeferredEvents()
 
 bool GLWindow::event( QEvent* event )
 {
+    if (event->type() == QEvent::WindowStateChange) {
+        // keep full-screen state in sync
+        const bool isFullscreen = (windowState() == Qt::WindowFullScreen);
+        
+        if (_isPrimaryWindow) {
+            fgSetBool("/sim/startup/fullscreen", isFullscreen);
+        }
+    }
+    
     // Reparenting GLWidget may create a new underlying window and a new GL context.
     // Qt will then call doneCurrent on the GL context about to be deleted. The thread
     // where old GL context was current has no longer current context to render to and
@@ -224,6 +233,11 @@ bool GLWindow::event( QEvent* event )
         if (_gw->_viewer.lock(v)) {
           v->frame();
         }
+    }
+    else if (event->type() == QEvent::Close) {
+        // spin an 'are you sure'? dialog here
+        // need to decide immediately unfortunately.
+        _gw->getEventQueue()->closeWindow();
     }
 
     // perform regular event handling
@@ -368,15 +382,20 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     if ( !_window )
         _window = windowData ? windowData->_window : nullptr;
 
-    // create widget if it does not exist
+    // create window if it does not exist
     _ownsWidget = (_window == NULL);
     if ( !_window )
     {
         // WindowFlags
         Qt::WindowFlags flags = f | Qt::Window | Qt::CustomizeWindowHint;
-        if ( _traits->windowDecoration )
+        if ( _traits->windowDecoration ) {
             flags |= Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint;
-
+            flags |= Qt::WindowFullscreenButtonHint;
+        
+            // TODO - check if this is desirable or not on Windows+Linux
+            //flags |= Qt::MaximizeUsingFullscreenGeometryHint;
+        }
+        
         // create widget
         _window = new GLWindow();
         _window->setFlags(flags);
@@ -398,8 +417,13 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
         } else {
           _window->resize( sz );
         }
+        
+        if (windowData->createFullscreen) {
+            _window->setWindowState(Qt::WindowFullScreen);
+        }
     }
 
+    _window->_isPrimaryWindow = windowData->isPrimaryWindow;
     _window->setGraphicsWindow( this );
     useCursor( _traits->useCursor );
 
@@ -619,15 +643,18 @@ bool GraphicsWindowQt5::valid() const
 
 bool GraphicsWindowQt5::realizeImplementation()
 {
-    _window->show();
-
-    // initialize GL context for the widget
-    // defer this to makeCurrent which happens on the rendering thread
+    WindowData* windowData = _traits.get() ? dynamic_cast<WindowData*>(_traits->inheritedWindowData.get()) : nullptr;
+    if (windowData->createFullscreen) {
+        _window->showFullScreen();
+        // work-around for resize events being discarded by EventQueue::setStartTick
+        _sendResizeOnEventCheck = true;
+    } else {
+        _window->show();
+    }
+    
+    getEventQueue()->syncWindowRectangleWithGraphicsContext();
 
     _realized = true;
-
-    // make sure the event queue has the correct window rectangle size and input range
-    getEventQueue()->syncWindowRectangleWithGraphicsContext();
     return true;
 }
 
@@ -720,6 +747,12 @@ bool GraphicsWindowQt5::checkEvents()
     if (_window->getNumDeferredEvents() > 0)
       _window->processDeferredEvents();
 
+    if (_sendResizeOnEventCheck) {
+        _sendResizeOnEventCheck = false;
+        _window->syncGeometryWithOSG();
+        
+    }
+    
 // todo - only if not running inside QApplication::exec; can we check this?
 
     QCoreApplication::processEvents(QEventLoop::AllEvents);
@@ -750,6 +783,17 @@ void GraphicsWindowQt5::requestContinuousUpdate(bool needed)
   GraphicsWindow::requestContinuousUpdate(needed);
 }
 
+void GraphicsWindowQt5::setFullscreen(bool isFullscreen)
+{
+    if (isFullscreen) {
+        _window->showFullScreen();
+    } else {
+        // FIXME should restore previous state?
+        _window->showNormal();
+    }
+}
+
+
 class Qt5WindowingSystem : public osg::GraphicsContext::WindowingSystemInterface
 {
 public:
@@ -757,6 +801,7 @@ public:
     Qt5WindowingSystem()
     {
         OSG_INFO << "QtWindowingSystemInterface()" << std::endl;
+
     }
 
     ~Qt5WindowingSystem()
@@ -788,7 +833,7 @@ public:
     {
       QScreen* screen = qScreenFromSI(si);
       if (!screen) {
-          qWarning() << Q_FUNC_INFO << "no screen for identifier";
+          qWarning() << Q_FUNC_INFO << "no screen for identifier" << QString::fromStdString(si.displayName());
           return;
       }
 
@@ -811,7 +856,7 @@ public:
     {
       QScreen* screen = qScreenFromSI(si);
       if (!screen) {
-          qWarning() << Q_FUNC_INFO << "no screen for identifier";
+          qWarning() << Q_FUNC_INFO << "no screen for identifier" << QString::fromStdString(si.displayName());
           return;
       }
 
@@ -852,7 +897,7 @@ private:
       if (screens.size() < si.screenNum)
         return screens.at(si.screenNum);
 
-      return 0; // or should we return the primary screen?
+        return QGuiApplication::primaryScreen();
     }
 
     // No implementation for these

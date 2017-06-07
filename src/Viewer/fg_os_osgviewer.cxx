@@ -2,7 +2,7 @@
 // implemented as an osgViewer
 //
 // Copyright (C) 2007  Tim Moore timoore@redhat.com
-// Copyright (C) 2007 Mathias Froehlich 
+// Copyright (C) 2007 Mathias Froehlich
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -61,6 +61,7 @@
 
 #if defined(HAVE_QT)
 #include "GraphicsWindowQt5.hxx"
+#include <GUI/QtLauncher.hxx>
 #include <QCoreApplication>
 #endif
 
@@ -100,11 +101,13 @@ USE_OSGPLUGIN(txf);
 // fg_os implementation
 //
 
-using namespace std;    
+using namespace std;
 using namespace flightgear;
 using namespace osg;
 
 osg::ref_ptr<osgViewer::Viewer> viewer;
+
+bool global_usingGraphicsWindowQt = false;
 
 static void setStereoMode( const char * mode )
 {
@@ -147,7 +150,7 @@ static void setStereoMode( const char * mode )
     {
         stereoMode = DisplaySettings::CHECKERBOARD;
     } else {
-        stereoOn = false; 
+        stereoOn = false;
     }
     DisplaySettings::instance()->setStereo( stereoOn );
     DisplaySettings::instance()->setStereoMode( stereoMode );
@@ -176,7 +179,7 @@ static const char * getStereoMode()
         return "VERTICAL_INTERLACE";
     } else if( stereoMode == DisplaySettings::CHECKERBOARD ) {
         return "CHECKERBOARD";
-    } 
+    }
     return "OFF";
 }
 
@@ -229,7 +232,7 @@ public:
     {
         osg::NotifySeverity severity = osg::WARN;
         string val = boost::to_lower_copy(string(node->getStringValue()));
-        
+
         if (val == "fatal") {
             severity = osg::FATAL;
         } else if (val == "warn") {
@@ -241,7 +244,7 @@ public:
         } else if ((val == "debug") || (val == "debug-info")) {
             severity = osg::DEBUG_INFO;
         }
-        
+
         osg::setNotifyLevel(severity);
     }
 };
@@ -253,7 +256,7 @@ void updateOSGNotifyLevel()
 void fgOSOpenWindow(bool stencil)
 {
     osg::setNotifyHandler(new NotifyLogger);
-    
+
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
 
@@ -271,7 +274,7 @@ void fgOSOpenWindow(bool stencil)
       viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
     WindowBuilder::initWindowBuilder(stencil);
     CameraGroup::buildDefaultGroup(viewer.get());
-    
+
     FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
     WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
     if (wsa->windows.size() != 1) {
@@ -292,14 +295,14 @@ void fgOSResetProperties()
     NotifyLevelListener* l = new NotifyLevelListener;
     globals->addListenerToCleanup(l);
     osgLevel->addChangeListener(l, true);
-    
+
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
         Viewport* guiViewport = guiCamera->getViewport();
         fgSetInt("/sim/startup/xsize", guiViewport->width());
         fgSetInt("/sim/startup/ysize", guiViewport->height());
     }
-    
+
     DisplaySettings * displaySettings = DisplaySettings::instance();
     fgTie("/sim/rendering/osg-displaysettings/eye-separation", displaySettings, &DisplaySettings::getEyeSeparation, &DisplaySettings::setEyeSeparation );
     fgTie("/sim/rendering/osg-displaysettings/screen-distance", displaySettings, &DisplaySettings::getScreenDistance, &DisplaySettings::setScreenDistance );
@@ -319,7 +322,7 @@ void fgOSExit(int code)
     viewer->setDone(true);
     viewer->getDatabasePager()->cancel();
     status = code;
-    
+
     // otherwise we crash if OSG does logging during static destruction, eg
     // GraphicsWindowX11, since OSG statics may have been created before the
     // sglog static, despite our best efforts in boostrap.cxx
@@ -329,20 +332,19 @@ void fgOSExit(int code)
 int fgOSMainLoop()
 {
     viewer->setReleaseContextAtEndOfFrameHint(false);
-    if (!viewer->isRealized())
+    if (!viewer->isRealized()) {
         viewer->realize();
+    }
+
     while (!viewer->done()) {
         fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
         if (idleFunc)
             (*idleFunc)();
 
-#if defined(HAVE_QT)
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-#endif
         globals->get_renderer()->update();
         viewer->frame( globals->get_sim_time_sec() );
     }
-    
+
     return status;
 }
 
@@ -352,7 +354,7 @@ int fgGetKeyModifiers()
     if (!r || !r->getEventHandler()) { // happens during shutdown
       return 0;
     }
-    
+
     return r->getEventHandler()->getCurrentModifiers();
 }
 
@@ -364,7 +366,9 @@ void fgWarpMouse(int x, int y)
 void fgOSInit(int* argc, char** argv)
 {
 #if defined(HAVE_QT)
-    if (fgGetBool("/sim/rendering/graphics-window-qt", false)) {
+    global_usingGraphicsWindowQt = fgGetBool("/sim/rendering/graphics-window-qt", false);
+    if (global_usingGraphicsWindowQt) {
+        flightgear::initApp(*argc, argv);
         SG_LOG(SG_GL, SG_INFO, "Using Qt implementation of GraphicsWindow");
         flightgear::initQtWindowingSystem();
     } else {
@@ -403,9 +407,20 @@ void fgOSFullScreen()
      * The other windows should use fixed setup from the camera.xml file anyway. */
     osgViewer::GraphicsWindow* window = windows[0];
 
+#if defined(HAVE_QT)
+    if (global_usingGraphicsWindowQt) {
+        const bool wasFullscreen = fgGetBool("/sim/startup/fullscreen");
+        auto qtWin = static_cast<flightgear::GraphicsWindowQt5*>(window);
+        qtWin->setFullscreen(!wasFullscreen);
+        fgSetBool("/sim/startup/fullscreen", !wasFullscreen);
+
+        // FIXME tell lies here for HiDPI sizing?
+        fgSetInt("/sim/startup/xsize", qtWin->getGLWindow()->width());
+        fgSetInt("/sim/startup/ysize", qtWin->getGLWindow()->height());
+    } else
+#endif
     {
         osg::GraphicsContext::WindowingSystemInterface    *wsi = osg::GraphicsContext::getWindowingSystemInterface();
-
         if (wsi == NULL)
         {
             SG_LOG(SG_VIEW, SG_ALERT, "ERROR: No WindowSystemInterface available. Cannot toggle window fullscreen.");
@@ -476,7 +491,7 @@ void fgOSFullScreen()
         window->setWindowDecoration(isFullScreen);
         window->setWindowRectangle(x, y, width, height);
         window->grabFocusIfPointerInWindow();
-    }
+    } // of stock GraphicsWindow verison (OSG has no native fullscreen mode)
 }
 
 static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
@@ -484,7 +499,7 @@ static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
     if (!gw) {
         return;
     }
-  
+
     osgViewer::GraphicsWindow::MouseCursor mouseCursor;
     mouseCursor = osgViewer::GraphicsWindow::InheritCursor;
     if (cursor == MOUSE_CURSOR_NONE)
@@ -529,7 +544,7 @@ void fgSetMouseCursor(int cursor)
     _cursor = cursor;
     if (!viewer)
         return;
-    
+
     std::vector<osgViewer::GraphicsWindow*> windows;
     viewer->getWindows(windows);
     BOOST_FOREACH(osgViewer::GraphicsWindow* gw, windows) {

@@ -113,6 +113,9 @@ protected:
 
     bool _forwardKeyEvents = false;
     qreal _devicePixelRatio;
+    
+    // is this the primary (GUI) window
+    bool _isPrimaryWindow = false;
 
     virtual void resizeEvent( QResizeEvent* event );
     virtual void moveEvent( QMoveEvent* event );
@@ -132,6 +135,12 @@ public:
     {
         WindowData( GLWindow* win = NULL ): _window(win) {}
         GLWindow* _window;
+        
+        bool createFullscreen = false;
+        
+        // is this the main window, corresponding to the /sim/startup
+        // properties? If so we will drive them in some cases.
+        bool isPrimaryWindow = false;
     };
 
     bool init( Qt::WindowFlags f );
@@ -178,6 +187,8 @@ public:
     void setViewer( osgViewer::ViewerBase *viewer );
 
     virtual void contextInitalised() { ; }
+    
+    void setFullscreen(bool isFullscreen);
 protected:
     virtual void viewerChanged(osgViewer::ViewerBase*);
 
@@ -190,6 +201,11 @@ protected:
     bool _realized;
     bool _updateContextNeeded;
     osg::observer_ptr< osgViewer::ViewerBase > _viewer;
+    
+    // if true, we will generate a resize event on the next
+    // call to check events. Ths works around OSG clearing the
+    // event queue on us.
+    bool _sendResizeOnEventCheck = false;
 };
 
 } // of namespace flightgear
