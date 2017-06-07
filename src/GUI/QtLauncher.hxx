@@ -26,6 +26,11 @@ namespace flightgear
   // Only requires FGGlobals to be initialized if 'doInitQSettings' is true.
   // Safe to call several times.
   void initApp(int& argc, char** argv, bool doInitQSettings = true);
+
+  // ensures Qt-related resources are cleaned up. Avoids crashes on shutdown
+  // if QPA assets are hanging around. (With the XCB QPA plugin especially)
+  void shutdownQtApp();
+
   // Requires FGGlobals to be initialized. Safe to call several times.
   void initQSettings();
 

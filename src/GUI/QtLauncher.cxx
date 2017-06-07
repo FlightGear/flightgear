@@ -232,6 +232,14 @@ static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &conte
 namespace flightgear
 {
 
+// making this a unique ptr ensures the QApplication will be deleted
+// event if we forget to call shutdownQtApp. Cleanly destroying this is
+// important so QPA resources, in particular the XCB thread, are exited
+// cleanly on quit. However, at present, the official policy is that static
+// destruction is too late to call this, hence why we have shutdownQtApp()
+
+std::unique_ptr<QApplication> static_qApp;
+
 // Only requires FGGlobals to be initialized if 'doInitQSettings' is true.
 // Safe to call several times.
 void initApp(int& argc, char** argv, bool doInitQSettings)
@@ -256,13 +264,13 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
-        QApplication* app = new QApplication(s_argc, argv);
-        app->setOrganizationName("FlightGear");
-        app->setApplicationName("FlightGear");
-        app->setOrganizationDomain("flightgear.org");
+        static_qApp.reset(new QApplication(s_argc, argv));
+        static_qApp->setOrganizationName("FlightGear");
+        static_qApp->setApplicationName("FlightGear");
+        static_qApp->setOrganizationDomain("flightgear.org");
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
-        app->setDesktopFileName(
+        static_qApp->setDesktopFileName(
           QStringLiteral("org.flightgear.FlightGear.desktop"));
 #endif
 
@@ -275,6 +283,11 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
     if (doInitQSettings) {
         initQSettings();
     }
+}
+
+void shutdownQtApp()
+{
+    static_qApp.reset();
 }
 
 // Requires FGGlobals to be initialized. Safe to call several times.

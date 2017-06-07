@@ -69,6 +69,10 @@
 
 #include "fg_os.hxx"
 
+#if defined(HAVE_QT)
+#include <GUI/QtLauncher.hxx>
+#endif
+
 #if defined(HAVE_CRASHRPT)
 	#include <CrashRpt.h>
 
@@ -351,6 +355,10 @@ int main ( int argc, char **argv )
             perror("Possible cause");
     }
 
+#if defined(HAVE_QT)
+    flightgear::shutdownQtApp();
+#endif
+
 #if defined(HAVE_CRASHRPT)
 	crUninstall();
 #endif
@@ -364,9 +372,12 @@ void fgExitCleanup() {
 
     if (_bootstrap_OSInit != 0) {
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
-
         fgOSCloseWindow();
     }
+
+    // you might imagine we'd call shutdownQtApp here, but it's not safe to do
+    // so in an atexit handler, and crashes on Mac. Thiago states this explicitly:
+    // https://bugreports.qt.io/browse/QTBUG-48709
 
     // on the common exit path globals is already deleted, and NULL,
     // so this only happens on error paths.
