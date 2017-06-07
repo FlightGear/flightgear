@@ -96,38 +96,6 @@ mapRobinTypeToFGPType(int aTy)
   }
 }
 
-static bool autoAlignLocalizers = false;
-static double autoAlignThreshold = 0.0;
-
-/**
- * Given a runway, and proposed localizer data (ident, positioned and heading),
- * precisely align the localizer with the actual runway heading, providing the
- * difference between the localizer course and runway heading is less than a
- * threshold. (To allow for localizers such as Kai-Tak requiring a turn on final).
- *
- * The positioned and heading argument are modified if changes are made.
- */
-void alignLocaliserWithRunway(FGRunway* rwy, const string& ident, SGGeod& pos, double& heading)
-{
-  assert(rwy);
-  // find the distance from the threshold to the localizer
-  double dist = SGGeodesy::distanceM(pos, rwy->threshold());
-  
-  // back project that distance along the runway center line
-  SGGeod newPos = rwy->pointOnCenterline(dist);
-
-  double hdg_diff = heading - rwy->headingDeg();
-  SG_NORMALIZE_RANGE(hdg_diff, -180.0, 180.0);
-
-  if ( fabs(hdg_diff) <= autoAlignThreshold ) {
-    pos = SGGeod::fromGeodFt(newPos, pos.getElevationFt());
-    heading = rwy->headingDeg();
-  } else {
-    SG_LOG(SG_NAVAID, SG_DEBUG, "localizer:" << ident << ", aligning with runway "
-           << rwy->ident() << " exceeded heading threshold");
-  }
-}
-
 static double defaultNavRange(const string& ident, FGPositioned::Type type)
 {
   // Ranges are included with the latest data format, no need to
@@ -440,12 +408,8 @@ PositionedID NavLoader::processNavLine(
   } // of type is runway-related
 
   bool isLoc = (type == FGPositioned::ILS) || (type == FGPositioned::LOC);
-  if (runway && autoAlignLocalizers && isLoc) {
-    alignLocaliserWithRunway(runway, ident, pos, multiuse);
-  }
-
-  PositionedID r = cache->insertNavaid(type, ident, name, pos, freq, range, multiuse,
-                             arp.first, arp.second);
+  PositionedID r = cache->insertNavaid(type, ident, name, pos, freq, range,
+                                       multiuse, arp.first, arp.second);
 
   if (isLoc) {
     cache->setRunwayILS(arp.second, r);
@@ -471,9 +435,6 @@ void NavLoader::loadNav(const SGPath& path, std::size_t bytesReadSoFar,
       "Cannot open file (" + simgear::strutils::error_string(errno) + ")",
       sg_location(path));
   }
-
-  autoAlignLocalizers = fgGetBool("/sim/navdb/localizers/auto-align", true);
-  autoAlignThreshold = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
 
   string line;
 
