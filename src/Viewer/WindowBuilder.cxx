@@ -24,6 +24,7 @@
 #include <Main/fg_props.hxx>
 
 #include <sstream>
+#include <limits>
 
 #if defined(SG_MAC)
     #include <osgViewer/api/Cocoa/GraphicsWindowCocoa>
@@ -112,8 +113,10 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
         traits->supportsResize = true;
         traits->width = fgGetInt("/sim/startup/xsize");
         traits->height = fgGetInt("/sim/startup/ysize");
-        traits->x = 50;
-        traits->y = 50;
+        
+        // these are marker values to tell GraphicsWindowQt5 to use default x/y
+        traits->x = std::numeric_limits<int>::max();
+        traits->y = std::numeric_limits<int>::max();
 #else
         SG_LOG(SG_VIEW,SG_ALERT,"requested Qt GraphicsWindow in non-Qt build");
 #endif

@@ -409,7 +409,15 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     if ( _ownsWidget )
     {
         _window->setTitle( _traits->windowName.c_str() );
-        _window->setPosition( _traits->x, _traits->y );
+        
+        // to get OS-dependant default positioning of the window (which is desirable),
+        // we must take care to only set the position if explicitly requested.
+        // hence we set X & Y to these marker values by default.
+        // And hence only set position if both are valid.
+        if ((_traits->x != std::numeric_limits<int>::max()) && (_traits->y != std::numeric_limits<int>::max())) {
+            _window->setPosition( _traits->x, _traits->y );
+        }
+        
         QSize sz(_traits->width, _traits->height);
         if ( !_traits->supportsResize ) {
           _window->setMinimumSize( sz );
@@ -419,6 +427,8 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
         }
         
         if (windowData->createFullscreen) {
+            // this doesn't seem to actually work, so we
+            // check the flag again in realizeImplementation()
             _window->setWindowState(Qt::WindowFullScreen);
         }
     }
