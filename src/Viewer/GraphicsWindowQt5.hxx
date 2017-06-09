@@ -128,8 +128,8 @@ public:
     GraphicsWindowQt5( osg::GraphicsContext::Traits* traits = 0);
     virtual ~GraphicsWindowQt5();
 
-    inline GLWindow* getGLWindow() { return _window; }
-    inline const GLWindow* getGLWindow() const { return _window; }
+    inline GLWindow* getGLWindow() { return _window.get(); }
+    inline const GLWindow* getGLWindow() const { return _window.get(); }
 
     struct WindowData : public osg::Referenced
     {
@@ -193,8 +193,8 @@ protected:
     virtual void viewerChanged(osgViewer::ViewerBase*);
 
     friend class GLWindow;
-    GLWindow* _window = nullptr;
-    QOpenGLContext* _context = nullptr;
+    std::unique_ptr<GLWindow> _window;
+    std::unique_ptr<QOpenGLContext> _context;
     QOpenGLContext* _shareContext = nullptr;
     bool _ownsWidget;
     QCursor _currentCursor;

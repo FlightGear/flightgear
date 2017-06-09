@@ -162,10 +162,7 @@ void GLWindow::syncGeometryWithOSG()
 
 GLWindow::~GLWindow()
 {
-    // close GraphicsWindowQt and remove the reference to us
-    if( _gw )
-    {
-        _gw->close();
+    if (_gw) {
         _gw->_window = nullptr;
         _gw = nullptr;
     }
@@ -369,68 +366,55 @@ GraphicsWindowQt5::~GraphicsWindowQt5()
 {
     OSG_INFO << "destroying GraphicsWindowQt5" << std::endl;
     close();
-
-    // remove reference from GLWindow
-    if ( _window )
-        _window->_gw = nullptr;
 }
 
 bool GraphicsWindowQt5::init( Qt::WindowFlags f )
 {
     // update _widget and parent by WindowData
     WindowData* windowData = _traits.get() ? dynamic_cast<WindowData*>(_traits->inheritedWindowData.get()) : 0;
-    if ( !_window )
-        _window = windowData ? windowData->_window : nullptr;
-
-    // create window if it does not exist
-    _ownsWidget = (_window == NULL);
-    if ( !_window )
-    {
-        // WindowFlags
-        Qt::WindowFlags flags = f | Qt::Window | Qt::CustomizeWindowHint;
-        if ( _traits->windowDecoration ) {
-            flags |= Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint;
-            flags |= Qt::WindowFullscreenButtonHint;
-        
-            // TODO - check if this is desirable or not on Windows+Linux
-            //flags |= Qt::MaximizeUsingFullscreenGeometryHint;
-        }
-        
-        // create widget
-        _window = new GLWindow();
-        _window->setFlags(flags);
-        _window->setSurfaceType(QSurface::OpenGLSurface);
-        _window->setFormat(traits2qSurfaceFormat(_traits.get()));
-        _window->create();
+    assert(!_window);
+    _ownsWidget = true;
+    
+    // WindowFlags
+    Qt::WindowFlags flags = f | Qt::Window | Qt::CustomizeWindowHint;
+    if ( _traits->windowDecoration ) {
+        flags |= Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint;
+        flags |= Qt::WindowFullscreenButtonHint;
+    
+        // TODO - check if this is desirable or not on Windows+Linux
+        //flags |= Qt::MaximizeUsingFullscreenGeometryHint;
     }
+    
+    // create widget
+    _window.reset(new GLWindow);
+    _window->setFlags(flags);
+    _window->setSurfaceType(QSurface::OpenGLSurface);
+    _window->setFormat(traits2qSurfaceFormat(_traits.get()));
+    _window->create();
 
-    // set widget name and position
-    // (do not set it when we inherited the widget)
-    if ( _ownsWidget )
-    {
-        _window->setTitle( _traits->windowName.c_str() );
-        
-        // to get OS-dependant default positioning of the window (which is desirable),
-        // we must take care to only set the position if explicitly requested.
-        // hence we set X & Y to these marker values by default.
-        // And hence only set position if both are valid.
-        if ((_traits->x != std::numeric_limits<int>::max()) && (_traits->y != std::numeric_limits<int>::max())) {
-            _window->setPosition( _traits->x, _traits->y );
-        }
-        
-        QSize sz(_traits->width, _traits->height);
-        if ( !_traits->supportsResize ) {
-          _window->setMinimumSize( sz );
-          _window->setMaximumSize( sz );
-        } else {
-          _window->resize( sz );
-        }
-        
-        if (windowData->createFullscreen) {
-            // this doesn't seem to actually work, so we
-            // check the flag again in realizeImplementation()
-            _window->setWindowState(Qt::WindowFullScreen);
-        }
+
+    _window->setTitle( _traits->windowName.c_str() );
+    
+    // to get OS-dependant default positioning of the window (which is desirable),
+    // we must take care to only set the position if explicitly requested.
+    // hence we set X & Y to these marker values by default.
+    // And hence only set position if both are valid.
+    if ((_traits->x != std::numeric_limits<int>::max()) && (_traits->y != std::numeric_limits<int>::max())) {
+        _window->setPosition( _traits->x, _traits->y );
+    }
+    
+    QSize sz(_traits->width, _traits->height);
+    if ( !_traits->supportsResize ) {
+      _window->setMinimumSize( sz );
+      _window->setMaximumSize( sz );
+    } else {
+      _window->resize( sz );
+    }
+    
+    if (windowData->createFullscreen) {
+        // this doesn't seem to actually work, so we
+        // check the flag again in realizeImplementation()
+        _window->setWindowState(Qt::WindowFullScreen);
     }
 
     _window->_isPrimaryWindow = windowData->isPrimaryWindow;
@@ -440,17 +424,7 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     // initialize State
     setState( new osg::State );
     getState()->setGraphicsContext(this);
-
-    // initialize contextID
-    if ( _traits.valid() && _traits->sharedContext.valid() )
-    {
-        getState()->setContextID( _traits->sharedContext->getState()->getContextID() );
-        incrementContextIDUsageCount( getState()->getContextID() );
-    }
-    else
-    {
-        getState()->setContextID( osg::GraphicsContext::createNewContextID() );
-    }
+    getState()->setContextID( osg::GraphicsContext::createNewContextID() );
 
     // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
@@ -530,7 +504,7 @@ osg::GraphicsContext::Traits* GraphicsWindowQt5::createTraits( const QWindow* wi
 
 bool GraphicsWindowQt5::setWindowRectangleImplementation( int x, int y, int width, int height )
 {
-    if ( _window == NULL )
+    if (!_window)
         return false;
 
     qDebug() << "setWRI window geometry to " << x << "," << y <<
@@ -648,7 +622,7 @@ void GraphicsWindowQt5::setCursor( MouseCursor cursor )
 
 bool GraphicsWindowQt5::valid() const
 {
-    return _window;
+    return _window.get() != nullptr;
 }
 
 bool GraphicsWindowQt5::realizeImplementation()
@@ -675,10 +649,12 @@ bool GraphicsWindowQt5::isRealizedImplementation() const
 
 void GraphicsWindowQt5::closeImplementation()
 {
-    if ( _window )
+    if ( _window ) {
         _window->close();
-
-    delete _context;
+        _window.reset();
+    }
+    
+    _context.reset();
     _realized = false;
 }
 
@@ -686,7 +662,7 @@ void GraphicsWindowQt5::runOperations()
 {
     // While in graphics thread this is last chance to do something useful before
     // graphics thread will execute its operations.
-    if (_updateContextNeeded || (QOpenGLContext::currentContext() != _context)) {
+    if (_updateContextNeeded || (QOpenGLContext::currentContext() != _context.get())) {
         makeCurrent();
         _updateContextNeeded = false;
     }
@@ -701,17 +677,11 @@ void GraphicsWindowQt5::runOperations()
 bool GraphicsWindowQt5::makeCurrentImplementation()
 {
     if (!_context) {
-        QOpenGLContext* shareContext = 0;
         if ( _traits->sharedContext.valid() ) {
-          GraphicsWindowQt5* gw = dynamic_cast<GraphicsWindowQt5*>(_traits->sharedContext.get());
-          if (gw) {
-            shareContext = gw->_context;
-            qDebug() << Q_FUNC_INFO << "have a share context";
-          }
+            qWarning() << Q_FUNC_INFO << "share contexts not supported";
         }
 
-        _context = new QOpenGLContext();
-        _context->setShareContext(shareContext);
+        _context.reset(new QOpenGLContext());
         _context->setFormat(_window->format());
         bool result = _context->create();
         if (!result)
@@ -720,7 +690,7 @@ bool GraphicsWindowQt5::makeCurrentImplementation()
           return false;
         }
 
-        _context->makeCurrent(_window);
+        _context->makeCurrent(_window.get());
         // allow derived classes to do work now the context is initalised
         contextInitalised();
     }
@@ -730,7 +700,7 @@ bool GraphicsWindowQt5::makeCurrentImplementation()
       return false;
     }
 
-    _context->makeCurrent(_window);
+    _context->makeCurrent(_window.get());
     return true;
 }
 
@@ -742,7 +712,7 @@ bool GraphicsWindowQt5::releaseContextImplementation()
 
 void GraphicsWindowQt5::swapBuffersImplementation()
 {
-    _context->swapBuffers(_window);
+    _context->swapBuffers(_window.get());
 }
 
 void GraphicsWindowQt5::requestWarpPointer( float x, float y )
