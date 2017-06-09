@@ -112,7 +112,7 @@ protected:
     QSet<QEvent::Type> _eventCompressor;
 
     bool _forwardKeyEvents = false;
-    qreal _devicePixelRatio;
+    qreal _devicePixelRatio = 1.0;
     
     // is this the primary (GUI) window
     bool _isPrimaryWindow = false;
@@ -198,8 +198,9 @@ protected:
     QOpenGLContext* _shareContext = nullptr;
     bool _ownsWidget;
     QCursor _currentCursor;
-    bool _realized;
-    bool _updateContextNeeded;
+    bool _realized = false;
+    bool _updateContextNeeded = false;
+    bool _continousUpdate = false;
     osg::observer_ptr< osgViewer::ViewerBase > _viewer;
     
     // if true, we will generate a resize event on the next

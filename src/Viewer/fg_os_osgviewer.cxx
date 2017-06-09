@@ -372,6 +372,8 @@ void fgOSInit(int* argc, char** argv)
         SG_LOG(SG_GL, SG_INFO, "Using Qt implementation of GraphicsWindow");
         flightgear::initQtWindowingSystem();
     } else {
+        // stock OSG windows are not Hi-DPI aware
+        fgSetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
         SG_LOG(SG_GL, SG_INFO, "Using stock OSG implementation of GraphicsWindow");
     }
 #endif

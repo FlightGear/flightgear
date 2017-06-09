@@ -141,6 +141,12 @@ void GLWindow::onScreenChanged()
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 2, 0))
     _devicePixelRatio = screen()->devicePixelRatio();
 #endif
+    
+    if (_isPrimaryWindow) {
+        // allow PUI and Canvas to be scaled
+        fgSetDouble("/sim/rendering/gui-pixel-ratio", _devicePixelRatio);
+    }
+    
     syncGeometryWithOSG();
 }
 
@@ -355,8 +361,6 @@ void GLWindow::wheelEvent( QWheelEvent* event )
 }
 
 GraphicsWindowQt5::GraphicsWindowQt5(osg::GraphicsContext::Traits* traits)
-:   _realized(false)
-,   _updateContextNeeded(false)
 {
     _traits = traits;
     init(0);
@@ -385,14 +389,12 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
         //flags |= Qt::MaximizeUsingFullscreenGeometryHint;
     }
     
-    // create widget
+    // create window
     _window.reset(new GLWindow);
     _window->setFlags(flags);
     _window->setSurfaceType(QSurface::OpenGLSurface);
     _window->setFormat(traits2qSurfaceFormat(_traits.get()));
     _window->create();
-
-
     _window->setTitle( _traits->windowName.c_str() );
     
     // to get OS-dependant default positioning of the window (which is desirable),
@@ -418,6 +420,10 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     }
 
     _window->_isPrimaryWindow = windowData->isPrimaryWindow;
+    if (_window->_isPrimaryWindow) {
+        fgSetDouble("/sim/rendering/gui-pixel-ratio", _window->_devicePixelRatio);
+    }
+    
     _window->setGraphicsWindow( this );
     useCursor( _traits->useCursor );
 
@@ -760,7 +766,11 @@ void GraphicsWindowQt5::requestRedraw()
 
 void GraphicsWindowQt5::requestContinuousUpdate(bool needed)
 {
-  GraphicsWindow::requestContinuousUpdate(needed);
+    _continousUpdate = needed;
+    GraphicsWindow::requestContinuousUpdate(needed);
+    if (_continousUpdate) {
+        _window->requestUpdate();
+    }
 }
 
 void GraphicsWindowQt5::setFullscreen(bool isFullscreen)
