@@ -174,23 +174,6 @@ GLWindow::~GLWindow()
     }
 }
 
-void GLWindow::processDeferredEvents()
-{
-    QQueue<QEvent::Type> deferredEventQueueCopy;
-    {
-        QMutexLocker lock(&_deferredEventQueueMutex);
-        deferredEventQueueCopy = _deferredEventQueue;
-        _eventCompressor.clear();
-        _deferredEventQueue.clear();
-    }
-
-    while (!deferredEventQueueCopy.isEmpty())
-    {
-        QEvent event(deferredEventQueueCopy.dequeue());
-        QWindow::event(&event);
-    }
-}
-
 bool GLWindow::event( QEvent* event )
 {
     if (event->type() == QEvent::WindowStateChange) {
@@ -201,37 +184,9 @@ bool GLWindow::event( QEvent* event )
             fgSetBool("/sim/startup/fullscreen", isFullscreen);
         }
     }
-    
-    // Reparenting GLWidget may create a new underlying window and a new GL context.
-    // Qt will then call doneCurrent on the GL context about to be deleted. The thread
-    // where old GL context was current has no longer current context to render to and
-    // we cannot make new GL context current in this thread.
-
-    // We workaround above problems by deferring execution of problematic event requests.
-    // These events has to be enqueue and executed later in a main GUI thread (GUI operations
-    // outside the main thread are not allowed) just before makeCurrent is called from the
-    // right thread. The good place for doing that is right after swap in a swapBuffersImplementation.
-
-    if (event->type() == QEvent::Hide)
-    {
-        // enqueue only the last of QEvent::Hide and QEvent::Show
-        enqueueDeferredEvent(QEvent::Hide, QEvent::Show);
-        return true;
-    }
-    else if (event->type() == QEvent::Show)
-    {
-        // enqueue only the last of QEvent::Show or QEvent::Hide
-        enqueueDeferredEvent(QEvent::Show, QEvent::Hide);
-        return true;
-    }
-    else if (event->type() == QEvent::ParentChange)
-    {
-        // enqueue only the last QEvent::ParentChange
-        enqueueDeferredEvent(QEvent::ParentChange);
-        return true;
-    }
     else if (event->type() == QEvent::UpdateRequest)
     {
+        qWarning() << "Got update request";
         osg::ref_ptr<osgViewer::ViewerBase> v;
         if (_gw->_viewer.lock(v)) {
           v->frame();
@@ -729,18 +684,12 @@ void GraphicsWindowQt5::requestWarpPointer( float x, float y )
 
 bool GraphicsWindowQt5::checkEvents()
 {
-    // this gets run on the main thread
-    if (_window->getNumDeferredEvents() > 0)
-      _window->processDeferredEvents();
-
     if (_sendResizeOnEventCheck) {
         _sendResizeOnEventCheck = false;
         _window->syncGeometryWithOSG();
-        
     }
     
 // todo - only if not running inside QApplication::exec; can we check this?
-
     QCoreApplication::processEvents(QEventLoop::AllEvents);
 
     return true;

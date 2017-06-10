@@ -81,35 +81,9 @@ private slots:
 protected:
     void syncGeometryWithOSG();
     
-    int getNumDeferredEvents()
-    {
-        QMutexLocker lock(&_deferredEventQueueMutex);
-        return _deferredEventQueue.count();
-    }
-    void enqueueDeferredEvent(QEvent::Type eventType, QEvent::Type removeEventType = QEvent::None)
-    {
-        QMutexLocker lock(&_deferredEventQueueMutex);
-
-        if (removeEventType != QEvent::None)
-        {
-            if (_deferredEventQueue.removeOne(removeEventType))
-                _eventCompressor.remove(eventType);
-        }
-
-        if (_eventCompressor.find(eventType) == _eventCompressor.end())
-        {
-            _deferredEventQueue.enqueue(eventType);
-            _eventCompressor.insert(eventType);
-        }
-    }
-    void processDeferredEvents();
-
+  
     friend class GraphicsWindowQt5;
     GraphicsWindowQt5* _gw = nullptr; // back-pointer
-
-    QMutex _deferredEventQueueMutex;
-    QQueue<QEvent::Type> _deferredEventQueue;
-    QSet<QEvent::Type> _eventCompressor;
 
     bool _forwardKeyEvents = false;
     qreal _devicePixelRatio = 1.0;
