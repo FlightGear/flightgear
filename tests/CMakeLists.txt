@@ -113,3 +113,20 @@ flightgear_test(test_flightplan test_flightplan.cxx)
 add_executable(test_ls_matrix test_ls_matrix.cxx ${CMAKE_SOURCE_DIR}/src/FDM/LaRCsim/ls_matrix.c)
 target_link_libraries(test_ls_matrix SimGearCore)
 add_test(test_ls_matrix ${EXECUTABLE_OUTPUT_PATH}/test_ls_matrix)
+
+add_executable(testAeroElement testAeroElement.cxx ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AeroElement.cxx)
+target_link_libraries(testAeroElement SimGearCore)
+add_test(testAeroElement ${EXECUTABLE_OUTPUT_PATH}/testAeroElement)
+
+add_executable(testAeroMesh testAeroMesh.cxx
+  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AeroElement.cxx
+  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AircraftMesh.cxx
+  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/WakeMesh.cxx
+  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AIWakeGroup.cxx
+  ${CMAKE_SOURCE_DIR}/src/FDM/LaRCsim/ls_matrix.c
+  )
+set_target_properties (testAeroMesh PROPERTIES COMPILE_DEFINITIONS "FG_TESTLIB")
+target_include_directories(testAeroMesh PRIVATE ${CMAKE_SOURCE_DIR}/tests
+  ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)
+target_link_libraries(testAeroMesh SimGearCore JSBSim)
+add_test(testAeroMesh ${EXECUTABLE_OUTPUT_PATH}/testAeroMesh)
