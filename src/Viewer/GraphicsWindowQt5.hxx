@@ -82,6 +82,8 @@ signals:
 private slots:
     void onScreenChanged();
     
+    void processUpdateEvent();
+    
 protected:
     void syncGeometryWithOSG();
     

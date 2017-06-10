@@ -29,6 +29,7 @@
 #include <QAbstractEventDispatcher>
 #include <QOpenGLContext>
 #include <QSurfaceFormat>
+#include <QTimer>
 
 #include <Main/fg_props.hxx>
 
@@ -179,7 +180,7 @@ GLWindow::~GLWindow()
 void GLWindow::requestUpdate()
 {
     // mimic Qt 5.5's requestUpdate method
-    QTimer::singleShot(0, this, &QWindow::update);
+    QTimer::singleShot(0, this, &GLWindow::processUpdateEvent);
 }
 #endif
 
@@ -195,17 +196,7 @@ bool GLWindow::event( QEvent* event )
     }
     else if (event->type() == QEvent::UpdateRequest)
     {
-        qWarning() << "Got update request";
-        osg::ref_ptr<osgViewer::ViewerBase> v;
-        if (_gw->_viewer.lock(v)) {
-          v->frame();
-        }
-        
-        // see discussion of QWindow::requestUpdate to see
-        // why this is good behaviour
-        if (_gw->_continousUpdate) {
-            requestUpdate();
-        }
+        processUpdateEvent();
     }
     else if (event->type() == QEvent::Close) {
         // spin an 'are you sure'? dialog here
@@ -215,6 +206,21 @@ bool GLWindow::event( QEvent* event )
 
     // perform regular event handling
     return QWindow::event( event );
+}
+
+void GLWindow::processUpdateEvent()
+{
+    osg::ref_ptr<osgViewer::ViewerBase> v;
+    if (_gw->_viewer.lock(v)) {
+        v->frame();
+    }
+    
+    // see discussion of QWindow::requestUpdate to see
+    // why this is good behaviour
+    if (_gw->_continousUpdate) {
+        requestUpdate();
+    }
+
 }
 
 void GLWindow::setKeyboardModifiers( QInputEvent* event )
@@ -730,7 +736,6 @@ void GraphicsWindowQt5::viewerChanged(osgViewer::ViewerBase*)
 void GraphicsWindowQt5::requestRedraw()
 {
   _window->requestUpdate();
-  GraphicsWindow::requestRedraw();
 }
 
 void GraphicsWindowQt5::requestContinuousUpdate(bool needed)
