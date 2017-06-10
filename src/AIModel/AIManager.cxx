@@ -616,7 +616,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 }
 
 double
-FGAIManager::calcRangeFt(const SGVec3d& aCartPos, FGAIBase* aObject) const
+FGAIManager::calcRangeFt(const SGVec3d& aCartPos, const FGAIBase* aObject) const
 {
     double distM = dist(aCartPos, aObject->getCartPos());
     return distM * SG_METER_TO_FEET;
