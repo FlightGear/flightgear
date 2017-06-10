@@ -55,6 +55,7 @@ FORWARD DECLARATIONS
 #include <simgear/props/props.hxx>
 
 #include <FDM/JSBSim/FGFDMExec.h>
+#include "FDM/AIWake/AircraftMesh.hxx"
 
 namespace JSBSim {
 class FGAtmosphere;
@@ -304,6 +305,12 @@ private:
 
     bool crashed;
 
+    AircraftMesh_ptr mesh;
+    SGPropertyNode_ptr _ai_wake_enabled;
+    SGPropertyNode_ptr _fmag{nullptr}, _mmag{nullptr};
+    SGPropertyNode_ptr _fbx{nullptr}, _fby{nullptr}, _fbz{nullptr};
+    SGPropertyNode_ptr _mbx{nullptr}, _mby{nullptr}, _mbz{nullptr};
+
     void do_trim(void);
 
     bool update_ground_cache(const JSBSim::FGLocation& cart, double dt);
@@ -315,5 +322,3 @@ private:
 
 
 #endif // _JSBSIM_HXX
-
-

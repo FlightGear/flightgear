@@ -233,6 +233,8 @@ FGJSBsim::FGJSBsim( double dt )
     fgGetNode("/fdm/jsbsim/sim-time-sec", true)->alias( node );
 // end of sim-time-sec deprecation patch
 
+    _ai_wake_enabled = fgGetNode("fdm/ai-wake/enabled", true);
+
     terrain = fgGetNode("/sim/fdm/surface", true);
 
     fdmex->Setdt( dt );
@@ -363,6 +365,9 @@ FGJSBsim::FGJSBsim( double dt )
     last_hook_root[0] = 0; last_hook_root[1] = 0; last_hook_root[2] = 0;
 
     crashed = false;
+
+    mesh = new AircraftMesh(fgGetDouble("/fdm/jsbsim/metrics/bw-ft"),
+                            fgGetDouble("/fdm/jsbsim/metrics/cbarw-ft"));
 }
 
 /******************************************************************************/
@@ -442,6 +447,15 @@ void FGJSBsim::init()
     }
 
     copy_from_JSBsim(); //update the bus
+
+    _fmag = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/magnitude", false);
+    _fbx = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/x", false);
+    _fby = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/y", false);
+    _fbz = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/z", false);
+    _mmag = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/magnitude-lbsft", false);
+    _mbx = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/l", false);
+    _mby = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/m", false);
+    _mbz = fgGetNode("/fdm/jsbsim/external_reactions/ai-wake/n", false);
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Initialized JSBSim with:" );
 
@@ -557,6 +571,8 @@ void FGJSBsim::update( double dt )
         break;
       }
     }
+
+    reset_wake_group();
 
     // translate JSBsim back to FG structure so that the
     // autopilot (and the rest of the sim can use the updated values
@@ -1556,5 +1572,35 @@ void FGJSBsim::update_external_forces(double t_off)
     last_hook_root[2] = hook_area[1][2];
     
     fgSetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-deg", fi);
-}
 
+    if (_ai_wake_enabled->getBoolValue()) {
+      FGColumnVector3 uvw = Propagate->GetUVW();
+      FGQuaternion ql2b = Propagate->GetQuaternion();
+      FGLocation l = Auxiliary->GetLocationVRP();
+      SGVec3d cartPos(l(1), l(2), l(3));
+      // The scalar component is the first component in FGQuaternion but
+      // the last component in SGQuat.
+      SGQuatd orient(ql2b(2), ql2b(3), ql2b(4), ql2b(1));
+
+      mesh->setPosition(cartPos * SG_FEET_TO_METER, orient);
+
+      SGVec3d f = mesh->GetForce(get_wake_group(),
+                                 SGVec3d(uvw(1), uvw(2), uvw(3)),
+                                 Atmosphere->GetDensity());
+      const SGVec3d& m = mesh->GetMoment();
+
+      if (_fmag) _fmag->setDoubleValue(1.0);
+      if (_fbx) _fbx->setDoubleValue(f[0]);
+      if (_fby) _fby->setDoubleValue(f[1]);
+      if (_fbz) _fbz->setDoubleValue(f[2]);
+
+      if (_mmag) _mmag->setDoubleValue(1.0);
+      if (_mbx) _mbx->setDoubleValue(m[0]);
+      if (_mby) _mby->setDoubleValue(m[1]);
+      if (_mbz) _mbz->setDoubleValue(m[2]);
+    }
+    else {
+      if (_fmag) _fmag->setDoubleValue(0.0);
+      if (_mmag) _mmag->setDoubleValue(0.0);
+    }
+}
