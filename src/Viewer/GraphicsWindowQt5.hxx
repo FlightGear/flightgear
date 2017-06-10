@@ -62,7 +62,7 @@ public:
     inline bool getForwardKeyEvents() const { return _forwardKeyEvents; }
     virtual void setForwardKeyEvents( bool f ) { _forwardKeyEvents = f; }
 
-    void setKeyboardModifiers( QInputEvent* event );
+    void setKeyboardModifiers(const Qt::KeyboardModifiers qtMods);
 
     virtual void keyPressEvent( QKeyEvent* event );
     virtual void keyReleaseEvent( QKeyEvent* event );
@@ -86,6 +86,8 @@ private slots:
     
 protected:
     void syncGeometryWithOSG();
+    
+    void updateEventQueueModifiers(QKeyEvent* event);
     
   
     friend class GraphicsWindowQt5;
