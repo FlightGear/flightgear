@@ -21,7 +21,7 @@
 //
 // $Id$
 
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGVec3.hxx>
@@ -58,19 +58,7 @@ void AIWakeGroup::AddAI(FGAIAircraft* ai)
         _aiWakeData[id] = AIWakeData(new WakeMesh(span, chord));
 
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT,
-               "Created mesh for " << ai->_getName() << " ID: #" << id
-               // << "Type:" << ai->getAcType() << endl
-               // << "Name:" << ai->_getName() << endl
-               // << "Speed:" << ai->getSpeed() << endl
-               // << "Vertical speed:" << ai->getVerticalSpeed() << endl
-               // << "Altitude:" << ai->getAltitude() << endl
-               // << "Heading:" << ai->_getHeading() << endl
-               // << "Roll:" << ai->getRoll() << endl
-               // << "Pitch:" << ai->getPitch() << endl
-               // << "Wing span (ft):" << span << endl
-               // << "Wing chord (ft):" << chord << endl
-               // << "Weight (lbs):" << perfData->weight() << endl
-               );
+               "Created mesh for " << ai->_getName() << " ID: #" << id);
     }
 
     AIWakeData& data = _aiWakeData[id];
