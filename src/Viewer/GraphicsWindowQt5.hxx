@@ -71,6 +71,9 @@ public:
     virtual void mouseMoveEvent( QMouseEvent* event );
     virtual void wheelEvent( QWheelEvent* event );
 
+#if QT_VERSION < 0x050500
+    void requestUpdate();
+#endif
 signals:
     void beforeRendering();
     void afterRendering();

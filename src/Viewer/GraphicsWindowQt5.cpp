@@ -16,6 +16,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <osg/DeleteHandler>
+#include <osg/Version>
 #include "GraphicsWindowQt5.hxx"
 #include <osgViewer/ViewerBase>
 #include <QInputEvent>
@@ -174,6 +175,14 @@ GLWindow::~GLWindow()
     }
 }
 
+#if QT_VERSION < 0x050500
+void GLWindow::requestUpdate()
+{
+    // mimic Qt 5.5's requestUpdate method
+    QTimer::singleShot(0, this, &QWindow::update);
+}
+#endif
+
 bool GLWindow::event( QEvent* event )
 {
     if (event->type() == QEvent::WindowStateChange) {
@@ -190,6 +199,12 @@ bool GLWindow::event( QEvent* event )
         osg::ref_ptr<osgViewer::ViewerBase> v;
         if (_gw->_viewer.lock(v)) {
           v->frame();
+        }
+        
+        // see discussion of QWindow::requestUpdate to see
+        // why this is good behaviour
+        if (_gw->_continousUpdate) {
+            requestUpdate();
         }
     }
     else if (event->type() == QEvent::Close) {
@@ -387,8 +402,10 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     getState()->setGraphicsContext(this);
     getState()->setContextID( osg::GraphicsContext::createNewContextID() );
 
+#if (OPENSCENEGRAPH_MAJOR_VERSION == 3) && (OPENSCENEGRAPH_MINOR_VERSION >= 4)
     // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
+#endif
 
     return true;
 }
@@ -597,8 +614,11 @@ bool GraphicsWindowQt5::realizeImplementation()
         _window->show();
     }
     
+#if (OPENSCENEGRAPH_MAJOR_VERSION == 3) && (OPENSCENEGRAPH_MINOR_VERSION >= 4)
+    // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
-
+#endif
+    
     _realized = true;
     return true;
 }
