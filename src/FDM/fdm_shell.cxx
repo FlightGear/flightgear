@@ -34,6 +34,8 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
+#include "AIModel/AIManager.hxx"
+#include "AIModel/AIAircraft.hxx"
 
 // all the FDMs, since we are the factory method
 #ifdef ENABLE_SP_FDM
@@ -88,6 +90,10 @@ void FDMShell::init()
   _data_logging     = _props->getNode("/sim/temp/fdm-data-logging",         true);
   _replay_master    = _props->getNode("/sim/freeze/replay-state",           true);
 
+  // AI aerodynamic wake interaction
+  _max_radius_nm    = _props->getNode("fdm/ai-wake/max-radius-nm",          true);
+  _ai_wake_enabled  = _props->getNode("fdm/ai-wake/enabled",                true);
+
   createImplementation();
 }
 
@@ -100,6 +106,12 @@ void FDMShell::postinit()
     {
         SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
     }
+
+    _ai_mgr = dynamic_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
+    if (_ai_mgr)
+        SG_LOG(SG_FLIGHT, SG_INFO, "FDM connection to the AI manager: SUCCESS");
+    else
+        SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "FDM connection to the AI manager: FAILED");
 }
 
 void FDMShell::shutdown()
@@ -184,7 +196,30 @@ void FDMShell::update(double dt)
     return; // still waiting
   }
 
-// pull environmental data in, since the FDMs are lazy
+  // AI aerodynamic wake interaction
+  if (_ai_wake_enabled->getBoolValue()) {
+      for (FGAIBase* base : _ai_mgr->get_ai_list()) {
+          try {
+              if (base->isa(FGAIBase::otAircraft) ) {
+                  SGVec3d pos = _impl->getCartPosition();
+                  const SGSharedPtr<FGAIAircraft> aircraft = dynamic_cast<FGAIAircraft*>(base);
+                  double range = _ai_mgr->calcRangeFt(pos, aircraft)*SG_FEET_TO_METER;
+
+                  if (!aircraft->onGround() && aircraft->getSpeed() > 0.0
+                      && range < _max_radius_nm->getDoubleValue()*SG_NM_TO_METER) {
+                      _impl->add_ai_wake(aircraft);
+                  }
+              }
+          } catch (sg_exception& e) {
+              SG_LOG(SG_FLIGHT, SG_WARN, "caught exception updating AI model:"
+                     << base->_getName()<< ", which will be killed."
+                     "\n\tError:" << e.getFormattedMessage());
+              base->setDie(true);
+          }
+      }
+  }
+
+  // pull environmental data in, since the FDMs are lazy
   _impl->set_Velocities_Local_Airmass(
           _wind_north->getDoubleValue(),
           _wind_east->getDoubleValue(),

@@ -80,12 +80,14 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 #include <FDM/groundcache.hxx>
+#include <FDM/AIWake/AIWakeGroup.hxx>
 
 namespace simgear {
 class BVHMaterial;
 }
 
 class SGIOChannel;
+class FGAIAircraft;
 
 /**
  * A little helper class to update the track if
@@ -125,8 +127,6 @@ private:
 
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface : public SGSubsystem {
-
-private:
   
     // Has the init() method been called.  This is used to delay
     // initialization until scenery can be loaded and we know the true
@@ -210,6 +210,8 @@ private:
     // the ground cache object itself.
     FGGroundCache ground_cache;
 
+    AIWakeGroup wake_group;
+
     void set_A_X_pilot(double x)
     { _set_Accels_Pilot_Body(x, _state.a_pilot_body_v[1], _state.a_pilot_body_v[2]); }
     
@@ -224,7 +226,6 @@ protected:
 
     int _calc_multiloop (double dt);
 
-public:
 
 				// deliberately not virtual so that
 				// FGInterface constructor will call
@@ -751,6 +752,11 @@ public:
     // Tell the cache code that it does no longer need to care for
     // the wire end position.
     void release_wire(void);
+
+    // Manages the AI wake computations.
+    void add_ai_wake(FGAIAircraft* ai) { wake_group.AddAI(ai); }
+    void reset_wake_group(void) { wake_group.gc(); }
+    const AIWakeGroup& get_wake_group(void) { return wake_group; }
 };
 
 #endif // _FLIGHT_HXX

@@ -28,6 +28,7 @@
 
 // forward decls
 class FGInterface;
+class FGAIManager;
 
 /**
  * Wrap an FDM implementation in a subsystem with standard semantics
@@ -68,6 +69,10 @@ private:
   SGPropertyNode_ptr _density_slugft, _data_logging, _replay_master;
     
   SGPropertyNode_ptr _initialFdmProperties;
+
+    SGSharedPtr<FGAIManager> _ai_mgr;
+    SGPropertyNode_ptr _max_radius_nm;
+    SGPropertyNode_ptr _ai_wake_enabled;
 };
 
 #endif // of FG_FDM_SHELL_HXX

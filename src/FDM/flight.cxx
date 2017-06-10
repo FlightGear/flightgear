@@ -228,6 +228,8 @@ FGInterface::common_init ()
         set_Climb_Rate( fgGetDouble("/sim/presets/vertical-speed-fps") );
     }
 
+    reset_wake_group();
+
     SG_LOG( SG_FLIGHT, SG_INFO, "End common FDM init" );
 }
 
@@ -927,4 +929,3 @@ FGInterface::release_wire(void)
 {
   ground_cache.release_wire();
 }
-
