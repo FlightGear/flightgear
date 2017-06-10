@@ -69,6 +69,9 @@ void PerformanceData::initFromProps(SGPropertyNode *db_node)
   _vApproach    = db_node->getDoubleValue("approach-speed-kts", _vApproach);
   _vTouchdown   = db_node->getDoubleValue("touchdown-speed-kts", _vTouchdown);
   _vTaxi        = db_node->getDoubleValue("taxi-speed-kts", _vTaxi);
+  _wingSpan     = db_node->getDoubleValue("geometry/wing/span-ft", 100.);
+  _wingChord    = db_node->getDoubleValue("geometry/wing/chord-ft", 12.);
+  _weight       = db_node->getDoubleValue("geometry/weight-lbs", 90000.);
 }
 
 double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool maxBrakes) {

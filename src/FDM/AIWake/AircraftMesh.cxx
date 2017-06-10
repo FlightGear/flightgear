@@ -31,10 +31,10 @@
 #include <simgear/math/SGQuat.hxx>
 #include "AircraftMesh.hxx"
 #include <FDM/flight.hxx>
+#include "AIWakeGroup.hxx"
 #ifndef FG_TESTLIB
 #include "AIModel/AIAircraft.hxx"
 #else
-#include "AIWakeGroup.hxx"
 #include "fakeAIAircraft.hxx"
 #endif
 extern "C" {

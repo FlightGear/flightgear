@@ -112,7 +112,6 @@ set(LARCSIM_SOURCES
     ls_gravity.c
     ls_init.c
     ls_interface.c
-    ls_matrix.c
     ls_model.c
     ls_step.c
     navion_aero.c
@@ -136,6 +135,11 @@ set(SOURCES
 	${SP_FDM_SOURCES}
 	ExternalNet/ExternalNet.cxx
 	ExternalPipe/ExternalPipe.cxx
+        AIWake/AircraftMesh.cxx
+        AIWake/WakeMesh.cxx
+        AIWake/AeroElement.cxx
+        AIWake/AIWakeGroup.cxx
+        LaRCsim/ls_matrix.c
 	)
 
 if(ENABLE_UIUC_MODEL)

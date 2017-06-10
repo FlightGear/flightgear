@@ -45,6 +45,9 @@ public:
     inline double vApproach        () { return _vApproach; };
     inline double vTouchdown       () { return _vTouchdown; };
     inline double vCruise          () { return _vCruise; };
+    inline double wingSpan         () { return _wingSpan; };
+    inline double wingChord        () { return _wingChord; };
+    inline double weight           () { return _weight; };
     
     double decelerationOnGround() const;
 private:
@@ -63,6 +66,11 @@ private:
 
     double _rollrate;
     double _maxbank;
+
+    // Data for aerodynamic wake computation
+    double _wingSpan;
+    double _wingChord;
+    double _weight;
 };
 
 #endif
