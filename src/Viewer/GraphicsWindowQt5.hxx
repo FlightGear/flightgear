@@ -20,6 +20,7 @@
 
 #include <QWindow>
 
+#include <memory>
 #include <osgViewer/GraphicsWindow>
 
 #include <QMutex>
