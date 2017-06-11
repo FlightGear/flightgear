@@ -193,7 +193,7 @@ GLWindow::~GLWindow()
 void GLWindow::requestUpdate()
 {
     // mimic Qt 5.5's requestUpdate method
-    QTimer::singleShot(0, this, &GLWindow::processUpdateEvent);
+    QTimer::singleShot(0, this, SLOT(processUpdateEvent()));
 }
 #endif
 
@@ -461,7 +461,9 @@ QSurfaceFormat GraphicsWindowQt5::traits2qSurfaceFormat( const osg::GraphicsCont
     format.setSwapBehavior( traits->doubleBuffer ?
         QSurfaceFormat::DoubleBuffer :
         QSurfaceFormat::DefaultSwapBehavior);
+#if QT_VERSION >= 0x050300
     format.setSwapInterval( traits->vsync ? 1 : 0 );
+#endif
     format.setStereo( traits->quadBufferStereo ? 1 : 0 );
 
     return format;
