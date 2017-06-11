@@ -32,6 +32,7 @@
 #include <type_traits>          // std::underlying_type
 #include <stdexcept>
 #include <cstdlib>
+#include <cstddef>              // std::size_t
 #include <clocale>
 #include <cstring>
 #include <cerrno>
@@ -136,14 +137,17 @@ bool ResourceDeclaration::isCompressed() const
 
 // Initialization of static members
 const std::array<string, 2> ResourceBuilderXMLVisitor::_tagTypeStr = {
-  "start", "end" };
+  {"start",
+   "end"}
+};
 const std::array<string, 5> ResourceBuilderXMLVisitor::_parserStateStr = {
-  "before 'FGRCC' element",
-  "inside 'FGRCC' element",
-  "inside 'qresource' element",
-  "inside 'file' element",
-  "after 'FGRCC' element"
- };
+  {"before 'FGRCC' element",
+   "inside 'FGRCC' element",
+   "inside 'qresource' element",
+   "inside 'file' element",
+   "after 'FGRCC' element"
+  }
+};
 
 ResourceBuilderXMLVisitor::ResourceBuilderXMLVisitor(const SGPath& rootDir)
   : _rootDir(rootDir)
@@ -707,7 +711,7 @@ using simgear::EmbeddedResourceManager;\n";
 
   // Print the total size of resources
   std::size_t staticMemoryUsedByResources = std::accumulate(
-    resSizeInBytes.begin(), resSizeInBytes.end(), 0);
+    resSizeInBytes.begin(), resSizeInBytes.end(), std::size_t(0));
   LOG("static memory used by resources (total): " <<
       prettyPrintNbOfBytes(staticMemoryUsedByResources));
 
