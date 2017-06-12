@@ -1,4 +1,4 @@
-// transponder.cxx -- class to impliment a transponder
+// transponder.cxx -- class to implement a transponder
 //
 // Written by Roy Vegard Ovesen, started September 2004.
 //
@@ -23,8 +23,27 @@
 //      <transponder>
 //        <name>encoder</name>
 //        <number>0</number>
-//        <mode>0</mode>  // Mode A = 0, Mode C = 1, Mode S = 2
+//        <mode>2</mode>  // Mode A = 0, Mode C = 1, Mode S = 2
+//        <auto-ground>...</auto-ground>
+//        <airspeed-path>...</airspeed-path>
 //      </altimeter>
+//
+// Mode-S transponders (configured with mode = 2) can transmit a ground bit to
+// indicate ground operation. If auto-ground is not defined, the ground bit is
+// switched manually by setting the transponder knob to GND. If auto-ground is
+// defined, the transponder simulates automatic switching of the ground bit
+// using the value of the property defined in auto-ground.
+//
+// For a squat switch, use "/gear/gear/wow". For automatic switching based on
+// airspeed, use a property rule to make a new boolean property that indicates,
+// for example, airspeed < 80, and reference your new property in auto-ground.
+//
+// Note that Mode-A and Mode-C transponders do not transmit a ground bit, even
+// if the transponder knob is set to the GND position.
+//
+// Mode-S transponders also transmit indicated airspeed. The default source of
+// this is /instrumentation/airspeed-indicator/indicated-speed-kt but this can be
+// changed by setting the airspeed-path property as shown above.
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -44,6 +63,7 @@ using std::string;
 
 const double IDENT_TIMEOUT = 18.0; // 18 seconds
 const int INVALID_ALTITUDE = -9999;
+const int INVALID_AIRSPEED = -9999;
 const int INVALID_ID = -9999;
 
 Transponder::Transponder(SGPropertyNode *node)
@@ -56,6 +76,8 @@ Transponder::Transponder(SGPropertyNode *node)
 {
     _requiredBusVolts = node->getDoubleValue("bus-volts", 8.0);
     _altitudeSourcePath = node->getStringValue("encoder-path", "/instrumentation/altimeter");
+    _autoGroundPath = node->getStringValue("auto-ground");
+    _airspeedSourcePath = node->getStringValue("airspeed-path", "/instrumentation/airspeed-indicator/indicated-speed-kt");
     _kt70Compat = node->getBoolValue("kt70-compatibility", false);
 }
 
@@ -72,6 +94,8 @@ void Transponder::init()
     // Inputs
     _busPower_node = fgGetNode("/systems/electrical/outputs/transponder", true);
     _pressureAltitude_node = fgGetNode(_altitudeSourcePath, true);
+    _autoGround_node = fgGetNode(_autoGroundPath, true);
+    _airspeedIndicator_node = fgGetNode(_airspeedSourcePath, true);
 
     SGPropertyNode *in_node = node->getChild("inputs", 0, true);
     for (int i=0; i<4;++i) {
@@ -114,6 +138,8 @@ void Transponder::init()
     _altitudeValid_node = node->getChild("altitude-valid", 0, true);
     _ident_node = node->getChild("ident", 0, true);
     _transmittedId_node = node->getChild("transmitted-id", 0, true);
+    _ground_node = node->getChild("ground-bit", 0, true);
+    _airspeed_node = node->getChild("airspeed-kt", 0, true);
     
     if (_kt70Compat) {
         // alias the properties through
@@ -156,7 +182,7 @@ void Transponder::update(double dt)
     if (has_power() && _serviceable_node->getBoolValue())
     {
         // Mode C & S send also altitude
-        Mode effectiveMode = (_knob == KNOB_ALT) ? _mode : MODE_A;
+        Mode effectiveMode = (_knob == KNOB_ALT || _knob == KNOB_GROUND) ? _mode : MODE_A;
         SGPropertyNode* altitudeSource = NULL;
         
         switch (effectiveMode) {
@@ -192,10 +218,28 @@ void Transponder::update(double dt)
             }
         }
         
-        if (_knob >= KNOB_ON) {
+        if (_knob >= KNOB_GROUND) {
             _transmittedId_node->setIntValue(_idCode_node->getIntValue());
         } else {
             _transmittedId_node->setIntValue(INVALID_ID);
+        }
+
+        if (_mode == MODE_S && _knob >= KNOB_GROUND) {
+            if (_autoGround_node->hasValue()) {
+                // Automatic ground bit based on the auto-ground property
+                _ground_node->setBoolValue(_autoGround_node->getBoolValue());
+            } else {
+                // Manual ground bit based on the transponder knob
+                _ground_node->setBoolValue(_knob == KNOB_GROUND);
+            }
+        } else {
+            _ground_node->setBoolValue(false);
+        }
+
+        if (_mode == MODE_S && _knob >= KNOB_GROUND && _airspeedIndicator_node->hasValue()) {
+            _airspeed_node->setIntValue(_airspeedIndicator_node->getIntValue());
+        } else {
+            _airspeed_node->setIntValue(INVALID_AIRSPEED);
         }
     }
     else
@@ -203,6 +247,8 @@ void Transponder::update(double dt)
       _altitude_node->setIntValue(INVALID_ALTITUDE);
       _altitudeValid_node->setBoolValue(false);
       _ident_node->setBoolValue(false);
+      _ground_node->setBoolValue(false);
+      _airspeed_node->setIntValue(INVALID_AIRSPEED);
       _transmittedId_node->setIntValue(INVALID_ID);
     }
 }
