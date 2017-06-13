@@ -308,7 +308,8 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         #undef p2
         r->setInUse();
     } else if(eq(name, "wing")) {
-	_airplane.setWing(parseWing(a, name, &_airplane));
+        Wing *wing = parseWing(a, name, &_airplane);
+        _airplane.setWing(wing);
     } else if(eq(name, "hstab")) {
 	_airplane.setTail(parseWing(a, name, &_airplane));
     } else if(eq(name, "vstab") || eq(name, "mstab")) {
@@ -537,23 +538,30 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	w->setStall(attrf(a, "aoa") * DEG2RAD);
 	w->setStallWidth(attrf(a, "width", 2) * DEG2RAD);
 	w->setStallPeak(attrf(a, "peak", 1.5));
-    } else if(eq(name, "flap0")) {
-	((Wing*)_currObj)->setFlap0Params(attrf(a, "start"), attrf(a, "end"),
-				    attrf(a, "lift"), attrf(a, "drag"));
-    } else if(eq(name, "flap1")) {
-	((Wing*)_currObj)->setFlap1Params(attrf(a, "start"), attrf(a, "end"),
-				    attrf(a, "lift"), attrf(a, "drag"));
-    } else if(eq(name, "slat")) {
-	((Wing*)_currObj)->setSlatParams(attrf(a, "start"), attrf(a, "end"),
-				   attrf(a, "aoa"), attrf(a, "drag"));
-    } else if(eq(name, "spoiler")) {
-	((Wing*)_currObj)->setSpoilerParams(attrf(a, "start"), attrf(a, "end"),
-				      attrf(a, "lift"), attrf(a, "drag"));
-    /* } else if(eq(name, "collective")) {
-        ((Rotor*)_currObj)->setcollective(attrf(a, "min"), attrf(a, "max"));
-    } else if(eq(name, "cyclic")) {
-        ((Rotor*)_currObj)->setcyclic(attrf(a, "ail"), attrf(a, "ele"));
-    */                               
+    } else if(eq(name, "flap0") || eq(name, "flap1") || eq(name, "spoiler") || eq(name, "slat")) {
+        FlapParams fp;
+        fp.start = attrf(a, "start");
+        fp.end = attrf(a, "end");
+        if (eq(name, "slat")) {
+            fp.aoa = attrf(a, "aoa");
+        } 
+        else {
+            fp.lift =  attrf(a, "lift");
+        }
+        fp.drag = attrf(a, "drag");
+        
+        if (eq(name, "flap0")) {
+            ((Wing*)_currObj)->setFlapParams(WING_FLAP0, fp);
+        }
+        if (eq(name, "flap1")) {
+            ((Wing*)_currObj)->setFlapParams(WING_FLAP1, fp);
+        }
+        if (eq(name, "spoiler")) {
+            ((Wing*)_currObj)->setFlapParams(WING_SPOILER, fp);
+        }
+        if (eq(name, "slat")) {
+            ((Wing*)_currObj)->setFlapParams(WING_SLAT, fp);
+        }
     } else if(eq(name, "actionpt")) {
  	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
@@ -807,14 +815,19 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
       defDihed = 90;
       mirror = false;
     }
-
-    float base[3];
-    base[0] = attrf(a, "x");
-    base[1] = attrf(a, "y");
-    base[2] = attrf(a, "z");    
-
+    
+    float isSection = attrb(a, "section");
+    float base[3] {0,0,0};
+    float chord {0};
+    if (!isSection) {
+      base[0] = attrf(a, "x");
+      base[1] = attrf(a, "y");
+      base[2] = attrf(a, "z");
+      chord = attrf(a, "chord");
+    } 
     float length = attrf(a, "length");
-    float chord = attrf(a, "chord");
+
+    // optional attributes (with defaults)
     float sweep = attrf(a, "sweep", 0) * DEG2RAD;
     float taper = attrf(a, "taper", 1);
     float dihedral = attrf(a, "dihedral", defDihed) * DEG2RAD;
@@ -831,7 +844,7 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
     }
     
     Wing* w = new Wing(version, mirror, base, chord, length, 
-                       taper, sweep, dihedral, twist);
+                      taper, sweep, dihedral, twist);
     w->setIncidence(incidence);
     w->setCamber(camber);
 

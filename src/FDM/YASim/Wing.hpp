@@ -9,8 +9,24 @@ namespace yasim {
 
 class Surface;
 
+struct FlapParams {
+    float start {0};
+    float end {0};
+    float lift {0}; 
+    float drag {0};
+    float aoa {0};
+};
+
+enum WingFlaps {
+    WING_FLAP0,
+    WING_FLAP1,
+    WING_SLAT,
+    WING_SPOILER
+};
+
 // FIXME: need to handle "inverted" controls for mirrored wings.
 class Wing {
+        
 public:
     Wing(Version *ver, bool mirror, float* base, float chord, float length, 
         float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0);
@@ -47,10 +63,7 @@ public:
     void setInducedDrag(float drag) { _inducedDrag = drag; }
     
     
-    void setFlap0Params(float start, float end, float lift, float drag);
-    void setFlap1Params(float start, float end, float lift, float drag);
-    void setSpoilerParams(float start, float end, float lift, float drag);
-    void setSlatParams(float start, float end, float aoa, float drag);
+    void setFlapParams(WingFlaps i, FlapParams fp);
 
     // Set the control axes for the sub-surfaces
     void setFlap0Pos(float lval, float rval);
@@ -88,6 +101,7 @@ public:
     void setLiftRatio(float ratio);
     float getLiftRatio() const { return _liftRatio; }
 
+    
 private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
     Surface* newSurface(float* pos, float* orient, float chord,
@@ -97,6 +111,7 @@ private:
     void calculateSpan();
     void calculateMAC();
     float calculateSweepAngleLeadingEdge();
+
     void addSurface(Surface* s, float weight, float twist);
     
     struct SurfRec { Surface * surface; float weight; };
@@ -141,25 +156,8 @@ private:
     float _dragScale {1};
     float _liftRatio {1};
 
-    float _flap0Start {0};
-    float _flap0End {0};
-    float _flap0Lift {0};
-    float _flap0Drag {0};
+    FlapParams _flapParams[sizeof(WingFlaps)];
 
-    float _flap1Start {0};
-    float _flap1End {0};
-    float _flap1Lift {0};
-    float _flap1Drag {0};
-
-    float _spoilerStart {0};
-    float _spoilerEnd {0};
-    float _spoilerLift {0};
-    float _spoilerDrag {0};
-
-    float _slatStart {0};
-    float _slatEnd {0};
-    float _slatAoA {0};
-    float _slatDrag {0};
 };
 
 }; // namespace yasim

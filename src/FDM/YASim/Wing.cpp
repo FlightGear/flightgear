@@ -39,36 +39,9 @@ void Wing::setIncidence(float incidence)
         ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence);
 }
 
-void Wing::setFlap0Params(float start, float end, float lift, float drag)
+void Wing::setFlapParams(WingFlaps i, FlapParams fp)
 {
-    _flap0Start = start;
-    _flap0End = end;
-    _flap0Lift = lift;
-    _flap0Drag = drag;
-}
-
-void Wing::setFlap1Params(float start, float end, float lift, float drag)
-{
-    _flap1Start = start;
-    _flap1End = end;
-    _flap1Lift = lift;
-    _flap1Drag = drag;
-}
-
-void Wing::setSlatParams(float start, float end, float aoa, float drag)
-{
-    _slatStart = start;
-    _slatEnd = end;
-    _slatAoA = aoa;
-    _slatDrag = drag;
-}
-
-void Wing::setSpoilerParams(float start, float end, float lift, float drag)
-{
-    _spoilerStart = start;
-    _spoilerEnd = end;
-    _spoilerLift = lift;
-    _spoilerDrag = drag;
+    _flapParams[i] = fp;
 }
 
 void Wing::setFlap0Pos(float lval, float rval)
@@ -201,10 +174,14 @@ void Wing::compile()
     // segments.
     const int NUM_BOUNDS {10};
     float bounds[NUM_BOUNDS];
-    bounds[0] = _flap0Start;   bounds[1] = _flap0End;
-    bounds[2] = _flap1Start;   bounds[3] = _flap1End;
-    bounds[4] = _spoilerStart; bounds[5] = _spoilerEnd;
-    bounds[6] = _slatStart;    bounds[7] = _slatEnd;
+    bounds[0] = _flapParams[WING_FLAP0].start;   
+    bounds[1] = _flapParams[WING_FLAP0].end;
+    bounds[2] = _flapParams[WING_FLAP1].start;   
+    bounds[3] = _flapParams[WING_FLAP1].end;
+    bounds[4] = _flapParams[WING_SPOILER].start; 
+    bounds[5] = _flapParams[WING_SPOILER].end;
+    bounds[6] = _flapParams[WING_SLAT].start;    
+    bounds[7] = _flapParams[WING_SLAT].end;
     //and don't forget the root and the tip of the wing itself
     bounds[8] = 0;             bounds[9] = 1;
 
@@ -243,10 +220,10 @@ void Wing::compile()
         float mid = (start+end)/2;
 
         bool hasFlap0=0, hasFlap1=0, hasSlat=0, hasSpoiler=0;
-        if(_flap0Start   < mid && mid < _flap0End)   hasFlap0 = 1;
-        if(_flap1Start   < mid && mid < _flap1End)   hasFlap1 = 1;
-        if(_slatStart    < mid && mid < _slatEnd)    hasSlat = 1;
-        if(_spoilerStart < mid && mid < _spoilerEnd) hasSpoiler = 1;
+        if(_flapParams[WING_FLAP0].start   < mid && mid < _flapParams[WING_FLAP0].end)   hasFlap0 = 1;
+        if(_flapParams[WING_FLAP1].start   < mid && mid < _flapParams[WING_FLAP1].end)   hasFlap1 = 1;
+        if(_flapParams[WING_SLAT].start    < mid && mid < _flapParams[WING_SLAT].end)    hasSlat = 1;
+        if(_flapParams[WING_SPOILER].start < mid && mid < _flapParams[WING_SPOILER].end) hasSpoiler = 1;
 
         // FIXME: Should probably detect an error here if both flap0
         // and flap1 are set.  Right now flap1 overrides.
@@ -353,10 +330,10 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
         s->setStallWidth(i, 0.01);
     }
     
-    if(hasFlap0)   s->setFlapParams(_flap0Lift, _flap0Drag);
-    if(hasFlap1)   s->setFlapParams(_flap1Lift, _flap1Drag);
-    if(hasSlat)    s->setSlatParams(_slatAoA, _slatDrag);
-    if(hasSpoiler) s->setSpoilerParams(_spoilerLift, _spoilerDrag);    
+    if(hasFlap0)   s->setFlapParams(_flapParams[WING_FLAP0].lift, _flapParams[WING_FLAP0].drag);
+    if(hasFlap1)   s->setFlapParams(_flapParams[WING_FLAP1].lift, _flapParams[WING_FLAP1].drag);
+    if(hasSlat)    s->setSlatParams(_flapParams[WING_SLAT].aoa, _flapParams[WING_SLAT].drag);
+    if(hasSpoiler) s->setSpoilerParams(_flapParams[WING_SPOILER].lift, _flapParams[WING_SPOILER].drag);    
 
     if(hasFlap0)   _flap0Surfs.add(s);
     if(hasFlap1)   _flap1Surfs.add(s);
