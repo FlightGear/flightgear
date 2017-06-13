@@ -132,11 +132,12 @@ void ControlMap::setInput(int input, float val)
 int ControlMap::getOutputHandle(void* obj, int type)
 {
     for(int i=0; i<_outputs.size(); i++) {
-	OutRec* o = (OutRec*)_outputs.get(i);
-	if(o->object == obj && o->type == type)
-	    return i;
+        OutRec* o = (OutRec*)_outputs.get(i);
+	    if(o->object == obj && o->type == type)
+	        return i;
     }
-    return 0;
+    fprintf(stderr, "ControlMap::getOutputHandle cannot find *%d, type %d \n", obj, type);
+    return -1;
 }
 
 void ControlMap::setTransitionTime(int handle, float time)

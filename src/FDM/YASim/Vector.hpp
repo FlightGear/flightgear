@@ -1,6 +1,8 @@
 #ifndef _VECTOR_HPP
 #define _VECTOR_HPP
 
+#include <stdio.h>
+#include <cassert>
 //
 // Excruciatingly simple vector-of-pointers class.  Easy & useful.
 // No support for addition of elements anywhere but at the end of the
@@ -46,11 +48,14 @@ inline int Vector::add(void* p)
 
 inline void* Vector::get(int i) const
 {
+    assert(i >= 0 and i < _sz);
     return _array[i];
+
 }
 
 inline void Vector::set(int i, void* p)
 {
+    assert(i >= 0 and i < _sz);
     _array[i] = p;
 }
 
