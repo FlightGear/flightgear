@@ -62,26 +62,32 @@ public:
         OPT_SQUARE = 0x04
     };
 
-    struct PropHandle { char* name; int handle; };
+    struct PropHandle {
+        char* name {nullptr};
+        int handle {0};
+    };
+    struct ObjectID {
+        void* object {nullptr};
+        int subObj {0};
+    };
     
     // map control name to int (enum)
     Control parseControl(const char* name);
-    // Adds a mapping to between input handle and a particular setting
-    // on an output object.  The value of output MUST match the type
-    // of object!
-    void addMapping(int input, Control control, void* object, int options=0);
+    // create ID from object and optional sub index (e.g. for wing section)
+    ObjectID getObjectID(void* object, int subObj = 0);
+    
+    // add input property for a control to an object
+    void addMapping(const char* prop, Control control, ObjectID id, int options = 0);
 
-    // An additional form to specify a mapping range.  Input values
-    // outside of [src0:src1] are clamped, and are then mapped to
-    // [dst0:dst1] before being set on the object.
-    void addMapping(int input, Control control, void* object, int options,
-		    float src0, float src1, float dst0, float dst1);
+    // same with limits. Input values are clamped to [src0:src1] and then mapped to
+    // [dst0:dst1] before being set on the objects control.
+    void addMapping(const char* prop, Control control, ObjectID id, int options, float src0, float src1, float dst0, float dst1);
 
     // Resets our accumulated input values.  Call before any
     // setInput() invokations.
     void reset();
 
-    // Sets the specified input (as returned by propertyHandle) to the
+    // Sets the specified input (as returned by getPropertyHandle()) to the
     // specified value.
     void setInput(int propHandle, float value);
 
@@ -97,7 +103,7 @@ public:
 
     // Each output record is identified by both an object/type tuple
     // and a numeric handle.
-    int getOutputHandle(void* obj, Control control);
+    int getOutputHandle(ObjectID id, Control control);
 
     // Sets the transition time for the control output to swing
     // through its full range.
@@ -110,14 +116,14 @@ public:
     float getOutputR(int handle);
 
     // register property name, return handle
-    int propertyHandle(const char* name);
+    int getPropertyHandle(const char* name);
     int numProperties() { return _properties.size(); }
     PropHandle* getProperty(const int i) { return ((PropHandle*)_properties.get(i)); }
 
 private:
     struct OutRec { 
         Control control;
-        void* object {nullptr}; 
+        ObjectID oid;
         Vector maps;
         float oldL {0};
         float oldR {0};

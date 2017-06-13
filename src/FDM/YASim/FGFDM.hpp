@@ -4,7 +4,6 @@
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/props/props.hxx>
 
-#include "yasim-common.hpp"
 #include "Airplane.hpp"
 #include "Vector.hpp"
 
@@ -50,22 +49,49 @@ private:
         float max {0}; 
     };
 
+    void parseAirplane(const XMLAttributes* a);
+    void parseApproachCruise(const XMLAttributes* a, const char* name);
+    void parseSolveWeight(const XMLAttributes* a);
+    void parseCockpit(const XMLAttributes* a);
+    
+    
     void setOutputProperties(float dt);
 
-    Rotor* parseRotor(XMLAttributes* a, const char* name);
-    Wing* parseWing(XMLAttributes* a, const char* name, Version * version);
+    void parseRotor(const XMLAttributes* a, const char* name);
+    void parseWing(const XMLAttributes* a, const char* name, Airplane* airplane);
     int parseOutput(const char* name);
-    void parseWeight(XMLAttributes* a);
-    void parseTurbineEngine(XMLAttributes* a);
-    void parsePistonEngine(XMLAttributes* a);
-    void parsePropeller(XMLAttributes* a);
-    int attri(XMLAttributes* atts, const char* attr);
-    int attri(XMLAttributes* atts, const char* attr, int def); 
-    float attrf(XMLAttributes* atts, const char* attr);
-    float attrf(XMLAttributes* atts, const char* attr, float def); 
-    double attrd(XMLAttributes* atts, const char* attr);
-    double attrd(XMLAttributes* atts, const char* attr, double def); 
-    bool attrb(XMLAttributes* atts, const char* attr);
+    void parseWeight(const XMLAttributes* a);
+    void parseStall(const XMLAttributes* a);
+    void parseFlap(const XMLAttributes* a, const char* name);
+    
+    void parseTurbineEngine(const XMLAttributes* a);
+    void parsePistonEngine(const XMLAttributes* a);
+    void parsePropeller(const XMLAttributes* a);
+    void parseThruster(const XMLAttributes* a);
+    void parseJet(const XMLAttributes* a);
+    void parseHitch(const XMLAttributes* a);
+    void parseTow(const XMLAttributes* a);
+    void parseWinch(const XMLAttributes* a);
+    void parseGear(const XMLAttributes* a);
+    void parseHook(const XMLAttributes* a);
+    void parseLaunchbar(const XMLAttributes* a);
+    void parseFuselage(const XMLAttributes* a);
+    void parseTank(const XMLAttributes* a);
+    void parseBallast(const XMLAttributes* a);
+    void parseControlSetting(const XMLAttributes* a);
+    void parseControlIn(const XMLAttributes* a);
+    void parseControlOut(const XMLAttributes* a);
+    void parseControlSpeed(const XMLAttributes* a);
+    
+    
+    int attri(const XMLAttributes* atts, const char* attr);
+    int attri(const XMLAttributes* atts, const char* attr, int def); 
+    float attrf(const XMLAttributes* atts, const char* attr);
+    float attrf(const XMLAttributes* atts, const char* attr, float def); 
+    void attrf_xyz(const XMLAttributes* atts, float* out);
+    double attrd(const XMLAttributes* atts, const char* attr);
+    double attrd(const XMLAttributes* atts, const char* attr, double def); 
+    bool attrb(const XMLAttributes* atts, const char* attr);
 
     // The core Airplane object we manage.
     Airplane _airplane;
@@ -89,6 +115,7 @@ private:
     void* _currObj {nullptr};
     bool _cruiseCurr {false};
     int _nextEngine {0};
+    int _wingSection {0};
 
     class FuelProps
     {

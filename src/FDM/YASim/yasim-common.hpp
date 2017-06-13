@@ -31,10 +31,6 @@ namespace yasim {
     
     static const float NM2FTLB = (1/(LBS2N*FT2M));
     static const float SLUG2KG = 14.59390f;
-
-    char* dup(const char* s);
-    bool eq(const char* a, const char* b);
-    
 }; //namespace yasim
 
 #endif // ifndef _YASIM_COMMON_HPP

@@ -5,81 +5,95 @@
 
 namespace yasim {
   
-Wing::Wing(Version *ver, bool mirror, float* base, float chord, 
-        float length, float taper, float sweep, float dihedral, float twist) :
+Wing::Wing(Version *ver, bool mirror) :
     _version(ver),
-    _mirror(mirror),
-    _rootChordLength(chord),
-    _length(length),
-    _taper(taper),
-    _sweepAngleCenterLine(sweep),
-    _dihedral(dihedral),
-    _twist(twist)
+    _mirror(mirror)
 {
-    Math::set3(base, _base);
-    _meanChord = _rootChordLength*(_taper+1)*0.5f;
-    calculateWingCoordinateSystem();
-    calculateTip();
-    calculateSpan();
-    calculateMAC();
 }
 
 Wing::~Wing()
 {
-    for(int i=0; i<_surfs.size(); i++) {
-        SurfRec* s = (SurfRec*)_surfs.get(i);
-        delete s->surface;
-        delete s;
-    }
-}
-
-void Wing::setIncidence(float incidence)
-{
-    _incidence = incidence;
-    for(int i=0; i<_surfs.size(); i++)
-        ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence);
-}
-
-void Wing::setFlapParams(WingFlaps i, FlapParams fp)
-{
-    _flapParams[i] = fp;
-}
-
-void Wing::setFlapPos(WingFlaps f,float lval, float rval)
-{
-    float min {-1};
-    if (f == WING_SPOILER || f == WING_SLAT) {
-        min = 0;
-    }
-    lval = Math::clamp(lval, min, 1);
-    rval = Math::clamp(rval, min, 1);
-    for(int i=0; i<_flapSurfs[f].size(); i++) {
-        switch (f) {
-            case WING_FLAP0:
-            case WING_FLAP1:
-                ((Surface*)_flapSurfs[f].get(i))->setFlapPos(lval);
-                if(_mirror) ((Surface*)_flapSurfs[f].get(++i))->setFlapPos(rval);
-                break;
-            case WING_SLAT:
-                ((Surface*)_flapSurfs[f].get(i))->setSlatPos(lval);
-                break;
-            case WING_SPOILER:
-                ((Surface*)_flapSurfs[f].get(i))->setSpoilerPos(lval);
-                if(_mirror) ((Surface*)_flapSurfs[f].get(++i))->setSpoilerPos(rval);
-                break;
+    WingSection* ws;
+    for (int s=0; s < _sections.size(); s++){
+        ws = (WingSection*)_sections.get(s);
+        for(int i=0; i<ws->_surfs.size(); i++) {
+            SurfRec* s = (SurfRec*)ws->_surfs.get(i);
+            delete s->surface;
+            delete s;
         }
     }
 }
 
-void Wing::setFlapEffectiveness(WingFlaps f, float lval)
+int Wing::addWingSection(float* base, float chord, float wingLength, float taper, 
+                         float sweep, float dihedral, float twist, float camber, 
+                         float idrag, float incidence)
 {
-    lval = Math::clamp(lval, 1, 10);
-    for(int i=0; i<_flapSurfs[f].size(); i++) {
-        ((Surface*)_flapSurfs[f].get(i))->setFlapEffectiveness(lval);
+    WingSection* ws = new WingSection;
+    if (_sections.size() == 0) {
+        // first section
+        Math::set3(base, _base);
+        ws->_rootChord = _float2chord(base, chord);
+        ws->_sectionIncidence = incidence;
+    } else { 
+        WingSection* prev = (WingSection*)_sections.get(_sections.size()-1);
+        //use old wing tip instead of base argument
+        ws->_rootChord = prev->_tipChord;
+        ws->_sectionIncidence = prev->_sectionIncidence + prev->_twist;
     }
+    ws->_length = wingLength;
+    ws->_taper = taper; 
+    ws->_sweepAngleCenterLine = sweep;    
+    ws->_dihedral = dihedral;
+    ws->_twist = twist;
+    ws->_camber = camber;
+    ws->_inducedDrag = idrag;
+    ws->calculateGeometry();
+    int idx = _sections.add(ws);    
+    // first / only section
+    if (idx == 0) {
+        _mac = ws->getMAC();
+        _wingspan = ws->_wingspan;
+        _area = ws->getArea();
+        _meanChord = ws->_meanChord;
+    }
+    // append section: Calculate wing MAC from MACs of section and prev wing
+    else {
+        _mac = Wing::calculateMAC(_mac, ws->getMAC());
+        _wingspan += ws->_wingspan;
+        _area += ws->getArea();
+        _meanChord = _meanChord * ws->_meanChord * 0.5f;
+    }
+    _chord2float(ws->_tipChord, _tip);    
+    return idx;
 }
 
-void Wing::calculateWingCoordinateSystem() {
+Chord Wing::_float2chord(float* pos, float lenght)
+{
+    Chord c;
+    c.x = pos[0];
+    c.y = pos[1];
+    c.z = pos[2];
+    c.length = lenght;
+    return c;
+}
+
+void Wing::_chord2float(Chord c, float* pos)
+{
+    pos[0] = c.x;
+    pos[1] = c.y;
+    pos[2] = c.z;
+}
+
+void Wing::WingSection::calculateGeometry()
+{
+    _meanChord = _rootChord.length*(_taper+1)*0.5f;
+    calculateWingCoordinateSystem();
+    calculateTipChord();
+    calculateSpan();
+    calculateMAC();    
+}
+
+void Wing::WingSection::calculateWingCoordinateSystem() {
   // prepare wing coordinate system, ignoring incidence and twist for now
   // (tail incidence is varied by the solver)
   // Generating a unit vector pointing out the left wing.
@@ -110,168 +124,257 @@ void Wing::calculateWingCoordinateSystem() {
   for(i=3; i<6; i++)  _rightOrient[i] = -_rightOrient[i];
 }
 
-void Wing::calculateTip() {
+void Wing::WingSection::calculateTipChord() {
     float *y = _orient+3;
-    Math::mul3(_length, y, _tip);
-    Math::add3(_base, _tip, _tip);
+    _tipChord.x = _rootChord.x + _length * y[0];
+    _tipChord.y = _rootChord.y + _length * y[1];
+    _tipChord.z = _rootChord.z + _length * y[2];
+    _tipChord.length = _rootChord.length * _taper;
 }
 
-void Wing::calculateSpan()
+void Wing::WingSection::calculateSpan()
 {
     // wingspan in y-direction (not for vstab)
-    _wingspan = Math::abs(2*_tip[1]);
-    _netSpan = Math::abs(2*(_tip[1]-_base[1]));
+    _wingspan = Math::abs(2*_tipChord.y);
     _aspectRatio = _wingspan / _meanChord;  
 }
 
-void Wing::calculateMAC()
+void Wing::WingSection::calculateMAC()
 {
+    //FIXME call static method, use absolute y values
+    
     // http://www.nasascale.org/p2/wp-content/uploads/mac-calculator.htm
-    const float commonFactor = _rootChordLength*(0.5+_taper)/(3*_rootChordLength*(1+_taper));
-    _mac.length = _rootChordLength-(2*_rootChordLength*(1-_taper)*commonFactor);
-    _mac.y = _netSpan*commonFactor;
-    _mac.x = _base[0]-Math::tan(_sweepAngleCenterLine) * _mac.y + _mac.length/2;
+    const float commonFactor = _rootChord.length*(0.5+_taper)/(3*_rootChord.length*(1+_taper));
+    _mac.length = _rootChord.length-(2*_rootChord.length*(1-_taper)*commonFactor);
+    _mac.y = Math::abs(2*(_tipChord.y-_rootChord.y))*commonFactor;
+    _mac.x = _rootChord.x-Math::tan(_sweepAngleCenterLine)*_mac.y + _mac.length/2;
+    _mac.y += _rootChord.y;
 }
 
-Chord Wing::calculateMAC(Chord root, Chord tip)
-{
-    assert(root.length > 0);
-    //const float taper = tip.length / root.length;
-    const float commonFactor = (root.length*0.5+tip.length)/(3*(root.length+tip.length));
-    Chord m;
-    m.length = root.length-(2*(root.length - tip.length)*commonFactor);
-    m.y = Math::abs(2*(tip.y - root.y))*commonFactor;
-    m.x = root.x - (root.x - tip.x)*(root.y - m.y)/(root.y - tip.y);
-    return m;
-}
-
-float Wing::calculateSweepAngleLeadingEdge()
+float Wing::WingSection::calculateSweepAngleLeadingEdge()
 {
     if (_length == 0) {
       return 0;
     }
     return Math::atan(
-      (sin(_sweepAngleCenterLine)+(1-_taper)*_rootChordLength/(2*_length)) /
+      (sin(_sweepAngleCenterLine)+(1-_taper)*_rootChord.length/(2*_length)) /
       cos(_sweepAngleCenterLine)
     );  
+}
+
+void Wing::WingSection::setIncidence(float incidence)
+{
+    //update surface
+    for(int i=0; i<_surfs.size(); i++)
+        ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence + _sectionIncidence);
+}
+
+// root and tip (x,y) coordinates are on leading edge
+Chord Wing::calculateMAC(Chord root, Chord tip)
+{
+    assert(root.length > 0);
+    //taper = tip.length / root.length;
+    const float commonFactor = (root.length*0.5+tip.length)/(3*(root.length+tip.length));
+    Chord m;
+    m.length = root.length-(2*(root.length - tip.length)*commonFactor);
+    m.y = Math::abs(2*(tip.y - root.y))*commonFactor + root.y; 
+    m.x = root.x - (root.x - tip.x)*(root.y - m.y)/(root.y - tip.y);
+    return m;
+}
+
+void Wing::setFlapParams(int section, WingFlaps type, FlapParams fp)
+{
+    ((WingSection*)_sections.get(section))->_flapParams[type] = fp;
+}
+
+void Wing::setSectionDrag(int section, float pdrag)
+{
+    ((WingSection*)_sections.get(section))->_dragScale = pdrag;
+}
+
+void Wing::setSectionStallParams(int section, StallParams sp)
+{
+    ((WingSection*)_sections.get(section))->_stallParams = sp;
+}
+    
+void Wing::setFlapPos(WingFlaps type,float lval, float rval)
+{
+    float min {-1};
+    if (type == WING_SPOILER || type == WING_SLAT) {
+        min = 0;
+    }
+    lval = Math::clamp(lval, min, 1);
+    rval = Math::clamp(rval, min, 1);
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) 
+    {        
+        ws = (WingSection*)_sections.get(section);
+        for(int i=0; i < ws->_flapSurfs[type].size(); i++) {
+            switch (type) {
+                case WING_FLAP0:
+                case WING_FLAP1:
+                    ((Surface*)ws->_flapSurfs[type].get(i))->setFlapPos(lval);
+                    if(_mirror) ((Surface*)ws->_flapSurfs[type].get(++i))->setFlapPos(rval);
+                    break;
+                case WING_SLAT:
+                    ((Surface*)ws->_flapSurfs[type].get(i))->setSlatPos(lval);
+                    break;
+                case WING_SPOILER:
+                    ((Surface*)ws->_flapSurfs[type].get(i))->setSpoilerPos(lval);
+                    if(_mirror) ((Surface*)ws->_flapSurfs[type].get(++i))->setSpoilerPos(rval);
+                    break;
+            }
+        }
+    }
+}
+
+void Wing::setFlapEffectiveness(WingFlaps f, float lval)
+{
+    lval = Math::clamp(lval, 1, 10);
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) 
+    {        
+        ws = (WingSection*)_sections.get(section);        
+        for(int i=0; i<ws->_flapSurfs[f].size(); i++) {
+            ((Surface*)ws->_flapSurfs[f].get(i))->setFlapEffectiveness(lval);
+        }
+    }
 }
 
 
 void Wing::compile()
 {
-    // Have we already been compiled?
-    if(! _surfs.empty()) return;
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) 
+    {        
+        ws = (WingSection*)_sections.get(section);
+        // Have we already been compiled?
+        if(! ws->_surfs.empty()) return;
+        
+        // Assemble the start/end coordinates of all control surfaces
+        // and the wing itself into an array, sort them,
+        // and remove duplicates.  This gives us the boundaries of our
+        // segments.
+        const int NUM_BOUNDS {10};
+        float bounds[NUM_BOUNDS];
+        bounds[0] = ws->_flapParams[WING_FLAP0].start;   
+        bounds[1] = ws->_flapParams[WING_FLAP0].end;
+        bounds[2] = ws->_flapParams[WING_FLAP1].start;   
+        bounds[3] = ws->_flapParams[WING_FLAP1].end;
+        bounds[4] = ws->_flapParams[WING_SPOILER].start; 
+        bounds[5] = ws->_flapParams[WING_SPOILER].end;
+        bounds[6] = ws->_flapParams[WING_SLAT].start;    
+        bounds[7] = ws->_flapParams[WING_SLAT].end;
+        //and don't forget the root and the tip of the wing itself
+        bounds[8] = 0;             bounds[9] = 1;
 
-    // Assemble the start/end coordinates of all control surfaces
-    // and the wing itself into an array, sort them,
-    // and remove duplicates.  This gives us the boundaries of our
-    // segments.
-    const int NUM_BOUNDS {10};
-    float bounds[NUM_BOUNDS];
-    bounds[0] = _flapParams[WING_FLAP0].start;   
-    bounds[1] = _flapParams[WING_FLAP0].end;
-    bounds[2] = _flapParams[WING_FLAP1].start;   
-    bounds[3] = _flapParams[WING_FLAP1].end;
-    bounds[4] = _flapParams[WING_SPOILER].start; 
-    bounds[5] = _flapParams[WING_SPOILER].end;
-    bounds[6] = _flapParams[WING_SLAT].start;    
-    bounds[7] = _flapParams[WING_SLAT].end;
-    //and don't forget the root and the tip of the wing itself
-    bounds[8] = 0;             bounds[9] = 1;
-
-    // Sort in increasing order
-    int i;
-    for(i=0; i<NUM_BOUNDS; i++) {
-      int minIdx = i;
-      float minVal = bounds[i];
-      for(int j=i+1; j<NUM_BOUNDS; j++) {
-        if(bounds[j] < minVal) {
-          minIdx = j;
-          minVal = bounds[j];
+        // Sort in increasing order
+        for(int i=0; i<NUM_BOUNDS; i++) {
+            int minIdx = i;
+            float minVal = bounds[i];
+            for(int j=i+1; j<NUM_BOUNDS; j++) {
+                if(bounds[j] < minVal) {
+                    minIdx = j;
+                    minVal = bounds[j];
+                }
+            }   
+            float tmp = bounds[i];
+            bounds[i] = minVal; bounds[minIdx] = tmp;
         }
-      }
-      float tmp = bounds[i];
-      bounds[i] = minVal; bounds[minIdx] = tmp;
-    }
 
-    // Uniqify
-    float last = bounds[0];
-    int nbounds = 1;
-    for(i=1; i<NUM_BOUNDS; i++) {
-        if(bounds[i] != last)
-            bounds[nbounds++] = bounds[i];
-        last = bounds[i];
-    }
+        // Uniqify
+        float last = bounds[0];
+        int nbounds = 1;
+        for(int i=1; i<NUM_BOUNDS; i++) {
+            if(bounds[i] != last)
+                bounds[nbounds++] = bounds[i];
+            last = bounds[i];
+        }
 
-    // Calculate a "nominal" segment length equal to an average chord,
-    // normalized to lie within 0-1 over the length of the wing.
-    float segLen = _meanChord / _length;
+        // Calculate a "nominal" segment length equal to an average chord,
+        // normalized to lie within 0-1 over the length of the wing.
+        float segLen = ws->_meanChord / ws->_length;
 
-    // Now go through each boundary and make segments
-    for(i=0; i<(nbounds-1); i++) {
-        float start = bounds[i];
-        float end = bounds[i+1];
-        float mid = (start+end)/2;
+        // Now go through each boundary and make segments
+        for(int i=0; i<(nbounds-1); i++) {
+            float start = bounds[i];
+            float end = bounds[i+1];
+            float mid = (start+end)/2;
 
-        bool hasFlap0=0, hasFlap1=0, hasSlat=0, hasSpoiler=0;
-        if(_flapParams[WING_FLAP0].start   < mid && mid < _flapParams[WING_FLAP0].end)   hasFlap0 = 1;
-        if(_flapParams[WING_FLAP1].start   < mid && mid < _flapParams[WING_FLAP1].end)   hasFlap1 = 1;
-        if(_flapParams[WING_SLAT].start    < mid && mid < _flapParams[WING_SLAT].end)    hasSlat = 1;
-        if(_flapParams[WING_SPOILER].start < mid && mid < _flapParams[WING_SPOILER].end) hasSpoiler = 1;
+            bool hasFlap0=0, hasFlap1=0, hasSlat=0, hasSpoiler=0;
+            if(ws->_flapParams[WING_FLAP0].start < mid && mid < ws->_flapParams[WING_FLAP0].end)  
+                hasFlap0 = 1;
+            if(ws->_flapParams[WING_FLAP1].start < mid && mid < ws->_flapParams[WING_FLAP1].end)  
+                hasFlap1 = 1;
+            if(ws->_flapParams[WING_SLAT].start < mid && mid < ws->_flapParams[WING_SLAT].end)
+                hasSlat = 1;
+            if(ws->_flapParams[WING_SPOILER].start < mid && mid < ws->_flapParams[WING_SPOILER].end) 
+                hasSpoiler = 1;
 
-        // FIXME: Should probably detect an error here if both flap0
-        // and flap1 are set.  Right now flap1 overrides.
+            // FIXME: Should probably detect an error here if both flap0
+            // and flap1 are set.  Right now flap1 overrides.
 
-        int nSegs = (int)Math::ceil((end-start)/segLen);
-        if (_twist != 0 && nSegs < 8) // more segments if twisted
-            nSegs = 8;
-        float segWid = _length * (end - start)/nSegs;
+            int nSegs = (int)Math::ceil((end-start)/segLen);
+            if (ws->_twist != 0 && nSegs < 8) // more segments if twisted
+                nSegs = 8;
+            float segWid = ws->_length * (end - start)/nSegs;
 
-        int j;
-        for(j=0; j<nSegs; j++) {
-            float frac = start + (j+0.5f) * (end-start)/nSegs;
-            float pos[3];
-            interp(_base, _tip, frac, pos);
+            for(int j=0; j<nSegs; j++) {
+                float frac = start + (j+0.5f) * (end-start)/nSegs;
+                float pos[3];
+                interp(_base, _tip, frac, pos);
 
-            float chord = _rootChordLength * (1 - (1-_taper)*frac);
-            float weight = chord * segWid;
-            float twist = _twist * frac;
+                float chord = ws->_rootChord.length * (1 - (1-ws->_taper)*frac);
+                float weight = chord * segWid;
+                float twist = ws->_twist * frac;
 
-            Surface *s = newSurface(pos, _orient, chord,
-                                    hasFlap0, hasFlap1, hasSlat, hasSpoiler);
+                ws->newSurface(_version, pos, ws->_orient, chord,                                       hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist);
 
-            addSurface(s, weight, twist);
-
-            if(_mirror) {
-                pos[1] = -pos[1];
-                s = newSurface(pos, _rightOrient, chord,
-                               hasFlap0, hasFlap1, hasSlat, hasSpoiler);
-                addSurface(s, weight, twist);                
+                if(_mirror) {
+                    pos[1] = -pos[1];
+                    ws->newSurface(_version, pos, ws->_rightOrient, chord,
+                                hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist);                
+                }
             }
         }
+        // Last of all, re-set the incidence in case setIncidence() was
+        // called before we were compiled.
+        setIncidence(_incidence);
     }
-    // Last of all, re-set the incidence in case setIncidence() was
-    // called before we were compiled.
-    setIncidence(_incidence);
     writeInfoToProptree();
 }
 
 void Wing::multiplyLiftRatio(float factor)
 {
-    setLiftRatio(_liftRatio * factor);
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) 
+    {        
+        ws = (WingSection*)_sections.get(section);
+        ws->multiplyLiftRatio(factor);
+    }  
 }
 
-void Wing::addSurface(Surface* s, float weight, float twist)
+void Wing::multiplyDragCoefficient(float factor)
 {
-    SurfRec *sr = new SurfRec();
-    sr->surface = s;
-    sr->weight = weight;
-    s->setDragCoefficient(sr->weight);
-    s->setTwist(twist);
-    _surfs.add(sr);
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) 
+    {        
+        ws = (WingSection*)_sections.get(section);
+        ws->multiplyDragCoefficient(factor);
+    }
 }
 
-void Wing::setDragCoefficient(float scale)
+void Wing::setIncidence(float incidence)
+{
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) 
+    {        
+        ws = (WingSection*)_sections.get(section);
+        ws->setIncidence(incidence);
+    }    
+}
+    
+void Wing::WingSection::setDragCoefficient(float scale)
 {
     _dragScale = scale;
     for(int i=0; i<_surfs.size(); i++) {
@@ -280,20 +383,24 @@ void Wing::setDragCoefficient(float scale)
     }
 }
 
-void Wing::multiplyDragCoefficient(float factor)
+void Wing::WingSection::multiplyDragCoefficient(float factor)
 {
     setDragCoefficient(_dragScale * factor);
 }
 
-void Wing::setLiftRatio(float ratio)
+void Wing::WingSection::setLiftRatio(float ratio)
 {
     _liftRatio = ratio;
     for(int i=0; i<_surfs.size(); i++)
         ((SurfRec*)_surfs.get(i))->surface->setZDrag(ratio);
 }
 
-Surface* Wing::newSurface(float* pos, float* orient, float chord,
-                          bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler)
+void Wing::WingSection::multiplyLiftRatio(float factor)
+{
+    setLiftRatio(_liftRatio * factor);
+}
+
+void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient, float chord, bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler, float weight, float twist)
 {
     Surface* s = new Surface(_version);
 
@@ -347,7 +454,12 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
 
     s->setInducedDrag(_inducedDrag);
 
-    return s;
+    SurfRec *sr = new SurfRec();
+    sr->surface = s;
+    sr->weight = weight;
+    s->setDragCoefficient(sr->weight);
+    s->setTwist(twist);
+    _surfs.add(sr);
 }
 
 void Wing::interp(const float* v1, const float* v2, const float frac, float* out)
@@ -361,30 +473,40 @@ void Wing::writeInfoToProptree()
 {
     if (_wingN == nullptr) 
         return;
+    WingSection* ws = (WingSection*)_sections.get(0);
+    float chord = ws->_rootChord.length;
+    ws = (WingSection*)_sections.get(_sections.size()-1);
+    float taper = ws->_rootChord.length * ws->_taper;
     _wingN->getNode("tip-x", true)->setFloatValue(_tip[0]);
     _wingN->getNode("tip-y", true)->setFloatValue(_tip[1]);
     _wingN->getNode("tip-z", true)->setFloatValue(_tip[2]);
     _wingN->getNode("base-x", true)->setFloatValue(_base[0]);
     _wingN->getNode("base-y", true)->setFloatValue(_base[1]);
     _wingN->getNode("base-z", true)->setFloatValue(_base[2]);
+    _wingN->getNode("chord", true)->setFloatValue(chord);
+    _wingN->getNode("taper", true)->setFloatValue(taper);
     _wingN->getNode("wing-span", true)->setFloatValue(_wingspan);
     _wingN->getNode("wing-area", true)->setFloatValue(_wingspan*_meanChord);
     _wingN->getNode("aspect-ratio", true)->setFloatValue(_aspectRatio);
     _wingN->getNode("standard-mean-chord", true)->setFloatValue(_meanChord);
     _wingN->getNode("mac", true)->setFloatValue(_mac.length);
     _wingN->getNode("mac-x", true)->setFloatValue(_mac.x);
-    _wingN->getNode("mac-y", true)->setFloatValue(_base[1]+_mac.y);
+    _wingN->getNode("mac-y", true)->setFloatValue(_mac.y);
 
     float wgt = 0;
     float dragSum = 0;
-    for(int surf=0; surf < numSurfaces(); surf++) {
-        Surface* s = (Surface*)getSurface(surf);
-        float drag = s->getDragCoefficient();
-        dragSum += drag;
 
-        float mass = getSurfaceWeight(surf);
-        mass = mass * Math::sqrt(mass);
-        wgt += mass;
+    for (int section=0; section < _sections.size(); section++) {
+        ws = (WingSection*)_sections.get(section);
+        for (int surf=0; surf < ws->numSurfaces(); surf++) {
+            Surface* s = ws->getSurface(surf);
+            float drag = s->getDragCoefficient();
+            dragSum += drag;
+
+            float mass = ws->getSurfaceWeight(surf);
+            mass = mass * Math::sqrt(mass);
+            wgt += mass;
+        }
     }
     _wingN->getNode("weight", true)->setFloatValue(wgt);
     _wingN->getNode("drag", true)->setFloatValue(dragSum);
@@ -393,21 +515,25 @@ void Wing::writeInfoToProptree()
 float Wing::updateModel(Model* model) 
 {
     float wgt = 0;
-    for(int surf=0; surf < numSurfaces(); surf++) {
-        Surface* s = (Surface*)getSurface(surf);
-        model->addSurface(s);
+    WingSection* ws;
+    for (int section=0; section < _sections.size(); section++) {
+        ws = (WingSection*)_sections.get(section);
+        for(int surf=0; surf < ws->numSurfaces(); surf++) {
+            Surface* s = ws->getSurface(surf);
+            model->addSurface(s);
 
-        float mass = getSurfaceWeight(surf);
-        mass = mass * Math::sqrt(mass);
-        wgt += mass;
+            float mass = ws->getSurfaceWeight(surf);
+            mass = mass * Math::sqrt(mass);
+            wgt += mass;
 
-        float pos[3];
-        s->getPosition(pos);
-        int mid = model->getBody()->addMass(mass, pos, true);
-        if (_wingN != nullptr) {
-            SGPropertyNode_ptr n = _wingN->getNode("surfaces", true)->getChild("surface", s->getID(), true);
-            n->getNode("drag", true)->setFloatValue(s->getDragCoefficient());
-            n->getNode("mass-id", true)->setIntValue(mid);
+            float pos[3];
+            s->getPosition(pos);
+            int mid = model->getBody()->addMass(mass, pos, true);
+            if (_wingN != nullptr) {
+                SGPropertyNode_ptr n = _wingN->getNode("surfaces", true)->getChild("surface", s->getID(), true);
+                n->getNode("drag", true)->setFloatValue(s->getDragCoefficient());
+                n->getNode("mass-id", true)->setIntValue(mid);
+            }
         }
     }
     return wgt;    

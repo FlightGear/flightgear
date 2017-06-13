@@ -67,8 +67,10 @@ void Surface::setSpoilerParams(float liftPenalty, float dragPenalty)
 void Surface::setFlapPos(float pos)
 {
   if (_flapPos != pos) {
-      _flapPos = pos;
-    if (_surfN != 0) _flapN->setFloatValue(pos);
+    _flapPos = pos;
+    if (_surfN != 0) {
+        _flapN->setFloatValue(pos);
+    }
   }
 }
 
@@ -76,7 +78,9 @@ void Surface::setSlatPos(float pos)
 {
   if (_slatPos != pos) {
     _slatPos = pos;
-    if (_surfN != 0) _slatN->setFloatValue(pos);
+    if (_surfN != 0) {
+        _slatN->setFloatValue(pos);
+    }
   }
 }
 

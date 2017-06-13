@@ -246,11 +246,12 @@ int main(int argc, char** argv)
     float SI_inertia[9];
     a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
     float MAC = 0, MACx = 0, MACy = 0;
-    Wing* wing = a->getWing();
-    if (wing) {
-      MAC = a->getWing()->getMACLength();
-      MACx = a->getWing()->getMACx();
-      MACy = a->getWing()->getMACy();
+    Wing* wing {nullptr};
+    if (a->hasWing()) {
+      wing = a->getWing();
+      MAC = wing->getMACLength();
+      MACx = wing->getMACx();
+      MACy = wing->getMACy();
     }
     printf("       Iterations: %d\n", a->getSolutionIterations());
     printf(" Drag Coefficient: %.3f\n", drag);

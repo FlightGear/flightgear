@@ -37,9 +37,9 @@ public:
 
     void setEmptyWeight(float weight) {  _emptyWeight = weight; }
 
-    void setWing(Wing* wing) { _wing = wing; }
-    Wing* getWing() { return _wing; }
-    void setTail(Wing* tail) { _tail = tail; }
+    Wing* getWing();
+    bool hasWing() const { return (_wing != nullptr); }
+    Wing* getTail(); 
     void addVStab(Wing* vstab) { _vstabs.add(vstab); }
 
     void addFuselage(float* front, float* back, float width,
@@ -59,9 +59,9 @@ public:
     void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
     void setCruise(float speed, float altitude, float fuel, float gla);
 
-    void setElevatorControl(int control);
-    void addApproachControl(int control, float val);
-    void addCruiseControl(int control, float val);
+    void setElevatorControl(const char* prop);
+    void addApproachControl(const char* prop, float val);
+    void addCruiseControl(const char* prop, float val);
 
     void addSolutionWeight(bool approach, int idx, float wgt);
 
@@ -135,7 +135,7 @@ private:
       float mass;
     };
     struct ControlSetting { 
-      int control;
+      int propHandle;
       float val;
     };
     struct WeightRec { 

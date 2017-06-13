@@ -111,6 +111,22 @@ void Airplane::getPilotAccel(float* out)
     // FIXME: rotational & centripetal acceleration needed
 }
 
+Wing* Airplane::getWing()
+{
+    if (_wing == nullptr) {
+        _wing = new Wing((Version*)this, true);
+    }
+    return _wing;
+}
+
+Wing* Airplane::getTail()
+{
+    if (_tail == nullptr) {
+        _tail = new Wing((Version*)this, true);
+    }
+    return _tail;
+}
+
 void Airplane::updateGearState()
 {
     for(int i=0; i<_gears.size(); i++) {
@@ -143,28 +159,28 @@ void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
     _cruiseConfig.glideAngle = gla;
 }
 
-void Airplane::setElevatorControl(int control)
+void Airplane::setElevatorControl(const char* prop)
 {
-    _approachElevator.control = control;
+    _approachElevator.propHandle = getControlMap()->getPropertyHandle(prop);
     _approachElevator.val = 0;
     _approachConfig.controls.add(&_approachElevator);
 }
 
-void Airplane::addApproachControl(int control, float val)
+void Airplane::addApproachControl(const char* prop, float val)
 {
     ControlSetting* c = new ControlSetting();
-    c->control = control;
+    c->propHandle = getControlMap()->getPropertyHandle(prop);
     c->val = val;
-            _approachConfig.controls.add(c);
+    _approachConfig.controls.add(c);
 }
 
-void Airplane::addCruiseControl(int control, float val)
+void Airplane::addCruiseControl(const char* prop, float val)
 {
     ControlSetting* c = new ControlSetting();
-    c->control = control;
+    c->propHandle = getControlMap()->getPropertyHandle(prop);
     c->val = val;
-            _cruiseConfig.controls.add(c);
-    }
+    _cruiseConfig.controls.add(c);
+}
 
 void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
 {
@@ -258,11 +274,11 @@ void Airplane::setWeight(int handle, float mass)
     // how we simulate droppable stores.
     if(mass == 0) {
 	wr->surf->setXDrag(0);
-        wr->surf->setYDrag(0);
+	wr->surf->setYDrag(0);
 	wr->surf->setZDrag(0);
     } else {
 	wr->surf->setXDrag(1);
-        wr->surf->setYDrag(1);
+	wr->surf->setYDrag(1);
 	wr->surf->setZDrag(1);
     }
 }
@@ -331,7 +347,7 @@ float Airplane::compileFuselage(Fuselage* f)
     float len = Math::mag3(fwd);
     if (len == 0) {
         _failureMsg = "Zero length fuselage";
-    return 0;
+	return 0;
     }
     float wid = f->width;
     int segs = (int)Math::ceil(len/wid);
@@ -344,14 +360,14 @@ float Airplane::compileFuselage(Fuselage* f)
         if(frac < f->mid)
             scale = f->taper+(1-f->taper) * (frac / f->mid);
         else {
-            if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-                // Correct calculation of width for fuselage taper.
-                scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
-            } else {
-                // Original, incorrect calculation of width for fuselage taper.
-                scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
-            }
-        }
+	    if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+		// Correct calculation of width for fuselage taper.
+		scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
+	    } else {
+		// Original, incorrect calculation of width for fuselage taper.
+		scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
+	    }
+	}
 
         // Where are we?
         float pos[3];
@@ -367,40 +383,40 @@ float Airplane::compileFuselage(Fuselage* f)
         Surface* s = new Surface(this);
         s->setPosition(pos);
 
-        // The following is the original YASim value for sideDrag.
-        // Originally YASim calculated the fuselage's lateral drag
-        // coefficient as (solver drag factor) * (len/wid).
-        // However, this greatly underestimates a fuselage's lateral drag.
-        float sideDrag = len/wid;
+	// The following is the original YASim value for sideDrag.
+	// Originally YASim calculated the fuselage's lateral drag
+	// coefficient as (solver drag factor) * (len/wid).
+	// However, this greatly underestimates a fuselage's lateral drag.
+	float sideDrag = len/wid;
 
-        if ( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-            // New YASim assumes a fixed lateral drag coefficient of 0.5.
-            // This will not be multiplied by the solver drag factor, because
-            // that factor is tuned to match the drag in the direction of
-            // flight, which is completely independent of lateral drag.
-            // The value of 0.5 is only a ballpark estimate, roughly matching
-            // the side-on drag for a long cylinder at the higher Reynolds
-            // numbers typical for an aircraft's lateral drag.
-            // This fits if the fuselage is long and has a round cross section.
-            // For flat-sided fuselages, the value should be increased, up to
-            // a limit of around 2 for a long rectangular prism.
-            // For very short fuselages, in which the end effects are strong,
-            // the value should be reduced.
-            // Such adjustments can be made using the fuselage's "cy" and "cz"
-            // XML parameters: "cy" for the sides, "cz" for top and bottom.
-            sideDrag = 0.5;
-        }
+	if ( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+	    // New YASim assumes a fixed lateral drag coefficient of 0.5.
+	    // This will not be multiplied by the solver drag factor, because
+	    // that factor is tuned to match the drag in the direction of
+	    // flight, which is completely independent of lateral drag.
+	    // The value of 0.5 is only a ballpark estimate, roughly matching
+	    // the side-on drag for a long cylinder at the higher Reynolds
+	    // numbers typical for an aircraft's lateral drag.
+	    // This fits if the fuselage is long and has a round cross section.
+	    // For flat-sided fuselages, the value should be increased, up to
+	    // a limit of around 2 for a long rectangular prism.
+	    // For very short fuselages, in which the end effects are strong,
+	    // the value should be reduced.
+	    // Such adjustments can be made using the fuselage's "cy" and "cz"
+	    // XML parameters: "cy" for the sides, "cz" for top and bottom.
+	    sideDrag = 0.5;
+	}
 
-        if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
         	s->setXDrag(f->_cx);
-        }
+	}
         s->setYDrag(sideDrag*f->_cy);
         s->setZDrag(sideDrag*f->_cz);
-        if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
         	s->setDragCoefficient(scale*segWgt);
 	} else {
 		s->setDragCoefficient(scale*segWgt*f->_cx);
-        }
+	}
         s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
@@ -409,8 +425,8 @@ float Airplane::compileFuselage(Fuselage* f)
         Math::unit3(fwd, x);
         y[0] = 0; y[1] = 1; y[2] = 0;
         Math::cross3(x, y, z);
-        Math::unit3(z, z);
-        Math::cross3(z, x, y);
+	Math::unit3(z, z);
+	Math::cross3(z, x, y);
         s->setOrientation(o);
 
         _model.addSurface(s);
@@ -503,38 +519,38 @@ void Airplane::compile()
     // The Wing objects
     if (_wing)
     {
-        if (baseN != 0) {
-            _wingsN = baseN->getChild("wing", 0, true);
-            _wing->setPropertyNode(_wingsN);
-        }
-        aeroWgt += compileWing(_wing);
-        
-        // convert % to absolute x coordinates
-        _cgDesiredFront = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMin;
-        _cgDesiredAft = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMax;
-        if (baseN != 0) {
-            SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
-            n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
-            n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
-        }
+      if (baseN != 0) {
+          _wingsN = baseN->getChild("wing", 0, true);
+          _wing->setPropertyNode(_wingsN);
+      }
+      aeroWgt += compileWing(_wing);
+      
+      // convert % to absolute x coordinates
+      _cgDesiredFront = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMin;
+      _cgDesiredAft = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMax;
+      if (baseN != 0) {
+        SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
+        n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
+        n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
+      }
     }
     if (_tail)
     {
-        if (baseN != 0) {
-            _wingsN = baseN->getChild("tail", 0, true);
-            _tail->setPropertyNode(_wingsN);
-        }
-        aeroWgt += compileWing(_tail);
+      if (baseN != 0) {
+          _wingsN = baseN->getChild("tail", 0, true);
+          _tail->setPropertyNode(_wingsN);
+      }
+      aeroWgt += compileWing(_tail);
     }
     int i;
     for(i=0; i<_vstabs.size(); i++)
     {
-        Wing* vs = (Wing*)_vstabs.get(i);
-        if (baseN != 0) {
-            _wingsN = baseN->getChild("stab", i, true);
-            vs->setPropertyNode(_wingsN);
-        }
-        aeroWgt += compileWing(vs);
+      Wing* vs = (Wing*)_vstabs.get(i);
+      if (baseN != 0) {
+          _wingsN = baseN->getChild("stab", i, true);
+          vs->setPropertyNode(_wingsN);
+      }
+      aeroWgt += compileWing(vs);
     }
 
     // The fuselage(s)
@@ -715,15 +731,15 @@ void Airplane::setupWeights(bool isApproach)
     }
 }
 
-/// load values for controls as defined in cruise configuration
+/// load values for controls as defined in cruise/approach configuration
 void Airplane::loadControls(const Vector& controls)
 {
-    _controls.reset();
-    for(int i=0; i < controls.size(); i++) {
+  _controls.reset();
+  for(int i=0; i < controls.size(); i++) {
         ControlSetting* c = (ControlSetting*)controls.get(i);
-    _controls.setInput(c->control, c->val);
-    }
-    _controls.applyControls(); 
+    _controls.setInput(c->propHandle, c->val);
+  }
+  _controls.applyControls(); 
 }
 
 /// Helper for solve()
@@ -801,11 +817,11 @@ void Airplane::applyDragFactor(float factor)
         }
     }
     for(i=0; i<_weights.size(); i++) {
-        WeightRec* wr = (WeightRec*)_weights.get(i);
+	WeightRec* wr = (WeightRec*)_weights.get(i);
 	wr->surf->setDragCoefficient(wr->surf->getDragCoefficient() * applied);
     }
     for(i=0; i<_gears.size(); i++) {
-        GearRec* gr = (GearRec*)_gears.get(i);
+	GearRec* gr = (GearRec*)_gears.get(i);
 	gr->surf->setDragCoefficient(gr->surf->getDragCoefficient() * applied);
     }
 }
