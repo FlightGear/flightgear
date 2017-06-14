@@ -1195,3 +1195,43 @@ void fgInitPackageRoot()
     globals->setPackageRoot(pkgRoot);
 
 }
+
+int fgUninstall()
+{
+    SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
+    simgear::Dir fgHome(dataPath);
+    if (fgHome.exists()) {
+        if (!fgHome.remove(true /* recursive */)) {
+            fprintf(stderr, "Errors occurred trying to remove FG_HOME");
+            return EXIT_FAILURE;
+        }
+    }
+
+    if (fgHome.exists()) {
+        fprintf(stderr, "unable to remove FG_HOME");
+        return EXIT_FAILURE;
+    }
+
+#if defined(SG_WINDOWS)
+    SGPath p = flightgear::defaultDownloadDir();
+    // we don't want to remove the whole dir, let's nuke specific
+    // subdirs which are (hopefully) safe
+
+    SGPath terrasyncPath = p / "TerraSync";
+    if (terrasyncPath.exists()) {
+        simgear::Dir dir(terrasyncPath);
+        if (!dir.remove(true /*recursive*/)) {
+            fprintf(stderr, "Errors occurred trying to remove Documents/FlightGear/TerraSync");
+        }
+    }
+
+    SGPath packagesPath = p / "Aircraft";
+    if (packagesPath.exists()) {
+        simgear::Dir dir(packagesPath);
+        if (!dir.remove(true /*recursive*/)) {
+            fprintf(stderr, "Errors occurred trying to remove Documents/FlightGear/Aircraft");
+        }
+    }
+#endif
+    return EXIT_SUCCESS;
+}

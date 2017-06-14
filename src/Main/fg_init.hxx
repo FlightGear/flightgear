@@ -74,6 +74,10 @@ void fgStartNewReset();
 // setup the package system including the global root
 void fgInitPackageRoot();
 
+// wipe FG_HOME. (The removing of the program data is assumed to be done
+// by the real installer).
+int fgUninstall();
+
 #endif // _FG_INIT_HXX
 
 

@@ -63,6 +63,7 @@
 #include "main.hxx"
 #include <Include/version.h>
 #include <Main/globals.hxx>
+#include <Main/fg_init.hxx>
 #include <Main/options.hxx>
 #include <Main/fg_props.hxx>
 #include <GUI/MessageBox.hxx>
@@ -311,6 +312,10 @@ int main ( int argc, char **argv )
     setlocale(LC_ALL, "");
     setlocale(LC_NUMERIC, "C");
     setlocale(LC_COLLATE, "C");
+
+    if (flightgear::Options::checkForArg(argc, argv, "uninstall")) {
+        return fgUninstall();
+    }
 
     bool fgviewer = flightgear::Options::checkForArg(argc, argv, "fgviewer");
     int exitStatus = EXIT_FAILURE;
