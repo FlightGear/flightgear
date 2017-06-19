@@ -481,8 +481,9 @@ void GraphicsWindowQt5::qSurfaceFormat2traits( const QSurfaceFormat& format, osg
 
     traits->quadBufferStereo = format.stereo();
     traits->doubleBuffer = (format.swapBehavior() == QSurfaceFormat::DoubleBuffer);
-
+#if QT_VERSION >= 0x050300
     traits->vsync = format.swapInterval() >= 1;
+#endif
 }
 
 osg::GraphicsContext::Traits* GraphicsWindowQt5::createTraits( const QWindow* window )
