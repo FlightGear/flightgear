@@ -223,6 +223,9 @@ public:
             e.getFormattedMessage());
           return false;
         }
+
+        checkAircraftMinVersion();
+
           // apply state after the -set.xml, but before any options are are set
           flightgear::applyInitialState();
         return true;
@@ -283,6 +286,7 @@ public:
       // apply state after the -set.xml, but before any options are are set
       flightgear::applyInitialState();
 
+      checkAircraftMinVersion();
 
     return true;
   }
@@ -349,6 +353,27 @@ private:
     }
 
     return VISIT_CONTINUE;
+  }
+
+  bool checkAircraftMinVersion()
+  {
+      SGPropertyNode* minVersionNode = globals->get_props()->getNode("/sim/minimum-fg-version");
+      if (minVersionNode) {
+          std::string minVersion = minVersionNode->getStringValue();
+          const int c = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, minVersion, 2);
+          if (c < 0) {
+              SG_LOG(SG_AIRCRAFT, SG_DEV_ALERT, "Aircraft minimum version (" << minVersion <<
+                     ") is higher than FG version:" << FLIGHTGEAR_VERSION);
+              flightgear::modalMessageBox("Aircraft requires newer version of FlightGear",
+                                          "The selected aircraft requires FlightGear version " + minVersion
+                                          + " to work correctly. Some features may not work as expected, or the aircraft may not load at all.");
+              return false;
+          }
+      } else {
+          SG_LOG(SG_AIRCRAFT, SG_DEV_ALERT, "Aircraft does not specify a minimum FG version: please add one at /sim/minimum-fg-version");
+      }
+
+      return true;
   }
   
   std::string _searchAircraft;
