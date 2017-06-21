@@ -25,10 +25,10 @@ void PreviewWindow::setUrls(QVariantList urls)
 
     Q_FOREACH (QVariant v, urls) {
         QUrl url = v.toUrl();
-        qWarning() << v;
-        m_urls.append(url);
         QNetworkReply* reply = m_netAccess->get(QNetworkRequest(url));
+        qInfo() << "requesting:" << url;
         connect(reply, &QNetworkReply::finished, this, &PreviewWindow::onDownloadFinished);
+        connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onDownloadError(QNetworkReply::NetworkError)));
     }
 }
 
@@ -36,9 +36,6 @@ void PreviewWindow::paintEvent(QPaintEvent *pe)
 {
     QUrl key = m_urls.at(m_currentPreview);
     QPixmap pm = m_cache.value(key.toString());
-    if (pm.isNull()) {
-        qWarning() << "null pixmap";
-    }
 
     QPainter painter(this);
     painter.fillRect(rect(), Qt::black);
@@ -94,11 +91,12 @@ void PreviewWindow::onDownloadFinished()
 
     QImage img;
     if (!img.load(reply, nullptr)) {
-        qWarning() << "failed to read image data from" << reply->url();
+        qWarning() << Q_FUNC_INFO << "failed to read image data from" << reply->url();
         return;
     }
 
     m_cache.insert(reply->url().toString(), QPixmap::fromImage(img));
+    m_urls.append(reply->url());
 
     if (!isVisible()) {
         QSize winSize(img.width() + BORDER_SIZE * 2, img.height() + BORDER_SIZE * 2);
@@ -106,4 +104,12 @@ void PreviewWindow::onDownloadFinished()
 
         show();
     }
+}
+
+void PreviewWindow::onDownloadError(QNetworkReply::NetworkError errorCode)
+{
+    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    qWarning() << "failed to download:" << reply->url();
+    qWarning() << reply->errorString();
+    m_urls.removeOne(reply->url());
 }

@@ -6,6 +6,7 @@
 #include <QVariant>
 #include <QNetworkAccessManager>
 #include <QMap>
+#include <QNetworkReply>
 
 class PreviewWindow : public QDialog
 {
@@ -24,9 +25,11 @@ protected:
 
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
 
+private slots:
+    void onDownloadError(QNetworkReply::NetworkError errorCode);
+
 private:
     void onDownloadFinished();
-
 
     unsigned int m_currentPreview = 0;
     QNetworkAccessManager* m_netAccess;
