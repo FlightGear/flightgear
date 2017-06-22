@@ -89,6 +89,8 @@ if (HAVE_QT)
         TimeSettings.qml
         ViewSettings.qml
         Weather.qml
+        AircraftList.qml
+        Scrollbar.qml
         )
 
     add_library(fglauncher QtLauncher.cxx
@@ -107,8 +109,6 @@ if (HAVE_QT)
                             ExtraSettingsSection.hxx
                             SetupRootDialog.cxx
                             SetupRootDialog.hxx
-                            AircraftItemDelegate.hxx
-                            AircraftItemDelegate.cxx
                             AircraftModel.hxx
                             AircraftModel.cxx
                             CatalogListModel.cxx
@@ -149,16 +149,20 @@ if (HAVE_QT)
                             ViewCommandLinePage.hxx
                             MPServersModel.cpp
                             MPServersModel.h
+                            ThumbnailImageItem.cxx
+                            ThumbnailImageItem.hxx
+                            FlickableExtentQuery.cxx
+                            FlickableExtentQuery.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml SimGearCore)
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::QuickWidgets SimGearCore)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
-    #target_include_directories(fglauncher PRIVATE ${Qt5Qml_PRIVATE_INCLUDE_DIRS})
 
-
+    # needed for scrollbar helper, unfortunately
+    target_include_directories(fglauncher PRIVATE ${Qt5Quick_PRIVATE_INCLUDE_DIRS})
 endif()
 
 

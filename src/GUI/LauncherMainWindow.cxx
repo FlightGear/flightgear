@@ -29,7 +29,6 @@
 // launcher headers
 #include "QtLauncher.hxx"
 #include "EditRatingsFilterDialog.hxx"
-#include "AircraftItemDelegate.hxx"
 #include "AircraftModel.hxx"
 #include "PathsDialog.hxx"
 #include "AircraftSearchFilterModel.hxx"
@@ -41,37 +40,16 @@
 #include "ExtraSettingsSection.hxx"
 #include "ViewCommandLinePage.hxx"
 #include "MPServersModel.h"
+#include "ThumbnailImageItem.hxx"
+#include "FlickableExtentQuery.hxx"
 
 #include "ui_Launcher.h"
-#include "ui_NoOfficialHangar.h"
 
 const int MAX_RECENT_AIRCRAFT = 20;
 
 using namespace simgear::pkg;
 
 extern void restartTheApp(QStringList fgArgs);
-
-class NoOfficialHangarMessage : public QWidget
-{
-    Q_OBJECT
-public:
-    NoOfficialHangarMessage() :
-        m_ui(new Ui::NoOfficialHangarMessage)
-    {
-        m_ui->setupUi(this);
-        // proxy this signal upwards
-        connect(m_ui->label, &QLabel::linkActivated,
-                this, &NoOfficialHangarMessage::linkActivated);
-    }
-
-Q_SIGNALS:
-    void linkActivated(QUrl link);
-
-private:
-    Ui::NoOfficialHangarMessage* m_ui;
-};
-
-#include "LauncherMainWindow.moc"
 
 QQmlPrivate::AutoParentResult launcher_autoParent(QObject* thing, QObject* parent)
 {
@@ -179,32 +157,20 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->locationHistory->setIcon(historyIcon);
 
     m_aircraftModel = new AircraftItemModel(this);
-    connect(m_aircraftModel, &AircraftItemModel::packagesNeedUpdating,
-            this, &LauncherMainWindow::onPackagesNeedUpdate);
     m_aircraftProxy->setSourceModel(m_aircraftModel);
 
     m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     m_aircraftProxy->setSortCaseSensitivity(Qt::CaseInsensitive);
     m_aircraftProxy->setSortRole(Qt::DisplayRole);
     m_aircraftProxy->setDynamicSortFilter(true);
+    m_ui->aircraftList->setResizeMode(QQuickWidget::SizeRootObjectToView);
 
-    m_ui->aircraftList->setModel(m_aircraftProxy);
-    m_ui->aircraftList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    AircraftItemDelegate* delegate = new AircraftItemDelegate(m_ui->aircraftList);
-    m_ui->aircraftList->setItemDelegate(delegate);
-    m_ui->aircraftList->setSelectionMode(QAbstractItemView::SingleSelection);
-    connect(m_ui->aircraftList, &QListView::clicked,
-            this, &LauncherMainWindow::onAircraftSelected);
-    connect(delegate, &AircraftItemDelegate::variantChanged,
-            this, &LauncherMainWindow::onAircraftSelected);
-    connect(delegate, &AircraftItemDelegate::requestInstall,
-            this, &LauncherMainWindow::onRequestPackageInstall);
-    connect(delegate, &AircraftItemDelegate::requestUninstall,
-            this, &LauncherMainWindow::onRequestPackageUninstall);
-    connect(delegate, &AircraftItemDelegate::cancelDownload,
-            this, &LauncherMainWindow::onCancelDownload);
-    connect(delegate, &AircraftItemDelegate::showPreviews,
-            this, &LauncherMainWindow::onShowPreviews);
+    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_filteredModel", m_aircraftProxy);
+    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_aircraftModel", m_aircraftModel);
+    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
+    m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+
+    m_ui->aircraftList->setSource(QUrl("qrc:///AircraftList.qml"));
 
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
             this, &LauncherMainWindow::onAircraftInstalledCompleted);
@@ -227,9 +193,6 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(m_aircraftProxy, &AircraftProxyModel::modelReset,
             this, &LauncherMainWindow::delayedAircraftModelReset);
 
-    connect(m_ui->updateAircraftLabel, &QLabel::linkActivated,
-            this, &LauncherMainWindow::onUpdateAircraftLink);
-
     QSettings settings;
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
     m_aircraftModel->setPackageRoot(globals->packageRoot());
@@ -242,10 +205,9 @@ LauncherMainWindow::LauncherMainWindow() :
     m_viewCommandLinePage->setLaunchConfig(m_config);
     m_ui->stack->addWidget(m_viewCommandLinePage);
 
-    checkOfficialCatalogMessage();
-    checkUpdateAircraft();
     restoreSettings();
     updateSettingsSummary();
+    emit showNoOfficialHangarChanged();
 }
 
 void LauncherMainWindow::initQML()
@@ -264,6 +226,8 @@ void LauncherMainWindow::initQML()
 
     qmlRegisterUncreatableType<SettingsControl>("FlightGear.Launcher", 1, 0, "Control", "Base class");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
+
+    qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherMainWindow::collectAircraftArgs);
@@ -285,6 +249,9 @@ void LauncherMainWindow::initQML()
 
     flightgear::WeatherScenariosModel* weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
     m_qmlEngine->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
+
+    qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
+    qmlRegisterType<ThumbnailImageItem>("FlightGear.Launcher", 1, 0, "ThumbnailImage");
 }
 
 void LauncherMainWindow::buildSettingsSections()
@@ -350,6 +317,10 @@ void LauncherMainWindow::buildEnvironmentSections()
 
 LauncherMainWindow::~LauncherMainWindow()
 {
+    // avoid a double-free when the QQuickWidget's engine seems to try
+    // and delete us.
+    delete m_ui->aircraftList;
+
     m_qmlEngine->collectGarbage();
     delete m_qmlEngine;
 }
@@ -452,12 +423,7 @@ void LauncherMainWindow::maybeRestoreAircraftSelection()
     QModelIndex aircraftIndex = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     QModelIndex proxyIndex = m_aircraftProxy->mapFromSource(aircraftIndex);
     if (proxyIndex.isValid()) {
-        m_ui->aircraftList->selectionModel()->setCurrentIndex(proxyIndex,
-                                                              QItemSelectionModel::ClearAndSelect);
-        m_ui->aircraftList->selectionModel()->select(proxyIndex,
-                                                     QItemSelectionModel::ClearAndSelect);
-        m_ui->aircraftList->scrollTo(proxyIndex);
-
+        emit selectAircraftIndex(proxyIndex.row());
         // and also select the correct variant on the model
         m_aircraftModel->selectVariantForAircraftURI(m_selectedAircraft);
     }
@@ -503,7 +469,6 @@ void LauncherMainWindow::collectAircraftArgs()
             qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
         }
     }
-
 
     // scenery paths
     QSettings settings;
@@ -634,37 +599,6 @@ void LauncherMainWindow::onQuit()
     }
 }
 
-#if 0
-void LauncherMainWindow::onToggleTerrasync(bool enabled)
-{
-    if (enabled) {
-        QSettings settings;
-        QString downloadDir = settings.value("download-dir").toString();
-        if (downloadDir.isEmpty()) {
-            downloadDir = QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
-        }
-
-        QFileInfo info(downloadDir);
-        if (!info.exists()) {
-            QMessageBox msg;
-            msg.setWindowTitle(tr("Create download folder?"));
-            msg.setText(tr("The download folder '%1' does not exist, create it now?").arg(downloadDir));
-            msg.addButton(QMessageBox::Yes);
-            msg.addButton(QMessageBox::Cancel);
-            int result = msg.exec();
-
-            if (result == QMessageBox::Cancel) {
-                //m_ui->terrasyncCheck->setChecked(false);
-                return;
-            }
-
-            QDir d(downloadDir);
-            d.mkpath(downloadDir);
-        }
-    } // of is enabled
-}
-#endif
-
 void LauncherMainWindow::onAircraftInstalledCompleted(QModelIndex index)
 {
     maybeUpdateSelectedAircraft(index);
@@ -675,7 +609,7 @@ void LauncherMainWindow::onRatingsFilterToggled()
     QModelIndex aircraftIndex = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     QModelIndex proxyIndex = m_aircraftProxy->mapFromSource(aircraftIndex);
     if (proxyIndex.isValid()) {
-        m_ui->aircraftList->scrollTo(proxyIndex);
+        emit selectAircraftIndex(proxyIndex.row());
     }
 }
 
@@ -693,62 +627,10 @@ void LauncherMainWindow::onAircraftInstallFailed(QModelIndex index, QString erro
     maybeUpdateSelectedAircraft(index);
 }
 
-void LauncherMainWindow::onAircraftSelected(const QModelIndex& index)
+void LauncherMainWindow::selectAircraft(QUrl aircraftUri)
 {
-    m_selectedAircraft = index.data(AircraftURIRole).toUrl();
+    m_selectedAircraft = aircraftUri;
     updateSelectedAircraft();
-}
-
-void LauncherMainWindow::onRequestPackageInstall(const QModelIndex& index)
-{
-    // also select, otherwise UI is confusing
-    m_selectedAircraft = index.data(AircraftURIRole).toUrl();
-    updateSelectedAircraft();
-
-    QString pkg = index.data(AircraftPackageIdRole).toString();
-    simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
-    if (pref->isInstalled()) {
-        InstallRef install = pref->existingInstall();
-        if (install && install->hasUpdate()) {
-            globals->packageRoot()->scheduleToUpdate(install);
-        }
-    } else {
-        pref->install();
-    }
-}
-
-void LauncherMainWindow::onRequestPackageUninstall(const QModelIndex& index)
-{
-
-    m_selectedAircraft = index.data(AircraftURIRole).toUrl();
-    updateSelectedAircraft();
-
-    QString pkg = index.data(AircraftPackageIdRole).toString();
-    if (pkg.isEmpty()) {
-        return; // can't be uninstalled, not from a package
-    }
-
-    simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
-    if (pref && pref->isInstalled()) {
-        qDebug() << "uninstalling" << pkg;
-        pref->existingInstall()->uninstall();
-    }
-}
-
-void LauncherMainWindow::onShowPreviews(const QModelIndex &index)
-{
-    QVariant urls = index.data(AircraftPreviewsRole);
-
-    PreviewWindow* previewWindow = new PreviewWindow;
-    previewWindow->setUrls(urls.toList());
-}
-
-void LauncherMainWindow::onCancelDownload(const QModelIndex& index)
-{
-    QString pkg = index.data(AircraftPackageIdRole).toString();
-    simgear::pkg::PackageRef pref = globals->packageRoot()->getPackageById(pkg.toStdString());
-    simgear::pkg::InstallRef i = pref->existingInstall();
-    i->cancelDownload();
 }
 
 void LauncherMainWindow::onRestoreDefaults()
@@ -806,7 +688,7 @@ void LauncherMainWindow::updateSelectedAircraft()
         m_ui->aircraftDescription->setText(longDesc.toString());
 
         int status = index.data(AircraftPackageStatusRole).toInt();
-        bool canRun = (status == PackageInstalled);
+        bool canRun = (status == AircraftItemModel::PackageInstalled);
         m_ui->flyButton->setEnabled(canRun);
 
         LauncherAircraftType aircraftType = Airplane;
@@ -823,12 +705,6 @@ void LauncherMainWindow::updateSelectedAircraft()
         m_ui->aircraftDescription->hide();
         m_ui->flyButton->setEnabled(false);
     }
-}
-
-void LauncherMainWindow::onPackagesNeedUpdate(bool yes)
-{
-    Q_UNUSED(yes);
-    checkUpdateAircraft();
 }
 
 void LauncherMainWindow::onClickToolboxButton()
@@ -881,8 +757,7 @@ void LauncherMainWindow::onPopupAircraftHistory()
         const QUrl uri = triggered->data().toUrl();
         m_selectedAircraft = uri;
         QModelIndex index = proxyIndexForAircraftURI(m_selectedAircraft);
-        m_ui->aircraftList->selectionModel()->setCurrentIndex(index,
-                                                              QItemSelectionModel::ClearAndSelect);
+        emit selectAircraftIndex(index.row());
         m_ui->aircraftFilter->clear();
         m_aircraftModel->selectVariantForAircraftURI(uri);
         updateSelectedAircraft();
@@ -990,7 +865,7 @@ void LauncherMainWindow::downloadDirChanged(QString path)
     m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
     m_aircraftModel->scanDirs();
 
-    checkOfficialCatalogMessage();
+    emit showNoOfficialHangarChanged();
 
     // re-set scenery dirs
     setSceneryPaths();
@@ -1005,56 +880,17 @@ bool LauncherMainWindow::shouldShowOfficialCatalogMessage() const
     }
     return showOfficialCatalogMesssage;
 }
-void LauncherMainWindow::checkOfficialCatalogMessage()
-{
-    const bool show = shouldShowOfficialCatalogMessage();
-    m_aircraftModel->setMessageWidgetVisible(show);
-    if (show) {
-        NoOfficialHangarMessage* messageWidget = new NoOfficialHangarMessage;
-        connect(messageWidget, &NoOfficialHangarMessage::linkActivated,
-                this, &LauncherMainWindow::onOfficialCatalogMessageLink);
 
-        QModelIndex index = m_aircraftProxy->mapFromSource(m_aircraftModel->messageWidgetIndex());
-        m_ui->aircraftList->setIndexWidget(index, messageWidget);
-    }
-}
-
-void LauncherMainWindow::onOfficialCatalogMessageLink(QUrl link)
+void LauncherMainWindow::officialCatalogAction(QString s)
 {
-    QString s = link.toString();
-    if (s == "action:hide") {
+    if (s == "hide") {
         QSettings settings;
         settings.setValue("hide-official-catalog-message", true);
-    } else if (s == "action:add-official") {
+    } else if (s == "add-official") {
         AddOnsPage::addDefaultCatalog(this, false /* not silent */);
     }
 
-    checkOfficialCatalogMessage();
-}
-
-void LauncherMainWindow::checkUpdateAircraft()
-{
-    const size_t numToUpdate = globals->packageRoot()->packagesNeedingUpdate().size();
-    const bool showUpdateMessage = (numToUpdate > 0);
-
-    static QString originalText = m_ui->updateAircraftLabel->text();
-    const QString t = originalText.arg(numToUpdate);
-    m_ui->updateAircraftLabel->setText(t);
-    m_ui->updateAircraftLabel->setVisible(showUpdateMessage);
-}
-
-void LauncherMainWindow::onUpdateAircraftLink(QUrl link)
-{
-    QString s = link.toString();
-    if (s == "action:hide") {
-        m_ui->updateAircraftLabel->hide();
-    } else if (s == "action:update") {
-        m_ui->updateAircraftLabel->hide();
-        const PackageList& toBeUpdated = globals->packageRoot()->packagesNeedingUpdate();
-        std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
-            globals->packageRoot()->scheduleToUpdate(pkg->install());
-        });
-    }
+    emit showNoOfficialHangarChanged();
 }
 
 simgear::pkg::PackageRef LauncherMainWindow::packageForAircraftURI(QUrl uri) const
@@ -1133,3 +969,70 @@ bool LauncherMainWindow::validateMetarString(QString metar)
 
     return true;
 }
+
+void LauncherMainWindow::showPreviewsFor(QUrl aircraftUri) const
+{
+    PreviewWindow* previewWindow = new PreviewWindow;
+    QModelIndex index = m_aircraftModel->indexOfAircraftURI(aircraftUri);
+    if (!index.isValid()) {
+        return;
+    }
+
+    QVariant urls = index.data(AircraftPreviewsRole);
+    previewWindow->setUrls(urls.toList());
+}
+
+void LauncherMainWindow::requestInstallUpdate(QUrl aircraftUri)
+{
+    // also select, otherwise UI is confusing
+    m_selectedAircraft = aircraftUri;
+    updateSelectedAircraft();
+
+    simgear::pkg::PackageRef pref = packageForAircraftURI(aircraftUri);
+    if (pref) {
+        if (pref->isInstalled()) {
+            InstallRef install = pref->existingInstall();
+            if (install->hasUpdate()) {
+                globals->packageRoot()->scheduleToUpdate(install);
+            }
+        } else {
+            pref->install();
+        }
+    }
+}
+
+void LauncherMainWindow::requestUninstall(QUrl aircraftUri)
+{
+    simgear::pkg::PackageRef pref = packageForAircraftURI(aircraftUri);
+    if (pref) {
+        simgear::pkg::InstallRef i = pref->existingInstall();
+        if (i) {
+            i->uninstall();
+        }
+    }
+}
+
+void LauncherMainWindow::requestInstallCancel(QUrl aircraftUri)
+{
+    simgear::pkg::PackageRef pref = packageForAircraftURI(aircraftUri);
+    if (pref) {
+        simgear::pkg::InstallRef i = pref->existingInstall();
+        if (i) {
+            i->cancelDownload();
+        }
+    }
+}
+
+void LauncherMainWindow::requestUpdateAllAircraft()
+{
+    const PackageList& toBeUpdated = globals->packageRoot()->packagesNeedingUpdate();
+    std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
+        globals->packageRoot()->scheduleToUpdate(pkg->install());
+    });
+}
+
+bool LauncherMainWindow::showNoOfficialHanger() const
+{
+    return shouldShowOfficialCatalogMessage();
+}
+

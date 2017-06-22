@@ -51,10 +51,6 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
     QVariant v = index.data(AircraftPackageStatusRole);
-    AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-    if (status == MessageWidget) {
-        return true;
-    }
 
     if (!filterAircraft(index)) {
         return false;
@@ -62,13 +58,15 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
 
     if (m_onlyShowInstalled) {
         QVariant v = index.data(AircraftPackageStatusRole);
-        AircraftItemStatus status = static_cast<AircraftItemStatus>(v.toInt());
-        if (status == PackageNotInstalled) {
+        const auto status = static_cast<AircraftItemModel::AircraftItemStatus>(v.toInt());
+        if (status == AircraftItemModel::PackageNotInstalled) {
             return false;
         }
     }
 
-    if (!m_onlyShowInstalled && m_ratingsFilter) {
+    // if there is no search active, i.e we are browsing, we might apply the
+    // ratings filter.
+    if (m_filterString.isEmpty() && !m_onlyShowInstalled && m_ratingsFilter) {
         for (int i=0; i<4; ++i) {
             if (m_ratings[i] > index.data(AircraftRatingRole + i).toInt()) {
                 return false;

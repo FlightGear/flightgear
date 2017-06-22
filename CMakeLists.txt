@@ -310,20 +310,20 @@ endif (USE_DBUS)
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-	message(STATUS "Qt launcher enabled, checking for Qt 5.1 / qmake")
-  find_package(Qt5 5.1 COMPONENTS Widgets Network Qml)
-	if (Qt5Widgets_FOUND)
-		message(STATUS "Will enable Qt launcher GUI")
-		message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
-		message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
-		set(HAVE_QT 1)
-  else()
-    # don't try to build FGQCanvas if Qt wasn't found correctly
-    set(ENABLE_FGQCANVAS OFF)
-	endif()
+    message(STATUS "Qt launcher enabled, checking for Qt 5.3 / qmake")
+    find_package(Qt5 5.3 COMPONENTS Widgets Network Qml QuickWidgets)
+    if (Qt5Widgets_FOUND)
+        message(STATUS "Will enable Qt launcher GUI")
+        message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
+        message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
+        set(HAVE_QT 1)
+    else()
+        # don't try to build FGQCanvas if Qt wasn't found correctly
+        set(ENABLE_FGQCANVAS OFF)
+    endif()
 else()
-  message(STATUS "Qt support disabled")
-  set(ENABLE_FGQCANVAS OFF)
+    message(STATUS "Qt support disabled")
+    set(ENABLE_FGQCANVAS OFF)
 endif (ENABLE_QT)
 ##############################################################################
 

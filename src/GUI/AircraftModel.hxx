@@ -54,6 +54,11 @@ const int AircraftPackageRefRole = Qt::UserRole + 19;
 const int AircraftThumbnailRole = Qt::UserRole + 20;
 const int AircraftPreviewsRole = Qt::UserRole + 21;
 
+const int AircraftStatusRole = Qt::UserRole + 22;
+const int AircraftMinVersionRole = Qt::UserRole + 23;
+
+const int AircraftHasPreviewsRole = Qt::UserRole + 24;
+
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
 
@@ -70,10 +75,10 @@ struct AircraftItem
     AircraftItem();
 
     AircraftItem(QDir dir, QString filePath);
-    
+
     // the file-name without -set.xml suffix
     QString baseName() const;
-    
+
     void fromDataStream(QDataStream& ds);
 
     void toDataStream(QDataStream& ds) const;
@@ -94,24 +99,30 @@ struct AircraftItem
     QList<QUrl> previews;
     bool isPrimary = false;
     QString thumbnailPath;
+    QString minFGVersion;
+    bool needsMaintenance = false;
 private:
     mutable QPixmap m_thumbnail;
-};
-
-
-enum AircraftItemStatus {
-    PackageNotInstalled = 0,
-    PackageInstalled,
-    PackageUpdateAvailable,
-    PackageQueued,
-    PackageDownloading,
-    MessageWidget
 };
 
 class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(int aircraftNeedingUpdated READ aircraftNeedingUpdated NOTIFY aircraftNeedingUpdatedChanged)
+    Q_PROPERTY(bool showUpdateAll READ showUpdateAll WRITE setShowUpdateAll NOTIFY aircraftNeedingUpdatedChanged)
+
+    Q_ENUMS(AircraftItemStatus)
+    Q_ENUMS(AircraftStatus)
 public:
+    enum AircraftItemStatus {
+        PackageNotInstalled = 0,
+        PackageInstalled,
+        PackageUpdateAvailable,
+        PackageQueued,
+        PackageDownloading
+    };
+
     AircraftItemModel(QObject* pr);
 
     ~AircraftItemModel();
@@ -122,11 +133,13 @@ public:
 
     void scanDirs();
 
-    virtual int rowCount(const QModelIndex& parent) const;
+    int rowCount(const QModelIndex& parent) const override;
     
-    virtual QVariant data(const QModelIndex& index, int role) const;
+    QVariant data(const QModelIndex& index, int role) const override;
     
-    virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+
+    QHash<int, QByteArray> roleNames() const override;
 
     /**
      * given a -set.xml path, return the corresponding model index, if one
@@ -154,19 +167,24 @@ public:
     QString nameForAircraftURI(QUrl uri) const;
 
     /**
-     * should we show reserve index 0 for a message widget? Which is set
-     * by the layer above via setIndexWidget
-     */
-    void setMessageWidgetVisible(bool vis);
-
-    QModelIndex messageWidgetIndex() const;
-
-    /**
      * @helper to determine if a particular path is likely to contain
      * aircraft or not. Checks for -set.xml files one level down in the tree.
      *
      */
     static bool isCandidateAircraftPath(QString path);
+
+    enum AircraftStatus
+    {
+        AircraftOk = 0,
+        AircraftUnmaintained,
+        AircraftNeedsNewerSimulator,
+        AircraftNeedsOlderSimulator // won't ever occur for the moment
+    };
+
+    int aircraftNeedingUpdated() const;
+
+    bool showUpdateAll() const;
+
 signals:
     void aircraftInstallFailed(QModelIndex index, QString errorMessage);
     
@@ -174,7 +192,11 @@ signals:
     
     void scanCompleted();
 
-    void packagesNeedUpdating(bool yes);
+    void aircraftNeedingUpdatedChanged();
+
+public slots:
+    void setShowUpdateAll(bool showUpdateAll);
+
 private slots:
     void onScanResults();
     
@@ -194,6 +216,7 @@ private:
     };
 
     QVariant dataFromItem(AircraftItemPtr item, const DelegateState& state, int role) const;
+    QVariant itemAircraftStatus(AircraftItemPtr item, const DelegateState& ds) const;
 
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
                              const DelegateState& state, int role) const;
@@ -202,6 +225,7 @@ private:
                               const DelegateState& state, bool download = true) const;
 
     QVariant packagePreviews(simgear::pkg::PackageRef p, const DelegateState &ds) const;
+    QVariant packageAircraftStatus(simgear::pkg::PackageRef p, const DelegateState &ds) const;
 
     void abandonCurrentScan();
     void refreshPackages();
@@ -213,8 +237,6 @@ private:
     AircraftScanThread* m_scanThread = nullptr;
     QVector<AircraftItemPtr> m_items;
     PackageDelegate* m_delegate = nullptr;
-    bool m_showMessageWidget = false;
-
 
     QVector<DelegateState> m_delegateStates;
 
@@ -222,6 +244,8 @@ private:
     simgear::pkg::PackageList m_packages;
         
     mutable QHash<QString, QPixmap> m_downloadedPixmapCache;
+    int m_cachedUpdateCount = 0;
+    bool m_showUpdateAll = true;
 };
 
 #endif // of FG_GUI_AIRCRAFT_MODEL

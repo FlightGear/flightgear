@@ -50,6 +50,9 @@ class MPServersModel;
 class LauncherMainWindow : public QMainWindow
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool showNoOfficialHanger READ showNoOfficialHanger NOTIFY showNoOfficialHangarChanged)
+
 public:
     LauncherMainWindow();
     virtual ~LauncherMainWindow();
@@ -59,9 +62,27 @@ public:
     bool wasRejected();
 
     Q_INVOKABLE bool validateMetarString(QString metar);
+    Q_INVOKABLE void showPreviewsFor(QUrl aircraftUri) const;
+
+    Q_INVOKABLE void requestInstallUpdate(QUrl aircraftUri);
+
+    Q_INVOKABLE void requestUninstall(QUrl aircraftUri);
+
+    Q_INVOKABLE void requestInstallCancel(QUrl aircraftUri);
 
     Q_INVOKABLE void downloadDirChanged(QString path);
 
+    Q_INVOKABLE void requestUpdateAllAircraft();
+
+    bool showNoOfficialHanger() const;
+
+    Q_INVOKABLE void officialCatalogAction(QString s);
+
+    Q_INVOKABLE void selectAircraft(QUrl aircraftUri);
+signals:
+    void showNoOfficialHangarChanged();
+
+    void selectAircraftIndex(int index);
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
@@ -75,12 +96,6 @@ private slots:
     void onApply();
 
     void onQuit();
-
-    void onAircraftSelected(const QModelIndex& index);
-    void onRequestPackageInstall(const QModelIndex& index);
-    void onRequestPackageUninstall(const QModelIndex& index);
-    void onShowPreviews(const QModelIndex& index);
-    void onCancelDownload(const QModelIndex& index);
 
     void onPopupAircraftHistory();
     void onPopupLocationHistory();
@@ -101,17 +116,12 @@ private slots:
     void onRestoreDefaults();
     void onViewCommandLine();
 
-    void onPackagesNeedUpdate(bool yes);
-
     void onClickToolboxButton();
 
     void setSceneryPaths();
     void onAircraftPathsChanged();
-
     void onChangeDataDir();
-
     void onSettingsSearchChanged();
-    void onUpdateAircraftLink(QUrl link);
 private:
 
     /**
@@ -128,10 +138,6 @@ private:
     QModelIndex sourceIndexForAircraftURI(QUrl uri) const;
 
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
-
-    void checkOfficialCatalogMessage();
-    void onOfficialCatalogMessageLink(QUrl link);
-    void checkUpdateAircraft();
 
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
