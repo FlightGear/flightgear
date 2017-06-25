@@ -15,7 +15,7 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.TH MIDGSMOOTH 1 2017-06-04 FlightGear "FlightGear man pages"
+.TH MIDGSMOOTH 1 2017-06-25 FlightGear "FlightGear man pages"
 .SH NAME
 MIDGsmooth \- send MIDG-formatted GPS data to a FlightGear instance
 .SH SYNOPSIS
@@ -23,11 +23,10 @@ MIDGsmooth \- send MIDG-formatted GPS data to a FlightGear instance
     | \fB\-\-infile\fR \fIinfile_name\fR [\fIoptions\fR]...
     | \fB\-\-serial\fR \fIdev_name\fR \fB\-\-outfile\fR \fIoutfile_name\fR
 [\fIoptions\fR]...
-
 .SH DESCRIPTION
 .B MIDGsmooth
 is a utility that reads GPS data in MIDG format from a text file or from an
-MDIG device connected to the serial port, parses it and sends it to a
+MIDG device connected to the serial port, parses it and sends it to a
 FlightGear instance for replaying.
 .SH OPTIONS
 .TP
@@ -35,7 +34,7 @@ FlightGear instance for replaying.
 Display usage information and exit.
 .TP
 \fB\-\-infile\fR \fIinfile_name\fR
-Read GPS data from \fIfilename\fR.
+Read GPS data from \fIinfile_name\fR.
 .TP
 \fB\-\-serial\fR \fIdev_name\fR
 Read GPS data from the serial device named \fIdev_name\fR.

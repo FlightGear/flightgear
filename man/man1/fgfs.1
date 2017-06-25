@@ -16,7 +16,7 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.TH FGFS 1 2017-06-04 FlightGear "FlightGear man pages"
+.TH FGFS 1 2017-06-25 FlightGear "FlightGear man pages"
 .SH NAME
 fgfs \- the FlightGear flight simulator
 .SH SYNOPSIS
@@ -130,7 +130,7 @@ property type by setting \fItype\fR to \fBstring\fR, \fBdouble\fR, \fBfloat\fR,
 \fBlong\fR, \fBint\fR or \fBbool\fR.
 .TP
 \fB\-\-config=\fIpath\fR
-Load additional configuration directives from \fIpath\fR. The file should be
+Load additional configuration directives from \fIpath\fR. The file should
 follow the format described in
 .BR fgfsrc (5).
 .TP
@@ -248,7 +248,7 @@ Enable/disable sound in the simulator.
 \fB\-\-terrain\-engine=tilecache\fR|\fBpagedLOD\fR
 Choose the terrain engine to use. \fBtilecache\fR is the "traditional" terrain
 engine (recommended); \fBpagedLOD\fR is a new, experimental terrain engine
-designed to minimize memory usage by loading more detailes versions of scenery
+designed to minimize memory usage by loading more detailed versions of scenery
 objects on demand.
 
 The \fBpagedLOD\fR engine is available only if FlightGear was compiled with
@@ -513,7 +513,7 @@ Place the aircraft at the parking position \fIname\fR. This option requires the
 \fB\-\-airport\fR option to be present.
 .TP
 \fB\-\-runway=\fInumber\fR
-Place the aircraft on runway \fIname\fR. This option requires the
+Place the aircraft on runway \fInumber\fR. This option requires the
 \fB\-\-airport\fR option to be present.
 .TP
 \fB\-\-carrier=\fIname\fR|\fIID\fR
@@ -713,7 +713,7 @@ Enable the screenshot HTTP server interface on the specified port. \fBThis
 option is deprecated: use the Phi interface instead.\fR
 .TP
 \fB\-\-enable\-terrasync\fR, \fB\-\-disable\-terrasync\fR
-Enable/disable automatic scenery downloads/uploads.
+Enable/disable automatic scenery/object downloads.
 .TP
 \fB\-\-terrasync\-dir=\fIdirectory\fR
 Set the directory where the downloaded scenery will be stored to
