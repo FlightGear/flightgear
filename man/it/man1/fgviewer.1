@@ -1,0 +1,92 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGVIEWER 1 2017-06-24 FlightGear "Pagine man di FlightGear"
+.SH NOME
+fgviewer \- Un'applicazione di visualizzazione di FlightGear alternativa
+.SH SINTASSI
+\fBfgviewer\fR [\fB\-\-fg\-root\fR \fIrootdir\fR]
+[\fB\-\-fg\-scenery\fR \fIscenerydir\fR] [\fB\-\-config\fR \fIconfigfile\fR]
+[\fB\-\-prop\fR \fIproprietà\fR \fIvalore\fR] [\fB\-\-renderer\fR \fIrend\fR]
+[\fB\-\-hla\fR] [\fB\-\-federation\fR \fIfed\fR]
+.SH DESCRIZIONE
+.B fgviewer
+è un'applicazione di visualizzazione che consente di esaminare lo scenario e
+gli oggetti di FlightGear senza avviare
+.BR fgfs (1).
+.SH OPZIONI
+.TP
+\fB\-\-fg\-root\fR \fIrootdir\fR
+Imposta la directory radice dei dati di FlightGear (\fB$FG_ROOT\fR) a
+\fIrootdir\fR. Se quest'opzione non è impostata,
+.B fgviewer
+utilizza il percorso specificato nella variabile d'ambiente
+.B FG_ROOT
+o, in sua assenza, la directory dei dati di FlightGear scelta all'atto della
+compilazione del programma.
+.TP
+\fB\-\-fg\-scenery\fR \fIscenerydir\fR
+Imposta la directory dello scenario di FlightGear (\fB$FG_SCENERY\fR) a
+\fIscenerydir\fR. Se quest'opzione non è impostata,
+.B fgelev
+utilizza il percorso specificato nella variabile d'ambiente
+.B FG_SCENERY
+o, in sua assenza, la sottodirectory
+.B Scenery
+all'interno di \fB$FG_ROOT\fR.
+.TP
+\fB\-\-config\fR \fIconfigfile\fR
+Legge direttive di configurazione da \fIconfigfile\fR.
+.TP
+\fB\-\-prop\fR \fIproprietà\fR \fIvalore\fR
+Imposta la proprietà \fIproprietà\fR a \fIvalore\fR.
+.TP
+\fB\-\-renderer\fR \fIrend\fR
+Utiliizza il renderer \fIrend\fR per eseguire il rendering dello scenario.
+Quest'opzione non è attualmente supportata.
+.TP
+\fB\-\-hla\fR
+Abilita la federazione HLA.
+.TP
+\fB\-\-federation\fR \fIfed\fR
+Abilita una federazione personalizzata \fIfed\fR.
+.SH "STATI D'USCITA"
+.B fgviewer
+esce con
+.B EXIT_SUCCESS
+se l'esecuzione ha avuto successo, con
+.B EXIT_FAILURE
+se la sintassi degli argomenti della riga di comando è errata o se si verifica
+un errore.
+.SH "VARIABILI D'AMBIENTE"
+.IP "\fBFG_ROOT\fR" 4
+Se
+.B FG_ROOT
+è impostata e
+.B \-\-fg\-root
+non è impostato, specifica la directory radice dei dati da utilizzare.
+.IP "\fBFG_SCENERY\fR" 4
+Se
+.B FG_SCENERY
+è impostata e
+.B \-\-fg\-scenery
+non è impostato, specifica la directory dello scenario da utilizzare.
+.SH FILE
+.IP "\fI$FG_ROOT/defaults.xml\fR" 4
+File delle impostazioni predefinite caricato all'avvio.
+.SH "VEDERE ANCHE"
+.BR fgfs (1)

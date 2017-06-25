@@ -1,0 +1,73 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH GPSSMOOTH 1 2017-06-24 FlightGear "Pagine man di FlightGear"
+.SH NOME
+GPSsmooth \- invia dati GPS in formato NMEA a un'istanza di FlightGear
+.SH SINTASSI
+\fBGPSsmooth\fR \fB\-\-help\fR | \fB\-\-file\fR \fInome_file\fR
+[\fB\-\-hertz\fR \fIhertz\fR] [\fB\-\-host\fR \fInomehost\fR]
+[\fB\-\-broadcast\fR] [\fB\-\-fdm\-port\fR \fIporta\fR] [\fB\-\-ctrls\-port\fR
+\fIporta\fR]
+.SH DESCRIZIONE
+.B GPSsmooth
+è un'utilità che legge un file di testo contenente dati GPS in formato NMEA,
+li analizza e li invia a un'istanza di FlightGear per riprodurli.
+.SH OPZIONI
+.TP
+\fB\-\-help\fR
+Mostra informazioni sull'utilizzo ed esce.
+.TP
+\fB\-\-file\fR \fInome_file\fR
+Legge dati GPS da \fInome_file\fR. Quest'opzione è obbligatoria se
+\fB\-\-help\fR non è specificato.
+.TP
+\fB\-\-hertz\fR \fIhertz\fR
+Specifica la frequenza da utilizzare per inviare i dati all'istanza di
+FlightGear. Per impostazione predefinita, gli eventi sono inviati a una
+frequenza di \fB60\fR Hz.
+.TP
+\fB\-\-host\fR \fInomehost\fR
+Invia i dati all'istanza di FlightGear in esecuzione su \fInomehost\fR.
+
+Se \fB\-\-host\fR non è specificato, per impostazione predefinita i dati
+vengono inviati a \fBlocalhost\fR.
+.TP
+\fB\-\-broadcast\fR
+Invia i dati del modello dei dati di volo e di controllo come pacchetti
+broadcast.
+.TP
+\fB\-\-fdm\-port\fR \fIporta\fR
+Imposta la porta a cui devono essere inviati i dati del modello dei dati di
+volo. Per impostazione predefinita, i dati vengono inviati alla porta
+\fB5505\fR.
+.TP
+\fB\-\-ctrls\-port\fR \fIporta\fR
+Imposta la porta a cui devono essere inviati i dati di controllo. Per
+impostazione predefinita, i dati vengono inviati alla porta \fB5506\fR.
+.SH "STATI D'USCITA"
+.B GPSsmooth
+esce con
+.B 0
+se l'esecuzione ha avuto successo, con
+.B \-1
+se la sintassi degli argomenti della riga di comando è errata o se si verifica
+un errore.
+.SH "VEDERE ANCHE"
+.BR fgfs (1),
+.BR MIDGsmooth (1),
+.BR UGsmooth (1)

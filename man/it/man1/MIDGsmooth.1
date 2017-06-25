@@ -1,0 +1,86 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH MIDGSMOOTH 1 2017-06-24 FlightGear "Pagine man di FlightGear"
+.SH NOME
+MIDGsmooth \- invia dati GPS in formato MIDG a un'istanza di FlightGear
+.SH SINTASSI
+\fBMIDGsmooth\fR \fB\-\-help\fR
+    | \fB\-\-infile\fR \fInome_fileinput\fR [\fIopzioni\fR]...
+    | \fB\-\-serial\fR \fInome_dispositivo\fR \fB\-\-outfile\fR \fInome_fileoutput\fR [\fIopzioni\fR]...
+.SH DESCRIZIONE
+.B MIDGsmooth
+è un'utilità che legge dati GPS in formato MIDG da un file di testo o da un
+dispositivo MIDG connesso alla porta seriale, li analizza e li invia a
+un'istanza di FlightGear per riprodurli.
+.SH OPZIONI
+.TP
+\fB\-\-help\fR
+Mostra informazioni sull'utilizzo ed esce.
+.TP
+\fB\-\-infile\fR \fInome_fileinput\fR
+Legge dati GPS da \fInome_fileinput\fR.
+.TP
+\fB\-\-serial\fR \fInome_dispositivo\fR
+Legge dati GPS dal dispositivo seriale \fInome_dispositivo\fR.
+.TP
+\fB\-\-outfile\fR \fInome_fileoutput\fR
+Salva i dati recuperati dal dispositivo in \fInome_fileoutput\fR.
+.TP
+\fB\-\-hertz\fR \fIfrequenza\fR
+Specifica la frequenza da utilizzare per inviare i dati all'istanza di
+FlightGear. Per impostazione predefinita, gli eventi sono inviati a una
+frequenza di \fB60\fR Hz.
+.TP
+\fB\-\-host\fR \fInomehost\fR
+Invia i dati all'istanza di FlightGear in esecuzione su \fInomehost\fR.
+
+Se \fB\-\-host\fR non è specificato, per impostazione predefinita i dati
+vengono inviati a \fBlocalhost\fR.
+.TP
+\fB\-\-skip\-seconds\fR \fIsecondi\fR
+Non trasmette i primi \fIsecondi\fR secondi di dati.
+
+Quest'opzione è ignorata quando si leggono dati GPS da un dispositivo seriale.
+.TP
+\fB\-\-broadcast\fR
+Invia i dati del modello dei dati di volo e di controllo come pacchetti
+broadcast.
+.TP
+\fB\-\-fdm\-port\fR \fIporta\fR
+Imposta la porta a cui devono essere inviati i dati del modello dei dati di
+volo. Per impostazione predefinita, i dati vengono inviati alla porta
+\fB5505\fR.
+.TP
+\fB\-\-ctrls\-port\fR \fIporta\fR
+Imposta la porta a cui devono essere inviati i dati di controllo. Per
+impostazione predefinita, i dati vengono inviati alla porta \fB5506\fR.
+.TP
+\fB\-\-altitude\-offset\fR \fImetri\fR
+Aggiunge l'offset specificato (in metri) all'altitudine inviata a FlightGear.
+.SH "STATI D'USCITA"
+.B MIDGsmooth
+esce con
+.B 0
+se l'esecuzione ha avuto successo, con
+.B \-1\fR
+se la sintassi degli argomenti della riga di comando è errata o se si verifica
+un errore.
+.SH "VEDERE ANCHE"
+.BR fgfs (1),
+.BR GPSsmooth (1),
+.BR UGsmooth (1)

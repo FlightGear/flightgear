@@ -1,0 +1,130 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGELEV 1 2017-06-18 FlightGear "Pagine man di FlightGear"
+.SH NOME
+fgelev \- Calcola l'altitudine dello scenario di FlightGear per un elenco di
+punti dato
+.SH SINTASSI
+\fBfgelev\fR [\fB\-\-expire\fR \fInum\fR] [\fB\-\-print\-solidness\fR]
+[\fB\-\-fg\-root\fR \fIrootdir\fR] [\fB\-\-fg\-scenery\fR \fIscenerydir\fR]
+.SH DESCRIZIONE
+.B fgelev
+è un'utilità autonoma che, dato un elenco di punti sullo standard input, stampa
+l'altitudine corrispondente per ognuno di essi sullo standard output. Essa può
+anche (facoltativamente) stampare se il materiale che ricopre tale punto è
+solido o meno.
+
+L'elenco di punti deve essere nel seguente formato:
+
+    \fIid lon lat\fR
+
+dove \fIid\fR è un identificatore arbitrario per il punto, \fIlon\fR è la
+longitudine del punto e \fIlat\fR è la latitudine del punto. Longitudini
+(latitudini) positive corrispondono a punti collocati nell'emisfero orientale
+(settentrionale); quelle negative corrispondono a punti collocati nell'emisfero
+occidentale (meridionale).
+
+L'elenco di altitudini restituito da
+.B fgelev
+ha il seguente formato:
+
+    \fIid: elev solid\fR
+
+dove \fIid\fR è l'identificatore del punto fornito come input, \fIelev\fR è
+l'altitudine del punto in metri (o \fB-1000\fR se l'altitudine del punto dato
+non è stata trovata) e \fIsolid\fR è:
+.IP \(bu 3
+la stringa
+.B solid
+se il parametro
+.B \-\-print\-solidness
+è stato fornito a
+.B fgelev
+e il materiale che ricopre il punto è solido;
+.IP \(bu 3
+la stringa
+.B \-
+se il parametro
+.B \-\-print\-solidness
+è stato fornito a
+.B fgelev
+e il materiale che ricopre il punto non è solido;
+.IP \(bu 3
+assente se il parametro
+.B \-\-print\-solidness
+non è stato fornito a \fBfgelev\fR.
+.SH OPZIONI
+.TP
+\fB\-\-expire\fR \fInum\fR
+Per velocizzare il recupero dei dati relativi all'altitudine,
+.B fgelev
+utilizza una cache interna. Quest'opzione consente all'utente di specificare
+il numero di richieste dopo le quali, se un punto non è stato richiesto, esso
+verrà contrassegnato come scaduto. Per impostazione predefinita,
+.B fgelev
+marca come scaduti i punti non richiesti nelle ultime \fB10\fR richieste.
+.TP
+\fB\-\-print\-solidness\fR
+Richiede a
+.B fgelev
+di stampare la solidità del materiale che ricopre il punto richiesto. Vedi la
+sezione
+.B DESCRIZIONE
+per ulteriori dettagli.
+.TP
+\fB\-\-fg\-root\fR \fIrootdir\fR
+Imposta la directory radice dei dati di FlightGear (\fB$FG_ROOT\fR) a
+\fIrootdir\fR. Se quest'opzione non è impostata,
+.B fgelev
+utilizza il percorso specificato nella variabile d'ambiente
+.B FG_ROOT
+o, in sua assenza, la directory dei dati di FlightGear scelta all'atto della
+compilazione del programma.
+.TP
+\fB\-\-fg\-scenery\fR \fIscenerydir\fR
+Imposta la directory dello scenario di FlightGear (\fB$FG_SCENERY\fR) a
+\fIscenerydir\fR. Se quest'opzione non è impostata,
+.B fgelev
+utilizza il percorso specificato nella variabile d'ambiente
+.B FG_SCENERY
+o, in sua assenza, la sottodirectory
+.B Scenery
+all'interno di \fB$FG_ROOT\fR.
+.SH "STATI D'USCITA"
+.B fgelev
+esce con
+.B EXIT_SUCCESS
+se l'esecuzione ha avuto successo, con
+.B EXIT_FAILURE
+se non è in grado di leggere i dati dallo standard input o di caricare lo
+scenario.
+.SH "VARIABILI D'AMBIENTE"
+.IP "\fBFG_ROOT\fR" 4
+Se
+.B FG_ROOT
+è impostata e
+.B \-\-fg\-root
+non è impostato, specifica la directory radice dei dati da utilizzare.
+.IP "\fBFG_SCENERY\fR" 4
+Se
+.B FG_SCENERY
+è impostata e
+.B \-\-fg\-scenery
+non è impostato, specifica la directory dello scenario da utilizzare.
+.SH "VEDERE ANCHE"
+.BR fgfs (1)

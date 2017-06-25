@@ -1,0 +1,68 @@
+.\" Copyright (C) 2002 Cameron Moore
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGJS 1 2017-06-24 FlightGear "Pagine man di FlightGear"
+.SH NOME
+fgjs \- utilità joystick di FlightGear
+.SH SINTASSI
+\fBfgjs\fR [\fB\-\-help\fR] [\fB\-\-fg\-root=\fIdirectoryroot\fR]
+.SH DESCRIZIONE
+.B fgjs
+è un'utilità joystick per il simulatore di volo FlightGear che consente di
+generare interattivamente un file di configurazione per il proprio joystick.
+
+Per utilizzarla, avviare il programma con i joystick connessi. L'utilità per
+prima cosa richiederà di muovere ogni joystick nella \fIdead band\fR, ossia
+l'area in cui il joystick è centrato e non dovrebbe generare alcun input. In
+seguito verrà richiesto di muovere l'asse/premere il pulsante che si preferisce
+utilizzare per ogni funzione.
+
+La configurazione sarà salvata nella directory di lavoro corrente in più
+file denominati \fIjsI.xml\fR, dove \fII\fR è il numero progressivo assegnato a
+ogni joystick rilevato. Sarà necessario spostarli in
+.I ~/.fgfs/Input/Joysticks
+affinché questi vengano utilizzati da FlightGear.
+.SH OPZIONI
+.TP
+\fB\-\-help\fR
+Mostra informazioni sull'utilizzo ed esce.
+.TP
+\fB\-\-fg\-root=\fIdirectoryroot\fR
+Imposta la directory radice dei dati di FlightGear (\fB$FG_ROOT\fR) a
+\fIdirectoryroot\fR.
+.SH "VARIABILI D'AMBIENTE"
+.IP "\fBFG_ROOT\fR" 4
+Se
+.B FG_ROOT
+è impostata e
+.B \-\-fg\-root
+non è impostato, specifica la directory radice dei dati da utilizzare.
+.SH FILE
+.IP "\fI~/.fgfsrc.hostname\fR, \fI~/.fgfsrc\fR" 4
+File di configurazione contenenti opzioni della riga di comando per
+.BR fgfs (1).
+L'opzione della riga di comando
+.B \-\-fg\-root
+è ricercata in tali file se non è fornita come argomento della riga di comando
+a \fBfgjs\fR.
+.SH "VEDERE ANCHE"
+.BR fgfs (1),
+.BR js_demo (1),
+.UR http://\:wiki.flightgear.org/\:Joystick
+la pagina "Joystick" del wiki FlightGear
+.UE

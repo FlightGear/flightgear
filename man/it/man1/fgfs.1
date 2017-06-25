@@ -1,0 +1,896 @@
+.\" Copyright (C) 2002 Cameron Moore
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGFS 1 2017-06-25 FlightGear "Pagine man di FlightGear"
+.SH NOME
+fgfs \- il simulatore di volo FlightGear
+.SH SINTASSI
+\fBfgfs\fR [\fIopzioni...\fR]
+.SH DESCRIZIONE
+.B fgfs
+è l'eseguibile principale di FlightGear, un framework di simulazione di volo
+libero, open source, multipiattaforma e sofisticato per lo sviluppo e la
+ricerca di interessanti idee sulla simulazione di volo.
+.SH OPZIONI
+Le opzioni sono inizialmente lette dagli argomenti della riga di comando
+forniti a \fBfgfs\fR. Il programma quindi controlla l'esistenza di
+\fI~/.fgfsrc.\fIhostname\fR (dove
+.I hostname
+è il nome host della macchina) e di \fI~/.fgfsrc\fR; se almeno uno di questi
+file esiste, è letto e analizzato (vedi la pagina di manuale
+.BR fgfsrc (5)
+per le specifiche complete del formato di file).
+
+Nel caso in cui siano fornite opzioni in conflitto tra loro, prevarranno quelle
+lette per ultime.
+
+.SS "Opzioni generali"
+.TP
+\fB\-\-help\fR, \fB\-h\fR
+Mostra informazioni sull'utilizzo delle opzioni della riga di comando più
+importanti ed esce.
+.TP
+\fB\-\-verbose\fR, \fB\-v\fR
+Quando combinato con \fB\-\-help\fR/\fB\-h\fR, mostra informazioni
+sull'utilizzo di tutte le opzioni della riga di comando, non solo di quelle più
+importanti.
+.TP
+\fB\-\-version\fR
+Mostra informazioni sulla versione di
+.B fgfs
+e di alcune delle librerie utilizzate dal programma (SimGear, OpenSceneGraph,
+PLIB), quindi esce.
+.TP
+\fB\-\-fg\-root=\fIpercorso\fR
+Imposta la directory radice dei dati di FlightGear (\fB$FG_ROOT\fR) a
+\fIpercorso\fR. Se quest'opzione non è impostata,
+.B fgfs
+utilizza il percorso specificato nella variabile d'ambiente
+.B FG_ROOT
+o, in sua assenza, la directory dei dati di FlightGear scelta all'atto della
+compilazione del programma.
+.TP
+\fB\-\-fg\-scenery=\fIpercorso\fR
+Imposta le directory dello scenario di FlightGear (\fB$FG_SCENERY\fR) a
+\fIpercorso\fR.
+
+È possibile specificare più directory separandole con due punti (\fB:\fR),
+come in \fI/primo/percorso\fB:\fI/secondo/percorso\fR (sui sistemi operativi
+Microsoft Windows, invece, i percorsi multipli devono essere separati da punti
+e virgola): in tal caso,
+.B fgfs
+seguirà l'ordine in cui i percorsi sono stati specificati per cercare i file
+dello scenario, fermandosi non appena è stato trovato il file cercato.
+
+Se quest'opzione non è impostata,
+.B fgfs
+utilizza il percorso specificato nella variabile d'ambiente
+.B FG_SCENERY
+o, in sua assenza, la sottodirectory
+.B Scenery
+all'interno di \fB$FG_ROOT\fR.
+.TP
+\fB\-\-fg\-aircraft=\fIpercorso\fR
+Carica aerei aggiuntivi da \fIpercorso\fR oltre alla sottodirectory
+.B Aircraft
+all'interno di \fB$FG_ROOT\fR. In alternativa, è possibile utilizzare
+.B \-\-aircraft\-dir
+per puntare a uno specifico aereo in una data directory.
+.TP
+\fB\-\-download\-dir=\fIpercorso\fR
+Salva gli aerei e lo scenario scaricati tramite il simulatore in \fIpercorso\fR.
+
+La directory di TerraSync può essere impostata in modo specifico con l'opzione
+.BR \-\-terrasync\-dir .
+.TP
+\fB\-\-allow\-nasal\-read=\fIdirectory\fR
+Permetti agli script aereo Nasal di leggere file dalle directory elencate in
+\fIdirectory\fR (percorsi multipli vanno separati con due punti, o punti e
+virgola sui sistemi operativi Microsoft Windows).
+
+Per impostazione predefinita, agli script Nasal è permesso leggere dati solo da
+\fB$FG_ROOT\fR e \fB$FG_HOME\fR per motivi di sicurezza.
+.TP
+\fB\-\-read\-only\fR
+Rendi \fB$FG_HOME\fR (il percorso in cui sono salvati i dati di FlightGear
+specifici per ogni utente) di sola lettura.
+.TP
+\fB\-\-language=\fIcodice\fR
+Imposta la lingua utilizzata dal simulatore a \fIcodice\fR, dove \fIcodice\fR
+è un codice lingua ISO 639-1 a due lettere (ad esempio, \fBen\fR o \fBit\fR).
+.TP
+\fB\-\-restore\-defaults\fR
+Reimposta tutte le impostazioni utente ai loro valori predefiniti.
+.TP
+\fB\-\-enable\-save\-on\-exit\fR, \fB\-\-disable\-save\-on\-exit\fR
+Salva/non salva le impostazioni utente all'uscita dal programma.
+.TP
+\fB\-\-ignore\-autosave\fR
+Ignora le impostazioni utente salvate durante la precedente esecuzione di
+FlightGear. Quest'opzione implica \fB\-\-disable\-save\-on\-exit\fR.
+.TP
+\fB\-\-browser\-app=\fIpercorso\fR
+Utilizza il browser Web specificato in \fIpercorso\fR per aprire la
+documentazione degli aerei.
+.TP
+\fB\-\-prop:\fR[\fItipo\fB:\fR]\fInome\fB=\fIvalore\fR
+Imposta la proprietà \fInome\fR a \fIvalore\fR. È facoltativamente possibile
+specificare il tipo della proprietà impostando \fItipo\fR a \fBstring\fR,
+\fBdouble\fR, \fBfloat\fR, \fBlong\fR, \fBint\fR o \fBbool\fR.
+.TP
+\fB\-\-config=\fIpercorso\fR
+Carica direttive di configurazione aggiuntive da \fIpercorso\fR. Il file deve
+essere nel formato descritto in
+.BR fgfsrc (5).
+.TP
+\fB\-\-no\-default\-config\fR
+Non carica alcun file di configurazione, eccetto quelli esplicitamente
+specificati con \fB\-\-config\fR.
+.TP
+\fB\-\-units\-feet\fR
+Utilizza i piedi come unità di misura interna per le distanze.
+.TP
+\fB\-\-units\-meters\fR
+Utilizza i metri come unità di misura interna per le distanze.
+.TP
+\fB\-\-console\fR
+Mostra una finestra console per il debug del simulatore/degli aerei.
+
+Quest'opzione è riconosciuta solo sui sistemi operativi Microsoft Windows; su
+altri sistemi, i messaggi di debug sono sempre stampati sullo standard
+output/standard error.
+.TP
+\fB\-\-launcher\fR
+Avvia il FlightGear Launcher, un'interfaccia grafica per il simulatore basata
+su Qt.
+
+Quest'opzione è disponibile solo se FlightGear è stato compilato con il
+supporto a Qt abilitato.
+.TP
+\fB\-\-json\-report\fR
+Stampa un rapporto in formato JSON sullo standard output. Il rapporto fornirà
+informazioni utili per scopi di debug, come la versione di FlightGear, i
+percorsi utilizzati per lo scenario/gli aerei, le directory di download di
+TerraSync e dei dati e i percorsi ai file dei dati di navigazione.
+.SS Funzionalità
+.TP
+\fB\-\-enable\-panel\fR, \fB\-\-disable\-panel\fR
+Abilita/disabilita il pannello strumenti aereo a scomparsa se l'aereo scelto
+ne è provvisto.
+.TP
+\fB\-\-enable\-hud\fR, \fB\-\-disable\-hud\fR
+Abilita/disabilita l'heads-up display (HUD) se l'aereo scelto ne è provvisto.
+.TP
+\fB\-\-enable\-anti\-alias\-hud\fR, \fB\-\-disable\-anti\-alias\-hud\fR
+Abilita/disabilita l'antialiasing dell'heads-up display.
+.TP
+\fB\-\-enable\-hud\-3d\fR, \fB\-\-disable\-hud\-3d\fR
+Abilita/disabilita la versione 3D dell'heads-up display.
+.TP
+\fB\-\-hud\-tris\fR
+Mostra il numero di triangoli renderizzati durante il disegno dell'heads-up
+display.
+.TP
+\fB\-\-hud\-culled\fR
+Mostra il numero di triangoli sottoposti a culling durante il disegno
+dell'heads-up display.
+.TP
+\fB\-\-enable\-random\-objects\fR, \fB\-\-disable\-random\-objects\fR
+Mostra/nasconde oggetti casuali nello scenario, come edifici. Gli oggetti
+dello scenario aumentano il realismo, ma richiedono più risorse (memoria e
+potenza della GPU).
+.TP
+\fB\-\-enable\-random\-vegetation\fR, \fB\-\-disable\-random\-vegetation\fR
+Mostra/nasconde vegetazione casuale.
+.TP
+\fB\-\-enable\-random\-buildings\fR, \fB\-\-disable\-random\-buildings\fR
+Mostra/nasconde edifici casuali.
+.TP
+\fB\-\-enable\-ai\-models\fR, \fB\-\-disable\-ai\-models\fR
+Abilita/disabilita il sottosistema IA interno richiesto per il gioco
+multigiocatore, il traffico IA e molte altre animazioni. \fBLa disabilitazione
+del sottosistema IA interno è deprecata.\fR
+.TP
+\fB\-\-enable\-ai\-traffic\fR, \fB\-\-disable\-ai\-traffic\fR
+Abilita/disabilita il traffico aereo artificiale.
+.TP
+\fB\-\-ai\-scenario=\fIscenario\fR
+Aggiunge e abilita lo scenario IA \fIscenario\fR. Quest'opzione può essere
+ripetuta più volte per abilitare scenari multipli.
+.TP
+\fB\-\-enable\-freeze\fR
+Avvia il simulatore in uno stato bloccato (in pausa).
+.TP
+\fB\-\-disable\-freeze\fR
+Avvia il simulatore in uno stato di esecuzione (non in pausa).
+.TP
+\fB\-\-enable\-fuel\-freeze\fR
+Non fa consumare carburante (mantiene la sua quantità nei serbatoi costante).
+.TP
+\fB\-\-disable\-fuel\-freeze\fR
+Fa consumare il carburante normalmente.
+.TP
+\fB\-\-enable\-clock\-freeze\fR
+Non consente all'orologio di avanzare durante l'esecuzione della simulazione.
+.TP
+\fB\-\-disable\-clock\-freeze\fR
+Fa sì che l'orologio avanzi normalmente.
+.TP
+\fB\-\-failure=pitot\fR|\fBstatic\fR|\fBvacuum\fR|\fBelectrical\fR
+Fa guastare i sistemi pitot, statico, del vuoto o elettrico dell'aereo.
+Quest'opzione può essere ripetuta più volte per far guastare più di un sistema.
+.TP
+\fB\-\-load\-tape=\fInastro\fR
+Carica e riproduce il nastro del registratore di volo \fInastro\fR.
+.SS "Opzioni audio"
+.TP
+\fB\-\-show\-sound\-devices\fR
+Mostra un elenco di dispositivi audio disponibili ed esce.
+.TP
+\fB\-\-sound\-device=\fInome\fR
+Imposta il dispositivo audio da utilizzare a \fInome\fR, dove
+.I nome
+è il nome dispositivo visualizzato dall'opzione
+.BR \-\-show\-sound\-devices .
+.TP
+\fB\-\-enable\-sound\fR, \fB\-\-disable\-sound\fR
+Abilita/disabilita l'audio nel simulatore.
+.SS "Opzioni rendering"
+.TP
+\fB\-\-terrain\-engine=tilecache\fR|\fBpagedLOD\fR
+Seleziona il terrain engine da utilizzare. \fBtilecache\fR è il terrain engine
+"tradizionale" (raccomandato); \fBpagedLOD\fR è un terrain engine nuovo e
+sperimentale progettato per ridurre al minimo l'utilizzo di memoria caricando
+le versioni maggiormente dettagliate degli oggetti dello scenario su richiesta.
+
+Il motore \fBpagedLOD\fR è disponibile solo se FlightGear è stato compilato con
+il supporto GDAL.
+.TP
+\fB\-\-lod\-levels=\fIlivelli\fR
+Imposta i livelli del livello di dettaglio a \fIlivelli\fR, dove \fIlivelli\fR
+è un elenco separato da spazi di livelli numerici. Quest'opzione è disponibile
+solo se il terrain engine in uso è \fBpagedLOD\fR.
+.TP
+\fB\-\-lod\-res=\fIrisoluzione\fR
+Imposta la risoluzione della mesh terreno a \fIrisoluzione\fR. Quest'opzione è
+disponibile solo se il terrain engine in uso è \fBpagedLOD\fR.
+.TP
+\fB\-\-lod\-texturing=bluemarble\fR|\fBraster\fR|\fBdebug\fR
+Imposta il metodo per le texture del terreno. Quest'opzione è disponibile solo
+se il terrain engine in uso è \fBpagedLOD\fR.
+.TP
+\fB\-\-lod\-range\-mult=\fImoltiplicatore\fR
+Imposta il moltiplicatore intervallo (il punto di transizione da un livello di
+dettaglio basso ad alto) a \fImoltiplicatore\fR. Quest'opzione è disponibile
+solo se il terrain engine in uso è \fBpagedLOD\fR.
+.TP
+\fB\-\-enable\-rembrandt\fR, \fB\-\-disable\-rembrandt\fR
+Abilita/disabilita il
+.UR http://\:wiki.flightgear.org/\:Project_Rembrandt
+motore Rembrandt
+.UE ,
+che aggiunge il deferred shading (rendering di tutte le proprietà di un
+oggetto, come shading, illuminazione, nebbia) in più passaggi.
+.TP
+\fB\-\-renderer=\fInome\fR
+Se il motore Rembrandt è abilitato, utilizza la pipeline di rendering descritta
+in \fI$FG_ROOT/Effects/\fRnome\fI.xml\fR.
+.TP
+\fB\-\-enable\-splash\-screen\fR, \fB\-\-disable\-splash\-screen\fR
+Mostra/nasconde la schermata di avvio del simulatore durante il caricamento
+dell'aereo/dello scenario.
+.TP
+\fB\-\-enable\-mouse\-pointer\fR, \fB\-\-disable\-mouse\-pointer\fR
+Forza/non forza la visualizzazione del puntatore del mouse all'avvio.
+.TP
+\fB\-\-max\-fps=\fIfrequenza\fR
+Limita il framerate massimo del simulatore a \fIfrequenza\fR Hz (frame al
+secondo).
+.TP
+\fB\-\-bpp=\fIprofondità\fR
+Utilizza una profondità colore di \fIprofondità\fR bit per pixel per
+visualizzare l'aereo e lo scenario.
+.TP
+\fB\-\-fog\-disable\fR, \fB\-\-fog\-fastest\fR, \fB\-\-fog\-nicest\fR
+Seleziona la tecnica di rendering della nebbia/foschia.
+.B \-\-fog\-disable
+disabilita completamente nebbia e foschia;
+.B \-\-fog\-fastest
+chiede esplicitamente al driver della scheda video di scegliere l'algoritmo di
+rendering più efficiente, ma forse meno accurato, per la nebbia/foschia;
+.B \-\-fog\-nicest
+lascia la scelta dell'algoritmo al driver, il che porta a risultati di
+miglior qualità.
+.TP
+\fB\-\-enable\-enhanced\-lighting\fR, \fB\-\-disable\-enhanced\-lighting\fR
+Abilita/disabilita l'illuminazione pista migliorata. \fBQuest'opzione è
+deprecata.\fR
+.TP
+\fB\-\-enable\-distance\-attenuation\fR, \fB\-\-disable\-distance\-attenuation\fR
+Abilita/disabilita l'attenuazione con la distanza delle luci pista (le luci
+pista diminuiscono di intensità all'aumento della distanza).
+.TP
+\fB\-\-enable\-horizon\-effect\fR, \fB\-\-disable\-horizon\-effect\fR
+Abilita/disabilita l'illusione di crescita dei corpi celesti in prossimità
+dell'orizzonte.
+.TP
+\fB\-\-enable\-specular\-highlight\fR, \fB\-\-disable\-specular\-highlight\fR
+Abilita/disabilita le riflessioni speculari su oggetti texturizzati.
+.TP
+\fB\-\-fov=\fIgradi\fR
+Imposta l'angolo di visione (FOV) a \fIgradi\fR. Angoli di visione grandi
+consentono di vedere una parte più ampia del mondo; angoli piccoli consentono
+di "zoomare" sui dettagli.
+.TP
+\fB\-\-aspect\-ratio\-multiplier=\fIfattore\fR
+Imposta il moltiplicatore rapporto d'aspetto orizzontale e verticale a
+\fIfattore\fR.
+.TP
+\fB\-\-enable\-fullscreen\fR, \fB\-\-disable\-fullscreen\fR
+Abilita/disabilita la modalità a schermo intero.
+.TP
+\fB\-\-shading\-flat\fR, \fB\-\-shading\-smooth\fR
+Utilizza il flat shading/smooth shading. Se il flat shading è attivo, il
+simulatore utilizza lo stesso colore per colorare le facce di un oggetto: ciò è
+più veloce, ma rende gli spigoli più pronunciati. Lo smooth shading smussa i
+cambiamenti di colore fra i vertici, il che porta a risultati di miglior
+qualità a spese delle prestazioni.
+.TP
+\fB\-\-materials\-file=\fIfile\fR
+Carica le definizioni dei materiali utilizzati per renderizzare lo scenario da
+\fIfile\fR. Per impostazione predefinita, i materiali sono caricati da
+\fI$FG_ROOT/regions/materials.xml\fR.
+.TP
+\fB\-\-texture\-filtering=\fIvalore\fR
+Imposta il filtraggio texture anisotropico a \fIvalore\fR. I valori accettabili
+sono \fB1\fR (impostazione predefinita), \fB2\fR, \fB4\fR, \fB8\fR o \fB16\fR.
+.TP
+\fB\-\-enable\-wireframe\fR, \fB\-\-disable\-wireframe\fR
+Abilita/disabilita la modalità disegno wireframe (in cui sono rappresentati
+solo gli spigoli degli oggetti).
+.TP
+\fB\-\-geometry=\fIlarghezza\fBx\fIaltezza\fR
+Imposta la geometria (dimensioni) della finestra a \fIlarghezza\fBx\fIaltezza\fR
+(sia \fIlarghezza\fR sia \fIaltezza\fR sono in pixel).
+.TP
+\fB\-\-view\-offset=LEFT\fR|\fBRIGHT\fR|\fBCENTER\fR|\fIvalore\fR
+Specifica la direzione predefinita per la vista frontale come offset dalla
+direzione "davanti a sé". I valori consentiti sono \fBLEFT\fR (-90°),
+\fBRIGHT\fR (90°), \fBCENTER\fR (0°) o un valore specifico in gradi.
+.SS "Opzioni aereo"
+.TP
+\fB\-\-aircraft=\fInome\fR, \fB\-\-vehicle=\fInome\fR
+Carica un aereo/veicolo da un file set denominato \fRnome\fI\-set.xml\fR. Il
+file viene cercato in \fI$FG_ROOT/Aircraft\fR, nella directory a cui punta la
+variabile d'ambiente \fBFG_AIRCRAFT\fR e nelle directory fornite a
+.BR fgfs (1)
+tramite l'opzione \fB\-\-fg\-aircraft\fR.
+.TP
+\fB\-\-aircraft\-dir=\fIpercorso\fR
+Specifica esplicitamente la directory in cui deve essere cercato il file
+\fB\-set.xml\fR. Se viene utilizzata quest'opzione, la cache dei percorsi
+salvata in \fI~/.fgfs/autosave_X_Y.xml\fR, le directory fornite tramite
+l'opzione \fB\-\-fg\-aircraft\fR e la directory specificata nella variabile
+d'ambiente \fBFG_AIRCRAFT\fR non sono tenute in considerazione.
+.TP
+\fB\-\-show\-aircraft\fR
+Stampa un elenco di aerei disponibili ed esce.
+.TP
+\fB\-\-min\-status=alpha\fR|\fBbeta\fR|\fBearly-production\fR|\fBproduction\fR
+Non elenca aerei con un livello di stato (stato di sviluppo) minore di quello
+specificato. Vedi
+.UR http://\:wiki.flightgear.org/\:Aircraft_rating_system
+la pagina "Aircraft rating system" del wiki FlightGear
+.UE
+per una descrizione estesa delle valutazioni degli aerei.
+.TP
+\fB\-\-fdm=jsb\fR|\fBlarcsim\fR|\fByasim\fR|\fBmagic\fR|\fBballoon\fR|\fBada\fR|\fBexternal\fR|\fBnull\fR
+Seleziona il modello core della dinamica di volo da utilizzare fra i seguenti:
+.RS 7
+.IP \(bu 3
+\fBjsb\fR: il
+.UR http://\:www.jsbsim.org/
+modello dinamica di volo JSBSim
+.UE ,
+che adotta un approccio alla modellazione guidato dai dati: noti i dati delle
+prestazioni di un aereo (massa e bilanciamento, reazioni a terra, propulsioni,
+aerodinamica...), li combina per produrre la dinamica globale dell'aereo;
+.IP \(bu 3
+\fBlarcsim\fR: il
+.UR http://\:www.jsbsim.org/
+modello dinamica di volo LaRCsim
+.UE ,
+il modello originariamente utilizzato in FlightGear fino al 2000, sviluppato
+presso la NASA, ora non attivo;
+.IP \(bu 3
+\fByasim\fR: il
+.UR http://\:wiki.flightgear.org/\:YASim
+modello dinamica di volo YASim
+.UE ,
+che, note le caratteristiche fisiche e di volo di un aereo, tenta di risolvere
+le equazioni in gioco rispettando tali vincoli;
+.IP \(bu 3
+\fBmagic\fR: il modello di volo "Magic Carpet";
+.IP \(bu 3
+\fBballoon\fR: una simulazione di volo di una mongolfiera;
+.IP \(bu 3
+\fBada\fR: un modello dinamica di volo guidato esternamente progettato dalla
+Aeronautical Development Agency di Bangalore, India;
+.IP \(bu 3
+\fBexternal\fR/\fBnull\fR: utilizza un modello dinamica di volo esterno
+(l'opzione \fBexternal\fR ha lo stesso significato di \fBnull\fR ed è mantenuta
+per motivi di retrocompatibilità).
+.RE
+.TP
+\fB\-\-aero=\fInome\fR
+Carica il modello dell'aerodinamica dell'aereo dal file \fRnome\fI.xml\fR nella
+directory dell'aereo.
+.TP
+\fB\-\-model\-hz=\fIn\fR
+Esegui il modello dinamica di volo a una frequenza di \fIn\fR Hz (\fIn\fR volte
+al secondo).
+.TP
+\fB\-\-speed=\fIn\fR
+Esegui il modello dinamica di volo \fIn\fR volte più velocemente rispetto al
+tempo reale.
+.TP
+\fB\-\-trim\fR, \fB\-\-notrim\fR
+Corregge/non tenta di correggere il modello. Quest'opzione è valida solo se il
+modello dinamica di volo utilizzato è JSBSim.
+.TP
+\fB\-\-on\-ground\fR
+Posiziona inizialmente l'aereo a terra. Questa è l'opzione predefinita.
+.TP
+\fB\-\-in\-air\fR
+Posiziona inizialmente l'aereo in volo. Quest'opzione è implicita se è
+specificato \fB\-\-altitude\fR.
+.TP
+\fB\-\-enable\-auto\-coordination\fR, \fB\-\-disable\-auto\-coordination\fR
+Abilita/disabilita la coordinazione automatica (controllo congiunto del
+timone e degli alettoni).
+.TP
+\fB\-\-livery=\fInome\fR
+Carica la livrea dell'aereo da un file denominato \fInome\fR.
+.TP
+\fB\-\-state=\fIvalore\fR
+Imposta lo stato iniziale dell'aereo a \fIvalore\fR. Gli stati che è possibile
+utilizzare dipendono dal modello di aereo.
+.SS "Opzioni tempo"
+.TP
+\fB\-\-timeofday=real\fR|\fBdawn\fR|\fBmorning\fR|\fBnoon\fR|\fBafternoon\fR|\fBdusk\fR|\fBevening\fR|\fBmidnight\fR
+Avvia il simulatore all'ora del giorno specificata:
+.RS 7
+.IP \(bu 3
+\fBreal\fR: ora reale;
+.IP \(bu 3
+\fBdawn\fR: l'ora all'istante in cui il Sole è a 90° a Est rispetto
+all'orizzonte;
+.IP \(bu 3
+\fBmorning\fR: l'ora all'istante in cui il Sole è a 75° a Est rispetto
+all'orizzonte;
+.IP \(bu 3
+\fBnoon\fR: l'ora all'istante in cui il Sole è a 0° rispetto all'orizzonte;
+.IP \(bu 3
+\fBafternoon\fR: l'ora all'istante in cui il Sole è a 75° a Ovest rispetto
+all'orizzonte;
+.IP \(bu 3
+\fBdusk\fR: l'ora all'istante in cui il Sole è a 90° a Ovest rispetto
+all'orizzonte;
+.IP \(bu 3
+\fBevening\fR: l'ora all'istante in cui il Sole è a 100° a Ovest rispetto
+all'orizzonte;
+.IP \(bu 3
+\fBmidnight\fR: l'ora all'istante in cui il Sole è a 180° rispetto
+all'orizzonte.
+.RE
+.TP
+\fB\-\-season=summer\fR|\fBwinter\fR
+Carica le texture estive/invernali.
+.TP
+\fB\-\-time\-offset=\fR[\fB+\fR|\fB-\fR]\fIhh\fB:\fImm\fB:\fIss\fR
+Aggiungi un offset temporale all'orario di avvio specificato con l'opzione
+\fB\-\-timeofday\fR.
+.TP
+\fB\-\-time\-match\-real\fR
+Sincronizza l'orario del simulatore con l'ora reale GMT.
+.TP
+\fB\-\-time\-match\-local\fR
+Sincronizza l'orario del simulatore con l'ora reale locale.
+.TP
+\fB\-\-start\-date\-sys=\fIyyyy\fB:\fImm\fB:\fIdd\fB:\fIhh\fB:\fImm\fB:\fIss\fR
+Specifica la data e l'ora di avvio del simulatore rispetto al fuso orario
+locale del sistema.
+.TP
+\fB\-\-start\-date\-gmt=\fIyyyy\fB:\fImm\fB:\fIdd\fB:\fIhh\fB:\fImm\fB:\fIss\fR
+Specifica la data e l'ora di avvio del simulatore rispetto all'ora di
+Greenwich.
+.TP
+\fB\-\-start\-date\-lat=\fIyyyy\fB:\fImm\fB:\fIdd\fB:\fIhh\fB:\fImm\fB:\fIss\fR
+Specifica la data e l'ora di avvio del simulatore rispetto al fuso orario
+locale dell'aeroporto di partenza.
+.SS "Posizione e orientamento iniziali"
+.TP
+\fB\-\-airport=\fIID\fR
+Avvia il simulatore all'aeroporto con codice ICAO \fIID\fR.
+.TP
+\fB\-\-parking\-id=\fInome\fR
+Posiziona l'aereo alla posizione di parcheggio \fInome\fR. Quest'opzione
+richiede che l'opzione \fB\-\-airport\fR sia presente.
+.TP
+\fB\-\-runway=\fInumero\fR
+Posiziona l'aereo sulla pista \fInumero\fR. Quest'opzione richiede che
+l'opzione \fB\-\-airport\fR sia presente.
+.TP
+\fB\-\-carrier=\fIname\fR|\fIID\fR
+Posiziona l'aereo sulla portaerei AI denominata \fInome\fR/con ID \fIID\fR.
+.TP
+\fB\-\-parkpos=\fInome\fR
+Posiziona l'aereo alla posizione iniziale \fInome\fR. Quest'opzione richiede
+che l'opzione \fB\-\-carrier\fR sia presente.
+.TP
+\fB\-\-vor=\fIID\fR
+Posiziona l'aereo sulla verticale del VOR \fIID\fR.
+.TP
+\fB\-\-vor\-frequency=\fIfrequenza\fR
+Imposta la frequenza del VOR a \fIfrequenza\fR. Quest'opzione richiede che
+l'opzione \fB\-\-vor\fR sia presente.
+.TP
+\fB\-\-ndb=\fIID\fR
+Posiziona l'aereo sulla verticale dell'NDB \fIID\fR.
+.TP
+\fB\-\-ndb\-frequency=\fIfrequenza\fR
+Imposta la frequenza dell'NDB a \fIfrequenza\fR. Quest'opzione richiede che
+l'opzione \fB\-\-ndb\fR sia presente.
+.TP
+\fB\-\-fix=\fIID\fR
+Posiziona l'aereo sulla verticale del punto \fIID\fR.
+.TP
+\fB\-\-offset\-distance=\fInm\fR
+Posiziona l'aereo a \fInm\fR miglia di distanza dal punto di riferimento
+specificato dalle opzioni precedenti.
+.TP
+\fB\-\-offset\-azimuth=\fIgradi\fR
+Posiziona l'aereo con prua \fIgradi\fR rispetto al punto di riferimento
+specificato dalle opzioni precedenti.
+.TP
+\fB\-\-lon=\fIgradi\fR, \fB\-\-lat=\fIgradi\fR
+Posiziona l'aereo al punto con coordinate (\fIlat\fR, \fIlon\fR). Le
+longitudini settentrionali/latitudini orientali devono essere numeri positivi;
+le longitudini meridionali/latitudini occidentali devono essere numeri
+negativi.
+.TP
+\fB\-\-altitude=\fIvalore\fR
+Posiziona l'aereo a un'altitudine di \fIvalore\fR piedi (metri se è specificata
+l'opzione \fB\-\-units\-meters\fR).
+.TP
+\fB\-\-heading=\fIgradi\fR
+Specifica la prua iniziale (imbardata, psi) dell'aereo.
+.TP
+\fB\-\-roll=\fIgradi\fR
+Specifica il rollio iniziale (phi) dell'aereo.
+.TP
+\fB\-\-pitch=\fIgradi\fR
+Specifica il beccheggio iniziale (theta) dell'aereo.
+.TP
+\fB\-\-uBody=\fIunità_per_s\fR
+Specifica la velocità iniziale lungo l'asse X del corpo.
+.TP
+\fB\-\-vBody=\fIunità_per_s\fR
+Specifica la velocità iniziale lungo l'asse Y del corpo.
+.TP
+\fB\-\-wBody=\fIunità_per_s\fR
+Specifica la velocità iniziale lungo l'asse Z del corpo.
+.TP
+\fB\-\-vNorth=\fIunità_per_s\fR
+Specifica la velocità iniziale lungo l'asse Nord-Sud del corpo.
+.TP
+\fB\-\-vEast=\fIunità_per_s\fR
+Specifica la velocità iniziale lungo l'asse Ovest-Est del corpo.
+.TP
+\fB\-\-vDown=\fIunità_per_s\fR
+Specifica la velocità iniziale lungo l'asse verticale del corpo.
+.TP
+\fB\-\-vc=\fInodi\fR
+Imposta la velocità all'aria iniziale dell'aereo a \fInodi\fR nodi.
+.TP
+\fB\-\-mach=\fInumero\fR
+Imposta la velocità all'aria iniziale dell'aereo a Mach \fInumero\fR.
+.TP
+\fB\-\-glideslope=\fIgradi\fR
+Imposta l'angolo di discesa a \fIgradi\fR gradi. Il valore può essere positivo.
+.TP
+\fB\-\-roc=\fIfpm\fR
+Imposta il rateo di salita iniziale a \fIfpm\fR piedi al minuto. Il valore può
+essere negativo.
+.SS "Opzioni rotta/waypoint"
+.TP
+\fB\-\-wp=\fIID\fR[\fB@\fIalt\fR]
+Inserisce il waypoint (VOR, NDB, punto) \fIID\fR nel pilota automatico. La
+parte facoltativa \fB@\fIalt\fR può essere utilizzata per specificare
+l'altitudine a cui superare \fIID\fR.
+.TP
+\fB\-\-flight\-plan=\fIfile\fR
+Leggi un piano di volo da \fIfile\fR.
+.SS "Opzioni avionica"
+.TP
+\fB\-\-com1=\fIfrequenza\fR
+Imposta la frequenza COM1 a \fIfrequenza\fR MHz.
+.TP
+\fB\-\-com2=\fIfrequenza\fR
+Imposta la frequenza COM2 a \fIfrequenza\fR MHz.
+.TP
+\fB\-\-nav1=\fR[\fIradiale\fB:\fR]\fIfrequenza\fR
+Imposta la frequenza NAV1 a \fIfrequenza\fR MHz. È facoltativamente possibile
+specificare un radiale premettendo la prua e due punti alla frequenza.
+.TP
+\fB\-\-nav2=\fR[\fIradiale\fB:\fR]\fIfrequenza\fR
+Imposta la frequenza NAV2 a \fIfrequenza\fR MHz. È facoltativamente possibile
+specificare un radiale premettendo la prua e due punti alla frequenza.
+.TP
+\fB\-\-adf1=\fR[\fIrotazione\fB:\fR]\fIfrequenza\fR, \fB\-\-adf=\fR[\fIrotazione\fB:\fR]\fIfrequenza\fR
+Imposta la frequenza ADF1 a \fIfrequenza\fR kHz. È facoltativamente possibile
+specificare l'angolo di rotazione del COMPASS CARD premettendo alla frequenza l'angolo e due punti. \fBL'opzione \-\-adf è deprecata.\fR
+.TP
+\fB\-\-adf2=\fR[\fIrotation\fB:\fR]\fIfrequenza\fR
+Imposta la frequenza ADF2 a \fIfrequenza\fR kHz. È facoltativamente possibile
+specificare l'angolo di rotazione del COMPASS CARD premettendo alla frequenza l'angolo e due punti.
+.TP
+\fB\-\-dme=nav1\fR|\fBnav2\fR|\fIfrequenza\fR
+Fa dipendere l'ADF dalla radio NAV1/NAV2 o imposta la sua frequenza interna a
+\fIfrequenza\fR.
+.SS "Opzioni ambiente"
+.TP
+\fB\-\-metar=\fIMETAR\fR
+Simula le condizioni meteo descritte dalla stringa METAR \fIMETAR\fR.
+Quest'opzione implica \fB\-\-disable\-real\-weather\-fetch\fR.
+.TP
+\fB\-\-enable\-real\-weather\-fetch\fR, \fB\-\-disable\-real\-weather\-fetch\fR
+Abilita/disabilita il recupero delle condizioni meteo reali basate sui METAR.
+Questa funzionalità richiede una connessione a Internet attiva.
+.TP
+\fB\-\-enable\-clouds\fR, \fB\-\-disable\-clouds\fR
+Abilita/disabilita gli strati di nuvole 2D (piatti).
+.TP
+\fB\-\-enable\-clouds3d\fR, \fB\-\-disable\-clouds3d\fR
+Abilita/disabilita gli strati di nuvole 3D (volumetrici).
+.TP
+\fB\-\-visibility=\fImetri\fR
+Imposta la visibilità iniziale a \fImetri\fR metri.
+.TP
+\fB\-\-visibility\-miles=\fImiglia\fR
+Imposta la visibilità iniziale a \fImiglia\fR miglia.
+.TP
+\fB\-\-wind=\fIdirezione\fR[\fB:\fIdirezionemassima\fR]\fB@\fIvelocità\fR[\fB:\fIraffica\fR]
+Specifica la direzione da cui soffia il vento (\fIdirezione\fR) e la sua
+velocità (\fIvelocità\fR nodi). Se il vento non deve soffiare da una direzione
+fissa, ma da un intervallo di direzioni, specificare l'intervallo come
+\fIdirezione\fB:\fIdirezionemassima\fR, dove \fIdirezione\fR e
+\fIdirezionemassima\fR sono gli angoli minimi e massimi in gradi. Se si vuole
+che il simulatore modelli anche raffiche di vento, impostare \fIraffica\fR alla
+loro intensità massima in nodi.
+.TP
+\fB\-\-random\-wind\fR
+Modifica casualmente la direzione e la velocità del vento.
+.TP
+\fB\-\-turbulence=\fIintensità\fR
+Imposta l'intensità della turbolenza a \fIintensità\fR. L'intensità può variare
+da \fB0.0\fR (vento calmo) a \fB1.0\fR (intensa).
+.TP
+\fB\-\-ceiling=\fIft_slm\fR[\fB:\fIspessore_ft\fR]
+Crea uno strato di nubi con base ad un'altezza di \fIft_slm\fR piedi sul
+livello del mare. È facoltativamente possibile specificare uno spessore
+aggiungendo due punti (\fB:\fR) e lo spessore desiderato in piedi; se viene
+omesso, il simulatore per impostazione predefinita lo renderà di 2000 ft.
+.SS "Opzioni rete"
+.TP
+\fB\-\-callsign=\fIvalore\fR
+Imposta il nominativo di chiamata multigiocatore a \fIvalore\fR. Il nominativo
+di chiamata deve consistere al più di dieci lettere e può contenere solo
+numeri, lettere dell'alfabeto inglese, trattini (\fB\-\fR) e trattini bassi
+(\fB_\fR); i nominativi di chiamata più lunghi vengono troncati e i caratteri
+che non rientrano in quelli elencati sopra sono sostituiti da trattini.
+.TP
+\fB\-\-multiplay=\fR{\fBin\fR|\fBout\fR}\fB,\fIhz\fB,\fIindirizzo\fB,\fIporta\fR
+Specifica le impostazioni di comunicazione multigiocatore.
+
+Il primo campo specifica se le impostazioni si applicano alle comunicazioni in
+ingresso (\fBin\fR) o in uscita (\fBout\fR). Il secondo campo (\fIhz\fR)
+specifica la frequenza (in Hz, volte al secondo) con cui devono essere inviati
+i dati. Il terzo campo (\fIindirizzo\fR) deve essere impostato all'indirizzo
+IP dell'interfaccia di rete che FlightGear deve utilizzare per inviare/ricevere
+i dati, o deve essere lasciato vuoto per far sì che il simulatore utilizzi
+tutte le interfacce disponibili. Il quarto campo (\fIporta\fR) deve essere
+impostato alla porta da utilizzare (solitamente \fB5000\fR).
+.TP
+\fB\-\-proxy=\fR[\fInomeutente\fB:\fIpassword\fB@\fR]\fIhost\fB:\fIporta\fR
+Specifica il server proxy e la porta da utilizzare. Il nome utente e la
+password sono facoltativi; se presenti, devono essere specificati come hash
+MD5.
+
+Quest'opzione è utile solo se \fB\-\-real\-weather\-fetch\fR è abilitato.
+.TP
+\fB\-\-httpd=\fR[\fIindirizzo\fB:\fR]\fIporta\fR
+Abilita l'interfaccia Phi (server HTTP) sull'indirizzo e sulla porta
+specificati. L'indirizzo è facoltativo.
+.TP
+\fB\-\-telnet=\fIporta\fR
+Abilita l'interfaccia Telnet sulla porta specificata.
+.TP
+\fB\-\-jpg\-httpd=\fIporta\fR
+Abilita l'interfaccia del server schermate HTTP sulla porta specificata.
+\fBQuest'opzione è deprecata: si utilizzi l'interfaccia Phi.\fR
+.TP
+\fB\-\-enable\-terrasync\fR, \fB\-\-disable\-terrasync\fR
+Abilita/disabilita il download automatico dello scenario/degli oggetti.
+.TP
+\fB\-\-terrasync\-dir=\fIdirectory\fR
+Imposta la directory dove sarà salvato lo scenario scaricato a \fIdirectory\fR.
+.TP
+\fB\-\-enable\-fgcom\fR, \fB\-\-disable\-fgcom\fR
+Abilita/disabilita l'integrazione FGCom (ATC vocale).
+.SS "Opzioni I/O"
+.TP
+\fB\-\-generic=\fIparametri\fR, \fB\-\-atlas=\fIparametri\fR, \fB\-\-atcsim=\fIparametri\fR, \fB\-\-AV400=\fIparametri\fR, \fB\-\-AV400Sim=\fIparametri\fR, \fB\-\-AV400WSimA=\fIparametri\fR, \fB\-\-AV400WSimB=\fIparametri\fR, \fB\-\-garmin=\fIparametri\fR, \fB\-\-hla=\fIparametri\fR, \fB\-\-hla\-local=\fIparametri\fR, \fB\-\-igc=\fIparametri\fR, \fB\-\-joyclient=\fIparametri\fR, \fB\-\-jsclient=\fIparametri\fR, \fB\-\-native\-ctrls=\fIparametri\fR, \fB\-\-native\-gui=\fIparametri\fR, \fB\-\-native\-fdm=\fIparametri\fR, \fB\-\-native=\fIparametri\fR, \fB\-\-nmea=\fIparametri\fR, \fB\-\-opengc=\fIparametri\fR, \fB\-\-props=\fIparametri\fR, \fB\-\-pve=\fIparametri\fR, \fB\-\-ray=\fIparametri\fR, \fB\-\-rul=\fIparametri\fR
+Apre una connessione per pilotare programmi esterni o hardware.
+
+Specificare il protocollo utilizzando l'opzione della riga di comando corretta:
+.RS 7
+.IP \(bu 3
+\fBgeneric\fR: un'interfaccia di comunicazione predefinita e un protocollo di
+comunicazione preselezionato;
+.IP \(bu 3
+\fBatlas\fR: il protocollo Atlas;
+.IP \(bu 3
+\fBatcsim\fR: il protocollo ATCsim (atc610x);
+.IP \(bu 3
+\fBAV400\fR: il protocollo Garmin AV400, richiesto per pilotare un GPS serie
+Garmin 196/296;
+.IP \(bu 3
+\fBAV400Sim\fR: l'insieme delle stringhe AV400 richiesto per pilotare un GPS
+serie Garmin 400;
+.IP \(bu 3
+\fBAV400WSimA\fR, \fBAV400WSimB\fR: l'insieme delle stringhe richieste per
+pilotare un GPS Garmin WAAS (dove il canale \fBA\fR utilizza una variante del
+protocollo AVSim400 e il canale \fBB\fR comunica con l'unità GPS);
+.IP \(bu 3
+\fBgarmin\fR: il protocollo Garmin GPS;
+.IP \(bu 3
+\fBhla\fR, \fBhla\-local\fR: il protocollo HLA, remoto o locale;
+.IP \(bu 3
+\fBigc\fR: il protocollo International Glider Commission;
+.IP \(bu 3
+\fBjoyclient\fR: il protocollo utilizzato dai joystick Agwagon;
+.IP \(bu 3
+\fBnative\-ctrls\fR: il protocollo FlightGear Native Controls;
+.IP \(bu 3
+\fBnative\-gui\fR: il protocollo FlightGear Native GUI;
+.IP \(bu 3
+\fBnative\-fdm\fR: il protocollo FlightGear Native FDM;
+.IP \(bu 3
+\fBnative\fR: il protocollo FlightGear Native;
+.IP \(bu 3
+\fBnmea\fR: il protocollo NMEA (utilizzato per pilotare la maggior parte delle
+unità GPS);
+.IP \(bu 3
+\fBopengc\fR: il protocollo utilizzato da OpenGC, un software utilizzato per
+eseguire il rendering di display glass cockpit di alta qualità per cabine di
+pilotaggio simulate;
+.IP \(bu 3
+\fBprops\fR: il protocollo gestore proprietà interattivo;
+.IP \(bu 3
+\fBpve\fR: il protocollo PVE;
+.IP \(bu 3
+\fBray\fR: il protocollo sedia mobile Ray Woodworth;
+.IP \(bu 3
+\fBrul\fR: il protocollo RUL.
+.RE
+
+.RS 7
+I parametri (\fIparametri\fR) devono essere nel formato
+\fImezzo\fB,\fIdirezione\fB,\fIhz\fB,\fIopzioni_mezzo\fR dove \fImezzo\fR è il
+mezzo utilizzato dal protocollo (\fBserial\fR, \fBsocket\fR, \fBfile\fR...),
+\fIdirezione\fR è la direzione delle comunicazioni (\fBin\fR, \fBout\fR o
+\fBbi\fR), \fIhz\fR è la frequenza a cui deve essere gestito il canale (sono
+accettati valori in virgola mobile) e \fIopzioni_mezzo\fR sono:
+.RE
+
+.RS 7
+.IP \(bu 3
+per i protocolli seriali, \fIdispositivo\fB,\fIbaud\fR, dove \fIdispositivo\fR
+è il nome del dispositivo da aprire e \fIbaud\fR è la velocità di comunicazione
+in baud;
+.IP \(bu 3
+per i protocolli socket, \fImacchina\fB,\fIporta\fB,\fIstile\fR, dove
+\fImacchina\fR è il nome della macchina o l'indirizzo IP del server (se il
+simulatore deve fungere da client) o è lasciato vuoto (se il simulatore deve
+fungere da server), \fIporta\fR è la porta da utilizzare (o è lasciato vuoto
+per richiedere al sistema operativo di scegliere una porta fra quelle
+disponibili) e \fIstile\fR è \fBtcp\fR o \fBudp\fR;
+.IP \(bu 3
+per i protocolli file, \fInomefile\fR, dove \fInomefile\fR è il nome del file
+in cui devono essere scritti i dati.
+.RE
+.SS "Opzioni di debug"
+.TP
+\fB\-\-enable\-fpe\fR
+Interrompi l'esecuzione quando si verifica un'eccezione in virgola mobile.
+.TP
+\fB\-\-fgviewer\fR
+Mostra lo scenario e l'aereo in un visualizzatore modelli semplice, senza
+caricare il simulatore nella sua interezza.
+.TP
+\fB\-\-log\-level=bulk\fR|\fBdebug\fR|\fBinfo\fR|\fBwarn\fR|\fBalert\fR
+Imposta il livello minimo di registrazione eventi. Gli eventi con gravità
+maggiore o uguale al valore specificato verranno registrati; gli altri verranno
+scartati.
+.TP
+\fB\-\-log\-class=all\fR|\fBnone\fR|\fBai\fR|\fBenvironment\fR|\fBflight\fR|\fBgeneral\fR|\fBio\fR|\fBnetwork\fR|\fBsound\fR|\fBterrain\fR|...
+Registra solamente gli eventi appartenenti alle classi di log specificate
+(\fBall\fR registra tutti gli eventi, \fBnone\fR non ne registra nessuno).
+È possibile specificare classi multiple separandole con virgole o barre
+verticali, ad esempio: \fB\-\-log\-class=ai,flight\fR.
+.TP
+\fB\-\-log\-dir=\fIdir\fR
+Salva i log nella directory \fIdir\fR. Se \fIdir\fR è \fBdesktop\fR, i log
+saranno salvati sul Desktop. Quest'opzione può essere specificata più volte
+indicando una directory diversa ogni volta. All'interno della directory
+specificata il file di log sarà denominato
+\fIFlightGear_\fRYYYY\fI-\fRMM\fI-\fRDD\fI_\fRnum\fI.log\fR, dove
+\fIYYYY-MM-DD\fR è la data corrente e \fInum\fR è un numero progressivo che
+parte da \fB0\fR.
+.TP
+\fB\-\-trace\-read=\fIproprietà\fR, \fB\-\-trace\-write=\fIproprietà\fR
+Traccia le letture/scritture di una proprietà (stampa un messaggio di log ogni
+volta che \fIproprietà\fR viene letta/scritta).
+.TP
+\fB\-\-developer\fR
+Abilita la modalità sviluppatore.
+.SH "STATI D'USCITA"
+.B fgfs
+esce con
+.B 0
+se l'esecuzione ha avuto successo o con un altro stato (solitamente
+.B 1
+o \fB-1\fR) se si è verificato un errore.
+.SH "VARIABILI D'AMBIENTE"
+.IP "\fBCOMPUTERNAME\fR" 4
+Specifica il nome host da utilizzare per il sistema. Questa variabile
+d'ambiente è presa in considerazione solo sui sistemi operativi Microsoft
+Windows.
+.IP "\fBFG_AIRCRAFT\fR" 4
+Specifica il percorso in cui devono essere ricercati gli aerei.
+.IP "\fBFG_LAUNCHER\fR" 4
+Se questa variabile d'ambiente è impostata e non è pari a \fB0\fR, sarà
+visualizzato il launcher Qt. Questa variabile è utilizzata principalmente sui
+sistemi operativi Mac OS X per evitare l'utilizzo di script wrapper.
+.IP "\fBFG_ROOT\fR" 4
+Specifica la directory radice dei dati da utilizzare.
+.IP "\fBFG_SCENERY\fR" 4
+Specifica la directory dello scenario da utilizzare.
+.IP "\fBHTTP_PROXY\fR" 4
+Specifica il proxy HTTP da utilizzare. Dev'essere nel formato
+\fBhttp://host:porta/\fR.
+.IP "\fBLANG\fR" 4
+Specifica la lingua da utilizzare.
+.SH FILE
+.IP "\fI~/.fgfs\fR" 4
+La directory principale in cui sono salvati i file di configurazione e i dati
+(aerei/scenario scaricati) di FlightGear.
+.IP "\fI~/.fgfsrc.nomehost\fR, \fI~/.fgfsrc\fR" 4
+File di configurazione contenenti opzioni della riga di comando per
+.BR fgfs (1).

@@ -1,0 +1,71 @@
+.\" Copyright (C) 2017 Alessandro Menti
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.TH FGFSRC 5 2017-06-25 FlightGear "Pagine man di FlightGear"
+.SH NOME
+fgfsrc \- file con opzioni della riga di comando di FlightGear
+.SH DESCRIZIONE
+.B fgfsrc
+è un file contenente opzioni della riga di comando letto da
+.BR fgfs (1)
+all'avvio. Questo file è inteso per coloro che non utilizzano un launcher
+grafico per eseguire il simulatore, in modo che questi possano specificare in
+tale file la maggior parte delle preferenze che non vengono modificate spesso
+(ad esempio, i percorsi degli scenari/aerei personalizzati o le opzioni
+relative alle dimensioni della finestra) e specificare solo quelle modificate
+di frequente (come l'aeroporto di partenza) sulla riga di comando.
+
+Il file deve essere in formato solo testo e codificato ASCII. Deve contenere
+una o più opzioni a riga di comando elencate in
+.BR fgfs (1);
+ogni opzione deve essere fornita su una riga separata.
+
+Se il primo carattere in una riga diverso da uno spazio bianco è un cancelletto
+(\fB#\fR),
+.BR fgfs (1)
+considera la riga un commento e la ignora. I commenti non devono essere
+aggiunti dopo un'opzione in quanto ciò potrebbe far sì che il simulatore non
+riesca a gestirli in certe condizioni (in particolare quando l'argomento della
+riga di comando fornito in tale riga è nella forma \fB\-\-prop=\fR).
+
+Le variabili nei percorsi, come
+.B $HOME
+o \fB$FG_HOME\fR, non sono espanse.
+.SH FILE
+.IP "\fI~/.fgfsrc.nomehost\fR, \fI~/.fgfsrc\fR" 4
+File di configurazione contenenti opzioni della riga di comando per
+.BR fgfs (1).
+Il simulatore gestisce prima gli argomenti della riga di comando, quindi
+\fI~/.fgfsrc.nomehost\fR (dove
+.I nomehost
+è il nome host della macchina) e quindi \fI~/.fgfsrc\fR, se tali file
+esistono, in quest'ordine.
+.SH ESEMPIO
+Il seguente file di configurazione di esempio sincronizza l'orologio del
+simulatore con il tempo reale locale, carica dati meteo reali, imposta le
+dimensioni della finestra a 1024x768 e abilita gli oggetti scenario casuali e
+il traffico IA:
+
+.nf
+\-\-time\-match\-local
+\-\-enable\-real\-weather\-fetch
+\-\-geometry=1024x768
+\-\-enable\-random\-objects
+\-\-enable\-ai\-traffic
+.fi
+.SH "VEDERE ANCHE"
+.BR fgfs (1)
