@@ -346,7 +346,7 @@ bool FGClouds::get_3dClouds() const
  * (Various) - cloud definition properties. See README.3DClouds
  *
  */
- bool FGClouds::add3DCloud(const SGPropertyNode *arg)
+ bool FGClouds::add3DCloud(const SGPropertyNode *arg, SGPropertyNode * root)
  {
    int l = arg->getIntValue("layer", 0);
    int index = arg->getIntValue("index", 0);
@@ -381,7 +381,7 @@ bool FGClouds::get_3dClouds() const
   * index - the cloud index
   *
   */
- bool FGClouds::delete3DCloud(const SGPropertyNode *arg)
+ bool FGClouds::delete3DCloud(const SGPropertyNode *arg, SGPropertyNode * root)
  {
    int l = arg->getIntValue("layer", 0);
    int i = arg->getIntValue("index", 0);
@@ -400,7 +400,7 @@ bool FGClouds::get_3dClouds() const
  * lon/lat/alt - the position for the cloud
  *
  */
-bool FGClouds::move3DCloud(const SGPropertyNode *arg)
+bool FGClouds::move3DCloud(const SGPropertyNode *arg, SGPropertyNode * root)
  {
    int l = arg->getIntValue("layer", 0);
    int i = arg->getIntValue("index", 0);

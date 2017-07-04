@@ -193,7 +193,7 @@ protected:
 
 };
 
-static bool commandRequestMetar(const SGPropertyNode* arg)
+static bool commandRequestMetar(const SGPropertyNode * arg, SGPropertyNode * root)
 {
   SGSubsystemGroup* envMgr = (SGSubsystemGroup*) globals->get_subsystem("environment");
   if (!envMgr) {
@@ -212,7 +212,7 @@ static bool commandRequestMetar(const SGPropertyNode* arg)
   return true;
 }
   
-static bool commandClearMetar(const SGPropertyNode* arg)
+static bool commandClearMetar(const SGPropertyNode * arg, SGPropertyNode * root)
 {
   SGSubsystemGroup* envMgr = (SGSubsystemGroup*) globals->get_subsystem("environment");
   if (!envMgr) {

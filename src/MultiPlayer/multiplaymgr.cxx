@@ -57,8 +57,7 @@
 using namespace std;
 
 #define MAX_PACKET_SIZE 1200
-#define MAX_TEXT_SIZE 128
-
+#define MAX_TEXT_SIZE 768 // Increased for 2017.3 to allow for long Emesary messages.
 /*
  * With the MP2017(V2) protocol it should be possible to transmit using a different type/encoding than the property has,
  * so it should be possible to transmit a bool as 
@@ -102,7 +101,21 @@ const int V2_PAD_MAGIC = 0x1face002;
  * These parameters define where these are mapped and how they are sent.
  * The blocks should be in the same property range (with no other properties inside the range)
  */
-const int BOOLARRAY_BLOCKSIZE = 40; 
+const int BOOLARRAY_BLOCKSIZE = 40;
+
+/*
+* 2017.3 introduces a new Generic Packet concept.
+* This allows a model to choose to only transmit a few essential properties, which leaves the packet at around 380 bytes.
+* The rest of the packet can then be used for bridged Emesary notifications, which over allow much more control
+* at the model level, including different notifications being sent.
+* see $FGData/Nasal/Notifications.nas and $FGData/Nasal/emesary_mp_bridge.nas
+*/
+static inline bool IsIncludedInGenericPacket(int property_id)
+{
+    return property_id >= 10002
+        || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
+}
+
 const int BOOLARRAY_BASE_1 = 11000;
 const int BOOLARRAY_BASE_2 = BOOLARRAY_BASE_1 + BOOLARRAY_BLOCKSIZE;
 const int BOOLARRAY_BASE_3 = BOOLARRAY_BASE_2 + BOOLARRAY_BLOCKSIZE;
@@ -718,7 +731,7 @@ private:
 //  txport: outgoing port number (default: 5000)
 //  rxport: incoming port number (default: 5000)
 //////////////////////////////////////////////////////////////////////
-static bool do_multiplayer_connect(const SGPropertyNode * arg) {
+static bool do_multiplayer_connect(const SGPropertyNode * arg, SGPropertyNode * root) {
    FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
    if (!self) {
       SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
@@ -753,7 +766,7 @@ static bool do_multiplayer_connect(const SGPropertyNode * arg) {
 //  disconnect args:
 //  none
 //////////////////////////////////////////////////////////////////////
-static bool do_multiplayer_disconnect(const SGPropertyNode * arg) {
+static bool do_multiplayer_disconnect(const SGPropertyNode * arg, SGPropertyNode * root) {
    FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
    if (!self) {
       SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
@@ -774,7 +787,7 @@ static bool do_multiplayer_disconnect(const SGPropertyNode * arg) {
 //////////////////////////////////////////////////////////////////////
 
 static bool
-do_multiplayer_refreshserverlist (const SGPropertyNode * arg)
+do_multiplayer_refreshserverlist (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   using namespace simgear;
 
@@ -844,6 +857,7 @@ FGMultiplayMgr::FGMultiplayMgr()
   pXmitLen = fgGetNode("/sim/multiplay/last-xmit-packet-len", true);
   pProtocolVersion = fgGetNode("/sim/multiplay/protocol-version", true);
   pMultiPlayDebugLevel = fgGetNode("/sim/multiplay/debug-level", true);
+  pMultiPlayTransmitOnlyGenerics = fgGetNode("/sim/multiplay/transmit-only-generics", true);
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
   pMultiPlayRange->setIntValue(100);
 } // FGMultiplayMgr::FGMultiplayMgr()
@@ -1106,7 +1120,7 @@ void
 FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 {
   int protocolToUse = getProtocolToUse();
-    
+  int transmitOnlyGenerics = pMultiPlayTransmitOnlyGenerics->getIntValue();
   if ((! mInitialised) || (! mHaveServer))
         return;
 
@@ -1214,7 +1228,14 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                   ++it;
                   continue;
               }
-
+              /*
+               * If requested only transmit the generic properties.
+               */
+              if (transmitOnlyGenerics && !IsIncludedInGenericPacket(propDef->id))
+              {
+                  ++it;
+                  continue;
+              }
               /*
                * 2017.2 partitions the buffer sent into protocol versions. Originally this was intended to allow
                * compatability with older clients; however this will only work in the future or with support from fgms

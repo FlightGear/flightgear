@@ -205,7 +205,8 @@ double InputValue::get_value() const
     if( _periodical ) {
       value = _periodical->normalize( value );
     }
-    
+    if (_isnan(value))
+        SG_LOG(SG_AUTOPILOT, SG_ALERT, "input is NaN." );
     return _abs ? fabs(value) : value;
 }
 

@@ -208,7 +208,7 @@ void FGSoundManager::update(double dt)
  * into a queue.  Messages are played sequentially so they do not
  * overlap.
  */
-bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg)
+bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");

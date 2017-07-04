@@ -900,7 +900,9 @@ namespace flightgear
 
 void initQtWindowingSystem()
 {
-osg::GraphicsContext::setWindowingSystemInterface(Qt5WindowingSystem::getInterface());
+#if OSG_VERSION_LESS_THAN(3,5,2)
+    osg::GraphicsContext::setWindowingSystemInterface(Qt5WindowingSystem::getInterface());
+#endif
 }
 
 } // of namespace flightgear

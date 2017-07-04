@@ -117,7 +117,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
         args->setStringValue("caption", caption);
         args->setStringValue("message", msg);
         args->setStringValue("more", moreText);
-        globals->get_commands()->execute("canvas-message-box", args);
+        globals->get_commands()->execute("canvas-message-box", args, nullptr);
 
         // how to make it modal?
 

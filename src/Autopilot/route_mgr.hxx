@@ -102,8 +102,8 @@ public:
 
   static const char* subsystemName() { return "route-manager"; }
 private:
-    bool commandDefineUserWaypoint(const SGPropertyNode* arg);
-    bool commandDeleteUserWaypoint(const SGPropertyNode* arg);
+    bool commandDefineUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root);
+    bool commandDeleteUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root);
     
     flightgear::FlightPlanRef _plan;
   

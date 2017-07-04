@@ -430,7 +430,7 @@ osg::Node* FGPanelNode::load(SGPropertyNode *n)
  * y-pos: the y position of the mouse click.
  */
 bool
-FGPanelNode::panelMouseClickCommand(const SGPropertyNode * arg)
+FGPanelNode::panelMouseClickCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     return _panel->doMouseAction(arg->getIntValue("button"),
                          arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,

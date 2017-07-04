@@ -194,7 +194,7 @@ void FGMouseCursor::setAutoHideTimeMsec(unsigned int aMsec)
 }
 
 
-bool FGMouseCursor::setCursorCommand(const SGPropertyNode* arg)
+bool FGMouseCursor::setCursorCommand(const SGPropertyNode* arg, SGPropertyNode*)
 {
     // JMT 2013 - I would prefer this was a seperate 'warp' command, but
     // historically set-cursor has done both. 

@@ -53,7 +53,7 @@ public:
 private:
     bool stationaryView() const;
 
-    bool playAudioSampleCommand(const SGPropertyNode * arg);
+    bool playAudioSampleCommand(const SGPropertyNode * arg, SGPropertyNode * root);
 
     SGSharedPtr<FGSampleQueue> _chatterQueue;
 

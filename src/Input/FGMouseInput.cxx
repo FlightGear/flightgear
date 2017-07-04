@@ -263,7 +263,7 @@ public:
         FGMouseCursor::instance()->setCursor(cur);
         if (!didPick) {
           SGPropertyNode_ptr args(new SGPropertyNode);
-          globals->get_commands()->execute("update-hover", args);
+          globals->get_commands()->execute("update-hover", args, nullptr);
 
         }
     }
@@ -501,7 +501,7 @@ void FGMouseInput::update ( double dt )
   {
       d->tooltipTimeoutDone = true;
       SGPropertyNode_ptr arg(new SGPropertyNode);
-      globals->get_commands()->execute("tooltip-timeout", arg);
+      globals->get_commands()->execute("tooltip-timeout", arg, nullptr);
   }
   
   if ( d->hideCursor ) {
@@ -610,7 +610,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
       if (d->clickTriggersTooltip) {
             SGPropertyNode_ptr args(new SGPropertyNode);
             args->setStringValue("reason", "click");
-            globals->get_commands()->execute("tooltip-timeout", args);
+            globals->get_commands()->execute("tooltip-timeout", args, nullptr);
             d->tooltipTimeoutDone = true;
       }
     } else {

@@ -114,7 +114,7 @@ static void handleExecCommand(cJSON* json)
   SGPropertyNode_ptr arg(new SGPropertyNode);
   JSON::addChildrenToProp( json, arg );
   
-  globals->get_commands()->execute(name->valuestring, arg);
+  globals->get_commands()->execute(name->valuestring, arg, nullptr);
 }
   
 PropertyChangeWebsocket::PropertyChangeWebsocket(PropertyChangeObserver * propertyChangeObserver)

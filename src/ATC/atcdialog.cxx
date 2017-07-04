@@ -167,13 +167,13 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
     _gui->showDialog(dialog_name);
 }
 
-static bool doFrequencySearch( const SGPropertyNode* )
+static bool doFrequencySearch( const SGPropertyNode*, SGPropertyNode * )
 {
     FGATCDialogNew::instance()->frequencySearch();
     return true;
 }
 
-static bool doFrequencyDisplay( const SGPropertyNode* args )
+static bool doFrequencyDisplay( const SGPropertyNode* args, SGPropertyNode * root)
 {
     std::string icao = args->getStringValue("icao");
     if (icao.empty()) {

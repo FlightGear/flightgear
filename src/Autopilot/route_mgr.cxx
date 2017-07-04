@@ -63,14 +63,14 @@
 using namespace flightgear;
 using std::string;
 
-static bool commandLoadFlightPlan(const SGPropertyNode* arg)
+static bool commandLoadFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
   return self->loadRoute(path);
 }
 
-static bool commandSaveFlightPlan(const SGPropertyNode* arg)
+static bool commandSaveFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
@@ -92,7 +92,7 @@ static bool commandSaveFlightPlan(const SGPropertyNode* arg)
   }
 }
 
-static bool commandActivateFlightPlan(const SGPropertyNode* arg)
+static bool commandActivateFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   bool activate = arg->getBoolValue("activate", true);
@@ -105,14 +105,14 @@ static bool commandActivateFlightPlan(const SGPropertyNode* arg)
   return true;
 }
 
-static bool commandClearFlightPlan(const SGPropertyNode*)
+static bool commandClearFlightPlan(const SGPropertyNode*, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   self->clearRoute();
   return true;
 }
 
-static bool commandSetActiveWaypt(const SGPropertyNode* arg)
+static bool commandSetActiveWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   int index = arg->getIntValue("index");
@@ -124,7 +124,7 @@ static bool commandSetActiveWaypt(const SGPropertyNode* arg)
   return true;
 }
 
-static bool commandInsertWaypt(const SGPropertyNode* arg)
+static bool commandInsertWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   int index = arg->getIntValue("index");
@@ -213,7 +213,7 @@ static bool commandInsertWaypt(const SGPropertyNode* arg)
   return true;
 }
 
-static bool commandDeleteWaypt(const SGPropertyNode* arg)
+static bool commandDeleteWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   int index = arg->getIntValue("index");
@@ -1187,7 +1187,7 @@ SGPropertyNode_ptr FGRouteMgr::wayptNodeAtIndex(int index) const
   return mirror->getChild("wp", index);
 }
 
-bool FGRouteMgr::commandDefineUserWaypoint(const SGPropertyNode* arg)
+bool FGRouteMgr::commandDefineUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     std::string ident = arg->getStringValue("ident");
     if (ident.empty()) {
@@ -1209,7 +1209,7 @@ bool FGRouteMgr::commandDefineUserWaypoint(const SGPropertyNode* arg)
     return true;
 }
 
-bool FGRouteMgr::commandDeleteUserWaypoint(const SGPropertyNode* arg)
+bool FGRouteMgr::commandDeleteUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     std::string ident = arg->getStringValue("ident");
     if (ident.empty()) {

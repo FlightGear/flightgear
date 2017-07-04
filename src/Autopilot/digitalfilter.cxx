@@ -589,23 +589,50 @@ void HighPassFilterImplementation::initialize( double initvalue )
   _output_1 = initvalue;
 }
 
-double HighPassFilterImplementation::compute(  double dt, double input )
+//double HighPassFilterImplementation::compute(  double dt, double input )
+//{
+//  input = GainFilterImplementation::compute( dt, input );
+//  double tf = _TfInput.get_value();
+//
+//  double output;
+//
+//  // avoid negative filter times
+//  // and div by zero if -tf == dt
+//
+//  double alpha = tf > 0.0 ? 1 / ((tf/dt) + 1) : 1.0;
+//  output = (1 - alpha) * (input - _input_1 +  _output_1);
+//  _input_1 = input;
+//  _output_1 = output;
+//  return output;
+//}
+
+double HighPassFilterImplementation::compute(double dt, double input)
 {
-  input = GainFilterImplementation::compute( dt, input );
-  double tf = _TfInput.get_value();
+    if (_isnan(input))
+        SG_LOG(SG_AUTOPILOT, SG_ALERT, "High pass filter output is NaN.");
 
-  double output;
+    input = GainFilterImplementation::compute(dt, input);
+    double tf = _TfInput.get_value();
 
-  // avoid negative filter times
-  // and div by zero if -tf == dt
+    double output;
 
-  double alpha = tf > 0.0 ? 1 / ((tf/dt) + 1) : 1.0;
-  output = (1 - alpha) * (input - _input_1 +  _output_1);
-  _input_1 = input;
-  _output_1 = output;
-  return output;
+    // avoid negative filter times
+    // and div by zero if -tf == dt
+
+
+    double alpha = tf > 0.0 ? 1 / ((tf / dt) + 1) : 1.0;
+    output = (1 - alpha) * (input - _input_1 + _output_1);
+    _input_1 = input;
+
+    // Catch NaN before it causes damage
+
+    if (output != output) {
+        SG_LOG(SG_AUTOPILOT, SG_ALERT, "High pass filter output is NaN.");
+        output = 0.0;
+    }
+    _output_1 = output;
+    return output;
 }
-
 //------------------------------------------------------------------------------
 bool HighPassFilterImplementation::configure( SGPropertyNode& cfg_node,
                                               const std::string& cfg_name,
@@ -803,6 +830,8 @@ void DigitalFilter::update( bool firstTime, double dt)
   }
 
   double input = _valueInput.get_value() - _referenceInput.get_value();
+  if (_isnan(input))
+      input = _valueInput.get_value() - _referenceInput.get_value();
   double output = _implementation->compute( dt, input );
 
   set_output_value( output );

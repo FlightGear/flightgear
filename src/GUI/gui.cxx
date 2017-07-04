@@ -197,9 +197,9 @@ void syncPausePopupState()
     args->setStringValue("id", "sim-pause");
     if (paused && fgGetBool("/sim/view-name-popup")) {
       args->setStringValue("label", "Simulation is paused");
-      globals->get_commands()->execute("show-message", args);
+      globals->get_commands()->execute("show-message", args, nullptr);
     } else {
-      globals->get_commands()->execute("clear-message", args);
+      globals->get_commands()->execute("clear-message", args, nullptr);
     }
 
 }

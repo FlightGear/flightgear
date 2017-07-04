@@ -62,14 +62,36 @@ using std::ofstream;
 
 
 static inline SGPropertyNode *
-get_prop (const SGPropertyNode * arg)
+get_prop (const SGPropertyNode * arg, SGPropertyNode * root)
 {
+    if (root != nullptr)
+    {
+        SGPropertyNode *rv = nullptr;
+        rv = root->getNode(arg->getStringValue("property[0]", "/null"), 0, true);
+        if (rv == nullptr)
+        {
+            rv = root->getNode(arg->getStringValue("property[0]", "/null"), 0, true);
+            return fgGetNode(arg->getStringValue("property[0]", "/null"), true);
+        }
+        return rv;
+    }
     return fgGetNode(arg->getStringValue("property[0]", "/null"), true);
 }
 
 static inline SGPropertyNode *
-get_prop2 (const SGPropertyNode * arg)
+get_prop2 (const SGPropertyNode * arg, SGPropertyNode * root)
 {
+    if (root != nullptr)
+    {
+        SGPropertyNode *rv = nullptr;
+        rv = root->getNode(arg->getStringValue("property[1]", "/null"), 0, true);
+        if (rv == nullptr)
+        {
+            rv = root->getNode(arg->getStringValue("property[1]", "/null"), 0, true);
+            return fgGetNode(arg->getStringValue("property[1]", "/null"), true);
+        }
+        return rv;
+    }
     return fgGetNode(arg->getStringValue("property[1]", "/null"), true);
 }
 
@@ -163,7 +185,7 @@ compare_values (SGPropertyNode * value1, SGPropertyNode * value2)
  * Built-in command: do nothing.
  */
 static bool
-do_null (const SGPropertyNode * arg)
+do_null (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   return true;
 }
@@ -172,16 +194,16 @@ do_null (const SGPropertyNode * arg)
  * Built-in command: run a Nasal script.
  */
 static bool
-do_nasal (const SGPropertyNode * arg)
+do_nasal (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    return ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(arg);
+    return ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(arg, root);
 }
 
 /**
  * Built-in command: replay the FDR buffer
  */
 static bool
-do_replay (const SGPropertyNode * arg)
+do_replay (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
     return r->start();
@@ -191,7 +213,7 @@ do_replay (const SGPropertyNode * arg)
  * Built-in command: pause/unpause the sim
  */
 static bool
-do_pause (const SGPropertyNode * arg)
+do_pause (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     bool forcePause = arg->getBoolValue("force-pause", false );
     bool forcePlay = arg->getBoolValue("force-play", false );
@@ -203,7 +225,7 @@ do_pause (const SGPropertyNode * arg)
 
     if (paused && (fgGetInt("/sim/freeze/replay-state",0)>0))
     {
-        do_replay(NULL);
+        do_replay(NULL, nullptr);
     }
     else
     {
@@ -222,7 +244,7 @@ do_pause (const SGPropertyNode * arg)
  *   directory).  Defaults to "fgfs.sav"
  */
 static bool
-do_load (const SGPropertyNode * arg)
+do_load (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SGPath file(arg->getStringValue("file", "fgfs.sav"));
 
@@ -255,7 +277,7 @@ do_load (const SGPropertyNode * arg)
  * current directory).  Defaults to "fgfs.sav".
  */
 static bool
-do_save (const SGPropertyNode * arg)
+do_save (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SGPath file(arg->getStringValue("file", "fgfs.sav"));
 
@@ -287,7 +309,7 @@ do_save (const SGPropertyNode * arg)
  *
  */
 static bool
-do_save_tape (const SGPropertyNode * arg)
+do_save_tape (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
     replay->saveTape(arg);
@@ -299,7 +321,7 @@ do_save_tape (const SGPropertyNode * arg)
  *
  */
 static bool
-do_load_tape (const SGPropertyNode * arg)
+do_load_tape (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
     replay->loadTape(arg);
@@ -333,7 +355,7 @@ do_view_prev(bool do_it)
  * Built-in command: cycle view.
  */
 static bool
-do_view_cycle (const SGPropertyNode * arg)
+do_view_cycle (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
@@ -346,9 +368,9 @@ do_view_cycle (const SGPropertyNode * arg)
  * property: The name of the property to toggle.
  */
 static bool
-do_property_toggle (const SGPropertyNode * arg)
+do_property_toggle (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop = get_prop(arg);
+  SGPropertyNode * prop = get_prop(arg, root);
   return prop->setBoolValue(!prop->getBoolValue());
 }
 
@@ -361,16 +383,16 @@ do_property_toggle (const SGPropertyNode * arg)
  * property[1]: the property to copy from.
  */
 static bool
-do_property_assign (const SGPropertyNode * arg)
+do_property_assign (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop = get_prop(arg);
+  SGPropertyNode * prop = get_prop(arg,root);
   const SGPropertyNode * value = arg->getNode("value");
 
   if (value != 0)
       return prop->setUnspecifiedValue(value->getStringValue());
   else
   {
-      const SGPropertyNode * prop2 = get_prop2(arg);
+      const SGPropertyNode * prop2 = get_prop2(arg,root);
       if (prop2)
           return prop->setUnspecifiedValue(prop2->getStringValue());
       else
@@ -400,9 +422,9 @@ do_property_assign (const SGPropertyNode * arg)
  *       false).
  */
 static bool
-do_property_adjust (const SGPropertyNode * arg)
+do_property_adjust (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop = get_prop(arg);
+  SGPropertyNode * prop = get_prop(arg,root);
 
   double amount = 0;
   if (arg->hasValue("step"))
@@ -438,9 +460,9 @@ do_property_adjust (const SGPropertyNode * arg)
  *       false).
  */
 static bool
-do_property_multiply (const SGPropertyNode * arg)
+do_property_multiply (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop = get_prop(arg);
+  SGPropertyNode * prop = get_prop(arg,root);
   double factor = arg->getDoubleValue("factor", 1);
 
   double unmodifiable, modifiable;
@@ -462,10 +484,10 @@ do_property_multiply (const SGPropertyNode * arg)
  * property[1]: the name of the second property.
  */
 static bool
-do_property_swap (const SGPropertyNode * arg)
+do_property_swap (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop1 = get_prop(arg);
-  SGPropertyNode * prop2 = get_prop2(arg);
+  SGPropertyNode * prop1 = get_prop(arg,root);
+  SGPropertyNode * prop2 = get_prop2(arg,root);
 
 				// FIXME: inefficient
   const string & tmp = prop1->getStringValue();
@@ -483,9 +505,9 @@ do_property_swap (const SGPropertyNode * arg)
  * factor: the factor to multiply by (use negative to reverse).
  */
 static bool
-do_property_scale (const SGPropertyNode * arg)
+do_property_scale (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop = get_prop(arg);
+  SGPropertyNode * prop = get_prop(arg,root);
   double setting = arg->getDoubleValue("setting");
   double offset = arg->getDoubleValue("offset", 0.0);
   double factor = arg->getDoubleValue("factor", 1.0);
@@ -527,9 +549,9 @@ do_property_scale (const SGPropertyNode * arg)
  * value[*]: the list of values to cycle through.
  */
 static bool
-do_property_cycle (const SGPropertyNode * arg)
+do_property_cycle (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    SGPropertyNode * prop = get_prop(arg);
+    SGPropertyNode * prop = get_prop(arg,root);
     std::vector<SGPropertyNode_ptr> values = arg->getChildren("value");
 
     bool wrap = arg->getBoolValue("wrap", true);
@@ -576,9 +598,9 @@ do_property_cycle (const SGPropertyNode * arg)
  * max: the maximum allowed value.
  */
 static bool
-do_property_randomize (const SGPropertyNode * arg)
+do_property_randomize (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    SGPropertyNode * prop = get_prop(arg);
+    SGPropertyNode * prop = get_prop(arg,root);
     double min = arg->getDoubleValue("min", DBL_MIN);
     double max = arg->getDoubleValue("max", DBL_MAX);
     prop->setDoubleValue(sg_random() * (max - min) + min);
@@ -604,9 +626,9 @@ do_property_randomize (const SGPropertyNode * arg)
  *                  the property value at the given speed.
  */
 static bool
-do_property_interpolate (const SGPropertyNode * arg)
+do_property_interpolate (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGPropertyNode * prop = get_prop(arg);
+  SGPropertyNode * prop = get_prop(arg,root);
   if( !prop )
     return false;
 
@@ -675,7 +697,7 @@ do_property_interpolate (const SGPropertyNode * arg)
  * current contents of the /logger tree.
  */
 static bool
-do_data_logging_commit (const SGPropertyNode * arg)
+do_data_logging_commit (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     FGLogger *log = (FGLogger *)globals->get_subsystem("logger");
     log->reinit();
@@ -686,7 +708,7 @@ do_data_logging_commit (const SGPropertyNode * arg)
  * Built-in command: set log level (0 ... 7)
  */
 static bool
-do_log_level (const SGPropertyNode * arg)
+do_log_level (const SGPropertyNode * arg, SGPropertyNode * root)
 {
    sglog().setLogLevels( SG_ALL, (sgDebugPriority)arg->getIntValue() );
 
@@ -706,7 +728,7 @@ do_log_level (const SGPropertyNode * arg)
  */
 
 static bool
-do_load_xml_to_proptree(const SGPropertyNode * arg)
+do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SGPath file(arg->getStringValue("filename"));
     if (file.isNull())
@@ -760,7 +782,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
 }
 
 static bool
-do_load_xml_from_url(const SGPropertyNode * arg)
+do_load_xml_from_url(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
     if (!http) {
@@ -810,7 +832,7 @@ do_load_xml_from_url(const SGPropertyNode * arg)
  */
 
 static bool
-do_save_xml_from_proptree(const SGPropertyNode * arg)
+do_save_xml_from_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SGPath file(arg->getStringValue("filename"));
     if (file.isNull())
@@ -861,7 +883,7 @@ no_profiling_support()
 #endif
 
 static bool
-do_profiler_start(const SGPropertyNode *arg)
+do_profiler_start(const SGPropertyNode *arg, SGPropertyNode *root)
 {
 #if FG_HAVE_GPERFTOOLS
   const char *filename = arg->getStringValue("filename", "fgfs.profile");
@@ -874,7 +896,7 @@ do_profiler_start(const SGPropertyNode *arg)
 }
 
 static bool
-do_profiler_stop(const SGPropertyNode *arg)
+do_profiler_stop(const SGPropertyNode *arg, SGPropertyNode *root)
 {
 #if FG_HAVE_GPERFTOOLS
   ProfilerStop();

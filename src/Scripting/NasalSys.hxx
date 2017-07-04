@@ -80,8 +80,9 @@ public:
     virtual bool handleCommand( const char* moduleName,
                                 const char* fileName,
                                 const char* src,
-                                const SGPropertyNode* arg = 0 );
-    virtual bool handleCommand(const SGPropertyNode* arg);
+                                const SGPropertyNode* arg = 0,
+                                SGPropertyNode* root = 0);
+    virtual bool handleCommand(const SGPropertyNode* arg, SGPropertyNode *root);
 
     bool createModule(const char* moduleName, const char* fileName,
                       const char* src, int len, const SGPropertyNode* cmdarg=0,

@@ -97,8 +97,8 @@ private:
     
     void removeDeadItem(FGAIBase* base);
 
-    bool loadScenarioCommand(const SGPropertyNode* args);
-    bool unloadScenarioCommand(const SGPropertyNode* args);
+    bool loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
+    bool unloadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
     bool addObjectCommand(const SGPropertyNode* definition);
     
     bool removeObject(const SGPropertyNode* args);

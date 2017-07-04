@@ -71,7 +71,7 @@
  * status: the exit status to return to the operating system (defaults to 0)
  */
 static bool
-do_exit (const SGPropertyNode * arg)
+do_exit (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
     fgSetBool("/sim/signals/exit", true);
@@ -85,7 +85,7 @@ do_exit (const SGPropertyNode * arg)
  * Reset FlightGear (Shift-Escape or Menu->File->Reset)
  */
 static bool
-do_reset (const SGPropertyNode * arg)
+do_reset (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     fgResetIdleState();
     return true;
@@ -96,7 +96,7 @@ do_reset (const SGPropertyNode * arg)
  * Change aircraft
  */
 static bool
-do_switch_aircraft (const SGPropertyNode * arg)
+do_switch_aircraft (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     fgSetString("/sim/aircraft", arg->getStringValue("aircraft"));
     // start a reset
@@ -107,7 +107,7 @@ do_switch_aircraft (const SGPropertyNode * arg)
 /**
  */
 static bool
-do_reposition (const SGPropertyNode * arg)
+do_reposition (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   fgStartReposition();
   return true;
@@ -121,7 +121,7 @@ do_reposition (const SGPropertyNode * arg)
  * and if that's unspecified, to "Panels/Default/default.xml".
  */
 static bool
-do_panel_load (const SGPropertyNode * arg)
+do_panel_load (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   string panel_path = arg->getStringValue("path");
   if (!panel_path.empty()) {
@@ -139,7 +139,7 @@ do_panel_load (const SGPropertyNode * arg)
  * to FG_ROOT). Defaults to "preferences.xml".
  */
 static bool
-do_preferences_load (const SGPropertyNode * arg)
+do_preferences_load (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     // disabling this command which was formerly used to reload 'preferences.xml'
     // reloading the defaults doesn't make sense (better to reset the simulator),
@@ -154,7 +154,7 @@ do_preferences_load (const SGPropertyNode * arg)
  * No parameters.
  */
 static bool
-do_toggle_fullscreen(const SGPropertyNode *arg)
+do_toggle_fullscreen(const SGPropertyNode*, SGPropertyNode*)
 {
     fgOSFullScreen();
     return true;
@@ -164,27 +164,27 @@ do_toggle_fullscreen(const SGPropertyNode *arg)
  * Built-in command: capture screen.
  */
 static bool
-do_screen_capture (const SGPropertyNode * arg)
+do_screen_capture(const SGPropertyNode*, SGPropertyNode*)
 {
   return fgDumpSnapShot();
 }
 
 static bool
-do_reload_shaders (const SGPropertyNode*)
+do_reload_shaders (const SGPropertyNode*, SGPropertyNode*)
 {
     simgear::reload_shaders();
     return true;
 }
 
 static bool
-do_dump_scene_graph (const SGPropertyNode*)
+do_dump_scene_graph (const SGPropertyNode*, SGPropertyNode*)
 {
     fgDumpSceneGraph();
     return true;
 }
 
 static bool
-do_dump_terrain_branch (const SGPropertyNode*)
+do_dump_terrain_branch (const SGPropertyNode*, SGPropertyNode*)
 {
     fgDumpTerrainBranch();
 
@@ -201,7 +201,7 @@ do_dump_terrain_branch (const SGPropertyNode*)
 }
 
 static bool
-do_print_visible_scene_info(const SGPropertyNode*)
+do_print_visible_scene_info(const SGPropertyNode*, SGPropertyNode*)
 {
     fgPrintVisibleSceneInfoCommand();
     return true;
@@ -211,7 +211,7 @@ do_print_visible_scene_info(const SGPropertyNode*)
  * Built-in command: hires capture screen.
  */
 static bool
-do_hires_screen_capture (const SGPropertyNode * arg)
+do_hires_screen_capture (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   fgHiResDump();
   return true;
@@ -222,7 +222,7 @@ do_hires_screen_capture (const SGPropertyNode * arg)
  * Reload the tile cache.
  */
 static bool
-do_tile_cache_reload (const SGPropertyNode * arg)
+do_tile_cache_reload (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
     bool freeze = master_freeze->getBoolValue();
@@ -243,7 +243,7 @@ do_tile_cache_reload (const SGPropertyNode * arg)
  * Reload the materials definition
  */
 static bool
-do_materials_reload (const SGPropertyNode * arg)
+do_materials_reload (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SG_LOG(SG_INPUT, SG_INFO, "Reloading Materials");
     SGMaterialLib* new_matlib =  new SGMaterialLib;
@@ -274,7 +274,7 @@ do_materials_reload (const SGPropertyNode * arg)
  * name: the name of the GUI dialog for future reference.
  */
 static bool
-do_dialog_new (const SGPropertyNode * arg)
+do_dialog_new (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     if (!gui) {
@@ -298,7 +298,7 @@ do_dialog_new (const SGPropertyNode * arg)
  * dialog-name: the name of the GUI dialog to display.
  */
 static bool
-do_dialog_show (const SGPropertyNode * arg)
+do_dialog_show (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     gui->showDialog(arg->getStringValue("dialog-name"));
@@ -310,7 +310,7 @@ do_dialog_show (const SGPropertyNode * arg)
  * Built-in Command: Hide the active XML-configured dialog.
  */
 static bool
-do_dialog_close (const SGPropertyNode * arg)
+do_dialog_close (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     if(arg->hasValue("dialog-name"))
@@ -325,7 +325,7 @@ do_dialog_close (const SGPropertyNode * arg)
  * object-name: The name of the GUI object(s) (all GUI objects if omitted).
  */
 static bool
-do_dialog_update (const SGPropertyNode * arg)
+do_dialog_update (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     FGDialog * dialog;
@@ -343,7 +343,7 @@ do_dialog_update (const SGPropertyNode * arg)
 }
 
 static bool
-do_open_browser (const SGPropertyNode * arg)
+do_open_browser (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     string path;
     if (arg->hasValue("path"))
@@ -358,7 +358,7 @@ do_open_browser (const SGPropertyNode * arg)
 }
 
 static bool
-do_open_launcher(const SGPropertyNode *)
+do_open_launcher(const SGPropertyNode*, SGPropertyNode*)
 {
 #if defined(HAVE_QT)
     bool ok = flightgear::runInAppLauncherDialog();
@@ -378,7 +378,7 @@ do_open_launcher(const SGPropertyNode *)
  * object-name: The name of the GUI object(s) (all GUI objects if omitted).
  */
 static bool
-do_dialog_apply (const SGPropertyNode * arg)
+do_dialog_apply (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     FGDialog * dialog;
@@ -401,7 +401,7 @@ do_dialog_apply (const SGPropertyNode * arg)
  * unlike reinit().
  */
 static bool
-do_gui_redraw (const SGPropertyNode * arg)
+do_gui_redraw (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     gui->redraw();
@@ -414,7 +414,7 @@ do_gui_redraw (const SGPropertyNode * arg)
  * is returned in property "property".
  */
 static bool
-do_add_model (const SGPropertyNode * arg)
+do_add_model (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     SGPropertyNode * model = fgGetNode("models", true);
     int i;
@@ -434,7 +434,7 @@ do_add_model (const SGPropertyNode * arg)
  * Built-in command: commit presets (read from in /sim/presets/)
  */
 static bool
-do_presets_commit (const SGPropertyNode * arg)
+do_presets_commit (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     if (fgGetBool("/sim/initialized", false)) {
       fgResetIdleState();
@@ -449,7 +449,7 @@ do_presets_commit (const SGPropertyNode * arg)
 }
 
 static bool
-do_press_cockpit_button (const SGPropertyNode *arg)
+do_press_cockpit_button (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   const char *prefix = arg->getStringValue("prefix");
 
@@ -471,7 +471,7 @@ do_press_cockpit_button (const SGPropertyNode *arg)
 }
 
 static bool
-do_release_cockpit_button (const SGPropertyNode *arg)
+do_release_cockpit_button (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   const char *prefix = arg->getStringValue("prefix");
 

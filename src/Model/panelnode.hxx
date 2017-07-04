@@ -64,7 +64,7 @@ private:
     void commonInit();
     void initWithPanel();
     
-    bool panelMouseClickCommand(const SGPropertyNode * arg);
+    bool panelMouseClickCommand(const SGPropertyNode * arg, SGPropertyNode * root);
     
     const bool _is2d;
     SGSharedPtr<FGPanel> _panel;

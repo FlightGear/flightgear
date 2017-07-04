@@ -33,7 +33,7 @@ using std::map;
 #if defined(TR_HIRES_SNAP)
 extern void dumpHiResSnapShot ();
 static bool
-do_hires_snapshot_dialog (const SGPropertyNode * arg)
+do_hires_snapshot_dialog (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     dumpHiResSnapShot();
     return true;

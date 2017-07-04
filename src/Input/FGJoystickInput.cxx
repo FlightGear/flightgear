@@ -214,7 +214,7 @@ void FGJoystickInput::postinit()
     unsigned int j;
     for (j = 0; j < nasal.size(); j++) {
       nasal[j]->setStringValue("module", module.c_str());
-      nasalsys->handleCommand(nasal[j]);
+      nasalsys->handleCommand(nasal[j],nullptr);
     }
 
     //

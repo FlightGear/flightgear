@@ -188,18 +188,18 @@ static SGSubsystem* getSubsystem(const SGPropertyNode* arg, bool create)
 }
 
 static bool
-do_check_subsystem_running(const SGPropertyNode* arg)
+do_check_subsystem_running(const SGPropertyNode * arg, SGPropertyNode * root)
 {
   return getSubsystem(arg, false) != 0;
 }
 
 static bool
-do_add_subsystem (const SGPropertyNode * arg)
+do_add_subsystem (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   return getSubsystem(arg, true) != 0;
 }
 
-static bool do_remove_subsystem(const SGPropertyNode * arg)
+static bool do_remove_subsystem(const SGPropertyNode * arg, SGPropertyNode * root)
 {
   std::string name = arg->getStringValue("subsystem");
 
@@ -226,7 +226,7 @@ static bool do_remove_subsystem(const SGPropertyNode * arg)
  * none is specified, reinitialize all of them.
  */
 static bool
-do_reinit (const SGPropertyNode * arg)
+do_reinit (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     bool result = true;
 
@@ -258,7 +258,7 @@ do_reinit (const SGPropertyNode * arg)
  * subsystem[*] - the name(s) of the subsystem(s) to suspend.
  */
 static bool
-do_suspend (const SGPropertyNode * arg)
+do_suspend (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     bool result = true;
 
@@ -282,7 +282,7 @@ do_suspend (const SGPropertyNode * arg)
  * subsystem[*] - the name(s) of the subsystem(s) to suspend.
  */
 static bool
-do_resume (const SGPropertyNode * arg)
+do_resume (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     bool result = true;
 

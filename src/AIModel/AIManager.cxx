@@ -339,7 +339,7 @@ FGAIManager::processThermal( double dt, FGAIThermal* thermal ) {
 
 }
 
-bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args)
+bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode *)
 {
     std::string name = args->getStringValue("name");
     if (args->hasChild("load-property")) {
@@ -370,9 +370,9 @@ bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args)
     return ok;
 }
 
-bool FGAIManager::unloadScenarioCommand(const SGPropertyNode* args)
+bool FGAIManager::unloadScenarioCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    std::string name = args->getStringValue("name");
+    std::string name = arg->getStringValue("name");
     return unloadScenario(name);
 }
 

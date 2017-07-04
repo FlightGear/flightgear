@@ -58,7 +58,7 @@ public:
     void addEntry(int, const std::string&);
     void removeEntry(int);
 
-    static bool popup( const SGPropertyNode * ) {
+    static bool popup( const SGPropertyNode *, SGPropertyNode * root) {
         instance()->PopupDialog();
         return true;
     }

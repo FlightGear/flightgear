@@ -37,7 +37,7 @@
 
 using std::string;
 
-static bool do_timeofday (const SGPropertyNode * arg)
+static bool do_timeofday (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     const string &offset_type = arg->getStringValue("timeofday", "noon");
     int offset = arg->getIntValue("offset", 0);

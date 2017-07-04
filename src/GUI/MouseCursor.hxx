@@ -57,7 +57,7 @@ public:
 protected:
     FGMouseCursor();
     
-    bool setCursorCommand(const SGPropertyNode* arg);
+    bool setCursorCommand(const SGPropertyNode* arg, SGPropertyNode*);
     
     unsigned int mAutoHideTimeMsec;
 };

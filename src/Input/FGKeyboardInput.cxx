@@ -112,7 +112,7 @@ void FGKeyboardInput::postinit()
   PropertyList nasal = key_nodes->getChildren("nasal");
   for (unsigned int j = 0; j < nasal.size(); j++) {
     nasal[j]->setStringValue("module", module.c_str());
-    nasalsys->handleCommand(nasal[j]);
+    nasalsys->handleCommand(nasal[j], nullptr);
   }
 
   PropertyList keys = key_nodes->getChildren("key");

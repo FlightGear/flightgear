@@ -55,76 +55,76 @@ using std::string;
 
 // Command callbacks for FlightGear
 
-static bool do_kln89_msg_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_msg_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	//cout << "do_kln89_msg_pressed called!\n";
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->MsgPressed();
 	return(true);
 }
 
-static bool do_kln89_obs_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_obs_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	//cout << "do_kln89_obs_pressed called!\n";
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->OBSPressed();
 	return(true);
 }
 
-static bool do_kln89_alt_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_alt_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	//cout << "do_kln89_alt_pressed called!\n";
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->AltPressed();
 	return(true);
 }
 
-static bool do_kln89_nrst_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_nrst_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->NrstPressed();
 	return(true);
 }
 
-static bool do_kln89_dto_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_dto_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->DtoPressed();
 	return(true);
 }
 
-static bool do_kln89_clr_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_clr_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->ClrPressed();
 	return(true);
 }
 
-static bool do_kln89_ent_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_ent_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->EntPressed();
 	return(true);
 }
 
-static bool do_kln89_crsr_pressed(const SGPropertyNode* arg) {
+static bool do_kln89_crsr_pressed(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->CrsrPressed();
 	return(true);
 }
 
-static bool do_kln89_knob1left1(const SGPropertyNode* arg) {
+static bool do_kln89_knob1left1(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->Knob1Left1();
 	return(true);
 }
 
-static bool do_kln89_knob1right1(const SGPropertyNode* arg) {
+static bool do_kln89_knob1right1(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->Knob1Right1();
 	return(true);
 }
 
-static bool do_kln89_knob2left1(const SGPropertyNode* arg) {
+static bool do_kln89_knob2left1(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->Knob2Left1();
 	return(true);
 }
 
-static bool do_kln89_knob2right1(const SGPropertyNode* arg) {
+static bool do_kln89_knob2right1(const SGPropertyNode * arg, SGPropertyNode * root) {
 	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 	gps->Knob2Right1();
 	return(true);

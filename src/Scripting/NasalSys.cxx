@@ -490,7 +490,7 @@ static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
     else
         node = new SGPropertyNode;
 
-    return naNum(globals->get_commands()->execute(naStr_data(cmd), node));
+    return naNum(globals->get_commands()->execute(naStr_data(cmd), node, nullptr));
 }
 
 // settimer(func, dt, simtime) extension function.  Falls through to
@@ -662,7 +662,7 @@ public:
         _sys->gcRelease(_gcRoot);
     }
 
-    virtual bool operator()(const SGPropertyNode* aNode)
+    virtual bool operator()(const SGPropertyNode* aNode, SGPropertyNode * root)
     {
         _sys->setCmdArg(const_cast<SGPropertyNode*>(aNode));
         naRef args[1];
@@ -1278,7 +1278,8 @@ naRef FGNasalSys::parse(naContext ctx, const char* filename, const char* buf, in
 bool FGNasalSys::handleCommand( const char* moduleName,
                                 const char* fileName,
                                 const char* src,
-                                const SGPropertyNode* arg )
+                                const SGPropertyNode* arg,
+                                SGPropertyNode* root)
 {
     naContext ctx = naNewContext();
     naRef code = parse(ctx, fileName, src, strlen(src));
@@ -1310,7 +1311,7 @@ bool FGNasalSys::handleCommand( const char* moduleName,
     return true;
 }
 
-bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
+bool FGNasalSys::handleCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
   const char* src = arg->getStringValue("script");
   const char* moduleName = arg->getStringValue("module");
@@ -1318,7 +1319,8 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
   return handleCommand( moduleName,
                         arg->getPath(true).c_str(),
                         src,
-                        arg );
+                        arg,
+                        root);
 }
 
 // settimer(func, dt, simtime) extension function.  The first argument

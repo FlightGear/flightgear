@@ -42,9 +42,9 @@ private:
 	bool clouds_3d_enabled;
     int index;
   
-    bool add3DCloud(const SGPropertyNode *arg);
-    bool delete3DCloud(const SGPropertyNode *arg);
-    bool move3DCloud(const SGPropertyNode *arg);
+    bool add3DCloud(const SGPropertyNode *arg, SGPropertyNode * root);
+    bool delete3DCloud(const SGPropertyNode *arg, SGPropertyNode * root);
+    bool move3DCloud(const SGPropertyNode *arg, SGPropertyNode * root);
     
 public:
 	FGClouds();

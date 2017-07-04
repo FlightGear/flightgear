@@ -384,7 +384,7 @@ PropsChannel::foundTerminator()
                         node->setStringValue( tokens[i].c_str() );
                     }
                     if ( !globals->get_commands()
-                             ->execute( "reinit", &args) )
+                             ->execute( "reinit", &args, nullptr) )
                     {
                         SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");
@@ -449,7 +449,7 @@ PropsChannel::foundTerminator()
                        }
                     }
                     if ( !globals->get_commands()
-                             ->execute(tokens[1].c_str(), &args) )
+                             ->execute(tokens[1].c_str(), &args, nullptr) )
                     {
                         SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");

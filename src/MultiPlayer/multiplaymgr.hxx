@@ -115,6 +115,7 @@ private:
   SGPropertyNode *pXmitLen;
   SGPropertyNode *pMultiPlayDebugLevel;
   SGPropertyNode *pMultiPlayRange;
+  SGPropertyNode *pMultiPlayTransmitOnlyGenerics;
 
   typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
   PropertyDefinitionMap mPropertyDefinition;
