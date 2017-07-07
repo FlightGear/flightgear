@@ -608,7 +608,7 @@ void HighPassFilterImplementation::initialize( double initvalue )
 
 double HighPassFilterImplementation::compute(double dt, double input)
 {
-    if (_isnan(input))
+    if (SGMiscd::isNaN(input))
         SG_LOG(SG_AUTOPILOT, SG_ALERT, "High pass filter output is NaN.");
 
     input = GainFilterImplementation::compute(dt, input);
@@ -830,7 +830,7 @@ void DigitalFilter::update( bool firstTime, double dt)
   }
 
   double input = _valueInput.get_value() - _referenceInput.get_value();
-  if (_isnan(input))
+  if (SGMiscd::isNaN(input))
       input = _valueInput.get_value() - _referenceInput.get_value();
   double output = _implementation->compute( dt, input );
 
