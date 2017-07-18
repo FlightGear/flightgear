@@ -1770,6 +1770,7 @@ struct OptionDesc {
     {"wp",                           true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_STRING,   "/autopilot/route-manager/file-path", false, "", NULL },
     {"config",                       true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
+    {"addon",                        true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },
@@ -2319,6 +2320,32 @@ int Options::parseOption(const string& s, bool fromConfigFile)
     }
 
     return FG_OPTIONS_OK;
+
+  } else if ( s.find("--addon=") == 0) {
+/*
+ using  --addon=/foo/bar does
+ * add /foo/bar/config.xml as propertyfile
+ * add /foo/bar to aircraft_paths to provide read-access
+ * sets property /addons/addon[n]/path = "/foo/bar"
+ * addons get initialized from addons.nas in FGDATA/Nasal 
+*/
+    SGPath path = s.substr(8);
+    SGPath config_xml = path / "config.xml";
+    if( config_xml.exists() ) {
+        p->propertyFiles.push_back(config_xml);
+        globals->append_aircraft_path(path);
+        fgGetNode("addons",true)
+          ->addChild("addon")
+          ->getNode("path",true)
+          ->setStringValue(path.str());
+    } else {
+      flightgear::fatalMessageBoxThenExit(
+        "FlightGear",
+        "Path specified with --addon does not exist or no config.xml found in that path"
+      );
+    }
+    return FG_OPTIONS_OK;
+
   } else if ( s.find( "--" ) == 0 ) {
     size_t eqPos = s.find( '=' );
     string key, value;
