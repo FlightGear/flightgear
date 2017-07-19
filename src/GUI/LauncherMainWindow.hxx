@@ -60,6 +60,8 @@ public:
 
     Q_INVOKABLE bool validateMetarString(QString metar);
 
+    Q_INVOKABLE void downloadDirChanged(QString path);
+
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
@@ -98,8 +100,6 @@ private slots:
 
     void onRestoreDefaults();
     void onViewCommandLine();
-
-    Q_INVOKABLE void onDownloadDirChanged();
 
     void onPackagesNeedUpdate(bool yes);
 

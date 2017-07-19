@@ -956,8 +956,24 @@ void LauncherMainWindow::onSubsytemIdleTimeout()
     globals->get_subsystem_mgr()->update(0.0);
 }
 
-void LauncherMainWindow::onDownloadDirChanged()
+void LauncherMainWindow::downloadDirChanged(QString path)
 {
+    // this can get run if the UI is disabled, just bail out before doing
+    // anything permanent.
+    if (!m_config->enableDownloadDirUI()) {
+        return;
+    }
+
+    auto options = flightgear::Options::sharedInstance();
+    if (options->valueForOption("download-dir") == path.toStdString()) {
+        // this works because we propogate the value from QSettings to
+        // the flightgear::Options object in runLauncherDialog()
+        // so the options object always contains our current idea of this
+        // value
+        return;
+    }
+
+    options->setOption("download-dir", path.toStdString());
 
     // replace existing package root
     globals->get_subsystem<FGHTTPClient>()->shutdown();

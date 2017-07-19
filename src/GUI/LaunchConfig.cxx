@@ -3,6 +3,8 @@
 #include <Main/options.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+static bool static_enableDownloadDirUI = true;
+
 LaunchConfig::LaunchConfig(QObject* parent) :
     QObject(parent)
 {
@@ -45,6 +47,16 @@ void LaunchConfig::setEnableDisableOption(QString name, bool value)
 QString LaunchConfig::defaultDownloadDir() const
 {
     return QString::fromStdString(flightgear::defaultDownloadDir().utf8Str());
+}
+
+bool LaunchConfig::enableDownloadDirUI() const
+{
+    return static_enableDownloadDirUI;
+}
+
+void LaunchConfig::setEnableDownloadDirUI(bool enableDownloadDirUI)
+{
+    static_enableDownloadDirUI = enableDownloadDirUI;
 }
 
 auto LaunchConfig::values() const -> std::vector<Arg>

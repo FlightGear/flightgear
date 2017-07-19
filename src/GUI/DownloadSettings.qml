@@ -25,13 +25,26 @@ Section {
         advanced: true
         chooseDirectory: true
         defaultPath: _config.defaultDownloadDir
-        option: "download-dir"
         dialogPrompt: "Choose a location to store download files."
 
+        // we disable this UI if the user passes --download-dir when starting the
+        // launcher, otherwise we coudld end up in a complete mess
+        enabled: _config.enableDownloadDirUI
+
         keywords: ["download", "storage", "disk"]
+
+        onPathChanged: {
+            // lots of special work needs to be done immediately that this
+            // value is changed.
+            _launcher.downloadDirChanged(path);
+        }
     }
 
     onApply: {
+        // note we do /not/ apply the downloadDir setting here, since it's
+        // only permitted to occurr once, and we set it via other means;
+        // on startup via runLauncherDialog, and if it changes, via
+        // LauncherMainWindow::downloadDirChanged
     }
 
     summary: terrasync.checked ? "scenery downloads;" : ""

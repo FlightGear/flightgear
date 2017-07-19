@@ -67,6 +67,7 @@
 #include <Network/HTTPClient.hxx>
 
 #include "LauncherMainWindow.hxx"
+#include "LaunchConfig.hxx"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -385,10 +386,17 @@ bool runLauncherDialog()
 
     initNavCache();
 
-    QSettings settings;
-    QString downloadDir = settings.value("download-dir").toString();
-    if (!downloadDir.isEmpty()) {
-        flightgear::Options::sharedInstance()->setOption("download-dir", downloadDir.toStdString());
+    auto options = flightgear::Options::sharedInstance();
+    if (options->isOptionSet("download-dir")) {
+        // user set download-dir on command line, don't mess with it in the
+        // launcher GUI. We'll disable the UI.
+        LaunchConfig::setEnableDownloadDirUI(false);
+    } else {
+        QSettings settings;
+        QString downloadDir = settings.value("downloadSettings/downloadDir").toString();
+        if (!downloadDir.isEmpty()) {
+            options->setOption("download-dir", downloadDir.toStdString());
+        }
     }
 
     fgInitPackageRoot();

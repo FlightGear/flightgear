@@ -11,6 +11,7 @@ class LaunchConfig : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QString defaultDownloadDir READ defaultDownloadDir CONSTANT)
+    Q_PROPERTY(bool enableDownloadDirUI READ enableDownloadDirUI CONSTANT)
 public:
     class Arg
     {
@@ -42,6 +43,10 @@ public:
     // save and restore API?
 
     QString defaultDownloadDir() const;
+
+    bool enableDownloadDirUI() const;
+
+    static void setEnableDownloadDirUI(bool enableDownloadDirUI);
 
 signals:
     void collect();
