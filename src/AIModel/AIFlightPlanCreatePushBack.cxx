@@ -75,7 +75,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
       gate = dep->getDynamics()->getAvailableParking(radius, fltType,
                                                        aircraftType, airline);
       if (!gate.isValid()) {
-        SG_LOG(SG_AI, SG_WARN, "Could not find parking for a " <<
+        SG_LOG(SG_AI, SG_DEV_WARN, "Could not find parking for a " <<
                aircraftType <<
                " of flight type " << fltType <<
                " of airline     " << airline <<
@@ -98,8 +98,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
       
         int size = route.size();
         if (size < 2) {
-            SG_LOG(SG_AI, SG_ALERT, "Push back route from gate " << parking->ident() << " has only " << size << " nodes.");
-            SG_LOG(SG_AI, SG_ALERT, "Using  " << parking->getPushBackPoint());
+            SG_LOG(SG_AI, SG_DEV_WARN, "Push back route from gate " << parking->ident() << " has only " << size << " nodes.");
+            SG_LOG(SG_AI, SG_DEV_WARN, "Using  " << parking->getPushBackPoint());
         }
         
         route.first();
@@ -137,7 +137,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
       FGTaxiSegment* pushForwardSegment = dep->groundNetwork()->findSegment(parking, 0);
       // there aren't any routes for this parking.
       if (!pushForwardSegment) {
-          SG_LOG(SG_AI, SG_ALERT, "Gate " << parking->ident() << "doesn't seem to have routes associated with it.");
+          SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << "/" << parking->getName()
+                 << "doesn't seem to have routes associated with it.");
           return false;
       }
 
