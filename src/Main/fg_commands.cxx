@@ -67,10 +67,10 @@ get_prop (const SGPropertyNode * arg, SGPropertyNode * root)
     if (root != nullptr)
     {
         SGPropertyNode *rv = nullptr;
-        rv = root->getNode(arg->getStringValue("property[0]", "/null"), 0, true);
+        rv = root->getNode(arg->getStringValue("property[0]", "/null"), true);
         if (rv == nullptr)
         {
-            rv = root->getNode(arg->getStringValue("property[0]", "/null"), 0, true);
+            rv = root->getNode(arg->getStringValue("property[0]", "/null"), true);
             return fgGetNode(arg->getStringValue("property[0]", "/null"), true);
         }
         return rv;
@@ -84,10 +84,10 @@ get_prop2 (const SGPropertyNode * arg, SGPropertyNode * root)
     if (root != nullptr)
     {
         SGPropertyNode *rv = nullptr;
-        rv = root->getNode(arg->getStringValue("property[1]", "/null"), 0, true);
+        rv = root->getNode(arg->getStringValue("property[1]", "/null"), true);
         if (rv == nullptr)
         {
-            rv = root->getNode(arg->getStringValue("property[1]", "/null"), 0, true);
+            rv = root->getNode(arg->getStringValue("property[1]", "/null"), true);
             return fgGetNode(arg->getStringValue("property[1]", "/null"), true);
         }
         return rv;
