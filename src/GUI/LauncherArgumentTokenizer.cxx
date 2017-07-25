@@ -67,6 +67,8 @@ QList<LauncherArgumentTokenizer::Arg> LauncherArgumentTokenizer::tokenize(QStrin
                 // check for escaped double-quote inside quoted value
                 if (nc == QChar('"')) {
                     ++index;
+                } else {
+                    value.append(c); // normal '\' inside quoted
                 }
             } else if (c == QChar('"')) {
                 state = Value;
