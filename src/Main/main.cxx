@@ -83,6 +83,7 @@ extern bool global_crashRptEnabled;
 
 #include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
 #include <EmbeddedResources/FlightGear-resources.hxx>
+#include <EmbeddedResources/FGData-resources.hxx>
 
 #if defined(HAVE_QT)
 #include <GUI/QtLauncher.hxx>
@@ -543,6 +544,7 @@ int fgMainInit( int argc, char **argv )
 
     const auto& resMgr = simgear::EmbeddedResourceManager::createInstance();
     initFlightGearEmbeddedResources();
+    initFGDataEmbeddedResources();
     // The language was set in processOptions()
     const std::string locale = globals->get_locale()->getPreferredLanguage();
     // Must always be done after all resources have been added to 'resMgr'

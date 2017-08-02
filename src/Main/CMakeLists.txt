@@ -23,6 +23,7 @@ set(SOURCES
     screensaver_control.cxx
 	${RESOURCE_FILE}
 	${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
+	${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FGData-resources.cxx
 	)
 
 set(HEADERS
@@ -42,6 +43,7 @@ set(HEADERS
     AircraftDirVisitorBase.hxx
     screensaver_control.hxx
     ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
+    ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FGData-resources.hxx
 	)
 
 # On Windows, make sure fgrcc can be run (it needs third-party libraries)
