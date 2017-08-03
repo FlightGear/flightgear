@@ -24,6 +24,7 @@
 #include <iosfwd>
 #include <vector>
 #include <array>
+#include <cstddef>              // std::size_t
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -89,6 +90,10 @@ private:
   // Return a string representing the compression type of a resource
   static std::string resourceClass(
     simgear::AbstractEmbeddedResource::CompressionType compressionType);
+  // Encode an integral index in a way that can be safely used as part of a
+  // C++ variable name. This is needed because, for instance, 'resource10' is
+  // not a valid C++ variable name.
+  static std::string encodeResourceIndex(std::size_t index);
   std::size_t writeEncodedResourceContents(const ResourceDeclaration& resDecl)
     const;
 

@@ -604,6 +604,28 @@ string ResourceCodeGenerator::resourceClass(
   return resClass;
 }
 
+// Static method
+//
+// Encode an integral index in a way that can be safely used as part of a C++
+// variable name. This is base 26 written from right to left (most significant
+// digit last).
+string ResourceCodeGenerator::encodeResourceIndex(std::size_t index) {
+  string res;
+  std::size_t remainder;
+
+  if (index == 0) {
+    res = string("A");          // 0
+  }
+
+  while (index > 0) {
+    remainder = index % 26;
+    res += 'A' + remainder;     // append a digit
+    index /= 26;
+  }
+
+  return res;
+}
+
 void ResourceCodeGenerator::writeCode() const
 {
   // This exception is not usable on all systems (cf.
@@ -643,7 +665,8 @@ using simgear::EmbeddedResourceManager;\n";
   for (vector<ResourceDeclaration>::size_type resNum = 0;
        resNum < _resDecl.size(); resNum++) {
     const auto& resDcl = _resDecl[resNum];
-    _outputStream << "\nstatic const char resource" << resNum+1 << "[] = \"";
+    _outputStream << "\nstatic const char resource" <<
+      encodeResourceIndex(resNum) << "[] = \"";
     resSizeInBytes.push_back(writeEncodedResourceContents(resDcl));
     _outputStream << "\";\n";
   }
@@ -658,19 +681,20 @@ using simgear::EmbeddedResourceManager;\n";
        resNum < _resDecl.size(); resNum++) {
     const auto& resDcl = _resDecl[resNum];
     string resClass = resourceClass(resDcl.compressionType);
+    string encodedResNum = encodeResourceIndex(resNum);
 
     _outputStream.flags(std::ios::dec);
     _outputStream << "\n  unique_ptr<const " << resClass << "> res" <<
-      resNum+1 << "(\n    new " << resClass << "(";
+      encodedResNum << "(\n    new " << resClass << "(";
     std::ostringstream resConstructArgs;
 
     switch (resDcl.compressionType) {
     case simgear::AbstractEmbeddedResource::CompressionType::ZLIB:
-      resConstructArgs << "resource" << resNum+1 << ", " <<
+      resConstructArgs << "resource" << encodedResNum << ", " <<
         resSizeInBytes[resNum] << ", " << resDcl.realPath.sizeInBytes();
       break;
     case simgear::AbstractEmbeddedResource::CompressionType::NONE:
-      resConstructArgs << "resource" << resNum+1 << ", " <<
+      resConstructArgs << "resource" << encodedResNum << ", " <<
         resDcl.realPath.sizeInBytes();
       break;
     default:
@@ -683,7 +707,7 @@ using simgear::EmbeddedResourceManager;\n";
     _outputStream << resConstructArgs.str() <<
       "));\n  resMgr->addResource("
       "\"" << simgear::strutils::escape(resDcl.virtualPath.utf8Str()) << "\", "
-      "std::move(" << "res" << resNum+1 << ")";
+      "std::move(" << "res" << encodedResNum << ")";
 
     if (!resDcl.language.empty()) {
       _outputStream << ", \"" << simgear::strutils::escape(resDcl.language) <<
