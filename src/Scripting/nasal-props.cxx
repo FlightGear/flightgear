@@ -299,22 +299,13 @@ T makeVecFromVector(naRef vector)
     return vec;
 }
 
-
-// Set the value of a node; returns true if it succeeded or
-// false if it failed. <val> can be a string, number, or a
+// Helper function to set the value of a node; returns true if it succeeded or
+// false if it failed.  <val> can be a string, number, or a
 // vector or numbers (for SGVec3D/4D types).
-// Forms:
-//    props.Node.setValue(string relative_path,
-//                        val);
-//    props.Node.setValue(val);
-static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
-{
-    NODEARG();
-    MOVETARGET(naVec_size(argv) > 1, true);
-    naRef val = naVec_get(argv, 0);
+static naRef f_setValueHelper(naContext c, SGPropertyNode_ptr node, naRef val) {
     bool result = false;
     if(naIsString(val)) {
-         result = node->setStringValue(naStr_data(val));
+        result = node->setStringValue(naStr_data(val));
     } else if(naIsVector(val)) {
         if(naVec_size(val) == 3)
             result = node->setValue(makeVecFromVector<SGVec3d>(val));
@@ -328,12 +319,28 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
 
         double d = naNumValue(val).num;
         if (SGMisc<double>::isNaN(d)) {
-          naRuntimeError(c, "props.setValue() passed a NaN");
+            naRuntimeError(c, "props.setValue() passed a NaN");
         }
 
         result = node->setDoubleValue(d);
     }
     return naNum(result);
+}
+
+
+// Set the value of a node; returns true if it succeeded or
+// false if it failed. <val> can be a string, number, or a
+// vector or numbers (for SGVec3D/4D types).
+// Forms:
+//    props.Node.setValue(string relative_path,
+//                        val);
+//    props.Node.setValue(val);
+static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    MOVETARGET(naVec_size(argv) > 1, true);
+    naRef val = naVec_get(argv, 0);
+    return f_setValueHelper(c, node, val);
 }
 
 static naRef f_setIntValue(naContext c, naRef me, int argc, naRef* args)
@@ -377,6 +384,79 @@ static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
     return naNum(node->setDoubleValue(r.num));
 }
 
+// Forward declaration
+static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* name, naRef val);
+
+static naRef f_setValuesHelper(naContext c, SGPropertyNode_ptr node, naRef hash)
+{
+    if (!naIsHash(hash)) {
+        naRuntimeError(c, "props.setValues() with non-hash");
+    }
+
+    naRef keyvec = naNewVector(c);
+    naHash_keys(keyvec, hash);
+    naRef ret;
+
+    for (int i = 0; i < naVec_size(keyvec); i++) {
+        naRef key = naVec_get(keyvec, i);
+        if (! naIsScalar(key)) {
+            naRuntimeError(c, "props.setValues() with non-scalar key value");
+        }
+        char* keystr = naStr_data(naStringValue(c, key));
+        ret = f_setChildrenHelper(c, node, keystr, naHash_cget(hash, keystr));
+    }
+
+    return ret;
+}
+
+static naRef f_setValues(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    MOVETARGET(naVec_size(argv) > 1, true);
+    naRef val = naVec_get(argv, 0);
+    return f_setValuesHelper(c, node, val);
+}
+
+static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* name, naRef val)
+{
+    naRef ret;
+    try {
+        SGPropertyNode_ptr subnode = node->getNode(name, true);
+
+        if (naIsScalar(val)) {
+            ret =  f_setValueHelper(c, subnode, val);
+        } else if (naIsHash(val)) {
+            ret = f_setValuesHelper(c, subnode, val);
+        } else if (naIsVector(val)) {
+            for (int i = 0; i < naVec_size(val); i++) {
+                char newname[sizeof(name) + 3];
+                sprintf(newname, "%s[%i]", name, i);
+                ret = f_setChildrenHelper(c, node, newname, naVec_get(val, i));
+            }
+        } else if (naIsNil(val)) {
+            // Nil value OK - no-op
+        } else {
+            naRuntimeError(c, "props.setChildren() with unknown type");
+        }
+    } catch(const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
+        return naNil();
+    }
+
+    return ret;
+}
+
+static naRef f_setChildren(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    if(! naIsString(naVec_get(argv, 0))) {
+      naRuntimeError(c, "props.setChildren() with non-string first argument");
+    }
+
+    char* name = naStr_data(naVec_get(argv, 0));
+    naRef val = naVec_get(argv, 1);
+    return f_setChildrenHelper(c, node, name, val);
+}
 
 // Get the parent of this node as a ghost.
 // Forms:
@@ -681,6 +761,7 @@ static struct {
     { f_equals,             "_equals"             },
     { f_getValue,           "_getValue"           },
     { f_setValue,           "_setValue"           },
+    { f_setValues,          "_setValues"          },
     { f_setIntValue,        "_setIntValue"        },
     { f_setBoolValue,       "_setBoolValue"       },
     { f_setDoubleValue,     "_setDoubleValue"     },
@@ -692,6 +773,7 @@ static struct {
     { f_removeChild,        "_removeChild"        },
     { f_removeChildren,     "_removeChildren"     },
     { f_removeAllChildren,  "_removeAllChildren"  },
+    { f_setChildren,        "_setChildren"        },
     { f_alias,              "_alias"              },
     { f_unalias,            "_unalias"            },
     { f_getAliasTarget,     "_getAliasTarget"     },
