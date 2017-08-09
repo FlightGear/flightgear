@@ -2459,7 +2459,7 @@ OptionResult Options::processOptions()
 {
   // establish locale before showing help (this selects the default locale,
   // when no explicit option was set)
-  globals->get_locale()->selectLanguage(valueForOption("language").c_str());
+  globals->get_locale()->selectLanguage(valueForOption("language"));
 
   // now FG_ROOT is setup, process various command line options that bail us
   // out quickly, but rely on aircraft / root settings

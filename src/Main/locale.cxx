@@ -27,7 +27,6 @@
 #endif
 
 #include <cstdio>
-#include <cstring>              // std::strlen()
 #include <cstddef>              // std::size_t
 #include <cassert>
 
@@ -153,10 +152,10 @@ FGLocale::findLocaleNode(const string& localeSpec)
     return nullptr;
 }
 
-// Select the language. When no language is given (nullptr),
-// a default is determined matching the system locale.
+// Select the language. When 'language' is empty, a default is determined
+// matching the system locale.
 bool
-FGLocale::selectLanguage(const char *language)
+FGLocale::selectLanguage(const string& language)
 {
     const auto& embeddedResMgr = simgear::EmbeddedResourceManager::instance();
 
@@ -168,8 +167,8 @@ FGLocale::selectLanguage(const char *language)
     }
 
     // if we were passed a language option, try it first
-    if ((language != nullptr) && (std::strlen(language) > 0)) {
-        languages.insert(languages.begin(), string(language));
+    if (!language.empty()) {
+        languages.insert(languages.begin(), language);
     }
 
     _currentLocaleString = removeEncodingPart(languages[0]);

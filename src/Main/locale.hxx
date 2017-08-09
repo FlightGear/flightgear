@@ -37,13 +37,13 @@ public:
     virtual ~FGLocale();
 
     /**
-     * Select the locale's primary language. When no language is given
-     * (nullptr), a default is determined matching the system locale. This
-     * method calls EmbeddedResourceManager::selectLocale() with the locale
-     * that will be effective after the call (normally, the user-chosen
-     * locale; may be the default locale in case of a problem).
+     * Select the locale's primary language. When 'language' is empty, a
+     * default is determined matching the system locale. This method calls
+     * EmbeddedResourceManager::selectLocale() with the locale that will be
+     * effective after the call (normally, the user-chosen locale; may be the
+     * default locale in case of a problem).
      */
-    bool selectLanguage(const char* language = nullptr);
+    bool selectLanguage(const std::string& language = "");
 
     /** Return the preferred language according to user choice and/or settings.
      *
@@ -51,9 +51,8 @@ public:
      *            found.
      *
      *  Note that this is not necessarily the same as the last value passed to
-     *  selectLanguage(), assuming it was non-null and non-empty, because the
-     *  latter may have an encoding specifier, while values returned by
-     *  getPreferredLanguage() never have that.
+     *  selectLanguage(), because the latter may have an encoding specifier,
+     *  while values returned by getPreferredLanguage() never have that.
      */
     std::string getPreferredLanguage() const;
 
