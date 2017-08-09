@@ -144,9 +144,13 @@ FGLocale::findLocaleNode(const string& localeSpec)
     std::size_t pos = language.find('_');
     if ((pos != string::npos) && (pos > 0))
     {
-        node = findLocaleNode(language.substr(0, pos));
-        if (node)
+        const string langWithoutTerritory = language.substr(0, pos);
+        node = findLocaleNode(langWithoutTerritory);
+        if (node) {
+            SG_LOG(SG_GENERAL, SG_INFO,
+                   "Found language resource for: " << langWithoutTerritory);
             return node;
+        }
     }
 
     return nullptr;
