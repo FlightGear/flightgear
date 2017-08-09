@@ -478,6 +478,12 @@ int fgMainInit( int argc, char **argv )
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
 			<< HUDSON_BUILD_ID);
 
+    const auto& resMgr = simgear::EmbeddedResourceManager::createInstance();
+    initFlightGearEmbeddedResources();
+    initFGDataEmbeddedResources();
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "EmbeddedResourceManager set up (using the default locale)");
+
     // seed the random number generator
     sg_srandom_time();
 
@@ -541,16 +547,6 @@ int fgMainInit( int argc, char **argv )
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
         return EXIT_SUCCESS;
     }
-
-    const auto& resMgr = simgear::EmbeddedResourceManager::createInstance();
-    initFlightGearEmbeddedResources();
-    initFGDataEmbeddedResources();
-    // The language was set in processOptions()
-    const std::string locale = globals->get_locale()->getPreferredLanguage();
-    // Must always be done after all resources have been added to 'resMgr'
-    resMgr->selectLocale(locale);
-    SG_LOG(SG_GENERAL, SG_INFO,
-           "EmbeddedResourceManager: selected locale '" << locale << "'");
 
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
