@@ -33,6 +33,7 @@
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
 
 #include "fg_props.hxx"
 #include "locale.hxx"
@@ -157,6 +158,8 @@ FGLocale::findLocaleNode(const string& localeSpec)
 bool
 FGLocale::selectLanguage(const char *language)
 {
+    const auto& embeddedResMgr = simgear::EmbeddedResourceManager::instance();
+
     string_list languages = getUserLanguage();
     if (languages.empty()) {
         // Use plain C locale if nothing is available.
@@ -201,10 +204,17 @@ FGLocale::selectLanguage(const char *language)
     {
        SG_LOG(SG_GENERAL, SG_ALERT,
               "System locale not found or no internationalization settings specified in defaults.xml. Using default (en)." );
-       return false;
+
+       // Be consistent with _currentLocale
+       _currentLocaleString.clear();
     }
 
-    return true;
+    embeddedResMgr->selectLocale(_currentLocaleString);
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "EmbeddedResourceManager: selected locale '" <<
+           _currentLocaleString << "'");
+
+    return (_currentLocale != nullptr);
 }
 
 // Return the preferred language according to user choice and/or settings

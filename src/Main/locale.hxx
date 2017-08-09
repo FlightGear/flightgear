@@ -38,7 +38,10 @@ public:
 
     /**
      * Select the locale's primary language. When no language is given
-     * (nullptr), a default is determined matching the system locale.
+     * (nullptr), a default is determined matching the system locale. This
+     * method calls EmbeddedResourceManager::selectLocale() with the locale
+     * that will be effective after the call (normally, the user-chosen
+     * locale; may be the default locale in case of a problem).
      */
     bool selectLanguage(const char* language = nullptr);
 
