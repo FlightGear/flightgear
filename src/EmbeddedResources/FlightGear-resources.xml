@@ -4,15 +4,4 @@
      (I can't put a double dash inside an XML comment...) -->
 
 <FGRCC version="1.0">
-  <qresource>
-    <file>Translations/de/FlightGear-nonQt.xlf</file>
-    <file>Translations/en_US/FlightGear-nonQt.xlf</file>
-    <file>Translations/es/FlightGear-nonQt.xlf</file>
-    <file>Translations/fr/FlightGear-nonQt.xlf</file>
-    <file>Translations/it/FlightGear-nonQt.xlf</file>
-    <file>Translations/nl/FlightGear-nonQt.xlf</file>
-    <file>Translations/pl/FlightGear-nonQt.xlf</file>
-    <file>Translations/pt/FlightGear-nonQt.xlf</file>
-    <file>Translations/zh_CN/FlightGear-nonQt.xlf</file>
-  </qresource>
 </FGRCC>
