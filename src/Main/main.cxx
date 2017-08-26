@@ -541,6 +541,11 @@ int fgMainInit( int argc, char **argv )
         return EXIT_SUCCESS;
     }
 
+    // Set the lists of allowed paths for cases where a path comes from an
+    // untrusted source, such as the global property tree (this uses $FG_HOME
+    // and other paths set by Options::processOptions()).
+    fgInitAllowedPaths();
+
     const auto& resMgr = simgear::EmbeddedResourceManager::createInstance();
     initFlightGearEmbeddedResources();
     // The language was set in processOptions()

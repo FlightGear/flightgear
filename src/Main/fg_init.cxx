@@ -1145,6 +1145,11 @@ void fgStartNewReset()
     
     flightgear::Options::sharedInstance()->processOptions();
 
+    // Rebuild the lists of allowed paths for cases where a path comes from an
+    // untrusted source, such as the global property tree (this uses $FG_HOME
+    // and other paths set by Options::processOptions()).
+    fgInitAllowedPaths();
+
     const auto& resMgr = simgear::EmbeddedResourceManager::instance();
     // The language was (re)set in processOptions()
     const string locale = globals->get_locale()->getPreferredLanguage();
