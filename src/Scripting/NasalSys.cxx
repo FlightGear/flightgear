@@ -909,10 +909,6 @@ void FGNasalSys::init()
       .member("simulatedTime", &TimerObj::isSimTime, &f_timerObj_setSimTime)
       .member("isRunning", &TimerObj::isRunning);
 
-
-    // Set allowed paths for Nasal I/O
-    fgInitAllowedPaths();
-    
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
     loadScriptDirectory(nasalDir);
