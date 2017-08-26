@@ -1117,7 +1117,12 @@ void fgStartNewReset()
     fgInitGeneral(); // all of this?
     
     flightgear::Options::sharedInstance()->processOptions();
-    
+
+    // Rebuild the lists of allowed paths for cases where a path comes from an
+    // untrusted source, such as the global property tree (this uses $FG_HOME
+    // and other paths set by Options::processOptions()).
+    fgInitAllowedPaths();
+
     // PRESERVED properties over-write state from options, intentionally
     if ( copyProperties(preserved, globals->get_props()) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Preserved state restored successfully" );
