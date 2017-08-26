@@ -28,18 +28,6 @@ using std::endl;
 // Implementation of FGLogger
 ////////////////////////////////////////////////////////////////////////
 
-FGLogger::FGLogger ()
-{
-}
-
-FGLogger::~FGLogger ()
-{
-    for (unsigned int i = 0; i < _logs.size(); i++) {
-        delete _logs[i];
-    }
-    _logs.clear();
-}
-
 void
 FGLogger::init ()
 {
@@ -48,16 +36,15 @@ FGLogger::init ()
     return;
 
   std::vector<SGPropertyNode_ptr> children = logging->getChildren("log");
-  for (unsigned int i = 0; i < children.size(); i++) {
+  _logs.reserve(children.size());
 
-    SGPropertyNode * child = children[i];
-
+  for (const auto child: children) {
     if (!child->getBoolValue("enabled", false))
         continue;
 
-    _logs.push_back(new Log());
-    Log &log = *_logs[_logs.size()-1];
-    
+    _logs.emplace_back(new Log());
+    Log &log = *_logs.back();
+
     string filename = child->getStringValue("filename");
     if (filename.empty()) {
         filename = "fg_log.csv";
@@ -94,8 +81,9 @@ FGLogger::init ()
     log.delimiter = delimiter.c_str()[0];
     // Security: use the return value of fgValidatePath()
     log.output = new sg_ofstream(authorizedPath, std::ios_base::out);
-    if (!log.output) {
+    if ( !(*log.output) ) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Cannot write log to " << filename);
+      _logs.pop_back();
       continue;
     }
 
@@ -131,9 +119,6 @@ FGLogger::init ()
 void
 FGLogger::reinit ()
 {
-    for (unsigned int i = 0; i < _logs.size(); i++) {
-        delete _logs[i];
-    }
     _logs.clear();
     init();
 }

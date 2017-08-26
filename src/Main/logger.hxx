@@ -6,6 +6,7 @@
 #ifndef __LOGGER_HXX
 #define __LOGGER_HXX 1
 
+#include <memory>
 #include <vector>
 
 #include <simgear/compiler.h>
@@ -19,10 +20,6 @@
 class FGLogger : public SGSubsystem
 {
 public:
-
-  FGLogger ();
-  virtual ~FGLogger ();
-
 				// Implementation of SGSubsystem
   virtual void init ();
   virtual void reinit ();
@@ -45,7 +42,7 @@ private:
     char delimiter;
   };
 
-  std::vector<Log *> _logs;
+  std::vector< std::unique_ptr<Log> > _logs;
 
 };
 
