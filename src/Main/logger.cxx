@@ -80,7 +80,7 @@ FGLogger::init ()
     log.last_time_ms = globals->get_sim_time_sec() * 1000;
     log.delimiter = delimiter.c_str()[0];
     // Security: use the return value of fgValidatePath()
-    log.output = new sg_ofstream(authorizedPath, std::ios_base::out);
+    log.output.reset(new sg_ofstream(authorizedPath, std::ios_base::out));
     if ( !(*log.output) ) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Cannot write log to " << filename);
       _logs.pop_back();
@@ -158,16 +158,10 @@ FGLogger::update (double dt)
 ////////////////////////////////////////////////////////////////////////
 
 FGLogger::Log::Log ()
-  : output(0),
-    interval_ms(0),
+  : interval_ms(0),
     last_time_ms(-999999.0),
     delimiter(',')
 {
-}
-
-FGLogger::Log::~Log ()
-{
-  delete output;
 }
 
 // end of logger.cxx

@@ -34,9 +34,9 @@ private:
    */
   struct Log {
     Log ();
-    virtual ~Log ();
+
     std::vector<SGPropertyNode_ptr> nodes;
-    sg_ofstream * output;
+    std::unique_ptr<sg_ofstream> output;
     long interval_ms;
     double last_time_ms;
     char delimiter;
