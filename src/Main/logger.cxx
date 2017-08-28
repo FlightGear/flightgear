@@ -9,12 +9,11 @@
 
 #include "logger.hxx"
 
-#include <ios>
+#include <fstream>
 #include <string>
 #include <cstdlib>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include "fg_props.hxx"
@@ -66,18 +65,19 @@ FGLogger::init ()
 
     // Security: the path comes from the global Property Tree; it *must* be
     //           validated before we overwrite the file.
-    const SGPath authorizedPath = fgValidatePath(SGPath::fromUtf8(filename),
-                                                 /* write */ true);
+    const string authorizedPath = fgValidatePath(filename,
+                                                 true /* write */);
 
-    if (authorizedPath.isNull()) {
+    if (authorizedPath.empty()) {
       const string propertyPath = child->getChild("filename")
-                                       ->getPath(/* simplify */ true);
+                                       ->getPath(true /* simplify */);
+      const SGPath proposedPath = SGPath(globals->get_fg_home()) / "Export";
       const string msg =
         "The FGLogger logging system, via the '" + propertyPath + "' property, "
         "was asked to write to '" + filename + "', however this path is not "
         "authorized for writing anymore for security reasons. " +
         "Please choose another location, for instance in the $FG_HOME/Export "
-        "folder (" + (globals->get_fg_home() / "Export").utf8Str() + ").";
+        "folder (" + proposedPath.str() + ").";
 
       SG_LOG(SG_GENERAL, SG_ALERT, msg);
       exit(EXIT_FAILURE);
@@ -93,7 +93,7 @@ FGLogger::init ()
     log.last_time_ms = globals->get_sim_time_sec() * 1000;
     log.delimiter = delimiter.c_str()[0];
     // Security: use the return value of fgValidatePath()
-    log.output = new sg_ofstream(authorizedPath, std::ios_base::out);
+    log.output = new std::ofstream(authorizedPath);
     if (!log.output) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Cannot write log to " << filename);
       continue;
