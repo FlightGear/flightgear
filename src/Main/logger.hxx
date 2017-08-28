@@ -6,10 +6,10 @@
 #ifndef __LOGGER_HXX
 #define __LOGGER_HXX 1
 
+#include <iosfwd>
 #include <vector>
 
 #include <simgear/compiler.h>
-#include <simgear/misc/sgstream.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 
@@ -39,7 +39,7 @@ private:
     Log ();
     virtual ~Log ();
     std::vector<SGPropertyNode_ptr> nodes;
-    sg_ofstream * output;
+    std::ostream * output;
     long interval_ms;
     double last_time_ms;
     char delimiter;
