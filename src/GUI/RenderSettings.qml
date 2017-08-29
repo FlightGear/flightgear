@@ -41,8 +41,10 @@ Section {
     }
 
     onApply: {
-        _config.setProperty("/sim/rendering/multi-sample-buffers", msaaEnabled)
-        _config.setProperty("/sim/rendering/multi-samples", msaa.data[msaa.selectedIndex])
+        if (msaaEnabled) {
+            _config.setProperty("/sim/rendering/multi-sample-buffers", 1)
+            _config.setProperty("/sim/rendering/multi-samples", msaa.data[msaa.selectedIndex])
+        }
 
         _config.setEnableDisableOption("rembrandt",  rembrandt);
 
