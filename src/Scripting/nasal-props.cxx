@@ -436,7 +436,13 @@ static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* nam
         } else if (naIsNil(val)) {
             // Nil value OK - no-op
         } else {
-            naRuntimeError(c, "props.setChildren() with unknown type");
+            // We have an error, but throwing a runtime error will prevent certain things from
+            // working (such as the pilot list)
+            // The nasal version would fail silently with invalid data - a runtime error will dump the stack and
+            // stop execution.
+            // Overall to be safer the new method should be functionally equivalent to keep compatibility.
+            //
+            //REMOVED: naRuntimeError(c, "props.setChildren() with unknown type");
         }
     } catch(const string& err) {
         naRuntimeError(c, (char *)err.c_str());
