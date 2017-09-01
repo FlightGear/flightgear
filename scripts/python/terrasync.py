@@ -24,9 +24,10 @@ import urllib, os, hashlib
 from urllib.parse import urlparse
 from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, isdir, join
 import re
 import argparse
+import shutil
 
 #################################################################################################################################
 class HTTPGetCallback:
@@ -247,6 +248,7 @@ class TerraSync:
     def handleDirindexFile(self, dirindexFile):
         dirIndex = DirIndex(dirindexFile)
         serverFiles = []
+        serverDirs = []
 
         for file in dirIndex.getFiles():
             f = file['name']
@@ -258,14 +260,20 @@ class TerraSync:
             d = subdir['name']
             h = subdir['hash']
             self.updateDirectory( "/" + dirIndex.getPath() + "/" + d, join(dirIndex.getPath(),d), h )
+            serverDirs.append(d)
 
         if self.removeOrphan:
             localFullPath = join(self.target, dirIndex.getPath())
             localFiles = [f for f in listdir(localFullPath) if isfile(join(localFullPath, f))]
             for f in localFiles:
                 if f != ".dirindex" and not f in serverFiles:
-                    #print("removing orphan", join(localFullPath,f) )
+                    #print("removing orphan file", join(localFullPath,f) )
                     os.remove( join(localFullPath,f) )
+            localDirs = [f for f in listdir(localFullPath) if isdir(join(localFullPath, f))]
+            for f in localDirs:
+                if not f in serverDirs:
+                    #print ("removing orphan dir",f)
+                    shutil.rmtree( join(localFullPath,f) )
 
 
     def isReady(self):
