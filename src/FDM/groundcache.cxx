@@ -319,6 +319,11 @@ bool
 FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
                                     const SGVec3d& pt, double rad)
 {
+    if (rad > 10000.0) {
+        SG_LOG(SG_FLIGHT, SG_DEV_WARN, "FGGroundCache::prepare_ground_cache passed an excessive radius");
+        rad = 10000.0;
+    }
+    
 #ifdef GROUNDCACHE_DEBUG
     SGTimeStamp t0 = SGTimeStamp::now();
 #endif
