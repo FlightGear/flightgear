@@ -575,6 +575,7 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   else if (!strcmp(fieldName, "current")) *out = naNum(fp->currentIndex());
     else if (!strcmp(fieldName, "aircraftCategory")) *out = stringToNasal(c, fp->icaoAircraftCategory());
     else if (!strcmp(fieldName, "followLegTrackToFix")) *out = naNum(fp->followLegTrackToFixes());
+    else if (!strcmp(fieldName, "active")) *out = naNum(fp->isActive());
   else {
     return 0;
   }

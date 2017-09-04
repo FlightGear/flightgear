@@ -160,6 +160,8 @@ public:
 
   void finish();
 
+    bool isActive() const;
+    
   Leg* currentLeg() const;
   Leg* nextLeg() const;
   Leg* previousLeg() const;

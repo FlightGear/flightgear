@@ -445,8 +445,13 @@ void FGRouteMgr::setFlightPlan(const FlightPlanRef& plan)
   }
   
   if (_plan) {
-    _plan->removeDelegate(this);
-    active->setBoolValue(false);
+      _plan->removeDelegate(this);
+
+      if (isRouteActive()) {
+          _plan->finish();
+      }
+      
+      active->setBoolValue(false);
   }
   
   _plan = plan;

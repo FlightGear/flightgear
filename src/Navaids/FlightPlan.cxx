@@ -51,6 +51,7 @@
 #include <Navaids/waypoint.hxx>
 #include <Navaids/routePath.hxx>
 #include <Navaids/airways.hxx>
+#include <Autopilot/route_mgr.hxx>
 
 using std::string;
 using std::vector;
@@ -324,7 +325,12 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
   unlockDelegate();
   return rf.numDeleted();
 }
-  
+    
+bool FlightPlan::isActive() const
+{
+    return (_currentIndex >= 0);
+}
+
 void FlightPlan::setCurrentIndex(int index)
 {
   if ((index < -1) || (index >= numLegs())) {
@@ -357,6 +363,7 @@ void FlightPlan::finish()
     
     unlockDelegate();
 }
+
   
 int FlightPlan::findWayptIndex(const SGGeod& aPos) const
 {  
@@ -1130,6 +1137,14 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
 
 void FlightPlan::activate()
 {
+    FGRouteMgr* routeManager = globals->get_subsystem<FGRouteMgr>();
+    if (routeManager) {
+        if (routeManager->flightPlan() != this) {
+            SG_LOG(SG_NAVAID, SG_INFO, "setting new flight-plan on route-manager");
+            routeManager->setFlightPlan(this);
+        }
+    }
+    
     lockDelegate();
 
     _currentIndex = 0;
