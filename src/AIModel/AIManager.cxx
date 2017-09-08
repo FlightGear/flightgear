@@ -519,45 +519,6 @@ FGAIManager::loadScenarioFile(const std::string& filename)
     return 0;
 }
 
-bool
-FGAIManager::getStartPosition(const string& id, const string& pid,
-                              SGGeod& geodPos, double& hdng, SGVec3d& uvw)
-{
-    bool found = false;
-    SGPropertyNode* root = fgGetNode("sim/ai", true);
-    if (!root->getNode("enabled", true)->getBoolValue())
-        return found;
-
-    for (int i = 0 ; (!found) && i < root->nChildren() ; i++) {
-        SGPropertyNode *aiEntry = root->getChild( i );
-        if ( !strcmp( aiEntry->getName(), "scenario" ) ) {
-            const string& filename = aiEntry->getStringValue();
-            SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
-            if (scenarioTop) {
-                SGPropertyNode* scenarios = scenarioTop->getChild("scenario");
-                if (scenarios) {
-                    for (int i = 0; i < scenarios->nChildren(); i++) {
-                        SGPropertyNode* scEntry = scenarios->getChild(i);
-                        const std::string& type = scEntry->getStringValue("type");
-                        const std::string& pnumber = scEntry->getStringValue("pennant-number");
-                        const std::string& name = scEntry->getStringValue("name");
-                        if (type == "carrier" && (pnumber == id || name == id)) {
-                            SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
-                            carrier->readFromScenario(scEntry);
-
-                            if (carrier->getParkPosition(pid, geodPos, hdng, uvw)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return found;
-}
-
 const FGAIBase *
 FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range)
 {

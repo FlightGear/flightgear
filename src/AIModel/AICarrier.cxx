@@ -590,3 +590,53 @@ void FGAICarrier::UpdateJBD(double dt, double jbd_transition_time) {
     return;
 
 } // end UpdateJBD
+
+std::pair<bool, SGGeod> FGAICarrier::initialPositionForCarrier(const std::string& namePennant)
+{
+    SGPropertyNode_ptr aiRoot = fgGetNode("/sim/ai", true);
+    for (const auto scenarioFileNode : aiRoot->getChildren("scenario")) {
+        SGPropertyNode_ptr s = FGAIManager::loadScenarioFile(scenarioFileNode->getStringValue());
+        if (!s || !s->hasChild("scenario")) {
+            continue;
+        }
+        
+        const std::string carrierType("carrier");
+        SGPropertyNode_ptr scenario = s->getChild("scenario");
+        for (int i = 0; i < scenario->nChildren(); i++) {
+            SGPropertyNode* c = scenario->getChild(i);
+            if (c->getStringValue("type") != carrierType) {
+                continue;
+            }
+            
+            const auto pennant = c->getStringValue("pennant-number");
+            const auto name = c->getStringValue("name");
+            if (pennant == namePennant || name == namePennant) {
+                SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
+                carrier->readFromScenario(c);
+                return std::make_pair(true, carrier->getGeodPos());
+            }
+        } // of objects in scenario iteration
+    } // of scenario files iteration
+    
+    return std::make_pair(false, SGGeod());
+}
+
+SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::string& namePennant)
+{
+    const FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    if (!aiManager) {
+        return {};
+    }
+    
+    for (const auto aiObject : aiManager->get_ai_list()) {
+        if (aiObject->isa(FGAIBase::otCarrier)) {
+            SGSharedPtr<FGAICarrier> c = static_cast<FGAICarrier*>(aiObject.get());
+            if ((c->sign == namePennant) || (c->_getName() == namePennant)) {
+                return c;
+            }
+        }
+    } // of all objects iteration
+    
+    return {};
+}
+

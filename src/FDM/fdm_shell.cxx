@@ -179,7 +179,8 @@ void FDMShell::update(double dt)
         
     double range = 1000.0; // in meters
     SGGeod geod = SGGeod::fromDeg(lon, lat);
-    if (globals->get_scenery()->scenery_available(geod, range)) {
+    const auto startUpPositionFialized = fgGetBool("/sim/position-finalized", false);
+    if (startUpPositionFialized && globals->get_scenery()->scenery_available(geod, range)) {
         SG_LOG(SG_FLIGHT, SG_INFO, "Scenery loaded, will init FDM");
         _impl->init();
         if (_impl->get_bound()) {

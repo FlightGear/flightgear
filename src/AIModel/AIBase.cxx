@@ -939,3 +939,14 @@ bool FGAIBase::isValid() {
 	//Either no flightplan or it is valid
 	return !fp || fp->isValidPlan(); 
 }
+
+osg::PagedLOD* FGAIBase::getSceneBranch() const
+{
+    return _model;
+}
+
+SGGeod FGAIBase::getGeodPos() const
+{
+    return pos;
+}
+

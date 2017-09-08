@@ -109,6 +109,8 @@ public:
 
     bool getDie();
 	bool isValid();
+    
+    SGGeod getGeodPos() const;
 
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
@@ -121,6 +123,7 @@ public:
     double _getCartPosY() const;
     double _getCartPosZ() const;
     
+    osg::PagedLOD* getSceneBranch() const;
 protected:
     double _elevation_m;
     

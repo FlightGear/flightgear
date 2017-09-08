@@ -62,11 +62,8 @@ public:
     inline double get_user_agl() const { return user_altitude_agl; }
 
     bool loadScenario( const std::string &filename );
-
+    
     static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
-
-    static bool getStartPosition(const std::string& id, const std::string& pid,
-        SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
     bool isVisible(const SGGeod& pos) const;

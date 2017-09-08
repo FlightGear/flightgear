@@ -23,11 +23,15 @@
 #endif
 
 #include <boost/tuple/tuple.hpp>
+#include <osgViewer/Viewer>
+#include <osg/PagedLOD>
 
 // simgear
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/scene/model/CheckSceneryVisitor.hxx>
+#include <simgear/scene/util/OsgMath.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
@@ -38,14 +42,25 @@
 #include <Airports/dynamics.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <AIModel/AIManager.hxx>
-#include <GUI/MessageBox.hxx>
+#include <AIModel/AICarrier.hxx>
 
+#include <Scenery/scenery.hxx>
+#include <GUI/MessageBox.hxx>
+#include <Viewer/renderer.hxx>
 
 using std::endl;
 using std::string;
 
 namespace flightgear
 {
+    
+    
+    enum InitPosResult {
+        ExactPosition,
+        VicinityPosition,
+        ContinueWaiting,
+        Failure
+    };
 
 /// to avoid blocking when metar-fetch is enabled, but the network is
 /// unresponsive, we need a timeout value. This value is reset on initPosition,
@@ -446,53 +461,95 @@ static bool fgSetPosFromNAV( const string& id,
     return true;
 }
 
+static InitPosResult setInitialPosFromCarrier( const string& carrier )
+{
+#if !defined(FG_TESTLIB)
+    const auto initialPos = FGAICarrier::initialPositionForCarrier(carrier);
+    if (initialPos.first) {
+        // set these so scenery system has a vicinity to work with, and
+        // so our PagedLOD is loaded
+        fgSetDouble("/sim/presets/longitude-deg",  initialPos.second.getLongitudeDeg());
+        fgSetDouble("/sim/presets/latitude-deg",  initialPos.second.getLatitudeDeg());
+        SG_LOG( SG_GENERAL, SG_INFO, "Initial carrier pos = " << initialPos.second );
+        return VicinityPosition;
+    }
+
+    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = " << carrier );
+#endif
+    return Failure;
+}
+                        
 // Set current_options lon/lat given an aircraft carrier id
-static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) 
+static InitPosResult setFinalPosFromCarrier( const string& carrier, const string& posid )
 {
 
-#ifndef FG_TESTLIB
+#if !defined(FG_TESTLIB)
+    SGSharedPtr<FGAICarrier> carrierRef = FGAICarrier::findCarrierByNameOrPennant(carrier);
+    if (!carrierRef) {
+      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
+             << carrier );
+      return Failure;
+    }
+
+    SGVec3d cartPos = carrierRef->getCartPos();
+    auto framestamp = globals->get_renderer()->getViewer()->getFrameStamp();
+    simgear::CheckSceneryVisitor csnv(globals->get_scenery()->getPager(),
+                                      toOsg(cartPos),
+                                      100.0 /* range in metres */,
+                                      framestamp);
     
-  // set initial position from runway and heading
-  SGGeod geodPos;
-  double heading;
-  SGVec3d uvw;
+    // currently the PagedLODs will not be loaded by the DatabasePager
+    // while the splashscreen is there, so CheckSceneryVisitor force-loads
+    // missing objects in the main thread
+    carrierRef->getSceneBranch()->accept(csnv);
+    if (!csnv.isLoaded()) {
+        return ContinueWaiting;
+    }
+    
+    // and then wait for the load to actually be synced to the main thread
+    if (carrierRef->getSceneBranch()->getNumChildren() < 1) {
+        return ContinueWaiting;
+    }
+    
+    SGGeod geodPos;
+    double heading;
+    SGVec3d uvw;
+    if (carrierRef->getParkPosition(posid, geodPos, heading, uvw)) {
+      
+      ////////
+      double lon = geodPos.getLongitudeDeg();
+      double lat = geodPos.getLatitudeDeg();
+      double alt = geodPos.getElevationFt() + 2.0;
+      
+      SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
+             << carrier << " at lat = " << lat << ", lon = " << lon
+             << ", alt = " << alt << ", heading = " << heading);
+      
+      fgSetDouble("/sim/presets/longitude-deg",  lon);
+      fgSetDouble("/sim/presets/latitude-deg",  lat);
+      fgSetDouble("/sim/presets/altitude-ft", alt);
+      fgSetDouble("/sim/presets/heading-deg", heading);
+      fgSetDouble("/position/longitude-deg",  lon);
+      fgSetDouble("/position/latitude-deg",  lat);
+      fgSetDouble("/position/altitude-ft", alt);
+      fgSetDouble("/orientation/heading-deg", heading);
+      
+      fgSetString("/sim/presets/speed-set", "UVW");
+      fgSetDouble("/velocities/uBody-fps", uvw(0));
+      fgSetDouble("/velocities/vBody-fps", uvw(1));
+      fgSetDouble("/velocities/wBody-fps", uvw(2));
+      fgSetDouble("/sim/presets/uBody-fps", uvw(0));
+      fgSetDouble("/sim/presets/vBody-fps", uvw(1));
+      fgSetDouble("/sim/presets/wBody-fps", uvw(2));
+      
+      fgSetBool("/sim/presets/onground", true);
 
-  if (FGAIManager::getStartPosition(carrier, posid, geodPos, heading, uvw)) {
-    double lon = geodPos.getLongitudeDeg();
-    double lat = geodPos.getLatitudeDeg();
-    double alt = geodPos.getElevationFt();
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
-           << carrier << " at lat = " << lat << ", lon = " << lon
-           << ", alt = " << alt << ", heading = " << heading);
-
-    fgSetDouble("/sim/presets/longitude-deg",  lon);
-    fgSetDouble("/sim/presets/latitude-deg",  lat);
-    fgSetDouble("/sim/presets/altitude-ft", alt);
-    fgSetDouble("/sim/presets/heading-deg", heading);
-    fgSetDouble("/position/longitude-deg",  lon);
-    fgSetDouble("/position/latitude-deg",  lat);
-    fgSetDouble("/position/altitude-ft", alt);
-    fgSetDouble("/orientation/heading-deg", heading);
-
-    fgSetString("/sim/presets/speed-set", "UVW");
-    fgSetDouble("/velocities/uBody-fps", uvw(0));
-    fgSetDouble("/velocities/vBody-fps", uvw(1));
-    fgSetDouble("/velocities/wBody-fps", uvw(2));
-    fgSetDouble("/sim/presets/uBody-fps", uvw(0));
-    fgSetDouble("/sim/presets/vBody-fps", uvw(1));
-    fgSetDouble("/sim/presets/wBody-fps", uvw(2));
-
-    fgSetBool("/sim/presets/onground", true);
-
-    return true;
-  } else
+      /////////
+      return ExactPosition;
+    }
 #endif
-  {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
-           << carrier );
-    return false;
-  }
+    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = " << carrier );
+    return Failure;
 }
 
 // Set current_options lon/lat given a fix ident and GUID
@@ -588,6 +645,15 @@ bool initPosition()
   if (hdg > 9990.0)
     hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
 
+    if ( !set_pos && !carrier.empty() ) {
+        // an aircraft carrier is requested
+        const auto result = setInitialPosFromCarrier( carrier );
+        if (result != Failure) {
+            // we at least found the carrier
+            set_pos = true;
+        }
+    }
+    
   if (apt_req && !rwy_req) {
       // ensure that if the users asks for a specific airport, but not a runway,
       // presumably because they want automatic selection, we do not look
@@ -644,13 +710,6 @@ bool initPosition()
   if ( !set_pos && !ndb.empty() ) {
     // an NDB is requested
     if ( fgSetPosFromNAV( ndb, ndb_freq, FGPositioned::NDB, navaidId ) ) {
-      set_pos = true;
-    }
-  }
-
-  if ( !set_pos && !carrier.empty() ) {
-    // an aircraft carrier is requested
-    if ( fgSetPosFromCarrier( carrier, parkpos ) ) {
       set_pos = true;
     }
   }
@@ -766,11 +825,20 @@ void finalizePosition()
 
     if (!carrier.empty())
     {
-        SG_LOG(SG_GENERAL, SG_INFO, "finalizePositioned: re-init-ing position on carrier");
-        // clear preset location and re-trigger position setup
-        fgSetDouble("/sim/presets/longitude-deg", 9999);
-        fgSetDouble("/sim/presets/latitude-deg", 9999);
-        initPosition();
+        const auto res = setFinalPosFromCarrier(carrier, parkpos);
+        if (res == ExactPosition) {
+            done = true;
+        } else if (res == Failure) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "secondary carrier init failed");
+            done = true;
+        } else {
+            done = false;
+            // 60 second timeout on waiting for the carrier to load
+            if (global_finalizeTime.elapsedMSec() > 60000) {
+                done = true;
+            }
+        }
+        
     } else if (!apt.empty() && !parkpos.empty()) {
         // parking position depends on ATC / dynamics code to assign spaces,
         // so we wait until this point to initialise

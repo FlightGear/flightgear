@@ -70,7 +70,13 @@ public:
 
     bool getParkPosition(const string& id, SGGeod& geodPos,
                          double& hdng, SGVec3d& uvw);
-
+    
+    /**
+     * @brief type-safe wrapper around AIManager::getObjectFromProperty
+     */
+    static SGSharedPtr<FGAICarrier> findCarrierByNameOrPennant(const std::string& namePennant);    
+    
+    static std::pair<bool, SGGeod> initialPositionForCarrier(const std::string& namePennant);
 private:
   /// Is sufficient to be private, stores a possible position to place an
   /// aircraft on start
