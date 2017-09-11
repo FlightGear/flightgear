@@ -2445,6 +2445,15 @@ static naRef f_flightplan_indexOfWp(naContext c, naRef me, int argc, naRef* args
     return naNum(fp->findWayptIndex(positioned));
   }
   
+  FlightPlan::Leg* leg = fpLegGhost(args[0]);
+  if (leg) {
+    if (leg->owner() == fp) {
+      return naNum(leg->index());
+    }
+    
+    naRuntimeError(c, "flightplan.indexOfWP called on leg from different flightplan");
+  }
+
   SGGeod pos;
   int argOffset = geodFromArgs(args, 0, argc, pos);
   if (argOffset > 0) {
