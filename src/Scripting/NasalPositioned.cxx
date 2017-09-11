@@ -1854,32 +1854,40 @@ static naRef f_tileIndex(naContext c, naRef me, int argc, naRef* args)
   return naNum(b.gen_index());
 }
 
-static naRef f_route(naContext c, naRef me, int argc, naRef* args)
+static naRef f_createFlightplan(naContext c, naRef me, int argc, naRef* args)
 {
-  if (argc == 0) {
-    FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));  
-    return ghostForFlightPlan(c, rm->flightPlan());
-  }
-  
-  if ((argc > 0) && naIsString(args[0])) {
-    flightgear::FlightPlan* fp = new flightgear::FlightPlan;
-    SGPath path(naStr_data(args[0]));
-    if (!path.exists()) {
-        std::string pdata = path.utf8Str();
-      naRuntimeError(c, "flightplan, no file at path %s", pdata.c_str());
+    flightgear::FlightPlanRef fp(new flightgear::FlightPlan);
+    
+    if ((argc > 0) && naIsString(args[0])) {
+        SGPath path(naStr_data(args[0]));
+        if (!path.exists()) {
+            std::string pdata = path.utf8Str();
+            naRuntimeError(c, "createFlightplan, no file at path %s", pdata.c_str());
+        }
+        
+        if (!fp->load(path)) {
+            SG_LOG(SG_NASAL, SG_WARN, "failed to load flight-plan from " << path);
+            return naNil();
+        }
+        
     }
     
-    if (!fp->load(path)) {
-      SG_LOG(SG_NASAL, SG_WARN, "failed to load flight-plan from " << path);
-      delete fp;
-      return naNil();
+    return ghostForFlightPlan(c, fp.get());
+}
+
+static naRef f_flightplan(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc == 0) {
+        FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+        return ghostForFlightPlan(c, rm->flightPlan());
     }
     
-    return ghostForFlightPlan(c, fp);
-  }
-  
-  naRuntimeError(c, "bad arguments to flightplan()");
-  return naNil();
+    if ((argc > 0) && naIsString(args[0])) {
+        return f_createFlightplan(c, me, argc, args);
+    }
+    
+    naRuntimeError(c, "bad arguments to flightplan()");
+    return naNil();
 }
 
 class NasalFPDelegate : public FlightPlan::Delegate
@@ -2643,7 +2651,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "findNavaidsByFrequency", f_findNavaidsByFrequency },
   { "findNavaidsByID", f_findNavaidsByIdent },
   { "findFixesByID", f_findFixesByIdent },
-  { "flightplan", f_route },
+  { "flightplan", f_flightplan },
+  { "createFlightplan", f_createFlightplan },
   { "registerFlightPlanDelegate", f_registerFPDelegate },
   { "createWP", f_createWP },
   { "createWPFrom", f_createWPFrom },
