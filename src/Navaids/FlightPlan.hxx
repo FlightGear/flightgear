@@ -128,20 +128,9 @@ public:
     Delegate();
 
   private:
-    void removeInner(Delegate* d);
-
-    void runDepartureChanged();
-    void runArrivalChanged();
-    void runWaypointsChanged();
-    void runCurrentWaypointChanged();
-    void runCleared();
-    void runFinished();
-    void runActivated();
-
     friend class FlightPlan;
 
-    bool _deleteWithPlan;
-    Delegate* _inner;
+    bool _deleteWithPlan = false;
   };
 
   Leg* insertWayptAtIndex(Waypt* aWpt, int aIndex);
@@ -258,10 +247,12 @@ public:
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
 private:
-  void lockDelegate();
-  void unlockDelegate();
+  void lockDelegates();
+  void unlockDelegates();
 
-  int _delegateLock;
+  void notifyCleared();
+    
+  unsigned int _delegateLock = 0;
   bool _arrivalChanged,
     _departureChanged,
     _waypointsChanged,
@@ -296,7 +287,7 @@ private:
   typedef std::vector<Leg*> LegVec;
   LegVec _legs;
 
-  Delegate* _delegate;
+    std::vector<Delegate*> _delegates;
 };
 
 } // of namespace flightgear

@@ -374,7 +374,8 @@ void FGRouteMgr::init() {
 void FGRouteMgr::postinit()
 {
   setFlightPlan(new FlightPlan());
-  
+  _plan->setIdent("default-flightplan");
+    
   SGPath path = SGPath::fromUtf8(_pathNode->getStringValue());
   if (!path.isNull()) {
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path);

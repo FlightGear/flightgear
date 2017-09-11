@@ -261,7 +261,9 @@ static FlightPlan* flightplanGhost(naRef r)
 
 static void routeBaseGhostDestroy(void* g)
 {
-  // nothing for now
+    RouteBase* r = (RouteBase*) g;
+    if (!RouteBase::put(r)) // unref
+        delete r;
 }
 
 static naRef airportPrototype;
@@ -357,6 +359,7 @@ naRef ghostForFlightPlan(naContext c, const FlightPlan* fp)
     return naNil();
   }
   
+  FlightPlan::get(fp); // take a ref
   return naNewGhost2(c, &FlightPlanGhostType, (void*) fp);
 }
 
@@ -366,6 +369,7 @@ naRef ghostForProcedure(naContext c, const Procedure* proc)
     return naNil();
   }
   
+  FlightPlan::get(proc); // take a ref
   return naNewGhost2(c, &ProcedureGhostType, (void*) proc);
 }
 

@@ -216,6 +216,8 @@ typedef std::vector<WayptRef> WayptVec;
 class RouteBase : public SGReferenced
 {
 public:
+  virtual ~RouteBase();
+    
   /**
    *
    */

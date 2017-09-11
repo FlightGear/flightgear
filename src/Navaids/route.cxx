@@ -330,6 +330,10 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
   }
 }
 
+RouteBase::~RouteBase()
+{
+}
+    
 void RouteBase::dumpRouteToKML(const WayptVec& aRoute, const std::string& aName)
 {
   SGPath p = "/Users/jmt/Desktop/" + aName + ".kml";
