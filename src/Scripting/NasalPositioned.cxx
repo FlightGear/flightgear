@@ -45,6 +45,7 @@
 #include <Navaids/procedure.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
 #include <ATC/CommStation.hxx>
 #include <Navaids/FlightPlan.hxx>
@@ -2453,6 +2454,27 @@ static naRef f_flightplan_indexOfWp(naContext c, naRef me, int argc, naRef* args
   return naNum(-1);
 }
 
+static naRef f_flightplan_save(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "save called on non-flightplan object");
+  }
+  
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "flightplan.save, no file path argument");
+  }
+  
+  SGPath raw_path(naStr_data(args[0]));
+  SGPath validated_path = fgValidatePath(raw_path, true);
+  if (validated_path.isNull()) {
+    naRuntimeError(c, "flightplan.save, writing to path is not permitted");
+  }
+  
+  bool ok = fp->save(validated_path);
+  return naNum(ok);
+}
+
 static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan::Leg* leg = fpLegGhost(me);
@@ -2726,7 +2748,10 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
     hashset(c, flightplanPrototype, "activate", naNewFunc(c, naNewCCode(c, f_flightplan_activate)));
     hashset(c, flightplanPrototype, "indexOfWP", naNewFunc(c, naNewCCode(c, f_flightplan_indexOfWp)));
-    
+
+    hashset(c, flightplanPrototype, "save", naNewFunc(c, naNewCCode(c, f_flightplan_save)));
+
+  
     waypointPrototype = naNewHash(c);
     naSave(c, waypointPrototype);
     
