@@ -2279,8 +2279,8 @@ static naRef f_flightplan_insertWP(naContext c, naRef me, int argc, naRef* args)
     index = (int) args[1].num;
   }
   
-  fp->insertWayptAtIndex(wp.get(), index);
-  return naNil();
+  auto leg = fp->insertWayptAtIndex(wp.get(), index);
+  return ghostForLeg(c, leg);
 }
 
 static naRef f_flightplan_insertWPAfter(naContext c, naRef me, int argc, naRef* args)
@@ -2296,8 +2296,8 @@ static naRef f_flightplan_insertWPAfter(naContext c, naRef me, int argc, naRef* 
     index = (int) args[1].num;
   }
   
-  fp->insertWayptAtIndex(wp.get(), index + 1);
-  return naNil();
+  auto leg = fp->insertWayptAtIndex(wp.get(), index + 1);
+  return ghostForLeg(c, leg);
 }
 
 static naRef f_flightplan_insertWaypoints(naContext c, naRef me, int argc, naRef* args)
