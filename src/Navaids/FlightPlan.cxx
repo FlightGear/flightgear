@@ -429,7 +429,7 @@ void FlightPlan::setDeparture(FGAirport* apt)
   _departureChanged = true;
   _departure = apt;
   _departureRunway = nullptr;
-  setSID((SID*) nullptr);
+  clearSID();
   unlockDelegates();
 }
   
@@ -445,8 +445,18 @@ void FlightPlan::setDeparture(FGRunway* rwy)
   _departureRunway = rwy;
   if (rwy->airport() != _departure) {
     _departure = rwy->airport();
-    setSID((SID*)nullptr);
+    clearSID();
   }
+  unlockDelegates();
+}
+  
+void FlightPlan::clearDeparture()
+{
+  lockDelegates();
+  _departureChanged = true;
+  _departure = nullptr;
+  _departureRunway = nullptr;
+  clearSID();
   unlockDelegates();
 }
   
@@ -476,6 +486,15 @@ void FlightPlan::setSID(Transition* trans)
   setSID((SID*) trans->parent(), trans->ident());
 }
   
+void FlightPlan::clearSID()
+{
+  lockDelegates();
+  _departureChanged = true;
+  _sid = nullptr;
+  _sidTransition.clear();
+  unlockDelegates();
+}
+  
 Transition* FlightPlan::sidTransition() const
 {
   if (!_sid || _sidTransition.empty()) {
@@ -495,7 +514,7 @@ void FlightPlan::setDestination(FGAirport* apt)
   _arrivalChanged = true;
   _destination = apt;
   _destinationRunway = nullptr;
-  setSTAR((STAR*)nullptr);
+  clearSTAR();
   setApproach(nullptr);
   unlockDelegates();
 }
@@ -511,12 +530,23 @@ void FlightPlan::setDestination(FGRunway* rwy)
   _destinationRunway = rwy;
   if (_destination != rwy->airport()) {
     _destination = rwy->airport();
-    setSTAR((STAR*)NULL);
+    clearSTAR();
   }
   
   unlockDelegates();
 }
   
+void FlightPlan::clearDestination()
+{
+  lockDelegates();
+  _arrivalChanged = true;
+  _destination = nullptr;
+  _destinationRunway = nullptr;
+  clearSTAR();
+  setApproach(nullptr);
+  unlockDelegates();
+}
+
 void FlightPlan::setSTAR(STAR* star, const std::string& transition)
 {
   if (_star == star) {
@@ -543,6 +573,16 @@ void FlightPlan::setSTAR(Transition* trans)
   setSTAR((STAR*) trans->parent(), trans->ident());
 }
 
+void FlightPlan::clearSTAR()
+{
+
+  lockDelegates();
+  _arrivalChanged = true;
+  _star = nullptr;
+  _starTransition.clear();
+  unlockDelegates();
+}
+  
 Transition* FlightPlan::starTransition() const
 {
   if (!_star || _starTransition.empty()) {

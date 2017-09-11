@@ -615,10 +615,10 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     }
     
     if (naIsNil(value)) {
-      fp->setDeparture(static_cast<FGAirport*>(NULL));
+      fp->clearDeparture();
       return;
     }
-      
+    
     naRuntimeError(c, "bad argument type setting departure");
   } else if (!strcmp(fieldName, "destination")) {
     FGAirport* apt = airportGhost(value);
@@ -630,6 +630,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     FGRunway* rwy = runwayGhost(value);
     if (rwy){
       fp->setDestination(rwy);
+      return;
+    }
+    
+    if (naIsNil(value)) {
+      fp->clearDestination();
       return;
     }
     
@@ -661,10 +666,15 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setSID((Transition*) proc);
       return;
     }
-        
+    
     if (naIsString(value)) {
       FGAirport* apt = fp->departureAirport();
       fp->setSID(apt->findSIDWithIdent(naStr_data(value)));
+      return;
+    }
+    
+    if (naIsNil(value)) {
+      fp->clearSID();
       return;
     }
     
@@ -687,6 +697,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       return;
     }
     
+    if (naIsNil(value)) {
+      fp->clearSTAR();
+      return;
+    }
+    
     naRuntimeError(c, "bad argument type setting STAR");
   } else if (!strcmp(fieldName, "approach")) {
     Procedure* proc = procedureGhost(value);
@@ -701,16 +716,20 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       return;
     }
     
+    if (naIsNil(value)) {
+      fp->setApproach(nullptr);
+      return;
+    }
+    
     naRuntimeError(c, "bad argument type setting approach");
   } else if (!strcmp(fieldName, "aircraftCategory")) {
-      if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
-      fp->setIcaoAircraftCategory(naStr_data(value));
+    if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
+    fp->setIcaoAircraftCategory(naStr_data(value));
   } else if (!strcmp(fieldName, "followLegTrackToFix")) {
-      int b = (int) value.num;
-      fp->setFollowLegTrackToFixes(b);
+    int b = (int) value.num;
+    fp->setFollowLegTrackToFixes(b);
   }
 }
-
 
 static naRef procedureTpType(naContext c, ProcedureType ty)
 {

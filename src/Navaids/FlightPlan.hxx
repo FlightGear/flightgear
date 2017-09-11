@@ -185,6 +185,8 @@ public:
   void setDeparture(FGAirport* apt);
   void setDeparture(FGRunway* rwy);
 
+    void clearDeparture();
+    
   SID* sid() const
   { return _sid; }
 
@@ -194,9 +196,13 @@ public:
 
   void setSID(Transition* sidWithTrans);
 
+    void clearSID();
+    
   void setDestination(FGAirport* apt);
   void setDestination(FGRunway* rwy);
 
+    void clearDestination();
+    
   /**
     * note setting an approach will implicitly update the destination
     * airport and runway to match
@@ -212,6 +218,8 @@ public:
 
   void setSTAR(Transition* starWithTrans);
 
+  void clearSTAR();
+    
   double totalDistanceNm() const
   { return _totalDistance; }
 
