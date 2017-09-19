@@ -443,11 +443,15 @@ namespace
     {
         char filename[32];
         static int count = 1;
-        while (count < 1000) {
-            snprintf(filename, 32, "fgfs-screen-%03d.png", count++);
+        while (count < 0x7fff) {
+            if (count < 1000) {
+                // zero-pad for backwards compatability
+                snprintf(filename, 32, "fgfs-screen-%03d.png", count++);
+            } else {
+                snprintf(filename, 32, "fgfs-screen-%d.png", count++);
+            }
             
-            SGPath p(screenshotDir);
-            p.append(filename);
+            SGPath p = screenshotDir / filename;
             if (!p.exists()) {
                 return p;
             }
