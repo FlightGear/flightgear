@@ -428,10 +428,11 @@ static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* nam
         } else if (naIsHash(val)) {
             ret = f_setValuesHelper(c, subnode, val);
         } else if (naIsVector(val)) {
+            char nameBuf[1024];
             for (int i = 0; i < naVec_size(val); i++) {
-                char newname[sizeof(name) + 3];
-                sprintf(newname, "%s[%i]", name, i);
-                ret = f_setChildrenHelper(c, node, newname, naVec_get(val, i));
+                const auto len = ::snprintf(nameBuf, sizeof(nameBuf), "%s[%i]", name, i);
+                assert(len < sizeof(nameBuf));
+                ret = f_setChildrenHelper(c, node, nameBuf, naVec_get(val, i));
             }
         } else if (naIsNil(val)) {
             // Nil value OK - no-op
