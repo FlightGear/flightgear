@@ -482,10 +482,13 @@ static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef*
   return waypointCommonGetMember(c, wpt, fieldName, out);
 }
 
-static RouteRestriction routeRestrictionFromString(const char* s)
+static RouteRestriction routeRestrictionFromArg(naRef arg)
 {
-  std::string u(s);
-  boost::to_lower(u);
+  if (naIsNil(arg) || !naIsString(arg)) {
+    return RESTRICT_NONE;
+  }
+  
+  const std::string u = simgear::strutils::lowercase(naStr_data(arg));
   if (u == "computed") return RESTRICT_COMPUTED;
   if (u == "at") return RESTRICT_AT;
   if (u == "mach") return SPEED_RESTRICT_MACH;
@@ -2499,7 +2502,7 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
       rr = RESTRICT_NONE;
     } else if (convertToNum(args[0], speed)) {
       if ((argc > 1) && naIsString(args[1])) {
-        rr = routeRestrictionFromString(naStr_data(args[1]));
+        rr = routeRestrictionFromArg(args[1]);
       } else {
         naRuntimeError(c, "bad arguments to setSpeed");
       }
@@ -2526,8 +2529,8 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
       // clear the restriction to NONE
       rr = RESTRICT_NONE;
     } else if (convertToNum(args[0], altitude)) {
-      if ((argc > 1) && naIsString(args[1])) {
-        rr = routeRestrictionFromString(naStr_data(args[1]));
+      if (argc > 1) {
+        rr = routeRestrictionFromArg(args[1]);
       } else {
         naRuntimeError(c, "bad arguments to leg.setAltitude");
       }
