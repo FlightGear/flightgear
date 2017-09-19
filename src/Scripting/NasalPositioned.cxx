@@ -2490,14 +2490,25 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
   if (!leg) {
     naRuntimeError(c, "leg.setSpeed called on non-flightplan-leg object");
   }
-
-    double speed = 0.0;
-    if ((argc < 2) || !convertToNum(args[0], speed))
-        naRuntimeError(c, "bad arguments to setSpeed");
-    
-  RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-  leg->setSpeed(rr, speed);
   
+  double speed = 0.0;
+  RouteRestriction rr = RESTRICT_AT;
+  if (argc > 0) {
+    if (naIsNil(args[0])) {
+        // clear the restriction to NONE
+      rr = RESTRICT_NONE;
+    } else if (convertToNum(args[0], speed)) {
+      if ((argc > 1) && naIsString(args[1])) {
+        rr = routeRestrictionFromString(naStr_data(args[1]));
+      } else {
+        naRuntimeError(c, "bad arguments to setSpeed");
+      }
+    }
+    
+    leg->setSpeed(rr, speed);
+  }
+  
+  naRuntimeError(c, "bad arguments to setSpeed");
   return naNil();
 }
 
@@ -2508,13 +2519,24 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
   
-    double alt = 0.0;
-    if ((argc < 2) || !convertToNum(args[0], alt))
+  double altitude = 0.0;
+  RouteRestriction rr = RESTRICT_AT;
+  if (argc > 0) {
+    if (naIsNil(args[0])) {
+      // clear the restriction to NONE
+      rr = RESTRICT_NONE;
+    } else if (convertToNum(args[0], altitude)) {
+      if ((argc > 1) && naIsString(args[1])) {
+        rr = routeRestrictionFromString(naStr_data(args[1]));
+      } else {
         naRuntimeError(c, "bad arguments to leg.setAltitude");
+      }
+    }
     
-  RouteRestriction rr = routeRestrictionFromString(naStr_data(args[1]));
-    leg->setAltitude(rr, alt);
-
+    leg->setAltitude(rr, altitude);
+  }
+  
+  naRuntimeError(c, "bad arguments to setleg.setAltitudeSpeed");
   return naNil();
 }
 
