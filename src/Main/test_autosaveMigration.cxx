@@ -140,7 +140,7 @@ void testMigration()
     blacklist->addChild("path")->setStringValue("/sim[0]/gui");
 
     // execute method under test
-    globals->loadUserSettings(testUserDataPath, true /* try migration */);
+    globals->loadUserSettings(testUserDataPath);
 
     SG_CHECK_EQUAL(globals->get_props()->getNode("sim")->getChildren("presets").size(), 2);
     SG_CHECK_EQUAL(globals->get_props()->getNode("sim")->getChildren("gui").size(), 0);
