@@ -72,7 +72,7 @@ flightgear::MessageBoxResult cocoaMessageBox(const std::string& msg,
                                      defaultButton:nil /* localized 'ok' */
                                    alternateButton:nil
                                        otherButton:nil
-                         informativeTextWithFormat:@"%@",stdStringToCocoa(text)];
+                         informativeTextWithFormat:@" %@",stdStringToCocoa(text)];
     [[alert retain] autorelease];
     [alert runModal];
     return flightgear::MSG_BOX_OK;

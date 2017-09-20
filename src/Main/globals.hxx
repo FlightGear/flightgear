@@ -385,7 +385,7 @@ public:
      * Load user settings from the autosave file under 'userDataPath',
      * which defaults to $FG_HOME.
      */
-    void loadUserSettings(SGPath userDatapath = SGPath(), bool tryMigrate = false);
+    void loadUserSettings(SGPath userDatapath = SGPath());
 
     /**
      * Save user settings to the autosave file under 'userDataPath', which

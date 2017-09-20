@@ -58,6 +58,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Viewer/renderer.hxx>
 #include <GUI/FGFontCache.hxx>
+#include <GUI/MessageBox.hxx>
 
 #include <simgear/sound/soundmgr.hxx>
 #include <simgear/scene/material/matlib.hxx>
@@ -761,7 +762,8 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
 
     // read migration blacklist
     string_list blacklist;
-    for (auto node : fgGetNode("/sim/autosave-migration/blacklist")->getChildren("path")) {
+    SGPropertyNode_ptr blacklistNode = fgGetNode("/sim/autosave-migration/blacklist", true);
+    for (auto node : blacklistNode->getChildren("path")) {
         blacklist.push_back(node->getStringValue());
     }
 
@@ -770,11 +772,20 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
 
     // copy remaining props out
     copyProperties(&oldProps, props);
+    
+    // inform the user
+#if !defined(FG_TESTLIB)
+    flightgear::modalMessageBox("Settings migrated",
+                                "Saved settings were migrated from a previous version of FlightGear. "
+                                "If you encounter any problems when using the system, try restoring "
+                                "the default settings, before reporting a problem."
+                                "Saved settings can affect the appearance, performance and features of the simulator.");
+#endif
 }
 
 // Load user settings from the autosave file (normally in $FG_HOME)
 void
-FGGlobals::loadUserSettings(SGPath userDataPath, bool tryMigrate)
+FGGlobals::loadUserSettings(SGPath userDataPath)
 {
     if (userDataPath.isNull()) {
         userDataPath = get_fg_home();
@@ -794,7 +805,7 @@ FGGlobals::loadUserSettings(SGPath userDataPath, bool tryMigrate)
           SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
             << "(from " << e.getOrigin() << ")");
       }
-    } else if (tryMigrate) {
+    } else {
         tryAutosaveMigration(userDataPath, &autosave);
     }
     copyProperties(&autosave, globals->get_props());
