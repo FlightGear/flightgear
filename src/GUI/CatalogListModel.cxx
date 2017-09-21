@@ -61,7 +61,7 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
     if (role == Qt::DisplayRole) {
         QString name = QString::fromStdString(cat->name());
         QString desc = QString::fromStdString(cat->description()).simplified();
-        return QString("%1 - %2").arg(name).arg(desc);
+        return tr("%1 - %2").arg(name).arg(desc);
     } else if (role == Qt::ToolTipRole) {
         return QString::fromStdString(cat->url());
     } else if (role == CatalogUrlRole) {

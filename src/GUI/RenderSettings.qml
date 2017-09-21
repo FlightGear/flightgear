@@ -10,18 +10,20 @@ Section {
 
     Combo {
         id: renderer
-        label: "Renderer"
-        choices: ["Default", "Atmospheric Light Scattering", "Rembrandt"]
+        label: qsTr("Renderer")
+        choices: [qsTr("Default"),
+            qsTr("Atmospheric Light Scattering"),
+            qsTr("Rembrandt")]
         description: descriptions[selectedIndex]
         defaultIndex: 0
 
         readonly property var descriptions: [
-            "The default renderer provides standard visuals with maximum compatibility.",
-            "The ALS renderer uses a sophisticated physical atmospheric model and several " +
-            "other effects to give realistic rendering of large distances.",
-            "Rembrandt is a configurable multi-pass renderer which supports shadow-maps, cinematic " +
+            qsTr("The default renderer provides standard visuals with maximum compatibility."),
+            qsTr("The ALS renderer uses a sophisticated physical atmospheric model and several " +
+            "other effects to give realistic rendering of large distances."),
+            qsTr("Rembrandt is a configurable multi-pass renderer which supports shadow-maps, cinematic " +
             "effects and more. However, not all aircraft appear correctly and performance will " +
-            "depend greatly on your system hardware."
+            "depend greatly on your system hardware.")
         ]
 
         keywords: ["als", "rembrandt", "render", "shadow"]
@@ -29,12 +31,12 @@ Section {
 
     Combo {
         id: msaa
-        label: "Anti-aliasing"
-        description: "Anti-aliasing improves the appearance of high-contrast edges and lines. " +
+        label: qsTr("Anti-aliasing")
+        description: qsTr("Anti-aliasing improves the appearance of high-contrast edges and lines. " +
             "This is especially noticeable on sloping or diagonal edges. " +
-            "Higher settings can reduce performance."
+            "Higher settings can reduce performance.")
         keywords: ["msaa", "anti", "aliasing", "multi", "sample"]
-        choices: ["Off", "2x", "4x"]
+        choices: [qsTr("Off"), "2x", "4x"]
         enabled: !rembrandt
         property var data: [0, 2, 4];
         defaultIndex: 0
@@ -53,6 +55,6 @@ Section {
         }
     }
 
-    summary: (rembrandt ? "Rembrandt;" : (alsEnabled ? "ALS;" : ""))
+    summary: (rembrandt ? qsTr("Rembrandt;") : (alsEnabled ? "ALS;" : ""))
              + (msaaEnabled ? "anti-aliasing;" : "")
 }

@@ -407,7 +407,7 @@ LocationWidget::LocationWidget(QWidget *parent) :
 
     m_backButton = new QToolButton(this);
     m_backButton->setGeometry(0, 0, 64, 32);
-    m_backButton->setText("<< Back");
+    m_backButton->setText(tr("<< Back"));
     m_backButton->raise();
 
     connect(m_backButton, &QAbstractButton::clicked,
@@ -785,7 +785,7 @@ void LocationWidget::onSearch()
     m_searchModel->setSearch(search, m_aircraftType);
 
     if (m_searchModel->isSearchActive()) {
-        m_ui->searchStatusText->setText(QString("Searching for '%1'").arg(search));
+        m_ui->searchStatusText->setText(tr("Searching for '%1'").arg(search));
         m_ui->searchIcon->setVisible(true);
         m_ui->searchIcon->movie()->start();
     } else if (m_searchModel->rowCount(QModelIndex()) == 1) {
@@ -797,11 +797,11 @@ void LocationWidget::onSearchComplete()
 {
     QString search = m_ui->locationSearchEdit->text();
     m_ui->searchIcon->setVisible(false);
-    m_ui->searchStatusText->setText(QString("Results for '%1'").arg(search));
+    m_ui->searchStatusText->setText(tr("Results for '%1'").arg(search));
 
     int numResults = m_searchModel->rowCount(QModelIndex());
     if (numResults == 0) {
-        m_ui->searchStatusText->setText(QString("No matches for '%1'").arg(search));
+        m_ui->searchStatusText->setText(tr("No matches for '%1'").arg(search));
     } else if (numResults == 1) {
         addToRecent(m_searchModel->itemAtRow(0));
         setBaseLocation(m_searchModel->itemAtRow(0));
@@ -941,10 +941,10 @@ QString LocationWidget::locationDescription() const
 {
     if (!m_location) {
         if (m_locationIsLatLon) {
-            return QString("at position %1").arg(formatGeodAsString(m_geodLocation));
+            return tr("at position %1").arg(formatGeodAsString(m_geodLocation));
         }
 
-        return QString("No location selected");
+        return tr("No location selected");
     }
 
     bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
@@ -966,19 +966,19 @@ QString LocationWidget::locationDescription() const
 
             if (onFinal) {
                 int finalDistance = m_ui->approachDistanceSpin->value();
-                locationOnAirport = QString("on %2-mile final to %1").arg(runwayName).arg(finalDistance);
+                locationOnAirport = tr("on %2-mile final to %1").arg(runwayName).arg(finalDistance);
             } else {
-                locationOnAirport = QString("on %1").arg(runwayName);
+                locationOnAirport = tr("on %1").arg(runwayName);
             }
         } else if (m_ui->parkingRadio->isChecked()) {
-            locationOnAirport = QString("at parking position %1").arg(m_ui->parkingCombo->currentText());
+            locationOnAirport = tr("at parking position %1").arg(m_ui->parkingCombo->currentText());
         }
 
-        return QString("%2 (%1): %3").arg(ident).arg(name).arg(locationOnAirport);
+        return tr("%2 (%1): %3").arg(ident).arg(name).arg(locationOnAirport);
     } else {
         QString offsetDesc = tr("at");
         if (m_ui->offsetGroup->isChecked()) {
-            offsetDesc = QString("%1nm %2 of").
+            offsetDesc = tr("%1nm %2 of").
                     arg(m_ui->offsetNmSpinbox->value(), 0, 'f', 1).
                     arg(compassPointFromHeading(m_ui->offsetBearingSpinbox->value()));
         }
@@ -990,13 +990,13 @@ QString LocationWidget::locationDescription() const
         case FGPositioned::NDB:
             navaidType = QString("NDB"); break;
         case FGPositioned::FIX:
-            return QString("%2 waypoint %1").arg(ident).arg(offsetDesc);
+            return tr("%2 waypoint %1").arg(ident).arg(offsetDesc);
         default:
             // unsupported type
             break;
         }
 
-        return QString("%4 %1 %2 (%3)").arg(navaidType).arg(ident).arg(name).arg(offsetDesc);
+        return tr("%4 %1 %2 (%3)").arg(navaidType).arg(ident).arg(name).arg(offsetDesc);
     }
 
     return tr("No location selected");

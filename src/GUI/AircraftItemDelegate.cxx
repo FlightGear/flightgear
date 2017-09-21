@@ -143,7 +143,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         QRect authorsRect = descriptionRect;
         authorsRect.moveTop(actualBounds.bottom() + MARGIN);
         painter->drawText(authorsRect, Qt::TextWordWrap,
-                          QString("by: %1").arg(authors),
+                          tr("by: %1").arg(authors),
                           &actualBounds);
     }
 
@@ -166,15 +166,15 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         r.moveTop(actualBounds.bottom() + MARGIN);
         r.setHeight(qMax(24, smallMetrics.height() + MARGIN));
 
-        drawRating(painter, "Flight model:", r, index.data(AircraftRatingRole).toInt());
+        drawRating(painter, tr("Flight model:"), r, index.data(AircraftRatingRole).toInt());
         r.moveTop(r.bottom());
-        drawRating(painter, "Systems:", r, index.data(AircraftRatingRole + 1).toInt());
+        drawRating(painter, tr("Systems:"), r, index.data(AircraftRatingRole + 1).toInt());
 
         r.moveTop(actualBounds.bottom() + MARGIN);
         r.moveLeft(r.right());
-        drawRating(painter, "Cockpit:", r, index.data(AircraftRatingRole + 2).toInt());
+        drawRating(painter, tr("Cockpit:"), r, index.data(AircraftRatingRole + 2).toInt());
         r.moveTop(r.bottom());
-        drawRating(painter, "Exterior:", r, index.data(AircraftRatingRole + 3).toInt());
+        drawRating(painter, tr("Exterior:"), r, index.data(AircraftRatingRole + 3).toInt());
     }
 
     double downloadFraction = 0.0;
@@ -188,7 +188,7 @@ void AircraftItemDelegate::paint(QPainter * painter, const QStyleOptionViewItem 
         buttonText = tr("Cancel");
         double downloadedMB = index.data(AircraftInstallDownloadedSizeRole).toInt();
         downloadedMB /= 0x100000;
-        infoText = QStringLiteral("%1 MB of %2 MB").arg(downloadedMB, 0, 'f', 1).arg(sizeInMBytes, 0, 'f', 1);
+        infoText = tr("%1 MB of %2 MB").arg(downloadedMB, 0, 'f', 1).arg(sizeInMBytes, 0, 'f', 1);
         buttonColor = QColor(0xcf, 0xcf, 0xcf);
         downloadFraction = downloadedMB / sizeInMBytes;
     } else if (status == PackageQueued) {
@@ -278,7 +278,7 @@ QSize AircraftItemDelegate::sizeHint(const QStyleOptionViewItem & option, const 
     f.setPointSize(12);
     QFontMetrics smallMetrics(f);
 
-    QString authors = QString("by: %1").arg(index.data(AircraftAuthorsRole).toString());
+    QString authors = tr("by: %1").arg(index.data(AircraftAuthorsRole).toString());
 
     if (!authors.isEmpty()) {
         textHeight += MARGIN;

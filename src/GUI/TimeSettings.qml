@@ -6,11 +6,12 @@ Section {
 
     Combo {
         id: timeOfDay
-        label: "Time of day"
-        description: "Select the time of day used when the simulator starts, or enter a "
-            + "custom date and time."
-        choices: ["Current time", "Dawn", "Morning", "Noon", "Afternoon",
-            "Dusk", "Evening", "Midnight", "Custom time & date"]
+        label: qsTr("Time of day")
+        description: qsTr("Select the time of day used when the simulator starts, or enter a "
+            + "custom date and time.")
+        choices: [qsTr("Current time"), qsTr("Dawn"), qsTr("Morning"), qsTr("Noon"),
+            qsTr("Afternoon"), qsTr("Dusk"), qsTr("Evening"),
+            qsTr("Midnight"), qsTr("Custom time & date")]
         defaultIndex: 0
 
         readonly property var args: ["", "dawn", "morning", "noon", "afternoon",
@@ -31,24 +32,25 @@ Section {
 
     DateTime {
         id: customTime
-        label: "Enter custom time & date"
+        label: qsTr("Enter custom time & date")
         visible: timeOfDay.isCustom
 //        description: "Enter a date and time."
     }
 
     Checkbox {
         id: customTimeIsGMT
-        label: "Custom time is GMT / UTC"
+        label: qsTr("Custom time is GMT / UTC")
         visible: timeOfDay.isCustom
     }
 
     Combo {
         id: season
-        label: "Season"
-        description: "Select if normal (summer) or winter textures are used for the scenery. "
-            + "This does not affect other aspects of the simulation at present."
+        label: qsTr("Season")
+        description: qsTr("Select if normal (summer) or winter textures are used for the scenery. "
+            + "This does not affect other aspects of the simulation at present.")
         keywords: ["season", "scenery", "texture", "winter"]
-        choices: ["Summer (default)", "Winter"]
+        choices: [qsTr("Summer (default)"),
+            qsTr("Winter")]
         defaultIndex: 0
         readonly property var args: ["summer", "winter"]
     }

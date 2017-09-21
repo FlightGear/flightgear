@@ -8,20 +8,20 @@ Section {
 
     Checkbox {
         id: enableMP
-        label: "Connect to the multi-player network"
-        description: "FlightGear supporters maintain a network of servers to enable global multi-user "
+        label: qsTr("Connect to the multi-player network")
+        description: qsTr("FlightGear supporters maintain a network of servers to enable global multi-user "
             + "flight. This requires a moderately fast Internet connection to be usable. Your aircraft "
-            + "will be visible to other users online, and you will see their aircraft."
+            + "will be visible to other users online, and you will see their aircraft.")
         keywords: ["network", "mp", "multiplay","online"]
     }
 
     LineEdit {
         id: callSign
         enabled: enableMP.checked
-        label: "Callsign"
-        description: "Enter a callsign you will use online. This is visible to all users and is " +
+        label: qsTr("Callsign")
+        description: qsTr("Enter a callsign you will use online. This is visible to all users and is " +
                      "how ATC services and other pilots will refer to you. " +
-                     "(Maximum of seven characters permitted)"
+                     "(Maximum of seven characters permitted)")
         placeholder: "D-FGFS"
         keywords: ["callsign", "handle", "name"]
 
@@ -32,9 +32,9 @@ Section {
 
     Combo {
         id: mpServer
-        label: "Server"
+        label: qsTr("Server")
         enabled: enableMP.checked
-        description: "Select a server close to you for better responsiveness and reduced lag when flying online."
+        description: qsTr("Select a server close to you for better responsiveness and reduced lag when flying online.")
         model: _mpServers
 
         readonly property bool currentIsCustom: (model.serverForIndex(selectedIndex) == "__custom__")
@@ -53,9 +53,9 @@ Section {
     LineEdit {
         id: mpCustomServer
         enabled: enableMP.checked
-        label: "Custom server"
+        label: qsTr("Custom server")
         visible: mpServer.currentIsCustom
-        description: "Enter a server hostname or IP address, and a port number. For example 'localhost:5001'"
+        description: qsTr("Enter a server hostname or IP address, and a port number. For example 'localhost:5001'")
         placeholder: "localhost:5001"
     }
 

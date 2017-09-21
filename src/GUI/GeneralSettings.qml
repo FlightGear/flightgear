@@ -6,19 +6,19 @@ Section {
 
     Checkbox {
         id: startPaused
-        label: "Start paused"
-        description: "Automatically pause the simulator when launching. This is useful "
-            + "when starting in the air."
+        label: qsTr("Start paused")
+        description: qsTr("Automatically pause the simulator when launching. This is useful "
+            + "when starting in the air.")
         keywords: ["pause", "freeze"]
     }
 
     Checkbox {
         id: autoCoordination
-        label: "Enable auto-coordination"
-        description: "When flying with the mouse, or a joystick lacking a rudder axis, "
+        label: qsTr("Enable auto-coordination")
+        description: qsTr("When flying with the mouse, or a joystick lacking a rudder axis, "
             + "it's difficult to manually coordinate aileron and rudder movements during "
             + "turn. This option automatically commands the rudder to maintain zero "
-            + "slip angle when banking";
+            + "slip angle when banking");
         advanced: true
         keywords: ["input", "mouse", "control", "rudder"]
         option: "auto-coordination"
@@ -26,8 +26,8 @@ Section {
 
     Checkbox {
         id: showConsoleWin
-        label: "Show debugging console"
-        description: "Open a console window showing debug output from the application."
+        label: qsTr("Show debugging console")
+        description: qsTr("Open a console window showing debug output from the application.")
         advanced: true
         visible: _osName == "win"
         keywords: ["console"]

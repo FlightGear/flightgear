@@ -16,9 +16,9 @@ ExtraSettingsSection::ExtraSettingsSection(QWidget* pr) :
 
     QVBoxLayout* topLevelVBox = qobject_cast<QVBoxLayout*>(layout());
     QLabel* prompt = new QLabel(this);
-    prompt->setText("Enter additional command-line arguments if any are required. "
+    prompt->setText(tr("Enter additional command-line arguments if any are required. "
                     "See <a href=\"http://flightgear.sourceforge.net/getstart-en/getstart-enpa2.html#x5-450004.5\">here</a> "
-                    "for documentation on possible arguments.");
+                    "for documentation on possible arguments."));
     prompt->setWordWrap(true);
     prompt->setOpenExternalLinks(true);
 

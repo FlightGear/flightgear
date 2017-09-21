@@ -104,12 +104,11 @@ void AddOnsPage::onAddSceneryPath()
 
         if (!isValid) {
             QMessageBox mb;
-            mb.setText(QString("The folder '%1' doesn't appear to contain scenery - add anyway?").arg(path));
+            mb.setText(tr("The folder '%1' doesn't appear to contain scenery - add anyway?").arg(path));
             mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
             mb.setDefaultButton(QMessageBox::No);
-            mb.setInformativeText(
-                "Added scenery should contain at least one of the following "
-                "folders: Objects, Terrain, Buildings, Roads, Pylons, NavData.");
+            mb.setInformativeText(tr("Added scenery should contain at least one of the following "
+                "folders: Objects, Terrain, Buildings, Roads, Pylons, NavData."));
             mb.exec();
 
             if (mb.result() == QMessageBox::No) {
@@ -155,7 +154,7 @@ void AddOnsPage::onAddAircraftPath()
 
         if (!pathOk) {
             QMessageBox mb;
-            mb.setText(QString("No aircraft found in the folder '%1' - add anyway?").arg(path));
+            mb.setText(tr("No aircraft found in the folder '%1' - add anyway?").arg(path));
             mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
             mb.setDefaultButton(QMessageBox::No);
             mb.exec();
@@ -254,12 +253,12 @@ void AddOnsPage::onRemoveCatalog()
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
 
     if (mi.isValid()) {
-        QString s = QString("Remove aircraft hangar '%1'? All installed aircraft from this "
+        QString s = tr("Remove aircraft hangar '%1'? All installed aircraft from this "
                             "hangar will be removed.");
         QString pkgId = mi.data(CatalogIdRole).toString();
 
         if (pkgId.toStdString() == http->getDefaultCatalogId()) {
-            s = QString("Remove the default aircraft hangar? "
+            s = tr("Remove the default aircraft hangar? "
                         "This hangar contains all the default aircraft included with FlightGear. "
                         "If you change your mind in the future, click the 'restore' button.");
         } else {

@@ -242,7 +242,7 @@ void InstallSceneryDialog::reject()
 void InstallSceneryDialog::pickFiles()
 {
     QStringList downloads = QStandardPaths::standardLocations(QStandardPaths::DownloadLocation);
-    QStringList files = QFileDialog::getOpenFileNames(this, "Choose scenery to install",
+    QStringList files = QFileDialog::getOpenFileNames(this, tr("Choose scenery to install"),
                                                       downloads.first(), "*.tar *.gz *.tgz");
     if (!files.isEmpty()) {
         QDir d(m_downloadDir);

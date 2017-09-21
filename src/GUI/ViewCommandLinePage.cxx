@@ -38,7 +38,7 @@ void ViewCommandLinePage::update()
     QString html;
     string_list commandLineOpts = flightgear::Options::sharedInstance()->extractOptions();
     if (!commandLineOpts.empty()) {
-        html += "<p>Options passed on the command line:</p>\n";
+        html += tr("<p>Options passed on the command line:</p>\n");
         html += "<ul>\n";
         for (auto opt : commandLineOpts) {
             html += QString("<li>--") + QString::fromStdString(opt) + "</li>\n";
@@ -56,7 +56,7 @@ void ViewCommandLinePage::update()
     m_config->reset();
     m_config->collect();
 
-    html += "<p>Options set in the launcher:</p>\n";
+    html += tr("<p>Options set in the launcher:</p>\n");
     html += "<ul>\n";
     for (auto arg : m_config->values()) {
         if (arg.value.isEmpty()) {
