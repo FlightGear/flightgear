@@ -247,23 +247,14 @@ void FGAIAircraft::setFlightPlan(const std::string& flightplan, bool repeat)
         return;
     }
     
-    FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
-    if (fp->isValidPlan()) {
-        fp->setRepeat(repeat);
-        SetFlightPlan(fp);
+    std::unique_ptr<FGAIFlightPlan> plan(new FGAIFlightPlan(flightplan));
+    if (plan->isValidPlan()) {
+        plan->setRepeat(repeat);
+        FGAIBase::setFlightPlan(std::move(plan));
     } else {
         SG_LOG(SG_AI, SG_WARN, "setFlightPlan: invalid flightplan specified:" << flightplan);
-        delete fp;
     }
 }
-
-
-void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f)
-{
-    delete fp;
-    fp = f;
-}
-
 
 void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
@@ -634,7 +625,7 @@ void FGAIAircraft::announcePositionToController() {
     }
     prevController = controller;
     if (controller) {
-        controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+        controller->announcePosition(getID(), fp.get(), fp->getCurrentWaypoint()->getRouteIndex(),
                                      _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                      trafficRef->getRadius(), leg, this);
     }
@@ -650,7 +641,7 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
                 cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
             }
             if (towerController) {
-                towerController->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+                towerController->announcePosition(getID(), fp.get(), fp->getCurrentWaypoint()->getRouteIndex(),
                                                    _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                                     trafficRef->getRadius(), leg, this);
                 //cerr << "Scheduling " << trafficRef->getCallSign() << " for takeoff " << endl;

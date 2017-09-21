@@ -49,9 +49,9 @@ public:
   //  void setPerformance(PerformanceData *ps);
 
     void setFlightPlan(const std::string& fp, bool repat = false);
-    void SetFlightPlan(FGAIFlightPlan *f);
+        
     void initializeFlightPlan();
-    FGAIFlightPlan* GetFlightPlan() const { return fp; };
+    FGAIFlightPlan* GetFlightPlan() const { return fp.get(); };
     void ProcessFlightPlan( double dt, time_t now );
     time_t checkForArrivalTime(const std::string& wptName);
     

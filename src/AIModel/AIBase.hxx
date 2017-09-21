@@ -108,7 +108,9 @@ public:
     int _getSubID() const;
 
     bool getDie();
-	bool isValid();
+	bool isValid() const;
+    
+    void setFlightPlan(std::unique_ptr<FGAIFlightPlan> f);
     
     SGGeod getGeodPos() const;
 
@@ -211,7 +213,7 @@ protected:
 
     double life;
 
-    FGAIFlightPlan *fp;
+    std::unique_ptr<FGAIFlightPlan> fp;
 
     bool _impact_reported;
     bool _collision_reported;

@@ -101,7 +101,7 @@ void FGATCManager::init() {
     flight->setCallSign(callsign);
     
     trafficRef->assign(flight);
-    FGAIFlightPlan *fp = 0; 
+    std::unique_ptr<FGAIFlightPlan> fp ;
     ai_ac->setTrafficRef(trafficRef);
     
     string flightPlanName = airport + "-" + airport + ".xml";
@@ -118,7 +118,7 @@ void FGATCManager::init() {
         // No valid parking location, so either at the runway or at a random location.
         if (pk.isValid()) {
             dcs->setParkingAvailable(pk.parking(), false);
-            fp = new FGAIFlightPlan;
+            fp.reset(new FGAIFlightPlan);
             controller = dcs->getStartupController();
             int stationFreq = dcs->getGroundFrequency(1);
             if (stationFreq > 0)
@@ -155,7 +155,7 @@ void FGATCManager::init() {
                 //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
                 fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
             }
-            fp = new FGAIFlightPlan;
+            fp.reset(new FGAIFlightPlan);
             leg = 3;
             string fltType = "ga";
             fp->setRunway(runway);
@@ -177,19 +177,14 @@ void FGATCManager::init() {
     if (fp) {
         fp->restart();
         fp->setLeg(leg);
-        ai_ac->SetFlightPlan(fp);
+        ai_ac->FGAIBase::setFlightPlan(std::move(fp));
     }
     if (controller) {
-        controller->announcePosition(ai_ac->getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+        FGAIFlightPlan* plan = ai_ac->GetFlightPlan();
+        controller->announcePosition(ai_ac->getID(), plan, plan->getCurrentWaypoint()->getRouteIndex(),
                                       ai_ac->_getLatitude(), ai_ac->_getLongitude(), heading, speed, altitude,
                                       aircraftRadius, leg, ai_ac);
-
-    //dialog.init();
-
-   //osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
-   //cerr << "Adding groundnetWork to the scenegraph::init" << endl;
-   //globals->get_scenery()->get_scene_graph()->addChild(node);
-   }
+    }
     initSucceeded = true;
 }
 

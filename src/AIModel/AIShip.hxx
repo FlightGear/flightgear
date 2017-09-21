@@ -42,7 +42,6 @@ public:
     virtual void update(double dt);
     virtual void reinit();
 
-    void setFlightPlan(FGAIFlightPlan* f);
     void setRudder(float r);
     void setRoll(double rl);
     void ProcessFlightPlan( double dt);

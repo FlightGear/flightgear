@@ -106,12 +106,9 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setRollFactor(scFileNode->getDoubleValue("roll-factor", 1));
 
     if (!flightplan.empty()) {
-        SG_LOG(SG_AI, SG_ALERT, "getting flightplan: " << _name );
-
-        FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
-        setFlightPlan(fp);
+        std::unique_ptr<FGAIFlightPlan> plan(new FGAIFlightPlan(flightplan));
+        setFlightPlan(std::move(plan));
     }
-
 }
 
 bool FGAIShip::init(bool search_in_AI_path) {
@@ -455,10 +452,6 @@ double FGAIShip::sign(double x) {
         return -1.0;
     else
         return 1.0;
-}
-
-void FGAIShip::setFlightPlan(FGAIFlightPlan* f) {
-    fp = f;
 }
 
 void FGAIShip::setStartTime(const string& st) {

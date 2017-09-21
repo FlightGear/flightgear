@@ -373,21 +373,19 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aiAircraft->setBank(0);
       
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
-  FGAIFlightPlan *fp = new FGAIFlightPlan(aiAircraft, flightPlanName, courseToDest, deptime,
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft, flightPlanName, courseToDest, deptime,
                                             dep, arr, true, radius, 
                                             flight->getCruiseAlt()*100, 
                                             position.getLatitudeDeg(), 
                                             position.getLongitudeDeg(), 
                                             speedKnots, flightType, acType, 
-                                            airline);
+                                            airline));
   if (fp->isValidPlan()) {
-        aiAircraft->SetFlightPlan(fp);
-        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai-model");
-        aimgr->attach(aiAircraft);
+        aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+        globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
         return true;
   } else {
         aiAircraft = NULL;
-        delete fp;
         //hand back the flights that had already been scheduled
         while (!flights.empty()) {
             flights.front()->release();

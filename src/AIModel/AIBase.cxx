@@ -127,7 +127,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     model_removed( fgGetNode("/ai/models/model-removed", true) ),
     manager( NULL ),
     _installed(false),
-    fp( NULL ),
     _impact_lat(0),
     _impact_lon(0),
     _impact_elev(0),
@@ -205,10 +204,6 @@ FGAIBase::~FGAIBase() {
     }
 
     removeSoundFx();
-
-    if (fp)
-        delete fp;
-    fp = 0;
 }
 
 /** Cleanly remove the model
@@ -935,7 +930,13 @@ int FGAIBase::_newAIModelID() {
     return id;
 }
 
-bool FGAIBase::isValid() { 
+void FGAIBase::setFlightPlan(std::unique_ptr<FGAIFlightPlan> f)
+{
+    fp = std::move(f);
+}
+
+bool FGAIBase::isValid() const
+{
 	//Either no flightplan or it is valid
 	return !fp || fp->isValidPlan(); 
 }
