@@ -37,6 +37,25 @@
 
 #include <simgear/io/untar.hxx>
 
+class SceneryExtractor : public simgear::TarExtractor
+{
+public:
+    SceneryExtractor(const SGPath& root) :
+        TarExtractor(root)
+    {}
+protected:
+
+    auto filterPath(std::string& path) -> PathResult override
+    {
+        if ((path.find("Objects/") == 0) || (path.find("Terrain/") == 0)) {
+            return Accepted;
+        }
+        
+        path = "Terrain/" + path;
+        return Modified;
+    }
+};
+
 class InstallSceneryThread : public QThread
 {
     Q_OBJECT
@@ -93,7 +112,7 @@ private:
     void extractNextArchive()
     {
         SGPath root(m_extractDir.toStdString());
-        m_untar.reset(new simgear::TarExtractor(root));
+        m_untar.reset(new SceneryExtractor(root));
 
         QString path = m_remainingPaths.front();
         m_remainingPaths.pop_front();
