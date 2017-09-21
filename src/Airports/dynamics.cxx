@@ -167,7 +167,6 @@ FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
 // Destructor
 FGAirportDynamics::~FGAirportDynamics()
 {
-    SG_LOG(SG_AI, SG_INFO, "destroyed dynamics for:" << _ap->ident());
 }
 
 
@@ -183,11 +182,17 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
                                            bool skipEmptyAirlineCode)
 {
     const FGParkingList& parkings(parent()->groundNetwork()->allParkings());
-    FGParkingList::const_iterator it;
-    for (it = parkings.begin(); it != parkings.end(); ++it) {
-        FGParkingRef parking = *it;
+    for (auto parking : parkings) {
         if (!isParkingAvailable(parking)) {
           continue;
+        }
+        
+        if (parking->getRadius() < radius) {
+            continue;
+        }
+        
+        if (!flType.empty() && (parking->getType() != flType)) {
+            continue;
         }
 
         if (skipEmptyAirlineCode && parking->getCodes().empty()) {
