@@ -42,6 +42,8 @@
 #include <Airports/runways.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <Navaids/NavDataCache.hxx>
+#include <AIModel/AIManager.hxx>
+#include <AIModel/AIBase.hxx>
 
 #include "airport.hxx"
 #include "dynamics.hxx"
@@ -152,6 +154,62 @@ FGParking* ParkingAssignment::parking() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief Helper to cache all AIObject positions near the airport when
+ * searching for available parkings. This allows us to reject parkings
+ * which we might not have marked as occupied, but which an object is
+ * neverthless close to; such as the primary user or MP aircraft.
+ */
+class NearbyAIObjectCache
+{
+public:
+    NearbyAIObjectCache(FGAirportRef apt) :
+        m_airport(apt)
+    {}
+
+    bool isAnythingNear(const SGVec3d& cart, double radiusM)
+    {
+        if (!m_populated) {
+            populate();
+        }
+
+        for (auto c : m_cache) {
+            const double d = dist(cart, c);
+            if (d < radiusM) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+private:
+    void populate()
+    {
+#if !defined(FG_TESTLIB)
+        SGVec3d cartAirportPos = m_airport->cart();
+        FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+        for (auto ai : aiManager->get_ai_list()) {
+            const auto cart = ai->getCartPos();
+
+            // 20km cutoff from airport centre
+            if (dist(cartAirportPos, cart) > 20000) {
+                continue;
+            }
+
+            m_cache.push_back(cart);
+        }
+#endif
+        m_populated = true;
+    }
+
+    bool m_populated = false;
+    FGAirportRef m_airport;
+    std::vector<SGVec3d> m_cache;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
     _ap(ap), rwyPrefs(ap),
     startupController    (this),
@@ -181,6 +239,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
                                            const string & airline,
                                            bool skipEmptyAirlineCode)
 {
+    NearbyAIObjectCache nearCache(parent());
     const FGParkingList& parkings(parent()->groundNetwork()->allParkings());
     for (auto parking : parkings) {
         if (!isParkingAvailable(parking)) {
@@ -203,6 +262,10 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
           if (parking->getCodes().find(airline, 0) == string::npos) {
             continue;
           }
+        }
+
+        if (nearCache.isAnythingNear(parking->cart(), parking->getRadius())) {
+            continue;
         }
 
         setParkingAvailable(parking, false);
