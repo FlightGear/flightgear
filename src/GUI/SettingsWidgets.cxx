@@ -498,11 +498,7 @@ void SettingsText::setValue(QString newVal)
 
 QString SettingsText::placeholder() const
 {
-#if QT_VERSION >= 0x050300
     return m_edit->placeholderText();
-#else
-    return QString();
-#endif
 }
 
 QString SettingsText::validation() const
@@ -515,10 +511,7 @@ void SettingsText::setPlaceholder(QString hold)
     if (placeholder() == hold)
         return;
 
-#if QT_VERSION >= 0x050300
-    // don't require Qt 5.3
     m_edit->setPlaceholderText(hold);
-#endif
     emit placeholderChanged(hold);
 }
 

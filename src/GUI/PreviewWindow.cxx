@@ -5,10 +5,6 @@
 #include <QNetworkReply>
 #include <QDebug>
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-#define qInfo       qDebug
-#endif
-
 const int BORDER_SIZE = 16;
 
 PreviewWindow::PreviewWindow(QWidget *parent)
@@ -30,7 +26,6 @@ void PreviewWindow::setUrls(QVariantList urls)
     Q_FOREACH (QVariant v, urls) {
         QUrl url = v.toUrl();
         QNetworkReply* reply = m_netAccess->get(QNetworkRequest(url));
-        qInfo() << "requesting:" << url;
         connect(reply, &QNetworkReply::finished, this, &PreviewWindow::onDownloadFinished);
         connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onDownloadError(QNetworkReply::NetworkError)));
     }

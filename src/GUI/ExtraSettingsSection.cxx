@@ -25,11 +25,8 @@ ExtraSettingsSection::ExtraSettingsSection(QWidget* pr) :
     topLevelVBox->addWidget(prompt);
     m_argsEdit = new QTextEdit(this);
     m_argsEdit->setAcceptRichText(false);
-
-#if QT_VERSION >= 0x050300
-    // don't require Qt 5.3
     m_argsEdit->setPlaceholderText("--option=value --prop:/sim/name=value");
-#endif
+
     topLevelVBox->addWidget(m_argsEdit);
 
     insertSettingsHeader();

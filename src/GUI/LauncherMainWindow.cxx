@@ -99,10 +99,7 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(viewCommandLineAction, &QAction::triggered,
             this, &LauncherMainWindow::onViewCommandLine);
 
-#if QT_VERSION >= 0x050200
     m_ui->aircraftFilter->setClearButtonEnabled(true);
-#endif
-
     m_serversModel = new MPServersModel(this);
     m_serversModel->refresh();
 

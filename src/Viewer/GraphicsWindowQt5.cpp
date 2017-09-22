@@ -144,18 +144,14 @@ GLWindow::GLWindow()
     : QWindow()
 {
     _devicePixelRatio = 1.0;
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 2, 0))
     connect(this, &QWindow::screenChanged, this, &GLWindow::onScreenChanged);
     onScreenChanged();
-#endif
 }
 
 void GLWindow::onScreenChanged()
 {
     qWarning() << Q_FUNC_INFO << "screen changed";
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 2, 0))
     _devicePixelRatio = screen()->devicePixelRatio();
-#endif
 
     if (_isPrimaryWindow) {
         // allow PUI and Canvas to be scaled
@@ -461,9 +457,7 @@ QSurfaceFormat GraphicsWindowQt5::traits2qSurfaceFormat( const osg::GraphicsCont
     format.setSwapBehavior( traits->doubleBuffer ?
         QSurfaceFormat::DoubleBuffer :
         QSurfaceFormat::DefaultSwapBehavior);
-#if QT_VERSION >= 0x050300
     format.setSwapInterval( traits->vsync ? 1 : 0 );
-#endif
     format.setStereo( traits->quadBufferStereo ? 1 : 0 );
 
     return format;
@@ -481,9 +475,7 @@ void GraphicsWindowQt5::qSurfaceFormat2traits( const QSurfaceFormat& format, osg
 
     traits->quadBufferStereo = format.stereo();
     traits->doubleBuffer = (format.swapBehavior() == QSurfaceFormat::DoubleBuffer);
-#if QT_VERSION >= 0x050300
     traits->vsync = format.swapInterval() >= 1;
-#endif
 }
 
 osg::GraphicsContext::Traits* GraphicsWindowQt5::createTraits( const QWindow* window )
