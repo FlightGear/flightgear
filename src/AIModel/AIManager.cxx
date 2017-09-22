@@ -28,9 +28,6 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/SGBinding.hxx>
 
-#include <boost/mem_fn.hpp>
-#include <boost/foreach.hpp>
-
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/airport.hxx>
@@ -56,7 +53,7 @@ public:
     Scenario(FGAIManager* man, const std::string& nm, SGPropertyNode* scenarios) :
         _internalName(nm)
     {
-        BOOST_FOREACH(SGPropertyNode* scEntry, scenarios->getChildren("entry")) {
+        for (auto scEntry : scenarios->getChildren("entry")) {
             FGAIBasePtr ai = man->addObject(scEntry);
             if (ai) {
                 _objects.push_back(ai);
@@ -81,9 +78,9 @@ public:
     
     ~Scenario()
     {
-        BOOST_FOREACH(FGAIBasePtr ai, _objects) {
-            ai->setDie(true);
-        }
+        std::for_each(_objects.begin(), _objects.end(),
+                      [](FGAIBasePtr ai) { ai->setDie(true); });
+
         
         FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
         if (!nasalSys)
@@ -117,7 +114,7 @@ FGAIManager::FGAIManager() :
 
 FGAIManager::~FGAIManager()
 {
-    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::unbind));
+    std::for_each(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::unbind));
 }
 
 void
@@ -148,7 +145,7 @@ FGAIManager::postinit()
         enabled->setBoolValue(true);
 
     // process all scenarios
-    BOOST_FOREACH(SGPropertyNode* n, root->getChildren("scenario")) {
+    for (auto n : root->getChildren("scenario")) {
         const string& name = n->getStringValue();
         if (name.empty())
             continue;
@@ -170,7 +167,7 @@ FGAIManager::reinit()
     unloadAllScenarios();
     
     update(0.0);
-    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::reinit));
+    std::for_each(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::reinit));
     
     // (re-)load scenarios
     postinit();
@@ -181,7 +178,7 @@ FGAIManager::shutdown()
 {
     unloadAllScenarios();
     
-    BOOST_FOREACH(FGAIBase* ai, ai_list) {
+    for (FGAIBase* ai : ai_list) {
         // other subsystems, especially ATC, may have references. This
         // lets them detect if the AI object should be skipped
         ai->setDie(true);
@@ -234,11 +231,11 @@ FGAIManager::update(double dt) {
     fetchUserState();
 
     // partition the list into dead followed by alive
-    ai_list_iterator firstAlive =
-      std::stable_partition(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::getDie));
+    auto firstAlive =
+      std::stable_partition(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::getDie));
     
     // clean up each item and finally remove from the container
-    for (ai_list_iterator it=ai_list.begin(); it != firstAlive; ++it) {
+    for (auto it=ai_list.begin(); it != firstAlive; ++it) {
         removeDeadItem(*it);
     }
   
@@ -247,7 +244,7 @@ FGAIManager::update(double dt) {
     // every remaining item is alive. update them in turn, but guard for
     // exceptions, so a single misbehaving AI object doesn't bring down the
     // entire subsystem.
-    BOOST_FOREACH(FGAIBase* base, ai_list) {
+    for (FGAIBase* base : ai_list) {
         try {
             if (base->isa(FGAIBase::otThermal)) {
                 processThermal(dt, (FGAIThermal*)base);
@@ -269,7 +266,7 @@ void
 FGAIManager::updateLOD(SGPropertyNode* node)
 {
     SG_UNUSED(node);
-    std::for_each(ai_list.begin(), ai_list.end(), boost::mem_fn(&FGAIBase::updateLOD));
+    std::for_each(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::updateLOD));
 }
 
 void
@@ -426,7 +423,7 @@ FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 bool FGAIManager::removeObject(const SGPropertyNode* args)
 {
     int id = args->getIntValue("id");
-    BOOST_FOREACH(FGAIBase* ai, get_ai_list()) {
+    for (FGAIBase* ai : get_ai_list()) {
         if (ai->getID() == id) {
             ai->setDie(true);
             break;
@@ -438,13 +435,12 @@ bool FGAIManager::removeObject(const SGPropertyNode* args)
 
 FGAIBasePtr FGAIManager::getObjectFromProperty(const SGPropertyNode* aProp) const
 {
-    BOOST_FOREACH(FGAIBase* ai, get_ai_list()) {
-        if (ai->_getProps() == aProp) {
-            return ai;
-        }
-    } // of AI objects iteration
-    
-    return NULL;
+    auto it = std::find_if(ai_list.begin(), ai_list.end(),
+                           [aProp](FGAIBasePtr ai) { return ai->_getProps() == aProp; });
+    if (it == ai_list.end()) {
+        return nullptr;
+    }
+    return *it;
 }
 
 bool

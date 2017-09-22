@@ -74,7 +74,7 @@ public:
      */
     FGAIBasePtr getObjectFromProperty(const SGPropertyNode* aProp) const;
 
-    typedef std::list <FGAIBasePtr> ai_list_type;
+    typedef std::vector <FGAIBasePtr> ai_list_type;
     const ai_list_type& get_ai_list() const {
         return ai_list;
     }
