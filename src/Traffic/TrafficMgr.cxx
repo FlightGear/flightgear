@@ -380,7 +380,7 @@ private:
 
         BOOST_FOREACH(SGPath p, d) {
             simgear::Dir d2(p);
-            SG_LOG(SG_AI, SG_INFO, "parsing traffic in:" << p);
+            SG_LOG(SG_AI, SG_DEBUG, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
             BOOST_FOREACH(SGPath xml, trafficFiles) {
                 readXML(xml, *this);
