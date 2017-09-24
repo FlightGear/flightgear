@@ -16,13 +16,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include "config.h"
+
 #include "positioninit.hxx"
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
-#include <boost/tuple/tuple.hpp>
 #include <osgViewer/Viewer>
 #include <osg/PagedLOD>
 
@@ -178,7 +175,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
     setInitialPosition(startPos, aHeading);
 }
 
-boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
+std::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
 {
     fgSetString("/sim/atc/runway", runway->ident().c_str());
     double offsetNm = fgGetDouble("/sim/presets/offset-distance-nm");
@@ -197,14 +194,14 @@ boost::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
         if (taxiNode) {
             // set this so multiplayer.nas can inform the user
             fgSetBool("/sim/presets/avoided-mp-runway", true);
-            return boost::make_tuple(taxiNode->geod(), SGGeodesy::courseDeg(taxiNode->geod(), pos));
+            return std::make_tuple(taxiNode->geod(), SGGeodesy::courseDeg(taxiNode->geod(), pos));
         }
 
         // if we couldn't find a suitable taxi-node, give up. Guessing a position
         // causes too much pain (starting in the water or similar bad things)
     }
 
-    return boost::make_tuple(pos, runway->headingDeg());
+    return std::make_tuple(pos, runway->headingDeg());
 }
 
 // Set current_options lon/lat given an airport id and heading (degrees)
@@ -230,7 +227,7 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     }
   } else {
     FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
-      boost::tie(startPos, heading) = runwayStartPos(r);
+      std::tie(startPos, heading) = runwayStartPos(r);
   }
 
     fgApplyStartOffset(startPos, heading);
@@ -317,11 +314,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
   // Why is the following line necessary?
   fgGetString("/sim/presets/parkpos");
   fgSetString("/sim/presets/parkpos", pka.parking()->getName());
-  // The problem is, this line doesn't work because the ParkingAssignment's refcounting mechanism:
-  // The parking will be released after this function returns.
-  // As a temporary measure, I'll try to reserve the parking via the atc_manager, which should work, because it uses the same
-  // mechanism as the AI traffic code.
-  dcs->setParkingAvailable(pka.parking(), false);
+  
   fgApplyStartOffset(pka.parking()->geod(), pka.parking()->getHeading());
   return true;
 }
@@ -347,7 +340,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
       FGRunway* r(apt->getRunwayByIdent(rwy));
       SGGeod startPos;
       double heading;
-      boost::tie(startPos, heading) = runwayStartPos(r);
+      std::tie(startPos, heading) = runwayStartPos(r);
       fgApplyStartOffset(startPos, heading);
       return true;
   } else if (apt->hasHelipadWithIdent(rwy)) {
