@@ -36,9 +36,6 @@
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/atcdialog.hxx>
 
-class FGAIAircraft;
-
-
 typedef std::vector<FGATCController*> AtcVec;
 typedef std::vector<FGATCController*>::iterator AtcVecIterator;
 
@@ -46,8 +43,7 @@ class FGATCManager : public SGSubsystem
 {
 private:
   AtcVec activeStations;
-  SGSharedPtr<FGAIAircraft> ai_ac;
-  FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft. 
+  FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft.
   bool networkVisible;
   bool initSucceeded;
   SGPropertyNode_ptr trans_num;
@@ -55,8 +51,8 @@ private:
 public:
   FGATCManager();
   ~FGATCManager();
-  void init();
-  virtual void shutdown();
+  void postinit() override;
+  void shutdown() override;
 
   void addController(FGATCController *controller);
   void removeController(FGATCController* controller);

@@ -133,6 +133,16 @@ FGAIManager::init() {
     globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
     globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
     _environmentVisiblity = fgGetNode("/environment/visibility-m");
+    
+    // Create an (invisible) AIAircraft representation of the current
+    // users's aircraft, that mimicks the user aircraft's behavior.
+
+    _userAircraft = new FGAIAircraft;
+    _userAircraft->setCallSign ( fgGetString("/sim/multiplay/callsign")  );
+    _userAircraft->setGeodPos(globals->get_aircraft_position());
+    _userAircraft->setPerformance("", "jet_transport");
+    _userAircraft->setHeading(fgGetDouble("/orientation/heading-deg"));
+    _userAircraft->setSpeed(fgGetDouble("/velocities/groundspeed-kt"));
 }
 
 void
@@ -187,6 +197,7 @@ FGAIManager::shutdown()
     
     ai_list.clear();
     _environmentVisiblity.clear();
+    _userAircraft.clear();
     
     globals->get_commands()->removeCommand("load-scenario");
     globals->get_commands()->removeCommand("unload-scenario");
@@ -220,7 +231,8 @@ void FGAIManager::removeDeadItem(FGAIBase* base)
 }
 
 void
-FGAIManager::update(double dt) {
+FGAIManager::update(double dt)
+{
     // initialize these for finding nearest thermals
     range_nearest = 10000.0;
     strength = 0.0;
@@ -228,7 +240,7 @@ FGAIManager::update(double dt) {
     if (!enabled->getBoolValue())
         return;
 
-    fetchUserState();
+    fetchUserState(dt);
 
     // partition the list into dead followed by alive
     auto firstAlive =
@@ -314,14 +326,19 @@ FGAIManager::getNumAiObjects() const
 }
 
 void
-FGAIManager::fetchUserState( void ) {
+FGAIManager::fetchUserState( double dt )
+{
 
     globals->get_aircraft_orientation(user_heading, user_pitch, user_roll);
     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
     wind_from_east = wind_from_east_node->getDoubleValue();
     wind_from_north   = wind_from_north_node->getDoubleValue();
     user_altitude_agl = user_altitude_agl_node->getDoubleValue();
-
+    
+    _userAircraft->setGeodPos(globals->get_aircraft_position());
+    _userAircraft->setHeading(user_heading);
+    _userAircraft->setSpeed(fgGetDouble("/velocities/groundspeed-kt"));
+    _userAircraft->update(dt);
 }
 
 // only keep the results from the nearest thermal
@@ -577,6 +594,11 @@ FGAIManager::calcRangeFt(const SGVec3d& aCartPos, const FGAIBase* aObject) const
 {
     double distM = dist(aCartPos, aObject->getCartPos());
     return distM * SG_METER_TO_FEET;
+}
+
+FGAIAircraft* FGAIManager::getUserAircraft() const
+{
+    return _userAircraft.get();
 }
 
 //end AIManager.cxx

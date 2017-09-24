@@ -31,6 +31,7 @@
 
 class FGAIBase;
 class FGAIThermal;
+class FGAIAircraft;
 
 typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
 
@@ -82,6 +83,14 @@ public:
     double calcRangeFt(const SGVec3d& aCartPos, const FGAIBase* aObject) const;
 
     static const char* subsystemName() { return "ai-model"; }
+    
+    /**
+     * @brief Retrieve the representation of the user's aircraft in the AI manager
+     * the position and velocity of this object are slaved to the user's aircraft,
+     * so that AI systems such as parking and ATC can see the user and process /
+     * avoid correctly.
+     */
+    FGAIAircraft* getUserAircraft() const;
 private:
     // FGSubmodelMgr is a friend for access to the AI_list
     friend class FGSubmodelMgr;
@@ -122,7 +131,7 @@ private:
     double wind_from_east;
     double wind_from_north;
 
-    void fetchUserState( void );
+    void fetchUserState( double dt );
 
     // used by thermals
     double range_nearest;
@@ -135,6 +144,8 @@ private:
     class Scenario;
     typedef std::map<std::string, Scenario*> ScenarioDict;
     ScenarioDict _scenarios;
+    
+    SGSharedPtr<FGAIAircraft> _userAircraft;
 };
 
 #endif  // _FG_AIMANAGER_HXX

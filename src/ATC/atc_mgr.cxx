@@ -33,6 +33,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <AIModel/AIAircraft.hxx>
+#include <AIModel/AIManager.hxx>
 #include <Traffic/Schedule.hxx>
 #include <Traffic/SchedFlight.hxx>
 #include <AIModel/AIFlightPlan.hxx>
@@ -53,9 +54,8 @@ FGATCManager::FGATCManager() :
 FGATCManager::~FGATCManager() {
 }
 
-void FGATCManager::init() {
-    SGSubsystem::init();
-
+void FGATCManager::postinit()
+{
     int leg = 0;
 
     trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
@@ -70,23 +70,10 @@ void FGATCManager::init() {
     string airport = fgGetString("/sim/presets/airport-id");
     string parking = fgGetString("/sim/presets/parkpos");
     
+    FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    FGAIAircraft* userAircraft = aiManager->getUserAircraft();
 
-    // Create an (invisible) AIAircraft represenation of the current
-    // Users, aircraft, that mimicks the user aircraft's behavior.
-    string callsign= fgGetString("/sim/multiplay/callsign");
-    double longitude = fgGetDouble("/position/longitude-deg");
-    double latitude  = fgGetDouble("/position/latitude-deg");
-    double altitude  = fgGetDouble("/position/altitude-ft");
-    double heading   = fgGetDouble("/orientation/heading-deg");
-    double speed     = fgGetDouble("/velocities/groundspeed-kt");
     double aircraftRadius = 40; // note that this is currently hardcoded to a one-size-fits all JumboJet value. Should change later;
-
-    ai_ac = new FGAIAircraft;
-    ai_ac->setCallSign ( callsign  );
-    ai_ac->setLongitude( longitude );
-    ai_ac->setLatitude ( latitude  );
-    ai_ac->setAltitude ( altitude  );
-    ai_ac->setPerformance("", "jet_transport");
 
     // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight planning.
     // Note that these are currently only defaults. 
@@ -98,11 +85,11 @@ void FGATCManager::init() {
     flight->setArrivalAirport(airport);
     flight->initializeAirports();
     flight->setFlightRules("IFR");
-    flight->setCallSign(callsign);
+    flight->setCallSign(userAircraft->getCallSign());
     
     trafficRef->assign(flight);
     std::unique_ptr<FGAIFlightPlan> fp ;
-    ai_ac->setTrafficRef(trafficRef);
+    userAircraft->setTrafficRef(trafficRef);
     
     string flightPlanName = airport + "-" + airport + ".xml";
     //double cruiseAlt = 100; // Doesn't really matter right now.
@@ -115,7 +102,6 @@ void FGATCManager::init() {
 
         ParkingAssignment pk(dcs->getParkingByName(parking));
       
-        // No valid parking location, so either at the runway or at a random location.
         if (pk.isValid()) {
             dcs->setParkingAvailable(pk.parking(), false);
             fp.reset(new FGAIFlightPlan);
@@ -134,7 +120,7 @@ void FGATCManager::init() {
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
             fp->setGate(pk);
-            if (!(fp->createPushBack(ai_ac,
+            if (!(fp->createPushBack(userAircraft,
                                      false,
                                      dcs->parent(),
                                      aircraftRadius,
@@ -148,6 +134,8 @@ void FGATCManager::init() {
             
             
         } else if (!runway.empty()) {
+            // on a runway
+
             controller = dcs->getTowerController();
             int stationFreq = dcs->getTowerFrequency(2);
             if (stationFreq > 0)
@@ -159,10 +147,10 @@ void FGATCManager::init() {
             leg = 3;
             string fltType = "ga";
             fp->setRunway(runway);
-            fp->createTakeOff(ai_ac, false, dcs->parent(), 0, fltType);
-            ai_ac->setTakeOffStatus(2);
+            fp->createTakeOff(userAircraft, false, dcs->parent(), 0, fltType);
+            userAircraft->setTakeOffStatus(2);
         } else {
-                // We're on the ground somewhere. Handle this case later.
+            // We're on the ground somewhere. Handle this case later.
         }
         
         if (fp) {
@@ -177,20 +165,23 @@ void FGATCManager::init() {
     if (fp) {
         fp->restart();
         fp->setLeg(leg);
-        ai_ac->FGAIBase::setFlightPlan(std::move(fp));
+        userAircraft->FGAIBase::setFlightPlan(std::move(fp));
     }
     if (controller) {
-        FGAIFlightPlan* plan = ai_ac->GetFlightPlan();
-        controller->announcePosition(ai_ac->getID(), plan, plan->getCurrentWaypoint()->getRouteIndex(),
-                                      ai_ac->_getLatitude(), ai_ac->_getLongitude(), heading, speed, altitude,
-                                      aircraftRadius, leg, ai_ac);
+        FGAIFlightPlan* plan = userAircraft->GetFlightPlan();
+        controller->announcePosition(userAircraft->getID(), plan, plan->getCurrentWaypoint()->getRouteIndex(),
+                                     userAircraft->_getLatitude(),
+                                     userAircraft->_getLongitude(),
+                                     userAircraft->_getHeading(),
+                                     userAircraft->getSpeed(),
+                                     userAircraft->getAltitude(),
+                                     aircraftRadius, leg, userAircraft);
     }
     initSucceeded = true;
 }
 
 void FGATCManager::shutdown()
 {
-    ai_ac.clear();
     activeStations.clear();
 }
 
@@ -211,8 +202,8 @@ void FGATCManager::update ( double time ) {
     //cerr << "ATC update code is running at time: " << time << endl;
     // Test code: let my virtual co-pilot handle ATC:
    
-    
-
+    FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    FGAIAircraft* ai_ac = aiManager->getUserAircraft();
     FGAIFlightPlan *fp = ai_ac->GetFlightPlan();
         
     /* test code : find out how the routing develops */
@@ -244,35 +235,7 @@ void FGATCManager::update ( double time ) {
     if (fp) {
         //cerr << "Currently at leg : " << fp->getLeg() << endl;
     }
-    double longitude = fgGetDouble("/position/longitude-deg");
-    double latitude  = fgGetDouble("/position/latitude-deg");
-    double heading   = fgGetDouble("/orientation/heading-deg");
-    double speed     = fgGetDouble("/velocities/groundspeed-kt");
-    double altitude  = fgGetDouble("/position/altitude-ft");
     
-    /*
-    SGGeod me(SGGeod::fromDegM(longitude,
-                               latitude,
-                               altitude));
-    SGGeod wpt1(SGGeod::fromDegM(fp->getWayPoint(1)->getLongitude(), 
-                                fp->getWayPoint(1)->getLatitude(),
-                                fp->getWayPoint(1)->getAltitude()));
-    SGGeod wpt2(SGGeod::fromDegM(fp->getWayPoint(1)->getLongitude(), 
-                                fp->getWayPoint(1)->getLatitude(),
-                                fp->getWayPoint(1)->getAltitude()));
-        
-    double course1, az1, dist1;
-    double course2, az2, dist2;
-    SGGeodesy::inverse(me, wpt1, course1, az1, dist1);
-    
-    cerr << "Bearing to nearest waypoint : " << course1 << " " << dist1 << ". (course " << course2 << ")." <<  endl;
-    */
-    ai_ac->setLatitude(latitude);
-    ai_ac->setLongitude(longitude);
-    ai_ac->setAltitude(altitude);
-    ai_ac->setHeading(heading);
-    ai_ac->setSpeed(speed);
-    ai_ac->update(time);
     controller = ai_ac->getATCController();
     FGATCDialogNew::instance()->update(time);
     if (controller) {
@@ -281,11 +244,11 @@ void FGATCManager::update ( double time ) {
         //cerr << "Running FGATCManager::update()" << endl;
         //cerr << "Currently under control of " << controller->getName() << endl;
         controller->updateAircraftInformation(ai_ac->getID(),
-                                              latitude,
-                                              longitude,
-                                              heading,
-                                              speed,
-                                              altitude, time);
+                                              ai_ac->_getLatitude(),
+                                              ai_ac->_getLongitude(),
+                                              ai_ac->_getHeading(),
+                                              ai_ac->getSpeed(),
+                                              ai_ac->getAltitude(), time);
         //string airport = fgGetString("/sim/presets/airport-id");
         //FGAirport *apt = FGAirport::findByIdent(airport); 
         // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading. 

@@ -951,3 +951,8 @@ SGGeod FGAIBase::getGeodPos() const
     return pos;
 }
 
+void FGAIBase::setGeodPos(const SGGeod& geod)
+{
+    pos = geod;
+}
+

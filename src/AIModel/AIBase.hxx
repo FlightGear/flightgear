@@ -113,7 +113,8 @@ public:
     void setFlightPlan(std::unique_ptr<FGAIFlightPlan> f);
     
     SGGeod getGeodPos() const;
-
+    void setGeodPos(const SGGeod& pos);
+    
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
 
