@@ -86,8 +86,6 @@
 #include <Airports/dynamics.hxx>
 #include <Airports/airportdynamicsmanager.hxx>
 
-#include <AIModel/AIManager.hxx>
-
 #include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
