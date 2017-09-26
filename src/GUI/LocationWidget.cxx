@@ -32,6 +32,7 @@
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "LaunchConfig.hxx"
+#include "DefaultAircraftLocator.hxx"
 
 #include <Airports/airport.hxx>
 #include <Airports/groundnetwork.hxx>
@@ -56,6 +57,8 @@ QString fixNavaidName(QString s)
         QString up = w.toUpper();
 
         // expand common abbreviations
+        // note these are not translated, since they are abbreivations
+        // for English-langauge airports, mostly in the US/Canada
         if (up == "FLD") {
             changedWords.append("Field");
             continue;
@@ -229,10 +232,11 @@ public:
 
         IdentSearchFilter filter(aircraft);
         FGPositionedList exactMatches = NavDataCache::instance()->findAllWithIdent(term, &filter, true);
-
-        for (unsigned int i=0; i<exactMatches.size(); ++i) {
-            m_ids.push_back(exactMatches[i]->guid());
-            m_items.push_back(exactMatches[i]);
+        m_ids.reserve(exactMatches.size());
+        m_items.reserve(exactMatches.size());
+        for (auto match : exactMatches) {
+            m_ids.push_back(match->guid());
+            m_items.push_back(match);
         }
         endResetModel();
 
@@ -322,11 +326,11 @@ private slots:
         }
         
         PositionedIDVec newIds = m_search->results();
-
+        m_ids.reserve(newIds.size());
         beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
-        for (unsigned int i=m_ids.size(); i < newIds.size(); ++i) {
-            m_ids.push_back(newIds[i]);
-            m_items.push_back(FGPositionedRef()); // null ref
+        for (auto id : newIds) {
+            m_ids.push_back(id);
+            m_items.push_back({}); // null ref
         }
         endInsertRows();
 
@@ -434,7 +438,7 @@ void LocationWidget::restoreSettings()
 {
     QSettings settings;
     m_recentLocations = loadPositionedList(settings.value("recent-locations"));
-    m_searchModel->setItems(m_recentLocations);
+    onShowHistory();
 }
 
 void LocationWidget::restoreLocation(QVariantMap l)
@@ -1072,8 +1076,20 @@ void LocationWidget::addToRecent(FGPositionedRef pos)
 
 void LocationWidget::onShowHistory()
 {
-    qDebug() << Q_FUNC_INFO;
-    m_searchModel->setItems(m_recentLocations);
+    // prepend the default location
+    FGPositionedList locs = m_recentLocations;
+    const std::string defaultICAO = flightgear::defaultAirportICAO();
+
+    auto it = std::find_if(locs.begin(), locs.end(), [defaultICAO](FGPositionedRef pos) {
+        return pos->ident() == defaultICAO;
+    });
+
+    if (it == locs.end()) {
+        FGAirportRef apt = FGAirport::findByIdent(defaultICAO);
+        locs.insert(locs.begin(), apt);
+    }
+
+    m_searchModel->setItems(locs);
 }
 
 void LocationWidget::setBaseLocation(FGPositionedRef ref)
