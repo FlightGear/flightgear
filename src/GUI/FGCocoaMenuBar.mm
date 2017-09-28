@@ -2,8 +2,6 @@
 
 #include <AppKit/NSMenu.h>
 
-#include <boost/foreach.hpp>
-
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -76,12 +74,6 @@ public:
   MenuItemBindings itemBindings;
     std::vector<CocoaEnabledListener*> listeners;
 };
-
-// prior to the 10.6 SDK, NSMenuDelegate was an informal protocol
-#if __MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-@protocol NSMenuDelegate <NSObject>
-@end
-#endif
 
 @interface CocoaMenuDelegate : NSObject <NSMenuDelegate> {
 @private
@@ -182,7 +174,7 @@ static bool labelIsSeparator(NSString* s)
 void FGCocoaMenuBar::CocoaMenuBarPrivate::menuFromProps(NSMenu* menu, SGPropertyNode* menuNode)
 {
   int index = 0;
-  BOOST_FOREACH(SGPropertyNode_ptr n, menuNode->getChildren("item")) {
+  for (SGPropertyNode_ptr n : menuNode->getChildren("item")) {
     if (!n->hasValue("enabled")) {
       n->setBoolValue("enabled", true);
     }
@@ -277,7 +269,7 @@ void FGCocoaMenuBar::init()
     [previousMenu setTitle:@"FlightGear"];
   }
   
-  BOOST_FOREACH(SGPropertyNode_ptr n, props->getChildren("menu")) {
+  for (auto n : props->getChildren("menu")) {
     NSString* label = stdStringToCocoa(getLocalizedLabel(n));
     NSMenuItem* item = [mainBar itemWithTitle:label];
     NSMenu* menu;
