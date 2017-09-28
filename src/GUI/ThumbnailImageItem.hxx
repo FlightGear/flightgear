@@ -1,6 +1,8 @@
 #ifndef THUMBNAILIMAGEITEM_HXX
 #define THUMBNAILIMAGEITEM_HXX
 
+#include <memory>
+
 #include <QQuickItem>
 #include <QUrl>
 #include <QImage>
