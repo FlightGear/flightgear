@@ -11,6 +11,7 @@
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Delegate.hxx>
 #include <simgear/package/Catalog.hxx>
+#include <simgear/package/Install.hxx>
 
 using namespace simgear;
 
