@@ -409,7 +409,7 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     // fallback mechanism for this. 
     // Starting from gate 0 doesn't work, so don't try it
     FGTaxiRoute taxiRoute;
-    if (gate.isValid())
+    if (runwayNode && gate.isValid())
         taxiRoute = gn->findShortestRoute(runwayNode, gate.parking());
 
     if (taxiRoute.empty()) {
