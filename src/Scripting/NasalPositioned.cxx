@@ -2509,9 +2509,10 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
     }
     
     leg->setSpeed(rr, speed);
+  } else {
+      naRuntimeError(c, "bad arguments to setSpeed");
   }
   
-  naRuntimeError(c, "bad arguments to setSpeed");
   return naNil();
 }
 
@@ -2537,9 +2538,10 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
     }
     
     leg->setAltitude(rr, altitude);
+  } else {
+      naRuntimeError(c, "bad arguments to setleg.setAltitude");
   }
-  
-  naRuntimeError(c, "bad arguments to setleg.setAltitudeSpeed");
+    
   return naNil();
 }
 
