@@ -726,6 +726,8 @@ void GraphicsWindowQt5::requestWarpPointer( float x, float y )
 {
     if ( _window )
         QCursor::setPos( _window->mapToGlobal(QPoint((int)x,(int)y)) );
+
+    getEventQueue()->mouseWarped(x,y);        
 }
 
 bool GraphicsWindowQt5::checkEvents()
