@@ -323,6 +323,7 @@ if (ENABLE_QT)
         message(STATUS "Will enable Qt launcher GUI")
         message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
         message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
+        message(STATUS "  QtQuick private header: ${Qt5Quick_PRIVATE_INCLUDE_DIRS}")
         set(HAVE_QT 1)
     else()
         # don't try to build FGQCanvas if Qt wasn't found correctly
