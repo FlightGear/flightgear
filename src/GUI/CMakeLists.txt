@@ -160,7 +160,9 @@ if (HAVE_QT)
                                                   ${Qt5Quick_PRIVATE_INCLUDE_DIRS}) 
 
     add_library(fgqmlui QQuickDrawable.cxx
-                        QQuickDrawable.hxx
+                        QQuickDrawable.hxx                    
+                        QtQuickFGCanvasItem.cxx
+                        QtQuickFGCanvasItem.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
