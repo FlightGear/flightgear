@@ -163,6 +163,12 @@ if (HAVE_QT)
                         QQuickDrawable.hxx                    
                         QtQuickFGCanvasItem.cxx
                         QtQuickFGCanvasItem.hxx
+                        PropertyItemModel.cxx
+                        PropertyItemModel.hxx
+                        FGQmlInstance.cxx
+                        FGQmlInstance.hxx
+                        FGQmlPropertyNode.cxx
+                        FGQmlPropertyNode.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
