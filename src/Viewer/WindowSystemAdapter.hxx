@@ -110,10 +110,7 @@ public:
      */
     GraphicsWindow* registerWindow(osg::GraphicsContext* gc,
                                    const std::string& windowName);
-    /** Initialize the plib pui interface library. This might happen
-     *in another thread and may be deferred.
-     */
-    virtual void puInitialize();
+
     /** Find a window by name.
      * @param name the window name
      * @return the window or 0
@@ -129,12 +126,7 @@ public:
     static void setWSA(WindowSystemAdapter* wsa) { _wsa = wsa; }
 protected:
     int _nextWindowID;
-    osg::ref_ptr<GraphicsContextOperation> _puInitOp;
-    bool _isPuInitialized;
     static osg::ref_ptr<WindowSystemAdapter> _wsa;
-    // Default callbacks for plib
-    static int puGetWindow();
-    static void puGetWindowSize(int* width, int* height);
 
 };
 

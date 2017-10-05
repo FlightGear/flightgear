@@ -35,7 +35,7 @@ CanvasWidget::CanvasWidget( int x, int y,
                             SGPropertyNode* props,
                             const std::string& module ):
   puObject(x, y, width, height),
-  _canvas_mgr( dynamic_cast<CanvasMgr*>(globals->get_subsystem("Canvas")) ),
+  _canvas_mgr(globals->get_subsystem<CanvasMgr>()),
   _last_x(0),
   _last_y(0),
   // automatically resize viewport of canvas if no size is given
@@ -197,13 +197,17 @@ void CanvasWidget::setSize(int w, int h)
 void CanvasWidget::draw(int dx, int dy)
 {
   glEnable(GL_TEXTURE_2D);
+  glEnable(GL_BLEND);
+  glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
+    
   glBindTexture(GL_TEXTURE_2D, _canvas_mgr->getCanvasTexId(_canvas));
   glBegin( GL_QUADS );
-    glColor3f(1,1,1);
+    glColor4f(1,1,1, 1.0f);
     glTexCoord2f(0,0); glVertex2f(dx + abox.min[0], dy + abox.min[1]);
     glTexCoord2f(1,0); glVertex2f(dx + abox.max[0], dy + abox.min[1]);
     glTexCoord2f(1,1); glVertex2f(dx + abox.max[0], dy + abox.max[1]);
     glTexCoord2f(0,1); glVertex2f(dx + abox.min[0], dy + abox.max[1]);
   glEnd();
   glDisable(GL_TEXTURE_2D);
+  glDisable(GL_BLEND);
 }

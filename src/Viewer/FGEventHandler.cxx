@@ -28,8 +28,7 @@ namespace flightgear
 {
 const int displayStatsKey = 1;
 const int printStatsKey = 2;
-
-
+    
 // The manipulator is responsible for updating a Viewer's camera. Its
 // event handling method is also a convenient place to run the FG idle
 // and draw handlers.
@@ -53,49 +52,6 @@ FGEventHandler::FGEventHandler() :
     statsHandler->setKeyEventPrintsOutStats(printStatsKey);
     statsEvent->setEventType(GUIEventAdapter::KEYDOWN);
 
-    // OSG reports NumPad keycodes independent of the NumLock modifier.
-    // Both KP-4 and KP-Left are reported as KEY_KP_Left (0xff96), so we
-    // have to generate the locked keys ourselves.
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Down] = '2';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Down] = '3';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Left] = '4';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Begin] = '5';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Right] = '6';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Delete] = '.';
-
-    // The comment above is incorrect on Mac osgViewer, at least. So we
-    // need to map the 'num-locked' key codes to real values.
-    numlockKeyMap[GUIEventAdapter::KEY_KP_0]  = '0';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_1] = '1';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_2] = '2';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_3] = '3';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_4] = '4';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_5] = '5';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_6] = '6';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_7] = '7';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_8] = '8';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_9] = '9';
-    numlockKeyMap[GUIEventAdapter::KEY_KP_Decimal] = '.';
-
-    
-    // mapping when NumLock is off
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Insert]     = PU_KEY_INSERT;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_End]        = PU_KEY_END;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Down]       = PU_KEY_DOWN;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Page_Down]  = PU_KEY_PAGE_DOWN;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Left]       = PU_KEY_LEFT;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Begin]      = '5';
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Right]      = PU_KEY_RIGHT;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Home]       = PU_KEY_HOME;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Up]         = PU_KEY_UP;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up]    = PU_KEY_PAGE_UP;
-    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Delete]     = 127;
-
     for (int i = 0; i < 128; i++)
         release_keys[i] = i;
 
@@ -110,33 +66,6 @@ void FGEventHandler::reset()
     statsHandler->reset();
 }
     
-namespace
-{
-// Translate OSG modifier mask to FG modifier mask.
-int osgToFGModifiers(int modifiers)
-{
-    int result = 0;
-    if (modifiers & osgGA::GUIEventAdapter::MODKEY_SHIFT)
-        result |= KEYMOD_SHIFT;
-
-    if (modifiers & osgGA::GUIEventAdapter::MODKEY_CTRL)
-        result |= KEYMOD_CTRL;
-
-    if (modifiers & osgGA::GUIEventAdapter::MODKEY_ALT)
-        result |= KEYMOD_ALT;
-
-    if (modifiers & osgGA::GUIEventAdapter::MODKEY_META)
-        result |= KEYMOD_META;
-
-    if (modifiers & osgGA::GUIEventAdapter::MODKEY_SUPER)
-        result |= KEYMOD_SUPER;
-
-    if (modifiers & osgGA::GUIEventAdapter::MODKEY_HYPER)
-        result |= KEYMOD_HYPER;
-    return result;
-}
-}
-
 #if 0
 void FGEventHandler::init(const osgGA::GUIEventAdapter& ea,
                           osgGA::GUIActionAdapter& us)
@@ -312,75 +241,151 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         return false;
     }
 }
-
-void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
-                               int& modifiers)
+    
+int FGEventHandler::translateKey(const osgGA::GUIEventAdapter& ea)
 {
     using namespace osgGA;
-    key = ea.getKey();
+
+    static std::map<int, int> numlockKeyMap;
+    static std::map<int, int> noNumlockKeyMap;
+    
+    if (numlockKeyMap.empty()) {
+        // init these first time around
+        
+        // OSG reports NumPad keycodes independent of the NumLock modifier.
+        // Both KP-4 and KP-Left are reported as KEY_KP_Left (0xff96), so we
+        // have to generate the locked keys ourselves.
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Down] = '2';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Down] = '3';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Left] = '4';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Begin] = '5';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Right] = '6';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Delete] = '.';
+        
+        // The comment above is incorrect on Mac osgViewer, at least. So we
+        // need to map the 'num-locked' key codes to real values.
+        numlockKeyMap[GUIEventAdapter::KEY_KP_0]  = '0';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_1] = '1';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_2] = '2';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_3] = '3';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_4] = '4';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_5] = '5';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_6] = '6';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_7] = '7';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_8] = '8';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_9] = '9';
+        numlockKeyMap[GUIEventAdapter::KEY_KP_Decimal] = '.';
+        
+        // mapping when NumLock is off
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Insert]     = PU_KEY_INSERT;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_End]        = PU_KEY_END;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Down]       = PU_KEY_DOWN;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Page_Down]  = PU_KEY_PAGE_DOWN;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Left]       = PU_KEY_LEFT;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Begin]      = '5';
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Right]      = PU_KEY_RIGHT;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Home]       = PU_KEY_HOME;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Up]         = PU_KEY_UP;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up]    = PU_KEY_PAGE_UP;
+        noNumlockKeyMap[GUIEventAdapter::KEY_KP_Delete]     = 127;
+    }
+    
+    int key = ea.getKey();
     // XXX Probably other translations are needed too.
     switch (key) {
-    case GUIEventAdapter::KEY_Escape:      key = 0x1b; break;
-    case GUIEventAdapter::KEY_Return:      key = '\n'; break;
-    case GUIEventAdapter::KEY_BackSpace:   key = '\b'; break;
-    case GUIEventAdapter::KEY_Delete:      key = 0x7f; break;
-    case GUIEventAdapter::KEY_Tab:         key = '\t'; break;
-    case GUIEventAdapter::KEY_Left:        key = PU_KEY_LEFT;      break;
-    case GUIEventAdapter::KEY_Up:          key = PU_KEY_UP;        break;
-    case GUIEventAdapter::KEY_Right:       key = PU_KEY_RIGHT;     break;
-    case GUIEventAdapter::KEY_Down:        key = PU_KEY_DOWN;      break;
-    case GUIEventAdapter::KEY_Page_Up:     key = PU_KEY_PAGE_UP;   break;
-    case GUIEventAdapter::KEY_Page_Down:   key = PU_KEY_PAGE_DOWN; break;
-    case GUIEventAdapter::KEY_Home:        key = PU_KEY_HOME;      break;
-    case GUIEventAdapter::KEY_End:         key = PU_KEY_END;       break;
-    case GUIEventAdapter::KEY_Insert:      key = PU_KEY_INSERT;    break;
-    case GUIEventAdapter::KEY_F1:          key = PU_KEY_F1;        break;
-    case GUIEventAdapter::KEY_F2:          key = PU_KEY_F2;        break;
-    case GUIEventAdapter::KEY_F3:          key = PU_KEY_F3;        break;
-    case GUIEventAdapter::KEY_F4:          key = PU_KEY_F4;        break;
-    case GUIEventAdapter::KEY_F5:          key = PU_KEY_F5;        break;
-    case GUIEventAdapter::KEY_F6:          key = PU_KEY_F6;        break;
-    case GUIEventAdapter::KEY_F7:          key = PU_KEY_F7;        break;
-    case GUIEventAdapter::KEY_F8:          key = PU_KEY_F8;        break;
-    case GUIEventAdapter::KEY_F9:          key = PU_KEY_F9;        break;
-    case GUIEventAdapter::KEY_F10:         key = PU_KEY_F10;       break;
-    case GUIEventAdapter::KEY_F11:         key = PU_KEY_F11;       break;
-    case GUIEventAdapter::KEY_F12:         key = PU_KEY_F12;       break;
-    case GUIEventAdapter::KEY_KP_Enter:    key = '\r'; break;
-    case GUIEventAdapter::KEY_KP_Add:      key = '+';  break;
-    case GUIEventAdapter::KEY_KP_Divide:   key = '/';  break;
-    case GUIEventAdapter::KEY_KP_Multiply: key = '*';  break;
-    case GUIEventAdapter::KEY_KP_Subtract: key = '-';  break;
+        case GUIEventAdapter::KEY_Escape:      key = 0x1b; break;
+        case GUIEventAdapter::KEY_Return:      key = '\n'; break;
+        case GUIEventAdapter::KEY_BackSpace:   key = '\b'; break;
+        case GUIEventAdapter::KEY_Delete:      key = 0x7f; break;
+        case GUIEventAdapter::KEY_Tab:         key = '\t'; break;
+        case GUIEventAdapter::KEY_Left:        key = PU_KEY_LEFT;      break;
+        case GUIEventAdapter::KEY_Up:          key = PU_KEY_UP;        break;
+        case GUIEventAdapter::KEY_Right:       key = PU_KEY_RIGHT;     break;
+        case GUIEventAdapter::KEY_Down:        key = PU_KEY_DOWN;      break;
+        case GUIEventAdapter::KEY_Page_Up:     key = PU_KEY_PAGE_UP;   break;
+        case GUIEventAdapter::KEY_Page_Down:   key = PU_KEY_PAGE_DOWN; break;
+        case GUIEventAdapter::KEY_Home:        key = PU_KEY_HOME;      break;
+        case GUIEventAdapter::KEY_End:         key = PU_KEY_END;       break;
+        case GUIEventAdapter::KEY_Insert:      key = PU_KEY_INSERT;    break;
+        case GUIEventAdapter::KEY_F1:          key = PU_KEY_F1;        break;
+        case GUIEventAdapter::KEY_F2:          key = PU_KEY_F2;        break;
+        case GUIEventAdapter::KEY_F3:          key = PU_KEY_F3;        break;
+        case GUIEventAdapter::KEY_F4:          key = PU_KEY_F4;        break;
+        case GUIEventAdapter::KEY_F5:          key = PU_KEY_F5;        break;
+        case GUIEventAdapter::KEY_F6:          key = PU_KEY_F6;        break;
+        case GUIEventAdapter::KEY_F7:          key = PU_KEY_F7;        break;
+        case GUIEventAdapter::KEY_F8:          key = PU_KEY_F8;        break;
+        case GUIEventAdapter::KEY_F9:          key = PU_KEY_F9;        break;
+        case GUIEventAdapter::KEY_F10:         key = PU_KEY_F10;       break;
+        case GUIEventAdapter::KEY_F11:         key = PU_KEY_F11;       break;
+        case GUIEventAdapter::KEY_F12:         key = PU_KEY_F12;       break;
+        case GUIEventAdapter::KEY_KP_Enter:    key = '\r'; break;
+        case GUIEventAdapter::KEY_KP_Add:      key = '+';  break;
+        case GUIEventAdapter::KEY_KP_Divide:   key = '/';  break;
+        case GUIEventAdapter::KEY_KP_Multiply: key = '*';  break;
+        case GUIEventAdapter::KEY_KP_Subtract: key = '-';  break;
     }
-    osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
-
+    
 #ifdef __APPLE__
     // Num Lock is always true on Mac
-    std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
+    auto  numPadIter = numlockKeyMap.find(key);
     if (numPadIter != numlockKeyMap.end()) {
         key = numPadIter->second;
     }
 #else
-    if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK)
-    {
+    if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
         // NumLock on: map to numeric keys
-        std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
+        auto numPadIter = numlockKeyMap.find(key);
         if (numPadIter != numlockKeyMap.end()) {
             key = numPadIter->second;
         }
-    }
-    else
-    {
+    } else {
         // NumLock off: map to PU arrow keys
-        std::map<int, int>::iterator numPadIter = noNumlockKeyMap.find(key);
+        auto numPadIter = noNumlockKeyMap.find(key);
         if (numPadIter != noNumlockKeyMap.end()) {
             key = numPadIter->second;
         }
     }
 #endif
+    return key;
+}
 
-    modifiers = osgToFGModifiers(ea.getModKeyMask());
+int FGEventHandler::translateModifiers(const osgGA::GUIEventAdapter& ea)
+{
+    int result = 0;
+    const auto modifiers =  ea.getModKeyMask();
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_SHIFT)
+        result |= KEYMOD_SHIFT;
+    
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_CTRL)
+        result |= KEYMOD_CTRL;
+    
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_ALT)
+        result |= KEYMOD_ALT;
+    
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_META)
+        result |= KEYMOD_META;
+    
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_SUPER)
+        result |= KEYMOD_SUPER;
+    
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_HYPER)
+        result |= KEYMOD_HYPER;
+    return result;
+}
+
+void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
+                               int& modifiers)
+{
+    key = translateKey(ea);
+    modifiers = translateModifiers(ea);
     currentModifiers = modifiers;
+    const auto eventType = ea.getEventType();
     if (eventType == osgGA::GUIEventAdapter::KEYUP)
         modifiers |= KEYMOD_RELEASED;
 
