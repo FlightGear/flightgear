@@ -182,9 +182,8 @@ if(ENABLE_FLITE)
 endif()
 
 if (Qt5Core_FOUND)
-    target_link_libraries(fgfs Qt5::Widgets fglauncher)
+    target_link_libraries(fgfs Qt5::Core Qt5::Widgets fglauncher fgqmlui)
     set_property(TARGET fgfs PROPERTY AUTOMOC ON)
-    target_link_libraries(fgfs fglauncher fgqmlui)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")

@@ -112,8 +112,10 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 
+#if defined(HAVE_QT)
 #include <GUI/QQuickDrawable.hxx>
 #include <Viewer/GraphicsWindowQt5.hxx>
+#endif
 
 #include <plib/pu.h>
 
@@ -1547,7 +1549,7 @@ FGRenderer::setupView( void )
         osg::Geode* geode = new osg::Geode;
         geode->addDrawable(new SGHUDDrawable);
         geode->addDrawable(new SGPuDrawable);
-
+#if defined(HAVE_QT)
         std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
         auto graphicsWindowQt = dynamic_cast<GraphicsWindowQt5*>(guiCamera->getGraphicsContext());
 
@@ -1555,10 +1557,10 @@ FGRenderer::setupView( void )
             _quickDrawable = new QQuickDrawable;
             _quickDrawable->setup(graphicsWindowQt);
 
-            _quickDrawable->setSource(QUrl(QString::fromStdString(rootQMLPath)));
+            _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
             geode->addDrawable(_quickDrawable);
         }
-
+#endif
         // Draw first (eg. before Canvas GUI)
         guiCamera->insertChild(0, geode);
         guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
@@ -1746,9 +1748,11 @@ FGRenderer::resize( int width, int height )
 
     // update splash node if present ?
     _splash->resize(width, height);
+#if defined(HAVE_QT)
     if (_quickDrawable) {
         _quickDrawable->resize(width, height);
     }
+#endif
 }
 
 typedef osgUtil::LineSegmentIntersector::Intersection Intersection;
