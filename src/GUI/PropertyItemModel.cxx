@@ -25,7 +25,7 @@ public:
 public slots:
     void setPath(QString path)
     {
-        if (_propertyPath == path.toStdString());
+        if (_propertyPath == path.toStdString())
             return;
 
         _propertyPath = path.toStdString();

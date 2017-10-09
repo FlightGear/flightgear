@@ -22,12 +22,12 @@
 #define FG_GUI_AIRCRAFT_MODEL
 
 #include <QAbstractListModel>
-#include <QDateTime>
 #include <QDir>
 #include <QPixmap>
 #include <QStringList>
-#include <QSharedPointer>
 #include <QUrl>
+
+#include "LocalAircraftCache.hxx"
 
 #include <simgear/package/Delegate.hxx>
 #include <simgear/package/Root.hxx>
@@ -62,48 +62,9 @@ const int AircraftHasPreviewsRole = Qt::UserRole + 24;
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
 
-class AircraftScanThread;
-class QDataStream;
 class PackageDelegate;
-struct AircraftItem;
-typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
 Q_DECLARE_METATYPE(simgear::pkg::PackageRef)
-
-struct AircraftItem
-{
-    AircraftItem();
-
-    AircraftItem(QDir dir, QString filePath);
-
-    // the file-name without -set.xml suffix
-    QString baseName() const;
-
-    void fromDataStream(QDataStream& ds);
-
-    void toDataStream(QDataStream& ds) const;
-
-    QPixmap thumbnail(bool loadIfRequired = true) const;
-
-    bool excluded = false;
-    QString path;
-    QString description;
-    QString longDescription;
-    QString authors;
-    int ratings[4] = {0, 0, 0, 0};
-    QString variantOf;
-    QDateTime pathModTime;
-    QList<AircraftItemPtr> variants;
-    bool usesHeliports = false;
-    bool usesSeaports = false;
-    QList<QUrl> previews;
-    bool isPrimary = false;
-    QString thumbnailPath;
-    QString minFGVersion;
-    bool needsMaintenance = false;
-private:
-    mutable QPixmap m_thumbnail;
-};
 
 class AircraftItemModel : public QAbstractListModel
 {
@@ -128,10 +89,6 @@ public:
     ~AircraftItemModel();
 
     void setPackageRoot(const simgear::pkg::RootRef& root);
-
-    void setPaths(QStringList paths);
-
-    void scanDirs();
 
     int rowCount(const QModelIndex& parent) const override;
     
@@ -166,21 +123,6 @@ public:
      */
     QString nameForAircraftURI(QUrl uri) const;
 
-    /**
-     * @helper to determine if a particular path is likely to contain
-     * aircraft or not. Checks for -set.xml files one level down in the tree.
-     *
-     */
-    static bool isCandidateAircraftPath(QString path);
-
-    enum AircraftStatus
-    {
-        AircraftOk = 0,
-        AircraftUnmaintained,
-        AircraftNeedsNewerSimulator,
-        AircraftNeedsOlderSimulator // won't ever occur for the moment
-    };
-
     int aircraftNeedingUpdated() const;
 
     bool showUpdateAll() const;
@@ -190,17 +132,14 @@ signals:
     
     void aircraftInstallCompleted(QModelIndex index);
     
-    void scanCompleted();
-
     void aircraftNeedingUpdatedChanged();
 
 public slots:
     void setShowUpdateAll(bool showUpdateAll);
 
 private slots:
-    void onScanResults();
-    
-    void onScanFinished();
+    void onScanStarted();
+    void onScanAddedItems(int count);
 
 private:
     friend class PackageDelegate;
@@ -212,11 +151,9 @@ private:
     struct DelegateState
     {
         quint32 variant = 0;
-        quint32 thumbnail = 0;
     };
 
     QVariant dataFromItem(AircraftItemPtr item, const DelegateState& state, int role) const;
-    QVariant itemAircraftStatus(AircraftItemPtr item, const DelegateState& ds) const;
 
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
                              const DelegateState& state, int role) const;
@@ -225,17 +162,12 @@ private:
                               const DelegateState& state, bool download = true) const;
 
     QVariant packagePreviews(simgear::pkg::PackageRef p, const DelegateState &ds) const;
-    QVariant packageAircraftStatus(simgear::pkg::PackageRef p, const DelegateState &ds) const;
 
-    void abandonCurrentScan();
     void refreshPackages();
     
     void installSucceeded(QModelIndex index);
     void installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason);
     
-    QStringList m_paths;
-    AircraftScanThread* m_scanThread = nullptr;
-    QVector<AircraftItemPtr> m_items;
     PackageDelegate* m_delegate = nullptr;
 
     QVector<DelegateState> m_delegateStates;
@@ -245,6 +177,7 @@ private:
         
     mutable QHash<QString, QPixmap> m_downloadedPixmapCache;
     int m_cachedUpdateCount = 0;
+    int m_cachedLocalAircraftCount = 0;
     bool m_showUpdateAll = true;
 };
 

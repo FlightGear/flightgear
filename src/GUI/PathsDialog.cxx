@@ -12,6 +12,7 @@
 #include "AircraftModel.hxx"
 #include "InstallSceneryDialog.hxx"
 #include "QtLauncher.hxx"
+#include "LocalAircraftCache.hxx"
 
 #include <Main/options.hxx>
 #include <Main/globals.hxx>
@@ -137,7 +138,7 @@ void AddOnsPage::onAddAircraftPath()
         // to check for that case and handle it gracefully.
         bool pathOk = false;
 
-        if (AircraftItemModel::isCandidateAircraftPath(path)) {
+        if (LocalAircraftCache::isCandidateAircraftPath(path)) {
             m_ui->aircraftPathsList->addItem(path);
             pathOk = true;
         } else {
@@ -145,7 +146,7 @@ void AddOnsPage::onAddAircraftPath()
             QDir d(path);
             if (d.exists("Aircraft")) {
                 QString p2 = d.filePath("Aircraft");
-                if (AircraftItemModel::isCandidateAircraftPath(p2)) {
+                if (LocalAircraftCache::isCandidateAircraftPath(p2)) {
                     m_ui->aircraftPathsList->addItem(p2);
                     pathOk = true;
                 }

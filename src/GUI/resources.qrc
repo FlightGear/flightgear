@@ -35,6 +35,7 @@
         <file>Button.qml</file>
         <file>AircraftWarningPanel.qml</file>
         <file>Scrollbar.qml</file>
+        <file>AircraftDetailsView.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

@@ -20,11 +20,6 @@
 
 #include "AircraftModel.hxx"
 
-#include <QDir>
-#include <QThread>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QDataStream>
 #include <QSettings>
 #include <QDebug>
 #include <QSharedPointer>
@@ -41,316 +36,12 @@
 #include <Main/globals.hxx>
 #include <Include/version.h>
 
+#include "QmlAircraftInfo.hxx"
+
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
 const int STANDARD_THUMBNAIL_WIDTH = 172;
-static quint32 CACHE_VERSION = 8;
 
 using namespace simgear::pkg;
-
-AircraftItem::AircraftItem()
-{
-}
-
-AircraftItem::AircraftItem(QDir dir, QString filePath)
-{
-    SGPropertyNode root;
-    readProperties(filePath.toStdString(), &root);
-
-    if (!root.hasChild("sim")) {
-        throw sg_io_exception(std::string("Malformed -set.xml file"), filePath.toStdString());
-    }
-
-    SGPropertyNode_ptr sim = root.getNode("sim");
-
-    path = filePath;
-    pathModTime = QFileInfo(path).lastModified();
-    if (sim->getBoolValue("exclude-from-gui", false)) {
-        excluded = true;
-        return;
-    }
-
-    description = sim->getStringValue("description");
-    authors =  sim->getStringValue("author");
-
-    if (sim->hasChild("rating")) {
-        SGPropertyNode_ptr ratingsNode = sim->getNode("rating");
-        ratings[0] = ratingsNode->getIntValue("FDM");
-        ratings[1] = ratingsNode->getIntValue("systems");
-        ratings[2] = ratingsNode->getIntValue("cockpit");
-        ratings[3] = ratingsNode->getIntValue("model");
-
-    }
-
-    if (sim->hasChild("long-description")) {
-        // clean up any XML whitspace in the text.
-        longDescription = QString(sim->getStringValue("long-description")).simplified();
-    }
-
-    if (sim->hasChild("variant-of")) {
-        variantOf = sim->getStringValue("variant-of");
-    } else {
-        isPrimary = true;
-    }
-
-    if (sim->hasChild("primary-set")) {
-        isPrimary = sim->getBoolValue("primary-set");
-    }
-
-    if (sim->hasChild("tags")) {
-        SGPropertyNode_ptr tagsNode = sim->getChild("tags");
-        int nChildren = tagsNode->nChildren();
-        for (int i = 0; i < nChildren; i++) {
-            const SGPropertyNode* c = tagsNode->getChild(i);
-            if (strcmp(c->getName(), "tag") == 0) {
-                const char* tagName = c->getStringValue();
-                usesHeliports |= (strcmp(tagName, "helicopter") == 0);
-                // could also consider vtol tag?
-                usesSeaports |= (strcmp(tagName, "seaplane") == 0);
-                usesSeaports |= (strcmp(tagName, "floats") == 0);
-
-                needsMaintenance |= (strcmp(tagName, "needs-maintenance") == 0);
-            }
-        } // of tags iteration
-    } // of set-xml has tags
-
-    if (sim->hasChild("previews")) {
-        SGPropertyNode_ptr previewsNode = sim->getChild("previews");
-        for (auto previewNode : previewsNode->getChildren("preview")) {
-            // add file path as url
-            QString pathInXml = QString::fromStdString(previewNode->getStringValue("path"));
-            QString previewPath = dir.absoluteFilePath(pathInXml);
-            previews.append(QUrl::fromLocalFile(previewPath));
-        }
-    }
-
-    if (sim->hasChild("thumbnail")) {
-        thumbnailPath = sim->getStringValue("thumbnail");
-    } else {
-        thumbnailPath = "thumbnail.jpg";
-    }
-
-    if (sim->hasChild("minimum-fg-version")) {
-        minFGVersion = sim->getStringValue("minimum-fg-version");
-    }
-}
-
-QString AircraftItem::baseName() const
-{
-    QString fn = QFileInfo(path).fileName();
-    fn.truncate(fn.count() - 8);
-    return fn;
-}
-
-void AircraftItem::fromDataStream(QDataStream& ds)
-{
-    ds >> path >> pathModTime >> excluded;
-    if (excluded) {
-        return;
-    }
-
-    ds >> description >> longDescription >> authors >> variantOf >> isPrimary;
-    for (int i=0; i<4; ++i) ds >> ratings[i];
-    ds >> previews;
-    ds >> thumbnailPath;
-    ds >> minFGVersion;
-    ds >> needsMaintenance >> usesHeliports >> usesSeaports;
-}
-
-void AircraftItem::toDataStream(QDataStream& ds) const
-{
-    ds << path << pathModTime << excluded;
-    if (excluded) {
-        return;
-    }
-
-    ds << description << longDescription << authors << variantOf << isPrimary;
-    for (int i=0; i<4; ++i) ds << ratings[i];
-    ds << previews;
-    ds << thumbnailPath;
-    ds << minFGVersion;
-    ds << needsMaintenance << usesHeliports << usesSeaports;
-}
-
-QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
-{
-    if (m_thumbnail.isNull() && loadIfRequired) {
-        QFileInfo info(path);
-        QDir dir = info.dir();
-        if (dir.exists(thumbnailPath)) {
-            m_thumbnail.load(dir.filePath(thumbnailPath));
-            // resize to the standard size
-            if (m_thumbnail.height() > STANDARD_THUMBNAIL_HEIGHT) {
-                m_thumbnail = m_thumbnail.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
-            }
-        }
-    }
-
-    return m_thumbnail;
-}
-
-class AircraftScanThread : public QThread
-{
-    Q_OBJECT
-public:
-    AircraftScanThread(QStringList dirsToScan) :
-        m_dirs(dirsToScan),
-        m_done(false)
-    {
-    }
-
-    ~AircraftScanThread()
-    {
-    }
-
-    /** thread-safe access to items already scanned */
-    QVector<AircraftItemPtr> items()
-    {
-        QVector<AircraftItemPtr> result;
-        QMutexLocker g(&m_lock);
-        result.swap(m_items);
-        g.unlock();
-        return result;
-    }
-
-    void setDone()
-    {
-        m_done = true;
-    }
-Q_SIGNALS:
-    void addedItems();
-
-protected:
-    virtual void run()
-    {
-        readCache();
-
-        Q_FOREACH(QString d, m_dirs) {
-            scanAircraftDir(QDir(d));
-            if (m_done) {
-                return;
-            }
-        }
-
-        writeCache();
-    }
-
-private:
-    void readCache()
-    {
-        QSettings settings;
-        QByteArray cacheData = settings.value("aircraft-cache").toByteArray();
-        if (!cacheData.isEmpty()) {
-            QDataStream ds(cacheData);
-            quint32 count, cacheVersion;
-            ds >> cacheVersion >> count;
-
-            if (cacheVersion != CACHE_VERSION) {
-                return; // mis-matched cache, version, drop
-            }
-
-             for (quint32 i=0; i<count; ++i) {
-                AircraftItemPtr item(new AircraftItem);
-                item->fromDataStream(ds);
-
-                QFileInfo finfo(item->path);
-                if (finfo.exists() && (finfo.lastModified() == item->pathModTime)) {
-                    // corresponding -set.xml file still exists and is
-                    // unmodified
-                    m_cachedItems[item->path] = item;
-                }
-            } // of cached item iteration
-        }
-    }
-
-    void writeCache()
-    {
-        QSettings settings;
-        QByteArray cacheData;
-        {
-            QDataStream ds(&cacheData, QIODevice::WriteOnly);
-            quint32 count = m_nextCache.count();
-            ds << CACHE_VERSION << count;
-
-            Q_FOREACH(AircraftItemPtr item, m_nextCache.values()) {
-                item->toDataStream(ds);
-            }
-        }
-
-        settings.setValue("aircraft-cache", cacheData);
-    }
-
-    void scanAircraftDir(QDir path)
-    {
-        QTime t;
-        t.start();
-
-        QStringList filters;
-        filters << "*-set.xml";
-        Q_FOREACH(QFileInfo child, path.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-            QDir childDir(child.absoluteFilePath());
-            QMap<QString, AircraftItemPtr> baseAircraft;
-            QList<AircraftItemPtr> variants;
-
-            Q_FOREACH(QFileInfo xmlChild, childDir.entryInfoList(filters, QDir::Files)) {
-                try {
-                    QString absolutePath = xmlChild.absoluteFilePath();
-                    AircraftItemPtr item;
-
-                    if (m_cachedItems.contains(absolutePath)) {
-                        item = m_cachedItems.value(absolutePath);
-                    } else {
-                        item = AircraftItemPtr(new AircraftItem(childDir, absolutePath));
-                    }
-
-                    m_nextCache[absolutePath] = item;
-
-                    if (item->excluded) {
-                        continue;
-                    }
-
-                    if (item->isPrimary) {
-                        baseAircraft.insert(item->baseName(), item);
-                    } else {
-                        variants.append(item);
-                    }
-                } catch (sg_exception& e) {
-                    continue;
-                }
-
-                if (m_done) {
-                    return;
-                }
-            } // of set.xml iteration
-
-            // bind variants to their principals
-            Q_FOREACH(AircraftItemPtr item, variants) {
-                if (!baseAircraft.contains(item->variantOf)) {
-                    qWarning() << "can't find principal aircraft " << item->variantOf << " for variant:" << item->path;
-                    continue;
-                }
-
-                baseAircraft.value(item->variantOf)->variants.append(item);
-            }
-
-            // lock mutex while we modify the items array
-            {
-                QMutexLocker g(&m_lock);
-                m_items+=(baseAircraft.values().toVector());
-            }
-
-            emit addedItems();
-        } // of subdir iteration
-    }
-
-    QMutex m_lock;
-    QStringList m_dirs;
-    QVector<AircraftItemPtr> m_items;
-
-    QMap<QString, AircraftItemPtr > m_cachedItems;
-    QMap<QString, AircraftItemPtr > m_nextCache;
-
-    bool m_done;
-};
 
 class PackageDelegate : public simgear::pkg::Delegate
 {
@@ -473,7 +164,7 @@ private:
         }
 
         int offset = std::distance(m_model->m_packages.begin(), it);
-        return m_model->index(offset + m_model->m_items.size());
+        return m_model->index(offset + m_model->m_cachedLocalAircraftCount);
     }
 
     AircraftItemModel* m_model;
@@ -482,11 +173,15 @@ private:
 AircraftItemModel::AircraftItemModel(QObject* pr) :
     QAbstractListModel(pr)
 {
+    auto cache = LocalAircraftCache::instance();
+    connect(cache, &LocalAircraftCache::scanStarted,
+            this, &AircraftItemModel::onScanStarted);
+    connect(cache, &LocalAircraftCache::addedItems,
+            this, &AircraftItemModel::onScanAddedItems);
 }
 
 AircraftItemModel::~AircraftItemModel()
 {
-    abandonCurrentScan();
     delete m_delegate;
 }
 
@@ -506,56 +201,22 @@ void AircraftItemModel::setPackageRoot(const simgear::pkg::RootRef& root)
     }
 }
 
-void AircraftItemModel::setPaths(QStringList paths)
+void AircraftItemModel::onScanStarted()
 {
-    m_paths = paths;
-}
-
-void AircraftItemModel::scanDirs()
-{
-	abandonCurrentScan();
-
-    const int numToRemove = m_items.size();
-	if (numToRemove > 0) {
+    const int numToRemove = m_cachedLocalAircraftCount;
+    if (numToRemove > 0) {
         int lastRow = numToRemove - 1;
         beginRemoveRows(QModelIndex(), 0, lastRow);
-        m_items.remove(0, numToRemove);
         m_delegateStates.remove(0, numToRemove);
-		endRemoveRows();
-	}
-
-    QStringList dirs = m_paths;
-
-    Q_FOREACH(SGPath ap, globals->get_aircraft_paths()) {
-        dirs << QString::fromStdString(ap.utf8Str());
-    }
-
-    SGPath rootAircraft(globals->get_fg_root());
-    rootAircraft.append("Aircraft");
-    dirs << QString::fromStdString(rootAircraft.utf8Str());
-
-    m_scanThread = new AircraftScanThread(dirs);
-    connect(m_scanThread, &AircraftScanThread::finished, this,
-            &AircraftItemModel::onScanFinished);
-    connect(m_scanThread, &AircraftScanThread::addedItems,
-            this, &AircraftItemModel::onScanResults);
-    m_scanThread->start();
-}
-
-void AircraftItemModel::abandonCurrentScan()
-{
-    if (m_scanThread) {
-        m_scanThread->setDone();
-        m_scanThread->wait(1000);
-        delete m_scanThread;
-        m_scanThread = NULL;
+        m_cachedLocalAircraftCount = 0;
+        endRemoveRows();
     }
 }
 
 void AircraftItemModel::refreshPackages()
 {
     simgear::pkg::PackageList newPkgs = m_packageRoot->allPackages();
-    const int firstRow = m_items.size();
+    const int firstRow = m_cachedLocalAircraftCount;
     const int newSize = newPkgs.size();
     const int newTotalSize = firstRow + newSize;
 
@@ -589,7 +250,7 @@ void AircraftItemModel::refreshPackages()
 
 int AircraftItemModel::rowCount(const QModelIndex& parent) const
 {
-    return m_items.size() + m_packages.size();
+    return m_cachedLocalAircraftCount + m_packages.size();
 }
 
 QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
@@ -599,8 +260,8 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
         return m_delegateStates.at(row).variant;
     }
 
-    if (row >= m_items.size()) {
-        quint32 packageIndex = row - m_items.size();
+    if (row >= m_cachedLocalAircraftCount) {
+        quint32 packageIndex = row - m_cachedLocalAircraftCount;
         const PackageRef& pkg(m_packages[packageIndex]);
         InstallRef ex = pkg->existingInstall();
 
@@ -614,7 +275,7 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
 
         return dataFromPackage(pkg, m_delegateStates.at(row), role);
     } else {
-        const AircraftItemPtr item(m_items.at(row));
+        const AircraftItemPtr item(LocalAircraftCache::instance()->itemAt(row));
         return dataFromItem(item, m_delegateStates.at(row), role);
     }
 }
@@ -694,7 +355,7 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
     {
         return 0;
     } else if (role == AircraftStatusRole) {
-        return itemAircraftStatus(item, state);
+        return item->status(0 /* variant is always 0 */);
     } else if (role == AircraftMinVersionRole) {
         return item->minFGVersion;
     }
@@ -784,7 +445,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         }
         return ratings->getChild(ratingIndex)->getIntValue();
     } else if (role == AircraftStatusRole) {
-        return packageAircraftStatus(item, state);
+        return QmlAircraftInfo::packageAircraftStatus(item);
     } else if (role == AircraftMinVersionRole) {
         const std::string v = item->properties()->getStringValue("minimum-fg-version");
         if (!v.empty()) {
@@ -860,37 +521,6 @@ QVariant AircraftItemModel::packagePreviews(PackageRef p, const DelegateState& d
     return result;
 }
 
-
-QVariant AircraftItemModel::itemAircraftStatus(AircraftItemPtr item, const DelegateState& ds) const
-{
-    if (item->needsMaintenance) {
-        return AircraftUnmaintained;
-    }
-
-    if (item->minFGVersion.isEmpty()) {
-        return AircraftOk;
-    }
-
-    const int c = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION,
-                                                      item->minFGVersion.toStdString(), 2);
-    return (c < 0) ? AircraftNeedsNewerSimulator : AircraftOk;
-}
-
-QVariant AircraftItemModel::packageAircraftStatus(PackageRef p, const DelegateState& ds) const
-{
-    if (p->hasTag("needs-maintenance")) {
-        return AircraftUnmaintained;
-    }
-
-    if (!p->properties()->hasChild("minimum-fg-version")) {
-        return AircraftOk;
-    }
-
-    const std::string minFGVersion = p->properties()->getStringValue("minimum-fg-version");
-    const int c = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, minFGVersion, 2);
-    return (c < 0) ? AircraftNeedsNewerSimulator : AircraftOk;
-}
-
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
   {
       int row = index.row();
@@ -946,23 +576,13 @@ QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
     }
 
     if (uri.isLocalFile()) {
-        QString path = uri.toLocalFile();
-        for (int row=0; row <m_items.size(); ++row) {
-            const AircraftItemPtr item(m_items.at(row));
-            if (item->path == path) {
-                return index(row);
-            }
-
-            // check variants too
-            for (int vr=0; vr < item->variants.size(); ++vr) {
-                if (item->variants.at(vr)->path == path) {
-                    return index(row);
-                }
-            }
+        int row = LocalAircraftCache::instance()->findIndexWithUri(uri);
+        if (row >= 0) {
+            return index(row);
         }
     } else if (uri.scheme() == "package") {
         QString ident = uri.path();
-        int rowOffset = m_items.size();
+        int rowOffset = m_cachedLocalAircraftCount;
 
         PackageRef pkg = m_packageRoot->getPackageById(ident.toStdString());
         if (pkg) {
@@ -991,27 +611,25 @@ void AircraftItemModel::selectVariantForAircraftURI(QUrl uri)
     QModelIndex modelIndex;
 
     if (uri.isLocalFile()) {
-        QString path = uri.toLocalFile();
-        for (int row=0; row <m_items.size(); ++row) {
-            const AircraftItemPtr item(m_items.at(row));
-            if (item->path == path) {
-                modelIndex = index(row);
-                variantIndex = 0;
-                break;
-            }
+        int row = LocalAircraftCache::instance()->findIndexWithUri(uri);
+        if (row < 0) {
+            return;
+        }
 
-            // check variants too
-            for (int vr=0; vr < item->variants.size(); ++vr) {
-                if (item->variants.at(vr)->path == path) {
-                    modelIndex = index(row);
-                    variantIndex = vr + 1;
-                    break;
-                }
+        modelIndex = index(row);
+        // now check if we are actually selecting a variant
+        const AircraftItemPtr item = LocalAircraftCache::instance()->itemAt(row);
+
+        const QString path = uri.toLocalFile();
+        for (int vr=0; vr < item->variants.size(); ++vr) {
+            if (item->variants.at(vr)->path == path) {
+                variantIndex = vr + 1;
+                break;
             }
         }
     } else if (uri.scheme() == "package") {
         QString ident = uri.path();
-        int rowOffset = m_items.size();
+        int rowOffset = m_cachedLocalAircraftCount;
 
         PackageRef pkg = m_packageRoot->getPackageById(ident.toStdString());
         if (pkg) {
@@ -1036,18 +654,16 @@ void AircraftItemModel::selectVariantForAircraftURI(QUrl uri)
 QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
 {
     if (uri.isLocalFile()) {
-        QString path = uri.toLocalFile();
-        for (int row=0; row <m_items.size(); ++row) {
-            const AircraftItemPtr item(m_items.at(row));
-            if (item->path == path) {
-                return item->description;
-            }
+        AircraftItemPtr item = LocalAircraftCache::instance()->findItemWithUri(uri);
+        const QString path = uri.toLocalFile();
+        if (item->path == path) {
+            return item->description;
+        }
 
-            // check variants too
-            for (int vr=0; vr < item->variants.size(); ++vr) {
-                if (item->variants.at(vr)->path == path) {
-                    return item->description;
-                }
+        // check variants too
+        for (int vr=0; vr < item->variants.size(); ++vr) {
+            if (item->variants.at(vr)->path == path) {
+                return item->description;
             }
         }
     } else if (uri.scheme() == "package") {
@@ -1065,30 +681,23 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
     return QString();
 }
 
-void AircraftItemModel::onScanResults()
+void AircraftItemModel::onScanAddedItems(int count)
 {
-    QVector<AircraftItemPtr> newItems = m_scanThread->items();
+    QVector<AircraftItemPtr> newItems = LocalAircraftCache::instance()->newestItems(count);
     if (newItems.isEmpty())
         return;
 
-    int firstRow = m_items.count();
-    int lastRow = firstRow + newItems.count() - 1;
+    int firstRow = m_cachedLocalAircraftCount;
+    int lastRow = firstRow + count - 1;
     beginInsertRows(QModelIndex(), firstRow, lastRow);
-    m_items+=newItems;
+    m_cachedLocalAircraftCount += count;
 
     // default variants in all cases
-    for (int i=0; i< newItems.count(); ++i) {
-        m_delegateStates.insert(firstRow + i, DelegateState());
+    for (int i=0; i< count; ++i) {
+        m_delegateStates.insert(firstRow + i, {});
     }
 
     endInsertRows();
-}
-
-void AircraftItemModel::onScanFinished()
-{
-    delete m_scanThread;
-    m_scanThread = NULL;
-    emit scanCompleted();
 }
 
 void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason)
@@ -1120,11 +729,11 @@ void AircraftItemModel::installSucceeded(QModelIndex index)
 
 bool AircraftItemModel::isIndexRunnable(const QModelIndex& index) const
 {
-    if (index.row() < m_items.size()) {
+    if (index.row() < m_cachedLocalAircraftCount) {
         return true; // local file, always runnable
     }
 
-    quint32 packageIndex = index.row() - m_items.size();
+    quint32 packageIndex = index.row() - m_cachedLocalAircraftCount;
     const PackageRef& pkg(m_packages[packageIndex]);
     InstallRef ex = pkg->existingInstall();
     if (!ex.valid()) {
@@ -1132,29 +741,6 @@ bool AircraftItemModel::isIndexRunnable(const QModelIndex& index) const
     }
 
     return !ex->isDownloading();
-}
-
-bool AircraftItemModel::isCandidateAircraftPath(QString path)
-{
-    QStringList filters;
-    filters << "*-set.xml";
-    int dirCount = 0,
-        setXmlCount = 0;
-
-    QDir d(path);
-    Q_FOREACH(QFileInfo child, d.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        QDir childDir(child.absoluteFilePath());
-        ++dirCount;
-        Q_FOREACH(QFileInfo xmlChild, childDir.entryInfoList(filters, QDir::Files)) {
-            ++setXmlCount;
-        }
-
-        if ((setXmlCount > 0) || (dirCount > 10)) {
-            break;
-        }
-    }
-
-    return (setXmlCount > 0);
 }
 
 int AircraftItemModel::aircraftNeedingUpdated() const
@@ -1176,4 +762,3 @@ void AircraftItemModel::setShowUpdateAll(bool showUpdateAll)
     emit aircraftNeedingUpdatedChanged();
 }
 
-#include "AircraftModel.moc"

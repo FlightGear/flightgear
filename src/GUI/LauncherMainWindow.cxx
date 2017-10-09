@@ -42,6 +42,7 @@
 #include "MPServersModel.h"
 #include "ThumbnailImageItem.hxx"
 #include "FlickableExtentQuery.hxx"
+#include "LocalAircraftCache.hxx"
 
 #include "ui_Launcher.h"
 
@@ -173,7 +174,10 @@ LauncherMainWindow::LauncherMainWindow() :
             this, &LauncherMainWindow::onAircraftInstalledCompleted);
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
             this, &LauncherMainWindow::onAircraftInstallFailed);
-    connect(m_aircraftModel, &AircraftItemModel::scanCompleted,
+
+
+    connect(LocalAircraftCache::instance(),
+            &LocalAircraftCache::scanCompleted,
             this, &LauncherMainWindow::updateSelectedAircraft);
 
     AddOnsPage* addOnsPage = new AddOnsPage(NULL, globals->packageRoot());
@@ -191,9 +195,9 @@ LauncherMainWindow::LauncherMainWindow() :
             this, &LauncherMainWindow::delayedAircraftModelReset);
 
     QSettings settings;
-    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
+    LocalAircraftCache::instance()->setPaths(settings.value("aircraft-paths").toStringList());
+    LocalAircraftCache::instance()->scanDirs();
     m_aircraftModel->setPackageRoot(globals->packageRoot());
-    m_aircraftModel->scanDirs();
 
     buildSettingsSections();
     buildEnvironmentSections();
@@ -864,8 +868,10 @@ void LauncherMainWindow::downloadDirChanged(QString path)
     QSettings settings;
     // re-scan the aircraft list
     m_aircraftModel->setPackageRoot(globals->packageRoot());
-    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
-    m_aircraftModel->scanDirs();
+
+    auto aircraftCache = LocalAircraftCache::instance();
+    aircraftCache->setPaths(settings.value("aircraft-paths").toStringList());
+    aircraftCache->scanDirs();
 
     emit showNoOfficialHangarChanged();
 
@@ -909,8 +915,9 @@ simgear::pkg::PackageRef LauncherMainWindow::packageForAircraftURI(QUrl uri) con
 void LauncherMainWindow::onAircraftPathsChanged()
 {
     QSettings settings;
-    m_aircraftModel->setPaths(settings.value("aircraft-paths").toStringList());
-    m_aircraftModel->scanDirs();
+    auto aircraftCache = LocalAircraftCache::instance();
+    aircraftCache->setPaths(settings.value("aircraft-paths").toStringList());
+    aircraftCache->scanDirs();
 }
 
 void LauncherMainWindow::onChangeDataDir()

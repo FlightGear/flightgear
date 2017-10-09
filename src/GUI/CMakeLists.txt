@@ -169,6 +169,11 @@ if (HAVE_QT)
                         FGQmlInstance.hxx
                         FGQmlPropertyNode.cxx
                         FGQmlPropertyNode.hxx
+                        QmlAircraftInfo.cxx
+                        QmlAircraftInfo.hxx
+                        LocalAircraftCache.cxx
+                        LocalAircraftCache.hxx
+
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
