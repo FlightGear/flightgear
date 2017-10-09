@@ -48,7 +48,8 @@ public:
     ThumbnailImageItem* owner;
 };
 
-ThumbnailImageItem::ThumbnailImageItem() :
+ThumbnailImageItem::ThumbnailImageItem(QQuickItem* parent) :
+    QQuickItem(parent),
     m_delegate(new ThumbnailPackageDelegate(this)),
     m_maximumSize(9999, 9999)
 {
@@ -66,18 +67,20 @@ ThumbnailImageItem::~ThumbnailImageItem()
 QSGNode *ThumbnailImageItem::updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *)
 {
     if (m_image.isNull()) {
+        delete oldNode;
         return nullptr;
     }
 
     QSGSimpleTextureNode* textureNode = static_cast<QSGSimpleTextureNode*>(oldNode);
-    if (!textureNode) {
-        textureNode = new QSGSimpleTextureNode;
-        textureNode->setOwnsTexture(true);
-    }
+    if (m_imageDirty || !textureNode) {
+        if (!textureNode) {
+            textureNode = new QSGSimpleTextureNode;
+            textureNode->setOwnsTexture(true);
+        }
 
-    if (m_imageDirty && !m_image.isNull()) {
         QSGTexture* tex = window()->createTextureFromImage(m_image);
         textureNode->setTexture(tex);
+        textureNode->markDirty(QSGBasicGeometryNode::DirtyMaterial);
         m_imageDirty = false;
     }
 

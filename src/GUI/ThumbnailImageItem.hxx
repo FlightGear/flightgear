@@ -18,7 +18,7 @@ class ThumbnailImageItem : public QQuickItem
 
     Q_PROPERTY(QSize maximumSize READ maximumSize WRITE setMaximumSize NOTIFY maximumSizeChanged)
 public:
-    ThumbnailImageItem();
+    ThumbnailImageItem(QQuickItem* parent = nullptr);
     ~ThumbnailImageItem();
 
     QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
