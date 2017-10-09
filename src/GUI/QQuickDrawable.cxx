@@ -268,8 +268,12 @@ void QQuickDrawable::setup(osgViewer::GraphicsWindow* gw)
         d->qmlEngine->setIncubationController(d->quickWindow->incubationController());
     
     d->renderControl->initialize(d->qtContext);
+
+#if QT_VERSION < 0x050600
+    SG_LOG(SG_GUI, SG_ALERT, "Qt < 5.6 was used to build FlightGear, multi-threading of QtQuick is not safe");
+#else
     d->renderControl->prepareThread(op->thread());
-    
+#endif
     QObject::connect(d->renderControl, &QQuickRenderControl::sceneChanged,
                      d, &QQuickDrawablePrivate::onSceneChanged);
     QObject::connect(d->renderControl, &QQuickRenderControl::renderRequested,
