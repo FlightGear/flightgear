@@ -694,6 +694,49 @@ clearLocation ()
     fgSetString("/sim/presets/fix", "");
 }
 
+/*
+ Using  --addon=/foo/bar does:
+   - load /foo/bar/config.xml into the Global Property Tree;
+   - add /foo/bar to the list of aircraft paths to provide read access:
+   - set property /addons/addon[n]/path = "/foo/bar".
+
+ Addons get initialized from addons.nas in FGData/Nasal.
+*/
+static int
+fgOptAddon(const char *arg)
+{
+  const SGPath path(SGPath::fromLocal8Bit(arg));
+  const SGPath config_xml = path / "config.xml";
+
+  if (config_xml.exists()) {
+    try {
+      readProperties(config_xml, globals->get_props());
+    } catch (const sg_exception &e) {
+      const string msg = "Unable to load '" + config_xml.utf8Str() + "'. "
+        "Please check that this file exists and is readable.\n\n" +
+        "Exception information: " + e.getFormattedMessage();
+      SG_LOG(SG_GENERAL, SG_ALERT, msg);
+      flightgear::fatalMessageBoxThenExit(
+        "FlightGear", "Unable to load an addon's config.xml file.", msg);
+    }
+
+    globals->append_aircraft_path(path);
+    fgGetNode("addons", true)
+      ->addChild("addon")
+      ->getNode("path", true)
+      ->setStringValue(path.utf8Str());
+  } else {
+    flightgear::fatalMessageBoxThenExit(
+      "FlightGear",
+      "Path specified with --addon does not exist or no config.xml found in "
+      "that path.",
+      "Unable to find the file '" + config_xml.utf8Str() + "'."
+      );
+  }
+
+  return FG_OPTIONS_OK;
+}
+
 static int
 fgOptVOR( const char * arg )
 {
@@ -1770,7 +1813,7 @@ struct OptionDesc {
     {"wp",                           true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_STRING,   "/autopilot/route-manager/file-path", false, "", NULL },
     {"config",                       true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
-    {"addon",                        true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
+    {"addon",                        true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptAddon },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },
@@ -2320,32 +2363,6 @@ int Options::parseOption(const string& s, bool fromConfigFile)
     }
 
     return FG_OPTIONS_OK;
-
-  } else if ( s.find("--addon=") == 0) {
-/*
- using  --addon=/foo/bar does
- * add /foo/bar/config.xml as propertyfile
- * add /foo/bar to aircraft_paths to provide read-access
- * sets property /addons/addon[n]/path = "/foo/bar"
- * addons get initialized from addons.nas in FGDATA/Nasal 
-*/
-    SGPath path = s.substr(8);
-    SGPath config_xml = path / "config.xml";
-    if( config_xml.exists() ) {
-        p->propertyFiles.push_back(config_xml);
-        globals->append_aircraft_path(path);
-        fgGetNode("addons",true)
-          ->addChild("addon")
-          ->getNode("path",true)
-          ->setStringValue(path.str());
-    } else {
-      flightgear::fatalMessageBoxThenExit(
-        "FlightGear",
-        "Path specified with --addon does not exist or no config.xml found in that path"
-      );
-    }
-    return FG_OPTIONS_OK;
-
   } else if ( s.find( "--" ) == 0 ) {
     size_t eqPos = s.find( '=' );
     string key, value;
