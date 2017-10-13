@@ -3,22 +3,21 @@ import QtQuick 2.0
 Rectangle {
     id: root
 
-    property string text
-    property string hoverText: ""
+    property alias text: buttonText.text
+    property bool active: false
 
     signal clicked
 
-    width: 120
-    height: buttonText.implicitHeight + (radius * 2)
+    width: buttonText.width + (radius * 2)
+    height: buttonText.height + (radius * 2)
     radius: 6
 
-    color: mouse.containsMouse ? "#064989" : "#1b7ad3"
+    color: mouse.containsMouse ? "#064989" : (active ? "#1b7ad3" : "white")
 
     Text {
         id: buttonText
         anchors.centerIn: parent
-        color: "white"
-        text: (mouse.containsMouse && hoverText != "") ? root.hoverText : root.text
+        color: (active | mouse.containsMouse) ? "white" : "#3f3f3f"
     }
 
     MouseArea {

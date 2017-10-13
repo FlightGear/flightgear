@@ -46,6 +46,7 @@ class LaunchConfig;
 class ExtraSettingsSection;
 class ViewCommandLinePage;
 class MPServersModel;
+class QQuickItem;
 
 class LauncherMainWindow : public QMainWindow
 {
@@ -53,6 +54,13 @@ class LauncherMainWindow : public QMainWindow
 
     Q_PROPERTY(bool showNoOfficialHanger READ showNoOfficialHanger NOTIFY showNoOfficialHangarChanged)
 
+    Q_PROPERTY(AircraftProxyModel* installedAircraftModel MEMBER m_installedAircraftModel CONSTANT)
+    Q_PROPERTY(AircraftProxyModel* browseAircraftModel MEMBER m_browseAircraftModel CONSTANT)
+    Q_PROPERTY(AircraftProxyModel* searchAircraftModel MEMBER m_aircraftSearchModel CONSTANT)
+
+    Q_PROPERTY(AircraftItemModel* baseAircraftModel MEMBER m_aircraftModel CONSTANT)
+
+    Q_PROPERTY(QUrl selectedAircraft READ selectedAircraft WRITE setSelectedAircraft NOTIFY selectedAircraftChanged)
 public:
     LauncherMainWindow();
     virtual ~LauncherMainWindow();
@@ -62,7 +70,6 @@ public:
     bool wasRejected();
 
     Q_INVOKABLE bool validateMetarString(QString metar);
-    Q_INVOKABLE void showPreviewsFor(QUrl aircraftUri) const;
 
     Q_INVOKABLE void requestInstallUpdate(QUrl aircraftUri);
 
@@ -78,11 +85,19 @@ public:
 
     Q_INVOKABLE void officialCatalogAction(QString s);
 
-    Q_INVOKABLE void selectAircraft(QUrl aircraftUri);
+    QUrl selectedAircraft() const;
+
+    // work around the fact, that this is not available on QQuickItem until 5.7
+    Q_INVOKABLE QPointF mapToGlobal(QQuickItem* item, const QPointF& pos) const;
+public slots:
+    void setSelectedAircraft(QUrl selectedAircraft);
+
 signals:
     void showNoOfficialHangarChanged();
 
     void selectAircraftIndex(int index);
+    void selectedAircraftChanged(QUrl selectedAircraft);
+
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
@@ -100,18 +115,12 @@ private slots:
     void onPopupAircraftHistory();
     void onPopupLocationHistory();
 
-    void onEditRatingsFilter();
-
     void updateSettingsSummary();
 
     void onSubsytemIdleTimeout();
 
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
-
-    void onShowInstalledAircraftToggled(bool b);
-
-    void maybeRestoreAircraftSelection();
 
     void onRestoreDefaults();
     void onViewCommandLine();
@@ -134,15 +143,11 @@ private:
     void restoreSettings();
     void saveSettings();
 
-    QModelIndex proxyIndexForAircraftURI(QUrl uri) const;
-    QModelIndex sourceIndexForAircraftURI(QUrl uri) const;
-
     simgear::pkg::PackageRef packageForAircraftURI(QUrl uri) const;
 
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
     void delayedAircraftModelReset();
-    void onRatingsFilterToggled();
 
     void updateLocationHistory();
     bool shouldShowOfficialCatalogMessage() const;
@@ -153,8 +158,10 @@ private:
     void initQML();
 
     QScopedPointer<Ui::Launcher> m_ui;
-    AircraftProxyModel* m_aircraftProxy;
+    AircraftProxyModel* m_installedAircraftModel;
     AircraftItemModel* m_aircraftModel;
+    AircraftProxyModel* m_aircraftSearchModel;
+    AircraftProxyModel* m_browseAircraftModel;
     MPServersModel* m_serversModel = nullptr;
 
     QUrl m_selectedAircraft;

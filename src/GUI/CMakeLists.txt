@@ -68,12 +68,10 @@ endif()
 
 if (HAVE_QT)
     qt5_wrap_ui(uic_sources Launcher.ui
-                            EditRatingsFilterDialog.ui
                             SetupRootDialog.ui
                             AddCatalogDialog.ui
                             PathsDialog.ui
                             LocationWidget.ui
-                            NoOfficialHangar.ui
                             InstallSceneryDialog.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
@@ -100,8 +98,6 @@ if (HAVE_QT)
                             AirportDiagram.hxx
                             NavaidDiagram.cxx
                             NavaidDiagram.hxx
-                            EditRatingsFilterDialog.cxx
-                            EditRatingsFilterDialog.hxx
                             ExtraSettingsSection.cxx
                             ExtraSettingsSection.hxx
                             SetupRootDialog.cxx
@@ -122,8 +118,6 @@ if (HAVE_QT)
                             QtFileDialog.hxx
                             InstallSceneryDialog.hxx
                             InstallSceneryDialog.cxx
-                            PreviewWindow.cxx
-                            PreviewWindow.hxx
                             SettingsSection.cxx
                             SettingsSection.hxx
                             SettingsSectionQML.cxx
@@ -146,18 +140,13 @@ if (HAVE_QT)
                             ViewCommandLinePage.hxx
                             MPServersModel.cpp
                             MPServersModel.h
-                            ThumbnailImageItem.cxx
-                            ThumbnailImageItem.hxx
-                            FlickableExtentQuery.cxx
-                            FlickableExtentQuery.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::QuickWidgets SimGearCore)
-    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI 
-                                                  ${Qt5Quick_PRIVATE_INCLUDE_DIRS}) 
+    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
     add_library(fgqmlui QQuickDrawable.cxx
                         QQuickDrawable.hxx                    
@@ -173,12 +162,17 @@ if (HAVE_QT)
                         QmlAircraftInfo.hxx
                         LocalAircraftCache.cxx
                         LocalAircraftCache.hxx
-
+                        PreviewImageItem.cxx
+                        PreviewImageItem.hxx
+                        ThumbnailImageItem.cxx
+                        ThumbnailImageItem.hxx
+                        FlickableExtentQuery.cxx
+                        FlickableExtentQuery.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
     target_link_libraries(fgqmlui Qt5::Quick Qt5::Network Qt5::Qml SimGearCore)
-    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
+    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI ${Qt5Quick_PRIVATE_INCLUDE_DIRS})
 endif()
 
 

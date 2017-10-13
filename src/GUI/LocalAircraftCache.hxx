@@ -49,6 +49,8 @@ struct AircraftItem
 
     QPixmap thumbnail(bool loadIfRequired = true) const;
 
+    int indexOfVariant(QUrl uri) const;
+
     bool excluded = false;
     QString path;
     QString description;
@@ -99,6 +101,8 @@ public:
     AircraftItemPtr findItemWithUri(QUrl aircraftUri) const;
     int findIndexWithUri(QUrl aircraftUri) const;
 
+    AircraftItemPtr primaryItemFor(AircraftItemPtr item) const;
+
     QVector<AircraftItemPtr> newestItems(int count);
 
     QVariant aircraftStatus(AircraftItemPtr item) const;
@@ -111,6 +115,16 @@ public:
         AircraftNeedsOlderSimulator // won't ever occur for the moment
     };
 
+    enum PackageStatus {
+        PackageNotInstalled = 0,
+        PackageInstalled,
+        PackageUpdateAvailable,
+        PackageQueued,
+        PackageDownloading
+    };
+
+    Q_ENUMS(PackageStatus)
+    Q_ENUMS(AircraftStatus)
 signals:
 
     void scanStarted();

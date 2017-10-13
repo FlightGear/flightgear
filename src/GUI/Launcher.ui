@@ -446,7 +446,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="aircraftPage">
-       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,1">
+       <layout class="QVBoxLayout" name="verticalLayout_3">
         <property name="spacing">
          <number>4</number>
         </property>
@@ -462,80 +462,6 @@
         <property name="bottomMargin">
          <number>4</number>
         </property>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <property name="spacing">
-           <number>4</number>
-          </property>
-          <property name="topMargin">
-           <number>4</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Search:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="aircraftFilter">
-            <property name="placeholderText">
-             <string>Search aircraft (press Enter to search)</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QCheckBox" name="onlyShowInstalledCheck">
-            <property name="text">
-             <string>Only show installed aircraft</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_3">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="ratingsFilterCheck">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Hide aircraft based on completeness (rating)</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="editRatingFilter">
-            <property name="text">
-             <string>Edit...</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
         <item>
          <widget class="QQuickWidget" name="aircraftList"/>
         </item>

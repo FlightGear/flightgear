@@ -1,6 +1,8 @@
 #ifndef QMLAIRCRAFTINFO_HXX
 #define QMLAIRCRAFTINFO_HXX
 
+#include <memory>
+
 #include <QObject>
 #include <QUrl>
 #include <QSharedPointer>
@@ -16,8 +18,9 @@ class QmlAircraftInfo : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QUrl uri READ uri WRITE setUri NOTIFY uriChanged)
+    Q_PROPERTY(int variant READ variant WRITE setVariant NOTIFY variantChanged)
 
-    Q_PROPERTY(int numPreviews READ numPreviews NOTIFY infoChanged)
+    Q_PROPERTY(QVariantList previews READ previews NOTIFY infoChanged)
     Q_PROPERTY(int numVariants READ numVariants NOTIFY infoChanged)
 
     Q_PROPERTY(QString name READ name NOTIFY infoChanged)
@@ -35,6 +38,7 @@ class QmlAircraftInfo : public QObject
     Q_PROPERTY(int downloadedBytes READ downloadedBytes NOTIFY downloadChanged)
 
     Q_PROPERTY(QVariant status READ status NOTIFY infoChanged)
+    Q_PROPERTY(QVariant installStatus READ installStatus NOTIFY downloadChanged)
 
     Q_PROPERTY(QString minimumFGVersion READ minimumFGVersion NOTIFY infoChanged)
 
@@ -46,22 +50,23 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(QVariantList ratings READ ratings NOTIFY infoChanged)
 
+    Q_PROPERTY(QStringList variantNames READ variantNames NOTIFY infoChanged)
+
+
 public:
     explicit QmlAircraftInfo(QObject *parent = nullptr);
     virtual ~QmlAircraftInfo();
 
-    QUrl uri() const
-    {
-        return _uri;
-    }
+    QUrl uri() const;
 
-    int numPreviews() const;
     int numVariants() const;
 
     QString name() const;
     QString description() const;
     QString authors() const;
     QVariantList ratings() const;
+
+    QVariantList previews() const;
 
     QUrl thumbnail() const;
     QString pathOnDisk() const;
@@ -74,21 +79,42 @@ public:
     QString minimumFGVersion() const;
 
     static QVariant packageAircraftStatus(simgear::pkg::PackageRef p);
+
+    int variant() const
+    {
+        return _variant;
+    }
+
+    QVariant installStatus() const;
+
+     simgear::pkg::PackageRef packageRef() const;
+
+    void setDownloadBytes(int bytes);
+
+    QStringList variantNames() const;
 signals:
     void uriChanged();
     void infoChanged();
     void downloadChanged();
+    void variantChanged(int variant);
+
 public slots:
 
     void setUri(QUrl uri);
 
+    void setVariant(int variant);
+
 private:
-    QUrl _uri;
+    class Delegate;
+    std::unique_ptr<Delegate> _delegate;
+
     simgear::pkg::PackageRef _package;
     AircraftItemPtr _item;
     int _variant = 0;
+    int _downloadBytes = 0;
 
     AircraftItemPtr resolveItem() const;
+    int m_variant;
 };
 
 #endif // QMLAIRCRAFTINFO_HXX

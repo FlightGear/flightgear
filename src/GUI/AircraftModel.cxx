@@ -298,14 +298,6 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
         }
     }
 
-    if (role == AircraftThumbnailSizeRole) {
-        QPixmap pm = item->thumbnail(false);
-        if (pm.isNull()) {
-            return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
-        }
-        return pm.size();
-    }
-
     if (role == Qt::DisplayRole) {
         if (item->description.isEmpty()) {
             return tr("Missing description for: %1").arg(item->baseName());
@@ -320,20 +312,12 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
         return item->authors;
     } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
         return item->ratings[role - AircraftRatingRole];
-    } else if (role == AircraftPreviewsRole) {
-        QVariantList result;
-        Q_FOREACH(QUrl u, item->previews) {
-            result.append(u);
-        }
-        return result;
-    } else if (role == AircraftHasPreviewsRole) {
-        return !item->previews.empty();
     } else if (role == AircraftThumbnailRole) {
         return item->thumbnail();
     } else if (role == AircraftPackageIdRole) {
         // can we fake an ID? otherwise fall through to a null variant
     } else if (role == AircraftPackageStatusRole) {
-        return PackageInstalled; // always the case
+        return LocalAircraftCache::PackageInstalled; // always the case
     } else if (role == Qt::ToolTipRole) {
         return item->path;
     } else if (role == AircraftURIRole) {
@@ -395,34 +379,25 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         InstallRef i = item->existingInstall();
         if (i.valid()) {
             if (i->isDownloading()) {
-                return PackageDownloading;
+                return LocalAircraftCache::PackageDownloading;
             }
             if (i->isQueued()) {
-                return PackageQueued;
+                return LocalAircraftCache::PackageQueued;
             }
             if (i->hasUpdate()) {
-                return PackageUpdateAvailable;
+                return LocalAircraftCache::PackageUpdateAvailable;
             }
 
-            return PackageInstalled;
+            return LocalAircraftCache::PackageInstalled;
         } else {
-            return PackageNotInstalled;
+            return LocalAircraftCache::PackageNotInstalled;
         }
     } else if (role == AircraftVariantCountRole) {
         // this value wants the number of aditional variants, i.e not
         // including the primary. Hence the -1 term.
         return static_cast<quint32>(item->variants().size() - 1);
-    } else if (role == AircraftThumbnailSizeRole) {
-        QPixmap pm = packageThumbnail(item, state, false).value<QPixmap>();
-        if (pm.isNull())
-            return QSize(STANDARD_THUMBNAIL_WIDTH, STANDARD_THUMBNAIL_HEIGHT);
-        return pm.size();
     } else if (role == AircraftThumbnailRole) {
         return packageThumbnail(item, state);
-    } else if (role == AircraftPreviewsRole) {
-        return packagePreviews(item, state);
-    } else if (role == AircraftHasPreviewsRole) {
-        return !item->previewsForVariant(state.variant).empty();
     } else if (role == AircraftAuthorsRole) {
         std::string authors = item->getLocalisedProp("author", state.variant);
         if (!authors.empty()) {
@@ -492,35 +467,6 @@ QVariant AircraftItemModel::packageThumbnail(PackageRef p, const DelegateState& 
     return QVariant();
 }
 
-QVariant AircraftItemModel::packagePreviews(PackageRef p, const DelegateState& ds) const
-{
-    const Package::PreviewVec& previews = p->previewsForVariant(ds.variant);
-    if (previews.empty()) {
-        return QVariant();
-    }
-
-    QVariantList result;
-    // if we have an install, return file URLs, not remote (http) ones
-    InstallRef ex = p->existingInstall();
-    if (ex.valid()) {
-        for (auto p : previews) {
-            SGPath localPreviewPath = ex->path() / p.path;
-            if (!localPreviewPath.exists()) {
-                qWarning() << "missing local preview" << QString::fromStdString(localPreviewPath.utf8Str());
-                continue;
-            }
-            result.append(QUrl::fromLocalFile(QString::fromStdString(localPreviewPath.utf8Str())));
-        }
-    }
-
-    // return remote urls
-    for (auto p : previews) {
-        result.append(QUrl(QString::fromStdString(p.url)));
-    }
-
-    return result;
-}
-
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
   {
       int row = index.row();
@@ -553,7 +499,6 @@ QHash<int, QByteArray> AircraftItemModel::roleNames() const
     result[AircraftPackageSizeRole] = "packageSizeBytes";
     result[AircraftPackageStatusRole] = "packageStatus";
 
-    result[AircraftHasPreviewsRole] = "hasPreviews";
     result[AircraftInstallDownloadedSizeRole] = "downloadedBytes";
     result[AircraftVariantRole] = "activeVariant";
 
@@ -655,6 +600,10 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
 {
     if (uri.isLocalFile()) {
         AircraftItemPtr item = LocalAircraftCache::instance()->findItemWithUri(uri);
+        if (!item) {
+            return {};
+        }
+
         const QString path = uri.toLocalFile();
         if (item->path == path) {
             return item->description;
@@ -675,10 +624,9 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
         }
     } else {
         qWarning() << "Unknown aircraft URI scheme" << uri << uri.scheme();
-        return QString();
     }
 
-    return QString();
+    return {};
 }
 
 void AircraftItemModel::onScanAddedItems(int count)

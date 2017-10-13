@@ -5,28 +5,34 @@ Item {
     id: root
 
     property url uri
-    property int installStatus: AircraftModel.PackageNotInstalled
+    property int installStatus: LocalAircraftCache.PackageNotInstalled
     property int packageSize: 0
 
     property int downloadedBytes: 0
 
-    readonly property bool active: (installStatus == AircraftModel.PackageQueued) ||
-                                   (installStatus == AircraftModel.PackageDownloading)
+    readonly property bool active: (installStatus == LocalAircraftCache.PackageQueued) ||
+                                   (installStatus == LocalAircraftCache.PackageDownloading)
 
     readonly property int compactWidth: button.width + sizeText.width
+
+    property bool compact: false
+
+    implicitWidth: childrenRect.width
+    implicitHeight: childrenRect.height
+
 
     state: "not-installed"
 
     onInstallStatusChanged: {
-        if (installStatus == AircraftModel.PackageInstalled) {
+        if (installStatus == LocalAircraftCache.PackageInstalled) {
             state = "installed";
-        } else if (installStatus == AircraftModel.PackageNotInstalled) {
+        } else if (installStatus == LocalAircraftCache.PackageNotInstalled) {
             state = "not-installed"
-        } else if (installStatus == AircraftModel.PackageUpdateAvailable) {
+        } else if (installStatus == LocalAircraftCache.PackageUpdateAvailable) {
             state = "has-update"
-        } else if (installStatus == AircraftModel.PackageQueued) {
+        } else if (installStatus == LocalAircraftCache.PackageQueued) {
             state = "queued"
-        } else if (installStatus == AircraftModel.PackageDownloading) {
+        } else if (installStatus == LocalAircraftCache.PackageDownloading) {
             state = "downloading"
         }
     }
@@ -177,7 +183,7 @@ Item {
         Text {
             id: statusText
             visible: false
-            text: "Downloaded " + (root.downloadedBytes / 0x100000).toFixed(1) +
+            text: (compact ? "" : "Downloaded ") + (root.downloadedBytes / 0x100000).toFixed(1) +
                   "MB of " + (root.packageSize / 0x100000).toFixed(1) + "MB";
         }
     } // item container for progress bar and text

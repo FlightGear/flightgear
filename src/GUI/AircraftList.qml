@@ -1,5 +1,5 @@
-import QtQuick 2.0
-import FlightGear.Launcher 1.0
+import QtQuick 2.2
+import FlightGear.Launcher 1.0 as FG
 
 Item
 {
@@ -7,230 +7,62 @@ Item
 
     readonly property int margin: 8
 
-    Component
+    Rectangle
     {
-        id: aircraftDelegate
+        id: tabBar
+        height: installedAircraftButton.height + margin
+        width: parent.width
 
-        Item {
-            // background
+        Row {
+            anchors.centerIn: parent
+            spacing: root.margin
 
-            height: Math.max(contentBox.childrenRect.height, thumbnailBox.height) + footer.height
-            width: root.width
-
-            MouseArea {
-                anchors.fill: parent
+            TabButton {
+                id: installedAircraftButton
+                text: qsTr("Installed Aircraft")
                 onClicked: {
-                    list.currentIndex = model.index
-                    _launcher.selectAircraft(model.uri);
+                    root.state = "installed"
                 }
+                active: root.state == "installed"
             }
 
-            Rectangle {
-                id: thumbnailBox
-                // thumbnail border
-
-                y: Math.max(0, Math.round((contentBox.childrenRect.height - height) * 0.5))
-
-                border.width: 1
-                border.color: "#7f7f7f"
-
-                width: thumbnail.width
-                height: thumbnail.height
-
-                ThumbnailImage {
-                    id: thumbnail
-
-                    aircraftUri: model.uri
-                    maximumSize.width: 300
-                    maximumSize.height: 200
+            TabButton {
+                id: browseButton
+                text: qsTr("Browse")
+                onClicked: {
+                    root.state = "browse"
                 }
+                active: root.state == "browse"
+            }
+        } // of header row
 
-                Image {
-                    id: previewIcon
-                    visible: model.hasPreviews
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                    source: "qrc:///preview-icon"
-                    opacity: showPreviewsMouse.containsMouse ? 1.0 : 0.5
-                    Behavior on opacity {
-                        NumberAnimation { duration: 100 }
-                    }
-                }
+        SearchButton {
+            id: searchButton
 
-                MouseArea {
-                    id: showPreviewsMouse
-                    hoverEnabled: true
-                    anchors.fill: parent
-                    visible: model.hasPreviews
+            width: 180
+            height: installedAircraftButton.height
 
-                    onClicked: {
-                        _launcher.showPreviewsFor(model.uri);
-                    }
-                }
+            anchors.right: parent.right
+            anchors.rightMargin: margin
+            anchors.verticalCenter: parent.verticalCenter
+
+            onSearch: {
+               _launcher.searchAircraftModel.setAircraftFilterString(term)
+                root.state = "search"
             }
 
-           Column {
-               id: contentBox
+            active: root.state == "search"
+        }
 
-               anchors.leftMargin: root.margin
-               anchors.left: thumbnailBox.right
-               anchors.right: parent.right
-               anchors.rightMargin: root.margin
+        Rectangle {
+            color: "#68A6E1"
+            height: 1
+            width: parent.width - 20
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+        }
+    }
 
-               spacing: root.margin
-
-               Item
-               {
-                   // box to contain the aircraft title and the variant
-                   // selection button arrows
-
-                   id: headingBox
-                   width: parent.width
-                   height: title.height
-
-                   ArrowButton {
-                       id: previousVariantButton
-
-                       visible: (model.variantCount > 0) && (model.activeVariant > 0)
-                       arrow: "qrc:///left-arrow-icon"
-                       anchors.verticalCenter: parent.verticalCenter
-                       anchors.left: parent.left
-
-                       onClicked: {
-                           model.activeVariant = (model.activeVariant - 1)
-                       }
-                   }
-
-                   Text {
-                       id: title
-
-                       anchors.verticalCenter: parent.verticalCenter
-                       anchors.left: previousVariantButton.right
-                       anchors.right: nextVariantButton.left
-
-                       horizontalAlignment: Text.AlignHCenter
-                       font.pixelSize: 24
-                       text: model.title
-
-                       elide: Text.ElideRight
-                   }
-
-                   ArrowButton {
-                       id: nextVariantButton
-
-                       arrow: "qrc:///right-arrow-icon"
-                       visible: (model.variantCount > 0) && (model.activeVariant < model.variantCount - 1)
-                       anchors.verticalCenter: parent.verticalCenter
-                       anchors.right: parent.right
-
-                       onClicked: {
-                           model.activeVariant = (model.activeVariant + 1)
-                       }
-                   }
-
-               } // top header box (title + variant arrows)
-
-               // this element normally hides itself unless needed
-               AircraftWarningPanel {
-                   id: warningBox
-                   aircraftStatus: model.aircraftStatus
-                   requiredFGVersion: model.requiredFGVersion
-                   width: parent.width
-               }
-
-               Text {
-                   id: authors
-                   visible: (model.authors != undefined)
-                   width: parent.width
-                   text: "by: " + model.authors
-                   maximumLineCount: 3
-                   wrapMode: Text.WordWrap
-                   elide: Text.ElideRight
-               }
-
-               Text {
-                   id: description
-                   width: parent.width
-                   text: model.description
-                   maximumLineCount: 10
-                   wrapMode: Text.WordWrap
-                   elide: Text.ElideRight
-               }
-
-               Item {
-                   // this area holds the install/update/remove button,
-                   // and the ratings grid. when a download / update is
-                   // happening, the content is re-arranged to give more room
-                   // for the progress bar and feedback
-                   id: bottomContent
-
-                   readonly property int minimumWidthForBottomContent: ratingGrid.width + downloadPanel.compactWidth + root.margin
-
-                   width: Math.max(parent.width, minimumWidthForBottomContent)
-                   height: ratingGrid.height
-
-                   AircraftDownloadPanel
-                   {
-                       id: downloadPanel
-                       visible: (model.package != undefined)
-                       packageSize: model.packageSizeBytes
-                       installStatus: model.packageStatus
-                       downloadedBytes: model.downloadedBytes
-                       uri: model.uri
-                       width: parent.width // full width, grid sits on top
-                   }
-
-                   Grid {
-                       id: ratingGrid
-                       anchors.right: parent.right
-
-                       // hide ratings when the panel is doing something, to
-                       // make more room for the progress bar and text
-                       visible: model.hasRatings && !downloadPanel.active
-
-                       rows: 2
-                       columns: 2
-                       rowSpacing: root.margin
-                       columnSpacing: root.margin
-
-                       AircraftRating {
-                           title: "Flight model"
-                           value: model.ratingFDM;
-                       }
-
-                       AircraftRating {
-                           title: "Systems"
-                           value: model.ratingSystems;
-                       }
-
-                       AircraftRating {
-                           title: "Cockpit"
-                           value: model.ratingCockpit;
-                       }
-
-                       AircraftRating {
-                           title: "Exterior"
-                           value: model.ratingExterior;
-                       }
-                   }
-               }
-           } // of content column
-
-           Item {
-               id: footer
-               height: 12
-               width: parent.width
-               anchors.bottom: parent.bottom
-
-               Rectangle {
-                   color: "#68A6E1"
-                   height: 2
-                   width: parent.width - 60
-                   anchors.centerIn: parent
-               }
-           }
-        } // of Component root item
-    } // of Component
 
     Component {
         id: highlight
@@ -242,11 +74,51 @@ Item
         }
     }
 
+    Component {
+        id: ratingsHeader
+        AircraftRatingsPanel {
+            width: aircraftList.width - 80
+            x: (aircraftList.width - width) / 2
+
+        }
+    }
+
+    Component {
+        id: noDefaultCatalogHeader
+        NoDefaultCatalogPanel {
+            width: aircraftList.width - 80
+            x: (aircraftList.width - width) / 2
+        }
+    }
+
+    Component {
+        id: updateAllHeader
+        UpdateAllPanel {
+            width: aircraftList.width - 80
+            x: (aircraftList.width - width) / 2
+        }
+    }
+
     ListView {
-        id: list
-        model: _filteredModel
-        anchors.fill: parent
-        delegate: aircraftDelegate
+        id: aircraftList
+
+        anchors {
+            left: parent.left
+            top: tabBar.bottom
+            bottom: parent.bottom
+            right: scrollbar.left
+        }
+
+        delegate: AircraftCompactDelegate {
+            onSelect: {
+                aircraftList.currentIndex = model.index;
+                _launcher.selectedAircraft = uri;
+            }
+
+            onShowDetails: root.showDetails(uri)
+        }
+
+        clip: true
 
         highlight: highlight
         highlightMoveDuration: 100
@@ -259,10 +131,26 @@ Item
 
         }
 
-        Scrollbar {
-            anchors.right: parent.right
-            height: parent.height
+        function updateSelectionFromLauncher()
+        {
+            model.selectVariantForAircraftURI(_launcher.selectedAircraft);
+            var row = model.indexForURI(_launcher.selectedAircraft);
+            if (row >= 0) {
+                currentIndex = row;
+            } else {
+                // clear selection in view, so we don't show something
+                // erroneous such as the previous value
+                currentIndex = -1;
+            }
         }
+    }
+
+    Scrollbar {
+        id: scrollbar
+        anchors.right: parent.right
+        anchors.top: tabBar.bottom
+        height: aircraftList.height
+        flickable: aircraftList
     }
 
     Connections
@@ -270,91 +158,73 @@ Item
         target: _launcher
         onSelectAircraftIndex: {
             console.warn("Selecting aircraft:" + index);
-            list.currentIndex = index;
+            aircraftList.currentIndex = index;
+            aircraftList.model.select
         }
     }
 
-    Rectangle {
-        id: updateAllBox
+    state: "installed"
 
-        visible: _aircraftModel.showUpdateAll
-        width: parent.width
-        height: updateAllRow.childrenRect.height + root.margin * 2
-
-        Row {
-            y: root.margin
-            id: updateAllRow
-            spacing: root.margin
-
-            Text {
-                text: _aircraftModel.aircraftNeedingUpdated + " aircraft have updates available - download and install them now?"
-                wrapMode: Text.WordWrap
-                anchors.verticalCenter: parent.verticalCenter
+    states: [
+        State {
+            name: "installed"
+            PropertyChanges {
+                target: aircraftList
+                model: _launcher.installedAircraftModel
+                header: _launcher.baseAircraftModel.showUpdateAll ? updateAllHeader : null
             }
+        },
 
-            Button {
-                text: "Update all"
-                anchors.verticalCenter: parent.verticalCenter
-
-                onClicked: {
-                    _launcher.requestUpdateAllAircraft();
-                    _launcher.showUpdateAll = false
-                }
+        State {
+            name: "search"
+            PropertyChanges {
+                target: aircraftList
+                model: _launcher.searchAircraftModel
+                header: null
             }
+        },
 
-            Button {
-                text: "Not now"
-                anchors.verticalCenter: parent.verticalCenter
-
-                onClicked: {
-                    _launcher.showUpdateAll = false
-                }
+        State {
+            name: "browse"
+            PropertyChanges {
+                target: aircraftList
+                model: _launcher.browseAircraftModel
+                header: _launcher.showNoOfficialHanger ? noDefaultCatalogHeader : ratingsHeader
             }
         }
-    } // of update-all prompt
+    ]
 
-    Rectangle {
-        id: noDefaultCatalogBox
-        visible: _launcher.showNoOfficialHanger
-        width: parent.width
-        height: noDefaultCatalogRow.childrenRect.height + root.margin * 2
+    function showDetails(uri)
+    {
+        // set URI, start animation
+        // change state
+        detailsView.aircraftURI = uri;
+        detailsView.visible = true
+    }
 
-        Row {
-            y: root.margin
-            id: noDefaultCatalogRow
-            spacing: root.margin
+    function goBack()
+    {
+        detailsView.visible = false;
+    }
 
-            Text {
-                text: "The official FlightGear aircraft hangar is not added, so many standard "
-                      + "aircraft will not be available. You can add the  hangar now, or hide "
-                      + "this message. The offical hangar can always be restored from the 'Add-Ons' page."
-                wrapMode: Text.WordWrap
-                anchors.verticalCenter: parent.verticalCenter
-                width: noDefaultCatalogBox.width - (addDefaultButton.width + hideButton.width + root.margin * 3)
-            }
+    AircraftDetailsView {
+        id: detailsView
+        anchors.fill: parent
+        visible: false
 
-            Button {
-                id: addDefaultButton
-                text: qsTr("Add default hangar")
-                anchors.verticalCenter: parent.verticalCenter
+        Button {
+            anchors { left: parent.left; top: parent.top; margins: root.margin }
+            width: 60
 
-                onClicked: {
-                    _launcher.officialCatalogAction("add-official");
-                }
-            }
-
-            Button {
-                id: hideButton
-                text: qsTr("Hide")
-                anchors.verticalCenter: parent.verticalCenter
-
-                onClicked: {
-                    _launcher.officialCatalogAction("hide");
-                }
+            id: backButton
+            text: "< Back"
+            onClicked: {
+                // ensure that if the variant was changed inside the detailsView,
+                // that we update our selection correctly
+                aircraftList.updateSelectionFromLauncher();
+                root.goBack();
             }
         }
     }
-
-    // no default catalog pop-over
 }
 

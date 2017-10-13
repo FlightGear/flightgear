@@ -7,7 +7,10 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMenu>
+#include <QNetworkAccessManager>
+#include <QNetworkDiskCache>
 
+#include <QQuickItem>
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -28,21 +31,21 @@
 
 // launcher headers
 #include "QtLauncher.hxx"
-#include "EditRatingsFilterDialog.hxx"
 #include "AircraftModel.hxx"
 #include "PathsDialog.hxx"
 #include "AircraftSearchFilterModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "SettingsWidgets.hxx"
-#include "PreviewWindow.hxx"
 #include "LaunchConfig.hxx"
 #include "SettingsSectionQML.hxx"
 #include "ExtraSettingsSection.hxx"
 #include "ViewCommandLinePage.hxx"
 #include "MPServersModel.h"
 #include "ThumbnailImageItem.hxx"
+#include "PreviewImageItem.hxx"
 #include "FlickableExtentQuery.hxx"
 #include "LocalAircraftCache.hxx"
+#include "QmlAircraftInfo.hxx"
 
 #include "ui_Launcher.h"
 
@@ -100,7 +103,6 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(viewCommandLineAction, &QAction::triggered,
             this, &LauncherMainWindow::onViewCommandLine);
 
-    m_ui->aircraftFilter->setClearButtonEnabled(true);
     m_serversModel = new MPServersModel(this);
     m_serversModel->refresh();
 
@@ -111,18 +113,6 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(m_subsystemIdleTimer, &QTimer::timeout,
             this, &LauncherMainWindow::onSubsytemIdleTimeout);
     m_subsystemIdleTimer->start();
-
-    // create and configure the proxy model
-    m_aircraftProxy = new AircraftProxyModel(this);
-    connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
-            m_aircraftProxy, &AircraftProxyModel::setRatingFilterEnabled);
-    connect(m_ui->ratingsFilterCheck, &QAbstractButton::toggled,
-            this, &LauncherMainWindow::maybeRestoreAircraftSelection);
-
-    connect(m_ui->onlyShowInstalledCheck, &QAbstractButton::toggled,
-            m_aircraftProxy, &AircraftProxyModel::setInstalledFilterEnabled);
-    connect(m_ui->aircraftFilter, &QLineEdit::textChanged,
-            m_aircraftProxy, &AircraftProxyModel::setAircraftFilterString);
 
     connect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onRun()));
     connect(m_ui->summaryButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
@@ -145,26 +135,22 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(qa, &QAction::triggered, this, &LauncherMainWindow::onQuit);
     addAction(qa);
 
-    connect(m_ui->editRatingFilter, &QPushButton::clicked,
-            this, &LauncherMainWindow::onEditRatingsFilter);
-    connect(m_ui->onlyShowInstalledCheck, &QCheckBox::toggled,
-            this, &LauncherMainWindow::onShowInstalledAircraftToggled);
-
     QIcon historyIcon(":/history-icon");
     m_ui->aircraftHistory->setIcon(historyIcon);
     m_ui->locationHistory->setIcon(historyIcon);
 
     m_aircraftModel = new AircraftItemModel(this);
-    m_aircraftProxy->setSourceModel(m_aircraftModel);
 
-    m_aircraftProxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    m_aircraftProxy->setSortCaseSensitivity(Qt::CaseInsensitive);
-    m_aircraftProxy->setSortRole(Qt::DisplayRole);
-    m_aircraftProxy->setDynamicSortFilter(true);
+    m_installedAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
+    m_installedAircraftModel->setInstalledFilterEnabled(true);
+
+    m_browseAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
+    m_browseAircraftModel->setRatingFilterEnabled(true);
+
+    m_aircraftSearchModel = new AircraftProxyModel(this, m_aircraftModel);
+
     m_ui->aircraftList->setResizeMode(QQuickWidget::SizeRootObjectToView);
 
-    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_filteredModel", m_aircraftProxy);
-    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_aircraftModel", m_aircraftModel);
     m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
     m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
 
@@ -186,13 +172,6 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(addOnsPage, &AddOnsPage::aircraftPathsChanged,
             this, &LauncherMainWindow::onAircraftPathsChanged);
     m_ui->stack->addWidget(addOnsPage);
-
-    // after any kind of reset, try to restore selection and scroll
-    // to match the m_selectedAircraft. This needs to be delayed
-    // fractionally otherwise the scrollTo seems to be ignored,
-    // unfortunately.
-    connect(m_aircraftProxy, &AircraftProxyModel::modelReset,
-            this, &LauncherMainWindow::delayedAircraftModelReset);
 
     QSettings settings;
     LocalAircraftCache::instance()->setPaths(settings.value("aircraft-paths").toStringList());
@@ -224,11 +203,14 @@ void LauncherMainWindow::initQML()
     qmlRegisterType<SettingsDateTime>("FlightGear.Launcher", 1, 0, "DateTime");
     qmlRegisterType<SettingsPath>("FlightGear.Launcher", 1, 0, "PathChooser");
     qmlRegisterUncreatableType<QAbstractItemModel>("FlightGear.Launcher", 1, 0, "QAIM", "no");
+    qmlRegisterUncreatableType<AircraftProxyModel>("FlightGear.Launcher", 1, 0, "AircraftProxyModel", "no");
 
     qmlRegisterUncreatableType<SettingsControl>("FlightGear.Launcher", 1, 0, "Control", "Base class");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
 
     qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
+
+    qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherMainWindow::collectAircraftArgs);
@@ -251,8 +233,19 @@ void LauncherMainWindow::initQML()
     flightgear::WeatherScenariosModel* weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
     m_qmlEngine->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
+    qmlRegisterUncreatableType<LocalAircraftCache>("FlightGear.Launcher", 1, 0, "LocalAircraftCache", "Aircraft cache");
     qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
     qmlRegisterType<ThumbnailImageItem>("FlightGear.Launcher", 1, 0, "ThumbnailImage");
+    qmlRegisterType<PreviewImageItem>("FlightGear.Launcher", 1, 0, "PreviewImage");
+
+    QNetworkDiskCache* diskCache = new QNetworkDiskCache(this);
+    SGPath cachePath = globals->get_fg_home() / "PreviewsCache";
+    diskCache->setCacheDirectory(QString::fromStdString(cachePath.utf8Str()));
+
+    QNetworkAccessManager* netAccess = new QNetworkAccessManager(this);
+    netAccess->setCache(diskCache);
+    PreviewImageItem::setGlobalNetworkAccess(netAccess);
+
 }
 
 void LauncherMainWindow::buildSettingsSections()
@@ -389,23 +382,7 @@ void LauncherMainWindow::restoreSettings()
 
     m_ui->location->restoreLocation(currentLocation);
 
-    // rating filters
-    m_ui->onlyShowInstalledCheck->setChecked(settings.value("only-show-installed", false).toBool());
-    if (m_ui->onlyShowInstalledCheck->isChecked()) {
-        m_ui->ratingsFilterCheck->setEnabled(false);
-    }
-
-    m_ui->ratingsFilterCheck->setChecked(settings.value("ratings-filter", true).toBool());
-    int index = 0;
-    Q_FOREACH(QVariant v, settings.value("min-ratings").toList()) {
-        m_ratingFilters[index++] = v.toInt();
-    }
-
-    m_aircraftProxy->setRatingFilterEnabled(m_ui->ratingsFilterCheck->isChecked());
-    m_aircraftProxy->setRatings(m_ratingFilters);
-
     updateSelectedAircraft();
-    maybeRestoreAircraftSelection();
 
     Q_FOREACH(SettingsSection* ss, findChildren<SettingsSection*>()) {
         ss->restoreState(settings);
@@ -414,31 +391,11 @@ void LauncherMainWindow::restoreSettings()
     m_serversModel->requestRestore();
  }
 
-void LauncherMainWindow::delayedAircraftModelReset()
-{
-    QTimer::singleShot(1, this, SLOT(maybeRestoreAircraftSelection()));
-}
-
-void LauncherMainWindow::maybeRestoreAircraftSelection()
-{
-    QModelIndex aircraftIndex = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
-    QModelIndex proxyIndex = m_aircraftProxy->mapFromSource(aircraftIndex);
-    if (proxyIndex.isValid()) {
-        emit selectAircraftIndex(proxyIndex.row());
-        // and also select the correct variant on the model
-        m_aircraftModel->selectVariantForAircraftURI(m_selectedAircraft);
-    }
-}
-
 void LauncherMainWindow::saveSettings()
 {
     QSettings settings;
-
-    settings.setValue("ratings-filter", m_ui->ratingsFilterCheck->isChecked());
-    settings.setValue("only-show-installed", m_ui->onlyShowInstalledCheck->isChecked());
     settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
     settings.setValue("recent-location-sets", m_recentLocations);
-
     settings.setValue("window-geometry", saveGeometry());
 
     Q_FOREACH(SettingsSection* ss, findChildren<SettingsSection*>()) {
@@ -605,15 +562,6 @@ void LauncherMainWindow::onAircraftInstalledCompleted(QModelIndex index)
     maybeUpdateSelectedAircraft(index);
 }
 
-void LauncherMainWindow::onRatingsFilterToggled()
-{
-    QModelIndex aircraftIndex = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
-    QModelIndex proxyIndex = m_aircraftProxy->mapFromSource(aircraftIndex);
-    if (proxyIndex.isValid()) {
-        emit selectAircraftIndex(proxyIndex.row());
-    }
-}
-
 void LauncherMainWindow::onAircraftInstallFailed(QModelIndex index, QString errorMessage)
 {
     qWarning() << Q_FUNC_INFO << index.data(AircraftURIRole) << errorMessage;
@@ -626,12 +574,6 @@ void LauncherMainWindow::onAircraftInstallFailed(QModelIndex index, QString erro
     msg.exec();
 
     maybeUpdateSelectedAircraft(index);
-}
-
-void LauncherMainWindow::selectAircraft(QUrl aircraftUri)
-{
-    m_selectedAircraft = aircraftUri;
-    updateSelectedAircraft();
 }
 
 void LauncherMainWindow::onRestoreDefaults()
@@ -694,7 +636,7 @@ void LauncherMainWindow::updateSelectedAircraft()
         m_ui->aircraftDescription->setText(longDesc.toString());
 
         int status = index.data(AircraftPackageStatusRole).toInt();
-        bool canRun = (status == AircraftItemModel::PackageInstalled);
+        bool canRun = (status == LocalAircraftCache::PackageInstalled);
         m_ui->flyButton->setEnabled(canRun);
 
         LauncherAircraftType aircraftType = Airplane;
@@ -728,18 +670,6 @@ void LauncherMainWindow::setSceneryPaths()
     flightgear::launcherSetSceneryPaths();
 }
 
-QModelIndex LauncherMainWindow::proxyIndexForAircraftURI(QUrl uri) const
-{
-  return m_aircraftProxy->mapFromSource(sourceIndexForAircraftURI(uri));
-}
-
-QModelIndex LauncherMainWindow::sourceIndexForAircraftURI(QUrl uri) const
-{
-    AircraftItemModel* sourceModel = qobject_cast<AircraftItemModel*>(m_aircraftProxy->sourceModel());
-    Q_ASSERT(sourceModel);
-    return sourceModel->indexOfAircraftURI(uri);
-}
-
 void LauncherMainWindow::onPopupAircraftHistory()
 {
     if (m_recentAircraft.isEmpty()) {
@@ -760,13 +690,7 @@ void LauncherMainWindow::onPopupAircraftHistory()
     QPoint popupPos = m_ui->aircraftHistory->mapToGlobal(m_ui->aircraftHistory->rect().bottomLeft());
     QAction* triggered = m.exec(popupPos);
     if (triggered) {
-        const QUrl uri = triggered->data().toUrl();
-        m_selectedAircraft = uri;
-        QModelIndex index = proxyIndexForAircraftURI(m_selectedAircraft);
-        emit selectAircraftIndex(index.row());
-        m_ui->aircraftFilter->clear();
-        m_aircraftModel->selectVariantForAircraftURI(uri);
-        updateSelectedAircraft();
+        setSelectedAircraft(triggered->data().toUrl());
     }
 }
 
@@ -790,25 +714,6 @@ void LauncherMainWindow::onPopupLocationHistory()
     }
 }
 
-void LauncherMainWindow::onEditRatingsFilter()
-{
-    EditRatingsFilterDialog dialog(this);
-    dialog.setRatings(m_ratingFilters);
-
-    dialog.exec();
-    if (dialog.result() == QDialog::Accepted) {
-        QVariantList vl;
-        for (int i=0; i<4; ++i) {
-            m_ratingFilters[i] = dialog.getRating(i);
-            vl.append(m_ratingFilters[i]);
-        }
-        m_aircraftProxy->setRatings(m_ratingFilters);
-
-        QSettings settings;
-        settings.setValue("min-ratings", vl);
-    }
-}
-
 void LauncherMainWindow::updateSettingsSummary()
 {
     QStringList summary;
@@ -824,12 +729,6 @@ void LauncherMainWindow::updateSettingsSummary()
     QString s = summary.join(", ");
     s[0] = s[0].toUpper();
     m_ui->settingsDescription->setText(s);
-}
-
-void LauncherMainWindow::onShowInstalledAircraftToggled(bool b)
-{
-    m_ui->ratingsFilterCheck->setEnabled(!b);
-    maybeRestoreAircraftSelection();
 }
 
 void LauncherMainWindow::onSubsytemIdleTimeout()
@@ -899,6 +798,27 @@ void LauncherMainWindow::officialCatalogAction(QString s)
     }
 
     emit showNoOfficialHangarChanged();
+}
+
+QUrl LauncherMainWindow::selectedAircraft() const
+{
+    return m_selectedAircraft;
+}
+
+QPointF LauncherMainWindow::mapToGlobal(QQuickItem *item, const QPointF &pos) const
+{
+    QPointF scenePos = item->mapToScene(pos);
+    return m_ui->aircraftList->mapToGlobal(scenePos.toPoint());
+}
+
+void LauncherMainWindow::setSelectedAircraft(QUrl selectedAircraft)
+{
+    if (m_selectedAircraft == selectedAircraft)
+        return;
+
+    m_selectedAircraft = selectedAircraft;
+    updateSelectedAircraft();
+    emit selectedAircraftChanged(m_selectedAircraft);
 }
 
 simgear::pkg::PackageRef LauncherMainWindow::packageForAircraftURI(QUrl uri) const
@@ -977,18 +897,6 @@ bool LauncherMainWindow::validateMetarString(QString metar)
     }
 
     return true;
-}
-
-void LauncherMainWindow::showPreviewsFor(QUrl aircraftUri) const
-{
-    PreviewWindow* previewWindow = new PreviewWindow;
-    QModelIndex index = m_aircraftModel->indexOfAircraftURI(aircraftUri);
-    if (!index.isValid()) {
-        return;
-    }
-
-    QVariant urls = index.data(AircraftPreviewsRole);
-    previewWindow->setUrls(urls.toList());
 }
 
 void LauncherMainWindow::requestInstallUpdate(QUrl aircraftUri)

@@ -36,6 +36,23 @@
         <file>AircraftWarningPanel.qml</file>
         <file>Scrollbar.qml</file>
         <file>AircraftDetailsView.qml</file>
+        <file>AircraftFullDelegate.qml</file>
+        <file>AircraftCompactDelegate.qml</file>
+        <file>SearchButton.qml</file>
+        <file>AircraftPreviewPanel.qml</file>
+        <file>TabButton.qml</file>
+        <file>Checkbox.qml</file>
+        <file>Slider.qml</file>
+        <file>ToggleSwitch.qml</file>
+        <file>RatingSlider.qml</file>
+        <file>PopupChoice.qml</file>
+        <file alias="up-down-arrow">up-down-arrow.png</file>
+        <file>AircraftVariantChoice.qml</file>
+        <file alias="search-icon-small">search-icon-small.png</file>
+        <file>AircraftRatingsPanel.qml</file>
+        <file>NoDefaultCatalogPanel.qml</file>
+        <file>ListHeaderBox.qml</file>
+        <file>UpdateAllPanel.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

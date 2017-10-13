@@ -3,15 +3,24 @@
 #include "AircraftModel.hxx"
 #include <simgear/package/Package.hxx>
 
-AircraftProxyModel::AircraftProxyModel(QObject *pr) :
+AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source) :
     QSortFilterProxyModel(pr)
 {
+    m_ratings = {3, 3, 3, 3};
+    setSourceModel(source);
+    setSortCaseSensitivity(Qt::CaseInsensitive);
+    setFilterCaseSensitivity(Qt::CaseInsensitive);
+    setSortRole(Qt::DisplayRole);
+    setDynamicSortFilter(true);
 }
 
-void AircraftProxyModel::setRatings(int *ratings)
+void AircraftProxyModel::setRatings(QList<int> ratings)
 {
-    ::memcpy(m_ratings, ratings, sizeof(int) * 4);
+    if (ratings == m_ratings)
+        return;
+    m_ratings = ratings;
     invalidate();
+    emit ratingsChanged();
 }
 
 void AircraftProxyModel::setAircraftFilterString(QString s)
@@ -27,6 +36,22 @@ void AircraftProxyModel::setAircraftFilterString(QString s)
     invalidate();
 }
 
+int AircraftProxyModel::indexForURI(QUrl uri) const
+{
+    auto sourceIndex = qobject_cast<AircraftItemModel*>(sourceModel())->indexOfAircraftURI(uri);
+    auto ourIndex = mapFromSource(sourceIndex);
+    if (!sourceIndex.isValid() || !ourIndex.isValid()) {
+        return -1;
+    }
+
+    return ourIndex.row();
+}
+
+void AircraftProxyModel::selectVariantForAircraftURI(QUrl uri)
+{
+    qobject_cast<AircraftItemModel*>(sourceModel())->selectVariantForAircraftURI(uri);
+}
+
 void AircraftProxyModel::setRatingFilterEnabled(bool e)
 {
     if (e == m_ratingsFilter) {
@@ -35,6 +60,7 @@ void AircraftProxyModel::setRatingFilterEnabled(bool e)
 
     m_ratingsFilter = e;
     invalidate();
+    emit ratingsFilterEnabledChanged();
 }
 
 void AircraftProxyModel::setInstalledFilterEnabled(bool e)
@@ -58,8 +84,8 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
 
     if (m_onlyShowInstalled) {
         QVariant v = index.data(AircraftPackageStatusRole);
-        const auto status = static_cast<AircraftItemModel::AircraftItemStatus>(v.toInt());
-        if (status == AircraftItemModel::PackageNotInstalled) {
+        const auto status = static_cast<LocalAircraftCache::PackageStatus>(v.toInt());
+        if (status == LocalAircraftCache::PackageNotInstalled) {
             return false;
         }
     }
@@ -67,8 +93,8 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
     // if there is no search active, i.e we are browsing, we might apply the
     // ratings filter.
     if (m_filterString.isEmpty() && !m_onlyShowInstalled && m_ratingsFilter) {
-        for (int i=0; i<4; ++i) {
-            if (m_ratings[i] > index.data(AircraftRatingRole + i).toInt()) {
+        for (int i=0; i<m_ratings.size(); ++i) {
+            if (m_ratings.at(i) > index.data(AircraftRatingRole + i).toInt()) {
                 return false;
             }
         }

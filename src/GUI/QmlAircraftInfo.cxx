@@ -4,14 +4,81 @@
 #include <QDebug>
 
 #include <simgear/package/Install.hxx>
+#include <simgear/package/Root.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Include/version.h>
+#include <Main/globals.hxx>
 
 #include "LocalAircraftCache.hxx"
 
-QmlAircraftInfo::QmlAircraftInfo(QObject *parent) : QObject(parent)
-{
+using namespace simgear::pkg;
 
+class QmlAircraftInfo::Delegate : public simgear::pkg::Delegate
+{
+public:
+    Delegate(QmlAircraftInfo* info) :
+        p(info)
+    {
+        globals->packageRoot()->addDelegate(this);
+    }
+
+    ~Delegate()
+    {
+        globals->packageRoot()->removeDelegate(this);
+    }
+
+protected:
+    void catalogRefreshed(CatalogRef, StatusCode) override
+    {
+    }
+
+    void startInstall(InstallRef aInstall) override
+    {
+        if (aInstall->package() == p->packageRef()) {
+            p->setDownloadBytes(0);
+        }
+    }
+
+    void installProgress(InstallRef aInstall, unsigned int bytes, unsigned int total) override
+    {
+        if (aInstall->package() == p->packageRef()) {
+            p->setDownloadBytes(bytes);
+        }
+    }
+
+    void finishInstall(InstallRef aInstall, StatusCode aReason) override
+    {
+        Q_UNUSED(aReason);
+        if (aInstall->package() == p->packageRef()) {
+            p->infoChanged();
+        }
+    }
+
+    void installStatusChanged(InstallRef aInstall, StatusCode aReason) override
+    {
+        Q_UNUSED(aReason);
+        if (aInstall->package() == p->packageRef()) {
+            p->downloadChanged();
+        }
+    }
+
+    void finishUninstall(const PackageRef& pkg) override
+    {
+        if (pkg == p->packageRef()) {
+            p->downloadChanged();
+        }
+    }
+
+private:
+
+    QmlAircraftInfo* p;
+};
+
+QmlAircraftInfo::QmlAircraftInfo(QObject *parent)
+    : QObject(parent)
+    , _delegate(new Delegate(this))
+{
 }
 
 QmlAircraftInfo::~QmlAircraftInfo()
@@ -19,9 +86,15 @@ QmlAircraftInfo::~QmlAircraftInfo()
 
 }
 
-int QmlAircraftInfo::numPreviews() const
+QUrl QmlAircraftInfo::uri() const
 {
-    return 0;
+    if (_item) {
+        QUrl::fromLocalFile(resolveItem()->path);
+    } else if (_package) {
+        return QUrl("package:" + QString::fromStdString(_package->qualifiedVariantId(_variant)));
+    }
+
+    return {};
 }
 
 int QmlAircraftInfo::numVariants() const
@@ -94,6 +167,47 @@ QVariantList QmlAircraftInfo::ratings() const
     return {};
 }
 
+QVariantList QmlAircraftInfo::previews() const
+{
+    if (_item) {
+        QVariantList result;
+        Q_FOREACH(QUrl u, _item->previews) {
+            result.append(u);
+        }
+        return result;
+    }
+
+    if (_package) {
+        const auto& previews = _package->previewsForVariant(_variant);
+        if (previews.empty()) {
+            return {};
+        }
+
+        QVariantList result;
+        // if we have an install, return file URLs, not remote (http) ones
+        auto ex = _package->existingInstall();
+        if (ex.valid()) {
+            for (auto p : previews) {
+                SGPath localPreviewPath = ex->path() / p.path;
+                if (!localPreviewPath.exists()) {
+                    qWarning() << "missing local preview" << QString::fromStdString(localPreviewPath.utf8Str());
+                    continue;
+                }
+                result.append(QUrl::fromLocalFile(QString::fromStdString(localPreviewPath.utf8Str())));
+            }
+        }
+
+        // return remote urls
+        for (auto p : previews) {
+            result.append(QUrl(QString::fromStdString(p.url)));
+        }
+
+        return result;
+    }
+
+    return {};
+}
+
 QUrl QmlAircraftInfo::thumbnail() const
 {
     if (_item) {
@@ -143,7 +257,7 @@ int QmlAircraftInfo::packageSize() const
 
 int QmlAircraftInfo::downloadedBytes() const
 {
-    return 0;
+    return _downloadBytes;
 }
 
 QVariant QmlAircraftInfo::status() const
@@ -180,16 +294,45 @@ AircraftItemPtr QmlAircraftInfo::resolveItem() const
     return _item;
 }
 
-void QmlAircraftInfo::setUri(QUrl uri)
+void QmlAircraftInfo::setUri(QUrl u)
 {
-    if (_uri == uri)
+    if (uri() == u)
         return;
 
-    _uri = uri;
+    _item.clear();
+    _package.clear();
 
+    if (u.isLocalFile()) {
+        _item = LocalAircraftCache::instance()->findItemWithUri(u);
+        if (_item->variantOf.isEmpty()) {
+            _variant = 0;
+        } else {
+            _item = LocalAircraftCache::instance()->primaryItemFor(_item);
+            _variant = _item->indexOfVariant(u);
+        }
+    } else if (u.scheme() == "package") {
+        auto ident = u.path().toStdString();
+        try {
+            _package = globals->packageRoot()->getPackageById(ident);
+            _variant = _package->indexOfVariant(ident);
+        } catch (sg_exception&) {
+            qWarning() << "couldn't find package/variant for " << u;
+        }
+    }
 
     emit uriChanged();
     emit infoChanged();
+    emit downloadChanged();
+}
+
+void QmlAircraftInfo::setVariant(int variant)
+{
+    if (_variant == variant)
+        return;
+
+    _variant = variant;
+    emit infoChanged();
+    emit variantChanged(_variant);
 }
 
 void QmlAircraftInfo::requestInstallUpdate()
@@ -221,4 +364,64 @@ QVariant QmlAircraftInfo::packageAircraftStatus(simgear::pkg::PackageRef p)
     const int c = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, minFGVersion, 2);
     return (c < 0) ? LocalAircraftCache::AircraftNeedsNewerSimulator :
                      LocalAircraftCache::AircraftOk;
+}
+
+QVariant QmlAircraftInfo::installStatus() const
+{
+    if (_item) {
+        return LocalAircraftCache::PackageInstalled;
+    }
+
+    if (_package) {
+        auto i = _package->existingInstall();
+        if (i.valid()) {
+            if (i->isDownloading()) {
+                return LocalAircraftCache::PackageDownloading;
+            }
+            if (i->isQueued()) {
+                return LocalAircraftCache::PackageQueued;
+            }
+            if (i->hasUpdate()) {
+                return LocalAircraftCache::PackageUpdateAvailable;
+            }
+
+            return LocalAircraftCache::PackageInstalled;
+        } else {
+            return LocalAircraftCache::PackageNotInstalled;
+        }
+    }
+
+    return {};
+}
+
+PackageRef QmlAircraftInfo::packageRef() const
+{
+    return _package;
+}
+
+void QmlAircraftInfo::setDownloadBytes(int bytes)
+{
+    _downloadBytes = bytes;
+    emit downloadChanged();;
+}
+
+QStringList QmlAircraftInfo::variantNames() const
+{
+    QStringList result;
+    if (_item) {
+        Q_FOREACH(auto v, _item->variants) {
+            if (v->description.isEmpty()) {
+                qWarning() << Q_FUNC_INFO << "missing description for " << v->path;
+            }
+            result.append(v->description);
+        }
+    } else if (_package) {
+        for (int vindex = 0; vindex < _package->variants().size(); ++vindex) {
+            if (_package->nameForVariant(vindex).empty()) {
+                qWarning() << Q_FUNC_INFO << "missing description for variant" << vindex;
+            }
+            result.append(QString::fromStdString(_package->nameForVariant(vindex)));
+        }
+    }
+    return result;
 }

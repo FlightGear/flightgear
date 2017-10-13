@@ -47,17 +47,13 @@ const int AircraftInstallPercentRole = Qt::UserRole + 11;
 const int AircraftPackageSizeRole = Qt::UserRole + 12;
 const int AircraftInstallDownloadedSizeRole = Qt::UserRole + 13;
 const int AircraftURIRole = Qt::UserRole + 14;
-const int AircraftThumbnailSizeRole = Qt::UserRole + 15;
 const int AircraftIsHelicopterRole = Qt::UserRole + 16;
 const int AircraftIsSeaplaneRole = Qt::UserRole + 17;
 const int AircraftPackageRefRole = Qt::UserRole + 19;
 const int AircraftThumbnailRole = Qt::UserRole + 20;
-const int AircraftPreviewsRole = Qt::UserRole + 21;
 
 const int AircraftStatusRole = Qt::UserRole + 22;
 const int AircraftMinVersionRole = Qt::UserRole + 23;
-
-const int AircraftHasPreviewsRole = Qt::UserRole + 24;
 
 const int AircraftRatingRole = Qt::UserRole + 100;
 const int AircraftVariantDescriptionRole = Qt::UserRole + 200;
@@ -73,16 +69,7 @@ class AircraftItemModel : public QAbstractListModel
     Q_PROPERTY(int aircraftNeedingUpdated READ aircraftNeedingUpdated NOTIFY aircraftNeedingUpdatedChanged)
     Q_PROPERTY(bool showUpdateAll READ showUpdateAll WRITE setShowUpdateAll NOTIFY aircraftNeedingUpdatedChanged)
 
-    Q_ENUMS(AircraftItemStatus)
-    Q_ENUMS(AircraftStatus)
 public:
-    enum AircraftItemStatus {
-        PackageNotInstalled = 0,
-        PackageInstalled,
-        PackageUpdateAvailable,
-        PackageQueued,
-        PackageDownloading
-    };
 
     AircraftItemModel(QObject* pr);
 

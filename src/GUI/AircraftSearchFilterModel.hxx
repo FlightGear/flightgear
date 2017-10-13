@@ -9,14 +9,39 @@ class AircraftProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    AircraftProxyModel(QObject* pr);
+    AircraftProxyModel(QObject* pr, QAbstractItemModel * source);
 
-    void setRatings(int* ratings);
+    Q_PROPERTY(QList<int> ratings READ ratings WRITE setRatings NOTIFY ratingsChanged)
 
-    void setAircraftFilterString(QString s);
+    Q_PROPERTY(bool ratingsFilterEnabled READ ratingsFilterEnabled WRITE setRatingFilterEnabled NOTIFY ratingsFilterEnabledChanged)
+
+    Q_INVOKABLE void setAircraftFilterString(QString s);
+
+    /**
+      * Compute the row (index in QML / ListView speak) based on an aircraft URI.
+      * Return -1 if the UIR is not present in the (filtered) model
+      **/
+    Q_INVOKABLE int indexForURI(QUrl uri) const;
+
+    Q_INVOKABLE void selectVariantForAircraftURI(QUrl uri);
+
+    QList<int> ratings() const
+    {
+        return m_ratings;
+    }
+
+    bool ratingsFilterEnabled() const
+    {
+        return m_ratingsFilter;
+    }
+
+    void setRatings(QList<int> ratings);
+    void setRatingFilterEnabled(bool e);
+signals:
+    void ratingsChanged();
+    void ratingsFilterEnabledChanged();
 
 public slots:
-    void setRatingFilterEnabled(bool e);
 
     void setInstalledFilterEnabled(bool e);
 
@@ -28,7 +53,7 @@ private:
 
     bool m_ratingsFilter = true;
     bool m_onlyShowInstalled = false;
-    int m_ratings[4] = {3, 3, 3, 3};
+    QList<int> m_ratings;
     QString m_filterString;
     SGPropertyNode_ptr m_filterProps;
 };

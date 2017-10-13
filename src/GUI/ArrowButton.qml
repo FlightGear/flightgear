@@ -19,7 +19,6 @@ Item {
 
     Image {
         id: img
-        visible: (model.variantCount > 0)
         anchors.centerIn: parent
     }
 

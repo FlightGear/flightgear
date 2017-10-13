@@ -181,6 +181,18 @@ QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
     return m_thumbnail;
 }
 
+int AircraftItem::indexOfVariant(QUrl uri) const
+{
+    const QString path = uri.toLocalFile();
+    for (int i=0; i< variants.size(); ++i) {
+        if (variants.at(i)->path == path) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 QVariant AircraftItem::status(int variant)
 {
     if (needsMaintenance) {
@@ -441,6 +453,21 @@ int LocalAircraftCache::findIndexWithUri(QUrl aircraftUri) const
     }
 
     return -1;
+}
+
+AircraftItemPtr LocalAircraftCache::primaryItemFor(AircraftItemPtr item) const
+{
+    if (!item || item->variantOf.isEmpty())
+        return item;
+
+    for (int row=0; row < m_items.size(); ++row) {
+        const AircraftItemPtr p(m_items.at(row));
+        if (p->baseName() == item->variantOf) {
+            return p;
+        }
+    }
+
+    return {};
 }
 
 QVector<AircraftItemPtr> LocalAircraftCache::newestItems(int count)

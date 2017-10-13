@@ -6,7 +6,7 @@ Rectangle {
     property int aircraftStatus
     property var requiredFGVersion
 
-    visible: (model.aircraftStatus != AircraftModel.AircraftOk)
+    visible: (aircraftStatus != LocalAircraftCache.AircraftOk)
 
     implicitHeight: warningText.height + 8
 
@@ -23,7 +23,7 @@ Rectangle {
 
         State {
             name: "sim-version-too-low"
-            when: aircraftStatus == AircraftModel.AircraftNeedsNewerSimulator
+            when: aircraftStatus == LocalAircraftCache.AircraftNeedsNewerSimulator
 
             PropertyChanges {
                 target: warningText
@@ -33,7 +33,7 @@ Rectangle {
 
         State {
             name: "unmaintained"
-            when: aircraftStatus == AircraftModel.AircraftUnmaintained
+            when: aircraftStatus == LocalAircraftCache.AircraftUnmaintained
 
             PropertyChanges {
                 target: warningText
