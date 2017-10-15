@@ -413,6 +413,13 @@ NewGUI::setStyle (void)
     SGPropertyNode *n = sim->getChild("style", which);
     if (!n)
         n = sim->getChild("style", 0, true);
+    
+    SGPropertyNode *selected_style = globals->get_props()->getNode("sim/gui/selected-style", true);
+
+    n->copy(selected_style);
+
+    //if (selected_style && n)
+    //    n->alias(selected_style);
 
     setupFont(n->getNode("fonts/gui", true));
     n = n->getNode("colors", true);
