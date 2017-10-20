@@ -197,8 +197,8 @@ void CanvasWidget::setSize(int w, int h)
 void CanvasWidget::draw(int dx, int dy)
 {
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BLEND);
-  glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
+ // glEnable(GL_BLEND);
+ // glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
     
   glBindTexture(GL_TEXTURE_2D, _canvas_mgr->getCanvasTexId(_canvas));
   glBegin( GL_QUADS );
@@ -209,5 +209,5 @@ void CanvasWidget::draw(int dx, int dy)
     glTexCoord2f(0,1); glVertex2f(dx + abox.min[0], dy + abox.max[1]);
   glEnd();
   glDisable(GL_TEXTURE_2D);
-  glDisable(GL_BLEND);
+ // glDisable(GL_BLEND);
 }
