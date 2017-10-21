@@ -116,7 +116,7 @@
 #endif
 
 #if defined(HAVE_PUI)
-#include <Viewer/puicamera.hxx>
+#include <Viewer/PUICamera.hxx>
 #endif
 
 using namespace osg;

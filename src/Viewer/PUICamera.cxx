@@ -43,6 +43,14 @@
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/FGEventHandler.hxx>
 
+// Old versions of PUI are missing these defines
+#ifndef PU_SCROLL_UP_BUTTON
+#define PU_SCROLL_UP_BUTTON 3
+#endif
+#ifndef PU_SCROLL_DOWN_BUTTON
+#define PU_SCROLL_DOWN_BUTTON 4
+#endif
+
 using namespace flightgear;
 
 class PUIDrawable : public osg::Drawable
