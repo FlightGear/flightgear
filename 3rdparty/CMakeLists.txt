@@ -25,3 +25,7 @@ if (ENABLE_FLITE)
         include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include )
     endif()
 endif()
+
+if (ENABLE_HID_INPUT)
+    add_subdirectory(hidapi)
+endif()
