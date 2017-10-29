@@ -118,6 +118,10 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
   c->setSTAR(_star);
   c->setSID(_sid);
   
+// mark data as unchanged since this is a clean plan
+  c->_arrivalChanged = false;
+  c->_departureChanged = false;
+    
 // copy legs
   c->_waypointsChanged = true;
   for (int l=0; l < numLegs(); ++l) {
@@ -692,6 +696,10 @@ bool FlightPlan::load(const SGPath& path)
     setIdent(path.file_base());
   }
   
+  // mark data as unchanged since this is a clean plan
+  _arrivalChanged = false;
+  _departureChanged = false;
+    
   _waypointsChanged = true;
   unlockDelegates();
 
