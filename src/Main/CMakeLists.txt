@@ -173,6 +173,8 @@ target_link_libraries(fgfs
 	${PLATFORM_LIBS}
 )
 
+
+
 if(ENABLE_FLITE)
     if(SYSTEM_HTS_ENGINE)
         target_link_libraries(fgfs flite_hts ${HTS_ENGINE_LIBRARIES})
@@ -184,6 +186,10 @@ endif()
 if (Qt5Core_FOUND)
     target_link_libraries(fgfs Qt5::Widgets fglauncher)
     set_property(TARGET fgfs PROPERTY AUTOMOC ON)
+endif()
+
+if (USE_AEONWAVE)
+   target_link_libraries(fgfs ${AAX_LIBRARY})
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
