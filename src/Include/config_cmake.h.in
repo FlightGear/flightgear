@@ -54,3 +54,5 @@
 #cmakedefine HAVE_QT
 
 #define FG_BUILD_TYPE "@FG_BUILD_TYPE@"
+
+#define HAVE_PUI

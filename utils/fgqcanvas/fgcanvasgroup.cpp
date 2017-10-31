@@ -2,6 +2,7 @@
 
 #include <QDebug>
 
+#include "canvasitem.h"
 #include "localprop.h"
 #include "fgcanvaspaintcontext.h"
 #include "fgcanvaspath.h"
@@ -26,7 +27,6 @@ public:
 FGCanvasGroup::FGCanvasGroup(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop)
 {
-
 }
 
 const FGCanvasElementVec &FGCanvasGroup::children() const
@@ -63,6 +63,18 @@ unsigned int FGCanvasGroup::indexOfChild(const FGCanvasElement *e) const
     }
 
     return std::distance(_children.begin(), it);
+}
+
+CanvasItem *FGCanvasGroup::createQuickItem(QQuickItem *parent)
+{
+    qDebug() << Q_FUNC_INFO;
+    _quick = new CanvasItem(parent);
+
+    for (auto e : _children) {
+        e->createQuickItem(_quick);
+    }
+
+    return _quick;
 }
 
 void FGCanvasGroup::doPaint(FGCanvasPaintContext *context) const
@@ -121,6 +133,12 @@ bool FGCanvasGroup::onChildAdded(LocalProp *prop)
 
     if (newChildCount > 0) {
         markChildZIndicesDirty();
+
+        if (_quick) {
+            qDebug() << "creating quick item for child";
+            _children.back()->createQuickItem(_quick);
+        }
+
         emit childAdded();
         return true;
     }

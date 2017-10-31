@@ -796,6 +796,9 @@ FGPUIDialog::display (SGPropertyNode *props)
 
     SGPropertyNode *fontnode = props->getNode("font");
     if (fontnode) {
+        SGPropertyNode *property_node = fontnode->getChild("property");
+        if (property_node)
+            fontnode = globals->get_props()->getNode(property_node->getStringValue());
         _font = FGFontCache::instance()->get(fontnode);
     } else {
         _font = _gui->getDefaultFont();
@@ -1061,6 +1064,7 @@ FGPUIDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeigh
 
         setupObject(obj, props);
         _activeWidgets.push_back(obj);
+        setColor(obj, props, FOREGROUND | LABEL);
         return obj;
     } else {
         return 0;
@@ -1091,9 +1095,18 @@ FGPUIDialog::setupObject (puObject *object, SGPropertyNode *props)
         object->setBorderThickness( props->getIntValue("border", 2) );
 
     if (SGPropertyNode *nft = props->getNode("font", false)) {
-       puFont *lfnt = FGFontCache::instance()->get(nft);
-       object->setLabelFont(*lfnt);
-       object->setLegendFont(*lfnt);
+        if (nft) {
+            SGPropertyNode *property_node = nft->getChild("property");
+            if (property_node)
+                nft = globals->get_props()->getNode(property_node->getStringValue());
+            _font = FGFontCache::instance()->get(nft);
+        }
+        else {
+            _font = _gui->getDefaultFont();
+        }
+        puFont *lfnt = FGFontCache::instance()->get(nft);
+        object->setLabelFont(*lfnt);
+        object->setLegendFont(*lfnt);
     } else {
        object->setLabelFont(*_font);
     }

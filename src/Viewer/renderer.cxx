@@ -19,9 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -112,7 +110,14 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 
-#include <plib/pu.h>
+#if defined(HAVE_QT)
+#include <GUI/QQuickDrawable.hxx>
+#include <Viewer/GraphicsWindowQt5.hxx>
+#endif
+
+#if defined(HAVE_PUI)
+#include <Viewer/PUICamera.hxx>
+#endif
 
 using namespace osg;
 using namespace simgear;
@@ -143,52 +148,6 @@ private:
   SGPropertyNode_ptr mConfigNode;
 };
 
-
-class SGPuDrawable : public osg::Drawable {
-public:
-  SGPuDrawable()
-  {
-    // Dynamic stuff, do not store geometry
-    setUseDisplayList(false);
-    setDataVariance(Object::DYNAMIC);
-
-    osg::StateSet* stateSet = getOrCreateStateSet();
-    stateSet->setRenderBinDetails(1001, "RenderBin");
-    // speed optimization?
-    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
-    // We can do translucent menus, so why not. :-)
-    stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-    stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
-
-    stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
-
-    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-  }
-  virtual void drawImplementation(osg::RenderInfo& renderInfo) const
-  { drawImplementation(*renderInfo.getState()); }
-  void drawImplementation(osg::State& state) const
-  {
-    state.setActiveTextureUnit(0);
-    state.setClientActiveTextureUnit(0);
-
-    state.disableAllVertexArrays();
-
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glPushClientAttrib(~0u);
-
-    puDisplay();
-
-    glPopClientAttrib();
-    glPopAttrib();
-  }
-
-  virtual osg::Object* cloneType() const { return new SGPuDrawable; }
-  virtual osg::Object* clone(const osg::CopyOp&) const { return new SGPuDrawable; }
-  
-private:
-};
 
 class SGHUDDrawable : public osg::Drawable {
 public:
@@ -445,6 +404,7 @@ FGRenderer::preinit( void )
     _viewerSceneRoot->setName("viewerSceneRoot");
     viewer->setSceneData(_viewerSceneRoot);
 
+    _quickDrawable = nullptr;
     _splash = new SplashScreen;
     if (_classicalRenderer) {
         _viewerSceneRoot->addChild(_splash);
@@ -1540,13 +1500,29 @@ FGRenderer::setupView( void )
     // plug in the GUI
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
-      osg::Geode* geode = new osg::Geode;
-      geode->addDrawable(new SGHUDDrawable);
-      geode->addDrawable(new SGPuDrawable);
+        osg::Geode* geode = new osg::Geode;
+        geode->addDrawable(new SGHUDDrawable);
 
-      // Draw first (eg. before Canvas GUI)
-      guiCamera->insertChild(0, geode);
-      guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
+#if defined(HAVE_PUI)
+        _puiCamera = new flightgear::PUICamera;
+        _puiCamera->init(guiCamera);
+#endif
+
+#if defined(HAVE_QT)
+        std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
+        auto graphicsWindowQt = dynamic_cast<GraphicsWindowQt5*>(guiCamera->getGraphicsContext());
+
+        if (graphicsWindowQt && !rootQMLPath.empty()) {
+            _quickDrawable = new QQuickDrawable;
+            _quickDrawable->setup(graphicsWindowQt);
+
+            _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
+            geode->addDrawable(_quickDrawable);
+        }
+#endif
+        // Draw first (eg. before Canvas GUI)
+        guiCamera->insertChild(0, geode);
+        guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
     
     osg::Switch* sw = new osg::Switch;
@@ -1729,8 +1705,13 @@ FGRenderer::resize( int width, int height )
         _ysize->setIntValue(height);
     }
 
-    // update splash node if present ?
+    // update splash node if present
     _splash->resize(width, height);
+#if defined(HAVE_QT)
+    if (_quickDrawable) {
+        _quickDrawable->resize(width, height);
+    }
+#endif
 }
 
 typedef osgUtil::LineSegmentIntersector::Intersection Intersection;

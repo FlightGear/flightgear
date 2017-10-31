@@ -99,6 +99,9 @@ public:
     void setResizable(bool _resizable) { resizable = _resizable; }
 
     void reset();
+    
+    static int translateKey(const osgGA::GUIEventAdapter& ea);
+    static int translateModifiers(const osgGA::GUIEventAdapter& ea);
 protected:
     osg::ref_ptr<osg::Node> _node;
     fgIdleHandler idleHandler;
@@ -109,8 +112,7 @@ protected:
     osg::ref_ptr<osgGA::GUIEventAdapter> statsEvent;
     int statsType;
     int currentModifiers;
-    std::map<int, int> numlockKeyMap;
-    std::map<int, int> noNumlockKeyMap;
+    
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
     bool resizable;
     bool mouseWarped;

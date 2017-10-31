@@ -1,13 +1,32 @@
+//
+// Copyright (C) 2017 James Turner  zakalawe@mac.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 #include "fgcanvaselement.h"
 
 #include "localprop.h"
 #include "fgcanvaspaintcontext.h"
 #include "fgcanvasgroup.h"
+#include "canvasitem.h"
 
 #include <QDebug>
 #include <QPainter>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
+#include <QMatrix4x4>
 
 QTransform qTransformFromCanvas(LocalProp* prop)
 {
@@ -50,6 +69,16 @@ bool FGCanvasElement::isHighlighted() const
     return _highlighted;
 }
 
+CanvasItem *FGCanvasElement::createQuickItem(QQuickItem *parent)
+{
+    return nullptr;
+}
+
+CanvasItem *FGCanvasElement::quickItem() const
+{
+    return nullptr;
+}
+
 FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
     QObject(pr),
     _propertyRoot(prop),
@@ -80,19 +109,31 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
 
     p->save();
 
-    if (_hasClip) {
-#if 0
+
+    if (_hasClip)
+    {
+        // clip is define in parent's coordinate system
+#if 1
         p->save();
+        p->setTransform(context->globalCoordinateTransform());
         p->setPen(Qt::yellow);
         p->setBrush(QBrush(Qt::yellow, Qt::DiagCrossPattern));
         p->drawRect(_clipRect);
         p->restore();
 #endif
-        context->painter()->setClipRect(_clipRect);
-        context->painter()->setClipping(true);
+
+        QTransform t = p->transform();
+        p->setTransform(context->globalCoordinateTransform());
+        p->setClipRect(_clipRect);
+        p->setClipping(true);
+        p->setTransform(t);
     }
 
-    p->setTransform(combinedTransform(), true /* combine */);
+    QTransform combined = combinedTransform();
+    p->setTransform(combined,  true /* combine */);
+    if (quickItem()) {
+        quickItem()->setTransform(combined);
+    }
 
     if (_styleDirty) {
         _fillColor = parseColorValue(getCascadedStyle("fill"));

@@ -988,7 +988,7 @@ void MapWidget::drawLatLonGrid()
   int ix = 0;
   int iy = 0;
 
-  glColor4f(0.8, 0.8, 0.8, 0.4);
+  glColor4f(0.8, 0.8, 0.8, 1.0);
   glBegin(GL_LINES);
   bool didDraw;
   do {

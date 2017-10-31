@@ -17,8 +17,6 @@
 #  include <config.h>
 #endif
 
-#include <plib/pu.h>
-
 #include<algorithm>
 #include <functional>
 
@@ -43,7 +41,7 @@ void GraphicsContextOperation::operator()(GraphicsContext* gc)
 }
 
 WindowSystemAdapter::WindowSystemAdapter() :
-    _nextWindowID(0), _isPuInitialized(false)
+    _nextWindowID(0)
 {
 }
 
@@ -55,33 +53,6 @@ WindowSystemAdapter::registerWindow(GraphicsContext* gc,
                                                 _nextWindowID++);
     windows.push_back(window);
     return window;
-}
-
-// The pu getWindow callback is supposed to return a window ID that
-// would allow drawing a GUI on different windows. All that stuff is
-// broken in multi-threaded OSG, and we only have one GUI "window"
-// anyway, so just return a constant. 
-int WindowSystemAdapter::puGetWindow()
-{
-    return 1;
-}
-
-void WindowSystemAdapter::puGetWindowSize(int* width, int* height)
-{
-    *width = 0;
-    *height = 0;
-    Camera* camera = getGUICamera(CameraGroup::getDefault());
-    if (!camera)
-        return;
-    Viewport* vport = camera->getViewport();
-    *width = (int)vport->width();
-    *height = (int)vport->height();
-}
-
-void WindowSystemAdapter::puInitialize()
-{
-    puSetWindowFuncs(puGetWindow, 0, puGetWindowSize, 0);
-    puRealInit();
 }
 
 GraphicsWindow* WindowSystemAdapter::findWindow(const string& name)

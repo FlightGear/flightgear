@@ -49,6 +49,7 @@
 #include <Viewer/CameraGroup.hxx>
 #include <GUI/new_gui.hxx>
 #include <GUI/FGFontCache.hxx>
+#include <Viewer/PUICamera.hxx>
 
 #include "gui.h"
 #include "layout.hxx"
@@ -74,8 +75,8 @@ public:
     }
     void run(osg::GraphicsContext* gc)
     {
-        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-        wsa->puInitialize();
+        flightgear::PUICamera::initPUI();
+        
         puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
         puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 

@@ -15,30 +15,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef FGQCANVASMAP_H
-#define FGQCANVASMAP_H
+#include "canvasitem.h"
 
-#include "fgcanvasgroup.h"
+#include <QMatrix4x4>
 
-class FGQCanvasMap : public FGCanvasGroup
+class LocalTransform : public QQuickTransform
 {
+    Q_OBJECT
 public:
-    FGQCanvasMap(FGCanvasGroup* pr, LocalProp* prop);
+    LocalTransform(QObject *parent) : QQuickTransform(parent) {}
 
-protected:
-    virtual void doPaint(FGCanvasPaintContext* context) const;
-
-    virtual bool onChildAdded(LocalProp* prop);
-
+    void setTransform(const QMatrix4x4 &t) {
+        transform = t;
+        update();
+    }
+    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE {
+        *matrix *= transform;
+    }
 private:
-    void markProjectionDirty();
-
-private:
-    double _projectionCenterLat;
-    double _projectionCenterLon;
-    double _range;
-
-    mutable bool _projectionChanged;
+    QMatrix4x4 transform;
 };
 
-#endif // FGQCANVASMAP_H
+CanvasItem::CanvasItem(QQuickItem* pr)
+    : QQuickItem(pr)
+    , m_localTransform(new LocalTransform(this))
+{
+    m_localTransform->prependToItem(this);
+}
+
+void CanvasItem::setTransform(const QMatrix4x4 &mat)
+{
+    m_localTransform->setTransform(mat);
+}
+
+#include "canvasitem.moc"

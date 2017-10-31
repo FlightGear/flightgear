@@ -1686,6 +1686,50 @@ static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* ar
   return r;
 }
 
+static naRef f_findNDBByFrequency(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsNum(args[argOffset])) {
+    naRuntimeError(c, "findNDBByFrquency expectes frequency (in kHz) as arg %d", argOffset);
+  }
+  
+  double dbFreq = args[argOffset++].num;
+  FGNavList::TypeFilter filter(FGPositioned::NDB);
+  nav_list_type navs = FGNavList::findAllByFreq(dbFreq, pos, &filter);
+  if (navs.empty()) {
+    return naNil();
+  }
+  
+  return ghostForNavaid(c, navs.front().ptr());
+}
+
+static naRef f_findNDBsByFrequency(naContext c, naRef me, int argc, naRef* args)
+{
+  int argOffset = 0;
+  SGGeod pos = globals->get_aircraft_position();
+  argOffset += geodFromArgs(args, 0, argc, pos);
+  
+  if (!naIsNum(args[argOffset])) {
+    naRuntimeError(c, "findNDBsByFrquency expectes frequency (in kHz) as arg %d", argOffset);
+  }
+  
+  double dbFreq = args[argOffset++].num;
+  FGNavList::TypeFilter filter(FGPositioned::NDB);
+  nav_list_type navs = FGNavList::findAllByFreq(dbFreq, pos, &filter);
+  if (navs.empty()) {
+    return naNil();
+  }
+  
+  naRef r = naNewVector(c);
+  for (nav_rec_ptr a : navs) {
+    naVec_append(r, ghostForNavaid(c, a.ptr()));
+  }
+  return r;
+}
+
 static naRef f_findNavaidByFrequency(naContext c, naRef me, int argc, naRef* args)
 {
   int argOffset = 0;
@@ -1700,10 +1744,13 @@ static naRef f_findNavaidByFrequency(naContext c, naRef me, int argc, naRef* arg
   double freqMhz = args[argOffset++].num;
   if (argOffset < argc) {
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
+    if (type == FGPositioned::NDB) {
+      naRuntimeError(c, "Use findNDBByFrquency to seach NDBs");
+    }
   }
   
   FGNavList::TypeFilter filter(type);
-  nav_list_type navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
+  auto navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
   if (navs.empty()) {
     return naNil();
   }
@@ -1725,14 +1772,15 @@ static naRef f_findNavaidsByFrequency(naContext c, naRef me, int argc, naRef* ar
   double freqMhz = args[argOffset++].num;
   if (argOffset < argc) {
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
+    if (type == FGPositioned::NDB) {
+      naRuntimeError(c, "Use findNDBsByFrquency to seach NDBs");
+    }
   }
   
   naRef r = naNewVector(c);
-  
   FGNavList::TypeFilter filter(type);
-  nav_list_type navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
-  
-  BOOST_FOREACH(nav_rec_ptr a, navs) {
+  auto navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
+  for (nav_rec_ptr a : navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));
   }
   
@@ -2724,8 +2772,10 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "findAirportsByICAO", f_findAirportsByICAO },
   { "navinfo", f_navinfo },
   { "findNavaidsWithinRange", f_findNavaidsWithinRange },
-  { "findNavaidByFrequency", f_findNavaidByFrequency },
-  { "findNavaidsByFrequency", f_findNavaidsByFrequency },
+  { "findNDBByFrequencyKHz", f_findNDBByFrequency },
+  { "findNDBsByFrequencyKHz", f_findNDBsByFrequency },
+  { "findNavaidByFrequencyMHz", f_findNavaidByFrequency },
+  { "findNavaidsByFrequencyMHz", f_findNavaidsByFrequency },
   { "findNavaidsByID", f_findNavaidsByIdent },
   { "findFixesByID", f_findFixesByIdent },
   { "flightplan", f_flightplan },

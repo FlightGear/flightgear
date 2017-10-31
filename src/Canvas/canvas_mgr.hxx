@@ -42,6 +42,7 @@ class CanvasMgr:
      */
     unsigned int getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const;
 
+    static const char* subsystemName() { return "Canvas"; }
   protected:
 
     osg::observer_ptr<osg::Camera>      _gui_camera;

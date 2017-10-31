@@ -39,11 +39,13 @@ namespace flightgear
 class FGEventHandler;
 struct CameraInfo;
 class CameraGroup;
+class PUICamera;
 }
 
 class SGSky;
 class SGUpdateVisitor;
 class SplashScreen;
+class QQuickDrawable;
 
 typedef std::vector<SGSceneryPick> PickList;
 
@@ -191,6 +193,8 @@ protected:
     void setupRoot();
 
     SplashScreen* _splash;
+    QQuickDrawable* _quickDrawable;
+    flightgear::PUICamera* _puiCamera = nullptr;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

@@ -38,7 +38,6 @@
 #include "FGButton.hxx"
 #include "Main/globals.hxx"
 #include <Viewer/renderer.hxx>
-#include <plib/pu.h>
 #include <Model/panelnode.hxx>
 #include <Cockpit/panel.hxx>
 #include <Viewer/FGEventHandler.hxx>
@@ -598,11 +597,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   }
 
   if (mode.pass_through) {
-    // remove once PUI uses standard picking mechanism
-    if (0 <= x && 0 <= y && puMouse(b, updown, x, y))
-      return; // pui handled it
-
-    // pui didn't want the click event so compute a
+    // compute a
     // scenegraph intersection point corresponding to the mouse click
     if (updown == MOUSE_BUTTON_DOWN) {
       d->activePickCallbacks.init( b, ea );
@@ -619,7 +614,6 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     } // mouse button was released
   } // of pass-through mode
 
-  // OK, PUI and the panel didn't want the click
   if (b >= MAX_MOUSE_BUTTONS) {
     SG_LOG(SG_INPUT, SG_ALERT, "Mouse button " << b
            << " where only " << MAX_MOUSE_BUTTONS << " expected");
@@ -655,13 +649,7 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
   }
   
   mouse_mode &mode = m.modes[modeIndex];
-  
-  // Pass on to PUI if requested, and return
-  // if PUI consumed the event.
-  if (mode.pass_through && puMouse(x, y)) {
-    return;
-  }
-
+ 
   if (d->haveWarped)
   {
     // don't fire mouse-movement events at the first update after warping the mouse,

@@ -1,11 +1,33 @@
+//
+// Copyright (C) 2017 James Turner  zakalawe@mac.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 #include "fgcanvastext.h"
 
 #include <QPainter>
 #include <QDebug>
+#include <QQmlComponent>
+#include <QQmlEngine>
 
 #include "fgcanvaspaintcontext.h"
 #include "localprop.h"
 #include "fgqcanvasfontcache.h"
+#include "canvasitem.h"
+
+static QQmlComponent* static_textComponent = nullptr;
 
 FGCanvasText::FGCanvasText(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop),
@@ -15,6 +37,26 @@ FGCanvasText::FGCanvasText(FGCanvasGroup* pr, LocalProp* prop) :
     // all texts watch it.
     connect(FGQCanvasFontCache::instance(), &FGQCanvasFontCache::fontLoaded,
             this, &FGCanvasText::onFontLoaded);
+}
+
+CanvasItem *FGCanvasText::createQuickItem(QQuickItem *parent)
+{
+    Q_ASSERT(static_textComponent);
+    _quickItem = qobject_cast<CanvasItem*>(static_textComponent->create());
+    _quickItem->setParentItem(parent);
+    markFontDirty(); // so it gets set on the new item
+    return _quickItem;
+}
+
+CanvasItem *FGCanvasText::quickItem() const
+{
+    return _quickItem;
+}
+
+void FGCanvasText::setEngine(QQmlEngine *engine)
+{
+    static_textComponent = new QQmlComponent(engine, QUrl("text.qml"));
+    qDebug() << static_textComponent->errorString();
 }
 
 void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
@@ -82,6 +124,9 @@ bool FGCanvasText::onChildAdded(LocalProp *prop)
 void FGCanvasText::onTextChanged(QVariant var)
 {
     _text = var.toString();
+    if (_quickItem) {
+        _quickItem->setProperty("text", var);
+    }
 }
 
 void FGCanvasText::setDrawMode(QVariant var)
@@ -155,9 +200,18 @@ void FGCanvasText::rebuildFont() const
         // wait for the correct font
     }
 
-    f.setPixelSize(getCascadedStyle("character-size", 16).toInt());
+    const int pixelSize = getCascadedStyle("character-size", 16).toInt();
+    f.setPixelSize(pixelSize);
     _font = f;
     _metrics = QFontMetricsF(_font);
     rebuildAlignment(getCascadedStyle("alignment"));
+
+    if (_quickItem) {
+        _quickItem->setProperty("fontFamily", f.family());
+        _quickItem->setProperty("fontPixelSize", pixelSize);
+
+        QColor fill = fillColor();
+        _quickItem->setProperty("color", fill.name());
+    }
 }
 

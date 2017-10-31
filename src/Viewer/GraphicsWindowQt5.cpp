@@ -645,6 +645,8 @@ bool GraphicsWindowQt5::realizeImplementation()
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
 #endif
 
+    getEventQueue()->getCurrentEventState()->setMouseYOrientation(osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS);
+
     _realized = true;
     return true;
 }

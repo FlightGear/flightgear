@@ -726,7 +726,7 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
         if (matches != 2) {
             continue;
         }
-        
+
         if (currentVersion < v) {
             // ignore autosaves from more recent versions; this happens when
             // running unsable and stable at the same time
@@ -772,13 +772,13 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
 
     // copy remaining props out
     copyProperties(&oldProps, props);
-    
+
     // inform the user
 #if !defined(FG_TESTLIB)
     flightgear::modalMessageBox("Settings migrated",
                                 "Saved settings were migrated from a previous version of FlightGear. "
                                 "If you encounter any problems when using the system, try restoring "
-                                "the default settings, before reporting a problem."
+                                "the default settings, before reporting a problem. "
                                 "Saved settings can affect the appearance, performance and features of the simulator.");
 #endif
 }

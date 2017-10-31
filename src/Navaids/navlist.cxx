@@ -248,10 +248,12 @@ nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
   nav_list_type stations;
   
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  int freqKhz = static_cast<int>(freq * 1000 + 0.5);
-  PositionedIDVec ids(cache->findNavaidsByFreq(freqKhz, position, filter));
+    // note this frequency is passed in 'database units', which depend on the
+    // type of navaid being requested
+  int f = static_cast<int>(freq * 100 + 0.5);
+  PositionedIDVec ids(cache->findNavaidsByFreq(f, position, filter));
   
-  BOOST_FOREACH(PositionedID id, ids) {
+  for (PositionedID id : ids) {
     FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (!filter->pass(station)) {
       continue;

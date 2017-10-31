@@ -66,9 +66,6 @@ if (APPLE)
         CocoaHelpers.mm)
 endif()
 
-
-
-
 if (HAVE_QT)
     qt5_wrap_ui(uic_sources Launcher.ui
                             EditRatingsFilterDialog.ui
@@ -159,10 +156,24 @@ if (HAVE_QT)
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::QuickWidgets SimGearCore)
-    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
+    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI 
+                                                  ${Qt5Quick_PRIVATE_INCLUDE_DIRS}) 
 
-    # needed for scrollbar helper, unfortunately
-    target_include_directories(fglauncher PRIVATE ${Qt5Quick_PRIVATE_INCLUDE_DIRS})
+    add_library(fgqmlui QQuickDrawable.cxx
+                        QQuickDrawable.hxx                    
+                        QtQuickFGCanvasItem.cxx
+                        QtQuickFGCanvasItem.hxx
+                        PropertyItemModel.cxx
+                        PropertyItemModel.hxx
+                        FGQmlInstance.cxx
+                        FGQmlInstance.hxx
+                        FGQmlPropertyNode.cxx
+                        FGQmlPropertyNode.hxx
+                        )
+
+    set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
+    target_link_libraries(fgqmlui Qt5::Quick Qt5::Network Qt5::Qml SimGearCore)
+    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 endif()
 
 

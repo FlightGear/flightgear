@@ -21,6 +21,10 @@ public:
 
     unsigned int indexOfChild(const FGCanvasElement* e) const;
 
+    CanvasItem* createQuickItem(QQuickItem *parent) override;
+    CanvasItem* quickItem() const override
+    { return _quick; }
+
 signals:
     void childAdded();
     void childRemoved(int index);
@@ -40,6 +44,8 @@ private:
     mutable FGCanvasElementVec _children;
     mutable bool _zIndicesDirty = false;
     mutable bool _cachedSymbolDirty = false;
+
+    CanvasItem* _quick = nullptr;
 };
 
 #endif // FGCANVASGROUP_H

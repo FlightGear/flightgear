@@ -29,7 +29,6 @@
 #include "FGKeyboardInput.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <plib/pu.h>
 
 using simgear::PropertyList;
 
@@ -248,10 +247,6 @@ void FGKeyboardInput::doKey (int k, int modifiers, int x, int y)
 
 void FGKeyboardInput::keyHandler(int key, int keymod, int mousex, int mousey)
 {
-  if((keymod & KEYMOD_RELEASED) == 0)
-      if(puKeyboard(key, PU_DOWN))
-          return;
-
-  if(keyboardInput)
-      keyboardInput->doKey(key, keymod, mousex, mousey);
+    if( keyboardInput)
+        keyboardInput->doKey(key, keymod, mousex, mousey);
 }

@@ -1,3 +1,20 @@
+//
+// Copyright (C) 2017 James Turner  zakalawe@mac.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 #include "fgcanvaspath.h"
 
 #include <cctype>
@@ -6,9 +23,207 @@
 #include <QPainter>
 #include <QDebug>
 #include <QtMath>
+#include <QPen>
 
 #include "fgcanvaspaintcontext.h"
 #include "localprop.h"
+#include "canvasitem.h"
+
+#include "private/qtriangulator_p.h" // private QtGui header
+#include "private/qtriangulatingstroker_p.h" // private QtGui header
+#include "private/qvectorpath_p.h" // private QtGui header
+
+#include <QSGGeometry>
+#include <QSGGeometryNode>
+#include <QSGFlatColorMaterial>
+
+class PathQuickItem : public CanvasItem
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor NOTIFY fillColorChanged)
+    Q_PROPERTY(QPen stroke READ stroke WRITE setStroke NOTIFY strokeChanged)
+
+public:
+    PathQuickItem(QQuickItem* parent)
+        : CanvasItem(parent)
+    {
+        setFlag(ItemHasContents);
+    }
+
+    void setPath(QPainterPath pp)
+    {
+        m_path = pp;
+
+        QRectF pathBounds = pp.boundingRect();
+        setImplicitSize(pathBounds.width(), pathBounds.height());
+
+        update(); // request a paint node update
+    }
+
+    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
+    {
+        if (m_path.isEmpty()) {
+            return nullptr;
+        }
+
+        QSGGeometryNode* fillGeom = nullptr;
+        QSGGeometryNode* strokeGeom = nullptr;
+
+        if (m_fillColor.isValid()) {
+            // TODO: compute LOD for qTriangulate based on world transform
+            QTransform transform;
+            QTriangleSet triangles = qTriangulate(m_path, transform);
+
+            // TODO, handle > 2^16 indices
+            Q_ASSERT(triangles.indices.type() == QVertexIndexVector::UnsignedShort);
+
+            QSGGeometry* sgGeom = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),
+                                                  triangles.vertices.size() >> 1,
+                                                  triangles.indices.size());
+            sgGeom->setIndexDataPattern(QSGGeometry::StaticPattern);
+            sgGeom->setDrawingMode(GL_TRIANGLES);
+
+            //
+            QSGGeometry::Point2D *points = sgGeom->vertexDataAsPoint2D();
+            for (int v=0; v < triangles.vertices.size(); ) {
+                const float vx = triangles.vertices.at(v++);
+                const float vy = triangles.vertices.at(v++);
+                (points++)->set(vx, vy);
+            }
+
+            quint16* indices = sgGeom->indexDataAsUShort();
+            ::memcpy(indices, triangles.indices.data(), sizeof(unsigned short) * triangles.indices.size());
+
+            // create the node now, pretty trivial
+            fillGeom = new QSGGeometryNode;
+            fillGeom->setGeometry(sgGeom);
+            fillGeom->setFlag(QSGNode::OwnsGeometry);
+
+            QSGFlatColorMaterial* mat = new QSGFlatColorMaterial();
+            mat->setColor(m_fillColor);
+            fillGeom->setMaterial(mat);
+            fillGeom->setFlag(QSGNode::OwnsMaterial);
+        }
+
+        if (m_stroke.style() != Qt::NoPen) {
+            const QVectorPath& vp = qtVectorPathForPath(m_path);
+            QRectF clipBounds;
+            QTriangulatingStroker ts;
+            QPainter::RenderHints renderHints;
+
+            if (m_stroke.style() == Qt::SolidLine) {
+                ts.process(vp, m_stroke, clipBounds, renderHints);
+    #if 0
+                inline int vertexCount() const { return m_vertices.size(); }
+                inline const float *vertices() const { return m_vertices.data(); }
+
+    #endif
+            } else {
+                QDashedStrokeProcessor dasher;
+                dasher.process(vp, m_stroke, clipBounds, renderHints);
+
+                QVectorPath dashStroke(dasher.points(),
+                                       dasher.elementCount(),
+                                       dasher.elementTypes(),
+                                       renderHints);
+
+                ts.process(dashStroke, m_stroke, clipBounds, renderHints);
+            }
+
+            QSGGeometry* sgGeom = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(),
+                                                  ts.vertexCount() >> 1);
+            sgGeom->setVertexDataPattern(QSGGeometry::StaticPattern);
+            sgGeom->setDrawingMode(GL_TRIANGLE_STRIP);
+
+            QSGGeometry::Point2D *points = sgGeom->vertexDataAsPoint2D();
+            const float* vPtr = ts.vertices();
+            for (int v=0; v < ts.vertexCount(); v += 2) {
+                const float vx = *vPtr++;
+                const float vy = *vPtr++;
+                (points++)->set(vx, vy);
+            }
+
+            // create the node now, pretty trivial
+            strokeGeom = new QSGGeometryNode;
+            strokeGeom->setGeometry(sgGeom);
+            strokeGeom->setFlag(QSGNode::OwnsGeometry);
+
+            QSGFlatColorMaterial* mat = new QSGFlatColorMaterial();
+            mat->setColor(m_stroke.color());
+            strokeGeom->setMaterial(mat);
+            strokeGeom->setFlag(QSGNode::OwnsMaterial);
+        }
+
+        if (fillGeom && strokeGeom) {
+            QSGNode* groupNode = new QSGNode;
+            groupNode->appendChildNode(fillGeom);
+            groupNode->appendChildNode(strokeGeom);
+            return groupNode;
+        } else if (fillGeom) {
+            return fillGeom;
+        }
+
+        return strokeGeom;
+    }
+
+    QColor fillColor() const
+    {
+        return m_fillColor;
+    }
+
+    QPen stroke() const
+    {
+        return m_stroke;
+    }
+
+public slots:
+    void setFillColor(QColor fillColor)
+    {
+        if (m_fillColor == fillColor)
+            return;
+
+        m_fillColor = fillColor;
+        emit fillColorChanged(fillColor);
+        update();
+    }
+
+    void setStroke(QPen stroke)
+    {
+        if (m_stroke == stroke)
+            return;
+
+        m_stroke = stroke;
+        emit strokeChanged(stroke);
+        update();
+    }
+
+signals:
+    void fillColorChanged(QColor fillColor);
+
+    void strokeChanged(QPen stroke);
+
+protected:
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+    {
+        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        update();
+    }
+
+    QRectF boundingRect() const
+    {
+        if ((width() == 0.0) || (height() == 0.0)) {
+            return QRectF(0.0, 0.0, implicitWidth(), implicitHeight());
+        }
+
+        return QQuickItem::boundingRect();
+    }
+
+private:
+    QPainterPath m_path;
+    QColor m_fillColor;
+    QPen m_stroke;
+};
 
 static void pathArcSegment(QPainterPath &path,
                            qreal xc, qreal yc,
@@ -155,18 +370,23 @@ static void pathArc(QPainterPath &path,
 FGCanvasPath::FGCanvasPath(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop)
 {
-
 }
 
 void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
 {
     if (_pathDirty) {
         rebuildPath();
+        if (_quickPath) {
+            _quickPath->setPath(_painterPath);
+        }
         _pathDirty = false;
     }
 
     if (_penDirty) {
         rebuildPen();
+        if (_quickPath) {
+            _quickPath->setStroke(_stroke);
+        }
         _penDirty = false;
     }
 
@@ -205,6 +425,20 @@ void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
 void FGCanvasPath::markStyleDirty()
 {
     _penDirty = true;
+}
+
+CanvasItem *FGCanvasPath::createQuickItem(QQuickItem *parent)
+{
+    qDebug() << Q_FUNC_INFO;
+    _quickPath = new PathQuickItem(parent);
+    _quickPath->setPath(_painterPath);
+    _quickPath->setStroke(_stroke);
+    return _quickPath;
+}
+
+CanvasItem *FGCanvasPath::quickItem() const
+{
+    return _quickPath;
 }
 
 void FGCanvasPath::markPathDirty()
@@ -693,3 +927,5 @@ void FGCanvasPath::rebuildPen() const
 
     _stroke = p;
 }
+
+#include "fgcanvaspath.moc"
