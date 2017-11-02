@@ -15,45 +15,52 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "temporarywidget.h"
-
 #include <QApplication>
-#include <QNetworkAccessManager>
-#include <QNetworkDiskCache>
-#include <QStandardPaths>
 #include <QQmlEngine>
+#include <QQuickView>
+#include <QQmlContext>
 
+#include "fgcanvastext.h"
+#include "fgqcanvasimage.h"
 #include "fgqcanvasfontcache.h"
 #include "fgqcanvasimageloader.h"
 #include "canvasitem.h"
+#include "applicationcontroller.h"
+#include "canvasdisplay.h"
+#include "canvasconnection.h"
 
 int main(int argc, char *argv[])
 {
-
     QApplication a(argc, argv);
 
     a.setApplicationName("FGCanvas");
     a.setOrganizationDomain("flightgear.org");
     a.setOrganizationName("FlightGear");
 
-    QNetworkAccessManager* downloader = new QNetworkAccessManager;
+    ApplicationController appController;
+    // load saved history on the app controller?
 
-    QNetworkDiskCache* cache = new QNetworkDiskCache;
-    cache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
-    downloader->setCache(cache); // takes ownership
-
-    FGQCanvasFontCache::initialise(downloader);
-    FGQCanvasImageLoader::initialise(downloader);
+    FGQCanvasFontCache::initialise(appController.netAccess());
+    FGQCanvasImageLoader::initialise(appController.netAccess());
 
     qmlRegisterType<CanvasItem>("FlightGear", 1, 0, "CanvasItem");
+    qmlRegisterType<CanvasDisplay>("FlightGear", 1, 0, "CanvasDisplay");
+    qmlRegisterUncreatableType<CanvasConnection>("FlightGear", 1, 0, "CanvasConnection", "Don't create me");
+    qmlRegisterUncreatableType<ApplicationController>("FlightGear", 1, 0, "Application", "Can't create");
 
+    QQuickView quickView;
+    quickView.resize(1024, 768);
 
-    TemporaryWidget w;
-    w.setNetworkAccess(downloader);
-    w.show();
+    quickView.rootContext()->setContextProperty("_application", &appController);
+
+    FGCanvasText::setEngine(quickView.engine());
+    FGQCanvasImage::setEngine(quickView.engine());
+
+    quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
+    quickView.setResizeMode(QQuickView::SizeRootObjectToView);
+    quickView.show();
 
     int result = a.exec();
-    delete downloader;
 
     return result;
 }

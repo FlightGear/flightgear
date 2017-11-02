@@ -49,6 +49,7 @@ public:
         : CanvasItem(parent)
     {
         setFlag(ItemHasContents);
+        qDebug() << Q_FUNC_INFO;
     }
 
     void setPath(QPainterPath pp)
@@ -374,22 +375,6 @@ FGCanvasPath::FGCanvasPath(FGCanvasGroup* pr, LocalProp* prop) :
 
 void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
 {
-    if (_pathDirty) {
-        rebuildPath();
-        if (_quickPath) {
-            _quickPath->setPath(_painterPath);
-        }
-        _pathDirty = false;
-    }
-
-    if (_penDirty) {
-        rebuildPen();
-        if (_quickPath) {
-            _quickPath->setStroke(_stroke);
-        }
-        _penDirty = false;
-    }
-
     context->painter()->setPen(_stroke);
 
     switch (_paintType) {
@@ -422,6 +407,26 @@ void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
 
 }
 
+void FGCanvasPath::doPolish()
+{
+    if (_pathDirty) {
+        rebuildPath();
+        if (_quickPath) {
+            _quickPath->setPath(_painterPath);
+        }
+        _pathDirty = false;
+    }
+
+    if (_penDirty) {
+        rebuildPen();
+        if (_quickPath) {
+            _quickPath->setStroke(_stroke);
+        }
+        _penDirty = false;
+    }
+
+}
+
 void FGCanvasPath::markStyleDirty()
 {
     _penDirty = true;
@@ -429,7 +434,6 @@ void FGCanvasPath::markStyleDirty()
 
 CanvasItem *FGCanvasPath::createQuickItem(QQuickItem *parent)
 {
-    qDebug() << Q_FUNC_INFO;
     _quickPath = new PathQuickItem(parent);
     _quickPath->setPath(_painterPath);
     _quickPath->setStroke(_stroke);
@@ -444,11 +448,13 @@ CanvasItem *FGCanvasPath::quickItem() const
 void FGCanvasPath::markPathDirty()
 {
     _pathDirty = true;
+    requestPolish();
 }
 
 void FGCanvasPath::markStrokeDirty()
 {
     _penDirty = true;
+    requestPolish();
 }
 
 bool FGCanvasPath::onChildAdded(LocalProp *prop)

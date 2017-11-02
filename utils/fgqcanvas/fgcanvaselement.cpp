@@ -92,6 +92,38 @@ FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
     if (pr) {
         pr->markChildZIndicesDirty();
     }
+
+    requestPolish();
+}
+
+
+void FGCanvasElement::requestPolish()
+{
+    _polishRequired = true;
+}
+
+void FGCanvasElement::polish()
+{
+    if (!isVisible()) {
+        return;
+    }
+
+    if (_clipDirty) {
+        parseCSSClip(_propertyRoot->value("clip", QVariant()).toByteArray());
+        _clipDirty = false;
+    }
+
+    if (quickItem()) {
+        quickItem()->setTransform(combinedTransform());
+    }
+
+    if (_styleDirty) {
+        _fillColor = parseColorValue(getCascadedStyle("fill"));
+        _styleDirty = false;
+    }
+
+    doPolish();
+    _polishRequired = false;
 }
 
 void FGCanvasElement::paint(FGCanvasPaintContext *context) const
@@ -101,12 +133,6 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
     }
 
     QPainter* p = context->painter();
-
-    if (_clipDirty) {
-        parseCSSClip(_propertyRoot->value("clip", QVariant()).toByteArray());
-        _clipDirty = false;
-    }
-
     p->save();
 
 
@@ -131,14 +157,6 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
 
     QTransform combined = combinedTransform();
     p->setTransform(combined,  true /* combine */);
-    if (quickItem()) {
-        quickItem()->setTransform(combined);
-    }
-
-    if (_styleDirty) {
-        _fillColor = parseColorValue(getCascadedStyle("fill"));
-        _styleDirty = false;
-    }
 
     if (!_fillColor.isValid()) {
         p->setBrush(Qt::NoBrush);
@@ -158,6 +176,10 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
 void FGCanvasElement::doPaint(FGCanvasPaintContext* context) const
 {
     Q_UNUSED(context);
+}
+
+void FGCanvasElement::doPolish()
+{
 }
 
 QTransform FGCanvasElement::combinedTransform() const
@@ -277,16 +299,20 @@ void FGCanvasElement::onCenterChanged(QVariant value)
     } else {
         _center.setY(value.toFloat());
     }
+
+    requestPolish();
 }
 
 void FGCanvasElement::markTransformsDirty()
 {
     _transformsDirty = true;
+    requestPolish();
 }
 
 void FGCanvasElement::markClipDirty()
 {
     _clipDirty = true;
+    requestPolish();
 }
 
 float FGCanvasElement::parseCSSValue(QByteArray value) const
@@ -376,6 +402,7 @@ QColor FGCanvasElement::parseColorValue(QVariant value) const
 void FGCanvasElement::markStyleDirty()
 {
     _styleDirty = true;
+    requestPolish();
     // group will cascade
 }
 
@@ -402,9 +429,10 @@ void FGCanvasElement::markZIndexDirty(QVariant value)
 void FGCanvasElement::onVisibleChanged(QVariant value)
 {
     _visible = value.toBool();
+    requestPolish();
 }
 
-void FGCanvasElement::parseCSSClip(QByteArray value) const
+void FGCanvasElement::parseCSSClip(QByteArray value)
 {
     if (value.isEmpty()) {
         _hasClip = false;
@@ -432,4 +460,6 @@ void FGCanvasElement::parseCSSClip(QByteArray value) const
     _clipRect = QRectF(left, top, right - left, bottom - top);
     qDebug() << "final clip rect:" << _clipRect << "from" << value;
     _hasClip = true;
+
+    requestPolish();
 }

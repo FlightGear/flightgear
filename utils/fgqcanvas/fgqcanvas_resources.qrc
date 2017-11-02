@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/mainMenu.qml</file>
+        <file>qml/Button.qml</file>
+        <file>qml/InputLine.qml</file>
+        <file alias="images/checkerboard">qml/checkerboard.png</file>
+        <file>qml/CanvasFrame.qml</file>
+        <file>qml/BrowsePanel.qml</file>
+        <file>qml/LoadSavePanel.qml</file>
+        <file>qml/image.qml</file>
+        <file>qml/text.qml</file>
+    </qresource>
+</RCC>

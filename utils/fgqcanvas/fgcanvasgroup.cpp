@@ -79,18 +79,27 @@ CanvasItem *FGCanvasGroup::createQuickItem(QQuickItem *parent)
 
 void FGCanvasGroup::doPaint(FGCanvasPaintContext *context) const
 {
-    if (_zIndicesDirty) {
-        std::sort(_children.begin(), _children.end(), ChildOrderingFunction());
-        _zIndicesDirty = false;
+    for (FGCanvasElement* element : _children) {
+        element->paint(context);
     }
+}
 
+void FGCanvasGroup::doPolish()
+{
     if (_cachedSymbolDirty) {
         qDebug() << _propertyRoot->path() << "should use symbol cache:" << _propertyRoot->value("symbol-type", QVariant()).toByteArray();
         _cachedSymbolDirty = false;
     }
 
+    if (_zIndicesDirty) {
+        std::sort(_children.begin(), _children.end(), ChildOrderingFunction());
+        _zIndicesDirty = false;
+
+        qWarning() << Q_FUNC_INFO << "adjust z order of quick items";
+    }
+
     for (FGCanvasElement* element : _children) {
-        element->paint(context);
+        element->polish();
     }
 }
 
@@ -135,7 +144,6 @@ bool FGCanvasGroup::onChildAdded(LocalProp *prop)
         markChildZIndicesDirty();
 
         if (_quick) {
-            qDebug() << "creating quick item for child";
             _children.back()->createQuickItem(_quick);
         }
 

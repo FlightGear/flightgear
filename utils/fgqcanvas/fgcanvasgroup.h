@@ -32,6 +32,8 @@ signals:
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
 
+    void doPolish() override;
+
     bool onChildAdded(LocalProp *prop) override;
     bool onChildRemoved(LocalProp *prop) override;
 
@@ -44,6 +46,7 @@ private:
     mutable FGCanvasElementVec _children;
     mutable bool _zIndicesDirty = false;
     mutable bool _cachedSymbolDirty = false;
+
 
     CanvasItem* _quick = nullptr;
 };

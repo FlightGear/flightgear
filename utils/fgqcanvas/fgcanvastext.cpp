@@ -55,17 +55,12 @@ CanvasItem *FGCanvasText::quickItem() const
 
 void FGCanvasText::setEngine(QQmlEngine *engine)
 {
-    static_textComponent = new QQmlComponent(engine, QUrl("text.qml"));
+    static_textComponent = new QQmlComponent(engine, QUrl("qrc:///qml/text.qml"));
     qDebug() << static_textComponent->errorString();
 }
 
 void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
 {
-    if (_fontDirty) {
-        rebuildFont();
-        _fontDirty = false;
-    }
-
     context->painter()->setFont(_font);
     context->painter()->setPen(fillColor());
     context->painter()->setBrush(Qt::NoBrush);
@@ -90,6 +85,14 @@ void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
     }
 
     context->painter()->drawText(rect, _alignment, _text);
+}
+
+void FGCanvasText::doPolish()
+{
+    if (_fontDirty) {
+        rebuildFont();
+        _fontDirty = false;
+    }
 }
 
 void FGCanvasText::markStyleDirty()

@@ -112,38 +112,48 @@ void FGQCanvasFontCache::onFontDownloadError(QNetworkReply::NetworkError)
 void FGQCanvasFontCache::lookupFile(QByteArray name)
 {
     QString path = QStandardPaths::locate(QStandardPaths::CacheLocation, name);
-    if (path.isEmpty()) {
-        QUrl url;
-        url.setScheme("http");
-        url.setHost(m_hostName);
-        url.setPort(m_port);
-        url.setPath("/Fonts/" + name);
-
-        Q_FOREACH (QNetworkReply* transfer, m_transfers) {
-            if (transfer->url() == url) {
-                return; // transfer already active
-            }
-        }
-
-        qDebug() << "reqeusting font" << url;
-        QNetworkReply* reply = m_downloader->get(QNetworkRequest(url));
-        reply->setProperty("font", name);
-
-        connect(reply, &QNetworkReply::finished, this, &FGQCanvasFontCache::onFontDownloadFinished);
-       // connect(reply, &QNetworkReply::error, this, &FGQCanvasFontCache::onFontDownloadError);
-
-        m_transfers.append(reply);
-    } else {
+    if (!path.isEmpty()) {
         qDebug() << "found font" << name << "at path" << path;
 
         int fontFamilyId = QFontDatabase::addApplicationFont(path);
-        QStringList families = QFontDatabase::applicationFontFamilies(fontFamilyId);
-        qDebug() << "families are:" << families;
+        if (fontFamilyId >= 0) {
+            QStringList families = QFontDatabase::applicationFontFamilies(fontFamilyId);
+            qDebug() << "families are:" << families;
 
-        // compute a QFont and cache
-        QFont font(families.front());
-        m_cache.insert(name, font);
+            // compute a QFont and cache
+            QFont font(families.front());
+            m_cache.insert(name, font);
+            return;
+        } else {
+            qWarning() << "Failed to load font into QFontDatabase:" << path;
+        }
     }
+
+    if (m_hostName.isEmpty()) {
+        qWarning() << "host name not specified";
+        return;
+    }
+
+    QUrl url;
+    url.setScheme("http");
+    url.setHost(m_hostName);
+    url.setPort(m_port);
+    url.setPath("/Fonts/" + name);
+
+    Q_FOREACH (QNetworkReply* transfer, m_transfers) {
+        if (transfer->url() == url) {
+            return; // transfer already active
+        }
+    }
+
+    qDebug() << "reqeusting font" << url;
+    QNetworkReply* reply = m_downloader->get(QNetworkRequest(url));
+    reply->setProperty("font", name);
+
+    connect(reply, &QNetworkReply::finished, this, &FGQCanvasFontCache::onFontDownloadFinished);
+    // connect(reply, &QNetworkReply::error, this, &FGQCanvasFontCache::onFontDownloadError);
+
+    m_transfers.append(reply);
 }
 
 

@@ -35,6 +35,7 @@ public:
     static void setEngine(QQmlEngine* engine);
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
+    void doPolish() override;
 
     virtual void markStyleDirty() override;
 private:

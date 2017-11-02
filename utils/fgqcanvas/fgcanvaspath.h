@@ -33,6 +33,8 @@ public:
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
 
+    void doPolish() override;
+
     virtual void markStyleDirty() override;
 
     CanvasItem* createQuickItem(QQuickItem *parent) override;

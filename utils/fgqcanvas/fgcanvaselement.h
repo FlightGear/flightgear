@@ -57,8 +57,12 @@ public:
     virtual CanvasItem* createQuickItem(QQuickItem* parent);
     virtual CanvasItem* quickItem() const;
 
+    void requestPolish();
+
+    void polish();
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const;
+    virtual void doPolish();
 
     virtual bool onChildAdded(LocalProp* prop);
     virtual bool onChildRemoved(LocalProp* prop);
@@ -88,6 +92,7 @@ private:
 private:
     friend class FGCanvasGroup;
 
+    bool _polishRequired = false;
     bool _visible = true;
     bool _highlighted = false;
 
@@ -106,7 +111,7 @@ private:
     mutable bool _hasClip = false;
     mutable QRectF _clipRect;
 
-    void parseCSSClip(QByteArray value) const;
+    void parseCSSClip(QByteArray value);
     float parseCSSValue(QByteArray value) const;
 };
 

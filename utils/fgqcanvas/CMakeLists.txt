@@ -6,17 +6,17 @@ include(GNUInstallDirs)
 
 project(FGQCanvas)
 
-find_package(Qt5 5.4 COMPONENTS Widgets WebSockets Gui Quick QuickWidgets)
+find_package(Qt5 5.4 COMPONENTS Widgets WebSockets Gui Quick)
 
-if (NOT Qt5WebSockets_FOUND OR NOT Qt5QuickWidgets_FOUND)
-  message(WARNING "FGQCanvas utility requested, but QtWebSockets/QtQuickWidgets not found")
-  message(STATUS "Check you have the development package for Qt5 WebSockets/QuickWidgets installed")
+if (NOT Qt5WebSockets_FOUND OR NOT Qt5Quick_FOUND)
+  message(WARNING "FGQCanvas utility requested, but QtWebSockets not found")
+  message(STATUS "Check you have the development package for Qt5 WebSockets installed")
   return()
 endif()
 
 set(SOURCES
-  temporarywidget.cpp
-  temporarywidget.h
+  #temporarywidget.cpp
+  #temporarywidget.h
   main.cpp
   localprop.cpp
   localprop.h
@@ -46,14 +46,22 @@ set(SOURCES
   elementdatamodel.h
   canvasitem.cpp
   canvasitem.h
+  canvasconnection.cpp
+  canvasconnection.h
+  applicationcontroller.cpp
+  applicationcontroller.h
+  canvasdisplay.cpp
+  canvasdisplay.h
 )
 
-qt5_wrap_ui(uic_sources temporarywidget.ui)
+qt5_add_resources(qrc_sources fgqcanvas_resources.qrc)
 
-add_executable(fgqcanvas ${SOURCES} ${uic_sources})
+#qt5_wrap_ui(uic_sources temporarywidget.ui)
+
+add_executable(fgqcanvas ${SOURCES} ${qrc_sources})
 
 set_property(TARGET fgqcanvas PROPERTY AUTOMOC ON)
-target_link_libraries(fgqcanvas Qt5::Core Qt5::Widgets Qt5::WebSockets Qt5::Quick Qt5::QuickWidgets)
+target_link_libraries(fgqcanvas Qt5::Core Qt5::Widgets Qt5::WebSockets Qt5::Quick)
 
 target_include_directories(fgqcanvas PRIVATE ${PROJECT_SOURCE_DIR})
 
