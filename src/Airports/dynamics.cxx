@@ -241,6 +241,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
 {
     NearbyAIObjectCache nearCache(parent());
     const FGParkingList& parkings(parent()->groundNetwork()->allParkings());
+    FGParkingList candidates;
     for (auto parking : parkings) {
         if (!isParkingAvailable(parking)) {
           continue;
@@ -268,11 +269,22 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
             continue;
         }
 
-        setParkingAvailable(parking, false);
-        return parking;
+        candidates.push_back(parking);
+    }
+    
+    if (candidates.empty()) {
+        return nullptr;
     }
 
-    return NULL;
+    // sort by increasing radius, so we return the smallest radius candidate
+    // this avoids large spaces (A380 sized) being given to Fokkers/ATR-72s
+    std::sort(candidates.begin(), candidates.end(),
+              [](const FGParkingRef& a, FGParkingRef& b) {
+                  return a->getRadius() < b->getRadius();
+              });
+    
+    setParkingAvailable(candidates.front(), false);
+    return candidates.front();
 }
 
 bool FGAirportDynamics::hasParkings() const
