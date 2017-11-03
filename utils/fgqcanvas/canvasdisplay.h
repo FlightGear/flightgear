@@ -18,6 +18,8 @@
 #ifndef CANVASDISPLAY_H
 #define CANVASDISPLAY_H
 
+#include <memory>
+
 #include <QQuickItem>
 
 class CanvasConnection;

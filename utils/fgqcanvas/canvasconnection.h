@@ -18,6 +18,8 @@
 #ifndef CANVASCONNECTION_H
 #define CANVASCONNECTION_H
 
+#include <memory>
+
 #include <QObject>
 #include <QtWebSockets/QWebSocket>
 #include <QJsonObject>
