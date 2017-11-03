@@ -28,6 +28,8 @@
 #include <QNetworkReply>
 
 #include "localprop.h"
+#include "fgqcanvasfontcache.h"
+#include "fgqcanvasimageloader.h"
 
 CanvasConnection::CanvasConnection(QObject *parent) : QObject(parent)
 {
@@ -41,6 +43,7 @@ CanvasConnection::CanvasConnection(QObject *parent) : QObject(parent)
 
 CanvasConnection::~CanvasConnection()
 {
+    qDebug() << Q_FUNC_INFO;
     disconnect(&m_webSocket, &QWebSocket::disconnected,
                this, &CanvasConnection::onWebSocketClosed);
     m_webSocket.close();
@@ -145,19 +148,31 @@ LocalProp *CanvasConnection::propertyRoot() const
     return m_localPropertyRoot.get();
 }
 
+FGQCanvasImageLoader *CanvasConnection::imageLoader() const
+{
+    if (!m_imageLoader) {
+        m_imageLoader = new FGQCanvasImageLoader(m_netAccess, const_cast<CanvasConnection*>(this));
+        m_imageLoader->setHost(m_webSocketUrl.host(),
+                               m_webSocketUrl.port());
+    }
+
+    return m_imageLoader;
+}
+
+FGQCanvasFontCache *CanvasConnection::fontCache() const
+{
+    if (!m_fontCache) {
+        m_fontCache = new FGQCanvasFontCache(m_netAccess, const_cast<CanvasConnection*>(this));
+        m_fontCache->setHost(m_webSocketUrl.host(),
+                             m_webSocketUrl.port());
+    }
+
+    return m_fontCache;
+}
+
 void CanvasConnection::onWebSocketConnected()
 {
     m_localPropertyRoot.reset(new LocalProp{nullptr, NameIndexTuple("")});
-
-   // ui->canvas->setRootProperty(m_localPropertyRoot);
-
-#if 0
-    FGQCanvasFontCache::instance()->setHost(ui->hostName->text(),
-                                            ui->portEdit->text().toInt());
-    FGQCanvasImageLoader::instance()->setHost(ui->hostName->text(),
-                                              ui->portEdit->text().toInt());
-#endif
-
     setStatus(Connected);
 }
 

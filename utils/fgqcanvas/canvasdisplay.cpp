@@ -18,16 +18,17 @@
 #include "canvasdisplay.h"
 
 #include <QDebug>
+#include <QQuickItem>
 
 #include "canvasconnection.h"
 #include "fgcanvasgroup.h"
 #include "fgcanvaspaintcontext.h"
 #include "canvasitem.h"
+#include "localprop.h"
 
 CanvasDisplay::CanvasDisplay(QQuickItem* parent) :
     QQuickItem(parent)
 {
-    setSize(QSizeF(400, 400));
     qDebug() << "created a canvas display";
 
     setFlag(ItemHasContents);
@@ -35,12 +36,19 @@ CanvasDisplay::CanvasDisplay(QQuickItem* parent) :
 
 CanvasDisplay::~CanvasDisplay()
 {
-
+    qDebug() << Q_FUNC_INFO << "connection is" << m_connection;
+    delete m_rootItem;
 }
 
 void CanvasDisplay::updatePolish()
 {
     m_rootElement->polish();
+}
+
+void CanvasDisplay::geometryChanged(const QRectF &newGeometry, const QRectF &)
+{
+    Q_UNUSED(newGeometry);
+    recomputeScaling();
 }
 
 void CanvasDisplay::setCanvas(CanvasConnection *canvas)
@@ -50,31 +58,81 @@ void CanvasDisplay::setCanvas(CanvasConnection *canvas)
 
     if (m_connection) {
         disconnect(m_connection, nullptr, this, nullptr);
+
+
+        qDebug() << "deleting items";
+        delete m_rootItem;
+
+        qDebug() << "deleting elements";
+        m_rootElement.reset();
+
+        qDebug() << "done";
     }
 
     m_connection = canvas;
     emit canvasChanged(m_connection);
 
-    // delete existing children
+    if (m_connection) {
+        // delete existing children
 
-    connect(m_connection, &CanvasConnection::statusChanged,
-            this, &CanvasDisplay::onConnectionStatusChanged);
-    connect(m_connection, &CanvasConnection::updated,
-            this, &CanvasDisplay::onConnectionUpdated);
+        connect(m_connection, &QObject::destroyed,
+                this, &CanvasDisplay::onConnectionDestroyed);
+        connect(m_connection, &CanvasConnection::statusChanged,
+                this, &CanvasDisplay::onConnectionStatusChanged);
+        connect(m_connection, &CanvasConnection::updated,
+                this, &CanvasDisplay::onConnectionUpdated);
 
+        onConnectionStatusChanged();
+    }
+
+}
+
+void CanvasDisplay::onConnectionDestroyed()
+{
+    m_connection = nullptr;
+    emit canvasChanged(m_connection);
+
+    m_rootElement.reset();
 }
 
 void CanvasDisplay::onConnectionStatusChanged()
 {
     if (m_connection->status() == CanvasConnection::Connected) {
         m_rootElement.reset(new FGCanvasGroup(nullptr, m_connection->propertyRoot()));
-        auto qq = m_rootElement->createQuickItem(this);
-        qq->setSize(QSizeF(400, 400));
+        // this is important to elements can discover their connection
+        // by walking their parent chain
+        m_rootElement->setParent(m_connection);
+
+        connect(m_rootElement.get(), &FGCanvasGroup::canvasSizeChanged,
+                this, &CanvasDisplay::onCanvasSizeChanged);
+
+        m_rootItem = m_rootElement->createQuickItem(this);
+        onCanvasSizeChanged();
     }
 }
 
 void CanvasDisplay::onConnectionUpdated()
 {
-    m_rootElement->polish();
-    update();
+    if (m_rootElement) {
+        m_rootElement->polish();
+        update();
+    }
+}
+
+void CanvasDisplay::onCanvasSizeChanged()
+{
+    m_sourceSize = QSizeF(m_connection->propertyRoot()->value("size", 400).toDouble(),
+                          m_connection->propertyRoot()->value("size[1]", 400).toDouble());
+
+    recomputeScaling();
+}
+
+void CanvasDisplay::recomputeScaling()
+{
+    double xScaleFactor = width() / m_sourceSize.width();
+    double yScaleFactor =  height() / m_sourceSize.height();
+
+    double finalScaleFactor = std::min(xScaleFactor, yScaleFactor);
+
+    setScale(finalScaleFactor);
 }

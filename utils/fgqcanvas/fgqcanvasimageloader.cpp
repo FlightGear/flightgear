@@ -20,8 +20,6 @@
 #include <QDebug>
 #include <QNetworkAccessManager>
 
-static FGQCanvasImageLoader* static_instance = nullptr;
-
 class TransferSignalHolder : public QObject
 {
     Q_OBJECT
@@ -31,8 +29,9 @@ signals:
     void trigger();
 };
 
-FGQCanvasImageLoader::FGQCanvasImageLoader(QNetworkAccessManager* dl)
-    : m_downloader(dl)
+FGQCanvasImageLoader::FGQCanvasImageLoader(QNetworkAccessManager* dl, QObject* pr)
+    : QObject(pr)
+    , m_downloader(dl)
 {
 }
 
@@ -56,17 +55,6 @@ void FGQCanvasImageLoader::onDownloadFinished()
 
     m_transfers.removeOne(reply);
     reply->deleteLater();
-}
-
-FGQCanvasImageLoader *FGQCanvasImageLoader::instance()
-{
-    return static_instance;
-}
-
-void FGQCanvasImageLoader::initialise(QNetworkAccessManager *dl)
-{
-    Q_ASSERT(static_instance == nullptr);
-    static_instance = new FGQCanvasImageLoader(dl);
 }
 
 void FGQCanvasImageLoader::setHost(QString hostName, int portNumber)

@@ -25,6 +25,7 @@
 #include "localprop.h"
 #include "fgqcanvasimageloader.h"
 #include "canvasitem.h"
+#include "canvasconnection.h"
 
 static QQmlComponent* static_imageComponent = nullptr;
 
@@ -37,10 +38,12 @@ FGQCanvasImage::FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop) :
 void FGQCanvasImage::setEngine(QQmlEngine *engine)
 {
     static_imageComponent = new QQmlComponent(engine, QUrl("image.qml"));
-    qDebug() << static_imageComponent->errorString();
+    if (!static_imageComponent || !static_imageComponent->errors().empty()) {
+        qWarning() << static_imageComponent->errorString();
+    }
 }
 
-void FGQCanvasImage::doPaint(FGCanvasPaintContext *context) const
+void FGQCanvasImage::doPolish()
 {
     if (_imageDirty) {
         rebuildImage();
@@ -50,7 +53,10 @@ void FGQCanvasImage::doPaint(FGCanvasPaintContext *context) const
     if (_sourceRectDirty) {
         recomputeSourceRect();
     }
+}
 
+void FGQCanvasImage::doPaint(FGCanvasPaintContext *context) const
+{
     QRectF dstRect(0.0, 0.0, _destSize.width(), _destSize.height());
     context->painter()->drawPixmap(dstRect, _image, _sourceRect);
 }
@@ -75,18 +81,19 @@ bool FGQCanvasImage::onChildAdded(LocalProp *prop)
         return true;
     }
 
-    qDebug() << "image saw child:" << prop->name();
     return false;
 }
 
 void FGQCanvasImage::markImageDirty()
 {
     _imageDirty = true;
+    requestPolish();
 }
 
 void FGQCanvasImage::markSourceDirty()
 {
     _sourceRectDirty = true;
+    requestPolish();
 }
 
 void FGQCanvasImage::recomputeSourceRect() const
@@ -118,15 +125,16 @@ void FGQCanvasImage::recomputeSourceRect() const
 void FGQCanvasImage::rebuildImage() const
 {
     QByteArray file = _propertyRoot->value("file", QByteArray()).toByteArray();
+    auto loader = connection()->imageLoader();
     if (!file.isEmpty()) {
-         _image = FGQCanvasImageLoader::instance()->getImage(file);
+         _image = loader->getImage(file);
 
 
         if (_image.isNull()) {
             // get notified when the image loads
-            FGQCanvasImageLoader::instance()->connectToImageLoaded(file,
-                                                                   const_cast<FGQCanvasImage*>(this),
-                                                                   SLOT(markImageDirty()));
+            loader->connectToImageLoaded(file,
+                                         const_cast<FGQCanvasImage*>(this),
+                                         SLOT(markImageDirty()));
         } else {
             // loaded image ok!
         }

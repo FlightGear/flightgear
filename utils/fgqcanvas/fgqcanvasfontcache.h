@@ -34,9 +34,6 @@ public:
 
     QFont fontForName(QByteArray name, bool* ok = nullptr);
 
-    static void initialise(QNetworkAccessManager* nam);
-    static FGQCanvasFontCache* instance();
-
     void setHost(QString hostName, int portNumber);
 signals:
     void fontLoaded(QByteArray name);

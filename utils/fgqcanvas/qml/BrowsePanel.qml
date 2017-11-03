@@ -61,6 +61,31 @@ Item {
                 }
             }
 
+            Button {
+                id: cancelButton
+                label: "Cancel"
+                anchors.right: parent.right
+
+                visible: (_application.status == FG.Application.Querying)
+
+                onClicked: {
+                    _application.cancelQuery();
+                }
+            }
+
+            Button {
+                id: clearlButton
+                label: "Clear"
+                anchors.right: parent.right
+
+                visible: (_application.status == FG.Application.SuccessfulQuery) |
+                         (_application.status == FG.Application.QueryFailed)
+
+                onClicked: {
+                    _application.clearQuery();
+                }
+            }
+
         }
     }
 
@@ -76,6 +101,7 @@ Item {
         width: 300
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 8
+        visible: _application.canvases.length > 0
 
         ListView {
             id: canvasList

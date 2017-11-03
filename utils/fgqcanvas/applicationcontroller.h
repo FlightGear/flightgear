@@ -49,6 +49,8 @@ public:
 
     Q_INVOKABLE void save(QString configName);
     Q_INVOKABLE void query();
+    Q_INVOKABLE void cancelQuery();
+    Q_INVOKABLE void clearQuery();
 
     Q_INVOKABLE void restoreConfig(int index);
 
@@ -107,6 +109,7 @@ private:
     void setStatus(Status newStatus);
 
     void rebuildConfigData();
+    void clearConnections();
 
     QByteArray saveState(QString name) const;
     void restoreState(QByteArray bytes);
@@ -118,6 +121,7 @@ private:
     QNetworkAccessManager* m_netAccess;
     Status m_status;
     QVariantList m_configs;
+    QNetworkReply* m_query = nullptr;
 
 };
 

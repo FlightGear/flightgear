@@ -21,6 +21,7 @@
 #include "fgcanvaspaintcontext.h"
 #include "fgcanvasgroup.h"
 #include "canvasitem.h"
+#include "canvasconnection.h"
 
 #include <QDebug>
 #include <QPainter>
@@ -85,7 +86,10 @@ FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
     _parent(pr)
 {
     connect(prop->getOrCreateWithPath("visible"), &LocalProp::valueChanged,
-            [this](QVariant val) { _visible = val.toBool(); });
+            [this](QVariant val) {
+        _visible = val.toBool();
+        requestPolish();
+    });
     connect(prop, &LocalProp::childAdded, this, &FGCanvasElement::onChildAdded);
     connect(prop, &LocalProp::childRemoved, this, &FGCanvasElement::onChildRemoved);
 
@@ -104,7 +108,13 @@ void FGCanvasElement::requestPolish()
 
 void FGCanvasElement::polish()
 {
-    if (!isVisible()) {
+    bool vis = isVisible();
+    auto qq = quickItem();
+    if (qq && (qq->isVisible() != vis)) {
+        qq->setVisible(vis);
+    }
+
+    if (!vis) {
         return;
     }
 
@@ -113,8 +123,8 @@ void FGCanvasElement::polish()
         _clipDirty = false;
     }
 
-    if (quickItem()) {
-        quickItem()->setTransform(combinedTransform());
+    if (qq) {
+        qq->setTransform(combinedTransform());
     }
 
     if (_styleDirty) {
@@ -216,6 +226,13 @@ int FGCanvasElement::zIndex() const
 const FGCanvasGroup *FGCanvasElement::parentGroup() const
 {
     return _parent;
+}
+
+CanvasConnection *FGCanvasElement::connection() const
+{
+    if (_parent)
+        return _parent->connection();
+    return qobject_cast<CanvasConnection*>(parent());
 }
 
 bool FGCanvasElement::onChildAdded(LocalProp *prop)

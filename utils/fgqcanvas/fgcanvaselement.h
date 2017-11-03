@@ -30,6 +30,7 @@ class FGCanvasPaintContext;
 class FGCanvasGroup;
 class CanvasItem;
 class QQuickItem;
+class CanvasConnection;
 
 class FGCanvasElement : public QObject
 {
@@ -46,6 +47,8 @@ public:
     int zIndex() const;
 
     const FGCanvasGroup* parentGroup() const;
+
+    CanvasConnection* connection() const;
 
     static bool isStyleProperty(QByteArray name);
 

@@ -28,6 +28,8 @@
 
 class LocalProp;
 class QNetworkAccessManager;
+class FGQCanvasImageLoader;
+class FGQCanvasFontCache;
 
 class CanvasConnection : public QObject
 {
@@ -85,6 +87,10 @@ public:
         return QString::fromUtf8(m_rootPropertyPath);
     }
 
+    FGQCanvasImageLoader* imageLoader() const;
+
+    FGQCanvasFontCache* fontCache() const;
+
 public Q_SLOTS:
     void reconnect();
 
@@ -126,6 +132,9 @@ private:
     QHash<int, LocalProp*> idPropertyDict;
     Status m_status = NotConnected;
     QString m_rootPath;
+
+    mutable FGQCanvasImageLoader* m_imageLoader = nullptr;
+    mutable FGQCanvasFontCache* m_fontCache = nullptr;
 };
 
 #endif // CANVASCONNECTION_H

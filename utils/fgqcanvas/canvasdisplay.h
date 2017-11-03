@@ -23,7 +23,8 @@
 #include <QQuickItem>
 
 class CanvasConnection;
-class FGCanvasElement;
+class FGCanvasGroup;
+class QQuickItem;
 
 class CanvasDisplay : public QQuickItem
 {
@@ -51,14 +52,23 @@ void setCanvas(CanvasConnection* canvas);
 protected:
     void updatePolish() override;
 
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+
 private slots:
     void onConnectionStatusChanged();
 
     void onConnectionUpdated();
 
+    void onCanvasSizeChanged();
+    void onConnectionDestroyed();
+
 private:
+    void recomputeScaling();
+
     CanvasConnection* m_connection = nullptr;
-    std::unique_ptr<FGCanvasElement> m_rootElement;
+    std::unique_ptr<FGCanvasGroup> m_rootElement;
+    QQuickItem* m_rootItem = nullptr;
+    QSizeF m_sourceSize;
 };
 
 #endif // CANVASDISPLAY_H

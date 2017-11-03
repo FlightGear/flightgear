@@ -29,6 +29,7 @@ signals:
     void childAdded();
     void childRemoved(int index);
 
+    void canvasSizeChanged();
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
 

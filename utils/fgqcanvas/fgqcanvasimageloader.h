@@ -29,9 +29,8 @@ class FGQCanvasImageLoader : public QObject
 {
     Q_OBJECT
 public:
-    static FGQCanvasImageLoader* instance();
+    FGQCanvasImageLoader(QNetworkAccessManager* dl, QObject* pr = nullptr);
 
-    static void initialise(QNetworkAccessManager* dl);
 
     void setHost(QString hostName, int portNumber);
 
@@ -49,7 +48,6 @@ signals:
 
 
 private:
-    explicit FGQCanvasImageLoader(QNetworkAccessManager* dl);
 
     void onDownloadFinished();
 

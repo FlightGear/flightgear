@@ -111,7 +111,9 @@ void ApplicationController::rebuildConfigData()
 
 void ApplicationController::query()
 {
-    qWarning() << Q_FUNC_INFO << m_host << m_port;
+    if (m_query) {
+        cancelQuery();
+    }
 
     if (m_host.isEmpty() || (m_port == 0))
         return;
@@ -123,11 +125,29 @@ void ApplicationController::query()
     queryUrl.setPath("/json/canvas/by-index");
     queryUrl.setQuery("d=2");
 
-    QNetworkReply* reply = m_netAccess->get(QNetworkRequest(queryUrl));
-    connect(reply, &QNetworkReply::finished,
+    m_query = m_netAccess->get(QNetworkRequest(queryUrl));
+    connect(m_query, &QNetworkReply::finished,
             this, &ApplicationController::onFinishedGetCanvasList);
 
     setStatus(Querying);
+}
+
+void ApplicationController::cancelQuery()
+{
+    setStatus(Idle);
+    if (m_query) {
+        m_query->abort();
+        m_query->deleteLater();
+    }
+
+    m_query = nullptr;
+    m_canvases.clear();
+    emit canvasListChanged();
+}
+
+void ApplicationController::clearQuery()
+{
+    cancelQuery();
 }
 
 void ApplicationController::restoreConfig(int index)
@@ -215,7 +235,8 @@ QJsonObject jsonPropNodeFindChild(QJsonObject obj, QByteArray name)
 void ApplicationController::onFinishedGetCanvasList()
 {
     m_canvases.clear();
-    QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    QNetworkReply* reply = m_query;
+    m_query = nullptr;
     reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError) {
@@ -272,8 +293,7 @@ QByteArray ApplicationController::saveState(QString name) const
 
 void ApplicationController::restoreState(QByteArray bytes)
 {
-    qDeleteAll(m_activeCanvases);
-    m_activeCanvases.clear();
+    clearConnections();
 
     QJsonDocument jsonDoc = QJsonDocument::fromJson(bytes);
     QJsonObject json = jsonDoc.object();
@@ -289,5 +309,14 @@ void ApplicationController::restoreState(QByteArray bytes)
         cc->reconnect();
     }
 
+    emit activeCanvasesChanged();
+}
+
+void ApplicationController::clearConnections()
+{
+    Q_FOREACH(auto c, m_activeCanvases) {
+        c->deleteLater();
+    }
+    m_activeCanvases.clear();
     emit activeCanvasesChanged();
 }

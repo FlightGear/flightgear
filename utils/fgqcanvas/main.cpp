@@ -22,8 +22,6 @@
 
 #include "fgcanvastext.h"
 #include "fgqcanvasimage.h"
-#include "fgqcanvasfontcache.h"
-#include "fgqcanvasimageloader.h"
 #include "canvasitem.h"
 #include "applicationcontroller.h"
 #include "canvasdisplay.h"
@@ -39,9 +37,6 @@ int main(int argc, char *argv[])
 
     ApplicationController appController;
     // load saved history on the app controller?
-
-    FGQCanvasFontCache::initialise(appController.netAccess());
-    FGQCanvasImageLoader::initialise(appController.netAccess());
 
     qmlRegisterType<CanvasItem>("FlightGear", 1, 0, "CanvasItem");
     qmlRegisterType<CanvasDisplay>("FlightGear", 1, 0, "CanvasDisplay");

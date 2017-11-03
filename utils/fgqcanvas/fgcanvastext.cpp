@@ -26,6 +26,7 @@
 #include "localprop.h"
 #include "fgqcanvasfontcache.h"
 #include "canvasitem.h"
+#include "canvasconnection.h"
 
 static QQmlComponent* static_textComponent = nullptr;
 
@@ -33,10 +34,6 @@ FGCanvasText::FGCanvasText(FGCanvasGroup* pr, LocalProp* prop) :
     FGCanvasElement(pr, prop),
     _metrics(QFont())
 {
-    // this signal fires infrequently enough, it's simpler just to have
-    // all texts watch it.
-    connect(FGQCanvasFontCache::instance(), &FGQCanvasFontCache::fontLoaded,
-            this, &FGCanvasText::onFontLoaded);
 }
 
 CanvasItem *FGCanvasText::createQuickItem(QQuickItem *parent)
@@ -191,6 +188,8 @@ void FGCanvasText::onFontLoaded(QByteArray name)
         return; // not our font
     }
 
+    auto fontCache = connection()->fontCache();
+    disconnect(fontCache, &FGQCanvasFontCache::fontLoaded, this, &FGCanvasText::onFontLoaded);
     markFontDirty();
 }
 
@@ -198,9 +197,12 @@ void FGCanvasText::rebuildFont() const
 {
     QByteArray fontName = getCascadedStyle("font", QString()).toByteArray();
     bool ok;
-    QFont f = FGQCanvasFontCache::instance()->fontForName(fontName, &ok);
+    auto fontCache = connection()->fontCache();
+    QFont f = fontCache->fontForName(fontName, &ok);
     if (!ok) {
         // wait for the correct font
+        connect(fontCache, &FGQCanvasFontCache::fontLoaded, this, &FGCanvasText::onFontLoaded);
+        return;
     }
 
     const int pixelSize = getCascadedStyle("character-size", 16).toInt();

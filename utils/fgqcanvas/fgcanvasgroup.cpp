@@ -67,7 +67,6 @@ unsigned int FGCanvasGroup::indexOfChild(const FGCanvasElement *e) const
 
 CanvasItem *FGCanvasGroup::createQuickItem(QQuickItem *parent)
 {
-    qDebug() << Q_FUNC_INFO;
     _quick = new CanvasItem(parent);
 
     for (auto e : _children) {
@@ -135,7 +134,12 @@ bool FGCanvasGroup::onChildAdded(LocalProp *prop)
 
     if (isRootGroup) {
         // ignore all of these, handled by the enclosing canvas view
-        if ((nm == "view") || (nm == "size") || nm.startsWith("status") || (nm == "name") || (nm == "mipmapping") || (nm == "placement")) {
+        if (nm == "size") {
+            connect(prop, &LocalProp::valueChanged, this, &FGCanvasGroup::canvasSizeChanged);
+            return true;
+        }
+
+        if ((nm == "view") || nm.startsWith("status") || (nm == "name") || (nm == "mipmapping") || (nm == "placement")) {
             return true;
         }
     }

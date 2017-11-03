@@ -55,20 +55,6 @@ QFont FGQCanvasFontCache::fontForName(QByteArray name, bool* ok)
     return QFont(); // default font
 }
 
-static FGQCanvasFontCache* s_instance = nullptr;
-
-void FGQCanvasFontCache::initialise(QNetworkAccessManager *nam)
-{
-    Q_ASSERT(s_instance == nullptr);
-    s_instance = new FGQCanvasFontCache(nam);
-}
-
-FGQCanvasFontCache *FGQCanvasFontCache::instance()
-{
-
-    return s_instance;
-}
-
 void FGQCanvasFontCache::setHost(QString hostName, int portNumber)
 {
     m_hostName = hostName;

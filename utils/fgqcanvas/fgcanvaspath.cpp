@@ -49,7 +49,6 @@ public:
         : CanvasItem(parent)
     {
         setFlag(ItemHasContents);
-        qDebug() << Q_FUNC_INFO;
     }
 
     void setPath(QPainterPath pp)

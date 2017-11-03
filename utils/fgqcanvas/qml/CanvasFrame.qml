@@ -8,11 +8,15 @@ Item {
 
     readonly property var centerPoint: Qt.point(width / 2, height / 2)
 
+    clip: true;
+
     Component.onCompleted: {
-        width = canvas.size.width
-        height = canvas.size.height
-        x = canvas.center.x - (width / 2)
-        y = canvas.center.y - (height / 2)
+        if (canvas) {
+            width = canvas.size.width
+            height = canvas.size.height
+            x = canvas.center.x - (width / 2)
+            y = canvas.center.y - (height / 2)
+        }
     }
 
     function saveGeometry()
@@ -26,11 +30,13 @@ Item {
         anchors.fill: parent
 
         onCanvasChanged: {
-            root.width = canvas.size.width
-            root.height = canvas.size.height
+            if (canvas) {
+                root.width = canvas.size.width
+                root.height = canvas.size.height
 
-            root.x = canvas.center.x - (root.width / 2)
-            root.y = canvas.center.y - (root.height / 2)
+                root.x = canvas.center.x - (root.width / 2)
+                root.y = canvas.center.y - (root.height / 2)
+            }
         }
     }
 
@@ -39,8 +45,8 @@ Item {
         border.color: "orange"
         color: "transparent"
         anchors.centerIn: parent
-        width: parent.width + 2
-        height: parent.height + 2
+        width: parent.width
+        height: parent.height
 
         MouseArea {
             anchors.fill: parent
@@ -110,7 +116,4 @@ Item {
 
         }
     }
-
-
-
 }

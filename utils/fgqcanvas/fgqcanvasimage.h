@@ -39,6 +39,7 @@ protected:
     virtual void markStyleDirty() override;
 
 
+    void doPolish() override;
 private slots:
     void markImageDirty();
     void markSourceDirty();

@@ -61,12 +61,42 @@ Item {
                 height:delegateFrame.height + 8
 
                 Rectangle {
+                    id: delegateBackFrame
+                    color: "#1f1f1f"
+                    width: delegateFrame.width
+                    height: delegateFrame.height
+
+
+                    Button {
+                        id: deleteButton
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8
+                        label: "Delete"
+                        onClicked:  {
+
+                        }
+                    }
+
+                    Button {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: deleteButton.left
+                        anchors.rightMargin: 8
+                        label: "Save"
+                        onClicked:  {
+
+                        }
+                    }
+                }
+
+                Rectangle {
                     id: delegateFrame
                     width: parent.width
-                    anchors.horizontalCenter: parent.horizontalCenter
+                 //   anchors.horizontalCenter: parent.horizontalCenter
 
                     height: configLabel.implicitHeight + 20
 
+                    opacity: 1.0
                     color: "#3f3f3f"
 
                     Text {
@@ -83,19 +113,14 @@ Item {
                         onClicked: {
                             _application.restoreConfig(model.index)
                         }
+
+                        drag.target: delegateFrame
+                        drag.axis: Drag.XAxis
+                        drag.minimumX: -delegateFrame.width
+                        drag.maximumX: 0
                     }
 
-                    Button {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.right: parent.right
-                        anchors.rightMargin: 8
-                        label: "X"
-                        width: height
 
-                        onClicked:  {
-
-                        }
-                    }
                 } // of visible rect
             } // of delegate item
 
