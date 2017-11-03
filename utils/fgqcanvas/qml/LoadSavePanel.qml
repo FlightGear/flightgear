@@ -18,39 +18,43 @@ Item {
         border.width: 1
         color: "#5f5f5f"
         opacity: 0.8
+        layer.enabled: true
 
-        Column {
-            spacing: 8
+        InputLine {
+            id: saveTitleInput
+            width: parent.width
+            label: "Title"
+            anchors {
+                top: parent.top
+                topMargin: 8
+                left: parent.left
+                leftMargin: 8
+                right: saveButton.left
+                rightMargin: 8
+            }
 
-            id: savePanelContent
-            width: parent.width - 30
+        }
+
+        Button {
+            id: saveButton
+            label: "Save"
+            enabled: (saveTitleInput.text != "")
+            anchors.right: parent.right
+            anchors.rightMargin: 8
             anchors.top: parent.top
             anchors.topMargin: 8
-            anchors.horizontalCenter: parent.horizontalCenter
 
-            InputLine {
-                id: saveTitleInput
-                width: parent.width
-                label: "Title"
-
-            }
-
-            Button {
-                id: saveButton
-                label: "Save"
-                enabled: (saveTitleInput.text != "")
-
-                onClicked: {
-                    _application.save(saveTitleInput.text);
-                }
+            onClicked: {
+                _application.save(saveTitleInput.text);
             }
         }
+
 
         ListView {
             id: savedList
             model: _application.configs
             width: parent.width - 30
-            anchors.top: savePanelContent.bottom
+            anchors.top: saveTitleInput.bottom
             anchors.topMargin: 8
             anchors.bottom:  parent.bottom
             anchors.bottomMargin: 8
@@ -74,7 +78,7 @@ Item {
                         anchors.rightMargin: 8
                         label: "Delete"
                         onClicked:  {
-
+                            _application.deleteConfig(model.index)
                         }
                     }
 
@@ -84,7 +88,7 @@ Item {
                         anchors.rightMargin: 8
                         label: "Save"
                         onClicked:  {
-
+                            _application.saveConfigChanges(model.index)
                         }
                     }
                 }

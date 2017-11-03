@@ -53,6 +53,8 @@ public:
     Q_INVOKABLE void clearQuery();
 
     Q_INVOKABLE void restoreConfig(int index);
+    Q_INVOKABLE void deleteConfig(int index);
+    Q_INVOKABLE void saveConfigChanges(int index);
 
     Q_INVOKABLE void openCanvas(QString path);
 
@@ -110,6 +112,8 @@ private:
 
     void rebuildConfigData();
     void clearConnections();
+
+    void doSaveToFile(QString path, QString configName);
 
     QByteArray saveState(QString name) const;
     void restoreState(QByteArray bytes);

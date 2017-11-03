@@ -59,13 +59,11 @@ void ApplicationController::save(QString configName)
 {
     QDir d(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
     if (!d.exists()) {
-        qWarning() << "creating" << d;
         d.mkpath(".");
     }
 
     // convert spaces to underscores
     QString filesystemCleanName = configName.replace(QRegularExpression("[\\s-\\\"/]"), "_");
-    qDebug() << Q_FUNC_INFO << "FS clean name is " << filesystemCleanName;
 
     QFile f(d.filePath(configName + ".json"));
     if (f.exists()) {
@@ -160,6 +158,33 @@ void ApplicationController::restoreConfig(int index)
     }
 
     restoreState(f.readAll());
+}
+
+void ApplicationController::deleteConfig(int index)
+{
+    QString path = m_configs.at(index).toMap().value("path").toString();
+    QFile f(path);
+    if (!f.remove()) {
+        qWarning() << "failed to remove file";
+        return;
+    }
+
+    m_configs.removeAt(index);
+    emit configListChanged(m_configs);
+}
+
+void ApplicationController::saveConfigChanges(int index)
+{
+    QString path = m_configs.at(index).toMap().value("path").toString();
+    QString name = m_configs.at(index).toMap().value("name").toString();
+    doSaveToFile(path, name);
+}
+
+void ApplicationController::doSaveToFile(QString path, QString configName)
+{
+    QFile f(path);
+    f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    f.write(saveState(configName));
 }
 
 void ApplicationController::openCanvas(QString path)
