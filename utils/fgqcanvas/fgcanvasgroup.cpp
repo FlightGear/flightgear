@@ -93,8 +93,7 @@ void FGCanvasGroup::doPolish()
     if (_zIndicesDirty) {
         std::sort(_children.begin(), _children.end(), ChildOrderingFunction());
         _zIndicesDirty = false;
-
-        qWarning() << Q_FUNC_INFO << "adjust z order of quick items";
+        resetChildQuickItemZValues();
     }
 
     for (FGCanvasElement* element : _children) {
@@ -102,9 +101,20 @@ void FGCanvasGroup::doPolish()
     }
 }
 
+void FGCanvasGroup::resetChildQuickItemZValues()
+{
+    int counter = 0;
+    for (auto e : _children) {
+        auto qq = e->quickItem();
+        if (qq) {
+            qq->setZ(counter++);
+        }
+    }
+}
+
 bool FGCanvasGroup::onChildAdded(LocalProp *prop)
 {
-    const bool isRootGroup = (parent() == nullptr);
+    const bool isRootGroup = (_parent == nullptr);
     int newChildCount = 0;
 
     if (FGCanvasElement::onChildAdded(prop)) {

@@ -42,6 +42,7 @@ protected:
 private:
     void markCachedSymbolDirty();
     int indexOfChildWithProp(LocalProp *prop) const;
+    void resetChildQuickItemZValues();
 
 private:
     mutable FGCanvasElementVec _children;

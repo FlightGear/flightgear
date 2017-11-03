@@ -37,7 +37,7 @@ FGQCanvasImage::FGQCanvasImage(FGCanvasGroup* pr, LocalProp* prop) :
 
 void FGQCanvasImage::setEngine(QQmlEngine *engine)
 {
-    static_imageComponent = new QQmlComponent(engine, QUrl("image.qml"));
+    static_imageComponent = new QQmlComponent(engine, QUrl("qrc:///qml/image.qml"));
     if (!static_imageComponent || !static_imageComponent->errors().empty()) {
         qWarning() << static_imageComponent->errorString();
     }

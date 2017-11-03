@@ -6,23 +6,21 @@ Item {
     property bool showDecorations: true
     property alias canvas: canvasDisplay.canvas
 
-    readonly property var centerPoint: Qt.point(width / 2, height / 2)
-
-    clip: true;
+    //clip: true;
 
     Component.onCompleted: {
         if (canvas) {
             width = canvas.size.width
             height = canvas.size.height
-            x = canvas.center.x - (width / 2)
-            y = canvas.center.y - (height / 2)
+            x = canvas.origin.x
+            y = canvas.origin.y
         }
     }
 
     function saveGeometry()
     {
-        canvas.center = Qt.point(x + (width / 2), y + (height / 2))
-        canvas.size = Qt.size(root.width / 2, root.height / 2);
+        canvas.origin = Qt.point(x, y )
+        canvas.size = Qt.size(root.width, root.height);
     }
 
     FG.CanvasDisplay {
@@ -33,9 +31,8 @@ Item {
             if (canvas) {
                 root.width = canvas.size.width
                 root.height = canvas.size.height
-
-                root.x = canvas.center.x - (root.width / 2)
-                root.y = canvas.center.y - (root.height / 2)
+                root.x = canvas.origin.x
+                root.y = canvas.origin.y
             }
         }
     }
@@ -73,13 +70,11 @@ Item {
 
                 onPositionChanged: {
                     var rootPos = mapToItem(root, mouse.x, mouse.y);
-                    var rootDiff = Qt.point(rootPos.x - root.centerPoint.x,
-                                            rootPos.y - root.centerPoint.y);
+                  //  var rootDiff = Qt.point(rootPos.x - root.x,
+                  //                          rootPos.y - root.y);
 
-                    root.width = rootDiff.x * 2;
-                    root.height = rootDiff.y * 2;
-                    root.x = canvas.center.x - (root.width / 2)
-                    root.y = canvas.center.y - (root.height / 2)
+                    root.width = rootPos.x;
+                    root.height = rootPos.y;
                 }
 
                 onReleased: {
@@ -104,6 +99,7 @@ Item {
                 case FG.CanvasConnection.NotConnected: return "Not connected";
                 case FG.CanvasConnection.Connecting: return "Connecting";
                 case FG.CanvasConnection.Connected: return "Connected";
+                case FG.CanvasConnection.Closed: return "Closed";
                 case FG.CanvasConnection.Reconnecting: return "Re-connecting";
                 case FG.CanvasConnection.Error: return "Error";
                 }

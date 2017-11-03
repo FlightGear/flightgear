@@ -123,16 +123,12 @@ void CanvasDisplay::onCanvasSizeChanged()
 {
     m_sourceSize = QSizeF(m_connection->propertyRoot()->value("size", 400).toDouble(),
                           m_connection->propertyRoot()->value("size[1]", 400).toDouble());
-
     recomputeScaling();
 }
 
 void CanvasDisplay::recomputeScaling()
 {
-    double xScaleFactor = width() / m_sourceSize.width();
-    double yScaleFactor =  height() / m_sourceSize.height();
-
-    double finalScaleFactor = std::min(xScaleFactor, yScaleFactor);
-
-    setScale(finalScaleFactor);
+    const double xScaleFactor = width() / m_sourceSize.width();
+    const double yScaleFactor =  height() / m_sourceSize.height();
+    setScale(std::min(xScaleFactor, yScaleFactor));
 }

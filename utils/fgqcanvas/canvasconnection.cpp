@@ -81,8 +81,7 @@ bool CanvasConnection::restoreState(QJsonObject state)
     m_destRect = QRectF(rect[0].toDouble(), rect[1].toDouble(),
             rect[2].toDouble(), rect[3].toDouble());
 
-    emit sizeChanged(m_destRect.size());
-    emit centerChanged(m_destRect.center());
+    emit geometryChanged();
     emit rootPathChanged();
     emit webSocketUrlChanged();
 
@@ -100,13 +99,13 @@ void CanvasConnection::showDebugTree()
     qWarning() << Q_FUNC_INFO << "implement me!";
 }
 
-void CanvasConnection::setCenter(QPointF c)
+void CanvasConnection::setOrigin(QPointF c)
 {
-    if (center() == c)
+    if (m_destRect.topLeft() == c)
         return;
 
-    m_destRect.moveCenter(c);
-    emit centerChanged(c);
+    m_destRect.moveTopLeft(c);
+    emit geometryChanged();
 }
 
 void CanvasConnection::setSize(QSizeF sz)
@@ -115,7 +114,7 @@ void CanvasConnection::setSize(QSizeF sz)
         return;
 
     m_destRect.setSize(sz);
-    emit sizeChanged(sz);
+    emit geometryChanged();
 }
 
 void CanvasConnection::connectWebSocket(QByteArray hostName, int port)
@@ -133,9 +132,9 @@ void CanvasConnection::connectWebSocket(QByteArray hostName, int port)
     setStatus(Connecting);
 }
 
-QPointF CanvasConnection::center() const
+QPointF CanvasConnection::origin() const
 {
-    return m_destRect.center();
+    return m_destRect.topLeft();
 }
 
 QSizeF CanvasConnection::size() const

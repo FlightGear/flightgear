@@ -40,8 +40,8 @@ class CanvasConnection : public QObject
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
 
 // QML exposed versions of the destination rect
-    Q_PROPERTY(QPointF center READ center WRITE setCenter NOTIFY centerChanged)
-    Q_PROPERTY(QSizeF size READ size WRITE setSize NOTIFY sizeChanged)
+    Q_PROPERTY(QPointF origin READ origin WRITE setOrigin NOTIFY geometryChanged)
+    Q_PROPERTY(QSizeF size READ size WRITE setSize NOTIFY geometryChanged)
 
     Q_PROPERTY(QUrl webSocketUrl READ webSocketUrl NOTIFY webSocketUrlChanged)
     Q_PROPERTY(QString rootPath READ rootPath NOTIFY rootPathChanged)
@@ -71,7 +71,7 @@ public:
     bool restoreState(QJsonObject state);
 
     void connectWebSocket(QByteArray hostName, int port);
-    QPointF center() const;
+    QPointF origin() const;
 
     QSizeF size() const;
 
@@ -97,16 +97,14 @@ public Q_SLOTS:
     // not on iOS / Android - requires widgets
     void showDebugTree();
 
-    void setCenter(QPointF center);
+    void setOrigin(QPointF center);
 
     void setSize(QSizeF size);
 
 signals:
     void statusChanged(Status status);
 
-    void centerChanged(QPointF center);
-
-    void sizeChanged(QSizeF size);
+    void geometryChanged();
 
     void rootPathChanged();
 
