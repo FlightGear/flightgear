@@ -2,26 +2,34 @@ import QtQuick 2.0
 import FlightGear 1.0 as FG
 
 Rectangle {
-    property bool __uiVisible: true
+    property bool uiVisible: true
     width: 1024
     height: 768
     color: "black"
 
+    property double __uiOpacity: uiVisible ? 1.0 : 0.0
+    property bool __uiVisible: true
+
+    Behavior on __uiOpacity {
+        SequentialAnimation {
+            ScriptAction { script: if (uiVisible) __uiVisible = true; }
+            NumberAnimation { duration: 250 }
+            ScriptAction { script: if (!uiVisible) __uiVisible = false; }
+        }
+    }
+
     Image {
-        opacity: visible ? 0.5 : 0.0
+        opacity: __uiOpacity * 0.5
         source: "qrc:///images/checkerboard"
         fillMode: Image.Tile
         anchors.fill: parent
         visible: __uiVisible
-        Behavior on opacity {
-            NumberAnimation { duration: 400 }
-        }
     }
 
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            __uiVisible = !__uiVisible;
+            uiVisible = !uiVisible;
         }
     }
 
@@ -30,6 +38,7 @@ Rectangle {
         delegate: CanvasFrame {
             id: display
             canvas: modelData
+            showUi: __uiVisible
         }
     }
 
@@ -38,10 +47,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         width: 400
         visible: __uiVisible
-        opacity: visible ? 1.0: 0.0
-        Behavior on opacity {
-            NumberAnimation { duration: 400 }
-        }
+        opacity: __uiOpacity
     }
 
     LoadSavePanel {
@@ -50,9 +56,6 @@ Rectangle {
         anchors.right: parent.right
         width: 400
         visible: __uiVisible
-        opacity: visible ? 1.0: 0.0
-        Behavior on opacity {
-            NumberAnimation { duration: 400 }
-        }
+        opacity: __uiOpacity
     }
 }

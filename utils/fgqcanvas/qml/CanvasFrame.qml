@@ -5,6 +5,7 @@ Item {
     id: root
     property bool showDecorations: true
     property alias canvas: canvasDisplay.canvas
+    property bool showUi: true
 
     //clip: true;
 
@@ -44,6 +45,7 @@ Item {
         anchors.centerIn: parent
         width: parent.width
         height: parent.height
+        visible: showUi
 
         MouseArea {
             anchors.fill: parent

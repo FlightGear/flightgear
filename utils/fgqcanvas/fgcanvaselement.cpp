@@ -244,10 +244,10 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
     } else if (nm == "visible") {
         return true;
     } else if (nm == "tf-rot-index") {
-        // ignored, this is noise from the Nasal SVG parswer
+        // ignored, this is noise from the Nasal SVG parser
         return true;
     } else if (nm.startsWith("center-offset-")) {
-        // ignored, this is noise from the Nasal SVG parswer
+        // ignored, this is noise from the Nasal SVG parser
         return true;
     } else if (nm == "center") {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::onCenterChanged);
