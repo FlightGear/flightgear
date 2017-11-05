@@ -30,6 +30,7 @@ class LocalProp;
 class QNetworkAccessManager;
 class FGQCanvasImageLoader;
 class FGQCanvasFontCache;
+class QDataStream;
 
 class CanvasConnection : public QObject
 {
@@ -59,7 +60,8 @@ public:
         Connected,
         Closed,
         Reconnecting,
-        Error
+        Error,
+        Snapshot  // offline mode, data from snapshot
     };
 
     Status status() const
@@ -69,6 +71,9 @@ public:
 
     QJsonObject saveState() const;
     bool restoreState(QJsonObject state);
+
+    void saveSnapshot(QDataStream& ds) const;
+    void restoreSnapshot(QDataStream &ds);
 
     void connectWebSocket(QByteArray hostName, int port);
     QPointF origin() const;
@@ -129,7 +134,6 @@ private:
     std::unique_ptr<LocalProp> m_localPropertyRoot;
     QHash<int, LocalProp*> idPropertyDict;
     Status m_status = NotConnected;
-    QString m_rootPath;
 
     mutable FGQCanvasImageLoader* m_imageLoader = nullptr;
     mutable FGQCanvasFontCache* m_fontCache = nullptr;

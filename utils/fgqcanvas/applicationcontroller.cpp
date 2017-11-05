@@ -31,6 +31,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QDataStream>
 
 #include "canvasconnection.h"
 
@@ -117,7 +118,7 @@ void ApplicationController::saveSnapshot(QString snapshotName)
 
     // convert spaces to underscores
     QString filesystemCleanName = snapshotName.replace(QRegularExpression("[\\s-\\\"/]"), "_");
-    QFile f(d.filePath(filesystemCleanName + ".json"));
+    QFile f(d.filePath(filesystemCleanName + ".fgcanvassnapshot"));
     if (f.exists()) {
         qWarning() << "not over-writing" << f.fileName();
         return;
@@ -135,7 +136,29 @@ void ApplicationController::saveSnapshot(QString snapshotName)
 
 void ApplicationController::restoreSnapshot(int index)
 {
+    QString path = m_snapshots.at(index).toMap().value("path").toString();
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << Q_FUNC_INFO << "failed to open the file";
+        return;
+    }
 
+    clearConnections();
+
+    {
+        QDataStream ds(&f);
+        int version, canvasCount;
+        QString name;
+        ds >> version >> name >> canvasCount;
+
+        for (int i=0; i < canvasCount; ++i) {
+            CanvasConnection* cc = new CanvasConnection(this);
+            cc->restoreSnapshot(ds);
+            m_activeCanvases.append(cc);
+        }
+    }
+
+    emit activeCanvasesChanged();
 }
 
 void ApplicationController::rebuildSnapshotData()
@@ -148,17 +171,21 @@ void ApplicationController::rebuildSnapshotData()
         return;
     }
 
-    // this requires parsing each snapshit in its entirety just to extract
-    // the name, which is horrible.
-    Q_FOREACH (auto entry, d.entryList(QStringList() << "*.json")) {
+    Q_FOREACH (auto entry, d.entryList(QStringList() << "*.fgcanvassnapshot")) {
         QFile f(d.filePath(entry));
         f.open(QIODevice::ReadOnly);
-        QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+        {
+            QDataStream ds(&f);
+            int version;
+            QString name;
+            ds >> version;
 
-        QVariantMap m;
-        m["path"] = f.fileName();
-        m["name"] = doc.object().value("snapshotName").toString();
-        m_snapshots.append(m);
+            QVariantMap m;
+            m["path"] = f.fileName();
+            ds >>name;
+            m["name"] = name;
+            m_snapshots.append(m);
+        }
     }
 
     emit snapshotListChanged();
@@ -405,19 +432,17 @@ void ApplicationController::clearConnections()
 
 QByteArray ApplicationController::createSnapshot(QString name) const
 {
-    QJsonObject json;
-    json["snapshotName"] = name;
-#if 0
-    QJsonArray canvases;
-    Q_FOREACH (auto canvas, m_activeCanvases) {
-        canvases.append(canvas->saveState());
+    QByteArray bytes;
+    const int version = 1;
+    {
+         QDataStream ds(&bytes, QIODevice::WriteOnly);
+         ds << version << name;
+
+         ds << m_activeCanvases.size();
+         Q_FOREACH(auto c, m_activeCanvases) {
+             c->saveSnapshot(ds);
+         }
     }
 
-    json["canvases"] = canvases;
-    // background color?
-    // window geometry and state?
-#endif
-    QJsonDocument doc;
-    doc.setObject(json);
-    return doc.toJson();
+    return bytes;
 }

@@ -26,6 +26,7 @@
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QDataStream>
 
 #include "localprop.h"
 #include "fgqcanvasfontcache.h"
@@ -86,6 +87,20 @@ bool CanvasConnection::restoreState(QJsonObject state)
     emit webSocketUrlChanged();
 
     return true;
+}
+
+void CanvasConnection::saveSnapshot(QDataStream &ds) const
+{
+    ds << m_webSocketUrl << m_rootPropertyPath << m_destRect;
+    m_localPropertyRoot->saveToStream(ds);
+}
+
+void CanvasConnection::restoreSnapshot(QDataStream &ds)
+{
+    ds >> m_webSocketUrl >> m_rootPropertyPath >> m_destRect;
+    m_localPropertyRoot.reset(new LocalProp{nullptr, NameIndexTuple("")});
+    m_localPropertyRoot->restoreFromStream(ds, nullptr);
+    setStatus(Snapshot);
 }
 
 void CanvasConnection::reconnect()
