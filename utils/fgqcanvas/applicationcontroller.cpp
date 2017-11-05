@@ -65,7 +65,7 @@ void ApplicationController::save(QString configName)
     // convert spaces to underscores
     QString filesystemCleanName = configName.replace(QRegularExpression("[\\s-\\\"/]"), "_");
 
-    QFile f(d.filePath(configName + ".json"));
+    QFile f(d.filePath(filesystemCleanName + ".json"));
     if (f.exists()) {
         qWarning() << "not over-writing" << f.fileName();
         return;
@@ -105,6 +105,63 @@ void ApplicationController::rebuildConfigData()
     }
 
     emit configListChanged(m_configs);
+}
+
+void ApplicationController::saveSnapshot(QString snapshotName)
+{
+    QDir d(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    d.cd("Snapshots");
+    if (!d.exists()) {
+        d.mkpath(".");
+    }
+
+    // convert spaces to underscores
+    QString filesystemCleanName = snapshotName.replace(QRegularExpression("[\\s-\\\"/]"), "_");
+    QFile f(d.filePath(filesystemCleanName + ".json"));
+    if (f.exists()) {
+        qWarning() << "not over-writing" << f.fileName();
+        return;
+    }
+
+    f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    f.write(createSnapshot(snapshotName));
+
+    QVariantMap m;
+    m["path"] = f.fileName();
+    m["name"] = snapshotName;
+    m_snapshots.append(m);
+    emit snapshotListChanged();
+}
+
+void ApplicationController::restoreSnapshot(int index)
+{
+
+}
+
+void ApplicationController::rebuildSnapshotData()
+{
+    m_snapshots.clear();
+    QDir d(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    d.cd("Snapshots");
+    if (!d.exists()) {
+        emit snapshotListChanged();
+        return;
+    }
+
+    // this requires parsing each snapshit in its entirety just to extract
+    // the name, which is horrible.
+    Q_FOREACH (auto entry, d.entryList(QStringList() << "*.json")) {
+        QFile f(d.filePath(entry));
+        f.open(QIODevice::ReadOnly);
+        QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+
+        QVariantMap m;
+        m["path"] = f.fileName();
+        m["name"] = doc.object().value("snapshotName").toString();
+        m_snapshots.append(m);
+    }
+
+    emit snapshotListChanged();
 }
 
 void ApplicationController::query()
@@ -344,4 +401,23 @@ void ApplicationController::clearConnections()
     }
     m_activeCanvases.clear();
     emit activeCanvasesChanged();
+}
+
+QByteArray ApplicationController::createSnapshot(QString name) const
+{
+    QJsonObject json;
+    json["snapshotName"] = name;
+#if 0
+    QJsonArray canvases;
+    Q_FOREACH (auto canvas, m_activeCanvases) {
+        canvases.append(canvas->saveState());
+    }
+
+    json["canvases"] = canvases;
+    // background color?
+    // window geometry and state?
+#endif
+    QJsonDocument doc;
+    doc.setObject(json);
+    return doc.toJson();
 }

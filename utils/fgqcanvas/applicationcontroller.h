@@ -36,6 +36,7 @@ class ApplicationController : public QObject
 
     Q_PROPERTY(QVariantList canvases READ canvases NOTIFY canvasListChanged)
     Q_PROPERTY(QVariantList configs READ configs NOTIFY configListChanged)
+    Q_PROPERTY(QVariantList snapshots READ snapshots NOTIFY snapshotListChanged)
 
 
     Q_PROPERTY(QQmlListProperty<CanvasConnection> activeCanvases READ activeCanvases NOTIFY activeCanvasesChanged)
@@ -47,18 +48,20 @@ public:
     explicit ApplicationController(QObject *parent = nullptr);
     ~ApplicationController();
 
-    Q_INVOKABLE void save(QString configName);
     Q_INVOKABLE void query();
     Q_INVOKABLE void cancelQuery();
     Q_INVOKABLE void clearQuery();
 
+    Q_INVOKABLE void save(QString configName);
     Q_INVOKABLE void restoreConfig(int index);
     Q_INVOKABLE void deleteConfig(int index);
     Q_INVOKABLE void saveConfigChanges(int index);
 
     Q_INVOKABLE void openCanvas(QString path);
 
-// void restore();
+    Q_INVOKABLE void saveSnapshot(QString snapshotName);
+    Q_INVOKABLE void restoreSnapshot(int index);
+
     QString host() const;
 
     unsigned int port() const;
@@ -86,6 +89,11 @@ public:
         return m_configs;
     }
 
+    QVariantList snapshots() const
+    {
+        return m_snapshots;
+    }
+
 signals:
 
     void hostChanged(QString host);
@@ -99,6 +107,8 @@ signals:
 
     void configListChanged(QVariantList configs);
 
+    void snapshotListChanged();
+
 public slots:
     void setHost(QString host);
 
@@ -111,12 +121,15 @@ private:
     void setStatus(Status newStatus);
 
     void rebuildConfigData();
+    void rebuildSnapshotData();
     void clearConnections();
 
     void doSaveToFile(QString path, QString configName);
 
     QByteArray saveState(QString name) const;
     void restoreState(QByteArray bytes);
+
+    QByteArray createSnapshot(QString name) const;
 
     QString m_host;
     unsigned int m_port;
@@ -126,7 +139,7 @@ private:
     Status m_status;
     QVariantList m_configs;
     QNetworkReply* m_query = nullptr;
-
+    QVariantList m_snapshots;
 };
 
 #endif // APPLICATIONCONTROLLER_H
