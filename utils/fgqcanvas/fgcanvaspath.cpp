@@ -456,6 +456,7 @@ CanvasItem *FGCanvasPath::createQuickItem(QQuickItem *parent)
     _quickPath = new PathQuickItem(parent);
     _quickPath->setPath(_painterPath);
     _quickPath->setStroke(_stroke);
+    _quickPath->setAntialiasing(true);
     return _quickPath;
 }
 

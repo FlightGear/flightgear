@@ -55,14 +55,6 @@ void CanvasItem::setGlobalClip(const QRectF &clip)
     update();
 }
 
-void CanvasItem::setScaleToFit(const QSizeF &windowSize)
-{
-    const double verticalScaling = windowSize.height() / implicitHeight();
-    const double horizontalScaling = windowSize.width() / implicitWidth();
-    const double usedScale = std::min(verticalScaling, horizontalScaling);
-    setScale(usedScale);
-}
-
 QSGClipNode *CanvasItem::getClipNode()
 {
     if (!m_hasClip) {

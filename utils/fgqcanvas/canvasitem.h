@@ -30,6 +30,8 @@ public:
     CanvasItem(QQuickItem* pr = nullptr);
 
     void setTransform(const QMatrix4x4& mat);
+
+    void setGlobalClip(const QRectF &clip);
 signals:
 
 public slots:
