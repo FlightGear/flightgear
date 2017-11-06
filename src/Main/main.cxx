@@ -56,6 +56,7 @@ extern bool global_crashRptEnabled;
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
 
+#include <Add-ons/AddonManager.hxx>
 #include <Main/locale.hxx>
 #include <Model/panelnode.hxx>
 #include <Scenery/scenery.hxx>
@@ -533,6 +534,8 @@ int fgMainInit( int argc, char **argv )
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
         return EXIT_SUCCESS;
     }
+
+    AddonManager::createInstance();
 
     configResult = flightgear::Options::sharedInstance()->processOptions();
     if (configResult == flightgear::FG_OPTIONS_ERROR) {

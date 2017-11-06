@@ -76,6 +76,8 @@
 #include <simgear/package/Install.hxx>
 #include <simgear/package/Catalog.hxx>
 
+#include <Add-ons/AddonManager.hxx>
+
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
 #include <Aircraft/FlightHistory.hxx>
@@ -1135,7 +1137,10 @@ void fgStartNewReset()
     globals->resetPropertyRoot();
     // otherwise channels are duplicated
     globals->get_channel_options_list()->clear();
-  
+
+    flightgear::AddonManager::reset();
+    flightgear::AddonManager::createInstance();
+
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     

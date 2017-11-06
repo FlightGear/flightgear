@@ -65,6 +65,7 @@
 #include <GUI/SetupRootDialog.hxx>
 #endif
 
+#include <Add-ons/AddonManager.hxx>
 #include <Main/locale.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include "globals.hxx"
@@ -705,33 +706,16 @@ clearLocation ()
 static int
 fgOptAddon(const char *arg)
 {
-  const SGPath path(SGPath::fromLocal8Bit(arg));
-  const SGPath config_xml = path / "config.xml";
+  const SGPath addonPath = SGPath::fromLocal8Bit(arg);
+  const auto& addonManager = AddonManager::instance();
 
-  if (config_xml.exists()) {
-    try {
-      readProperties(config_xml, globals->get_props());
-    } catch (const sg_exception &e) {
-      const string msg = "Unable to load '" + config_xml.utf8Str() + "'. "
-        "Please check that this file exists and is readable.\n\n" +
-        "Exception information: " + e.getFormattedMessage();
-      SG_LOG(SG_GENERAL, SG_ALERT, msg);
-      flightgear::fatalMessageBoxThenExit(
-        "FlightGear", "Unable to load an addon's config.xml file.", msg);
-    }
-
-    globals->append_aircraft_path(path);
-    fgGetNode("addons", true)
-      ->addChild("addon")
-      ->getNode("path", true)
-      ->setStringValue(path.utf8Str());
-  } else {
+  try {
+    addonManager->registerAddon(addonPath);
+  } catch (const sg_exception &e) {
+    string msg = "Error registering an add-on: " + e.getFormattedMessage();
+    SG_LOG(SG_GENERAL, SG_ALERT, msg);
     flightgear::fatalMessageBoxThenExit(
-      "FlightGear",
-      "Path specified with --addon does not exist or no config.xml found in "
-      "that path.",
-      "Unable to find the file '" + config_xml.utf8Str() + "'."
-      );
+      "FlightGear", "Unable to register an add-on.", msg);
   }
 
   return FG_OPTIONS_OK;

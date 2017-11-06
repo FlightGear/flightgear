@@ -7,6 +7,9 @@ set(sources
   Main/locale.cxx
   Main/util.cxx
   Main/positioninit.cxx
+  Add-ons/Addon.cxx
+  Add-ons/AddonManager.cxx
+  Add-ons/AddonVersion.cxx
   Aircraft/controls.cxx
   Aircraft/FlightHistory.cxx
   Aircraft/flightrecorder.cxx
@@ -59,6 +62,7 @@ set(sources
   Time/TimeManager.cxx
   Time/bodysolver.cxx
   Scripting/NasalSys.cxx
+  Scripting/NasalAddons.cxx
   Scripting/NasalCondition.cxx
   Scripting/NasalAircraft.cxx
   Scripting/NasalString.cxx

@@ -38,6 +38,7 @@
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 
+#include "NasalAddons.hxx"
 #include "NasalSGPath.hxx"
 #include "NasalSys.hxx"
 #include "NasalSys_private.hxx"
@@ -856,6 +857,8 @@ void FGNasalSys::setCmdArg(SGPropertyNode* aNode)
 
 void FGNasalSys::init()
 {
+    using namespace flightgear;
+
     if (_inited) {
         SG_LOG(SG_GENERAL, SG_ALERT, "duplicate init of Nasal");
     }
@@ -881,7 +884,7 @@ void FGNasalSys::init()
     for(i=0; funcs[i].name; i++)
         hashset(_globals, funcs[i].name,
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
-    nasal::Hash io_module = nasal::Hash(_globals, _context).get<nasal::Hash>("io");
+    nasal::Hash io_module = getGlobals().get<nasal::Hash>("io");
     io_module.set("open", f_open);
 
     // And our SGPropertyNode wrapper
@@ -910,6 +913,8 @@ void FGNasalSys::init()
       .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
       .member("simulatedTime", &TimerObj::isSimTime, &f_timerObj_setSimTime)
       .member("isRunning", &TimerObj::isRunning);
+
+    initAddonClassesForNasal(_globals, _context);
 
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
