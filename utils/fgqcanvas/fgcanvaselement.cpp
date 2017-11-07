@@ -119,8 +119,14 @@ void FGCanvasElement::polish()
     }
 
     if (_clipDirty) {
-        parseCSSClip(_propertyRoot->value("clip", QVariant()).toByteArray());
         _clipDirty = false;
+        if (qq) {
+            if (_hasClip) {
+                qq->setGlobalClip(_clipRect);
+            } else {
+                qq->clearClip();
+            }
+        }
     }
 
     if (qq) {
@@ -329,6 +335,7 @@ void FGCanvasElement::markTransformsDirty()
 void FGCanvasElement::markClipDirty()
 {
     _clipDirty = true;
+    parseCSSClip(_propertyRoot->value("clip", QVariant()).toByteArray());
     requestPolish();
 }
 

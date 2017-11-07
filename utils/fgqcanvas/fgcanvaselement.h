@@ -57,13 +57,16 @@ public:
     void setHighlighted(bool hilighted);
     bool isHighlighted() const;
 
-    virtual CanvasItem* createQuickItem(QQuickItem* parent);
     virtual CanvasItem* quickItem() const;
+
+    virtual CanvasItem* createQuickItem(QQuickItem* parent);
 
     void requestPolish();
 
     void polish();
+
 protected:
+
     virtual void doPaint(FGCanvasPaintContext* context) const;
     virtual void doPolish();
 

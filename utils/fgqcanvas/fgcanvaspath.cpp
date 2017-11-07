@@ -61,12 +61,13 @@ public:
         update(); // request a paint node update
     }
 
-    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
+    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *)
     {
         if (m_path.isEmpty()) {
             return nullptr;
         }
 
+        delete oldNode;
         QSGGeometryNode* fillGeom = nullptr;
         QSGGeometryNode* strokeGeom = nullptr;
 
@@ -168,7 +169,7 @@ public:
             strokeGeom->setFlag(QSGNode::OwnsMaterial);
         }
 
-        QSGClipNode* clip = getClipNode();
+        QSGClipNode* clip = updateClipNode();
         if (clip) {
             if (fillGeom) clip->appendChildNode(fillGeom);
             if (strokeGeom) clip->appendChildNode(strokeGeom);

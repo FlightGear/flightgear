@@ -75,6 +75,7 @@ public:
 
     virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
     {
+
         if (!m_textNode) {
             m_textNode = new QQuickTextNode(this);
         }
@@ -87,6 +88,11 @@ public:
                                   m_color,
                                   QQuickText::Normal);
 
+        QSGNode* clip = updateClipNode();
+        if (clip) {
+            clip->appendChildNode(m_textNode);
+            return clip;
+        }
 
         return m_textNode;
     }

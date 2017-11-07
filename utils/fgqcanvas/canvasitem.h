@@ -32,12 +32,16 @@ public:
     void setTransform(const QMatrix4x4& mat);
 
     void setGlobalClip(const QRectF &clip);
+
+    void clearClip();
+
+    QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 signals:
 
 public slots:
 
 protected:
-    QSGClipNode* getClipNode();
+    QSGClipNode* updateClipNode();
 
 private:
     LocalTransform* m_localTransform;

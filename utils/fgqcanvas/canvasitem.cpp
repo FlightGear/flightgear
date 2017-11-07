@@ -41,6 +41,7 @@ CanvasItem::CanvasItem(QQuickItem* pr)
     : QQuickItem(pr)
     , m_localTransform(new LocalTransform(this))
 {
+    setFlag(ItemHasContents);
     m_localTransform->prependToItem(this);
 }
 
@@ -52,12 +53,37 @@ void CanvasItem::setTransform(const QMatrix4x4 &mat)
 void CanvasItem::setGlobalClip(const QRectF &clip)
 {
     m_hasClip = true;
+    m_globalClipRect = clip;
     update();
 }
 
-QSGClipNode *CanvasItem::getClipNode()
+void CanvasItem::clearClip()
+{
+    m_hasClip = false;
+    update();
+}
+
+QSGNode *CanvasItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
+{
+    if (m_hasClip && oldNode && (oldNode->type() == QSGNode::BasicNodeType)) {
+        delete oldNode;
+    }
+
+    if (!m_hasClip && m_clipNode) {
+        oldNode = new QSGNode;
+    }
+
+    updateClipNode();
+    return m_hasClip ? m_clipNode : oldNode;
+}
+
+QSGClipNode *CanvasItem::updateClipNode()
 {
     if (!m_hasClip) {
+        if (m_clipNode) {
+            delete m_clipNode;
+            m_clipNode = nullptr;
+        }
         return nullptr;
     }
 
