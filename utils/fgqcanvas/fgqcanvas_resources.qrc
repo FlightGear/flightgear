@@ -7,7 +7,5 @@
         <file>qml/CanvasFrame.qml</file>
         <file>qml/BrowsePanel.qml</file>
         <file>qml/LoadSavePanel.qml</file>
-        <file>qml/image.qml</file>
-        <file>qml/text.qml</file>
     </qresource>
 </RCC>
