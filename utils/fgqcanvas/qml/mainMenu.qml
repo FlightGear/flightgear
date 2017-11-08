@@ -42,20 +42,25 @@ Rectangle {
         }
     }
 
-    BrowsePanel {
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 400
-        visible: __uiVisible
-        opacity: __uiOpacity
+    VerticalTabPanel {
+        anchors.fill: parent
+        tabs: [browsePanel, configPanel, snapshotsPanel]
+        titles: ["Connect", "Load / Save", "Snapshots"]
     }
 
-    LoadSavePanel {
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        width: 400
-        visible: __uiVisible
-        opacity: __uiOpacity
+    Component {
+        id: browsePanel
+        BrowsePanel { }
     }
+
+    Component {
+        id: configPanel
+        LoadSavePanel { }
+    }
+
+    Component {
+        id: snapshotsPanel
+        SnapshotsPanel { }
+    }
+
 }
