@@ -104,6 +104,7 @@ Item {
                 case FG.CanvasConnection.Closed: return "Closed";
                 case FG.CanvasConnection.Reconnecting: return "Re-connecting";
                 case FG.CanvasConnection.Error: return "Error";
+                case FG.CanvasConnection.Snapshot: return "Snapshot";
                 }
             }
 

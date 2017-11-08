@@ -44,7 +44,6 @@ CanvasConnection::CanvasConnection(QObject *parent) : QObject(parent)
 
 CanvasConnection::~CanvasConnection()
 {
-    qDebug() << Q_FUNC_INFO;
     disconnect(&m_webSocket, &QWebSocket::disconnected,
                this, &CanvasConnection::onWebSocketClosed);
     m_webSocket.close();
@@ -98,9 +97,14 @@ void CanvasConnection::saveSnapshot(QDataStream &ds) const
 void CanvasConnection::restoreSnapshot(QDataStream &ds)
 {
     ds >> m_webSocketUrl >> m_rootPropertyPath >> m_destRect;
-    m_localPropertyRoot.reset(new LocalProp{nullptr, NameIndexTuple("")});
-    m_localPropertyRoot->restoreFromStream(ds, nullptr);
+    m_localPropertyRoot.reset(LocalProp::restoreFromStream(ds, nullptr));
     setStatus(Snapshot);
+
+    emit geometryChanged();
+    emit rootPathChanged();
+    emit webSocketUrlChanged();
+
+    emit updated();
 }
 
 void CanvasConnection::reconnect()
@@ -186,6 +190,7 @@ FGQCanvasFontCache *CanvasConnection::fontCache() const
 
 void CanvasConnection::onWebSocketConnected()
 {
+    qDebug() << Q_FUNC_INFO;
     m_localPropertyRoot.reset(new LocalProp{nullptr, NameIndexTuple("")});
     setStatus(Connected);
 }

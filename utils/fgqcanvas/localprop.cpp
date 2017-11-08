@@ -162,8 +162,8 @@ void LocalProp::recursiveNotifyRestored()
         emit childAdded(child);
     }
 
-    for (auto child : _children) {
-        child->recursiveNotifyRestored();
+    for (auto cc : _children) {
+        cc->recursiveNotifyRestored();
     }
 }
 

@@ -73,8 +73,6 @@ void CanvasDisplay::setCanvas(CanvasConnection *canvas)
     emit canvasChanged(m_connection);
 
     if (m_connection) {
-        // delete existing children
-
         connect(m_connection, &QObject::destroyed,
                 this, &CanvasDisplay::onConnectionDestroyed);
         connect(m_connection, &CanvasConnection::statusChanged,
@@ -97,7 +95,9 @@ void CanvasDisplay::onConnectionDestroyed()
 
 void CanvasDisplay::onConnectionStatusChanged()
 {
-    if (m_connection->status() == CanvasConnection::Connected) {
+    if ((m_connection->status() == CanvasConnection::Connected) ||
+            (m_connection->status() == CanvasConnection::Snapshot))
+    {
         m_rootElement.reset(new FGCanvasGroup(nullptr, m_connection->propertyRoot()));
         // this is important to elements can discover their connection
         // by walking their parent chain
@@ -108,6 +108,9 @@ void CanvasDisplay::onConnectionStatusChanged()
 
         m_rootItem = m_rootElement->createQuickItem(this);
         onCanvasSizeChanged();
+
+        m_connection->propertyRoot()->recursiveNotifyRestored();
+        qDebug() << Q_FUNC_INFO << "did build item tree";
     }
 }
 

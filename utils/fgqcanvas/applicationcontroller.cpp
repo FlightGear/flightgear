@@ -49,6 +49,7 @@ ApplicationController::ApplicationController(QObject *parent)
 
     setStatus(Idle);
     rebuildConfigData();
+    rebuildSnapshotData();
 }
 
 ApplicationController::~ApplicationController()
