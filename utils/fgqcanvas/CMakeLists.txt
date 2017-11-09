@@ -15,8 +15,6 @@ if (NOT Qt5WebSockets_FOUND OR NOT Qt5Quick_FOUND)
 endif()
 
 set(SOURCES
-  #temporarywidget.cpp
-  #temporarywidget.h
   main.cpp
   localprop.cpp
   localprop.h
@@ -34,8 +32,6 @@ set(SOURCES
   fgqcanvasimage.h
   fgqcanvasmap.cpp
   fgqcanvasmap.h
-  fgcanvaswidget.cpp
-  fgcanvaswidget.h
   canvastreemodel.cpp
   canvastreemodel.h
   fgqcanvasfontcache.cpp
