@@ -219,12 +219,12 @@ void ControlMap::applyControls(float dt)
 	case LEXTEND:  ((Launchbar*)obj)->setExtension(lval);      break;
     case LACCEL:   ((Launchbar*)obj)->setAcceleration(lval);   break;
 	case CASTERING:((Gear*)obj)->setCastering(lval != 0);      break;
-	case SLAT:     ((Wing*)obj)->setSlatPos(lval);                break;
-	case FLAP0:    ((Wing*)obj)->setFlap0Pos(lval, rval);         break;
-	case FLAP0EFFECTIVENESS: ((Wing*)obj)->setFlap0Effectiveness(lval); break;
-	case FLAP1:    ((Wing*)obj)->setFlap1Pos(lval, rval);         break;
-	case FLAP1EFFECTIVENESS: ((Wing*)obj)->setFlap1Effectiveness(lval); break;
-	case SPOILER:  ((Wing*)obj)->setSpoilerPos(lval, rval);       break;
+	case SLAT:     ((Wing*)obj)->setFlapPos(WING_SLAT,lval);                break;
+	case FLAP0:    ((Wing*)obj)->setFlapPos(WING_FLAP0, lval, rval);         break;
+	case FLAP0EFFECTIVENESS: ((Wing*)obj)->setFlapEffectiveness(WING_FLAP0,lval); break;
+	case FLAP1:    ((Wing*)obj)->setFlapPos(WING_FLAP1,lval, rval);         break;
+	case FLAP1EFFECTIVENESS: ((Wing*)obj)->setFlapEffectiveness(WING_FLAP1,lval); break;
+	case SPOILER:  ((Wing*)obj)->setFlapPos(WING_SPOILER, lval, rval);       break;
         case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);     break;
         case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval); break;
         case CYCLICELE:    ((Rotor*)obj)->setCyclicele(lval,rval); break;

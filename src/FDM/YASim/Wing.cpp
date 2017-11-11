@@ -44,57 +44,38 @@ void Wing::setFlapParams(WingFlaps i, FlapParams fp)
     _flapParams[i] = fp;
 }
 
-void Wing::setFlap0Pos(float lval, float rval)
+void Wing::setFlapPos(WingFlaps f,float lval, float rval)
 {
-    lval = Math::clamp(lval, -1, 1);
-    rval = Math::clamp(rval, -1, 1);
-    for(int i=0; i<_flap0Surfs.size(); i++) {
-      ((Surface*)_flap0Surfs.get(i))->setFlapPos(lval);
-      if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapPos(rval);
+    float min {-1};
+    if (f == WING_SPOILER || f == WING_SLAT) {
+        min = 0;
+    }
+    lval = Math::clamp(lval, min, 1);
+    rval = Math::clamp(rval, min, 1);
+    for(int i=0; i<_flapSurfs[f].size(); i++) {
+        switch (f) {
+            case WING_FLAP0:
+            case WING_FLAP1:
+                ((Surface*)_flapSurfs[f].get(i))->setFlapPos(lval);
+                if(_mirror) ((Surface*)_flapSurfs[f].get(++i))->setFlapPos(rval);
+                break;
+            case WING_SLAT:
+                ((Surface*)_flapSurfs[f].get(i))->setSlatPos(lval);
+                break;
+            case WING_SPOILER:
+                ((Surface*)_flapSurfs[f].get(i))->setSpoilerPos(lval);
+                if(_mirror) ((Surface*)_flapSurfs[f].get(++i))->setSpoilerPos(rval);
+                break;
+        }
     }
 }
 
-void Wing::setFlap0Effectiveness(float lval)
+void Wing::setFlapEffectiveness(WingFlaps f, float lval)
 {
     lval = Math::clamp(lval, 1, 10);
-    for(int i=0; i<_flap0Surfs.size(); i++) {
-        ((Surface*)_flap0Surfs.get(i))->setFlapEffectiveness(lval);
+    for(int i=0; i<_flapSurfs[f].size(); i++) {
+        ((Surface*)_flapSurfs[f].get(i))->setFlapEffectiveness(lval);
     }
-}
-
-void Wing::setFlap1Pos(float lval, float rval)
-{
-    lval = Math::clamp(lval, -1, 1);
-    rval = Math::clamp(rval, -1, 1);
-    for(int i=0; i<_flap1Surfs.size(); i++) {
-      ((Surface*)_flap1Surfs.get(i))->setFlapPos(lval);
-      if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlapPos(rval);
-    }
-}
-
-void Wing::setFlap1Effectiveness(float lval)
-{
-    lval = Math::clamp(lval, 1, 10);
-    for(int i=0; i<_flap1Surfs.size(); i++) {
-        ((Surface*)_flap1Surfs.get(i))->setFlapEffectiveness(lval);
-    }
-}
-
-void Wing::setSpoilerPos(float lval, float rval)
-{
-    lval = Math::clamp(lval, 0, 1);
-    rval = Math::clamp(rval, 0, 1);
-    for(int i=0; i<_spoilerSurfs.size(); i++) {
-      ((Surface*)_spoilerSurfs.get(i))->setSpoilerPos(lval);
-      if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoilerPos(rval);
-    }
-}
-
-void Wing::setSlatPos(float val)
-{
-    val = Math::clamp(val, 0, 1);
-    for(int i=0; i<_slatSurfs.size(); i++)
-      ((Surface*)_slatSurfs.get(i))->setSlatPos(val);
 }
 
 void Wing::calculateWingCoordinateSystem() {
@@ -335,10 +316,10 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     if(hasSlat)    s->setSlatParams(_flapParams[WING_SLAT].aoa, _flapParams[WING_SLAT].drag);
     if(hasSpoiler) s->setSpoilerParams(_flapParams[WING_SPOILER].lift, _flapParams[WING_SPOILER].drag);    
 
-    if(hasFlap0)   _flap0Surfs.add(s);
-    if(hasFlap1)   _flap1Surfs.add(s);
-    if(hasSlat)    _slatSurfs.add(s);
-    if(hasSpoiler) _spoilerSurfs.add(s);
+    if(hasFlap0)   _flapSurfs[WING_FLAP0].add(s);
+    if(hasFlap1)   _flapSurfs[WING_FLAP1].add(s);
+    if(hasSlat)    _flapSurfs[WING_SLAT].add(s);
+    if(hasSpoiler) _flapSurfs[WING_SPOILER].add(s);
 
     s->setInducedDrag(_inducedDrag);
 

@@ -20,8 +20,8 @@ struct FlapParams {
 enum WingFlaps {
     WING_FLAP0,
     WING_FLAP1,
+    WING_SPOILER,
     WING_SLAT,
-    WING_SPOILER
 };
 
 // FIXME: need to handle "inverted" controls for mirrored wings.
@@ -65,13 +65,9 @@ public:
     
     void setFlapParams(WingFlaps i, FlapParams fp);
 
-    // Set the control axes for the sub-surfaces
-    void setFlap0Pos(float lval, float rval);
-    void setFlap1Pos(float lval, float rval);
-    void setSpoilerPos(float lval, float rval);
-    void setSlatPos(float val);
-    void setFlap0Effectiveness(float lval);
-    void setFlap1Effectiveness(float lval);
+    // propergate the control axes value for the sub-surfaces
+    void setFlapPos(WingFlaps i, float lval, float rval = 0);
+    void setFlapEffectiveness(WingFlaps f, float lval);
 
     // Compile the thing into a bunch of Surface objects
     void compile();
@@ -116,11 +112,10 @@ private:
     
     struct SurfRec { Surface * surface; float weight; };
 
-    Vector _surfs;
-    Vector _flap0Surfs;
-    Vector _flap1Surfs;
-    Vector _slatSurfs;
-    Vector _spoilerSurfs;
+    // all surfaces of this wing
+    Vector _surfs;      
+    // surfaces having a certain type of flap (flap, slat, spoiler)
+    Vector _flapSurfs[sizeof(WingFlaps)]; 
 
     Version * _version;
     bool _mirror {false};
