@@ -174,7 +174,7 @@ bool FGGarmin::gen_message() {
     garmin_sentence += gsa;
     garmin_sentence += "\r\n";
 
-    std::cout << garmin_sentence;
+    // std::cout << garmin_sentence;
 
     length = garmin_sentence.length();
     strncpy( buf, garmin_sentence.c_str(), length );
