@@ -678,7 +678,12 @@ void LauncherMainWindow::updateSelectedAircraft()
     if (index.isValid()) {
         QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
         m_ui->thumbnail->setPixmap(pm);
-        m_ui->aircraftName->setText(index.data(Qt::DisplayRole).toString());
+
+        // important to use this version to get the variant-specific name
+        // correct; the QModelIndex lookup doesn't do that.
+        // actually all the data is for the primary variant, but this will be
+        // fixed when enabling the LocalAircraftCache outside the AircaftModel
+        m_ui->aircraftName->setText(m_aircraftModel->nameForAircraftURI(m_selectedAircraft));
 
         QVariant longDesc = index.data(AircraftLongDescriptionRole);
         m_ui->aircraftDescription->setVisible(!longDesc.isNull());
