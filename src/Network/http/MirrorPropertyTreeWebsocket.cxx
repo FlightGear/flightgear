@@ -21,6 +21,7 @@
 #include "MirrorPropertyTreeWebsocket.hxx"
 #include "jsonprops.hxx"
 
+#include <algorithm>
 #include <unordered_map>
 #include <set>
 

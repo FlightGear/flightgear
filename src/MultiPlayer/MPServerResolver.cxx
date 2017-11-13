@@ -17,12 +17,16 @@
 
  You should have received a copy of the GNU General Public License
  along with FlightGear.  If not, see <http://www.gnu.org/licenses/>.
- */#include "MPServerResolver.hxx"
+ */
+
+#include <algorithm>
 
 #include <Network/DNSClient.hxx>
 #include <Main/fg_props.hxx>
 #include <3rdparty/cjson/cJSON.h>
 #include <cstdlib>
+
+#include "MPServerResolver.hxx"
 
 using namespace simgear;
 
