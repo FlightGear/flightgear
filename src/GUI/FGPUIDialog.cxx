@@ -783,8 +783,12 @@ FGPUIDialog::display (SGPropertyNode *props)
         return;
     }
 
-    int screenw = globals->get_props()->getIntValue("/sim/startup/xsize");
-    int screenh = globals->get_props()->getIntValue("/sim/startup/ysize");
+    // map from physical to logical units for PUI
+    const double ratio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
+    const int physicalWidth = fgGetInt("/sim/startup/xsize"),
+            physicalHeight = fgGetInt("/sim/startup/ysize");
+    const int screenw = static_cast<int>(physicalWidth / ratio),
+              screenh = static_cast<int>(physicalHeight / ratio);
 
     bool userx = props->hasValue("x");
     bool usery = props->hasValue("y");
