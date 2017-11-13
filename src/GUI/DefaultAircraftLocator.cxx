@@ -143,4 +143,13 @@ QString WeatherScenariosModel::descriptionForItem(int index) const
     return m_scenarios.at(index).description;
 }
 
+QString WeatherScenariosModel::nameForItem(int index) const
+{
+    if ((index < 0) || (index >= m_scenarios.size())) {
+        return QString();
+    }
+
+    return m_scenarios.at(index).name;
+}
+
 } // of namespace flightgear

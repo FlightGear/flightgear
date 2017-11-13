@@ -6,6 +6,16 @@ Section {
     title: "Weather"
 
     Checkbox {
+        id: advancedWeather
+        label: "Advanced weather modelling"
+        description: "Detailed weather simulation based on local terrain and "
+                     + "atmospheric simulation. Note that using advanced weather with "
+                     + "real-world weather data (METAR) information may not show exactly "
+                     + "the conditions recorded, and is not recommended for multi-player "
+                     + "flight since the weather simulation is not shared over the network."
+    }
+
+    Checkbox {
         id: fetchMetar
         label: "Real-world weather"
         description: "Download real-world weather from the NOAA servers based on location."
@@ -50,14 +60,29 @@ Section {
     }
 
     onApply: {
+        if (advancedWeather.checked) {
+            // set description from the weather scenarios, so Local-weather
+            // can run the appropriate simulation
+            _config.setProperty("/nasal/local_weather/enabled", 1);
+        }
+
+        var index = weatherScenario.selectedIndex;
+
         if (!fetchMetar.checked) {
             if (weatherScenario.isCustomMETAR) {
                 _config.setArg("metar", customMETAR.value)
             } else {
-                _config.setArg("metar", _weatherScenarios.metarForItem(weatherScenario.selectedIndex))
+                _config.setArg("metar", _weatherScenarios.metarForItem(index))
             }
+
+            // either way, set the scenario name since Local-Weather keys off
+            // this to know what to do with the scenario + metar data
+            _config.setProperty("/environment/weather-scenario",
+                                _weatherScenarios.nameForItem(index))
+
         }
     }
 
-    summary: fetchMetar.checked ? "real-world weather;" : ""
+    summary: (advancedWeather.checked ? "advanced weather;" : "")
+             + (fetchMetar.checked ? "real-world weather;" : "")
 }

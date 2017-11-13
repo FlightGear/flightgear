@@ -46,6 +46,8 @@ public:
 
     Q_INVOKABLE QString metarForItem(int index) const;
 
+    Q_INVOKABLE QString nameForItem(int index) const;
+
     Q_INVOKABLE QString descriptionForItem(int index) const;
 private:
     struct WeatherScenario
