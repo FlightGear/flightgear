@@ -332,7 +332,7 @@ FGIO::parse_port_config( const string& config )
     {
         SG_LOG( SG_IO, SG_ALERT, "Unknown transport medium \"" << medium << "\" in \"" << config << "\"");
         delete io;
-        return NULL;
+        return nullptr;
     }
 
     return io;
