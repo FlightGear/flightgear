@@ -1,7 +1,4 @@
-//
-// simple.cxx -- a really simplistic class to manage airport ID,
-//               lat, lon of the center of one of it's runways, and
-//               elevation in feet.
+// airport.cxx -- Classes representing airports, seaports and helipads
 //
 // Written by Curtis Olson, started April 1998.
 // Updated by Durk Talsma, started December, 2004.
