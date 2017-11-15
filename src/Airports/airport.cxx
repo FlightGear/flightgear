@@ -51,6 +51,7 @@
 #include <ATC/CommStation.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Navaids/positioned.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <Airports/xmlloader.hxx>
 
@@ -106,13 +107,10 @@ bool FGAirport::isHeliport() const
   return type() == HELIPORT;
 }
 
+// Static method
 bool FGAirport::isAirportType(FGPositioned* pos)
 {
-    if (!pos) {
-        return false;
-    }
-    
-    return (pos->type() >= AIRPORT) && (pos->type() <= SEAPORT);
+  return FGPositioned::isAirportType(pos);
 }
 
 //------------------------------------------------------------------------------

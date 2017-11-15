@@ -85,6 +85,43 @@ FGPositioned::~FGPositioned()
 {
 }
 
+// Static method
+bool FGPositioned::isAirportType(FGPositioned* pos)
+{
+    if (!pos) {
+      return false;
+    }
+
+    return (pos->type() >= AIRPORT) && (pos->type() <= SEAPORT);
+}
+
+// Static method
+bool FGPositioned::isRunwayType(FGPositioned* pos)
+{
+  return (pos && pos->type() == RUNWAY);
+}
+
+// Static method
+bool FGPositioned::isNavaidType(FGPositioned* pos)
+{
+  if (!pos) {
+    return false;
+  }
+
+  switch (pos->type()) {
+  case NDB:
+  case VOR:
+  case ILS:
+  case LOC:
+  case GS:
+  case DME:
+  case TACAN:
+    return true;
+  default:
+    return false;
+  }
+}
+
 FGPositionedRef
 FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
 {

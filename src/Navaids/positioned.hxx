@@ -98,6 +98,16 @@ public:
   Type type() const
   { return mType; }
 
+  // True for the following types: AIRPORT, HELIPORT, SEAPORT.
+  // False for other types, as well as if pos == nullptr.
+  static bool isAirportType(FGPositioned* pos);
+  // True for the following type: RUNWAY.
+  // False for other types, as well as if pos == nullptr.
+  static bool isRunwayType(FGPositioned* pos);
+  // True for the following types: NDB, VOR, ILS, LOC, GS, DME, TACAN.
+  // False for other types, as well as if pos == nullptr.
+  static bool isNavaidType(FGPositioned* pos);
+
   const char* typeString() const
   { return nameForType(mType); }
 
