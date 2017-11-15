@@ -22,7 +22,7 @@
 #  include "config.h"
 #endif
 
-#include <string.h>
+#include <cstring>
 
 #include "NasalPositioned.hxx"
 
@@ -429,6 +429,45 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
   return "";
 }
 
+// Return the navaid ghost associated with a waypoint of navaid type.
+static naRef waypointNavaid(naContext c, Waypt* wpt)
+{
+  FGPositioned* pos = wpt->source();
+
+  if (!FGPositioned::isNavaidType(pos)) {
+    return naNil();
+  }
+
+  return ghostForNavaid(c, static_cast<FGNavRecord*>(pos));
+}
+
+// Return the airport ghost associated with a waypoint of airport or runway
+// type.
+static naRef waypointAirport(naContext c, Waypt* wpt)
+{
+  FGPositioned* pos = wpt->source();
+
+  if (FGPositioned::isRunwayType(pos)) {
+    pos = static_cast<FGRunway*>(pos) -> airport();
+  } else if (!FGPositioned::isAirportType(pos)) {
+    return naNil();
+  }
+
+  return ghostForAirport(c, static_cast<FGAirport*>(pos));
+}
+
+// Return the runway ghost associated with a waypoint of runway type.
+static naRef waypointRunway(naContext c, Waypt* wpt)
+{
+  FGPositioned* pos = wpt->source();
+
+  if (!FGPositioned::isRunwayType(pos)) {
+    return naNil();
+  }
+
+  return ghostForRunway(c, static_cast<FGRunway*>(pos));
+}
+
 static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* fieldName, naRef* out)
 {
   if (!strcmp(fieldName, "wp_name") || !strcmp(fieldName, "id")) *out = stringToNasal(c, wpt->ident());
@@ -450,8 +489,14 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
     }
   } else if (!strcmp(fieldName, "heading_course")) {
       *out = naNum(wpt->headingRadialDeg());
+  } else if (!strcmp(fieldName, "navaid")) {
+    *out = waypointNavaid(c, wpt);
+  } else if (!strcmp(fieldName, "airport")) {
+    *out = waypointAirport(c, wpt);
+  } else if (!strcmp(fieldName, "runway")) {
+    *out = waypointRunway(c, wpt);
   } else {
-    return NULL; // member not found
+    return nullptr; // member not found
   }
 
   return "";
@@ -2636,65 +2681,6 @@ static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef*
     return result;
 }
 
-static naRef f_waypoint_navaid(naContext c, naRef me, int argc, naRef* args)
-{
-  flightgear::Waypt* w = wayptGhost(me);
-  if (!w) {
-    naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
-  }
-  
-  FGPositioned* pos = w->source();
-  if (!pos) {
-    return naNil();
-  }
-  
-  switch (pos->type()) {
-  case FGPositioned::VOR:
-  case FGPositioned::NDB:
-  case FGPositioned::ILS:
-  case FGPositioned::LOC:
-  case FGPositioned::GS:
-  case FGPositioned::DME:
-  case FGPositioned::TACAN: {
-    FGNavRecord* nav = (FGNavRecord*) pos;
-    return ghostForNavaid(c, nav);
-  }
-      
-  default:
-    return naNil();
-  }
-}
-
-static naRef f_waypoint_airport(naContext c, naRef me, int argc, naRef* args)
-{
-  flightgear::Waypt* w = wayptGhost(me);
-  if (!w) {
-    naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
-  }
-  
-  FGPositioned* pos = w->source();
-  if (!pos || FGAirport::isAirportType(pos)) {
-    return naNil();
-  }
-  
-  return ghostForAirport(c, (FGAirport*) pos);
-}
-
-static naRef f_waypoint_runway(naContext c, naRef me, int argc, naRef* args)
-{
-  flightgear::Waypt* w = wayptGhost(me);
-  if (!w) {
-    naRuntimeError(c, "waypoint.navaid called on non-waypoint object");
-  }
-  
-  FGPositioned* pos = w->source();
-  if (!pos || (pos->type() != FGPositioned::RUNWAY)) {
-    return naNil();
-  }
-  
-  return ghostForRunway(c, (FGRunway*) pos);
-}
-
 static naRef f_procedure_transition(naContext c, naRef me, int argc, naRef* args)
 {
   Procedure* proc = procedureGhost(me);
@@ -2840,11 +2826,7 @@ naRef initNasalPositioned(naRef globals, naContext c)
   
     waypointPrototype = naNewHash(c);
     naSave(c, waypointPrototype);
-    
-    hashset(c, waypointPrototype, "navaid", naNewFunc(c, naNewCCode(c, f_waypoint_navaid)));
-    hashset(c, waypointPrototype, "runway", naNewFunc(c, naNewCCode(c, f_waypoint_runway)));
-    hashset(c, waypointPrototype, "airport", naNewFunc(c, naNewCCode(c, f_waypoint_airport)));
-  
+
     procedurePrototype = naNewHash(c);
     naSave(c, procedurePrototype);
     hashset(c, procedurePrototype, "transition", naNewFunc(c, naNewCCode(c, f_procedure_transition)));
