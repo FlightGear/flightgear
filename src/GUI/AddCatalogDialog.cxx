@@ -24,6 +24,9 @@
 #include <QPushButton>
 #include <QDebug>
 
+#include <simgear/package/Package.hxx>
+#include <simgear/package/Install.hxx>
+
 #include <Main/globals.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Include/version.h>
