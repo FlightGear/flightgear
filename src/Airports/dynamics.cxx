@@ -279,7 +279,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
     // sort by increasing radius, so we return the smallest radius candidate
     // this avoids large spaces (A380 sized) being given to Fokkers/ATR-72s
     std::sort(candidates.begin(), candidates.end(),
-              [](const FGParkingRef& a, FGParkingRef& b) {
+              [](const FGParkingRef& a, const FGParkingRef& b) {
                   return a->getRadius() < b->getRadius();
               });
     
