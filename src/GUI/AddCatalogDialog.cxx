@@ -30,6 +30,23 @@
 
 using namespace simgear::pkg;
 
+class AddCatalogDialog::AddCatalogDelegate : public simgear::pkg::Delegate
+{
+public:
+    AddCatalogDelegate(AddCatalogDialog* outer) : p(outer) {}
+    
+    void catalogRefreshed(CatalogRef catalog, StatusCode) override
+    {
+        p->onCatalogStatusChanged(catalog);
+    }
+
+    void startInstall(InstallRef) override {}
+    void installProgress(InstallRef, unsigned int, unsigned int) override {}
+    void finishInstall(InstallRef, StatusCode ) override {}
+private:
+    AddCatalogDialog* p = nullptr;
+};
+
 AddCatalogDialog::AddCatalogDialog(QWidget *parent, RootRef root) :
     QDialog(parent, Qt::Dialog
                     | Qt::CustomizeWindowHint
@@ -37,7 +54,6 @@ AddCatalogDialog::AddCatalogDialog(QWidget *parent, RootRef root) :
                     | Qt::WindowSystemMenuHint
                     | Qt::WindowContextHelpButtonHint
                     | Qt::MSWindowsFixedSizeDialogHint),
-    m_state(STATE_START),
     ui(new Ui::AddCatalogDialog),
     m_packageRoot(root)
 {
@@ -51,6 +67,9 @@ AddCatalogDialog::AddCatalogDialog(QWidget *parent, RootRef root) :
 
 AddCatalogDialog::~AddCatalogDialog()
 {
+    if (m_delegate) {
+        m_packageRoot->removeDelegate(m_delegate.get());
+    }
     delete ui;
 }
 
@@ -137,8 +156,9 @@ void AddCatalogDialog::startDownload()
 {
     Q_ASSERT(m_catalogUrl.isValid());
 
+    m_delegate.reset(new AddCatalogDelegate{this});
+    m_packageRoot->addDelegate(m_delegate.get());
     m_result = Catalog::createFromUrl(m_packageRoot, m_catalogUrl.toString().toStdString());
-    m_result->addStatusCallback(this, &AddCatalogDialog::onCatalogStatusChanged);
     m_state = STATE_DOWNLOADING;
     updateUi();
     ui->stack->setCurrentIndex(STATE_DOWNLOADING);
@@ -175,6 +195,10 @@ void AddCatalogDialog::reject()
 
 void AddCatalogDialog::onCatalogStatusChanged(Catalog* cat)
 {
+    if (cat != m_result) {
+        return;
+    }
+    
     Delegate::StatusCode s = cat->status();
     switch (s) {
     case Delegate::STATUS_REFRESHED:

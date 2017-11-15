@@ -21,6 +21,8 @@
 #ifndef FG_GUI_ADDCATALOGDIALOG_HXX
 #define FG_GUI_ADDCATALOGDIALOG_HXX
 
+#include <memory>
+
 #include <QDialog>
 #include <QUrl>
 
@@ -30,6 +32,7 @@
 namespace Ui {
 class AddCatalogDialog;
 }
+
 
 class AddCatalogDialog : public QDialog
 {
@@ -56,10 +59,12 @@ private slots:
 
     void onUrlTextChanged();
 private:
+    class AddCatalogDelegate;
+    friend class AddCatalogDelegate;
+
     void startDownload();
     void updateUi();
 
-    // callback from the catalog
     void onCatalogStatusChanged(simgear::pkg::Catalog* cat);
 
     enum State {
@@ -70,13 +75,15 @@ private:
 
     };
 
-    State m_state;
+    State m_state = STATE_START;
 
     Ui::AddCatalogDialog *ui;
     simgear::pkg::RootRef m_packageRoot;
     QUrl m_catalogUrl;
     simgear::pkg::CatalogRef m_result;
     bool m_nonInteractiveMode = false;
+
+    std::unique_ptr<AddCatalogDelegate> m_delegate;
 };
 
 #endif // FG_GUI_ADDCATALOGDIALOG_HXX
