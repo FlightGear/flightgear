@@ -124,62 +124,44 @@ FGIO::parse_port_config( const string& config )
             atcsim->set_path_names(tokens[2], tokens[3], tokens[4], tokens[5]);
             return atcsim;
         } else if ( protocol == "atlas" ) {
-            FGAtlas *atlas = new FGAtlas;
-            io = atlas;
+            io = new FGAtlas;
         } else if ( protocol == "opengc" ) {
-            FGOpenGC *opengc = new FGOpenGC;
-            io = opengc;
+            io = new FGOpenGC;
         } else if ( protocol == "AV400" ) {
-            FGAV400 *av400 = new FGAV400;
-            io = av400;
+            io = new FGAV400;
         } else if ( protocol == "AV400Sim" ) {
-            FGAV400Sim *av400sim = new FGAV400Sim;
-            io = av400sim;
+            io = new FGAV400Sim;
         } else if ( protocol == "AV400WSimA" ) {
-            FGAV400WSimA *av400wsima = new FGAV400WSimA;
-            io = av400wsima;
+            io = new FGAV400WSimA;
         } else if ( protocol == "AV400WSimB" ) {
-            FGAV400WSimB *av400wsimb = new FGAV400WSimB;
-            io = av400wsimb;
+            io = new FGAV400WSimB;
         } else if ( protocol == "garmin" ) {
-            FGGarmin *garmin = new FGGarmin;
-            io = garmin;
+            io = new FGGarmin();
         } else if ( protocol == "igc" ) {
-            IGCProtocol *igc = new IGCProtocol;
-            io = igc;
+            io = new IGCProtocol;
         } else if ( protocol == "joyclient" ) {
-            FGJoyClient *joyclient = new FGJoyClient;
-            io = joyclient;
+            io = new FGJoyClient;
         } else if ( protocol == "jsclient" ) {
-            FGJsClient *jsclient = new FGJsClient;
-            io = jsclient;
+            io = new FGJsClient;
         } else if ( protocol == "native" ) {
-            FGNative *native = new FGNative;
-            io = native;
+            io = new FGNative;
         } else if ( protocol == "native-ctrls" ) {
-            FGNativeCtrls *native_ctrls = new FGNativeCtrls;
-            io = native_ctrls;
+            io = new FGNativeCtrls;
         } else if ( protocol == "native-fdm" ) {
-            FGNativeFDM *native_fdm = new FGNativeFDM;
-            io = native_fdm;
+            io = new FGNativeFDM;
         } else if ( protocol == "native-gui" ) {
-            FGNativeGUI *net_gui = new FGNativeGUI;
-            io = net_gui;
+            io = new FGNativeGUI;
         } else if ( protocol == "nmea" ) {
-            FGNMEA *nmea = new FGNMEA;
-            io = nmea;
+            io = new FGNMEA();
         } else if ( protocol == "props" || protocol == "telnet" ) {
             io = new FGProps( tokens );
             return io;
         } else if ( protocol == "pve" ) {
-            FGPVE *pve = new FGPVE;
-            io = pve;
+            io = new FGPVE;
         } else if ( protocol == "ray" ) {
-            FGRAY *ray = new FGRAY;
-            io = ray;
+            io = new FGRAY;
         } else if ( protocol == "rul" ) {
-            FGRUL *rul = new FGRUL;
-            io = rul;
+            io = new FGRUL;
         } else if ( protocol == "generic" ) {
             FGGeneric *generic = new FGGeneric( tokens );
             if (!generic->getInitOk())
