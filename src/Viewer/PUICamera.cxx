@@ -149,10 +149,14 @@ public:
 
             case osgGA::GUIEventAdapter::SCROLL:
             {
-                const int button = (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP) ?
-                    PU_SCROLL_UP_BUTTON : PU_SCROLL_DOWN_BUTTON;
-                bool handled = puMouse(button, PU_DOWN, scaledX, scaledY);
-                return handled;
+                const int button = buttonForScrollEvent(ea);
+                if (button != PU_NOBUTTON) {
+                    // sent both down and up events for a single scroll, for
+                    // compatability
+                    bool handled = puMouse(button, PU_DOWN, scaledX, scaledY);
+                    puMouse(button, PU_UP, scaledX, scaledY);
+                    return handled;
+                }
             }
                 
                 
@@ -178,6 +182,36 @@ private:
         }
 
         return 0;
+    }
+    
+    int buttonForScrollEvent(const osgGA::GUIEventAdapter &ea) const
+    {
+        if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_2D) {
+            int button = PU_NOBUTTON;
+            if (ea.getScrollingDeltaY() > 0)
+                button = PU_SCROLL_UP_BUTTON;
+            else if (ea.getScrollingDeltaY() < 0)
+                button = PU_SCROLL_DOWN_BUTTON;
+            
+#if defined(SG_MAC)
+            // bug https://code.google.com/p/flightgear-bugs/issues/detail?id=1286
+            // Mac (Cocoa) interprets shift+wheel as horizontal scroll
+            if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_SHIFT) {
+                if (ea.getScrollingDeltaX() > 0) {
+                    button = PU_SCROLL_UP_BUTTON;
+                } else if (ea.getScrollingDeltaX() < 0) {
+                    button = PU_SCROLL_DOWN_BUTTON;
+                }
+            }
+#endif
+            return button;
+        } else if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP) {
+            return PU_SCROLL_UP_BUTTON;
+        } else {
+            return PU_SCROLL_DOWN_BUTTON;
+        }
+        
+        return PU_NOBUTTON;
     }
     
     PUICamera* _puiCamera;
