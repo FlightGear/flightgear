@@ -46,28 +46,6 @@ FGAV400::~FGAV400() {
 }
 
 
-#if 0
-// calculate the garmin check sum
-static char calc_nmea_cksum(char *sentence) {
-    unsigned char sum = 0;
-    int i, len;
-
-    // cout << sentence << endl;
-
-    len = strlen(sentence);
-    sum = sentence[0];
-    for ( i = 1; i < len; i++ ) {
-        // cout << sentence[i];
-        sum ^= sentence[i];
-    }
-    // cout << endl;
-
-    // printf("sum = %02x\n", sum);
-    return sum;
-}
-#endif
-
-
 // generate AV400 message
 bool FGAV400::gen_message() {
     // cout << "generating garmin message" << endl;

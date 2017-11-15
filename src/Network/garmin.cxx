@@ -56,25 +56,18 @@ static char calc_nmea_cksum(char *sentence) {
     unsigned char sum = 0;
     int i, len;
 
-    // cout << sentence << endl;
-
     len = strlen(sentence);
     sum = sentence[0];
     for ( i = 1; i < len; i++ ) {
-        // cout << sentence[i];
         sum ^= sentence[i];
     }
-    // cout << endl;
 
-    // printf("sum = %02x\n", sum);
     return sum;
 }
 
 
 // generate Garmin message
 bool FGGarmin::gen_message() {
-    // cout << "generating garmin message" << endl;
-
     char rmc[256], rmc_sum[256], rmz[256], rmz_sum[256], gsa[256];
     char dir;
     int deg;
@@ -173,8 +166,6 @@ bool FGGarmin::gen_message() {
     // GSA sentence (totally faked)
     garmin_sentence += gsa;
     garmin_sentence += "\r\n";
-
-    std::cout << garmin_sentence;
 
     length = garmin_sentence.length();
     strncpy( buf, garmin_sentence.c_str(), length );
@@ -363,8 +354,6 @@ bool FGGarmin::parse_message() {
  	    SG_LOG( SG_IO, SG_INFO, " altitude  = " << altitude );
 
 	}
-
-	// printf("%.8f %.8f\n", lon, lat);
 
 	begin = begin_line;
 	end_line = msg.find("\n", begin_line);

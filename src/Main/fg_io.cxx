@@ -328,6 +328,12 @@ FGIO::parse_port_config( const string& config )
 
         io->set_io_channel( new SGSocket( hostname, port, style ) );
     }
+    else
+    {
+        SG_LOG( SG_IO, SG_ALERT, "Unknown transport medium \"" << medium << "\" in \"" << config << "\"");
+        delete io;
+        return nullptr;
+    }
 
     return io;
 }

@@ -547,7 +547,7 @@ TCAS::ThreatDetector::init(void)
     nodeHeading     = fgGetNode("/orientation/heading-deg",        true);
     nodeVelocity    = fgGetNode("/velocities/airspeed-kt",         true);
     nodeVerticalFps = fgGetNode("/velocities/vertical-speed-fps",  true);
-    
+
     tcas->advisoryGenerator.init(&self,&currentThreat);
 }
 
@@ -620,7 +620,9 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 #ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
     checkCount++;
 #endif
-    
+    if (!pModel->getBoolValue("valid"))
+        return ThreatInvisible;
+
     float velocityKt  = pModel->getDoubleValue("velocities/true-airspeed-kt");
 
     if (!checkTransponder(pModel, velocityKt))
