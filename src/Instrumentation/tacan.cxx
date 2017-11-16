@@ -7,13 +7,15 @@
 #  include <config.h>
 #endif
 
+#include <algorithm>
+#include <vector>
+
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
 
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
-#include <vector>
 
 #include "tacan.hxx"
 
