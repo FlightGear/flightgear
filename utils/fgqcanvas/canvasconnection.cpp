@@ -190,7 +190,6 @@ FGQCanvasFontCache *CanvasConnection::fontCache() const
 
 void CanvasConnection::onWebSocketConnected()
 {
-    qDebug() << Q_FUNC_INFO;
     m_localPropertyRoot.reset(new LocalProp{nullptr, NameIndexTuple("")});
     setStatus(Connected);
 }

@@ -7,8 +7,6 @@ Item {
     property alias canvas: canvasDisplay.canvas
     property bool showUi: true
 
-    //clip: true;
-
     Component.onCompleted: {
         if (canvas) {
             width = canvas.size.width
@@ -24,16 +22,22 @@ Item {
         canvas.size = Qt.size(root.width, root.height);
     }
 
-    FG.CanvasDisplay {
-        id: canvasDisplay
+    Item {
+        id: clipShell
         anchors.fill: parent
+        clip: true
 
-        onCanvasChanged: {
-            if (canvas) {
-                root.width = canvas.size.width
-                root.height = canvas.size.height
-                root.x = canvas.origin.x
-                root.y = canvas.origin.y
+        FG.CanvasDisplay {
+            id: canvasDisplay
+            anchors.fill: parent
+
+            onCanvasChanged: {
+                if (canvas) {
+                    root.width = canvas.size.width
+                    root.height = canvas.size.height
+                    root.x = canvas.origin.x
+                    root.y = canvas.origin.y
+                }
             }
         }
     }

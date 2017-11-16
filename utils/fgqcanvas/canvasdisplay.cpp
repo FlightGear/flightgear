@@ -29,14 +29,12 @@
 CanvasDisplay::CanvasDisplay(QQuickItem* parent) :
     QQuickItem(parent)
 {
-    qDebug() << "created a canvas display";
-
+    setTransformOrigin(QQuickItem::TopLeft);
     setFlag(ItemHasContents);
 }
 
 CanvasDisplay::~CanvasDisplay()
 {
-    qDebug() << Q_FUNC_INFO << "connection is" << m_connection;
     delete m_rootItem;
 }
 
@@ -109,8 +107,9 @@ void CanvasDisplay::onConnectionStatusChanged()
         m_rootItem = m_rootElement->createQuickItem(this);
         onCanvasSizeChanged();
 
-        m_connection->propertyRoot()->recursiveNotifyRestored();
-        qDebug() << Q_FUNC_INFO << "did build item tree";
+        if (m_connection->status() == CanvasConnection::Snapshot) {
+            m_connection->propertyRoot()->recursiveNotifyRestored();
+        }
     }
 }
 
@@ -124,8 +123,9 @@ void CanvasDisplay::onConnectionUpdated()
 
 void CanvasDisplay::onCanvasSizeChanged()
 {
-    m_sourceSize = QSizeF(m_connection->propertyRoot()->value("size", 400).toDouble(),
-                          m_connection->propertyRoot()->value("size[1]", 400).toDouble());
+    m_sourceSize = QSizeF(m_connection->propertyRoot()->value("size", 256).toDouble(),
+                          m_connection->propertyRoot()->value("size[1]", 256).toDouble());
+    setImplicitSize(m_sourceSize.width(), m_sourceSize.height());
     recomputeScaling();
 }
 
