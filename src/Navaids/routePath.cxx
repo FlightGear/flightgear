@@ -3,6 +3,8 @@
 #  include "config.h"
 #endif
 
+#include <algorithm>
+
 #include <Navaids/routePath.hxx>
 
 #include <simgear/structure/exception.hxx>
