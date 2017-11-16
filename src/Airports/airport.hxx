@@ -74,10 +74,6 @@ class FGAirport : public FGPositioned
         return mIsClosed;
     }
 
-    // True for the following types: AIRPORT, HELIPORT, SEAPORT.
-    // False for other types, as well as if pos == nullptr.
-    static bool isAirportType(FGPositioned* pos);
-
     virtual const std::string& name() const
     { return _name; }
 

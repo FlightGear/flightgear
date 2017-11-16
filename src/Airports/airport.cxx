@@ -107,12 +107,6 @@ bool FGAirport::isHeliport() const
   return type() == HELIPORT;
 }
 
-// Static method
-bool FGAirport::isAirportType(FGPositioned* pos)
-{
-  return FGPositioned::isAirportType(pos);
-}
-
 //------------------------------------------------------------------------------
 unsigned int FGAirport::numRunways() const
 {

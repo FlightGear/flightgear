@@ -463,7 +463,7 @@ void LocationWidget::restoreLocation(QVariantMap l)
 
     // now we've loaded airport location data (potentially), we can apply
     // more settings
-    if (FGAirport::isAirportType(m_location.ptr())) {
+    if (FGPositioned::isAirportType(m_location.ptr())) {
         if (l.contains("location-apt-runway")) {
             QString runway = l.value("location-apt-runway").toString();
             int index = m_ui->runwayCombo->findText(runway);
@@ -494,7 +494,7 @@ bool LocationWidget::shouldStartPaused() const
         return false; // defaults to on-ground at KSFO
     }
 
-    if (FGAirport::isAirportType(m_location.ptr())) {
+    if (FGPositioned::isAirportType(m_location.ptr())) {
         return m_ui->onFinalCheckbox->isChecked();
     } else {
         // navaid, start paused
@@ -511,7 +511,7 @@ QVariantMap LocationWidget::saveLocation() const
     } else if (m_location) {
         locationSet.insert("location-id", static_cast<qlonglong>(m_location->guid()));
 
-        if (FGAirport::isAirportType(m_location.ptr())) {
+        if (FGPositioned::isAirportType(m_location.ptr())) {
             locationSet.insert("location-on-final", m_ui->onFinalCheckbox->isChecked());
             locationSet.insert("location-apt-final-distance", m_ui->approachDistanceSpin->value());
             if (m_ui->runwayRadio->isChecked()) {
@@ -574,7 +574,7 @@ void LocationWidget::setLocationProperties()
         return;
     }
 
-    if (FGAirport::isAirportType(m_location.ptr())) {
+    if (FGPositioned::isAirportType(m_location.ptr())) {
         FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
         fgSetString("/sim/presets/airport-id", apt->ident());
         fgSetBool("/sim/presets/on-ground", true);
@@ -685,7 +685,7 @@ void LocationWidget::onCollectConfig()
         return;
     }
 
-    if (FGAirport::isAirportType(m_location.ptr())) {
+    if (FGPositioned::isAirportType(m_location.ptr())) {
         FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
         m_config->setArg("airport", QString::fromStdString(apt->ident()));
 
@@ -814,7 +814,7 @@ void LocationWidget::onSearchComplete()
 
 void LocationWidget::onLocationChanged()
 {
-    bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
+    bool locIsAirport = FGPositioned::isAirportType(m_location.ptr());
     if (!m_location) {
         onBackToSearch();
         return;
@@ -951,7 +951,7 @@ QString LocationWidget::locationDescription() const
         return tr("No location selected");
     }
 
-    bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
+    bool locIsAirport = FGPositioned::isAirportType(m_location.ptr());
     QString ident = QString::fromStdString(m_location->ident()),
         name = QString::fromStdString(m_location->name());
 
@@ -1009,7 +1009,7 @@ QString LocationWidget::locationDescription() const
 
 void LocationWidget::updateDescription()
 {
-    bool locIsAirport = FGAirport::isAirportType(m_location.ptr());
+    bool locIsAirport = FGPositioned::isAirportType(m_location.ptr());
     if (locIsAirport) {
         FGAirport* apt = static_cast<FGAirport*>(m_location.ptr());
 

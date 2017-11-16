@@ -254,7 +254,7 @@ void BaseDiagram::splitItems(const FGPositionedList& in, FGPositionedList& navai
 {
     FGPositionedList::const_iterator it = in.begin();
     for (; it != in.end(); ++it) {
-        if (FGAirport::isAirportType(it->ptr())) {
+        if (FGPositioned::isAirportType(it->ptr())) {
             ports.push_back(*it);
         } else {
             navaids.push_back(*it);
@@ -370,7 +370,7 @@ void BaseDiagram::paintNavaid(QPainter* painter, const QTransform& t, const FGPo
 
    // compute label text so we can measure it
     QString label;
-    if (FGAirport::isAirportType(pos.ptr())) {
+    if (FGPositioned::isAirportType(pos.ptr())) {
         label = QString::fromStdString(pos->name());
         label = fixNavaidName(label);
     } else {
@@ -685,7 +685,7 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos,
     bool small = options.testFlag(SmallIcons);
 
     bool isTowered = false;
-    if (FGAirport::isAirportType(pos)) {
+    if (FGPositioned::isAirportType(pos.ptr())) {
         FGAirport* apt = static_cast<FGAirport*>(pos.ptr());
         isTowered = apt->hasTower();
     }
