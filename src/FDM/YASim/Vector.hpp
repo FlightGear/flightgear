@@ -21,9 +21,9 @@ public:
 private:
     void realloc();
 
-    int _nelem;
-    int _sz;
-    void** _array;
+    int _nelem {0};
+    int _sz {0};
+    void** _array {nullptr};
 };
 
 inline Vector::Vector()
