@@ -1,4 +1,4 @@
-// garmin.hxx -- Garmin protocal class
+// garmin.hxx -- Garmin protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -20,44 +20,36 @@
 //
 // $Id$
 
-
 #ifndef _FG_GARMIN_HXX
 #define _FG_GARMIN_HXX
 
+#include "nmea.hxx"
 
-#include <simgear/compiler.h>
+namespace NMEA
+{
+    // Garmin proprietary messages
+    namespace GARMIN
+    {
+        const unsigned int PGRMZ = (1<<0);
+    }
+}
 
-#include <string>
 
-#include "protocol.hxx"
+class FGGarmin : public FGNMEA {
 
-class FlightProperties;
 
-class FGGarmin : public FGProtocol {
+protected:
+    unsigned int mGarminMessages;
+    bool mMetric;
 
-    char buf[ FG_MAX_MSG_SIZE ];
-    int length;
-    FlightProperties* fdm;
-    
+    // process a Garmin sentence
+    virtual void parse_message(const std::vector<std::string>& tokens);
+
 public:
-
     FGGarmin();
     ~FGGarmin();
 
-    bool gen_message();
-    bool parse_message();
- 
-    // open hailing frequencies
-    bool open();
-
-    // process work for this port
-    bool process();
-
-    // close the channel
-    bool close();
+    virtual bool gen_message();
 };
 
-
 #endif // _FG_GARMIN_HXX
-
-
