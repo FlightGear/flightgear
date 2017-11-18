@@ -10,22 +10,56 @@ class ControlMap {
 public:
     ~ControlMap();
 
-    enum OutputType { THROTTLE, MIXTURE, CONDLEVER, STARTER, MAGNETOS,
-		      ADVANCE, REHEAT, PROP,
-        BRAKE, STEER, EXTEND, HEXTEND, LEXTEND, LACCEL,
-		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER, VECTOR,
-              FLAP0EFFECTIVENESS, FLAP1EFFECTIVENESS,
-                      BOOST, CASTERING, PROPPITCH, PROPFEATHER,
-                      COLLECTIVE, CYCLICAIL, CYCLICELE, ROTORENGINEON,
-                      TILTYAW, TILTPITCH, TILTROLL,
-                      ROTORBRAKE, ROTORENGINEMAXRELTORQUE, ROTORRELTARGET,
-                      ROTORBALANCE, REVERSE_THRUST, WASTEGATE,
-              WINCHRELSPEED, HITCHOPEN, PLACEWINCH, FINDAITOW
-              };
+    enum OutputType { 
+        THROTTLE, 
+        MIXTURE, 
+        CONDLEVER, 
+        STARTER, 
+        MAGNETOS,
+        ADVANCE, 
+        REHEAT, 
+        PROP,
+        BRAKE,
+        STEER,
+        EXTEND,
+        HEXTEND,
+        LEXTEND,
+        LACCEL,
+        INCIDENCE,
+        FLAP0,
+        FLAP1,
+        SLAT,
+        SPOILER,
+        VECTOR,
+        FLAP0EFFECTIVENESS,
+        FLAP1EFFECTIVENESS,
+        BOOST,
+        CASTERING,
+        PROPPITCH,
+        PROPFEATHER,
+        COLLECTIVE, 
+        CYCLICAIL, 
+        CYCLICELE, 
+        ROTORENGINEON,
+        TILTYAW, 
+        TILTPITCH, 
+        TILTROLL,
+        ROTORBRAKE, 
+        ROTORENGINEMAXRELTORQUE, 
+        ROTORRELTARGET,
+        ROTORBALANCE,
+        REVERSE_THRUST,
+        WASTEGATE,
+        WINCHRELSPEED,
+        HITCHOPEN,
+        PLACEWINCH,
+        FINDAITOW
+    };
 
     enum { OPT_SPLIT  = 0x01,
            OPT_INVERT = 0x02,
-           OPT_SQUARE = 0x04 };
+           OPT_SQUARE = 0x04
+    };
 
     struct PropHandle { char* name; int handle; };
 
