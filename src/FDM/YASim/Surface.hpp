@@ -59,8 +59,8 @@ public:
     // The offset from base incidence for this surface.
     void setTwist(float angle) { _twist = angle; }
 
-    void setTotalDrag(float c0) { _c0 = c0; }
-    float getTotalDrag() const { return _c0; }
+    void setDragCoefficient(float c0) { _c0 = c0; }
+    float getDragCoefficient() const { return _c0; }
     
     void setXDrag(float cx) { _cx = cx; }
     void setYDrag(float cy) { _cy = cy; }

@@ -240,7 +240,7 @@ int Airplane::addWeight(float* pos, float size)
 
     wr->surf = new Surface(this);
     wr->surf->setPosition(pos);
-    wr->surf->setTotalDrag(size*size);
+    wr->surf->setDragCoefficient(size*size);
     _model.addSurface(wr->surf);
     _surfs.add(wr->surf);
 
@@ -329,7 +329,7 @@ float Airplane::compileWing(Wing* w)
     float dragSum = 0;
     for(int i=0; i<w->numSurfaces(); i++) {
         Surface* s = (Surface*)w->getSurface(i);
-        float td = s->getTotalDrag();
+        float td = s->getDragCoefficient();
         int sid = s->getID();
 
         _model.addSurface(s);
@@ -437,9 +437,9 @@ float Airplane::compileFuselage(Fuselage* f)
         s->setYDrag(sideDrag*f->_cy);
         s->setZDrag(sideDrag*f->_cz);
 	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-        	s->setTotalDrag(scale*segWgt);
+        	s->setDragCoefficient(scale*segWgt);
 	} else {
-		s->setTotalDrag(scale*segWgt*f->_cx);
+		s->setDragCoefficient(scale*segWgt*f->_cx);
 	}
         s->setInducedDrag(f->_idrag);
 
@@ -481,7 +481,7 @@ void Airplane::compileGear(GearRec* gr)
     Math::add3(pos, cmp, pos);
 
     s->setPosition(pos);
-    s->setTotalDrag(length*length);
+    s->setDragCoefficient(length*length);
 
     _model.addGear(g);
     _model.addSurface(s);
@@ -826,17 +826,17 @@ void Airplane::applyDragFactor(float factor)
 	    } else {
 		// Originally YASim applied the drag factor to all axes
 		// for Fuselage Surfaces.
-		s->setTotalDrag(s->getTotalDrag() * applied);
+		s->setDragCoefficient(s->getDragCoefficient() * applied);
 	    }
 	}
     }
     for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);
-	wr->surf->setTotalDrag(wr->surf->getTotalDrag() * applied);
+	wr->surf->setDragCoefficient(wr->surf->getDragCoefficient() * applied);
     }
     for(i=0; i<_gears.size(); i++) {
 	GearRec* gr = (GearRec*)_gears.get(i);
-	gr->surf->setTotalDrag(gr->surf->getTotalDrag() * applied);
+	gr->surf->setDragCoefficient(gr->surf->getDragCoefficient() * applied);
     }
 }
 
