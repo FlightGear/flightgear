@@ -9,7 +9,7 @@ Wing::Wing(Version *ver, bool mirror, float* base, float chord,
         float length, float taper, float sweep, float dihedral, float twist) :
     _version(ver),
     _mirror(mirror),
-    _chord(chord),
+    _rootChordLength(chord),
     _length(length),
     _taper(taper),
     _sweepAngleCenterLine(sweep),
@@ -17,7 +17,7 @@ Wing::Wing(Version *ver, bool mirror, float* base, float chord,
     _twist(twist)
 {
     Math::set3(base, _base);
-    _meanChord = _chord*(_taper+1)*0.5f;
+    _meanChord = _rootChordLength*(_taper+1)*0.5f;
     calculateWingCoordinateSystem();
     calculateTip();
     calculateSpan();
@@ -127,10 +127,22 @@ void Wing::calculateSpan()
 void Wing::calculateMAC()
 {
     // http://www.nasascale.org/p2/wp-content/uploads/mac-calculator.htm
-    const float commonFactor = _chord*(0.5+_taper)/(3*_chord*(1+_taper));
-    _mac = _chord-(2*_chord*(1-_taper)*commonFactor);
-    _macRootDistance = _netSpan*commonFactor;
-    _macX = _base[0]-Math::tan(_sweepAngleCenterLine) * _macRootDistance + _mac/2;
+    const float commonFactor = _rootChordLength*(0.5+_taper)/(3*_rootChordLength*(1+_taper));
+    _mac.length = _rootChordLength-(2*_rootChordLength*(1-_taper)*commonFactor);
+    _mac.y = _netSpan*commonFactor;
+    _mac.x = _base[0]-Math::tan(_sweepAngleCenterLine) * _mac.y + _mac.length/2;
+}
+
+Chord Wing::calculateMAC(Chord root, Chord tip)
+{
+    assert(root.length > 0);
+    //const float taper = tip.length / root.length;
+    const float commonFactor = (root.length*0.5+tip.length)/(3*(root.length+tip.length));
+    Chord m;
+    m.length = root.length-(2*(root.length - tip.length)*commonFactor);
+    m.y = Math::abs(2*(tip.y - root.y))*commonFactor;
+    m.x = root.x - (root.x - tip.x)*(root.y - m.y)/(root.y - tip.y);
+    return m;
 }
 
 float Wing::calculateSweepAngleLeadingEdge()
@@ -139,7 +151,7 @@ float Wing::calculateSweepAngleLeadingEdge()
       return 0;
     }
     return Math::atan(
-      (sin(_sweepAngleCenterLine)+(1-_taper)*_chord/(2*_length)) /
+      (sin(_sweepAngleCenterLine)+(1-_taper)*_rootChordLength/(2*_length)) /
       cos(_sweepAngleCenterLine)
     );  
 }
@@ -221,7 +233,7 @@ void Wing::compile()
             float pos[3];
             interp(_base, _tip, frac, pos);
 
-            float chord = _chord * (1 - (1-_taper)*frac);
+            float chord = _rootChordLength * (1 - (1-_taper)*frac);
             float weight = chord * segWid;
             float twist = _twist * frac;
 
@@ -354,9 +366,9 @@ void Wing::writeInfoToProptree()
     _wingN->getNode("wing-area", true)->setFloatValue(_wingspan*_meanChord);
     _wingN->getNode("aspect-ratio", true)->setFloatValue(_aspectRatio);
     _wingN->getNode("standard-mean-chord", true)->setFloatValue(_meanChord);
-    _wingN->getNode("mac", true)->setFloatValue(_mac);
-    _wingN->getNode("mac-x", true)->setFloatValue(_macX);
-    _wingN->getNode("mac-y", true)->setFloatValue(_base[1]+_macRootDistance);
+    _wingN->getNode("mac", true)->setFloatValue(_mac.length);
+    _wingN->getNode("mac-x", true)->setFloatValue(_mac.x);
+    _wingN->getNode("mac-y", true)->setFloatValue(_base[1]+_mac.y);
 
     float wgt = 0;
     float dragSum = 0;

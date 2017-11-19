@@ -19,6 +19,13 @@ struct FlapParams {
     float aoa {0};
 };
 
+// position and length of a chord line
+struct Chord {
+    float x {0};
+    float y {0};
+    float length {0};
+};
+
 enum WingFlaps {
     WING_FLAP0,
     WING_FLAP1,
@@ -45,7 +52,7 @@ public:
     // dist. ALONG wing (not span!)     
     float getLength() const { return _length; };
     // at base, measured along X axis
-    float getChord() const { return _chord; };
+    float getChord() const { return _rootChordLength; };
     // fraction of chord at wing tip, 0..1
     float getTaper() const { return _taper; };
     // radians
@@ -80,9 +87,10 @@ public:
     float getArea() const { return _wingspan*_meanChord; };
     float getAspectRatio() const { return _aspectRatio; };
     float getSMC() const { return _meanChord; };
-    float getMACLength() const { return _mac; }; // get length of MAC
-    float getMACx() const { return _macX; }; // get x-coord of MAC leading edge 
-    float getMACy() const { return _base[1]+_macRootDistance; }; // get y-coord of MAC leading edge 
+    Chord getMAC() const { return _mac; };
+    float getMACLength() const { return _mac.length; }; // get length of MAC
+    float getMACx() const { return _mac.x; }; // get x-coord of MAC 
+    float getMACy() const { return _base[1]+_mac.y; }; // get y-coord of MAC  
     
     
     int numSurfaces() const { return _surfs.size(); }
@@ -110,11 +118,11 @@ private:
     void calculateTip();
     void calculateSpan();
     void calculateMAC();
+    static Chord calculateMAC(Chord root, Chord tip);
     float calculateSweepAngleLeadingEdge();
 
     void addSurface(Surface* s, float weight, float twist);
     void writeInfoToProptree();
-    
     
     struct SurfRec { Surface * surface; float weight; };
     // all surfaces of this wing
@@ -125,7 +133,7 @@ private:
     Version * _version;
     bool _mirror {false};
     float _base[3] {0,0,0};
-    float _chord {0};
+    float _rootChordLength {0};
     // length is distance from base to tip, not wing span
     float _length {0};
     float _taper {1};
@@ -138,9 +146,7 @@ private:
     float _rightOrient[9];
     float _tip[3] {0,0,0};
     float _meanChord {0}; // std. mean chord
-    float _mac {0}; // mean aerodynamic chord length
-    float _macRootDistance {0}; // y-distance of mac from root
-    float _macX {0}; // x-coordinate of mac (leading edge)
+    Chord _mac; // mean aerodynamic chord (x,y) leading edge
     float _netSpan {0};
     float _wingspan {0};
     float _aspectRatio {1};
