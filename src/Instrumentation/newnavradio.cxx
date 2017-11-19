@@ -265,7 +265,9 @@ void NavRadioComponent::search( double frequency, const SGGeod & aircraftPositio
     _ident = "";
     return;
   }
-  SG_LOG(SG_INSTR,SG_INFO, "Using " << _name << "'" << _navRecord->get_ident() << "' for " << frequency );
+  SG_LOG(SG_INSTR, SG_INFO,
+         "Using " << _name << " '" << _navRecord->get_ident() << "' for " <<
+         frequency);
   _ident = _navRecord->ident();
 }
 
