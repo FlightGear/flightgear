@@ -787,35 +787,35 @@ void Airplane::applyDragFactor(float factor)
     float applied = Math::pow(factor, SOLVE_TWEAK);
     _dragFactor *= applied;
     if(_wing)
-      _wing->setDragScale(_wing->getDragScale() * applied);
+      _wing->multiplyDragCoefficient(applied);
     if(_tail)
-      _tail->setDragScale(_tail->getDragScale() * applied);
+      _tail->multiplyDragCoefficient(applied);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
-	Wing* w = (Wing*)_vstabs.get(i);
-	w->setDragScale(w->getDragScale() * applied);
+        Wing* w = (Wing*)_vstabs.get(i);
+        w->multiplyDragCoefficient(applied);
     }
     for(i=0; i<_fuselages.size(); i++) {
-	Fuselage* f = (Fuselage*)_fuselages.get(i);
-	int j;
-	for(j=0; j<f->surfs.size(); j++) {
-	    Surface* s = (Surface*)f->surfs.get(j);
-	    if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-		// For new YASim, the solver drag factor is only applied to
-		// the X axis for Fuselage Surfaces.
-		// The solver is tuning the coefficient for longitudinal drag,
-		// along the direction of flight. A fuselage's lateral drag
-		// is completely independent and is normally much higher;
-		// it won't be affected by the streamlining done to reduce
-		// longitudinal drag. So the solver should only adjust the
-		// fuselage's longitudinal (X axis) drag coefficient.
-		s->setXDrag(s->getXDrag() * applied);
-	    } else {
-		// Originally YASim applied the drag factor to all axes
-		// for Fuselage Surfaces.
-		s->setDragCoefficient(s->getDragCoefficient() * applied);
-	    }
-	}
+        Fuselage* f = (Fuselage*)_fuselages.get(i);
+        int j;
+        for(j=0; j<f->surfs.size(); j++) {
+            Surface* s = (Surface*)f->surfs.get(j);
+            if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+            // For new YASim, the solver drag factor is only applied to
+            // the X axis for Fuselage Surfaces.
+            // The solver is tuning the coefficient for longitudinal drag,
+            // along the direction of flight. A fuselage's lateral drag
+            // is completely independent and is normally much higher;
+            // it won't be affected by the streamlining done to reduce
+            // longitudinal drag. So the solver should only adjust the
+            // fuselage's longitudinal (X axis) drag coefficient.
+            s->setXDrag(s->getXDrag() * applied);
+            } else {
+            // Originally YASim applied the drag factor to all axes
+            // for Fuselage Surfaces.
+            s->setDragCoefficient(s->getDragCoefficient() * applied);
+            }
+        }
     }
     for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);

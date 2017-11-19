@@ -253,13 +253,18 @@ void Wing::addSurface(Surface* s, float weight, float twist)
     _surfs.add(sr);
 }
 
-void Wing::setDragScale(float scale)
+void Wing::setDragCoefficient(float scale)
 {
     _dragScale = scale;
     for(int i=0; i<_surfs.size(); i++) {
         SurfRec* s = (SurfRec*)_surfs.get(i);
         s->surface->setDragCoefficient(scale * s->weight);
     }
+}
+
+void Wing::multiplyDragCoefficient(float factor)
+{
+    setDragCoefficient(_dragScale * factor);
 }
 
 void Wing::setLiftRatio(float ratio)

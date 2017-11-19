@@ -853,7 +853,7 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
     w->setInducedDrag(0.7*attrf(a, "idrag", 1));
 
     float effect = attrf(a, "effectiveness", 1);
-    w->setDragScale(w->getDragScale()*effect);
+    w->multiplyDragCoefficient(effect);
 
     _currObj = w;
     return w;

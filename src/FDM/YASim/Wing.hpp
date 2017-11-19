@@ -90,8 +90,8 @@ public:
 
     // The overall drag coefficient for the wing as a whole.  Units are
     // arbitrary.
-    void setDragScale(float scale);
-    float getDragScale() const { return _dragScale; }
+    void setDragCoefficient(float scale);
+    void multiplyDragCoefficient(float factor);
 
     // The ratio of force along the Z (lift) direction of each wing
     // segment to that along the X (drag) direction.
