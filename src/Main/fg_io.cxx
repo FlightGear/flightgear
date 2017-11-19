@@ -225,8 +225,9 @@ FGIO::parse_port_config( const string& config )
         return NULL;
     }
 
-    if (tokens.size() < 3) {
-        SG_LOG( SG_IO, SG_ALERT, "Incompatible number of network arguments.");
+    if (tokens.size() < 4) {
+        SG_LOG( SG_IO, SG_ALERT, "Too few arguments for network protocol. At least 3 arguments required. " <<
+                "Usage: --" << protocol << "=(file|socket|serial), (in|out|bi), hertz");
         delete io;
         return NULL;
     }
@@ -243,8 +244,9 @@ FGIO::parse_port_config( const string& config )
     SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
 
     if ( medium == "serial" ) {
-        if ( tokens.size() < 5) {
-            SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for serial communications.");
+        if ( tokens.size() < 6) {
+            SG_LOG( SG_IO, SG_ALERT, "Too few arguments for serial communications. " <<
+                    "Usage --" << protocol << "=serial, (in|out|bi), hertz, device, baudrate");
             delete io;
             return NULL;
         }
@@ -273,8 +275,9 @@ FGIO::parse_port_config( const string& config )
         }
     } else if ( medium == "file" ) {
         // file name
-        if ( tokens.size() < 4) {
-            SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for file I/O.");
+        if ( tokens.size() < 5) {
+            SG_LOG( SG_IO, SG_ALERT, "Too few arguments for file I/O. " <<
+                    "Usage --" << protocol << "=file, (in|out), hertz, filename (,repeat)");
             delete io;
             return NULL;
         }
@@ -295,8 +298,9 @@ FGIO::parse_port_config( const string& config )
         SGFile *ch = new SGFile( file, repeat );
         io->set_io_channel( ch );
     } else if ( medium == "socket" ) {
-        if ( tokens.size() < 6) {
-            SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for socket communications.");
+        if ( tokens.size() < 7) {
+            SG_LOG( SG_IO, SG_ALERT, "Too few arguments for socket communications. " <<
+                    "Usage --" << protocol << "=socket, (in|out|bi), hertz, hostname, port, (tcp|udp)");
             delete io;
             return NULL;
         }
