@@ -310,25 +310,7 @@ float Airplane::compileWing(Wing* w)
     }
 
     float wgt = 0;
-    for(int i=0; i<w->numSurfaces(); i++) {
-        Surface* s = (Surface*)w->getSurface(i);
-        float td = s->getDragCoefficient();
-        int sid = s->getID();
-
-        _model.addSurface(s);
-
-        float mass = w->getSurfaceWeight(i);
-        mass = mass * Math::sqrt(mass);
-        float pos[3];
-        s->getPosition(pos);
-        int mid = _model.getBody()->addMass(mass, pos, true);
-        if (_wingsN != 0) {
-          SGPropertyNode_ptr n = _wingsN->getNode("surfaces", true)->getChild("surface", sid, true);
-          n->getNode("drag", true)->setFloatValue(td);
-          n->getNode("mass-id", true)->setIntValue(mid);
-        }
-        wgt += mass;
-    }
+    wgt = w->updateModel(&_model);
     return wgt;
 }
 

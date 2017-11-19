@@ -9,6 +9,7 @@
 namespace yasim {
 
 class Surface;
+class Model;
 
 struct FlapParams {
     float start {0};
@@ -99,6 +100,7 @@ public:
     float getLiftRatio() const { return _liftRatio; }
 
     void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
+    float updateModel(Model* model);
     
 private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
@@ -112,7 +114,7 @@ private:
 
     void addSurface(Surface* s, float weight, float twist);
     void writeInfoToProptree();
-
+    
     
     struct SurfRec { Surface * surface; float weight; };
     // all surfaces of this wing

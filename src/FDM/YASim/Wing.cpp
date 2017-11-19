@@ -1,4 +1,5 @@
 #include "yasim-common.hpp"
+#include "Model.hpp"
 #include "Surface.hpp"
 #include "Wing.hpp"
 
@@ -361,8 +362,8 @@ void Wing::writeInfoToProptree()
     float dragSum = 0;
     for(int surf=0; surf < numSurfaces(); surf++) {
         Surface* s = (Surface*)getSurface(surf);
-        float td = s->getDragCoefficient();
-        dragSum += td;
+        float drag = s->getDragCoefficient();
+        dragSum += drag;
 
         float mass = getSurfaceWeight(surf);
         mass = mass * Math::sqrt(mass);
@@ -371,4 +372,28 @@ void Wing::writeInfoToProptree()
     _wingN->getNode("weight", true)->setFloatValue(wgt);
     _wingN->getNode("drag", true)->setFloatValue(dragSum);
 }
+
+float Wing::updateModel(Model* model) 
+{
+    float wgt = 0;
+    for(int surf=0; surf < numSurfaces(); surf++) {
+        Surface* s = (Surface*)getSurface(surf);
+        model->addSurface(s);
+
+        float mass = getSurfaceWeight(surf);
+        mass = mass * Math::sqrt(mass);
+        wgt += mass;
+
+        float pos[3];
+        s->getPosition(pos);
+        int mid = model->getBody()->addMass(mass, pos, true);
+        if (_wingN != nullptr) {
+            SGPropertyNode_ptr n = _wingN->getNode("surfaces", true)->getChild("surface", s->getID(), true);
+            n->getNode("drag", true)->setFloatValue(s->getDragCoefficient());
+            n->getNode("mass-id", true)->setIntValue(mid);
+        }
+    }
+    return wgt;    
+}
+
 }; // namespace yasim
