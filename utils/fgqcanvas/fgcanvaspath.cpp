@@ -76,11 +76,11 @@ public:
             QTransform transform;
             QTriangleSet triangles = qTriangulate(m_path, transform);
 
-            int indexType = QSGGeometry::UnsignedShortType;
+            int indexType = GL_UNSIGNED_SHORT;
             if (triangles.indices.type() == QVertexIndexVector::UnsignedShort) {
                 // default is fine
             } else if (triangles.indices.type() == QVertexIndexVector::UnsignedInt) {
-                indexType = QSGGeometry::UnsignedIntType;
+                indexType = GL_UNSIGNED_INT;
             } else {
                 qFatal("Unsupported triangle index type");
             }
