@@ -4,6 +4,7 @@
 #include "Vector.hpp"
 #include "Version.hpp"
 #include "Math.hpp"
+#include <simgear/props/props.hxx>
 
 namespace yasim {
 
@@ -26,7 +27,7 @@ enum WingFlaps {
 
 // FIXME: need to handle "inverted" controls for mirrored wings.
 class Wing {
-        
+    SGPropertyNode_ptr _wingN {nullptr};
 public:
     Wing(Version *ver, bool mirror, float* base, float chord, float length, 
         float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0);
@@ -97,6 +98,7 @@ public:
     void setLiftRatio(float ratio);
     float getLiftRatio() const { return _liftRatio; }
 
+    void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
     
 private:
     void interp(const float* v1, const float* v2, const float frac, float* out);
@@ -109,9 +111,10 @@ private:
     float calculateSweepAngleLeadingEdge();
 
     void addSurface(Surface* s, float weight, float twist);
+    void writeInfoToProptree();
+
     
     struct SurfRec { Surface * surface; float weight; };
-
     // all surfaces of this wing
     Vector _surfs;      
     // surfaces having a certain type of flap (flap, slat, spoiler)

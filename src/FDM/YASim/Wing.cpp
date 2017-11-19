@@ -240,6 +240,7 @@ void Wing::compile()
     // Last of all, re-set the incidence in case setIncidence() was
     // called before we were compiled.
     setIncidence(_incidence);
+    writeInfoToProptree();
 }
 
 void Wing::addSurface(Surface* s, float weight, float twist)
@@ -333,4 +334,36 @@ void Wing::interp(const float* v1, const float* v2, const float frac, float* out
     out[2] = v1[2] + frac*(v2[2]-v1[2]);
 }
 
+void Wing::writeInfoToProptree()
+{
+    if (_wingN == nullptr) 
+        return;
+    _wingN->getNode("tip-x", true)->setFloatValue(_tip[0]);
+    _wingN->getNode("tip-y", true)->setFloatValue(_tip[1]);
+    _wingN->getNode("tip-z", true)->setFloatValue(_tip[2]);
+    _wingN->getNode("base-x", true)->setFloatValue(_base[0]);
+    _wingN->getNode("base-y", true)->setFloatValue(_base[1]);
+    _wingN->getNode("base-z", true)->setFloatValue(_base[2]);
+    _wingN->getNode("wing-span", true)->setFloatValue(_wingspan);
+    _wingN->getNode("wing-area", true)->setFloatValue(_wingspan*_meanChord);
+    _wingN->getNode("aspect-ratio", true)->setFloatValue(_aspectRatio);
+    _wingN->getNode("standard-mean-chord", true)->setFloatValue(_meanChord);
+    _wingN->getNode("mac", true)->setFloatValue(_mac);
+    _wingN->getNode("mac-x", true)->setFloatValue(_macX);
+    _wingN->getNode("mac-y", true)->setFloatValue(_base[1]+_macRootDistance);
+
+    float wgt = 0;
+    float dragSum = 0;
+    for(int surf=0; surf < numSurfaces(); surf++) {
+        Surface* s = (Surface*)getSurface(surf);
+        float td = s->getDragCoefficient();
+        dragSum += td;
+
+        float mass = getSurfaceWeight(surf);
+        mass = mass * Math::sqrt(mass);
+        wgt += mass;
+    }
+    _wingN->getNode("weight", true)->setFloatValue(wgt);
+    _wingN->getNode("drag", true)->setFloatValue(dragSum);
+}
 }; // namespace yasim

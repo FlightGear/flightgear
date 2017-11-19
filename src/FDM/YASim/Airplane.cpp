@@ -308,25 +308,8 @@ float Airplane::compileWing(Wing* w)
         addContactPoint(tip);
         tip[1] *= -1; //undo mirror
     }
-    if (_wingsN != 0) {
-      _wingsN->getNode("tip-x", true)->setFloatValue(tip[0]);
-      _wingsN->getNode("tip-y", true)->setFloatValue(tip[1]);
-      _wingsN->getNode("tip-z", true)->setFloatValue(tip[2]);
-      w->getBase(tip);
-      _wingsN->getNode("base-x", true)->setFloatValue(tip[0]);
-      _wingsN->getNode("base-y", true)->setFloatValue(tip[1]);
-      _wingsN->getNode("base-z", true)->setFloatValue(tip[2]);
-      _wingsN->getNode("wing-span", true)->setFloatValue(w->getSpan());
-      _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
-      _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
-      _wingsN->getNode("standard-mean-chord", true)->setFloatValue(w->getSMC());
-      _wingsN->getNode("mac", true)->setFloatValue(w->getMACLength());
-      _wingsN->getNode("mac-x", true)->setFloatValue(w->getMACx());
-      _wingsN->getNode("mac-y", true)->setFloatValue(w->getMACy());
-    }
 
     float wgt = 0;
-    float dragSum = 0;
     for(int i=0; i<w->numSurfaces(); i++) {
         Surface* s = (Surface*)w->getSurface(i);
         float td = s->getDragCoefficient();
@@ -345,11 +328,6 @@ float Airplane::compileWing(Wing* w)
           n->getNode("mass-id", true)->setIntValue(mid);
         }
         wgt += mass;
-        dragSum += td;
-    }
-    if (_wingsN != 0)  {
-      _wingsN->getNode("weight", true)->setFloatValue(wgt);	
-      _wingsN->getNode("drag", true)->setFloatValue(dragSum);	
     }
     return wgt;
 }
@@ -543,7 +521,10 @@ void Airplane::compile()
     // The Wing objects
     if (_wing)
     {
-      if (baseN != 0) _wingsN = baseN->getChild("wing", 0, true);
+      if (baseN != 0) {
+          _wingsN = baseN->getChild("wing", 0, true);
+          _wing->setPropertyNode(_wingsN);
+      }
       aeroWgt += compileWing(_wing);
       
       // convert % to absolute x coordinates
@@ -557,13 +538,19 @@ void Airplane::compile()
     }
     if (_tail)
     {
-      if (baseN != 0) _wingsN = baseN->getChild("tail", 0, true);
+      if (baseN != 0) {
+          _wingsN = baseN->getChild("tail", 0, true);
+          _tail->setPropertyNode(_wingsN);
+      }
       aeroWgt += compileWing(_tail);
     }
     int i;
     for(i=0; i<_vstabs.size(); i++)
     {
-      if (baseN != 0) _wingsN = baseN->getChild("stab", i, true);
+      if (baseN != 0) {
+          _wingsN = baseN->getChild("stab", i, true);
+          ((Wing*)_vstabs.get(i))->setPropertyNode(_wingsN);
+      }
       aeroWgt += compileWing((Wing*)_vstabs.get(i));
     }
 
