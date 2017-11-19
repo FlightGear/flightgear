@@ -40,13 +40,14 @@
 
 #include <zlib.h>               // Z_BEST_COMPRESSION
 
+#include <simgear/embedded_resources/EmbeddedResource.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/argparse.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
-#include <simgear/io/iostreams/sgstream.hxx>
+#include <simgear/sg_inlines.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/xml/easyxml.hxx>
-#include <simgear/embedded_resources/EmbeddedResource.hxx>
 
 #include "fgrcc.hxx"
 
@@ -54,6 +55,7 @@ using std::string;
 using std::vector;
 using std::cout;
 using std::cerr;
+using simgear::enumValue;
 
 // The name is still hard-coded essentially in the text for --help
 // (cf. showUsage()), because the formatting there depends on how long the
@@ -62,12 +64,6 @@ static const string PROGNAME = "fgrcc";
 
 // 'stuff' should insert UTF-8-encoded text into the stream
 #define LOG(stuff) do { cerr << PROGNAME << ": " << stuff << "\n"; } while(0)
-
-// Cast an enum value to its underlying type
-template <typename T>
-static constexpr typename std::underlying_type<T>::type enumValue(T e) {
-    return static_cast<typename std::underlying_type<T>::type>(e);
-}
 
 static string prettyPrintNbOfBytes(std::size_t nbBytes)
 {
