@@ -320,7 +320,7 @@ float Airplane::compileWing(Wing* w)
       _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
       _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
       _wingsN->getNode("standard-mean-chord", true)->setFloatValue(w->getSMC());
-      _wingsN->getNode("mac", true)->setFloatValue(w->getMAC());
+      _wingsN->getNode("mac", true)->setFloatValue(w->getMACLength());
       _wingsN->getNode("mac-x", true)->setFloatValue(w->getMACx());
       _wingsN->getNode("mac-y", true)->setFloatValue(w->getMACy());
     }
@@ -547,8 +547,8 @@ void Airplane::compile()
       aeroWgt += compileWing(_wing);
       
       // convert % to absolute x coordinates
-      _cgDesiredFront = _wing->getMACx() - _wing->getMAC()*_cgDesiredMin;
-      _cgDesiredAft = _wing->getMACx() - _wing->getMAC()*_cgDesiredMax;
+      _cgDesiredFront = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMin;
+      _cgDesiredAft = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMax;
       if (baseN != 0) {
         SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
         n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
@@ -1034,7 +1034,7 @@ float Airplane::getCGMAC()
     if (_wing) {
       float cg[3];
       _model.getBody()->getCG(cg);
-      return (_wing->getMACx() - cg[0]) / _wing->getMAC();
+      return (_wing->getMACx() - cg[0]) / _wing->getMACLength();
     }
     return 0;
 }

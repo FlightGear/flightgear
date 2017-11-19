@@ -248,7 +248,7 @@ int main(int argc, char** argv)
     float MAC = 0, MACx = 0, MACy = 0;
     Wing* wing = a->getWing();
     if (wing) {
-      MAC = a->getWing()->getMAC();
+      MAC = a->getWing()->getMACLength();
       MACx = a->getWing()->getMACx();
       MACy = a->getWing()->getMACy();
     }

@@ -78,7 +78,7 @@ public:
     float getArea() const { return _wingspan*_meanChord; };
     float getAspectRatio() const { return _aspectRatio; };
     float getSMC() const { return _meanChord; };
-    float getMAC() const { return _mac; }; // get length of MAC
+    float getMACLength() const { return _mac; }; // get length of MAC
     float getMACx() const { return _macX; }; // get x-coord of MAC leading edge 
     float getMACy() const { return _base[1]+_macRootDistance; }; // get y-coord of MAC leading edge 
     
