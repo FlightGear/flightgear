@@ -1,4 +1,4 @@
-// nmea.hxx -- NMEA protocal class
+// nmea.hxx -- NMEA protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -24,7 +24,6 @@
 #ifndef _FG_NMEA_HXX
 #define _FG_NMEA_HXX
 
-
 #include <simgear/compiler.h>
 
 #include <string>
@@ -33,30 +32,49 @@
 
 class FlightProperties;
 
+namespace NMEA
+{
+    // supported NMEA messages
+    const unsigned int GPRMC = (1<<0);
+    const unsigned int GPGGA = (1<<1);
+    const unsigned int GPGSA = (1<<2);
+
+    const unsigned int SET   = (GPRMC|GPGGA|GPGSA);
+}
+
 class FGNMEA : public FGProtocol {
 
-    char buf[ FG_MAX_MSG_SIZE ];
-    int length;
-    FlightProperties* fdm;
+protected:
+    char mBuf[FG_MAX_MSG_SIZE];
+    unsigned int mLength;
+    unsigned int mNmeaMessages;
+    FlightProperties mFdm;
+    const char* mLineFeed;
+    string mNmeaSentence;
+
+    void add_with_checksum(char *sentence, unsigned int buf_size);
+
+    // process a single NMEA line
+    void parse_line();
+
+    // generate output message(s)
+    virtual bool gen_message();
+
+    // process a single NMEA sentence
+    virtual void parse_message(const std::vector<std::string>& tokens);
+
 public:
-
-    FGNMEA();
-    ~FGNMEA();
-
-    bool gen_message();
-    bool parse_message();
+            FGNMEA();
+            ~FGNMEA();
 
     // open hailing frequencies
-    bool open();
+    virtual bool open();
 
     // process work for this port
-    bool process();
+    virtual bool process();
 
     // close the channel
-    bool close();
+    virtual bool close();
 };
 
-
 #endif // _FG_NMEA_HXX
-
-

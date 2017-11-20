@@ -620,7 +620,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 #ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
     checkCount++;
 #endif
-    if (!pModel->getBoolValue("valid"))
+    if (!pModel->getBoolValue("valid", true))
         return ThreatInvisible;
 
     float velocityKt  = pModel->getDoubleValue("velocities/true-airspeed-kt");

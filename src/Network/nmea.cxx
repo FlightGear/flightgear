@@ -1,4 +1,4 @@
-// nmea.cxx -- NMEA protocal class
+// nmea.cxx -- NMEA protocol class
 //
 // Written by Curtis Olson, started November 1999.
 //
@@ -39,156 +39,150 @@
 
 #include "nmea.hxx"
 
-FGNMEA::FGNMEA() {
-  fdm = new FlightProperties();
+FGNMEA::FGNMEA() :
+    mLength(0),
+    mNmeaMessages(NMEA::SET),
+    mLineFeed("\n")
+{
 }
+
 
 FGNMEA::~FGNMEA() {
-  delete fdm;
 }
 
 
-// calculate the nmea check sum
-static char calc_nmea_cksum(char *sentence) {
+// calculate the NMEA check sum
+void FGNMEA::add_with_checksum(char *sentence, unsigned int buf_size) {
+    unsigned int i;
     unsigned char sum = 0;
-    int i, len;
 
-    // cout << sentence << endl;
-
-    len = strlen(sentence);
-    sum = sentence[0];
-    for ( i = 1; i < len; i++ ) {
-        // cout << sentence[i];
+    for (i = 1; sentence[i] != 0; i++ ) {
         sum ^= sentence[i];
     }
-    // cout << endl;
 
-    // printf("sum = %02x\n", sum);
-    return sum;
+    if (i + 6 < buf_size)
+        snprintf( &sentence[i], 6, "*%02X%s", sum, mLineFeed);
+
+    SG_LOG( SG_IO, SG_DEBUG, sentence );
+
+    mNmeaSentence += sentence;
 }
 
 
 // generate NMEA message
-bool FGNMEA::gen_message() {
-    // cout << "generating nmea message" << endl;
-
-    char rmc[256], gga[256], gsa[256];
-    char rmc_sum[10], gga_sum[10];
+bool FGNMEA::gen_message()
+{
     char dir;
     int deg;
     double min;
+    char nmea[256];
 
     SGTime *t = globals->get_time_params();
 
     char utc[10];
     sprintf( utc, "%02d%02d%02d", 
-	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
+             t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
-    char gga_lat[20], rmc_lat[20];
-    double latd = fdm->get_Latitude() * SGD_RADIANS_TO_DEGREES;
-    if ( latd < 0.0 ) {
-	latd = -latd;
-	dir = 'S';
-    } else {
-	dir = 'N';
+    char lat[20];
+    {
+        double latd = mFdm.get_Latitude() * SGD_RADIANS_TO_DEGREES;
+        if ( latd < 0.0 ) {
+            latd = -latd;
+            dir = 'S';
+        } else {
+            dir = 'N';
+        }
+        deg = (int)(latd);
+        min = (latd - (double)deg) * 60.0;
+        sprintf( lat, "%02d%07.4f,%c", abs(deg), min, dir);
     }
-    deg = (int)(latd);
-    min = (latd - (double)deg) * 60.0;
-    sprintf( gga_lat, "%02d%07.4f,%c", abs(deg), min, dir);
-    sprintf( rmc_lat, "%02d%07.4f,%c", abs(deg), min, dir);
 
-    char gga_lon[20], rmc_lon[20];
-    double lond = fdm->get_Longitude() * SGD_RADIANS_TO_DEGREES;
-    if ( lond < 0.0 ) {
-	lond = -lond;
-	dir = 'W';
-    } else {
-	dir = 'E';
+    char lon[20];
+    {
+        double lond = mFdm.get_Longitude() * SGD_RADIANS_TO_DEGREES;
+        if ( lond < 0.0 ) {
+            lond = -lond;
+            dir = 'W';
+        } else {
+            dir = 'E';
+        }
+        deg = (int)(lond);
+        min = (lond - (double)deg) * 60.0;
+        sprintf( lon, "%03d%07.4f,%c", abs(deg), min, dir);
     }
-    deg = (int)(lond);
-    min = (lond - (double)deg) * 60.0;
-    sprintf( gga_lon, "%03d%07.4f,%c", abs(deg), min, dir);
-    sprintf( rmc_lon, "%03d%07.4f,%c", abs(deg), min, dir);
 
     double vn = fgGetDouble( "/velocities/speed-north-fps" );
     double ve = fgGetDouble( "/velocities/speed-east-fps" );
-    double fps = sqrt( vn*vn + ve*ve );
-    double mps = fps * SG_FEET_TO_METER;
-    double kts = mps * SG_METER_TO_NM * 3600;
+
     char speed[10];
-    sprintf( speed, "%.1f", kts );
-
-    double hdg_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
-    if ( hdg_true < 0 ) {
-      hdg_true += 360.0;
+    {
+        double fps = sqrt( vn*vn + ve*ve );
+        double mps = fps * SG_FEET_TO_METER;
+        double kts = mps * SG_METER_TO_NM * 3600;
+        sprintf( speed, "%.1f", kts );
     }
-    char heading[10];
-    sprintf( heading, "%.1f", hdg_true );
 
-    char altitude_m[10];
-    sprintf( altitude_m, "%.1f", 
-	     fdm->get_Altitude() * SG_FEET_TO_METER );
+    char heading[10];
+    {
+        double hdg_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
+        if ( hdg_true < 0 ) {
+          hdg_true += 360.0;
+        }
+        sprintf( heading, "%.1f", hdg_true );
+    }
+
+    double altitude_ft = mFdm.get_Altitude();
 
     char date[10];
-    int year = t->getGmt()->tm_year;
-    while ( year >= 100 ) { year -= 100; }
-    sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday, 
-	     t->getGmt()->tm_mon+1, year );
+    {
+        int year = t->getGmt()->tm_year;
+        while ( year >= 100 ) { year -= 100; }
+        sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday,
+             t->getGmt()->tm_mon+1, year );
+    }
 
     char magvar[10];
-    float magdeg = fgGetDouble( "/environment/magnetic-variation-deg" );
-    if ( magdeg < 0.0 ) {
-	magdeg = -magdeg;
-	dir = 'W';
-    } else {
-	dir = 'E';
+    {
+        float magdeg = fgGetDouble( "/environment/magnetic-variation-deg" );
+        if ( magdeg < 0.0 ) {
+            magdeg = -magdeg;
+            dir = 'W';
+        } else {
+            dir = 'E';
+        }
+        sprintf( magvar, "%.1f,%c", magdeg, dir );
     }
-    sprintf( magvar, "%.1f,%c", magdeg, dir );
- 
-    // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E,A*XX
-    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,%s,A",
-	     utc, rmc_lat, rmc_lon, speed, heading, date, magvar );
-    sprintf( rmc_sum, "%02X", calc_nmea_cksum(rmc) );
-
-    // $GPGGA,HHMMSS,DDMM.MMMM,N,DDDMM.MMMM,W,1,NN,H.H,AAAA.A,M,GG.G,M,,*XX
-    sprintf( gga, "GPGGA,%s,%s,%s,1,08,0.9,%s,M,0.0,M,,",
-	     utc, gga_lat, gga_lon, altitude_m );
-    sprintf( gga_sum, "%02X", calc_nmea_cksum(gga) );
-    sprintf( gsa, "%s",
-             "$GPGSA,A,3,01,02,03,,05,,07,,09,,11,12,0.9,0.9,2.0*38" );
-
-    SG_LOG( SG_IO, SG_DEBUG, rmc );
-    SG_LOG( SG_IO, SG_DEBUG, gga );
-    SG_LOG( SG_IO, SG_DEBUG, gsa );
-
-    string nmea_sentence;
 
     // RMC sentence
-    nmea_sentence = "$";
-    nmea_sentence += rmc;
-    nmea_sentence += "*";
-    nmea_sentence += rmc_sum;
-    nmea_sentence += "\n";
+    if (mNmeaMessages & NMEA::GPRMC)
+    {
+        // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E,A*XX
+        sprintf( nmea, "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,A",
+                 utc, lat, lon, speed, heading, date, magvar );
+        add_with_checksum(nmea, 256);
+    }
 
     // GGA sentence
-    nmea_sentence += "$";
-    nmea_sentence += gga;
-    nmea_sentence += "*";
-    nmea_sentence += gga_sum;
-    nmea_sentence += "\n";
+    if (mNmeaMessages & NMEA::GPGGA)
+    {
+        // $GPGGA,HHMMSS,DDMM.MMMM,N,DDDMM.MMMM,W,1,NN,H.H,AAAA.A,M,GG.G,M,,*XX
+        sprintf( nmea, "$GPGGA,%s,%s,%s,1,08,0.9,%.1f,M,0.0,M,,",
+                 utc, lat, lon, altitude_ft * SG_FEET_TO_METER );
+        add_with_checksum(nmea, 256);
+    }
 
     // GSA sentence (totally faked)
-    nmea_sentence += gsa;
-    nmea_sentence += "\n";
+    if (mNmeaMessages & NMEA::GPGSA)
+    {
+        sprintf( nmea, "%s%s",
+                "$GPGSA,A,3,01,02,03,,05,,07,,09,,11,12,0.9,0.9,2.0*38", mLineFeed );
+        SG_LOG( SG_IO, SG_DEBUG, nmea );
 
-    // cout << nmea_sentence;
-
-    length = nmea_sentence.length();
-    strncpy( buf, nmea_sentence.c_str(), length );
+        mNmeaSentence += nmea;
+    }
 
     return true;
 }
-
 
 // parse NMEA message.  messages will look something like the
 // following:
@@ -196,307 +190,187 @@ bool FGNMEA::gen_message() {
 // $GPRMC,163227,A,3321.173,N,11039.855,W,000.1,270.0,171199,0.000,E*61
 // $GPGGA,163227,3321.173,N,11039.855,W,1,,,3333,F,,,,*0F
 
-bool FGNMEA::parse_message() {
-    SG_LOG( SG_IO, SG_INFO, "parse nmea message" );
+void FGNMEA::parse_line() {
+    SG_LOG( SG_IO, SG_DEBUG, "parse nmea message" );
 
-    string msg = buf;
-    msg = msg.substr( 0, length );
-    SG_LOG( SG_IO, SG_INFO, "entire message = " << msg );
+    if (mLength > FG_MAX_MSG_SIZE-1)
+        mLength = FG_MAX_MSG_SIZE-1;
 
-    string::size_type begin_line, end_line, begin, end;
-    begin_line = begin = 0;
+    SG_LOG( SG_IO, SG_DEBUG, "entire message = " << mBuf );
 
-    // extract out each line
-    end_line = msg.find("\n", begin_line);
-    while ( end_line != string::npos ) {
-	string line = msg.substr(begin_line, end_line - begin_line);
-	begin_line = end_line + 1;
-	SG_LOG( SG_IO, SG_INFO, "  input line = " << line );
-
-	// leading character
-	string start = msg.substr(begin, 1);
-	++begin;
-	SG_LOG( SG_IO, SG_INFO, "  start = " << start );
-
-	// sentence
-	end = msg.find(",", begin);
-	if ( end == string::npos ) {
-	    return false;
-	}
-    
-	string sentence = msg.substr(begin, end - begin);
-	begin = end + 1;
-	SG_LOG( SG_IO, SG_INFO, "  sentence = " << sentence );
-
-	double lon_deg, lon_min, lat_deg, lat_min;
-	double lon, lat, speed, heading, altitude;
-
-	if ( sentence == "GPRMC" ) {
-	    // time
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string utc = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
-
-	    // junk
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string junk = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
-
-	    // lat val
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lat_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lat_deg = atof( lat_str.substr(0, 2).c_str() );
-	    lat_min = atof( lat_str.substr(2).c_str() );
-
-	    // lat dir
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lat_dir = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lat = lat_deg + ( lat_min / 60.0 );
-	    if ( lat_dir == "S" ) {
-		lat *= -1;
-	    }
-
-	    fdm->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
-
-	    // lon val
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lon_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lon_deg = atof( lon_str.substr(0, 3).c_str() );
-	    lon_min = atof( lon_str.substr(3).c_str() );
-
-	    // lon dir
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lon_dir = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lon = lon_deg + ( lon_min / 60.0 );
-	    if ( lon_dir == "W" ) {
-		lon *= -1;
-	    }
-
-	    fdm->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
-
-#if 0
-	    double sl_radius, lat_geoc;
-	    sgGeodToGeoc( fdm->get_Latitude(), 
-			  fdm->get_Altitude(), 
-			  &sl_radius, &lat_geoc );
-	    fdm->set_Geocentric_Position( lat_geoc, 
-			   fdm->get_Longitude(), 
-	     	           sl_radius + fdm->get_Altitude() );
-#endif
-
-	    // speed
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string speed_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    speed = atof( speed_str.c_str() );
-	    fdm->set_V_calibrated_kts( speed );
-	    // fdm->set_V_ground_speed( speed );
-	    SG_LOG( SG_IO, SG_INFO, "  speed = " << speed );
-
-	    // heading
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string hdg_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    heading = atof( hdg_str.c_str() );
-	    fdm->set_Euler_Angles( fdm->get_Phi(), 
-					     fdm->get_Theta(), 
-					     heading * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  heading = " << heading );
-	} else if ( sentence == "GPGGA" ) {
-	    // time
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string utc = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
-
-	    // lat val
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lat_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lat_deg = atof( lat_str.substr(0, 2).c_str() );
-	    lat_min = atof( lat_str.substr(2).c_str() );
-
-	    // lat dir
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lat_dir = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lat = lat_deg + ( lat_min / 60.0 );
-	    if ( lat_dir == "S" ) {
-		lat *= -1;
-	    }
-
-	    // fdm->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
-
-	    // lon val
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lon_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lon_deg = atof( lon_str.substr(0, 3).c_str() );
-	    lon_min = atof( lon_str.substr(3).c_str() );
-
-	    // lon dir
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lon_dir = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lon = lon_deg + ( lon_min / 60.0 );
-	    if ( lon_dir == "W" ) {
-		lon *= -1;
-	    }
-
-	    // fdm->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
-
-	    // junk
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string junk = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
-
-	    // junk
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    junk = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
-
-	    // junk
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    junk = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
-
-	    // altitude
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string alt_str = msg.substr(begin, end - begin);
-	    altitude = atof( alt_str.c_str() );
-	    begin = end + 1;
-
-	    // altitude units
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string alt_units = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    if ( alt_units != "F" ) {
-		altitude *= SG_METER_TO_FEET;
-	    }
-
-	    fdm->set_Altitude( altitude );
-    
- 	    SG_LOG( SG_IO, SG_INFO, " altitude  = " << altitude );
-
-	}
-
-	// printf("%.8f %.8f\n", lon, lat);
-
-	begin = begin_line;
-	end_line = msg.find("\n", begin_line);
+    // test leading character
+    if (mBuf[0] != '$')
+    {
+        SG_LOG( SG_IO, SG_DEBUG, "  invalid NMEA start character = " << mBuf[0]);
+        return;
     }
 
-    return true;
+    // get rid of checksum and "*" delimiter
+    while ((mLength > 0)&&(mBuf[mLength]!='*'))
+    {
+        mLength--;
+    }
+    mBuf[mLength] = 0;
+
+    // split string to tokens
+    std::vector<std::string> tokens;
+    for (unsigned int pos=1;pos < mLength;pos++)
+    {
+        const char* pCurrent = &mBuf[pos];
+        while ((mBuf[pos]!=',')&&(pos<mLength))
+            pos++;
+        if (mBuf[pos]==',')
+            mBuf[pos] = 0;
+        tokens.push_back(pCurrent);
+    }
+
+    if (tokens.size() == 0)
+        return;
+
+    if (tokens.size()>1)
+    {
+        for (unsigned int i=0;i<tokens.size();i++)
+        {
+            SG_LOG( SG_IO, SG_DEBUG, "  NMEA token # " << i << ": " << tokens[i]);
+        }
+        parse_message(tokens);
+    }
+}
+
+void FGNMEA::parse_message(const std::vector<std::string>& tokens)
+{
+    double lon_deg, lon_min, lat_deg, lat_min;
+    double lon, lat;
+    string::size_type begin = 0, end;
+
+    if (tokens[0] == "GPRMC" ) {
+        // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E,A*XX
+        if ( tokens.size()<9)
+            return;
+
+        // #1: time
+        const string& utc = tokens[1];
+        SG_LOG( SG_IO, SG_DEBUG, "  utc = " << utc );
+
+        // #2: junk
+        SG_LOG( SG_IO, SG_DEBUG, "  junk = " << tokens[2] );
+
+        // #3: lat val
+        lat_deg = atof( tokens[3].substr(0, 2).c_str() );
+        lat_min = atof( tokens[3].substr(2).c_str() );
+        lat = lat_deg + ( lat_min / 60.0 );
+
+        // #4: lat dir
+        if ( tokens[4] == "S" )
+            lat *= -1;
+
+        mFdm.set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
+
+        // #5: lon val
+        lon_deg = atof( tokens[5].substr(0, 3).c_str() );
+        lon_min = atof( tokens[5].substr(3).c_str() );
+        lon = lon_deg + ( lon_min / 60.0 );
+
+        // #6: lon dir
+        if ( tokens[6] == "W" )
+            lon *= -1;
+
+        mFdm.set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
+        SG_LOG( SG_IO, SG_DEBUG, "  lat = " << lat << ", lon = " << lon );
+
+#if 0
+        double sl_radius, lat_geoc;
+        sgGeodToGeoc( mFdm.get_Latitude(),
+              mFdm.get_Altitude(),
+              &sl_radius, &lat_geoc );
+        mFdm.set_Geocentric_Position( lat_geoc,
+               mFdm.get_Longitude(),
+                       sl_radius + mFdm.get_Altitude() );
+#endif
+
+        // #7: speed
+        double speed = atof( tokens[7].c_str() );
+        mFdm.set_V_calibrated_kts( speed );
+        // mFdm.set_V_ground_speed( speed );
+        SG_LOG( SG_IO, SG_DEBUG, "  speed = " << speed );
+
+        // #8: heading
+        double heading = atof( tokens[8].c_str() );
+        mFdm.set_Euler_Angles( mFdm.get_Phi(),
+                         mFdm.get_Theta(),
+                         heading * SGD_DEGREES_TO_RADIANS );
+        SG_LOG( SG_IO, SG_DEBUG, "  heading = " << heading );
+    } else
+    if (tokens[0] == "GPGGA" ) {
+        if ( tokens.size()<11)
+            return;
+
+        // #1: time
+        const string& utc = tokens[1];
+        SG_LOG( SG_IO, SG_DEBUG, "  utc = " << utc );
+
+        // #2: lat val
+        lat_deg = atof( tokens[2].substr(0, 2).c_str() );
+        lat_min = atof( tokens[2].substr(2).c_str() );
+        lat = lat_deg + ( lat_min / 60.0 );
+
+        // #3: lat dir
+        if ( tokens[4] == "S" )
+            lat *= -1;
+
+        mFdm.set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
+
+        // #4: lon val
+        lon_deg = atof( tokens[4].substr(0, 3).c_str() );
+        lon_min = atof( tokens[4].substr(3).c_str() );
+        lon = lon_deg + ( lon_min / 60.0 );
+
+        // #5: lon dir
+        if ( tokens[5] == "W" )
+            lon *= -1;
+
+        mFdm.set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
+        SG_LOG( SG_IO, SG_DEBUG, "  lat = " << lat << ", lon = " << lon );
+
+        // #6: junk
+        SG_LOG( SG_IO, SG_DEBUG, "  junk = " << tokens[6] );
+
+        // #7: junk
+        SG_LOG( SG_IO, SG_DEBUG, "  junk = " << tokens[7] );
+
+        // #8: junk
+        SG_LOG( SG_IO, SG_DEBUG, "  junk = " << tokens[8] );
+
+        // #9: altitude
+        double altitude = atof( tokens[9].c_str() );
+
+        // #10: altitude unit
+        const string& alt_units = tokens[10];
+
+        if ( alt_units != "F" && alt_units != "f" ) {
+            altitude *= SG_METER_TO_FEET;
+        }
+
+        mFdm.set_Altitude( altitude );
+
+        SG_LOG( SG_IO, SG_DEBUG, " altitude  = " << altitude );
+    }
 }
 
 
 // open hailing frequencies
 bool FGNMEA::open() {
     if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+                << "is already in use, ignoring" );
+        return false;
     }
 
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
-	return false;
+        SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
+        return false;
     }
 
     set_enabled( true );
@@ -509,28 +383,33 @@ bool FGNMEA::open() {
 bool FGNMEA::process() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT ) {
-	gen_message();
-	if ( ! io->write( buf, length ) ) {
-	    SG_LOG( SG_IO, SG_WARN, "Error writing data." );
-	    return false;
-	}
-    } else if ( get_direction() == SG_IO_IN ) {
-	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-	    parse_message();
-	} else {
-	    SG_LOG( SG_IO, SG_WARN, "Error reading data." );
-	    return false;
-	}
-	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-	    parse_message();
-	} else {
-	    SG_LOG( SG_IO, SG_WARN, "Error reading data." );
-	    return false;
-	}
+    if ( get_direction() == SG_IO_OUT )
+    {
+        // process output
+        gen_message();
+        if ((!mNmeaSentence.empty())&&
+            (!io->write( mNmeaSentence.c_str(), mNmeaSentence.length() )))
+        {
+            SG_LOG( SG_IO, SG_WARN, "Error writing data." );
+        }
+        mNmeaSentence = "";
+    }
+    else
+    if ( get_direction() == SG_IO_IN )
+    {
+        // process input lines (up to two lines per cycle)
+        for (int i=0;i<2;i++)
+        {
+            if ( (mLength = io->readline( mBuf, FG_MAX_MSG_SIZE )) > 0 ) {
+                parse_line();
+            } else {
+                printf("Error reading data!\n");
+                SG_LOG( SG_IO, SG_WARN, "Error reading data." );
+            }
+        }
     }
 
-    return true;
+    return true; // return value is unused
 }
 
 
@@ -540,9 +419,5 @@ bool FGNMEA::close() {
 
     set_enabled( false );
 
-    if ( ! io->close() ) {
-	return false;
-    }
-
-    return true;
+    return io->close();
 }
