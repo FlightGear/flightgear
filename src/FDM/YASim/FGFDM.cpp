@@ -534,10 +534,12 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
     } else if(eq(name, "weight")) {
 	parseWeight(a);
     } else if(eq(name, "stall")) {
-	Wing* w = (Wing*)_currObj;
-	w->setStall(attrf(a, "aoa") * DEG2RAD);
-	w->setStallWidth(attrf(a, "width", 2) * DEG2RAD);
-	w->setStallPeak(attrf(a, "peak", 1.5));
+        Wing* w = (Wing*)_currObj;
+        StallParams sp;
+        sp.aoa = attrf(a, "aoa") * DEG2RAD;
+        sp.width = attrf(a, "width", 2) * DEG2RAD;
+        sp.peak = attrf(a, "peak", 1.5);
+        w->setStallParams(sp);
     } else if(eq(name, "flap0") || eq(name, "flap1") || eq(name, "spoiler") || eq(name, "slat")) {
         FlapParams fp;
         fp.start = attrf(a, "start");

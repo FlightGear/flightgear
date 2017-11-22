@@ -297,27 +297,27 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     s->setChord(chord);
 
     // Camber is expressed as a fraction of stall peak, so convert.
-    s->setBaseZDrag(_camber*_stallPeak);
+    s->setBaseZDrag(_camber*_stallParams.peak);
 
     // The "main" (i.e. normal) stall angle
-    float stallAoA = _stall - _stallWidth/4;
+    float stallAoA = _stallParams.aoa - _stallParams.width/4;
     s->setStall(0, stallAoA);
-    s->setStallWidth(0, _stallWidth);
-    s->setStallPeak(0, _stallPeak);
+    s->setStallWidth(0, _stallParams.width);
+    s->setStallPeak(0, _stallParams.peak);
 
     // The negative AoA stall is the same if we're using an symmetric
     // airfoil, otherwise a "little worse".
     if(_camber > 0) {
         s->setStall(1, stallAoA * 0.8f);
-        s->setStallWidth(1, _stallWidth * 0.5f);
+        s->setStallWidth(1, _stallParams.width * 0.5f);
     } else {
       s->setStall(1, stallAoA);
       if( _version->isVersionOrNewer( Version::YASIM_VERSION_2017_2 )) {
         // what was presumably meant
-        s->setStallWidth(1, _stallWidth);
+        s->setStallWidth(1, _stallParams.width);
       } else {
         // old code; presumably a copy&paste error
-        s->setStall(1, _stallWidth);
+        s->setStall(1, _stallParams.width);
       }
     }
 

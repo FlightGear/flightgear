@@ -19,6 +19,12 @@ struct FlapParams {
     float aoa {0};
 };
 
+struct StallParams {
+    float aoa {0};
+    float width {0};
+    float peak {0};
+};
+
 // position and length of a chord line
 struct Chord {
     float x {0};
@@ -65,9 +71,7 @@ public:
     
     
     // parameters for stall curve
-    void setStall(float aoa) { _stall = aoa; }
-    void setStallWidth(float angle) { _stallWidth = angle; }
-    void setStallPeak(float fraction) { _stallPeak = fraction; }
+    void setStallParams(StallParams sp) { _stallParams = sp; }
     void setCamber(float camber) { _camber = camber; }
     void setInducedDrag(float drag) { _inducedDrag = drag; }
     
@@ -151,9 +155,8 @@ private:
     float _wingspan {0};
     float _aspectRatio {1};
 
-    float _stall {0};
-    float _stallWidth {0};
-    float _stallPeak {0};
+    StallParams _stallParams;
+    
     float _twist {0};
     float _camber {0};
     float _incidence {0};
