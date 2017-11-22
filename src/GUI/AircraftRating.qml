@@ -32,7 +32,7 @@ Item {
             model: 5
 
             delegate: Rectangle {
-                color: (model.index <= root.value) ? "#3f3f3f" : "#cfcfcf"
+                color: ((model.index + 1) <= root.value) ? "#3f3f3f" : "#cfcfcf"
                 width: 12
                 height: 12
                 radius: 6
