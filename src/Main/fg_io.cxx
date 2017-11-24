@@ -47,6 +47,7 @@
 #include <Network/AV400.hxx>
 #include <Network/AV400Sim.hxx>
 #include <Network/AV400WSim.hxx>
+#include <Network/flarm.hxx>
 #include <Network/garmin.hxx>
 #include <Network/igc.hxx>
 #include <Network/joyclient.hxx>
@@ -135,6 +136,8 @@ FGIO::parse_port_config( const string& config )
             io = new FGAV400WSimA;
         } else if ( protocol == "AV400WSimB" ) {
             io = new FGAV400WSimB;
+        } else if ( protocol == "flarm" ) {
+            io = new FGFlarm();
         } else if ( protocol == "garmin" ) {
             io = new FGGarmin();
         } else if ( protocol == "igc" ) {

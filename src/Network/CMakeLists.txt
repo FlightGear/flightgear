@@ -12,6 +12,7 @@ set(SOURCES
 	generic.cxx
 	HTTPClient.cxx
 	DNSClient.cxx
+	flarm.cxx
 	igc.cxx
 	joyclient.cxx
 	jsclient.cxx
@@ -41,6 +42,7 @@ set(HEADERS
 	generic.hxx
 	HTTPClient.hxx
 	DNSClient.hxx
+	flarm.hxx
 	igc.hxx
 	joyclient.hxx
 	jsclient.hxx

@@ -43,7 +43,7 @@ private:
 
     double hz;
     double count_down;
-    long count;
+    unsigned long count;
 
     SGProtocolDir dir;
 
@@ -75,7 +75,7 @@ public:
     inline void inc_count_down( double amt ) { count_down += amt; }
     inline void dec_count_down( double amt ) { count_down -= amt; }
     inline void inc_count() { count++; }
-    inline long get_count() { return count; }
+    inline unsigned long get_count() { return count; }
 
     virtual bool gen_message();
     virtual bool parse_message();

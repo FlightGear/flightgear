@@ -48,6 +48,8 @@ protected:
     char mBuf[FG_MAX_MSG_SIZE];
     unsigned int mLength;
     unsigned int mNmeaMessages;
+    unsigned int mMaxReceiveLines;
+    bool mBiDirectionalSupport;
     FlightProperties mFdm;
     const char* mLineFeed;
     string mNmeaSentence;

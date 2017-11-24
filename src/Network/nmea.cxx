@@ -42,6 +42,9 @@
 FGNMEA::FGNMEA() :
     mLength(0),
     mNmeaMessages(NMEA::SET),
+    // by default, expect 2 messages per iteration (input)
+    mMaxReceiveLines(2),
+    mBiDirectionalSupport(false), // protocol normally only supports input _or_ output
     mLineFeed("\n")
 {
 }
@@ -366,6 +369,15 @@ bool FGNMEA::open() {
         return false;
     }
 
+    // bidirectional support does not make sense for NMEA (and Garmin) protocols
+    if ((get_direction() == SG_IO_BI)&&
+        (!mBiDirectionalSupport))
+    {
+        SG_LOG( SG_IO, SG_ALERT, "NMEA protocol does not support bidirectional communication. "
+                "Use 'in' or 'out' instead of 'bi'.");
+        return false;
+    }
+
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
@@ -383,7 +395,8 @@ bool FGNMEA::open() {
 bool FGNMEA::process() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT )
+    if (( get_direction() == SG_IO_OUT )||
+        ( get_direction() == SG_IO_BI))
     {
         // process output
         gen_message();
@@ -394,16 +407,16 @@ bool FGNMEA::process() {
         }
         mNmeaSentence = "";
     }
-    else
-    if ( get_direction() == SG_IO_IN )
+
+    if (( get_direction() == SG_IO_IN )||
+        ( get_direction() == SG_IO_BI))
     {
-        // process input lines (up to two lines per cycle)
-        for (int i=0;i<2;i++)
+        // process input lines (normally expecting 2 messages per cycle)
+        for (unsigned int i=0;i<mMaxReceiveLines;i++)
         {
             if ( (mLength = io->readline( mBuf, FG_MAX_MSG_SIZE )) > 0 ) {
                 parse_line();
             } else {
-                printf("Error reading data!\n");
                 SG_LOG( SG_IO, SG_WARN, "Error reading data." );
             }
         }

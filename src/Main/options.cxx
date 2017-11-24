@@ -658,7 +658,7 @@ parse_fov( const string& arg ) {
 //  device = OS device name of serial line to be open()'ed
 //  baud = {300, 1200, 2400, ..., 230400}
 //
-// Socket exacmple "--native=socket,dir,hz,machine,port,style" where
+// Socket example "--native=socket,dir,hz,machine,port,style" where
 //
 //  machine = machine name or ip address if client (leave empty if server)
 //  port = port, leave empty to let system choose
@@ -670,8 +670,8 @@ parse_fov( const string& arg ) {
 
 static bool
 add_channel( const string& type, const string& channel_str ) {
-    // This check is neccessary to prevent fgviewer from segfaulting when given
-    // weird options. (It doesn't run the full initailization)
+    // This check is necessary to prevent fgviewer from segfaulting when given
+    // weird options. (It doesn't run the full initialization)
     if(!globals->get_channel_options_list())
     {
         SG_LOG(SG_GENERAL, SG_ALERT, "Option " << type << "=" << channel_str
@@ -1780,6 +1780,7 @@ struct OptionDesc {
     {"AV400Sim",                     true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"AV400WSimA",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"AV400WSimB",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"flarm",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"garmin",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"igc",                          true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"nmea",                         true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
