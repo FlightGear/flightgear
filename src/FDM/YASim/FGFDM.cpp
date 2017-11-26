@@ -221,9 +221,9 @@ void FGFDM::init()
 void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 {
     XMLAttributes* a = (XMLAttributes*)&atts;
-    float v[3];
+    float v[3] {0,0,0};
     char buf[64];
-    float f = 0;
+    float f {0};
     
     if(eq(name, "airplane")) {
       if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; } 
