@@ -815,13 +815,13 @@ void Airplane::applyLiftRatio(float factor)
     float applied = Math::pow(factor, SOLVE_TWEAK);
     _liftRatio *= applied;
     if(_wing)
-      _wing->setLiftRatio(_wing->getLiftRatio() * applied);
+      _wing->multiplyLiftRatio(applied);
     if(_tail)
-      _tail->setLiftRatio(_tail->getLiftRatio() * applied);
+      _tail->multiplyLiftRatio(applied);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
         Wing* w = (Wing*)_vstabs.get(i);
-        w->setLiftRatio(w->getLiftRatio() * applied);
+        w->multiplyLiftRatio(applied);
     }
 }
 

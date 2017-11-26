@@ -256,6 +256,11 @@ void Wing::compile()
     writeInfoToProptree();
 }
 
+void Wing::multiplyLiftRatio(float factor)
+{
+    setLiftRatio(_liftRatio * factor);
+}
+
 void Wing::addSurface(Surface* s, float weight, float twist)
 {
     SurfRec *sr = new SurfRec();

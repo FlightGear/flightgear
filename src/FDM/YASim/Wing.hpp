@@ -109,7 +109,7 @@ public:
     // The ratio of force along the Z (lift) direction of each wing
     // segment to that along the X (drag) direction.
     void setLiftRatio(float ratio);
-    float getLiftRatio() const { return _liftRatio; }
+    void multiplyLiftRatio(float factor);
 
     void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
     float updateModel(Model* model);
