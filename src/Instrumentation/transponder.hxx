@@ -71,6 +71,8 @@ private:
     
     // Inputs
     SGPropertyNode_ptr _pressureAltitude_node;
+    SGPropertyNode_ptr _autoGround_node;
+    SGPropertyNode_ptr _airspeedIndicator_node;
     SGPropertyNode_ptr _busPower_node;
     SGPropertyNode_ptr _serviceable_node;
 
@@ -90,6 +92,8 @@ private:
     SGPropertyNode_ptr _altitudeValid_node;
     SGPropertyNode_ptr _transmittedId_node;
     SGPropertyNode_ptr _ident_node;
+    SGPropertyNode_ptr _ground_node;
+    SGPropertyNode_ptr _airspeed_node;
 
     // Internal
     std::string _name;
@@ -100,6 +104,8 @@ private:
     int _listener_active;
     double _requiredBusVolts;
     std::string _altitudeSourcePath;
+    std::string _autoGroundPath;
+    std::string _airspeedSourcePath;
     
     void valueChanged (SGPropertyNode *);
     int setMinMax(int val);
