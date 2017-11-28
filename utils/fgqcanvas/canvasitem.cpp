@@ -30,7 +30,8 @@ public:
         transform = t;
         update();
     }
-    void applyTo(QMatrix4x4 *matrix) const Q_DECL_OVERRIDE {
+    void applyTo(QMatrix4x4 *matrix) const override
+    {
         *matrix *= transform;
     }
 private:

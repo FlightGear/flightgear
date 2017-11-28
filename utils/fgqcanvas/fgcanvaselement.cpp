@@ -85,11 +85,8 @@ FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
     _propertyRoot(prop),
     _parent(pr)
 {
-    connect(prop->getOrCreateWithPath("visible"), &LocalProp::valueChanged,
-            [this](QVariant val) {
-        _visible = val.toBool();
-        requestPolish();
-    });
+    connect(prop->getOrCreateWithPath("visible", true), &LocalProp::valueChanged,
+            this, &FGCanvasElement::onVisibleChanged);
     connect(prop, &LocalProp::childAdded, this, &FGCanvasElement::onChildAdded);
     connect(prop, &LocalProp::childRemoved, this, &FGCanvasElement::onChildRemoved);
 

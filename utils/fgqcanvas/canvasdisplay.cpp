@@ -109,6 +109,8 @@ void CanvasDisplay::onConnectionStatusChanged()
 
         if (m_connection->status() == CanvasConnection::Snapshot) {
             m_connection->propertyRoot()->recursiveNotifyRestored();
+            m_rootElement->polish();
+            update();
         }
     }
 }

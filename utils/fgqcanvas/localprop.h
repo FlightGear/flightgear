@@ -90,11 +90,11 @@ public:
 
     QByteArray path() const;
 
-    LocalProp* getOrCreateWithPath(const QByteArray& path);
+    LocalProp* getOrCreateWithPath(const QByteArray& path, QVariant defaultValue = {});
 
     LocalProp* childWithNameAndIndex(const NameIndexTuple& ni) const;
 
-    LocalProp* getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni);
+    LocalProp* getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni, QVariant defaultValue = {});
 
     LocalProp* getOrCreateWithPath(const char* name);
 

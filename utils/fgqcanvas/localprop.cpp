@@ -32,7 +32,7 @@ QDataStream& operator>>(QDataStream& stream, NameIndexTuple& nameIndex)
     return stream;
 }
 
-LocalProp *LocalProp::getOrCreateWithPath(const QByteArray &path)
+LocalProp *LocalProp::getOrCreateWithPath(const QByteArray &path, QVariant defaultValue)
 {
     if (path.isEmpty()) {
         return this;
@@ -40,10 +40,15 @@ LocalProp *LocalProp::getOrCreateWithPath(const QByteArray &path)
 
     QList<QByteArray> segments = path.split('/');
     LocalProp* result = this;
-    while (!segments.empty()) {
+    while (segments.size() > 1) {
         QByteArray nameIndex = segments.front();
         result = result->getOrCreateChildWithNameAndIndex(nameIndex);
         segments.pop_front();
+    }
+
+    // for the final segment, pass the default value
+    if (!segments.empty()) {
+        result = result->getOrCreateChildWithNameAndIndex(segments.front(), defaultValue);
     }
 
     return result;
@@ -167,7 +172,8 @@ void LocalProp::recursiveNotifyRestored()
     }
 }
 
-LocalProp *LocalProp::getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni)
+LocalProp *LocalProp::getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni,
+                                                       QVariant defaultValue)
 {
     auto it = std::lower_bound(_children.begin(), _children.end(), ni, lessThanPropNameIndex);
     if ((it != _children.end()) && ((*it)->id() == ni)) {
@@ -175,6 +181,7 @@ LocalProp *LocalProp::getOrCreateChildWithNameAndIndex(const NameIndexTuple& ni)
     }
 
     LocalProp* newChild = new LocalProp(this, ni);
+    newChild->_value = defaultValue;
     _children.insert(it, newChild);
     emit childAdded(newChild);
     return newChild;
