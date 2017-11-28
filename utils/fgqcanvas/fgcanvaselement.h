@@ -73,6 +73,8 @@ protected:
     virtual bool onChildAdded(LocalProp* prop);
     virtual bool onChildRemoved(LocalProp* prop);
 
+    virtual void doDestroy();
+
     const LocalProp* _propertyRoot;
     const FGCanvasGroup* _parent;
 
@@ -83,6 +85,10 @@ protected:
     virtual void markStyleDirty();
 
     QVariant getCascadedStyle(const char* name, QVariant defaultValue = QVariant()) const;
+
+private slots:
+    void onPropDestroyed();
+
 private:
 
     void onCenterChanged(QVariant value);

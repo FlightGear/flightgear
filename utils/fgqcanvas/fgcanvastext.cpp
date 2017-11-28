@@ -252,6 +252,12 @@ void FGCanvasText::markStyleDirty()
     markFontDirty();
 }
 
+void FGCanvasText::doDestroy()
+{
+    qDebug() << Q_FUNC_INFO;
+    delete _quickItem;
+}
+
 bool FGCanvasText::onChildAdded(LocalProp *prop)
 {
     if (FGCanvasElement::onChildAdded(prop)) {

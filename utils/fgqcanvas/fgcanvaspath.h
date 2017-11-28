@@ -40,6 +40,8 @@ protected:
     CanvasItem* createQuickItem(QQuickItem *parent) override;
     CanvasItem* quickItem() const override;
 
+    void doDestroy() override;
+
 private:
     void markPathDirty();
     void markStrokeDirty();

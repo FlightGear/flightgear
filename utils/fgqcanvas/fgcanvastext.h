@@ -38,6 +38,9 @@ protected:
     void doPolish() override;
 
     virtual void markStyleDirty() override;
+
+    void doDestroy() override;
+
 private:
     bool onChildAdded(LocalProp *prop) override;
 

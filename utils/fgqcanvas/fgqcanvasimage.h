@@ -38,6 +38,7 @@ protected:
 
     virtual void markStyleDirty() override;
 
+    void doDestroy() override;
 
     void doPolish() override;
 private slots:

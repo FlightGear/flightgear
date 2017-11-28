@@ -242,6 +242,10 @@ void FGQCanvasImage::markStyleDirty()
 {
 }
 
+void FGQCanvasImage::doDestroy()
+{
+    delete _quickItem;
+}
 
 CanvasItem *FGQCanvasImage::createQuickItem(QQuickItem *parent)
 {

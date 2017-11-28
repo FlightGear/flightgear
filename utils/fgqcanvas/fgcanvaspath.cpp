@@ -466,6 +466,11 @@ CanvasItem *FGCanvasPath::quickItem() const
     return _quickPath;
 }
 
+void FGCanvasPath::doDestroy()
+{
+    delete _quickPath;
+}
+
 void FGCanvasPath::markPathDirty()
 {
     _pathDirty = true;

@@ -25,6 +25,7 @@ public:
     CanvasItem* quickItem() const override
     { return _quick; }
 
+    void removeChild(FGCanvasElement* child);
 signals:
     void childAdded();
     void childRemoved(int index);
@@ -39,6 +40,8 @@ protected:
     bool onChildRemoved(LocalProp *prop) override;
 
     virtual void markStyleDirty() override;
+
+    void doDestroy() override;
 private:
     void markCachedSymbolDirty();
     int indexOfChildWithProp(LocalProp *prop) const;

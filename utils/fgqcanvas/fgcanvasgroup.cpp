@@ -190,6 +190,16 @@ bool FGCanvasGroup::onChildRemoved(LocalProp *prop)
     return false;
 }
 
+void FGCanvasGroup::removeChild(FGCanvasElement *child)
+{
+    auto it = std::find(_children.begin(), _children.end(), child);
+    if (it != _children.end()) {
+        int index = std::distance(_children.begin(), it);
+        _children.erase(it);
+        emit childRemoved(index);
+    }
+}
+
 int FGCanvasGroup::indexOfChildWithProp(LocalProp* prop) const
 {
     auto it = std::find_if(_children.begin(), _children.end(), [prop](FGCanvasElement* child)
@@ -208,6 +218,17 @@ void FGCanvasGroup::markStyleDirty()
 {
     for (FGCanvasElement* element : _children) {
         element->markStyleDirty();
+    }
+}
+
+void FGCanvasGroup::doDestroy()
+{
+    delete _quick;
+
+    FGCanvasElementVec children = std::move(_children);
+    _children.clear();
+    for (auto c : children) {
+        delete c;
     }
 }
 

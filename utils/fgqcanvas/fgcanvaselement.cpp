@@ -89,6 +89,7 @@ FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
             this, &FGCanvasElement::onVisibleChanged);
     connect(prop, &LocalProp::childAdded, this, &FGCanvasElement::onChildAdded);
     connect(prop, &LocalProp::childRemoved, this, &FGCanvasElement::onChildRemoved);
+    connect(prop, &LocalProp::destroyed, this, &FGCanvasElement::onPropDestroyed);
 
     if (pr) {
         pr->markChildZIndicesDirty();
@@ -97,6 +98,12 @@ FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
     requestPolish();
 }
 
+void FGCanvasElement::onPropDestroyed()
+{
+    doDestroy();
+    const_cast<FGCanvasGroup*>(_parent)->removeChild(this);
+    deleteLater();
+}
 
 void FGCanvasElement::requestPolish()
 {
@@ -302,6 +309,10 @@ bool FGCanvasElement::onChildRemoved(LocalProp *prop)
     }
 
     return false;
+}
+
+void FGCanvasElement::doDestroy()
+{
 }
 
 QColor FGCanvasElement::fillColor() const
