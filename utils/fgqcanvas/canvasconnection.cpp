@@ -228,12 +228,20 @@ void CanvasConnection::onTextMessageReceived(QString message)
         QJsonArray removed = json.object().value("removed").toArray();
         Q_FOREACH (QJsonValue v, removed) {
             unsigned int propId = v.toInt();
-            if (idPropertyDict.contains(propId)) {
-                LocalProp* prop = idPropertyDict.value(propId);
-                idPropertyDict.remove(propId);
+            if (!idPropertyDict.contains(propId)) {
+                continue;
+            }
+
+            auto prop = idPropertyDict.value(propId);
+            idPropertyDict.remove(propId);
+
+            // depending on the order removes are sent, the LocalProp
+            // may already have been deleted when its parent was removed,
+            // so check if the QPointer is null
+            if (!prop.isNull()) {
                 prop->parent()->removeChild(prop);
             }
-        }
+        } // of removes processing
 
         // process changes
         QJsonArray changed = json.object().value("changed").toArray();
@@ -252,8 +260,10 @@ void CanvasConnection::onTextMessageReceived(QString message)
             }
 
             LocalProp* lp = idPropertyDict.value(propId);
-            lp->processChange(change.at(1));
-        }
+            if (lp != nullptr) {
+                lp->processChange(change.at(1));
+            }
+        } // of change processing
     }
 
     emit updated();

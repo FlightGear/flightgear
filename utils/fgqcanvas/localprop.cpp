@@ -89,6 +89,9 @@ LocalProp::LocalProp(LocalProp *pr, const NameIndexTuple& ni) :
 
 LocalProp::~LocalProp()
 {
+    for (auto c : _children) {
+        delete c;
+    }
 }
 
 void LocalProp::processChange(QJsonValue json)
@@ -257,6 +260,7 @@ void LocalProp::removeChild(LocalProp *prop)
 {
     Q_ASSERT(prop->parent() == this);
     auto it = std::find(_children.begin(), _children.end(), prop);
+    Q_ASSERT(it != _children.end());
     _children.erase(it);
     emit childRemoved(prop);
     delete prop;

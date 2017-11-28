@@ -25,6 +25,7 @@
 #include <QJsonObject>
 #include <QUrl>
 #include <QRectF>
+#include <QPointer>
 
 class LocalProp;
 class QNetworkAccessManager;
@@ -132,7 +133,7 @@ private:
     QWebSocket m_webSocket;
     QNetworkAccessManager* m_netAccess = nullptr;
     std::unique_ptr<LocalProp> m_localPropertyRoot;
-    QHash<int, LocalProp*> idPropertyDict;
+    QHash<int, QPointer<LocalProp>> idPropertyDict;
     Status m_status = NotConnected;
 
     mutable FGQCanvasImageLoader* m_imageLoader = nullptr;
