@@ -34,8 +34,14 @@ public:
 private:
     struct EngRec { char* prefix; Thruster* eng; };
     struct WeightRec { char* prop; float size; int handle; };
-    struct PropOut { SGPropertyNode* prop; int handle, type; bool left;
-                     float min, max; };
+    struct PropOut { 
+        SGPropertyNode* prop; 
+        int handle {0};
+        ControlMap::Control control; 
+        bool left {false};
+        float min {0};
+        float max {0}; 
+    };
 
     void setOutputProperties(float dt);
 

@@ -44,10 +44,10 @@ ControlMap::~ControlMap()
 	input : index to _inputs
 	type: identifier (see enum OutputType)
 */
-void ControlMap::addMapping(int input, int type, void* object, int options,
+void ControlMap::addMapping(int input, Control control, void* object, int options,
 			    float src0, float src1, float dst0, float dst1)
 {
-    addMapping(input, type, object, options);
+    addMapping(input, control, object, options);
 
     // The one we just added is last in the list (ugly, awful hack!)
     Vector* maps = (Vector*)_inputs.get(input);
@@ -63,26 +63,25 @@ void ControlMap::addMapping(int input, int type, void* object, int options,
 	input : index to _inputs
 	type: identifier (see enum OutputType)
 */
-void ControlMap::addMapping(int input, int type, void* object, int options)
+void ControlMap::addMapping(int input, Control control, void* object, int options)
 {
     // See if the output object already exists
     OutRec* out = 0;
     int i;
     for(i=0; i<_outputs.size(); i++) {
-	OutRec* o = (OutRec*)_outputs.get(i);
-	if(o->object == object && o->type == type) {
-	    out = o;
-	    break;
-	}
+        OutRec* o = (OutRec*)_outputs.get(i);
+        if(o->object == object && o->control == control) {
+            out = o;
+            break;
+        }
     }
 
     // Create one if it doesn't
     if(out == 0) {
-	out = new OutRec();
-	out->type = type;
-	out->object = object;
-        out->oldL = out->oldR = out->time = 0;
-	_outputs.add(out);
+        out = new OutRec();
+        out->control = control;
+        out->object = object;
+        _outputs.add(out);
     }
     
     // Make a new input record
@@ -92,8 +91,8 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
     map->idx = out->maps.add(map);
 
     // The default ranges differ depending on type!
-    map->src1 = map->dst1 = rangeMax(type);
-    map->src0 = map->dst0 = rangeMin(type);
+    map->src1 = map->dst1 = rangeMax(control);
+    map->src0 = map->dst0 = rangeMin(control);
 
     // And add it to the approproate vectors.
     Vector* maps = (Vector*)_inputs.get(input);
@@ -129,14 +128,14 @@ void ControlMap::setInput(int input, float val)
     }
 }
 
-int ControlMap::getOutputHandle(void* obj, int type)
+int ControlMap::getOutputHandle(void* obj, Control control)
 {
     for(int i=0; i<_outputs.size(); i++) {
         OutRec* o = (OutRec*)_outputs.get(i);
-	    if(o->object == obj && o->type == type)
+	    if(o->object == obj && o->control == control)
 	        return i;
     }
-    fprintf(stderr, "ControlMap::getOutputHandle cannot find *%d, type %d \n", obj, type);
+    fprintf(stderr, "ControlMap::getOutputHandle cannot find *%d, control %d \n", obj, control);
     return -1;
 }
 
@@ -188,7 +187,7 @@ void ControlMap::applyControls(float dt)
             float adl = Math::abs(dl);
             float adr = Math::abs(dr);
         
-            float max = (dt/o->time) * (rangeMax(o->type) - rangeMin(o->type));
+            float max = (dt/o->time) * (rangeMax(o->control) - rangeMin(o->control));
             if(adl > max) dl = dl*max/adl;
             if(adr > max) dr = dr*max/adr;
 
@@ -200,7 +199,7 @@ void ControlMap::applyControls(float dt)
         o->oldR = rval;
 
 	void* obj = o->object;
-	switch(o->type) {
+	switch(o->control) {
 	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);        break;
 	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);         break;
     case CONDLEVER: ((TurbineEngine*)((PropEngine*)
@@ -255,35 +254,35 @@ void ControlMap::applyControls(float dt)
     }
 }
 
-float ControlMap::rangeMin(int type)
+float ControlMap::rangeMin(Control control)
 {
     // The minimum of the range for each type of control
-    switch(type) {
-    case FLAP0:    return -1;  // [-1:1]
-    case FLAP1:    return -1;
-    case STEER:    return -1;
-    case CYCLICELE: return -1;
-    case CYCLICAIL: return -1;
-    case COLLECTIVE: return -1;
-    case WINCHRELSPEED: return -1;
-    case MAGNETOS: return 0;   // [0:3]
-    case FLAP0EFFECTIVENESS: return 1;  // [0:10]
-    case FLAP1EFFECTIVENESS: return 1;  // [0:10]
-    default:       return 0;   // [0:1]
+    switch(control) {
+        case FLAP0:    return -1;  // [-1:1]
+        case FLAP1:    return -1;
+        case STEER:    return -1;
+        case CYCLICELE: return -1;
+        case CYCLICAIL: return -1;
+        case COLLECTIVE: return -1;
+        case WINCHRELSPEED: return -1;
+        case MAGNETOS: return 0;   // [0:3]
+        case FLAP0EFFECTIVENESS: return 1;  // [0:10]
+        case FLAP1EFFECTIVENESS: return 1;  // [0:10]
+        default:       return 0;   // [0:1]
     }
 }
 
-float ControlMap::rangeMax(int type)
+float ControlMap::rangeMax(Control control)
 {
     // The maximum of the range for each type of control
-    switch(type) {
-    case FLAP0:    return 1; // [-1:1]
-    case FLAP1:    return 1;
-    case STEER:    return 1;
-    case MAGNETOS: return 3; // [0:3]
-    case FLAP0EFFECTIVENESS: return 10;//  [0:10]
-    case FLAP1EFFECTIVENESS: return 10;//  [0:10]
-    default:       return 1; // [0:1]
+    switch(control) {
+        case FLAP0:    return 1; // [-1:1]
+        case FLAP1:    return 1;
+        case STEER:    return 1;
+        case MAGNETOS: return 3; // [0:3]
+        case FLAP0EFFECTIVENESS: return 10;//  [0:10]
+        case FLAP1EFFECTIVENESS: return 10;//  [0:10]
+        default:       return 1; // [0:1]
     }
 }
 
@@ -326,6 +325,57 @@ int ControlMap::propertyHandle(const char* name)
 	p->handle = _inputs.add(v);
 	_properties.add(p);
 	return p->handle;
+}
+
+
+ControlMap::Control ControlMap::parseControl(const char* name)
+{
+    if(eq(name, "THROTTLE"))  return THROTTLE;
+    if(eq(name, "MIXTURE"))   return MIXTURE;
+    if(eq(name, "CONDLEVER")) return CONDLEVER;
+    if(eq(name, "STARTER"))   return STARTER;
+    if(eq(name, "MAGNETOS"))  return MAGNETOS;
+    if(eq(name, "ADVANCE"))   return ADVANCE;
+    if(eq(name, "REHEAT"))    return REHEAT;
+    if(eq(name, "BOOST"))     return BOOST;
+    if(eq(name, "VECTOR"))    return VECTOR;
+    if(eq(name, "PROP"))      return PROP;
+    if(eq(name, "BRAKE"))     return BRAKE;
+    if(eq(name, "STEER"))     return STEER;
+    if(eq(name, "EXTEND"))    return EXTEND;
+    if(eq(name, "HEXTEND"))   return HEXTEND;
+    if(eq(name, "LEXTEND"))   return LEXTEND;
+    if(eq(name, "LACCEL"))    return LACCEL;
+    if(eq(name, "INCIDENCE")) return INCIDENCE;
+    if(eq(name, "FLAP0"))     return FLAP0;
+    if(eq(name, "FLAP0EFFECTIVENESS"))   return FLAP0EFFECTIVENESS;
+    if(eq(name, "FLAP1"))     return FLAP1;
+    if(eq(name, "FLAP1EFFECTIVENESS"))   return FLAP1EFFECTIVENESS;
+    if(eq(name, "SLAT"))      return SLAT;
+    if(eq(name, "SPOILER"))   return SPOILER;
+    if(eq(name, "CASTERING")) return CASTERING;
+    if(eq(name, "PROPPITCH")) return PROPPITCH;
+    if(eq(name, "PROPFEATHER")) return PROPFEATHER;
+    if(eq(name, "COLLECTIVE")) return COLLECTIVE;
+    if(eq(name, "CYCLICAIL")) return CYCLICAIL;
+    if(eq(name, "CYCLICELE")) return CYCLICELE;
+    if(eq(name, "TILTROLL")) return TILTROLL;
+    if(eq(name, "TILTPITCH")) return TILTPITCH;
+    if(eq(name, "TILTYAW")) return TILTYAW;
+    if(eq(name, "ROTORGEARENGINEON")) return ROTORENGINEON;
+    if(eq(name, "ROTORBRAKE")) return ROTORBRAKE;
+    if(eq(name, "ROTORENGINEMAXRELTORQUE")) return ROTORENGINEMAXRELTORQUE;
+    if(eq(name, "ROTORRELTARGET")) return ROTORRELTARGET;
+    if(eq(name, "ROTORBALANCE")) return ROTORBALANCE;
+    if(eq(name, "REVERSE_THRUST")) return REVERSE_THRUST;
+    if(eq(name, "WASTEGATE")) return WASTEGATE;
+    if(eq(name, "WINCHRELSPEED")) return WINCHRELSPEED;
+    if(eq(name, "HITCHOPEN")) return HITCHOPEN;
+    if(eq(name, "PLACEWINCH")) return PLACEWINCH;
+    if(eq(name, "FINDAITOW")) return FINDAITOW;
+    SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '" << name 
+        << "' in YASim aircraft description.");
+    exit(1);
 }
 
 } // namespace yasim

@@ -587,7 +587,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
     ControlMap* cm = _airplane.getControlMap();
     // A mapping of input property to a control
     int axis = cm->propertyHandle(a->getValue("axis"));
-    int control = parseOutput(a->getValue("control"));
+    ControlMap::Control control = cm->parseControl(a->getValue("control"));
     int opt = 0;
     opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
     opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
@@ -602,23 +602,24 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
   } else if(eq(name, "control-output")) {
         // A property output for a control on the current object
         ControlMap* cm = _airplane.getControlMap();
-        int type = parseOutput(a->getValue("control"));
-        int handle = cm->getOutputHandle(_currObj, type);
+        ControlMap::Control control = cm->parseControl(a->getValue("control"));
+        
+        int handle = cm->getOutputHandle(_currObj, control);
 
 	PropOut* p = new PropOut();
 	p->prop = fgGetNode(a->getValue("prop"), true);
 	p->handle = handle;
-	p->type = type;
+	p->control = control;
 	p->left = !(a->hasAttribute("side") &&
                         eq("right", a->getValue("side")));
-	p->min = attrf(a, "min", cm->rangeMin(type));
-	p->max = attrf(a, "max", cm->rangeMax(type));
+	p->min = attrf(a, "min", cm->rangeMin(control));
+	p->max = attrf(a, "max", cm->rangeMax(control));
 	_controlProps.add(p);
 
     } else if(eq(name, "control-speed")) {
         ControlMap* cm = _airplane.getControlMap();
-        int type = parseOutput(a->getValue("control"));
-        int handle = cm->getOutputHandle(_currObj, type);
+        ControlMap::Control control = cm->parseControl(a->getValue("control"));
+        int handle = cm->getOutputHandle(_currObj, control);
         float time = attrf(a, "transition-time", 0);
         
         cm->setTransitionTime(handle, time);
@@ -715,8 +716,8 @@ void FGFDM::setOutputProperties(float dt)
         float val = (p->left
                      ? cm->getOutput(p->handle)
                      : cm->getOutputR(p->handle));
-        float rmin = cm->rangeMin(p->type);
-        float rmax = cm->rangeMax(p->type);
+        float rmin = cm->rangeMin(p->control);
+        float rmax = cm->rangeMax(p->control);
         float frac = (val - rmin) / (rmax - rmin);
         val = frac*(p->max - p->min) + p->min;
         p->prop->setFloatValue(val);
@@ -1104,59 +1105,6 @@ void FGFDM::parsePropeller(XMLAttributes* a)
     _currObj = thruster;
 }
 
-/// map identifier (string) to int (enum in ControlMap)
-int FGFDM::parseOutput(const char* name)
-{
-    if(eq(name, "THROTTLE"))  return ControlMap::THROTTLE;
-    if(eq(name, "MIXTURE"))   return ControlMap::MIXTURE;
-    if(eq(name, "CONDLEVER")) return ControlMap::CONDLEVER;
-    if(eq(name, "STARTER"))   return ControlMap::STARTER;
-    if(eq(name, "MAGNETOS"))  return ControlMap::MAGNETOS;
-    if(eq(name, "ADVANCE"))   return ControlMap::ADVANCE;
-    if(eq(name, "REHEAT"))    return ControlMap::REHEAT;
-    if(eq(name, "BOOST"))     return ControlMap::BOOST;
-    if(eq(name, "VECTOR"))    return ControlMap::VECTOR;
-    if(eq(name, "PROP"))      return ControlMap::PROP;
-    if(eq(name, "BRAKE"))     return ControlMap::BRAKE;
-    if(eq(name, "STEER"))     return ControlMap::STEER;
-    if(eq(name, "EXTEND"))    return ControlMap::EXTEND;
-    if(eq(name, "HEXTEND"))   return ControlMap::HEXTEND;
-    if(eq(name, "LEXTEND"))   return ControlMap::LEXTEND;
-        if(eq(name, "LACCEL"))    return ControlMap::LACCEL;
-    if(eq(name, "INCIDENCE")) return ControlMap::INCIDENCE;
-    if(eq(name, "FLAP0"))     return ControlMap::FLAP0;
-    if(eq(name, "FLAP0EFFECTIVENESS"))   return ControlMap::FLAP0EFFECTIVENESS;
-    if(eq(name, "FLAP1"))     return ControlMap::FLAP1;
-    if(eq(name, "FLAP1EFFECTIVENESS"))   return ControlMap::FLAP1EFFECTIVENESS;
-    if(eq(name, "SLAT"))      return ControlMap::SLAT;
-    if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
-    if(eq(name, "CASTERING")) return ControlMap::CASTERING;
-    if(eq(name, "PROPPITCH")) return ControlMap::PROPPITCH;
-    if(eq(name, "PROPFEATHER")) return ControlMap::PROPFEATHER;
-    if(eq(name, "COLLECTIVE")) return ControlMap::COLLECTIVE;
-    if(eq(name, "CYCLICAIL")) return ControlMap::CYCLICAIL;
-    if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;
-    if(eq(name, "TILTROLL")) return ControlMap::TILTROLL;
-    if(eq(name, "TILTPITCH")) return ControlMap::TILTPITCH;
-    if(eq(name, "TILTYAW")) return ControlMap::TILTYAW;
-    if(eq(name, "ROTORGEARENGINEON")) return ControlMap::ROTORENGINEON;
-    if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
-    if(eq(name, "ROTORENGINEMAXRELTORQUE")) 
-        return ControlMap::ROTORENGINEMAXRELTORQUE;
-    if(eq(name, "ROTORRELTARGET")) return ControlMap::ROTORRELTARGET;
-    if(eq(name, "ROTORBALANCE")) return ControlMap::ROTORBALANCE;
-    if(eq(name, "REVERSE_THRUST")) return ControlMap::REVERSE_THRUST;
-    if(eq(name, "WASTEGATE")) return ControlMap::WASTEGATE;
-    if(eq(name, "WINCHRELSPEED")) return ControlMap::WINCHRELSPEED;
-    if(eq(name, "HITCHOPEN")) return ControlMap::HITCHOPEN;
-    if(eq(name, "PLACEWINCH")) return ControlMap::PLACEWINCH;
-    if(eq(name, "FINDAITOW")) return ControlMap::FINDAITOW;
-
-    SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
-           << name << "' in YASim aircraft description.");
-    exit(1);
-
-}
 
 void FGFDM::parseWeight(XMLAttributes* a)
 {
