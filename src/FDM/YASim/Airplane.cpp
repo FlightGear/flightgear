@@ -529,11 +529,12 @@ void Airplane::compile()
     int i;
     for(i=0; i<_vstabs.size(); i++)
     {
+      Wing* vs = (Wing*)_vstabs.get(i);
       if (baseN != 0) {
           _wingsN = baseN->getChild("stab", i, true);
-          ((Wing*)_vstabs.get(i))->setPropertyNode(_wingsN);
+          vs->setPropertyNode(_wingsN);
       }
-      aeroWgt += compileWing((Wing*)_vstabs.get(i));
+      aeroWgt += compileWing(vs);
     }
 
     // The fuselage(s)
