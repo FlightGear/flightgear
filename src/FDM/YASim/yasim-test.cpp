@@ -260,16 +260,18 @@ int main(int argc, char** argv)
     printf("Approach Elevator: %.3f\n\n", a->getApproachElevator());
     printf("               CG: x:%.3f, y:%.3f, z:%.3f\n", cg[0], cg[1], cg[2]);
     if (wing) {
-      printf("    Wing MAC (*1): x:%.2f, y:%.2f, length:%.1f \n", MACx, MACy, MAC);
-      printf("    CG-x rel. MAC: %.3f\n", a->getCGMAC());
-      printf("    CG-x  desired: %.3f < %.3f < %.3f \n", a->getCGSoftLimitXMin(), cg[0], a->getCGSoftLimitXMax());
+      printf("         Wing MAC: (x:%.2f, y:%.2f), length:%.1f \n", MACx, MACy, MAC);
+      printf("  hard limit CG-x: %.3f \n", a->getCGHardLimitXMax());
+      printf("  soft limit CG-x: %.3f \n", a->getCGSoftLimitXMax());
+      printf("             CG-x: %.3f \n", cg[0]);
+      printf("    CG-x rel. MAC: %3.0f%%\n", a->getCGMAC()*100);
+      printf("  soft limit CG-x: %.3f \n", a->getCGSoftLimitXMin());
+      printf("  hard limit CG-x: %.3f \n", a->getCGHardLimitXMin());
     }
-    
     printf("\nInertia tensor [kg*m^2], origo at CG:\n\n");
-    printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
-    printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[3], SI_inertia[4], SI_inertia[5]);
-    printf("  %7.3f, %7.3f, %7.3f\n", SI_inertia[6], SI_inertia[7], SI_inertia[8]);
-    printf("\n(*1) MAC calculation works on <wing> only! Numbers will be wrong for segmented wings, e.g. <wing>+<mstab>.\n");
+    printf("  %7.0f, %7.0f, %7.0f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
+    printf("  %7.0f, %7.0f, %7.0f\n", SI_inertia[3], SI_inertia[4], SI_inertia[5]);
+    printf("  %7.0f, %7.0f, %7.0f\n", SI_inertia[6], SI_inertia[7], SI_inertia[8]);
   }
     delete fdm;
     return 0;
