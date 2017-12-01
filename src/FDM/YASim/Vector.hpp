@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <cassert>
+
+namespace yasim {
 //
 // Excruciatingly simple vector-of-pointers class.  Easy & useful.
 // No support for addition of elements anywhere but at the end of the
@@ -78,5 +80,5 @@ inline void Vector::realloc()
     delete[] _array;
     _array = array;
 }
-
+}; //namespace yasim
 #endif // _VECTOR_HPP

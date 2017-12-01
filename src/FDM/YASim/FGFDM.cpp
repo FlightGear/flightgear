@@ -1114,24 +1114,6 @@ void FGFDM::parseWeight(XMLAttributes* a)
     _weights.add(wr);
 }
 
-bool FGFDM::eq(const char* a, const char* b)
-{
-    // Figure it out for yourself. :)
-    while(*a && *b && *a == *b) { a++; b++; }
-    return !(*a || *b);
-}
-
-char* FGFDM::dup(const char* s)
-{
-    int len=0;
-    while(s[len++]);
-    char* s2 = new char[len+1];
-    char* p = s2;
-    while((*p++ = *s++));
-    s2[len] = 0;
-    return s2;
-}
-
 int FGFDM::attri(XMLAttributes* atts, const char* attr)
 {
     if(!atts->hasAttribute(attr)) {

@@ -2,6 +2,7 @@
 #  include "config.h"
 #endif
 
+#include "yasim-common.hpp"
 #include "Jet.hpp"
 #include "Thruster.hpp"
 #include "PropEngine.hpp"
@@ -279,26 +280,6 @@ float ControlMap::rangeMax(Control control)
         case FLAP1EFFECTIVENESS: return 10;//  [0:10]
         default:       return 1; // [0:1]
     }
-}
-
-/// duplicate null-terminated string
-char* ControlMap::dup(const char* s)
-{
-    int len=0;
-    while(s[len++]);
-    char* s2 = new char[len+1];
-    char* p = s2;
-    while((*p++ = *s++));
-    s2[len] = 0;
-    return s2;
-}
-
-/// compare null-terminated strings
-bool ControlMap::eq(const char* a, const char* b)
-{
-	while(*a && *b && *a == *b) { a++; b++; }
-	// equal if both a and b points to null chars
-	return !(*a || *b);
 }
 
 /// register property name, return ID (int)

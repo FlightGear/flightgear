@@ -142,10 +142,6 @@ private:
     Vector _outputs;
     // control properties
     Vector _properties;
-
-    // helper
-    char* dup(const char* s);
-    bool eq(const char* a, const char* b);
 };
 
 }; // namespace yasim

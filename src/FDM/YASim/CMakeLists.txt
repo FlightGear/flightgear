@@ -26,6 +26,7 @@ set(COMMON
 	Turbulence.cpp
 	Wing.cpp
 	Version.cpp
+	yasim-common.cpp
 	)
 
 set(SOURCES

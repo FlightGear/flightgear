@@ -59,9 +59,6 @@ private:
     void parseTurbineEngine(XMLAttributes* a);
     void parsePistonEngine(XMLAttributes* a);
     void parsePropeller(XMLAttributes* a);
-    bool eq(const char* a, const char* b);
-    bool caseeq(const char* a, const char* b);
-    char* dup(const char* s);
     int attri(XMLAttributes* atts, const char* attr);
     int attri(XMLAttributes* atts, const char* attr, int def); 
     float attrf(XMLAttributes* atts, const char* attr);
