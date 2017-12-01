@@ -66,9 +66,8 @@ void ControlMap::addMapping(int input, Control control, void* object, int option
 void ControlMap::addMapping(int input, Control control, void* object, int options)
 {
     // See if the output object already exists
-    OutRec* out = 0;
-    int i;
-    for(i=0; i<_outputs.size(); i++) {
+    OutRec* out {nullptr};
+    for(int i = 0; i < _outputs.size(); i++) {
         OutRec* o = (OutRec*)_outputs.get(i);
         if(o->object == object && o->control == control) {
             out = o;
@@ -77,7 +76,7 @@ void ControlMap::addMapping(int input, Control control, void* object, int option
     }
 
     // Create one if it doesn't
-    if(out == 0) {
+    if(out == nullptr) {
         out = new OutRec();
         out->control = control;
         out->object = object;
@@ -102,29 +101,25 @@ void ControlMap::addMapping(int input, Control control, void* object, int option
 void ControlMap::reset()
 {
     // Set all the values to zero
-    for(int i=0; i<_outputs.size(); i++) {
-	OutRec* o = (OutRec*)_outputs.get(i);
-	for(int j=0; j<o->maps.size(); j++)
-	    ((MapRec*)(o->maps.get(j)))->val = 0;
+    for(int i = 0; i < _outputs.size(); i++) {
+        OutRec* o = (OutRec*)_outputs.get(i);
+        for(int j = 0; j < o->maps.size(); j++) {
+            ((MapRec*)(o->maps.get(j)))->val = 0;
+        }
     }
 }
 
 void ControlMap::setInput(int input, float val)
 {
     Vector* maps = (Vector*)_inputs.get(input);
-    for(int i=0; i<maps->size(); i++) {
-	MapRec* m = (MapRec*)maps->get(i);
-
-	float val2 = val;
-
-	// Do the scaling operation.  Clamp to [src0:src1], rescale to
-	// [0:1] within that range, then map to [dst0:dst1].
-	if(val2 < m->src0) val2 = m->src0;
-	if(val2 > m->src1) val2 = m->src1;
-	val2 = (val2 - m->src0) / (m->src1 - m->src0);
-	val2 = m->dst0 + val2 * (m->dst1 - m->dst0);
-
-	m->val = val2;
+    for(int i = 0; i < maps->size(); i++) {
+        MapRec* m = (MapRec*)maps->get(i);
+        float val2 = val;
+        // Do the scaling operation.  Clamp to [src0:src1], rescale to
+        // [0:1] within that range, then map to [dst0:dst1].
+        val2 = Math::clamp(val2, m->src0, m->src1);
+        val2 = (val2 - m->src0) / (m->src1 - m->src0);
+        m->val = m->dst0 + val2 * (m->dst1 - m->dst0);
     }
 }
 

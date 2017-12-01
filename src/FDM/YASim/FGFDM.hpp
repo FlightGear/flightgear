@@ -32,12 +32,19 @@ public:
     float getVehicleRadius(void) const { return _vehicle_radius; }
 
 private:
-    struct EngRec { char* prefix; Thruster* eng; };
-    struct WeightRec { char* prop; float size; int handle; };
-    struct PropOut { 
-        SGPropertyNode* prop; 
+    struct EngRec { 
+        char* prefix {nullptr}; 
+        Thruster* eng {nullptr}; 
+    };
+    struct WeightRec { 
+        char* prop {nullptr};
+        float size {0};
         int handle {0};
-        ControlMap::Control control; 
+    };
+    struct PropOut { 
+        SGPropertyNode* prop {nullptr};
+        int handle {0};
+        ControlMap::Control control;
         bool left {false};
         float min {0};
         float max {0}; 
@@ -79,12 +86,12 @@ private:
     Vector _controlProps;
 
     // Radius of the vehicle, for intersection testing.
-    float _vehicle_radius;
+    float _vehicle_radius {0};
 
     // Parsing temporaries
-    void* _currObj;
-    bool _cruiseCurr;
-    int _nextEngine;
+    void* _currObj {nullptr};
+    bool _cruiseCurr {false};
+    int _nextEngine {0};
 
     class FuelProps
     {

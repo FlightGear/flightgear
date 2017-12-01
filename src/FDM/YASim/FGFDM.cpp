@@ -35,10 +35,6 @@ namespace yasim {
 
 FGFDM::FGFDM()
 {
-    _vehicle_radius = 0.0f;
-
-    _nextEngine = 0;
-
     // Map /controls/flight/elevator to the approach elevator control.  This
     // should probably be settable, but there are very few aircraft
     // who trim their approaches using things other than elevator.
@@ -534,7 +530,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
     } else if(eq(name, "weight")) {
 	parseWeight(a);
     } else if(eq(name, "stall")) {
-        Wing* w = (Wing*)_currObj;
+	Wing* w = (Wing*)_currObj;
         StallParams sp;
         sp.aoa = attrf(a, "aoa") * DEG2RAD;
         sp.width = attrf(a, "width", 2) * DEG2RAD;
@@ -583,38 +579,34 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         _airplane.addCruiseControl(cm->propertyHandle(axis), value);
     else
 	    _airplane.addApproachControl(cm->propertyHandle(axis), value);
-  } else if(eq(name, "control-input")) {
-    ControlMap* cm = _airplane.getControlMap();
-    // A mapping of input property to a control
-    int axis = cm->propertyHandle(a->getValue("axis"));
-    ControlMap::Control control = cm->parseControl(a->getValue("control"));
-    int opt = 0;
-    opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
-    opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
-    opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
-    if(a->hasAttribute("src0")) {
-       cm->addMapping(axis, control, _currObj, opt,
-			   attrf(a, "src0"), attrf(a, "src1"), 
-			   attrf(a, "dst0"), attrf(a, "dst1"));
-    } else {
-      cm->addMapping(axis, control, _currObj, opt);
-    }
-  } else if(eq(name, "control-output")) {
+    } else if(eq(name, "control-input")) {
+        ControlMap* cm = _airplane.getControlMap();
+        // A mapping of input property to a control
+        int propHandle = cm->propertyHandle(a->getValue("axis"));
+        ControlMap::Control control = cm->parseControl(a->getValue("control"));
+        int opt = 0;
+        opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
+        opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
+        opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
+        if(a->hasAttribute("src0")) {
+            cm->addMapping(propHandle, control, _currObj, opt, attrf(a, "src0"), attrf(a, "src1"), attrf(a, "dst0"), attrf(a, "dst1"));
+        } else {
+            cm->addMapping(propHandle, control, _currObj, opt);
+        }
+    } else if(eq(name, "control-output")) {
         // A property output for a control on the current object
         ControlMap* cm = _airplane.getControlMap();
         ControlMap::Control control = cm->parseControl(a->getValue("control"));
-        
-        int handle = cm->getOutputHandle(_currObj, control);
 
-	PropOut* p = new PropOut();
-	p->prop = fgGetNode(a->getValue("prop"), true);
-	p->handle = handle;
-	p->control = control;
-	p->left = !(a->hasAttribute("side") &&
-                        eq("right", a->getValue("side")));
-	p->min = attrf(a, "min", cm->rangeMin(control));
-	p->max = attrf(a, "max", cm->rangeMax(control));
-	_controlProps.add(p);
+        PropOut* p = new PropOut();
+        p->prop = fgGetNode(a->getValue("prop"), true);
+        p->handle = cm->getOutputHandle(_currObj, control);
+        p->control = control;
+        p->left = !(a->hasAttribute("side") &&
+                            eq("right", a->getValue("side")));
+        p->min = attrf(a, "min", cm->rangeMin(control));
+        p->max = attrf(a, "max", cm->rangeMax(control));
+        _controlProps.add(p);
 
     } else if(eq(name, "control-speed")) {
         ControlMap* cm = _airplane.getControlMap();
@@ -854,10 +846,10 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type, Version * version)
     // The 70% is a magic number that sorta kinda seems to match known
     // throttle settings to approach speed.
     w->setInducedDrag(0.7*attrf(a, "idrag", 1));
-
+   
     float effect = attrf(a, "effectiveness", 1);
     w->multiplyDragCoefficient(effect);
-
+    
     _currObj = w;
     return w;
 }

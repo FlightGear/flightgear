@@ -116,15 +116,15 @@ public:
 
 private:
     struct OutRec { 
-        Control control; 
-        void* object; 
+        Control control;
+        void* object {nullptr}; 
         Vector maps;
         float oldL {0};
         float oldR {0};
         float time {0};
     };
     struct MapRec  { 
-        OutRec* out; 
+        OutRec* out {nullptr}; 
         int idx {0};
         int opt {0};
         float val {0};
