@@ -1081,21 +1081,19 @@ void fgStartNewReset()
     // remove most subsystems, with a few exceptions.
     for (int g=0; g<SGSubsystemMgr::MAX_GROUPS; ++g) {
         SGSubsystemGroup* grp = subsystemManger->get_group(static_cast<SGSubsystemMgr::GroupType>(g));
-        const string_list& names(grp->member_names());
-        string_list::const_iterator it;
-        for (it = names.begin(); it != names.end(); ++it) {
-            if ((*it == "time") || (*it == "terrasync") || (*it == "events")
-                || (*it == "lighting") || (*it == FGScenery::subsystemName()))
+        for (auto nm : grp->member_names()) {
+            if ((nm == "time") || (nm == "terrasync") || (nm == "events")
+                || (nm == "lighting") || (nm == FGScenery::subsystemName()))
             {
                 continue;
             }
             
             try {
-                subsystemManger->remove(it->c_str());
+                subsystemManger->remove(nm.c_str());
             } catch (std::exception& e) {
-                SG_LOG(SG_GENERAL, SG_INFO, "caught std::exception shutting down:" << *it);
+                SG_LOG(SG_GENERAL, SG_INFO, "caught std::exception shutting down:" << nm);
             } catch (...) {
-                SG_LOG(SG_GENERAL, SG_INFO, "caught generic exception shutting down:" << *it);
+                SG_LOG(SG_GENERAL, SG_INFO, "caught generic exception shutting down:" << nm);
             }
             
             // don't delete here, dropping the ref should be sufficient
@@ -1194,9 +1192,11 @@ void fgStartNewReset()
     globals->set_matlib( new SGMaterialLib );
     
 // terra-sync needs the property tree root, pass it back in
-    simgear::SGTerraSync* terra_sync = static_cast<simgear::SGTerraSync*>(subsystemManger->get_subsystem("terrasync"));
-    terra_sync->setRoot(globals->get_props());
-
+    auto terra_sync = static_cast<simgear::SGTerraSync*>(subsystemManger->get_subsystem("terrasync"));
+    if (terra_sync) {
+        terra_sync->setRoot(globals->get_props());
+    }
+    
     fgSetBool("/sim/signals/reinit", false);
     fgSetBool("/sim/freeze/master", false);
     fgSetBool("/sim/sceneryloaded",false);
