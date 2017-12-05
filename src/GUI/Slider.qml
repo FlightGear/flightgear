@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "."
 
 Item {
     property alias label: labelText.text
@@ -16,25 +17,25 @@ Item {
 
     Text {
         id: labelText
-        width: parent.width - (emptyTrack.width + 8)
+        width: parent.width - (emptyTrack.width + Style.margin)
         horizontalAlignment: Text.AlignRight
     }
 
     Rectangle {
         id: emptyTrack
 
-        width: sliderWidth > 0 ? sliderWidth : parent.width - (labelText.implicitWidth + 8)
+        width: sliderWidth > 0 ? sliderWidth : parent.width - (labelText.implicitWidth + Style.margin)
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
 
         height: 2
-        color: "#9f9f9f"
+        color: Style.inactiveThemeColor
 
         Rectangle {
             id: fullTrack
             height: parent.height
-            color:"#68A6E1"
+            color: Style.frameColor
             width: parent.width * __percentFull
         }
 
@@ -58,10 +59,10 @@ Item {
 
         Rectangle {
             id: thumb
-            width: 12
-            height: 12
-            radius: 6
-            color: "#68A6E1"
+            width: radius * 2
+            height: radius * 2
+            radius: Style.roundRadius
+            color: Style.themeColor
 
             anchors.verticalCenter: parent.verticalCenter
             x: parent.width * __percentFull

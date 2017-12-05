@@ -1,21 +1,20 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
+import "." // -> forces the qmldir to be loaded
 
 Item
 {
     id: root
 
-    readonly property int margin: 8
-
     Rectangle
     {
         id: tabBar
-        height: installedAircraftButton.height + margin
+        height: installedAircraftButton.height + Style.margin
         width: parent.width
 
         Row {
             anchors.centerIn: parent
-            spacing: root.margin
+            spacing: Style.margin
 
             TabButton {
                 id: installedAircraftButton
@@ -39,11 +38,10 @@ Item
         SearchButton {
             id: searchButton
 
-            width: 180
             height: installedAircraftButton.height
 
             anchors.right: parent.right
-            anchors.rightMargin: margin
+            anchors.rightMargin: Style.margin
             anchors.verticalCenter: parent.verticalCenter
 
             onSearch: {
@@ -55,9 +53,9 @@ Item
         }
 
         Rectangle {
-            color: "#68A6E1"
+            color: Style.frameColor
             height: 1
-            width: parent.width - 20
+            width: parent.width - Style.inset
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
         }
@@ -77,7 +75,7 @@ Item
     Component {
         id: ratingsHeader
         AircraftRatingsPanel {
-            width: aircraftList.width - 80
+            width: aircraftList.width - Style.strutSize * 2
             x: (aircraftList.width - width) / 2
 
         }
@@ -86,7 +84,7 @@ Item
     Component {
         id: noDefaultCatalogHeader
         NoDefaultCatalogPanel {
-            width: aircraftList.width - 80
+            width: aircraftList.width - Style.strutSize * 2
             x: (aircraftList.width - width) / 2
         }
     }
@@ -94,7 +92,7 @@ Item
     Component {
         id: updateAllHeader
         UpdateAllPanel {
-            width: aircraftList.width - 80
+            width: aircraftList.width - Style.strutSize * 2
             x: (aircraftList.width - width) / 2
         }
     }
@@ -213,8 +211,8 @@ Item
         visible: false
 
         Button {
-            anchors { left: parent.left; top: parent.top; margins: root.margin }
-            width: 60
+            anchors { left: parent.left; top: parent.top; margins: Style.margin }
+            width: Style.strutSize
 
             id: backButton
             text: "< Back"

@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "."
 
 Item {
     property bool checked: false
@@ -10,26 +11,26 @@ Item {
     Rectangle {
         id: track
         width: height * 2
-        height: 12
-        radius: 6
+        height: radius * 2
+        radius: Style.roundRadius
 
-        color: checked ? "#68A6E1" :"#9f9f9f"
+        color: checked ? Style.frameColor : Style.minorFrameColor
         anchors.left: parent.left
-        anchors.leftMargin: 8
+        anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
 
         Rectangle {
             id: thumb
-            width: 18
-            height: 18
-            radius: 9
+            width: radius * 2
+            height: radius * 2
+            radius: Style.roundRadius * 1.5
 
             anchors.verticalCenter: parent.verticalCenter
-            color: checked ? "#68A6E1" : "white"
+            color: checked ? Style.themeColor : "white"
             border.width: 1
-            border.color: "#9f9f9f"
+            border.color: Style.inactiveThemeColor
 
-            x: checked ? parent.width - (6 + radius) : -3
+            x: checked ? parent.width - (track.radius + radius) : (track.radius - radius)
 
             Behavior on x {
                 NumberAnimation {
@@ -42,7 +43,7 @@ Item {
     Text {
         id: label
         anchors.left: track.right
-        anchors.leftMargin: 8
+        anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
     }
 

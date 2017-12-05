@@ -1,9 +1,9 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
+import "."
 
 ListHeaderBox {
     id: root
-    property int margin: 6
 
     contents: [
         Text {
@@ -11,7 +11,7 @@ ListHeaderBox {
             anchors {
                 left: parent.left
                 right: updateAllButton.left
-                margins: root.margin
+                margins: Style.margin
                 verticalCenter: parent.verticalCenter
             }
 
@@ -25,7 +25,7 @@ ListHeaderBox {
             text: qsTr("Update all")
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: notNowButton.left
-            anchors.rightMargin: root.margin
+            anchors.rightMargin: Style.margin
 
             onClicked: {
                 _launcher.requestUpdateAllAircraft();
@@ -38,7 +38,7 @@ ListHeaderBox {
             text: qsTr("Not now")
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
-            anchors.rightMargin: root.margin
+            anchors.rightMargin: Style.margin
 
             onClicked: {
                 _launcher.baseAircraftModel.showUpdateAll = false

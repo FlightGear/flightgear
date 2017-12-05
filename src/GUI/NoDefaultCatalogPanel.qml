@@ -3,18 +3,17 @@ import FlightGear.Launcher 1.0 as FG
 
 Rectangle {
     id: root
-    property int margin: 6
 
-    height: noDefaultCatalogRow.childrenRect.height + margin * 2;
+    height: noDefaultCatalogRow.childrenRect.height + (Style.margin * 2);
     z: 100
     color: "white"
     border.width: 1
-    border.color: "#9f9f9f"
+    border.color: Style.minorFrameColor
 
     Row {
-        y: root.margin
+        y: Style.margin
         id: noDefaultCatalogRow
-        spacing: root.margin
+        spacing: Style.margin
 
         Text {
             text: "The official FlightGear aircraft hangar is not added, so many standard "
@@ -22,7 +21,7 @@ Rectangle {
                   + "this message. The offical hangar can always be restored from the 'Add-Ons' page."
             wrapMode: Text.WordWrap
             anchors.verticalCenter: parent.verticalCenter
-            width: root.width - (addDefaultButton.width + hideButton.width + root.margin * 3)
+            width: root.width - (addDefaultButton.width + hideButton.width + Style.margin * 3)
         }
 
         Button {

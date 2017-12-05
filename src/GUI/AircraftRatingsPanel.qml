@@ -1,5 +1,6 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
+import "."
 
 ListHeaderBox
 {
@@ -19,7 +20,7 @@ ListHeaderBox
 
         Text {
             anchors.right: parent.right
-            anchors.rightMargin: root.margin
+            anchors.rightMargin: Style.margin
             text: qsTr("Adjust minimum ratings")
             anchors.verticalCenter: parent.verticalCenter
 
@@ -49,20 +50,20 @@ ListHeaderBox
             visible: false
             width: parent.width
             y: parent.height - 1
-            height: childrenRect.height + 24
+            height: childrenRect.height + (Style.margin * 2)
 
             border.width: 1
             border.color: "#9f9f9f"
 
             Column {
-                y: 12
-                spacing: 24
+                y: Style.margin
+                spacing: (Style.margin * 2)
 
                 Text {
                     text: qsTr("Aircraft are rated by the community based on four critiera, on a scale from " +
                                "one to five. The ratings are designed to help make an informed guess how "+
                                "complete and functional an aircraft is.")
-                    width: editRatingsPanel.width - 100
+                    width: editRatingsPanel.width - Style.strutSize * 2
                     wrapMode: Text.WordWrap
                     anchors.horizontalCenter: parent.horizontalCenter
                 }

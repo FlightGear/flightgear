@@ -151,6 +151,7 @@ LauncherMainWindow::LauncherMainWindow() :
 
     m_ui->aircraftList->setResizeMode(QQuickWidget::SizeRootObjectToView);
 
+    m_ui->aircraftList->engine()->addImportPath("qrc:///");
     m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
     m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
 

@@ -4,12 +4,11 @@ import FlightGear.Launcher 1.0
 Item {
     id: root
 
-    readonly property int margin: 8
-
     signal select(var uri);
     signal showDetails(var uri)
 
-    implicitHeight: Math.max(contentBox.childrenRect.height, thumbnailBox.height) + footer.height
+    implicitHeight: Math.max(contentBox.childrenRect.height, thumbnailBox.height) +
+                    footer.height
     implicitWidth: ListView.view.width
 
     readonly property bool __isSelected: ListView.isCurrentItem
@@ -50,13 +49,13 @@ Item {
         id: contentBox
 
         anchors {
-            margins: root.margin
+            margins: Style.margin
             left: thumbnailBox.right
             right: parent.right
             top: parent.top
         }
 
-        spacing: root.margin
+        spacing: Style.margin
 
         AircraftVariantChoice {
             id: titleBox
@@ -98,14 +97,14 @@ Item {
 
     Item {
         id: footer
-        height: 12
+        height: Style.margin
         width: parent.width
         anchors.bottom: parent.bottom
 
         Rectangle {
-            color: "#68A6E1"
+            color: Style.frameColor
             height: 1
-            width: parent.width - 60
+            width: parent.width - Style.strutSize
             anchors.centerIn: parent
         }
     }

@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "."
 
 Rectangle {
     id: root
@@ -8,11 +9,11 @@ Rectangle {
 
     signal clicked
 
-    width: 120
+    width: Style.strutSize * 2
     height: buttonText.implicitHeight + (radius * 2)
-    radius: 6
+    radius: Style.roundRadius
 
-    color: mouse.containsMouse ? "#064989" : "#1b7ad3"
+    color: mouse.containsMouse ? Style.activeColor : Style.themeColor
 
     Text {
         id: buttonText

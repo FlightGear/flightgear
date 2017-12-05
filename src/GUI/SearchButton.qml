@@ -1,4 +1,5 @@
 import QtQuick 2.2
+import "."
 
 Rectangle {
     id: root
@@ -8,20 +9,21 @@ Rectangle {
 
     signal search(string term)
 
-    radius: 6
+    radius: Style.roundRadius
 
+    width: Style.strutSize * 3
     border.width: 1
-    border.color: (mouse.containsMouse | active) ? "#1b7ad3" : "#cfcfcf"
+    border.color: (mouse.containsMouse | active) ? Style.themeColor: Style.minorFrameColor
     clip: true
 
     TextInput {
         id: buttonText
         anchors.left: parent.left
         anchors.right: searchIcon.left
-        anchors.margins: 4
+        anchors.margins: Style.margin
         anchors.verticalCenter: parent.verticalCenter
 
-        color: "#3f3f3f"
+        color: Style.baseTextColor
 
         onTextChanged: {
             searchTimer.restart();
@@ -39,7 +41,7 @@ Rectangle {
         id: searchIcon
         source: "qrc:///search-icon-small"
         anchors.right: parent.right
-        anchors.rightMargin: 4
+        anchors.rightMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
     }
 

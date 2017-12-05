@@ -1,12 +1,12 @@
 import QtQuick 2.0
 import FlightGear.Launcher 1.0
+import "."
 
 Rectangle {
     id: root
     property alias aircraftURI: aircraft.uri
 
     color: "white"
-    readonly property int margin: 16
 
     MouseArea {
         // consume all mouse-clicks on the detail view
@@ -19,8 +19,8 @@ Rectangle {
     }
 
     Column {
-        width: root.width - (margin * 2)
-        spacing: root.margin
+        width: root.width - (Style.margin * 2)
+        spacing: Style.margin
         anchors.horizontalCenter: parent.horizontalCenter
 
         AircraftVariantChoice {
@@ -29,7 +29,7 @@ Rectangle {
             popupFontPixelSize: 18
 
             anchors {
-                margins: 100 // space for back button
+                margins: Style.strutSize * 2 // space for back button
                 left: parent.left
                 right: parent.right
             }
@@ -77,9 +77,9 @@ Rectangle {
 
             Column {
                 anchors.left: thumbnailBox.right
-                anchors.leftMargin: root.margin
+                anchors.leftMargin: Style.margin
                 anchors.right: parent.right
-                spacing: root.margin
+                spacing: Style.margin
 
                 Text {
                     id: aircraftDescription
@@ -126,8 +126,8 @@ Rectangle {
 
             rows: 2
             columns: 3
-            rowSpacing: root.margin
-            columnSpacing: root.margin
+            rowSpacing: Style.margin
+            columnSpacing: Style.margin
 
             Text {
                 id: ratingsLabel

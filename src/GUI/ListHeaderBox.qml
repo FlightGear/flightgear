@@ -1,11 +1,10 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
+import "."
 
 Item {
     id: root
-    readonly property int margin: 8
-
-    height: visible ? 48 : 0
+    height: visible ? contentBox.height + (Style.margin * 2) : 0
     z: 100
 
     property alias contents: contentBox.children
@@ -13,13 +12,11 @@ Item {
     Rectangle {
         id: contentBox
         width: parent.width
-        height: 40
-        y: 4
+        height: Style.strutSize
+        y: Style.margin
         color: "white"
         border.width: 1
-        border.color: "#9f9f9f"
-
-
+        border.color: Style.minorFrameColor
 
     }
 

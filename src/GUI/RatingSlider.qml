@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "."
 
 Slider {
     property var ratings: []
@@ -8,7 +9,7 @@ Slider {
     max: 5
 
     value: ratings[ratingIndex]
-    width: editRatingsPanel.width - 30
+    width: editRatingsPanel.width - Style.strutSize
     anchors.horizontalCenter: parent.horizontalCenter
     sliderWidth: width / 2
 

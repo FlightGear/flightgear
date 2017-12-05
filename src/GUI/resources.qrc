@@ -53,6 +53,8 @@
         <file>NoDefaultCatalogPanel.qml</file>
         <file>ListHeaderBox.qml</file>
         <file>UpdateAllPanel.qml</file>
+        <file>Style.qml</file>
+        <file>qmldir</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

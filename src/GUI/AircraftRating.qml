@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "."
 
 Item {
     id: root
@@ -6,19 +7,17 @@ Item {
     property string title: ""
     property int value: 3
 
-    implicitWidth: 160
+    implicitWidth: Style.strutSize * 3
     implicitHeight: label.height
 
     Text {
         id: label
         anchors.right: ratingRow.left
-        anchors.rightMargin: 6
+        anchors.rightMargin: Style.margin
         anchors.left: parent.left
 
         horizontalAlignment: Text.AlignRight
         text: root.title + ":"
-
-
     }
 
     Row {
@@ -33,9 +32,9 @@ Item {
 
             delegate: Rectangle {
                 color: ((model.index + 1) <= root.value) ? "#3f3f3f" : "#cfcfcf"
-                width: 12
-                height: 12
-                radius: 6
+                width: radius * 2
+                height: radius * 2
+                radius: Style.roundRadius
             }
         }
     }
