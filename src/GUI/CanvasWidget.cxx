@@ -27,6 +27,7 @@
 #include <Scripting/NasalSys.hxx>
 
 #include <osg/GLExtensions>
+#include <osg/Version>
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/events/MouseEvent.hxx>
@@ -198,7 +199,12 @@ void CanvasWidget::setSize(int w, int h)
 //------------------------------------------------------------------------------
 void CanvasWidget::draw(int dx, int dy)
 {
-  osg::GLExtensions* extensions = osg::GLExtensions::Get(0, true);
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    osg::Extensions* extensions = osg::getExtensions(0, true);
+#else
+    osg::GLExtensions* extensions = osg::GLExtensions::Get(0, true);
+#endif
+    
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
   extensions->glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
