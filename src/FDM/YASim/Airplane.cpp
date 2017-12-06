@@ -254,9 +254,7 @@ int Airplane::addWeight(float* pos, float size)
     WeightRec* wr = new WeightRec();
     wr->handle = _model.getBody()->addMass(0, pos);
 
-    wr->surf = new Surface(this);
-    wr->surf->setPosition(pos);
-    wr->surf->setDragCoefficient(size*size);
+    wr->surf = new Surface(this, pos, size*size);
     _model.addSurface(wr->surf);
     _surfs.add(wr->surf);
 
@@ -273,13 +271,13 @@ void Airplane::setWeight(int handle, float mass)
     // Kill the aerodynamic drag if the mass is exactly zero.  This is
     // how we simulate droppable stores.
     if(mass == 0) {
-	wr->surf->setXDrag(0);
-	wr->surf->setYDrag(0);
-	wr->surf->setZDrag(0);
+        wr->surf->setXDrag(0);
+        wr->surf->setYDrag(0);
+        wr->surf->setZDrag(0);
     } else {
-	wr->surf->setXDrag(1);
-	wr->surf->setYDrag(1);
-	wr->surf->setZDrag(1);
+        wr->surf->setXDrag(1);
+        wr->surf->setYDrag(1);
+        wr->surf->setZDrag(1);
     }
 }
 
@@ -347,7 +345,7 @@ float Airplane::compileFuselage(Fuselage* f)
     float len = Math::mag3(fwd);
     if (len == 0) {
         _failureMsg = "Zero length fuselage";
-	return 0;
+    return 0;
     }
     float wid = f->width;
     int segs = (int)Math::ceil(len/wid);
@@ -355,19 +353,18 @@ float Airplane::compileFuselage(Fuselage* f)
     int j;
     for(j=0; j<segs; j++) {
         float frac = (j+0.5f) / segs;
-
         float scale = 1;
         if(frac < f->mid)
             scale = f->taper+(1-f->taper) * (frac / f->mid);
         else {
-	    if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-		// Correct calculation of width for fuselage taper.
-		scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
-	    } else {
-		// Original, incorrect calculation of width for fuselage taper.
-		scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
-	    }
-	}
+            if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+                // Correct calculation of width for fuselage taper.
+                scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
+            } else {
+                // Original, incorrect calculation of width for fuselage taper.
+                scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
+            }
+        }
 
         // Where are we?
         float pos[3];
@@ -379,44 +376,42 @@ float Airplane::compileFuselage(Fuselage* f)
         _model.getBody()->addMass(mass, pos, true);
         wgt += mass;
 
+
+        // The following is the original YASim value for sideDrag.
+        // Originally YASim calculated the fuselage's lateral drag
+        // coefficient as (solver drag factor) * (len/wid).
+        // However, this greatly underestimates a fuselage's lateral drag.
+        float sideDrag = len/wid;
+
+        if ( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+            // New YASim assumes a fixed lateral drag coefficient of 0.5.
+            // This will not be multiplied by the solver drag factor, because
+            // that factor is tuned to match the drag in the direction of
+            // flight, which is completely independent of lateral drag.
+            // The value of 0.5 is only a ballpark estimate, roughly matching
+            // the side-on drag for a long cylinder at the higher Reynolds
+            // numbers typical for an aircraft's lateral drag.
+            // This fits if the fuselage is long and has a round cross section.
+            // For flat-sided fuselages, the value should be increased, up to
+            // a limit of around 2 for a long rectangular prism.
+            // For very short fuselages, in which the end effects are strong,
+            // the value should be reduced.
+            // Such adjustments can be made using the fuselage's "cy" and "cz"
+            // XML parameters: "cy" for the sides, "cz" for top and bottom.
+            sideDrag = 0.5;
+        }
+        float dragCoefficient = scale*segWgt*f->_cx;
+        if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+                dragCoefficient = scale*segWgt;
+        }
+
         // Make a Surface too
-        Surface* s = new Surface(this);
-        s->setPosition(pos);
-
-	// The following is the original YASim value for sideDrag.
-	// Originally YASim calculated the fuselage's lateral drag
-	// coefficient as (solver drag factor) * (len/wid).
-	// However, this greatly underestimates a fuselage's lateral drag.
-	float sideDrag = len/wid;
-
-	if ( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-	    // New YASim assumes a fixed lateral drag coefficient of 0.5.
-	    // This will not be multiplied by the solver drag factor, because
-	    // that factor is tuned to match the drag in the direction of
-	    // flight, which is completely independent of lateral drag.
-	    // The value of 0.5 is only a ballpark estimate, roughly matching
-	    // the side-on drag for a long cylinder at the higher Reynolds
-	    // numbers typical for an aircraft's lateral drag.
-	    // This fits if the fuselage is long and has a round cross section.
-	    // For flat-sided fuselages, the value should be increased, up to
-	    // a limit of around 2 for a long rectangular prism.
-	    // For very short fuselages, in which the end effects are strong,
-	    // the value should be reduced.
-	    // Such adjustments can be made using the fuselage's "cy" and "cz"
-	    // XML parameters: "cy" for the sides, "cz" for top and bottom.
-	    sideDrag = 0.5;
-	}
-
-	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-        	s->setXDrag(f->_cx);
-	}
+        Surface* s = new Surface(this, pos, dragCoefficient);
+        if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+                s->setXDrag(f->_cx);
+        }
         s->setYDrag(sideDrag*f->_cy);
         s->setZDrag(sideDrag*f->_cz);
-	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-        	s->setDragCoefficient(scale*segWgt);
-	} else {
-		s->setDragCoefficient(scale*segWgt*f->_cx);
-	}
         s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
@@ -425,8 +420,8 @@ float Airplane::compileFuselage(Fuselage* f)
         Math::unit3(fwd, x);
         y[0] = 0; y[1] = 1; y[2] = 0;
         Math::cross3(x, y, z);
-	Math::unit3(z, z);
-	Math::cross3(z, x, y);
+        Math::unit3(z, z);
+        Math::cross3(z, x, y);
         s->setOrientation(o);
 
         _model.addSurface(s);
@@ -441,9 +436,6 @@ void Airplane::compileGear(GearRec* gr)
 {
     Gear* g = gr->gear;
 
-    // Make a Surface object for the aerodynamic behavior
-    Surface* s = new Surface(this);
-    gr->surf = s;
 
     // Put the surface at the half-way point on the gear strut, give
     // it a drag coefficient equal to a square of the same dimension
@@ -456,8 +448,9 @@ void Airplane::compileGear(GearRec* gr)
     Math::mul3(0.5, cmp, cmp);
     Math::add3(pos, cmp, pos);
 
-    s->setPosition(pos);
-    s->setDragCoefficient(length*length);
+    // Make a Surface object for the aerodynamic behavior
+    Surface* s = new Surface(this, pos, length*length);
+    gr->surf = s;
 
     _model.addGear(g);
     _model.addSurface(s);
@@ -812,17 +805,17 @@ void Airplane::applyDragFactor(float factor)
             } else {
             // Originally YASim applied the drag factor to all axes
             // for Fuselage Surfaces.
-            s->setDragCoefficient(s->getDragCoefficient() * applied);
+            s->mulDragCoefficient(applied);
             }
         }
     }
     for(i=0; i<_weights.size(); i++) {
-	WeightRec* wr = (WeightRec*)_weights.get(i);
-	wr->surf->setDragCoefficient(wr->surf->getDragCoefficient() * applied);
+        WeightRec* wr = (WeightRec*)_weights.get(i);
+        wr->surf->mulDragCoefficient(applied);
     }
     for(i=0; i<_gears.size(); i++) {
-	GearRec* gr = (GearRec*)_gears.get(i);
-	gr->surf->setDragCoefficient(gr->surf->getDragCoefficient() * applied);
+        GearRec* gr = (GearRec*)_gears.get(i);
+        gr->surf->mulDragCoefficient(applied);
     }
 }
 

@@ -16,7 +16,7 @@ class Surface
     int _id;        //index for property tree
 
 public:
-    Surface( Version * version );
+    Surface(Version * version, float* pos, float dragCoefficient);
 
     int getID() const { return _id; };
     static void resetIDgen() { s_idGenerator = 0; };
@@ -25,8 +25,8 @@ public:
     void setPosition(const float* p);
     void getPosition(float* out) const { Math::set3(_pos, out); }
 
-    // Distance scale along the X axis
-    void setChord(float chord) { _chord = chord; }
+    // Distance scale along the X axis used for torque (pitch) calculation
+    void setChord(float chord);
 
     // Slats act to move the stall peak by the specified angle, and
     // increase drag by the multiplier specified.
@@ -60,6 +60,7 @@ public:
     void setTwist(float angle) { _twist = angle; }
 
     void setDragCoefficient(float c0) { _c0 = c0; }
+    void mulDragCoefficient(float factor) { _c0 *= factor; }
     float getDragCoefficient() const { return _c0; }
     
     void setXDrag(float cx) { _cx = cx; }
@@ -87,6 +88,7 @@ public:
     
 private:
     SGPropertyNode_ptr _surfN;
+    Version * _version;
     
     float stallFunc(float* v);
     float flapLift(float alpha);
@@ -123,7 +125,6 @@ private:
     float _stallAlpha {0};
     float _alpha {0};
 
-    Version * _version;
     SGPropertyNode* _fxN;
     SGPropertyNode* _fyN;
     SGPropertyNode* _fzN;

@@ -1,11 +1,13 @@
 #include <Main/fg_props.hxx>
+#include "Math.hpp"
 #include "Surface.hpp"
 
 namespace yasim {
 int Surface::s_idGenerator = 0;
 
-Surface::Surface( Version * version ) :
-    _version(version)
+Surface::Surface(Version* version, float* pos, float dragCoefficient = 1 ) :
+    _version(version),
+    _c0(dragCoefficient)
 {
     _id = s_idGenerator++;
 
@@ -13,36 +15,59 @@ Surface::Surface( Version * version ) :
     _orient[3] = 0; _orient[4] = 1; _orient[5] = 0;
     _orient[6] = 0; _orient[7] = 0; _orient[8] = 1;
     
+    Math::set3(pos, _pos);
+    
     _surfN = fgGetNode("/fdm/yasim/debug/surfaces", true);
     if (_surfN != 0) {
-      _surfN = _surfN->getChild("surface", _id, true);
-      _fxN = _surfN->getNode("f-x", true);
-      _fyN = _surfN->getNode("f-y", true);
-      _fzN = _surfN->getNode("f-z", true);
-      _fabsN = _surfN->getNode("f-abs", true);
-      _alphaN = _surfN->getNode("alpha", true);
-      _stallAlphaN = _surfN->getNode("stall-alpha", true);
-      _flapN = _surfN->getNode("flap-pos", true);
-      _slatN = _surfN->getNode("slat-pos", true);
-      _spoilerN = _surfN->getNode("spoiler-pos", true);
+        _surfN = _surfN->getChild("surface", _id, true);
+        _fxN = _surfN->getNode("f-x", true);
+        _fyN = _surfN->getNode("f-y", true);
+        _fzN = _surfN->getNode("f-z", true);
+        _fabsN = _surfN->getNode("f-abs", true);
+        _alphaN = _surfN->getNode("alpha", true);
+        _stallAlphaN = _surfN->getNode("stall-alpha", true);
+        _flapN = _surfN->getNode("flap-pos", true);
+        _slatN = _surfN->getNode("slat-pos", true);
+        _spoilerN = _surfN->getNode("spoiler-pos", true);
+        _surfN->getNode("pos-x", true)->setFloatValue(pos[0]);
+        _surfN->getNode("pos-y", true)->setFloatValue(pos[1]);
+        _surfN->getNode("pos-z", true)->setFloatValue(pos[2]);
+        _surfN->getNode("chord",true)->setFloatValue(0);
+        _surfN->getNode("axis-x", true)->setFloatValue(0);
+        _surfN->getNode("axis-y", true)->setFloatValue(0);
+        _surfN->getNode("axis-z", true)->setFloatValue(0);
     }
 }
 
 
-void Surface::setPosition(const float* p)
+void Surface::setPosition(const float* pos)
 {
-    int i;
-    for(i=0; i<3; i++) _pos[i] = p[i];
+    Math::set3(pos, _pos);
     if (_surfN != 0) {
-      _surfN->getNode("pos-x", true)->setFloatValue(p[0]);
-      _surfN->getNode("pos-y", true)->setFloatValue(p[1]);
-      _surfN->getNode("pos-z", true)->setFloatValue(p[2]);
+        _surfN->getNode("pos-x", true)->setFloatValue(pos[0]);
+        _surfN->getNode("pos-y", true)->setFloatValue(pos[1]);
+        _surfN->getNode("pos-z", true)->setFloatValue(pos[2]);
+    }
+}
+
+void Surface::setChord(float chord) 
+{
+    _chord = chord;
+    if (_surfN != 0) {
+        _surfN->getNode("chord",true)->setFloatValue(_chord);
     }
 }
 
 void Surface::setOrientation(const float* o)
 {
-  for(int i=0; i<9; i++) _orient[i] = o[i];
+    for(int i=0; i<9; i++) _orient[i] = o[i];
+    if (_surfN) {
+        float xaxis[3] {-1,0,0};
+        Math::tmul33(_orient,xaxis, xaxis);
+        _surfN->getNode("axis-x", true)->setFloatValue(xaxis[0]);
+        _surfN->getNode("axis-y", true)->setFloatValue(xaxis[1]);
+        _surfN->getNode("axis-z", true)->setFloatValue(xaxis[2]);
+    }
 }
 
 

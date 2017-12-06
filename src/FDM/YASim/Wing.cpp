@@ -402,9 +402,8 @@ void Wing::WingSection::multiplyLiftRatio(float factor)
 
 void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient, float chord, bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler, float weight, float twist)
 {
-    Surface* s = new Surface(_version);
+    Surface* s = new Surface(_version, pos, weight);
 
-    s->setPosition(pos);
     s->setOrientation(orient);
     s->setChord(chord);
 
@@ -457,7 +456,6 @@ void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient,
     SurfRec *sr = new SurfRec();
     sr->surface = s;
     sr->weight = weight;
-    s->setDragCoefficient(sr->weight);
     s->setTwist(twist);
     _surfs.add(sr);
 }
