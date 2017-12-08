@@ -18,17 +18,13 @@ ListHeaderBox
             anchors.verticalCenter: parent.verticalCenter
         },
 
-        Text {
+        ClickableText {
             anchors.right: parent.right
             anchors.rightMargin: Style.margin
             text: qsTr("Adjust minimum ratings")
             anchors.verticalCenter: parent.verticalCenter
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked:  {
-                    editRatingsPanel.visible = true
-                }
+            onClicked:  {
+                editRatingsPanel.visible = true
             }
         },
 

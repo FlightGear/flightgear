@@ -2,6 +2,7 @@ import QtQuick 2.0
 import "."
 
 Item {
+    id: root
     property alias label: labelText.text
 
     property int min: 0
@@ -37,6 +38,18 @@ Item {
             height: parent.height
             color: Style.frameColor
             width: parent.width * __percentFull
+        }
+
+        MouseArea {
+            id: clickTrackArea
+            anchors.centerIn: parent
+            width: parent.width
+            height: root.height
+
+            onClicked: {
+                var frac = mouse.x / width;
+                root.value = min + 0.5 + (max - min) * frac;
+            }
         }
 
         // invisble item that moves directly with the mouse
