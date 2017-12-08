@@ -611,8 +611,9 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
 
         // check variants too
         for (int vr=0; vr < item->variants.size(); ++vr) {
-            if (item->variants.at(vr)->path == path) {
-                return item->description;
+            auto variant = item->variants.at(vr);
+            if (variant->path == path) {
+                return variant->description;
             }
         }
     } else if (uri.scheme() == "package") {

@@ -52,6 +52,7 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(QStringList variantNames READ variantNames NOTIFY infoChanged)
 
+    Q_PROPERTY(bool isPackaged READ isPackaged NOTIFY infoChanged)
 
 public:
     explicit QmlAircraftInfo(QObject *parent = nullptr);
@@ -92,6 +93,8 @@ public:
     void setDownloadBytes(int bytes);
 
     QStringList variantNames() const;
+
+    bool isPackaged() const;
 signals:
     void uriChanged();
     void infoChanged();

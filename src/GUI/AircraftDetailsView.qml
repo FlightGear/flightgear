@@ -104,6 +104,7 @@ Rectangle {
         }
 
         AircraftDownloadPanel {
+            visible: aircraft.isPackaged
             width: parent.width
             uri: aircraft.uri
             installStatus: aircraft.installStatus

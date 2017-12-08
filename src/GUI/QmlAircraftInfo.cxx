@@ -89,7 +89,7 @@ QmlAircraftInfo::~QmlAircraftInfo()
 QUrl QmlAircraftInfo::uri() const
 {
     if (_item) {
-        QUrl::fromLocalFile(resolveItem()->path);
+        return QUrl::fromLocalFile(resolveItem()->path);
     } else if (_package) {
         return QUrl("package:" + QString::fromStdString(_package->qualifiedVariantId(_variant)));
     }
@@ -100,8 +100,10 @@ QUrl QmlAircraftInfo::uri() const
 int QmlAircraftInfo::numVariants() const
 {
     if (_item) {
-        return _item->variants.size();
+        // for on-disk, we don't count the primary item
+        return _item->variants.size() + 1;
     } else if (_package) {
+        // whereas for packaged aircraft we do
         return _package->variants().size();
     }
 
@@ -304,12 +306,11 @@ void QmlAircraftInfo::setUri(QUrl u)
 
     if (u.isLocalFile()) {
         _item = LocalAircraftCache::instance()->findItemWithUri(u);
-        if (_item->variantOf.isEmpty()) {
-            _variant = 0;
-        } else {
-            _item = LocalAircraftCache::instance()->primaryItemFor(_item);
-            _variant = _item->indexOfVariant(u);
-        }
+        int vindex = _item->indexOfVariant(u);
+        // we need to offset the variant index to allow for the different
+        // indexing schemes here (primary included) and in the cache (primary
+        // is not counted)
+        _variant = (vindex >= 0) ? vindex + 1 : 0;
     } else if (u.scheme() == "package") {
         auto ident = u.path().toStdString();
         try {
@@ -327,6 +328,14 @@ void QmlAircraftInfo::setUri(QUrl u)
 
 void QmlAircraftInfo::setVariant(int variant)
 {
+    if (!_item && !_package)
+        return;
+
+    if ((variant < 0) || (variant >= numVariants())) {
+        qWarning() << Q_FUNC_INFO << uri() << "variant index out of range:" << variant;
+        return;
+    }
+
     if (_variant == variant)
         return;
 
@@ -409,6 +418,7 @@ QStringList QmlAircraftInfo::variantNames() const
 {
     QStringList result;
     if (_item) {
+        result.append(_item->description);
         Q_FOREACH(auto v, _item->variants) {
             if (v->description.isEmpty()) {
                 qWarning() << Q_FUNC_INFO << "missing description for " << v->path;
@@ -424,4 +434,9 @@ QStringList QmlAircraftInfo::variantNames() const
         }
     }
     return result;
+}
+
+bool QmlAircraftInfo::isPackaged() const
+{
+    return _package != PackageRef();
 }
