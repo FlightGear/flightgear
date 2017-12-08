@@ -168,7 +168,8 @@ AddonVersionSuffix::suffixStringToTuple(const std::string& suffix)
       }
     }
 
-    return {preReleaseType, preReleaseNum, !devNum_s.empty(), devNum};
+    return std::make_tuple(preReleaseType, preReleaseNum, !devNum_s.empty(),
+                           devNum);
   } else {                      // the regexp didn't match
     string msg = "invalid add-on version suffix: '" + suffix + "' "
       "(expected form is [{a|b|rc}N1][.devN2] where N1 and N2 are positive "
@@ -181,7 +182,8 @@ AddonVersionSuffix::suffixStringToTuple(const std::string& suffix)
 std::tuple<AddonVersionSuffixPrereleaseType, int, bool, int>
 AddonVersionSuffix::makeTuple() const
 {
-  return { _preReleaseType, _preReleaseNum, _developmental, _devNum };
+  return std::make_tuple(_preReleaseType, _preReleaseNum, _developmental,
+                         _devNum);
 }
 
 std::tuple<int,
@@ -194,11 +196,12 @@ AddonVersionSuffix::genSortKey() const
   // The first element means that a plain .devN is lower than everything else,
   // except .devM with M <= N (namely: all dev and non-dev alpha, beta,
   // candidates, as well as the empty suffix).
-  return { ((_developmental && _preReleaseType == AddonRelType::none) ? 0 : 1),
-           enumValue(_preReleaseType),
-           _preReleaseNum,
-           (_developmental ? 0 : 1), // e.g., 1.0.3a2.devN < 1.0.3a2 for all N
-           _devNum };
+  return std::make_tuple(
+    ((_developmental && _preReleaseType == AddonRelType::none) ? 0 : 1),
+    enumValue(_preReleaseType),
+    _preReleaseNum,
+    (_developmental ? 0 : 1), // e.g., 1.0.3a2.devN < 1.0.3a2 for all N
+    _devNum);
 }
 
 bool operator==(const AddonVersionSuffix& lhs, const AddonVersionSuffix& rhs)
@@ -272,7 +275,8 @@ AddonVersion::versionStringToTuple(const std::string& versionStr)
     int minor = strutils::readNonNegativeInt<int>(minorNumber_s);
     int patchLevel = strutils::readNonNegativeInt<int>(patchLevel_s);
 
-    return {major, minor, patchLevel, AddonVersionSuffix(suffix_s)};
+    return std::make_tuple(major, minor, patchLevel,
+                           AddonVersionSuffix(suffix_s));
   } else {                      // the regexp didn't match
     string msg = "invalid add-on version number: '" + versionStr + "' "
       "(expected form is MAJOR.MINOR.PATCHLEVEL[{a|b|rc}N1][.devN2] where "
@@ -297,7 +301,9 @@ std::string AddonVersion::suffixStr() const
 { return suffix().str(); }
 
 std::tuple<int, int, int, AddonVersionSuffix> AddonVersion::makeTuple() const
-{ return {majorNumber(), minorNumber(), patchLevel(), suffix()}; }
+{
+  return std::make_tuple(majorNumber(), minorNumber(), patchLevel(), suffix());
+}
 
 string AddonVersion::str() const
 {
