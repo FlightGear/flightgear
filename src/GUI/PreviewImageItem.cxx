@@ -68,6 +68,11 @@ void PreviewImageItem::setGlobalNetworkAccess(QNetworkAccessManager *netAccess)
     global_previewNetAccess = netAccess;
 }
 
+bool PreviewImageItem::isLoading() const
+{
+    return m_requestActive;
+}
+
 void PreviewImageItem::setImageUrl( QUrl url)
 {
     if (m_imageUrl == url)
@@ -90,6 +95,9 @@ void PreviewImageItem::startDownload()
 
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)),
             this, SLOT(onDownloadError(QNetworkReply::NetworkError)));
+
+    m_requestActive = true;
+    emit isLoadingChanged();
 }
 
 void PreviewImageItem::setImage(QImage image)
@@ -110,6 +118,8 @@ void PreviewImageItem::onFinished()
         return;
     }
     setImage(img);
+    m_requestActive = false;
+    emit isLoadingChanged();
 }
 
 void PreviewImageItem::onDownloadError(QNetworkReply::NetworkError errorCode)
@@ -124,4 +134,6 @@ void PreviewImageItem::onDownloadError(QNetworkReply::NetworkError errorCode)
 
     qWarning() << "failed to download:" << reply->url();
     qWarning() << reply->errorString();
+    m_requestActive = false;
+    emit isLoadingChanged();
 }

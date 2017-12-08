@@ -18,7 +18,8 @@ class PreviewImageItem : public QQuickItem
 
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
 
-   // Q_PROPERTY(QSize maximumSize READ maximumSize WRITE setMaximumSize NOTIFY maximumSizeChanged)
+    Q_PROPERTY(bool isLoading READ isLoading NOTIFY isLoadingChanged)
+
 public:
     PreviewImageItem(QQuickItem* parent = nullptr);
     ~PreviewImageItem();
@@ -31,10 +32,12 @@ public:
 
     static void setGlobalNetworkAccess(QNetworkAccessManager* netAccess);
 
+    bool isLoading() const;
+
 signals:
     void imageUrlChanged();
     void sourceSizeChanged();
-
+    void isLoadingChanged();
 
 public slots:
 
@@ -53,6 +56,7 @@ private:
     bool m_imageDirty = false;
     QImage m_image;
     unsigned int m_downloadRetryCount = 0;
+    bool m_requestActive = false;
 };
 
 #endif // PREVIEW_IMAGEITEM_HXX

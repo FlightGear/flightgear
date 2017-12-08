@@ -25,6 +25,20 @@ Rectangle {
         width: parent.width
         height: parent.height
         imageUrl: __havePreviews ? root.previews[root.activePreview] : ""
+
+        Rectangle {
+            anchors.fill: parent
+            visible: parent.isLoading
+            opacity: 0.5
+            color: "black"
+        }
+
+        AnimatedImage {
+            id: spinner
+            source: "qrc:///spinner"
+            anchors.centerIn: parent
+            visible: parent.isLoading
+        }
     }
 
     Row {
