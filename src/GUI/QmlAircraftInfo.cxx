@@ -271,7 +271,7 @@ QVariant QmlAircraftInfo::status() const
         return packageAircraftStatus(_package);
     }
 
-    return {};
+    return LocalAircraftCache::AircraftOk;
 }
 
 QString QmlAircraftInfo::minimumFGVersion() const
@@ -401,7 +401,7 @@ QVariant QmlAircraftInfo::installStatus() const
         }
     }
 
-    return {};
+    return LocalAircraftCache::NotPackaged;
 }
 
 PackageRef QmlAircraftInfo::packageRef() const
