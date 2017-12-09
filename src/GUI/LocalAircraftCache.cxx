@@ -418,8 +418,12 @@ void LocalAircraftCache::scanDirs()
     m_scanThread = new AircraftScanThread(dirs);
     connect(m_scanThread, &AircraftScanThread::finished, this,
             &LocalAircraftCache::onScanFinished);
+    // force a queued connection here since we the scan thread object still
+    // belongs to the same thread as us, and hence this would otherwise be
+    // a direct connection
     connect(m_scanThread, &AircraftScanThread::addedItems,
-            this, &LocalAircraftCache::onScanResults);
+            this, &LocalAircraftCache::onScanResults,
+            Qt::QueuedConnection);
     m_scanThread->start();
 
     emit scanStarted();

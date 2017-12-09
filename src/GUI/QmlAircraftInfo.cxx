@@ -197,6 +197,7 @@ QVariantList QmlAircraftInfo::previews() const
                 }
                 result.append(QUrl::fromLocalFile(QString::fromStdString(localPreviewPath.utf8Str())));
             }
+            return result;
         }
 
         // return remote urls
