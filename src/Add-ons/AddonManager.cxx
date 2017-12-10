@@ -140,11 +140,35 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
       e.getFormattedMessage());
   }
 
-  // Check the format version of the metadata file
-  SGPropertyNode *fmtVersionNode = addonRoot.getChild("format-version");
+  // Check the 'meta' section
+  SGPropertyNode *metaNode = addonRoot.getChild("meta");
+  if (metaNode == nullptr) {
+    throw addon_errors::error_loading_metadata_file(
+      "no /meta node found in add-on metadata file '" +
+      metadataFile.utf8Str() + "'");
+  }
+
+  // Check the file type
+  SGPropertyNode *fileTypeNode = metaNode->getChild("file-type");
+  if (fileTypeNode == nullptr) {
+    throw addon_errors::error_loading_metadata_file(
+      "no /meta/file-type node found in add-on metadata file '" +
+      metadataFile.utf8Str() + "'");
+  }
+
+  string fileType = fileTypeNode->getStringValue();
+  if (fileType != "FlightGear add-on metadata") {
+    throw addon_errors::error_loading_metadata_file(
+      "Invalid /meta/file-type value for add-on metadata file '" +
+      metadataFile.utf8Str() + "': '" + fileType + "' "
+      "(expected 'FlightGear add-on metadata')");
+  }
+
+  // Check the format version
+  SGPropertyNode *fmtVersionNode = metaNode->getChild("format-version");
   if (fmtVersionNode == nullptr) {
     throw addon_errors::error_loading_metadata_file(
-      "no 'format-version' node found in add-on metadata file '" +
+      "no /meta/format-version node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
 
