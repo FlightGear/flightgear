@@ -183,14 +183,14 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   SGPropertyNode *addonNode = addonRoot.getChild("addon");
   if (addonNode == nullptr) {
     throw addon_errors::error_loading_metadata_file(
-      "no 'addon' node found in add-on metadata file '" +
+      "no /addon node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
 
   SGPropertyNode *idNode = addonNode->getChild("identifier");
   if (idNode == nullptr) {
     throw addon_errors::error_loading_metadata_file(
-      "no 'identifier' node found in add-on metadata file '" +
+      "no /addon/identifier node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
   std::string addonId = strutils::strip(idNode->getStringValue());
@@ -198,8 +198,8 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   // Require a non-empty identifier for the add-on
   if (addonId.empty()) {
     throw addon_errors::error_loading_metadata_file(
-      "empty or whitespace-only value for the 'identifier' node in add-on "
-      "metadata file '" + metadataFile.utf8Str() + "'");
+      "empty or whitespace-only value for the /addon/identifier node in "
+      "add-on metadata file '" + metadataFile.utf8Str() + "'");
   } else if (addonId.find('.') == string::npos) {
     SG_LOG(SG_GENERAL, SG_WARN,
            "Add-on identifier '" << addonId << "' does not use reverse DNS "
@@ -210,7 +210,7 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   SGPropertyNode *nameNode = addonNode->getChild("name");
   if (nameNode == nullptr) {
     throw addon_errors::error_loading_metadata_file(
-      "no 'name' node found in add-on metadata file '" +
+      "no /addon/name node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
   std::string addonName = strutils::strip(nameNode->getStringValue());
@@ -218,14 +218,14 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   // Require a non-empty name for the add-on
   if (addonName.empty()) {
     throw addon_errors::error_loading_metadata_file(
-      "empty or whitespace-only value for the 'name' node in add-on "
+      "empty or whitespace-only value for the /addon/name node in add-on "
       "metadata file '" + metadataFile.utf8Str() + "'");
   }
 
   SGPropertyNode *versionNode = addonNode->getChild("version");
   if (versionNode == nullptr) {
     throw addon_errors::error_loading_metadata_file(
-      "no 'version' node found in add-on metadata file '" +
+      "no /addon/version node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
   AddonVersion addonVersion(versionNode->getStringValue());
