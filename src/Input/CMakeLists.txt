@@ -10,6 +10,11 @@ else()
 	set(EVENT_INPUT_HEADERS FGLinuxEventInput.hxx)
 endif()
 
+if (ENABLE_HID_INPUT)
+	list(APPEND EVENT_INPUT_SOURCES FGHIDEventInput.cxx)
+	list(APPEND EVENT_INPUT_HEADERS FGHIDEventInput.hxx)	
+endif()
+
 
 set(SOURCES
 	FGButton.cxx
@@ -63,6 +68,14 @@ if(ENABLE_JS_DEMO)
     )
 
     install(TARGETS js_demo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if (COMMAND flightgear_test)
+	set(HID_INPUT_TEST_SOURCES test_hidinput.cxx FGEventInput.cxx 
+		FGCommonInput.cxx FGDEviceConfigurationMap.cxx)
+
+	flightgear_test(hidinput "${HID_INPUT_TEST_SOURCES}")
+	target_link_libraries(hidinput ${EVENT_INPUT_LIBRARIES} hidapi)	
 endif()
 
 flightgear_component(Input "${SOURCES}" "${HEADERS}")

@@ -50,6 +50,7 @@
 #cmakedefine HAVE_CRASHRPT
 
 #cmakedefine ENABLE_FLITE
+#cmakedefine ENABLE_HID_INPUT
 
 #cmakedefine HAVE_QT
 

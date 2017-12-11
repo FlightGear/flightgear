@@ -260,8 +260,8 @@ public:
 static EventTypeByName EVENT_TYPE_BY_NAME;
 
 
-FGLinuxInputDevice::FGLinuxInputDevice( std::string aName, std::string aDevname ) :
-  FGInputDevice(aName),
+FGLinuxInputDevice::FGLinuxInputDevice( std::string aName, std::string aDevname, std::string aSerial ) :
+  FGInputDevice(aName,aSerial),
   devname( aDevname ),
   fd(-1)
 {
@@ -481,10 +481,10 @@ void FGLinuxEventInput::postinit()
  
     dev = udev_device_get_parent( dev );
     const char * name = udev_device_get_sysattr_value(dev,"name");
-
+    const char * serial = udev_device_get_sysattr_value(dev, "serial");
     SG_LOG(SG_INPUT,SG_DEBUG, "name=" << (name?name:"<null>") << ", node=" << (node?node:"<null>"));
     if( name && node )
-      AddDevice( new FGLinuxInputDevice(name, node) );
+      AddDevice( new FGLinuxInputDevice(name, node, serial) );
 
     udev_device_unref(dev);
   }

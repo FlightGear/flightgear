@@ -28,8 +28,6 @@
 
 #include "FGDeviceConfigurationMap.hxx"
 
-#include <boost/foreach.hpp>
-
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
@@ -45,9 +43,15 @@ FGDeviceConfigurationMap::FGDeviceConfigurationMap( const string& relative_path,
                                                    const std::string& nodeName)
 {
   // scan for over-ride configurations, loaded via joysticks.xml, etc
-  BOOST_FOREACH(SGPropertyNode_ptr preloaded, nodePath->getChildren(nodeName)) {
-    BOOST_FOREACH(SGPropertyNode* nameProp, preloaded->getChildren("name")) {
-      overrideDict[nameProp->getStringValue()] = preloaded;
+  for (auto preloaded : nodePath->getChildren(nodeName)) {
+    // allow specifying a serial number in the override
+    std::string serial = preloaded->getStringValue("serial-number");
+    if (!serial.empty()) {
+      serial = "::" + serial;
+    }
+    
+    for (auto nameProp : preloaded->getChildren("name")) {
+      overrideDict[nameProp->getStringValue() + serial] = preloaded;
     } // of names iteration
   } // of defined overrides iteration
   
@@ -62,15 +66,15 @@ FGDeviceConfigurationMap::~FGDeviceConfigurationMap()
 SGPropertyNode_ptr
 FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
 {
-  NameNodeMap::iterator j = overrideDict.find(name);
+  auto j = overrideDict.find(name);
   if (j != overrideDict.end()) {
     return j->second;
   }
   
 // no override, check out list of config files
-  NamePathMap::iterator it = namePathMap.find(name);
+  auto it = namePathMap.find(name);
   if (it == namePathMap.end()) {
-    return SGPropertyNode_ptr();
+    return {};
   }
       
   SGPropertyNode_ptr result(new SGPropertyNode);
@@ -79,14 +83,15 @@ FGDeviceConfigurationMap::configurationForDeviceName(const std::string& name)
     result->setStringValue("source", it->second.utf8Str());
   } catch (sg_exception&) {
     SG_LOG(SG_INPUT, SG_WARN, "parse failure reading:" << it->second);
-    return NULL;
+    return {};
   }
+  
   return result;
 }
 
 bool FGDeviceConfigurationMap::hasConfiguration(const std::string& name) const
 {
-  NameNodeMap::const_iterator j = overrideDict.find(name);
+  auto j = overrideDict.find(name);
   if (j != overrideDict.end()) {
     return true;
   }
@@ -107,7 +112,7 @@ void FGDeviceConfigurationMap::scan_dir(const SGPath & path)
   simgear::PathList children = dir.children(simgear::Dir::TYPE_FILE | 
     simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
   
-  BOOST_FOREACH(SGPath path, children) {
+  for (SGPath path : children) {
     if (path.isDir()) {
       scan_dir(path);
     } else if (path.extension() == "xml") {
@@ -124,14 +129,12 @@ void FGDeviceConfigurationMap::scan_dir(const SGPath & path)
 
 void FGDeviceConfigurationMap::readCachedData(const SGPath& path)
 {
-  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
-  NamePathMap::iterator it;
-  BOOST_FOREACH(string s, cache->readStringListProperty(path.utf8Str())) {
+  auto cache = flightgear::NavDataCache::instance();
+  for (string s : cache->readStringListProperty(path.utf8Str())) {
     // important - only insert if not already present. This ensures
     // user configs can override those in the base package, since they are
     // searched first.
-    it = namePathMap.find(s);
-    if (it == namePathMap.end()) {
+    if (namePathMap.find(s) == namePathMap.end()) {
       namePathMap.insert(std::make_pair(s, path));
     }
   } // of cached names iteration
@@ -148,18 +151,22 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
     return;
   }
   
-  NamePathMap::iterator it;
+  std::string serial = n->getStringValue("serial-number");
+  if (!serial.empty()) {
+    serial = "::" + serial;
+  }
+  
   string_list names;
-  BOOST_FOREACH(SGPropertyNode* nameProp, n->getChildren("name")) {
-    names.push_back(nameProp->getStringValue());
+  for (auto nameProp : n->getChildren("name")) {
+    const string name = nameProp->getStringValue() + serial;
+    names.push_back(name);
     // same comment as readCachedData: only insert if not already present
-    it = namePathMap.find(names.back());
-    if (it == namePathMap.end()) {
-      namePathMap.insert(std::make_pair(names.back(), path));
+    if (namePathMap.find(name) == namePathMap.end()) {
+      namePathMap.insert(std::make_pair(name, path));
     }
   }
   
-  flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
+  auto cache = flightgear::NavDataCache::instance();
   cache->stampCacheFile(path);
   cache->writeStringListProperty(path.utf8Str(), names);
 }

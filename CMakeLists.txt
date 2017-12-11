@@ -207,6 +207,7 @@ option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
 option(ENABLE_TRAFFIC    "Set to ON to build the external traffic generator modules" ON)
 option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas application" OFF)
 option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
+option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code (default)" OFF)
 
 include (DetectArch)
 
@@ -239,6 +240,8 @@ include( ConfigureMsvc3rdParty )
 if(EVENT_INPUT)
     if(APPLE)
       add_definitions(-DWITH_EVENTINPUT)
+      find_library(IOKIT_FRAMEWORK IOKit)
+      list(APPEND EVENT_INPUT_LIBRARIES ${IOKIT_FRAMEWORK})      
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux|FreeBSD")
         if(NOT UDEV_FOUND)
             message(WARNING "UDev not found, event input is disabled!")
@@ -250,6 +253,10 @@ if(EVENT_INPUT)
         endif()
     else()
         message(WARNING "event-based input is not supported on this platform yet")
+    endif()
+
+    if (ENABLE_HID_INPUT)
+        list(APPEND EVENT_INPUT_LIBRARIES hidapi)
     endif()
 
     # Keep PLIB INPUT enabled as long as EventInput does not replace current joystick configurations.

@@ -81,6 +81,11 @@ void postinitNasalGUI(naRef globals, naContext c)
 
 }
 
+int fgGetKeyModifiers()
+{
+    return 0;
+}
+
 void syncPausePopupState()
 {
 

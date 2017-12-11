@@ -250,7 +250,8 @@ void FGMacOSXEventInputPrivate::matchedDevice(IOHIDDeviceRef device)
 {
     std::string productName = getDeviceStringProperty(device, CFSTR(kIOHIDProductKey));
     std::string manufacturer = getDeviceStringProperty(device, CFSTR(kIOHIDManufacturerKey));
-
+    std::string serial = getDeviceStringProperty(device, CFSTR(kIOHIDSerialNumberKey));
+    
     SG_LOG(SG_INPUT, SG_INFO, "matched device:" << productName << " from " << manufacturer);
 
     // allocate a Mac input device, and add to the base class to see if we have
@@ -258,6 +259,8 @@ void FGMacOSXEventInputPrivate::matchedDevice(IOHIDDeviceRef device)
 
     FGMacOSXInputDevice* macInputDevice = new FGMacOSXInputDevice(device, this);
     macInputDevice->SetName(manufacturer + " " + productName);
+    macInputDevice->SetSerialNumber(serial);
+    
     p->AddDevice(macInputDevice);
 }
 

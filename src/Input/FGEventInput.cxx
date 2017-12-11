@@ -101,10 +101,9 @@ FGInputEvent::FGInputEvent( FGInputDevice * aDevice, SGPropertyNode_ptr node ) :
   intervalSec = node->getDoubleValue("interval-sec",0.0);
   
   read_bindings( node, bindings, KEYMOD_NONE, device->GetNasalModule() );
-
-  PropertyList settingNodes = node->getChildren("setting");
-  for( PropertyList::iterator it = settingNodes.begin(); it != settingNodes.end(); ++it )
-    settings.push_back( new FGEventSetting( *it ) );
+    
+  for (auto node : node->getChildren("setting"))
+    settings.push_back( new FGEventSetting(node) );
 }
 
 FGInputEvent::~FGInputEvent()
@@ -113,11 +112,11 @@ FGInputEvent::~FGInputEvent()
 
 void FGInputEvent::update( double dt )
 {
-  for( setting_list_t::iterator it = settings.begin(); it != settings.end(); ++it ) {
-    if( (*it)->Test() ) {
-      double value = (*it)->GetValue();
+  for (auto setting : settings) {
+    if( setting->Test() ) {
+      const double value = setting->GetValue();
       if( value != lastSettingValue ) {
-        device->Send( GetName(), (*it)->GetValue() );
+        device->Send( GetName(), value );
         lastSettingValue = value;
       }
     }
@@ -275,6 +274,14 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
 
 }
 
+void FGInputDevice::AddHandledEvent( FGInputEvent_ptr event )
+{
+    auto it = handledEvents.find(event->GetName());
+    if (it == handledEvents.end()) {
+        handledEvents.insert(it, std::make_pair(event->GetName(), event));
+    }
+}
+
 void FGInputDevice::update( double dt )
 {
   for( map<string,FGInputEvent_ptr>::iterator it = handledEvents.begin(); it != handledEvents.end(); it++ )
@@ -292,10 +299,11 @@ void FGInputDevice::update( double dt )
 void FGInputDevice::HandleEvent( FGEventData & eventData )
 {
   string eventName = TranslateEventName( eventData );  
-  if( debugEvents )
-    cout << GetName() << " has event " << 
-    eventName << " modifiers=" << eventData.modifiers << " value=" << eventData.value << endl;
-
+  if( debugEvents ) {
+    SG_LOG(SG_INPUT, SG_INFO, GetName() << " has event " <<
+           eventName << " modifiers=" << eventData.modifiers << " value=" << eventData.value);
+  }
+    
   if( handledEvents.count( eventName ) > 0 ) {
     handledEvents[ eventName ]->fire( eventData );
   }
@@ -304,6 +312,11 @@ void FGInputDevice::HandleEvent( FGEventData & eventData )
 void FGInputDevice::SetName( string name )
 {
   this->name = name; 
+}
+
+void FGInputDevice::SetSerialNumber( std::string serial )
+{
+    serialNumber = serial;
 }
 
 void FGInputDevice::SendFeatureReport(unsigned int reportId, const std::string& data)
@@ -335,9 +348,6 @@ void FGEventInput::shutdown()
 
 void FGEventInput::init( )
 {
-  SG_LOG(SG_INPUT, SG_DEBUG, "Initializing event bindings");
-//  SGPropertyNode * base = fgGetNode("/input/event", true);
-
 }
 
 void FGEventInput::postinit ()
@@ -354,36 +364,48 @@ void FGEventInput::update( double dt )
 unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
 {
   SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
-  SGPropertyNode_ptr deviceNode = NULL;
+  SGPropertyNode_ptr deviceNode;
 
-  // look for configuration in the device map
-  if ( configMap.hasConfiguration( inputDevice->GetName() ) ) {
-    // found - copy to /input/event/device[n]
-
-    // find a free index
-    unsigned index;
-    for( index = 0; index < MAX_DEVICES; index++ )
-      if( (deviceNode = baseNode->getNode( "device", index, false ) ) == NULL )
-        break;
-
-    if( index == MAX_DEVICES ) {
-      SG_LOG(SG_INPUT, SG_WARN, "To many event devices - ignoring " << inputDevice->GetName() );
+  const string deviceName = inputDevice->GetName();
+  SGPropertyNode_ptr configNode;
+  
+  if (!inputDevice->GetSerialNumber().empty()) {
+    const string nameWithSerial = deviceName + "::" + inputDevice->GetSerialNumber();
+    if (configMap.hasConfiguration(nameWithSerial)) {
+      configNode = configMap.configurationForDeviceName(nameWithSerial);
+    }
+  }
+  
+  if (configNode == nullptr) {
+    if (!configMap.hasConfiguration(deviceName)) {
+      SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << deviceName <<
+             " (with serial: " << inputDevice->GetSerialNumber() << ")");
+      delete inputDevice;
       return INVALID_DEVICE_INDEX;
     }
+    configNode = configMap.configurationForDeviceName(deviceName);
+  }
+    
+  // found - copy to /input/event/device[n]
 
-    // create this node 
-    deviceNode = baseNode->getNode( "device", index, true );
-
-    // and copy the properties from the configuration tree
-    copyProperties( configMap.configurationForDeviceName(inputDevice->GetName()), deviceNode );
-
+  // find a free index
+  unsigned int index;
+  for ( index = 0; index < MAX_DEVICES; index++ ) {
+    if ( (deviceNode = baseNode->getNode( "device", index, false ) ) == nullptr )
+      break;
   }
 
-  if( deviceNode == NULL ) {
-    SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << inputDevice->GetName() );
-    delete  inputDevice;
+  if (index == MAX_DEVICES) {
+    SG_LOG(SG_INPUT, SG_WARN, "To many event devices - ignoring " << inputDevice->GetName() );
+    delete inputDevice;
     return INVALID_DEVICE_INDEX;
   }
+
+  // create this node
+  deviceNode = baseNode->getNode( "device", index, true );
+
+  // and copy the properties from the configuration tree
+  copyProperties(configNode, deviceNode );
 
   inputDevice->Configure( deviceNode );
 
@@ -447,6 +469,11 @@ std::string FGReportSetting::reportBytes(const std::string& moduleName) const
     }
 
     naRef module = nas->getModule(moduleName.c_str());
+    if (naIsNil(module)) {
+        SG_LOG(SG_IO, SG_WARN, "No such Nasal module:" << moduleName);
+        return {};
+    }
+    
     naRef func = naHash_cget(module, (char*) nasalFunction.c_str());
     if (!naIsFunc(func)) {
         return std::string();

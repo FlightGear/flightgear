@@ -22,9 +22,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "input.hxx"
 
@@ -46,6 +44,10 @@
 #else
 #include "FGLinuxEventInput.hxx"
 #define INPUTEVENT_CLASS FGLinuxEventInput
+#endif
+
+#if defined(ENABLE_HID_INPUT)
+#include "FGHIDEventInput.hxx"
 #endif
 
 #endif
@@ -79,6 +81,14 @@ FGInput::FGInput ()
     SG_LOG(SG_INPUT,SG_ALERT,"Event input disabled!");
   } else {
     set_subsystem( "input-event", new INPUTEVENT_CLASS() );
+  }
+#endif
+    
+#if defined(ENABLE_HID_INPUT)
+  if (fgGetBool("/sim/input/enable-hid", true)) {
+    set_subsystem( "input-event-hid", new FGHIDEventInput() );
+  } else {
+    SG_LOG(SG_INPUT, SG_WARN, "HID-based event input disabled");
   }
 #endif
 }

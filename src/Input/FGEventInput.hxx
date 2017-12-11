@@ -217,8 +217,9 @@ typedef class SGSharedPtr<FGInputEvent> FGInputEvent_ptr;
  */
 class FGInputDevice : public SGReferenced {
 public:
-  FGInputDevice() : debugEvents(false), grab(false) {}
-  FGInputDevice( std::string aName ) : name(aName), debugEvents(false), grab(false)  {}
+  FGInputDevice() {}
+  FGInputDevice( std::string aName, std::string aSerial = {} ) :
+    name(aName), serialNumber(aSerial) {}
     
   virtual ~FGInputDevice();
 
@@ -239,12 +240,12 @@ public:
   void SetName( std::string name );
   std::string & GetName() { return name; }
 
+  void SetSerialNumber( std::string serial );
+  std::string& GetSerialNumber() { return serialNumber; }
+    
   void HandleEvent( FGEventData & eventData );
 
-  virtual void AddHandledEvent( FGInputEvent_ptr handledEvent ) {
-    if( handledEvents.count( handledEvent->GetName() ) == 0 )
-      handledEvents[handledEvent->GetName()] = handledEvent;
-  }
+  virtual void AddHandledEvent( FGInputEvent_ptr handledEvent );
 
   virtual void Configure( SGPropertyNode_ptr deviceNode );
 
@@ -256,20 +257,24 @@ public:
 
   const std::string & GetNasalModule() const { return nasalModule; }
 
-private:
+protected:
   // A map of events, this device handles
   std::map<std::string,FGInputEvent_ptr> handledEvents;
 
   // the device has a name to be recognized
   std::string name;
 
+  // serial number string to disambiguate multiple instances
+  // of the same device
+  std::string serialNumber;
+    
   // print out events comming in from the device
   // if true
-  bool   debugEvents;
+  bool   debugEvents = false;
 
   // grab the device exclusively, if O/S supports this
   // so events are not sent to other applications
-  bool   grab;
+  bool   grab = false;
 
   SGPropertyNode_ptr deviceNode;
   std::string nasalModule;
