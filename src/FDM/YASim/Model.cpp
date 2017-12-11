@@ -61,6 +61,12 @@ Model::Model()
     _fAeroXN = _modelN->getNode("f-x-drag", true);
     _fAeroYN = _modelN->getNode("f-y-side", true);
     _fAeroZN = _modelN->getNode("f-z-lift", true);
+    _fGravXN = _modelN->getNode("gravity-x", true);
+    _fGravYN = _modelN->getNode("gravity-y", true);
+    _fGravZN = _modelN->getNode("gravity-z", true);
+    _fSumXN = _modelN->getNode("f-sum-x", true);
+    _fSumYN = _modelN->getNode("f-sum-y", true);
+    _fSumZN = _modelN->getNode("f-sum-z", true);
     
     _gefxN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-x", true);
     _gefyN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-y", true);
@@ -293,8 +299,7 @@ void Model::calcForces(State* s)
 
     // Do each surface, remembering that the local velocity at each
     // point is different due to rotation.
-    float faero[3];
-    faero[0] = faero[1] = faero[2] = 0;
+    float faero[3] {0,0,0};    
     for(i=0; i<_surfaces.size(); i++) {
       Surface* sf = (Surface*)_surfaces.get(i);
 
@@ -374,6 +379,12 @@ void Model::calcForces(State* s)
       _fAeroXN->setFloatValue(faero[0]);
       _fAeroYN->setFloatValue(faero[1]);
       _fAeroZN->setFloatValue(faero[2]);
+      _fGravXN->setFloatValue(grav[0]);
+      _fGravYN->setFloatValue(grav[1]);
+      _fGravZN->setFloatValue(grav[2]);
+      _fSumXN->setFloatValue(faero[0]+grav[0]);
+      _fSumYN->setFloatValue(faero[1]+grav[1]);
+      _fSumZN->setFloatValue(faero[2]+grav[2]);
     }
     // Convert the velocity and rotation vectors to local coordinates
     float lrot[3], lv[3];
@@ -382,18 +393,18 @@ void Model::calcForces(State* s)
 
     // The landing gear
     for(i=0; i<_gears.size(); i++) {
-	float force[3], contact[3];
-	Gear* g = (Gear*)_gears.get(i);
+        float force[3], contact[3];
+        Gear* g = (Gear*)_gears.get(i);
 
-	g->calcForce(&_body, s, lv, lrot);
-	g->getForce(force, contact);
-	_body.addForce(contact, force);
+        g->calcForce(&_body, s, lv, lrot);
+        g->getForce(force, contact);
+        _body.addForce(contact, force);
     }
 
     // The arrester hook
     if(_hook) {
         _hook->calcForce(_ground_cb, &_body, s, lv, lrot);
-	float force[3], contact[3];
+        float force[3], contact[3];
         _hook->getForce(force, contact);
         _body.addForce(contact, force);
     }
@@ -401,13 +412,13 @@ void Model::calcForces(State* s)
     // The launchbar/holdback
     if(_launchbar) {
         _launchbar->calcForce(_ground_cb, &_body, s, lv, lrot);
-	float forcelb[3], contactlb[3], forcehb[3], contacthb[3];
+        float forcelb[3], contactlb[3], forcehb[3], contacthb[3];
         _launchbar->getForce(forcelb, contactlb, forcehb, contacthb);
         _body.addForce(contactlb, forcelb);
         _body.addForce(contacthb, forcehb);
     }
 
-// The hitches
+    // The hitches
     for(i=0; i<_hitches.size(); i++) {
         float force[3], contact[3];
         Hitch* h = (Hitch*)_hitches.get(i);

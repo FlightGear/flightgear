@@ -118,6 +118,12 @@ private:
     SGPropertyNode_ptr _fAeroXN;
     SGPropertyNode_ptr _fAeroYN;
     SGPropertyNode_ptr _fAeroZN;
+    SGPropertyNode_ptr _fSumXN;
+    SGPropertyNode_ptr _fSumYN;
+    SGPropertyNode_ptr _fSumZN;
+    SGPropertyNode_ptr _fGravXN;
+    SGPropertyNode_ptr _fGravYN;
+    SGPropertyNode_ptr _fGravZN;
     SGPropertyNode_ptr _gefxN;
     SGPropertyNode_ptr _gefyN;
     SGPropertyNode_ptr _gefzN;
