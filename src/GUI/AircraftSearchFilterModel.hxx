@@ -15,6 +15,8 @@ public:
 
     Q_PROPERTY(bool ratingsFilterEnabled READ ratingsFilterEnabled WRITE setRatingFilterEnabled NOTIFY ratingsFilterEnabledChanged)
 
+    Q_PROPERTY(QString summaryText READ summaryText NOTIFY summaryTextChanged)
+
     Q_INVOKABLE void setAircraftFilterString(QString s);
 
     /**
@@ -37,9 +39,12 @@ public:
 
     void setRatings(QList<int> ratings);
     void setRatingFilterEnabled(bool e);
+
+    QString summaryText() const;
 signals:
     void ratingsChanged();
     void ratingsFilterEnabledChanged();
+    void summaryTextChanged();
 
 public slots:
 

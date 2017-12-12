@@ -21,6 +21,7 @@ void AircraftProxyModel::setRatings(QList<int> ratings)
     m_ratings = ratings;
     invalidate();
     emit ratingsChanged();
+    emit summaryTextChanged();
 }
 
 void AircraftProxyModel::setAircraftFilterString(QString s)
@@ -61,6 +62,17 @@ void AircraftProxyModel::setRatingFilterEnabled(bool e)
     m_ratingsFilter = e;
     invalidate();
     emit ratingsFilterEnabledChanged();
+    emit summaryTextChanged();
+}
+
+QString AircraftProxyModel::summaryText() const
+{
+    const int unfilteredCount = sourceModel()->rowCount();
+    if (m_ratingsFilter) {
+        return tr("(%1 of %2 aircraft)").arg(rowCount()).arg(unfilteredCount);
+    }
+
+    return tr("(%1 aircraft)").arg(unfilteredCount);
 }
 
 void AircraftProxyModel::setInstalledFilterEnabled(bool e)

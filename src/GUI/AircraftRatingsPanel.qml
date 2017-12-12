@@ -14,11 +14,22 @@ ListHeaderBox
                 _launcher.browseAircraftModel.ratingsFilterEnabled = checked
             }
 
-            label: qsTr("Filter aircraft based on rating")
+            label: qsTr("Filter using ratings")
             anchors.verticalCenter: parent.verticalCenter
         },
 
+        Text {
+            anchors {
+                verticalCenter: parent.verticalCenter
+                leftMargin: Style.margin
+                left: doFilterCheck.right
+                right: adjustRatingsText.left
+            }
+            text: _launcher.browseAircraftModel.summaryText
+        },
+
         ClickableText {
+            id: adjustRatingsText
             anchors.right: parent.right
             anchors.rightMargin: Style.margin
             text: qsTr("Adjust minimum ratings")
