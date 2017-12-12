@@ -84,8 +84,6 @@ if (HAVE_QT)
         TimeSettings.qml
         ViewSettings.qml
         Weather.qml
-        AircraftList.qml
-        Scrollbar.qml
         )
 
     add_library(fglauncher QtLauncher.cxx

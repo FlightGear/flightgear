@@ -155,7 +155,7 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
     m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
 
-    m_ui->aircraftList->setSource(QUrl("qrc:///AircraftList.qml"));
+    m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
 
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
             this, &LauncherMainWindow::onAircraftInstalledCompleted);
