@@ -19,8 +19,8 @@
 
 #include <algorithm>
 #include <memory>
-#include <utility>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <cstdlib>
@@ -107,168 +107,14 @@ AddonManager::loadConfigFileIfExists(const SGPath& configFile)
 string
 AddonManager::registerAddonMetadata(const SGPath& addonPath)
 {
-  SGPropertyNode addonRoot;
-  const SGPath metadataFile = addonPath / "addon-metadata.xml";
-
-  if (!metadataFile.exists()) {
-    throw addon_errors::no_metadata_file_found(
-      "unable to find add-on metadata file '" + metadataFile.utf8Str() + "'");
-  }
-
-  try {
-    readProperties(metadataFile, &addonRoot);
-  } catch (const sg_exception &e) {
-    throw addon_errors::error_loading_metadata_file(
-      "unable to load add-on metadata file '" + metadataFile.utf8Str() + "': " +
-      e.getFormattedMessage());
-  }
-
-  // Check the 'meta' section
-  SGPropertyNode *metaNode = addonRoot.getChild("meta");
-  if (metaNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /meta node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-
-  // Check the file type
-  SGPropertyNode *fileTypeNode = metaNode->getChild("file-type");
-  if (fileTypeNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /meta/file-type node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-
-  string fileType = fileTypeNode->getStringValue();
-  if (fileType != "FlightGear add-on metadata") {
-    throw addon_errors::error_loading_metadata_file(
-      "Invalid /meta/file-type value for add-on metadata file '" +
-      metadataFile.utf8Str() + "': '" + fileType + "' "
-      "(expected 'FlightGear add-on metadata')");
-  }
-
-  // Check the format version
-  SGPropertyNode *fmtVersionNode = metaNode->getChild("format-version");
-  if (fmtVersionNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /meta/format-version node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-
-  int formatVersion = fmtVersionNode->getIntValue();
-  if (formatVersion != 1) {
-    throw addon_errors::error_loading_metadata_file(
-      "unknown format version in add-on metadata file '" +
-      metadataFile.utf8Str() + "': " + std::to_string(formatVersion));
-  }
-
-  // Now the data we are really interested in
-  SGPropertyNode *addonNode = addonRoot.getChild("addon");
-  if (addonNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /addon node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-
-  SGPropertyNode *idNode = addonNode->getChild("identifier");
-  if (idNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /addon/identifier node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-  std::string addonId = strutils::strip(idNode->getStringValue());
-
-  // Require a non-empty identifier for the add-on
-  if (addonId.empty()) {
-    throw addon_errors::error_loading_metadata_file(
-      "empty or whitespace-only value for the /addon/identifier node in "
-      "add-on metadata file '" + metadataFile.utf8Str() + "'");
-  } else if (addonId.find('.') == string::npos) {
-    SG_LOG(SG_GENERAL, SG_WARN,
-           "Add-on identifier '" << addonId << "' does not use reverse DNS "
-           "style (e.g., org.flightgear.addons.MyAddon) in add-on metadata "
-           "file '" << metadataFile.utf8Str() + "'");
-  }
-
-  SGPropertyNode *nameNode = addonNode->getChild("name");
-  if (nameNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /addon/name node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-  std::string addonName = strutils::strip(nameNode->getStringValue());
-
-  // Require a non-empty name for the add-on
-  if (addonName.empty()) {
-    throw addon_errors::error_loading_metadata_file(
-      "empty or whitespace-only value for the /addon/name node in add-on "
-      "metadata file '" + metadataFile.utf8Str() + "'");
-  }
-
-  SGPropertyNode *versionNode = addonNode->getChild("version");
-  if (versionNode == nullptr) {
-    throw addon_errors::error_loading_metadata_file(
-      "no /addon/version node found in add-on metadata file '" +
-      metadataFile.utf8Str() + "'");
-  }
-  AddonVersion addonVersion(versionNode->getStringValue());
-
-  std::string addonShortDescription;
-  SGPropertyNode *shortDescNode = addonNode->getChild("short-description");
-  if (shortDescNode != nullptr) {
-    addonShortDescription = strutils::strip(shortDescNode->getStringValue());
-  }
-
-  std::string addonLongDescription;
-  SGPropertyNode *longDescNode = addonNode->getChild("long-description");
-  if (longDescNode != nullptr) {
-    addonLongDescription = strutils::strip(longDescNode->getStringValue());
-  }
-
-  std::string addonMinFGVersionRequired;
-  SGPropertyNode *minNode = addonNode->getChild("min-FG-version");
-  if (minNode != nullptr) {
-    addonMinFGVersionRequired = minNode->getStringValue();
-  }
-
-  std::string addonMaxFGVersionRequired;
-  SGPropertyNode *maxNode = addonNode->getChild("max-FG-version");
-  if (maxNode != nullptr) {
-    addonMaxFGVersionRequired = maxNode->getStringValue();
-  }
-
-  std::string addonHomePage;
-  SGPropertyNode *homePageNode = addonNode->getChild("home-page");
-  if (homePageNode != nullptr) {
-    addonHomePage = strutils::strip(homePageNode->getStringValue());
-  }
-
-  std::string addonDownloadUrl;
-  SGPropertyNode *downloadUrlNode = addonNode->getChild("download-url");
-  if (downloadUrlNode != nullptr) {
-    addonDownloadUrl = strutils::strip(downloadUrlNode->getStringValue());
-  }
-
-  std::string addonSupportUrl;
-  SGPropertyNode *supportUrlNode = addonNode->getChild("support-url");
-  if (supportUrlNode != nullptr) {
-    addonSupportUrl = strutils::strip(supportUrlNode->getStringValue());
-  }
+  AddonRef addon(new Addon(Addon::fromAddonDir(addonPath)));
+  SGPath metadataFile = addon->getMetadataFile();
+  string addonId = addon->getId();
 
   SGPropertyNode* addonPropNode = fgGetNode("addons", true)
                                  ->getChild("by-id", 0, 1)
                                  ->getChild(addonId, 0, 1);
-  // Object holding all the add-on metadata
-  AddonRef addon(new Addon(
-                   addonId, std::move(addonVersion), addonPath,
-                   addonMinFGVersionRequired, addonMaxFGVersionRequired,
-                   addonPropNode));
-  addon->setName(addonName);
-  addon->setShortDescription(addonShortDescription);
-  addon->setLongDescription(addonLongDescription);
-  addon->setHomePage(addonHomePage);
-  addon->setDownloadUrl(addonDownloadUrl);
-  addon->setSupportUrl(addonSupportUrl);
+  addon->setAddonNode(addonPropNode);
   addon->setLoadSequenceNumber(_loadSequenceNumber++);
 
   // Check that the FlightGear version satisfies the add-on requirements

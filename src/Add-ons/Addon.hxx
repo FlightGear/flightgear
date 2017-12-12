@@ -22,6 +22,8 @@
 
 #include <ostream>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
@@ -47,6 +49,10 @@ public:
         std::string maxFGVersionRequired = "",
         SGPropertyNode* addonNode = nullptr);
 
+  // Parse the add-on metadata file inside 'addonPath' (as defined by
+  // getMetadataFile()) and return the corresponding Addon instance.
+  static Addon fromAddonDir(const SGPath& addonPath);
+
   std::string getId() const;
   void setId(const std::string& addonId);
 
@@ -56,14 +62,36 @@ public:
   AddonVersionRef getVersion() const;
   void setVersion(const AddonVersion& addonVersion);
 
+  std::string getAuthors() const;
+  void setAuthors(const std::string& addonAuthors);
+
+  std::string getMaintainers() const;
+  void setMaintainers(const std::string& addonMaintainers);
+
   std::string getShortDescription() const;
   void setShortDescription(const std::string& addonShortDescription);
 
   std::string getLongDescription() const;
   void setLongDescription(const std::string& addonLongDescription);
 
+  std::string getLicenseDesignation() const;
+  void setLicenseDesignation(const std::string& addonLicenseDesignation);
+
+  SGPath getLicenseFile() const;
+  void setLicenseFile(const SGPath& addonLicenseFile);
+
+  std::string getLicenseUrl() const;
+  void setLicenseUrl(const std::string& addonLicenseUrl);
+
+  std::vector<std::string> getTags() const;
+  void setTags(const std::vector<std::string>& addonTags);
+
   SGPath getBasePath() const;
   void setBasePath(const SGPath& addonBasePath);
+
+  // “Compute” a path to the metadata file from the add-on base path
+  static SGPath getMetadataFile(const SGPath& addonPath);
+  SGPath getMetadataFile() const;
 
   // Should be valid for use with simgear::strutils::compare_versions()
   std::string getMinFGVersionRequired() const;
@@ -82,6 +110,9 @@ public:
 
   std::string getSupportUrl() const;
   void setSupportUrl(const std::string& addonSupportUrl);
+
+  std::string getCodeRepositoryUrl() const;
+  void setCodeRepositoryUrl(const std::string& addonCodeRepositoryUrl);
 
   // Node pertaining to the add-on in the Global Property Tree
   SGPropertyNode_ptr getAddonNode() const;
@@ -103,6 +134,9 @@ public:
   static void setupGhost(nasal::Hash& addonsModule);
 
 private:
+  static std::tuple<string, SGPath, string>
+  parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode);
+
   // The add-on identifier, in reverse DNS style. The AddonManager refuses to
   // register two add-ons with the same id in a given FlightGear session.
   std::string _id;
@@ -111,17 +145,31 @@ private:
   // Use a smart pointer to expose the AddonVersion instance to Nasal without
   // needing to copy the data every time.
   AddonVersionRef _version;
+
+  std::string _authors;
+  std::string _maintainers;
+
   // Strings describing what the add-on does
   std::string _shortDescription;
   std::string _longDescription;
+
+  std::string _licenseDesignation;
+  SGPath _licenseFile;
+  std::string _licenseUrl;
+
+  std::vector<std::string> _tags;
   SGPath _basePath;
+
   // To be used with simgear::strutils::compare_versions()
   std::string _minFGVersionRequired;
   // Ditto, but there is a special value: "none"
   std::string _maxFGVersionRequired;
+
   std::string _homePage;
   std::string _downloadUrl;
   std::string _supportUrl;
+  std::string _codeRepositoryUrl;
+
   // Main node for the add-on in the Property Tree
   SGPropertyNode_ptr _addonNode;
   // Semantics explained above
