@@ -269,7 +269,6 @@ static void routeBaseGhostDestroy(void* g)
 
 static naRef airportPrototype;
 static naRef flightplanPrototype;
-static naRef waypointPrototype;
 static naRef geoCoordClass;
 static naRef fpLegPrototype;
 static naRef procedurePrototype;
@@ -558,6 +557,45 @@ naRef routeRestrictionToNasal(naContext c, RouteRestriction rr)
   return naNil();
 }
 
+// navaid() method of FPLeg ghosts
+static naRef f_fpLeg_navaid(naContext c, naRef me, int argc, naRef* args)
+{
+  flightgear::Waypt* w = wayptGhost(me);
+  if (!w) {
+    naRuntimeError(c,
+                   "flightplan-leg.navaid() called, but can't find the "
+                   "underlying waypoint for the flightplan-leg object");
+  }
+
+  return waypointNavaid(c, w);
+}
+
+// airport() method of FPLeg ghosts
+static naRef f_fpLeg_airport(naContext c, naRef me, int argc, naRef* args)
+{
+  flightgear::Waypt* w = wayptGhost(me);
+  if (!w) {
+    naRuntimeError(c,
+                   "flightplan-leg.airport() called, but can't find the "
+                   "underlying waypoint for the flightplan-leg object");
+  }
+
+  return waypointAirport(c, w);
+}
+
+// runway() method of FPLeg ghosts
+static naRef f_fpLeg_runway(naContext c, naRef me, int argc, naRef* args)
+{
+  flightgear::Waypt* w = wayptGhost(me);
+  if (!w) {
+    naRuntimeError(c,
+                   "flightplan-leg.runway() called, but can't find the "
+                   "underlying waypoint for the flightplan-leg object");
+  }
+
+  return waypointRunway(c, w);
+}
+
 static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
@@ -567,7 +605,6 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
     naVec_append(*out, fpLegPrototype);
-    naVec_append(*out, waypointPrototype);
   } else if (!strcmp(fieldName, "index")) {
     *out = naNum(leg->index());
   } else if (!strcmp(fieldName, "alt_cstr")) {
@@ -585,6 +622,12 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
     *out = naNum(leg->courseDeg());
   } else if (!strcmp(fieldName, "distance_along_route")) {
     *out = naNum(leg->distanceAlongRoute());
+  } else if (!strcmp(fieldName, "airport")) {
+    *out = naNewFunc(c, naNewCCode(c, f_fpLeg_airport));
+  } else if (!strcmp(fieldName, "navaid")) {
+    *out = naNewFunc(c, naNewCCode(c, f_fpLeg_navaid));
+  } else if (!strcmp(fieldName, "runway")) {
+    *out = naNewFunc(c, naNewCCode(c, f_fpLeg_runway));
   } else { // check for fields defined on the underlying waypoint
     return waypointCommonGetMember(c, wpt, fieldName, out);
   }
@@ -2822,10 +2865,6 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "indexOfWP", naNewFunc(c, naNewCCode(c, f_flightplan_indexOfWp)));
 
     hashset(c, flightplanPrototype, "save", naNewFunc(c, naNewCCode(c, f_flightplan_save)));
-
-  
-    waypointPrototype = naNewHash(c);
-    naSave(c, waypointPrototype);
 
     procedurePrototype = naNewHash(c);
     naSave(c, procedurePrototype);
