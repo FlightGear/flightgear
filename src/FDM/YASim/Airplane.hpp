@@ -24,6 +24,11 @@ public:
     Airplane();
     ~Airplane();
 
+    enum Configuration {
+        APPROACH,
+        CRUISE,
+    };
+    
     void iterate(float dt);
     void calcFuelWeights();
 
@@ -60,10 +65,9 @@ public:
     void setCruise(float speed, float altitude, float fuel, float gla);
 
     void setElevatorControl(const char* prop);
-    void addApproachControl(const char* prop, float val);
-    void addCruiseControl(const char* prop, float val);
+    void addControlSetting(Configuration cfg, const char* prop, float val);
 
-    void addSolutionWeight(bool approach, int idx, float wgt);
+    void addSolutionWeight(Configuration cfg, int idx, float wgt);
 
     int numGear() const { return _gears.size(); }
     Gear* getGear(int g) { return ((GearRec*)_gears.get(g))->gear; }

@@ -228,22 +228,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &a)
     else if(!strcmp(name, "solve-weight")) { parseSolveWeight(&a); } 
     else if(!strcmp(name, "cockpit")) { parseCockpit(&a); }
     else if(!strcmp(name, "rotor")) { parseRotor(&a, name); }
-    else if(!strcmp(name, "rotorgear")) {
-        Rotorgear* r = _airplane.getModel()->getRotorgear();
-        _currObj = r;
-        #define p(x) if ((&a)->hasAttribute(#x)) r->setParameter((char *)#x,attrf(&a,#x) );
-        #define p2(x,y) if ((&a)->hasAttribute(y)) r->setParameter((char *)#x,attrf(&a,y) );
-        p2(max_power_engine,"max-power-engine")
-        p2(engine_prop_factor,"engine-prop-factor")
-        p(yasimdragfactor)
-        p(yasimliftfactor)
-        p2(max_power_rotor_brake,"max-power-rotor-brake")
-        p2(rotorgear_friction,"rotorgear-friction")
-        p2(engine_accel_limit,"engine-accel-limit")
-        #undef p
-        #undef p2
-        r->setInUse();
-    } 
+    else if(!strcmp(name, "rotorgear")) { parseRotorGear(&a); }
     else if(!strcmp(name, "wing") || !strcmp(name, "hstab") || !strcmp(name, "vstab") || !strcmp(name, "mstab")) { 
         parseWing(&a, name, &_airplane); 
     } 
@@ -320,11 +305,11 @@ void FGFDM::parseApproachCruise(const XMLAttributes* a, const char* name)
     if (!strcmp(name, "approach")) {
         float aoa = attrf(a, "aoa", 0) * DEG2RAD;
         _airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2), gla);
-        _cruiseCurr = false;        
+        _airplaneCfg = Airplane::Configuration::APPROACH;
     }
     else {
         _airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5),gla);
-        _cruiseCurr = true;
+        _airplaneCfg = Airplane::Configuration::CRUISE;
     }
 }
 
@@ -339,7 +324,7 @@ void FGFDM::parseSolveWeight(const XMLAttributes* a)
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, solve-weight needs one of {weight-lbs, weight-kg}");
         exit(1);       
     }
-    _airplane.addSolutionWeight(!_cruiseCurr, idx, f);
+    _airplane.addSolutionWeight(_airplaneCfg, idx, f);
 }
 
 void FGFDM::parseCockpit(const XMLAttributes* a)
@@ -594,10 +579,13 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
 
     float dragFactor = attrf(a, "pdrag", 1);
     if (a->hasAttribute("effectiveness")) {
+/* FIXME: 
+ * check if all attibutes have "good" names and update parser AND documentation together
+ * only after that issue warnings
         SG_LOG(SG_FLIGHT, SG_ALERT, "Warning: " <<
                "deprecated attribute 'effectiveness' in YASim configuration file.  " <<
                "Use 'pdrag' instead to add parasitic drag.");
-        
+*/       
         dragFactor = attrf(a, "effectiveness", 1);
     }
     w->setSectionDrag(_wingSection, dragFactor);
@@ -718,6 +706,24 @@ void FGFDM::parseRotor(const XMLAttributes* a, const char* type)
     _currObj = w;
     _airplane.getModel()->getRotorgear()->addRotor(w);    
 } //parseRotor
+
+void FGFDM::parseRotorGear(const XMLAttributes* a)
+{
+    Rotorgear* r = _airplane.getModel()->getRotorgear();
+    _currObj = r;
+    #define p(x) if (a->hasAttribute(#x)) r->setParameter((char *)#x,attrf(a,#x) );
+    #define p2(x,y) if (a->hasAttribute(y)) r->setParameter((char *)#x,attrf(a,y) );
+    p2(max_power_engine,"max-power-engine")
+    p2(engine_prop_factor,"engine-prop-factor")
+    p(yasimdragfactor)
+    p(yasimliftfactor)
+    p2(max_power_rotor_brake,"max-power-rotor-brake")
+    p2(rotorgear_friction,"rotorgear-friction")
+    p2(engine_accel_limit,"engine-accel-limit")
+    #undef p
+    #undef p2
+    r->setInUse();
+}
 
 void FGFDM::parsePistonEngine(const XMLAttributes* a)
 {
@@ -1138,12 +1144,7 @@ void FGFDM::parseControlSetting(const XMLAttributes* a)
 {
     // A cruise or approach control setting
     float value = attrf(a, "value", 0);
-    if(_cruiseCurr) {
-        _airplane.addCruiseControl(a->getValue("axis"), value);
-    }
-    else {
-        _airplane.addApproachControl(a->getValue("axis"), value);
-    }
+    _airplane.addControlSetting(_airplaneCfg, a->getValue("axis"), value);
 }
 
 void FGFDM::parseControlIn(const XMLAttributes* a)
@@ -1156,11 +1157,16 @@ void FGFDM::parseControlIn(const XMLAttributes* a)
     opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
     opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
     opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
+    float src0, src1, dst0, dst1;
+    src0 = dst0 = cm->rangeMin(control);
+    src1 = dst1 = cm->rangeMax(control);
     if(a->hasAttribute("src0")) {
-        cm->addMapping(a->getValue("axis"), control, oid, opt, attrf(a, "src0"), attrf(a, "src1"), attrf(a, "dst0"), attrf(a, "dst1"));
-    } else {
-        cm->addMapping(a->getValue("axis"), control, oid, opt);
-    }   
+        src0 = attrf(a, "src0");
+        src1 = attrf(a, "src1");
+        dst0 = attrf(a, "dst0");
+        dst1 = attrf(a, "dst1");
+    }
+    cm->addMapping(a->getValue("axis"), control, oid, opt, src0, src1, dst0, dst1);
 }
 
 void FGFDM::parseControlOut(const XMLAttributes* a)

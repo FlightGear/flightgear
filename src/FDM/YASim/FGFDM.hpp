@@ -58,6 +58,7 @@ private:
     void setOutputProperties(float dt);
 
     void parseRotor(const XMLAttributes* a, const char* name);
+    void parseRotorGear(const XMLAttributes* a);
     void parseWing(const XMLAttributes* a, const char* name, Airplane* airplane);
     int parseOutput(const char* name);
     void parseWeight(const XMLAttributes* a);
@@ -113,7 +114,7 @@ private:
 
     // Parsing temporaries
     void* _currObj {nullptr};
-    bool _cruiseCurr {false};
+    Airplane::Configuration _airplaneCfg;
     int _nextEngine {0};
     int _wingSection {0};
 

@@ -50,13 +50,7 @@ options: bits OPT_INVERT, OPT_SPLIT, OPT_SQUARE
 */
 void ControlMap::addMapping(const char* prop, Control control, ObjectID id, int options, float src0, float src1, float dst0, float dst1)
 {
-    addMapping(prop, control, id, options);
-    int inputPropHandle = getPropertyHandle(prop);
-
-    // The one we just added is last in the list (ugly, awful hack!)
-    Vector* maps = (Vector*)_inputs.get(inputPropHandle);
-    MapRec* m = (MapRec*)maps->get(maps->size() - 1);
-
+    MapRec* m = (MapRec*)addMapping(prop, control, id, options);
     m->src0 = src0;
     m->src1 = src1;
     m->dst0 = dst0;
@@ -69,12 +63,13 @@ control: identifier (see enum OutputType)
 object: object to which this input belongs to
 options: bits OPT_INVERT, OPT_SPLIT, OPT_SQUARE
 */
-void ControlMap::addMapping(const char* prop, Control control, ObjectID id, int options)
+void* ControlMap::addMapping(const char* prop, Control control, ObjectID id, int options)
 {
-    int inputPropHandle = getPropertyHandle(prop);
+    int inputPropHandle = getInputPropertyHandle(prop);
     // See if the output object already exists
     OutRec* out {nullptr};
-    for(int i = 0; i < _outputs.size(); i++) {
+    int i;
+    for(i = 0; i < _outputs.size(); i++) {
         OutRec* o = (OutRec*)_outputs.get(i);
         if(o->oid.object == id.object && o->oid.subObj == id.subObj 
             && o->control == control) 
@@ -105,6 +100,7 @@ void ControlMap::addMapping(const char* prop, Control control, ObjectID id, int 
     // And add it to the approproate vectors.
     Vector* maps = (Vector*)_inputs.get(inputPropHandle);
     maps->add(map);
+    return map;
 }
 
 void ControlMap::reset()
@@ -138,9 +134,9 @@ int ControlMap::getOutputHandle(ObjectID id, Control control)
         OutRec* o = (OutRec*)_outputs.get(i);
 	    if(o->oid.object == id.object && o->oid.subObj == id.subObj 
             && o->control == control)
-	        return i;
+            return i;
     }
-    fprintf(stderr, "ControlMap::getOutputHandle cannot find *%ld, control %d \n", (long)id.object, control);
+    fprintf(stderr, "ControlMap::getOutputHandle cannot find *%ld, control %d \nMissing <control-input ...> in XML?!", (long)id.object, control);
     return -1;
 }
 
@@ -330,6 +326,7 @@ void ControlMap::applyControls(float dt)
                 ((Hitch*)obj)->findBestAIObject(lval!=0);
                 break;
             case PROP:
+                break;
             case INCIDENCE:
                 break;
         }
@@ -369,24 +366,24 @@ float ControlMap::rangeMax(Control control)
 }
 
 /// register property name, return ID (int)
-int ControlMap::getPropertyHandle(const char* name)
+int ControlMap::getInputPropertyHandle(const char* name)
 {
-	for(int i=0; i < _properties.size(); i++) {
-		PropHandle* p = (PropHandle*)_properties.get(i);
-		if(!strcmp(p->name, name))
-			return p->handle;
-	}
+    for(int i=0; i < _properties.size(); i++) {
+        PropHandle* p = (PropHandle*)_properties.get(i);
+        if(!strcmp(p->name, name))
+            return p->handle;
+    }
 
-	// create new
-	PropHandle* p = new PropHandle();
-	p->name = strdup(name);
-	
-	fgGetNode(p->name, true); 
+    // create new
+    PropHandle* p = new PropHandle();
+    p->name = strdup(name);
+    
+    fgGetNode(p->name, true); 
 
-	Vector* v = new Vector();
-	p->handle = _inputs.add(v);
-	_properties.add(p);
-	return p->handle;
+    Vector* v = new Vector();
+    p->handle = _inputs.add(v);
+    _properties.add(p);
+    return p->handle;
 }
 
 
@@ -442,6 +439,7 @@ ControlMap::Control ControlMap::parseControl(const char* name)
 
 ControlMap::ObjectID ControlMap::getObjectID(void* object, int subObj)
 {
+    assert(object != nullptr);
     ObjectID o;
     o.object = object;
     o.subObj = subObj;

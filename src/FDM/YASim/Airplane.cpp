@@ -161,31 +161,30 @@ void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
 
 void Airplane::setElevatorControl(const char* prop)
 {
-    _approachElevator.propHandle = getControlMap()->getPropertyHandle(prop);
+    _approachElevator.propHandle = getControlMap()->getInputPropertyHandle(prop);
     _approachElevator.val = 0;
     _approachConfig.controls.add(&_approachElevator);
 }
 
-void Airplane::addApproachControl(const char* prop, float val)
+void Airplane::addControlSetting(Configuration cfg, const char* prop, float val)
 {
     ControlSetting* c = new ControlSetting();
-    c->propHandle = getControlMap()->getPropertyHandle(prop);
+    c->propHandle = getControlMap()->getInputPropertyHandle(prop);
     c->val = val;
-    _approachConfig.controls.add(c);
+    switch (cfg) {
+        case APPROACH:
+            _approachConfig.controls.add(c);
+            break;
+        case CRUISE:
+            _cruiseConfig.controls.add(c);
+            break;
+    }
 }
 
-void Airplane::addCruiseControl(const char* prop, float val)
-{
-    ControlSetting* c = new ControlSetting();
-    c->propHandle = getControlMap()->getPropertyHandle(prop);
-    c->val = val;
-    _cruiseConfig.controls.add(c);
-}
-
-void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
+void Airplane::addSolutionWeight(Configuration cfg, int idx, float wgt)
 {
     SolveWeight* w = new SolveWeight();
-    w->approach = approach;
+    w->approach = (cfg == APPROACH);
     w->idx = idx;
     w->wgt = wgt;
     _solveWeights.add(w);

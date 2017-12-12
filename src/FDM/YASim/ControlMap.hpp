@@ -9,7 +9,7 @@ namespace yasim {
 class ControlMap {
 public:
     ~ControlMap();
-
+    
     enum Control { 
         THROTTLE, 
         MIXTURE, 
@@ -77,7 +77,6 @@ public:
     ObjectID getObjectID(void* object, int subObj = 0);
     
     // add input property for a control to an object
-    void addMapping(const char* prop, Control control, ObjectID id, int options = 0);
 
     // same with limits. Input values are clamped to [src0:src1] and then mapped to
     // [dst0:dst1] before being set on the objects control.
@@ -116,7 +115,7 @@ public:
     float getOutputR(int handle);
 
     // register property name, return handle
-    int getPropertyHandle(const char* name);
+    int getInputPropertyHandle(const char* name);
     int numProperties() { return _properties.size(); }
     PropHandle* getProperty(const int i) { return ((PropHandle*)_properties.get(i)); }
 
@@ -148,6 +147,8 @@ private:
     Vector _outputs;
     // control properties
     Vector _properties;
+
+    void* addMapping(const char* prop, Control control, ObjectID id, int options = 0);
 };
 
 }; // namespace yasim
