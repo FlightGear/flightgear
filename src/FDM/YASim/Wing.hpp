@@ -49,6 +49,7 @@ class Wing {
     };
     
     struct WingSection {
+        int _id;
         Chord _rootChord;
         // length is distance from base to tip, not wing span
         float _length {0};
@@ -123,7 +124,9 @@ class Wing {
     float _aspectRatio {0};
     float _meanChord {0};
     float _incidence {0};
+    float _weight {0};
 
+    //-- private methods
     Chord _float2chord(float* pos, float lenght = 0);
     void _chord2float(Chord c, float* pos);
     void interp(const float* v1, const float* v2, const float frac, float* out);
@@ -166,7 +169,6 @@ public:
 
     void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
     float updateModel(Model* model);
-
 };
 
 }; // namespace yasim

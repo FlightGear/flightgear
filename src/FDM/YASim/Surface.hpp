@@ -59,17 +59,18 @@ public:
     // The offset from base incidence for this surface.
     void setTwist(float angle) { _twist = angle; }
 
-    void setDragCoefficient(float c0) { _c0 = c0; }
-    void mulDragCoefficient(float factor) { _c0 *= factor; }
-    float getDragCoefficient() const { return _c0; }
+    void  setTotalForceCoefficient(float c0) { _c0 = c0; }
+    void  mulTotalForceCoefficient(float factor) { _c0 *= factor; }
+    float getTotalForceCoefficient() const { return _c0; }
     
-    void setXDrag(float cx) { _cx = cx; }
-    void setYDrag(float cy) { _cy = cy; }
-    void setZDrag(float cz) { _cz = cz; }
-    float getXDrag() const { return _cx; }
+    void  setDragCoefficient(float cx) { _cx = cx; }
+    float getDragCoefficient() const { return _cx; }
+    void  setYDrag(float cy) { _cy = cy; }
+    void  setLiftCoefficient(float cz) { _cz = cz; }
+    float getLiftCoefficient() const { return _cz; }
 
     // zero-alpha Z drag ("camber") specified as a fraction of cz
-    void setBaseZDrag(float cz0) { _cz0 = cz0; }
+    void setZeroAlphaLift(float cz0) { _cz0 = cz0; }
 
     // i: 0 == forward, 1 == backwards
     void setStallPeak(int i, float peak) { _peaks[i] = peak; }

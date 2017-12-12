@@ -133,9 +133,9 @@ void Airplane::updateGearState()
         GearRec* gr = (GearRec*)_gears.get(i);
         float ext = gr->gear->getExtension();
 
-        gr->surf->setXDrag(ext);
+        gr->surf->setDragCoefficient(ext);
         gr->surf->setYDrag(ext);
-        gr->surf->setZDrag(ext);
+        gr->surf->setLiftCoefficient(ext);
     }
 }
 
@@ -271,13 +271,13 @@ void Airplane::setWeight(int handle, float mass)
     // Kill the aerodynamic drag if the mass is exactly zero.  This is
     // how we simulate droppable stores.
     if(mass == 0) {
-        wr->surf->setXDrag(0);
+        wr->surf->setDragCoefficient(0);
         wr->surf->setYDrag(0);
-        wr->surf->setZDrag(0);
+        wr->surf->setLiftCoefficient(0);
     } else {
-        wr->surf->setXDrag(1);
+        wr->surf->setDragCoefficient(1);
         wr->surf->setYDrag(1);
-        wr->surf->setZDrag(1);
+        wr->surf->setLiftCoefficient(1);
     }
 }
 
@@ -408,10 +408,10 @@ float Airplane::compileFuselage(Fuselage* f)
         // Make a Surface too
         Surface* s = new Surface(this, pos, dragCoefficient);
         if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-                s->setXDrag(f->_cx);
+                s->setDragCoefficient(f->_cx);
         }
         s->setYDrag(sideDrag*f->_cy);
-        s->setZDrag(sideDrag*f->_cz);
+        s->setLiftCoefficient(sideDrag*f->_cz);
         s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
@@ -512,38 +512,38 @@ void Airplane::compile()
     // The Wing objects
     if (_wing)
     {
-      if (baseN != 0) {
-          _wingsN = baseN->getChild("wing", 0, true);
-          _wing->setPropertyNode(_wingsN);
-      }
-      aeroWgt += compileWing(_wing);
-      
-      // convert % to absolute x coordinates
-      _cgDesiredFront = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMin;
-      _cgDesiredAft = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMax;
-      if (baseN != 0) {
-        SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
-        n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
-        n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
-      }
+        if (baseN != 0) {
+            _wingsN = baseN->getChild("wing", 0, true);
+            _wing->setPropertyNode(_wingsN);
+        }
+        aeroWgt += compileWing(_wing);
+        
+        // convert % to absolute x coordinates
+        _cgDesiredFront = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMin;
+        _cgDesiredAft = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMax;
+        if (baseN != 0) {
+            SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
+            n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
+            n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
+        }
     }
     if (_tail)
     {
-      if (baseN != 0) {
-          _wingsN = baseN->getChild("tail", 0, true);
-          _tail->setPropertyNode(_wingsN);
-      }
-      aeroWgt += compileWing(_tail);
+        if (baseN != 0) {
+            _wingsN = baseN->getChild("tail", 0, true);
+            _tail->setPropertyNode(_wingsN);
+        }
+        aeroWgt += compileWing(_tail);
     }
     int i;
     for(i=0; i<_vstabs.size(); i++)
     {
-      Wing* vs = (Wing*)_vstabs.get(i);
-      if (baseN != 0) {
-          _wingsN = baseN->getChild("stab", i, true);
-          vs->setPropertyNode(_wingsN);
-      }
-      aeroWgt += compileWing(vs);
+        Wing* vs = (Wing*)_vstabs.get(i);
+        if (baseN != 0) {
+            _wingsN = baseN->getChild("stab", i, true);
+            vs->setPropertyNode(_wingsN);
+        }
+        aeroWgt += compileWing(vs);
     }
 
     // The fuselage(s)
@@ -557,9 +557,13 @@ void Airplane::compile()
 
     // Rescale to the specified empty weight
     float wscale = (_emptyWeight-nonAeroWgt)/aeroWgt;
-    for(i=firstMass; i<body->numMasses(); i++)
+    for(i=firstMass; i<body->numMasses(); i++) {
         body->setMass(i, body->getMass(i)*wscale);
-
+    }
+    if (_wingsN != nullptr) {
+        float w = _wingsN->getNode("weight", true)->getFloatValue();
+        _wingsN->getNode("mass", true)->setFloatValue(w * wscale);
+    }
     // Add the thruster masses
     for(i=0; i<_thrusters.size(); i++) {
         ThrustRec* t = (ThrustRec*)_thrusters.get(i);
@@ -801,21 +805,21 @@ void Airplane::applyDragFactor(float factor)
             // it won't be affected by the streamlining done to reduce
             // longitudinal drag. So the solver should only adjust the
             // fuselage's longitudinal (X axis) drag coefficient.
-            s->setXDrag(s->getXDrag() * applied);
+            s->setDragCoefficient(s->getDragCoefficient() * applied);
             } else {
             // Originally YASim applied the drag factor to all axes
             // for Fuselage Surfaces.
-            s->mulDragCoefficient(applied);
+            s->mulTotalForceCoefficient(applied);
             }
         }
     }
     for(i=0; i<_weights.size(); i++) {
         WeightRec* wr = (WeightRec*)_weights.get(i);
-        wr->surf->mulDragCoefficient(applied);
+        wr->surf->mulTotalForceCoefficient(applied);
     }
     for(i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
-        gr->surf->mulDragCoefficient(applied);
+        gr->surf->mulTotalForceCoefficient(applied);
     }
 }
 

@@ -1,4 +1,5 @@
 #include <Main/fg_props.hxx>
+#include "yasim-common.hpp"
 #include "Math.hpp"
 #include "Surface.hpp"
 
@@ -119,23 +120,24 @@ void Surface::setSpoilerPos(float pos)
 
 // Calculate the aerodynamic force given a wind vector v (in the
 // aircraft's "local" coordinates) and an air density rho.  Returns a
-// torque about the Y axis, too.
+// torque about the Y axis ("pitch"), too.
 void Surface::calcForce(const float* v, const float rho, float* out, float* torque)
 {
+    // initialize outputs to zero
+    Math::zero3(out);
+    Math::zero3(torque);
+    
     // Split v into magnitude and direction:
     float vel = Math::mag3(v);
 
     // Zero velocity means zero force by definition (also prevents div0).
     if(vel == 0) {
-        int i;
-	for(i=0; i<3; i++) out[i] = torque[i] = 0;
-	return;
+        return;
     }
 
     // special case this so the logic below doesn't produce a non-zero
     // force; should probably have a "no force" flag instead...
     if(_cx == 0. && _cy == 0. && _cz == 0.) {
-        for(int i=0; i<3; i++) out[i] = torque[i] = 0.;
         return;
     }
     
@@ -145,10 +147,10 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
 
     // "Rotate" by the incidence angle.  Assume small angles, so we
     // need to diddle only the Z component, X is relatively unchanged
-    // by small rotations.
+    // by small rotations. sin(a) ~ a, cos(a) ~ 1 for small a
     float incidence = _incidence + _twist;
     out[2] += incidence * out[0]; // z' = z + incidence * x
-
+    
     // Hold onto the local wind vector so we can multiply the induced
     // drag at the end.
     float lwind[3];
@@ -190,9 +192,9 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
     // roughly parallel with Z, the small-angle approximation
     // must change its X component.
     if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
-	out[0] += incidence * out[2];
+        out[0] += incidence * out[2];
     } else {
-	out[2] -= incidence * out[0];
+        out[2] -= incidence * out[0];
     }
 
     // Convert back to external coordinates

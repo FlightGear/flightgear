@@ -379,7 +379,7 @@ void Wing::WingSection::setDragCoefficient(float scale)
     _dragScale = scale;
     for(int i=0; i<_surfs.size(); i++) {
         SurfRec* s = (SurfRec*)_surfs.get(i);
-        s->surface->setDragCoefficient(scale * s->weight);
+        s->surface->setTotalForceCoefficient(scale * s->weight);
     }
 }
 
@@ -392,7 +392,7 @@ void Wing::WingSection::setLiftRatio(float ratio)
 {
     _liftRatio = ratio;
     for(int i=0; i<_surfs.size(); i++)
-        ((SurfRec*)_surfs.get(i))->surface->setZDrag(ratio);
+        ((SurfRec*)_surfs.get(i))->surface->setLiftCoefficient(ratio);
 }
 
 void Wing::WingSection::multiplyLiftRatio(float factor)
@@ -408,7 +408,7 @@ void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient,
     s->setChord(chord);
 
     // Camber is expressed as a fraction of stall peak, so convert.
-    s->setBaseZDrag(_camber*_stallParams.peak);
+    s->setZeroAlphaLift(_camber*_stallParams.peak);
 
     // The "main" (i.e. normal) stall angle
     float stallAoA = _stallParams.aoa - _stallParams.width/4;
@@ -498,7 +498,7 @@ void Wing::writeInfoToProptree()
         ws = (WingSection*)_sections.get(section);
         for (int surf=0; surf < ws->numSurfaces(); surf++) {
             Surface* s = ws->getSurface(surf);
-            float drag = s->getDragCoefficient();
+            float drag = s->getTotalForceCoefficient();
             dragSum += drag;
 
             float mass = ws->getSurfaceWeight(surf);
@@ -510,9 +510,11 @@ void Wing::writeInfoToProptree()
     _wingN->getNode("drag", true)->setFloatValue(dragSum);
 }
 
+// estimate a mass distibution and add masses to the model
+// they will be scaled to match total mass of aircraft later
 float Wing::updateModel(Model* model) 
 {
-    float wgt = 0;
+    _weight = 0;
     WingSection* ws;
     for (int section=0; section < _sections.size(); section++) {
         ws = (WingSection*)_sections.get(section);
@@ -520,21 +522,26 @@ float Wing::updateModel(Model* model)
             Surface* s = ws->getSurface(surf);
             model->addSurface(s);
 
-            float mass = ws->getSurfaceWeight(surf);
-            mass = mass * Math::sqrt(mass);
-            wgt += mass;
+            float weight = ws->getSurfaceWeight(surf);
+            weight = weight * Math::sqrt(weight);
+            _weight += weight;
 
             float pos[3];
             s->getPosition(pos);
-            int mid = model->getBody()->addMass(mass, pos, true);
+            int mid = model->getBody()->addMass(weight, pos, true);
             if (_wingN != nullptr) {
                 SGPropertyNode_ptr n = _wingN->getNode("surfaces", true)->getChild("surface", s->getID(), true);
-                n->getNode("drag", true)->setFloatValue(s->getDragCoefficient());
+                n->getNode("c0", true)->setFloatValue(s->getTotalForceCoefficient());
+                n->getNode("cdrag", true)->setFloatValue(s->getDragCoefficient());
+                n->getNode("clift", true)->setFloatValue(s->getLiftCoefficient());
                 n->getNode("mass-id", true)->setIntValue(mid);
             }
         }
     }
-    return wgt;    
+    if (_wingN != nullptr) {
+        _wingN->getNode("weight", true)->setFloatValue(_weight);
+    }
+    return _weight;
 }
 
 }; // namespace yasim
