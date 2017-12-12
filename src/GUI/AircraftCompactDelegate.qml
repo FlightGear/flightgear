@@ -49,9 +49,10 @@ Item {
         id: contentBox
 
         anchors {
-            margins: Style.margin
             left: thumbnailBox.right
             right: parent.right
+            leftMargin: Style.margin
+            rightMargin: Style.margin
             top: parent.top
         }
 
