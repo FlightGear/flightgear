@@ -134,7 +134,7 @@ private:
       float cg[3];
       float mass;
     };
-    struct Control { 
+    struct ControlSetting { 
       int control;
       float val;
     };
@@ -210,7 +210,7 @@ private:
     float _dragFactor {1};
     float _liftRatio {1};
     float _tailIncidence {0};
-    Control _approachElevator;
+    ControlSetting _approachElevator;
     const char* _failureMsg {0};
     
     float _cgMax {-1e6};         // hard limits for cg from gear position
