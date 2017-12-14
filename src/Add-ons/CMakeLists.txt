@@ -1,7 +1,17 @@
 include(FlightGearComponent)
 
-set(SOURCES Addon.cxx AddonManager.cxx AddonVersion.cxx)
-set(HEADERS addon_fwd.hxx Addon.hxx AddonManager.hxx AddonVersion.hxx)
+set(SOURCES Addon.cxx
+            AddonManager.cxx
+            AddonVersion.cxx
+            exceptions.cxx
+            )
+
+set(HEADERS addon_fwd.hxx
+            Addon.hxx
+            AddonManager.hxx
+            AddonVersion.hxx
+            exceptions.hxx
+            )
 
 flightgear_component(AddonManagement "${SOURCES}" "${HEADERS}")
 

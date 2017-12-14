@@ -41,6 +41,7 @@
 #include "Addon.hxx"
 #include "AddonManager.hxx"
 #include "AddonVersion.hxx"
+#include "exceptions.hxx"
 
 namespace strutils = simgear::strutils;
 
@@ -53,24 +54,6 @@ namespace flightgear
 {
 
 static unique_ptr<AddonManager> staticInstance;
-
-namespace addon_errors
-{
-// ***************************************************************************
-// *                    Base class for custom exceptions                     *
-// ***************************************************************************
-
-// Prepending a prefix such as "Add-on error: " would be redundant given the
-// messages used below.
-error::error(const string& message, const string& origin)
-  : sg_exception(message, origin)
-{ }
-
-error::error(const char* message, const char* origin)
-  : error(string(message), string(origin))
-{ }
-
-} // of namespace addon_errors
 
 // ***************************************************************************
 // *                              AddonManager                               *

@@ -35,37 +35,6 @@
 namespace flightgear
 {
 
-namespace addon_errors
-{
-// Custom exception classes
-class error : public sg_exception
-{
-public:
-  explicit error(const std::string& message,
-                 const std::string& origin = std::string());
-  explicit error(const char* message, const char* origin = nullptr);
-};
-
-class error_loading_config_file : public error
-{ using error::error; /* inherit all constructors */ };
-
-class no_metadata_file_found : public error
-{ using error::error; };
-
-class error_loading_metadata_file : public error
-{ using error::error; };
-
-class duplicate_registration_attempt : public error
-{ using error::error; };
-
-class fg_version_too_old : public error
-{ using error::error; };
-
-class fg_version_too_recent : public error
-{ using error::error; };
-
-} // of namespace addon_errors
-
 class AddonManager
 {
 public:
