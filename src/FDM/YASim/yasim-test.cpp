@@ -95,7 +95,7 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
       ld_max= ld;
       ld_max_deg = deg;
     }    
-    printf("%d %g %g %g\n", deg, lift, drag, ld);
+    printf("%d %.4g %.4g %.4g\n", deg, lift, drag, ld);
   }
   printf("# cl_max %g at %d deg\n", cl_max, cl_max_deg);
   printf("# cd_min %g at %d deg\n", cd_min, cd_min_deg);
