@@ -37,6 +37,9 @@
 namespace flightgear
 {
 
+namespace addons
+{
+
 class Addon : public SGReferenced {
 public:
   // Default constructor. 'minFGVersionRequired' is initialized to "2017.4.0"
@@ -177,6 +180,8 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& os, const Addon& addonMetaData);
+
+} // of namespace addons
 
 } // of namespace flightgear
 

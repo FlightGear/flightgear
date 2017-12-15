@@ -38,12 +38,14 @@
 using std::string;
 using std::vector;
 
-using namespace flightgear;
+using flightgear::addons::Addon;
+using flightgear::addons::AddonVersion;
+using flightgear::addons::AddonVersionSuffix;
 
 
 void testAddonVersionSuffix()
 {
-  using AddonRelType = AddonVersionSuffixPrereleaseType;
+  using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
   fgtest::initTestGlobals("AddonVersion");
 
@@ -140,7 +142,7 @@ void testAddonVersionSuffix()
 
 void testAddonVersion()
 {
-  using AddonRelType = AddonVersionSuffixPrereleaseType;
+  using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
   fgtest::initTestGlobals("AddonVersion");
 

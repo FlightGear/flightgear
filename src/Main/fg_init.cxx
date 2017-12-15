@@ -1138,8 +1138,8 @@ void fgStartNewReset()
     // otherwise channels are duplicated
     globals->get_channel_options_list()->clear();
 
-    flightgear::AddonManager::reset();
-    flightgear::AddonManager::createInstance();
+    flightgear::addons::AddonManager::reset();
+    flightgear::addons::AddonManager::createInstance();
 
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?

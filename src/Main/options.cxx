@@ -707,7 +707,7 @@ static int
 fgOptAddon(const char *arg)
 {
   const SGPath addonPath = SGPath::fromLocal8Bit(arg);
-  const auto& addonManager = AddonManager::instance();
+  const auto& addonManager = addons::AddonManager::instance();
 
   try {
     addonManager->registerAddon(addonPath);

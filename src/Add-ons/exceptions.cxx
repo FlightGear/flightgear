@@ -28,10 +28,14 @@ using std::string;
 namespace flightgear
 {
 
-namespace addon_errors
+namespace addons
 {
+
+namespace errors
+{
+
 // ***************************************************************************
-// *                    Base class for custom exceptions                     *
+// *                    Base class for add-on exceptions                     *
 // ***************************************************************************
 
 // Prepending a prefix such as "Add-on error: " would be redundant given the
@@ -44,6 +48,8 @@ error::error(const char* message, const char* origin)
   : error(string(message), string(origin))
 { }
 
-} // of namespace addon_errors
+} // of namespace errors
+
+} // of namespace addons
 
 } // of namespace flightgear

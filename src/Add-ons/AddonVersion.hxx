@@ -34,6 +34,9 @@
 namespace flightgear
 {
 
+namespace addons
+{
+
 // Order matters for the sorting/comparison functions
 enum class AddonVersionSuffixPrereleaseType {
   alpha = 0,
@@ -169,6 +172,8 @@ bool operator<=(const AddonVersion& lhs, const AddonVersion& rhs);
 bool operator>=(const AddonVersion& lhs, const AddonVersion& rhs);
 
 std::ostream& operator<<(std::ostream&, const AddonVersion&);
+
+} // of namespace addons
 
 } // of namespace flightgear
 

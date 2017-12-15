@@ -36,6 +36,9 @@
 namespace flightgear
 {
 
+namespace addons
+{
+
 // ***************************************************************************
 // *                              AddonManager                               *
 // ***************************************************************************
@@ -193,5 +196,7 @@ void initAddonClassesForNasal(naRef globals, naContext c)
   AddonVersion::setupGhost(addonsModule);
   addonsModule.createHash("AddonVersion").set("new", &f_createAddonVersion);
 }
+
+} // of namespace addons
 
 } // of namespace flightgear

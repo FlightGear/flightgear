@@ -26,6 +26,9 @@
 namespace flightgear
 {
 
+namespace addons
+{
+
 class Addon;
 class AddonManager;
 class AddonVersion;
@@ -34,7 +37,7 @@ class AddonVersionSuffix;
 using AddonRef = SGSharedPtr<Addon>;
 using AddonVersionRef = SGSharedPtr<AddonVersion>;
 
-namespace addon_errors
+namespace errors
 {
 
 class error;
@@ -45,7 +48,9 @@ class duplicate_registration_attempt;
 class fg_version_too_old;
 class fg_version_too_recent;
 
-} // of namespace addon_errors
+} // of namespace errors
+
+} // of namespace addons
 
 } // of namespace flightgear
 

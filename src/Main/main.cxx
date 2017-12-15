@@ -535,7 +535,7 @@ int fgMainInit( int argc, char **argv )
         return EXIT_SUCCESS;
     }
 
-    AddonManager::createInstance();
+    addons::AddonManager::createInstance();
 
     configResult = flightgear::Options::sharedInstance()->processOptions();
     if (configResult == flightgear::FG_OPTIONS_ERROR) {

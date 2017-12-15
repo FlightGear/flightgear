@@ -857,8 +857,6 @@ void FGNasalSys::setCmdArg(SGPropertyNode* aNode)
 
 void FGNasalSys::init()
 {
-    using namespace flightgear;
-
     if (_inited) {
         SG_LOG(SG_GENERAL, SG_ALERT, "duplicate init of Nasal");
     }
@@ -914,7 +912,7 @@ void FGNasalSys::init()
       .member("simulatedTime", &TimerObj::isSimTime, &f_timerObj_setSimTime)
       .member("isRunning", &TimerObj::isRunning);
 
-    initAddonClassesForNasal(_globals, _context);
+    flightgear::addons::initAddonClassesForNasal(_globals, _context);
 
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));

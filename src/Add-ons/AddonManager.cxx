@@ -53,6 +53,9 @@ using std::unique_ptr;
 namespace flightgear
 {
 
+namespace addons
+{
+
 static unique_ptr<AddonManager> staticInstance;
 
 // ***************************************************************************
@@ -95,7 +98,7 @@ AddonManager::loadConfigFileIfExists(const SGPath& configFile)
   try {
     readProperties(configFile, globals->get_props());
   } catch (const sg_exception &e) {
-    throw addon_errors::error_loading_config_file(
+    throw errors::error_loading_config_file(
       "unable to load add-on config file '" + configFile.utf8Str() + "': " +
       e.getFormattedMessage());
   }
@@ -120,7 +123,7 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   // Check that the FlightGear version satisfies the add-on requirements
   std::string minFGversion = addon->getMinFGVersionRequired();
   if (strutils::compare_versions(FLIGHTGEAR_VERSION, minFGversion) < 0) {
-    throw addon_errors::fg_version_too_old(
+    throw errors::fg_version_too_old(
       "add-on '" + addonId + "' requires FlightGear " + minFGversion +
       " or later, however this is FlightGear " + FLIGHTGEAR_VERSION);
   }
@@ -128,7 +131,7 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   std::string maxFGversion = addon->getMaxFGVersionRequired();
   if (maxFGversion != "none" &&
       strutils::compare_versions(FLIGHTGEAR_VERSION, maxFGversion) > 0) {
-    throw addon_errors::fg_version_too_recent(
+    throw errors::fg_version_too_recent(
       "add-on '" + addonId + "' requires FlightGear " + maxFGversion +
       " or earlier, however this is FlightGear " + FLIGHTGEAR_VERSION);
   }
@@ -140,7 +143,7 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
   if (!emplaceRetval.second) {
     auto existingElt = _idToAddonMap.find(addonId);
     assert(existingElt != _idToAddonMap.end());
-    throw addon_errors::duplicate_registration_attempt(
+    throw errors::duplicate_registration_attempt(
       "attempt to register add-on '" + addonId + "' with base path '"
       + addonPath.utf8Str() + "', however it is already registered with base "
       "path '" + existingElt->second->getBasePath().utf8Str() + "'");
@@ -253,5 +256,7 @@ SGPropertyNode_ptr AddonManager::addonNode(const string& addonId) const
 {
   return getAddon(addonId)->getAddonNode();
 }
+
+} // of namespace addons
 
 } // of namespace flightgear

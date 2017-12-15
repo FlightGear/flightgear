@@ -47,6 +47,9 @@ namespace strutils = simgear::strutils;
 namespace flightgear
 {
 
+namespace addons
+{
+
 // ***************************************************************************
 // *                           AddonVersionSuffix                            *
 // ***************************************************************************
@@ -398,5 +401,7 @@ void AddonVersion::setupGhost(nasal::Hash& addonsModule)
     .method("greaterThan", &AddonVersion::greaterThan)
     .method("greaterThanOrEqual", &AddonVersion::greaterThanOrEqual);
 }
+
+} // of namespace addons
 
 } // of namespace flightgear

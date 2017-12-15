@@ -25,7 +25,12 @@
 namespace flightgear
 {
 
+namespace addons
+{
+
 void initAddonClassesForNasal(naRef globals, naContext c);
+
+} // of namespace addons
 
 } // of namespace flightgear
 

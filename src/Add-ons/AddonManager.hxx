@@ -35,6 +35,9 @@
 namespace flightgear
 {
 
+namespace addons
+{
+
 class AddonManager
 {
 public:
@@ -99,6 +102,8 @@ private:
   // Also note that add-ons are loaded in their registration order.
   int _loadSequenceNumber = 0;
 };
+
+} // of namespace addons
 
 } // of namespace flightgear
 

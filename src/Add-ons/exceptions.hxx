@@ -27,7 +27,10 @@
 namespace flightgear
 {
 
-namespace addon_errors
+namespace addons
+{
+
+namespace errors
 {
 
 class error : public sg_exception
@@ -56,7 +59,9 @@ class fg_version_too_old : public error
 class fg_version_too_recent : public error
 { using error::error; };
 
-} // of namespace addon_errors
+} // of namespace errors
+
+} // of namespace addons
 
 } // of namespace flightgear
 
