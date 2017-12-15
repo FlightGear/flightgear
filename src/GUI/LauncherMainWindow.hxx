@@ -63,7 +63,15 @@ class LauncherMainWindow : public QMainWindow
 
     Q_PROPERTY(QUrl selectedAircraft READ selectedAircraft WRITE setSelectedAircraft NOTIFY selectedAircraftChanged)
 
+
     Q_PROPERTY(QmlAircraftInfo* selectedAircraftInfo READ selectedAircraftInfo NOTIFY selectedAircraftChanged)
+
+    Q_PROPERTY(bool isSearchActive READ isSearchActive NOTIFY searchChanged)
+    Q_PROPERTY(QString settingsSearchTerm READ settingsSearchTerm WRITE setSettingsSearchTerm NOTIFY searchChanged)
+
+    Q_PROPERTY(QStringList settingsSummary READ settingsSummary WRITE setSettingsSummary NOTIFY summaryChanged)
+    Q_PROPERTY(QStringList environmentSummary READ environmentSummary WRITE setEnvironmentSummary NOTIFY summaryChanged)
+
 public:
     LauncherMainWindow();
     virtual ~LauncherMainWindow();
@@ -96,14 +104,43 @@ public:
     Q_INVOKABLE QPointF mapToGlobal(QQuickItem* item, const QPointF& pos) const;
 
     QmlAircraftInfo* selectedAircraftInfo() const;
+    
+    Q_INVOKABLE bool matchesSearch(QString term, QStringList keywords) const;
+
+    bool isSearchActive() const;
+
+    QString settingsSearchTerm() const
+    {
+        return m_settingsSearchTerm;
+    }
+
+    QStringList settingsSummary() const;
+
+    QStringList environmentSummary() const;
+
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
+
+    void setSettingsSearchTerm(QString settingsSearchTerm);
+
+    void setSettingsSummary(QStringList settingsSummary);
+
+    void setEnvironmentSummary(QStringList environmentSummary);
 
 signals:
     void showNoOfficialHangarChanged();
 
     void selectedAircraftChanged(QUrl selectedAircraft);
 
+    void searchChanged();
+
+    void summaryChanged();
+
+    /**
+     * @brief requestSaveState - signal to request QML settings to save their
+     * state to persistent storage
+     */
+    void requestSaveState();
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
 
@@ -158,8 +195,6 @@ private:
     void updateLocationHistory();
     bool shouldShowOfficialCatalogMessage() const;
 
-    void buildSettingsSections();
-    void buildEnvironmentSections();
     void collectAircraftArgs();
     void initQML();
 
@@ -185,6 +220,9 @@ private:
     ExtraSettingsSection* m_extraSettings = nullptr;
     ViewCommandLinePage* m_viewCommandLinePage = nullptr;
     QmlAircraftInfo* m_selectedAircraftInfo = nullptr;
+    QString m_settingsSearchTerm;
+    QStringList m_settingsSummary,
+       m_environmentSummary;
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX

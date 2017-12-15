@@ -138,6 +138,8 @@ if (HAVE_QT)
                             ViewCommandLinePage.hxx
                             MPServersModel.cpp
                             MPServersModel.h
+                            PathUrlHelper.cxx
+                            PathUrlHelper.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
@@ -166,6 +168,8 @@ if (HAVE_QT)
                         ThumbnailImageItem.hxx
                         FlickableExtentQuery.cxx
                         FlickableExtentQuery.hxx
+                        PopupWindowTracker.cxx
+                        PopupWindowTracker.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

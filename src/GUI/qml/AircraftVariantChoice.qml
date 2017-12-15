@@ -93,7 +93,7 @@ Rectangle {
 
         Rectangle {
             border.width: 1
-            border.color: "#afafaf"
+            border.color: Style.minorFrameColor
             anchors.fill: parent
         }
 

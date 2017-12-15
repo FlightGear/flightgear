@@ -128,6 +128,7 @@ public slots:
 private slots:
     void onScanStarted();
     void onScanAddedItems(int count);
+    void onLocalCacheCleared();
 
 private:
     friend class PackageDelegate;

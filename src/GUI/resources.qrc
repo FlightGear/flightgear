@@ -56,6 +56,21 @@
         <file>qml/Style.qml</file>
         <file>qml/qmldir</file>
         <file>qml/ClickableText.qml</file>
+        <file>qml/LauncherSettings.qml</file>
+        <file>qml/Section.qml</file>
+        <file>qml/SettingControl.qml</file>
+        <file>qml/SettingCheckbox.qml</file>
+        <file>qml/SettingsComboBox.qml</file>
+        <file>qml/SettingDescription.qml</file>
+        <file>qml/SettingLineEdit.qml</file>
+        <file>qml/Settings.qml</file>
+        <file>qml/AdvancedSettingsToggle.qml</file>
+        <file>qml/SettingPathChooser.qml</file>
+        <file>qml/SettingExtraArguments.qml</file>
+        <file>qml/Environment.qml</file>
+        <file>qml/DateTimeEdit.qml</file>
+        <file>qml/DateTimeValueEdit.qml</file>
+        <file>qml/SettingsDateTimePicker.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

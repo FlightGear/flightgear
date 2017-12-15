@@ -1,0 +1,184 @@
+import QtQuick 2.4
+import "."
+
+FocusScope {
+    id: root
+    property Item nextToFocus
+    property Item previousToFocus
+
+    property int value: 0
+    property int minValue: 0 // might be 1 for day-of-month
+    property int maxValue: 99 // max numerical value
+
+    property int fieldWidth: 2
+    property bool valueWraps: false
+
+    property string widthString: "00"
+
+    width: metrics.width + (input.activeFocus ?  upDownArea.width : 0)
+    height: metrics.height
+
+    // promote Z value when focused so our icon decoration
+    // is on top of our sibling edits.
+    z: input.activeFocus ? 10 : 0
+
+    signal commit(var newValue);
+
+    onMaxValueChanged: {
+        // cap current value if the max is now lower
+        value = Math.min(value, maxValue);
+    }
+
+    function zeroPaddedNumber(v)
+    {
+        var s = v.toString();
+        while (s.length < fieldWidth) {
+            s = "0" + s;
+        }
+        return s;
+    }
+
+    readonly property string __valueString: zeroPaddedNumber(value)
+
+    function incrementValue()
+    {
+        if (input.activeFocus) {
+            value = Math.min(parseInt(input.text) + 1, maxValue)
+            input.text = __valueString
+        } else {
+            commit(Math.min(value + 1, maxValue));
+        }
+    }
+
+    function decrementValue()
+    {
+        if (input.activeFocus) {
+            value = Math.max(parseInt(input.text) - 1, minValue)
+            input.text = __valueString
+        } else {
+            commit(Math.max(value - 1, minValue));
+        }
+    }
+
+    function focusNext()
+    {
+        if (nextToFocus != undefined) {
+            nextToFocus.forceActiveFocus();
+        }
+    }
+
+    TextInput {
+        id: input
+        focus: true
+
+        // validate on integers
+        height: parent.height
+        width: metrics.width
+        maximumLength: fieldWidth
+
+        Keys.onUpPressed: {
+            incrementValue();
+        }
+
+        Keys.onDownPressed: {
+            decrementValue();
+        }
+
+        Keys.onTabPressed:  { root.focusNext(); }
+
+        Keys.onBacktabPressed:  {
+            if (previousToFocus != undefined) {
+                previousToFocus.focus = true;
+            }
+        }
+
+        Keys.onPressed:  {
+            if ((event.key == Qt.Key_Colon) || (event.key == Qt.Key_Slash)) {
+                nextToFocus.focus = true;
+                event.accepted = true;
+            }
+        }
+
+//        onTextChanged: {
+//            if (activeFocus && (text.length == root.widthString.length)) {
+//                root.focusNext();
+//            }
+//        }
+
+        onActiveFocusChanged: {
+            if (activeFocus) {
+                selectAll();
+            } else {
+                commit(parseInt(text))
+            }
+        }
+
+        validator: IntValidator {
+            id: validator
+            top: root.maxValue
+            bottom: root.minValue
+        }
+    }
+
+    Binding {
+        when: !input.activeFocus
+        target: input
+        property: "text"
+        value: root.__valueString
+    }
+
+    MouseArea {
+        height: root.height
+        width: root.width
+        // use wheel events to adjust up/dowm
+        onClicked: {
+            input.forceActiveFocus();
+        }
+
+        onWheel: {
+            if (wheel.angleDelta > 0) {
+                root.incrementValue()
+            } else if (wheel.angleDelta < 0) {
+               root.decrementValue()
+            }
+        }
+    }
+
+    Rectangle {
+        id: upDownArea
+        color: "white"
+        anchors.left: input.right
+        anchors.verticalCenter: input.verticalCenter
+        height: upDownIcon.implicitHeight
+        visible: input.activeFocus
+        width: upDownIcon.implicitWidth
+
+        Image {
+            id: upDownIcon
+            // show up/down arrows
+            source: "qrc:///up-down-arrow"
+        }
+
+        MouseArea {
+            width: parent.width
+            height: parent.height / 2
+            onPressed: {
+                root.incrementValue();
+            }
+        }
+
+        MouseArea {
+            width: parent.width
+            height: parent.height / 2
+            anchors.bottom: parent.bottom
+            onPressed: {
+                root.decrementValue();
+            }
+        }
+    }
+
+    TextMetrics {
+        id: metrics
+        text: root.widthString
+    }
+}

@@ -6,6 +6,7 @@ Rectangle {
 
     property string text
     property string hoverText: ""
+    property bool enabled: true
 
     signal clicked
 
@@ -13,7 +14,7 @@ Rectangle {
     height: buttonText.implicitHeight + (radius * 2)
     radius: Style.roundRadius
 
-    color: mouse.containsMouse ? Style.activeColor : Style.themeColor
+    color: enabled ? (mouse.containsMouse ? Style.activeColor : Style.themeColor) : Style.disabledThemeColor
 
     Text {
         id: buttonText
@@ -26,6 +27,8 @@ Rectangle {
     MouseArea {
         id: mouse
         anchors.fill: parent
+        enabled: root.enabled
+
         hoverEnabled: true
 
         onClicked: {

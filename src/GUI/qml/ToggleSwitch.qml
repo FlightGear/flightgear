@@ -4,6 +4,7 @@ import "."
 Item {
     property bool checked: false
     property alias label: label.text
+    property bool enabled: true
 
     implicitWidth: track.width + label.width + 16
     implicitHeight: label.height
@@ -14,7 +15,7 @@ Item {
         height: radius * 2
         radius: Style.roundRadius
 
-        color: checked ? Style.frameColor : Style.minorFrameColor
+        color: (checked && enabled) ? Style.frameColor : Style.minorFrameColor
         anchors.left: parent.left
         anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
@@ -26,7 +27,7 @@ Item {
             radius: Style.roundRadius * 1.5
 
             anchors.verticalCenter: parent.verticalCenter
-            color: checked ? Style.themeColor : "white"
+            color: (checked && enabled) ? Style.themeColor : "white"
             border.width: 1
             border.color: Style.inactiveThemeColor
 
@@ -51,6 +52,8 @@ Item {
     MouseArea {
         anchors.fill: parent
         id: mouseArea
+        enabled: root.enabled
+
         hoverEnabled: true
         onClicked: {
             checked = !checked

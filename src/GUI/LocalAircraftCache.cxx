@@ -407,12 +407,19 @@ LocalAircraftCache::~LocalAircraftCache()
 
 void LocalAircraftCache::setPaths(QStringList paths)
 {
+    if (paths == m_paths) {
+        return;
+    }
+
+    m_items.clear();
+    emit cleared();
     m_paths = paths;
 }
 
 void LocalAircraftCache::scanDirs()
 {
     abandonCurrentScan();
+    m_items.clear();
 
     QStringList dirs = m_paths;
 
@@ -504,12 +511,17 @@ void LocalAircraftCache::abandonCurrentScan()
         m_scanThread->setDone();
         m_scanThread->wait(1000);
         m_scanThread.reset();
+        qWarning() << Q_FUNC_INFO << "current scan abandonded";
     }
 }
 
 
 void LocalAircraftCache::onScanResults()
 {
+    if (!m_scanThread) {
+        return;
+    }
+
     QVector<AircraftItemPtr> newItems = m_scanThread->items();
     if (newItems.isEmpty())
         return;

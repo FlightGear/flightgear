@@ -3,6 +3,9 @@
 #include <Main/options.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <QSettings>
+#include <QDebug>
+
 static bool static_enableDownloadDirUI = true;
 
 LaunchConfig::LaunchConfig(QObject* parent) :
@@ -42,6 +45,28 @@ void LaunchConfig::setProperty(QString path, QVariant value)
 void LaunchConfig::setEnableDisableOption(QString name, bool value)
 {
     m_values.push_back(Arg((value ? "enable-" : "disable-") + name));
+}
+
+QVariant LaunchConfig::getValueForKey(QString group, QString key, QVariant defaultValue) const
+{
+    QSettings settings;
+    settings.beginGroup(group);
+    auto v = settings.value(key, defaultValue);
+    bool convertedOk = v.convert(defaultValue.type());
+    if (!convertedOk) {
+        qWarning() << "type forcing on loaded value failed:" << key << v << v.typeName() << defaultValue;
+    }
+  //  qInfo() << Q_FUNC_INFO << key << "value" << v << v.typeName() << convertedOk;
+    return v;
+}
+
+void LaunchConfig::setValueForKey(QString group, QString key, QVariant var)
+{
+    QSettings settings;
+    settings.beginGroup(group);
+  //  qInfo() << "saving" << key << "with value" << var << var.typeName();
+    settings.setValue(key, var);
+    settings.endGroup();
 }
 
 QString LaunchConfig::defaultDownloadDir() const

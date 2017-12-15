@@ -393,7 +393,7 @@ bool runLauncherDialog()
         LaunchConfig::setEnableDownloadDirUI(false);
     } else {
         QSettings settings;
-        QString downloadDir = settings.value("downloadSettings/downloadDir").toString();
+        QString downloadDir = settings.value("download-dir").toString();
         if (!downloadDir.isEmpty()) {
             options->setOption("download-dir", downloadDir.toStdString());
         }

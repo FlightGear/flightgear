@@ -12,6 +12,7 @@
 #include "LaunchConfig.hxx"
 
 const int IsCustomIndexRole = Qt::UserRole + 1;
+const int ServerNameRole = Qt::UserRole + 2;
 
 MPServersModel::MPServersModel(QObject* parent) :
     QAbstractListModel(parent)
@@ -52,6 +53,8 @@ QVariant MPServersModel::data(const QModelIndex &index, int role) const
     const ServerInfo& sv(m_servers.at(row));
     if (role == Qt::DisplayRole) {
         return tr("%1 - %2").arg(sv.name).arg(sv.location);
+    } else if (role == ServerNameRole) {
+        return sv.name;
     } else if (role == IsCustomIndexRole) {
         return false;
     }
@@ -61,7 +64,7 @@ QVariant MPServersModel::data(const QModelIndex &index, int role) const
 
 QHash<int, QByteArray> MPServersModel::roleNames() const
 {
-    QHash<int, QByteArray> result;
+    QHash<int, QByteArray> result = QAbstractListModel::roleNames();
     result[IsCustomIndexRole] = "isCustomIndex";
     return result;
 }

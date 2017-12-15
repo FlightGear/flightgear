@@ -16,9 +16,11 @@ QtObject
     readonly property string activeColor: Qt.darker(themeColor)
 
     readonly property string inactiveThemeColor: "#9f9f9f"
+    readonly property string disabledThemeColor: disabledTextColor
 
     readonly property string baseTextColor: "#3f3f3f"
 
     readonly property int baseFontPixelSize: 12
+    readonly property string disabledTextColor: "#5f5f5f"
 }
 

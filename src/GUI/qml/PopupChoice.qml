@@ -1,47 +1,96 @@
 import QtQuick 2.0
+import QtQuick.Window 2.0
+import FlightGear.Launcher 1.0
+
+import "."
 
 Item {
     id: root
     property alias label: label.text
 
-    property var choices: []
-    property string displayRole: ""
-
+    property var model: undefined
+    property string displayRole: "display"
+    property bool enabled: true
     property int currentIndex: 0
+    property bool __dummy: false
+
+    implicitHeight: label.implicitHeight
+
+    Item {
+        Repeater {
+            id: internalModel
+            model: root.model
+
+            Item {
+                id: internalModelItem
+
+                // Taken from TableViewItemDelegateLoader.qml to follow QML role conventions
+                readonly property var text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
+                                                                                       : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
+                                                                                                                                            : modelData != undefined ? modelData : "" // Models without role
+                readonly property bool selected: root.currentIndex === model.index
+                readonly property QtObject modelObj: model
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        // hack to force updating of currentText after internalModel
+        // has been populated
+        __dummy = !__dummy
+    }
+
+    function currentText()
+    {
+        var foo = __dummy; // fake propery dependency to update this
+        var item = internalModel.itemAt(currentIndex);
+        if (!item) return "";
+        return item.text
+    }
 
     Text {
         id: label
         anchors.left: root.left
         anchors.leftMargin: 8
         anchors.verticalCenter: parent.verticalCenter
-        color: mouseArea.containsMouse ? "#68A6E1" : "black"
+        horizontalAlignment: Text.AlignRight
+        color: mouseArea.containsMouse ? Style.themeColor :
+                                         (root.enabled ? "black" : Style.inactiveThemeColor)
     }
 
     Rectangle {
         id: currentChoiceFrame
-        radius: 4
-        border.color: mouseArea.containsMouse ? "#68A6E1" : "#9f9f9f"
+        radius: Style.roundRadius
+        border.color: mouseArea.containsMouse ? Style.themeColor : Style.minorFrameColor
         border.width: 1
-        height: root.height
-        width: parent.width / 2
-        anchors.right: parent.right
-        anchors.rightMargin: 8
+        height: currentChoiceText.implicitHeight + Style.margin
+
+        anchors.left: label.right
+        anchors.leftMargin: Style.margin
+
+        // width of current item, or available space after the label
+        width: Math.min(root.width - (label.width + Style.margin),
+                        currentChoiceText.implicitWidth + (Style.margin * 2) + upDownIcon.width);
+
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
             id: currentChoiceText
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: 8
-            text: choices[currentIndex][displayRole]
-            color: mouseArea.containsMouse ? "#68A6E1" : "#7F7F7F"
+            anchors.right: parent.right
+            anchors.margins: Style.margin
+            text: currentText()
+            color: mouseArea.containsMouse ? Style.themeColor : Style.baseTextColor
+            elide: Text.ElideRight
+            maximumLineCount: 1
         }
 
         Image {
             id: upDownIcon
             source: "qrc:///up-down-arrow"
             anchors.right: parent.right
-            anchors.rightMargin: 8
+            anchors.rightMargin: Style.margin
             anchors.verticalCenter: parent.verticalCenter
         }
     }
@@ -50,46 +99,68 @@ Item {
         anchors.fill: parent
         id: mouseArea
         hoverEnabled: true
+        enabled: root.enabled
         onClicked: {
+            var screenPos = _launcher.mapToGlobal(currentChoiceText, Qt.point(0, -currentChoiceText.height * currentIndex))
+            if (screenPos.y < 0) {
+                // if the popup would appear off the screen, use the first item
+                // position instead
+                screenPos = _launcher.mapToGlobal(currentChoiceText, Qt.point(0, 0))
+            }
+
+            popupFrame.x = screenPos.x;
+            popupFrame.y = screenPos.y;
             popupFrame.visible = true
         }
     }
 
-    Rectangle {
+    Window {
         id: popupFrame
 
-        width: currentChoiceFrame.width
-        anchors.left: currentChoiceFrame.left
-
-        // todo - position so current item lies on top
-        anchors.top: currentChoiceFrame.bottom
-
-        height: choicesColumn.childrenRect.height
-
+        modality: Qt.WindowModal
+        flags: Qt.Popup
+        height: choicesColumn.childrenRect.height + Style.margin * 2
+        width: choicesColumn.childrenRect.width + Style.margin * 2
         visible: false
+        color: "white"
 
-        border.color: "#9f9f9f"
-        border.width: 1
+        Rectangle {
+            border.width: 1
+            border.color: Style.minorFrameColor
+            anchors.fill: parent
+        }
 
+        // text repeater
         Column {
             id: choicesColumn
+            spacing: Style.margin
+            x: Style.margin
+            y: Style.margin
 
             Repeater {
-                model: choices
-                delegate: Text {
-                    text: choices[model.index][root.displayRole]
-                    width: popupFrame.width
-                    height: 40
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            root.currentIndex = model.index
-                            popupFrame.visible = false
-                        }
-                    }
+                id: choicesRepeater
+                model: root.model
+                delegate:
+                    Text {
+                        id: choiceText
+                        readonly property bool selected: root.currentIndex === model.index
 
-                }
-            }
-        }
-    }
+                        // Taken from TableViewItemDelegateLoader.qml to follow QML role conventions
+                        text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
+                                                                         : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
+                                                                                                                              : modelData != undefined ? modelData : "" // Models without role
+                        height: implicitHeight + Style.margin
+
+                        MouseArea {
+                            width: popupFrame.width // full width of the popup
+                            height: parent.height
+                            onClicked: {
+                                root.currentIndex = model.index
+                                popupFrame.visible = false
+                            }
+                        }
+                    } // of Text delegate
+            } // text repeater
+        } // text column
+    } // of popup Window
 }

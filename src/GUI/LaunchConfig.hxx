@@ -38,9 +38,14 @@ public:
 
     Q_INVOKABLE void setEnableDisableOption(QString name, bool value);
 
+
+
     // ensure a property is /not/ set?
 
     // save and restore API?
+
+    Q_INVOKABLE QVariant getValueForKey(QString group, QString key, QVariant defaultValue = QVariant()) const;
+    Q_INVOKABLE void setValueForKey(QString group, QString key, QVariant var);
 
     QString defaultDownloadDir() const;
 

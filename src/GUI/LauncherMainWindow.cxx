@@ -46,6 +46,8 @@
 #include "FlickableExtentQuery.hxx"
 #include "LocalAircraftCache.hxx"
 #include "QmlAircraftInfo.hxx"
+#include "LauncherArgumentTokenizer.hxx"
+#include "PathUrlHelper.hxx"
 
 #include "ui_Launcher.h"
 
@@ -166,6 +168,26 @@ LauncherMainWindow::LauncherMainWindow() :
 
     m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
 
+    m_ui->settings->engine()->addImportPath("qrc:///");
+    m_ui->settings->engine()->rootContext()->setContextProperty("_launcher", this);
+    m_ui->settings->engine()->rootContext()->setContextProperty("_mpServers", m_serversModel);
+
+    m_ui->settings->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+
+    m_ui->settings->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->settings->setSource(QUrl("qrc:///qml/Settings.qml"));
+
+    m_ui->environmentPage->engine()->addImportPath("qrc:///");
+    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_launcher", this);
+    auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
+    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
+
+    m_ui->environmentPage->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_config", m_config);
+
+    m_ui->environmentPage->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->environmentPage->setSource(QUrl("qrc:///qml/Environment.qml"));
+
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
             this, &LauncherMainWindow::onAircraftInstalledCompleted);
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
@@ -191,9 +213,6 @@ LauncherMainWindow::LauncherMainWindow() :
     LocalAircraftCache::instance()->scanDirs();
     m_aircraftModel->setPackageRoot(globals->packageRoot());
 
-    buildSettingsSections();
-    buildEnvironmentSections();
-
     m_viewCommandLinePage = new ViewCommandLinePage;
     m_viewCommandLinePage->setLaunchConfig(m_config);
     m_ui->stack->addWidget(m_viewCommandLinePage);
@@ -208,6 +227,8 @@ void LauncherMainWindow::initQML()
     QQmlPrivate::RegisterAutoParent autoparent = { 0, &launcher_autoParent };
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
+    qmlRegisterType<LauncherArgumentTokenizer>("FlightGear.Launcher", 1, 0, "ArgumentTokenizer");
+
     qmlRegisterType<SettingsSectionQML>("FlightGear.Launcher", 1, 0, "Section");
     qmlRegisterType<SettingsCheckbox>("FlightGear.Launcher", 1, 0, "Checkbox");
     qmlRegisterType<SettingsComboBox>("FlightGear.Launcher", 1, 0, "Combo");
@@ -220,19 +241,14 @@ void LauncherMainWindow::initQML()
 
     qmlRegisterUncreatableType<SettingsControl>("FlightGear.Launcher", 1, 0, "Control", "Base class");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
+    qmlRegisterType<PathUrlHelper>("FlightGear.Launcher", 1, 0, "PathUrlHelper");
 
     qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
-
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherMainWindow::collectAircraftArgs);
     m_ui->location->setLaunchConfig(m_config);
-
-    m_qmlEngine = new QQmlEngine(this);
-    m_qmlEngine->rootContext()->setContextProperty("_config", m_config);
-    m_qmlEngine->rootContext()->setContextProperty("_launcher", this);
-    m_qmlEngine->rootContext()->setContextProperty("_mpServers", m_serversModel);
 
 #if defined(Q_OS_WIN)
     const QString osName("win");
@@ -241,10 +257,11 @@ void LauncherMainWindow::initQML()
 #else
     const QString osName("unix");
 #endif
-    m_qmlEngine->rootContext()->setContextProperty("_osName", osName);
 
-    flightgear::WeatherScenariosModel* weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
-    m_qmlEngine->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
+    QQmlContext* settingsContext = m_ui->settings->engine()->rootContext();
+    settingsContext->setContextProperty("_mpServers", m_serversModel);
+    settingsContext->setContextProperty("_config", m_config);
+    settingsContext->setContextProperty("_osName", osName);
 
     qmlRegisterUncreatableType<LocalAircraftCache>("FlightGear.Launcher", 1, 0, "LocalAircraftCache", "Aircraft cache");
     qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
@@ -261,75 +278,11 @@ void LauncherMainWindow::initQML()
 
 }
 
-void LauncherMainWindow::buildSettingsSections()
-{
-    QVBoxLayout* settingsVBox = static_cast<QVBoxLayout*>(m_ui->settingsScrollContents->layout());
-
-    QStringList sections = QStringList() << "general" << "mp" << "downloads" << "view" << "render";
-    Q_FOREACH (QString section, sections) {
-        QQmlComponent* comp = new QQmlComponent(m_qmlEngine, QUrl("qrc:///settings/" + section), this);
-        if (comp->isError()) {
-            qWarning() << "Errors parsing settings section:" << section << "\n" << comp->errorString();
-        } else {
-            SettingsSection* ss = qobject_cast<SettingsSection*>(comp->create());
-            if (!ss) {
-                qWarning() << "failed to create settings section from" << section;
-            } else {
-                ss->insertSettingsHeader();
-                ss->setLaunchConfig(m_config);
-                ss->setParent(m_ui->settingsScrollContents);
-                settingsVBox->addWidget(ss);
-                connect(ss, &SettingsSection::summaryChanged,
-                        this, &LauncherMainWindow::updateSettingsSummary);
-            }
-        }
-    }
-
-    m_extraSettings = new ExtraSettingsSection(m_ui->settingsScrollContents);
-    m_extraSettings->setLaunchConfig(m_config);
-    settingsVBox->addWidget(m_extraSettings);
-    settingsVBox->addStretch(1);
-
-    connect(m_ui->settingsSearchEdit, &QLineEdit::textChanged,
-            this, &LauncherMainWindow::onSettingsSearchChanged);
-}
-
-void LauncherMainWindow::buildEnvironmentSections()
-{
-    QVBoxLayout* settingsVBox = new QVBoxLayout;
-    m_ui->environmentScrollContents->setLayout(settingsVBox);
-
-    QStringList sections = QStringList() << "time" << "weather";
-    Q_FOREACH (QString section, sections) {
-        QQmlComponent* comp = new QQmlComponent(m_qmlEngine, QUrl("qrc:///environment/" + section), this);
-        if (comp->isError()) {
-            qWarning() << "Errors parsing environment section:" << section << "\n" << comp->errorString();
-        } else {
-            SettingsSection* ss = qobject_cast<SettingsSection*>(comp->create());
-            if (!ss) {
-                qWarning() << "failed to create environment section from" << section;
-            } else {
-                ss->insertSettingsHeader();
-                ss->setLaunchConfig(m_config);
-                ss->setParent(m_ui->environmentScrollContents);
-                settingsVBox->addWidget(ss);
-                connect(ss, &SettingsSection::summaryChanged,
-                        this, &LauncherMainWindow::updateSettingsSummary);
-            }
-        }
-    }
-
-    settingsVBox->addStretch(1);
-}
-
 LauncherMainWindow::~LauncherMainWindow()
 {
     // avoid a double-free when the QQuickWidget's engine seems to try
     // and delete us.
-    delete m_ui->aircraftList;
-
-    m_qmlEngine->collectGarbage();
-    delete m_qmlEngine;
+   // delete m_ui->aircraftList;
 }
 
 bool LauncherMainWindow::execInApp()
@@ -406,6 +359,8 @@ void LauncherMainWindow::restoreSettings()
 
 void LauncherMainWindow::saveSettings()
 {
+    emit requestSaveState();
+
     QSettings settings;
     settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
     settings.setValue("recent-location-sets", m_recentLocations);
@@ -779,16 +734,7 @@ void LauncherMainWindow::onPopupLocationHistory()
 
 void LauncherMainWindow::updateSettingsSummary()
 {
-    QStringList summary;
-
-    Q_FOREACH(SettingsSection* ss, findChildren<SettingsSection*>()) {
-        QString s = ss->summary();
-        if (!s.isEmpty()) {
-            QStringList pieces = s.split(';', QString::SkipEmptyParts);
-            summary.append(pieces);
-        }
-    }
-
+    const QStringList summary = m_settingsSummary + m_environmentSummary;
     QString s = summary.join(", ");
     s[0] = s[0].toUpper();
     m_ui->settingsDescription->setText(s);
@@ -807,6 +753,11 @@ void LauncherMainWindow::downloadDirChanged(QString path)
         return;
     }
 
+    // if the default dir is passed in, map that back to the emptru string
+    if (path == m_config->defaultDownloadDir()) {
+        path.clear();;
+    }
+
     auto options = flightgear::Options::sharedInstance();
     if (options->valueForOption("download-dir") == path.toStdString()) {
         // this works because we propogate the value from QSettings to
@@ -816,7 +767,11 @@ void LauncherMainWindow::downloadDirChanged(QString path)
         return;
     }
 
-    options->setOption("download-dir", path.toStdString());
+    if (!path.isEmpty()) {
+        options->setOption("download-dir", path.toStdString());
+    } else {
+        options->clearOption("download-dir");
+    }
 
     // replace existing package root
     globals->get_subsystem<FGHTTPClient>()->shutdown();
@@ -879,6 +834,32 @@ QmlAircraftInfo *LauncherMainWindow::selectedAircraftInfo() const
     return m_selectedAircraftInfo;
 }
 
+bool LauncherMainWindow::matchesSearch(QString term, QStringList keywords) const
+{
+    Q_FOREACH(QString s, keywords) {
+        if (s.contains(term, Qt::CaseInsensitive)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool LauncherMainWindow::isSearchActive() const
+{
+    return !m_settingsSearchTerm.isEmpty();
+}
+
+QStringList LauncherMainWindow::settingsSummary() const
+{
+    return m_settingsSummary;
+}
+
+QStringList LauncherMainWindow::environmentSummary() const
+{
+    return m_environmentSummary;
+}
+
 void LauncherMainWindow::setSelectedAircraft(QUrl selectedAircraft)
 {
     if (m_selectedAircraft == selectedAircraft)
@@ -887,6 +868,35 @@ void LauncherMainWindow::setSelectedAircraft(QUrl selectedAircraft)
     m_selectedAircraft = selectedAircraft;
     updateSelectedAircraft();
     emit selectedAircraftChanged(m_selectedAircraft);
+}
+
+void LauncherMainWindow::setSettingsSearchTerm(QString settingsSearchTerm)
+{
+    if (m_settingsSearchTerm == settingsSearchTerm)
+        return;
+
+    m_settingsSearchTerm = settingsSearchTerm;
+    emit searchChanged();
+}
+
+void LauncherMainWindow::setSettingsSummary(QStringList settingsSummary)
+{
+    if (m_settingsSummary == settingsSummary)
+        return;
+
+    m_settingsSummary = settingsSummary;
+    emit summaryChanged();
+    updateSettingsSummary();
+}
+
+void LauncherMainWindow::setEnvironmentSummary(QStringList environmentSummary)
+{
+    if (m_environmentSummary == environmentSummary)
+        return;
+
+    m_environmentSummary = environmentSummary;
+    emit summaryChanged();
+    updateSettingsSummary();
 }
 
 simgear::pkg::PackageRef LauncherMainWindow::packageForAircraftURI(QUrl uri) const
@@ -946,9 +956,11 @@ void LauncherMainWindow::onChangeDataDir()
 
 void LauncherMainWindow::onSettingsSearchChanged()
 {
+#if 0
     Q_FOREACH(SettingsSectionQML* ss, findChildren<SettingsSectionQML*>()) {
         ss->setSearchTerm(m_ui->settingsSearchEdit->text());
     }
+#endif
 }
 
 bool LauncherMainWindow::validateMetarString(QString metar)

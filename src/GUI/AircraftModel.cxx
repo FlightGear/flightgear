@@ -179,6 +179,8 @@ AircraftItemModel::AircraftItemModel(QObject* pr) :
             this, &AircraftItemModel::onScanStarted);
     connect(cache, &LocalAircraftCache::addedItems,
             this, &AircraftItemModel::onScanAddedItems);
+    connect(cache, &LocalAircraftCache::cleared,
+            this, &AircraftItemModel::onLocalCacheCleared);
 }
 
 AircraftItemModel::~AircraftItemModel()
@@ -190,7 +192,7 @@ void AircraftItemModel::setPackageRoot(const simgear::pkg::RootRef& root)
 {
     if (m_packageRoot) {
         delete m_delegate;
-        m_delegate = NULL;
+        m_delegate = nullptr;
     }
 
     m_packageRoot = root;
@@ -643,6 +645,17 @@ void AircraftItemModel::onScanAddedItems(int addedCount)
     m_delegateStates.insert(m_cachedLocalAircraftCount, newItemCount, {});
     m_cachedLocalAircraftCount += newItemCount;
     endInsertRows();
+}
+
+void AircraftItemModel::onLocalCacheCleared()
+{
+    const int firstRow = 0;
+    const int lastRow = m_cachedLocalAircraftCount + 1;
+
+    beginRemoveRows(QModelIndex(), firstRow, lastRow);
+    m_delegateStates.remove(0, m_cachedLocalAircraftCount);
+    m_cachedLocalAircraftCount = 0;
+    endRemoveRows();
 }
 
 void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason)

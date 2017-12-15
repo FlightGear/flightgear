@@ -132,6 +132,7 @@ signals:
     void scanStarted();
     void scanCompleted();
 
+    void cleared();
     void addedItems(int count);
 public slots:
 

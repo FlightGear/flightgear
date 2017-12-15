@@ -1,18 +1,21 @@
 #include "LauncherArgumentTokenizer.hxx"
 
+#include <QVariantMap>
+#include <QJSEngine>
+
 LauncherArgumentTokenizer::LauncherArgumentTokenizer()
 {
 
 }
 
-QList<LauncherArgumentTokenizer::Arg> LauncherArgumentTokenizer::tokenize(QString in) const
+QList<ArgumentToken> LauncherArgumentTokenizer::tokenize(QString in) const
 {
     int index = 0;
     const int len = in.count();
     QChar c, nc;
     State state = Start;
     QString key, value;
-    QList<Arg> result;
+    QList<ArgumentToken> result;
 
     for (; index < len; ++index) {
         c = in.at(index);
@@ -28,7 +31,7 @@ QList<LauncherArgumentTokenizer::Arg> LauncherArgumentTokenizer::tokenize(QStrin
                 } else {
                     // should we pemit single hyphen arguments?
                     // choosing to fail for now
-                    return QList<Arg>();
+                    return {};
                 }
             } else if (c == QChar('#')) {
                 state = Comment;
@@ -44,7 +47,7 @@ QList<LauncherArgumentTokenizer::Arg> LauncherArgumentTokenizer::tokenize(QStrin
                 value.clear();
             } else if (c.isSpace()) {
                 state = Start;
-                result.append(Arg(key));
+                result.append(ArgumentToken{key});
             } else {
                 // could check for illegal charatcers here
                 key.append(c);
@@ -56,7 +59,7 @@ QList<LauncherArgumentTokenizer::Arg> LauncherArgumentTokenizer::tokenize(QStrin
                 state = Quoted;
             } else if (c.isSpace()) {
                 state = Start;
-                result.append(Arg(key, value));
+                result.append(ArgumentToken{key, value});
             } else {
                 value.append(c);
             }
@@ -90,10 +93,31 @@ QList<LauncherArgumentTokenizer::Arg> LauncherArgumentTokenizer::tokenize(QStrin
 
     // ensure last argument isn't lost
     if (state == Key) {
-        result.append(Arg(key));
+        result.append(ArgumentToken{key});
     } else if (state == Value) {
-        result.append(Arg(key, value));
+        result.append(ArgumentToken{key, value});
     }
 
     return result;
+}
+
+QVariantList LauncherArgumentTokenizer::tokens() const
+{
+    QVariantList result;
+    Q_FOREACH(auto tk, tokenize(m_argString)) {
+        QVariantMap m;
+        m["arg"] = tk.arg;
+        m["value"] = tk.value;
+        result.append(m);
+    }
+    return result;
+}
+
+void LauncherArgumentTokenizer::setArgString(QString argString)
+{
+    if (m_argString == argString)
+        return;
+
+    m_argString = argString;
+    emit argStringChanged(m_argString);
 }
