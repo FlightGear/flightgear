@@ -20,6 +20,7 @@
 #ifndef FG_ADDON_HXX
 #define FG_ADDON_HXX
 
+#include <map>
 #include <ostream>
 #include <string>
 #include <tuple>
@@ -39,6 +40,29 @@ namespace flightgear
 
 namespace addons
 {
+
+enum class UrlType {
+  homePage,
+  download,
+  support,
+  codeRepository,
+  license
+};
+
+class QualifiedUrl {
+public:
+  QualifiedUrl(UrlType type, std::string url);
+
+  UrlType getType() const;
+  void setType(UrlType type);
+
+  std::string getUrl() const;
+  void setUrl(const std::string& url);
+
+private:
+  UrlType _type;
+  std::string _url;
+};
 
 class Addon : public SGReferenced {
 public:
@@ -130,6 +154,9 @@ public:
   // -1 means “not set” (as done by the default constructor)
   int getLoadSequenceNumber() const;
   void setLoadSequenceNumber(int num);
+
+  // Get all non-empty URLs pertaining to this add-on
+  std::map<UrlType, QualifiedUrl> getUrls() const;
 
   // Simple string representation
   std::string str() const;

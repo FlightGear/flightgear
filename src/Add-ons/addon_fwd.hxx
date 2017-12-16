@@ -34,6 +34,9 @@ class AddonManager;
 class AddonVersion;
 class AddonVersionSuffix;
 
+enum class UrlType;
+class QualifiedUrl;
+
 using AddonRef = SGSharedPtr<Addon>;
 using AddonVersionRef = SGSharedPtr<AddonVersion>;
 

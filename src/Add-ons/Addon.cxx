@@ -25,12 +25,15 @@
 #include <utility>
 #include <vector>
 
+#include <cassert>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/naref.h>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/sg_inlines.h>
 
 #include <Main/globals.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -50,6 +53,31 @@ namespace flightgear
 
 namespace addons
 {
+
+// ***************************************************************************
+// *                              QualifiedUrl                               *
+// ***************************************************************************
+
+QualifiedUrl::QualifiedUrl(UrlType type, std::string url)
+  : _type(type),
+    _url(std::move(url))
+{ }
+
+UrlType QualifiedUrl::getType() const
+{ return _type; }
+
+void QualifiedUrl::setType(UrlType type)
+{ _type = type; }
+
+std::string QualifiedUrl::getUrl() const
+{ return _url; }
+
+void QualifiedUrl::setUrl(const std::string& url)
+{ _url = url; }
+
+// ***************************************************************************
+// *                                  Addon                                  *
+// ***************************************************************************
 
 Addon::Addon(std::string id, AddonVersion version, SGPath basePath,
              std::string minFGVersionRequired, std::string maxFGVersionRequired,
@@ -506,6 +534,29 @@ Addon::parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode)
   return std::make_tuple(licenseDesignation, licenseFile, licenseUrl);
 }
 
+std::map<UrlType, QualifiedUrl> Addon::getUrls() const
+{
+  std::map<UrlType, QualifiedUrl> res;
+
+  auto appendIfNonEmpty = [&res](UrlType type, const string& url) {
+    if (!url.empty()) {
+      auto emplaceRetval = res.emplace(type, QualifiedUrl(type, url));
+      // We start with an empty std::map<> and don't call this lambda more
+      // than once for the same type, therefore the same key can't be seen
+      // twice.
+      assert(emplaceRetval.second);
+      SG_UNUSED(emplaceRetval); // 'cause asserts are removed in Release builds
+    }
+  };
+
+  appendIfNonEmpty(UrlType::homePage, getHomePage());
+  appendIfNonEmpty(UrlType::download, getDownloadUrl());
+  appendIfNonEmpty(UrlType::support, getSupportUrl());
+  appendIfNonEmpty(UrlType::codeRepository, getCodeRepositoryUrl());
+  appendIfNonEmpty(UrlType::license, getLicenseUrl());
+
+  return res;
+}
 
 // Static method
 void Addon::setupGhost(nasal::Hash& addonsModule)
