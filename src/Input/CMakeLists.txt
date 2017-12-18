@@ -70,12 +70,14 @@ if(ENABLE_JS_DEMO)
     install(TARGETS js_demo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if (COMMAND flightgear_test)
-	set(HID_INPUT_TEST_SOURCES test_hidinput.cxx FGEventInput.cxx 
-		FGCommonInput.cxx FGDEviceConfigurationMap.cxx)
+if (ENABLE_HID_INPUT)
+	if (COMMAND flightgear_test)
+		set(HID_INPUT_TEST_SOURCES test_hidinput.cxx FGEventInput.cxx 
+			FGCommonInput.cxx FGDEviceConfigurationMap.cxx)
 
-	flightgear_test(hidinput "${HID_INPUT_TEST_SOURCES}")
-	target_link_libraries(hidinput ${EVENT_INPUT_LIBRARIES} hidapi)	
+		flightgear_test(hidinput "${HID_INPUT_TEST_SOURCES}")
+		target_link_libraries(hidinput ${EVENT_INPUT_LIBRARIES} hidapi)	
+	endif()
 endif()
 
 flightgear_component(Input "${SOURCES}" "${HEADERS}")
