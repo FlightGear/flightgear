@@ -54,10 +54,10 @@ void yasim_graph(Airplane* a, const float alt, const float kts, int cfg = CONFIG
 
   switch (cfg) {
     case CONFIG_APPROACH:
-      a->loadApproachControls();
+      a->setApproachControls();
       break;
     case CONFIG_CRUISE:
-      a->loadCruiseControls();
+      a->setCruiseControls();
       break;
     case CONFIG_NONE:
       break;
@@ -129,10 +129,10 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, int cfg = CONFIG_
   
   switch (cfg) {
     case CONFIG_APPROACH:
-      a->loadApproachControls();
+      a->setApproachControls();
       break;
     case CONFIG_CRUISE:
-      a->loadCruiseControls();
+      a->setCruiseControls();
       break;
     case CONFIG_NONE:
       break;
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
     printf("= YASim solution results =\n");
     printf("==========================\n");
     float aoa = a->getCruiseAoA() * RAD2DEG;
-    float tail = -1 * a->getTailIncidence() * RAD2DEG;
+    float tailIncidence = -1 * a->getTailIncidence() * RAD2DEG;
     float drag = 1000 * a->getDragCoefficient();
     float cg[3];
     a->getModel()->getBody()->getCG(cg);
@@ -246,28 +246,49 @@ int main(int argc, char** argv)
     float SI_inertia[9];
     a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
     float MAC = 0, MACx = 0, MACy = 0;
+    float sweepMin = 0, sweepMax = 0;
     Wing* wing {nullptr};
+    Wing* tail {nullptr};
     if (a->hasWing()) {
       wing = a->getWing();
-      MAC = wing->getMACLength();
-      MACx = wing->getMACx();
-      MACy = wing->getMACy();
+      tail = a->getTail();
     }
     printf("       Iterations: %d\n", a->getSolutionIterations());
     printf(" Drag Coefficient: %.3f\n", drag);
     printf("       Lift Ratio: %.3f\n", a->getLiftRatio());
     printf("       Cruise AoA: %.2f deg\n", aoa);
-    printf("   Tail Incidence: %.2f deg\n", tail);
+    printf("   Tail Incidence: %.2f deg\n", tailIncidence);
     printf("Approach Elevator: %.3f\n\n", a->getApproachElevator());
     printf("               CG: x:%.3f, y:%.3f, z:%.3f\n", cg[0], cg[1], cg[2]);
     if (wing) {
+      MAC = wing->getMACLength();
+      MACx = wing->getMACx();
+      MACy = wing->getMACy();
+      sweepMin = wing->getSweepLEMin() * RAD2DEG;
+      sweepMax = wing->getSweepLEMax() * RAD2DEG;
       printf("         Wing MAC: (x:%.2f, y:%.2f), length:%.1f \n", MACx, MACy, MAC);
-      printf("  hard limit CG-x: %.3f \n", a->getCGHardLimitXMax());
-      printf("  soft limit CG-x: %.3f \n", a->getCGSoftLimitXMax());
-      printf("             CG-x: %.3f \n", cg[0]);
+      printf("  hard limit CG-x: %.3f m\n", a->getCGHardLimitXMax());
+      printf("  soft limit CG-x: %.3f m\n", a->getCGSoftLimitXMax());
+      printf("             CG-x: %.3f m\n", cg[0]);
       printf("    CG-x rel. MAC: %3.0f%%\n", a->getCGMAC()*100);
-      printf("  soft limit CG-x: %.3f \n", a->getCGSoftLimitXMin());
-      printf("  hard limit CG-x: %.3f \n", a->getCGHardLimitXMin());
+      printf("  soft limit CG-x: %.3f m\n", a->getCGSoftLimitXMin());
+      printf("  hard limit CG-x: %.3f m\n", a->getCGHardLimitXMin());
+      printf("\n");
+      printf("        wing span: %.2f m\n", a->getWingSpan());
+      printf(" sweep lead. edge: %.1f .. %.1f deg\n", sweepMin, sweepMax);
+      printf("        wing area: %.2f m²\n", a->getWingArea());
+      printf("  wing load empty: %.2f kg/m² (Empty %.0f kg)\n", a->getWingLoadEmpty(), a->getEmptyWeight());
+      printf("   wing load MTOW: %.2f kg/m² (MTOW  %.0f kg)\n", a->getWingLoadMTOW(), a->getMTOW());
+      printf("\n");
+      printf("        tail span: %.3f m\n", tail->getSpan());
+      printf("        tail area: %.3f m²\n", tail->getArea());
+      printf("\n");
+      printf("       wing lever: %.3f m\n", a->getWingLever());
+      printf("       tail lever: %.3f m\n", a->getTailLever());
+      printf("\n");
+      printf("       max thrust: %.2f kN\n", a->getMaxThrust()/1000);
+      printf("     thrust/empty: %.2f\n", a->getThrust2WeightEmpty());
+      printf("      thrust/mtow: %.2f\n", a->getThrust2WeightMTOW());
     }
     printf("\nInertia tensor [kg*m^2], origo at CG:\n\n");
     printf("  %7.0f, %7.0f, %7.0f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);

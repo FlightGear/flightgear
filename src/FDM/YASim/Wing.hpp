@@ -1,6 +1,7 @@
 #ifndef _WING_HPP
 #define _WING_HPP
 
+#include "yasim-common.hpp"
 #include "Vector.hpp"
 #include "Version.hpp"
 #include "Math.hpp"
@@ -50,11 +51,12 @@ class Wing {
     
     struct WingSection {
         int _id;
+        /// length and midpoint (not leading edge!) of root chord
         Chord _rootChord;
-        // length is distance from base to tip, not wing span
+        /// length is distance from base to tip, not wing span
         float _length {0};
         float _taper {1};
-        // sweep of center line, not leading edge!
+        /// sweep of center line, not leading edge!
         float _sweepAngleCenterLine {0}; 
         float _dihedral {0};
         float _twist {0};
@@ -63,7 +65,7 @@ class Wing {
 
         StallParams _stallParams;
 
-        //fixed incidence of section as given in config XML
+        ///fixed incidence of section as given in config XML
         float _sectionIncidence {0};
         float _dragScale {1};
         float _liftRatio {1};
@@ -74,13 +76,14 @@ class Wing {
         float _orient[9];
         float _rightOrient[9];
         Chord _tipChord;
-        float _meanChord {0}; // std. mean chord
-        Chord _mac; // mean aerodynamic chord (x,y) leading edge
-        float _wingspan {0};
-        float _aspectRatio {1};
-        // all SurfRec of this wing
+        /// std. mean chord
+        float _meanChord {0}; 
+        /// mean aerodynamic chord, (x,y) leading edge!
+        Chord _mac; 
+        float _sectionSpan {0};
+        /// all SurfRec of this wing
         Vector _surfs;      
-        // surfaces having a certain type of flap (flap, slat, spoiler)
+        /// surfaces having a certain type of flap (flap, slat, spoiler)
         Vector _flapSurfs[sizeof(WingFlaps)];
         
         void calculateGeometry();
@@ -96,7 +99,7 @@ class Wing {
 
         // valid only after Wing::compile() was called
         Chord getMAC() const { return _mac; };
-        float getArea() const { return _wingspan*_meanChord; };
+        float getArea() const { return _sectionSpan*_meanChord; };
         void setDragCoefficient(float scale);
         void multiplyDragCoefficient(float factor);
         // The ratio of force along the Z (lift) direction of each wing
@@ -116,19 +119,29 @@ class Wing {
     Version* _version;
     bool _mirror {false};
     Vector _sections;
-    Chord _mac;
+    // midpoint (not leading edge!) of wing root chord
     float _base[3] {0,0,0};
+    // midpoint (not leading edge!) of wing tip
     float _tip[3] {0,0,0};
-    float _wingspan {0};
+    float _netSpan {0};
+    float _wingSpan {0};
     float _area {0};
     float _aspectRatio {0};
     float _meanChord {0};
+    Chord _mac;
+    float _taper {1};
     float _incidence {0};
+    float _incidenceMin {-20*DEG2RAD};
+    float _incidenceMax {20*DEG2RAD};
     float _weight {0};
+    float _sweepLEMin {0};
+    float _sweepLEMax {0};
 
     //-- private methods
-    Chord _float2chord(float* pos, float lenght = 0);
-    void _chord2float(Chord c, float* pos);
+    //copy float[3] to chord x,y,z
+    static Chord _float2chord(float* pos, float lenght = 0);
+    //copy chord x,y,z to float[3]
+    static void _chord2float(Chord c, float* pos);
     void interp(const float* v1, const float* v2, const float frac, float* out);
     void writeInfoToProptree();
     
@@ -139,7 +152,7 @@ public:
     int addWingSection(float* base, float chord, float wingLength, 
         float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0, float camber = 0, float idrag = 1, float incidence = 0);
 
-    static Chord calculateMAC(Chord root, Chord tip);    
+    static Chord calculateMAC(const Chord root, const Chord tip);    
 
     void setFlapParams(int section, WingFlaps type, FlapParams fp);
     void setSectionDrag(int section, float pdrag);
@@ -150,17 +163,24 @@ public:
     void multiplyLiftRatio(float factor);
     void multiplyDragCoefficient(float factor);
     void setIncidence(float incidence);
-
+    void setIncidenceMin(float min) { _incidenceMin = min; };
+    void setIncidenceMax(float max) { _incidenceMax = max; };
+    void weight2mass(float scale);
+    
     bool isMirrored() const { return _mirror; };
     void getBase(float* base) const { Math::set3(_base, base); };
     void getTip(float* tip) const { Math::set3(_tip, tip); };
-    float getSpan() const { return _wingspan; };
-    float getArea() const { return _area; };
+    float getSpan() const { return _wingSpan; };
+    float getTaper() const { return _taper; };
+    float getArea() const;
     float getAspectRatio() const { return _aspectRatio; };
     float getSMC() const { return _meanChord; };
     float getMACLength() const { return _mac.length; }; // get length of MAC
     float getMACx() const { return _mac.x; }; // get x-coord of MAC leading edge 
     float getMACy() const { return _mac.y; }; // get y-coord of MAC leading edge 
+    float getMACz() const { return _mac.z; }; // get y-coord of MAC leading edge 
+    float getSweepLEMin() const { return _sweepLEMin; }; //min sweep angle of leading edge
+    float getSweepLEMax() const { return _sweepLEMax; }; //max sweep angle of leading edge
    
 //-----------------------------    
     // propergate the control axes value for the sub-surfaces

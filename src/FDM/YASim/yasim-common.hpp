@@ -20,6 +20,7 @@ namespace yasim {
 
     static const float LBS2N = 4.44822f;
     static const float N2LB = 1/LBS2N;
+    static const float KG2N = 9.81f;
     static const float LBS2KG = 0.45359237f;
     static const float KG2LBS = 1/LBS2KG;
     static const float CM2GALS = 264.172037284f;

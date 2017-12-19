@@ -29,6 +29,7 @@ public:
     virtual ~Model();
 
     RigidBody* getBody() { return &_body; }
+    void getCG(float* cg) const { return _body.getCG(cg); }
     Integrator* getIntegrator() { return &_integrator; }
 
     void setTurbulence(Turbulence* turb) { _turb = turb; }

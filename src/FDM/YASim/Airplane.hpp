@@ -37,20 +37,20 @@ public:
 
     void setPilotPos(float* pos) { Math::set3(pos, _pilotPos); }
     void getPilotPos(float* out) { Math::set3(_pilotPos, out); }
-
     void getPilotAccel(float* out);
 
-    void setEmptyWeight(float weight) {  _emptyWeight = weight; }
+    void  setEmptyWeight(float weight) {  _emptyWeight = weight; }
+    float getEmptyWeight() const {  return _emptyWeight; }
 
     Wing* getWing();
-    bool hasWing() const { return (_wing != nullptr); }
+    bool  hasWing() const { return (_wing != nullptr); }
     Wing* getTail(); 
-    void addVStab(Wing* vstab) { _vstabs.add(vstab); }
+    void  addVStab(Wing* vstab) { _vstabs.add(vstab); }
 
     void addFuselage(float* front, float* back, float width,
                      float taper=1, float mid=0.5f,
                      float cx=1, float cy=1, float cz=1, float idrag=1);
-    int addTank(float* pos, float cap, float fuelDensity);
+    int  addTank(float* pos, float cap, float fuelDensity);
     void addGear(Gear* g);
     void addHook(Hook* h) { _model.addHook(h); }
     void addLaunchbar(Launchbar* l) { _model.addLaunchbar(l); }
@@ -58,7 +58,7 @@ public:
     void addBallast(float* pos, float mass);
     void addHitch(Hitch* h) { _model.addHitch(h); }
 
-    int addWeight(float* pos, float size);
+    int  addWeight(float* pos, float size);
     void setWeight(int handle, float mass);
 
     void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
@@ -83,11 +83,11 @@ public:
     
     int numTanks() const { return _tanks.size(); }
     void setFuelFraction(float frac); // 0-1, total amount of fuel
-    // get fuel in kg
+    /// get fuel in kg
     float getFuel(int tank) const { return ((Tank*)_tanks.get(tank))->fill; }
-    // set fuel in kg
+    /// set fuel in kg
     float setFuel(int tank, float fuel) { return ((Tank*)_tanks.get(tank))->fill = fuel; }
-    // get fuel density in kg/m^3
+    /// get fuel density in kg/m^3
     float getFuelDensity(int tank) const { return ((Tank*)_tanks.get(tank))->density; }
     float getTankCapacity(int tank) const { return ((Tank*)_tanks.get(tank))->cap; }
 
@@ -104,17 +104,30 @@ public:
     float getApproachElevator() const { return _approachElevator.val; }
     const char* getFailureMsg() const { return _failureMsg; }
 
-    void loadApproachControls() { loadControls(_approachConfig.controls); }
-    void loadCruiseControls() { loadControls(_cruiseConfig.controls); }
+    void setApproachControls() { setControlValues(_approachConfig.controls); }
+    void setCruiseControls() { setControlValues(_cruiseConfig.controls); }
     
     float getCGHardLimitXMin() const { return _cgMin; } // get min x-coordinate for c.g (from main gear)
     float getCGHardLimitXMax() const { return _cgMax; } // get max x-coordinate for c.g (from nose gear)
     float getCGMAC(); // return c.g. x as fraction of MAC
-    // set desired range for C.G. in % of MAC, 0% = leading edge, 100% trailing edge
+    /// set desired range for C.G. in % of MAC, 0% = leading edge, 100% trailing edge
     void  setDesiredCGRangeInPercentOfMAC(float MACPercentMin, float MACPercentMax) { _cgDesiredMin = MACPercentMin; _cgDesiredMax = MACPercentMax; }
     float getCGSoftLimitXMin() const { return _cgDesiredAft; }   // get x-coordinate limit calculated from MAC and setCGRange values
     float getCGSoftLimitXMax() const { return _cgDesiredFront; } // get x-coordinate limit calculated from MAC and setCGRange values
-    void  setAutoBallast(bool allowed) { _autoBallast = allowed; }
+
+    void  setMTOW(float mtow) { _mtow = mtow; }
+    float getMTOW() const { return _mtow; }
+    float getWingSpan() const;
+    float getWingArea() const;
+    float getWingLoadEmpty() const { return _getWingLoad(_emptyWeight); };
+    float getWingLoadMTOW() const { return _getWingLoad(_mtow); };
+    /// get x-distance between CG and 25% MAC of wing
+    float getWingLever() const { return _getWingLever(_wing); };
+    /// get x-distance between CG and 25% MAC of tail
+    float getTailLever() const { return _getWingLever(_tail); };
+    float getMaxThrust();
+    float getThrust2WeightEmpty() { return getMaxThrust()/(_emptyWeight * KG2N); };
+    float getThrust2WeightMTOW() { return getMaxThrust()/(_mtow*KG2N); };
     
 private:
     struct Tank { 
@@ -161,17 +174,21 @@ private:
       float fuel {0};
       float glideAngle {0};      
       float aoa {0};
-      float altitude;
-      float weight;
+      float altitude {0};
+      float weight {0};
       State state;
       Vector controls;
     };
     Config _cruiseConfig;
     Config _approachConfig;
 
-    void loadControls(const Vector& controls);
+    /// load values for controls as defined in cruise/approach configuration
+    void setControlValues(const Vector& controls);
+    /// Helper for solve()
     void runConfig(Config &cfg);
     void solveGear();
+    float _getPitch(Config &cfg);
+    float _getLift(Config &cfg);
     void solve();
     void solveHelicopter();
     float compileWing(Wing* w);
@@ -186,11 +203,17 @@ private:
     void updateGearState();
     void setupWeights(bool isApproach);
     void calculateCGHardLimits();
+    ///calculate mass divided by area of main wing
+    float _getWingLoad(float mass) const;
+    ///calculate distance between CGx and AC of wing w
+    float _getWingLever(Wing* w) const;
     
     Model _model;
     ControlMap _controls;
 
     float _emptyWeight {0};
+    ///max take of weight
+    float _mtow {0};
     float _pilotPos[3] {0, 0, 0};
 
     Wing* _wing {nullptr};
@@ -216,14 +239,18 @@ private:
     float _tailIncidence {0};
     ControlSetting _approachElevator;
     const char* _failureMsg {0};
-    
-    float _cgMax {-1e6};         // hard limits for cg from gear position
-    float _cgMin {1e6};          // hard limits for cg from gear position
-    float _cgDesiredMax {0.3f};  // desired cg max in %MAC from config
-    float _cgDesiredMin {0.25f}; // desired cg min in %MAC from config
-    float _cgDesiredFront {0};   // calculated desired cg x max
-    float _cgDesiredAft {0};     // calculated desired cg x min 
-    bool _autoBallast = false;
+    /// hard limits for cg from gear position
+    float _cgMax {-1e6};         
+    /// hard limits for cg from gear position
+    float _cgMin {1e6};          
+    /// desired cg max in %MAC from config
+    float _cgDesiredMax {0.3f};  
+    /// desired cg min in %MAC from config
+    float _cgDesiredMin {0.25f}; 
+    /// calculated desired cg x max
+    float _cgDesiredFront {0};   
+    /// calculated desired cg x min 
+    float _cgDesiredAft {0};     
 };
 
 }; // namespace yasim

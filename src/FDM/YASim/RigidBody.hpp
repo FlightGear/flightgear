@@ -59,18 +59,19 @@ public:
     // regenerate its internal tables.  This step is expensive, so
     // it's exposed to the client who can amortize the call across
     // multiple changes. see also _recalcStatic() 
+    /// calculate the total mass, centre of gravity and inertia tensor
     void recalc();
 
-    // Resets the current force/torque parameters to zero.
+    /// Resets the current force/torque parameters to zero.
     void reset();
 
-    // Applies a force at the center of gravity.
+    /// Applies a force at the center of gravity.
     void addForce(const float* force) { Math::add3(_force, force, _force); }
     
-    // Applies a force at the specified position.
+    /// Applies a force at the specified position.
     void addForce(const float* pos, const float* force); 
     
-    // Adds a torque with the specified axis and magnitude
+    /// Adds a torque with the specified axis and magnitude
     void addTorque(const float* torque) { Math::add3(_torque, torque, _torque); }
 
     // Sets the rotation rate of the body (about its c.g.) within the

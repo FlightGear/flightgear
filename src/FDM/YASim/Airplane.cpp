@@ -511,7 +511,7 @@ void Airplane::compile()
     // The Wing objects
     if (_wing)
     {
-        if (baseN != 0) {
+        if (baseN != nullptr) {
             _wingsN = baseN->getChild("wing", 0, true);
             _wing->setPropertyNode(_wingsN);
         }
@@ -528,14 +528,14 @@ void Airplane::compile()
     }
     if (_tail)
     {
-        if (baseN != 0) {
+        if (baseN != nullptr) {
             _wingsN = baseN->getChild("tail", 0, true);
             _tail->setPropertyNode(_wingsN);
         }
         aeroWgt += compileWing(_tail);
     }
-    int i;
-    for(i=0; i<_vstabs.size(); i++)
+
+    for(int i=0; i<_vstabs.size(); i++)
     {
         Wing* vs = (Wing*)_vstabs.get(i);
         if (baseN != 0) {
@@ -546,32 +546,37 @@ void Airplane::compile()
     }
 
     // The fuselage(s)
-    for(i=0; i<_fuselages.size(); i++)
+    for(int i=0; i<_fuselages.size(); i++)
         aeroWgt += compileFuselage((Fuselage*)_fuselages.get(i));
 
     // Count up the absolute weight we have
     float nonAeroWgt = _ballast;
-    for(i=0; i<_thrusters.size(); i++)
+    for(int i=0; i<_thrusters.size(); i++)
         nonAeroWgt += ((ThrustRec*)_thrusters.get(i))->mass;
 
     // Rescale to the specified empty weight
     float wscale = (_emptyWeight-nonAeroWgt)/aeroWgt;
-    for(i=firstMass; i<body->numMasses(); i++) {
+    for(int i=firstMass; i<body->numMasses(); i++) {
         body->setMass(i, body->getMass(i)*wscale);
     }
-    if (_wingsN != nullptr) {
-        float w = _wingsN->getNode("weight", true)->getFloatValue();
-        _wingsN->getNode("mass", true)->setFloatValue(w * wscale);
+    //if we have prop tree, give scale factor to each wing so it can export its mass to the prop tree
+    if (baseN != nullptr) {
+        if (_wing) _wing->weight2mass(wscale);
+        if (_tail) _tail->weight2mass(wscale);
+        for(int i=0; i<_vstabs.size(); i++)
+        {
+            ((Wing*)_vstabs.get(i))->weight2mass(wscale);
+        }
     }
     // Add the thruster masses
-    for(i=0; i<_thrusters.size(); i++) {
+    for(int i=0; i<_thrusters.size(); i++) {
         ThrustRec* t = (ThrustRec*)_thrusters.get(i);
         body->addMass(t->mass, t->cg, true);
     }
 
     // Add the tanks, empty for now.
     float totalFuel = 0;
-    for(i=0; i<_tanks.size(); i++) { 
+    for(int i=0; i<_tanks.size(); i++) { 
         Tank* t = (Tank*)_tanks.get(i); 
         t->handle = body->addMass(0, t->pos);
         totalFuel += t->cap;
@@ -583,11 +588,11 @@ void Airplane::compile()
     body->recalc();
 
     // Add surfaces for the landing gear.
-    for(i=0; i<_gears.size(); i++)
+    for(int i=0; i<_gears.size(); i++)
         compileGear((GearRec*)_gears.get(i));
 
     // The Thruster objects
-    for(i=0; i<_thrusters.size(); i++) {
+    for(int i=0; i<_thrusters.size(); i++) {
         ThrustRec* tr = (ThrustRec*)_thrusters.get(i);
         tr->handle = _model.addThruster(tr->thruster);
     }
@@ -727,54 +732,52 @@ void Airplane::setupWeights(bool isApproach)
     }
 }
 
-/// load values for controls as defined in cruise/approach configuration
-void Airplane::loadControls(const Vector& controls)
+void Airplane::setControlValues(const Vector& controls)
 {
-  _controls.reset();
-  for(int i=0; i < controls.size(); i++) {
+    _controls.reset();
+    for(int i=0; i < controls.size(); i++) {
         ControlSetting* c = (ControlSetting*)controls.get(i);
-    _controls.setInput(c->propHandle, c->val);
-  }
-  _controls.applyControls(); 
+        _controls.setInput(c->propHandle, c->val);
+    }
+    _controls.applyControls(); 
 }
 
-/// Helper for solve()
 void Airplane::runConfig(Config &cfg)
 {
-  // aoa is consider to be given for approach so we calculate orientation 
-  // only once in setApproach()
-  if (!cfg.isApproach) {
-    cfg.state.setupOrientationFromAoa(cfg.aoa);
-  }
-  cfg.state.setupSpeedAndPosition(cfg.speed, cfg.glideAngle);
-  _model.setState(&cfg.state);
-  _model.setStandardAtmosphere(cfg.altitude);
-  loadControls(cfg.controls);
+    // aoa is consider to be given for approach so we calculate orientation 
+    // only once in setApproach()
+    if (!cfg.isApproach) {
+        cfg.state.setupOrientationFromAoa(cfg.aoa);
+    }
+    cfg.state.setupSpeedAndPosition(cfg.speed, cfg.glideAngle);
+    _model.setState(&cfg.state);
+    _model.setStandardAtmosphere(cfg.altitude);
+    setControlValues(cfg.controls);
   
-  // The local wind
-  float wind[3];
-  Math::mul3(-1, cfg.state.v, wind);
-  cfg.state.globalToLocal(wind, wind);
-  
-  setFuelFraction(cfg.fuel);
-  setupWeights(cfg.isApproach);
-  
-  // Set up the thruster parameters and iterate until the thrust
-  // stabilizes.
-  for(int i=0; i<_thrusters.size(); i++) {
-    Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
-    t->setWind(wind);
-    t->setStandardAtmosphere(cfg.altitude);
-  }
-  
-  stabilizeThrust();
-  updateGearState();
-  
-  // Precompute thrust in the model, and calculate aerodynamic forces
-  _model.getBody()->recalc();
-  _model.getBody()->reset();
-  _model.initIteration();
-  _model.calcForces(&cfg.state);
+    // The local wind
+    float wind[3];
+    Math::mul3(-1, cfg.state.v, wind);
+    cfg.state.globalToLocal(wind, wind);
+    
+    setFuelFraction(cfg.fuel);
+    setupWeights(cfg.isApproach);
+    
+    // Set up the thruster parameters and iterate until the thrust
+    // stabilizes.
+    for(int i=0; i<_thrusters.size(); i++) {
+        Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
+        t->setWind(wind);
+        t->setStandardAtmosphere(cfg.altitude);
+    }
+    
+    stabilizeThrust();
+    updateGearState();
+    
+    // Precompute thrust in the model, and calculate aerodynamic forces
+    _model.getBody()->recalc();
+    _model.getBody()->reset();
+    _model.initIteration();
+    _model.calcForces(&cfg.state);
 }
 /// Used only in Airplane::solve() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
@@ -846,6 +849,24 @@ float Airplane::normFactor(float f)
     return f;
 }
 
+///helper for Airplane::solve()
+float Airplane::_getPitch(Config &cfg)
+{
+    float tmp[3];
+    _model.getBody()->getAngularAccel(tmp);
+    cfg.state.localToGlobal(tmp, tmp);
+    return tmp[1];
+}
+
+///helper for Airplane::solve()
+float Airplane::_getLift(Config &cfg)
+{
+    float tmp[3];
+    _model.getBody()->getAccel(tmp);
+    cfg.state.localToGlobal(tmp, tmp);
+    return cfg.weight * tmp[2];
+}
+
 void Airplane::solve()
 {
     static const float ARCMIN = 0.0002909f;
@@ -859,50 +880,35 @@ void Airplane::solve()
             _failureMsg = "Solution failed to converge after 10000 iterations";
             return;
         }
-
         // Run an iteration at cruise, and extract the needed numbers:
         runConfig(_cruiseConfig);
-
         _model.getThrust(tmp);
         float thrust = tmp[0] + _cruiseConfig.weight * Math::sin(_cruiseConfig.glideAngle) * 9.81;
 
         _model.getBody()->getAccel(tmp);
         _cruiseConfig.state.localToGlobal(tmp, tmp);
         float xforce = _cruiseConfig.weight * tmp[0];
-        float clift0 = _cruiseConfig.weight * tmp[2];
-
-        _model.getBody()->getAngularAccel(tmp);
-        _cruiseConfig.state.localToGlobal(tmp, tmp);
-        float pitch0 = tmp[1];
+        float clift0 = _getLift(_cruiseConfig);
+        float pitch0 = _getPitch(_cruiseConfig);
 
         // Run an approach iteration, and do likewise
         runConfig(_approachConfig);
-
-        _model.getBody()->getAngularAccel(tmp);
-        _approachConfig.state.localToGlobal(tmp, tmp);
-        double apitch0 = tmp[1];
-
-        _model.getBody()->getAccel(tmp);
-        _approachConfig.state.localToGlobal(tmp, tmp);
-        float alift = _approachConfig.weight * tmp[2];
+        double apitch0 = _getPitch(_approachConfig);
+        float alift = _getLift(_approachConfig);
 
         // Modify the cruise AoA a bit to get a derivative
         _cruiseConfig.aoa += ARCMIN;
         runConfig(_cruiseConfig);
         _cruiseConfig.aoa -= ARCMIN;
             
-        _model.getBody()->getAccel(tmp);
-        _cruiseConfig.state.localToGlobal(tmp, tmp);
-        float clift1 = _cruiseConfig.weight * tmp[2];
+        float clift1 = _getLift(_cruiseConfig);
 
         // Do the same with the tail incidence
         _tail->setIncidence(_tailIncidence + ARCMIN);
         runConfig(_cruiseConfig);
         _tail->setIncidence(_tailIncidence);
 
-        _model.getBody()->getAngularAccel(tmp);
-        _cruiseConfig.state.localToGlobal(tmp, tmp);
-        float pitch1 = tmp[1];
+        float pitch1 = _getPitch(_cruiseConfig);
 
         // Now calculate:
         float awgt = 9.8f * _approachConfig.weight;
@@ -925,9 +931,7 @@ void Airplane::solve()
         runConfig(_approachConfig);
         _approachElevator.val -= ELEVDIDDLE;
 
-        _model.getBody()->getAngularAccel(tmp);
-        _approachConfig.state.localToGlobal(tmp, tmp);
-        double apitch1 = tmp[1];
+        double apitch1 = _getPitch(_approachConfig);
         float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
 
         // Now apply the values we just computed.  Note that the
@@ -1019,6 +1023,55 @@ float Airplane::getCGMAC()
       return (_wing->getMACx() - cg[0]) / _wing->getMACLength();
     }
     return 0;
+}
+
+float Airplane::getWingSpan() const
+{
+    if (_wing == nullptr) return -1;
+    return  _wing->getSpan();
+}
+
+float Airplane::getWingArea() const
+{
+    if (_wing == nullptr) return -1;
+    return  _wing->getArea();
+}
+
+float Airplane::_getWingLoad(float mass) const
+{
+    if (_wing == nullptr) return -1;
+    float area =  _wing->getArea();
+    if (area == 0) return -1;
+    else return mass / area;
+}
+
+/// get x-distance between CG and 25% MAC of w
+float Airplane::_getWingLever(Wing* w) const
+{
+    if (w == nullptr) return -1;
+    float cg[3];
+    _model.getCG(cg);
+    // aerodynamic center is at 25% of MAC
+    float ac = w->getMACx() - 0.25f * w->getMACLength();
+    return ac - cg[0];
+}
+
+/// get max thrust with standard atmosphere at sea level
+float Airplane::getMaxThrust()
+{
+    float wind[3] {0,0,0};
+    float thrust[3] {0,0,0};
+    float sum[3] {0,0,0};
+    for(int i=0; i<_thrusters.size(); i++) {
+        Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
+        t->setWind(wind);
+        t->setStandardAtmosphere(0);
+        t->setThrottle(1);
+        t->stabilize();
+        t->getThrust(thrust);
+        Math::add3(thrust, sum, sum);
+    }    
+    return sum[0];
 }
 
 }; // namespace yasim

@@ -285,7 +285,10 @@ void FGFDM::parseAirplane(const XMLAttributes* a)
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
     }
     _airplane.setDesiredCGRangeInPercentOfMAC(attrf(a, "cg-min", 0.25f), attrf(a, "cg-max", 0.3f)); 
-    if (attrb(a, "auto-ballast")) { _airplane.setAutoBallast(true); }
+    
+    if (a->hasAttribute("mtow-lbs")) { _airplane.setMTOW(attrf(a, "mtow-lbs") * LBS2KG); }
+    else if (a->hasAttribute("mtow-kg")) { _airplane.setMTOW(attrf(a, "mtow-kg")); }
+    
 }
 
 void FGFDM::parseApproachCruise(const XMLAttributes* a, const char* name)
@@ -566,6 +569,8 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     } 
     else if (!strcmp(type, "hstab")) {
         w = airplane->getTail();
+        if (a->hasAttribute("incidence-max")) w->setIncidenceMax(attrf(a, "incidence-max") * DEG2RAD);
+        if (a->hasAttribute("incidence-min")) w->setIncidenceMin(attrf(a, "incidence-min") * DEG2RAD);
     } else {
         w = new Wing(airplane, mirror);
     }
@@ -816,22 +821,22 @@ void FGFDM::parsePropeller(const XMLAttributes* a)
     prop->setStops(fine_stop, coarse_stop);
 
     if(a->hasAttribute("takeoff-power")) {
-	float power0 = attrf(a, "takeoff-power") * HP2W;
-	float omega0 = attrf(a, "takeoff-rpm") * RPM2RAD;
-	prop->setTakeoff(omega0, power0);
+        float power0 = attrf(a, "takeoff-power") * HP2W;
+        float omega0 = attrf(a, "takeoff-rpm") * RPM2RAD;
+        prop->setTakeoff(omega0, power0);
     }
 
     if(a->hasAttribute("max-rpm")) {
-	float max = attrf(a, "max-rpm") * RPM2RAD;
-	float min = attrf(a, "min-rpm") * RPM2RAD;
-	thruster->setVariableProp(min, max);
+        float max = attrf(a, "max-rpm") * RPM2RAD;
+        float min = attrf(a, "min-rpm") * RPM2RAD;
+        thruster->setVariableProp(min, max);
     }
 
     if(attrb(a, "contra"))
         thruster->setContraPair(true);
 
     if(a->hasAttribute("manual-pitch")) {
-	prop->setManualPitch();
+        prop->setManualPitch();
     }
 
     thruster->setGearRatio(attrf(a, "gear-ratio", 1));
