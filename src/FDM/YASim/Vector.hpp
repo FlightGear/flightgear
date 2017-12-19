@@ -1,6 +1,10 @@
 #ifndef _VECTOR_HPP
 #define _VECTOR_HPP
 
+#include <stdio.h>
+#include <cassert>
+
+namespace yasim {
 //
 // Excruciatingly simple vector-of-pointers class.  Easy & useful.
 // No support for addition of elements anywhere but at the end of the
@@ -19,9 +23,9 @@ public:
 private:
     void realloc();
 
-    int _nelem;
-    int _sz;
-    void** _array;
+    int _nelem {0};
+    int _sz {0};
+    void** _array {nullptr};
 };
 
 inline Vector::Vector()
@@ -46,11 +50,14 @@ inline int Vector::add(void* p)
 
 inline void* Vector::get(int i) const
 {
+    assert(i >= 0 and i < _sz);
     return _array[i];
+
 }
 
 inline void Vector::set(int i, void* p)
 {
+    assert(i >= 0 and i < _sz);
     _array[i] = p;
 }
 
@@ -73,5 +80,5 @@ inline void Vector::realloc()
     delete[] _array;
     _array = array;
 }
-
+}; //namespace yasim
 #endif // _VECTOR_HPP

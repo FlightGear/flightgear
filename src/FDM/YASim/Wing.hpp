@@ -4,159 +4,171 @@
 #include "Vector.hpp"
 #include "Version.hpp"
 #include "Math.hpp"
+#include <simgear/props/props.hxx>
 
 namespace yasim {
 
 class Surface;
+class Model;
 
-// FIXME: need to handle "inverted" controls for mirrored wings.
+struct FlapParams {
+    float start {0};
+    float end {0};
+    float lift {0}; 
+    float drag {0};
+    float aoa {0};
+};
+
+struct StallParams {
+    float aoa {0};
+    float width {0};
+    float peak {0};
+};
+
+// position and length of a chord line
+struct Chord {
+    float x {0};
+    float y {0};
+    float z {0};
+    float length {0};
+};
+
+enum WingFlaps {
+    WING_FLAP0,
+    WING_FLAP1,
+    WING_SPOILER,
+    WING_SLAT,
+};
+
 class Wing {
+    SGPropertyNode_ptr _wingN {nullptr};
+    
+    struct SurfRec { 
+        Surface* surface; 
+        float weight; 
+    };
+    
+    struct WingSection {
+        int _id;
+        Chord _rootChord;
+        // length is distance from base to tip, not wing span
+        float _length {0};
+        float _taper {1};
+        // sweep of center line, not leading edge!
+        float _sweepAngleCenterLine {0}; 
+        float _dihedral {0};
+        float _twist {0};
+        float _camber {0}; 
+        float _inducedDrag {1};
+
+        StallParams _stallParams;
+
+        //fixed incidence of section as given in config XML
+        float _sectionIncidence {0};
+        float _dragScale {1};
+        float _liftRatio {1};
+
+        FlapParams _flapParams[sizeof(WingFlaps)];
+
+        // calculated from above
+        float _orient[9];
+        float _rightOrient[9];
+        Chord _tipChord;
+        float _meanChord {0}; // std. mean chord
+        Chord _mac; // mean aerodynamic chord (x,y) leading edge
+        float _wingspan {0};
+        float _aspectRatio {1};
+        // all SurfRec of this wing
+        Vector _surfs;      
+        // surfaces having a certain type of flap (flap, slat, spoiler)
+        Vector _flapSurfs[sizeof(WingFlaps)];
+        
+        void calculateGeometry();
+        void calculateWingCoordinateSystem();
+        void calculateTipChord();
+        void calculateSpan();
+        void calculateMAC();
+        float calculateSweepAngleLeadingEdge();
+        //set incidence value to all surfaces of this section
+        void setIncidence(float incidence);
+        // parameters for stall curve
+        void setStallParams(StallParams sp) { _stallParams = sp; }
+
+        // valid only after Wing::compile() was called
+        Chord getMAC() const { return _mac; };
+        float getArea() const { return _wingspan*_meanChord; };
+        void setDragCoefficient(float scale);
+        void multiplyDragCoefficient(float factor);
+        // The ratio of force along the Z (lift) direction of each wing
+        // segment to that along the X (drag) direction.
+        void setLiftRatio(float ratio);
+        void multiplyLiftRatio(float factor);
+
+        void newSurface(Version* _version, float* pos, float* orient, float chord,
+            bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler, 
+            float weight, float twist);
+        int numSurfaces() const { return _surfs.size(); }
+        Surface* getSurface(int n) { return ((SurfRec*)_surfs.get(n))->surface; }
+        float getSurfaceWeight(int n) const { return ((SurfRec*)_surfs.get(n))->weight; }
+    }; //struct WingSection
+
+    //-- wing member variables --    
+    Version* _version;
+    bool _mirror {false};
+    Vector _sections;
+    Chord _mac;
+    float _base[3] {0,0,0};
+    float _tip[3] {0,0,0};
+    float _wingspan {0};
+    float _area {0};
+    float _aspectRatio {0};
+    float _meanChord {0};
+    float _incidence {0};
+    float _weight {0};
+
+    //-- private methods
+    Chord _float2chord(float* pos, float lenght = 0);
+    void _chord2float(Chord c, float* pos);
+    void interp(const float* v1, const float* v2, const float frac, float* out);
+    void writeInfoToProptree();
+    
 public:
-    Wing(Version *ver, bool mirror, float* base, float chord, float length, 
-        float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0);
+    Wing(Version* ver, bool mirror);
     ~Wing();
 
-    // Do we mirror ourselves about the XZ plane?
-    void setMirror(bool mirror) { _mirror = mirror; }
-    const bool isMirrored() { return _mirror; };
-    
-    // Wing geometry in local coordinates:
-    
-    // base point of wing
-    void getBase(float* base) const { Math::set3(_base, base); };
-    // dist. ALONG wing (not span!)     
-    float getLength() const { return _length; };
-    // at base, measured along X axis
-    float getChord() const { return _chord; };
-    // fraction of chord at wing tip, 0..1
-    float getTaper() const { return _taper; };
-    // radians
-    float getSweep() const { return _sweep; };
-    // radians, positive is "up"
-    void setDihedral(float dihedral) { _dihedral = dihedral; }
-    float getDihedral() const { return _dihedral; };
-    
-    void setIncidence(float incidence);
-    
-    
-    // parameters for stall curve
-    void setStall(float aoa) { _stall = aoa; }
-    void setStallWidth(float angle) { _stallWidth = angle; }
-    void setStallPeak(float fraction) { _stallPeak = fraction; }
-    void setCamber(float camber) { _camber = camber; }
-    void setInducedDrag(float drag) { _inducedDrag = drag; }
-    
-    
-    void setFlap0Params(float start, float end, float lift, float drag);
-    void setFlap1Params(float start, float end, float lift, float drag);
-    void setSpoilerParams(float start, float end, float lift, float drag);
-    void setSlatParams(float start, float end, float aoa, float drag);
+    int addWingSection(float* base, float chord, float wingLength, 
+        float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0, float camber = 0, float idrag = 1, float incidence = 0);
 
-    // Set the control axes for the sub-surfaces
-    void setFlap0Pos(float lval, float rval);
-    void setFlap1Pos(float lval, float rval);
-    void setSpoilerPos(float lval, float rval);
-    void setSlatPos(float val);
-    void setFlap0Effectiveness(float lval);
-    void setFlap1Effectiveness(float lval);
+    static Chord calculateMAC(Chord root, Chord tip);    
 
+    void setFlapParams(int section, WingFlaps type, FlapParams fp);
+    void setSectionDrag(int section, float pdrag);
+    void setSectionStallParams(int section, StallParams sp);
+    
     // Compile the thing into a bunch of Surface objects
     void compile();
-    void getTip(float* tip) const { Math::set3(_tip, tip);};
-    
-    // valid only after Wing::compile() was called
+    void multiplyLiftRatio(float factor);
+    void multiplyDragCoefficient(float factor);
+    void setIncidence(float incidence);
+
+    bool isMirrored() const { return _mirror; };
+    void getBase(float* base) const { Math::set3(_base, base); };
+    void getTip(float* tip) const { Math::set3(_tip, tip); };
     float getSpan() const { return _wingspan; };
-    float getArea() const { return _wingspan*_meanChord; };
+    float getArea() const { return _area; };
     float getAspectRatio() const { return _aspectRatio; };
     float getSMC() const { return _meanChord; };
-    float getMAC() const { return _mac; }; // get length of MAC
-    float getMACx() const { return _macX; }; // get x-coord of MAC leading edge 
-    float getMACy() const { return _base[1]+_macRootDistance; }; // get y-coord of MAC leading edge 
-    
-    
-    int numSurfaces() const { return _surfs.size(); }
-    Surface* getSurface(int n) { return ((SurfRec*)_surfs.get(n))->surface; }
-    float getSurfaceWeight(int n) const { return ((SurfRec*)_surfs.get(n))->weight; }
+    float getMACLength() const { return _mac.length; }; // get length of MAC
+    float getMACx() const { return _mac.x; }; // get x-coord of MAC leading edge 
+    float getMACy() const { return _mac.y; }; // get y-coord of MAC leading edge 
+   
+//-----------------------------    
+    // propergate the control axes value for the sub-surfaces
+    void setFlapPos(WingFlaps type, float lval, float rval = 0);
+    void setFlapEffectiveness(WingFlaps f, float lval);
 
-    // The overall drag coefficient for the wing as a whole.  Units are
-    // arbitrary.
-    void setDragScale(float scale);
-    float getDragScale() const { return _dragScale; }
-
-    // The ratio of force along the Z (lift) direction of each wing
-    // segment to that along the X (drag) direction.
-    void setLiftRatio(float ratio);
-    float getLiftRatio() const { return _liftRatio; }
-
-private:
-    void interp(const float* v1, const float* v2, const float frac, float* out);
-    Surface* newSurface(float* pos, float* orient, float chord,
-                        bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler);
-    void calculateWingCoordinateSystem();
-    void calculateTip();
-    void calculateSpan();
-    void calculateMAC();
-    void addSurface(Surface* s, float weight, float twist);
-    
-    struct SurfRec { Surface * surface; float weight; };
-
-    Vector _surfs;
-    Vector _flap0Surfs;
-    Vector _flap1Surfs;
-    Vector _slatSurfs;
-    Vector _spoilerSurfs;
-
-    Version * _version;
-    bool _mirror {false};
-    float _base[3] {0,0,0};
-    float _chord {0};
-    float _length {0};
-    float _taper {1};
-    float _sweep {0};
-    float _dihedral {0};
-    
-    // calculated from above
-    float _orient[9];
-    float _rightOrient[9];
-    float _tip[3] {0,0,0};
-    float _meanChord {0}; // std. mean chord
-    float _mac {0}; // mean aerodynamic chord length
-    float _macRootDistance {0}; // y-distance of mac from root
-    float _macX {0}; // x-coordinate of mac (leading edge)
-    float _netSpan {0};
-    float _wingspan {0};
-    float _aspectRatio {1};
-
-    float _stall {0};
-    float _stallWidth {0};
-    float _stallPeak {0};
-    float _twist {0};
-    float _camber {0};
-    float _incidence {0};
-    float _inducedDrag {1};
-
-    float _dragScale {1};
-    float _liftRatio {1};
-
-    float _flap0Start {0};
-    float _flap0End {0};
-    float _flap0Lift {0};
-    float _flap0Drag {0};
-
-    float _flap1Start {0};
-    float _flap1End {0};
-    float _flap1Lift {0};
-    float _flap1Drag {0};
-
-    float _spoilerStart {0};
-    float _spoilerEnd {0};
-    float _spoilerLift {0};
-    float _spoilerDrag {0};
-
-    float _slatStart {0};
-    float _slatEnd {0};
-    float _slatAoA {0};
-    float _slatDrag {0};
+    void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
+    float updateModel(Model* model);
 };
 
 }; // namespace yasim

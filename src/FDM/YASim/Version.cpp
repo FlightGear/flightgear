@@ -18,6 +18,8 @@ void Version::setVersion( const char * version )
     _version = YASIM_VERSION_32;
   } else if( v == "2017.2" ) {
     _version = YASIM_VERSION_2017_2;
+  } else if( v == "2018.1" ) {
+    _version = YASIM_VERSION_2018_1;
   } else if( v == "YASIM_VERSION_CURRENT" ) {
     _version = YASIM_VERSION_CURRENT;
   } else {

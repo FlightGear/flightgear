@@ -60,9 +60,9 @@ Airplane::~Airplane()
     for(i=0; i<_solveWeights.size(); i++)
         delete (SolveWeight*)_solveWeights.get(i);
     for(i=0; i<_cruiseConfig.controls.size(); i++)
-        delete (Control*)_cruiseConfig.controls.get(i);
+        delete (ControlSetting*)_cruiseConfig.controls.get(i);
     for(i=0; i<_approachConfig.controls.size(); i++) {
-        Control* c = (Control*)_approachConfig.controls.get(i);
+        ControlSetting* c = (ControlSetting*)_approachConfig.controls.get(i);
         if(c != &_approachElevator)
             delete c;
     }
@@ -111,15 +111,31 @@ void Airplane::getPilotAccel(float* out)
     // FIXME: rotational & centripetal acceleration needed
 }
 
+Wing* Airplane::getWing()
+{
+    if (_wing == nullptr) {
+        _wing = new Wing((Version*)this, true);
+    }
+    return _wing;
+}
+
+Wing* Airplane::getTail()
+{
+    if (_tail == nullptr) {
+        _tail = new Wing((Version*)this, true);
+    }
+    return _tail;
+}
+
 void Airplane::updateGearState()
 {
     for(int i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
         float ext = gr->gear->getExtension();
 
-        gr->surf->setXDrag(ext);
+        gr->surf->setDragCoefficient(ext);
         gr->surf->setYDrag(ext);
-        gr->surf->setZDrag(ext);
+        gr->surf->setLiftCoefficient(ext);
     }
 }
 
@@ -143,33 +159,32 @@ void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
     _cruiseConfig.glideAngle = gla;
 }
 
-void Airplane::setElevatorControl(int control)
+void Airplane::setElevatorControl(const char* prop)
 {
-    _approachElevator.control = control;
+    _approachElevator.propHandle = getControlMap()->getInputPropertyHandle(prop);
     _approachElevator.val = 0;
     _approachConfig.controls.add(&_approachElevator);
 }
 
-void Airplane::addApproachControl(int control, float val)
+void Airplane::addControlSetting(Configuration cfg, const char* prop, float val)
 {
-    Control* c = new Control();
-    c->control = control;
+    ControlSetting* c = new ControlSetting();
+    c->propHandle = getControlMap()->getInputPropertyHandle(prop);
     c->val = val;
-    _approachConfig.controls.add(c);
+    switch (cfg) {
+        case APPROACH:
+            _approachConfig.controls.add(c);
+            break;
+        case CRUISE:
+            _cruiseConfig.controls.add(c);
+            break;
+    }
 }
 
-void Airplane::addCruiseControl(int control, float val)
-{
-    Control* c = new Control();
-    c->control = control;
-    c->val = val;
-    _cruiseConfig.controls.add(c);
-}
-
-void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
+void Airplane::addSolutionWeight(Configuration cfg, int idx, float wgt)
 {
     SolveWeight* w = new SolveWeight();
-    w->approach = approach;
+    w->approach = (cfg == APPROACH);
     w->idx = idx;
     w->wgt = wgt;
     _solveWeights.add(w);
@@ -238,9 +253,7 @@ int Airplane::addWeight(float* pos, float size)
     WeightRec* wr = new WeightRec();
     wr->handle = _model.getBody()->addMass(0, pos);
 
-    wr->surf = new Surface(this);
-    wr->surf->setPosition(pos);
-    wr->surf->setTotalDrag(size*size);
+    wr->surf = new Surface(this, pos, size*size);
     _model.addSurface(wr->surf);
     _surfs.add(wr->surf);
 
@@ -257,13 +270,13 @@ void Airplane::setWeight(int handle, float mass)
     // Kill the aerodynamic drag if the mass is exactly zero.  This is
     // how we simulate droppable stores.
     if(mass == 0) {
-	wr->surf->setXDrag(0);
-	wr->surf->setYDrag(0);
-	wr->surf->setZDrag(0);
+        wr->surf->setDragCoefficient(0);
+        wr->surf->setYDrag(0);
+        wr->surf->setLiftCoefficient(0);
     } else {
-	wr->surf->setXDrag(1);
-	wr->surf->setYDrag(1);
-	wr->surf->setZDrag(1);
+        wr->surf->setDragCoefficient(1);
+        wr->surf->setYDrag(1);
+        wr->surf->setLiftCoefficient(1);
     }
 }
 
@@ -308,49 +321,9 @@ float Airplane::compileWing(Wing* w)
         addContactPoint(tip);
         tip[1] *= -1; //undo mirror
     }
-    if (_wingsN != 0) {
-      _wingsN->getNode("tip-x", true)->setFloatValue(tip[0]);
-      _wingsN->getNode("tip-y", true)->setFloatValue(tip[1]);
-      _wingsN->getNode("tip-z", true)->setFloatValue(tip[2]);
-      w->getBase(tip);
-      _wingsN->getNode("base-x", true)->setFloatValue(tip[0]);
-      _wingsN->getNode("base-y", true)->setFloatValue(tip[1]);
-      _wingsN->getNode("base-z", true)->setFloatValue(tip[2]);
-      _wingsN->getNode("wing-span", true)->setFloatValue(w->getSpan());
-      _wingsN->getNode("wing-area", true)->setFloatValue(w->getArea());
-      _wingsN->getNode("aspect-ratio", true)->setFloatValue(w->getAspectRatio());
-      _wingsN->getNode("standard-mean-chord", true)->setFloatValue(w->getSMC());
-      _wingsN->getNode("mac", true)->setFloatValue(w->getMAC());
-      _wingsN->getNode("mac-x", true)->setFloatValue(w->getMACx());
-      _wingsN->getNode("mac-y", true)->setFloatValue(w->getMACy());
-    }
 
     float wgt = 0;
-    float dragSum = 0;
-    for(int i=0; i<w->numSurfaces(); i++) {
-        Surface* s = (Surface*)w->getSurface(i);
-        float td = s->getTotalDrag();
-        int sid = s->getID();
-
-        _model.addSurface(s);
-
-        float mass = w->getSurfaceWeight(i);
-        mass = mass * Math::sqrt(mass);
-        float pos[3];
-        s->getPosition(pos);
-        int mid = _model.getBody()->addMass(mass, pos, true);
-        if (_wingsN != 0) {
-          SGPropertyNode_ptr n = _wingsN->getNode("surfaces", true)->getChild("surface", sid, true);
-          n->getNode("drag", true)->setFloatValue(td);
-          n->getNode("mass-id", true)->setIntValue(mid);
-        }
-        wgt += mass;
-        dragSum += td;
-    }
-    if (_wingsN != 0)  {
-      _wingsN->getNode("weight", true)->setFloatValue(wgt);	
-      _wingsN->getNode("drag", true)->setFloatValue(dragSum);	
-    }
+    wgt = w->updateModel(&_model);
     return wgt;
 }
 
@@ -371,7 +344,7 @@ float Airplane::compileFuselage(Fuselage* f)
     float len = Math::mag3(fwd);
     if (len == 0) {
         _failureMsg = "Zero length fuselage";
-	return 0;
+    return 0;
     }
     float wid = f->width;
     int segs = (int)Math::ceil(len/wid);
@@ -379,19 +352,18 @@ float Airplane::compileFuselage(Fuselage* f)
     int j;
     for(j=0; j<segs; j++) {
         float frac = (j+0.5f) / segs;
-
         float scale = 1;
         if(frac < f->mid)
             scale = f->taper+(1-f->taper) * (frac / f->mid);
         else {
-	    if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-		// Correct calculation of width for fuselage taper.
-		scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
-	    } else {
-		// Original, incorrect calculation of width for fuselage taper.
-		scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
-	    }
-	}
+            if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+                // Correct calculation of width for fuselage taper.
+                scale = 1 - (1-f->taper) * (frac - f->mid) / (1 - f->mid);
+            } else {
+                // Original, incorrect calculation of width for fuselage taper.
+                scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
+            }
+        }
 
         // Where are we?
         float pos[3];
@@ -403,44 +375,42 @@ float Airplane::compileFuselage(Fuselage* f)
         _model.getBody()->addMass(mass, pos, true);
         wgt += mass;
 
+
+        // The following is the original YASim value for sideDrag.
+        // Originally YASim calculated the fuselage's lateral drag
+        // coefficient as (solver drag factor) * (len/wid).
+        // However, this greatly underestimates a fuselage's lateral drag.
+        float sideDrag = len/wid;
+
+        if ( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+            // New YASim assumes a fixed lateral drag coefficient of 0.5.
+            // This will not be multiplied by the solver drag factor, because
+            // that factor is tuned to match the drag in the direction of
+            // flight, which is completely independent of lateral drag.
+            // The value of 0.5 is only a ballpark estimate, roughly matching
+            // the side-on drag for a long cylinder at the higher Reynolds
+            // numbers typical for an aircraft's lateral drag.
+            // This fits if the fuselage is long and has a round cross section.
+            // For flat-sided fuselages, the value should be increased, up to
+            // a limit of around 2 for a long rectangular prism.
+            // For very short fuselages, in which the end effects are strong,
+            // the value should be reduced.
+            // Such adjustments can be made using the fuselage's "cy" and "cz"
+            // XML parameters: "cy" for the sides, "cz" for top and bottom.
+            sideDrag = 0.5;
+        }
+        float dragCoefficient = scale*segWgt*f->_cx;
+        if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+                dragCoefficient = scale*segWgt;
+        }
+
         // Make a Surface too
-        Surface* s = new Surface(this);
-        s->setPosition(pos);
-
-	// The following is the original YASim value for sideDrag.
-	// Originally YASim calculated the fuselage's lateral drag
-	// coefficient as (solver drag factor) * (len/wid).
-	// However, this greatly underestimates a fuselage's lateral drag.
-	float sideDrag = len/wid;
-
-	if ( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-	    // New YASim assumes a fixed lateral drag coefficient of 0.5.
-	    // This will not be multiplied by the solver drag factor, because
-	    // that factor is tuned to match the drag in the direction of
-	    // flight, which is completely independent of lateral drag.
-	    // The value of 0.5 is only a ballpark estimate, roughly matching
-	    // the side-on drag for a long cylinder at the higher Reynolds
-	    // numbers typical for an aircraft's lateral drag.
-	    // This fits if the fuselage is long and has a round cross section.
-	    // For flat-sided fuselages, the value should be increased, up to
-	    // a limit of around 2 for a long rectangular prism.
-	    // For very short fuselages, in which the end effects are strong,
-	    // the value should be reduced.
-	    // Such adjustments can be made using the fuselage's "cy" and "cz"
-	    // XML parameters: "cy" for the sides, "cz" for top and bottom.
-	    sideDrag = 0.5;
-	}
-
-	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-        	s->setXDrag(f->_cx);
-	}
+        Surface* s = new Surface(this, pos, dragCoefficient);
+        if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+                s->setDragCoefficient(f->_cx);
+        }
         s->setYDrag(sideDrag*f->_cy);
-        s->setZDrag(sideDrag*f->_cz);
-	if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-        	s->setTotalDrag(scale*segWgt);
-	} else {
-		s->setTotalDrag(scale*segWgt*f->_cx);
-	}
+        s->setLiftCoefficient(sideDrag*f->_cz);
         s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
@@ -449,8 +419,8 @@ float Airplane::compileFuselage(Fuselage* f)
         Math::unit3(fwd, x);
         y[0] = 0; y[1] = 1; y[2] = 0;
         Math::cross3(x, y, z);
-	Math::unit3(z, z);
-	Math::cross3(z, x, y);
+        Math::unit3(z, z);
+        Math::cross3(z, x, y);
         s->setOrientation(o);
 
         _model.addSurface(s);
@@ -465,9 +435,6 @@ void Airplane::compileGear(GearRec* gr)
 {
     Gear* g = gr->gear;
 
-    // Make a Surface object for the aerodynamic behavior
-    Surface* s = new Surface(this);
-    gr->surf = s;
 
     // Put the surface at the half-way point on the gear strut, give
     // it a drag coefficient equal to a square of the same dimension
@@ -480,8 +447,9 @@ void Airplane::compileGear(GearRec* gr)
     Math::mul3(0.5, cmp, cmp);
     Math::add3(pos, cmp, pos);
 
-    s->setPosition(pos);
-    s->setTotalDrag(length*length);
+    // Make a Surface object for the aerodynamic behavior
+    Surface* s = new Surface(this, pos, length*length);
+    gr->surf = s;
 
     _model.addGear(g);
     _model.addSurface(s);
@@ -543,28 +511,38 @@ void Airplane::compile()
     // The Wing objects
     if (_wing)
     {
-      if (baseN != 0) _wingsN = baseN->getChild("wing", 0, true);
-      aeroWgt += compileWing(_wing);
-      
-      // convert % to absolute x coordinates
-      _cgDesiredFront = _wing->getMACx() - _wing->getMAC()*_cgDesiredMin;
-      _cgDesiredAft = _wing->getMACx() - _wing->getMAC()*_cgDesiredMax;
-      if (baseN != 0) {
-        SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
-        n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
-        n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
-      }
+        if (baseN != 0) {
+            _wingsN = baseN->getChild("wing", 0, true);
+            _wing->setPropertyNode(_wingsN);
+        }
+        aeroWgt += compileWing(_wing);
+        
+        // convert % to absolute x coordinates
+        _cgDesiredFront = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMin;
+        _cgDesiredAft = _wing->getMACx() - _wing->getMACLength()*_cgDesiredMax;
+        if (baseN != 0) {
+            SGPropertyNode_ptr n = fgGetNode("/fdm/yasim/model", true);
+            n->getNode("cg-x-range-front", true)->setFloatValue(_cgDesiredFront);
+            n->getNode("cg-x-range-aft", true)->setFloatValue(_cgDesiredAft);
+        }
     }
     if (_tail)
     {
-      if (baseN != 0) _wingsN = baseN->getChild("tail", 0, true);
-      aeroWgt += compileWing(_tail);
+        if (baseN != 0) {
+            _wingsN = baseN->getChild("tail", 0, true);
+            _tail->setPropertyNode(_wingsN);
+        }
+        aeroWgt += compileWing(_tail);
     }
     int i;
     for(i=0; i<_vstabs.size(); i++)
     {
-      if (baseN != 0) _wingsN = baseN->getChild("stab", i, true);
-      aeroWgt += compileWing((Wing*)_vstabs.get(i));
+        Wing* vs = (Wing*)_vstabs.get(i);
+        if (baseN != 0) {
+            _wingsN = baseN->getChild("stab", i, true);
+            vs->setPropertyNode(_wingsN);
+        }
+        aeroWgt += compileWing(vs);
     }
 
     // The fuselage(s)
@@ -578,9 +556,13 @@ void Airplane::compile()
 
     // Rescale to the specified empty weight
     float wscale = (_emptyWeight-nonAeroWgt)/aeroWgt;
-    for(i=firstMass; i<body->numMasses(); i++)
+    for(i=firstMass; i<body->numMasses(); i++) {
         body->setMass(i, body->getMass(i)*wscale);
-
+    }
+    if (_wingsN != nullptr) {
+        float w = _wingsN->getNode("weight", true)->getFloatValue();
+        _wingsN->getNode("mass", true)->setFloatValue(w * wscale);
+    }
     // Add the thruster masses
     for(i=0; i<_thrusters.size(); i++) {
         ThrustRec* t = (ThrustRec*)_thrusters.get(i);
@@ -745,13 +727,13 @@ void Airplane::setupWeights(bool isApproach)
     }
 }
 
-/// load values for controls as defined in cruise configuration
+/// load values for controls as defined in cruise/approach configuration
 void Airplane::loadControls(const Vector& controls)
 {
   _controls.reset();
   for(int i=0; i < controls.size(); i++) {
-    Control* c = (Control*)controls.get(i);
-    _controls.setInput(c->control, c->val);
+        ControlSetting* c = (ControlSetting*)controls.get(i);
+    _controls.setInput(c->propHandle, c->val);
   }
   _controls.applyControls(); 
 }
@@ -800,43 +782,43 @@ void Airplane::applyDragFactor(float factor)
     float applied = Math::pow(factor, SOLVE_TWEAK);
     _dragFactor *= applied;
     if(_wing)
-      _wing->setDragScale(_wing->getDragScale() * applied);
+      _wing->multiplyDragCoefficient(applied);
     if(_tail)
-      _tail->setDragScale(_tail->getDragScale() * applied);
+      _tail->multiplyDragCoefficient(applied);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
-	Wing* w = (Wing*)_vstabs.get(i);
-	w->setDragScale(w->getDragScale() * applied);
+        Wing* w = (Wing*)_vstabs.get(i);
+        w->multiplyDragCoefficient(applied);
     }
     for(i=0; i<_fuselages.size(); i++) {
-	Fuselage* f = (Fuselage*)_fuselages.get(i);
-	int j;
-	for(j=0; j<f->surfs.size(); j++) {
-	    Surface* s = (Surface*)f->surfs.get(j);
-	    if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-		// For new YASim, the solver drag factor is only applied to
-		// the X axis for Fuselage Surfaces.
-		// The solver is tuning the coefficient for longitudinal drag,
-		// along the direction of flight. A fuselage's lateral drag
-		// is completely independent and is normally much higher;
-		// it won't be affected by the streamlining done to reduce
-		// longitudinal drag. So the solver should only adjust the
-		// fuselage's longitudinal (X axis) drag coefficient.
-		s->setXDrag(s->getXDrag() * applied);
-	    } else {
-		// Originally YASim applied the drag factor to all axes
-		// for Fuselage Surfaces.
-		s->setTotalDrag(s->getTotalDrag() * applied);
-	    }
-	}
+        Fuselage* f = (Fuselage*)_fuselages.get(i);
+        int j;
+        for(j=0; j<f->surfs.size(); j++) {
+            Surface* s = (Surface*)f->surfs.get(j);
+            if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
+            // For new YASim, the solver drag factor is only applied to
+            // the X axis for Fuselage Surfaces.
+            // The solver is tuning the coefficient for longitudinal drag,
+            // along the direction of flight. A fuselage's lateral drag
+            // is completely independent and is normally much higher;
+            // it won't be affected by the streamlining done to reduce
+            // longitudinal drag. So the solver should only adjust the
+            // fuselage's longitudinal (X axis) drag coefficient.
+            s->setDragCoefficient(s->getDragCoefficient() * applied);
+            } else {
+            // Originally YASim applied the drag factor to all axes
+            // for Fuselage Surfaces.
+            s->mulTotalForceCoefficient(applied);
+            }
+        }
     }
     for(i=0; i<_weights.size(); i++) {
-	WeightRec* wr = (WeightRec*)_weights.get(i);
-	wr->surf->setTotalDrag(wr->surf->getTotalDrag() * applied);
+        WeightRec* wr = (WeightRec*)_weights.get(i);
+        wr->surf->mulTotalForceCoefficient(applied);
     }
     for(i=0; i<_gears.size(); i++) {
-	GearRec* gr = (GearRec*)_gears.get(i);
-	gr->surf->setTotalDrag(gr->surf->getTotalDrag() * applied);
+        GearRec* gr = (GearRec*)_gears.get(i);
+        gr->surf->mulTotalForceCoefficient(applied);
     }
 }
 
@@ -846,13 +828,13 @@ void Airplane::applyLiftRatio(float factor)
     float applied = Math::pow(factor, SOLVE_TWEAK);
     _liftRatio *= applied;
     if(_wing)
-      _wing->setLiftRatio(_wing->getLiftRatio() * applied);
+      _wing->multiplyLiftRatio(applied);
     if(_tail)
-      _tail->setLiftRatio(_tail->getLiftRatio() * applied);
+      _tail->multiplyLiftRatio(applied);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
         Wing* w = (Wing*)_vstabs.get(i);
-        w->setLiftRatio(w->getLiftRatio() * applied);
+        w->multiplyLiftRatio(applied);
     }
 }
 
@@ -878,57 +860,57 @@ void Airplane::solve()
             return;
         }
 
-	// Run an iteration at cruise, and extract the needed numbers:
-	runConfig(_cruiseConfig);
+        // Run an iteration at cruise, and extract the needed numbers:
+        runConfig(_cruiseConfig);
 
-	_model.getThrust(tmp);
+        _model.getThrust(tmp);
         float thrust = tmp[0] + _cruiseConfig.weight * Math::sin(_cruiseConfig.glideAngle) * 9.81;
 
-	_model.getBody()->getAccel(tmp);
+        _model.getBody()->getAccel(tmp);
         _cruiseConfig.state.localToGlobal(tmp, tmp);
-	float xforce = _cruiseConfig.weight * tmp[0];
-	float clift0 = _cruiseConfig.weight * tmp[2];
+        float xforce = _cruiseConfig.weight * tmp[0];
+        float clift0 = _cruiseConfig.weight * tmp[2];
 
-	_model.getBody()->getAngularAccel(tmp);
+        _model.getBody()->getAngularAccel(tmp);
         _cruiseConfig.state.localToGlobal(tmp, tmp);
-	float pitch0 = tmp[1];
+        float pitch0 = tmp[1];
 
-	// Run an approach iteration, and do likewise
+        // Run an approach iteration, and do likewise
         runConfig(_approachConfig);
 
-	_model.getBody()->getAngularAccel(tmp);
+        _model.getBody()->getAngularAccel(tmp);
         _approachConfig.state.localToGlobal(tmp, tmp);
-	double apitch0 = tmp[1];
+        double apitch0 = tmp[1];
 
-	_model.getBody()->getAccel(tmp);
+        _model.getBody()->getAccel(tmp);
         _approachConfig.state.localToGlobal(tmp, tmp);
-	float alift = _approachConfig.weight * tmp[2];
+        float alift = _approachConfig.weight * tmp[2];
 
-	// Modify the cruise AoA a bit to get a derivative
-	_cruiseConfig.aoa += ARCMIN;
+        // Modify the cruise AoA a bit to get a derivative
+        _cruiseConfig.aoa += ARCMIN;
         runConfig(_cruiseConfig);
         _cruiseConfig.aoa -= ARCMIN;
-        
-	_model.getBody()->getAccel(tmp);
+            
+        _model.getBody()->getAccel(tmp);
         _cruiseConfig.state.localToGlobal(tmp, tmp);
-	float clift1 = _cruiseConfig.weight * tmp[2];
+        float clift1 = _cruiseConfig.weight * tmp[2];
 
-	// Do the same with the tail incidence
-	_tail->setIncidence(_tailIncidence + ARCMIN);
+        // Do the same with the tail incidence
+        _tail->setIncidence(_tailIncidence + ARCMIN);
         runConfig(_cruiseConfig);
         _tail->setIncidence(_tailIncidence);
 
-	_model.getBody()->getAngularAccel(tmp);
+        _model.getBody()->getAngularAccel(tmp);
         _cruiseConfig.state.localToGlobal(tmp, tmp);
-	float pitch1 = tmp[1];
+        float pitch1 = tmp[1];
 
-	// Now calculate:
-	float awgt = 9.8f * _approachConfig.weight;
+        // Now calculate:
+        float awgt = 9.8f * _approachConfig.weight;
 
-	float dragFactor = thrust / (thrust-xforce);
-	float liftFactor = awgt / (awgt+alift);
-	float aoaDelta = -clift0 * (ARCMIN/(clift1-clift0));
-	float tailDelta = -pitch0 * (ARCMIN/(pitch1-pitch0));
+        float dragFactor = thrust / (thrust-xforce);
+        float liftFactor = awgt / (awgt+alift);
+        float aoaDelta = -clift0 * (ARCMIN/(clift1-clift0));
+        float tailDelta = -pitch0 * (ARCMIN/(pitch1-pitch0));
 
         // Sanity:
         if(dragFactor <= 0 || liftFactor <= 0)
@@ -943,36 +925,36 @@ void Airplane::solve()
         runConfig(_approachConfig);
         _approachElevator.val -= ELEVDIDDLE;
 
-	_model.getBody()->getAngularAccel(tmp);
+        _model.getBody()->getAngularAccel(tmp);
         _approachConfig.state.localToGlobal(tmp, tmp);
-	double apitch1 = tmp[1];
+        double apitch1 = tmp[1];
         float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
 
         // Now apply the values we just computed.  Note that the
         // "minor" variables are deferred until we get the lift/drag
         // numbers in the right ballpark.
 
-	applyDragFactor(dragFactor);
-	applyLiftRatio(liftFactor);
+        applyDragFactor(dragFactor);
+        applyLiftRatio(liftFactor);
 
-	// DON'T do the following until the above are sane
-	if(normFactor(dragFactor) > STHRESH*1.0001
-	   || normFactor(liftFactor) > STHRESH*1.0001)
-	{
-	    continue;
-	}
+        // DON'T do the following until the above are sane
+        if(normFactor(dragFactor) > STHRESH*1.0001
+        || normFactor(liftFactor) > STHRESH*1.0001)
+        {
+            continue;
+        }
 
-	// OK, now we can adjust the minor variables:
-	_cruiseConfig.aoa += SOLVE_TWEAK*aoaDelta;
-	_tailIncidence += SOLVE_TWEAK*tailDelta;
-	
-	_cruiseConfig.aoa = Math::clamp(_cruiseConfig.aoa, -0.175f, 0.175f);
-	_tailIncidence = Math::clamp(_tailIncidence, -0.175f, 0.175f);
+        // OK, now we can adjust the minor variables:
+        _cruiseConfig.aoa += SOLVE_TWEAK*aoaDelta;
+        _tailIncidence += SOLVE_TWEAK*tailDelta;
+        
+        _cruiseConfig.aoa = Math::clamp(_cruiseConfig.aoa, -0.175f, 0.175f);
+        _tailIncidence = Math::clamp(_tailIncidence, -0.175f, 0.175f);
 
         if(abs(xforce/_cruiseConfig.weight) < STHRESH*0.0001 &&
-           abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
-           abs(aoaDelta) < STHRESH*.000017 &&
-           abs(tailDelta) < STHRESH*.000017)
+        abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
+        abs(aoaDelta) < STHRESH*.000017 &&
+        abs(tailDelta) < STHRESH*.000017)
         {
             // If this finaly value is OK, then we're all done
             if(abs(elevDelta) < STHRESH*0.0001)
@@ -988,17 +970,17 @@ void Airplane::solve()
     }
 
     if(_dragFactor < 1e-06 || _dragFactor > 1e6) {
-	_failureMsg = "Drag factor beyond reasonable bounds.";
-	return;
+        _failureMsg = "Drag factor beyond reasonable bounds.";
+        return;
     } else if(_liftRatio < 1e-04 || _liftRatio > 1e4) {
-	_failureMsg = "Lift ratio beyond reasonable bounds.";
-	return;
+        _failureMsg = "Lift ratio beyond reasonable bounds.";
+        return;
     } else if(Math::abs(_cruiseConfig.aoa) >= .17453293) {
-	_failureMsg = "Cruise AoA > 10 degrees";
-	return;
+        _failureMsg = "Cruise AoA > 10 degrees";
+        return;
     } else if(Math::abs(_tailIncidence) >= .17453293) {
-	_failureMsg = "Tail incidence > 10 degrees";
-	return;
+        _failureMsg = "Tail incidence > 10 degrees";
+        return;
     }
 }
 
@@ -1034,7 +1016,7 @@ float Airplane::getCGMAC()
     if (_wing) {
       float cg[3];
       _model.getBody()->getCG(cg);
-      return (_wing->getMACx() - cg[0]) / _wing->getMAC();
+      return (_wing->getMACx() - cg[0]) / _wing->getMACLength();
     }
     return 0;
 }

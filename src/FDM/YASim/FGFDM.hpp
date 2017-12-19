@@ -4,7 +4,6 @@
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/props/props.hxx>
 
-#include "yasim-common.hpp"
 #include "Airplane.hpp"
 #include "Vector.hpp"
 
@@ -32,30 +31,68 @@ public:
     float getVehicleRadius(void) const { return _vehicle_radius; }
 
 private:
-    struct EngRec { char* prefix; Thruster* eng; };
-    struct WeightRec { char* prop; float size; int handle; };
-    struct PropOut { SGPropertyNode* prop; int handle, type; bool left;
-                     float min, max; };
+    struct EngRec { 
+        char* prefix {nullptr}; 
+        Thruster* eng {nullptr}; 
+    };
+    struct WeightRec { 
+        char* prop {nullptr};
+        float size {0};
+        int handle {0};
+    };
+    struct PropOut { 
+        SGPropertyNode* prop {nullptr};
+        int handle {0};
+        ControlMap::Control control;
+        bool left {false};
+        float min {0};
+        float max {0}; 
+    };
 
+    void parseAirplane(const XMLAttributes* a);
+    void parseApproachCruise(const XMLAttributes* a, const char* name);
+    void parseSolveWeight(const XMLAttributes* a);
+    void parseCockpit(const XMLAttributes* a);
+    
+    
     void setOutputProperties(float dt);
 
-    Rotor* parseRotor(XMLAttributes* a, const char* name);
-    Wing* parseWing(XMLAttributes* a, const char* name, Version * version);
+    void parseRotor(const XMLAttributes* a, const char* name);
+    void parseRotorGear(const XMLAttributes* a);
+    void parseWing(const XMLAttributes* a, const char* name, Airplane* airplane);
     int parseOutput(const char* name);
-    void parseWeight(XMLAttributes* a);
-    void parseTurbineEngine(XMLAttributes* a);
-    void parsePistonEngine(XMLAttributes* a);
-    void parsePropeller(XMLAttributes* a);
-    bool eq(const char* a, const char* b);
-    bool caseeq(const char* a, const char* b);
-    char* dup(const char* s);
-    int attri(XMLAttributes* atts, const char* attr);
-    int attri(XMLAttributes* atts, const char* attr, int def); 
-    float attrf(XMLAttributes* atts, const char* attr);
-    float attrf(XMLAttributes* atts, const char* attr, float def); 
-    double attrd(XMLAttributes* atts, const char* attr);
-    double attrd(XMLAttributes* atts, const char* attr, double def); 
-    bool attrb(XMLAttributes* atts, const char* attr);
+    void parseWeight(const XMLAttributes* a);
+    void parseStall(const XMLAttributes* a);
+    void parseFlap(const XMLAttributes* a, const char* name);
+    
+    void parseTurbineEngine(const XMLAttributes* a);
+    void parsePistonEngine(const XMLAttributes* a);
+    void parsePropeller(const XMLAttributes* a);
+    void parseThruster(const XMLAttributes* a);
+    void parseJet(const XMLAttributes* a);
+    void parseHitch(const XMLAttributes* a);
+    void parseTow(const XMLAttributes* a);
+    void parseWinch(const XMLAttributes* a);
+    void parseGear(const XMLAttributes* a);
+    void parseHook(const XMLAttributes* a);
+    void parseLaunchbar(const XMLAttributes* a);
+    void parseFuselage(const XMLAttributes* a);
+    void parseTank(const XMLAttributes* a);
+    void parseBallast(const XMLAttributes* a);
+    void parseControlSetting(const XMLAttributes* a);
+    void parseControlIn(const XMLAttributes* a);
+    void parseControlOut(const XMLAttributes* a);
+    void parseControlSpeed(const XMLAttributes* a);
+    
+    
+    int attri(const XMLAttributes* atts, const char* attr);
+    int attri(const XMLAttributes* atts, const char* attr, int def); 
+    float attrf(const XMLAttributes* atts, const char* attr);
+    float attrf(const XMLAttributes* atts, const char* attr, float def); 
+    void attrf_xyz(const XMLAttributes* atts, float* out);
+    double attrd(const XMLAttributes* atts, const char* attr);
+    double attrd(const XMLAttributes* atts, const char* attr, double def); 
+    bool attrb(const XMLAttributes* atts, const char* attr);
 
     // The core Airplane object we manage.
     Airplane _airplane;
@@ -73,12 +110,13 @@ private:
     Vector _controlProps;
 
     // Radius of the vehicle, for intersection testing.
-    float _vehicle_radius;
+    float _vehicle_radius {0};
 
     // Parsing temporaries
-    void* _currObj;
-    bool _cruiseCurr;
-    int _nextEngine;
+    void* _currObj {nullptr};
+    Airplane::Configuration _airplaneCfg;
+    int _nextEngine {0};
+    int _wingSection {0};
 
     class FuelProps
     {

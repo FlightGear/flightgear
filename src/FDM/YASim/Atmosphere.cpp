@@ -211,7 +211,7 @@ bool Atmosphere::test() {
     fprintf(stderr, "Columns = %d\n", numColumns);
     fprintf(stderr, "Rows = %d\n", rows);
     
-    for (int alt = 0; alt < maxTableIndex(); alt++) {
+    for (int alt = 0; alt <= maxTableIndex(); alt++) {
       float density = calcStdDensity(data[alt][PRESSURE], data[alt][TEMPERATURE]);
       float delta = data[alt][DENSITY] - density;
       fprintf(stderr, "%d : %f \n", alt, delta);

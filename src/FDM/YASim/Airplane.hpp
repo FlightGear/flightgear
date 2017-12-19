@@ -24,6 +24,11 @@ public:
     Airplane();
     ~Airplane();
 
+    enum Configuration {
+        APPROACH,
+        CRUISE,
+    };
+    
     void iterate(float dt);
     void calcFuelWeights();
 
@@ -37,9 +42,9 @@ public:
 
     void setEmptyWeight(float weight) {  _emptyWeight = weight; }
 
-    void setWing(Wing* wing) { _wing = wing; }
-    Wing* getWing() { return _wing; }
-    void setTail(Wing* tail) { _tail = tail; }
+    Wing* getWing();
+    bool hasWing() const { return (_wing != nullptr); }
+    Wing* getTail(); 
     void addVStab(Wing* vstab) { _vstabs.add(vstab); }
 
     void addFuselage(float* front, float* back, float width,
@@ -59,11 +64,10 @@ public:
     void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
     void setCruise(float speed, float altitude, float fuel, float gla);
 
-    void setElevatorControl(int control);
-    void addApproachControl(int control, float val);
-    void addCruiseControl(int control, float val);
+    void setElevatorControl(const char* prop);
+    void addControlSetting(Configuration cfg, const char* prop, float val);
 
-    void addSolutionWeight(bool approach, int idx, float wgt);
+    void addSolutionWeight(Configuration cfg, int idx, float wgt);
 
     int numGear() const { return _gears.size(); }
     Gear* getGear(int g) { return ((GearRec*)_gears.get(g))->gear; }
@@ -134,8 +138,8 @@ private:
       float cg[3];
       float mass;
     };
-    struct Control { 
-      int control;
+    struct ControlSetting { 
+      int propHandle;
       float val;
     };
     struct WeightRec { 
@@ -210,7 +214,7 @@ private:
     float _dragFactor {1};
     float _liftRatio {1};
     float _tailIncidence {0};
-    Control _approachElevator;
+    ControlSetting _approachElevator;
     const char* _failureMsg {0};
     
     float _cgMax {-1e6};         // hard limits for cg from gear position

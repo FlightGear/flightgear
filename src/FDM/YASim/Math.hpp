@@ -50,6 +50,8 @@ public:
         out[2] = v[2];
     }
 
+    static void  zero3(float* out) { out[0] = out[1] = out[2] = 0; }
+    
     static inline float dot3(const float* a, const float* b) {
         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
     }

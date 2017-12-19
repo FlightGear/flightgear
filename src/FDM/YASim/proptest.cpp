@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "yasim-common.hpp"
 #include "Math.hpp"
 #include "FGFDM.hpp"
 #include "PropEngine.hpp"
