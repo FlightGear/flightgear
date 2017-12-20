@@ -50,14 +50,14 @@ inline int Vector::add(void* p)
 
 inline void* Vector::get(int i) const
 {
-    assert(i >= 0 and i < _sz);
+    assert((i >= 0) && (i < _sz));
     return _array[i];
 
 }
 
 inline void Vector::set(int i, void* p)
 {
-    assert(i >= 0 and i < _sz);
+    assert((i >= 0) && (i < _sz));
     _array[i] = p;
 }
 
