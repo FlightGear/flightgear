@@ -73,7 +73,7 @@ endif()
 if (ENABLE_HID_INPUT)
 	if (COMMAND flightgear_test)
 		set(HID_INPUT_TEST_SOURCES test_hidinput.cxx FGEventInput.cxx 
-			FGCommonInput.cxx FGDEviceConfigurationMap.cxx)
+			FGCommonInput.cxx FGDeviceConfigurationMap.cxx)
 
 		flightgear_test(hidinput "${HID_INPUT_TEST_SOURCES}")
 		target_link_libraries(hidinput ${EVENT_INPUT_LIBRARIES} hidapi)	

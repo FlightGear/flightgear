@@ -42,7 +42,7 @@ struct FGLinuxEventData : public FGEventData {
 class FGLinuxInputDevice : public FGInputDevice {
 public:
   FGLinuxInputDevice();
-  FGLinuxInputDevice( std::string name, std::string devname );
+  FGLinuxInputDevice( std::string name, std::string devname, std::string aSerial );
   virtual ~FGLinuxInputDevice();
 
   virtual void Open();

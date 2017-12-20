@@ -21,6 +21,9 @@ add_library(hidapi STATIC
     ${HIDAPI_SOURCES} 
 )
 
+target_link_libraries(hidapi ${UDEV_LIBRARIES})
+
+
 target_include_directories(hidapi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/hidapi)
 target_include_directories(hidapi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
