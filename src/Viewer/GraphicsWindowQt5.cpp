@@ -879,9 +879,10 @@ public:
 private:
     QScreen* qScreenFromSI(const osg::GraphicsContext::ScreenIdentifier& si)
     {
-      QList<QScreen*> screens = QGuiApplication::screens();
-      if (screens.size() < si.screenNum)
-        return screens.at(si.screenNum);
+        QList<QScreen*> screens = QGuiApplication::screens();
+        if (screens.size() < si.screenNum) {
+            return screens.at(si.screenNum);
+        }
 
         return QGuiApplication::primaryScreen();
     }
