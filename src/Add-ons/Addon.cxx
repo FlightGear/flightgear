@@ -370,7 +370,7 @@ Addon Addon::fromAddonDir(const SGPath& addonPath)
       "no /addon/version node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
-  AddonVersion addonVersion(versionNode->getStringValue());
+  AddonVersion addonVersion(strutils::strip(versionNode->getStringValue()));
 
   string addonAuthors;
   SGPropertyNode *authorsNode = addonNode->getChild("authors");
@@ -413,13 +413,13 @@ Addon Addon::fromAddonDir(const SGPath& addonPath)
   string addonMinFGVersionRequired;
   SGPropertyNode *minNode = addonNode->getChild("min-FG-version");
   if (minNode != nullptr) {
-    addonMinFGVersionRequired = minNode->getStringValue();
+    addonMinFGVersionRequired = strutils::strip(minNode->getStringValue());
   }
 
   string addonMaxFGVersionRequired;
   SGPropertyNode *maxNode = addonNode->getChild("max-FG-version");
   if (maxNode != nullptr) {
-    addonMaxFGVersionRequired = maxNode->getStringValue();
+    addonMaxFGVersionRequired = strutils::strip(maxNode->getStringValue());
   }
 
   string addonHomePage, addonDownloadUrl, addonSupportUrl, addonCodeRepoUrl;
