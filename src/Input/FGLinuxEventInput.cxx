@@ -483,8 +483,10 @@ void FGLinuxEventInput::postinit()
     const char * name = udev_device_get_sysattr_value(dev,"name");
     const char * serial = udev_device_get_sysattr_value(dev, "serial");
     SG_LOG(SG_INPUT,SG_DEBUG, "name=" << (name?name:"<null>") << ", node=" << (node?node:"<null>"));
-    if( name && node )
+    if( name && node ) {
+      std::string serialString = serial ? serial : std::stringP{};
       AddDevice( new FGLinuxInputDevice(name, node, serial) );
+    }
 
     udev_device_unref(dev);
   }

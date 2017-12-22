@@ -102,8 +102,8 @@ FGInputEvent::FGInputEvent( FGInputDevice * aDevice, SGPropertyNode_ptr node ) :
   
   read_bindings( node, bindings, KEYMOD_NONE, device->GetNasalModule() );
     
-  for (auto node : node->getChildren("setting"))
-    settings.push_back( new FGEventSetting(node) );
+  for (auto child : node->getChildren("setting"))
+    settings.push_back( new FGEventSetting(child) );
 }
 
 FGInputEvent::~FGInputEvent()
