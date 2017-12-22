@@ -84,7 +84,7 @@ FGInput::FGInput ()
   }
 #endif
     
-#if defined(ENABLE_HID_INPUT)
+#if defined(ENABLE_HID_INPUT) && defined(WITH_EVENTINPUT)
   if (fgGetBool("/sim/input/enable-hid", true)) {
     set_subsystem( "input-event-hid", new FGHIDEventInput() );
   } else {
