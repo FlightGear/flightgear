@@ -153,7 +153,7 @@ public:
 
     virtual ~FGMacOSXInputDevice();
 
-    void Open() override;
+    bool Open() override;
     void Close() override;
     
     virtual void update(double dt);
@@ -344,16 +344,21 @@ FGMacOSXInputDevice::~FGMacOSXInputDevice()
     CFRelease(_hid);
 }
 
-void FGMacOSXInputDevice::Open()
+bool FGMacOSXInputDevice::Open()
 {
-
-    IOHIDDeviceOpen(_hid, kIOHIDOptionsTypeNone);
+    IOReturn result = IOHIDDeviceOpen(_hid, kIOHIDOptionsTypeNone);
+    if (result != kIOReturnSuccess) {
+        return false;
+    }
+    
     IOHIDDeviceScheduleWithRunLoop(_hid, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 
     // IOHIDQueueRegisterValueAvailableCallback(_queue, valueAvailableCallback, this);
 
     IOHIDQueueScheduleWithRunLoop(_queue, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     IOHIDQueueStart(_queue);
+    
+    return true;
 }
 
 void FGMacOSXInputDevice::buildElementNameDictionary()

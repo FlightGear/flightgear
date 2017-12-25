@@ -45,10 +45,10 @@ public:
   FGLinuxInputDevice( std::string name, std::string devname, std::string aSerial );
   virtual ~FGLinuxInputDevice();
 
-  virtual void Open();
-  virtual void Close();
-  virtual void Send( const char * eventName, double value );
-  virtual const char * TranslateEventName( FGEventData & eventData );
+  bool Open() override;
+  void Close() override;
+  void Send( const char * eventName, double value ) override;
+  const char * TranslateEventName( FGEventData & eventData ) override;
 
   void SetDevname( const std::string & name );
   std::string GetDevname() const { return devname; }

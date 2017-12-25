@@ -286,9 +286,9 @@ static inline bool bitSet( unsigned char * buf, unsigned bit )
   return (buf[bit/sizeof(unsigned char)/8] >> (bit%(sizeof(unsigned char)*8))) & 1;
 }
 
-void FGLinuxInputDevice::Open()
+bool FGLinuxInputDevice::Open()
 {
-  if( fd != -1 ) return;
+  if( fd != -1 ) return true;
   if( (fd = ::open( devname.c_str(), O_RDWR )) == -1 ) { 
     throw std::exception();
   }
@@ -371,6 +371,8 @@ void FGLinuxInputDevice::Open()
       }
     }
   }
+
+  return true;
 }
 
 double FGLinuxInputDevice::Normalize( struct input_event & event ) 

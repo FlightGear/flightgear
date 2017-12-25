@@ -219,7 +219,7 @@ public:
 
     virtual ~FGHIDDevice();
 
-    void Open() override;
+    bool Open() override;
     void Close() override;
     
     void update(double dt) override;
@@ -322,15 +322,17 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
     
 FGHIDDevice::~FGHIDDevice()
 {
-    
+    if (_device) {
+        hid_close(_device);
+    }
 }
     
-void FGHIDDevice::Open()
+bool FGHIDDevice::Open()
 {
     _device = hid_open_path(_hidPath.c_str());
-    if (_device == 0) {
-        SG_LOG(SG_INPUT, SG_WARN, "Failed to open:" << _hidPath);
-        return;
+    if (_device == nullptr) {
+        SG_LOG(SG_INPUT, SG_WARN, "HID: Failed to open:" << _hidPath);
+        return false;
     }
     
     unsigned char reportDescriptor[1024];
@@ -354,6 +356,8 @@ void FGHIDDevice::Open()
        // SG_LOG(SG_INPUT, SG_INFO, "found item for event:" << v.first);
         reportItem.second->event = event;
     }
+    
+    return true;
 }
     
 void FGHIDDevice::scanCollection(hid_item* c)
@@ -475,11 +479,18 @@ void FGHIDDevice::scanItem(hid_item* item)
 
 void FGHIDDevice::Close()
 {
-    hid_close(_device);
+    if (_device) {
+        hid_close(_device);
+        _device = nullptr;
+    }
 }
 
 void FGHIDDevice::update(double dt)
 {
+    if (!_device) {
+        return;
+    }
+    
     uint8_t reportBuf[65];
     int readCount = 0;
     while (true) {
@@ -528,6 +539,10 @@ void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
     
 void FGHIDDevice::sendReport(Report* report) const
 {
+    if (!_device) {
+        return;
+    }
+    
     uint8_t reportBytes[65];
     size_t reportLength = 0;
     memset(reportBytes, 0, sizeof(reportBytes));
@@ -632,6 +647,10 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
     
 void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& data)
 {
+    if (!_device) {
+        return;
+    }
+    
     uint8_t buf[65];
     size_t len = std::min(data.length() + 1, sizeof(buf));
     buf[0] = reportId;

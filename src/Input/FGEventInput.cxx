@@ -410,8 +410,12 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   inputDevice->Configure( deviceNode );
 
   try {	
-    inputDevice->Open();
-    input_devices[ deviceNode->getIndex() ] = inputDevice;
+    bool ok = inputDevice->Open();
+      if (ok) {
+          input_devices[ deviceNode->getIndex() ] = inputDevice;
+      } else {
+          throw sg_exception("Opening input device failed");
+      }
   }
   catch( ... ) {
     delete  inputDevice;

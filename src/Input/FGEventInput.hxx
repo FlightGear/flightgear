@@ -223,7 +223,7 @@ public:
     
   virtual ~FGInputDevice();
 
-  virtual void Open() = 0;
+  virtual bool Open() = 0;
   virtual void Close() = 0;
 
   virtual void Send( const char * eventName, double value ) = 0;
