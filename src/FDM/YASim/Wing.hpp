@@ -189,6 +189,7 @@ public:
 
     void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
     float updateModel(Model* model);
+    void  printSectionInfo();
 };
 
 }; // namespace yasim

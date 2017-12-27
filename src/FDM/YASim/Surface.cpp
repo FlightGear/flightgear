@@ -63,7 +63,8 @@ void Surface::setOrientation(const float* o)
 {
     for(int i=0; i<9; i++) _orient[i] = o[i];
     if (_surfN) {
-        float xaxis[3] {-1,0,0};
+        // export the chord line (transformed into aircraft coordiantes)
+        float xaxis[3] {1,0,0};
         Math::tmul33(_orient,xaxis, xaxis);
         _surfN->getNode("axis-x", true)->setFloatValue(xaxis[0]);
         _surfN->getNode("axis-y", true)->setFloatValue(xaxis[1]);
