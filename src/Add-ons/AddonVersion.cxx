@@ -264,8 +264,7 @@ AddonVersion::versionStringToTuple(const std::string& versionStr)
   // <https://www.python.org/dev/peps/pep-0440/> (always 3 components in the
   // release segment, pre-release segment + development release segment; no
   // post-release segment allowed).
-  std::regex versionRegexp(
-    R"((\d+)\.(\d+).(\d+)(.*))");
+  std::regex versionRegexp(R"((\d+)\.(\d+).(\d+)(.*))");
   std::smatch results;
 
   if (std::regex_match(versionStr, results, versionRegexp)) {

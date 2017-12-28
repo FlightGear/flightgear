@@ -47,7 +47,7 @@ void testAddonVersionSuffix()
 {
   using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
-  fgtest::initTestGlobals("AddonVersion");
+  fgtest::initTestGlobals("AddonVersionSuffix");
 
   AddonVersionSuffix v1(AddonRelType::beta, 2, true, 5);
   AddonVersionSuffix v1Copy(v1);
@@ -207,38 +207,42 @@ void testAddonVersion()
 
 void testAddon()
 {
-  Addon m;
-  std::string addonId = "org.FlightGear.addons.MyGreatAddon";
-  m.setId(addonId);
-  m.setVersion(AddonVersion("2017.2.5rc3"));
-  m.setBasePath(SGPath("/path/to/MyGreatAddon"));
-  m.setMinFGVersionRequired("2017.4.1");
-  m.setMaxFGVersionRequired("none");
+  fgtest::initTestGlobals("Addon");
 
-  SG_CHECK_EQUAL(m.getId(), addonId);
-  SG_CHECK_EQUAL(*m.getVersion(), AddonVersion("2017.2.5rc3"));
-  SG_CHECK_EQUAL(m.getBasePath(), SGPath("/path/to/MyGreatAddon"));
-  SG_CHECK_EQUAL(m.getMinFGVersionRequired(), "2017.4.1");
+  Addon addon;
+  std::string addonId = "org.FlightGear.addons.MyGreatAddon";
+  addon.setId(addonId);
+  addon.setVersion(AddonVersion("2017.2.5rc3"));
+  addon.setBasePath(SGPath("/path/to/MyGreatAddon"));
+  addon.setMinFGVersionRequired("2017.4.1");
+  addon.setMaxFGVersionRequired("none");
+
+  SG_CHECK_EQUAL(addon.getId(), addonId);
+  SG_CHECK_EQUAL(*addon.getVersion(), AddonVersion("2017.2.5rc3"));
+  SG_CHECK_EQUAL(addon.getBasePath(), SGPath("/path/to/MyGreatAddon"));
+  SG_CHECK_EQUAL(addon.getMinFGVersionRequired(), "2017.4.1");
 
   const string refText = "addon '" + addonId + "' (version = 2017.2.5rc3, "
                          "base path = '/path/to/MyGreatAddon', "
                          "minFGVersionRequired = '2017.4.1', "
                          "maxFGVersionRequired = 'none')";
-  SG_CHECK_EQUAL(m.str(), refText);
+  SG_CHECK_EQUAL(addon.str(), refText);
 
   // Check stream output
   std::ostringstream oss;
-  oss << m;
+  oss << addon;
   SG_CHECK_EQUAL(oss.str(), refText);
 
   // Set a max FG version and recheck
-  m.setMaxFGVersionRequired("2018.2.5");
+  addon.setMaxFGVersionRequired("2018.2.5");
   const string refText2 = "addon '" + addonId + "' (version = 2017.2.5rc3, "
                           "base path = '/path/to/MyGreatAddon', "
                           "minFGVersionRequired = '2017.4.1', "
                           "maxFGVersionRequired = '2018.2.5')";
-  SG_CHECK_EQUAL(m.getMaxFGVersionRequired(), "2018.2.5");
-  SG_CHECK_EQUAL(m.str(), refText2);
+  SG_CHECK_EQUAL(addon.getMaxFGVersionRequired(), "2018.2.5");
+  SG_CHECK_EQUAL(addon.str(), refText2);
+
+  fgtest::shutdownTestGlobals();
 }
 
 int main(int argc, const char* const* argv)
