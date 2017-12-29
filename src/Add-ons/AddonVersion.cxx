@@ -120,6 +120,7 @@ AddonVersionSuffix::str() const
 std::tuple<AddonVersionSuffixPrereleaseType, int, bool, int>
 AddonVersionSuffix::suffixStringToTuple(const std::string& suffix)
 {
+#ifdef HAVE_WORKING_STD_REGEX
   // Use a simplified variant of the syntax described in PEP 440
   // <https://www.python.org/dev/peps/pep-0440/>: for the version suffix, only
   // allow a pre-release segment and a development release segment, but no
@@ -173,12 +174,113 @@ AddonVersionSuffix::suffixStringToTuple(const std::string& suffix)
 
     return std::make_tuple(preReleaseType, preReleaseNum, !devNum_s.empty(),
                            devNum);
+#else // all this 'else' clause should be removed once we actually require C++11
+  bool isMatch;
+  AddonVersionSuffixPrereleaseType preReleaseType;
+  int preReleaseNum;
+  bool developmental;
+  int devNum;
+
+  std::tie(isMatch, preReleaseType, preReleaseNum, developmental, devNum) =
+    parseVersionSuffixString_noRegexp(suffix);
+
+  if (isMatch) {
+    return std::make_tuple(preReleaseType, preReleaseNum, developmental,
+                           devNum);
+#endif     // HAVE_WORKING_STD_REGEX
   } else {                      // the regexp didn't match
     string msg = "invalid add-on version suffix: '" + suffix + "' "
       "(expected form is [{a|b|rc}N1][.devN2] where N1 and N2 are positive "
       "integers)";
     throw sg_format_exception(msg, suffix);
   }
+}
+
+// Static method, only needed for compilers that are not C++11-compliant
+// (gcc 4.8 pretends to support <regex> as required by C++11 but doesn't, see
+// <https://stackoverflow.com/a/12665408/4756009>).
+std::tuple<bool, AddonVersionSuffixPrereleaseType, int, bool, int>
+AddonVersionSuffix::parseVersionSuffixString_noRegexp(const string& suffix)
+{
+  AddonVersionSuffixPrereleaseType preReleaseType;
+  string rest;
+  int preReleaseNum = 0;        // alpha, beta or release candidate number, or
+                                // 0 when absent
+  bool developmental = false;   // whether 'suffix' has a .devN2 part
+  int devNum = 0;               // the N2 in question, or 0 when absent
+
+  std::tie(preReleaseType, rest) = popPrereleaseTypeFromBeginning(suffix);
+
+  if (preReleaseType != AddonVersionSuffixPrereleaseType::none) {
+    std::size_t startPrerelNum = rest.find_first_of("0123456789");
+    if (startPrerelNum != 0) {    // no prerelease num -> no match
+      return std::make_tuple(false, preReleaseType, preReleaseNum, false,
+                             devNum);
+    }
+
+    std::size_t endPrerelNum = rest.find_first_not_of("0123456789", 1);
+    // Works whether endPrerelNum is string::npos or not
+    string preReleaseNum_s = rest.substr(0, endPrerelNum);
+    preReleaseNum = strutils::readNonNegativeInt<int>(preReleaseNum_s);
+
+    if (preReleaseNum < 1) {
+      string msg = "invalid add-on version suffix: '" + suffix + "' "
+        "(prerelease number must be greater than or equal to 1, but got " +
+        preReleaseNum_s + ")";
+      throw sg_format_exception(msg, suffix);
+    }
+
+    rest = (endPrerelNum == string::npos) ? "" : rest.substr(endPrerelNum);
+  }
+
+  if (strutils::starts_with(rest, ".dev")) {
+    rest = rest.substr(4);
+    std::size_t startDevNum = rest.find_first_of("0123456789");
+    if (startDevNum != 0) {    // no dev num -> no match
+      return std::make_tuple(false, preReleaseType, preReleaseNum, false,
+                             devNum);
+    }
+
+    std::size_t endDevNum = rest.find_first_not_of("0123456789", 1);
+    if (endDevNum != string::npos) {
+      // There is trailing garbage after the development release number
+      // -> no match
+      return std::make_tuple(false, preReleaseType, preReleaseNum, false,
+                             devNum);
+    }
+
+    devNum = strutils::readNonNegativeInt<int>(rest);
+    if (devNum < 1) {
+      string msg = "invalid add-on version suffix: '" + suffix + "' "
+        "(development release number must be greater than or equal to 1, "
+        "but got " + rest + ")";
+      throw sg_format_exception(msg, suffix);
+    }
+
+    developmental = true;
+  }
+
+  return std::make_tuple(true, preReleaseType, preReleaseNum, developmental,
+                         devNum);
+}
+
+// Static method
+std::tuple<AddonVersionSuffixPrereleaseType, string>
+AddonVersionSuffix::popPrereleaseTypeFromBeginning(const string& s)
+{
+  if (s.empty()) {
+    return std::make_tuple(AddonVersionSuffixPrereleaseType::none, s);
+  } else if (s[0] == 'a') {
+    return std::make_tuple(AddonVersionSuffixPrereleaseType::alpha,
+                           s.substr(1));
+  } else if (s[0] == 'b') {
+    return std::make_tuple(AddonVersionSuffixPrereleaseType::beta, s.substr(1));
+  } else if (strutils::starts_with(s, "rc")) {
+    return std::make_tuple(AddonVersionSuffixPrereleaseType::candidate,
+                           s.substr(2));
+  }
+
+  return std::make_tuple(AddonVersionSuffixPrereleaseType::none, s);
 }
 
 // Beware, this is not suitable for sorting! cf. genSortKey() below.
@@ -260,6 +362,7 @@ AddonVersion::AddonVersion(const char* versionStr)
 std::tuple<int, int, int, AddonVersionSuffix>
 AddonVersion::versionStringToTuple(const std::string& versionStr)
 {
+#ifdef HAVE_WORKING_STD_REGEX
   // Use a simplified variant of the syntax described in PEP 440
   // <https://www.python.org/dev/peps/pep-0440/> (always 3 components in the
   // release segment, pre-release segment + development release segment; no
@@ -279,12 +382,72 @@ AddonVersion::versionStringToTuple(const std::string& versionStr)
 
     return std::make_tuple(major, minor, patchLevel,
                            AddonVersionSuffix(suffix_s));
+#else // all this 'else' clause should be removed once we actually require C++11
+  bool isMatch;
+  int major, minor, patchLevel;
+  AddonVersionSuffix suffix;
+
+  std::tie(isMatch, major, minor, patchLevel, suffix) =
+    parseVersionString_noRegexp(versionStr);
+
+  if (isMatch) {
+    return std::make_tuple(major, minor, patchLevel, suffix);
+#endif     // HAVE_WORKING_STD_REGEX
   } else {                      // the regexp didn't match
     string msg = "invalid add-on version number: '" + versionStr + "' "
       "(expected form is MAJOR.MINOR.PATCHLEVEL[{a|b|rc}N1][.devN2] where "
       "N1 and N2 are positive integers)";
     throw sg_format_exception(msg, versionStr);
   }
+}
+
+// Static method, only needed for compilers that are not C++11-compliant
+// (gcc 4.8 pretends to support <regex> as required by C++11 but doesn't, see
+// <https://stackoverflow.com/a/12665408/4756009>).
+std::tuple<bool, int, int, int, AddonVersionSuffix>
+AddonVersion::parseVersionString_noRegexp(const string& versionStr)
+{
+  int major = 0, minor = 0, patchLevel = 0;
+  AddonVersionSuffix suffix{};
+
+  // Major version number
+  std::size_t endMajor = versionStr.find_first_not_of("0123456789");
+  if (endMajor == 0 || endMajor == string::npos) { // no match
+    return std::make_tuple(false, major, minor, patchLevel, suffix);
+  }
+  major = strutils::readNonNegativeInt<int>(versionStr.substr(0, endMajor));
+
+  // Dot separating the major and minor version numbers
+  if (versionStr.size() < endMajor + 1 || versionStr[endMajor] != '.') {
+    return std::make_tuple(false, major, minor, patchLevel, suffix);
+  }
+  string rest = versionStr.substr(endMajor + 1);
+
+  // Minor version number
+  std::size_t endMinor = rest.find_first_not_of("0123456789");
+  if (endMinor == 0 || endMinor == string::npos) { // no match
+    return std::make_tuple(false, major, minor, patchLevel, suffix);
+  }
+  minor = strutils::readNonNegativeInt<int>(rest.substr(0, endMinor));
+
+  // Dot separating the minor version number and the patch level
+  if (rest.size() < endMinor + 1 || rest[endMinor] != '.') {
+    return std::make_tuple(false, major, minor, patchLevel, suffix);
+  }
+  rest = rest.substr(endMinor + 1);
+
+  // Patch level
+  std::size_t endPatchLevel = rest.find_first_not_of("0123456789");
+  if (endPatchLevel == 0) {     // no patch level, therefore no match
+    return std::make_tuple(false, major, minor, patchLevel, suffix);
+  }
+  patchLevel = strutils::readNonNegativeInt<int>(rest.substr(0, endPatchLevel));
+
+  if (endPatchLevel != string::npos) { // there is a version suffix, parse it
+    suffix = AddonVersionSuffix(rest.substr(endPatchLevel));
+  }
+
+  return std::make_tuple(true, major, minor, patchLevel, suffix);
 }
 
 int AddonVersion::majorNumber() const

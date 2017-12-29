@@ -71,6 +71,16 @@ public:
   std::string str() const;
 
 private:
+  // String representation of the release type component: "a", "b", "rc" or "".
+  static std::string releaseTypeStr(AddonVersionSuffixPrereleaseType);
+
+  // If 's' starts with a non-empty release type ('a', 'b' or 'rc'), return
+  // the corresponding enum value along with the remainder of 's' (that is,
+  // everything after the release type). Otherwise, return
+  // AddonVersionSuffixPrereleaseType::none along with a copy of 's'.
+  static std::tuple<AddonVersionSuffixPrereleaseType, std::string>
+  popPrereleaseTypeFromBeginning(const std::string& s);
+
   // Extract all components from a string representing a version suffix.
   // The components of the return value are, in this order:
   //
@@ -80,8 +90,18 @@ private:
   static std::tuple<AddonVersionSuffixPrereleaseType, int, bool, int>
   suffixStringToTuple(const std::string& suffix);
 
-  // String representation of the release type component: "a", "b", "rc" or "".
-  static std::string releaseTypeStr(AddonVersionSuffixPrereleaseType);
+  // Used to implement suffixStringToTuple() for compilers that are not
+  // C++11-compliant (gcc 4.8 pretends to support <regex> as required by C++11
+  // but doesn't, see <https://stackoverflow.com/a/12665408/4756009>).
+  //
+  // The bool in the first component of the result is true iff 'suffix' is a
+  // valid version suffix string. The bool is false when 'suffix' is invalid
+  // in such a way that the generic sg_format_exception thrown at the end of
+  // suffixStringToTuple() is appropriate. In all other cases, a specific
+  // exception is thrown.
+  static std::tuple<bool, AddonVersionSuffixPrereleaseType, int, bool, int>
+  parseVersionSuffixString_noRegexp(const std::string& suffix);
+
   // Useful for comparisons/sorting purposes
   std::tuple<int,
              std::underlying_type<AddonVersionSuffixPrereleaseType>::type,
@@ -155,6 +175,18 @@ private:
 
   static std::tuple<int, int, int, AddonVersionSuffix>
   versionStringToTuple(const std::string& versionStr);
+
+  // Used to implement versionStringToTuple() for compilers that are not
+  // C++11-compliant (gcc 4.8 pretends to support <regex> as required by C++11
+  // but doesn't, see <https://stackoverflow.com/a/12665408/4756009>).
+  //
+  // The bool in the first component of the result is true iff 'versionStr' is
+  // a valid version string. The bool is false when 'versionStr' is invalid in
+  // such a way that the generic sg_format_exception thrown at the end of
+  // versionStringToTuple() is appropriate. In all other cases, a specific
+  // exception is thrown.
+  static std::tuple<bool, int, int, int, AddonVersionSuffix>
+  parseVersionString_noRegexp(const std::string& versionStr);
 
   friend bool operator==(const AddonVersion& lhs, const AddonVersion& rhs);
   friend bool operator<(const AddonVersion& lhs, const AddonVersion& rhs);
