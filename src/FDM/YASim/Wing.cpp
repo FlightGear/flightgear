@@ -332,10 +332,15 @@ void Wing::compile()
                 nSegs = 8;
             float segWid = ws->_length * (end - start)/nSegs;
 
+            float base[3];
+            _chord2float(ws->_rootChord, base);
+            float tip[3];
+            _chord2float(ws->_tipChord, tip);
+            
             for(int j=0; j<nSegs; j++) {
                 float frac = start + (j+0.5f) * (end-start)/nSegs;
                 float pos[3];
-                interp(_base, _tip, frac, pos);
+                interp(base, tip, frac, pos);
 
                 float chord = ws->_rootChord.length * (1 - (1-ws->_taper)*frac);
                 float weight = chord * segWid;
@@ -518,15 +523,23 @@ void Wing::writeInfoToProptree()
 
     for (int section=0; section < _sections.size(); section++) {
         ws = (WingSection*)_sections.get(section);
+        float mass {0};
         for (int surf=0; surf < ws->numSurfaces(); surf++) {
             Surface* s = ws->getSurface(surf);
             float drag = s->getTotalForceCoefficient();
             dragSum += drag;
 
-            float mass = ws->getSurfaceWeight(surf);
+            mass = ws->getSurfaceWeight(surf);
             mass = mass * Math::sqrt(mass);
             wgt += mass;
         }
+        SGPropertyNode_ptr sectN = _wingN->getChild("section",section,1);
+        sectN->getNode("surface-count", true)->setFloatValue(ws->numSurfaces());
+        sectN->getNode("weight", true)->setFloatValue(mass);
+        sectN->getNode("base-x", true)->setFloatValue(ws->_rootChord.x);
+        sectN->getNode("base-y", true)->setFloatValue(ws->_rootChord.y);
+        sectN->getNode("base-z", true)->setFloatValue(ws->_rootChord.z);
+        sectN->getNode("chord", true)->setFloatValue(ws->_rootChord.length);
     }
     _wingN->getNode("weight", true)->setFloatValue(wgt);
     _wingN->getNode("drag", true)->setFloatValue(dragSum);
@@ -572,6 +585,17 @@ float Wing::updateModel(Model* model)
         _wingN->getNode("weight", true)->setFloatValue(_weight);
     }
     return _weight;
+}
+
+void Wing::printSectionInfo()
+{
+    WingSection* ws;
+    printf("#wing sections: %d\n", _sections.size());
+    for (int section=0; section < _sections.size(); section++) {
+        ws = (WingSection*)_sections.get(section);
+        printf("Section %d base point (%.3f, %.3f, %.3f), chord %.3f\n", section,
+               ws->_rootChord.x, ws->_rootChord.y, ws->_rootChord.z, ws->_rootChord.length);
+    }
 }
 
 }; // namespace yasim
