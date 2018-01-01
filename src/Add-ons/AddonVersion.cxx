@@ -95,7 +95,7 @@ AddonVersionSuffix::releaseTypeStr(AddonVersionSuffixPrereleaseType releaseType)
     return string();
   default:
     throw sg_error("unexpected value for member of "
-                   "flightgear::AddonVersionSuffixPrereleaseType: " +
+                   "flightgear::addons::AddonVersionSuffixPrereleaseType: " +
                    std::to_string(enumValue(releaseType)));
   }
 }

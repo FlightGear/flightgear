@@ -146,7 +146,7 @@ public:
   explicit AddonVersion(const std::tuple<int, int, int, AddonVersionSuffix>& t);
 
   // Using the method names major() and minor() can lead to incomprehensible
-  // errors such as "major is not a member of flightgear::AddonVersion"
+  // errors such as "major is not a member of flightgear::addons::AddonVersion"
   // because of a hideous glibc bug[1]: major() and minor() are defined by
   // standard headers as *macros*!
   //
