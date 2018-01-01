@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 //
 // Addon.cxx --- FlightGear class holding add-on metadata
-// Copyright (C) 2017  Florent Rougon
+// Copyright (C) 2017, 2018  Florent Rougon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include <cassert>
 
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/naref.h>
