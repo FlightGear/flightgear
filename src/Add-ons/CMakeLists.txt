@@ -11,6 +11,7 @@ set(HEADERS addon_fwd.hxx
             AddonManager.hxx
             AddonVersion.hxx
             exceptions.hxx
+            pointer_traits.hxx
             )
 
 flightgear_component(AddonManagement "${SOURCES}" "${HEADERS}")
