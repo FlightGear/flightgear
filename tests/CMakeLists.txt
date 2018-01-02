@@ -10,6 +10,7 @@ set(sources
   Add-ons/Addon.cxx
   Add-ons/AddonManager.cxx
   Add-ons/AddonVersion.cxx
+  Add-ons/contacts.cxx
   Add-ons/exceptions.cxx
   Aircraft/controls.cxx
   Aircraft/FlightHistory.cxx

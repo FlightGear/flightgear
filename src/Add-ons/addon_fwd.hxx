@@ -37,8 +37,16 @@ class AddonVersionSuffix;
 enum class UrlType;
 class QualifiedUrl;
 
+enum class ContactType;
+class Contact;
+class Author;
+class Maintainer;
+
 using AddonRef = SGSharedPtr<Addon>;
 using AddonVersionRef = SGSharedPtr<AddonVersion>;
+using ContactRef = SGSharedPtr<Contact>;
+using AuthorRef = SGSharedPtr<Author>;
+using MaintainerRef = SGSharedPtr<Maintainer>;
 
 namespace errors
 {

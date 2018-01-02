@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 //
 // NasalAddons.cxx --- Expose add-on classes to Nasal
-// Copyright (C) 2017  Florent Rougon
+// Copyright (C) 2017, 2018  Florent Rougon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include <Add-ons/Addon.hxx>
 #include <Add-ons/AddonManager.hxx>
 #include <Add-ons/AddonVersion.hxx>
+#include <Add-ons/contacts.hxx>
 
 namespace flightgear
 {
@@ -192,6 +193,9 @@ void initAddonClassesForNasal(naRef globals, naContext c)
   wrapAddonManagerMethods(addonsModule);
 
   Addon::setupGhost(addonsModule);
+  Contact::setupGhost(addonsModule);
+  Author::setupGhost(addonsModule);
+  Maintainer::setupGhost(addonsModule);
 
   AddonVersion::setupGhost(addonsModule);
   addonsModule.createHash("AddonVersion").set("new", &f_createAddonVersion);

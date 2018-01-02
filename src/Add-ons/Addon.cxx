@@ -34,7 +34,6 @@
 #include <simgear/nasal/naref.h>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
-#include <simgear/sg_inlines.h>
 
 #include <Main/globals.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -42,7 +41,9 @@
 #include "addon_fwd.hxx"
 #include "Addon.hxx"
 #include "AddonVersion.hxx"
+#include "contacts.hxx"
 #include "exceptions.hxx"
+#include "pointer_traits.hxx"
 
 namespace strutils = simgear::strutils;
 
@@ -59,9 +60,10 @@ namespace addons
 // *                              QualifiedUrl                               *
 // ***************************************************************************
 
-QualifiedUrl::QualifiedUrl(UrlType type, std::string url)
+QualifiedUrl::QualifiedUrl(UrlType type, string url, string detail)
   : _type(type),
-    _url(std::move(url))
+    _url(std::move(url)),
+    _detail(std::move(detail))
 { }
 
 UrlType QualifiedUrl::getType() const
@@ -75,6 +77,12 @@ std::string QualifiedUrl::getUrl() const
 
 void QualifiedUrl::setUrl(const std::string& url)
 { _url = url; }
+
+std::string QualifiedUrl::getDetail() const
+{ return _detail; }
+
+void QualifiedUrl::setDetail(const std::string& detail)
+{ _detail = detail; }
 
 // ***************************************************************************
 // *                                  Addon                                  *
@@ -123,16 +131,16 @@ AddonVersionRef Addon::getVersion() const
 void Addon::setVersion(const AddonVersion& addonVersion)
 { _version.reset(new AddonVersion(addonVersion)); }
 
-std::string Addon::getAuthors() const
+std::vector<AuthorRef> Addon::getAuthors() const
 { return _authors; }
 
-void Addon::setAuthors(const std::string& addonAuthors)
+void Addon::setAuthors(const std::vector<AuthorRef>& addonAuthors)
 { _authors = addonAuthors; }
 
-std::string Addon::getMaintainers() const
+std::vector<MaintainerRef> Addon::getMaintainers() const
 { return _maintainers; }
 
-void Addon::setMaintainers(const std::string& addonMaintainers)
+void Addon::setMaintainers(const std::vector<MaintainerRef>& addonMaintainers)
 { _maintainers = addonMaintainers; }
 
 std::string Addon::getShortDescription() const
@@ -373,17 +381,10 @@ Addon Addon::fromAddonDir(const SGPath& addonPath)
   }
   AddonVersion addonVersion(strutils::strip(versionNode->getStringValue()));
 
-  string addonAuthors;
-  SGPropertyNode *authorsNode = addonNode->getChild("authors");
-  if (authorsNode != nullptr) {
-    addonAuthors = strutils::strip(authorsNode->getStringValue());
-  }
-
-  string addonMaintainers;
-  SGPropertyNode *maintainersNode = addonNode->getChild("maintainers");
-  if (maintainersNode != nullptr) {
-    addonMaintainers = strutils::strip(maintainersNode->getStringValue());
-  }
+  auto addonAuthors = parseContactsNode<Author>(metadataFile,
+                                                addonNode->getChild("authors"));
+  auto addonMaintainers = parseContactsNode<Maintainer>(
+    metadataFile, addonNode->getChild("maintainers"));
 
   string addonShortDescription;
   SGPropertyNode *shortDescNode = addonNode->getChild("short-description");
@@ -467,6 +468,62 @@ Addon Addon::fromAddonDir(const SGPath& addonPath)
   return addon;
 }
 
+// Utility function for Addon::parseContactsNode<>()
+//
+// Read a node such as "name", "email" or "url", child of a contact node (e.g.,
+// of an "author" or "maintainer" node).
+static string
+parseContactsNode_readNode(const SGPath& metadataFile,
+                           SGPropertyNode* contactNode,
+                           string subnodeName, bool allowEmpty)
+{
+  SGPropertyNode *node = contactNode->getChild(subnodeName);
+  string contents;
+
+  if (node != nullptr) {
+    contents = simgear::strutils::strip(node->getStringValue());
+  }
+
+  if (!allowEmpty && contents.empty()) {
+    throw errors::error_loading_metadata_file(
+      "in add-on metadata file '" + metadataFile.utf8Str() + "': "
+      "when the node " + contactNode->getPath(true) + " exists, it must have "
+      "a non-empty '" + subnodeName + "' child node");
+  }
+
+  return contents;
+};
+
+// Static method template (private and only used in this file)
+template <class T>
+vector<typename ContactTraits<T>::strong_ref>
+Addon::parseContactsNode(const SGPath& metadataFile, SGPropertyNode* mainNode)
+{
+  using contactTraits = ContactTraits<T>;
+  vector<typename contactTraits::strong_ref> res;
+
+  if (mainNode != nullptr) {
+    auto contactNodes = mainNode->getChildren(contactTraits::xmlNodeName());
+    res.reserve(contactNodes.size());
+
+    for (const auto& contactNode: contactNodes) {
+      string name, email, url;
+
+      name = parseContactsNode_readNode(metadataFile, contactNode.get(),
+                                        "name", false /* allowEmpty */);
+      email = parseContactsNode_readNode(metadataFile, contactNode.get(),
+                                         "email", true);
+      url = parseContactsNode_readNode(metadataFile, contactNode.get(),
+                                       "url", true);
+
+      using ptr_traits = shared_ptr_traits<typename contactTraits::strong_ref>;
+      res.push_back(ptr_traits::makeStrongRef(name, email, url));
+    }
+  }
+
+  return res;
+};
+
 // Static method
 std::tuple<string, SGPath, string>
 Addon::parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode)
@@ -535,20 +592,23 @@ Addon::parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode)
   return std::make_tuple(licenseDesignation, licenseFile, licenseUrl);
 }
 
-std::map<UrlType, QualifiedUrl> Addon::getUrls() const
+std::multimap<UrlType, QualifiedUrl> Addon::getUrls() const
 {
-  std::map<UrlType, QualifiedUrl> res;
+  std::multimap<UrlType, QualifiedUrl> res;
 
-  auto appendIfNonEmpty = [&res](UrlType type, const string& url) {
+  auto appendIfNonEmpty = [&res](UrlType type, string url, string detail = "") {
     if (!url.empty()) {
-      auto emplaceRetval = res.emplace(type, QualifiedUrl(type, url));
-      // We start with an empty std::map<> and don't call this lambda more
-      // than once for the same type, therefore the same key can't be seen
-      // twice.
-      assert(emplaceRetval.second);
-      SG_UNUSED(emplaceRetval); // 'cause asserts are removed in Release builds
+      res.emplace(type, QualifiedUrl(type, std::move(url), std::move(detail)));
     }
   };
+
+  for (const auto& author: _authors) {
+    appendIfNonEmpty(UrlType::author, author->getUrl(), author->getName());
+  }
+
+  for (const auto& maint: _maintainers) {
+    appendIfNonEmpty(UrlType::maintainer, maint->getUrl(), maint->getName());
+  }
 
   appendIfNonEmpty(UrlType::homePage, getHomePage());
   appendIfNonEmpty(UrlType::download, getDownloadUrl());

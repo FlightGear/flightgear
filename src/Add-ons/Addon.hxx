@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 //
 // Addon.hxx --- FlightGear class holding add-on metadata
-// Copyright (C) 2017  Florent Rougon
+// Copyright (C) 2017, 2018  Florent Rougon
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 
 #include "addon_fwd.hxx"
 #include "AddonVersion.hxx"
+#include "contacts.hxx"
 
 namespace flightgear
 {
@@ -42,6 +43,8 @@ namespace addons
 {
 
 enum class UrlType {
+  author,
+  maintainer,
   homePage,
   download,
   support,
@@ -49,9 +52,10 @@ enum class UrlType {
   license
 };
 
-class QualifiedUrl {
+class QualifiedUrl
+{
 public:
-  QualifiedUrl(UrlType type, std::string url);
+  QualifiedUrl(UrlType type, std::string url, std::string detail = "");
 
   UrlType getType() const;
   void setType(UrlType type);
@@ -59,9 +63,16 @@ public:
   std::string getUrl() const;
   void setUrl(const std::string& url);
 
+  std::string getDetail() const;
+  void setDetail(const std::string& detail);
+
 private:
   UrlType _type;
   std::string _url;
+  // Used to store the author or maintainer name when _type is UrlType::author
+  // or UrlType::maintainer. Could be used to record details about a website
+  // too (e.g., for a UrlType::support, something like “official forum”).
+  std::string _detail;
 };
 
 class Addon : public SGReferenced {
@@ -89,11 +100,11 @@ public:
   AddonVersionRef getVersion() const;
   void setVersion(const AddonVersion& addonVersion);
 
-  std::string getAuthors() const;
-  void setAuthors(const std::string& addonAuthors);
+  std::vector<AuthorRef> getAuthors() const;
+  void setAuthors(const std::vector<AuthorRef>& addonAuthors);
 
-  std::string getMaintainers() const;
-  void setMaintainers(const std::string& addonMaintainers);
+  std::vector<MaintainerRef> getMaintainers() const;
+  void setMaintainers(const std::vector<MaintainerRef>& addonMaintainers);
 
   std::string getShortDescription() const;
   void setShortDescription(const std::string& addonShortDescription);
@@ -156,7 +167,7 @@ public:
   void setLoadSequenceNumber(int num);
 
   // Get all non-empty URLs pertaining to this add-on
-  std::map<UrlType, QualifiedUrl> getUrls() const;
+  std::multimap<UrlType, QualifiedUrl> getUrls() const;
 
   // Simple string representation
   std::string str() const;
@@ -167,6 +178,13 @@ private:
   static std::tuple<string, SGPath, string>
   parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode);
 
+  // Parse an addon-metadata.xml node such as <authors> or <maintainers>.
+  // Return the corresponding vector<AuthorRef> or vector<MaintainerRef>. If
+  // the 'mainNode' argument is nullptr, return an empty vector.
+  template <class T>
+  static std::vector<typename ContactTraits<T>::strong_ref>
+  parseContactsNode(const SGPath& metadataFile, SGPropertyNode* mainNode);
+
   // The add-on identifier, in reverse DNS style. The AddonManager refuses to
   // register two add-ons with the same id in a given FlightGear session.
   std::string _id;
@@ -176,8 +194,8 @@ private:
   // needing to copy the data every time.
   AddonVersionRef _version;
 
-  std::string _authors;
-  std::string _maintainers;
+  std::vector<AuthorRef> _authors;
+  std::vector<MaintainerRef> _maintainers;
 
   // Strings describing what the add-on does
   std::string _shortDescription;
