@@ -182,7 +182,7 @@ private:
   // Return the corresponding vector<AuthorRef> or vector<MaintainerRef>. If
   // the 'mainNode' argument is nullptr, return an empty vector.
   template <class T>
-  static std::vector<typename ContactTraits<T>::strong_ref>
+  static std::vector<typename contact_traits<T>::strong_ref>
   parseContactsNode(const SGPath& metadataFile, SGPropertyNode* mainNode);
 
   // The add-on identifier, in reverse DNS style. The AddonManager refuses to

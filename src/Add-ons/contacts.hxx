@@ -89,14 +89,14 @@ public:
 };
 
 // ***************************************************************************
-// *                              ContactTraits                              *
+// *                              contact_traits                             *
 // ***************************************************************************
 
 template <typename T>
-struct ContactTraits;
+struct contact_traits;
 
 template<>
-struct ContactTraits<Author>
+struct contact_traits<Author>
 {
   using contact_type = Author;
   using strong_ref = AuthorRef;
@@ -108,7 +108,7 @@ struct ContactTraits<Author>
 };
 
 template<>
-struct ContactTraits<Maintainer>
+struct contact_traits<Maintainer>
 {
   using contact_type = Maintainer;
   using strong_ref = MaintainerRef;

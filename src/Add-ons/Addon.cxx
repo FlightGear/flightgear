@@ -500,10 +500,10 @@ parseContactsNode_readNode(const SGPath& metadataFile,
 
 // Static method template (private and only used in this file)
 template <class T>
-vector<typename ContactTraits<T>::strong_ref>
+vector<typename contact_traits<T>::strong_ref>
 Addon::parseContactsNode(const SGPath& metadataFile, SGPropertyNode* mainNode)
 {
-  using contactTraits = ContactTraits<T>;
+  using contactTraits = contact_traits<T>;
   vector<typename contactTraits::strong_ref> res;
 
   if (mainNode != nullptr) {
