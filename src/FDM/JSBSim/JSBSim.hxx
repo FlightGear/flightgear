@@ -291,6 +291,9 @@ private:
     SGPropertyNode_ptr wind_from_east;
     SGPropertyNode_ptr wind_from_down;
 
+    SGPropertyNode_ptr arrestor_wire_engaged_hook;
+    SGPropertyNode_ptr release_hook;
+
     SGPropertyNode_ptr slaved;
 
     SGPropertyNode_ptr terrain;
@@ -301,7 +304,6 @@ private:
     double last_hook_root[3];
     JSBSim::FGColumnVector3 hook_root_struct;
     double hook_length;
-    bool got_wire;
 
     bool crashed;
 

@@ -155,7 +155,7 @@ std::map<std::string,int> FGJSBsim::TURBULENCE_TYPE_NAMES;
 static FGTurbulenceSeverityTable TurbulenceSeverityTable;
 
 FGJSBsim::FGJSBsim( double dt )
-  : FGInterface(dt), got_wire(false)
+  : FGInterface(dt)
 {
     bool result;
     if( TURBULENCE_TYPE_NAMES.empty() ) {
@@ -335,7 +335,9 @@ FGJSBsim::FGJSBsim( double dt )
     ab_brake_engaged = fgGetNode("/autopilot/autobrake/engaged", true);
     ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
     ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
-    
+    arrestor_wire_engaged_hook = fgGetNode("/fdm/jsbsim/systems/hook/arrestor-wire-engaged-hook", true);
+    release_hook = fgGetNode("/fdm/jsbsim/systems/hook/tailhook-release-cmd", true);
+
     altitude = fgGetNode("/position/altitude-ft");
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
@@ -1456,8 +1458,7 @@ void FGJSBsim::update_external_forces(double t_off)
     FGColumnVector3 hook_tip_body = hook_root_body;
     hook_tip_body(1) -= hook_length * cos_fi;
     hook_tip_body(3) += hook_length * sin_fi;    
-    
-    if (!got_wire) {
+    if (!arrestor_wire_engaged_hook->getBoolValue()) {
       double contact[3];
       double ground_normal[3];
       double ground_vel[3];
@@ -1513,31 +1514,40 @@ void FGJSBsim::update_external_forces(double t_off)
     	    }
 	}
     } else {
-        FGColumnVector3 hook_root_vel = Propagate->GetVel() + (Tb2l * (Propagate->GetPQR() *  hook_root_body));
-        double wire_ends_ec[2][3];
-        double wire_vel_ec[2][3];
-        get_wire_ends_ft(t_off, wire_ends_ec, wire_vel_ec);
-        FGColumnVector3 wire_vel_1 = Tec2l * FGColumnVector3(wire_vel_ec[0][0], wire_vel_ec[0][1], wire_vel_ec[0][2]);
-        FGColumnVector3 wire_vel_2 = Tec2l * FGColumnVector3(wire_vel_ec[1][0], wire_vel_ec[1][1], wire_vel_ec[1][2]);
-        FGColumnVector3 rel_vel = hook_root_vel - (wire_vel_1 + wire_vel_2) / 2;
-        if (rel_vel.Magnitude() < 3) {
-            got_wire = false;
+        if (release_hook->getBoolValue()) {
             release_wire();
             fgSetDouble("/fdm/jsbsim/external_reactions/hook/magnitude", 0.0);
+            arrestor_wire_engaged_hook->setBoolValue(false);
+            release_hook->setBoolValue(false);
         } else {
-            FGColumnVector3 wire_end1_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[0][0], wire_ends_ec[0][1], wire_ends_ec[0][2])) - hook_root_body;
-            FGColumnVector3 wire_end2_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[1][0], wire_ends_ec[1][1], wire_ends_ec[1][2])) - hook_root_body;
-            FGColumnVector3 force_plane_normal = wire_end1_body * wire_end2_body;
-            force_plane_normal.Normalize();
-            cos_fi = DotProduct(force_plane_normal, FGColumnVector3(0, 0, 1));
-            if (cos_fi < 0) cos_fi = -cos_fi;
-            sin_fi = sqrt(1 - sqr(cos_fi));
-            fi = atan2(sin_fi, cos_fi) * SG_RADIANS_TO_DEGREES;
-        
-            fgSetDouble("/fdm/jsbsim/external_reactions/hook/x", -cos_fi);
-            fgSetDouble("/fdm/jsbsim/external_reactions/hook/y", 0);
-            fgSetDouble("/fdm/jsbsim/external_reactions/hook/z", sin_fi);
-            fgSetDouble("/fdm/jsbsim/external_reactions/hook/magnitude", fgGetDouble("/fdm/jsbsim/systems/hook/force"));
+            FGColumnVector3 hook_root_vel = Propagate->GetVel() + (Tb2l * (Propagate->GetPQR() *  hook_root_body));
+            double wire_ends_ec[2][3];
+            double wire_vel_ec[2][3];
+            get_wire_ends_ft(t_off, wire_ends_ec, wire_vel_ec);
+            FGColumnVector3 wire_vel_1 = Tec2l * FGColumnVector3(wire_vel_ec[0][0], wire_vel_ec[0][1], wire_vel_ec[0][2]);
+            FGColumnVector3 wire_vel_2 = Tec2l * FGColumnVector3(wire_vel_ec[1][0], wire_vel_ec[1][1], wire_vel_ec[1][2]);
+            FGColumnVector3 rel_vel = hook_root_vel - (wire_vel_1 + wire_vel_2) / 2;
+            if (rel_vel.Magnitude() < 3) {
+                release_wire();
+                fgSetDouble("/fdm/jsbsim/external_reactions/hook/magnitude", 0.0);
+                arrestor_wire_engaged_hook->setBoolValue(false);
+                release_hook->setBoolValue(false);
+            }
+            else {
+                FGColumnVector3 wire_end1_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[0][0], wire_ends_ec[0][1], wire_ends_ec[0][2])) - hook_root_body;
+                FGColumnVector3 wire_end2_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[1][0], wire_ends_ec[1][1], wire_ends_ec[1][2])) - hook_root_body;
+                FGColumnVector3 force_plane_normal = wire_end1_body * wire_end2_body;
+                force_plane_normal.Normalize();
+                cos_fi = DotProduct(force_plane_normal, FGColumnVector3(0, 0, 1));
+                if (cos_fi < 0) cos_fi = -cos_fi;
+                sin_fi = sqrt(1 - sqr(cos_fi));
+                fi = atan2(sin_fi, cos_fi) * SG_RADIANS_TO_DEGREES;
+
+                fgSetDouble("/fdm/jsbsim/external_reactions/hook/x", -cos_fi);
+                fgSetDouble("/fdm/jsbsim/external_reactions/hook/y", 0);
+                fgSetDouble("/fdm/jsbsim/external_reactions/hook/z", sin_fi);
+                fgSetDouble("/fdm/jsbsim/external_reactions/hook/magnitude", fgGetDouble("/fdm/jsbsim/systems/hook/force"));
+            }
         }
     }
 
@@ -1547,7 +1557,7 @@ void FGJSBsim::update_external_forces(double t_off)
     hook_area[0][1] = hook_tip(2);
     hook_area[0][2] = hook_tip(3);
 
-    if (!got_wire) {
+    if (!arrestor_wire_engaged_hook->getBoolValue()) {
         // The previous positions.
         hook_area[2][0] = last_hook_root[0];
         hook_area[2][1] = last_hook_root[1];
@@ -1559,7 +1569,7 @@ void FGJSBsim::update_external_forces(double t_off)
         // Check if we caught a wire.
         // Returns true if we caught one.
         if (caught_wire_ft(t_off, hook_area)) {
-                got_wire = true;
+                arrestor_wire_engaged_hook->setBoolValue(true);
         }
     }
     
