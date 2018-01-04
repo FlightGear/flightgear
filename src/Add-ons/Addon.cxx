@@ -92,7 +92,8 @@ Addon::Addon(std::string id, AddonVersion version, SGPath basePath,
              std::string minFGVersionRequired, std::string maxFGVersionRequired,
              SGPropertyNode* addonNode)
   : _id(std::move(id)),
-    _version(new AddonVersion(std::move(version))),
+    _version(
+      shared_ptr_traits<AddonVersionRef>::makeStrongRef(std::move(version))),
     _basePath(std::move(basePath)),
     _minFGVersionRequired(std::move(minFGVersionRequired)),
     _maxFGVersionRequired(std::move(maxFGVersionRequired)),
@@ -129,7 +130,10 @@ AddonVersionRef Addon::getVersion() const
 { return _version; }
 
 void Addon::setVersion(const AddonVersion& addonVersion)
-{ _version.reset(new AddonVersion(addonVersion)); }
+{
+  using ptr_traits = shared_ptr_traits<AddonVersionRef>;
+  _version.reset(ptr_traits::makeStrongRef(addonVersion));
+}
 
 std::vector<AuthorRef> Addon::getAuthors() const
 { return _authors; }

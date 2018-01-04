@@ -42,6 +42,7 @@
 #include "AddonManager.hxx"
 #include "AddonVersion.hxx"
 #include "exceptions.hxx"
+#include "pointer_traits.hxx"
 
 namespace strutils = simgear::strutils;
 
@@ -110,7 +111,8 @@ AddonManager::loadConfigFileIfExists(const SGPath& configFile)
 string
 AddonManager::registerAddonMetadata(const SGPath& addonPath)
 {
-  AddonRef addon(new Addon(Addon::fromAddonDir(addonPath)));
+  using ptr_traits = shared_ptr_traits<AddonRef>;
+  AddonRef addon = ptr_traits::makeStrongRef(Addon::fromAddonDir(addonPath));
   SGPath metadataFile = addon->getMetadataFile();
   string addonId = addon->getId();
 
