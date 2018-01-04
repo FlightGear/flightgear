@@ -342,9 +342,10 @@ void FGAIMultiplayer::update(double dt)
                           case props::INT:
                           case props::BOOL:
                           case props::LONG:
-                              ival = (int)(0.5 + (1 - tau)*((double)(*prevPropIt)->int_value) +
-                                  tau*((double)(*nextPropIt)->int_value));
-                              pIt->second->setIntValue(ival);
+                              // Jean Pellotier, 2018-01-02 : we don't want interpolation for integer values, they are mostly used 
+                              // for non linearly changing values (e.g. transponder etc ...)
+                              // fixes: https://sourceforge.net/p/flightgear/codetickets/1885/
+                              pIt->second->setIntValue((*nextPropIt)->int_value);
                               //cout << "Int: " << ival << "\n";
                               break;
                           case props::FLOAT:
