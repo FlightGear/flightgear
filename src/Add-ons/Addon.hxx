@@ -23,7 +23,6 @@
 #include <map>
 #include <ostream>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include <simgear/misc/sg_path.hxx>
@@ -33,8 +32,8 @@
 #include <simgear/structure/SGReferenced.hxx>
 
 #include "addon_fwd.hxx"
-#include "AddonVersion.hxx"
 #include "contacts.hxx"
+#include "AddonVersion.hxx"
 
 namespace flightgear
 {
@@ -75,7 +74,8 @@ private:
   std::string _detail;
 };
 
-class Addon : public SGReferenced {
+class Addon : public SGReferenced
+{
 public:
   // Default constructor. 'minFGVersionRequired' is initialized to "2017.4.0"
   // and 'maxFGVersionRequired' to "none".
@@ -148,6 +148,9 @@ public:
   std::string getCodeRepositoryUrl() const;
   void setCodeRepositoryUrl(const std::string& addonCodeRepositoryUrl);
 
+  std::string getTriggerProperty() const;
+  void setTriggerProperty(const std::string& addonTriggerProperty);
+
   // Node pertaining to the add-on in the Global Property Tree
   SGPropertyNode_ptr getAddonNode() const;
   void setAddonNode(SGPropertyNode* addonNode);
@@ -171,19 +174,12 @@ public:
   static void setupGhost(nasal::Hash& addonsModule);
 
 private:
+  class Metadata;
+  class MetadataParser;
+
   // “Compute” a path to the metadata file from the add-on base path
   static SGPath getMetadataFile(const SGPath& addonPath);
   SGPath getMetadataFile() const;
-
-  static std::tuple<string, SGPath, string>
-  parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode);
-
-  // Parse an addon-metadata.xml node such as <authors> or <maintainers>.
-  // Return the corresponding vector<AuthorRef> or vector<MaintainerRef>. If
-  // the 'mainNode' argument is nullptr, return an empty vector.
-  template <class T>
-  static std::vector<typename contact_traits<T>::strong_ref>
-  parseContactsNode(const SGPath& metadataFile, SGPropertyNode* mainNode);
 
   // The add-on identifier, in reverse DNS style. The AddonManager refuses to
   // register two add-ons with the same id in a given FlightGear session.
@@ -220,11 +216,14 @@ private:
 
   // Main node for the add-on in the Property Tree
   SGPropertyNode_ptr _addonNode;
+  // The add-on will be loaded when the property referenced by
+  // _triggerProperty is written to.
+  std::string _triggerProperty;
   // Semantics explained above
   int _loadSequenceNumber = -1;
 };
 
-std::ostream& operator<<(std::ostream& os, const Addon& addonMetaData);
+std::ostream& operator<<(std::ostream& os, const Addon& addon);
 
 } // of namespace addons
 

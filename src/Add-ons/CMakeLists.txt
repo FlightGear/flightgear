@@ -2,6 +2,7 @@ include(FlightGearComponent)
 
 set(SOURCES Addon.cxx
             AddonManager.cxx
+            AddonMetadataParser.cxx
             AddonVersion.cxx
             contacts.cxx
             exceptions.cxx
@@ -10,6 +11,7 @@ set(SOURCES Addon.cxx
 set(HEADERS addon_fwd.hxx
             Addon.hxx
             AddonManager.hxx
+            AddonMetadataParser.hxx
             AddonVersion.hxx
             contacts.hxx
             exceptions.hxx

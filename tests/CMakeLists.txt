@@ -9,6 +9,7 @@ set(sources
   Main/positioninit.cxx
   Add-ons/Addon.cxx
   Add-ons/AddonManager.cxx
+  Add-ons/AddonMetadataParser.cxx
   Add-ons/AddonVersion.cxx
   Add-ons/contacts.cxx
   Add-ons/exceptions.cxx
