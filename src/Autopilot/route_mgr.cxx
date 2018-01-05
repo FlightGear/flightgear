@@ -865,7 +865,7 @@ void FGRouteMgr::setDepartureICAO(const std::string& aIdent)
         return;
     }
     
-  if (aIdent.length() < 4) {
+  if (aIdent.length() < 3) {
     _plan->setDeparture((FGAirport*) NULL);
   } else {
     _plan->setDeparture(FGAirport::findByIdent(aIdent));
@@ -1003,7 +1003,7 @@ void FGRouteMgr::setDestinationICAO(const std::string& aIdent)
         return;
     }
     
-  if (aIdent.length() < 4) {
+  if (aIdent.length() < 3) {
     _plan->setDestination((FGAirport*) NULL);
   } else {
     _plan->setDestination(FGAirport::findByIdent(aIdent));
