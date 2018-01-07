@@ -38,7 +38,7 @@
 static quint32 CACHE_VERSION = 8;
 
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
-const int STANDARD_THUMBNAIL_WIDTH = 172;
+//const int STANDARD_THUMBNAIL_WIDTH = 172;
 
 AircraftItem::AircraftItem()
 {
@@ -230,6 +230,7 @@ public:
         QVector<AircraftItemPtr> result;
         QMutexLocker g(&m_lock);
         result.swap(m_items);
+        Q_ASSERT(m_items.empty());
         g.unlock();
         return result;
     }
@@ -303,8 +304,8 @@ private:
 
     void scanAircraftDir(QDir path)
     {
-        QTime t;
-        t.start();
+        //QTime t;
+        //t.start();
 
         QStringList filters;
         filters << "*-set.xml";
@@ -318,9 +319,12 @@ private:
                     QString absolutePath = xmlChild.absoluteFilePath();
                     AircraftItemPtr item;
 
+                    // should we re-stat here? But we already did so when loading
+                    // the cache and dropped any non-valid entries
                     if (m_cachedItems.contains(absolutePath)) {
                         item = m_cachedItems.value(absolutePath);
                     } else {
+                        // scan the cached item
                         item = AircraftItemPtr(new AircraftItem(childDir, absolutePath));
                     }
 
@@ -339,7 +343,7 @@ private:
                     continue;
                 }
 
-                if (m_done) {
+                if (m_done) { // thread termination bail-out
                     return;
                 }
             } // of set.xml iteration
@@ -355,13 +359,19 @@ private:
             }
 
             // lock mutex while we modify the items array
+            bool didAddItems = false;
             {
                 QMutexLocker g(&m_lock);
                 m_items+=(baseAircraft.values().toVector());
+                didAddItems = !m_items.isEmpty();
             }
 
-            emit addedItems();
+            if (didAddItems) {
+                emit addedItems();
+            }
         } // of subdir iteration
+
+        //qInfo() << "scanning" << path.absolutePath() << "took" << t.elapsed();
     }
 
     QMutex m_lock;
@@ -393,7 +403,6 @@ LocalAircraftCache::LocalAircraftCache()
 LocalAircraftCache::~LocalAircraftCache()
 {
     abandonCurrentScan();
-
 }
 
 void LocalAircraftCache::setPaths(QStringList paths)
@@ -415,13 +424,13 @@ void LocalAircraftCache::scanDirs()
     rootAircraft.append("Aircraft");
     dirs << QString::fromStdString(rootAircraft.utf8Str());
 
-    m_scanThread = new AircraftScanThread(dirs);
-    connect(m_scanThread, &AircraftScanThread::finished, this,
+    m_scanThread.reset(new AircraftScanThread(dirs));
+    connect(m_scanThread.get(), &AircraftScanThread::finished, this,
             &LocalAircraftCache::onScanFinished);
     // force a queued connection here since we the scan thread object still
     // belongs to the same thread as us, and hence this would otherwise be
     // a direct connection
-    connect(m_scanThread, &AircraftScanThread::addedItems,
+    connect(m_scanThread.get(), &AircraftScanThread::addedItems,
             this, &LocalAircraftCache::onScanResults,
             Qt::QueuedConnection);
     m_scanThread->start();
@@ -432,6 +441,11 @@ void LocalAircraftCache::scanDirs()
 int LocalAircraftCache::itemCount() const
 {
     return m_items.size();
+}
+
+QVector<AircraftItemPtr> LocalAircraftCache::allItems() const
+{
+    return m_items;
 }
 
 AircraftItemPtr LocalAircraftCache::itemAt(int index) const
@@ -474,17 +488,6 @@ AircraftItemPtr LocalAircraftCache::primaryItemFor(AircraftItemPtr item) const
     return {};
 }
 
-QVector<AircraftItemPtr> LocalAircraftCache::newestItems(int count)
-{
-    QVector<AircraftItemPtr> r;
-    r.reserve(count);
-    int total = m_items.size();
-    for (int i = total - count; i < count; ++i) {
-        r.push_back(m_items.at(i));
-    }
-    return r;
-}
-
 AircraftItemPtr LocalAircraftCache::findItemWithUri(QUrl aircraftUri) const
 {
     int index = findIndexWithUri(aircraftUri);
@@ -500,8 +503,7 @@ void LocalAircraftCache::abandonCurrentScan()
     if (m_scanThread) {
         m_scanThread->setDone();
         m_scanThread->wait(1000);
-        delete m_scanThread;
-        m_scanThread = NULL;
+        m_scanThread.reset();
     }
 }
 
@@ -512,15 +514,13 @@ void LocalAircraftCache::onScanResults()
     if (newItems.isEmpty())
         return;
 
-
     m_items+=newItems;
     emit addedItems(newItems.size());
 }
 
 void LocalAircraftCache::onScanFinished()
 {
-    delete m_scanThread;
-    m_scanThread = nullptr;
+    m_scanThread.reset();
     emit scanCompleted();
 }
 
@@ -528,6 +528,9 @@ bool LocalAircraftCache::isCandidateAircraftPath(QString path)
 {
     QStringList filters;
     filters << "*-set.xml";
+    // count of child dirs, if we visited more than ten children without
+    // finding a -set.xml file, let's assume we are done. This avoids an
+    // exhaustive search of huge directory trees
     int dirCount = 0,
         setXmlCount = 0;
 

@@ -39,7 +39,6 @@
 #include "QmlAircraftInfo.hxx"
 
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
-const int STANDARD_THUMBNAIL_WIDTH = 172;
 
 using namespace simgear::pkg;
 
@@ -630,22 +629,17 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
     return {};
 }
 
-void AircraftItemModel::onScanAddedItems(int count)
+void AircraftItemModel::onScanAddedItems(int addedCount)
 {
-    QVector<AircraftItemPtr> newItems = LocalAircraftCache::instance()->newestItems(count);
-    if (newItems.isEmpty())
-        return;
+    Q_UNUSED(addedCount);
+    const auto items = LocalAircraftCache::instance()->allItems();
+    const int newItemCount = items.size() - m_cachedLocalAircraftCount;
+    const int firstRow = m_cachedLocalAircraftCount;
+    const int lastRow = firstRow + newItemCount - 1;
 
-    int firstRow = m_cachedLocalAircraftCount;
-    int lastRow = firstRow + count - 1;
     beginInsertRows(QModelIndex(), firstRow, lastRow);
-    m_cachedLocalAircraftCount += count;
-
-    // default variants in all cases
-    for (int i=0; i< count; ++i) {
-        m_delegateStates.insert(firstRow + i, {});
-    }
-
+    m_delegateStates.insert(m_cachedLocalAircraftCount, newItemCount, {});
+    m_cachedLocalAircraftCount += newItemCount;
     endInsertRows();
 }
 

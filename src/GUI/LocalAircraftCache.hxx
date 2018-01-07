@@ -20,6 +20,7 @@
 #ifndef LOCALAIRCRAFTCACHE_HXX
 #define LOCALAIRCRAFTCACHE_HXX
 
+#include <memory>
 #include <QObject>
 #include <QPixmap>
 #include <QDateTime>
@@ -96,14 +97,14 @@ public:
 
     int itemCount() const;
 
+    QVector<AircraftItemPtr> allItems() const;
+
     AircraftItemPtr itemAt(int index) const;
 
     AircraftItemPtr findItemWithUri(QUrl aircraftUri) const;
     int findIndexWithUri(QUrl aircraftUri) const;
 
     AircraftItemPtr primaryItemFor(AircraftItemPtr item) const;
-
-    QVector<AircraftItemPtr> newestItems(int count);
 
     QVariant aircraftStatus(AircraftItemPtr item) const;
 
@@ -145,7 +146,7 @@ private:
     void abandonCurrentScan();
 
     QStringList m_paths;
-    AircraftScanThread* m_scanThread = nullptr;
+    std::unique_ptr<AircraftScanThread> m_scanThread;
     QVector<AircraftItemPtr> m_items;
 
 };
