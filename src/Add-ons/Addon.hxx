@@ -127,10 +127,6 @@ public:
   SGPath getBasePath() const;
   void setBasePath(const SGPath& addonBasePath);
 
-  // “Compute” a path to the metadata file from the add-on base path
-  static SGPath getMetadataFile(const SGPath& addonPath);
-  SGPath getMetadataFile() const;
-
   // Should be valid for use with simgear::strutils::compare_versions()
   std::string getMinFGVersionRequired() const;
   void setMinFGVersionRequired(const std::string& minFGVersionRequired);
@@ -175,6 +171,10 @@ public:
   static void setupGhost(nasal::Hash& addonsModule);
 
 private:
+  // “Compute” a path to the metadata file from the add-on base path
+  static SGPath getMetadataFile(const SGPath& addonPath);
+  SGPath getMetadataFile() const;
+
   static std::tuple<string, SGPath, string>
   parseLicenseNode(const SGPath& addonPath, SGPropertyNode* addonNode);
 

@@ -113,7 +113,6 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
 {
   using ptr_traits = shared_ptr_traits<AddonRef>;
   AddonRef addon = ptr_traits::makeStrongRef(Addon::fromAddonDir(addonPath));
-  SGPath metadataFile = addon->getMetadataFile();
   string addonId = addon->getId();
 
   SGPropertyNode* addonPropNode = fgGetNode("addons", true)
@@ -150,9 +149,6 @@ AddonManager::registerAddonMetadata(const SGPath& addonPath)
       + addonPath.utf8Str() + "', however it is already registered with base "
       "path '" + existingElt->second->getBasePath().utf8Str() + "'");
   }
-
-  SG_LOG(SG_GENERAL, SG_DEBUG,
-         "Loaded add-on metadata file: '" << metadataFile.utf8Str() + "'");
 
   return addonId;
 }

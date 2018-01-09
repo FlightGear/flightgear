@@ -27,6 +27,7 @@
 
 #include <cassert>
 
+#include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
@@ -468,6 +469,9 @@ Addon Addon::fromAddonDir(const SGPath& addonPath)
   addon.setDownloadUrl(addonDownloadUrl);
   addon.setSupportUrl(addonSupportUrl);
   addon.setCodeRepositoryUrl(addonCodeRepoUrl);
+
+  SG_LOG(SG_GENERAL, SG_DEBUG,
+         "Loaded add-on metadata file: '" << metadataFile.utf8Str() + "'");
 
   return addon;
 }
