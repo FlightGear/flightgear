@@ -91,7 +91,7 @@ static naRef f_find(const nasal::CallContext& ctx)
   size_t pos = ctx.getArg<int>(1, 0);
 
   if( find.size() != 1 )
-    naRuntimeError(ctx.c, "string::find: single character expected");
+    ctx.runtimeError("string::find: single character expected");
 
   return pos_to_nasal( str.find(*find.c_str(), pos) );
 }

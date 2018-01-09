@@ -43,12 +43,8 @@ static NasalClipboard::Type parseType(const nasal::CallContext& ctx, size_t i)
         return NasalClipboard::PRIMARY;
     }
 
-    naRuntimeError
-    (
-      ctx.c,
-      "clipboard: invalid arg "
-      "(expected clipboard.CLIPBOARD or clipboard.SELECTION)"
-    );
+    ctx.runtimeError("clipboard: invalid arg "
+                     "(expected clipboard.CLIPBOARD or clipboard.SELECTION)");
   }
 
   return NasalClipboard::CLIPBOARD;
@@ -58,8 +54,8 @@ static NasalClipboard::Type parseType(const nasal::CallContext& ctx, size_t i)
 static naRef f_setClipboardText(const nasal::CallContext& ctx)
 {
   if( ctx.argc < 1 || ctx.argc > 2 )
-    naRuntimeError( ctx.c, "clipboard.setText() expects 1 or 2 arguments: "
-                           "text, [, type = clipboard.CLIPBOARD]" );
+    ctx.runtimeError("clipboard.setText() expects 1 or 2 arguments: "
+                     "text, [, type = clipboard.CLIPBOARD]");
 
   return
     naNum
@@ -73,8 +69,8 @@ static naRef f_setClipboardText(const nasal::CallContext& ctx)
 static naRef f_getClipboardText(const nasal::CallContext& ctx)
 {
   if( ctx.argc > 1 )
-    naRuntimeError(ctx.c, "clipboard.getText() accepts max 1 arg: "
-                          "[type = clipboard.CLIPBOARD]");
+    ctx.runtimeError("clipboard.getText() accepts max 1 arg: "
+                     "[type = clipboard.CLIPBOARD]");
 
   return ctx.to_nasal
   (

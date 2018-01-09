@@ -58,7 +58,7 @@ static naRef f_node_getPose( const osg::Node& node,
     double hdg, pitch, roll;
     rotate.getEulerDeg(hdg, pitch, roll);
 
-    nasal::Hash pose(ctx.to_nasal(coord), ctx.c);
+    nasal::Hash pose(ctx.to_nasal(coord), ctx.c_ctx());
     pose.set("heading", hdg);
     pose.set("pitch", pitch);
     pose.set("roll", roll);

@@ -33,7 +33,7 @@ static naRef f_getHistory(const nasal::CallContext& ctx)
   FGFlightHistory* history =
     static_cast<FGFlightHistory*>(globals->get_subsystem("history"));
   if( !history )
-    naRuntimeError(ctx.c, "Failed to get 'history' subsystem");
+    ctx.runtimeError("Failed to get 'history' subsystem");
 
   return ctx.to_nasal(history);
 }

@@ -37,11 +37,11 @@ typedef nasal::Ghost<simgear::HTTP::Request_ptr> NasalRequest;
 typedef nasal::Ghost<simgear::HTTP::FileRequestRef> NasalFileRequest;
 typedef nasal::Ghost<simgear::HTTP::MemoryRequestRef> NasalMemoryRequest;
 
-FGHTTPClient& requireHTTPClient(naContext c)
+FGHTTPClient& requireHTTPClient(const nasal::ContextWrapper& ctx)
 {
   FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
   if( !http )
-    naRuntimeError(c, "Failed to get HTTP subsystem");
+    ctx.runtimeError("Failed to get HTTP subsystem");
 
   return *http;
 }
@@ -58,13 +58,11 @@ static naRef f_http_save(const nasal::CallContext& ctx)
   const SGPath validated_path = fgValidatePath(filename, true);
 
   if( validated_path.isNull() )
-    naRuntimeError( ctx.c,
-                    "Access denied: can not write to %s",
-                    filename.c_str() );
+    ctx.runtimeError("Access denied: can not write to %s", filename.c_str());
 
   return ctx.to_nasal
   (
-   requireHTTPClient(ctx.c).client()->save(url, validated_path.utf8Str())
+    requireHTTPClient(ctx).client()->save(url, validated_path.utf8Str())
   );
 }
 
@@ -74,15 +72,16 @@ static naRef f_http_save(const nasal::CallContext& ctx)
 static naRef f_http_load(const nasal::CallContext& ctx)
 {
   const std::string url = ctx.requireArg<std::string>(0);
-  return ctx.to_nasal( requireHTTPClient(ctx.c).client()->load(url) );
+  return ctx.to_nasal( requireHTTPClient(ctx).client()->load(url) );
 }
 
-static naRef f_request_abort(simgear::HTTP::Request&, const nasal::CallContext& ctx)
+static naRef f_request_abort( simgear::HTTP::Request&,
+                              const nasal::CallContext& ctx )
 {
     // we need a request_ptr for cancel, not a reference. So extract
     // the me object from the context directly.
     simgear::HTTP::Request_ptr req = ctx.from_nasal<simgear::HTTP::Request_ptr>(ctx.me);
-    requireHTTPClient(ctx.c).client()->cancelRequest(req);
+    requireHTTPClient(ctx).client()->cancelRequest(req);
     return naNil();
 }
 

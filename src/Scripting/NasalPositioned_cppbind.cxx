@@ -300,7 +300,7 @@ static naRef f_airportinfo(nasal::CallContext ctx)
   SGGeod pos = getPosition(ctx);
 
   if( ctx.argc > 1 )
-    naRuntimeError(ctx.c, "airportinfo() with invalid function arguments");
+    ctx.runtimeError("airportinfo() with invalid function arguments");
 
   // optional type/ident
   std::string ident("airport");
@@ -367,7 +367,7 @@ static naRef f_navinfo(nasal::CallContext ctx)
   if( filter.fromTypeString(id) )
     id = ctx.getArg<std::string>(1);
   else if( ctx.argc > 1 )
-    naRuntimeError(ctx.c, "navinfo() already got an ident");
+    ctx.runtimeError("navinfo() already got an ident");
 
   return ctx.to_nasal( FGNavList::findByIdentAndFreq(pos, id, 0.0, &filter) );
 }
@@ -412,7 +412,7 @@ static naRef f_courseAndDistance(nasal::CallContext ctx)
   SGGeod from = globals->get_aircraft_position(), to, pos;
   bool ok = extractGeod(ctx, pos);
   if (!ok) {
-    naRuntimeError(ctx.c, "invalid arguments to courseAndDistance");
+    ctx.runtimeError("invalid arguments to courseAndDistance");
   }
   
   if (extractGeod(ctx, to)) {
@@ -424,10 +424,7 @@ static naRef f_courseAndDistance(nasal::CallContext ctx)
   double course, course2, d;
   SGGeodesy::inverse(from, to, course, course2, d);
   
-  naRef result = naNewVector(ctx.c);
-  naVec_append(result, naNum(course));
-  naVec_append(result, naNum(d * SG_METER_TO_NM));
-  return result;
+  return ctx.newVector(course, d * SG_METER_TO_NM);
 }
 
 static naRef f_sortByRange(nasal::CallContext ctx)

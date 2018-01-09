@@ -102,9 +102,8 @@ static naRef f_standardLocation(const nasal::CallContext& ctx)
   else if( type_str == "PICTURES" )
     type = SGPath::PICTURES;
   else if( type_str != "HOME" )
-    naRuntimeError
+    ctx.runtimeError
     (
-      ctx.c,
       "os.path.standardLocation: unknown type %s", type_str.c_str()
     );
 

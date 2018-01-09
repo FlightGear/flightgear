@@ -122,9 +122,10 @@ naRef f_createAddonVersion(const nasal::CallContext& ctx)
   std::string suffix;
 
   if (ctx.argc == 0 || ctx.argc > 4) {
-    naRuntimeError(ctx.c,
-                   "AddonVersion.new(versionString) or "
-                   "AddonVersion.new(major[, minor[, patchLevel[, suffix]]])");
+    ctx.runtimeError(
+      "AddonVersion.new(versionString) or "
+      "AddonVersion.new(major[, minor[, patchLevel[, suffix]]])"
+    );
   }
 
   if (ctx.argc == 1) {
@@ -137,45 +138,50 @@ naRef f_createAddonVersion(const nasal::CallContext& ctx)
                                            AddonVersionSuffix(suffix))};
       return ctx.to_nasal(std::move(ref));
     } else {
-      naRuntimeError(ctx.c,
-                     "AddonVersion.new(versionString) or "
-                     "AddonVersion.new(major[, minor[, patchLevel[, suffix]]])");
+      ctx.runtimeError(
+        "AddonVersion.new(versionString) or "
+        "AddonVersion.new(major[, minor[, patchLevel[, suffix]]])"
+      );
     }
   }
 
   assert(ctx.argc > 0);
-  if (!naIsNum(ctx.args[0])) {
-    naRuntimeError(
-      ctx.c, "addons.AddonVersion.new() requires major number as an integer");
+  if (!ctx.isNumeric(0)) {
+    ctx.runtimeError(
+      "addons.AddonVersion.new() requires major number as an integer"
+    );
   }
 
-  major = ctx.args[0].num;
+  major = ctx.requireArg<int>(0);
 
   if (ctx.argc > 1) {
-    if (!naIsNum(ctx.args[1])) {
-      naRuntimeError(
-        ctx.c, "addons.AddonVersion.new() requires minor number as an integer");
+    if (!ctx.isNumeric(1)) {
+      ctx.runtimeError(
+        "addons.AddonVersion.new() requires minor number as an integer"
+      );
     }
 
-    minor = ctx.args[1].num;
+    minor = ctx.requireArg<int>(1);
   }
 
   if (ctx.argc > 2) {
-    if (!naIsNum(ctx.args[2])) {
-      naRuntimeError(
-        ctx.c, "addons.AddonVersion.new() requires patch level as an integer");
+    if (!ctx.isNumeric(2)) {
+      ctx.runtimeError(
+        "addons.AddonVersion.new() requires patch level as an integer"
+      );
     }
 
-    patchLevel = ctx.args[2].num;
+    patchLevel = ctx.requireArg<int>(2);
   }
 
   if (ctx.argc > 3) {
-    if (!naIsString(ctx.args[3])) {
-      naRuntimeError(
-        ctx.c, "addons.AddonVersion.new() requires suffix as a string");
+    if (!ctx.isString(3)) {
+      ctx.runtimeError(
+        "addons.AddonVersion.new() requires suffix as a string"
+      );
     }
 
-    suffix = naStr_data(ctx.args[3]);
+    suffix = ctx.requireArg<std::string>(3);
   }
 
   assert(ctx.argc <= 4);

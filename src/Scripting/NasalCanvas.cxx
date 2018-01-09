@@ -99,22 +99,22 @@ SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
   return props;
 }
 
-CanvasMgr& requireCanvasMgr(naContext c)
+CanvasMgr& requireCanvasMgr(const nasal::ContextWrapper& ctx)
 {
   CanvasMgr* canvas_mgr =
     static_cast<CanvasMgr*>(globals->get_subsystem("Canvas"));
   if( !canvas_mgr )
-    naRuntimeError(c, "Failed to get Canvas subsystem");
+    ctx.runtimeError("Failed to get Canvas subsystem");
 
   return *canvas_mgr;
 }
 
-GUIMgr& requireGUIMgr(naContext c)
+GUIMgr& requireGUIMgr(const nasal::ContextWrapper& ctx)
 {
   GUIMgr* mgr =
     static_cast<GUIMgr*>(globals->get_subsystem("CanvasGUI"));
   if( !mgr )
-    naRuntimeError(c, "Failed to get CanvasGUI subsystem");
+    ctx.runtimeError("Failed to get CanvasGUI subsystem");
 
   return *mgr;
 }
@@ -124,7 +124,7 @@ GUIMgr& requireGUIMgr(naContext c)
  */
 static naRef f_createCanvas(const nasal::CallContext& ctx)
 {
-  return ctx.to_nasal(requireCanvasMgr(ctx.c).createCanvas());
+  return ctx.to_nasal(requireCanvasMgr(ctx).createCanvas());
 }
 
 /**
@@ -132,10 +132,9 @@ static naRef f_createCanvas(const nasal::CallContext& ctx)
  */
 static naRef f_createWindow(const nasal::CallContext& ctx)
 {
-  return nasal::to_nasal<sc::WindowWeakPtr>
+  return ctx.to_nasal<sc::WindowWeakPtr>
   (
-    ctx.c,
-    requireGUIMgr(ctx.c).createWindow( ctx.getArg<std::string>(0) )
+    requireGUIMgr(ctx).createWindow( ctx.getArg<std::string>(0) )
   );
 }
 
@@ -145,7 +144,7 @@ static naRef f_createWindow(const nasal::CallContext& ctx)
 static naRef f_getCanvas(const nasal::CallContext& ctx)
 {
   SGPropertyNode& props = *ctx.requireArg<SGPropertyNode*>(0);
-  CanvasMgr& canvas_mgr = requireCanvasMgr(ctx.c);
+  CanvasMgr& canvas_mgr = requireCanvasMgr(ctx);
 
   sc::CanvasPtr canvas;
   if( canvas_mgr.getPropertyRoot() == props.getParent() )
@@ -175,27 +174,27 @@ naRef f_canvasCreateGroup(sc::Canvas& canvas, const nasal::CallContext& ctx)
 /**
  * Get group containing all gui windows
  */
-naRef f_getDesktop(naContext c, naRef me, int argc, naRef* args)
+naRef f_getDesktop(const nasal::CallContext& ctx)
 {
-  return nasal::to_nasal(c, requireGUIMgr(c).getDesktop());
+  return ctx.to_nasal(requireGUIMgr(ctx).getDesktop());
 }
 
 naRef f_setInputFocus(const nasal::CallContext& ctx)
 {
-  requireGUIMgr(ctx.c).setInputFocus(ctx.requireArg<sc::WindowPtr>(0));
+  requireGUIMgr(ctx).setInputFocus(ctx.requireArg<sc::WindowPtr>(0));
   return naNil();
 }
 
 naRef f_grabPointer(const nasal::CallContext& ctx)
 {
   return ctx.to_nasal(
-    requireGUIMgr(ctx.c).grabPointer(ctx.requireArg<sc::WindowPtr>(0))
+    requireGUIMgr(ctx).grabPointer(ctx.requireArg<sc::WindowPtr>(0))
   );
 }
 
 naRef f_ungrabPointer(const nasal::CallContext& ctx)
 {
-  requireGUIMgr(ctx.c).ungrabPointer(ctx.requireArg<sc::WindowPtr>(0));
+  requireGUIMgr(ctx).ungrabPointer(ctx.requireArg<sc::WindowPtr>(0));
   return naNil();
 }
 
@@ -212,13 +211,13 @@ static sc::ElementPtr f_groupGetChild(sc::Group& group, SGPropertyNode* node)
 
 static void propElementSetData( simgear::PropertyBasedElement& el,
                                 const std::string& name,
-                                naContext c,
+                                const nasal::ContextWrapper& ctx,
                                 naRef ref )
 {
   if( naIsNil(ref) )
     return el.removeDataProp(name);
 
-  std::string val = nasal::from_nasal<std::string>(c, ref);
+  std::string val = ctx.from_nasal<std::string>(ref);
 
   char* end = NULL;
 
@@ -266,7 +265,7 @@ static naRef f_propElementData( simgear::PropertyBasedElement& el,
     // Add/delete properties given as hash
     nasal::Hash obj = ctx.requireArg<nasal::Hash>(0);
     for(nasal::Hash::iterator it = obj.begin(); it != obj.end(); ++it)
-      propElementSetData(el, it->getKey(), ctx.c, it->getValue<naRef>());
+      propElementSetData(el, it->getKey(), ctx, it->getValue<naRef>());
 
     return ctx.to_nasal(&el);
   }
@@ -286,7 +285,7 @@ static naRef f_propElementData( simgear::PropertyBasedElement& el,
     else
     {
       // only name -> get property
-      propElementSetData(el, name, ctx.c, ctx.requireArg<naRef>(1));
+      propElementSetData(el, name, ctx, ctx.requireArg<naRef>(1));
       return ctx.to_nasal(&el);
     }
   }
