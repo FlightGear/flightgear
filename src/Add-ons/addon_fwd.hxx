@@ -33,6 +33,7 @@ class Addon;
 class AddonManager;
 class AddonVersion;
 class AddonVersionSuffix;
+class ResourceProvider;
 
 enum class UrlType;
 class QualifiedUrl;
