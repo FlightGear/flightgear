@@ -45,6 +45,7 @@
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/package/Root.hxx>
 
+#include <Add-ons/AddonResourceProvider.hxx>
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
 #include <Autopilot/route_mgr.hxx>
@@ -166,8 +167,10 @@ FGGlobals::FGGlobals() :
     props = SGPropertyNode_ptr(root);
     locale = new FGLocale(props);
 
-    simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider);
-    simgear::ResourceManager::instance()->addProvider(new CurrentAircraftDirProvider);
+    auto resMgr = simgear::ResourceManager::instance();
+    resMgr->addProvider(new AircraftResourceProvider());
+    resMgr->addProvider(new CurrentAircraftDirProvider());
+    resMgr->addProvider(new flightgear::addons::ResourceProvider());
     initProperties();
 }
 
