@@ -1,6 +1,9 @@
 #ifndef _YASIM_COMMON_HPP
 #define _YASIM_COMMON_HPP
 
+#include <string>
+#include <vector>
+#include <algorithm>
 /*
  common file for YASim wide constants and static helper functions
  */

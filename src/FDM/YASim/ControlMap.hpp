@@ -2,14 +2,19 @@
 #define _CONTROL_MAP_HPP
 
 #include <simgear/props/props.hxx>
+#include "yasim-common.hpp"
 #include "Vector.hpp"
 
 namespace yasim {
 
+
+
+    
 class ControlMap {
 public:
     ~ControlMap();
     
+    //! keep this enum in sync with the static vector ControlNames in ControlMap.cpp !
     enum Control { 
         THROTTLE, 
         MIXTURE, 
@@ -40,7 +45,7 @@ public:
         COLLECTIVE, 
         CYCLICAIL, 
         CYCLICELE, 
-        ROTORENGINEON,
+        ROTORGEARENGINEON,
         TILTYAW, 
         TILTPITCH, 
         TILTROLL,
@@ -53,9 +58,10 @@ public:
         WINCHRELSPEED,
         HITCHOPEN,
         PLACEWINCH,
-        FINDAITOW
-    };
+        FINDAITOW,
+    }; //! keep this enum in sync with the static vector ControlNames in ControlMap.cpp !
 
+        
     enum { 
         OPT_SPLIT  = 0x01,
         OPT_INVERT = 0x02,
@@ -73,6 +79,8 @@ public:
     
     // map control name to int (enum)
     Control parseControl(const char* name);
+    Control getControlByName(const std::string& name);
+    std::string getControlName(Control c);
     // create ID from object and optional sub index (e.g. for wing section)
     ObjectID getObjectID(void* object, int subObj = 0);
     
@@ -103,7 +111,7 @@ public:
     // Each output record is identified by both an object/type tuple
     // and a numeric handle.
     int getOutputHandle(ObjectID id, Control control);
-
+    
     // Sets the transition time for the control output to swing
     // through its full range.
     void setTransitionTime(int handle, float time);
@@ -120,7 +128,8 @@ public:
     PropHandle* getProperty(const int i) { return ((PropHandle*)_properties.get(i)); }
 
 private:
-    struct OutRec { 
+    struct OutRec {
+        int id {0};
         Control control;
         ObjectID oid;
         Vector maps;
@@ -149,6 +158,7 @@ private:
     Vector _properties;
 
     void* addMapping(const char* prop, Control control, ObjectID id, int options = 0);
+    OutRec* getOutRec(ObjectID id, Control control);
 };
 
 }; // namespace yasim

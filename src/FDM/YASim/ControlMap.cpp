@@ -21,25 +21,70 @@
 #include "ControlMap.hpp"
 namespace yasim {
 
+//! keep this list in sync with the enum Control in ControlMap.hpp !
+static const std::vector<std::string> ControlNames = {
+    "THROTTLE",
+    "MIXTURE",
+    "CONDLEVER",
+    "STARTER", 
+    "MAGNETOS",
+    "ADVANCE", 
+    "REHEAT", 
+    "PROP",
+    "BRAKE",
+    "STEER",
+    "EXTEND",
+    "HEXTEND",
+    "LEXTEND",
+    "LACCEL",
+    "INCIDENCE",
+    "FLAP0",
+    "FLAP1",
+    "SLAT",
+    "SPOILER",
+    "VECTOR",
+    "FLAP0EFFECTIVENESS",
+    "FLAP1EFFECTIVENESS",
+    "BOOST",
+    "CASTERING",
+    "PROPPITCH",
+    "PROPFEATHER",
+    "COLLECTIVE", 
+    "CYCLICAIL", 
+    "CYCLICELE", 
+    "ROTORGEARENGINEON",
+    "TILTYAW", 
+    "TILTPITCH", 
+    "TILTROLL",
+    "ROTORBRAKE", 
+    "ROTORENGINEMAXRELTORQUE", 
+    "ROTORRELTARGET",
+    "ROTORBALANCE",
+    "REVERSE_THRUST",
+    "WASTEGATE",
+    "WINCHRELSPEED",
+    "HITCHOPEN",
+    "PLACEWINCH",
+    "FINDAITOW"
+}; //! keep this list in sync with the enum Control in ControlMap.hpp !
+
 ControlMap::~ControlMap()
 {
-  int i;
-  for(i=0; i<_inputs.size(); i++) {
-    Vector* v = (Vector*)_inputs.get(i);
-    int j;
-    for(j=0; j<v->size(); j++)
-	    delete (MapRec*)v->get(j);
-    delete v;
-  }
+    for(int i=0; i<_inputs.size(); i++) {
+        Vector* v = (Vector*)_inputs.get(i);
+        for(int j=0; j<v->size(); j++)
+            delete (MapRec*)v->get(j);
+        delete v;
+    }
 
-  for(i=0; i<_outputs.size(); i++)
-    delete (OutRec*)_outputs.get(i);
+    for(int i=0; i<_outputs.size(); i++)
+        delete (OutRec*)_outputs.get(i);
    
-	for(i=0; i<_properties.size(); i++) {
-    PropHandle* p = (PropHandle*)_properties.get(i);
-    delete[] p->name;
-    delete p;
-  }  
+    for(int i=0; i<_properties.size(); i++) {
+        PropHandle* p = (PropHandle*)_properties.get(i);
+        delete[] p->name;
+        delete p;
+    }  
 }
 
 /**
@@ -65,27 +110,9 @@ options: bits OPT_INVERT, OPT_SPLIT, OPT_SQUARE
 */
 void* ControlMap::addMapping(const char* prop, Control control, ObjectID id, int options)
 {
-    int inputPropHandle = getInputPropertyHandle(prop);
     // See if the output object already exists
     OutRec* out {nullptr};
-    int i;
-    for(i = 0; i < _outputs.size(); i++) {
-        OutRec* o = (OutRec*)_outputs.get(i);
-        if(o->oid.object == id.object && o->oid.subObj == id.subObj 
-            && o->control == control) 
-        {
-            out = o;
-            break;
-        }
-    }
-
-    // Create one if it doesn't
-    if(out == nullptr) {
-        out = new OutRec();
-        out->control = control;
-        out->oid = id;
-        _outputs.add(out);
-    }
+    out = getOutRec(id, control);
     
     // Make a new input record
     MapRec* map = new MapRec();
@@ -98,9 +125,33 @@ void* ControlMap::addMapping(const char* prop, Control control, ObjectID id, int
     map->src0 = map->dst0 = rangeMin(control);
 
     // And add it to the approproate vectors.
+    int inputPropHandle = getInputPropertyHandle(prop);
     Vector* maps = (Vector*)_inputs.get(inputPropHandle);
     maps->add(map);
     return map;
+}
+
+ControlMap::OutRec* ControlMap::getOutRec(ObjectID id, Control control)
+{
+    OutRec* out {nullptr};
+    for(int i = 0; i < _outputs.size(); i++) {
+        OutRec* o = (OutRec*)_outputs.get(i);
+        if(o->oid.object == id.object && o->oid.subObj == id.subObj 
+            && o->control == control) 
+        {
+            out = o;
+            break;
+        }
+    }    
+
+    // Create one if it doesn't
+    if(out == nullptr) {
+        out = new OutRec();
+        out->control = control;
+        out->oid = id;
+        out->id = _outputs.add(out);
+    }
+    return out;
 }
 
 void ControlMap::reset()
@@ -130,14 +181,7 @@ void ControlMap::setInput(int input, float val)
 
 int ControlMap::getOutputHandle(ObjectID id, Control control)
 {
-    for(int i = 0; i < _outputs.size(); i++) {
-        OutRec* o = (OutRec*)_outputs.get(i);
-	    if(o->oid.object == id.object && o->oid.subObj == id.subObj 
-            && o->control == control)
-            return i;
-    }
-    fprintf(stderr, "ControlMap::getOutputHandle cannot find *%ld, control %d \nMissing <control-input ...> in XML?!", (long)id.object, control);
-    return -1;
+    return getOutRec(id, control)->id;
 }
 
 void ControlMap::setTransitionTime(int handle, float time)
@@ -295,7 +339,7 @@ void ControlMap::applyControls(float dt)
             case ROTORBRAKE:   
                 ((Rotorgear*)obj)->setRotorBrake(lval); 
                 break;
-            case ROTORENGINEON: 
+            case ROTORGEARENGINEON: 
                 ((Rotorgear*)obj)->setEngineOn((int)lval); 
                 break;
             case ROTORENGINEMAXRELTORQUE: 
@@ -386,55 +430,26 @@ int ControlMap::getInputPropertyHandle(const char* name)
     return p->handle;
 }
 
+ControlMap::Control ControlMap::getControlByName(const std::string& name)
+{
+    auto it = std::find(ControlNames.begin(), ControlNames.end(), name);
+    if (it == ControlNames.end()) {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '" << name 
+            << "' in YASim aircraft description.");
+        exit(1);
+    }
+    return static_cast<Control>(std::distance(ControlNames.begin(), it));
+}
+
+std::string ControlMap::getControlName(Control c)
+{
+    return ControlNames.at(static_cast<int>(c));
+}
 
 ControlMap::Control ControlMap::parseControl(const char* name)
 {
-    if(!strcmp(name, "THROTTLE"))  return THROTTLE;
-    if(!strcmp(name, "MIXTURE"))   return MIXTURE;
-    if(!strcmp(name, "CONDLEVER")) return CONDLEVER;
-    if(!strcmp(name, "STARTER"))   return STARTER;
-    if(!strcmp(name, "MAGNETOS"))  return MAGNETOS;
-    if(!strcmp(name, "ADVANCE"))   return ADVANCE;
-    if(!strcmp(name, "REHEAT"))    return REHEAT;
-    if(!strcmp(name, "BOOST"))     return BOOST;
-    if(!strcmp(name, "VECTOR"))    return VECTOR;
-    if(!strcmp(name, "PROP"))      return PROP;
-    if(!strcmp(name, "BRAKE"))     return BRAKE;
-    if(!strcmp(name, "STEER"))     return STEER;
-    if(!strcmp(name, "EXTEND"))    return EXTEND;
-    if(!strcmp(name, "HEXTEND"))   return HEXTEND;
-    if(!strcmp(name, "LEXTEND"))   return LEXTEND;
-    if(!strcmp(name, "LACCEL"))    return LACCEL;
-    if(!strcmp(name, "INCIDENCE")) return INCIDENCE;
-    if(!strcmp(name, "FLAP0"))     return FLAP0;
-    if(!strcmp(name, "FLAP0EFFECTIVENESS"))   return FLAP0EFFECTIVENESS;
-    if(!strcmp(name, "FLAP1"))     return FLAP1;
-    if(!strcmp(name, "FLAP1EFFECTIVENESS"))   return FLAP1EFFECTIVENESS;
-    if(!strcmp(name, "SLAT"))      return SLAT;
-    if(!strcmp(name, "SPOILER"))   return SPOILER;
-    if(!strcmp(name, "CASTERING")) return CASTERING;
-    if(!strcmp(name, "PROPPITCH")) return PROPPITCH;
-    if(!strcmp(name, "PROPFEATHER")) return PROPFEATHER;
-    if(!strcmp(name, "COLLECTIVE")) return COLLECTIVE;
-    if(!strcmp(name, "CYCLICAIL")) return CYCLICAIL;
-    if(!strcmp(name, "CYCLICELE")) return CYCLICELE;
-    if(!strcmp(name, "TILTROLL")) return TILTROLL;
-    if(!strcmp(name, "TILTPITCH")) return TILTPITCH;
-    if(!strcmp(name, "TILTYAW")) return TILTYAW;
-    if(!strcmp(name, "ROTORGEARENGINEON")) return ROTORENGINEON;
-    if(!strcmp(name, "ROTORBRAKE")) return ROTORBRAKE;
-    if(!strcmp(name, "ROTORENGINEMAXRELTORQUE")) return ROTORENGINEMAXRELTORQUE;
-    if(!strcmp(name, "ROTORRELTARGET")) return ROTORRELTARGET;
-    if(!strcmp(name, "ROTORBALANCE")) return ROTORBALANCE;
-    if(!strcmp(name, "REVERSE_THRUST")) return REVERSE_THRUST;
-    if(!strcmp(name, "WASTEGATE")) return WASTEGATE;
-    if(!strcmp(name, "WINCHRELSPEED")) return WINCHRELSPEED;
-    if(!strcmp(name, "HITCHOPEN")) return HITCHOPEN;
-    if(!strcmp(name, "PLACEWINCH")) return PLACEWINCH;
-    if(!strcmp(name, "FINDAITOW")) return FINDAITOW;
-    SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '" << name 
-        << "' in YASim aircraft description.");
-    exit(1);
+    std::string n(name);
+    return getControlByName(n);
 }
 
 ControlMap::ObjectID ControlMap::getObjectID(void* object, int subObj)
