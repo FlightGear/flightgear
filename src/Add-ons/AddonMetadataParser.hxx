@@ -39,8 +39,9 @@ namespace flightgear
 namespace addons
 {
 
-struct Addon::Metadata
+class Addon::Metadata
 {
+public:
   // Comments about these fields can be found in Addon.hxx
   std::string id;
   std::string name;
