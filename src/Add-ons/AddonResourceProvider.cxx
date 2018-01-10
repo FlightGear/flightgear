@@ -39,7 +39,7 @@ namespace addons
 {
 
 ResourceProvider::ResourceProvider()
-  : simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL)
+  : simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_DEFAULT)
 { }
 
 SGPath
