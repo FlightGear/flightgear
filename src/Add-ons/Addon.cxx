@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/naref.h>
@@ -36,7 +37,10 @@
 #include "Addon.hxx"
 #include "AddonMetadataParser.hxx"
 #include "AddonVersion.hxx"
+#include "exceptions.hxx"
 #include "pointer_traits.hxx"
+
+namespace strutils = simgear::strutils;
 
 using std::string;
 using std::vector;
@@ -180,6 +184,17 @@ SGPath Addon::getBasePath() const
 void Addon::setBasePath(const SGPath& addonBasePath)
 { _basePath = addonBasePath; }
 
+std::string Addon::resourcePath(const std::string& relativePath) const
+{
+  if (strutils::starts_with(relativePath, "/")) {
+    throw errors::invalid_resource_path(
+      "addon-specific resource path '" + relativePath + "' shouldn't start "
+      "with a '/'");
+  }
+
+  return "[addon=" + getId() + "]" + relativePath;
+}
+
 std::string Addon::getMinFGVersionRequired() const
 { return _minFGVersionRequired; }
 
@@ -315,6 +330,7 @@ void Addon::setupGhost(nasal::Hash& addonsModule)
     .member("licenseUrl", &Addon::getLicenseUrl)
     .member("tags", &Addon::getTags)
     .member("basePath", &Addon::getBasePath)
+    .method("resourcePath", &Addon::resourcePath)
     .member("minFGVersionRequired", &Addon::getMinFGVersionRequired)
     .member("maxFGVersionRequired", &Addon::getMaxFGVersionRequired)
     .member("homePage", &Addon::getHomePage)

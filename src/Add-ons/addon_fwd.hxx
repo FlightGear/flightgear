@@ -59,6 +59,7 @@ class error_loading_metadata_file;
 class duplicate_registration_attempt;
 class fg_version_too_old;
 class fg_version_too_recent;
+class invalid_resource_path;
 
 } // of namespace errors
 

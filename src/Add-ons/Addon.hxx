@@ -127,6 +127,11 @@ public:
   SGPath getBasePath() const;
   void setBasePath(const SGPath& addonBasePath);
 
+  // Return a resource path suitable for use with the simgear::ResourceManager.
+  // 'relativePath' is relative to the add-on base path, and should not start
+  // with a '/'.
+  std::string resourcePath(const std::string& relativePath) const;
+
   // Should be valid for use with simgear::strutils::compare_versions()
   std::string getMinFGVersionRequired() const;
   void setMinFGVersionRequired(const std::string& minFGVersionRequired);

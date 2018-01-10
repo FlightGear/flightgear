@@ -59,6 +59,9 @@ class fg_version_too_old : public error
 class fg_version_too_recent : public error
 { using error::error; };
 
+class invalid_resource_path : public error
+{ using error::error; };
+
 } // of namespace errors
 
 } // of namespace addons
