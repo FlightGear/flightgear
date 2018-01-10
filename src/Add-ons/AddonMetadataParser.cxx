@@ -338,11 +338,19 @@ Addon::MetadataParser::parseLicenseNode(const SGPath& addonPath,
           "however it starts with '" + licenseFile_s[0] + "'");
       }
 
+#ifdef HAVE_WORKING_STD_REGEX
       std::regex winDriveRegexp("([a-zA-Z]:).*");
       std::smatch results;
 
       if (std::regex_match(licenseFile_s, results, winDriveRegexp)) {
         string winDrive = results.str(1);
+#else // all this 'else' clause should be removed once we actually require C++11
+      if (licenseFile_s.size() >= 2 &&
+          (('a' <= licenseFile_s[0] && licenseFile_s[0] <= 'z') ||
+           ('A' <= licenseFile_s[0] && licenseFile_s[0] <= 'Z')) &&
+          licenseFile_s[1] == ':') {
+        string winDrive = licenseFile_s.substr(0, 2);
+#endif
         throw errors::error_loading_metadata_file(
           "in add-on metadata file '" + metadataFile.utf8Str() + "': the "
           "value of /addon/license/file must be relative to the add-on folder, "
