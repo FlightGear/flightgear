@@ -346,8 +346,11 @@ void testmat( void ) /* main() for test purposes */
             
             printf("Original multiplied by inverse:\n");
             nr_printmat( mat3, n );
-            
+
+            // if-defed out to silence Clang warning
+#if 0
             if (loop < maxloop-1) /* sleep(1) */;
+#endif
         }
 
     nr_free_matrix( mat1, 1, n, 1, n );
