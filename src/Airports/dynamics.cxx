@@ -382,7 +382,7 @@ FGParkingList FGAirportDynamics::getParkings(bool onlyAvailable, const std::stri
     FGParkingList result(parent()->groundNetwork()->allParkings());
 
     GetParkingsPredicate pred(onlyAvailable, type, this);
-    FGParkingList::iterator it = std::remove_if(result.begin(), result.end(), pred);
+    auto it = std::remove_if(result.begin(), result.end(), pred);
     result.erase(it, result.end());
     return result;
 }
@@ -559,8 +559,7 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
         // discount runways based on cross / tail-wind
         WindExclusionCheck windCheck(windHeading, windSpeed);
         RunwayVec runways(parent()->getRunways());
-        RunwayVec::iterator it = std::remove_if(runways.begin(), runways.end(),
-                                                windCheck);
+        auto it = std::remove_if(runways.begin(), runways.end(), windCheck);
         runways.erase(it, runways.end());
 
         // sort highest scored to lowest scored

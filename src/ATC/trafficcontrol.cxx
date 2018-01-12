@@ -60,18 +60,6 @@ using std::endl;
 
 namespace {
 
-TrafficVectorIterator findTraffic(TrafficVector& vec, int id)
-{
-    TrafficVectorIterator it = vec.begin();
-    for (; it != vec.end(); ++it) {
-        if (it->getId() == id) {
-            return it;
-        }
-    }
-
-    return it; // vec.end, effectively
-}
-
 void clearTrafficControllers(TrafficVector& vec)
 {
     TrafficVectorIterator it = vec.begin();
@@ -843,22 +831,15 @@ void FGATCController::init()
     }
 }
 
-class AircraftIsDead
+void FGATCController::eraseDeadTraffic(TrafficVector& vec)
 {
-public:
-    bool operator()(const FGTrafficRecord& traffic) const
+    auto it = std::remove_if(vec.begin(), vec.end(), [](const FGTrafficRecord& traffic)
     {
         if (!traffic.getAircraft()) {
             return true;
         }
-
         return traffic.getAircraft()->getDie();
-    }
-};
-
-void FGATCController::eraseDeadTraffic(TrafficVector& vec)
-{
-    TrafficVector::iterator it = std::remove_if(vec.begin(), vec.end(), AircraftIsDead());
+    });
     vec.erase(it, vec.end());
 }
 

@@ -297,7 +297,7 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
   
 // now delete and remove
   RemoveWithFlag rf(flag);
-  LegVec::iterator it = std::remove_if(_legs.begin(), _legs.end(), rf);
+  auto it = std::remove_if(_legs.begin(), _legs.end(), rf);
   if (it == _legs.end()) {
     return 0; // nothing was cleared, don't fire the delegate
   }
