@@ -465,7 +465,8 @@ int fgMainInit( int argc, char **argv )
         return EXIT_FAILURE;
     }
 
-    if (!fgGetBool("/sim/fghome-readonly")) {
+    const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
+    if (!readOnlyFGHome) {
         // now home is initialised, we can log to a file inside it
         logToHome();
     }
@@ -490,7 +491,7 @@ int fgMainInit( int argc, char **argv )
     upper_case_property("/sim/tower/airport-id");
     upper_case_property("/autopilot/route-manager/input");
 
-// check if the launcher is reuested, since it affects config file parsing
+// check if the launcher is requested, since it affects config file parsing
     bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
     // an Info.plist bundle can't define command line arguments, but it can set
     // environment variables. This avoids needed a wrapper shell-script on OS-X.
@@ -500,6 +501,13 @@ int fgMainInit( int argc, char **argv )
         // set overlaping options, we disable the default files. Users can
         // still explicitly request config files via --config options if they choose.
         flightgear::Options::sharedInstance()->setShouldLoadDefaultConfig(false);
+    }
+
+    if (showLauncher && readOnlyFGHome) {
+        // this is perhaps not what the user wanted, let's inform them
+        flightgear::modalMessageBox("Multiple copies of FlightGear",
+                                    "Another copy of FlightGear is already running on this computer, "
+                                    "so this copy will run in read-only mode.");
     }
 
     // Load the configuration parameters.  (Command line options
