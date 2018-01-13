@@ -155,7 +155,6 @@ class FGMouseInput::FGMouseInputPrivate : public SGPropertyChangeListener
 {
 public:
     FGMouseInputPrivate() :
-        initialized(false),
         haveWarped(false),
         xSizeNode(fgGetNode("/sim/startup/xsize", false ) ),
         ySizeNode(fgGetNode("/sim/startup/ysize", false ) ),
@@ -326,7 +325,6 @@ public:
 
     mouse mice[MAX_MICE];
     
-    bool initialized;
     bool hideCursor, haveWarped;
     bool tooltipTimeoutDone;
     bool clickTriggersTooltip;
@@ -365,8 +363,7 @@ static void mouseMotionHandler(int x, int y, const osgGA::GUIEventAdapter* ea)
 
 
 
-FGMouseInput::FGMouseInput() :
-  d(new FGMouseInputPrivate)
+FGMouseInput::FGMouseInput()
 {
     global_mouseInput = this;
 }
@@ -378,15 +375,8 @@ FGMouseInput::~FGMouseInput()
 
 void FGMouseInput::init()
 {
-    if (d->initialized) {
-        SG_LOG(SG_INPUT, SG_WARN, "Duplicate init of FGMouseInput");
-
-        return;
-    }
-    
-    d->initialized = true;
-    
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse bindings");
+  d.reset(new FGMouseInputPrivate());
   std::string module = "";
 
   SGPropertyNode * mouse_nodes = fgGetNode("/input/mice");
@@ -471,7 +461,7 @@ void FGMouseInput::init()
 
 void FGMouseInput::update ( double dt )
 {
-    if (!d->initialized) {
+    if (!d) {
         SG_LOG(SG_INPUT, SG_WARN, "update of mouse before init");
     }
     
@@ -546,7 +536,7 @@ mouse_mode::~mouse_mode ()
 
 void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
 {
-    if (!d->initialized) {
+    if (!d) {
         // can occur during reset
         return;
     }
@@ -680,7 +670,7 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
 
 void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea)
 {
-    if (!d->initialized) {
+    if (!d) {
         // can occur during reset
         return;
     }
@@ -710,12 +700,9 @@ void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea
 
 bool FGMouseInput::isRightDragToLookEnabled() const
 {
-    if (!d->initialized) {
+    if (!d) {
         return false;
     }
 
     return (d->rightClickModeCycle == false);
 }
-
-
-
