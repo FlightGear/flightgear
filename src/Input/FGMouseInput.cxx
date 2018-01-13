@@ -115,7 +115,7 @@ struct mouse_mode {
     FGMouseCursor::Cursor cursor;
     bool constrained;
     bool pass_through;
-    FGButton * buttons;
+    std::unique_ptr<FGButton[]> buttons;
     SGBindingList x_bindings[KEYMOD_MAX];
     SGBindingList y_bindings[KEYMOD_MAX];
 };
@@ -126,13 +126,13 @@ struct mouse_mode {
  */
 struct mouse {
     mouse ();
-    virtual ~mouse ();
+
     int x, y;
     SGPropertyNode_ptr mode_node;
     SGPropertyNode_ptr mouse_button_nodes[MAX_MOUSE_BUTTONS];
     int nModes;
     int current_mode;
-    
+
     SGTimeStamp timeSinceLastMove;
     std::unique_ptr<mouse_mode[]> modes;
 };
@@ -431,7 +431,7 @@ void FGMouseInput::init()
       m.modes[j].pass_through = mode_node->getBoolValue("pass-through", false);
 
       // Read the button bindings for this mode
-      m.modes[j].buttons = new FGButton[MAX_MOUSE_BUTTONS];
+      m.modes[j].buttons.reset(new FGButton[MAX_MOUSE_BUTTONS]);
       std::ostringstream buf;
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
         buf.seekp(ios_base::beg);
@@ -524,15 +524,11 @@ mouse::mouse ()
 {
 }
 
-mouse::~mouse ()
-{
-}
-
 mouse_mode::mouse_mode ()
   : cursor(FGMouseCursor::CURSOR_ARROW),
     constrained(false),
     pass_through(false),
-    buttons(NULL)
+    buttons()
 {
 }
 
@@ -546,9 +542,6 @@ mouse_mode::~mouse_mode ()
 //     for (j = 0; j < y_bindings[i].size(); j++)
 //       delete bindings[i][j];
 //   }
-  if (buttons) {
-    delete [] buttons;
-  }
 }
 
 void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
