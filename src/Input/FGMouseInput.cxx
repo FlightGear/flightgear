@@ -26,6 +26,8 @@
 #  include "config.h"
 #endif
 
+#include <memory>
+
 #include "FGMouseInput.hxx"
 
 #include <boost/foreach.hpp>
@@ -132,7 +134,7 @@ struct mouse {
     int current_mode;
     
     SGTimeStamp timeSinceLastMove;
-    mouse_mode * modes;
+    std::unique_ptr<mouse_mode[]> modes;
 };
 
 static
@@ -415,7 +417,7 @@ void FGMouseInput::init()
 
    // Read all the modes
     m.nModes = mouse_node->getIntValue("mode-count", 1);
-    m.modes = new mouse_mode[m.nModes];
+    m.modes.reset(new mouse_mode[m.nModes]);
 
     for (int j = 0; j < m.nModes; j++) {
       int k;
@@ -518,13 +520,12 @@ mouse::mouse ()
     y(-1),
     nModes(1),
     current_mode(0),
-    modes(NULL)
+    modes()
 {
 }
 
 mouse::~mouse ()
 {
-  delete [] modes;
 }
 
 mouse_mode::mouse_mode ()
