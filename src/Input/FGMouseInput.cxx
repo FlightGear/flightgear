@@ -111,7 +111,7 @@ void ActivePickCallbacks::update( double dt, unsigned int keyModState )
  */
 struct mouse_mode {
     mouse_mode ();
-    virtual ~mouse_mode ();
+
     FGMouseCursor::Cursor cursor;
     bool constrained;
     bool pass_through;
@@ -347,7 +347,7 @@ public:
 // The Mouse Input Implementation
 ////////////////////////////////////////////////////////////////////////
 
-static FGMouseInput* global_mouseInput = NULL;
+static FGMouseInput* global_mouseInput = nullptr;
 
 static void mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
 {
@@ -361,21 +361,12 @@ static void mouseMotionHandler(int x, int y, const osgGA::GUIEventAdapter* ea)
         global_mouseInput->doMouseMotion(x, y, ea);
 }
 
-
-
-FGMouseInput::FGMouseInput()
-{
-    global_mouseInput = this;
-}
-
-FGMouseInput::~FGMouseInput()
-{
-    global_mouseInput = NULL;
-}
+FGMouseInput::FGMouseInput() = default;
 
 void FGMouseInput::init()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse bindings");
+
   d.reset(new FGMouseInputPrivate());
   std::string module = "";
 
@@ -457,6 +448,23 @@ void FGMouseInput::init()
 
   fgRegisterMouseClickHandler(mouseClickHandler);
   fgRegisterMouseMotionHandler(mouseMotionHandler);
+  global_mouseInput = this;
+}
+
+void FGMouseInput::shutdown()
+{
+  SG_LOG(SG_INPUT, SG_DEBUG, "Shutting down mouse bindings");
+
+  // This ensures that mouseClickHandler and mouseMotionHandler are no-ops.
+  global_mouseInput = nullptr;
+  // Reset the Pimpl
+  d.reset();
+}
+
+void FGMouseInput::reinit()
+{
+  shutdown();
+  init();
 }
 
 void FGMouseInput::update ( double dt )
@@ -520,18 +528,6 @@ mouse_mode::mouse_mode ()
     pass_through(false),
     buttons()
 {
-}
-
-mouse_mode::~mouse_mode ()
-{
-                                // FIXME: memory leak
-//   for (int i = 0; i < KEYMOD_MAX; i++) {
-//     int j;
-//     for (j = 0; i < x_bindings[i].size(); j++)
-//       delete bindings[i][j];
-//     for (j = 0; j < y_bindings[i].size(); j++)
-//       delete bindings[i][j];
-//   }
 }
 
 void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)

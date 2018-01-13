@@ -40,10 +40,12 @@ namespace osgGA { class GUIEventAdapter; }
 ////////////////////////////////////////////////////////////////////////
 class FGMouseInput : public SGSubsystem, FGCommonInput {
 public:
-  FGMouseInput();
-  virtual ~FGMouseInput();
+    FGMouseInput();
+    virtual ~FGMouseInput() = default;
 
     void init() override;
+    void shutdown() override;
+    void reinit() override;
     void update( double dt ) override;
 
     static const char* subsystemName() { return "input-mouse"; }
