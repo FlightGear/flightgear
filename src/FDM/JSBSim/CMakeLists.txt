@@ -40,8 +40,6 @@ set(HEADERS
     math/FGRealValue.h
     math/FGRungeKutta.h
     math/FGTable.h
-    math/FGNelderMead.h
-    math/FGStateSpace.h
     models/FGAccelerations.h
     models/FGAerodynamics.h
     models/FGAircraft.h
@@ -134,8 +132,6 @@ set(SOURCES
     math/FGRealValue.cpp
     math/FGRungeKutta.cpp
     math/FGTable.cpp
-    math/FGNelderMead.cpp
-    math/FGStateSpace.cpp
     models/FGAccelerations.cpp
     models/FGAerodynamics.cpp
     models/FGAircraft.cpp
