@@ -714,5 +714,14 @@ void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea
   d->mouseYNode->setIntValue(y);
 }
 
+bool FGMouseInput::isRightDragToLookEnabled() const
+{
+    if (!d->initialized) {
+        return false;
+    }
+
+    return (d->rightClickModeCycle == false);
+}
+
 
 

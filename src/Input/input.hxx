@@ -26,14 +26,8 @@
 #ifndef _INPUT_HXX
 #define _INPUT_HXX
 
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif
 
 #include <simgear/structure/subsystem_mgr.hxx>
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -60,6 +54,8 @@ public:
    * Destructor.
    */
   virtual ~FGInput();
+
+  static const char* subsystemName() { return "input"; }
 
 };
 

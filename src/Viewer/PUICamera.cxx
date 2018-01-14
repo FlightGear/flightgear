@@ -43,6 +43,9 @@
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/FGEventHandler.hxx>
 
+#include <Input/input.hxx>
+#include <Input/FGMouseInput.hxx>
+
 // Old versions of PUI are missing these defines
 #ifndef PU_SCROLL_UP_BUTTON
 #define PU_SCROLL_UP_BUTTON 3
@@ -99,7 +102,9 @@ class PUIEventHandler : public osgGA::GUIEventHandler
 public:
     PUIEventHandler(PUICamera* cam) :
         _puiCamera(cam)
-    {}
+    {
+        _mouse0RightButtonNode = fgGetNode("/devices/status/mice/mouse[0]/button[2]", true);
+    }
     
     bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa, osg::Object *, osg::NodeVisitor *nv) override
     {
@@ -117,22 +122,29 @@ public:
             case(osgGA::GUIEventAdapter::MOVE):
             case(osgGA::GUIEventAdapter::DRAG):
             {
+                FGMouseInput* mouseSubsystem = globals->get_subsystem<FGInput>()->get_subsystem<FGMouseInput>();
+                if (mouseSubsystem &&
+                    mouseSubsystem->isRightDragToLookEnabled() &&
+                    _mouse0RightButtonNode->getBoolValue())
+                {
+                    return false;
+                }
+
                 bool handled = puMouse(scaledX, scaledY);
                 return handled;
             }
-                // you might thnk the code below is a good idea, but apparently it's not
-                // PUI synthesises PU_DRAG internally, it doesn't want to see it delivered
-                // from the windowing system
-#if 0
-            case(osgGA::GUIEventAdapter::DRAG):
-            {
-                bool handled = puMouse(osgButtonToPUI(ea), PU_DRAG, scaledX, scaledY);
-                return handled;
-            }
-#endif
+
             case(osgGA::GUIEventAdapter::PUSH):
             case(osgGA::GUIEventAdapter::RELEASE):
             {
+                FGMouseInput* mouseSubsystem = globals->get_subsystem<FGInput>()->get_subsystem<FGMouseInput>();
+                if (mouseSubsystem &&
+                    mouseSubsystem->isRightDragToLookEnabled() &&
+                    _mouse0RightButtonNode->getBoolValue())
+                {
+                    return false;
+                }
+
                 bool upOrDown = (ea.getEventType() == osgGA::GUIEventAdapter::RELEASE);
                 bool handled = puMouse(osgButtonToPUI(ea), upOrDown, scaledX, scaledY);
                 return handled;
@@ -215,6 +227,7 @@ private:
     }
     
     PUICamera* _puiCamera;
+    SGPropertyNode_ptr _mouse0RightButtonNode;
 };
 
 // The pu getWindow callback is supposed to return a window ID that

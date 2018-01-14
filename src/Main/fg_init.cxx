@@ -919,7 +919,7 @@ void fgCreateSubsystems(bool duringReset) {
     // Initialize the input subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("input", new FGInput, SGSubsystemMgr::GENERAL);
+    globals->add_new_subsystem<FGInput>(SGSubsystemMgr::GENERAL);
 
 
     ////////////////////////////////////////////////////////////////////

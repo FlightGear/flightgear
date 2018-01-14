@@ -43,11 +43,20 @@ public:
   FGMouseInput();
   virtual ~FGMouseInput();
 
-  virtual void init();
-  virtual void update( double dt );
+    void init() override;
+    void update( double dt ) override;
+
+    static const char* subsystemName() { return "input-mouse"; }
 
     void doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea);
     void doMouseMotion (int x, int y, const osgGA::GUIEventAdapter*);
+
+    /**
+     * @brief isRightDragToLookEnabled - test if we're in right-mouse-drag
+     * to adjust the view direction/position mode.
+     * @return
+     */
+    bool isRightDragToLookEnabled() const;
 private:
   void processMotion(int x, int y, const osgGA::GUIEventAdapter* ea);
     
