@@ -12,7 +12,7 @@ Item {
                     footer.height
     implicitWidth: ListView.view.width
 
-    readonly property bool __isSelected: ListView.isCurrentItem
+    readonly property bool __isSelected: (_launcher.selectedAircraft == model.uri)
 
     MouseArea {
         anchors.fill: parent

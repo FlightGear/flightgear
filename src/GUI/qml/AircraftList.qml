@@ -21,6 +21,7 @@ Item
                 text: qsTr("Installed Aircraft")
                 onClicked: {
                     root.state = "installed"
+                    aircraftList.updateSelectionFromLauncher();
                 }
                 active: root.state == "installed"
             }
@@ -30,6 +31,7 @@ Item
                 text: qsTr("Browse")
                 onClicked: {
                     root.state = "browse"
+                    aircraftList.updateSelectionFromLauncher();
                 }
                 active: root.state == "browse"
             }
@@ -47,6 +49,7 @@ Item
             onSearch: {
                _launcher.searchAircraftModel.setAircraftFilterString(term)
                 root.state = "search"
+                aircraftList.updateSelectionFromLauncher();
             }
 
             active: root.state == "search"
@@ -155,7 +158,6 @@ Item
     {
         target: _launcher
         onSelectAircraftIndex: {
-            console.warn("Selecting aircraft:" + index);
             aircraftList.currentIndex = index;
             aircraftList.model.select
         }
