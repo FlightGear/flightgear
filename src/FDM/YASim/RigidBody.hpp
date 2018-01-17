@@ -30,7 +30,7 @@ public:
 
     // Adds a point mass to the system.  Returns a handle so the gyro
     // can be later modified via setMass().
-    int addMass(float mass, float* pos, bool isStatic = false);
+    int addMass(float mass, const float* pos, bool isStatic = false);
 
     // Modifies a previously-added point mass (fuel tank running dry,
     // gear going up, swing wing swinging, pilot bailing out, etc...)
@@ -94,7 +94,7 @@ public:
     // coordinates.  If the body is rotating, this will be different
     // from the c.g. acceleration due to the centripetal accelerations
     // of points not on the rotation axis.
-    void getAccel(float* pos, float* accelOut) const;
+    void getAccel(const float* pos, float* accelOut) const;
 
     // Returns the instantaneous rate of change of the angular
     // velocity, as a vector in local coordinates.

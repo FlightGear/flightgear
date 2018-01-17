@@ -22,7 +22,7 @@ RigidBody::~RigidBody()
 
 /// add new point mass to body
 /// isStatic: set to true for masses that do not change per iteration (everything but fuel?)
-int RigidBody::addMass(float mass, float* pos, bool isStatic)
+int RigidBody::addMass(float mass, const float* pos, bool isStatic)
 {
     // If out of space, reallocate twice as much
     if(_nMasses == _massesAlloced) {
@@ -211,7 +211,7 @@ void RigidBody::addForce(const float* pos, const float* force)
     addTorque(t);
 }
 
-void RigidBody::getAccel(float* pos, float* accelOut) const
+void RigidBody::getAccel(const float* pos, float* accelOut) const
 {
     getAccel(accelOut);
 
