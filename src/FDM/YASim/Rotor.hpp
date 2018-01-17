@@ -9,7 +9,6 @@
 
 namespace yasim {
 
-//class Surface;
 class Rotorpart;
 class Ground;
 const float rho_null=1.184f; //25DegC, 101325Pa
