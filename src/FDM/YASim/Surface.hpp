@@ -16,7 +16,7 @@ class Surface
     int _id;        //index for property tree
 
 public:
-    Surface(Version * version, float* pos, float dragCoefficient);
+    Surface(Version * version, const float* pos, float c0);
 
     int getID() const { return _id; };
     static void resetIDgen() { s_idGenerator = 0; };
@@ -54,16 +54,17 @@ public:
     // For variable-incidence control surfaces.  The angle is a
     // negative rotation about the surface's Y axis, in radians, so
     // positive is "up" (i.e. "positive AoA")
-    void setIncidence(float angle) { _incidence = angle; }
+    void setIncidence(float angle);
 
     // The offset from base incidence for this surface.
-    void setTwist(float angle) { _twist = angle; }
+    void setTwist(float angle);
 
     void  setTotalForceCoefficient(float c0) { _c0 = c0; }
     void  mulTotalForceCoefficient(float factor) { _c0 *= factor; }
     float getTotalForceCoefficient() const { return _c0; }
     
     void  setDragCoefficient(float cx) { _cx = cx; }
+    void  mulDragCoefficient(float factor) { _cx *= factor; }
     float getDragCoefficient() const { return _cx; }
     void  setYDrag(float cy) { _cy = cy; }
     void  setLiftCoefficient(float cz) { _cz = cz; }
@@ -135,6 +136,8 @@ private:
     SGPropertyNode* _slatN;
     SGPropertyNode* _spoilerN;
     SGPropertyNode* _fabsN;
+    SGPropertyNode* _incidenceN;
+    SGPropertyNode* _twistN;
 };
 
 }; // namespace yasim

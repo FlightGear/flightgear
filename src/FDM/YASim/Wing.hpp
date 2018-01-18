@@ -92,7 +92,8 @@ class Wing {
         void calculateSpan();
         void calculateMAC();
         float calculateSweepAngleLeadingEdge();
-        //set incidence value to all surfaces of this section
+        /// update surfaces of wing section to (incidence + _sectionIncidence)
+        /// e.g. for rotating hstab 
         void setIncidence(float incidence);
         // parameters for stall curve
         void setStallParams(StallParams sp) { _stallParams = sp; }
@@ -131,8 +132,8 @@ class Wing {
     Chord _mac;
     float _taper {1};
     float _incidence {0};
-    float _incidenceMin {-20*DEG2RAD};
-    float _incidenceMax {20*DEG2RAD};
+    float _incidenceMin {INCIDENCE_MIN};
+    float _incidenceMax {INCIDENCE_MAX};
     float _weight {0};
     float _sweepLEMin {0};
     float _sweepLEMax {0};
@@ -162,9 +163,14 @@ public:
     void compile();
     void multiplyLiftRatio(float factor);
     void multiplyDragCoefficient(float factor);
+    // setIncidence used to rotate (trim) the hstab
     void setIncidence(float incidence);
+    // limits for setIncidence
     void setIncidenceMin(float min) { _incidenceMin = min; };
     void setIncidenceMax(float max) { _incidenceMax = max; };
+    float getIncidenceMin() const { return _incidenceMin; };
+    float getIncidenceMax() const { return _incidenceMax; };
+    // write mass (= _weight * scale) to property tree
     void weight2mass(float scale);
     
     bool isMirrored() const { return _mirror; };
@@ -186,9 +192,10 @@ public:
     // propergate the control axes value for the sub-surfaces
     void setFlapPos(WingFlaps type, float lval, float rval = 0);
     void setFlapEffectiveness(WingFlaps f, float lval);
-
+    /// base node for exporting data of this wing to property tree
     void setPropertyNode(SGPropertyNode_ptr n) { _wingN = n; };
     float updateModel(Model* model);
+    /// for YASim CLI tool
     void  printSectionInfo();
 };
 

@@ -346,7 +346,8 @@ void Wing::compile()
                 float weight = chord * segWid;
                 float twist = ws->_twist * frac;
 
-                ws->newSurface(_version, pos, ws->_orient, chord,                                       hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist);
+                ws->newSurface(_version, pos, ws->_orient, chord,
+                               hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist);
 
                 if(_mirror) {
                     pos[1] = -pos[1];
@@ -388,6 +389,7 @@ void Wing::multiplyDragCoefficient(float factor)
     }
 }
 
+///update incidence for wing (rotate wing while maintaining initial twist config)
 void Wing::setIncidence(float incidence)
 {
     if (incidence < _incidenceMin || incidence > _incidenceMax)
@@ -540,6 +542,7 @@ void Wing::writeInfoToProptree()
         sectN->getNode("base-y", true)->setFloatValue(ws->_rootChord.y);
         sectN->getNode("base-z", true)->setFloatValue(ws->_rootChord.z);
         sectN->getNode("chord", true)->setFloatValue(ws->_rootChord.length);
+        sectN->getNode("incidence", true)->setFloatValue(ws->_sectionIncidence);
     }
     _wingN->getNode("weight", true)->setFloatValue(wgt);
     _wingN->getNode("drag", true)->setFloatValue(dragSum);

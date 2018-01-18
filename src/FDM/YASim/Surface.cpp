@@ -6,9 +6,9 @@
 namespace yasim {
 int Surface::s_idGenerator = 0;
 
-Surface::Surface(Version* version, float* pos, float dragCoefficient = 1 ) :
+Surface::Surface(Version* version, const float* pos, float c0 = 1 ) :
     _version(version),
-    _c0(dragCoefficient)
+    _c0(c0)
 {
     _id = s_idGenerator++;
 
@@ -30,6 +30,10 @@ Surface::Surface(Version* version, float* pos, float dragCoefficient = 1 ) :
         _flapN = _surfN->getNode("flap-pos", true);
         _slatN = _surfN->getNode("slat-pos", true);
         _spoilerN = _surfN->getNode("spoiler-pos", true);
+        _incidenceN = _surfN->getNode("incidence", true);
+        _incidenceN->setFloatValue(0);
+        _twistN = _surfN->getNode("twist", true);
+        _twistN->setFloatValue(0);
         _surfN->getNode("pos-x", true)->setFloatValue(pos[0]);
         _surfN->getNode("pos-y", true)->setFloatValue(pos[1]);
         _surfN->getNode("pos-z", true)->setFloatValue(pos[2]);
@@ -332,6 +336,22 @@ float Surface::controlDrag(float lift, float drag)
     drag *= 1 + _slatPos * (_slatDrag - 1);
 
     return drag;
+}
+
+
+void Surface::setIncidence(float angle) {
+    _incidence = angle;
+    if (_surfN != 0) {
+        _incidenceN->setFloatValue(angle);
+    }
+}
+
+
+void Surface::setTwist(float angle) {
+    _twist = angle;
+    if (_surfN != 0) {
+        _twistN->setFloatValue(angle);
+    }
 }
 
 }; // namespace yasim
