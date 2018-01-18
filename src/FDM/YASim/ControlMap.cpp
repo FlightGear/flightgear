@@ -88,10 +88,11 @@ ControlMap::~ControlMap()
 }
 
 /**
-prop: name of input property
+inputProp: name of input property
 control: identifier (see enum OutputType)
-object: object to which this input belongs to
+id: object to which this input belongs to
 options: bits OPT_INVERT, OPT_SPLIT, OPT_SQUARE
+src,dst: input will be clamped to src range and mapped to dst range 
 */
 void ControlMap::addMapping(const char* inputProp, ControlType control, ObjectID id, int options, float src0, float src1, float dst0, float dst1)
 {
@@ -150,9 +151,9 @@ void ControlMap::reset()
     }
 }
 
-void ControlMap::setInput(int input, float val)
+void ControlMap::setInput(int propHandle, float val)
 {
-    Vector* maps = (Vector*)_inputs.get(input);
+    Vector* maps = (Vector*)_inputs.get(propHandle);
     for(int i = 0; i < maps->size(); i++) {
         MapRec* m = (MapRec*)maps->get(i);
         float val2 = val;
@@ -186,28 +187,22 @@ float ControlMap::getOutputR(int handle)
 
 void ControlMap::applyControls(float dt)
 {
-    int outrec;
-    for(outrec=0; outrec<_outputs.size(); outrec++) 
+    for(int outrec=0; outrec<_outputs.size(); outrec++) 
     {
         OutRec* o = (OutRec*)_outputs.get(outrec);
     
         // Generate a summed value.  Note the check for "split"
         // control axes like ailerons.
         float lval = 0, rval = 0;
-        int i;
-        for(i=0; i<o->maps.size(); i++) {
+        for(int i = 0; i < o->maps.size(); i++) {
             MapRec* m = (MapRec*)o->maps.get(i);
             float val = m->val;
 
-            if(m->opt & OPT_SQUARE)
-            val = val * Math::abs(val);
-            if(m->opt & OPT_INVERT)
-            val = -val;
+            if(m->opt & OPT_SQUARE) { val = val * Math::abs(val); }
+            if(m->opt & OPT_INVERT) { val = -val; }
             lval += val;
-            if(m->opt & OPT_SPLIT)
-            rval -= val;
-            else
-            rval += val;
+            if(m->opt & OPT_SPLIT) { rval -= val; }
+            else { rval += val; }
         }
 
         // If there is a finite transition time, clamp the values to
@@ -218,12 +213,15 @@ void ControlMap::applyControls(float dt)
             float adl = Math::abs(dl);
             float adr = Math::abs(dr);
         
-            float max = (dt/o->transitionTime) * (rangeMax(o->control) - rangeMin(o->control));
-            if(adl > max) dl = dl*max/adl;
-            if(adr > max) dr = dr*max/adr;
-
-            lval = o->oldValueLeft + dl;
-            rval = o->oldValueRight + dr;
+            float maxDelta = (dt/o->transitionTime) * (rangeMax(o->control) - rangeMin(o->control));
+            if(adl > maxDelta) {
+                dl = dl*maxDelta/adl;
+                lval = o->oldValueLeft + dl;
+            }
+            if(adr > maxDelta) {
+                dr = dr*maxDelta/adr;
+                rval = o->oldValueRight + dr;
+            }
         }
 
         o->oldValueLeft = lval;
@@ -357,6 +355,7 @@ void ControlMap::applyControls(float dt)
             case PROP:
                 break;
             case INCIDENCE:
+                ((Wing*)obj)->setIncidence(lval);
                 break;
         }
     }
@@ -366,6 +365,7 @@ float ControlMap::rangeMin(ControlType control)
 {
     // The minimum of the range for each type of control
     switch(control) {
+        case INCIDENCE: return INCIDENCE_MIN;
         case FLAP0:    return -1;  // [-1:1]
         case FLAP1:    return -1;
         case STEER:    return -1;
@@ -384,6 +384,7 @@ float ControlMap::rangeMax(ControlType control)
 {
     // The maximum of the range for each type of control
     switch(control) {
+        case INCIDENCE: return INCIDENCE_MAX;
         case FLAP0:    return 1; // [-1:1]
         case FLAP1:    return 1;
         case STEER:    return 1;
@@ -397,13 +398,14 @@ float ControlMap::rangeMax(ControlType control)
 /// register property name, return ID (int)
 int ControlMap::getInputPropertyHandle(const char* name)
 {
+    // search for existing
     for(int i=0; i < _properties.size(); i++) {
         PropHandle* p = (PropHandle*)_properties.get(i);
         if(!strcmp(p->name, name))
             return p->handle;
     }
 
-    // create new
+    // else create new
     PropHandle* p = new PropHandle();
     p->name = strdup(name);
     
@@ -411,6 +413,7 @@ int ControlMap::getInputPropertyHandle(const char* name)
 
     Vector* v = new Vector();
     p->handle = _inputs.add(v);
+
     _properties.add(p);
     return p->handle;
 }
@@ -444,6 +447,12 @@ ControlMap::ObjectID ControlMap::getObjectID(void* object, int subObj)
     o.object = object;
     o.subObj = subObj;
     return o;
+}
+
+// used at runtime in FGFDM::getExternalInput
+ControlMap::PropHandle* ControlMap::getProperty(const int i) {
+    assert((i >= 0) && (i < _properties.size()));
+    return ((PropHandle*)_properties.get(i));
 }
 
 } // namespace yasim

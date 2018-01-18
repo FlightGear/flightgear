@@ -390,19 +390,23 @@ void Wing::multiplyDragCoefficient(float factor)
 }
 
 ///update incidence for wing (rotate wing while maintaining initial twist config)
-void Wing::setIncidence(float incidence)
+bool Wing::setIncidence(float incidence)
 {
     if (incidence < _incidenceMin || incidence > _incidenceMax)
     {
-        fprintf(stderr, "YASim: cannot set incidence, parameter out of range.");
-        return;
+        return false;
     }
+    _incidence = incidence;
     WingSection* ws;
     for (int section=0; section < _sections.size(); section++) 
     {        
         ws = (WingSection*)_sections.get(section);
         ws->setIncidence(incidence);
     }    
+    if (_wingN) {
+        _wingN->getNode("incidence-deg", true)->setFloatValue(_incidence * RAD2DEG);
+    }
+    return true;
 }
     
 void Wing::WingSection::setDragCoefficient(float scale)
@@ -542,7 +546,7 @@ void Wing::writeInfoToProptree()
         sectN->getNode("base-y", true)->setFloatValue(ws->_rootChord.y);
         sectN->getNode("base-z", true)->setFloatValue(ws->_rootChord.z);
         sectN->getNode("chord", true)->setFloatValue(ws->_rootChord.length);
-        sectN->getNode("incidence", true)->setFloatValue(ws->_sectionIncidence);
+        sectN->getNode("incidence-deg", true)->setFloatValue(ws->_sectionIncidence * RAD2DEG);
     }
     _wingN->getNode("weight", true)->setFloatValue(wgt);
     _wingN->getNode("drag", true)->setFloatValue(dragSum);
@@ -596,8 +600,8 @@ void Wing::printSectionInfo()
     printf("#wing sections: %d\n", _sections.size());
     for (int section=0; section < _sections.size(); section++) {
         ws = (WingSection*)_sections.get(section);
-        printf("Section %d base point (%.3f, %.3f, %.3f), chord %.3f\n", section,
-               ws->_rootChord.x, ws->_rootChord.y, ws->_rootChord.z, ws->_rootChord.length);
+        printf("Section %d base point (%.3f, %.3f, %.3f), chord %.3f, incidence at section root %.1fdeg\n", section,
+               ws->_rootChord.x, ws->_rootChord.y, ws->_rootChord.z, ws->_rootChord.length, ws->_sectionIncidence * RAD2DEG);
     }
 }
 

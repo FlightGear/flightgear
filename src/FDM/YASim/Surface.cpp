@@ -30,9 +30,9 @@ Surface::Surface(Version* version, const float* pos, float c0 = 1 ) :
         _flapN = _surfN->getNode("flap-pos", true);
         _slatN = _surfN->getNode("slat-pos", true);
         _spoilerN = _surfN->getNode("spoiler-pos", true);
-        _incidenceN = _surfN->getNode("incidence", true);
+        _incidenceN = _surfN->getNode("incidence-deg", true);
         _incidenceN->setFloatValue(0);
-        _twistN = _surfN->getNode("twist", true);
+        _twistN = _surfN->getNode("twist-deg", true);
         _twistN->setFloatValue(0);
         _surfN->getNode("pos-x", true)->setFloatValue(pos[0]);
         _surfN->getNode("pos-y", true)->setFloatValue(pos[1]);
@@ -340,17 +340,17 @@ float Surface::controlDrag(float lift, float drag)
 
 
 void Surface::setIncidence(float angle) {
-    _incidence = angle;
+    _incidence = angle * -1;
     if (_surfN != 0) {
-        _incidenceN->setFloatValue(angle);
+        _incidenceN->setFloatValue(angle * RAD2DEG);
     }
 }
 
 
 void Surface::setTwist(float angle) {
-    _twist = angle;
+    _twist = angle * -1;
     if (_surfN != 0) {
-        _twistN->setFloatValue(angle);
+        _twistN->setFloatValue(angle * RAD2DEG);
     }
 }
 

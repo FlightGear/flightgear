@@ -40,9 +40,9 @@ private:
         float size {0};
         int handle {0};
     };
-    struct PropOut { 
-        SGPropertyNode* prop {nullptr};
+    struct ControlOutput { 
         int handle {0};
+        SGPropertyNode* prop {nullptr};
         ControlMap::ControlType control;
         bool left {false};
         float min {0};
@@ -107,7 +107,7 @@ private:
     Vector _thrusters;
 
     // Output properties for the ControlMap
-    Vector _controlProps;
+    Vector _controlOutputs;
 
     // Radius of the vehicle, for intersection testing.
     float _vehicle_radius {0};

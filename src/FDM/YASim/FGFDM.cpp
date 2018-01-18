@@ -37,11 +37,6 @@ namespace yasim {
 
 FGFDM::FGFDM()
 {
-    // Map /controls/flight/elevator to the approach elevator control.  This
-    // should probably be settable, but there are very few aircraft
-    // who trim their approaches using things other than elevator.
-    _airplane.setElevatorControl("/controls/flight/elevator-trim");
-
     // FIXME: read seed from somewhere?
     int seed = 0;
     _turb = new Turbulence(10, seed);
@@ -62,8 +57,8 @@ FGFDM::~FGFDM()
         delete wr;
     }
 
-    for(int i=0; i<_controlProps.size(); i++)
-        delete (PropOut*)_controlProps.get(i);
+    for(int i=0; i<_controlOutputs.size(); i++)
+        delete (ControlOutput*)_controlOutputs.get(i);
 
     delete _turb;
 }
@@ -419,14 +414,15 @@ void FGFDM::setOutputProperties(float dt)
     _arzN->setFloatValue(racc[2]);
 
     ControlMap* cm = _airplane.getControlMap();
-    for(int i=0; i<_controlProps.size(); i++) {
-        PropOut* p = (PropOut*)_controlProps.get(i);
+    for(int i=0; i<_controlOutputs.size(); i++) {
+        ControlOutput* p = (ControlOutput*)_controlOutputs.get(i);
         float val = (p->left
                      ? cm->getOutput(p->handle)
                      : cm->getOutputR(p->handle));
         float rmin = cm->rangeMin(p->control);
         float rmax = cm->rangeMax(p->control);
         float frac = (val - rmin) / (rmax - rmin);
+        // clamp output
         val = frac*(p->max - p->min) + p->min;
         p->prop->setFloatValue(val);
     }
@@ -531,11 +527,10 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     float chord {0};
     float length = attrf(a, "length");
 
-    // These come in with positive indicating positive AoA, but the
-    // internals expect a rotation about the left-pointing Y axis, so
-    // invert the sign.
+    // positive incidence/twist means positive AoA (leading edge up). 
+    // Due to the coordinate system used in class Surface the sign will be inverted (only) there.
     float incidence {0};
-    float twist = attrf(a, "twist", 0) * DEG2RAD * -1;
+    float twist = attrf(a, "twist", 0) * DEG2RAD;
     
     // if this element is declared as section of a wing, skip attributes 
     // that are ignored in class Wing anyway because they are calculated
@@ -543,7 +538,15 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     if (!isSection) {
         attrf_xyz(a, base);
         chord = attrf(a, "chord");
-        incidence = attrf(a, "incidence", 0) * DEG2RAD * -1;
+        incidence = attrf(a, "incidence", 0) * DEG2RAD;
+    }
+    else {
+        if (a->hasAttribute("x") || a->hasAttribute("y") || a->hasAttribute("z") ||
+            a->hasAttribute("chord") || a->hasAttribute("incidence") 
+        ) {
+            SG_LOG(SG_FLIGHT, SG_WARN, "YASim warning: redundant attribute in wing definition \n" 
+            "when using <wing append=\"1\" ...> x, y, z, chord and incidence will be ignored. ");
+        }
     } 
 
     // optional attributes (with defaults)
@@ -569,8 +572,8 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     } 
     else if (!strcmp(type, "hstab")) {
         w = airplane->getTail();
-        if (a->hasAttribute("incidence-max")) w->setIncidenceMax(attrf(a, "incidence-max") * DEG2RAD);
-        if (a->hasAttribute("incidence-min")) w->setIncidenceMin(attrf(a, "incidence-min") * DEG2RAD);
+        if (a->hasAttribute("incidence-max-deg")) w->setIncidenceMax(attrf(a, "incidence-max-deg") * DEG2RAD);
+        if (a->hasAttribute("incidence-min-deg")) w->setIncidenceMin(attrf(a, "incidence-min-deg") * DEG2RAD);
     } else {
         w = new Wing(airplane, mirror);
     }
@@ -1155,48 +1158,47 @@ void FGFDM::parseControlSetting(const XMLAttributes* a)
 void FGFDM::parseControlIn(const XMLAttributes* a)
 {
     // map input property to a YASim control 
-    ControlMap* cm = _airplane.getControlMap();
-    ControlMap::ControlType control = cm->parseControl(a->getValue("control"));
-    ControlMap::ObjectID oid = cm->getObjectID(_currObj, _wingSection);
+    ControlMap::ControlType control = ControlMap::parseControl(a->getValue("control"));
     int opt = 0;
     opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
     opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
     opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
     float src0, src1, dst0, dst1;
-    src0 = dst0 = cm->rangeMin(control);
-    src1 = dst1 = cm->rangeMax(control);
+    src0 = dst0 = ControlMap::rangeMin(control);
+    src1 = dst1 = ControlMap::rangeMax(control);
     if(a->hasAttribute("src0")) {
         src0 = attrf(a, "src0");
         src1 = attrf(a, "src1");
         dst0 = attrf(a, "dst0");
         dst1 = attrf(a, "dst1");
     }
-    cm->addMapping(a->getValue("axis"), control, oid, opt, src0, src1, dst0, dst1);
+    _airplane.addControlInput(a->getValue("axis"), control, _currObj, _wingSection, opt, src0, src1, dst0, dst1);
 }
 
 void FGFDM::parseControlOut(const XMLAttributes* a)
 {
     // A property output for a control on the current object
     ControlMap* cm = _airplane.getControlMap();
-    ControlMap::ControlType control = cm->parseControl(a->getValue("control"));
-    ControlMap::ObjectID oid = cm->getObjectID(_currObj, _wingSection);
+    ControlMap::ControlType control = ControlMap::parseControl(a->getValue("control"));
+    ControlMap::ObjectID oid = ControlMap::getObjectID(_currObj, _wingSection);
 
-    PropOut* p = new PropOut();
+    ControlOutput* p = new ControlOutput();
     p->prop = fgGetNode(a->getValue("prop"), true);
     p->handle = cm->getOutputHandle(oid, control);
     p->control = control;
     p->left = !(a->hasAttribute("side") &&
                     !strcmp("right", a->getValue("side")));
+    // for output clamping
     p->min = attrf(a, "min", cm->rangeMin(control));
     p->max = attrf(a, "max", cm->rangeMax(control));
-    _controlProps.add(p);
+    _controlOutputs.add(p);
 }
 
 void FGFDM::parseControlSpeed(const XMLAttributes* a)
 {
     ControlMap* cm = _airplane.getControlMap();
-    ControlMap::ControlType control = cm->parseControl(a->getValue("control"));
-    ControlMap::ObjectID oid = cm->getObjectID(_currObj, _wingSection);
+    ControlMap::ControlType control = ControlMap::parseControl(a->getValue("control"));
+    ControlMap::ObjectID oid = ControlMap::getObjectID(_currObj, _wingSection);
     int handle = cm->getOutputHandle(oid, control);
     float time = attrf(a, "transition-time", 0);
     cm->setTransitionTime(handle, time);
