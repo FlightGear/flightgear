@@ -154,7 +154,7 @@ void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
     _cruiseConfig.speed = speed;
     _cruiseConfig.altitude = altitude;
     _cruiseConfig.aoa = 0;
-    _tailIncidence = 0;
+    _tailIncidence.val = 0;
     _cruiseConfig.fuel = fuel;
     _cruiseConfig.glideAngle = gla;
 }
@@ -185,21 +185,18 @@ void Airplane::addSolutionWeight(Configuration cfg, int idx, float wgt)
 {
     SolveWeight* w = new SolveWeight();
     w->approach = (cfg == APPROACH);
-    w->idx = idx;
+    w->id = idx;
     w->wgt = wgt;
     _solveWeights.add(w);
 }
 
-void Airplane::addFuselage(float* front, float* back, float width,
+void Airplane::addFuselage(const float* front, const float* back, float width,
                            float taper, float mid, 
                            float cx, float cy, float cz, float idrag)
 {
     Fuselage* f = new Fuselage();
-    int i;
-    for(i=0; i<3; i++) {
-	f->front[i] = front[i];
-	f->back[i]  = back[i];
-    }
+    Math::set3(front, f->front);
+    Math::set3(back, f->back);
     f->width = width;
     f->taper = taper;
     f->mid = mid;
@@ -210,11 +207,10 @@ void Airplane::addFuselage(float* front, float* back, float width,
     _fuselages.add(f);
 }
 
-int Airplane::addTank(float* pos, float cap, float density)
+int Airplane::addTank(const float* pos, float cap, float density)
 {
     Tank* t = new Tank();
-    int i;
-    for(i=0; i<3; i++) t->pos[i] = pos[i];
+    Math::set3(pos, t->pos);
     t->cap = cap;
     t->fill = cap;
     t->density = density;
@@ -230,25 +226,24 @@ void Airplane::addGear(Gear* gear)
     _gears.add(g);
 }
 
-void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
+void Airplane::addThruster(Thruster* thruster, float mass, const float* cg)
 {
     ThrustRec* t = new ThrustRec();
     t->thruster = thruster;
     t->mass = mass;
-    int i;
-    for(i=0; i<3; i++) t->cg[i] = cg[i];
+    Math::set3(cg, t->cg);
     _thrusters.add(t);
 }
 
 /// Use ballast to redistribute mass, this is NOT added to empty weight.
-void Airplane::addBallast(float* pos, float mass)
+void Airplane::addBallast(const float* pos, float mass)
 {
     _model.getBody()->addMass(mass, pos, true);
     _ballast += mass;
 }
 
 /// Masses configurable at runtime, e.g. cargo, pax
-int Airplane::addWeight(float* pos, float size)
+int Airplane::addWeight(const float* pos, float size)
 {
     WeightRec* wr = new WeightRec();
     wr->handle = _model.getBody()->addMass(0, pos);
@@ -296,7 +291,7 @@ void Airplane::setFuelFraction(float frac)
  * @param pos ...
  */
 
-void Airplane::addContactPoint(float* pos)
+void Airplane::addContactPoint(const float* pos)
 {
     ContactRec* c = new ContactRec;
     c->gear = 0;
@@ -625,7 +620,7 @@ void Airplane::compile()
     solveGear();
     calculateCGHardLimits();
     
-    if(_wing && _tail) solve();
+    if(_wing && _tail) solveAirplane();
     else
     {
        // The rotor(s) mass:
@@ -728,18 +723,18 @@ void Airplane::setupWeights(bool isApproach)
     for(i=0; i<_solveWeights.size(); i++) {
         SolveWeight* w = (SolveWeight*)_solveWeights.get(i);
         if(w->approach == isApproach)
-            setWeight(w->idx, w->wgt);
+            setWeight(w->id, w->wgt);
     }
 }
 
 void Airplane::setControlValues(const Vector& controls)
 {
-    _controls.reset();
+    _controlMap.reset();
     for(int i=0; i < controls.size(); i++) {
         ControlSetting* c = (ControlSetting*)controls.get(i);
-        _controls.setInput(c->propHandle, c->val);
+        _controlMap.setInput(c->propHandle, c->val);
     }
-    _controls.applyControls(); 
+    _controlMap.applyControls(); 
 }
 
 void Airplane::runConfig(Config &cfg)
@@ -779,7 +774,7 @@ void Airplane::runConfig(Config &cfg)
     _model.initIteration();
     _model.calcForces(&cfg.state);
 }
-/// Used only in Airplane::solve() and solveHelicopter(), not at runtime
+/// Used only in solveAirplane() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
@@ -841,7 +836,7 @@ void Airplane::applyLiftRatio(float factor)
     }
 }
 
-/// Helper for solve()
+/// Helper for solveAirplane()
 float Airplane::normFactor(float f)
 {
     if(f < 0) f = -f;
@@ -849,7 +844,7 @@ float Airplane::normFactor(float f)
     return f;
 }
 
-///helper for Airplane::solve()
+///helper for solveAirplane()
 float Airplane::_getPitch(Config &cfg)
 {
     float tmp[3];
@@ -858,7 +853,7 @@ float Airplane::_getPitch(Config &cfg)
     return tmp[1];
 }
 
-///helper for Airplane::solve()
+///helper for solveAirplane()
 float Airplane::_getLift(Config &cfg)
 {
     float tmp[3];
@@ -867,7 +862,7 @@ float Airplane::_getLift(Config &cfg)
     return cfg.weight * tmp[2];
 }
 
-void Airplane::solve()
+void Airplane::solveAirplane()
 {
     static const float ARCMIN = 0.0002909f;
 
@@ -904,9 +899,9 @@ void Airplane::solve()
         float clift1 = _getLift(_cruiseConfig);
 
         // Do the same with the tail incidence
-        _tail->setIncidence(_tailIncidence + ARCMIN);
+        _tail->setIncidence(_tailIncidence.val + ARCMIN);
         runConfig(_cruiseConfig);
-        _tail->setIncidence(_tailIncidence);
+        _tail->setIncidence(_tailIncidence.val);
 
         float pitch1 = _getPitch(_cruiseConfig);
 
@@ -950,10 +945,10 @@ void Airplane::solve()
 
         // OK, now we can adjust the minor variables:
         _cruiseConfig.aoa += SOLVE_TWEAK*aoaDelta;
-        _tailIncidence += SOLVE_TWEAK*tailDelta;
+        _tailIncidence.val += SOLVE_TWEAK*tailDelta;
         
         _cruiseConfig.aoa = Math::clamp(_cruiseConfig.aoa, -0.175f, 0.175f);
-        _tailIncidence = Math::clamp(_tailIncidence, -0.175f, 0.175f);
+        _tailIncidence.val = Math::clamp(_tailIncidence.val, -0.175f, 0.175f);
 
         if(abs(xforce/_cruiseConfig.weight) < STHRESH*0.0001 &&
         abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
@@ -982,7 +977,7 @@ void Airplane::solve()
     } else if(Math::abs(_cruiseConfig.aoa) >= .17453293) {
         _failureMsg = "Cruise AoA > 10 degrees";
         return;
-    } else if(Math::abs(_tailIncidence) >= .17453293) {
+    } else if(Math::abs(_tailIncidence.val) >= .17453293) {
         _failureMsg = "Tail incidence > 10 degrees";
         return;
     }
@@ -1010,7 +1005,7 @@ void Airplane::solveHelicopter()
     _cruiseConfig.state.setupState(0,0,0);
     _model.setState(&_cruiseConfig.state);
     setupWeights(true);
-    _controls.reset();
+    _controlMap.reset();
     _model.getBody()->reset();
     _model.setStandardAtmosphere(_cruiseConfig.altitude);    
 }
@@ -1046,7 +1041,7 @@ float Airplane::_getWingLoad(float mass) const
 }
 
 /// get x-distance between CG and 25% MAC of w
-float Airplane::_getWingLever(Wing* w) const
+float Airplane::_getWingLever(const Wing* w) const
 {
     if (w == nullptr) return -1;
     float cg[3];

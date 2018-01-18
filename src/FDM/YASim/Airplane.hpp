@@ -32,10 +32,10 @@ public:
     void iterate(float dt);
     void calcFuelWeights();
 
-    ControlMap* getControlMap() { return &_controls; }
+    ControlMap* getControlMap() { return &_controlMap; }
     Model* getModel() { return &_model; }
 
-    void setPilotPos(float* pos) { Math::set3(pos, _pilotPos); }
+    void setPilotPos(const float* pos) { Math::set3(pos, _pilotPos); }
     void getPilotPos(float* out) { Math::set3(_pilotPos, out); }
     void getPilotAccel(float* out);
 
@@ -47,23 +47,24 @@ public:
     Wing* getTail(); 
     void  addVStab(Wing* vstab) { _vstabs.add(vstab); }
 
-    void addFuselage(float* front, float* back, float width,
+    void addFuselage(const float* front, const float* back, float width,
                      float taper=1, float mid=0.5f,
                      float cx=1, float cy=1, float cz=1, float idrag=1);
-    int  addTank(float* pos, float cap, float fuelDensity);
+    int  addTank(const float* pos, float cap, float fuelDensity);
     void addGear(Gear* g);
     void addHook(Hook* h) { _model.addHook(h); }
     void addLaunchbar(Launchbar* l) { _model.addLaunchbar(l); }
-    void addThruster(Thruster* t, float mass, float* cg);
-    void addBallast(float* pos, float mass);
+    void addThruster(Thruster* thruster, float mass, const float* cg);
+    void addBallast(const float* pos, float mass);
     void addHitch(Hitch* h) { _model.addHitch(h); }
 
-    int  addWeight(float* pos, float size);
+    int  addWeight(const float* pos, float size);
     void setWeight(int handle, float mass);
 
     void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
     void setCruise(float speed, float altitude, float fuel, float gla);
 
+     ///set name of property controlling the elevator
     void setElevatorControl(const char* prop);
     void addControlSetting(Configuration cfg, const char* prop, float val);
 
@@ -100,7 +101,7 @@ public:
     float getDragCoefficient() const { return _dragFactor; }
     float getLiftRatio() const { return _liftRatio; }
     float getCruiseAoA() const { return _cruiseConfig.aoa; }
-    float getTailIncidence() const { return _tailIncidence; }
+    float getTailIncidence() const { return _tailIncidence.val; }
     float getApproachElevator() const { return _approachElevator.val; }
     const char* getFailureMsg() const { return _failureMsg; }
 
@@ -131,42 +132,42 @@ public:
     
 private:
     struct Tank { 
-      float pos[3]; 
-      float cap, fill, density;
-      int handle;       
+      float pos[3] {0,0,0};
+      float cap {0}, fill {0}, density {0};
+      int handle {-1};
     };
     struct Fuselage { 
-      float  front[3], back[3];
+      float  front[3] {0,0,0}, back[3] {0,0,0};
       float  width, taper, mid, _cx, _cy, _cz, _idrag;
       Vector surfs;      
     };
     struct GearRec { 
       Gear* gear;
       Surface* surf;
-      float wgt;
+      float wgt {0};
     };
     struct ThrustRec { 
-      Thruster* thruster;
-      int handle;
-      float cg[3];
-      float mass;
+      int handle {-1};
+      Thruster* thruster {nullptr};
+      float cg[3] {0,0,0};
+      float mass {0};
     };
     struct ControlSetting { 
-      int propHandle;
-      float val;
+      int propHandle {-1};
+      float val {0};
     };
     struct WeightRec { 
-      int handle;
-      Surface* surf;
+      int handle {-1};
+      Surface* surf {nullptr};
     };
     struct SolveWeight { 
-      bool approach;
-      int idx;
-      float wgt;
+      int id {-1};
+      bool approach {false};
+      float wgt {0};
     };
     struct ContactRec {
-      Gear* gear;
-      float p[3];
+      Gear* gear {nullptr};
+      float p[3] {0,0,0};
     };
     struct Config {
       bool isApproach {false};
@@ -189,7 +190,7 @@ private:
     void solveGear();
     float _getPitch(Config &cfg);
     float _getLift(Config &cfg);
-    void solve();
+    void solveAirplane();
     void solveHelicopter();
     float compileWing(Wing* w);
     void compileRotorgear();
@@ -197,7 +198,7 @@ private:
     void compileGear(GearRec* gr);
     void applyDragFactor(float factor);
     void applyLiftRatio(float factor);
-    void addContactPoint(float* pos);
+    void addContactPoint(const float* pos);
     void compileContactPoints();
     float normFactor(float f);
     void updateGearState();
@@ -206,10 +207,10 @@ private:
     ///calculate mass divided by area of main wing
     float _getWingLoad(float mass) const;
     ///calculate distance between CGx and AC of wing w
-    float _getWingLever(Wing* w) const;
+    float _getWingLever(const Wing* w) const;
     
     Model _model;
-    ControlMap _controls;
+    ControlMap _controlMap;
 
     float _emptyWeight {0};
     ///max take of weight
@@ -236,7 +237,7 @@ private:
     int _solutionIterations {0};
     float _dragFactor {1};
     float _liftRatio {1};
-    float _tailIncidence {0};
+    ControlSetting _tailIncidence;
     ControlSetting _approachElevator;
     const char* _failureMsg {0};
     /// hard limits for cg from gear position
