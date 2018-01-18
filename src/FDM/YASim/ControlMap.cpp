@@ -21,7 +21,7 @@
 #include "ControlMap.hpp"
 namespace yasim {
 
-//! keep this list in sync with the enum Control in ControlMap.hpp !
+//! keep this list in sync with the enum ControlType in ControlMap.hpp !
 static const std::vector<std::string> ControlNames = {
     "THROTTLE",
     "MIXTURE",
@@ -66,7 +66,7 @@ static const std::vector<std::string> ControlNames = {
     "HITCHOPEN",
     "PLACEWINCH",
     "FINDAITOW"
-}; //! keep this list in sync with the enum Control in ControlMap.hpp !
+}; //! keep this list in sync with the enum ControlType in ControlMap.hpp !
 
 ControlMap::~ControlMap()
 {
@@ -93,45 +93,30 @@ control: identifier (see enum OutputType)
 object: object to which this input belongs to
 options: bits OPT_INVERT, OPT_SPLIT, OPT_SQUARE
 */
-void ControlMap::addMapping(const char* prop, Control control, ObjectID id, int options, float src0, float src1, float dst0, float dst1)
+void ControlMap::addMapping(const char* inputProp, ControlType control, ObjectID id, int options, float src0, float src1, float dst0, float dst1)
 {
-    MapRec* m = (MapRec*)addMapping(prop, control, id, options);
-    m->src0 = src0;
-    m->src1 = src1;
-    m->dst0 = dst0;
-    m->dst1 = dst1;
-}
-
-/**
-prop: name of input property
-control: identifier (see enum OutputType)
-object: object to which this input belongs to
-options: bits OPT_INVERT, OPT_SPLIT, OPT_SQUARE
-*/
-void* ControlMap::addMapping(const char* prop, Control control, ObjectID id, int options)
-{
-    // See if the output object already exists
-    OutRec* out {nullptr};
-    out = getOutRec(id, control);
+    OutRec* out = getOutRec(id, control);
     
     // Make a new input record
     MapRec* map = new MapRec();
-    map->out = out;
     map->opt = options;
-    map->idx = out->maps.add(map);
+    map->id = out->maps.add(map);
 
     // The default ranges differ depending on type!
     map->src1 = map->dst1 = rangeMax(control);
     map->src0 = map->dst0 = rangeMin(control);
 
     // And add it to the approproate vectors.
-    int inputPropHandle = getInputPropertyHandle(prop);
-    Vector* maps = (Vector*)_inputs.get(inputPropHandle);
+    Vector* maps = (Vector*)_inputs.get(getInputPropertyHandle(inputProp));
     maps->add(map);
-    return map;
+
+    map->src0 = src0;
+    map->src1 = src1;
+    map->dst0 = dst0;
+    map->dst1 = dst1;
 }
 
-ControlMap::OutRec* ControlMap::getOutRec(ObjectID id, Control control)
+ControlMap::OutRec* ControlMap::getOutRec(ObjectID id, ControlType control)
 {
     OutRec* out {nullptr};
     for(int i = 0; i < _outputs.size(); i++) {
@@ -179,24 +164,24 @@ void ControlMap::setInput(int input, float val)
     }
 }
 
-int ControlMap::getOutputHandle(ObjectID id, Control control)
+int ControlMap::getOutputHandle(ObjectID id, ControlType control)
 {
     return getOutRec(id, control)->id;
 }
 
 void ControlMap::setTransitionTime(int handle, float time)
 {
-    ((OutRec*)_outputs.get(handle))->time = time;
+    ((OutRec*)_outputs.get(handle))->transitionTime = time;
 }
 
 float ControlMap::getOutput(int handle)
 {
-    return ((OutRec*)_outputs.get(handle))->oldL;
+    return ((OutRec*)_outputs.get(handle))->oldValueLeft;
 }
 
 float ControlMap::getOutputR(int handle)
 {
-    return ((OutRec*)_outputs.get(handle))->oldR;
+    return ((OutRec*)_outputs.get(handle))->oldValueRight;
 }
 
 void ControlMap::applyControls(float dt)
@@ -227,22 +212,22 @@ void ControlMap::applyControls(float dt)
 
         // If there is a finite transition time, clamp the values to
         // the maximum travel allowed in this dt.
-        if(o->time > 0) {
-            float dl = lval - o->oldL;
-            float dr = rval - o->oldR;
+        if(o->transitionTime > 0) {
+            float dl = lval - o->oldValueLeft;
+            float dr = rval - o->oldValueRight;
             float adl = Math::abs(dl);
             float adr = Math::abs(dr);
         
-            float max = (dt/o->time) * (rangeMax(o->control) - rangeMin(o->control));
+            float max = (dt/o->transitionTime) * (rangeMax(o->control) - rangeMin(o->control));
             if(adl > max) dl = dl*max/adl;
             if(adr > max) dr = dr*max/adr;
 
-            lval = o->oldL + dl;
-            rval = o->oldR + dr;
+            lval = o->oldValueLeft + dl;
+            rval = o->oldValueRight + dr;
         }
 
-        o->oldL = lval;
-        o->oldR = rval;
+        o->oldValueLeft = lval;
+        o->oldValueRight = rval;
 
         void* obj = o->oid.object;
         switch(o->control) {
@@ -377,7 +362,7 @@ void ControlMap::applyControls(float dt)
     }
 }
 
-float ControlMap::rangeMin(Control control)
+float ControlMap::rangeMin(ControlType control)
 {
     // The minimum of the range for each type of control
     switch(control) {
@@ -395,7 +380,7 @@ float ControlMap::rangeMin(Control control)
     }
 }
 
-float ControlMap::rangeMax(Control control)
+float ControlMap::rangeMax(ControlType control)
 {
     // The maximum of the range for each type of control
     switch(control) {
@@ -430,7 +415,7 @@ int ControlMap::getInputPropertyHandle(const char* name)
     return p->handle;
 }
 
-ControlMap::Control ControlMap::getControlByName(const std::string& name)
+ControlMap::ControlType ControlMap::getControlByName(const std::string& name)
 {
     auto it = std::find(ControlNames.begin(), ControlNames.end(), name);
     if (it == ControlNames.end()) {
@@ -438,15 +423,15 @@ ControlMap::Control ControlMap::getControlByName(const std::string& name)
             << "' in YASim aircraft description.");
         exit(1);
     }
-    return static_cast<Control>(std::distance(ControlNames.begin(), it));
+    return static_cast<ControlType>(std::distance(ControlNames.begin(), it));
 }
 
-std::string ControlMap::getControlName(Control c)
+std::string ControlMap::getControlName(ControlType c)
 {
     return ControlNames.at(static_cast<int>(c));
 }
 
-ControlMap::Control ControlMap::parseControl(const char* name)
+ControlMap::ControlType ControlMap::parseControl(const char* name)
 {
     std::string n(name);
     return getControlByName(n);

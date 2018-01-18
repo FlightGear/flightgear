@@ -43,7 +43,7 @@ private:
     struct PropOut { 
         SGPropertyNode* prop {nullptr};
         int handle {0};
-        ControlMap::Control control;
+        ControlMap::ControlType control;
         bool left {false};
         float min {0};
         float max {0}; 

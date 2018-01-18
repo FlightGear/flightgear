@@ -1156,7 +1156,7 @@ void FGFDM::parseControlIn(const XMLAttributes* a)
 {
     // map input property to a YASim control 
     ControlMap* cm = _airplane.getControlMap();
-    ControlMap::Control control = cm->parseControl(a->getValue("control"));
+    ControlMap::ControlType control = cm->parseControl(a->getValue("control"));
     ControlMap::ObjectID oid = cm->getObjectID(_currObj, _wingSection);
     int opt = 0;
     opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
@@ -1178,7 +1178,7 @@ void FGFDM::parseControlOut(const XMLAttributes* a)
 {
     // A property output for a control on the current object
     ControlMap* cm = _airplane.getControlMap();
-    ControlMap::Control control = cm->parseControl(a->getValue("control"));
+    ControlMap::ControlType control = cm->parseControl(a->getValue("control"));
     ControlMap::ObjectID oid = cm->getObjectID(_currObj, _wingSection);
 
     PropOut* p = new PropOut();
@@ -1195,7 +1195,7 @@ void FGFDM::parseControlOut(const XMLAttributes* a)
 void FGFDM::parseControlSpeed(const XMLAttributes* a)
 {
     ControlMap* cm = _airplane.getControlMap();
-    ControlMap::Control control = cm->parseControl(a->getValue("control"));
+    ControlMap::ControlType control = cm->parseControl(a->getValue("control"));
     ControlMap::ObjectID oid = cm->getObjectID(_currObj, _wingSection);
     int handle = cm->getOutputHandle(oid, control);
     float time = attrf(a, "transition-time", 0);

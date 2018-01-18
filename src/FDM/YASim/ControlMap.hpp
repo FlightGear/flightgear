@@ -15,7 +15,7 @@ public:
     ~ControlMap();
     
     //! keep this enum in sync with the static vector ControlNames in ControlMap.cpp !
-    enum Control { 
+    enum ControlType { 
         THROTTLE, 
         MIXTURE, 
         CONDLEVER, 
@@ -78,17 +78,17 @@ public:
     };
     
     // map control name to int (enum)
-    Control parseControl(const char* name);
-    Control getControlByName(const std::string& name);
-    std::string getControlName(Control c);
+    static ControlType parseControl(const char* name);
+    static ControlType getControlByName(const std::string& name);
+    static std::string getControlName(ControlType c);
     // create ID from object and optional sub index (e.g. for wing section)
-    ObjectID getObjectID(void* object, int subObj = 0);
+    static ObjectID getObjectID(void* object, int subObj = 0);
     
     // add input property for a control to an object
 
     // same with limits. Input values are clamped to [src0:src1] and then mapped to
     // [dst0:dst1] before being set on the objects control.
-    void addMapping(const char* prop, Control control, ObjectID id, int options, float src0, float src1, float dst0, float dst1);
+    void addMapping(const char* inputProp, ControlType control, ObjectID id, int options, float src0, float src1, float dst0, float dst1);
 
     // Resets our accumulated input values.  Call before any
     // setInput() invokations.
@@ -105,12 +105,12 @@ public:
     // Returns the input/output range appropriate for the given
     // control.  Ailerons go from -1 to 1, while throttles are never
     // lower than zero, etc...
-    static float rangeMin(Control control);
-    static float rangeMax(Control control);
+    static float rangeMin(ControlType control);
+    static float rangeMax(ControlType control);
 
     // Each output record is identified by both an object/type tuple
     // and a numeric handle.
-    int getOutputHandle(ObjectID id, Control control);
+    int getOutputHandle(ObjectID id, ControlType control);
     
     // Sets the transition time for the control output to swing
     // through its full range.
@@ -128,18 +128,18 @@ public:
     PropHandle* getProperty(const int i) { return ((PropHandle*)_properties.get(i)); }
 
 private:
+    //output data for a control of an object
     struct OutRec {
         int id {0};
-        Control control;
+        ControlType control;
         ObjectID oid;
         Vector maps;
-        float oldL {0};
-        float oldR {0};
-        float time {0};
+        float transitionTime {0};
+        float oldValueLeft {0};
+        float oldValueRight {0};
     };
     struct MapRec  { 
-        OutRec* out {nullptr}; 
-        int idx {0};
+        int id {0};
         int opt {0};
         float val {0};
         float src0 {0}; 
@@ -157,8 +157,8 @@ private:
     // control properties
     Vector _properties;
 
-    void* addMapping(const char* prop, Control control, ObjectID id, int options = 0);
-    OutRec* getOutRec(ObjectID id, Control control);
+    void* addMapping(const char* prop, ControlType control, ObjectID id, int options = 0);
+    OutRec* getOutRec(ObjectID id, ControlType control);
 };
 
 }; // namespace yasim
