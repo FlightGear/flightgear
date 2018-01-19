@@ -452,25 +452,23 @@ CPPEncoder::CPPEncoder(std::istream& inputStream)
 [[ noreturn ]] void CPPEncoder::handleWriteError(int errorNumber)
 {
   throw sg_exception(
-    "error while writing hex-encoded resource data: " +
+    "error while writing octal-encoded resource data: " +
     simgear::strutils::error_string(errorNumber));
 }
 
-// Extract bytes from a stream, write them in lines of hex-encoded C++
+// Extract bytes from a stream, write them in lines of octal-encoded C++
 // character escapes. Return the number of bytes from the input stream that
 // have been encoded.
 std::size_t CPPEncoder::write(std::ostream& oStream)
 {
   char buf[4096];
   std::streamsize nbBytesRead;
-  // Write at most 19 encoded bytes per line (19*4 + 1 = 77)
-  constexpr std::streamsize nbEncBytesPerLine = 19;
-  std::streamsize availablePlaces = 0; // what remains to fill for current line
+  // Lines will be at most 80 characters wide because of the '";' following
+  // the string literal contents.
+  const std::size_t maxColumns = 78;
+  std::size_t availableColumns = 0; // what remains to fill for current line
   int savedErrno;
   std::size_t payloadSize = 0;
-
-  oStream.flags(std::ios::right | std::ios::hex | std::ios::uppercase);
-  oStream.fill('0');
 
   do {
     // std::ifstream::read() sets *both* the eofbit and failbit flags if EOF
@@ -482,19 +480,22 @@ std::size_t CPPEncoder::write(std::ostream& oStream)
 
     // Process what has been read (*even* if _inputStream.fail() is true)
     for (std::streamsize remaining = nbBytesRead; remaining > 0; remaining--) {
-      if (availablePlaces == 0) {
+      std::ostringstream oss;
+      oss << "\\" << std::oct << static_cast<unsigned int>(*charPtr++);
+      string theCharLiteral = oss.str();
+
+      if (availableColumns < theCharLiteral.size()) {
         if (!(oStream << "\\\n")) {
           handleWriteError(errno);
         }
 
-        availablePlaces = nbEncBytesPerLine;
+        availableColumns = maxColumns;
       }
 
-      if (!(oStream << "\\x" <<
-            std::setw(2) << static_cast<const unsigned int>(*charPtr++))) {
+      if (!(oStream << theCharLiteral)) {
         handleWriteError(errno);
       }
-      availablePlaces--;
+      availableColumns -= theCharLiteral.size();
     } // of for loop over the 'nbBytesRead' bytes
 
     payloadSize += nbBytesRead;
