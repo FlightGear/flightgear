@@ -121,7 +121,7 @@ class MK_VIII : public SGSubsystem
     bool	running;
 
     inline Timer ()
-      : running(false) {}
+      : start_time(0.0), running(false) {}
 
     inline void start () { running = true; start_time = globals->get_sim_time_sec(); }
     inline void stop () { running = false; }
@@ -183,7 +183,7 @@ class MK_VIII : public SGSubsystem
     inline PropertiesHandler (MK_VIII *device)
       : FGVoicePlayer::PropertiesHandler(), mk(device) {}
 
-    PropertiesHandler() : FGVoicePlayer::PropertiesHandler() {}
+    PropertiesHandler() : FGVoicePlayer::PropertiesHandler(), mk(NULL) {}
 
     void init ();
   };
@@ -370,10 +370,10 @@ private:
       N_FAULTS
     } Fault;
 
-    bool faults[N_FAULTS];
+    unsigned int faults;
 
     inline FaultHandler (MK_VIII *device)
-      : mk(device) {}
+      : mk(device), faults(0) {}
 
     void boot ();
 
@@ -921,7 +921,7 @@ private:
     } conf;
 
     inline Mode1Handler (MK_VIII *device)
-      : mk(device) {}
+      : mk(device), sink_rate_tti(0.0) {}
 
     void update ();
   };
@@ -954,7 +954,7 @@ private:
 
       public:
 	inline PassFilter (double _a0, double _a1, double _b1)
-	  : a0(_a0), a1(_a1), b1(_b1) {}
+	  : a0(_a0), a1(_a1), b1(_b1), last_input(0.0), last_output(0.0) {}
 
 	inline double filter (double input)
 	{
@@ -1182,13 +1182,15 @@ private:
 
     struct
     {
-      bool			minimums_enabled;
-      bool			smart_500_enabled;
-      VoicePlayer::Voice	*above_field_voice;
+      bool                retard_enabled;
+      bool                minimums_above_100_enabled;
+      bool                minimums_enabled;
+      bool                smart_500_enabled;
+      VoicePlayer::Voice  *above_field_voice;
 
-      bool			altitude_callouts_enabled[n_altitude_callouts];
-      bool			bank_angle_enabled;
-      BankAnglePredicate	is_bank_angle;
+      unsigned int        altitude_callouts_enabled;
+      bool                bank_angle_enabled;
+      BankAnglePredicate  is_bank_angle;
     } conf;
 
     static const int altitude_callout_definitions[];

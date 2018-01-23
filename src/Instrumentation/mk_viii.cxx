@@ -356,7 +356,7 @@ MK_VIII::SystemHandler::update ()
 ///////////////////////////////////////////////////////////////////////////////
 
 MK_VIII::ConfigurationModule::ConfigurationModule (MK_VIII *device)
-  : mk(device)
+  : state(STATE_OK), mk(device)
 {
   // arbitrary defaults
   categories[CATEGORY_AIRCRAFT_MODE_TYPE_SELECT] = 0;
@@ -603,8 +603,7 @@ MK_VIII::ConfigurationModule::read_altitude_callouts (int value)
   mk->mode6_handler.conf.minimums_enabled = false;
   mk->mode6_handler.conf.smart_500_enabled = false;
   mk->mode6_handler.conf.above_field_voice = NULL;
-  for (i = 0; i < n_altitude_callouts; i++)
-    mk->mode6_handler.conf.altitude_callouts_enabled[i] = false;
+  mk->mode6_handler.conf.altitude_callouts_enabled = 0;
 
   for (i = 0; i < n_elements(values); i++)
     if (values[i].id == value)
@@ -631,7 +630,7 @@ MK_VIII::ConfigurationModule::read_altitude_callouts (int value)
 	    default:
 	      for (unsigned k = 0; k < n_altitude_callouts; k++)
 		if (mk->mode6_handler.altitude_callout_definitions[k] == values[i].callouts[j])
-		  mk->mode6_handler.conf.altitude_callouts_enabled[k] = true;
+		  mk->mode6_handler.conf.altitude_callouts_enabled |= 1 << k;
 	      break;
 	    }
 
@@ -887,18 +886,17 @@ const unsigned int MK_VIII::FaultHandler::fault_inops[] = {
 bool
 MK_VIII::FaultHandler::has_faults () const
 {
-  for (int i = 0; i < N_FAULTS; i++)
-    if (faults[i])
-      return true;
-
-  return false;
+    return faults!=0;
 }
 
 bool
 MK_VIII::FaultHandler::has_faults (unsigned int inop)
 {
+  if (!faults)
+      return false;
+
   for (int i = 0; i < N_FAULTS; i++)
-    if (faults[i] && test_bits(fault_inops[i], inop))
+    if ((faults & (1<<i)) && test_bits(fault_inops[i], inop))
       return true;
 
   return false;
@@ -907,15 +905,15 @@ MK_VIII::FaultHandler::has_faults (unsigned int inop)
 void
 MK_VIII::FaultHandler::boot ()
 {
-  memset(faults, 0, sizeof(faults));
+  faults = 0;
 }
 
 void
 MK_VIII::FaultHandler::set_fault (Fault fault)
 {
-  if (! faults[fault])
+  if (! (faults & (1<<fault)))
     {
-      faults[fault] = true;
+      faults |= 1<<fault;
 
       mk->self_test_handler.set_inop();
 
@@ -935,14 +933,14 @@ MK_VIII::FaultHandler::set_fault (Fault fault)
 void
 MK_VIII::FaultHandler::unset_fault (Fault fault)
 {
-  if (faults[fault])
-    {
-      faults[fault] = false;
+  if (faults & (1<<fault))
+  {
+      faults |= 1<<fault;
       if (! has_faults(INOP_GPWS))
-	mk_doutput(gpws_inop) = false;
+          mk_doutput(gpws_inop) = false;
       if (! has_faults(INOP_TAD))
-	mk_doutput(tad_inop) = false;
-    }
+          mk_doutput(tad_inop) = false;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -996,7 +994,7 @@ MK_VIII::IOHandler::TerrainClearanceFilter::reset ()
 }
 
 MK_VIII::IOHandler::IOHandler (MK_VIII *device)
-  : mk(device), _lamp(LAMP_NONE)
+  : mk(device), _lamp(LAMP_NONE), last_landing_gear(false), last_real_flaps_down(false)
 {
   memset(&input_feeders, 0, sizeof(input_feeders));
   memset(&inputs.discretes, 0, sizeof(inputs.discretes));
@@ -1320,9 +1318,11 @@ MK_VIII::IOHandler::update_inputs ()
   // 4. process input feeders requiring data computed above
 
   if (mk_dinput_feed(decision_height))
+  {
     mk_dinput(decision_height) = ! mk_data(radio_altitude).ncd
       && ! mk_data(decision_height).ncd
       && mk_data(radio_altitude).get() <= mk_data(decision_height).get();
+  }
 }
 
 void
@@ -1352,8 +1352,8 @@ MK_VIII::IOHandler::handle_input_fault (bool test, FaultHandler::Fault fault)
 {
   if (test)
     {
-      if (! mk->fault_handler.faults[fault])
-	mk->fault_handler.set_fault(fault);
+      if (! (mk->fault_handler.faults & (1<<fault)))
+          mk->fault_handler.set_fault(fault);
     }
   else
     mk->fault_handler.unset_fault(fault);
@@ -1367,7 +1367,7 @@ MK_VIII::IOHandler::handle_input_fault (bool test,
 {
   if (test)
     {
-      if (! mk->fault_handler.faults[fault])
+      if (! (mk->fault_handler.faults & (1<<fault)))
 	{
 	  if (timer->start_or_elapsed() >= max_duration)
 	    mk->fault_handler.set_fault(fault);
@@ -1688,13 +1688,13 @@ MK_VIII::IOHandler::update_egpwc_alert_discrete_3 ()
 {
   mk_aoutput(egpwc_alert_discrete_3) = 1 << 17 | 1 << 18;
 
-  if (mk->fault_handler.faults[FaultHandler::FAULT_MODES14_INPUTS_INVALID])
+  if (mk->fault_handler.faults & (1<<FaultHandler::FAULT_MODES14_INPUTS_INVALID))
     mk_aoutput(egpwc_alert_discrete_3) |= 1 << 11;
-  if (mk->fault_handler.faults[FaultHandler::FAULT_MODE5_INPUTS_INVALID])
+  if (mk->fault_handler.faults & (1<<FaultHandler::FAULT_MODE5_INPUTS_INVALID))
     mk_aoutput(egpwc_alert_discrete_3) |= 1 << 12;
-  if (mk->fault_handler.faults[FaultHandler::FAULT_MODE6_INPUTS_INVALID])
+  if (mk->fault_handler.faults & (1<<FaultHandler::FAULT_MODE6_INPUTS_INVALID))
     mk_aoutput(egpwc_alert_discrete_3) |= 1 << 13;
-  if (mk->fault_handler.faults[FaultHandler::FAULT_BANK_ANGLE_INPUTS_INVALID])
+  if (mk->fault_handler.faults & (1<<FaultHandler::FAULT_BANK_ANGLE_INPUTS_INVALID))
     mk_aoutput(egpwc_alert_discrete_3) |= 1 << 14;
   if (mk_doutput(tad_inop))
     mk_aoutput(egpwc_alert_discrete_3) |= 1 << 16;
@@ -2063,7 +2063,7 @@ MK_VIII::IOHandler::present_status ()
 	  };
 
 	  for (size_t i = 0; i < n_elements(fault_names); i++)
-	    if (mk->fault_handler.faults[i])
+	    if (mk->fault_handler.faults & (1<<i))
 	      present_status_subitem(fault_names[i]);
 	}
     }
@@ -2148,11 +2148,11 @@ MK_VIII::VoicePlayer::init ()
     make_voice(&voices.too_low_terrain, "too-low-terrain");
 
     for (unsigned i = 0; i < n_altitude_callouts; i++)
-      {
+    {
         std::ostringstream name;
         name << "altitude-" << MK_VIII::Mode6Handler::altitude_callout_definitions[i];
         make_voice(&voices.altitude_callouts[i], name.str().c_str());
-      }
+    }
     speaker.update_configuration();
 }
 
@@ -2270,7 +2270,7 @@ MK_VIII::SelfTestHandler::run ()
 	goto glideslope_end;
       else
 	{
-	  if (mk->fault_handler.faults[FaultHandler::FAULT_MODE5_INPUTS_INVALID])
+	  if (mk->fault_handler.faults & (1<<FaultHandler::FAULT_MODE5_INPUTS_INVALID))
 	    goto glideslope_inop;
 	}
     }
@@ -2286,8 +2286,8 @@ MK_VIII::SelfTestHandler::run ()
 
   if (! was_here())
     {
-      if (mk->fault_handler.faults[FaultHandler::FAULT_MODES14_INPUTS_INVALID])
-	goto gpws_inop;
+      if (mk->fault_handler.faults & (1<<FaultHandler::FAULT_MODES14_INPUTS_INVALID))
+          goto gpws_inop;
     }
   if (! was_here())
     return discrete_on_off(&mk_doutput(gpws_warning), mk_voice(pull_up));
@@ -2305,13 +2305,13 @@ MK_VIII::SelfTestHandler::run ()
   if (! was_here())
     {
       if (mk->mode6_handler.conf.bank_angle_enabled
-	  && mk->fault_handler.faults[FaultHandler::FAULT_BANK_ANGLE_INPUTS_INVALID])
+	  && (mk->fault_handler.faults & (1<<FaultHandler::FAULT_BANK_ANGLE_INPUTS_INVALID)))
 	return play(mk_voice(bank_angle_inop));
     }
   if (! was_here())
     {
       if (mk->mode6_handler.altitude_callouts_enabled()
-	  && mk->fault_handler.faults[FaultHandler::FAULT_MODE6_INPUTS_INVALID])
+	  && (mk->fault_handler.faults & (1<<FaultHandler::FAULT_MODE6_INPUTS_INVALID)))
 	return play(mk_voice(callouts_inop));
     }
   if (! was_here())
@@ -2367,15 +2367,16 @@ MK_VIII::SelfTestHandler::run ()
     }
   for (unsigned i = 0; i < n_altitude_callouts; i++)
     if (! was_here_offset(i))
-      {
-	if (mk->mode6_handler.conf.altitude_callouts_enabled[i])
-	  return play(mk_altitude_voice(i));
-      }
+     {
+        if (mk->mode6_handler.conf.altitude_callouts_enabled & (1<<i))
+            return play(mk_altitude_voice(i));
+     }
+
   if (! was_here())
-    {
+  {
       if (mk->mode6_handler.conf.smart_500_enabled)
-	return play(mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_500));
-    }
+          return play(mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_500));
+  }
   goto callouts_end;
  callouts_disabled:
   if (! was_here())
@@ -2638,7 +2639,7 @@ MK_VIII::AlertHandler::update ()
   else if (select_voice_alerts(ALERT_MODE6_MINIMUMS))
     {
       if (! has_old_alerts(ALERT_MODE6_MINIMUMS))
-	mk->voice_player.play(mk_voice(minimums_minimums));
+          mk->voice_player.play(mk_voice(minimums_minimums));
     }
   else if (select_voice_alerts(ALERT_MODE4AB_TOO_LOW_TERRAIN | ALERT_MODE4C_TOO_LOW_TERRAIN))
     {
@@ -2871,12 +2872,12 @@ MK_VIII::StateHandler::post_reposition ()
 
   if (ground && ! _ground)
     leave_ground();
-  else if (! ground && _ground)
+  else if ((!ground) && _ground)
     enter_ground();
 
-  if (takeoff && ! _takeoff)
+  if (takeoff && (!_takeoff))
     leave_takeoff();
-  else if (! takeoff && _takeoff)
+  else if ((!takeoff) && _takeoff)
     enter_takeoff();
 }
 
@@ -3950,11 +3951,7 @@ MK_VIII::Mode6Handler::altitude_callouts_enabled ()
   if (conf.minimums_enabled || conf.smart_500_enabled || conf.above_field_voice)
     return true;
 
-  for (unsigned i = 0; i < n_altitude_callouts; i++)
-    if (conf.altitude_callouts_enabled[i])
-      return true;
-
-  return false;
+  return (conf.altitude_callouts_enabled != 0);
 }
 
 void
@@ -4004,7 +4001,7 @@ MK_VIII::Mode6Handler::update_altitude_callouts ()
       && ! mk->state_handler.ground // [1]
       && ! mk_data(radio_altitude).ncd)
     for (unsigned i = 0; i < n_altitude_callouts && mk_data(radio_altitude).get() <= altitude_callout_definitions[i]; i++)
-      if ((conf.altitude_callouts_enabled[i]
+      if (((conf.altitude_callouts_enabled & (1<<i))
 	   || (altitude_callout_definitions[i] == 500
 	       && conf.smart_500_enabled))
 	  && ! altitude_callouts_issued[i]
