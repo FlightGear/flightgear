@@ -424,7 +424,7 @@ static naRef f_courseAndDistance(nasal::CallContext ctx)
   double course, course2, d;
   SGGeodesy::inverse(from, to, course, course2, d);
   
-  return ctx.newVector(course, d * SG_METER_TO_NM);
+  return ctx.to_nasal_vec(course, d * SG_METER_TO_NM);
 }
 
 static naRef f_sortByRange(nasal::CallContext ctx)
