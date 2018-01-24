@@ -75,6 +75,7 @@ void TimeManager::init()
   _firstUpdate = true;
   _inited = true;
   _dtRemainder = 0.0;
+  _mpProtocolClock = 0.0;
   _adjustWarpOnUnfreeze = false;
   
   _maxDtPerFrame = fgGetNode("/sim/max-simtime-per-frame", true);
@@ -112,6 +113,7 @@ void TimeManager::init()
     _modelHz = fgGetNode("sim/model-hz", true);
     _timeDelta = fgGetNode("sim/time/delta-realtime-sec", true);
     _simTimeDelta = fgGetNode("sim/time/delta-sec", true);
+    _mpClockNode = fgGetNode("sim/time/mp-clock-sec", true);
 
     _simTimeFactor = fgGetNode("/sim/speed-up", true);
     // use pre-set value but ensure we get a sane default
@@ -135,6 +137,7 @@ void TimeManager::unbind()
     _modelHz.clear();
     _timeDelta.clear();
     _simTimeDelta.clear();
+    _mpClockNode.clear();
     _simTimeFactor.clear();
 }
 
@@ -182,6 +185,11 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   // Update the elapsed time.
   if (_firstUpdate) {
     _lastStamp.stamp();
+
+    // we initialise the mp protocol clock  with the system clock.
+    _systemStamp.systemClockHoursAndMinutes();
+    _mpProtocolClock = _systemStamp.toSecs();
+
     _firstUpdate = false;
     _lastClockFreeze = _clockFreeze->getBoolValue();
   }
@@ -196,10 +204,16 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
       _lastFrameTime=0;
       _frameCount = 0;
   }
-  
+
   SGTimeStamp currentStamp;
   currentStamp.stamp();
+
+  // this dt will be clamped by the max sim time by frame.
   double dt = (currentStamp - _lastStamp).toSecs();
+
+  // here we have a true real dt for a clock "real time".
+  double mpProtocolDt = dt;
+
   if (dt > _frameLatencyMax)
       _frameLatencyMax = dt;
 
@@ -221,14 +235,19 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
   double modelHz = _modelHz->getDoubleValue();
   fdmGroup->set_fixed_update_time(1.0 / modelHz);
-  
+
 // round the real time down to a multiple of 1/model-hz.
 // this way all systems are updated the _same_ amount of dt.
   dt += _dtRemainder;
+
+  // we keep the mp clock sync with the sim time, as it's used as timestamp
+  // in fdm state,
+  mpProtocolDt += _dtRemainder;
   int multiLoop = long(floor(dt * modelHz));
   multiLoop = SGMisc<long>::max(0, multiLoop);
   _dtRemainder = dt - double(multiLoop)/modelHz;
   dt = double(multiLoop)/modelHz;
+  mpProtocolDt -= _dtRemainder;
 
   realDt = dt;
   if (_clockFreeze->getBoolValue() || wait_for_scenery) {
@@ -237,9 +256,12 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
       // sim time can be scaled
       simDt = dt * _simTimeFactor->getDoubleValue();
   }
-  
+
   _lastStamp = currentStamp;
   globals->inc_sim_time_sec(simDt);
+  _mpProtocolClock += mpProtocolDt;
+
+  _mpClockNode->setDoubleValue(_mpProtocolClock);
 
 // These are useful, especially for Nasal scripts.
   _timeDelta->setDoubleValue(realDt);

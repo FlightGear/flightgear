@@ -46,6 +46,8 @@ public:
   void valueChanged(SGPropertyNode *) override;
   
   void setTimeOffset(const std::string& offset_type, long int offset);
+
+  inline double getMPProtocolClockSec() const { return _mpProtocolClock; }
     
   static const char* subsystemName() { return "time"; }
 private:
@@ -69,6 +71,7 @@ private:
   bool _inited;
   SGTime* _impl;
   SGTimeStamp _lastStamp;
+  SGTimeStamp _systemStamp;
   bool _firstUpdate;
   double _dtRemainder;
   SGPropertyNode_ptr _maxDtPerFrame;
@@ -77,6 +80,7 @@ private:
   SGPropertyNode_ptr _warp;
   SGPropertyNode_ptr _warpDelta;
   SGPropertyNode_ptr _simTimeFactor;
+  SGPropertyNode_ptr _mpClockNode;
 
   bool _lastClockFreeze;
   bool _adjustWarpOnUnfreeze;
@@ -87,6 +91,7 @@ private:
   SGPropertyNode_ptr _frameLatency;
   time_t _lastFrameTime;
   double _frameLatencyMax;
+  double _mpProtocolClock;
   int _frameCount;
   
   SGPropertyNode_ptr _sceneryLoaded;

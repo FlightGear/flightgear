@@ -30,6 +30,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Time/TimeManager.hxx>
 
 #include "AIMultiplayer.hxx"
 
@@ -128,7 +129,8 @@ void FGAIMultiplayer::update(double dt)
   // The current simulation time we need to update for,
   // note that the simulation time is updated before calling all the
   // update methods. Thus it contains the time intervals *end* time
-  double curtime = globals->get_sim_time_sec();
+  // 2018: notice this time is specifically used for mp protocol
+  double curtime = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
 
   // Get the last available time
   MotionInfo::reverse_iterator it = mMotionInfo.rbegin();

@@ -50,6 +50,7 @@
 #include "mpmessages.hxx"
 #include "MPServerResolver.hxx"
 #include <FDM/flightProperties.hxx>
+#include <Time/TimeManager.hxx>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WS2tcpip.h>
@@ -1825,11 +1826,13 @@ FGMultiplayMgr::Send()
         mTimeUntilSend = mDt;
     }
 
-    double sim_time = globals->get_sim_time_sec();
+    // we are now using a time immune to pause, warp etc as timestamp.
+    double mp_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
+
     //    static double lastTime = 0.0;
 
-       // SG_LOG(SG_GENERAL, SG_INFO, "actual dt=" << sim_time - lastTime);
-    //    lastTime = sim_time;
+       // SG_LOG(SG_GENERAL, SG_INFO, "actual mp dt=" << mp_time - lastTime);
+    //    lastTime = mp_time;
 
     FlightProperties ifce;
 
@@ -1841,7 +1844,7 @@ FGMultiplayMgr::Send()
     // note that the simulation time is updated before calling all the
     // update methods. Thus it contains the time intervals *end* time.
     // The FDM is already run, so the states belong to that time.
-    motionInfo.time = sim_time;
+    motionInfo.time = mp_time;
     motionInfo.lag = mDt;
 
     // These are for now converted from lat/lon/alt and euler angles.
