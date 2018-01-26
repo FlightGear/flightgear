@@ -34,7 +34,6 @@ class HTTPGetCallback:
     def __init__(self, src, callback):
         self.callback = callback
         self.src = src
-        self.result = None
 
 class HTTPGetter:
     def __init__(self, baseUrl, maxPending=10):
@@ -48,13 +47,12 @@ class HTTPGetter:
 
     def doGet(self, httpGetCallback):
         conn = self.httpConnection
-        request = httpGetCallback
-        self.httpConnection.request("GET",
-                                    self.parsedBaseUrl.path + request.src,
-                                    None, self.httpRequestHeaders)
-        httpGetCallback.result = self.httpConnection.getresponse()
+        url = self.parsedBaseUrl.path + httpGetCallback.src
+        self.httpConnection.request("GET", url, None, self.httpRequestHeaders)
+        httpResponse = self.httpConnection.getresponse()
 
-        return httpGetCallback.callback()
+        # 'httpResponse' is an http.client.HTTPResponse instance
+        return httpGetCallback.callback(url, httpResponse)
 
     def get(self, httpGetCallback):
         try:
@@ -123,12 +121,13 @@ class HTTPDownloadRequest(HTTPGetCallback):
         self.dst = dst
         self.mycallback = callback
 
-    def callback(self):
-        if self.result.status != 200:
+    # 'httpResponse' is an http.client.HTTPResponse instance
+    def callback(self, url, httpResponse):
+        if httpResponse.status != 200:
             return
 
         with open(self.dst, 'wb') as f:
-            f.write(self.result.read())
+            f.write(httpResponse.read())
 
         if self.mycallback != None:
             self.mycallback(self)
