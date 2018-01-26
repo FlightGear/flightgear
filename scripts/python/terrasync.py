@@ -214,17 +214,17 @@ class TerraSync:
             #print("hash of file matches, not downloading")
             return
 
-        print("downloading ", serverPath )
+        print("Downloading '{}'".format(serverPath))
 
         request = HTTPDownloadRequest(self, serverPath, localFullPath )
         self.httpGetter.get(request)
 
 
     def updateDirectory(self, serverPath, localPath, dirIndexHash):
-        print("processing ", serverPath)
+        print("Processing '{}'...".format(serverPath))
 
-        if len(serverPath) > 0:
-            serverFolderName = serverPath[serverPath.rfind('/') + 1:]
+        if serverPath:
+            serverFolderName = os.path.basename(serverPath)
             coordinate = parse_terrasync_coordinate(serverFolderName)
             if coordinate and not self.downloadBoundaries.is_coordinate_inside_boundaries(coordinate):
                 return
@@ -239,7 +239,10 @@ class TerraSync:
             if not self.quick:
                 self.handleDirindexFile( localDirIndex )
         else:
-            request = HTTPDownloadRequest(self, serverPath + "/.dirindex", localDirIndex, self.handleDirindexRequest )
+            request = HTTPDownloadRequest(self,
+                                          serverPath + "/.dirindex",
+                                          localDirIndex,
+                                          self.handleDirindexRequest)
             self.httpGetter.get(request)
 
     def handleDirindexRequest(self, dirindexRequest):
@@ -253,23 +256,29 @@ class TerraSync:
         for file in dirIndex.getFiles():
             f = file['name']
             h = file['hash']
-            self.updateFile( "/" + dirIndex.getPath() + "/" + f, join(dirIndex.getPath(),f), h )
+            self.updateFile("/" + dirIndex.getPath() + "/" + f,
+                            join(dirIndex.getPath(), f),
+                            h)
             serverFiles.append(f)
 
         for subdir in dirIndex.getDirectories():
             d = subdir['name']
             h = subdir['hash']
-            self.updateDirectory( "/" + dirIndex.getPath() + "/" + d, join(dirIndex.getPath(),d), h )
+            self.updateDirectory("/" + dirIndex.getPath() + "/" + d,
+                                 join(dirIndex.getPath(), d),
+                                 h)
             serverDirs.append(d)
 
         if self.removeOrphan:
             localFullPath = join(self.target, dirIndex.getPath())
-            localFiles = [f for f in listdir(localFullPath) if isfile(join(localFullPath, f))]
+            localFiles = [ f for f in listdir(localFullPath)
+                           if isfile(join(localFullPath, f)) ]
             for f in localFiles:
                 if f != ".dirindex" and not f in serverFiles:
                     #print("removing orphan file", join(localFullPath,f) )
                     os.remove( join(localFullPath,f) )
-            localDirs = [f for f in listdir(localFullPath) if isdir(join(localFullPath, f))]
+            localDirs = [ f for f in listdir(localFullPath)
+                          if isdir(join(localFullPath, f)) ]
             for f in localDirs:
                 if not f in serverDirs:
                     #print ("removing orphan dir",f)
