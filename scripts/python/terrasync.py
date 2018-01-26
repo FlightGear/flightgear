@@ -49,20 +49,24 @@ class HTTPGetter:
     def doGet(self, httpGetCallback):
         conn = self.httpConnection
         request = httpGetCallback
-        self.httpConnection.request("GET", self.parsedBaseUrl.path + request.src, None, self.httpRequestHeaders)
+        self.httpConnection.request("GET",
+                                    self.parsedBaseUrl.path + request.src,
+                                    None, self.httpRequestHeaders)
         httpGetCallback.result = self.httpConnection.getresponse()
-        httpGetCallback.callback()
+
+        return httpGetCallback.callback()
 
     def get(self, httpGetCallback):
-
         try:
-            self.doGet(httpGetCallback)
+            res = self.doGet(httpGetCallback)
         except HTTPException:
             # try to reconnect once
             #print("reconnect")
             self.httpConnection.close()
             self.httpConnection.connect()
-            self.doGet(httpGetCallback)
+            res = self.doGet(httpGetCallback)
+
+        return res
 
 
 #################################################################################################################################
