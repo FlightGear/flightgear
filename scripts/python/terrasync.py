@@ -31,6 +31,10 @@ import shutil
 import time
 
 
+# *****************************************************************************
+# *                             Custom exceptions                             *
+# *****************************************************************************
+
 # Generic exception class for terrasync.py, to be subclassed for each specific
 # kind exception.
 class TerraSyncPyException(Exception):
@@ -70,12 +74,57 @@ class TerraSyncPyException(Exception):
     ExceptionShortDescription = "terrasync.py generic exception"
 
 
+class UserError(TerraSyncPyException):
+     """Exception raised when the program is used in an incorrect way."""
+     ExceptionShortDescription = "User error"
+
 class NetworkError(TerraSyncPyException):
      """Exception raised when getting a network error even after retrying."""
      ExceptionShortDescription = "Network error"
 
 
-#################################################################################################################################
+# *****************************************************************************
+# *                             Utility functions                             *
+# *****************************************************************************
+
+# If a path matches this regexp, we really don't want to delete it recursively
+# (“cre” stands for “compiled regexp”).
+_removeDirectoryTree_dangerous_cre = re.compile(
+    r"""^(/ (home (/ [^/]*)? )? /* |    # for Unix-like systems
+          [a-zA-Z]: [\/]*               # for Windows
+    )$""", re.VERBOSE)
+
+def removeDirectoryTree(base, whatToRemove):
+    """Recursively remove directory 'whatToRemove', with safety checks.
+
+    This function ensures that 'whatToRemove' does not resolve to a
+    directory such as /, /home, /home/foobar, C:\, d:\, etc. It is also
+    an error if 'whatToRemove' does not literally start with the value
+    of 'base' (IOW, this function refuses to erase anything that is not
+    under 'base').
+
+    'whatToRemove' is *not* interpreted relatively to 'base' (this would
+    be doable, just a different API).
+
+    """
+    assert os.path.isdir(base), "Not a directory: {!r}".format(base)
+    assert (base and
+            whatToRemove.startswith(base) and
+            whatToRemove[len(base):].startswith(os.sep)), \
+            "Unexpected base path for removeDirectoryTree(): {!r}".format(base)
+    absPath = os.path.abspath(whatToRemove)
+
+    if _removeDirectoryTree_dangerous_cre.match(absPath):
+        raise UserError("in order to protect your data, refusing to "
+                        "recursively delete '{}'".format(absPath))
+    else:
+        shutil.rmtree(absPath)
+
+
+# *****************************************************************************
+# *                          Network-related classes                          *
+# *****************************************************************************
+
 class HTTPGetCallback:
     def __init__(self, src, callback):
         self.callback = callback
@@ -346,7 +395,7 @@ class TerraSync:
             for f in localDirs:
                 if not f in serverDirs:
                     #print ("removing orphan dir",f)
-                    shutil.rmtree( join(localFullPath,f) )
+                    removeDirectoryTree(self.target, join(localFullPath, f))
 
 #################################################################################################################################
 
