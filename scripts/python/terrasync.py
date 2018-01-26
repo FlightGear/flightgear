@@ -284,15 +284,6 @@ class TerraSync:
                     #print ("removing orphan dir",f)
                     shutil.rmtree( join(localFullPath,f) )
 
-
-    def isReady(self):
-        return self.httpGetter and self.httpGetter.isReady()
-        return False
-
-    def update(self):
-        if self.httpGetter:
-            self.httpGetter.update()
-
 #################################################################################################################################
 
 
