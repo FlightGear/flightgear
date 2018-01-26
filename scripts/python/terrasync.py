@@ -121,6 +121,20 @@ def removeDirectoryTree(base, whatToRemove):
         shutil.rmtree(absPath)
 
 
+def computeHash(fileLike):
+    hash = hashlib.sha1()
+
+    for chunk in iter(lambda: fileLike.read(4096), b""):
+        hash.update(chunk)
+
+    return hash.hexdigest()
+
+
+def hashForFile(fname):
+    with open(fname, "rb") as f:
+        return computeHash(f)
+
+
 # *****************************************************************************
 # *                          Network-related classes                          *
 # *****************************************************************************
@@ -247,16 +261,32 @@ class HTTPDownloadRequest(HTTPGetCallback):
         if self.mycallback != None:
             self.mycallback(self)
 
-#################################################################################################################################
 
-def hash_of_file(fname):
-    hash = hashlib.sha1()
+class HTTPSocketRequest(HTTPGetCallback):
+    """HTTPGetCallback class whose callback returns a file-like object.
 
-    with open(fname, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash.update(chunk)
+    The file-like object returned by the callback, and thus by
+    HTTPGetter.get(), is a socket or similar. This allows one to read
+    the data obtained from the network without necessarily storing it
+    to a file.
 
-    return hash.hexdigest()
+    """
+    def __init__(self, src):
+        """Initialize an HTTPSocketRequest object.
+
+        src -- path to the resource on the server (no protocol, no
+               server name, just the path starting with a '/').
+
+        """
+        HTTPGetCallback.__init__(self, src, self.callback)
+
+    def callback(self, url, httpResponse):
+        # Same comment as for HTTPDownloadRequest.callback()
+        if httpResponse.status != 200:
+            raise NetworkError("HTTP callback got status {status} for URL {url}"
+                               .format(status=httpResponse.status, url=url))
+
+        return httpResponse
 
 #################################################################################################################################
 
@@ -300,6 +330,17 @@ def parse_terrasync_coordinate(coordinate):
         lat *= -1
     return Coordinate(lat, lon)
 
+
+class Report:
+    """Gather and format data about the state of a TerraSync mirror."""
+
+    def addDirIndexWithIncorrectHash(self, localDirIndex):
+        pass
+
+    def addMissingDirIndex(self, localDirIndex):
+        pass
+
+
 class TerraSync:
 
     def __init__(self, url, target, quick, removeOrphan, downloadBoundaries):
@@ -308,6 +349,9 @@ class TerraSync:
         self.removeOrphan = removeOrphan
         self.httpGetter = None
         self.downloadBoundaries = downloadBoundaries
+        # Status of the local repository (as compared to what the server says),
+        # before any update we might do to it.
+        self.report = Report()
 
     def setUrl(self, url):
         self.url = url.rstrip('/').strip()
@@ -319,13 +363,31 @@ class TerraSync:
 
     def start(self):
         self.httpGetter = HTTPGetter(self.url)
-        self.updateDirectory("", "", None )
+
+        # Get the hash of the root .dirindex file
+        try:
+            request = HTTPSocketRequest("/.dirindex")
+            with self.httpGetter.get(request) as fileLike:
+                rootDirIndexHash = computeHash(fileLike)
+        except HTTPException as exc:
+            raise NetworkError("for the root .dirindex file: {errMsg}"
+                               .format(errMsg=exc)) from exc
+
+        # Process the root (TerraSync) directory
+        self.updateDirectory("", "", rootDirIndexHash)
 
     def updateFile(self, serverPath, localPath, fileHash ):
         localFullPath = join(self.target, localPath)
-        if fileHash != None and hash_of_file(localFullPath) == fileHash:
+
+        if (os.path.isfile(localFullPath) and
+            hashForFile(localFullPath) == fileHash):
             #print("hash of file matches, not downloading")
             return
+
+        if os.path.isdir(localFullPath):
+            # 'localFullPath' is a directory (locally), but on the server it is
+            # a file -> remove the dir so that we can store the file.
+            removeDirectoryTree(self.target, localFullPath)
 
         print("Downloading '{}'".format(serverPath))
 
@@ -343,15 +405,26 @@ class TerraSync:
                 return
 
         localFullPath = join(self.target, localPath)
-        if not os.path.exists( localFullPath ):
-          os.makedirs( localFullPath )
-
         localDirIndex = join(localFullPath, ".dirindex")
-        if dirIndexHash != None and  hash_of_file(localDirIndex) == dirIndexHash:
-            # print("hash of dirindex matches, not downloading")
+        localDirIndexPresent = localDirIndexHasCorrectHash = False
+
+        if os.path.isfile(localDirIndex):
+            localDirIndexPresent = True
+
+            if hashForFile(localDirIndex) == dirIndexHash:
+                localDirIndexHasCorrectHash = True
+            else:
+                self.report.addDirIndexWithIncorrectHash(localDirIndex)
+        else:
+            self.report.addMissingDirIndex(localDirIndex)
+
+        if localDirIndexPresent and localDirIndexHasCorrectHash:
             if not self.quick:
                 self.handleDirindexFile( localDirIndex )
         else:
+            if not os.path.exists(localFullPath):
+                os.makedirs(localFullPath)
+
             request = HTTPDownloadRequest(self,
                                           serverPath + "/.dirindex",
                                           localDirIndex,
