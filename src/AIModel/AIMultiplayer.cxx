@@ -323,7 +323,6 @@ void FGAIMultiplayer::update(double dt)
                   {
                       //cout << "Found " << pIt->second->getPath() << ":";
 
-                      int ival;
                       float val;
                       /*
                        * RJH - 2017-01-25
@@ -346,7 +345,6 @@ void FGAIMultiplayer::update(double dt)
                               // for non linearly changing values (e.g. transponder etc ...)
                               // fixes: https://sourceforge.net/p/flightgear/codetickets/1885/
                               pIt->second->setIntValue((*nextPropIt)->int_value);
-                              //cout << "Int: " << ival << "\n";
                               break;
                           case props::FLOAT:
                           case props::DOUBLE:
