@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
+# terrasync.py --- Synchronize TerraScenery data to your local disk
+#
 # Copyright (C) 2016  Torsten Dreyer
 #
 # This program is free software; you can redistribute it and/or
@@ -16,9 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#
-# terrasync.py - synchronize terrascenery data to your local disk
-# needs dnspython (pip install dnspython)
 
 import argparse
 import enum
