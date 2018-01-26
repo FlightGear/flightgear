@@ -20,15 +20,29 @@
 # terrasync.py - synchronize terrascenery data to your local disk
 # needs dnspython (pip install dnspython)
 
-import urllib, os, hashlib
+import argparse
+import enum
+import hashlib
+import os
+import pathlib
+import re
+import shutil
+import sys
+import time
+import urllib
+
 from urllib.parse import urlparse
 from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, isdir, join
-import re
-import argparse
-import shutil
-import time
+
+PROGNAME = os.path.basename(sys.argv[0])
+
+class ExitStatus(enum.Enum):
+    SUCCESS = 0
+    # The program exit status is 1 when an exception isn't caught.
+    ERROR = 1
+    CHECK_MODE_FOUND_MISMATCH = 2
 
 
 # *****************************************************************************
@@ -133,6 +147,36 @@ def computeHash(fileLike):
 def hashForFile(fname):
     with open(fname, "rb") as f:
         return computeHash(f)
+
+
+def normalizeVirtualPath(path):
+    """Normalized string representation of a virtual path.
+
+    Virtual paths are paths inside the TerraSync repository (be it local
+    or remote) using '/' as their separator. The virtual path '/' always
+    corresponds to the repository root, regardless of where it is stored
+    (hard drive, etc.).
+
+    If the input path (string) doesn't start with a slash ('/'), it is
+    considered relative to the root of the TerraSync repository.
+
+    Return a string that always starts with a slash, never contains
+    consecutive slashes and only ends with a slash if it is the root
+    virtual path ('/').
+
+    """
+    if not path.startswith('/'):
+        # / is the “virtual root” of the TerraSync repository
+        path = '/' + path
+    elif path.startswith('//') and not path.startswith('///'):
+        # Nasty special case. As allowed (but not mandated!) by POSIX[1],
+        # in pathlib.PurePosixPath('//some/path'), no collapsing happens[2].
+        # This is only the case for exactly *two* *leading* slashes.
+        # [1] http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap04.html#tag_04_11
+        # [2] https://www.python.org/dev/peps/pep-0428/#construction
+        path = path[1:]
+
+    return pathlib.PurePosixPath(path).as_posix()
 
 
 # *****************************************************************************
@@ -334,16 +378,119 @@ def parse_terrasync_coordinate(coordinate):
 class Report:
     """Gather and format data about the state of a TerraSync mirror."""
 
-    def addDirIndexWithIncorrectHash(self, localDirIndex):
-        pass
+    def __init__(self, targetDir):
+        self.targetDir = targetDir
 
-    def addMissingDirIndex(self, localDirIndex):
-        pass
+        self.dirsWithMissingIndex = set()
+        self.dirsWithMismatchingDirIndexHash = set()
+        self.missingFiles = set()
+        self.filesWithMismatchingHash = set()
+        self.dirsSkippedDueToBoundaries = set()
+
+        self.orphanFiles = set()
+        self.orphanDirs = set()
+
+    def addMissingDirIndex(self, directoryRelPath):
+        self.dirsWithMissingIndex.add(directoryRelPath)
+
+    def addDirIndexWithMismatchingHash(self, directoryRelPath):
+        self.dirsWithMismatchingDirIndexHash.add(directoryRelPath)
+
+    def addMissingFile(self, relPath):
+        self.missingFiles.add(relPath)
+
+    def addFileWithMismatchingHash(self, relPath):
+        self.filesWithMismatchingHash.add(relPath)
+
+    def addSkippedDueToBoundaries(self, relPath):
+        self.dirsSkippedDueToBoundaries.add(relPath)
+
+    def addOrphanFile(self, relPath):
+        self.orphanFiles.add(relPath)
+
+    def addOrphanDir(self, relPath):
+        self.orphanDirs.add(relPath)
+
+    def summaryString(self):
+        reportElements = [
+            ("Directories with missing index", self.dirsWithMissingIndex),
+            ("Directories whose .dirindex file had a mismatching hash",
+             self.dirsWithMismatchingDirIndexHash),
+            ("Missing files", self.missingFiles),
+            ("Files with a mismatching hash", self.filesWithMismatchingHash),
+            ("Directories skipped because of the specified boundaries",
+             self.dirsSkippedDueToBoundaries),
+            ("Orphan files", self.orphanFiles),
+            ("Orphan directories", self.orphanDirs)]
+
+        l = []
+        for heading, setOfFilesOrDirs in reportElements:
+            if setOfFilesOrDirs:
+                l.append(heading + ":\n")
+                l.extend( ( "  /" + f + '\n' for f in sorted(setOfFilesOrDirs)) )
+            else:
+                l.append(heading + ": none")
+
+        return '\n'.join(l)
+
+    def printReport(self):
+        title = "{prg} report".format(prg=PROGNAME)
+        print("\n" + title + '\n' + len(title)*"=", end="\n\n")
+        print(self.summaryString())
+
+
+@enum.unique
+class FailedCheckReason(enum.Enum):
+    """Reasons that can cause 'check' mode to report a mismatch.
+
+    Note that network errors and things like that do *not* belong here.
+
+    """
+
+    missingDirIndexFile, mismatchingHashForDirIndexFile, \
+        missingNormalFile, mismatchingHashForNormalFile, \
+        orphanFile, orphanDirectory = range(6)
+
+    # 'path': virtual path to a file or directory
+    def explain(self, path):
+        if self is FailedCheckReason.missingDirIndexFile:
+            res = ".dirindex file '{}' is missing locally".format(path)
+        elif self is FailedCheckReason.mismatchingHashForDirIndexFile:
+            res = ".dirindex file '{}' doesn't have the hash it " \
+                  "should have according to the server".format(path)
+        elif self is FailedCheckReason.missingNormalFile:
+            res = "file '{}' is present on the server but missing locally" \
+                  .format(path)
+        elif self is FailedCheckReason.mismatchingHashForNormalFile:
+            res = "file '{}' doesn't have the hash given in the " \
+                  ".dirindex file of its containing directory".format(path)
+        elif self is FailedCheckReason.orphanFile:
+            res = "file '{}' was found locally but is not present on the " \
+                  "server".format(path)
+        elif self is FailedCheckReason.orphanDirectory:
+            res = "directory '{}' was found locally but is not present " \
+                  "on the server".format(path)
+        else:
+            assert False, "Unhandled enum value: {!r}".format(self)
+
+        return res
 
 
 class TerraSync:
 
-    def __init__(self, url, target, quick, removeOrphan, downloadBoundaries):
+    @enum.unique
+    class Mode(enum.Enum):
+        """Main modes of operation for the TerraSync class."""
+
+        # Using lower case for the member names, because this way
+        # enumMember.name is exactly the mode string passed to --mode on the
+        # command line (can be useful for messages destined to users).
+        check, sync = range(2)
+
+    def __init__(self, mode, doReport, url, target, quick, removeOrphan,
+                 downloadBoundaries):
+        self.mode = self.Mode[mode]
+        self.doReport = doReport
         self.setUrl(url).setTarget(target)
         self.quick = quick
         self.removeOrphan = removeOrphan
@@ -351,7 +498,10 @@ class TerraSync:
         self.downloadBoundaries = downloadBoundaries
         # Status of the local repository (as compared to what the server says),
         # before any update we might do to it.
-        self.report = Report()
+        self.report = Report(self.target)
+
+    def inSyncMode(self):
+        return self.mode == self.Mode.sync
 
     def setUrl(self, url):
         self.url = url.rstrip('/').strip()
@@ -373,55 +523,69 @@ class TerraSync:
             raise NetworkError("for the root .dirindex file: {errMsg}"
                                .format(errMsg=exc)) from exc
 
-        # Process the root (TerraSync) directory
-        self.updateDirectory("", "", rootDirIndexHash)
+        # Process the root directory of the repository (recursive)
+        self.processDirectoryEntry("", "", rootDirIndexHash)
+        return self.report
 
-    def updateFile(self, serverPath, localPath, fileHash ):
+    def processFileEntry(self, serverPath, localPath, fileHash):
+        """Process a file entry from a .dirindex file."""
         localFullPath = join(self.target, localPath)
+        failedCheckReason = None
 
-        if (os.path.isfile(localFullPath) and
-            hashForFile(localFullPath) == fileHash):
-            #print("hash of file matches, not downloading")
+        if not os.path.isfile(localFullPath):
+            self.report.addMissingFile(localPath)
+            failedCheckReason = FailedCheckReason.missingNormalFile
+        elif hashForFile(localFullPath) != fileHash:
+            self.report.addFileWithMismatchingHash(localPath)
+            failedCheckReason = FailedCheckReason.mismatchingHashForNormalFile
+        else:
+            # The file exists and has the hash mentioned in the .dirindex file
             return
 
-        if os.path.isdir(localFullPath):
-            # 'localFullPath' is a directory (locally), but on the server it is
-            # a file -> remove the dir so that we can store the file.
-            removeDirectoryTree(self.target, localFullPath)
+        assert failedCheckReason is not None
 
-        print("Downloading '{}'".format(serverPath))
+        if self.inSyncMode():
+            if os.path.isdir(localFullPath):
+                # 'localFullPath' is a directory (locally), but on the server
+                # it is a file -> remove the dir so that we can store the file.
+                removeDirectoryTree(self.target, localFullPath)
 
-        request = HTTPDownloadRequest(self, serverPath, localFullPath )
-        self.httpGetter.get(request)
+            print("Downloading '{}'".format(serverPath))
+            request = HTTPDownloadRequest(self, serverPath, localFullPath )
+            self.httpGetter.get(request)
+        else:
+            virtualPath = normalizeVirtualPath(serverPath)
+            self.abortCheckMode(failedCheckReason, virtualPath)
 
-
-    def updateDirectory(self, serverPath, localPath, dirIndexHash):
-        print("Processing '{}'...".format(serverPath))
+    def processDirectoryEntry(self, serverPath, localPath, dirIndexHash):
+        """Process a directory entry from a .dirindex file."""
+        virtualPath = normalizeVirtualPath(serverPath)
+        print("Processing '{}'...".format(virtualPath))
 
         if serverPath:
             serverFolderName = os.path.basename(serverPath)
             coordinate = parse_terrasync_coordinate(serverFolderName)
-            if coordinate and not self.downloadBoundaries.is_coordinate_inside_boundaries(coordinate):
+            if (coordinate and
+                not self.downloadBoundaries.is_coordinate_inside_boundaries(
+                    coordinate)):
+                self.report.addSkippedDueToBoundaries(localPath)
                 return
 
         localFullPath = join(self.target, localPath)
         localDirIndex = join(localFullPath, ".dirindex")
-        localDirIndexPresent = localDirIndexHasCorrectHash = False
+        failedCheckReason = None
 
-        if os.path.isfile(localDirIndex):
-            localDirIndexPresent = True
+        if not os.path.isfile(localDirIndex):
+            failedCheckReason = FailedCheckReason.missingDirIndexFile
+            self.report.addMissingDirIndex(localPath)
+        elif hashForFile(localDirIndex) != dirIndexHash:
+            failedCheckReason = FailedCheckReason.mismatchingHashForDirIndexFile
+            self.report.addDirIndexWithMismatchingHash(localPath)
 
-            if hashForFile(localDirIndex) == dirIndexHash:
-                localDirIndexHasCorrectHash = True
-            else:
-                self.report.addDirIndexWithIncorrectHash(localDirIndex)
-        else:
-            self.report.addMissingDirIndex(localDirIndex)
-
-        if localDirIndexPresent and localDirIndexHasCorrectHash:
+        if failedCheckReason is None:
             if not self.quick:
-                self.handleDirindexFile( localDirIndex )
-        else:
+                self.handleDirindexFile(localDirIndex)
+        elif self.inSyncMode():
             if not os.path.exists(localFullPath):
                 os.makedirs(localFullPath)
 
@@ -430,45 +594,77 @@ class TerraSync:
                                           localDirIndex,
                                           self.handleDirindexRequest)
             self.httpGetter.get(request)
+        else:
+            vPath = normalizeVirtualPath(virtualPath + "/.dirindex")
+            self.abortCheckMode(failedCheckReason, vPath)
 
     def handleDirindexRequest(self, dirindexRequest):
         self.handleDirindexFile(dirindexRequest.dst)
 
     def handleDirindexFile(self, dirindexFile):
         dirIndex = DirIndex(dirindexFile)
+        root = "/" + dirIndex.getPath() if dirIndex.getPath() else ""
         serverFiles = []
         serverDirs = []
 
         for file in dirIndex.getFiles():
             f = file['name']
-            h = file['hash']
-            self.updateFile("/" + dirIndex.getPath() + "/" + f,
-                            join(dirIndex.getPath(), f),
-                            h)
+            self.processFileEntry(root + "/" + f,
+                                  join(dirIndex.getPath(), f),
+                                  file['hash'])
             serverFiles.append(f)
 
         for subdir in dirIndex.getDirectories():
             d = subdir['name']
-            h = subdir['hash']
-            self.updateDirectory("/" + dirIndex.getPath() + "/" + d,
-                                 join(dirIndex.getPath(), d),
-                                 h)
+            self.processDirectoryEntry(root + "/" + d,
+                                       join(dirIndex.getPath(), d),
+                                       subdir['hash'])
             serverDirs.append(d)
 
-        if self.removeOrphan:
-            localFullPath = join(self.target, dirIndex.getPath())
-            localFiles = [ f for f in listdir(localFullPath)
-                           if isfile(join(localFullPath, f)) ]
-            for f in localFiles:
-                if f != ".dirindex" and not f in serverFiles:
-                    #print("removing orphan file", join(localFullPath,f) )
-                    os.remove( join(localFullPath,f) )
-            localDirs = [ f for f in listdir(localFullPath)
-                          if isdir(join(localFullPath, f)) ]
-            for f in localDirs:
-                if not f in serverDirs:
-                    #print ("removing orphan dir",f)
-                    removeDirectoryTree(self.target, join(localFullPath, f))
+        localFullPath = join(self.target, dirIndex.getPath())
+        localFiles = [ f for f in listdir(localFullPath)
+                       if isfile(join(localFullPath, f)) ]
+
+        for f in localFiles:
+            if f != ".dirindex" and f not in serverFiles:
+                relPath = dirIndex.getPath() + '/' + f # has no leading '/'
+                self.report.addOrphanFile(relPath)
+
+                if self.inSyncMode():
+                    if self.removeOrphan:
+                        os.remove(join(self.target, relPath))
+                else:
+                    self.abortCheckMode(FailedCheckReason.orphanFile,
+                                        normalizeVirtualPath(relPath))
+
+        localDirs = [ f for f in listdir(localFullPath)
+                      if isdir(join(localFullPath, f)) ]
+
+        for d in localDirs:
+            if d not in serverDirs:
+                relPath = dirIndex.getPath() + '/' + d # has no leading '/'
+                self.report.addOrphanDir(relPath)
+
+                if self.inSyncMode():
+                    if self.removeOrphan:
+                        removeDirectoryTree(self.target,
+                                            join(self.target, relPath))
+                else:
+                    self.abortCheckMode(FailedCheckReason.orphanDirectory,
+                                        normalizeVirtualPath(relPath))
+
+    # 'reason' is a member of the FailedCheckReason enum
+    def abortCheckMode(self, reason, fileOrDirVirtualPath):
+        assert self.mode == self.Mode.check, self.mode
+
+        print("{prg}: exiting from 'check' mode because {explanation}."
+              .format(prg=PROGNAME,
+                      explanation=reason.explain(fileOrDirVirtualPath)))
+
+        if self.doReport:
+            self.report.printReport()
+
+        sys.exit(ExitStatus.CHECK_MODE_FOUND_MISMATCH.value)
 
 #################################################################################################################################
 
@@ -483,6 +679,18 @@ parser.add_argument("-q", "--quick", dest="quick", action="store_true",
 parser.add_argument("-r", "--remove-orphan", dest="removeOrphan", action="store_true",
         default=False, help="Remove old scenery files")
 
+parser.add_argument("--mode", default="sync", choices=("check", "sync"),
+  help="""\
+  main mode of operation (default: '%(default)s'). In 'sync' mode, contents is
+  downloaded from the server to the target directory. On the other hand, in
+  'check' mode, {progname} compares the contents of the target directory with
+  the remote repository without writing nor deleting anything on disk."""
+                    .format(progname=PROGNAME))
+
+parser.add_argument("--report", dest="report", action="store_true",
+                    default=False,
+                    help="before normal exit, print a report of what was found")
+
 parser.add_argument("--top", dest="top", type=int,
         default=90, help="Maximum latitude to include in download [default: %(default)d]")
 parser.add_argument("--bottom", dest="bottom", type=int,
@@ -494,7 +702,21 @@ parser.add_argument("--right", dest="right", type=int,
 
 args = parser.parse_args()
 
-terraSync = TerraSync(args.url, args.target, args.quick, args.removeOrphan,
-        DownloadBoundaries(args.top, args.left, args.bottom, args.right))
+# Consistency checks on the arguments
+if args.mode == "check" and args.removeOrphan:
+    print("{prg}: 'check' mode is read-only and thus doesn't make sense with\n"
+          "option --remove-orphan (-r)".format(prg=PROGNAME), file=sys.stderr)
+    sys.exit(ExitStatus.ERROR.value)
 
-terraSync.start()
+# Now the real work :)
+terraSync = TerraSync(args.mode, args.report, args.url, args.target, args.quick,
+                      args.removeOrphan,
+                      DownloadBoundaries(args.top, args.left, args.bottom,
+                                         args.right))
+
+report = terraSync.start()
+
+if args.report:
+    report.printReport()
+
+sys.exit(ExitStatus.SUCCESS.value)
