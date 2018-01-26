@@ -28,6 +28,7 @@ from os.path import isfile, isdir, join
 import re
 import argparse
 import shutil
+import time
 
 
 # Generic exception class for terrasync.py, to be subclassed for each specific
@@ -90,9 +91,12 @@ class HTTPGetter:
         self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc)
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
+    def assembleUrl(self, httpGetCallback):
+        return self.parsedBaseUrl.path + httpGetCallback.src
+
     def doGet(self, httpGetCallback):
         conn = self.httpConnection
-        url = self.parsedBaseUrl.path + httpGetCallback.src
+        url = self.assembleUrl(httpGetCallback)
         self.httpConnection.request("GET", url, None, self.httpRequestHeaders)
         httpResponse = self.httpConnection.getresponse()
 
@@ -100,16 +104,24 @@ class HTTPGetter:
         return httpGetCallback.callback(url, httpResponse)
 
     def get(self, httpGetCallback):
-        try:
-            res = self.doGet(httpGetCallback)
-        except HTTPException:
-            # try to reconnect once
-            #print("reconnect")
-            self.httpConnection.close()
-            self.httpConnection.connect()
-            res = self.doGet(httpGetCallback)
+        nbRetries = nbRetriesLeft = 5
 
-        return res
+        while True:
+            try:
+                return self.doGet(httpGetCallback)
+            except HTTPException as exc:
+                if nbRetriesLeft == 0:
+                    raise NetworkError(
+                        "after {nbRetries} retries for URL {url}: {errMsg}"
+                        .format(nbRetries=nbRetries,
+                                url=self.assembleUrl(httpGetCallback),
+                                errMsg=exc)) from exc
+
+            # Try to reconnect
+            self.httpConnection.close()
+            time.sleep(1)
+            self.httpConnection.connect()
+            nbRetriesLeft -= 1
 
 
 #################################################################################################################################
@@ -176,8 +188,12 @@ class HTTPDownloadRequest(HTTPGetCallback):
             raise NetworkError("HTTP callback got status {status} for URL {url}"
                                .format(status=httpResponse.status, url=url))
 
-        with open(self.dst, 'wb') as f:
-            f.write(httpResponse.read())
+        try:
+            with open(self.dst, 'wb') as f:
+                f.write(httpResponse.read())
+        except HTTPException as exc:
+            raise NetworkError("for URL {url}: {error}"
+                               .format(url=url, error=exc)) from exc
 
         if self.mycallback != None:
             self.mycallback(self)
