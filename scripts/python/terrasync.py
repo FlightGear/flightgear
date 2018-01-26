@@ -29,6 +29,51 @@ import re
 import argparse
 import shutil
 
+
+# Generic exception class for terrasync.py, to be subclassed for each specific
+# kind exception.
+class TerraSyncPyException(Exception):
+    def __init__(self, message=None, *, mayCapitalizeMsg=True):
+        """Initialize a TerraSyncPyException instance.
+
+        Except in cases where 'message' starts with a proper noun or
+        something like that, its first character should be given in
+        lower case. Automated treatments of this exception may print the
+        message with its first character changed to upper case, unless
+        'mayCapitalizeMsg' is False. In other words, if the case of the
+        first character of 'message' must not be changed under any
+        circumstances, set 'mayCapitalizeMsg' to False.
+
+        """
+        self.message = message
+        self.mayCapitalizeMsg = mayCapitalizeMsg
+
+    def __str__(self):
+        return self.completeMessage()
+
+    def __repr__(self):
+        return "{}.{}({!r})".format(__name__, type(self).__name__, self.message)
+
+    # Typically overridden by subclasses with a custom constructor
+    def detail(self):
+        return self.message
+
+    def completeMessage(self):
+        if self.message:
+            return "{shortDesc}: {detail}".format(
+                shortDesc=self.ExceptionShortDescription,
+                detail=self.detail())
+        else:
+            return self.ExceptionShortDescription
+
+    ExceptionShortDescription = "terrasync.py generic exception"
+
+
+class NetworkError(TerraSyncPyException):
+     """Exception raised when getting a network error even after retrying."""
+     ExceptionShortDescription = "Network error"
+
+
 #################################################################################################################################
 class HTTPGetCallback:
     def __init__(self, src, callback):
@@ -123,8 +168,13 @@ class HTTPDownloadRequest(HTTPGetCallback):
 
     # 'httpResponse' is an http.client.HTTPResponse instance
     def callback(self, url, httpResponse):
+        # I suspect this doesn't handle HTTP redirects and things like that. As
+        # mentioned at <https://docs.python.org/3/library/http.client.html>,
+        # http.client is a low-level interface that should normally not be used
+        # directly!
         if httpResponse.status != 200:
-            return
+            raise NetworkError("HTTP callback got status {status} for URL {url}"
+                               .format(status=httpResponse.status, url=url))
 
         with open(self.dst, 'wb') as f:
             f.write(httpResponse.read())
@@ -135,16 +185,11 @@ class HTTPDownloadRequest(HTTPGetCallback):
 #################################################################################################################################
 
 def hash_of_file(fname):
-    if not os.path.exists( fname ):
-      return None
-
     hash = hashlib.sha1()
-    try:
-        with open(fname, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                hash.update(chunk)
-    except:
-        pass
+
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash.update(chunk)
 
     return hash.hexdigest()
 
