@@ -35,7 +35,6 @@
 #include <osgGA/GUIEventHandler>
 
 #include <boost/bind.hpp>
-#include <boost/lexical_cast.hpp>
 
 class DesktopGroup;
 typedef SGSharedPtr<DesktopGroup> DesktopPtr;
@@ -114,7 +113,7 @@ class DesktopGroup:
     friend class GUIMgr;
 
     SGPropertyChangeCallback<DesktopGroup> _cb_mouse_mode;
-    bool                                   _handle_events;
+    bool                                   _handle_events {true};
 
     simgear::PropertyObject<int>        _width,
                                         _height;
@@ -125,15 +124,15 @@ class DesktopGroup:
                       _focus_window,
                       _pointer_grab_window;
 
-    uint8_t _resize;
-    int     _last_cursor;
+    uint8_t _resize {sc::Window::NONE};
+    int     _last_cursor {MOUSE_CURSOR_NONE};
 
     osg::Vec2 _drag_start;
-    float _last_x,
-          _last_y;
-    double _last_scroll_time;
+    float _last_x {-1},
+          _last_y {-1};
+    double _last_scroll_time {0};
 
-    uint32_t _last_key_down_no_mod; // Key repeat for non modifier keys
+    uint32_t _last_key_down_no_mod {~0u}; // Key repeat for non modifier keys
 
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     bool handleKeyboard(const osgGA::GUIEventAdapter& ea);
@@ -184,22 +183,19 @@ DesktopGroup::DesktopGroup():
   _cb_mouse_mode( this,
                   &DesktopGroup::handleMouseMode,
                   fgGetNode("/devices/status/mice/mouse[0]/mode") ),
-  _handle_events(true),
   _width(_node, "size[0]"),
-  _height(_node, "size[1]"),
-  _resize(sc::Window::NONE),
-  _last_cursor(MOUSE_CURSOR_NONE),
-  _last_x(-1),
-  _last_y(-1),
-  _last_scroll_time(0),
-  _last_key_down_no_mod(-1)
+  _height(_node, "size[1]")
 {
-  osg::Camera* camera =
-    flightgear::getGUICamera( flightgear::CameraGroup::getDefault() );
-  assert(camera);
-  camera->addChild( getMatrixTransform() );
+  auto camera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+  if( !camera )
+  {
+    SG_LOG(SG_GUI, SG_WARN, "DesktopGroup: failed to get GUI camera.");
+    return;
+  }
 
-  osg::StateSet* stateSet = _transform->getOrCreateStateSet();
+  camera->addChild(_scene_group.get());
+
+  osg::StateSet* stateSet = _scene_group->getOrCreateStateSet();
   stateSet->setDataVariance(osg::Object::STATIC);
   stateSet->setRenderBinDetails(1000, "RenderBin");
 
@@ -295,7 +291,7 @@ const float resize_corner = 20;
 //------------------------------------------------------------------------------
 bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 {
-  if( !_transform->getNumChildren() || !_handle_events )
+  if( !_handle_events || !_scene_group || !_scene_group->getNumChildren() )
     return false;
 
   sc::MouseEventPtr event(new sc::MouseEvent(ea));
@@ -334,12 +330,12 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
   sc::WindowPtr window_at_cursor = _pointer_grab_window.lock();
   if( !window_at_cursor )
   {
-    for( int i = _transform->getNumChildren() - 1; i >= 0; --i )
+    for( int i = _scene_group->getNumChildren() - 1; i >= 0; --i )
     {
-      osg::Group *element = _transform->getChild(i)->asGroup();
+      osg::Group *element = _scene_group->getChild(i)->asGroup();
 
-      assert(element);
-      assert(element->getUserData());
+      if( !element || !element->getUserData() )
+        continue; // TODO warn/log?
 
       sc::WindowPtr window =
         dynamic_cast<sc::Window*>
@@ -509,7 +505,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 //------------------------------------------------------------------------------
 bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
 {
-  if( !_transform->getNumChildren() || !_handle_events )
+  if( !_handle_events || !_scene_group || _scene_group->getNumChildren() )
     return false;
 
   sc::KeyboardEventPtr event(new sc::KeyboardEvent(ea));
@@ -526,7 +522,7 @@ bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
     else
     {
       if( event->keyCode() == _last_key_down_no_mod )
-      _last_key_down_no_mod = -1;
+      _last_key_down_no_mod = ~0u;
     }
   }
 
@@ -574,13 +570,17 @@ void DesktopGroup::handleResize(int x, int y, int width, int height)
   _width = width;
   _height = height;
 
-  // Origin should be at top left corner, therefore we need to mirror the y-axis
-  _transform->setMatrix(osg::Matrix(
-    1,  0, 0, 0,
-    0, -1, 0, 0,
-    0,  0, 1, 0,
-    0, _height, 0, 1
-  ));
+  if( _scene_group.valid() )
+  {
+    // Origin should be at top left corner, therefore we need to mirror the
+    // y-axis
+    _scene_group->setMatrix(osg::Matrix(
+      1,  0, 0, 0,
+      0, -1, 0, 0,
+      0,  0, 1, 0,
+      0, _height, 0, 1
+    ));
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -602,11 +602,7 @@ sc::WindowPtr GUIMgr::createWindow(const std::string& name)
 {
   sc::WindowPtr window = _desktop->createChild<sc::Window>(name);
   if( name.empty() )
-    window->set<std::string>
-    (
-      "id",
-      boost::lexical_cast<std::string>(window->getProps()->getIndex())
-    );
+    window->set("id", std::to_string(window->getProps()->getIndex()));
   return window;
 }
 
