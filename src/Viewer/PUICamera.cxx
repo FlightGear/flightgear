@@ -29,7 +29,7 @@
 #include <osg/BlendFunc>
 
 #include <osg/NodeVisitor>
-
+#include <osgUtil/CullVisitor>
 #include <osgGA/GUIEventHandler>
 #include <osgGA/GUIEventAdapter>
 
@@ -55,6 +55,40 @@
 #endif
 
 using namespace flightgear;
+
+#if OSG_VERSION_LESS_THAN(3,4,0)
+
+// this class kindly provided by Wojtek Lewandowsk on ths OpenSceneGraph-users
+// mailing list from his code-archive, it's needed to poke the camera setup
+// after resizing the FBO backing storage, on OSG 3.2.x
+
+class PUICamera::UpdateViewportAndFBOAfterTextureResizeCallback : public osg::NodeCallback
+{
+public:
+    UpdateViewportAndFBOAfterTextureResizeCallback(bool dirty = false) : _dirty(dirty) {}
+    
+    void setDirty(bool dirty) { _dirty = dirty; }
+    bool getDirty() { return _dirty; }
+    
+    void operator()(osg::Node *node, osg::NodeVisitor *nv)
+    {
+        if (_dirty)
+        {
+            osgUtil::CullVisitor *cv = static_cast<osgUtil::CullVisitor *>(nv);
+            if (cv && node == cv->getCurrentRenderStage()->getCamera())
+            {
+                cv->getCurrentRenderStage()->setCameraRequiresSetUp(true);
+                _dirty = false;
+            }
+        }
+        
+        traverse(node, nv);
+    }
+protected:
+    bool _dirty;
+};
+
+#endif
 
 class PUIDrawable : public osg::Drawable
 {
@@ -289,6 +323,11 @@ void PUICamera::init(osg::Group* parent)
     // set the camera's node mask, ensure the pick bit is clear
     setNodeMask(SG_NODEMASK_GUI_BIT);
 
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    _resizeCullCallback = new UpdateViewportAndFBOAfterTextureResizeCallback;
+    setCullCallback(_resizeCullCallback);
+#endif
+    
 // geode+drawable to call puDisplay, as a child of this FBO-camera
     osg::Geode* geode = new osg::Geode;
     geode->setName("PUIDrawableGeode");
@@ -301,7 +340,6 @@ void PUICamera::init(osg::Group* parent)
                                                osg::Vec3(200.0, 0.0, 0.0),
                                                osg::Vec3(0.0, 200.0, 0.0));
     _fullScreenQuad->setSupportsDisplayList(false);
-    _fullScreenQuad->setNodeMask(SG_NODEMASK_GUI_BIT);
     _fullScreenQuad->setName("PUI fullscreen quad");
 
 // state used for drawing the quad (not for rendering PUI, that's done in the
@@ -348,13 +386,13 @@ void PUICamera::resizeUi(int width, int height)
     double ratio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
     const int scaledWidth = static_cast<int>(width / ratio);
     const int scaledHeight = static_cast<int>(height / ratio);
-
-    osg::Camera::resize(scaledWidth, scaledHeight);
     
     setViewport(0, 0, scaledWidth, scaledHeight);
 #if OSG_VERSION_LESS_THAN(3,4,0)
     manuallyResizeFBO(scaledWidth, scaledHeight);
+    _resizeCullCallback->setDirty(true);
 #else
+    osg::Camera::resize(scaledWidth, scaledHeight);
     resizeAttachments(scaledWidth, scaledHeight);
 #endif
 

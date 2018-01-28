@@ -199,16 +199,15 @@ void CanvasWidget::setSize(int w, int h)
 //------------------------------------------------------------------------------
 void CanvasWidget::draw(int dx, int dy)
 {
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    osg::Extensions* extensions = osg::getExtensions(0, true);
-#else
-    osg::GLExtensions* extensions = osg::GLExtensions::Get(0, true);
-#endif
-    
+
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
-  extensions->glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
-    
+
+#if OSG_VERSION_LESS_THAN(3,4,0)
+#else
+    osg::GLExtensions* extensions = osg::GLExtensions::Get(0, true);
+    extensions->glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
+#endif
   glBindTexture(GL_TEXTURE_2D, _canvas_mgr->getCanvasTexId(_canvas));
   glBegin( GL_QUADS );
     glColor4f(1,1,1, 1.0f);

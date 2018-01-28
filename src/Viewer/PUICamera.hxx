@@ -18,6 +18,7 @@
 #define PUICAMERA_HXX
 
 #include <osg/Camera>
+#include <osg/Version>
 
 namespace osg
 {
@@ -42,7 +43,11 @@ public:
     void resizeUi(int width, int height);
     void init(osg::Group *parent);
 private:
-
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    class UpdateViewportAndFBOAfterTextureResizeCallback;
+    UpdateViewportAndFBOAfterTextureResizeCallback* _resizeCullCallback = nullptr;
+#endif
+    
     void manuallyResizeFBO(int width, int height);
 
     osg::Texture2D* _fboTexture = nullptr;
