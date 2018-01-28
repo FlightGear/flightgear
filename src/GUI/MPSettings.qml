@@ -48,6 +48,11 @@ Section {
         onRestoreIndex: {
             mpServer.selectedIndex = index
         }
+
+        onRestoreDefault: {
+            console.info("Selecting default MP server");
+            mpServer.selectedIndex = 0;
+        }
     }
 
     LineEdit {
@@ -74,7 +79,12 @@ Section {
                 _config.setProperty("/sim/multiplay/txport", port);
             } else {
                 var sel = mpServer.selectedIndex
-                _config.setProperty("/sim/multiplay/txhost", _mpServers.serverForIndex(sel));
+                var host = _mpServers.serverForIndex(sel);
+                if (host == "") {
+                    console.warn("No host name for selected MP server " + sel)
+                }
+
+                _config.setProperty("/sim/multiplay/txhost", host);
                 var port = _mpServers.portForIndex(sel);
                 if (port == 0) {
                     port = defaultMPPort;

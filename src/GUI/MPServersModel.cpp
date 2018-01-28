@@ -141,6 +141,8 @@ void MPServersModel::restoreMPServerSelection()
 
             if (it != m_servers.end()) {
                 emit restoreIndex(std::distance(m_servers.begin(), it));
+            } else {
+                emit restoreDefault();
             }
         }
 

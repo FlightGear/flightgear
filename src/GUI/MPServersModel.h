@@ -33,7 +33,7 @@ public:
     Q_INVOKABLE int portForIndex(int index) const;
 signals:
     void restoreIndex(int index);
-
+    void restoreDefault();
 private:
 
     SGSharedPtr<RemoteXMLRequest> m_mpServerRequest;
