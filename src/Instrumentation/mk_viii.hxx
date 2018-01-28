@@ -55,7 +55,7 @@ class SGSampleGroup;
 class MK_VIII : public SGSubsystem
 {
   // keep in sync with Mode6Handler::altitude_callout_definitions[]
-  static const unsigned n_altitude_callouts = 11;
+  static const unsigned n_altitude_callouts = 12;
 
   /////////////////////////////////////////////////////////////////////////////
   // MK_VIII::Parameter ///////////////////////////////////////////////////////
@@ -164,6 +164,7 @@ class MK_VIII : public SGSubsystem
       SGPropertyNode_ptr autopilot_heading_lock;
       SGPropertyNode_ptr flaps;
       SGPropertyNode_ptr gear_down;
+      SGPropertyNode_ptr throttle;
       SGPropertyNode_ptr latitude;
       SGPropertyNode_ptr longitude;
       SGPropertyNode_ptr nav0_cdi_serviceable;
@@ -460,6 +461,7 @@ public:
 	bool self_test;			// appendix E 6.6.7, 3.15.1.10
 	bool glideslope_inhibit;	// appendix E 6.6.11, 3.15.1.1
 	bool glideslope_cancel;		// appendix E 6.6.13, 3.15.1.5
+	bool decision_height_100;
 	bool decision_height;		// appendix E 6.6.14, 3.10.2
 	bool mode6_low_volume;		// appendix E 6.6.15, 3.15.1.7
 	bool audio_inhibit;		// appendix E 6.6.16, 3.15.1.3
@@ -686,7 +688,9 @@ public:
         Voice *gpws_inop;
         Voice *hard_glideslope;
         Voice *minimums;
+        Voice *minimums_100;
         Voice *minimums_minimums;
+        Voice *retard;
         Voice *pull_up;
         Voice *sink_rate;
         Voice *sink_rate_pause_sink_rate;
@@ -818,6 +822,7 @@ private:
       ALERT_MODE5_HARD					= 1 << 15,
 
       ALERT_MODE6_MINIMUMS				= 1 << 16,
+
       ALERT_MODE6_ALTITUDE_CALLOUT			= 1 << 17,
       ALERT_MODE6_LOW_BANK_ANGLE_1			= 1 << 18,
       ALERT_MODE6_HIGH_BANK_ANGLE_1			= 1 << 19,
@@ -826,7 +831,10 @@ private:
       ALERT_MODE6_LOW_BANK_ANGLE_3			= 1 << 22,
       ALERT_MODE6_HIGH_BANK_ANGLE_3			= 1 << 23,
 
-      ALERT_TCF_TOO_LOW_TERRAIN				= 1 << 24
+      ALERT_TCF_TOO_LOW_TERRAIN				= 1 << 24,
+
+      ALERT_MODE6_MINIMUMS_100          = 1 << 28,
+      ALERT_MODE6_RETARD                = 1 << 29,
     };
 
     enum
@@ -1163,6 +1171,7 @@ private:
     // keep in sync with altitude_callout_definitions[]
     typedef enum
     {
+      ALTITUDE_CALLOUT_2500,
       ALTITUDE_CALLOUT_1000,
       ALTITUDE_CALLOUT_500,
       ALTITUDE_CALLOUT_400,
@@ -1209,13 +1218,16 @@ private:
   private:
     MK_VIII *mk;
 
-    bool		last_decision_height;
-    Parameter<double>	last_radio_altitude;
-    Parameter<double>	last_altitude_above_field;
+    bool                last_decision_height;
+    bool                last_decision_height_100;
+    Parameter<double>   last_radio_altitude;
+    Parameter<double>   last_altitude_above_field;
 
     bool altitude_callouts_issued[n_altitude_callouts];
     bool minimums_issued;
+    bool minimums_above_100_issued;
     bool above_field_issued;
+    bool throttle_retarded;
 
     Timer		runway_timer;
     Parameter<bool>	has_runway;

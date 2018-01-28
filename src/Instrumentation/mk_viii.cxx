@@ -170,6 +170,7 @@ MK_VIII::PropertiesHandler::init ()
   mk_node(autopilot_heading_lock) = fgGetNode("/autopilot/locks/heading", true);
   mk_node(flaps) = fgGetNode("/controls/flight/flaps", true);
   mk_node(gear_down) = fgGetNode("/controls/gear/gear-down", true);
+  mk_node(throttle) = fgGetNode("/controls/engines/engine/throttle", true);
   mk_node(latitude) = fgGetNode("/position/latitude-deg", true);
   mk_node(longitude) = fgGetNode("/position/longitude-deg", true);
   mk_node(nav0_cdi_serviceable) = fgGetNode("/instrumentation/nav/cdi/serviceable", true);
@@ -567,16 +568,18 @@ MK_VIII::ConfigurationModule::read_altitude_callouts (int value)
 {
   enum
   {
-    MINIMUMS		= -1,
-    SMART_500		= -2,
-    FIELD_500		= -3,
-    FIELD_500_ABOVE	= -4
+    MINIMUMS           = -1,
+    SMART_500          = -2,
+    FIELD_500          = -3,
+    FIELD_500_ABOVE    = -4,
+    MINIMUMS_ABOVE_100 = -5,
+    RETARD             = -6
   };
 
   static const struct
   {
     int	id;
-    int callouts[13];
+    int callouts[16];
   } values[] = {
     { 0, { MINIMUMS, SMART_500, 200, 100, 50, 40, 30, 20, 10, 0 } },
     { 1, { MINIMUMS, SMART_500, 200, 0 } },
@@ -595,22 +598,35 @@ MK_VIII::ConfigurationModule::read_altitude_callouts (int value)
     { 14, { MINIMUMS, 100, 0 } },
     { 15, { MINIMUMS, 200, 100, 0 } },
     { 100, { FIELD_500, 0 } },
-    { 101, { FIELD_500_ABOVE, 0 } }
+    { 101, { FIELD_500_ABOVE, 0 } },
+    {1000, { RETARD, MINIMUMS_ABOVE_100, MINIMUMS, 2500, 1000, 500, 400, 300, 200, 100, 50, 40, 30,20, 10, 0 } },
+    {1001, { RETARD,                     MINIMUMS, 2500, 1000, 500, 400, 300, 200, 100, 50, 40, 30,20, 10, 0 } },
+    {1002, {                             MINIMUMS, 2500, 1000, 500, 400, 300, 200, 100, 50, 40, 30,20, 10, 0 } },
+    {1010, { RETARD, MINIMUMS_ABOVE_100, MINIMUMS,       1000, 500, 400, 300, 200, 100, 50, 40, 30,20, 10, 0 } },
+    {1011, { RETARD,                     MINIMUMS,       1000, 500, 400, 300, 200, 100, 50, 40, 30,20, 10, 0 } },
   };
 
-  unsigned i;
-
+  mk->mode6_handler.conf.retard_enabled = false;
+  mk->mode6_handler.conf.minimums_above_100_enabled = false;
   mk->mode6_handler.conf.minimums_enabled = false;
   mk->mode6_handler.conf.smart_500_enabled = false;
   mk->mode6_handler.conf.above_field_voice = NULL;
   mk->mode6_handler.conf.altitude_callouts_enabled = 0;
 
-  for (i = 0; i < n_elements(values); i++)
+  for (unsigned int i = 0; i < n_elements(values); i++)
     if (values[i].id == value)
       {
 	for (int j = 0; values[i].callouts[j] != 0; j++)
 	  switch (values[i].callouts[j])
 	    {
+	    case RETARD:
+	      mk->mode6_handler.conf.retard_enabled = true;
+          break;
+
+	    case MINIMUMS_ABOVE_100:
+	      mk->mode6_handler.conf.minimums_above_100_enabled = true;
+	      break;
+
 	    case MINIMUMS:
 	      mk->mode6_handler.conf.minimums_enabled = true;
 	      break;
@@ -1319,6 +1335,10 @@ MK_VIII::IOHandler::update_inputs ()
 
   if (mk_dinput_feed(decision_height))
   {
+    mk_dinput(decision_height_100) = ! mk_data(radio_altitude).ncd
+      && ! mk_data(decision_height).ncd
+      && mk_data(radio_altitude).get() <= mk_data(decision_height).get()+100;
+
     mk_dinput(decision_height) = ! mk_data(radio_altitude).ncd
       && ! mk_data(decision_height).ncd
       && mk_data(radio_altitude).get() <= mk_data(decision_height).get();
@@ -1646,6 +1666,7 @@ MK_VIII::IOHandler::update_mode6_callouts_discrete_2 ()
 	{ 11, mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_400) },
 	{ 12, mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_500) },
 	{ 13, mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_1000) },
+	{ 14, mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_2500) },
 	{ 18, mk_voice(bank_angle_pause_bank_angle) },
 	{ 18, mk_voice(bank_angle_pause_bank_angle_3) },
 	{ 23, mk_voice(five_hundred_above) }
@@ -2135,7 +2156,9 @@ MK_VIII::VoicePlayer::init ()
     make_voice(&voices.glideslope_inop, "glideslope-inop");
     make_voice(&voices.gpws_inop, "gpws-inop");
     make_voice(&voices.hard_glideslope, "glideslope", "glideslope", 3.0);
+    make_voice(&voices.retard, "retard");
     make_voice(&voices.minimums, "minimums");
+    make_voice(&voices.minimums_100, "100-above");
     make_voice(&voices.minimums_minimums, "minimums", "minimums");
     make_voice(&voices.pull_up, "pull-up");
     make_voice(&voices.sink_rate, "sink-rate");
@@ -2357,6 +2380,11 @@ MK_VIII::SelfTestHandler::run ()
     }
   if (! was_here())
     {
+      if (mk->mode6_handler.conf.minimums_above_100_enabled)
+          return play(mk_voice(minimums_100));
+    }
+  if (! was_here())
+    {
       if (mk->mode6_handler.conf.minimums_enabled)
 	return play(mk_voice(minimums));
     }
@@ -2367,10 +2395,10 @@ MK_VIII::SelfTestHandler::run ()
     }
   for (unsigned i = 0; i < n_altitude_callouts; i++)
     if (! was_here_offset(i))
-     {
+    {
         if (mk->mode6_handler.conf.altitude_callouts_enabled & (1<<i))
             return play(mk_altitude_voice(i));
-     }
+    }
 
   if (! was_here())
   {
@@ -2640,6 +2668,16 @@ MK_VIII::AlertHandler::update ()
     {
       if (! has_old_alerts(ALERT_MODE6_MINIMUMS))
           mk->voice_player.play(mk_voice(minimums_minimums));
+    }
+  else if (select_voice_alerts(ALERT_MODE6_MINIMUMS_100))
+    {
+      if (! has_old_alerts(ALERT_MODE6_MINIMUMS_100))
+          mk->voice_player.play(mk_voice(minimums_100));
+    }
+  else if (select_voice_alerts(ALERT_MODE6_RETARD))
+    {
+      if (must_play_voice(ALERT_MODE6_RETARD))
+          mk->voice_player.play(mk_voice(retard), VoicePlayer::PLAY_LOOPED);
     }
   else if (select_voice_alerts(ALERT_MODE4AB_TOO_LOW_TERRAIN | ALERT_MODE4C_TOO_LOW_TERRAIN))
     {
@@ -3807,12 +3845,13 @@ MK_VIII::Mode5Handler::update ()
 
 // keep sorted in descending order
 const int MK_VIII::Mode6Handler::altitude_callout_definitions[] = 
-  { 1000, 500, 400, 300, 200, 100, 50, 40, 30, 20, 10 };
+  { 2500, 1000, 500, 400, 300, 200, 100, 50, 40, 30, 20, 10 };
 
 void
 MK_VIII::Mode6Handler::reset_minimums ()
 {
   minimums_issued = false;
+  minimums_above_100_issued = false;
 }
 
 void
@@ -3820,6 +3859,7 @@ MK_VIII::Mode6Handler::reset_altitude_callouts ()
 {
   for (unsigned i = 0; i < n_altitude_callouts; i++)
     altitude_callouts_issued[i] = false;
+  throttle_retarded = false;
 }
 
 bool
@@ -3967,28 +4007,47 @@ MK_VIII::Mode6Handler::update_minimums ()
       && conf.minimums_enabled
       && ! minimums_issued
       && mk_dinput(landing_gear)
-      && mk_dinput(decision_height)
       && ! last_decision_height)
-    {
-      minimums_issued = true;
+  {
+      if (mk_dinput(decision_height))
+      {
+          minimums_issued = true;
 
-      // If an altitude callout is playing, stop it now so that the
-      // minimums callout can be played (note that proper connection
-      // and synchronization of the radio-altitude ARINC 529 input,
-      // decision-height discrete and decision-height ARINC 529 input
-      // will prevent an altitude callout from being played near the
-      // decision height).
+          // If an altitude callout is playing, stop it now so that the
+          // minimums callout can be played (note that proper connection
+          // and synchronization of the radio-altitude ARINC 529 input,
+          // decision-height discrete and decision-height ARINC 529 input
+          // will prevent an altitude callout from being played near the
+          // decision height).
 
-      if (is_playing_altitude_callout())
-	mk->voice_player.stop(VoicePlayer::STOP_NOW);
+          if (is_playing_altitude_callout())
+              mk->voice_player.stop(VoicePlayer::STOP_NOW);
 
-      mk_set_alerts(mk_alert(MODE6_MINIMUMS));
-    }
+          mk_unset_alerts(mk_alert(MODE6_MINIMUMS_100));
+          mk_set_alerts(mk_alert(MODE6_MINIMUMS));
+      }
+      else
+      if (conf.minimums_above_100_enabled && (!minimums_above_100_issued) &&
+          mk_dinput(decision_height_100))
+      {
+          minimums_above_100_issued = true;
+
+          if (is_playing_altitude_callout())
+              mk->voice_player.stop(VoicePlayer::STOP_NOW);
+
+          mk_unset_alerts(mk_alert(MODE6_MINIMUMS));
+          mk_set_alerts(mk_alert(MODE6_MINIMUMS_100));
+      }
+  }
   else
+  {
     mk_unset_alerts(mk_alert(MODE6_MINIMUMS));
+    mk_unset_alerts(mk_alert(MODE6_MINIMUMS_100));
+  }
 
  end:
   last_decision_height = mk_dinput(decision_height);
+  last_decision_height_100 = mk_dinput(decision_height_100);
 }
 
 void
@@ -3997,8 +4056,23 @@ MK_VIII::Mode6Handler::update_altitude_callouts ()
   if (! mk->io_handler.gpws_inhibit() && is_playing_altitude_callout())
     goto end;
 
-  if (! mk->io_handler.gpws_inhibit()
-      && ! mk->state_handler.ground // [1]
+  if (! mk->io_handler.gpws_inhibit())
+  {
+    if (mk->mode6_handler.conf.retard_enabled &&
+        (!throttle_retarded)&&
+        (mk_data(radio_altitude).get() < 25))
+    {
+        if (mk_node(throttle)->getDoubleValue() > 0.05)
+        {
+            mk_repeat_alert(mk_alert(MODE6_RETARD));
+            goto end;
+        }
+        // throttle was closed
+        throttle_retarded = true;
+    }
+    mk_unset_alerts(mk_alert(MODE6_RETARD));
+
+    if (! mk->state_handler.ground // [1]
       && ! mk_data(radio_altitude).ncd)
     for (unsigned i = 0; i < n_altitude_callouts && mk_data(radio_altitude).get() <= altitude_callout_definitions[i]; i++)
       if (((conf.altitude_callouts_enabled & (1<<i))
@@ -4023,6 +4097,7 @@ MK_VIII::Mode6Handler::update_altitude_callouts ()
 	      goto end;
 	    }
 	}
+  }
 
   mk_unset_alerts(mk_alert(MODE6_ALTITUDE_CALLOUT));
 
