@@ -104,17 +104,28 @@ const int V2_PAD_MAGIC = 0x1face002;
 const int BOOLARRAY_BLOCKSIZE = 40;
 
 /*
-* 2017.3 introduces a new Generic Packet concept.
+* 2018.1 introduces a new minimal generic packet concept.
 * This allows a model to choose to only transmit a few essential properties, which leaves the packet at around 380 bytes.
 * The rest of the packet can then be used for bridged Emesary notifications, which over allow much more control
 * at the model level, including different notifications being sent.
 * see $FGData/Nasal/Notifications.nas and $FGData/Nasal/emesary_mp_bridge.nas
+* The property /sim/multiplay/transmit-filter-property-base can be set to 1 to turn off all of the standard properties and only send generics.
+* or this property can be set to a number greater than 1 (e.g. 12000) to only transmit properties based on their index. It is a simple filtering
+* mechanism.
+* - in both cases the chat and transponder properties will be transmitted for compatibility.
 */
-static inline bool IsIncludedInGenericPacket(int property_id)
+static inline bool IsIncludedInPacket(int filter_base, int property_id)
 {
-    return property_id >= 10002
-        || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
+    if (filter_base == 1) // transmit-property-base of 1 is equivalent to only generics.
+        return property_id >= 10002
+            || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
+    else
+        return property_id >= filter_base
+            || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
 }
+
+const int EMESARYBRIDGE_BASE = 12000;
+const int EMESARYBRIDGETYPE_BASE = 12200;
 
 const int BOOLARRAY_BASE_1 = 11000;
 const int BOOLARRAY_BASE_2 = BOOLARRAY_BASE_1 + BOOLARRAY_BLOCKSIZE;
@@ -356,51 +367,6 @@ static const IdPropertyList sIdPropertyList[] = {
     { 10118, "sim/multiplay/generic/string[18]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
     { 10119, "sim/multiplay/generic/string[19]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
 
-    // Direct support for emesary bridge properties. This is mainly to ensure that these properties do not overlap with the string
-    // properties; although the emesary bridge can use any string property.
-    { 10120, "sim/multiplay/emesary/bridge[0]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10121, "sim/multiplay/emesary/bridge[1]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10122, "sim/multiplay/emesary/bridge[2]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10123, "sim/multiplay/emesary/bridge[3]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10124, "sim/multiplay/emesary/bridge[4]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10125, "sim/multiplay/emesary/bridge[5]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10126, "sim/multiplay/emesary/bridge[6]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10127, "sim/multiplay/emesary/bridge[7]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10128, "sim/multiplay/emesary/bridge[8]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10129, "sim/multiplay/emesary/bridge[9]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10120, "sim/multiplay/emesary/bridge[10]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10131, "sim/multiplay/emesary/bridge[11]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10132, "sim/multiplay/emesary/bridge[12]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10133, "sim/multiplay/emesary/bridge[13]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10134, "sim/multiplay/emesary/bridge[14]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10135, "sim/multiplay/emesary/bridge[15]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10136, "sim/multiplay/emesary/bridge[16]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10137, "sim/multiplay/emesary/bridge[17]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10138, "sim/multiplay/emesary/bridge[18]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10139, "sim/multiplay/emesary/bridge[19]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
-
-    // To allow the bridge to identify itself and allow quick filtering based on type/ID.
-    { 10160, "sim/multiplay/emesary/bridge-type[0]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10161, "sim/multiplay/emesary/bridge-type[1]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10162, "sim/multiplay/emesary/bridge-type[2]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10163, "sim/multiplay/emesary/bridge-type[3]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10164, "sim/multiplay/emesary/bridge-type[4]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10165, "sim/multiplay/emesary/bridge-type[5]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10166, "sim/multiplay/emesary/bridge-type[6]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10167, "sim/multiplay/emesary/bridge-type[7]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10168, "sim/multiplay/emesary/bridge-type[8]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10169, "sim/multiplay/emesary/bridge-type[9]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10160, "sim/multiplay/emesary/bridge-type[10]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10171, "sim/multiplay/emesary/bridge-type[11]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10172, "sim/multiplay/emesary/bridge-type[12]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10173, "sim/multiplay/emesary/bridge-type[13]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10174, "sim/multiplay/emesary/bridge-type[14]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10175, "sim/multiplay/emesary/bridge-type[15]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10176, "sim/multiplay/emesary/bridge-type[16]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10177, "sim/multiplay/emesary/bridge-type[17]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10178, "sim/multiplay/emesary/bridge-type[18]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-    { 10179, "sim/multiplay/emesary/bridge-type[19]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
-
     { 10200, "sim/multiplay/generic/float[0]", simgear::props::FLOAT, TT_ASIS,  V1_1_PROP_ID, NULL, NULL },
     { 10201, "sim/multiplay/generic/float[1]", simgear::props::FLOAT, TT_ASIS,  V1_1_PROP_ID, NULL, NULL },
     { 10202, "sim/multiplay/generic/float[2]", simgear::props::FLOAT, TT_ASIS,  V1_1_PROP_ID, NULL, NULL },
@@ -640,6 +606,72 @@ static const IdPropertyList sIdPropertyList[] = {
     { BOOLARRAY_BASE_3 + 28, "sim/multiplay/generic/bool[88]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 29, "sim/multiplay/generic/bool[89]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 30, "sim/multiplay/generic/bool[90]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
+
+
+        // Direct support for emesary bridge properties. This is mainly to ensure that these properties do not overlap with the string
+        // properties; although the emesary bridge can use any string property.
+    { EMESARYBRIDGE_BASE + 0,  "sim/multiplay/emesary/bridge[0]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 1,  "sim/multiplay/emesary/bridge[1]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 2,  "sim/multiplay/emesary/bridge[2]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 3,  "sim/multiplay/emesary/bridge[3]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 4,  "sim/multiplay/emesary/bridge[4]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 5,  "sim/multiplay/emesary/bridge[5]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 6,  "sim/multiplay/emesary/bridge[6]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 7,  "sim/multiplay/emesary/bridge[7]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 8,  "sim/multiplay/emesary/bridge[8]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 9,  "sim/multiplay/emesary/bridge[9]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 10, "sim/multiplay/emesary/bridge[10]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 11, "sim/multiplay/emesary/bridge[11]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 12, "sim/multiplay/emesary/bridge[12]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 13, "sim/multiplay/emesary/bridge[13]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 14, "sim/multiplay/emesary/bridge[14]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 15, "sim/multiplay/emesary/bridge[15]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 16, "sim/multiplay/emesary/bridge[16]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 17, "sim/multiplay/emesary/bridge[17]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 18, "sim/multiplay/emesary/bridge[18]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 19, "sim/multiplay/emesary/bridge[19]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 20, "sim/multiplay/emesary/bridge[20]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 21, "sim/multiplay/emesary/bridge[21]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 22, "sim/multiplay/emesary/bridge[22]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 23, "sim/multiplay/emesary/bridge[23]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 24, "sim/multiplay/emesary/bridge[24]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 25, "sim/multiplay/emesary/bridge[25]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 26, "sim/multiplay/emesary/bridge[26]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 27, "sim/multiplay/emesary/bridge[27]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 28, "sim/multiplay/emesary/bridge[28]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGE_BASE + 29, "sim/multiplay/emesary/bridge[29]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
+
+        // To allow the bridge to identify itself and allow quick filtering based on type/ID.
+    { EMESARYBRIDGETYPE_BASE + 0,  "sim/multiplay/emesary/bridge-type[0]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 1,  "sim/multiplay/emesary/bridge-type[1]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 2,  "sim/multiplay/emesary/bridge-type[2]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 3,  "sim/multiplay/emesary/bridge-type[3]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 4,  "sim/multiplay/emesary/bridge-type[4]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 5,  "sim/multiplay/emesary/bridge-type[5]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 6,  "sim/multiplay/emesary/bridge-type[6]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 7,  "sim/multiplay/emesary/bridge-type[7]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 8,  "sim/multiplay/emesary/bridge-type[8]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 9,  "sim/multiplay/emesary/bridge-type[9]",  simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 10, "sim/multiplay/emesary/bridge-type[10]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 11, "sim/multiplay/emesary/bridge-type[11]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 12, "sim/multiplay/emesary/bridge-type[12]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 13, "sim/multiplay/emesary/bridge-type[13]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 14, "sim/multiplay/emesary/bridge-type[14]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 15, "sim/multiplay/emesary/bridge-type[15]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 16, "sim/multiplay/emesary/bridge-type[16]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 17, "sim/multiplay/emesary/bridge-type[17]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 18, "sim/multiplay/emesary/bridge-type[18]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 19, "sim/multiplay/emesary/bridge-type[19]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 20, "sim/multiplay/emesary/bridge-type[20]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 21, "sim/multiplay/emesary/bridge-type[21]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 22, "sim/multiplay/emesary/bridge-type[22]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 23, "sim/multiplay/emesary/bridge-type[23]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 24, "sim/multiplay/emesary/bridge-type[24]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 25, "sim/multiplay/emesary/bridge-type[25]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 26, "sim/multiplay/emesary/bridge-type[26]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 27, "sim/multiplay/emesary/bridge-type[27]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 28, "sim/multiplay/emesary/bridge-type[28]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { EMESARYBRIDGETYPE_BASE + 29, "sim/multiplay/emesary/bridge-type[29]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
 };
 /*
  * For the 2017.x version 2 protocol the properties are sent in two partitions,
@@ -904,7 +936,7 @@ FGMultiplayMgr::FGMultiplayMgr()
   pXmitLen = fgGetNode("/sim/multiplay/last-xmit-packet-len", true);
   pProtocolVersion = fgGetNode("/sim/multiplay/protocol-version", true);
   pMultiPlayDebugLevel = fgGetNode("/sim/multiplay/debug-level", true);
-  pMultiPlayTransmitOnlyGenerics = fgGetNode("/sim/multiplay/transmit-only-generics", true);
+  pMultiPlayTransmitPropertyBase = fgGetNode("/sim/multiplay/transmit-filter-property-base", true);
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
   pMultiPlayRange->setIntValue(100);
 } // FGMultiplayMgr::FGMultiplayMgr()
@@ -1167,7 +1199,7 @@ void
 FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 {
   int protocolToUse = getProtocolToUse();
-  int transmitOnlyGenerics = pMultiPlayTransmitOnlyGenerics->getIntValue();
+  int transmitFilterPropertyBase = pMultiPlayTransmitPropertyBase->getIntValue();
   if ((! mInitialised) || (! mHaveServer))
         return;
 
@@ -1276,9 +1308,11 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                   continue;
               }
               /*
-               * If requested only transmit the generic properties.
+               * If requested only transmit the properties that are above the filter base index; and essential other properties
+               * a value of 1 is equivalent to just transmitting generics (>10002)
+               * a value of 12000 is for only emesary properties.
                */
-              if (transmitOnlyGenerics && !IsIncludedInGenericPacket(propDef->id))
+              if (transmitFilterPropertyBase && !IsIncludedInPacket(transmitFilterPropertyBase, propDef->id))
               {
                   ++it;
                   continue;
