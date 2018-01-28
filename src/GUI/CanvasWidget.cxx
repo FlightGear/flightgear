@@ -16,18 +16,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "CanvasWidget.hxx"
 
 #include <Canvas/canvas_mgr.hxx>
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
 #include <Scripting/NasalSys.hxx>
-
-#include <osg/GLExtensions>
-#include <osg/Version>
 
 #include <simgear/canvas/Canvas.hxx>
 #include <simgear/canvas/events/MouseEvent.hxx>
@@ -201,13 +196,11 @@ void CanvasWidget::draw(int dx, int dy)
 {
 
   glEnable(GL_TEXTURE_2D);
-  glEnable(GL_BLEND);
+    // prevent alpha values in the Canvas texture ending up in the PUI
+    // compositing FBO. While that would ideally be a feature, it didn't
+    // use to work, so Canvas users don't do a default opaque fill.
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
-#if OSG_VERSION_LESS_THAN(3,4,0)
-#else
-    osg::GLExtensions* extensions = osg::GLExtensions::Get(0, true);
-    extensions->glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE);
-#endif
   glBindTexture(GL_TEXTURE_2D, _canvas_mgr->getCanvasTexId(_canvas));
   glBegin( GL_QUADS );
     glColor4f(1,1,1, 1.0f);
@@ -216,6 +209,7 @@ void CanvasWidget::draw(int dx, int dy)
     glTexCoord2f(1,1); glVertex2f(dx + abox.max[0], dy + abox.max[1]);
     glTexCoord2f(0,1); glVertex2f(dx + abox.min[0], dy + abox.max[1]);
   glEnd();
+    
   glDisable(GL_TEXTURE_2D);
-  glDisable(GL_BLEND);
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
