@@ -343,11 +343,11 @@ int WaypointList::rowForY(int y) const
 void WaypointList::draw( int dx, int dy )
 {
   puFrame::draw(dx, dy);
-
+  
   if (!_model) {
     return;
   }
-
+  
   if (_dragScroll != SCROLL_NO) {
     doDragScroll();
   }
@@ -358,20 +358,24 @@ void WaypointList::draw( int dx, int dy )
     _blink = !_blink;
   }
   
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+  
   glEnable(GL_SCISSOR_TEST);
   GLint sx = (int) abox.min[0],
-    sy = abox.min[1];
+  sy = abox.min[1];
   GLsizei w = (GLsizei) abox.max[0] - abox.min[0],
-    h = _heightPx;
-    
+  h = _heightPx;
+  
   sx += border_thickness;
   sy += border_thickness;
   w -= 2 * border_thickness;
   h -= 2 * border_thickness;
-    
+  
   glScissor(sx + dx, sy + dy, w, h);
-  int row = firstVisibleRow(), 
-    final = lastVisibleRow(),
+  int row = firstVisibleRow(),
+    finalRow = lastVisibleRow(),
     rowHeight = rowHeightPx(),
     y = rowHeight;
   
@@ -381,12 +385,12 @@ void WaypointList::draw( int dx, int dy )
   
   RoutePath path(_model->flightplan());
   
-  for ( ; row <= final; ++row, y += rowHeight) {
+  for ( ; row <= finalRow; ++row, y += rowHeight) {
     drawRow(dx, dy, row, y, path);
   } // of row drawing iteration
   
   glDisable(GL_SCISSOR_TEST);
-    
+  
   if (_dragging) {
     // draw the insert marker after the rows
     int insertY = (_dragTargetRow * rowHeight) - _scrollPx;
@@ -395,10 +399,13 @@ void WaypointList::draw( int dx, int dy )
     glColor4f(1.0f, 0.5f, 0.0f, 0.8f);
     glLineWidth(3.0f);
     glBegin(GL_LINES);
-      glVertex2f(dx + abox.min[0], dy + abox.max[1] - insertY);
-      glVertex2f(dx + abox.max[0], dy + abox.max[1] - insertY);
+    glVertex2f(dx + abox.min[0], dy + abox.max[1] - insertY);
+    glVertex2f(dx + abox.max[0], dy + abox.max[1] - insertY);
     glEnd();
   }
+  
+  glDisable(GL_BLEND);
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
 void WaypointList::drawRow(int dx, int dy, int rowIndex, int y,
