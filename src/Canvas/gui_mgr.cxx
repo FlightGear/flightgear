@@ -134,6 +134,7 @@ class DesktopGroup:
 
     uint32_t _last_key_down_no_mod {~0u}; // Key repeat for non modifier keys
 
+    bool canHandleInput() const;
     bool handleMouse(const osgGA::GUIEventAdapter& ea);
     bool handleKeyboard(const osgGA::GUIEventAdapter& ea);
 
@@ -289,9 +290,17 @@ const float resize_margin_neg = 2;
 const float resize_corner = 20;
 
 //------------------------------------------------------------------------------
+bool DesktopGroup::canHandleInput() const
+{
+  return _handle_events
+      && _scene_group.valid()
+      && _scene_group->getNumChildren() > 0;
+}
+
+//------------------------------------------------------------------------------
 bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 {
-  if( !_handle_events || !_scene_group || !_scene_group->getNumChildren() )
+  if( !canHandleInput() )
     return false;
 
   sc::MouseEventPtr event(new sc::MouseEvent(ea));
@@ -505,7 +514,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 //------------------------------------------------------------------------------
 bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
 {
-  if( !_handle_events || !_scene_group || _scene_group->getNumChildren() )
+  if( !canHandleInput() )
     return false;
 
   sc::KeyboardEventPtr event(new sc::KeyboardEvent(ea));
