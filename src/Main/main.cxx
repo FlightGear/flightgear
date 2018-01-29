@@ -99,7 +99,6 @@ using std::vector;
 extern int _bootstrap_OSInit;
 
 static SGPropertyNode_ptr frame_signal;
-static TimeManager* timeMgr;
 
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
@@ -113,10 +112,11 @@ static void fgMainLoop( void )
 
     frame_signal->fireValueChanged();
 
+    auto timeManager = globals->get_subsystem<TimeManager>();
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     double sim_dt, real_dt;
-    timeMgr->computeTimeDeltas(sim_dt, real_dt);
+    timeManager->computeTimeDeltas(sim_dt, real_dt);
 
     // update all subsystems
     globals->get_subsystem_mgr()->update(sim_dt);
@@ -236,7 +236,6 @@ static void registerMainLoop()
 {
     // stash current frame signal property
     frame_signal = fgGetNode("/sim/signals/frame", true);
-    timeMgr = (TimeManager*) globals->get_subsystem("time");
     fgRegisterIdleHandler( fgMainLoop );
 }
 
@@ -279,8 +278,7 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 4 ) {
         idle_state++;
 
-        TimeManager* t = new TimeManager;
-        globals->add_subsystem("time", t, SGSubsystemMgr::INIT);
+        globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::INIT);
 
         // Do some quick general initializations
         if( !fgInitGeneral()) {
@@ -308,7 +306,7 @@ static void fgIdleFunction ( void ) {
 
         simgear::SGModelLib::init(globals->get_fg_root().local8BitStr(), globals->get_props());
 
-        TimeManager* timeManager = (TimeManager*) globals->get_subsystem("time");
+        auto timeManager = globals->get_subsystem<TimeManager>();
         timeManager->init();
 
         ////////////////////////////////////////////////////////////////////

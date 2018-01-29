@@ -35,19 +35,19 @@ public:
     
   void computeTimeDeltas(double& simDt, double& realDt);
   
-  virtual void init();
-  virtual void reinit();
-  virtual void postinit();
-  virtual void shutdown();
+  void init() override;
+  void reinit() override;
+  void postinit() override;
+  void shutdown() override;
+  void unbind() override;
+  void update(double dt) override;
   
-  virtual void unbind();
-    
-  void update(double dt);
-  
-// SGPropertyChangeListener overrides
-  virtual void valueChanged(SGPropertyNode *);
+  // SGPropertyChangeListener overrides
+  void valueChanged(SGPropertyNode *) override;
   
   void setTimeOffset(const std::string& offset_type, long int offset);
+    
+  static const char* subsystemName() { return "time"; }
 private:
   
   /**
