@@ -63,11 +63,11 @@ public:
 
     void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
     void setCruise(float speed, float altitude, float fuel, float gla);
-
-     ///set name of property controlling the elevator
-    void setElevatorControl(const char* prop);
+    
+    /// add (fixed) control setting to approach/cruise config (for solver)
     void addControlSetting(Configuration cfg, const char* prop, float val);
-
+    /// add a control input mapping for runtime
+    void addControlInput(const char* propName, ControlMap::ControlType type, void* obj, int subobj, int opt, float src0, float src1, float dst0, float dst1);
     void addSolutionWeight(Configuration cfg, int idx, float wgt);
 
     int numGear() const { return _gears.size(); }
@@ -101,10 +101,11 @@ public:
     float getDragCoefficient() const { return _dragFactor; }
     float getLiftRatio() const { return _liftRatio; }
     float getCruiseAoA() const { return _cruiseConfig.aoa; }
-    float getTailIncidence() const { return _tailIncidence.val; }
-    float getApproachElevator() const { return _approachElevator.val; }
+    float getTailIncidence() const { return _tailIncidence->val; }
+    float getApproachElevator() const { return _approachElevator->val; }
     const char* getFailureMsg() const { return _failureMsg; }
 
+    // next two are used only in yasim CLI tool
     void setApproachControls() { setControlValues(_approachConfig.controls); }
     void setCruiseControls() { setControlValues(_cruiseConfig.controls); }
     
@@ -208,6 +209,11 @@ private:
     float _getWingLoad(float mass) const;
     ///calculate distance between CGx and AC of wing w
     float _getWingLever(const Wing* w) const;
+    ControlSetting* _addControlSetting(Configuration cfg, const char* prop, float val);
+     ///set name of property controlling the elevator
+    void setElevatorControl(const char* propName);
+    /// set property name controling tail trim (incidence)
+    void setHstabTrimControl(const char* propName);
     
     Model _model;
     ControlMap _controlMap;
@@ -237,8 +243,9 @@ private:
     int _solutionIterations {0};
     float _dragFactor {1};
     float _liftRatio {1};
-    ControlSetting _tailIncidence;
-    ControlSetting _approachElevator;
+    ControlSetting* _tailIncidence {nullptr}; // added to approach config so solver can change it
+    ControlSetting* _ti2 {nullptr}; // copy of _tailIncidence added to cruise config
+    ControlSetting* _approachElevator {nullptr};
     const char* _failureMsg {0};
     /// hard limits for cg from gear position
     float _cgMax {-1e6};         

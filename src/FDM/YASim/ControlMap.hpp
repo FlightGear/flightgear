@@ -72,6 +72,7 @@ public:
         char* name {nullptr};
         int handle {0};
     };
+    // to identify controls per wing section we need wing object + section id 
     struct ObjectID {
         void* object {nullptr};
         int subObj {0};
@@ -125,7 +126,7 @@ public:
     // register property name, return handle
     int getInputPropertyHandle(const char* name);
     int numProperties() { return _properties.size(); }
-    PropHandle* getProperty(const int i) { return ((PropHandle*)_properties.get(i)); }
+    PropHandle* getProperty(const int i);
 
 private:
     //output data for a control of an object
@@ -154,10 +155,9 @@ private:
 
     // An unordered list of output settings.
     Vector _outputs;
-    // control properties
-    Vector _properties;
+    
+    Vector _properties; // list of PropHandle*
 
-    void* addMapping(const char* prop, ControlType control, ObjectID id, int options = 0);
     OutRec* getOutRec(ObjectID id, ControlType control);
 };
 

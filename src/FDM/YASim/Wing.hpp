@@ -164,7 +164,7 @@ public:
     void multiplyLiftRatio(float factor);
     void multiplyDragCoefficient(float factor);
     // setIncidence used to rotate (trim) the hstab
-    void setIncidence(float incidence);
+    bool setIncidence(float incidence);
     // limits for setIncidence
     void setIncidenceMin(float min) { _incidenceMin = min; };
     void setIncidenceMax(float max) { _incidenceMax = max; };

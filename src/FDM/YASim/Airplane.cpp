@@ -16,6 +16,9 @@
 
 namespace yasim {
 
+//default prop names
+static const char* DEF_PROP_ELEVATOR_TRIM = "/controls/flight/elevator-trim";
+
 // gadgets
 inline float abs(float f) { return f<0 ? -f : f; }
 
@@ -59,12 +62,13 @@ Airplane::~Airplane()
     }
     for(i=0; i<_solveWeights.size(); i++)
         delete (SolveWeight*)_solveWeights.get(i);
-    for(i=0; i<_cruiseConfig.controls.size(); i++)
-        delete (ControlSetting*)_cruiseConfig.controls.get(i);
+    for(i=0; i<_cruiseConfig.controls.size(); i++) {
+        ControlSetting* c = (ControlSetting*)_cruiseConfig.controls.get(i);
+        delete c;        
+    }
     for(i=0; i<_approachConfig.controls.size(); i++) {
         ControlSetting* c = (ControlSetting*)_approachConfig.controls.get(i);
-        if(c != &_approachElevator)
-            delete c;
+        delete c;
     }
     delete _wing;
     delete _tail;
@@ -78,7 +82,6 @@ void Airplane::iterate(float dt)
 {
     // The gear might have moved.  Change their aerodynamics.
     updateGearState();
-
     _model.iterate();
 }
 
@@ -143,7 +146,8 @@ void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, f
 {
     _approachConfig.speed = speed;
     _approachConfig.altitude = altitude;
-    _approachConfig.state.setupOrientationFromAoa(aoa); // see runConfig()
+    // solver assumes fixed (given) AoA for approach, so setup once
+    _approachConfig.state.setupOrientationFromAoa(aoa); 
     _approachConfig.aoa = aoa; // not strictly needed, see runConfig()
     _approachConfig.fuel = fuel;
     _approachConfig.glideAngle = gla;
@@ -153,23 +157,32 @@ void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
 {
     _cruiseConfig.speed = speed;
     _cruiseConfig.altitude = altitude;
-    _cruiseConfig.aoa = 0;
-    _tailIncidence.val = 0;
     _cruiseConfig.fuel = fuel;
     _cruiseConfig.glideAngle = gla;
 }
 
-void Airplane::setElevatorControl(const char* prop)
+/// set property name for elevator  
+void Airplane::setElevatorControl(const char* propName)
 {
-    _approachElevator.propHandle = getControlMap()->getInputPropertyHandle(prop);
-    _approachElevator.val = 0;
-    _approachConfig.controls.add(&_approachElevator);
+    _approachElevator = _addControlSetting(APPROACH, propName, 0);
+}
+
+/// set property name for hstab trim
+void Airplane::setHstabTrimControl(const char* propName)
+{
+    _tailIncidence = _addControlSetting(APPROACH, propName, 0);
+    _ti2 = _addControlSetting(CRUISE, propName, 0);
 }
 
 void Airplane::addControlSetting(Configuration cfg, const char* prop, float val)
 {
+    _addControlSetting(cfg, prop,val);
+}
+
+Airplane::ControlSetting* Airplane::_addControlSetting(Configuration cfg, const char* prop, float val)
+{
     ControlSetting* c = new ControlSetting();
-    c->propHandle = getControlMap()->getInputPropertyHandle(prop);
+    c->propHandle = _controlMap.getInputPropertyHandle(prop);
     c->val = val;
     switch (cfg) {
         case APPROACH:
@@ -178,6 +191,21 @@ void Airplane::addControlSetting(Configuration cfg, const char* prop, float val)
         case CRUISE:
             _cruiseConfig.controls.add(c);
             break;
+    }
+    return c;
+}
+
+
+/**
+ * used by the XML parser in FGFDM and solveAirplane
+ */
+void Airplane::addControlInput(const char* propName, ControlMap::ControlType type, void* obj, int subobj, int opt, float src0, float src1, float dst0, float dst1)
+{
+    ControlMap::ObjectID oid = ControlMap::getObjectID(obj, subobj);    
+    _controlMap.addMapping(propName, type, oid, opt, src0, src1, dst0, dst1);
+    // tail incidence is needed by solver so capture the prop name if used in XML
+    if (type == ControlMap::INCIDENCE && obj == _tail) {
+        setHstabTrimControl(propName);
     }
 }
 
@@ -727,12 +755,14 @@ void Airplane::setupWeights(bool isApproach)
     }
 }
 
+/// used by solver to simulate property input
 void Airplane::setControlValues(const Vector& controls)
 {
     _controlMap.reset();
     for(int i=0; i < controls.size(); i++) {
         ControlSetting* c = (ControlSetting*)controls.get(i);
-        _controlMap.setInput(c->propHandle, c->val);
+        if (c->propHandle >= 0)
+            _controlMap.setInput(c->propHandle, c->val);
     }
     _controlMap.applyControls(); 
 }
@@ -740,7 +770,7 @@ void Airplane::setControlValues(const Vector& controls)
 void Airplane::runConfig(Config &cfg)
 {
     // aoa is consider to be given for approach so we calculate orientation 
-    // only once in setApproach()
+    // for approach only once in setApproach() but everytime for cruise here.
     if (!cfg.isApproach) {
         cfg.state.setupOrientationFromAoa(cfg.aoa);
     }
@@ -774,6 +804,7 @@ void Airplane::runConfig(Config &cfg)
     _model.initIteration();
     _model.calcForces(&cfg.state);
 }
+
 /// Used only in solveAirplane() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
 {
@@ -790,23 +821,22 @@ void Airplane::applyDragFactor(float factor)
     }
     for(i=0; i<_fuselages.size(); i++) {
         Fuselage* f = (Fuselage*)_fuselages.get(i);
-        int j;
-        for(j=0; j<f->surfs.size(); j++) {
+        for(int j=0; j<f->surfs.size(); j++) {
             Surface* s = (Surface*)f->surfs.get(j);
             if( isVersionOrNewer( YASIM_VERSION_32 ) ) {
-            // For new YASim, the solver drag factor is only applied to
-            // the X axis for Fuselage Surfaces.
-            // The solver is tuning the coefficient for longitudinal drag,
-            // along the direction of flight. A fuselage's lateral drag
-            // is completely independent and is normally much higher;
-            // it won't be affected by the streamlining done to reduce
-            // longitudinal drag. So the solver should only adjust the
-            // fuselage's longitudinal (X axis) drag coefficient.
-            s->setDragCoefficient(s->getDragCoefficient() * applied);
+                // For new YASim, the solver drag factor is only applied to
+                // the X axis for Fuselage Surfaces.
+                // The solver is tuning the coefficient for longitudinal drag,
+                // along the direction of flight. A fuselage's lateral drag
+                // is completely independent and is normally much higher;
+                // it won't be affected by the streamlining done to reduce
+                // longitudinal drag. So the solver should only adjust the
+                // fuselage's longitudinal (X axis) drag coefficient.
+                s->mulDragCoefficient(applied);
             } else {
-            // Originally YASim applied the drag factor to all axes
-            // for Fuselage Surfaces.
-            s->mulTotalForceCoefficient(applied);
+                // Originally YASim applied the drag factor to all axes
+                // for Fuselage Surfaces.
+                s->mulTotalForceCoefficient(applied);
             }
         }
     }
@@ -820,7 +850,8 @@ void Airplane::applyDragFactor(float factor)
     }
 }
 
-/// Used only in Airplane::solve() and solveHelicopter(), not at runtime
+/// Used only in solveAirplane() and solveHelicopter(), not at runtime
+/// change lift coefficient cz in surfaces
 void Airplane::applyLiftRatio(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
@@ -870,9 +901,20 @@ void Airplane::solveAirplane()
     _solutionIterations = 0;
     _failureMsg = 0;
 
+    if (_approachElevator == nullptr) {        
+        setElevatorControl(DEF_PROP_ELEVATOR_TRIM);
+    }
+    
+    if (_tailIncidence == nullptr) {
+        // no control mapping from XML parser, so we just create "local" 
+        // variables for solver instead of full mapping / property
+        _tailIncidence = new ControlSetting;
+        _ti2 = new ControlSetting;
+    }
+
     while(1) {
-        if(_solutionIterations++ > 10000) { 
-            _failureMsg = "Solution failed to converge after 10000 iterations";
+        if(_solutionIterations++ > SOLVER_MAX_ITERATIONS) { 
+            _failureMsg = "Solution failed to converge!";
             return;
         }
         // Run an iteration at cruise, and extract the needed numbers:
@@ -884,7 +926,7 @@ void Airplane::solveAirplane()
         _cruiseConfig.state.localToGlobal(tmp, tmp);
         float xforce = _cruiseConfig.weight * tmp[0];
         float clift0 = _getLift(_cruiseConfig);
-        float pitch0 = _getPitch(_cruiseConfig);
+        float cpitch0 = _getPitch(_cruiseConfig);
 
         // Run an approach iteration, and do likewise
         runConfig(_approachConfig);
@@ -899,19 +941,23 @@ void Airplane::solveAirplane()
         float clift1 = _getLift(_cruiseConfig);
 
         // Do the same with the tail incidence
-        _tail->setIncidence(_tailIncidence.val + ARCMIN);
+        float savedIncidence = _tailIncidence->val;
+        _ti2->val = _tailIncidence->val += ARCMIN;
+        if (!_tail->setIncidence(_tailIncidence->val)) {
+            _failureMsg = "Tail incidence out of bounds.";
+            return;
+        };
         runConfig(_cruiseConfig);
-        _tail->setIncidence(_tailIncidence.val);
+        _ti2->val = _tailIncidence->val = savedIncidence;
+        _tail->setIncidence(_tailIncidence->val);
 
-        float pitch1 = _getPitch(_cruiseConfig);
+        float cpitch1 = _getPitch(_cruiseConfig);
 
         // Now calculate:
         float awgt = 9.8f * _approachConfig.weight;
 
         float dragFactor = thrust / (thrust-xforce);
         float liftFactor = awgt / (awgt+alift);
-        float aoaDelta = -clift0 * (ARCMIN/(clift1-clift0));
-        float tailDelta = -pitch0 * (ARCMIN/(pitch1-pitch0));
 
         // Sanity:
         if(dragFactor <= 0 || liftFactor <= 0)
@@ -922,12 +968,11 @@ void Airplane::solveAirplane()
         // same thing -- pitching moment -- by diddling a different
         // variable).
         const float ELEVDIDDLE = 0.001f;
-        _approachElevator.val += ELEVDIDDLE;
+        _approachElevator->val += ELEVDIDDLE;
         runConfig(_approachConfig);
-        _approachElevator.val -= ELEVDIDDLE;
+        _approachElevator->val -= ELEVDIDDLE;
 
         double apitch1 = _getPitch(_approachConfig);
-        float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
 
         // Now apply the values we just computed.  Note that the
         // "minor" variables are deferred until we get the lift/drag
@@ -944,25 +989,28 @@ void Airplane::solveAirplane()
         }
 
         // OK, now we can adjust the minor variables:
+        float aoaDelta = -clift0 * (ARCMIN/(clift1-clift0));
+        float tailDelta = -cpitch0 * (ARCMIN/(cpitch1-cpitch0));
         _cruiseConfig.aoa += SOLVE_TWEAK*aoaDelta;
-        _tailIncidence.val += SOLVE_TWEAK*tailDelta;
+        _tailIncidence->val += SOLVE_TWEAK*tailDelta;
         
         _cruiseConfig.aoa = Math::clamp(_cruiseConfig.aoa, -0.175f, 0.175f);
-        _tailIncidence.val = Math::clamp(_tailIncidence.val, -0.175f, 0.175f);
+        _tailIncidence->val = Math::clamp(_tailIncidence->val, -0.175f, 0.175f);
 
         if(abs(xforce/_cruiseConfig.weight) < STHRESH*0.0001 &&
-        abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
-        abs(aoaDelta) < STHRESH*.000017 &&
-        abs(tailDelta) < STHRESH*.000017)
+          abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
+          abs(aoaDelta) < STHRESH*.000017 &&
+          abs(tailDelta) < STHRESH*.000017)
         {
+            float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
             // If this finaly value is OK, then we're all done
             if(abs(elevDelta) < STHRESH*0.0001)
                 break;
 
             // Otherwise, adjust and do the next iteration
-            _approachElevator.val += SOLVE_TWEAK * elevDelta;
-            if(abs(_approachElevator.val) > 1) {
-                _failureMsg = "Insufficient elevator to trim for approach";
+            _approachElevator->val += SOLVE_TWEAK * elevDelta;
+            if(abs(_approachElevator->val) > 1) {
+                _failureMsg = "Insufficient elevator to trim for approach.";
                 break;
             }
         }
@@ -977,9 +1025,15 @@ void Airplane::solveAirplane()
     } else if(Math::abs(_cruiseConfig.aoa) >= .17453293) {
         _failureMsg = "Cruise AoA > 10 degrees";
         return;
-    } else if(Math::abs(_tailIncidence.val) >= .17453293) {
+    } else if(Math::abs(_tailIncidence->val) >= .17453293) {
         _failureMsg = "Tail incidence > 10 degrees";
         return;
+    }
+    // if we have a property tree, export result from solver
+    if (_wingsN != nullptr) {
+        if (_tailIncidence->propHandle >= 0) {
+            fgSetFloat(_controlMap.getProperty(_tailIncidence->propHandle)->name, _tailIncidence->val);
+        }
     }
 }
 
