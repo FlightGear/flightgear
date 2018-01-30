@@ -14,9 +14,27 @@ Item {
 
     readonly property bool __isSelected: (_launcher.selectedAircraft == model.uri)
 
+    property bool __showAlternateText: false
+
+    function cycleTextDisplay()
+    {
+        __showAlternateText = !__showAlternateText;
+    }
+
+    function alternateText()
+    {
+        return qsTr("URI: %1\nLocal path: %2").arg(model.uri).arg(titleBox.pathOnDisk);
+    }
+
     MouseArea {
         anchors.fill: parent
+
         onClicked: {
+            if (mouse.modifiers & Qt.ShiftModifier ) {
+                root.cycleTextDisplay();
+                return;
+            }
+
             if (__isSelected) {
                 root.showDetails(model.uri)
             } else {
@@ -75,12 +93,13 @@ Item {
         Text {
             id: description
             width: parent.width
-            text: model.description
+            text: root.__showAlternateText ? root.alternateText()
+                                           : model.description
             maximumLineCount: 3
             wrapMode: Text.WordWrap
             elide: Text.ElideRight
             height: implicitHeight
-            visible: model.description != ""
+            visible: (model.description != "") || root.__showAlternateText
         }
 
         AircraftDownloadPanel

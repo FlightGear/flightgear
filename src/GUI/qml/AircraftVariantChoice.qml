@@ -21,6 +21,10 @@ Rectangle {
     property alias fontPixelSize: title.font.pixelSize
     property int popupFontPixelSize: 0
 
+    // expose this to avoid a second AircraftInfo in the compact delegate
+    // really should refactor to put the AircraftInfo up there.
+    readonly property string pathOnDisk: aircraftInfo.pathOnDisk
+
     signal selected(var index)
 
     Text {
