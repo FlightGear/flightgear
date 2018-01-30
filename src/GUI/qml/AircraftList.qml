@@ -158,15 +158,6 @@ Item
         flickable: aircraftList
     }
 
-    Connections
-    {
-        target: _launcher
-        onSelectAircraftIndex: {
-            aircraftList.currentIndex = index;
-            aircraftList.model.select
-        }
-    }
-
     state: "installed"
 
     states: [

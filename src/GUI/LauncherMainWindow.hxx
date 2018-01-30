@@ -95,7 +95,6 @@ public slots:
 signals:
     void showNoOfficialHangarChanged();
 
-    void selectAircraftIndex(int index);
     void selectedAircraftChanged(QUrl selectedAircraft);
 
 protected:
