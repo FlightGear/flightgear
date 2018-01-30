@@ -244,7 +244,8 @@ private:
     float _dragFactor {1};
     float _liftRatio {1};
     ControlSetting* _tailIncidence {nullptr}; // added to approach config so solver can change it
-    ControlSetting* _ti2 {nullptr}; // copy of _tailIncidence added to cruise config
+    // Copy of _tailIncidence added to cruise config. See setHstabTrimControl() for explanation.
+    ControlSetting* _tailIncidenceCopy {nullptr}; 
     ControlSetting* _approachElevator {nullptr};
     const char* _failureMsg {0};
     /// hard limits for cg from gear position

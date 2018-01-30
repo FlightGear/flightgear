@@ -170,8 +170,10 @@ void Airplane::setElevatorControl(const char* propName)
 /// set property name for hstab trim
 void Airplane::setHstabTrimControl(const char* propName)
 {
+    // there must be only one value for tail incidence but we need it in each 
+    // config, so we have a 2nd variable
     _tailIncidence = _addControlSetting(APPROACH, propName, 0);
-    _ti2 = _addControlSetting(CRUISE, propName, 0);
+    _tailIncidenceCopy = _addControlSetting(CRUISE, propName, 0);
 }
 
 void Airplane::addControlSetting(Configuration cfg, const char* prop, float val)
@@ -909,7 +911,7 @@ void Airplane::solveAirplane()
         // no control mapping from XML parser, so we just create "local" 
         // variables for solver instead of full mapping / property
         _tailIncidence = new ControlSetting;
-        _ti2 = new ControlSetting;
+        _tailIncidenceCopy = new ControlSetting;
     }
 
     while(1) {
@@ -942,13 +944,14 @@ void Airplane::solveAirplane()
 
         // Do the same with the tail incidence
         float savedIncidence = _tailIncidence->val;
-        _ti2->val = _tailIncidence->val += ARCMIN;
+        // see setHstabTrimControl() for explanation
+        _tailIncidenceCopy->val = _tailIncidence->val += ARCMIN;
         if (!_tail->setIncidence(_tailIncidence->val)) {
             _failureMsg = "Tail incidence out of bounds.";
             return;
         };
         runConfig(_cruiseConfig);
-        _ti2->val = _tailIncidence->val = savedIncidence;
+        _tailIncidenceCopy->val = _tailIncidence->val = savedIncidence;
         _tail->setIncidence(_tailIncidence->val);
 
         float cpitch1 = _getPitch(_cruiseConfig);
