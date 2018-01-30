@@ -121,6 +121,10 @@ Item
 
         clip: true
 
+        // prevent mouse wheel interactions when the details view is
+        // visible, since it has its own flickable
+        enabled: !detailsView.visible
+
         highlight: highlight
         highlightMoveDuration: 100
 
