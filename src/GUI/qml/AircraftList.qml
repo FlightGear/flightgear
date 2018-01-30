@@ -80,7 +80,7 @@ Item
         AircraftRatingsPanel {
             width: aircraftList.width - Style.strutSize * 2
             x: (aircraftList.width - width) / 2
-
+            theList: aircraftList
         }
     }
 
