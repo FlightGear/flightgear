@@ -37,8 +37,10 @@ public:
 
         QImage img = QImage::fromData(QByteArray::fromRawData(reinterpret_cast<const char*>(bytes), length));
         if (img.isNull()) {
-            qWarning() << "failed to load image data for URL:" <<
-                QString::fromStdString(aThumbnailUrl);
+            if (length > 0) {
+                // warn if we had valid bytes but couldn't load it, i.e corrupted data or similar
+                qWarning() << "failed to load image data for URL:" << QString::fromStdString(aThumbnailUrl);
+            }
             return;
         }
 
@@ -130,13 +132,15 @@ void ThumbnailImageItem::setAircraftUri(QString uri)
         const QString thumbnailPath = aircraftSetPath.dir().filePath("thumbnail.jpg");
         m_imageUrl = QUrl::fromLocalFile(thumbnailPath);
 
-        QImage img;
-        if (img.load(thumbnailPath)) {
-            setImage(img);
-        } else {
-            qWarning() << Q_FUNC_INFO << "failed to load thumbnail from:" << thumbnailPath;
+        if (QFileInfo(thumbnailPath).exists()) {
+            QImage img;
+            if (img.load(thumbnailPath)) {
+                setImage(img);
+            } else {
+                qWarning() << Q_FUNC_INFO << "failed to load thumbnail from:" << thumbnailPath;
+            }
         }
-    }
+    } // of local aircraft case
 
     emit aircraftUriChanged();
 }
