@@ -600,7 +600,7 @@ void Wing::printSectionInfo()
     printf("#wing sections: %d\n", _sections.size());
     for (int section=0; section < _sections.size(); section++) {
         ws = (WingSection*)_sections.get(section);
-        printf("Section %d base point (%.3f, %.3f, %.3f), chord %.3f, incidence at section root %.1fdeg\n", section,
+        printf("Section %d base point: x=\"%.3f\" y=\"%.3f\" z=\"%.3f\" chord=\"%.3f\" incidence=\"%.1f\" (at section root in deg)\n", section,
                ws->_rootChord.x, ws->_rootChord.y, ws->_rootChord.z, ws->_rootChord.length, ws->_sectionIncidence * RAD2DEG);
     }
 }
