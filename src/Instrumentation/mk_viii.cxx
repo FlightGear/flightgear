@@ -962,7 +962,7 @@ MK_VIII::FaultHandler::unset_fault (Fault fault)
 {
     if (faults & (1<<fault))
     {
-        faults |= 1<<fault;
+        faults &= ~(1<<fault);
         if (! has_faults(INOP_GPWS))
             mk_doutput(gpws_inop) = false;
         if (! has_faults(INOP_TAD))
@@ -1380,8 +1380,7 @@ MK_VIII::IOHandler::handle_input_fault (bool test, FaultHandler::Fault fault)
 {
     if (test)
     {
-        if (! (mk->fault_handler.faults & (1<<fault)))
-            mk->fault_handler.set_fault(fault);
+        mk->fault_handler.set_fault(fault);
     }
     else
         mk->fault_handler.unset_fault(fault);
