@@ -44,12 +44,15 @@ class FGProps : public FGProtocol,
 		public SGPropertyChangeListener // for subscriptions
 {
 private:
+    class PropsChannel;
 
     /**
      * Server port to listen on.
      */
     int port;
     simgear::NetChannelPoller poller;
+
+    std::vector<PropsChannel*> _activeChannels;
 public:
     /**
      * Create a new TCP server.
@@ -83,6 +86,7 @@ public:
      */
     void handleAccept();
 
+    void removeChannel(PropsChannel* channel);
 };
 
 #endif // _FG_PROPS_HXX
