@@ -92,7 +92,7 @@ void uiuc_aero_2_wrapper( SCALAR dt, int Initialize )
 void uiuc_wind_2_wrapper( SCALAR dt, int Initialize ) 
 {
   if (Initialize == 0)
-    uiuc_wind_routine(dt);
+    uiuc_wind_routine();
 }
 
 void uiuc_engine_2_wrapper( SCALAR dt, int Initialize ) 

@@ -431,7 +431,7 @@ static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* nam
             char nameBuf[1024];
             for (int i = 0; i < naVec_size(val); i++) {
                 const auto len = ::snprintf(nameBuf, sizeof(nameBuf), "%s[%i]", name, i);
-                assert(len < sizeof(nameBuf));
+                assert(len < (int) sizeof(nameBuf));
                 ret = f_setChildrenHelper(c, node, nameBuf, naVec_get(val, i));
             }
         } else if (naIsNil(val)) {
