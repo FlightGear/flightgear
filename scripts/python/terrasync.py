@@ -507,7 +507,9 @@ class TerraSync:
         return self
 
     def setTarget(self, target):
-        self.target = target.rstrip('/').strip()
+        # Using os.path.abspath() here is safer in case the process later uses
+        # os.chdir(), which would change the meaning of the "." directory.
+        self.target = os.path.abspath(target)
         return self
 
     def start(self):
