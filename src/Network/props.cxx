@@ -40,9 +40,11 @@
 #include <iostream>
 #include <errno.h>
 #include <algorithm>
+#include <functional>
 
 #include <Main/globals.hxx>
 #include <Viewer/viewmgr.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include <simgear/io/sg_netChat.hxx>
 
@@ -73,13 +75,13 @@ class FGProps::PropsChannel : public simgear::NetChat, public SGPropertyChangeLi
     /**
      * Current property node name.
      */
-    string path;
+    string path= "/";
 
     enum Mode {
         PROMPT,
         DATA
     };
-    Mode mode;
+    Mode mode = PROMPT;
 
 public:
     /**
@@ -136,22 +138,23 @@ private:
     // callback implementations:
     void subscribe(const ParameterList &p);
     void unsubscribe(const ParameterList &p);
+    void beginNasal(const ParameterList &p);
 
     FGProps* _owner = nullptr;
+    bool _colletingNasal = false;
 };
 
 /**
  *
  */
 FGProps::PropsChannel::PropsChannel(FGProps* owner)
-    : buffer(8192),
-      path("/"),
-      mode(PROMPT),
-      _owner(owner)
+    : buffer(8192)
+    , _owner(owner)
 {
     setTerminator( "\r\n" );
     callback_map["subscribe"] 	= 	&PropsChannel::subscribe;
     callback_map["unsubscribe"]	=	&PropsChannel::unsubscribe;
+    callback_map["nasal"] =         &PropsChannel::beginNasal;
 }
 
 FGProps::PropsChannel::~PropsChannel()
@@ -204,6 +207,18 @@ void FGProps::PropsChannel::unsubscribe(const ParameterList &param) {
   }
 }
 
+void FGProps::PropsChannel::beginNasal(const ParameterList &param)
+{
+    std::string eofMarker = "##EOF##";
+    if (param.size() > 1) {
+        if ((param.at(1) == "eof") && (param.size() >= 3)) {
+            eofMarker = param.at(2);
+        }
+    } // of optional argument parsing
+    
+    _colletingNasal = true;
+    setTerminator(eofMarker);
+}
 
 //TODO: provide support for different types of subscriptions MODES ? (child added/removed, thesholds, min/max)
   void FGProps::PropsChannel::valueChanged(SGPropertyNode* ptr)
@@ -276,8 +291,35 @@ getValueTypeString( const SGPropertyNode *node )
 void
 FGProps::PropsChannel::foundTerminator()
 {
+    if (_colletingNasal) {
+        std::string nasalSource = buffer.getData(); // make a copy
+        _colletingNasal = false;
+        setTerminator("\r\n");
+        buffer.remove(); // safe since we copied the source above
+
+        if (globals->get_props()->getBoolValue("sim/secure-flag", true) == true) {
+            SG_LOG(SG_IO, SG_ALERT, "Telnet connection trying to run Nasal, blocked it.\n"
+                   "Run the simulator with --allow-nasal-from-sockets to allow this.");
+            error("Simulator running in secure mode, Nasal execution blocked.");
+        } else {
+            auto nasal = globals->get_subsystem<FGNasalSys>();
+            if (nasal) {
+                std::string errors, output;
+                bool ok = nasal->parseAndRunWithOutput(nasalSource, output, errors);
+                if (!ok) {
+                    error("Nasal error" + errors);
+                } else if (!output.empty()) {
+                    // success and we have output: push it
+                    push(output.c_str());
+                }
+            }
+        }
+        
+        return;
+    }
+    
     const char* cmd = buffer.getData();
-    SG_LOG( SG_IO, SG_INFO, "processing command = \"" << cmd << "\"" );
+    SG_LOG( SG_IO, SG_DEBUG, "processing command = \"" << cmd << "\"" );
 
     ParameterList tokens = simgear::strutils::split( cmd );
 
@@ -506,12 +548,12 @@ FGProps::PropsChannel::foundTerminator()
             } else if ( command == "prompt" ) {
                 mode = PROMPT;
             } else if (callback_map.find(command) != callback_map.end() ) {
-		   TelnetCallback t = callback_map[ command ];
-		   if (t)
-		     	   (this->*t) (tokens);
-		   else
-			   error("No matching callback found for command:"+command);
-	    }
+                TelnetCallback t = callback_map[ command ];
+                if (t)
+                    (this->*t) (tokens);
+                else
+                    error("No matching callback found for command:"+command);
+            }
       else if ( command == "seti" ) {
         string value, tmp;
         if (tokens.size() == 3) {
@@ -604,7 +646,9 @@ setf <var> <val>   alias for setd\r\n\
 seti <var> <val>   set Int <var> to a new <val>\r\n\
 del <var> <nod>    delete <nod> in <var>\r\n\
 subscribe <var>	   subscribe to property changes \r\n\
-unscubscribe <var>  unscubscribe from property changes (var must be the property name/path used by subscribe)\r\n";
+unsubscribe <var>  unscubscribe from property changes (var must be the property name/path used by subscribe)\r\n\
+nasal [EOF <marker>]  execute arbitrary Nasal code (simulator must be running with Nasal allowed from sockets)\r\n\
+";
                 push( msg );
             }
         }
@@ -615,7 +659,7 @@ unscubscribe <var>  unscubscribe from property changes (var must be the property
         push( getTerminator() );
     }
 
-    if ( mode == PROMPT ) {
+    if ( (mode == PROMPT) && !_colletingNasal) {
         string prompt = node->getPath();
         if (prompt.empty()) {
             prompt = "/";

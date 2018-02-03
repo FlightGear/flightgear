@@ -1621,6 +1621,7 @@ struct OptionDesc {
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
 	{"console",                      false, OPTION_FUNC,   "", false, "", fgOptConsole },
     {"launcher",                     false, OPTION_IGNORE,   "", false, "", 0 },
+    {"allow-nasal-from-sockets",     false, OPTION_IGNORE,   "", false, "", 0 },
     {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
     {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
     {"renderer",                     true,  OPTION_STRING, "/sim/rendering/rembrandt/renderer", false, "", 0 },

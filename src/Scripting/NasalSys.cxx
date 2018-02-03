@@ -298,18 +298,35 @@ FGNasalSys::~FGNasalSys()
     nasalSys = 0;
 }
 
-bool FGNasalSys::parseAndRun(const char* sourceCode)
+bool FGNasalSys::parseAndRunWithOutput(const std::string& source, std::string& output, std::string& errors)
 {
     naContext ctx = naNewContext();
-    naRef code = parse(ctx, "FGNasalSys::parseAndRun()", sourceCode,
-                       strlen(sourceCode));
+    naRef code = parse(ctx, "FGNasalSys::parseAndRun()", source.c_str(),
+                       source.size(), errors);
     if(naIsNil(code)) {
         naFreeContext(ctx);
         return false;
     }
-    callWithContext(ctx, code, 0, 0, naNil());
+    naRef result = callWithContext(ctx, code, 0, 0, naNil());
+    
+    // if there was a result value, try to convert it to a string
+    // value.
+    if (!naIsNil(result)) {
+        naRef s = naStringValue(ctx, result);
+        if (!naIsNil(s)) {
+            output = naStr_data(s);
+        }
+    }
+    
     naFreeContext(ctx);
     return true;
+}
+
+bool FGNasalSys::parseAndRun(const std::string& source)
+{
+    std::string errors;
+    std::string output;
+    return parseAndRunWithOutput(source, output, errors);
 }
 
 #if 0
@@ -1208,7 +1225,8 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
                               int argc, naRef* args)
 {
     naContext ctx = naNewContext();
-    naRef code = parse(ctx, fileName, src, len);
+    std::string errors;
+    naRef code = parse(ctx, fileName, src, len, errors);
     if(naIsNil(code)) {
         naFreeContext(ctx);
         return false;
@@ -1257,16 +1275,21 @@ naRef FGNasalSys::getModule(const char* moduleName)
     return mod;
 }
 
-naRef FGNasalSys::parse(naContext ctx, const char* filename, const char* buf, int len)
+naRef FGNasalSys::parse(naContext ctx, const char* filename,
+                        const char* buf, int len,
+                        std::string& errors)
 {
     int errLine = -1;
     naRef srcfile = naNewString(ctx);
     naStr_fromdata(srcfile, (char*)filename, strlen(filename));
     naRef code = naParseCode(ctx, srcfile, 1, (char*)buf, len, &errLine);
     if(naIsNil(code)) {
-        SG_LOG(SG_NASAL, SG_ALERT,
-               "Nasal parse error: " << naGetError(ctx) <<
-               " in "<< filename <<", line " << errLine);
+        std::ostringstream errorMessageStream;
+        errorMessageStream << "Nasal parse error: " << naGetError(ctx) <<
+            " in "<< filename <<", line " << errLine;
+        errors = errorMessageStream.str();
+        SG_LOG(SG_NASAL, SG_ALERT, errors);
+               
         return naNil();
     }
 
@@ -1281,7 +1304,8 @@ bool FGNasalSys::handleCommand( const char* moduleName,
                                 SGPropertyNode* root)
 {
     naContext ctx = naNewContext();
-    naRef code = parse(ctx, fileName, src, strlen(src));
+    std::string errorMessage;
+    naRef code = parse(ctx, fileName, src, strlen(src), errorMessage);
     if(naIsNil(code)) {
         naFreeContext(ctx);
         return false;

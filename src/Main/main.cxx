@@ -386,6 +386,26 @@ void fgResetIdleState()
     fgRegisterIdleHandler( &fgIdleFunction );
 }
 
+void fgInitSecureMode()
+{
+    bool secureMode = true;
+    if (Options::sharedInstance()->isOptionSet("allow-nasal-from-sockets")) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "\n!! Network connections allowed to use Nasal !!\n"
+       "Network connections will be allowed full access to the simulator \n"
+       "including running arbitrary scripts. Ensure you have adequate security\n"
+        "(such as a firewall which blocks external connections).\n");
+        secureMode = false;
+    }
+    
+    // it's by design that we overwrite any existing property tree value
+    // here - this prevents an aircraft or add-on setting the property
+    // value underneath us, eg in their -set.xml
+    SGPropertyNode_ptr secureFlag = fgGetNode("/sim/secure-flag", true);
+    secureFlag->setBoolValue(secureMode);
+    secureFlag->setAttributes(SGPropertyNode::READ |
+                              SGPropertyNode::PRESERVE |
+                              SGPropertyNode::PROTECTED);
+}
 
 static void upper_case_property(const char *name)
 {
@@ -470,8 +490,7 @@ int fgMainInit( int argc, char **argv )
     }
 
     std::string version(FLIGHTGEAR_VERSION);
-    SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
-            << version );
+    SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version " << version );
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Build Type " << FG_BUILD_TYPE );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
@@ -529,9 +548,11 @@ int fgMainInit( int argc, char **argv )
     }
 #else
     if (showLauncher) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "\n!Launcher requested, but FlightGear was compiled without Qt support!");
+        SG_LOG(SG_GENERAL, SG_ALERT, "\n!Launcher requested, but FlightGear was compiled without Qt support!\n");
     }
 #endif
+    
+    fgInitSecureMode();
     fgInitAircraftPaths(false);
 
     configResult = fgInitAircraft(false);

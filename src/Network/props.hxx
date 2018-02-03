@@ -49,7 +49,7 @@ private:
     /**
      * Server port to listen on.
      */
-    int port;
+    int port = 5501;
     simgear::NetChannelPoller poller;
 
     std::vector<PropsChannel*> _activeChannels;
@@ -69,22 +69,22 @@ public:
     /**
      * Start the telnet server.
      */
-    bool open();
+    bool open() override;
 
     /**
      * Process network activity.
      */
-    bool process();
+    bool process() override;
 
     /**
      * 
      */
-    bool close();
+    bool close() override;
 
     /**
      * Accept a new client connection.
      */
-    void handleAccept();
+    void handleAccept() override;
 
     void removeChannel(PropsChannel* channel);
 };

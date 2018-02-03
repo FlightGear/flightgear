@@ -48,8 +48,12 @@ public:
     // indicate successful execution.  Does *not* return any Nasal
     // values, because handling garbage-collected objects from C space
     // is deep voodoo and violates the "simple hook" idea.
-    bool parseAndRun(const char* sourceCode);
+    bool parseAndRun(const std::string& source);
 
+    bool parseAndRunWithOutput(const std::string& source,
+                     std::string& output,
+                     std::string& errors);
+    
     // Slightly more complicated hook to get a handle to a precompiled
     // Nasal script that can be invoked via a call() method.  The
     // caller is expected to delete the FGNasalScript returned from
@@ -191,7 +195,8 @@ private:
     void loadScriptDirectory(simgear::Dir nasalDir);
     void addModule(std::string moduleName, simgear::PathList scripts);
     static void logError(naContext);
-    naRef parse(naContext ctx, const char* filename, const char* buf, int len);
+    naRef parse(naContext ctx, const char* filename, const char* buf, int len,
+                std::string& errors);
     naRef genPropsModule();
 
     bool _inited;
