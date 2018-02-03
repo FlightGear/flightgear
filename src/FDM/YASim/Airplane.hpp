@@ -92,7 +92,7 @@ public:
     float getFuelDensity(int tank) const { return ((Tank*)_tanks.get(tank))->density; }
     float getTankCapacity(int tank) const { return ((Tank*)_tanks.get(tank))->cap; }
 
-    void compile(); // generate point masses & such, then solve
+    void compile(bool verbose = false); // generate point masses & such, then solve
     void initEngines();
     void stabilizeThrust();
 
@@ -101,8 +101,8 @@ public:
     float getDragCoefficient() const { return _dragFactor; }
     float getLiftRatio() const { return _liftRatio; }
     float getCruiseAoA() const { return _cruiseConfig.aoa; }
-    float getTailIncidence() const { return _tailIncidence->val; }
-    float getApproachElevator() const { return _approachElevator->val; }
+    float getTailIncidence()const;
+    float getApproachElevator() const;
     const char* getFailureMsg() const { return _failureMsg; }
 
     // next two are used only in yasim CLI tool
@@ -130,6 +130,9 @@ public:
     float getMaxThrust();
     float getThrust2WeightEmpty() { return getMaxThrust()/(_emptyWeight * KG2N); };
     float getThrust2WeightMTOW() { return getMaxThrust()/(_mtow*KG2N); };
+    void  setSolverTweak(float f) { _solverDelta = f; };
+    void  setSolverThreshold(float threshold) { _solverThreshold = threshold; };
+    void  setSolverMaxIterations(int i) { _solverMaxIterations = i; };
     
 private:
     struct Tank { 
@@ -191,8 +194,8 @@ private:
     void solveGear();
     float _getPitch(Config &cfg);
     float _getLift(Config &cfg);
-    void solveAirplane();
-    void solveHelicopter();
+    void solveAirplane(bool verbose = false);
+    void solveHelicopter(bool verbose = false);
     float compileWing(Wing* w);
     void compileRotorgear();
     float compileFuselage(Fuselage* f);
@@ -215,6 +218,11 @@ private:
     /// set property name controling tail trim (incidence)
     void setHstabTrimControl(const char* propName);
     
+    float _solverDelta {0.3226};
+    // How close to the solution are we trying get?  
+    // Trying too hard can result in oscillations (no convergence). 
+    float _solverThreshold {1};
+    int   _solverMaxIterations {4000};
     Model _model;
     ControlMap _controlMap;
 

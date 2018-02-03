@@ -22,18 +22,6 @@ static const char* DEF_PROP_ELEVATOR_TRIM = "/controls/flight/elevator-trim";
 // gadgets
 inline float abs(float f) { return f<0 ? -f : f; }
 
-// Solver threshold.  How close to the solution are we trying
-// to get?  Trying too hard can result in oscillations about
-// the correct solution, which is bad.  Stick this in as a
-// compile time constant for now, and consider making it
-// settable per-model.
-const float STHRESH = 1;
-
-// How slowly do we change values in the solver.  Too slow, and
-// the solution converges very slowly.  Too fast, and it can
-// oscillate.
-const float SOLVE_TWEAK = 0.3226;
-
 Airplane::Airplane()
 {
     _approachConfig.isApproach = true;
@@ -522,7 +510,7 @@ void Airplane::compileContactPoints()
     }
 }
 
-void Airplane::compile()
+void Airplane::compile(bool verbose)
 {
     RigidBody* body = _model.getBody();
     int firstMass = body->numMasses();
@@ -650,12 +638,12 @@ void Airplane::compile()
     solveGear();
     calculateCGHardLimits();
     
-    if(_wing && _tail) solveAirplane();
+    if(_wing && _tail) solveAirplane(verbose);
     else
     {
        // The rotor(s) mass:
        compileRotorgear(); 
-       solveHelicopter();
+       solveHelicopter(verbose);
     }
 
     // Do this after solveGear, because it creates "gear" objects that
@@ -810,7 +798,7 @@ void Airplane::runConfig(Config &cfg)
 /// Used only in solveAirplane() and solveHelicopter(), not at runtime
 void Airplane::applyDragFactor(float factor)
 {
-    float applied = Math::pow(factor, SOLVE_TWEAK);
+    float applied = Math::pow(factor, _solverDelta);
     _dragFactor *= applied;
     if(_wing)
       _wing->multiplyDragCoefficient(applied);
@@ -856,7 +844,7 @@ void Airplane::applyDragFactor(float factor)
 /// change lift coefficient cz in surfaces
 void Airplane::applyLiftRatio(float factor)
 {
-    float applied = Math::pow(factor, SOLVE_TWEAK);
+    float applied = Math::pow(factor, _solverDelta);
     _liftRatio *= applied;
     if(_wing)
       _wing->multiplyLiftRatio(applied);
@@ -895,7 +883,7 @@ float Airplane::_getLift(Config &cfg)
     return cfg.weight * tmp[2];
 }
 
-void Airplane::solveAirplane()
+void Airplane::solveAirplane(bool verbose)
 {
     static const float ARCMIN = 0.0002909f;
 
@@ -913,14 +901,18 @@ void Airplane::solveAirplane()
         _tailIncidence = new ControlSetting;
         _tailIncidenceCopy = new ControlSetting;
     }
+    if (verbose) {
+        fprintf(stdout,"i\tdAoa\tdTail\tcl0\tcp1\n");
+    }
 
     while(1) {
-        if(_solutionIterations++ > SOLVER_MAX_ITERATIONS) { 
+        if(_solutionIterations++ > _solverMaxIterations) { 
             _failureMsg = "Solution failed to converge!";
             return;
         }
         // Run an iteration at cruise, and extract the needed numbers:
         runConfig(_cruiseConfig);
+        
         _model.getThrust(tmp);
         float thrust = tmp[0] + _cruiseConfig.weight * Math::sin(_cruiseConfig.glideAngle) * 9.81;
 
@@ -985,8 +977,8 @@ void Airplane::solveAirplane()
         applyLiftRatio(liftFactor);
 
         // DON'T do the following until the above are sane
-        if(normFactor(dragFactor) > STHRESH*1.0001
-        || normFactor(liftFactor) > STHRESH*1.0001)
+        if(normFactor(dragFactor) > _solverThreshold*1.0001
+        || normFactor(liftFactor) > _solverThreshold*1.0001)
         {
             continue;
         }
@@ -994,24 +986,31 @@ void Airplane::solveAirplane()
         // OK, now we can adjust the minor variables:
         float aoaDelta = -clift0 * (ARCMIN/(clift1-clift0));
         float tailDelta = -cpitch0 * (ARCMIN/(cpitch1-cpitch0));
-        _cruiseConfig.aoa += SOLVE_TWEAK*aoaDelta;
-        _tailIncidence->val += SOLVE_TWEAK*tailDelta;
+        
+        if (verbose) {
+            fprintf(stdout,"%4d\t%f\t%f\t%f\t%f\n", _solutionIterations, aoaDelta, tailDelta, clift0, cpitch1);
+        }
+        _cruiseConfig.aoa += _solverDelta*aoaDelta;
+        _tailIncidence->val += _solverDelta*tailDelta;
         
         _cruiseConfig.aoa = Math::clamp(_cruiseConfig.aoa, -0.175f, 0.175f);
         _tailIncidence->val = Math::clamp(_tailIncidence->val, -0.175f, 0.175f);
 
-        if(abs(xforce/_cruiseConfig.weight) < STHRESH*0.0001 &&
-          abs(alift/_approachConfig.weight) < STHRESH*0.0001 &&
-          abs(aoaDelta) < STHRESH*.000017 &&
-          abs(tailDelta) < STHRESH*.000017)
+        if(abs(xforce/_cruiseConfig.weight) < _solverThreshold*0.0001 &&
+          abs(alift/_approachConfig.weight) < _solverThreshold*0.0001 &&
+          abs(aoaDelta) < _solverThreshold*.000017 &&
+          abs(tailDelta) < _solverThreshold*.000017)
         {
             float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
+            if (verbose) {
+                fprintf(stdout,"%4d dElev %f, ap0 %f,ap1 %f \n", _solutionIterations, elevDelta, apitch0, apitch1);
+            }
             // If this finaly value is OK, then we're all done
-            if(abs(elevDelta) < STHRESH*0.0001)
+            if(abs(elevDelta) < _solverThreshold*0.0001)
                 break;
 
             // Otherwise, adjust and do the next iteration
-            _approachElevator->val += SOLVE_TWEAK * elevDelta;
+            _approachElevator->val += _solverDelta * elevDelta;
             if(abs(_approachElevator->val) > 1) {
                 _failureMsg = "Insufficient elevator to trim for approach.";
                 break;
@@ -1040,7 +1039,7 @@ void Airplane::solveAirplane()
     }
 }
 
-void Airplane::solveHelicopter()
+void Airplane::solveHelicopter(bool verbose)
 {
     _solutionIterations = 0;
     _failureMsg = 0;
@@ -1048,16 +1047,16 @@ void Airplane::solveHelicopter()
     {
         Rotorgear* rg = getRotorgear();
         applyDragFactor(Math::pow(rg->getYasimDragFactor()/1000,
-            1/SOLVE_TWEAK));
+            1/_solverDelta));
         applyLiftRatio(Math::pow(rg->getYasimLiftFactor(),
-            1/SOLVE_TWEAK));
+            1/_solverDelta));
     }
     else
     //huh, no wing and no rotor? (_rotorgear is constructed, 
     //if a rotor is defined
     {
-        applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
-        applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
+        applyDragFactor(Math::pow(15.7/1000, 1/_solverDelta));
+        applyLiftRatio(Math::pow(104, 1/_solverDelta));
     }
     _cruiseConfig.state.setupState(0,0,0);
     _model.setState(&_cruiseConfig.state);
@@ -1124,6 +1123,22 @@ float Airplane::getMaxThrust()
         Math::add3(thrust, sum, sum);
     }    
     return sum[0];
+}
+
+float Airplane::getTailIncidence() const 
+{
+    if (_tailIncidence != nullptr) { 
+        return _tailIncidence->val;        
+    }
+    else return 0;
+}
+
+float Airplane::getApproachElevator() const 
+{
+    if (_approachElevator != nullptr) { 
+        return _approachElevator->val;        
+    }
+    else return 0;
 }
 
 }; // namespace yasim

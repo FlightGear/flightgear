@@ -8,7 +8,6 @@
  common file for YASim wide constants and static helper functions
  */
 namespace yasim {
-    static const int SOLVER_MAX_ITERATIONS = 4000;
     static const float YASIM_PI = 3.14159265358979323846f;
     static const float PI2 = YASIM_PI*2;
     static const float RAD2DEG = 180/YASIM_PI;
