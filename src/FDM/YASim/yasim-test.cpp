@@ -262,11 +262,21 @@ int main(int argc, char** argv)
   catch (const sg_exception &e) {
     printf("XML parse error: %s (%s)\n", e.getFormattedMessage().c_str(), e.getOrigin());
   }
-
   // ... and run
-  a->compile();
-  if(a->getFailureMsg())
+  bool verbose {false};
+  if (argc > 2 && strcmp(argv[2], "-v") == 0) {
+    verbose=true;
+  }
+  if ((argc == 4) && (strcmp(argv[2], "--tweak") == 0)) {
+    float tweak = std::atof(argv[3]);
+    a->setSolverTweak(tweak);
+    a->setSolverMaxIterations(2000);
+    verbose=true;
+  }
+  a->compile(verbose);
+  if(a->getFailureMsg()) {
       printf("SOLUTION FAILURE: %s\n", a->getFailureMsg());
+  }
   if(!a->getFailureMsg() && argc > 2 ) {
     bool test = (strcmp(argv[2], "-test") == 0);
     if((strcmp(argv[2], "-g") == 0) || test) 
