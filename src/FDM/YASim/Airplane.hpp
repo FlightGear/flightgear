@@ -218,7 +218,7 @@ private:
     /// set property name controling tail trim (incidence)
     void setHstabTrimControl(const char* propName);
     
-    float _solverDelta {0.3226};
+    float _solverDelta {0.3226f};
     // How close to the solution are we trying get?  
     // Trying too hard can result in oscillations (no convergence). 
     float _solverThreshold {1};
