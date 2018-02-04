@@ -154,6 +154,8 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
     else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
     else if(!strcmp(a, "preserve"))    attr = SGPropertyNode::PRESERVE;
+    else if(!strcmp(a, "protected"))    attr = SGPropertyNode::PROTECTED;
+    
     else {
         naRuntimeError(c, "props.getAttribute() with invalid attribute");
         return naNil();
@@ -173,11 +175,19 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
 static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
+    if (node->getAttribute(SGPropertyNode::PROTECTED)) {
+        naRuntimeError(c, "props.setAttribute() called on proptected property %s",
+                       node->getPath().c_str());
+        return naNil();
+    }
+    
     MOVETARGET(naVec_size(argv) > 2, false);
     naRef val = naVec_get(argv, 0);
     if(naVec_size(argv) == 1 && naIsNum(val)) {
         naRef ret = naNum(node->getAttributes());
-        node->setAttributes((int)val.num);
+        // prevent Nasal modifying PROTECTED
+        int attrs = static_cast<int>(val.num) & (~SGPropertyNode::PROTECTED);
+        node->setAttributes(attrs);
         return ret;
     }
     SGPropertyNode::Attribute attr;
@@ -190,6 +200,7 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
     else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
     else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
     else if(!strcmp(a, "preserve"))    attr = SGPropertyNode::PRESERVE;
+    // explicitly don't allow "protected" to be modified here
     else {
         naRuntimeError(c, "props.setAttribute() with invalid attribute");
         return naNil();
@@ -623,6 +634,13 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
     if(!naIsString(child) || !naIsNum(index)) return naNil();
     SGPropertyNode_ptr n;
     try {
+        n = node->getChild(naStr_data(child), (int)index.num);
+        if (n && n->getAttribute(SGPropertyNode::PROTECTED)) {
+            naRuntimeError(c, "props.Node.removeChild() called on protected child %s of %s",
+                           node->getPath().c_str(),
+                           naStr_data(child));
+            return naNil();
+        }
         n = node->removeChild(naStr_data(child), (int)index.num);
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
@@ -642,17 +660,32 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
     naRef result = naNewVector(c);
     if(naIsNil(argv) || naVec_size(argv) == 0) {
         // Remove all children
-        for(int i = node->nChildren() - 1; i >=0; i--)
-            naVec_append(result, propNodeGhostCreate(c, node->removeChild(i)));
+        for(int i = node->nChildren() - 1; i >=0; i--) {
+            SGPropertyNode_ptr n = node->getChild(i);
+            if (n->getAttribute(SGPropertyNode::PROTECTED)) {
+                SG_LOG(SG_NASAL, SG_ALERT, "props.Node.removeChildren: node " <<
+                       n->getPath() << " is protected");
+                continue;
+            }
+            
+            node->removeChild(i);
+            naVec_append(result, propNodeGhostCreate(c, n));
+        }
     } else {
         // Remove all children of a specified name
         naRef name = naVec_get(argv, 0);
         if(!naIsString(name)) return naNil();
         try {
-            vector<SGPropertyNode_ptr> children
-                = node->removeChildren(naStr_data(name));
-            for(unsigned int i=0; i<children.size(); i++)
-                naVec_append(result, propNodeGhostCreate(c, children[i]));
+            auto children = node->getChildren(naStr_data(name));
+            for (auto cn : children) {
+                if (cn->getAttribute(SGPropertyNode::PROTECTED)) {
+                    SG_LOG(SG_NASAL, SG_ALERT, "props.Node.removeChildren: node " <<
+                        cn->getPath() << " is protected");
+                    continue;
+                }
+                node->removeChild(cn);
+                naVec_append(result, propNodeGhostCreate(c, cn));
+            }
         } catch (const string& err) {
             naRuntimeError(c, (char *)err.c_str());
             return naNil();
@@ -680,6 +713,11 @@ static naRef f_removeAllChildren(naContext c, naRef me, int argc, naRef* args)
 static naRef f_alias(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
+    if (node->getAttribute(SGPropertyNode::PROTECTED)) {
+        naRuntimeError(c, "props.Node.alias() called on protected property %s",
+                       node->getPath().c_str());
+        return naNil();
+    }
     SGPropertyNode* al;
     naRef prop = naVec_get(argv, 0);
     try {
