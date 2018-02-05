@@ -35,6 +35,9 @@ from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, isdir, join
 
+from .exceptions import UserError, NetworkError
+
+
 PROGNAME = os.path.basename(sys.argv[0])
 
 class ExitStatus(enum.Enum):
@@ -42,58 +45,6 @@ class ExitStatus(enum.Enum):
     # The program exit status is 1 when an exception isn't caught.
     ERROR = 1
     CHECK_MODE_FOUND_MISMATCH = 2
-
-
-# *****************************************************************************
-# *                             Custom exceptions                             *
-# *****************************************************************************
-
-# Generic exception class for terrasync.py, to be subclassed for each specific
-# kind exception.
-class TerraSyncPyException(Exception):
-    def __init__(self, message=None, *, mayCapitalizeMsg=True):
-        """Initialize a TerraSyncPyException instance.
-
-        Except in cases where 'message' starts with a proper noun or
-        something like that, its first character should be given in
-        lower case. Automated treatments of this exception may print the
-        message with its first character changed to upper case, unless
-        'mayCapitalizeMsg' is False. In other words, if the case of the
-        first character of 'message' must not be changed under any
-        circumstances, set 'mayCapitalizeMsg' to False.
-
-        """
-        self.message = message
-        self.mayCapitalizeMsg = mayCapitalizeMsg
-
-    def __str__(self):
-        return self.completeMessage()
-
-    def __repr__(self):
-        return "{}.{}({!r})".format(__name__, type(self).__name__, self.message)
-
-    # Typically overridden by subclasses with a custom constructor
-    def detail(self):
-        return self.message
-
-    def completeMessage(self):
-        if self.message:
-            return "{shortDesc}: {detail}".format(
-                shortDesc=self.ExceptionShortDescription,
-                detail=self.detail())
-        else:
-            return self.ExceptionShortDescription
-
-    ExceptionShortDescription = "terrasync.py generic exception"
-
-
-class UserError(TerraSyncPyException):
-     """Exception raised when the program is used in an incorrect way."""
-     ExceptionShortDescription = "User error"
-
-class NetworkError(TerraSyncPyException):
-     """Exception raised when getting a network error even after retrying."""
-     ExceptionShortDescription = "Network error"
 
 
 # *****************************************************************************
