@@ -73,6 +73,7 @@ public:
     
     /// Adds a torque with the specified axis and magnitude
     void addTorque(const float* torque) { Math::add3(_torque, torque, _torque); }
+    void setTorque(const float* torque) { Math::set3(torque, _torque); }
 
     // Sets the rotation rate of the body (about its c.g.) within the
     // surrounding environment.  This is needed to compute torque on

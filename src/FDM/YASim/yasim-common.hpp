@@ -38,6 +38,7 @@ namespace yasim {
 
     static const float INCIDENCE_MIN = -20*DEG2RAD;
     static const float INCIDENCE_MAX = 20*DEG2RAD;
+    static const char* DEF_PROP_ELEVATOR_TRIM = "/controls/flight/elevator-trim";
 }; //namespace yasim
 
 #endif // ifndef _YASIM_COMMON_HPP

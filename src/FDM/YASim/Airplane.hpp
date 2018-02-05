@@ -25,8 +25,11 @@ public:
     ~Airplane();
 
     enum Configuration {
+        NONE,
         APPROACH,
         CRUISE,
+        TAKEOFF,  // for testing
+        TEST,     // for testing
     };
     
     void iterate(float dt);
@@ -61,8 +64,8 @@ public:
     int  addWeight(const float* pos, float size);
     void setWeight(int handle, float mass);
 
-    void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
-    void setCruise(float speed, float altitude, float fuel, float gla);
+    void setConfig(Configuration cfg, float speed, float altitude, float fuel, 
+                   float gla = 0, float aoa = 0);
     
     /// add (fixed) control setting to approach/cruise config (for solver)
     void addControlSetting(Configuration cfg, const char* prop, float val);
@@ -100,14 +103,15 @@ public:
     int getSolutionIterations() const { return _solutionIterations; }
     float getDragCoefficient() const { return _dragFactor; }
     float getLiftRatio() const { return _liftRatio; }
-    float getCruiseAoA() const { return _cruiseConfig.aoa; }
+    float getCruiseAoA() const { return _config[CRUISE].aoa; }
     float getTailIncidence()const;
     float getApproachElevator() const;
     const char* getFailureMsg() const { return _failureMsg; }
-
+    float getMass() const { return _model.getMass(); };
+    
     // next two are used only in yasim CLI tool
-    void setApproachControls() { setControlValues(_approachConfig.controls); }
-    void setCruiseControls() { setControlValues(_cruiseConfig.controls); }
+    void setApproachControls() { setControlValues(_config[APPROACH].controls); }
+    void setCruiseControls() { setControlValues(_config[CRUISE].controls); }
     
     float getCGHardLimitXMin() const { return _cgMin; } // get min x-coordinate for c.g (from main gear)
     float getCGHardLimitXMax() const { return _cgMax; } // get max x-coordinate for c.g (from nose gear)
@@ -166,7 +170,7 @@ private:
     };
     struct SolveWeight { 
       int id {-1};
-      bool approach {false};
+      Configuration cfg {APPROACH};
       float wgt {0};
     };
     struct ContactRec {
@@ -174,18 +178,17 @@ private:
       float p[3] {0,0,0};
     };
     struct Config {
-      bool isApproach {false};
-      float speed {0};
-      float fuel {0};
-      float glideAngle {0};      
-      float aoa {0};
-      float altitude {0};
-      float weight {0};
-      State state;
-      Vector controls;
+        Configuration id;
+        float speed {0};
+        float fuel {0};
+        float glideAngle {0};
+        float aoa {0};
+        float altitude {0};
+        float weight {0};
+        State state;
+        Vector controls;
     };
-    Config _cruiseConfig;
-    Config _approachConfig;
+    Config _config[Configuration::TEST];
 
     /// load values for controls as defined in cruise/approach configuration
     void setControlValues(const Vector& controls);
@@ -193,7 +196,8 @@ private:
     void runConfig(Config &cfg);
     void solveGear();
     float _getPitch(Config &cfg);
-    float _getLift(Config &cfg);
+    float _getLiftForce(Config &cfg);
+    float _getDragForce(Config &cfg);
     void solveAirplane(bool verbose = false);
     void solveHelicopter(bool verbose = false);
     float compileWing(Wing* w);
@@ -206,7 +210,7 @@ private:
     void compileContactPoints();
     float normFactor(float f);
     void updateGearState();
-    void setupWeights(bool isApproach);
+    void setupWeights(Configuration cfg);
     void calculateCGHardLimits();
     ///calculate mass divided by area of main wing
     float _getWingLoad(float mass) const;

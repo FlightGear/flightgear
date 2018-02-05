@@ -99,32 +99,30 @@ void Model::getThrust(float* out) const
 void Model::initIteration()
 {
     // Precompute torque and angular momentum for the thrusters
-    int i;
-    for(i=0; i<3; i++)
-	_gyro[i] = _torque[i] = 0;
+    Math::zero3(_torque);
+    Math::zero3(_gyro);
 
     // Need a local altitude for the wind calculation
     float lground[4];
     _s->planeGlobalToLocal(_global_ground, lground);
     float alt = Math::abs(lground[3]);
 
-    for(i=0; i<_thrusters.size(); i++) {
-	Thruster* t = (Thruster*)_thrusters.get(i);
-	
+    for(int i=0; i<_thrusters.size(); i++) {
+        Thruster* t = (Thruster*)_thrusters.get(i);
         // Get the wind velocity at the thruster location
         float pos[3], v[3];
-	t->getPosition(pos);
+        t->getPosition(pos);
         localWind(pos, _s, v, alt);
 
-	t->setWind(v);
-	t->setAtmosphere(_atmo);
-	t->integrate(_integrator.getInterval());
+        t->setWind(v);
+        t->setAtmosphere(_atmo);
+        t->integrate(_integrator.getInterval());
 
-	t->getTorque(v);
-	Math::add3(v, _torque, _torque);
+        t->getTorque(v);
+        Math::add3(v, _torque, _torque);
 
-	t->getGyro(v);
-	Math::add3(v, _gyro, _gyro);
+        t->getGyro(v);
+        Math::add3(v, _gyro, _gyro);
     }
 
     // Displace the turbulence coordinates according to the local wind.
@@ -134,12 +132,12 @@ void Model::initIteration()
         _turb->offset(toff);
     }
 
-    for(i=0; i<_gears.size(); i++) {
+    for(int i=0; i<_gears.size(); i++) {
         Gear* g = (Gear*)_gears.get(i);
         g->integrate(_integrator.getInterval());
     }
 
-    for(i=0; i<_hitches.size(); i++) {
+    for(int i=0; i<_hitches.size(); i++) {
         Hitch* h = (Hitch*)_hitches.get(i);
         h->integrate(_integrator.getInterval());
     }
@@ -272,7 +270,7 @@ void Model::calcForces(State* s)
     // calcForces.  They get computed before we begin the integration
     // step.
     _body.setGyro(_gyro);
-    _body.addTorque(_torque);
+    _body.setTorque(_torque);
     int i,j;
     for(i=0; i<_thrusters.size(); i++) {
       Thruster* t = (Thruster*)_thrusters.get(i);

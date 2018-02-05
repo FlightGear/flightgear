@@ -30,6 +30,7 @@ public:
 
     RigidBody* getBody() { return &_body; }
     void getCG(float* cg) const { return _body.getCG(cg); }
+    float getMass() const {return _body.getTotalMass(); }
     Integrator* getIntegrator() { return &_integrator; }
 
     void setTurbulence(Turbulence* turb) { _turb = turb; }

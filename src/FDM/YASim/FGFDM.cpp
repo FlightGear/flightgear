@@ -302,12 +302,12 @@ void FGFDM::parseApproachCruise(const XMLAttributes* a, const char* name)
     float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
     if (!strcmp(name, "approach")) {
         float aoa = attrf(a, "aoa", 0) * DEG2RAD;
-        _airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2), gla);
         _airplaneCfg = Airplane::Configuration::APPROACH;
+        _airplane.setConfig(_airplaneCfg, spd, alt, attrf(a, "fuel", 0.2), gla, aoa);
     }
     else {
-        _airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5),gla);
         _airplaneCfg = Airplane::Configuration::CRUISE;
+        _airplane.setConfig(_airplaneCfg, spd, alt, attrf(a, "fuel", 0.5), gla);
     }
 }
 
