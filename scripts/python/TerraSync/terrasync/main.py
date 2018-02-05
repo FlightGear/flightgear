@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# terrasync.py --- Synchronize TerraScenery data to your local disk
+# main.py --- Main module for terrasync.py
 #
 # Copyright (C) 2016  Torsten Dreyer
 #
@@ -669,55 +669,71 @@ class TerraSync:
 
 #################################################################################################################################
 
+def parseCommandLine():
+    parser = argparse.ArgumentParser()
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-u", "--url", dest="url", metavar="URL",
-        default="http://flightgear.sourceforge.net/scenery", help="Server URL [default: %(default)s]")
-parser.add_argument("-t", "--target", dest="target", metavar="DIR",
-        default=".", help="Directory to store the files [default: current directory]")
-parser.add_argument("-q", "--quick", dest="quick", action="store_true",
-        default=False, help="Quick")
-parser.add_argument("-r", "--remove-orphan", dest="removeOrphan", action="store_true",
-        default=False, help="Remove old scenery files")
+    parser.add_argument("-u", "--url", dest="url", metavar="URL",
+                        default="http://flightgear.sourceforge.net/scenery",
+                        help="server URL [default: %(default)s]")
 
-parser.add_argument("--mode", default="sync", choices=("check", "sync"),
-  help="""\
-  main mode of operation (default: '%(default)s'). In 'sync' mode, contents is
-  downloaded from the server to the target directory. On the other hand, in
-  'check' mode, {progname} compares the contents of the target directory with
-  the remote repository without writing nor deleting anything on disk."""
-                    .format(progname=PROGNAME))
+    parser.add_argument("-t", "--target", dest="target", metavar="DIR",
+                        default=".", help="""\
+      directory where to store the files [default: the current directory]""")
 
-parser.add_argument("--report", dest="report", action="store_true",
-                    default=False,
-                    help="before normal exit, print a report of what was found")
+    parser.add_argument("-q", "--quick", dest="quick", action="store_true",
+                        default=False, help="enable quick mode")
 
-parser.add_argument("--top", dest="top", type=int,
-        default=90, help="Maximum latitude to include in download [default: %(default)d]")
-parser.add_argument("--bottom", dest="bottom", type=int,
-        default=-90, help="Minimum latitude to include in download [default: %(default)d]")
-parser.add_argument("--left", dest="left", type=int,
-        default=-180, help="Minimum longitude to include in download [default: %(default)d]")
-parser.add_argument("--right", dest="right", type=int,
-        default=180, help="Maximum longitude to include in download [default: %(default)d]")
+    parser.add_argument("-r", "--remove-orphan", dest="removeOrphan",
+                        action="store_true",
+                        default=False, help="remove old scenery files")
 
-args = parser.parse_args()
+    parser.add_argument("--mode", default="sync", choices=("check", "sync"),
+                        help="""\
+      main mode of operation (default: '%(default)s'). In 'sync' mode, contents
+      is downloaded from the server to the target directory. On the other hand,
+      in 'check' mode, {progname} compares the contents of the target directory
+      with the remote repository without writing nor deleting anything on
+      disk.""".format(progname=PROGNAME))
 
-# Consistency checks on the arguments
-if args.mode == "check" and args.removeOrphan:
-    print("{prg}: 'check' mode is read-only and thus doesn't make sense with\n"
-          "option --remove-orphan (-r)".format(prg=PROGNAME), file=sys.stderr)
-    sys.exit(ExitStatus.ERROR.value)
+    parser.add_argument("--report", dest="report", action="store_true",
+                        default=False,
+                        help="""\
+      before normal exit, print a report of what was found""")
 
-# Now the real work :)
-terraSync = TerraSync(args.mode, args.report, args.url, args.target, args.quick,
-                      args.removeOrphan,
-                      DownloadBoundaries(args.top, args.left, args.bottom,
-                                         args.right))
+    parser.add_argument("--top", dest="top", type=int, default=90, help="""\
+      maximum latitude to include in download [default: %(default)d]""")
 
-report = terraSync.start()
+    parser.add_argument("--bottom", dest="bottom", type=int, default=-90,
+                        help="""\
+      minimum latitude to include in download [default: %(default)d]""")
 
-if args.report:
-    report.printReport()
+    parser.add_argument("--left", dest="left", type=int, default=-180, help="""\
+      minimum longitude to include in download [default: %(default)d]""")
+    parser.add_argument("--right", dest="right", type=int, default=180,
+                        help="""\
+      maximum longitude to include in download [default: %(default)d]""")
 
-sys.exit(ExitStatus.SUCCESS.value)
+    args = parser.parse_args()
+
+    # Perform consistency checks on the arguments
+    if args.mode == "check" and args.removeOrphan:
+        print("{prg}: 'check' mode is read-only and thus doesn't make sense "
+              "with\noption --remove-orphan (-r)".format(prg=PROGNAME),
+              file=sys.stderr)
+        sys.exit(ExitStatus.ERROR.value)
+
+    return args
+
+
+def main():
+    args = parseCommandLine()
+    terraSync = TerraSync(args.mode, args.report, args.url, args.target,
+                          args.quick, args.removeOrphan,
+                          DownloadBoundaries(args.top, args.left, args.bottom,
+                                             args.right))
+    report = terraSync.start()
+
+    if args.report:
+        report.printReport()
+
+    sys.exit(ExitStatus.SUCCESS.value)
