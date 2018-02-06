@@ -23,7 +23,6 @@ import argparse
 import enum
 import hashlib
 import os
-import pathlib
 import re
 import shutil
 import sys
@@ -36,6 +35,7 @@ from os import listdir
 from os.path import isfile, isdir, join
 
 from .exceptions import UserError, NetworkError
+from .virtual_path import VirtualPath
 
 
 PROGNAME = os.path.basename(sys.argv[0])
@@ -99,42 +99,22 @@ def hashForFile(fname):
         return computeHash(f)
 
 
-def normalizeVirtualPath(path):
-    """Normalized string representation of a virtual path.
-
-    Virtual paths are paths inside the TerraSync repository (be it local
-    or remote) using '/' as their separator. The virtual path '/' always
-    corresponds to the repository root, regardless of where it is stored
-    (hard drive, etc.).
-
-    If the input path (string) doesn't start with a slash ('/'), it is
-    considered relative to the root of the TerraSync repository.
-
-    Return a string that always starts with a slash, never contains
-    consecutive slashes and only ends with a slash if it is the root
-    virtual path ('/').
-
-    """
-    if not path.startswith('/'):
-        # / is the “virtual root” of the TerraSync repository
-        path = '/' + path
-    elif path.startswith('//') and not path.startswith('///'):
-        # Nasty special case. As allowed (but not mandated!) by POSIX[1],
-        # in pathlib.PurePosixPath('//some/path'), no collapsing happens[2].
-        # This is only the case for exactly *two* *leading* slashes.
-        # [1] http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap04.html#tag_04_11
-        # [2] https://www.python.org/dev/peps/pep-0428/#construction
-        path = path[1:]
-
-    return pathlib.PurePosixPath(path).as_posix()
-
-
 # *****************************************************************************
 # *                          Network-related classes                          *
 # *****************************************************************************
 
 class HTTPGetCallback:
     def __init__(self, src, callback):
+        """Initialize an HTTPGetCallback instance.
+
+        src      -- a VirtualPath instance (corresponding to the path on
+                    the server for which a GET request is to be issued)
+        callback -- a function taking two parameters: the URL (string)
+                    and an http.client.HTTPResponse instance. When
+                    invoked, the callback return value will be returned
+                    by HTTPGetter.get().
+
+        """
         self.callback = callback
         self.src = src
 
@@ -149,7 +129,8 @@ class HTTPGetter:
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
     def assembleUrl(self, httpGetCallback):
-        return self.parsedBaseUrl.path + httpGetCallback.src
+        assert not self.parsedBaseUrl.path.endswith('/'), self.parsedBaseUrl
+        return self.parsedBaseUrl.path + str(httpGetCallback.src)
 
     def doGet(self, httpGetCallback):
         conn = self.httpConnection
@@ -188,7 +169,7 @@ class DirIndex:
         self.d = []
         self.f = []
         self.version = 0
-        self.path = ""
+        self.path = None        # will be a VirtualPath instance when set
 
         with open(dirIndexFile) as f:
             self.readFrom(f)
@@ -207,7 +188,8 @@ class DirIndex:
                 self.version = int(tokens[1])
 
             elif tokens[0] == "path":
-                self.path = tokens[1]
+                # This is relative to the repository root
+                self.path = VirtualPath(tokens[1])
 
             elif tokens[0] == "d":
                 self.d.append({ 'name': tokens[1], 'hash': tokens[2] })
@@ -230,6 +212,21 @@ class DirIndex:
 #################################################################################################################################
 class HTTPDownloadRequest(HTTPGetCallback):
     def __init__(self, terrasync, src, dst, callback = None ):
+        """Initialize an HTTPDownloadRequest instance.
+
+        terrasync -- a TerraSync instance
+        src       -- a VirtualPath instance (corresponding to the path
+                     on the server for which a GET request is to be
+                     issued)
+        dst       -- file path (or whatever open() accepts) where the
+                     downloaded data is to be stored
+        callback  -- a function that will be called if the download is
+                     successful, or None if no such callback is desired.
+                     The function must take one parameter: when invoked,
+                     it will be passed this HTTPDownloadRequest
+                     instance. Its return value is ignored.
+
+        """
         super().__init__(src, self.callback)
         self.terrasync = terrasync
         self.dst = dst
@@ -268,8 +265,8 @@ class HTTPSocketRequest(HTTPGetCallback):
     def __init__(self, src):
         """Initialize an HTTPSocketRequest object.
 
-        src -- path to the resource on the server (no protocol, no
-               server name, just the path starting with a '/').
+        src -- VirtualPath instance for the resource on the server
+               (presumably a file)
 
         """
         HTTPGetCallback.__init__(self, src, self.callback)
@@ -340,26 +337,26 @@ class Report:
         self.orphanFiles = set()
         self.orphanDirs = set()
 
-    def addMissingDirIndex(self, directoryRelPath):
-        self.dirsWithMissingIndex.add(directoryRelPath)
+    def addMissingDirIndex(self, directoryVirtualPath):
+        self.dirsWithMissingIndex.add(directoryVirtualPath)
 
-    def addDirIndexWithMismatchingHash(self, directoryRelPath):
-        self.dirsWithMismatchingDirIndexHash.add(directoryRelPath)
+    def addDirIndexWithMismatchingHash(self, directoryVirtualPath):
+        self.dirsWithMismatchingDirIndexHash.add(directoryVirtualPath)
 
-    def addMissingFile(self, relPath):
-        self.missingFiles.add(relPath)
+    def addMissingFile(self, virtualPath):
+        self.missingFiles.add(virtualPath)
 
-    def addFileWithMismatchingHash(self, relPath):
-        self.filesWithMismatchingHash.add(relPath)
+    def addFileWithMismatchingHash(self, virtualPath):
+        self.filesWithMismatchingHash.add(virtualPath)
 
-    def addSkippedDueToBoundaries(self, relPath):
-        self.dirsSkippedDueToBoundaries.add(relPath)
+    def addSkippedDueToBoundaries(self, virtualPath):
+        self.dirsSkippedDueToBoundaries.add(virtualPath)
 
-    def addOrphanFile(self, relPath):
-        self.orphanFiles.add(relPath)
+    def addOrphanFile(self, virtualPath):
+        self.orphanFiles.add(virtualPath)
 
-    def addOrphanDir(self, relPath):
-        self.orphanDirs.add(relPath)
+    def addOrphanDir(self, virtualPath):
+        self.orphanDirs.add(virtualPath)
 
     def summaryString(self):
         reportElements = [
@@ -377,7 +374,8 @@ class Report:
         for heading, setOfFilesOrDirs in reportElements:
             if setOfFilesOrDirs:
                 l.append(heading + ":\n")
-                l.extend( ( "  /" + f + '\n' for f in sorted(setOfFilesOrDirs)) )
+                l.extend( ("  " + str(f) + '\n'
+                           for f in sorted(setOfFilesOrDirs)) )
             else:
                 l.append(heading + ": none")
 
@@ -401,7 +399,7 @@ class FailedCheckReason(enum.Enum):
         missingNormalFile, mismatchingHashForNormalFile, \
         orphanFile, orphanDirectory = range(6)
 
-    # 'path': virtual path to a file or directory
+    # 'path': VirtualPath instance for a file or directory
     def explain(self, path):
         if self is FailedCheckReason.missingDirIndexFile:
             res = ".dirindex file '{}' is missing locally".format(path)
@@ -468,7 +466,7 @@ class TerraSync:
 
         # Get the hash of the root .dirindex file
         try:
-            request = HTTPSocketRequest("/.dirindex")
+            request = HTTPSocketRequest(VirtualPath("/.dirindex"))
             with self.httpGetter.get(request) as fileLike:
                 rootDirIndexHash = computeHash(fileLike)
         except HTTPException as exc:
@@ -476,19 +474,20 @@ class TerraSync:
                                .format(errMsg=exc)) from exc
 
         # Process the root directory of the repository (recursive)
-        self.processDirectoryEntry("", "", rootDirIndexHash)
+        self.processDirectoryEntry(VirtualPath("/"), "", rootDirIndexHash)
+
         return self.report
 
-    def processFileEntry(self, serverPath, localPath, fileHash):
+    def processFileEntry(self, virtualPath, localPath, fileHash):
         """Process a file entry from a .dirindex file."""
         localFullPath = join(self.target, localPath)
         failedCheckReason = None
 
         if not os.path.isfile(localFullPath):
-            self.report.addMissingFile(localPath)
+            self.report.addMissingFile(virtualPath)
             failedCheckReason = FailedCheckReason.missingNormalFile
         elif hashForFile(localFullPath) != fileHash:
-            self.report.addFileWithMismatchingHash(localPath)
+            self.report.addFileWithMismatchingHash(virtualPath)
             failedCheckReason = FailedCheckReason.mismatchingHashForNormalFile
         else:
             # The file exists and has the hash mentioned in the .dirindex file
@@ -502,26 +501,21 @@ class TerraSync:
                 # it is a file -> remove the dir so that we can store the file.
                 removeDirectoryTree(self.target, localFullPath)
 
-            print("Downloading '{}'".format(serverPath))
-            request = HTTPDownloadRequest(self, serverPath, localFullPath )
+            print("Downloading '{}'".format(virtualPath))
+            request = HTTPDownloadRequest(self, virtualPath, localFullPath)
             self.httpGetter.get(request)
         else:
-            virtualPath = normalizeVirtualPath(serverPath)
             self.abortCheckMode(failedCheckReason, virtualPath)
 
-    def processDirectoryEntry(self, serverPath, localPath, dirIndexHash):
+    def processDirectoryEntry(self, virtualPath, localPath, dirIndexHash):
         """Process a directory entry from a .dirindex file."""
-        virtualPath = normalizeVirtualPath(serverPath)
         print("Processing '{}'...".format(virtualPath))
 
-        if serverPath:
-            serverFolderName = os.path.basename(serverPath)
-            coordinate = parse_terrasync_coordinate(serverFolderName)
-            if (coordinate and
-                not self.downloadBoundaries.is_coordinate_inside_boundaries(
-                    coordinate)):
-                self.report.addSkippedDueToBoundaries(localPath)
-                return
+        coord = parse_terrasync_coordinate(virtualPath.name)
+        if (coord and
+            not self.downloadBoundaries.is_coordinate_inside_boundaries(coord)):
+            self.report.addSkippedDueToBoundaries(virtualPath)
+            return
 
         localFullPath = join(self.target, localPath)
         localDirIndex = join(localFullPath, ".dirindex")
@@ -529,10 +523,10 @@ class TerraSync:
 
         if not os.path.isfile(localDirIndex):
             failedCheckReason = FailedCheckReason.missingDirIndexFile
-            self.report.addMissingDirIndex(localPath)
+            self.report.addMissingDirIndex(virtualPath)
         elif hashForFile(localDirIndex) != dirIndexHash:
             failedCheckReason = FailedCheckReason.mismatchingHashForDirIndexFile
-            self.report.addDirIndexWithMismatchingHash(localPath)
+            self.report.addDirIndexWithMismatchingHash(virtualPath)
 
         if failedCheckReason is None:
             if not self.quick:
@@ -542,68 +536,69 @@ class TerraSync:
                 os.makedirs(localFullPath)
 
             request = HTTPDownloadRequest(self,
-                                          serverPath + "/.dirindex",
+                                          virtualPath / ".dirindex",
                                           localDirIndex,
                                           self.handleDirindexRequest)
             self.httpGetter.get(request)
         else:
-            vPath = normalizeVirtualPath(virtualPath + "/.dirindex")
-            self.abortCheckMode(failedCheckReason, vPath)
+            self.abortCheckMode(failedCheckReason, virtualPath / ".dirindex")
 
     def handleDirindexRequest(self, dirindexRequest):
         self.handleDirindexFile(dirindexRequest.dst)
 
     def handleDirindexFile(self, dirindexFile):
         dirIndex = DirIndex(dirindexFile)
-        root = "/" + dirIndex.getPath() if dirIndex.getPath() else ""
+        virtualBase = dirIndex.getPath()        # VirtualPath instance
+        relativeBase = virtualBase.asRelative() # string, doesn't start with '/'
         serverFiles = []
         serverDirs = []
 
         for file in dirIndex.getFiles():
             f = file['name']
-            self.processFileEntry(root + "/" + f,
-                                  join(dirIndex.getPath(), f),
+            self.processFileEntry(virtualBase / f,
+                                  join(relativeBase, f),
                                   file['hash'])
             serverFiles.append(f)
 
         for subdir in dirIndex.getDirectories():
             d = subdir['name']
-            self.processDirectoryEntry(root + "/" + d,
-                                       join(dirIndex.getPath(), d),
+            self.processDirectoryEntry(virtualBase / d,
+                                       join(relativeBase, d),
                                        subdir['hash'])
             serverDirs.append(d)
 
-        localFullPath = join(self.target, dirIndex.getPath())
+        localFullPath = join(self.target, relativeBase)
         localFiles = [ f for f in listdir(localFullPath)
                        if isfile(join(localFullPath, f)) ]
 
         for f in localFiles:
             if f != ".dirindex" and f not in serverFiles:
-                relPath = dirIndex.getPath() + '/' + f # has no leading '/'
-                self.report.addOrphanFile(relPath)
+                virtualPath = virtualBase / f
+                self.report.addOrphanFile(virtualPath)
 
                 if self.inSyncMode():
                     if self.removeOrphan:
-                        os.remove(join(self.target, relPath))
+                        os.remove(join(self.target, virtualPath.asRelative()))
                 else:
                     self.abortCheckMode(FailedCheckReason.orphanFile,
-                                        normalizeVirtualPath(relPath))
+                                        virtualPath)
 
         localDirs = [ f for f in listdir(localFullPath)
                       if isdir(join(localFullPath, f)) ]
 
         for d in localDirs:
             if d not in serverDirs:
-                relPath = dirIndex.getPath() + '/' + d # has no leading '/'
-                self.report.addOrphanDir(relPath)
+                virtualPath = virtualBase / d
+                self.report.addOrphanDir(virtualPath)
 
                 if self.inSyncMode():
                     if self.removeOrphan:
                         removeDirectoryTree(self.target,
-                                            join(self.target, relPath))
+                                            join(self.target,
+                                                 virtualPath.asRelative()))
                 else:
                     self.abortCheckMode(FailedCheckReason.orphanDirectory,
-                                        normalizeVirtualPath(relPath))
+                                        virtualPath)
 
     # 'reason' is a member of the FailedCheckReason enum
     def abortCheckMode(self, reason, fileOrDirVirtualPath):
