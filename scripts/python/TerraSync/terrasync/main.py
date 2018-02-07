@@ -461,20 +461,35 @@ class TerraSync:
         self.target = os.path.abspath(target)
         return self
 
-    def start(self):
+    def start(self, virtualSubdir=VirtualPath('/')):
+        """Start the 'sync' or 'check' process.
+
+        The 'virtualSubdir' argument must be a VirtualPath instance and
+        allows one to start the 'sync' or 'check' process in a chosen
+        subdirectory of the TerraSync repository, instead of at its
+        root.
+
+        """
+        # Remove the leading '/' from 'virtualSubdir' and convert to native
+        # separators ('/' or '\' depending on the platform).
+        localSubdir = os.path.normpath(virtualSubdir.asRelative())
+        if localSubdir == ".":  # just ugly, but it wouldn't hurt
+            localSubdir = ""
+
+        assert not os.path.isabs(localSubdir), repr(localSubdir)
         self.httpGetter = HTTPGetter(self.url)
 
-        # Get the hash of the root .dirindex file
+        # Get the hash of the .dirindex file for 'virtualSubdir'
         try:
-            request = HTTPSocketRequest(VirtualPath("/.dirindex"))
+            request = HTTPSocketRequest(virtualSubdir / ".dirindex")
             with self.httpGetter.get(request) as fileLike:
-                rootDirIndexHash = computeHash(fileLike)
+                dirIndexHash = computeHash(fileLike)
         except HTTPException as exc:
             raise NetworkError("for the root .dirindex file: {errMsg}"
                                .format(errMsg=exc)) from exc
 
-        # Process the root directory of the repository (recursive)
-        self.processDirectoryEntry(VirtualPath("/"), "", rootDirIndexHash)
+        # Process the chosen part of the repository (recursive)
+        self.processDirectoryEntry(virtualSubdir, localSubdir, dirIndexHash)
 
         return self.report
 
@@ -626,6 +641,12 @@ def parseCommandLine():
                         default=".", help="""\
       directory where to store the files [default: the current directory]""")
 
+    parser.add_argument("--only-subdir", dest="onlySubdir", metavar="SUBDIR",
+                        default="", help="""\
+      restrict processing to this subdirectory of the TerraSync repository. Use
+      a relative path with '/' separators, for instance 'Models/Residential'
+      [default: process the whole repository]""")
+
     parser.add_argument("-q", "--quick", dest="quick", action="store_true",
                         default=False, help="enable quick mode")
 
@@ -668,6 +689,17 @@ def parseCommandLine():
               file=sys.stderr)
         sys.exit(ExitStatus.ERROR.value)
 
+    # Remove leading and trailing '/', collapse consecutive slashes. Yes, this
+    # implies that we tolerate leading slashes for --only-subdir.
+    args.virtualSubdir = VirtualPath(args.onlySubdir)
+
+    # Be nice to our user in case the path starts with '\', 'C:\', etc.
+    if os.path.isabs(args.virtualSubdir.asRelative()):
+        print("{}: option --only-subdir expects a *relative*, slash-separated "
+              "path, but got '{}'".format(PROGNAME, args.onlySubdir),
+              file=sys.stderr)
+        sys.exit(ExitStatus.ERROR.value)
+
     return args
 
 
@@ -677,7 +709,7 @@ def main():
                           args.quick, args.removeOrphan,
                           DownloadBoundaries(args.top, args.left, args.bottom,
                                              args.right))
-    report = terraSync.start()
+    report = terraSync.start(args.virtualSubdir)
 
     if args.report:
         report.printReport()
