@@ -644,7 +644,7 @@ def parseCommandLine():
     parser.add_argument("--only-subdir", dest="onlySubdir", metavar="SUBDIR",
                         default="", help="""\
       restrict processing to this subdirectory of the TerraSync repository. Use
-      a relative path with '/' separators, for instance 'Models/Residential'
+      a path relative to the repository root, for instance 'Models/Residential'
       [default: process the whole repository]""")
 
     parser.add_argument("-q", "--quick", dest="quick", action="store_true",
@@ -689,14 +689,17 @@ def parseCommandLine():
               file=sys.stderr)
         sys.exit(ExitStatus.ERROR.value)
 
-    # Remove leading and trailing '/', collapse consecutive slashes. Yes, this
-    # implies that we tolerate leading slashes for --only-subdir.
-    args.virtualSubdir = VirtualPath(args.onlySubdir)
+    # Replace backslashes with forward slashes, remove leading and trailing
+    # slashes, collapse consecutive slashes. Yes, this implies that we tolerate
+    # leading slashes for --only-subdir (which makes sense because virtual
+    # paths are printed like that by this program, therefore it is natural for
+    # users to copy & paste such paths in order to use them for --only-subdir).
+    args.virtualSubdir = VirtualPath(args.onlySubdir.replace('\\', '/'))
 
     # Be nice to our user in case the path starts with '\', 'C:\', etc.
     if os.path.isabs(args.virtualSubdir.asRelative()):
-        print("{}: option --only-subdir expects a *relative*, slash-separated "
-              "path, but got '{}'".format(PROGNAME, args.onlySubdir),
+        print("{prg}: option --only-subdir expects a *relative* path, but got "
+              "'{subdir}'".format(prg=PROGNAME, subdir=args.onlySubdir),
               file=sys.stderr)
         sys.exit(ExitStatus.ERROR.value)
 
