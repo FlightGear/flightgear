@@ -374,8 +374,8 @@ class Report:
         for heading, setOfFilesOrDirs in reportElements:
             if setOfFilesOrDirs:
                 l.append(heading + ":\n")
-                l.extend( ("  " + str(f) + '\n'
-                           for f in sorted(setOfFilesOrDirs)) )
+                l.extend( ("  " + str(f) for f in sorted(setOfFilesOrDirs)) )
+                l.append('')    # ensure a blank line follows the list
             else:
                 l.append(heading + ": none")
 
