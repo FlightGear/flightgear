@@ -29,7 +29,7 @@ import sys
 import time
 import urllib
 
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 from http.client import HTTPConnection, _CS_IDLE, HTTPException
 from os import listdir
 from os.path import isfile, isdir, join
@@ -128,18 +128,32 @@ class HTTPGetter:
         self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc)
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
-    def assembleUrl(self, httpGetCallback):
+    def assemblePath(self, httpGetCallback):
+        """Return the path-on-server for the file to download.
+
+        Example: '/scenery/Airports/N/E/4/.dirindex'
+
+        """
         assert not self.parsedBaseUrl.path.endswith('/'), self.parsedBaseUrl
         return self.parsedBaseUrl.path + str(httpGetCallback.src)
 
+    def assembleUrl(self, httpGetCallback):
+        """Return the URL of the file to download."""
+        baseUrl = self.parsedBaseUrl.geturl()
+        assert not baseUrl.endswith('/'), repr(baseUrl)
+
+        return urljoin(baseUrl + '/', httpGetCallback.src.asRelative())
+
     def doGet(self, httpGetCallback):
         conn = self.httpConnection
-        url = self.assembleUrl(httpGetCallback)
-        self.httpConnection.request("GET", url, None, self.httpRequestHeaders)
+        pathOnServer = self.assemblePath(httpGetCallback)
+        self.httpConnection.request("GET", pathOnServer, None,
+                                    self.httpRequestHeaders)
         httpResponse = self.httpConnection.getresponse()
 
         # 'httpResponse' is an http.client.HTTPResponse instance
-        return httpGetCallback.callback(url, httpResponse)
+        return httpGetCallback.callback(self.assembleUrl(httpGetCallback),
+                                        httpResponse)
 
     def get(self, httpGetCallback):
         nbRetries = nbRetriesLeft = 5
