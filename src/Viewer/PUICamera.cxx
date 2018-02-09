@@ -153,20 +153,12 @@ public:
         
         switch(ea.getEventType())
         {
-            case(osgGA::GUIEventAdapter::MOVE):
             case(osgGA::GUIEventAdapter::DRAG):
-            {
-                FGMouseInput* mouseSubsystem = globals->get_subsystem<FGInput>()->get_subsystem<FGMouseInput>();
-                if (mouseSubsystem &&
-                    mouseSubsystem->isRightDragToLookEnabled() &&
-                    _mouse0RightButtonNode->getBoolValue())
-                {
+                if (!_is_dragging)
                     return false;
-                }
-
-                bool handled = puMouse(scaledX, scaledY);
-                return handled;
-            }
+                // No break
+            case(osgGA::GUIEventAdapter::MOVE):
+                return puMouse(scaledX, scaledY);
 
             case(osgGA::GUIEventAdapter::PUSH):
             case(osgGA::GUIEventAdapter::RELEASE):
@@ -179,8 +171,17 @@ public:
                     return false;
                 }
 
-                bool upOrDown = (ea.getEventType() == osgGA::GUIEventAdapter::RELEASE);
-                bool handled = puMouse(osgButtonToPUI(ea), upOrDown, scaledX, scaledY);
+                bool mouse_up = (ea.getEventType() == osgGA::GUIEventAdapter::RELEASE);
+                bool handled = puMouse(osgButtonToPUI(ea), mouse_up, scaledX, scaledY);
+                if (!mouse_up && handled)
+                {
+                    _is_dragging = true;
+                }
+                // Release drag if no more buttons are pressed
+                else if (mouse_up && !ea.getButtonMask())
+                {
+                    _is_dragging = false;
+                }
                 return handled;
             }
 
@@ -200,12 +201,12 @@ public:
                     // sent both down and up events for a single scroll, for
                     // compatability
                     bool handled = puMouse(button, PU_DOWN, scaledX, scaledY);
-                    puMouse(button, PU_UP, scaledX, scaledY);
+                    handled |= puMouse(button, PU_UP, scaledX, scaledY);
                     return handled;
                 }
+                return false;
             }
-                
-                
+
             case (osgGA::GUIEventAdapter::RESIZE):
                 _puiCamera->resizeUi(ea.getWindowWidth(), ea.getWindowHeight());
                 break;
@@ -259,8 +260,10 @@ private:
         
         return PU_NOBUTTON;
     }
-    
-    PUICamera* _puiCamera;
+
+    PUICamera*  _puiCamera = nullptr;
+    bool        _is_dragging = false;
+
     SGPropertyNode_ptr _mouse0RightButtonNode;
 };
 
