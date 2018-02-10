@@ -547,6 +547,11 @@ void Wing::writeInfoToProptree()
         sectN->getNode("base-z", true)->setFloatValue(ws->_rootChord.z);
         sectN->getNode("chord", true)->setFloatValue(ws->_rootChord.length);
         sectN->getNode("incidence-deg", true)->setFloatValue(ws->_sectionIncidence * RAD2DEG);
+        sectN->getNode("mac", true)->setFloatValue(ws->_mac.length);
+        sectN->getNode("mac-x", true)->setFloatValue(ws->_mac.x);
+        sectN->getNode("mac-y", true)->setFloatValue(ws->_mac.y);
+        sectN->getNode("mac-z", true)->setFloatValue(ws->_mac.z);
+        
     }
     _wingN->getNode("weight", true)->setFloatValue(wgt);
     _wingN->getNode("drag", true)->setFloatValue(dragSum);
