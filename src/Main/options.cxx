@@ -696,12 +696,17 @@ clearLocation ()
 }
 
 /*
- Using  --addon=/foo/bar does:
-   - load /foo/bar/config.xml into the Global Property Tree;
+ Using --addon=/foo/bar does:
+   - register the add-on with the AddonManager (enabling, among other things,
+     add-on-specific resources for simgear::ResourceManager);
+   - load /foo/bar/addon-config.xml into the Global Property Tree;
    - add /foo/bar to the list of aircraft paths to provide read access:
-   - set property /addons/addon[n]/path = "/foo/bar".
+   - set various properties related to the add-on under /addons;
+   - load /foo/bar/addon-main.nas into namespace __addon[ADDON_ID]__
+     (see $FG_ROOT/Nasal/addons.nas);
+   - call the main() function defined in that file.
 
- Addons get initialized from addons.nas in FGData/Nasal.
+ For more details, see $FG_ROOT/Docs/README.add-ons.
 */
 static int
 fgOptAddon(const char *arg)

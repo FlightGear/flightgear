@@ -161,7 +161,7 @@ AddonManager::registerAddon(const SGPath& addonPath)
   // one of its components is a symlink.
   const SGPath addonRealPath = addonPath.realpath();
   const string addonId = registerAddonMetadata(addonRealPath);
-  loadConfigFileIfExists(addonRealPath / "config.xml");
+  loadConfigFileIfExists(addonRealPath / "addon-config.xml");
   globals->append_aircraft_path(addonRealPath);
 
   AddonRef addon{getAddon(addonId)};

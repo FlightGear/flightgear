@@ -62,7 +62,7 @@ public:
   // This comprises the following steps, where $path = addonPath.realpath():
   //  - load add-on metadata from $path/addon-metadata.xml and register it
   //    inside _idToAddonMap (this step is done via registerAddonMetadata());
-  //  - load $path/config.xml into the Property Tree;
+  //  - load $path/addon-config.xml into the Property Tree;
   //  - append $path to the list of aircraft paths;
   //  - make part of the add-on metadata available in the Property Tree under
   //    the /addons node (/addons/by-id/<addonId>/{id,version,path,...});
@@ -73,9 +73,9 @@ public:
   std::vector<AddonRef> registeredAddons() const;
   bool isAddonRegistered(const std::string& addonId) const;
 
-  // A loaded add-on is one whose main.nas file has been loaded. The returned
-  // vector is sorted by add-on id (cheap sorting based on UTF-8 code units,
-  // only guaranteed correct for ASCII chars).
+  // A loaded add-on is one whose addon-main.nas file has been loaded. The
+  // returned vector is sorted by add-on id (cheap sorting based on UTF-8 code
+  // units, only guaranteed correct for ASCII chars).
   std::vector<AddonRef> loadedAddons() const;
   bool isAddonLoaded(const std::string& addonId) const;
 
