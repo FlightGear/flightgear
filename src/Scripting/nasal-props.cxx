@@ -176,7 +176,7 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     if (node->getAttribute(SGPropertyNode::PROTECTED)) {
-        naRuntimeError(c, "props.setAttribute() called on proptected property %s",
+        naRuntimeError(c, "props.setAttribute() called on protected property %s",
                        node->getPath().c_str());
         return naNil();
     }
@@ -637,8 +637,7 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
         n = node->getChild(naStr_data(child), (int)index.num);
         if (n && n->getAttribute(SGPropertyNode::PROTECTED)) {
             naRuntimeError(c, "props.Node.removeChild() called on protected child %s of %s",
-                           node->getPath().c_str(),
-                           naStr_data(child));
+                           naStr_data(child), node->getPath().c_str());
             return naNil();
         }
         n = node->removeChild(naStr_data(child), (int)index.num);
