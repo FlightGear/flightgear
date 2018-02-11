@@ -226,7 +226,7 @@ private:
     // How close to the solution are we trying get?  
     // Trying too hard can result in oscillations (no convergence). 
     float _solverThreshold {1};
-    int   _solverMaxIterations {4000};
+    int   _solverMaxIterations {10000};
     Model _model;
     ControlMap _controlMap;
 
