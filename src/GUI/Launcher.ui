@@ -251,23 +251,59 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="summaryPage">
-       <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0,0,0,1" columnstretch="0,0,0,1,0">
+       <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,1,0">
+        <item row="0" column="3" colspan="2">
+         <widget class="QLabel" name="appTitleLabel">
+          <property name="font">
+           <font>
+            <pointsize>48</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>FlightGear 2017.1.0</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QPushButton" name="aircraftHistory">
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
         <item row="5" column="2">
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="stateLabel">
           <property name="font">
            <font>
             <pointsize>16</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>Location:</string>
+           <string>State:</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="6" column="2">
+        <item row="3" column="3">
+         <widget class="QLabel" name="aircraftName">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>aircraft</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="2">
          <widget class="QLabel" name="label_5">
           <property name="font">
            <font>
@@ -279,13 +315,6 @@
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="4">
-         <widget class="QPushButton" name="locationHistory">
-          <property name="autoDefault">
-           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -304,14 +333,41 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="4">
-         <widget class="QPushButton" name="aircraftHistory">
-          <property name="autoDefault">
-           <bool>false</bool>
+        <item row="7" column="3">
+         <widget class="QLabel" name="locationDescription">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>location</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="9" column="3" colspan="2">
+        <item row="2" column="3" colspan="2">
+         <widget class="QLabel" name="thumbnail">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>171</width>
+            <height>128</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="3" colspan="2">
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -339,37 +395,55 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="3">
-         <widget class="QLabel" name="locationDescription">
+        <item row="5" column="3" colspan="2">
+         <widget class="QComboBox" name="stateCombo"/>
+        </item>
+        <item row="1" column="3" colspan="2">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;©2017 FlightGear contributors. Licensed under the GNU Public License. See &lt;a href=&quot;http://www.flightgear.org&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;here&lt;/span&gt;&lt;/a&gt; for more information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="openExternalLinks">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="2">
+         <widget class="QLabel" name="label_3">
           <property name="font">
            <font>
             <pointsize>16</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>location</string>
+           <string>Location:</string>
           </property>
-          <property name="wordWrap">
-           <bool>true</bool>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="3">
-         <widget class="QLabel" name="aircraftName">
-          <property name="font">
-           <font>
-            <pointsize>16</pointsize>
-           </font>
-          </property>
+        <item row="0" column="2" rowspan="2">
+         <widget class="QLabel" name="logoIcon">
           <property name="text">
-           <string>aircraft</string>
+           <string/>
           </property>
-          <property name="wordWrap">
-           <bool>true</bool>
+          <property name="pixmap">
+           <pixmap resource="resources.qrc">:/app-icon-large</pixmap>
           </property>
          </widget>
         </item>
-        <item row="6" column="3" colspan="2">
+        <item row="7" column="4">
+         <widget class="QPushButton" name="locationHistory">
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="3" colspan="2">
          <widget class="QLabel" name="settingsDescription">
           <property name="font">
            <font>
@@ -387,59 +461,15 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="3" colspan="2">
-         <widget class="QLabel" name="thumbnail">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>171</width>
-            <height>128</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>TextLabel</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3" colspan="2">
-         <widget class="QLabel" name="appTitleLabel">
+        <item row="6" column="3" colspan="2">
+         <widget class="QLabel" name="stateDescription">
           <property name="font">
            <font>
-            <pointsize>48</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
+            <pointsize>11</pointsize>
            </font>
           </property>
           <property name="text">
-           <string>FlightGear 2017.1.0</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3" colspan="2">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;©2017 FlightGear contributors. Licensed under the GNU Public License. See &lt;a href=&quot;http://www.flightgear.org&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;here&lt;/span&gt;&lt;/a&gt; for more information&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-          <property name="openExternalLinks">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" rowspan="2">
-         <widget class="QLabel" name="logoIcon">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="pixmap">
-           <pixmap resource="resources.qrc">:/app-icon-large</pixmap>
+           <string>TextLabel</string>
           </property>
          </widget>
         </item>

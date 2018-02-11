@@ -441,6 +441,45 @@ void LocationWidget::restoreSettings()
     onShowHistory();
 }
 
+bool LocationWidget::isParkedLocation() const
+{
+    if (FGPositioned::isAirportType(m_location.ptr())) {
+        if (m_ui->parkingRadio->isChecked()) {
+            return true;
+        }
+    }
+
+    // treat all other ground starts as taxi or on runway, i.e engines
+    // running if possible
+    return false;
+}
+
+bool LocationWidget::isAirborneLocation() const
+{
+    const int altitude = m_ui->altitudeSpinbox->value();
+    const bool altIsPositive = (altitude > 0);
+    const bool offsetSet = m_ui->offsetGroup->isChecked();
+
+    if (m_locationIsLatLon) {
+        return altIsPositive;
+    }
+
+    if (FGPositioned::isAirportType(m_location.ptr())) {
+        if (m_ui->runwayRadio->isChecked() && offsetSet) {
+            // in this case no altitude migth be set, but we assume
+            // it's still an airborne pos
+            return true;
+        }
+
+        // this allows for people using offsets from a parking position or
+        // similar weirdness :)
+        return altIsPositive;
+    }
+
+    // relative to a navaid or fix - base off altitude.
+    return altIsPositive;
+}
+
 void LocationWidget::restoreLocation(QVariantMap l)
 {
     if (l.contains("location-lat")) {

@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QSharedPointer>
+#include <QAbstractListModel>
 
 #include <simgear/package/Catalog.hxx>
 #include <simgear/package/Package.hxx>
@@ -54,6 +55,10 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(bool isPackaged READ isPackaged NOTIFY infoChanged)
 
+    Q_PROPERTY(bool hasStates READ hasStates NOTIFY infoChanged)
+
+    Q_PROPERTY(QAbstractListModel* statesModel READ statesModel NOTIFY infoChanged)
+
 public:
     explicit QmlAircraftInfo(QObject *parent = nullptr);
     virtual ~QmlAircraftInfo();
@@ -95,6 +100,17 @@ public:
     QStringList variantNames() const;
 
     bool isPackaged() const;
+
+    bool hasStates() const
+    {
+        return !_statesModel.isNull();
+    }
+
+    static const int StateTagRole;
+    static const int StateDescriptionRole;
+    static const int StateExplicitRole;
+
+    QAbstractListModel* statesModel();
 signals:
     void uriChanged();
     void infoChanged();
@@ -108,6 +124,9 @@ public slots:
     void setVariant(int variant);
 
 private:
+    AircraftItemPtr resolveItem() const;
+    void checkForStates();
+
     class Delegate;
     std::unique_ptr<Delegate> _delegate;
 
@@ -115,9 +134,7 @@ private:
     AircraftItemPtr _item;
     int _variant = 0;
     int _downloadBytes = 0;
-
-    AircraftItemPtr resolveItem() const;
-    int m_variant;
+    QScopedPointer<QAbstractListModel> _statesModel;
 };
 
 #endif // QMLAIRCRAFTINFO_HXX

@@ -106,6 +106,17 @@ LauncherMainWindow::LauncherMainWindow() :
     m_serversModel = new MPServersModel(this);
     m_serversModel->refresh();
 
+    // keep the description QLabel in sync as the current item changes
+    connect(m_ui->stateCombo,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            [this](int)
+    {
+        auto v = m_ui->stateCombo->currentData(QmlAircraftInfo::StateDescriptionRole);
+        m_ui->stateDescription->setText(v.toString());
+        m_ui->stateDescription->setVisible(!v.toString().isEmpty());
+    });
+
+    m_selectedAircraftInfo = new QmlAircraftInfo(this);
     initQML();
 
     m_subsystemIdleTimer = new QTimer(this);
@@ -457,6 +468,27 @@ void LauncherMainWindow::onRun()
           m_recentAircraft.pop_back();
     }
 
+    if (m_ui->stateCombo->isVisible()) {
+        // apply state setting
+        std::string tag =  m_ui->stateCombo->currentData(QmlAircraftInfo::StateTagRole).
+                toString().toStdString();
+
+        // implicit auto behaviour disabled for 2018.1, since it
+        // needs a bit more work
+#if 0
+        if (tag == "auto") {
+            bool isExplictAuto = m_ui->stateCombo->currentData(QmlAircraftInfo::StateExplicitRole).toBool();
+            if (!isExplictAuto) {
+                tag = selectStateAutomatically();
+                qInfo() << "automatic state selection: picked:" << QString::fromStdString(tag);
+            }
+        }
+#endif
+        if (!tag.empty()  && (tag != "__default__")) {
+            m_config->setArg("state", tag);
+        }
+    } // of applying state selection
+
     // aircraft paths
     QSettings settings;
     updateLocationHistory();
@@ -490,6 +522,20 @@ void LauncherMainWindow::onRun()
     qApp->exit(1);
 }
 
+std::string LauncherMainWindow::selectStateAutomatically()
+{
+    if (m_ui->location->isAirborneLocation()) {
+        return "approach";
+    }
+
+    if (m_ui->location->isParkedLocation()) {
+        return "parked";
+    } else {
+        return "take-off";
+    }
+
+    return {}; // failed to compute, give up
+}
 
 void LauncherMainWindow::onApply()
 {
@@ -621,6 +667,7 @@ void LauncherMainWindow::maybeUpdateSelectedAircraft(QModelIndex index)
 
 void LauncherMainWindow::updateSelectedAircraft()
 {
+    m_selectedAircraftInfo->setUri(m_selectedAircraft);
     QModelIndex index = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     if (index.isValid()) {
         QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
@@ -648,10 +695,24 @@ void LauncherMainWindow::updateSelectedAircraft()
         }
 
         m_ui->location->setAircraftType(aircraftType);
+
+        const bool hasStates = m_selectedAircraftInfo->hasStates();
+        m_ui->stateCombo->setVisible(hasStates);
+        m_ui->stateLabel->setVisible(hasStates);
+        m_ui->stateDescription->setVisible(false);
+        if (hasStates) {
+            m_ui->stateCombo->setModel(m_selectedAircraftInfo->statesModel());
+            m_ui->stateDescription->setText(m_ui->stateCombo->currentData(QmlAircraftInfo::StateDescriptionRole).toString());
+            // hiden when no description is present
+            m_ui->stateDescription->setVisible(!m_ui->stateDescription->text().isEmpty());
+        }
     } else {
         m_ui->thumbnail->setPixmap(QPixmap());
         m_ui->aircraftName->setText("");
         m_ui->aircraftDescription->hide();
+        m_ui->stateCombo->hide();
+        m_ui->stateLabel->hide();
+        m_ui->stateDescription->hide();
         m_ui->flyButton->setEnabled(false);
     }
 }
@@ -810,6 +871,11 @@ QPointF LauncherMainWindow::mapToGlobal(QQuickItem *item, const QPointF &pos) co
 {
     QPointF scenePos = item->mapToScene(pos);
     return m_ui->aircraftList->mapToGlobal(scenePos.toPoint());
+}
+
+QmlAircraftInfo *LauncherMainWindow::selectedAircraftInfo() const
+{
+    return m_selectedAircraftInfo;
 }
 
 void LauncherMainWindow::setSelectedAircraft(QUrl selectedAircraft)

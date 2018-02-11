@@ -6,6 +6,7 @@
 #include <simgear/package/Install.hxx>
 #include <simgear/package/Root.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Include/version.h>
 #include <Main/globals.hxx>
@@ -13,6 +14,10 @@
 #include "LocalAircraftCache.hxx"
 
 using namespace simgear::pkg;
+
+const int QmlAircraftInfo::StateTagRole =  Qt::UserRole + 1;
+const int QmlAircraftInfo::StateDescriptionRole = Qt::UserRole + 2;
+const int QmlAircraftInfo::StateExplicitRole = Qt::UserRole + 3;
 
 class QmlAircraftInfo::Delegate : public simgear::pkg::Delegate
 {
@@ -51,6 +56,7 @@ protected:
     {
         Q_UNUSED(aReason);
         if (aInstall->package() == p->packageRef()) {
+            p->checkForStates();
             p->infoChanged();
         }
     }
@@ -74,6 +80,145 @@ private:
 
     QmlAircraftInfo* p;
 };
+
+////////////////////////////////////////////////////////////////////////////
+
+
+struct StateInfo
+{
+    std::string tag; // internal XML name
+    QString name;   // human-readable name, or blank if we auto-generate this
+    QString description; // human-readable description
+};
+
+using AircraftStateVec = std::vector<StateInfo>;
+
+static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
+{
+    SGPropertyNode_ptr root(new SGPropertyNode);
+    try {
+        readProperties(setXMLPath, root);
+    } catch (sg_exception&) {
+        // malformed include or XML, just bail
+        return {};
+    }
+    
+    if (!root->getNode("sim/state")) {
+        return {};
+    }
+
+    auto nodes = root->getNode("sim")->getChildren("state");
+    AircraftStateVec result;
+    result.reserve(nodes.size());
+    for (auto cn : nodes) {
+        result.push_back({cn->getStringValue("name"),
+                          QString::fromStdString(cn->getStringValue("readable-name")),
+                          QString::fromStdString(cn->getStringValue("description"))
+                         });
+
+        qInfo() << QString::fromStdString(result.back().tag) << result.back().description;
+    }
+
+    return result;
+}
+
+QString humanNameFromStateTag(const std::string& tag)
+{
+    if (tag == "approach") return QObject::tr("On approach");
+    if (tag == "take-off") return QObject::tr("Ready for Take-off");
+    if ((tag == "parking") || (tag == "cold-and-dark"))
+        return QObject::tr("Parked, cold & dark");
+    if (tag == "auto")
+        return QObject::tr("Automatic");
+    if (tag == "cruise")
+        return QObject::tr("Cruise");
+
+    qWarning() << Q_FUNC_INFO << "add for" << QString::fromStdString(tag);
+    // no mapping, let's use the tag directly
+    return QString::fromStdString(tag);
+}
+
+class StatesModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    StatesModel(const AircraftStateVec& states) :
+        _data(states)
+    {
+        // sort which places 'auto' item at the front if it exists
+        std::sort(_data.begin(), _data.end(), [](const StateInfo& a, const StateInfo& b) {
+            if (a.tag == "auto") return true;
+            if (b.tag == "auto") return false;
+            return a.tag < b.tag;
+        });
+
+        if (_data.front().tag == "auto") {
+            // track if the aircraft supplied an 'auto' state, in which case
+            // we will not run our own selection logic
+            _explicitAutoState = true;
+        } else {
+            // disabling this code for 2018.1, since it needs more testing
+#if 0
+            _data.insert(_data.begin(), {"auto", {}, tr("Select state based on startup position.")});
+#else
+            _data.insert(_data.begin(), {"__default__", tr("Parked"), tr("Default state for the aircraft (usually cold and dark)")});
+#endif
+        }
+    }
+
+    int indexForTag(const std::string &tag) const
+    {
+        auto it = std::find_if(_data.begin(), _data.end(), [tag](const StateInfo& i) {
+            return i.tag == tag;
+        });
+
+        if (it == _data.end())
+            return -1;
+
+        return std::distance(_data.begin(), it);
+    }
+
+    int rowCount(const QModelIndex &parent) const override
+    {
+        return _data.size();
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        const StateInfo& s = _data.at(index.row());
+      //  qInfo() << index.row() << s.name << QString::fromStdString(s.tag);
+        if (role == Qt::DisplayRole) {
+            if (s.name.isEmpty()) {
+                return humanNameFromStateTag(s.tag);
+            }
+            return s.name;
+        } else if (role == QmlAircraftInfo::StateTagRole) {
+            return QString::fromStdString(s.tag);
+        } else if (role == QmlAircraftInfo::StateDescriptionRole) {
+            return s.description;
+        } else if (role == QmlAircraftInfo::StateExplicitRole) {
+            if (s.tag == "auto")
+                return _explicitAutoState;
+            return true;
+        }
+
+        return {};
+    }
+
+    QHash<int, QByteArray> roleNames() const override
+    {
+        auto result = QAbstractListModel::roleNames();
+        result[Qt::DisplayRole] = "name";
+        result[QmlAircraftInfo::StateTagRole] = "tag";
+        result[QmlAircraftInfo::StateDescriptionRole] = "description";
+        return result;
+    }
+private:
+    AircraftStateVec _data;
+    bool _explicitAutoState = false;
+};
+
+////////////////////////////////////////////////////////////////////////////
 
 QmlAircraftInfo::QmlAircraftInfo(QObject *parent)
     : QObject(parent)
@@ -297,6 +442,26 @@ AircraftItemPtr QmlAircraftInfo::resolveItem() const
     return _item;
 }
 
+void QmlAircraftInfo::checkForStates()
+{
+    QString path = pathOnDisk();
+    if (path.isEmpty()) {
+        _statesModel.reset();
+        emit infoChanged();
+        return;
+    }
+
+    auto states = readAircraftStates(SGPath::fromUtf8(path.toUtf8().toStdString()));
+    if (states.empty()) {
+        _statesModel.reset();
+        emit infoChanged();
+        return;
+    }
+
+    _statesModel.reset(new StatesModel(states));
+    emit infoChanged();
+}
+
 void QmlAircraftInfo::setUri(QUrl u)
 {
     if (uri() == u)
@@ -304,9 +469,16 @@ void QmlAircraftInfo::setUri(QUrl u)
 
     _item.clear();
     _package.clear();
+    _statesModel.reset();
 
     if (u.isLocalFile()) {
         _item = LocalAircraftCache::instance()->findItemWithUri(u);
+        if (!_item) {
+            // scan still active or aircraft not found, let's bail out
+            // and rely on caller to try again
+            return;
+        }
+
         int vindex = _item->indexOfVariant(u);
         // we need to offset the variant index to allow for the different
         // indexing schemes here (primary included) and in the cache (primary
@@ -321,6 +493,8 @@ void QmlAircraftInfo::setUri(QUrl u)
             qWarning() << "couldn't find package/variant for " << u;
         }
     }
+
+    checkForStates();
 
     emit uriChanged();
     emit infoChanged();
@@ -341,6 +515,8 @@ void QmlAircraftInfo::setVariant(int variant)
         return;
 
     _variant = variant;
+    checkForStates();
+
     emit infoChanged();
     emit variantChanged(_variant);
 }
@@ -412,7 +588,7 @@ PackageRef QmlAircraftInfo::packageRef() const
 void QmlAircraftInfo::setDownloadBytes(int bytes)
 {
     _downloadBytes = bytes;
-    emit downloadChanged();;
+    emit downloadChanged();
 }
 
 QStringList QmlAircraftInfo::variantNames() const
@@ -441,3 +617,14 @@ bool QmlAircraftInfo::isPackaged() const
 {
     return _package != PackageRef();
 }
+
+QAbstractListModel *QmlAircraftInfo::statesModel()
+{
+    if (!hasStates())
+        return nullptr;
+
+    return _statesModel.data();
+}
+
+#include "QmlAircraftInfo.moc"
+

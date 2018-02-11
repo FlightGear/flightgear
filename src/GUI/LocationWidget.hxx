@@ -61,6 +61,12 @@ public:
     QVariantMap saveLocation() const;
 
     void restoreSettings();
+
+    /// used to automatically select aircraft state
+    bool isParkedLocation() const;
+
+    /// used to automatically select aircraft state
+    bool isAirborneLocation() const;
 Q_SIGNALS:
     void descriptionChanged(QString t);
 

@@ -47,6 +47,7 @@ class ExtraSettingsSection;
 class ViewCommandLinePage;
 class MPServersModel;
 class QQuickItem;
+class QmlAircraftInfo;
 
 class LauncherMainWindow : public QMainWindow
 {
@@ -61,6 +62,8 @@ class LauncherMainWindow : public QMainWindow
     Q_PROPERTY(AircraftItemModel* baseAircraftModel MEMBER m_aircraftModel CONSTANT)
 
     Q_PROPERTY(QUrl selectedAircraft READ selectedAircraft WRITE setSelectedAircraft NOTIFY selectedAircraftChanged)
+
+    Q_PROPERTY(QmlAircraftInfo* selectedAircraftInfo READ selectedAircraftInfo NOTIFY selectedAircraftChanged)
 public:
     LauncherMainWindow();
     virtual ~LauncherMainWindow();
@@ -89,6 +92,8 @@ public:
 
     // work around the fact, that this is not available on QQuickItem until 5.7
     Q_INVOKABLE QPointF mapToGlobal(QQuickItem* item, const QPointF& pos) const;
+
+    QmlAircraftInfo* selectedAircraftInfo() const;
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
 
@@ -156,6 +161,8 @@ private:
     void collectAircraftArgs();
     void initQML();
 
+    std::string selectStateAutomatically();
+
     QScopedPointer<Ui::Launcher> m_ui;
     AircraftProxyModel* m_installedAircraftModel;
     AircraftItemModel* m_aircraftModel;
@@ -175,6 +182,7 @@ private:
     LaunchConfig* m_config = nullptr;
     ExtraSettingsSection* m_extraSettings = nullptr;
     ViewCommandLinePage* m_viewCommandLinePage = nullptr;
+    QmlAircraftInfo* m_selectedAircraftInfo = nullptr;
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX
