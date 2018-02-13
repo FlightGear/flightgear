@@ -100,6 +100,9 @@ class Wing {
 
         // valid only after Wing::compile() was called
         Chord getMAC() const { return _mac; };
+        float getMACx() const { return _mac.x; };
+        float getMACy() const { return _mac.y; };
+        float getMACz() const { return _mac.z; };
         float getArea() const { return _sectionSpan*_meanChord; };
         void setDragCoefficient(float scale);
         void multiplyDragCoefficient(float factor);
@@ -143,8 +146,9 @@ class Wing {
     static Chord _float2chord(float* pos, float lenght = 0);
     //copy chord x,y,z to float[3]
     static void _chord2float(Chord c, float* pos);
-    void interp(const float* v1, const float* v2, const float frac, float* out);
-    void writeInfoToProptree();
+    void _interp(const float* v1, const float* v2, const float frac, float* out);
+    void _writeInfoToProptree();
+    Chord _weightedMeanChord(Chord a, float wa, Chord b, float wb);
     
 public:
     Wing(Version* ver, bool mirror);
@@ -152,8 +156,6 @@ public:
 
     int addWingSection(float* base, float chord, float wingLength, 
         float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0, float camber = 0, float idrag = 1, float incidence = 0);
-
-    static Chord calculateMAC(const Chord root, const Chord tip);    
 
     void setFlapParams(int section, WingFlaps type, FlapParams fp);
     void setSectionDrag(int section, float pdrag);
@@ -184,7 +186,7 @@ public:
     float getMACLength() const { return _mac.length; }; // get length of MAC
     float getMACx() const { return _mac.x; }; // get x-coord of MAC leading edge 
     float getMACy() const { return _mac.y; }; // get y-coord of MAC leading edge 
-    float getMACz() const { return _mac.z; }; // get y-coord of MAC leading edge 
+    float getMACz() const { return _mac.z; }; // get z-coord of MAC leading edge 
     float getSweepLEMin() const { return _sweepLEMin; }; //min sweep angle of leading edge
     float getSweepLEMax() const { return _sweepLEMax; }; //max sweep angle of leading edge
    

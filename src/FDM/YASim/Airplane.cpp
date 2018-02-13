@@ -17,8 +17,6 @@
 
 namespace yasim {
 
-//default prop names
-
 // gadgets
 inline float abs(float f) { return f<0 ? -f : f; }
 

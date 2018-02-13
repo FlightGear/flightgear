@@ -59,7 +59,7 @@ int Wing::addWingSection(float* base, float chord, float wingLength, float taper
     }
     // append section: Calculate wing MAC from MACs of section and prev wing
     else {
-        _mac = Wing::calculateMAC(_mac, ws->getMAC());
+        _mac = _weightedMeanChord(_mac, _area, ws->getMAC(), ws->getArea());
         _netSpan += ws->_sectionSpan;
         _area += ws->getArea();
         _meanChord = _meanChord * ws->_meanChord * 0.5f;
@@ -88,6 +88,16 @@ void Wing::_chord2float(Chord c, float* pos)
     pos[0] = c.x;
     pos[1] = c.y;
     pos[2] = c.z;
+}
+
+Chord Wing::_weightedMeanChord(Chord a, float wa, Chord b, float wb)
+{
+    Chord c;
+    c.length = Math::weightedMean(a.length, wa, b.length, wb);
+    c.x = Math::weightedMean(a.x, wa, b.x, wb);
+    c.y = Math::weightedMean(a.y, wa, b.y, wb);
+    c.z = Math::weightedMean(a.z, wa, b.z, wb);
+    return c;
 }
 
 void Wing::WingSection::calculateGeometry()
@@ -147,15 +157,15 @@ void Wing::WingSection::calculateSpan()
 void Wing::WingSection::calculateMAC()
 {    
     // http://www.nasascale.org/p2/wp-content/uploads/mac-calculator.htm
-    //const float commonFactor = _rootChord.length*(0.5+_taper)/(3*_rootChord.length*(1+_taper));
+    //const float commonFactor = _rootChord.length*0.5(1+2*_taper)/(3*_rootChord.length*(1+_taper));
     
     const float commonFactor = (0.5+_taper)/(3*(1+_taper));
     _mac.length = _rootChord.length-(2*_rootChord.length*(1-_taper)*commonFactor);
     // y distance to root chord
     _mac.y = Math::abs(2*(_tipChord.y-_rootChord.y))*commonFactor;
     // MAC leading edge x = midpoint + half MAC length
-    _mac.x = _rootChord.x-Math::tan(_sweepAngleCenterLine)*_mac.y + _mac.length/2;
-    _mac.z = _rootChord.z+Math::tan(_dihedral)*_mac.y;
+    _mac.x = -Math::tan(_sweepAngleCenterLine)*_mac.y + _mac.length/2 + _rootChord.x;
+    _mac.z = Math::tan(_dihedral)*_mac.y + _rootChord.z;
     //add root y to get aircraft coordinates
     _mac.y += _rootChord.y;
 }
@@ -176,23 +186,6 @@ void Wing::WingSection::setIncidence(float incidence)
     //update surface
     for(int i=0; i<_surfs.size(); i++)
         ((SurfRec*)_surfs.get(i))->surface->setIncidence(incidence + _sectionIncidence);
-}
-
-/// root and tip (x,y) coordinates are on leading edge
-Chord Wing::calculateMAC(const Chord root, const Chord tip)
-{
-    assert(root.length > 0);
-    // http://www.nasascale.org/p2/wp-content/uploads/mac-calculator.htm
-    //taper = tip.length / root.length;
-    const float commonFactor = (root.length*0.5+tip.length)/(3*(root.length+tip.length));
-    Chord m;
-    m.length = root.length-(2*(root.length - tip.length)*commonFactor);
-    float dy = tip.y - root.y;
-    m.y = Math::abs(2*dy)*commonFactor; 
-    m.z = root.z + m.y*(tip.z-root.z)/dy;
-    m.x = root.x - m.y*(root.x - tip.x)/dy;
-    m.y += root.y;
-    return m;
 }
 
 void Wing::setFlapParams(int section, WingFlaps type, FlapParams fp)
@@ -340,7 +333,7 @@ void Wing::compile()
             for(int j=0; j<nSegs; j++) {
                 float frac = start + (j+0.5f) * (end-start)/nSegs;
                 float pos[3];
-                interp(base, tip, frac, pos);
+                _interp(base, tip, frac, pos);
 
                 float chord = ws->_rootChord.length * (1 - (1-ws->_taper)*frac);
                 float weight = chord * segWid;
@@ -360,7 +353,7 @@ void Wing::compile()
         // called before we were compiled.
         setIncidence(_incidence);
     }
-    writeInfoToProptree();
+    _writeInfoToProptree();
 }
 
 float Wing::getArea() const 
@@ -495,14 +488,14 @@ void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient,
     _surfs.add(sr);
 }
 
-void Wing::interp(const float* v1, const float* v2, const float frac, float* out)
+void Wing::_interp(const float* v1, const float* v2, const float frac, float* out)
 {
     out[0] = v1[0] + frac*(v2[0]-v1[0]);
     out[1] = v1[1] + frac*(v2[1]-v1[1]);
     out[2] = v1[2] + frac*(v2[2]-v1[2]);
 }
 
-void Wing::writeInfoToProptree()
+void Wing::_writeInfoToProptree()
 {
     if (_wingN == nullptr) 
         return;
@@ -548,9 +541,9 @@ void Wing::writeInfoToProptree()
         sectN->getNode("chord", true)->setFloatValue(ws->_rootChord.length);
         sectN->getNode("incidence-deg", true)->setFloatValue(ws->_sectionIncidence * RAD2DEG);
         sectN->getNode("mac", true)->setFloatValue(ws->_mac.length);
-        sectN->getNode("mac-x", true)->setFloatValue(ws->_mac.x);
-        sectN->getNode("mac-y", true)->setFloatValue(ws->_mac.y);
-        sectN->getNode("mac-z", true)->setFloatValue(ws->_mac.z);
+        sectN->getNode("mac-x", true)->setFloatValue(ws->getMACx());
+        sectN->getNode("mac-y", true)->setFloatValue(ws->getMACy());
+        sectN->getNode("mac-z", true)->setFloatValue(ws->getMACz());
         
     }
     _wingN->getNode("weight", true)->setFloatValue(wgt);
