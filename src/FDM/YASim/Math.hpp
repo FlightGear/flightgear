@@ -14,7 +14,9 @@ public:
         if(val > max) return max;
         return val;
     }
-
+    static float weightedMean(float x1, float w1, float x2, float w2) {
+        return (x1*w1 + x2*w2)/(w1+w2);
+    }
     // Simple wrappers around library routines
     static inline float abs(float f)  { return (float)::fabs(f); }
     static inline float sqrt(float f) { return (float)::sqrt(f); }
