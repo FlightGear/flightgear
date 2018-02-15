@@ -134,7 +134,8 @@ class HTTPGetter:
         Example: '/scenery/Airports/N/E/4/.dirindex'
 
         """
-        assert not self.parsedBaseUrl.path.endswith('/'), self.parsedBaseUrl
+        assert not self.parsedBaseUrl.path.endswith('/'), \
+            repr(self.parsedBaseUrl)
         return self.parsedBaseUrl.path + str(httpGetCallback.src)
 
     def assembleUrl(self, httpGetCallback):
@@ -631,7 +632,7 @@ class TerraSync:
 
     # 'reason' is a member of the FailedCheckReason enum
     def abortCheckMode(self, reason, fileOrDirVirtualPath):
-        assert self.mode == self.Mode.check, self.mode
+        assert self.mode == self.Mode.check, repr(self.mode)
 
         print("{prg}: exiting from 'check' mode because {explanation}."
               .format(prg=PROGNAME,

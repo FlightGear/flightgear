@@ -116,7 +116,7 @@ class VirtualPath:
         """Run consistency checks on self."""
         assert (self._path.startswith('/') and not self._path.startswith('//')
                 and (self._path == '/' or not self._path.endswith('/'))), \
-                self._path
+                repr(self._path)
 
     @classmethod
     def normalizeStringPath(cls, path):
@@ -155,7 +155,7 @@ class VirtualPath:
         Return a new instance of type(self).
 
         """
-        assert not (s.startswith('/') or s.endswith('/')), s
+        assert not (s.startswith('/') or s.endswith('/')), repr(s)
 
         if self._path == '/':
             return type(self)(self._path + s)
@@ -214,7 +214,7 @@ class VirtualPath:
         if self._path == '/':
             return
 
-        assert self._path.startswith('/')
+        assert self._path.startswith('/'), repr(self._path)
         prevPos = len(self._path)
 
         while True:
@@ -324,7 +324,7 @@ class VirtualPath:
         ''
 
         """
-        assert self._path.startswith('/'), self._path
+        assert self._path.startswith('/'), repr(self._path)
         return self._path[1:]
 
 
@@ -354,7 +354,7 @@ class MutableVirtualPath(VirtualPath):
         # This check could of course be skipped if it is found to really affect
         # performance.
         self._check()
-        assert not (s.startswith('/') or s.endswith('/')), s
+        assert not (s.startswith('/') or s.endswith('/')), repr(s)
 
         if self._path == '/':
             self._path += s
