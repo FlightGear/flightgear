@@ -41,6 +41,26 @@ typedef SGSharedPtr<DesktopGroup> DesktopPtr;
 typedef SGWeakPtr<DesktopGroup> DesktopWeakPtr;
 
 namespace sc = simgear::canvas;
+using osgEA = osgGA::GUIEventAdapter;
+
+/*
+RESIZE AREAS
+============
+
+|   || |      _ inside corner region (L-shaped part inside margin) both
+|___||_|_ _ _/  directions can be resized (outside only one axis)
+|   || |     |
+|   || |
+|   || |_____|__                  _
+|   ||       |   } margin_neg      \
+|    ========|== <-- window border  |_ area where resize
+|            |   } margin_pos       |  can be initiated
+|____________|__/                 _/
+|<- corner ->|
+*/
+const float RESIZE_MARGIN_POS = 12;
+const float RESIZE_MARGIN_NEG = 2;
+const float RESIZE_CORNER = 20;
 
 /**
  * Event handler
@@ -51,7 +71,7 @@ class GUIEventHandler:
   public:
     GUIEventHandler(const DesktopWeakPtr& desktop_group);
 
-    bool handle( const osgGA::GUIEventAdapter& ea,
+    bool handle( const osgEA& ea,
                  osgGA::GUIActionAdapter&,
                  osg::Object*,
                  osg::NodeVisitor* );
@@ -106,7 +126,10 @@ class DesktopGroup:
     bool grabPointer(const sc::WindowPtr& window);
     void ungrabPointer(const sc::WindowPtr& window);
 
-    bool handleEvent(const osgGA::GUIEventAdapter& ea);
+    sc::WindowPtr windowAtPosition(const osg::Vec2f& screen_pos);
+    osg::Vec2f toScreenPos(const osgEA& ea) const;
+
+    bool handleOsgEvent(const osgEA& ea);
 
   protected:
 
@@ -119,6 +142,7 @@ class DesktopGroup:
                                         _height;
 
     sc::WindowWeakPtr _last_push,
+                      _last_drag,
                       _last_mouse_over,
                       _resize_window,
                       _focus_window,
@@ -126,23 +150,25 @@ class DesktopGroup:
 
     uint8_t _resize {sc::Window::NONE};
     int     _last_cursor {MOUSE_CURSOR_NONE};
+    bool    _drag_finished {false};
 
-    osg::Vec2 _drag_start;
-    float _last_x {-1},
-          _last_y {-1};
+    osg::Vec2f  _drag_start,
+                _last_mouse_pos;
     double _last_scroll_time {0};
 
     uint32_t _last_key_down_no_mod {~0u}; // Key repeat for non modifier keys
 
     bool canHandleInput() const;
-    bool handleMouse(const osgGA::GUIEventAdapter& ea);
-    bool handleKeyboard(const osgGA::GUIEventAdapter& ea);
+    bool handleMouse(const osgEA& ea);
+    bool handleKeyboard(const osgEA& ea);
 
-    bool handleEvent( const sc::EventPtr& event,
-                      const sc::WindowPtr& active_window );
-    bool handleRootEvent(const sc::EventPtr& event);
+    bool propagateEvent( const sc::EventPtr& event,
+                         const sc::WindowPtr& active_window );
+    bool propagateRootEvent(const sc::EventPtr& event);
 
     void handleResize(int x, int y, int width, int height);
+    bool handleDrag(const sc::EventPtr& event);
+    void finishDrag(const sc::WindowPtr& drag_src, const sc::EventPtr& event);
     void handleMouseMode(SGPropertyNode* node);
 
     /**
@@ -166,7 +192,7 @@ GUIEventHandler::GUIEventHandler(const DesktopWeakPtr& desktop_group):
 }
 
 //------------------------------------------------------------------------------
-bool GUIEventHandler::handle( const osgGA::GUIEventAdapter& ea,
+bool GUIEventHandler::handle( const osgEA& ea,
                               osgGA::GUIActionAdapter&,
                               osg::Object*,
                               osg::NodeVisitor* )
@@ -175,7 +201,7 @@ bool GUIEventHandler::handle( const osgGA::GUIEventAdapter& ea,
     return false;
 
   DesktopPtr desktop = _desktop.lock();
-  return desktop && desktop->handleEvent(ea);
+  return desktop && desktop->handleOsgEvent(ea);
 }
 
 //------------------------------------------------------------------------------
@@ -244,22 +270,67 @@ void DesktopGroup::ungrabPointer(const sc::WindowPtr& window)
 }
 
 //------------------------------------------------------------------------------
-bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
+sc::WindowPtr DesktopGroup::windowAtPosition(const osg::Vec2f& screen_pos)
+{
+  for( int i = _scene_group->getNumChildren() - 1; i >= 0; --i )
+  {
+    osg::Group *element = _scene_group->getChild(i)->asGroup();
+
+    if( !element || !element->getUserData() )
+      continue; // TODO warn/log?
+
+    sc::WindowPtr window =
+      dynamic_cast<sc::Window*>
+      (
+        static_cast<sc::Element::OSGUserData*>(
+          element->getUserData()
+        )->element.get()
+      );
+
+    if( !window || !window->isCapturingEvents() || !window->isVisible() )
+      continue;
+
+    float margin = window->isResizable() ? RESIZE_MARGIN_POS : 0;
+    if( window->getScreenRegion().contains( screen_pos.x(),
+                                            screen_pos.y(),
+                                            margin ) )
+    {
+      return window;
+    }
+  }
+
+  return {};
+}
+
+//------------------------------------------------------------------------------
+osg::Vec2f DesktopGroup::toScreenPos(const osgEA& ea) const
+{
+  float x = SGMiscf::round(0.5 * (ea.getXnormalized() + 1) * _width);
+  float y = SGMiscf::round(0.5 * (ea.getYnormalized() + 1) * _height);
+
+  if( ea.getMouseYOrientation() != osgEA::Y_INCREASING_DOWNWARDS )
+    y = _height - y;
+
+  return {x, y};
+}
+
+//------------------------------------------------------------------------------
+bool DesktopGroup::handleOsgEvent(const osgEA& ea)
 {
   switch( ea.getEventType() )
   {
-    case osgGA::GUIEventAdapter::PUSH:
-    case osgGA::GUIEventAdapter::RELEASE:
-//    case osgGA::GUIEventAdapter::DOUBLECLICK:
+    case osgEA::PUSH:
+    case osgEA::RELEASE:
+//    case osgEA::DOUBLECLICK:
 //    // DOUBLECLICK doesn't seem to be triggered...
-    case osgGA::GUIEventAdapter::DRAG:
-    case osgGA::GUIEventAdapter::MOVE:
-    case osgGA::GUIEventAdapter::SCROLL:
+    case osgEA::DRAG:
+    case osgEA::MOVE:
+    case osgEA::SCROLL:
       return handleMouse(ea);
-    case osgGA::GUIEventAdapter::KEYDOWN:
-    case osgGA::GUIEventAdapter::KEYUP:
+    case osgEA::KEYDOWN:
+    case osgEA::KEYUP:
       return handleKeyboard(ea);
-    case osgGA::GUIEventAdapter::RESIZE:
+    case osgEA::RESIZE:
       handleResize( ea.getWindowX(),
                     ea.getWindowY(),
                     ea.getWindowWidth(),
@@ -270,25 +341,6 @@ bool DesktopGroup::handleEvent(const osgGA::GUIEventAdapter& ea)
   }
 }
 
-/*
-RESIZE AREAS
-============
-
-|   || |      _ inside corner region (L-shaped part inside margin) both
-|___||_|_ _ _/  directions can be resized (outside only one axis)
-|   || |     |
-|   || |
-|   || |_____|__                  _
-|   ||       |   } margin_neg      \
-|    ========|== <-- window border  |_ area where resize
-|            |   } margin_pos       |  can be initiated
-|____________|__/                 _/
-|<- corner ->|
-*/
-const float resize_margin_pos = 12;
-const float resize_margin_neg = 2;
-const float resize_corner = 20;
-
 //------------------------------------------------------------------------------
 bool DesktopGroup::canHandleInput() const
 {
@@ -298,102 +350,74 @@ bool DesktopGroup::canHandleInput() const
 }
 
 //------------------------------------------------------------------------------
-bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
+bool DesktopGroup::handleMouse(const osgEA& ea)
 {
   if( !canHandleInput() )
     return false;
 
-  sc::MouseEventPtr event(new sc::MouseEvent(ea));
+  osg::Vec2f mouse_pos = toScreenPos(ea),
+             delta = mouse_pos - _last_mouse_pos;
+  _last_mouse_pos = mouse_pos;
 
-  event->screen_pos.x() = 0.5 * (ea.getXnormalized() + 1) * _width + 0.5;
-  event->screen_pos.y() = 0.5 * (ea.getYnormalized() + 1) * _height + 0.5;
-  if(    ea.getMouseYOrientation()
-      != osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS )
-    event->screen_pos.y() = _height - event->screen_pos.y();
-
-  event->delta.x() = event->getScreenX() - _last_x;
-  event->delta.y() = event->getScreenY() - _last_y;
-
-  _last_x = event->getScreenX();
-  _last_y = event->getScreenY();
-
-  event->local_pos = event->client_pos = event->screen_pos;
-
-  if( !_resize_window.expired() )
+  if( auto resize_window = _resize_window.lock() )
   {
     switch( ea.getEventType() )
     {
-      case osgGA::GUIEventAdapter::RELEASE:
-        _resize_window.lock()->handleResize(sc::Window::NONE);
+      case osgEA::RELEASE:
+        resize_window->handleResize(sc::Window::NONE);
         _resize_window.reset();
         break;
-      case osgGA::GUIEventAdapter::DRAG:
-        _resize_window.lock()->handleResize( _resize,
-                                             event->screen_pos - _drag_start );
+      case osgEA::DRAG:
+        resize_window->handleResize(_resize, mouse_pos - _drag_start);
         return true;
       default:
-        return false;
+        // Ignore all other events while resizing
+        return true;
     }
+  }
+
+  sc::MouseEventPtr event(new sc::MouseEvent(ea));
+  event->screen_pos = mouse_pos;
+  event->delta = delta;
+
+  if( !_drag_finished && ea.getEventType() == osgEA::DRAG )
+    return handleDrag(event);
+
+  if( auto last_drag = _last_drag.lock() )
+  {
+    if( ea.getEventType() == osgEA::RELEASE )
+      finishDrag(last_drag, event);
+    else
+      // While dragging ignore all other mouse events
+      return true;
   }
 
   sc::WindowPtr window_at_cursor = _pointer_grab_window.lock();
   if( !window_at_cursor )
-  {
-    for( int i = _scene_group->getNumChildren() - 1; i >= 0; --i )
-    {
-      osg::Group *element = _scene_group->getChild(i)->asGroup();
-
-      if( !element || !element->getUserData() )
-        continue; // TODO warn/log?
-
-      sc::WindowPtr window =
-        dynamic_cast<sc::Window*>
-        (
-          static_cast<sc::Element::OSGUserData*>(
-            element->getUserData()
-          )->element.get()
-        );
-
-      if( !window || !window->isCapturingEvents() || !window->isVisible() )
-        continue;
-
-      float margin = window->isResizable() ? resize_margin_pos : 0;
-      if( window->getScreenRegion().contains( event->getScreenX(),
-                                              event->getScreenY(),
-                                              margin ) )
-      {
-        window_at_cursor = window;
-        break;
-      }
-    }
-  }
+    window_at_cursor = windowAtPosition(event->screen_pos);
 
   if( window_at_cursor )
   {
     const SGRect<float>& reg = window_at_cursor->getScreenRegion();
 
     if(     window_at_cursor->isResizable()
-        && (  ea.getEventType() == osgGA::GUIEventAdapter::MOVE
-           || ea.getEventType() == osgGA::GUIEventAdapter::PUSH
-           || ea.getEventType() == osgGA::GUIEventAdapter::RELEASE
-           )
         && !reg.contains( event->getScreenX(),
                           event->getScreenY(),
-                          -resize_margin_neg ) )
+                          -RESIZE_MARGIN_NEG ) )
     {
       if( !_last_cursor )
         _last_cursor = fgGetMouseCursor();
 
       _resize = 0;
 
-      if( event->getScreenX() <= reg.l() + resize_corner )
+      if( event->getScreenX() <= reg.l() + RESIZE_CORNER )
         _resize |= sc::Window::LEFT;
-      else if( event->getScreenX() >= reg.r() - resize_corner )
+      else if( event->getScreenX() >= reg.r() - RESIZE_CORNER )
         _resize |= sc::Window::RIGHT;
 
-      if( event->getScreenY() <= reg.t() + resize_corner )
+      if( event->getScreenY() <= reg.t() + RESIZE_CORNER )
         _resize |= sc::Window::TOP;
-      else if( event->getScreenY() >= reg.b() - resize_corner )
+      else if( event->getScreenY() >= reg.b() - RESIZE_CORNER )
         _resize |= sc::Window::BOTTOM;
 
       static const int cursor_mapping[] =
@@ -408,7 +432,7 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 
       fgSetMouseCursor(cursor_mapping[_resize]);
 
-      if( ea.getEventType() == osgGA::GUIEventAdapter::PUSH )
+      if( ea.getEventType() == osgEA::PUSH )
       {
         _resize_window = window_at_cursor;
         _drag_start = event->screen_pos;
@@ -428,20 +452,20 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
     return true;
   }
 
-  sc::WindowPtr target_window = window_at_cursor;
   switch( ea.getEventType() )
   {
-    case osgGA::GUIEventAdapter::PUSH:
+    case osgEA::PUSH:
       _last_push = window_at_cursor;
+      _drag_finished = false;
       event->type = sc::Event::MOUSE_DOWN;
       break;
-    case osgGA::GUIEventAdapter::SCROLL:
+    case osgEA::SCROLL:
       switch( ea.getScrollingMotion() )
       {
-        case osgGA::GUIEventAdapter::SCROLL_UP:
+        case osgEA::SCROLL_UP:
           event->delta.y() = 1;
           break;
-        case osgGA::GUIEventAdapter::SCROLL_DOWN:
+        case osgEA::SCROLL_DOWN:
           event->delta.y() = -1;
           break;
         default:
@@ -457,67 +481,57 @@ bool DesktopGroup::handleMouse(const osgGA::GUIEventAdapter& ea)
 
       event->type = sc::Event::WHEEL;
       break;
-    case osgGA::GUIEventAdapter::MOVE:
+
+    // If drag has not been handled yet it has been aborted. So let's treat it
+    // like a normal mouse movement.
+    case osgEA::DRAG:
+    case osgEA::MOVE:
     {
       sc::WindowPtr last_mouse_over = _last_mouse_over.lock();
-      if( last_mouse_over != window_at_cursor && last_mouse_over )
-      {
-        sc::MouseEventPtr move_event( new sc::MouseEvent(*event) );
-        move_event->type = sc::Event::MOUSE_LEAVE;
-        move_event->client_pos -= toOsg(last_mouse_over->getPosition());
-        move_event->local_pos = move_event->client_pos;
+      if( last_mouse_over && last_mouse_over != window_at_cursor )
+        last_mouse_over->handleEvent(event->clone(sc::Event::MOUSE_LEAVE));
 
-        last_mouse_over->handleEvent(move_event);
-      }
       _last_mouse_over = window_at_cursor;
       event->type = sc::Event::MOUSE_MOVE;
       break;
     }
-    case osgGA::GUIEventAdapter::RELEASE:
+    case osgEA::RELEASE:
     {
-      event->type = sc::Event::MOUSE_UP;
-
       sc::WindowPtr last_push = _last_push.lock();
-      _last_push.reset();
-
-      if( last_push && last_push != target_window )
+      if( last_push && last_push != window_at_cursor )
       {
         // Leave old window
-        sc::MouseEventPtr leave_event( new sc::MouseEvent(*event) );
-        leave_event->type = sc::Event::MOUSE_LEAVE;
-        leave_event->client_pos -= toOsg(last_push->getPosition());
-        leave_event->local_pos = leave_event->client_pos;
-
-        last_push->handleEvent(leave_event);
+        last_push->handleEvent(event->clone(sc::Event::MOUSE_LEAVE));
       }
+
+      _last_push.reset();
+      event->type = sc::Event::MOUSE_UP;
       break;
     }
-    case osgGA::GUIEventAdapter::DRAG:
-      target_window = _last_push.lock();
-      event->type = sc::Event::DRAG;
-      break;
 
     default:
       return false;
   }
 
-  if( target_window )
-  {
-    event->client_pos -= toOsg(target_window->getPosition());
-    event->local_pos = event->client_pos;
-    return target_window->handleEvent(event);
-  }
-  else
-    return handleRootEvent(event);
+  return propagateEvent(event, window_at_cursor);
 }
 
 //------------------------------------------------------------------------------
-bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
+bool DesktopGroup::handleKeyboard(const osgEA& ea)
 {
   if( !canHandleInput() )
     return false;
 
   sc::KeyboardEventPtr event(new sc::KeyboardEvent(ea));
+
+  if( auto drag = _last_drag.lock() )
+  {
+    if( ea.getKey() == osgEA::KEY_Escape )
+      finishDrag(drag, event);
+
+    // While dragging ignore all key events
+    return true;
+  }
 
   // Detect key repeat (of non modifier keys)
   if( !event->isModifier() )
@@ -536,34 +550,31 @@ bool DesktopGroup::handleKeyboard(const osgGA::GUIEventAdapter& ea)
   }
 
   sc::WindowPtr active_window = _focus_window.lock();
-  bool handled = handleEvent(event, active_window);
+  bool handled = propagateEvent(event, active_window);
 
   if(    event->getType() == sc::Event::KEY_DOWN
       && !event->defaultPrevented()
       && event->isPrint() )
   {
-    sc::KeyboardEventPtr keypress( new sc::KeyboardEvent(*event) );
-    keypress->type = sc::Event::KEY_PRESS;
-
-    handled |= handleEvent(keypress, active_window);
+    handled |= propagateEvent(event->clone(sc::Event::KEY_PRESS), active_window);
   }
 
   return handled;
 }
 
 //------------------------------------------------------------------------------
-bool DesktopGroup::handleEvent( const sc::EventPtr& event,
-                                const sc::WindowPtr& active_window )
+bool DesktopGroup::propagateEvent( const sc::EventPtr& event,
+                                   const sc::WindowPtr& active_window )
 {
   return active_window
        ? active_window->handleEvent(event)
-       : handleRootEvent(event);
+       : propagateRootEvent(event);
 }
 
 //------------------------------------------------------------------------------
-bool DesktopGroup::handleRootEvent(const sc::EventPtr& event)
+bool DesktopGroup::propagateRootEvent(const sc::EventPtr& event)
 {
-  sc::Element::handleEvent(event);
+  handleEvent(event);
 
   // stopPropagation() on DesktopGroup stops propagation to internal event
   // handling.
@@ -590,6 +601,33 @@ void DesktopGroup::handleResize(int x, int y, int width, int height)
       0, _height, 0, 1
     ));
   }
+}
+
+//------------------------------------------------------------------------------
+bool DesktopGroup::handleDrag(const sc::EventPtr& event)
+{
+  event->type = sc::Event::DRAG;
+
+  auto drag_window = _last_drag.lock();
+  if( !drag_window )
+  {
+    _last_drag = drag_window = _last_push.lock();
+
+    if( drag_window )
+      drag_window->handleEvent(event->clone(sc::Event::DRAG_START));
+  }
+
+  // TODO dragover
+  return drag_window && drag_window->handleEvent(event);
+}
+
+//------------------------------------------------------------------------------
+void DesktopGroup::finishDrag( const sc::WindowPtr& drag_src,
+                               const sc::EventPtr& event )
+{
+  drag_src->handleEvent(event->clone(sc::Event::DRAG_END));
+  _last_drag.reset();
+  _drag_finished = true;
 }
 
 //------------------------------------------------------------------------------
