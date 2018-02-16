@@ -64,3 +64,12 @@ class UserError(TerraSyncPyException):
 class NetworkError(TerraSyncPyException):
      """Exception raised when getting a network error even after retrying."""
      ExceptionShortDescription = "Network error"
+
+class RepoDataError(TerraSyncPyException):
+     """
+     Exception raised when getting invalid data from the TerraSync repository."""
+     ExceptionShortDescription = "Invalid data from the TerraSync repository"
+
+class InvalidDirIndexFile(RepoDataError):
+     """Exception raised when getting invalid data from a .dirindex file."""
+     ExceptionShortDescription = "Invalid .dirindex file"
