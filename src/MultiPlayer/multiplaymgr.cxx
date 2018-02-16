@@ -104,30 +104,6 @@ const int V2_PAD_MAGIC = 0x1face002;
  */
 const int BOOLARRAY_BLOCKSIZE = 40;
 
-/*
-* 2018.1 introduces a new minimal generic packet concept.
-* This allows a model to choose to only transmit a few essential properties, which leaves the packet at around 380 bytes.
-* The rest of the packet can then be used for bridged Emesary notifications, which over allow much more control
-* at the model level, including different notifications being sent.
-* see $FGData/Nasal/Notifications.nas and $FGData/Nasal/emesary_mp_bridge.nas
-* The property /sim/multiplay/transmit-filter-property-base can be set to 1 to turn off all of the standard properties and only send generics.
-* or this property can be set to a number greater than 1 (e.g. 12000) to only transmit properties based on their index. It is a simple filtering
-* mechanism.
-* - in both cases the chat and transponder properties will be transmitted for compatibility.
-*/
-static inline bool IsIncludedInPacket(int filter_base, int property_id)
-{
-    if (filter_base == 1) // transmit-property-base of 1 is equivalent to only generics.
-        return property_id >= 10002
-            || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
-    else
-        return property_id >= filter_base
-            || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
-}
-
-const int EMESARYBRIDGE_BASE = 12000;
-const int EMESARYBRIDGETYPE_BASE = 12200;
-
 const int BOOLARRAY_BASE_1 = 11000;
 const int BOOLARRAY_BASE_2 = BOOLARRAY_BASE_1 + BOOLARRAY_BLOCKSIZE;
 const int BOOLARRAY_BASE_3 = BOOLARRAY_BASE_2 + BOOLARRAY_BLOCKSIZE;
@@ -136,6 +112,12 @@ const int BOOLARRAY_START_ID = BOOLARRAY_BASE_1;
 const int BOOLARRAY_END_ID = BOOLARRAY_BASE_3;
 // Transmission uses a buffer to build the value for each array block.
 const int MAX_BOOL_BUFFERS = 3;
+
+// starting with 2018.1 we will now append new properties for each version at the end of the list - as this provides much 
+// better backwards compatibility.
+const int V2018_1_BASE = 11990;
+const int EMESARYBRIDGETYPE_BASE = 12200;
+const int EMESARYBRIDGE_BASE = 12000;
 
 /*
  * definition of properties that are to be transmitted.
@@ -609,6 +591,7 @@ static const IdPropertyList sIdPropertyList[] = {
     { BOOLARRAY_BASE_3 + 30, "sim/multiplay/generic/bool[90]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
 
 
+    { V2018_1_BASE + 0,  "sim/multiplay/mp-clock-mode", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
         // Direct support for emesary bridge properties. This is mainly to ensure that these properties do not overlap with the string
         // properties; although the emesary bridge can use any string property.
     { EMESARYBRIDGE_BASE + 0,  "sim/multiplay/emesary/bridge[0]", simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
@@ -802,6 +785,30 @@ public:
 private:
    FGMultiplayMgr* _multiplay;
 };
+
+
+/*
+* 2018.1 introduces a new minimal generic packet concept.
+* This allows a model to choose to only transmit a few essential properties, which leaves the packet at around 380 bytes.
+* The rest of the packet can then be used for bridged Emesary notifications, which over allow much more control
+* at the model level, including different notifications being sent.
+* see $FGData/Nasal/Notifications.nas and $FGData/Nasal/emesary_mp_bridge.nas
+* The property /sim/multiplay/transmit-filter-property-base can be set to 1 to turn off all of the standard properties and only send generics.
+* or this property can be set to a number greater than 1 (e.g. 12000) to only transmit properties based on their index. It is a simple filtering
+* mechanism.
+* - in both cases the chat and transponder properties will be transmitted for compatibility.
+*/
+static inline bool IsIncludedInPacket(int filter_base, int property_id)
+{
+    if (filter_base == 1) // transmit-property-base of 1 is equivalent to only generics.
+        return property_id >= 10002
+        || (property_id == V2018_1_BASE)  // MP time sync
+        || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
+    else
+        return property_id >= filter_base
+        || (property_id == V2018_1_BASE)  // MP time sync
+        || (property_id >= 1500 && property_id < 1600); // include chat and generic properties.
+}
 
 //////////////////////////////////////////////////////////////////////
 //
