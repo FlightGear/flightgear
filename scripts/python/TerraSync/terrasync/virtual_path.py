@@ -24,22 +24,28 @@ import pathlib
 
 
 class VirtualPath:
-    """Class used to represent paths inside the TerraSync repository.
+    """Class used to represent virtual paths using the slash separator.
 
-    This class always uses '/' as the separator. The root path '/'
-    corresponds to the repository root, regardless of where it is stored
-    (hard drive, remote server, etc.).
+    This class always uses the slash ('/') as the separator between
+    components. For terrasync.py, the root path '/' corresponds to the
+    repository root, regardless of where it is stored (hard drive,
+    remote server, etc.).
 
     Note: because of this, the class is not supposed to be used directly
           for filesystem accesses, since some root directory or
           protocol://server/root-dir prefix would have to be prepended
-          to provide reasonably useful functionality). This is why the
-          class is said to be virtual. This also implies that even in
-          Python 3.6 or later, the class should *not* inherit from
-          os.PathLike.
+          to provide reasonably useful functionality. This is why the
+          paths managed by this class are said to be virtual. This also
+          implies that even in Python 3.6 or later, this class should
+          *not* inherit from os.PathLike.
 
-    Wherever a given feature exists in pathlib.PurePath, this class
-    replicates the corresponding pathlib.PurePath API.
+    Whenever a given feature exists in pathlib.PurePath, this class
+    replicates the corresponding pathlib.PurePath API, but using
+    mixedCaseStyle instead of underscore_style (the latter being used
+    for every method of pathlib.PurePath). Of course, types are adapted:
+    for instance, methods of this class often return a VirtualPath
+    instance, whereas the corresponding pathlib.PurePath methods would
+    return a pathlib.PurePath instance.
 
     """
     def __init__(self, p):
@@ -52,7 +58,24 @@ class VirtualPath:
         self._check()
 
     def __str__(self):
+        """Return a string representation of the path in self.
+
+        The return value:
+          - always starts with a '/';
+          - never ends with a '/' except if it is exactly '/' (i.e.,
+            the root virtual path).
+
+        """
         return self._path
+
+    def asPosix(self):
+        """Return a string representation of the path in self.
+
+        This method returns str(self), it is only present for
+        compatibility with pathlib.PurePath.
+
+        """
+        return str(self)
 
     def __repr__(self):
         return "{}.{}({!r})".format(__name__, type(self).__name__, self._path)
@@ -311,6 +334,25 @@ class VirtualPath:
 
         return l
 
+    @property
+    def stem(self):
+        """The final path component, without its suffix.
+
+        >>> VirtualPath('/my/library.tar.gz').stem
+        'library.tar'
+        >>> VirtualPath('/my/library.tar').stem
+        'library'
+        >>> VirtualPath('/my/library').stem
+        'library'
+        >>> VirtualPath('/').stem
+        ''
+
+        """
+        name = self.name
+        pos = name.rfind('.')
+
+        return name if pos == -1 else name[:pos]
+
     def asRelative(self):
         """Return the virtual path without its leading '/'.
 
@@ -327,8 +369,90 @@ class VirtualPath:
         assert self._path.startswith('/'), repr(self._path)
         return self._path[1:]
 
+    def relativeTo(self, other):
+        """Return the portion of this path that follows 'other'.
+
+        The return value is a string. If the operation is impossible,
+        ValueError is raised.
+
+        >>> VirtualPath('/etc/passwd').relativeTo('/')
+        'etc/passwd'
+        >>> VirtualPath('/etc/passwd').relativeTo('/etc')
+        'passwd'
+
+        """
+        normedOther = self.normalizeStringPath(other)
+
+        if normedOther == '/':
+            return self._path[1:]
+        elif self._path.startswith(normedOther):
+            rest = self._path[len(normedOther):]
+
+            if rest.startswith('/'):
+                return rest[1:]
+
+        raise ValueError("{!r} does not start with '{}'".format(self, other))
+
+    def withName(self, newName):
+        """Return a new VirtualPath instance with the 'name' part changed.
+
+        If the original path is '/' (which doesn’t have a name in the
+        sense of the 'name' property), ValueError is raised.
+
+        >>> p = VirtualPath('/foobar/downloads/pathlib.tar.gz')
+        >>> p.withName('setup.py')
+        terrasync.virtual_path.VirtualPath('/foobar/downloads/setup.py')
+
+        """
+        if self._path == '/':
+            raise ValueError("{!r} has an empty name".format(self))
+        else:
+            pos = self._path.rfind('/')
+            assert pos != -1, (pos, self._path)
+
+            if newName.startswith('/'):
+                raise ValueError("{!r} starts with a '/'".format(newName))
+            elif newName.endswith('/'):
+                raise ValueError("{!r} ends with a '/'".format(newName))
+            else:
+                return VirtualPath(self._path[:pos]) / newName
+
+
+    def withSuffix(self, newSuffix):
+        """Return a new VirtualPath instance with the suffix changed.
+
+        If the original path doesn’t have a suffix, the new suffix is
+        appended:
+
+        >>> p = VirtualPath('/foobar/downloads/pathlib.tar.gz')
+        >>> p.withSuffix('.bz2')
+        terrasync.virtual_path.VirtualPath('/foobar/downloads/pathlib.tar.bz2')
+        >>> p = VirtualPath('/foobar/README')
+        >>> p.withSuffix('.txt')
+        terrasync.virtual_path.VirtualPath('/foobar/README.txt')
+
+        If 'self' is the root virtual path ('/') or 'newSuffix' doesn't
+        start with '.', ValueError is raised.
+
+        """
+        if not newSuffix.startswith('.'):
+            raise ValueError("new suffix {!r} doesn't start with '.'"
+                             .format(newSuffix))
+
+        name = self.name
+        if not name:
+            raise ValueError("{!r} has an empty 'name' part".format(self))
+
+        pos = name.rfind('.')
+
+        if pos == -1:
+            return self.withName(name + newSuffix)       # append suffix
+        else:
+            return self.withName(name[:pos] + newSuffix) # replace suffix
+
 
 class MutableVirtualPath(VirtualPath):
+
     """Mutable subclass of VirtualPath.
 
     Contrary to VirtualPath objects, instances of this class can be

@@ -64,9 +64,9 @@ class VirtualPathCommonTests:
                          "/abc/def")
 
     # Unless the implementation of VirtualPath.__init__() has changed
-    # meanwhile, test_creation() must be essentially the same as
+    # meanwhile, the following function must be essentially the same as
     # test_normalizeStringPath().
-    def test_creation(self):
+    def test_constructor_and_str(self):
         p = self.cls("/")
         self.assertEqual(str(p), "/")
 
@@ -91,6 +91,14 @@ class VirtualPathCommonTests:
         p = self.cls("/abc//def")
         self.assertEqual(str(p), "/abc/def")
 
+    def test_asPosix (self):
+        self.assertEqual(self.cls("").asPosix(), "/")
+        self.assertEqual(self.cls("/").asPosix(), "/")
+        self.assertEqual(self.cls("/abc//def").asPosix(), "/abc/def")
+        self.assertEqual(self.cls("/abc//def/").asPosix(), "/abc/def")
+        self.assertEqual(self.cls("//abc//def//").asPosix(), "/abc/def")
+        self.assertEqual(self.cls("////abc//def//").asPosix(), "/abc/def")
+
     def test_samePath(self):
         self.assertTrue(self.cls("").samePath(self.cls("")))
         self.assertTrue(self.cls("").samePath(self.cls("/")))
@@ -103,9 +111,6 @@ class VirtualPathCommonTests:
             self.cls("/abc//def").samePath(self.cls("/abc/def")))
         self.assertTrue(
             self.cls("/abc/def/").samePath(self.cls("/abc/def")))
-
-    def test_str(self):
-        self.assertEqual(str(self.cls("/abc//def")), "/abc/def")
 
     def test_comparisons(self):
         self.assertEqual(self.cls("/abc/def"), self.cls("/abc/def"))
@@ -207,10 +212,80 @@ class VirtualPathCommonTests:
         p = self.cls("/foo/bar/baz")
         self.assertEqual(p.suffixes, [])
 
+    def test_stemAttribute(self):
+        p = self.cls("/")
+        self.assertEqual(p.stem, '')
+
+        p = self.cls("/foo/bar/baz.py")
+        self.assertEqual(p.stem, 'baz')
+
+        p = self.cls("/foo/bar/baz.py.bla")
+        self.assertEqual(p.stem, 'baz.py')
+
     def test_asRelative(self):
         self.assertEqual(self.cls("/").asRelative(), "")
         self.assertEqual(self.cls("/foo/bar/baz/quux/zoot").asRelative(),
                          "foo/bar/baz/quux/zoot")
+
+    def test_relativeTo(self):
+        self.assertEqual(self.cls("").relativeTo(""), "")
+        self.assertEqual(self.cls("").relativeTo("/"), "")
+        self.assertEqual(self.cls("/").relativeTo("/"), "")
+        self.assertEqual(self.cls("/").relativeTo(""), "")
+
+        p = self.cls("/foo/bar/baz/quux/zoot")
+
+        self.assertEqual(p.relativeTo(""), "foo/bar/baz/quux/zoot")
+        self.assertEqual(p.relativeTo("/"), "foo/bar/baz/quux/zoot")
+
+        self.assertEqual(p.relativeTo("foo"), "bar/baz/quux/zoot")
+        self.assertEqual(p.relativeTo("foo/"), "bar/baz/quux/zoot")
+        self.assertEqual(p.relativeTo("/foo"), "bar/baz/quux/zoot")
+        self.assertEqual(p.relativeTo("/foo/"), "bar/baz/quux/zoot")
+
+        self.assertEqual(p.relativeTo("foo/bar/baz"), "quux/zoot")
+        self.assertEqual(p.relativeTo("foo/bar/baz/"), "quux/zoot")
+        self.assertEqual(p.relativeTo("/foo/bar/baz"), "quux/zoot")
+        self.assertEqual(p.relativeTo("/foo/bar/baz/"), "quux/zoot")
+
+        with self.assertRaises(ValueError):
+            p.relativeTo("/foo/ba")
+
+        with self.assertRaises(ValueError):
+            p.relativeTo("/foo/balloon")
+
+    def test_withName(self):
+        p = self.cls("/foo/bar/baz/quux/zoot")
+
+        self.assertEqual(p.withName(""),
+                         VirtualPath("/foo/bar/baz/quux"))
+        self.assertEqual(p.withName("pouet"),
+                         VirtualPath("/foo/bar/baz/quux/pouet"))
+        self.assertEqual(p.withName("pouet/zdong"),
+                         VirtualPath("/foo/bar/baz/quux/pouet/zdong"))
+
+        # The self.cls object has no 'name' (referring to the 'name' property)
+        with self.assertRaises(ValueError):
+            self.cls("").withName("foobar")
+
+        with self.assertRaises(ValueError):
+            self.cls("/").withName("foobar")
+
+    def test_withSuffix(self):
+        p = self.cls("/foo/bar/baz.tar.gz")
+        self.assertEqual(p.withSuffix(".bz2"),
+                         VirtualPath("/foo/bar/baz.tar.bz2"))
+        p = self.cls("/foo/bar/baz")
+        self.assertEqual(p.withSuffix(".tar.xz"),
+                         VirtualPath("/foo/bar/baz.tar.xz"))
+
+        # The self.cls object has no 'name' (referring to the 'name' property)
+        with self.assertRaises(ValueError):
+            self.cls("/foo/bar/baz.tar.gz").withSuffix("no-leading-dot")
+
+        with self.assertRaises(ValueError):
+            # The root virtual path ('/') can't be used for this
+            self.cls("/").withSuffix(".foobar")
 
 
 class TestVirtualPath(unittest.TestCase, VirtualPathCommonTests):
