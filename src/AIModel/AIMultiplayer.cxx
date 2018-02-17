@@ -82,6 +82,10 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
 void FGAIMultiplayer::bind() {
     FGAIBase::bind();
 
+    //2018.1 mp-clock-mode indicates the clock mode that the client is running, so for backwards
+    //       compatibility ensure this is initialized to 0 which means pre 2018.1
+    props->setIntValue("sim/multiplay/mp-clock-mode", 0);
+    
     tie("refuel/contact", SGRawValuePointer<bool>(&contact));
     tie("tanker", SGRawValuePointer<bool>(&isTanker));
 
