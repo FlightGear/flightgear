@@ -137,6 +137,7 @@ public:
     void  setSolverTweak(float f) { _solverDelta = f; };
     void  setSolverThreshold(float threshold) { _solverThreshold = threshold; };
     void  setSolverMaxIterations(int i) { _solverMaxIterations = i; };
+    void  setSolverMode(int i) { _solverMode = i; };
     
 private:
     struct Tank { 
@@ -198,6 +199,7 @@ private:
     float _getPitch(Config &cfg);
     float _getLiftForce(Config &cfg);
     float _getDragForce(Config &cfg);
+    float _checkConvergence(float prev, float current);
     void solveAirplane(bool verbose = false);
     void solveHelicopter(bool verbose = false);
     float compileWing(Wing* w);
@@ -222,6 +224,7 @@ private:
     /// set property name controling tail trim (incidence)
     void setHstabTrimControl(const char* propName);
     
+    int   _solverMode {1};
     float _solverDelta {0.3226f};
     // How close to the solution are we trying get?  
     // Trying too hard can result in oscillations (no convergence). 

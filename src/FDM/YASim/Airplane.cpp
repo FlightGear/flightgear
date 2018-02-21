@@ -877,6 +877,21 @@ float Airplane::_getDragForce(Config &cfg)
     return cfg.weight * tmp[0];
 }
 
+// This is a heuristic approach to "force" solver converge due to numeric
+// problems. To be replaced by a better solution later.
+float Airplane::_checkConvergence(float prev, float current)
+{
+    static int damping {0};
+    //different sign and almost same value -> oscilation; 
+    if ((prev*current) < 0 && (abs(current + prev) < 0.01f)) {
+        if (!damping) fprintf(stderr,"YASim warning: possible convergence problem.\n");
+        damping++;
+        if (current < 1) current *= abs(current); // quadratic
+        else current = sqrt(current);
+    }
+    return current;
+}
+
 void Airplane::solveAirplane(bool verbose)
 {
     static const float ARCMIN = 0.0002909f;
@@ -899,6 +914,7 @@ void Airplane::solveAirplane(bool verbose)
         fprintf(stdout,"i\tdAoa\tdTail\tcl0\tcp1\n");
     }
 
+    float prevTailDelta {0};
     while(1) {
         if(_solutionIterations++ > _solverMaxIterations) { 
             _failureMsg = "Solution failed to converge!";
@@ -920,9 +936,10 @@ void Airplane::solveAirplane(bool verbose)
         float alift = _getLiftForce(_config[APPROACH]);
 
         // Modify the cruise AoA a bit to get a derivative
+        float savedAoa = _config[CRUISE].aoa;
         _config[CRUISE].aoa += ARCMIN;
         runConfig(_config[CRUISE]);
-        _config[CRUISE].aoa -= ARCMIN;
+        _config[CRUISE].aoa = savedAoa;
             
         float clift1 = _getLiftForce(_config[CRUISE]);
 
@@ -978,7 +995,12 @@ void Airplane::solveAirplane(bool verbose)
         // OK, now we can adjust the minor variables:
         float aoaDelta = -clift0 * (ARCMIN/(clift1-clift0));
         float tailDelta = -cpitch0 * (ARCMIN/(cpitch1-cpitch0));
-        
+        // following is a hack against oszilation variables,
+        // needs more research to get a fully understood - it works 
+        if (_solverMode > 0) {
+            tailDelta = _checkConvergence(prevTailDelta, tailDelta);
+            prevTailDelta = tailDelta;
+        }
         if (verbose) {
             fprintf(stdout,"%4d\t%f\t%f\t%f\t%f\n", _solutionIterations, aoaDelta, tailDelta, clift0, cpitch1);
         }
