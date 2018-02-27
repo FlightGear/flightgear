@@ -29,7 +29,9 @@
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/naref.h>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scripting/NasalSys.hxx>
 
@@ -266,6 +268,22 @@ int Addon::getLoadSequenceNumber() const
 void Addon::setLoadSequenceNumber(int num)
 { _loadSequenceNumber = num; }
 
+std::vector<SGPropertyNode_ptr> Addon::getMenubarNodes() const
+{ return _menubarNodes; }
+
+void Addon::setMenubarNodes(const std::vector<SGPropertyNode_ptr>& menubarNodes)
+{ _menubarNodes = menubarNodes; }
+
+void Addon::addToFGMenubar() const
+{
+  SGPropertyNode* menuRootNode = fgGetNode("/sim/menubar/default", true);
+
+  for (const auto& node: getMenubarNodes()) {
+    SGPropertyNode* childNode = menuRootNode->addChild("menu");
+    ::copyProperties(node.ptr(), childNode);
+  }
+}
+
 std::string Addon::str() const
 {
   std::ostringstream oss;
@@ -311,7 +329,79 @@ Addon Addon::fromAddonDir(const SGPath& addonPath)
   addon.setSupportUrl(std::move(metadata.supportUrl));
   addon.setCodeRepositoryUrl(std::move(metadata.codeRepositoryUrl));
 
+  SGPath menuFile = addonPath / "addon-menubar-items.xml";
+
+  if (menuFile.exists()) {
+    addon.setMenubarNodes(readMenubarItems(menuFile));
+  }
+
   return addon;
+}
+
+// Static method
+std::vector<SGPropertyNode_ptr>
+Addon::readMenubarItems(const SGPath& menuFile)
+{
+  SGPropertyNode rootNode;
+
+  try {
+    readProperties(menuFile, &rootNode);
+  } catch (const sg_exception &e) {
+    throw errors::error_loading_menubar_items_file(
+      "unable to load add-on menu bar items from file '" +
+      menuFile.utf8Str() + "': " + e.getFormattedMessage());
+  }
+
+  // Check the 'meta' section
+  SGPropertyNode *metaNode = rootNode.getChild("meta");
+  if (metaNode == nullptr) {
+    throw errors::error_loading_menubar_items_file(
+      "no /meta node found in add-on menu bar items file '" +
+      menuFile.utf8Str() + "'");
+  }
+
+  // Check the file type
+  SGPropertyNode *fileTypeNode = metaNode->getChild("file-type");
+  if (fileTypeNode == nullptr) {
+    throw errors::error_loading_menubar_items_file(
+      "no /meta/file-type node found in add-on menu bar items file '" +
+      menuFile.utf8Str() + "'");
+  }
+
+  string fileType = fileTypeNode->getStringValue();
+  if (fileType != "FlightGear add-on menu bar items") {
+    throw errors::error_loading_menubar_items_file(
+      "Invalid /meta/file-type value for add-on menu bar items file '" +
+      menuFile.utf8Str() + "': '" + fileType + "' "
+      "(expected 'FlightGear add-on menu bar items')");
+  }
+
+  // Check the format version
+  SGPropertyNode *fmtVersionNode = metaNode->getChild("format-version");
+  if (fmtVersionNode == nullptr) {
+    throw errors::error_loading_menubar_items_file(
+      "no /meta/format-version node found in add-on menu bar items file '" +
+      menuFile.utf8Str() + "'");
+  }
+
+  int formatVersion = fmtVersionNode->getIntValue();
+  if (formatVersion != 1) {
+    throw errors::error_loading_menubar_items_file(
+      "unknown format version in add-on menu bar items file '" +
+      menuFile.utf8Str() + "': " + std::to_string(formatVersion));
+  }
+
+  SG_LOG(SG_GENERAL, SG_DEBUG,
+         "Loaded add-on menu bar items from '" << menuFile.utf8Str() + "'");
+
+  SGPropertyNode *menubarItemsNode = rootNode.getChild("menubar-items");
+  std::vector<SGPropertyNode_ptr> res;
+
+  if (menubarItemsNode != nullptr) {
+    res = menubarItemsNode->getChildren("menu");
+  }
+
+  return res;
 }
 
 // Static method

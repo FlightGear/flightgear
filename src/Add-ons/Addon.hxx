@@ -173,6 +173,12 @@ public:
   // Get all non-empty URLs pertaining to this add-on
   std::multimap<UrlType, QualifiedUrl> getUrls() const;
 
+  // Getter and setter for the menu bar item nodes of the add-on
+  std::vector<SGPropertyNode_ptr> getMenubarNodes() const;
+  void setMenubarNodes(const std::vector<SGPropertyNode_ptr>& menubarNodes);
+  // Add the menus defined in addon-menubar-items.xml to /sim/menubar/default
+  void addToFGMenubar() const;
+
   // Simple string representation
   std::string str() const;
 
@@ -185,6 +191,10 @@ private:
   // “Compute” a path to the metadata file from the add-on base path
   static SGPath getMetadataFile(const SGPath& addonPath);
   SGPath getMetadataFile() const;
+
+  // Read all menus from addon-menubar-items.xml (under the add-on base path)
+  static std::vector<SGPropertyNode_ptr>
+  readMenubarItems(const SGPath& menuFile);
 
   // The add-on identifier, in reverse DNS style. The AddonManager refuses to
   // register two add-ons with the same id in a given FlightGear session.
@@ -226,6 +236,8 @@ private:
   std::string _triggerProperty;
   // Semantics explained above
   int _loadSequenceNumber = -1;
+
+  std::vector<SGPropertyNode_ptr> _menubarNodes;
 };
 
 std::ostream& operator<<(std::ostream& os, const Addon& addon);

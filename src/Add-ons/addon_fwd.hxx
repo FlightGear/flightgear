@@ -56,6 +56,7 @@ class error;
 class error_loading_config_file;
 class no_metadata_file_found;
 class error_loading_metadata_file;
+class error_loading_menubar_items_file;
 class duplicate_registration_attempt;
 class fg_version_too_old;
 class fg_version_too_recent;

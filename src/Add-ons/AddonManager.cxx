@@ -255,6 +255,14 @@ SGPropertyNode_ptr AddonManager::addonNode(const string& addonId) const
   return getAddon(addonId)->getAddonNode();
 }
 
+void
+AddonManager::addAddonMenusToFGMenubar() const
+{
+  for (const auto& addon: _registeredAddons) {
+    addon->addToFGMenubar();
+  }
+}
+
 } // of namespace addons
 
 } // of namespace flightgear
