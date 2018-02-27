@@ -17,6 +17,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+#include <map>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -267,6 +268,33 @@ int Addon::getLoadSequenceNumber() const
 
 void Addon::setLoadSequenceNumber(int num)
 { _loadSequenceNumber = num; }
+
+std::multimap<UrlType, QualifiedUrl> Addon::getUrls() const
+{
+  std::multimap<UrlType, QualifiedUrl> res;
+
+  auto appendIfNonEmpty = [&res](UrlType type, string url, string detail = "") {
+    if (!url.empty()) {
+      res.emplace(type, QualifiedUrl(type, std::move(url), std::move(detail)));
+    }
+  };
+
+  for (const auto& author: _authors) {
+    appendIfNonEmpty(UrlType::author, author->getUrl(), author->getName());
+  }
+
+  for (const auto& maint: _maintainers) {
+    appendIfNonEmpty(UrlType::maintainer, maint->getUrl(), maint->getName());
+  }
+
+  appendIfNonEmpty(UrlType::homePage, getHomePage());
+  appendIfNonEmpty(UrlType::download, getDownloadUrl());
+  appendIfNonEmpty(UrlType::support, getSupportUrl());
+  appendIfNonEmpty(UrlType::codeRepository, getCodeRepositoryUrl());
+  appendIfNonEmpty(UrlType::license, getLicenseUrl());
+
+  return res;
+}
 
 std::vector<SGPropertyNode_ptr> Addon::getMenubarNodes() const
 { return _menubarNodes; }
