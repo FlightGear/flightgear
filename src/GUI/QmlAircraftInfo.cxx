@@ -488,7 +488,9 @@ void QmlAircraftInfo::setUri(QUrl u)
         auto ident = u.path().toStdString();
         try {
             _package = globals->packageRoot()->getPackageById(ident);
-            _variant = _package->indexOfVariant(ident);
+            if (_package) {
+                _variant = _package->indexOfVariant(ident);
+            }
         } catch (sg_exception&) {
             qWarning() << "couldn't find package/variant for " << u;
         }
