@@ -67,6 +67,8 @@ protected:
             qWarning() << "failed refresh of "
                 << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
         }
+
+        m_model->catalogsRefreshed();
     }
 
     void startInstall(InstallRef aInstall) override
