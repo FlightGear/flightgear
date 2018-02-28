@@ -52,6 +52,13 @@ public:
      */
     void setNonInteractiveMode();
 
+    /**
+     * @brief setUpdatingExistingCatalog - indicate that this is an update or
+     * fix of an existing catalog, in which case we will treat failures /
+     * cancellation differently.
+     */
+    void setUpdatingExistingCatalog();
+
     void setUrlAndDownload(QUrl url);
 private slots:
     virtual void reject();
@@ -82,7 +89,7 @@ private:
     QUrl m_catalogUrl;
     simgear::pkg::CatalogRef m_result;
     bool m_nonInteractiveMode = false;
-
+    bool m_updatingExistingCatalog = false;
     std::unique_ptr<AddCatalogDelegate> m_delegate;
 };
 

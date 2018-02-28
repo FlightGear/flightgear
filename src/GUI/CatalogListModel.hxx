@@ -45,17 +45,20 @@ public:
 
     void refresh();
 
-    virtual int rowCount(const QModelIndex& parent) const;
+    int rowCount(const QModelIndex& parent) const override;
 
-    virtual QVariant data(const QModelIndex& index, int role) const;
+    QVariant data(const QModelIndex& index, int role) const override;
     
-    virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 private slots:
 
 
 private:
     simgear::pkg::RootRef m_packageRoot;
+    simgear::pkg::CatalogList m_catalogs;
 };
 
 #endif // of FG_GUI_CATALOG_LIST_MODEL
