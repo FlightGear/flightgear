@@ -105,8 +105,10 @@ bool CatalogListModel::setData(const QModelIndex &index, const QVariant &value, 
 
 Qt::ItemFlags CatalogListModel::flags(const QModelIndex &index) const
 {
-    auto r = QAbstractListModel::flags(index);
+    Qt::ItemFlags r = Qt::ItemIsSelectable;
     const auto cat = m_catalogs.at(index.row());
-    r.setFlag(Qt::ItemIsEnabled, cat->isEnabled());
+    if (cat->isEnabled()) {
+        r |= Qt::ItemIsEnabled;
+    }
     return r;
 }
