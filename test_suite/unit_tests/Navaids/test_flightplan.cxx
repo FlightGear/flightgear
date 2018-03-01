@@ -1,8 +1,7 @@
-#include "config.h"
+#include "test_flightplan.hxx"
 
-#include "unitTestHelpers.hxx"
+#include "tests/unitTestHelpers.hxx"
 
-#include <simgear/misc/test_macros.hxx>
 #include <simgear/misc/strutils.hxx>
 
 #include <Navaids/FlightPlan.hxx>
@@ -15,6 +14,21 @@
 #include <Airports/airport.hxx>
 
 using namespace flightgear;
+
+
+// Set up function for each test.
+void FlightplanTests::setUp()
+{
+    fgtest::initTestGlobals("flightplan");
+}
+
+
+// Clean up after each test.
+void FlightplanTests::tearDown()
+{
+    fgtest::shutdownTestGlobals();
+}
+
 
 FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunway,
                          const std::string& destICAO, const std::string& destRunway,
@@ -37,28 +51,28 @@ FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunwa
     return f;
 }
 
-void testBasic()
+void FlightplanTests::testBasic()
 {
     FlightPlanRef fp1 = makeTestFP("EGCC", "23L", "EHAM", "24",
                                    "TNT CLN");
     fp1->setIdent("testplan");
 
-    SG_CHECK_EQUAL(fp1->ident(), "testplan");
-    SG_CHECK_EQUAL(fp1->departureAirport()->ident(), "EGCC");
-    SG_CHECK_EQUAL(fp1->departureRunway()->ident(), "23L");
-    SG_CHECK_EQUAL(fp1->destinationAirport()->ident(), "EHAM");
-    SG_CHECK_EQUAL(fp1->destinationRunway()->ident(), "24");
+    CPPUNIT_ASSERT(fp1->ident() == "testplan");
+    CPPUNIT_ASSERT(fp1->departureAirport()->ident() == "EGCC");
+    CPPUNIT_ASSERT(fp1->departureRunway()->ident() == "23L");
+    CPPUNIT_ASSERT(fp1->destinationAirport()->ident() == "EHAM");
+    CPPUNIT_ASSERT(fp1->destinationRunway()->ident() == "24");
 
-    SG_CHECK_EQUAL(fp1->numLegs(), 2);
+    CPPUNIT_ASSERT_EQUAL(fp1->numLegs(), 2);
 
-    SG_CHECK_EQUAL(fp1->legAtIndex(0)->waypoint()->source()->ident(), "TNT");
-    SG_CHECK_EQUAL(fp1->legAtIndex(0)->waypoint()->source()->name(), "TRENT VOR-DME");
+    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "TNT");
+    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->name() == "TRENT VOR-DME");
 
-    SG_CHECK_EQUAL(fp1->legAtIndex(1)->waypoint()->source()->ident(), "CLN");
-    SG_CHECK_EQUAL(fp1->legAtIndex(1)->waypoint()->source()->name(), "CLACTON VOR-DME");
+    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->ident() == "CLN");
+    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->name() == "CLACTON VOR-DME");
 }
 
-void testRoutePathBasic()
+void FlightplanTests::testRoutePathBasic()
 {
     FlightPlanRef fp1 = makeTestFP("EGHI", "20", "EDDM", "08L",
                                    "SFD LYD BNE CIV ELLX LUX SAA KRH WLD");
@@ -85,15 +99,15 @@ void testRoutePathBasic()
     double distM = SGGeodesy::distanceM(bne->geod(), civ->geod());
     double trackDeg = SGGeodesy::courseDeg(bne->geod(), civ->geod());
 
-    SG_CHECK_EQUAL_EP2(trackDeg, rtepath.trackForIndex(3), 0.5);
-    SG_CHECK_EQUAL_EP2(distM, rtepath.distanceForIndex(3), 2000); // 2km precision, allow for turns
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(trackDeg, rtepath.trackForIndex(3), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(distM, rtepath.distanceForIndex(3), 2000); // 2km precision, allow for turns
 
 }
 
 // https://sourceforge.net/p/flightgear/codetickets/1703/
 // https://sourceforge.net/p/flightgear/codetickets/1939/
 
-void testRoutePathSkipped()
+void FlightplanTests::testRoutePathSkipped()
 {
     FlightPlanRef fp1 = makeTestFP("EHAM", "24", "EDDM", "08L",
                                    "EHEH KBO TAU FFM FFM/100/0.01 FFM/120/0.02 WUR WLD");
@@ -102,22 +116,22 @@ void testRoutePathSkipped()
     RoutePath rtepath(fp1);
 
     // skipped point uses inbound track
-    SG_CHECK_EQUAL_EP(rtepath.trackForIndex(3), rtepath.trackForIndex(4));
+    CPPUNIT_ASSERT_EQUAL(rtepath.trackForIndex(3), rtepath.trackForIndex(4));
 
-    SG_CHECK_EQUAL_EP(0.0, rtepath.distanceForIndex(4));
-    SG_CHECK_EQUAL_EP(0.0, rtepath.distanceForIndex(5));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, rtepath.distanceForIndex(4), 1e-9);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, rtepath.distanceForIndex(5), 1e-9);
 
-    SG_CHECK_EQUAL_EP2(101000, rtepath.distanceForIndex(6), 1000);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(101000, rtepath.distanceForIndex(6), 1000);
 
 
     // this tests skipping two preceeding points works as it should
     SGGeodVec vec = rtepath.pathForIndex(6);
-    SG_CHECK_EQUAL(vec.size(), 9);
+    CPPUNIT_ASSERT(vec.size() == 9);
 
 
 }
 
-void testRoutePathTrivialFlightPlan()
+void FlightplanTests::testRoutePathTrivialFlightPlan()
 {
     FlightPlanRef fp1 = makeTestFP("EGPH", "24", "EGPH", "06",
                                    "");
@@ -131,17 +145,5 @@ void testRoutePathTrivialFlightPlan()
         rtepath.distanceForIndex(leg);
     }
 
-    SG_CHECK_EQUAL_EP(0.0, fp1->totalDistanceNm());
-}
-
-int main(int argc, char* argv[])
-{
-    fgtest::initTestGlobals("flightplan");
-
-    testBasic();
-    testRoutePathBasic();
-    testRoutePathSkipped();
-    testRoutePathTrivialFlightPlan();
-    
-    fgtest::shutdownTestGlobals();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, fp1->totalDistanceNm(), 1e-9);
 }

@@ -1,6 +1,7 @@
 # Add each unit test category.
 foreach( unit_test_category
         general
+        Navaids
         Scripting
     )
 
