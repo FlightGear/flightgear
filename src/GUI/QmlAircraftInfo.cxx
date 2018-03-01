@@ -318,7 +318,8 @@ QVariantList QmlAircraftInfo::previews() const
 {
     if (_item) {
         QVariantList result;
-        Q_FOREACH(QUrl u, _item->previews) {
+        auto actualItem = resolveItem();
+        Q_FOREACH(QUrl u, actualItem->previews) {
             result.append(u);
         }
         return result;
