@@ -45,6 +45,7 @@ Item {
         anchors.left: track.right
         anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
+        font.pixelSize: Style.baseFontPixelSize
     }
 
     MouseArea {
