@@ -1,58 +1,58 @@
 
-if (MSVC)
-	set( RESOURCE_FILE flightgear.rc )
-endif (MSVC)
+if(MSVC)
+    set(RESOURCE_FILE flightgear.rc)
+endif(MSVC)
 
 set(SOURCES
-	bootstrap.cxx
-	fg_commands.cxx
-	fg_scene_commands.cxx
-	fg_init.cxx
-	fg_io.cxx
-	fg_os_common.cxx
-	fg_props.cxx
-	FGInterpolator.cxx
-	globals.cxx
-	locale.cxx
-	logger.cxx
-	main.cxx
-	options.cxx
-	util.cxx
+    bootstrap.cxx
+    fg_commands.cxx
+    fg_init.cxx
+    fg_io.cxx
+    fg_os_common.cxx
+    fg_scene_commands.cxx
+    fg_props.cxx
+    FGInterpolator.cxx
+    globals.cxx
+    locale.cxx
+    logger.cxx
+    main.cxx
+    options.cxx
     positioninit.cxx
-    subsystemFactory.cxx
     screensaver_control.cxx
-	${RESOURCE_FILE}
-	${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-	)
+    subsystemFactory.cxx
+    util.cxx
+    ${RESOURCE_FILE}
+    ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
+)
 
 set(HEADERS
-	fg_commands.hxx
-	fg_init.hxx
-	fg_io.hxx
-	fg_props.hxx
-	FGInterpolator.hxx
-	globals.hxx
-	locale.hxx
-	logger.hxx
-	main.hxx
-	options.hxx
-	util.hxx
-    positioninit.hxx
-    subsystemFactory.hxx
     AircraftDirVisitorBase.hxx
+    fg_commands.hxx
+    fg_init.hxx
+    fg_io.hxx
+    fg_props.hxx
+    FGInterpolator.hxx
+    globals.hxx
+    locale.hxx
+    logger.hxx
+    main.hxx
+    options.hxx
+    positioninit.hxx
     screensaver_control.hxx
+    subsystemFactory.hxx
+    util.hxx
     ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
-	)
+)
 
 # On Windows, make sure fgrcc can be run (it needs third-party libraries)
-if (MSVC)
-  if (MSVC_3RDPARTY_ROOT AND MSVC_3RDPARTY_DIR)
+if(MSVC)
+  if(MSVC_3RDPARTY_ROOT AND MSVC_3RDPARTY_DIR)
     set(CMAKE_MSVCIDE_RUN_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin)
-  else ()
+  else()
     message(FATAL_ERROR
       "Either MSVC_3RDPARTY_ROOT or MSVC_3RDPARTY_DIR is empty or unset")
-  endif ()
-endif ()
+  endif()
+endif()
 
 add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
@@ -60,7 +60,7 @@ add_custom_command(
   COMMAND fgrcc --root=${CMAKE_SOURCE_DIR} --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx --init-func-name=initFlightGearEmbeddedResources --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
   DEPENDS
     fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-  )
+)
 
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
@@ -70,19 +70,19 @@ link_directories ( ${Boost_LIBRARY_DIRS} )
 get_property(FG_GROUPS_C GLOBAL PROPERTY FG_GROUPS_C)
 string(REPLACE "@" ";" groups ${FG_GROUPS_C} )
 foreach(g ${groups})
-	string(REPLACE "#" ";" g2 ${g})
-	list(GET g2 0 name)
-	list(REMOVE_AT g2 0)
-	source_group("${name}\\Sources" FILES ${g2})
+    string(REPLACE "#" ";" g2 ${g})
+    list(GET g2 0 name)
+    list(REMOVE_AT g2 0)
+    source_group("${name}\\Sources" FILES ${g2})
 endforeach()
 
 get_property(FG_GROUPS_H GLOBAL PROPERTY FG_GROUPS_H)
 string(REPLACE "@" ";" groups ${FG_GROUPS_H} )
 foreach(g ${groups})
-	string(REPLACE "#" ";" g2 ${g})
-	list(GET g2 0 name)
-	list(REMOVE_AT g2 0)
-	source_group("${name}\\Headers" FILES ${g2})
+    string(REPLACE "#" ";" g2 ${g})
+    list(GET g2 0 name)
+    list(REMOVE_AT g2 0)
+    source_group("${name}\\Headers" FILES ${g2})
 endforeach()
 
 source_group("Main\\Headers" FILES ${HEADERS})
@@ -93,10 +93,10 @@ source_group("Main\\Sources" FILES ${SOURCES})
 # it manually via AllocConsole()
 # similarly pass MACOSX_BUNDLE so we generate a .app on Mac
 add_executable(fgfs WIN32 MACOSX_BUNDLE
-                ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
+               ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
 
 #-----------------------------------------------------------------------------
-# MacOSX bundle packagaing
+# MacOSX bundle packaging
 
 if(APPLE)
     execute_process(COMMAND date +%Y
@@ -126,15 +126,15 @@ get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
 
 if(RTI_FOUND)
-	set(HLA_LIBRARIES ${RTI_LIBRARIES})
+    set(HLA_LIBRARIES ${RTI_LIBRARIES})
 else()
-	set(HLA_LIBRARIES "")
+    set(HLA_LIBRARIES "")
 endif()
 
 if(GDAL_FOUND)
-	set(GDAL_LIBRARIES ${GDAL_LIBRARY})
+    set(GDAL_LIBRARIES ${GDAL_LIBRARY})
 else()
-	set(GDAL_LIBRARIES "")
+    set(GDAL_LIBRARIES "")
 endif()
 
 if(ENABLE_JSBSIM)
@@ -143,36 +143,41 @@ if(ENABLE_JSBSIM)
 
     target_link_libraries(fgfs JSBSim)
 endif()
+
 if(ENABLE_IAX)
     target_link_libraries(fgfs iaxclient_lib ${OPENAL_LIBRARY})
 endif()
+
 if(USE_DBUS)
     target_link_libraries(fgfs ${DBUS_LIBRARIES})
 endif()
+
 if(FG_HAVE_GPERFTOOLS)
     include_directories(${GooglePerfTools_INCLUDE_DIR})
     target_link_libraries(fgfs ${GooglePerfTools_LIBRARIES})
 endif()
 
-if (CRASHRPT_FOUND)
-	target_link_libraries(fgfs ${CRASHRPT_LIBRARY})
+if(CRASHRPT_FOUND)
+    target_link_libraries(fgfs ${CRASHRPT_LIBRARY})
 endif()
+
 if(X11_FOUND)
     target_link_libraries(fgfs ${X11_LIBRARIES})
 endif()
-target_link_libraries(fgfs
-	SimGearCore SimGearScene
-	${SQLITE3_LIBRARY}
-	${SIMGEAR_LIBRARIES}
-	${OPENSCENEGRAPH_LIBRARIES}
-	${OPENGL_LIBRARIES}
-	${PLIB_LIBRARIES}
-	${HLA_LIBRARIES}
-	${GDAL_LIBRARIES}
-	${EVENT_INPUT_LIBRARIES}
-	${PLATFORM_LIBS}
-)
 
+target_link_libraries(fgfs
+    SimGearCore
+    SimGearScene
+    ${EVENT_INPUT_LIBRARIES}
+    ${GDAL_LIBRARIES}
+    ${HLA_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${OPENSCENEGRAPH_LIBRARIES}
+    ${PLATFORM_LIBS}
+    ${PLIB_LIBRARIES}
+    ${SQLITE3_LIBRARY}
+    ${SIMGEAR_LIBRARIES}
+)
 
 
 if(ENABLE_FLITE)
@@ -183,12 +188,12 @@ if(ENABLE_FLITE)
     endif()
 endif()
 
-if (Qt5Core_FOUND)
+if(Qt5Core_FOUND)
     target_link_libraries(fgfs Qt5::Core Qt5::Widgets fglauncher fgqmlui)
     set_property(TARGET fgfs PROPERTY AUTOMOC ON)
 endif()
 
-if (USE_AEONWAVE)
+if(USE_AEONWAVE)
    target_link_libraries(fgfs ${AAX_LIBRARY})
 endif()
 
@@ -213,6 +218,6 @@ if(ENABLE_METAR)
 endif()
 
 if (COMMAND flightgear_test)
-	flightgear_test(posinit test_posinit.cxx)
-	flightgear_test(autosaveMigration test_autosaveMigration.cxx)
+    flightgear_test(posinit test_posinit.cxx)
+    flightgear_test(autosaveMigration test_autosaveMigration.cxx)
 endif()
