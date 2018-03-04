@@ -964,8 +964,14 @@ void Airplane::solveAirplane(bool verbose)
         float liftFactor = awgt / (awgt+alift);
 
         // Sanity:
-        if(dragFactor <= 0 || liftFactor <= 0)
+        if(dragFactor <= 0) {
+            _failureMsg = "dragFactor < 0 (drag > thrust)";
             break;
+        }
+        if(liftFactor <= 0) {
+            _failureMsg = "liftFactor < 0";
+            break;
+        }
 
         // And the elevator control in the approach.  This works just
         // like the tail incidence computation (it's solving for the
