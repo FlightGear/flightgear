@@ -84,7 +84,12 @@ CatalogRef AddCatalogDialog::addedCatalog()
 void AddCatalogDialog::setNonInteractiveMode()
 {
     m_nonInteractiveMode = true;
-     ui->buttonBox->hide();
+    ui->buttonBox->hide();
+}
+
+void AddCatalogDialog::setUpdatingExistingCatalog()
+{
+    m_updatingExistingCatalog = true;
 }
 
 void AddCatalogDialog::setUrlAndDownload(QUrl url)
@@ -187,10 +192,23 @@ void AddCatalogDialog::accept()
 
 void AddCatalogDialog::reject()
 {
-    if (m_result && !m_result->id().empty()) {
-        // user may have successfully download the catalog, but choosen
-        // not to add it. so remove it here
-        m_packageRoot->removeCatalogById(m_result->id());
+    // user may have successfully download the catalog, but choosen
+    // not to add it. so remove it here
+
+    // however, if we got in here as part of re-validating an existing
+    // disabled catalog, *but* the re-validation also failed, we do not
+    // want to remove it here.
+
+    if (m_result && !m_result->id().empty())
+    {
+        if (m_updatingExistingCatalog) {
+            qWarning() << "cancelled add, but existing catalog so not removing:"
+                       << QString::fromStdString(m_result->id());
+        } else {
+            qWarning() << "removed cancelled catalog:"
+                          << QString::fromStdString(m_result->id());
+            m_packageRoot->removeCatalogById(m_result->id());
+        }
     }
 
     QDialog::reject();

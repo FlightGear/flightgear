@@ -104,7 +104,6 @@ LauncherMainWindow::LauncherMainWindow() :
             this, &LauncherMainWindow::onViewCommandLine);
 
     m_serversModel = new MPServersModel(this);
-    m_serversModel->refresh();
 
     // keep the description QLabel in sync as the current item changes
     connect(m_ui->stateCombo,
@@ -151,7 +150,6 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->locationHistory->setIcon(historyIcon);
 
     m_aircraftModel = new AircraftItemModel(this);
-
     m_installedAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
     m_installedAircraftModel->setInstalledFilterEnabled(true);
 
@@ -184,6 +182,9 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(addOnsPage, &AddOnsPage::aircraftPathsChanged,
             this, &LauncherMainWindow::onAircraftPathsChanged);
     m_ui->stack->addWidget(addOnsPage);
+
+    connect (m_aircraftModel, &AircraftItemModel::catalogsRefreshed,
+             addOnsPage, &AddOnsPage::onCatalogsRefreshed);
 
     QSettings settings;
     LocalAircraftCache::instance()->setPaths(settings.value("aircraft-paths").toStringList());
@@ -1013,6 +1014,11 @@ void LauncherMainWindow::requestUpdateAllAircraft()
     std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
         globals->packageRoot()->scheduleToUpdate(pkg->install());
     });
+}
+
+void LauncherMainWindow::queryMPServers()
+{
+    m_serversModel->refresh();
 }
 
 bool LauncherMainWindow::showNoOfficialHanger() const

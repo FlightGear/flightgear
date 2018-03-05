@@ -21,6 +21,7 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
 
+#include <Add-ons/AddonManager.hxx>
 #include <Main/fg_props.hxx>
 
 #if defined(SG_UNIX) && !defined(SG_MAC) 
@@ -82,7 +83,17 @@ NewGUI::init ()
     if (aircraftDialogDir.exists()) {
         readDir(aircraftDialogDir);
     }
-    
+
+    // Read XML dialogs made available by registered add-ons
+    const auto& addonManager = flightgear::addons::AddonManager::instance();
+    for (const auto& addon: addonManager->registeredAddons()) {
+        SGPath addonDialogDir = addon->getBasePath() / "gui/dialogs";
+
+        if (addonDialogDir.exists()) {
+            readDir(addonDialogDir);
+        }
+    }
+
     // Fix for http://code.google.com/p/flightgear-bugs/issues/detail?id=947
     fgGetNode("sim/menubar")->setAttribute(SGPropertyNode::PRESERVE, true);
     _menubar->init();

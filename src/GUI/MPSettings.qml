@@ -13,6 +13,13 @@ Section {
             + "flight. This requires a moderately fast Internet connection to be usable. Your aircraft "
             + "will be visible to other users online, and you will see their aircraft.")
         keywords: ["network", "mp", "multiplay","online"]
+
+        onCheckedChanged: {
+            if (checked) {
+                // kick off a server query now
+                _launcher.queryMPServers();
+            }
+        }
     }
 
     LineEdit {
@@ -100,7 +107,12 @@ Section {
     }
 
     onRestore:  {
-        // nothing to do, restoration is done by the C++ code
+        if (enableMP.checked) {
+            // only query servers if MP is enabled
+            _launcher.queryMPServers();
+        }
+
+        // restoration is done by the C++ code
         // in MPServersModel::restoreMPServerSelection
     }
 

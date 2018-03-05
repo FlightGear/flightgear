@@ -238,8 +238,9 @@ void FGHTTPClient::postinit()
   .method("refresh", &pkg::Catalog::refresh)
   .method("needingUpdate", &pkg::Catalog::packagesNeedingUpdate)
   .member("installed", &pkg::Catalog::installedPackages)
-  .method("search", &f_catalog_search);
-  
+  .method("search", &f_catalog_search)
+  .member("enabled", &pkg::Catalog::isEnabled);
+
   NasalPackage::init("Package")
   .member("id", &pkg::Package::id)
   .member("name", &pkg::Package::name)

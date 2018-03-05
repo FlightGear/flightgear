@@ -787,7 +787,7 @@ void MapWidget::paintRuler()
   SGVec2d acftPos = project(_aircraft);
   SGVec2d clickPos = project(_clickGeod);
 
-  glColor4f(0.0, 1.0, 1.0, 0.6);
+  glColor3f(0.0, 1.0, 1.0);
   drawLine(acftPos, clickPos);
 
   circleAtAlt(clickPos, 8, 10, 5);
@@ -812,7 +812,7 @@ void MapWidget::paintAircraftLocation(const SGGeod& aircraftPos)
   double hdg = fgGetDouble("/orientation/heading-deg");
 
   glLineWidth(2.0);
-  glColor4f(1.0, 1.0, 0.0, 1.0);
+  glColor3f(1.0, 1.0, 0.0);
   glPushMatrix();
   glTranslated(loc.x(), loc.y(), 0.0);
   glRotatef(hdg - _upHeading, 0.0, 0.0, -1.0);
@@ -848,9 +848,9 @@ void MapWidget::paintRoute()
     }
 
     if (w < _route->currentIndex()) {
-      glColor4f(0.5, 0.5, 0.5, 0.7);
+      glColor3f(0.5, 0.5, 0.5);
     } else {
-      glColor4f(1.0, 0.0, 1.0, 1.0);
+      glColor3f(1.0, 0.0, 1.0);
     }
 
     flightgear::WayptRef wpt(_route->wayptAtIndex(w));
@@ -879,7 +879,7 @@ void MapWidget::paintRoute()
     }
 
     SGVec2d p = project(g);
-    glColor4f(1.0, 0.0, 1.0, 1.0);
+    glColor3f(1.0, 0.0, 1.0);
     circleAtAlt(p, 8, 12, 5);
 
     std::ostringstream legend;
@@ -912,7 +912,7 @@ void MapWidget::drawFlightHistory()
   // first pass, draw the actual lines
   glLineWidth(2.0);
   
-  glColor4f(0.0, 0.0, 1.0, 0.7);
+  glColor3f(0.0, 0.0, 1.0);
 
   glBegin(GL_LINE_STRIP);
   for (unsigned int i=0; i<_flightHistoryPath.size(); ++i) {
@@ -987,7 +987,7 @@ void MapWidget::drawLatLonGrid()
   int ix = 0;
   int iy = 0;
 
-  glColor4f(0.8, 0.8, 0.8, 1.0);
+  glColor3f(0.8, 0.8, 0.8);
   glBegin(GL_LINES);
   bool didDraw;
   do {
@@ -1038,7 +1038,7 @@ void MapWidget::drawGPSData()
     SGGeod trackRadial;
     SGGeodesy::direct(_aircraft, gpsTrackDeg, _drawRangeNm * SG_NM_TO_METER, trackRadial, az2);
 
-    glColor4f(1.0, 1.0, 0.0, 1.0);
+    glColor3f(1.0, 1.0, 0.0);
     glEnable(GL_LINE_STIPPLE);
     glLineStipple(1, 0x00FF);
     drawLine(project(_aircraft), project(trackRadial));
@@ -1049,7 +1049,7 @@ void MapWidget::drawGPSData()
     SGVec2d wp0Pos = project(wp0Geod);
     SGVec2d wp1Pos = project(wp1Geod);
 
-    glColor4f(1.0, 0.0, 1.0, 1.0);
+    glColor3f(1.0, 0.0, 1.0);
     drawLine(wp0Pos, wp1Pos);
 
   }
@@ -1387,7 +1387,7 @@ void MapWidget::drawRunwayPre(FGRunway* rwy)
 
   glLineWidth(4.0);
   glColor3f(1.0, 0.0, 1.0);
-	drawLine(p1, p2);
+  drawLine(p1, p2);
 }
 
 void MapWidget::drawRunway(FGRunway* rwy)

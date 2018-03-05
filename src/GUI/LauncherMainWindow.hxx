@@ -84,6 +84,8 @@ public:
 
     Q_INVOKABLE void requestUpdateAllAircraft();
 
+    Q_INVOKABLE void queryMPServers();
+
     bool showNoOfficialHanger() const;
 
     Q_INVOKABLE void officialCatalogAction(QString s);

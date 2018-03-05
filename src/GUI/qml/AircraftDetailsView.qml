@@ -100,7 +100,7 @@ Rectangle {
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: aircraft.description != ""
-                            font.pixelSize: 14
+                            font.pixelSize: Style.baseFontPixelSize
                         }
 
                         Text {
@@ -110,7 +110,7 @@ Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             wrapMode: Text.WordWrap
                             visible: (aircraft.authors != undefined)
-
+                            font.pixelSize: Style.baseFontPixelSize
                         }
                     }
 
@@ -146,6 +146,7 @@ Rectangle {
                     Text {
                         id: ratingsLabel
                         text: qsTr("Ratings:")
+                        font.pixelSize: Style.baseFontPixelSize
                     }
 
 
@@ -192,6 +193,7 @@ Rectangle {
                     width: parent.width
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     visible: aircraft.pathOnDisk != undefined
+                    font.pixelSize: Style.baseFontPixelSize
                 }
 
             } // main layout column

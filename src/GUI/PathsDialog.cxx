@@ -27,7 +27,8 @@ AddOnsPage::AddOnsPage(QWidget *parent, simgear::pkg::RootRef root) :
     
     m_catalogsModel = new CatalogListModel(this, m_packageRoot);
     m_ui->catalogsList->setModel(m_catalogsModel);
-
+    connect(m_ui->catalogsList, &QListView::doubleClicked,
+            this, &AddOnsPage::onCatalogDoubleClicked);
  // enable drag-drop to re-order the paths
     m_ui->sceneryPathsList->setDragEnabled(true);
     m_ui->sceneryPathsList->setDragDropMode(QAbstractItemView::InternalMove);
@@ -245,7 +246,12 @@ void AddOnsPage::addDefaultCatalog(QWidget* pr, bool silent)
     }
     dlg->setUrlAndDownload(url);
     dlg->exec();
+}
 
+void AddOnsPage::onCatalogsRefreshed()
+{
+    m_catalogsModel->refresh();
+    updateUi();
 }
 
 void AddOnsPage::onRemoveCatalog()
@@ -278,6 +284,18 @@ void AddOnsPage::onRemoveCatalog()
     }
 
     updateUi();
+}
+
+void AddOnsPage::onCatalogDoubleClicked(const QModelIndex& index)
+{
+    if ((index.flags() & Qt::ItemIsEnabled) == false) {
+        // re-validate existing catalog
+        QScopedPointer<AddCatalogDialog> dlg(new AddCatalogDialog(this, m_packageRoot));
+        dlg->setUpdatingExistingCatalog();
+        dlg->setUrlAndDownload(index.data(CatalogUrlRole).toUrl());
+        dlg->exec();
+        m_catalogsModel->refresh();
+    }
 }
 
 void AddOnsPage::onInstallScenery()

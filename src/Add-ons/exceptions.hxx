@@ -50,6 +50,9 @@ class no_metadata_file_found : public error
 class error_loading_metadata_file : public error
 { using error::error; };
 
+class error_loading_menubar_items_file : public error
+{ using error::error; };
+
 class duplicate_registration_attempt : public error
 { using error::error; };
 

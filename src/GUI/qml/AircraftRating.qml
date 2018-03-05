@@ -18,6 +18,7 @@ Item {
 
         horizontalAlignment: Text.AlignRight
         text: root.title + ":"
+        font.pixelSize: Style.baseFontPixelSize
     }
 
     Row {

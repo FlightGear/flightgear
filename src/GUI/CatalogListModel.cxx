@@ -33,10 +33,13 @@
 // FlightGear
 #include <Main/globals.hxx>
 
+using namespace simgear::pkg;
+
 CatalogListModel::CatalogListModel(QObject* pr, simgear::pkg::RootRef& rootRef) :
     QAbstractListModel(pr),
     m_packageRoot(rootRef)
 {
+    refresh();
 }
 
 CatalogListModel::~CatalogListModel()
@@ -46,21 +49,39 @@ CatalogListModel::~CatalogListModel()
 void CatalogListModel::refresh()
 {
     beginResetModel();
+    m_catalogs = m_packageRoot->allCatalogs();
     endResetModel();
 }
 
 int CatalogListModel::rowCount(const QModelIndex& parent) const
 {
-    return m_packageRoot->catalogs().size();
+    return m_catalogs.size();
 }
 
 QVariant CatalogListModel::data(const QModelIndex& index, int role) const
 {
-    simgear::pkg::CatalogRef cat = m_packageRoot->catalogs().at(index.row());
+    simgear::pkg::CatalogRef cat = m_catalogs.at(index.row());
 
     if (role == Qt::DisplayRole) {
         QString name = QString::fromStdString(cat->name());
-        QString desc = QString::fromStdString(cat->description()).simplified();
+        QString desc;
+        if (cat->isEnabled()) {
+            desc = QString::fromStdString(cat->description()).simplified();
+        } else {
+            switch (cat->status()) {
+            case Delegate::FAIL_NOT_FOUND:
+                desc = tr("The catalog data was not found on the server at the expected location (URL)");
+                break;
+            case Delegate::FAIL_VERSION:
+                desc =  tr("The catalog is not comaptible with the version of FlightGear");
+                break;
+            case Delegate::FAIL_HTTP_FORBIDDEN:
+                desc = tr("The catalog server is blocking access from some reason (forbidden)");
+                break;
+            default:
+                desc = tr("disabled due to an internal error");
+            }
+        }
         return tr("%1 - %2").arg(name).arg(desc);
     } else if (role == Qt::ToolTipRole) {
         return QString::fromStdString(cat->url());
@@ -80,4 +101,14 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
 bool CatalogListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     return false;
+}
+
+Qt::ItemFlags CatalogListModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags r = Qt::ItemIsSelectable;
+    const auto cat = m_catalogs.at(index.row());
+    if (cat->isEnabled()) {
+        r |= Qt::ItemIsEnabled;
+    }
+    return r;
 }

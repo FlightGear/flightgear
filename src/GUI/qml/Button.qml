@@ -20,6 +20,7 @@ Rectangle {
         anchors.centerIn: parent
         color: "white"
         text: (mouse.containsMouse && hoverText != "") ? root.hoverText : root.text
+        font.pixelSize: Style.baseFontPixelSize
     }
 
     MouseArea {

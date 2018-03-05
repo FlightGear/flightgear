@@ -585,6 +585,9 @@ int fgMainInit( int argc, char **argv )
     SG_LOG(SG_GENERAL, SG_INFO,
            "EmbeddedResourceManager: selected locale '" << locale << "'");
 
+    // Copy the property nodes for the menus added by registered add-ons
+    addons::AddonManager::instance()->addAddonMenusToFGMenubar();
+
     // Initialize the Window/Graphics environment.
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;

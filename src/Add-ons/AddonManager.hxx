@@ -86,6 +86,10 @@ public:
   // Base node pertaining to the add-on in the Global Property Tree
   SGPropertyNode_ptr addonNode(const std::string& addonId) const;
 
+  // Add the 'menu' nodes defined by each registered add-on to
+  // /sim/menubar/default
+  void addAddonMenusToFGMenubar() const;
+
 private:
   // Constructor called from createInstance() only
   explicit AddonManager() = default;

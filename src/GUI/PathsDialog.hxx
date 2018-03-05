@@ -22,6 +22,9 @@ public:
 
     static void addDefaultCatalog(QWidget* pr, bool silent);
     
+public slots:
+    void onCatalogsRefreshed();
+
 signals:
     void sceneryPathsChanged();
     void aircraftPathsChanged();
@@ -43,6 +46,8 @@ private slots:
 
     void saveAircraftPaths();
     void saveSceneryPaths();
+
+    void onCatalogDoubleClicked(const QModelIndex& index);
 private:
     void updateUi();
 
