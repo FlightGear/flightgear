@@ -73,6 +73,11 @@ bool PreviewImageItem::isLoading() const
     return m_requestActive;
 }
 
+float PreviewImageItem::aspectRatio() const
+{
+    return static_cast<float>(m_image.width()) / m_image.height();
+}
+
 void PreviewImageItem::setImageUrl( QUrl url)
 {
     if (m_imageUrl == url)

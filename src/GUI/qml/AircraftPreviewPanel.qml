@@ -11,7 +11,7 @@ Rectangle {
         activePreview = 0
     }
 
-    height: width / (16/9)
+    height: width / preview.aspectRatio
     color: "#7f7f7f"
 
     border.width: 1
@@ -22,6 +22,7 @@ Rectangle {
     }
 
     PreviewImage {
+        id: preview
         width: parent.width
         height: parent.height
         imageUrl: __havePreviews ? root.previews[root.activePreview] : ""

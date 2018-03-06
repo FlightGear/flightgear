@@ -20,6 +20,7 @@ class PreviewImageItem : public QQuickItem
 
     Q_PROPERTY(bool isLoading READ isLoading NOTIFY isLoadingChanged)
 
+    Q_PROPERTY(float aspectRatio READ aspectRatio NOTIFY sourceSizeChanged)
 public:
     PreviewImageItem(QQuickItem* parent = nullptr);
     ~PreviewImageItem();
@@ -33,6 +34,8 @@ public:
     static void setGlobalNetworkAccess(QNetworkAccessManager* netAccess);
 
     bool isLoading() const;
+
+    float aspectRatio() const;
 
 signals:
     void imageUrlChanged();
