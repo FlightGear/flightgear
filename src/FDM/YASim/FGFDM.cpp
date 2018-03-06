@@ -283,7 +283,7 @@ void FGFDM::parseAirplane(const XMLAttributes* a)
     
     if (a->hasAttribute("mtow-lbs")) { _airplane.setMTOW(attrf(a, "mtow-lbs") * LBS2KG); }
     else if (a->hasAttribute("mtow-kg")) { _airplane.setMTOW(attrf(a, "mtow-kg")); }
-    
+    if (a->hasAttribute("solver-mode")) { _airplane.setSolverMode(attri(a, "solver-mode")); }    
 }
 
 void FGFDM::parseApproachCruise(const XMLAttributes* a, const char* name)
