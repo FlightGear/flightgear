@@ -160,6 +160,11 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
     if(HTS_ENGINE_FOUND)
         set(SYSTEM_HTS_ENGINE_DEFAULT 1)
     endif()
+
+    find_package(CppUnit)
+    if (CPPUNIT_FOUND)
+        set(SYSTEM_CPPUNIT_DEFAULT 1)
+    endif()
 endif()
 
 find_package(Git)
@@ -191,6 +196,7 @@ option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex a
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
+option(SYSTEM_CPPUNIT    "Set to ON to build Flightgear with the system's CppUnit library" ${SYSTEM_CPPUNIT_DEFAULT})
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
@@ -603,10 +609,4 @@ ADD_CUSTOM_TARGET(uninstall
 
 
 # The test suite.
-find_package(CppUnit)
-if (CPPUNIT_FOUND)
-    message(STATUS "CppUnit found.")
-    add_subdirectory(test_suite EXCLUDE_FROM_ALL)
-else()
-    message(STATUS "CppUnit not found.")
-endif()
+add_subdirectory(test_suite EXCLUDE_FROM_ALL)

@@ -29,3 +29,7 @@ endif()
 if (ENABLE_HID_INPUT)
     add_subdirectory(hidapi)
 endif()
+
+if (NOT SYSTEM_CPPUNIT)
+    add_subdirectory(cppunit)
+endif()
