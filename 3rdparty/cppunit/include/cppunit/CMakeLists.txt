@@ -1,0 +1,36 @@
+set(CPPUNIT_HEADERS
+    ${CPPUNIT_HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/AdditionalMessage.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Asserter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BriefTestProgressListener.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CompilerOutputter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Exception.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Message.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Outputter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Portability.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Protector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SourceLine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SynchronizedObject.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Test.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestAssert.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestCase.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestCaller.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestComposite.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestFailure.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestFixture.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestLeaf.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestPath.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestResult.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestResultCollector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestRunner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestSuccessListener.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestSuite.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextOutputter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextTestProgressListener.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextTestResult.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextTestRunner.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestListener.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XmlOutputter.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XmlOutputterHook.h
+    PARENT_SCOPE
+)

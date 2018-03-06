@@ -31,6 +31,21 @@ set(TESTSUITE_HEADERS
 # The test suite output directory.
 set(TESTSUITE_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
+# Get the CppUnit sources and headers to be built into the test suite.
+if (NOT SYSTEM_CPPUNIT)
+    message(STATUS "CppUnit: Building the FlightGear supplied CppUnit library")
+
+    get_property(CPPUNIT_SOURCES GLOBAL PROPERTY CPPUNIT_SOURCES)
+    get_property(CPPUNIT_HEADERS GLOBAL PROPERTY CPPUNIT_HEADERS)
+
+    include_directories("${PROJECT_SOURCE_DIR}/3rdparty/cppunit/include")
+
+    add_library(CppUnitLib STATIC ${CPPUNIT_SOURCES} ${CPPUNIT_HEADERS})
+    set(CPPUNIT_LIBRARIES CppUnitLib)
+else()
+    message(STATUS "CppUnit: Linking to the system supplied CppUnit library")
+endif()
+
 #-----------------------------------------------------------------------------
 # From here on, this is a modified copy of src/Main/CMakeLists.txt.  This is
 # designed to have a minimal diff so that this can be updated together with the
