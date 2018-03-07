@@ -77,9 +77,8 @@ void YASim::report()
     SG_LOG(SG_FLIGHT, SG_INFO, buf);
 
     if(a->getFailureMsg()) {
-        SG_LOG(SG_FLIGHT, SG_ALERT, "YASim SOLUTION FAILURE:");
-        SG_LOG(SG_FLIGHT, SG_ALERT, a->getFailureMsg());
-        exit(1);
+        SG_LOG(SG_FLIGHT, SG_POPUP, std::string("YASim flight dynamics problem:") + a->getFailureMsg()+"\nThe aircraft may not fly correctly");
+        //throw sg_error(std::string("YASim SOLUTION FAILURE:") + a->getFailureMsg(););
     }
 }
 
