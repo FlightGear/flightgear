@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstring>
 #include <iostream>
 
 #include "fgTestRunner.hxx"
@@ -29,6 +30,8 @@ using namespace std;
 // Print out a summary of the relax test suite.
 void summary(CppUnit::OStream &stream, int system_result, int unit_result, int gui_result, int simgear_result)
 {
+    int synopsis = 0;
+
     // Title.
     string text = "Summary of the FlightGear test suite";
     printTitle(stream, text);
@@ -38,24 +41,35 @@ void summary(CppUnit::OStream &stream, int system_result, int unit_result, int g
     printSection(stream, text);
 
     // System/functional test summary.
-    text = "System/functional tests";
-    printSummaryLine(stream, text, system_result);
+    if (system_result != -1) {
+        text = "System/functional tests";
+        printSummaryLine(stream, text, system_result);
+        synopsis += system_result;
+    }
 
     // Unit test summary.
-    text = "Unit tests";
-    printSummaryLine(stream, text, unit_result);
+    if (unit_result != -1) {
+        text = "Unit tests";
+        printSummaryLine(stream, text, unit_result);
+        synopsis += unit_result;
+    }
 
     // GUI test summary.
-    text = "GUI tests";
-    printSummaryLine(stream, text, gui_result);
+    if (gui_result != -1) {
+        text = "GUI tests";
+        printSummaryLine(stream, text, gui_result);
+        synopsis += gui_result;
+    }
 
     // Simgear unit test summary.
-    text = "Simgear unit tests";
-    printSummaryLine(stream, text, simgear_result);
+    if (simgear_result != -1) {
+        text = "Simgear unit tests";
+        printSummaryLine(stream, text, simgear_result);
+        synopsis += simgear_result;
+    }
 
     // Synopsis.
     text ="Synopsis";
-    int synopsis = system_result + unit_result + gui_result + simgear_result;
     printSummaryLine(stream, text, synopsis);
 
     // End.
@@ -63,20 +77,103 @@ void summary(CppUnit::OStream &stream, int system_result, int unit_result, int g
 }
 
 
-int main(void)
+int main(int argc, char **argv)
 {
     // Declarations.
-    int status_gui, status_simgear, status_system, status_unit;
+    int status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1;
+    bool run_system=false, run_unit=false, run_gui=false, run_simgear=false;
+    bool verbose=false, help=false;
+    char *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL;
+    char firstchar;
+
+    // Argument parsing.
+    for (int i = 1; i < argc; i++) {
+        firstchar = '\0';
+        if (i < argc-1)
+            firstchar = argv[i+1][0];
+
+        // System test.
+        if (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--system-tests") == 0) {
+            run_system = true;
+            if (firstchar != '-')
+                subset_system = argv[i+1];
+
+        // Unit test.
+        } else if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--unit-tests") == 0) {
+            run_unit = true;
+            if (firstchar != '-')
+                subset_unit = argv[i+1];
+
+        // GUI test.
+        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--gui-tests") == 0) {
+            run_gui = true;
+            if (firstchar != '-')
+                subset_gui = argv[i+1];
+
+        // Simgear test.
+        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--simgear-tests") == 0) {
+            run_simgear = true;
+            if (firstchar != '-')
+                subset_simgear = argv[i+1];
+
+        // Verbose output.
+        } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
+            verbose = true;
+
+        // Help.
+        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+            help = true;
+        }
+    }
+
+    // Help.
+    if (help) {
+        std::cout << "Usage: run_test_suite [options]" << std::endl << std::endl;
+        std::cout << "Options:" << std::endl;
+        std::cout << "  -h, --help            show this help message and exit." << std::endl;
+        std::cout << std::endl;
+        std::cout << "  Test selection options:" << std::endl;
+        std::cout << "    -s, --system-tests  execute the system/functional tests." << std::endl;
+        std::cout << "    -u, --unit-tests    execute the unit tests." << std::endl;
+        std::cout << "    -g, --gui-tests     execute the GUI tests." << std::endl;
+        std::cout << "    -m, --simgear-tests execute the simgear tests." << std::endl;
+        std::cout << std::endl;
+        std::cout << "    The -s, -u, -g, and -m options accept an optional argument to perform a" << std::endl;
+        std::cout << "    subset of all tests.  This argument should either be the name of a test" << std::endl;
+        std::cout << "    suite or the full name of an individual test." << std::endl;
+        std::cout << std::endl;
+        std::cout << "    Full test names consist of the test suite name, the separator '::' and then" << std::endl;
+        std::cout << "    the individual test name.  The test names can revealed with the verbose" << std::endl;
+        std::cout << "    option." << std::endl;
+        std::cout << std::endl;
+        std::cout << "  Verbosity options:" << std::endl;
+        std::cout << "    -v, --verbose       verbose output including names and timings for all" << std::endl;
+        std::cout << "                        tests." << std::endl;
+        std::cout.flush();
+        return 0;
+    }
+
+    // Turn on all tests if no subset was specified.
+    if (!run_system && !run_unit && !run_gui && !run_simgear) {
+        run_system = true;
+        run_unit = true;
+        run_gui = true;
+        run_simgear = true;
+    }
 
     // Set up logging.
     sglog().setDeveloperMode(true);
     setupLogging();
 
     // Execute each of the test suite categories.
-    status_system = testRunner("System tests");
-    status_unit = testRunner("Unit tests");
-    status_gui = testRunner("GUI tests");
-    status_simgear = testRunner("Simgear unit tests");
+    if (run_system)
+        status_system = testRunner("System tests", subset_system, verbose);
+    if (run_unit)
+        status_unit = testRunner("Unit tests", subset_unit, verbose);
+    if (run_gui)
+        status_gui = testRunner("GUI tests", subset_gui, verbose);
+    if (run_simgear)
+        status_simgear = testRunner("Simgear unit tests", subset_simgear, verbose);
 
     // Summary printout.
     summary(cerr, status_system, status_unit, status_gui, status_simgear);

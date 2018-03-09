@@ -52,6 +52,23 @@ void fgTestListener::endTest(CppUnit::Test *test)
         cerr << (m_error ? "E" : "F");
     else
         cerr << '.';
+
+    // Verbose output.
+    if (verbose) {
+        // Test timing.
+        float time = ((float)(clock()-m_time))/CLOCKS_PER_SEC;
+        char buffer[100];
+        if (time > 60.0)
+            snprintf(buffer, sizeof(buffer), "%10.3f %-3s", time/60, "min");
+        else if (time > 1.0)
+            snprintf(buffer, sizeof(buffer), "%10.3f %-3s", time, "s");
+        else
+            snprintf(buffer, sizeof(buffer), "%10.3f %-3s", time*1000, "ms");
+        cerr << buffer;
+
+        // Test name.
+        cerr << " for " << test->getName() << endl;
+    }
     cerr.flush();
 
     // Store the captured IO for any failed tests.

@@ -75,7 +75,10 @@ class fgTestListener : public CppUnit::TestListener
         // IO capture for all failed tests.
         std::vector<TestIOCapt> io_capt;
 
-    private:
+        // Output settings.
+        bool verbose;
+
+    protected:
         // The original IO streams.
         std::streambuf *orig_cerr, *orig_cout;
 
