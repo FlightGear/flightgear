@@ -3,10 +3,12 @@
 #include <QGuiApplication>
 #include <QMouseEvent>
 #include <QWindow>
+#include <QDebug>
 
 PopupWindowTracker::PopupWindowTracker(QObject *parent) : QObject(parent)
 {
-
+    connect(qGuiApp, &QGuiApplication::applicationStateChanged,
+            this, &PopupWindowTracker::onApplicationStateChanged);
 }
 
 PopupWindowTracker::~PopupWindowTracker()
@@ -35,6 +37,14 @@ void PopupWindowTracker::setWindow(QWindow *window)
     emit windowChanged(m_window);
 }
 
+void PopupWindowTracker::onApplicationStateChanged(Qt::ApplicationState as)
+{
+    if (m_window && (as != Qt::ApplicationActive)) {
+        m_window->close();
+        setWindow(nullptr);
+    }
+}
+
 bool PopupWindowTracker::eventFilter(QObject *watched, QEvent *event)
 {
     if (!m_window)
@@ -42,10 +52,16 @@ bool PopupWindowTracker::eventFilter(QObject *watched, QEvent *event)
 
     if (event->type() == QEvent::MouseButtonPress) {
         QMouseEvent* me = static_cast<QMouseEvent*>(event);
-        QPoint windowPos = m_window->mapFromGlobal(me->globalPos());
-    }
+        QRect globalGeometry(m_window->mapToGlobal(QPoint(0,0)), m_window->size());
 
-    // also check for app loosing focus
+        if (globalGeometry.contains(me->globalPos())) {
+            // click inside the window, process as normal fall through
+        } else {
+            m_window->close();
+            setWindow(nullptr);
+            return true;
+        }
+    }
 
     return false;
 }

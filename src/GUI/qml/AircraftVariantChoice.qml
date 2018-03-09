@@ -73,6 +73,7 @@ Rectangle {
             popupFrame.x = screenPos.x;
             popupFrame.y = screenPos.y;
             popupFrame.visible = true
+            tracker.window = popupFrame
         }
     }
 
@@ -81,10 +82,13 @@ Rectangle {
         id: aircraftInfo
     }
 
+    PopupWindowTracker {
+        id: tracker
+    }
+
     Window {
         id: popupFrame
 
-        modality: Qt.WindowModal
         width: root.width
         flags: Qt.Popup
         height: choicesColumn.childrenRect.height

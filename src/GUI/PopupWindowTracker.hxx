@@ -29,6 +29,8 @@ signals:
 public slots:
     void setWindow(QWindow* window);
 
+    void onApplicationStateChanged(Qt::ApplicationState as);
+
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 };

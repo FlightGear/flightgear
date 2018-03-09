@@ -48,6 +48,7 @@
 #include "QmlAircraftInfo.hxx"
 #include "LauncherArgumentTokenizer.hxx"
 #include "PathUrlHelper.hxx"
+#include "PopupWindowTracker.hxx"
 
 #include "ui_Launcher.h"
 
@@ -245,6 +246,7 @@ void LauncherMainWindow::initQML()
 
     qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
+    qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherMainWindow::collectAircraftArgs);
