@@ -39,6 +39,7 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: 24
         text: aircraftInfo.name
+        fontSizeMode: Text.Fit
 
         elide: Text.ElideRight
         maximumLineCount: 1
