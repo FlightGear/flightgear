@@ -267,7 +267,11 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         // Optimus / AMD symbols in main.cxx).
         QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+        // for 2018.2, disable this on Windows, since font-sizing is not
+        // behaving consistently across different Windows setups
+#if !defined (Q_OS_WIN)
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 #endif
         static_qApp.reset(new QApplication(s_argc, argv));
         static_qApp->setOrganizationName("FlightGear");
