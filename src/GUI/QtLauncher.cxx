@@ -263,7 +263,11 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         qInstallMessageHandler(simgearMessageOutput);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+        // for 2018.1, disable this on @indows, since font-sizing is not
+        // behaving consistently across different Windows setups
+#if !defined (Q_OS_WIN)
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 #endif
         static_qApp.reset(new QApplication(s_argc, argv));
         static_qApp->setOrganizationName("FlightGear");
