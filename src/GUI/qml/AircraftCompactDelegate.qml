@@ -95,7 +95,6 @@ Item {
             width: parent.width
             text: root.__showAlternateText ? root.alternateText()
                                            : model.description
-            font.pixelSize: Style.baseFontPixelSize
             maximumLineCount: 3
             wrapMode: Text.WordWrap
             elide: Text.ElideRight

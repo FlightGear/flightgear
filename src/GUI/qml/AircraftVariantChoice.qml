@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Window 2.0
-import "." // -> forces the qmldir to be loaded
 
 import FlightGear.Launcher 1.0
 
@@ -38,9 +37,8 @@ Rectangle {
         anchors.rightMargin: 4
 
         horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: Style.baseFontPixelSize * 2
+        font.pixelSize: 24
         text: aircraftInfo.name
-        fontSizeMode: Text.Fit
 
         elide: Text.ElideRight
         maximumLineCount: 1

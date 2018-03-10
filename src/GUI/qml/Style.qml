@@ -18,7 +18,5 @@ QtObject
     readonly property string inactiveThemeColor: "#9f9f9f"
 
     readonly property string baseTextColor: "#3f3f3f"
-
-    readonly property int baseFontPixelSize: 12
 }
 

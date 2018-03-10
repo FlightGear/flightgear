@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import FlightGear.Launcher 1.0
-import "." // -> forces the qmldir to be loaded
 
 Item {
     id: root
@@ -144,7 +143,6 @@ Item {
         anchors.leftMargin: 6
         anchors.verticalCenter: button.verticalCenter
         text: "Size: " + (root.packageSize / 0x100000).toFixed(1) + "MB"
-        font.pixelSize: Style.baseFontPixelSize
     }
 
     Column {
@@ -187,7 +185,6 @@ Item {
             visible: false
             text: (compact ? "" : "Downloaded ") + (root.downloadedBytes / 0x100000).toFixed(1) +
                   "MB of " + (root.packageSize / 0x100000).toFixed(1) + "MB";
-            font.pixelSize: Style.baseFontPixelSize
         }
     } // item container for progress bar and text
 }

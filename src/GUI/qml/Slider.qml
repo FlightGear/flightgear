@@ -20,7 +20,6 @@ Item {
         id: labelText
         width: parent.width - (emptyTrack.width + Style.margin)
         horizontalAlignment: Text.AlignRight
-        font.pixelSize: Style.baseFontPixelSize
     }
 
     Rectangle {
