@@ -209,9 +209,8 @@ void testAddon()
 {
   fgtest::initTestGlobals("Addon");
 
-  Addon addon;
   std::string addonId = "org.FlightGear.addons.MyGreatAddon";
-  addon.setId(addonId);
+  Addon addon{addonId};
   addon.setVersion(AddonVersion("2017.2.5rc3"));
   addon.setBasePath(SGPath("/path/to/MyGreatAddon"));
   addon.setMinFGVersionRequired("2017.4.1");

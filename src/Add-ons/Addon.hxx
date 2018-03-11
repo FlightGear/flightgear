@@ -77,13 +77,10 @@ private:
 class Addon : public SGReferenced
 {
 public:
-  // Default constructor. 'minFGVersionRequired' is initialized to "2017.4.0"
-  // and 'maxFGVersionRequired' to "none".
-  Addon();
   // An empty value for 'minFGVersionRequired' is translated into "2017.4.0".
   // An empty value for 'maxFGVersionRequired' is translated into "none".
-  Addon(std::string id, AddonVersion version, SGPath basePath,
-        std::string minFGVersionRequired = "",
+  Addon(std::string id, AddonVersion version = AddonVersion(),
+        SGPath basePath = SGPath(), std::string minFGVersionRequired = "",
         std::string maxFGVersionRequired = "",
         SGPropertyNode* addonNode = nullptr);
 
@@ -92,7 +89,6 @@ public:
   static Addon fromAddonDir(const SGPath& addonPath);
 
   std::string getId() const;
-  void setId(const std::string& addonId);
 
   std::string getName() const;
   void setName(const std::string& addonName);
@@ -205,7 +201,7 @@ private:
 
   // The add-on identifier, in reverse DNS style. The AddonManager refuses to
   // register two add-ons with the same id in a given FlightGear session.
-  std::string _id;
+  const std::string _id;
   // Pretty name for the add-on (not constrained to reverse DNS style)
   std::string _name;
   // Use a smart pointer to expose the AddonVersion instance to Nasal without

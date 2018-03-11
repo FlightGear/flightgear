@@ -110,16 +110,8 @@ Addon::Addon(std::string id, AddonVersion version, SGPath basePath,
   }
 }
 
-Addon::Addon()
-  : Addon(std::string(), AddonVersion(), SGPath(), std::string(),
-          std::string(), nullptr)
-{ }
-
 std::string Addon::getId() const
 { return _id; }
-
-void Addon::setId(const std::string& addonId)
-{ _id = addonId; }
 
 std::string Addon::getName() const
 { return _name; }
