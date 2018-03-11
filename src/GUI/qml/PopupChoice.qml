@@ -14,7 +14,7 @@ Item {
     property int currentIndex: 0
     property bool __dummy: false
 
-    implicitHeight: label.implicitHeight
+    implicitHeight: Math.max(label.implicitHeight, currentChoiceFrame.height)
 
     Item {
         Repeater {
@@ -38,6 +38,10 @@ Item {
         // hack to force updating of currentText after internalModel
         // has been populated
         __dummy = !__dummy
+    }
+
+    onModelChanged: {
+         __dummy = !__dummy // force update of currentText
     }
 
     function currentText()

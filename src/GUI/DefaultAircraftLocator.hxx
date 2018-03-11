@@ -13,6 +13,8 @@ namespace flightgear
 
 std::string defaultAirportICAO();
 
+string_list defaultSplashScreenPaths();
+
 /**
  * we don't want to rely on the main AircraftModel threaded scan, to find the
  * default aircraft, so we do a synchronous scan here, on the assumption that

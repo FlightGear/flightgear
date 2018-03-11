@@ -4,7 +4,8 @@ import "."
 Text {
     signal clicked();
 
-    color: mouse.containsMouse ? Style.themeColor : Style.baseTextColor
+    property color baseTextColor: Style.baseTextColor
+    color: mouse.containsMouse ? Style.themeColor : baseTextColor
 
     MouseArea {
         id: mouse
@@ -12,5 +13,7 @@ Text {
         anchors.fill: parent
 
         onClicked: parent.clicked();
+
+        cursorShape: Qt.PointingHandCursor
     }
 }

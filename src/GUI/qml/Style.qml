@@ -21,6 +21,10 @@ QtObject
     readonly property string baseTextColor: "#3f3f3f"
 
     readonly property int baseFontPixelSize: 12
+    readonly property int headingFontPixelSize: 18
+
     readonly property string disabledTextColor: "#5f5f5f"
+
+    readonly property double panelOpacity: 0.8
 }
 

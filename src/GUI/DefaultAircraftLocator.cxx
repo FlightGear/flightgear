@@ -34,6 +34,20 @@ std::string defaultAirportICAO()
     return airportCode;
 }
 
+string_list defaultSplashScreenPaths()
+{
+    string_list result;
+    SGPath tpath = globals->get_fg_root() / "Textures";
+    simgear::Dir d(tpath);
+    for (auto c : d.children(simgear::Dir::TYPE_FILE, ".png")) {
+        if (c.file_base().find("Splash") == 0) {
+            result.push_back(c.utf8Str());
+        }
+    }
+
+    return result;
+}
+
 DefaultAircraftLocator::DefaultAircraftLocator()
 {
     SGPropertyNode_ptr root = loadXMLDefaults();

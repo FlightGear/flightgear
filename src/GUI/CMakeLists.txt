@@ -140,6 +140,10 @@ if (HAVE_QT)
                             MPServersModel.h
                             PathUrlHelper.cxx
                             PathUrlHelper.hxx
+                            RecentAircraftModel.cxx
+                            RecentAircraftModel.hxx
+                            RecentLocationsModel.cxx
+                            RecentLocationsModel.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})

@@ -2,6 +2,7 @@
 
 #include <QVariant>
 #include <QDebug>
+#include <QQmlEngine>
 
 #include <simgear/package/Install.hxx>
 #include <simgear/package/Root.hxx>
@@ -86,9 +87,12 @@ private:
 
 struct StateInfo
 {
-    std::string tag; // internal XML name
+    string_list tags;
     QString name;   // human-readable name, or blank if we auto-generate this
     QString description; // human-readable description
+
+    std::string primaryTag() const
+    { return tags.front(); }
 };
 
 using AircraftStateVec = std::vector<StateInfo>;
@@ -111,12 +115,20 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
     AircraftStateVec result;
     result.reserve(nodes.size());
     for (auto cn : nodes) {
-        result.push_back({cn->getStringValue("name"),
+        string_list stateNames;
+        for (auto nameNode : cn->getChildren("name")) {
+            stateNames.push_back(nameNode->getStringValue());
+        }
+
+        if (stateNames.empty()) {
+            qWarning() << "state with no names defined, skipping";
+            continue;
+        }
+
+        result.push_back({stateNames,
                           QString::fromStdString(cn->getStringValue("readable-name")),
                           QString::fromStdString(cn->getStringValue("description"))
                          });
-
-        qInfo() << QString::fromStdString(result.back().tag) << result.back().description;
     }
 
     return result;
@@ -141,35 +153,34 @@ QString humanNameFromStateTag(const std::string& tag)
 class StatesModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool hasExplicitAuto READ hasExplicitAuto CONSTANT)
 public:
     StatesModel(const AircraftStateVec& states) :
         _data(states)
     {
         // sort which places 'auto' item at the front if it exists
         std::sort(_data.begin(), _data.end(), [](const StateInfo& a, const StateInfo& b) {
-            if (a.tag == "auto") return true;
-            if (b.tag == "auto") return false;
-            return a.tag < b.tag;
+            if (a.primaryTag() == "auto") return true;
+            if (b.primaryTag() == "auto") return false;
+            return a.primaryTag() < b.primaryTag();
         });
 
-        if (_data.front().tag == "auto") {
+        if (_data.front().primaryTag() == "auto") {
             // track if the aircraft supplied an 'auto' state, in which case
             // we will not run our own selection logic
             _explicitAutoState = true;
         } else {
             // disabling this code for 2018.1, since it needs more testing
-#if 0
-            _data.insert(_data.begin(), {"auto", {}, tr("Select state based on startup position.")});
-#else
-            _data.insert(_data.begin(), {"__default__", tr("Parked"), tr("Default state for the aircraft (usually cold and dark)")});
-#endif
+            _data.insert(_data.begin(), {{"auto"}, {}, tr("Select state based on startup position.")});
         }
     }
 
     int indexForTag(const std::string &tag) const
     {
         auto it = std::find_if(_data.begin(), _data.end(), [tag](const StateInfo& i) {
-            return i.tag == tag;
+            auto tagIt = std::find(i.tags.begin(), i.tags.end(), tag);
+            return (tagIt != i.tags.end());
         });
 
         if (it == _data.end())
@@ -186,18 +197,17 @@ public:
     QVariant data(const QModelIndex &index, int role) const override
     {
         const StateInfo& s = _data.at(index.row());
-      //  qInfo() << index.row() << s.name << QString::fromStdString(s.tag);
         if (role == Qt::DisplayRole) {
             if (s.name.isEmpty()) {
-                return humanNameFromStateTag(s.tag);
+                return humanNameFromStateTag(s.primaryTag());
             }
             return s.name;
         } else if (role == QmlAircraftInfo::StateTagRole) {
-            return QString::fromStdString(s.tag);
+            return QString::fromStdString(s.primaryTag());
         } else if (role == QmlAircraftInfo::StateDescriptionRole) {
             return s.description;
         } else if (role == QmlAircraftInfo::StateExplicitRole) {
-            if (s.tag == "auto")
+            if (s.primaryTag() == "auto")
                 return _explicitAutoState;
             return true;
         }
@@ -213,6 +223,28 @@ public:
         result[QmlAircraftInfo::StateDescriptionRole] = "description";
         return result;
     }
+
+    Q_INVOKABLE QString descriptionForState(int row) const
+    {
+        if ((row < 0) || (row >= _data.size()))
+            return {};
+
+        const StateInfo& s = _data.at(row);
+        return s.description;
+    }
+
+    Q_INVOKABLE QString tagForState(int row) const
+    {
+        if ((row < 0) || (row >= _data.size()))
+            return {};
+
+        return QString::fromStdString(_data.at(row).primaryTag());
+    }
+
+    bool hasExplicitAuto() const
+    {
+        return _explicitAutoState;
+    }
 private:
     AircraftStateVec _data;
     bool _explicitAutoState = false;
@@ -224,6 +256,7 @@ QmlAircraftInfo::QmlAircraftInfo(QObject *parent)
     : QObject(parent)
     , _delegate(new Delegate(this))
 {
+    qmlRegisterUncreatableType<StatesModel>("FlightGear.Launcher", 1, 0, "StatesModel", "no");
 }
 
 QmlAircraftInfo::~QmlAircraftInfo()
@@ -621,7 +654,7 @@ bool QmlAircraftInfo::isPackaged() const
     return _package != PackageRef();
 }
 
-QAbstractListModel *QmlAircraftInfo::statesModel()
+StatesModel *QmlAircraftInfo::statesModel()
 {
     if (!hasStates())
         return nullptr;

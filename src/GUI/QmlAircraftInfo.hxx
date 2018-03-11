@@ -14,6 +14,8 @@
 struct AircraftItem;
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
+class StatesModel;
+
 class QmlAircraftInfo : public QObject
 {
     Q_OBJECT
@@ -57,7 +59,7 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(bool hasStates READ hasStates NOTIFY infoChanged)
 
-    Q_PROPERTY(QAbstractListModel* statesModel READ statesModel NOTIFY infoChanged)
+    Q_PROPERTY(StatesModel* statesModel READ statesModel NOTIFY infoChanged)
 
 public:
     explicit QmlAircraftInfo(QObject *parent = nullptr);
@@ -110,7 +112,7 @@ public:
     static const int StateDescriptionRole;
     static const int StateExplicitRole;
 
-    QAbstractListModel* statesModel();
+    StatesModel* statesModel();
 signals:
     void uriChanged();
     void infoChanged();
@@ -134,7 +136,7 @@ private:
     AircraftItemPtr _item;
     int _variant = 0;
     int _downloadBytes = 0;
-    QScopedPointer<QAbstractListModel> _statesModel;
+    QScopedPointer<StatesModel> _statesModel;
 };
 
 #endif // QMLAIRCRAFTINFO_HXX

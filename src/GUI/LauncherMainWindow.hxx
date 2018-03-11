@@ -48,6 +48,9 @@ class ViewCommandLinePage;
 class MPServersModel;
 class QQuickItem;
 class QmlAircraftInfo;
+class QStandardItemModel;
+class RecentAircraftModel;
+class RecentLocationsModel;
 
 class LauncherMainWindow : public QMainWindow
 {
@@ -71,6 +74,14 @@ class LauncherMainWindow : public QMainWindow
 
     Q_PROPERTY(QStringList settingsSummary READ settingsSummary WRITE setSettingsSummary NOTIFY summaryChanged)
     Q_PROPERTY(QStringList environmentSummary READ environmentSummary WRITE setEnvironmentSummary NOTIFY summaryChanged)
+
+    Q_PROPERTY(QString locationDescription READ locationDescription NOTIFY summaryChanged)
+    Q_PROPERTY(QStringList combinedSummary READ combinedSummary NOTIFY summaryChanged)
+
+    Q_PROPERTY(QString versionString READ versionString CONSTANT)
+
+    Q_PROPERTY(RecentAircraftModel* aircraftHistory READ aircraftHistory CONSTANT)
+    Q_PROPERTY(RecentLocationsModel* locationHistory READ locationHistory CONSTANT)
 
 public:
     LauncherMainWindow();
@@ -105,6 +116,8 @@ public:
 
     QmlAircraftInfo* selectedAircraftInfo() const;
     
+    Q_INVOKABLE void restoreLocation(QVariant var);
+
     Q_INVOKABLE bool matchesSearch(QString term, QStringList keywords) const;
 
     bool isSearchActive() const;
@@ -117,6 +130,25 @@ public:
     QStringList settingsSummary() const;
 
     QStringList environmentSummary() const;
+
+    QStringList combinedSummary() const;
+
+    QString locationDescription() const;
+
+    QString versionString() const;
+
+    RecentAircraftModel* aircraftHistory();
+
+    RecentLocationsModel* locationHistory();
+
+    Q_INVOKABLE void launchUrl(QUrl url);
+
+    // list of QUrls containing the default splash images from FGData.
+    // used on the summary screen
+    Q_INVOKABLE QVariantList defaultSplashUrls() const;
+
+
+    Q_INVOKABLE QString selectAircraftStateAutomatically();
 
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
@@ -155,11 +187,6 @@ private slots:
 
     void onQuit();
 
-    void onPopupAircraftHistory();
-    void onPopupLocationHistory();
-
-    void updateSettingsSummary();
-
     void onSubsytemIdleTimeout();
 
     void onAircraftInstalledCompleted(QModelIndex index);
@@ -192,13 +219,11 @@ private:
     // scrolling, to give the view time it seems.
     void delayedAircraftModelReset();
 
-    void updateLocationHistory();
     bool shouldShowOfficialCatalogMessage() const;
 
     void collectAircraftArgs();
     void initQML();
 
-    std::string selectStateAutomatically();
 
     QScopedPointer<Ui::Launcher> m_ui;
     AircraftProxyModel* m_installedAircraftModel;
@@ -208,21 +233,20 @@ private:
     MPServersModel* m_serversModel = nullptr;
 
     QUrl m_selectedAircraft;
-    QList<QUrl> m_recentAircraft;
     QTimer* m_subsystemIdleTimer;
     bool m_inAppMode = false;
     bool m_runInApp = false;
     bool m_accepted = false;
     int m_ratingFilters[4] = {3, 3, 3, 3};
-    QVariantList m_recentLocations;
     QQmlEngine* m_qmlEngine = nullptr;
     LaunchConfig* m_config = nullptr;
-    ExtraSettingsSection* m_extraSettings = nullptr;
     ViewCommandLinePage* m_viewCommandLinePage = nullptr;
     QmlAircraftInfo* m_selectedAircraftInfo = nullptr;
     QString m_settingsSearchTerm;
     QStringList m_settingsSummary,
-       m_environmentSummary;
+    m_environmentSummary;
+    RecentAircraftModel* m_aircraftHistory = nullptr;
+    RecentLocationsModel* m_locationHistory = nullptr;
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX

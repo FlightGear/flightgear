@@ -9,6 +9,9 @@
 #include <QMenu>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
+#include <QPushButton>
+#include <QStandardItemModel>
+#include <QDesktopServices>
 
 #include <QQuickItem>
 #include <QQmlEngine>
@@ -49,10 +52,10 @@
 #include "LauncherArgumentTokenizer.hxx"
 #include "PathUrlHelper.hxx"
 #include "PopupWindowTracker.hxx"
+#include "RecentAircraftModel.hxx"
+#include "RecentLocationsModel.hxx"
 
 #include "ui_Launcher.h"
-
-const int MAX_RECENT_AIRCRAFT = 20;
 
 using namespace simgear::pkg;
 
@@ -75,13 +78,10 @@ QQmlPrivate::AutoParentResult launcher_autoParent(QObject* thing, QObject* paren
 
 LauncherMainWindow::LauncherMainWindow() :
     QMainWindow(),
-    m_ui(NULL),
     m_subsystemIdleTimer(NULL)
 {
     m_ui.reset(new Ui::Launcher);
     m_ui->setupUi(this);
-
-    m_ui->appTitleLabel->setText(tr("FlightGear %1").arg(FLIGHTGEAR_VERSION));
 
     QMenuBar* mb = menuBar();
 
@@ -108,15 +108,7 @@ LauncherMainWindow::LauncherMainWindow() :
 
     m_serversModel = new MPServersModel(this);
 
-    // keep the description QLabel in sync as the current item changes
-    connect(m_ui->stateCombo,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-            [this](int)
-    {
-        auto v = m_ui->stateCombo->currentData(QmlAircraftInfo::StateDescriptionRole);
-        m_ui->stateDescription->setText(v.toString());
-        m_ui->stateDescription->setVisible(!v.toString().isEmpty());
-    });
+    m_locationHistory = new RecentLocationsModel(this);
 
     m_selectedAircraftInfo = new QmlAircraftInfo(this);
     initQML();
@@ -135,22 +127,13 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(m_ui->settingsButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
     connect(m_ui->addOnsButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
 
-    connect(m_ui->aircraftHistory, &QPushButton::clicked,
-          this, &LauncherMainWindow::onPopupAircraftHistory);
-    connect(m_ui->locationHistory, &QPushButton::clicked,
-          this, &LauncherMainWindow::onPopupLocationHistory);
-
     connect(m_ui->location, &LocationWidget::descriptionChanged,
-            m_ui->locationDescription, &QLabel::setText);
+            this, &LauncherMainWindow::summaryChanged);
 
     QAction* qa = new QAction(this);
     qa->setShortcut(QKeySequence("Ctrl+Q"));
     connect(qa, &QAction::triggered, this, &LauncherMainWindow::onQuit);
     addAction(qa);
-
-    QIcon historyIcon(":/history-icon");
-    m_ui->aircraftHistory->setIcon(historyIcon);
-    m_ui->locationHistory->setIcon(historyIcon);
 
     m_aircraftModel = new AircraftItemModel(this);
     m_installedAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
@@ -161,39 +144,12 @@ LauncherMainWindow::LauncherMainWindow() :
 
     m_aircraftSearchModel = new AircraftProxyModel(this, m_aircraftModel);
 
-    m_ui->aircraftList->setResizeMode(QQuickWidget::SizeRootObjectToView);
-
-    m_ui->aircraftList->engine()->addImportPath("qrc:///");
-    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
-    m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
-
-    m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
-
-    m_ui->settings->engine()->addImportPath("qrc:///");
-    m_ui->settings->engine()->rootContext()->setContextProperty("_launcher", this);
-    m_ui->settings->engine()->rootContext()->setContextProperty("_mpServers", m_serversModel);
-
-    m_ui->settings->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
-
-    m_ui->settings->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    m_ui->settings->setSource(QUrl("qrc:///qml/Settings.qml"));
-
-    m_ui->environmentPage->engine()->addImportPath("qrc:///");
-    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_launcher", this);
-    auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
-    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
-
-    m_ui->environmentPage->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
-    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_config", m_config);
-
-    m_ui->environmentPage->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    m_ui->environmentPage->setSource(QUrl("qrc:///qml/Environment.qml"));
+    m_aircraftHistory = new RecentAircraftModel(m_aircraftModel, this);
 
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
             this, &LauncherMainWindow::onAircraftInstalledCompleted);
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallFailed,
             this, &LauncherMainWindow::onAircraftInstallFailed);
-
 
     connect(LocalAircraftCache::instance(),
             &LocalAircraftCache::scanCompleted,
@@ -219,8 +175,50 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->stack->addWidget(m_viewCommandLinePage);
 
     restoreSettings();
-    updateSettingsSummary();
+
+    emit summaryChanged();
     emit showNoOfficialHangarChanged();
+
+    /////////////
+    // aircraft
+    m_ui->aircraftList->setResizeMode(QQuickWidget::SizeRootObjectToView);
+
+    m_ui->aircraftList->engine()->addImportPath("qrc:///");
+    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
+    m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+
+    m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
+
+    // settings
+    m_ui->settings->engine()->addImportPath("qrc:///");
+    m_ui->settings->engine()->rootContext()->setContextProperty("_launcher", this);
+    m_ui->settings->engine()->rootContext()->setContextProperty("_mpServers", m_serversModel);
+
+    m_ui->settings->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+
+    m_ui->settings->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->settings->setSource(QUrl("qrc:///qml/Settings.qml"));
+
+    // environemnt
+    m_ui->environmentPage->engine()->addImportPath("qrc:///");
+    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_launcher", this);
+    auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
+    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
+
+    m_ui->environmentPage->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_config", m_config);
+
+    m_ui->environmentPage->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->environmentPage->setSource(QUrl("qrc:///qml/Environment.qml"));
+
+    // summary
+    m_ui->summary->engine()->addImportPath("qrc:///");
+    m_ui->summary->engine()->rootContext()->setContextProperty("_launcher", this);
+    m_ui->summary->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
+    m_ui->summary->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->summary->setSource(QUrl("qrc:///qml/Summary.qml"));
+    //////////////////////////
+
 }
 
 void LauncherMainWindow::initQML()
@@ -239,6 +237,9 @@ void LauncherMainWindow::initQML()
     qmlRegisterType<SettingsPath>("FlightGear.Launcher", 1, 0, "PathChooser");
     qmlRegisterUncreatableType<QAbstractItemModel>("FlightGear.Launcher", 1, 0, "QAIM", "no");
     qmlRegisterUncreatableType<AircraftProxyModel>("FlightGear.Launcher", 1, 0, "AircraftProxyModel", "no");
+
+    qmlRegisterUncreatableType<RecentAircraftModel>("FlightGear.Launcher", 1, 0, "RecentAircraftModel", "no");
+    qmlRegisterUncreatableType<RecentLocationsModel>("FlightGear.Launcher", 1, 0, "RecentLocationsModel", "no");
 
     qmlRegisterUncreatableType<SettingsControl>("FlightGear.Launcher", 1, 0, "Control", "Base class");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
@@ -264,6 +265,9 @@ void LauncherMainWindow::initQML()
     settingsContext->setContextProperty("_mpServers", m_serversModel);
     settingsContext->setContextProperty("_config", m_config);
     settingsContext->setContextProperty("_osName", osName);
+
+    QQmlContext* summaryContext = m_ui->summary->engine()->rootContext();
+    summaryContext->setContextProperty("_config", m_config);
 
     qmlRegisterUncreatableType<LocalAircraftCache>("FlightGear.Launcher", 1, 0, "LocalAircraftCache", "Aircraft cache");
     qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
@@ -311,12 +315,8 @@ void LauncherMainWindow::restoreSettings()
 
     restoreGeometry(settings.value("window-geometry").toByteArray());
 
-    // full paths to -set.xml files
-    m_recentAircraft = QUrl::fromStringList(settings.value("recent-aircraft").toStringList());
-
-    if (!m_recentAircraft.empty()) {
-        m_selectedAircraft = m_recentAircraft.front();
-    } else {
+    m_selectedAircraft = m_aircraftHistory->mostRecent();
+    if (m_selectedAircraft.isEmpty()) {
         // select the default aircraft specified in defaults.xml
         flightgear::DefaultAircraftLocator da;
         if (da.foundPath().exists()) {
@@ -332,22 +332,16 @@ void LauncherMainWindow::restoreSettings()
     }
 
     m_ui->location->restoreSettings();
-    m_recentLocations = settings.value("recent-location-sets").toList();
-    QVariantMap currentLocation;
-    if (m_recentLocations.isEmpty()) {
+    QVariantMap currentLocation = m_locationHistory->mostRecent();
+    if (currentLocation.isEmpty()) {
         // use the default
         std::string defaultAirport = flightgear::defaultAirportICAO();
         FGAirportRef apt = FGAirport::findByIdent(defaultAirport);
         if (apt) {
             currentLocation["location-id"] = static_cast<qlonglong>(apt->guid());
             currentLocation["location-apt-runway"] = "active";
-            qDebug() << "restored default airport:" << QString::fromStdString(defaultAirport);
         } // otherwise we failed to find the default airport in the nav-db :(
-    } else {
-        // we have a valid current location
-        currentLocation = m_recentLocations.front().toMap();
     }
-
     m_ui->location->restoreLocation(currentLocation);
 
     updateSelectedAircraft();
@@ -363,9 +357,10 @@ void LauncherMainWindow::saveSettings()
 {
     emit requestSaveState();
 
+    m_aircraftHistory->saveToSettings();
+    m_locationHistory->saveToSettings();
+
     QSettings settings;
-    settings.setValue("recent-aircraft", QUrl::toStringList(m_recentAircraft));
-    settings.setValue("recent-location-sets", m_recentLocations);
     settings.setValue("window-geometry", saveGeometry());
 
     Q_FOREACH(SettingsSection* ss, findChildren<SettingsSection*>()) {
@@ -416,41 +411,13 @@ void LauncherMainWindow::onRun()
     m_config->reset();
     m_config->collect();
 
-    // aircraft
-    if (!m_selectedAircraft.isEmpty()) {
-      // manage aircraft history
-        if (m_recentAircraft.contains(m_selectedAircraft))
-          m_recentAircraft.removeOne(m_selectedAircraft);
-        m_recentAircraft.prepend(m_selectedAircraft);
-        if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
-          m_recentAircraft.pop_back();
-    }
+    m_aircraftHistory->insert(m_selectedAircraft);
 
-    if (m_ui->stateCombo->isVisible()) {
-        // apply state setting
-        std::string tag =  m_ui->stateCombo->currentData(QmlAircraftInfo::StateTagRole).
-                toString().toStdString();
-
-        // implicit auto behaviour disabled for 2018.1, since it
-        // needs a bit more work
-#if 0
-        if (tag == "auto") {
-            bool isExplictAuto = m_ui->stateCombo->currentData(QmlAircraftInfo::StateExplicitRole).toBool();
-            if (!isExplictAuto) {
-                tag = selectStateAutomatically();
-                qInfo() << "automatic state selection: picked:" << QString::fromStdString(tag);
-            }
-        }
-#endif
-        if (!tag.empty()  && (tag != "__default__")) {
-            m_config->setArg("state", tag);
-        }
-    } // of applying state selection
+    QVariant locSet = m_ui->location->saveLocation();
+    m_locationHistory->insert(locSet);
 
     // aircraft paths
     QSettings settings;
-    updateLocationHistory();
-
     QString downloadDir = settings.value("downloadSettings/downloadDir").toString();
     if (!downloadDir.isEmpty()) {
         QDir d(downloadDir);
@@ -480,7 +447,7 @@ void LauncherMainWindow::onRun()
     qApp->exit(1);
 }
 
-std::string LauncherMainWindow::selectStateAutomatically()
+QString LauncherMainWindow::selectAircraftStateAutomatically()
 {
     if (m_ui->location->isAirborneLocation()) {
         return "approach";
@@ -517,13 +484,7 @@ void LauncherMainWindow::onApply()
             qWarning() << "unsupported aircraft launch URL" << m_selectedAircraft;
         }
 
-        // manage aircraft history
-        if (m_recentAircraft.contains(m_selectedAircraft))
-            m_recentAircraft.removeOne(m_selectedAircraft);
-        m_recentAircraft.prepend(m_selectedAircraft);
-        if (m_recentAircraft.size() > MAX_RECENT_AIRCRAFT)
-            m_recentAircraft.pop_back();
-
+        m_aircraftHistory->insert(m_selectedAircraft);
         globals->get_props()->setStringValue("/sim/aircraft", aircraftPropValue);
         globals->get_props()->setStringValue("/sim/aircraft-dir", aircraftDir);
     }
@@ -534,23 +495,6 @@ void LauncherMainWindow::onApply()
     saveSettings();
     m_accepted = true;
     m_runInApp = false;
-}
-
-void LauncherMainWindow::updateLocationHistory()
-{
-    QVariant locSet = m_ui->location->saveLocation();
-
-    // check for existing; let's use description to imply uniqueness. This means
-    // 'A1111' parkings get merged but I prefer that to keep the menu usable
-    QVariant locDesc = locSet.toMap().value("text");
-    auto it = std::remove_if(m_recentLocations.begin(), m_recentLocations.end(),
-                   [locDesc](QVariant v) { return v.toMap().value("text") == locDesc; });
-    m_recentLocations.erase(it, m_recentLocations.end());
-
-    // now we can always prepend
-    m_recentLocations.prepend(locSet);
-    if (m_recentLocations.size() > MAX_RECENT_AIRCRAFT)
-        m_recentLocations.pop_back();
 }
 
 void LauncherMainWindow::onQuit()
@@ -628,6 +572,7 @@ void LauncherMainWindow::updateSelectedAircraft()
     m_selectedAircraftInfo->setUri(m_selectedAircraft);
     QModelIndex index = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     if (index.isValid()) {
+#if 0
         QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
         m_ui->thumbnail->setPixmap(pm);
 
@@ -640,7 +585,7 @@ void LauncherMainWindow::updateSelectedAircraft()
         QVariant longDesc = index.data(AircraftLongDescriptionRole);
         m_ui->aircraftDescription->setVisible(!longDesc.isNull());
         m_ui->aircraftDescription->setText(longDesc.toString());
-
+#endif
         int status = index.data(AircraftPackageStatusRole).toInt();
         bool canRun = (status == LocalAircraftCache::PackageInstalled);
         m_ui->flyButton->setEnabled(canRun);
@@ -655,6 +600,7 @@ void LauncherMainWindow::updateSelectedAircraft()
         m_ui->location->setAircraftType(aircraftType);
 
         const bool hasStates = m_selectedAircraftInfo->hasStates();
+#if 0
         m_ui->stateCombo->setVisible(hasStates);
         m_ui->stateLabel->setVisible(hasStates);
         m_ui->stateDescription->setVisible(false);
@@ -664,13 +610,16 @@ void LauncherMainWindow::updateSelectedAircraft()
             // hiden when no description is present
             m_ui->stateDescription->setVisible(!m_ui->stateDescription->text().isEmpty());
         }
+#endif
     } else {
+#if 0
         m_ui->thumbnail->setPixmap(QPixmap());
         m_ui->aircraftName->setText("");
         m_ui->aircraftDescription->hide();
         m_ui->stateCombo->hide();
         m_ui->stateLabel->hide();
         m_ui->stateDescription->hide();
+#endif
         m_ui->flyButton->setEnabled(false);
     }
 }
@@ -688,58 +637,6 @@ void LauncherMainWindow::onClickToolboxButton()
 void LauncherMainWindow::setSceneryPaths()
 {
     flightgear::launcherSetSceneryPaths();
-}
-
-void LauncherMainWindow::onPopupAircraftHistory()
-{
-    if (m_recentAircraft.isEmpty()) {
-        return;
-    }
-
-    QMenu m;
-    Q_FOREACH(QUrl uri, m_recentAircraft) {
-        QString nm = m_aircraftModel->nameForAircraftURI(uri);
-        if (nm.isEmpty()) {
-            continue;
-        }
-
-        QAction* act = m.addAction(nm);
-        act->setData(uri);
-    }
-
-    QPoint popupPos = m_ui->aircraftHistory->mapToGlobal(m_ui->aircraftHistory->rect().bottomLeft());
-    QAction* triggered = m.exec(popupPos);
-    if (triggered) {
-        setSelectedAircraft(triggered->data().toUrl());
-    }
-}
-
-void LauncherMainWindow::onPopupLocationHistory()
-{
-    if (m_recentLocations.isEmpty()) {
-        return;
-    }
-
-    QMenu m;
-    Q_FOREACH(QVariant loc, m_recentLocations) {
-        QString summary = loc.toMap().value("text").toString();
-        QAction* act = m.addAction(summary);
-        act->setData(loc);
-    }
-
-    QPoint popupPos = m_ui->locationHistory->mapToGlobal(m_ui->locationHistory->rect().bottomLeft());
-    QAction* triggered = m.exec(popupPos);
-    if (triggered) {
-        m_ui->location->restoreLocation(triggered->data().toMap());
-    }
-}
-
-void LauncherMainWindow::updateSettingsSummary()
-{
-    const QStringList summary = m_settingsSummary + m_environmentSummary;
-    QString s = summary.join(", ");
-    s[0] = s[0].toUpper();
-    m_ui->settingsDescription->setText(s);
 }
 
 void LauncherMainWindow::onSubsytemIdleTimeout()
@@ -836,6 +733,11 @@ QmlAircraftInfo *LauncherMainWindow::selectedAircraftInfo() const
     return m_selectedAircraftInfo;
 }
 
+void LauncherMainWindow::restoreLocation(QVariant var)
+{
+    m_ui->location->restoreLocation(var.toMap());
+}
+
 bool LauncherMainWindow::matchesSearch(QString term, QStringList keywords) const
 {
     Q_FOREACH(QString s, keywords) {
@@ -888,7 +790,6 @@ void LauncherMainWindow::setSettingsSummary(QStringList settingsSummary)
 
     m_settingsSummary = settingsSummary;
     emit summaryChanged();
-    updateSettingsSummary();
 }
 
 void LauncherMainWindow::setEnvironmentSummary(QStringList environmentSummary)
@@ -898,7 +799,16 @@ void LauncherMainWindow::setEnvironmentSummary(QStringList environmentSummary)
 
     m_environmentSummary = environmentSummary;
     emit summaryChanged();
-    updateSettingsSummary();
+}
+
+QStringList LauncherMainWindow::combinedSummary() const
+{
+    return m_settingsSummary + m_environmentSummary;
+}
+
+QString LauncherMainWindow::locationDescription() const
+{
+    return m_ui->location->locationDescription();
 }
 
 simgear::pkg::PackageRef LauncherMainWindow::packageForAircraftURI(QUrl uri) const
@@ -1040,3 +950,34 @@ bool LauncherMainWindow::showNoOfficialHanger() const
     return shouldShowOfficialCatalogMessage();
 }
 
+QString LauncherMainWindow::versionString() const
+{
+    return FLIGHTGEAR_VERSION;
+}
+
+RecentAircraftModel *LauncherMainWindow::aircraftHistory()
+{
+    return m_aircraftHistory;
+}
+
+RecentLocationsModel *LauncherMainWindow::locationHistory()
+{
+    return m_locationHistory;
+}
+
+void LauncherMainWindow::launchUrl(QUrl url)
+{
+    QDesktopServices::openUrl(url);
+}
+
+QVariantList LauncherMainWindow::defaultSplashUrls() const
+{
+    QVariantList urls;
+
+    for (auto path : flightgear::defaultSplashScreenPaths()) {
+        QUrl url = QUrl::fromLocalFile(QString::fromStdString(path));
+        urls.append(url);
+    }
+
+    return urls;
+}
