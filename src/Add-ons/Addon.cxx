@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
@@ -34,6 +35,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Main/util.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "addon_fwd.hxx"
@@ -93,6 +95,7 @@ Addon::Addon(std::string id, AddonVersion version, SGPath basePath,
     _version(
       shared_ptr_traits<AddonVersionRef>::makeStrongRef(std::move(version))),
     _basePath(std::move(basePath)),
+    _storagePath(globals->get_fg_home() / ("Export/Addons/" + _id)),
     _minFGVersionRequired(std::move(minFGVersionRequired)),
     _maxFGVersionRequired(std::move(maxFGVersionRequired)),
     _addonNode(addonNode)
@@ -186,6 +189,48 @@ SGPath Addon::getBasePath() const
 
 void Addon::setBasePath(const SGPath& addonBasePath)
 { _basePath = addonBasePath; }
+
+SGPath Addon::getStoragePath() const
+{ return _storagePath; }
+
+SGPath Addon::createStorageDir() const
+{
+  if (_storagePath.exists()) {
+    if (!_storagePath.isDir()) {
+      string msg =
+        "Unable to create add-on storage directory because the entry already "
+        "exists, but is not a directory: '" + _storagePath.utf8Str() + "'";
+      // Log + throw, because if called from Nasal, only throwing would cause
+      // the exception message to 1) be truncated and 2) only appear in the
+      // log, not stopping the sim. Then users would have to figure out why
+      // their add-on doesn't work...
+      SG_LOG(SG_GENERAL, SG_POPUP, msg);
+      throw errors::unable_to_create_addon_storage_dir(msg);
+    }
+  } else {
+    SGPath authorizedPath = fgValidatePath(_storagePath, true /* write */);
+
+    if (authorizedPath.isNull()) {
+      string msg =
+        "Unable to create add-on storage directory because of the FlightGear "
+        "security policy (refused by fgValidatePath()): '" +
+        _storagePath.utf8Str() + "'";
+      SG_LOG(SG_GENERAL, SG_POPUP, msg);
+      throw errors::unable_to_create_addon_storage_dir(msg);
+    } else {
+      simgear::Dir(authorizedPath).create(0777);
+    }
+  }
+
+  // The sensitive operation (creating the directory) is behind us; return
+  // _storagePath instead of authorizedPath for consistency with the
+  // getStoragePath() method (_storagePath and authorizedPath could be
+  // different in case the former contains symlink components). Further
+  // sensitive operations beneath _storagePath must use fgValidatePath() again
+  // every time, of course (otherwise attackers could use symlinks in
+  // _storagePath to bypass the security policy).
+  return _storagePath;
+}
 
 std::string Addon::resourcePath(const std::string& relativePath) const
 {
@@ -448,6 +493,8 @@ void Addon::setupGhost(nasal::Hash& addonsModule)
     .member("licenseUrl", &Addon::getLicenseUrl)
     .member("tags", &Addon::getTags)
     .member("basePath", &Addon::getBasePath)
+    .member("storagePath", &Addon::getStoragePath)
+    .method("createStorageDir", &Addon::createStorageDir)
     .method("resourcePath", &Addon::resourcePath)
     .member("minFGVersionRequired", &Addon::getMinFGVersionRequired)
     .member("maxFGVersionRequired", &Addon::getMaxFGVersionRequired)

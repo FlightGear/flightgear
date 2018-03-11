@@ -65,6 +65,9 @@ class fg_version_too_recent : public error
 class invalid_resource_path : public error
 { using error::error; };
 
+class unable_to_create_addon_storage_dir : public error
+{ using error::error; };
+
 } // of namespace errors
 
 } // of namespace addons

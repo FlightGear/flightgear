@@ -127,6 +127,13 @@ public:
   SGPath getBasePath() const;
   void setBasePath(const SGPath& addonBasePath);
 
+  // Return $FG_HOME/Export/Addons/ADDON_ID as an SGPath instance.
+  SGPath getStoragePath() const;
+  // Create directory $FG_HOME/Export/Addons/ADDON_ID, including any parent,
+  // if it doesn't already exist. Throw an exception in case of problems.
+  // Return an SGPath instance for the directory (same as getStoragePath()).
+  SGPath createStorageDir() const;
+
   // Return a resource path suitable for use with the simgear::ResourceManager.
   // 'relativePath' is relative to the add-on base path, and should not start
   // with a '/'.
@@ -218,6 +225,8 @@ private:
 
   std::vector<std::string> _tags;
   SGPath _basePath;
+  // $FG_HOME/Export/Addons/ADDON_ID
+  const SGPath _storagePath;
 
   // To be used with simgear::strutils::compare_versions()
   std::string _minFGVersionRequired;

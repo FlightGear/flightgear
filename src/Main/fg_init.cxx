@@ -488,6 +488,21 @@ bool fgInitHome()
     return result;
 }
 
+static void createBaseStorageDirForAddons(const SGPath& exportDir)
+{
+    SGPath addonStorageBasePath = exportDir / "Addons";
+    if (addonStorageBasePath.exists()) {
+      if (!addonStorageBasePath.isDir()) {
+        throw sg_error(
+          "Unable to create add-on storage base directory, because the entry "
+          "already exists but is not a directory: '" +
+          addonStorageBasePath.utf8Str() + "'");
+      }
+    } else {
+      simgear::Dir(addonStorageBasePath).create(0777); // respect user's umask
+    }
+}
+
 // Read in configuration (file and command line)
 int fgInitConfig ( int argc, char **argv, bool reinit )
 {
@@ -497,7 +512,11 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     if (!exportDir.exists()) {
       exportDir.create(0755);
     }
-    
+
+    // Reserve a directory where add-ons can write. There will be a subdir for
+    // each add-on, see Addon::createStorageDir() and Addon::getStoragePath().
+    createBaseStorageDirForAddons(exportDir.path());
+
     // Set /sim/fg-home.  Use FG_HOME if necessary.
     // deliberately not a tied property, for fgValidatePath security
     // write-protect to avoid accidents
