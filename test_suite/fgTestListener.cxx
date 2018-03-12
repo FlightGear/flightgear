@@ -44,8 +44,14 @@ void fgTestListener::endTest(CppUnit::Test *test)
     sum_time += clock() - m_time;
 
     // Restore the IO streams.
-    cout.rdbuf(orig_cout);
-    cerr.rdbuf(orig_cerr);
+    if (!debug) {
+        cout.rdbuf(orig_cout);
+        cerr.rdbuf(orig_cerr);
+    }
+
+    // Debugging output.
+    if (debug)
+        cerr << string(WIDTH_DIVIDER, '-') << endl;
 
     // Per-test single character status feedback.
     if (m_failure)
@@ -54,7 +60,7 @@ void fgTestListener::endTest(CppUnit::Test *test)
         cerr << '.';
 
     // Verbose output.
-    if (verbose || ctest_output) {
+    if (verbose || ctest_output || debug) {
         // Test timing.
         float time = ((float)(clock()-m_time))/CLOCKS_PER_SEC;
         char buffer[100];
@@ -72,7 +78,7 @@ void fgTestListener::endTest(CppUnit::Test *test)
     cerr.flush();
 
     // Store the captured IO for any failed tests.
-    if (m_failure) {
+    if (m_failure && !debug) {
         // Set up the data structure.
         TestIOCapt test_io;
         test_io.name = test->getName();
@@ -98,24 +104,32 @@ void fgTestListener::endTest(CppUnit::Test *test)
 // Override the base class function to capture IO streams.
 void fgTestListener::startTest(CppUnit::Test *test)
 {
-    // Clear the simgear logstream buffers.
-    capturedIO &obj = getIOstreams();
-    obj.sg_bulk.str("");
-    obj.sg_bulk_only.str("");
-    obj.sg_debug_only.str("");
-    obj.sg_info_only.str("");
-    obj.sg_warn_only.str("");
-    obj.sg_alert_only.str("");
+    // IO capture.
+    if (!debug) {
+        // Clear the simgear logstream buffers.
+        capturedIO &obj = getIOstreams();
+        obj.sg_bulk.str("");
+        obj.sg_bulk_only.str("");
+        obj.sg_debug_only.str("");
+        obj.sg_info_only.str("");
+        obj.sg_warn_only.str("");
+        obj.sg_alert_only.str("");
 
-    // Store the original STDOUT and STDERR for restoring later on.
-    orig_cout = cout.rdbuf();
-    orig_cerr = cerr.rdbuf();
+        // Store the original STDOUT and STDERR for restoring later on.
+        orig_cout = cout.rdbuf();
+        orig_cerr = cerr.rdbuf();
 
-    // Clear the captured stream and then catch stdout and stderr.
-    capt.str(string());
-    cout.rdbuf(capt.rdbuf());
-    cerr.rdbuf(capt.rdbuf());
+        // Clear the captured stream and then catch stdout and stderr.
+        capt.str(string());
+        cout.rdbuf(capt.rdbuf());
+        cerr.rdbuf(capt.rdbuf());
 
+    // Debugging output.
+    } else {
+        cerr << string(WIDTH_DIVIDER, '=') << endl;
+        cerr << "Starting test: " << test->getName() << endl;
+        cerr << string(WIDTH_DIVIDER, '-') << endl;
+    }
     // Reset the test status.
     m_failure = false;
     m_error = false;

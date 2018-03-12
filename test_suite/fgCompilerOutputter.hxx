@@ -38,6 +38,7 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
             const clock_t *clock,
             CppUnit::OStream &stream,
             bool ctest = false,
+            bool debug = false,
             const std::string &locationFormat = CPPUNIT_COMPILER_LOCATION_FORMAT)
         : CppUnit::CompilerOutputter(result, stream, locationFormat)
         , io_capt(capt)
@@ -45,6 +46,7 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
         , fg_stream(stream)
         , suite_timer(clock)
         , ctest_output(ctest)
+        , debug(debug)
         {
         }
 
@@ -76,6 +78,7 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
 
         // Output control.
         bool ctest_output;
+        bool debug;
 
         // Simgear logstream IO printout.
         void printIOStreamMessages(const char *heading, std::string messages, bool empty);

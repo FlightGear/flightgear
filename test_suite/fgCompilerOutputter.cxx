@@ -54,6 +54,10 @@ void fgCompilerOutputter::printFailureDetail(CppUnit::TestFailure *failure)
     fg_stream << (failure->isError() ? "Error" : "Assertion") << ": ";
     printFailureLocation(failure->sourceLine());
     printFailureMessage(failure);
+    fg_stream.flush();
+
+    if (debug)
+        return;
 
     // The captured IO for this test.
     test_iter = find_if(io_capt->begin(), io_capt->end(), matchTestName(failure->failedTestName()));

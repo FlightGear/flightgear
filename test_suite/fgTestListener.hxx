@@ -25,6 +25,8 @@
 #include <time.h>
 #include <vector>
 
+#include "formatting.hxx"
+
 
 // Data structure for holding the captured IO for a failed test.
 struct TestIOCapt {
@@ -78,6 +80,7 @@ class fgTestListener : public CppUnit::TestListener
         // Output settings.
         bool verbose;
         bool ctest_output;
+        bool debug;
 
     protected:
         // The original IO streams.
