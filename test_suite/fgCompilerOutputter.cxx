@@ -79,6 +79,10 @@ void fgCompilerOutputter::printFailureReport()
     // Custom printouts for each failed test.
     printFailuresList();
 
+    // CTest output (nothing).
+    if (ctest_output)
+        return;
+
     // A summary with timing info.
     printSuiteStats();
 
@@ -134,6 +138,10 @@ void fgCompilerOutputter::printSuiteStats()
 // Print a summary after a successful run of the test suite.
 void fgCompilerOutputter::printSuccess()
 {
+    // CTest output (nothing).
+    if (ctest_output)
+        return;
+
     // A summary with timing info.
     printSuiteStats();
 

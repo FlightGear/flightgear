@@ -47,6 +47,22 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
+# Set up all test suites as CTests.
+
+# System test suites.
+
+# Unit test suites.
+add_test(FlightplanUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u FlightplanTests)
+add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u MktimeTests)
+add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NasalSysTests)
+
+# GUI test suites.
+
+# Simgear unit test suites.
+add_test(MathGeodesySimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m MathGeodesyTests)
+add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m SimgearPropsTests)
+
+#-----------------------------------------------------------------------------
 # From here on, this is a modified copy of src/Main/CMakeLists.txt.  This is
 # designed to have a minimal diff so that this can be updated together with the
 # main CMakeLists.txt file.

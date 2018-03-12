@@ -29,13 +29,14 @@
 
 
 // Execute all test suites for the given test category.
-int testRunner(const std::string& title, char *subset, bool verbose)
+int testRunner(const std::string& title, char *subset, bool verbose, bool ctest_output)
 {
     // Declarations.
     CppUnit::TextTestRunner runner;
 
     // Print out a title.
-    printTitle(std::cerr, title);
+    if (!ctest_output)
+        printTitle(std::cerr, title);
 
     // Get all tests.
     runner.addTest(CppUnit::TestFactoryRegistry::getRegistry(title).makeTest());
@@ -45,9 +46,10 @@ int testRunner(const std::string& title, char *subset, bool verbose)
     testListener = new fgTestListener;
     runner.eventManager().addListener(testListener);
     testListener->verbose = verbose;
+    testListener->ctest_output = ctest_output;
 
     // Set the test suite output IO stream.
-    runner.setOutputter(new fgCompilerOutputter(&runner.result(), &testListener->io_capt, &testListener->sum_time, std::cerr));
+    runner.setOutputter(new fgCompilerOutputter(&runner.result(), &testListener->io_capt, &testListener->sum_time, std::cerr, ctest_output));
 
     // Execute the tests.
     if (subset == NULL)

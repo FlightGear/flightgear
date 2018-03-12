@@ -54,7 +54,7 @@ void fgTestListener::endTest(CppUnit::Test *test)
         cerr << '.';
 
     // Verbose output.
-    if (verbose) {
+    if (verbose || ctest_output) {
         // Test timing.
         float time = ((float)(clock()-m_time))/CLOCKS_PER_SEC;
         char buffer[100];

@@ -37,12 +37,14 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
             std::vector<TestIOCapt> *capt,
             const clock_t *clock,
             CppUnit::OStream &stream,
+            bool ctest = false,
             const std::string &locationFormat = CPPUNIT_COMPILER_LOCATION_FORMAT)
         : CppUnit::CompilerOutputter(result, stream, locationFormat)
         , io_capt(capt)
         , fg_result(result)
         , fg_stream(stream)
         , suite_timer(clock)
+        , ctest_output(ctest)
         {
         }
 
@@ -71,6 +73,9 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
 
         // The test suite time, in clock ticks.
         const clock_t *suite_timer;
+
+        // Output control.
+        bool ctest_output;
 
         // Simgear logstream IO printout.
         void printIOStreamMessages(const char *heading, std::string messages, bool empty);

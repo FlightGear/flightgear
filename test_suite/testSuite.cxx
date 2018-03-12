@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     // Declarations.
     int status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1;
     bool run_system=false, run_unit=false, run_gui=false, run_simgear=false;
-    bool verbose=false, help=false;
+    bool verbose=false, ctest_output=false, help=false;
     char *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL;
     char firstchar;
 
@@ -120,6 +120,10 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             verbose = true;
 
+        // CTest suitable output.
+        } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--ctest") == 0) {
+            ctest_output = true;
+
         // Help.
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             help = true;
@@ -149,6 +153,7 @@ int main(int argc, char **argv)
         std::cout << "  Verbosity options:" << std::endl;
         std::cout << "    -v, --verbose       verbose output including names and timings for all" << std::endl;
         std::cout << "                        tests." << std::endl;
+        std::cout << "    -c, --ctest         simplified output suitable for running via CTest." << std::endl;
         std::cout.flush();
         return 0;
     }
@@ -167,16 +172,17 @@ int main(int argc, char **argv)
 
     // Execute each of the test suite categories.
     if (run_system)
-        status_system = testRunner("System tests", subset_system, verbose);
+        status_system = testRunner("System tests", subset_system, verbose, ctest_output);
     if (run_unit)
-        status_unit = testRunner("Unit tests", subset_unit, verbose);
+        status_unit = testRunner("Unit tests", subset_unit, verbose, ctest_output);
     if (run_gui)
-        status_gui = testRunner("GUI tests", subset_gui, verbose);
+        status_gui = testRunner("GUI tests", subset_gui, verbose, ctest_output);
     if (run_simgear)
-        status_simgear = testRunner("Simgear unit tests", subset_simgear, verbose);
+        status_simgear = testRunner("Simgear unit tests", subset_simgear, verbose, ctest_output);
 
     // Summary printout.
-    summary(cerr, status_system, status_unit, status_gui, status_simgear);
+    if (!ctest_output)
+        summary(cerr, status_system, status_unit, status_gui, status_simgear);
 
     // Deactivate the logging.
     stopLogging();

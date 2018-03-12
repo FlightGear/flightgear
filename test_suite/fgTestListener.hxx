@@ -77,6 +77,7 @@ class fgTestListener : public CppUnit::TestListener
 
         // Output settings.
         bool verbose;
+        bool ctest_output;
 
     protected:
         // The original IO streams.
