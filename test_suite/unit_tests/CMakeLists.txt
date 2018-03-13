@@ -1,5 +1,6 @@
 # Add each unit test category.
 foreach( unit_test_category
+        Add-ons
         general
         FDM
         Navaids

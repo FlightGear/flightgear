@@ -21,7 +21,3 @@ set(HEADERS addon_fwd.hxx
             )
 
 flightgear_component(AddonManagement "${SOURCES}" "${HEADERS}")
-
-if (COMMAND flightgear_test)
-  flightgear_test(test_AddonManagement test_AddonManagement.cxx)
-endif()

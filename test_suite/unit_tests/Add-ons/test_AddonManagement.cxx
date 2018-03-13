@@ -18,8 +18,10 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+#include "test_AddonManagement.hxx"
+
 #include "config.h"
-#include "unitTestHelpers.hxx"
+#include "tests/unitTestHelpers.hxx"
 
 #include <sstream>
 #include <string>
@@ -30,10 +32,9 @@
 #include <cassert>
 #include <cstddef>
 
-#include <simgear/misc/test_macros.hxx>
-
 #include "Add-ons/Addon.hxx"
 #include "Add-ons/AddonVersion.hxx"
+
 
 using std::string;
 using std::vector;
@@ -43,7 +44,8 @@ using flightgear::addons::AddonVersion;
 using flightgear::addons::AddonVersionSuffix;
 
 
-void testAddonVersionSuffix()
+
+void AddonManagementTests::testAddonVersionSuffix()
 {
   using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
@@ -52,44 +54,44 @@ void testAddonVersionSuffix()
   AddonVersionSuffix v1(AddonRelType::beta, 2, true, 5);
   AddonVersionSuffix v1Copy(v1);
   AddonVersionSuffix v1NonDev(AddonRelType::beta, 2, false);
-  SG_CHECK_EQUAL(v1, v1Copy);
-  SG_CHECK_EQUAL(v1, AddonVersionSuffix("b2.dev5"));
-  SG_CHECK_EQUAL_NOSTREAM(v1.makeTuple(),
+  CPPUNIT_ASSERT_EQUAL(v1, v1Copy);
+  CPPUNIT_ASSERT_EQUAL(v1, AddonVersionSuffix("b2.dev5"));
+  CPPUNIT_ASSERT(v1.makeTuple() ==
                           std::make_tuple(AddonRelType::beta, 2, true, 5));
-  SG_CHECK_EQUAL(AddonVersionSuffix(), AddonVersionSuffix(""));
+  CPPUNIT_ASSERT_EQUAL(AddonVersionSuffix(), AddonVersionSuffix(""));
   // A simple comparison
-  SG_CHECK_LT(v1, v1NonDev);    // b2.dev5 < b2
+  CPPUNIT_ASSERT(v1 < v1NonDev);    // b2.dev5 < b2
 
   // Check string representation with str()
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::none).str(), "");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::none, 0, true, 12).str(),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none).str() == "");
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none, 0, true, 12).str() ==
                  ".dev12");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::alpha, 1).str(), "a1");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::alpha, 1, false).str(), "a1");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::alpha, 2, true, 4).str(),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::alpha, 1).str() == "a1");
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::alpha, 1, false).str() == "a1");
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::alpha, 2, true, 4).str() ==
                  "a2.dev4");
 
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::beta, 1).str(), "b1");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::beta, 1, false).str(), "b1");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::beta, 2, true, 4).str(),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::beta, 1).str() == "b1");
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::beta, 1, false).str() == "b1");
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::beta, 2, true, 4).str() ==
                  "b2.dev4");
 
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::candidate, 1).str(), "rc1");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::candidate, 1, false).str(),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::candidate, 1).str() == "rc1");
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::candidate, 1, false).str() ==
                  "rc1");
-  SG_CHECK_EQUAL(AddonVersionSuffix(AddonRelType::candidate, 2, true, 4).str(),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::candidate, 2, true, 4).str() ==
                  "rc2.dev4");
 
   // Check stream output
   std::ostringstream oss;
   oss << AddonVersionSuffix(AddonRelType::candidate, 2, true, 4);
-  SG_CHECK_EQUAL(oss.str(), "rc2.dev4");
+  CPPUNIT_ASSERT(oss.str() == "rc2.dev4");
 
   // Check ordering with all types of transitions, using operator<()
   auto checkStrictOrdering = [](const vector<AddonVersionSuffix>& v) {
     assert(v.size() > 1);
     for (std::size_t i=0; i < v.size() - 1; i++) {
-      SG_CHECK_LT(v[i], v[i+1]);
+      CPPUNIT_ASSERT(v[i] < v[i+1]);
     }
   };
 
@@ -120,27 +122,27 @@ void testAddonVersionSuffix()
     });
 
   // Check operator>() and operator!=()
-  SG_CHECK_GT(AddonVersionSuffix(AddonRelType::none),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none) >
               AddonVersionSuffix(AddonRelType::candidate, 21, false));
 
-  SG_CHECK_NE(AddonVersionSuffix(AddonRelType::none),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none) !=
               AddonVersionSuffix(AddonRelType::candidate, 21, false));
 
   // Check operator<=() and operator>=()
-  SG_CHECK_LE(AddonVersionSuffix(AddonRelType::candidate, 2, false),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::candidate, 2, false) <=
               AddonVersionSuffix(AddonRelType::candidate, 2, false));
-  SG_CHECK_LE(AddonVersionSuffix(AddonRelType::candidate, 2, false),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::candidate, 2, false) <=
               AddonVersionSuffix(AddonRelType::none));
 
-  SG_CHECK_GE(AddonVersionSuffix(AddonRelType::none),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none) >=
               AddonVersionSuffix(AddonRelType::none));
-  SG_CHECK_GE(AddonVersionSuffix(AddonRelType::none),
+  CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none) >=
               AddonVersionSuffix(AddonRelType::candidate, 21, false));
 
   fgtest::shutdownTestGlobals();
 }
 
-void testAddonVersion()
+void AddonManagementTests::testAddonVersion()
 {
   using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
@@ -153,43 +155,43 @@ void testAddonVersion()
   AddonVersion v3(std::move(v1Copy));
   AddonVersion v4 = std::move(v2);
 
-  SG_CHECK_EQUAL(v1, AddonVersion("2017.4.7b2.dev5"));
-  SG_CHECK_EQUAL(v1, AddonVersion(std::make_tuple(2017, 4, 7, suffix)));
-  SG_CHECK_EQUAL(v1, v3);
-  SG_CHECK_EQUAL(v1, v4);
-  SG_CHECK_LT(v1, AddonVersion("2017.4.7b2"));
-  SG_CHECK_LE(v1, AddonVersion("2017.4.7b2"));
-  SG_CHECK_LE(v1, v1);
-  SG_CHECK_GT(AddonVersion("2017.4.7b2"), v1);
-  SG_CHECK_GE(AddonVersion("2017.4.7b2"), v1);
-  SG_CHECK_GE(v1, v1);
-  SG_CHECK_NE(v1, AddonVersion("2017.4.7b3"));
+  CPPUNIT_ASSERT_EQUAL(v1, AddonVersion("2017.4.7b2.dev5"));
+  CPPUNIT_ASSERT_EQUAL(v1, AddonVersion(std::make_tuple(2017, 4, 7, suffix)));
+  CPPUNIT_ASSERT_EQUAL(v1, v3);
+  CPPUNIT_ASSERT_EQUAL(v1, v4);
+  CPPUNIT_ASSERT(v1 < AddonVersion("2017.4.7b2"));
+  CPPUNIT_ASSERT(v1 <= AddonVersion("2017.4.7b2"));
+  CPPUNIT_ASSERT(v1 <= v1);
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7b2") > v1);
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7b2") >= v1);
+  CPPUNIT_ASSERT(v1 >= v1);
+  CPPUNIT_ASSERT(v1 != AddonVersion("2017.4.7b3"));
 
-  SG_CHECK_EQUAL(v1.majorNumber(), 2017);
-  SG_CHECK_EQUAL(v1.minorNumber(), 4);
-  SG_CHECK_EQUAL(v1.patchLevel(), 7);
-  SG_CHECK_EQUAL(v1.suffix(), suffix);
+  CPPUNIT_ASSERT_EQUAL(v1.majorNumber(), 2017);
+  CPPUNIT_ASSERT_EQUAL(v1.minorNumber(), 4);
+  CPPUNIT_ASSERT_EQUAL(v1.patchLevel(), 7);
+  CPPUNIT_ASSERT_EQUAL(v1.suffix(), suffix);
 
   // Round-trips std::string <-> AddonVersion
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7.dev13").str(), "2017.4.7.dev13");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7a2.dev8").str(), "2017.4.7a2.dev8");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7a2").str(), "2017.4.7a2");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7b2.dev5").str(), "2017.4.7b2.dev5");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7b2").str(), "2017.4.7b2");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7rc1.dev3").str(), "2017.4.7rc1.dev3");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7rc1").str(), "2017.4.7rc1");
-  SG_CHECK_EQUAL(AddonVersion("2017.4.7").str(), "2017.4.7");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7.dev13").str() == "2017.4.7.dev13");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7a2.dev8").str() == "2017.4.7a2.dev8");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7a2").str() == "2017.4.7a2");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7b2.dev5").str() == "2017.4.7b2.dev5");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7b2").str() == "2017.4.7b2");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7rc1.dev3").str() == "2017.4.7rc1.dev3");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7rc1").str() == "2017.4.7rc1");
+  CPPUNIT_ASSERT(AddonVersion("2017.4.7").str() == "2017.4.7");
 
   // Check stream output
   std::ostringstream oss;
   oss << AddonVersion("2017.4.7b2.dev5");
-  SG_CHECK_EQUAL(oss.str(), "2017.4.7b2.dev5");
+  CPPUNIT_ASSERT(oss.str() == "2017.4.7b2.dev5");
 
   // Check ordering with all types of transitions, using operator<()
   auto checkStrictOrdering = [](const vector<AddonVersion>& v) {
     assert(v.size() > 1);
     for (std::size_t i=0; i < v.size() - 1; i++) {
-      SG_CHECK_LT(v[i], v[i+1]);
+      CPPUNIT_ASSERT(v[i] < v[i+1]);
     }
   };
 
@@ -205,7 +207,7 @@ void testAddonVersion()
   fgtest::shutdownTestGlobals();
 }
 
-void testAddon()
+void AddonManagementTests::testAddon()
 {
   fgtest::initTestGlobals("Addon");
 
@@ -216,21 +218,21 @@ void testAddon()
   addon.setMinFGVersionRequired("2017.4.1");
   addon.setMaxFGVersionRequired("none");
 
-  SG_CHECK_EQUAL(addon.getId(), addonId);
-  SG_CHECK_EQUAL(*addon.getVersion(), AddonVersion("2017.2.5rc3"));
-  SG_CHECK_EQUAL(addon.getBasePath(), SGPath("/path/to/MyGreatAddon"));
-  SG_CHECK_EQUAL(addon.getMinFGVersionRequired(), "2017.4.1");
+  CPPUNIT_ASSERT_EQUAL(addon.getId(), addonId);
+  CPPUNIT_ASSERT_EQUAL(*addon.getVersion(), AddonVersion("2017.2.5rc3"));
+  CPPUNIT_ASSERT_EQUAL(addon.getBasePath(), SGPath("/path/to/MyGreatAddon"));
+  CPPUNIT_ASSERT(addon.getMinFGVersionRequired() == "2017.4.1");
 
   const string refText = "addon '" + addonId + "' (version = 2017.2.5rc3, "
                          "base path = '/path/to/MyGreatAddon', "
                          "minFGVersionRequired = '2017.4.1', "
                          "maxFGVersionRequired = 'none')";
-  SG_CHECK_EQUAL(addon.str(), refText);
+  CPPUNIT_ASSERT_EQUAL(addon.str(), refText);
 
   // Check stream output
   std::ostringstream oss;
   oss << addon;
-  SG_CHECK_EQUAL(oss.str(), refText);
+  CPPUNIT_ASSERT_EQUAL(oss.str(), refText);
 
   // Set a max FG version and recheck
   addon.setMaxFGVersionRequired("2018.2.5");
@@ -238,17 +240,8 @@ void testAddon()
                           "base path = '/path/to/MyGreatAddon', "
                           "minFGVersionRequired = '2017.4.1', "
                           "maxFGVersionRequired = '2018.2.5')";
-  SG_CHECK_EQUAL(addon.getMaxFGVersionRequired(), "2018.2.5");
-  SG_CHECK_EQUAL(addon.str(), refText2);
+  CPPUNIT_ASSERT(addon.getMaxFGVersionRequired() == "2018.2.5");
+  CPPUNIT_ASSERT_EQUAL(addon.str(), refText2);
 
   fgtest::shutdownTestGlobals();
-}
-
-int main(int argc, const char* const* argv)
-{
-  testAddonVersionSuffix();
-  testAddonVersion();
-  testAddon();
-
-  return EXIT_SUCCESS;
 }
