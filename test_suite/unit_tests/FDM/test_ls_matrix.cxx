@@ -1,10 +1,13 @@
+#include "test_ls_matrix.hxx"
+
 #include <simgear/constants.h>
 #include <simgear/misc/test_macros.hxx>
 extern "C" {
 #include "src/FDM/LaRCsim/ls_matrix.h"
 }
 
-void testCopyMatrix()
+
+void LaRCSimMatrixTests::testCopyMatrix()
 {
     int nelm = 20;
     double **src = nr_matrix(1, nelm, 1, nelm);
@@ -19,13 +22,13 @@ void testCopyMatrix()
 
     for (int i=1; i<=nelm; ++i)
         for (int j=1; j<=nelm; ++j)
-            SG_CHECK_EQUAL(src[i][j], dest[i][j]);
+            CPPUNIT_ASSERT_EQUAL(src[i][j], dest[i][j]);
 
     nr_free_matrix(src, 1, nelm, 1, nelm);
     nr_free_matrix(dest, 1, nelm, 1, nelm);
 }
 
-void testIdentityMatrix()
+void LaRCSimMatrixTests::testIdentityMatrix()
 {
     int nelm = 10;
     double **id = nr_matrix(1, nelm, 1, nelm);
@@ -38,12 +41,12 @@ void testIdentityMatrix()
 
     for (int i=1; i<=nelm; ++i)
         for (int j=1; j<=nelm; ++j)
-            SG_CHECK_EQUAL_EP(id[i][j], i == j ? 1.0 : 0.0);
+            CPPUNIT_ASSERT_DOUBLES_EQUAL(id[i][j], i == j ? 1.0 : 0.0, 1e-9);
 
     nr_free_matrix(id, 1, nelm, 1, nelm);
 }
 
-void testOrthogonalMatrix()
+void LaRCSimMatrixTests::testOrthogonalMatrix()
 {
     int nelm = 3;
     double **m = nr_matrix(1, nelm, 1, nelm);
@@ -65,13 +68,13 @@ void testOrthogonalMatrix()
 
     for (int i=1; i<=nelm; ++i)
         for (int j=1; j<=nelm; ++j)
-            SG_CHECK_EQUAL_EP(m[i][j], inv[j][i]);
+            CPPUNIT_ASSERT_DOUBLES_EQUAL(m[i][j], inv[j][i], 1e-9);
 
     nr_free_matrix(m, 1, nelm, 1, nelm);
     nr_free_matrix(inv, 1, nelm, 1, nelm);
 }
 
-void testRandomMatrix()
+void LaRCSimMatrixTests::testRandomMatrix()
 {
     int nelm = 20;
     double **src = nr_matrix(1, nelm, 1, nelm);
@@ -95,14 +98,14 @@ void testRandomMatrix()
 
     for (int i=1; i<=nelm; ++i)
         for (int j=1; j<=nelm; ++j)
-            SG_CHECK_EQUAL_EP(id[i][j], i == j ? 1.0 : 0.0);
+            CPPUNIT_ASSERT_DOUBLES_EQUAL(id[i][j], i == j ? 1.0 : 0.0, 1e-9);
 
     nr_free_matrix(src, 1, nelm, 1, nelm);
     nr_free_matrix(inv, 1, nelm, 1, nelm);
     nr_free_matrix(id, 1, nelm, 1, nelm);
 }
 
-void testSolveLinearSystem()
+void LaRCSimMatrixTests::testSolveLinearSystem()
 {
     int nelm = 20;
     double **src = nr_matrix(1, nelm, 1, nelm);
@@ -133,7 +136,7 @@ void testSolveLinearSystem()
 
     for (int i=1; i<=nelm; ++i)
         for (int j=1; j<=nelm; ++j)
-            SG_CHECK_EQUAL_EP(check[i][j], i == j ? 1.0 : 0.0);
+            CPPUNIT_ASSERT_DOUBLES_EQUAL(check[i][j], i == j ? 1.0 : 0.0, 1e-9);
 
     for (int i=1; i<=nelm; ++i) {
         check[i][1] = 0.0;
@@ -142,20 +145,11 @@ void testSolveLinearSystem()
     }
 
     for (int i=1; i<=nelm; ++i)
-        SG_CHECK_EQUAL_EP(check[i][1], rhs[i][1]);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(check[i][1], rhs[i][1], 1e-9);
 
     nr_free_matrix(src, 1, nelm, 1, nelm);
     nr_free_matrix(inv, 1, nelm, 1, nelm);
     nr_free_matrix(check, 1, nelm, 1, nelm);
     nr_free_matrix(rhs, 1, nelm, 1, 1);
     nr_free_matrix(sol, 1, nelm, 1, 1);
-}
-
-int main(int argc, char* argv[])
-{
-    testCopyMatrix();
-    testIdentityMatrix();
-    testOrthogonalMatrix();
-    testRandomMatrix();
-    testSolveLinearSystem();
 }
