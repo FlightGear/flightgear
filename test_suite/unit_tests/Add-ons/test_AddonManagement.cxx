@@ -21,7 +21,7 @@
 #include "test_AddonManagement.hxx"
 
 #include "config.h"
-#include "tests/unitTestHelpers.hxx"
+#include "test_suite/helpers/globals.hxx"
 
 #include <sstream>
 #include <string>

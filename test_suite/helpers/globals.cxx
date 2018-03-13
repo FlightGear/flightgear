@@ -1,7 +1,7 @@
 
 #include "config.h"
 
-#include "unitTestHelpers.hxx"
+#include "globals.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/options.hxx>
@@ -33,9 +33,6 @@ namespace fgtest
 
   void initTestGlobals(const std::string& testName)
   {
-    sglog().setLogLevels( SG_ALL, SG_WARN );
-    sglog().setDeveloperMode(true);
-
     globals = new FGGlobals;
 
       bool foundRoot = false;

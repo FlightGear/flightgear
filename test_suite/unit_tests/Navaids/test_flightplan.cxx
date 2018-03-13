@@ -1,6 +1,6 @@
 #include "test_flightplan.hxx"
 
-#include "tests/unitTestHelpers.hxx"
+#include "test_suite/helpers/globals.hxx"
 
 #include <simgear/misc/strutils.hxx>
 

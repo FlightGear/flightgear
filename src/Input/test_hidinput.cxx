@@ -18,7 +18,7 @@
 
 #include "config.h"
 
-#include "unitTestHelpers.hxx"
+#include "test_suite/helpers/globals.hxx"
 
 #include <simgear/misc/test_macros.hxx>
 

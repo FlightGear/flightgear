@@ -18,7 +18,7 @@
 
 #include "test_posinit.hxx"
 
-#include "tests/unitTestHelpers.hxx"
+#include "test_suite/helpers/globals.hxx"
 
 #include <simgear/props/props_io.hxx>
 
