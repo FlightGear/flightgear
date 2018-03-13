@@ -16,11 +16,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "config.h"
+#include "test_posinit.hxx"
 
-#include "unitTestHelpers.hxx"
+#include "tests/unitTestHelpers.hxx"
 
-#include <simgear/misc/test_macros.hxx>
 #include <simgear/props/props_io.hxx>
 
 #include "Main/positioninit.hxx"
@@ -32,7 +31,7 @@
 
 using namespace flightgear;
 
-void testDefaultStartup()
+void PosInitTests::testDefaultStartup()
 {
     fgtest::initTestGlobals("posinit");
     Options::reset();
@@ -55,25 +54,25 @@ void testDefaultStartup()
 
     {
         SGPath presets = fgtest::fgdataPath() / "location-presets.xml";
-        SG_VERIFY(presets.exists());
+        CPPUNIT_ASSERT(presets.exists());
         SGPropertyNode_ptr props(new SGPropertyNode);
         readProperties(presets, props);
 
         std::string icao = props->getStringValue("/sim/presets/airport-id");
-        SG_CHECK_EQUAL(globals->get_props()->getStringValue("/sim/airport/closest-airport-id"), icao);
+        CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == icao);
 
         SGGeod pos = globals->get_aircraft_position();
 
         FGAirportRef defaultAirport = FGAirport::getByIdent(icao);
 
         double dist = SGGeodesy::distanceM(pos, defaultAirport->geod());
-        SG_CHECK_LT(dist, 10000);
+        CPPUNIT_ASSERT(dist < 10000);
     }
     fgtest::shutdownTestGlobals();
 
 }
 
-void testAirportOnlyStartup()
+void PosInitTests::testAirportOnlyStartup()
 {
     fgtest::initTestGlobals("posinit");
     Options::reset();
@@ -88,18 +87,18 @@ void testAirportOnlyStartup()
         opts->processOptions();
     }
 
-    SG_VERIFY(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     initPosition();
 
-    SG_CHECK_EQUAL(globals->get_props()->getStringValue("/sim/airport/closest-airport-id"), std::string("EDDF"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == std::string("EDDF"));
     double dist = SGGeodesy::distanceM(globals->get_aircraft_position(),
                                        FGAirport::getByIdent("EDDF")->geod());
-    SG_CHECK_LT(dist, 10000);
+    CPPUNIT_ASSERT(dist < 10000);
     fgtest::shutdownTestGlobals();
 
 }
 
-void testAirportAndMetarStartup()
+void PosInitTests::testAirportAndMetarStartup()
 {
     fgtest::initTestGlobals("posinit");
 
@@ -116,22 +115,12 @@ void testAirportAndMetarStartup()
 
     initPosition();
 
-    SG_CHECK_EQUAL(globals->get_props()->getStringValue("/sim/airport/closest-airport-id"), std::string("LOWI"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == std::string("LOWI"));
     double dist = SGGeodesy::distanceM(globals->get_aircraft_position(),
                                        FGAirport::getByIdent("LOWI")->geod());
-    SG_CHECK_LT(dist, 10000);
+    CPPUNIT_ASSERT(dist < 10000);
     ///sim/atc/runway
-    SG_CHECK_EQUAL(globals->get_props()->getStringValue("sim/atc/runway"), std::string("26"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("sim/atc/runway") == std::string("26"));
 
     fgtest::shutdownTestGlobals();
-}
-
-int main(int argc, char* argv[])
-{
-
-    testDefaultStartup();
-    testAirportOnlyStartup();
-    testAirportAndMetarStartup();
-
-    return EXIT_SUCCESS;
 }

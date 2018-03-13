@@ -218,6 +218,5 @@ if(ENABLE_METAR)
 endif()
 
 if (COMMAND flightgear_test)
-    flightgear_test(posinit test_posinit.cxx)
     flightgear_test(autosaveMigration test_autosaveMigration.cxx)
 endif()
