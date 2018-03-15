@@ -326,13 +326,15 @@ private slots:
         }
         
         PositionedIDVec newIds = m_search->results();
-        m_ids.reserve(newIds.size());
-        beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
-        for (auto id : newIds) {
-            m_ids.push_back(id);
-            m_items.push_back({}); // null ref
+        if (!newIds.empty()) {
+            m_ids.reserve(newIds.size());
+            beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
+            for (auto id : newIds) {
+                m_ids.push_back(id);
+                m_items.push_back({}); // null ref
+            }
+            endInsertRows();
         }
-        endInsertRows();
 
         if (m_search->isComplete()) {
             m_searchActive = false;
