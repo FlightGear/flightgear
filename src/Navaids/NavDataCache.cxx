@@ -2476,7 +2476,7 @@ PositionedIDVec NavDataCache::ThreadedGUISearch::results() const
     PositionedIDVec r;
     {
         SGGuard<SGMutex> g(d->lock);
-        r = d->results;
+        r = std::move(d->results);
     }
     return r;
 }
