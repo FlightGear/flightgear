@@ -87,7 +87,8 @@ namespace fgtest
           }
       }
 
-      TimeManager* t = new TimeManager;
+      std::unique_ptr<TimeManager> t;
+      t.reset(new TimeManager);
       t->init(); // establish mag-var data
   }
 
