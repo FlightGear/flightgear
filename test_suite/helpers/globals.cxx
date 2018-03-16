@@ -62,7 +62,6 @@ namespace fgtest
 
       if (!foundRoot) {
             std::cerr << "FGData not found" << std::endl;
-            exit(EXIT_FAILURE);
         }
 
       tests_fgdata = globals->get_fg_root();
