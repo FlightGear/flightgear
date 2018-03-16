@@ -216,6 +216,9 @@ option(ENABLE_FGQCANVAS  "Set to ON to build the Qt-based remote canvas applicat
 option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" ON)
 option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code (default)" OFF)
 
+# Test-suite options.
+option(ENABLE_AUTOTESTING "Set to ON to execute the test suite after building the test_suite target (default)" ON)
+
 include (DetectArch)
 
 # when building an OSG with commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
