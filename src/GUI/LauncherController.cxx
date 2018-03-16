@@ -42,7 +42,6 @@
 
 // remove me once location widget is ported to Quick
 #include "LocationWidget.hxx"
-#include "PathsDialog.hxx"
 
 using namespace simgear::pkg;
 
@@ -152,7 +151,6 @@ void LauncherController::restoreSettings()
     m_serversModel->requestRestore();
 
     emit summaryChanged();
-    emit showNoOfficialHangarChanged();
  }
 
 void LauncherController::saveSettings()
@@ -366,20 +364,8 @@ void LauncherController::downloadDirChanged(QString path)
     aircraftCache->setPaths(settings.value("aircraft-paths").toStringList());
     aircraftCache->scanDirs();
 
-    emit showNoOfficialHangarChanged();
-
     // re-set scenery dirs
-    setSceneryPaths();
-}
-
-bool LauncherController::shouldShowOfficialCatalogMessage() const
-{
-    QSettings settings;
-    bool showOfficialCatalogMesssage = !globals->get_subsystem<FGHTTPClient>()->isDefaultCatalogInstalled();
-    if (settings.value("hide-official-catalog-message").toBool()) {
-        showOfficialCatalogMesssage = false;
-    }
-    return showOfficialCatalogMesssage;
+    flightgear::launcherSetSceneryPaths();
 }
 
 QmlAircraftInfo *LauncherController::selectedAircraftInfo() const
@@ -483,14 +469,6 @@ simgear::pkg::PackageRef LauncherController::packageForAircraftURI(QUrl uri) con
     return globals->packageRoot()->getPackageById(ident.toStdString());
 }
 
-void LauncherController::onAircraftPathsChanged()
-{
-    QSettings settings;
-    auto aircraftCache = LocalAircraftCache::instance();
-    aircraftCache->setPaths(settings.value("aircraft-paths").toStringList());
-    aircraftCache->scanDirs();
-}
-
 bool LauncherController::validateMetarString(QString metar)
 {
     if (metar.isEmpty()) {
@@ -561,11 +539,6 @@ void LauncherController::queryMPServers()
     m_serversModel->refresh();
 }
 
-bool LauncherController::showNoOfficialHanger() const
-{
-    return shouldShowOfficialCatalogMessage();
-}
-
 QString LauncherController::versionString() const
 {
     return FLIGHTGEAR_VERSION;
@@ -615,25 +588,6 @@ void LauncherController::onAircraftInstallFailed(QModelIndex index, QString erro
     msg.exec();
 
     maybeUpdateSelectedAircraft(index);
-}
-
-
-void LauncherController::setSceneryPaths()
-{
-    flightgear::launcherSetSceneryPaths();
-}
-
-void LauncherController::officialCatalogAction(QString s)
-{
-    if (s == "hide") {
-        QSettings settings;
-        settings.setValue("hide-official-catalog-message", true);
-    } else if (s == "add-official") {
-        // TEMPROARY, FIXME
-        AddOnsPage::addDefaultCatalog(nullptr, false /* not silent */);
-    }
-
-    emit showNoOfficialHangarChanged();
 }
 
 

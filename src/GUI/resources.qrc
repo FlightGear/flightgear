@@ -73,6 +73,17 @@
         <file>qml/SettingsDateTimePicker.qml</file>
         <file>qml/Summary.qml</file>
         <file>qml/HistoryPopup.qml</file>
+        <file>qml/AddOns.qml</file>
+        <file>qml/DragToReorderButton.qml</file>
+        <file>qml/AddButton.qml</file>
+        <file alias="cancel-icon">qml/icons8-cancel-50.png</file>
+        <file alias="reorder-list-icon">qml/icons8-drag-reorder-filled-50.png</file>
+        <file alias="add-icon">qml/icons8-plus-26.png</file>
+        <file>qml/DeleteButton.qml</file>
+        <file>qml/YesNoPanel.qml</file>
+        <file>qml/PathListDelegate.qml</file>
+        <file>qml/AddCatalogPanel.qml</file>
+        <file>qml/LineEdit.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

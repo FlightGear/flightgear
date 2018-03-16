@@ -184,7 +184,7 @@ Item
             PropertyChanges {
                 target: aircraftList
                 model: _launcher.browseAircraftModel
-                header: _launcher.showNoOfficialHanger ? noDefaultCatalogHeader : ratingsHeader
+                header: _addOns.showNoOfficialHangar ? noDefaultCatalogHeader : ratingsHeader
             }
         }
     ]

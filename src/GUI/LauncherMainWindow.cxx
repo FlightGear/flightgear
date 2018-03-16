@@ -9,7 +9,6 @@
 #include <QMenu>
 
 #include <QPushButton>
-#include <QStandardItemModel>
 #include <QDesktopServices>
 
 #include <QQuickItem>
@@ -34,13 +33,17 @@
 
 // launcher headers
 #include "QtLauncher.hxx"
-#include "PathsDialog.hxx"
-
+#include "AircraftModel.hxx"
+#include "AircraftSearchFilterModel.hxx"
+#include "DefaultAircraftLocator.hxx"
+#include "LaunchConfig.hxx"
 #include "ViewCommandLinePage.hxx"
 #include "AircraftModel.hxx"
 #include "LocalAircraftCache.hxx"
 #include "LauncherController.hxx"
 #include "DefaultAircraftLocator.hxx"
+#include "AddOnsController.hxx"
+#include "CatalogListModel.hxx"
 
 #include "ui_Launcher.h"
 
@@ -107,18 +110,6 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(qa, &QAction::triggered, this, &LauncherMainWindow::onQuit);
     addAction(qa);
 
-
-    AddOnsPage* addOnsPage = new AddOnsPage(NULL, globals->packageRoot());
-    connect(addOnsPage, &AddOnsPage::sceneryPathsChanged,
-            m_controller, &LauncherController::setSceneryPaths);
-    connect(addOnsPage, &AddOnsPage::aircraftPathsChanged,
-            m_controller, &LauncherController::onAircraftPathsChanged);
-    m_ui->stack->addWidget(addOnsPage);
-
-    connect(m_controller->baseAircraftModel(), &AircraftItemModel::catalogsRefreshed,
-             addOnsPage, &AddOnsPage::onCatalogsRefreshed);
-
-
     m_viewCommandLinePage = new ViewCommandLinePage;
     m_viewCommandLinePage->setLaunchConfig(m_controller->config());
     m_ui->stack->addWidget(m_viewCommandLinePage);
@@ -127,7 +118,9 @@ LauncherMainWindow::LauncherMainWindow() :
     restoreGeometry(settings.value("window-geometry").toByteArray());
 
     m_controller->restoreSettings();
-    restoreSettings();
+    flightgear::launcherSetSceneryPaths();
+
+    auto addOnsCtl = new AddOnsController(this);
 
     ////////////
 #if defined(Q_OS_WIN)
@@ -144,6 +137,7 @@ LauncherMainWindow::LauncherMainWindow() :
 
     m_ui->aircraftList->engine()->addImportPath("qrc:///");
     m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", m_controller);
+    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_addOns", addOnsCtl);
 
     connect( m_ui->aircraftList, &QQuickWidget::statusChanged,
              this, &LauncherMainWindow::onQuickStatusChanged);
@@ -184,15 +178,16 @@ LauncherMainWindow::LauncherMainWindow() :
     connect( m_ui->summary, &QQuickWidget::statusChanged,
              this, &LauncherMainWindow::onQuickStatusChanged);
     m_ui->summary->setSource(QUrl("qrc:///qml/Summary.qml"));
+
+
+    // addOns
+    m_ui->addOns->engine()->addImportPath("qrc:///");
+    m_ui->addOns->engine()->rootContext()->setContextProperty("_launcher", m_controller);
+    m_ui->addOns->engine()->rootContext()->setContextProperty("_addOns", addOnsCtl);
+    m_ui->addOns->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->addOns->setSource(QUrl("qrc:///qml/AddOns.qml"));
     //////////////////////////
 
-}
-
-void LauncherMainWindow::restoreSettings()
-{
-    if (!m_inAppMode) {
-        m_controller->setSceneryPaths();
-    }
 }
 
 void LauncherMainWindow::saveSettings()
@@ -362,6 +357,4 @@ void LauncherMainWindow::onChangeDataDir()
 
     flightgear::restartTheApp();
 }
-
-
 

@@ -92,10 +92,6 @@ if (HAVE_QT)
                             AircraftModel.cxx
                             CatalogListModel.cxx
                             CatalogListModel.hxx
-                            AddCatalogDialog.cxx
-                            AddCatalogDialog.hxx
-                            PathsDialog.cxx
-                            PathsDialog.hxx
                             LocationWidget.cxx
                             LocationWidget.hxx
                             QtMessageBox.cxx
@@ -126,6 +122,8 @@ if (HAVE_QT)
                             RecentLocationsModel.hxx
                             LauncherController.cxx
                             LauncherController.hxx
+                            AddOnsController.cxx
+                            AddOnsController.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})

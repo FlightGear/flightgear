@@ -13,6 +13,8 @@ QtObject
     readonly property string minorFrameColor: "#9f9f9f"
 
     readonly property string themeColor: "#1b7ad3"
+    readonly property string destructiveActionColor: "#c62703"
+
     readonly property string activeColor: Qt.darker(themeColor)
 
     readonly property string inactiveThemeColor: "#9f9f9f"
@@ -21,6 +23,7 @@ QtObject
     readonly property string baseTextColor: "#3f3f3f"
 
     readonly property int baseFontPixelSize: 12
+    readonly property int subHeadingFontPixelSize: 14
     readonly property int headingFontPixelSize: 18
 
     readonly property string disabledTextColor: "#5f5f5f"

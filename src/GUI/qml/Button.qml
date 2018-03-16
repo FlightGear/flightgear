@@ -7,14 +7,16 @@ Rectangle {
     property string text
     property string hoverText: ""
     property bool enabled: true
+    property bool destructiveAction: false
 
+    readonly property string __baseColor: destructiveAction ? Style.destructiveActionColor : Style.themeColor
     signal clicked
 
-    width: Style.strutSize * 2
+    width: Math.max(Style.strutSize * 2, buttonText.implicitWidth + radius * 2)
     height: buttonText.implicitHeight + (radius * 2)
     radius: Style.roundRadius
 
-    color: enabled ? (mouse.containsMouse ? Style.activeColor : Style.themeColor) : Style.disabledThemeColor
+    color: enabled ? (mouse.containsMouse ? Style.activeColor : __baseColor) : Style.disabledThemeColor
 
     Text {
         id: buttonText

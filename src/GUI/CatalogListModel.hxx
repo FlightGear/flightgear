@@ -34,16 +34,23 @@ const int CatalogUrlRole = Qt::UserRole + 1;
 const int CatalogIdRole = Qt::UserRole + 2;
 const int CatalogPackageCountRole = Qt::UserRole + 3;
 const int CatalogInstallCountRole = Qt::UserRole + 4;
+const int CatalogStatusRole = Qt::UserRole + 5;
+const int CatalogDescriptionRole = Qt::UserRole + 6;
+const int CatalogNameRole = Qt::UserRole + 7;
+const int CatalogIsNewlyAdded = Qt::UserRole + 8;
+
+class CatalogDelegate;
 
 class CatalogListModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool isAddingCatalog READ isAddingCatalog NOTIFY isAddingCatalogChanged)
+    Q_PROPERTY(CatalogStatus statusOfAddingCatalog READ statusOfAddingCatalog NOTIFY statusOfAddingCatalogChanged)
 public:
-    CatalogListModel(QObject* pr, simgear::pkg::RootRef& root);
+    CatalogListModel(QObject* pr, const simgear::pkg::RootRef& root);
 
     ~CatalogListModel();
-
-    void refresh();
 
     int rowCount(const QModelIndex& parent) const override;
 
@@ -53,12 +60,64 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-private slots:
+    QHash<int, QByteArray> roleNames() const override;
 
+    Q_INVOKABLE void removeCatalog(int index);
+
+    Q_INVOKABLE void refreshCatalog(int index);
+
+    Q_INVOKABLE void installDefaultCatalog();
+
+    // returns the index of the new catalog
+    Q_INVOKABLE void addCatalogByUrl(QUrl url);
+
+    Q_INVOKABLE void finalizeAddCatalog();
+
+    Q_INVOKABLE void abandonAddCatalog();
+
+    bool isAddingCatalog() const;
+
+    enum CatalogStatus
+    {
+        Ok = 0,
+        Refreshing,
+        NetworkError,
+        NotFoundOnServer,
+        IncomaptbleVersion,
+        HTTPForbidden,
+        InvalidData,
+        UnknownError,
+        NoAddInProgress
+    };
+
+    Q_ENUM(CatalogStatus)
+
+    void onCatalogStatusChanged(simgear::pkg::Catalog *cat);
+
+    CatalogStatus statusOfAddingCatalog() const;
+
+signals:
+    void isAddingCatalogChanged();
+    void statusOfAddingCatalogChanged();
+
+    void catalogsChanged();
+
+public slots:
+    void resetData();
+
+private slots:
 
 private:
     simgear::pkg::RootRef m_packageRoot;
     simgear::pkg::CatalogList m_catalogs;
+
+    simgear::pkg::CatalogRef m_newlyAddedCatalog;
+
+    int indexOf(QUrl url);
+
+    CatalogDelegate* m_delegate;
+
+    CatalogStatus translateStatusForCatalog(simgear::pkg::CatalogRef cat) const;
 };
 
 #endif // of FG_GUI_CATALOG_LIST_MODEL

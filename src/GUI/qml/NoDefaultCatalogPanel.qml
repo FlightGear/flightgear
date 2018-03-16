@@ -30,7 +30,9 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
 
             onClicked: {
-                _launcher.officialCatalogAction("add-official");
+                console.warn("Implement me")
+
+              //  _launcher.officialCatalogAction("add-official");
             }
         }
 
@@ -40,7 +42,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
 
             onClicked: {
-                _launcher.officialCatalogAction("hide");
+                _addOns.officialCatalogAction("hide");
             }
         }
     }

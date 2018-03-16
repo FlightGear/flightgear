@@ -43,8 +43,6 @@ class LauncherController : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool showNoOfficialHanger READ showNoOfficialHanger NOTIFY showNoOfficialHangarChanged)
-
     Q_PROPERTY(AircraftProxyModel* installedAircraftModel MEMBER m_installedAircraftModel CONSTANT)
     Q_PROPERTY(AircraftProxyModel* browseAircraftModel MEMBER m_browseAircraftModel CONSTANT)
     Q_PROPERTY(AircraftProxyModel* searchAircraftModel MEMBER m_aircraftSearchModel CONSTANT)
@@ -91,10 +89,6 @@ public:
     Q_INVOKABLE void requestUpdateAllAircraft();
 
     Q_INVOKABLE void queryMPServers();
-
-    bool showNoOfficialHanger() const;
-
-    Q_INVOKABLE void officialCatalogAction(QString s);
 
     QUrl selectedAircraft() const;
 
@@ -145,8 +139,6 @@ public:
 
     bool canFly() const;
 
-    void setSceneryPaths();
-
     AircraftItemModel* baseAircraftModel() const
     { return m_aircraftModel; }
 
@@ -154,7 +146,6 @@ public:
     void saveSettings();
 signals:
 
-    void showNoOfficialHangarChanged();
     void selectedAircraftChanged(QUrl selectedAircraft);
 
     void searchChanged();
@@ -176,8 +167,6 @@ public slots:
 
     void setEnvironmentSummary(QStringList environmentSummary);
 
-    void onAircraftPathsChanged();
-
 private slots:
 
     void onAircraftInstalledCompleted(QModelIndex index);
@@ -197,8 +186,6 @@ private:
     // need to wait after a model reset before restoring selection and
     // scrolling, to give the view time it seems.
     void delayedAircraftModelReset();
-
-    bool shouldShowOfficialCatalogMessage() const;
 
     void collectAircraftArgs();
 
