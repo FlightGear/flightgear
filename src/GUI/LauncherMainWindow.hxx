@@ -200,7 +200,6 @@ private slots:
     void setSceneryPaths();
     void onAircraftPathsChanged();
     void onChangeDataDir();
-    void onSettingsSearchChanged();
 private:
 
     /**

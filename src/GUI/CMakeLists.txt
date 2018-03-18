@@ -96,8 +96,6 @@ if (HAVE_QT)
                             AirportDiagram.hxx
                             NavaidDiagram.cxx
                             NavaidDiagram.hxx
-                            ExtraSettingsSection.cxx
-                            ExtraSettingsSection.hxx
                             SetupRootDialog.cxx
                             SetupRootDialog.hxx
                             AircraftModel.hxx
@@ -116,12 +114,6 @@ if (HAVE_QT)
                             QtFileDialog.hxx
                             InstallSceneryDialog.hxx
                             InstallSceneryDialog.cxx
-                            SettingsSection.cxx
-                            SettingsSection.hxx
-                            SettingsSectionQML.cxx
-                            SettingsSectionQML.hxx
-                            AdvancedSettingsButton.h
-                            AdvancedSettingsButton.cpp
                             ToolboxButton.cpp
                             ToolboxButton.h
                             LauncherArgumentTokenizer.cxx
@@ -130,8 +122,6 @@ if (HAVE_QT)
                             AircraftSearchFilterModel.hxx
                             DefaultAircraftLocator.cxx
                             DefaultAircraftLocator.hxx
-                            SettingsWidgets.cxx
-                            SettingsWidgets.hxx
                             LaunchConfig.cxx
                             LaunchConfig.hxx
                             ViewCommandLinePage.cxx

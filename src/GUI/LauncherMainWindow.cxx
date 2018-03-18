@@ -38,10 +38,7 @@
 #include "PathsDialog.hxx"
 #include "AircraftSearchFilterModel.hxx"
 #include "DefaultAircraftLocator.hxx"
-#include "SettingsWidgets.hxx"
 #include "LaunchConfig.hxx"
-#include "SettingsSectionQML.hxx"
-#include "ExtraSettingsSection.hxx"
 #include "ViewCommandLinePage.hxx"
 #include "MPServersModel.h"
 #include "ThumbnailImageItem.hxx"
@@ -60,19 +57,6 @@
 using namespace simgear::pkg;
 
 extern void restartTheApp(QStringList fgArgs);
-
-QQmlPrivate::AutoParentResult launcher_autoParent(QObject* thing, QObject* parent)
-{
-    SettingsSection* ss = qobject_cast<SettingsSection*>(parent);
-    SettingsControl* sc = qobject_cast<SettingsControl*>(thing);
-    if (ss && sc) {
-        sc->setParent(ss);
-        return QQmlPrivate::Parented;
-    }
-
-    qWarning() << "Unsuitable" << thing  << parent;
-    return QQmlPrivate::IncompatibleObject;
-}
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -223,31 +207,22 @@ LauncherMainWindow::LauncherMainWindow() :
 
 void LauncherMainWindow::initQML()
 {
-    QQmlPrivate::RegisterAutoParent autoparent = { 0, &launcher_autoParent };
-    QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
-
     qmlRegisterType<LauncherArgumentTokenizer>("FlightGear.Launcher", 1, 0, "ArgumentTokenizer");
-
-    qmlRegisterType<SettingsSectionQML>("FlightGear.Launcher", 1, 0, "Section");
-    qmlRegisterType<SettingsCheckbox>("FlightGear.Launcher", 1, 0, "Checkbox");
-    qmlRegisterType<SettingsComboBox>("FlightGear.Launcher", 1, 0, "Combo");
-    qmlRegisterType<SettingsIntSpinbox>("FlightGear.Launcher", 1, 0, "Spinbox");
-    qmlRegisterType<SettingsText>("FlightGear.Launcher", 1, 0, "LineEdit");
-    qmlRegisterType<SettingsDateTime>("FlightGear.Launcher", 1, 0, "DateTime");
-    qmlRegisterType<SettingsPath>("FlightGear.Launcher", 1, 0, "PathChooser");
     qmlRegisterUncreatableType<QAbstractItemModel>("FlightGear.Launcher", 1, 0, "QAIM", "no");
     qmlRegisterUncreatableType<AircraftProxyModel>("FlightGear.Launcher", 1, 0, "AircraftProxyModel", "no");
-
     qmlRegisterUncreatableType<RecentAircraftModel>("FlightGear.Launcher", 1, 0, "RecentAircraftModel", "no");
     qmlRegisterUncreatableType<RecentLocationsModel>("FlightGear.Launcher", 1, 0, "RecentLocationsModel", "no");
-
-    qmlRegisterUncreatableType<SettingsControl>("FlightGear.Launcher", 1, 0, "Control", "Base class");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
-    qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
 
+    qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
     qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
     qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
+
+    qmlRegisterUncreatableType<LocalAircraftCache>("FlightGear.Launcher", 1, 0, "LocalAircraftCache", "Aircraft cache");
+    qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
+    qmlRegisterType<ThumbnailImageItem>("FlightGear.Launcher", 1, 0, "ThumbnailImage");
+    qmlRegisterType<PreviewImageItem>("FlightGear.Launcher", 1, 0, "PreviewImage");
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherMainWindow::collectAircraftArgs);
@@ -269,11 +244,6 @@ void LauncherMainWindow::initQML()
     QQmlContext* summaryContext = m_ui->summary->engine()->rootContext();
     summaryContext->setContextProperty("_config", m_config);
 
-    qmlRegisterUncreatableType<LocalAircraftCache>("FlightGear.Launcher", 1, 0, "LocalAircraftCache", "Aircraft cache");
-    qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
-    qmlRegisterType<ThumbnailImageItem>("FlightGear.Launcher", 1, 0, "ThumbnailImage");
-    qmlRegisterType<PreviewImageItem>("FlightGear.Launcher", 1, 0, "PreviewImage");
-
     QNetworkDiskCache* diskCache = new QNetworkDiskCache(this);
     SGPath cachePath = globals->get_fg_home() / "PreviewsCache";
     diskCache->setCacheDirectory(QString::fromStdString(cachePath.utf8Str()));
@@ -281,7 +251,6 @@ void LauncherMainWindow::initQML()
     QNetworkAccessManager* netAccess = new QNetworkAccessManager(this);
     netAccess->setCache(diskCache);
     PreviewImageItem::setGlobalNetworkAccess(netAccess);
-
 }
 
 LauncherMainWindow::~LauncherMainWindow()
@@ -345,11 +314,6 @@ void LauncherMainWindow::restoreSettings()
     m_ui->location->restoreLocation(currentLocation);
 
     updateSelectedAircraft();
-
-    Q_FOREACH(SettingsSection* ss, findChildren<SettingsSection*>()) {
-        ss->restoreState(settings);
-    }
-
     m_serversModel->requestRestore();
  }
 
@@ -362,10 +326,6 @@ void LauncherMainWindow::saveSettings()
 
     QSettings settings;
     settings.setValue("window-geometry", saveGeometry());
-
-    Q_FOREACH(SettingsSection* ss, findChildren<SettingsSection*>()) {
-        ss->saveState(settings);
-    }
 }
 
 void LauncherMainWindow::closeEvent(QCloseEvent *event)
@@ -572,20 +532,6 @@ void LauncherMainWindow::updateSelectedAircraft()
     m_selectedAircraftInfo->setUri(m_selectedAircraft);
     QModelIndex index = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     if (index.isValid()) {
-#if 0
-        QPixmap pm = index.data(Qt::DecorationRole).value<QPixmap>();
-        m_ui->thumbnail->setPixmap(pm);
-
-        // important to use this version to get the variant-specific name
-        // correct; the QModelIndex lookup doesn't do that.
-        // actually all the data is for the primary variant, but this will be
-        // fixed when enabling the LocalAircraftCache outside the AircaftModel
-        m_ui->aircraftName->setText(m_aircraftModel->nameForAircraftURI(m_selectedAircraft));
-
-        QVariant longDesc = index.data(AircraftLongDescriptionRole);
-        m_ui->aircraftDescription->setVisible(!longDesc.isNull());
-        m_ui->aircraftDescription->setText(longDesc.toString());
-#endif
         int status = index.data(AircraftPackageStatusRole).toInt();
         bool canRun = (status == LocalAircraftCache::PackageInstalled);
         m_ui->flyButton->setEnabled(canRun);
@@ -598,28 +544,7 @@ void LauncherMainWindow::updateSelectedAircraft()
         }
 
         m_ui->location->setAircraftType(aircraftType);
-
-        const bool hasStates = m_selectedAircraftInfo->hasStates();
-#if 0
-        m_ui->stateCombo->setVisible(hasStates);
-        m_ui->stateLabel->setVisible(hasStates);
-        m_ui->stateDescription->setVisible(false);
-        if (hasStates) {
-            m_ui->stateCombo->setModel(m_selectedAircraftInfo->statesModel());
-            m_ui->stateDescription->setText(m_ui->stateCombo->currentData(QmlAircraftInfo::StateDescriptionRole).toString());
-            // hiden when no description is present
-            m_ui->stateDescription->setVisible(!m_ui->stateDescription->text().isEmpty());
-        }
-#endif
     } else {
-#if 0
-        m_ui->thumbnail->setPixmap(QPixmap());
-        m_ui->aircraftName->setText("");
-        m_ui->aircraftDescription->hide();
-        m_ui->stateCombo->hide();
-        m_ui->stateLabel->hide();
-        m_ui->stateDescription->hide();
-#endif
         m_ui->flyButton->setEnabled(false);
     }
 }
@@ -866,14 +791,6 @@ void LauncherMainWindow::onChangeDataDir()
     flightgear::restartTheApp();
 }
 
-void LauncherMainWindow::onSettingsSearchChanged()
-{
-#if 0
-    Q_FOREACH(SettingsSectionQML* ss, findChildren<SettingsSectionQML*>()) {
-        ss->setSearchTerm(m_ui->settingsSearchEdit->text());
-    }
-#endif
-}
 
 bool LauncherMainWindow::validateMetarString(QString metar)
 {
