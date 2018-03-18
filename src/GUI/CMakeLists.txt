@@ -76,16 +76,6 @@ if (HAVE_QT)
                             )
     qt5_add_resources(qrc_sources resources.qrc)
 
-    set(qml_sources
-        DownloadSettings.qml
-        GeneralSettings.qml
-        MPSettings.qml
-        RenderSettings.qml
-        TimeSettings.qml
-        ViewSettings.qml
-        Weather.qml
-        )
-
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
                             LauncherMainWindow.hxx
