@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick.Dialogs 1.0 as Dialogs
 import FlightGear.Launcher 1.0 as FG
 
 import "."
@@ -20,7 +19,7 @@ SettingControl {
 
     readonly property bool isDefault: (path.length == 0) || (path == defaultPath)
 
-    readonly property url effectiveUrl: pathHelper.urlFromLocalFilePath(effectivePath());
+    readonly property url effectiveUrl: picker.urlFromLocalFilePath(effectivePath());
 
     function effectivePath()
     {
@@ -91,19 +90,15 @@ SettingControl {
         width: parent.width
     }
 
-    Dialogs.FileDialog {
+    FG.FileDialog {
         id: picker
 
         onAccepted: {
-            path = pathHelper.urlToLocalFilePath(picker.fileUrl);
+            path = filePath
         }
 
         onRejected: {
 
         }
-    }
-
-    FG.PathUrlHelper {
-        id: pathHelper
     }
 }

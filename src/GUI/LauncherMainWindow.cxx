@@ -242,7 +242,7 @@ void LauncherMainWindow::initQML()
 
     qmlRegisterUncreatableType<SettingsControl>("FlightGear.Launcher", 1, 0, "Control", "Base class");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
-    qmlRegisterType<PathUrlHelper>("FlightGear.Launcher", 1, 0, "PathUrlHelper");
+    qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
 
     qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
