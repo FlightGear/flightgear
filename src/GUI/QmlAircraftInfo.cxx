@@ -3,6 +3,7 @@
 #include <QVariant>
 #include <QDebug>
 #include <QQmlEngine>
+#include <QQmlComponent>
 
 #include <simgear/package/Install.hxx>
 #include <simgear/package/Root.hxx>
