@@ -2,7 +2,7 @@
 #define RECENTLOCATIONSMODEL_HXX
 
 #include <QAbstractListModel>
-#include <QvariantList>
+#include <QVariantList>
 
 
 class RecentLocationsModel : public QAbstractListModel
