@@ -17,6 +17,7 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
+#include <QQmlError>
 
 // simgear headers
 #include <simgear/package/Install.hxx>
@@ -171,6 +172,9 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
     m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
 
+
+    connect( m_ui->aircraftList, &QQuickWidget::statusChanged,
+             this, &LauncherMainWindow::onQuickStatusChanged);
     m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
 
     // settings
@@ -181,6 +185,8 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->settings->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
 
     m_ui->settings->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    connect( m_ui->settings, &QQuickWidget::statusChanged,
+             this, &LauncherMainWindow::onQuickStatusChanged);
     m_ui->settings->setSource(QUrl("qrc:///qml/Settings.qml"));
 
     // environemnt
@@ -193,6 +199,9 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->environmentPage->engine()->rootContext()->setContextProperty("_config", m_config);
 
     m_ui->environmentPage->setResizeMode(QQuickWidget::SizeRootObjectToView);
+
+    connect( m_ui->environmentPage, &QQuickWidget::statusChanged,
+             this, &LauncherMainWindow::onQuickStatusChanged);
     m_ui->environmentPage->setSource(QUrl("qrc:///qml/Environment.qml"));
 
     // summary
@@ -200,6 +209,9 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->summary->engine()->rootContext()->setContextProperty("_launcher", this);
     m_ui->summary->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
     m_ui->summary->setResizeMode(QQuickWidget::SizeRootObjectToView);
+
+    connect( m_ui->summary, &QQuickWidget::statusChanged,
+             this, &LauncherMainWindow::onQuickStatusChanged);
     m_ui->summary->setSource(QUrl("qrc:///qml/Summary.qml"));
     //////////////////////////
 
@@ -251,6 +263,24 @@ void LauncherMainWindow::initQML()
     QNetworkAccessManager* netAccess = new QNetworkAccessManager(this);
     netAccess->setCache(diskCache);
     PreviewImageItem::setGlobalNetworkAccess(netAccess);
+}
+
+void LauncherMainWindow::onQuickStatusChanged(QQuickWidget::Status status)
+{
+    if (status == QQuickWidget::Error) {
+        QQuickWidget* qw = qobject_cast<QQuickWidget*>(sender());
+        QString errorString;
+
+        Q_FOREACH(auto err, qw->errors()) {
+            errorString.append("\n" + err.toString());
+        }
+
+        QMessageBox::critical(this, "UI loading failures.",
+                              tr("Problems occurred loading the user interface. This is often due to missing modules on your system. "
+                                 "Please report this error to the FlightGear developer list or forum, and take care to mention your system "
+                                 "distribution, etc. Please also include the information provided below.\n")
+                              + errorString);
+    }
 }
 
 LauncherMainWindow::~LauncherMainWindow()

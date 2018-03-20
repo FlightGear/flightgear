@@ -27,6 +27,7 @@
 #include <QModelIndex>
 #include <QTimer>
 #include <QUrl>
+#include <QQuickWidget>
 
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Catalog.hxx>
@@ -200,6 +201,7 @@ private slots:
     void setSceneryPaths();
     void onAircraftPathsChanged();
     void onChangeDataDir();
+    void onQuickStatusChanged(QQuickWidget::Status status);
 private:
 
     /**
