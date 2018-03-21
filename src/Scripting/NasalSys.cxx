@@ -1373,13 +1373,19 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
 
     bool simtime = (argc > 2 && naTrue(args[2])) ? false : true;
 
+    // A unique name for the timer based on the file name and line number of the function.
+    std::string name = "NasalTimer-";
+    name.append(naStr_data(naGetSourceFile(c, 0)));
+    name.append(":");
+    name.append(std::to_string(naGetLine(c, 0)));
+
     // Generate and register a C++ timer handler
     NasalTimer* t = new NasalTimer;
     t->handler = handler;
     t->gcKey = gcSave(handler);
     t->nasal = this;
 
-    globals->get_event_mgr()->addEvent("NasalTimer",
+    globals->get_event_mgr()->addEvent(name,
                                        t, &NasalTimer::timerExpired,
                                        delta.num, simtime);
 }
