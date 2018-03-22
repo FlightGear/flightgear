@@ -186,9 +186,9 @@ Item {
                         label: qsTr("Server")
                         enabled: enableMP.checked
                         description: qsTr("Select a server close to you for better responsiveness and reduced lag when flying online.")
-                        choices: _mpServers
+                        choices: _launcher.mpServersModel
 
-                        readonly property bool currentIsCustom: (_mpServers.serverForIndex(selectedIndex) == "__custom__")
+                        readonly property bool currentIsCustom: (_launcher.mpServersModel.serverForIndex(selectedIndex) == "__custom__")
                         property string __savedServer;
 
                         keywords: ["server", "hostname"]
@@ -202,7 +202,7 @@ Item {
                         {
                             // these values match the code in MPServersModel.cpp, sorry for that
                             // nastyness
-                            _config.setValueForKey("mpSettings", "mp-server", _mpServers.serverForIndex(selectedIndex) );
+                            _config.setValueForKey("mpSettings", "mp-server", _launcher.mpServersModel.serverForIndex(selectedIndex) );
                         }
 
                         function restoreState()
@@ -212,7 +212,7 @@ Item {
 
                         Connections
                         {
-                            target: _mpServers
+                            target: _launcher.mpServersModel
                             onRestoreIndex: { mpServer.selectedIndex = index }
                         }
                     },

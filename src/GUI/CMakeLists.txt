@@ -124,6 +124,8 @@ if (HAVE_QT)
                             RecentAircraftModel.hxx
                             RecentLocationsModel.cxx
                             RecentLocationsModel.hxx
+                            LauncherController.cxx
+                            LauncherController.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
