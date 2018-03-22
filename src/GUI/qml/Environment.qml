@@ -130,7 +130,7 @@ Item {
                                      + "real-world weather data (METAR) information may not show exactly "
                                      + "the conditions recorded, and is not recommended for multi-player "
                                      + "flight since the weather simulation is not shared over the network."
-                        setting: "aws-enables"
+                        setting: "aws-enabled"
                     },
 
                     SettingCheckbox {
@@ -184,14 +184,16 @@ Item {
                 }
 
                 onApply: {
-                    if (advancedWeather.checked) {
-                        // set description from the weather scenarios, so Local-weather
-                        // can run the appropriate simulation
-                        _config.setProperty("/nasal/local_weather/enabled", 1);
-                    }
+                    // important that we always set a value here, to override
+                    // the auto-saved value in FlightGear. Otherwise we get
+                    // confusing behaviour when the user toggles the setting
+                    // inside the sim
+                    _config.setProperty("/nasal/local_weather/enabled", advancedWeather.checked);
 
                     var index = weatherScenario.selectedIndex;
 
+                    // set description from the weather scenarios, so Local-weather
+                    // can run the appropriate simulation
                     if (!fetchMetar.checked) {
                         if (weatherScenario.isCustomMETAR) {
                             _config.setArg("metar", customMETAR.value)
