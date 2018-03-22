@@ -170,8 +170,6 @@ LauncherMainWindow::LauncherMainWindow() :
 
     m_ui->aircraftList->engine()->addImportPath("qrc:///");
     m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", this);
-    m_ui->aircraftList->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
-
 
     connect( m_ui->aircraftList, &QQuickWidget::statusChanged,
              this, &LauncherMainWindow::onQuickStatusChanged);
@@ -181,9 +179,6 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->settings->engine()->addImportPath("qrc:///");
     m_ui->settings->engine()->rootContext()->setContextProperty("_launcher", this);
     m_ui->settings->engine()->rootContext()->setContextProperty("_mpServers", m_serversModel);
-
-    m_ui->settings->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
-
     m_ui->settings->setResizeMode(QQuickWidget::SizeRootObjectToView);
     connect( m_ui->settings, &QQuickWidget::statusChanged,
              this, &LauncherMainWindow::onQuickStatusChanged);
@@ -194,8 +189,6 @@ LauncherMainWindow::LauncherMainWindow() :
     m_ui->environmentPage->engine()->rootContext()->setContextProperty("_launcher", this);
     auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
     m_ui->environmentPage->engine()->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
-
-    m_ui->environmentPage->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
     m_ui->environmentPage->engine()->rootContext()->setContextProperty("_config", m_config);
 
     m_ui->environmentPage->setResizeMode(QQuickWidget::SizeRootObjectToView);
@@ -207,7 +200,6 @@ LauncherMainWindow::LauncherMainWindow() :
     // summary
     m_ui->summary->engine()->addImportPath("qrc:///");
     m_ui->summary->engine()->rootContext()->setContextProperty("_launcher", this);
-    m_ui->summary->engine()->setObjectOwnership(this, QQmlEngine::CppOwnership);
     m_ui->summary->setResizeMode(QQuickWidget::SizeRootObjectToView);
 
     connect( m_ui->summary, &QQuickWidget::statusChanged,
@@ -285,9 +277,30 @@ void LauncherMainWindow::onQuickStatusChanged(QQuickWidget::Status status)
 
 LauncherMainWindow::~LauncherMainWindow()
 {
-    // avoid a double-free when the QQuickWidget's engine seems to try
-    // and delete us.
-   // delete m_ui->aircraftList;
+    std::vector<QQuickWidget*> quickWidgets = { m_ui->aircraftList,
+                                                m_ui->settings,
+                                                m_ui->summary,
+                                                m_ui->environmentPage};
+
+    // candidate work-around for crash on deleting the launcher window
+    for (auto qw : quickWidgets) {
+        qw->setSource(QUrl{});
+    }
+
+#if 1
+    for (auto qw : quickWidgets) {
+        auto rootContext = qw->engine()->rootContext();
+        rootContext->setContextProperty("_launcher", nullptr);
+    }
+#endif
+
+    // candidate work-around for crash on deleting the launcher window
+    // this un-parents the quick widgets so they won't be freed
+#if 0
+    for (auto qw : quickWidgets) {
+        qw->setParent(nullptr);
+    }
+#endif
 }
 
 bool LauncherMainWindow::execInApp()
