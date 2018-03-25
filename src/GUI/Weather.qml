@@ -60,11 +60,9 @@ Section {
     }
 
     onApply: {
-        if (advancedWeather.checked) {
-            // set description from the weather scenarios, so Local-weather
-            // can run the appropriate simulation
-            _config.setProperty("/nasal/local_weather/enabled", 1);
-        }
+        // ensure we alwasy set this property, so that the launcher
+        // setting overrides the auto-saved value from the in-sim dialog
+        _config.setProperty("/nasal/local_weather/enabled", advancedWeather.checked);
 
         var index = weatherScenario.selectedIndex;
 
