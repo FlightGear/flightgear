@@ -1,3 +1,6 @@
+# CMake module includes.
+include(SetupFGFSLibraries)
+
 # Add each test suite category.
 foreach(test_category
         gui_tests
@@ -141,8 +144,6 @@ add_custom_command(
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 
-link_directories ( ${Boost_LIBRARY_DIRS} )
-
 # Set up the source groups.
 get_property(FG_GROUPS_C GLOBAL PROPERTY FG_GROUPS_C)
 string(REPLACE "@" ";" groups ${FG_GROUPS_C} )
@@ -199,86 +200,8 @@ add_custom_target(test_suite
     COMMENT ${TEST_SUITE_COMMENT}
 )
 
-#-----------------------------------------------------------------------------
+# Set up the target links and includes.
+setup_fgfs_libraries(run_test_suite)
 
-get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
-#message(STATUS "fg libs ${FG_LIBS}")
-#message(STATUS "OSG libs ${OPENSCENEGRAPH_LIBRARIES}")
-#message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
-
-if(RTI_FOUND)
-    set(HLA_LIBRARIES ${RTI_LIBRARIES})
-else()
-    set(HLA_LIBRARIES "")
-endif()
-
-if(GDAL_FOUND)
-    set(GDAL_LIBRARIES ${GDAL_LIBRARY})
-else()
-    set(GDAL_LIBRARIES "")
-endif()
-
-if(ENABLE_JSBSIM)
-    # FIXME - remove once JSBSim doesn't expose private headers
-    include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
-
-    target_link_libraries(run_test_suite JSBSim)
-endif()
-
-if(ENABLE_IAX)
-    target_link_libraries(run_test_suite iaxclient_lib ${OPENAL_LIBRARY})
-endif()
-
-if(USE_DBUS)
-    target_link_libraries(run_test_suite ${DBUS_LIBRARIES})
-endif()
-
-if(FG_HAVE_GPERFTOOLS)
-    include_directories(${GooglePerfTools_INCLUDE_DIR})
-    target_link_libraries(run_test_suite ${GooglePerfTools_LIBRARIES})
-endif()
-
-if(CRASHRPT_FOUND)
-    target_link_libraries(run_test_suite ${CRASHRPT_LIBRARY})
-endif()
-
-if(X11_FOUND)
-    target_link_libraries(run_test_suite ${X11_LIBRARIES})
-endif()
-
-target_link_libraries(run_test_suite
-    SimGearCore
-    SimGearScene
-    ${CPPUNIT_LIBRARIES}
-    ${EVENT_INPUT_LIBRARIES}
-    ${GDAL_LIBRARIES}
-    ${HLA_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    ${OPENSCENEGRAPH_LIBRARIES}
-    ${PLATFORM_LIBS}
-    ${PLIB_LIBRARIES}
-    ${SQLITE3_LIBRARY}
-    ${SIMGEAR_LIBRARIES}
-)
-
-
-if(ENABLE_FLITE)
-    if(SYSTEM_HTS_ENGINE)
-        target_link_libraries(run_test_suite flite_hts ${HTS_ENGINE_LIBRARIES})
-    else()
-        target_link_libraries(run_test_suite flite_hts hts_engine)
-    endif()
-endif()
-
-if(Qt5Core_FOUND)
-    target_link_libraries(run_test_suite Qt5::Core Qt5::Widgets fglauncher fgqmlui)
-    set_property(TARGET run_test_suite PROPERTY AUTOMOC ON)
-endif()
-
-if(USE_AEONWAVE)
-   target_link_libraries(run_test_suite ${AAX_LIBRARY})
-endif()
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
-    target_link_libraries(run_test_suite execinfo)
-endif()
+# Additional libraries just for the test suite.
+target_link_libraries(run_test_suite ${CPPUNIT_LIBRARIES})
