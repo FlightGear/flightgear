@@ -1,4 +1,5 @@
 # CMake module includes.
+include(SetupFGFSEmbeddedResources)
 include(SetupFGFSLibraries)
 
 if(MSVC)
@@ -24,7 +25,6 @@ set(SOURCES
     subsystemFactory.cxx
     util.cxx
     ${RESOURCE_FILE}
-    ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
 )
 
 set(HEADERS
@@ -43,29 +43,16 @@ set(HEADERS
     screensaver_control.hxx
     subsystemFactory.hxx
     util.hxx
-    ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
 )
 
-# On Windows, make sure fgrcc can be run (it needs third-party libraries)
-if(MSVC)
-  if(MSVC_3RDPARTY_ROOT AND MSVC_3RDPARTY_DIR)
-    set(CMAKE_MSVCIDE_RUN_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin)
-  else()
-    message(FATAL_ERROR
-      "Either MSVC_3RDPARTY_ROOT or MSVC_3RDPARTY_DIR is empty or unset")
-  endif()
-endif()
+# Set up the embedded resources.
+setup_fgfs_embedded_resources()
 
-add_custom_command(
-  OUTPUT ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-         ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
-  COMMAND fgrcc --root=${CMAKE_SOURCE_DIR} --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx --init-func-name=initFlightGearEmbeddedResources --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-  DEPENDS
-    fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-)
-
+# All sources and headers to be built into fgfs.
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
+get_property(EMBEDDED_RESOURCE_SOURCES GLOBAL PROPERTY EMBEDDED_RESOURCE_SOURCES)
+get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS)
 
 get_property(FG_GROUPS_C GLOBAL PROPERTY FG_GROUPS_C)
 string(REPLACE "@" ";" groups ${FG_GROUPS_C} )
@@ -92,8 +79,16 @@ source_group("Main\\Sources" FILES ${SOURCES})
 # platforms ignore this option. If a console is needed we allocate
 # it manually via AllocConsole()
 # similarly pass MACOSX_BUNDLE so we generate a .app on Mac
-add_executable(fgfs WIN32 MACOSX_BUNDLE
-               ${SOURCES} ${FG_SOURCES} ${FG_HEADERS} ${HEADERS})
+add_executable(fgfs
+    WIN32
+    MACOSX_BUNDLE
+    ${SOURCES}
+    ${HEADERS}
+    ${FG_SOURCES}
+    ${FG_HEADERS}
+    ${EMBEDDED_RESOURCE_SOURCES}
+    ${EMBEDDED_RESOURCE_HEADERS}
+)
 
 #-----------------------------------------------------------------------------
 # MacOSX bundle packaging
