@@ -1,6 +1,7 @@
 # CMake module includes.
 include(SetupFGFSEmbeddedResources)
 include(SetupFGFSLibraries)
+include(SetupMSVCGrouping)
 
 if(MSVC)
     set(RESOURCE_FILE flightgear.rc)
@@ -48,32 +49,14 @@ set(HEADERS
 # Set up the embedded resources.
 setup_fgfs_embedded_resources()
 
+# Sort the sources and headers for MSVC.
+setup_msvc_grouping()
+
 # All sources and headers to be built into fgfs.
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 get_property(EMBEDDED_RESOURCE_SOURCES GLOBAL PROPERTY EMBEDDED_RESOURCE_SOURCES)
 get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS)
-
-get_property(FG_GROUPS_C GLOBAL PROPERTY FG_GROUPS_C)
-string(REPLACE "@" ";" groups ${FG_GROUPS_C} )
-foreach(g ${groups})
-    string(REPLACE "#" ";" g2 ${g})
-    list(GET g2 0 name)
-    list(REMOVE_AT g2 0)
-    source_group("${name}\\Sources" FILES ${g2})
-endforeach()
-
-get_property(FG_GROUPS_H GLOBAL PROPERTY FG_GROUPS_H)
-string(REPLACE "@" ";" groups ${FG_GROUPS_H} )
-foreach(g ${groups})
-    string(REPLACE "#" ";" g2 ${g})
-    list(GET g2 0 name)
-    list(REMOVE_AT g2 0)
-    source_group("${name}\\Headers" FILES ${g2})
-endforeach()
-
-source_group("Main\\Headers" FILES ${HEADERS})
-source_group("Main\\Sources" FILES ${SOURCES})
 
 # important we pass WIN32 here so the console is optional. Other
 # platforms ignore this option. If a console is needed we allocate
