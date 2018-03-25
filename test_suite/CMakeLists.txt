@@ -74,9 +74,7 @@ add_test(MathGeodesySimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ct
 add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m SimgearPropsTests)
 
 #-----------------------------------------------------------------------------
-# From here on, this is a modified copy of src/Main/CMakeLists.txt.  This is
-# designed to have a minimal diff so that this can be updated together with the
-# main CMakeLists.txt file.
+# Set up the binary.
 
 # Set up the Main FG file sources and headers (excluding bootstrap.cxx and its main() function).
 if(MSVC)
