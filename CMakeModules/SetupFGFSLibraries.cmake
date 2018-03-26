@@ -19,9 +19,6 @@ function(setup_fgfs_libraries target)
     endif()
 
     if(ENABLE_JSBSIM)
-        # FIXME - remove once JSBSim doesn't expose private headers
-        include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
-
         target_link_libraries(${target} JSBSim)
     endif()
 
@@ -34,7 +31,6 @@ function(setup_fgfs_libraries target)
     endif()
 
     if(FG_HAVE_GPERFTOOLS)
-        include_directories(${GooglePerfTools_INCLUDE_DIR})
         target_link_libraries(${target} ${GooglePerfTools_LIBRARIES})
     endif()
 

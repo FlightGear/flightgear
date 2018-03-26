@@ -1,5 +1,6 @@
 # CMake module includes.
 include(SetupFGFSEmbeddedResources)
+include(SetupFGFSIncludes)
 include(SetupFGFSLibraries)
 include(SetupMSVCGrouping)
 
@@ -82,6 +83,9 @@ setup_fgfs_embedded_resources()
 # Sort the sources and headers for MSVC.
 setup_msvc_grouping()
 
+# Additional search paths for includes.
+setup_fgfs_includes()
+
 # All sources and headers to be built into the test suite.
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
@@ -121,7 +125,7 @@ add_custom_target(test_suite
     COMMENT ${TEST_SUITE_COMMENT}
 )
 
-# Set up the target links and includes.
+# Set up the target links.
 setup_fgfs_libraries(run_test_suite)
 
 # Additional libraries just for the test suite.
