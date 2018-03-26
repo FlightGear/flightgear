@@ -16,7 +16,4 @@ function(setup_msvc_grouping)
         list(REMOVE_AT g2 0)
         source_group("${name}\\Headers" FILES ${g2})
     endforeach()
-
-    source_group("Main\\Headers" FILES ${HEADERS})
-    source_group("Main\\Sources" FILES ${SOURCES})
 endfunction()

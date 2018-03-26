@@ -76,50 +76,6 @@ add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --c
 #-----------------------------------------------------------------------------
 # Set up the binary.
 
-# Set up the Main FG file sources and headers (excluding bootstrap.cxx and its main() function).
-if(MSVC)
-    set(RESOURCE_FILE ${PROJECT_SOURCE_DIR}/src/Main/flightgear.rc)
-endif(MSVC)
-
-set(MAIN_SOURCES
-    #${PROJECT_SOURCE_DIR}/src/Main/bootstrap.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_commands.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_init.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_io.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_os_common.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_scene_commands.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_props.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/FGInterpolator.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/globals.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/locale.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/logger.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/main.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/options.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/positioninit.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/screensaver_control.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/subsystemFactory.cxx
-    ${PROJECT_SOURCE_DIR}/src/Main/util.cxx
-    ${RESOURCE_FILE}
-)
-
-set(MAIN_HEADERS
-    ${PROJECT_SOURCE_DIR}/src/Main/AircraftDirVisitorBase.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_commands.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_init.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_io.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/fg_props.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/FGInterpolator.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/globals.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/locale.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/logger.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/main.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/options.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/positioninit.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/screensaver_control.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/subsystemFactory.hxx
-    ${PROJECT_SOURCE_DIR}/src/Main/util.hxx
-)
-
 # Set up the embedded resources.
 setup_fgfs_embedded_resources()
 
@@ -138,8 +94,6 @@ add_executable(run_test_suite
     ${FG_HEADERS}
     ${EMBEDDED_RESOURCE_SOURCES}
     ${EMBEDDED_RESOURCE_HEADERS}
-    ${MAIN_SOURCES}
-    ${MAIN_HEADERS}
     ${TESTSUITE_SOURCES}
     ${TESTSUITE_HEADERS}
 )

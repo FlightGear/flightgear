@@ -1,15 +1,16 @@
 # CMake module includes.
+include(FlightGearComponent)
 include(SetupFGFSBundle)
 include(SetupFGFSEmbeddedResources)
 include(SetupFGFSLibraries)
 include(SetupMSVCGrouping)
 
+# Set up the Main FG file sources and headers (excluding bootstrap.cxx and its main() function).
 if(MSVC)
-    set(RESOURCE_FILE flightgear.rc)
+    set(MS_RESOURCE_FILE flightgear.rc)
 endif(MSVC)
 
 set(SOURCES
-    bootstrap.cxx
     fg_commands.cxx
     fg_init.cxx
     fg_io.cxx
@@ -26,7 +27,7 @@ set(SOURCES
     screensaver_control.cxx
     subsystemFactory.cxx
     util.cxx
-    ${RESOURCE_FILE}
+    ${MS_RESOURCE_FILE}
 )
 
 set(HEADERS
@@ -45,6 +46,13 @@ set(HEADERS
     screensaver_control.hxx
     subsystemFactory.hxx
     util.hxx
+)
+
+flightgear_component(Main "${SOURCES}" "${HEADERS}")
+
+# The main() function.
+set(MAIN_SOURCE
+    bootstrap.cxx
 )
 
 # Set up the embedded resources.
@@ -66,8 +74,7 @@ get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS
 add_executable(fgfs
     WIN32
     MACOSX_BUNDLE
-    ${SOURCES}
-    ${HEADERS}
+    ${MAIN_SOURCE}
     ${FG_SOURCES}
     ${FG_HEADERS}
     ${EMBEDDED_RESOURCE_SOURCES}
