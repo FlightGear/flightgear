@@ -3,6 +3,10 @@
 
 #include "globals.hxx"
 
+#if defined(HAVE_QT)
+#include <GUI/QtLauncher.hxx>
+#endif
+
 #include <Main/globals.hxx>
 #include <Main/options.hxx>
 
@@ -93,6 +97,12 @@ namespace fgtest
 
   void shutdownTestGlobals()
   {
+    // The QApplication instance must be destroyed before exit() begins, see
+    // <https://bugreports.qt.io/browse/QTBUG-48709> (otherwise, segfault).
+#if defined(HAVE_QT)
+    flightgear::shutdownQtApp();
+#endif
+
     delete globals;
   }
 } // of namespace fgtest
