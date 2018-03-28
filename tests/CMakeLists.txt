@@ -89,6 +89,7 @@ get_property(fgtestlib_sources DIRECTORY PROPERTY fgtestlib_sources)
 
 add_library(fgtestlib SHARED ${fgtestlib_sources}
   "${CMAKE_SOURCE_DIR}/test_suite/helpers/globals.cxx"
+  "${CMAKE_SOURCE_DIR}/test_suite/dataStore.cxx"
   testStubs.cxx
   fake_sgSky.cxx
   fake_sgPrecipitation.cxx

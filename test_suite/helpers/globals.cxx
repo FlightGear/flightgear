@@ -1,6 +1,8 @@
 
 #include "config.h"
 
+#include "test_suite/dataStore.hxx"
+
 #include "globals.hxx"
 
 #if defined(HAVE_QT) && !defined(FG_TESTLIB)
@@ -24,12 +26,6 @@ static SGPath tests_fgdata;
 namespace fgtest
 {
 
-    bool looksLikeFGData(const SGPath& path)
-    {
-        return (path / "defaults.xml").exists();
-    }
-
-
     SGPath fgdataPath()
     {
         return tests_fgdata;
@@ -39,36 +35,9 @@ namespace fgtest
   {
     globals = new FGGlobals;
 
-      bool foundRoot = false;
-    if (std::getenv("FG_ROOT")) {
-      SGPath fg_root = SGPath::fromEnv("FG_ROOT");
-        if (looksLikeFGData(fg_root)) {
-            globals->set_fg_root(fg_root);
-            foundRoot = true;
-        }
-    }
-
-      if (!foundRoot) {
-        SGPath pkgLibDir = SGPath::fromUtf8(PKGLIBDIR);
-        if (looksLikeFGData(pkgLibDir)) {
-          globals->set_fg_root(pkgLibDir);
-            foundRoot = true;
-        }
-      }
-
-      if (!foundRoot) {
-      SGPath dataDir = SGPath::fromUtf8(FGSRCDIR) / ".." / "fgdata";
-        if (looksLikeFGData(dataDir)) {
-            globals->set_fg_root(dataDir);
-            foundRoot = true;
-        }
-      }
-
-      if (!foundRoot) {
-            std::cerr << "FGData not found" << std::endl;
-        }
-
-      tests_fgdata = globals->get_fg_root();
+    DataStore &data = DataStore::get();
+    globals->set_fg_root(data.getFGRoot());
+    tests_fgdata = data.getFGRoot();
 
       // current dir
       SGPath homePath = SGPath::fromUtf8(FGBUILDDIR) / "test_home";
@@ -85,8 +54,8 @@ namespace fgtest
           std::cerr << "Navcache rebuild for testing" << std::flush;
 
           while (cache->rebuild() != flightgear::NavDataCache::REBUILD_DONE) {
-			  SGTimeStamp::sleepForMSec(1000);
-              std::cerr << "." << std::flush;
+            SGTimeStamp::sleepForMSec(1000);
+            std::cerr << "." << std::flush;
           }
       }
 

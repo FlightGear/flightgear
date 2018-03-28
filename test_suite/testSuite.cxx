@@ -20,6 +20,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "dataStore.hxx"
 #include "fgTestRunner.hxx"
 #include "formatting.hxx"
 #include "logging.hxx"
@@ -80,11 +81,12 @@ void summary(CppUnit::OStream &stream, int system_result, int unit_result, int g
 int main(int argc, char **argv)
 {
     // Declarations.
-    int status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1;
-    bool run_system=false, run_unit=false, run_gui=false, run_simgear=false;
-    bool verbose=false, ctest_output=false, debug=false, help=false;
-    char *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL;
-    char firstchar;
+    int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1;
+    bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false;
+    bool        verbose=false, ctest_output=false, debug=false, help=false;
+    char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL;
+    char        firstchar;
+    std::string fgRoot;
 
     // Argument parsing.
     for (int i = 1; i < argc; i++) {
@@ -131,6 +133,11 @@ int main(int argc, char **argv)
         // Help.
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             help = true;
+
+        // FGData path.
+        } else if (strcmp(argv[i], "--fg-root") == 0) {
+            if (firstchar != '-')
+                fgRoot = argv[i+1];
         }
     }
 
@@ -159,6 +166,9 @@ int main(int argc, char **argv)
         std::cout << "                        tests." << std::endl;
         std::cout << "    -c, --ctest         simplified output suitable for running via CTest." << std::endl;
         std::cout << "    -d, --debug         disable IO capture for debugging (super verbose output)." << std::endl;
+        std::cout << std::endl;
+        std::cout << "  FG options:" << std::endl;
+        std::cout << "    --fg-root           the path to FGData" << std::endl;
         std::cout.flush();
         return 0;
     }
@@ -169,6 +179,12 @@ int main(int argc, char **argv)
         run_unit = true;
         run_gui = true;
         run_simgear = true;
+    }
+
+    // Set up the data store singleton and FGData path.
+    DataStore& data = DataStore::get();
+    if (data.findFGRoot(fgRoot, debug) != 0) {
+        return 1;
     }
 
     // Set up logging.

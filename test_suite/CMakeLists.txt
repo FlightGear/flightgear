@@ -21,6 +21,7 @@ add_subdirectory(helpers)
 set(TESTSUITE_SOURCES
     ${TESTSUITE_SOURCES}
     bootstrap.cxx
+    dataStore.cxx
     fgCompilerOutputter.cxx
     fgTestListener.cxx
     fgTestRunner.cxx
@@ -30,6 +31,7 @@ set(TESTSUITE_SOURCES
 )
 set(TESTSUITE_HEADERS
     ${TESTSUITE_HEADERS}
+    dataStore.hxx
     fgCompilerOutputter.hxx
     fgTestListener.hxx
     fgTestRunner.hxx
