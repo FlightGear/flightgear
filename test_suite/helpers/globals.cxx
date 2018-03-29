@@ -3,7 +3,7 @@
 
 #include "globals.hxx"
 
-#if defined(HAVE_QT)
+#if defined(HAVE_QT) && !defined(FG_TESTLIB)
 #include <GUI/QtLauncher.hxx>
 #endif
 
@@ -99,7 +99,7 @@ namespace fgtest
   {
     // The QApplication instance must be destroyed before exit() begins, see
     // <https://bugreports.qt.io/browse/QTBUG-48709> (otherwise, segfault).
-#if defined(HAVE_QT)
+#if defined(HAVE_QT) && !defined(FG_TESTLIB)
     flightgear::shutdownQtApp();
 #endif
 
