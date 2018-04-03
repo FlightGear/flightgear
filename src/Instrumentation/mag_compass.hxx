@@ -40,9 +40,7 @@
  */
 class MagCompass : public SGSubsystem
 {
-
 public:
-
     MagCompass ( SGPropertyNode *node);
     MagCompass ();
     virtual ~MagCompass ();
@@ -52,7 +50,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     double _rate_degps;
 
     std::string _name;
@@ -71,7 +68,6 @@ private:
     SGPropertyNode_ptr _y_accel_node;
     SGPropertyNode_ptr _z_accel_node;
     SGPropertyNode_ptr _out_node;
-
 };
 
 #endif // __INSTRUMENTS_MAG_COMPASS_HXX

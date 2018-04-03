@@ -26,7 +26,8 @@
  * /instrumentation/clock/indicated-sec
  * /instrumentation/clock/indicated-string
  */
-class Clock : public SGSubsystem {
+class Clock : public SGSubsystem
+{
 public:
     Clock(SGPropertyNode *node);
     virtual ~Clock();

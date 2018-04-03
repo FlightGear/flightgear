@@ -44,26 +44,26 @@
 class GSDI : public SGSubsystem
 {
 public:
-	GSDI(SGPropertyNode *node);
-	virtual ~GSDI();
+    GSDI(SGPropertyNode *node);
+    virtual ~GSDI();
 
-	virtual void init();
-	virtual void update(double dt);
+    virtual void init();
+    virtual void update(double dt);
 
 private:
-  std::string _name;
-	unsigned int _num;
+    std::string _name;
+    unsigned int _num;
 
-	SGPropertyNode_ptr _serviceableN;
-	SGPropertyNode_ptr _headingN;
-	SGPropertyNode_ptr _ubodyN;
-	SGPropertyNode_ptr _vbodyN;
-	SGPropertyNode_ptr _wind_speedN;
-	SGPropertyNode_ptr _wind_dirN;
-	SGPropertyNode_ptr _drift_uN;
-	SGPropertyNode_ptr _drift_vN;
-	SGPropertyNode_ptr _drift_speedN;
-	SGPropertyNode_ptr _drift_angleN;
+    SGPropertyNode_ptr _serviceableN;
+    SGPropertyNode_ptr _headingN;
+    SGPropertyNode_ptr _ubodyN;
+    SGPropertyNode_ptr _vbodyN;
+    SGPropertyNode_ptr _wind_speedN;
+    SGPropertyNode_ptr _wind_dirN;
+    SGPropertyNode_ptr _drift_uN;
+    SGPropertyNode_ptr _drift_vN;
+    SGPropertyNode_ptr _drift_speedN;
+    SGPropertyNode_ptr _drift_angleN;
 };
 
 #endif // _INSTRUMENTS_GSDI_HXX

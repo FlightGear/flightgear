@@ -31,7 +31,7 @@
  * /environment/magnetic-variation-deg
  * /systems/electrical/outputs/gps
  * /instrumentation/gps/serviceable
- * 
+ *
  *
  * Output properties:
  *
@@ -64,7 +64,7 @@ public:
     GPS ();
     virtual ~GPS ();
 
-  // SGSubsystem interface
+    // SGSubsystem interface
     virtual void init ();
     virtual void reinit ();
     virtual void update (double delta_time_sec);
@@ -72,7 +72,7 @@ public:
     virtual void bind();
     virtual void unbind();
 
-  // RNAV interface
+    // RNAV interface
     virtual SGGeod position();
     virtual double trackDeg();
     virtual double groundSpeedKts();
@@ -93,51 +93,51 @@ private:
     class Config
     {
     public:
-      Config();
+        Config();
 
-      void bind(GPS* aOwner, SGPropertyNode* aCfg);
+        void bind(GPS* aOwner, SGPropertyNode* aCfg);
 
-      bool turnAnticipationEnabled() const { return _enableTurnAnticipation; }
+        bool turnAnticipationEnabled() const { return _enableTurnAnticipation; }
 
-      /**
-       * Desired turn rate in degrees/second. From this we derive the turn
-       * radius and hence how early we need to anticipate it.
-       */
-      double turnRateDegSec() const        { return _turnRate; }
+        /**
+         * Desired turn rate in degrees/second. From this we derive the turn
+         * radius and hence how early we need to anticipate it.
+         */
+        double turnRateDegSec() const        { return _turnRate; }
 
-      /**
-       * Distance at which we switch to next waypoint.
-       */
-      double overflightDistanceNm() const { return _overflightDistance; }
-      /**
-       * Distance at which we arm overflight sequencing. Once inside this
-       * distance, a change of the wp1 'TO' flag to false will be considered
-       * overlight of the wp.
-       */
-      double overflightArmDistanceNm() const { return _overflightArmDistance; }
-      /**
-		 * abs angle at which we arm overflight sequencing.
-		 */
-      double overflightArmAngleDeg() const { return _overflightArmAngle; }
+        /**
+         * Distance at which we switch to next waypoint.
+         */
+        double overflightDistanceNm() const { return _overflightDistance; }
+        /**
+         * Distance at which we arm overflight sequencing. Once inside this
+         * distance, a change of the wp1 'TO' flag to false will be considered
+         * overlight of the wp.
+         */
+        double overflightArmDistanceNm() const { return _overflightArmDistance; }
+        /**
+         * abs angle at which we arm overflight sequencing.
+         */
+        double overflightArmAngleDeg() const { return _overflightArmAngle; }
 
-      /**
-       * Time before the next WP to activate an external annunciator
-       */
-      double waypointAlertTime() const     { return _waypointAlertTime; }
+        /**
+         * Time before the next WP to activate an external annunciator
+         */
+        double waypointAlertTime() const     { return _waypointAlertTime; }
 
-      bool requireHardSurface() const      { return _requireHardSurface; }
+        bool requireHardSurface() const      { return _requireHardSurface; }
 
-      bool cdiDeflectionIsAngular() const  { return (_cdiMaxDeflectionNm <= 0.0); }
+        bool cdiDeflectionIsAngular() const  { return (_cdiMaxDeflectionNm <= 0.0); }
 
-      double cdiDeflectionLinearPeg() const
-      {
-        assert(_cdiMaxDeflectionNm > 0.0);
-        return _cdiMaxDeflectionNm;
-      }
+        double cdiDeflectionLinearPeg() const
+        {
+            assert(_cdiMaxDeflectionNm > 0.0);
+            return _cdiMaxDeflectionNm;
+        }
 
-      bool driveAutopilot() const          { return _driveAutopilot; }
+        bool driveAutopilot() const          { return _driveAutopilot; }
 
-      bool courseSelectable() const        { return _courseSelectable; }
+        bool courseSelectable() const        { return _courseSelectable; }
 
         /**
          * Select whether we fly the leg track between waypoints, or
@@ -149,34 +149,34 @@ private:
         bool followLegTrackToFix() const      { return _followLegTrackToFix; }
 
     private:
-      bool _enableTurnAnticipation;
+        bool _enableTurnAnticipation;
 
-      // desired turn rate in degrees per second
-      double _turnRate;
+        // desired turn rate in degrees per second
+        double _turnRate;
 
-      // distance from waypoint to arm overflight sequencing (in nm)
-      double _overflightDistance;
+        // distance from waypoint to arm overflight sequencing (in nm)
+        double _overflightDistance;
 
-      // distance from waypoint to arm overflight sequencing (in nm)
-      double _overflightArmDistance;
+        // distance from waypoint to arm overflight sequencing (in nm)
+        double _overflightArmDistance;
 
-      //abs angle from course to waypoint to arm overflight sequencing (in deg)
-      double _overflightArmAngle;
+        //abs angle from course to waypoint to arm overflight sequencing (in deg)
+        double _overflightArmAngle;
 
-      // time before reaching a waypoint to trigger annunciator light/sound
-      // (in seconds)
-      double _waypointAlertTime;
+        // time before reaching a waypoint to trigger annunciator light/sound
+        // (in seconds)
+        double _waypointAlertTime;
 
-      // should we require a hard-surfaced runway when filtering?
-      bool _requireHardSurface;
+        // should we require a hard-surfaced runway when filtering?
+        bool _requireHardSurface;
 
-      double _cdiMaxDeflectionNm;
+        double _cdiMaxDeflectionNm;
 
-      // should we drive the autopilot directly or not?
-      bool _driveAutopilot;
+        // should we drive the autopilot directly or not?
+        bool _driveAutopilot;
 
-      // is selected-course-deg read to set desired-course or not?
-      bool _courseSelectable;
+        // is selected-course-deg read to set desired-course or not?
+        bool _courseSelectable;
 
         // do we fly direct to fixes, or follow the leg track closely?
         bool _followLegTrackToFix;
@@ -185,10 +185,10 @@ private:
     class SearchFilter : public FGPositioned::Filter
     {
     public:
-      virtual bool pass(FGPositioned* aPos) const;
+        virtual bool pass(FGPositioned* aPos) const;
 
-      virtual FGPositioned::Type minType() const;
-      virtual FGPositioned::Type maxType() const;
+        virtual FGPositioned::Type minType() const;
+        virtual FGPositioned::Type maxType() const;
     };
 
     /** reset all output properties to default / non-service values */
@@ -219,20 +219,20 @@ private:
      * valid or not. */
     bool isScratchPositionValid() const;
     FGPositionedRef positionedFromScratch() const;
-    
+
 #if FG_210_COMPAT
     void setScratchFromPositioned(FGPositioned* aPos, int aIndex);
     void setScratchFromCachedSearchResult();
     void setScratchFromRouteWaypoint(int aIndex);
-    
+
     /** Add airport-specific information to a scratch result */
     void addAirportToScratch(FGAirport* aAirport);
-    
+
     FGPositioned::Filter* createFilter(FGPositioned::Type aTy);
-    
+
     /** Search kernel - called each time we step through a result */
     void performSearch();
-    
+
     // command handlers
     void loadRouteWaypoint();
     void loadNearest();
@@ -242,7 +242,7 @@ private:
     void defineWaypoint();
     void insertWaypointAtIndex(int aIndex);
     void removeWaypointAtIndex(int aIndex);
-    
+
     // tied-property getter/setters
     double getScratchDistance() const;
     double getScratchMagBearing() const;
@@ -250,13 +250,13 @@ private:
     bool getScratchHasNext() const;
 
 #endif
-    
-// command handlers
+
+    // command handlers
     void selectLegMode();
     void selectOBSMode(flightgear::Waypt* waypt);
     void directTo();
 
-// tied-property getter/setters
+    // tied-property getter/setters
     void setCommand(const char* aCmd);
     const char* getCommand() const { return ""; }
 
@@ -310,22 +310,22 @@ private:
     /** helper, tie the lat/lon/elev of a SGGeod to the named children of aNode */
     void tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef,
                    const char* lonStr, const char* latStr, const char* altStr);
-  
+
     /** helper, tie a SGGeod to proeprties, but read-only */
     void tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
                            const char* lonStr, const char* latStr, const char* altStr);
 
-// FlightPlan::Delegate
+    // FlightPlan::Delegate
     virtual void currentWaypointChanged();
     virtual void waypointsChanged();
     virtual void cleared();
     virtual void endOfFlightPlan();
-    
+
     void sequence();
     void routeManagerFlightPlanChanged(SGPropertyNode*);
     void routeActivated(SGPropertyNode*);
-    
-// members
+
+    // members
     SGPropertyNode_ptr _gpsNode;
     SGPropertyNode_ptr _currentWayptNode;
     SGPropertyNode_ptr _magvar_node;
@@ -340,13 +340,13 @@ private:
     SGPropertyNode_ptr _magnetic_bug_error_node;
     SGPropertyNode_ptr _eastWestVelocity;
     SGPropertyNode_ptr _northSouthVelocity;
-    
-  //  SGPropertyNode_ptr _route_active_node;
+
+    //  SGPropertyNode_ptr _route_active_node;
     SGPropertyNode_ptr _route_current_wp_node;
     SGPropertyNode_ptr _routeDistanceNm;
     SGPropertyNode_ptr _routeETE;
     SGPropertyNode_ptr _desiredCourseNode;
-    
+
     double _selectedCourse;
     double _desiredCourse;
 
@@ -367,7 +367,7 @@ private:
      * and not to worry about electrical power or similar.
      */
     bool _defaultGPSMode;
-    
+
     std::string _mode;
     Config _config;
     std::string _name;
@@ -377,12 +377,12 @@ private:
     SGGeod _indicated_pos;
     double _legDistanceNm;
 
-// scratch data
+    // scratch data
     SGGeod _scratchPos;
     SGPropertyNode_ptr _scratchNode;
     bool _scratchValid;
 #if FG_210_COMPAT
-// search data
+    // search data
     int _searchResultIndex;
     std::string _searchQuery;
     FGPositioned::Type _searchType;
@@ -392,8 +392,8 @@ private:
     bool _searchHasNext; ///< is there a result after this one?
     bool _searchNames; ///< set if we're searching names instead of idents
 #endif
-    
-// turn data
+
+    // turn data
     bool _computeTurnData; ///< do we need to update the turn data?
     bool _anticipateTurn; ///< are we anticipating the next turn or not?
     bool _inTurn; // is a turn in progress?
@@ -409,14 +409,14 @@ private:
     flightgear::WayptRef _prevWaypt;
     flightgear::WayptRef _currentWaypt;
 
-// autopilot drive properties
+    // autopilot drive properties
     SGPropertyNode_ptr _apDrivingFlag;
     SGPropertyNode_ptr _apTrueHeading;
-    
+
     simgear::TiedPropertyList _tiedProperties;
 
     flightgear::FlightPlanRef _route;
-    
+
     SGPropertyChangeCallback<GPS> _callbackFlightPlanChanged;
     SGPropertyChangeCallback<GPS> _callbackRouteActivated;
 };

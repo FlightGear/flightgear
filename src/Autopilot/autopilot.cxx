@@ -49,25 +49,22 @@ using namespace FGXMLAutopilot;
 class StateMachineComponent : public Component
 {
 public:
-  StateMachineComponent( SGPropertyNode& props_root,
-                         SGPropertyNode& cfg )
-  {
-    inner = simgear::StateMachine::createFromPlist(&cfg, &props_root);
-  }
-  
-  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr config)
-  {
-    return false;
-  }
-  
-  virtual void update( bool firstTime, double dt )
-  {
-    SG_UNUSED(firstTime);
-    inner->update(dt);
-  }
+    StateMachineComponent( SGPropertyNode& props_root,
+                           SGPropertyNode& cfg ) {
+        inner = simgear::StateMachine::createFromPlist(&cfg, &props_root);
+    }
+
+    virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr config) {
+        return false;
+    }
+    
+    virtual void update( bool firstTime, double dt ) {
+        SG_UNUSED(firstTime);
+        inner->update(dt);
+    }
   
 private:
-  simgear::StateMachine_ptr inner;
+    simgear::StateMachine_ptr inner;
 };
 
 class StateMachineFunctor : public FunctorBase<Component>

@@ -50,9 +50,7 @@ class SGInterpTable;
  */
 class InstVerticalSpeedIndicator : public SGSubsystem
 {
-
 public:
-
     InstVerticalSpeedIndicator ( SGPropertyNode *node );
     virtual ~InstVerticalSpeedIndicator ();
 
@@ -61,7 +59,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     std::string _name;
     int _num;
 

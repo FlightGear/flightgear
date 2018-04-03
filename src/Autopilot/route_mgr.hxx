@@ -35,127 +35,128 @@ class PropertyWatcher;
 
 /**
  * Top level route manager class
- * 
+ *
  */
 
-class FGRouteMgr : public SGSubsystem, 
+class FGRouteMgr : public SGSubsystem,
                    public flightgear::FlightPlan::Delegate
 {
 public:
-  FGRouteMgr();
-  ~FGRouteMgr();
+    FGRouteMgr();
+    ~FGRouteMgr();
 
-  void init ();
-  void postinit ();
-  void bind ();
-  void unbind ();
-  void update (double dt);
-  
-  bool isRouteActive() const;
-         
-  int currentIndex() const;
-  
-  void setFlightPlan(const flightgear::FlightPlanRef& plan);
-  flightgear::FlightPlanRef flightPlan() const;
-  
-  void clearRoute();
-  
-  flightgear::Waypt* currentWaypt() const;
-  
-  int numLegs() const;
-  
-// deprecated
-  int numWaypts() const
-  { return numLegs(); }
-  
-// deprecated
-  flightgear::Waypt* wayptAtIndex(int index) const;
-  
-  SGPropertyNode_ptr wayptNodeAtIndex(int index) const;
-  
-  void removeLegAtIndex(int aIndex);
-  
-  /**
-   * Activate a built route. This checks for various mandatory pieces of
-   * data, such as departure and destination airports, and creates waypoints
-   * for them on the route structure.
-   *
-   * returns true if the route was activated successfully, or false if the
-   * route could not be activated for some reason
-   */
-  bool activate();
-  
-  /**
-   * deactivate the route if active
-   */
-  void deactivate();
+    void init ();
+    void postinit ();
+    void bind ();
+    void unbind ();
+    void update (double dt);
 
-  /**
-   * Set the current waypoint to the specified index.
-   */
-  void jumpToIndex(int index);
-  
-  bool saveRoute(const SGPath& p);
-  bool loadRoute(const SGPath& p);
-  
-  flightgear::WayptRef waypointFromString(const std::string& target);
+    bool isRouteActive() const;
 
-  static const char* subsystemName() { return "route-manager"; }
+    int currentIndex() const;
+
+    void setFlightPlan(const flightgear::FlightPlanRef& plan);
+    flightgear::FlightPlanRef flightPlan() const;
+
+    void clearRoute();
+
+    flightgear::Waypt* currentWaypt() const;
+
+    int numLegs() const;
+
+    // deprecated
+    int numWaypts() const
+    { return numLegs(); }
+
+    // deprecated
+    flightgear::Waypt* wayptAtIndex(int index) const;
+
+    SGPropertyNode_ptr wayptNodeAtIndex(int index) const;
+
+    void removeLegAtIndex(int aIndex);
+
+    /**
+     * Activate a built route. This checks for various mandatory pieces of
+     * data, such as departure and destination airports, and creates waypoints
+     * for them on the route structure.
+     *
+     * returns true if the route was activated successfully, or false if the
+     * route could not be activated for some reason
+     */
+    bool activate();
+
+    /**
+     * deactivate the route if active
+     */
+    void deactivate();
+
+    /**
+     * Set the current waypoint to the specified index.
+     */
+    void jumpToIndex(int index);
+
+    bool saveRoute(const SGPath& p);
+    bool loadRoute(const SGPath& p);
+
+    flightgear::WayptRef waypointFromString(const std::string& target);
+
+    static const char* subsystemName() { return "route-manager"; }
+
 private:
     bool commandDefineUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root);
     bool commandDeleteUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root);
-    
+
     flightgear::FlightPlanRef _plan;
-  
+
     time_t _takeoffTime;
     time_t _touchdownTime;
 
     // automatic inputs
     SGPropertyNode_ptr magvar;
-    
-    // automatic outputs    
+
+    // automatic outputs
     SGPropertyNode_ptr departure; ///< departure airport information
     SGPropertyNode_ptr destination; ///< destination airport information
     SGPropertyNode_ptr alternate; ///< alternate airport information
     SGPropertyNode_ptr cruise; ///< cruise information
-    
+
     SGPropertyNode_ptr totalDistance;
     SGPropertyNode_ptr distanceToGo;
     SGPropertyNode_ptr ete;
     SGPropertyNode_ptr elapsedFlightTime;
-    
+
     SGPropertyNode_ptr active;
     SGPropertyNode_ptr airborne;
-    
+
     SGPropertyNode_ptr wp0;
     SGPropertyNode_ptr wp1;
     SGPropertyNode_ptr wpn;
-    
-    
+
+
     SGPropertyNode_ptr _pathNode;
     SGPropertyNode_ptr _currentWpt;
-    
-    
-    /** 
+
+
+    /**
      * Signal property to notify people that the route was edited
      */
     SGPropertyNode_ptr _edited;
-    
+
     /**
      * Signal property to notify when the last waypoint is reached
      */
     SGPropertyNode_ptr _finished;
-    
+
     SGPropertyNode_ptr _flightplanChanged;
-  
+
     void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
-    
+
     /**
      * retrieve the cached path distance along a leg
      */
     double cachedLegPathDistanceM(int index) const;
     double cachedWaypointPathTotalDistance(int index) const;
-  
+
     class InputListener : public SGPropertyChangeListener {
     public:
         InputListener(FGRouteMgr *m) : mgr(m) {}
@@ -167,47 +168,47 @@ private:
     SGPropertyNode_ptr input;
     SGPropertyNode_ptr weightOnWheels;
     SGPropertyNode_ptr groundSpeed;
-  
+
     InputListener *listener;
-    SGPropertyNode_ptr mirror;    
-  
+    SGPropertyNode_ptr mirror;
+
     /**
      * Helper to keep various pieces of state in sync when the route is
      * modified (waypoints added, inserted, removed). Notably, this fires the
      * 'edited' signal.
      */
     virtual void waypointsChanged();
-    
+
     void update_mirror();
-    
+
     virtual void currentWaypointChanged();
-    
-// tied getters and setters
+
+    // tied getters and setters
     std::string getDepartureICAO() const;
     std::string getDepartureName() const;
     void setDepartureICAO(const std::string& aIdent);
-    
+
     std::string getDepartureRunway() const;
     void setDepartureRunway(const std::string& aIdent);
-  
+
     std::string getSID() const;
     void setSID(const std::string& aIdent);
-  
+
     std::string getDestinationICAO() const;
     std::string getDestinationName() const;
     void setDestinationICAO(const std::string& aIdent);
 
     std::string getDestinationRunway() const;
     void setDestinationRunway(const std::string& aIdent);
-  
+
     std::string getApproach() const;
     void setApproach(const std::string& aIdent);
-  
+
     std::string getSTAR() const;
     void setSTAR(const std::string& aIdent);
-  
-    double getDepartureFieldElevation() const;  
-    double getDestinationFieldElevation() const;  
+
+    double getDepartureFieldElevation() const;
+    double getDestinationFieldElevation() const;
 
     int getCruiseAltitudeFt() const;
     void setCruiseAltitudeFt(int ft);
@@ -225,6 +226,5 @@ private:
     std::string getAlternateName() const;
     void setAlternate(const std::string &icao);
 };
-
 
 #endif // _ROUTE_MGR_HXX

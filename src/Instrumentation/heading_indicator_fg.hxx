@@ -34,9 +34,7 @@
  */
 class HeadingIndicatorFG : public SGSubsystem
 {
-
 public:
-
     HeadingIndicatorFG ( SGPropertyNode *node );
     HeadingIndicatorFG ();
     virtual ~HeadingIndicatorFG ();
@@ -48,24 +46,20 @@ public:
     virtual void update (double dt);
 
 private:
-
     Gyro _gyro;
     double _last_heading_deg;
 
     std::string name;
     int num;
-    
+
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _heading_out_node;
-	SGPropertyNode_ptr _electrical_node;
-	SGPropertyNode_ptr _error_node;
-	SGPropertyNode_ptr _nav1_error_node;
+    SGPropertyNode_ptr _electrical_node;
+    SGPropertyNode_ptr _error_node;
+    SGPropertyNode_ptr _nav1_error_node;
     SGPropertyNode_ptr _off_node;
-
-
-    
 };
 
 #endif // __INSTRUMENTS_HEADING_INDICATOR_HXX

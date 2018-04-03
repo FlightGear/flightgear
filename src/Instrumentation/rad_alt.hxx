@@ -1,7 +1,7 @@
 // Radar Altimeter
 //
 // Written by Vivian MEAZZA, started Feb 2008.
-// 
+//
 //
 // Copyright (C) 2008  Vivain MEAZZA - vivian.meazza@lineone.net
 //
@@ -31,39 +31,35 @@
 class RadarAltimeter : public SGSubsystem
 {
 public:
-
     RadarAltimeter ( SGPropertyNode *node );
     virtual ~RadarAltimeter ();
 
 private:
-
     virtual void init ();
     virtual void update (double dt);
 
     void update_altitude();
     void updateSetHeight();
-    
+
     double getDistanceAntennaToHit(const SGVec3d& h) const;
     SGVec3d getCartAntennaPos()const;
-    
+
     SGVec3d rayVector(double az, double el) const;
-    
+
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _user_alt_agl_node;
     SGPropertyNode_ptr _rad_alt_warning_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _sceneryLoaded;
-    
-    
+
     SGVec3d _antennaOffset; // in aircraft local XYZ frame
-    
+
     std::string _name;
     int _num;
     double _time;
     double _interval;
 
     double _min_radalt;
-
 };
 
 #endif // _INST_AGRADAR_HXX

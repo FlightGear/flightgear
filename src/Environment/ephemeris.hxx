@@ -36,25 +36,24 @@ class SGPropertyNode;
 class Ephemeris : public SGSubsystem
 {
 public:
+    Ephemeris();
+    ~Ephemeris();
 
-	Ephemeris();
-	~Ephemeris();		
-	
-	virtual void bind();
-	virtual void unbind();
-	virtual void update(double dt);
-	virtual void init();
+    virtual void bind();
+    virtual void unbind();
+    virtual void update(double dt);
+    virtual void init();
     virtual void shutdown();
     virtual void postinit();
 
     static const char* subsystemName() { return "ephemeris"; }
 
     SGEphemeris* data();
+
 private:
-  std::unique_ptr<SGEphemeris> _impl;
-  SGPropertyNode_ptr _latProp;
-  SGPropertyNode_ptr _moonlight;
+    std::unique_ptr<SGEphemeris> _impl;
+    SGPropertyNode_ptr _latProp;
+    SGPropertyNode_ptr _moonlight;
 };
 
 #endif // of FG_ENVIRONMENT_EPHEMERIS_HXX
-

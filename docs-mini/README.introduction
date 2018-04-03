@@ -54,16 +54,15 @@ SGSubsystem and define at least a small set of functions:
     class FGFX : public SGSubsystem
     {
     public:
+        FGFX();
+        virtual ~FGFX();
 
-      FGFX ();
-      virtual ~FGFX ();
-
-      virtual void init ();
-      virtual void reinit ();
-      virtual void bind ();
-      virtual void unbind ();
-      virtual void update (double dt);
-    }
+        virtual void init();
+        virtual void reinit();
+        virtual void bind();
+        virtual void unbind();
+        virtual void update(double dt);
+    };
 
 The init() functions should make sure everything is set and ready so the
 update() function can be run by the main loop. The reinit() function handles

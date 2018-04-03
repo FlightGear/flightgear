@@ -39,9 +39,7 @@ class SGSampleGroup;
  */
 class ADF : public AbstractInstrument
 {
-
 public:
-
     ADF ( SGPropertyNode *node );
     virtual ~ADF ();
 
@@ -49,7 +47,6 @@ public:
     virtual void update (double delta_time_sec);
 
 private:
-
     void set_bearing (double delta_time_sec, double bearing);
 
     void search (double frequency, const SGGeod& pos);
@@ -81,6 +78,5 @@ private:
 
     SGSharedPtr<SGSampleGroup> _sgr;
 };
-
 
 #endif // __INSTRUMENTS_ADF_HXX

@@ -31,10 +31,9 @@
 #include <FDM/flight.hxx>
 
 
-class FGExternalNet: public FGInterface {
-
+class FGExternalNet : public FGInterface
+{
 private:
-
     int data_in_port;
     int data_out_port;
     int cmd_port;
@@ -49,7 +48,6 @@ private:
     FGNetFDM fdm;
 
 public:
-
     // Constructor
     FGExternalNet( double dt, std::string host, int dop, int dip, int cp );
 
@@ -61,8 +59,6 @@ public:
 
     // update the fdm
     void update( double dt );
-
 };
-
 
 #endif // _EXTERNAL_NET_HXX

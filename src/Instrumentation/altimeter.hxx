@@ -29,9 +29,7 @@
  */
 class Altimeter : public SGSubsystem
 {
-
 public:
-
     Altimeter (SGPropertyNode *node, const std::string& aDefaultName, double quantum = 0);
     virtual ~Altimeter ();
 
@@ -58,7 +56,7 @@ private:
     double _settingInHg;
     bool _encodeModeC;
     bool _encodeModeS;
-    
+
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _press_alt_node;

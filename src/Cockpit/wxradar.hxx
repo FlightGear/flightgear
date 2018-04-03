@@ -36,16 +36,17 @@
 
 class FGODGauge;
 
-class wxRadarBg : public SGSubsystem, public SGPropertyChangeListener {
+class wxRadarBg : public SGSubsystem,
+                  public SGPropertyChangeListener
+{
 public:
-
     wxRadarBg(SGPropertyNode *node);
     wxRadarBg();
     virtual ~wxRadarBg();
 
     virtual void init();
     virtual void shutdown();
-    
+
     virtual void update(double dt);
     virtual void valueChanged(SGPropertyNode *);
 
@@ -75,7 +76,7 @@ protected:
         double elevation;
         double bumpiness;
         double elapsed_time;
-    }ground_echo;
+    } ground_echo;
 
     typedef std::vector <ground_echo*> ground_echo_vector_type;
     typedef ground_echo_vector_type::iterator ground_echo_vector_iterator;
@@ -199,6 +200,5 @@ SGPropertyNode *wxRadarBg::getInstrumentNode(const char *name, const char *value
         result->setStringValue(value);
     return result;
 }
-
 
 #endif // _INST_WXRADAR_HXX

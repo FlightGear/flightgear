@@ -36,9 +36,7 @@ class FGEnvironmentMgr;
  */
 class AirspeedIndicator : public SGSubsystem
 {
-
 public:
-
     AirspeedIndicator ( SGPropertyNode *node );
     virtual ~AirspeedIndicator ();
 
@@ -58,7 +56,7 @@ private:
     double _ias_limit;
     double _mach_limit;
     double _alt_threshold;
-    
+
     SGPropertyNode_ptr _ias_limit_node;
     SGPropertyNode_ptr _mach_limit_node;
     SGPropertyNode_ptr _alt_threshold_node;
@@ -71,7 +69,7 @@ private:
     SGPropertyNode_ptr _pressure_alt;
     SGPropertyNode_ptr _mach_node;
     SGPropertyNode_ptr _tas_node;
-    
+
     FGEnvironmentMgr* _environmentManager;
 };
 

@@ -25,10 +25,13 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 namespace Environment {
-    class LayerInterpolateController : public SGSubsystem {
-    public:
-        static LayerInterpolateController * createInstance( SGPropertyNode_ptr rootNode );
-    };
+
+class LayerInterpolateController : public SGSubsystem
+{
+public:
+    static LayerInterpolateController * createInstance( SGPropertyNode_ptr rootNode );
+};
+
 } // namespace
 
 #endif // _ENVIRONMENT_CTRL_HXX

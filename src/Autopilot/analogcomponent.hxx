@@ -40,8 +40,8 @@ namespace FGXMLAutopilot {
  *   <li>an optional periodical definition</li>
  * </ul>
  */
-class AnalogComponent : public Component {
-
+class AnalogComponent : public Component
+{
 private:
     /**
      * @brief a flag signalling that the output property value shall be fed back
@@ -77,7 +77,7 @@ protected:
     PeriodicalValue_ptr _periodical;
 
     /**
-     * @brief A constructor for an analog component. Call configure() to 
+     * @brief A constructor for an analog component. Call configure() to
      * configure this component from a property node
      */
     AnalogComponent();
@@ -104,8 +104,8 @@ protected:
 
    /**
     * @brief overideable method being called from the update() method if this component
-    *        is disabled. Analog components feed back it's output value to the active 
-             input value if disabled and feedback-if-disabled is true 
+    *        is disabled. Analog components feed back it's output value to the active
+             input value if disabled and feedback-if-disabled is true
     */
     virtual void disabled( double dt );
 
@@ -115,10 +115,10 @@ protected:
      * If no output property is configured, a value of zero will be returned.
      * If more than one output property is configured, the value of the first output property
      * is returned. The current value of the output property will be clamped to the configured
-     * values of &lt;min&gt; and/or &lt;max&gt;. 
+     * values of &lt;min&gt; and/or &lt;max&gt;.
      */
     inline double get_output_value() const {
-      return _output_list.empty() ? 0.0 : clamp(_output_list[0]->getDoubleValue());
+        return _output_list.empty() ? 0.0 : clamp(_output_list[0]->getDoubleValue());
     }
 
     simgear::PropertyList _output_list;
@@ -134,7 +134,7 @@ protected:
         value = clamp( value );
         for( simgear::PropertyList::iterator it = _output_list.begin();
              it != _output_list.end(); ++it)
-          (*it)->setDoubleValue( value );
+            (*it)->setDoubleValue( value );
     }
 
 public:
@@ -143,11 +143,11 @@ public:
 
 inline void AnalogComponent::disabled( double dt )
 {
-  if( _feedback_if_disabled && ! _output_list.empty() ) {    
-    InputValue * input;
-    if( (input = _valueInput.get_active() ) != NULL )
-      input->set_value( _output_list[0]->getDoubleValue() );
-  }
+    if( _feedback_if_disabled && ! _output_list.empty() ) {
+        InputValue * input;
+        if( (input = _valueInput.get_active() ) != NULL )
+            input->set_value( _output_list[0]->getDoubleValue() );
+    }
 }
 
 }

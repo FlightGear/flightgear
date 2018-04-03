@@ -37,20 +37,18 @@ class FGElectricalSystem;
 
 
 // Base class for other electrical components
-class FGElectricalComponent {
-
+class FGElectricalComponent
+{
 public:
-
-enum FGElectricalComponentType {
-    FG_UNKNOWN,
-    FG_SUPPLIER,
-    FG_BUS,
-    FG_OUTPUT,
-    FG_CONNECTOR
-};
+    enum FGElectricalComponentType {
+        FG_UNKNOWN,
+        FG_SUPPLIER,
+        FG_BUS,
+        FG_OUTPUT,
+        FG_CONNECTOR
+    };
 
 protected:
-
     using comp_list = std::vector<FGElectricalComponent *> ;
 
     int kind;
@@ -67,7 +65,6 @@ protected:
     simgear::PropertyList props;
 
 public:
-
     FGElectricalComponent();
     virtual ~FGElectricalComponent() {}
 
@@ -108,10 +105,9 @@ public:
 
 
 // Electrical supplier
-class FGElectricalSupplier : public FGElectricalComponent {
-
+class FGElectricalSupplier : public FGElectricalComponent
+{
 public:
-
     enum FGSupplierType {
         FG_BATTERY,
         FG_ALTERNATOR,
@@ -120,7 +116,6 @@ public:
     };
 
 private:
-
     SGPropertyNode_ptr _rpm_node;
 
     FGSupplierType model;       // store supplier type
@@ -139,7 +134,6 @@ private:
     float charge_amps;          // maximum charge load battery can draw
 
 public:
-
     FGElectricalSupplier ( SGPropertyNode *node );
     ~FGElectricalSupplier () {}
 
@@ -153,10 +147,9 @@ public:
 
 // Electrical bus (can take multiple inputs and provide multiple
 // outputs)
-class FGElectricalBus : public FGElectricalComponent {
-
+class FGElectricalBus : public FGElectricalComponent
+{
 public:
-
     FGElectricalBus ( SGPropertyNode *node );
     ~FGElectricalBus () {}
 };
@@ -164,10 +157,9 @@ public:
 
 // A lot like an FGElectricalBus, but here for convenience and future
 // flexibility
-class FGElectricalOutput : public FGElectricalComponent {
-
+class FGElectricalOutput : public FGElectricalComponent
+{
 public:
-
     FGElectricalOutput ( SGPropertyNode *node );
     ~FGElectricalOutput () {}
 };
@@ -175,16 +167,14 @@ public:
 
 // Model an electrical switch.  If the rating_amps > 0 then this
 // becomes a circuit breaker type switch that can trip
-class FGElectricalSwitch {
-
+class FGElectricalSwitch
+{
 private:
-
     SGPropertyNode_ptr switch_node;
     float rating_amps;
     bool circuit_breaker;
 
 public:
-
     FGElectricalSwitch( SGPropertyNode *node );
 
     ~FGElectricalSwitch() { };
@@ -196,15 +186,14 @@ public:
 
 // Connects multiple sources to multiple destinations with optional
 // switches/fuses/circuit breakers inline
-class FGElectricalConnector : public FGElectricalComponent {
-
+class FGElectricalConnector : public FGElectricalComponent
+{
     comp_list inputs;
     comp_list outputs;
     typedef vector< FGElectricalSwitch> switch_list;
     switch_list switches;
 
 public:
-
     FGElectricalConnector ( SGPropertyNode *node, FGElectricalSystem *es );
     ~FGElectricalConnector () {}
 
@@ -221,14 +210,12 @@ public:
 
 /**
  * Model an electrical system.  This is a fairly simplistic system
- * 
+ *
  */
 
 class FGElectricalSystem : public SGSubsystem
 {
-
 public:
-
     FGElectricalSystem ( SGPropertyNode *node );
     virtual ~FGElectricalSystem ();
 
@@ -244,11 +231,9 @@ public:
     FGElectricalComponent *find ( const std::string &name );
 
 protected:
-
     typedef vector<FGElectricalComponent *> comp_list;
 
 private:
-
     std::string name;
     int num;
     std::string path;
@@ -265,6 +250,5 @@ private:
     SGPropertyNode_ptr _serviceable_node;
     bool _serviceable = true;
 };
-
 
 #endif // _SYSTEMS_ELECTRICAL_HXX

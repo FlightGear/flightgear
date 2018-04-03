@@ -30,12 +30,12 @@ class FGHTTPClient : public SGSubsystem
 public:
     FGHTTPClient();
     virtual ~FGHTTPClient();
-    
+
     void makeRequest(const simgear::HTTP::Request_ptr& req);
 
     simgear::HTTP::Client* client() { return _http.get(); }
     simgear::HTTP::Client const* client() const { return _http.get(); }
-    
+
     virtual void init();
     virtual void postinit();
     virtual void shutdown();
@@ -47,9 +47,10 @@ public:
     std::string getDefaultCatalogId() const;
     std::string getDefaultCatalogUrl() const;
     std::string getDefaultCatalogFallbackUrl() const;
-    
+
     static const char* subsystemName() { return "http"; }
-private:    
+
+private:
     bool _inited;
     std::unique_ptr<simgear::HTTP::Client> _http;
 };

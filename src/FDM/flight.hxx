@@ -99,35 +99,37 @@ class FGAIAircraft;
  * life/visibility, computes the track if the 
  * position has changed.
  */
-class TrackComputer {
+class TrackComputer
+{
 public:
-  inline TrackComputer( double & track, double & path, const SGGeod & position ) : 
-    _track( track ),
-    _path( path ),
-    _position( position ),
-    _prevPosition( position ) {
-  }
-
-  inline ~TrackComputer() {
-    if( _prevPosition == _position ) return;
-//    _track = SGGeodesy::courseDeg( _prevPosition, _position );
-    double d = .0;
-    double distance = .0;
-    if( SGGeodesy::inverse( _prevPosition, _position, _track, d, distance ) ) {
-      d = _position.getElevationM() - _prevPosition.getElevationM();
-      _path = atan2( d, distance ) * SGD_RADIANS_TO_DEGREES;
+    inline TrackComputer( double & track, double & path, const SGGeod & position ) : 
+        _track( track ),
+        _path( path ),
+        _position( position ),
+        _prevPosition( position ) {
     }
-  }
+
+    inline ~TrackComputer() {
+        if( _prevPosition == _position ) return;
+//        _track = SGGeodesy::courseDeg( _prevPosition, _position );
+        double d = .0;
+        double distance = .0;
+        if( SGGeodesy::inverse( _prevPosition, _position, _track, d, distance ) ) {
+            d = _position.getElevationM() - _prevPosition.getElevationM();
+            _path = atan2( d, distance ) * SGD_RADIANS_TO_DEGREES;
+        }
+    }
+
 private:
-  double & _track;
-  double & _path;
-  const SGGeod & _position;
-  const SGGeod _prevPosition;
+    double & _track;
+    double & _path;
+    const SGGeod & _position;
+    const SGGeod _prevPosition;
 };
 
 // This is based heavily on LaRCsim/ls_generic.h
-class FGInterface : public SGSubsystem {
-  
+class FGInterface : public SGSubsystem
+{
     // Has the init() method been called.  This is used to delay
     // initialization until scenery can be loaded and we know the true
     // ground elevation.
@@ -220,16 +222,14 @@ class FGInterface : public SGSubsystem {
     
     void set_A_Z_pilot(double z)
     { _set_Accels_Pilot_Body(_state.a_pilot_body_v[0], _state.a_pilot_body_v[1], z); }
-    
 
 protected:
-
     int _calc_multiloop (double dt);
 
 
-				// deliberately not virtual so that
-				// FGInterface constructor will call
-				// the right version
+    // deliberately not virtual so that
+    // FGInterface constructor will call
+    // the right version
     void _setup();
 
     void _busdump(void);
@@ -245,92 +245,92 @@ protected:
     void _update_ground_elev_at_pos( void );
 
     inline void _set_CG_Position( double dx, double dy, double dz ) {
-	_state.d_cg_rp_body_v[0] = dx;
-	_state.d_cg_rp_body_v[1] = dy;
-	_state.d_cg_rp_body_v[2] = dz;
+        _state.d_cg_rp_body_v[0] = dx;
+        _state.d_cg_rp_body_v[1] = dy;
+        _state.d_cg_rp_body_v[2] = dz;
     }
     inline void _set_Accels_Local( double north, double east, double down ) {
-	_state.v_dot_local_v[0] = north;
-	_state.v_dot_local_v[1] = east;
-	_state.v_dot_local_v[2] = down;
+        _state.v_dot_local_v[0] = north;
+        _state.v_dot_local_v[1] = east;
+        _state.v_dot_local_v[2] = down;
     }
     inline void _set_Accels_Body( double u, double v, double w ) {
-	_state.v_dot_body_v[0] = u;
-	_state.v_dot_body_v[1] = v;
-	_state.v_dot_body_v[2] = w;
+        _state.v_dot_body_v[0] = u;
+        _state.v_dot_body_v[1] = v;
+        _state.v_dot_body_v[2] = w;
     }
     inline void _set_Accels_CG_Body( double x, double y, double z ) {
-	_state.a_cg_body_v[0] = x;
-	_state.a_cg_body_v[1] = y;
-	_state.a_cg_body_v[2] = z;
+        _state.a_cg_body_v[0] = x;
+        _state.a_cg_body_v[1] = y;
+        _state.a_cg_body_v[2] = z;
     }
     inline void _set_Accels_Pilot_Body( double x, double y, double z ) {
-	_state.a_pilot_body_v[0] = x;
-	_state.a_pilot_body_v[1] = y;
-	_state.a_pilot_body_v[2] = z;
+        _state.a_pilot_body_v[0] = x;
+        _state.a_pilot_body_v[1] = y;
+        _state.a_pilot_body_v[2] = z;
     }
     inline void _set_Accels_CG_Body_N( double x, double y, double z ) {
-	_state.n_cg_body_v[0] = x;
-	_state.n_cg_body_v[1] = y;
-	_state.n_cg_body_v[2] = z;
+        _state.n_cg_body_v[0] = x;
+        _state.n_cg_body_v[1] = y;
+        _state.n_cg_body_v[2] = z;
     }
     void _set_Nlf(double n) { _state.nlf=n;  }
     inline void _set_Velocities_Local( double north, double east, double down ){
-	_state.v_local_v[0] = north;
-	_state.v_local_v[1] = east;
-	_state.v_local_v[2] = down;
+        _state.v_local_v[0] = north;
+        _state.v_local_v[1] = east;
+        _state.v_local_v[2] = down;
     }
     inline void _set_Velocities_Ground(double north, double east, double down) {
-	_state.v_local_rel_ground_v[0] = north;
-	_state.v_local_rel_ground_v[1] = east;
-	_state.v_local_rel_ground_v[2] = down;
+        _state.v_local_rel_ground_v[0] = north;
+        _state.v_local_rel_ground_v[1] = east;
+        _state.v_local_rel_ground_v[2] = down;
     }
     inline void _set_Velocities_Local_Airmass( double north, double east, 
-					      double down)
+                                              double down)
     {
-	_state.v_local_airmass_v[0] = north;
-	_state.v_local_airmass_v[1] = east;
-	_state.v_local_airmass_v[2] = down;
+        _state.v_local_airmass_v[0] = north;
+        _state.v_local_airmass_v[1] = east;
+        _state.v_local_airmass_v[2] = down;
     }
     inline void _set_Velocities_Body( double u, double v, double w) {
-	_state.v_body_v[0] = u;
-	_state.v_body_v[1] = v;
-	_state.v_body_v[2] = w;
+        _state.v_body_v[0] = u;
+        _state.v_body_v[1] = v;
+        _state.v_body_v[2] = w;
     }
     inline void _set_V_rel_wind(double vt) { _state.v_rel_wind = vt; }
     inline void _set_V_ground_speed( double v) { _state.v_ground_speed = v; }
     inline void _set_V_equiv_kts( double kts ) { _state.v_equiv_kts = kts; }
     inline void _set_V_calibrated_kts( double kts ) { _state.v_calibrated_kts = kts; }
     inline void _set_Omega_Body( double p, double q, double r ) {
-	_state.omega_body_v[0] = p;
-	_state.omega_body_v[1] = q;
-	_state.omega_body_v[2] = r;
+        _state.omega_body_v[0] = p;
+        _state.omega_body_v[1] = q;
+        _state.omega_body_v[2] = r;
     }
     inline void _set_Euler_Rates( double phi, double theta, double psi ) {
-	_state.euler_rates_v[0] = phi;
-	_state.euler_rates_v[1] = theta;
-	_state.euler_rates_v[2] = psi;
+        _state.euler_rates_v[0] = phi;
+        _state.euler_rates_v[1] = theta;
+        _state.euler_rates_v[2] = psi;
     }
     
     void set_Phi_dot_degps(double x)
     {
-      _state.euler_rates_v[0] = x * SGD_DEGREES_TO_RADIANS;
+        _state.euler_rates_v[0] = x * SGD_DEGREES_TO_RADIANS;
     }
     
     void set_Theta_dot_degps(double x)
     {
-      _state.euler_rates_v[1] = x * SGD_DEGREES_TO_RADIANS;
+        _state.euler_rates_v[1] = x * SGD_DEGREES_TO_RADIANS;
     }
     
     void set_Psi_dot_degps(double x)
     {
-      _state.euler_rates_v[2] = x * SGD_DEGREES_TO_RADIANS;
+        _state.euler_rates_v[2] = x * SGD_DEGREES_TO_RADIANS;
     }
     
     inline void _set_Geocentric_Rates( double lat, double lon, double rad ) {
-	_state.geocentric_rates_v[0] = lat;
-	_state.geocentric_rates_v[1] = lon;
-	_state.geocentric_rates_v[2] = rad;
+        _state.geocentric_rates_v[0] = lat;
+        _state.geocentric_rates_v[1] = lon;
+        _state.geocentric_rates_v[2] = rad;
     }
     inline void _set_Geocentric_Position( double lat, double lon, double rad ) {
         _state.geocentric_position_v.setLatitudeRad(lat);
@@ -363,9 +363,9 @@ protected:
         _state.geodetic_position_v.setElevationFt(alt);
     }
     inline void _set_Euler_Angles( double phi, double theta, double psi ) {
-	_state.euler_angles_v[0] = phi;
-	_state.euler_angles_v[1] = theta;
-	_state.euler_angles_v[2] = psi;
+        _state.euler_angles_v[0] = phi;
+        _state.euler_angles_v[1] = theta;
+        _state.euler_angles_v[2] = psi;
     }
     // FIXME, for compatibility with JSBSim
     inline void _set_T_Local_to_Body( int i, int j, double value) { }
@@ -386,7 +386,6 @@ protected:
     inline void _set_Climb_Rate(double rate) { _state.climb_rate = rate; }
 
 public:
-  
     FGInterface();
     FGInterface( double dt );
     virtual ~FGInterface();
@@ -403,31 +402,31 @@ public:
     
     // Define the various supported flight models (many not yet implemented)
     enum {
-	// Magic Carpet mode
-	FG_MAGICCARPET = 0,
+        // Magic Carpet mode
+        FG_MAGICCARPET = 0,
 
-	// The NASA LaRCsim (Navion) flight model
-	FG_LARCSIM = 1,
+        // The NASA LaRCsim (Navion) flight model
+        FG_LARCSIM = 1,
 
-	// Jon S. Berndt's new FDM written from the ground up in C++
-	FG_JSBSIM = 2,
+        // Jon S. Berndt's new FDM written from the ground up in C++
+        FG_JSBSIM = 2,
 
-	// Christian's hot air balloon simulation
-	FG_BALLOONSIM = 3,
+        // Christian's hot air balloon simulation
+        FG_BALLOONSIM = 3,
 
-	// Aeronautical DEvelopment AGEncy, Bangalore India
-	FG_ADA = 4,
+        // Aeronautical DEvelopment AGEncy, Bangalore India
+        FG_ADA = 4,
 
-	// The following aren't implemented but are here to spark
-	// thoughts and discussions, and maybe even action.
-	FG_ACM = 5,
-	FG_SUPER_SONIC = 6,
-	FG_HELICOPTER = 7,
-	FG_AUTOGYRO = 8,
-	FG_PARACHUTE = 9,
+        // The following aren't implemented but are here to spark
+        // thoughts and discussions, and maybe even action.
+        FG_ACM = 5,
+        FG_SUPER_SONIC = 6,
+        FG_HELICOPTER = 7,
+        FG_AUTOGYRO = 8,
+        FG_PARACHUTE = 9,
 
-	// Driven externally via a serial port, net, file, etc.
-	FG_EXTERNAL = 10
+        // Driven externally via a serial port, net, file, etc.
+        FG_EXTERNAL = 10
     };
 
     // initialization
@@ -445,10 +444,10 @@ public:
     virtual void set_Altitude(double alt);  // triggers re-calc of AGL altitude
     virtual void set_AltitudeAGL(double altagl); // and vice-versa
     virtual void set_Latitude_deg (double lat) {
-      set_Latitude(lat * SGD_DEGREES_TO_RADIANS);
+        set_Latitude(lat * SGD_DEGREES_TO_RADIANS);
     }
     virtual void set_Longitude_deg (double lon) {
-      set_Longitude(lon * SGD_DEGREES_TO_RADIANS);
+        set_Longitude(lon * SGD_DEGREES_TO_RADIANS);
     }
     
     // Speeds -- setting any of these will trigger a re-calc of the rest
@@ -456,44 +455,44 @@ public:
     virtual void set_Mach_number(double mach);
     virtual void set_Velocities_Local( double north, double east, double down );
     inline void set_V_north (double north) { 
-      set_Velocities_Local(north, _state.v_local_v[1], _state.v_local_v[2]);
+        set_Velocities_Local(north, _state.v_local_v[1], _state.v_local_v[2]);
     }
     inline void set_V_east (double east) { 
-      set_Velocities_Local(_state.v_local_v[0], east, _state.v_local_v[2]);
+        set_Velocities_Local(_state.v_local_v[0], east, _state.v_local_v[2]);
     }
     inline void set_V_down (double down) { 
-      set_Velocities_Local(_state.v_local_v[0], _state.v_local_v[1], down);
+        set_Velocities_Local(_state.v_local_v[0], _state.v_local_v[1], down);
     }
     virtual void set_Velocities_Body( double u, double v, double w);
     virtual void set_uBody (double uBody) { 
-      set_Velocities_Body(uBody, _state.v_body_v[1], _state.v_body_v[2]);
+        set_Velocities_Body(uBody, _state.v_body_v[1], _state.v_body_v[2]);
     }
     virtual void set_vBody (double vBody) { 
-      set_Velocities_Body(_state.v_body_v[0], vBody, _state.v_body_v[2]);
+        set_Velocities_Body(_state.v_body_v[0], vBody, _state.v_body_v[2]);
     }
     virtual void set_wBody (double wBody) {
-      set_Velocities_Body(_state.v_body_v[0], _state.v_body_v[1], wBody);
+        set_Velocities_Body(_state.v_body_v[0], _state.v_body_v[1], wBody);
     }
     
     // Euler angles 
     virtual void set_Euler_Angles( double phi, double theta, double psi );
     virtual void set_Phi (double phi) {
-      set_Euler_Angles(phi, get_Theta(), get_Psi());
+        set_Euler_Angles(phi, get_Theta(), get_Psi());
     }
     virtual void set_Theta (double theta) {
-      set_Euler_Angles(get_Phi(), theta, get_Psi());
+        set_Euler_Angles(get_Phi(), theta, get_Psi());
     }
     virtual void set_Psi (double psi) { 
-      set_Euler_Angles(get_Phi(), get_Theta(), psi);
+        set_Euler_Angles(get_Phi(), get_Theta(), psi);
     }
     virtual void set_Phi_deg (double phi) {
-      set_Phi(phi * SGD_DEGREES_TO_RADIANS);
+        set_Phi(phi * SGD_DEGREES_TO_RADIANS);
     }
     virtual void set_Theta_deg (double theta) {
-      set_Theta(theta * SGD_DEGREES_TO_RADIANS); 
+        set_Theta(theta * SGD_DEGREES_TO_RADIANS); 
     }
     virtual void set_Psi_deg (double psi) {
-      set_Psi(psi * SGD_DEGREES_TO_RADIANS);
+        set_Psi(psi * SGD_DEGREES_TO_RADIANS);
     }
     
     // Flight Path
@@ -507,8 +506,8 @@ public:
     virtual void set_Density(double rho);
     
     virtual void set_Velocities_Local_Airmass (double wnorth, 
-					       double weast, 
-					       double wdown );
+                                               double weast, 
+                                               double wdown );
 
     // ========== Mass properties and geometry values ==========
 
@@ -604,10 +603,10 @@ public:
         return _state.geocentric_position_v.getLatitudeRad();
     }
     inline double get_Lon_geocentric() const {
-	return _state.geocentric_position_v.getLongitudeRad();
+        return _state.geocentric_position_v.getLongitudeRad();
     }
     inline double get_Radius_to_vehicle() const {
-	return _state.geocentric_position_v.getRadiusFt();
+        return _state.geocentric_position_v.getRadiusFt();
     }
 
     const SGGeod& getPosition() const { return _state.geodetic_position_v; }
@@ -662,7 +661,7 @@ public:
 
     inline double get_Sea_level_radius() const { return _state.sea_level_radius; }
     inline double get_Earth_position_angle() const {
-	return _state.earth_position_angle;
+        return _state.earth_position_angle;
     }
 
     inline double get_Runway_altitude() const { return _state.runway_altitude; }

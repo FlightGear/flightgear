@@ -166,73 +166,72 @@ public:
  *
  * Mongoose API is documented here: http://cesanta.com/docs/API.shtml
  */
-class MongooseHttpd: public FGHttpd {
+class MongooseHttpd : public FGHttpd
+{
 public:
+    /**
+     * Construct a MongooseHttpd object from options in a PropertyNode
+     */
+    MongooseHttpd(SGPropertyNode_ptr);
 
-  /**
-   * Construct a MongooseHttpd object from options in a PropertyNode
-   */
-  MongooseHttpd(SGPropertyNode_ptr);
+    /**
+     * Cleanup et.al.
+     */
+    ~MongooseHttpd();
 
-  /**
-   * Cleanup et.al.
-   */
-  ~MongooseHttpd();
+    /**
+     * override SGSubsystem::init()
+     *
+     * Reads the configuration PropertyNode, installs URIHandlers and configures mongoose
+     */
+    void init();
 
-  /**
-   * override SGSubsystem::init()
-   *
-   * Reads the configuration PropertyNode, installs URIHandlers and configures mongoose
-   */
-  void init();
+    /**
+     * override SGSubsystem::bind()
+     *
+     * Currently a noop
+     */
+    void bind();
 
-  /**
-   * override SGSubsystem::bind()
-   *
-   * Currently a noop
-   */
-  void bind();
+    /**
+     * override SGSubsystem::unbind()
+     * shutdown of mongoose, clear connections, unregister URIHandlers
+     */
+    void unbind();
 
-  /**
-   * override SGSubsystem::unbind()
-   * shutdown of mongoose, clear connections, unregister URIHandlers
-   */
-  void unbind();
+    /**
+     * overrride SGSubsystem::update()
+     * poll connections, check for changed properties
+     */
+    void update(double dt);
 
-  /**
-   * overrride SGSubsystem::update()
-   * poll connections, check for changed properties
-   */
-  void update(double dt);
+    /**
+     * Returns a URIHandler for the given uri
+     *
+     * @see URIHandlerMap::findHandler( const std::string & uri )
+     */
+    SGSharedPtr<URIHandler> findHandler(const std::string & uri) {
+        return _uriHandler.findHandler(uri);
+    }
 
-  /**
-   * Returns a URIHandler for the given uri
-   *
-   * @see URIHandlerMap::findHandler( const std::string & uri )
-   */
-  SGSharedPtr<URIHandler> findHandler(const std::string & uri)
-  {
-    return _uriHandler.findHandler(uri);
-  }
-
-  Websocket * newWebsocket(const string & uri);
+    Websocket * newWebsocket(const string & uri);
 
 private:
-  int poll(struct mg_connection * connection);
-  int auth(struct mg_connection * connection);
-  int request(struct mg_connection * connection);
-  int onConnect(struct mg_connection * connection);
-  void close(struct mg_connection * connection);
+    int poll(struct mg_connection * connection);
+    int auth(struct mg_connection * connection);
+    int request(struct mg_connection * connection);
+    int onConnect(struct mg_connection * connection);
+    void close(struct mg_connection * connection);
 
-  static int staticRequestHandler(struct mg_connection *, mg_event event);
+    static int staticRequestHandler(struct mg_connection *, mg_event event);
 
-  struct mg_server *_server;
-  SGPropertyNode_ptr _configNode;
+    struct mg_server *_server;
+    SGPropertyNode_ptr _configNode;
 
-  typedef int (MongooseHttpd::*handler_t)(struct mg_connection *);
-  URIHandlerMap _uriHandler;
+    typedef int (MongooseHttpd::*handler_t)(struct mg_connection *);
+    URIHandlerMap _uriHandler;
 
-  PropertyChangeObserver _propertyChangeObserver;
+    PropertyChangeObserver _propertyChangeObserver;
 };
 
 class MongooseConnection: public Connection {

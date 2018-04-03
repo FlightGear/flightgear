@@ -35,21 +35,22 @@ void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value);
 
 class FGHIDEventInput : public FGEventInput {
 public:
-  FGHIDEventInput();
+    FGHIDEventInput();
 
-  virtual ~FGHIDEventInput();
-  
-  void update(double dt) override;
-  void init() override;
-  void reinit() override;
-  void postinit();
-  void shutdown() override;
+    virtual ~FGHIDEventInput();
 
-  static const char* subsystemName() { return "input-hid"; }
+    void update(double dt) override;
+    void init() override;
+    void reinit() override;
+    void postinit();
+    void shutdown() override;
+
+    static const char* subsystemName() { return "input-hid"; }
+
 private:
-  class FGHIDEventInputPrivate;
-  
-  std::unique_ptr<FGHIDEventInputPrivate> d;
+    class FGHIDEventInputPrivate;
+
+    std::unique_ptr<FGHIDEventInputPrivate> d;
 };
 
 #endif

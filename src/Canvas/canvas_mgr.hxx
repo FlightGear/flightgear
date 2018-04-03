@@ -22,10 +22,9 @@
 #include <simgear/canvas/CanvasMgr.hxx>
 #include <simgear/props/PropertyBasedMgr.hxx>
 
-class CanvasMgr:
-  public simgear::canvas::CanvasMgr
+class CanvasMgr : public simgear::canvas::CanvasMgr
 {
-  public:
+public:
     CanvasMgr();
 
     virtual void init();
@@ -43,7 +42,8 @@ class CanvasMgr:
     unsigned int getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const;
 
     static const char* subsystemName() { return "Canvas"; }
-  protected:
+
+protected:
 
     osg::observer_ptr<osg::Camera>      _gui_camera;
     SGPropertyChangeCallback<CanvasMgr> _cb_model_reinit;

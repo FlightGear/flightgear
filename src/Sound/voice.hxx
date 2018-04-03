@@ -50,51 +50,56 @@ using std::vector;
 
 
 
-class FGVoiceMgr : public SGSubsystem {
+class FGVoiceMgr : public SGSubsystem
+{
 public:
-	FGVoiceMgr();
-	~FGVoiceMgr();
-	void init(void);
-	void shutdown();
-	void update(double dt);
+    FGVoiceMgr();
+    ~FGVoiceMgr();
+    void init(void);
+    void shutdown();
+    void update(double dt);
 
+    class FGVoice;
 
-  class FGVoice;
 protected:
-  friend class FGFestivalVoice;
+    friend class FGFestivalVoice;
+
 #if defined(ENABLE_THREADS)
-	class FGVoiceThread;
-	FGVoiceThread *_thread;
+    class FGVoiceThread;
+    FGVoiceThread *_thread;
 #endif
 
-  std::string _host;
-  std::string _port;
-	bool _enabled;
-	SGPropertyNode_ptr _pausedNode;
-	bool _paused;
-  std::vector<FGVoice *> _voices;
+    std::string _host;
+    std::string _port;
+    bool _enabled;
+    SGPropertyNode_ptr _pausedNode;
+    bool _paused;
+    std::vector<FGVoice *> _voices;
 };
 
 
 
 #if defined(ENABLE_THREADS)
-class FGVoiceMgr::FGVoiceThread : public OpenThreads::Thread {
+class FGVoiceMgr::FGVoiceThread : public OpenThreads::Thread
+{
 public:
-	FGVoiceThread(FGVoiceMgr *mgr) : _mgr(mgr) {}
-	void run();
-	void wake_up() { _jobs.signal(); }
+    FGVoiceThread(FGVoiceMgr *mgr) : _mgr(mgr) {}
+    void run();
+    void wake_up() { _jobs.signal(); }
 
 private:
-	void wait_for_jobs() { OpenThreads::ScopedLock<OpenThreads::Mutex> g(_mutex); _jobs.wait(&_mutex); }
-	OpenThreads::Condition _jobs;
-	OpenThreads::Mutex _mutex;
+    void wait_for_jobs() { OpenThreads::ScopedLock<OpenThreads::Mutex> g(_mutex); _jobs.wait(&_mutex); }
+    OpenThreads::Condition _jobs;
+    OpenThreads::Mutex _mutex;
+
 protected:
-	FGVoiceMgr *_mgr;
+    FGVoiceMgr *_mgr;
 };
 #endif
 
 
-class FGVoiceMgr::FGVoice : public SGPropertyChangeListener {
+class FGVoiceMgr::FGVoice : public SGPropertyChangeListener
+{
 public:
   FGVoice(FGVoiceMgr * mgr ) : _mgr(mgr) {}
   virtual ~FGVoice() {}
@@ -108,13 +113,11 @@ protected:
 
   FGVoiceMgr *_mgr;
 
-  #if defined(ENABLE_THREADS)
+#if defined(ENABLE_THREADS)
   SGLockedQueue<std::string> _msg;
 #else
   std::queue<std::string> _msg;
 #endif
-
-
 };
 
 #endif // _VOICE_HXX

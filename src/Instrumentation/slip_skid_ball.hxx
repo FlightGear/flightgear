@@ -30,9 +30,7 @@
  */
 class SlipSkidBall : public SGSubsystem
 {
-
 public:
-
     SlipSkidBall ( SGPropertyNode *node );
     virtual ~SlipSkidBall ();
 
@@ -49,7 +47,6 @@ private:
     SGPropertyNode_ptr _z_accel_node;
     SGPropertyNode_ptr _out_node;
     SGPropertyNode_ptr _override_node;
-   
 };
 
 #endif // __INSTRUMENTS_SLIP_SKID_BALL_HXX

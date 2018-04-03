@@ -37,10 +37,10 @@ namespace FGXMLAutopilot {
 /**
  * A simplistic P [ + I ] PI controller
  */
-class PISimpleController : public AnalogComponent {
+class PISimpleController : public AnalogComponent
+{
 
 private:
-
     // proportional component data
     InputValueList _Kp;
 
@@ -54,7 +54,6 @@ protected:
                             SGPropertyNode& prop_root );
 
 public:
-
     PISimpleController();
     ~PISimpleController() {}
 

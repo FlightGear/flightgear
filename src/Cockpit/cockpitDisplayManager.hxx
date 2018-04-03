@@ -29,23 +29,22 @@ class SGPropertyNode;
 
 namespace flightgear
 {
-    
+
 /**
  * Manage aircraft displays.
  */
 class CockpitDisplayManager : public SGSubsystemGroup
 {
 public:
-
     CockpitDisplayManager ();
     virtual ~CockpitDisplayManager ();
-    
+
     virtual void init();
     virtual InitStatus incrementalInit();
 
 private:
     bool build (SGPropertyNode* config_props);
-        
+
     std::vector<std::string> _displays;
 };
 

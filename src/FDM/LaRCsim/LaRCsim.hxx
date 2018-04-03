@@ -32,10 +32,9 @@
 #include "IO360.hxx"
 #include "LaRCsimIC.hxx"
 
-class FGLaRCsim: public FGInterface {
-
+class FGLaRCsim : public FGInterface
+{
 private:
-
     FGNewEngine eng;
     LaRCsimIC* lsic;
     void set_ls(void);
@@ -44,47 +43,46 @@ private:
     SGPropertyNode_ptr aero;
     SGPropertyNode_ptr uiuc_type;
     double mass, i_xx, i_yy, i_zz, i_xz;
-    
-public:
 
+public:
     FGLaRCsim( double dt );
     ~FGLaRCsim(void);
-    
+
     // copy FDM state to LaRCsim structures
     bool copy_to_LaRCsim();
 
     // copy FDM state from LaRCsim structures
     bool copy_from_LaRCsim();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on inputs, positions, velocities, etc.
     void update( double dt );
-    
+
     // Positions
     void set_Latitude(double lat);  //geocentric
-    void set_Longitude(double lon);    
+    void set_Longitude(double lon);
     void set_Altitude(double alt);        // triggers re-calc of AGL altitude
     void set_AltitudeAGL(double altagl); // and vice-versa
-    
+
     // Speeds -- setting any of these will trigger a re-calc of the rest
     void set_V_calibrated_kts(double vc);
     void set_Mach_number(double mach);
     void set_Velocities_Local( double north, double east, double down );
     void set_Velocities_Body( double u, double v, double w);
-    
-    // Euler angles 
+
+    // Euler angles
     void set_Euler_Angles( double phi, double theta, double psi );
-    
+
     // Flight Path
     void set_Climb_Rate( double roc);
     void set_Gamma_vert_rad( double gamma);
-    
+
     // Earth
     void set_Static_pressure(double p);
-    void set_Static_temperature(double T); 
-    void set_Density(double rho); 
+    void set_Static_temperature(double T);
+    void set_Density(double rho);
 
     // Inertias
     double get_Mass() const { return mass; }
@@ -103,7 +101,4 @@ public:
     }
 };
 
-
 #endif // _LARCSIM_HXX
-
-

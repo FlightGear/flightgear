@@ -37,7 +37,6 @@ typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
 
 class FGAIManager : public SGSubsystem
 {
-
 public:
     FGAIManager();
     virtual ~FGAIManager();
@@ -99,15 +98,16 @@ public:
      * avoid correctly.
      */
     FGAIAircraft* getUserAircraft() const;
-    
+
     bool isRadarEnabled() const
     { return _radarEnabled; }
-    
+
     bool enableRadarDebug() const
     { return _radarDebugMode; }
-    
+
     double radarRangeM() const
     { return _radarRangeM; }
+
 private:
     // FGSubmodelMgr is a friend for access to the AI_list
     friend class FGSubmodelMgr;

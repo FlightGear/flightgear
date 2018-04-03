@@ -38,18 +38,18 @@
 #else
 # include "simd.hxx"
 # include "simd4x4.hxx"
-# define SG_METER_TO_FEET		3.2808399
-# define SG_FEET_TO_METER		(1/SG_METER_TO_FEET)
-# define SGD_DEGREES_TO_RADIANS		0.0174532925
-# define SGD_RADIANS_TO_DEGREES		(1/SGD_DEGREES_TO_RADIANS)
-# define SGD_PI				3.1415926535
+# define SG_METER_TO_FEET               3.2808399
+# define SG_FEET_TO_METER               (1/SG_METER_TO_FEET)
+# define SGD_DEGREES_TO_RADIANS         0.0174532925
+# define SGD_RADIANS_TO_DEGREES         (1/SGD_DEGREES_TO_RADIANS)
+# define SGD_PI                         3.1415926535
 #endif
 
 // #define SG_DEGREES_TO_RADIANS 0.0174532925f
 
-	// max. no. gears, maxi. no. engines
-#define AISIM_MAX	4
-#define AISIM_G		32.174f
+// max. no. gears, maxi. no. engines
+#define AISIM_MAX       4
+#define AISIM_G         32.174f
 
 class FGAISim
 #ifdef ENABLE_SP_FDM
@@ -75,7 +75,7 @@ public:
     FGAISim(double dt);
     ~FGAISim();
 
-    // reset flight params to a specific location 
+    // reset flight params to a specific location
     void init();
 
     // update location based on properties
@@ -104,7 +104,7 @@ public:
         xClmnT.ptr()[AILERON][ROLL] = Clda_n*f;
         xClmnT.ptr()[AILERON][YAW] = Cnda_n*f;
     }
-    inline void set_flaps_norm(float f) { 
+    inline void set_flaps_norm(float f) {
         xCDYLT.ptr()[FLAPS][LIFT] = CLdf_n*f;
         xCDYLT.ptr()[FLAPS][DRAG] = CDdf_n*std::abs(f);
         xClmnT.ptr()[FLAPS][PITCH] = Cmdf_n*f;
@@ -154,7 +154,7 @@ public:
     inline void set_beta_rad(float f) {
         xCDYLT.ptr()[BETA][DRAG] = CDb*std::abs(f);
         xCDYLT.ptr()[BETA][SIDE] = CYb*f;
-        xClmnT.ptr()[BETA][ROLL] = Clb*f; 
+        xClmnT.ptr()[BETA][ROLL] = Clb*f;
         xClmnT.ptr()[BETA][YAW] = Cnb*f;
         AOA[BETA] = f;
     }
@@ -171,33 +171,33 @@ private:
     simd4x4_t<float,4> invert_inertia(simd4x4_t<float,4> mtx);
 
     /* aircraft normalized controls */
-    float th;				/* throttle command		*/
-    float br;				/* brake command		*/
+    float th;                           /* throttle command             */
+    float br;                           /* brake command                */
 
     /* aircraft state */
-    simd4_t<double,3> location_geod;	/* lat, lon, altitude		*/
-    simd4_t<float,3> aXYZ;		/* local body accelrations	*/
-    simd4_t<float,3> NEDdot;		/* North, East, Down velocity	*/
-    simd4_t<float,3> vUVW;		/* fwd, side, down velocity	*/
-    simd4_t<float,3> vUVWdot;           /* fwd, side, down accel.	*/
-    simd4_t<float,3> vPQR;		/* roll, pitch, yaw rate	*/
-    simd4_t<float,3> vPQRdot;		/* roll, pitch, yaw accel. 	*/
-    simd4_t<float,3> AOA;		/* alpha, beta			*/
-    simd4_t<float,3> AOAdot;		/* adot, bdot      		*/
-    simd4_t<float,3> euler;		/* phi, theta, psi		*/
-    simd4_t<float,3> euler_dot;		/* change in phi, theta, psi	*/
-    simd4_t<float,3> wind_ned;		/* wind north, east, down	*/
+    simd4_t<double,3> location_geod;    /* lat, lon, altitude           */
+    simd4_t<float,3> aXYZ;              /* local body accelrations      */
+    simd4_t<float,3> NEDdot;            /* North, East, Down velocity   */
+    simd4_t<float,3> vUVW;              /* fwd, side, down velocity     */
+    simd4_t<float,3> vUVWdot;           /* fwd, side, down accel.       */
+    simd4_t<float,3> vPQR;              /* roll, pitch, yaw rate        */
+    simd4_t<float,3> vPQRdot;           /* roll, pitch, yaw accel.      */
+    simd4_t<float,3> AOA;               /* alpha, beta                  */
+    simd4_t<float,3> AOAdot;            /* adot, bdot                   */
+    simd4_t<float,3> euler;             /* phi, theta, psi              */
+    simd4_t<float,3> euler_dot;         /* change in phi, theta, psi    */
+    simd4_t<float,3> wind_ned;          /* wind north, east, down       */
 
     /* ---------------------------------------------------------------- */
-    /* This should reduce the time spent in update() since controls	*/
-    /* change less often than the update function runs which  might	*/
-    /* run 20 to 60 times (or more) per second				*/
+    /* This should reduce the time spent in update() since controls     */
+    /* change less often than the update function runs which  might     */
+    /* run 20 to 60 times (or more) per second                          */
 
     /* cache */
-    simd4_t<float,3> vUVWaero;		/* airmass relative to the body */
-    simd4_t<float,3> FT[AISIM_MAX];	/* thrust force			*/
-    simd4_t<float,3> FTM[AISIM_MAX];	/* thrust due to mach force	*/
-    simd4_t<float,3> MT[AISIM_MAX];	/* thrust moment		*/
+    simd4_t<float,3> vUVWaero;          /* airmass relative to the body */
+    simd4_t<float,3> FT[AISIM_MAX];     /* thrust force                 */
+    simd4_t<float,3> FTM[AISIM_MAX];    /* thrust due to mach force     */
+    simd4_t<float,3> MT[AISIM_MAX];     /* thrust moment                */
     simd4_t<float,3> b_2U, cbar_2U;
     simd4_t<float,3> inv_m;
     float velocity, mach;
@@ -214,17 +214,17 @@ private:
     /* ---------------------------------------------------------------- */
     /* aircraft static data */
     int no_engines, no_gears;
-    simd4x4_t<float,4> mI, mIinv;	/* inertia matrix		*/
-    simd4_t<float,3> gear_pos[AISIM_MAX]; /* pos in structural frame	*/
-    simd4_t<float,3> cg;	/* center of gravity			*/
-    simd4_t<float,4> I;		/* inertia				*/
-    float S, cbar, b;		/* wing area, mean average chord, span	*/
-    float m;                    /* mass					*/
+    simd4x4_t<float,4> mI, mIinv;       /* inertia matrix               */
+    simd4_t<float,3> gear_pos[AISIM_MAX]; /* pos in structural frame    */
+    simd4_t<float,3> cg;        /* center of gravity                    */
+    simd4_t<float,4> I;         /* inertia                              */
+    float S, cbar, b;           /* wing area, mean average chord, span  */
+    float m;                    /* mass                                 */
 
-    /* static coefficients, *_n is for normalized surface deflection	*/
-    float Cg_spring[AISIM_MAX];	/* gear spring coeffients		*/
-    float Cg_damp[AISIM_MAX];	/* gear damping coefficients		*/
-    float CTmax, CTu;		/* thrust max, due to speed		*/
+    /* static coefficients, *_n is for normalized surface deflection    */
+    float Cg_spring[AISIM_MAX]; /* gear spring coeffients               */
+    float Cg_damp[AISIM_MAX];   /* gear damping coefficients            */
+    float CTmax, CTu;           /* thrust max, due to speed             */
     float CLmin, CLa, CLadot, CLq, CLdf_n;
     float CDmin, CDa, CDb, CDi, CDdf_n;
     float CYb, CYp, CYr, CYdr_n;

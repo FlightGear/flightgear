@@ -25,9 +25,9 @@
 #define _SCENERY_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 #include <osg/ref_ptr>
 #include <osg/Switch>
@@ -52,7 +52,6 @@ class FGScenery : public SGSubsystem
     class ScenerySwitchListener;
     friend class ScenerySwitchListener;
 
-    
     // scene graph
     osg::ref_ptr<osg::Switch> scene_graph;
     osg::ref_ptr<osg::Group> terrain_branch;
@@ -61,7 +60,7 @@ class FGScenery : public SGSubsystem
     osg::ref_ptr<osg::Group> interior_branch;
     osg::ref_ptr<osg::Group> particles_branch;
     osg::ref_ptr<osg::Group> precipitation_branch;
-    
+
     osg::ref_ptr<flightgear::SceneryPager> _pager;
     ScenerySwitchListener* _listener;
 
@@ -88,7 +87,7 @@ public:
     /// The altitude hit is returned in the alt argument.
     /// The method returns true if the scenery is available for the given
     /// lat/lon pair. If there is no scenery for that point, the altitude
-    /// value is undefined. 
+    /// value is undefined.
     /// All values are meant to be in meters or degrees.
     bool get_elevation_m(const SGGeod& geod, double& alt,
                          const simgear::BVHMaterial** material,
@@ -110,7 +109,7 @@ public:
                               const simgear::BVHMaterial** material,
                               const osg::Node* butNotFrom = 0);
 
-    /// Compute the nearest intersection point of the line starting from 
+    /// Compute the nearest intersection point of the line starting from
     /// start going in direction dir with the terrain.
     /// The input and output values should be in cartesian coordinates in the
     /// usual earth centered wgs84 coordinate system. Units are meters.
@@ -126,7 +125,7 @@ public:
     osg::Group *get_interior_branch () const { return interior_branch.get(); }
     osg::Group *get_particles_branch () const { return particles_branch.get(); }
     osg::Group *get_precipitation_branch () const { return precipitation_branch.get(); }
-    
+
     /// Returns true if scenery is available for the given lat, lon position
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
@@ -138,7 +137,7 @@ public:
     static void resetPagerSingleton();
 
     flightgear::SceneryPager* getPager() { return _pager.get(); }
-    
+
     // tile mgr api
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
     void materialLibChanged();
@@ -149,7 +148,7 @@ private:
     // the terrain engine
     FGTerrain* _terrain;
 
-    // The state of the scene graph.    
+    // The state of the scene graph.
     bool _inited;
 };
 

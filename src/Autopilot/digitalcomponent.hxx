@@ -90,12 +90,14 @@ typedef SGSharedPtr<DigitalOutput> DigitalOutput_ptr;
  *   <li>any number of output properties</li>
  * </ul>
  */
-class DigitalComponent : public Component {
+class DigitalComponent : public Component
+{
 public:
     DigitalComponent();
 
-    class InputMap : public std::map<const std::string,SGSharedPtr<const SGCondition> > {
-      public:
+    class InputMap : public std::map<const std::string,SGSharedPtr<const SGCondition> >
+    {
+    public:
         bool get_value( const std::string & name ) const;
     };
 

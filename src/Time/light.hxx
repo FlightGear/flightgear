@@ -25,9 +25,9 @@
 #define _LIGHT_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 
 #ifdef HAVE_CONFIG_H
@@ -45,9 +45,7 @@
 // Define a structure containing the global lighting parameters
 class FGLight : public SGSubsystem
 {
-
 private:
-
     /*
      * Lighting look up tables (based on sun angle with local horizon)
      */
@@ -120,7 +118,7 @@ private:
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.
     SGPropertyNode_ptr _chromeProps[4];
-  
+
     SGPropertyNode_ptr _sunAngleRad;
     SGPropertyNode_ptr _moonAngleRad;
 
@@ -138,7 +136,6 @@ private:
     }
 
 public:
-
     FGLight ();
     virtual ~FGLight ();
 

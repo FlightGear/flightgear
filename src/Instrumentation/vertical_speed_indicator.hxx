@@ -33,9 +33,7 @@
  */
 class VerticalSpeedIndicator : public SGSubsystem
 {
-
 public:
-
     VerticalSpeedIndicator ( SGPropertyNode *node );
     virtual ~VerticalSpeedIndicator ();
 
@@ -44,7 +42,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     double _casing_pressure_Pa = 0.0;
     double _casing_airmass_kg = 0.0;
     double _casing_density_kgpm3 = 0.0;
@@ -61,7 +58,6 @@ private:
     SGPropertyNode_ptr _speed_fpm_node;
     SGPropertyNode_ptr _speed_mps_node;
     SGPropertyNode_ptr _speed_kts_node;
-    
 };
 
 #endif // __INSTRUMENTS_VERTICAL_SPEED_INDICATOR_HXX

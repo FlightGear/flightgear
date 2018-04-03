@@ -34,10 +34,9 @@ namespace osgGA
 }
 
 class GUIEventHandler;
-class GUIMgr:
-  public SGSubsystem
+class GUIMgr : public SGSubsystem
 {
-  public:
+public:
     GUIMgr();
 
     simgear::canvas::WindowPtr createWindow(const std::string& name = "");
@@ -68,8 +67,7 @@ class GUIMgr:
      */
     void ungrabPointer(const simgear::canvas::WindowPtr& window);
 
-  protected:
-
+protected:
     simgear::canvas::GroupPtr           _desktop;
     osg::ref_ptr<GUIEventHandler>       _event_handler;
 

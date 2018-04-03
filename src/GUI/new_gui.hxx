@@ -30,7 +30,6 @@ class puFont;
 class NewGUI : public SGSubsystem
 {
 public:
-
     /**
      * Constructor.
      */
@@ -47,7 +46,7 @@ public:
     virtual void init ();
 
     virtual void shutdown ();
-    
+
     /**
      * Reinitialize the GUI subsystem. Reloads all XML dialogs.
      */
@@ -174,7 +173,6 @@ public:
     static const char* subsystemName() { return "gui"; }
 
 protected:
-
     /**
      * Test if the menubar is visible.
      *
@@ -203,9 +201,10 @@ protected:
 
     bool getMenuBarOverlapHide() const;
     void setMenuBarOverlapHide(bool hide);
+
 private:
     void createMenuBarImplementation();
-    
+
     struct ltstr
     {
         bool operator()(const char* s1, const char* s2) const {
@@ -228,18 +227,16 @@ private:
     FGDialog * _active_dialog;
     typedef std::map<std::string,FGDialog *> DialogDict;
     DialogDict _active_dialogs;
-  
+
     typedef std::map<std::string, SGPath> NamePathDict;
     // mapping from dialog names to the corresponding XML property list
     // which defines them
     NamePathDict _dialog_names;
-  
+
     // cache of loaded dialog proeprties
     typedef std::map<std::string,SGPropertyNode_ptr> NameDialogDict;
     NameDialogDict _dialog_props;
-
 };
-
 
 #endif // __NEW_GUI_HXX
 

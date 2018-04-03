@@ -42,9 +42,7 @@ namespace flightgear
 // Define a structure containing view information
 class FGViewMgr : public SGSubsystem
 {
-
 public:
-
     // Constructor
     FGViewMgr( void );
 
@@ -58,26 +56,27 @@ public:
     virtual void update (double dt);
     virtual void reinit ();
     virtual void shutdown();
-    
+
     // getters
     inline int size() const { return views.size(); }
     inline int get_current() const { return current; }
-    
+
     flightgear::View* get_current_view();
     const flightgear::View* get_current_view() const;
-    
+
     flightgear::View* get_view( int i );
     const flightgear::View* get_view( int i ) const;
-      
+
     flightgear::View* next_view();
     flightgear::View* prev_view();
-      
+
     // setters
     void clear();
 
     void add_view( flightgear::View * v );
-    
+
     static const char* subsystemName() { return "view-manager"; }
+
 private:
     simgear::TiedPropertyList _tiedProperties;
 
@@ -92,6 +91,5 @@ private:
 
     int current;
 };
-
 
 #endif // _VIEWMGR_HXX

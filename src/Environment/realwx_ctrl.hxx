@@ -25,13 +25,15 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
+
 namespace Environment {
+
 class RealWxController : public SGSubsystem
 {
 public:
     virtual ~RealWxController();
-    
-	static RealWxController * createInstance( SGPropertyNode_ptr rootNode );
+
+    static RealWxController * createInstance( SGPropertyNode_ptr rootNode );
 };
 
 } // namespace

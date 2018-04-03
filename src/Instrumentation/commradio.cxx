@@ -454,40 +454,40 @@ private:
 
 /* ------------- The CommRadio implementation ---------------------- */
 
-class CommRadioImpl: public CommRadio, OutputProperties {
-
+class CommRadioImpl: public CommRadio,
+                     OutputProperties
+{
 public:
-  CommRadioImpl(SGPropertyNode_ptr node);
-  virtual ~CommRadioImpl();
+    CommRadioImpl(SGPropertyNode_ptr node);
+    virtual ~CommRadioImpl();
 
-  void update(double dt) override;
-  void init() override;
-  void bind() override;
-  void unbind() override;
+    void update(double dt) override;
+    void init() override;
+    void bind() override;
+    void unbind() override;
 
 private:
-  bool _useEightPointThree = false;
-  MetarBridgeRef _metarBridge;
-  AtisSpeaker _atisSpeaker;
-  SGSharedPtr<FrequencyFormatterBase> _useFrequencyFormatter;
-  SGSharedPtr<FrequencyFormatterBase> _stbyFrequencyFormatter;
-  const SignalQualityComputerRef _signalQualityComputer;
+    bool _useEightPointThree = false;
+    MetarBridgeRef _metarBridge;
+    AtisSpeaker _atisSpeaker;
+    SGSharedPtr<FrequencyFormatterBase> _useFrequencyFormatter;
+    SGSharedPtr<FrequencyFormatterBase> _stbyFrequencyFormatter;
+    const SignalQualityComputerRef _signalQualityComputer;
 
-  double _stationTTL = 0.0;
-  double _frequency = -1.0;
-  flightgear::CommStationRef _commStationForFrequency;
+    double _stationTTL = 0.0;
+    double _frequency = -1.0;
+    flightgear::CommStationRef _commStationForFrequency;
 
-  PropertyObject<double> _volume_norm;
-  PropertyObject<string> _atis;
-  PropertyObject<bool> _addNoise;
-  PropertyObject<double> _cutoffSignalQuality;
-  
-  std::string _soundPrefix;
-  void stopAudio();
-  void updateAudio();
-  
-  SGSampleGroup* _sampleGroup = nullptr;
+    PropertyObject<double> _volume_norm;
+    PropertyObject<string> _atis;
+    PropertyObject<bool> _addNoise;
+    PropertyObject<double> _cutoffSignalQuality;
 
+    std::string _soundPrefix;
+    void stopAudio();
+    void updateAudio();
+
+    SGSampleGroup* _sampleGroup = nullptr;
 };
 
 CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :

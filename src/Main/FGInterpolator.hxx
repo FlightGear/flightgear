@@ -21,13 +21,11 @@
 
 #include <simgear/props/PropertyInterpolationMgr.hxx>
 
-class FGInterpolator:
-  public simgear::PropertyInterpolationMgr
+class FGInterpolator : public simgear::PropertyInterpolationMgr
 {
-  public:
+public:
     FGInterpolator();
     ~FGInterpolator();
 };
-
 
 #endif /* FG_INTERPOLATOR_HXX_ */

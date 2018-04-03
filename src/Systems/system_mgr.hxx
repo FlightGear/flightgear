@@ -28,11 +28,9 @@
 class FGSystemMgr : public SGSubsystemGroup
 {
 public:
-
     FGSystemMgr ();
     virtual ~FGSystemMgr ();
     bool build (SGPropertyNode* config_props);
-
 };
 
 #endif // __SYSTEM_MGR_HXX

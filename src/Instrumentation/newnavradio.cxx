@@ -802,48 +802,51 @@ void GS::display( NavIndicator & navIndicator )
 
 /* ------------- The NavRadio implementation ---------------------- */
 
-class NavRadioImpl : public NavRadio {
+class NavRadioImpl : public NavRadio
+{
 public:
-  NavRadioImpl( SGPropertyNode_ptr node );
-  virtual ~NavRadioImpl();
+    NavRadioImpl( SGPropertyNode_ptr node );
+    virtual ~NavRadioImpl();
 
-  virtual void update( double dt );
-  virtual void init();
+    virtual void update( double dt );
+    virtual void init();
+
 private:
-  void search();
+    void search();
 
-  class Legacy {
-  public:
-      Legacy( NavRadioImpl * navRadioImpl ) : _navRadioImpl( navRadioImpl ) {}
+    class Legacy {
+    public:
+        Legacy( NavRadioImpl * navRadioImpl ) : _navRadioImpl( navRadioImpl ) {}
 
-      void init();
-      void update( double dt );
-  private:
-      NavRadioImpl * _navRadioImpl;
-      SGPropertyNode_ptr is_valid_node;
-      SGPropertyNode_ptr nav_serviceable_node;
-      SGPropertyNode_ptr nav_id_node;
-      SGPropertyNode_ptr id_c1_node;
-      SGPropertyNode_ptr id_c2_node;
-      SGPropertyNode_ptr id_c3_node;
-      SGPropertyNode_ptr id_c4_node;
-  } _legacy;
+        void init();
+        void update( double dt );
 
-  const static int VOR_COMPONENT = 0;
-  const static int LOC_COMPONENT = 1;
-  const static int GS_COMPONENT  = 2;
+    private:
+        NavRadioImpl * _navRadioImpl;
+        SGPropertyNode_ptr is_valid_node;
+        SGPropertyNode_ptr nav_serviceable_node;
+        SGPropertyNode_ptr nav_id_node;
+        SGPropertyNode_ptr id_c1_node;
+        SGPropertyNode_ptr id_c2_node;
+        SGPropertyNode_ptr id_c3_node;
+        SGPropertyNode_ptr id_c4_node;
+    } _legacy;
 
-  std::string _name;
-  int         _num;
-  SGPropertyNode_ptr _rootNode;
-  FrequencyFormatter _useFrequencyFormatter;
-  FrequencyFormatter _stbyFrequencyFormatter;
-  std::vector<NavRadioComponent*> _components;
-  NavIndicator _navIndicator;
-  double _stationTTL;
-  double _frequency;
-  PropertyObject<bool> _cdiDisconnected;
-  PropertyObject<std::string> _navType;
+    const static int VOR_COMPONENT = 0;
+    const static int LOC_COMPONENT = 1;
+    const static int GS_COMPONENT  = 2;
+
+    std::string _name;
+    int         _num;
+    SGPropertyNode_ptr _rootNode;
+    FrequencyFormatter _useFrequencyFormatter;
+    FrequencyFormatter _stbyFrequencyFormatter;
+    std::vector<NavRadioComponent*> _components;
+    NavIndicator _navIndicator;
+    double _stationTTL;
+    double _frequency;
+    PropertyObject<bool> _cdiDisconnected;
+    PropertyObject<std::string> _navType;
 };
 
 NavRadioImpl::NavRadioImpl( SGPropertyNode_ptr node ) :

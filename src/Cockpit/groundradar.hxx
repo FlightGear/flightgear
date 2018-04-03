@@ -36,7 +36,9 @@ class FGPavement;
 // Built-in layer for the atc radar.
 ////////////////////////////////////////////////////////////////////////
 
-class GroundRadar : public SGSubsystem, public SGPropertyChangeListener, private FGODGauge
+class GroundRadar : public SGSubsystem,
+                    public SGPropertyChangeListener,
+                    private FGODGauge
 {
 public:
     static const int TextureHalfSize = 256;
@@ -45,12 +47,13 @@ public:
     void updateTexture();
     virtual void valueChanged(SGPropertyNode*);
     virtual void update (double dt);
+
 protected:
     void createTexture(const char* texture_name);
-    
+
     void addRunwayVertices(const FGRunwayBase* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices);
     osg::Geometry *addPavementGeometry(const FGPavement* aPavement, double aTowerLat, double aTowerLon, double aScale);
-    
+
     osg::ref_ptr<osg::Geode> _geode;
     SGPropertyNode_ptr _airport_node;
     SGPropertyNode_ptr _range_node;

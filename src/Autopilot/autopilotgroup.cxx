@@ -40,13 +40,12 @@ using std::vector;
 using simgear::PropertyList;
 using FGXMLAutopilot::Autopilot;
 
-class FGXMLAutopilotGroupImplementation:
-  public FGXMLAutopilotGroup
+class FGXMLAutopilotGroupImplementation : public FGXMLAutopilotGroup
 {
-  public:
+public:
     FGXMLAutopilotGroupImplementation(const std::string& nodeName):
-      FGXMLAutopilotGroup(),
-      _nodeName(nodeName)
+        FGXMLAutopilotGroup(),
+        _nodeName(nodeName)
     {}
 
     virtual void addAutopilot( const std::string& name,
@@ -57,10 +56,9 @@ class FGXMLAutopilotGroupImplementation:
     InitStatus incrementalInit();
     void reinit();
 
-  private:
+private:
     void initFrom( SGPropertyNode_ptr rootNode, const char * childName );
     std::string _nodeName;
-
 };
 
 //------------------------------------------------------------------------------

@@ -34,9 +34,7 @@
  */
 class HeadingIndicator : public SGSubsystem
 {
-
 public:
-
     HeadingIndicator ( SGPropertyNode *node );
     HeadingIndicator ();
     virtual ~HeadingIndicator ();
@@ -48,7 +46,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     Gyro _gyro;
     double _last_heading_deg;
 
@@ -62,7 +59,6 @@ private:
     SGPropertyNode_ptr _heading_out_node;
     SGPropertyNode_ptr _heading_bug_error_node;
     SGPropertyNode_ptr _heading_bug_node;
-
 };
 
 #endif // __INSTRUMENTS_HEADING_INDICATOR_HXX

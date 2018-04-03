@@ -27,48 +27,51 @@
 #include <linux/input.h>
 
 struct FGLinuxEventData : public FGEventData {
-  FGLinuxEventData( struct input_event & event, double dt, int modifiers ) :
-    FGEventData( (double)event.value, dt, modifiers ),
-    type(event.type),
-    code(event.code) {
-  }
-  unsigned type;
-  unsigned code;
+    FGLinuxEventData( struct input_event & event, double dt, int modifiers ) :
+        FGEventData( (double)event.value, dt, modifiers ),
+        type(event.type),
+        code(event.code) {
+    }
+    unsigned type;
+    unsigned code;
 };
 
 /*
  * A implementation for linux event devices
  */
-class FGLinuxInputDevice : public FGInputDevice {
+class FGLinuxInputDevice : public FGInputDevice
+{
 public:
-  FGLinuxInputDevice();
-  FGLinuxInputDevice( std::string name, std::string devname, std::string aSerial );
-  virtual ~FGLinuxInputDevice();
+    FGLinuxInputDevice();
+    FGLinuxInputDevice( std::string name, std::string devname, std::string aSerial );
+    virtual ~FGLinuxInputDevice();
 
-  bool Open() override;
-  void Close() override;
-  void Send( const char * eventName, double value ) override;
-  const char * TranslateEventName( FGEventData & eventData ) override;
+    bool Open() override;
+    void Close() override;
+    void Send( const char * eventName, double value ) override;
+    const char * TranslateEventName( FGEventData & eventData ) override;
 
-  void SetDevname( const std::string & name );
-  std::string GetDevname() const { return devname; }
+    void SetDevname( const std::string & name );
+    std::string GetDevname() const { return devname; }
 
-  int GetFd() { return fd; }
+    int GetFd() { return fd; }
 
-  double Normalize( struct input_event & event );
+    double Normalize( struct input_event & event );
+
 private:
-  std::string devname;
-  int fd;
+    std::string devname;
+    int fd;
 
-  std::map<unsigned int,input_absinfo> absinfo;
+    std::map<unsigned int,input_absinfo> absinfo;
 };
 
-class FGLinuxEventInput : public FGEventInput {
+class FGLinuxEventInput : public FGEventInput
+{
 public:
-  FGLinuxEventInput();
-  virtual ~ FGLinuxEventInput();
-  virtual void update (double dt);
-  virtual void postinit();
+    FGLinuxEventInput();
+    virtual ~ FGLinuxEventInput();
+    virtual void update (double dt);
+    virtual void postinit();
 
 protected:
 };

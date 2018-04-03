@@ -25,7 +25,7 @@
 
 
 #ifndef _VIEWER_HXX
-#define _VIEWER_HXX                                
+#define _VIEWER_HXX
 
 
 #include <simgear/compiler.h>
@@ -43,15 +43,14 @@ namespace flightgear
 {
 
 // Define a structure containing view information
-class View : public SGSubsystem {
-
+class View : public SGSubsystem
+{
 public:
-
     enum ScalingType {  // nominal Field Of View actually applies to ...
-	FG_SCALING_WIDTH,       // window width
-	FG_SCALING_MAX          // max(width, height)
-	// FG_SCALING_G_MEAN,      // geometric_mean(width, height)
-	// FG_SCALING_INDEPENDENT  // whole screen
+        FG_SCALING_WIDTH,       // window width
+        FG_SCALING_MAX          // max(width, height)
+        // FG_SCALING_G_MEAN,      // geometric_mean(width, height)
+        // FG_SCALING_INDEPENDENT  // whole screen
     };
 
     enum ViewType {
@@ -89,7 +88,7 @@ public:
     // Reference geodetic position of view from position...
     //   These are the actual aircraft position (pilot in
     //   pilot view, model in model view).
-    //   FIXME: the model view position (ie target positions) 
+    //   FIXME: the model view position (ie target positions)
     //   should be in the model class.
 
 
@@ -102,15 +101,15 @@ public:
 
     // Position offsets from reference
     //   These offsets position they "eye" in the scene according to a given
-    //   location.  For example in pilot view they are used to position the 
+    //   location.  For example in pilot view they are used to position the
     //   head inside the aircraft.
-    //   Note that in pilot view these are applied "before" the orientation 
-    //   rotations (see below) so that the orientation rotations have the 
-    //   effect of the pilot staying in his seat and "looking out" in 
+    //   Note that in pilot view these are applied "before" the orientation
+    //   rotations (see below) so that the orientation rotations have the
+    //   effect of the pilot staying in his seat and "looking out" in
     //   different directions.
-    //   In chase view these are applied "after" the application of the 
-    //   orientation rotations listed below.  This has the effect of the 
-    //   eye moving around and "looking at" the object (model) from 
+    //   In chase view these are applied "after" the application of the
+    //   orientation rotations listed below.  This has the effect of the
+    //   eye moving around and "looking at" the object (model) from
     //   different angles.
     SGVec3d getOffset_m () const { return _offset_m; }
     double getXOffset_m () const { return _offset_m.x(); }
@@ -126,8 +125,8 @@ public:
     void setTargetYOffset_m (double y_offset_m);
     void setTargetZOffset_m (double z_offset_m);
     void setPositionOffsets (double x_offset_m,
-				     double y_offset_m,
-				     double z_offset_m);
+                             double y_offset_m,
+                             double z_offset_m);
 
     // Reference orientation rotations...
     //   These are rotations that represent the plane attitude effect on
@@ -186,7 +185,6 @@ public:
     void set_dirty() { _dirty = true; }
 
 private:
-
     // Constructor
     View( ViewType Type, bool from_model, int from_model_index,
          bool at_model, int at_model_index,
@@ -260,8 +258,6 @@ private:
     void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
 
 
-
-
     // Orientation offsets rotations from reference orientation.
     // Goal settings are for smooth transition from prior
     // offset when changing view direction.
@@ -282,7 +278,7 @@ private:
     void setOrientationOffsets (double roll_offset_deg,
                                 double heading_offset_deg,
                                 double pitch_offset_deg);
-    
+
     void set_aspect_ratio_multiplier( double m ) {
         _aspect_ratio_multiplier = m;
     }
@@ -304,7 +300,7 @@ private:
     //////////////////////////////////////////////////////////////////
 
     std::string _name, _typeString;
-    
+
     // flag forcing a recalc of derived view parameters
     bool _dirty;
 
@@ -331,7 +327,7 @@ private:
     SGVec3d _dampTarget; ///< current target value we are damping towards
     SGVec3d _dampOutput; ///< current output of damping filter
     SGVec3d _dampFactor; ///< weighting of the damping filter
-    
+
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
@@ -380,7 +376,7 @@ private:
     {
     public:
         PositionAttitudeProperties();
-        
+
         void init(SGPropertyNode_ptr parent, const std::string& prefix);
 
         virtual ~PositionAttitudeProperties();
@@ -392,7 +388,7 @@ private:
         virtual void valueChanged(SGPropertyNode* prop);
 
     private:
-// disable copy
+        // disable copy
         PositionAttitudeProperties(const PositionAttitudeProperties&);
 
         SGPropertyNode_ptr resolvePathProperty(SGPropertyNode_ptr p);
@@ -424,30 +420,28 @@ private:
 
     void setDampTarget(double h, double p, double r);
     void getDampOutput(double& roll, double& pitch, double& heading);
-    
+
     void updateDampOutput(double dt);
-    
+
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
-	set_dirty();
-	_heading_offset_deg += amt;
+        set_dirty();
+        _heading_offset_deg += amt;
     }
 
     // add to _pitch_offset_deg
     inline void incPitchOffset_deg( double amt ) {
-	set_dirty();
-	_pitch_offset_deg += amt;
+        set_dirty();
+        _pitch_offset_deg += amt;
     }
 
     // add to _roll_offset_deg
     inline void incRollOffset_deg( double amt ) {
-	set_dirty();
-	_roll_offset_deg += amt;
+        set_dirty();
+        _roll_offset_deg += amt;
     }
-
 }; // of class View
 
 } // of namespace flightgear
-
 
 #endif // _VIEWER_HXX

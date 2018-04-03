@@ -69,29 +69,30 @@ public:
     {
         _cachedItemsValid = false;
     }
-    
+
     double textureSize() const
     { return _textureSize; }
-    
+
     void forceUpdate()
     { _forceUpdate = true; }
-    
+
     bool anyRuleForType(const std::string& type) const;
     bool isPositionedShown(FGPositioned* pos);
+
 protected:
     std::string _name;
     int _num;
     double _time;
     double _updateInterval;
     bool _forceUpdate;
-    
+
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _radar_mode_control_node;
     SGPropertyNode_ptr _user_heading_node;
     SGPropertyNode_ptr _testModeNode;
     SGPropertyNode_ptr _userLatNode, _userLonNode, _userPositionEnable;
-    
+
     FGODGauge *_odg;
 
     // Convenience function for creating a property node with a
@@ -102,13 +103,13 @@ protected:
 private:
     friend class SymbolRule;
     friend class SymbolDef;
-  
+
     void addRule(SymbolRule*);
-  
+
     void addSymbolsToScene();
     void addSymbolToScene(SymbolInstance* sym);
     void limitDisplayedSymbols();
-    
+
     void findItems();
     void isPositionedShownInner(FGPositioned* pos, SymbolRuleVector& rules);
     void foundPositionedItem(FGPositioned* pos);
@@ -120,59 +121,58 @@ private:
     FGNavRecord* processNavRadio(const SGPropertyNode_ptr& radio);
     void processAI();
     void computeAIStates(const SGPropertyNode* ai, string_set& states);
-    
+
     void computeCustomSymbolStates(const SGPropertyNode* sym, string_set& states);
     void processCustomSymbols();
-    
+
     void findRules(const std::string& type, const string_set& states, SymbolRuleVector& rules);
-    
+
     SymbolInstance* addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
     void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec4& color);
     osg::Vec2 projectBearingRange(double bearingDeg, double rangeNm) const;
     osg::Vec2 projectGeod(const SGGeod& geod) const;
     bool isProjectedClipped(const osg::Vec2& projected) const;
     void updateFont();
-    
+
     void addTestSymbol(const std::string& type, const std::string& states, const SGGeod& pos, double heading, SGPropertyNode* vars);
     void addTestSymbols();
-  
+
     std::string _texture_path;
     unsigned int _textureSize;
 
     float _scale;   // factor to convert nm to display units
     float _view_heading;
-    
+
     SGPropertyNode_ptr _Radar_controls;
 
 
-    
     SGPropertyNode_ptr _font_node;
     SGPropertyNode_ptr _ai_enabled_node;
     SGPropertyNode_ptr _navRadio1Node;
     SGPropertyNode_ptr _navRadio2Node;
     SGPropertyNode_ptr _xCenterNode, _yCenterNode;
     SGPropertyNode_ptr _viewHeadingNode;
-  
+
     osg::ref_ptr<osg::Texture2D> _symbolTexture;
     osg::ref_ptr<osg::Geode> _radarGeode;
     osg::ref_ptr<osg::Geode> _textGeode;
-  
+
     osg::Geometry *_geom;
-  
+
     osg::DrawArrays* _symbolPrimSet;
     osg::Vec2Array *_vertices;
     osg::Vec2Array *_texCoords;
     osg::Vec4Array* _quadColors;
-    
+
     osg::Geometry* _lineGeometry;
     osg::DrawArrays* _linePrimSet;
     osg::Vec2Array* _lineVertices;
     osg::Vec4Array* _lineColors;
-  
-  
+
+
     osg::Matrixf _centerTrans;
     osg::Matrixf _projectMat;
-    
+
     osg::ref_ptr<osgText::Font> _font;
     osg::Vec4 _font_color;
     float _font_size;
@@ -182,24 +182,24 @@ private:
     SGGeod _pos;
     double _rangeNm;
     SGPropertyNode_ptr _rangeNode;
-    
+
     SymbolDefVector _definitions;
     SymbolRuleVector _rules;
     FGNavRecord* _nav1Station;
     FGNavRecord* _nav2Station;
     std::vector<SymbolInstance*> _symbols;
     std::set<FGPositioned*> _routeSources;
-    
+
     bool _cachedItemsValid;
     SGVec3d _cachedPos;
     FGPositionedList _itemsInRange;
     SGPropertyNode_ptr _excessDataNode;
     int _maxSymbols;
     SGPropertyNode_ptr _customSymbols;
-    
+
     class CacheListener;
     std::unique_ptr<CacheListener> _cacheListener;
-    
+
     class ForceUpdateListener;
     std::unique_ptr<ForceUpdateListener> _forceUpdateListener;
 };

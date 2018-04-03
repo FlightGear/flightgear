@@ -34,9 +34,7 @@ class FGNavRecord;
  */
 class DME : public AbstractInstrument
 {
-
 public:
-
     DME ( SGPropertyNode *node );
     virtual ~DME ();
 
@@ -69,6 +67,5 @@ private:
 
     class AudioIdent * _audioIdent;
 };
-
 
 #endif // __INSTRUMENTS_DME_HXX

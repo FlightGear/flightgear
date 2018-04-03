@@ -44,8 +44,8 @@ namespace FGXMLAutopilot {
  *   0.1 would mean (9 parts past value + 1 part current value) / 10
  *   0.25 would mean (3 parts past value + 1 part current value) / 4
  */
-class Predictor : public AnalogComponent {
-
+class Predictor : public AnalogComponent
+{
 private:
     double _last_value;
     double _average;
@@ -53,9 +53,9 @@ private:
     InputValueList _filter_gain;
 
 protected:
-  virtual bool configure( SGPropertyNode& cfg_node,
-                          const std::string& cfg_name,
-                          SGPropertyNode& prop_root );
+    virtual bool configure( SGPropertyNode& cfg_node,
+                            const std::string& cfg_name,
+                            SGPropertyNode& prop_root );
 
 public:
     Predictor();

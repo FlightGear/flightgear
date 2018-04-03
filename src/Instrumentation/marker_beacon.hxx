@@ -33,7 +33,6 @@ class SGSampleGroup;
 
 class FGMarkerBeacon : public AbstractInstrument
 {
-
     // Inputs
     SGPropertyNode_ptr lon_node;
     SGPropertyNode_ptr lat_node;
@@ -57,7 +56,6 @@ class FGMarkerBeacon : public AbstractInstrument
     SGSharedPtr<SGSampleGroup> _sgr;
 
 public:
-
     enum fgMkrBeacType {
         NOBEACON = 0,
         INNER,

@@ -34,7 +34,7 @@ protected:
  /**
   * @brief configure this component from a property node. Iterates through all nodes found
   *        as childs under configNode and calls configure of the derived class for each child.
-  * @param configNode the property node containing the configuration 
+  * @param configNode the property node containing the configuration
   */
   virtual bool configure( SGPropertyNode& cfg_node,
                           const std::string& cfg_name,
@@ -54,7 +54,7 @@ public:
  /**
   * @brief configure this component from a property node. Iterates through all nodes found
   *        as childs under configNode and calls configure of the derived class for each child.
-  * @param configNode the property node containing the configuration 
+  * @param configNode the property node containing the configuration
   */
   bool configure( SGPropertyNode& prop_root,
                   SGPropertyNode& cfg );
@@ -63,12 +63,14 @@ public:
 /**
  * @brief A simple flipflop implementation
  */
-class FlipFlop : public Logic {
+class FlipFlop : public Logic
+{
 public:
+
 protected:
     /**
      * @brief Over-rideable hook method to allow derived classes to refine top-level
-     * node parsing. 
+     * node parsing.
      * @param aName
      * @param aNode
      * @return true if the node was handled, false otherwise.
@@ -77,10 +79,10 @@ protected:
                             const std::string& cfg_name,
                             SGPropertyNode& prop_root );
 
-   /** 
+   /**
     * @brief Implementation of the pure virtual function of the Component class. Gets called from
     * the update method if it's not disabled with the firstTime parameter set to true if this
-    * is the first call after being enabled 
+    * is the first call after being enabled
     * @param firstTime set to true if this is the first update call since this component has
              been enabled. Set to false for every subsequent call.
     * @param dt  the elapsed time since the last call
@@ -88,11 +90,10 @@ protected:
     void update( bool firstTime, double dt );
 
 private:
-   /** 
+   /**
     * @brief Pointer to the actual flip flop implementation
     */
     SGSharedPtr<FlipFlopImplementation> _implementation;
-
 };
 
 }

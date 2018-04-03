@@ -28,25 +28,23 @@
 #include <FDM/flight.hxx>
 
 
-class FGACMS: public FGInterface
+class FGACMS : public FGInterface
 {
 public:
     FGACMS( double dt );
     ~FGACMS();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on properties
     void update( double dt );
 
 private:
-
     SGPropertyNode_ptr _alt, _speed, _climb_rate;
     SGPropertyNode_ptr _pitch, _roll, _heading;
     SGPropertyNode_ptr _acc_lat, _acc_lon, _acc_down;
     SGPropertyNode_ptr _temp, _wow;
 };
-
 
 #endif // _ACMS_HXX

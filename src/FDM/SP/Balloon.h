@@ -1,6 +1,6 @@
 /*****************************************************************************
 
- Header:       BalloonSimInterface.h	
+ Header:       BalloonSimInterface.h
  Author:       Christian Mayer
  Date started: 07.10.99
 
@@ -25,11 +25,11 @@
 
 FUNCTIONAL DESCRIPTION
 ------------------------------------------------------------------------------
-interface to the the hot air balloon simulator
+interface to the hot air balloon simulator
 
 HISTORY
 ------------------------------------------------------------------------------
-07.10.1999 Christian Mayer	Created
+07.10.1999 Christian Mayer      Created
 *****************************************************************************/
 
 /****************************************************************************/
@@ -39,28 +39,27 @@ HISTORY
 #define BalloonSimInterface_H
 
 /****************************************************************************/
-/* INCLUDES								    */
+/* INCLUDES                                                                 */
 /****************************************************************************/
 
 #include <FDM/flight.hxx>
 
 #include "BalloonSim.h"
-		
-/****************************************************************************/
-/* DEFINES								    */
-/****************************************************************************/
 
 /****************************************************************************/
-/* DECLARATIONS  							    */
+/* DEFINES                                                                  */
+/****************************************************************************/
+
+/****************************************************************************/
+/* DECLARATIONS                                                             */
 /****************************************************************************/
 
 
-class FGBalloonSim: public FGInterface {
-
+class FGBalloonSim : public FGInterface
+{
     balloon current_balloon;
 
 public:
-
     FGBalloonSim( double dt );
     ~FGBalloonSim();
 
@@ -70,17 +69,12 @@ public:
     // copy FDM state from BalloonSim structures
     bool copy_from_BalloonSim();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on inputs, positions, velocities, etc.
     void update( double dt );
 };
 
-
 /****************************************************************************/
 #endif /*BalloonSimInterface_H*/
-
-
-
-

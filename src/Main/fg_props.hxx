@@ -127,7 +127,7 @@ inline SGPropertyNode * fgGetNode (const std::string & path, bool create = false
  * @return The node, or 0 if none exists and none was created.
  */
 extern SGPropertyNode * fgGetNode (const char * path,
-				   int index, bool create = false);
+                                   int index, bool create = false);
 
 /**
  * Get a property node with separate index.
@@ -144,7 +144,7 @@ extern SGPropertyNode * fgGetNode (const char * path,
  * @return The node, or 0 if none exists and none was created.
  */
 inline SGPropertyNode * fgGetNode (const std::string & path,
-				   int index, bool create = false)
+                                   int index, bool create = false)
 {
     return fgGetNode(path.c_str(), index, create );
 }
@@ -179,7 +179,7 @@ inline bool fgHasNode (const std::string & path)
  * any given in the string).
  */
 extern void fgAddChangeListener (SGPropertyChangeListener * listener,
-				 const char * path);
+                                 const char * path);
 
 /**
  * Add a listener to a node.
@@ -190,7 +190,7 @@ extern void fgAddChangeListener (SGPropertyChangeListener * listener,
  * any given in the string).
  */
 inline void fgAddChangeListener (SGPropertyChangeListener * listener,
-				 const std::string & path)
+                                 const std::string & path)
 {
     fgAddChangeListener( listener, path.c_str() );
 }
@@ -205,7 +205,7 @@ inline void fgAddChangeListener (SGPropertyChangeListener * listener,
  * any given in the string).
  */
 extern void fgAddChangeListener (SGPropertyChangeListener * listener,
-				 const char * path, int index);
+                                 const char * path, int index);
 
 /**
  * Add a listener to a node.
@@ -216,7 +216,7 @@ extern void fgAddChangeListener (SGPropertyChangeListener * listener,
  * any given in the string).
  */
 inline void fgAddChangeListener (SGPropertyChangeListener * listener,
-				 const std::string & path, int index)
+                                 const std::string & path, int index)
 {
     fgAddChangeListener( listener, path.c_str(), index );
 }
@@ -417,7 +417,7 @@ inline double fgGetDouble (const std::string & name, double defaultValue = 0.0)
  * @return The property's value as a string, or the default value provided.
  */
 extern const char * fgGetString (const char * name,
-				 const char * defaultValue = "");
+                                 const char * defaultValue = "");
 
 /**
  * Get a string value for a property.
@@ -721,7 +721,7 @@ extern void fgUntie (const char * name);
  * @param name The property name to tie (full path).
  * @param getter The getter function, or 0 if the value is unreadable.
  * @param setter The setter function, or 0 if the value is unmodifiable.
- * @param useDefault true if the setter should be invoked with any existing 
+ * @param useDefault true if the setter should be invoked with any existing
  *        property value should be; false if the old value should be
  *        discarded; defaults to true.
  */
@@ -731,9 +731,9 @@ fgTie (const char * name, V (*getter)(), void (*setter)(V) = 0,
        bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValueFunctions<V>(getter, setter),
-				 useDefault))
+                                 useDefault))
     SG_LOG(SG_GENERAL, SG_WARN,
-	   "Failed to tie property " << name << " to functions");
+           "Failed to tie property " << name << " to functions");
 }
 
 
@@ -751,7 +751,7 @@ fgTie (const char * name, V (*getter)(), void (*setter)(V) = 0,
  *        setter functions.
  * @param getter The getter function, or 0 if the value is unreadable.
  * @param setter The setter function, or 0 if the value is unmodifiable.
- * @param useDefault true if the setter should be invoked with any existing 
+ * @param useDefault true if the setter should be invoked with any existing
  *        property value should be; false if the old value should be
  *        discarded; defaults to true.
  */
@@ -761,12 +761,12 @@ fgTie (const char * name, int index, V (*getter)(int),
        void (*setter)(int, V) = 0, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
-				 SGRawValueFunctionsIndexed<V>(index,
-							       getter,
-							       setter),
-				 useDefault))
+                                 SGRawValueFunctionsIndexed<V>(index,
+                                                               getter,
+                                                               setter),
+                                 useDefault))
     SG_LOG(SG_GENERAL, SG_WARN,
-	   "Failed to tie property " << name << " to indexed functions");
+           "Failed to tie property " << name << " to indexed functions");
 }
 
 
@@ -785,7 +785,7 @@ fgTie (const char * name, int index, V (*getter)(int),
  *        unreadable.
  * @param setter The object's setter method, or 0 if the value is
  *        unmodifiable.
- * @param useDefault true if the setter should be invoked with any existing 
+ * @param useDefault true if the setter should be invoked with any existing
  *        property value should be; false if the old value should be
  *        discarded; defaults to true.
  */
@@ -795,10 +795,10 @@ fgTie (const char * name, T * obj, V (T::*getter)() const,
        void (T::*setter)(V) = 0, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
-				 SGRawValueMethods<T,V>(*obj, getter, setter),
-				 useDefault))
+                                 SGRawValueMethods<T,V>(*obj, getter, setter),
+                                 useDefault))
     SG_LOG(SG_GENERAL, SG_WARN,
-	   "Failed to tie property " << name << " to object methods");
+           "Failed to tie property " << name << " to object methods");
 }
 
 
@@ -817,24 +817,24 @@ fgTie (const char * name, T * obj, V (T::*getter)() const,
  *        setter methods.
  * @param getter The getter method, or 0 if the value is unreadable.
  * @param setter The setter method, or 0 if the value is unmodifiable.
- * @param useDefault true if the setter should be invoked with any existing 
+ * @param useDefault true if the setter should be invoked with any existing
  *        property value should be; false if the old value should be
  *        discarded; defaults to true.
  */
 template <class T, class V>
-inline void 
+inline void
 fgTie (const char * name, T * obj, int index,
        V (T::*getter)(int) const, void (T::*setter)(int, V) = 0,
        bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
-				 SGRawValueMethodsIndexed<T,V>(*obj,
-							       index,
-							       getter,
-							       setter),
-				 useDefault))
+                                 SGRawValueMethodsIndexed<T,V>(*obj,
+                                                               index,
+                                                               getter,
+                                                               setter),
+                                 useDefault))
     SG_LOG(SG_GENERAL, SG_WARN,
-	   "Failed to tie property " << name << " to indexed object methods");
+           "Failed to tie property " << name << " to indexed object methods");
 }
 
 

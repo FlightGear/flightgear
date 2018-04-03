@@ -54,7 +54,7 @@ public:
     bool parseAndRunWithOutput(const std::string& source,
                      std::string& output,
                      std::string& errors);
-    
+
     // Slightly more complicated hook to get a handle to a precompiled
     // Nasal script that can be invoked via a call() method.  The
     // caller is expected to delete the FGNasalScript returned from
@@ -74,13 +74,13 @@ public:
     naRef cmdArgGhost();
 
     void setCmdArg(SGPropertyNode* aNode);
-    
+
     /**
      * create Nasal props.Node for an SGPropertyNode*
      * This is the actual ghost, wrapped in a Nasal sugar class.
      */
     naRef wrappedPropsNode(SGPropertyNode* aProps);
-    
+
     // Callbacks for command and timer bindings
     virtual bool handleCommand( const char* moduleName,
                                 const char* fileName,
@@ -99,7 +99,7 @@ public:
 
     void addCommand(naRef func, const std::string& name);
     void removeCommand(const std::string& name);
-    
+
     /**
      * Set member of specified hash to given value
      */
@@ -112,12 +112,12 @@ public:
 
     naRef call(naRef code, int argc, naRef* args, naRef locals);
     naRef callWithContext(naContext ctx, naRef code, int argc, naRef* args, naRef locals);
-  
+
     naRef callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals);
     naRef callMethodWithContext(naContext ctx, naRef code, naRef self, int argc, naRef* args, naRef locals);
-  
+
     naRef propNodeGhost(SGPropertyNode* handle);
-  
+
     void registerToLoad(FGNasalModelData* data);
     void registerToUnload(FGNasalModelData* data);
 
@@ -127,7 +127,7 @@ public:
 
     nasal::Hash getGlobals() const
     { return nasal::Hash(_globals, _context); }
-  
+
     // This mechanism is here to allow naRefs to be passed to
     // locations "outside" the interpreter.  Normally, such a
     // reference would be garbage collected unexpectedly.  By passing
@@ -157,6 +157,7 @@ public:
     { return _log.get(); }
 
     static const char* subsystemName() { return "nasal"; }
+
 private:
     //friend class FGNasalScript;
     friend class FGNasalListener;
@@ -171,9 +172,9 @@ private:
     // Listener
     std::map<int, FGNasalListener *> _listener;
     std::vector<FGNasalListener *> _dead_listener;
-    
+
     std::vector<FGNasalModuleListener*> _moduleListeners;
-    
+
     static int _listenerId;
 
     void loadPropertyScripts();
@@ -193,12 +194,12 @@ private:
     SGPropertyNode_ptr _cmdArg;
 
     std::unique_ptr<simgear::BufferedLogCallback> _log;
-    
+
     typedef std::map<std::string, NasalCommand*> NasalCommandDict;
     NasalCommandDict _commands;
-    
+
     naRef _wrappedNodeFunc;
-    
+
     // track NasalTimer instances (created via settimer() call) -
     // this allows us to clean these up on shutdown
     std::vector<NasalTimer*> _nasalTimers;
@@ -206,15 +207,15 @@ private:
     // NasalTimer is a friend to invoke handleTimer and do the actual
     // dispatch of the settimer-d callback
     friend NasalTimer;
-    
+
     void handleTimer(NasalTimer* t);
-    
+
     // track persistent timers. These are owned from the Nasal side, so we
     // only track a non-owning reference here.
     std::vector<TimerObj*> _persistentTimers;
-    
+
     friend TimerObj;
-    
+
     void addPersistentTimer(TimerObj* pto);
     void removePersistentTimer(TimerObj* obj);
 
@@ -222,7 +223,8 @@ private:
 };
 
 #if 0
-class FGNasalScript {
+class FGNasalScript
+{
 public:
     ~FGNasalScript() { _nas->gcRelease(_gcKey); }
 
@@ -231,8 +233,9 @@ public:
         naCall(_nas->_context, _code, 0, &n, naNil(), naNil());
         return naGetError(_nas->_context) == 0;
     }
-    
+
     FGNasalSys* sys() const { return _nas; }
+
 private:
     friend class FGNasalSys;
     naRef _code;

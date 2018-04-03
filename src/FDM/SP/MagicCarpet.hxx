@@ -28,19 +28,17 @@
 #include <FDM/flight.hxx>
 
 
-class FGMagicCarpet: public FGInterface {
-
+class FGMagicCarpet : public FGInterface
+{
 public:
     FGMagicCarpet( double dt );
     ~FGMagicCarpet();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on inputs, positions, velocities, etc.
     void update( double dt );
-
 };
-
 
 #endif // _MAGICCARPET_HXX

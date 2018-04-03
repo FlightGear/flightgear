@@ -1,7 +1,7 @@
-// terrainsampler.hxx -- 
+// terrainsampler.hxx --
 //
 // Written by Torsten Dreyer, started July 2010
-// Based on local weather implementation in nasal from 
+// Based on local weather implementation in nasal from
 // Thorsten Renk
 //
 // Copyright (C) 2010  Curtis Olson
@@ -26,11 +26,12 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 namespace Environment {
+
 class TerrainSampler : public SGSubsystemGroup
 {
 public:
     TerrainSampler() : SGSubsystemGroup("TerrainSampler") {}
-	static TerrainSampler * createInstance( SGPropertyNode_ptr rootNode );
+    static TerrainSampler * createInstance( SGPropertyNode_ptr rootNode );
 };
 
 } // namespace

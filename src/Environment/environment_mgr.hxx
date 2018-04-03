@@ -38,62 +38,60 @@ class SGSky;
  */
 class FGEnvironmentMgr : public SGSubsystemGroup
 {
-
 public:
+    enum {
+        MAX_CLOUD_LAYERS = 5
+    };
 
-  enum {
-    MAX_CLOUD_LAYERS = 5
-  };
+    FGEnvironmentMgr ();
+    virtual ~FGEnvironmentMgr ();
 
-  FGEnvironmentMgr ();
-  virtual ~FGEnvironmentMgr ();
+    virtual InitStatus incrementalInit ();
+    virtual void reinit ();
+    virtual void shutdown ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (double dt);
 
-  virtual InitStatus incrementalInit ();
-  virtual void reinit ();
-  virtual void shutdown ();
-  virtual void bind ();
-  virtual void unbind ();
-  virtual void update (double dt);
+    /**
+     * Get the environment information for the plane's current position.
+     */
+    virtual FGEnvironment getEnvironment () const;
 
-  /**
-   * Get the environment information for the plane's current position.
-   */
-  virtual FGEnvironment getEnvironment () const;
+    /**
+     * Get the environment information for another location.
+     */
+    virtual FGEnvironment getEnvironment (double lat, double lon,
+                                          double alt) const;
 
+    virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 
-  /**
-   * Get the environment information for another location.
-   */
-  virtual FGEnvironment getEnvironment (double lat, double lon,
-					double alt) const;
-
-  virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 private:
-  void updateClosestAirport();
-  
-  double get_cloud_layer_span_m (int index) const;
-  void set_cloud_layer_span_m (int index, double span_m);
-  double get_cloud_layer_elevation_ft (int index) const;
-  void set_cloud_layer_elevation_ft (int index, double elevation_ft);
-  double get_cloud_layer_thickness_ft (int index) const;
-  void set_cloud_layer_thickness_ft (int index, double thickness_ft);
-  double get_cloud_layer_transition_ft (int index) const;
-  void set_cloud_layer_transition_ft (int index, double transition_ft);
-  const char * get_cloud_layer_coverage (int index) const;
-  void set_cloud_layer_coverage (int index, const char * coverage);
-  int get_cloud_layer_coverage_type (int index) const;
-  void set_cloud_layer_coverage_type (int index, int type );
-  double get_cloud_layer_visibility_m (int index) const;
-  void set_cloud_layer_visibility_m (int index, double visibility_m);
-  double get_cloud_layer_maxalpha (int index ) const;
-  void set_cloud_layer_maxalpha (int index, double maxalpha);
+    void updateClosestAirport();
 
-  FGEnvironment * _environment;	// always the same, for now
-  FGClouds *fgClouds;
-  bool _cloudLayersDirty;
-  simgear::TiedPropertyList _tiedProperties;
-  SGPropertyChangeListener * _3dCloudsEnableListener;
-  SGSky* _sky;
+    double get_cloud_layer_span_m (int index) const;
+    void set_cloud_layer_span_m (int index, double span_m);
+    double get_cloud_layer_elevation_ft (int index) const;
+    void set_cloud_layer_elevation_ft (int index, double elevation_ft);
+    double get_cloud_layer_thickness_ft (int index) const;
+    void set_cloud_layer_thickness_ft (int index, double thickness_ft);
+    double get_cloud_layer_transition_ft (int index) const;
+    void set_cloud_layer_transition_ft (int index, double transition_ft);
+    const char * get_cloud_layer_coverage (int index) const;
+    void set_cloud_layer_coverage (int index, const char * coverage);
+    int get_cloud_layer_coverage_type (int index) const;
+    void set_cloud_layer_coverage_type (int index, int type );
+    double get_cloud_layer_visibility_m (int index) const;
+    void set_cloud_layer_visibility_m (int index, double visibility_m);
+    double get_cloud_layer_maxalpha (int index ) const;
+    void set_cloud_layer_maxalpha (int index, double maxalpha);
+
+    FGEnvironment * _environment; // always the same, for now
+    FGClouds *fgClouds;
+    bool _cloudLayersDirty;
+    simgear::TiedPropertyList _tiedProperties;
+    SGPropertyChangeListener * _3dCloudsEnableListener;
+    SGSky* _sky;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

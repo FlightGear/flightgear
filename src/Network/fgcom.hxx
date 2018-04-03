@@ -23,9 +23,10 @@
 #include <simgear/props/props.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
-class FGCom : public SGSubsystem, public SGPropertyChangeListener
+class FGCom : public SGSubsystem,
+              public SGPropertyChangeListener
 {
-  public:
+public:
     FGCom();
     virtual ~FGCom();
 
@@ -38,9 +39,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     virtual void shutdown();
     void iaxTextEvent(struct iaxc_ev_text text);
 
-
-  private:
-
+private:
     SGPropertyNode_ptr _ptt_node;                             // PTT; nonzero int indicating channel number (instrumentation/comm/[channel-1])
     SGPropertyNode_ptr _selected_comm_node;                   // selected channel (fgcom); nonzero channel int indicating channel number (instrumentation/comm/[channel-1])
     SGPropertyNode_ptr _commFrequencyNode;                    // current comm node in use; e.g. /instrumentation/comm[0]
@@ -67,7 +66,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _showMessages_node;                    // sim/fgcom/show-messages
     SGPropertyNode_ptr _mpTransmitFrequencyNode;              // sim/multiplay/comm-transmit-frequency-mhz
     SGPropertyNode_ptr _mpTransmitPowerNode;                  // sim/multiplay/comm-transmit-power-norm
-
 
     double   _maxRange;
     double   _minRange;
@@ -98,7 +96,6 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     void updateCall();
     void connectToCommFrequency();
     void testMode(bool testMode);
-
 };
 
 #endif // of FG_FGCOM_HXX

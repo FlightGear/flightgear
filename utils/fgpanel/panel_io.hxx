@@ -31,9 +31,10 @@
 
 #include "FGPanel.hxx"
 
-class FGReadablePanel : public FGPanel {
+class FGReadablePanel : public FGPanel
+{
 public:
-  static SGSharedPtr<FGPanel> read (SGPropertyNode_ptr root);
+    static SGSharedPtr<FGPanel> read (SGPropertyNode_ptr root);
 };
 
 #endif // __PANEL_IO_HXX

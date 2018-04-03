@@ -140,17 +140,17 @@ public:
     inline void set_rotation( double rot ) { rotation = rot; }
     inline bool get_power_btn() const { return power_btn; }
     inline void set_power_btn( bool val ) {
-	power_btn = val;
+        power_btn = val;
     }
     inline bool get_audio_btn() const { return audio_btn; }
     inline void set_audio_btn( bool val ) {
-	audio_btn = val;
+        audio_btn = val;
     }
     inline double get_vol_btn() const { return vol_btn; }
     inline void set_vol_btn( double val ) {
-	if ( val < 0.0 ) val = 0.0;
-	if ( val > 1.0 ) val = 1.0;
-	vol_btn = val;
+        if ( val < 0.0 ) val = 0.0;
+        if ( val > 1.0 ) val = 1.0;
+        vol_btn = val;
     }
     inline bool get_adf_btn() const { return adf_btn; }
     inline void set_adf_btn( bool val ) { adf_btn = val; }
@@ -166,7 +166,7 @@ public:
     // outputs
     inline int get_freq () const { return freq; }
     inline void set_freq( int f ) {
-	freq = f;
+        freq = f;
         need_update = true;
     }
     int get_stby_freq () const;
@@ -184,6 +184,5 @@ public:
     inline bool get_flt_ann() const { return flt_ann; }
     inline bool get_et_ann() const { return et_ann; }
 };
-
 
 #endif // _FG_KR_87_HXX

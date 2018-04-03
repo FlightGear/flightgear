@@ -19,11 +19,10 @@
 class FGAIBase;
 class FGAIManager;
 
-class FGSubmodelMgr : public SGSubsystem, public SGPropertyChangeListener
+class FGSubmodelMgr : public SGSubsystem,
+                      public SGPropertyChangeListener
 {
-
 public:
-
     typedef struct {
         SGPropertyNode_ptr trigger_node;
         SGPropertyNode_ptr prop;
@@ -107,7 +106,6 @@ public:
     void shutdown() override;
 
 private:
-
     typedef std::vector <submodel*> submodel_vector_type;
     typedef submodel_vector_type::iterator submodel_vector_iterator;
 
@@ -183,10 +181,9 @@ private:
 
     SGGeod userpos;
     SGGeod offsetpos;
-    
+
     SGVec3d getCartOffsetPos(submodel* sm) const;
     void setOffsetPos(submodel* sm);
-
 };
 
 #endif // __SYSTEMS_SUBMODEL_HXX

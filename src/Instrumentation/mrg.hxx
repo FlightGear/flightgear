@@ -35,9 +35,7 @@
 
 class MasterReferenceGyro : public SGSubsystem
 {
-
 public:
-
     MasterReferenceGyro ( SGPropertyNode *node );
     MasterReferenceGyro ();
     virtual ~MasterReferenceGyro ();
@@ -49,7 +47,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     static const double gravity; //conversion factor
 
     std::string _name;

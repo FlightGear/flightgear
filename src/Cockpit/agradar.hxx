@@ -1,7 +1,7 @@
 // Air Ground Radar
 //
 // Written by Vivian MEAZZA, started Feb 2008.
-// 
+//
 //
 // Copyright (C) 2008  Vivain MEAZZA - vivian.meazza@lineone.net
 //
@@ -30,9 +30,9 @@
 
 #include "wxradar.hxx"
 
-class agRadar : public wxRadarBg{
+class agRadar : public wxRadarBg
+{
 public:
-
     agRadar ( SGPropertyNode *node );
     agRadar ();
     virtual ~agRadar ();

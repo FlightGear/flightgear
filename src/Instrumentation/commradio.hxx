@@ -28,10 +28,11 @@
 
 namespace Instrumentation {
 
-class SignalQualityComputer : public SGReferenced {
+class SignalQualityComputer : public SGReferenced
+{
 public:
-  virtual ~SignalQualityComputer();
-  virtual double computeSignalQuality( double distance_nm ) const = 0;
+    virtual ~SignalQualityComputer();
+    virtual double computeSignalQuality( double distance_nm ) const = 0;
 };
 
 typedef SGSharedPtr<SignalQualityComputer> SignalQualityComputerRef;
@@ -39,7 +40,7 @@ typedef SGSharedPtr<SignalQualityComputer> SignalQualityComputerRef;
 class CommRadio : public AbstractInstrument
 {
 public:
-  static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
+    static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
 };
 
 }

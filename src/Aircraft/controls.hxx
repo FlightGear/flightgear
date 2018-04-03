@@ -31,9 +31,7 @@
 
 class FGControls : public SGSubsystem
 {
-
 public:
-
     enum {
         ALL_ENGINES = -1,
         MAX_ENGINES = 12
@@ -83,19 +81,19 @@ public:
         ALL_EJECTION_SEATS = -1,
         MAX_EJECTION_SEATS = 10
     };
-   
+
     enum {
         SEAT_SAFED = -1,
         SEAT_ARMED = 0,
         SEAT_FAIL = 1
     };
-   
-    enum { 
+
+    enum {
         CMD_SEL_NORM = -1,
         CMD_SEL_AFT = 0,
         CMD_SEL_SOLO = 1
     };
-    
+
 private:
     // controls/flight/
     double aileron;
@@ -143,7 +141,7 @@ private:
     bool fuel_selector[MAX_TANKS];
     int to_engine[MAX_TANKS];
     int to_tank[MAX_TANKS];
-    
+
     // controls/fuel/tank[n]/pump[p]/
     bool boost_pump[MAX_TANKS * MAX_BOOSTPUMPS];
 
@@ -174,7 +172,7 @@ private:
     // controls/anti-ice/engine[n]/
     bool carb_heat[MAX_ENGINES];
     bool inlet_heat[MAX_ENGINES];
-    
+
     // controls/hydraulic/system[n]/
     bool engine_pump[MAX_HYD_SYSTEMS];
     bool electric_pump[MAX_HYD_SYSTEMS];
@@ -193,7 +191,7 @@ private:
 
     // controls/pneumatic/engine[n]/
     bool engine_bleed[MAX_ENGINES];
-    
+
     // controls/pressurization/
     int mode;
     bool dump;
@@ -247,16 +245,15 @@ private:
     double bank_angle_select;
     double vertical_speed_select;
     double speed_select;
-    double mach_select; 
+    double mach_select;
     int vertical_mode;
     int lateral_mode;
-     
 
     SGPropertyNode_ptr auto_coordination;
     SGPropertyNode_ptr auto_coordination_factor;
     simgear::TiedPropertyList _tiedProperties;
-public:
 
+public:
     FGControls();
     ~FGControls();
 
@@ -266,10 +263,10 @@ public:
     void unbind ();
     void update (double dt);
     virtual void reinit();
-  
+
     // Reset function
     void reset_all(void);
-        
+
     // Query functions
     // controls/flight/
     inline double get_aileron() const { return aileron; }
@@ -280,7 +277,7 @@ public:
     inline double get_rudder_trim() const { return rudder_trim; }
     inline double get_flaps() const { return flaps; }
     inline double get_slats() const { return slats; }
-    inline bool get_BLC() const { return BLC; }  
+    inline bool get_BLC() const { return BLC; }
     inline double get_spoilers() const { return spoilers; }
     inline double get_speedbrake() const { return speedbrake; }
     inline double get_wing_sweep() const { return wing_sweep; }
@@ -305,7 +302,7 @@ public:
     }
     inline int get_magnetos(int engine) const { return magnetos[engine]; }
     inline int get_feed_tank(int engine) const { return feed_tank[engine]; }
-    inline bool get_nitrous_injection(int engine) const { 
+    inline bool get_nitrous_injection(int engine) const {
         return nitrous_injection[engine];
     }
     inline double get_cowl_flaps_norm(int engine) const {
@@ -315,8 +312,8 @@ public:
     inline int get_ignition(int engine) const { return ignition[engine]; }
     inline bool get_augmentation(int engine) const { return augmentation[engine]; }
     inline bool get_reverser(int engine) const { return reverser[engine]; }
-    inline bool get_water_injection(int engine) const { 
-        return water_injection[engine]; 
+    inline bool get_water_injection(int engine) const {
+        return water_injection[engine];
     }
     inline double get_condition(int engine) const { return condition[engine]; }
 
@@ -375,7 +372,7 @@ public:
     inline bool get_APU_generator() const { return APU_generator; }
 
     // controls/electric/engine[n]/
-    inline bool get_generator_breaker(int engine) const { 
+    inline bool get_generator_breaker(int engine) const {
         return generator_breaker[engine];
     }
     inline bool get_bus_tie(int engine) const { return bus_tie[engine]; }
@@ -385,7 +382,7 @@ public:
 
     // controls/pneumatic/engine[n]/
     inline bool get_engine_bleed(int engine) const { return engine_bleed[engine]; }
-    
+
     // controls/pressurization/
     inline int get_mode() const { return mode; }
     inline double get_outflow_valve() const { return outflow_valve; }
@@ -427,7 +424,7 @@ public:
         return eseat_status[which_seat];
     }
     inline int get_cmd_selector_valve() const { return cmd_selector_valve; }
-    
+
 
     // controls/APU/
     inline int get_off_start_run() const { return off_start_run; }
@@ -439,19 +436,19 @@ public:
     inline double get_heading_select() const { return heading_select; }
     inline double get_altitude_select() const { return altitude_select; }
     inline double get_bank_angle_select() const { return bank_angle_select; }
-    inline double get_vertical_speed_select() const { 
-        return vertical_speed_select; 
+    inline double get_vertical_speed_select() const {
+        return vertical_speed_select;
     }
     inline double get_speed_select() const { return speed_select; }
-    inline double get_mach_select() const { return mach_select; } 
+    inline double get_mach_select() const { return mach_select; }
     inline int get_vertical_mode() const { return vertical_mode; }
     inline int get_lateral_mode() const { return lateral_mode; }
 
     // controls/autoflight/autopilot[n]/
-    inline bool get_autopilot_engage(int ap) const { 
+    inline bool get_autopilot_engage(int ap) const {
         return autopilot_engage[ap];
     }
-     
+
 
     // Update functions
     // controls/flight/
@@ -471,14 +468,14 @@ public:
     void move_flaps( double amt );
     void set_slats( double pos );
     void move_slats( double amt );
-    void set_BLC( bool val ); 
+    void set_BLC( bool val );
     void set_spoilers( double pos );
     void move_spoilers( double amt );
     void set_speedbrake( double pos );
     void move_speedbrake( double amt );
     void set_wing_sweep( double pos );
     void move_wing_sweep( double amt );
-    void set_wing_fold( bool val );   
+    void set_wing_fold( bool val );
     void set_drag_chute( bool val );
 
     // controls/engines/
@@ -507,7 +504,7 @@ public:
     void set_augmentation( int engine, bool val );
     void set_reverser( int engine, bool val );
     void set_water_injection( int engine, bool val );
-    void set_condition( int engine, double val );    
+    void set_condition( int engine, double val );
 
     // controls/fuel
     void set_dump_valve( bool val );
@@ -569,7 +566,7 @@ public:
 
     // controls/pneumatic/engine[n]/
     void set_engine_bleed( int engine, bool val );
-    
+
     // controls/pressurization/
     void set_mode( int mode );
     void set_outflow_valve( double pos );
@@ -631,8 +628,8 @@ public:
     void move_vertical_speed_select( double amt );
     void set_speed_select( double speed );
     void move_speed_select( double amt );
-    void set_mach_select( double mach ); 
-    void move_mach_select( double amt ); 
+    void set_mach_select( double mach );
+    void move_mach_select( double amt );
     void set_vertical_mode( int mode );
     void set_lateral_mode( int mode );
 
@@ -640,16 +637,16 @@ public:
     void set_autopilot_engage( int ap, bool val );
 
     static const char* subsystemName() { return "controls"; }
+
 private:
     inline void do_autocoordination() {
-      // check for autocoordination
-      if ( auto_coordination->getBoolValue() ) {
-        double factor = auto_coordination_factor->getDoubleValue();
-        if( factor > 0.0 ) set_rudder( aileron * factor );
-      }
-    }    
+        // check for autocoordination
+        if ( auto_coordination->getBoolValue() ) {
+            double factor = auto_coordination_factor->getDoubleValue();
+            if( factor > 0.0 ) set_rudder( aileron * factor );
+        }
+    }
 };
-
 
 #endif // _CONTROLS_HXX
 

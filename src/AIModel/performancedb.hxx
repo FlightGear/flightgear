@@ -15,7 +15,7 @@ class SGPath;
  *
  * Allows to store performance data for later reuse/retrieval. Just
  * a simple map for now.
- * 
+ *
  * @author Thomas F�rster <t.foerster@biologie.hu-berlin.de>
 */
 //TODO provide std::map interface?
@@ -41,6 +41,7 @@ public:
     PerformanceData* getDefaultPerformance() const;
 
     static const char* subsystemName() { return "aircraft-performance-db"; }
+
 private:
     void load(const SGPath& path);
 
@@ -49,13 +50,13 @@ private:
 
     typedef std::map<std::string, PerformanceData*> PerformanceDataDict;
     PerformanceDataDict _db;
-    
+
     const std::string& findAlias(const std::string& acType) const;
-  
+
     typedef std::pair<std::string, std::string> StringPair;
-  /// alias list, to allow type/class names to share data. This is used to merge
-  /// related types together. Note it's ordered, and not a map since we permit
-  /// partial matches when merging - the first matching alias is used.
+    /// alias list, to allow type/class names to share data. This is used to merge
+    /// related types together. Note it's ordered, and not a map since we permit
+    /// partial matches when merging - the first matching alias is used.
     std::vector<StringPair> _aliases;
 };
 

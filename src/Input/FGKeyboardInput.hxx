@@ -37,37 +37,39 @@
 ////////////////////////////////////////////////////////////////////////
 // The Keyboard Input Class
 ////////////////////////////////////////////////////////////////////////
-class FGKeyboardInput : public SGSubsystem,FGCommonInput {
+class FGKeyboardInput : public SGSubsystem,
+                        FGCommonInput
+{
 public:
-  FGKeyboardInput();
-  virtual ~FGKeyboardInput();
+    FGKeyboardInput();
+    virtual ~FGKeyboardInput();
 
-  virtual void init();
-  virtual void postinit();
-  virtual void bind();
-  virtual void unbind();
-  virtual void update( double dt );
+    virtual void init();
+    virtual void postinit();
+    virtual void bind();
+    virtual void unbind();
+    virtual void update( double dt );
 
-  static const int MAX_KEYS = 1024;
+    static const int MAX_KEYS = 1024;
 
 private:
-  const binding_list_t& _find_key_bindings (unsigned int k, int modifiers);
-  void doKey (int k, int modifiers, int x, int y);
+    const binding_list_t& _find_key_bindings (unsigned int k, int modifiers);
+    void doKey (int k, int modifiers, int x, int y);
 
-  static void keyHandler(int key, int keymod, int mousex, int mousey);
-  static FGKeyboardInput * keyboardInput;
-  FGButton bindings[MAX_KEYS];
-  SGPropertyNode_ptr _key_event;
-  int  _key_code;
-  int  _key_modifiers;
-  bool _key_pressed;
-  bool _key_shift;
-  bool _key_ctrl;
-  bool _key_alt;
-  bool _key_meta;
-  bool _key_super;
-  bool _key_hyper;
-  simgear::TiedPropertyList _tiedProperties;
+    static void keyHandler(int key, int keymod, int mousex, int mousey);
+    static FGKeyboardInput * keyboardInput;
+    FGButton bindings[MAX_KEYS];
+    SGPropertyNode_ptr _key_event;
+    int  _key_code;
+    int  _key_modifiers;
+    bool _key_pressed;
+    bool _key_shift;
+    bool _key_ctrl;
+    bool _key_alt;
+    bool _key_meta;
+    bool _key_super;
+    bool _key_hyper;
+    simgear::TiedPropertyList _tiedProperties;
 };
 
 #endif

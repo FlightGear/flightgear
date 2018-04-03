@@ -35,9 +35,7 @@
  */
 class StaticSystem : public SGSubsystem
 {
-
 public:
-
     StaticSystem ( SGPropertyNode *node );
     StaticSystem ( int i );
     virtual ~StaticSystem ();
@@ -49,7 +47,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     std::string _name;
     int _num;
     double _tau;
@@ -61,7 +58,6 @@ private:
     SGPropertyNode_ptr _beta_node;
     SGPropertyNode_ptr _alpha_node;
     SGPropertyNode_ptr _mach_node;
-    
 };
 
 #endif // __SYSTEMS_STATIC_HXX

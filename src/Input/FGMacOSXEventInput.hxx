@@ -33,28 +33,30 @@
 class FGMacOSXEventInputPrivate;
 
 struct FGMacOSXEventData : public FGEventData {
-  FGMacOSXEventData(std::string name, double value, double dt, int modifiers) :
-    FGEventData(value, dt, modifiers), name(name) {}
-  std::string name;
+    FGMacOSXEventData(std::string name, double value, double dt, int modifiers) :
+        FGEventData(value, dt, modifiers), name(name) {}
+    std::string name;
 };
 
 
 //
 // Mac OS X specific FGEventInput
 //
-class FGMacOSXEventInput : public FGEventInput {
+class FGMacOSXEventInput : public FGEventInput
+{
 public:
     FGMacOSXEventInput();
 
-  virtual ~FGMacOSXEventInput();
-  virtual void update(double dt);
-  virtual void init();
+    virtual ~FGMacOSXEventInput();
+    virtual void update(double dt);
+    virtual void init();
     virtual void postinit();
     virtual void shutdown();
+
 private:
     friend class FGMacOSXEventInputPrivate;
-    
-  std::unique_ptr<FGMacOSXEventInputPrivate> d;
+
+    std::unique_ptr<FGMacOSXEventInputPrivate> d;
 };
 
 #endif

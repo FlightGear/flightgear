@@ -41,36 +41,36 @@ class FGAIManager;
 class FDMShell : public SGSubsystem
 {
 public:
-  FDMShell();
-  ~FDMShell() override;
-  
-  void init() override;
-  void shutdown() override;
-  void reinit() override;
-  void postinit() override;
-  
-  void bind() override;
-  void unbind() override;
-  
-  void update(double dt) override;
+    FDMShell();
+    ~FDMShell() override;
+
+    void init() override;
+    void shutdown() override;
+    void reinit() override;
+    void postinit() override;
+
+    void bind() override;
+    void unbind() override;
+
+    void update(double dt) override;
 
     FGInterface* getInterface() const;
     
     static const char* subsystemName() { return "flight"; }
-private:
 
-  void createImplementation();
-  
-  TankPropertiesList _tankProperties;
-  SGSharedPtr<FGInterface> _impl;
-  SGPropertyNode_ptr _props; // root property tree for this FDM instance
-  bool _dataLogging;
-  
-  SGPropertyNode_ptr _wind_north, _wind_east,_wind_down;
-  SGPropertyNode_ptr _control_fdm_atmo,_temp_degc,_pressure_inhg;
-  SGPropertyNode_ptr _density_slugft, _data_logging, _replay_master;
-    
-  SGPropertyNode_ptr _initialFdmProperties;
+private:
+    void createImplementation();
+
+    TankPropertiesList _tankProperties;
+    SGSharedPtr<FGInterface> _impl;
+    SGPropertyNode_ptr _props; // root property tree for this FDM instance
+    bool _dataLogging;
+
+    SGPropertyNode_ptr _wind_north, _wind_east,_wind_down;
+    SGPropertyNode_ptr _control_fdm_atmo,_temp_degc,_pressure_inhg;
+    SGPropertyNode_ptr _density_slugft, _data_logging, _replay_master;
+
+    SGPropertyNode_ptr _initialFdmProperties;
 
     SGSharedPtr<FGAIManager> _ai_mgr;
     SGPropertyNode_ptr _max_radius_nm;

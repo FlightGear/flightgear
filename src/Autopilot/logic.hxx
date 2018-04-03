@@ -32,11 +32,13 @@ namespace FGXMLAutopilot {
 /**
  * @brief A simple logic class writing &lt;condition&gt; to a property
  */
-class Logic : public DigitalComponent {
+class Logic : public DigitalComponent
+{
 public:
     bool get_input() const;
     void set_output( bool value );
     bool get_output() const;
+
 protected:
     void update( bool firstTime, double dt );
 };

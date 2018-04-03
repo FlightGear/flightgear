@@ -27,7 +27,8 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 
-class Transponder : public AbstractInstrument, public SGPropertyChangeListener
+class Transponder : public AbstractInstrument,
+                    public SGPropertyChangeListener
 {
 public:
     Transponder(SGPropertyNode *node);
@@ -37,20 +38,18 @@ public:
     void update (double dt) override;
     void bind() override;
     void unbind() override;
-    
+
 protected:
     bool isPowerSwitchOn() const override;
-    
+
 private:
-    enum Mode
-    {
+    enum Mode {
         MODE_A = 0,
         MODE_C,
         MODE_S
     };
-    
-    enum KnobPosition
-    {
+
+    enum KnobPosition {
         KNOB_OFF = 0,
         KNOB_STANDBY,
         KNOB_TEST,
@@ -58,7 +57,7 @@ private:
         KNOB_ON,
         KNOB_ALT
     };
-    
+
     // annunciators, for KT-70 compatibility only
     // these should be replaced with conditionals in the instrument
     bool getFLAnnunciator() const;
@@ -67,7 +66,7 @@ private:
     bool getOnAnnunciator() const;
     bool getStandbyAnnunciator() const;
     bool getReplyAnnunciator() const;
-    
+
     // Inputs
     SGPropertyNode_ptr _pressureAltitude_node;
     SGPropertyNode_ptr _autoGround_node;
@@ -77,13 +76,13 @@ private:
     SGPropertyNode_ptr _knob_node;
     SGPropertyNode_ptr _idCode_node;
     SGPropertyNode_ptr _digit_node[4];
-    
+
     simgear::TiedPropertyList _tiedProperties;
-    
+
     SGPropertyNode_ptr _identBtn_node;
     bool _identMode = false;
     bool _kt70Compat;
-    
+
     // Outputs
     SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _altitudeValid_node;
@@ -101,9 +100,9 @@ private:
     std::string _altitudeSourcePath;
     std::string _autoGroundPath;
     std::string _airspeedSourcePath;
-    
+
     void valueChanged (SGPropertyNode *) override;
-    
+
     int setMinMax(int val);
 };
 

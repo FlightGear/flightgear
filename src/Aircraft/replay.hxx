@@ -56,7 +56,7 @@ typedef std::vector < FGReplayMessages > replay_messages_type;
 
 /**
  * A recording/replay module for FlightGear flights
- * 
+ *
  */
 
 class FGReplay : public SGSubsystem

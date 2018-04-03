@@ -11,7 +11,7 @@
 #include <osg/Switch>
 
 #include <memory>
-#include <simgear/structure/subsystem_mgr.hxx>	// for SGSubsystem
+#include <simgear/structure/subsystem_mgr.hxx>    // for SGSubsystem
 
 
 // Don't pull in the headers, since we don't need them here.
@@ -21,32 +21,32 @@ class FGFX;
 class FGAircraftModel : public SGSubsystem
 {
 public:
+    FGAircraftModel ();
+    virtual ~FGAircraftModel ();
 
-  FGAircraftModel ();
-  virtual ~FGAircraftModel ();
-
-  virtual void init ();
-  virtual void shutdown ();
-  virtual void reinit ();
-  virtual void bind ();
-  virtual void unbind ();
-  virtual void update (double dt);
-  virtual SGModelPlacement * get3DModel() { return _aircraft.get(); }
-  virtual SGVec3d& getVelocity() { return _velocity; }
+    virtual void init ();
+    virtual void shutdown ();
+    virtual void reinit ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (double dt);
+    virtual SGModelPlacement * get3DModel() { return _aircraft.get(); }
+    virtual SGVec3d& getVelocity() { return _velocity; }
 
     static const char* subsystemName() { return "aircraft-model"; }
+
 private:
-  void deinit ();
-  
+    void deinit ();
+
     std::unique_ptr<SGModelPlacement> _aircraft;
     std::unique_ptr<SGModelPlacement> _interior;
-    
-  SGVec3d _velocity;
-  SGSharedPtr<FGFX>  _fx;
 
-  SGPropertyNode_ptr _speed_n;
-  SGPropertyNode_ptr _speed_e;
-  SGPropertyNode_ptr _speed_d;
+    SGVec3d _velocity;
+    SGSharedPtr<FGFX>  _fx;
+
+    SGPropertyNode_ptr _speed_n;
+    SGPropertyNode_ptr _speed_e;
+    SGPropertyNode_ptr _speed_d;
 };
 
 #endif // __ACMODEL_HXX

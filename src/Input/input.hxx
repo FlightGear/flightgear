@@ -45,18 +45,17 @@
 class FGInput : public SGSubsystemGroup
 {
 public:
-  /**
-   * Default constructor.
-   */
-  FGInput ();
+    /**
+     * Default constructor.
+     */
+    FGInput ();
 
-  /**
-   * Destructor.
-   */
-  virtual ~FGInput();
+    /**
+     * Destructor.
+     */
+    virtual ~FGInput();
 
-  static const char* subsystemName() { return "input"; }
-
+    static const char* subsystemName() { return "input"; }
 };
 
 #endif // _INPUT_HXX

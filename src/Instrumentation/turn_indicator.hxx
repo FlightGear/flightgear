@@ -20,7 +20,7 @@
 /**
  * Model an electric-powered turn indicator.
  *
- * This class does not model the slip/skid ball; that is properly 
+ * This class does not model the slip/skid ball; that is properly
  * a separate instrument.
  *
  * Input properties:
@@ -37,9 +37,7 @@
  */
 class TurnIndicator : public SGSubsystem
 {
-
 public:
-
     TurnIndicator ( SGPropertyNode *node );
     virtual ~TurnIndicator ();
 
@@ -50,7 +48,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     Gyro _gyro;
     double _last_rate;
 
@@ -61,7 +58,6 @@ private:
     SGPropertyNode_ptr _yaw_rate_node;
     SGPropertyNode_ptr _electric_current_node;
     SGPropertyNode_ptr _rate_out_node;
-    
 };
 
 #endif // __INSTRUMENTS_TURN_INDICATOR_HXX

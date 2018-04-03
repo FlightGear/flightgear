@@ -31,11 +31,10 @@
  * /instrumentation/"name"/indicated-ground-speed-kt
  * /instrumentation/"name"/indicated-time-kt
  */
-class TACAN : public SGSubsystem, public SGPropertyChangeListener
+class TACAN : public SGSubsystem,
+              public SGPropertyChangeListener
 {
-
-  public:
-
+public:
     TACAN(SGPropertyNode *node);
     virtual ~TACAN();
 
@@ -43,8 +42,7 @@ class TACAN : public SGSubsystem, public SGPropertyChangeListener
     virtual void reinit ();
     virtual void update (double delta_time_sec);
 
-  private:
-
+private:
     void disabled(bool force = false);
 
     void search (double frequency, const SGGeod& pos);
@@ -88,6 +86,5 @@ class TACAN : public SGSubsystem, public SGPropertyChangeListener
 
     int _listener_active;
 };
-
 
 #endif // __INSTRUMENTS_TACAN_HXX

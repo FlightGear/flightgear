@@ -40,9 +40,7 @@ using std::string;
  */
 class PitotSystem : public SGSubsystem
 {
-
 public:
-
     PitotSystem ( SGPropertyNode *node );
     virtual ~PitotSystem ();
 
@@ -52,7 +50,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     std::string _name;
     int _num;
     double _stall_factor;

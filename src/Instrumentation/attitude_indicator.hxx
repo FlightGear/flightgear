@@ -38,9 +38,7 @@
  */
 class AttitudeIndicator : public SGSubsystem
 {
-
 public:
-
     AttitudeIndicator ( SGPropertyNode *node );
     virtual ~AttitudeIndicator ();
 
@@ -51,7 +49,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     std::string _name;
     int _num;
     std::string _suction;

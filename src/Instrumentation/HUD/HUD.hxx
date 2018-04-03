@@ -40,7 +40,8 @@ class fntTexFont;
 class FGViewer;
 class ClipBox;
 
-class LineSegment {
+class LineSegment
+{
 public:
     LineSegment(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1)
         : _x0(x0), _y0(y0), _x1(x1), _y1(y1) {}
@@ -56,7 +57,8 @@ private:
 
 
 
-class LineList {
+class LineList
+{
 public:
     void add(const LineSegment& seg) { _list.push_back(seg); }
     void erase() { _list.erase(_list.begin(), _list.end()); }
@@ -76,7 +78,8 @@ private:
 
 
 
-class HUDText {
+class HUDText
+{
 public:
     HUDText(fntRenderer *f, float x, float y, const char *s, int align = 0, int digits = 0);
     void draw();
@@ -91,7 +94,8 @@ private:
 
 
 
-class TextList {
+class TextList
+{
 public:
     TextList() { _font = 0; }
 
@@ -111,14 +115,16 @@ private:
 
 
 
-class HUD : public SGSubsystem, public SGPropertyChangeListener {
+class HUD : public SGSubsystem,
+            public SGPropertyChangeListener
+{
 public:
     HUD();
     ~HUD();
     void init();
     void update(double);
 
-  void reinit();
+    void reinit();
 
     // called from Main/renderer.cxx to draw 2D and 3D HUD
     void draw(osg::State&);
@@ -163,12 +169,12 @@ protected:
 
 private:
     void deinit();
-    
+
     void draw3D();
     void draw2D(GLfloat, GLfloat, GLfloat, GLfloat);
 
     void currentColorChanged();
-    
+
     class Input;
     class Item;
     class Label;

@@ -35,17 +35,15 @@ namespace FGXMLAutopilot {
 /**
  * @brief Base class for other autopilot components
  */
-class Component : public SGSubsystem {
-
+class Component : public SGSubsystem
+{
 private:
-
     SGSharedPtr<const SGCondition> _condition;
     SGPropertyNode_ptr _enable_prop;
     std::string * _enable_value;
     bool _enabled;
 
 protected:
-
     virtual bool configure( SGPropertyNode& cfg_node,
                             const std::string& cfg_name,
                             SGPropertyNode& prop_root );
@@ -55,10 +53,10 @@ protected:
     */
     virtual void update( double dt );
 
-   /** 
+   /**
     * @brief pure virtual function to be implemented by the derived classes. Gets called from
     * the update method if it's not disabled with the firstTime parameter set to true if this
-    * is the first call after being enabled 
+    * is the first call after being enabled
     * @param firstTime set to true if this is the first update call since this component has
              been enabled. Set to false for every subsequent call.
     * @param dt  the elapsed time since the last call
@@ -71,21 +69,20 @@ protected:
     */
     virtual void disabled( double dt ) {}
 
-    /** 
+    /**
      * @brief debug flag, true if this component should generate some useful output
      * on every iteration
      */
     bool _debug;
 
 
-    /** 
+    /**
      * @brief a (historic) flag signalling the derived class that it should compute it's internal
      *        state but shall not set the output properties if /autopilot/locks/passive-mode is true.
      */
     bool _honor_passive;
-    
+
 public:
-    
     /**
      * @brief A constructor for an empty Component.
      */
@@ -124,7 +121,7 @@ public:
      * &lt;enable&gt; section
      * @return true if the enable-condition is true.
      *
-     * If a &lt;condition&gt; is defined, this condition is evaluated, 
+     * If a &lt;condition&gt; is defined, this condition is evaluated,
      * &lt;prop&gt; and &lt;value&gt; tags are ignored.
      *
      * If a &lt;prop&gt; is defined and no &lt;value&gt; is defined, the property
@@ -139,6 +136,6 @@ public:
     bool isPropertyEnabled();
 };
 
-
 }
+
 #endif // COMPONENT_HXX

@@ -1255,7 +1255,7 @@ class MK_VIII : public SGSubsystem
 
         void get_altitude_above_field (Parameter<double> *parameter);
         void update_above_field_callout ();
-    
+
         bool is_bank_angle (double abs_roll_angle, double bias);
         bool is_high_bank_angle ();
         unsigned int get_bank_angle_alerts ();

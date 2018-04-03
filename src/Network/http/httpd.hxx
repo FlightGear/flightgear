@@ -26,6 +26,7 @@
 
 
 namespace flightgear {
+
 namespace http {
 
 extern const char * PROPERTY_ROOT;
@@ -36,7 +37,8 @@ public:
     static FGHttpd * createInstance( SGPropertyNode_ptr configNode );
 };
 
-}
+} // namespace http
+
 } // namespace flightgear
 
 #endif // FG_HTTPD_HXX

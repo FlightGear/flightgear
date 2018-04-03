@@ -171,6 +171,7 @@ public:
 
     typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList::iterator findMetarAtPath(const string &propPath);
+
 protected:
     void bind();
     void unbind();
@@ -189,7 +190,6 @@ protected:
     simgear::TiedPropertyList _tiedProperties;
     MetarPropertiesList _metarProperties;
     MetarRequester* _requester;
-
 };
 
 static bool commandRequestMetar(const SGPropertyNode * arg, SGPropertyNode * root)
@@ -400,7 +400,8 @@ void BasicRealWxController::checkNearbyMetar()
 
 /* -------------------------------------------------------------------------------- */
 
-class NoaaMetarRealWxController : public BasicRealWxController, MetarRequester {
+class NoaaMetarRealWxController : public BasicRealWxController, MetarRequester
+{
 public:
     NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
 
@@ -410,6 +411,7 @@ public:
     virtual ~NoaaMetarRealWxController()
     {
     }
+
 private:
     std::string noaa_base_url;
 };

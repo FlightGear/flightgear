@@ -98,11 +98,12 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGJSBsim: public FGInterface {
-
+class FGJSBsim : public FGInterface
+{
 public:
     /// Constructor
     FGJSBsim( double dt );
+
     /// Destructor
     ~FGJSBsim();
 
@@ -221,6 +222,7 @@ public:
     double get_agl_ft(double t, const JSBSim::FGColumnVector3& loc,
                       double alt_off, double contact[3], double normal[3],
                       double vel[3], double angularVel[3]);
+
 private:
     JSBSim::FGFDMExec *fdmex;
     JSBSim::FGInitialCondition *fgic;
@@ -274,7 +276,7 @@ private:
     SGPropertyNode_ptr ab_brake_engaged;
     SGPropertyNode_ptr ab_brake_left_pct;
     SGPropertyNode_ptr ab_brake_right_pct;
-    
+
     SGPropertyNode_ptr gear_pos_pct;
     SGPropertyNode_ptr wing_fold_pos_pct;
     SGPropertyNode_ptr tailhook_pos_pct;
@@ -323,6 +325,5 @@ private:
 
     void update_external_forces(double t_off);
 };
-
 
 #endif // _JSBSIM_HXX

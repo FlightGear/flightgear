@@ -51,59 +51,59 @@ using namespace std;
  * redraw themselves when necessary, and will pass mouse clicks on to
  * the appropriate instruments for processing.
  */
-class FGPanel : public SGSubsystem {
+class FGPanel : public SGSubsystem
+{
 public:
-  FGPanel (const SGPropertyNode_ptr root);
-  virtual ~FGPanel ();
+    FGPanel (const SGPropertyNode_ptr root);
+    virtual ~FGPanel ();
 
-  // Update the panel (every frame).
-  virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
-  //  virtual void draw ();
-  virtual void update (const double dt);
+    // Update the panel (every frame).
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    //  virtual void draw ();
+    virtual void update (const double dt);
 
-  // transfer pointer ownership!!!
-  virtual void addInstrument (FGPanelInstrument * const instrument);
+    // transfer pointer ownership!!!
+    virtual void addInstrument (FGPanelInstrument * const instrument);
 
-  // Background texture.
-  virtual void setBackground (const FGCroppedTexture_ptr texture);
-  void setBackgroundWidth (const double d);
-  void setBackgroundHeight (const double d);
+    // Background texture.
+    virtual void setBackground (const FGCroppedTexture_ptr texture);
+    void setBackgroundWidth (const double d);
+    void setBackgroundHeight (const double d);
 
-  // Background multiple textures.
-  virtual void setMultiBackground (const FGCroppedTexture_ptr texture , const int idx);
+    // Background multiple textures.
+    virtual void setMultiBackground (const FGCroppedTexture_ptr texture , const int idx);
 
-  // Full width of panel.
-  virtual void setWidth (const int width);
-  virtual int getWidth () const;
+    // Full width of panel.
+    virtual void setWidth (const int width);
+    virtual int getWidth () const;
 
-  // Full height of panel.
-  virtual void setHeight (const int height);
-  virtual int getHeight () const;
+    // Full height of panel.
+    virtual void setHeight (const int height);
+    virtual int getHeight () const;
 
 private:
+    typedef vector <FGPanelInstrument *> instrument_list_type;
+    int m_width;
+    int m_height;
 
-  typedef vector <FGPanelInstrument *> instrument_list_type;
-  int m_width;
-  int m_height;
+    SGPropertyNode_ptr m_flipx;
 
-  SGPropertyNode_ptr m_flipx;
+    FGCroppedTexture_ptr m_bg;
+    double m_bg_width;
+    double m_bg_height;
+    FGCroppedTexture_ptr m_mbg[8];
+    // List of instruments in panel.
+    instrument_list_type m_instruments;
 
-  FGCroppedTexture_ptr m_bg;
-  double m_bg_width;
-  double m_bg_height;
-  FGCroppedTexture_ptr m_mbg[8];
-  // List of instruments in panel.
-  instrument_list_type m_instruments;
+    void getInitDisplayList ();
 
-  void getInitDisplayList ();
-
-  static GLuint Textured_Layer_Program_Object;
-  static GLint Textured_Layer_Position_Loc;
-  static GLint Textured_Layer_Tex_Coord_Loc;
-  static GLint Textured_Layer_MVP_Loc;
-  static GLint Textured_Layer_Sampler_Loc;
+    static GLuint Textured_Layer_Program_Object;
+    static GLint Textured_Layer_Position_Loc;
+    static GLint Textured_Layer_Tex_Coord_Loc;
+    static GLint Textured_Layer_MVP_Loc;
+    static GLint Textured_Layer_Sampler_Loc;
 };
 
 #endif

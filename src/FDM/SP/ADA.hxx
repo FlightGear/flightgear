@@ -26,10 +26,9 @@ class SGSocket;
 #include <FDM/flight.hxx>
 
 
-class FGADA: public FGInterface {
-
+class FGADA : public FGInterface
+{
 private:
-	
     SGSocket *fdmsock;
 #if 0
     // Auxilliary Flight Model parameters, basically for HUD
@@ -71,17 +70,14 @@ private:
     bool copy_from_FGADA();
 
 public:
-
     FGADA( double dt );
     ~FGADA();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on inputs, positions, velocities, etc.
     void update(double dt);
-
 };
-
 
 #endif // _ADA_HXX

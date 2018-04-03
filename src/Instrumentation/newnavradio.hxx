@@ -27,10 +27,11 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 namespace Instrumentation {
+
 class NavRadio : public SGSubsystem
 {
 public:
-  static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
+    static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
 };
 
 }

@@ -34,7 +34,8 @@
 
 class SGSampleGroup;
 
-class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
+class FGNavRadio : public AbstractInstrument,
+                   public SGPropertyChangeListener
 {
     SGPropertyNode_ptr _radio_node;
 
@@ -53,7 +54,7 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
     SGPropertyNode_ptr cdi_serviceable_node;
     SGPropertyNode_ptr gs_serviceable_node;
     SGPropertyNode_ptr tofrom_serviceable_node;
-    
+
     // property outputs
     SGPropertyNode_ptr fmt_freq_node;     // formated frequency
     SGPropertyNode_ptr fmt_alt_freq_node; // formated alternate frequency
@@ -106,7 +107,7 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
     SGPropertyNode_ptr gps_course_node;
     SGPropertyNode_ptr gps_xtrack_error_nm_node;
     SGPropertyNode_ptr _magvarNode;
-    
+
     // realism setting, are false courses and GS lobes enabled?
     SGPropertyNode_ptr falseCoursesEnabledNode;
 
@@ -117,7 +118,7 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
     double _last_freq;
     FGNavRecordRef _navaid;
     FGNavRecordRef _gs;
-    
+
     double target_radial;
     double effective_range;
     double target_gs;
@@ -142,16 +143,16 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
     double _gsDirect;
 
     class AudioIdent * _audioIdent;
-    
+
     bool updateWithPower(double aDt);
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,
-			   double nominalRange );
+                           double nominalRange );
 
     // model standard ILS service volumes as per AIM 1-1-9
     double adjustILSRange( double stationElev, double aircraftElev,
-			   double offsetDegrees, double distance );
+                           double offsetDegrees, double distance );
 
     void updateAudio( double dt );
 
@@ -160,16 +161,15 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
     void updateGPSSlaved();
     void updateCDI(double dt);
     void updateFormattedFrequencies();
-    
+
     void clearOutputs();
 
     FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
-    
-      
-  // implement SGPropertyChangeListener
-    virtual void valueChanged (SGPropertyNode * prop);
-public:
 
+    // implement SGPropertyChangeListener
+    virtual void valueChanged (SGPropertyNode * prop);
+
+public:
     FGNavRadio(SGPropertyNode *node);
     ~FGNavRadio();
 
@@ -181,6 +181,5 @@ public:
     void search ();
     void updateNav();
 };
-
 
 #endif // _FG_NAVRADIO_HXX

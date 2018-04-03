@@ -30,19 +30,20 @@ class FGDNSClient : public SGSubsystem
 public:
     FGDNSClient();
     virtual ~FGDNSClient();
-    
+
     void makeRequest(const simgear::DNS::Request_ptr& req);
 
 //    simgear::HTTP::Client* client() { return _http.get(); }
 //    simgear::HTTP::Client const* client() const { return _http.get(); }
-    
+
     virtual void init();
     virtual void postinit();
     virtual void shutdown();
     virtual void update(double);
 
     static const char* subsystemName() { return "dns"; }
-private:    
+
+private:
     bool _inited;
     std::unique_ptr<simgear::DNS::Client> _dns;
 };

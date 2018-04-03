@@ -35,9 +35,7 @@
  */
 class VacuumSystem : public SGSubsystem
 {
-
 public:
-
     VacuumSystem( SGPropertyNode *node );
     VacuumSystem( int i );
     virtual ~VacuumSystem ();
@@ -49,7 +47,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     std::string _name;
     int _num;
     string_list _rpms;
@@ -58,7 +55,6 @@ private:
     std::vector<SGPropertyNode_ptr> _rpm_nodes;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _suction_node;
-    
 };
 
 #endif // __SYSTEMS_VACUUM_HXX

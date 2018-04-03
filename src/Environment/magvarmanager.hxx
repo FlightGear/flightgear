@@ -33,17 +33,17 @@ class FGMagVarManager : public SGSubsystem
 public:
     FGMagVarManager();
     virtual ~FGMagVarManager();
-    
+
     virtual void init();
     virtual void bind();
     virtual void unbind();
-    
+
     virtual void update(double dt);
-    
+
 private:
-  std::unique_ptr<SGMagVar> _magVar;
-  
-  SGPropertyNode_ptr _magVarNode, _magDipNode;
+    std::unique_ptr<SGMagVar> _magVar;
+
+    SGPropertyNode_ptr _magVarNode, _magDipNode;
 };
 
 #endif // of FG_MAGVAR_MANAGER

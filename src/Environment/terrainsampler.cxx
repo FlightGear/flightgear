@@ -1,7 +1,7 @@
 // terrainsampler.cxx --
 //
 // Written by Torsten Dreyer, started July 2010
-// Based on local weather implementation in nasal from 
+// Based on local weather implementation in nasal from
 // Thorsten Renk
 //
 // Copyright (C) 2010  Curtis Olson
@@ -40,10 +40,12 @@ using std::string;
 #include <simgear/props/tiedpropertylist.hxx>
 
 namespace Environment {
+
 /**
  * @brief Class for presampling the terrain roughness
  */
-class AreaSampler : public SGSubsystem {
+class AreaSampler : public SGSubsystem
+{
 public:
     AreaSampler( SGPropertyNode_ptr rootNode );
     virtual ~AreaSampler();
@@ -54,13 +56,13 @@ public:
     void reinit();
 
     int getElevationHistogramStep() const { return _elevationHistogramStep; }
-    void setElevationHistograpStep( int value ) { 
+    void setElevationHistograpStep( int value ) {
         _elevationHistogramStep = value > 0 ? value : 500;
         _elevationHistogramCount = _elevationHistogramMax / _elevationHistogramStep;
     }
 
     int getElevationHistogramMax() const { return _elevationHistogramMax; }
-    void setElevationHistograpMax( int value ) { 
+    void setElevationHistograpMax( int value ) {
         _elevationHistogramMax = value > 0 ? value : 10000;
         _elevationHistogramCount = _elevationHistogramMax / _elevationHistogramStep;
     }
@@ -192,9 +194,9 @@ void AreaSampler::update( double dt )
 
     // get the aircraft's position if requested
     if( _useAircraftPosition && _speed_kt < 0.5 ) {
-        _inputPosition = SGGeod::fromDegM( 
-            _positionLongitudeNode->getDoubleValue(), 
-            _positionLatitudeNode->getDoubleValue(), 
+        _inputPosition = SGGeod::fromDegM(
+            _positionLongitudeNode->getDoubleValue(),
+            _positionLatitudeNode->getDoubleValue(),
             SG_MAX_ELEVATION_M );
     }
 
@@ -231,11 +233,11 @@ void AreaSampler::update( double dt )
         SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, distance ));
         double elevation_m = 0.0;
 
-        if (scenery->get_elevation_m( probe, elevation_m, NULL )) 
+        if (scenery->get_elevation_m( probe, elevation_m, NULL ))
             _elevations.push_front(elevation_m *= SG_METER_TO_FEET);
-        
+
         if( _elevations.size() >= (deque<unsigned>::size_type)_max_samples ) {
-            // sampling complete? 
+            // sampling complete?
             analyse();
             _outputPosition = _inputPosition;
             _signalNode->setBoolValue( true );
@@ -249,7 +251,7 @@ void AreaSampler::analyse()
     double sum;
 
     vector<int> histogram(_elevationHistogramCount,0);
-    
+
     for( deque<double>::size_type i = 0; i < _elevations.size(); i++ ) {
         int idx = SGMisc<int>::clip( (int)(_elevations[i]/_elevationHistogramStep), 0, histogram.size()-1 );
         histogram[idx]++;
@@ -275,7 +277,7 @@ void AreaSampler::analyse()
         }
     }
 
-   _altMean = 0.0;
+    _altMean = 0.0;
     for(  vector<int>::size_type i = 0; i < histogram.size(); i++ ) {
         _altMean += histogram[i] * i;
     }
@@ -319,7 +321,7 @@ class TerrainSamplerImplementation : public TerrainSampler
 public:
     TerrainSamplerImplementation ( SGPropertyNode_ptr rootNode );
     virtual ~TerrainSamplerImplementation ();
-    
+
     virtual void init ();
     virtual InitStatus incrementalInit ();
     virtual void postinit();
@@ -327,11 +329,12 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void update (double delta_time_sec);
+
 private:
     inline string areaSubsystemName( unsigned i ) {
-      ostringstream name;
-      name <<  "area" << i;
-      return name.str();
+        ostringstream name;
+        name <<  "area" << i;
+        return name.str();
     }
 
     SGPropertyNode_ptr _rootNode;
@@ -348,7 +351,7 @@ TerrainSamplerImplementation::TerrainSamplerImplementation( SGPropertyNode_ptr r
 TerrainSamplerImplementation::~TerrainSamplerImplementation()
 {
 }
-  
+
 SGSubsystem::InitStatus TerrainSamplerImplementation::incrementalInit()
 {
   init();
@@ -358,7 +361,7 @@ SGSubsystem::InitStatus TerrainSamplerImplementation::incrementalInit()
 void TerrainSamplerImplementation::init()
 {
     PropertyList areaNodes = _rootNode->getChildren( "area" );
-    
+
     for( PropertyList::size_type i = 0; i < areaNodes.size(); i++ )
         set_subsystem( areaSubsystemName(i), new AreaSampler( areaNodes[i] ) );
 
@@ -380,7 +383,7 @@ void TerrainSamplerImplementation::reinit()
         subsys->unbind();
         delete subsys;
     }
-    
+
     init();
 }
 

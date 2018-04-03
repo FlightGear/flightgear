@@ -28,18 +28,17 @@
 class FGInstrumentMgr : public SGSubsystemGroup
 {
 public:
-
     FGInstrumentMgr ();
     virtual ~FGInstrumentMgr ();
-    
+
     virtual void init();
     virtual InitStatus incrementalInit();
 
 private:
     bool build (SGPropertyNode* config_props);
-    
+
     bool _explicitGps;
-    
+
     std::vector<std::string> _instruments;
 };
 

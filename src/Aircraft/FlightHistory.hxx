@@ -31,13 +31,15 @@
 
 typedef std::vector<SGGeod> SGGeodVec;
 
-class PagedPathForHistory : public SGReferenced {
+class PagedPathForHistory : public SGReferenced
+{
 public:
-	PagedPathForHistory() : last_seen(0) {}
-	virtual ~PagedPathForHistory() {}
-	SGGeodVec path;
-	time_t last_seen;
+    PagedPathForHistory() : last_seen(0) {}
+    virtual ~PagedPathForHistory() {}
+    SGGeodVec path;
+    time_t last_seen;
 };
+
 typedef SGSharedPtr<PagedPathForHistory> PagedPathForHistory_ptr;
 
 const unsigned int SAMPLE_BUCKET_WIDTH = 1024;
@@ -54,12 +56,12 @@ class FGFlightHistory : public SGSubsystem
 public:
     FGFlightHistory();
     virtual ~FGFlightHistory();
-    
+
     virtual void init();
     virtual void shutdown();
     virtual void reinit();
     virtual void update(double dt);
-    
+
     PagedPathForHistory_ptr pagedPathForHistory(size_t max_entries, size_t newerThan = 0) const;
     /**
      * retrieve the path, collapsing segments shorter than
@@ -86,9 +88,8 @@ private:
         float heading, pitch, roll;
         size_t simTimeMSec;
     };
-    
-    
-    
+
+
     /**
      * Bucket is a fixed-size container of samples. This is a crude slab
      * allocation of samples, in chunks defined by the width constant above.
@@ -101,26 +102,26 @@ private:
     public:
         Sample samples[SAMPLE_BUCKET_WIDTH];
     };
-    
+
     double m_lastCaptureTime;
     double m_sampleInterval; ///< sample interval in seconds
-/// our store of samples (in buckets). The last bucket is partially full,
-/// with the number of valid samples indicated by m_validSampleCount
+    /// our store of samples (in buckets). The last bucket is partially full,
+    /// with the number of valid samples indicated by m_validSampleCount
     std::vector<SampleBucket*> m_buckets;
-    
-/// number of valid samples in the final bucket
+
+    /// number of valid samples in the final bucket
     unsigned int m_validSampleCount;
-    
+
     SGPropertyNode_ptr m_weightOnWheels;
     SGPropertyNode_ptr m_enabled;
-  
+
     bool m_lastWoW;
     size_t m_maxMemoryUseBytes;
-  
+
     void allocateNewBucket();
-    
+
     void capture();
-  
+
     size_t currentMemoryUseBytes() const;
 };
 

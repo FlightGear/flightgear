@@ -32,10 +32,9 @@
 #include <FDM/flight.hxx>
 
 
-class FGExternalPipe: public FGInterface {
-
+class FGExternalPipe : public FGInterface
+{
 private:
-
     bool valid;
 
     std::string fifo_name_1;
@@ -63,8 +62,8 @@ private:
     void update_property( double dt );
 
     void process_set_command( const string_list &tokens );
-public:
 
+public:
     // Constructor
     FGExternalPipe( double dt, std::string fifo_name, std::string protocol );
 
@@ -76,8 +75,6 @@ public:
 
     // update the fdm
     void update( double dt );
-
 };
-
 
 #endif // _EXTERNAL_PIPE_HXX

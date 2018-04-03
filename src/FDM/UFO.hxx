@@ -27,15 +27,17 @@
 #include "flight.hxx"
 
 
-class FGUFO: public FGInterface {
+class FGUFO : public FGInterface
+{
 private:
-
-    class lowpass {
+    class lowpass
+    {
     private:
         static double _dt;
         double _coeff;
         double _last;
         bool _initialized;
+
     public:
         lowpass(double coeff) : _coeff(coeff), _initialized(false) {}
         static inline void set_delta(double dt) { _dt = dt; }
@@ -67,8 +69,6 @@ public:
 
     // update position based on inputs, positions, velocities, etc.
     void update( double dt );
-
 };
-
 
 #endif // _UFO_HXX

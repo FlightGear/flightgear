@@ -37,8 +37,8 @@ namespace FGXMLAutopilot {
 /**
  * Roy Ovesen's PID controller
  */
-class PIDController : public AnalogComponent {
-
+class PIDController : public AnalogComponent
+{
 private:
     // Configuration values
     InputValueList Kp;          // proportional gain
@@ -65,6 +65,7 @@ protected:
     virtual bool configure( SGPropertyNode& cfg_node,
                             const std::string& cfg_name,
                             SGPropertyNode& prop_root );
+
 public:
     PIDController();
     ~PIDController() {}

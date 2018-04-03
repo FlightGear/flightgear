@@ -29,18 +29,17 @@
 #include "flight.hxx"
 
 
-class FGNullFDM: public FGInterface {
-
+class FGNullFDM : public FGInterface
+{
 public:
     FGNullFDM( double dt );
     ~FGNullFDM();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on inputs, positions, velocities, etc.
     void update( double dt );
 };
-
 
 #endif // _NULLFDM_HXX

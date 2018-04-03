@@ -51,82 +51,82 @@ class FGAIMultiplayer;
 class FGMultiplayMgr : public SGSubsystem
 {
 public:
-  FGMultiplayMgr();
-  ~FGMultiplayMgr();
+    FGMultiplayMgr();
+    ~FGMultiplayMgr();
 
-  virtual void init(void);
-  virtual void update(double dt);
+    virtual void init(void);
+    virtual void update(double dt);
 
-  virtual void shutdown(void);
-  virtual void reinit();
+    virtual void shutdown(void);
+    virtual void reinit();
 
-  // transmitter
+    // transmitter
 
-  void SendTextMessage(const std::string &sMsgText);
-  // receiver
+    void SendTextMessage(const std::string &sMsgText);
+    // receiver
 
 private:
-  friend class MPPropertyListener;
+    friend class MPPropertyListener;
 
-  void setPropertiesChanged()
-  {
-    mPropertiesChanged = true;
-  }
-  int getProtocolToUse()
-  {
-      int protocolVersion = pProtocolVersion->getIntValue();
-      if (protocolVersion >= MIN_MP_PROTOCOL_VERSION && protocolVersion <= MAX_MP_PROTOCOL_VERSION)
-          return protocolVersion;
-      else
-          return MIN_MP_PROTOCOL_VERSION;
-  }
+    void setPropertiesChanged()
+    {
+      mPropertiesChanged = true;
+    }
+    int getProtocolToUse()
+    {
+        int protocolVersion = pProtocolVersion->getIntValue();
+        if (protocolVersion >= MIN_MP_PROTOCOL_VERSION && protocolVersion <= MAX_MP_PROTOCOL_VERSION)
+            return protocolVersion;
+        else
+            return MIN_MP_PROTOCOL_VERSION;
+    }
 
-  void findProperties();
+    void findProperties();
 
-  void Send();
-  void SendMyPosition(const FGExternalMotionData& motionInfo);
-  short get_scaled_short(double v, double scale);
+    void Send();
+    void SendMyPosition(const FGExternalMotionData& motionInfo);
+    short get_scaled_short(double v, double scale);
 
-  union MsgBuf;
-  FGAIMultiplayer* addMultiplayer(const std::string& callsign,
-                                  const std::string& modelName,
-                                  const int fallback_model_index);
-  FGAIMultiplayer* getMultiplayer(const std::string& callsign);
-  void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
-  void ProcessPosMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress,
-                     long stamp);
-  void ProcessChatMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress);
-  bool isSane(const FGExternalMotionData& motionInfo);
+    union MsgBuf;
+    FGAIMultiplayer* addMultiplayer(const std::string& callsign,
+                                    const std::string& modelName,
+                                    const int fallback_model_index);
+    FGAIMultiplayer* getMultiplayer(const std::string& callsign);
+    void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
+    void ProcessPosMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress,
+                       long stamp);
+    void ProcessChatMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress);
+    bool isSane(const FGExternalMotionData& motionInfo);
 
-  /// maps from the callsign string to the FGAIMultiplayer
-  typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
-  MultiPlayerMap mMultiPlayerMap;
+    /// maps from the callsign string to the FGAIMultiplayer
+    typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
+    MultiPlayerMap mMultiPlayerMap;
 
-  std::unique_ptr<simgear::Socket> mSocket;
-  simgear::IPAddress mServer;
-  bool mHaveServer;
-  bool mInitialised;
-  std::string mCallsign;
+    std::unique_ptr<simgear::Socket> mSocket;
+    simgear::IPAddress mServer;
+    bool mHaveServer;
+    bool mInitialised;
+    std::string mCallsign;
 
-  // Map between the property id's from the multiplayers network packets
-  // and the property nodes
-  typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
-  PropertyMap mPropertyMap;
-  SGPropertyNode *pProtocolVersion;
-  SGPropertyNode *pXmitLen;
-  SGPropertyNode *pMultiPlayDebugLevel;
-  SGPropertyNode *pMultiPlayRange;
-  SGPropertyNode *pMultiPlayTransmitPropertyBase;
+    // Map between the property id's from the multiplayers network packets
+    // and the property nodes
+    typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
+    PropertyMap mPropertyMap;
+    SGPropertyNode *pProtocolVersion;
+    SGPropertyNode *pXmitLen;
+    SGPropertyNode *pMultiPlayDebugLevel;
+    SGPropertyNode *pMultiPlayRange;
+    SGPropertyNode *pMultiPlayTransmitPropertyBase;
 
-  typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
-  PropertyDefinitionMap mPropertyDefinition;
+    typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
+    PropertyDefinitionMap mPropertyDefinition;
 
-  bool mPropertiesChanged;
+    bool mPropertiesChanged;
 
-  MPPropertyListener* mListener;
+    MPPropertyListener* mListener;
 
-  double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
-  double mTimeUntilSend;
+    double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
+    double mTimeUntilSend;
 };
 
 #endif

@@ -50,7 +50,6 @@ class SGSampleGroup;
 
 class TCAS : public SGSubsystem
 {
-
     typedef enum
     {
         AdvisoryClear         = 0,                          /*< Clear of traffic */
@@ -99,7 +98,7 @@ class TCAS : public SGSubsystem
 
     typedef struct
     {
-        float Tau;       /*< vertical/horizontal protection range in seconds */ 
+        float Tau;       /*< vertical/horizontal protection range in seconds */
         float DMOD;      /*< horizontal protection range in nm */
         float ALIM;      /*< vertical protection range in ft */
     } Thresholds;
@@ -154,10 +153,10 @@ class TCAS : public SGSubsystem
     class PropertiesHandler : public FGVoicePlayer::PropertiesHandler
     {
     public:
-      PropertiesHandler (TCAS *) :
-        FGVoicePlayer::PropertiesHandler() {}
+        PropertiesHandler (TCAS *) :
+            FGVoicePlayer::PropertiesHandler() {}
 
-      PropertiesHandler (void) : FGVoicePlayer::PropertiesHandler() {}
+        PropertiesHandler (void) : FGVoicePlayer::PropertiesHandler() {}
     };
 
     /////////////////////////////////////////////////////////////////////////////
@@ -169,7 +168,7 @@ class TCAS : public SGSubsystem
     {
     public:
         VoicePlayer (TCAS* tcas) :
-          FGVoicePlayer(&tcas->properties_handler, "tcas") {}
+            FGVoicePlayer(&tcas->properties_handler, "tcas") {}
 
         ~VoicePlayer (void) {}
 
@@ -177,22 +176,22 @@ class TCAS : public SGSubsystem
 
         struct
         {
-          Voice* pTrafficTraffic;
-          Voice* pClimb;
-          Voice* pClimbNow;
-          Voice* pClimbCrossing;
-          Voice* pClimbIncrease;
-          Voice* pDescend;
-          Voice* pDescendNow;
-          Voice* pDescendCrossing;
-          Voice* pDescendIncrease;
-          Voice* pClear;
-          Voice* pAdjustVSpeed;
-          Voice* pMaintVSpeed;
-          Voice* pMonitorVSpeed;
-          Voice* pLevelOff;
-          Voice* pTestOk;
-          Voice* pTestFail;
+            Voice* pTrafficTraffic;
+            Voice* pClimb;
+            Voice* pClimbNow;
+            Voice* pClimbCrossing;
+            Voice* pClimbIncrease;
+            Voice* pDescend;
+            Voice* pDescendNow;
+            Voice* pDescendCrossing;
+            Voice* pDescendIncrease;
+            Voice* pClear;
+            Voice* pAdjustVSpeed;
+            Voice* pMaintVSpeed;
+            Voice* pMonitorVSpeed;
+            Voice* pLevelOff;
+            Voice* pTestOk;
+            Voice* pTestFail;
         } Voices;
     private:
         SGPropertyNode_ptr nodeSoundFilePrefix;
@@ -275,7 +274,7 @@ class TCAS : public SGSubsystem
         bool   newTargets;
         TrackerTargets targets;
     };
-    
+
     /////////////////////////////////////////////////////////////////////////////
     // TCAS::AdvisoryGenerator //////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
@@ -342,7 +341,7 @@ class TCAS : public SGSubsystem
 #ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
         int                checkCount;
 #endif // of FEATURE_TCAS_DEBUG_THREAT_DETECTOR
-        
+
         SGPropertyNode_ptr nodeLat;
         SGPropertyNode_ptr nodeLon;
         SGPropertyNode_ptr nodePressureAlt;

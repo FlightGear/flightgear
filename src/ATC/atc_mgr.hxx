@@ -23,8 +23,8 @@
 /**************************************************************************
  * The ATC Manager interfaces the users aircraft with the AI traffic system
  * and also monitors the ongoing AI traffic patterns for potential conflicts
- * and interferes where necessary. 
- *************************************************************************/ 
+ * and interferes where necessary.
+ *************************************************************************/
 
 #ifndef _ATC_MGR_HXX_
 #define _ATC_MGR_HXX_
@@ -42,21 +42,21 @@ typedef std::vector<FGATCController*>::iterator AtcVecIterator;
 class FGATCManager : public SGSubsystem
 {
 private:
-  AtcVec activeStations;
-  FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft.
-  bool networkVisible;
-  bool initSucceeded;
-  SGPropertyNode_ptr trans_num;
+    AtcVec activeStations;
+    FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft.
+    bool networkVisible;
+    bool initSucceeded;
+    SGPropertyNode_ptr trans_num;
 
 public:
-  FGATCManager();
-  ~FGATCManager();
-  void postinit() override;
-  void shutdown() override;
+    FGATCManager();
+    ~FGATCManager();
+    void postinit() override;
+    void shutdown() override;
 
-  void addController(FGATCController *controller);
-  void removeController(FGATCController* controller);
-  void update(double time);
+    void addController(FGATCController *controller);
+    void removeController(FGATCController* controller);
+    void update(double time);
 };
-  
+
 #endif // _ATC_MRG_HXX_

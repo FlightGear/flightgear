@@ -6,7 +6,8 @@
 
 namespace yasim { class FGFDM; };
 
-class YASim : public FGInterface {
+class YASim : public FGInterface
+{
 public:
     YASim(double dt);
     ~YASim();
@@ -19,8 +20,7 @@ public:
     // Run an iteration
     virtual void update(double dt);
 
- private:
-
+private:
     void report();
     void copyFromYASim();
     void copyToYASim(bool copyState);
