@@ -48,17 +48,15 @@ public:
     FGLaRCsim( double dt );
     ~FGLaRCsim(void);
 
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
+
     // copy FDM state to LaRCsim structures
     bool copy_to_LaRCsim();
 
     // copy FDM state from LaRCsim structures
     bool copy_from_LaRCsim();
-
-    // reset flight params to a specific position
-    void init();
-
-    // update position based on inputs, positions, velocities, etc.
-    void update( double dt );
 
     // Positions
     void set_Latitude(double lat);  //geocentric

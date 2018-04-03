@@ -34,10 +34,11 @@ public:
     Transponder(SGPropertyNode *node);
     virtual ~Transponder();
 
-    void init () override;
-    void update (double dt) override;
+    // Subsystem API.
     void bind() override;
+    void init() override;
     void unbind() override;
+    void update(double dt) override;
 
 protected:
     bool isPowerSwitchOn() const override;

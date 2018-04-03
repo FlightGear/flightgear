@@ -40,38 +40,16 @@ public:
      */
     virtual ~NewGUI ();
 
-    /**
-     * Initialize the GUI subsystem.
-     */
-    virtual void init ();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double delta_time_sec) override;
 
-    virtual void shutdown ();
-
-    /**
-     * Reinitialize the GUI subsystem. Reloads all XML dialogs.
-     */
-    virtual void reinit ();
-
-    /**
-     * Bind properties for the GUI subsystem.
-     *
-     * Currently, this method binds the properties for showing and
-     * hiding the menu.
-     */
-    virtual void bind ();
-
-    /**
-     * Unbind properties for the GUI subsystem.
-     */
-    virtual void unbind ();
-
-    /**
-     * Update the GUI subsystem.
-     *
-     * Currently, this method is a no-op, because nothing the GUI
-     * subsystem does is time-dependent.
-     */
-    virtual void update (double delta_time_sec);
+    // Subsystem identification.
+    static const char* subsystemName() { return "gui"; }
 
     /**
      * Redraw the GUI picking up new GUI colors.
@@ -169,8 +147,6 @@ public:
     }
 
     virtual puFont *getDefaultFont() { return _font; }
-
-    static const char* subsystemName() { return "gui"; }
 
 protected:
     /**

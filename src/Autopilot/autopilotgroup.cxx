@@ -48,13 +48,15 @@ public:
         _nodeName(nodeName)
     {}
 
+    // Subsystem API.
+    void init() override;
+    InitStatus incrementalInit() override;
+    void reinit() override;
+
     virtual void addAutopilot( const std::string& name,
                                SGPropertyNode_ptr apNode,
                                SGPropertyNode_ptr config );
     virtual void removeAutopilot( const std::string & name );
-    void init();
-    InitStatus incrementalInit();
-    void reinit();
 
 private:
     void initFrom( SGPropertyNode_ptr rootNode, const char * childName );

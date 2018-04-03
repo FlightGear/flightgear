@@ -45,11 +45,15 @@ public:
     FGRouteMgr();
     ~FGRouteMgr();
 
-    void init ();
-    void postinit ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void postinit() override;
+    void unbind() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "route-manager"; }
 
     bool isRouteActive() const;
 
@@ -99,8 +103,6 @@ public:
     bool loadRoute(const SGPath& p);
 
     flightgear::WayptRef waypointFromString(const std::string& target);
-
-    static const char* subsystemName() { return "route-manager"; }
 
 private:
     bool commandDefineUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root);

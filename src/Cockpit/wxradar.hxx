@@ -44,10 +44,11 @@ public:
     wxRadarBg();
     virtual ~wxRadarBg();
 
-    virtual void init();
-    virtual void shutdown();
+    // Subsystem API.
+    void init() override;
+    void shutdown() override;
+    void update(double dt) override;
 
-    virtual void update(double dt);
     virtual void valueChanged(SGPropertyNode *);
 
 protected:

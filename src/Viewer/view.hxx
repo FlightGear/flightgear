@@ -67,10 +67,10 @@ public:
     // Part 1: standard SGSubsystem implementation.
     //////////////////////////////////////////////////////////////////////
 
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    void init() override;
+    void bind() override;
+    void unbind() override;
+    void update(double dt) override;
 
 
     //////////////////////////////////////////////////////////////////////

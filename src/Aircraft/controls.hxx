@@ -257,12 +257,15 @@ public:
     FGControls();
     ~FGControls();
 
-    // Implementation of SGSubsystem.
-    void init ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
-    virtual void reinit();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "controls"; }
 
     // Reset function
     void reset_all(void);
@@ -635,8 +638,6 @@ public:
 
     // controls/autoflight/autopilot[n]/
     void set_autopilot_engage( int ap, bool val );
-
-    static const char* subsystemName() { return "controls"; }
 
 private:
     inline void do_autocoordination() {

@@ -44,19 +44,19 @@ public:
     FDMShell();
     ~FDMShell() override;
 
-    void init() override;
-    void shutdown() override;
-    void reinit() override;
-    void postinit() override;
-
+    // Subsystem API.
     void bind() override;
+    void init() override;
+    void postinit() override;
+    void reinit() override;
+    void shutdown() override;
     void unbind() override;
-
     void update(double dt) override;
 
-    FGInterface* getInterface() const;
-    
+    // Subsystem identification.
     static const char* subsystemName() { return "flight"; }
+
+    FGInterface* getInterface() const;
 
 private:
     void createImplementation();

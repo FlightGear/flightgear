@@ -63,17 +63,15 @@ public:
     FGBalloonSim( double dt );
     ~FGBalloonSim();
 
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
+
     // copy FDM state to BalloonSim structures
     bool copy_to_BalloonSim();
 
     // copy FDM state from BalloonSim structures
     bool copy_from_BalloonSim();
-
-    // reset flight params to a specific position
-    void init();
-
-    // update position based on inputs, positions, velocities, etc.
-    void update( double dt );
 };
 
 /****************************************************************************/

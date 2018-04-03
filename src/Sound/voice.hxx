@@ -55,9 +55,11 @@ class FGVoiceMgr : public SGSubsystem
 public:
     FGVoiceMgr();
     ~FGVoiceMgr();
-    void init(void);
-    void shutdown();
-    void update(double dt);
+
+    // Subsystem API.
+    void init() override;
+    void shutdown() override;
+    void update(double dt) override;
 
     class FGVoice;
 

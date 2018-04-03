@@ -25,10 +25,13 @@ public:
     PerformanceDB();
     virtual ~PerformanceDB();
 
-    virtual void init();
-    virtual void shutdown();
+    // Subsystem API.
+    void init() override;
+    void shutdown() override;
+    void update(double dt) override;
 
-    virtual void update(double dt);
+    // Subsystem identification.
+    static const char* subsystemName() { return "aircraft-performance-db"; }
 
     bool havePerformanceDataForAircraftType(const std::string& acType) const;
 
@@ -39,8 +42,6 @@ public:
     PerformanceData* getDataFor(const std::string& acType, const std::string& acClass) const;
 
     PerformanceData* getDefaultPerformance() const;
-
-    static const char* subsystemName() { return "aircraft-performance-db"; }
 
 private:
     void load(const SGPath& path);

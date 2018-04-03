@@ -37,8 +37,9 @@ public:
     agRadar ();
     virtual ~agRadar ();
 
-    virtual void init ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
     void setUserPos();
     void setUserVec(double az, double el);

@@ -12,13 +12,11 @@ public:
     YASim(double dt);
     ~YASim();
 
-    // Load externally set stuff into the FDM
-    virtual void init();
-    virtual void bind();
-    virtual void reinit();
-
-    // Run an iteration
-    virtual void update(double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void update(double dt) override;
 
 private:
     void report();

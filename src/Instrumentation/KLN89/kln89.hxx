@@ -96,10 +96,11 @@ public:
     KLN89(RenderArea2D* instrument);
     ~KLN89();
 
-    void bind();
-    void unbind();
-    void init();
-    void update(double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 
     // Set Units
     // m if true, ft if false

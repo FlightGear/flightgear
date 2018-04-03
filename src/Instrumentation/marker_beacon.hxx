@@ -66,11 +66,12 @@ public:
     FGMarkerBeacon(SGPropertyNode *node);
     ~FGMarkerBeacon();
 
-    void init () override;
-    void reinit () override;
-    void bind () override;
-    void unbind () override;
-    void update (double dt) override;
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;
 
     void search ();
 

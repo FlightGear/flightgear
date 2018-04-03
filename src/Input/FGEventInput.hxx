@@ -322,10 +322,12 @@ class FGEventInput : public SGSubsystem,
 public:
     FGEventInput();
     virtual ~FGEventInput();
+
+    // Subsystem API.
     void init() override;
     void postinit() override;
-    void update( double dt ) override;
     void shutdown() override;
+    void update(double dt) override;
 
     const static unsigned MAX_DEVICES = 1000;
     const static unsigned INVALID_DEVICE_INDEX = MAX_DEVICES + 1;

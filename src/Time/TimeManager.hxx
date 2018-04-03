@@ -34,14 +34,18 @@ public:
     TimeManager();
     virtual ~TimeManager();
 
-    void computeTimeDeltas(double& simDt, double& realDt);
-
+    // Subsystem API.
     void init() override;
-    void reinit() override;
     void postinit() override;
+    void reinit() override;
     void shutdown() override;
     void unbind() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "time"; }
+
+    void computeTimeDeltas(double& simDt, double& realDt);
 
     // SGPropertyChangeListener overrides
     void valueChanged(SGPropertyNode *) override;
@@ -50,8 +54,6 @@ public:
 
     inline double getMPProtocolClockSec() const { return _mpProtocolClock; }
     inline double getSteadyClockSec() const { return _steadyClock; }
-
-    static const char* subsystemName() { return "time"; }
 
 private:
     /**

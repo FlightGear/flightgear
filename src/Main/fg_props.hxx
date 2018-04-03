@@ -23,10 +23,11 @@ public:
     FGProperties ();
     virtual ~FGProperties ();
 
-    void init ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 
 private:
     simgear::TiedPropertyList _tiedProperties;

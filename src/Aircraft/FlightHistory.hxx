@@ -57,10 +57,11 @@ public:
     FGFlightHistory();
     virtual ~FGFlightHistory();
 
-    virtual void init();
-    virtual void shutdown();
-    virtual void reinit();
-    virtual void update(double dt);
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void update(double dt) override;
 
     PagedPathForHistory_ptr pagedPathForHistory(size_t max_entries, size_t newerThan = 0) const;
     /**

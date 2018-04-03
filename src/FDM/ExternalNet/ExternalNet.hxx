@@ -54,11 +54,9 @@ public:
     // Destructor
     ~FGExternalNet();
 
-    // Reset flight params to a specific position
-    void init();
-
-    // update the fdm
-    void update( double dt );
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 };
 
 #endif // _EXTERNAL_NET_HXX

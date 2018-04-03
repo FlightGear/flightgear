@@ -173,9 +173,10 @@ public:
     FGNavRadio(SGPropertyNode *node);
     ~FGNavRadio();
 
-    void init ();
-    void reinit ();
-    void update (double dt);
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void update(double dt) override;
 
     // Update nav/adf radios based on current postition
     void search ();

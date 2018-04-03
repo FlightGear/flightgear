@@ -45,11 +45,13 @@ public:
     FGMouseInput();
     virtual ~FGMouseInput() = default;
 
+    // Subsystem API.
     void init() override;
-    void shutdown() override;
     void reinit() override;
-    void update( double dt ) override;
+    void shutdown() override;
+    void update(double dt) override;
 
+    // Subsystem identification.
     static const char* subsystemName() { return "input-mouse"; }
 
     void doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea);

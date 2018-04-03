@@ -49,11 +49,13 @@ class AreaSampler : public SGSubsystem
 public:
     AreaSampler( SGPropertyNode_ptr rootNode );
     virtual ~AreaSampler();
-    void update( double dt );
-    void bind();
-    void unbind();
-    void init();
-    void reinit();
+
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;
 
     int getElevationHistogramStep() const { return _elevationHistogramStep; }
     void setElevationHistograpStep( int value ) {
@@ -322,13 +324,14 @@ public:
     TerrainSamplerImplementation ( SGPropertyNode_ptr rootNode );
     virtual ~TerrainSamplerImplementation ();
 
-    virtual void init ();
-    virtual InitStatus incrementalInit ();
-    virtual void postinit();
-    virtual void reinit ();
-    virtual void bind();
-    virtual void unbind();
-    virtual void update (double delta_time_sec);
+    // Subsystem API.
+    void bind() override;
+    InitStatus incrementalInit() override;
+    void init() override;
+    void postinit() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double delta_time_sec) override;
 
 private:
     inline string areaSubsystemName( unsigned i ) {

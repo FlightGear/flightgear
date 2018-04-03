@@ -27,8 +27,12 @@ class CanvasMgr : public simgear::canvas::CanvasMgr
 public:
     CanvasMgr();
 
-    virtual void init();
-    virtual void shutdown();
+    // Subsystem API.
+    void init() override;
+    void shutdown() override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "Canvas"; }
 
     /**
      * Get OpenGL texture name for given canvas
@@ -40,8 +44,6 @@ public:
      * @return OpenGL texture name
      */
     unsigned int getCanvasTexId(const simgear::canvas::CanvasPtr& canvas) const;
-
-    static const char* subsystemName() { return "Canvas"; }
 
 protected:
 

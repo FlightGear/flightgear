@@ -24,16 +24,19 @@ public:
     FGAircraftModel ();
     virtual ~FGAircraftModel ();
 
-    virtual void init ();
-    virtual void shutdown ();
-    virtual void reinit ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "aircraft-model"; }
+
     virtual SGModelPlacement * get3DModel() { return _aircraft.get(); }
     virtual SGVec3d& getVelocity() { return _velocity; }
-
-    static const char* subsystemName() { return "aircraft-model"; }
 
 private:
     void deinit ();

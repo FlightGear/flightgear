@@ -219,10 +219,11 @@ public:
     FGElectricalSystem ( SGPropertyNode *node );
     virtual ~FGElectricalSystem ();
 
-    void init () override;
-    void bind () override;
-    void unbind () override;
-    void update (double dt) override;
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 
     bool build (SGPropertyNode* config_props);
     float propagate( FGElectricalComponent *node, double dt,

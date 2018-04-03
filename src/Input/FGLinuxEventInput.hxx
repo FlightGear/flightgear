@@ -70,8 +70,10 @@ class FGLinuxEventInput : public FGEventInput
 public:
     FGLinuxEventInput();
     virtual ~ FGLinuxEventInput();
-    virtual void update (double dt);
-    virtual void postinit();
+
+    // Subsystem API.
+    void postinit() override;
+    void update(double dt) override;
 
 protected:
 };

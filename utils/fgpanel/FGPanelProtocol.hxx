@@ -33,11 +33,11 @@ class FGPanelProtocol : public SGSubsystem
 public:
     FGPanelProtocol (SGPropertyNode_ptr a_Root);
     virtual ~FGPanelProtocol ();
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double dt);
 
-protected:
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void update(double dt) override;
 
 private:
     SGPropertyNode_ptr root;

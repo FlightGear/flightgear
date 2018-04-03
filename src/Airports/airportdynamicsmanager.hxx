@@ -38,18 +38,20 @@ public:
     AirportDynamicsManager();
     virtual ~AirportDynamicsManager();
 
-    virtual void init();
-    virtual void shutdown();
-    virtual void update (double dt);
-    virtual void reinit();
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "airport-dynamics"; }
 
     static FGAirportDynamicsRef find(const std::string& icao);
 
     static FGAirportDynamicsRef find(const FGAirportRef& apt);
 
     FGAirportDynamicsRef dynamicsForICAO(const std::string& icao);
-
-    static const char* subsystemName() { return "airport-dynamics"; }
 
 private:
     typedef std::map<std::string, FGAirportDynamicsRef> ICAODynamicsDict;

@@ -390,10 +390,12 @@ public:
     FGInterface( double dt );
     virtual ~FGInterface();
 
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update(double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
+
     virtual bool ToggleDataLogging(bool state) { return false; }
     virtual bool ToggleDataLogging(void) { return false; }
 

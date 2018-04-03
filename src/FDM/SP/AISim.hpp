@@ -75,11 +75,9 @@ public:
     FGAISim(double dt);
     ~FGAISim();
 
-    // reset flight params to a specific location
-    void init();
-
-    // update location based on properties
-    void update(double dt);
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
     bool load(std::string path);
 

@@ -40,11 +40,12 @@ public:
     StaticSystem ( int i );
     virtual ~StaticSystem ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;
 
 private:
     std::string _name;

@@ -40,13 +40,13 @@ public:
     FGIO();
     ~FGIO();
 
-    void init();
-    void reinit();
-    void bind();
-    void unbind();
-    void update( double dt );
-
-    void shutdown();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
 
     /**
      * helper to determine early in startup, if MP will be used.

@@ -34,10 +34,11 @@ public:
     RadarAltimeter ( SGPropertyNode *node );
     virtual ~RadarAltimeter ();
 
-private:
-    virtual void init ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
+private:
     void update_altitude();
     void updateSetHeight();
 

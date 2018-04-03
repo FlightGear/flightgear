@@ -461,10 +461,11 @@ public:
     CommRadioImpl(SGPropertyNode_ptr node);
     virtual ~CommRadioImpl();
 
-    void update(double dt) override;
-    void init() override;
+    // Subsystem API.
     void bind() override;
+    void init() override;
     void unbind() override;
+    void update(double dt) override;
 
 private:
     bool _useEightPointThree = false;

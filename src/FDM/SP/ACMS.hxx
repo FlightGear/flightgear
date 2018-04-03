@@ -34,11 +34,9 @@ public:
     FGACMS( double dt );
     ~FGACMS();
 
-    // reset flight params to a specific position
-    void init();
-
-    // update position based on properties
-    void update( double dt );
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
 private:
     SGPropertyNode_ptr _alt, _speed, _climb_rate;

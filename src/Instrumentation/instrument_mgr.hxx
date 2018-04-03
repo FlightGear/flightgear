@@ -31,8 +31,9 @@ public:
     FGInstrumentMgr ();
     virtual ~FGInstrumentMgr ();
 
-    virtual void init();
-    virtual InitStatus incrementalInit();
+    // Subsystem API.
+    void init() override;
+    InitStatus incrementalInit() override;
 
 private:
     bool build (SGPropertyNode* config_props);

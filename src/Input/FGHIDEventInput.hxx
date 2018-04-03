@@ -39,12 +39,14 @@ public:
 
     virtual ~FGHIDEventInput();
 
-    void update(double dt) override;
+    // Subsystem API.
     void init() override;
+    void postinit() override;
     void reinit() override;
-    void postinit();
     void shutdown() override;
+    void update(double dt) override;
 
+    // Subsystem identification.
     static const char* subsystemName() { return "input-hid"; }
 
 private:

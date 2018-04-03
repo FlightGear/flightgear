@@ -155,9 +155,13 @@ public:
     BasicRealWxController( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester );
     virtual ~BasicRealWxController ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void shutdown ();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
     
     /**
      * Create a metar-property binding at the specified property path,
@@ -173,10 +177,6 @@ public:
     MetarPropertiesList::iterator findMetarAtPath(const string &propPath);
 
 protected:
-    void bind();
-    void unbind();
-    void update( double dt );
-
     void checkNearbyMetar();
 
     long getMetarMaxAgeMin() const { return _max_age_n == NULL ? 0 : _max_age_n->getLongValue(); }

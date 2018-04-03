@@ -43,10 +43,11 @@ public:
     FGJoystickInput();
     virtual ~FGJoystickInput();
 
-    virtual void init();
-    virtual void postinit();
-    virtual void reinit();
-    virtual void update( double dt );
+    // Subsystem API.
+    void init() override;
+    void postinit() override;
+    void reinit() override;
+    void update(double dt) override;
 
     static const int MAX_JOYSTICKS        = 16;
     static const int MAX_JOYSTICK_AXES    = _JS_MAX_AXES;

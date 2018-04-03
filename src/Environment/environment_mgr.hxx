@@ -46,12 +46,13 @@ public:
     FGEnvironmentMgr ();
     virtual ~FGEnvironmentMgr ();
 
-    virtual InitStatus incrementalInit ();
-    virtual void reinit ();
-    virtual void shutdown ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    InitStatus incrementalInit() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
 
     /**
      * Get the environment information for the plane's current position.

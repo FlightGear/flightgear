@@ -30,6 +30,7 @@ class FGSystemMgr : public SGSubsystemGroup
 public:
     FGSystemMgr ();
     virtual ~FGSystemMgr ();
+
     bool build (SGPropertyNode* config_props);
 };
 

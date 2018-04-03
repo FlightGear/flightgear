@@ -40,9 +40,10 @@ public:
     Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode = NULL );
     ~Autopilot();
 
-    void bind();
-    void unbind();
-    void update( double dt );
+    // Subsystem API.
+    void bind() override;
+    void unbind() override;
+    void update(double dt) override;
 
     void set_serviceable( bool value ) { _serviceable = value; }
     bool is_serviceable() const { return _serviceable; }

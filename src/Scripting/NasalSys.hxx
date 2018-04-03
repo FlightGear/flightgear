@@ -37,9 +37,14 @@ class FGNasalSys : public SGSubsystem
 public:
     FGNasalSys();
     virtual ~FGNasalSys();
+
+    // Subsystem API.
     void init() override;
     void shutdown() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "nasal"; }
 
     // Loads a nasal script from an external file and inserts it as a
     // global module of the specified name.
@@ -155,8 +160,6 @@ public:
     /// output somewhere (a UI, presumably)
     simgear::BufferedLogCallback* log() const
     { return _log.get(); }
-
-    static const char* subsystemName() { return "nasal"; }
 
 private:
     //friend class FGNasalScript;

@@ -51,12 +51,14 @@ private:
 public:
     FGATCManager();
     ~FGATCManager();
+
+    // Subsystem API.
     void postinit() override;
     void shutdown() override;
+    void update(double time) override;
 
     void addController(FGATCController *controller);
     void removeController(FGATCController* controller);
-    void update(double time);
 };
 
 #endif // _ATC_MRG_HXX_

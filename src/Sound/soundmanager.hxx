@@ -38,10 +38,14 @@ public:
     FGSoundManager();
     virtual ~FGSoundManager();
 
-    void init(void);
-    virtual void shutdown();
-    void update(double dt);
-    void reinit(void);
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "sound"; }
 
     void activate(bool State);
     void update_device_list();
@@ -73,8 +77,10 @@ public:
     FGSoundManager() { fgSetBool("/sim/sound/working", false);}
     ~FGSoundManager() {}
 
-    void update(double dt) {}
+    // Subsystem API.
+    void update(double dt) {} override
 
+    // Subsystem identification.
     static const char* subsystemName() { return "sound"; }
 };
 

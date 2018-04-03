@@ -41,13 +41,17 @@ public:
     FGAIManager();
     virtual ~FGAIManager();
 
+    // Subsystem API.
+    void bind() override;
     void init() override;
-    void shutdown() override;
     void postinit() override;
     void reinit() override;
-    void bind() override;
+    void shutdown() override;
     void unbind() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "ai-model"; }
 
     void updateLOD(SGPropertyNode* node);
     void attach(FGAIBase *model);
@@ -88,8 +92,6 @@ public:
     }
 
     double calcRangeFt(const SGVec3d& aCartPos, const FGAIBase* aObject) const;
-
-    static const char* subsystemName() { return "ai-model"; }
 
     /**
      * @brief Retrieve the representation of the user's aircraft in the AI manager

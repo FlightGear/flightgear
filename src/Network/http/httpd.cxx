@@ -179,31 +179,11 @@ public:
      */
     ~MongooseHttpd();
 
-    /**
-     * override SGSubsystem::init()
-     *
-     * Reads the configuration PropertyNode, installs URIHandlers and configures mongoose
-     */
-    void init();
-
-    /**
-     * override SGSubsystem::bind()
-     *
-     * Currently a noop
-     */
-    void bind();
-
-    /**
-     * override SGSubsystem::unbind()
-     * shutdown of mongoose, clear connections, unregister URIHandlers
-     */
-    void unbind();
-
-    /**
-     * overrride SGSubsystem::update()
-     * poll connections, check for changed properties
-     */
-    void update(double dt);
+    // Subsystem API.
+    void bind() override;            // Currently a noop
+    void init() override;            // Reads the configuration PropertyNode, installs URIHandlers and configures mongoose
+    void unbind() override;          // shutdown of mongoose, clear connections, unregister URIHandlers
+    void update(double dt) override; // poll connections, check for changed properties
 
     /**
      * Returns a URIHandler for the given uri

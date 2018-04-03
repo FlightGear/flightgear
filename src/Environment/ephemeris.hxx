@@ -31,7 +31,7 @@ class SGEphemeris;
 class SGPropertyNode;
 
 /**
- * Wrap SGEphemeris in a susbsytem/property interface
+ * Wrap SGEphemeris in a subsystem/property interface
  */
 class Ephemeris : public SGSubsystem
 {
@@ -39,13 +39,15 @@ public:
     Ephemeris();
     ~Ephemeris();
 
-    virtual void bind();
-    virtual void unbind();
-    virtual void update(double dt);
-    virtual void init();
-    virtual void shutdown();
-    virtual void postinit();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void postinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
 
+    // Subsystem identification.
     static const char* subsystemName() { return "ephemeris"; }
 
     SGEphemeris* data();

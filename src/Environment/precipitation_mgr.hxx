@@ -45,11 +45,11 @@ public:
     FGPrecipitationMgr();
     virtual ~FGPrecipitationMgr();
 
-    // SGSubsystem methods
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void init ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 
     void setupSceneGraph(void);
     void setPrecipitationLevel(double l);

@@ -48,10 +48,12 @@ public:
     FGMacOSXEventInput();
 
     virtual ~FGMacOSXEventInput();
-    virtual void update(double dt);
-    virtual void init();
-    virtual void postinit();
-    virtual void shutdown();
+
+    // Subsystem API.
+    void init() override;
+    void postinit() override;
+    void shutdown() override;
+    void update(double dt) override;
 
 private:
     friend class FGMacOSXEventInputPrivate;

@@ -57,12 +57,11 @@ public:
     FGPanel (const SGPropertyNode_ptr root);
     virtual ~FGPanel ();
 
-    // Update the panel (every frame).
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    //  virtual void draw ();
-    virtual void update (const double dt);
+    // Subsystem API.
+    void init() override;
+    void bind() override;
+    void unbind() override;
+    void update(double dt) override;
 
     // transfer pointer ownership!!!
     virtual void addInstrument (FGPanelInstrument * const instrument);

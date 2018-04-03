@@ -45,9 +45,10 @@ public:
     MagCompass ();
     virtual ~MagCompass ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void update(double dt) override;
 
 private:
     double _rate_degps;

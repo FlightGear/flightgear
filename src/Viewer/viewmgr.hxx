@@ -49,13 +49,17 @@ public:
     // Destructor
     ~FGViewMgr( void );
 
-    virtual void init ();
-    virtual void postinit();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
-    virtual void reinit ();
-    virtual void shutdown();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void postinit() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "view-manager"; }
 
     // getters
     inline int size() const { return views.size(); }
@@ -74,8 +78,6 @@ public:
     void clear();
 
     void add_view( flightgear::View * v );
-
-    static const char* subsystemName() { return "view-manager"; }
 
 private:
     simgear::TiedPropertyList _tiedProperties;

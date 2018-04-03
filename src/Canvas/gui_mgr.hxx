@@ -39,12 +39,12 @@ class GUIMgr : public SGSubsystem
 public:
     GUIMgr();
 
+    // Subsystem API.
+    void init() override;
+    void shutdown() override;
+    void update(double dt) override;
+
     simgear::canvas::WindowPtr createWindow(const std::string& name = "");
-
-    virtual void init();
-    virtual void shutdown();
-
-    virtual void update(double dt);
 
     /**
      * Get simgear::canvas::Group containing all windows

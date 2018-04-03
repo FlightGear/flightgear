@@ -44,11 +44,12 @@ public:
     FGKeyboardInput();
     virtual ~FGKeyboardInput();
 
-    virtual void init();
-    virtual void postinit();
-    virtual void bind();
-    virtual void unbind();
-    virtual void update( double dt );
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void postinit() override;
+    void unbind() override;
+    void update(double dt) override;
 
     static const int MAX_KEYS = 1024;
 

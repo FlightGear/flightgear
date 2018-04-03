@@ -30,13 +30,15 @@ public:
     FGCom();
     virtual ~FGCom();
 
-    virtual void bind();
-    virtual void unbind();
-    virtual void init();
-    virtual void postinit();
-    virtual void update(double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void postinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
+
     virtual void valueChanged(SGPropertyNode *prop);
-    virtual void shutdown();
     void iaxTextEvent(struct iaxc_ev_text text);
 
 private:

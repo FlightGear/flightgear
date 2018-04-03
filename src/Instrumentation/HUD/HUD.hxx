@@ -121,10 +121,11 @@ class HUD : public SGSubsystem,
 public:
     HUD();
     ~HUD();
-    void init();
-    void update(double);
 
-    void reinit();
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void update(double) override;
 
     // called from Main/renderer.cxx to draw 2D and 3D HUD
     void draw(osg::State&);

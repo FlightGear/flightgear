@@ -107,23 +107,18 @@ public:
     /// Destructor
     ~FGJSBsim();
 
+    // Subsystem API.
+    void init() override;
+    void resume() override;
+    void suspend() override;
+    void unbind() override;
+    void update(double dt) override;
+
     /// copy FDM state to LaRCsim structures
     bool copy_to_JSBsim();
 
     /// copy FDM state from LaRCsim structures
     bool copy_from_JSBsim();
-
-    /// Reset flight params to a specific position
-    void init();
-
-    /// Unbind properties
-    void unbind();
-
-    /// Suspend integration
-    void suspend();
-
-    /// Resume integration
-    void resume();
 
     /// @name Position Parameter Set
     //@{
@@ -210,11 +205,6 @@ public:
         @param wdown velocity down in fps*/
     /// @name Position Parameter Update
     //@{
-
-
-    /** Update the position based on inputs, positions, velocities, etc.
-        @param dt delta time in seconds. */
-    void update(double dt);
 
     bool ToggleDataLogging(bool state);
     bool ToggleDataLogging(void);

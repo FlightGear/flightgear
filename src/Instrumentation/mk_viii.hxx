@@ -1374,10 +1374,11 @@ class MK_VIII : public SGSubsystem
 public:
     MK_VIII (SGPropertyNode *node);
 
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 };
 
 #ifdef _MSC_VER

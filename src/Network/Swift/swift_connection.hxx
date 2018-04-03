@@ -38,16 +38,18 @@
 class SwiftConnection : public SGSubsystem
 {
 public:
-    bool startServer(const SGPropertyNode* arg, SGPropertyNode* root);
-    bool stopServer(const SGPropertyNode* arg, SGPropertyNode* root);
     SwiftConnection();
     ~SwiftConnection();
-    FGSwiftBus::CPlugin* plug;
 
-    virtual void         init(void);
-    virtual void         update(double delta_time_sec) override;
-    virtual void shutdown(void);
-    virtual void reinit();
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void update(double delta_time_sec) override;
+
+    bool startServer(const SGPropertyNode* arg, SGPropertyNode* root);
+    bool stopServer(const SGPropertyNode* arg, SGPropertyNode* root);
+    FGSwiftBus::CPlugin* plug;
 
 private:
     bool serverRunning = false;

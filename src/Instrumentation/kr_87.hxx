@@ -108,11 +108,12 @@ public:
     FGKR_87( SGPropertyNode *node );
     ~FGKR_87();
 
-    void init ();
-    void reinit ();
-    void bind ();
-    void unbind ();
-    void update (double dt_sec);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt_sec) override;
 
     // Update nav/adf radios based on current postition
     void search ();

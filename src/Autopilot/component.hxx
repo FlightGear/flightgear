@@ -49,11 +49,6 @@ protected:
                             SGPropertyNode& prop_root );
 
    /**
-    * @brief the implementation of the update() method of the SGSubsystem
-    */
-    virtual void update( double dt );
-
-   /**
     * @brief pure virtual function to be implemented by the derived classes. Gets called from
     * the update method if it's not disabled with the firstTime parameter set to true if this
     * is the first call after being enabled
@@ -92,6 +87,9 @@ public:
      * virtual destructor to clean up resources
      */
     virtual ~Component();
+
+    // Subsystem API.
+    void update(double dt) override;
 
     /**
      * @brief configure this component from a property node. Iterates through

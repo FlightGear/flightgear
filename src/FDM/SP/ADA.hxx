@@ -73,11 +73,9 @@ public:
     FGADA( double dt );
     ~FGADA();
 
-    // reset flight params to a specific position
-    void init();
-
-    // update position based on inputs, positions, velocities, etc.
-    void update(double dt);
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 };
 
 #endif // _ADA_HXX

@@ -32,8 +32,9 @@ public:
     Clock(SGPropertyNode *node);
     virtual ~Clock();
 
-    virtual void init();
-    virtual void update(double dt);
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
 private:
     std::string _name;

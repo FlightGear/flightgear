@@ -40,9 +40,10 @@ public:
     AirspeedIndicator ( SGPropertyNode *node );
     virtual ~AirspeedIndicator ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double dt);
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void update(double dt) override;
 
 private:
     void computeMach();

@@ -106,12 +106,13 @@ class LayerInterpolateControllerImplementation : public LayerInterpolateControll
 public:
     LayerInterpolateControllerImplementation( SGPropertyNode_ptr rootNode );
     
-    virtual void init ();
-    virtual void reinit ();
-    virtual void postinit();
-    virtual void bind();
-    virtual void unbind();
-    virtual void update (double delta_time_sec);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void postinit() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double delta_time_sec) override;
 
 private:
     SGPropertyNode_ptr _rootNode;

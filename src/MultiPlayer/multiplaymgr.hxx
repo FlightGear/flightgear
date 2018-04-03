@@ -54,11 +54,11 @@ public:
     FGMultiplayMgr();
     ~FGMultiplayMgr();
 
-    virtual void init(void);
-    virtual void update(double dt);
-
-    virtual void shutdown(void);
-    virtual void reinit();
+    // Subsystem API.
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void update(double dt) override;
 
     // transmitter
 

@@ -381,13 +381,13 @@ private:
 public:
     TCAS (SGPropertyNode* node);
 
-    virtual void bind   (void);
-    virtual void unbind (void);
-    virtual void init   (void);
-    virtual void reinit (void);
-    virtual void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;
 
-	
     /* configuration options */
     int  _verticalRange;
     int  _lateralRange;

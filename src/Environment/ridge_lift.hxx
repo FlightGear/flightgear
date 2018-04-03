@@ -44,10 +44,11 @@ public:
     FGRidgeLift();
     ~FGRidgeLift();
 
-    virtual void bind();
-    virtual void unbind();
-    virtual void update(double dt);
-    virtual void init();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 
     inline double getStrength() const { return strength; };
 

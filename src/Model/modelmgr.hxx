@@ -54,12 +54,15 @@ public:
     FGModelMgr ();
     virtual ~FGModelMgr ();
 
-    virtual void init ();
-    virtual void shutdown ();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
 
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    // Subsystem identification.
+    static const char* subsystemName() { return "model-manager"; }
 
     virtual void add_model (SGPropertyNode * node);
 
@@ -82,8 +85,6 @@ public:
      * NOTE: the manager will delete the instance as well.
      */
     virtual void remove_instance (Instance * instance);
-
-    static const char* subsystemName() { return "model-manager"; }
 
 private:
     /**

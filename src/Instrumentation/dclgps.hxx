@@ -202,12 +202,13 @@ public:
     DCLGPS(RenderArea2D* instrument);
     virtual ~DCLGPS() = 0;
 
-    virtual void draw(osg::State& state);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void unbind() override;
+    void update(double dt) override;
 
-    virtual void init();
-    virtual void bind();
-    virtual void unbind();
-    virtual void update(double dt);
+    virtual void draw(osg::State& state);
 
     // Expand a SIAP ident to the full procedure name.
     std::string ExpandSIAPIdent(const std::string& ident);

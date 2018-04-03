@@ -71,13 +71,16 @@ public:
     FGScenery();
     ~FGScenery();
 
-    // Implementation of SGSubsystem.
-    void init ();
-    void reinit();
-    void shutdown ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void shutdown() override;
+    void unbind() override;
+    void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "scenery"; }
 
     /// Compute the elevation of the scenery at geodetic latitude lat,
     /// geodetic longitude lon and not higher than max_alt.
@@ -141,9 +144,6 @@ public:
     // tile mgr api
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
     void materialLibChanged();
-    
-    static const char* subsystemName() { return "scenery"; }
-
 private:
     // the terrain engine
     FGTerrain* _terrain;

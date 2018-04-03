@@ -38,6 +38,7 @@ public:
     DME ( SGPropertyNode *node );
     virtual ~DME ();
 
+    // Subsystem API.
     void init() override;
     void reinit() override;
     void update(double delta_time_sec) override;

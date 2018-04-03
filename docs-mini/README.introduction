@@ -57,11 +57,15 @@ SGSubsystem and define at least a small set of functions:
         FGFX();
         virtual ~FGFX();
 
-        virtual void init();
-        virtual void reinit();
-        virtual void bind();
-        virtual void unbind();
-        virtual void update(double dt);
+        // Subsystem API.
+        void bind() override;
+        void init() override;
+        void reinit() override;
+        void unbind() override;
+        void update(double dt) override;
+
+        // Subsystem identification.
+        static const char* subsystemName() { return "fx"; }
     };
 
 The init() functions should make sure everything is set and ready so the

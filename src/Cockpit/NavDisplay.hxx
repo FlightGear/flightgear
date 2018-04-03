@@ -62,8 +62,9 @@ public:
     NavDisplay(SGPropertyNode *node);
     virtual ~NavDisplay();
 
-    virtual void init();
-    virtual void update(double dt);
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
     void invalidatePositionedCache()
     {

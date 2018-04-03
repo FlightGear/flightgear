@@ -113,8 +113,10 @@ private:
 public:
     FGTrafficManager();
     ~FGTrafficManager();
-    void init();
-    void update(double time);
+
+    // Subsystem API.
+    void init() override;
+    void update(double time) override;
 
     FGScheduledFlightVecIterator getFirstFlight(const std::string &ref) { return flights[ref].begin(); }
     FGScheduledFlightVecIterator getLastFlight(const std::string &ref) { return flights[ref].end(); }

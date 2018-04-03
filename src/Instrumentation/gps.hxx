@@ -64,13 +64,12 @@ public:
     GPS ();
     virtual ~GPS ();
 
-    // SGSubsystem interface
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double delta_time_sec);
-
-    virtual void bind();
-    virtual void unbind();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double delta_time_sec) override;
 
     // RNAV interface
     virtual SGGeod position();

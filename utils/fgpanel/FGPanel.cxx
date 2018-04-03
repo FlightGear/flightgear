@@ -168,7 +168,7 @@ FGPanel::unbind () {
 }
 
 void
-FGPanel::update (const double dt) {
+FGPanel::update (double dt) {
   getInitDisplayList ();
   // Draw the instruments.
   // Syd Adams: added instrument clipping

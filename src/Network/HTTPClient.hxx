@@ -31,15 +31,19 @@ public:
     FGHTTPClient();
     virtual ~FGHTTPClient();
 
+    // Subsystem API.
+    void init() override;
+    void postinit() override;
+    void shutdown() override;
+    void update(double) override;
+
+    // Subsystem identification.
+    static const char* subsystemName() { return "http"; }
+
     void makeRequest(const simgear::HTTP::Request_ptr& req);
 
     simgear::HTTP::Client* client() { return _http.get(); }
     simgear::HTTP::Client const* client() const { return _http.get(); }
-
-    virtual void init();
-    virtual void postinit();
-    virtual void shutdown();
-    virtual void update(double);
 
     bool isDefaultCatalogInstalled() const;
     void addDefaultCatalog();
@@ -47,8 +51,6 @@ public:
     std::string getDefaultCatalogId() const;
     std::string getDefaultCatalogUrl() const;
     std::string getDefaultCatalogFallbackUrl() const;
-
-    static const char* subsystemName() { return "http"; }
 
 private:
     bool _inited;

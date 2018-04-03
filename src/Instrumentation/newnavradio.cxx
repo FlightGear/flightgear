@@ -808,8 +808,9 @@ public:
     NavRadioImpl( SGPropertyNode_ptr node );
     virtual ~NavRadioImpl();
 
-    virtual void update( double dt );
-    virtual void init();
+    // Subsystem API.
+    void init() override;
+    void update(double dt) override;
 
 private:
     void search();

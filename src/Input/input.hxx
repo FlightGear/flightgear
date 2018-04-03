@@ -55,6 +55,7 @@ public:
      */
     virtual ~FGInput();
 
+    // Subsystem identification.
     static const char* subsystemName() { return "input"; }
 };
 

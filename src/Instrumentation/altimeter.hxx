@@ -33,11 +33,12 @@ public:
     Altimeter (SGPropertyNode *node, const std::string& aDefaultName, double quantum = 0);
     virtual ~Altimeter ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double dt);
-    virtual void bind();
-    virtual void unbind();
+    // Subsystem API.
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;
 
     double getSettingInHg() const;
     void setSettingInHg( double value );

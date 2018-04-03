@@ -43,8 +43,9 @@ public:
     ADF ( SGPropertyNode *node );
     virtual ~ADF ();
 
-    virtual void init ();
-    virtual void update (double delta_time_sec);
+    // Subsystem API.
+    void init() override;
+    void update(double delta_time_sec) override;
 
 private:
     void set_bearing (double delta_time_sec, double bearing);

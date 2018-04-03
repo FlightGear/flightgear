@@ -96,14 +96,15 @@ public:
     FGSubmodelMgr();
     ~FGSubmodelMgr() override;
 
-    void load();
-
+    // Subsystem API.
+    void bind() override;
     void init() override;
     void postinit() override;
-    void bind() override;
+    void shutdown() override;
     void unbind() override;
     void update(double dt) override;
-    void shutdown() override;
+
+    void load();
 
 private:
     typedef std::vector <submodel*> submodel_vector_type;
