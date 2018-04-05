@@ -138,7 +138,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
       // there aren't any routes for this parking.
       if (!pushForwardSegment) {
           SG_LOG(SG_AI, SG_DEV_WARN, "Gate " << parking->ident() << "/" << parking->getName()
-                 << "doesn't seem to have routes associated with it.");
+                 << " at " << dep->getId()
+                 << " doesn't seem to have routes associated with it.");
           return false;
       }
 
