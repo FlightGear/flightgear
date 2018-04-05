@@ -603,7 +603,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     }
     switch (msgId) {
     case MSG_ANNOUNCE_ENGINE_START:
-        text = sender + ". Ready to Start up";
+        text = sender + ". Ready to Start up.";
         break;
     case MSG_REQUEST_ENGINE_START:
         text =
@@ -613,7 +613,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             rec->getAircraft()->getTrafficRef()->getFlightRules() +
             " to " +
             rec->getAircraft()->getTrafficRef()->getArrivalAirport()->
-            getName() + ". Request start-up";
+            getName() + ". Request start-up.";
         break;
         // Acknowledge engine startup permission
         // Assign departure runway
@@ -650,7 +650,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             sender + " control.";
         break;
     case MSG_DENY_ENGINE_START:
-        text = receiver + ". Standby";
+        text = receiver + ". Standby.";
         break;
     case MSG_ACKNOWLEDGE_ENGINE_START:
         fp = rec->getAircraft()->GetFlightPlan()->getSID();
@@ -670,88 +670,88 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             " correct, runway " + activeRunway + ", " + SID + ", squawk " +
             transponderCode + ". " +
             "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
-            sender;
+            sender + ".";
         break;
     case MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY:
         taxiFreqStr = formatATCFrequency3_2(taxiFreq);
-        text = receiver + ". Switching to " + taxiFreqStr + ". " + sender;
+        text = receiver + ". Switching to " + taxiFreqStr + ". " + sender + ".";
         break;
     case MSG_INITIATE_CONTACT:
-        text = receiver + ". With you. " + sender;
+        text = receiver + ". With you. " + sender + ".";
         break;
     case MSG_ACKNOWLEDGE_INITIATE_CONTACT:
-        text = receiver + ". Roger. " + sender;
+        text = receiver + ". Roger. " + sender + ".";
         break;
     case MSG_REQUEST_PUSHBACK_CLEARANCE:
         if (rec->getAircraft()->getTaxiClearanceRequest()) {
-            text = receiver + ". Request push-back. " + sender;
+            text = receiver + ". Request push-back. " + sender + ".";
         } else {
-            text = receiver + ". Request Taxi clearance. " + sender;
+            text = receiver + ". Request Taxi clearance. " + sender + ".";
         }
         break;
     case MSG_PERMIT_PUSHBACK_CLEARANCE:
         if (rec->getAircraft()->getTaxiClearanceRequest()) {
-            text = receiver + ". Push-back approved. " + sender;
+            text = receiver + ". Push-back approved. " + sender + ".";
         } else {
-            text = receiver + ". Cleared to Taxi." + sender;
+            text = receiver + ". Cleared to Taxi." + sender + "."; 
         }
         break;
     case MSG_HOLD_PUSHBACK_CLEARANCE:
-        text = receiver + ". Standby. " + sender;
+        text = receiver + ". Standby. " + sender + ".";
         break;
     case MSG_REQUEST_TAXI_CLEARANCE:
-        text = receiver + ". Ready to Taxi. " + sender;
+        text = receiver + ". Ready to Taxi. " + sender + ".";
         break;
     case MSG_ISSUE_TAXI_CLEARANCE:
-        text = receiver + ". Cleared to taxi. " + sender;
+        text = receiver + ". Cleared to taxi. " + sender + ".";
         break;
     case MSG_ACKNOWLEDGE_TAXI_CLEARANCE:
-        text = receiver + ". Cleared to taxi. " + sender;
+        text = receiver + ". Cleared to taxi. " + sender + ".";
         break;
     case MSG_HOLD_POSITION:
-        text = receiver + ". Hold Position. " + sender;
+        text = receiver + ". Hold Position. " + sender + ".";
         break;
     case MSG_ACKNOWLEDGE_HOLD_POSITION:
-        text = receiver + ". Holding Position. " + sender;
+        text = receiver + ". Holding Position. " + sender + ".";
         break;
     case MSG_RESUME_TAXI:
-        text = receiver + ". Resume Taxiing. " + sender;
+        text = receiver + ". Resume Taxiing. " + sender + ".";
         break;
     case MSG_ACKNOWLEDGE_RESUME_TAXI:
-        text = receiver + ". Continuing Taxi. " + sender;
+        text = receiver + ". Continuing Taxi. " + sender + ".";
         break;
     case MSG_REPORT_RUNWAY_HOLD_SHORT:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         //activeRunway = "test";
         text = receiver + ". Holding short runway "
                + activeRunway
-               + ". " + sender;
+               + ". " + sender + ".";
         //text = "test1";
         //cerr << "1 Currently at leg " << rec->getLeg() << endl;
         break;
     case MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
-        text = receiver + "Roger. Holding short runway "
+        text = receiver + " Roger. Holding short runway "
                //                + activeRunway
-               + ". " + sender;
+               + ". " + sender + ".";
         //text = "test2";
         //cerr << "2 Currently at leg " << rec->getLeg() << endl;
         break;
     case MSG_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
-        text = receiver + "Contact Tower at " + towerFreqStr + ". " + sender;
+        text = receiver + " Contact Tower at " + towerFreqStr + ". " + sender + ".";
         //text = "test3";
         //cerr << "3 Currently at leg " << rec->getLeg() << endl;
         break;
     case MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
-        text = receiver + "Roger, switching to tower at " + towerFreqStr + ". " + sender;
+        text = receiver + " Roger, switching to tower at " + towerFreqStr + ". " + sender + ".";
         //text = "test4";
         //cerr << "4 Currently at leg " << rec->getLeg() << endl;
         break;
     default:
         //text = "test3";
-        text = text + sender + ". Transmitting unknown Message";
+        text = text + sender + ". Transmitting unknown Message.";
         break;
     }
     if (audible) {
