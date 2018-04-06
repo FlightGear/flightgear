@@ -1,0 +1,1826 @@
+# Clang-format configuration file for FlightGear.
+#
+# The settings below were chosen based largely on two criteria:
+#
+# 1) The "average flightgear coding style", defined as producing a minimal diff
+# in the flightgear repository when running the following commands:
+#
+# $ find src/ -type f \( -iname *.c -o -iname *.cxx -o -iname *.h \
+# -o -iname *.hxx \) -exec clang-format -i {} \;
+# $ git diff --shortstat
+#
+# 2) The preservation of meticulously formatted code found in many files.
+#
+# This file should be considered as a style-guide for new code.
+#
+# The comments before each option are reStructuredText formatted text converted
+# from the https://clang.llvm.org/docs/ClangFormatStyleOptions.html web page.
+
+
+---
+# **Language** (``LanguageKind``)
+#     Language, this format style is targeted at.
+#
+#     Possible values:
+#
+#     * ``LK_None`` (in configuration: ``None``) Do not use.
+#     * ``LK_Cpp`` (in configuration: ``Cpp``) Should be used for C, C++.
+#     * ``LK_Java`` (in configuration: ``Java``) Should be used for Java.
+#     * ``LK_JavaScript`` (in configuration: ``JavaScript``) Should be used for JavaScript.
+#     * ``LK_ObjC`` (in configuration: ``ObjC``) Should be used for Objective-C, Objective-C++.
+#     * ``LK_Proto`` (in configuration: ``Proto``) Should be used for Protocol Buffers (https://developers.google.com/protocol-buffers/).
+#     * ``LK_TableGen`` (in configuration: ``TableGen``) Should be used for TableGen code.
+#     * ``LK_TextProto`` (in configuration: ``TextProto``) Should be used for Protocol Buffer messages in text format (https://developers.google.com/protocol-buffers/).
+
+Language:        Cpp
+
+# **BasedOnStyle** (``string``)
+#     The style used for all options not specifically set in the configuration.
+#
+#     This option is supported only in the **clang-format** configuration (both within ``-style='{...}'`` and the ``.clang-format`` file).
+#
+#     Possible values:
+#
+#     * ``LLVM`` A style complying with the `LLVM coding standards`_
+#     * ``Google`` A style complying with `Google's C++ style guide`_
+#     * ``Chromium`` A style complying with `Chromium's style guide`_
+#     * ``Mozilla`` A style complying with `Mozilla's style guide`_
+#     * ``WebKit`` A style complying with `WebKit's style guide`_
+#
+#
+# .. _LLVM coding standards: http://llvm.org/docs/CodingStandards.html
+# .. _Google's C++ style guide: http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
+# .. _Chromium's style guide: http://www.chromium.org/developers/coding-style
+# .. _Mozilla's style guide: https://developer.mozilla.org/en-US/docs/Developer_Guide/Coding_Style
+# .. _WebKit's style guide: http://www.webkit.org/coding/coding-style.html
+
+# Rational:  Not needed as all options are manually set.
+#BasedOnStyle: LLVM
+
+
+# **AccessModifierOffset** (``int``)
+#     The extra indent or outdent of access modifiers, e.g. ``public:``.
+
+# Rational:  Average FG style with minimal diff.
+AccessModifierOffset: -4
+
+
+# **AlignAfterOpenBracket** (``BracketAlignmentStyle``)
+#     If ``true``, horizontally aligns arguments after an open bracket.
+#
+#     This applies to round brackets (parentheses), angle brackets and square brackets.
+#
+#     Possible values:
+#
+#     * ``BAS_Align`` (in configuration: ``Align``) Align parameters on the open bracket, e.g.:
+#
+#       .. parsed-literal::
+#
+#          someLongFunction(argument1,
+#                           argument2);
+#
+#     * ``BAS_DontAlign`` (in configuration: ``DontAlign``) Don't align, instead use ``ContinuationIndentWidth``, e.g.:
+#
+#       .. parsed-literal::
+#
+#          someLongFunction(argument1,
+#              argument2);
+#
+#     * ``BAS_AlwaysBreak`` (in configuration: ``AlwaysBreak``) Always break after an open bracket, if the parameters don't fit on a single line, e.g.:
+#
+#       .. parsed-literal::
+#
+#          someLongFunction(
+#              argument1, argument2);
+
+# Rational:  Average FG style with minimal diff.
+#AlignAfterOpenBracket: AlwaysBreak
+
+# Rational:  Preservation of formatting.
+AlignAfterOpenBracket: Align
+
+
+# **AlignConsecutiveAssignments** (``bool``)
+#     If ``true``, aligns consecutive assignments.
+#
+#     This will align the assignment operators of consecutive lines. This will result in formattings like
+#
+#     .. parsed-literal::
+#
+#        int aaaa = 12;
+#        int b    = 23;
+#        int ccc  = 23;
+
+# Rational:  Average FG style with minimal diff.
+#AlignConsecutiveAssignments: false
+
+# Rational:  Preservation of formatting.
+AlignConsecutiveAssignments: true
+
+
+# **AlignConsecutiveDeclarations** (``bool``)
+#     If ``true``, aligns consecutive declarations.
+#
+#     This will align the declaration names of consecutive lines. This will result in formattings like
+#
+#     .. parsed-literal::
+#
+#        int         aaaa = 12;
+#        float       b = 23;
+#        std::string ccc = 23;
+
+# Rational:  Average FG style with minimal diff.
+# Rational:  Preservation of formatting.
+AlignConsecutiveDeclarations: true
+
+
+# **AlignEscapedNewlines** (``EscapedNewlineAlignmentStyle``)
+#     Options for aligning backslashes in escaped newlines.
+#
+#     Possible values:
+#
+#     * ``ENAS_DontAlign`` (in configuration: ``DontAlign``) Don't align escaped newlines.
+#
+#       .. parsed-literal::
+#
+#          #define A \\
+#            int aaaa; \\
+#            int b; \\
+#            int dddddddddd;
+#
+#     * ``ENAS_Left`` (in configuration: ``Left``) Align escaped newlines as far left as possible.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          #define A   \\
+#            int aaaa; \\
+#            int b;    \\
+#            int dddddddddd;
+#
+#          false:
+#
+#     * ``ENAS_Right`` (in configuration: ``Right``) Align escaped newlines in the right-most column.
+#
+#       .. parsed-literal::
+#
+#          #define A                                                                      \\
+#            int aaaa;                                                                    \\
+#            int b;                                                                       \\
+#            int dddddddddd;
+
+# Clang version >= 5.
+# Rational:  Average FG style with minimal diff.
+#AlignEscapedNewlines: Left
+
+# Rational:  Preservation of formatting.
+#AlignEscapedNewlines: Left
+
+
+# **AlignEscapedNewlinesLeft** (``bool``)
+#     If ``true``, aligns escaped newlines as far left as possible. Otherwise puts them into the right-most column.
+
+# Clang version < 5.
+# Rational:  Average FG style with minimal diff.
+# Rational:  Preservation of formatting.
+AlignEscapedNewlinesLeft: true
+
+
+# **AlignOperands** (``bool``)
+#     If ``true``, horizontally align operands of binary and ternary expressions.
+#
+#     Specifically, this aligns operands of a single expression that needs to be split over multiple lines, e.g.:
+#
+#     .. parsed-literal::
+#
+#        int aaa = bbbbbbbbbbbbbbb +
+#                  ccccccccccccccc;
+
+# Rational:  Average FG style with minimal diff.
+#AlignOperands: false
+
+# Rational:  Preservation of formatting.
+AlignOperands: true
+
+
+# **AlignTrailingComments** (``bool``)
+#     If ``true``, aligns trailing comments.
+#
+#     .. parsed-literal::
+#
+#        true:                                   false:
+#        int a;     // My comment a      vs.     int a; // My comment a
+#        int b = 2; // comment  b                int b = 2; // comment about b
+
+# Rational:  Average FG style with minimal diff.
+#AlignTrailingComments: false
+
+# Rational:  Preservation of formatting.
+AlignTrailingComments: true
+
+
+# **AllowAllParametersOfDeclarationOnNextLine** (``bool``)
+#     If the function declaration doesn't fit on a line, allow putting all parameters of a function declaration onto the next line even if ``BinPackParameters`` is ``false``.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        void myFunction(
+#            int a, int b, int c, int d, int e);
+#
+#        false:
+#        void myFunction(int a,
+#                        int b,
+#                        int c,
+#                        int d,
+#                        int e);
+
+# Rational:  Average FG style with minimal diff.
+# Rational:  Preservation of formatting.
+AllowAllParametersOfDeclarationOnNextLine: true
+
+
+# **AllowShortBlocksOnASingleLine** (``bool``)
+#     Allows contracting simple braced statements to a single line.
+#
+#     E.g., this allows ``if (a) { return; }`` to be put on a single line.
+
+# Rational:  Average FG style with minimal diff.
+AllowShortBlocksOnASingleLine: true
+
+
+# **AllowShortCaseLabelsOnASingleLine** (``bool``)
+#     If ``true``, short case labels will be contracted to a single line.
+#
+#     .. parsed-literal::
+#
+#        true:                                   false:
+#        switch (a) {                    vs.     switch (a) {
+#        case 1: x = 1; break;                   case 1:
+#        case 2: return;                           x = 1;
+#        }                                         break;
+#                                                case 2:
+#                                                  return;
+#                                                }
+
+# Rational:  Average FG style with minimal diff.
+AllowShortCaseLabelsOnASingleLine: true
+
+
+# **AllowShortFunctionsOnASingleLine** (``ShortFunctionStyle``)
+#     Dependent on the value, ``int f() { return 0; }`` can be put on a single line.
+#
+#     Possible values:
+#
+#     * ``SFS_None`` (in configuration: ``None``) Never merge functions into a single line.
+#
+#     * ``SFS_InlineOnly`` (in configuration: ``InlineOnly``) Only merge functions defined inside a class. Same as “inline”, except it does not implies “empty”: i.e. top level empty functions are not merged either.
+#
+#       .. parsed-literal::
+#
+#          class Foo {
+#            void f() { foo(); }
+#          };
+#          void f() {
+#            foo();
+#          }
+#          void f() {
+#          }
+#
+#     * ``SFS_Empty`` (in configuration: ``Empty``) Only merge empty functions.
+#
+#       .. parsed-literal::
+#
+#          void f() {}
+#          void f2() {
+#            bar2();
+#          }
+#
+#     * ``SFS_Inline`` (in configuration: ``Inline``) Only merge functions defined inside a class. Implies “empty”.
+#
+#       .. parsed-literal::
+#
+#          class Foo {
+#            void f() { foo(); }
+#          };
+#          void f() {
+#            foo();
+#          }
+#          void f() {}
+#
+#     * ``SFS_All`` (in configuration: ``All``) Merge all functions fitting on a single line.
+#
+#       .. parsed-literal::
+#
+#          class Foo {
+#            void f() { foo(); }
+#          };
+#          void f() { bar(); }
+
+# Rational:  Average FG style with minimal diff.
+AllowShortFunctionsOnASingleLine: All
+
+
+# **AllowShortIfStatementsOnASingleLine** (``bool``)
+#     If ``true``, ``if (a) return;`` can be put on a single line.
+
+# Rational:  Average FG style with minimal diff.
+AllowShortIfStatementsOnASingleLine: true
+
+
+# **AllowShortLoopsOnASingleLine** (``bool``)
+#     If ``true``, ``while (true) continue;`` can be put on a single line.
+
+# Rational:  Average FG style with minimal diff.
+AllowShortLoopsOnASingleLine: true
+
+
+# **AlwaysBreakAfterReturnType** (``ReturnTypeBreakingStyle``)
+#     The function declaration return type breaking style to use.
+#
+#     Possible values:
+#
+#     * ``RTBS_None`` (in configuration: ``None``) Break after return type automatically. ``PenaltyReturnTypeOnItsOwnLine`` is taken into account.
+#
+#       .. parsed-literal::
+#
+#          class A {
+#            int f() { return 0; };
+#          };
+#          int f();
+#          int f() { return 1; }
+#
+#     * ``RTBS_All`` (in configuration: ``All``) Always break after the return type.
+#
+#       .. parsed-literal::
+#
+#          class A {
+#            int
+#            f() {
+#              return 0;
+#            };
+#          };
+#          int
+#          f();
+#          int
+#          f() {
+#            return 1;
+#          }
+#
+#     * ``RTBS_TopLevel`` (in configuration: ``TopLevel``) Always break after the return types of top-level functions.
+#
+#       .. parsed-literal::
+#
+#          class A {
+#            int f() { return 0; };
+#          };
+#          int
+#          f();
+#          int
+#          f() {
+#            return 1;
+#          }
+#
+#     * ``RTBS_AllDefinitions`` (in configuration: ``AllDefinitions``) Always break after the return type of function definitions.
+#
+#       .. parsed-literal::
+#
+#          class A {
+#            int
+#            f() {
+#              return 0;
+#            };
+#          };
+#          int f();
+#          int
+#          f() {
+#            return 1;
+#          }
+#
+#     * ``RTBS_TopLevelDefinitions`` (in configuration: ``TopLevelDefinitions``) Always break after the return type of top-level definitions.
+#
+#       .. parsed-literal::
+#
+#          class A {
+#            int f() { return 0; };
+#          };
+#          int f();
+#          int
+#          f() {
+#            return 1;
+#          }
+
+# Rational:  Average FG style with minimal diff.
+AlwaysBreakAfterReturnType: None
+
+
+# **AlwaysBreakBeforeMultilineStrings** (``bool``)
+#     If ``true``, always break before multiline string literals.
+#
+#     This flag is mean to make cases where there are multiple multiline strings in a file look more consistent. Thus, it will only take effect if wrapping the string at that point leads to it being indented ``ContinuationIndentWidth`` spaces from the start of the line.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        aaaa =                         vs.     aaaa = "bbbb"
+#            "bbbb"                                    "cccc";
+#            "cccc";
+
+# Rational:  Average FG style with minimal diff.
+AlwaysBreakBeforeMultilineStrings: false
+
+
+# **AlwaysBreakTemplateDeclarations** (``bool``)
+#     If ``true``, always break after the ``template<...>`` of a template declaration.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        template <typename T>          vs.     template <typename T> class C {};
+#        class C {};
+
+# Rational:  Average FG style with minimal diff.
+AlwaysBreakTemplateDeclarations: false
+
+
+# **BinPackArguments** (``bool``)
+#     If ``false``, a function call's arguments will either be all on the same line or will have one line each.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        void f() {
+#          f(aaaaaaaaaaaaaaaaaaaa, aaaaaaaaaaaaaaaaaaaa,
+#            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);
+#        }
+#
+#        false:
+#        void f() {
+#          f(aaaaaaaaaaaaaaaaaaaa,
+#            aaaaaaaaaaaaaaaaaaaa,
+#            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa);
+#        }
+
+# Rational:  Average FG style with minimal diff.
+BinPackArguments: true
+
+
+# **BinPackParameters** (``bool``)
+#     If ``false``, a function declaration's or function definition's parameters will either all be on the same line or will have one line each.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        void f(int aaaaaaaaaaaaaaaaaaaa, int aaaaaaaaaaaaaaaaaaaa,
+#               int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+#
+#        false:
+#        void f(int aaaaaaaaaaaaaaaaaaaa,
+#               int aaaaaaaaaaaaaaaaaaaa,
+#               int aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) {}
+
+# Rational:  Average FG style with minimal diff.
+BinPackParameters: true
+
+
+# **BraceWrapping** (``BraceWrappingFlags``)
+#     Control of individual brace wrapping cases.
+#
+#     If ``BreakBeforeBraces`` is set to ``BS_Custom``, use this to specify how each individual brace case should be handled. Otherwise, this is ignored.
+#
+#     .. parsed-literal::
+#
+#        # Example of usage:
+#        BreakBeforeBraces: Custom
+#        BraceWrapping:
+#          AfterEnum: true
+#          AfterStruct: false
+#          SplitEmptyFunction: false
+#
+#     Nested configuration flags:
+#
+#     * ``bool AfterClass`` Wrap class definitions.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          class foo {};
+#
+#          false:
+#          class foo
+#          {};
+#
+#     * ``bool AfterControlStatement`` Wrap control statements (``if``/``for``/``while``/``switch``/..).
+#
+#       .. parsed-literal::
+#
+#          true:
+#          if (foo())
+#          {
+#          } else
+#          {}
+#          for (int i = 0; i < 10; ++i)
+#          {}
+#
+#          false:
+#          if (foo()) {
+#          } else {
+#          }
+#          for (int i = 0; i < 10; ++i) {
+#          }
+#
+#     * ``bool AfterEnum`` Wrap enum definitions.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          enum X : int
+#          {
+#            B
+#          };
+#
+#          false:
+#          enum X : int { B };
+#
+#     * ``bool AfterFunction`` Wrap function definitions.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          void foo()
+#          {
+#            bar();
+#            bar2();
+#          }
+#
+#          false:
+#          void foo() {
+#            bar();
+#            bar2();
+#          }
+#
+#     * ``bool AfterNamespace`` Wrap namespace definitions.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          namespace
+#          {
+#          int foo();
+#          int bar();
+#          }
+#
+#          false:
+#          namespace {
+#          int foo();
+#          int bar();
+#          }
+#
+#     * ``bool AfterObjCDeclaration`` Wrap ObjC definitions (interfaces, implementations…). @autoreleasepool and @synchronized blocks are wrapped according to *AfterControlStatement* flag.
+#
+#     * ``bool AfterStruct`` Wrap struct definitions.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          struct foo
+#          {
+#            int x;
+#          };
+#
+#          false:
+#          struct foo {
+#            int x;
+#          };
+#
+#     * ``bool AfterUnion`` Wrap union definitions.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          union foo
+#          {
+#            int x;
+#          }
+#
+#          false:
+#          union foo {
+#            int x;
+#          }
+#
+#     * ``bool AfterExternBlock`` Wrap extern blocks.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          extern "C"
+#          {
+#            int foo();
+#          }
+#
+#          false:
+#          extern "C" {
+#          int foo();
+#          }
+#
+#     * ``bool BeforeCatch`` Wrap before ``catch``.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          try {
+#            foo();
+#          }
+#          catch () {
+#          }
+#
+#          false:
+#          try {
+#            foo();
+#          } catch () {
+#          }
+#
+#     * ``bool BeforeElse`` Wrap before ``else``.
+#
+#       .. parsed-literal::
+#
+#          true:
+#          if (foo()) {
+#          }
+#          else {
+#          }
+#
+#          false:
+#          if (foo()) {
+#          } else {
+#          }
+#
+#     * ``bool IndentBraces`` Indent the wrapped braces themselves.
+#
+#     * ``bool SplitEmptyFunction`` If ``false``, empty function body can be put on a single line. This option is used only if the opening brace of the function has already been wrapped, i.e. the *AfterFunction* brace wrapping mode is set, and the function could/should not be put on a single line (as per *AllowShortFunctionsOnASingleLine* and constructor formatting options).
+#
+#       .. parsed-literal::
+#
+#          int f()   vs.   inf f()
+#          {}              {
+#                          }
+#
+#     * ``bool SplitEmptyRecord`` If ``false``, empty record (e.g. class, struct or union) body can be put on a single line. This option is used only if the opening brace of the record has already been wrapped, i.e. the *AfterClass* (for classes) brace wrapping mode is set.
+#
+#       .. parsed-literal::
+#
+#          class Foo   vs.  class Foo
+#          {}               {
+#                           }
+#
+#     * ``bool SplitEmptyNamespace`` If ``false``, empty namespace body can be put on a single line. This option is used only if the opening brace of the namespace has already been wrapped, i.e. the *AfterNamespace* brace wrapping mode is set.
+#
+#       .. parsed-literal::
+#
+#          namespace Foo   vs.  namespace Foo
+#          {}                   {
+#                               }
+
+# Rational:  Average FG style with minimal diff.
+BraceWrapping:
+  AfterClass:               true
+  AfterControlStatement:    false
+  AfterEnum:                false
+  AfterFunction:            true
+  AfterNamespace:           false
+  AfterStruct:              false
+  AfterUnion:               false
+  BeforeCatch:              false
+  BeforeElse:               false
+  IndentBraces:             false
+
+# Clang version >= 6.
+#  AfterExternBlock:         false
+#  SplitEmptyFunction:       false
+#  SplitEmptyRecord:         false
+#  SplitEmptyNamespace:      false
+
+
+# **BreakBeforeBinaryOperators** (``BinaryOperatorStyle``)
+#     The way to wrap binary operators.
+#
+#     Possible values:
+#
+#     * ``BOS_None`` (in configuration: ``None``) Break after operators.
+#
+#       .. parsed-literal::
+#
+#          LooooooooooongType loooooooooooooooooooooongVariable =
+#              someLooooooooooooooooongFunction();
+#
+#          bool value = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa +
+#                               aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ==
+#                           aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa &&
+#                       aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa >
+#                           ccccccccccccccccccccccccccccccccccccccccc;
+#     * ``BOS_NonAssignment`` (in configuration: ``NonAssignment``) Break before operators that aren't assignments.
+#
+#       .. parsed-literal::
+#
+#          LooooooooooongType loooooooooooooooooooooongVariable =
+#              someLooooooooooooooooongFunction();
+#
+#          bool value = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                               + aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                           == aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                       && aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                              > ccccccccccccccccccccccccccccccccccccccccc;
+#     * ``BOS_All`` (in configuration: ``All``) Break before operators.
+#
+#       .. parsed-literal::
+#
+#          LooooooooooongType loooooooooooooooooooooongVariable
+#              = someLooooooooooooooooongFunction();
+#
+#          bool value = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                               + aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                           == aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                       && aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+#                              > ccccccccccccccccccccccccccccccccccccccccc;
+
+# Rational:  Average FG style with minimal diff.
+BreakBeforeBinaryOperators: None
+
+
+# **BreakBeforeBraces** (``BraceBreakingStyle``)
+#     The brace breaking style to use.
+#
+#     Possible values:
+#
+#     * ``BS_Attach`` (in configuration: ``Attach``) Always attach braces to surrounding context.
+#
+#       .. parsed-literal::
+#
+#          try {
+#            foo();
+#          } catch () {
+#          }
+#          void foo() { bar(); }
+#          class foo {};
+#          if (foo()) {
+#          } else {
+#          }
+#          enum X : int { A, B };
+#
+#     * ``BS_Linux`` (in configuration: ``Linux``) Like ``Attach``, but break before braces on function, namespace and class definitions.
+#
+#       .. parsed-literal::
+#
+#          try {
+#            foo();
+#          } catch () {
+#          }
+#          void foo() { bar(); }
+#          class foo
+#          {
+#          };
+#          if (foo()) {
+#          } else {
+#          }
+#          enum X : int { A, B };
+#
+#     * ``BS_Mozilla`` (in configuration: ``Mozilla``) Like ``Attach``, but break before braces on enum, function, and record definitions.
+#
+#       .. parsed-literal::
+#
+#          try {
+#            foo();
+#          } catch () {
+#          }
+#          void foo() { bar(); }
+#          class foo
+#          {
+#          };
+#          if (foo()) {
+#          } else {
+#          }
+#          enum X : int { A, B };
+#
+#     * ``BS_Stroustrup`` (in configuration: ``Stroustrup``) Like ``Attach``, but break before function definitions, ``catch``, and ``else``.
+#
+#       .. parsed-literal::
+#
+#          try {
+#            foo();
+#          } catch () {
+#          }
+#          void foo() { bar(); }
+#          class foo
+#          {
+#          };
+#          if (foo()) {
+#          } else {
+#          }
+#          enum X : int
+#          {
+#            A,
+#            B
+#          };
+#
+#     * ``BS_Allman`` (in configuration: ``Allman``) Always break before braces.
+#
+#       .. parsed-literal::
+#
+#          try {
+#            foo();
+#          }
+#          catch () {
+#          }
+#          void foo() { bar(); }
+#          class foo {
+#          };
+#          if (foo()) {
+#          }
+#          else {
+#          }
+#          enum X : int { A, B };
+#
+#     * ``BS_GNU`` (in configuration: ``GNU``) Always break before braces and add an extra level of indentation to braces of control statements, not to those of class, function or other definitions.
+#
+#       .. parsed-literal::
+#
+#          try
+#            {
+#              foo();
+#            }
+#          catch ()
+#            {
+#            }
+#          void foo() { bar(); }
+#          class foo
+#          {
+#          };
+#          if (foo())
+#            {
+#            }
+#          else
+#            {
+#            }
+#          enum X : int
+#          {
+#            A,
+#            B
+#          };
+#
+#     * ``BS_WebKit`` (in configuration: ``WebKit``) Like ``Attach``, but break before functions.
+#
+#       .. parsed-literal::
+#
+#          try {
+#            foo();
+#          } catch () {
+#          }
+#          void foo() { bar(); }
+#          class foo {
+#          };
+#          if (foo()) {
+#          } else {
+#          }
+#          enum X : int { A, B };
+#
+#     * ``BS_Custom`` (in configuration: ``Custom``) Configure each individual brace in *BraceWrapping*.
+
+# Rational:  Average FG style with minimal diff.
+BreakBeforeBraces: Custom
+
+
+# **BreakBeforeInheritanceComma** (``bool``)
+#     If ``true``, in the class inheritance expression clang-format will break before ``:`` and ``,`` if there is multiple inheritance.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        class MyClass                  vs.     class MyClass : public X, public Y {
+#            : public X                         };
+#            , public Y {
+#        };
+
+# Clang version >= 5.
+#BreakBeforeInheritanceComma: false
+
+
+# **BreakBeforeTernaryOperators** (``bool``)
+#     If ``true``, ternary operators will be placed after line breaks.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription
+#            ? firstValue
+#            : SecondValueVeryVeryVeryVeryLong;
+#
+#        false:
+#        veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription ?
+#            firstValue :
+#            SecondValueVeryVeryVeryVeryLong;
+
+# Rational:  Average FG style with minimal diff.
+BreakBeforeTernaryOperators: true
+
+
+# **BreakConstructorInitializers** (``BreakConstructorInitializersStyle``)
+#     The constructor initializers style to use.
+#
+#     Possible values:
+#
+#     * ``BCIS_BeforeColon`` (in configuration: ``BeforeColon``) Break constructor initializers before the colon and after the commas.
+#
+#       Constructor()
+#           : initializer1(),
+#               initializer2()
+#
+#     * ``BCIS_BeforeComma`` (in configuration: ``BeforeComma``) Break constructor initializers before the colon and commas, and align the commas with the colon.
+#
+#       Constructor()
+#           : initializer1() , initializer2()
+#
+#     * ``BCIS_AfterColon`` (in configuration: ``AfterColon``) Break constructor initializers after the colon and commas.
+#
+#       Constructor() :
+#           initializer1(), initializer2()
+
+# Clang version >= 5.
+# Rational:  Average FG style with minimal diff.
+#BreakConstructorInitializers: None
+
+
+# **BreakConstructorInitializersBeforeComma** (``bool``)
+#     Always break constructor initializers before commas and align the commas with the colon.
+
+# Clang version < 5.
+# Rational:  Average FG style with minimal diff.
+BreakConstructorInitializersBeforeComma: false
+
+
+# **BreakStringLiterals** (``bool``)
+#     Allow breaking string literals when formatting.
+
+# Rational:  Average FG style with minimal diff.
+BreakStringLiterals: false
+
+
+# **ColumnLimit** (``unsigned``)
+#     The column limit.
+#
+#     A column limit of ``0`` means that there is no column limit. In this case, clang-format will respect the input's line breaking decisions within statements unless they contradict other rules.
+
+# Rational:  Average FG style with minimal diff.
+ColumnLimit: 0
+
+
+# **CommentPragmas** (``std::string``)
+#     A regular expression that describes comments with special meaning, which should not be split into lines or otherwise changed.
+#
+#     .. parsed-literal::
+#
+#        // CommentPragmas: '^ FOOBAR pragma:'
+#        // Will leave the following line unaffected
+#        #include <vector> // FOOBAR pragma: keep
+
+# Rational:  Average FG style with minimal diff.
+CommentPragmas: None
+
+
+# **CompactNamespaces** (``bool``)
+#     If ``true``, consecutive namespace declarations will be on the same line. If ``false``, each namespace is declared on a new line.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        namespace Foo { namespace Bar {
+#        }}
+#
+#        false:
+#        namespace Foo {
+#        namespace Bar {
+#        }
+#        }
+#
+#     If it does not fit on a single line, the overflowing namespaces get wrapped:
+#
+#     .. parsed-literal::
+#
+#        namespace Foo { namespace Bar {
+#        namespace Extra {
+#        }}}
+
+# Clang version >= 5.
+# Rational:  Average FG style with minimal diff.
+#CompactNamespaces: false
+
+
+# **ConstructorInitializerAllOnOneLineOrOnePerLine** (``bool``)
+#     If the constructor initializers don't fit on a line, put each initializer on its own line.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        SomeClass\:\:Constructor()
+#            : aaaaaaaa(aaaaaaaa), aaaaaaaa(aaaaaaaa), aaaaaaaa(aaaaaaaaaaaaaaaaaaaaaaaaa) {
+#          return 0;
+#        }
+#
+#        false:
+#        SomeClass\:\:Constructor()
+#            : aaaaaaaa(aaaaaaaa), aaaaaaaa(aaaaaaaa),
+#              aaaaaaaa(aaaaaaaaaaaaaaaaaaaaaaaaa) {
+#          return 0;
+#        }
+
+# Rational:  Average FG style with minimal diff.
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+
+
+# **ConstructorInitializerIndentWidth** (``unsigned``)
+#     The number of characters to use for indentation of constructor initializer lists.
+
+# Rational:  Preservation of formatting.
+ConstructorInitializerIndentWidth: 4
+
+
+# **ContinuationIndentWidth** (``unsigned``)
+#     Indent width for line continuations.
+#
+#     .. parsed-literal::
+#
+#        ContinuationIndentWidth: 2
+#
+#        int i =         //  VeryVeryVeryVeryVeryLongComment
+#          longFunction( // Again a long comment
+#            arg);
+
+# Rational:  Average FG style with minimal diff.
+ContinuationIndentWidth: 4
+
+
+# **Cpp11BracedListStyle** (``bool``)
+#     If ``true``, format braced lists as best suited for C++11 braced lists.
+#
+#     Important differences: - No spaces inside the braced list. - No line break before the closing brace. - Indentation with the continuation indent, not with the block indent.
+#
+#     Fundamentally, C++11 braced lists are formatted exactly like function calls would be formatted in their place. If the braced list follows a name (e.g. a type or variable name), clang-format formats as if the ``{}`` were the parentheses of a function call with that name. If there is no name, a zero-length name is assumed.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        vector<int> x{1, 2, 3, 4};     vs.     vector<int> x{ 1, 2, 3, 4 };
+#        vector<T> x{{}, {}, {}, {}};           vector<T> x{ {}, {}, {}, {} };
+#        f(MyMap[{composite, key}]);            f(MyMap[{ composite, key }]);
+#        new int[3]{1, 2, 3};                   new int[3]{ 1, 2, 3 };
+
+# Rational:  Switch to the C++11 braced lists format.
+Cpp11BracedListStyle: true
+
+
+# **DerivePointerAlignment** (``bool``)
+#     If ``true``, analyze the formatted file for the most common alignment of ``&`` and ``*``. Pointer and reference alignment styles are going to be updated according to the preferences found in the file. ``PointerAlignment`` is then used only as fallback.
+
+# Rational:  Do not override PointerAlignment!
+DerivePointerAlignment: false
+
+
+# **DisableFormat** (``bool``)
+#     Disables formatting completely.
+
+# Rational:  N/A.
+DisableFormat: false
+
+
+# **ExperimentalAutoDetectBinPacking** (``bool``)
+#     If ``true``, clang-format detects whether function calls and definitions are formatted with one parameter per line.
+#
+#     Each call can be bin-packed, one-per-line or inconclusive. If it is inconclusive, e.g. completely on one line, but a decision needs to be made, clang-format analyzes whether there are other bin-packed cases in the input file and act accordingly.
+#
+#     NOTE: This is an experimental flag, that might go away or be renamed. Do not use this in config files, etc. Use at your own risk.
+
+# Rational:  N/A.
+#ExperimentalAutoDetectBinPacking: false
+
+
+# **FixNamespaceComments** (``bool``)
+#     If ``true``, clang-format adds missing namespace end comments and fixes invalid existing ones.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        namespace a {                  vs.     namespace a {
+#        foo();                                 foo();
+#        } // namespace a;                      }
+
+# Clang version >= 5.
+# Rational:  This should be set to ``true`` when possible.
+#FixNamespaceComments: true
+
+
+# **ForEachMacros** (``std::vector<std::string>``)
+#     A vector of macros that should be interpreted as foreach loops instead of as function calls.
+#
+#     These are expected to be macros of the form:
+#
+#     .. parsed-literal::
+#
+#        FOREACH(<variable-declaration>, ...)
+#          <loop-body>
+#
+#     In the .clang-format configuration file, this can be configured like:
+#
+#     .. parsed-literal::
+#
+#        ForEachMacros: \['RANGES_FOR', 'FOREACH']
+#
+#     For example: BOOST_FOREACH.
+
+# Rational:  Average FG style with minimal diff.
+ForEachMacros: [ foreach, Q_FOREACH, BOOST_FOREACH ]
+
+
+# **IncludeBlocks** (``IncludeBlocksStyle``)
+#     Dependent on the value, multiple ``#include`` blocks can be sorted as one and divided based on category.
+#
+#     Possible values:
+#
+#     * ``IBS_Preserve`` (in configuration: ``Preserve``) Sort each ``#include`` block separately.
+#
+#       .. parsed-literal::
+#
+#          #include "b.h"               into      #include "b.h"
+#
+#          #include <lib/main.h>                  #include "a.h"
+#          #include "a.h"                         #include <lib/main.h>
+#
+#     * ``IBS_Merge`` (in configuration: ``Merge``) Merge multiple ``#include`` blocks together and sort as one.
+#
+#       .. parsed-literal::
+#
+#          #include "b.h"               into      #include "a.h"
+#                                                 #include "b.h"
+#          #include <lib/main.h>                  #include <lib/main.h>
+#          #include "a.h"
+#
+#     * ``IBS_Regroup`` (in configuration: ``Regroup``) Merge multiple ``#include`` blocks together and sort as one. Then split into groups based on category priority. See ``IncludeCategories``.
+#
+#       .. parsed-literal::
+#
+#          #include "b.h"               into      #include "a.h"
+#                                                 #include "b.h"
+#          #include <lib/main.h>
+#          #include "a.h"                         #include <lib/main.h>
+
+# Clang version >= 6.
+# Rational:  Formatting clean up.
+#IncludeBlocks: Regroup
+
+
+# **IncludeCategories** (``std::vector<IncludeCategory>``)
+#     Regular expressions denoting the different ``#include`` categories used for ordering ``#includes``.
+#
+#     These regular expressions are matched against the filename of an include (including the <> or “”) in order. The value belonging to the first matching regular expression is assigned and ``#includes`` are sorted first according to increasing category number and then alphabetically within each category.
+#
+#     If none of the regular expressions match, INT_MAX is assigned as category. The main header for a source file automatically gets category 0. so that it is generally kept at the beginning of the ``#includes`` (http://llvm.org/docs/CodingStandards.html#include-style). However, you can also assign negative priorities if you have certain headers that always need to be first.
+#
+#     To configure this in the .clang-format file, use:
+#
+#     .. parsed-literal::
+#
+#        IncludeCategories:
+#          - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+#            Priority:        2
+#          - Regex:           '^(<|"(gtest|gmock|isl|json)/)'
+#            Priority:        3
+#          - Regex:           '.*'
+#            Priority:        1
+
+# Rational:  Left on the default LLVM values.
+IncludeCategories:
+  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority:        2
+  - Regex:           '^(<|"(gtest|isl|json)/)'
+    Priority:        3
+  - Regex:           '.*'
+    Priority:        1
+
+
+# **IncludeIsMainRegex** (``std::string``)
+#     Specify a regular expression of suffixes that are allowed in the file-to-main-include mapping.
+#
+#     When guessing whether a #include is the “main” include (to assign category 0, see above), use this regex of allowed suffixes to the header stem. A partial match is done, so that: - “” means “arbitrary suffix” - “$” means “no suffix”
+#
+#     For example, if configured to “(_test)?$”, then a header a.h would be seen as the “main” include in both a.cc and a_test.cc.
+
+# Rational:  Average FG style with minimal diff.
+IncludeIsMainRegex: '$'
+
+
+# **IndentCaseLabels** (``bool``)
+#     Indent case labels one level from the switch statement.
+#
+#     When ``false``, use the same indentation level as for the switch statement. Switch statement body is always indented one level more than case labels.
+#
+#     .. parsed-literal::
+#
+#        false:                                 true:
+#        switch (fool) {                vs.     switch (fool) {
+#        case 1:                                  case 1:
+#          bar();                                   bar();
+#          break;                                   break;
+#        default:                                 default:
+#          plop();                                  plop();
+#        }                                      }
+
+# Rational:  Average FG style with minimal diff.
+IndentCaseLabels: false
+
+
+# **IndentPPDirectives** (``PPDirectiveIndentStyle``)
+#     The preprocessor directive indenting style to use.
+#
+#     Possible values:
+#
+#     * ``PPDIS_None`` (in configuration: ``None``) Does not indent any directives.
+#
+#       .. parsed-literal::
+#
+#          #if FOO
+#          #if BAR
+#          #include <foo>
+#          #endif
+#          #endif
+#
+#     * ``PPDIS_AfterHash`` (in configuration: ``AfterHash``) Indents directives after the hash.
+#
+#       .. parsed-literal::
+#
+#          #if FOO
+#          #  if BAR
+#          #    include <foo>
+#          #  endif
+#          #endif
+
+# Clang version >= 6.
+# Rational:  Average FG style with minimal diff.
+#IndentPPDirectives: AfterHash
+
+
+# **IndentWidth** (``unsigned``)
+#     The number of columns to use for indentation.
+#
+#     .. parsed-literal::
+#
+#        IndentWidth: 3
+#
+#        void f() {
+#           someFunction();
+#           if (true, false) {
+#              f();
+#           }
+#        }
+
+# Rational:  Average FG style with minimal diff.
+IndentWidth: 4
+
+
+# **IndentWrappedFunctionNames** (``bool``)
+#     Indent if a function definition or declaration is wrapped after the type.
+#
+#     .. parsed-literal::
+#
+#        true:
+#        LoooooooooooooooooooooooooooooooooooooooongReturnType
+#            LoooooooooooooooooooooooooooooooongFunctionDeclaration();
+#
+#        false:
+#        LoooooooooooooooooooooooooooooooooooooooongReturnType
+#        LoooooooooooooooooooooooooooooooongFunctionDeclaration();
+
+# Rational:  Average FG style with minimal diff.
+IndentWrappedFunctionNames: false
+
+
+# **KeepEmptyLinesAtTheStartOfBlocks** (``bool``)
+#     If true, the empty line at the start of blocks is kept.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        if (foo) {                     vs.     if (foo) {
+#                                                 bar();
+#          bar();                               }
+#        }
+
+# Rational:  Average FG style with minimal diff.
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+
+# **MacroBlockBegin** (``std::string``)
+#     A regular expression matching macros that start a block.
+#
+#     .. parsed-literal::
+#
+#        # With:
+#        MacroBlockBegin: "^NS_MAP_BEGIN|\\
+#        NS_TABLE_HEAD$"
+#        MacroBlockEnd: "^\\
+#        NS_MAP_END|\\
+#        NS_TABLE\_.*_END$"
+#
+#        NS_MAP_BEGIN
+#          foo();
+#        NS_MAP_END
+#
+#        NS_TABLE_HEAD
+#          bar();
+#        NS_TABLE_FOO_END
+#
+#        # Without:
+#        NS_MAP_BEGIN
+#        foo();
+#        NS_MAP_END
+#
+#        NS_TABLE_HEAD
+#        bar();
+#        NS_TABLE_FOO_END
+
+# Rational:  Average FG style with minimal diff.
+MacroBlockBegin: ''
+
+
+# **MacroBlockEnd** (``std::string``)
+#     A regular expression matching macros that end a block.
+
+# Rational:  Average FG style with minimal diff.
+MacroBlockEnd: ''
+
+
+# **MaxEmptyLinesToKeep** (``unsigned``)
+#     The maximum number of consecutive empty lines to keep.
+#
+#     .. parsed-literal::
+#
+#        MaxEmptyLinesToKeep: 1         vs.     MaxEmptyLinesToKeep: 0
+#        int f() {                              int f() {
+#          int = 1;                                 int i = 1;
+#                                                   i = foo();
+#          i = foo();                               return i;
+#                                               }
+#          return i;
+#        }
+
+# Rational:  Avoid 3 or more empty lines.
+MaxEmptyLinesToKeep: 2
+
+
+# **NamespaceIndentation** (``NamespaceIndentationKind``)
+#     The indentation used for namespaces.
+#
+#     Possible values:
+#
+#     * ``NI_None`` (in configuration: ``None``) Don't indent in namespaces.
+#
+#       .. parsed-literal::
+#
+#          namespace out {
+#          int i;
+#          namespace in {
+#          int i;
+#          }
+#          }
+#
+#     * ``NI_Inner`` (in configuration: ``Inner``) Indent only in inner namespaces (nested in other namespaces).
+#
+#       .. parsed-literal::
+#
+#          namespace out {
+#          int i;
+#          namespace in {
+#            int i;
+#          }
+#          }
+#
+#     * ``NI_All`` (in configuration: ``All``) Indent in all namespaces.
+#
+#       .. parsed-literal::
+#
+#          namespace out {
+#            int i;
+#            namespace in {
+#              int i;
+#            }
+#          }
+#
+
+# Rational:  Average FG style with minimal diff.
+NamespaceIndentation: None
+
+
+# **PenaltyBreakAssignment** (``unsigned``)
+#     The penalty for breaking around an assignment operator.
+
+# Clang version >= 5.
+#PenaltyBreakAssignment:
+
+
+# **PenaltyBreakBeforeFirstCallParameter** (``unsigned``)
+#     The penalty for breaking a function call after ``call(``.
+
+# Rational:  Left to default.
+PenaltyBreakBeforeFirstCallParameter: 19
+
+
+# **PenaltyBreakComment** (``unsigned``)
+#     The penalty for each line break introduced inside a comment.
+
+# Rational:  Left to default.
+PenaltyBreakComment: 300
+
+
+# **PenaltyBreakFirstLessLess** (``unsigned``)
+#     The penalty for breaking before the first ``<<``.
+
+# Rational:  Left to default.
+PenaltyBreakFirstLessLess: 120
+
+
+# **PenaltyBreakString** (``unsigned``)
+#     The penalty for each line break introduced inside a string literal.
+
+# Rational:  Left to default.
+PenaltyBreakString: 1000
+
+
+# **PenaltyExcessCharacter** (``unsigned``)
+#     The penalty for each character outside of the column limit.
+
+# Rational:  Left to default.
+PenaltyExcessCharacter: 1000000
+
+
+# **PenaltyReturnTypeOnItsOwnLine** (``unsigned``)
+#     Penalty for putting the return type of a function onto its own line.
+
+# Rational:  Left to default.
+PenaltyReturnTypeOnItsOwnLine: 60
+
+
+# **PointerAlignment** (``PointerAlignmentStyle``)
+#     Pointer and reference alignment style.
+#
+#     Possible values:
+#
+#     * ``PAS_Left`` (in configuration: ``Left``) Align pointer to the left.
+#
+#       .. parsed-literal::
+#
+#          int* a;
+#
+#     * ``PAS_Right`` (in configuration: ``Right``) Align pointer to the right.
+#
+#       .. parsed-literal::
+#
+#          int \*a;
+#
+#     * ``PAS_Middle`` (in configuration: ``Middle``) Align pointer in the middle.
+#
+#       .. parsed-literal::
+#
+#          int * a;
+
+# Rational:  Average FG style with minimal diff.
+PointerAlignment: Left
+
+
+# **RawStringFormats** (``std::vector<RawStringFormat>``)
+#     Defines hints for detecting supported languages code blocks in raw strings.
+#
+#     A raw string with a matching delimiter or a matching enclosing function name will be reformatted assuming the specified language based on the style for that language defined in the .clang-format file. If no style has been defined in the .clang-format file for the specific language, a predefined style given by ‘BasedOnStyle' is used. If ‘BasedOnStyle' is not found, the formatting is based on llvm style. A matching delimiter takes precedence over a matching enclosing function name for determining the language of the raw string contents.
+#
+#     If a canonical delimiter is specified, occurrences of other delimiters for the same language will be updated to the canonical if possible.
+#
+#     There should be at most one specification per language and each delimiter and enclosing function should not occur in multiple specifications.
+#
+#     To configure this in the .clang-format file, use:
+#
+#     .. parsed-literal::
+#
+#        RawStringFormats:
+#          - Language: TextProto
+#              Delimiters:
+#                - 'pb'
+#                - 'proto'
+#              EnclosingFunctions:
+#                - 'PARSE_TEXT_PROTO'
+#              BasedOnStyle: google
+#          - Language: Cpp
+#              Delimiters:
+#                - 'cc'
+#                - 'cpp'
+#              BasedOnStyle: llvm
+#              CanonicalDelimiter: 'cc'
+
+# Clang version >= 6.
+#RawStringFormats:
+
+
+# **ReflowComments** (``bool``)
+#     If ``true``, clang-format will attempt to re-flow comments.
+#
+#     .. parsed-literal::
+#
+#        false:
+#        // veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of information
+#        /* second veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of information \*/
+#
+#        true:
+#        // veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of
+#        // information
+#        /* second veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongComment with plenty of
+#         * information \*/
+
+# Rational:  Seems to require ColumnLimit to be set.
+ReflowComments: false
+
+
+# **SortIncludes** (``bool``)
+#     If ``true``, clang-format will sort ``#includes``.
+#
+#     .. parsed-literal::
+#
+#        false:                                 true:
+#        #include "b.h"                 vs.     #include "a.h"
+#        #include "a.h"                         #include "b.h"
+
+# Rational:  Formatting clean up.
+SortIncludes: true
+
+
+# **SortUsingDeclarations** (``bool``)
+#     If ``true``, clang-format will sort using declarations.
+#
+#     The order of using declarations is defined as follows: Split the strings by “\:\:” and discard any initial empty strings. The last element of each list is a non-namespace name; all others are namespace names. Sort the lists of names lexicographically, where the sort order of individual names is that all non-namespace names come before all namespace names, and within those groups, names are in case-insensitive lexicographic order.
+#
+#     .. parsed-literal::
+#
+#        false:                                 true:
+#        using std::cout;               vs.     using std::cin;
+#        using std::cin;                        using std::cout;
+
+# Clang version >= 5.
+# Rational:  Formatting clean up.
+#SortUsingDeclarations: true
+
+
+# **SpaceAfterCStyleCast** (``bool``)
+#     If ``true``, a space is inserted after C style casts.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        (int) i;                       vs.     (int)i;
+
+# Rational:  Average FG style with minimal diff.
+SpaceAfterCStyleCast: false
+
+
+# **SpaceAfterTemplateKeyword** (``bool``)
+#     If ``true``, a space will be inserted after the ‘template' keyword.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        template <int> void foo();     vs.     template<int> void foo();
+
+# Clang version >= 4.
+# Rational:  Average FG style with minimal diff.
+#SpaceAfterTemplateKeyword: true
+
+
+# **SpaceBeforeAssignmentOperators** (``bool``)
+#     If ``false``, spaces will be removed before assignment operators.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        int a = 5;                     vs.     int a=5;
+#        a += 42                                a+=42;
+
+# Rational:  Average FG style with minimal diff.
+SpaceBeforeAssignmentOperators: true
+
+
+# **SpaceBeforeCtorInitializerColon** (``bool``)
+#     If ``false``, spaces will be removed before constructor initializer colon.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        Foo::Foo() : a(a) {}                   Foo::Foo(): a(a) {}
+
+# Clang version >= 7.
+# Rational:  Average FG style with minimal diff.
+#SpaceBeforeCtorInitializerColon: true
+
+
+# **SpaceBeforeInheritanceColon** (``bool``)
+#     If ``false``, spaces will be removed before inheritance colon.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        class Foo : Bar {}             vs.     class Foo: Bar {}
+
+# Clang version >= 7.
+# Rational:  Average FG style with minimal diff.
+#SpaceBeforeInheritanceColon: true
+
+
+# **SpaceBeforeParens** (``SpaceBeforeParensOptions``)
+#     Defines in which cases to put a space before opening parentheses.
+#
+#     Possible values:
+#
+#     * ``SBPO_Never`` (in configuration: ``Never``) Never put a space before opening parentheses.
+#
+#       .. parsed-literal::
+#
+#          void f() {
+#            if(true) {
+#              f();
+#            }
+#          }
+#
+#     * ``SBPO_ControlStatements`` (in configuration: ``ControlStatements``) Put a space before opening parentheses only after control statement keywords (``for/if/while...``).
+#
+#       .. parsed-literal::
+#
+#          void f() {
+#            if (true) {
+#              f();
+#            }
+#          }
+#
+#     * ``SBPO_Always`` (in configuration: ``Always``) Always put a space before opening parentheses, except when it's prohibited by the syntax rules (in function-like macro definitions) or when determined by other style rules (after unary operators, opening parentheses, etc.)
+#
+#       .. parsed-literal::
+#
+#          void f () {
+#            if (true) {
+#              f ();
+#            }
+#          }
+#
+
+# Rational:  Average FG style with minimal diff.
+SpaceBeforeParens: ControlStatements
+
+
+# **SpaceBeforeRangeBasedForLoopColon** (``bool``)
+#     If ``false``, spaces will be removed before range-based for loop colon.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        for (auto v : values) {}       vs.     for(auto v: values) {}
+
+# Clang version >= 7.
+# Rational:  Average FG style with minimal diff.
+#SpaceBeforeRangeBasedForLoopColon: true
+
+
+# **SpaceInEmptyParentheses** (``bool``)
+#     If ``true``, spaces may be inserted into ``()``.
+#
+#     .. parsed-literal::
+#
+#        true:                                false:
+#        void f( ) {                    vs.   void f() {
+#          int x[] = {foo( ), bar( )};          int x[] = {foo(), bar()};
+#          if (true) {                          if (true) {
+#            f( );                                f();
+#          }                                    }
+#        }                                    }
+
+# Rational:  Average FG style with minimal diff.
+SpaceInEmptyParentheses: false
+
+
+# **SpacesBeforeTrailingComments** (``unsigned``)
+#     The number of spaces before trailing line comments (``//`` - comments).
+#
+#     This does not affect trailing block comments (``/*`` - comments) as those commonly have different usage patterns and a number of special cases.
+#
+#     .. parsed-literal::
+#
+#        SpacesBeforeTrailingComments: 3
+#        void f() {
+#          if (true) {   // foo1
+#            f();        // bar
+#          }             // foo
+#        }
+
+# Rational:  Average FG style with minimal diff.
+SpacesBeforeTrailingComments: 1
+
+
+# **SpacesInAngles** (``bool``)
+#     If ``true``, spaces will be inserted after ``<`` and before ``>`` in template argument lists.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        static_cast< int >(arg);       vs.     static_cast<int>(arg);
+#        std\:\:function< void(int) > fct;        std\:\:function<void(int)> fct;
+
+# Rational:  Average FG style with minimal diff.
+SpacesInAngles: false
+
+
+# **SpacesInContainerLiterals** (``bool``)
+#     If ``true``, spaces are inserted inside container literals (e.g. ObjC and Javascript array and dict literals).
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        var arr = [ 1, 2, 3 ];         vs.     var arr = [1, 2, 3];
+#        f({a : 1, b : 2, c : 3});              f({a: 1, b: 2, c: 3});
+
+# Rational:  Average FG style with minimal diff.
+SpacesInContainerLiterals: false
+
+
+# **SpacesInCStyleCastParentheses** (``bool``)
+#     If ``true``, spaces may be inserted into C style casts.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        x = ( int32 )y                 vs.     x = (int32)y
+
+# Rational:  Average FG style with minimal diff.
+SpacesInCStyleCastParentheses: false
+
+
+# **SpacesInParentheses** (``bool``)
+#     If ``true``, spaces will be inserted after ``(`` and before ``)``.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        t f( Deleted & ) & = delete;   vs.     t f(Deleted &) & = delete;
+
+# Rational:  Average FG style with minimal diff.
+SpacesInParentheses: false
+
+
+# **SpacesInSquareBrackets** (``bool``)
+#     If ``true``, spaces will be inserted after ``[`` and before ``]``. Lambdas or unspecified size array declarations will not be affected.
+#
+#     .. parsed-literal::
+#
+#        true:                                  false:
+#        int a[ 5 ];                    vs.     int a[5];
+#        std::unique_ptr<int[]> foo() {} // Won't be affected
+
+# Rational:  Average FG style with minimal diff.
+SpacesInSquareBrackets: false
+
+
+
+# **Standard** (``LanguageStandard``)
+#     Format compatible with this standard, e.g. use ``A<A<int> >`` instead of ``A<A<int>>`` for ``LS_Cpp03``.
+#
+#     Possible values:
+#
+#     * ``LS_Cpp03`` (in configuration: ``Cpp03``) Use C++03-compatible syntax.
+#     * ``LS_Cpp11`` (in configuration: ``Cpp11``) Use features of C++11, C++14 and C++1z (e.g. ``A<A<int>>`` instead of ``A<A<int> >``).
+#     * ``LS_Auto`` (in configuration: ``Auto``) Automatic detection based on the input.
+
+# Rational:  FlightGear currently uses the C++11 standard.
+Standard: Cpp11
+
+
+# **TabWidth** (``unsigned``)
+#     The number of columns used for tab stops.
+
+# Rational:  Average FG style with minimal diff.
+TabWidth: 4
+
+
+# **UseTab** (``UseTabStyle``)
+#     The way to use tab characters in the resulting file.
+#
+#     Possible values:
+#
+#     * ``UT_Never`` (in configuration: ``Never``) Never use tab.
+#     * ``UT_ForIndentation`` (in configuration: ``ForIndentation``) Use tabs only for indentation.
+#     * ``UT_ForContinuationAndIndentation`` (in configuration: ``ForContinuationAndIndentation``) Use tabs only for line continuation and indentation.
+#     * ``UT_Always`` (in configuration: ``Always``) Use tabs whenever we need to fill whitespace that spans at least from one tab stop to the next one.
+
+# Rational:  Don't use "\t".
+UseTab: Never
+
+
+...
