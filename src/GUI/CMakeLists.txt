@@ -69,8 +69,6 @@ endif()
 if (HAVE_QT)
     qt5_wrap_ui(uic_sources Launcher.ui
                             SetupRootDialog.ui
-                            AddCatalogDialog.ui
-                            PathsDialog.ui
                             LocationWidget.ui
                             InstallSceneryDialog.ui
                             )
