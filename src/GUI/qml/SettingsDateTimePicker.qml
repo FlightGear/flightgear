@@ -32,7 +32,6 @@ SettingControl {
 
     function restoreState()
     {
-        console.info("Custom restore state on SettingsDateTimePicker");
         var rawValue = _config.getValueForKey("", root.setting, defaultValue);
         dateTimeEdit.setDate(rawValue);
     }
