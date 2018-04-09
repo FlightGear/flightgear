@@ -693,7 +693,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         if (rec->getAircraft()->getTaxiClearanceRequest()) {
             text = receiver + ". Push-back approved. " + sender + ".";
         } else {
-            text = receiver + ". Cleared to Taxi." + sender + "."; 
+            text = receiver + ". Cleared to Taxi. " + sender + "."; 
         }
         break;
     case MSG_HOLD_PUSHBACK_CLEARANCE:
