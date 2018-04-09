@@ -252,7 +252,7 @@ void FGMacOSXEventInputPrivate::matchedDevice(IOHIDDeviceRef device)
     std::string manufacturer = getDeviceStringProperty(device, CFSTR(kIOHIDManufacturerKey));
     std::string serial = getDeviceStringProperty(device, CFSTR(kIOHIDSerialNumberKey));
     
-    SG_LOG(SG_INPUT, SG_INFO, "matched device:" << productName << " from " << manufacturer);
+    SG_LOG(SG_INPUT, SG_DEBUG, "MacOSX-EventInput: matched device:" << productName << "( from " << manufacturer << ")");
 
     // allocate a Mac input device, and add to the base class to see if we have
     // a config
@@ -268,10 +268,6 @@ void FGMacOSXEventInputPrivate::removedDevice(IOHIDDeviceRef device)
 {
     std::string productName = getDeviceStringProperty(device, CFSTR(kIOHIDProductKey));
     std::string manufacturer = getDeviceStringProperty(device, CFSTR(kIOHIDManufacturerKey));
-
-    SG_LOG(SG_INPUT, SG_INFO, "removed device:" << productName << " from " << manufacturer);
-
-
     // see if we have an entry for the device
 }
 

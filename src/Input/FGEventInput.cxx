@@ -369,17 +369,20 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   const string deviceName = inputDevice->GetName();
   SGPropertyNode_ptr configNode;
   
+    // if we have a serial number set, tru using that to select a specfic configuration
   if (!inputDevice->GetSerialNumber().empty()) {
     const string nameWithSerial = deviceName + "::" + inputDevice->GetSerialNumber();
     if (configMap.hasConfiguration(nameWithSerial)) {
       configNode = configMap.configurationForDeviceName(nameWithSerial);
+        SG_LOG(SG_INPUT, SG_INFO, "using instance-specific configuration for device "
+               << nameWithSerial << " : " << configNode->getStringValue("source"));
     }
   }
   
+    // otherwise try the unmodifed name for the device
   if (configNode == nullptr) {
     if (!configMap.hasConfiguration(deviceName)) {
-      SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << deviceName <<
-             " (with serial: " << inputDevice->GetSerialNumber() << ")");
+      SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << deviceName);
       delete inputDevice;
       return INVALID_DEVICE_INDEX;
     }

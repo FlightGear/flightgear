@@ -266,6 +266,7 @@ if(EVENT_INPUT)
     endif()
 
     if (ENABLE_HID_INPUT)
+        message(STATUS "Enabling HID-API input")
         list(APPEND EVENT_INPUT_LIBRARIES hidapi)
     endif()
 

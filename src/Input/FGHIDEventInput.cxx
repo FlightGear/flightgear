@@ -313,11 +313,21 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
         productName = std::wstring(devInfo->product_string);
     const auto serial = devInfo->serial_number;
     
-    auto path = devInfo->path;
-    
     SetName(simgear::strutils::convertWStringToUtf8(manufactuerName) + " " +
             simgear::strutils::convertWStringToUtf8(productName));
-    SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
+    
+    // every device so far encountered returns a blank serial number, so we
+    // fall back to the device path to disambiguate.
+    std::string path(devInfo->path);
+    if ((serial == nullptr) || std::wcslen(serial) == 0) {
+        // use device path to disambiguate
+        if (!path.empty()) {
+            SG_LOG(SG_INPUT, SG_INFO, "Missing serial on device, using path: " << path);
+            SetSerialNumber(path);
+        }
+    } else {
+        SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
+    }
 }
     
 FGHIDDevice::~FGHIDDevice()
