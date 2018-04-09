@@ -18,15 +18,18 @@ Flickable {
             // adding process is complete
             visible: !model.isNewlyAdded
 
-            height: catalogTextColumn.childrenRect.height
+            height: catalogTextColumn.childrenRect.height + Style.margin * 2
             border.width: 1
-            border.color: Style.minorFrameColor
+            border.color: Style.themeColor
             width: catalogsColumn.width
 
 
             Column {
                 id: catalogTextColumn
+
+                y: Style.margin
                 anchors.left: parent.left
+                anchors.leftMargin: Style.margin
                 anchors.right: catalogDeleteButton.left
                 anchors.rightMargin: Style.margin
                 spacing: Style.margin
@@ -67,6 +70,7 @@ Flickable {
             DeleteButton {
                 id: catalogDeleteButton
                 anchors.right: parent.right
+                anchors.rightMargin: Style.margin
                 anchors.verticalCenter: parent.verticalCenter
                 visible: delegateHover.containsMouse
 
