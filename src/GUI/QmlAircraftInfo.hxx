@@ -103,10 +103,7 @@ public:
 
     bool isPackaged() const;
 
-    bool hasStates() const
-    {
-        return !_statesModel.isNull();
-    }
+    bool hasStates() const;
 
     static const int StateTagRole;
     static const int StateDescriptionRole;

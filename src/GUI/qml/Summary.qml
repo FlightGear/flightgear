@@ -10,22 +10,7 @@ Item {
         color: "#7f7f7f"
     }
 
-    property string __aircraftDescription
-
-    // conditional bindings on aircraft description
-    Binding {
-        when: _launcher.selectedAircraftInfo != undefined
-        target: root
-        property: "__aircraftDescription"
-        value: _launcher.selectedAircraftInfo.description
-    }
-
-    Binding {
-        when: _launcher.selectedAircraftInfo == undefined
-        target: root
-        property: "__aircraftDescription"
-        value: ""
-    }
+    readonly property string __aircraftDescription: _launcher.selectedAircraftInfo.description
 
     // base image when preview not available
     Rectangle {
@@ -66,16 +51,14 @@ Item {
 
 // conditional binding when we have valid previews
         Binding {
-            when: _launcher.selectedAircraftInfo != undefined &&
-                   (_launcher.selectedAircraftInfo.previews.length > 0)
+            when: (_launcher.selectedAircraftInfo.previews.length > 0)
             target: preview
             property: "urlsList"
             value: _launcher.selectedAircraftInfo.previews
         }
 
         Binding {
-            when: _launcher.selectedAircraftInfo == undefined ||
-                  _launcher.selectedAircraftInfo.previews.length == 0
+            when: _launcher.selectedAircraftInfo.previews.length === 0
             target: preview
             property: "urlsList"
             value: _launcher.defaultSplashUrls()
@@ -114,6 +97,7 @@ Item {
         baseTextColor: "white"
         style: Text.Outline
         styleColor: "black"
+        font.bold: true
 
         onClicked: {
             _launcher.launchUrl("http://flightgear.org/license.html");
@@ -208,14 +192,11 @@ Item {
                 }
             }
 
-
-
             Item {
                 width: 1; height: 1
             }
 
             // aircraft state row, if enabled
-
             Item {
                width: 1; height: 1
                visible: stateSelectionGroup.visible
@@ -241,13 +222,7 @@ Item {
                     maximumLineCount: 5
                     elide: Text.ElideRight
                     width: parent.width
-
-                    Binding {
-                        when: _launcher.selectedAircraftInfo.statesModel != null
-                        target: stateDescriptionText
-                        property: "text"
-                        value:  _launcher.selectedAircraftInfo.statesModel.descriptionForState(stateSelectionCombo.currentIndex)
-                    }
+                    text: _launcher.selectedAircraftInfo.statesModel.descriptionForState(stateSelectionCombo.currentIndex)
                 }
 
                 Connections {

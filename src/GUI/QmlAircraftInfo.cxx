@@ -122,7 +122,7 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
         }
 
         if (stateNames.empty()) {
-            qWarning() << "state with no names defined, skipping";
+            qWarning() << "state with no names defined, skipping" << QString::fromStdString(cn->getPath());
             continue;
         }
 
@@ -157,9 +157,18 @@ class StatesModel : public QAbstractListModel
 
     Q_PROPERTY(bool hasExplicitAuto READ hasExplicitAuto CONSTANT)
 public:
+    StatesModel()
+    {
+    }
+
     StatesModel(const AircraftStateVec& states) :
         _data(states)
     {
+        // we use an empty model for aircraft with no states defined
+        if (states.empty()) {
+            return;
+        }
+
         // sort which places 'auto' item at the front if it exists
         std::sort(_data.begin(), _data.end(), [](const StateInfo& a, const StateInfo& b) {
             if (a.primaryTag() == "auto") return true;
@@ -245,6 +254,11 @@ public:
     bool hasExplicitAuto() const
     {
         return _explicitAutoState;
+    }
+
+    bool isEmpty() const
+    {
+        return _data.empty();
     }
 private:
     AircraftStateVec _data;
@@ -481,14 +495,14 @@ void QmlAircraftInfo::checkForStates()
 {
     QString path = pathOnDisk();
     if (path.isEmpty()) {
-        _statesModel.reset();
+        _statesModel.reset(new StatesModel);
         emit infoChanged();
         return;
     }
 
     auto states = readAircraftStates(SGPath::fromUtf8(path.toUtf8().toStdString()));
     if (states.empty()) {
-        _statesModel.reset();
+        _statesModel.reset(new StatesModel);
         emit infoChanged();
         return;
     }
@@ -504,7 +518,7 @@ void QmlAircraftInfo::setUri(QUrl u)
 
     _item.clear();
     _package.clear();
-    _statesModel.reset();
+    _statesModel.reset(new StatesModel);
 
     if (u.isLocalFile()) {
         _item = LocalAircraftCache::instance()->findItemWithUri(u);
@@ -655,11 +669,13 @@ bool QmlAircraftInfo::isPackaged() const
     return _package != PackageRef();
 }
 
+bool QmlAircraftInfo::hasStates() const
+{
+    return !_statesModel->isEmpty();
+}
+
 StatesModel *QmlAircraftInfo::statesModel()
 {
-    if (!hasStates())
-        return nullptr;
-
     return _statesModel.data();
 }
 
