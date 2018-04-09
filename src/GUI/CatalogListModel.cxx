@@ -30,6 +30,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <simgear/package/Package.hxx>
+#include <simgear/package/Install.hxx>
 
 // FlightGear
 #include <Main/globals.hxx>
