@@ -12,7 +12,7 @@ Item {
                     footer.height
     implicitWidth: ListView.view.width
 
-    readonly property bool __isSelected: (_launcher.selectedAircraft == model.uri)
+    readonly property bool __isSelected: (_launcher.selectedAircraft === model.uri)
 
     property bool __showAlternateText: false
 
@@ -100,13 +100,13 @@ Item {
             wrapMode: Text.WordWrap
             elide: Text.ElideRight
             height: implicitHeight
-            visible: (model.description != "") || root.__showAlternateText
+            visible: (model.description !== "") || root.__showAlternateText
         }
 
         AircraftDownloadPanel
         {
             id: downloadPanel
-            visible: (model.package != undefined)
+            visible: (model.package !== undefined)
             packageSize: model.packageSizeBytes
             installStatus: model.packageStatus
             downloadedBytes: model.downloadedBytes

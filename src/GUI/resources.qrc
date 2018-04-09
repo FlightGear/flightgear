@@ -86,6 +86,10 @@
         <file>qml/PathListDelegate.qml</file>
         <file>qml/AddCatalogPanel.qml</file>
         <file>qml/LineEdit.qml</file>
+        <file alias="linear-spinner">qml/icons8-linear-spinner.gif</file>
+        <file>qml/RadioButton.qml</file>
+        <file>qml/IntegerSpinbox.qml</file>
+        <file>qml/DoubleSpinbox.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

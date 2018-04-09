@@ -1,0 +1,212 @@
+import QtQuick 2.4
+import "."
+
+FocusScope {
+    id: root
+    property string label
+    property bool enabled: true
+    property int value: 0
+    property alias min: validator.bottom
+    property int max: validator.top
+    property bool wrap: false
+    property alias suffix: suffix.text
+    property alias prefix: prefix.text
+    property alias maxDigits: edit.maximumLength
+    property int step: 1
+
+    implicitHeight: editFrame.height
+    // we have a margin between the frame and the label, and on each
+    implicitWidth: label.width + editFrame.width + Style.margin
+
+    signal commit(var newValue);
+
+    function incrementValue()
+    {
+        if (edit.activeFocus) {
+            value = Math.min(parseInt(edit.text) + root.step, root.max)
+            edit.text = value
+        } else {
+            commit(Math.min(value + root.step, root.max))
+        }
+    }
+
+    function decrementValue()
+    {
+        if (edit.activeFocus) {
+            value = Math.max(parseInt(edit.text) - root.step, root.min)
+            edit.text = value
+        } else {
+            commit(Math.max(value - root.step, root.min))
+        }
+    }
+
+    TextMetrics {
+        id: metrics
+        text: root.max // use maximum value
+    }
+
+    Text {
+        id: label
+        text: root.label
+        anchors.verticalCenter: editFrame.verticalCenter
+        color: editFrame.activeFocus ? Style.themeColor :
+                                     (root.enabled ? "black" : Style.inactiveThemeColor)
+    }
+
+    MouseArea {
+        height: root.height
+        width: root.width
+        enabled: root.enabled
+
+        // use wheel events to adjust up/dowm
+        onClicked: {
+            edit.forceActiveFocus();
+        }
+
+        onWheel: {
+            var delta = wheel.angleDelta.y
+            if (delta > 0) {
+                root.incrementValue()
+            } else if (delta < 0) {
+               root.decrementValue()
+            }
+        }
+    }
+
+    Binding {
+        when: !edit.activeFocus
+        target: edit
+        property: "text"
+        value: root.value
+    }
+
+    Rectangle {
+        id: editFrame
+        clip: true
+        anchors.left: label.right
+        anchors.margins: Style.margin
+
+        height: edit.implicitHeight + Style.margin
+        width: edit.width + prefix.width + suffix.width + upDownArea.width + Style.margin * 2
+        radius: Style.roundRadius
+        border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
+        border.width: 1
+
+
+        Text {
+            id: prefix
+            visible: root.prefix !== ""
+            color: Style.baseTextColor
+            anchors.baseline: edit.baseline
+            anchors.left: parent.left
+            anchors.margins: Style.margin
+        }
+
+        TextInput {
+            id: edit
+            enabled: root.enabled
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: prefix.right
+            selectByMouse: true
+            width: metrics.width
+            horizontalAlignment: Text.AlignRight
+
+            focus: true
+            color: enabled && activeFocus ? Style.themeColor : Style.baseTextColor
+
+            validator: IntValidator {
+                id: validator
+            }
+
+            Keys.onUpPressed: {
+                root.incrementValue();
+            }
+
+            Keys.onDownPressed: {
+                root.decrementValue();
+            }
+
+            onActiveFocusChanged: {
+                if (activeFocus) {
+                    selectAll();
+                } else {
+                    commit(parseInt(text))
+                }
+            }
+        }
+
+        Text {
+            id: suffix
+            visible: root.suffix !== ""
+            color: Style.baseTextColor
+            anchors.baseline: edit.baseline
+            anchors.right: upDownArea.left
+        }
+
+        Item {
+            id: upDownArea
+          //  color: "white"
+            anchors.right: parent.right
+            anchors.rightMargin: Style.margin
+            anchors.verticalCenter: editFrame.verticalCenter
+            height: upDownIcon.implicitHeight
+            visible: edit.activeFocus
+            width: upDownIcon.implicitWidth
+
+            Image {
+                id: upDownIcon
+                // show up/down arrows
+                source: "qrc:///up-down-arrow"
+            }
+
+            MouseArea {
+                width: parent.width
+                height: parent.height / 2
+                onPressed: {
+                    root.incrementValue();
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    opacity: 0.5
+                    color: Style.themeColor
+                    visible: parent.pressed
+                }
+
+                Timer {
+                    id: upRepeat
+                    interval: 250
+                    running: parent.pressed
+                    repeat: true
+                    onTriggered: root.incrementValue()
+                }
+            }
+
+            MouseArea {
+                width: parent.width
+                height: parent.height / 2
+                anchors.bottom: parent.bottom
+                onPressed: {
+                    root.decrementValue();
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    opacity: 0.5
+                    color: Style.themeColor
+                    visible: parent.pressed
+                }
+
+                Timer {
+                    id: downRepeat
+                    interval: 250
+                    running: parent.pressed
+                    repeat: true
+                    onTriggered: root.decrementValue()
+                }
+            }
+        }
+    } // of frame rectangle
+
+
+}

@@ -7,7 +7,7 @@ Item {
     property bool enabled: true
 
     implicitWidth: track.width + label.width + 16
-    implicitHeight: label.height
+    implicitHeight: Math.max(label.height, thumb.height)
 
     Rectangle {
         id: track

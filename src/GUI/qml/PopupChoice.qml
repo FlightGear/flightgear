@@ -14,7 +14,11 @@ Item {
     property int currentIndex: 0
     property bool __dummy: false
 
+    property alias header: choicesHeader.sourceComponent
+    property string headerText: ""
+
     implicitHeight: Math.max(label.implicitHeight, currentChoiceFrame.height)
+    implicitWidth: label.implicitWidth + Style.margin + currentChoiceFrame.__naturalWidth
 
     Item {
         Repeater {
@@ -44,8 +48,16 @@ Item {
          __dummy = !__dummy // force update of currentText
     }
 
+    function haveHeader()
+    {
+        return headerText !== "";
+    }
+
     function currentText()
     {
+        if ((currentIndex == -1) && haveHeader())
+            return headerText;
+
         var foo = __dummy; // fake propery dependency to update this
         var item = internalModel.itemAt(currentIndex);
         if (!item) return "";
@@ -65,17 +77,19 @@ Item {
     Rectangle {
         id: currentChoiceFrame
         radius: Style.roundRadius
-        border.color: mouseArea.containsMouse ? Style.themeColor : Style.minorFrameColor
+        border.color: root.enabled ? (mouseArea.containsMouse ? Style.themeColor : Style.minorFrameColor)
+                                   : Style.inactiveThemeColor
         border.width: 1
         height: currentChoiceText.implicitHeight + Style.margin
+        clip: true
 
         anchors.left: label.right
         anchors.leftMargin: Style.margin
 
         // width of current item, or available space after the label
-        width: Math.min(root.width - (label.width + Style.margin),
-                        currentChoiceText.implicitWidth + (Style.margin * 2) + upDownIcon.width);
+        width: Math.min(root.width - (label.width + Style.margin), __naturalWidth);
 
+        readonly property int __naturalWidth: currentChoiceText.implicitWidth + (Style.margin * 3) + upDownIcon.width
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
@@ -102,7 +116,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         id: mouseArea
-        hoverEnabled: true
+        hoverEnabled: root.enabled
         enabled: root.enabled
         onClicked: {
             var screenPos = _launcher.mapToGlobal(currentChoiceText, Qt.point(0, -currentChoiceText.height * currentIndex))
@@ -138,13 +152,42 @@ Item {
             anchors.fill: parent
         }
 
-        // text repeater
+        // choice layout column
         Column {
             id: choicesColumn
             spacing: Style.margin
             x: Style.margin
             y: Style.margin
 
+            // optional header component:
+            Loader {
+                id: choicesHeader
+                active: root.haveHeader()
+
+                // default component is just a plain text element, same as
+                // normal items
+                sourceComponent: Text {
+                    text: root.headerText
+                    height: implicitHeight + Style.margin
+                    width: popupFrame.width
+                }
+
+                height: item ? item.height : 0
+                width: item ? item.width : 0
+
+                // essentially the same mouse area as normal items
+                MouseArea {
+                    width: popupFrame.width // full width of the popup
+                    height: parent.height
+                    z: -1 // so header can do other mouse behaviours
+                    onClicked: {
+                        root.currentIndex = -1;
+                        popupFrame.visible = false
+                    }
+                }
+            } // of header loader
+
+            // main item repeater
             Repeater {
                 id: choicesRepeater
                 model: root.model

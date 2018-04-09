@@ -5,14 +5,15 @@ FocusScope
 {
     id: root
 
-    width:frame.width
+    width: Style.strutSize * 3
     height: frame.height
 
-   // property string text
+    property string placeholder: qsTr("Search")
     property bool active: false
 
     signal search(string term)
 
+    property bool autoSubmit: true
     property alias autoSubmitTimeout: searchTimer.interval
 
     onActiveChanged: {
@@ -23,7 +24,7 @@ FocusScope
 
     function clear()
     {
-        buttonText.text = "Search"
+        buttonText.text = ""
         root.focus = false
         searchTimer.stop();
         root.search("");
@@ -34,11 +35,13 @@ FocusScope
         id: frame
         radius: Style.roundRadius
 
-        width: Style.strutSize * 3
+        width: root.width
         height: Math.max(searchIcon.height, buttonText.height) + (Style.roundRadius)
         border.width: 1
         border.color: (mouse.containsMouse | active) ? Style.themeColor: Style.minorFrameColor
         clip: true
+
+
 
         TextInput {
             id: buttonText
@@ -51,7 +54,9 @@ FocusScope
             focus: true
 
             onTextChanged: {
-                searchTimer.restart();
+                if (root.autoSubmit) {
+                    searchTimer.restart();
+                }
             }
 
             onEditingFinished: {
@@ -63,7 +68,14 @@ FocusScope
                 }
             }
 
-            text: "Search"
+            text: ""
+
+            // placeholder text, hides itself whenever parent has non-empty text
+            Text {
+                anchors.fill: parent
+                visible: parent.text == ""
+                text: root.placeholder
+            }
         }
 
         Image {

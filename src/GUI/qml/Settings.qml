@@ -121,7 +121,7 @@ Item {
                         label: qsTr("Show debugging console")
                         description: qsTr("Open a console window showing debug output from the application.")
                         advanced: true
-                        hidden: _osName != "win"
+                        hidden: _osName !== "win"
                         keywords: ["console", "terminal", "log", "debug"]
                         setting: "console"
                     }

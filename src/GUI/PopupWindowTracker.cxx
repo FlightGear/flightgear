@@ -59,7 +59,7 @@ bool PopupWindowTracker::eventFilter(QObject *watched, QEvent *event)
         } else {
             m_window->close();
             setWindow(nullptr);
-            return true;
+            // still fall through
         }
     }
 

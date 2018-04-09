@@ -93,7 +93,7 @@ FocusScope {
         }
 
         Keys.onPressed:  {
-            if ((event.key == Qt.Key_Colon) || (event.key == Qt.Key_Slash)) {
+            if ((event.key === Qt.Key_Colon) || (event.key === Qt.Key_Slash)) {
                 nextToFocus.focus = true;
                 event.accepted = true;
             }
@@ -136,9 +136,10 @@ FocusScope {
         }
 
         onWheel: {
-            if (wheel.angleDelta > 0) {
+            var delta = wheel.angleDelta.y
+            if (delta > 0) {
                 root.incrementValue()
-            } else if (wheel.angleDelta < 0) {
+            } else if (delta < 0) {
                root.decrementValue()
             }
         }

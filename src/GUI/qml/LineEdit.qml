@@ -7,6 +7,7 @@ FocusScope {
     property string placeholder: ""
     property alias validator: edit.validator
     property alias text: edit.text
+    property bool enabled: true
 
     property alias suggestedWidthString: metrics.text
     readonly property int suggestedWidth: useFullWidth ? root.width
@@ -16,6 +17,7 @@ FocusScope {
     property bool useFullWidth: false
 
     implicitHeight: editFrame.height
+    implicitWidth: suggestedWidth + label.implicitWidth + (Style.margin * 3)
 
     TextMetrics {
         id: metrics
@@ -35,10 +37,8 @@ FocusScope {
         anchors.left: label.right
         anchors.margins: Style.margin
 
-
         height: edit.implicitHeight + Style.margin
-
-        width: Math.min(root.width - (label.width + Style.margin * 2), Math.max(suggestedWidth, edit.implicitWidth));
+        width: Math.min(root.width - (label.width + Style.margin), Math.max(suggestedWidth, edit.implicitWidth) + Style.margin * 2);
 
         radius: Style.roundRadius
         border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
@@ -54,6 +54,7 @@ FocusScope {
             anchors.margins: Style.margin
             selectByMouse: true
             focus: true
+            color: enabled && activeFocus ? Style.themeColor : Style.baseTextColor
 
             Text {
                 id: placeholder
