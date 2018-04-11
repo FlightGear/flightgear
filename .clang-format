@@ -274,7 +274,7 @@ AllowShortCaseLabelsOnASingleLine: true
 #
 #     * ``SFS_None`` (in configuration: ``None``) Never merge functions into a single line.
 #
-#     * ``SFS_InlineOnly`` (in configuration: ``InlineOnly``) Only merge functions defined inside a class. Same as “inline”, except it does not implies “empty”: i.e. top level empty functions are not merged either.
+#     * ``SFS_InlineOnly`` (in configuration: ``InlineOnly``) Only merge functions defined inside a class. Same as "inline", except it does not implies "empty": i.e. top level empty functions are not merged either.
 #
 #       .. parsed-literal::
 #
@@ -296,7 +296,7 @@ AllowShortCaseLabelsOnASingleLine: true
 #            bar2();
 #          }
 #
-#     * ``SFS_Inline`` (in configuration: ``Inline``) Only merge functions defined inside a class. Implies “empty”.
+#     * ``SFS_Inline`` (in configuration: ``Inline``) Only merge functions defined inside a class. Implies "empty".
 #
 #       .. parsed-literal::
 #
@@ -576,7 +576,7 @@ BinPackParameters: true
 #          int bar();
 #          }
 #
-#     * ``bool AfterObjCDeclaration`` Wrap ObjC definitions (interfaces, implementations…). @autoreleasepool and @synchronized blocks are wrapped according to *AfterControlStatement* flag.
+#     * ``bool AfterObjCDeclaration`` Wrap ObjC definitions (interfaces, implementations...). @autoreleasepool and @synchronized blocks are wrapped according to *AfterControlStatement* flag.
 #
 #     * ``bool AfterStruct`` Wrap struct definitions.
 #
@@ -1179,7 +1179,7 @@ ForEachMacros: [ foreach, Q_FOREACH, BOOST_FOREACH ]
 # **IncludeCategories** (``std::vector<IncludeCategory>``)
 #     Regular expressions denoting the different ``#include`` categories used for ordering ``#includes``.
 #
-#     These regular expressions are matched against the filename of an include (including the <> or “”) in order. The value belonging to the first matching regular expression is assigned and ``#includes`` are sorted first according to increasing category number and then alphabetically within each category.
+#     These regular expressions are matched against the filename of an include (including the <> or "") in order. The value belonging to the first matching regular expression is assigned and ``#includes`` are sorted first according to increasing category number and then alphabetically within each category.
 #
 #     If none of the regular expressions match, INT_MAX is assigned as category. The main header for a source file automatically gets category 0. so that it is generally kept at the beginning of the ``#includes`` (http://llvm.org/docs/CodingStandards.html#include-style). However, you can also assign negative priorities if you have certain headers that always need to be first.
 #
@@ -1208,9 +1208,9 @@ IncludeCategories:
 # **IncludeIsMainRegex** (``std::string``)
 #     Specify a regular expression of suffixes that are allowed in the file-to-main-include mapping.
 #
-#     When guessing whether a #include is the “main” include (to assign category 0, see above), use this regex of allowed suffixes to the header stem. A partial match is done, so that: - “” means “arbitrary suffix” - “$” means “no suffix”
+#     When guessing whether a #include is the "main" include (to assign category 0, see above), use this regex of allowed suffixes to the header stem. A partial match is done, so that: - "" means "arbitrary suffix" - "$" means "no suffix"
 #
-#     For example, if configured to “(_test)?$”, then a header a.h would be seen as the “main” include in both a.cc and a_test.cc.
+#     For example, if configured to "(_test)?$", then a header a.h would be seen as the "main" include in both a.cc and a_test.cc.
 
 # Rational:  Average FG style with minimal diff.
 IncludeIsMainRegex: '$'
@@ -1496,7 +1496,7 @@ PointerAlignment: Left
 # **RawStringFormats** (``std::vector<RawStringFormat>``)
 #     Defines hints for detecting supported languages code blocks in raw strings.
 #
-#     A raw string with a matching delimiter or a matching enclosing function name will be reformatted assuming the specified language based on the style for that language defined in the .clang-format file. If no style has been defined in the .clang-format file for the specific language, a predefined style given by ‘BasedOnStyle' is used. If ‘BasedOnStyle' is not found, the formatting is based on llvm style. A matching delimiter takes precedence over a matching enclosing function name for determining the language of the raw string contents.
+#     A raw string with a matching delimiter or a matching enclosing function name will be reformatted assuming the specified language based on the style for that language defined in the .clang-format file. If no style has been defined in the .clang-format file for the specific language, a predefined style given by 'BasedOnStyle' is used. If 'BasedOnStyle' is not found, the formatting is based on llvm style. A matching delimiter takes precedence over a matching enclosing function name for determining the language of the raw string contents.
 #
 #     If a canonical delimiter is specified, occurrences of other delimiters for the same language will be updated to the canonical if possible.
 #
@@ -1560,7 +1560,7 @@ SortIncludes: true
 # **SortUsingDeclarations** (``bool``)
 #     If ``true``, clang-format will sort using declarations.
 #
-#     The order of using declarations is defined as follows: Split the strings by “\:\:” and discard any initial empty strings. The last element of each list is a non-namespace name; all others are namespace names. Sort the lists of names lexicographically, where the sort order of individual names is that all non-namespace names come before all namespace names, and within those groups, names are in case-insensitive lexicographic order.
+#     The order of using declarations is defined as follows: Split the strings by "\:\:" and discard any initial empty strings. The last element of each list is a non-namespace name; all others are namespace names. Sort the lists of names lexicographically, where the sort order of individual names is that all non-namespace names come before all namespace names, and within those groups, names are in case-insensitive lexicographic order.
 #
 #     .. parsed-literal::
 #
@@ -1586,7 +1586,7 @@ SpaceAfterCStyleCast: false
 
 
 # **SpaceAfterTemplateKeyword** (``bool``)
-#     If ``true``, a space will be inserted after the ‘template' keyword.
+#     If ``true``, a space will be inserted after the 'template' keyword.
 #
 #     .. parsed-literal::
 #
