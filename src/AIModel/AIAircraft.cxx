@@ -1306,6 +1306,11 @@ void FGAIAircraft::updateSecondaryTargetValues(double dt) {
 
 bool FGAIAircraft::reachedEndOfCruise(double &distance) {
     FGAIWaypoint* curr = fp->getCurrentWaypoint();
+    if (!curr) {
+        SG_LOG(SG_AI, SG_WARN, "FGAIAircraft::reachedEndOfCruise: no current waypoint");
+        return false;
+    }
+    
     if (curr->getName() == string("BOD")) {
         double dist = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
         double descentSpeed = (getPerformance()->vDescent() * SG_NM_TO_METER) / 3600.0;     // convert from kts to meter/s
