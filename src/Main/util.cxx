@@ -118,7 +118,7 @@ void fgInitAllowedPaths()
     write_allowed_paths.push_back(fg_home + "/state/*.xml");
     write_allowed_paths.push_back(fg_home + "/aircraft-data/*.xml");
     write_allowed_paths.push_back(fg_home + "/Wildfire/*.xml");
-    write_allowed_paths.push_back(fg_home + "/runtime-jetway/*.xml");
+    write_allowed_paths.push_back(fg_home + "/runtime-jetways/*.xml");
     write_allowed_paths.push_back(fg_home + "/Input/Joysticks/*.xml");
     
     // Check that it works
