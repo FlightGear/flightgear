@@ -104,13 +104,12 @@ Item {
         }
     }
 
+
     Rectangle {
         id: summaryPanel
 
-        color: "white"
-        opacity: Style.panelOpacity
-       // radius: Style.roundRadius
-        border.width: 2
+        color: "transparent"
+        border.width: 1
         border.color: Style.frameColor
 
         anchors {
@@ -121,6 +120,15 @@ Item {
         }
 
         height: summaryGrid.height + Style.margin * 2
+
+        // set opacity here only, so we don't make the whole summary pannel translucent
+        Rectangle {
+            id: background
+            anchors.fill: parent
+            z: -1
+            opacity: Style.panelOpacity
+            color: "white"
+        }
 
         Grid {
             id: summaryGrid
