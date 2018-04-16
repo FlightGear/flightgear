@@ -12,7 +12,7 @@ function(setup_fgfs_embedded_resources)
     # On Windows, make sure fgrcc can be run (it needs third-party libraries)
     if(MSVC)
       if(MSVC_3RDPARTY_ROOT AND MSVC_3RDPARTY_DIR)
-        set(CMAKE_MSVCIDE_RUN_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin)
+        set(CMAKE_MSVCIDE_RUN_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin PARENT_SCOPE)
       else()
         message(FATAL_ERROR
           "Either MSVC_3RDPARTY_ROOT or MSVC_3RDPARTY_DIR is empty or unset")
