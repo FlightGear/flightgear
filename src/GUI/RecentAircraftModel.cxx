@@ -28,6 +28,11 @@ QUrl RecentAircraftModel::uriAt(int index) const
     return m_data.at(index);
 }
 
+bool RecentAircraftModel::isEmpty() const
+{
+    return m_data.empty();
+}
+
 QVariant RecentAircraftModel::data(const QModelIndex &index, int role) const
 {
     const QUrl uri = m_data.at(index.row());
@@ -89,4 +94,6 @@ void RecentAircraftModel::insert(QUrl aircraftUrl)
         m_data = m_data.mid(0, MAX_RECENT_AIRCRAFT);
         endRemoveRows();
     }
+
+    emit isEmptyChanged();
 }

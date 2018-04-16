@@ -24,6 +24,11 @@ QVariantMap RecentLocationsModel::locationAt(int index) const
     return m_data.at(index).toMap();
 }
 
+bool RecentLocationsModel::isEmpty() const
+{
+    return m_data.empty();
+}
+
 QVariant RecentLocationsModel::data(const QModelIndex &index, int role) const
 {
     const QVariantMap loc = m_data.at(index.row()).toMap();
@@ -88,4 +93,6 @@ void RecentLocationsModel::insert(QVariant location)
         m_data = m_data.mid(0, MAX_RECENT_LOCATIONS);
         endRemoveRows();
     }
+
+    emit isEmptyChanged();
 }

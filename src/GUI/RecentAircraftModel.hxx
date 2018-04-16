@@ -10,6 +10,8 @@ class AircraftItemModel;
 class RecentAircraftModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool isEmpty READ isEmpty NOTIFY isEmptyChanged)
 public:
     RecentAircraftModel(AircraftItemModel *acModel, QObject* pr = nullptr);
 
@@ -26,6 +28,12 @@ public:
     void saveToSettings();
 
     Q_INVOKABLE QUrl uriAt(int index) const;
+
+    bool isEmpty() const;
+
+signals:
+    void isEmptyChanged();
+
 private:
     AircraftItemModel* m_aircraftModel;
     QList<QUrl> m_data;

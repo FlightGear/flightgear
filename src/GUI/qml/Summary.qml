@@ -110,7 +110,7 @@ Item {
         color: "white"
         opacity: Style.panelOpacity
        // radius: Style.roundRadius
-        border.width: 1
+        border.width: 2
         border.color: Style.frameColor
 
         anchors {
@@ -154,6 +154,7 @@ Item {
             HistoryPopup {
                 id: aircraftHistoryPopup
                 model: _launcher.aircraftHistory
+                enabled: !_launcher.aircraftHistory.isEmpty
                 onSelected: {
                     _launcher.selectedAircraft = _launcher.aircraftHistory.uriAt(index)
                 }
@@ -267,6 +268,7 @@ Item {
             HistoryPopup {
                 id: locationHistoryPopup
                 model: _launcher.locationHistory
+                enabled: !_launcher.aircraftHistory.isEmpty
                 onSelected: {
                     _launcher.restoreLocation(_launcher.locationHistory.locationAt(index))
                 }

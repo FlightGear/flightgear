@@ -34,7 +34,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             id: mouse
-            hoverEnabled: true
+            hoverEnabled: root.enabled
             enabled: root.enabled
             onClicked: {
                 var screenPos = _launcher.mapToGlobal(button, Qt.point(-popupFrame.width, 0))

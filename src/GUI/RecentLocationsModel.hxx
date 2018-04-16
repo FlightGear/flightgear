@@ -8,6 +8,9 @@
 class RecentLocationsModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(bool isEmpty READ isEmpty NOTIFY isEmptyChanged)
+
 public:
     RecentLocationsModel(QObject* pr = nullptr);
 
@@ -24,6 +27,12 @@ public:
     void saveToSettings();
 
     Q_INVOKABLE QVariantMap locationAt(int index) const;
+
+    bool isEmpty() const;
+
+signals:
+    void isEmptyChanged();
+
 private:
     QVariantList m_data;
 };
