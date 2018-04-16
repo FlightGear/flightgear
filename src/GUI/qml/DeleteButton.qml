@@ -14,7 +14,7 @@ Item {
         id: icon
         x: 0
         y: 0
-        source: "qrc:///cancel-icon"
+        source: "qrc:///cancel-icon-small"
     }
 
     MouseArea {

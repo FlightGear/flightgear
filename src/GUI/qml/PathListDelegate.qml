@@ -9,6 +9,7 @@ Item {
     signal performMove(var newIndex);
 
     property alias deletePromptText: confirmDeletePath.promptText
+    property int modelCount: 0
 
     height: childrenRect.height
 
@@ -72,7 +73,10 @@ Item {
                 id: reorderButton
                 anchors.right: pathDeleteButton.left
                 anchors.rightMargin: Style.margin
-                visible: pathDelegateHover.containsMouse
+                visible: pathDelegateHover.containsMouse && (canMoveDown || canMoveUp)
+
+                canMoveUp: model.index > 0
+                canMoveDown: model.index < (delegateRoot.modelCount - 1)
 
                 onMoveUp: {
                     if (model.index === 0)

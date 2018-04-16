@@ -78,6 +78,8 @@
         <file>qml/AddButton.qml</file>
         <file alias="cancel-icon">qml/icons8-cancel-50.png</file>
         <file alias="reorder-list-icon">qml/icons8-drag-reorder-filled-50.png</file>
+        <file alias="cancel-icon-small">qml/icons8-cancel-25.png</file>
+        <file alias="reorder-list-icon-small">qml/icons8-drag-reorder-filled-25.png</file>
         <file alias="add-icon">qml/icons8-plus-26.png</file>
         <file>qml/DeleteButton.qml</file>
         <file>qml/YesNoPanel.qml</file>
