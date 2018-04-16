@@ -401,7 +401,7 @@ static naRef f_findByName(nasal::CallContext ctx)
   std::string prefix = ctx.requireArg<std::string>(0);
   std::string typeSpec = ctx.getArg<std::string>(1);
   FGPositioned::TypeFilter filter(FGPositioned::TypeFilter::fromString(typeSpec));
-  
+
   return ctx.to_nasal( FGPositioned::findAllWithName(prefix, &filter, false) );
 }
 
@@ -414,16 +414,16 @@ static naRef f_courseAndDistance(nasal::CallContext ctx)
   if (!ok) {
     ctx.runtimeError("invalid arguments to courseAndDistance");
   }
-  
+
   if (extractGeod(ctx, to)) {
     from = pos; // we parsed both FROM and TO args, so first was FROM
   } else {
     to = pos; // only parsed one arg, so FROM is current
   }
-  
+
   double course, course2, d;
   SGGeodesy::inverse(from, to, course, course2, d);
-  
+
   return ctx.to_nasal_vec(course, d * SG_METER_TO_NM);
 }
 
@@ -490,11 +490,14 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
     .bases<NasalPositioned>()
     .member("frequency", &FGNavRecord::get_freq)
     .member("range_nm", &FGNavRecord::get_range)
-    .member("course", &f_navaid_course);
+    .member("course", &f_navaid_course)
+    .member("magvar", &FGNavRecord::get_multiuse)
+    .member("dme", &FGNavRecord::hasDME)
+    .member("vorac", &FGNavRecord::isVORTAC);
 
   NasalFix::init("Fix")
     .bases<NasalPositioned>();
-  
+
   NasalAirport::init("FGAirport")
     .bases<NasalPositioned>()
     .member("has_metar", &FGAirport::getMetar)
@@ -514,7 +517,7 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
     .method("getStar", &FGAirport::findSTARWithIdent)
     .method("getIAP", &FGAirport::findApproachWithIdent)
     .method("tostring", &FGAirport::toString);
-    
+
   nasal::Hash globals(globalsRef, c),
               positioned( globals.createHash("positioned") );
 
@@ -522,13 +525,13 @@ naRef initNasalPositioned_cppbind(naRef globalsRef, naContext c)
   positioned.set("findAirportsWithinRange", f_findAirportsWithinRange);
   positioned.set("findAirportsByICAO", &f_findAirportsByICAO);
   positioned.set("navinfo", &f_navinfo);
-  
+
   positioned.set("findWithinRange", &f_findWithinRange);
   positioned.set("findByIdent", &f_findByIdent);
   positioned.set("findByName", &f_findByName);
   positioned.set("courseAndDistance", &f_courseAndDistance);
   positioned.set("sortByRange", &f_sortByRange);
-  
+
   positioned.set("diff", &f_diff);
 
   return naNil();

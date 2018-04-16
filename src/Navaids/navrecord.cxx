@@ -52,7 +52,7 @@ FGNavRecord::FGNavRecord(PositionedID aGuid, Type aTy, const std::string& aIdent
   mRunway(aRunway),
   mColocated(0),
   serviceable(true)
-{ 
+{
 }
 
 FGRunwayRef FGNavRecord::runway() const
@@ -65,19 +65,19 @@ double FGNavRecord::localizerWidth() const
   if (!mRunway) {
     return 6.0;
   }
-  
+
   FGRunway* rwy = runway();
   SGVec3d thresholdCart(SGVec3d::fromGeod(rwy->threshold()));
   double axisLength = dist(cart(), thresholdCart);
   double landingLength = dist(thresholdCart, SGVec3d::fromGeod(rwy->end()));
-  
+
 // Reference: http://dcaa.slv.dk:8000/icaodocs/
 // ICAO standard width at threshold is 210 m = 689 feet = approx 700 feet.
 // ICAO 3.1.1 half course = DDM = 0.0775
 // ICAO 3.1.3.7.1 Sensitivity 0.00145 DDM/m at threshold
 //  implies peg-to-peg of 214 m ... we will stick with 210.
 // ICAO 3.1.3.7.1 "Course sector angle shall not exceed 6 degrees."
-              
+
 // Very short runway:  less than 1200 m (4000 ft) landing length:
   if (landingLength < 1200.0) {
 // ICAO fudges localizer sensitivity for very short runways.
@@ -93,7 +93,7 @@ double FGNavRecord::localizerWidth() const
 
 }
 
-bool FGNavRecord::hasDME()
+bool FGNavRecord::hasDME() const
 {
   return (mColocated > 0);
 }
@@ -232,7 +232,7 @@ void FGMobileNavRecord::updatePos()
 FGTACANRecord::FGTACANRecord(void) :
     channel(""),
     freq(0)
-    
+
 {
 }
 

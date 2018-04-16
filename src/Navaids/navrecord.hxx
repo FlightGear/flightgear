@@ -39,7 +39,7 @@ const double FG_DME_DEFAULT_RANGE = 50; // nm
 const double FG_TACAN_DEFAULT_RANGE = 250; // nm
 const double FG_NAV_MAX_RANGE = 300;    // nm
 
-class FGNavRecord : public FGPositioned 
+class FGNavRecord : public FGPositioned
 {
 
     int freq;
@@ -69,7 +69,7 @@ class FGNavRecord : public FGPositioned
     inline double get_lon() const { return longitude(); } // degrees
     inline double get_lat() const { return latitude(); } // degrees
     inline double get_elev_ft() const { return elevation(); }
-        
+
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
     inline double get_multiuse() const { return multiuse; }
@@ -98,7 +98,7 @@ class FGNavRecord : public FGPositioned
     void unbindFromNode(SGPropertyNode* nd) const;
 
     void setColocatedDME(PositionedID other);
-    bool hasDME();
+    bool hasDME() const;
 
     bool isVORTAC() const;
 
@@ -137,11 +137,11 @@ class FGMobileNavRecord:
 
 class FGTACANRecord : public SGReferenced {
 
-    std::string channel;		
+    std::string channel;
     int freq;
-     
+
 public:
-    
+
      FGTACANRecord(void);
     inline ~FGTACANRecord(void) {}
 

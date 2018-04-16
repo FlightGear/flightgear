@@ -83,7 +83,7 @@ naGhostType FixGhostType = { positionedGhostDestroy, "fix", fixGhostGetMember, 0
 static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void waypointGhostSetMember(naContext c, void* g, naRef field, naRef value);
 
-naGhostType WayptGhostType = { wayptGhostDestroy, 
+naGhostType WayptGhostType = { wayptGhostDestroy,
   "waypoint",
   wayptGhostGetMember,
   waypointGhostSetMember};
@@ -91,7 +91,7 @@ naGhostType WayptGhostType = { wayptGhostDestroy,
 static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void legGhostSetMember(naContext c, void* g, naRef field, naRef value);
 
-naGhostType FPLegGhostType = { legGhostDestroy, 
+naGhostType FPLegGhostType = { legGhostDestroy,
   "flightplan-leg",
   legGhostGetMember,
   legGhostSetMember};
@@ -99,14 +99,14 @@ naGhostType FPLegGhostType = { legGhostDestroy,
 static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef value);
 
-naGhostType FlightPlanGhostType = { routeBaseGhostDestroy, 
+naGhostType FlightPlanGhostType = { routeBaseGhostDestroy,
   "flightplan",
   flightplanGhostGetMember,
   flightplanGhostSetMember
 };
 
 static const char* procedureGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-naGhostType ProcedureGhostType = { routeBaseGhostDestroy, 
+naGhostType ProcedureGhostType = { routeBaseGhostDestroy,
   "procedure",
   procedureGhostGetMember,
   0};
@@ -121,7 +121,7 @@ static void hashset(naContext c, naRef hash, const char* key, naRef val)
 static naRef stringToNasal(naContext c, const std::string& s)
 {
     return naStr_fromdata(naNewString(c),
-                   const_cast<char *>(s.c_str()), 
+                   const_cast<char *>(s.c_str()),
                    s.length());
 }
 
@@ -131,7 +131,7 @@ static bool convertToNum(naRef v, double& result)
     if (naIsNil(n)) {
         return false; // couldn't convert
     }
-    
+
     result = n.num;
     return true;
 }
@@ -143,7 +143,7 @@ static WayptFlag wayptFlagFromString(const char* s)
   if (!strcmp(s, "approach")) return WPT_APPROACH;
   if (!strcmp(s, "missed")) return WPT_MISS;
   if (!strcmp(s, "pseudo")) return WPT_PSEUDO;
-  
+
   return (WayptFlag) 0;
 }
 
@@ -166,7 +166,7 @@ static FGPositioned* positionedGhost(naRef r)
     {
         return (FGPositioned*) naGhost_ptr(r);
     }
-  
+
     return 0;
 }
 
@@ -217,12 +217,12 @@ static Waypt* wayptGhost(naRef r)
 {
   if (naGhost_type(r) == &WayptGhostType)
     return (Waypt*) naGhost_ptr(r);
-  
+
   if (naGhost_type(r) == &FPLegGhostType) {
     FlightPlan::Leg* leg = (FlightPlan::Leg*) naGhost_ptr(r);
     return leg->waypoint();
   }
-  
+
   return 0;
 }
 
@@ -278,7 +278,7 @@ naRef ghostForAirport(naContext c, const FGAirport* apt)
   if (!apt) {
     return naNil();
   }
-  
+
   FGPositioned::get(apt); // take a ref
   return naNewGhost2(c, &AirportGhostType, (void*) apt);
 }
@@ -288,7 +288,7 @@ naRef ghostForNavaid(naContext c, const FGNavRecord* n)
   if (!n) {
     return naNil();
   }
-  
+
   FGPositioned::get(n); // take a ref
   return naNewGhost2(c, &NavaidGhostType, (void*) n);
 }
@@ -298,7 +298,7 @@ naRef ghostForRunway(naContext c, const FGRunway* r)
   if (!r) {
     return naNil();
   }
-  
+
   FGPositioned::get(r); // take a ref
   return naNewGhost2(c, &RunwayGhostType, (void*) r);
 }
@@ -318,7 +318,7 @@ naRef ghostForTaxiway(naContext c, const FGTaxiway* r)
   if (!r) {
     return naNil();
   }
-  
+
   FGPositioned::get(r); // take a ref
   return naNewGhost2(c, &TaxiwayGhostType, (void*) r);
 }
@@ -328,7 +328,7 @@ naRef ghostForFix(naContext c, const FGFix* r)
   if (!r) {
     return naNil();
   }
-  
+
   FGPositioned::get(r); // take a ref
   return naNewGhost2(c, &FixGhostType, (void*) r);
 }
@@ -349,7 +349,7 @@ naRef ghostForLeg(naContext c, const FlightPlan::Leg* leg)
   if (!leg) {
     return naNil();
   }
-  
+
   return naNewGhost2(c, &FPLegGhostType, (void*) leg);
 }
 
@@ -358,7 +358,7 @@ naRef ghostForFlightPlan(naContext c, const FlightPlan* fp)
   if (!fp) {
     return naNil();
   }
-  
+
   FlightPlan::get(fp); // take a ref
   return naNewGhost2(c, &FlightPlanGhostType, (void*) fp);
 }
@@ -368,7 +368,7 @@ naRef ghostForProcedure(naContext c, const Procedure* proc)
   if (!proc) {
     return naNil();
   }
-  
+
   FlightPlan::get(proc); // take a ref
   return naNewGhost2(c, &ProcedureGhostType, (void*) proc);
 }
@@ -377,7 +377,7 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
 {
   const char* fieldName = naStr_data(field);
   FGAirport* apt = (FGAirport*) g;
-  
+
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
     naVec_append(*out, airportPrototype);
@@ -424,7 +424,7 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
   } else {
     return 0;
   }
-  
+
   return "";
 }
 
@@ -510,7 +510,7 @@ static void waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldNa
     if (f == 0) {
       naRuntimeError(c, "unrecognized wp_role value %s", naStr_data(value));
     }
-    
+
     wpt->setFlag(f, true);
   } else if (!strcmp(fieldName, "fly_type")) {
       if (!naIsString(value)) naRuntimeError(c, "fly_type must be a string");
@@ -531,7 +531,7 @@ static RouteRestriction routeRestrictionFromArg(naRef arg)
   if (naIsNil(arg) || !naIsString(arg)) {
     return RESTRICT_NONE;
   }
-  
+
   const std::string u = simgear::strutils::lowercase(naStr_data(arg));
   if (u == "computed") return RESTRICT_COMPUTED;
   if (u == "at") return RESTRICT_AT;
@@ -553,7 +553,7 @@ naRef routeRestrictionToNasal(naContext c, RouteRestriction rr)
     case SPEED_COMPUTED_MACH: return stringToNasal(c, "computed-mach");
     case RESTRICT_DELETE: return stringToNasal(c, "delete");
   }
-  
+
   return naNil();
 }
 
@@ -601,7 +601,7 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
   Waypt* wpt = leg->waypoint();
-  
+
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
     naVec_append(*out, fpLegPrototype);
@@ -615,7 +615,7 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
     double s = isMachRestrict(leg->speedRestriction()) ? leg->speedMach() : leg->speedKts();
     *out = naNum(s);
   } else if (!strcmp(fieldName, "speed_cstr_type")) {
-    *out = routeRestrictionToNasal(c, leg->speedRestriction());  
+    *out = routeRestrictionToNasal(c, leg->speedRestriction());
   } else if (!strcmp(fieldName, "leg_distance")) {
     *out = naNum(leg->distanceNm());
   } else if (!strcmp(fieldName, "leg_bearing")) {
@@ -631,7 +631,7 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
   } else { // check for fields defined on the underlying waypoint
     return waypointCommonGetMember(c, wpt, fieldName, out);
   }
-  
+
   return ""; // success
 }
 
@@ -646,7 +646,7 @@ static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
 {
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
-    
+
   waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
 }
 
@@ -654,7 +654,7 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
 {
   const char* fieldName = naStr_data(field);
   FlightPlan* fp = (FlightPlan*) g;
-  
+
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
     naVec_append(*out, flightplanPrototype);
@@ -675,7 +675,7 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   else {
     return 0;
   }
-  
+
   return "";
 }
 
@@ -683,7 +683,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
 {
   const char* fieldName = naStr_data(field);
   FlightPlan* fp = (FlightPlan*) g;
-  
+
   if (!strcmp(fieldName, "id")) {
     if (!naIsString(value)) naRuntimeError(c, "flightplan.id must be a string");
     fp->setIdent(naStr_data(value));
@@ -699,18 +699,18 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setDeparture(apt);
       return;
     }
-    
+
     FGRunway* rwy = runwayGhost(value);
     if (rwy){
       fp->setDeparture(rwy);
       return;
     }
-    
+
     if (naIsNil(value)) {
       fp->clearDeparture();
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting departure");
   } else if (!strcmp(fieldName, "destination")) {
     FGAirport* apt = airportGhost(value);
@@ -718,18 +718,18 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setDestination(apt);
       return;
     }
-    
+
     FGRunway* rwy = runwayGhost(value);
     if (rwy){
       fp->setDestination(rwy);
       return;
     }
-    
+
     if (naIsNil(value)) {
       fp->clearDestination();
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting destination");
   } else if (!strcmp(fieldName, "departure_runway")) {
     FGRunway* rwy = runwayGhost(value);
@@ -737,7 +737,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setDeparture(rwy);
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting departure runway");
   } else if (!strcmp(fieldName, "destination_runway")) {
     FGRunway* rwy = runwayGhost(value);
@@ -745,7 +745,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setDestination(rwy);
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting destination runway");
   } else if (!strcmp(fieldName, "sid")) {
     Procedure* proc = procedureGhost(value);
@@ -758,18 +758,18 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setSID((Transition*) proc);
       return;
     }
-    
+
     if (naIsString(value)) {
       FGAirport* apt = fp->departureAirport();
       fp->setSID(apt->findSIDWithIdent(naStr_data(value)));
       return;
     }
-    
+
     if (naIsNil(value)) {
       fp->clearSID();
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting SID");
   } else if (!strcmp(fieldName, "star")) {
     Procedure* proc = procedureGhost(value);
@@ -777,23 +777,23 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setSTAR((STAR*) proc);
       return;
     }
-    
+
     if (proc && (proc->type() == PROCEDURE_TRANSITION)) {
       fp->setSTAR((Transition*) proc);
       return;
     }
-    
+
     if (naIsString(value)) {
       FGAirport* apt = fp->destinationAirport();
       fp->setSTAR(apt->findSTARWithIdent(naStr_data(value)));
       return;
     }
-    
+
     if (naIsNil(value)) {
       fp->clearSTAR();
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting STAR");
   } else if (!strcmp(fieldName, "approach")) {
     Procedure* proc = procedureGhost(value);
@@ -801,18 +801,18 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       fp->setApproach((Approach*) proc);
       return;
     }
-    
+
     if (naIsString(value)) {
       FGAirport* apt = fp->destinationAirport();
       fp->setApproach(apt->findApproachWithIdent(naStr_data(value)));
       return;
     }
-    
+
     if (naIsNil(value)) {
       fp->setApproach(nullptr);
       return;
     }
-    
+
     naRuntimeError(c, "bad argument type setting approach");
   } else if (!strcmp(fieldName, "aircraftCategory")) {
     if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
@@ -828,9 +828,9 @@ static naRef procedureTpType(naContext c, ProcedureType ty)
   switch (ty) {
     case PROCEDURE_SID: return stringToNasal(c, "sid");
     case PROCEDURE_STAR: return stringToNasal(c, "star");
-    case PROCEDURE_APPROACH_VOR: 
-    case PROCEDURE_APPROACH_ILS: 
-    case PROCEDURE_APPROACH_RNAV: 
+    case PROCEDURE_APPROACH_VOR:
+    case PROCEDURE_APPROACH_ILS:
+    case PROCEDURE_APPROACH_RNAV:
     case PROCEDURE_APPROACH_NDB:
       return stringToNasal(c, "IAP");
     default:
@@ -854,7 +854,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
 {
   const char* fieldName = naStr_data(field);
   Procedure* proc = (Procedure*) g;
-  
+
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
     naVec_append(*out, procedurePrototype);
@@ -872,7 +872,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
       *out = naNil();
       return "";
     }
-        
+
     ArrivalDeparture* ad = static_cast<ArrivalDeparture*>(proc);
     *out = naNewVector(c);
     BOOST_FOREACH(std::string id, ad->transitionIdents()) {
@@ -881,7 +881,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
   } else {
     return 0;
   }
-  
+
   return "";
 }
 
@@ -889,7 +889,7 @@ static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef
 {
   const char* fieldName = naStr_data(field);
   FGRunwayBase* base = (FGRunwayBase*) g;
-  
+
   if (!strcmp(fieldName, "id")) *out = stringToNasal(c, base->ident());
   else if (!strcmp(fieldName, "lat")) *out = naNum(base->latitude());
   else if (!strcmp(fieldName, "lon")) *out = naNum(base->longitude());
@@ -897,7 +897,7 @@ static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef
   else if (!strcmp(fieldName, "length")) *out = naNum(base->lengthM());
   else if (!strcmp(fieldName, "width")) *out = naNum(base->widthM());
   else if (!strcmp(fieldName, "surface")) *out = naNum(base->surface());
-  else if (base->type() == FGRunwayBase::RUNWAY) {  
+  else if (base->type() == FGRunwayBase::RUNWAY) {
     FGRunway* rwy = (FGRunway*) g;
     if (!strcmp(fieldName, "threshold")) *out = naNum(rwy->displacedThresholdM());
     else if (!strcmp(fieldName, "stopway")) *out = naNum(rwy->stopwayM());
@@ -911,9 +911,9 @@ static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef
       return 0;
     }
   } else {
-    return 0;    
+    return 0;
   }
-  
+
   return "";
 }
 
@@ -921,7 +921,7 @@ static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef
 {
   const char* fieldName = naStr_data(field);
   FGNavRecord* nav = (FGNavRecord*) g;
-  
+
   if (!strcmp(fieldName, "id")) *out = stringToNasal(c, nav->ident());
   else if (!strcmp(fieldName, "name")) *out = stringToNasal(c, nav->name());
   else if (!strcmp(fieldName, "lat")) *out = naNum(nav->get_lat());
@@ -931,9 +931,22 @@ static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef
   } else if (!strcmp(fieldName, "type")) {
     *out = stringToNasal(c, nav->nameForType(nav->type()));
   } else if (!strcmp(fieldName, "frequency")) {
-    *out = naNum(nav->get_freq()); 
+    *out = naNum(nav->get_freq());
   } else if (!strcmp(fieldName, "range_nm")) {
-    *out = naNum(nav->get_range()); 
+    *out = naNum(nav->get_range());
+  } else if (!strcmp(fieldName, "magvar")) {
+    if (nav->type() == FGPositioned::VOR) {
+      // For VORs, the multiuse function provides the magnetic variation
+      double variation = nav->get_multiuse();
+      SG_NORMALIZE_RANGE(variation, 0.0, 360.0);
+      *out = naNum(variation);
+    } else {
+      *out = naNil();
+    }
+  } else if (!strcmp(fieldName, "dme")) {
+    *out = naNum(nav->hasDME());
+  } else if (!strcmp(fieldName, "vortac")) {
+    *out = naNum(nav->isVORTAC());
   } else if (!strcmp(fieldName, "course")) {
     if ((nav->type() == FGPositioned::ILS) || (nav->type() == FGPositioned::LOC)) {
       double radial = nav->get_multiuse();
@@ -945,7 +958,7 @@ static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef
   } else {
     return 0;
   }
-  
+
   return "";
 }
 
@@ -953,14 +966,14 @@ static const char* fixGhostGetMember(naContext c, void* g, naRef field, naRef* o
 {
   const char* fieldName = naStr_data(field);
   FGFix* fix = (FGFix*) g;
-  
+
   if (!strcmp(fieldName, "id")) *out = stringToNasal(c, fix->ident());
   else if (!strcmp(fieldName, "lat")) *out = naNum(fix->get_lat());
   else if (!strcmp(fieldName, "lon")) *out = naNum(fix->get_lon());
   else {
     return 0;
   }
-  
+
   return "";
 }
 
@@ -970,7 +983,7 @@ static bool hashIsCoord(naRef h)
   if (!naIsVector(parents)) {
     return false;
   }
-  
+
   return naEqual(naVec_get(parents, 0), geoCoordClass) != 0;
 }
 
@@ -980,7 +993,7 @@ bool geodFromHash(naRef ref, SGGeod& result)
     return false;
   }
 
-  
+
 // check for manual latitude / longitude names
   naRef lat = naHash_cget(ref, (char*) "lat");
   naRef lon = naHash_cget(ref, (char*) "lon");
@@ -988,7 +1001,7 @@ bool geodFromHash(naRef ref, SGGeod& result)
     result = SGGeod::fromDeg(naNumValue(lon).num, naNumValue(lat).num);
     return true;
   }
-  
+
   if (hashIsCoord(ref)) {
     naRef lat = naHash_cget(ref, (char*) "_lat");
     naRef lon = naHash_cget(ref, (char*) "_lon");
@@ -1004,7 +1017,7 @@ bool geodFromHash(naRef ref, SGGeod& result)
   }
 // check for any synonyms?
   // latitude + longitude?
-  
+
   return false;
 }
 
@@ -1013,51 +1026,51 @@ static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
   if (offset >= argc) {
     return 0;
   }
-  
+
   if (naIsGhost(args[offset])) {
     naGhostType* gt = naGhost_type(args[offset]);
     if (gt == &AirportGhostType) {
       result = airportGhost(args[offset])->geod();
       return 1;
     }
-    
+
     if (gt == &NavaidGhostType) {
       result = navaidGhost(args[offset])->geod();
       return 1;
     }
-    
+
     if (gt == &RunwayGhostType) {
       result = runwayGhost(args[offset])->geod();
       return 1;
     }
-    
+
     if (gt == &TaxiwayGhostType) {
       result = taxiwayGhost(args[offset])->geod();
       return 1;
     }
-    
+
     if (gt == &FixGhostType) {
       result = fixGhost(args[offset])->geod();
       return 1;
     }
-    
+
     if (gt == &WayptGhostType) {
       result = wayptGhost(args[offset])->position();
       return 1;
     }
   }
-  
+
   if (geodFromHash(args[offset], result)) {
     return 1;
   }
-  
+
   if (((argc - offset) >= 2) && naIsNum(args[offset]) && naIsNum(args[offset + 1])) {
     double lat = naNumValue(args[0]).num,
     lon = naNumValue(args[1]).num;
     result = SGGeod::fromDeg(lon, lat);
     return 2;
   }
-  
+
   return 0;
 }
 
@@ -1118,7 +1131,7 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 * Exposes the built in function to Nasal to allow a craft to ascertain
 * whether or not a certain position and direction pair intersect with
 * the ground.
-* 
+*
 * Useful for radars, terrain avoidance (GPWS), etc.
 *
 * @param [in] vec3d(x,y,z) position
@@ -1231,14 +1244,14 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 
 #ifndef FG_TESTLIB
   naRef matdata = naNil();
-  
+
   const SGMaterial *mat = dynamic_cast<const SGMaterial *>(material);
   if(mat) {
     matdata = naNewHash(c);
     naRef names = naNewVector(c);
     BOOST_FOREACH(const std::string& n, mat->get_names())
       naVec_append(names, stringToNasal(c, n));
-      
+
     HASHSET("names", 5, names);
     HASHSET("solid", 5, naNum(mat->get_solid()));
     HASHSET("friction_factor", 15, naNum(mat->get_friction_factor()));
@@ -1265,17 +1278,17 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod pos = globals->get_aircraft_position();
   FGAirport* apt = NULL;
-  
+
   if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
     pos = SGGeod::fromDeg(args[1].num, args[0].num);
     args += 2;
     argc -= 2;
   }
-  
+
   double maxRange = 10000.0; // expose this? or pick a smaller value?
-  
+
   FGAirport::TypeRunwayFilter filter; // defaults to airports only
-  
+
   if(argc == 0) {
     // fall through and use AIRPORT
   } else if(argc == 1 && naIsString(args[0])) {
@@ -1295,12 +1308,12 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "airportinfo() with invalid function arguments");
     return naNil();
   }
-  
+
   if(!apt) {
     apt = FGAirport::findClosest(pos, maxRange, &filter);
     if(!apt) return naNil();
   }
-  
+
   return ghostForAirport(c, apt);
 }
 
@@ -1309,27 +1322,27 @@ static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* a
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsNum(args[argOffset])) {
     naRuntimeError(c, "findAirportsWithinRange expected range (in nm) as arg %d", argOffset);
   }
-  
+
   FGAirport::TypeRunwayFilter filter; // defaults to airports only
   double rangeNm = args[argOffset++].num;
   if (argOffset < argc) {
     filter.fromTypeString(naStr_data(args[argOffset++]));
   }
-  
+
   naRef r = naNewVector(c);
-  
+
   FGPositionedList apts = FGPositioned::findWithinRange(pos, rangeNm, &filter);
   FGPositioned::sortByRange(apts, pos);
-  
+
   BOOST_FOREACH(FGPositionedRef a, apts) {
     FGAirport* apt = (FGAirport*) a.get();
     naVec_append(r, ghostForAirport(c, apt));
   }
-  
+
   return r;
 }
 
@@ -1338,23 +1351,23 @@ static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
   if (!naIsString(args[0])) {
     naRuntimeError(c, "findAirportsByICAO expects string as arg 0");
   }
-  
+
   int argOffset = 0;
   std::string prefix(naStr_data(args[argOffset++]));
   FGAirport::TypeRunwayFilter filter; // defaults to airports only
   if (argOffset < argc) {
     filter.fromTypeString(naStr_data(args[argOffset++]));
   }
-  
+
   naRef r = naNewVector(c);
-  
+
   FGPositionedList apts = FGPositioned::findAllWithIdent(prefix, &filter, false);
-  
+
   BOOST_FOREACH(FGPositionedRef a, apts) {
     FGAirport* apt = (FGAirport*) a.get();
     naVec_append(r, ghostForAirport(c, apt));
   }
-  
+
   return r;
 }
 
@@ -1364,8 +1377,8 @@ static naRef f_airport_tower(naContext c, naRef me, int argc, naRef* args)
     if (!apt) {
       naRuntimeError(c, "airport.tower called on non-airport object");
     }
-  
-    // build a hash for the tower position    
+
+    // build a hash for the tower position
     SGGeod towerLoc = apt->getTowerLocation();
     naRef tower = naNewHash(c);
     hashset(c, tower, "lat", naNum(towerLoc.getLatitudeDeg()));
@@ -1381,16 +1394,16 @@ static naRef f_airport_comms(naContext c, naRef me, int argc, naRef* args)
       naRuntimeError(c, "airport.comms called on non-airport object");
     }
     naRef comms = naNewVector(c);
-    
+
 // if we have an explicit type, return a simple vector of frequencies
     if (argc > 0 && !naIsString(args[0])) {
         naRuntimeError(c, "airport.comms argument must be a frequency type name");
     }
-    
+
     if (argc > 0) {
         std::string commName = naStr_data(args[0]);
         FGPositioned::Type commType = FGPositioned::typeFromName(commName);
-        
+
         BOOST_FOREACH(flightgear::CommStation* comm, apt->commStationsOfType(commType)) {
             naVec_append(comms, naNum(comm->freqMHz()));
         }
@@ -1403,7 +1416,7 @@ static naRef f_airport_comms(naContext c, naRef me, int argc, naRef* args)
             naVec_append(comms, commHash);
         }
     }
-    
+
     return comms;
 }
 
@@ -1451,9 +1464,9 @@ static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.sids called on non-airport object");
   }
-  
+
   naRef sids = naNewVector(c);
-  
+
   FGRunway* rwy = NULL;
   if (argc > 0 && naIsString(args[0])) {
     if (!apt->hasRunwayWithIdent(naStr_data(args[0]))) {
@@ -1477,7 +1490,7 @@ static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
       naVec_append(sids, procId);
     }
   }
-  
+
   return sids;
 }
 
@@ -1487,20 +1500,20 @@ static naRef f_airport_stars(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.stars called on non-airport object");
   }
-  
+
   naRef stars = naNewVector(c);
-  
+
   FGRunway* rwy = NULL;
   if (argc > 0 && naIsString(args[0])) {
     if (!apt->hasRunwayWithIdent(naStr_data(args[0]))) {
       return naNil();
     }
-        
+
     rwy = apt->getRunwayByIdent(naStr_data(args[0]));
   } else if (argc > 0) {
     rwy = runwayGhost(args[0]);
   }
-  
+
   if (rwy) {
     BOOST_FOREACH(flightgear::STAR* s, rwy->getSTARs()) {
       naRef procId = stringToNasal(c, s->ident());
@@ -1513,7 +1526,7 @@ static naRef f_airport_stars(naContext c, naRef me, int argc, naRef* args)
       naVec_append(stars, procId);
     }
   }
-  
+
   return stars;
 }
 
@@ -1523,9 +1536,9 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.getApproachList called on non-airport object");
   }
-  
+
   naRef approaches = naNewVector(c);
-  
+
   ProcedureType ty = PROCEDURE_INVALID;
   if ((argc > 1) && naIsString(args[1])) {
     std::string u(naStr_data(args[1]));
@@ -1535,7 +1548,7 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
     if (u == "ILS") ty = PROCEDURE_APPROACH_ILS;
     if (u == "RNAV") ty = PROCEDURE_APPROACH_RNAV;
   }
-  
+
   FGRunway* rwy = NULL;
   if (argc > 0 && (rwy = runwayGhost(args[0]))) {
     // ok
@@ -1543,16 +1556,16 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
     if (!apt->hasRunwayWithIdent(naStr_data(args[0]))) {
       return naNil();
     }
-    
+
     rwy = apt->getRunwayByIdent(naStr_data(args[0]));
   }
-  
+
   if (rwy) {
     BOOST_FOREACH(Approach* s, rwy->getApproaches()) {
       if ((ty != PROCEDURE_INVALID) && (s->type() != ty)) {
         continue;
       }
-      
+
       naRef procId = stringToNasal(c, s->ident());
       naVec_append(approaches, procId);
     }
@@ -1563,12 +1576,12 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
       if ((ty != PROCEDURE_INVALID) && (app->type() != ty)) {
         continue;
       }
-      
+
       naRef procId = stringToNasal(c, app->ident());
       naVec_append(approaches, procId);
     }
   }
-  
+
   return approaches;
 }
 
@@ -1578,19 +1591,19 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.parking called on non-airport object");
   }
-  
+
   naRef r = naNewVector(c);
   std::string type;
   bool onlyAvailable = false;
-  
+
   if (argc > 0 && naIsString(args[0])) {
     type = naStr_data(args[0]);
   }
-  
+
   if ((argc > 1) && naIsNum(args[1])) {
     onlyAvailable = (args[1].num != 0.0);
   }
-  
+
   FGAirportDynamicsRef dynamics = apt->getDynamics();
   FGParkingList parkings = dynamics->getParkings(onlyAvailable, type);
   FGParkingList::const_iterator it;
@@ -1604,7 +1617,7 @@ static naRef f_airport_parking(naContext c, naRef me, int argc, naRef* args)
     hashset(c, ph, "elevation", naNum(parkLoc.getElevationM()));
     naVec_append(r, ph);
   }
-  
+
   return r;
 }
 
@@ -1614,11 +1627,11 @@ static naRef f_airport_getSid(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.getSid called on non-airport object");
   }
-  
+
   if ((argc != 1) || !naIsString(args[0])) {
     naRuntimeError(c, "airport.getSid passed invalid argument");
   }
-  
+
   std::string ident = naStr_data(args[0]);
   return ghostForProcedure(c, apt->findSIDWithIdent(ident));
 }
@@ -1629,11 +1642,11 @@ static naRef f_airport_getStar(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.getStar called on non-airport object");
   }
-  
+
   if ((argc != 1) || !naIsString(args[0])) {
     naRuntimeError(c, "airport.getStar passed invalid argument");
   }
-  
+
   std::string ident = naStr_data(args[0]);
   return ghostForProcedure(c, apt->findSTARWithIdent(ident));
 }
@@ -1644,11 +1657,11 @@ static naRef f_airport_getApproach(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.getIAP called on non-airport object");
   }
-  
+
   if ((argc != 1) || !naIsString(args[0])) {
     naRuntimeError(c, "airport.getIAP passed invalid argument");
   }
-  
+
   std::string ident = naStr_data(args[0]);
   return ghostForProcedure(c, apt->findApproachWithIdent(ident));
 }
@@ -1659,12 +1672,12 @@ static naRef f_airport_findBestRunway(naContext c, naRef me, int argc, naRef* ar
     if (!apt) {
         naRuntimeError(c, "findBestRunway called on non-airport object");
     }
-    
+
     SGGeod pos;
     if (!geodFromArgs(args, 0, argc, pos)) {
         naRuntimeError(c, "findBestRunway must be passed a position");
     }
-    
+
     return ghostForRunway(c,  apt->findBestRunwayForPos(pos));
 }
 
@@ -1674,12 +1687,12 @@ static naRef f_airport_toString(naContext c, naRef me, int argc, naRef* args)
   if (!apt) {
     naRuntimeError(c, "airport.tostring called on non-airport object");
   }
-  
+
   return stringToNasal(c, "an airport " + apt->ident());
 }
 
 // Returns vector of data hash for navaid of a <type>, nil on error
-// navaids sorted by ascending distance 
+// navaids sorted by ascending distance
 // navinfo([<lat>,<lon>],[<type>],[<id>])
 // lat/lon (numeric): use latitude/longitude instead of ac position
 // type:              ("fix"|"vor"|"ndb"|"ils"|"dme"|"tacan"|"any")
@@ -1688,12 +1701,12 @@ static naRef f_airport_toString(naContext c, naRef me, int argc, naRef* args)
 // navinfo("vor")     returns all vors
 // navinfo("HAM")     return all navaids who's name start with "HAM"
 // navinfo("vor", "HAM") return all vor who's name start with "HAM"
-//navinfo(34,48,"vor","HAM") return all vor who's name start with "HAM" 
+//navinfo(34,48,"vor","HAM") return all vor who's name start with "HAM"
 //                           sorted by distance relative to lat=34, lon=48
 static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod pos;
-  
+
   if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
     pos = SGGeod::fromDeg(args[1].num, args[0].num);
     args += 2;
@@ -1701,11 +1714,11 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
   } else {
     pos = globals->get_aircraft_position();
   }
-  
+
   FGPositioned::Type type = FGPositioned::INVALID;
   nav_list_type navlist;
   const char * id = "";
-  
+
   if(argc > 0 && naIsString(args[0])) {
     const char *s = naStr_data(args[0]);
     if(!strcmp(s, "any")) type = FGPositioned::INVALID;
@@ -1718,8 +1731,8 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
     else id = s; // this is an id
     ++args;
     --argc;
-  } 
-  
+  }
+
   if(argc > 0 && naIsString(args[0])) {
     if( *id != 0 ) {
       naRuntimeError(c, "navinfo() called with navaid id");
@@ -1729,15 +1742,15 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
     ++args;
     --argc;
   }
-  
+
   if( argc > 0 ) {
     naRuntimeError(c, "navinfo() called with too many arguments");
     return naNil();
   }
-  
+
   FGNavList::TypeFilter filter(type);
   navlist = FGNavList::findByIdentAndFreq( pos, id, 0.0, &filter );
-  
+
   naRef reply = naNewVector(c);
   for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
     naVec_append( reply, ghostForNavaid(c, *it) );
@@ -1750,27 +1763,27 @@ static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* ar
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsNum(args[argOffset])) {
     naRuntimeError(c, "findNavaidsWithinRange expected range (in nm) as arg %d", argOffset);
   }
-  
+
   FGPositioned::Type type = FGPositioned::INVALID;
   double rangeNm = args[argOffset++].num;
   if (argOffset < argc) {
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
   }
-  
+
   naRef r = naNewVector(c);
   FGNavList::TypeFilter filter(type);
   FGPositionedList navs = FGPositioned::findWithinRange(pos, rangeNm, &filter);
   FGPositioned::sortByRange(navs, pos);
-  
+
   BOOST_FOREACH(FGPositionedRef a, navs) {
     FGNavRecord* nav = (FGNavRecord*) a.get();
     naVec_append(r, ghostForNavaid(c, nav));
   }
-  
+
   return r;
 }
 
@@ -1779,18 +1792,18 @@ static naRef f_findNDBByFrequency(naContext c, naRef me, int argc, naRef* args)
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsNum(args[argOffset])) {
     naRuntimeError(c, "findNDBByFrquency expectes frequency (in kHz) as arg %d", argOffset);
   }
-  
+
   double dbFreq = args[argOffset++].num;
   FGNavList::TypeFilter filter(FGPositioned::NDB);
   nav_list_type navs = FGNavList::findAllByFreq(dbFreq, pos, &filter);
   if (navs.empty()) {
     return naNil();
   }
-  
+
   return ghostForNavaid(c, navs.front().ptr());
 }
 
@@ -1799,18 +1812,18 @@ static naRef f_findNDBsByFrequency(naContext c, naRef me, int argc, naRef* args)
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsNum(args[argOffset])) {
     naRuntimeError(c, "findNDBsByFrquency expectes frequency (in kHz) as arg %d", argOffset);
   }
-  
+
   double dbFreq = args[argOffset++].num;
   FGNavList::TypeFilter filter(FGPositioned::NDB);
   nav_list_type navs = FGNavList::findAllByFreq(dbFreq, pos, &filter);
   if (navs.empty()) {
     return naNil();
   }
-  
+
   naRef r = naNewVector(c);
   for (nav_rec_ptr a : navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));
@@ -1823,11 +1836,11 @@ static naRef f_findNavaidByFrequency(naContext c, naRef me, int argc, naRef* arg
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsNum(args[argOffset])) {
     naRuntimeError(c, "findNavaidByFrequency expectes frequency (in Mhz) as arg %d", argOffset);
   }
-  
+
   FGPositioned::Type type = FGPositioned::INVALID;
   double freqMhz = args[argOffset++].num;
   if (argOffset < argc) {
@@ -1836,13 +1849,13 @@ static naRef f_findNavaidByFrequency(naContext c, naRef me, int argc, naRef* arg
       naRuntimeError(c, "Use findNDBByFrquency to seach NDBs");
     }
   }
-  
+
   FGNavList::TypeFilter filter(type);
   auto navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
   if (navs.empty()) {
     return naNil();
   }
-  
+
   return ghostForNavaid(c, navs.front().ptr());
 }
 
@@ -1851,11 +1864,11 @@ static naRef f_findNavaidsByFrequency(naContext c, naRef me, int argc, naRef* ar
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsNum(args[argOffset])) {
     naRuntimeError(c, "findNavaidsByFrequency expectes frequency (in Mhz) as arg %d", argOffset);
   }
-  
+
   FGPositioned::Type type = FGPositioned::INVALID;
   double freqMhz = args[argOffset++].num;
   if (argOffset < argc) {
@@ -1864,14 +1877,14 @@ static naRef f_findNavaidsByFrequency(naContext c, naRef me, int argc, naRef* ar
       naRuntimeError(c, "Use findNDBsByFrquency to seach NDBs");
     }
   }
-  
+
   naRef r = naNewVector(c);
   FGNavList::TypeFilter filter(type);
   auto navs = FGNavList::findAllByFreq(freqMhz, pos, &filter);
   for (nav_rec_ptr a : navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));
   }
-  
+
   return r;
 }
 
@@ -1880,25 +1893,25 @@ static naRef f_findNavaidsByIdent(naContext c, naRef me, int argc, naRef* args)
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsString(args[argOffset])) {
     naRuntimeError(c, "findNavaidsByIdent expectes ident string as arg %d", argOffset);
   }
-  
+
   FGPositioned::Type type = FGPositioned::INVALID;
   std::string ident = naStr_data(args[argOffset++]);
   if (argOffset < argc) {
     type = FGPositioned::typeFromName(naStr_data(args[argOffset]));
   }
-  
+
   FGNavList::TypeFilter filter(type);
   naRef r = naNewVector(c);
   nav_list_type navs = FGNavList::findByIdentAndFreq(pos, ident, 0.0, &filter);
-  
+
   BOOST_FOREACH(nav_rec_ptr a, navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));
   }
-  
+
   return r;
 }
 
@@ -1907,22 +1920,22 @@ static naRef f_findFixesByIdent(naContext c, naRef me, int argc, naRef* args)
   int argOffset = 0;
   SGGeod pos = globals->get_aircraft_position();
   argOffset += geodFromArgs(args, 0, argc, pos);
-  
+
   if (!naIsString(args[argOffset])) {
     naRuntimeError(c, "findFixesByIdent expectes ident string as arg %d", argOffset);
   }
-  
+
   std::string ident(naStr_data(args[argOffset]));
   naRef r = naNewVector(c);
-  
+
   FGPositioned::TypeFilter filter(FGPositioned::FIX);
   FGPositionedList fixes = FGPositioned::findAllWithIdent(ident, &filter);
   FGPositioned::sortByRange(fixes, pos);
-  
+
   BOOST_FOREACH(FGPositionedRef f, fixes) {
     naVec_append(r, ghostForFix(c, (FGFix*) f.ptr()));
   }
-  
+
   return r;
 }
 
@@ -1937,7 +1950,7 @@ static naRef f_magvar(naContext c, naRef me, int argc, naRef* args)
   } else {
     naRuntimeError(c, "magvar() expects no arguments, a positioned hash or lat,lon pair");
   }
-  
+
   double jd = globals->get_time_params()->getJD();
   double magvarDeg = sgGetMagVar(pos, jd) * SG_RADIANS_TO_DEGREES;
   return naNum(magvarDeg);
@@ -1952,14 +1965,14 @@ static naRef f_courseAndDistance(naContext c, naRef me, int argc, naRef* args)
     } else {
       to = p; // only parsed one arg, so FROM is current
     }
-  
+
     if (argOffset == 0) {
         naRuntimeError(c, "invalid arguments to courseAndDistance");
     }
-    
+
     double course, course2, d;
     SGGeodesy::inverse(from, to, course, course2, d);
-    
+
     naRef result = naNewVector(c);
     naVec_append(result, naNum(course));
     naVec_append(result, naNum(d * SG_METER_TO_NM));
@@ -1970,26 +1983,26 @@ static naRef f_greatCircleMove(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod from = globals->get_aircraft_position(), to;
   int argOffset = 0;
-  
+
   // complication - don't inerpret two doubles (as the only args)
   // as a lat,lon pair - only do so if we have at least three args.
   if (argc > 2) {
     argOffset = geodFromArgs(args, 0, argc, from);
   }
-  
+
   if ((argOffset + 1) >= argc) {
     naRuntimeError(c, "isufficent arguments to greatCircleMove");
   }
-  
+
   if (!naIsNum(args[argOffset]) || !naIsNum(args[argOffset+1])) {
     naRuntimeError(c, "invalid arguments %d and %d to greatCircleMove",
                    argOffset, argOffset + 1);
   }
-  
+
   double course = args[argOffset].num, course2;
   double distanceNm = args[argOffset + 1].num;
   SGGeodesy::direct(from, course, distanceNm * SG_NM_TO_METER, to, course2);
-  
+
   // return geo.Coord
   naRef coord = naNewHash(c);
   hashset(c, coord, "lat", naNum(to.getLatitudeDeg()));
@@ -2016,21 +2029,21 @@ static naRef f_tileIndex(naContext c, naRef me, int argc, naRef* args)
 static naRef f_createFlightplan(naContext c, naRef me, int argc, naRef* args)
 {
     flightgear::FlightPlanRef fp(new flightgear::FlightPlan);
-    
+
     if ((argc > 0) && naIsString(args[0])) {
         SGPath path(naStr_data(args[0]));
         if (!path.exists()) {
             std::string pdata = path.utf8Str();
             naRuntimeError(c, "createFlightplan, no file at path %s", pdata.c_str());
         }
-        
+
         if (!fp->load(path)) {
             SG_LOG(SG_NASAL, SG_WARN, "failed to load flight-plan from " << path);
             return naNil();
         }
-        
+
     }
-    
+
     return ghostForFlightPlan(c, fp.get());
 }
 
@@ -2040,11 +2053,11 @@ static naRef f_flightplan(naContext c, naRef me, int argc, naRef* args)
         FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
         return ghostForFlightPlan(c, rm->flightPlan());
     }
-    
+
     if ((argc > 0) && naIsString(args[0])) {
         return f_createFlightplan(c, me, argc, args);
     }
-    
+
     naRuntimeError(c, "bad arguments to flightplan()");
     return naNil();
 }
@@ -2059,37 +2072,37 @@ public:
   {
     _gcSaveKey = _nasal->gcSave(ins);
   }
-  
+
   virtual ~NasalFPDelegate()
   {
     _nasal->gcRelease(_gcSaveKey);
   }
-  
+
   virtual void departureChanged()
   {
     callDelegateMethod("departureChanged");
   }
-  
+
   virtual void arrivalChanged()
   {
     callDelegateMethod("arrivalChanged");
   }
-  
+
   virtual void waypointsChanged()
   {
     callDelegateMethod("waypointsChanged");
   }
-  
+
   virtual void currentWaypointChanged()
   {
     callDelegateMethod("currentWaypointChanged");
   }
-    
+
   virtual void cleared()
   {
     callDelegateMethod("cleared");
   }
-    
+
   virtual void endOfFlightPlan()
   {
     callDelegateMethod("endOfFlightPlan");
@@ -2100,21 +2113,21 @@ public:
     callDelegateMethod("activated");
   }
 private:
-  
+
   void callDelegateMethod(const char* method)
   {
     naRef f;
     naContext ctx = naNewContext();
-      
+
     if (naMember_cget(ctx, _instance, method, &f) != 0) {
         naRef arg[1];
         arg[0] = ghostForFlightPlan(ctx, _plan);
         _nasal->callMethod(f, _instance, 1, arg, naNil());
     }
-    
+
     naFreeContext(ctx);
   }
-  
+
   FGNasalSys* _nasal;
   FlightPlan* _plan;
   naRef _instance;
@@ -2131,25 +2144,25 @@ public:
     _func = code;
     _gcSaveKey = _nasal->gcSave(_func);
   }
-  
+
   virtual ~NasalFPDelegateFactory()
   {
     _nasal->gcRelease(_gcSaveKey);
   }
-  
+
   virtual FlightPlan::Delegate* createFlightPlanDelegate(FlightPlan* fp)
   {
     naRef args[1];
     naContext ctx = naNewContext();
     args[0] = ghostForFlightPlan(ctx, fp);
     naRef instance = _nasal->call(_func, 1, args, naNil());
-    
+
       FlightPlan::Delegate* result = NULL;
       if (!naIsNil(instance)) {
           // will GC-save instance
           result = new NasalFPDelegate(fp, _nasal, instance);
       }
-      
+
       naFreeContext(ctx);
       return result;
   }
@@ -2178,7 +2191,6 @@ static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
   if ((argc < 1) || !naIsFunc(args[0])) {
     naRuntimeError(c, "non-function argument to registerFlightPlanDelegate");
   }
-  
   NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0]);
   FlightPlan::registerDelegateFactory(factory);
     static_nasalDelegateFactories.push_back(factory);
@@ -2191,20 +2203,20 @@ static WayptRef wayptFromArg(naRef arg)
   if (r.valid()) {
     return r;
   }
-  
+
   FGPositioned* pos = positionedGhost(arg);
   if (!pos) {
     // let's check if the arg is hash, coudl extra a geod and hence build
     // a simple waypoint
-    
+
     return WayptRef();
   }
-  
+
 // special-case for runways
   if (pos->type() == FGPositioned::RUNWAY) {
     return new RunwayWaypt((FGRunway*) pos, NULL);
   }
-  
+
   return new NavaidWaypoint(pos, NULL);
 }
 
@@ -2222,29 +2234,29 @@ static naRef f_airwaySearch(naContext c, naRef me, int argc, naRef* args)
   if (argc < 2) {
     naRuntimeError(c, "airwaysSearch needs at least two arguments");
   }
-  
-  WayptRef start = wayptFromArg(args[0]), 
+
+  WayptRef start = wayptFromArg(args[0]),
     end = wayptFromArg(args[1]);
-  
+
   if (!start || !end) {
     SG_LOG(SG_NASAL, SG_WARN, "airwaysSearch: start or end points are invalid");
     return naNil();
   }
-  
+
   bool highLevel = true;
   if ((argc > 2) && naIsString(args[2])) {
     if (!strcmp(naStr_data(args[2]), "lowlevel")) {
       highLevel = false;
     }
   }
-  
+
   WayptVec route;
   if (highLevel) {
     Airway::highLevel()->route(start, end, route);
   } else {
     Airway::lowLevel()->route(start, end, route);
   }
-  
+
   return convertWayptVecToNasal(c, route);
 }
 
@@ -2252,24 +2264,24 @@ static naRef f_createWP(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod pos;
   int argOffset = geodFromArgs(args, 0, argc, pos);
-  
+
   if (((argc - argOffset) < 1) || !naIsString(args[argOffset])) {
     naRuntimeError(c, "createWP: no identifier supplied");
   }
-    
+
   std::string ident = naStr_data(args[argOffset++]);
   WayptRef wpt = new BasicWaypt(pos, ident, NULL);
-  
+
 // set waypt flags - approach, departure, pseudo, etc
   if (argc > argOffset) {
     WayptFlag f = wayptFlagFromString(naStr_data(args[argOffset++]));
     if (f == 0) {
       naRuntimeError(c, "createWP: bad waypoint role");
     }
-      
+
     wpt->setFlag(f);
   }
-  
+
   return ghostForWaypt(c, wpt);
 }
 
@@ -2278,12 +2290,12 @@ static naRef f_createWPFrom(naContext c, naRef me, int argc, naRef* args)
   if (argc < 1) {
     naRuntimeError(c, "createWPFrom: need at least one argument");
   }
-  
+
   FGPositioned* positioned = positionedGhost(args[0]);
   if (!positioned) {
     naRuntimeError(c, "createWPFrom: couldn't convert arg[0] to FGPositioned");
   }
-  
+
   WayptRef wpt;
   if (positioned->type() == FGPositioned::RUNWAY) {
     wpt = new RunwayWaypt((FGRunway*) positioned, NULL);
@@ -2299,7 +2311,7 @@ static naRef f_createWPFrom(naContext c, naRef me, int argc, naRef* args)
     }
     wpt->setFlag(f);
   }
-  
+
   return ghostForWaypt(c, wpt);
 }
 
@@ -2357,11 +2369,11 @@ static naRef f_flightplan_getWP(naContext c, naRef me, int argc, naRef* args)
   } else {
     index = (int) naNumValue(args[0]).num;
   }
-  
+
   if ((index < 0) || (index >= fp->numLegs())) {
     return naNil();
   }
-  
+
   return ghostForLeg(c, fp->legAtIndex(index));
 }
 
@@ -2398,7 +2410,7 @@ static naRef f_flightplan_appendWP(naContext c, naRef me, int argc, naRef* args)
   if (!fp) {
     naRuntimeError(c, "flightplan.appendWP called on non-flightplan object");
   }
-  
+
   WayptRef wp = wayptGhost(args[0]);
   int index = fp->numLegs();
   fp->insertWayptAtIndex(wp.get(), index);
@@ -2411,13 +2423,13 @@ static naRef f_flightplan_insertWP(naContext c, naRef me, int argc, naRef* args)
   if (!fp) {
     naRuntimeError(c, "flightplan.insertWP called on non-flightplan object");
   }
-  
+
   WayptRef wp = wayptGhost(args[0]);
   int index = -1; // append
   if ((argc > 1) && naIsNum(args[1])) {
     index = (int) args[1].num;
   }
-  
+
   auto leg = fp->insertWayptAtIndex(wp.get(), index);
   return ghostForLeg(c, leg);
 }
@@ -2428,13 +2440,13 @@ static naRef f_flightplan_insertWPAfter(naContext c, naRef me, int argc, naRef* 
   if (!fp) {
     naRuntimeError(c, "flightplan.insertWPAfter called on non-flightplan object");
   }
-  
+
   WayptRef wp = wayptGhost(args[0]);
   int index = -1; // append
   if ((argc > 1) && naIsNum(args[1])) {
     index = (int) args[1].num;
   }
-  
+
   auto leg = fp->insertWayptAtIndex(wp.get(), index + 1);
   return ghostForLeg(c, leg);
 }
@@ -2445,7 +2457,7 @@ static naRef f_flightplan_insertWaypoints(naContext c, naRef me, int argc, naRef
   if (!fp) {
     naRuntimeError(c, "flightplan.insertWaypoints called on non-flightplan object");
   }
-  
+
   WayptVec wps;
   if (!naIsVector(args[0])) {
     naRuntimeError(c, "flightplan.insertWaypoints expects vector as first arg");
@@ -2458,7 +2470,7 @@ static naRef f_flightplan_insertWaypoints(naContext c, naRef me, int argc, naRef
       wps.push_back(wp);
     }
   }
-  
+
   int index = -1; // append
   if ((argc > 1) && naIsNum(args[1])) {
     index = (int) args[1].num;
@@ -2474,11 +2486,11 @@ static naRef f_flightplan_deleteWP(naContext c, naRef me, int argc, naRef* args)
   if (!fp) {
     naRuntimeError(c, "flightplan.deleteWP called on non-flightplan object");
   }
-  
+
   if ((argc < 1) || !naIsNum(args[0])) {
     naRuntimeError(c, "bad argument to flightplan.deleteWP");
   }
-  
+
   int index = (int) args[0].num;
   fp->deleteIndex(index);
   return naNil();
@@ -2490,7 +2502,7 @@ static naRef f_flightplan_clearPlan(naContext c, naRef me, int argc, naRef* args
   if (!fp) {
     naRuntimeError(c, "flightplan.clearPlan called on non-flightplan object");
   }
-  
+
   fp->clear();
   return naNil();
 }
@@ -2501,16 +2513,16 @@ static naRef f_flightplan_clearWPType(naContext c, naRef me, int argc, naRef* ar
   if (!fp) {
     naRuntimeError(c, "flightplan.clearWPType called on non-flightplan object");
   }
-  
+
   if (argc < 1) {
     naRuntimeError(c, "insufficent args to flightplan.clearWPType");
   }
-  
+
   WayptFlag flag = wayptFlagFromString(naStr_data(args[0]));
   if (flag == 0) {
     naRuntimeError(c, "clearWPType: bad waypoint role");
   }
-    
+
   fp->clearWayptsWithFlag(flag);
   return naNil();
 }
@@ -2521,7 +2533,7 @@ static naRef f_flightplan_clone(naContext c, naRef me, int argc, naRef* args)
   if (!fp) {
     naRuntimeError(c, "flightplan.clone called on non-flightplan object");
   }
-  
+
   return ghostForFlightPlan(c, fp->clone());
 }
 
@@ -2555,7 +2567,7 @@ static naRef f_flightplan_finish(naContext c, naRef me, int argc, naRef* args)
     if (!fp) {
         naRuntimeError(c, "flightplan.finish called on non-flightplan object");
     }
-    
+
     fp->finish();
     return naNil();
 }
@@ -2578,18 +2590,18 @@ static naRef f_flightplan_indexOfWp(naContext c, naRef me, int argc, naRef* args
   if (!fp) {
     naRuntimeError(c, "flightplan.indexOfWP called on non-flightplan object");
   }
-  
+
   FGPositioned* positioned = positionedGhost(args[0]);
   if (positioned) {
     return naNum(fp->findWayptIndex(positioned));
   }
-  
+
   FlightPlan::Leg* leg = fpLegGhost(args[0]);
   if (leg) {
     if (leg->owner() == fp) {
       return naNum(leg->index());
     }
-    
+
     naRuntimeError(c, "flightplan.indexOfWP called on leg from different flightplan");
   }
 
@@ -2608,17 +2620,17 @@ static naRef f_flightplan_save(naContext c, naRef me, int argc, naRef* args)
   if (!fp) {
     naRuntimeError(c, "save called on non-flightplan object");
   }
-  
+
   if ((argc < 1) || !naIsString(args[0])) {
     naRuntimeError(c, "flightplan.save, no file path argument");
   }
-  
+
   SGPath raw_path(naStr_data(args[0]));
   SGPath validated_path = fgValidatePath(raw_path, true);
   if (validated_path.isNull()) {
     naRuntimeError(c, "flightplan.save, writing to path is not permitted");
   }
-  
+
   bool ok = fp->save(validated_path);
   return naNum(ok);
 }
@@ -2629,7 +2641,7 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
   if (!leg) {
     naRuntimeError(c, "leg.setSpeed called on non-flightplan-leg object");
   }
-  
+
   double speed = 0.0;
   RouteRestriction rr = RESTRICT_AT;
   if (argc > 0) {
@@ -2643,12 +2655,12 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "bad arguments to setSpeed");
       }
     }
-    
+
     leg->setSpeed(rr, speed);
   } else {
       naRuntimeError(c, "bad arguments to setSpeed");
   }
-  
+
   return naNil();
 }
 
@@ -2658,7 +2670,7 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
   if (!leg) {
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
-  
+
   double altitude = 0.0;
   RouteRestriction rr = RESTRICT_AT;
   if (argc > 0) {
@@ -2672,12 +2684,12 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "bad arguments to leg.setAltitude");
       }
     }
-    
+
     leg->setAltitude(rr, altitude);
   } else {
       naRuntimeError(c, "bad arguments to setleg.setAltitude");
   }
-    
+
   return naNil();
 }
 
@@ -2687,7 +2699,7 @@ static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
   if (!leg) {
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
-  
+
   RoutePath path(leg->owner());
   SGGeodVec gv(path.pathForIndex(leg->index()));
 
@@ -2709,15 +2721,15 @@ static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef*
     if (!leg) {
         naRuntimeError(c, "leg.courseAndDistanceFrom called on non-flightplan-leg object");
     }
-    
+
     SGGeod pos;
     geodFromArgs(args, 0, argc, pos);
-  
+
     RoutePath path(leg->owner());
     SGGeod wpPos = path.positionForIndex(leg->index());
     double courseDeg, az2, distanceM;
     SGGeodesy::inverse(pos, wpPos, courseDeg, az2, distanceM);
-  
+
     naRef result = naNewVector(c);
     naVec_append(result, naNum(courseDeg));
     naVec_append(result, naNum(distanceM * SG_METER_TO_NM));
@@ -2730,14 +2742,14 @@ static naRef f_procedure_transition(naContext c, naRef me, int argc, naRef* args
   if (!proc) {
     naRuntimeError(c, "procedure.transition called on non-procedure object");
   }
-  
+
   if ((proc->type() != PROCEDURE_SID) && (proc->type() != PROCEDURE_STAR)) {
     naRuntimeError(c, "procedure.transition called on non-SID or -STAR");
   }
-  
+
   ArrivalDeparture* ad = (ArrivalDeparture*) proc;
   Transition* trans = ad->findTransitionByName(naStr_data(args[0]));
-  
+
   return ghostForProcedure(c, trans);
 }
 
@@ -2747,7 +2759,7 @@ static naRef f_procedure_route(naContext c, naRef me, int argc, naRef* args)
   if (!proc) {
     naRuntimeError(c, "procedure.route called on non-procedure object");
   }
-  
+
 // wrapping up tow different routines here - approach routing from the IAF
 // to the associated runway, and SID/STAR routing via an enroute transition
 // and possibly a runway transition or not.
@@ -2756,35 +2768,35 @@ static naRef f_procedure_route(naContext c, naRef me, int argc, naRef* args)
     if (argc > 0) {
       iaf = wayptFromArg(args[0]);
     }
-    
+
     WayptVec r;
     Approach* app = (Approach*) proc;
     if (!app->route(iaf, r)) {
       return naNil();
     }
-    
+
     return convertWayptVecToNasal(c, r);
   } else if ((proc->type() != PROCEDURE_SID) && (proc->type() != PROCEDURE_STAR)) {
     naRuntimeError(c, "procedure.route called on unsuitable procedure type");
   }
-  
+
   int argOffset = 0;
   FGRunway* rwy = runwayGhost(args[0]);
   if (rwy) ++argOffset;
-  
+
   ArrivalDeparture* ad = (ArrivalDeparture*) proc;
   Transition* trans = NULL;
   if (argOffset < argc) {
     trans = (Transition*) procedureGhost(args[argOffset]);
   }
-  
+
   // note either runway or trans may be NULL - that's ok
   WayptVec r;
   if (!ad->route(rwy, trans, r)) {
-    SG_LOG(SG_NASAL, SG_WARN, "prcoedure.route failed for ArrvialDeparture somehow");
+    SG_LOG(SG_NASAL, SG_WARN, "procedure.route failed for ArrivalDeparture somehow");
     return naNil();
   }
-  
+
   return convertWayptVecToNasal(c, r);
 }
 
@@ -2828,7 +2840,7 @@ naRef initNasalPositioned(naRef globals, naContext c)
 {
     airportPrototype = naNewHash(c);
     naSave(c, airportPrototype);
-  
+
     hashset(c, airportPrototype, "runway", naNewFunc(c, naNewCCode(c, f_airport_runway)));
     hashset(c, airportPrototype, "runwaysWithoutReciprocals", naNewFunc(c, naNewCCode(c, f_airport_runwaysWithoutReciprocals)));
     hashset(c, airportPrototype, "helipad", naNewFunc(c, naNewCCode(c, f_airport_runway)));
@@ -2843,22 +2855,22 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, airportPrototype, "getIAP", naNewFunc(c, naNewCCode(c, f_airport_getApproach)));
     hashset(c, airportPrototype, "findBestRunwayForPos", naNewFunc(c, naNewCCode(c, f_airport_findBestRunway)));
     hashset(c, airportPrototype, "tostring", naNewFunc(c, naNewCCode(c, f_airport_toString)));
-  
+
     flightplanPrototype = naNewHash(c);
     naSave(c, flightplanPrototype);
-      
+
     hashset(c, flightplanPrototype, "getWP", naNewFunc(c, naNewCCode(c, f_flightplan_getWP)));
-    hashset(c, flightplanPrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_flightplan_currentWP))); 
-    hashset(c, flightplanPrototype, "nextWP", naNewFunc(c, naNewCCode(c, f_flightplan_nextWP))); 
+    hashset(c, flightplanPrototype, "currentWP", naNewFunc(c, naNewCCode(c, f_flightplan_currentWP)));
+    hashset(c, flightplanPrototype, "nextWP", naNewFunc(c, naNewCCode(c, f_flightplan_nextWP)));
     hashset(c, flightplanPrototype, "getPlanSize", naNewFunc(c, naNewCCode(c, f_flightplan_numWaypoints)));
-    hashset(c, flightplanPrototype, "appendWP", naNewFunc(c, naNewCCode(c, f_flightplan_appendWP))); 
-    hashset(c, flightplanPrototype, "insertWP", naNewFunc(c, naNewCCode(c, f_flightplan_insertWP))); 
-    hashset(c, flightplanPrototype, "deleteWP", naNewFunc(c, naNewCCode(c, f_flightplan_deleteWP))); 
-    hashset(c, flightplanPrototype, "insertWPAfter", naNewFunc(c, naNewCCode(c, f_flightplan_insertWPAfter))); 
-    hashset(c, flightplanPrototype, "insertWaypoints", naNewFunc(c, naNewCCode(c, f_flightplan_insertWaypoints))); 
-    hashset(c, flightplanPrototype, "cleanPlan", naNewFunc(c, naNewCCode(c, f_flightplan_clearPlan))); 
-    hashset(c, flightplanPrototype, "clearWPType", naNewFunc(c, naNewCCode(c, f_flightplan_clearWPType))); 
-    hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone))); 
+    hashset(c, flightplanPrototype, "appendWP", naNewFunc(c, naNewCCode(c, f_flightplan_appendWP)));
+    hashset(c, flightplanPrototype, "insertWP", naNewFunc(c, naNewCCode(c, f_flightplan_insertWP)));
+    hashset(c, flightplanPrototype, "deleteWP", naNewFunc(c, naNewCCode(c, f_flightplan_deleteWP)));
+    hashset(c, flightplanPrototype, "insertWPAfter", naNewFunc(c, naNewCCode(c, f_flightplan_insertWPAfter)));
+    hashset(c, flightplanPrototype, "insertWaypoints", naNewFunc(c, naNewCCode(c, f_flightplan_insertWaypoints)));
+    hashset(c, flightplanPrototype, "cleanPlan", naNewFunc(c, naNewCCode(c, f_flightplan_clearPlan)));
+    hashset(c, flightplanPrototype, "clearWPType", naNewFunc(c, naNewCCode(c, f_flightplan_clearWPType)));
+    hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone)));
     hashset(c, flightplanPrototype, "pathGeod", naNewFunc(c, naNewCCode(c, f_flightplan_pathGeod)));
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
     hashset(c, flightplanPrototype, "activate", naNewFunc(c, naNewCCode(c, f_flightplan_activate)));
@@ -2870,19 +2882,19 @@ naRef initNasalPositioned(naRef globals, naContext c)
     naSave(c, procedurePrototype);
     hashset(c, procedurePrototype, "transition", naNewFunc(c, naNewCCode(c, f_procedure_transition)));
     hashset(c, procedurePrototype, "route", naNewFunc(c, naNewCCode(c, f_procedure_route)));
-  
+
     fpLegPrototype = naNewHash(c);
     naSave(c, fpLegPrototype);
     hashset(c, fpLegPrototype, "setSpeed", naNewFunc(c, naNewCCode(c, f_leg_setSpeed)));
     hashset(c, fpLegPrototype, "setAltitude", naNewFunc(c, naNewCCode(c, f_leg_setAltitude)));
     hashset(c, fpLegPrototype, "path", naNewFunc(c, naNewCCode(c, f_leg_path)));
     hashset(c, fpLegPrototype, "courseAndDistanceFrom", naNewFunc(c, naNewCCode(c, f_leg_courseAndDistanceFrom)));
-  
+
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
       naNewFunc(c, naNewCCode(c, funcs[i].func)));
     }
-  
+
   return naNil();
 }
 
@@ -2893,8 +2905,6 @@ void postinitNasalPositioned(naRef globals, naContext c)
     SG_LOG(SG_GENERAL, SG_WARN, "postinitNasalPositioned: geo.nas not loaded");
     return;
   }
-  
+
   geoCoordClass = naHash_cget(geoModule, (char*) "Coord");
 }
-
-
