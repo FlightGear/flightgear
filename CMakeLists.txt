@@ -464,7 +464,12 @@ if(CMAKE_COMPILER_IS_GNUCXX)
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     endif()
 
-    if(ENABLE_SIMD)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      set(CMAKE_C_FLAGS
+        "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline")
+      set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline")
+    elseif (ENABLE_SIMD)
       if (X86 OR X86_64)
         set(CMAKE_C_FLAGS_RELEASE "-O3 -msse2 -mfpmath=sse")
         set(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse2 -mfpmath=sse")
@@ -482,7 +487,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
      endif()
 
-     if(ENABLE_SIMD)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      set(CMAKE_C_FLAGS
+        "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
+      set(CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
+    endif()
+
+    if (ENABLE_SIMD)
       if (X86 OR X86_64)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3 -mfpmath=sse")
       endif()
