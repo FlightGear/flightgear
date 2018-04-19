@@ -51,11 +51,11 @@ Subsystems
 To add a new subsystem you would have to create a derived class from
 SGSubsystem and define at least a small set of functions:
 
-    class FGFX : public SGSubsystem
+    class FGSubsystemExample : public SGSubsystem
     {
     public:
-        FGFX();
-        virtual ~FGFX();
+        FGSubsystemExample();
+        virtual ~FGSubsystemExample();
 
         // Subsystem API.
         void bind() override;
@@ -65,7 +65,7 @@ SGSubsystem and define at least a small set of functions:
         void update(double dt) override;
 
         // Subsystem identification.
-        static const char* subsystemName() { return "fx"; }
+        static const char* subsystemName() { return "subsystem-example"; }
     };
 
 The init() functions should make sure everything is set and ready so the
@@ -76,7 +76,7 @@ The bind() and unbind() functions can be used to tie and untie properties.
 
 After that you can register this class at the subsystem manager:
 
-    globals->add_subsystem("fx", new FGFX);
+    globals->add_subsystem("example", new FGSubsystemExample);
 
 Now the subsystem manager calls the update() function of this class every
 frame. dt is the time (in seconds) elapsed since the last call.
