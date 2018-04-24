@@ -384,13 +384,13 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
         aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
         globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
         if (aiAircraft->_getProps()) {
-            SGPropertyNode *nodeofaircraft = aiAircraft->_getProps();
+            SGPropertyNode *nodeForAircraft = aiAircraft->_getProps();
             if (dep) {
-                nodeofaircraft->getChild("departureairport", 0, true)->setStringValue(dep->getId());
-                nodeofaircraft->getChild("departuretime", 0, true)->setIntValue(deptime);
+                nodeForAircraft->getChild("departure-airport-id", 0, true)->setStringValue(dep->getId());
+                nodeForAircraft->getChild("departure-time-sec", 0, true)->setIntValue(deptime);
             }
             if (arr) {
-                nodeofaircraft->getChild("arrivalairport", 0, true)->setStringValue(arr->getId());                        
+                nodeForAircraft->getChild("arrival-airport-id", 0, true)->setStringValue(arr->getId());                        
 		// arrival time not known here
             }
         }
