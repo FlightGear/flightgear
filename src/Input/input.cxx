@@ -89,7 +89,7 @@ FGInput::FGInput ()
     set_subsystem( "input-event", new INPUTEVENT_CLASS() );
   }
 #endif
-    
+
 #if defined(ENABLE_HID_INPUT) && defined(WITH_EVENTINPUT)
   if (fgGetBool("/sim/input/no-hid-input", false)) {
     SG_LOG(SG_INPUT, SG_WARN, "HID-based event input disabled");
@@ -103,4 +103,3 @@ FGInput::~FGInput ()
 {
   // SGSubsystemGroup deletes all subsystem in it's destructor
 }
-

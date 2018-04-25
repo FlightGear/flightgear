@@ -57,10 +57,10 @@ namespace HID
         // PID 0x0f
         Unicode = 0x10,
         AlphanumericDisplay = 0x14,
-        
+
         VendorDefinedStart = 0xFF00
     };
-    
+
     enum GenericDesktopUsage
     {
         // generic desktop section
@@ -84,7 +84,7 @@ namespace HID
         GD_DpadRight,
         GD_DpadLeft
     };
-    
+
     enum LEDUsage
     {
         LED_Undefined = 0,
@@ -92,7 +92,7 @@ namespace HID
         LED_Pause = 0x37,
         LED_GenericIndicator = 0x4B
     };
-    
+
     enum AlphanumericUsage
     {
         AD_AlphanumericDisplay = 0x01,
@@ -105,17 +105,23 @@ namespace HID
         AD_DisplayBrightness = 0x46,
         AD_DisplayContrast = 0x47
     };
-    
+
     enum class ReportType
     {
         In = 0x08,
         Out = 0x09,
         Feature = 0x0B
     };
-    
+
     std::string nameForUsage(uint32_t usagePage, uint32_t usage)
     {
         const auto enumUsage = static_cast<UsagePage>(usagePage);
+        if (enumUsage == UsagePage::Undefined) {
+          std::stringstream os;
+          os << "undefined-" << usage;
+          return os.str();
+        }
+
         if (enumUsage == UsagePage::GenericDesktop) {
             switch (usage) {
                 case GD_Joystick:          return "joystick";
@@ -148,7 +154,7 @@ namespace HID
                 case AD_CharacterReport:           return "character-report";
                 case AD_DisplayData:               return "display-data";
                 case AD_DisplayBrightness:         return "display-brightness";
-                    
+
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID alphanumeric usage:" << usage);
             }
@@ -158,7 +164,7 @@ namespace HID
                 case LED_Pause:                    return "led-pause";
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID LED usage:" << usage);
-                    
+
             }
         } else if (enumUsage == UsagePage::Button) {
             std::stringstream os;
@@ -170,10 +176,10 @@ namespace HID
             SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID usage page:" << std::hex << usagePage
                    << " with usage " << std::hex << usage);
         }
-        
+
         return "unknown";
     }
-    
+
     bool shouldPrefixWithAbs(uint32_t usagePage, uint32_t usage)
     {
         const auto enumUsage = static_cast<UsagePage>(usagePage);
@@ -194,7 +200,7 @@ namespace HID
                 break;
             }
         }
-        
+
         return false;
     }
 
@@ -203,7 +209,7 @@ namespace HID
 class FGHIDEventInput::FGHIDEventInputPrivate
 {
 public:
-    FGHIDEventInput* p = nullptr;    
+    FGHIDEventInput* p = nullptr;
 
     void evaluateDevice(hid_device_info* deviceInfo);
 };
@@ -211,7 +217,7 @@ public:
 // anonymous namespace to define our device subclass
 namespace
 {
-    
+
 class FGHIDDevice : public FGInputDevice {
 public:
     FGHIDDevice(hid_device_info* devInfo,
@@ -221,7 +227,7 @@ public:
 
     bool Open() override;
     void Close() override;
-    
+
     void update(double dt) override;
     const char *TranslateEventName(FGEventData &eventData) override;
     void Send( const char * eventName, double value ) override;
@@ -235,7 +241,7 @@ public:
             bitOffset(offset),
             bitSize(size)
         {}
-        
+
         std::string name;
         uint32_t bitOffset = 0; // form the start of the report
         uint8_t bitSize = 1;
@@ -252,11 +258,11 @@ private:
     {
     public:
         Report(HID::ReportType ty, uint8_t n = 0) : type(ty), number(n) {}
-        
+
         HID::ReportType type;
         uint8_t number = 0;
         std::vector<Item*> items;
-        
+
         uint32_t currentBitSize() const
         {
             uint32_t size = 0;
@@ -266,31 +272,31 @@ private:
             return size;
         }
     };
-    
+
     void scanCollection(hid_item* collection);
     void scanItem(hid_item* item);
-    
+
     Report* getReport(HID::ReportType ty, uint8_t number, bool doCreate = false);
-    
+
     void sendReport(Report* report) const;
-    
+
     uint8_t countWithName(const std::string& name) const;
     std::pair<Report*, Item*> itemWithName(const std::string& name) const;
 
     void processInputReport(Report* report, unsigned char* data, size_t length,
                             double dt, int keyModifiers);
-    
+
     int maybeSignExtend(Item* item, int inValue);
-    
+
     std::vector<Report*> _reports;
     std::string _hidPath;
     hid_device* _device = nullptr;
     bool _haveNumberedReports = false;
-    
+
     // all sets which will be send on the next update() call.
     std::set<Report*> _dirtyReports;
 };
-    
+
 class HIDEventData : public FGEventData
 {
 public:
@@ -304,39 +310,40 @@ public:
 
     FGHIDDevice::Item* item = nullptr;
 };
-    
+
 FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
 {
     _hidPath = devInfo->path;
-    
+
     std::wstring manufactuerName = std::wstring(devInfo->manufacturer_string),
         productName = std::wstring(devInfo->product_string);
     const auto serial = devInfo->serial_number;
-    
+
     SetName(simgear::strutils::convertWStringToUtf8(manufactuerName) + " " +
             simgear::strutils::convertWStringToUtf8(productName));
-    
+
     // every device so far encountered returns a blank serial number, so we
     // fall back to the device path to disambiguate.
     std::string path(devInfo->path);
     if ((serial == nullptr) || std::wcslen(serial) == 0) {
         // use device path to disambiguate
         if (!path.empty()) {
-            SG_LOG(SG_INPUT, SG_INFO, "Missing serial on device, using path: " << path);
+            SG_LOG(SG_INPUT, SG_INFO, "Missing serial on device '" <<
+            simgear::strutils::convertWStringToUtf8(productName) << "', using path: " << path);
             SetSerialNumber(path);
         }
     } else {
         SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
     }
 }
-    
+
 FGHIDDevice::~FGHIDDevice()
 {
     if (_device) {
         hid_close(_device);
     }
 }
-    
+
 bool FGHIDDevice::Open()
 {
     _device = hid_open_path(_hidPath.c_str());
@@ -344,32 +351,32 @@ bool FGHIDDevice::Open()
         SG_LOG(SG_INPUT, SG_WARN, "HID: Failed to open:" << _hidPath);
         return false;
     }
-    
+
     unsigned char reportDescriptor[1024];
     int descriptorSize = hid_get_descriptor(_device, reportDescriptor, 1024);
-    
+
     hid_item* rootItem = nullptr;
     hid_parse_reportdesc(reportDescriptor, descriptorSize, &rootItem);
-    
+
     scanCollection(rootItem);
-    
+
     hid_free_reportdesc(rootItem);
-    
+
     for (auto& v : handledEvents) {
         auto reportItem = itemWithName(v.first);
         if (!reportItem.second) {
             SG_LOG(SG_INPUT, SG_WARN, "HID device has no element for event:" << v.first);
             continue;
         }
-        
+
         FGInputEvent_ptr event = v.second;
        // SG_LOG(SG_INPUT, SG_INFO, "found item for event:" << v.first);
         reportItem.second->event = event;
     }
-    
+
     return true;
 }
-    
+
 void FGHIDDevice::scanCollection(hid_item* c)
 {
     for (hid_item* child = c->collection; child != nullptr; child = child->next) {
@@ -381,19 +388,19 @@ void FGHIDDevice::scanCollection(hid_item* c)
         }
     }
 }
-    
+
 auto FGHIDDevice::getReport(HID::ReportType ty, uint8_t number, bool doCreate) -> Report*
 {
     if (number > 0) {
         _haveNumberedReports = true;
     }
-    
+
     for (auto report : _reports) {
         if ((report->type == ty) && (report->number == number)) {
             return report;
         }
     }
-    
+
     if (doCreate) {
         auto r = new Report{ty, number};
         _reports.push_back(r);
@@ -402,7 +409,7 @@ auto FGHIDDevice::getReport(HID::ReportType ty, uint8_t number, bool doCreate) -
         return nullptr;
     }
 }
-    
+
 auto FGHIDDevice::itemWithName(const std::string& name) const -> std::pair<Report*, Item*>
 {
     for (auto report : _reports) {
@@ -412,15 +419,15 @@ auto FGHIDDevice::itemWithName(const std::string& name) const -> std::pair<Repor
             }
         }
     }
-    
+
     return std::make_pair(static_cast<Report*>(nullptr), static_cast<Item*>(nullptr));
 }
-    
+
 uint8_t FGHIDDevice::countWithName(const std::string& name) const
 {
     uint8_t result = 0;
     size_t nameLength = name.length();
-    
+
     for (auto report : _reports) {
         for (auto item : report->items) {
             if (strncmp(name.c_str(), item->name.c_str(), nameLength) == 0) {
@@ -428,10 +435,10 @@ uint8_t FGHIDDevice::countWithName(const std::string& name) const
             }
         }
     }
-    
+
     return result;
 }
-    
+
 void FGHIDDevice::scanItem(hid_item* item)
 {
     std::string name = HID::nameForUsage(item->usage >> 16, item->usage & 0xffff);
@@ -440,7 +447,7 @@ void FGHIDDevice::scanItem(hid_item* item)
     } else if (HID::shouldPrefixWithAbs(item->usage >> 16, item->usage & 0xffff)) {
         name = "abs-" + name;
     }
-    
+
     const auto ty = static_cast<HID::ReportType>(item->type);
     auto existingItem = itemWithName(name);
     if (existingItem.second) {
@@ -457,7 +464,7 @@ void FGHIDDevice::scanItem(hid_item* item)
             }
         }
     }
-    
+
     // do the count now, after we did any renaming, since we might have
     // N > 1 for the new name
     int existingCount = countWithName(name);
@@ -467,20 +474,20 @@ void FGHIDDevice::scanItem(hid_item* item)
             auto existingItem = itemWithName(name);
             existingItem.second->name += "-0";
         }
-        
+
         // define the new nae
         std::stringstream os;
         os << name << "-" << existingCount;
         name = os.str();
     }
-    
+
     auto report = getReport(ty, item->report_id, true /* create */);
     uint32_t bitOffset = report->currentBitSize();
-    
+
     SG_LOG(SG_INPUT, SG_INFO, "adding item:" << name);
     Item* itemObject = new Item{name, bitOffset, item->report_size};
     itemObject->isRelative = hid_parse_is_relative(item);
-    
+
     SG_LOG(SG_INPUT, SG_INFO, "\t logical min-max:" << item->logical_min << " / " << item->logical_max);
 
     itemObject->doSignExtend = (item->logical_min < 0) || (item->logical_max < 0);
@@ -500,16 +507,16 @@ void FGHIDDevice::update(double dt)
     if (!_device) {
         return;
     }
-    
+
     uint8_t reportBuf[65];
     int readCount = 0;
     while (true) {
         readCount = hid_read_timeout(_device, reportBuf, sizeof(reportBuf), 0);
-    
+
         if (readCount <= 0) {
             break;
         }
-    
+
         int modifiers = fgGetKeyModifiers();
         const uint8_t reportNumber = _haveNumberedReports ? reportBuf[0] : 0;
         auto inputReport = getReport(HID::ReportType::In, reportNumber, false);
@@ -523,11 +530,11 @@ void FGHIDDevice::update(double dt)
     }
 
     FGInputDevice::update(dt);
-    
+
     for (auto rep : _dirtyReports) {
         sendReport(rep);
     }
-    
+
     _dirtyReports.clear();
 }
 
@@ -538,21 +545,21 @@ void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
     size_t offsetInByte = bitOffset & 0x7;
     size_t bitsInByte = std::min(bitSize, 8 - offsetInByte);
     uint8_t mask = 0xff >> (8 - bitsInByte);
-    
+
     *dataByte |= ((value & mask) << offsetInByte);
-    
+
     if (bitsInByte < bitSize) {
         // if we have more bits to write, recurse
         writeBits(bytes, bitOffset + bitsInByte, bitSize - bitsInByte, value >> bitsInByte);
     }
 }
-    
+
 void FGHIDDevice::sendReport(Report* report) const
 {
     if (!_device) {
         return;
     }
-    
+
     uint8_t reportBytes[65];
     size_t reportLength = 0;
     memset(reportBytes, 0, sizeof(reportBytes));
@@ -564,10 +571,10 @@ void FGHIDDevice::sendReport(Report* report) const
         if (item->lastValue == 0) {
             continue;
         }
-        
+
         writeBits(reportBytes + 1, item->bitOffset, item->bitSize, item->lastValue);
     }
-    
+
     reportLength /= 8;
 // send the data, based on th report type
     if (report->type == HID::ReportType::Feature) {
@@ -577,39 +584,39 @@ void FGHIDDevice::sendReport(Report* report) const
         hid_write(_device, reportBytes, reportLength + 1);
     }
 }
-    
+
 int extractBits(uint8_t* bytes, size_t lengthInBytes, size_t bitOffset, size_t bitSize)
 {
     const size_t wholeBytesToSkip = bitOffset >> 3;
     const size_t offsetInByte = bitOffset & 0x7;
-    
+
     // work out how many whole bytes to copy
     const size_t bytesToCopy = std::min(sizeof(uint32_t), (offsetInByte + bitSize + 7) / 8);
     uint32_t v = 0;
     // this goes from byte alignment to word alignment safely
     memcpy((void*) &v, bytes + wholeBytesToSkip, bytesToCopy);
-    
+
     // shift down so lowest bit is aligned
     v = v >> offsetInByte;
-    
+
     // mask off any extraneous top bits
     const uint32_t mask = ~(0xffffffff << bitSize);
     v &= mask;
-    
+
     return v;
 }
-    
+
 int signExtend(int inValue, size_t bitSize)
 {
     const int m = 1U << (bitSize - 1);
     return (inValue ^ m) - m;
 }
-    
+
 int FGHIDDevice::maybeSignExtend(Item* item, int inValue)
 {
     return item->doSignExtend ? signExtend(inValue, item->bitSize) : inValue;
 }
-    
+
 void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      size_t length,
                                      double dt, int keyModifiers)
@@ -625,12 +632,12 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
         SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
     }
 #endif
-    
+
     for (auto item : report->items) {
         int value = extractBits(data, length, item->bitOffset, item->bitSize);
-        
+
         value = maybeSignExtend(item, value);
-        
+
         // suppress events for values that aren't changing
         if (item->isRelative) {
             // supress spurious 0-valued relative events
@@ -643,7 +650,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                 continue;
             }
         }
-        
+
         item->lastValue = value;
         if (!item->event)
             continue;
@@ -654,26 +661,26 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
         HandleEvent(event);
     }
 }
-    
+
 void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& data)
 {
     if (!_device) {
         return;
     }
-    
+
     uint8_t buf[65];
     size_t len = std::min(data.length() + 1, sizeof(buf));
     buf[0] = reportId;
     memcpy(buf + 1, data.data(), len - 1);
     hid_send_feature_report(_device, buf, len);
 }
-    
+
 const char *FGHIDDevice::TranslateEventName(FGEventData &eventData)
 {
     HIDEventData& hidEvent = static_cast<HIDEventData&>(eventData);
     return hidEvent.item->name.c_str();
 }
-    
+
 void FGHIDDevice::Send(const char *eventName, double value)
 {
     auto item = itemWithName(eventName);
@@ -681,17 +688,17 @@ void FGHIDDevice::Send(const char *eventName, double value)
         SG_LOG(SG_INPUT, SG_WARN, "FGHIDDevice: unknown item name:" << eventName);
         return;
     }
-    
+
     int intValue = static_cast<int>(value);
     if (item.second->lastValue == intValue) {
         return; // not actually changing
     }
-    
+
     // update the stored value prior to sending
     item.second->lastValue = intValue;
     _dirtyReports.insert(item.first);
 }
-    
+
 } // of anonymous namespace
 
 FGHIDEventInput::FGHIDEventInput() :
@@ -724,13 +731,13 @@ void FGHIDEventInput::postinit()
     SG_LOG(SG_INPUT, SG_INFO, "HID event input starting up");
 
     hid_init();
-    
+
     hid_device_info* devices = hid_enumerate(0 /* vendor ID */, 0 /* product ID */);
-    
+
     for (hid_device_info* curDev = devices; curDev != nullptr; curDev = curDev->next) {
         d->evaluateDevice(curDev);
     }
-    
+
     hid_free_enumeration(devices);
 }
 
@@ -738,7 +745,7 @@ void FGHIDEventInput::shutdown()
 {
     SG_LOG(SG_INPUT, SG_INFO, "HID event input shutting down");
     FGEventInput::shutdown();
-    
+
     hid_exit();
 }
 
@@ -762,5 +769,3 @@ void FGHIDEventInput::FGHIDEventInputPrivate::evaluateDevice(hid_device_info* de
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
-
