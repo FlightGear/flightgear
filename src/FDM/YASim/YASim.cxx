@@ -218,7 +218,7 @@ void YASim::init()
     }
 
     // Blank the state, and copy in ours
-    State s;
+    yasim::State s;
     model->setState(&s);
     copyToYASim(true);
 
@@ -303,7 +303,7 @@ void YASim::copyToYASim(bool copyState)
                             
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
-    State s;
+    yasim::State s;
     float xyz2ned[9];
     Glue::xyz2nedMat(lat, lon, xyz2ned);
 
@@ -424,7 +424,7 @@ void YASim::copyFromYASim()
 {
     Airplane* airplane = _fdm->getAirplane();
     Model* model = airplane->getModel();
-    State* s = model->getState();
+    yasim::State* s = model->getState();
 
     // position
     double lat, lon, alt;
