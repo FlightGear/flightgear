@@ -358,7 +358,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             }
 
             announcePositionToController();
-            if (fp) {
+            if (fp && props) {
                 props->getChild("arrival-time-sec", 0, true)->setIntValue(fp->getArrivalTime());                
             }
         }
