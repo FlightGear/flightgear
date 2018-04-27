@@ -192,11 +192,13 @@ void Autopilot::bind()
 {
   fgTie( _rootNode->getNode("serviceable", true)->getPath().c_str(), this, 
     &Autopilot::is_serviceable, &Autopilot::set_serviceable );
+  SGSubsystemGroup::bind();
 }
 
 void Autopilot::unbind() 
 {
   _rootNode->untie( "serviceable" );
+  SGSubsystemGroup::unbind();
 }
 
 void Autopilot::add_component( Component * component, double updateInterval )
