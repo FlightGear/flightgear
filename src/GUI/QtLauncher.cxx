@@ -262,6 +262,10 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         // whichever log locations SimGear has configured
         qInstallMessageHandler(simgearMessageOutput);
 
+        // ensure we use desktop OpenGL, don't even fall back to ANGLE, since
+        // this gets into a knot on Optimus setups (since we export the magic
+        // Optimus / AMD symbols in main.cxx).
+        QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
