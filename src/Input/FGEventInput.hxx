@@ -309,6 +309,9 @@ protected:
   FGDeviceConfigurationMap configMap;
 
   SGPropertyNode_ptr nasalClose;
+
+private:
+  std::string computeDeviceIndexName(FGInputDevice *dev) const;
 };
 
 #endif

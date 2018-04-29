@@ -363,6 +363,21 @@ void FGEventInput::update( double dt )
     }
 }
 
+std::string FGEventInput::computeDeviceIndexName(FGInputDevice* dev) const
+{
+    int count = 0;
+    const auto devName = dev->GetName();
+    for (auto it : input_devices) {
+        if (it.second->GetName() == devName) {
+            ++count;
+        }
+    }
+
+    std::ostringstream os;
+    os << devName << "_" << count;
+    return os.str();
+}
+
 unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
 {
   SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
@@ -371,7 +386,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   const string deviceName = inputDevice->GetName();
   SGPropertyNode_ptr configNode;
   
-    // if we have a serial number set, tru using that to select a specfic configuration
+    // if we have a serial number set, try using that to select a specfic configuration
   if (!inputDevice->GetSerialNumber().empty()) {
     const string nameWithSerial = deviceName + "::" + inputDevice->GetSerialNumber();
     if (configMap.hasConfiguration(nameWithSerial)) {
@@ -379,6 +394,16 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
         SG_LOG(SG_INPUT, SG_INFO, "using instance-specific configuration for device "
                << nameWithSerial << " : " << configNode->getStringValue("source"));
     }
+  }
+
+  // try instanced (counted) name
+  if (configNode == nullptr) {
+      const auto nameWithIndex = computeDeviceIndexName(inputDevice);
+      if (configMap.hasConfiguration(nameWithIndex)) {
+          configNode = configMap.configurationForDeviceName(nameWithIndex);
+          SG_LOG(SG_INPUT, SG_INFO, "using instance-specific configuration for device "
+                 << nameWithIndex << " : " << configNode->getStringValue("source"));
+      }
   }
   
     // otherwise try the unmodifed name for the device
