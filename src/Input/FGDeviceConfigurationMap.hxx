@@ -37,6 +37,8 @@
 class FGDeviceConfigurationMap
 {
 public:
+  FGDeviceConfigurationMap();
+
   FGDeviceConfigurationMap ( const std::string& relative_path,
                             SGPropertyNode* nodePath,
                             const std::string& nodeName);
@@ -45,6 +47,7 @@ public:
   SGPropertyNode_ptr configurationForDeviceName(const std::string& name);
   
   bool hasConfiguration(const std::string& name) const;
+
 private:
   void scan_dir(const SGPath & path);
   

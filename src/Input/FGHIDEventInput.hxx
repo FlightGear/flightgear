@@ -35,8 +35,11 @@ public:
   
   void update(double dt) override;
   void init() override;
+  void reinit() override;
   void postinit();
   void shutdown() override;
+
+  static const char* subsystemName() { return "input-hid"; }
 private:
   class FGHIDEventInputPrivate;
   

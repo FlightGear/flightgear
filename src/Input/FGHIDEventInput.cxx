@@ -711,8 +711,18 @@ void FGHIDEventInput::init()
     // requires Nasal to be running
 }
 
+void FGHIDEventInput::reinit()
+{
+    SG_LOG(SG_INPUT, SG_INFO, "Re-Initializing HID input bindings");
+    FGHIDEventInput::shutdown();
+    FGHIDEventInput::init();
+    FGHIDEventInput::postinit();
+}
+
 void FGHIDEventInput::postinit()
 {
+    SG_LOG(SG_INPUT, SG_INFO, "HID event input starting up");
+
     hid_init();
     
     hid_device_info* devices = hid_enumerate(0 /* vendor ID */, 0 /* product ID */);
@@ -726,6 +736,7 @@ void FGHIDEventInput::postinit()
 
 void FGHIDEventInput::shutdown()
 {
+    SG_LOG(SG_INPUT, SG_INFO, "HID event input shutting down");
     FGEventInput::shutdown();
     
     hid_exit();

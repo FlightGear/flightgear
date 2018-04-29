@@ -292,10 +292,10 @@ class FGEventInput : public SGSubsystem,FGCommonInput {
 public:
   FGEventInput();
   virtual ~FGEventInput();
-  virtual void init();
-  virtual void postinit();
-  virtual void update( double dt );
-  virtual void shutdown() override;
+  void init() override;
+  void postinit() override;
+  void update( double dt ) override;
+  void shutdown() override;
 
   const static unsigned MAX_DEVICES = 1000;
   const static unsigned INVALID_DEVICE_INDEX = MAX_DEVICES + 1;

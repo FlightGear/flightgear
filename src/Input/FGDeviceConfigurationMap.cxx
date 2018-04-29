@@ -38,6 +38,11 @@
 using simgear::PropertyList;
 using std::string;
 
+FGDeviceConfigurationMap::FGDeviceConfigurationMap()
+{
+
+}
+
 FGDeviceConfigurationMap::FGDeviceConfigurationMap( const string& relative_path,
                                                    SGPropertyNode* nodePath,
                                                    const std::string& nodeName)

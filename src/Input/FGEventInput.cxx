@@ -327,8 +327,7 @@ void FGInputDevice::SendFeatureReport(unsigned int reportId, const std::string& 
 
 const char * FGEventInput::PROPERTY_ROOT = "/input/event";
 
-FGEventInput::FGEventInput() : 
-  configMap( "Input/Event", fgGetNode(PROPERTY_ROOT, true), "device-named")
+FGEventInput::FGEventInput()
 {
 }
 
@@ -348,6 +347,9 @@ void FGEventInput::shutdown()
 
 void FGEventInput::init( )
 {
+    configMap = FGDeviceConfigurationMap( "Input/Event",
+                                          fgGetNode(PROPERTY_ROOT, true),
+                                          "device-named");
 }
 
 void FGEventInput::postinit ()
