@@ -42,13 +42,14 @@ public:
     FGAIManager();
     virtual ~FGAIManager();
 
-    void init();
-    virtual void shutdown();
-    void postinit();
-    void reinit();
-    void bind();
-    void unbind();
-    void update(double dt);
+    void init() override;
+    void shutdown() override;
+    void postinit() override;
+    void reinit() override;
+    void bind() override;
+    void unbind() override;
+    void update(double dt) override;
+
     void updateLOD(SGPropertyNode* node);
     void attach(FGAIBase *model);
 
