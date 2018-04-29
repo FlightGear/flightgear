@@ -133,11 +133,16 @@ void FGJoystickInput::init()
       SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \"" << name << '"');
       SGPropertyNode_ptr named;
 
-      if (configMap.hasConfiguration(name)) {
+      // allow distinguishing duplicated devices by the name
+      string indexedName = computeDeviceIndexName(name, i);
+      if (configMap.hasConfiguration(indexedName)) {
+          named = configMap.configurationForDeviceName(indexedName);
+          std::string source = named->getStringValue("source", "user defined");
+          SG_LOG(SG_INPUT, SG_INFO, "... found joystick: " << source);
+      } else if (configMap.hasConfiguration(name)) {
         named = configMap.configurationForDeviceName(name);
         std::string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "... found joystick: " << source);
-
       } else if ((named = configMap.configurationForDeviceName("default"))) {
         std::string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "No config found for joystick \"" << name
@@ -152,6 +157,21 @@ void FGJoystickInput::init()
       js_node->setStringValue("id", name);
     }
   }
+}
+
+std::string FGJoystickInput::computeDeviceIndexName(const std::string& name,
+                                                    int lastIndex) const
+{
+    int index = 0;
+    for (int i = 0; i < lastIndex; i++) {
+        if (joysticks[i].plibJS && (joysticks[i].plibJS->getName() == name)) {
+            ++index;
+        }
+    }
+
+    std::ostringstream os;
+    os << name << "_" << index;
+    return os.str();
 }
 
 void FGJoystickInput::reinit() {

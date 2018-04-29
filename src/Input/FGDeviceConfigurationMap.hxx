@@ -54,6 +54,8 @@ private:
   void readCachedData(const SGPath& path);
   void refreshCacheForFile(const SGPath& path);
   
+  std::string computeSuffix(SGPropertyNode_ptr node);
+
   typedef std::map<std::string, SGPropertyNode_ptr> NameNodeMap;
 // dictionary of over-ridden configurations, where the config data
 // was explicitly loaded and shoudl be picked over a file search

@@ -50,7 +50,16 @@ public:
   static const int MAX_JOYSTICK_BUTTONS = 32;
 
 private:
- 
+  /**
+   * @brief computeDeviceIndexName - compute the name including the index, based
+   * on the number of identically named devices. This is used to allow multiple
+   * different files for identical hardware, especially throttles
+   * @param name - the base joystick name
+   * @param lastIndex - don't check names at this index or above. Needed to
+   * ensure we only check as far as the joystick we are currently processing
+   * @return
+   */
+  std::string computeDeviceIndexName(const std::string &name, int lastIndex) const;
     
    void _remove(bool all);
    SGPropertyNode_ptr status_node;
@@ -91,7 +100,7 @@ private:
     
   joystick joysticks[MAX_JOYSTICKS];
   void updateJoystick(int index, joystick* joy, double dt);
-    
+
 };
 
 #endif

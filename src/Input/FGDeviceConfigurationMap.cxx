@@ -49,19 +49,30 @@ FGDeviceConfigurationMap::FGDeviceConfigurationMap( const string& relative_path,
 {
   // scan for over-ride configurations, loaded via joysticks.xml, etc
   for (auto preloaded : nodePath->getChildren(nodeName)) {
-    // allow specifying a serial number in the override
-    std::string serial = preloaded->getStringValue("serial-number");
-    if (!serial.empty()) {
-      serial = "::" + serial;
-    }
-    
+    std::string suffix = computeSuffix(preloaded);
     for (auto nameProp : preloaded->getChildren("name")) {
-      overrideDict[nameProp->getStringValue() + serial] = preloaded;
+      overrideDict[nameProp->getStringValue() + suffix] = preloaded;
     } // of names iteration
   } // of defined overrides iteration
   
   scan_dir( SGPath(globals->get_fg_home(), relative_path));
   scan_dir( SGPath(globals->get_fg_root(), relative_path));
+}
+
+std::string FGDeviceConfigurationMap::computeSuffix(SGPropertyNode_ptr node)
+{
+    if (node->hasChild("serial-number")) {
+        return std::string("::") + node->getStringValue("serial-number");
+    }
+
+    // allow specifying a device number / index in the override
+    if (node->hasChild("device-number")) {
+        std::ostringstream os;
+        os << "_" << node->getIntValue("device-number");
+        return os.str();
+    }
+
+    return{};
 }
 
 FGDeviceConfigurationMap::~FGDeviceConfigurationMap()
@@ -156,14 +167,10 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
     return;
   }
   
-  std::string serial = n->getStringValue("serial-number");
-  if (!serial.empty()) {
-    serial = "::" + serial;
-  }
-  
+  std::string suffix = computeSuffix(n);
   string_list names;
   for (auto nameProp : n->getChildren("name")) {
-    const string name = nameProp->getStringValue() + serial;
+    const string name = nameProp->getStringValue() + suffix;
     names.push_back(name);
     // same comment as readCachedData: only insert if not already present
     if (namePathMap.find(name) == namePathMap.end()) {
