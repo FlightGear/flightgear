@@ -264,6 +264,10 @@ if(EVENT_INPUT)
         if(NOT UDEV_FOUND)
             message(WARNING "UDev not found, event input is disabled!")
             set(EVENT_INPUT 0)
+
+            # HIDraw backend for hidapi also needs UDev, so also force
+            # HID-input to off in this scenario
+            set(ENABLE_HID_INPUT 0)
         else()
             add_definitions(-DWITH_EVENTINPUT)
             set(EVENT_INPUT_LIBRARIES ${UDEV_LIBRARIES})
@@ -281,6 +285,7 @@ if(EVENT_INPUT)
     # Keep PLIB INPUT enabled as long as EventInput does not replace current joystick configurations.
     set(ENABLE_PLIB_JOYSTICK 1)
 else(EVENT_INPUT)
+    message(STATUS "Event-based input disabled by config")
     set(ENABLE_PLIB_JOYSTICK 1)
 endif(EVENT_INPUT)
 
