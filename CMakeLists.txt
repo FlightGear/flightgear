@@ -14,6 +14,14 @@ if(COMMAND cmake_policy)
    if(POLICY CMP0042)
        cmake_policy(SET CMP0042 NEW)
    endif()
+
+    # AUTOMOC/AUTOUIC on generated files policy. Since we only
+    # generate resource files with fgrcc which don't use Qt,
+    # we set those files source property. See the help for this
+    # policy for more info
+    if(POLICY CMP0071)
+        cmake_policy(SET CMP0071 NEW)
+    endif()
 endif()
 
 message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
