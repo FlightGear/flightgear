@@ -27,6 +27,9 @@
 #include <osgUtil/SceneView>
 #include <osgViewer/Viewer>
 
+#include <Canvas/canvas_mgr.hxx>
+#include <simgear/canvas/Canvas.hxx>
+
 #include <simgear/threads/SGQueue.hxx>
 #include <simgear/structure/Singleton.hxx>
 #include <Main/globals.hxx>
@@ -38,6 +41,8 @@
 using std::string;
 using std::vector;
 using std::list;
+
+namespace sc = simgear::canvas;
 
 namespace flightgear {
 namespace http {
@@ -328,6 +333,114 @@ private:
   ScreenshotCallback * _screenshotCallback;
 };
 
+/**
+ */
+class CanvasImageRequest : public ConnectionData, public simgear::canvas::CanvasImageReadyListener, StringReadyListener {
+public:
+    ImageCompressionTask *currenttask=NULL;
+    sc::CanvasPtr canvas;
+    int connected = 0;
+
+    CanvasImageRequest(const string & window, const string & type, int canvasindex, bool stream)
+    : _type(type), _stream(stream) {
+        SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImageRequest:");
+
+        if (NULL == osgDB::Registry::instance()->getReaderWriterForExtension(_type))
+            throw sg_format_exception("Unsupported image type: " + type, type);
+
+        CanvasMgr* canvas_mgr = static_cast<CanvasMgr*> (globals->get_subsystem("Canvas"));
+        if (!canvas_mgr) {
+            SG_LOG(SG_NETWORK, SG_WARN, "CanvasImage:CanvasMgr not found");
+        } else {
+            canvas = canvas_mgr->getCanvas(canvasindex);
+            if (!canvas) {
+                throw sg_error("CanvasImage:Canvas not found for index " + std::to_string(canvasindex));
+            } else {
+                SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImage:Canvas found for index " << canvasindex);
+                //SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImageRequest: found camera " << camera << ", width=" << canvas->getSizeX() << ", height=%d\n" << canvas->getSizeY());
+
+                SGConstPropertyNode_ptr canvasnode = canvas->getProps();
+                if (canvasnode) {
+                    const char *canvasname = canvasnode->getStringValue("name");
+                    if (canvasname) {
+                        SG_LOG(SG_NETWORK, SG_INFO, "CanvasImageRequest: node=" << canvasnode->getDisplayName().c_str() << ", canvasname =" << canvasname);
+                    }
+                }
+                //Looping until success is no option
+                connected = canvas->subscribe(this);
+            }
+        }
+    }
+
+    // Assumption: when unsubscribe returns,there might just be a compressor thread running,
+    // causing a crash when the deconstructor finishes. Rare, but might happen. Just wait to be sure.
+    virtual ~CanvasImageRequest() {
+        if (currenttask){
+            SG_LOG(SG_NETWORK, SG_INFO, "canvasimage task running");
+#ifdef _WIN32
+            Sleep(15000);
+#else
+            sleep(15);
+#endif
+        }
+
+        if (canvas && connected){
+            canvas->unsubscribe(this);
+        }
+    }
+
+    virtual void imageReady(osg::ref_ptr<osg::Image> rawImage) {
+        SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImage:imageReady");
+        // called from a rendering thread, not from the main loop
+        ImageCompressionTask task;
+        currenttask = &task;
+        task.image = rawImage;
+        task.format = _type;
+        task.stringReadyListener = this;
+        ImageCompressorSingleton::instance()->addTask(task);
+    }
+
+    void requestCanvasImage() {
+        connected = canvas->subscribe(this);
+    }
+
+    mutable OpenThreads::Mutex _lock;
+
+    virtual void stringReady(const string & s) {
+        SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImage:stringReady");
+
+        // called from the compressor thread
+        OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_lock);
+        _compressedData = s;
+        // allow destructor
+        currenttask = NULL;
+    }
+
+    string getCanvasImage() {
+        string reply;
+        {
+            // called from the main loop
+            OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_lock);
+            reply = _compressedData;
+            _compressedData.clear();
+        }
+        return reply;
+    }
+
+    bool isStream() const {
+        return _stream;
+    }
+
+    const string & getType() const {
+        return _type;
+    }
+
+private:
+    string _type;
+    bool _stream;
+    string _compressedData;
+};
+
 ScreenshotUriHandler::ScreenshotUriHandler(const char * uri)
     : URIHandler(uri)
 {
@@ -339,7 +452,8 @@ ScreenshotUriHandler::~ScreenshotUriHandler()
   //ImageCompressorSingleton::instance()->join();
 }
 
-const static string KEY("ScreenshotUriHandler::ScreenshotRequest");
+const static string KEY_SCREENSHOT("ScreenshotUriHandler::ScreenshotRequest");
+const static string KEY_CANVASIMAGE("ScreenshotUriHandler::CanvasImageRequest");
 #define BOUNDARY "--fgfs-screenshot-boundary"
 
 bool ScreenshotUriHandler::handleGetRequest(const HTTPRequest & request, HTTPResponse & response, Connection * connection)
@@ -355,10 +469,18 @@ bool ScreenshotUriHandler::handleGetRequest(const HTTPRequest & request, HTTPRes
 
   bool stream = (false == request.RequestVariables.get("stream").empty());
 
+  int canvasindex = -1;
+  string s_canvasindex = request.RequestVariables.get("canvasindex");
+  if (!s_canvasindex.empty()) canvasindex = atoi(s_canvasindex.c_str());
+
   SGSharedPtr<ScreenshotRequest> screenshotRequest;
+  SGSharedPtr<CanvasImageRequest> canvasimageRequest;
   try {
-    SG_LOG(SG_NETWORK, SG_DEBUG, "new ScreenshotRequest("<<window<<","<<type<<"," << stream << ")");
-    screenshotRequest = new ScreenshotRequest(window, type, stream);
+    SG_LOG(SG_NETWORK, SG_DEBUG, "new ScreenshotRequest("<<window<<","<<type<<"," << stream << "," << canvasindex <<")");
+    if (canvasindex == -1)
+        screenshotRequest = new ScreenshotRequest(window, type, stream);
+    else
+        canvasimageRequest = new CanvasImageRequest(window, type, canvasindex, stream);
   }
   catch (sg_format_exception & ex)
   {
@@ -385,43 +507,84 @@ bool ScreenshotUriHandler::handleGetRequest(const HTTPRequest & request, HTTPRes
 
   }
 
-  connection->put(KEY, screenshotRequest);
+  if (canvasindex == -1)
+      connection->put(KEY_SCREENSHOT, screenshotRequest);
+  else
+      connection->put(KEY_CANVASIMAGE, canvasimageRequest);
   return false; // call me again thru poll
 }
 
 bool ScreenshotUriHandler::poll(Connection * connection)
 {
+  SGSharedPtr<ConnectionData> data = connection->get(KEY_SCREENSHOT);
+  if (data) {
+    ScreenshotRequest * screenshotRequest = dynamic_cast<ScreenshotRequest*>(data.get());
+    if ( NULL == screenshotRequest) return true; // Should not happen, kill the connection
 
-  SGSharedPtr<ConnectionData> data = connection->get(KEY);
-  ScreenshotRequest * screenshotRequest = dynamic_cast<ScreenshotRequest*>(data.get());
-  if ( NULL == screenshotRequest) return true; // Should not happen, kill the connection
+    const string & screenshot = screenshotRequest->getScreenshot();
+    if (screenshot.empty()) {
+      SG_LOG(SG_NETWORK, SG_DEBUG, "No screenshot available.");
+      return false; // not ready yet, call again.
+    }
 
-  const string & screenshot = screenshotRequest->getScreenshot();
-  if (screenshot.empty()) {
-    SG_LOG(SG_NETWORK, SG_DEBUG, "No screenshot available.");
-    return false; // not ready yet, call again.
+    SG_LOG(SG_NETWORK, SG_DEBUG, "Screenshot is ready, size=" << screenshot.size());
+
+      if (screenshotRequest->isStream()) {
+        string s( BOUNDARY "\r\nContent-Type: image/");
+        s.append(screenshotRequest->getType()).append("\r\nContent-Length:");
+        s += boost::lexical_cast<string>(screenshot.size());
+        s += "\r\n\r\n";
+        connection->write(s.c_str(), s.length());
+      }
+
+      connection->write(screenshot.data(), screenshot.size());
+
+      if (screenshotRequest->isStream()) {
+        screenshotRequest->requestScreenshot();
+        // continue until user closes connection
+        return false;
+      }
+
+      // single screenshot, send terminating chunk
+      connection->remove(KEY_SCREENSHOT);
+      connection->write("", 0);
+      return true; // done.
+  } // Screenshot
+
+  // CanvasImage
+  data = connection->get(KEY_CANVASIMAGE);
+  CanvasImageRequest * canvasimageRequest = dynamic_cast<CanvasImageRequest*> (data.get());
+  if (NULL == canvasimageRequest) return true; // Should not happen, kill the connection
+
+  if (!canvasimageRequest->connected) {
+      SG_LOG(SG_NETWORK, SG_INFO, "CanvasImageRequest: not connected. Resubscribing");
+      canvasimageRequest->requestCanvasImage();
   }
 
-  SG_LOG(SG_NETWORK, SG_DEBUG, "Screenshot is ready, size=" << screenshot.size());
-
-  if (screenshotRequest->isStream()) {
-    string s( BOUNDARY "\r\nContent-Type: image/");
-    s.append(screenshotRequest->getType()).append("\r\nContent-Length:");
-    s += boost::lexical_cast<string>(screenshot.size());
-    s += "\r\n\r\n";
-    connection->write(s.c_str(), s.length());
+  const string & canvasimage = canvasimageRequest->getCanvasImage();
+  if (canvasimage.empty()) {
+      SG_LOG(SG_NETWORK, SG_INFO, "No canvasimage available.");
+      return false; // not ready yet, call again.
   }
 
-  connection->write(screenshot.data(), screenshot.size());
+  SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImage is ready, size=" << canvasimage.size());
 
-  if (screenshotRequest->isStream()) {
-    screenshotRequest->requestScreenshot();
-    // continue until user closes connection
-    return false;
+  if (canvasimageRequest->isStream()) {
+      string s(BOUNDARY "\r\nContent-Type: image/");
+      s.append(canvasimageRequest->getType()).append("\r\nContent-Length:");
+      s += boost::lexical_cast<string>(canvasimage.size());
+      s += "\r\n\r\n";
+      connection->write(s.c_str(), s.length());
+  }
+  connection->write(canvasimage.data(), canvasimage.size());
+  if (canvasimageRequest->isStream()) {
+      canvasimageRequest->requestCanvasImage();
+      // continue until user closes connection
+      return false;
   }
 
-  // single screenshot, send terminating chunk
-  connection->remove(KEY);
+  // single canvasimage, send terminating chunk
+  connection->remove(KEY_CANVASIMAGE);
   connection->write("", 0);
   return true; // done.
 }
