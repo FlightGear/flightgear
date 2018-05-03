@@ -77,23 +77,8 @@ void jsJoystick::open ()
   ioctl ( os->fd, JSIOCGNAME ( sizeof(name) ), name ) ;
   fcntl ( os->fd, F_SETFL      , O_NONBLOCK   ) ;
 
-  int all_axes = num_axes;
   if ( num_axes > _JS_MAX_AXES )
     num_axes = _JS_MAX_AXES ;
-
-  // Remove any deadband value already done in the kernel.
-  // Since we have our own deadband management this is save to do so.
-  struct js_corr* corr = new js_corr[ all_axes ] ;
-  ioctl ( os->fd, JSIOCGCORR, corr );
-  for ( int i = 0; i < num_axes ; ++i ) {
-    if ( corr[ i ] . type == JS_CORR_BROKEN ) {
-      int nodeadband = ( corr[ i ] . coef[ 0 ] + corr[ i ] . coef[ 1 ] ) / 2 ;
-      corr[ i ] . coef[ 0 ] = nodeadband ;
-      corr[ i ] . coef[ 1 ] = nodeadband ;
-    }
-  }
-  ioctl ( os->fd, JSIOCSCORR, corr );
-  delete [] corr;
 
   for ( int i = 0 ; i < _JS_MAX_AXES ; i++ )
   {
