@@ -174,7 +174,7 @@ public:
     template<class T>
     T* get_subsystem() const
     {
-        return dynamic_cast<T*>(get_subsystem(T::subsystemName()));
+        return dynamic_cast<T*>(get_subsystem(T::staticSubsystemClassId()));
     }
 
 
@@ -190,7 +190,7 @@ public:
                                 double min_time_sec = 0)
     {
         T* sub = new T;
-        add_subsystem(T::subsystemName(), sub, type, min_time_sec);
+        add_subsystem(T::staticSubsystemClassId(), sub, type, min_time_sec);
         return sub;
     }
 

@@ -80,7 +80,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "scenery"; }
+    static const char* staticSubsystemClassId() { return "scenery"; }
 
     /// Compute the elevation of the scenery at geodetic latitude lat,
     /// geodetic longitude lon and not higher than max_alt.

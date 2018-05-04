@@ -44,7 +44,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "nasal"; }
+    static const char* staticSubsystemClassId() { return "nasal"; }
 
     // Loads a nasal script from an external file and inserts it as a
     // global module of the specified name.

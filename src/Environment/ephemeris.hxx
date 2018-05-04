@@ -48,7 +48,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "ephemeris"; }
+    static const char* staticSubsystemClassId() { return "ephemeris"; }
 
     SGEphemeris* data();
 

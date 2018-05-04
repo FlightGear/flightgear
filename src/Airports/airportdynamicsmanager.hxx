@@ -45,7 +45,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "airport-dynamics"; }
+    static const char* staticSubsystemClassId() { return "airport-dynamics"; }
 
     static FGAirportDynamicsRef find(const std::string& icao);
 

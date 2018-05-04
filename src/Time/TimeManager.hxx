@@ -43,7 +43,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "time"; }
+    static const char* staticSubsystemClassId() { return "time"; }
 
     void computeTimeDeltas(double& simDt, double& realDt);
 

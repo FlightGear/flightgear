@@ -45,7 +45,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "sound"; }
+    static const char* staticSubsystemClassId() { return "sound"; }
 
     void activate(bool State);
     void update_device_list();
@@ -81,7 +81,7 @@ public:
     void update(double dt) {} override
 
     // Subsystem identification.
-    static const char* subsystemName() { return "sound"; }
+    static const char* staticSubsystemClassId() { return "sound"; }
 };
 
 #endif // ENABLE_AUDIO_SUPPORT

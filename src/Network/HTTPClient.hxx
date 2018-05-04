@@ -38,7 +38,7 @@ public:
     void update(double) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "http"; }
+    static const char* staticSubsystemClassId() { return "http"; }
 
     void makeRequest(const simgear::HTTP::Request_ptr& req);
 

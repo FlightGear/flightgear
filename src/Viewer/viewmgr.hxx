@@ -59,7 +59,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "view-manager"; }
+    static const char* staticSubsystemClassId() { return "view-manager"; }
 
     // getters
     inline int size() const { return views.size(); }

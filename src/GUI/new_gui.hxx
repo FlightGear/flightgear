@@ -49,7 +49,7 @@ public:
     void update(double delta_time_sec) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "gui"; }
+    static const char* staticSubsystemClassId() { return "gui"; }
 
     /**
      * Redraw the GUI picking up new GUI colors.

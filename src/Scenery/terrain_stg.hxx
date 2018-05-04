@@ -109,7 +109,7 @@ public:
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
     void materialLibChanged();
     
-    static const char* subsystemName() { return "scenery"; }
+    static const char* staticSubsystemClassId() { return "scenery"; }
 
 private:
     // tile manager

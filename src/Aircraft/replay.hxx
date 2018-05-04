@@ -73,7 +73,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "replay"; }
+    static const char* staticSubsystemClassId() { return "replay"; }
 
     bool start(bool NewTape=false);
 

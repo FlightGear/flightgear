@@ -1153,7 +1153,7 @@ void fgStartNewReset()
         SGSubsystemGroup* grp = subsystemManger->get_group(static_cast<SGSubsystemMgr::GroupType>(g));
         for (auto nm : grp->member_names()) {
             if ((nm == "time") || (nm == "terrasync") || (nm == "events")
-                || (nm == "lighting") || (nm == FGScenery::subsystemName()))
+                || (nm == "lighting") || (nm == FGScenery::staticSubsystemClassId()))
             {
                 continue;
             }
@@ -1176,7 +1176,7 @@ void fgStartNewReset()
     
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
-    subsystemManger->remove(FGScenery::subsystemName());
+    subsystemManger->remove(FGScenery::staticSubsystemClassId());
 
     FGScenery::getPagerSingleton()->clearRequests();
     flightgear::CameraGroup::setDefault(NULL);

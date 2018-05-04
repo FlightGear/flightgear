@@ -62,7 +62,7 @@ FGInput::FGInput () : SGSubsystemGroup("FGInput")
   if( fgGetBool("/sim/input/no-mouse-input",false) ) {
     SG_LOG(SG_INPUT,SG_ALERT,"Mouse input disabled!");
   } else {
-    set_subsystem( FGMouseInput::subsystemName(), new FGMouseInput() );
+    set_subsystem( FGMouseInput::staticSubsystemClassId(), new FGMouseInput() );
   }
 
   if( fgGetBool("/sim/input/no-keyboard-input",false) ) {

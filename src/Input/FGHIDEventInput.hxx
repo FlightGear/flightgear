@@ -47,7 +47,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "input-hid"; }
+    static const char* staticSubsystemClassId() { return "input-hid"; }
 
 private:
     class FGHIDEventInputPrivate;

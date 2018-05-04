@@ -38,7 +38,7 @@ public:
     void update(double) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "dns"; }
+    static const char* staticSubsystemClassId() { return "dns"; }
 
     void makeRequest(const simgear::DNS::Request_ptr& req);
 

@@ -53,7 +53,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "route-manager"; }
+    static const char* staticSubsystemClassId() { return "route-manager"; }
 
     bool isRouteActive() const;
 

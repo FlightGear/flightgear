@@ -33,7 +33,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "aircraft-model"; }
+    static const char* staticSubsystemClassId() { return "aircraft-model"; }
 
     virtual SGModelPlacement * get3DModel() { return _aircraft.get(); }
     virtual SGVec3d& getVelocity() { return _velocity; }

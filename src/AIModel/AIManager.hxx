@@ -51,7 +51,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "ai-model"; }
+    static const char* staticSubsystemClassId() { return "ai-model"; }
 
     void updateLOD(SGPropertyNode* node);
     void attach(FGAIBase *model);

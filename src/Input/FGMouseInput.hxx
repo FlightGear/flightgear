@@ -52,7 +52,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "input-mouse"; }
+    static const char* staticSubsystemClassId() { return "input-mouse"; }
 
     void doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea);
     void doMouseMotion (int x, int y, const osgGA::GUIEventAdapter*);

@@ -213,7 +213,7 @@ FGGlobals::~FGGlobals()
     }
 
     osgDB::Registry::instance()->clearObjectCache();
-    subsystem_mgr->remove(FGScenery::subsystemName());
+    subsystem_mgr->remove(FGScenery::staticSubsystemClassId());
 
     // renderer touches subsystems during its destruction
     set_renderer(NULL);

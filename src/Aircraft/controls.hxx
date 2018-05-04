@@ -265,7 +265,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "controls"; }
+    static const char* staticSubsystemClassId() { return "controls"; }
 
     // Reset function
     void reset_all(void);

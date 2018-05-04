@@ -31,7 +31,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "aircraft-performance-db"; }
+    static const char* staticSubsystemClassId() { return "aircraft-performance-db"; }
 
     bool havePerformanceDataForAircraftType(const std::string& acType) const;
 

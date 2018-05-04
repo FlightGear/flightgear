@@ -32,7 +32,7 @@ public:
     void shutdown() override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "Canvas"; }
+    static const char* staticSubsystemClassId() { return "Canvas"; }
 
     /**
      * Get OpenGL texture name for given canvas

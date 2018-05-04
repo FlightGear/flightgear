@@ -62,7 +62,7 @@ public:
     void update(double dt) override;
 
     // Subsystem identification.
-    static const char* subsystemName() { return "model-manager"; }
+    static const char* staticSubsystemClassId() { return "model-manager"; }
 
     virtual void add_model (SGPropertyNode * node);
 
