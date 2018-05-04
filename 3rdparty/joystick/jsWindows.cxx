@@ -27,6 +27,7 @@
 
 #include <cstring>
 #include <RegStr.h> // for REGSTR_PATH_JOYCONFIG, etc
+#include <simgear/debug/logstream.hxx>
 
 #define _JS_MAX_AXES_WIN 8  /* X,Y,Z,R,U,V,POV_X,POV_Y */
 
