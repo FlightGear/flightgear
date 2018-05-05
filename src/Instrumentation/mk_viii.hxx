@@ -1379,6 +1379,9 @@ public:
     void init() override;
     void unbind() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "mk-viii"; }
 };
 
 #ifdef _MSC_VER

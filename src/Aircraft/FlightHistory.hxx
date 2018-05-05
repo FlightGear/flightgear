@@ -63,6 +63,9 @@ public:
     void shutdown() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "history"; }
+
     PagedPathForHistory_ptr pagedPathForHistory(size_t max_entries, size_t newerThan = 0) const;
     /**
      * retrieve the path, collapsing segments shorter than

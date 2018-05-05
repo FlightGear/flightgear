@@ -47,6 +47,9 @@ public:
     void init() override;
     void update(double delta_time_sec) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "adf"; }
+
 private:
     void set_bearing (double delta_time_sec, double bearing);
 

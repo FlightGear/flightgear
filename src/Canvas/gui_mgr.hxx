@@ -44,6 +44,9 @@ public:
     void shutdown() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "CanvasGUI"; }
+
     simgear::canvas::WindowPtr createWindow(const std::string& name = "");
 
     /**

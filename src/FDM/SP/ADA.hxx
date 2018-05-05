@@ -76,6 +76,9 @@ public:
     // Subsystem API.
     void init() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "ada"; }
 };
 
 #endif // _ADA_HXX

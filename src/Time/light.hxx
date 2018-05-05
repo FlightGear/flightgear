@@ -146,6 +146,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "lighting"; }
+
     // Color related functions
 
     inline const SGVec4f& scene_ambient () const { return _scene_ambient; }

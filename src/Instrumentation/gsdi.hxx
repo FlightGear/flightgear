@@ -51,6 +51,9 @@ public:
     void init() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "gsdi"; }
+
 private:
     std::string _name;
     unsigned int _num;

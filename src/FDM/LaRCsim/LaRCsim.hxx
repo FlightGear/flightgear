@@ -52,6 +52,9 @@ public:
     void init() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "larcsim"; }
+
     // copy FDM state to LaRCsim structures
     bool copy_to_LaRCsim();
 

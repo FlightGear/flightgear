@@ -54,6 +54,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "environment"; }
+
     /**
      * Get the environment information for the plane's current position.
      */

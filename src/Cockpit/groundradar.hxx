@@ -41,6 +41,9 @@ class GroundRadar : public SGSubsystem,
                     private FGODGauge
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "groundradar"; }
+
     static const int TextureHalfSize = 256;
     GroundRadar(SGPropertyNode* node);
     virtual ~GroundRadar();

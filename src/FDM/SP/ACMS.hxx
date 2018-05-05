@@ -38,6 +38,9 @@ public:
     void init() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "acms"; }
+
 private:
     SGPropertyNode_ptr _alt, _speed, _climb_rate;
     SGPropertyNode_ptr _pitch, _roll, _heading;

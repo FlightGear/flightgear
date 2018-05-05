@@ -40,6 +40,9 @@ typedef SGSharedPtr<SignalQualityComputer> SignalQualityComputerRef;
 class CommRadio : public AbstractInstrument
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "comm-radio"; }
+
     static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
 };
 

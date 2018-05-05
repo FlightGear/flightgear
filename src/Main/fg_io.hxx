@@ -48,12 +48,16 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "io"; }
+
     /**
      * helper to determine early in startup, if MP will be used.
      * This information is needed in the position-init code, to adjust the
      * start position off active runways.
      */
     static bool isMultiplayerRequested();
+
 private:
     void add_channel(const std::string& config);
     FGProtocol* parse_port_config( const std::string& cfgstr );

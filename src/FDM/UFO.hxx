@@ -67,6 +67,9 @@ public:
     // Subsystem API.
     void init() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "ufo"; }
 };
 
 #endif // _UFO_HXX

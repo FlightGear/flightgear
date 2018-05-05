@@ -73,6 +73,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "marker-beacon"; }
+
     void search ();
 
     // Marker Beacon Accessors

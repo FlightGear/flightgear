@@ -27,6 +27,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "logger"; }
+
 private:
     /**
      * A single instance of a log file (the logger can contain many).

@@ -115,6 +115,9 @@ public:
     void unbind() override;
     void update(double dt_sec) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "KR-87"; }
+
     // Update nav/adf radios based on current postition
     void search ();
 

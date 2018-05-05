@@ -71,6 +71,9 @@ public:
     void unbind() override;
     void update(double delta_time_sec) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "gps"; }
+
     // RNAV interface
     virtual SGGeod position();
     virtual double trackDeg();

@@ -70,6 +70,9 @@ public:
     PIDController();
     ~PIDController() {}
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "pid-controller"; }
+
     void update( bool firstTime, double dt );
 };
 

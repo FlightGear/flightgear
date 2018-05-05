@@ -39,6 +39,9 @@ public:
     void set_output( bool value );
     bool get_output() const;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "logic"; }
+
 protected:
     void update( bool firstTime, double dt );
 };

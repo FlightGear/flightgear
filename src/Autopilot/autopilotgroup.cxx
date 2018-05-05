@@ -53,6 +53,9 @@ public:
     InitStatus incrementalInit() override;
     void reinit() override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "xml-autopilot-group"; }
+
     virtual void addAutopilot( const std::string& name,
                                SGPropertyNode_ptr apNode,
                                SGPropertyNode_ptr config );

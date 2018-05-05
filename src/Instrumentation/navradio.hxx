@@ -178,6 +178,9 @@ public:
     void reinit() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "old-navradio"; }
+
     // Update nav/adf radios based on current postition
     void search ();
     void updateNav();

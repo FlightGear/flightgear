@@ -127,6 +127,9 @@ public:
     void reinit() override;
     void update(double) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "hud"; }
+
     // called from Main/renderer.cxx to draw 2D and 3D HUD
     void draw(osg::State&);
 

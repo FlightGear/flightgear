@@ -31,6 +31,9 @@ public:
     FGSystemMgr ();
     virtual ~FGSystemMgr ();
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "systems"; }
+
     bool build (SGPropertyNode* config_props);
 };
 

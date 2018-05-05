@@ -50,6 +50,9 @@ public:
     void reinit() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "magnetic-compass"; }
+
 private:
     double _rate_degps;
 

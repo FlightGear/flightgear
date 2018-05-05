@@ -41,6 +41,9 @@ public:
     void init() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "air-ground-radar"; }
+
     void setUserPos();
     void setUserVec(double az, double el);
     void update_terrain();

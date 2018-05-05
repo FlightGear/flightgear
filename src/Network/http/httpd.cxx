@@ -185,6 +185,9 @@ public:
     void unbind() override;          // shutdown of mongoose, clear connections, unregister URIHandlers
     void update(double dt) override; // poll connections, check for changed properties
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "mongoose-httpd"; }
+
     /**
      * Returns a URIHandler for the given uri
      *

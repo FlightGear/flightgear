@@ -51,6 +51,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "precipitation"; }
+
     void setupSceneGraph(void);
     void setPrecipitationLevel(double l);
 };

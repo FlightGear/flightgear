@@ -42,6 +42,9 @@ public:
     void reinit() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "vertical-speed-indicator"; }
+
 private:
     double _casing_pressure_Pa = 0.0;
     double _casing_airmass_kg = 0.0;

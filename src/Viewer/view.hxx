@@ -72,6 +72,8 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "view"; }
 
     //////////////////////////////////////////////////////////////////////
     // Part 2: user settings.

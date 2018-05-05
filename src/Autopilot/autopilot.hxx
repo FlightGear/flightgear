@@ -45,6 +45,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "autopilot"; }
+
     void set_serviceable( bool value ) { _serviceable = value; }
     bool is_serviceable() const { return _serviceable; }
 

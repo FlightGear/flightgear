@@ -35,6 +35,9 @@ public:
     void init() override;
     InitStatus incrementalInit() override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "instrumentation"; }
+
 private:
     bool build (SGPropertyNode* config_props);
 

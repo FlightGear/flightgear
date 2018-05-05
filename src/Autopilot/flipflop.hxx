@@ -66,6 +66,8 @@ public:
 class FlipFlop : public Logic
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "flipflop"; }
 
 protected:
     /**

@@ -114,6 +114,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "jsb"; }
+
     /// copy FDM state to LaRCsim structures
     bool copy_to_JSBsim();
 

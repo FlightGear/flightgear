@@ -29,6 +29,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "properties"; }
+
 private:
     simgear::TiedPropertyList _tiedProperties;
 

@@ -114,6 +114,9 @@ public:
     void unbind() override;
     void update(double delta_time_sec) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "layer-interpolate-controller"; }
+
 private:
     SGPropertyNode_ptr _rootNode;
     bool _enabled;

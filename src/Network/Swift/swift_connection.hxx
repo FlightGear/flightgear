@@ -47,6 +47,9 @@ public:
     void shutdown() override;
     void update(double delta_time_sec) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "swift"; }
+
     bool startServer(const SGPropertyNode* arg, SGPropertyNode* root);
     bool stopServer(const SGPropertyNode* arg, SGPropertyNode* root);
     FGSwiftBus::CPlugin* plug;

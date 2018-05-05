@@ -48,6 +48,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "turn-indicator"; }
+
 private:
     Gyro _gyro;
     double _last_rate;

@@ -40,6 +40,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "altimeter"; }
+
     double getSettingInHg() const;
     void setSettingInHg( double value );
     double getSettingHPa() const;

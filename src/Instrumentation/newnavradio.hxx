@@ -31,6 +31,9 @@ namespace Instrumentation {
 class NavRadio : public SGSubsystem
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "nav-radio"; }
+
     static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
 };
 

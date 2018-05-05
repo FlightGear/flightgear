@@ -104,6 +104,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "submodel-mgr"; }
+
     void load();
 
 private:

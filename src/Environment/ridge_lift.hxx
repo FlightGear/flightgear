@@ -50,6 +50,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "ridgelift"; }
+
     inline double getStrength() const { return strength; };
 
     inline double get_probe_elev_m( int index ) const { return probe_elev_m[index]; };

@@ -388,6 +388,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "tcas"; }
+
     /* configuration options */
     int  _verticalRange;
     int  _lateralRange;

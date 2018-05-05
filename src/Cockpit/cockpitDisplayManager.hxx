@@ -43,6 +43,9 @@ public:
     void init() override;
     InitStatus incrementalInit() override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "cockpit-displays"; }
+
 private:
     bool build (SGPropertyNode* config_props);
 

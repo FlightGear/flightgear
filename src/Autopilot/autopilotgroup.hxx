@@ -31,6 +31,9 @@
 class FGXMLAutopilotGroup : public SGSubsystemGroup
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "xml-rules"; }
+
     static FGXMLAutopilotGroup * createInstance(const std::string& nodeName);
 
     void addAutopilotFromFile( const std::string & name, SGPropertyNode_ptr apNode, const char * path );

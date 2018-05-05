@@ -60,6 +60,9 @@ public:
     void shutdown() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "mp"; }
+
     // transmitter
 
     void SendTextMessage(const std::string &sMsgText);

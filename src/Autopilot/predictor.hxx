@@ -61,6 +61,9 @@ public:
     Predictor();
     ~Predictor() {}
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "predict-simple"; }
+
     void update( bool firstTime, double dt );
 };
 

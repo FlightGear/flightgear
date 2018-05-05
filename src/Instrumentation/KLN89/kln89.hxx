@@ -102,6 +102,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "KLN89"; }
+
     // Set Units
     // m if true, ft if false
     inline void SetAltUnitsSI(bool b) { _altUnits = (b ? GPS_ALT_UNITS_M : GPS_ALT_UNITS_FT); }

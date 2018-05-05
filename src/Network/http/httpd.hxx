@@ -34,6 +34,9 @@ extern const char * PROPERTY_ROOT;
 class FGHttpd : public SGSubsystem
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "httpd"; }
+
     static FGHttpd * createInstance( SGPropertyNode_ptr configNode );
 };
 

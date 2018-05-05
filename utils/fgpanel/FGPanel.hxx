@@ -63,6 +63,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "panel"; }
+
     // transfer pointer ownership!!!
     virtual void addInstrument (FGPanelInstrument * const instrument);
 

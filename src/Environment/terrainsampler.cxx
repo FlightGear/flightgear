@@ -57,6 +57,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "area"; }
+
     int getElevationHistogramStep() const { return _elevationHistogramStep; }
     void setElevationHistograpStep( int value ) {
         _elevationHistogramStep = value > 0 ? value : 500;
@@ -332,6 +335,9 @@ public:
     void reinit() override;
     void unbind() override;
     void update(double delta_time_sec) override;
+
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "terrain-sampler"; }
 
 private:
     inline string areaSubsystemName( unsigned i ) {

@@ -39,6 +39,9 @@ public:
     void reinit() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "slip-skid-ball"; }
+
 private:
     std::string _name;
     int _num;

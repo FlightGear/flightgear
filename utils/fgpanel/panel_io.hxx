@@ -34,6 +34,9 @@
 class FGReadablePanel : public FGPanel
 {
 public:
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "readable-panel"; }
+
     static SGSharedPtr<FGPanel> read (SGPropertyNode_ptr root);
 };
 

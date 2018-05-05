@@ -47,6 +47,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "master-reference-gyro"; }
+
 private:
     static const double gravity; //conversion factor
 

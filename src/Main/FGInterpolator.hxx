@@ -26,6 +26,9 @@ class FGInterpolator : public simgear::PropertyInterpolationMgr
 public:
     FGInterpolator();
     ~FGInterpolator();
+
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "prop-interpolator"; }
 };
 
 #endif /* FG_INTERPOLATOR_HXX_ */

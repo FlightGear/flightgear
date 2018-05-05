@@ -38,6 +38,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "fgcom"; }
+
     virtual void valueChanged(SGPropertyNode *prop);
     void iaxTextEvent(struct iaxc_ev_text text);
 

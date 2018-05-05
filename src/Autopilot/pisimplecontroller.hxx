@@ -57,6 +57,9 @@ public:
     PISimpleController();
     ~PISimpleController() {}
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "pi-simple-controller"; }
+
     void update( bool firstTime, double dt );
 };
 

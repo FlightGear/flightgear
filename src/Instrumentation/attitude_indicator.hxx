@@ -49,6 +49,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "attitude-indicator"; }
+
 private:
     std::string _name;
     int _num;

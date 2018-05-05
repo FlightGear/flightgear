@@ -62,6 +62,9 @@ public:
     DigitalFilter();
     ~DigitalFilter();
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "filter"; }
+
     virtual bool configure( SGPropertyNode& prop_root,
                             SGPropertyNode& cfg );
 };

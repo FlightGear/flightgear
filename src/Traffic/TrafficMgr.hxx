@@ -118,6 +118,9 @@ public:
     void init() override;
     void update(double time) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "traffic-manager"; }
+
     FGScheduledFlightVecIterator getFirstFlight(const std::string &ref) { return flights[ref].begin(); }
     FGScheduledFlightVecIterator getLastFlight(const std::string &ref) { return flights[ref].end(); }
 };

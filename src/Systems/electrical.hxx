@@ -225,6 +225,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "electrical"; }
+
     bool build (SGPropertyNode* config_props);
     float propagate( FGElectricalComponent *node, double dt,
                      float input_volts, float input_amps,

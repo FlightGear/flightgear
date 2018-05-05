@@ -43,6 +43,9 @@ public:
     void reinit() override;
     void update(double delta_time_sec) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "tacan"; }
+
 private:
     void disabled(bool force = false);
 

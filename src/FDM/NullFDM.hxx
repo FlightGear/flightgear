@@ -38,6 +38,9 @@ public:
     // Subsystem API.
     void init() override;
     void update(double dt) override;
+
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "null"; }
 };
 
 #endif // _NULLFDM_HXX

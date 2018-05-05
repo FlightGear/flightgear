@@ -79,6 +79,9 @@ public:
     void init() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "aisim"; }
+
     bool load(std::string path);
 
 #ifdef ENABLE_SP_FDM

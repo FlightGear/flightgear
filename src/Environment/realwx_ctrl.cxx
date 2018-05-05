@@ -412,6 +412,9 @@ public:
     {
     }
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "noaa-metar-real-wx-controller"; }
+
 private:
     std::string noaa_base_url;
 };

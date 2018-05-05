@@ -46,6 +46,9 @@ public:
     void unbind() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "heading-indicator-fg"; }
+
 private:
     Gyro _gyro;
     double _last_heading_deg;

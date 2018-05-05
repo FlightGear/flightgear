@@ -36,6 +36,9 @@ public:
     void init() override;
     void update(double dt) override;
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "clock"; }
+
 private:
     std::string _name;
     unsigned int _num;

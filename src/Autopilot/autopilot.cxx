@@ -54,6 +54,9 @@ public:
         inner = simgear::StateMachine::createFromPlist(&cfg, &props_root);
     }
 
+    // Subsystem identification.
+    static const char* staticSubsystemClassId() { return "state-machine"; }
+
     virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr config) {
         return false;
     }
