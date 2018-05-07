@@ -210,3 +210,7 @@ void FGRidgeLift::update(double dt) {
 	strength = fgGetLowPass( strength, lift_mps * SG_METER_TO_FEET, dt );
 	_ridge_lift_fps_node->setDoubleValue( strength );
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGRidgeLift> registrantFGRidgeLift;

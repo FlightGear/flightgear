@@ -459,4 +459,9 @@ NewGUI::setupFont (SGPropertyNode *node)
     return;
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<NewGUI> registrantNewGUI(
+    SGSubsystemMgr::INIT);
+
 // end of new_gui.cxx

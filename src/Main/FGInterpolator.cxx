@@ -35,3 +35,8 @@ FGInterpolator::~FGInterpolator()
   if( SGPropertyNode::getInterpolationMgr() == this )
     SGPropertyNode::setInterpolationMgr(0);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGInterpolator> registrantFGInterpolator(
+    SGSubsystemMgr::INIT);

@@ -98,4 +98,10 @@ VacuumSystem::update (double dt)
     _suction_node->setDoubleValue(suction);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<VacuumSystem> registrantVacuumSystem;
+#endif
+
 // end of vacuum.cxx

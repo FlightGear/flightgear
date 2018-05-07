@@ -87,3 +87,7 @@ void PISimpleController::update( bool firstTime, double dt )
     set_output_value( clamped_output );
     if ( _debug ) std::cout << "output = " << clamped_output << std::endl;
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<PISimpleController> registrantPISimpleController;

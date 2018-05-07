@@ -70,6 +70,13 @@ private:
     simgear::StateMachine_ptr inner;
 };
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<StateMachineComponent> registrantStateMachineComponent;
+#endif
+
+
 class StateMachineFunctor : public FunctorBase<Component>
 {
 public:

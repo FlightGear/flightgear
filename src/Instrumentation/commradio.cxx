@@ -720,5 +720,13 @@ SGSubsystem * CommRadio::createInstance(SGPropertyNode_ptr rootNode)
   return new CommRadioImpl(rootNode);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<CommRadio> registrantCommRadio(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 } // namespace Instrumentation
 

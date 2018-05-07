@@ -485,3 +485,5 @@ void FlipFlop::update( bool firstTime, double dt )
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FlipFlop> registrantFlipFlop;

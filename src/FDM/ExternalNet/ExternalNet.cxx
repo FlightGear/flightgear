@@ -230,3 +230,9 @@ void FGExternalNet::update( double dt ) {
 	FGNetFDM2Props( &fdm );
     }
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGExternalNet> registrantFGExternalNet;
+#endif

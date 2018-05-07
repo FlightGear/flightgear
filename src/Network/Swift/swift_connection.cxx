@@ -102,3 +102,7 @@ void SwiftConnection::reinit()
     shutdown();
     init();
 }
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<SwiftConnection> registrantSwiftConnection(
+    SGSubsystemMgr::POST_FDM);

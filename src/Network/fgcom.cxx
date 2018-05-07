@@ -723,3 +723,5 @@ bool FGCom::isInRange(const double &freq) const
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGCom> registrantFGCom;

@@ -69,3 +69,7 @@ void FGDNSClient::makeRequest(const simgear::DNS::Request_ptr& req)
 {
   _dns->makeRequest(req);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGDNSClient> registrantFGDNSClient;

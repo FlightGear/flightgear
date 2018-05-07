@@ -1601,4 +1601,12 @@ void GPS::tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
   }
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<GPS> registrantGPS(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of gps.cxx

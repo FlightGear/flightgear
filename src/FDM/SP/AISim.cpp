@@ -706,3 +706,8 @@ FGAISim::load(std::string path)
     return true;
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGAISim> registrantFGAISim;
+#endif

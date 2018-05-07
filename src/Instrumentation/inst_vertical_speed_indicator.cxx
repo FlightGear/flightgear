@@ -238,4 +238,12 @@ void InstVerticalSpeedIndicator::update (double dt)
     }
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<InstVerticalSpeedIndicator> registrantInstVerticalSpeedIndicator(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of inst_vertical_speed_indicator.cxx

@@ -313,4 +313,9 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
   }
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGModelMgr> registrantFGModelMgr(
+    SGSubsystemMgr::DISPLAY);
+
 // end of modelmgr.cxx

@@ -216,3 +216,10 @@ SGVec3d RadarAltimeter::rayVector(double az, double el) const
     
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<RadarAltimeter> registrantRadarAltimeter(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif

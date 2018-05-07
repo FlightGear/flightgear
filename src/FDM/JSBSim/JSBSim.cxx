@@ -1629,3 +1629,9 @@ void FGJSBsim::update_external_forces(double t_off)
       if (_mmag) _mmag->setDoubleValue(0.0);
     }
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGJSBsim> registrantFGJSBsim;
+#endif

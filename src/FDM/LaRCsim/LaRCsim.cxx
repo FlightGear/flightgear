@@ -948,3 +948,8 @@ void FGLaRCsim::set_Density(double rho) {
 
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGLaRCsim> registrantFGLaRCsim;
+#endif

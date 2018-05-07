@@ -144,4 +144,12 @@ Altimeter::update (double dt)
     }
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<Altimeter> registrantAltimeter(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of altimeter.cxx

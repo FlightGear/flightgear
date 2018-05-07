@@ -296,4 +296,12 @@ MasterReferenceGyro::update (double dt)
     _hdg_rate_out_node ->setDoubleValue( _indicated_hdg_rate );
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<MasterReferenceGyro> registrantMasterReferenceGyro(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of mrg.cxx

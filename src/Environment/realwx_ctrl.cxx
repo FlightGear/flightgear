@@ -398,6 +398,7 @@ void BasicRealWxController::checkNearbyMetar()
     
 }
 
+
 /* -------------------------------------------------------------------------------- */
 
 class NoaaMetarRealWxController : public BasicRealWxController, MetarRequester
@@ -496,6 +497,16 @@ void NoaaMetarRealWxController::requestMetar
       http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId, noaa_base_url));
   }
 }
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<NoaaMetarRealWxController> registrantNoaaMetarRealWxController(
+    SGSubsystemMgr::GENERAL,
+    {{"environment", SGSubsystemMgr::Dependency::SOFT},
+     {"FGHTTPClient", SGSubsystemMgr::Dependency::SOFT},
+     {"realwx", SGSubsystemMgr::Dependency::SOFT}});
+#endif
+
 
 /* -------------------------------------------------------------------------------- */
     

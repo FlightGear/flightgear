@@ -340,3 +340,11 @@ void FGMarkerBeacon::search()
         last_beacon = NOBEACON;
     }
 }
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<FGMarkerBeacon> registrantFGMarkerBeacon(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.2);
+#endif

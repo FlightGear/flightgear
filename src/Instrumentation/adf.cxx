@@ -270,4 +270,12 @@ ADF::set_bearing (double dt, double bearing_deg)
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<ADF> registrantADF(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.15);
+#endif
+
 // end of adf.cxx

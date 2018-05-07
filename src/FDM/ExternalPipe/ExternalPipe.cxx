@@ -582,3 +582,7 @@ void FGExternalPipe::update_property( double dt ) {
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGExternalPipe> registrantFGExternalPipe;
+#endif

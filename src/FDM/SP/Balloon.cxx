@@ -199,3 +199,7 @@ bool FGBalloonSim::copy_from_BalloonSim() {
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGBalloonSim> registrantFGBalloonSim;
+#endif

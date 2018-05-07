@@ -59,4 +59,13 @@ SlipSkidBall::update (double delta_time_sec)
     }
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<SlipSkidBall> registrantSlipSkidBall(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.03);
+#endif
+
 // end of slip_skid_ball.cxx

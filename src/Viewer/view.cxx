@@ -1161,3 +1161,9 @@ SGVec3d View::PositionAttitudeProperties::attitude() const
     double roll = _rollProp ? _rollProp->getDoubleValue() : 0.0;
     return SGVec3d(heading, pitch, roll);
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<View> registrantView;
+#endif

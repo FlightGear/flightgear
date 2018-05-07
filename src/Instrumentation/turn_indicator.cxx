@@ -113,4 +113,12 @@ TurnIndicator::update (double dt)
     _rate_out_node->setDoubleValue(rate);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<TurnIndicator> registrantTurnIndicator(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of turn_indicator.cxx

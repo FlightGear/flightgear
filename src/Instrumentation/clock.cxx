@@ -131,4 +131,12 @@ Clock::update (double delta_time_sec)
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<Clock> registrantClock(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.25);
+#endif
+
 // end of clock.cxx

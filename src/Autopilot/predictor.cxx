@@ -77,3 +77,7 @@ void Predictor::update( bool firstTime, double dt )
 
     _last_value = ivalue;
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<Predictor> registrantPredictor;

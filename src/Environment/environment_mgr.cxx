@@ -428,4 +428,7 @@ FGEnvironmentMgr::set_cloud_layer_coverage_type (int index, int type )
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGEnvironmentMgr> registrantFGEnvironmentMgr;
+
 // end of environment-mgr.cxx

@@ -144,3 +144,8 @@ void CanvasMgr::handleModelReinit(SGPropertyNode*)
             element->reloadPlacements("object");
     }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<CanvasMgr> registrantCanvasMgr(
+    SGSubsystemMgr::DISPLAY);

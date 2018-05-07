@@ -225,3 +225,6 @@ size_t FGFlightHistory::currentMemoryUseBytes() const
     return sizeof(SampleBucket) * m_buckets.size();
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGFlightHistory> registrantFGFlightHistory;

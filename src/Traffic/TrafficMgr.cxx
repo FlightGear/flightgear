@@ -936,3 +936,10 @@ void FGTrafficManager::Tokenize(const string& str,
         pos = str.find_first_of(delimiters, lastPos);
     }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGTrafficManager> registrantFGTrafficManager(
+    SGSubsystemMgr::POST_FDM,
+    {{"terrasync", SGSubsystemMgr::Dependency::HARD},
+     {"PerformanceDB", SGSubsystemMgr::Dependency::HARD}});

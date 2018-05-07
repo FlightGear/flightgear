@@ -642,5 +642,11 @@ FGHttpd * FGHttpd::createInstance(SGPropertyNode_ptr configNode)
   return new MongooseHttpd(configNode);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<MongooseHttpd> registrantMongooseHttpd;
+#endif
+
 } // namespace http
 } // namespace flightgear

@@ -537,3 +537,12 @@ int FGKR_87::get_stby_freq() const {
         }
     }
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<FGKR_87> registrantFGKR_87(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD},
+     {"sound", SGSubsystemMgr::Dependency::HARD}});
+#endif

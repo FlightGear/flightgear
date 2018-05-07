@@ -1117,3 +1117,8 @@ wxRadarBg::valueChanged(SGPropertyNode*)
     _time = _interval;
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<wxRadarBg> registrantwxRadarBg;
+#endif

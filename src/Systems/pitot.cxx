@@ -85,4 +85,13 @@ PitotSystem::update (double dt)
     }
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<PitotSystem> registrantPitotSystem(
+    SGSubsystemMgr::POST_FDM,
+    {{"static", SGSubsystemMgr::Dependency::SOFT},
+     {"vacuum", SGSubsystemMgr::Dependency::SOFT}});
+#endif
+
 // end of pitot.cxx

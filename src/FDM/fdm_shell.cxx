@@ -384,3 +384,8 @@ void FDMShell::createImplementation()
                    "If you still need it, please rebuild FlightGear and enable its support."));
     }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FDMShell> registrantFDMShell(
+    SGSubsystemMgr::FDM);

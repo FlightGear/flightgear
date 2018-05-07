@@ -409,3 +409,8 @@ void FGJoystickInput::update( double dt )
   }
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGJoystickInput> registrantFGJoystickInput(
+    SGSubsystemMgr::GENERAL,
+    {{"nasal", SGSubsystemMgr::Dependency::HARD}});

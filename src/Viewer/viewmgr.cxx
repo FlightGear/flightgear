@@ -257,3 +257,8 @@ FGViewMgr::setView (int newview)
     // on FGViewer, so update() is a no-op.
     update(0.0);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGViewMgr> registrantFGViewMgr(
+    SGSubsystemMgr::DISPLAY);

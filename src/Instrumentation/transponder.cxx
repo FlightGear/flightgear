@@ -347,3 +347,10 @@ bool Transponder::isPowerSwitchOn() const
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<Transponder> registrantTransponder(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.2);
+#endif

@@ -732,3 +732,9 @@ FGElectricalComponent *FGElectricalSystem::find ( const string &name ) {
     // nothing found
     return NULL;
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGElectricalSystem> registrantFGElectricalSystem;
+#endif

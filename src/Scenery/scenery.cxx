@@ -501,3 +501,10 @@ void FGScenery::resetPagerSingleton()
 {
     pager = NULL;
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGScenery> registrantFGScenery(
+    SGSubsystemMgr::DISPLAY,
+    {{"FGRenderer", SGSubsystemMgr::Dependency::NONSUBSYSTEM_HARD},
+        {"SGSky", SGSubsystemMgr::Dependency::NONSUBSYSTEM_HARD}});

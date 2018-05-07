@@ -128,4 +128,12 @@ HeadingIndicator::update (double dt)
     _heading_bug_error_node->setDoubleValue( diff );
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<HeadingIndicator> registrantHeadingIndicator(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of heading_indicator.cxx

@@ -250,3 +250,9 @@ void FGKeyboardInput::keyHandler(int key, int keymod, int mousex, int mousey)
     if( keyboardInput)
         keyboardInput->doKey(key, keymod, mousex, mousey);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGKeyboardInput> registrantFGKeyboardInput(
+    SGSubsystemMgr::GENERAL,
+    {{"nasal", SGSubsystemMgr::Dependency::HARD}});

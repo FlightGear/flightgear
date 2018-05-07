@@ -2377,3 +2377,12 @@ FGMultiplayMgr::findProperties()
       SG_LOG(SG_NETWORK, SG_DEBUG, "activating MP property:" << pNode->getPath());
     }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGMultiplayMgr> registrantFGMultiplayMgr(
+    SGSubsystemMgr::POST_FDM,
+    {{"ai-model", SGSubsystemMgr::Dependency::HARD},
+     {"flight", SGSubsystemMgr::Dependency::HARD},
+     {"mp", SGSubsystemMgr::Dependency::HARD},
+     {"time", SGSubsystemMgr::Dependency::HARD}});

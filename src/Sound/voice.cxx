@@ -137,6 +137,9 @@ void FGVoiceMgr::update(double dt)
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGVoiceMgr> registrantFGVoiceMgr(
+    SGSubsystemMgr::DISPLAY);
 
 
 /// VOICE ///

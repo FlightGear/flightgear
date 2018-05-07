@@ -226,4 +226,9 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
     return true;
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGInstrumentMgr> registrantFGInstrumentMgr(
+    SGSubsystemMgr::FDM);
+
 // end of instrument_manager.cxx

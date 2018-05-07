@@ -69,3 +69,7 @@ void FGMagVarManager::update(double dt)
   _magDipNode->setDoubleValue(_magVar->get_magdip() * SG_RADIANS_TO_DEGREES);
     
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGMagVarManager> registrantFGMagVarManager;

@@ -159,4 +159,12 @@ AirspeedIndicator::computeMach()
   _tas_node->setDoubleValue(V_true * SG_MPS_TO_KT );
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<AirspeedIndicator> registrantAirspeedIndicator(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of airspeed_indicator.cxx

@@ -1145,3 +1145,7 @@ FGReplay::loadTape(const SGPropertyNode* ConfigData)
         return loadTape(tapeDirectory, Preview, UserData);
     }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGReplay> registrantFGReplay;

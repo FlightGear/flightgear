@@ -450,3 +450,6 @@ bool FGIO::isMultiplayerRequested()
                            { return (channelOption.find("multiplay") == 0); });
     return it != channels->end();
 }
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGIO> registrantFGIO;

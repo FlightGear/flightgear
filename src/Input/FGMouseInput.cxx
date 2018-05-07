@@ -719,3 +719,7 @@ bool FGMouseInput::isActiveModePassThrough() const
     
     return m.modes[mode].pass_through;
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGMouseInput> registrantFGMouseInput;

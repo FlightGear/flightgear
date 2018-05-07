@@ -1608,3 +1608,9 @@ char KLN89::DecChar(char c, bool gap, bool wrap) {
 	if(c == ' ') return('9');
 	return(c - 1);
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<KLN89> registrantKLN89;
+#endif

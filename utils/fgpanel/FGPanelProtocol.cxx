@@ -177,3 +177,9 @@ void
 FGPanelProtocol::reinit () {
   init ();
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGPanelProtocol> registrantFGPanelProtocol;
+#endif

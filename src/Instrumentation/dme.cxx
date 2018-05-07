@@ -253,4 +253,12 @@ void DME::clear()
 	_audioIdent->setIdent("", 0.0);
 }
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<DME> registrantDME(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    1.0);
+#endif
+
 // end of dme.cxx

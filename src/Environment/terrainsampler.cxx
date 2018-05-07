@@ -317,6 +317,12 @@ append(alt_50_array, alt_med);
 #endif
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<AreaSampler> registrantAreaSampler;
+#endif
+
 /* --------------------- End of AreaSampler implementation ------------- */
 
 /* --------------------- TerrainSamplerImplementation -------------------------- */

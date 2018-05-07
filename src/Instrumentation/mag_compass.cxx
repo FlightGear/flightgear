@@ -199,4 +199,12 @@ MagCompass::update (double delta_time_sec)
     _out_node->setDoubleValue(indicated_deg);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<MagCompass> registrantMagCompass(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of altimeter.cxx

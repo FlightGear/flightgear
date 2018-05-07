@@ -649,6 +649,10 @@ void HUDText::draw()
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<HUD> registrantHUD;
+
+
 void TextList::align(const char *s, int align, float *x, float *y,
         float *l, float *r, float *b, float *t) const
 {

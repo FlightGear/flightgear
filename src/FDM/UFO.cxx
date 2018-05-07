@@ -192,3 +192,7 @@ void FGUFO::update( double dt ) {
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGUFO> registrantFGUFO;
+#endif

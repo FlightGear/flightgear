@@ -841,3 +841,7 @@ void DigitalFilter::update( bool firstTime, double dt)
               << "\toutput:" << output << std::endl;
   }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<DigitalFilter> registrantDigitalFilter;

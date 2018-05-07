@@ -55,3 +55,9 @@ void FGNullFDM::update( double dt ) {
     // That is just to trigger ground level computations
     _updateGeodeticPosition(get_Latitude(), get_Longitude(), get_Altitude());
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGNullFDM> registrantFGNullFDM;
+#endif

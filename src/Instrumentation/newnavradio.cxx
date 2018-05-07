@@ -972,5 +972,13 @@ SGSubsystem * NavRadio::createInstance( SGPropertyNode_ptr rootNode )
     return new FGNavRadio( rootNode );
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<NavRadio> registrantNavRadio(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 } // namespace Instrumentation
 

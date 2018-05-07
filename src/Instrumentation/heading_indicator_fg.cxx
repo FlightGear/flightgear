@@ -184,4 +184,12 @@ HeadingIndicatorFG::update (double dt)
 
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<HeadingIndicatorFG> registrantHeadingIndicatorFG(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of heading_indicator_fg.cxx

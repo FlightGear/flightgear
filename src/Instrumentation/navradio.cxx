@@ -967,3 +967,11 @@ void FGNavRadio::updateNav()
   id_c3_node->setIntValue( (int)identBuffer[2] );
   id_c4_node->setIntValue( (int)identBuffer[3] );
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<FGNavRadio> registrantFGNavRadio(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif

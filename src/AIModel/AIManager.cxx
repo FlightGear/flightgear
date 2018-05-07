@@ -718,4 +718,9 @@ FGAIAircraft* FGAIManager::getUserAircraft() const
     return _userAircraft.get();
 }
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGAIManager> registrantFGAIManager(
+    SGSubsystemMgr::POST_FDM,
+    {{"nasal", SGSubsystemMgr::Dependency::HARD}});
+
 //end AIManager.cxx

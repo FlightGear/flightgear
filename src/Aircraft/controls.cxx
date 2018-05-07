@@ -1881,3 +1881,6 @@ FGControls::set_autopilot_engage( int ap, bool val )
         }
     }
 }
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGControls> registrantFGControls;

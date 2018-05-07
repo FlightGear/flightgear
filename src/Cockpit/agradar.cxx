@@ -323,3 +323,7 @@ agRadar::update_terrain()
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<agRadar> registrantagRadar;
+#endif

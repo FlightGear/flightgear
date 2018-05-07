@@ -360,4 +360,13 @@ TACAN::valueChanged(SGPropertyNode *prop)
     _listener_active--;
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<TACAN> registrantTACAN(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.2);
+#endif
+
 // end of TACAN.cxx

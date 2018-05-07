@@ -1527,3 +1527,12 @@ TCAS::Tracker::getThreatLevel(string callsign)
     else
         return 0;
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<TCAS> registrantTCAS(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.2);
+#endif

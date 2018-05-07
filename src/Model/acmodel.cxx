@@ -210,4 +210,8 @@ FGAircraftModel::update (double dt)
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGAircraftModel> registrantFGAircraftModel(
+    SGSubsystemMgr::DISPLAY);
+
 // end of model.cxx

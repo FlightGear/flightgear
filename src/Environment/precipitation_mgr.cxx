@@ -292,3 +292,10 @@ void FGPrecipitationMgr::update(double dt)
     // Update the drawing...
     precipitation->update();
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGPrecipitationMgr> registrantFGPrecipitationMgr(
+    SGSubsystemMgr::GENERAL,
+    {{"FGScenery", SGSubsystemMgr::Dependency::HARD},
+     {"SGSky", SGSubsystemMgr::Dependency::NONSUBSYSTEM_HARD}});

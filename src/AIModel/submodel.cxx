@@ -816,3 +816,8 @@ void FGSubmodelMgr::setParentNode(int id)
         SG_LOG(SG_AI, SG_ALERT, "AISubmodel: parent node not found ");
     }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGSubmodelMgr> registrantFGSubmodelMgr(
+    SGSubsystemMgr::POST_FDM);

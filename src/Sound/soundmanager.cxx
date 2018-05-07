@@ -240,5 +240,10 @@ VoiceSynthesizer * FGSoundManager::getSynthesizer( const std::string & voice )
   }
   return it->second;
 }
-
 #endif // ENABLE_AUDIO_SUPPORT
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGSoundManager> registrantFGSoundManager(
+    SGSubsystemMgr::SOUND,
+    {{"SGSoundMgr", SGSubsystemMgr::Dependency::HARD}});

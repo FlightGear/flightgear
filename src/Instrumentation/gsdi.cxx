@@ -83,4 +83,12 @@ void GSDI::update(double /*delta_time_sec*/)
 	_drift_angleN->setDoubleValue(angle);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<GSDI> registrantGSDI(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of gsdi.cxx

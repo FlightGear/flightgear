@@ -108,3 +108,9 @@ void FGACMS::update( double dt ) {
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
 
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGACMS> registrantFGACMS;
+#endif

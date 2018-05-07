@@ -100,3 +100,7 @@ FGInput::~FGInput ()
 {
   // SGSubsystemGroup deletes all subsystem in it's destructor
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGInput> registrantFGInput;

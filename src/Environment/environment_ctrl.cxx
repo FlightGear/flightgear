@@ -351,4 +351,9 @@ LayerInterpolateController * LayerInterpolateController::createInstance( SGPrope
 
 //////////////////////////////////////////////////////////////////////////////
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<LayerInterpolateControllerImplementation> registrantLayerInterpolateControllerImplementation;
+#endif
+
 } // namespace

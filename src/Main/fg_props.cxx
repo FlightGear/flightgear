@@ -494,6 +494,9 @@ FGProperties::update (double dt)
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGProperties> registrantFGProperties;
+
 
 ////////////////////////////////////////////////////////////////////////
 // Save and restore.

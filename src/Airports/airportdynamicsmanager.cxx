@@ -106,4 +106,7 @@ FGAirportDynamicsRef AirportDynamicsManager::find(const FGAirportRef& apt)
     return find(apt->ident());
 }
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<AirportDynamicsManager> registrantAirportDynamicsManager;
+
 } // of namespace flightgear

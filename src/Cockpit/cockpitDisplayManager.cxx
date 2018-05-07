@@ -118,4 +118,9 @@ bool CockpitDisplayManager::build (SGPropertyNode* config_props)
     return true;
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<CockpitDisplayManager> registrantCockpitDisplayManager(
+    SGSubsystemMgr::DISPLAY);
+
 } // of namespace flightgear

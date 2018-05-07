@@ -331,3 +331,9 @@ bool FGADA::copy_from_FGADA() {
     
     return true;
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGADA> registrantFGADA;
+#endif

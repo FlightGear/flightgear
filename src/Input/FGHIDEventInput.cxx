@@ -919,6 +919,10 @@ void FGHIDEventInput::update(double dt)
     FGEventInput::update(dt);
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGHIDEventInput> registrantFGHIDEventInput;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void FGHIDEventInput::FGHIDEventInputPrivate::evaluateDevice(hid_device_info* deviceInfo)

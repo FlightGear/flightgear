@@ -1481,3 +1481,9 @@ void NavDisplay::processCustomSymbols()
 }
 
 
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<NavDisplay> registrantNavDisplay(
+    SGSubsystemMgr::GENERAL,
+    {{"route-manager", SGSubsystemMgr::Dependency::HARD}});
+#endif

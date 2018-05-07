@@ -432,3 +432,9 @@ FGPanel::getInitDisplayList () {
 #endif
   }
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGPanel> registrantFGPanel;
+#endif

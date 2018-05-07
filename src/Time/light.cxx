@@ -460,3 +460,8 @@ void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
   
     AngleRad->setDoubleValue(*angle);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGLight> registrantFGLight(
+    SGSubsystemMgr::DISPLAY);

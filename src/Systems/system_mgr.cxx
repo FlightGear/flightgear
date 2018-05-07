@@ -91,4 +91,9 @@ bool FGSystemMgr::build (SGPropertyNode* config_props)
     return true;
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGSystemMgr> registrantFGSystemMgr(
+    SGSubsystemMgr::FDM);
+
 // end of system_manager.cxx

@@ -761,3 +761,10 @@ GUIMgr::addWindowPlacement( SGPropertyNode* placement,
   }
   return placements;
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<GUIMgr> registrantGUIMgr(
+    SGSubsystemMgr::DISPLAY,
+    {{"viewer", SGSubsystemMgr::Dependency::HARD},
+     {"FGRenderer", SGSubsystemMgr::Dependency::NONSUBSYSTEM_HARD}});

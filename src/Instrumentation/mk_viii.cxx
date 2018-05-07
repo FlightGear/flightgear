@@ -4700,3 +4700,12 @@ MK_VIII::update (double dt)
     alert_handler.update();
     io_handler.update_outputs();
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<MK_VIII> registrantMK_VIII(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}},
+    0.2);
+#endif

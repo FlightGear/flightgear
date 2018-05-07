@@ -164,4 +164,8 @@ FGLogger::Log::Log ()
 {
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGLogger> registrantFGLogger;
+
 // end of logger.cxx

@@ -171,3 +171,6 @@ const string& PerformanceDB::findAlias(const string& acType) const
 }
 
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<PerformanceDB> registrantPerformanceDB(
+    SGSubsystemMgr::POST_FDM);

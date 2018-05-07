@@ -1317,3 +1317,8 @@ bool FGRouteMgr::commandDeleteUserWaypoint(const SGPropertyNode * arg, SGPropert
     return FGPositioned::deleteUserWaypoint(ident);
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGRouteMgr> registrantFGRouteMgr(
+    SGSubsystemMgr::GENERAL,
+    {{"gui", SGSubsystemMgr::Dependency::HARD}});

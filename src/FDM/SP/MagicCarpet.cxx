@@ -117,3 +117,9 @@ void FGMagicCarpet::update( double dt ) {
     _set_Altitude( get_Altitude() + climb );
     _set_Altitude_AGL( get_Altitude() - get_Runway_altitude() );
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<FGMagicCarpet> registrantFGMagicCarpet;
+#endif

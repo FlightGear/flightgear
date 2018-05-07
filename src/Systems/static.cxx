@@ -110,4 +110,12 @@ StaticSystem::update (double dt)
     }
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<StaticSystem> registrantStaticSystem(
+    SGSubsystemMgr::GENERAL,
+    {{"vacuum", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of static.cxx

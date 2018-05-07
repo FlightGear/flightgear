@@ -240,3 +240,7 @@ bool PIDController::configure( SGPropertyNode& cfg_node,
 
   return AnalogComponent::configure(cfg_node, cfg_name, prop_root);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<PIDController> registrantPIDController;

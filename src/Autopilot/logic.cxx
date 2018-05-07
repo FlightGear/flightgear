@@ -71,3 +71,6 @@ void Logic::update( bool firstTime, double dt )
   set_output( get_input() );
 }
 
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<Logic> registrantLogic;

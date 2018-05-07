@@ -105,3 +105,7 @@ void Ephemeris::update(double)
     // Update the moonlight intensity.
     _moonlight->setDoubleValue(_impl->get_moon()->getIlluminanceFactor());
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<Ephemeris> registrantEphemeris;

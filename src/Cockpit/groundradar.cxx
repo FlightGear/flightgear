@@ -349,4 +349,10 @@ void GroundRadar::updateTexture()
     getCamera()->setNodeMask(0xffffffff);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<GroundRadar> registrantGroundRadar;
+#endif
+
 // end of GroundRadar.cxx

@@ -1620,6 +1620,11 @@ void FGNasalSys::removePersistentTimer(TimerObj* obj)
     _persistentTimers.erase(it);
 }
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGNasalSys> registrantFGNasalSys(
+    SGSubsystemMgr::INIT);
+
+
 //////////////////////////////////////////////////////////////////////////
 // FGNasalListener class.
 

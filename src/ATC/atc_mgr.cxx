@@ -294,3 +294,9 @@ void FGATCManager::update ( double time ) {
        (*atc)->update(time);
    }
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGATCManager> registrantFGATCManager(
+    SGSubsystemMgr::POST_FDM,
+    {{"FGAIManager", SGSubsystemMgr::Dependency::HARD}});

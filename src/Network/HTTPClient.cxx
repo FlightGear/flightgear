@@ -297,3 +297,9 @@ void FGHTTPClient::makeRequest(const simgear::HTTP::Request_ptr& req)
 {
   _http->makeRequest(req);
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<FGHTTPClient> registrantFGHTTPClient(
+    SGSubsystemMgr::GENERAL,
+    {{"nasal", SGSubsystemMgr::Dependency::HARD}});

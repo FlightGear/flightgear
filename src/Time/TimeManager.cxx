@@ -463,3 +463,9 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
   SG_LOG( SG_GENERAL, SG_INFO, "After TimeManager::setTimeOffset(): warp = " 
             << _warp->getIntValue() );
 }
+
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<TimeManager> registrantTimeManager(
+    SGSubsystemMgr::INIT,
+    {{"FDM", SGSubsystemMgr::Dependency::HARD}});

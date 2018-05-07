@@ -574,3 +574,9 @@ void YASim::reinit()
     // get current FDM values from the property tree
     copyToYASim(true);
 }
+
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::Registrant<YASim> registrantYASim;
+#endif

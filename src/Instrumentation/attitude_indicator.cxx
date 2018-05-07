@@ -180,4 +180,12 @@ AttitudeIndicator::update (double dt)
     _pitch_out_node->setDoubleValue(pitch + pitch_error);
 }
 
+
+// Register the subsystem.
+#if 0
+SGSubsystemMgr::InstancedRegistrant<AttitudeIndicator> registrantAttitudeIndicator(
+    SGSubsystemMgr::FDM,
+    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
+#endif
+
 // end of attitude_indicator.cxx
