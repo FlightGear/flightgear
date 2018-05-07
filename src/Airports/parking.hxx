@@ -42,7 +42,6 @@ class FGParking : public FGTaxiNode
 private:
   const double heading;
   const double radius;
-  const std::string parkingName;
   const std::string type;
   const std::string airlineCodes;
   FGTaxiNodeRef pushBackPoint;
@@ -64,10 +63,7 @@ public:
 
   std::string getType     () const { return type;        };
   std::string getCodes    () const { return airlineCodes;};
-  std::string getName     () const { return parkingName; };
-
-  // TODO do parkings have different name and ident?
-  virtual const std::string& name() const { return parkingName; }
+  std::string getName     () const { return ident(); };
 
   void setPushBackPoint(const FGTaxiNodeRef& node);
   FGTaxiNodeRef getPushBackPoint () { return pushBackPoint; };

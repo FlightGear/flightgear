@@ -33,8 +33,12 @@
 #include <Airports/runways.hxx>
 #include <Airports/parking.hxx>
 #include <Airports/pavement.hxx>
+#include <Airports/groundnetwork.hxx>
 
 #include <Navaids/navrecord.hxx>
+#include <Navaids/NavDataCache.hxx>
+
+#include "QmlPositioned.hxx"
 
 static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
                                     const QVector2D& b, double* outT = NULL)
@@ -86,7 +90,7 @@ static double unitLengthAfterMapping(const QTransform& t)
     return QVector2D(tVec).length();
 }
 
-AirportDiagram::AirportDiagram(QWidget* pr) :
+AirportDiagram::AirportDiagram(QQuickItem* pr) :
     BaseDiagram(pr),
     m_approachDistanceNm(-1.0)
 {
@@ -133,10 +137,29 @@ void AirportDiagram::setAirport(FGAirportRef apt)
     m_airport = apt;
     m_projectionCenter = apt ? apt->geod() : SGGeod();
     m_runways.clear();
-    m_approachDistanceNm = -1.0;    m_parking.clear();
+    m_parking.clear();
     m_helipads.clear();
 
     if (apt) {
+        if (apt->type() == FGPositioned::HELIPORT) {
+            for (unsigned int r=0; r<apt->numHelipads(); ++r) {
+                FGHelipadRef pad = apt->getHelipadByIndex(r);
+                // add pad with index as data role
+                addHelipad(pad);
+            }
+        } else {
+            for (unsigned int r=0; r<apt->numRunways(); ++r) {
+                addRunway(apt->getRunwayByIndex(r));
+            }
+        }
+
+       FGGroundNetwork* ground = apt->groundNetwork();
+       if (ground && ground->exists()) {
+           for (auto park : ground->allParkings()) {
+               addParking(park);
+           }
+       } // of was able to get ground-network
+
         buildTaxiways();
         buildPavements();
     }
@@ -148,48 +171,23 @@ void AirportDiagram::setAirport(FGAirportRef apt)
     update();
 }
 
-FGRunwayRef AirportDiagram::selectedRunway() const
+void AirportDiagram::setSelection(QmlPositioned* pos)
 {
-    return m_selectedRunway;
-}
-
-void AirportDiagram::setSelectedRunway(FGRunwayRef r)
-{
-    if (r == m_selectedRunway) {
+    if (pos && (m_selection == pos->inner())) {
         return;
     }
 
-    m_selectedParking.clear();
-    m_selectedHelipad.clear();
-    m_selectedRunway = r;
-    update();
-}
-
-void AirportDiagram::setSelectedHelipad(FGHelipadRef pad)
-{
-    if (pad == m_selectedHelipad) {
-        return;
+    if (!pos) {
+        m_selection.clear();
+    } else {
+        m_selection = pos->inner();
     }
-
-    m_selectedParking.clear();
-    m_selectedRunway.clear();
-    m_selectedHelipad = pad;
+    emit selectionChanged();
+    recomputeBounds(true);
     update();
 }
 
-void AirportDiagram::setSelectedParking(FGParkingRef park)
-{
-    if (m_selectedParking == park) {
-        return;
-    }
-
-    m_selectedRunway.clear();
-    m_selectedHelipad.clear();
-    m_selectedParking = park;
-    update();
-}
-
-void AirportDiagram::setApproachExtensionDistance(double distanceNm)
+void AirportDiagram::setApproachExtensionNm(double distanceNm)
 {
     if (m_approachDistanceNm == distanceNm) {
         return;
@@ -198,6 +196,38 @@ void AirportDiagram::setApproachExtensionDistance(double distanceNm)
     m_approachDistanceNm = distanceNm;
     recomputeBounds(true);
     update();
+    emit approachExtensionChanged();
+}
+
+double AirportDiagram::approachExtensionNm() const
+{
+    return m_approachDistanceNm;
+}
+
+QmlPositioned* AirportDiagram::selection() const
+{
+    if (!m_selection)
+        return nullptr;
+
+    return new QmlPositioned{m_selection};
+}
+
+qlonglong AirportDiagram::airportGuid() const
+{
+    if (!m_airport)
+        return 0;
+    return m_airport->guid();
+}
+
+void AirportDiagram::setAirportGuid(qlonglong guid)
+{
+    if (guid == -1) {
+        m_airport.clear();
+    } else {
+        m_airport = fgpositioned_cast<FGAirport>(flightgear::NavDataCache::instance()->loadById(guid));
+    }
+    setAirport(m_airport);
+    emit airportChanged();
 }
 
 void AirportDiagram::addRunway(FGRunwayRef rwy)
@@ -233,16 +263,17 @@ void AirportDiagram::doComputeBounds()
     }
 
     Q_FOREACH(const ParkingData& p, m_parking) {
-        extendBounds(p.pt);
+        extendBounds(p.pt, 10.0);
     }
 
     Q_FOREACH(const HelipadData& p, m_helipads) {
-        extendBounds(p.pt);
+        extendBounds(p.pt, 20.0);
     }
 
-    if (m_selectedRunway && (m_approachDistanceNm > 0.0)) {
+    FGRunway* runwaySelection = fgpositioned_cast<FGRunway>(m_selection);
+    if (runwaySelection && (m_approachDistanceNm > 0.0)) {
         double d = SG_NM_TO_METER * m_approachDistanceNm;
-        QPointF pt = project(m_selectedRunway->pointOnCenterline(-d));
+        QPointF pt = project(runwaySelection->pointOnCenterline(-d));
         extendBounds(pt);
     }
 }
@@ -263,11 +294,9 @@ void AirportDiagram::addHelipad(FGHelipadRef pad)
     update();
 }
 
-
 void AirportDiagram::paintContents(QPainter* p)
 {
     QTransform t = p->transform();
-
 // pavements
     QBrush brush(QColor(0x9f, 0x9f, 0x9f));
     Q_FOREACH(const QPainterPath& path, m_pavements) {
@@ -305,11 +334,13 @@ void AirportDiagram::paintContents(QPainter* p)
     SGGeod aircraftPos;
     int headingDeg;
 
+    FGRunway* runwaySelection = fgpositioned_cast<FGRunway>(m_selection);
+
     // now draw the runways for real
     Q_FOREACH(const RunwayData& r, m_runways) {
 
         QColor color(Qt::magenta);
-        if ((r.runway == m_selectedRunway) || (r.runway->reciprocalRunway() == m_selectedRunway)) {
+        if ((r.runway == runwaySelection) || (r.runway->reciprocalRunway() == runwaySelection)) {
             color = Qt::yellow;
         }
         
@@ -329,7 +360,7 @@ void AirportDiagram::paintContents(QPainter* p)
         // invert scaling factor so we can use screen pixel sizes here
         p->scale(1.0 / m_scale, 1.0/ m_scale);
         
-        p->setPen((r.runway == m_selectedRunway) ? Qt::yellow : Qt::magenta);
+        p->setPen((r.runway == runwaySelection) ? Qt::yellow : Qt::magenta);
         p->drawText(QRect(-100, 5, 200, 200), ident, Qt::AlignHCenter | Qt::AlignTop);
 
         FGRunway* recip = r.runway->reciprocalRunway();
@@ -340,28 +371,28 @@ void AirportDiagram::paintContents(QPainter* p)
         p->rotate(recip->headingDeg());
         p->scale(1.0 / m_scale, 1.0/ m_scale);
 
-        p->setPen((r.runway->reciprocalRunway() == m_selectedRunway) ? Qt::yellow : Qt::magenta);
+        p->setPen((r.runway->reciprocalRunway() == runwaySelection) ? Qt::yellow : Qt::magenta);
         p->drawText(QRect(-100, 5, 200, 200), recipIdent, Qt::AlignHCenter | Qt::AlignTop);
     }
 
-    if (m_selectedRunway) {
+    if (runwaySelection) {
         drawAircraft = true;
-        aircraftPos = m_selectedRunway->geod();
-        headingDeg = m_selectedRunway->headingDeg();
+        aircraftPos = runwaySelection->geod();
+        headingDeg = runwaySelection->headingDeg();
     }
 
-    if (m_selectedRunway && (m_approachDistanceNm > 0.0)) {
+    if (runwaySelection && (m_approachDistanceNm > 0.0)) {
         p->setTransform(t);
         // draw approach extension point
         double d = SG_NM_TO_METER * m_approachDistanceNm;
-        QPointF pt = project(m_selectedRunway->pointOnCenterline(-d));
-        QPointF pt2 = project(m_selectedRunway->geod());
+        QPointF pt = project(runwaySelection->pointOnCenterline(-d));
+        QPointF pt2 = project(runwaySelection->geod());
         QPen pen(Qt::yellow);
         pen.setWidth(2.0 / m_scale);
         p->setPen(pen);
         p->drawLine(pt, pt2);
 
-        aircraftPos = m_selectedRunway->pointOnCenterline(-d);
+        aircraftPos = runwaySelection->pointOnCenterline(-d);
     }
 
     if (drawAircraft) {
@@ -388,23 +419,26 @@ void AirportDiagram::paintContents(QPainter* p)
 
 void AirportDiagram::drawHelipads(QPainter* painter)
 {
-    QTransform t = painter->transform();
+    FGHelipad* selectedHelipad = fgpositioned_cast<FGHelipad>(m_selection);
+
     Q_FOREACH(const HelipadData& p, m_helipads) {
-        painter->setTransform(t);
+        painter->save();
         painter->translate(p.pt);
 
-        if (p.helipad == m_selectedHelipad) {
+        if (p.helipad == selectedHelipad) {
             painter->setBrush(Qt::yellow);
         } else {
             painter->setBrush(Qt::magenta);
         }
 
         painter->drawPath(m_helipadIconPath);
+        painter->restore();
     }
 }
 
 void AirportDiagram::drawParking(QPainter* painter, const ParkingData& p) const
 {
+    painter->save();
     painter->translate(p.pt);
 
     double hdg = p.parking->getHeading();
@@ -420,8 +454,10 @@ void AirportDiagram::drawParking(QPainter* painter, const ParkingData& p) const
     }
 
     painter->rotate(hdg);
+    painter->setPen(Qt::NoPen);
 
-    if (p.parking == m_selectedParking) {
+    FGParking* selectedParking = fgpositioned_cast<FGParking>(m_selection);
+    if (p.parking == selectedParking) {
         painter->setBrush(Qt::yellow);
     } else {
         painter->setBrush(QColor(255, 196, 196)); // kind of pink
@@ -431,7 +467,7 @@ void AirportDiagram::drawParking(QPainter* painter, const ParkingData& p) const
 
     // ensure the selection colour is quite visible, by not filling
     // with white when selected
-    if (p.parking != m_selectedParking) {
+    if (p.parking != selectedParking) {
         painter->fillRect(labelRect, Qt::white);
     }
 
@@ -450,39 +486,39 @@ void AirportDiagram::drawParking(QPainter* painter, const ParkingData& p) const
     // draw text
     painter->setPen(Qt::black);
     painter->drawText(labelRect, textFlags, parkingName);
+    painter->restore();
 }
 
 AirportDiagram::ParkingData AirportDiagram::findParkingData(const FGParkingRef &pk) const
 {
+    FGParking* selectedParking = fgpositioned_cast<FGParking>(m_selection);
+    if (!selectedParking)
+        return {};
+
     Q_FOREACH(const ParkingData& p, m_parking) {
-        if (p.parking == m_selectedParking) {
+        if (p.parking == selectedParking) {
             return p;
         }
     }
 
-    return ParkingData();
+    return {};
 }
 
 void AirportDiagram::drawParkings(QPainter* painter) const
 {
-    painter->save();
-    QTransform t = painter->transform();
+    FGParking* selectedParking = fgpositioned_cast<FGParking>(m_selection);
 
     Q_FOREACH(const ParkingData& p, m_parking) {
-        if (p.parking == m_selectedParking) {
+        if (p.parking == selectedParking) {
             continue; // skip and draw last
         }
 
-        painter->setTransform(t);
         drawParking(painter, p);
     }
 
-    if (m_selectedParking) {
-        painter->setTransform(t);
-        drawParking(painter, findParkingData(m_selectedParking));
+    if (selectedParking) {
+        drawParking(painter, findParkingData(selectedParking));
     }
-
-    painter->restore();
 }
 
 void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
@@ -514,12 +550,14 @@ void AirportDiagram::drawILS(QPainter* painter, FGRunwayRef runway) const
 
 void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
 {
-    if (me->button() != Qt::LeftButton) {
-        return;
-    }
-
+    me->accept();
     QTransform t(transform());
     double minWidth = 8.0 * unitLengthAfterMapping(t.inverted());
+#if 0
+    QImage img(width(), height(), QImage::Format_ARGB32);
+    QPainter imgPaint(&img);
+    imgPaint.setPen(QPen(Qt::cyan, 1));
+#endif
 
     Q_FOREACH(const RunwayData& r, m_runways) {
         QPainterPath pp = pathForRunway(r, t, minWidth);
@@ -528,11 +566,8 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
             QPointF p1(t.map(r.p1)), p2(t.map(r.p2));
             double param;
             distanceToLineSegment(QVector2D(me->pos()), QVector2D(p1), QVector2D(p2), &param);
-            if (param > 0.5) {
-                emit clickedRunway(r.runway->reciprocalRunway());
-            } else {
-                emit clickedRunway(r.runway);
-            }
+            const FGRunwayRef clickedRunway = (param > 0.5) ? FGRunwayRef{r.runway->reciprocalRunway()} : r.runway;
+            emit clicked(new QmlPositioned{clickedRunway});
             return;
         }
     } // of runways iteration
@@ -540,18 +575,22 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
     Q_FOREACH(const ParkingData& parking, m_parking) {
         QPainterPath pp = pathForParking(parking, t);
         if (pp.contains(me->pos())) {
-            emit clickedParking(parking.parking);
+            emit clicked(new QmlPositioned{parking.parking});
             return;
         }
     }
 
     Q_FOREACH(const HelipadData& pad, m_helipads) {
         QPainterPath pp = pathForHelipad(pad, t);
+        //imgPaint.drawPath(pp);
         if (pp.contains(me->pos())) {
-            emit clickedHelipad(pad.helipad);
+            emit clicked(new QmlPositioned{pad.helipad});
             return;
         }
     }
+#if 0
+    img.save("/Users/jmt/Desktop/img.png");
+#endif
 }
 
 QPainterPath AirportDiagram::pathForRunway(const RunwayData& r, const QTransform& t,

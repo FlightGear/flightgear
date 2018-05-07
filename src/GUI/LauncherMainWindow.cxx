@@ -44,6 +44,7 @@
 #include "DefaultAircraftLocator.hxx"
 #include "AddOnsController.hxx"
 #include "CatalogListModel.hxx"
+#include "LocationController.hxx"
 
 #include "ui_Launcher.h"
 
@@ -69,13 +70,11 @@ LauncherMainWindow::LauncherMainWindow() :
 
 #endif
 
-    m_controller = new LauncherController(this, m_ui->location);
+    m_controller = new LauncherController(this);
     m_controller->initQML();
 
     connect(m_controller, &LauncherController::canFlyChanged,
             this, &LauncherMainWindow::onCanFlyChanged);
-
-    m_ui->location->setLaunchConfig(m_controller->config());
 
     QMenu* toolsMenu = mb->addMenu(tr("Tools"));
     QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
@@ -143,6 +142,18 @@ LauncherMainWindow::LauncherMainWindow() :
              this, &LauncherMainWindow::onQuickStatusChanged);
     m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
 
+    /////////////
+    // location
+    m_ui->location->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_ui->location->engine()->addImportPath("qrc:///");
+    m_ui->location->engine()->rootContext()->setContextProperty("_launcher", m_controller);
+    m_ui->location->engine()->rootContext()->setContextProperty("_config", m_controller->config());
+    m_ui->location->engine()->rootContext()->setContextProperty("_location", m_controller->location());
+    connect( m_ui->location, &QQuickWidget::statusChanged,
+             this, &LauncherMainWindow::onQuickStatusChanged);
+    m_ui->location->setSource(QUrl("qrc:///qml/Location.qml"));
+
+    /////////////
     // settings
     m_ui->settings->engine()->addImportPath("qrc:///");
     QQmlContext* settingsContext = m_ui->settings->engine()->rootContext();

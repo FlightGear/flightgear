@@ -72,6 +72,7 @@
         <file>qml/DateTimeValueEdit.qml</file>
         <file>qml/SettingsDateTimePicker.qml</file>
         <file>qml/Summary.qml</file>
+        <file>qml/Location.qml</file>
         <file>qml/HistoryPopup.qml</file>
         <file>qml/AddOns.qml</file>
         <file>qml/DragToReorderButton.qml</file>
@@ -86,6 +87,8 @@
         <file>qml/PathListDelegate.qml</file>
         <file>qml/AddCatalogPanel.qml</file>
         <file>qml/LineEdit.qml</file>
+        <file>qml/LocationAirportView.qml</file>
+        <file>qml/LocationNavaidView.qml</file>
         <file alias="linear-spinner">qml/icons8-linear-spinner.gif</file>
         <file>qml/RadioButton.qml</file>
         <file>qml/IntegerSpinbox.qml</file>

@@ -42,10 +42,9 @@ FGParking::FGParking(int index,
                      const std::string& name,
                      const std::string& aType,
                      const std::string& codes) :
-  FGTaxiNode(index, pos, false, 0),
+  FGTaxiNode(index, pos, false, 0, name),
   heading(aHeading),
   radius(aRadius),
-  parkingName(name),
   type(aType),
   airlineCodes(codes)
 {

@@ -22,7 +22,7 @@
 #define GUI_NAVAID_DIAGRAM_HXX
 
 #include "BaseDiagram.hxx"
-#include <QPainterPath>
+#include "QmlPositioned.hxx"
 
 #include <Navaids/navrecord.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -30,28 +30,50 @@
 class NavaidDiagram : public BaseDiagram
 {
     Q_OBJECT
-public:
-    NavaidDiagram(QWidget* pr);
 
-    void setNavaid(FGPositionedRef nav);
+    Q_PROPERTY(qlonglong navaid READ navaid WRITE setNavaid NOTIFY locationChanged)
+    Q_PROPERTY(QmlGeod geod READ geod WRITE setGeod NOTIFY locationChanged)
+
+    Q_PROPERTY(int headingDeg READ headingDeg WRITE setHeadingDeg NOTIFY offsetChanged)
+    Q_PROPERTY(int offsetBearingDeg READ offsetBearingDeg WRITE setOffsetBearingDeg NOTIFY offsetChanged)
+    Q_PROPERTY(bool offsetEnabled READ isOffsetEnabled WRITE setOffsetEnabled NOTIFY offsetChanged)
+    Q_PROPERTY(double offsetDistanceNm READ offsetDistanceNm WRITE setOffsetDistanceNm NOTIFY offsetChanged)
+public:
+    NavaidDiagram(QQuickItem* pr = nullptr);
+
+    void setNavaid(qlonglong nav);
+    qlonglong navaid() const;
+
+    void setGeod(QmlGeod geod);
+    QmlGeod geod() const;
 
     void setGeod(const SGGeod& geod);
 
-    bool isOffsetEnabled() const;
+    bool isOffsetEnabled() const
+    { return m_offsetEnabled; }
+
     void setOffsetEnabled(bool offset);
 
     void setOffsetDistanceNm(double distanceNm);
-    double offsetDistanceNm() const;
+    double offsetDistanceNm() const
+    { return m_offsetDistanceNm; }
 
     void setOffsetBearingDeg(int bearingDeg);
-    int offsetBearingDeg() const;
+    int offsetBearingDeg() const
+    { return m_offsetBearingDeg; }
 
     void setHeadingDeg(int headingDeg);
-    void headingDeg() const;
-protected:
-    void paintContents(QPainter *) Q_DECL_OVERRIDE;
+    int headingDeg() const
+    { return m_headingDeg; }
 
-    void doComputeBounds() Q_DECL_OVERRIDE;
+signals:
+    void locationChanged();
+    void offsetChanged();
+
+protected:
+    void paintContents(QPainter *) override;
+
+    void doComputeBounds() override;
 private:
     FGPositionedRef m_navaid;
     SGGeod m_geod;

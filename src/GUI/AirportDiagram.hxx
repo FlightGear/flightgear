@@ -23,15 +23,25 @@
 
 #include "BaseDiagram.hxx"
 
+#include <QPixmap>
+
 #include <Airports/parking.hxx>
 #include <Airports/runways.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+// forward decls
+class QmlPositioned;
+
 class AirportDiagram : public BaseDiagram
 {
     Q_OBJECT
+
+    Q_PROPERTY(QmlPositioned* selection READ selection WRITE setSelection NOTIFY selectionChanged)
+    Q_PROPERTY(qlonglong airport READ airportGuid WRITE setAirportGuid NOTIFY airportChanged)
+
+    Q_PROPERTY(double approachExtensionNm READ approachExtensionNm WRITE setApproachExtensionNm NOTIFY approachExtensionChanged)
 public:
-    AirportDiagram(QWidget* pr);
+    AirportDiagram(QQuickItem* pr = nullptr);
     virtual ~AirportDiagram();
 
     void setAirport(FGAirportRef apt);
@@ -40,24 +50,30 @@ public:
     void addParking(FGParkingRef park);
     void addHelipad(FGHelipadRef pad);
 
-    FGRunwayRef selectedRunway() const;
-    void setSelectedRunway(FGRunwayRef r);
+    QmlPositioned* selection() const;
 
-    void setSelectedHelipad(FGHelipadRef pad);
-    void setSelectedParking(FGParkingRef park);
+    void setSelection(QmlPositioned* pos);
 
-    void setApproachExtensionDistance(double distanceNm);
+    void setApproachExtensionNm(double distanceNm);
+    double approachExtensionNm() const;
+
+    qlonglong airportGuid() const;
+    void setAirportGuid(qlonglong guid);
+
 Q_SIGNALS:
-    void clickedRunway(FGRunwayRef rwy);
-    void clickedHelipad(FGHelipadRef pad);
-    void clickedParking(FGParkingRef park);
+    void clicked(QmlPositioned* pos);
+
+    void selectionChanged();
+    void airportChanged();
+    void approachExtensionChanged();
+
 protected:
     
-    virtual void mouseReleaseEvent(QMouseEvent* me);
+    void mouseReleaseEvent(QMouseEvent* me) override;
 
-    void paintContents(QPainter*) Q_DECL_OVERRIDE;
+    void paintContents(QPainter*) override;
 
-    void doComputeBounds() Q_DECL_OVERRIDE;
+    void doComputeBounds() override;
 private:
     struct RunwayData {
         QPointF p1, p2;
@@ -115,11 +131,9 @@ private:
     QPainterPath m_parkingIconPath, // arrow points right
         m_parkingIconLeftPath; // arrow points left
     double m_approachDistanceNm;
-    FGRunwayRef m_selectedRunway;
-    FGParkingRef m_selectedParking;
-    FGHelipadRef m_selectedHelipad;
 
     QPainterPath m_helipadIconPath;
+    FGPositionedRef m_selection;
 };
 
 #endif // of GUI_AIRPORT_DIAGRAM_HXX

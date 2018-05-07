@@ -21,23 +21,23 @@
 #ifndef GUI_BASEDIAGRAM_HXX
 #define GUI_BASEDIAGRAM_HXX
 
-#include <QWidget>
 #include <QPainterPath>
 #include <QHash>
+#include <QQuickPaintedItem>
+#include <QTransform>
 
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <Navaids/positioned.hxx>
 #include <Airports/airport.hxx>
 #include <Navaids/PolyLine.hxx>
+#include "LauncherController.hxx"
 
-#include "QtLauncher_fwd.hxx"
-
-class BaseDiagram : public QWidget
+class BaseDiagram : public QQuickPaintedItem
 {
     Q_OBJECT
 public:
-    BaseDiagram(QWidget* pr);
+    BaseDiagram(QQuickItem* pr = nullptr);
 
     enum IconOption
     {
@@ -54,14 +54,16 @@ public:
     static QVector<QLineF> projectAirportRuwaysIntoRect(FGAirportRef apt, const QRectF& bounds);
     static QVector<QLineF> projectAirportRuwaysWithCenter(FGAirportRef apt, const SGGeod &c);
 
-    void setAircraftType(LauncherAircraftType type);
+    void setAircraftType(LauncherController::AircraftType type);
+
+    QRect rect() const;
 protected:
-    virtual void paintEvent(QPaintEvent* pe);
+    void paint(QPainter* p) override;
 
-    virtual void mousePressEvent(QMouseEvent* me);
-    virtual void mouseMoveEvent(QMouseEvent* me);
+    void mousePressEvent(QMouseEvent* me) override;
+    void mouseMoveEvent(QMouseEvent* me) override;
 
-    virtual void wheelEvent(QWheelEvent* we);
+    void wheelEvent(QWheelEvent* we) override;
 
     virtual void paintContents(QPainter*);
 
@@ -71,7 +73,7 @@ protected:
 
     virtual void doComputeBounds();
 
-    void extendBounds(const QPointF& p);
+    void extendBounds(const QPointF& p, double radiusM = 1.0);
     QPointF project(const SGGeod& geod) const;
     QTransform transform() const;
     
@@ -85,7 +87,7 @@ protected:
     QPointF m_panOffset, m_lastMousePos;
     int m_wheelAngleDeltaAccumulator;
     bool m_didPan;
-    LauncherAircraftType m_aircraftType;
+    LauncherController::AircraftType m_aircraftType = LauncherController::Airplane;
 
     static void extendRect(QRectF& r, const QPointF& p);
 
@@ -118,6 +120,8 @@ private:
                                int & flags /* out parameter */) const;
     QRect labelPositioned(const QRect &itemRect, const QSize &bounds, LabelPosition lp) const;
 
+    QTransform m_baseDeviceTransform;
+    QTransform m_viewportTransform;
     QVector<FGPositionedRef> m_ignored;
 
     mutable QHash<PositionedID, LabelPosition> m_labelPositions;
@@ -126,9 +130,7 @@ private:
     static int textFlagsForLabelPosition(LabelPosition pos);
 
     void splitItems(const FGPositionedList &in, FGPositionedList &navaids, FGPositionedList &ports);
-    void paintNavaid(QPainter *painter,
-                     const QTransform& t,
-                     const FGPositionedRef &pos);
+    void paintNavaid(QPainter *painter, const FGPositionedRef &pos);
     void paintPolygonData(QPainter *painter);
     void paintGeodVec(QPainter *painter, const flightgear::SGGeodVec &vec);
     void fillClosedGeodVec(QPainter *painter, const QColor &color, const flightgear::SGGeodVec &vec);

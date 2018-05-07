@@ -18,6 +18,13 @@ Item {
         color: "magenta"
     }
 
+    Connections {
+        target: _launcher
+        onAircraftTypeChanged: {
+            console.info("Aircraft type is now:" + _launcher.aircraftType)
+        }
+    }
+
     PreviewImage {
         id: preview
         anchors.centerIn: parent
@@ -151,7 +158,8 @@ Item {
             // TODO - make clickable, jump to to the aircraft in the installed
             // aircraft list
             Text {
-                text: _launcher.selectedAircraftInfo.name
+                text: _launcher.selectedAircraftInfo.name === "" ?
+                          qsTr("No aircraft selected") : _launcher.selectedAircraftInfo.name
                 font.pixelSize: Style.headingFontPixelSize
             }
 
@@ -265,8 +273,9 @@ Item {
 
             // TODO - make clickable, jump to the location page
             Text {
-                text: _launcher.locationDescription
+                text: _launcher.location.description
                 font.pixelSize: Style.headingFontPixelSize
+                width: summaryGrid.middleColumnWidth
             }
 
             HistoryPopup {

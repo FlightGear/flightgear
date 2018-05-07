@@ -13,6 +13,7 @@ FocusScope {
     property alias prefix: prefix.text
     property alias maxDigits: edit.maximumLength
     property int step: 1
+    property bool live: false
 
     implicitHeight: editFrame.height
     // we have a margin between the frame and the label, and on each
@@ -23,8 +24,11 @@ FocusScope {
     function incrementValue()
     {
         if (edit.activeFocus) {
-            value = Math.min(parseInt(edit.text) + root.step, root.max)
-            edit.text = value
+            var newValue = Math.min(parseInt(edit.text) + root.step, root.max)
+            edit.text = newValue
+            if (live) {
+                commit(newValue);
+            }
         } else {
             commit(Math.min(value + root.step, root.max))
         }
@@ -33,8 +37,11 @@ FocusScope {
     function decrementValue()
     {
         if (edit.activeFocus) {
-            value = Math.max(parseInt(edit.text) - root.step, root.min)
-            edit.text = value
+            var newValue = Math.max(parseInt(edit.text) - root.step, root.min)
+            edit.text = newValue
+            if (live) {
+                commit(newValue);
+            }
         } else {
             commit(Math.max(value - root.step, root.min))
         }
@@ -69,6 +76,17 @@ FocusScope {
                 root.incrementValue()
             } else if (delta < 0) {
                root.decrementValue()
+            }
+        }
+    }
+
+    // timer to commit the value when in live mode
+    Timer {
+        id: liveEditTimer
+        interval: 800
+        onTriggered: {
+            if (edit.activeFocus) {
+                commit(parseInt(edit.text));
             }
         }
     }
@@ -131,6 +149,13 @@ FocusScope {
                     selectAll();
                 } else {
                     commit(parseInt(text))
+                    liveEditTimer.stop();
+                }
+            }
+
+            onTextChanged: {
+                if (activeFocus && root.live) {
+                    liveEditTimer.restart();
                 }
             }
         }

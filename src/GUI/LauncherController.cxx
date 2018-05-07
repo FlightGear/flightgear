@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QQuickWindow>
+#include <QQmlComponent>
 
 // simgear headers
 #include <simgear/package/Install.hxx>
@@ -38,26 +39,29 @@
 #include "DefaultAircraftLocator.hxx"
 #include "LaunchConfig.hxx"
 #include "AircraftModel.hxx"
-
-// remove me once location widget is ported to Quick
-#include "LocationWidget.hxx"
+#include "LocationController.hxx"
+#include "QmlPositioned.hxx"
+#include "PixmapImageItem.hxx"
+#include "AirportDiagram.hxx"
+#include "NavaidDiagram.hxx"
+#include "QmlRadioButtonHelper.hxx"
 
 using namespace simgear::pkg;
 
 
-LauncherController::LauncherController(QObject *parent,
-                                       LocationWidget* loc) :
-    QObject(parent),
-    m_locationWidget_FIXME(loc)
+LauncherController::LauncherController(QObject *parent) :
+    QObject(parent)
 {
     m_serversModel = new MPServersModel(this);
+    m_location = new LocationController(this);
     m_locationHistory = new RecentLocationsModel(this);
     m_selectedAircraftInfo = new QmlAircraftInfo(this);
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherController::collectAircraftArgs);
 
-    connect(m_locationWidget_FIXME, &LocationWidget::descriptionChanged,
+    m_location->setLaunchConfig(m_config);
+    connect(m_location, &LocationController::descriptionChanged,
             this, &LauncherController::summaryChanged);
 
     initQML();
@@ -91,6 +95,9 @@ LauncherController::LauncherController(QObject *parent,
 
 void LauncherController::initQML()
 {
+    qmlRegisterUncreatableType<LauncherController>("FlightGear.Launcher", 1, 0, "LauncherController", "no");
+    qmlRegisterUncreatableType<LocationController>("FlightGear.Launcher", 1, 0, "LocationController", "no");
+
     qmlRegisterType<LauncherArgumentTokenizer>("FlightGear.Launcher", 1, 0, "ArgumentTokenizer");
     qmlRegisterUncreatableType<QAbstractItemModel>("FlightGear.Launcher", 1, 0, "QAIM", "no");
     qmlRegisterUncreatableType<AircraftProxyModel>("FlightGear.Launcher", 1, 0, "AircraftProxyModel", "no");
@@ -107,6 +114,15 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
     qmlRegisterType<ThumbnailImageItem>("FlightGear.Launcher", 1, 0, "ThumbnailImage");
     qmlRegisterType<PreviewImageItem>("FlightGear.Launcher", 1, 0, "PreviewImage");
+
+    qmlRegisterType<QmlPositioned>("FlightGear", 1, 0, "Positioned");
+    // this is a Q_GADGET, but we need to register it for use in return types, etc
+    qRegisterMetaType<QmlGeod>();
+
+    qmlRegisterType<PixmapImageItem>("FlightGear", 1, 0, "PixmapImage");
+    qmlRegisterType<AirportDiagram>("FlightGear", 1, 0, "AirportDiagram");
+    qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
+    qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
 
     QNetworkDiskCache* diskCache = new QNetworkDiskCache(this);
     SGPath cachePath = globals->get_fg_home() / "PreviewsCache";
@@ -132,7 +148,7 @@ void LauncherController::restoreSettings()
     }
 
 
-    m_locationWidget_FIXME->restoreSettings();
+    m_location->restoreSettings();
     QVariantMap currentLocation = m_locationHistory->mostRecent();
     if (currentLocation.isEmpty()) {
         // use the default
@@ -143,7 +159,7 @@ void LauncherController::restoreSettings()
             currentLocation["location-apt-runway"] = "active";
         } // otherwise we failed to find the default airport in the nav-db :(
     }
-    m_locationWidget_FIXME->restoreLocation(currentLocation);
+    m_location->restoreLocation(currentLocation);
 
     updateSelectedAircraft();
     m_serversModel->requestRestore();
@@ -199,7 +215,7 @@ void LauncherController::doRun()
 
     m_aircraftHistory->insert(m_selectedAircraft);
 
-    QVariant locSet = m_locationWidget_FIXME->saveLocation();
+    QVariant locSet = m_location->saveLocation();
     m_locationHistory->insert(locSet);
 
     // aircraft paths
@@ -257,8 +273,7 @@ void LauncherController::doApply()
         globals->get_props()->setStringValue("/sim/aircraft-dir", aircraftDir);
     }
 
-    // location
-    m_locationWidget_FIXME->setLocationProperties();
+    m_location->setLocationProperties();
     saveSettings();
 }
 
@@ -268,14 +283,13 @@ QString LauncherController::selectAircraftStateAutomatically()
     if (!m_selectedAircraftInfo)
         return {};
 
-    if (m_locationWidget_FIXME->isAirborneLocation()) {
-        if (m_selectedAircraftInfo->hasState("approach"))
-            return "approach";
+    if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("approach")) 
+    {
+        return "approach";
     }
 
-    if (m_locationWidget_FIXME->isParkedLocation()) {
-        if (m_selectedAircraftInfo->hasState("parked"))
-            return "parked";
+    if (m_location->isParkedLocation() && m_selectedAircraftInfo->hasState("parked")) {
+        return "parked";
     } else {
         // also try 'engines-running'?
         if (m_selectedAircraftInfo->hasState("take-off"))
@@ -299,14 +313,12 @@ void LauncherController::updateSelectedAircraft()
     m_selectedAircraftInfo->setUri(m_selectedAircraft);
     QModelIndex index = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     if (index.isValid()) {
-        LauncherAircraftType aircraftType = Airplane;
+        m_aircraftType = Airplane;
         if (index.data(AircraftIsHelicopterRole).toBool()) {
-            aircraftType = Helicopter;
+            m_aircraftType = Helicopter;
         } else if (index.data(AircraftIsSeaplaneRole).toBool()) {
-            aircraftType = Seaplane;
+            m_aircraftType = Seaplane;
         }
-
-        m_locationWidget_FIXME->setAircraftType(aircraftType);
     }
 
     emit canFlyChanged();
@@ -380,9 +392,8 @@ QmlAircraftInfo *LauncherController::selectedAircraftInfo() const
 
 void LauncherController::restoreLocation(QVariant var)
 {
-    m_locationWidget_FIXME->restoreLocation(var.toMap());
+    m_location->restoreLocation(var.toMap());
 }
-
 
 QUrl LauncherController::selectedAircraft() const
 {
@@ -456,11 +467,6 @@ void LauncherController::setEnvironmentSummary(QStringList environmentSummary)
 QStringList LauncherController::combinedSummary() const
 {
     return m_settingsSummary + m_environmentSummary;
-}
-
-QString LauncherController::locationDescription() const
-{
-    return m_locationWidget_FIXME->locationDescription();
 }
 
 simgear::pkg::PackageRef LauncherController::packageForAircraftURI(QUrl uri) const

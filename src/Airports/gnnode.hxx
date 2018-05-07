@@ -31,7 +31,8 @@ protected:
   bool m_isPushback;
 
 public:    
-  FGTaxiNode(int index, const SGGeod& pos, bool aOnRunway, int aHoldType);
+  FGTaxiNode(int index, const SGGeod& pos, bool aOnRunway, int aHoldType,
+             const std::string& ident = {});
   virtual ~FGTaxiNode();
   
   void setElevation(double val);

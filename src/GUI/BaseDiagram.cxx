@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <QVector2D>
 #include <QMouseEvent>
+#include <QPaintDevice>
 
 #include <Navaids/navrecord.hxx>
 #include <Navaids/positioned.hxx>
@@ -39,6 +40,7 @@ const double rec  = 6378137;          // earth radius, equator (?)
 const double rpol = 6356752.314;      // earth radius, polar   (?)
 
 const double MINIMUM_SCALE = 0.002;
+const double MAXIMUM_SCALE = 2.0;
 
 //Returns Earth radius at a given latitude (Ellipsoide equation with two equal axis)
 static double earth_radius_lat( double lat )
@@ -48,14 +50,15 @@ static double earth_radius_lat( double lat )
     return 1.0 / sqrt( a * a + b * b );
 }
 
-BaseDiagram::BaseDiagram(QWidget* pr) :
-    QWidget(pr),
+BaseDiagram::BaseDiagram(QQuickItem* pr) :
+    QQuickPaintedItem(pr),
     m_autoScalePan(true),
     m_wheelAngleDeltaAccumulator(0)
 {
-    setSizePolicy(QSizePolicy::MinimumExpanding,
-                  QSizePolicy::MinimumExpanding);
-    setMinimumSize(100, 100);
+    setAcceptedMouseButtons(Qt::LeftButton);
+    setFlag(ItemHasContents);
+    setOpaquePainting(true);
+    setAntialiasing(true);
 }
 
 QTransform BaseDiagram::transform() const
@@ -98,11 +101,15 @@ void BaseDiagram::extendRect(QRectF &r, const QPointF &p)
     }
 }
 
-void BaseDiagram::paintEvent(QPaintEvent*)
+QRect BaseDiagram::rect() const
 {
-    QPainter p(this);
-    p.setRenderHints(QPainter::Antialiasing);
-    p.fillRect(rect(), QColor(0x3f, 0x3f, 0x3f));
+    return QRect(0, 0, width(), height());
+}
+
+void BaseDiagram::paint(QPainter* p)
+{
+    //p->setRenderHints(QPainter::Antialiasing);
+    p->fillRect(rect(), QColor(0x3f, 0x3f, 0x3f));
 
     if (m_autoScalePan) {
         // fit bounds within our available space, allowing for a margin
@@ -110,24 +117,26 @@ void BaseDiagram::paintEvent(QPaintEvent*)
         double ratioInX = (width() - MARGIN * 2) / m_bounds.width();
         double ratioInY = (height() - MARGIN * 2) / m_bounds.height();
         m_scale = std::min(ratioInX, ratioInY);
+        SG_CLAMP_RANGE(m_scale, MINIMUM_SCALE, MAXIMUM_SCALE);
     }
 
-    QTransform t(transform());
-    p.setTransform(t);
+    m_baseDeviceTransform = p->deviceTransform();
+    m_viewportTransform = transform();
+    p->setWorldTransform(m_viewportTransform * m_baseDeviceTransform);
 
-    paintPolygonData(&p);
-
-    paintNavaids(&p);
-
-    paintContents(&p);
+    paintPolygonData(p);
+    paintNavaids(p);
+    paintContents(p);
 }
 
 void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int headingDeg)
 {
     QPointF pos = project(geod);
     QPixmap pix(":/airplane-icon");
-    pos = painter->transform().map(pos);
-    painter->resetTransform();
+    pos = m_viewportTransform.map(pos);
+    painter->save();
+    painter->setWorldTransform(m_baseDeviceTransform);
+
     painter->translate(pos.x(), pos.y());
     painter->rotate(headingDeg);
 
@@ -135,16 +144,17 @@ void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int h
     QRect airplaneIconRect = pix.rect();
     airplaneIconRect.moveCenter(QPoint(0,0));
     painter->drawPixmap(airplaneIconRect, pix);
+
+    painter->restore();
 }
 
 void BaseDiagram::paintPolygonData(QPainter* painter)
 {
-    QTransform xf = painter->transform();
-    QTransform invT = xf.inverted();
-
-    SGGeod topLeft = unproject(invT.map(rect().topLeft()), m_projectionCenter);
-    SGGeod viewCenter = unproject(invT.map(rect().center()), m_projectionCenter);
-    SGGeod bottomRight = unproject(invT.map(rect().bottomRight()), m_projectionCenter);
+    QTransform invT = m_viewportTransform.inverted();
+    const auto geom = rect();
+    SGGeod topLeft = unproject(invT.map(geom.topLeft()), m_projectionCenter);
+    SGGeod viewCenter = unproject(invT.map(geom.center()), m_projectionCenter);
+    SGGeod bottomRight = unproject(invT.map(geom.bottomRight()), m_projectionCenter);
 
     double drawRangeNm = std::max(SGGeodesy::distanceNm(viewCenter, topLeft),
                                   SGGeodesy::distanceNm(viewCenter, bottomRight));
@@ -155,35 +165,31 @@ void BaseDiagram::paintPolygonData(QPainter* painter)
     QPen waterPen(QColor(64, 64, 255), 1);
     waterPen.setCosmetic(true);
     painter->setPen(waterPen);
-    flightgear::PolyLineList::const_iterator it;
-    for (it=lines.begin(); it != lines.end(); ++it) {
-        paintGeodVec(painter, (*it)->points());
+    for (auto line : lines) {
+        paintGeodVec(painter, line->points());
     }
 
     lines = flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
                                               flightgear::PolyLine::URBAN);
-    for (it=lines.begin(); it != lines.end(); ++it) {
-        fillClosedGeodVec(painter, QColor(192, 192, 96), (*it)->points());
+    for (auto line : lines) {
+        fillClosedGeodVec(painter, QColor(192, 192, 96), line->points());
     }
 
     lines = flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
                                               flightgear::PolyLine::RIVER);
 
     painter->setPen(waterPen);
-    for (it=lines.begin(); it != lines.end(); ++it) {
-        paintGeodVec(painter, (*it)->points());
+    for (auto line : lines) {
+        paintGeodVec(painter, line->points());
     }
 
 
     lines = flightgear::PolyLine::linesNearPos(viewCenter, drawRangeNm,
                                               flightgear::PolyLine::LAKE);
 
-    for (it=lines.begin(); it != lines.end(); ++it) {
-        fillClosedGeodVec(painter, QColor(128, 128, 255),
-                          (*it)->points());
+    for (auto line : lines) {
+        fillClosedGeodVec(painter, QColor(128, 128, 255), line->points());
     }
-
-
 }
 
 void BaseDiagram::paintGeodVec(QPainter* painter, const flightgear::SGGeodVec& vec)
@@ -216,17 +222,17 @@ class MapFilter : public FGPositioned::TypeFilter
 {
 public:
 
-    MapFilter(LauncherAircraftType aircraft)
+    MapFilter(LauncherController::AircraftType aircraft)
     {
       //  addType(FGPositioned::FIX);
         addType(FGPositioned::NDB);
         addType(FGPositioned::VOR);
 
-        if (aircraft == Helicopter) {
+        if (aircraft == LauncherController::Helicopter) {
             addType(FGPositioned::HELIPAD);
         }
 
-        if (aircraft == Seaplane) {
+        if (aircraft == LauncherController::Seaplane) {
             addType(FGPositioned::SEAPORT);
         } else {
             addType(FGPositioned::AIRPORT);
@@ -252,12 +258,11 @@ public:
 void BaseDiagram::splitItems(const FGPositionedList& in, FGPositionedList& navaids,
                              FGPositionedList& ports)
 {
-    FGPositionedList::const_iterator it = in.begin();
-    for (; it != in.end(); ++it) {
-        if (FGPositioned::isAirportType(it->ptr())) {
-            ports.push_back(*it);
+    for (auto p : in) {
+        if (FGPositioned::isAirportType(p)) {
+            ports.push_back(p);
         } else {
-            navaids.push_back(*it);
+            navaids.push_back(p);
         }
     }
 }
@@ -273,10 +278,8 @@ bool orderAirportsByRunwayLength(const FGPositionedRef& a,
 
 void BaseDiagram::paintNavaids(QPainter* painter)
 {
-    QTransform xf = painter->transform();
-    painter->setTransform(QTransform()); // reset to identity
-    QTransform invT = xf.inverted();
-
+    painter->save();
+    QTransform invT = m_viewportTransform.inverted();
 
     SGGeod topLeft = unproject(invT.map(rect().topLeft()), m_projectionCenter);
     SGGeod viewCenter = unproject(invT.map(rect().center()), m_projectionCenter);
@@ -300,19 +303,17 @@ void BaseDiagram::paintNavaids(QPainter* painter)
 
     m_labelRects.clear();
     m_labelRects.reserve(items.size());
+    painter->setTransform(m_baseDeviceTransform);
 
-    FGPositionedList::const_iterator it;
-    for (it = ports.begin(); it != ports.end(); ++it) {
-        paintNavaid(painter, xf, *it);
+    for (auto port : ports) {
+        paintNavaid(painter, port);
     }
 
-    for (it = navaids.begin(); it != navaids.end(); ++it) {
-        paintNavaid(painter, xf, *it);
+    for (auto nav : navaids) {
+        paintNavaid(painter, nav);
     }
 
-
-    // restore transform
-    painter->setTransform(xf);
+    painter->restore();
 }
 
 QRect boundsOfLines(const QVector<QLineF>& lines)
@@ -325,7 +326,7 @@ QRect boundsOfLines(const QVector<QLineF>& lines)
     return r;
 }
 
-void BaseDiagram::paintNavaid(QPainter* painter, const QTransform& t, const FGPositionedRef &pos)
+void BaseDiagram::paintNavaid(QPainter* painter, const FGPositionedRef &pos)
 {
     if (isNavaidIgnored(pos))
         return;
@@ -341,8 +342,10 @@ void BaseDiagram::paintNavaid(QPainter* painter, const QTransform& t, const FGPo
         if (apt->hasHardRunwayOfLengthFt(minRunwayLengthFt)) {
 
             drawAsIcon = false;
-            painter->setTransform(t);
             QVector<QLineF> lines = projectAirportRuwaysWithCenter(apt, m_projectionCenter);
+
+            painter->save();
+            painter->setTransform(m_viewportTransform * m_baseDeviceTransform);
 
             QPen pen(QColor(0x03, 0x83, 0xbf), 8);
             pen.setCosmetic(true);
@@ -354,15 +357,15 @@ void BaseDiagram::paintNavaid(QPainter* painter, const QTransform& t, const FGPo
             painter->setPen(linePen);
             painter->drawLines(lines);
 
-            painter->resetTransform();
+            iconRect = m_viewportTransform.mapRect(boundsOfLines(lines));
 
-            iconRect = t.mapRect(boundsOfLines(lines));
+            painter->restore();
         }
     }
 
     if (drawAsIcon) {
         QPixmap pm = iconForPositioned(pos);
-        QPointF loc = t.map(project(pos->geod()));
+        QPointF loc = m_viewportTransform.map(project(pos->geod()));
         iconRect = pm.rect();
         iconRect.moveCenter(loc.toPoint());
         painter->drawPixmap(iconRect, pm);
@@ -510,8 +513,13 @@ QRect BaseDiagram::labelPositioned(const QRect& itemRect,
 
 void BaseDiagram::mousePressEvent(QMouseEvent *me)
 {
+    if (!hasActiveFocus()) {
+        forceActiveFocus(Qt::MouseFocusReason);
+    }
+
     m_lastMousePos = me->pos();
     m_didPan = false;
+    me->accept();
 }
 
 void BaseDiagram::mouseMoveEvent(QMouseEvent *me)
@@ -558,7 +566,7 @@ void BaseDiagram::wheelEvent(QWheelEvent *we)
         m_scale *= 0.75;
     }
 
-    SG_CLAMP_RANGE(m_scale, MINIMUM_SCALE, 1.0);
+    SG_CLAMP_RANGE(m_scale, MINIMUM_SCALE, MAXIMUM_SCALE);
     update();
 }
 
@@ -585,7 +593,7 @@ void BaseDiagram::doComputeBounds()
     // no-op in the base class
 }
 
-void BaseDiagram::extendBounds(const QPointF& p)
+void BaseDiagram::extendBounds(const QPointF& p, double radiusM)
 {
     // this check added after a bug where apt.dat reports SCSL as
     // https://airportguide.com/airport/info/AG0003 (British Columbia)
@@ -598,7 +606,12 @@ void BaseDiagram::extendBounds(const QPointF& p)
         return;
     }
 
-    extendRect(m_bounds, p);
+    if (radiusM > 0.0) {
+        extendRect(m_bounds, p - QPointF(radiusM, radiusM));
+        extendRect(m_bounds, p + QPointF(radiusM, radiusM));
+    } else {
+        extendRect(m_bounds, p);
+    }
 }
 
 QPointF BaseDiagram::project(const SGGeod& geod, const SGGeod& center)
@@ -787,7 +800,7 @@ QVector<QLineF> BaseDiagram::projectAirportRuwaysWithCenter(FGAirportRef apt, co
     return r;
 }
 
-void BaseDiagram::setAircraftType(LauncherAircraftType type)
+void BaseDiagram::setAircraftType(LauncherController::AircraftType type)
 {
     m_aircraftType = type;
     update();

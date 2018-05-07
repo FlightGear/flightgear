@@ -69,7 +69,6 @@ endif()
 if (HAVE_QT)
     qt5_wrap_ui(uic_sources Launcher.ui
                             SetupRootDialog.ui
-                            LocationWidget.ui
                             InstallSceneryDialog.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
@@ -90,14 +89,14 @@ if (HAVE_QT)
                             AircraftModel.cxx
                             CatalogListModel.cxx
                             CatalogListModel.hxx
-                            LocationWidget.cxx
-                            LocationWidget.hxx
                             QtMessageBox.cxx
                             QtMessageBox.hxx
                             QtFileDialog.cxx
                             QtFileDialog.hxx
                             InstallSceneryDialog.hxx
                             InstallSceneryDialog.cxx
+                            LocationController.cxx
+                            LocationController.hxx
                             ToolboxButton.cpp
                             ToolboxButton.h
                             LauncherArgumentTokenizer.cxx
@@ -122,6 +121,8 @@ if (HAVE_QT)
                             LauncherController.hxx
                             AddOnsController.cxx
                             AddOnsController.hxx
+                            PixmapImageItem.cxx
+                            PixmapImageItem.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
@@ -150,6 +151,12 @@ if (HAVE_QT)
                         ThumbnailImageItem.hxx
                         PopupWindowTracker.cxx
                         PopupWindowTracker.hxx
+                        QmlPositioned.hxx
+                        QmlPositioned.cxx
+                        QmlNavCacheWrapper.hxx
+                        QmlNavCacheWrapper.cxx
+                        QmlRadioButtonHelper.cxx
+                        QmlRadioButtonHelper.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

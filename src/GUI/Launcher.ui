@@ -299,7 +299,9 @@
       </widget>
 
 
-      <widget class="LocationWidget" name="location"/>
+      <widget class="QQuickWidget" name="location">
+
+      </widget>
 
       <widget class="QQuickWidget" name="environmentPage">        
       </widget>
@@ -359,12 +361,6 @@
    <class>QQuickWidget</class>
    <extends>QWidget</extends>
    <header>QtQuickWidgets/QQuickWidget</header>
-  </customwidget>
-  <customwidget>
-   <class>LocationWidget</class>
-   <extends>QWidget</extends>
-   <header location="global">GUI/LocationWidget.hxx</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>ToolboxButton</class>

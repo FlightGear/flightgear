@@ -16,8 +16,10 @@ using namespace flightgear;
  * FGTaxiNode
  *************************************************************************/
 
-FGTaxiNode::FGTaxiNode(int index, const SGGeod& pos, bool aOnRunway, int aHoldType) :
-  FGPositioned(TRANSIENT_ID, FGPositioned::PARKING, "", pos),
+FGTaxiNode::FGTaxiNode(int index, const SGGeod& pos,
+                       bool aOnRunway, int aHoldType,
+                       const std::string& ident) :
+  FGPositioned(TRANSIENT_ID, FGPositioned::PARKING, ident, pos),
   m_index(index),
   isOnRunway(aOnRunway),
   holdType(aHoldType),

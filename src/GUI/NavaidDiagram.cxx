@@ -27,7 +27,9 @@
 #include <QVector2D>
 #include <QMouseEvent>
 
-NavaidDiagram::NavaidDiagram(QWidget* pr) :
+#include <Navaids/NavDataCache.hxx>
+
+NavaidDiagram::NavaidDiagram(QQuickItem* pr) :
     BaseDiagram(pr),
     m_offsetEnabled(false),
     m_offsetDistanceNm(5.0),
@@ -37,12 +39,28 @@ NavaidDiagram::NavaidDiagram(QWidget* pr) :
 
 }
 
-void NavaidDiagram::setNavaid(FGPositionedRef nav)
+void NavaidDiagram::setNavaid(qlonglong nav)
 {
-    m_navaid = nav;
-    m_projectionCenter = nav ? nav->geod() : SGGeod();
-    m_geod = nav->geod();
+    m_navaid = fgpositioned_cast<FGNavRecord>(flightgear::NavDataCache::instance()->loadById(nav));
+    m_projectionCenter = m_navaid ? m_navaid->geod() : SGGeod();
+    m_geod = m_projectionCenter;
     recomputeBounds(true);
+    emit locationChanged();
+}
+
+qlonglong NavaidDiagram::navaid() const
+{
+    return m_navaid->guid();
+}
+
+void NavaidDiagram::setGeod(QmlGeod geod)
+{
+    setGeod(geod.geod());
+}
+
+QmlGeod NavaidDiagram::geod() const
+{
+    return QmlGeod(m_geod);
 }
 
 void NavaidDiagram::setGeod(const SGGeod &geod)
@@ -51,6 +69,7 @@ void NavaidDiagram::setGeod(const SGGeod &geod)
     m_geod = geod;
     m_projectionCenter = m_geod;
     recomputeBounds(true);
+    emit locationChanged();
 }
 
 void NavaidDiagram::setOffsetEnabled(bool offset)
@@ -59,24 +78,28 @@ void NavaidDiagram::setOffsetEnabled(bool offset)
         return;
     m_offsetEnabled = offset;
     recomputeBounds(true);
+    emit offsetChanged();
 }
 
 void NavaidDiagram::setOffsetDistanceNm(double distanceNm)
 {
     m_offsetDistanceNm = distanceNm;
     update();
+    emit offsetChanged();
 }
 
 void NavaidDiagram::setOffsetBearingDeg(int bearingDeg)
 {
     m_offsetBearingDeg = bearingDeg;
     update();
+    emit offsetChanged();
 }
 
 void NavaidDiagram::setHeadingDeg(int headingDeg)
 {
     m_headingDeg = headingDeg;
     update();
+    emit offsetChanged();
 }
 
 void NavaidDiagram::paintContents(QPainter *painter)

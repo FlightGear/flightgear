@@ -35,9 +35,9 @@ class RecentAircraftModel;
 class RecentLocationsModel;
 class MPServersModel;
 class AircraftItemModel;
-class LocationWidget;
 class QQuickItem;
 class LaunchConfig;
+class LocationController;
 
 class LauncherController : public QObject
 {
@@ -48,6 +48,8 @@ class LauncherController : public QObject
     Q_PROPERTY(AircraftProxyModel* searchAircraftModel MEMBER m_aircraftSearchModel CONSTANT)
 
     Q_PROPERTY(AircraftItemModel* baseAircraftModel MEMBER m_aircraftModel CONSTANT)
+
+    Q_PROPERTY(LocationController* location MEMBER m_location CONSTANT)
 
     Q_PROPERTY(MPServersModel* mpServersModel MEMBER m_serversModel CONSTANT)
 
@@ -61,7 +63,6 @@ class LauncherController : public QObject
     Q_PROPERTY(QStringList settingsSummary READ settingsSummary WRITE setSettingsSummary NOTIFY summaryChanged)
     Q_PROPERTY(QStringList environmentSummary READ environmentSummary WRITE setEnvironmentSummary NOTIFY summaryChanged)
 
-    Q_PROPERTY(QString locationDescription READ locationDescription NOTIFY summaryChanged)
     Q_PROPERTY(QStringList combinedSummary READ combinedSummary NOTIFY summaryChanged)
 
     Q_PROPERTY(QString versionString READ versionString CONSTANT)
@@ -70,9 +71,10 @@ class LauncherController : public QObject
     Q_PROPERTY(RecentLocationsModel* locationHistory READ locationHistory CONSTANT)
 
     Q_PROPERTY(bool canFly READ canFly NOTIFY canFlyChanged)
+
+    Q_PROPERTY(AircraftType aircraftType READ aircraftType NOTIFY selectedAircraftChanged)
 public:
-    explicit LauncherController(QObject *parent,
-                                LocationWidget* loc);
+    explicit LauncherController(QObject *parent);
 
     void initQML();
 
@@ -114,8 +116,6 @@ public:
 
     QStringList combinedSummary() const;
 
-    QString locationDescription() const;
-
     QString versionString() const;
 
     RecentAircraftModel* aircraftHistory();
@@ -144,6 +144,22 @@ public:
 
     void restoreSettings();
     void saveSettings();
+
+    LocationController* location() const
+    { return m_location; }
+
+    enum AircraftType
+    {
+        Airplane = 0,
+        Seaplane,
+        Helicopter,
+        Airship
+    };
+
+    Q_ENUM(AircraftType)
+
+    AircraftType aircraftType() const
+    { return m_aircraftType; }
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -195,8 +211,10 @@ private:
     AircraftProxyModel* m_aircraftSearchModel;
     AircraftProxyModel* m_browseAircraftModel;
     MPServersModel* m_serversModel = nullptr;
+    LocationController* m_location = nullptr;
 
     QUrl m_selectedAircraft;
+    AircraftType m_aircraftType = Airplane;
     int m_ratingFilters[4] = {3, 3, 3, 3};
     LaunchConfig* m_config = nullptr;
     QmlAircraftInfo* m_selectedAircraftInfo = nullptr;
@@ -204,8 +222,6 @@ private:
     QStringList m_settingsSummary, m_environmentSummary;
     RecentAircraftModel* m_aircraftHistory = nullptr;
     RecentLocationsModel* m_locationHistory = nullptr;
-
-    LocationWidget* m_locationWidget_FIXME = nullptr;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX
