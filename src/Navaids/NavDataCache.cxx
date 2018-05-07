@@ -1713,7 +1713,7 @@ void NavDataCache::abortTransaction()
 
 FGPositionedRef NavDataCache::loadById(PositionedID rowid)
 {
-  if (rowid == 0) {
+  if (rowid < 1) {
     return NULL;
   }
   if (!d) return NULL;

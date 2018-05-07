@@ -110,7 +110,12 @@ bool FGNavRecord::isVORTAC() const
 
 void FGNavRecord::setColocatedDME(PositionedID other)
 {
-  mColocated = other;
+    mColocated = other;
+}
+
+PositionedID FGNavRecord::colocatedDME() const
+{
+    return mColocated;
 }
 
 void FGNavRecord::updateFromXML(const SGGeod& geod, double heading)

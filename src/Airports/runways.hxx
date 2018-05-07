@@ -38,7 +38,9 @@ class FGRunway : public FGRunwayBase
   double _stopway;
   PositionedID _ils;
 public:
-  
+  static bool isType(FGPositioned::Type ty)
+  { return (ty ==  FGPositioned::RUNWAY); }
+
   FGRunway(PositionedID aGuid,
            PositionedID aAirport, const std::string& rwy_no,
             const SGGeod& aGeod,
@@ -126,6 +128,9 @@ public:
 class FGHelipad : public FGRunwayBase
 {
 public:
+    static bool isType(FGPositioned::Type ty)
+    { return (ty ==  FGPositioned::HELIPAD); }
+
     FGHelipad(PositionedID aGuid,
            PositionedID aAirport, const std::string& rwy_no,
             const SGGeod& aGeod,

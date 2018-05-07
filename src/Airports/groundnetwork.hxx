@@ -259,6 +259,8 @@ public:
 
     FGParkingRef getParkingByIndex(unsigned int index) const;
 
+    FGParkingRef findParkingByName(const std::string& name) const;
+
     /**
      * Find the taxiway segment joining two (ground-net) nodes. Returns
      * NULL if no such segment exists.

@@ -451,6 +451,18 @@ FGParkingRef FGGroundNetwork::getParkingByIndex(unsigned int index) const
     return FGParkingRef(static_cast<FGParking*>(tn.ptr()));
 }
 
+FGParkingRef FGGroundNetwork::findParkingByName(const string &name) const
+{
+    auto it = std::find_if(m_parkings.begin(), m_parkings.end(), [name](const FGParkingRef& p) {
+       return p->ident() == name;
+    });
+
+    if (it == m_parkings.end())
+        return nullptr;
+
+    return *it;
+}
+
 void FGGroundNetwork::addSegment(const FGTaxiNodeRef &from, const FGTaxiNodeRef &to)
 {
     FGTaxiSegment* seg = new FGTaxiSegment(from, to);

@@ -302,4 +302,26 @@ private:
   const SGVec3d mCart;
 };
 
+template <class T>
+T* fgpositioned_cast(FGPositioned* p)
+{
+    if (T::isType(p->type())) {
+        return static_cast<T*>(p);
+    }
+
+    return nullptr;
+}
+
+template <class T>
+T* fgpositioned_cast(FGPositionedRef p)
+{
+    if (!p) return nullptr;
+
+    if (T::isType(p->type())) {
+        return static_cast<T*>(p.ptr());
+    }
+
+    return nullptr;
+}
+
 #endif // of FG_POSITIONED_HXX

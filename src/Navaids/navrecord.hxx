@@ -56,6 +56,9 @@ class FGNavRecord : public FGPositioned
     mutable bool serviceable;   // for failure modeling
 
   public:
+    static bool isType(FGPositioned::Type ty)
+    { return (ty >= FGPositioned::NDB) && (ty <= FGPositioned::DME); }
+
     FGNavRecord( PositionedID aGuid,
                  Type type,
                  const std::string& ident,
@@ -98,7 +101,10 @@ class FGNavRecord : public FGPositioned
     void unbindFromNode(SGPropertyNode* nd) const;
 
     void setColocatedDME(PositionedID other);
+    
     bool hasDME() const;
+
+    PositionedID colocatedDME() const;
 
     bool isVORTAC() const;
 

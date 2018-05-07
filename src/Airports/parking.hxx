@@ -49,6 +49,9 @@ private:
 
   SG_DISABLE_COPY(FGParking);
 public:
+  static bool isType(FGPositioned::Type ty)
+  { return (ty == FGPositioned::PARKING); }
+
   FGParking(int index,
             const SGGeod& pos,
             double heading, double radius,

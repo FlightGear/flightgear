@@ -52,6 +52,9 @@ class FGAirport : public FGPositioned
             const std::string& name, bool has_metar, Type aType);
     ~FGAirport();
 
+    static bool isType(FGPositioned::Type ty)
+    { return (ty >= FGPositioned::AIRPORT) && (ty <= FGPositioned::SEAPORT); }
+
     const std::string& getId() const { return ident(); }
     const std::string& getName() const { return _name; }
     std::string toString() const { return "an airport " + ident(); }
