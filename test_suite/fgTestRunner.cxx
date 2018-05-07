@@ -63,5 +63,5 @@ int testRunner(const std::string& title, char *subset, bool verbose, bool ctest_
 
     // Return the status of the tests.
     CppUnit::TestResultCollector &status = runner.result();
-    return status.testFailures();
+    return status.testFailuresTotal();
 }
