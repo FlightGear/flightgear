@@ -29,6 +29,12 @@ FocusScope {
         value = Math.min(value, maxValue);
     }
 
+    function doCommit(newValue)
+    {
+        value = newValue;
+        commit(newValue)
+    }
+
     function zeroPaddedNumber(v)
     {
         var s = v.toString();
@@ -46,7 +52,7 @@ FocusScope {
             value = Math.min(parseInt(input.text) + 1, maxValue)
             input.text = __valueString
         } else {
-            commit(Math.min(value + 1, maxValue));
+            doCommit(Math.min(value + 1, maxValue));
         }
     }
 
@@ -56,7 +62,7 @@ FocusScope {
             value = Math.max(parseInt(input.text) - 1, minValue)
             input.text = __valueString
         } else {
-            commit(Math.max(value - 1, minValue));
+            doCommit(Math.max(value - 1, minValue));
         }
     }
 
@@ -109,7 +115,7 @@ FocusScope {
             if (activeFocus) {
                 selectAll();
             } else {
-                commit(parseInt(text))
+                doCommit(parseInt(text))
             }
         }
 
