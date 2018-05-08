@@ -1,5 +1,4 @@
 import QtQuick 2.4
-import FlightGear.Launcher 1.0
 
 Item
 {
@@ -8,7 +7,6 @@ Item
     implicitWidth: 14
 
     property Flickable flickable: parent
-
     readonly property real heightRatio: flickable ? flickable.visibleArea.heightRatio : 0
 
     readonly property int barSize: Math.max(height * heightRatio, width * 3);
@@ -24,9 +22,10 @@ Item
         return visArea.yPosition / (1.0 - visArea.heightRatio);
     }
 
-    FlickableExtentQuery {
-        id: extentQuery
-        flickable: root.flickable
+    function verticalExtent()
+    {
+        var f = root.flickable;
+        return (f.height / f.visibleArea.heightRatio) - f.height;
     }
 
     MouseArea {
@@ -35,8 +34,7 @@ Item
         anchors.fill: parent
         onClicked: {
             var clickPos = (mouse.y / height)
-            var cy = clickPos * extentQuery.verticalExtent() - extentQuery.minYExtent();
-            flickable.contentY = cy;
+            flickable.contentY = clickPos * verticalExtent();
         }
         visible: root.enabled
     }
@@ -76,10 +74,9 @@ Item
 
                 onMouseYChanged: {
                     var position = (thumb.y / root.scrollRange)
-                    var cy =  position * extentQuery.verticalExtent() - extentQuery.minYExtent();
-                    flickable.contentY = cy;
+                    flickable.contentY = position * verticalExtent();
                 }
             }
         }
-    }
+    } // of track item
 }

@@ -33,7 +33,6 @@
 #include "RecentLocationsModel.hxx"
 #include "ThumbnailImageItem.hxx"
 #include "PreviewImageItem.hxx"
-#include "FlickableExtentQuery.hxx"
 #include "MPServersModel.h"
 #include "AircraftSearchFilterModel.hxx"
 #include "DefaultAircraftLocator.hxx"
@@ -101,7 +100,6 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<MPServersModel>("FlightGear.Launcher", 1, 0, "MPServers", "Singleton API");
 
     qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
-    qmlRegisterType<FlickableExtentQuery>("FlightGear.Launcher", 1, 0, "FlickableExtentQuery");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
     qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
 

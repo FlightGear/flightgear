@@ -343,28 +343,6 @@ else()
 endif (USE_DBUS)
 
 ##############################################################################
-
-function(check_private_headers_exist module private_includes_var)
-message(STATUS "Checking whether private include directories for module ${module} exist")
-foreach(_dir ${private_includes_var})
-  if(NOT EXISTS "${_dir}")
-    message(FATAL_ERROR "The private include directory ${_dir} for module ${module} do not exist! Please make sure your Qt5 installation contains private headers.\nThe required directories:\n  ${private_includes_var}")
-  endif()
-endforeach()
-endfunction()
-function(check_private_header_exists _file _dirs)
-set(_found FALSE)
-foreach(_dir ${_dirs})
-  if(EXISTS "${_dir}/${_file}")
-    set(_found TRUE)
-  endif()
-endforeach()
-if(NOT _found)
-  message(FATAL_ERROR "The private include file ${_file} was not found in directory ${_dirs}! Please make sure your Qt5 installation contains private headers.")
-endif()
-endfunction()
-
-##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
     message(STATUS "Qt launcher enabled, checking for Qt 5.4 / qmake")
@@ -372,24 +350,7 @@ if (ENABLE_QT)
     if (Qt5Widgets_FOUND)
         message(STATUS "Will enable Qt launcher GUI")
         message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
-        message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
-
-        # copied from KDAB's GammaRay CMakeLists.txt
-        # Sanity checking, we need private includes for the following modules
-
-        check_private_headers_exist("Qt5Gui" "${Qt5Gui_PRIVATE_INCLUDE_DIRS}")
-
-        #HACK: CMake with broken Qt5Quick_PRIVATE_INCLUDE_DIRS
-        if (NOT "${Qt5Quick_PRIVATE_INCLUDE_DIRS}" MATCHES "/QtQuick/")
-            string(REPLACE "/QtCore" "/QtQuick" replaceme "${Qt5Core_PRIVATE_INCLUDE_DIRS}")
-            list(APPEND Qt5Quick_PRIVATE_INCLUDE_DIRS ${Qt5Qml_PRIVATE_INCLUDE_DIRS})
-            list(APPEND Qt5Quick_PRIVATE_INCLUDE_DIRS ${replaceme})
-            list(REMOVE_DUPLICATES Qt5Quick_PRIVATE_INCLUDE_DIRS)
-        endif()
-        check_private_header_exists("private/qquickitem_p.h" "${Qt5Quick_PRIVATE_INCLUDE_DIRS}")
-
-        message(STATUS "  Qt5Quick private include dir: ${Qt5Quick_PRIVATE_INCLUDE_DIRS}")
-        
+        message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")        
         set(HAVE_QT 1)
     else()
         # don't try to build FGQCanvas if Qt wasn't found correctly

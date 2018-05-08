@@ -148,15 +148,13 @@ if (HAVE_QT)
                         PreviewImageItem.hxx
                         ThumbnailImageItem.cxx
                         ThumbnailImageItem.hxx
-                        FlickableExtentQuery.cxx
-                        FlickableExtentQuery.hxx
                         PopupWindowTracker.cxx
                         PopupWindowTracker.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
     target_link_libraries(fgqmlui Qt5::Quick Qt5::Network Qt5::Qml SimGearCore)
-    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI ${Qt5Quick_PRIVATE_INCLUDE_DIRS})
+    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 endif()
 
 
