@@ -1114,21 +1114,27 @@ void LocationWidget::addToRecent(FGPositionedRef pos)
     settings.setValue("recent-locations", savePositionList(m_recentLocations));
 }
 
+static void prependLocation(FGPositionedList& locs, const std::string& airportIdent)
+{
+    auto it = std::find_if(locs.begin(), locs.end(), [airportIdent](FGPositionedRef pos) {
+        return pos->ident() == airportIdent;
+    });
+    
+    if (it == locs.end()) {
+        FGAirportRef apt = FGAirport::findByIdent(airportIdent);
+        locs.insert(locs.begin(), apt);
+    }
+}
 
 void LocationWidget::onShowHistory()
 {
-    // prepend the default location
     FGPositionedList locs = m_recentLocations;
-    const std::string defaultICAO = flightgear::defaultAirportICAO();
-
-    auto it = std::find_if(locs.begin(), locs.end(), [defaultICAO](FGPositionedRef pos) {
-        return pos->ident() == defaultICAO;
-    });
-
-    if (it == locs.end()) {
-        FGAirportRef apt = FGAirport::findByIdent(defaultICAO);
-        locs.insert(locs.begin(), apt);
-    }
+    
+    // prepend the C172P tutorial airport
+    prependLocation(locs, "PHTO");
+    
+    // and then prepend our default airport
+    prependLocation(locs, flightgear::defaultAirportICAO());
 
     m_searchModel->setItems(locs);
 }
