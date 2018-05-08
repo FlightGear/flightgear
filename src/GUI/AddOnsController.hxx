@@ -2,6 +2,7 @@
 #define ADDONSCONTROLLER_HXX
 
 #include <QObject>
+#include <QStringList>
 
 class CatalogListModel;
 class LauncherMainWindow;

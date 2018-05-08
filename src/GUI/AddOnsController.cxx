@@ -146,8 +146,6 @@ void AddOnsController::setAircraftPaths(QStringList aircraftPaths)
     if (m_aircraftPaths == aircraftPaths)
         return;
 
-    qInfo() << Q_FUNC_INFO << aircraftPaths << ", was " << m_aircraftPaths;
-
     m_aircraftPaths = aircraftPaths;
     emit aircraftPathsChanged(m_aircraftPaths);
 

@@ -90,7 +90,7 @@ public:
         NoAddInProgress
     };
 
-    Q_ENUM(CatalogStatus)
+    Q_ENUMS(CatalogStatus)
 
     void onCatalogStatusChanged(simgear::pkg::Catalog *cat);
 
