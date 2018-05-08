@@ -40,6 +40,7 @@ public:
             if (length > 0) {
                 // warn if we had valid bytes but couldn't load it, i.e corrupted data or similar
                 qWarning() << "failed to load image data for URL:" << QString::fromStdString(aThumbnailUrl);
+                owner->clearImage();
             }
             return;
         }
@@ -125,7 +126,11 @@ void ThumbnailImageItem::setAircraftUri(QString uri)
             int variant = package->indexOfVariant(packageId);
             const auto thumbnail = package->thumbnailForVariant(variant);
             m_imageUrl = QUrl(QString::fromStdString(thumbnail.url));
-            globals->packageRoot()->requestThumbnailData(m_imageUrl.toString().toStdString());
+            if (m_imageUrl.isValid()) {
+                globals->packageRoot()->requestThumbnailData(m_imageUrl.toString().toStdString());
+            } else {
+                clearImage();
+            }
         }
     } else {
         QFileInfo aircraftSetPath(QUrl(uri).toLocalFile());
@@ -138,6 +143,7 @@ void ThumbnailImageItem::setAircraftUri(QString uri)
                 setImage(img);
             } else {
                 qWarning() << Q_FUNC_INFO << "failed to load thumbnail from:" << thumbnailPath;
+                clearImage();
             }
         }
     } // of local aircraft case
@@ -165,6 +171,15 @@ void ThumbnailImageItem::setImage(QImage image)
     m_imageDirty = true;
     setImplicitSize(qMin(m_maximumSize.width(), m_image.width()),
                     qMin(m_maximumSize.height(), m_image.height()));
+    emit sourceSizeChanged();
+    update();
+}
+
+void ThumbnailImageItem::clearImage()
+{
+    m_image = QImage{};
+    m_imageDirty = true;
+    setImplicitSize(m_maximumSize.width(), m_maximumSize.height());
     emit sourceSizeChanged();
     update();
 }

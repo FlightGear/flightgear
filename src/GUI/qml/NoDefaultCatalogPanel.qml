@@ -1,49 +1,50 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
 
-Rectangle {
+Item {
     id: root
 
-    height: noDefaultCatalogRow.childrenRect.height + (Style.margin * 2);
+    height: frameRect.height + (Style.margin * 2);
     z: 100
-    color: "white"
-    border.width: 1
-    border.color: Style.minorFrameColor
 
-    Row {
+    Rectangle {
+        id: frameRect
         y: Style.margin
-        id: noDefaultCatalogRow
-        spacing: Style.margin
+        height: noDefaultCatalogRow.childrenRect.height + (Style.margin * 2);
+        width: parent.width
+        color: "white"
+        border.width: 1
+        border.color: Style.minorFrameColor
 
-        Text {
-            text: "The official FlightGear aircraft hangar is not added, so many standard "
-                  + "aircraft will not be available. You can add the  hangar now, or hide "
-                  + "this message. The offical hangar can always be restored from the 'Add-Ons' page."
-            wrapMode: Text.WordWrap
-            anchors.verticalCenter: parent.verticalCenter
-            width: root.width - (addDefaultButton.width + hideButton.width + Style.margin * 3)
-        }
+        Row {
+            y: Style.margin
+            id: noDefaultCatalogRow
+            spacing: Style.margin
 
-        Button {
-            id: addDefaultButton
-            text: qsTr("Add default hangar")
-            anchors.verticalCenter: parent.verticalCenter
-
-            onClicked: {
-                console.warn("Implement me")
-
-              //  _launcher.officialCatalogAction("add-official");
+            Text {
+                text: qsTr("The official FlightGear aircraft hangar is not added, so many standard "
+                      + "aircraft will not be available. You can add the  hangar now, or hide "
+                      + "this message. The offical hangar can always be restored from the 'Add-Ons' page.")
+                wrapMode: Text.WordWrap
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.width - (addDefaultButton.width + hideButton.width + Style.margin * 3)
             }
-        }
 
-        Button {
-            id: hideButton
-            text: qsTr("Hide")
-            anchors.verticalCenter: parent.verticalCenter
-
-            onClicked: {
-                _addOns.officialCatalogAction("hide");
+            Button {
+                id: addDefaultButton
+                text: _addOns.catalogs.isAddingCatalog ? qsTr("Adding hangar")
+                                                       : qsTr("Add default hangar")
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: _addOns.officialCatalogAction("add-official");
+                enabled: !_addOns.catalogs.isAddingCatalog
             }
-        }
-    }
-}
+
+            Button {
+                id: hideButton
+                text: qsTr("Hide")
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: _addOns.officialCatalogAction("hide");
+            }
+        } // content row
+    } // visible frame
+} // root item

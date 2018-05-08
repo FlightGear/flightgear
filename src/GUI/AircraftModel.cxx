@@ -64,7 +64,7 @@ protected:
         } else if ((aReason == STATUS_REFRESHED) || (aReason == STATUS_SUCCESS)) {
             m_model->refreshPackages();
         } else {
-            qWarning() << "failed refresh of "
+            qWarning() << "failed refresh of"
                 << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
         }
 

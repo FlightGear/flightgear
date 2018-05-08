@@ -49,6 +49,7 @@ private:
     friend class ThumbnailPackageDelegate;
 
     void setImage(QImage image);
+    void clearImage();
 
     QString m_aircraftUri;
     QUrl m_imageUrl;

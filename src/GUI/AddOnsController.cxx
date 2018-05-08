@@ -180,8 +180,7 @@ void AddOnsController::officialCatalogAction(QString s)
         QSettings settings;
         settings.setValue("hide-official-catalog-message", true);
     } else if (s == "add-official") {
-        // TEMPROARY, FIXME
-       // AddOnsPage::addDefaultCatalog(nullptr, false /* not silent */);
+        m_catalogs->installDefaultCatalog();
     }
 
     emit showNoOfficialHangarChanged();
