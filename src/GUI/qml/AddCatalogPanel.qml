@@ -37,6 +37,13 @@ Rectangle {
             placeholder: "http://www.flightgear.org/hangars/some-catalog.xml"
         }
 
+        AnimatedImage {
+            id: spinner
+            anchors.horizontalCenter: parent.horizontalCenter
+            source: "qrc:///linear-spinner"
+            playing: true
+        }
+
         Item {
             id: buttonBox
             width: parent.width
@@ -138,6 +145,7 @@ Rectangle {
             PropertyChanges { target: addCatalogPromptText; text: qsTr("Click here to add a new aircraft hangar. (Note this requires an Internet connection)"); clickable: true }
             PropertyChanges { target: addCatalogUrlEntry; visible: false; text: "" } // reset URL on cancel / success
             PropertyChanges { target: buttonBox; visible: false }
+            PropertyChanges { target: spinner; visible: false }
         },
 
         State {
@@ -145,6 +153,7 @@ Rectangle {
             PropertyChanges { target: addCatalogPromptText; text: qsTr("Enter a hangar location (URL) to add."); clickable: false }
             PropertyChanges { target: addCatalogUrlEntry; visible: true }
             PropertyChanges { target: buttonBox; visible: true }
+            PropertyChanges { target: spinner; visible: false }
         },
 
         State {
@@ -152,6 +161,7 @@ Rectangle {
             PropertyChanges { target: addCatalogPromptText; text: qsTr("Retrieving hangar information..."); clickable: false }
             PropertyChanges { target: addCatalogUrlEntry; visible: false }
             PropertyChanges { target: addCatalogProceedButton; enabled: false }
+            PropertyChanges { target: spinner; visible: true }
         },
 
 
@@ -160,6 +170,7 @@ Rectangle {
             PropertyChanges { target: addCatalogPromptText; text: qsTr("There was a problem adding the hangar: %1.").arg(addErrorMessage()); clickable: false }
             PropertyChanges { target: addCatalogUrlEntry; visible: true }
             PropertyChanges { target: addCatalogProceedButton; enabled: true }
+            PropertyChanges { target: spinner; visible: false }
         }
     ]
 }
