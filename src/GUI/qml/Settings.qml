@@ -32,9 +32,11 @@ Item {
     }
 
     Flickable {
+        id: settingsFlick
         contentHeight: sectionColumn.childrenRect.height
         flickableDirection: Flickable.VerticalFlick
-        anchors.fill: parent
+        height: parent.height
+        width: parent.width - scrollbar.width
 
         Column
         {
@@ -472,4 +474,12 @@ Item {
             }
         } // of Column
     } // of Flickable
+
+    Scrollbar {
+        id: scrollbar
+        anchors.right: parent.right
+        height: settingsFlick.height
+        flickable: settingsFlick
+        visible: settingsFlick.contentHeight > settingsFlick.height
+    }
 }
