@@ -37,6 +37,11 @@ public:
 
     float aspectRatio() const;
 
+    /**
+      @brief clear the image immediately, so we don't see a stale / expired
+      one while attemtping to load the next one
+      */
+    Q_INVOKABLE void clear();
 signals:
     void imageUrlChanged();
     void sourceSizeChanged();

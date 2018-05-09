@@ -29,8 +29,13 @@ Item {
         width: height * aspectRatio
         height: scale * sourceSize.height
 
-        property var urlsList: []
+        property var urlsList: _launcher.defaultSplashUrls()
         property int __currentUrl: 0
+
+        Binding on urlsList {
+            when: _launcher.selectedAircraftInfo.previews.length > 0
+            value: _launcher.selectedAircraftInfo.previews
+        }
 
         onUrlsListChanged: {
             __currentUrl = 0;
@@ -46,29 +51,14 @@ Item {
             }
         }
 
-        function currentPreviewUrl()
+        function currentUrl()
         {
-            if (__currentUrl >= urlsList.length) return "";
+            if (urlsList.length <= __currentUrl) return "";
             return urlsList[__currentUrl];
         }
 
         visible: imageUrl != ""
-        imageUrl: currentPreviewUrl()
-
-// conditional binding when we have valid previews
-        Binding {
-            when: (_launcher.selectedAircraftInfo.previews.length > 0)
-            target: preview
-            property: "urlsList"
-            value: _launcher.selectedAircraftInfo.previews
-        }
-
-        Binding {
-            when: _launcher.selectedAircraftInfo.previews.length === 0
-            target: preview
-            property: "urlsList"
-            value: _launcher.defaultSplashUrls()
-        }
+        imageUrl: currentUrl()
     }
 
     Text {

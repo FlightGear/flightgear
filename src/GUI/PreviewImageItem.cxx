@@ -78,6 +78,17 @@ float PreviewImageItem::aspectRatio() const
     return static_cast<float>(m_image.width()) / m_image.height();
 }
 
+void PreviewImageItem::clear()
+{
+    m_imageUrl.clear();
+    m_image = QImage{};
+    m_imageDirty = true;
+    m_requestActive = false;
+    update();
+    emit imageUrlChanged();
+    emit isLoadingChanged();
+}
+
 void PreviewImageItem::setImageUrl( QUrl url)
 {
     if (m_imageUrl == url)
@@ -117,6 +128,11 @@ void PreviewImageItem::setImage(QImage image)
 void PreviewImageItem::onFinished()
 {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->url() != m_imageUrl) {
+        // if replies arrive out of order, don't trample the correct one
+        return;
+    }
+
     QImage img;
     if (!img.load(reply, nullptr)) {
         qWarning() << Q_FUNC_INFO << "failed to read image data from" << reply->url();
@@ -137,8 +153,8 @@ void PreviewImageItem::onDownloadError(QNetworkReply::NetworkError errorCode)
         }
     }
 
-    qWarning() << "failed to download:" << reply->url();
-    qWarning() << reply->errorString();
+    qWarning() << Q_FUNC_INFO << "failed to download:" << reply->url();
+    qWarning() << "\t" << reply->errorString();
     m_requestActive = false;
     emit isLoadingChanged();
 }

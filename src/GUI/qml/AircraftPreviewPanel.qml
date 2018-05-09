@@ -9,6 +9,7 @@ Rectangle {
     readonly property bool __havePreviews: (previews.length > 0)
     onPreviewsChanged: {
         activePreview = 0
+        preview.clear()
     }
 
     height: width / preview.aspectRatio
@@ -25,7 +26,15 @@ Rectangle {
         id: preview
         width: parent.width
         height: parent.height
-        imageUrl: __havePreviews ? root.previews[root.activePreview] : ""
+
+        function activePreviewUrl()
+        {
+            if (!__havePreviews) return "";
+            if (root.previews.length <= root.activePreview) return "";
+            return root.previews[root.activePreview];
+        }
+
+        imageUrl: activePreviewUrl();
 
         Rectangle {
             anchors.fill: parent
