@@ -46,8 +46,14 @@ Item {
             }
         }
 
+        function currentPreviewUrl()
+        {
+            if (__currentUrl >= urlsList.length) return "";
+            return urlsList[__currentUrl];
+        }
+
         visible: imageUrl != ""
-        imageUrl: urlsList[__currentUrl]
+        imageUrl: currentPreviewUrl()
 
 // conditional binding when we have valid previews
         Binding {
