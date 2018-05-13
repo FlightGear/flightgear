@@ -508,6 +508,8 @@ void FGAIBase::bind() {
         SGRawValueMethods<FGAIBase,const char*>(*this,
         &FGAIBase::_getCallsign,
         0));
+    // 2018.2 - to ensure consistent properties also tie the callsign to where it would be in a local model.
+    tie("sim/multiplay/callsign", SGRawValueMethods<FGAIBase, const char*>(*this, &FGAIBase::_getCallsign, 0));
 
     tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
     tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
@@ -525,6 +527,7 @@ void FGAIBase::bind() {
     tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
     tie("subID", SGRawValuePointer<int>(&_subID));
     tie("controls/lighting/nav-lights", SGRawValueFunctions<bool>(_isNight));
+
 
     props->setBoolValue("controls/lighting/beacon", true);
     props->setBoolValue("controls/lighting/strobe", true);
