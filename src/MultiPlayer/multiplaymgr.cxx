@@ -98,9 +98,10 @@ const int V2_PROP_ID_PROTOCOL = 0x10001;
 const int V2_PAD_MAGIC = 0x1face002;
 
 /*
- * boolean arrays are transmitted in blocks of 30 mapping to a single int.
+ * boolean arrays are transmitted in blocks of 31 mapping to a single int.
  * These parameters define where these are mapped and how they are sent.
  * The blocks should be in the same property range (with no other properties inside the range)
+ * The blocksize is set to 40 to allow for ints being 32 bits, so block 0 will be 0..30 (31 bits)
  */
 const int BOOLARRAY_BLOCKSIZE = 40;
 
@@ -1411,20 +1412,18 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                       }
                       case TT_BOOLARRAY:
                       {
-                          if ((*it)->int_value)
+                          struct BoolArrayBuffer *boolBuf = nullptr;
+                          if ((*it)->id >= BOOLARRAY_START_ID && (*it)->id <= BOOLARRAY_END_ID + BOOLARRAY_BLOCKSIZE)
                           {
-                              struct BoolArrayBuffer *boolBuf = nullptr;
-                              if ((*it)->id > BOOLARRAY_START_ID && (*it)->id <= BOOLARRAY_END_ID + BOOLARRAY_BLOCKSIZE)
-                              {
-                                  int buffer_block = ((*it)->id - BOOLARRAY_BASE_1) / BOOLARRAY_BLOCKSIZE;
-                                  boolBuf = &boolBuffer[buffer_block];
-                                  boolBuf->propertyId = BOOLARRAY_START_ID + buffer_block * BOOLARRAY_BLOCKSIZE;
-                              }
-                              if (boolBuf)
-                              {
-                                  int bitidx = (*it)->id - boolBuf->propertyId;
+                              int buffer_block = ((*it)->id - BOOLARRAY_BASE_1) / BOOLARRAY_BLOCKSIZE;
+                              boolBuf = &boolBuffer[buffer_block];
+                              boolBuf->propertyId = BOOLARRAY_START_ID + buffer_block * BOOLARRAY_BLOCKSIZE;
+                          }
+                          if (boolBuf)
+                          {
+                              int bitidx = (*it)->id - boolBuf->propertyId;
+                              if ((*it)->int_value)
                                   boolBuf->boolValue |= 1 << bitidx;
-                              }
                           }
                           break;
                       }
