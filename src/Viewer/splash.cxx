@@ -161,12 +161,13 @@ void SplashScreen::createNodes()
             _items.back().maxLineCount = 1;
         }
 
-        addText(geode, osg::Vec2(0.025, 0.975), 0.03,
+        addText(geode, osg::Vec2(0.025, 0.940), 0.03,
                 fgGetString("/sim/author"),
-                osgText::Text::LEFT_BOTTOM,
+                osgText::Text::LEFT_TOP,
                 nullptr,
                 0.6);
-        _items.back().maxLineCount = 1;
+        _items.back().maxLineCount = 3;
+        _items.back().maxHeightFraction = 0.055;
     }
 
     addText(geode, osg::Vec2(0.975, 0.935), 0.03,
@@ -371,13 +372,19 @@ void SplashScreen::TextItem::reposition(int width, int height) const
 
 void SplashScreen::TextItem::recomputeSize(int height) const
 {
-    if (maxLineCount == 0) {
+    if ((maxLineCount == 0) && (maxHeightFraction < 0.0)) {
         return;
     }
 
+    double heightFraction = maxHeightFraction;
+    if (heightFraction < 0.0) {
+        heightFraction = 9999.0;
+    }
+    
     double baseSize = fractionalCharSize;
     textNode->update();
-    while (textNode->getLineCount() > maxLineCount) {
+    while ((textNode->getLineCount() > maxLineCount) ||
+           (baseSize * textNode->getLineCount() > heightFraction)) {
         baseSize *= 0.8; // 20% shrink each time
         textNode->setCharacterSize(baseSize * height);
         textNode->update();

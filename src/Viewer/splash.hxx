@@ -93,7 +93,8 @@ private:
         double fractionalCharSize;
         double maxWidthFraction = -1.0;
         unsigned int maxLineCount = 0;
-
+        double maxHeightFraction = -1.0;
+        
         void recomputeSize(int height) const;
         void reposition(int width, int height) const;
     };
