@@ -704,3 +704,13 @@ bool FGMouseInput::isRightDragToLookEnabled() const
 
     return (d->rightClickModeCycle == false);
 }
+
+bool FGMouseInput::isActiveModePassThrough() const
+{
+    if (!d) {
+        return false;
+    }
+    
+    mouse &m = d->mice[0];
+    return m.modes[m.current_mode].pass_through;
+}

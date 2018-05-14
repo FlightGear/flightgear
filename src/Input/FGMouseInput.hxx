@@ -59,6 +59,11 @@ public:
      * @return
      */
     bool isRightDragToLookEnabled() const;
+    
+    /**
+     * @brief check if the active mode passes clicks through to the UI or not
+     */
+    bool isActiveModePassThrough() const;
 private:
   void processMotion(int x, int y, const osgGA::GUIEventAdapter* ea);
     

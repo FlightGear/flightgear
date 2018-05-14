@@ -164,10 +164,7 @@ public:
             case(osgGA::GUIEventAdapter::RELEASE):
             {
                 FGMouseInput* mouseSubsystem = globals->get_subsystem<FGInput>()->get_subsystem<FGMouseInput>();
-                if (mouseSubsystem &&
-                    mouseSubsystem->isRightDragToLookEnabled() &&
-                    _mouse0RightButtonNode->getBoolValue())
-                {
+                if (mouseSubsystem && !mouseSubsystem->isActiveModePassThrough()) {
                     return false;
                 }
 
