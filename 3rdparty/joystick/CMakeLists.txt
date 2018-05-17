@@ -34,6 +34,9 @@ elseif(WIN32)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     # no libs here?
 elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+	set_target_properties(PLIBJoystick PROPERTIES 
+		COMPILE_DEFINITIONS "HAVE_USBHID_H")
+	target_include_directories(PLIBJoystick PRIVATE ${USBHID_INCLUDE_DIR})
     target_link_libraries(PLIBJoystick ${USBHID_LIBRARY})
 else()
     # other / none platform
