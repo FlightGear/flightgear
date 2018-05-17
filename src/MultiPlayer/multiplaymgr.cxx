@@ -538,7 +538,9 @@ static const IdPropertyList sIdPropertyList[] = {
     { BOOLARRAY_BASE_2 + 8, "sim/multiplay/generic/bool[39]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 9, "sim/multiplay/generic/bool[40]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 10, "sim/multiplay/generic/bool[41]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
-    { BOOLARRAY_BASE_2 + 11, "sim/multiplay/generic/bool[42]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
+        // out of sequence between the block and the buffer becuase of a typo. repurpose the first as that way [72] will work 
+        // correctly on older versions.
+    { BOOLARRAY_BASE_2 + 11, "sim/multiplay/generic/bool[91]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 12, "sim/multiplay/generic/bool[42]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 13, "sim/multiplay/generic/bool[43]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 14, "sim/multiplay/generic/bool[44]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
@@ -570,7 +572,9 @@ static const IdPropertyList sIdPropertyList[] = {
     { BOOLARRAY_BASE_3 + 8, "sim/multiplay/generic/bool[69]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 9, "sim/multiplay/generic/bool[70]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 10, "sim/multiplay/generic/bool[71]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
-    { BOOLARRAY_BASE_3 + 11, "sim/multiplay/generic/bool[72]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
+        // out of sequence between the block and the buffer becuase of a typo. repurpose the first as that way [72] will work 
+        // correctly on older versions.
+    { BOOLARRAY_BASE_3 + 11, "sim/multiplay/generic/bool[92]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 12, "sim/multiplay/generic/bool[72]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 13, "sim/multiplay/generic/bool[73]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 14, "sim/multiplay/generic/bool[74]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
