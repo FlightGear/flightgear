@@ -62,12 +62,13 @@ QString AddOnsController::addAircraftPath() const
     if (LocalAircraftCache::isCandidateAircraftPath(path)) {
         pathOk = true;
     } else {
-        // no aircraft in speciied path, look for Aircraft/ subdir
+        // no aircraft in specified path, look for Aircraft/ subdir
         QDir d(path);
         if (d.exists("Aircraft")) {
             QString p2 = d.filePath("Aircraft");
             if (LocalAircraftCache::isCandidateAircraftPath(p2)) {
                 pathOk = true;
+                path = p2;
             }
         }
     }
