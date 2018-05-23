@@ -131,8 +131,9 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setParentName(scFileNode->getStringValue("parent"));
 }
 
-bool FGAIBallistic::init(bool search_in_AI_path) {
-    FGAIBase::init(search_in_AI_path);
+bool FGAIBallistic::init(ModelSearchOrder searchOrder)
+{
+    FGAIBase::init(searchOrder);
     reinit();
     return true;
 }

@@ -121,8 +121,8 @@ void FGAIGroundVehicle::bind() {
         SGRawValuePointer<double>(&_contact_x2_offset));
 }
 
-bool FGAIGroundVehicle::init(bool search_in_AI_path) {
-    if (!FGAIShip::init(search_in_AI_path))
+bool FGAIGroundVehicle::init(ModelSearchOrder searchOrder) {
+    if (!FGAIShip::init(searchOrder))
         return false;
     reinit();
     return true;

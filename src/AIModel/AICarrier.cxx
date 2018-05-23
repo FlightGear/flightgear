@@ -205,8 +205,8 @@ void FGAICarrier::update(double dt) {
       source = 0;
 } //end update
 
-bool FGAICarrier::init(bool search_in_AI_path) {
-    if (!FGAIShip::init(search_in_AI_path))
+bool FGAICarrier::init(ModelSearchOrder searchOrder) {
+    if (!FGAIShip::init(searchOrder))
         return false;
 
     _longitude_node = fgGetNode("/position/longitude-deg", true);

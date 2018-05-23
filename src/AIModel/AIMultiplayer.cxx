@@ -56,8 +56,9 @@ FGAIMultiplayer::FGAIMultiplayer() :
 FGAIMultiplayer::~FGAIMultiplayer() {
 }
 
-bool FGAIMultiplayer::init(bool search_in_AI_path) {
-    props->setStringValue("sim/model/path", model_path.c_str());
+bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
+{
+    props->setStringValue("sim/model/path", model_path);
     //refuel_node = fgGetNode("systems/refuel/contact", true);
     isTanker = false; // do this until this property is
                       // passed over the net
@@ -73,7 +74,7 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
     }
 
     // load model
-    bool result = FGAIBase::init(search_in_AI_path);
+    bool result = FGAIBase::init(searchOrder);
     // propagate installation state (used by MP pilot list)
     props->setBoolValue("model-installed", _installed);
     return result;

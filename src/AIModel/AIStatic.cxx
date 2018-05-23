@@ -40,19 +40,6 @@ FGAIStatic::FGAIStatic() : FGAIBase(otStatic, false) {
 FGAIStatic::~FGAIStatic() {
 }
 
-bool FGAIStatic::init(bool search_in_AI_path) {
-   return FGAIBase::init(search_in_AI_path);
-}
-
-void FGAIStatic::bind() {
-    FGAIBase::bind();
-}
-
-void FGAIStatic::unbind() {
-    FGAIBase::unbind();
-}
-
-
 void FGAIStatic::update(double dt) {
    FGAIBase::update(dt);
    Transform();

@@ -378,7 +378,43 @@ void FGAIBase::Transform() {
 
 }
 
-bool FGAIBase::init(bool search_in_AI_path)
+std::string FGAIBase::resolveModelPath(ModelSearchOrder searchOrder)
+{
+    std::string aiPath;
+    if (searchOrder != DATA_ONLY) {
+        for (SGPath p : globals->get_data_paths("AI")) {
+            p.append(model_path);
+            if (p.exists()) {
+                aiPath = p.local8BitStr();
+                break;
+            }
+        } // of AI data paths iteration
+    }
+    
+    // if we prefer AI, and it's valid, use it, we're done
+    if ((searchOrder == PREFER_AI) && !aiPath.empty()) {
+        _installed = true;
+        return aiPath;
+    }
+    
+    // regular search including aircraft paths
+    auto p = simgear::SGModelLib::findDataFile(model_path);
+    if (!p.empty()) {
+        _installed = true;
+        return p;
+    }
+    
+    // if we prefer data, but will still use AI paths, now is the time.
+    if ((searchOrder == PREFER_DATA) && !aiPath.empty()) {
+        _installed = true;
+        return aiPath;
+    }
+    
+    // okay, out of options, use the default model (the blue glider)
+    return fgGetString("/sim/multiplay/default-model", default_model);
+}
+
+bool FGAIBase::init(ModelSearchOrder searchOrder)
 {
     if (_model.valid())
     {
@@ -386,26 +422,8 @@ bool FGAIBase::init(bool search_in_AI_path)
         return false;
     }
 
-    string f;
-    if(search_in_AI_path)
-    {
-        BOOST_FOREACH(SGPath p, globals->get_data_paths("AI")) {
-            p.append(model_path);
-            if (p.exists()) {
-                f = p.local8BitStr();
-                break;
-            }
-        } // of AI data paths iteration
-    } // of search in AI path
-
-    if (f.empty()) {
-        f = simgear::SGModelLib::findDataFile(model_path);
-    }
+    string f = resolveModelPath(searchOrder);
     
-    if(f.empty())
-        f = fgGetString("/sim/multiplay/default-model", default_model);
-    else
-        _installed = true;
 
     props->addChild("type")->setStringValue("AI");
     _modeldata = new FGAIModelData(props);

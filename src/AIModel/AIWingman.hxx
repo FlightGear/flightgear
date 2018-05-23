@@ -35,7 +35,7 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-    bool init(bool search_in_AI_path=false);
+    bool init(ModelSearchOrder searchOrder) override;
     virtual void bind();
     virtual void reinit();
     virtual void update (double dt);

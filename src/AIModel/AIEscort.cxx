@@ -118,8 +118,8 @@ void FGAIEscort::bind() {
         SGRawValuePointer<bool>(&_patrol));
 }
 
-bool FGAIEscort::init(bool search_in_AI_path) {
-    if (!FGAIShip::init(search_in_AI_path))
+bool FGAIEscort::init(ModelSearchOrder searchOrder) {
+    if (!FGAIShip::init(searchOrder))
         return false;
     reinit();
     return true;

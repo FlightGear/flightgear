@@ -37,9 +37,6 @@ public:
 	
         void readFromScenario(SGPropertyNode* scFileNode);
 
-	virtual bool init(bool search_in_AI_path=false);
-        virtual void bind();
-        virtual void unbind();
 	virtual void update(double dt);
         inline void setStrengthNorm( double s ) { strength_norm = s; };
         inline void setDiameter( double d ) { diameter = d; };

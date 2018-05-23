@@ -158,8 +158,9 @@ void FGAIWingman::bind() {
         SGRawValueMethods<FGAIBallistic,double>(*this, &FGAIBallistic::getTgtZOffset, &FGAIBallistic::setTgtZOffset));
 }
 
-bool FGAIWingman::init(bool search_in_AI_path) {
-    if (!FGAIBallistic::init(search_in_AI_path))
+bool FGAIWingman::init(ModelSearchOrder searchOrder)
+{
+    if (!FGAIBallistic::init(searchOrder))
         return false;
     reinit();
     return true;

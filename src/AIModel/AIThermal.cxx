@@ -61,7 +61,7 @@ void FGAIThermal::readFromScenario(SGPropertyNode* scFileNode) {
   setHeight(scFileNode->getDoubleValue("height-msl", 5000.0));  
 }
 
-bool FGAIThermal::init(bool search_in_AI_path) {
+bool FGAIThermal::init(ModelSearchOrder searchOrder) {
    factor = 8.0 * max_strength / (diameter * diameter * diameter);
    setAltitude( height );
    _surface_wind_from_deg_node =
@@ -73,7 +73,7 @@ bool FGAIThermal::init(bool search_in_AI_path) {
    _aloft_wind_speed_node =
             fgGetNode("/environment/config/aloft/entry[2]/wind-speed-kt", true);
     do_agl_calc = 1;
-   return FGAIBase::init(search_in_AI_path);
+   return FGAIBase::init(searchOrder);
 }
 
 void FGAIThermal::bind() {

@@ -64,7 +64,7 @@ public:
     void ReturnToBox();
     bool OutsideBox();
 
-    bool init(bool search_in_AI_path=false);
+    bool init(ModelSearchOrder searchOrder) override;
 
     virtual const char* getTypeString(void) const { return "carrier"; }
 

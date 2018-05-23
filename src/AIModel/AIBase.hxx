@@ -57,7 +57,13 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-    virtual bool init(bool search_in_AI_path=false);
+    enum ModelSearchOrder {
+        DATA_ONLY,  // don't search AI/ prefix at all
+        PREFER_AI,  // search AI first, override other paths
+        PREFER_DATA // search data first but fall back to AI
+    };
+    
+    virtual bool init(ModelSearchOrder searchOrder);
     virtual void initModel();
     virtual void update(double dt);
     virtual void bind();
@@ -247,6 +253,8 @@ private:
     osg::ref_ptr<FGAIModelData> _modeldata;
 
     SGSharedPtr<FGFX>  _fx;
+
+    std::string resolveModelPath(ModelSearchOrder searchOrder);
 
 public:
     object_type getType();

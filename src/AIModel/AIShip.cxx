@@ -111,9 +111,9 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     }
 }
 
-bool FGAIShip::init(bool search_in_AI_path) {
+bool FGAIShip::init(ModelSearchOrder searchOrder) {
     reinit();
-    return FGAIBase::init(search_in_AI_path);
+    return FGAIBase::init(searchOrder);
 }
 
 void FGAIShip::reinit()
