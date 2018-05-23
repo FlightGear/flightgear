@@ -752,7 +752,7 @@ bool fgInitGeneral() {
 void fgOutputSettings()
 {    
     SG_LOG( SG_GENERAL, SG_INFO, "Configuration State" );
-    SG_LOG( SG_GENERAL, SG_INFO, "======= ==============" );
+    SG_LOG( SG_GENERAL, SG_INFO, "============= =====" );
     
     SG_LOG( SG_GENERAL, SG_INFO, "aircraft-dir = " << '"' << fgGetString("/sim/aircraft-dir") << '"' );
     SG_LOG( SG_GENERAL, SG_INFO, "fghome-dir = " << '"' << globals->get_fg_home() << '"');
@@ -770,7 +770,7 @@ void fgOutputSettings()
 void fgCreateSubsystems(bool duringReset) {
 
     SG_LOG( SG_GENERAL, SG_INFO, "Creating Subsystems");
-    SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
+    SG_LOG( SG_GENERAL, SG_INFO, "======== ==========");
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound subsystem.
