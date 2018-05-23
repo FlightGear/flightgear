@@ -712,5 +712,10 @@ bool FGMouseInput::isActiveModePassThrough() const
     }
     
     mouse &m = d->mice[0];
-    return m.modes[m.current_mode].pass_through;
+    int mode = m.current_mode;
+    if (isRightDragToLookEnabled() && m.mouse_button_nodes[2]->getBoolValue()) {
+        mode = 3;
+    }
+    
+    return m.modes[mode].pass_through;
 }
