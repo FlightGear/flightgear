@@ -255,6 +255,7 @@ FGGlobals::~FGGlobals()
     props.clear();
 
     delete commands;
+    delete simgear::ResourceManager::instance();
 }
 
 // set the fg_root path
