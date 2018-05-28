@@ -1166,26 +1166,18 @@ FGPUIDialog::setupObject (puObject *object, SGPropertyNode *props)
 
     }
 
-    SGPropertyNode *dest = fgGetNode("/sim/bindings/gui", true);
-    std::vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
-    if (bindings.size() > 0) {
+    const auto bindings = props->getChildren("binding");
+    if (!bindings.empty()) {
         info->key = props->getIntValue("keynum", -1);
         if (props->hasValue("key"))
             info->key = getKeyCode(props->getStringValue("key", ""));
 
-        for (unsigned int i = 0; i < bindings.size(); i++) {
-            unsigned int j = 0;
-            SGPropertyNode_ptr binding;
-            while (dest->getChild("binding", j))
-                j++;
-
-            const char *cmd = bindings[i]->getStringValue("command");
+        for (auto bindingNode : bindings) {
+            const char *cmd = bindingNode->getStringValue("command");
             if (!strcmp(cmd, "nasal"))
-                bindings[i]->setStringValue("module", _module.c_str());
+                bindingNode->setStringValue("module", _module.c_str());
 
-            binding = dest->getChild("binding", j, true);
-            copyProperties(bindings[i], binding);
-            info->bindings.push_back(new SGBinding(binding, globals->get_props()));
+            info->bindings.push_back(new SGBinding(bindingNode, globals->get_props()));
         }
         object->setCallback(action_callback);
     }
