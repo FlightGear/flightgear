@@ -160,7 +160,6 @@ Item {
 
                         onValueChanged: {
                             if (value) {
-                                console.info("MP enabled, doing refresh")
                                 _launcher.queryMPServers();
                             }
                         }
@@ -190,7 +189,9 @@ Item {
                         description: qsTr("Select a server close to you for better responsiveness and reduced lag when flying online.")
                         choices: _launcher.mpServersModel
 
-                        readonly property bool currentIsCustom: (_launcher.mpServersModel.serverForIndex(selectedIndex) == "__custom__")
+                        readonly property bool currentIsCustom: (_launcher.mpServersModel.serverForIndex(selectedIndex) === "__custom__")
+                        readonly property bool currentIsNoServers: (_launcher.mpServersModel.serverForIndex(selectedIndex) === "__noservers__")
+
                         property string __savedServer;
 
                         keywords: ["server", "hostname"]
@@ -216,6 +217,7 @@ Item {
                         {
                             target: _launcher.mpServersModel
                             onRestoreIndex: { mpServer.selectedIndex = index }
+                            onRestoreDefault: { mpServer.selectedIndex = 0; }
                         }
                     },
 
@@ -233,25 +235,32 @@ Item {
 
                 onApply: {
                     if (enableMP.checked) {
-                        if (mpServer.currentIsCustom) {
+                        if (mpServer.currentIsNoServers) {
+                            console.warn("MP enabled but no valid server selected, skipping");
+                        } else if (mpServer.currentIsCustom) {
                             var pieces = mpCustomServer.value.split(':')
                             var port = defaultMPPort;
                             if (pieces.length > 1) {
                                 port = pieces[1];
                             }
 
-                            _config.setProperty("/sim/multiplay/txhost", pieces[0]);
-                            _config.setProperty("/sim/multiplay/txport", port);
+                            if (pieces[0].length > 0) {
+                                _config.setProperty("/sim/multiplay/txhost", pieces[0]);
+                                _config.setProperty("/sim/multiplay/txport", port);
+                            } else {
+                                console.warn("Custom MP server selected but no hostname defined");
+                            }
                         } else {
                             var sel = mpServer.selectedIndex
-                            var host = _mpServers.serverForIndex(sel);
-                            console.log("MP host is " + host)
+                            var host =  _launcher.mpServersModel.serverForIndex(sel);
+                            console.info("MP host is " + host)
                             if (host.length > 0) {
                                 _config.setProperty("/sim/multiplay/txhost", host);
                             }
 
-                            var port = _mpServers.portForIndex(sel);
-                            if (port == 0) {
+                            var port = _launcher.mpServersModel.portForIndex(sel);
+                            if (port === 0) {
+                                console.info("Using default MP port");
                                 port = defaultMPPort;
                             }
 
