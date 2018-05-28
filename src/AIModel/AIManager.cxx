@@ -2,7 +2,7 @@
 // - a global management type for AI objects
 //
 // Written by David Culp, started October 2003.
-// - davidculp2@comcast.net 
+// - davidculp2@comcast.net
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -59,12 +59,12 @@ public:
                 _objects.push_back(ai);
             }
         } // of scenario entry iteration
-        
+
         SGPropertyNode* nasalScripts = scenarios->getChild("nasal");
         if (!nasalScripts) {
             return;
         }
-        
+
         _unloadScript = nasalScripts->getStringValue("unload");
         std::string loadScript = nasalScripts->getStringValue("load");
         if (!loadScript.empty()) {
@@ -75,24 +75,24 @@ public:
                                    0);
         }
     }
-    
+
     ~Scenario()
     {
         std::for_each(_objects.begin(), _objects.end(),
                       [](FGAIBasePtr ai) { ai->setDie(true); });
 
-        
+
         FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
         if (!nasalSys)
             return;
-        
+
         std::string moduleName = "scenario_" + _internalName;
         if (!_unloadScript.empty()) {
             nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
                                    _unloadScript.c_str(), _unloadScript.size(),
                                    0);
         }
-        
+
         nasalSys->deleteModule(moduleName.c_str());
     }
 private:
@@ -129,11 +129,13 @@ FGAIManager::init() {
 
     user_altitude_agl_node  = fgGetNode("/position/altitude-agl-ft", true);
     user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
-    
+
     globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
     globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
     _environmentVisiblity = fgGetNode("/environment/visibility-m");
-    
+
+    _mp_use_detailed_models = fgGetNode("/sim/multiplay/use-detailed-models", true);
+
     // Create an (invisible) AIAircraft representation of the current
     // users's aircraft, that mimicks the user aircraft's behavior.
 
@@ -175,10 +177,10 @@ FGAIManager::reinit()
 {
     // shutdown scenarios
     unloadAllScenarios();
-    
+
     update(0.0);
     std::for_each(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::reinit));
-    
+
     // (re-)load scenarios
     postinit();
 }
@@ -187,18 +189,18 @@ void
 FGAIManager::shutdown()
 {
     unloadAllScenarios();
-    
+
     for (FGAIBase* ai : ai_list) {
         // other subsystems, especially ATC, may have references. This
         // lets them detect if the AI object should be skipped
         ai->setDie(true);
         ai->unbind();
     }
-    
+
     ai_list.clear();
     _environmentVisiblity.clear();
     _userAircraft.clear();
-    
+
     globals->get_commands()->removeCommand("load-scenario");
     globals->get_commands()->removeCommand("unload-scenario");
 }
@@ -218,10 +220,10 @@ FGAIManager::unbind() {
 void FGAIManager::removeDeadItem(FGAIBase* base)
 {
     SGPropertyNode *props = base->_getProps();
-    
+
     props->setBoolValue("valid", false);
     base->unbind();
-    
+
     // for backward compatibility reset properties, so that aircraft,
     // which don't know the <valid> property, keep working
     // TODO: remove after a while
@@ -245,14 +247,14 @@ FGAIManager::update(double dt)
     // partition the list into dead followed by alive
     auto firstAlive =
       std::stable_partition(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::getDie));
-    
+
     // clean up each item and finally remove from the container
     for (auto it=ai_list.begin(); it != firstAlive; ++it) {
         removeDeadItem(*it);
     }
-  
+
     ai_list.erase(ai_list.begin(), firstAlive);
-  
+
     // every remaining item is alive. update them in turn, but guard for
     // exceptions, so a single misbehaving AI object doesn't bring down the
     // entire subsystem.
@@ -311,12 +313,14 @@ FGAIManager::attach(FGAIBase *model)
     case FGAIBase::otAircraft:
     case FGAIBase::otStatic:
         modelPolicy = FGAIBase::PREFER_AI;
+        break;
     case FGAIBase::otMultiplayer:
-        modelPolicy = FGAIBase::PREFER_DATA;
+        modelPolicy = this->_mp_use_detailed_models->getBoolValue() ? FGAIBase::PREFER_DATA : FGAIBase::PREFER_AI;
+        break;
     default:
         break;
     }
-    
+
     model->init(modelPolicy);
     model->bind();
     p->setBoolValue("valid", true);
@@ -343,7 +347,7 @@ FGAIManager::fetchUserState( double dt )
     wind_from_east = wind_from_east_node->getDoubleValue();
     wind_from_north   = wind_from_north_node->getDoubleValue();
     user_altitude_agl = user_altitude_agl_node->getDoubleValue();
-    
+
     _userAircraft->setGeodPos(globals->get_aircraft_position());
     _userAircraft->setHeading(user_heading);
     _userAircraft->setSpeed(fgGetDouble("/velocities/groundspeed-kt"));
@@ -374,22 +378,22 @@ bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode
             return unloadScenario(name);
         }
     }
-    
+
     if (_scenarios.find(name) != _scenarios.end()) {
         SG_LOG(SG_AI, SG_WARN, "scenario '" << name << "' already loaded");
         return false;
     }
-    
+
     bool ok = loadScenario(name);
     if (ok) {
         // create /sim/ai node for consistency
         int index = 0;
         for (; root->hasChild("scenario", index); ++index) {}
-        
+
         SGPropertyNode* scenarioNode = root->getChild("scenario", index, true);
         scenarioNode->setStringValue(name);
     }
-    
+
     return ok;
 }
 
@@ -408,10 +412,10 @@ bool FGAIManager::addObjectCommand(const SGPropertyNode* definition)
 FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 {
     const std::string& type = definition->getStringValue("type", "aircraft");
-    
+
     FGAIBase* ai = NULL;
     if (type == "tanker") { // refueling scenarios
-        ai = new FGAITanker; 
+        ai = new FGAITanker;
     } else if (type == "wingman") {
         ai = new FGAIWingman;
     } else if (type == "aircraft") {
@@ -455,7 +459,7 @@ bool FGAIManager::removeObject(const SGPropertyNode* args)
             break;
         }
     }
-    
+
     return false;
 }
 
@@ -476,12 +480,12 @@ FGAIManager::loadScenario( const string &filename )
     if (!file) {
         return false;
     }
-    
+
     SGPropertyNode_ptr scNode = file->getChild("scenario");
     if (!scNode) {
         return false;
     }
-    
+
     _scenarios[filename] = new Scenario(this, filename, scNode);
     return true;
 }
@@ -495,7 +499,7 @@ FGAIManager::unloadScenario( const string &filename)
         SG_LOG(SG_AI, SG_WARN, "unload scenario: not found:" << filename);
         return false;
     }
-    
+
 // remove /sim/ai node
     unsigned int index = 0;
     for (SGPropertyNode* n = NULL; (n = root->getChild("scenario", index)) != NULL; ++index) {
@@ -504,7 +508,7 @@ FGAIManager::unloadScenario( const string &filename)
             break;
         }
     }
-    
+
     delete it->second;
     _scenarios.erase(it);
     return true;
@@ -517,8 +521,8 @@ FGAIManager::unloadAllScenarios()
     for (; it != _scenarios.end(); ++it) {
         delete it->second;
     } // of scenarios iteration
-    
-    
+
+
     // remove /sim/ai node
     root->removeChildren("scenario");
     _scenarios.clear();
@@ -552,7 +556,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
     SGGeod pos(SGGeod::fromDegFt(lon, lat, alt));
     SGVec3d cartPos(SGVec3d::fromGeod(pos));
-    
+
     while (ai_list_itr != end) {
         double tgt_alt = (*ai_list_itr)->_getAltitude();
         int type       = (*ai_list_itr)->getType();

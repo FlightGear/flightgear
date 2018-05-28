@@ -1,5 +1,5 @@
 // AIManager.hxx - David Culp - based on:
-// AIMgr.hxx - definition of FGAIMgr 
+// AIMgr.hxx - definition of FGAIMgr
 // - a global management class for FlightGear generated AI traffic
 //
 // Written by David Luff, started March 2002.
@@ -64,12 +64,12 @@ public:
     inline double get_user_agl() const { return user_altitude_agl; }
 
     bool loadScenario( const std::string &filename );
-    
+
     static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
     bool isVisible(const SGGeod& pos) const;
-    
+
     /**
      * @brief given a reference to an /ai/models/<foo>[n] node, return the
      * corresponding AIObject implementation, or NULL.
@@ -84,7 +84,7 @@ public:
     double calcRangeFt(const SGVec3d& aCartPos, const FGAIBase* aObject) const;
 
     static const char* subsystemName() { return "ai-model"; }
-    
+
     /**
      * @brief Retrieve the representation of the user's aircraft in the AI manager
      * the position and velocity of this object are slaved to the user's aircraft,
@@ -95,23 +95,23 @@ public:
 private:
     // FGSubmodelMgr is a friend for access to the AI_list
     friend class FGSubmodelMgr;
-    
+
     // A list of pointers to AI objects
     typedef ai_list_type::iterator ai_list_iterator;
     typedef ai_list_type::const_iterator ai_list_const_iterator;
 
     int getNumAiObjects() const;
-    
+
     void removeDeadItem(FGAIBase* base);
 
     bool loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
     bool unloadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
     bool addObjectCommand(const SGPropertyNode* definition);
-    
+
     bool removeObject(const SGPropertyNode* args);
     bool unloadScenario( const std::string &filename );
     void unloadAllScenarios();
-    
+
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr enabled;
     SGPropertyNode_ptr thermal_lift_node;
@@ -120,10 +120,11 @@ private:
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
     SGPropertyNode_ptr _environmentVisiblity;
+    SGPropertyNode_ptr _mp_use_detailed_models;
 
 
     ai_list_type ai_list;
-    
+
     double user_altitude_agl;
     double user_heading;
     double user_pitch;
@@ -141,11 +142,11 @@ private:
 
     SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
     SGPropertyChangeCallback<FGAIManager> cb_ai_detailed;
-    
+
     class Scenario;
     typedef std::map<std::string, Scenario*> ScenarioDict;
     ScenarioDict _scenarios;
-    
+
     SGSharedPtr<FGAIAircraft> _userAircraft;
 };
 
