@@ -10,6 +10,7 @@ class MPServersModel : public QAbstractListModel
 {
     Q_OBJECT
 
+    Q_PROPERTY(bool valid READ valid NOTIFY validChanged)
 public:
     MPServersModel(QObject* parent = nullptr);
     ~MPServersModel();
@@ -31,9 +32,14 @@ public:
 
     Q_INVOKABLE QString serverForIndex(int index) const;
     Q_INVOKABLE int portForIndex(int index) const;
+
+    bool valid() const;
+
 signals:
     void restoreIndex(int index);
     void restoreDefault();
+    void validChanged();
+
 private:
 
     SGSharedPtr<RemoteXMLRequest> m_mpServerRequest;

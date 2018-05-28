@@ -30,17 +30,29 @@ MPServersModel::~MPServersModel()
 
 int MPServersModel::rowCount(const QModelIndex&) const
 {
+    // if query failed, we have two item:
+    // 1) - 'no servers found'
+    // 2) - 'custom server'
+    if (m_servers.empty())
+        return 2;
+
     return m_servers.size() + 1;
 }
 
 QVariant MPServersModel::data(const QModelIndex &index, int role) const
 {
-    int row = index.row();
-    if ((row < 0) || (row > m_servers.size())) {
+    const int row = index.row();
+    const int customServerRow = (m_servers.empty() ? 1 : m_servers.size());
+
+    if ((row == 0) && m_servers.empty()) {
+        if (role == Qt::DisplayRole) {
+            return tr("No servers available");
+        }
+
         return QVariant();
     }
 
-    if (row == m_servers.size()) {
+    if (row == customServerRow) {
         if (role == Qt::DisplayRole) {
             return tr("Custom server");
         } else if (role == IsCustomIndexRole) {
@@ -114,6 +126,7 @@ void MPServersModel::onRefreshMPServersDone(simgear::HTTP::Request*)
         m_servers.push_back(ServerInfo(name, loc, host, port));
     }
     endResetModel();
+    emit validChanged();
 
     restoreMPServerSelection();
     m_mpServerRequest.clear();
@@ -126,6 +139,7 @@ void MPServersModel::onRefreshMPServersFailed(simgear::HTTP::Request*)
     beginResetModel();
     m_servers.clear();
     endResetModel();
+    emit validChanged();
     restoreMPServerSelection();
 }
 
@@ -160,6 +174,10 @@ void MPServersModel::requestRestore()
 
 QString MPServersModel::serverForIndex(int index) const
 {
+    if (!valid()) {
+        return (index == 1) ? "__custom__" : "__noservers__";
+    }
+
     if ((index < 0) || (index > m_servers.size())) {
         return QString();
     }
@@ -173,11 +191,19 @@ QString MPServersModel::serverForIndex(int index) const
 
 int MPServersModel::portForIndex(int index) const
 {
+    if (!valid())
+        return 0;
+
     if ((index < 0) || (index >= m_servers.size())) {
         return 0;
     }
 
     return m_servers.at(index).port;
+}
+
+bool MPServersModel::valid() const
+{
+    return !m_servers.empty();
 }
 
 MPServersModel::ServerInfo::ServerInfo(QString n, QString l, QString h, int p)
