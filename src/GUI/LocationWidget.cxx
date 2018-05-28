@@ -856,7 +856,7 @@ void LocationWidget::onSearchComplete()
 void LocationWidget::onLocationChanged()
 {
     bool locIsAirport = FGPositioned::isAirportType(m_location.ptr());
-    if (!m_location) {
+    if (!m_location && !m_locationIsLatLon) {
         onBackToSearch();
         return;
     }
