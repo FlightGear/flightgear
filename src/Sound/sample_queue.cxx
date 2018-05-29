@@ -39,8 +39,8 @@
 FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const std::string &refname ) :
     last_enabled( true ),
     last_volume( 0.0 ),
-    _enabled( fgGetNode("/sim/sound/chatter/enabled", true) ),
-    _volume( fgGetNode("/sim/sound/chatter/volume", true) )
+    _enabled( fgGetNode("/sim/sound/"+refname+"/enabled", true) ),
+    _volume( fgGetNode("/sim/sound/"+refname+"/volume", true) )
 {
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_smgr->add(this, refname);

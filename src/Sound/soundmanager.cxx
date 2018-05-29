@@ -97,7 +97,7 @@ void FGSoundManager::shutdown()
     
     stop();
 
-    _chatterQueue.clear();
+    _queue.clear();
     globals->get_commands()->removeCommand("play-audio-sample");
 
 
@@ -210,19 +210,21 @@ void FGSoundManager::update(double dt)
  */
 bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
+    const char *qname = arg->getStringValue("queue");
+    string name = qname ? qname : "chatter";
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
     float volume = arg->getFloatValue("volume");
     // cout << "playing " << path << " / " << file << endl;
     try {
-        if ( !_chatterQueue ) {
-            _chatterQueue = new FGSampleQueue(this, "chatter");
-            _chatterQueue->tie_to_listener();
+        if ( !_queue[name] ) {
+            _queue[name] = new FGSampleQueue(this, name);
+            _queue[name]->tie_to_listener();
         }
 
         SGSoundSample *msg = new SGSoundSample(file.c_str(), path);
         msg->set_volume( volume );
-        _chatterQueue->add( msg );
+        _queue[name]->add( msg );
 
         return true;
 

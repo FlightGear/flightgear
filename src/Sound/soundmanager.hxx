@@ -55,7 +55,7 @@ private:
 
     bool playAudioSampleCommand(const SGPropertyNode * arg, SGPropertyNode * root);
 
-    SGSharedPtr<FGSampleQueue> _chatterQueue;
+    std::map<std::string,SGSharedPtr<FGSampleQueue>> _queue;
 
     double _active_dt;
     bool _is_initialized, _enabled;
