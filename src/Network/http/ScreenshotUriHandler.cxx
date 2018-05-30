@@ -377,11 +377,7 @@ public:
     virtual ~CanvasImageRequest() {
         if (currenttask){
             SG_LOG(SG_NETWORK, SG_INFO, "canvasimage task running");
-#ifdef _WIN32
-            Sleep(15000);
-#else
-            sleep(15);
-#endif
+            SGTimeStamp::sleepForMSec(55);  /* avoid <windows.h>, for Sleep... */
         }
 
         if (canvas && connected){
