@@ -71,7 +71,7 @@ void RecentLocationsModel::insert(QVariant location)
     QVariant locDesc = location.toMap().value("text");
     auto it = std::find_if(m_data.begin(), m_data.end(),
                    [locDesc](QVariant v) { return v.toMap().value("text") == locDesc; });
-    if (it == m_data.begin()) {
+    if (!m_data.empty() && (it == m_data.begin())) {
         // special, common case - nothing to do
         return;
     }
