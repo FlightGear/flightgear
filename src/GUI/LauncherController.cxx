@@ -265,14 +265,21 @@ void LauncherController::doApply()
 
 QString LauncherController::selectAircraftStateAutomatically()
 {
+    if (!m_selectedAircraftInfo)
+        return {};
+
     if (m_locationWidget_FIXME->isAirborneLocation()) {
-        return "approach";
+        if (m_selectedAircraftInfo->hasState("approach"))
+            return "approach";
     }
 
     if (m_locationWidget_FIXME->isParkedLocation()) {
-        return "parked";
+        if (m_selectedAircraftInfo->hasState("parked"))
+            return "parked";
     } else {
-        return "take-off";
+        // also try 'engines-running'?
+        if (m_selectedAircraftInfo->hasState("take-off"))
+            return "take-off";
     }
 
     return {}; // failed to compute, give up
