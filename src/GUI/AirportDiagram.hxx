@@ -117,6 +117,7 @@ private:
     double m_approachDistanceNm;
     FGRunwayRef m_selectedRunway;
     FGParkingRef m_selectedParking;
+    FGHelipadRef m_selectedHelipad;
 
     QPixmap m_helipadIcon;
 };

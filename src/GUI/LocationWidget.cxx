@@ -200,15 +200,23 @@ public:
         addType(FGPositioned::FIX);
         addType(FGPositioned::NDB);
 
+        // aircraft type isn't reliable yet, until we ensure
+        // most aircraft are tagged accordingly with helicopter,
+        // seaplane, etc. Hnece disabling this logic for now
+#if 0
         if (aircraft == Helicopter) {
-            addType(FGPositioned::HELIPAD);
+            addType(FGPositioned::HELIPORT);
         }
 
         if (aircraft == Seaplane) {
             addType(FGPositioned::SEAPORT);
-        } else {
-            addType(FGPositioned::AIRPORT);
         }
+#else
+        addType(FGPositioned::HELIPORT);
+        addType(FGPositioned::SEAPORT);
+#endif
+        // always include airports regardless of acft type
+        addType(FGPositioned::AIRPORT);
     }
 };
 
@@ -391,6 +399,8 @@ LocationWidget::LocationWidget(QWidget *parent) :
             this, &LocationWidget::onAirportRunwayClicked);
     connect(m_ui->airportDiagram, &AirportDiagram::clickedParking,
             this, &LocationWidget::onAirportParkingClicked);
+    connect(m_ui->airportDiagram, &AirportDiagram::clickedHelipad,
+            this, &LocationWidget::onAirportHelipadClicked);
 
     connect(m_ui->locationSearchEdit, &QLineEdit::returnPressed,
             this, &LocationWidget::onSearch);
@@ -957,6 +967,18 @@ void LocationWidget::onAirportParkingClicked(FGParkingRef park)
         int parkingIndex = m_ui->parkingCombo->findData(park->getIndex());
         m_ui->parkingCombo->setCurrentIndex(parkingIndex);
         m_ui->airportDiagram->setSelectedParking(park);
+    }
+
+    updateDescription();
+}
+
+void LocationWidget::onAirportHelipadClicked(FGHelipadRef pad)
+{
+    if (pad) {
+        m_ui->runwayRadio->setChecked(true);
+        int rwyIndex = m_ui->runwayCombo->findText(QString::fromStdString(pad->ident()));
+        m_ui->runwayCombo->setCurrentIndex(rwyIndex);
+        m_ui->airportDiagram->setSelectedHelipad(pad);
     }
 
     updateDescription();

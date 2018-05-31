@@ -85,6 +85,7 @@ private:
 
     void onAirportRunwayClicked(FGRunwayRef rwy);
     void onAirportParkingClicked(FGParkingRef park);
+    void onAirportHelipadClicked(FGHelipadRef pad);
 
     void onOffsetBearingTrueChanged(bool on);
 
