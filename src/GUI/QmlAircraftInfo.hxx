@@ -105,6 +105,8 @@ public:
 
     bool hasStates() const;
 
+    bool hasState(QString name) const;
+
     static const int StateTagRole;
     static const int StateDescriptionRole;
     static const int StateExplicitRole;

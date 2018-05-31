@@ -477,15 +477,13 @@ bool LocationWidget::isAirborneLocation() const
     }
 
     if (FGPositioned::isAirportType(m_location.ptr())) {
-        if (m_ui->runwayRadio->isChecked() && offsetSet) {
+        if (m_ui->runwayRadio->isChecked() && m_ui->onFinalCheckbox->isChecked()) {
             // in this case no altitude migth be set, but we assume
             // it's still an airborne pos
             return true;
         }
 
-        // this allows for people using offsets from a parking position or
-        // similar weirdness :)
-        return altIsPositive;
+        return false;
     }
 
     // relative to a navaid or fix - base off altitude.

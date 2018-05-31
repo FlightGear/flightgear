@@ -260,6 +260,11 @@ public:
     {
         return _data.empty();
     }
+
+    bool hasState(QString st) const
+    {
+        return indexForTag(st.toStdString()) != -1;
+    }
 private:
     AircraftStateVec _data;
     bool _explicitAutoState = false;
@@ -672,6 +677,11 @@ bool QmlAircraftInfo::isPackaged() const
 bool QmlAircraftInfo::hasStates() const
 {
     return !_statesModel->isEmpty();
+}
+
+bool QmlAircraftInfo::hasState(QString name) const
+{
+    return _statesModel->hasState(name);
 }
 
 StatesModel *QmlAircraftInfo::statesModel()
