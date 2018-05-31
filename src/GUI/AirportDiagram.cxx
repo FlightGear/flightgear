@@ -88,8 +88,7 @@ static double unitLengthAfterMapping(const QTransform& t)
 
 AirportDiagram::AirportDiagram(QWidget* pr) :
     BaseDiagram(pr),
-    m_approachDistanceNm(-1.0),
-    m_helipadIcon(":/heliport-icon")
+    m_approachDistanceNm(-1.0)
 {
     m_parkingIconPath.moveTo(0,0);
     m_parkingIconPath.lineTo(-16, -16);
@@ -104,6 +103,24 @@ AirportDiagram::AirportDiagram(QWidget* pr) :
     m_parkingIconLeftPath.lineTo(64, 16);
     m_parkingIconLeftPath.lineTo(16, 16);
     m_parkingIconLeftPath.lineTo(0, 0);
+
+    m_helipadIconPath.moveTo(0,0);
+    m_helipadIconPath.addEllipse(QPointF(0, 0), 16.0, 16.0);
+    m_helipadIconPath.addEllipse(QPointF(0, 0), 13.0, 13.0);
+
+    QFont f;
+    f.setPixelSize(24.0);
+    f.setBold(true);
+    QFontMetricsF metrics(f);
+    qreal xOffset = metrics.width("H") * 0.5;
+#if QT_VERSION >= 0x050800
+    qreal yOffset = metrics.capHeight() * 0.5;
+#else
+    // capHeight is not avaialble in 5.7 and lower, compute
+    // it using tightBoundingRect
+    qreal yOffset = -0.5 * metrics.tightBoundingRect("H").y();
+#endif
+    m_helipadIconPath.addText(-xOffset, yOffset, f, "H");
 }
 
 AirportDiagram::~AirportDiagram()
@@ -372,14 +389,17 @@ void AirportDiagram::paintContents(QPainter* p)
 void AirportDiagram::drawHelipads(QPainter* painter)
 {
     QTransform t = painter->transform();
-
-    QRect r = m_helipadIcon.rect();
-    r.moveCenter(QPoint(0, 0));
-
     Q_FOREACH(const HelipadData& p, m_helipads) {
         painter->setTransform(t);
         painter->translate(p.pt);
-        painter->drawPixmap(r, m_helipadIcon);
+
+        if (p.helipad == m_selectedHelipad) {
+            painter->setBrush(Qt::yellow);
+        } else {
+            painter->setBrush(Qt::magenta);
+        }
+
+        painter->drawPath(m_helipadIconPath);
     }
 }
 
@@ -573,14 +593,9 @@ QPainterPath AirportDiagram::pathForParking(const ParkingData& p, const QTransfo
 
 QPainterPath AirportDiagram::pathForHelipad(const HelipadData& h, const QTransform& t) const
 {
-    QPainterPath pp;
-    QRect r = m_helipadIcon.rect();
-    r.moveCenter(QPoint(0, 0));
-    pp.addEllipse(r);
-
     QTransform x = t;
     x.translate(h.pt.x(), h.pt.y());
-    return x.map(pp);
+    return x.map(m_helipadIconPath);
 }
 
 void AirportDiagram::buildTaxiways()

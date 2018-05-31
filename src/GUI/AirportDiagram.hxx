@@ -119,7 +119,7 @@ private:
     FGParkingRef m_selectedParking;
     FGHelipadRef m_selectedHelipad;
 
-    QPixmap m_helipadIcon;
+    QPainterPath m_helipadIconPath;
 };
 
 #endif // of GUI_AIRPORT_DIAGRAM_HXX
