@@ -376,8 +376,8 @@ public:
     // causing a crash when the deconstructor finishes. Rare, but might happen. Just wait to be sure.
     virtual ~CanvasImageRequest() {
         if (currenttask){
-            SG_LOG(SG_NETWORK, SG_INFO, "canvasimage task running");
-            SGTimeStamp::sleepForMSec(55);  /* avoid <windows.h>, for Sleep... */
+            SG_LOG(SG_NETWORK, SG_ALERT, "CanvasImage: task running, pausing for 15 seconds");
+            SGTimeStamp::sleepFor(SGTimeStamp::fromSec(15));
         }
 
         if (canvas && connected){
