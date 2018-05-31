@@ -143,13 +143,21 @@ void AirportDiagram::setSelectedRunway(FGRunwayRef r)
     }
 
     m_selectedParking.clear();
+    m_selectedHelipad.clear();
     m_selectedRunway = r;
     update();
 }
 
 void AirportDiagram::setSelectedHelipad(FGHelipadRef pad)
 {
-    qWarning() << Q_FUNC_INFO << "implement me";
+    if (pad == m_selectedHelipad) {
+        return;
+    }
+
+    m_selectedParking.clear();
+    m_selectedRunway.clear();
+    m_selectedHelipad = pad;
+    update();
 }
 
 void AirportDiagram::setSelectedParking(FGParkingRef park)
@@ -159,6 +167,7 @@ void AirportDiagram::setSelectedParking(FGParkingRef park)
     }
 
     m_selectedRunway.clear();
+    m_selectedHelipad.clear();
     m_selectedParking = park;
     update();
 }
@@ -568,7 +577,10 @@ QPainterPath AirportDiagram::pathForHelipad(const HelipadData& h, const QTransfo
     QRect r = m_helipadIcon.rect();
     r.moveCenter(QPoint(0, 0));
     pp.addEllipse(r);
-    return t.map(pp);
+
+    QTransform x = t;
+    x.translate(h.pt.x(), h.pt.y());
+    return x.map(pp);
 }
 
 void AirportDiagram::buildTaxiways()
