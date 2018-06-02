@@ -2263,8 +2263,8 @@ void Options::processArgResult(int result)
     cout << renderer << " provided by " << vendor << endl;
     cout << endl << "No. Device" << endl;
 
-    vector <const char*>devices = smgr.get_available_devices();
-    for (vector <const char*>::size_type i=0; i<devices.size(); i++) {
+    vector <std::string>devices = smgr.get_available_devices();
+    for (vector <std::string>::size_type i=0; i<devices.size(); i++) {
       cout << i << ".  \"" << devices[i] << "\"" << endl;
     }
     devices.clear();

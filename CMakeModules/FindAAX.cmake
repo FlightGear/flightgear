@@ -1,14 +1,19 @@
-# Locate AAX
+# Try to find AAX (AeonWave)
 # This module defines
-# AAX_LIBRARIES
-# AAX_FOUND, if false, do not try to link to AAX 
-# AAX_INCLUDE_DIR, where to find the headers
+#
+# AAX_FOUND - if false, do not try to link to AAX
+# AAX_INCLUDE_DIR - where to find the headers
+# AAX_LIBRARIES - Link these to use AAX
+#
+# Copyright (C) 2016-2018 by Erik Hofman.
+# Copyright (C) 2016-2018 by Adalin B.V.
 #
 # $AAXDIR is an environment variable that would
 # correspond to the ./configure --prefix=$AAXDIR
 # used in building AAX.
 #
-# Created by Erik Hofman.
+# This file is Public Domain (www.unlicense.org)
+# This is free and unencumbered software released into the public domain.
 
 FIND_PATH(AAX_INCLUDE_DIR aax/aax.h
   HINTS
@@ -27,14 +32,14 @@ FIND_PATH(AAX_INCLUDE_DIR aax/aax.h
 )
 
 FIND_LIBRARY(AAX_LIBRARY 
-  NAMES AAX aax AAX32
+  NAMES AAX aax libAAX
   HINTS
   $ENV{AAXDIR}
   $ENV{ProgramFiles}/AAX
   $ENV{ProgramFiles}/AeonWave
   $ENV{ProgramFiles}/Adalin/AeonWave
   ${CMAKE_BUILD_DIR}/aax
-  PATH_SUFFIXES bin lib lib/${CMAKE_LIBRARY_ARCHITECTURE} lib64 libs64 libs libs/Win32 libs/Win64
+  PATH_SUFFIXES lib64 lib lib/${CMAKE_LIBRARY_ARCHITECTURE} libs64 libs libs/Win32 libs/Win64 bin
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -52,7 +57,7 @@ ELSE(AAX_LIBRARY AND AAX_INCLUDE_DIR)
   ENDIF(NOT AAX_INCLUDE_DIR)
   IF(NOT AAX_LIBRARY)
     IF(SINGLE_PACKAGE)
-      SET(AAX_LIBRARY "${aax_BUILD_DIR}/aax/AAX32.dll")
+      SET(AAX_LIBRARY "${aax_BUILD_DIR}/aax/AAX.lib")
       SET(AAX_FOUND "YES")
     ELSE(SINGLE_PACKAGE)
     ENDIF(SINGLE_PACKAGE)

@@ -50,8 +50,8 @@ bool SGSoundMgr::load(const std::string &samplepath, void **data, int *format, s
 	return false;
 }
 
-std::vector<const char*> SGSoundMgr::get_available_devices()
+std::vector<std::string> SGSoundMgr::get_available_devices()
 {
-    std::vector<const char*> result;
+    std::vector<std::string> result;
     return result;
 }

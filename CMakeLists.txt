@@ -199,7 +199,6 @@ option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profilin
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
-option(USE_AEONWAVE      "Set to ON to use AeonWave instead of OpenAL" OFF)
 option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex and speexdsp library" ${SYSTEM_SPEEX_DEFAULT})
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
@@ -520,7 +519,7 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${SQLITE3_INCLUDED_DIR} )
 
 if (USE_AEONWAVE)
-    find_package(AAX COMPONENTS aax REQUIRED)
+    find_package(AAX REQUIRED)
     include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
         ${AAX_INCLUDE_DIR}
     )

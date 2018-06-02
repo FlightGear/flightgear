@@ -1,0 +1,39 @@
+[This file is mirrored in both the FlightGear and SimGear packages.]
+
+For Sound support FlightGear requires one of the two following packages:
+- OpenAL
+- AeonWave
+
+== OpenAL ===
+
+You *must* have the development components of OpenAL installed on your system
+to build FlightGear!"  You can get a copy here:
+
+      http://connect.creativelabs.com/openal/default.aspx
+
+Build notes:
+
+You can download a versioned release of the openal library from
+http://www.openal.org/downloads.html. Download the openal source,
+release 0.0.8 (dated February 11, 2006) and run:
+tar xjvf openal-soft-1.5.304.tar.bz2
+cd openal-soft-1.5.304/
+ccmake .
+
+[ While running ccmake: press 'c' to configure, press 'c' once more, and
+  then press 'g' to generate and exit ]
+
+
+== AeonWave ===
+
+For FlightGear AeonWave has a number of advantages over OpenAL:
+* Correct Doppler effect behavior
+* Default distance attenuation frequency filtering
+* Native support for 29 types of audio formats.
+* Native support for wav, mp3, vorbis and raw file formats.
+
+The source code of AeonWave can be found on GitHub:
+https://github.com/adalinbv
+
+Optimized binary packages are available at:
+http://www.adalin.com/
