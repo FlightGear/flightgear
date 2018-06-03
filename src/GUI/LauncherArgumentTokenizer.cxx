@@ -1,5 +1,8 @@
 #include "LauncherArgumentTokenizer.hxx"
 
+#include <algorithm>
+#include <set>
+
 #include <QVariantMap>
 #include <QJSEngine>
 
@@ -8,14 +11,17 @@ LauncherArgumentTokenizer::LauncherArgumentTokenizer()
 
 }
 
-QList<ArgumentToken> LauncherArgumentTokenizer::tokenize(QString in) const
+void LauncherArgumentTokenizer::tokenize(QString in)
 {
+    m_tokens.clear();
+    m_valid = false;
+
     int index = 0;
     const int len = in.count();
     QChar c, nc;
     State state = Start;
     QString key, value;
-    QList<ArgumentToken> result;
+    std::vector<ArgumentToken> result;
 
     for (; index < len; ++index) {
         c = in.at(index);
@@ -31,7 +37,7 @@ QList<ArgumentToken> LauncherArgumentTokenizer::tokenize(QString in) const
                 } else {
                     // should we pemit single hyphen arguments?
                     // choosing to fail for now
-                    return {};
+                    return;
                 }
             } else if (c == QChar('#')) {
                 state = Comment;
@@ -47,7 +53,7 @@ QList<ArgumentToken> LauncherArgumentTokenizer::tokenize(QString in) const
                 value.clear();
             } else if (c.isSpace()) {
                 state = Start;
-                result.append(ArgumentToken{key});
+                result.emplace_back(key);
             } else {
                 // could check for illegal charatcers here
                 key.append(c);
@@ -59,7 +65,7 @@ QList<ArgumentToken> LauncherArgumentTokenizer::tokenize(QString in) const
                 state = Quoted;
             } else if (c.isSpace()) {
                 state = Start;
-                result.append(ArgumentToken{key, value});
+                result.emplace_back(key, value);
             } else {
                 value.append(c);
             }
@@ -93,18 +99,22 @@ QList<ArgumentToken> LauncherArgumentTokenizer::tokenize(QString in) const
 
     // ensure last argument isn't lost
     if (state == Key) {
-        result.append(ArgumentToken{key});
+        result.emplace_back(key);
     } else if (state == Value) {
-        result.append(ArgumentToken{key, value});
+        result.emplace_back(key, value);
     }
 
-    return result;
+    m_valid = true;
+    m_tokens = result;
 }
 
 QVariantList LauncherArgumentTokenizer::tokens() const
 {
+    if (!m_valid)
+        return {};
+
     QVariantList result;
-    Q_FOREACH(auto tk, tokenize(m_argString)) {
+    for (auto tk : m_tokens) {
         QVariantMap m;
         m["arg"] = tk.arg;
         m["value"] = tk.value;
@@ -113,11 +123,35 @@ QVariantList LauncherArgumentTokenizer::tokens() const
     return result;
 }
 
+bool LauncherArgumentTokenizer::isValid() const
+{
+    return m_valid;
+}
+
 void LauncherArgumentTokenizer::setArgString(QString argString)
 {
     if (m_argString == argString)
         return;
 
     m_argString = argString;
+    tokenize(m_argString);
     emit argStringChanged(m_argString);
+}
+
+const std::set<std::string> argBlacklist({
+    "lat", "lon", "aircraft", "airport", "parkpos", "season",
+    "runway", "vor", "time-offset", "timeofday"});
+
+bool LauncherArgumentTokenizer::haveProtectedArgs() const
+{
+    if (!m_valid)
+        return false;
+
+    auto n = std::count_if(m_tokens.begin(), m_tokens.end(),
+                           [](const ArgumentToken& tk)
+    {
+        return (argBlacklist.find(tk.arg.toStdString()) != argBlacklist.end());
+    });
+
+    return (n > 0);
 }

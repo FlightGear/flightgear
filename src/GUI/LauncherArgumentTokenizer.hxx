@@ -21,11 +21,13 @@ class LauncherArgumentTokenizer : public QObject
 
     Q_PROPERTY(QString argString READ argString WRITE setArgString NOTIFY argStringChanged)
     Q_PROPERTY(QVariantList tokens READ tokens NOTIFY argStringChanged)
+
+    Q_PROPERTY(bool valid READ isValid NOTIFY argStringChanged)
+    Q_PROPERTY(bool warnProtectedArgs READ haveProtectedArgs NOTIFY argStringChanged)
+
 public:
     LauncherArgumentTokenizer();
 
-
-    Q_INVOKABLE QList<ArgumentToken> tokenize(QString in) const;
 
     QString argString() const
     {
@@ -34,6 +36,9 @@ public:
 
     QVariantList tokens() const;
 
+    bool isValid() const;
+
+    bool haveProtectedArgs() const;
 public slots:
     void setArgString(QString argString);
 
@@ -41,6 +46,8 @@ signals:
     void argStringChanged(QString argString);
 
 private:
+    void tokenize(QString in);
+
     enum State {
         Start = 0,
         Key,
@@ -49,7 +56,9 @@ private:
         Comment
     };
 
+    std::vector<ArgumentToken> m_tokens;
     QString m_argString;
+    bool m_valid = false;
 };
 
 #endif // LAUNCHERARGUMENTTOKENIZER_HXX
