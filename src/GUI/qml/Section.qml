@@ -27,7 +27,7 @@ Item {
     function anyAdvancedSettings(items)
     {
         for (var i = 0; i < items.length; i++) {
-            if (items[i].advanced == true) return true;
+            if (items[i].advanced === true) return true;
         }
 
         return false;
@@ -39,7 +39,7 @@ Item {
     {
         for (var i = 0; i < items.length; i++) {
             var control = items[i];
-            if (control.advanced == true) {
+            if (control.advanced === true) {
                 if (!control.__isDefault && !control.hidden) {
                     //console.info("Non-default advanced setting:" + control.label + ","
                     //             + control.defaultValue + " != " + control.value) ;

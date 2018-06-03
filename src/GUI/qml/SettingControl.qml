@@ -26,7 +26,7 @@ Item {
         return !hidden && (!advanced || parent.showAdvanced)
     }
 
-    readonly property bool __isDefault: (this.value == this.defaultValue);
+    readonly property bool __isDefault: (this.value === this.defaultValue);
 
     Component.onCompleted: {
         restoreState();
@@ -84,7 +84,7 @@ Item {
         var defaultValue = ("defaultValue" in root) ? root.defaultValue : undefined;
         var rawValue = _config.getValueForKey("", root.setting, defaultValue);
       // console.warn("restoring state for " + root.setting + ", got raw value " + rawValue + " with type " + typeof(rawValue))
-        if (rawValue != undefined) {
+        if (rawValue !== undefined) {
            // root["value"] = rawValue
             this.value = rawValue
         }
