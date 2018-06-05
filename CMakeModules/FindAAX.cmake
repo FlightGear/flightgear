@@ -15,52 +15,60 @@
 # This file is Public Domain (www.unlicense.org)
 # This is free and unencumbered software released into the public domain.
 
-FIND_PATH(AAX_INCLUDE_DIR aax/aax.h
-  HINTS
-  $ENV{AAXDIR}
-  $ENV{ProgramFiles}/aax
-  $ENV{ProgramFiles}/AeonWave
-  $ENV{ProgramFiles}/Adalin/AeonWave
-  ${CMAKE_SOURCE_DIR}/aax
-  PATH_SUFFIXES include
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
+if (AAX_LIBRARY AND AAX_INCLUDE_DIR)
+  # in cache already
+  set(AAX_FOUND TRUE)
+else()
+  find_path(AAX_INCLUDE_DIR aax/aax.h
+    HINTS
+    $ENV{AAXDIR}
+    $ENV{ProgramFiles}/aax
+    $ENV{ProgramFiles}/AeonWave
+    $ENV{ProgramFiles}/Adalin/AeonWave
+    ${CMAKE_SOURCE_DIR}/aax
+    PATH_SUFFIXES include
+    PATHS
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /usr/local
+    /usr
+    /opt
+  )
 
-FIND_LIBRARY(AAX_LIBRARY 
-  NAMES AAX aax libAAX
-  HINTS
-  $ENV{AAXDIR}
-  $ENV{ProgramFiles}/AAX
-  $ENV{ProgramFiles}/AeonWave
-  $ENV{ProgramFiles}/Adalin/AeonWave
-  ${CMAKE_BUILD_DIR}/aax
-  PATH_SUFFIXES lib64 lib lib/${CMAKE_LIBRARY_ARCHITECTURE} libs64 libs libs/Win32 libs/Win64 bin
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
+  find_library(AAX_LIBRARY 
+    NAMES AAX aax libAAX
+    HINTS
+    $ENV{AAXDIR}
+    $ENV{ProgramFiles}/AAX
+    $ENV{ProgramFiles}/AeonWave
+    $ENV{ProgramFiles}/Adalin/AeonWave
+    ${CMAKE_BUILD_DIR}/aax
+    PATH_SUFFIXES lib64 lib lib/${CMAKE_LIBRARY_ARCHITECTURE} libs64 libs libs/Win32 libs/Win64 bin
+    PATHS
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /usr/local
+    /usr
+    /opt
+  )
 
-IF(AAX_LIBRARY AND AAX_INCLUDE_DIR)
-  SET(AAX_FOUND "YES")
-ELSE(AAX_LIBRARY AND AAX_INCLUDE_DIR)
-  IF(NOT AAX_INCLUDE_DIR)
-    MESSAGE(FATAL_ERROR "Unable to find the AAX library development files.")
-    SET(AAX_FOUND "NO")
-  ENDIF(NOT AAX_INCLUDE_DIR)
-  IF(NOT AAX_LIBRARY)
-    IF(SINGLE_PACKAGE)
-      SET(AAX_LIBRARY "${aax_BUILD_DIR}/aax/AAX.lib")
-      SET(AAX_FOUND "YES")
-    ELSE(SINGLE_PACKAGE)
-    ENDIF(SINGLE_PACKAGE)
-  ENDIF(NOT AAX_LIBRARY)
-ENDIF(AAX_LIBRARY AND AAX_INCLUDE_DIR)
+  set(AAX_DEFINITIONS "")
+  if (AAX_LIBRARY AND AAX_INCLUDE_DIR)
+    set(AAX_FOUND TRUE)
+  endif()
+
+  if (AAX_FOUND)
+    if (NOT Udns_FIND_QUIETLY)
+      message(STATUS "Found AeonWave: ${AAX_LIBRARIES}")
+    endif ()
+  else ()
+    if (Udns_FIND_REQUIRED)
+      message(FATAL_ERROR "Could not find AeonWave")
+    endif ()
+  endif ()
+
+  # show the AAX_INCLUDE_DIRS and AAX_LIBRARIES variables only in the advanced view
+  mark_as_advanced(AAX_INCLUDE_DIRS AAX_LIBRARIES)
+
+endif()
 
