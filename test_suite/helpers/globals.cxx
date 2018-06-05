@@ -36,6 +36,9 @@ namespace fgtest
     globals = new FGGlobals;
 
     DataStore &data = DataStore::get();
+    if (!data.getFGRoot().exists()) {
+        data.findFGRoot("");
+    }
     globals->set_fg_root(data.getFGRoot());
     tests_fgdata = data.getFGRoot();
 
