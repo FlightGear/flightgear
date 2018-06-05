@@ -70,11 +70,11 @@ public:
     {
     }
 
-    
+
     ~FGAIModelData()
     {
     }
-    
+
     virtual FGAIModelData* clone() const { return new FGAIModelData(); }
 
     /** osg callback, thread-safe */
@@ -83,7 +83,7 @@ public:
         // WARNING: Called in a separate OSG thread! Only use thread-safe stuff here...
         if (_ready)
             return;
-        
+
         if(prop->hasChild("interior-path")){
             _interiorPath = prop->getStringValue("interior-path");
             _hasInteriorPath = true;
@@ -91,15 +91,15 @@ public:
 
         _fxpath = prop->getStringValue("sound/path");
         _nasal->modelLoaded(path, prop, n);
-        
+
         _ready = true;
 
     }
-    
+
     /** init hook to be called after model is loaded.
      * Not thread-safe. Call from main thread only. */
     void init(void) { _initialized = true; }
-    
+
     bool needInitilization(void) { return _ready && !_initialized;}
     bool isInitialized(void) { return _initialized;}
     inline std::string& get_sound_path() { return _fxpath;}
@@ -224,7 +224,7 @@ FGAIBase::removeModel()
         aip.clear();
         _modeldata = 0;
         _model = 0;
-        
+
         // pass it on to the pager, to be be deleted in the pager thread
         pSceneryManager->getPager()->queueDeleteRequest(temp);
     }
@@ -333,27 +333,83 @@ void FGAIBase::updateInterior()
 /** update LOD properties of the model */
 void FGAIBase::updateLOD()
 {
-    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 10000.0);
-//    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 20000.0);
+    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 3000.0);
+    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 10000.0);
 
     _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/ai-interior", 50.0);
+
     if (_model.valid())
     {
         if( maxRangeDetail == 0.0 )
         {
-            // disable LOD
+            // Disable LOD.  The First entry in the LOD node is the most detailed
+            // so use that.
             _model->setRange(0, 0.0,     FLT_MAX);
-            _model->setRange(1, FLT_MAX, FLT_MAX);
+            if (_model->getNumFileNames() == 2) {
+              _model->setRange(1, FLT_MAX, FLT_MAX);
+            }
         }
         else
         {
-            if( fgGetBool("/sim/rendering/static-lod/ai-range-mode-pixel", false ) ) 
+            if( fgGetBool("/sim/rendering/static-lod/ai-range-mode-pixel", false ) )
             {
+                /* In pixel size mode, the range sense is reversed, so we want the
+                * detailed model [0] to be displayed when the "range" is really
+                * large (i.e. the object is taking up a large number of pixels on screen),
+                * and the less detailed model [1] to be displayed if the
+                * "range" is between the detailed range and the bare range.
+                * When the "range" is less than the bare value, the aircraft
+                * represents too few pixels to be worth displaying.
+                */
+
+                if (maxRangeBare > maxRangeDetail) {
+                  // Sanity check that we have sensible values.
+                  maxRangeBare = maxRangeDetail;
+                  SG_LOG(SG_AI,
+                    SG_WARN,
+                    "/sim/rendering/static-lod/ai-bare greater " <<
+                    "than /sim/rendering/static-lod/ai-detailed when using " <<
+                    "/sim/rendering/static-lod/ai-range-mode-pixel=true.  Ignoring ai-bare."
+                  );
+                }
+
                 _model->setRangeMode( osg::LOD::PIXEL_SIZE_ON_SCREEN );
-                _model->setRange(0, maxRangeDetail, 100000 );
+                if (_model->getNumFileNames() == 2) {
+                  _model->setRange(0, maxRangeDetail, 100000 );
+                  _model->setRange(1, maxRangeBare, maxRangeDetail);
+                } else {
+                  /* If we have only one LoD for this model, then we want to
+                   * display it from the smallest pixel value
+                   */
+                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), 100000 );
+                }
             } else {
+                /* In non-pixel range mode we're dealing with straight distance.
+                 * We use the detailed model [0] for when we are up to the detailed
+                 * range, and the less complex model [1] (if available) for further
+                 * away up to the bare range.
+                 */
+
+                 if (maxRangeBare < maxRangeDetail) {
+                   // Sanity check that we have sensible values.
+                   maxRangeBare = maxRangeDetail;
+                   SG_LOG(SG_AI,
+                     SG_WARN,
+                     "/sim/rendering/static-lod/ai-bare less than " <<
+                     "than /sim/rendering/static-lod/ai-detailed.  Ignoring ai-bare."
+                   );
+                 }
+
                 _model->setRangeMode( osg::LOD:: DISTANCE_FROM_EYE_POINT);
-                _model->setRange(0, 0.0, maxRangeDetail);
+                if (_model->getNumFileNames() == 2) {
+                  _model->setRange(0, 0, maxRangeDetail);
+                  _model->setRange(1, maxRangeDetail, maxRangeBare);
+                } else {
+                  /* If we have only one LoD for this model, then we want to
+                   * display it from whatever range.
+                   */
+                  _model->setRange(0, 0, max(maxRangeBare, maxRangeDetail));
+                }
             }
         }
     }
@@ -378,40 +434,65 @@ void FGAIBase::Transform() {
 
 }
 
-std::string FGAIBase::resolveModelPath(ModelSearchOrder searchOrder)
+/*
+ * Find a set of paths to the model, in order of LOD from most detailed to
+ * least, and accounting for the user preference of detailed models vs. AI
+ * low resolution models.
+ *
+ * This returns a vector of size 1 or 2.
+ */
+std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder)
 {
-    std::string aiPath;
-    if (searchOrder != DATA_ONLY) {
+    std::vector<std::string> path_list;
+
+    if (searchOrder == DATA_ONLY) {
+        auto p = simgear::SGModelLib::findDataFile(model_path);
+        if (!p.empty()) {
+            // We've got a model, use it
+            _installed = true;
+            path_list.push_back(p);
+        } else {
+            // No model, so fall back to the default
+            path_list.push_back(fgGetString("/sim/multiplay/default-model", default_model));
+        }
+    } else {
+        // We're either PREFER_AI or PREFER_DATA.  Find an AI model first.
         for (SGPath p : globals->get_data_paths("AI")) {
             p.append(model_path);
             if (p.exists()) {
-                aiPath = p.local8BitStr();
+                path_list.push_back(p.local8BitStr());
                 break;
             }
         } // of AI data paths iteration
+
+        if ((searchOrder == PREFER_AI) && !path_list.empty()) {
+            // if we prefer AI, and we've got a valid AI path from above, then use it, we're done
+            _installed = true;
+            return path_list;
+        }
+
+        // At this point we've either still to find a valid path, or we're
+        // looking for a regular model to display at closer range.
+        auto p = simgear::SGModelLib::findDataFile(model_path);
+        if (!p.empty()) {
+            _installed = true;
+            path_list.insert(path_list.begin(), p);
+        }
+
+        if (path_list.empty()) {
+          // No model found at all, so fall back to the default
+          path_list.push_back(fgGetString("/sim/multiplay/default-model", default_model));
+        }
     }
-    
-    // if we prefer AI, and it's valid, use it, we're done
-    if ((searchOrder == PREFER_AI) && !aiPath.empty()) {
-        _installed = true;
-        return aiPath;
-    }
-    
-    // regular search including aircraft paths
-    auto p = simgear::SGModelLib::findDataFile(model_path);
-    if (!p.empty()) {
-        _installed = true;
-        return p;
-    }
-    
-    // if we prefer data, but will still use AI paths, now is the time.
-    if ((searchOrder == PREFER_DATA) && !aiPath.empty()) {
-        _installed = true;
-        return aiPath;
-    }
-    
-    // okay, out of options, use the default model (the blue glider)
-    return fgGetString("/sim/multiplay/default-model", default_model);
+
+    /*
+     * We return either one or two models.  LoD logic elsewhere relies on this,
+     * so anything else is a logic error in the above code.
+     */
+    assert(path_list.size() != 0);
+    assert(path_list.size() <  3);
+
+    return path_list;
 }
 
 bool FGAIBase::init(ModelSearchOrder searchOrder)
@@ -422,25 +503,16 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
         return false;
     }
 
-    string f = resolveModelPath(searchOrder);
-    
+    vector<string> model_list = resolveModelPath(searchOrder);
 
     props->addChild("type")->setStringValue("AI");
     _modeldata = new FGAIModelData(props);
-    _model= SGModelLib::loadPagedModel(f, props, _modeldata);
-
+    _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);
     _model->setName("AI-model range animation node");
 
-  //  _model->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
-  //  _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-  
-//    We really need low-resolution versions of AI/MP aircraft.
-//    Or at least dummy "stubs" with some default silhouette.
-//        _model->addChild( SGModelLib::loadPagedModel(fgGetString("/sim/multiplay/default-model", default_model),
-//                                                    props, new FGNasalModelData(props)), FLT_MAX, FLT_MAX);
     updateLOD();
     initModel();
-  
+
     if (_model.valid() && _initialized == false) {
         aip.init( _model.get() );
         aip.setVisible(true);
@@ -462,7 +534,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
 
 void FGAIBase::initModel()
 {
-    if (_model.valid()) { 
+    if (_model.valid()) {
 
         if( _path != ""){
             props->setStringValue("submodels/path", _path.c_str());
@@ -596,20 +668,20 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
     radar_range_m *= SG_NM_TO_METER  * 1.1; // + 10%
     radar_range_m *= radar_range_m; // squared
-    
+
     double d2 = distSqr(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
     double range_ft = sqrt(d2) * SG_METER_TO_FEET;
-    
+
     if (!force_on && (d2 > radar_range_m)) {
         return range_ft * range_ft;
     }
-    
+
     props->setBoolValue("radar/in-range", true);
 
     // copy values from the AIManager
     double user_heading   = manager->get_user_heading();
     double user_pitch     = manager->get_user_pitch();
-  
+
     range = range_ft * SG_FEET_TO_METER * SG_METER_TO_NM;
 
     // calculate bearing to target
@@ -618,7 +690,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     // calculate look left/right to target, without yaw correction
     horiz_offset = bearing - user_heading;
     SG_NORMALIZE_RANGE(horiz_offset, -180.0, 180.0);
-   
+
     // calculate elevation to target
     ht_diff = altitude_ft - globals->get_aircraft_position().getElevationFt();
     elevation = atan2( ht_diff, range_ft ) * SG_RADIANS_TO_DEGREES;
@@ -643,7 +715,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     // calculate values for radar display
     y_shift = range * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
     x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
-    
+
     rotation = hdg - user_heading;
     SG_NORMALIZE_RANGE(rotation, 0.0, 360.0);
 
@@ -959,7 +1031,7 @@ void FGAIBase::setFlightPlan(std::unique_ptr<FGAIFlightPlan> f)
 bool FGAIBase::isValid() const
 {
 	//Either no flightplan or it is valid
-	return !fp || fp->isValidPlan(); 
+	return !fp || fp->isValidPlan();
 }
 
 osg::PagedLOD* FGAIBase::getSceneBranch() const
@@ -976,4 +1048,3 @@ void FGAIBase::setGeodPos(const SGGeod& geod)
 {
     pos = geod;
 }
-

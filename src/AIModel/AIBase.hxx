@@ -1,7 +1,7 @@
 // FGAIBase.hxx - abstract base class for AI objects
 // Written by David Culp, started Nov 2003, based on
 // David Luff's FGAIEntity class.
-// - davidculp2@comcast.net 
+// - davidculp2@comcast.net
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -62,7 +62,7 @@ public:
         PREFER_AI,  // search AI first, override other paths
         PREFER_DATA // search data first but fall back to AI
     };
-    
+
     virtual bool init(ModelSearchOrder searchOrder);
     virtual void initModel();
     virtual void update(double dt);
@@ -115,12 +115,12 @@ public:
 
     bool getDie();
 	bool isValid() const;
-    
+
     void setFlightPlan(std::unique_ptr<FGAIFlightPlan> f);
-    
+
     SGGeod getGeodPos() const;
     void setGeodPos(const SGGeod& pos);
-    
+
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
 
@@ -131,29 +131,29 @@ public:
     double _getCartPosX() const;
     double _getCartPosY() const;
     double _getCartPosZ() const;
-    
+
     osg::PagedLOD* getSceneBranch() const;
 protected:
     double _elevation_m;
-    
+
     double _maxRangeInterior;
 
     double _x_offset;
     double _y_offset;
     double _z_offset;
-    
+
     double _pitch_offset;
     double _roll_offset;
     double _yaw_offset;
-    
+
     double _max_speed;
-    
+
     std::string _path;
     std::string _callsign;
     std::string _submodel;
     std::string _name;
     std::string _parent;
-    
+
     /**
      * Tied-properties helper, record nodes which are tied for easy un-tie-ing
      */
@@ -254,7 +254,7 @@ private:
 
     SGSharedPtr<FGFX>  _fx;
 
-    std::string resolveModelPath(ModelSearchOrder searchOrder);
+    std::vector<std::string> resolveModelPath(ModelSearchOrder searchOrder);
 
 public:
     object_type getType();
@@ -419,7 +419,7 @@ inline void FGAIBase::setPitchoffset(double p) {
 
 inline void FGAIBase::setRolloffset(double r) {
     _roll_offset = r;
-} 
+}
 
 inline void FGAIBase::setYawoffset(double y) {
     _yaw_offset = y;
