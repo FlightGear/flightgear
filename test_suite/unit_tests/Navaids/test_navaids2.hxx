@@ -17,10 +17,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_flightplan.hxx"
-#include "test_navaids2.hxx"
+
+#ifndef _FG_NAVAIDS_UNIT_TESTS_HXX
+#define _FG_NAVAIDS_UNIT_TESTS_HXX
 
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(FlightplanTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavaidsTests, "Unit tests");
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
+
+
+// The flight plan unit tests.
+class NavaidsTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(NavaidsTests);
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testBasic();
+};
+
+#endif  // _FG_NAVAIDS_UNIT_TESTS_HXX

@@ -2,6 +2,7 @@ set(TESTSUITE_SOURCES
     ${TESTSUITE_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/TestSuite.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_flightplan.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_navaids2.cxx
     PARENT_SCOPE
 )
 
