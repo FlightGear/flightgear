@@ -23,6 +23,9 @@
 #ifndef _FG_AEROELEMENT_HXX
 #define _FG_AEROELEMENT_HXX
 
+#include <simgear/math/SGMathFwd.hxx>
+
+
 class AeroElement : public SGReferenced {
 public:
     AeroElement(const SGVec3d& n1, const SGVec3d& n2, const SGVec3d& n3,

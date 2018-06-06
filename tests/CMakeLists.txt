@@ -116,10 +116,6 @@ macro(flightgear_test name sources)
   add_test(${name} ${EXECUTABLE_OUTPUT_PATH}/${name})
 endmacro()
 
-add_executable(testAeroElement testAeroElement.cxx ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AeroElement.cxx)
-target_link_libraries(testAeroElement SimGearCore)
-add_test(testAeroElement ${EXECUTABLE_OUTPUT_PATH}/testAeroElement)
-
 add_executable(testAeroMesh testAeroMesh.cxx
   ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AeroElement.cxx
   ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AircraftMesh.cxx
