@@ -26,6 +26,7 @@
 
 #include "WakeMesh.hxx"
 
+namespace FGTestApi { namespace PrivateAccessor { namespace FDM { class Accessor; } } }
 class FGAIAircraft;
 class AIWakeGroup;
 
@@ -36,9 +37,9 @@ public:
     SGVec3d GetForce(const AIWakeGroup& wg, const SGVec3d& vel, double rho);
     const SGVec3d& GetMoment(void) const { return moment; };
 
-#ifndef FG_TESTLIB
 private:
-#endif
+    friend class FGTestApi::PrivateAccessor::FDM::Accessor;
+
     std::vector<SGVec3d> collPt, midPt;
     SGQuatd Te2b;
     SGVec3d moment;

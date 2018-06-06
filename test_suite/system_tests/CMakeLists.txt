@@ -1,5 +1,6 @@
 # Add each system test category.
 foreach( system_test_category
+        FDM
     )
 
     add_subdirectory(${system_test_category})

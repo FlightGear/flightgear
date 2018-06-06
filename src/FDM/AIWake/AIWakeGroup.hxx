@@ -24,14 +24,16 @@
 #ifndef _FG_AIWAKEGROUP_HXX
 #define _FG_AIWAKEGROUP_HXX
 
+#include <simgear/props/propsfwd.hxx>
+
 #include "FDM/AIWake/WakeMesh.hxx"
 
+namespace FGTestApi { namespace PrivateAccessor { namespace FDM { class Accessor; } } }
 class FGAIAircraft;
 
 class AIWakeGroup {
-#ifdef FG_TESTLIB
-public:
-#endif
+    friend class FGTestApi::PrivateAccessor::FDM::Accessor;
+
     struct AIWakeData {
         explicit AIWakeData(WakeMesh* m = nullptr) : mesh(m) {}
 

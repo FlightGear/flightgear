@@ -25,6 +25,9 @@
 
 #include "AeroElement.hxx"
 
+namespace FGTestApi { namespace PrivateAccessor { namespace FDM { class Accessor; } } }
+
+
 class WakeMesh : public SGReferenced {
 public:
     WakeMesh(double _span, double _chord);
@@ -32,9 +35,9 @@ public:
     double computeAoA(double vel, double rho, double weight);
     SGVec3d getInducedVelocityAt(const SGVec3d& at) const;
 
-#ifndef FG_TESTLIB
 protected:
-#endif
+    friend class FGTestApi::PrivateAccessor::FDM::Accessor;
+
     int nelm;
     double span, chord;
     std::vector<AeroElement_ptr> elements;

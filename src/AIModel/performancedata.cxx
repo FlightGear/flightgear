@@ -26,7 +26,10 @@ PerformanceData::PerformanceData() :
   _vDescent(300.0),
   _vApproach(170.0),
   _vTouchdown(150.0),
-  _vTaxi(15.0)
+  _vTaxi(15.0),
+  _wingSpan(100.0),
+  _wingChord(12.0),
+  _weight(90000.0)
 {
   _rollrate = 9.0; // degrees per second
   _maxbank = 30.0; // passenger friendly bank angle
@@ -69,9 +72,9 @@ void PerformanceData::initFromProps(SGPropertyNode *db_node)
   _vApproach    = db_node->getDoubleValue("approach-speed-kts", _vApproach);
   _vTouchdown   = db_node->getDoubleValue("touchdown-speed-kts", _vTouchdown);
   _vTaxi        = db_node->getDoubleValue("taxi-speed-kts", _vTaxi);
-  _wingSpan     = db_node->getDoubleValue("geometry/wing/span-ft", 100.);
-  _wingChord    = db_node->getDoubleValue("geometry/wing/chord-ft", 12.);
-  _weight       = db_node->getDoubleValue("geometry/weight-lbs", 90000.);
+  _wingSpan     = db_node->getDoubleValue("geometry/wing/span-ft", _wingSpan);
+  _wingChord    = db_node->getDoubleValue("geometry/wing/chord-ft", _wingChord);
+  _weight       = db_node->getDoubleValue("geometry/weight-lbs", _weight);
 }
 
 double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool maxBrakes) {

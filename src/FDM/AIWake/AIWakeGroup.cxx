@@ -28,17 +28,9 @@
 #include <simgear/math/SGGeod.hxx>
 #include <simgear/math/SGGeoc.hxx>
 #include <simgear/math/SGQuat.hxx>
-#ifdef FG_TESTLIB
-#include <map>
-#include <simgear/props/props.hxx>
-#include "tests/fakeAIAircraft.hxx"
-Globals g;
-Globals *globals = &g;
-#else
 #include "Main/globals.hxx"
 #include "AIModel/performancedata.hxx"
 #include "AIModel/AIAircraft.hxx"
-#endif
 #include "FDM/AIWake/AIWakeGroup.hxx"
 
 AIWakeGroup::AIWakeGroup(void)

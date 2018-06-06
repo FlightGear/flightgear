@@ -32,11 +32,7 @@
 #include "AircraftMesh.hxx"
 #include <FDM/flight.hxx>
 #include "AIWakeGroup.hxx"
-#ifndef FG_TESTLIB
 #include "AIModel/AIAircraft.hxx"
-#else
-#include "fakeAIAircraft.hxx"
-#endif
 extern "C" {
 #include "../LaRCsim/ls_matrix.h"
 }

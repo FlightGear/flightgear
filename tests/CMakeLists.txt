@@ -115,16 +115,3 @@ macro(flightgear_test name sources)
   target_link_libraries(${name} fgtestlib)
   add_test(${name} ${EXECUTABLE_OUTPUT_PATH}/${name})
 endmacro()
-
-add_executable(testAeroMesh testAeroMesh.cxx
-  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AeroElement.cxx
-  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AircraftMesh.cxx
-  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/WakeMesh.cxx
-  ${CMAKE_SOURCE_DIR}/src/FDM/AIWake/AIWakeGroup.cxx
-  ${CMAKE_SOURCE_DIR}/src/FDM/LaRCsim/ls_matrix.c
-  )
-set_target_properties (testAeroMesh PROPERTIES COMPILE_DEFINITIONS "FG_TESTLIB")
-target_include_directories(testAeroMesh PRIVATE ${CMAKE_SOURCE_DIR}/tests
-  ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)
-target_link_libraries(testAeroMesh SimGearCore JSBSim)
-add_test(testAeroMesh ${EXECUTABLE_OUTPUT_PATH}/testAeroMesh)
