@@ -109,10 +109,6 @@ if(ENABLE_METAR)
     install(TARGETS metar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-if (COMMAND flightgear_test)
-    flightgear_test(autosaveMigration test_autosaveMigration.cxx)
-endif()
-
 if (MSVC)
   if (TARGET Qt5::qmake)
     # property is the full path to qmake.exe

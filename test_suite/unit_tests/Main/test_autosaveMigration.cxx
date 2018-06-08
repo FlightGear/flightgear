@@ -18,9 +18,10 @@
 
 #include "config.h"
 
-#include "test_suite/helpers/globals.hxx"
+#include "test_autosaveMigration.hxx"
 
-#include <simgear/misc/test_macros.hxx>
+#include "test_suite/FGTestApi/globals.hxx"
+
 #include <simgear/props/props_io.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
@@ -98,12 +99,24 @@ void writeLegacyAutosave2(SGPath userData, int majorVersion, int minorVersion)
     of.close();
 }
 
-void testMigration()
+// Set up function for each test.
+void AutosaveMigrationTests::setUp()
 {
-    fgtest::initTestGlobals("autosaveMigration");
+    FGTestApi::setUp::initTestGlobals("autosaveMigration");
 
     Options::reset();
+}
 
+
+// Clean up after each test.
+void AutosaveMigrationTests::tearDown()
+{
+   FGTestApi::tearDown::shutdownTestGlobals();
+}
+
+
+void AutosaveMigrationTests::testMigration()
+{
     SGPath testUserDataPath = globals->get_fg_home() / "test_autosave_migrate";
     if (!testUserDataPath.exists()) {
         SGPath p = testUserDataPath / "foo";
@@ -118,7 +131,7 @@ void testMigration()
     writeLegacyAutosave(testUserDataPath, 2016, 1);
 
     const string_list versionParts = simgear::strutils::split(VERSION, ".");
-    SG_VERIFY(versionParts.size() == 3);
+    CPPUNIT_ASSERT(versionParts.size() == 3);
     const int currentMajor = simgear::strutils::to_int(versionParts[0]);
     const int currentMinor = simgear::strutils::to_int(versionParts[1]);
 
@@ -129,7 +142,7 @@ void testMigration()
 
     SGPath p = globals->autosaveFilePath(testUserDataPath);
     if (p.exists()) {
-        SG_VERIFY(p.remove());
+        CPPUNIT_ASSERT(p.remove());
     }
 
     // write some blck-list rules to property tree
@@ -142,24 +155,15 @@ void testMigration()
     // execute method under test
     globals->loadUserSettings(testUserDataPath);
 
-    SG_CHECK_EQUAL(globals->get_props()->getNode("sim")->getChildren("presets").size(), 2);
-    SG_CHECK_EQUAL(globals->get_props()->getNode("sim")->getChildren("gui").size(), 0);
+    CPPUNIT_ASSERT_EQUAL((int)globals->get_props()->getNode("sim")->getChildren("presets").size(), 2);
+    CPPUNIT_ASSERT_EQUAL((int)globals->get_props()->getNode("sim")->getChildren("gui").size(), 0);
 
-    SG_CHECK_EQUAL(globals->get_props()->getIntValue("sim/window-height"), 42);
-    SG_CHECK_EQUAL(globals->get_props()->getIntValue("sim/presets/foo"), 0);
-    SG_CHECK_EQUAL(globals->get_props()->getIntValue("sim/presets[1]/foo"), 13);
+    CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/window-height"), 42);
+    CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/presets/foo"), 0);
+    CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/presets[1]/foo"), 13);
 
-    SG_CHECK_EQUAL(globals->get_props()->getIntValue("some-setting"), 888);
+    CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("some-setting"), 888);
 
     // if this is not zero, one of the bad autosaves was read
-    SG_CHECK_EQUAL(globals->get_props()->getIntValue("sim/bad"), 0);
-
-
-    fgtest::shutdownTestGlobals();
-}
-
-int main(int argc, char* argv[])
-{
-    testMigration();
-    return EXIT_SUCCESS;
+    CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/bad"), 0);
 }

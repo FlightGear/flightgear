@@ -17,10 +17,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_autosaveMigration.hxx"
-#include "test_posinit.hxx"
+
+#ifndef _FG_AUTOSAVE_MIGRATION_UNIT_TESTS_HXX
+#define _FG_AUTOSAVE_MIGRATION_UNIT_TESTS_HXX
 
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AutosaveMigrationTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(PosInitTests, "Unit tests");
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
+
+
+// The unit tests.
+class AutosaveMigrationTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(AutosaveMigrationTests);
+    CPPUNIT_TEST(testMigration);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testMigration();
+};
+
+#endif  // _FG_AUTOSAVE_MIGRATION_UNIT_TESTS_HXX
