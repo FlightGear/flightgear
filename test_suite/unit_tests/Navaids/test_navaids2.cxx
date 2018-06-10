@@ -1,6 +1,7 @@
 #include "test_navaids2.hxx"
 
 #include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
@@ -11,6 +12,7 @@
 void NavaidsTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("navaids2");
+    FGTestApi::setUp::initNavDataCache();
 }
 
 

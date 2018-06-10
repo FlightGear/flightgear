@@ -38,10 +38,10 @@ class PosInitTests : public CppUnit::TestFixture
 
 public:
     // Set up function for each test.
-    void setUp() {}
+    void setUp();
 
     // Clean up after each test.
-    void tearDown() {}
+    void tearDown();
 
     // The tests.
     void testAirportAndMetarStartup();

@@ -1,16 +1,13 @@
-#ifndef FG_TEST_HELPERS_HXX
-#define FG_TEST_HELPERS_HXX
+#ifndef FG_TEST_GLOBALS_HELPERS_HXX
+#define FG_TEST_GLOBALS_HELPERS_HXX
 
 #include <string>
-#include <simgear/misc/sg_path.hxx>
 
 namespace FGTestApi {
 
 namespace setUp {
 
 void initTestGlobals(const std::string& testName);
-
-SGPath fgdataPath();
 
 }  // End of namespace setUp.
 
@@ -23,4 +20,4 @@ void shutdownTestGlobals();
 
 }  // End of namespace FGTestApi.
 
-#endif // of FG_TEST_HELPERS_HXX
+#endif // of FG_TEST_GLOBALS_HELPERS_HXX

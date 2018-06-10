@@ -19,6 +19,7 @@
 #include "test_posinit.hxx"
 
 #include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <simgear/props/props_io.hxx>
 
@@ -31,13 +32,23 @@
 
 using namespace flightgear;
 
-void PosInitTests::testDefaultStartup()
+void PosInitTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("posinit");
+    FGTestApi::setUp::initNavDataCache();
     Options::reset();
-
     fgLoadProps("defaults.xml", globals->get_props());
+}
 
+
+void PosInitTests::tearDown()
+{
+    FGTestApi::tearDown::shutdownTestGlobals();
+}
+
+
+void PosInitTests::testDefaultStartup()
+{
     {
         Options* opts = Options::sharedInstance();
         opts->setShouldLoadDefaultConfig(false);
@@ -53,7 +64,7 @@ void PosInitTests::testDefaultStartup()
     // this unfortunately means manually parsing that file, oh well
 
     {
-        SGPath presets = FGTestApi::setUp::fgdataPath() / "location-presets.xml";
+        SGPath presets = globals->get_fg_root() / "location-presets.xml";
         CPPUNIT_ASSERT(presets.exists());
         SGPropertyNode_ptr props(new SGPropertyNode);
         readProperties(presets, props);
@@ -68,16 +79,10 @@ void PosInitTests::testDefaultStartup()
         double dist = SGGeodesy::distanceM(pos, defaultAirport->geod());
         CPPUNIT_ASSERT(dist < 10000);
     }
-    FGTestApi::tearDown::shutdownTestGlobals();
-
 }
 
 void PosInitTests::testAirportOnlyStartup()
 {
-    FGTestApi::setUp::initTestGlobals("posinit");
-    Options::reset();
-    fgLoadProps("defaults.xml", globals->get_props());
-
     {
         Options* opts = Options::sharedInstance();
         opts->setShouldLoadDefaultConfig(false);
@@ -94,17 +99,10 @@ void PosInitTests::testAirportOnlyStartup()
     double dist = SGGeodesy::distanceM(globals->get_aircraft_position(),
                                        FGAirport::getByIdent("EDDF")->geod());
     CPPUNIT_ASSERT(dist < 10000);
-    FGTestApi::tearDown::shutdownTestGlobals();
-
 }
 
 void PosInitTests::testAirportAndMetarStartup()
 {
-    FGTestApi::setUp::initTestGlobals("posinit");
-
-    Options::reset();
-    fgLoadProps("defaults.xml", globals->get_props());
-
     {
         Options* opts = Options::sharedInstance();
         opts->setShouldLoadDefaultConfig(false);
@@ -121,6 +119,4 @@ void PosInitTests::testAirportAndMetarStartup()
     CPPUNIT_ASSERT(dist < 10000);
     ///sim/atc/runway
     CPPUNIT_ASSERT(globals->get_props()->getStringValue("sim/atc/runway") == std::string("26"));
-
-    FGTestApi::tearDown::shutdownTestGlobals();
 }

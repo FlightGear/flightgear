@@ -1,6 +1,7 @@
 #include "test_flightplan.hxx"
 
 #include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <simgear/misc/strutils.hxx>
 
@@ -20,6 +21,7 @@ using namespace flightgear;
 void FlightplanTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("flightplan");
+    FGTestApi::setUp::initNavDataCache();
 }
 
 
