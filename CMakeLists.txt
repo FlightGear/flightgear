@@ -215,7 +215,6 @@ option(ENABLE_FGJS       "Set to ON to build the fgjs application (default)" ON)
 option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" ON)
 option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON)
 option(ENABLE_STGMERGE   "Set to ON to build the stgmerge application (default)" OFF)
-option(ENABLE_TESTS      "Set to ON to build test applications (default)" ON)
 option(ENABLE_FGCOM      "Set to ON to build the FGCom application (default)" ON)
 option(ENABLE_FLITE      "Set to ON to build the Flite text-to-speech module" ON)
 option(ENABLE_QT         "Set to ON to build the internal Qt launcher" ON)
@@ -562,16 +561,6 @@ configure_file (
 add_subdirectory(3rdparty)
 add_subdirectory(utils)
 
-if(ENABLE_TESTS)
-    # enable CTest / make test target
-    message(STATUS "Tests: ENABLED")
-
-    include (Dart)
-    enable_testing()
-else()
-    message(STATUS "Tests: DISABLED")
-endif(ENABLE_TESTS)
-
 add_subdirectory(src)
 add_subdirectory(icons)
 add_subdirectory(man)
@@ -594,4 +583,5 @@ ADD_CUSTOM_TARGET(uninstall
 
 
 # The test suite.
+enable_testing()
 add_subdirectory(test_suite EXCLUDE_FROM_ALL)

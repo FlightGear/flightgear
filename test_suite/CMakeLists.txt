@@ -60,6 +60,9 @@ endif()
 #-----------------------------------------------------------------------------
 # Set up all test suites as CTests.
 
+# Activation.
+include(Dart)
+
 # System test suites.
 add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s AeroMeshTests)
 
