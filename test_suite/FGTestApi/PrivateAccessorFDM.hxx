@@ -2,6 +2,7 @@
 #define _FG_PRIVATE_ACCESSOR_FDM_HXX
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include <simgear/math/SGMath.hxx>
@@ -14,6 +15,11 @@ class AircraftMesh;
 class WakeMesh;
 class AeroElement;
 typedef SGSharedPtr<AeroElement> AeroElement_ptr;
+
+// Forward declaration for: src/FDM/YASim.
+namespace yasim {
+class Atmosphere;
+}
 
 
 namespace FGTestApi {
@@ -34,6 +40,10 @@ public:
     const std::vector<AeroElement_ptr> read_FDM_AIWake_WakeMesh_elements(WakeMesh* instance) const;
     int read_FDM_AIWake_WakeMesh_nelm(WakeMesh* instance) const;
     double **read_FDM_AIWake_WakeMesh_Gamma(WakeMesh* instance) const;
+
+    // Access variables from src/FDM/YASim/Atmosphere.hxx.
+    float read_FDM_YASim_Atmosphere_numColumns(std::unique_ptr<yasim::Atmosphere> &instance) const;
+    float read_FDM_YASim_Atmosphere_data(std::unique_ptr<yasim::Atmosphere> &instance, int i, int j) const;
 };
 
 } // End of namespace FDM.

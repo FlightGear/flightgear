@@ -202,28 +202,4 @@ int Atmosphere::maxTableIndex() {
     return (sizeof(data) / (numColumns * sizeof(float))) - 1;
 }
 
-bool Atmosphere::test() {
-    bool passed = true;
-    int rows = maxTableIndex() + 1;
-    const float maxDeviation = 0.0002f;
-    
-    fprintf(stderr, "Atmosphere::test()\n");
-    fprintf(stderr, "Columns = %d\n", numColumns);
-    fprintf(stderr, "Rows = %d\n", rows);
-    
-    for (int alt = 0; alt <= maxTableIndex(); alt++) {
-      float density = calcStdDensity(data[alt][PRESSURE], data[alt][TEMPERATURE]);
-      float delta = data[alt][DENSITY] - density;
-      fprintf(stderr, "%d : %f \n", alt, delta);
-      if (Math::abs(delta) > maxDeviation) { 
-        passed = false;       
-        fprintf(stderr,"FAIL: Deviation above limit of %1.6f\n", maxDeviation);
-      }
-    }
-    if (passed) {
-      fprintf(stderr,"Deviation below %1.6f for all rows.\n", maxDeviation);
-    }
-    return passed;
-}
-
 }; // namespace yasim

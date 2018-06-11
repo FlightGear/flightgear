@@ -17,12 +17,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_ls_matrix.hxx"
-#include "testAeroElement.hxx"
-#include "testYASimAtmosphere.hxx"
+
+#ifndef _FG_YASIM_ATMOSPHERE_UNIT_TESTS_HXX
+#define _FG_YASIM_ATMOSPHERE_UNIT_TESTS_HXX
+
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
+
+#include <src/FDM/YASim/Atmosphere.hpp>
 
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AeroElementTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(LaRCSimMatrixTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(YASimAtmosphereTests, "Unit tests");
+// The unit tests.
+class YASimAtmosphereTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(YASimAtmosphereTests);
+    CPPUNIT_TEST(testAtmosphere);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testAtmosphere();
+
+    // Data.
+    std::unique_ptr<yasim::Atmosphere> a;
+};
+
+#endif  // _FG_YASIM_ATMOSPHERE_UNIT_TESTS_HXX

@@ -1,19 +1,24 @@
 #ifndef _ATMOSPHERE_HPP
 #define _ATMOSPHERE_HPP
 
+namespace FGTestApi { namespace PrivateAccessor { namespace FDM { class Accessor; } } }
+
 namespace yasim {
 
 //constexpr int Atmosphere::numColumns {4};
   
 class Atmosphere {
+    friend class ::FGTestApi::PrivateAccessor::FDM::Accessor;
+
+    static const int numColumns {4};
+
+public:
     enum Column {
       ALTITUDE,
       TEMPERATURE,
       PRESSURE,
       DENSITY
     };
-    static const int numColumns {4};
-public:
     void setTemperature(float t) { _temperature = t; }
     void setPressure(float p) { _pressure = p; }
     void setDensity(float d) { _density = d; }
@@ -46,13 +51,13 @@ public:
     static void calcStaticAir(float p0, float t0, float d0, float v,
                               float* pOut, float* tOut, float* dOut);
     void calcStaticAir(float v, float* pOut, float* tOut, float* dOut);
-    static bool test();
-    
+
+    static int maxTableIndex();
+
 private:
     static float getRecord(float alt, Atmosphere::Column recNum);
     static float data[][numColumns];
-    static int maxTableIndex();
-    
+
     float _temperature = 288.11f;
     float _pressure = 101325.0f;
     float _density = 1.22500f;

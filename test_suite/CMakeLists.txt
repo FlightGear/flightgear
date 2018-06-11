@@ -76,6 +76,7 @@ add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u Mktim
 add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NasalSysTests)
 add_test(NavaidsUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NavaidsTests)
 add_test(PosInitUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u PosInitTests)
+add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u YASimAtmosphereTests)
 
 # GUI test suites.
 
