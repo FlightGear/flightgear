@@ -456,7 +456,6 @@ static bool fgSetPosFromNAV( const string& id,
 
 static InitPosResult setInitialPosFromCarrier( const string& carrier )
 {
-#if !defined(FG_TESTLIB)
   const auto initialPos = FGAICarrier::initialPositionForCarrier(carrier);
   if (initialPos.first) {
     // set these so scenery system has a vicinity to work with, and
@@ -468,7 +467,6 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
   }
   
   SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = " << carrier );
-#endif
   return Failure;
 }
 
@@ -476,7 +474,6 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
 static InitPosResult setFinalPosFromCarrier( const string& carrier, const string& posid )
 {
   
-#if !defined(FG_TESTLIB)
   SGSharedPtr<FGAICarrier> carrierRef = FGAICarrier::findCarrierByNameOrPennant(carrier);
   if (!carrierRef) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
@@ -540,7 +537,6 @@ static InitPosResult setFinalPosFromCarrier( const string& carrier, const string
     /////////
     return ExactPosition;
   }
-#endif
   SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = " << carrier );
   return Failure;
 }

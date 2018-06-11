@@ -913,10 +913,8 @@ void FGNasalSys::init()
     initNasalPositioned(_globals, _context);
     initNasalPositioned_cppbind(_globals, _context);
     initNasalAircraft(_globals, _context);
-#ifndef FG_TESTLIB
     NasalClipboard::init(this);
     initNasalCanvas(_globals, _context);
-#endif
     initNasalCondition(_globals, _context);
     initNasalHTTP(_globals, _context);
     initNasalSGPath(_globals, _context);
@@ -1016,17 +1014,14 @@ naRef FGNasalSys::wrappedPropsNode(SGPropertyNode* aProps)
 
 void FGNasalSys::update(double)
 {
-#ifndef FG_TESTLIB
     if( NasalClipboard::getInstance() )
         NasalClipboard::getInstance()->update();
-#endif
     if(!_dead_listener.empty()) {
         vector<FGNasalListener *>::iterator it, end = _dead_listener.end();
         for(it = _dead_listener.begin(); it != end; ++it) delete *it;
         _dead_listener.clear();
     }
 
-#ifndef FG_TESTLIB
     if (!_loadList.empty())
     {
         if( _delay_load )
@@ -1042,7 +1037,6 @@ void FGNasalSys::update(double)
         // (only unload one per update loop to avoid excessive lags)
         _unloadList.pop()->unload();
     }
-#endif
     // Destroy all queued ghosts
     nasal::ghostProcessDestroyList();
 
@@ -1478,18 +1472,14 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 
 void FGNasalSys::registerToLoad(FGNasalModelData *data)
 {
-#ifndef FG_TESTLIB
   if( _loadList.empty() )
     _delay_load = true;
   _loadList.push(data);
-#endif
 }
 
 void FGNasalSys::registerToUnload(FGNasalModelData *data)
 {
-#ifndef FG_TESTLIB
     _unloadList.push(data);
-#endif
 }
 
 void FGNasalSys::addCommand(naRef func, const std::string& name)

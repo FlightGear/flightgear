@@ -137,15 +137,12 @@ FGViewMgr::update (double dt)
   // Update the current view
   currentView->update(dt);
 
-#ifndef FG_TESTLIB
-
 // update the camera now
     osg::ref_ptr<flightgear::CameraGroup> cameraGroup = flightgear::CameraGroup::getDefault();
     cameraGroup->update(toOsg(currentView->getViewPosition()),
                         toOsg(currentView->getViewOrientation()));
     cameraGroup->setCameraParameters(currentView->get_v_fov(),
                                      cameraGroup->getMasterAspectRatio());
-#endif
 }
 
 void FGViewMgr::clear()

@@ -186,7 +186,6 @@ public:
 private:
     void populate()
     {
-#if !defined(FG_TESTLIB)
         SGVec3d cartAirportPos = m_airport->cart();
         FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
         for (auto ai : aiManager->get_ai_list()) {
@@ -199,7 +198,6 @@ private:
 
             m_cache.push_back(cart);
         }
-#endif
         m_populated = true;
     }
 

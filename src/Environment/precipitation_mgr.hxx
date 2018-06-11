@@ -36,10 +36,8 @@
 class FGPrecipitationMgr : public SGSubsystem
 {
 private:
-#ifndef FG_TESTLIB
     osg::ref_ptr<osg::MatrixTransform> transform;
     osg::ref_ptr<SGPrecipitation> precipitation;
-#endif
     float getPrecipitationAtAltitudeMax(void);
     simgear::TiedPropertyList _tiedProperties;
 

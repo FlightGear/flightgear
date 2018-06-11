@@ -118,10 +118,8 @@ private:
     // Time structure
     SGTime *time_params;
 
-#ifndef FG_TESTLIB
     // Material properties library
     SGSharedPtr<SGMaterialLib> matlib;
-#endif
 
     SGCommandMgr *commands;
 
@@ -324,11 +322,7 @@ public:
 
     inline SGMaterialLib *get_matlib() const
     {
-    #ifdef FG_TESTLIB
-      return nullptr;
-    #else
       return matlib;
-    #endif
     }
     void set_matlib( SGMaterialLib *m );
 

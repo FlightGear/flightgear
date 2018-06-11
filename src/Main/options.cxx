@@ -60,7 +60,7 @@
 #include <GUI/gui.h>
 #include <GUI/MessageBox.hxx>
 
-#if defined(HAVE_QT) && !defined(FG_TESTLIB)
+#if defined(HAVE_QT)
 #include <GUI/QtLauncher.hxx>
 #include <GUI/SetupRootDialog.hxx>
 #endif
@@ -238,12 +238,10 @@ void fgSetDefaults ()
     SGPropertyNode* v = globals->get_props()->getNode("/sim/version", true);
     v->setValueReadOnly("flightgear", FLIGHTGEAR_VERSION);
     v->setValueReadOnly("simgear", SG_STRINGIZE(SIMGEAR_VERSION));
-#ifndef FG_TESTLIB
     v->setValueReadOnly("openscenegraph", osgGetVersion());
 #if OSG_VERSION_LESS_THAN(3,5,2)
     v->setValueReadOnly("openscenegraph-thread-safe-reference-counting",
                          osg::Referenced::getThreadSafeReferenceCounting());
-#endif
 #endif
     v->setValueReadOnly("revision", REVISION);
     v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
@@ -1036,14 +1034,12 @@ fgOptJpgHttpd( const char * arg )
 static int
 fgOptHttpd( const char * arg )
 {
-#ifndef FG_TESTLIB
     // port may be any valid address:port notation
     // like 127.0.0.1:8080
     // or just the port 8080
     string port = simgear::strutils::strip(string(arg));
     if( port.empty() ) return FG_OPTIONS_ERROR;
     fgSetString( string(flightgear::http::PROPERTY_ROOT).append("/options/listening-port").c_str(), port );
-#endif
     return FG_OPTIONS_OK;
 }
 
@@ -2109,9 +2105,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
   if (!p->shouldLoadDefaultConfig) {
-#if !defined(FG_TESTLIB)
     setupRoot(argc, argv);
-#endif
     return;
   }
 
@@ -2750,9 +2744,7 @@ void Options::showVersion() const
     PathList scn = globals->get_fg_scenery();
     cout << SGPath::join(scn, SGPath::pathListSep) << endl;
     cout << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
-#ifndef FG_TESTLIB
     cout << "OSG version: " << osgGetVersion() << endl;
-#endif
     cout << "PLIB version: " << PLIB_VERSION << endl;
 }
 
@@ -2890,7 +2882,7 @@ void Options::setupRoot(int argc, char **argv)
         root = SGPath::fromLocal8Bit(envp);
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
-#if defined(HAVE_QT) && !defined(FG_TESTLIB)
+#if defined(HAVE_QT)
         flightgear::initApp(argc, argv);
         root = SetupRootDialog::restoreUserSelectedRoot();
 #endif
@@ -2908,7 +2900,7 @@ void Options::setupRoot(int argc, char **argv)
     string base_version = fgBasePackageVersion(root);
 
 
-#if defined(HAVE_QT) && !defined(FG_TESTLIB)
+#if defined(HAVE_QT)
     // only compare major and minor version, not the patch level.
     const int versionComp = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, base_version, 2);
 

@@ -1262,7 +1262,6 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   naRef vec = naNewVector(c);
   naVec_append(vec, naNum(elev));
 
-#ifndef FG_TESTLIB
   naRef matdata = naNil();
 
   const SGMaterial *mat = dynamic_cast<const SGMaterial *>(material);
@@ -1281,7 +1280,6 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
     HASHSET("light_coverage", 14, naNum(mat->get_light_coverage()));
   }
   naVec_append(vec, matdata);
-#endif
   return vec;
 #undef HASHSET
 }

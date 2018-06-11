@@ -160,10 +160,8 @@ private:
     //friend class FGNasalScript;
     friend class FGNasalListener;
     friend class FGNasalModuleListener;
-#ifndef FG_TESTLIB
     SGLockedQueue<SGSharedPtr<FGNasalModelData> > _loadList;
     SGLockedQueue<SGSharedPtr<FGNasalModelData> > _unloadList;
-#endif
     // Delay removing items of the _loadList to ensure the are already attached
     // to the scene graph (eg. enables to retrieve world position in load
     // callback).
