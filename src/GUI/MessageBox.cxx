@@ -111,6 +111,15 @@ MessageBoxResult modalMessageBox(const std::string& caption,
     const std::string& msg,
     const std::string& moreText)
 {
+    // Headless mode.
+    if (globals->is_headless()) {
+        SG_LOG(SG_HEADLESS, SG_ALERT, "ModalMessageBox Caption: \"" << caption << "\"");
+        SG_LOG(SG_HEADLESS, SG_ALERT, "ModalMessageBox Message: \"" << msg << "\"");
+        if (!moreText.empty())
+            SG_LOG(SG_HEADLESS, SG_ALERT, "ModalMessageBox More text: \"" << moreText << "\"");
+        return MSG_BOX_OK;
+    }
+
     // prefer canvas
     if (isCanvasImplementationRegistered()) {
         SGPropertyNode_ptr args(new SGPropertyNode);
