@@ -568,12 +568,6 @@ if(ENABLE_TESTS)
 
     include (Dart)
     enable_testing()
-    if(WIN32)
-      # tests disabled until shared library export is fixed on Windows
-      message(STATUS "Tests disabled on Windows for the moment")
-    else()
-      add_subdirectory(tests)
-    endif()
 else()
     message(STATUS "Tests: DISABLED")
 endif(ENABLE_TESTS)
