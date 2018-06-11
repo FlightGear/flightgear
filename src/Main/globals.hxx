@@ -156,6 +156,9 @@ private:
     SGPropertyChangeListenerVec _listeners_to_cleanup;
 
     SGSharedPtr<simgear::pkg::Root> _packageRoot;
+
+    bool _headless;
+
 public:
 
     FGGlobals();
@@ -404,6 +407,12 @@ public:
 
     simgear::pkg::Root* packageRoot();
     void setPackageRoot(const SGSharedPtr<simgear::pkg::Root>& p);
+
+    /**
+     * A runtime headless mode for running without a GUI.
+     */
+    bool is_headless();
+    void set_headless(bool mode);
 };
 
 
