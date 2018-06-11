@@ -38,6 +38,9 @@ void initTestGlobals(const std::string& testName)
 
     globals->set_fg_home(homePath);
 
+    // Activate headless mode.
+    globals->set_headless(true);
+
     fgSetDefaults();
 
     std::unique_ptr<TimeManager> t;
