@@ -27,7 +27,7 @@ function(setup_fgfs_libraries target)
     endif()
 
     if(USE_DBUS)
-        target_link_libraries(${target} ${DBUS_LIBRARIES})
+        target_link_libraries(${target} ${DBUS_LDFLAGS})
     endif()
 
     if(FG_HAVE_GPERFTOOLS)
