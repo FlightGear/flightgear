@@ -42,6 +42,16 @@
 #define HAVE_USB_JS	1
 #endif
 
+#ifndef TRUE
+#define TRUE  1
+#define FALSE 0
+#endif
+
+#include <simgear/props/props.hxx> /* for jsSetError and SG_WARN */
+
+#include <sys/param.h>
+#include <fcntl.h>
+
 #include <string.h>
 #include <errno.h>
 #include <sys/ioctl.h>
