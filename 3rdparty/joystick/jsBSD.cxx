@@ -336,8 +336,8 @@ void jsJoystick::open ()
     error = ( joyfile == NULL ) ;
     if ( error )
     {
-      jsSetError ( SG_WARN, "unable to open calibration file %s (%s), joystick %i disabled (you can generate the calibration file with the plib-jscal utility)",
-		   joyfname, strerror ( errno ), id + 1 );
+      jsSetError ( SG_WARN, "unable to open calibration file, you can generate "
+        "the calibration file with the plib-jscal utility" );
       return ;
     }
 
