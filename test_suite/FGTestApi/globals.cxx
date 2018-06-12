@@ -13,6 +13,7 @@
 
 #include <Time/TimeManager.hxx>
 
+#include <simgear/structure/event_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 
@@ -46,6 +47,14 @@ void initTestGlobals(const std::string& testName)
     std::unique_ptr<TimeManager> t;
     t.reset(new TimeManager);
     t->init(); // establish mag-var data
+
+    /**
+     * Both the event manager and subsystem manager are initialised by the
+     * FGGlobals ctor, but only the subsystem manager is destroyed by the dtor.
+     * Here the event manager is added to the subsystem manager so it can be
+     * destroyed via the subsystem manager.
+     */
+    globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
 }
 
 }  // End of namespace setUp.
