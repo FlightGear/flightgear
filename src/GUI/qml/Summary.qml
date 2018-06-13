@@ -89,14 +89,14 @@ Item {
         // dynamic text sizing, so bind it manually
         y: logoText.y + Style.margin + logoText.contentHeight
         wrapMode: Text.WordWrap
-        text: "Licenced under the GNU Public License (GPL) version 2.0 - click for more info"
+        text: "Licenced under the GNU Public License (GPL)- click for more info"
         baseTextColor: "white"
         style: Text.Outline
         styleColor: "black"
         font.bold: true
 
         onClicked: {
-            _launcher.launchUrl("http://flightgear.org/license.html");
+            _launcher.launchUrl("http://home.flightgear.org/about/");
         }
     }
 
