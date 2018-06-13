@@ -362,7 +362,10 @@ Item {
                             }
 
                             onPerformMove: {
-
+                                var modifiedPaths = _addOns.sceneryPaths.slice()
+                                modifiedPaths.splice(model.index, 1);
+                                modifiedPaths.splice(newIndex, 0, modelData)
+                                _addOns.sceneryPaths = modifiedPaths;
                             }
                         }
                     }
