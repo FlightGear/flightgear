@@ -297,6 +297,10 @@ Item {
                         keywords: ["terrasync", "download", "scenery"]
                         option: "terrasync"
                         setting: "terrasync"
+
+                        // ensure we pass --disable-terrasync when unchecked, because
+                        // terrasync state is autosaved and hence can stick inside the sim
+                        setIfDefault: true
                     },
 
 
