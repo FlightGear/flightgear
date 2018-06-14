@@ -62,6 +62,9 @@ Item {
 
     function saveState()
     {
+        if (root.setting === "")
+            return;
+
         if (this.hasOwnProperty("value")) {
             _config.setValueForKey("", root.setting, this.value)
         } else {
@@ -71,10 +74,8 @@ Item {
 
     function restoreState()
     {
-        if (root.setting == "") {
-            console.warn("Missing setting key on " + label)
+        if (root.setting === "")
             return;
-        }
 
         if (!"value" in root) {
             console.warn("No value property on " + root);
