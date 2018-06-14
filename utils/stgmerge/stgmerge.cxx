@@ -82,6 +82,7 @@ struct _ObjectStatic {
 
 std::string fg_root;
 std::string fg_scenery;
+std::string fg_terrasync_root;
 std::string input;
 std::string output;
 bool display_viewer = false;
@@ -113,7 +114,7 @@ sg::SGReaderWriterOptions* sharedOptions(const std::string& filePath,
 	sharedOptions = sg::SGReaderWriterOptions::copyOrCreate(options);
 	sharedOptions->getDatabasePathList().clear();
 
-	SGPath path = filePath;
+	SGPath path(filePath);
 	path.append("..");
 	path.append("..");
 	path.append("..");
@@ -121,8 +122,7 @@ sg::SGReaderWriterOptions* sharedOptions(const std::string& filePath,
 
 	// ensure Models directory synced via TerraSync is searched before the copy in
 	// FG_ROOT, so that updated models can be used.
-	std::string terrasync_root = options->getPluginStringData(
-			"SimGear::TERRASYNC_ROOT");
+	std::string terrasync_root = options->getPluginStringData("SimGear::TERRASYNC_ROOT");
 	if (!terrasync_root.empty()) {
 		sharedOptions->getDatabasePathList().push_back(terrasync_root);
 	}
@@ -140,22 +140,32 @@ sg::SGReaderWriterOptions* sharedOptions(const std::string& filePath,
 
 int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 		std::string stg) {
+
+	// List of .ac files to remove
+	std::vector<std::string> ac_files;
+
 	// Get the STG file
 	if (stg.empty()) {
 		SG_LOG(SG_TERRAIN, SG_ALERT, "STG file empty");
 		return EXIT_FAILURE;
 	}
 
-	SG_LOG(SG_TERRAIN, SG_ALERT, "Loading stg file " << stg);
+	SGPath sourcestg(input);
+	sourcestg.append(stg);
 
-	sg_gzifstream stream(stg);
+	SGPath deststg(output);
+	deststg.append(stg);
+
+	SG_LOG(SG_TERRAIN, SG_INFO, "Processing " << sourcestg.c_str());
+
+	sg_gzifstream stream((std::string) sourcestg.c_str());
 	if (!stream.is_open()) {
-		SG_LOG(SG_TERRAIN, SG_ALERT, "Unable to open STG file " << stg);
+		SG_LOG(SG_TERRAIN, SG_ALERT, "Unable to open STG file " << sourcestg.c_str());
 		return EXIT_FAILURE;
 	}
 
 	// Extract the bucket from the filename
-	std::istringstream ss(osgDB::getStrippedName(stg));
+	std::istringstream ss(osgDB::getStrippedName(sourcestg.file().c_str()));
 	long index;
 	ss >> index;
 	if (ss.fail()) {
@@ -173,23 +183,19 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 	int lat_blocks = (int) ceil(bucket.get_height_m() / group_size);
 	float lat_delta = bucket.get_height() / lat_blocks;
 	float lon_delta = bucket.get_width() / lon_blocks;
-	SG_LOG(SG_TERRAIN, SG_ALERT,
+	SG_LOG(SG_TERRAIN, SG_DEBUG,
 			"Splitting into (" << lon_blocks << "," << lat_blocks << ") blocks"
 			<< "of size (" << lon_delta << "," << lat_delta << ") degrees\n");
 
 	std::list<_ObjectStatic> _objectStaticList[lon_blocks][lat_blocks];
 
-	std::string filePath = osgDB::getFilePath(stg);
-
 	// Write out the STG files.
-	SGPath stgpath(stg);
-	std::string outpath = SGPath(SGPath(output), stgpath.file()).c_str();
-	SG_LOG(SG_TERRAIN, SG_ALERT, "Writing to " << outpath);
-	std::ofstream stgout(outpath.c_str(), std::ofstream::out);
+	SG_LOG(SG_TERRAIN, SG_DEBUG, "Writing to " << deststg.c_str());
+	std::ofstream stgout(deststg.c_str(), std::ofstream::out);
 
 	if (!stgout.is_open()) {
 		SG_LOG(SG_TERRAIN, SG_ALERT,
-				"Unable to open STG file to write " << outpath);
+				"Unable to open STG file to write " << deststg.c_str());
 		return EXIT_FAILURE;
 	}
 
@@ -221,9 +227,6 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 		std::string name;
 		in >> name;
 
-		SGPath path = filePath;
-		path.append(name);
-
 		//  The following tokens are ignored
 		// OBJECT_BASE - base scenery, not relevant
 		// OBJECT - airport BTG files
@@ -232,17 +235,30 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 		// OBJECT_SIGN - depends on materials library, which is runtime dependent
 
 		if ((token == "OBJECT_STATIC") || (token == "OBJECT_SHARED")) {
+			if (SGPath(name).lower_extension() != "ac") {
+				// We only attempt to merge static .ac objects, as they don't have any
+				// animations
+				SG_LOG(SG_TERRAIN, SG_DEBUG, "Ignoring non .ac file '" << name << "'");
+				stgout << line << "\n";
+				continue;
+			}
+
+			// If we merge it, then we should remove the .ac file from the output.
+			ac_files.push_back(name);
+
+			SGPath filePath(sourcestg.dir());
+			filePath.append(name);
 
 			_ObjectStatic obj;
 			osg::ref_ptr<sg::SGReaderWriterOptions> opt;
 
 			if (token == "OBJECT_STATIC") {
-				opt = staticOptions(filePath, options);
+				opt = staticOptions(deststg.dir().c_str(), options);
 				//if (SGPath(name).lower_extension() == "ac")
 				//opt->setInstantiateEffects(true);  // Is this output correctly?
 				obj._shared = false;
 			} else if (token == "OBJECT_SHARED") {
-				opt = sharedOptions(filePath, options);
+				opt = sharedOptions(deststg.dir().c_str(), options);
 				//if (SGPath(name).lower_extension() == "ac")
 				//opt->setInstantiateEffects(true);  // Is this output correctly?
 				obj._shared = true;
@@ -256,15 +272,33 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 			in >> obj._lon >> obj._lat >> obj._elev >> obj._hdg >> obj._pitch
 					>> obj._roll;
 
-			// Determine the correct bucket for this object.
-			int x = (int) floor((obj._lon - bucket.get_corner(0).getLongitudeDeg()) / lon_delta);
-			int y = (int) floor((obj._lat - bucket.get_corner(0).getLatitudeDeg()) / lat_delta);
-			SG_LOG(SG_TERRAIN, SG_INFO,
-					"Assigned (" << obj._lon << "," << obj._lat << ") to block (" << x << "," << y << ")");
+			// Sanity check this object is in the correct bucket
+			if ((obj._lon < bucket.get_corner(0).getLongitudeDeg()) ||
+					(obj._lon > bucket.get_corner(2).getLongitudeDeg()) ||
+					(obj._lat < bucket.get_corner(0).getLatitudeDeg())  ||
+					(obj._lat > bucket.get_corner(2).getLatitudeDeg())     ) {
+				SG_LOG(SG_TERRAIN, SG_ALERT,
+						"File " << sourcestg.c_str() << " contains object outside bounds of bucket:\n" <<
+						" Bucket bounds (lat, lon) : (" <<
+						bucket.get_corner(0).getLatitudeDeg() << ", " <<
+						bucket.get_corner(0).getLongitudeDeg() << ") - (" <<
+						bucket.get_corner(2).getLatitudeDeg() << ", " <<
+						bucket.get_corner(2).getLongitudeDeg() << ") \n" <<
+						line << "\n");
 
-			_objectStaticList[x][y].push_back(obj);
+					// Simply leave it in place for the moment.
+					stgout << line << "\n";
+			} else {
+				// Determine the correct bucket for this object.
+				int x = (int) floor((obj._lon - bucket.get_corner(0).getLongitudeDeg()) / lon_delta);
+				int y = (int) floor((obj._lat - bucket.get_corner(0).getLatitudeDeg()) / lat_delta);
+				SG_LOG(SG_TERRAIN, SG_INFO,
+						"Assigned (" << obj._lon << "," << obj._lat << ") to block (" << x << "," << y << ")");
+
+				_objectStaticList[x][y].push_back(obj);
+			}
 		} else {
-			SG_LOG(SG_TERRAIN, SG_ALERT, "Ignoring token '" << token << "'");
+			SG_LOG(SG_TERRAIN, SG_DEBUG, "Ignoring token '" << token << "'");
 			stgout << line << "\n";
 		}
 	}
@@ -301,18 +335,6 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 
 			for (std::list<_ObjectStatic>::iterator i = _objectStaticList[x][y].begin();
 					i != _objectStaticList[x][y].end(); ++i) {
-
-				// We don't process XML files, as they typically include animations which we can't output
-				/*
-				 if (SGPath(i->_name).lower_extension() == "xml") {
-				 //SG_LOG(SG_TERRAIN, SG_ALERT, "Ignoring non-static "
-				 //	   << i->_token << " '" << i->_name << "'");
-				 std::cout << (i->_shared ? "OBJECT_SHARED " : "OBJECT_STATIC ");
-				 std::cout << i->_name << " " << i->_lon << " " << i->_lat << " " << i->_elev << " " << i->_hdg;
-				 std::cout << " " << i->_pitch << i->_roll << "\n";
-				 continue;
-				 }
-				 */
 
 				SG_LOG(SG_TERRAIN, SG_INFO, "Processing " << i->_name);
 
@@ -398,7 +420,7 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 			}
 
 			// Serialize the result as a binary OSG file, including textures:
-			std::string filename = stgpath.file();
+			std::string filename = sourcestg.file();
 
 			// Include both the STG name and the indexes for uniqueness.
 			// ostringstream required for compilers that don't support C++11
@@ -406,7 +428,7 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 			oss << x << y;
 			filename.append(oss.str());
 			filename.append(".osg");
-			SGPath osgpath = SGPath(SGPath(output), filename);
+			SGPath osgpath = SGPath(deststg.dir(), filename);
 			osgDB::writeNodeFile(*group, osgpath.c_str(),
 					new osgDB::Options("WriteImageHint=IncludeData Compressor=zlib"));
 
@@ -421,9 +443,129 @@ int processSTG(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
 		}
 	}
 
+	if (copy_files) {
+		std::vector<std::string>::const_iterator iter;
+
+		for (iter = ac_files.begin(); iter != ac_files.end(); ++iter) {
+			SGPath acfile = SGPath(deststg.dir());
+			acfile.append(*iter);
+			if (acfile.isFile()) {
+				if (remove(acfile.c_str()) != 0) {
+					SG_LOG(SG_GENERAL, SG_ALERT, "Unable to remove " << acfile.c_str());
+				}
+			}
+		}
+	}
+
 	// Finished with this file.
 	stgout.flush();
 	stgout.close();
+
+	return EXIT_SUCCESS;
+}
+
+int processDirectory(osg::ref_ptr<simgear::SGReaderWriterOptions> options,
+		SGPath directory_name) {
+
+	// List of STG files to process
+	std::vector<std::string> stg_files;
+
+	SGPath source = SGPath(input);
+	source.append(directory_name.c_str());
+
+	SG_LOG(SG_GENERAL, SG_INFO, "Processing " << source.c_str());
+
+	DIR *dir = NULL;
+	dir = opendir(source.c_str());
+
+	if (dir == NULL) {
+		SG_LOG(SG_GENERAL, SG_ALERT, "Unable to open " << source.c_str());
+		return EXIT_FAILURE;
+	}
+
+	if (copy_files) {
+		// Create the directory in the output directory
+		SGPath destination = SGPath(output);
+		destination.append(directory_name.c_str());
+		destination.append(".");  //  Do this so the path is a directory rather than a file!
+		if (destination.exists()) {
+			if (! destination.isDir()) {
+				SG_LOG(SG_GENERAL, SG_ALERT, destination.c_str() << " exists and is not a directory.");
+				return EXIT_FAILURE;
+			}
+			if (! destination.canWrite()) {
+				SG_LOG(SG_GENERAL, SG_ALERT, destination.c_str() << " cannot be written.");
+				return EXIT_FAILURE;
+			}
+		} else {
+
+			// Note that this create the directory part of the path,
+			int success = destination.create_dir();
+
+			if (success != 0) {
+				SG_LOG(SG_GENERAL, SG_ALERT, "Unable to create " << destination.dir());
+				return EXIT_FAILURE;
+			}
+
+			if (! destination.exists()) {
+				SG_LOG(SG_GENERAL, SG_ALERT, "Failed to create " << destination.dir());
+				return EXIT_FAILURE;
+			}
+		}
+	}
+
+	struct dirent *pent = NULL;
+	pent = readdir(dir);
+
+	while (pent != NULL) {
+		std::string fname = pent->d_name;
+		SG_LOG(SG_GENERAL, SG_DEBUG, "  checking " << fname.c_str());
+
+		if ((fname.compare(".") == 0) || (fname.compare("..") == 0)) {
+			pent = readdir(dir);
+			continue;
+		}
+
+		SGPath fpath = SGPath(input);
+		fpath.append(directory_name.c_str());
+		fpath.append(fname);
+
+	  if (fpath.isDir()) {
+			SGPath dirname = SGPath(directory_name);
+			dirname.append(fname);
+			if (processDirectory(options, dirname) == EXIT_FAILURE) {
+				return EXIT_FAILURE;
+			}
+    } else if (SGPath(fname).lower_extension() == "stg") {
+			stg_files.push_back(fname);
+		} else if (copy_files) {
+			// Copy it over if we're copying all files.
+			SGPath fsource = SGPath(input);
+			fsource.append(directory_name.c_str());
+			fsource.append(fname);
+			SGPath fdestination = SGPath(output);
+			fdestination.append(directory_name.c_str());
+			fdestination.append(fname);
+
+			SG_LOG(SG_GENERAL, SG_DEBUG, "Copying " << fsource.c_str() << " to " << fdestination.c_str());
+			std::ifstream src(fsource.c_str(), std::ios::binary);
+			std::ofstream dst(fdestination.c_str(), std::ios::binary);
+
+			dst << src.rdbuf();
+		}
+		pent = readdir(dir);
+	}
+
+	closedir(dir);
+
+	// Now we've copied the data, process the STG files
+	std::vector<std::string>::const_iterator iter;
+
+	for (iter = stg_files.begin(); iter != stg_files.end(); ++iter) {
+		SGPath stg = SGPath(directory_name);
+		stg.append(*iter);
+		processSTG(options, stg.c_str());
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -440,6 +582,7 @@ int main(int argc, char** argv) {
 			"$FG_ROOT");
 	usage->addCommandLineOption("--fg-scenery <dir>", "FG scenery path",
 			"$FG_SCENERY");
+	usage->addCommandLineOption("--terrasync <dir>", "Terrasync path (for Models)");
 	usage->addCommandLineOption("--group-size <N>", "Group size (m)", "5000");
 	usage->addCommandLineOption("--optimize", "Optimize scene-graph");
 	usage->addCommandLineOption("--viewer", "Display loaded objects");
@@ -464,6 +607,11 @@ int main(int argc, char** argv) {
 		SGPath path(fg_root);
 		path.append("Scenery");
 		fg_scenery = path.str();
+	}
+
+	if (arguments.read("--terrasync", fg_terrasync_root)) {
+	} else {
+		fg_scenery = "";
 	}
 
 	if (!arguments.read("--input", input)) {
@@ -531,7 +679,7 @@ int main(int argc, char** argv) {
 	SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
 	try {
 		SGPath preferencesFile = fg_root;
-		preferencesFile.append("preferences.xml");
+		preferencesFile.append("defaults.xml");
 		readProperties(preferencesFile.str(), props);
 	} catch (...) {
 		// In case of an error, at least make summer :)
@@ -574,57 +722,12 @@ int main(int argc, char** argv) {
 	options->setMaterialLib(ml);
 	options->setPropertyNode(props);
 	options->setPluginStringData("SimGear::FG_ROOT", fg_root);
+	options->setPluginStringData("SimGear::TERRASYNC_ROOT", fg_terrasync_root);
 
 	// Here, all arguments are processed
 	arguments.reportRemainingOptionsAsUnrecognized();
 	arguments.writeErrorMessages(std::cerr);
 
-	DIR *dir = NULL;
-	dir = opendir(input.c_str());
-	struct dirent *pent = NULL;
-
-	if (dir == NULL) {
-		SG_LOG(SG_GENERAL, SG_ALERT, "Unable to open " << input);
-		return EXIT_FAILURE;
-	}
-
-	// List of STG files to process
-	std::vector<std::string> stg_files;
-
-	pent = readdir(dir);
-
-	while (pent != NULL) {
-
-		std::string fname = pent->d_name;
-
-		if (SGPath(fname).lower_extension() == "stg") {
-			SG_LOG(SG_GENERAL, SG_ALERT, "STG " << fname);
-			stg_files.push_back(fname);
-		} else if (copy_files) {
-			// Copy it over if we're copying all files.
-			SGPath source = SGPath(input);
-			source.append(fname);
-			SGPath destination = SGPath(output);
-			destination.append(fname);
-			//SG_LOG(SG_GENERAL, SG_ALERT, "Copying " << source.c_str() << " to " << destination.c_str());
-			std::ifstream src(source.c_str(), std::ios::binary);
-			std::ofstream dst(destination.c_str(), std::ios::binary);
-
-			dst << src.rdbuf();
-		}
-		pent = readdir(dir);
-	}
-
-	closedir(dir);
-
-	// Now we've copied the data, process the STG files
-	std::vector<std::string>::const_iterator iter;
-
-	for (iter = stg_files.begin(); iter != stg_files.end(); ++iter) {
-		SGPath stg = SGPath(input);
-		stg.append(*iter);
-		processSTG(options, stg.c_str());
-	}
-
-	return EXIT_SUCCESS;
+	std::string dot = "";
+	return processDirectory(options, dot);
 }
