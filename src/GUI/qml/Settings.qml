@@ -309,7 +309,8 @@ Item {
                         label: qsTr("Download location")
                         description: qsTr("FlightGear stores downloaded files (scenery and aircraft) in this location. "
                                      + "Depending on your settings, it may grow to a considerable size (many gigabytes). "
-                                     + "If you change the download location, files will need to be downloaded again.")
+                                     + "If you change the download location, files will need to be downloaded again. "
+                                     + "When changing this setting, FlightGear will restart to use the new location correctly.")
                         advanced: true
                         chooseDirectory: true
                         defaultPath: _config.defaultDownloadDir
@@ -326,6 +327,12 @@ Item {
                             // lots of special work needs to be done immediately that this
                             // value is changed.
                             _launcher.downloadDirChanged(path);
+                        }
+
+                        function saveState()
+                        {
+                            // ensure this is a no-op, we write the value explicity
+                            // in LauncherController::downloadDirChanged
                         }
                     }
                 ]

@@ -344,9 +344,9 @@ void LauncherController::downloadDirChanged(QString path)
         return;
     }
 
-    // if the default dir is passed in, map that back to the emptru string
+    // if the default dir is passed in, map that back to the empty string
     if (path == m_config->defaultDownloadDir()) {
-        path.clear();;
+        path.clear();
     }
 
     auto options = flightgear::Options::sharedInstance();
@@ -364,25 +364,9 @@ void LauncherController::downloadDirChanged(QString path)
         options->clearOption("download-dir");
     }
 
-    // replace existing package root
-    globals->get_subsystem<FGHTTPClient>()->shutdown();
-    globals->setPackageRoot(simgear::pkg::RootRef());
-
-    // create new root with updated download-dir value
-    fgInitPackageRoot();
-
-    globals->get_subsystem<FGHTTPClient>()->init();
-
-    QSettings settings;
-    // re-scan the aircraft list
-    m_aircraftModel->setPackageRoot(globals->packageRoot());
-
-    auto aircraftCache = LocalAircraftCache::instance();
-    aircraftCache->setPaths(settings.value("aircraft-paths").toStringList());
-    aircraftCache->scanDirs();
-
-    // re-set scenery dirs
-    flightgear::launcherSetSceneryPaths();
+    m_config->setValueForKey("", "download-dir", path);
+    saveSettings();
+    flightgear::restartTheApp();
 }
 
 QmlAircraftInfo *LauncherController::selectedAircraftInfo() const
