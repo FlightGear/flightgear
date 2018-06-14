@@ -6,7 +6,6 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_init.hxx>
-#include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
 #include <Instrumentation/gps.hxx>
@@ -15,6 +14,12 @@
 #include <Navaids/airways.hxx>
 #include <Navaids/waypoint.hxx>
 #include <Navaids/procedure.hxx>
+
+#include "test_suite/helpers/globals.hxx"
+#include "test_suite/helpers/NavDataCache.hxx"
+
+#include "testgps.hxx"
+
 
 using std::string;
 using namespace flightgear;
@@ -77,20 +82,22 @@ void createDummyRoute(FGRouteMgr* rm)
   rmInput->setStringValue("OTR");
 }
 
-int main(int argc, char* argv[])
+
+void GPSTests::setUp()
 {
-
-try{
-  globals = new FGGlobals;
-
-  fgInitFGRoot(argc, argv);
-  if (!fgInitConfig(argc, argv) ) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed" );
-    exit(-1);
-  }
+    fgtest::initTestGlobals("GPS");
+    fgtest::initNavDataCache();
+}
 
 
-  fgInitNav();
+void GPSTests::tearDown()
+{
+    fgtest::shutdownTestGlobals();
+}
+
+
+void GPSTests::testGPS()
+{
   fgSetDouble("/environment/magnetic-variation-deg", 0.0);
 
   Airway::load();
@@ -101,7 +108,7 @@ try{
   SG_LOG(SG_GENERAL, SG_ALERT, "egph: cart location:" << egph->cart());
 
   FGAirport::AirportFilter af;
-  FGPositioned::List l = FGPositioned::findClosestN(egph->geod(), 20, 2000.0, &af);
+  FGPositionedList l = FGPositioned::findClosestN(egph->geod(), 20, 2000.0, &af);
   for (unsigned int i=0; i<l.size(); ++i) {
     SG_LOG(SG_GENERAL, SG_ALERT, "\t" << l[i]->ident() << "/" << l[i]->name());
   }
@@ -341,14 +348,4 @@ try{
   f << "</Document>\n"
     "</kml>" << endl;
   f.close();
-
-
-  return EXIT_SUCCESS;
-
-
-
-} catch (sg_exception& ex) {
-  SG_LOG(SG_GENERAL, SG_ALERT, "exception:" << ex.getFormattedMessage());
-}
-  return EXIT_FAILURE;
 }

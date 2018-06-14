@@ -65,6 +65,7 @@ include(Dart)
 
 # System test suites.
 add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s AeroMeshTests)
+#add_test(GPSSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s GPSTests)
 
 # Unit test suites.
 add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AddonManagementTests)
