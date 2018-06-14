@@ -27,6 +27,12 @@
 
 #include "FGEventInput.hxx"
 
+
+int extractBits(uint8_t* bytes, size_t lengthInBytes, size_t bitOffset, size_t bitSize);
+int signExtend(int inValue, size_t bitSize);
+void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value);
+
+
 class FGHIDEventInput : public FGEventInput {
 public:
   FGHIDEventInput();

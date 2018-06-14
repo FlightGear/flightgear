@@ -3,6 +3,7 @@ foreach( unit_test_category
         Add-ons
         general
         FDM
+        Input
         Main
         Navaids
         Scripting

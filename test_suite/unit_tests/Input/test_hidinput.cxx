@@ -18,33 +18,35 @@
 
 #include "config.h"
 
+#include "test_hidinput.hxx"
+
 #include "test_suite/helpers/globals.hxx"
 
 #include <simgear/misc/test_macros.hxx>
 
-#include "FGHIDEventInput.cxx"
+#include <Input/FGHIDEventInput.hxx>
 
-void testValueExtract()
+void HIDInputTests::testValueExtract()
 {
     uint8_t testDataFromSpec[4] = {0, 0xf4, 0x1 | (0x7 << 2), 0x03};
-    SG_VERIFY(extractBits(testDataFromSpec, 4, 8, 10) == 500);
-    SG_VERIFY(extractBits(testDataFromSpec, 4, 18, 10) == 199);
+    CPPUNIT_ASSERT(extractBits(testDataFromSpec, 4, 8, 10) == 500);
+    CPPUNIT_ASSERT(extractBits(testDataFromSpec, 4, 18, 10) == 199);
 
     uint8_t testData2[4] = {0x01 << 6 | 0x0f,
         0x17 | (1 << 6),
         0x3 | (0x11 << 2),
         0x3d | (1 << 6) };
 
-    SG_VERIFY(extractBits(testData2, 4, 0, 6) == 15);
-    SG_VERIFY(extractBits(testData2, 4, 6, 12) == 3421);
-    SG_VERIFY(extractBits(testData2, 4, 18, 12) == 3921);
-    SG_VERIFY(extractBits(testData2, 4, 30, 1) == 1);
-    SG_VERIFY(extractBits(testData2, 4, 31, 1) == 0);
+    CPPUNIT_ASSERT(extractBits(testData2, 4, 0, 6) == 15);
+    CPPUNIT_ASSERT(extractBits(testData2, 4, 6, 12) == 3421);
+    CPPUNIT_ASSERT(extractBits(testData2, 4, 18, 12) == 3921);
+    CPPUNIT_ASSERT(extractBits(testData2, 4, 30, 1) == 1);
+    CPPUNIT_ASSERT(extractBits(testData2, 4, 31, 1) == 0);
 }
 
 // void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
 
-void testValueInsert()
+void HIDInputTests::testValueInsert()
 {
     uint8_t buf[8];
     memset(buf, 0, 8);
@@ -54,27 +56,18 @@ void testValueInsert()
     writeBits(buf, 6, 12, a);
     writeBits(buf, 18, 12, b);
 
-    SG_VERIFY(buf[0] == 0x40);
-    SG_VERIFY(buf[1] == 0x57);
-    SG_VERIFY(buf[2] == (0x03 | 0x44));
-    SG_VERIFY(buf[3] == 0x3d);
+    CPPUNIT_ASSERT(buf[0] == 0x40);
+    CPPUNIT_ASSERT(buf[1] == 0x57);
+    CPPUNIT_ASSERT(buf[2] == (0x03 | 0x44));
+    CPPUNIT_ASSERT(buf[3] == 0x3d);
 }
 
-void testSignExtension()
+void HIDInputTests::testSignExtension()
 {
-    SG_VERIFY(signExtend(0x80, 8) == -128);
-    SG_VERIFY(signExtend(0xff, 8) == -1);
-    SG_VERIFY(signExtend(0x7f, 8) == 127);
+    CPPUNIT_ASSERT(signExtend(0x80, 8) == -128);
+    CPPUNIT_ASSERT(signExtend(0xff, 8) == -1);
+    CPPUNIT_ASSERT(signExtend(0x7f, 8) == 127);
     
-    SG_VERIFY(signExtend(0x831, 12) == -1999);
-    SG_VERIFY(signExtend(0x7dd, 12) == 2013);
-}
-
-int main(int argc, char* argv[])
-{
-    testValueExtract();
-    testValueInsert();
-    testSignExtension();
-    
-    return EXIT_SUCCESS;
+    CPPUNIT_ASSERT(signExtend(0x831, 12) == -1999);
+    CPPUNIT_ASSERT(signExtend(0x7dd, 12) == 2013);
 }

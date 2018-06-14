@@ -538,22 +538,6 @@ void FGHIDDevice::update(double dt)
     _dirtyReports.clear();
 }
 
-void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
-{
-    size_t wholeBytesToSkip = bitOffset >> 3;
-    uint8_t* dataByte = bytes + wholeBytesToSkip;
-    size_t offsetInByte = bitOffset & 0x7;
-    size_t bitsInByte = std::min(bitSize, 8 - offsetInByte);
-    uint8_t mask = 0xff >> (8 - bitsInByte);
-
-    *dataByte |= ((value & mask) << offsetInByte);
-
-    if (bitsInByte < bitSize) {
-        // if we have more bits to write, recurse
-        writeBits(bytes, bitOffset + bitsInByte, bitSize - bitsInByte, value >> bitsInByte);
-    }
-}
-
 void FGHIDDevice::sendReport(Report* report) const
 {
     if (!_device) {
@@ -583,33 +567,6 @@ void FGHIDDevice::sendReport(Report* report) const
         assert(report->type == HID::ReportType::Out);
         hid_write(_device, reportBytes, reportLength + 1);
     }
-}
-
-int extractBits(uint8_t* bytes, size_t lengthInBytes, size_t bitOffset, size_t bitSize)
-{
-    const size_t wholeBytesToSkip = bitOffset >> 3;
-    const size_t offsetInByte = bitOffset & 0x7;
-
-    // work out how many whole bytes to copy
-    const size_t bytesToCopy = std::min(sizeof(uint32_t), (offsetInByte + bitSize + 7) / 8);
-    uint32_t v = 0;
-    // this goes from byte alignment to word alignment safely
-    memcpy((void*) &v, bytes + wholeBytesToSkip, bytesToCopy);
-
-    // shift down so lowest bit is aligned
-    v = v >> offsetInByte;
-
-    // mask off any extraneous top bits
-    const uint32_t mask = ~(0xffffffff << bitSize);
-    v &= mask;
-
-    return v;
-}
-
-int signExtend(int inValue, size_t bitSize)
-{
-    const int m = 1U << (bitSize - 1);
-    return (inValue ^ m) - m;
 }
 
 int FGHIDDevice::maybeSignExtend(Item* item, int inValue)
@@ -700,6 +657,50 @@ void FGHIDDevice::Send(const char *eventName, double value)
 }
 
 } // of anonymous namespace
+
+
+int extractBits(uint8_t* bytes, size_t lengthInBytes, size_t bitOffset, size_t bitSize)
+{
+    const size_t wholeBytesToSkip = bitOffset >> 3;
+    const size_t offsetInByte = bitOffset & 0x7;
+
+    // work out how many whole bytes to copy
+    const size_t bytesToCopy = std::min(sizeof(uint32_t), (offsetInByte + bitSize + 7) / 8);
+    uint32_t v = 0;
+    // this goes from byte alignment to word alignment safely
+    memcpy((void*) &v, bytes + wholeBytesToSkip, bytesToCopy);
+
+    // shift down so lowest bit is aligned
+    v = v >> offsetInByte;
+
+    // mask off any extraneous top bits
+    const uint32_t mask = ~(0xffffffff << bitSize);
+    v &= mask;
+
+    return v;
+}
+
+int signExtend(int inValue, size_t bitSize)
+{
+    const int m = 1U << (bitSize - 1);
+    return (inValue ^ m) - m;
+}
+
+void writeBits(uint8_t* bytes, size_t bitOffset, size_t bitSize, int value)
+{
+    size_t wholeBytesToSkip = bitOffset >> 3;
+    uint8_t* dataByte = bytes + wholeBytesToSkip;
+    size_t offsetInByte = bitOffset & 0x7;
+    size_t bitsInByte = std::min(bitSize, 8 - offsetInByte);
+    uint8_t mask = 0xff >> (8 - bitsInByte);
+
+    *dataByte |= ((value & mask) << offsetInByte);
+
+    if (bitsInByte < bitSize) {
+        // if we have more bits to write, recurse
+        writeBits(bytes, bitOffset + bitsInByte, bitSize - bitsInByte, value >> bitsInByte);
+    }
+}
 
 FGHIDEventInput::FGHIDEventInput() :
     FGEventInput(),
