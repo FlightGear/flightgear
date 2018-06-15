@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     // Declarations.
     int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1;
     bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false;
-    bool        verbose=false, ctest_output=false, debug=false, help=false;
+    bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL;
     char        firstchar;
     std::string fgRoot;
@@ -130,6 +130,10 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
             debug = true;
 
+        // No summary output.
+        } else if (strcmp(argv[i], "--no-summary") == 0) {
+            printSummary = false;
+
         // Help.
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             help = true;
@@ -166,6 +170,7 @@ int main(int argc, char **argv)
         std::cout << "                        tests." << std::endl;
         std::cout << "    -c, --ctest         simplified output suitable for running via CTest." << std::endl;
         std::cout << "    -d, --debug         disable IO capture for debugging (super verbose output)." << std::endl;
+        std::cout << "    --no-summary        disable the final summary printout." << std::endl;
         std::cout << std::endl;
         std::cout << "  FG options:" << std::endl;
         std::cout << "    --fg-root           the path to FGData" << std::endl;
@@ -205,7 +210,7 @@ int main(int argc, char **argv)
         status_simgear = testRunner("Simgear unit tests", subset_simgear, verbose, ctest_output, debug);
 
     // Summary printout.
-    if (!ctest_output)
+    if (printSummary && !ctest_output)
         summary(cerr, status_system, status_unit, status_gui, status_simgear);
 
     // Deactivate the logging.
