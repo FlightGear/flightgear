@@ -218,7 +218,7 @@ public:
         Airship = LauncherController::Airship
     };
 
-    Q_ENUM(AircraftType)
+    Q_ENUMS(AircraftType)
 
     Q_INVOKABLE void setSearch(QString t, AircraftType aircraft)
     {

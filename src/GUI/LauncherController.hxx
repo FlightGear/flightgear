@@ -156,7 +156,7 @@ public:
         Airship
     };
 
-    Q_ENUM(AircraftType)
+    Q_ENUMS(AircraftType)
 
     AircraftType aircraftType() const
     { return m_aircraftType; }

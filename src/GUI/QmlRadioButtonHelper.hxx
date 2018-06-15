@@ -22,7 +22,7 @@
 #define QMLRADIOBUTTONHELPER_HXX
 
 #include <QObject>
-#include <QQmlEngine> // for QML_DECLARE_TYPEINFO
+#include <QtQml>
 
 class QmlRadioButtonGroup;
 

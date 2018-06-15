@@ -113,7 +113,7 @@ public:
         Village = FGPositioned::VILLAGE
     };
 
-    Q_ENUM(Type)
+    Q_ENUMS(Type)
 
     Q_PROPERTY(QString ident READ ident NOTIFY infoChanged)
     Q_PROPERTY(QString name READ name NOTIFY infoChanged)

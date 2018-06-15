@@ -22,6 +22,7 @@
 
 #include <QMetaObject>
 #include <QDebug>
+#include <QQmlEngine>
 
 QmlRadioButtonGroup::QmlRadioButtonGroup(QObject *parent) : QObject(parent)
 {
