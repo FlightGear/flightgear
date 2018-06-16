@@ -28,6 +28,6 @@ QtObject
 
     readonly property string disabledTextColor: "#5f5f5f"
 
-    readonly property double panelOpacity: 0.5
+    readonly property double panelOpacity: 0.7
 }
 
