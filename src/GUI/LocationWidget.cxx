@@ -421,6 +421,19 @@ LocationWidget::LocationWidget(QWidget *parent) :
     connect(m_ui->headingSpinbox, SIGNAL(valueChanged(int)),
             this, SLOT(onHeadingChanged()));
 
+	connect(m_ui->altitudeCheck, &QCheckBox::toggled, [this](bool checked) { 
+		m_ui->altitudeModeCombo->setEnabled(checked);
+		m_ui->altitudeSpinbox->setEnabled(checked);
+	});
+
+	connect(m_ui->airspeedCheck, &QCheckBox::toggled, [this](bool checked) {
+		m_ui->airspeedSpinbox->setEnabled(checked);
+	});
+
+	connect(m_ui->headingCheck, &QCheckBox::toggled, [this](bool checked) {
+		m_ui->headingSpinbox->setEnabled(checked);
+	});
+
     m_backButton = new QToolButton(this);
     m_backButton->setGeometry(0, 0, 64, 32);
     m_backButton->setText(tr("<< Back"));
@@ -501,6 +514,10 @@ void LocationWidget::restoreLocation(QVariantMap l)
         m_locationIsLatLon = false;
     }
 
+	m_ui->altitudeCheck->setChecked(l.contains("altitude"));
+	m_ui->airspeedCheck->setChecked(l.contains("speed"));
+	m_ui->headingCheck->setChecked(l.contains("heading"));
+
     m_ui->altitudeSpinbox->setValue(l.value("altitude", 6000).toInt());
     m_ui->airspeedSpinbox->setValue(l.value("speed", 120).toInt());
     m_ui->headingSpinbox->setValue(l.value("heading").toInt());
@@ -576,8 +593,15 @@ QVariantMap LocationWidget::saveLocation() const
     } // of m_location is valid
 
 
-    locationSet.insert("altitude", m_ui->altitudeSpinbox->value());
-    locationSet.insert("speed", m_ui->airspeedSpinbox->value());
+	if (m_ui->altitudeCheck->isChecked()) 
+		locationSet.insert("altitude", m_ui->altitudeSpinbox->value());
+
+	if (m_ui->airspeedCheck->isChecked())
+	    locationSet.insert("speed", m_ui->airspeedSpinbox->value());
+
+	if (m_ui->headingCheck->isChecked())
+		locationSet.insert("heading", m_ui->headingSpinbox->value());
+
     locationSet.insert("offset-enabled", m_ui->offsetGroup->isChecked());
     locationSet.insert("offset-bearing", m_ui->offsetBearingSpinbox->value());
     locationSet.insert("offset-distance", m_ui->offsetNmSpinbox->value());
@@ -704,13 +728,18 @@ void LocationWidget::setLocationProperties()
 
 void LocationWidget::applyPositionOffset()
 {
-    if (m_ui->altitudeSpinbox->value() > 0) {
+    if (m_ui->altitudeCheck->isChecked()) {
         m_config->setArg("altitude", QString::number(m_ui->altitudeSpinbox->value()));
     }
 
-    m_config->setArg("vc", QString::number(m_ui->airspeedSpinbox->value()));
-    m_config->setArg("heading", QString::number(m_ui->headingSpinbox->value()));
-    
+	if (m_ui->headingCheck->isChecked()) {
+		m_config->setArg("heading", QString::number(m_ui->headingSpinbox->value()));
+	}
+
+	if (m_ui->airspeedCheck->isChecked()) {
+		m_config->setArg("vc", QString::number(m_ui->airspeedSpinbox->value()));
+	}
+
     if (m_ui->offsetGroup->isChecked()) {
         // flip direction of azimuth to balance the flip done in fgApplyStartOffset
         // I don't know why that flip exists but changing it there will break
