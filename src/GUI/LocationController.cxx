@@ -534,7 +534,7 @@ QObjectList LocationController::airportRunways() const
         }
     } else {
         // regular runways
-        for (int r=0; r<m_airportLocation->numRunways(); ++r) {
+        for (unsigned int r=0; r<m_airportLocation->numRunways(); ++r) {
             auto p = new QmlPositioned(m_airportLocation->getRunwayByIndex(r).ptr());
             QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
             result.push_back(p);

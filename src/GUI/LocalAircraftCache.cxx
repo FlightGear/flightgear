@@ -339,7 +339,7 @@ private:
                     } else {
                         variants.append(item);
                     }
-                } catch (sg_exception& e) {
+                } catch (sg_exception&) {
                     continue;
                 }
 
