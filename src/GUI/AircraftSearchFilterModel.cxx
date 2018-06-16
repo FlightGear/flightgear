@@ -12,6 +12,9 @@ AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source)
     setFilterCaseSensitivity(Qt::CaseInsensitive);
     setSortRole(Qt::DisplayRole);
     setDynamicSortFilter(true);
+
+    // kick off initial sort
+    sort(0);
 }
 
 void AircraftProxyModel::setRatings(QList<int> ratings)
