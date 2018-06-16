@@ -112,3 +112,18 @@ endif()
 if (COMMAND flightgear_test)
     flightgear_test(autosaveMigration test_autosaveMigration.cxx)
 endif()
+
+if (MSVC)
+  if (TARGET Qt5::qmake)
+    # property is the full path to qmake.exe
+    get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
+    get_filename_component(_qt5_bin_dir ${_qt5_qmake_path} DIRECTORY)
+    file(TO_NATIVE_PATH "${_qt5_bin_dir}" _qt5_bin_dir_native)
+  endif()
+
+  file(TO_NATIVE_PATH "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
+  file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
+
+  set_property(TARGET fgfs PROPERTY
+  VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
+endif()

@@ -584,6 +584,10 @@ add_subdirectory(man)
 add_subdirectory(package)
 add_subdirectory(scripts)
 
+#----------------------------------------------------------------------------
+### MSVC startup project - ensure you can just hit build & run in MSVC
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT fgfs)
+
 #-----------------------------------------------------------------------------
 ### uninstall target
 #-----------------------------------------------------------------------------
