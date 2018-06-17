@@ -140,7 +140,7 @@ Item {
         anchors.margins: Style.margin
 
         autoSubmit: false
-        placeholder: qsTr("Enter a navaid or airport ID, name or a latitude & longitude");
+        placeholder: qsTr("Search for an airport or navaid");
 
         onSearch: {
             // when th search term is cleared, show the history
@@ -163,13 +163,26 @@ Item {
         }
     }
 
+    Text {
+        id: searchHelpText
+        anchors.right: parent.right
+        anchors.top: searchButton.bottom
+        anchors.left: parent.left
+        anchors.margins: Style.margin
+        wrapMode: Text.WordWrap
+
+        text: qsTr("Enter the name, partial name or ident of a navaid or fix, or an " +
+                   "airport name or ICAO identifier. Alternatively, enter a latitude & longitude in " +
+                   "decimal notation, i.e. '-3.5, 55.4'")
+    }
+
     Rectangle {
         id: headerSplit
         color: Style.frameColor
         height: 1
         width: parent.width - Style.inset
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: searchButton.bottom
+        anchors.top: searchHelpText.bottom
         anchors.topMargin: Style.margin
     }
 

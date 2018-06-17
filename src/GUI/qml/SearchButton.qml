@@ -94,8 +94,10 @@ FocusScope
             hoverEnabled: true
 
             onClicked: {
-                root.forceActiveFocus();
-                buttonText.text = "";
+                if (!buttonText.activeFocus) {
+                    root.forceActiveFocus();
+                    buttonText.selectAll();
+                }
             }
         }
 
