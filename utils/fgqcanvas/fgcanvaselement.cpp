@@ -47,7 +47,8 @@ QTransform qTransformFromCanvas(LocalProp* prop)
 bool FGCanvasElement::isStyleProperty(QByteArray name)
 {
     if ((name == "font") || (name == "line-height") || (name == "alignment")
-        || (name == "character-size") || (name == "fill") || (name == "background"))
+        || (name == "character-size") || (name == "fill") || (name == "background")
+        || (name == "fill-opacity"))
     {
         return true;
     }
@@ -126,9 +127,9 @@ void FGCanvasElement::polish()
         _clipDirty = false;
         if (qq) {
             if (_hasClip) {
-                qq->setGlobalClip(_clipRect);
+              //  qq->setGlobalClip(_clipRect);
             } else {
-                qq->clearClip();
+               // qq->clearClip();
             }
         }
     }
@@ -139,6 +140,11 @@ void FGCanvasElement::polish()
 
     if (_styleDirty) {
         _fillColor = parseColorValue(getCascadedStyle("fill"));
+        const auto opacity = getCascadedStyle("fill-opacity");
+        if (!opacity.isNull()) {
+            _fillColor.setAlphaF(opacity.toFloat());
+        }
+
         _styleDirty = false;
     }
 
@@ -278,7 +284,7 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
     } else if (prop->name() == "update") {
         // disable updates optionally?
         return true;
-    } else if (nm == "clip") {
+    } else if ((nm == "clip") || (nm == "clip-frame")) {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markClipDirty);
         return true;
     }
@@ -344,6 +350,7 @@ void FGCanvasElement::markClipDirty()
 {
     _clipDirty = true;
     parseCSSClip(_propertyRoot->value("clip", QVariant()).toByteArray());
+    _clipFrame = static_cast<ReferenceFrame>(_propertyRoot->value("clip-frame", 0).toInt());
     requestPolish();
 }
 
@@ -490,7 +497,7 @@ void FGCanvasElement::parseCSSClip(QByteArray value)
     const float left = parseCSSValue(clipRectDesc.at(3));
 
     _clipRect = QRectF(left, top, right - left, bottom - top);
-    qDebug() << "final clip rect:" << _clipRect << "from" << value;
+  //  qDebug() << "final clip rect:" << _clipRect << "from" << value;
     _hasClip = true;
 
     requestPolish();

@@ -32,6 +32,17 @@ class CanvasItem;
 class QQuickItem;
 class CanvasConnection;
 
+/**
+ * Coordinate reference frame (eg. "clip" property)
+ */
+enum class ReferenceFrame
+{
+  GLOBAL, ///< Global coordinates
+  PARENT, ///< Coordinates relative to parent coordinate frame
+  LOCAL   ///< Coordinates relative to local coordinates (parent
+          ///  coordinates with local transformations applied)
+};
+
 class FGCanvasElement : public QObject
 {
     Q_OBJECT
@@ -122,6 +133,7 @@ private:
     mutable bool _clipDirty = true;
     mutable bool _hasClip = false;
     mutable QRectF _clipRect;
+    mutable ReferenceFrame _clipFrame = ReferenceFrame::GLOBAL;
 
     void parseCSSClip(QByteArray value);
     float parseCSSValue(QByteArray value) const;

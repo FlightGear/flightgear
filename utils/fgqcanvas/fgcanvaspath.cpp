@@ -445,6 +445,9 @@ void FGCanvasPath::doPolish()
         _penDirty = false;
     }
 
+    if (_quickPath) {
+        _quickPath->setFillColor(fillColor());
+    }
 }
 
 void FGCanvasPath::markStyleDirty()
@@ -522,7 +525,7 @@ bool FGCanvasPath::onChildAdded(LocalProp *prop)
         return true;
     }
 
-    qDebug() << "path saw child:" << prop->name() << prop->index();
+    qWarning() << "path saw unrecognized child:" << prop->name() << prop->index();
     return false;
 }
 
