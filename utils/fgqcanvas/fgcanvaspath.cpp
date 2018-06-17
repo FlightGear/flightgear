@@ -61,7 +61,7 @@ public:
         update(); // request a paint node update
     }
 
-    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *)
+    QSGNode* updateRealPaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *) override
     {
         if (m_path.isEmpty()) {
             return nullptr;
@@ -167,13 +167,6 @@ public:
             mat->setColor(m_stroke.color());
             strokeGeom->setMaterial(mat);
             strokeGeom->setFlag(QSGNode::OwnsMaterial);
-        }
-
-        QSGClipNode* clip = updateClipNode();
-        if (clip) {
-            if (fillGeom) clip->appendChildNode(fillGeom);
-            if (strokeGeom) clip->appendChildNode(strokeGeom);
-            return clip;
         }
 
         if (fillGeom && strokeGeom) {

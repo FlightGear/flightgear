@@ -59,6 +59,8 @@ public:
 
     const FGCanvasGroup* parentGroup() const;
 
+    const FGCanvasGroup* rootGroup() const;
+
     CanvasConnection* connection() const;
 
     static bool isStyleProperty(QByteArray name);

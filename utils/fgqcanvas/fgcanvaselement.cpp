@@ -127,9 +127,15 @@ void FGCanvasElement::polish()
         _clipDirty = false;
         if (qq) {
             if (_hasClip) {
-              //  qq->setGlobalClip(_clipRect);
+                if (_clipFrame == ReferenceFrame::GLOBAL) {
+                    qq->setClipReferenceFrameItem(rootGroup()->quickItem());
+                } else if (_clipFrame == ReferenceFrame::PARENT) {
+                    qq->setClipReferenceFrameItem(parentGroup()->quickItem());
+                }
+                qq->setObjectName(_propertyRoot->path());
+                qq->setClip(_clipRect, _clipFrame);
             } else {
-               // qq->clearClip();
+                qq->clearClip();
             }
         }
     }
@@ -242,6 +248,15 @@ int FGCanvasElement::zIndex() const
 const FGCanvasGroup *FGCanvasElement::parentGroup() const
 {
     return _parent;
+}
+
+const FGCanvasGroup *FGCanvasElement::rootGroup() const
+{
+    if (!_parent) {
+        return qobject_cast<const FGCanvasGroup*>(this);
+    }
+
+    return _parent->rootGroup();
 }
 
 CanvasConnection *FGCanvasElement::connection() const

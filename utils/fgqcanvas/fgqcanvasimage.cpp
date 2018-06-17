@@ -65,7 +65,7 @@ public:
          update();
     }
 
-    virtual QSGNode* updatePaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data)
+    QSGNode* updateRealPaintNode(QSGNode* oldNode, QQuickItem::UpdatePaintNodeData *data) override
     {
         if (m_pixmap.isNull()) {
             return nullptr;
@@ -85,13 +85,6 @@ public:
         }
         m_texture = window()->createTextureFromImage(m_pixmap.toImage(), QQuickWindow::TextureCanUseAtlas);
         texNode->setTexture(m_texture);
-
-        QSGNode* clip = updateClipNode();
-        if (clip) {
-            clip->appendChildNode(texNode);
-            return clip;
-        }
-
         return texNode;
     }
 

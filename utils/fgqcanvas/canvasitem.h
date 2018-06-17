@@ -19,6 +19,7 @@
 #define CANVASITEM_H
 
 #include <QQuickItem>
+#include "fgcanvaselement.h"
 
 class LocalTransform;
 class QSGClipNode;
@@ -31,23 +32,28 @@ public:
 
     void setTransform(const QMatrix4x4& mat);
 
-    void setGlobalClip(const QRectF &clip);
+    void setClip(const QRectF &clip, ReferenceFrame rf);
+
+    void setClipReferenceFrameItem(QQuickItem* refItem);
 
     void clearClip();
 
-    QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
+    QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *) override final;
 signals:
 
 public slots:
 
 protected:
-    QSGClipNode* updateClipNode();
 
+    virtual QSGNode *updateRealPaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *d);
 private:
+    QSGClipNode* updateClipNode(QSGClipNode* oldClipNode, QSGNode* contentNode);
+
     LocalTransform* m_localTransform;
-    QRectF m_globalClipRect;
+    QRectF m_clipRect;
     bool m_hasClip = false;
-    QSGClipNode* m_clipNode = nullptr;
+    ReferenceFrame m_clipReferenceFrame = ReferenceFrame::GLOBAL;
+    QQuickItem* m_clipReferenceFrameItem = nullptr;
 };
 
 #endif // CANVASITEM_H

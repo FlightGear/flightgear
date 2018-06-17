@@ -51,11 +51,21 @@ void CanvasItem::setTransform(const QMatrix4x4 &mat)
     m_localTransform->setTransform(mat);
 }
 
-void CanvasItem::setGlobalClip(const QRectF &clip)
+void CanvasItem::setClip(const QRectF &clip, ReferenceFrame rf)
 {
+    if (m_hasClip && (clip == m_clipRect) && (rf == m_clipReferenceFrame)) {
+        return;
+    }
+
     m_hasClip = true;
-    m_globalClipRect = clip;
+    m_clipRect = clip;
+    m_clipReferenceFrame = rf;
     update();
+}
+
+void CanvasItem::setClipReferenceFrameItem(QQuickItem *refItem)
+{
+    m_clipReferenceFrameItem = refItem;
 }
 
 void CanvasItem::clearClip()
@@ -64,39 +74,125 @@ void CanvasItem::clearClip()
     update();
 }
 
-QSGNode *CanvasItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
+QSGNode *CanvasItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *d)
 {
-    if (m_hasClip && oldNode && (oldNode->type() == QSGNode::BasicNodeType)) {
-        delete oldNode;
+    QSGNode* realOldNode = oldNode;
+    QSGClipNode* oldClip = nullptr;
+
+    if (oldNode && (oldNode->type() == QSGNode::ClipNodeType)) {
+        Q_ASSERT(oldNode->childCount() == 1);
+        realOldNode = oldNode->childAtIndex(0);
+        oldClip = static_cast<QSGClipNode*>(oldNode);
     }
 
-    if (!m_hasClip && m_clipNode) {
-        oldNode = new QSGNode;
-    }
-
-    updateClipNode();
-    return m_hasClip ? m_clipNode : oldNode;
-}
-
-QSGClipNode *CanvasItem::updateClipNode()
-{
-    if (!m_hasClip) {
-        if (m_clipNode) {
-            delete m_clipNode;
-            m_clipNode = nullptr;
-        }
+    QSGNode* contentNode = updateRealPaintNode(realOldNode, d);
+    if (!contentNode) {
         return nullptr;
     }
 
-    if (!m_clipNode) {
-        m_clipNode = new QSGClipNode();
+    QSGNode* clipNode = updateClipNode(oldClip, contentNode);
+    return clipNode ? clipNode : contentNode;
+}
+
+QSGNode *CanvasItem::updateRealPaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *d)
+{
+    if (oldNode) {
+        return oldNode;
     }
 
-    // transform global rect to local
-    QRectF localRect(mapFromGlobal(m_globalClipRect.topLeft()),
-                     mapFromGlobal(m_globalClipRect.bottomRight()));
-    m_clipNode->setClipRect(localRect);
-    return m_clipNode;
+    return new QSGNode();
+}
+
+QRectF checkRectangularClip(QPointF* vertices)
+{
+    // order is TL / BL / TR / BR to match updateRectGeometry
+    const double top = vertices[0].y();
+    const double left = vertices[0].x();
+    const double bottom = vertices[1].y();
+    const double right = vertices[2].x();
+
+    if (vertices[1].x() != left) return {};
+    if (vertices[2].y() != top) return {};
+    if ((vertices[3].x() != right) || (vertices[3].y() != bottom))
+        return {};
+
+    return QRectF(vertices[0], vertices[3]);
+}
+
+QSGClipNode* CanvasItem::updateClipNode(QSGClipNode* oldClipNode, QSGNode* contentNode)
+{
+    Q_ASSERT(contentNode);
+    if (!m_hasClip) {
+        return nullptr;
+    }
+
+    QSGGeometry* clipGeometry = nullptr;
+    QSGClipNode* clipNode = oldClipNode;
+
+    if (!clipNode) {
+        clipNode = new QSGClipNode();
+        clipGeometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
+        clipGeometry->setDrawingMode(GL_TRIANGLE_STRIP);
+        clipNode->setGeometry(clipGeometry);
+        clipNode->setFlag(QSGNode::OwnsGeometry);
+        clipNode->appendChildNode(contentNode);
+    } else {
+        if (clipNode->childCount() == 1) {
+            const auto existingChild = clipNode->childAtIndex(0);
+            if (existingChild == contentNode) {
+                qInfo() << "optimise for this case!";
+            }
+        }
+
+        clipNode->removeAllChildNodes();
+        clipNode->appendChildNode(contentNode);
+        clipGeometry = clipNode->geometry();
+        Q_ASSERT(clipGeometry);
+    }
+
+    QPointF clipVertices[4],
+            inVertices[4] = {m_clipRect.topLeft(), m_clipRect.bottomLeft(),
+                             m_clipRect.topRight(), m_clipRect.bottomRight()};
+    QRectF rectClip;
+
+    switch (m_clipReferenceFrame) {
+    case ReferenceFrame::GLOBAL:
+    case ReferenceFrame::PARENT:
+        Q_ASSERT(m_clipReferenceFrameItem);
+        for (int i=0; i<4; ++i) {
+            clipVertices[i] = mapFromItem(m_clipReferenceFrameItem, inVertices[i]);
+        }
+        rectClip = checkRectangularClip(clipVertices);
+        break;
+
+    case ReferenceFrame::LOCAL:
+        // local ref-frame clip is always rectangular
+        rectClip = m_clipRect;
+        for (int i=0; i<4; ++i) {
+            clipVertices[i] = inVertices[i];
+        }
+        break;
+    }
+
+    clipNode->setIsRectangular(!rectClip.isNull());
+    qInfo() << "\nobj:" << objectName();
+    if (!rectClip.isNull()) {
+        qInfo() << "have rectangular clip for:" << m_clipRect << (int) m_clipReferenceFrame << rectClip;
+        clipNode->setClipRect(rectClip);
+    } else {
+        qInfo() << "haved rotated clip" << m_clipRect << (int) m_clipReferenceFrame;
+        qInfo() << "final local clip points:" << clipVertices[0] << clipVertices[1]
+                << clipVertices[2] << clipVertices[3];
+    }
+
+    QSGGeometry::Point2D *v = clipGeometry->vertexDataAsPoint2D();
+    for (int i=0; i<4; ++i) {
+        v[i].x = clipVertices[i].x();
+        v[i].y = clipVertices[i].y();
+    }
+    clipGeometry->markVertexDataDirty();
+    clipNode->markDirty(QSGNode::DirtyGeometry);
+    return clipNode;
 }
 
 #include "canvasitem.moc"
