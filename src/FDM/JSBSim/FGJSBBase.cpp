@@ -86,15 +86,11 @@ const double FGJSBBase::psftoinhg = 0.014138;
 const double FGJSBBase::psftopa = 47.88;
 const double FGJSBBase::ktstofps = 1.68781;
 const double FGJSBBase::fpstokts = 1.0/ktstofps;
-const double FGJSBBase::inchtoft = 0.08333333;
+const double FGJSBBase::inchtoft = 1.0/12;
 const double FGJSBBase::in3tom3 = 1.638706E-5;
 const double FGJSBBase::m3toft3 = 1.0/(fttom*fttom*fttom);
 const double FGJSBBase::inhgtopa = 3386.38;
 const double FGJSBBase::fttom = 0.3048;
-double FGJSBBase::Reng = 1716.56;   // Gas constant for Air (ft-lb/slug-R)
-double FGJSBBase::Rstar = 1545.348; // Universal gas constant
-double FGJSBBase::Mair = 28.9645;   //
-const double FGJSBBase::SHRatio = 1.40;
 
 // Note that definition of lbtoslug by the inverse of slugtolb and not
 // to a different constant you can also get from some tables will make
@@ -108,7 +104,7 @@ const double FGJSBBase::kgtolb = 2.20462;
 const double FGJSBBase::kgtoslug = 0.06852168;
 
 const string FGJSBBase::needed_cfg_version = "2.0";
-const string FGJSBBase::JSBSim_version = "1.0 " __DATE__ " " __TIME__ ;
+const string FGJSBBase::JSBSim_version = JSBSIM_VERSION " " __DATE__ " " __TIME__ ;
 
 queue <FGJSBBase::Message> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;

@@ -23,7 +23,6 @@ set(HEADERS
     input_output/FGOutputFG.h
     input_output/FGOutputFile.h
     input_output/FGOutputSocket.h
-    input_output/FGUDPOutputSocket.h
     input_output/FGOutputTextFile.h
     input_output/FGOutputType.h
     input_output/FGModelLoader.h
@@ -40,6 +39,8 @@ set(HEADERS
     math/FGRealValue.h
     math/FGRungeKutta.h
     math/FGTable.h
+    math/FGFunctionValue.h
+    math/FGTemplateFunc.h
     models/FGAccelerations.h
     models/FGAerodynamics.h
     models/FGAircraft.h
@@ -117,7 +118,6 @@ set(SOURCES
     input_output/FGOutputFG.cpp
     input_output/FGOutputFile.cpp
     input_output/FGOutputSocket.cpp
-    input_output/FGUDPOutputSocket.cpp
     input_output/FGOutputTextFile.cpp
     input_output/FGOutputType.cpp
     input_output/FGModelLoader.cpp
@@ -191,6 +191,8 @@ set(SOURCES
 
 
 add_library(JSBSim STATIC ${SOURCES} ${HEADERS})
+set(VERSION_MESSAGE "compiled from FlightGear ${FLIGHTGEAR_VERSION}")
+add_definitions("-DJSBSIM_VERSION=\"${VERSION_MESSAGE}\"")
 
 target_link_libraries(JSBSim SimGearCore)
 target_include_directories(JSBSim PRIVATE ${CMAKE_SOURCE_DIR}/src/FDM/JSBSim)

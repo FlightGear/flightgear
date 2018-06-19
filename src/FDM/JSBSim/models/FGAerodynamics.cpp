@@ -76,7 +76,8 @@ FGAerodynamics::FGAerodynamics(FGFDMExec* FDMExec) : FGModel(FDMExec)
   AxisIdx["Y"] = 1;
   AxisIdx["Z"] = 2;
 
-  axisType = atNone;
+  forceAxisType = atNone;
+  momentAxisType = atNone;
 
   AeroFunctions = new AeroFunctionArray[6];
   AeroFunctionsAtCG = new AeroFunctionArray[6];
@@ -154,7 +155,7 @@ bool FGAerodynamics::Run(bool Holding)
     // Skip the computation if qbar is close to zero to avoid huge values for
     // aero/cl-squared when a non-null lift coincides with a very small aero
     // velocity (i.e. when qbar is close to zero).
-    clsq = (vFw(eLift) + vFwAtCG(eLift))/ (in.Wingarea*in.Qbar);
+    clsq = vFw(eLift) / (in.Wingarea*in.Qbar);
     clsq *= clsq;
   }
 
@@ -179,16 +180,17 @@ bool FGAerodynamics::Run(bool Holding)
 
   if (alphahystmax != 0.0 && alphahystmin != 0.0) {
     if (in.Alpha > alphahystmax) {
-       stall_hyst = 1;
+      stall_hyst = 1;
     } else if (in.Alpha < alphahystmin) {
-       stall_hyst = 0;
+      stall_hyst = 0;
     }
   }
 
   vFw.InitMatrix();
-  vFwAtCG.InitMatrix();
   vFnative.InitMatrix();
   vFnativeAtCG.InitMatrix();
+
+  BuildStabilityTransformMatrices();
 
   for (axis_ctr = 0; axis_ctr < 3; ++axis_ctr) {
     AeroFunctionArray::iterator f;
@@ -210,68 +212,46 @@ bool FGAerodynamics::Run(bool Holding)
     }
   }
 
-  // Note that we still need to convert to wind axes here, because it is
-  // used in the L/D calculation, and we still may want to look at Lift
-  // and Drag.
+  switch (forceAxisType) {
+  case atBodyXYZ:       // Forces already in body axes; no manipulation needed
+    vForces = vFnative;
+    vForcesAtCG = vFnativeAtCG;
+    break;
+  case atWind:      // Copy forces into wind axes
+    vFnative(eDrag)*=-1; vFnative(eLift)*=-1;
+    vForces = in.Tw2b*vFnative;
 
-  // JSB 4/27/12 - After use, convert wind axes to produce normal lift
-  // and drag values - not negative ones!
+    vFnativeAtCG(eDrag)*=-1; vFnativeAtCG(eLift)*=-1;
+    vForcesAtCG = in.Tw2b*vFnativeAtCG;
+    break;
+  case atBodyAxialNormal:   // Convert native forces into Axial|Normal|Side system
+    vFnative(eX)*=-1; vFnative(eZ)*=-1;
+    vForces = vFnative;
 
-  // As a clarification, JSBSim assumes that drag and lift values are defined 
-  // in wind axes - BUT with a 180 rotation about the Y axis. That is, lift and
-  // drag will be positive up and aft, respectively, so that they are reported
-  // as positive numbers. However, the wind axes themselves assume that the X
-  // and Z forces are positive forward and down.
+    vFnativeAtCG(eX)*=-1; vFnativeAtCG(eZ)*=-1;
+    vForcesAtCG = vFnativeAtCG;
+    break;
+  case atStability:   // Convert from stability axes to both body and wind axes
+    vFnative(eDrag) *= -1; vFnative(eLift) *= -1;
+    vForces = Ts2b*vFnative;
 
-  switch (axisType) {
-    case atBodyXYZ:       // Forces already in body axes; no manipulation needed
-      vFw = in.Tb2w*vFnative;
-      vForces = vFnative;
-      vFw(eDrag)*=-1; vFw(eLift)*=-1;
-
-      vFwAtCG = in.Tb2w*vFnativeAtCG;
-      vForcesAtCG = vFnativeAtCG;
-      vFwAtCG(eDrag)*=-1; vFwAtCG(eLift)*=-1;
-      break;
-    case atLiftDrag:      // Copy forces into wind axes
-      vFw = vFnative;
-      vFw(eDrag)*=-1; vFw(eLift)*=-1;
-      vForces = in.Tw2b*vFw;
-      vFw(eDrag)*=-1; vFw(eLift)*=-1;
-
-      vFwAtCG = vFnativeAtCG;
-      vFwAtCG(eDrag)*=-1; vFwAtCG(eLift)*=-1;
-      vForcesAtCG = in.Tw2b*vFwAtCG;
-      vFwAtCG(eDrag)*=-1; vFwAtCG(eLift)*=-1;
-      break;
-    case atAxialNormal:   // Convert native forces into Axial|Normal|Side system
-      vFw = in.Tb2w*vFnative;
-      vFnative(eX)*=-1; vFnative(eZ)*=-1;
-      vForces = vFnative;
-
-      vFwAtCG = in.Tb2w*vFnativeAtCG;
-      vFnativeAtCG(eX)*=-1; vFnativeAtCG(eZ)*=-1;
-      vForcesAtCG = vFnativeAtCG;
-      break;
-    default:
-      cerr << endl << "  A proper axis type has NOT been selected. Check "
-                   << "your aerodynamics definition." << endl;
-      exit(-1);
+    vFnativeAtCG(eDrag) *= -1; vFnativeAtCG(eLift) *= -1;
+    vForcesAtCG = Ts2b*vFnativeAtCG;
+    break;
+  default:
+    cerr << endl << "  A proper axis type has NOT been selected. Check "
+         << "your aerodynamics definition." << endl;
+    exit(-1);
   }
-
-  // Calculate lift Lift over Drag
-  if ( fabs(vFw(eDrag) + vFwAtCG(eDrag)) > 0.0)
-    lod = fabs( (vFw(eLift) + vFwAtCG(eLift))/ (vFw(eDrag) + vFwAtCG(eDrag)));
-
-  // Calculate aerodynamic reference point shift, if any. The shift
-  // takes place in the structual axis. That is, if the shift is positive,
-  // it is towards the back (tail) of the vehicle. The AeroRPShift
-  // function should be non-dimensionalized by the wing chord. The
-  // calculated vDeltaRP will be in feet.
+  // Calculate aerodynamic reference point shift, if any. The shift takes place
+  // in the structual axis. That is, if the shift is positive, it is towards the
+  // back (tail) of the vehicle. The AeroRPShift function should be
+  // non-dimensionalized by the wing chord. The calculated vDeltaRP will be in
+  // feet.
   if (AeroRPShift) vDeltaRP(eX) = AeroRPShift->GetValue()*in.Wingchord;
 
-  vDXYZcg(eX) = in.RPBody(eX) - vDeltaRP(eX); // vDeltaRP is given in the structural frame
-  vDXYZcg(eY) = in.RPBody(eY) + vDeltaRP(eY);
+  vDXYZcg(eX) = in.RPBody(eX) - vDeltaRP(eX); // vDeltaRP is given in the
+  vDXYZcg(eY) = in.RPBody(eY) + vDeltaRP(eY); // structural frame.
   vDXYZcg(eZ) = in.RPBody(eZ) - vDeltaRP(eZ);
 
   vMomentsMRC.InitMatrix();
@@ -287,15 +267,65 @@ bool FGAerodynamics::Run(bool Holding)
       vMomentsMRC(axis_ctr+1) += (*f)->GetValue();
     }
   }
-  vMoments = vMomentsMRC + vDXYZcg*vForces; // M = r X F
-  // Now add the "at CG" values to base forces - after the moments have been transferred
+  
+  // Transform moments to bodyXYZ if the moments are specified in stability or
+  // wind axes
+  vMomentsMRCBodyXYZ.InitMatrix();
+  switch (momentAxisType) {
+  case atBodyXYZ:
+    vMomentsMRCBodyXYZ = vMomentsMRC;
+    break;
+  case atStability:
+    vMomentsMRCBodyXYZ = Ts2b*vMomentsMRC;
+    break;
+  case atWind:
+    vMomentsMRCBodyXYZ = in.Tw2b*vMomentsMRC;
+    break;
+  default:
+    cerr << endl << "  A proper axis type has NOT been selected. Check "
+         << "your aerodynamics definition." << endl;
+    exit(-1);
+  }
+
+  vMoments = vMomentsMRCBodyXYZ + vDXYZcg*vForces; // M = r X F
+  
+  // Now add the "at CG" values to base forces - after the moments have been
+  // transferred.
   vForces += vForcesAtCG;
-  vFnative += vFnativeAtCG;
-  vFw += vFwAtCG;
+
+  // Note that we still need to convert to wind axes here, because it is used in
+  // the L/D calculation, and we still may want to look at Lift and Drag.
+  //
+  // JSB 4/27/12 - After use, convert wind axes to produce normal lift and drag
+  // values - not negative ones!
+  //
+  // As a clarification, JSBSim assumes that drag and lift values are defined in
+  // wind axes - BUT with a 180 rotation about the Y axis. That is, lift and
+  // drag will be positive up and aft, respectively, so that they are reported
+  // as positive numbers. However, the wind axes themselves assume that the X
+  // and Z forces are positive forward and down. Same applies to the stability
+  // axes.
+  vFw = in.Tb2w * vForces;
+  vFw(eDrag) *= -1; vFw(eLift) *= -1;
+
+  // Calculate Lift over Drag
+  if ( fabs(vFw(eDrag)) > 0.0)
+    lod = fabs( vFw(eLift) / vFw(eDrag));
 
   RunPostFunctions();
 
   return false;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGColumnVector3 FGAerodynamics::GetForcesInStabilityAxes(void) const
+{ 
+  FGColumnVector3 vFs = Tb2s*vForces;
+  // Need sign flips since drag is positive and lift is positive in stability axes
+  vFs(eDrag) *= -1; vFs(eLift) *= -1;
+
+  return vFs;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -309,7 +339,7 @@ bool FGAerodynamics::Load(Element *document)
   Name = "Aerodynamics Model: " + document->GetAttributeValue("name");
 
   // Perform base class Pre-Load
-  if (!FGModel::Load(document))
+  if (!FGModel::Load(document, true))
     return false;
 
   DetermineAxisSystem(document); // Determine if Lift/Side/Drag, etc. is used.
@@ -353,7 +383,8 @@ bool FGAerodynamics::Load(Element *document)
       try {
         ca.push_back( new FGFunction(PropertyManager, function_element) );
       } catch (const string& str) {
-        cerr << endl << fgred << "Error loading aerodynamic function in " 
+        cerr << endl << axis_element->ReadFrom()
+             << endl << fgred << "Error loading aerodynamic function in "
              << current_func_name << ":" << str << " Aborting." << reset << endl;
         return false;
       }
@@ -361,7 +392,8 @@ bool FGAerodynamics::Load(Element *document)
         try {
           ca_atCG.push_back( new FGFunction(PropertyManager, function_element) );
         } catch (const string& str) {
-          cerr << endl << fgred << "Error loading aerodynamic function in " 
+          cerr << endl << axis_element->ReadFrom()
+               << endl << fgred << "Error loading aerodynamic function in "
                << current_func_name << ":" << str << " Aborting." << reset << endl;
           return false;
         }
@@ -387,6 +419,9 @@ bool FGAerodynamics::Load(Element *document)
 // a warning message will be given IF the AXIAL|NORMAL specifiers are also given.
 // This is OK, and the warning is due to the SIDE specifier used for both
 // the Lift/Drag and Axial/Normal axis systems.
+// Alternatively the axis name 'X|Y|Z or ROLL|PITCH|YAW' can be specified in 
+// conjunction with a frame 'BODY|STABILITY|WIND', for example:
+// <axis name="X" frame="STABILITY"/> 
 
 void FGAerodynamics::DetermineAxisSystem(Element* document)
 {
@@ -394,40 +429,84 @@ void FGAerodynamics::DetermineAxisSystem(Element* document)
   string axis;
   while (axis_element) {
     axis = axis_element->GetAttributeValue("name");
-    if (axis == "LIFT" || axis == "DRAG") {
-      if (axisType == atNone) axisType = atLiftDrag;
-      else if (axisType != atLiftDrag) {
-        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
-                     << " aircraft config file. (LIFT DRAG)" << endl;
+    string frame = axis_element->GetAttributeValue("frame");
+    if (axis == "X" || axis == "Y" || axis == "Z") {
+      ProcessAxesNameAndFrame(forceAxisType, axis, frame, axis_element,
+                              "(X Y Z)");
+    } else if (axis == "ROLL" || axis == "PITCH" || axis == "YAW") {
+      ProcessAxesNameAndFrame(momentAxisType, axis, frame, axis_element,
+                              "(ROLL PITCH YAW)");
+    } else if (axis == "LIFT" || axis == "DRAG") {
+      if (forceAxisType == atNone) forceAxisType = atWind;
+      else if (forceAxisType != atWind) {
+        cerr << endl << axis_element->ReadFrom()
+             << endl << "  Mixed aerodynamic axis systems have been used in the"
+             << " aircraft config file. (LIFT DRAG)" << endl;
       }
     } else if (axis == "SIDE") {
-      if (axisType != atNone && axisType != atLiftDrag && axisType != atAxialNormal) {
-        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
-                     << " aircraft config file. (SIDE)" << endl;
+      if (forceAxisType != atNone && forceAxisType != atWind && forceAxisType != atBodyAxialNormal) {
+        cerr << endl << axis_element->ReadFrom()
+             << endl << "  Mixed aerodynamic axis systems have been used in the"
+             << " aircraft config file. (SIDE)" << endl;
       }
     } else if (axis == "AXIAL" || axis == "NORMAL") {
-      if (axisType == atNone) axisType = atAxialNormal;
-      else if (axisType != atAxialNormal) {
-        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
-                     << " aircraft config file. (NORMAL AXIAL)" << endl;
+      if (forceAxisType == atNone) forceAxisType = atBodyAxialNormal;
+      else if (forceAxisType != atBodyAxialNormal) {
+        cerr << endl << axis_element->ReadFrom()
+             << endl << "  Mixed aerodynamic axis systems have been used in the"
+             << " aircraft config file. (NORMAL AXIAL)" << endl;
       }
-    } else if (axis == "X" || axis == "Y" || axis == "Z") {
-      if (axisType == atNone) axisType = atBodyXYZ;
-      else if (axisType != atBodyXYZ) {
-        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
-                     << " aircraft config file. (XYZ)" << endl;
-      }
-    } else if (axis != "ROLL" && axis != "PITCH" && axis != "YAW") { // error
-      cerr << endl << "  An unknown axis type, " << axis << " has been specified"
-                   << " in the aircraft configuration file." << endl;
+    } else { // error
+      cerr << endl << axis_element->ReadFrom()
+           << endl << "  An unknown axis type, " << axis << " has been specified"
+           << " in the aircraft configuration file." << endl;
       exit(-1);
     }
     axis_element = document->FindNextElement("axis");
   }
-  if (axisType == atNone) {
-    axisType = atLiftDrag;
+
+  if (forceAxisType == atNone) {
+    forceAxisType = atWind;
     cerr << endl << "  The aerodynamic axis system has been set by default"
                  << " to the Lift/Side/Drag system." << endl;
+  }
+  if (momentAxisType == atNone) {
+    momentAxisType = atBodyXYZ;
+    cerr << endl << "  The aerodynamic moment axis system has been set by default"
+      << " to the bodyXYZ system." << endl;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAerodynamics::ProcessAxesNameAndFrame(eAxisType& axisType, const string& name,
+                                             const string& frame, Element* el,
+                                             const string& validNames)
+{
+  if (frame == "BODY" || frame.empty()) {
+    if (axisType == atNone) axisType = atBodyXYZ;
+    else if (axisType != atBodyXYZ)
+      cerr << endl << el->ReadFrom()
+           << endl << " Mixed aerodynamic axis systems have been used in the "
+                   << " aircraft config file." << validNames << " - BODY" << endl;
+  }
+  else if (frame == "STABILITY") {
+    if (axisType == atNone) axisType = atStability;
+    else if (axisType != atStability)
+      cerr << endl << el->ReadFrom()
+           << endl << " Mixed aerodynamic axis systems have been used in the "
+                   << " aircraft config file." << validNames << " - STABILITY" << endl;
+  }
+  else if (frame == "WIND") {
+    if (axisType == atNone) axisType = atWind;
+    else if (axisType != atWind)
+      cerr << endl << el->ReadFrom()
+           << endl << " Mixed aerodynamic axis systems have been used in the "
+                   << " aircraft config file." << validNames << " - WIND" << endl;
+  }
+  else {
+    cerr << endl << " Unknown axis frame type of - " << frame << endl;
+    exit(-1);
   }
 }
 
@@ -495,15 +574,24 @@ void FGAerodynamics::bind(void)
 {
   typedef double (FGAerodynamics::*PMF)(int) const;
 
-  PropertyManager->Tie("forces/fbx-aero-lbs",  this, 1, (PMF)&FGAerodynamics::GetForces);
-  PropertyManager->Tie("forces/fby-aero-lbs",  this, 2, (PMF)&FGAerodynamics::GetForces);
-  PropertyManager->Tie("forces/fbz-aero-lbs",  this, 3, (PMF)&FGAerodynamics::GetForces);
-  PropertyManager->Tie("moments/l-aero-lbsft", this, 1, (PMF)&FGAerodynamics::GetMoments);
-  PropertyManager->Tie("moments/m-aero-lbsft", this, 2, (PMF)&FGAerodynamics::GetMoments);
-  PropertyManager->Tie("moments/n-aero-lbsft", this, 3, (PMF)&FGAerodynamics::GetMoments);
-  PropertyManager->Tie("forces/fwx-aero-lbs",  this, 1, (PMF)&FGAerodynamics::GetvFw);
-  PropertyManager->Tie("forces/fwy-aero-lbs",  this, 2, (PMF)&FGAerodynamics::GetvFw);
-  PropertyManager->Tie("forces/fwz-aero-lbs",  this, 3, (PMF)&FGAerodynamics::GetvFw);
+  PropertyManager->Tie("forces/fbx-aero-lbs",  this, eX, (PMF)&FGAerodynamics::GetForces);
+  PropertyManager->Tie("forces/fby-aero-lbs",  this, eY, (PMF)&FGAerodynamics::GetForces);
+  PropertyManager->Tie("forces/fbz-aero-lbs",  this, eZ, (PMF)&FGAerodynamics::GetForces);
+  PropertyManager->Tie("moments/l-aero-lbsft", this, eL, (PMF)&FGAerodynamics::GetMoments);
+  PropertyManager->Tie("moments/m-aero-lbsft", this, eM, (PMF)&FGAerodynamics::GetMoments);
+  PropertyManager->Tie("moments/n-aero-lbsft", this, eN, (PMF)&FGAerodynamics::GetMoments);
+  PropertyManager->Tie("forces/fwx-aero-lbs",  this, eDrag, (PMF)&FGAerodynamics::GetvFw);
+  PropertyManager->Tie("forces/fwy-aero-lbs",  this, eSide, (PMF)&FGAerodynamics::GetvFw);
+  PropertyManager->Tie("forces/fwz-aero-lbs",  this, eLift, (PMF)&FGAerodynamics::GetvFw);
+  PropertyManager->Tie("forces/fsx-aero-lbs",  this, eX, (PMF)&FGAerodynamics::GetForcesInStabilityAxes);
+  PropertyManager->Tie("forces/fsy-aero-lbs",  this, eY, (PMF)&FGAerodynamics::GetForcesInStabilityAxes);
+  PropertyManager->Tie("forces/fsz-aero-lbs",  this, eZ, (PMF)&FGAerodynamics::GetForcesInStabilityAxes);
+  PropertyManager->Tie("moments/roll-stab-aero-lbsft", this, eRoll, (PMF)&FGAerodynamics::GetMomentsInStabilityAxes);
+  PropertyManager->Tie("moments/pitch-stab-aero-lbsft", this, ePitch, (PMF)&FGAerodynamics::GetMomentsInStabilityAxes);
+  PropertyManager->Tie("moments/yaw-stab-aero-lbsft", this, eYaw, (PMF)&FGAerodynamics::GetMomentsInStabilityAxes);
+  PropertyManager->Tie("moments/roll-wind-aero-lbsft", this, eRoll, (PMF)&FGAerodynamics::GetMomentsInWindAxes);
+  PropertyManager->Tie("moments/pitch-wind-aero-lbsft", this, ePitch, (PMF)&FGAerodynamics::GetMomentsInWindAxes);
+  PropertyManager->Tie("moments/yaw-wind-aero-lbsft", this, eYaw, (PMF)&FGAerodynamics::GetMomentsInWindAxes);
   PropertyManager->Tie("forces/lod-norm",      this, &FGAerodynamics::GetLoD);
   PropertyManager->Tie("aero/cl-squared",      this, &FGAerodynamics::GetClSquared);
   PropertyManager->Tie("aero/qbar-area", &qbar_area);
@@ -514,6 +602,44 @@ void FGAerodynamics::bind(void)
   PropertyManager->Tie("aero/alpha-wing-rad",  this, &FGAerodynamics::GetAlphaW);
   PropertyManager->Tie("systems/stall-warn-norm", this, &FGAerodynamics::GetStallWarn);
   PropertyManager->Tie("aero/stall-hyst-norm", this, &FGAerodynamics::GetHysteresisParm);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// Build transformation matrices for transforming from stability axes to 
+// body axes and to wind axes. Where "a" is alpha and "B" is beta:
+//
+// The transform from body to stability axes is:
+//
+//   cos(a)     0     sin(a)
+//   0          1     0
+//   -sin(a)    0     cos(a)
+//
+// The transform from stability to body axes is:
+//
+//   cos(a)     0     -sin(a)
+//   0          1     0
+//   sin(a)     0     cos(a)
+//
+//
+
+void FGAerodynamics::BuildStabilityTransformMatrices(void)
+{
+  double ca = cos(in.Alpha);
+  double sa = sin(in.Alpha);
+
+  // Stability-to-body
+  Ts2b(1, 1) = ca;
+  Ts2b(1, 2) = 0.0;
+  Ts2b(1, 3) = -sa;
+  Ts2b(2, 1) = 0.0;
+  Ts2b(2, 2) = 1.0;
+  Ts2b(2, 3) = 0.0;
+  Ts2b(3, 1) = sa;
+  Ts2b(3, 2) = 0.0;
+  Ts2b(3, 3) = ca;
+
+  Tb2s = Ts2b.Transposed();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -541,19 +667,22 @@ void FGAerodynamics::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 2) { // Loader
-      switch (axisType) {
-        case (atLiftDrag):
-          cout << endl << "  Aerodynamics (Lift|Side|Drag axes):" << endl << endl;
-          break;
-        case (atAxialNormal):
-          cout << endl << "  Aerodynamics (Axial|Side|Normal axes):" << endl << endl;
-          break;
-        case (atBodyXYZ):
-          cout << endl << "  Aerodynamics (X|Y|Z axes):" << endl << endl;
-          break;
+      switch (forceAxisType) {
+      case (atWind):
+        cout << endl << "  Aerodynamics (Lift|Side|Drag axes):" << endl << endl;
+        break;
+      case (atBodyAxialNormal):
+        cout << endl << "  Aerodynamics (Axial|Side|Normal axes):" << endl << endl;
+        break;
+      case (atBodyXYZ):
+        cout << endl << "  Aerodynamics (Body X|Y|Z axes):" << endl << endl;
+        break;
+      case (atStability):
+        cout << endl << "  Aerodynamics (Stability X|Y|Z axes):" << endl << endl;
+        break;
       case (atNone):
-          cout << endl << "  Aerodynamics (undefined axes):" << endl << endl;
-          break;
+        cout << endl << "  Aerodynamics (undefined axes):" << endl << endl;
+        break;
       }
     }
   }

@@ -44,10 +44,10 @@ INCLUDES
 #include "input_output/FGOutputSocket.h"
 #include "input_output/FGOutputTextFile.h"
 #include "input_output/FGOutputFG.h"
-#include "input_output/FGUDPOutputSocket.h"
 #include "input_output/FGXMLFileRead.h"
 #include "input_output/FGXMLElement.h"
 #include "input_output/FGModelLoader.h"
+#include "math/FGTemplateFunc.h"
 
 using namespace std;
 
@@ -76,9 +76,9 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 
 FGOutput::~FGOutput()
 {
-  vector<FGOutputType*>::iterator it;
-  for (it = OutputTypes.begin(); it != OutputTypes.end(); ++it)
-    delete (*it);
+  vector<FGOutputType*>::iterator itv;
+  for (itv = OutputTypes.begin(); itv != OutputTypes.end(); ++itv)
+    delete (*itv);
 
   Debug(1);
 }
@@ -221,9 +221,6 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
   } else if (type == "FLIGHTGEAR") {
     Output = new FGOutputFG(FDMExec);
     name += ":" + port + "/" + protocol;
-  } else if (type == "QTJSBSIM") {
-    Output = new FGUDPOutputSocket(FDMExec);
-    name += ":" + port + "/" + protocol;
   } else if (type == "TERMINAL") {
     // Not done yet
   } else if (type != string("NONE")) {
@@ -246,22 +243,30 @@ bool FGOutput::Load(int subSystems, std::string protocol, std::string type,
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGOutput::Load(Element* el)
+bool FGOutput::Load(Element* document, const SGPath& dir)
 {
-  // Unlike the other FGModel classes, properties listed in the <output> section
-  // are not intended to create new properties. For that reason, FGOutput
-  // cannot load its XML directives with FGModel::Load().
-  // Instead FGModelLoader::Open() and FGModel::PreLoad() must be explicitely
-  // called.
-  FGModelLoader ModelLoader(this);
-  Element* element = ModelLoader.Open(el);
+  // Optional path to use for included files
+  includePath = dir;
 
-  if (!element) return false;
+  // Perform base class Pre-Load
+  if (!FGModel::Load(document, false))
+    return false;
 
-  FGModel::PreLoad(element, PropertyManager);
+  Element *function = document->FindElement("function");
+
+  while (function) {
+    string fType = function->GetAttributeValue("type");
+
+    if (fType == "template") {
+      string name = function->GetAttributeValue("name");
+      TemplateFunctions[name] = new FGTemplateFunc(PropertyManager, function);
+    }
+
+    function = document->FindNextElement("function");
+  }
 
   size_t idx = OutputTypes.size();
-  string type = element->GetAttributeValue("type");
+  string type = document->GetAttributeValue("type");
   FGOutputType* Output = 0;
 
   if (debug_lvl > 0) cout << endl << "  Output data set: " << idx << "  " << endl;
@@ -276,8 +281,6 @@ bool FGOutput::Load(Element* el)
     Output = new FGOutputSocket(FDMExec);
   } else if (type == "FLIGHTGEAR") {
     Output = new FGOutputFG(FDMExec);
-  } else if (type == "QTJSBSIM") {
-    Output = new FGUDPOutputSocket(FDMExec);
   } else if (type == "TERMINAL") {
     // Not done yet
   } else if (type != string("NONE")) {
@@ -287,13 +290,27 @@ bool FGOutput::Load(Element* el)
   if (!Output) return false;
 
   Output->SetIdx(idx);
-  Output->Load(element);
-  PostLoad(element, PropertyManager);
+  Output->PreLoad(document, PropertyManager);
+  Output->Load(document);
+  Output->PostLoad(document, PropertyManager);
 
   OutputTypes.push_back(Output);
 
   Debug(2);
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+SGPath FGOutput::FindFullPathName(const SGPath& path) const
+{
+  // Check optional include path if set
+  if (!includePath.isNull()) {
+    SGPath name = CheckPathName(includePath, path);
+    if (!name.isNull()) return name;
+  }
+
+  return FGModel::FindFullPathName(path);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

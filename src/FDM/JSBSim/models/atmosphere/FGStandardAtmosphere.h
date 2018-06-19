@@ -217,9 +217,6 @@ public:
   /// Returns the pressure at a specified altitude in psf.
   virtual double GetPressure(double altitude) const;
 
-  /// Returns the standard pressure at a specified altitude in psf
-  virtual double GetStdPressure100K(double altitude) const;
-
   /// Returns the standard pressure at the specified altitude.
   virtual double GetStdPressure(double altitude) const;
 
@@ -253,9 +250,11 @@ protected:
   double TemperatureDeltaGradient;
   double GradientFadeoutAltitude;
 
-  FGTable* StdAtmosTemperatureTable;
+  FGTable StdAtmosTemperatureTable;
   std::vector<double> LapseRateVector;
   std::vector<double> PressureBreakpointVector;
+  std::vector<double> StdPressureBreakpointVector;
+  std::vector<double> StdDensityBreakpointVector;
 
   /// Recalculate the lapse rate vectors when the temperature profile is altered
   /// in a way that would change the lapse rates, such as when a gradient is applied.
@@ -266,8 +265,42 @@ protected:
   /// altitudes in the standard temperature table.
   void CalculatePressureBreakpoints();
 
+  /// Calculate the atmospheric density breakpoints at the 
+  /// altitudes in the standard temperature table.
+  void CalculateStdDensityBreakpoints();
+
+  /// Convert a geometric altitude to a geopotential altitude
+  double GeopotentialAltitude(double geometalt) const { return (geometalt * EarthRadius) / (EarthRadius + geometalt); }
+
+  /// Convert a geopotential altitude to a geometric altitude
+  double GeometricAltitude(double geopotalt) const { return (geopotalt * EarthRadius) / (EarthRadius - geopotalt); }
+
+  /** Calculates the density altitude given any temperature or pressure bias.
+  Calculated density for the specified geometric altitude given any temperature
+  or pressure biases is passed in.
+  @param density
+  @param geometricAlt
+  @see
+  https://en.wikipedia.org/wiki/Density_altitude
+  https://wahiduddin.net/calc/density_altitude.htm
+  */
+  virtual double CalculateDensityAltitude(double density, double geometricAlt);
+
+  /** Calculates the pressure altitude given any temperature or pressure bias.
+  Calculated density for the specified geometric altitude given any temperature
+  or pressure biases is passed in.
+  @param pressure
+  @param geometricAlt
+  @see
+  https://en.wikipedia.org/wiki/Pressure_altitude
+  */
+  virtual double CalculatePressureAltitude(double pressure, double geometricAlt);
+
   virtual void bind(void);
   void Debug(int from);
+
+  /// Earth radius in ft as defined for ISA 1976
+  static const double EarthRadius;
 };
 
 } // namespace JSBSim

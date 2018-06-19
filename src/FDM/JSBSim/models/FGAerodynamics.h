@@ -141,7 +141,7 @@ public:
       have found the aerodynamics keyword in the configuration file.
       @param element pointer to the current XML element for aerodynamics parameters.
       @return true if successful */
-  bool Load(Element* element);
+  virtual bool Load(Element* element);
 
   /** Gets the total aerodynamic force vector.
       @return a force vector reference. */
@@ -180,6 +180,34 @@ public:
       @return a reference to a column vector containing the requested wind
       axis force. */
   double GetvFw(int axis) const { return vFw(axis); }
+
+  /** Retrieves the aerodynamic forces in the stability axes.
+  @return a reference to a column vector containing the stability axis forces. */
+  FGColumnVector3 GetForcesInStabilityAxes(void) const;
+
+  /** Retrieves the aerodynamic forces in the stability axes, given an axis.
+  @param axis the axis to return the force for (eX, eY, eZ).
+  @return a reference to a column vector containing the requested stability
+  axis force. */
+  double GetForcesInStabilityAxes(int n) const { return GetForcesInStabilityAxes()(n); }
+
+  /** Gets the total aerodynamic moment vector about the CG in the stability axes.
+  @return a moment vector reference. */
+  FGColumnVector3 GetMomentsInStabilityAxes(void) const { return Tb2s*vMoments; }
+
+  /** Gets the aerodynamic moment about the CG for an axis.
+  @return the moment about a single axis (as described also in the
+  similar call to GetForces(int n).*/
+  double GetMomentsInStabilityAxes(int n) const { return GetMomentsInStabilityAxes()(n); }
+
+  /** Gets the total aerodynamic moment vector about the CG in the wind axes.
+  @return a moment vector reference. */
+  FGColumnVector3 GetMomentsInWindAxes(void) const { return in.Tb2w*vMoments; }
+
+  /** Gets the aerodynamic moment about the CG for an axis.
+  @return the moment about a single axis (as described also in the
+  similar call to GetForces(int n).*/
+  double GetMomentsInWindAxes(int n) const { return GetMomentsInWindAxes()(n); }
 
   /** Retrieves the lift over drag ratio */
   double GetLoD(void) const { return lod; }
@@ -227,21 +255,22 @@ public:
   } in;
 
 private:
-  enum eAxisType {atNone, atLiftDrag, atAxialNormal, atBodyXYZ} axisType;
+  enum eAxisType {atNone, atWind, atBodyAxialNormal, atBodyXYZ, atStability} forceAxisType, momentAxisType;
   typedef std::map<std::string,int> AxisIndex;
   AxisIndex AxisIdx;
   FGFunction* AeroRPShift;
   typedef std::vector <FGFunction*> AeroFunctionArray;
   AeroFunctionArray* AeroFunctions;
+  FGMatrix33 Ts2b, Tb2s;
   FGColumnVector3 vFnative;
   FGColumnVector3 vFw;
   FGColumnVector3 vForces;
   AeroFunctionArray* AeroFunctionsAtCG;
-  FGColumnVector3 vFwAtCG;
   FGColumnVector3 vFnativeAtCG;
   FGColumnVector3 vForcesAtCG;
   FGColumnVector3 vMoments;
   FGColumnVector3 vMomentsMRC;
+  FGColumnVector3 vMomentsMRCBodyXYZ;
   FGColumnVector3 vDXYZcg;
   FGColumnVector3 vDeltaRP;
   double alphaclmax, alphaclmin;
@@ -253,7 +282,11 @@ private:
 
   typedef double (FGAerodynamics::*PMF)(int) const;
   void DetermineAxisSystem(Element* document);
+  void ProcessAxesNameAndFrame(FGAerodynamics::eAxisType& axisType,
+                               const string& name, const string& frame,
+                               Element* el, const string& validNames);
   void bind(void);
+  void BuildStabilityTransformMatrices(void);
 
   void Debug(int from);
 };

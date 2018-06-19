@@ -50,12 +50,23 @@ INCLUDES
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGAtmosphere.cpp,v 1.61 2016/01/10 19:22:12 bcoconni Exp $");
+IDENT(IdSrc,"$Id: FGAtmosphere.cpp,v 1.62 2016/01/16 12:05:47 bcoconni Exp $");
 IDENT(IdHdr,ID_ATMOSPHERE);
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+// Atmosphere constants in British units converted from the SI values specified in the 
+// ISA document - https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770009539.pdf
+
+const double KtoDegR = 1.8; // Kelvin to degree Rankine
+const double FGAtmosphere::Rstar = 8.31432 * (FGJSBBase::kgtoslug / (KtoDegR * FGJSBBase::fttom * FGJSBBase::fttom)); // ft*lbf/R/mol
+const double FGAtmosphere::Mair = 28.9645 * FGJSBBase::kgtoslug / 1000.0; // slug/mol
+const double FGAtmosphere::g0 = 9.80665 / FGJSBBase::fttom; // ft/s^2
+double FGAtmosphere::Reng = Rstar / Mair;
+
+const double FGAtmosphere::SHRatio = 1.40;
 
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
                                                PressureAltitude(0.0),      // ft
@@ -84,7 +95,7 @@ bool FGAtmosphere::InitModel(void)
 
   Calculate(0.0);
   SLtemperature = Temperature = 518.67;
-  SLpressure = Pressure = 2116.22;
+  SLpressure = Pressure = 2116.228;
   SLdensity = Density = Pressure/(Reng*Temperature);
   SLsoundspeed = Soundspeed = sqrt(SHRatio*Reng*(Temperature));
 
@@ -130,8 +141,8 @@ void FGAtmosphere::Calculate(double altitude)
     Density = node->GetDouble("atmosphere/override/density");
 
   Soundspeed  = sqrt(SHRatio*Reng*(Temperature));
-  PressureAltitude = altitude;
-  DensityAltitude = altitude;
+  PressureAltitude = CalculatePressureAltitude(Pressure, altitude);
+  DensityAltitude = CalculateDensityAltitude(Density, altitude);
 
   Viscosity = Beta * pow(Temperature, 1.5) / (SutherlandConstant + Temperature);
   KinematicViscosity = Viscosity / Density;
