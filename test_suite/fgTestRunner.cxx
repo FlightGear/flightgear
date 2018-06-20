@@ -29,7 +29,7 @@
 
 
 // Execute all test suites for the given test category.
-int testRunner(const std::string& title, char *subset, bool verbose, bool ctest_output, bool debug)
+int testRunner(const std::string& type, const std::string& title, char *subset, bool verbose, bool ctest_output, bool debug)
 {
     // Declarations.
     CppUnit::TextTestRunner runner;
@@ -39,7 +39,7 @@ int testRunner(const std::string& title, char *subset, bool verbose, bool ctest_
         printTitle(std::cerr, title);
 
     // Get all tests.
-    runner.addTest(CppUnit::TestFactoryRegistry::getRegistry(title).makeTest());
+    runner.addTest(CppUnit::TestFactoryRegistry::getRegistry(type).makeTest());
 
     // Set up the test listener.
     fgTestListener *testListener;

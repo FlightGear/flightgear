@@ -201,13 +201,13 @@ int main(int argc, char **argv)
 
     // Execute each of the test suite categories.
     if (run_system)
-        status_system = testRunner("System tests", subset_system, verbose, ctest_output, debug);
+        status_system = testRunner("System tests", "System / functional tests", subset_system, verbose, ctest_output, debug);
     if (run_unit)
-        status_unit = testRunner("Unit tests", subset_unit, verbose, ctest_output, debug);
-    if (run_gui)
-        status_gui = testRunner("GUI tests", subset_gui, verbose, ctest_output, debug);
+        status_unit = testRunner("Unit tests", "Unit tests", subset_unit, verbose, ctest_output, debug);
+    if (run_gui && 0) // Disabled as there are no GUI tests yet.
+        status_gui = testRunner("GUI tests", "GUI tests", subset_gui, verbose, ctest_output, debug);
     if (run_simgear)
-        status_simgear = testRunner("Simgear unit tests", subset_simgear, verbose, ctest_output, debug);
+        status_simgear = testRunner("Simgear unit tests", "Simgear unit tests", subset_simgear, verbose, ctest_output, debug);
 
     // Summary printout.
     if (printSummary && !ctest_output)

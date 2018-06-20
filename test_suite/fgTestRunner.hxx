@@ -23,7 +23,7 @@
 
 
 // Execute all test suites for the given test category.
-int testRunner(const std::string&, char*, bool, bool, bool);
+int testRunner(const std::string&, const std::string&, char*, bool, bool, bool);
 
 
 #endif  // _FG_TEST_RUNNER_HXX

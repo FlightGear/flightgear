@@ -76,7 +76,7 @@ void printTitle(CppUnit::OStream &stream, const string &text)
 
     // Format the text.
     stream << endl << endl;
-    stream << string(width, '#') << endl;
-    stream << "# " << text << " #" << endl;
-    stream << string(width, '#') << endl << endl;
+    stream << string(width, '=') << endl;
+    stream << "= " << text << " =" << endl;
+    stream << string(width, '=') << endl << endl;
 }
