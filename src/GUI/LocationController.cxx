@@ -705,8 +705,8 @@ void LocationController::restoreLocation(QVariantMap l)
         m_detailLocation.clear();
 
         if (l.contains("location-apt-runway")) {
-            QString runway = l.value("location-apt-runway").toString();
-            if (runway == "active") {
+            QString runway = l.value("location-apt-runway").toString().toUpper();
+            if (runway == "ACTIVE") {
                 m_useActiveRunway = true;
             } else {
                 m_detailLocation = m_airportLocation->getRunwayByIdent(runway.toStdString());

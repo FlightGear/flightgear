@@ -156,7 +156,7 @@ void LauncherController::restoreSettings()
         FGAirportRef apt = FGAirport::findByIdent(defaultAirport);
         if (apt) {
             currentLocation["location-id"] = static_cast<qlonglong>(apt->guid());
-            currentLocation["location-apt-runway"] = "active";
+            currentLocation["location-apt-runway"] = "ACTIVE";
         } // otherwise we failed to find the default airport in the nav-db :(
     }
     m_location->restoreLocation(currentLocation);
