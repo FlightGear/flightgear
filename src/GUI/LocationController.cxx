@@ -681,9 +681,20 @@ void LocationController::restoreLocation(QVariantMap l)
         }
     }
 
-    m_altitudeFt = l.value("altitude", 6000).toInt();
+    if (l.contains("altitude-type")) {
+        m_altitudeFt = l.value("altitude", 6000).toInt();
+        m_flightLevel = l.value("flight-level").toInt();
+        m_altitudeType = static_cast<AltitudeType>(l.value("altitude-type").toInt());
+    } else {
+        m_altitudeType = Off;
+    }
+
+    m_speedEnabled = l.contains("speed");
+    m_headingEnabled = l.contains("heading");
+
     m_airspeedKnots = l.value("speed", 120).toInt();
     m_headingDeg = l.value("heading").toInt();
+
     m_offsetEnabled = l.value("offset-enabled").toBool();
     m_offsetRadial = l.value("offset-bearing").toInt();
     m_offsetNm = l.value("offset-distance", 10).toInt();
@@ -752,11 +763,30 @@ QVariantMap LocationController::saveLocation() const
         } // of location is an airport
     } // of m_location is valid
 
-    locationSet.insert("altitude", m_altitudeFt);
-    locationSet.insert("speed", m_airspeedKnots);
-    locationSet.insert("offset-enabled", m_offsetEnabled);
-    locationSet.insert("offset-bearing", m_offsetRadial);
-    locationSet.insert("offset-distance",m_offsetNm);
+    if (m_altitudeType != Off) {
+        if ((m_altitudeType == MSL_Feet) || (m_altitudeType == AGL_Feet)) {
+            locationSet.insert("altitude", m_altitudeFt);
+        }
+
+        if (m_altitudeType == FlightLevel) {
+            locationSet.insert("flight-level", m_flightLevel);
+        }
+    }
+
+    if (m_speedEnabled) {
+        locationSet.insert("speed", m_airspeedKnots);
+    }
+
+    if (m_headingEnabled) {
+        locationSet.insert("heading", m_headingDeg);
+    }
+
+    if (m_offsetEnabled) {
+        locationSet.insert("offset-enabled", m_offsetEnabled);
+        locationSet.insert("offset-bearing", m_offsetRadial);
+        locationSet.insert("offset-distance",m_offsetNm);
+    }
+
     locationSet.insert("text", description());
     locationSet.insert("tune-nav1-radio", m_tuneNAV1);
 
@@ -874,13 +904,32 @@ void LocationController::setLocationProperties()
 
 void LocationController::applyPositionOffset()
 {
-    if (m_altitudeFt > 0) {
+    switch (m_altitudeType) {
+    case Off:
+        break;
+    case MSL_Feet:
         m_config->setArg("altitude", QString::number(m_altitudeFt));
+        break;
+
+    case AGL_Feet:
+        // fixme - allow the sim to accpet AGL start position
+        m_config->setArg("altitude", QString::number(m_altitudeFt));
+        break;
+
+    case FlightLevel:
+        // FIXME - allow the sim to accept real FlightLevel arguments
+        m_config->setArg("altitude", QString::number(m_flightLevel * 100));
+        break;
     }
 
-    m_config->setArg("vc", QString::number(m_airspeedKnots));
-    m_config->setArg("heading", QString::number(m_headingDeg));
-    
+    if (m_speedEnabled) {
+        m_config->setArg("vc", QString::number(m_airspeedKnots));
+    }
+
+    if (m_headingEnabled) {
+        m_config->setArg("heading", QString::number(m_headingDeg));
+    }
+
     if (m_offsetEnabled) {
         // flip direction of azimuth to balance the flip done in fgApplyStartOffset
         // I don't know why that flip exists but changing it there will break

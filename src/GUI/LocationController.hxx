@@ -48,8 +48,15 @@ class LocationController : public QObject
     Q_PROPERTY(bool offsetBearingIsTrue MEMBER m_offsetBearingIsTrue NOTIFY offsetChanged)
     Q_PROPERTY(double offsetNm READ offsetNm WRITE setOffsetNm NOTIFY offsetChanged)
 
+    Q_PROPERTY(bool headingEnabled MEMBER m_headingEnabled NOTIFY configChanged)
+    Q_PROPERTY(bool speedEnabled MEMBER m_speedEnabled NOTIFY configChanged)
+
+    Q_PROPERTY(AltitudeType altitudeType MEMBER m_altitudeType NOTIFY configChanged)
+
     Q_PROPERTY(int headingDeg MEMBER m_headingDeg NOTIFY configChanged)
     Q_PROPERTY(int altitudeFt MEMBER m_altitudeFt NOTIFY configChanged)
+    Q_PROPERTY(int flightLevel MEMBER m_flightLevel NOTIFY configChanged)
+
     Q_PROPERTY(int airspeedKnots MEMBER m_airspeedKnots NOTIFY configChanged)
     Q_PROPERTY(bool onFinal READ onFinal WRITE setOnFinal NOTIFY configChanged)
 
@@ -64,6 +71,16 @@ class LocationController : public QObject
 public:
     explicit LocationController(QObject *parent = nullptr);
     ~LocationController();
+
+    enum AltitudeType
+    {
+        Off = 0,
+        MSL_Feet,
+        AGL_Feet,
+        FlightLevel
+    };
+
+    Q_ENUMS(AltitudeType)
 
     void setLaunchConfig(LaunchConfig* config);
 
@@ -192,12 +209,16 @@ private:
     double m_offsetNm = 0.0;
     bool m_offsetBearingIsTrue = false;
     int m_headingDeg = 0;
-    int m_altitudeFt= -9999;
-    int m_airspeedKnots = 120;
+    int m_altitudeFt= 0;
+    int m_airspeedKnots = 150;
     bool m_onFinal = false;
     bool m_useActiveRunway = true;
-    bool m_tuneNAV1;
+    bool m_tuneNAV1 = false;
     bool m_useAvailableParking;
+    bool m_headingEnabled = false;
+    bool m_speedEnabled = false;
+    AltitudeType m_altitudeType = Off;
+    int m_flightLevel = 0;
 };
 
 #endif // LOCATION_CONTROLLER_HXX

@@ -58,16 +58,28 @@ Item {
             width: parent.width
 
             Text { // heading text
-                visible: navaidData.valid
-                id: heading
+                id: headingText
                 width: parent.width
-                text: "Navaid: " + navaidData.ident + " / " + navaidData.name
+                text: "format lat-lon as string!"
+
+                Binding {
+                    when: navaidData.valid
+                    target: headingText
+                    property: "text"
+                    value: "Navaid: " + navaidData.ident + " / " + navaidData.name
+                }
             }
 
             Row {
                 height: childrenRect.height
                 width: parent.width
                 spacing: Style.margin
+
+                ToggleSwitch {
+                    id: airspeedToggle
+                    checked: _location.speedEnabled
+                    onCheckedChanged: _location.speedEnabled = checked;
+                }
 
                 IntegerSpinbox {
                     label: qsTr("Airspeed:")
@@ -76,8 +88,21 @@ Item {
                     max: 10000 // more for spaceships?
                     step: 5
                     maxDigits: 5
+                    enabled: _location.speedEnabled
                     value: _location.airspeedKnots
                     onCommit: _location.airspeedKnots = newValue
+                }
+
+                Item {
+                    // padding
+                    width: Style.strutSize
+                    height: 1
+                }
+
+                ToggleSwitch {
+                    id: headingToggle
+                    checked: _location.headingEnabled
+                    onCheckedChanged: _location.headingEnabled = checked;
                 }
 
                 IntegerSpinbox {
@@ -87,6 +112,7 @@ Item {
                     max: 359
                     live: true
                     maxDigits: 3
+                    enabled: _location.headingEnabled
                     value: _location.headingDeg
                     onCommit: _location.headingDeg = newValue
                 }
@@ -97,6 +123,13 @@ Item {
                 width: parent.width
                 spacing: Style.margin
 
+                ToggleSwitch {
+                    id: altitudeToggle
+                    checked: _location.altitudeType !== LocationController.Off
+                    onCheckedChanged: _location.altitudeType = (checked ? LocationController.MSL_Feet
+                                                                       : LocationController.Off)
+                }
+
                 IntegerSpinbox {
                     label: qsTr("Altitude:")
                     suffix: "ft"
@@ -104,7 +137,7 @@ Item {
                     max: 200000
                     step: 100
                     maxDigits: 6
-
+                    enabled: altitudeToggle.checked
                     visible: !altitudeTypeChoice.isFlightLevel
                     value: _location.altitudeFt
                     onCommit: _location.altitudeFt = newValue
@@ -117,24 +150,31 @@ Item {
                     max: 1000
                     step: 10
                     maxDigits: 3
+                    enabled: altitudeToggle.checked
                     visible: altitudeTypeChoice.isFlightLevel
+                    value: _location.flightLevel
+                    onCommit: _location.flightLevel = newValue
                 }
 
                 PopupChoice {
                     id: altitudeTypeChoice
-
+                    enabled: _location.altitudeType !== LocationController.Off
+                    currentIndex: Math.max(0, _location.altitudeType - 1)
                     readonly property bool isFlightLevel: (currentIndex == 2)
 
                     model: [qsTr("Above mean sea-level (MSL)"),
                             qsTr("Above ground (AGL)"),
                             qsTr("Flight-level")]
+
+                    function select(index)
+                    {
+                        _location.altitudeType = index + 1;
+                    }
                 }
             }
 
             // offset row
             Row {
-                x: Style.strutSize
-
                 ToggleSwitch {
                     id: offsetToggle
                     label: qsTr("Offset ")

@@ -73,6 +73,10 @@ void RecentLocationsModel::insert(QVariant location)
                    [locDesc](QVariant v) { return v.toMap().value("text") == locDesc; });
     if (!m_data.empty() && (it == m_data.begin())) {
         // special, common case - nothing to do
+        // we use the description to determine equality,
+        // but it doesn't mention altitude/speed/heading so always
+        // update the actual stored value
+        *it = location;
         return;
     }
 

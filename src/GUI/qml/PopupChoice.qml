@@ -20,6 +20,11 @@ Item {
     implicitHeight: Math.max(label.implicitHeight, currentChoiceFrame.height)
     implicitWidth: label.implicitWidth + Style.margin + currentChoiceFrame.__naturalWidth
 
+    function select(index)
+    {
+        root.currentIndex = index;
+    }
+
     Item {
         Repeater {
             id: internalModel
@@ -181,8 +186,8 @@ Item {
                     height: parent.height
                     z: -1 // so header can do other mouse behaviours
                     onClicked: {
-                        root.currentIndex = -1;
                         popupFrame.visible = false
+                        root.select(-1);
                     }
                 }
             } // of header loader
@@ -206,8 +211,8 @@ Item {
                             width: popupFrame.width // full width of the popup
                             height: parent.height
                             onClicked: {
-                                root.currentIndex = model.index
                                 popupFrame.visible = false
+                                root.select(model.index)
                             }
                         }
                     } // of Text delegate
