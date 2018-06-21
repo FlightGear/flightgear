@@ -199,8 +199,9 @@ Item {
                     enabled: offsetToggle.checked
                 }
 
-                Text {
+                StyledText {
                     text: qsTr(" on bearing ")
+                    enabled: _location.offsetEnabled
                     anchors.verticalCenter: parent.verticalCenter
                 }
 

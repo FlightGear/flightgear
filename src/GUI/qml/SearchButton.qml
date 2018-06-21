@@ -71,10 +71,15 @@ FocusScope
             text: ""
 
             // placeholder text, hides itself whenever parent has non-empty text
-            Text {
+            StyledText {
                 anchors.fill: parent
                 visible: parent.text == ""
                 text: root.placeholder
+
+                // werid rule here - we want to make the placeholder text very
+                // subtle when the textdit is focused, so the user knows it will
+                // be overwritten
+                color: buttonText.activeFocus ? Style.disabledTextColor : Style.baseTextColor
             }
         }
 

@@ -54,12 +54,12 @@ FocusScope {
         text: root.max // use maximum value
     }
 
-    Text {
+    StyledText {
         id: label
         text: root.label
         anchors.verticalCenter: editFrame.verticalCenter
-        color: editFrame.activeFocus ? Style.themeColor :
-                                     (root.enabled ? "black" : Style.inactiveThemeColor)
+        hover: editFrame.activeFocus
+        enabled: root.enabled
     }
 
     MouseArea {
@@ -109,14 +109,13 @@ FocusScope {
         height: edit.implicitHeight + Style.margin
         width: edit.width + prefix.width + suffix.width + upDownArea.width + Style.margin * 2
         radius: Style.roundRadius
-        border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
+        border.color: root.enable ? (edit.activeFocus ? Style.frameColor : Style.minorFrameColor) : Style.disabledMinorFrameColor
         border.width: 1
 
-
-        Text {
+        StyledText {
             id: prefix
             visible: root.prefix !== ""
-            color: Style.baseTextColor
+            enabled: root.enabled
             anchors.baseline: edit.baseline
             anchors.left: parent.left
             anchors.margins: Style.margin
@@ -132,7 +131,7 @@ FocusScope {
             horizontalAlignment: Text.AlignRight
 
             focus: true
-            color: enabled && activeFocus ? Style.themeColor : Style.baseTextColor
+            color: enabled ? (activeFocus ? Style.themeColor : Style.baseTextColor) : Style.disabledTextColor
 
             validator: DoubleValidator {
                 id: validator
@@ -162,10 +161,10 @@ FocusScope {
             }
         }
 
-        Text {
+        StyledText {
             id: suffix
             visible: root.suffix !== ""
-            color: Style.baseTextColor
+            enabled: root.enabled
             anchors.baseline: edit.baseline
             anchors.right: upDownArea.left
         }

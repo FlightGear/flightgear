@@ -41,12 +41,13 @@ Item {
         }
     }
 
-    Text {
+    StyledText {
         id: label
         anchors.left: track.right
         anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
-        font.pixelSize: Style.baseFontPixelSize
+        enabled: root.enabled
+        hover: mouseArea.containsMouse
     }
 
     MouseArea {

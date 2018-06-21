@@ -69,21 +69,21 @@ Item {
         return item.text
     }
 
-    Text {
+    StyledText {
         id: label
         anchors.left: root.left
         anchors.leftMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         horizontalAlignment: Text.AlignRight
-        color: mouseArea.containsMouse ? Style.themeColor :
-                                         (root.enabled ? "black" : Style.inactiveThemeColor)
+        enabled: root.enabled
+        hover: mouseArea.containsMouse
     }
 
     Rectangle {
         id: currentChoiceFrame
         radius: Style.roundRadius
         border.color: root.enabled ? (mouseArea.containsMouse ? Style.themeColor : Style.minorFrameColor)
-                                   : Style.inactiveThemeColor
+                                   : Style.disabledMinorFrameColor
         border.width: 1
         height: currentChoiceText.implicitHeight + Style.margin
         clip: true
@@ -97,20 +97,20 @@ Item {
         readonly property int __naturalWidth: currentChoiceText.implicitWidth + (Style.margin * 3) + upDownIcon.width
         anchors.verticalCenter: parent.verticalCenter
 
-        Text {
+        StyledText {
             id: currentChoiceText
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: Style.margin
             text: currentText()
-            color: mouseArea.containsMouse ? Style.themeColor : Style.baseTextColor
             elide: Text.ElideRight
             maximumLineCount: 1
         }
 
         Image {
             id: upDownIcon
+            visible: root.enabled
             source: "qrc:///up-down-arrow"
             anchors.right: parent.right
             anchors.rightMargin: Style.margin
@@ -206,10 +206,15 @@ Item {
                                                                          : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
                                                                                                                               : modelData != undefined ? modelData : "" // Models without role
                         height: implicitHeight + Style.margin
+                        font.pixelSize: Style.baseFontPixelSize
+                        color: choiceArea.containsMouse ? Style.themeColor : Style.baseTextColor
 
                         MouseArea {
+                            id: choiceArea
                             width: popupFrame.width // full width of the popup
                             height: parent.height
+                            hoverEnabled: true
+
                             onClicked: {
                                 popupFrame.visible = false
                                 root.select(model.index)

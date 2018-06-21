@@ -138,13 +138,12 @@ Item {
         }
     }
 
-    Text {
+    StyledText {
         id: sizeText
         anchors.left: button.right
         anchors.leftMargin: 6
         anchors.verticalCenter: button.verticalCenter
         text: "Size: " + (root.packageSize / 0x100000).toFixed(1) + "MB"
-        font.pixelSize: Style.baseFontPixelSize
     }
 
     Column {
@@ -161,7 +160,7 @@ Item {
             width: parent.width
             visible: false // hidden by default
 
-            border.color: "#cfcfcf"
+            border.color: Style.minorFrameColor
             border.width: 2
 
             Rectangle {
@@ -171,7 +170,7 @@ Item {
                 height: 6
                 anchors.verticalCenter: parent.verticalCenter
 
-                color: "#1b7ad3"
+                color: Style.themeColor
 
                 readonly property real fraction: root.downloadedBytes / root.packageSize
                 readonly property real maxWidth: parent.width - 10
@@ -182,12 +181,11 @@ Item {
         }
 
         // show download progress textually, or error message if a problem occurs
-        Text {
+        StyledText {
             id: statusText
             visible: false
             text: (compact ? "" : "Downloaded ") + (root.downloadedBytes / 0x100000).toFixed(1) +
                   "MB of " + (root.packageSize / 0x100000).toFixed(1) + "MB";
-            font.pixelSize: Style.baseFontPixelSize
         }
     } // item container for progress bar and text
 }

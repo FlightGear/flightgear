@@ -19,14 +19,15 @@ QtObject
 
     readonly property string inactiveThemeColor: "#9f9f9f"
     readonly property string disabledThemeColor: disabledTextColor
+    readonly property string disabledMinorFrameColor: "#afafaf"
 
-    readonly property string baseTextColor: "#3f3f3f"
+    readonly property string baseTextColor: "#2f2f2f"
 
     readonly property int baseFontPixelSize: 12
     readonly property int subHeadingFontPixelSize: 14
     readonly property int headingFontPixelSize: 18
 
-    readonly property string disabledTextColor: "#5f5f5f"
+    readonly property string disabledTextColor: "#6f6f6f"
 
     readonly property double panelOpacity: 0.7
 }

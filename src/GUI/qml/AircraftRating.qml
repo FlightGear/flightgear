@@ -10,7 +10,7 @@ Item {
     implicitWidth: Style.strutSize * 3
     implicitHeight: label.height
 
-    Text {
+    StyledText {
         id: label
         anchors.right: ratingRow.left
         anchors.rightMargin: Style.margin
@@ -18,7 +18,6 @@ Item {
 
         horizontalAlignment: Text.AlignRight
         text: root.title + ":"
-        font.pixelSize: Style.baseFontPixelSize
     }
 
     Row {

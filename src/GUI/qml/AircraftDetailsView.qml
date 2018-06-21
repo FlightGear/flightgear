@@ -94,23 +94,21 @@ Rectangle {
                         anchors.right: parent.right
                         spacing: Style.margin
 
-                        Text {
+                        StyledText {
                             id: aircraftDescription
                             text: aircraft.description
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: aircraft.description != ""
-                            font.pixelSize: Style.baseFontPixelSize
                         }
 
-                        Text {
+                        StyledText {
                             id: aircraftAuthors
                             text: qsTr("by %1").arg(aircraft.authors)
                             width: parent.width
                             anchors.horizontalCenter: parent.horizontalCenter
                             wrapMode: Text.WordWrap
                             visible: (aircraft.authors != undefined)
-                            font.pixelSize: Style.baseFontPixelSize
                         }
                     }
 
@@ -143,10 +141,9 @@ Rectangle {
                     rowSpacing: Style.margin
                     columnSpacing: Style.margin
 
-                    Text {
+                    StyledText {
                         id: ratingsLabel
                         text: qsTr("Ratings:")
-                        font.pixelSize: Style.baseFontPixelSize
                     }
 
 
@@ -188,12 +185,11 @@ Rectangle {
                     }
                 }
 
-                Text {
+                StyledText {
                     text: qsTr("Local file location: %1").arg(aircraft.pathOnDisk);
                     width: parent.width
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     visible: aircraft.pathOnDisk != undefined
-                    font.pixelSize: Style.baseFontPixelSize
                 }
 
             } // main layout column

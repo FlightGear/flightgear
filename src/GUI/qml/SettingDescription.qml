@@ -6,7 +6,7 @@ Text {
 
     color: enabled ? Style.baseTextColor : Style.disabledTextColor
 
-    // make the text slightly smaller?
+    font.pixelSize: Style.baseFontPixelSize
 
     wrapMode: Text.WordWrap
 }

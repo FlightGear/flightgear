@@ -23,6 +23,7 @@ SettingControl {
         id: edit
         label: root.label
         width: parent.width
+        enabled: root.enabled
     }
 
     SettingDescription {

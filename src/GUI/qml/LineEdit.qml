@@ -23,12 +23,12 @@ FocusScope {
         id: metrics
     }
 
-    Text {
+    StyledText {
         id: label
         text: root.label
         anchors.verticalCenter: editFrame.verticalCenter
-        color: editFrame.activeFocus ? Style.themeColor :
-                                     (root.enabled ? "black" : Style.inactiveThemeColor)
+        hover: editFrame.activeFocus
+        enabled: root.enabled
     }
 
     Rectangle {
@@ -41,7 +41,7 @@ FocusScope {
         width: Math.min(root.width - (label.width + Style.margin), Math.max(suggestedWidth, edit.implicitWidth) + Style.margin * 2);
 
         radius: Style.roundRadius
-        border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
+        border.color: root.enabled ? (edit.activeFocus ? Style.frameColor : Style.minorFrameColor) : Style.disabledMinorFrameColor
         border.width: 1
         clip: true
 
@@ -54,13 +54,13 @@ FocusScope {
             anchors.margins: Style.margin
             selectByMouse: true
             focus: true
-            color: enabled && activeFocus ? Style.themeColor : Style.baseTextColor
+            color: enabled ? (activeFocus ? Style.themeColor : Style.baseTextColor) : Style.disabledTextColor
 
-            Text {
+            StyledText {
                 id: placeholder
                 visible: (edit.text.length == 0) && !edit.activeFocus
                 text: root.placeholder
-                color: Style.baseTextColor
+                enabled: root.enabled
             }
        }
     }

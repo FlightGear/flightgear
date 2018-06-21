@@ -11,7 +11,7 @@ Rectangle {
     implicitHeight: title.implicitHeight
 
     radius: 4
-    border.color: "#68A6E1"
+    border.color: Style.frameColor
     border.width: headingMouseArea.containsMouse ? 1 : 0
     color: headingMouseArea.containsMouse ? "#7fffffff" : "transparent"
 
@@ -44,7 +44,7 @@ Rectangle {
 
         elide: Text.ElideRight
         maximumLineCount: 1
-        color: "black"
+        color: headingMouseArea.containsMouse ? Style.themeColor : Style.baseTextColor
     }
 
 
@@ -117,7 +117,7 @@ Rectangle {
                         // allow override the size in case the title size is enormous
                         font.pixelSize: (popupFontPixelSize > 0) ? popupFontPixelSize : title.font.pixelSize
 
-                        color: choiceArea.containsMouse ? "#68A6E1" : "black"
+                        color: choiceArea.containsMouse ? Style.themeColor : Style.baseTextColor
                         anchors {
                             left: parent.left
                             right: parent.right
