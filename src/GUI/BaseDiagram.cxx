@@ -743,12 +743,15 @@ QPixmap BaseDiagram::iconForAirport(FGAirport* apt, const IconOptions& options)
     }
 
     if (options.testFlag(LargeAirportPlans) && apt->hasHardRunwayOfLengthFt(8500)) {
-        QPixmap result(32, 32);
+        QPixmap result(96, 96);
+        result.setDevicePixelRatio(2.0);
+        QRect logicalRect = QRect(0, 0, 48, 48);
+
         result.fill(Qt::transparent);
         {
             QPainter p(&result);
             p.setRenderHint(QPainter::Antialiasing, true);
-            QRectF b = result.rect().adjusted(4, 4, -4, -4);
+            QRectF b = logicalRect.adjusted(4, 4, -4, -4);
             QVector<QLineF> lines = projectAirportRuwaysIntoRect(apt, b);
 
             p.setPen(QPen(QColor(0x03, 0x83, 0xbf), 8));
@@ -760,7 +763,8 @@ QPixmap BaseDiagram::iconForAirport(FGAirport* apt, const IconOptions& options)
         return result;
     }
 
-    QPixmap result(25, 25);
+    QPixmap result(50, 50);
+    result.setDevicePixelRatio(2.0);
     result.fill(Qt::transparent);
 
     {
