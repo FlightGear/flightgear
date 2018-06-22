@@ -98,6 +98,7 @@ FGStandardAtmosphere::FGStandardAtmosphere(FGFDMExec* fdmex)
                            << 298556.4304 << 336.5028; //             91.000 - First layer in high altitude regime 
 
   PressureBreakpointVector.resize(StdAtmosTemperatureTable.GetNumRows());
+  LapseRateVector.resize(StdAtmosTemperatureTable.GetNumRows());
 
   // Assume the altitude to fade out the gradient at is at the highest
   // altitude in the table. Above that, other functions are used to
