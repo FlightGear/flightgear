@@ -9,6 +9,14 @@ Item {
     implicitWidth: track.width + label.width + 16
     implicitHeight: Math.max(label.height, thumb.height)
 
+    // helepr to set the value without an animation
+    function setValue(newCheck)
+    {
+        sliderBehaviour.enabled = false;
+        checked = newCheck
+        sliderBehaviour.enabled = true;
+    }
+
     Rectangle {
         id: track
         width: height * 2
@@ -34,6 +42,7 @@ Item {
             x: checked ? parent.width - (track.radius + radius) : (track.radius - radius)
 
             Behavior on x {
+                id: sliderBehaviour
                 NumberAnimation {
                     duration: 250
                 }

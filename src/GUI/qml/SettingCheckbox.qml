@@ -13,6 +13,8 @@ SettingControl {
     // value
     property bool setIfDefault: false
 
+    implicitHeight: toggle.height + Style.margin + description.height
+
     ToggleSwitch {
         id: toggle
         label: root.label
@@ -36,5 +38,10 @@ SettingControl {
         if (setIfDefault || (value != defaultValue)) {
             _config.setEnableDisableOption(option, checked)
         }
+    }
+
+    function setValue(newValue)
+    {
+        toggle.setValue(newValue)
     }
 }

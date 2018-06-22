@@ -10,7 +10,15 @@ Rectangle {
 
     readonly property bool isActive: (state != "start")
     Behavior on height {
+        enabled: false // disable to prevent animation on load
+        id: heightBehaviour
         NumberAnimation { duration: 200; }
+    }
+
+    Timer { // ugly: timer to enable the animation after loading is done
+        onTriggered: heightBehaviour.enabled = true;
+        running: true
+        interval: 5
     }
 
     Column {

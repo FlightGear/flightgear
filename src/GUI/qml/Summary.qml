@@ -5,25 +5,15 @@ import "."
 Item {
     id: root
 
+    signal showSelectedAircraft();
+    signal showSelectedLocation();
+
     Rectangle {
         anchors.fill: parent
         color: "#7f7f7f"
     }
 
     readonly property string __aircraftDescription: _launcher.selectedAircraftInfo.description
-
-    // base image when preview not available
-    Rectangle {
-        anchors.fill: parent
-        color: "magenta"
-    }
-
-    Connections {
-        target: _launcher
-        onAircraftTypeChanged: {
-            console.info("Aircraft type is now:" + _launcher.aircraftType)
-        }
-    }
 
     PreviewImage {
         id: preview
@@ -101,6 +91,7 @@ Item {
         style: Text.Outline
         styleColor: "black"
         font.bold: true
+        font.pixelSize: Style.subHeadingFontPixelSize
 
         onClicked: {
             _launcher.launchUrl("http://home.flightgear.org/about/");
@@ -114,6 +105,7 @@ Item {
         color: "transparent"
         border.width: 1
         border.color: Style.frameColor
+        clip: true
 
         anchors {
             left: parent.left
@@ -149,7 +141,7 @@ Item {
             }
 
             // aircraft name row
-            Text {
+            StyledText {
                 text: qsTr("Aircraft:")
                 horizontalAlignment: Text.AlignRight
                 font.pixelSize: Style.headingFontPixelSize
@@ -157,10 +149,13 @@ Item {
 
             // TODO - make clickable, jump to to the aircraft in the installed
             // aircraft list
-            Text {
+            ClickableText {
                 text: _launcher.selectedAircraftInfo.name === "" ?
                           qsTr("No aircraft selected") : _launcher.selectedAircraftInfo.name
+                enabled: _launcher.selectedAircraftInfo.name !== ""
                 font.pixelSize: Style.headingFontPixelSize
+
+                onClicked: root.showSelectedAircraft();
             }
 
             HistoryPopup {
@@ -189,7 +184,7 @@ Item {
                     maximumSize.height: 128
                 }
 
-                Text {
+                StyledText {
                     id: aircraftDescriptionText
                     anchors {
                         left: thumbnail.right
@@ -229,7 +224,7 @@ Item {
                     width: parent.width
                 }
 
-                Text {
+                StyledText {
                     id: stateDescriptionText
                     wrapMode: Text.WordWrap
                     maximumLineCount: 5
@@ -264,18 +259,18 @@ Item {
             }
 
             // location summary row
-            Text {
+            StyledText {
                 id: locationLabel
                 text: qsTr("Location:")
                 horizontalAlignment: Text.AlignRight
                 font.pixelSize: Style.headingFontPixelSize
             }
 
-            // TODO - make clickable, jump to the location page
-            Text {
+            ClickableText {
                 text: _launcher.location.description
                 font.pixelSize: Style.headingFontPixelSize
                 width: summaryGrid.middleColumnWidth
+                onClicked: root.showSelectedLocation()
             }
 
             HistoryPopup {
@@ -288,13 +283,13 @@ Item {
             }
 
             // settings summary row
-            Text {
+            StyledText {
                 text: qsTr("Settings:")
                 horizontalAlignment: Text.AlignRight
                 font.pixelSize: Style.headingFontPixelSize
             }
 
-            Text {
+            StyledText {
                 text: _launcher.combinedSummary.join(", ")
                 font.pixelSize: Style.headingFontPixelSize
                 wrapMode: Text.WordWrap

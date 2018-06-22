@@ -49,8 +49,9 @@
 using namespace simgear::pkg;
 
 
-LauncherController::LauncherController(QObject *parent) :
-    QObject(parent)
+LauncherController::LauncherController(QObject *parent, QWindow* window) :
+    QObject(parent),
+    m_window(window)
 {
     m_serversModel = new MPServersModel(this);
     m_location = new LocationController(this);
@@ -91,6 +92,19 @@ LauncherController::LauncherController(QObject *parent) :
     LocalAircraftCache::instance()->scanDirs();
     m_aircraftModel->setPackageRoot(globals->packageRoot());
 
+    m_subsystemIdleTimer = new QTimer(this);
+    m_subsystemIdleTimer->setInterval(0);
+    connect(m_subsystemIdleTimer, &QTimer::timeout, []()
+       {globals->get_subsystem_mgr()->update(0.0);});
+    m_subsystemIdleTimer->start();
+
+    QRect winRect= settings.value("window-geometry").toRect();
+    if (winRect.isValid()) {
+        m_window->setGeometry(winRect);
+    } else {
+        m_window->setWidth(600);
+        m_window->setHeight(800);
+    }
 }
 
 void LauncherController::initQML()
@@ -170,6 +184,9 @@ void LauncherController::restoreSettings()
 void LauncherController::saveSettings()
 {
     emit requestSaveState();
+
+    QSettings settings;
+    settings.setValue("window-geometry", m_window->geometry());
 
     m_aircraftHistory->saveToSettings();
     m_locationHistory->saveToSettings();
@@ -446,6 +463,12 @@ void LauncherController::setEnvironmentSummary(QStringList environmentSummary)
 
     m_environmentSummary = environmentSummary;
     emit summaryChanged();
+}
+
+void LauncherController::fly()
+{
+    doRun();
+    qApp->exit(1);
 }
 
 QStringList LauncherController::combinedSummary() const

@@ -15,8 +15,8 @@ Item {
     // define a new visiblity property so we can control built-in 'visible' ourselves
     property bool hidden: false
 
-    implicitHeight: childrenRect.height
     implicitWidth: parent.width // which is assumed to be the section
+
     visible: {
         // override so advanced items show up in searches
         if (_launcher.isSearchActive && _launcher.matchesSearch(_launcher.settingsSearchTerm, keywords)) {
@@ -86,8 +86,13 @@ Item {
         var rawValue = _config.getValueForKey("", root.setting, defaultValue);
       // console.warn("restoring state for " + root.setting + ", got raw value " + rawValue + " with type " + typeof(rawValue))
         if (rawValue !== undefined) {
-           // root["value"] = rawValue
-            this.value = rawValue
+            setValue(rawValue);
         }
+    }
+
+    function setValue(newValue)
+    {
+        // hook method so controls can override
+        this.value = newValue
     }
 }

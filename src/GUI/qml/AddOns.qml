@@ -36,14 +36,14 @@ Item {
                     anchors.rightMargin: Style.margin
                     spacing: Style.margin
 
-                    Text {
+                    StyledText {
                         font.pixelSize: Style.subHeadingFontPixelSize
                         font.bold: true
                         width: parent.width
                         text: model.name
                     }
 
-                    Text {
+                    StyledText {
                         visible: model.status === CatalogListModel.Ok
                         width: parent.width
                         text: model.description
@@ -62,7 +62,7 @@ Item {
                         }
                     }
 
-                    Text {
+                    StyledText {
                         width: parent.width
                         text: model.url
                     }
@@ -119,33 +119,12 @@ Item {
     //////////////////////////////////////////////////////////////////
     // catalogs //////////////////////////////////////////////////////
 
-            Item {
-                id: catalogHeaderItem
-                width: parent.width
-                height: catalogHeadingText.height + catalogDescriptionText.height + Style.margin
-
-                Text {
-                    id: catalogHeadingText
-                    text: qsTr("Aircraft hangars")
-                    font.pixelSize: Style.headingFontPixelSize
-                    width: parent.width
-                }
-
-                Text {
-                    id: catalogDescriptionText
-                    text: qsTr("Aircraft hangars are managed collections of aircraft, which can be " +
-                               "downloaded, installed and updated inside FlightGear.")
-                    anchors {
-                        top: catalogHeadingText.bottom
-                        topMargin: Style.margin
-                    }
-
-                    width: parent.width
-                    wrapMode: Text.WordWrap
-                }
-
-
-            } // of catalogs header item
+            AddOnsHeader {
+                id: catalogHeader
+                title: qsTr("Aircraft hangars")
+                description: qsTr("Aircraft hangars are managed collections of aircraft, which can be " +
+                                  "downloaded, installed and updated inside FlightGear.")
+            }
 
             Rectangle {
                 width: parent.width
@@ -191,49 +170,19 @@ Item {
                 height: Style.margin * 2
             }
 
-            Item {
-                id: aircraftHeaderItem
-                width: parent.width
-                height: aircraftHeading.height + aircraftDescriptionText.height + Style.margin
-
-                Text {
-                    id: aircraftHeading
-                    text: qsTr("Additional aircraft folders")
-                    font.pixelSize: Style.headingFontPixelSize
-
-                    anchors {
-                        left: parent.left
-                        right: addAircraftPathButton.left
-                        rightMargin: Style.margin
+            AddOnsHeader {
+                id: aircraftHeader
+                title: qsTr("Additional aircraft folders")
+                description: qsTr("To use aircraft you download yourself, FlightGear needs to " +
+                                  "know the folder(s) containing the aircraft data.")
+                showAddButton: true
+                onAdd: {
+                    var newPath =_addOns.addAircraftPath();
+                    if (newPath !== "") {
+                        _addOns.aircraftPaths.push(newPath)
                     }
                 }
-
-                Text {
-                    id: aircraftDescriptionText
-                    text: qsTr("To use aircraft you download yourself, FlightGear needs to " +
-                               "know the folder(s) containing the aircraft data.")
-                    anchors {
-                        top: aircraftHeading.bottom
-                        topMargin: Style.margin
-                        left: parent.left
-                        right: addAircraftPathButton.left
-                        rightMargin: Style.margin
-                    }
-                    wrapMode: Text.WordWrap
-                }
-
-                AddButton {
-                    id: addAircraftPathButton
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    onClicked: {
-                        var newPath =_addOns.addAircraftPath();
-                        if (newPath !== "") {
-                            _addOns.aircraftPaths.push(newPath)
-                        }
-                    }
-                }
-            } // of aircraft header item
+            }
 
             Rectangle {
                 width: parent.width
@@ -270,7 +219,7 @@ Item {
                         }
                     }
 
-                    Text {
+                    StyledText {
                         visible: (aircraftPathsRepeater.count == 0)
                         width: parent.width
                         text : qsTr("No custom aircraft paths are configured.");
@@ -288,51 +237,20 @@ Item {
                 height: Style.margin * 2
             }
 
-            Item {
-                id: sceneryHeaderItem
-                width: parent.width
-                height: sceneryHeading.height + sceneryDescriptionText.height + Style.margin
-
-                Text {
-                    id: sceneryHeading
-                    text: qsTr("Additional scenery folders")
-                    font.pixelSize: Style.headingFontPixelSize
-
-                    anchors {
-                        left: parent.left
-                        right: addSceneryPathButton.left
-                        rightMargin: Style.margin
+            AddOnsHeader {
+                id: sceneryHeader
+                title: qsTr("Additional scenery folders")
+                description: qsTr("To use scenery you download yourself, FlightGear needs " +
+                                  "to know the folders containing the scenery data. " +
+                                  "Adjust the order of the list to control which scenery is used in a region.");
+                showAddButton: true
+                onAdd: {
+                    var newPath =_addOns.addSceneryPath();
+                    if (newPath !== "") {
+                        _addOns.sceneryPaths.push(newPath)
                     }
                 }
-
-                Text {
-                    id: sceneryDescriptionText
-                    text: qsTr("To use scenery you download yourself, FlightGear needs " +
-                               "to know the folders containing the scenery data. " +
-                               "Adjust the order of the list to control which scenery is used in a region.");
-                    anchors {
-                        top: sceneryHeading.bottom
-                        topMargin: Style.margin
-                        left: parent.left
-                        right: addSceneryPathButton.left
-                        rightMargin: Style.margin
-                    }
-                    wrapMode: Text.WordWrap
-                }
-
-                AddButton {
-                    id: addSceneryPathButton
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    onClicked: {
-                        var newPath =_addOns.addSceneryPath();
-                        if (newPath !== "") {
-                            _addOns.sceneryPaths.push(newPath)
-
-                        }
-                    }
-                }
-            } // of aircraft header item
+            }
 
             Rectangle {
                 width: parent.width
@@ -370,7 +288,7 @@ Item {
                         }
                     }
 
-                    Text {
+                    StyledText {
                         visible: (sceneryPathsRepeater.count == 0)
                         width: parent.width
                         text : qsTr("No custom scenery paths are configured.");
@@ -400,7 +318,7 @@ Item {
                     }
                 }
 
-                Text {
+                StyledText {
                     id: installTarballText
                     anchors {
                         left: installTarballButton.right

@@ -38,6 +38,7 @@ public:
 
     Q_INVOKABLE void setEnableDisableOption(QString name, bool value);
 
+    Q_INVOKABLE QString htmlForCommandLine();
 
 
     // ensure a property is /not/ set?

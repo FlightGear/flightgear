@@ -13,7 +13,7 @@ SettingControl {
     property alias value: popup.currentIndex
     property alias defaultValue: root.defaultIndex
 
-    implicitHeight: childrenRect.height
+    implicitHeight: popup.height + Style.margin + description.height
 
     PopupChoice {
         id: popup

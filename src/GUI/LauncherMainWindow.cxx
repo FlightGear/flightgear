@@ -6,10 +6,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QMenuBar>
-#include <QMenu>
-
 #include <QPushButton>
-#include <QDesktopServices>
 
 #include <QQuickItem>
 #include <QQmlEngine>
@@ -17,36 +14,17 @@
 #include <QQmlContext>
 #include <QQmlError>
 
-// simgear headers
-#include <simgear/package/Install.hxx>
-#include <simgear/environment/metar.hxx>
-#include <simgear/structure/exception.hxx>
-
-// FlightGear headers
-#include <Network/HTTPClient.hxx>
-#include <Main/globals.hxx>
-#include <Airports/airport.hxx>
-#include <Main/options.hxx>
-#include <Main/fg_init.hxx>
-#include <Main/fg_props.hxx>
 #include "version.h"
 
 // launcher headers
 #include "QtLauncher.hxx"
-#include "AircraftModel.hxx"
-#include "AircraftSearchFilterModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "LaunchConfig.hxx"
-#include "ViewCommandLinePage.hxx"
 #include "AircraftModel.hxx"
 #include "LocalAircraftCache.hxx"
 #include "LauncherController.hxx"
-#include "DefaultAircraftLocator.hxx"
 #include "AddOnsController.hxx"
-#include "CatalogListModel.hxx"
 #include "LocationController.hxx"
-
-#include "ui_Launcher.h"
 
 
 extern void restartTheApp(QStringList fgArgs);
@@ -54,67 +32,33 @@ extern void restartTheApp(QStringList fgArgs);
 //////////////////////////////////////////////////////////////////////////////
 
 LauncherMainWindow::LauncherMainWindow() :
-    QMainWindow(),
-    m_subsystemIdleTimer(NULL)
+    QQuickView()
 {
-    m_ui.reset(new Ui::Launcher);
-    m_ui->setupUi(this);
+    setTitle("FlightGear " FLIGHTGEAR_VERSION);
 
-    QMenuBar* mb = menuBar();
-
-#if !defined(Q_OS_MAC)
-    QMenu* fileMenu = mb->addMenu(tr("File"));
-    QAction* quitAction = fileMenu->addAction(tr("Exit"));
-    connect(quitAction, &QAction::triggered,
-            this, &LauncherMainWindow::onQuit);
-
-#endif
-
-    m_controller = new LauncherController(this);
+    m_controller = new LauncherController(this, this);
     m_controller->initQML();
 
-    connect(m_controller, &LauncherController::canFlyChanged,
-            this, &LauncherMainWindow::onCanFlyChanged);
+#if defined(Q_OS_MAC)
+   QMenuBar* mb = new QMenuBar();
 
-    QMenu* toolsMenu = mb->addMenu(tr("Tools"));
-    QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
-    connect(restoreDefaultsAction, &QAction::triggered,
-            this, &LauncherMainWindow::onRestoreDefaults);
+   QMenu* toolsMenu = mb->addMenu(tr("Tools"));
+   QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
+   connect(restoreDefaultsAction, &QAction::triggered,
+           this, &LauncherMainWindow::onRestoreDefaults);
 
-    QAction* changeDataAction = toolsMenu->addAction(tr("Select data files location..."));
-    connect(changeDataAction, &QAction::triggered,
-            this, &LauncherMainWindow::onChangeDataDir);
+   QAction* changeDataAction = toolsMenu->addAction(tr("Select data files location..."));
+   connect(changeDataAction, &QAction::triggered,
+           this, &LauncherMainWindow::onChangeDataDir);
 
-    QAction* viewCommandLineAction = toolsMenu->addAction(tr("View command-line"));
-    connect(viewCommandLineAction, &QAction::triggered,
-            this, &LauncherMainWindow::onViewCommandLine);
-
-
-    m_subsystemIdleTimer = new QTimer(this);
-    m_subsystemIdleTimer->setInterval(0);
-    connect(m_subsystemIdleTimer, &QTimer::timeout,
-            this, &LauncherMainWindow::onSubsytemIdleTimeout);
-    m_subsystemIdleTimer->start();
-
-    connect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onRun()));
-    connect(m_ui->summaryButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
-    connect(m_ui->aircraftButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
-    connect(m_ui->locationButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
-    connect(m_ui->environmentButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
-    connect(m_ui->settingsButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
-    connect(m_ui->addOnsButton, &QAbstractButton::clicked, this, &LauncherMainWindow::onClickToolboxButton);
+   QAction* viewCommandLineAction = toolsMenu->addAction(tr("View command-line"));
+   connect(viewCommandLineAction, &QAction::triggered,
+           m_controller, &LauncherController::viewCommandLine);
+#endif
 
     QAction* qa = new QAction(this);
     qa->setShortcut(QKeySequence("Ctrl+Q"));
     connect(qa, &QAction::triggered, this, &LauncherMainWindow::onQuit);
-    addAction(qa);
-
-    m_viewCommandLinePage = new ViewCommandLinePage;
-    m_viewCommandLinePage->setLaunchConfig(m_controller->config());
-    m_ui->stack->addWidget(m_viewCommandLinePage);
-
-    QSettings settings;
-    restoreGeometry(settings.value("window-geometry").toByteArray());
 
     m_controller->restoreSettings();
     flightgear::launcherSetSceneryPaths();
@@ -130,83 +74,23 @@ LauncherMainWindow::LauncherMainWindow() :
     const QString osName("unix");
 #endif
 
-    /////////////
-    // aircraft
-    m_ui->aircraftList->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    setResizeMode(QQuickView::SizeRootObjectToView);
+    engine()->addImportPath("qrc:///");
 
-    m_ui->aircraftList->engine()->addImportPath("qrc:///");
-    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_launcher", m_controller);
-    m_ui->aircraftList->engine()->rootContext()->setContextProperty("_addOns", addOnsCtl);
+    QQmlContext* ctx = rootContext();
+    ctx->setContextProperty("_launcher", m_controller);
+    ctx->setContextProperty("_addOns", addOnsCtl);
+    ctx->setContextProperty("_config", m_controller->config());
+    ctx->setContextProperty("_location", m_controller->location());
+    ctx->setContextProperty("_osName", osName);
 
-    connect( m_ui->aircraftList, &QQuickWidget::statusChanged,
-             this, &LauncherMainWindow::onQuickStatusChanged);
-    m_ui->aircraftList->setSource(QUrl("qrc:///qml/AircraftList.qml"));
-
-    /////////////
-    // location
-    m_ui->location->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    m_ui->location->engine()->addImportPath("qrc:///");
-    m_ui->location->engine()->rootContext()->setContextProperty("_launcher", m_controller);
-    m_ui->location->engine()->rootContext()->setContextProperty("_config", m_controller->config());
-    m_ui->location->engine()->rootContext()->setContextProperty("_location", m_controller->location());
-    connect( m_ui->location, &QQuickWidget::statusChanged,
-             this, &LauncherMainWindow::onQuickStatusChanged);
-    m_ui->location->setSource(QUrl("qrc:///qml/Location.qml"));
-
-    /////////////
-    // settings
-    m_ui->settings->engine()->addImportPath("qrc:///");
-    QQmlContext* settingsContext = m_ui->settings->engine()->rootContext();
-    settingsContext->setContextProperty("_launcher", m_controller);
-    settingsContext->setContextProperty("_osName", osName);
-    settingsContext->setContextProperty("_config", m_controller->config());
-
-    m_ui->settings->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    connect( m_ui->settings, &QQuickWidget::statusChanged,
-             this, &LauncherMainWindow::onQuickStatusChanged);
-    m_ui->settings->setSource(QUrl("qrc:///qml/Settings.qml"));
-
-    // environemnt
-    m_ui->environmentPage->engine()->addImportPath("qrc:///");
-    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_launcher", m_controller);
     auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
-    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_weatherScenarios", weatherScenariosModel);
-    m_ui->environmentPage->engine()->rootContext()->setContextProperty("_config", m_controller->config());
+    ctx->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
-    m_ui->environmentPage->setResizeMode(QQuickWidget::SizeRootObjectToView);
-
-    connect( m_ui->environmentPage, &QQuickWidget::statusChanged,
-             this, &LauncherMainWindow::onQuickStatusChanged);
-    m_ui->environmentPage->setSource(QUrl("qrc:///qml/Environment.qml"));
-
-    // summary
-    m_ui->summary->engine()->addImportPath("qrc:///");
-    m_ui->summary->engine()->rootContext()->setContextProperty("_launcher", m_controller);
-    m_ui->summary->engine()->rootContext()->setContextProperty("_config", m_controller->config());
-
-    m_ui->summary->setResizeMode(QQuickWidget::SizeRootObjectToView);
-
-    connect( m_ui->summary, &QQuickWidget::statusChanged,
-             this, &LauncherMainWindow::onQuickStatusChanged);
-    m_ui->summary->setSource(QUrl("qrc:///qml/Summary.qml"));
-
-
-    // addOns
-    m_ui->addOns->engine()->addImportPath("qrc:///");
-    m_ui->addOns->engine()->rootContext()->setContextProperty("_launcher", m_controller);
-    m_ui->addOns->engine()->rootContext()->setContextProperty("_addOns", addOnsCtl);
-    m_ui->addOns->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    m_ui->addOns->setSource(QUrl("qrc:///qml/AddOns.qml"));
-    //////////////////////////
-
+    setSource(QUrl("qrc:///qml/Launcher.qml"));
 }
 
-void LauncherMainWindow::saveSettings()
-{
-    QSettings settings;
-    settings.setValue("window-geometry", saveGeometry());
-}
-
+#if 0
 void LauncherMainWindow::onQuickStatusChanged(QQuickWidget::Status status)
 {
     if (status == QQuickWidget::Error) {
@@ -224,11 +108,7 @@ void LauncherMainWindow::onQuickStatusChanged(QQuickWidget::Status status)
                               + errorString);
     }
 }
-
-void LauncherMainWindow::onCanFlyChanged()
-{
-    m_ui->flyButton->setEnabled(m_controller->canFly());
-}
+#endif
 
 LauncherMainWindow::~LauncherMainWindow()
 {
@@ -236,6 +116,7 @@ LauncherMainWindow::~LauncherMainWindow()
 
 bool LauncherMainWindow::execInApp()
 {
+#if 0
     m_inAppMode = true;
     m_ui->addOnsButton->hide();
     m_ui->settingsButton->hide();
@@ -250,22 +131,10 @@ bool LauncherMainWindow::execInApp()
     }
 
     return m_accepted;
+#endif
 }
 
-
-
-void LauncherMainWindow::closeEvent(QCloseEvent *event)
-{
-    qApp->exit(-1);
-}
-
-
-void LauncherMainWindow::onRun()
-{
-    m_controller->doRun();
-    saveSettings();
-    qApp->exit(1);
-}
+#if 0
 
 void LauncherMainWindow::onApply()
 {
@@ -274,6 +143,7 @@ void LauncherMainWindow::onApply()
     m_accepted = true;
     m_runInApp = false;
 }
+#endif
 
 void LauncherMainWindow::onQuit()
 {
@@ -286,7 +156,7 @@ void LauncherMainWindow::onQuit()
 
 void LauncherMainWindow::onRestoreDefaults()
 {
-    QMessageBox mbox(this);
+    QMessageBox mbox;
     mbox.setText(tr("Restore all settings to defaults?"));
     mbox.setInformativeText(tr("Restoring settings to their defaults may affect available add-ons such as scenery or aircraft."));
     QPushButton* quitButton = mbox.addButton(tr("Restore and restart now"), QMessageBox::YesRole);
@@ -308,30 +178,6 @@ void LauncherMainWindow::onRestoreDefaults()
     flightgear::restartTheApp();
 }
 
-void LauncherMainWindow::onViewCommandLine()
-{
-    m_ui->stack->setCurrentIndex(6);
-    Q_FOREACH (ToolboxButton* tb, findChildren<ToolboxButton*>()) {
-        tb->setChecked(false);
-    }
-    m_viewCommandLinePage->update();
-}
-
-
-void LauncherMainWindow::onClickToolboxButton()
-{
-    int pageIndex = sender()->property("pageIndex").toInt();
-    m_ui->stack->setCurrentIndex(pageIndex);
-    Q_FOREACH (ToolboxButton* tb, findChildren<ToolboxButton*>()) {
-        tb->setChecked(tb->property("pageIndex").toInt() == pageIndex);
-    }
-    saveSettings();
-}
-
-void LauncherMainWindow::onSubsytemIdleTimeout()
-{
-    globals->get_subsystem_mgr()->update(0.0);
-}
 
 void LauncherMainWindow::onChangeDataDir()
 {
@@ -344,7 +190,7 @@ void LauncherMainWindow::onChangeDataDir()
         currentLocText = tr("Currently using location: %1").arg(root);
     }
 
-    QMessageBox mbox(this);
+    QMessageBox mbox;
     mbox.setText(tr("Change the data files used by FlightGear?"));
     mbox.setInformativeText(tr("FlightGear requires additional files to operate. "
                                "(Also called the base package, or fg-data) "

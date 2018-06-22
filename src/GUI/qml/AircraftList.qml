@@ -6,6 +6,10 @@ Item
 {
     id: root
 
+    Component.onCompleted: {
+        aircraftList.updateSelectionFromLauncher();
+    }
+
     Rectangle
     {
         id: tabBar

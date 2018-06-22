@@ -12,6 +12,7 @@ Item {
     function backToSearch()
     {
         detailLoader.sourceComponent = null
+        _location.setBaseLocation(null)
     }
 
     function selectLocation(guid, type)
@@ -28,7 +29,21 @@ Item {
     }
 
     Component.onCompleted: {
-        _location.showHistoryInSearchModel()
+        // important so we can leave the location page and return to it,
+        // preserving the state
+        if (_location.base.valid) {
+            selectedLocation.guid = _location.base.guid;
+
+            if (selectedLocation.isAirportType) {
+                detailLoader.sourceComponent = airportDetails
+            } else {
+                detailLoader.sourceComponent = navaidDetails
+            }
+        } else if (_location.isBaseLatLon) {
+            detailLoader.sourceComponent = navaidDetails
+        } else {
+            _location.showHistoryInSearchModel();
+        }
     }
 
     Positioned {
@@ -41,7 +56,6 @@ Item {
             id: airportView
         }
     }
-
 
     Component {
         id: navaidDetails
@@ -94,7 +108,7 @@ Item {
                     image: model.icon
                 }
 
-                Text {
+                StyledText {
                     id: delegateText
                     anchors.right: parent.right
                     anchors.left: delegateIcon.right
@@ -131,11 +145,21 @@ Item {
         }
     }
 
+    Text {
+        id: headerText
+        text: qsTr("Location")
+        font.pixelSize: Style.headingFontPixelSize
+        anchors.left: parent.left
+        anchors.leftMargin: Style.inset
+        anchors.top: parent.top
+        anchors.topMargin: Style.margin
+    }
+
     SearchButton {
         id: searchButton
 
         anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.top: headerText.bottom
         anchors.left: parent.left
         anchors.margins: Style.margin
 
@@ -151,7 +175,6 @@ Item {
 
             var geod = _location.parseStringAsGeod(term)
             if (geod.valid) {
-                console.info("REMOVE-ME: Setting lat-lon location")
                 _location.baseGeod = geod
                 selectedLocation.guid = 0;
                 detailLoader.sourceComponent = navaidDetails
@@ -163,7 +186,7 @@ Item {
         }
     }
 
-    Text {
+    StyledText {
         id: searchHelpText
         anchors.right: parent.right
         anchors.top: searchButton.bottom
@@ -248,14 +271,12 @@ Item {
     }
 
     Button {
+        id: backButton
+
         anchors { left: parent.left; top: parent.top; margins: Style.margin }
         width: Style.strutSize
         visible: detailLoader.visible
-
-        id: backButton
         text: "< Back"
-        onClicked: {
-            root.backToSearch();
-        }
+        onClicked: root.backToSearch();
     }
 }

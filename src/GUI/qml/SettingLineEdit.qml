@@ -3,7 +3,8 @@ import "."
 
 SettingControl {
     id: root
-    implicitHeight: childrenRect.height
+
+    implicitHeight: edit.height + Style.margin + description.height
 
     property alias placeholder: edit.placeholder
     property alias validation: edit.validator

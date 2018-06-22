@@ -51,7 +51,7 @@ QStringList AddOnsController::sceneryPaths() const
 
 QString AddOnsController::addAircraftPath() const
 {
-    QString path = QFileDialog::getExistingDirectory(m_launcher, tr("Choose aircraft folder"));
+    QString path = QFileDialog::getExistingDirectory(nullptr, tr("Choose aircraft folder"));
     if (path.isEmpty()) {
         return {};
     }
@@ -90,7 +90,7 @@ QString AddOnsController::addAircraftPath() const
 
 QString AddOnsController::addSceneryPath() const
 {
-    QString path = QFileDialog::getExistingDirectory(m_launcher, tr("Choose scenery folder"));
+    QString path = QFileDialog::getExistingDirectory(nullptr, tr("Choose scenery folder"));
     if (path.isEmpty()) {
         return {};
 
@@ -128,7 +128,7 @@ QString AddOnsController::installCustomScenery()
 {
     QSettings settings;
     QString downloadDir = settings.value("download-dir").toString();
-    InstallSceneryDialog dlg(m_launcher, downloadDir);
+    InstallSceneryDialog dlg(nullptr, downloadDir);
     if (dlg.exec() == QDialog::Accepted) {
         return dlg.sceneryPath();
     }

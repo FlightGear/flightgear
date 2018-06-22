@@ -1,0 +1,117 @@
+import QtQuick 2.4
+import "."
+
+Item {
+    id: root
+    // order of this model sets the order of buttons in the sidebar
+    ListModel {
+        id: pagesModel
+        ListElement { title: qsTr("Summary"); pageSource: "qrc:///qml/Summary.qml"; iconPath: "qrc:///toolbox-summary"; state:"loader" }
+        ListElement { title: qsTr("Aircraft"); pageSource: "qrc:///qml/AircraftList.qml"; iconPath: "qrc:///toolbox-aircraft"; state:"loader" }
+        ListElement { title: qsTr("Location"); pageSource: "qrc:///qml/Location.qml"; iconPath: "qrc:///toolbox-location"; state:"loader" }
+
+        // due to some design stupidity by James, we can't use the Loader mechanism for these pages; they need to exist
+        // permanently so that collecting args works. So we instantiate them down below, and toggle the visiblity
+        // of them and the loader using a state.
+
+        ListElement { title: qsTr("Environment"); pageSource: ""; iconPath: "qrc:///toolbox-environment"; state:"environment"  }
+        ListElement { title: qsTr("Settings"); pageSource: ""; iconPath: "qrc:///toolbox-settings"; state:"settings" }
+
+        ListElement { title: qsTr("Add-ons"); pageSource: "qrc:///qml/AddOns.qml"; iconPath: "qrc:///toolbox-addons"; state:"loader" }
+
+    }
+
+    states: [
+        State {
+            name: "loader"
+            PropertyChanges { target: pageLoader; visible: true }
+            PropertyChanges { target: settings; visible: false }
+            PropertyChanges { target: environment; visible: false }
+        },
+
+        State {
+            name: "settings"
+            PropertyChanges { target: pageLoader; visible: false }
+            PropertyChanges { target: settings; visible: true }
+            PropertyChanges { target: environment; visible: false }
+        },
+
+        State {
+            name: "environment"
+            PropertyChanges { target: pageLoader; visible: false }
+            PropertyChanges { target: settings; visible: false }
+            PropertyChanges { target: environment; visible: true }
+        }
+    ]
+
+    Connections {
+        target: _launcher
+        onViewCommandLine: {
+            sidebar.selectedPage = -1;
+            pageLoader.source = "qrc:///qml/ViewCommandLine.qml"
+            root.state = "loader";
+        }
+    }
+
+    Sidebar {
+        id: sidebar
+        width: Style.strutSize * 2
+        height: parent.height
+        z: 1
+        pagesModel: pagesModel
+        selectedPage: 0 // open on the summary page
+
+        onSelectPage: {
+            pageLoader.source = pageSource
+            root.state = pagesModel.get(selectedPage).state
+        }
+    }
+
+    Settings {
+        id: settings
+
+        height: parent.height
+        anchors {
+            left: sidebar.right
+            right: parent.right
+        }
+    }
+
+    Environment {
+        id: environment
+
+        height: parent.height
+        anchors {
+            left: sidebar.right
+            right: parent.right
+        }
+    }
+
+    Loader {
+        id: pageLoader
+        height: parent.height
+        anchors {
+            left: sidebar.right
+            right: parent.right
+        }
+
+        source: "qrc:///qml/Summary.qml"
+    }
+
+    function selectPage(index)
+    {
+        sidebar.setSelectedPage(index);
+        var page = pagesModel.get(index);
+        pageLoader.source = page.pageSource
+        root.state = page.state
+    }
+
+    Connections {
+        target: pageLoader.item
+        ignoreUnknownSignals: true
+        onShowSelectedAircraft: root.selectPage(1)
+        onShowSelectedLocation: root.selectPage(2)
+    }
+
+
+}

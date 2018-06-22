@@ -3,6 +3,7 @@ import FlightGear.Launcher 1.0
 import "."
 
 Item {
+    id: settings
     Rectangle {
         // search 'dimming' rectangle
         visible: _launcher.isSearchActive
@@ -21,14 +22,21 @@ Item {
 
     Connections {
         target: _launcher
-        onRequestSaveState: {
-            mpSettings.saveState();
-            downloadSettings.saveState();
-            generalSettings.saveState();
-            renderSection.saveState();
-            extraArgsSection.saveState();
-            windowSettings.saveState();
-        }
+        onRequestSaveState: settings.saveState();
+    }
+
+    Component.onDestruction: {
+        settings.saveState();
+    }
+
+    function saveState()
+    {
+        mpSettings.saveState();
+        downloadSettings.saveState();
+        generalSettings.saveState();
+        renderSection.saveState();
+        extraArgsSection.saveState();
+        windowSettings.saveState();
     }
 
     Flickable {
@@ -57,7 +65,7 @@ Item {
                 Text {
                     id: headerText
                     text: qsTr("Settings")
-                    font.pixelSize: Style.strutSize / 2
+                    font.pixelSize: Style.headingFontPixelSize
                     anchors.left: parent.left
                     anchors.leftMargin: Style.inset
                 }

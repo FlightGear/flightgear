@@ -47,6 +47,45 @@ void LaunchConfig::setEnableDisableOption(QString name, bool value)
     m_values.push_back(Arg((value ? "enable-" : "disable-") + name));
 }
 
+QString LaunchConfig::htmlForCommandLine()
+{
+    QString html;
+    string_list commandLineOpts = flightgear::Options::sharedInstance()->extractOptions();
+    if (!commandLineOpts.empty()) {
+        html += tr("<p>Options passed on the command line:</p>\n");
+        html += "<ul>\n";
+        for (auto opt : commandLineOpts) {
+            html += QString("<li>--") + QString::fromStdString(opt) + "</li>\n";
+        }
+        html += "</ul>\n";
+    }
+#if 0
+    if (m_extraSettings) {
+        LauncherArgumentTokenizer tk;
+        Q_FOREACH(auto arg, tk.tokenize(m_extraSettings->argsText())) {
+    //        m_config->setArg(arg.arg, arg.value);
+        }
+    }
+#endif
+    reset();
+    collect();
+
+    html += tr("<p>Options set in the launcher:</p>\n");
+    html += "<ul>\n";
+    for (auto arg : values()) {
+        if (arg.value.isEmpty()) {
+            html += QString("<li>--") + arg.arg + "</li>\n";
+        } else if (arg.arg == "prop") {
+            html += QString("<li>--") + arg.arg + ":" + arg.value + "</li>\n";
+        } else {
+            html += QString("<li>--") + arg.arg + "=" + arg.value + "</li>\n";
+        }
+    }
+    html += "</ul>\n";
+
+    return html;
+}
+
 QVariant LaunchConfig::getValueForKey(QString group, QString key, QVariant defaultValue) const
 {
     QSettings settings;

@@ -67,7 +67,9 @@ class LocationController : public QObject
     Q_PROPERTY(bool tuneNAV1 READ tuneNAV1 WRITE setTuneNAV1 NOTIFY configChanged)
     Q_PROPERTY(QmlGeod baseGeod READ baseGeod WRITE setBaseGeod NOTIFY baseLocationChanged)
 
+    Q_PROPERTY(QmlPositioned* base READ baseLocation CONSTANT)
     Q_PROPERTY(QmlPositioned* detail READ detail CONSTANT)
+    Q_PROPERTY(bool isBaseLatLon READ isBaseLatLon NOTIFY baseLocationChanged)
 public:
     explicit LocationController(QObject *parent = nullptr);
     ~LocationController();
@@ -152,9 +154,16 @@ public:
 
     QmlPositioned* detail() const;
 
+    QmlPositioned* baseLocation() const;
+
     bool useAvailableParking() const
     {
         return m_useAvailableParking;
+    }
+
+    bool isBaseLatLon() const
+    {
+        return m_locationIsLatLon;
     }
 
 public slots:
@@ -203,6 +212,7 @@ private:
     FGPositionedList m_recentLocations;
     LaunchConfig* m_config = nullptr;
     QmlPositioned* m_detailQml = nullptr;
+    QmlPositioned* m_baseQml = nullptr;
 
     bool m_offsetEnabled = false;
     int m_offsetRadial = 0;

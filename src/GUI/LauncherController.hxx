@@ -29,6 +29,8 @@
 #include <simgear/package/Catalog.hxx>
 
 // forward decls
+class QTimer;
+class QWindow;
 class AircraftProxyModel;
 class QmlAircraftInfo;
 class RecentAircraftModel;
@@ -74,7 +76,7 @@ class LauncherController : public QObject
 
     Q_PROPERTY(AircraftType aircraftType READ aircraftType NOTIFY selectedAircraftChanged)
 public:
-    explicit LauncherController(QObject *parent);
+    explicit LauncherController(QObject *parent, QWindow* win);
 
     void initQML();
 
@@ -174,6 +176,9 @@ signals:
      * state to persistent storage
      */
     void requestSaveState();
+
+    void viewCommandLine();
+
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
 
@@ -182,6 +187,8 @@ public slots:
     void setSettingsSummary(QStringList settingsSummary);
 
     void setEnvironmentSummary(QStringList environmentSummary);
+
+    void fly();
 
 private slots:
 
@@ -206,6 +213,8 @@ private:
     void collectAircraftArgs();
 
 private:
+    QWindow* m_window = nullptr;
+
     AircraftProxyModel* m_installedAircraftModel;
     AircraftItemModel* m_aircraftModel;
     AircraftProxyModel* m_aircraftSearchModel;
@@ -222,6 +231,8 @@ private:
     QStringList m_settingsSummary, m_environmentSummary;
     RecentAircraftModel* m_aircraftHistory = nullptr;
     RecentLocationsModel* m_locationHistory = nullptr;
+
+    QTimer* m_subsystemIdleTimer = nullptr;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX

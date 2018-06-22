@@ -8,6 +8,7 @@ Text {
     property bool clickable: true
     property color baseTextColor: Style.baseTextColor
     color: mouse.containsMouse ? Style.themeColor : baseTextColor
+    font.pixelSize: Style.baseFontPixelSize
 
     MouseArea {
         id: mouse

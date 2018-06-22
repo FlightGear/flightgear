@@ -2,7 +2,7 @@
 //
 // Written by James Turner, started October 2015.
 //
-// Copyright (C) 2015 James Turner <zakalawe@mac.com>
+// Copyright (C) 2018 James Turner <james@flightgear.org>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -21,18 +21,13 @@
 #ifndef LAUNCHER_MAIN_WINDOW_HXX
 #define LAUNCHER_MAIN_WINDOW_HXX
 
-#include <QMainWindow>
 #include <QScopedPointer>
 #include <QStringList>
 #include <QModelIndex>
 #include <QTimer>
 #include <QUrl>
-#include <QQuickWidget>
+#include <QQuickView>
 
-namespace Ui
-{
-    class Launcher;
-}
 
 class QModelIndex;
 class QQmlEngine;
@@ -41,7 +36,7 @@ class ViewCommandLinePage;
 class QQuickItem;
 class LauncherController;
 
-class LauncherMainWindow : public QMainWindow
+class LauncherMainWindow : public QQuickView
 {
     Q_OBJECT
 public:
@@ -54,47 +49,25 @@ public:
 
 
 protected:
-    virtual void closeEvent(QCloseEvent *event) override;
 
 private slots:
-    // run is used when the launcher is invoked before the main app is
-    // started
-    void onRun();
-
-    // apply is used in-app, where we must set properties and trigger
-    // a reset; setting command line options won't help us.
-    void onApply();
-
-    void onQuit();
-
-    void onSubsytemIdleTimeout();
 
 
     void onRestoreDefaults();
-    void onViewCommandLine();
+  //  void onViewCommandLine();
 
-    void onClickToolboxButton();
+    void onQuit();
 
-
-    void onQuickStatusChanged(QQuickWidget::Status status);
-
-    void onCanFlyChanged();
+ //   void onQuickStatusChanged(QQuickWidget::Status status);
 
     void onChangeDataDir();
 
 private:
-
     LauncherController* m_controller;
-    QScopedPointer<Ui::Launcher> m_ui;
-    QTimer* m_subsystemIdleTimer;
+
     bool m_inAppMode = false;
     bool m_runInApp = false;
     bool m_accepted = false;
-
-    ViewCommandLinePage* m_viewCommandLinePage = nullptr;
-
-    void restoreSettings();
-    void saveSettings();
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX

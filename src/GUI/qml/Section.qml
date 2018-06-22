@@ -77,6 +77,7 @@ Item {
             color: "white"
             anchors.verticalCenter: parent.verticalCenter
             font.bold: true
+            font.pixelSize: Style.subHeadingFontPixelSize
             anchors.left: parent.left
             anchors.leftMargin: Style.inset
         }

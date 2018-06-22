@@ -5,7 +5,7 @@ import "."
 
 SettingControl {
     id: root
-    implicitHeight: childrenRect.height
+    implicitHeight: defaultButton.height + Style.margin + description.height
 
     property alias label: label.text
     property string path

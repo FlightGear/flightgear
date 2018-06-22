@@ -370,6 +370,8 @@ LocationController::LocationController(QObject *parent) :
     m_searchModel = new NavSearchModel;
 
     m_detailQml = new QmlPositioned(this);
+    m_baseQml = new QmlPositioned(this);
+
     // chain location and offset updated to description
     connect(this, &LocationController::baseLocationChanged,
             this, &LocationController::descriptionChanged);
@@ -453,11 +455,23 @@ void LocationController::setBaseGeod(QmlGeod geod)
 
 void LocationController::setBaseLocation(QmlPositioned* pos)
 {
+    if (!pos) {
+        m_location.clear();
+        m_detailLocation.clear();
+        m_detailQml->setGuid(0);
+        m_baseQml->setGuid(0);
+        m_airportLocation.clear();
+        m_locationIsLatLon = false;
+        emit baseLocationChanged();
+        return;
+    }
+
     if (pos->inner() == m_location)
         return;
 
     m_locationIsLatLon = false;
     m_location = pos->inner();
+    m_baseQml->setGuid(pos->guid());
     m_detailLocation.clear();
     m_detailQml->setGuid(0);
 
@@ -610,6 +624,11 @@ QmlPositioned *LocationController::detail() const
     return m_detailQml;
 }
 
+QmlPositioned *LocationController::baseLocation() const
+{
+    return m_baseQml;
+}
+
 void LocationController::setOffsetRadial(int offsetRadial)
 {
     if (m_offsetRadial == offsetRadial)
@@ -679,6 +698,7 @@ void LocationController::restoreLocation(QVariantMap l)
         if (FGPositioned::isAirportType(m_location.ptr())) {
             m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
         }
+        m_baseQml->setInner(m_location);
     }
 
     if (l.contains("altitude-type")) {
@@ -714,6 +734,10 @@ void LocationController::restoreLocation(QVariantMap l)
         } else if (l.contains("location-apt-parking")) {            
             QString parking = l.value("location-apt-parking").toString();
             m_detailLocation = m_airportLocation->groundNetwork()->findParkingByName(parking.toStdString());
+        }
+
+        if (m_detailLocation) {
+            m_detailQml->setInner(m_detailLocation);
         }
 
         m_onFinal = l.value("location-on-final").toBool();

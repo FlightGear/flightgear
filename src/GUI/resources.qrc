@@ -94,6 +94,11 @@
         <file>qml/IntegerSpinbox.qml</file>
         <file>qml/DoubleSpinbox.qml</file>
         <file>qml/StyledText.qml</file>
+        <file>qml/Launcher.qml</file>
+        <file>qml/Sidebar.qml</file>
+        <file>qml/SidebarButton.qml</file>
+        <file>qml/ViewCommandLine.qml</file>
+        <file>qml/AddOnsHeader.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>
