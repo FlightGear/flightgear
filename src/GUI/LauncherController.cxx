@@ -147,6 +147,23 @@ void LauncherController::initQML()
     PreviewImageItem::setGlobalNetworkAccess(netAccess);
 }
 
+void LauncherController::setInAppMode()
+{
+	m_inAppMode = true;
+	m_keepRunningInAppMode = true;
+	m_appModeResult = true;
+}
+
+bool LauncherController::keepRunningInAppMode() const
+{
+	return m_keepRunningInAppMode;
+}
+
+bool LauncherController::inAppResult() const
+{
+	return m_appModeResult;
+}
+
 void LauncherController::restoreSettings()
 {
     m_selectedAircraft = m_aircraftHistory->mostRecent();
@@ -467,8 +484,14 @@ void LauncherController::setEnvironmentSummary(QStringList environmentSummary)
 
 void LauncherController::fly()
 {
-    doRun();
-    qApp->exit(1);
+	if (m_inAppMode) {
+		doApply();
+		m_keepRunningInAppMode = false;
+		m_appModeResult = true;
+	} else {
+		doRun();
+		qApp->exit(1);
+	}
 }
 
 QStringList LauncherController::combinedSummary() const

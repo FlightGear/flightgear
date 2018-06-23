@@ -162,6 +162,10 @@ public:
 
     AircraftType aircraftType() const
     { return m_aircraftType; }
+
+	void setInAppMode();
+	bool keepRunningInAppMode() const;
+	bool inAppResult() const;
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -233,6 +237,10 @@ private:
     RecentLocationsModel* m_locationHistory = nullptr;
 
     QTimer* m_subsystemIdleTimer = nullptr;
+
+	bool m_inAppMode = false;
+	bool m_keepRunningInAppMode = false;
+	bool m_appModeResult = true;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX

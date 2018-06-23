@@ -54,7 +54,6 @@ private slots:
 
 
     void onRestoreDefaults();
-  //  void onViewCommandLine();
 
     void onQuit();
 
@@ -64,10 +63,6 @@ private slots:
 
 private:
     LauncherController* m_controller;
-
-    bool m_inAppMode = false;
-    bool m_runInApp = false;
-    bool m_accepted = false;
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX

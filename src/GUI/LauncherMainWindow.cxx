@@ -116,42 +116,20 @@ LauncherMainWindow::~LauncherMainWindow()
 
 bool LauncherMainWindow::execInApp()
 {
-#if 0
-    m_inAppMode = true;
-    m_ui->addOnsButton->hide();
-    m_ui->settingsButton->hide();
-    disconnect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onRun()));
-    connect(m_ui->flyButton, SIGNAL(clicked()), this, SLOT(onApply()));
-    m_runInApp = true;
-
+	m_controller->setInAppMode();
+    
     show();
 
-    while (m_runInApp) {
+    while (m_controller->keepRunningInAppMode()) {
         qApp->processEvents();
     }
 
-    return m_accepted;
-#endif
+    return m_controller->inAppResult();
 }
-
-#if 0
-
-void LauncherMainWindow::onApply()
-{
-    m_controller->doApply();
-    saveSettings();
-    m_accepted = true;
-    m_runInApp = false;
-}
-#endif
 
 void LauncherMainWindow::onQuit()
 {
-    if (m_inAppMode) {
-        m_runInApp = false;
-    } else {
-        qApp->exit(-1);
-    }
+	qApp->exit(-1);
 }
 
 void LauncherMainWindow::onRestoreDefaults()
