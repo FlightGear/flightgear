@@ -714,6 +714,7 @@ FGHIDEventInput::~FGHIDEventInput()
 
 void FGHIDEventInput::init()
 {
+    FGEventInput::init();
     // have to wait until postinit since loading config files
     // requires Nasal to be running
 }
