@@ -24,6 +24,7 @@
 #include "applicationcontroller.h"
 #include "canvasdisplay.h"
 #include "canvasconnection.h"
+#include "canvaspainteddisplay.h"
 
 int main(int argc, char *argv[])
 {
@@ -38,6 +39,8 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<CanvasItem>("FlightGear", 1, 0, "CanvasItem");
     qmlRegisterType<CanvasDisplay>("FlightGear", 1, 0, "CanvasDisplay");
+    qmlRegisterType<CanvasPaintedDisplay>("FlightGear", 1, 0, "PaintedCanvasDisplay");
+
     qmlRegisterUncreatableType<CanvasConnection>("FlightGear", 1, 0, "CanvasConnection", "Don't create me");
     qmlRegisterUncreatableType<ApplicationController>("FlightGear", 1, 0, "Application", "Can't create");
 

@@ -171,7 +171,10 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
     if (_hasClip)
     {
         // clip is defined in the global coordinate system
-#if 0
+        if (_clipFrame != ReferenceFrame::GLOBAL) {
+            qWarning() << Q_FUNC_INFO << "implement support for non-global clips";
+        }
+#if defined(DEBUG_PAINTING)
         p->save();
         p->setTransform(context->globalCoordinateTransform());
         p->setPen(Qt::yellow);

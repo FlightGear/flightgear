@@ -53,6 +53,8 @@ set(SOURCES
   applicationcontroller.h
   canvasdisplay.cpp
   canvasdisplay.h
+  canvaspainteddisplay.cpp
+  canvaspainteddisplay.h
 )
 
 qt5_add_resources(qrc_sources fgqcanvas_resources.qrc)

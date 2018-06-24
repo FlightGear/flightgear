@@ -130,13 +130,13 @@ protected:
         return QPointF(x,y);
     }
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override
     {
         QQuickItem::geometryChanged(newGeometry, oldGeometry);
         update();
     }
 
-    QRectF boundingRect() const
+    QRectF boundingRect() const override
     {
         if ((width() == 0.0) || (height() == 0.0)) {
             return m_layout.boundingRect();
@@ -229,8 +229,8 @@ void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
 
     context->painter()->drawText(rect, _alignment, _text);
 
-    context->painter()->setPen(Qt::cyan);
-    context->painter()->drawRect(rect);
+   // context->painter()->setPen(Qt::cyan);
+   // context->painter()->drawRect(rect);
 }
 
 void FGCanvasText::doPolish()

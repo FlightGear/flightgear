@@ -4,7 +4,7 @@ import FlightGear 1.0 as FG
 Item {
     id: root
     property bool showDecorations: true
-    property alias canvas: canvasDisplay.canvas
+    property alias canvas: paintedDisplay.canvas
     property bool showUi: true
 
     Component.onCompleted: {
@@ -27,9 +27,24 @@ Item {
         anchors.fill: parent
         clip: true
 
-        FG.CanvasDisplay {
-            id: canvasDisplay
+//        FG.CanvasDisplay {
+//            id: canvasDisplay
+//            anchors.fill: parent
+
+//            onCanvasChanged: {
+//                if (canvas) {
+//                    root.width = canvas.size.width
+//                    root.height = canvas.size.height
+//                    root.x = canvas.origin.x
+//                    root.y = canvas.origin.y
+//                }
+//            }
+//        }
+
+        FG.PaintedCanvasDisplay {
+            id: paintedDisplay
             anchors.fill: parent
+         //   canvas: canvasDisplay.canvas
 
             onCanvasChanged: {
                 if (canvas) {
