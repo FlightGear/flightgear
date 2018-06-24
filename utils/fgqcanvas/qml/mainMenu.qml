@@ -46,6 +46,8 @@ Rectangle {
         anchors.fill: parent
         tabs: [browsePanel, configPanel, snapshotsPanel]
         titles: ["Connect", "Load / Save", "Snapshots"]
+        visible: __uiVisible
+        opacity: __uiOpacity
     }
 
     Component {
