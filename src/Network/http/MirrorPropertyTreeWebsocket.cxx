@@ -117,7 +117,7 @@ using std::string;
 
     struct RecentlyRemovedNode
     {
-        RecentlyRemovedNode() : type(simgear::props::NONE), id(0) { }
+        RecentlyRemovedNode() { }
 
         RecentlyRemovedNode(SGPropertyNode* node, unsigned int aId) :
             type(node->getType()),
@@ -125,14 +125,9 @@ using std::string;
             id(aId)
         {}
 
-        simgear::props::Type type;
+        simgear::props::Type type = simgear::props::NONE;
         std::string path;
-        unsigned int id;
-
-        bool operator==(const RecentlyRemovedNode& other) const
-        {
-            return (type == other.type) && (path == other.path);
-        }
+        unsigned int id = 0;
     };
 
     class MirrorTreeListener : public SGPropertyChangeListener
@@ -166,10 +161,12 @@ using std::string;
 
         virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child) override
         {
-            // this works becuase custom operator== overload on RecentlyRemovedNode
-            // ignores the ID value.
-            RecentlyRemovedNode m(child, 0);
-            auto rrIt = std::find(recentlyRemoved.begin(), recentlyRemoved.end(), m);
+
+            const auto type = child->getType();
+            const auto& path = child->getPath();
+            auto rrIt = std::find_if(recentlyRemoved.begin(), recentlyRemoved.end(),
+                                     [type, &path](const RecentlyRemovedNode& rr)
+                                     { return (type == rr.type) && (path == rr.path); });
             if (rrIt != recentlyRemoved.end()) {
                 // recycle nodes which get thrashed from Nasal (deleted + re-created
                 // each time a Nasal timer fires)
@@ -196,7 +193,7 @@ using std::string;
                 // record so we can map removed+add of the same property into
                 // a simple value change (this happens commonly with the canvas
                 // due to lazy Nasal scripting)
-                recentlyRemoved.push_back(RecentlyRemovedNode(child, it->second));
+                recentlyRemoved.emplace_back(child, it->second);
             }
         }
 
