@@ -140,7 +140,6 @@ using std::string;
 
         virtual ~MirrorTreeListener()
         {
-            SG_LOG(SG_NETWORK, SG_INFO, "destroying MirrorTreeListener");
         }
 
         virtual void valueChanged(SGPropertyNode* node) override
@@ -224,18 +223,23 @@ using std::string;
 
         cJSON* makeJSONData()
         {
+#if defined (MIRROR_DEBUG)
             SGTimeStamp st;
             st.stamp();
-
-            cJSON* result = cJSON_CreateObject();
-
+            
             int newSize = newNodes.size();
             int changedSize = changedNodes.size();
             int removedSize = removedNodes.size();
-
+#endif
+            cJSON* result = cJSON_CreateObject();
             if (!newNodes.empty()) {
                 cJSON * newNodesArray = cJSON_CreateArray();
-
+                
+                // cJSON_AddItemToArray performance is O(N) due to use of a linked
+                // list, which dominates the performance here. To fix this we maintan
+                // a point to the tail of the array, keeping appends O(1)
+                cJSON* arrayTail = nullptr;
+                
                 for (auto prop : newNodes) {
                     changedNodes.erase(prop); // avoid duplicate send
                     cJSON* newPropData = cJSON_CreateObject();
@@ -247,7 +251,15 @@ using std::string;
                     if (prop->getType() != simgear::props::NONE) {
                         cJSON_AddItemToObject(newPropData, "value", JSON::valueToJson(prop));
                     }
-                    cJSON_AddItemToArray(newNodesArray, newPropData);
+                    
+                    if (arrayTail) {
+                        arrayTail->next = newPropData;
+                        newPropData->prev = arrayTail;
+                        arrayTail = newPropData;
+                    } else {
+                        cJSON_AddItemToArray(newNodesArray, newPropData);
+                        arrayTail = newPropData;
+                    }
                 }
 
                 newNodes.clear();
@@ -266,19 +278,32 @@ using std::string;
 
             if (!changedNodes.empty()) {
                 cJSON * changedNodesArray = cJSON_CreateArray();
-
+                
+                // see comment above about cJSON_AddItemToArray
+                cJSON* tail = nullptr;
+                
                 for (auto prop : changedNodes) {
                     cJSON* propData = cJSON_CreateArray();
                     cJSON_AddItemToArray(propData, cJSON_CreateNumber(idForProperty(prop)));
                     cJSON_AddItemToArray(propData, JSON::valueToJson(prop));
-                    cJSON_AddItemToArray(changedNodesArray, propData);
+                    
+                    
+                    if (tail) {
+                        tail->next = propData;
+                        propData->prev = tail;
+                        tail = propData;
+                    } else {
+                        cJSON_AddItemToArray(changedNodesArray, propData);
+                        tail = propData;
+                    }
                 }
 
                 changedNodes.clear();
                 cJSON_AddItemToObject(result, "changed", changedNodesArray);
             }
-
+#if defined (MIRROR_DEBUG)
             SG_LOG(SG_NETWORK, SG_INFO, "making JSON data took:" << st.elapsedMSec() << " for " << newSize << "/" << changedSize << "/" << removedSize);
+#endif
             recentlyRemoved.clear();
 
             return result;
@@ -366,7 +391,6 @@ MirrorPropertyTreeWebsocket::MirrorPropertyTreeWebsocket(const std::string& path
 
 MirrorPropertyTreeWebsocket::~MirrorPropertyTreeWebsocket()
 {
-    SG_LOG(SG_NETWORK, SG_INFO, "shutting down MirrorPropertyTreeWebsocket");
 }
 
 void MirrorPropertyTreeWebsocket::close()
