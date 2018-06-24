@@ -34,6 +34,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         color: "white"
         font.underline: mouse.containsMouse
+        font.pixelSize: Style.baseFontPixelSize
     }
 
 

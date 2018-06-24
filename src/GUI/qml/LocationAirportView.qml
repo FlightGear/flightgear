@@ -83,9 +83,10 @@ Item {
             spacing: Style.margin
             width: parent.width
 
-            Text { // heading text
+            StyledText { // heading text
                 id: airportHeading
                 width: parent.width
+                font.pixelSize: Style.headingFontPixelSize
                 text: isHeliport ? qsTr("Heliport: ") + airportData.ident + " / " + airportData.name
                                  : qsTr("Airport: ") + airportData.ident + " / " + airportData.name
             }
@@ -104,7 +105,7 @@ Item {
                     }
                 }
 
-                Text {
+                StyledText {
                     text: isHeliport ? qsTr("Pad") : qsTr("Runway")
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -185,7 +186,7 @@ Item {
                     enabled: runwayRadio.selected && onFinalToggle.checked
                 }
 
-                Text {
+                StyledText {
                     text: qsTr(" from the threshold")
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -223,7 +224,7 @@ Item {
                     }
                 }
 
-                Text {
+                StyledText {
                     text: qsTr("Parking")
                     anchors.verticalCenter: parent.verticalCenter
                 }

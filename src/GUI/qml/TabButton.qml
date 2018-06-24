@@ -14,7 +14,7 @@ Rectangle {
 
     color: mouse.containsMouse ? "#064989" : (active ? "#1b7ad3" : "white")
 
-    Text {
+    StyledText {
         id: buttonText
         anchors.centerIn: parent
         color: (active | mouse.containsMouse) ? "white" : "#3f3f3f"

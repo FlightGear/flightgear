@@ -22,6 +22,7 @@ Rectangle {
             leftMargin: Style.margin
             verticalCenter: parent.verticalCenter
         }
+        font.pixelSize: Style.baseFontPixelSize
     }
 
     Image {

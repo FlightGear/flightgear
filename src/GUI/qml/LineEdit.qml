@@ -55,7 +55,7 @@ FocusScope {
             selectByMouse: true
             focus: true
             color: enabled ? (activeFocus ? Style.themeColor : Style.baseTextColor) : Style.disabledTextColor
-
+            font.pixelSize: Style.baseFontPixelSize
             StyledText {
                 id: placeholder
                 visible: (edit.text.length == 0) && !edit.activeFocus

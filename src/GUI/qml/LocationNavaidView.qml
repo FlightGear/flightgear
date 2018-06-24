@@ -57,11 +57,11 @@ Item {
             spacing: Style.margin
             width: parent.width
 
-            Text { // heading text
+            StyledText { // heading text
                 id: headingText
                 width: parent.width
                 text: "format lat-lon as string!"
-
+                font.pixelSize: Style.headingFontPixelSize
                 Binding {
                     when: navaidData.valid
                     target: headingText

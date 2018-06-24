@@ -37,6 +37,7 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         anchors.top: iconImage.bottom
         anchors.topMargin: Style.margin
+        font.pixelSize: Style.baseFontPixelSize
     }
 
     MouseArea {

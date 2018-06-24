@@ -129,6 +129,7 @@ FocusScope {
             selectByMouse: true
             width: metrics.width
             horizontalAlignment: Text.AlignRight
+            font.pixelSize: Style.baseFontPixelSize
 
             focus: true
             color: enabled ? (activeFocus ? Style.themeColor : Style.baseTextColor) : Style.disabledTextColor
