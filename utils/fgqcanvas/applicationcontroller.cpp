@@ -32,7 +32,9 @@
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QDataStream>
+#include <QWindow>
 
+#include "jsonutils.h"
 #include "canvasconnection.h"
 
 ApplicationController::ApplicationController(QObject *parent)
@@ -55,6 +57,26 @@ ApplicationController::ApplicationController(QObject *parent)
 ApplicationController::~ApplicationController()
 {
     delete m_netAccess;
+}
+
+void ApplicationController::setWindow(QWindow *window)
+{
+    m_window = window;
+}
+
+void ApplicationController::loadFromFile(QString path)
+{
+    if (!QFile::exists(path)) {
+        qWarning() << Q_FUNC_INFO << "no such file:" << path;
+    }
+
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << Q_FUNC_INFO << "failed to open" << path;
+        return;
+    }
+
+    restoreState(f.readAll());
 }
 
 void ApplicationController::save(QString configName)
@@ -393,8 +415,12 @@ QByteArray ApplicationController::saveState(QString name) const
     }
 
     json["canvases"] = canvases;
+    if (m_window) {
+        json["window-rect"] = rectToJsonArray(m_window->geometry());
+        json["window-state"] = static_cast<int>(m_window->windowState());
+    }
+
     // background color?
-    // window geometry and state?
 
     QJsonDocument doc;
     doc.setObject(json);
@@ -408,7 +434,14 @@ void ApplicationController::restoreState(QByteArray bytes)
     QJsonDocument jsonDoc = QJsonDocument::fromJson(bytes);
     QJsonObject json = jsonDoc.object();
 
-    // window size
+    if (m_window) {
+        QRect r = jsonArrayToRect(json.value("window-rect").toArray());
+        if (r.isValid()) {
+            m_window->setGeometry(r);
+        }
+
+        m_window->setWindowState(static_cast<Qt::WindowState>(json.value("window-state").toInt()));
+    }
     // background color
 
     for (auto c : json.value("canvases").toArray()) {

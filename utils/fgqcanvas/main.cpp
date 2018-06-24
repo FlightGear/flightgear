@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
     a.setOrganizationName("FlightGear");
 
     ApplicationController appController;
-    // load saved history on the app controller?
 
     qmlRegisterType<CanvasItem>("FlightGear", 1, 0, "CanvasItem");
     qmlRegisterType<CanvasDisplay>("FlightGear", 1, 0, "CanvasDisplay");
@@ -45,9 +44,16 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<ApplicationController>("FlightGear", 1, 0, "Application", "Can't create");
 
     QQuickView quickView;
-    quickView.resize(1024, 768);
+    appController.setWindow(&quickView);
 
     quickView.rootContext()->setContextProperty("_application", &appController);
+
+    if (argc > 1) {
+        appController.loadFromFile(QString::fromLocal8Bit(argv[1]));
+    } else {
+        quickView.setWidth(1024);
+        quickView.setHeight(768);
+    }
 
     quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
     quickView.setResizeMode(QQuickView::SizeRootObjectToView);

@@ -33,6 +33,7 @@ CanvasPaintedDisplay::CanvasPaintedDisplay(QQuickItem* parent) :
 
 CanvasPaintedDisplay::~CanvasPaintedDisplay()
 {
+    qDebug() << "did destory canvas painted";
 }
 
 void CanvasPaintedDisplay::paint(QPainter *painter)
@@ -47,6 +48,7 @@ void CanvasPaintedDisplay::paint(QPainter *painter)
 
     FGCanvasPaintContext context(painter);
     m_rootElement->paint(&context);
+
 }
 
 void CanvasPaintedDisplay::geometryChanged(const QRectF &newGeometry, const QRectF &)
@@ -78,7 +80,6 @@ void CanvasPaintedDisplay::setCanvas(CanvasConnection *canvas)
 
         onConnectionStatusChanged();
     }
-
 }
 
 void CanvasPaintedDisplay::onConnectionDestroyed()
@@ -94,22 +95,25 @@ void CanvasPaintedDisplay::onConnectionStatusChanged()
     if ((m_connection->status() == CanvasConnection::Connected) ||
             (m_connection->status() == CanvasConnection::Snapshot))
     {
-        m_rootElement.reset(new FGCanvasGroup(nullptr, m_connection->propertyRoot()));
-        // this is important to elements can discover their connection
-        // by walking their parent chain
-        m_rootElement->setParent(m_connection);
-
-        connect(m_rootElement.get(), &FGCanvasGroup::canvasSizeChanged,
-                this, &CanvasPaintedDisplay::onCanvasSizeChanged);
-
-        onCanvasSizeChanged();
-
-        if (m_connection->status() == CanvasConnection::Snapshot) {
-            m_connection->propertyRoot()->recursiveNotifyRestored();
-            m_rootElement->polish();
-            update();
-        }
+        buildElements();
     }
+}
+
+void CanvasPaintedDisplay::buildElements()
+{
+    m_rootElement.reset(new FGCanvasGroup(nullptr, m_connection->propertyRoot()));
+    // this is important to elements can discover their connection
+    // by walking their parent chain
+    m_rootElement->setParent(m_connection);
+
+    connect(m_rootElement.get(), &FGCanvasGroup::canvasSizeChanged,
+            this, &CanvasPaintedDisplay::onCanvasSizeChanged);
+
+    onCanvasSizeChanged();
+
+    m_connection->propertyRoot()->recursiveNotifyRestored();
+    m_rootElement->polish();
+    update();
 }
 
 void CanvasPaintedDisplay::onConnectionUpdated()

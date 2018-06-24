@@ -386,6 +386,11 @@ FGCanvasPath::FGCanvasPath(FGCanvasGroup* pr, LocalProp* prop) :
 {
 }
 
+void FGCanvasPath::dumpElement()
+{
+    qDebug() << "Path: at " << _propertyRoot->path();
+}
+
 void FGCanvasPath::doPaint(FGCanvasPaintContext *context) const
 {
     context->painter()->setPen(_stroke);

@@ -33,6 +33,8 @@ public:
 
     CanvasItem* createQuickItem(QQuickItem *parent) override;
     CanvasItem* quickItem() const override;
+
+    void dumpElement() override;
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
 

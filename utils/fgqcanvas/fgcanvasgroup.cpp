@@ -200,6 +200,15 @@ void FGCanvasGroup::removeChild(FGCanvasElement *child)
     }
 }
 
+void FGCanvasGroup::dumpElement()
+{
+    qDebug() << "Group at" << _propertyRoot->path();
+    for (auto c : _children) {
+        c->dumpElement();
+    }
+    qDebug() << "End-group at" << _propertyRoot->path();
+}
+
 int FGCanvasGroup::indexOfChildWithProp(LocalProp* prop) const
 {
     auto it = std::find_if(_children.begin(), _children.end(), [prop](FGCanvasElement* child)

@@ -256,4 +256,9 @@ CanvasItem *FGQCanvasImage::quickItem() const
     return _quickItem;
 }
 
+void FGQCanvasImage::dumpElement()
+{
+    qDebug() << "Image: " << _source << " at " << _propertyRoot->path();
+}
+
 #include "fgqcanvasimage.moc"

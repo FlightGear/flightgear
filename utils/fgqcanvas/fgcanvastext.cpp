@@ -202,6 +202,11 @@ CanvasItem *FGCanvasText::quickItem() const
     return _quickItem;
 }
 
+void FGCanvasText::dumpElement()
+{
+    qDebug() << "Text:" << _text << " at " << _propertyRoot->path();
+}
+
 void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
 {
     context->painter()->setFont(_font);

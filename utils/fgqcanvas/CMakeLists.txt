@@ -55,6 +55,8 @@ set(SOURCES
   canvasdisplay.h
   canvaspainteddisplay.cpp
   canvaspainteddisplay.h
+  jsonutils.cpp
+  jsonutils.h
 )
 
 qt5_add_resources(qrc_sources fgqcanvas_resources.qrc)

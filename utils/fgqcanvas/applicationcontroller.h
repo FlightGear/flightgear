@@ -25,6 +25,7 @@
 #include <QVariantList>
 
 class CanvasConnection;
+class QWindow;
 
 class ApplicationController : public QObject
 {
@@ -44,9 +45,14 @@ class ApplicationController : public QObject
     Q_ENUMS(Status)
 
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+
 public:
     explicit ApplicationController(QObject *parent = nullptr);
     ~ApplicationController();
+
+    void setWindow(QWindow* window);
+
+    void loadFromFile(QString path);
 
     Q_INVOKABLE void query();
     Q_INVOKABLE void cancelQuery();
@@ -140,6 +146,7 @@ private:
     QVariantList m_configs;
     QNetworkReply* m_query = nullptr;
     QVariantList m_snapshots;
+    QWindow* m_window = nullptr;
 };
 
 #endif // APPLICATIONCONTROLLER_H

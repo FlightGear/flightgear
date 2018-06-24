@@ -64,6 +64,7 @@ private slots:
 
 private:
     void recomputeScaling();
+    void buildElements();
 
     CanvasConnection* m_connection = nullptr;
     std::unique_ptr<FGCanvasGroup> m_rootElement;

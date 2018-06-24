@@ -78,6 +78,7 @@ public:
 
     void polish();
 
+    virtual void dumpElement() = 0;
 protected:
 
     virtual void doPaint(FGCanvasPaintContext* context) const;
@@ -113,6 +114,7 @@ private:
     void onVisibleChanged(QVariant value);
 
     void markClipDirty();
+    void markSVGIDDirty(QVariant value);
 
 private:
     friend class FGCanvasGroup;

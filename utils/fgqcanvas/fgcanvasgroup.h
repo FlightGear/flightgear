@@ -26,6 +26,8 @@ public:
     { return _quick; }
 
     void removeChild(FGCanvasElement* child);
+
+    void dumpElement() override;
 signals:
     void childAdded();
     void childRemoved(int index);

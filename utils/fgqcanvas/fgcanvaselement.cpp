@@ -158,6 +158,11 @@ void FGCanvasElement::polish()
     _polishRequired = false;
 }
 
+void FGCanvasElement::dumpElement()
+{
+
+}
+
 void FGCanvasElement::paint(FGCanvasPaintContext *context) const
 {
     if (!isVisible()) {
@@ -297,7 +302,7 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
         // ignore for now, we do geo projection server-side
         return true;
     } else if (nm == "id") {
-        connect(prop, &LocalProp::valueChanged, [this](QVariant value) { _svgElementId = value.toByteArray(); });
+        connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markSVGIDDirty);
         return true;
     } else if (prop->name() == "update") {
         // disable updates optionally?
@@ -481,6 +486,11 @@ void FGCanvasElement::markZIndexDirty(QVariant value)
 {
     _zIndex = value.toInt();
     _parent->markChildZIndicesDirty();
+}
+
+void FGCanvasElement::markSVGIDDirty(QVariant value)
+{
+    _svgElementId = value.toByteArray();
 }
 
 void FGCanvasElement::onVisibleChanged(QVariant value)

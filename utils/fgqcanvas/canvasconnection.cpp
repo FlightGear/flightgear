@@ -31,6 +31,7 @@
 #include "localprop.h"
 #include "fgqcanvasfontcache.h"
 #include "fgqcanvasimageloader.h"
+#include "jsonutils.h"
 
 CanvasConnection::CanvasConnection(QObject *parent) : QObject(parent)
 {
@@ -65,7 +66,7 @@ QJsonObject CanvasConnection::saveState() const
     QJsonObject json;
     json["url"] = m_webSocketUrl.toString();
     json["path"] = QString::fromUtf8(m_rootPropertyPath);
-    json["rect"] = QJsonArray{m_destRect.x(), m_destRect.y(), m_destRect.width(), m_destRect.height()};
+    json["rect"] = rectToJsonArray(m_destRect.toRect());
     return json;
 }
 
@@ -73,13 +74,7 @@ bool CanvasConnection::restoreState(QJsonObject state)
 {
     m_webSocketUrl = state.value("url").toString();
     m_rootPropertyPath = state.value("path").toString().toUtf8();
-    QJsonArray rect = state.value("rect").toArray();
-    if (rect.size() < 4) {
-        return false;
-    }
-
-    m_destRect = QRectF(rect[0].toDouble(), rect[1].toDouble(),
-            rect[2].toDouble(), rect[3].toDouble());
+    m_destRect = jsonArrayToRect(state.value("rect").toArray());
 
     emit geometryChanged();
     emit rootPathChanged();

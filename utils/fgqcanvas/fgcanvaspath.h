@@ -30,6 +30,7 @@ class FGCanvasPath : public FGCanvasElement
 public:
     FGCanvasPath(FGCanvasGroup* pr, LocalProp* prop);
 
+    void dumpElement() override;
 protected:
     virtual void doPaint(FGCanvasPaintContext* context) const override;
 
