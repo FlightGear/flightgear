@@ -1,18 +1,6 @@
 
-QT       += core gui gui-private quick websockets quick-private
+QT       += core gui widgets gui-private quick websockets quick-private
 CONFIG += c++11
-
-!ios:!android
-{
-    greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-    SOURCES += canvastreemodel.cpp \
-               elementdatamodel.cpp
-
-    HEADERS += canvastreemodel.h \
-               elementdatamodel.h
-
-}
 
 TARGET = fgqcanvas
 TEMPLATE = app
@@ -31,7 +19,9 @@ SOURCES += main.cpp\
     canvasitem.cpp \
     canvasconnection.cpp \
     applicationcontroller.cpp \
-    canvasdisplay.cpp
+    canvasdisplay.cpp \
+    canvaspainteddisplay.cpp \
+    jsonutils.cpp
 
 
 HEADERS +=  \
@@ -48,7 +38,9 @@ HEADERS +=  \
     canvasdisplay.h \
     canvasitem.h \
     fgqcanvasfontcache.h \
-    fgqcanvasimageloader.h
+    fgqcanvasimageloader.h \
+    canvaspainteddisplay.h \
+    jsonutils.h
 
 RESOURCES += \
     fgqcanvas_resources.qrc
