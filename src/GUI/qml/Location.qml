@@ -195,8 +195,8 @@ Item {
         wrapMode: Text.WordWrap
 
         text: qsTr("Enter the name, partial name or ident of a navaid or fix, or an " +
-                   "airport name or ICAO identifier. Alternatively, enter a latitude & longitude in " +
-                   "decimal notation, i.e. '-3.5, 55.4'")
+                   "airport name or ICAO identifier. Alternatively, enter a latitude & longitude: for " +
+                   "example 53.4,-3.4 or 18.4S, 87.23W")
     }
 
     Rectangle {

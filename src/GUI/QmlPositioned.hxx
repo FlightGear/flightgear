@@ -59,6 +59,16 @@ public:
     double elevationFt() const;
 
     bool valid() const;
+
+    enum Format {
+        DecimalDegrees = 0,
+        SignedDecimalDegrees
+    };
+
+    Q_INVOKABLE QString toString(Format fmt) const;
+
+    Q_ENUMS(Format);
+
 public slots:
     void setLatitudeDeg(double latitudeDeg);
     void setLongitudeDeg(double longitudeDeg);

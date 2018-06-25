@@ -27,6 +27,8 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 
+#include <simgear/misc/strutils.hxx>
+
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "LaunchConfig.hxx"
@@ -119,15 +121,6 @@ QString fixNavaidName(QString s)
     }
 
     return changedWords.join(QChar(' '));
-}
-
-QString formatGeodAsString(const SGGeod& geod)
-{
-    QChar ns = (geod.getLatitudeDeg() > 0.0) ? 'N' : 'S';
-    QChar ew = (geod.getLongitudeDeg() > 0.0) ? 'E' : 'W';
-
-    return QString::number(fabs(geod.getLongitudeDeg()), 'f',2 ) + ew + " " +
-            QString::number(fabs(geod.getLatitudeDeg()), 'f',2 ) + ns;
 }
 
 QVariant savePositionList(const FGPositionedList& posList)
@@ -590,29 +583,10 @@ void LocationController::showHistoryInSearchModel()
     m_searchModel->setItems(locs);
 }
 
-bool parseStringAsGeod(const QString& s, SGGeod& result)
-{
-    int commaPos = s.indexOf(QChar(','));
-    if (commaPos < 0)
-        return false;
-
-    bool ok;
-    double lon = s.leftRef(commaPos).toDouble(&ok);
-    if (!ok)
-        return false;
-
-    double lat = s.midRef(commaPos+1).toDouble(&ok);
-    if (!ok)
-        return false;
-
-    result = SGGeod::fromDeg(lon, lat);
-    return true;
-}
-
 QmlGeod LocationController::parseStringAsGeod(QString string) const
 {
     SGGeod g;
-    if (!::parseStringAsGeod(string, g)) {
+    if (!simgear::strutils::parseStringAsGeod(string.toStdString(), &g)) {
         return {};
     }
 
@@ -1109,7 +1083,10 @@ QString LocationController::description() const
 {
     if (!m_location) {
         if (m_locationIsLatLon) {
-            return tr("at position %1").arg(formatGeodAsString(m_geodLocation));
+            const auto s = simgear::strutils::formatGeodAsString(m_geodLocation,
+                                                                 simgear::strutils::LatLonFormat::DECIMAL_DEGREES,
+                                                                 simgear::strutils::DegreeSymbol::UTF8_DEGREE);
+            return tr("at position %1").arg(QString::fromStdString(s));
         }
 
         return tr("No location selected");

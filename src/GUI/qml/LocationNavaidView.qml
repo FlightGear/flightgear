@@ -60,7 +60,7 @@ Item {
             StyledText { // heading text
                 id: headingText
                 width: parent.width
-                text: "format lat-lon as string!"
+                text: qsTr("Position: %1").arg(geod.toString(0));
                 font.pixelSize: Style.headingFontPixelSize
                 Binding {
                     when: navaidData.valid

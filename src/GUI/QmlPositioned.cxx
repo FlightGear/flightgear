@@ -22,6 +22,8 @@
 
 #include <QDebug>
 
+#include <simgear/misc/strutils.hxx>
+
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Airports/airport.hxx>
@@ -29,6 +31,7 @@
 #include <Airports/runways.hxx>
 
 using namespace flightgear;
+using namespace simgear::strutils;
 
 QmlGeod::QmlGeod() :
     m_data(SGGeod::fromDeg(-9999.0, -9999.0))
@@ -68,6 +71,21 @@ double QmlGeod::elevationFt() const
 bool QmlGeod::valid() const
 {
     return m_data.isValid();
+}
+
+QString QmlGeod::toString(QmlGeod::Format fmt) const
+{
+    if (!m_data.isValid())
+        return "<invalid coordinate>";
+
+    LatLonFormat internalFormat = LatLonFormat::DECIMAL_DEGREES;
+    switch (fmt) {
+    case DecimalDegrees: internalFormat = LatLonFormat::DECIMAL_DEGREES; break;
+    case SignedDecimalDegrees: internalFormat = LatLonFormat::SIGNED_DECIMAL_DEGREES; break;
+    }
+
+    const auto s = formatGeodAsString(m_data, internalFormat, DegreeSymbol::UTF8_DEGREE);
+    return QString::fromStdString(s);
 }
 
 double QmlGeod::elevationM() const
