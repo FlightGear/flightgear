@@ -779,10 +779,13 @@ QVariantMap LocationController::saveLocation() const
             locationSet.insert("location-apt-final-distance", m_offsetNm);
             if (m_useActiveRunway) {
                 locationSet.insert("location-apt-runway", "ACTIVE");
-            } else if (m_detailLocation->type() == FGPositioned::RUNWAY) {
-                locationSet.insert("location-apt-runway", QString::fromStdString(m_detailLocation->ident()));
-            } else if (m_detailLocation->type() == FGPositioned::PARKING) {
-                locationSet.insert("location-apt-parking", QString::fromStdString(m_detailLocation->ident()));
+            } else if (m_detailLocation) {
+                const auto detailType = m_detailLocation->type();
+                if (detailType == FGPositioned::RUNWAY) {
+                    locationSet.insert("location-apt-runway", QString::fromStdString(m_detailLocation->ident()));
+                } else if (detailType == FGPositioned::PARKING) {
+                    locationSet.insert("location-apt-parking", QString::fromStdString(m_detailLocation->ident()));
+                }
             }
         } // of location is an airport
     } // of m_location is valid
