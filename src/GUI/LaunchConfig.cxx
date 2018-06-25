@@ -1,5 +1,7 @@
 #include "LaunchConfig.hxx"
 
+#include <set>
+
 #include <Main/options.hxx>
 #include <simgear/misc/sg_path.hxx>
 
@@ -20,31 +22,50 @@ void LaunchConfig::reset()
 
 void LaunchConfig::applyToOptions() const
 {
+    // build a set of all the extra args we have defined
+    std::set<std::string> extraArgNames;
+    for (auto arg : m_values) {
+        // don't override prop: arguments
+        if (arg.arg == "prop") continue;
+
+        if (arg.origin == ExtraArgs)
+            extraArgNames.insert(arg.arg.toStdString());
+    }
+
     flightgear::Options* options = flightgear::Options::sharedInstance();
-    std::for_each(m_values.begin(), m_values.end(), [options](const Arg& arg)
-                  {
-                      options->addOption(arg.arg.toStdString(), arg.value.toStdString());
-                  });
+    std::for_each(m_values.begin(), m_values.end(),
+                  [options, &extraArgNames](const Arg& arg)
+    {
+        const auto name = arg.arg.toStdString();
+        if (arg.origin == Launcher) {
+            auto it = extraArgNames.find(name);
+            if (it != extraArgNames.end()) {
+                qInfo() << "skipping arg:" << arg.arg << "=" << arg.value << "because the user has over-ridden it";
+                return;
+            }
+        }
+        options->addOption(name, arg.value.toStdString());
+    });
 }
 
-void LaunchConfig::setArg(QString name, QString value)
+void LaunchConfig::setArg(QString name, QString value, Origin origin)
 {
-    m_values.push_back(Arg(name, value));
+    m_values.push_back(Arg(name, value, origin));
 }
 
 void LaunchConfig::setArg(const std::string &name, const std::string &value)
 {
-    setArg(QString::fromStdString(name), QString::fromStdString(value));
+    setArg(QString::fromStdString(name), QString::fromStdString(value), Launcher);
 }
 
-void LaunchConfig::setProperty(QString path, QVariant value)
+void LaunchConfig::setProperty(QString path, QVariant value, Origin origin)
 {
-    m_values.push_back(Arg("prop", path + "=" + value.toString()));
+    m_values.push_back(Arg("prop", path + "=" + value.toString(), origin));
 }
 
 void LaunchConfig::setEnableDisableOption(QString name, bool value)
 {
-    m_values.push_back(Arg((value ? "enable-" : "disable-") + name));
+    m_values.push_back(Arg((value ? "enable-" : "disable-") + name, "", Launcher));
 }
 
 QString LaunchConfig::htmlForCommandLine()
@@ -59,20 +80,26 @@ QString LaunchConfig::htmlForCommandLine()
         }
         html += "</ul>\n";
     }
-#if 0
-    if (m_extraSettings) {
-        LauncherArgumentTokenizer tk;
-        Q_FOREACH(auto arg, tk.tokenize(m_extraSettings->argsText())) {
-    //        m_config->setArg(arg.arg, arg.value);
-        }
-    }
-#endif
+
     reset();
     collect();
 
     html += tr("<p>Options set in the launcher:</p>\n");
     html += "<ul>\n";
-    for (auto arg : values()) {
+    for (auto arg : valuesFromLauncher()) {
+        if (arg.value.isEmpty()) {
+            html += QString("<li>--") + arg.arg + "</li>\n";
+        } else if (arg.arg == "prop") {
+            html += QString("<li>--") + arg.arg + ":" + arg.value + "</li>\n";
+        } else {
+            html += QString("<li>--") + arg.arg + "=" + arg.value + "</li>\n";
+        }
+    }
+    html += "</ul>\n";
+
+    html += tr("<p>Options set as additional arguments:</p>\n");
+    html += "<ul>\n";
+    for (auto arg : valuesFromExtraArgs()) {
         if (arg.value.isEmpty()) {
             html += QString("<li>--") + arg.arg + "</li>\n";
         } else if (arg.arg == "prop") {
@@ -126,4 +153,20 @@ void LaunchConfig::setEnableDownloadDirUI(bool enableDownloadDirUI)
 auto LaunchConfig::values() const -> std::vector<Arg>
 {
     return m_values;
+}
+
+auto LaunchConfig::valuesFromLauncher() const -> std::vector<Arg>
+{
+    std::vector<Arg> result;
+    std::copy_if(m_values.begin(), m_values.end(), std::back_inserter(result), [](const Arg& a)
+    { return a.origin == Launcher; });
+    return result;
+}
+
+auto LaunchConfig::valuesFromExtraArgs() const -> std::vector<Arg>
+{
+    std::vector<Arg> result;
+    std::copy_if(m_values.begin(), m_values.end(), std::back_inserter(result), [](const Arg& a)
+    { return a.origin == ExtraArgs; });
+    return result;
 }

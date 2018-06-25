@@ -128,6 +128,14 @@ bool LauncherArgumentTokenizer::isValid() const
     return m_valid;
 }
 
+const std::set<std::string> unsupportedArgs({
+    "fg-aircraft", "fg-root", "fg-home", "aircraft-dir", "fg-scenery"});
+
+bool LauncherArgumentTokenizer::haveUnsupportedArgs() const
+{
+    return haveArgsIn(unsupportedArgs);
+}
+
 void LauncherArgumentTokenizer::setArgString(QString argString)
 {
     if (m_argString == argString)
@@ -138,20 +146,29 @@ void LauncherArgumentTokenizer::setArgString(QString argString)
     emit argStringChanged(m_argString);
 }
 
-const std::set<std::string> argBlacklist({
-    "lat", "lon", "aircraft", "airport", "parkpos", "season",
-    "runway", "vor", "time-offset", "timeofday"});
+const std::set<std::string> positionalArgs({
+    "lat", "lon", "vc", "vor", "ndb", "fix"
+    "airport", "parkpos", "runway",
+    "heading", "altitude", "offset-azimuth",
+    "offset-distance", "glideslope",
+    "on-ground"});
 
-bool LauncherArgumentTokenizer::haveProtectedArgs() const
+bool LauncherArgumentTokenizer::haveArgsIn(const std::set<std::string>& args) const
 {
     if (!m_valid)
         return false;
 
     auto n = std::count_if(m_tokens.begin(), m_tokens.end(),
-                           [](const ArgumentToken& tk)
+                           [&args](const ArgumentToken& tk)
     {
-        return (argBlacklist.find(tk.arg.toStdString()) != argBlacklist.end());
+        return (args.find(tk.arg.toStdString()) != args.end());
     });
 
     return (n > 0);
+}
+
+
+bool LauncherArgumentTokenizer::havePositionalArgs() const
+{
+    return haveArgsIn(positionalArgs);
 }

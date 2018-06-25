@@ -1,6 +1,8 @@
 #ifndef LAUNCHERARGUMENTTOKENIZER_HXX
 #define LAUNCHERARGUMENTTOKENIZER_HXX
 
+#include <set>
+
 #include <QString>
 #include <QList>
 #include <QObject>
@@ -23,7 +25,8 @@ class LauncherArgumentTokenizer : public QObject
     Q_PROPERTY(QVariantList tokens READ tokens NOTIFY argStringChanged)
 
     Q_PROPERTY(bool valid READ isValid NOTIFY argStringChanged)
-    Q_PROPERTY(bool warnProtectedArgs READ haveProtectedArgs NOTIFY argStringChanged)
+    Q_PROPERTY(bool havePositionalArgs READ havePositionalArgs NOTIFY argStringChanged)
+    Q_PROPERTY(bool haveUnsupportedArgs READ haveUnsupportedArgs NOTIFY argStringChanged)
 
 public:
     LauncherArgumentTokenizer();
@@ -38,7 +41,8 @@ public:
 
     bool isValid() const;
 
-    bool haveProtectedArgs() const;
+    bool haveUnsupportedArgs() const;
+    bool havePositionalArgs() const;
 public slots:
     void setArgString(QString argString);
 
@@ -46,6 +50,8 @@ signals:
     void argStringChanged(QString argString);
 
 private:
+    bool haveArgsIn(const std::set<std::string> &args) const;
+
     void tokenize(QString in);
 
     enum State {

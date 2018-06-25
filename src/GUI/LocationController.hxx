@@ -70,6 +70,10 @@ class LocationController : public QObject
     Q_PROPERTY(QmlPositioned* base READ baseLocation CONSTANT)
     Q_PROPERTY(QmlPositioned* detail READ detail CONSTANT)
     Q_PROPERTY(bool isBaseLatLon READ isBaseLatLon NOTIFY baseLocationChanged)
+
+    // allow collecting the location properties to be disabled, if the
+    // user is setting conflicting ones
+    Q_PROPERTY(bool skipFromArgs MEMBER m_skipFromArgs NOTIFY skipFromArgsChanged)
 public:
     explicit LocationController(QObject *parent = nullptr);
     ~LocationController();
@@ -184,6 +188,7 @@ Q_SIGNALS:
     void offsetChanged();
     void baseLocationChanged();
     void configChanged();
+    void skipFromArgsChanged();
 
 private Q_SLOTS:
     void onCollectConfig();
@@ -229,6 +234,7 @@ private:
     bool m_speedEnabled = false;
     AltitudeType m_altitudeType = Off;
     int m_flightLevel = 0;
+    bool m_skipFromArgs = false;
 };
 
 #endif // LOCATION_CONTROLLER_HXX

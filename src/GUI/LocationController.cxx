@@ -943,6 +943,11 @@ void LocationController::applyPositionOffset()
 
 void LocationController::onCollectConfig()
 {
+    if (m_skipFromArgs) {
+        qInfo() << Q_FUNC_INFO << "skipping argument collection";
+        return;
+    }
+
     if (m_locationIsLatLon) {
         m_config->setArg("lat", QString::number(m_geodLocation.getLatitudeDeg()));
         m_config->setArg("lon", QString::number(m_geodLocation.getLongitudeDeg()));
