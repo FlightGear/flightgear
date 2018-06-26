@@ -22,30 +22,35 @@ void LaunchConfig::reset()
 
 void LaunchConfig::applyToOptions() const
 {
-    // build a set of all the extra args we have defined
-    std::set<std::string> extraArgNames;
-    for (auto arg : m_values) {
-        // don't override prop: arguments
-        if (arg.arg == "prop") continue;
-
-        if (arg.origin == ExtraArgs)
-            extraArgNames.insert(arg.arg.toStdString());
-    }
-
+	const auto extraArgs = extraArgNames();
     flightgear::Options* options = flightgear::Options::sharedInstance();
     std::for_each(m_values.begin(), m_values.end(),
-                  [options, &extraArgNames](const Arg& arg)
+                  [options, &extraArgs](const Arg& arg)
     {
         const auto name = arg.arg.toStdString();
         if (arg.origin == Launcher) {
-            auto it = extraArgNames.find(name);
-            if (it != extraArgNames.end()) {
+            auto it = extraArgs.find(name);
+            if (it != extraArgs.end()) {
                 qInfo() << "skipping arg:" << arg.arg << "=" << arg.value << "because the user has over-ridden it";
                 return;
             }
         }
         options->addOption(name, arg.value.toStdString());
     });
+}
+
+std::set<std::string> LaunchConfig::extraArgNames() const
+{
+	// build a set of all the extra args we have defined
+	std::set<std::string> r;
+	for (auto arg : m_values) {
+		// don't override prop: arguments
+		if (arg.arg == "prop") continue;
+
+		if (arg.origin == ExtraArgs)
+			r.insert(arg.arg.toStdString());
+	}
+	return r;
 }
 
 void LaunchConfig::setArg(QString name, QString value, Origin origin)
@@ -84,16 +89,28 @@ QString LaunchConfig::htmlForCommandLine()
     reset();
     collect();
 
+	const auto extraArgs = extraArgNames();
+
     html += tr("<p>Options set in the launcher:</p>\n");
     html += "<ul>\n";
     for (auto arg : valuesFromLauncher()) {
+		auto it = extraArgs.find(arg.arg.toStdString());
+		html += "<li>";
+		bool strikeThrough = (it != extraArgs.end());
+		if (strikeThrough) {
+			html += "<i>";
+		}
         if (arg.value.isEmpty()) {
-            html += QString("<li>--") + arg.arg + "</li>\n";
+			html += QString("--") + arg.arg;
         } else if (arg.arg == "prop") {
-            html += QString("<li>--") + arg.arg + ":" + arg.value + "</li>\n";
+            html += QString("--") + arg.arg + ":" + arg.value;
         } else {
-            html += QString("<li>--") + arg.arg + "=" + arg.value + "</li>\n";
+            html += QString("--") + arg.arg + "=" + arg.value;
         }
+		if (strikeThrough) {
+			html += tr(" (will be skipped due to being specified as an additional argument)") + "</i> ";
+		}
+		html += "</li>\n";
     }
     html += "</ul>\n";
 

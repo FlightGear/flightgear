@@ -1,6 +1,7 @@
 #ifndef FG_GUI_LAUNCHCONFIG_HXX
 #define FG_GUI_LAUNCHCONFIG_HXX
 
+#include <set>
 #include <QObject>
 #include <QVariant>
 
@@ -72,6 +73,8 @@ signals:
     void collect();
     
 private:
+	std::set<std::string> extraArgNames() const;
+
     std::vector<Arg> m_values;
     QString m_defaultDownloadDir;
 };
