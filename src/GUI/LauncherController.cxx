@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QQuickWindow>
 #include <QQmlComponent>
+#include <QPushButton>
 
 // simgear headers
 #include <simgear/package/Install.hxx>
@@ -494,6 +495,16 @@ void LauncherController::fly()
 	}
 }
 
+void LauncherController::quit()
+{
+	if (m_inAppMode) {
+		m_keepRunningInAppMode = false;
+		m_appModeResult = false;
+	} else {
+		qApp->exit(0);
+	}
+}
+
 QStringList LauncherController::combinedSummary() const
 {
     return m_settingsSummary + m_environmentSummary;
@@ -637,4 +648,65 @@ QPointF LauncherController::mapToGlobal(QQuickItem *item, const QPointF &pos) co
     QPointF scenePos = item->mapToScene(pos);
     QQuickWindow* win = item->window();
     return win->mapToGlobal(scenePos.toPoint());
+}
+
+void LauncherController::requestRestoreDefaults()
+{
+	QMessageBox mbox;
+	mbox.setText(tr("Restore all settings to defaults?"));
+	mbox.setInformativeText(tr("Restoring settings to their defaults may affect available add-ons such as scenery or aircraft."));
+	QPushButton* quitButton = mbox.addButton(tr("Restore and restart now"), QMessageBox::YesRole);
+	mbox.addButton(QMessageBox::Cancel);
+	mbox.setDefaultButton(QMessageBox::Cancel);
+	mbox.setIconPixmap(QPixmap(":/app-icon-large"));
+
+	mbox.exec();
+	if (mbox.clickedButton() != quitButton) {
+		return;
+	}
+
+	{
+		QSettings settings;
+		settings.clear();
+		settings.setValue("restore-defaults-on-run", true);
+	}
+
+	flightgear::restartTheApp();
+}
+
+void LauncherController::requestChangeDataPath()
+{
+	QString currentLocText;
+	QSettings settings;
+	QString root = settings.value("fg-root").toString();
+	if (root.isNull()) {
+		currentLocText = tr("Currently the built-in data files are being used");
+	}
+	else {
+		currentLocText = tr("Currently using location: %1").arg(root);
+	}
+
+	QMessageBox mbox;
+	mbox.setText(tr("Change the data files used by FlightGear?"));
+	mbox.setInformativeText(tr("FlightGear requires additional files to operate. "
+		"(Also called the base package, or fg-data) "
+		"You can restart FlightGear and choose a "
+		"different data files location, or restore the default setting. %1").arg(currentLocText));
+	QPushButton* quitButton = mbox.addButton(tr("Restart FlightGear now"), QMessageBox::YesRole);
+	mbox.addButton(QMessageBox::Cancel);
+	mbox.setDefaultButton(QMessageBox::Cancel);
+	mbox.setIconPixmap(QPixmap(":/app-icon-large"));
+
+	mbox.exec();
+	if (mbox.clickedButton() != quitButton) {
+		return;
+	}
+
+	{
+		QSettings settings;
+		// set the option to the magic marker value
+		settings.setValue("fg-root", "!ask");
+	} // scope the ensure settings are written nicely
+
+	flightgear::restartTheApp();
 }

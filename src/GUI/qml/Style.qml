@@ -30,5 +30,7 @@ QtObject
     readonly property string disabledTextColor: "#6f6f6f"
 
     readonly property double panelOpacity: 0.7
+
+    readonly property int menuItemHeight: baseFontPixelSize + (margin * 2)
 }
 

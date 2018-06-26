@@ -100,6 +100,10 @@
         <file>qml/SidebarButton.qml</file>
         <file>qml/ViewCommandLine.qml</file>
         <file>qml/AddOnsHeader.qml</file>
+        <file>qml/Menu.qml</file>
+        <file>qml/BaseMenuItem.qml</file>
+        <file>qml/MenuItem.qml</file>
+        <file>qml/MenuDivider.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

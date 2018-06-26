@@ -8,8 +8,11 @@ Rectangle {
 
     property alias pagesModel: buttonRepeater.model
     property int selectedPage: 0
+    property alias showMenuIcon: menuIcon.visible
 
     signal selectPage(var pageSource);
+
+    signal showMenu();
 
     function setSelectedPage(index)
     {
@@ -19,8 +22,28 @@ Rectangle {
     Column {
         width: parent.width
         anchors.top: parent.top
-        anchors.topMargin: Style.margin
         anchors.bottom: flyButton.top
+        //spacing: Style.margin
+
+        Rectangle {
+            id: menuIcon
+            width: parent.width
+            height:menuIconImage.sourceSize.height
+            color: menuMouseArea.containsMouse ? Style.activeColor : "transparent"
+
+            Image {
+                id: menuIconImage
+                anchors.centerIn: parent
+                source: "qrc:///ellipsis-icon"
+            }
+
+            MouseArea {
+                id: menuMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: root.showMenu()
+            }
+        }
 
         Repeater {
             id: buttonRepeater

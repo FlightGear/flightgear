@@ -72,6 +72,8 @@ Item {
         pagesModel: pagesModel
         selectedPage: 0 // open on the summary page
 
+        onShowMenu: menu.show();
+
         onSelectPage: {
             pageLoader.source = pageSource
             root.state = pagesModel.get(selectedPage).state
@@ -122,6 +124,22 @@ Item {
         ignoreUnknownSignals: true
         onShowSelectedAircraft: root.selectPage(1)
         onShowSelectedLocation: root.selectPage(2)
+    }
+
+    Menu {
+        id: menu
+        z: 100
+
+        items: [
+            MenuItem { text:qsTr("Open saved configuration..."); enabled: false },
+            MenuItem { text:qsTr("Save configuration..."); enabled: false },
+            MenuDivider {},
+            MenuItem { text:qsTr("View command line"); onTriggered: _launcher.viewCommandLine(); },
+            MenuItem { text:qsTr("Select data files location..."); onTriggered: _launcher.requestChangeDataPath(); },
+            MenuItem { text:qsTr("Restore default settings..."); onTriggered: _launcher.requestRestoreDefaults(); },
+            MenuDivider {},
+            MenuItem { text:qsTr("Quit"); shortcut: "Ctrl+Q"; onTriggered: _launcher.quit();  } 
+        ]
     }
 
 

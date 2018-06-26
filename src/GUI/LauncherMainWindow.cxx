@@ -6,7 +6,6 @@
 #include <QDebug>
 #include <QMenu>
 #include <QMenuBar>
-#include <QPushButton>
 
 #include <QQuickItem>
 #include <QQmlEngine>
@@ -27,8 +26,6 @@
 #include "LocationController.hxx"
 
 
-extern void restartTheApp(QStringList fgArgs);
-
 //////////////////////////////////////////////////////////////////////////////
 
 LauncherMainWindow::LauncherMainWindow() :
@@ -45,11 +42,11 @@ LauncherMainWindow::LauncherMainWindow() :
    QMenu* toolsMenu = mb->addMenu(tr("Tools"));
    QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
    connect(restoreDefaultsAction, &QAction::triggered,
-           this, &LauncherMainWindow::onRestoreDefaults);
+	   m_controller, &LauncherController::requestRestoreDefaults);
 
    QAction* changeDataAction = toolsMenu->addAction(tr("Select data files location..."));
    connect(changeDataAction, &QAction::triggered,
-           this, &LauncherMainWindow::onChangeDataDir);
+	   m_controller, &LauncherController::requestChangeDataPath);
 
    QAction* viewCommandLineAction = toolsMenu->addAction(tr("View command-line"));
    connect(viewCommandLineAction, &QAction::triggered,
@@ -58,7 +55,7 @@ LauncherMainWindow::LauncherMainWindow() :
 
     QAction* qa = new QAction(this);
     qa->setShortcut(QKeySequence("Ctrl+Q"));
-    connect(qa, &QAction::triggered, this, &LauncherMainWindow::onQuit);
+    connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
 
     m_controller->restoreSettings();
     flightgear::launcherSetSceneryPaths();
@@ -88,6 +85,8 @@ LauncherMainWindow::LauncherMainWindow() :
     ctx->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
     setSource(QUrl("qrc:///qml/Launcher.qml"));
+
+	setMinimumSize(QSize(300, 400));
 }
 
 #if 0
@@ -125,71 +124,5 @@ bool LauncherMainWindow::execInApp()
     }
 
     return m_controller->inAppResult();
-}
-
-void LauncherMainWindow::onQuit()
-{
-	qApp->exit(-1);
-}
-
-void LauncherMainWindow::onRestoreDefaults()
-{
-    QMessageBox mbox;
-    mbox.setText(tr("Restore all settings to defaults?"));
-    mbox.setInformativeText(tr("Restoring settings to their defaults may affect available add-ons such as scenery or aircraft."));
-    QPushButton* quitButton = mbox.addButton(tr("Restore and restart now"), QMessageBox::YesRole);
-    mbox.addButton(QMessageBox::Cancel);
-    mbox.setDefaultButton(QMessageBox::Cancel);
-    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
-
-    mbox.exec();
-    if (mbox.clickedButton() != quitButton) {
-        return;
-    }
-
-    {
-        QSettings settings;
-        settings.clear();
-        settings.setValue("restore-defaults-on-run", true);
-    }
-
-    flightgear::restartTheApp();
-}
-
-
-void LauncherMainWindow::onChangeDataDir()
-{
-    QString currentLocText;
-    QSettings settings;
-    QString root = settings.value("fg-root").toString();
-    if (root.isNull()) {
-        currentLocText = tr("Currently the built-in data files are being used");
-    } else {
-        currentLocText = tr("Currently using location: %1").arg(root);
-    }
-
-    QMessageBox mbox;
-    mbox.setText(tr("Change the data files used by FlightGear?"));
-    mbox.setInformativeText(tr("FlightGear requires additional files to operate. "
-                               "(Also called the base package, or fg-data) "
-                               "You can restart FlightGear and choose a "
-                               "different data files location, or restore the default setting. %1").arg(currentLocText));
-    QPushButton* quitButton = mbox.addButton(tr("Restart FlightGear now"), QMessageBox::YesRole);
-    mbox.addButton(QMessageBox::Cancel);
-    mbox.setDefaultButton(QMessageBox::Cancel);
-    mbox.setIconPixmap(QPixmap(":/app-icon-large"));
-
-    mbox.exec();
-    if (mbox.clickedButton() != quitButton) {
-        return;
-    }
-
-    {
-        QSettings settings;
-        // set the option to the magic marker value
-        settings.setValue("fg-root", "!ask");
-    } // scope the ensure settings are written nicely
-
-    flightgear::restartTheApp();
 }
 

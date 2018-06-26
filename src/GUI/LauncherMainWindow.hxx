@@ -48,19 +48,6 @@ public:
     bool wasRejected();
 
 
-protected:
-
-private slots:
-
-
-    void onRestoreDefaults();
-
-    void onQuit();
-
- //   void onQuickStatusChanged(QQuickWidget::Status status);
-
-    void onChangeDataDir();
-
 private:
     LauncherController* m_controller;
 };

@@ -193,7 +193,11 @@ public slots:
     void setEnvironmentSummary(QStringList environmentSummary);
 
     void fly();
+	void quit();
 
+	void requestRestoreDefaults();
+
+	void requestChangeDataPath();
 private slots:
 
     void onAircraftInstalledCompleted(QModelIndex index);
