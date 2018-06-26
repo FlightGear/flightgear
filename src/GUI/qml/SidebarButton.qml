@@ -16,7 +16,10 @@ Item {
     property bool selected: false
     property bool enabled: true
 
+    property string disabledText: ""
+
     Rectangle {
+        id: baseRect
         anchors.fill: parent
         visible: root.enabled & (root.selected | mouse.containsMouse)
         color: Style.activeColor
@@ -42,9 +45,78 @@ Item {
 
     MouseArea {
         id: mouse
-        enabled: root.enabled
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: root.clicked();
+        onClicked: if (root.enabled) root.clicked();
+
+        onEntered: {
+            // disabled tooltip
+            if (!root.enabled) tooltipTimer.restart()
+        }
+
+        onExited: {
+            tooltipTimer.stop()
+            disabledTextBox.hide();
+        }
     }
+
+    Timer {
+        id: tooltipTimer
+        onTriggered: {
+            disabledTextBox.show()
+        }
+    }
+
+    Rectangle {
+        id: disabledTextBox
+        height:disabledTextContent.implicitHeight + Style.margin * 2
+        width: disabledTextContent.implicitWidth + Style.margin * 2
+        color: Style.themeColor
+        visible: false  
+
+        anchors.left: baseRect.right
+        anchors.verticalCenter: baseRect.verticalCenter
+
+        function show() {
+            hideDisabledAnimation.stop();
+            showDisabledAnimation.start();
+        }
+
+        function hide() {
+            if (!visible)
+                return;
+            showDisabledAnimation.stop();
+            hideDisabledAnimation.start();
+        }
+
+        Text {
+            id: disabledTextContent
+            x: Style.margin
+            y: Style.margin
+            color: "white"
+            font.pixelSize: Style.subHeadingFontPixelSize
+            verticalAlignment: Text.AlignVCenter
+            text: root.disabledText
+        }
+
+        SequentialAnimation {
+            id: showDisabledAnimation
+            PropertyAction { target:disabledTextBox; property:"visible"; value: true }
+            NumberAnimation { 
+                target:disabledTextBox; property:"opacity"
+                from: 0.0; to: 1.0
+                duration: 500
+            }
+        }
+
+        SequentialAnimation {
+            id: hideDisabledAnimation
+            NumberAnimation { 
+                target:disabledTextBox; property:"opacity"
+                from: 1.0; to: 0.0
+                duration: 500
+            }
+            PropertyAction { target:disabledTextBox; property:"visible"; value: false }
+        }
+    } // of disabled text box
 }

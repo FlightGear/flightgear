@@ -33,6 +33,8 @@ Rectangle {
                     root.selectPage(model.pageSource);
                 }
 
+                enabled: !model.buttonDisabled
+                disabledText: model.hasOwnProperty("disabledText") ? model.disabledText : ""
                 selected: (model.index === root.selectedPage)
             }
         }
@@ -44,6 +46,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Style.margin
         enabled: _launcher.canFly
+        disabledText: qsTr("The selected aircraft is not installed")
         icon: "qrc:///toolbox-fly"
         onClicked: _launcher.fly();
     }

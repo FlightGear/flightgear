@@ -8,7 +8,13 @@ Item {
         id: pagesModel
         ListElement { title: qsTr("Summary"); pageSource: "qrc:///qml/Summary.qml"; iconPath: "qrc:///toolbox-summary"; state:"loader" }
         ListElement { title: qsTr("Aircraft"); pageSource: "qrc:///qml/AircraftList.qml"; iconPath: "qrc:///toolbox-aircraft"; state:"loader" }
-        ListElement { title: qsTr("Location"); pageSource: "qrc:///qml/Location.qml"; iconPath: "qrc:///toolbox-location"; state:"loader" }
+        
+        ListElement { 
+            title: qsTr("Location"); pageSource: "qrc:///qml/Location.qml"; 
+            iconPath: "qrc:///toolbox-location"; state:"loader"
+            buttonDisabled: false
+            disabledText: qsTr("Location page disabled due to conflicting user arguments (in Settings)");
+        }
 
         // due to some design stupidity by James, we can't use the Loader mechanism for these pages; they need to exist
         // permanently so that collecting args works. So we instantiate them down below, and toggle the visiblity
@@ -19,6 +25,11 @@ Item {
 
         ListElement { title: qsTr("Add-ons"); pageSource: "qrc:///qml/AddOns.qml"; iconPath: "qrc:///toolbox-addons"; state:"loader" }
 
+    }
+
+    Connections {
+        target: _location
+        onSkipFromArgsChanged: pagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
     }
 
     states: [

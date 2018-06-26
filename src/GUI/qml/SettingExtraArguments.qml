@@ -22,7 +22,20 @@ SettingControl {
             enabled: root.enabled
             text: qsTr("Enter additional command-line arguments if any are required. " +
                        "See <a href=\"http://flightgear.sourceforge.net/getstart-en/getstart-enpa2.html#x5-450004.5\">here</a> " +
-                       "for documentation on possible arguments.");
+                       "for documentation on possible arguments. " +
+                       "<br>" +
+                       "<b>Warning:</b> values entered here always override other settings; <a href=\"#view-command-line\">click here</a> " +
+                       "to view the final set of arguments that will be used"
+                       );
+
+            onLinkActivated: {
+                if (link == "#view-command-line") {
+                    _launcher.viewCommandLine();
+                } else {
+                    Qt.openUrlExternally(link)
+                }
+            }
+
             width: parent.width
         }
 
