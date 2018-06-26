@@ -35,7 +35,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
-static quint32 CACHE_VERSION = 8;
+static quint32 CACHE_VERSION = 10;
 
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
 //const int STANDARD_THUMBNAIL_WIDTH = 172;
@@ -63,7 +63,10 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
     }
 
     description = sim->getStringValue("description");
-    authors =  sim->getStringValue("author");
+	// trim the description to ensure the alphabetical sort
+	// doesn't get thrown off by leading whitespace
+	description = description.trimmed();
+    authors = sim->getStringValue("author");
 
     if (sim->hasChild("rating")) {
         SGPropertyNode_ptr ratingsNode = sim->getNode("rating");
