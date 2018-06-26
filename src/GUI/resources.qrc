@@ -90,6 +90,7 @@
         <file>qml/LocationAirportView.qml</file>
         <file>qml/LocationNavaidView.qml</file>
         <file alias="linear-spinner">qml/icons8-linear-spinner.gif</file>
+        <file alias="ellipsis-icon">qml/icons8-ellipsis-filled-50.png</file>
         <file>qml/RadioButton.qml</file>
         <file>qml/IntegerSpinbox.qml</file>
         <file>qml/DoubleSpinbox.qml</file>
