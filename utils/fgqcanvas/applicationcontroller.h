@@ -52,7 +52,11 @@ public:
 
     void setWindow(QWindow* window);
 
+    void restoreWindowState();
+
     void loadFromFile(QString path);
+
+    void setDaemonMode();
 
     Q_INVOKABLE void query();
     Q_INVOKABLE void cancelQuery();
@@ -146,7 +150,11 @@ private:
     QVariantList m_configs;
     QNetworkReply* m_query = nullptr;
     QVariantList m_snapshots;
+
     QWindow* m_window = nullptr;
+    Qt::WindowState m_windowState = Qt::WindowNoState;
+
+    bool m_daemonMode = false;
 };
 
 #endif // APPLICATIONCONTROLLER_H

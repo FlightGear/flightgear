@@ -33,7 +33,6 @@ CanvasPaintedDisplay::CanvasPaintedDisplay(QQuickItem* parent) :
 
 CanvasPaintedDisplay::~CanvasPaintedDisplay()
 {
-    qDebug() << "did destory canvas painted";
 }
 
 void CanvasPaintedDisplay::paint(QPainter *painter)
@@ -64,7 +63,7 @@ void CanvasPaintedDisplay::setCanvas(CanvasConnection *canvas)
 
     if (m_connection) {
         disconnect(m_connection, nullptr, this, nullptr);
-        m_rootElement.reset();
+        delete m_rootElement;
     }
 
     m_connection = canvas;
@@ -84,29 +83,35 @@ void CanvasPaintedDisplay::setCanvas(CanvasConnection *canvas)
 
 void CanvasPaintedDisplay::onConnectionDestroyed()
 {
+    qDebug() << "saw connection destroyed";
     m_connection = nullptr;
-    emit canvasChanged(m_connection);
+    delete m_rootElement;
 
-    m_rootElement.reset();
+    emit canvasChanged(m_connection);
 }
 
 void CanvasPaintedDisplay::onConnectionStatusChanged()
 {
     if ((m_connection->status() == CanvasConnection::Connected) ||
-            (m_connection->status() == CanvasConnection::Snapshot))
+        (m_connection->status() == CanvasConnection::Snapshot))
     {
         buildElements();
+    } else {
+        qDebug() << Q_FUNC_INFO << "clearing root element";
+        delete m_rootElement;
+        update();
     }
 }
 
 void CanvasPaintedDisplay::buildElements()
 {
-    m_rootElement.reset(new FGCanvasGroup(nullptr, m_connection->propertyRoot()));
+    qDebug() << Q_FUNC_INFO;
+    m_rootElement = new FGCanvasGroup(nullptr, m_connection->propertyRoot());
     // this is important to elements can discover their connection
     // by walking their parent chain
     m_rootElement->setParent(m_connection);
 
-    connect(m_rootElement.get(), &FGCanvasGroup::canvasSizeChanged,
+    connect(m_rootElement, &FGCanvasGroup::canvasSizeChanged,
             this, &CanvasPaintedDisplay::onCanvasSizeChanged);
 
     onCanvasSizeChanged();

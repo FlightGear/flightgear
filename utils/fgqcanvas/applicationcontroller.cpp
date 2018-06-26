@@ -64,6 +64,13 @@ void ApplicationController::setWindow(QWindow *window)
     m_window = window;
 }
 
+void ApplicationController::restoreWindowState()
+{
+    if (!m_window)
+        return;
+    m_window->setWindowState(m_windowState);
+}
+
 void ApplicationController::loadFromFile(QString path)
 {
     if (!QFile::exists(path)) {
@@ -77,6 +84,11 @@ void ApplicationController::loadFromFile(QString path)
     }
 
     restoreState(f.readAll());
+}
+
+void ApplicationController::setDaemonMode()
+{
+    m_daemonMode = true;
 }
 
 void ApplicationController::save(QString configName)
@@ -440,12 +452,18 @@ void ApplicationController::restoreState(QByteArray bytes)
             m_window->setGeometry(r);
         }
 
-        m_window->setWindowState(static_cast<Qt::WindowState>(json.value("window-state").toInt()));
+        // we have to cache the state becuase it seems to be ignored
+        // before show is called();
+        m_windowState = static_cast<Qt::WindowState>(json.value("window-state").toInt());
+        m_window->setWindowState(m_windowState);
     }
     // background color
 
     for (auto c : json.value("canvases").toArray()) {
         auto cc = new CanvasConnection(this);
+        if (m_daemonMode)
+            cc->setAutoReconnect();
+
         cc->setNetworkAccess(m_netAccess);
         m_activeCanvases.append(cc);
         cc->restoreState(c.toObject());

@@ -41,6 +41,11 @@ CanvasConnection::CanvasConnection(QObject *parent) : QObject(parent)
             this, &CanvasConnection::onTextMessageReceived);
 
     m_destRect = QRectF(50, 50, 400, 400);
+    m_reconnectTimer = new QTimer(this);
+    m_reconnectTimer->setInterval(1000 * 10);
+    m_reconnectTimer->setSingleShot(true);
+    connect(m_reconnectTimer, &QTimer::timeout,
+            this, &CanvasConnection::reconnect);
 }
 
 CanvasConnection::~CanvasConnection()
@@ -59,6 +64,11 @@ void CanvasConnection::setRootPropertyPath(QByteArray path)
 {
     m_rootPropertyPath = path;
     emit rootPathChanged();
+}
+
+void CanvasConnection::setAutoReconnect()
+{
+    m_autoReconnect = true;
 }
 
 QJsonObject CanvasConnection::saveState() const
@@ -104,6 +114,7 @@ void CanvasConnection::restoreSnapshot(QDataStream &ds)
 
 void CanvasConnection::reconnect()
 {
+    qDebug() << "starting connection attempt to:" << m_webSocketUrl;
     m_webSocket.open(m_webSocketUrl);
     setStatus(Connecting);
 }
@@ -185,6 +196,7 @@ FGQCanvasFontCache *CanvasConnection::fontCache() const
 
 void CanvasConnection::onWebSocketConnected()
 {
+    qDebug() << Q_FUNC_INFO << m_webSocketUrl;
     m_localPropertyRoot.reset(new LocalProp{nullptr, NameIndexTuple("")});
     setStatus(Connected);
 }
@@ -272,10 +284,9 @@ void CanvasConnection::onWebSocketClosed()
 
     setStatus(Closed);
 
-    // if we're in automatic mode, start reconnection timer
-// update state
-
-    //   ui->stack->setCurrentIndex(0);
+    if (m_autoReconnect) {
+        m_reconnectTimer->start();
+    }
 }
 
 void CanvasConnection::setStatus(CanvasConnection::Status newStatus)

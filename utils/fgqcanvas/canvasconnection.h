@@ -26,6 +26,7 @@
 #include <QUrl>
 #include <QRectF>
 #include <QPointer>
+#include <QTimer>
 
 class LocalProp;
 class QNetworkAccessManager;
@@ -53,6 +54,8 @@ public:
 
     void setNetworkAccess(QNetworkAccessManager *dl);
     void setRootPropertyPath(QByteArray path);
+
+    void setAutoReconnect();
 
     enum Status
     {
@@ -132,6 +135,9 @@ private:
 
     QWebSocket m_webSocket;
     QNetworkAccessManager* m_netAccess = nullptr;
+    QTimer* m_reconnectTimer = nullptr;
+    bool m_autoReconnect = false;
+
     std::unique_ptr<LocalProp> m_localPropertyRoot;
     QHash<int, QPointer<LocalProp>> idPropertyDict;
     Status m_status = NotConnected;

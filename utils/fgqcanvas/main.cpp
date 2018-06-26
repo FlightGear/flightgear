@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
     quickView.rootContext()->setContextProperty("_application", &appController);
 
     if (argc > 1) {
+        appController.setDaemonMode();
         appController.loadFromFile(QString::fromLocal8Bit(argv[1]));
     } else {
         quickView.setWidth(1024);
@@ -58,6 +59,8 @@ int main(int argc, char *argv[])
     quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
     quickView.setResizeMode(QQuickView::SizeRootObjectToView);
     quickView.show();
+
+    appController.restoreWindowState();
 
     int result = a.exec();
 

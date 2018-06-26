@@ -253,7 +253,6 @@ void FGCanvasText::markStyleDirty()
 
 void FGCanvasText::doDestroy()
 {
-    qDebug() << Q_FUNC_INFO;
     delete _quickItem;
 }
 

@@ -31,6 +31,16 @@ Rectangle {
         onClicked: {
             uiVisible = !uiVisible;
         }
+
+        hoverEnabled: uiVisible
+        onMouseXChanged: idleTimer.restart()
+        onMouseYChanged: idleTimer.restart()
+    }
+
+    Timer {
+        id: idleTimer
+        interval: 1000 * 10
+        onTriggered:  { uiVisible = false; }
     }
 
     Repeater {
@@ -64,5 +74,7 @@ Rectangle {
         id: snapshotsPanel
         SnapshotsPanel { }
     }
+
+
 
 }

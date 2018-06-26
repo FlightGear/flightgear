@@ -21,6 +21,7 @@
 #include <memory>
 
 #include <QQuickPaintedItem>
+#include <QPointer>
 
 class CanvasConnection;
 class FGCanvasGroup;
@@ -67,7 +68,7 @@ private:
     void buildElements();
 
     CanvasConnection* m_connection = nullptr;
-    std::unique_ptr<FGCanvasGroup> m_rootElement;
+    QPointer<FGCanvasGroup> m_rootElement;
    // QQuickItem* m_rootItem = nullptr;
     QSizeF m_sourceSize;
 };

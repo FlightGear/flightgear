@@ -102,7 +102,9 @@ FGCanvasElement::FGCanvasElement(FGCanvasGroup* pr, LocalProp* prop) :
 void FGCanvasElement::onPropDestroyed()
 {
     doDestroy();
-    const_cast<FGCanvasGroup*>(_parent)->removeChild(this);
+    if (_parent) {
+        const_cast<FGCanvasGroup*>(_parent)->removeChild(this);
+    }
     deleteLater();
 }
 
