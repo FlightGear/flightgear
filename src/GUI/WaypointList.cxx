@@ -382,6 +382,7 @@ void WaypointList::draw( int dx, int dy )
   y -= (_scrollPx % rowHeight); // partially draw the first row
   
   _arrowWidth = legendFont.getStringWidth(">");
+  _latLonFormat = static_cast<simgear::strutils::LatLonFormat>(fgGetInt("/sim/lon-lat-format"));
   
   RoutePath path(_model->flightplan());
   
@@ -502,12 +503,10 @@ void WaypointList::drawRowText(int x, int baseline, int rowIndex, const RoutePat
         if (_showLatLon) {
           // only show for non-dynamic waypoints
           if (!wp->flag(WPT_DYNAMIC)) {
-            SGGeod p(wp->position());
-            char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
-            char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
-
-            ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
-              fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
+            const auto s = simgear::strutils::formatGeodAsString(wp->position(),
+                                                                 _latLonFormat);
+            const auto bytesToCopy = std::min((size_t) 128 - count, s.size() + 1);
+            ::memcpy(buffer, s.c_str(), bytesToCopy);
           } else {
             buffer[0] = 0;
           }

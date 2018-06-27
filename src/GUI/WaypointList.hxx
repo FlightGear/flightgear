@@ -7,6 +7,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <plib/pu.h>
 
@@ -150,6 +151,9 @@ private:
   SGTimeStamp _blinkTimer;
   bool _blink;
   int _arrowWidth;
+  
+  // cached value from /sim/lon-lat-format
+  simgear::strutils::LatLonFormat _latLonFormat = simgear::strutils::LatLonFormat::DECIMAL_DEGREES;
 };
 
 class ScrolledWaypointList : public puGroup
