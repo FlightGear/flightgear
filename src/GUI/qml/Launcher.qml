@@ -131,8 +131,8 @@ Item {
         z: 100
 
         items: [
-            MenuItem { text:qsTr("Open saved configuration..."); enabled: false },
-            MenuItem { text:qsTr("Save configuration..."); enabled: false },
+            MenuItem { text:qsTr("Open saved configuration..."); onTriggered: _launcher.openConfig(); },
+            MenuItem { text:qsTr("Save configuration as..."); onTriggered: _launcher.saveConfigAs(); },
             MenuDivider {},
             MenuItem { text:qsTr("View command line"); onTriggered: _launcher.viewCommandLine(); },
             MenuItem { text:qsTr("Select data files location..."); onTriggered: _launcher.requestChangeDataPath(); },

@@ -391,12 +391,30 @@ void LocationController::setLaunchConfig(LaunchConfig *config)
 {
     m_config = config;
     connect(m_config, &LaunchConfig::collect, this, &LocationController::onCollectConfig);
+
+    connect(m_config, &LaunchConfig::save, this, &LocationController::onSaveCurrentLocation);
+    connect(m_config, &LaunchConfig::restore, this, &LocationController::onRestoreCurrentLocation);
+
 }
 
-void LocationController::restoreSettings()
+void LocationController::restoreSearchHistory()
 {
     QSettings settings;
     m_recentLocations = loadPositionedList(settings.value("recent-locations"));
+}
+
+void LocationController::onRestoreCurrentLocation()
+{
+    QVariantMap vm = m_config->getValueForKey("", "current-location", QVariantMap()).toMap();
+    if (vm.empty())
+        return;
+
+    restoreLocation(vm);
+}
+
+void LocationController::onSaveCurrentLocation()
+{
+    m_config->setValueForKey("", "current-location", saveLocation());
 }
 
 bool LocationController::isParkedLocation() const
@@ -417,24 +435,25 @@ bool LocationController::isAirborneLocation() const
     const bool altIsPositive = (m_altitudeFt > 0);
 
     if (m_locationIsLatLon) {
-        return altIsPositive;
+        return (m_altitudeType != AltitudeType::Off) && altIsPositive;
     }
 
     if (m_airportLocation) {
-        const bool onRunway = (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY));
-        if (onRunway && m_offsetEnabled) {
+        const bool onRunway =
+                (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY)) ||
+                m_useActiveRunway;
+
+        if (onRunway && m_onFinal) {
             // in this case no altitude might be set, but we assume
-            // it's still an airborne pos
+            // it's still an airborne position
             return true;
         }
 
-        // this allows for people using offsets from a parking position or
-        // similar weirdness :)
-        return altIsPositive;
+        return false;
     }
 
     // relative to a navaid or fix - base off altitude.
-    return altIsPositive;
+    return (m_altitudeType != AltitudeType::Off) && altIsPositive;
 }
 
 int LocationController::offsetRadial() const
@@ -709,7 +728,7 @@ void LocationController::restoreLocation(QVariantMap l)
 
         if (l.contains("location-apt-runway")) {
             QString runway = l.value("location-apt-runway").toString().toUpper();
-            if (runway == "ACTIVE") {
+            if (runway == QStringLiteral("ACTIVE")) {
                 m_useActiveRunway = true;
             } else {
                 m_detailLocation = m_airportLocation->getRunwayByIdent(runway.toStdString());

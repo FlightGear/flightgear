@@ -11,6 +11,7 @@
 #include <QQuickWindow>
 #include <QQmlComponent>
 #include <QPushButton>
+#include <QFileDialog>
 
 // simgear headers
 #include <simgear/package/Install.hxx>
@@ -61,6 +62,8 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
 
     m_config = new LaunchConfig(this);
     connect(m_config, &LaunchConfig::collect, this, &LauncherController::collectAircraftArgs);
+    connect(m_config, &LaunchConfig::save, this, &LauncherController::saveAircraft);
+    connect(m_config, &LaunchConfig::restore, this, &LauncherController::restoreAircraft);
 
     m_location->setLaunchConfig(m_config);
     connect(m_location, &LocationController::descriptionChanged,
@@ -165,7 +168,7 @@ bool LauncherController::inAppResult() const
 	return m_appModeResult;
 }
 
-void LauncherController::restoreSettings()
+void LauncherController::initialRestoreSettings()
 {
     m_selectedAircraft = m_aircraftHistory->mostRecent();
     if (m_selectedAircraft.isEmpty()) {
@@ -179,8 +182,7 @@ void LauncherController::restoreSettings()
         }
     }
 
-
-    m_location->restoreSettings();
+    m_location->restoreSearchHistory();
     QVariantMap currentLocation = m_locationHistory->mostRecent();
     if (currentLocation.isEmpty()) {
         // use the default
@@ -193,19 +195,22 @@ void LauncherController::restoreSettings()
     }
     m_location->restoreLocation(currentLocation);
 
+    emit selectedAircraftChanged(m_selectedAircraft);
+
     updateSelectedAircraft();
     m_serversModel->requestRestore();
+    m_aircraftState = m_config->getValueForKey("", "selected-aircraft-state", QString()).toString();
+    emit selectedAircraftStateChanged();
 
     emit summaryChanged();
  }
 
 void LauncherController::saveSettings()
 {
-    emit requestSaveState();
-
     QSettings settings;
     settings.setValue("window-geometry", m_window->geometry());
 
+    m_config->saveConfigToINI();
     m_aircraftHistory->saveToSettings();
     m_locationHistory->saveToSettings();
 }
@@ -230,6 +235,18 @@ void LauncherController::collectAircraftArgs()
         }
     }
 
+    if (m_selectedAircraftInfo->hasStates() && !m_aircraftState.isEmpty()) {
+        QString state = m_aircraftState;
+        if ((m_aircraftState == "auto") && !m_selectedAircraftInfo->haveExplicitAutoState()) {
+            state = selectAircraftStateAutomatically();
+            qInfo() << "doing launcher auto state selection, picked:" + state;
+        }
+
+        if (!state.isEmpty()) {
+            m_config->setArg("state", state);
+        }
+    }
+
     // scenery paths
     QSettings settings;
     Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
@@ -240,6 +257,23 @@ void LauncherController::collectAircraftArgs()
     Q_FOREACH(QString path, settings.value("aircraft-paths").toStringList()) {
         m_config->setArg("fg-aircraft", path);
     }
+}
+
+void LauncherController::saveAircraft()
+{
+    m_config->setValueForKey("", "selected-aircraft", m_selectedAircraft);
+    if (!m_aircraftState.isEmpty()) {
+        m_config->setValueForKey("", "selected-aircraft-state", m_aircraftState);
+    }
+}
+
+void LauncherController::restoreAircraft()
+{
+    m_selectedAircraft = m_config->getValueForKey("", "selected-aircraft", QUrl()).toUrl();
+    m_aircraftState = m_config->getValueForKey("", "selected-aircraft-state", QString()).toString();
+    emit selectedAircraftChanged(m_selectedAircraft);
+    updateSelectedAircraft();
+    emit selectedAircraftStateChanged();
 }
 
 void LauncherController::doRun()
@@ -318,8 +352,13 @@ QString LauncherController::selectAircraftStateAutomatically()
     if (!m_selectedAircraftInfo)
         return {};
 
-    if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("approach")) 
-    {
+    if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("cruise")) {
+        if (m_location->altitudeFt() > 6000) {
+            return "cruise";
+        }
+    }
+
+    if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("approach")) {
         return "approach";
     }
 
@@ -452,8 +491,11 @@ void LauncherController::setSelectedAircraft(QUrl selectedAircraft)
         return;
 
     m_selectedAircraft = selectedAircraft;
+    m_aircraftState.clear();
+
     updateSelectedAircraft();
     emit selectedAircraftChanged(m_selectedAircraft);
+    emit selectedAircraftStateChanged();
 }
 
 void LauncherController::setSettingsSearchTerm(QString settingsSearchTerm)
@@ -708,5 +750,24 @@ void LauncherController::requestChangeDataPath()
 		settings.setValue("fg-root", "!ask");
 	} // scope the ensure settings are written nicely
 
-	flightgear::restartTheApp();
+    flightgear::restartTheApp();
+}
+
+void LauncherController::openConfig()
+{
+    QString file = QFileDialog::getOpenFileName(nullptr, tr("Choose a saved configuration"),
+       {}, "*.fglaunch");
+    if (file.isEmpty())
+        return;
+
+    m_config->loadConfigFromFile(file);
+}
+
+void LauncherController::saveConfigAs()
+{
+    QString file = QFileDialog::getSaveFileName(nullptr, tr("Save the current configuration"),
+       {}, "*.fglaunch");
+    if (file.isEmpty())
+        return;
+    m_config->saveConfigToFile(file);
 }

@@ -39,6 +39,15 @@ LauncherMainWindow::LauncherMainWindow() :
 #if defined(Q_OS_MAC)
    QMenuBar* mb = new QMenuBar();
 
+   QMenu* fileMenu = mb->addMenu(tr("File"));
+   QAction* openAction = fileMenu->addAction(tr("Open saved configuration..."));
+   connect(openAction, &QAction::triggered,
+       m_controller, &LauncherController::openConfig);
+
+   QAction* saveAction = fileMenu->addAction(tr("Save configuration as..."));
+   connect(saveAction, &QAction::triggered,
+       m_controller, &LauncherController::saveConfigAs);
+
    QMenu* toolsMenu = mb->addMenu(tr("Tools"));
    QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
    connect(restoreDefaultsAction, &QAction::triggered,
@@ -57,7 +66,7 @@ LauncherMainWindow::LauncherMainWindow() :
     qa->setShortcut(QKeySequence("Ctrl+Q"));
     connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
 
-    m_controller->restoreSettings();
+    m_controller->initialRestoreSettings();
     flightgear::launcherSetSceneryPaths();
 
     auto addOnsCtl = new AddOnsController(this);

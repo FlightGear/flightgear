@@ -43,6 +43,12 @@ Item {
         onCollect: apply();
     }
 
+    Connections {
+        target: _config
+        onRestore: root.restoreState();
+        onSave: root.saveState();
+    }
+
     Rectangle {
         // this is the 'search hit highlight effect'
         anchors.fill: parent

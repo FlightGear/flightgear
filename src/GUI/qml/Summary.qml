@@ -86,7 +86,7 @@ Item {
         // dynamic text sizing, so bind it manually
         y: logoText.y + Style.margin + logoText.contentHeight
         wrapMode: Text.WordWrap
-        text: "Licenced under the GNU Public License (GPL)- click for more info"
+        text: "Licenced under the GNU Public License (GPL) - click for more info"
         baseTextColor: "white"
         style: Text.Outline
         styleColor: "black"
@@ -216,12 +216,29 @@ Item {
                 width: summaryGrid.middleColumnWidth
                 spacing: Style.margin
 
+                Component.onCompleted: updateComboFromController();
+
+                function updateComboFromController()
+                {
+                    stateSelectionCombo.currentIndex = _launcher.selectedAircraftInfo.statesModel.indexForTag(_launcher.selectedAircraftState)
+                }
+
                 PopupChoice {
                     id: stateSelectionCombo
                     model: _launcher.selectedAircraftInfo.statesModel
                     displayRole: "name"
                     label: qsTr("State:")
-                    width: parent.width
+                    width: parent.width   
+                    headerText: qsTr("Default state")
+
+                    function select(index)
+                    {
+                        if (index === -1) {
+                            _launcher.selectedAircraftState = "";
+                        } else {
+                            _launcher.selectedAircraftState = model.tagForState(index);
+                        }
+                    }
                 }
 
                 StyledText {
@@ -234,22 +251,13 @@ Item {
                 }
 
                 Connections {
-                    target: _config
-                    onCollect: {
-                        if (!_launcher.selectedAircraftInfo.hasStates)
-                            return;
+                    target: _launcher.selectedAircraftInfo
+                    onInfoChanged: stateSelectionGroup.updateComboFromController()
+                }
 
-                        var state = _launcher.selectedAircraftInfo.statesModel.tagForState(stateSelectionCombo.currentIndex);
-                        if (state === "auto" && !_launcher.selectedAircraftInfo.statesModel.hasExplicitAuto) {
-                            // auto state selection if not handled by aircraft
-                            state = _launcher.selectAircraftStateAutomatically();
-                            console.info("launcher auto state selection, picked:" + state)
-                        }
-
-                        if (state !== "__default__") { // don't set arg in default case
-                            _config.setArg("state", state);
-                        }
-                    }
+                Connections {
+                    target: _launcher
+                    onSelectedAircraftStateChanged: stateSelectionGroup.updateComboFromController()
                 } // of connections
             }
 

@@ -20,26 +20,8 @@ Item {
                                                 renderSection.summary());
     }
 
-    Connections {
-        target: _launcher
-        onRequestSaveState: settings.saveState();
-    }
-
-    Component.onDestruction: {
-        settings.saveState();
-    }
-
-    function saveState()
+    Flickable
     {
-        mpSettings.saveState();
-        downloadSettings.saveState();
-        generalSettings.saveState();
-        renderSection.saveState();
-        extraArgsSection.saveState();
-        windowSettings.saveState();
-    }
-
-    Flickable {
         id: settingsFlick
         contentHeight: sectionColumn.childrenRect.height
         flickableDirection: Flickable.VerticalFlick

@@ -155,7 +155,6 @@ class StatesModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool hasExplicitAuto READ hasExplicitAuto CONSTANT)
 public:
     StatesModel()
     {
@@ -181,9 +180,13 @@ public:
             // we will not run our own selection logic
             _explicitAutoState = true;
         } else {
-            // disabling this code for 2018.1, since it needs more testing
             _data.insert(_data.begin(), {{"auto"}, {}, tr("Select state based on startup position.")});
         }
+    }
+
+    Q_INVOKABLE int indexForTag(QString s) const
+    {
+        return indexForTag(s.toStdString());
     }
 
     int indexForTag(const std::string &tag) const
@@ -682,6 +685,11 @@ bool QmlAircraftInfo::hasStates() const
 bool QmlAircraftInfo::hasState(QString name) const
 {
     return _statesModel->hasState(name);
+}
+
+bool QmlAircraftInfo::haveExplicitAutoState() const
+{
+    return _statesModel->hasExplicitAuto();
 }
 
 StatesModel *QmlAircraftInfo::statesModel()

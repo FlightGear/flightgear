@@ -9,14 +9,6 @@ Item {
         value: timeOfDay.summary().concat(weatherSettings.summary());
     }
 
-    Connections {
-        target: _launcher
-        onRequestSaveState: {
-            timeOfDaySettings.saveState();
-            weatherSettings.saveState();
-        }
-    }
-
     Flickable {
         contentHeight: sectionColumn.childrenRect.height
         flickableDirection: Flickable.VerticalFlick

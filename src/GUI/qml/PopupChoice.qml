@@ -13,8 +13,6 @@ Item {
     property bool enabled: true
     property int currentIndex: 0
     property bool __dummy: false
-
-    property alias header: choicesHeader.sourceComponent
     property string headerText: ""
 
     implicitHeight: Math.max(label.implicitHeight, currentChoiceFrame.height)
@@ -166,20 +164,11 @@ Item {
             width: menuWidth
 
             // optional header component:
-            Loader {
-                id: choicesHeader
-                active: root.haveHeader()
-
-                // default component is just a plain text element, same as
-                // normal items
-                sourceComponent: StyledText {
-                    text: root.headerText
-                    height: implicitHeight + Style.margin
-                    width: choicesColumn.width
-                }
-
-                height: item ? item.height : 0
-                width: item ? item.width : 0
+            StyledText {
+                text: root.headerText
+                visible: root.haveHeader();
+                height: implicitHeight + Style.margin
+                width: choicesColumn.width
 
                 // essentially the same mouse area as normal items
                 MouseArea {
@@ -191,7 +180,7 @@ Item {
                         root.select(-1);
                     }
                 }
-            } // of header loader
+            }
 
             function calculateMenuWidth()
             {

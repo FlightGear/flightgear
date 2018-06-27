@@ -59,6 +59,8 @@ class LauncherController : public QObject
 
     Q_PROPERTY(QmlAircraftInfo* selectedAircraftInfo READ selectedAircraftInfo NOTIFY selectedAircraftChanged)
 
+    Q_PROPERTY(QString selectedAircraftState MEMBER m_aircraftState NOTIFY selectedAircraftStateChanged)
+
     Q_PROPERTY(bool isSearchActive READ isSearchActive NOTIFY searchChanged)
     Q_PROPERTY(QString settingsSearchTerm READ settingsSearchTerm WRITE setSettingsSearchTerm NOTIFY searchChanged)
 
@@ -131,7 +133,6 @@ public:
     Q_INVOKABLE QVariantList defaultSplashUrls() const;
 
 
-    Q_INVOKABLE QString selectAircraftStateAutomatically();
 
     LaunchConfig* config() const
     { return m_config; }
@@ -144,7 +145,7 @@ public:
     AircraftItemModel* baseAircraftModel() const
     { return m_aircraftModel; }
 
-    void restoreSettings();
+    void initialRestoreSettings();
     void saveSettings();
 
     LocationController* location() const
@@ -169,17 +170,12 @@ public:
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
-
+    void selectedAircraftStateChanged();
+    
     void searchChanged();
     void summaryChanged();
 
     void canFlyChanged();
-
-    /**
-     * @brief requestSaveState - signal to request QML settings to save their
-     * state to persistent storage
-     */
-    void requestSaveState();
 
     void viewCommandLine();
 
@@ -198,11 +194,16 @@ public slots:
 	void requestRestoreDefaults();
 
 	void requestChangeDataPath();
+
+    void openConfig();
+    void saveConfigAs();
 private slots:
 
     void onAircraftInstalledCompleted(QModelIndex index);
     void onAircraftInstallFailed(QModelIndex index, QString errorMessage);
 
+    void saveAircraft();
+    void restoreAircraft();
 private:
     /**
      * Check if the passed index is the selected aircraft, and if so, refresh
@@ -220,6 +221,8 @@ private:
 
     void collectAircraftArgs();
 
+    QString selectAircraftStateAutomatically();
+
 private:
     QWindow* m_window = nullptr;
 
@@ -231,6 +234,7 @@ private:
     LocationController* m_location = nullptr;
 
     QUrl m_selectedAircraft;
+    QString m_aircraftState;
     AircraftType m_aircraftType = Airplane;
     int m_ratingFilters[4] = {3, 3, 3, 3};
     LaunchConfig* m_config = nullptr;

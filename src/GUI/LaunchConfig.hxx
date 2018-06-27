@@ -4,6 +4,10 @@
 #include <set>
 #include <QObject>
 #include <QVariant>
+#include <QScopedPointer>
+
+// forwards decls
+class QSettings;
 
 namespace flightgear { class Options; }
 
@@ -34,6 +38,7 @@ public:
 
 
     LaunchConfig(QObject* parent = nullptr);
+    ~LaunchConfig();
 
     void reset();
     void applyToOptions() const;
@@ -52,10 +57,12 @@ public:
 
     Q_INVOKABLE QString htmlForCommandLine();
 
+    bool saveConfigToINI();
+    bool loadConfigFromINI();
 
-    // ensure a property is /not/ set?
+    Q_INVOKABLE bool saveConfigToFile(QString path);
 
-    // save and restore API?
+    Q_INVOKABLE bool loadConfigFromFile(QString path);
 
     Q_INVOKABLE QVariant getValueForKey(QString group, QString key, QVariant defaultValue = QVariant()) const;
     Q_INVOKABLE void setValueForKey(QString group, QString key, QVariant var);
@@ -72,11 +79,17 @@ public:
 signals:
     void collect();
     
+    void save();
+
+    void restore();
+    
+    void postRestore();
 private:
 	std::set<std::string> extraArgNames() const;
 
     std::vector<Arg> m_values;
     QString m_defaultDownloadDir;
+    mutable QScopedPointer<QSettings> m_loadSaveSettings;
 };
 
 #endif

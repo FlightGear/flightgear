@@ -7,12 +7,52 @@
 
 #include <QSettings>
 #include <QDebug>
+#include <QIODevice>
+#include <QDataStream>
 
 static bool static_enableDownloadDirUI = true;
+static QSettings::Format static_binaryFormat = QSettings::InvalidFormat;
+
+static bool binaryReadFunc(QIODevice &device, QSettings::SettingsMap &map)
+{
+    QDataStream ds(&device);
+    int count;
+    ds >> count;
+    for (int i=0; i < count; ++i) {
+        QString k;
+        QVariant v;
+        ds >> k >> v;
+        map.insert(k, v);
+    }
+
+    return true;
+}
+
+static bool binaryWriteFunc(QIODevice &device, const QSettings::SettingsMap &map)
+{
+    QDataStream ds(&device);
+
+    ds << map.size();
+    Q_FOREACH(QString key, map.keys()) {
+        ds << key << map.value(key);
+    }
+
+    return true;
+}
 
 LaunchConfig::LaunchConfig(QObject* parent) :
     QObject(parent)
 {
+    if (static_binaryFormat == QSettings::InvalidFormat) {
+        static_binaryFormat = QSettings::registerFormat("fglaunch",
+                                                        &binaryReadFunc,
+                                                        &binaryWriteFunc);
+    }
+}
+
+LaunchConfig::~LaunchConfig()
+{
+
 }
 
 void LaunchConfig::reset()
@@ -130,11 +170,59 @@ QString LaunchConfig::htmlForCommandLine()
     return html;
 }
 
+bool LaunchConfig::saveConfigToINI()
+{
+    // create settings using default type (INI) and path (inside FG_HOME),
+    // as setup in initQSettings()
+    m_loadSaveSettings.reset(new QSettings);
+    emit save();
+    m_loadSaveSettings->sync();
+    m_loadSaveSettings.reset();
+
+    return true;
+}
+
+bool LaunchConfig::loadConfigFromINI()
+{
+    // create settings using default type (INI) and path (inside FG_HOME),
+    // as setup in initQSettings()
+    m_loadSaveSettings.reset(new QSettings);
+    emit restore();
+    emit postRestore();
+    m_loadSaveSettings.reset();
+    return true;
+}
+
+bool LaunchConfig::saveConfigToFile(QString path)
+{
+    m_loadSaveSettings.reset(new QSettings(path, static_binaryFormat));
+    emit save();
+    m_loadSaveSettings.reset();
+    return true;
+}
+
+bool LaunchConfig::loadConfigFromFile(QString path)
+{
+    m_loadSaveSettings.reset(new QSettings(path, static_binaryFormat));
+    emit restore();
+    // some things have an ordering dependency, give them a chance to run
+    // after other settings have been restored (eg, location or aircraft)
+    emit postRestore();
+    m_loadSaveSettings.reset();
+    return true;
+}
+
 QVariant LaunchConfig::getValueForKey(QString group, QString key, QVariant defaultValue) const
 {
-    QSettings settings;
-    settings.beginGroup(group);
-    auto v = settings.value(key, defaultValue);
+    if (!m_loadSaveSettings) {
+        // becuase we load settings on component completion, we need
+        // to create the default implementation (using the INI file)
+        // on demand
+        m_loadSaveSettings.reset(new QSettings);
+    }
+
+    m_loadSaveSettings->beginGroup(group);
+    auto v = m_loadSaveSettings->value(key, defaultValue);
     bool convertedOk = v.convert(defaultValue.type());
     if (!convertedOk) {
         qWarning() << "type forcing on loaded value failed:" << key << v << v.typeName() << defaultValue;
@@ -145,11 +233,11 @@ QVariant LaunchConfig::getValueForKey(QString group, QString key, QVariant defau
 
 void LaunchConfig::setValueForKey(QString group, QString key, QVariant var)
 {
-    QSettings settings;
-    settings.beginGroup(group);
+    Q_ASSERT(m_loadSaveSettings);
+    m_loadSaveSettings->beginGroup(group);
   //  qInfo() << "saving" << key << "with value" << var << var.typeName();
-    settings.setValue(key, var);
-    settings.endGroup();
+    m_loadSaveSettings->setValue(key, var);
+    m_loadSaveSettings->endGroup();
 }
 
 QString LaunchConfig::defaultDownloadDir() const

@@ -101,7 +101,7 @@ public:
     void restoreLocation(QVariantMap l);
     QVariantMap saveLocation() const;
 
-    void restoreSettings();
+    void restoreSearchHistory();
 
     /// used to automatically select aircraft state
     bool isParkedLocation() const;
@@ -170,6 +170,10 @@ public:
         return m_locationIsLatLon;
     }
 
+    int altitudeFt() const
+    {
+        return m_altitudeFt;
+    }
 public slots:
     void setOffsetRadial(int offsetRadial);
 
@@ -192,6 +196,8 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onCollectConfig();
+    void onRestoreCurrentLocation();
+    void onSaveCurrentLocation();
 private:
 
     void onSearchComplete();
