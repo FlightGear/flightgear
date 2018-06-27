@@ -67,8 +67,7 @@ if (APPLE)
 endif()
 
 if (HAVE_QT)
-    qt5_wrap_ui(uic_sources Launcher.ui
-                            SetupRootDialog.ui
+    qt5_wrap_ui(uic_sources SetupRootDialog.ui
                             InstallSceneryDialog.ui
                             )
     qt5_add_resources(qrc_sources resources.qrc)
@@ -97,8 +96,6 @@ if (HAVE_QT)
                             InstallSceneryDialog.cxx
                             LocationController.cxx
                             LocationController.hxx
-                            ToolboxButton.cpp
-                            ToolboxButton.h
                             LauncherArgumentTokenizer.cxx
                             LauncherArgumentTokenizer.hxx
                             AircraftSearchFilterModel.cxx
@@ -107,8 +104,6 @@ if (HAVE_QT)
                             DefaultAircraftLocator.hxx
                             LaunchConfig.cxx
                             LaunchConfig.hxx
-                            ViewCommandLinePage.cxx
-                            ViewCommandLinePage.hxx
                             MPServersModel.cpp
                             MPServersModel.h
                             PathUrlHelper.cxx
