@@ -189,6 +189,7 @@ class NavSearchModel : public QAbstractListModel
     Q_OBJECT
 
     Q_PROPERTY(bool isSearchActive READ isSearchActive NOTIFY searchActiveChanged)
+    Q_PROPERTY(bool haveExistingSearch READ haveExistingSearch NOTIFY haveExistingSearchChanged)
 
     enum Roles {
         GeodRole = Qt::UserRole + 1,
@@ -236,11 +237,17 @@ public:
         QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
         m_searchActive = true;
         emit searchActiveChanged();
+        emit haveExistingSearchChanged();
     }
 
     bool isSearchActive() const
     {
         return m_searchActive;
+    }
+
+    bool haveExistingSearch() const
+    {
+        return m_searchActive || (!m_items.empty());
     }
 
     int rowCount(const QModelIndex&) const override
@@ -318,6 +325,7 @@ public:
 Q_SIGNALS:
     void searchComplete();
     void searchActiveChanged();
+    void haveExistingSearchChanged();
 
 private slots:
 
@@ -343,6 +351,7 @@ private slots:
             m_search.reset();
             emit searchComplete();
             emit searchActiveChanged();
+            emit haveExistingSearchChanged();
         } else {
             QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
         }

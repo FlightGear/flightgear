@@ -13,6 +13,9 @@ Item {
     {
         detailLoader.sourceComponent = null
         _location.setBaseLocation(null)
+        if (!_location.searchModel.haveExistingSearch) {
+            _location.showHistoryInSearchModel();
+        }
     }
 
     function selectLocation(guid, type)
