@@ -76,7 +76,7 @@ Item {
                 id: choicesRepeater
                 model: root.model
                 delegate:
-                    Text {
+                    StyledText {
                         id: choiceText
 
                         // Taken from TableViewItemDelegateLoader.qml to follow QML role conventions

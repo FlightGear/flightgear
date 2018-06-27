@@ -79,12 +79,15 @@ SettingControl {
                 font.family: "Courier"
                 selectByMouse: true
                 wrapMode: TextEdit.WordWrap
+                font.pixelSize: Style.baseFontPixelSize
+                color: Style.baseTextColor
 
-                Text {
+                StyledText {
                     id: placeholder
                     visible: (edit.text.length == 0) && !edit.activeFocus
                     text: root.placeholder
-                    color: Style.baseTextColor
+                    font.family: "Courier"
+                    color: Style.disabledTextColor
                 }
            }
         }

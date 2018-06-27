@@ -26,6 +26,8 @@ Item {
             readOnly: true
 
             wrapMode: TextEdit.Wrap
+            font.pixelSize: Style.baseFontPixelSize
+            color: Style.baseTextColor
 
             text: _config.htmlForCommandLine();
         }

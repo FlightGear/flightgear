@@ -52,6 +52,7 @@ FocusScope
 
             color: Style.baseTextColor
             focus: true
+            font.pixelSize: Style.baseFontPixelSize
 
             onTextChanged: {
                 if (root.autoSubmit) {
