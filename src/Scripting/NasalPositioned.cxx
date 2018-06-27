@@ -1979,6 +1979,43 @@ static naRef f_courseAndDistance(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+static naRef f_formatLatLon(naContext c, naRef me, int argc, naRef* args)
+{
+  SGGeod p;
+  int argOffset = geodFromArgs(args, 0, argc, p);
+  if (argOffset == 0) {
+    naRuntimeError(c, "invalid arguments to formatLatLon, expect a geod or lat,lon");
+  }
+  
+  simgear::strutils::LatLonFormat format =
+    static_cast<simgear::strutils::LatLonFormat>(fgGetInt("/sim/lon-lat-format"));
+  if (argOffset < argc && naIsNum(args[argOffset])) {
+    format = static_cast<simgear::strutils::LatLonFormat>(args[argOffset].num);
+    if (format > simgear::strutils::LatLonFormat::DECIMAL_DEGREES_SYMBOL) {
+      naRuntimeError(c, "invalid lat-lon format requested");
+    }
+  }
+  
+  const auto s = simgear::strutils::formatGeodAsString(p, format);
+  return stringToNasal(c, s);
+}
+
+static naRef f_parseStringAsLatLonValue(naContext c, naRef me, int argc, naRef* args)
+{
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "Missing / bad argument to parseStringAsLatLonValue");
+  }
+  
+  double value;
+  bool ok = simgear::strutils::parseStringAsLatLonValue(naStr_data(args[0]), value);
+  if (!ok) {
+    return naNil();
+  }
+  
+  return naNum(value);
+}
+
+
 static naRef f_greatCircleMove(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod from = globals->get_aircraft_position(), to;
@@ -2806,6 +2843,8 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "carttogeod", f_carttogeod },
   { "geodtocart", f_geodtocart },
   { "geodinfo", f_geodinfo },
+  { "formatLatLon", f_formatLatLon },
+  { "parseStringAsLatLonValue", f_parseStringAsLatLonValue},
   { "get_cart_ground_intersection", f_get_cart_ground_intersection },
   { "aircraftToCart", f_aircraftToCart },
   { "airportinfo", f_airportinfo },
