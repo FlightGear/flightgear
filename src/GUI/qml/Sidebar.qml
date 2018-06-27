@@ -57,7 +57,7 @@ Rectangle {
                 }
 
                 enabled: !model.buttonDisabled
-                disabledText: model.hasOwnProperty("disabledText") ? model.disabledText : ""
+                disabledText: (model.disabledText !== undefined) ? model.disabledText : ""
                 selected: (model.index === root.selectedPage)
             }
         }
