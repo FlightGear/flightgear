@@ -39,7 +39,7 @@ Rectangle {
                 AircraftVariantChoice {
                     id: headingBox
                     fontPixelSize: 30
-                    popupFontPixelSize: 18
+                    popupFontPixelSize: Style.headingFontPixelSize
 
                     anchors {
                         margins: Style.strutSize * 2 // space for back button
@@ -134,7 +134,7 @@ Rectangle {
                     id: ratingGrid
                     anchors.left: parent.left
 
-                    visible: aircraft.ratings != undefined
+                    visible: aircraft.ratings !== undefined
 
                     rows: 2
                     columns: 3
