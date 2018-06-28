@@ -1990,7 +1990,7 @@ static naRef f_formatLatLon(naContext c, naRef me, int argc, naRef* args)
   simgear::strutils::LatLonFormat format =
     static_cast<simgear::strutils::LatLonFormat>(fgGetInt("/sim/lon-lat-format"));
   if (argOffset < argc && naIsNum(args[argOffset])) {
-    format = static_cast<simgear::strutils::LatLonFormat>(args[argOffset].num);
+    format = static_cast<simgear::strutils::LatLonFormat>((int) args[argOffset].num);
     if (format > simgear::strutils::LatLonFormat::DECIMAL_DEGREES_SYMBOL) {
       naRuntimeError(c, "invalid lat-lon format requested");
     }
