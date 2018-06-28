@@ -147,7 +147,7 @@ Item {
 
         flags: Qt.Popup
         height: choicesColumn.childrenRect.height + Style.margin * 2
-        width: choicesColumn.childrenRect.width + Style.margin * 2
+        width: choicesColumn.width + Style.margin * 2
         visible: false
         color: "white"
 
@@ -163,6 +163,7 @@ Item {
             spacing: Style.margin
             x: Style.margin
             y: Style.margin
+            width: menuWidth
 
             // optional header component:
             Loader {
@@ -171,10 +172,10 @@ Item {
 
                 // default component is just a plain text element, same as
                 // normal items
-                sourceComponent: Text {
+                sourceComponent: StyledText {
                     text: root.headerText
                     height: implicitHeight + Style.margin
-                    width: popupFrame.width
+                    width: choicesColumn.width
                 }
 
                 height: item ? item.height : 0
@@ -191,6 +192,17 @@ Item {
                     }
                 }
             } // of header loader
+
+            function calculateMenuWidth()
+            {
+                var minWidth = 0;
+                for (var i = 0; i < choicesRepeater.count; i++) {
+                    minWidth = Math.max(minWidth, choicesRepeater.itemAt(i).implicitWidth);
+                }
+                return minWidth;
+            }
+
+            readonly property int menuWidth: calculateMenuWidth()
 
             // main item repeater
             Repeater {
