@@ -28,6 +28,7 @@
 #include <QQmlEngine>
 
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
@@ -690,63 +691,73 @@ void LocationController::setUseAvailableParking(bool useAvailableParking)
 
 void LocationController::restoreLocation(QVariantMap l)
 {
-    if (l.contains("location-lat")) {
-        m_locationIsLatLon = true;
-        m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
-                                         l.value("location-lat").toDouble());
-    } else if (l.contains("location-id")) {
-        m_location = NavDataCache::instance()->loadById(l.value("location-id").toULongLong());
-        m_locationIsLatLon = false;
-        if (FGPositioned::isAirportType(m_location.ptr())) {
-            m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
-        } else {
-            m_airportLocation.clear();
-        }
-        m_baseQml->setInner(m_location);
-    }
-
-    if (l.contains("altitude-type")) {
-        m_altitudeFt = l.value("altitude", 6000).toInt();
-        m_flightLevel = l.value("flight-level").toInt();
-        m_altitudeType = static_cast<AltitudeType>(l.value("altitude-type").toInt());
-    } else {
-        m_altitudeType = Off;
-    }
-
-    m_speedEnabled = l.contains("speed");
-    m_headingEnabled = l.contains("heading");
-
-    m_airspeedKnots = l.value("speed", 120).toInt();
-    m_headingDeg = l.value("heading").toInt();
-
-    m_offsetEnabled = l.value("offset-enabled").toBool();
-    m_offsetRadial = l.value("offset-bearing").toInt();
-    m_offsetNm = l.value("offset-distance", 10).toInt();
-    m_tuneNAV1 = l.value("tune-nav1-radio").toBool();
-
-    if (m_airportLocation) {
-        m_useActiveRunway = false;
-        m_detailLocation.clear();
-
-        if (l.contains("location-apt-runway")) {
-            QString runway = l.value("location-apt-runway").toString().toUpper();
-            if (runway == QStringLiteral("ACTIVE")) {
-                m_useActiveRunway = true;
+    try {
+        if (l.contains("location-lat")) {
+            m_locationIsLatLon = true;
+            m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
+                                             l.value("location-lat").toDouble());
+        } else if (l.contains("location-id")) {
+            m_location = NavDataCache::instance()->loadById(l.value("location-id").toULongLong());
+            m_locationIsLatLon = false;
+            if (FGPositioned::isAirportType(m_location.ptr())) {
+                m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
             } else {
-                m_detailLocation = m_airportLocation->getRunwayByIdent(runway.toStdString());
+                m_airportLocation.clear();
             }
-        } else if (l.contains("location-apt-parking")) {            
-            QString parking = l.value("location-apt-parking").toString();
-            m_detailLocation = m_airportLocation->groundNetwork()->findParkingByName(parking.toStdString());
+            m_baseQml->setInner(m_location);
         }
 
-        if (m_detailLocation) {
-            m_detailQml->setInner(m_detailLocation);
+        if (l.contains("altitude-type")) {
+            m_altitudeFt = l.value("altitude", 6000).toInt();
+            m_flightLevel = l.value("flight-level").toInt();
+            m_altitudeType = static_cast<AltitudeType>(l.value("altitude-type").toInt());
+        } else {
+            m_altitudeType = Off;
         }
 
-        m_onFinal = l.value("location-on-final").toBool();
-        m_offsetNm = l.value("location-apt-final-distance").toInt();
-    } // of location is an airport
+        m_speedEnabled = l.contains("speed");
+        m_headingEnabled = l.contains("heading");
+
+        m_airspeedKnots = l.value("speed", 120).toInt();
+        m_headingDeg = l.value("heading").toInt();
+
+        m_offsetEnabled = l.value("offset-enabled").toBool();
+        m_offsetRadial = l.value("offset-bearing").toInt();
+        m_offsetNm = l.value("offset-distance", 10).toInt();
+        m_tuneNAV1 = l.value("tune-nav1-radio").toBool();
+
+        if (m_airportLocation) {
+            m_useActiveRunway = false;
+            m_detailLocation.clear();
+
+            if (l.contains("location-apt-runway")) {
+                QString runway = l.value("location-apt-runway").toString().toUpper();
+                if (runway == QStringLiteral("ACTIVE")) {
+                    m_useActiveRunway = true;
+                } else if (m_airportLocation->isHeliport()) {
+                    m_detailLocation = m_airportLocation->getHelipadByIdent(runway.toStdString());
+                } else {
+                    m_detailLocation = m_airportLocation->getRunwayByIdent(runway.toStdString());
+                }
+            } else if (l.contains("location-apt-parking")) {
+                QString parking = l.value("location-apt-parking").toString();
+                m_detailLocation = m_airportLocation->groundNetwork()->findParkingByName(parking.toStdString());
+            }
+
+            if (m_detailLocation) {
+                m_detailQml->setInner(m_detailLocation);
+            }
+
+            m_onFinal = l.value("location-on-final").toBool();
+            m_offsetNm = l.value("location-apt-final-distance").toInt();
+        } // of location is an airport
+    } catch (const sg_exception&) {
+        qWarning() << "Errors restoring saved location, clearing";
+        m_location.clear();
+        m_airportLocation.clear();
+        m_baseQml->setInner(nullptr);
+        m_offsetEnabled = false;
+    }
 
     baseLocationChanged();
     configChanged();
