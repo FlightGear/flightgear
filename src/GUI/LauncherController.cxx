@@ -769,5 +769,9 @@ void LauncherController::saveConfigAs()
        {}, "*.fglaunch");
     if (file.isEmpty())
         return;
+    if (!file.endsWith(".fglaunch")) {
+        file += ".fglaunch";
+    }
+
     m_config->saveConfigToFile(file);
 }
