@@ -6,7 +6,7 @@ ListHeaderBox {
     id: root
 
     contents: [
-        Text {
+        StyledText {
             id: updateAllText
             anchors {
                 left: parent.left

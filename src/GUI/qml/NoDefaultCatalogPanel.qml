@@ -18,10 +18,12 @@ Item {
 
         Row {
             y: Style.margin
+            x: Style.margin
+
             id: noDefaultCatalogRow
             spacing: Style.margin
 
-            Text {
+            StyledText {
                 text: qsTr("The official FlightGear aircraft hangar is not added, so many standard "
                       + "aircraft will not be available. You can add the  hangar now, or hide "
                       + "this message. The offical hangar can always be restored from the 'Add-Ons' page.")

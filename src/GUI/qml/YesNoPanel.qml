@@ -13,7 +13,7 @@ Rectangle {
 
     signal rejected()
 
-    Text {
+    StyledText {
         id: prompt
         anchors {
             verticalCenter: parent.verticalCenter

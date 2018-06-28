@@ -20,7 +20,7 @@ ListHeaderBox
             anchors.verticalCenter: parent.verticalCenter
         },
 
-        Text {
+        StyledText {
             anchors {
                 verticalCenter: parent.verticalCenter
                 leftMargin: Style.margin
@@ -72,7 +72,7 @@ ListHeaderBox
                 y: Style.margin
                 spacing: (Style.margin * 2)
 
-                Text {
+                StyledText {
                     text: qsTr("Aircraft are rated by the community based on four critiera, on a scale from " +
                                "one to five. The ratings are designed to help make an informed guess how "+
                                "complete and functional an aircraft is.")
