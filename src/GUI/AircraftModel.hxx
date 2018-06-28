@@ -66,9 +66,6 @@ class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(int aircraftNeedingUpdated READ aircraftNeedingUpdated NOTIFY aircraftNeedingUpdatedChanged)
-    Q_PROPERTY(bool showUpdateAll READ showUpdateAll WRITE setShowUpdateAll NOTIFY aircraftNeedingUpdatedChanged)
-
 public:
 
     AircraftItemModel(QObject* pr);
@@ -110,20 +107,12 @@ public:
      */
     QString nameForAircraftURI(QUrl uri) const;
 
-    int aircraftNeedingUpdated() const;
-
-    bool showUpdateAll() const;
-
 signals:
     void aircraftInstallFailed(QModelIndex index, QString errorMessage);
     
     void aircraftInstallCompleted(QModelIndex index);
     
-    void aircraftNeedingUpdatedChanged();
-
     void catalogsRefreshed();
-public slots:
-    void setShowUpdateAll(bool showUpdateAll);
 
 private slots:
     void onScanStarted();
@@ -153,7 +142,7 @@ private:
     QVariant packagePreviews(simgear::pkg::PackageRef p, const DelegateState &ds) const;
 
     void refreshPackages();
-    
+
     void installSucceeded(QModelIndex index);
     void installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason);
     
@@ -165,9 +154,7 @@ private:
     simgear::pkg::PackageList m_packages;
         
     mutable QHash<QString, QPixmap> m_downloadedPixmapCache;
-    int m_cachedUpdateCount = 0;
     int m_cachedLocalAircraftCount = 0;
-    bool m_showUpdateAll = true;
 };
 
 #endif // of FG_GUI_AIRCRAFT_MODEL

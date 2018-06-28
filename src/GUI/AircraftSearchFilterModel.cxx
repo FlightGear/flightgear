@@ -15,6 +15,10 @@ AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source)
 
     // kick off initial sort
     sort(0);
+
+    connect(this, &QAbstractItemModel::rowsInserted, this, &AircraftProxyModel::countChanged);
+    connect(this, &QAbstractItemModel::rowsRemoved, this, &AircraftProxyModel::countChanged);
+    connect(this, &QAbstractItemModel::modelReset, this, &AircraftProxyModel::countChanged);
 }
 
 void AircraftProxyModel::setRatings(QList<int> ratings)
@@ -78,6 +82,11 @@ QString AircraftProxyModel::summaryText() const
     return tr("(%1 aircraft)").arg(unfilteredCount);
 }
 
+int AircraftProxyModel::count() const
+{
+    return rowCount();
+}
+
 void AircraftProxyModel::setInstalledFilterEnabled(bool e)
 {
     if (e == m_onlyShowInstalled) {
@@ -85,6 +94,15 @@ void AircraftProxyModel::setInstalledFilterEnabled(bool e)
     }
 
     m_onlyShowInstalled = e;
+    invalidate();
+}
+
+void AircraftProxyModel::setHaveUpdateFilterEnabled(bool e)
+{
+    if (e == m_onlyShowWithUpdate)
+        return;
+
+    m_onlyShowWithUpdate = e;
     invalidate();
 }
 
@@ -102,6 +120,21 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
         const auto status = static_cast<LocalAircraftCache::PackageStatus>(v.toInt());
         if (status == LocalAircraftCache::PackageNotInstalled) {
             return false;
+        }
+    }
+
+    if (m_onlyShowWithUpdate) {
+        QVariant v = index.data(AircraftPackageStatusRole);
+        const auto status = static_cast<LocalAircraftCache::PackageStatus>(v.toInt());
+        switch (status) {
+        case LocalAircraftCache::PackageNotInstalled:
+        case LocalAircraftCache::PackageInstalled:
+        case LocalAircraftCache::NotPackaged:
+            return false; // no updated need / possible
+
+        // otherwise, show in the update list
+        default:
+            break;
         }
     }
 

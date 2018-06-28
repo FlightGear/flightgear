@@ -39,6 +39,17 @@ Item
                 }
                 active: root.state == "browse"
             }
+
+            TabButton {
+                id: updatesButton
+              //  visible: _launcher.baseAircraftModel.showUpdateAll
+                text: qsTr("Updates")
+                onClicked: {
+                    root.state = "updates"
+                    aircraftList.updateSelectionFromLauncher();
+                }
+                active: root.state == "updates"
+            }
         } // of header row
 
         SearchButton {
@@ -154,6 +165,21 @@ Item
         }
     }
 
+    StyledText {
+        id: noUpdatesMessage
+        anchors {
+            left: parent.left
+            top: tabBar.bottom
+            bottom: parent.bottom
+            right: scrollbar.left
+        }
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        font.pixelSize: Style.headingFontPixelSize
+        text: qsTr("No aircraft updates available right now")
+        visible: (root.state == "updates") && (_launcher.aircraftWithUpdatesModel.count == 0)
+    }
+
     Scrollbar {
         id: scrollbar
         anchors.right: parent.right
@@ -170,7 +196,6 @@ Item
             PropertyChanges {
                 target: aircraftList
                 model: _launcher.installedAircraftModel
-                header: _launcher.baseAircraftModel.showUpdateAll ? updateAllHeader : null
             }
         },
 
@@ -189,6 +214,15 @@ Item
                 target: aircraftList
                 model: _launcher.browseAircraftModel
                 header: _addOns.showNoOfficialHangar ? noDefaultCatalogHeader : ratingsHeader
+            }
+        },
+
+        State {
+            name: "updates"
+            PropertyChanges {
+                target: aircraftList
+                model: _launcher.aircraftWithUpdatesModel
+                header: (_launcher.aircraftWithUpdatesModel.count > 0) ? updateAllHeader : null
             }
         }
     ]

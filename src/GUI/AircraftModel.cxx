@@ -247,8 +247,6 @@ void AircraftItemModel::refreshPackages()
     }
 
     emit dataChanged(index(firstRow), index(firstRow + newSize - 1));
-    m_cachedUpdateCount = m_packageRoot->packagesNeedingUpdate().size();
-    emit aircraftNeedingUpdatedChanged();
 }
 
 int AircraftItemModel::rowCount(const QModelIndex& parent) const
@@ -701,22 +699,4 @@ bool AircraftItemModel::isIndexRunnable(const QModelIndex& index) const
     return !ex->isDownloading();
 }
 
-int AircraftItemModel::aircraftNeedingUpdated() const
-{
-    return m_cachedUpdateCount;
-}
-
-bool AircraftItemModel::showUpdateAll() const
-{
-    return (m_cachedUpdateCount > 0) && m_showUpdateAll;
-}
-
-void AircraftItemModel::setShowUpdateAll(bool showUpdateAll)
-{
-    if (m_showUpdateAll == showUpdateAll)
-        return;
-
-    m_showUpdateAll = showUpdateAll;
-    emit aircraftNeedingUpdatedChanged();
-}
 

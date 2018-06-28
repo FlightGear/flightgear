@@ -75,6 +75,10 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     m_installedAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
     m_installedAircraftModel->setInstalledFilterEnabled(true);
 
+    m_aircraftWithUpdatesModel = new AircraftProxyModel(this, m_aircraftModel);
+    m_aircraftWithUpdatesModel->setInstalledFilterEnabled(true);
+    m_aircraftWithUpdatesModel->setHaveUpdateFilterEnabled(true);
+
     m_browseAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
     m_browseAircraftModel->setRatingFilterEnabled(true);
 

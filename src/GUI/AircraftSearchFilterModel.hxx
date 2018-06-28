@@ -19,6 +19,8 @@ public:
 
     Q_INVOKABLE void setAircraftFilterString(QString s);
 
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+
     /**
       * Compute the row (index in QML / ListView speak) based on an aircraft URI.
       * Return -1 if the UIR is not present in the (filtered) model
@@ -41,15 +43,19 @@ public:
     void setRatingFilterEnabled(bool e);
 
     QString summaryText() const;
+
+    int count() const;
 signals:
     void ratingsChanged();
     void ratingsFilterEnabledChanged();
     void summaryTextChanged();
+    void countChanged();
 
 public slots:
 
     void setInstalledFilterEnabled(bool e);
 
+    void setHaveUpdateFilterEnabled(bool e);
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
@@ -58,6 +64,8 @@ private:
 
     bool m_ratingsFilter = true;
     bool m_onlyShowInstalled = false;
+    bool m_onlyShowWithUpdate = false;
+
     QList<int> m_ratings;
     QString m_filterString;
     SGPropertyNode_ptr m_filterProps;
