@@ -999,8 +999,8 @@ void LocationController::onCollectConfig()
     }
 
     if (m_locationIsLatLon) {
-        m_config->setArg("lat", QString::number(m_geodLocation.getLatitudeDeg()));
-        m_config->setArg("lon", QString::number(m_geodLocation.getLongitudeDeg()));
+        m_config->setArg("lat", QString::number(m_geodLocation.getLatitudeDeg(), 'f', 8));
+        m_config->setArg("lon", QString::number(m_geodLocation.getLongitudeDeg(), 'f', 8));
         applyPositionOffset();
         return;
     }
