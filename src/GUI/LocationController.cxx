@@ -499,9 +499,16 @@ void LocationController::setBaseLocation(QmlPositioned* pos)
 
     if (FGPositioned::isAirportType(m_location.ptr())) {
         m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
+        // disable offset when selecting a heliport
+        if (m_airportLocation->isHeliport()) {
+            qInfo() << "disabling offset";
+            m_onFinal = false;
+        }
     } else {
         m_airportLocation.clear();
     }
+
+    emit offsetChanged();
     emit baseLocationChanged();
 }
 
