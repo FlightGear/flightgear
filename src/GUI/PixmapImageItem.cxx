@@ -44,7 +44,7 @@ void PixmapImageItem::setImage(QImage img)
 
     _image = img;
     update();
-    const auto sz = img.size() / img.devicePixelRatioF();
+    const auto sz = img.size() / img.devicePixelRatio();
     setImplicitSize(sz.width(), sz.height());
     emit imageChanged();
 }

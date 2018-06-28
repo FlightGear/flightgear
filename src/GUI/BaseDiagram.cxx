@@ -366,7 +366,8 @@ void BaseDiagram::paintNavaid(QPainter* painter, const FGPositionedRef &pos)
     if (drawAsIcon) {
         QPixmap pm = iconForPositioned(pos);
         QPointF loc = m_viewportTransform.map(project(pos->geod()));
-        iconRect = pm.rect();
+        const auto sz = pm.size() / pm.devicePixelRatio();
+        iconRect = QRect(QPoint(0,0), sz);
         iconRect.moveCenter(loc.toPoint());
         painter->drawPixmap(iconRect, pm);
     }
