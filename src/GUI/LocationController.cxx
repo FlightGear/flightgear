@@ -699,6 +699,8 @@ void LocationController::restoreLocation(QVariantMap l)
         m_locationIsLatLon = false;
         if (FGPositioned::isAirportType(m_location.ptr())) {
             m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
+        } else {
+            m_airportLocation.clear();
         }
         m_baseQml->setInner(m_location);
     }
@@ -793,6 +795,8 @@ QVariantMap LocationController::saveLocation() const
     } // of m_location is valid
 
     if (m_altitudeType != Off) {
+        locationSet.insert("altitude-type", m_altitudeType);
+
         if ((m_altitudeType == MSL_Feet) || (m_altitudeType == AGL_Feet)) {
             locationSet.insert("altitude", m_altitudeFt);
         }

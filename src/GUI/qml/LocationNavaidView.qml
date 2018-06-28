@@ -102,7 +102,9 @@ Item {
                 ToggleSwitch {
                     id: headingToggle
                     checked: _location.headingEnabled
-                    onCheckedChanged: _location.headingEnabled = checked;
+                    function toggle(newChecked) {
+                        _location.headingEnabled  = newChecked;
+                    }
                 }
 
                 IntegerSpinbox {
@@ -126,8 +128,11 @@ Item {
                 ToggleSwitch {
                     id: altitudeToggle
                     checked: _location.altitudeType !== LocationController.Off
-                    onCheckedChanged: _location.altitudeType = (checked ? LocationController.MSL_Feet
-                                                                       : LocationController.Off)
+
+                    function toggle(newChecked) {
+                        _location.altitudeType = (newChecked ? LocationController.MSL_Feet
+                                                               : LocationController.Off)
+                    }
                 }
 
                 IntegerSpinbox {

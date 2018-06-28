@@ -2,6 +2,7 @@ import QtQuick 2.4
 import "."
 
 Item {
+    id: root
     property bool checked: false
     property alias label: label.text
     property bool enabled: true
@@ -15,6 +16,11 @@ Item {
         sliderBehaviour.enabled = false;
         checked = newCheck
         sliderBehaviour.enabled = true;
+    }
+
+    function toggle(newChecked)
+    {
+        checked = newChecked
     }
 
     Rectangle {
@@ -65,8 +71,6 @@ Item {
         enabled: root.enabled
 
         hoverEnabled: true
-        onClicked: {
-            checked = !checked
-        }
+        onClicked: root.toggle(!checked)
     }
 }
