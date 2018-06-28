@@ -1031,6 +1031,10 @@ void LocationController::onCollectConfig()
                     m_config->setArg("glideslope", std::string("3.0"));
                     m_config->setArg("offset-distance", QString::number(m_offsetNm));
                     m_config->setArg("on-ground", std::string("false"));
+
+                    if (m_speedEnabled) {
+                        m_config->setArg("vc", QString::number(m_airspeedKnots));
+                    }
                 }
             } else if (m_airportLocation->type() == FGPositioned::HELIPORT) {
                 m_config->setArg("runway", QString::fromStdString(m_detailLocation->ident()));

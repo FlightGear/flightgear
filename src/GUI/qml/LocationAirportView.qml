@@ -161,6 +161,8 @@ Item {
                 // no offset for helipads
                 visible: !isHeliport
 
+                readonly property bool enableOnFinal: runwayRadio.selected && _location.onFinal
+
                 ToggleSwitch {
                     id: onFinalToggle
                     label: qsTr("On final approach at ")
@@ -183,11 +185,39 @@ Item {
                     live: true
 
                     anchors.verticalCenter: parent.verticalCenter
-                    enabled: runwayRadio.selected && onFinalToggle.checked
+                    enabled: parent.enableOnFinal
                 }
 
                 StyledText {
                     text: qsTr(" from the threshold")
+                    anchors.verticalCenter: parent.verticalCenter
+                    enabled: parent.enableOnFinal
+                }
+
+                Item {
+                    // padding
+                    width: Style.strutSize
+                    height: 1
+                }
+
+                ToggleSwitch {
+                    id: airspeedToggle
+                    enabled: parent.enableOnFinal
+                    checked: _location.speedEnabled
+                    onCheckedChanged: _location.speedEnabled = checked;
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                IntegerSpinbox {
+                    label: qsTr("Airspeed:")
+                    suffix: "kts"
+                    min: 0
+                    max: 10000 // more for spaceships?
+                    step: 5
+                    maxDigits: 5
+                    enabled: _location.speedEnabled && parent.enableOnFinal
+                    value: _location.airspeedKnots
+                    onCommit: _location.airspeedKnots = newValue
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -196,6 +226,7 @@ Item {
                 x: Style.strutSize
                 // no localizer for helipads
                 visible: !isHeliport
+                enabled:runwayRadio.selected
 
                 // enable if selected runway has ILS
                 label: qsTr("Tune navigation radio (NAV1) to runway localizer")

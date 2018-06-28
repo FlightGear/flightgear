@@ -3,6 +3,7 @@ import QtQuick 2.4
 import "."
 
 Text {
+    id: root
     font.pixelSize: Style.baseFontPixelSize
 
     property bool enabled: true
