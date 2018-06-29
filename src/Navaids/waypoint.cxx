@@ -234,7 +234,6 @@ Hold::Hold(const SGGeod& aPos, const string& aIdent, RouteBase* aOwner) :
   _righthanded(true),
   _isDistance(false)
 {
-  setFlag(WPT_DYNAMIC);
 }
 
 Hold::Hold(RouteBase* aOwner) :
