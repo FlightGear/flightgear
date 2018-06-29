@@ -1052,18 +1052,22 @@ WayptRef intersectionFromString(FGPositionedRef p1,
 
 WayptRef wayptFromLonLatString(const std::string& target)
 {
-    size_t pos = target.find( ',' );
-    if ( pos == string::npos )
-        return WayptRef();
+    SGGeod g;
+    const bool defaultToLonLat = true; // parseStringAsGeod would otherwise default to lat,lon
+    if (!simgear::strutils::parseStringAsGeod(target, &g, defaultToLonLat)) {
+        return {};
+    }
+    
+    // build a short name, like
+    const int lonDeg = static_cast<int>(g.getLongitudeDeg());
+    const int latDeg = static_cast<int>(g.getLatitudeDeg());
 
-    double lon = atof( target.substr(0, pos).c_str());
-    double lat = atof( target.c_str() + pos + 1);
     char buf[32];
-    char ew = (lon < 0.0) ? 'W' : 'E';
-    char ns = (lat < 0.0) ? 'S' : 'N';
-    snprintf(buf, 32, "%c%03d%c%03d", ew, (int) fabs(lon), ns, (int)fabs(lat));
+    char ew = (lonDeg < 0) ? 'W' : 'E';
+    char ns = (latDeg < 0) ? 'S' : 'N';
+    snprintf(buf, 32, "%c%03d%c%03d", ew, std::abs(lonDeg), ns, std::abs(latDeg));
 
-    return new BasicWaypt(SGGeod::fromDeg(lon, lat), buf, NULL);
+    return new BasicWaypt(g, buf, nullptr);
 }
 
 WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
