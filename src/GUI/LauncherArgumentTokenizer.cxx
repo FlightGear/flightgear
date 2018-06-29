@@ -129,7 +129,7 @@ bool LauncherArgumentTokenizer::isValid() const
 }
 
 const std::set<std::string> unsupportedArgs({
-    "fg-aircraft", "fg-root", "fg-home", "aircraft-dir", "fg-scenery"});
+    "fg-aircraft", "fg-root", "fg-home", "aircraft-dir"});
 
 bool LauncherArgumentTokenizer::haveUnsupportedArgs() const
 {
@@ -147,11 +147,9 @@ void LauncherArgumentTokenizer::setArgString(QString argString)
 }
 
 const std::set<std::string> positionalArgs({
-    "lat", "lon", "vc", "vor", "ndb", "fix"
-    "airport", "parkpos", "runway",
-    "heading", "altitude", "offset-azimuth",
-    "offset-distance", "glideslope",
-    "on-ground"});
+    "lat", "lon", "vor", "ndb", "fix"
+    "airport", "parkpos", "runway"
+});
 
 bool LauncherArgumentTokenizer::haveArgsIn(const std::set<std::string>& args) const
 {
