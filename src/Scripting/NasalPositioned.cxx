@@ -494,6 +494,26 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
     *out = waypointAirport(c, wpt);
   } else if (!strcmp(fieldName, "runway")) {
     *out = waypointRunway(c, wpt);
+  } else if (wpt->type() == "hold") {
+    // hold-specific properties
+    const auto hold = static_cast<Hold*>(wpt);
+    if (!strcmp(fieldName, "hold_is_left_handed")) {
+      *out = naNum(hold->isLeftHanded());
+    } else if (!strcmp(fieldName, "hold_is_distance")) {
+      *out = naNum(hold->isDistance());
+    } else if (!strcmp(fieldName, "hold_is_time")) {
+      *out = naNum(!hold->isDistance());
+    } else if (!strcmp(fieldName, "hold_inbound_radial")) {
+      *out = naNum(hold->inboundRadial());
+    } else if (!strcmp(fieldName, "hold_heading_radial_deg")) {
+      *out = naNum(hold->inboundRadial());
+    } else if (!strcmp(fieldName, "hold_time_or_distance")) {
+      // This is the leg length, defined either as a time in seconds, or a
+      // distance in nm.
+      *out = naNum(hold->timeOrDistance());
+    } else {
+      return nullptr; // member not found
+    }
   } else {
     return nullptr; // member not found
   }
