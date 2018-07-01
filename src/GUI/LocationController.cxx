@@ -603,18 +603,26 @@ QObjectList LocationController::airportParkings() const
 
 void LocationController::showHistoryInSearchModel()
 {
-    // prepend the default location
-    FGPositionedList locs = m_recentLocations;
+    // prepend the default location and tutorial airport
+
+	FGPositionedList locs = m_recentLocations;
     const std::string defaultICAO = flightgear::defaultAirportICAO();
+	const std::string tutorialICAO = "PHTO"; // C172P tutorial aiurport
 
-    auto it = std::find_if(locs.begin(), locs.end(), [defaultICAO](FGPositionedRef pos) {
-        return pos->ident() == defaultICAO;
+	// remove them from the recent locations
+    auto it = std::remove_if(locs.begin(), locs.end(), 
+		[defaultICAO, tutorialICAO](FGPositionedRef pos) 
+	{
+        return (pos->ident() == defaultICAO) || (pos->ident() == tutorialICAO);
     });
+	locs.erase(it, locs.end());
 
-    if (it == locs.end()) {
-        FGAirportRef apt = FGAirport::findByIdent(defaultICAO);
-        locs.insert(locs.begin(), apt);
-    }
+	// prepend them
+	FGAirportRef apt = FGAirport::findByIdent(tutorialICAO);
+	locs.insert(locs.begin(), apt);
+
+	apt = FGAirport::findByIdent(defaultICAO);
+	locs.insert(locs.begin(), apt);
 
     m_searchModel->setItems(locs);
 }
