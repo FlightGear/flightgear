@@ -165,10 +165,10 @@ Item {
 
             // optional header component:
             StyledText {
+                id: header
                 text: root.headerText
                 visible: root.haveHeader();
                 height: implicitHeight + Style.margin
-                width: choicesColumn.width
 
                 // essentially the same mouse area as normal items
                 MouseArea {
@@ -188,6 +188,8 @@ Item {
                 for (var i = 0; i < choicesRepeater.count; i++) {
                     minWidth = Math.max(minWidth, choicesRepeater.itemAt(i).implicitWidth);
                 }
+                if (root.haveHeader())
+                    minWidth = Math.max(minWidth, header.width);
                 return minWidth;
             }
 
