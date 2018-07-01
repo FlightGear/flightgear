@@ -43,12 +43,6 @@ INCLUDES
 #include "models/FGAtmosphere.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINITIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-#define ID_STANDARDATMOSPHERE "$Id: FGStandardAtmosphere.h,v 1.17 2012/04/13 13:18:27 jberndt Exp $"
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -93,7 +87,6 @@ consistently and accurately calculated.
 
   @author Jon Berndt
   @see "U.S. Standard Atmosphere, 1976", NASA TM-X-74335
-  @version $Id: FGStandardAtmosphere.h,v 1.17 2012/04/13 13:18:27 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -238,23 +231,60 @@ public:
   //@{
   /// Returns the standard density at a specified altitude
   virtual double GetStdDensity(double altitude) const;
+  /// Returns the standard density at a specified altitude
+  virtual double GetDensity(double altitude) const;
+  //@}
+
+  //  *************************************************************************
+  ///@name Humidity access functions
+  //@{
+  /** Sets the dew point.
+      @param dewpoint The dew point in the units specified
+      @param unit The unit of measure that the specified dew point is supplied
+                  in. */
+  void SetDewPoint(eTemperature unit, double dewpoint);
+  /** Returns the dew point.
+      @param to The unit of measure that the dew point should be supplied in. */
+  double GetDewPoint(eTemperature to) const;
+  /** Sets the partial pressure of water vapor.
+      @param Pv The vapor pressure in the units specified
+      @param unit The unit of measure that the specified vapor pressure is
+                  supplied in. */
+  void SetVaporPressure(ePressure unit, double Pv);
+  /** Returns the partial pressure of water vapor.
+      @param to The unit of measure that the water vapor should be supplied in. */
+  double GetVaporPressure(ePressure to) const;
+  /** Returns the saturated pressure of water vapor.
+      @param to The unit of measure that the water vapor should be supplied in. */
+  double GetSaturatedVaporPressure(ePressure to) const;
+  /** Sets the relative humidity.
+      @param RH The relative humidity in percent. */
+  void SetRelativeHumidity(double RH);
+  /// Returns the relative humidity in percent.
+  double GetRelativeHumidity(void) const;
   //@}
 
   /// Prints the U.S. Standard Atmosphere table.
   virtual void PrintStandardAtmosphereTable();
 
 protected:
-  double StdSLtemperature, StdSLdensity, StdSLpressure, StdSLsoundspeed; // Standard sea level conditions
+  /// Standard sea level conditions
+  double StdSLtemperature, StdSLdensity, StdSLpressure, StdSLsoundspeed;
 
   double TemperatureBias;
   double TemperatureDeltaGradient;
   double GradientFadeoutAltitude;
+  double VaporPressure;
+  double SaturatedVaporPressure;
 
   FGTable StdAtmosTemperatureTable;
-  std::vector<double> LapseRateVector;
-  std::vector<double> PressureBreakpointVector;
-  std::vector<double> StdPressureBreakpointVector;
-  std::vector<double> StdDensityBreakpointVector;
+  std::vector<double> LapseRates;
+  std::vector<double> PressureBreakpoints;
+  std::vector<double> StdPressureBreakpoints;
+  std::vector<double> StdDensityBreakpoints;
+  std::vector<double> StdLapseRates;
+
+  virtual void Calculate(double altitude);
 
   /// Recalculate the lapse rate vectors when the temperature profile is altered
   /// in a way that would change the lapse rates, such as when a gradient is applied.
@@ -296,11 +326,18 @@ protected:
   */
   virtual double CalculatePressureAltitude(double pressure, double geometricAlt);
 
+  /// Calculate the pressure of water vapor with the Magnus formula.
+  double CalculateVaporPressure(double temperature);
+
   virtual void bind(void);
   void Debug(int from);
 
   /// Earth radius in ft as defined for ISA 1976
   static const double EarthRadius;
+  /// Constants for the Magnus formula (vapor pressure)
+  static const double a, b, c;
+  /// Mean molecular weight for water - slug/mol
+  static const double Mwater;
 };
 
 } // namespace JSBSim

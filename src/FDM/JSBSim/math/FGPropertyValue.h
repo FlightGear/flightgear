@@ -39,12 +39,6 @@ INCLUDES
 #include "input_output/FGPropertyManager.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINITIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-#define ID_PROPERTYVALUE "$Id: FGPropertyValue.h,v 1.11 2013/09/27 19:43:01 jberndt Exp $"
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -81,7 +75,7 @@ protected:
 
 private:
   FGPropertyManager* PropertyManager; // Property root used to do late binding.
-  FGPropertyNode_ptr PropertyNode;
+  mutable FGPropertyNode_ptr PropertyNode;
   std::string PropertyName;
   int Sign;
 };

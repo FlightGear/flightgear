@@ -50,9 +50,6 @@ INCLUDES
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGAtmosphere.cpp,v 1.62 2016/01/16 12:05:47 bcoconni Exp $");
-IDENT(IdHdr,ID_ATMOSPHERE);
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -136,7 +133,7 @@ void FGAtmosphere::Calculate(double altitude)
     Pressure = node->GetDouble("atmosphere/override/pressure");
 
   if (!PropertyManager->HasNode("atmosphere/override/density"))
-    Density = Pressure/(Reng*Temperature);
+    Density = GetDensity(altitude);
   else
     Density = node->GetDouble("atmosphere/override/density");
 
@@ -193,13 +190,39 @@ double FGAtmosphere::ConvertToRankine(double t, eTemperature unit) const
     targetTemp = t + 459.67;
     break;
   case eCelsius:
-    targetTemp = t*9.0/5.0 + 32.0 + 459.67;
+    targetTemp = (t + 273.15) * 1.8;
     break;
   case eRankine:
     targetTemp = t;
     break;
   case eKelvin:
-    targetTemp = t*9.0/5.0;
+    targetTemp = t*1.8;
+    break;
+  default:
+    break;
+  }
+
+  return targetTemp;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGAtmosphere::ConvertFromRankine(double t, eTemperature unit) const
+{
+  double targetTemp=0;
+
+  switch(unit) {
+  case eFahrenheit:
+    targetTemp = t - 459.67;
+    break;
+  case eCelsius:
+    targetTemp = t/1.8 - 273.15;
+    break;
+  case eRankine:
+    targetTemp = t;
+    break;
+  case eKelvin:
+    targetTemp = t/1.8;
     break;
   default:
     break;
@@ -236,7 +259,7 @@ double FGAtmosphere::ConvertToPSF(double p, ePressure unit) const
 
 double FGAtmosphere::ConvertFromPSF(double p, ePressure unit) const
 {
-  double targetPressure=0; // Pressure in PSF
+  double targetPressure=0; // Pressure
 
   switch(unit) {
   case ePSF:
@@ -318,8 +341,6 @@ void FGAtmosphere::Debug(int from)
   }
   if (debug_lvl & 64) {
     if (from == 0) { // Constructor
-      std::cout << IdSrc << std::endl;
-      std::cout << IdHdr << std::endl;
     }
   }
 }

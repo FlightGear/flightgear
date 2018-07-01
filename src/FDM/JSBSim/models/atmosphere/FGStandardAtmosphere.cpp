@@ -37,6 +37,9 @@ COMMENTS, REFERENCES,  and NOTES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [1]   Anderson, John D. "Introduction to Flight, Third Edition", McGraw-Hill,
       1989, ISBN 0-07-001641-0
+[2]   Sonntag, D. "Important New Values of the Physical Constants of 1986,
+      Vapour Pressure Formulations based on the IST-90 and Psychrometer
+      Formulae", Z. Meteorol., 70 (5), pp. 340-344, 1990
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
@@ -50,9 +53,6 @@ INCLUDES
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGStandardAtmosphere.cpp,v 1.24 2014/05/17 15:07:48 jberndt Exp $");
-IDENT(IdHdr,ID_STANDARDATMOSPHERE);
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -60,10 +60,17 @@ CLASS IMPLEMENTATION
 // Effective radius of the earth at a specific latitude per ISA 1976 (converted to ft)
 // r0 = 6356766 m
 const double FGStandardAtmosphere::EarthRadius = 6356766.0/FGJSBBase::fttom;
+/** Sonntag constants based on ref [2]. They are valid for temperatures between
+    -45 degC (-49 degF) and 60 degC (140 degF) with a precision of +/-0.35 degC
+    (+/-0.63 degF) */
+const double FGStandardAtmosphere::a = 611.2/FGJSBBase::psftopa; // psf
+const double FGStandardAtmosphere::b = 17.62; // 1/degC
+const double FGStandardAtmosphere::c = 243.12; // degC
+const double FGStandardAtmosphere::Mwater = 18.016 * FGJSBBase::kgtoslug / 1000.0; // slug/mol
 
 FGStandardAtmosphere::FGStandardAtmosphere(FGFDMExec* fdmex)
   : FGAtmosphere(fdmex), TemperatureBias(0.0), TemperatureDeltaGradient(0.0),
-    StdAtmosTemperatureTable(9)
+    VaporPressure(0.0), SaturatedVaporPressure(0.0), StdAtmosTemperatureTable(9)
 {
   Name = "FGStandardAtmosphere";
 
@@ -97,8 +104,9 @@ FGStandardAtmosphere::FGStandardAtmosphere(FGFDMExec* fdmex)
                            << 278385.8268 << 336.5028  // 84.852      86.000
                            << 298556.4304 << 336.5028; //             91.000 - First layer in high altitude regime 
 
-  PressureBreakpointVector.resize(StdAtmosTemperatureTable.GetNumRows());
-  LapseRateVector.resize(StdAtmosTemperatureTable.GetNumRows());
+  unsigned int numRows = StdAtmosTemperatureTable.GetNumRows();
+  PressureBreakpoints.resize(numRows);
+  LapseRates.resize(numRows);
 
   // Assume the altitude to fade out the gradient at is at the highest
   // altitude in the table. Above that, other functions are used to
@@ -120,7 +128,7 @@ FGStandardAtmosphere::~FGStandardAtmosphere()
 
 bool FGStandardAtmosphere::InitModel(void)
 {
-  PressureBreakpointVector[0] = StdSLpressure = SLpressure = Pressure = 2116.228; // psf
+  PressureBreakpoints[0] = StdSLpressure = SLpressure = Pressure = 2116.228; // psf
   TemperatureDeltaGradient = 0.0;
   TemperatureBias = 0.0;
   CalculateLapseRates();
@@ -129,7 +137,8 @@ bool FGStandardAtmosphere::InitModel(void)
   StdSLtemperature = SLtemperature = StdAtmosTemperatureTable(1, 1);
   StdSLdensity     = SLdensity = StdSLpressure / (Reng * StdSLtemperature);
 
-  StdPressureBreakpointVector = PressureBreakpointVector;
+  StdPressureBreakpoints = PressureBreakpoints;
+  StdLapseRates = LapseRates;
 
   CalculateStdDensityBreakpoints();
 
@@ -145,6 +154,18 @@ bool FGStandardAtmosphere::InitModel(void)
 //  PrintStandardAtmosphereTable();
 
   return true;
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGStandardAtmosphere::Calculate(double altitude)
+{
+  FGAtmosphere::Calculate(altitude);
+  SaturatedVaporPressure = CalculateVaporPressure(Temperature);
+
+  // Make sure the partial pressure of water vapor never becomes higher than the
+  // saturated vapor pressure.
+  if (VaporPressure > SaturatedVaporPressure)
+    VaporPressure = SaturatedVaporPressure;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -174,14 +195,14 @@ double FGStandardAtmosphere::GetPressure(double altitude) const
 
   double Tmb = GetTemperature(GeometricAltitude(BaseAlt));
   double deltaH = GeoPotAlt - BaseAlt;
-  double Lmb = LapseRateVector[b];
+  double Lmb = LapseRates[b];
 
   if (Lmb != 0.0) {
     double Exp = g0*Mair / (Rstar*Lmb);
     double factor = Tmb/(Tmb + Lmb*deltaH);
-    return PressureBreakpointVector[b]*pow(factor, Exp);
+    return PressureBreakpoints[b]*pow(factor, Exp);
   } else
-    return PressureBreakpointVector[b]*exp(-g0*Mair*deltaH/(Rstar*Tmb));
+    return PressureBreakpoints[b]*exp(-g0*Mair*deltaH/(Rstar*Tmb));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -190,7 +211,7 @@ void FGStandardAtmosphere::SetPressureSL(ePressure unit, double pressure)
 {
   double press = ConvertToPSF(pressure, unit);
 
-  PressureBreakpointVector[0] = press;
+  PressureBreakpoints[0] = press;
   CalculatePressureBreakpoints();
 }
 
@@ -213,10 +234,13 @@ double FGStandardAtmosphere::GetTemperature(double altitude) const
   else {
     // We don't need to add TemperatureDeltaGradient*GeoPotAlt here because
     // the lapse rate vector already accounts for the temperature gradient.
-    T = StdAtmosTemperatureTable.GetValue(0.0) + GeoPotAlt*LapseRateVector[0];
+    T = StdAtmosTemperatureTable.GetValue(0.0) + GeoPotAlt*LapseRates[0];
   }
 
-  T += TemperatureBias + TemperatureDeltaGradient * GradientFadeoutAltitude;
+  T += TemperatureBias;
+
+  if (GeoPotAlt <= GradientFadeoutAltitude)
+    T += TemperatureDeltaGradient * GradientFadeoutAltitude;
 
   return T;
 }
@@ -237,7 +261,7 @@ double FGStandardAtmosphere::GetStdTemperature(double altitude) const
     if (GeoPotAlt >= 0.0)
       temp = StdAtmosTemperatureTable.GetValue(GeoPotAlt);
     else
-      temp = StdAtmosTemperatureTable.GetValue(0.0) + GeoPotAlt*LapseRateVector[0];
+      temp = StdAtmosTemperatureTable.GetValue(0.0) + GeoPotAlt*LapseRates[0];
 
   } else if (altitude < 360892.4) {        // 110 km - station 9
 
@@ -282,14 +306,14 @@ double FGStandardAtmosphere::GetStdPressure(double altitude) const
 
   double Tmb = GetStdTemperature(GeometricAltitude(BaseAlt));
   double deltaH = GeoPotAlt - BaseAlt;
-  double Lmb = LapseRateVector[b];
+  double Lmb = LapseRates[b];
 
   if (Lmb != 0.0) {
     double Exp = g0*Mair / (Rstar*Lmb);
     double factor = Tmb/(Tmb + Lmb*deltaH);
-    return StdPressureBreakpointVector[b]*pow(factor, Exp);
+    return StdPressureBreakpoints[b]*pow(factor, Exp);
   } else
-    return StdPressureBreakpointVector[b]*exp(-g0*Mair*deltaH/(Rstar*Tmb));
+    return StdPressureBreakpoints[b]*exp(-g0*Mair*deltaH/(Rstar*Tmb));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -301,13 +325,28 @@ double FGStandardAtmosphere::GetStdDensity(double altitude) const
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Get the density, taking into account the water vapor in the air.
+
+double FGStandardAtmosphere::GetDensity(double altitude) const
+{
+  double P = GetPressure(altitude);
+  double Pa = P - VaporPressure; // Partial pressure of air
+
+  return (Pa/Reng + Mwater*VaporPressure/Rstar)/GetTemperature(altitude);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGStandardAtmosphere::SetTemperature(double t, double h, eTemperature unit)
 {
-  double targetSLtemp = ConvertToRankine(t, unit);
+  double targetTemp = ConvertToRankine(t, unit);
+  double GeoPotAlt = GeopotentialAltitude(h);
 
-  TemperatureBias = 0.0;
-  TemperatureBias = targetSLtemp - GetTemperature(h);
+  TemperatureBias = targetTemp - GetStdTemperature(h);
+
+  if (GeoPotAlt <= GradientFadeoutAltitude)
+    TemperatureBias -= TemperatureDeltaGradient * (GradientFadeoutAltitude - GeoPotAlt);
+
   CalculatePressureBreakpoints();
 }
 
@@ -387,7 +426,7 @@ void FGStandardAtmosphere::SetTemperatureGradedDelta(double deltemp, double h, e
 void FGStandardAtmosphere::CalculateLapseRates()
 {
   unsigned int numRows = StdAtmosTemperatureTable.GetNumRows();
-  LapseRateVector.clear();
+  LapseRates.clear();
 
   for (unsigned int bh=0; bh < numRows-1; bh++)
   {
@@ -395,7 +434,7 @@ void FGStandardAtmosphere::CalculateLapseRates()
     double t1 = StdAtmosTemperatureTable(bh+2,1);
     double h0 = StdAtmosTemperatureTable(bh+1,0);
     double h1 = StdAtmosTemperatureTable(bh+2,0);
-    LapseRateVector.push_back((t1 - t0) / (h1 - h0) - TemperatureDeltaGradient);
+    LapseRates.push_back((t1 - t0) / (h1 - h0) - TemperatureDeltaGradient);
   }
 }
 
@@ -403,7 +442,7 @@ void FGStandardAtmosphere::CalculateLapseRates()
 
 void FGStandardAtmosphere::CalculatePressureBreakpoints()
 {
-  for (unsigned int b=0; b<PressureBreakpointVector.size()-1; b++) {
+  for (unsigned int b=0; b<PressureBreakpoints.size()-1; b++) {
     double BaseTemp = StdAtmosTemperatureTable(b+1,1);
     double BaseAlt = StdAtmosTemperatureTable(b+1,0);
     double UpperAlt = StdAtmosTemperatureTable(b+2,0);
@@ -411,13 +450,13 @@ void FGStandardAtmosphere::CalculatePressureBreakpoints()
     double Tmb = BaseTemp
                  + TemperatureBias 
                  + (GradientFadeoutAltitude - BaseAlt)*TemperatureDeltaGradient;
-    if (LapseRateVector[b] != 0.00) {
-      double Lmb = LapseRateVector[b];
+    if (LapseRates[b] != 0.00) {
+      double Lmb = LapseRates[b];
       double Exp = g0*Mair / (Rstar*Lmb);
       double factor = Tmb/(Tmb + Lmb*deltaH);
-      PressureBreakpointVector[b+1] = PressureBreakpointVector[b]*pow(factor, Exp);
+      PressureBreakpoints[b+1] = PressureBreakpoints[b]*pow(factor, Exp);
     } else {
-      PressureBreakpointVector[b+1] = PressureBreakpointVector[b]*exp(-g0*Mair*deltaH/(Rstar*Tmb));
+      PressureBreakpoints[b+1] = PressureBreakpoints[b]*exp(-g0*Mair*deltaH/(Rstar*Tmb));
     }
   }
 }
@@ -435,7 +474,7 @@ void FGStandardAtmosphere::ResetSLTemperature()
 
 void FGStandardAtmosphere::ResetSLPressure()
 {
-  PressureBreakpointVector[0] = StdSLpressure; // psf
+  PressureBreakpoints[0] = StdSLpressure; // psf
   CalculatePressureBreakpoints();
 }
 
@@ -443,9 +482,9 @@ void FGStandardAtmosphere::ResetSLPressure()
 
 void FGStandardAtmosphere::CalculateStdDensityBreakpoints()
 {
-  StdDensityBreakpointVector.clear();
-  for (unsigned int i = 0; i < StdPressureBreakpointVector.size(); i++) {
-    StdDensityBreakpointVector.push_back(StdPressureBreakpointVector[i] / (Reng * StdAtmosTemperatureTable(i + 1, 1)));
+  StdDensityBreakpoints.clear();
+  for (unsigned int i = 0; i < StdPressureBreakpoints.size(); i++) {
+    StdDensityBreakpoints.push_back(StdPressureBreakpoints[i] / (Reng * StdAtmosTemperatureTable(i + 1, 1)));
   }
 }
 
@@ -455,19 +494,16 @@ double FGStandardAtmosphere::CalculateDensityAltitude(double density, double geo
 {
   // Work out which layer we're dealing with
   unsigned int b = 0;
-  for (; b < StdDensityBreakpointVector.size() - 2; b++) {
-    if (density >= StdDensityBreakpointVector[b + 1])
+  for (; b < StdDensityBreakpoints.size() - 2; b++) {
+    if (density >= StdDensityBreakpoints[b + 1])
       break;
   }
 
   // Get layer properties
   double Tmb = StdAtmosTemperatureTable(b + 1, 1);
   double Hb = StdAtmosTemperatureTable(b + 1, 0);
-  double UpperTemp = StdAtmosTemperatureTable(b + 2, 1);
-  double UpperAlt = StdAtmosTemperatureTable(b + 2, 0);
-  double deltaH = UpperAlt - Hb;
-  double Lmb = (UpperTemp - Tmb) / deltaH;
-  double pb = StdDensityBreakpointVector[b];
+  double Lmb = StdLapseRates[b];
+  double pb = StdDensityBreakpoints[b];
 
   double density_altitude = 0.0;
 
@@ -489,19 +525,16 @@ double FGStandardAtmosphere::CalculatePressureAltitude(double pressure, double g
 {
   // Work out which layer we're dealing with
   unsigned int b = 0;
-  for (; b < StdPressureBreakpointVector.size() - 2; b++) {
-    if (pressure >= StdPressureBreakpointVector[b + 1])
+  for (; b < StdPressureBreakpoints.size() - 2; b++) {
+    if (pressure >= StdPressureBreakpoints[b + 1])
       break;
   }
 
   // Get layer properties
   double Tmb = StdAtmosTemperatureTable(b + 1, 1);
   double Hb = StdAtmosTemperatureTable(b + 1, 0);
-  double UpperTemp = StdAtmosTemperatureTable(b + 2, 1);
-  double UpperAlt = StdAtmosTemperatureTable(b + 2, 0);
-  double deltaH = UpperAlt - Hb;
-  double Lmb = (UpperTemp - Tmb) / deltaH;
-  double Pb = StdPressureBreakpointVector[b];
+  double Lmb = StdLapseRates[b];
+  double Pb = StdPressureBreakpoints[b];
 
   double pressure_altitude = 0.0;
 
@@ -520,6 +553,72 @@ double FGStandardAtmosphere::CalculatePressureAltitude(double pressure, double g
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+double FGStandardAtmosphere::CalculateVaporPressure(double temperature)
+{
+  double temperature_degC = temperature/1.8-273.15;
+  return a*exp(b*temperature_degC/(c+temperature_degC));
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGStandardAtmosphere::SetDewPoint(eTemperature unit, double dewpoint)
+{
+  VaporPressure = CalculateVaporPressure(ConvertToRankine(dewpoint, unit));
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGStandardAtmosphere::GetDewPoint(eTemperature to) const
+{
+  double dewpoint_degC;
+
+  if (VaporPressure <= 0.0)
+    dewpoint_degC = -c;
+  else {
+    double x = log(VaporPressure/a);
+    dewpoint_degC = c*x / (b - x);
+  }
+
+  return ConvertFromRankine(1.8*(dewpoint_degC + 273.15), to);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGStandardAtmosphere::SetVaporPressure(ePressure unit, double Pa)
+{
+  VaporPressure = ConvertToPSF(Pa, unit);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGStandardAtmosphere::GetVaporPressure(ePressure to) const
+{
+  return ConvertFromPSF(VaporPressure, to);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGStandardAtmosphere::GetSaturatedVaporPressure(ePressure to) const
+{
+  return ConvertFromPSF(SaturatedVaporPressure, to);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGStandardAtmosphere::GetRelativeHumidity(void) const
+{
+  return 100.0*VaporPressure/SaturatedVaporPressure;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGStandardAtmosphere::SetRelativeHumidity(double RH)
+{
+  VaporPressure = 0.01*RH*SaturatedVaporPressure;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGStandardAtmosphere::bind(void)
 {
   typedef double (FGStandardAtmosphere::*PMFi)(int) const;
@@ -533,6 +632,17 @@ void FGStandardAtmosphere::bind(void)
   PropertyManager->Tie("atmosphere/P-sl-psf", this, ePSF,
                                    (PMFi)&FGStandardAtmosphere::GetPressureSL,
                                    (PMF)&FGStandardAtmosphere::SetPressureSL);
+  PropertyManager->Tie("atmosphere/dew-point-R", this, eRankine,
+                       (PMFi)&FGStandardAtmosphere::GetDewPoint,
+                       (PMF)&FGStandardAtmosphere::SetDewPoint);
+  PropertyManager->Tie("atmosphere/vapor-pressure-psf", this, ePSF,
+                       (PMFi)&FGStandardAtmosphere::GetVaporPressure,
+                       (PMF)&FGStandardAtmosphere::SetVaporPressure);
+  PropertyManager->Tie("atmosphere/saturated-vapor-pressure-psf", this, ePSF,
+                       (PMFi)&FGStandardAtmosphere::GetSaturatedVaporPressure);
+  PropertyManager->Tie("atmosphere/RH", this,
+                       &FGStandardAtmosphere::GetRelativeHumidity,
+                       &FGStandardAtmosphere::SetRelativeHumidity);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -576,8 +686,6 @@ void FGStandardAtmosphere::Debug(int from)
   }
   if (debug_lvl & 64) {
     if (from == 0) { // Constructor
-      std::cout << IdSrc << std::endl;
-      std::cout << IdHdr << std::endl;
     }
   }
 }

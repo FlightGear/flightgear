@@ -61,9 +61,6 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGOutputSocket.cpp,v 1.9 2014/02/17 05:01:22 jberndt Exp $");
-IDENT(IdHdr,ID_OUTPUTSOCKET);
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -107,7 +104,7 @@ void FGOutputSocket::SetOutputName(const string& fname)
   
   SockPort = atoi(port.c_str());
   
-  if (proto == "UDP")
+  if (to_upper(proto) == "UDP")
     SockProtocol = FGfdmSocket::ptUDP;
   else // Default to TCP
     SockProtocol = FGfdmSocket::ptTCP;

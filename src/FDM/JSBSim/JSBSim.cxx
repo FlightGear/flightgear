@@ -55,13 +55,13 @@
 #include <FDM/JSBSim/models/FGPropagate.h>
 #include <FDM/JSBSim/models/FGAuxiliary.h>
 #include <FDM/JSBSim/models/FGInertial.h>
-#include <FDM/JSBSim/models/FGAtmosphere.h>
 #include <FDM/JSBSim/models/FGMassBalance.h>
 #include <FDM/JSBSim/models/FGAerodynamics.h>
 #include <FDM/JSBSim/models/FGLGear.h>
 #include <FDM/JSBSim/models/FGGroundReactions.h>
 #include <FDM/JSBSim/models/FGPropulsion.h>
 #include <FDM/JSBSim/models/FGAccelerations.h>
+#include <FDM/JSBSim/models/atmosphere/FGStandardAtmosphere.h>
 #include <FDM/JSBSim/models/atmosphere/FGWinds.h>
 #include <FDM/JSBSim/models/propulsion/FGEngine.h>
 #include <FDM/JSBSim/models/propulsion/FGPiston.h>
@@ -342,6 +342,7 @@ FGJSBsim::FGJSBsim( double dt )
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     pressureSL = fgGetNode("/environment/pressure-sea-level-inhg",true);
+    dew_point = fgGetNode("/environment/dewpoint-degc", true);
     ground_wind = fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt",true);
     turbulence_gain = fgGetNode("/environment/turbulence/magnitude-norm",true);
     turbulence_rate = fgGetNode("/environment/turbulence/rate-hz",true);
@@ -692,6 +693,8 @@ bool FGJSBsim::copy_to_JSBsim()
 
     Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
     Atmosphere->SetPressureSL(FGAtmosphere::eInchesHg, pressureSL->getDoubleValue());
+    static_cast<FGStandardAtmosphere*>(Atmosphere)->SetDewPoint(FGAtmosphere::eCelsius,
+                                                                dew_point->getDoubleValue());
 
     Winds->SetTurbType((FGWinds::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
     switch( Winds->GetTurbType() ) {

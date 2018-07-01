@@ -282,6 +282,7 @@ private:
     SGPropertyNode_ptr temperature;
     SGPropertyNode_ptr pressure;
     SGPropertyNode_ptr pressureSL;
+    SGPropertyNode_ptr dew_point;
     SGPropertyNode_ptr ground_wind;
     SGPropertyNode_ptr turbulence_gain;
     SGPropertyNode_ptr turbulence_rate;

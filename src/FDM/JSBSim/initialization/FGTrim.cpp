@@ -57,9 +57,6 @@ using namespace std;
 
 namespace JSBSim {
 
-IDENT(IdSrc,"$Id: FGTrim.cpp,v 1.34 2016/06/12 09:09:02 bcoconni Exp $");
-IDENT(IdHdr,ID_TRIM);
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGTrim::FGTrim(FGFDMExec *FDMExec,TrimMode tt)

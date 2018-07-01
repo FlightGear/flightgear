@@ -44,22 +44,6 @@ INCLUDES
 #include <vector>
 #include <stdio.h>
 
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINITIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-#define ID_STRINGUTILS "$Id: string_utilities.h,v 1.24 2015/08/16 16:06:28 bcoconni Exp $"
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-FORWARD DECLARATIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-CLASS DOCUMENTATION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -73,16 +57,6 @@ CLASS DECLARATION
   extern std::string& to_lower(std::string& str);
   extern bool is_number(const std::string& str);
   std::vector <std::string> split(std::string str, char d);
-
-  // These functions are built-ins for:
-  // * C++11
-  // * libc++ for all C++ language versions
-  // * Visual Studio for versions greater than 2010 (1700 -> MSVC++ 11.0 and VS 2012)
-#if !defined(_LIBCPP_VERSION) && _MSC_VER < 1700 && __cplusplus < 201103L
-  extern std::string to_string(int);
-  extern std::string to_string(double);
-  extern std::string to_string(float);
-#endif
 
   extern std::string replace(std::string str, const std::string& old, const std::string& newstr);
 #else
@@ -165,33 +139,6 @@ CLASS DECLARATION
     return str_array;
   }
 
-  // These functions are built-ins for:
-  // * C++11
-  // * libc++ for all C++ language versions
-  // * Visual Studio for versions greater than 2010 (1700 -> MSVC++ 11.0 and VS 2012)
-#if !defined(_LIBCPP_VERSION) && _MSC_VER < 1700 && __cplusplus < 201103L
-  std::string to_string(int i)
-  {
-    char buffer[32];
-    sprintf(buffer, "%d", i);
-    return std::string(buffer);
-  }
-
-  std::string to_string(float x)
-  {
-    std::ostringstream o;
-    if (!(o << x)) std::cerr << "Bad float to string conversion" << std::endl;
-    return o.str();
-  }
-
-  std::string to_string(double x)
-  {
-    std::ostringstream o;
-    if (!(o << x)) std::cerr << "Bad double to string conversion" << std::endl;
-    return o.str();
-  }
-#endif
-
   std::string replace(std::string str, const std::string& oldstr, const std::string& newstr)
   {
     std::string temp = str;
@@ -207,4 +154,3 @@ CLASS DECLARATION
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #endif
-
