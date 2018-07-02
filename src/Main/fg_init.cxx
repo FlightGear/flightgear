@@ -408,6 +408,10 @@ static SGPath platformDefaultDataPath()
 }
 #endif
 
+#if defined(SG_WINDOWS)
+static HANDLE static_fgHomeWriteMutex = nullptr;
+#endif
+
 bool fgInitHome()
 {
   SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
@@ -438,8 +442,8 @@ bool fgInitHome()
 	// unreliable and causes false-positives. Instead, use a named
 	// mutex.
 
-	HANDLE hMutex = CreateMutexA(nullptr, FALSE, "org.flightgear.fgfs.primary");
-	if (hMutex == nullptr) {
+	static_fgHomeWriteMutex = CreateMutexA(nullptr, FALSE, "org.flightgear.fgfs.primary");
+	if (static_fgHomeWriteMutex == nullptr) {
 		printf("CreateMutex error: %d\n", GetLastError());
 		SG_LOG(SG_GENERAL, SG_POPUP, "Failed to create mutex for multi-app protection");
 		return false;
@@ -486,6 +490,15 @@ bool fgInitHome()
 #endif
     fgSetBool("/sim/fghome-readonly", false);
     return result;
+}
+
+void fgShutdownHome()
+{
+#if defined(SG_WINDOWS)
+	if (static_fgHomeWriteMutex) {
+		CloseHandle(static_fgHomeWriteMutex);
+	}
+#endif
 }
 
 static void createBaseStorageDirForAddons(const SGPath& exportDir)

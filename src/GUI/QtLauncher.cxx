@@ -292,6 +292,9 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
 
 void shutdownQtApp()
 {
+	// restore default message handler, otherwise Qt logging on
+	// shutdown crashes once sglog is killed
+	qInstallMessageHandler(nullptr);
     static_qApp.reset();
 }
 
@@ -333,6 +336,10 @@ void restartTheApp()
     // Spawn a new instance of myApplication:
     QProcess proc;
     QStringList args;
+
+	// ensure we release whatever mutex/lock file we have in home,
+	// so the new instance runs in writeable mode
+	fgShutdownHome();
 
 #if defined(Q_OS_MAC)
     QDir dir(qApp->applicationDirPath()); // returns the 'MacOS' dir

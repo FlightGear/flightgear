@@ -36,6 +36,7 @@ class SGPath;
 std::string fgBasePackageVersion(const SGPath& path);
 
 bool fgInitHome();
+void fgShutdownHome();
 
 // Read in configuration (file and command line)
 int fgInitConfig ( int argc, char **argv, bool reinit );
