@@ -72,7 +72,7 @@ Rectangle {
 
             popupFrame.x = screenPos.x;
             popupFrame.y = screenPos.y;
-            popupFrame.visible = true
+            popupFrame.show()
             tracker.window = popupFrame
         }
     }
@@ -92,7 +92,6 @@ Rectangle {
         width: root.width
         flags: Qt.Popup
         height: choicesColumn.childrenRect.height
-        visible: false
         color: "white"
 
         Rectangle {
@@ -105,7 +104,11 @@ Rectangle {
             id: choicesColumn
 
             Repeater {
-                model: popupFrame.visible ? aircraftInfo.variantNames : 0
+                // would prefer the model to be conditional on visiblity,
+                // but this trips up the Window sizing on Linux (Ubuntu at
+                // least) and we get a mis-aligned origin
+                model: aircraftInfo.variantNames
+
                 delegate: Item {
                     width: popupFrame.width
                     height: choiceText.implicitHeight
@@ -130,8 +133,8 @@ Rectangle {
                         hoverEnabled: true
                         anchors.fill: parent
                         onClicked: {
+                            popupFrame.hide()
                             root.selected(model.index)
-                            popupFrame.visible = false
                         }
                     }
                 } // of delegate Item
