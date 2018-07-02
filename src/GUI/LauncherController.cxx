@@ -790,3 +790,12 @@ void LauncherController::saveConfigAs()
 
     m_config->saveConfigToFile(file);
 }
+
+void LauncherController::setMinWindowSize(QSize sz)
+{
+	if (sz == m_minWindowSize)
+		return;
+
+	m_window->setMinimumSize(sz);
+	emit minWindowSizeChanged();
+}

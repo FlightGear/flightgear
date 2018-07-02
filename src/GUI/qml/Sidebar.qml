@@ -10,6 +10,8 @@ Rectangle {
     property int selectedPage: 0
     property alias showMenuIcon: menuIcon.visible
 
+    readonly property int minimumHeight: mainColumn.childrenRect.height + flyButton.height
+
     signal selectPage(var pageSource);
 
     signal showMenu();
@@ -20,6 +22,7 @@ Rectangle {
     }
 
     Column {
+        id: mainColumn
         width: parent.width
         anchors.top: parent.top
         anchors.bottom: flyButton.top

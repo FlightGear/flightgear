@@ -94,8 +94,6 @@ LauncherMainWindow::LauncherMainWindow() :
     ctx->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
     setSource(QUrl("qrc:///qml/Launcher.qml"));
-
-	setMinimumSize(QSize(300, 400));
 }
 
 #if 0

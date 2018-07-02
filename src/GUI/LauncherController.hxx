@@ -24,6 +24,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QModelIndex>
+#include <QSize>
 
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Catalog.hxx>
@@ -78,6 +79,9 @@ class LauncherController : public QObject
     Q_PROPERTY(bool canFly READ canFly NOTIFY canFlyChanged)
 
     Q_PROPERTY(AircraftType aircraftType READ aircraftType NOTIFY selectedAircraftChanged)
+
+	Q_PROPERTY(QSize minimumWindowSize READ minWindowSize WRITE setMinWindowSize NOTIFY minWindowSizeChanged)
+
 public:
     explicit LauncherController(QObject *parent, QWindow* win);
 
@@ -168,6 +172,13 @@ public:
 	void setInAppMode();
 	bool keepRunningInAppMode() const;
 	bool inAppResult() const;
+
+	QSize minWindowSize() const 
+	{
+		return m_minWindowSize; 
+	}
+
+	void setMinWindowSize(QSize sz);
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -175,7 +186,7 @@ signals:
     
     void searchChanged();
     void summaryChanged();
-
+	void minWindowSizeChanged();
     void canFlyChanged();
 
     void viewCommandLine();
@@ -245,7 +256,7 @@ private:
     QStringList m_settingsSummary, m_environmentSummary;
     RecentAircraftModel* m_aircraftHistory = nullptr;
     RecentLocationsModel* m_locationHistory = nullptr;
-
+	QSize m_minWindowSize;
     QTimer* m_subsystemIdleTimer = nullptr;
 
 	bool m_inAppMode = false;

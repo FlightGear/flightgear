@@ -27,6 +27,11 @@ Item {
 
     }
 
+    Component.onCompleted:
+    {
+       _launcher.minimumWindowSize = Qt.size(Style.strutSize * 12, sidebar.minimumHeight);
+    }
+
     Connections {
         target: _location
         onSkipFromArgsChanged: pagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
