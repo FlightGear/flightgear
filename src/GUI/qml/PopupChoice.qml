@@ -96,6 +96,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         StyledText {
+            enabled: root.enabled
             id: currentChoiceText
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left

@@ -35,12 +35,11 @@ Item {
     // not very declarative, try to remove this over time
     function syncUIFromController()
     {
-        runwayRadio.selected = (_location.detail.isRunwayType);
-        parkingRadio.selected = (_location.detail.type == Positioned.Parking);
-
         if (_location.detail.isRunwayType) {
+            runwayRadio.select();
             runwayChoice.syncCurrentIndex();
         } else if (_location.detail.type == Positioned.Parking) {
+            parkingRadio.select()
             parkingChoice.syncCurrentIndex();
         }
     }
@@ -59,6 +58,7 @@ Item {
         color: "transparent"
         border.width: 1
         border.color: Style.frameColor
+        clip: true
 
         anchors {
             left: parent.left
@@ -154,73 +154,91 @@ Item {
                 }
             }
 
-            // runway offset row
-            Row {
-                x: Style.strutSize
+            // runway offset
+            ToggleBox {
+                id: onFinalBox
+
+                anchors.left: parent.left
+                anchors.leftMargin: Style.strutSize
+                height: onFinalContents.height + onFinalContents.y + Style.margin
+                anchors.right: parent.right
+                anchors.rightMargin: Style.margin
 
                 // no offset for helipads
                 visible: !isHeliport
 
-                readonly property bool enableOnFinal: runwayRadio.selected && _location.onFinal
+                enabled: runwayRadio.selected
+                selected: _location.onFinal
 
-                ToggleSwitch {
-                    id: onFinalToggle
-                    label: qsTr("On final approach at ")
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: _location.onFinal
-                    enabled:runwayRadio.selected
-                    onCheckedChanged: _location.onFinal = checked
-                }
+                label: qsTr("On final approach")
 
-                DoubleSpinbox {
-                    id: offsetNmEdit
-                    value: _location.offsetNm
-                    onCommit: _location.offsetNm = newValue;
+                onSelectedChanged: _location.onFinal = selected
+                readonly property bool enableOnFinal: enabled && selected
 
-                    suffix: "Nm"
-                    min: 0.0
-                    max: 40.0
-                    decimals: 1
-                    maxDigits: 5
-                    live: true
+                Column {
+                    id: onFinalContents
+                    y: parent.contentVerticalOffset
+                    spacing: Style.margin
+                    width: parent.width
 
-                    anchors.verticalCenter: parent.verticalCenter
-                    enabled: parent.enableOnFinal
-                }
+                    Row {
+                        height: offsetNmEdit.height
+                        DoubleSpinbox {
+                            id: offsetNmEdit
+                            value: _location.offsetNm
+                            onCommit: _location.offsetNm = newValue;
+                            label: qsTr("At")
+                            suffix: "Nm"
+                            min: 0.0
+                            max: 40.0
+                            decimals: 1
+                            maxDigits: 5
+                            live: true
+                            anchors.verticalCenter: parent.verticalCenter
+                            enabled: onFinalBox.enableOnFinal
+                        }
 
-                StyledText {
-                    text: qsTr(" from the threshold")
-                    anchors.verticalCenter: parent.verticalCenter
-                    enabled: parent.enableOnFinal
-                }
+                        StyledText {
+                            text: qsTr(" from the threshold")
+                            anchors.verticalCenter: parent.verticalCenter
+                            enabled: onFinalBox.enableOnFinal
+                        }
 
-                Item {
-                    // padding
-                    width: Style.strutSize
-                    height: 1
-                }
+                        Item {
+                            height: 1; width: Style.strutSize
+                        }
 
-                ToggleSwitch {
-                    id: airspeedToggle
-                    enabled: parent.enableOnFinal
-                    checked: _location.speedEnabled
-                    onCheckedChanged: _location.speedEnabled = checked;
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+                        ToggleSwitch {
+                            id: airspeedToggle
+                            enabled: onFinalBox.enableOnFinal
+                            checked: _location.speedEnabled
+                            onCheckedChanged: _location.speedEnabled = checked;
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
 
-                IntegerSpinbox {
-                    label: qsTr("Airspeed:")
-                    suffix: "kts"
-                    min: 0
-                    max: 10000 // more for spaceships?
-                    step: 5
-                    maxDigits: 5
-                    enabled: _location.speedEnabled && parent.enableOnFinal
-                    value: _location.airspeedKnots
-                    onCommit: _location.airspeedKnots = newValue
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
+                        IntegerSpinbox {
+                            id: airspeedSpinbox
+                            label: qsTr("Airspeed:")
+                            suffix: "kts"
+                            min: 0
+                            max: 10000 // more for spaceships?
+                            step: 5
+                            maxDigits: 5
+                            enabled: _location.speedEnabled && onFinalBox.enableOnFinal
+                            value: _location.airspeedKnots
+                            onCommit: _location.airspeedKnots = newValue
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    LocationAltitudeRow
+                    {
+                        enabled: onFinalBox.enableOnFinal
+                        width: parent.width
+                    }
+                } // of column
+            } // of runway offset group
+
 
             ToggleSwitch {
                 x: Style.strutSize

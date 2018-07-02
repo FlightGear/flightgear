@@ -120,62 +120,9 @@ Item {
                 }
             }
 
-            Row {
-                height: childrenRect.height
+            LocationAltitudeRow
+            {
                 width: parent.width
-                spacing: Style.margin
-
-                ToggleSwitch {
-                    id: altitudeToggle
-                    checked: _location.altitudeType !== LocationController.Off
-
-                    function toggle(newChecked) {
-                        _location.altitudeType = (newChecked ? LocationController.MSL_Feet
-                                                               : LocationController.Off)
-                    }
-                }
-
-                IntegerSpinbox {
-                    label: qsTr("Altitude:")
-                    suffix: "ft"
-                    min: -1000 // Dead Sea, Schiphol
-                    max: 200000
-                    step: 100
-                    maxDigits: 6
-                    enabled: altitudeToggle.checked
-                    visible: !altitudeTypeChoice.isFlightLevel
-                    value: _location.altitudeFt
-                    onCommit: _location.altitudeFt = newValue
-                }
-
-                IntegerSpinbox {
-                    label: qsTr("Altitude:")
-                    prefix: "FL"
-                    min: 0
-                    max: 1000
-                    step: 10
-                    maxDigits: 3
-                    enabled: altitudeToggle.checked
-                    visible: altitudeTypeChoice.isFlightLevel
-                    value: _location.flightLevel
-                    onCommit: _location.flightLevel = newValue
-                }
-
-                PopupChoice {
-                    id: altitudeTypeChoice
-                    enabled: _location.altitudeType !== LocationController.Off
-                    currentIndex: Math.max(0, _location.altitudeType - 1)
-                    readonly property bool isFlightLevel: (currentIndex == 2)
-
-                    model: [qsTr("Above mean sea-level (MSL)"),
-                            qsTr("Above ground (AGL)"),
-                            qsTr("Flight-level")]
-
-                    function select(index)
-                    {
-                        _location.altitudeType = index + 1;
-                    }
-                }
             }
 
             // offset row

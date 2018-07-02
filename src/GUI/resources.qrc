@@ -104,6 +104,8 @@
         <file>qml/BaseMenuItem.qml</file>
         <file>qml/MenuItem.qml</file>
         <file>qml/MenuDivider.qml</file>
+        <file>qml/ToggleBox.qml</file>
+        <file>qml/LocationAltitudeRow.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

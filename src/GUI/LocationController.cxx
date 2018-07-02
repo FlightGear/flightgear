@@ -958,10 +958,31 @@ void LocationController::setLocationProperties()
                                           static_cast<int>(m_location->guid()));
         
         applyPositionOffset();
+        applyAltitude();
     } // of navaid location
 }
 
 void LocationController::applyPositionOffset()
+{
+    if (m_speedEnabled) {
+        m_config->setArg("vc", QString::number(m_airspeedKnots));
+    }
+
+    if (m_headingEnabled) {
+        m_config->setArg("heading", QString::number(m_headingDeg));
+    }
+
+    if (m_offsetEnabled) {
+        // flip direction of azimuth to balance the flip done in fgApplyStartOffset
+        // I don't know why that flip exists but changing it there will break
+        // command-line compatability so compensating here instead
+        int offsetAzimuth = m_offsetRadial - 180;
+        m_config->setArg("offset-azimuth", QString::number(offsetAzimuth));
+        m_config->setArg("offset-distance", QString::number(m_offsetNm));
+    }
+}
+
+void LocationController::applyAltitude()
 {
     switch (m_altitudeType) {
     case Off:
@@ -979,23 +1000,6 @@ void LocationController::applyPositionOffset()
         // FIXME - allow the sim to accept real FlightLevel arguments
         m_config->setArg("altitude", QString::number(m_flightLevel * 100));
         break;
-    }
-
-    if (m_speedEnabled) {
-        m_config->setArg("vc", QString::number(m_airspeedKnots));
-    }
-
-    if (m_headingEnabled) {
-        m_config->setArg("heading", QString::number(m_headingDeg));
-    }
-
-    if (m_offsetEnabled) {
-        // flip direction of azimuth to balance the flip done in fgApplyStartOffset
-        // I don't know why that flip exists but changing it there will break
-        // command-line compatability so compensating here instead
-        int offsetAzimuth = m_offsetRadial - 180;
-        m_config->setArg("offset-azimuth", QString::number(offsetAzimuth));
-        m_config->setArg("offset-distance", QString::number(m_offsetNm));
     }
 }
 
@@ -1043,6 +1047,8 @@ void LocationController::onCollectConfig()
                     if (m_speedEnabled) {
                         m_config->setArg("vc", QString::number(m_airspeedKnots));
                     }
+
+                    applyAltitude();
                 }
             } else if (m_airportLocation->type() == FGPositioned::HELIPORT) {
                 m_config->setArg("runway", QString::fromStdString(m_detailLocation->ident()));
@@ -1079,6 +1085,7 @@ void LocationController::onCollectConfig()
         // set disambiguation property
         m_config->setProperty("/sim/presets/navaid-id", QString::number(m_location->guid()));
         applyPositionOffset();
+        applyAltitude();
     } // of navaid location
 }
 

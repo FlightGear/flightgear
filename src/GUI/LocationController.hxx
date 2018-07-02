@@ -211,6 +211,7 @@ private:
     void setNavRadioOption();
 
     void applyPositionOffset();
+    void applyAltitude();
 
     NavSearchModel* m_searchModel = nullptr;
 

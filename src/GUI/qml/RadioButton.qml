@@ -13,6 +13,13 @@ Item {
     implicitHeight: outerRing.height + Style.margin
     implicitWidth: outerRing.width + Style.margin
 
+    function select()
+    {
+        if (root.group) {
+            root.group.selected = root;
+        }
+    }
+
     Binding {
         when: root.group != null
         target: root
@@ -58,10 +65,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         onClicked: {
-            if (root.group) {
-                root.group.selected = root;
-            }
-
+            root.select();
             root.clicked()
         }
     }
