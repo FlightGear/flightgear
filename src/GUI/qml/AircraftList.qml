@@ -13,7 +13,7 @@ Item
     Rectangle
     {
         id: tabBar
-        height: installedAircraftButton.height + Style.margin
+        height: searchButton.height + (Style.margin * 2)
         width: parent.width
 
         Row {
@@ -69,16 +69,16 @@ Item
 
             active: root.state == "search"
         }
-
-        Rectangle {
-            color: Style.frameColor
-            height: 1
-            width: parent.width - Style.inset
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-        }
     }
 
+    Rectangle {
+        id: tabBarDivider
+        color: Style.frameColor
+        height: 1
+        width: parent.width - Style.inset
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: tabBar.bottom
+    }
 
     Component {
         id: highlight
@@ -120,9 +120,10 @@ Item
 
         anchors {
             left: parent.left
-            top: tabBar.bottom
+            top: tabBarDivider.bottom
             bottom: parent.bottom
             right: scrollbar.left
+            topMargin: Style.margin
         }
 
         delegate: AircraftCompactDelegate {
