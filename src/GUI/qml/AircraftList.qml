@@ -142,7 +142,11 @@ Item
         enabled: !detailsView.visible
 
         highlight: highlight
-        highlightMoveDuration: 100
+        highlightMoveDuration: __realHighlightMoveDuration
+
+        // saved here becuase we need to reset highlightMoveDuration
+        // when doing a progrmatic set
+        readonly property int __realHighlightMoveDuration: 200
 
         Keys.onUpPressed: {
 
@@ -157,7 +161,11 @@ Item
             model.selectVariantForAircraftURI(_launcher.selectedAircraft);
             var row = model.indexForURI(_launcher.selectedAircraft);
             if (row >= 0) {
+                // sequence here is necessary so progrommatic moves
+                // are instant
+                highlightMoveDuration = 0;
                 currentIndex = row;
+                highlightMoveDuration = __realHighlightMoveDuration;
             } else {
                 // clear selection in view, so we don't show something
                 // erroneous such as the previous value
