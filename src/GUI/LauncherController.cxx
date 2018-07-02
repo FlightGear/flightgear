@@ -558,6 +558,7 @@ void LauncherController::quit()
 		m_keepRunningInAppMode = false;
 		m_appModeResult = false;
 	} else {
+        saveSettings();
 		qApp->exit(0);
 	}
 }
