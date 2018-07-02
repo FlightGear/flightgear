@@ -6,8 +6,8 @@ Item {
     // order of this model sets the order of buttons in the sidebar
     ListModel {
         id: pagesModel
-        ListElement { title: qsTr("Summary"); pageSource: "qrc:///qml/Summary.qml"; iconPath: "qrc:///toolbox-summary"; state:"loader" }
-        ListElement { title: qsTr("Aircraft"); pageSource: "qrc:///qml/AircraftList.qml"; iconPath: "qrc:///toolbox-aircraft"; state:"loader" }
+        ListElement { title: qsTr("Summary"); pageSource: "qrc:///qml/Summary.qml"; iconPath: "qrc:///svg/toolbox-summary"; state:"loader" }
+        ListElement { title: qsTr("Aircraft"); pageSource: "qrc:///qml/AircraftList.qml"; iconPath: "qrc:///svg/toolbox-aircraft"; state:"loader" }
         
         ListElement { 
             title: qsTr("Location"); pageSource: "qrc:///qml/Location.qml"; 
@@ -20,10 +20,10 @@ Item {
         // permanently so that collecting args works. So we instantiate them down below, and toggle the visiblity
         // of them and the loader using a state.
 
-        ListElement { title: qsTr("Environment"); pageSource: ""; iconPath: "qrc:///toolbox-environment"; state:"environment"  }
-        ListElement { title: qsTr("Settings"); pageSource: ""; iconPath: "qrc:///toolbox-settings"; state:"settings" }
+        ListElement { title: qsTr("Environment"); pageSource: ""; iconPath: "qrc:///svg/toolbox-environment"; state:"environment"  }
+        ListElement { title: qsTr("Settings"); pageSource: ""; iconPath: "qrc:///svg/toolbox-settings"; state:"settings" }
 
-        ListElement { title: qsTr("Add-ons"); pageSource: "qrc:///qml/AddOns.qml"; iconPath: "qrc:///toolbox-addons"; state:"loader" }
+        ListElement { title: qsTr("Add-ons"); pageSource: "qrc:///qml/AddOns.qml"; iconPath: "qrc:///svg/toolbox-addons"; state:"loader" }
 
     }
 

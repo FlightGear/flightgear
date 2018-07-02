@@ -73,7 +73,7 @@ Rectangle {
         anchors.bottomMargin: Style.margin
         enabled: _launcher.canFly
         disabledText: qsTr("The selected aircraft is not installed")
-        icon: "qrc:///toolbox-fly"
+        icon: "qrc:///svg/toolbox-fly"
         onClicked: _launcher.fly();
     }
 }

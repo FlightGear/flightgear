@@ -123,7 +123,7 @@ if (HAVE_QT)
                             ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::QuickWidgets SimGearCore)
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::Svg SimGearCore)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
     add_library(fgqmlui QQuickDrawable.cxx

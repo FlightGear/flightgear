@@ -112,4 +112,13 @@
         <file alias="left-arrow-icon">preview-left-arrow.png</file>
         <file alias="right-arrow-icon">preview-right-arrow.png</file>
     </qresource>
+    <qresource prefix="/svg">
+        <file alias="toolbox-fly">assets/icons8-airplane-take-off.svg</file>
+        <file alias="toolbox-environment">assets/icons8-windy-weather-filled.svg</file>
+        <file alias="toolbox-location">assets/icons8-location.svg</file>
+        <file alias="toolbox-settings">assets/icons8-automation.svg</file>
+        <file alias="toolbox-addons">assets/icons8-puzzle.svg</file>
+        <file alias="toolbox-summary">assets/icons8-home.svg</file>
+        <file alias="toolbox-aircraft">assets/icons8-aircraft.svg</file>
+    </qresource>
 </RCC>
