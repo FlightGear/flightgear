@@ -1172,11 +1172,25 @@ FGPUIDialog::setupObject (puObject *object, SGPropertyNode *props)
         if (props->hasValue("key"))
             info->key = getKeyCode(props->getStringValue("key", ""));
 
+        
         for (auto bindingNode : bindings) {
             const char *cmd = bindingNode->getStringValue("command");
-            if (!strcmp(cmd, "nasal"))
-                bindingNode->setStringValue("module", _module.c_str());
-
+            if (!strcmp(cmd, "nasal")) {
+                // we need to clone the binding node, so we can unique the
+                // Nasal module. Otherwise we always modify the global dialog
+                // definition, and cloned dialogs use the same Nasal module for
+                // <nasal> bindings, which goes wrong. (Especially, the property
+                // inspector)
+                
+                // memory ownership works because SGBinding has a ref to its
+                // argument node and holds onto it.
+                SGPropertyNode_ptr copiedBinding = new SGPropertyNode;
+                copyProperties(bindingNode, copiedBinding);
+                copiedBinding->setStringValue("module", _module.c_str());
+                
+                bindingNode = copiedBinding;
+            }
+            
             info->bindings.push_back(new SGBinding(bindingNode, globals->get_props()));
         }
         object->setCallback(action_callback);
