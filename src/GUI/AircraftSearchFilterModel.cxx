@@ -10,7 +10,11 @@ AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source)
     setSourceModel(source);
     setSortCaseSensitivity(Qt::CaseInsensitive);
     setFilterCaseSensitivity(Qt::CaseInsensitive);
-    setSortRole(Qt::DisplayRole);
+
+    // important we sort on the primary name role and not Qt::DisplayRole
+    // otherwise the aircraft jump when switching variant
+    setSortRole(AircraftVariantDescriptionRole);
+
     setDynamicSortFilter(true);
 
     // kick off initial sort

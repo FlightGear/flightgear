@@ -289,6 +289,11 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
 
     if (role >= AircraftVariantDescriptionRole) {
         int variantIndex = role - AircraftVariantDescriptionRole;
+        if (variantIndex == 0) {
+            return item->description;
+        }
+
+        Q_ASSERT(variantIndex < item->variants.size());
         return item->variants.at(variantIndex)->description;
     }
 
@@ -471,7 +476,7 @@ QVariant AircraftItemModel::packageThumbnail(PackageRef p, const DelegateState& 
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
   {
       int row = index.row();
-      int newValue = value.toInt();
+      quint32 newValue = value.toUInt();
 
       if (role == AircraftVariantRole) {
           if (m_delegateStates[row].variant == newValue) {
