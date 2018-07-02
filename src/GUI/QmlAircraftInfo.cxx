@@ -145,6 +145,8 @@ QString humanNameFromStateTag(const std::string& tag)
         return QObject::tr("Automatic");
     if (tag == "cruise")
         return QObject::tr("Cruise");
+    if (tag == "taxi")
+        return QObject::tr("Ready to taxi");
 
     qWarning() << Q_FUNC_INFO << "add for" << QString::fromStdString(tag);
     // no mapping, let's use the tag directly
