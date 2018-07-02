@@ -21,7 +21,6 @@ Item {
     implicitWidth: childrenRect.width
     implicitHeight: childrenRect.height
 
-
     state: "not-installed"
 
     onInstallStatusChanged: {
@@ -53,6 +52,7 @@ Item {
                 visible: true
             }
 
+            PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
         State {
@@ -68,6 +68,8 @@ Item {
                 target: sizeText
                 visible: true
             }
+
+            PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
         State {
@@ -83,6 +85,8 @@ Item {
                 target: sizeText
                 visible: true
             }
+
+            PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
         State {
@@ -98,6 +102,8 @@ Item {
                 text: "Queued"
                 hoverText: "Cancel"
             }
+
+            PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
         State {
@@ -122,6 +128,13 @@ Item {
                 text: "Downloading"
                 hoverText: "Cancel"
             }
+
+            PropertyChanges { target: confirmUninstallPanel; visible: false }
+        },
+
+        State {
+            name: "confirm-uninstall"
+            PropertyChanges { target: confirmUninstallPanel; visible: true }
         }
     ]
 
@@ -131,7 +144,7 @@ Item {
             if ((root.state == "has-update") || (root.state == "not-installed")) {
                 _launcher.requestInstallUpdate(root.uri);
             } else if (root.state == "installed") {
-                _launcher.requestUninstall(root.uri)
+                root.state = "confirm-uninstall"
             } else {
                 _launcher.requestInstallCancel(root.uri)
             }
@@ -188,4 +201,16 @@ Item {
                   "MB of " + (root.packageSize / 0x100000).toFixed(1) + "MB";
         }
     } // item container for progress bar and text
+
+    YesNoPanel {
+        id: confirmUninstallPanel
+        anchors.fill: parent
+        promptText: qsTr("Are you sure you want to uninstall this aircraft?")
+        yesIsDestructive: true
+        yesText: qsTr("Uninstall")
+        noText: qsTr("Cancel")
+
+        onRejected: root.state = "installed"
+        onAccepted: _launcher.requestUninstall(root.uri)
+     }
 }
