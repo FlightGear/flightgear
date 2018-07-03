@@ -501,7 +501,6 @@ void LocationController::setBaseLocation(QmlPositioned* pos)
         m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
         // disable offset when selecting a heliport
         if (m_airportLocation->isHeliport()) {
-            qInfo() << "disabling offset";
             m_onFinal = false;
         }
     } else {
@@ -1006,7 +1005,7 @@ void LocationController::applyAltitude()
 void LocationController::onCollectConfig()
 {
     if (m_skipFromArgs) {
-        qInfo() << Q_FUNC_INFO << "skipping argument collection";
+        qWarning() << Q_FUNC_INFO << "skipping argument collection";
         return;
     }
 

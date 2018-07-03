@@ -71,7 +71,6 @@ void LaunchConfig::applyToOptions() const
         if (arg.origin == Launcher) {
             auto it = extraArgs.find(name);
             if (it != extraArgs.end()) {
-                qInfo() << "skipping arg:" << arg.arg << "=" << arg.value << "because the user has over-ridden it";
                 return;
             }
         }
@@ -86,6 +85,12 @@ std::set<std::string> LaunchConfig::extraArgNames() const
 	for (auto arg : m_values) {
 		// don't override prop: arguments
 		if (arg.arg == "prop") continue;
+
+        // allow some multi-valued arguments
+        if (arg.arg == "fg-scenery")
+        {
+            continue;
+        }
 
 		if (arg.origin == ExtraArgs)
 			r.insert(arg.arg.toStdString());

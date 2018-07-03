@@ -107,7 +107,6 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     m_subsystemIdleTimer->start();
 
     QRect winRect= settings.value("window-geometry").toRect();
-    qInfo() << "read saved window geometry:" << winRect;
 
     if (winRect.isValid()) {
         m_window->setGeometry(winRect);
@@ -117,7 +116,6 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     }
 
     if (settings.contains("window-state")) {
-        qInfo() << "restoring window state";
         const auto ws = static_cast<Qt::WindowState>(settings.value("window-state").toInt());
         m_window->setWindowState(ws);
     }
@@ -254,7 +252,9 @@ void LauncherController::collectAircraftArgs()
         QString state = m_aircraftState;
         if ((m_aircraftState == "auto") && !m_selectedAircraftInfo->haveExplicitAutoState()) {
             state = selectAircraftStateAutomatically();
+#if QT_VERSION >= 0x050600
             qInfo() << "doing launcher auto state selection, picked:" + state;
+#endif
         }
 
         if (!state.isEmpty()) {
