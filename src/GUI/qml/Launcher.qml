@@ -136,10 +136,12 @@ Item {
         z: 100
 
         items: [
-            MenuItem { text:qsTr("Open saved configuration..."); onTriggered: _launcher.openConfig(); },
-            MenuItem { text:qsTr("Save configuration as..."); onTriggered: _launcher.saveConfigAs(); },
+            MenuItem { text:qsTr("Open saved configuration..."); shortcut: "Ctrl+O";
+                onTriggered: _launcher.openConfig(); },
+            MenuItem { text:qsTr("Save configuration as..."); shortcut: "Ctrl+S";
+                onTriggered: _launcher.saveConfigAs(); },
             MenuDivider {},
-            MenuItem { text:qsTr("View command line"); onTriggered: _launcher.viewCommandLine(); },
+            MenuItem { text:qsTr("View command line"); onTriggered: _launcher.viewCommandLine(); shortcut: "Ctrl+L"},
             MenuItem { text:qsTr("Select data files location..."); onTriggered: _launcher.requestChangeDataPath(); },
             MenuItem { text:qsTr("Restore default settings..."); onTriggered: _launcher.requestRestoreDefaults(); },
             MenuDivider {},

@@ -1,16 +1,23 @@
-import QtQuick 2.4
+import QtQuick 2.6 // so we can use Shortcut
 import "."
+import ".."
 
 BaseMenuItem {
     id: root
     
     property alias text: itemText.text
-    property string shortcut: "" // for compatability with Qt 5.6 and up
+    property alias shortcut: keyShortcut.sequence
 
     signal triggered();
 
     function minWidth() { 
-        return itemText.width + (Style.inset * 2)
+        return itemText.width + shortcutText.width + (Style.inset * 2)
+    }
+
+    Shortcut {
+        id: keyShortcut
+        onActivated: root.triggered();
+        enabled: root.enabled
     }
 
     Rectangle {
@@ -29,6 +36,21 @@ BaseMenuItem {
         anchors {
             left: parent.left
             leftMargin: Style.inset
+            verticalCenter: parent.verticalCenter
+        }
+    }
+
+    Text {
+        id: shortcutText
+        color: Style.disabledTextColor
+        font.pixelSize: Style.baseFontPixelSize
+        width: implicitWidth + Style.inset
+        horizontalAlignment: Text.AlignRight
+        text: keyShortcut.nativeText
+
+        anchors {
+            right: parent.right
+            rightMargin: Style.inset
             verticalCenter: parent.verticalCenter
         }
     }
