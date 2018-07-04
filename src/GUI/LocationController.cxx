@@ -1013,6 +1013,7 @@ void LocationController::onCollectConfig()
         m_config->setArg("lat", QString::number(m_geodLocation.getLatitudeDeg(), 'f', 8));
         m_config->setArg("lon", QString::number(m_geodLocation.getLongitudeDeg(), 'f', 8));
         applyPositionOffset();
+        applyAltitude();
         return;
     }
 
