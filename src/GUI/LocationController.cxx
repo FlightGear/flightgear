@@ -710,6 +710,9 @@ void LocationController::restoreLocation(QVariantMap l)
             m_locationIsLatLon = true;
             m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
                                              l.value("location-lat").toDouble());
+            m_location.clear();
+            m_airportLocation.clear();
+            m_baseQml->setInner(nullptr);
         } else if (l.contains("location-id")) {
             m_location = NavDataCache::instance()->loadById(l.value("location-id").toULongLong());
             m_locationIsLatLon = false;
