@@ -30,6 +30,8 @@ FocusScope
         root.search("");
     }
 
+    readonly property bool canClear: (buttonText.text.length > 0)
+
     Rectangle
     {
         id: frame
@@ -40,8 +42,6 @@ FocusScope
         border.width: 1
         border.color: (mouse.containsMouse | active) ? Style.themeColor: Style.minorFrameColor
         clip: true
-
-
 
         TextInput {
             id: buttonText
@@ -86,7 +86,7 @@ FocusScope
 
         Image {
             id: searchIcon
-            source: clearButtonMouse.containsMouse ? "qrc:///up-down-arrow" :"qrc:///search-icon-small"
+            source: root.canClear ? "qrc:///clear-text-icon" :"qrc:///search-icon-small"
             anchors.right: parent.right
             anchors.rightMargin: Style.margin
             anchors.verticalCenter: parent.verticalCenter
@@ -113,11 +113,9 @@ FocusScope
             anchors.right: parent.right
             height: parent.height
             width: searchIcon.width
-            hoverEnabled: true
-
-            onClicked: {
-                clear();
-            }
+            hoverEnabled: root.canClear
+            visible: root.canClear
+            onClicked: clear();
         }
 
         Timer {

@@ -108,6 +108,7 @@
         <file>qml/ToggleBox.qml</file>
         <file>qml/LocationAltitudeRow.qml</file>
         <file>qml/CatalogDelegate.qml</file>
+        <file alias="clear-text-icon">assets/icons8-clear-symbol-26.png</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>
