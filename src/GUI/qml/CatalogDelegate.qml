@@ -1,0 +1,117 @@
+import QtQuick 2.4
+import FlightGear.Launcher 1.0
+import "."
+
+Item {
+    id: delegateRoot
+
+    // don't show the delegate for newly added catalogs, until the
+    // adding process is complete
+    visible: !model.isNewlyAdded
+
+    implicitWidth: 300
+    height: childrenRect.height
+
+    Item {
+        id: divider
+        visible: model.index > 0 // divider before each item except the first
+        height: Style.margin
+        width: parent.width
+
+        Rectangle {
+            color: Style.frameColor
+            height: 1
+            width: parent.width - Style.strutSize
+            anchors.centerIn: parent
+        }
+    }
+
+    Item
+    {
+        anchors.top: divider.bottom
+        height: catalogTextColumn.childrenRect.height + Style.margin * 2
+        width: parent.width
+
+        Column {
+            id: catalogTextColumn
+
+            y: Style.margin
+            anchors.left: parent.left
+            anchors.leftMargin: Style.margin
+            anchors.right: catalogDeleteButton.left
+            anchors.rightMargin: Style.margin
+            spacing: Style.margin
+
+            StyledText {
+                font.pixelSize: Style.subHeadingFontPixelSize
+                font.bold: true
+                width: parent.width
+                text: model.name
+            }
+
+            StyledText {
+                visible: model.status === CatalogListModel.Ok
+                width: parent.width
+                text: model.description
+                wrapMode: Text.WordWrap
+            }
+
+            ClickableText {
+                visible: model.status !== CatalogListModel.Ok
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: qsTr("This hangar is currently disabled due to a problem. " +
+                           "Click here to try updating the hangar information from the server. "
+                           + "(An Internet connection is required for this)");
+                onClicked:  {
+                    _addOns.catalogs.refreshCatalog(model.index)
+                }
+            }
+
+            StyledText {
+                width: parent.width
+                text: model.url
+            }
+
+        }
+
+        DeleteButton {
+            id: catalogDeleteButton
+            anchors.right: parent.right
+            anchors.rightMargin: Style.margin
+            anchors.verticalCenter: parent.verticalCenter
+            visible: delegateHover.containsMouse
+
+            onClicked:  {
+                confirmDeleteHangar.visible = true;
+            }
+        }
+
+        MouseArea {
+            id: delegateHover
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+        }
+
+        YesNoPanel {
+            id: confirmDeleteHangar
+            visible: false
+            anchors.fill: parent
+            anchors.margins: 1 // don't cover the border
+
+            yesText: qsTr("Remove")
+            noText: qsTr("Cancel")
+            yesIsDestructive: true
+            promptText: qsTr("Remove this hangar? (Downloaded aircraft will be deleted from your computer)");
+            onAccepted: {
+                _addOns.catalogs.removeCatalog(model.index);
+            }
+
+            onRejected: {
+                confirmDeleteHangar.visible = false
+            }
+        }
+    }
+
+}
