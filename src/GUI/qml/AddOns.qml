@@ -201,14 +201,15 @@ Item {
                 height: Math.max(installTarballText.implicitHeight, installTarballButton.height)
                 Button {
                     id: installTarballButton
-                    text: "Install add-on scenery"
+                    text: qsTr("Install add-on scenery")
 
                     onClicked: {
                         var path = _addOns.installCustomScenery();
                         if (path !== "") {
                             // insert into scenery paths if not already present
-                            for (var p in _addOns.sceneryPaths) {
-                                if (p === path)
+                            var sceneryPaths = _addOns.sceneryPaths
+                            for (var i = 0; i < sceneryPaths.length; i++) {
+                                if (sceneryPaths[i] === path)
                                     return; // found, we are are done
                             }
 

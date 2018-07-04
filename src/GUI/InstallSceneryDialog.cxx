@@ -37,11 +37,11 @@
 
 #include <simgear/io/untar.hxx>
 
-class SceneryExtractor : public simgear::TarExtractor
+class SceneryExtractor : public simgear::ArchiveExtractor
 {
 public:
     SceneryExtractor(const SGPath& root) :
-        TarExtractor(root)
+        ArchiveExtractor(root)
     {}
 protected:
 
@@ -88,7 +88,8 @@ public:
             f.open(QIODevice::ReadOnly);
             QByteArray firstData = f.read(8192);
 
-            if (!simgear::TarExtractor::isTarData((uint8_t*) firstData.data(), firstData.count())) {
+            auto archiveType = simgear::ArchiveExtractor::determineType((uint8_t*) firstData.data(), firstData.count());
+            if (archiveType == simgear::ArchiveExtractor::Invalid) {
                 emit extractionError(path,tr("file does not appear to be a scenery archive."));
                 m_error = true;
                 return;
@@ -112,7 +113,7 @@ private:
     void extractNextArchive()
     {
         SGPath root(m_extractDir.toStdString());
-        m_untar.reset(new SceneryExtractor(root));
+        m_archive.reset(new SceneryExtractor(root));
 
         QString path = m_remainingPaths.front();
         m_remainingPaths.pop_front();
@@ -126,17 +127,18 @@ private:
 
         while (!f.atEnd()) {
             QByteArray bytes = f.read(4 * 1024 * 1024);
-            m_untar->extractBytes(bytes.constData(), bytes.size());
+            m_archive->extractBytes((const uint8_t*) bytes.constData(), bytes.size());
             m_bytesRead += bytes.size();
 
-            if (m_untar->hasError()) {
+            if (m_archive->hasError()) {
                 break;
             }
 
             emit progress((m_bytesRead * 100) / m_totalBytes);
         }
 
-        if (m_untar->hasError() || !m_untar->isAtEndOfArchive()) {
+        m_archive->flush();
+        if (m_archive->hasError() || !m_archive->isAtEndOfArchive()) {
             emit extractionError(path, tr("unarchiving failed"));
             m_error = true;
             // try to clean up?
@@ -145,7 +147,7 @@ private:
 
     QString m_extractDir;
     QStringList m_remainingPaths;
-    std::unique_ptr<simgear::TarExtractor> m_untar;
+    std::unique_ptr<simgear::ArchiveExtractor> m_archive;
     bool m_error;
     quint64 m_totalBytes;
     quint64 m_bytesRead;
@@ -243,7 +245,7 @@ void InstallSceneryDialog::pickFiles()
 {
     QStringList downloads = QStandardPaths::standardLocations(QStandardPaths::DownloadLocation);
     QStringList files = QFileDialog::getOpenFileNames(this, tr("Choose scenery to install"),
-                                                      downloads.first(), "*.tar *.gz *.tgz");
+                                                      downloads.first(), "Compressed data (*.tar *.gz *.tgz *.zip)");
     if (!files.isEmpty()) {
         QDir d(m_downloadDir);
         if (!d.exists("Scenery")) {
