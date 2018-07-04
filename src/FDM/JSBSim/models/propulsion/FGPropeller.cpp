@@ -255,7 +255,7 @@ double FGPropeller::Calculate(double EnginePower)
     double tangentialVel = localAeroVel.Magnitude(eV, eW);
 
     if (tangentialVel > 0.0001) {
-      double angle = atan2(tangentialVel, localAeroVel(eU));
+      double angle = atan2(tangentialVel, localAeroVel(eU) + Vinduced);
       double factor = Sense * P_Factor * angle / tangentialVel;
       SetActingLocationY( GetLocationY() + factor * localAeroVel(eW));
       SetActingLocationZ( GetLocationZ() + factor * localAeroVel(eV));
