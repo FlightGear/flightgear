@@ -43,15 +43,12 @@ Item {
 
             PropertyChanges {
                 target: button
-                text: "Install"
+                text: qsTr("Install")
                 hoverText: ""
-            }
-
-            PropertyChanges {
-                target: sizeText
                 visible: true
             }
 
+            PropertyChanges { target: sizeText; visible: true }
             PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
@@ -60,15 +57,12 @@ Item {
 
             PropertyChanges {
                 target: button
-                text: "Uninstall"
+                text: qsTr("Uninstall")
                 hoverText: ""
-            }
-
-            PropertyChanges {
-                target: sizeText
                 visible: true
             }
 
+            PropertyChanges { target: sizeText; visible: true }
             PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
@@ -77,15 +71,12 @@ Item {
 
             PropertyChanges {
                 target: button
-                text: "Update"
+                text: qsTr("Update")
                 hoverText: ""
-            }
-
-            PropertyChanges {
-                target: sizeText
                 visible: true
             }
 
+            PropertyChanges { target: sizeText; visible: true }
             PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
@@ -99,8 +90,9 @@ Item {
 
             PropertyChanges {
                 target: button
-                text: "Queued"
-                hoverText: "Cancel"
+                text: qsTr("Queued")
+                hoverText: qsTr("Cancel")
+                visible: true
             }
 
             PropertyChanges { target: confirmUninstallPanel; visible: false }
@@ -108,32 +100,25 @@ Item {
 
         State {
             name: "downloading"
-            PropertyChanges {
-                target: progressFrame
-                visible: true
-            }
-
-            PropertyChanges {
-                target: statusText
-                visible: true
-            }
-
-            PropertyChanges {
-                target: sizeText
-                visible: false
-            }
+            PropertyChanges { target: progressFrame; visible: true }
+            PropertyChanges { target: statusText; visible: true }
+            PropertyChanges { target: sizeText; visible: false }
+            PropertyChanges { target: confirmUninstallPanel; visible: false }
 
             PropertyChanges {
                 target: button
-                text: "Downloading"
-                hoverText: "Cancel"
+                text: qsTr("Downloading")
+                hoverText: qsTr("Cancel")
+                visible: true
             }
-
-            PropertyChanges { target: confirmUninstallPanel; visible: false }
         },
 
         State {
             name: "confirm-uninstall"
+            PropertyChanges { target: button; visible: false }
+            PropertyChanges { target: progressFrame; visible: false }
+            PropertyChanges { target: statusText; visible: false }
+            PropertyChanges { target: sizeText; visible: false }
             PropertyChanges { target: confirmUninstallPanel; visible: true }
         }
     ]

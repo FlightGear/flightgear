@@ -105,6 +105,11 @@ Item {
             onRejected: {
                 confirmDeletePath.visible = false
             }
+
+            Rectangle {
+                anchors.fill: parent
+                z: -1
+            }
         }
     }
 }

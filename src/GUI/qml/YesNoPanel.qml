@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import "."
 
-Rectangle {
+Item {
     property alias promptText:prompt.text
     property alias yesText: yesButton.text
     property alias noText: noButton.text

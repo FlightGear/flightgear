@@ -111,6 +111,11 @@ Item {
             onRejected: {
                 confirmDeleteHangar.visible = false
             }
+
+            Rectangle {
+                anchors.fill: parent
+                z: -1
+            }
         }
     }
 
