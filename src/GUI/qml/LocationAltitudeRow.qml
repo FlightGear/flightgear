@@ -50,7 +50,7 @@ Row {
 
     PopupChoice {
         id: altitudeTypeChoice
-        enabled: __rowEnabled && (location.altitudeType !== LocationController.Off)
+        enabled: __rowEnabled && (_location.altitudeType !== LocationController.Off)
         currentIndex: Math.max(0, _location.altitudeType - 1)
         readonly property bool isFlightLevel: (currentIndex == 2)
 

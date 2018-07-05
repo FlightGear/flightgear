@@ -60,36 +60,12 @@ SettingControl {
                        "page (for example, airport or altitude) will be ignored.");
         }
 
-        Rectangle {
-            id: editFrame
-            height: edit.height + Style.margin
-            border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
-            border.width: 1
+        PlainTextEditBox
+        {
+            id: edit
             width: parent.width
-
-            TextEdit {
-                id: edit
-                enabled: root.enabled
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: Style.margin
-                height: Math.max(Style.strutSize * 4, implicitHeight)
-                textFormat: TextEdit.PlainText
-                font.family: "Courier"
-                selectByMouse: true
-                wrapMode: TextEdit.WordWrap
-                font.pixelSize: Style.baseFontPixelSize
-                color: Style.baseTextColor
-
-                StyledText {
-                    id: placeholder
-                    visible: (edit.text.length == 0) && !edit.activeFocus
-                    text: root.placeholder
-                    font.family: "Courier"
-                    color: Style.disabledTextColor
-                }
-           }
+            enabled: root.enabled
+            placeholder: root.placeholder
         }
     }
 

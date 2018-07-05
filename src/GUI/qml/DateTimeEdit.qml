@@ -9,6 +9,7 @@ FocusScope {
     property var value: new Date()
 
     implicitHeight: label.implicitHeight
+    implicitWidth: label.implicitWidth + Style.margin + editFrame.width
 
     function daysInMonth()
     {
@@ -32,14 +33,13 @@ FocusScope {
         updateCurrentDate();
     }
 
-    Text {
+    StyledText {
         id: label
         anchors.left: root.left
-        anchors.leftMargin: 8
+        anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
         horizontalAlignment: Text.AlignRight
-     //   color: mouseArea.containsMouse ? Style.themeColor :
-      //                                   (root.enabled ? "black" : Style.inactiveThemeColor)
+        enabled: root.enabled
     }
 
     Rectangle {
@@ -82,9 +82,10 @@ FocusScope {
                 onCommit: updateCurrentDate();
             }
 
-            Text {
+            StyledText {
                 text: " / "
                 anchors.verticalCenter: parent.verticalCenter
+                enabled: root.enabled
             }
 
             DateTimeValueEdit {
@@ -98,9 +99,10 @@ FocusScope {
                 onCommit: updateCurrentDate();
             }
 
-            Text {
+            StyledText {
                 text: " / "
                 anchors.verticalCenter: parent.verticalCenter
+                enabled: root.enabled
             }
 
             DateTimeValueEdit {
@@ -115,9 +117,10 @@ FocusScope {
             }
 
             // spacer here
-            Text {
+            StyledText {
                 text: "  "
                 anchors.verticalCenter: parent.verticalCenter
+                enabled: root.enabled
             }
 
             DateTimeValueEdit {
@@ -131,9 +134,10 @@ FocusScope {
                 onCommit: updateCurrentDate();
             }
 
-            Text {
+            StyledText {
                 text: " : "
                 anchors.verticalCenter: parent.verticalCenter
+                enabled: root.enabled
             }
 
             DateTimeValueEdit {

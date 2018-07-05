@@ -69,6 +69,13 @@ Item {
         }
     }
 
+    function enterFlightPlan()
+    {
+        sidebar.selectedPage = -1;
+        pageLoader.source = "qrc:///qml/FlightPlan.qml"
+        root.state = "loader";
+    }
+
     Sidebar {
         id: sidebar
         width: Style.strutSize * 2
@@ -140,6 +147,8 @@ Item {
                 onTriggered: _launcher.openConfig(); },
             MenuItem { text:qsTr("Save configuration as..."); shortcut: "Ctrl+S";
                 onTriggered: _launcher.saveConfigAs(); },
+            MenuDivider {},
+            MenuItem { text:qsTr("Flight-planning"); onTriggered: root.enterFlightPlan(); shortcut: "Ctrl+P"; enabled: false},
             MenuDivider {},
             MenuItem { text:qsTr("View command line"); onTriggered: _launcher.viewCommandLine(); shortcut: "Ctrl+L"},
             MenuItem { text:qsTr("Select data files location..."); onTriggered: _launcher.requestChangeDataPath(); },
