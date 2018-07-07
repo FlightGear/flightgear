@@ -270,6 +270,7 @@ private:
     SGPropertyNode_ptr speedbrake_pos_pct;
     SGPropertyNode_ptr spoilers_pos_pct;
 
+    SGPropertyNode_ptr override_fg_brake_prop;
     SGPropertyNode_ptr ab_brake_engaged;
     SGPropertyNode_ptr ab_brake_left_pct;
     SGPropertyNode_ptr ab_brake_right_pct;

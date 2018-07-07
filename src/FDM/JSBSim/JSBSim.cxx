@@ -332,9 +332,12 @@ FGJSBsim::FGJSBsim( double dt )
     speedbrake_pos_pct->setDoubleValue(0);
     spoilers_pos_pct->setDoubleValue(0);
 
+    override_fg_brake_prop = fgGetNode("/fdm/jsbsim/systems/override-fg-brake-properties", true);
+    override_fg_brake_prop->setBoolValue(false);
     ab_brake_engaged = fgGetNode("/autopilot/autobrake/engaged", true);
     ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
     ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
+
     arrestor_wire_engaged_hook = fgGetNode("/fdm/jsbsim/systems/hook/arrestor-wire-engaged-hook", true);
     release_hook = fgGetNode("/fdm/jsbsim/systems/hook/tailhook-release-cmd", true);
 
@@ -619,23 +622,24 @@ bool FGJSBsim::copy_to_JSBsim()
     FCS->SetDsbCmd( globals->get_controls()->get_speedbrake() );
     FCS->SetDspCmd( globals->get_controls()->get_spoilers() );
 
+    if (!override_fg_brake_prop->getBoolValue()) {
         // Parking brake sets minimum braking
         // level for mains.
-    double parking_brake = globals->get_controls()->get_brake_parking();
-    double left_brake = globals->get_controls()->get_brake_left();
-    double right_brake = globals->get_controls()->get_brake_right();
-    
-    if (ab_brake_engaged->getBoolValue()) {
-      left_brake = ab_brake_left_pct->getDoubleValue();
-      right_brake = ab_brake_right_pct->getDoubleValue(); 
+        double parking_brake = globals->get_controls()->get_brake_parking();
+        double left_brake = globals->get_controls()->get_brake_left();
+        double right_brake = globals->get_controls()->get_brake_right();
+
+        if (ab_brake_engaged->getBoolValue()) {
+            left_brake = ab_brake_left_pct->getDoubleValue();
+            right_brake = ab_brake_right_pct->getDoubleValue(); 
+        }
+
+        FCS->SetLBrake(FMAX(left_brake, parking_brake));
+        FCS->SetRBrake(FMAX(right_brake, parking_brake));
+
+        FCS->SetCBrake( 0.0 );
+        // FCS->SetCBrake( globals->get_controls()->get_brake(2) );
     }
-    
-    FCS->SetLBrake(FMAX(left_brake, parking_brake));
-    FCS->SetRBrake(FMAX(right_brake, parking_brake));
-    
-    
-    FCS->SetCBrake( 0.0 );
-    // FCS->SetCBrake( globals->get_controls()->get_brake(2) );
 
     FCS->SetGearCmd( globals->get_controls()->get_gear_down());
     for (i = 0; i < Propulsion->GetNumEngines(); i++) {
