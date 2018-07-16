@@ -14,8 +14,8 @@ foreach(test_category
     add_subdirectory(${test_category})
 endforeach(test_category)
 
-# Add the helpers.
-add_subdirectory(helpers)
+# Add the testing API.
+add_subdirectory(FGTestApi)
 
 # Add all test suite sources and headers.
 set(TESTSUITE_SOURCES

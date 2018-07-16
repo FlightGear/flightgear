@@ -1,6 +1,7 @@
 set(TESTSUITE_SOURCES
     ${TESTSUITE_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/globals.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrivateAccessorFDM.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_graph.cxx
     PARENT_SCOPE
 )
@@ -9,6 +10,7 @@ set(TESTSUITE_SOURCES
 set(TESTSUITE_HEADERS
     ${TESTSUITE_HEADERS}
     ${CMAKE_CURRENT_SOURCE_DIR}/globals.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrivateAccessorFDM.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_graph.hxx
     PARENT_SCOPE
 )

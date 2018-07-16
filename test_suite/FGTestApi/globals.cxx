@@ -23,8 +23,9 @@
 
 static SGPath tests_fgdata;
 
-namespace fgtest
-{
+namespace FGTestApi {
+
+namespace setUp {
 
     SGPath fgdataPath()
     {
@@ -67,6 +68,11 @@ namespace fgtest
       t->init(); // establish mag-var data
   }
 
+}  // End of namespace setUp.
+
+
+namespace tearDown {
+
   void shutdownTestGlobals()
   {
     // The QApplication instance must be destroyed before exit() begins, see
@@ -77,4 +83,7 @@ namespace fgtest
 
     delete globals;
   }
-} // of namespace fgtest
+
+}  // End of namespace tearDown.
+
+}  // End of namespace FGTestApi.

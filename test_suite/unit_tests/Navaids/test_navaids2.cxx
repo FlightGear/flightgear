@@ -1,6 +1,6 @@
 #include "test_navaids2.hxx"
 
-#include "test_suite/helpers/globals.hxx"
+#include "test_suite/FGTestApi/globals.hxx"
 
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
@@ -10,14 +10,14 @@
 // Set up function for each test.
 void NavaidsTests::setUp()
 {
-    fgtest::initTestGlobals("navaids2");
+    FGTestApi::setUp::initTestGlobals("navaids2");
 }
 
 
 // Clean up after each test.
 void NavaidsTests::tearDown()
 {
-    fgtest::shutdownTestGlobals();
+    FGTestApi::tearDown::shutdownTestGlobals();
 }
 
 

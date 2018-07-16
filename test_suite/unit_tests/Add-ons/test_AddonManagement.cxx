@@ -21,7 +21,7 @@
 #include "test_AddonManagement.hxx"
 
 #include "config.h"
-#include "test_suite/helpers/globals.hxx"
+#include "test_suite/FGTestApi/globals.hxx"
 
 #include <sstream>
 #include <string>
@@ -49,7 +49,7 @@ void AddonManagementTests::testAddonVersionSuffix()
 {
   using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
-  fgtest::initTestGlobals("AddonVersionSuffix");
+  FGTestApi::setUp::initTestGlobals("AddonVersionSuffix");
 
   AddonVersionSuffix v1(AddonRelType::beta, 2, true, 5);
   AddonVersionSuffix v1Copy(v1);
@@ -139,14 +139,14 @@ void AddonManagementTests::testAddonVersionSuffix()
   CPPUNIT_ASSERT(AddonVersionSuffix(AddonRelType::none) >=
               AddonVersionSuffix(AddonRelType::candidate, 21, false));
 
-  fgtest::shutdownTestGlobals();
+  FGTestApi::tearDown::shutdownTestGlobals();
 }
 
 void AddonManagementTests::testAddonVersion()
 {
   using AddonRelType = flightgear::addons::AddonVersionSuffixPrereleaseType;
 
-  fgtest::initTestGlobals("AddonVersion");
+  FGTestApi::setUp::initTestGlobals("AddonVersion");
 
   AddonVersionSuffix suffix(AddonRelType::beta, 2, true, 5);
   AddonVersion v1(2017, 4, 7, suffix);
@@ -204,12 +204,12 @@ void AddonManagementTests::testAddonVersion()
       "3.12.9", "3.13.0", "4.0.0.dev1", "4.0.0.dev10", "4.0.0a1", "4.0.0",
       "2017.4.0", "2017.4.1", "2017.4.10", "2017.5.0", "2018.0.0"});
 
-  fgtest::shutdownTestGlobals();
+  FGTestApi::tearDown::shutdownTestGlobals();
 }
 
 void AddonManagementTests::testAddon()
 {
-  fgtest::initTestGlobals("Addon");
+    FGTestApi::setUp::initTestGlobals("Addon");
 
   std::string addonId = "org.FlightGear.addons.MyGreatAddon";
   Addon addon{addonId};
@@ -243,5 +243,5 @@ void AddonManagementTests::testAddon()
   CPPUNIT_ASSERT(addon.getMaxFGVersionRequired() == "2018.2.5");
   CPPUNIT_ASSERT_EQUAL(addon.str(), refText2);
 
-  fgtest::shutdownTestGlobals();
+  FGTestApi::tearDown::shutdownTestGlobals();
 }

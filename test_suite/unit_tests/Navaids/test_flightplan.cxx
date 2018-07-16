@@ -1,6 +1,6 @@
 #include "test_flightplan.hxx"
 
-#include "test_suite/helpers/globals.hxx"
+#include "test_suite/FGTestApi/globals.hxx"
 
 #include <simgear/misc/strutils.hxx>
 
@@ -19,14 +19,14 @@ using namespace flightgear;
 // Set up function for each test.
 void FlightplanTests::setUp()
 {
-    fgtest::initTestGlobals("flightplan");
+    FGTestApi::setUp::initTestGlobals("flightplan");
 }
 
 
 // Clean up after each test.
 void FlightplanTests::tearDown()
 {
-    fgtest::shutdownTestGlobals();
+    FGTestApi::tearDown::shutdownTestGlobals();
 }
 
 

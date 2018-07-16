@@ -20,9 +20,12 @@
 #ifndef FG_TEST_SCENE_GRAPH_HXX
 #define FG_TEST_SCENE_GRAPH_HXX
 
-namespace fgtest
-{
+namespace FGTestApi {
+namespace setUp {
+
 void initScenery();
-}
+
+} // End of namespace setUp.
+} // End of namespace FGTestApi.
 
 #endif // FG_TEST_SCENE_GRAPH_HXX

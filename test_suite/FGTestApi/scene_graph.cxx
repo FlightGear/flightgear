@@ -26,8 +26,8 @@
 #include <Viewer/FGEventHandler.hxx>
 
 
-namespace fgtest
-{
+namespace FGTestApi {
+namespace setUp {
 
 void initScenery()
 {
@@ -49,4 +49,5 @@ void initScenery()
     globals->get_scenery()->bind();
 }
 
-} // of namespace fgtest
+} // End of namespace setUp.
+} // End of namespace FGTestApi.

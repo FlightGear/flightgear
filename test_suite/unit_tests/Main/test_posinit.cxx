@@ -18,7 +18,7 @@
 
 #include "test_posinit.hxx"
 
-#include "test_suite/helpers/globals.hxx"
+#include "test_suite/FGTestApi/globals.hxx"
 
 #include <simgear/props/props_io.hxx>
 
@@ -33,7 +33,7 @@ using namespace flightgear;
 
 void PosInitTests::testDefaultStartup()
 {
-    fgtest::initTestGlobals("posinit");
+    FGTestApi::setUp::initTestGlobals("posinit");
     Options::reset();
 
     fgLoadProps("defaults.xml", globals->get_props());
@@ -53,7 +53,7 @@ void PosInitTests::testDefaultStartup()
     // this unfortunately means manually parsing that file, oh well
 
     {
-        SGPath presets = fgtest::fgdataPath() / "location-presets.xml";
+        SGPath presets = FGTestApi::setUp::fgdataPath() / "location-presets.xml";
         CPPUNIT_ASSERT(presets.exists());
         SGPropertyNode_ptr props(new SGPropertyNode);
         readProperties(presets, props);
@@ -68,13 +68,13 @@ void PosInitTests::testDefaultStartup()
         double dist = SGGeodesy::distanceM(pos, defaultAirport->geod());
         CPPUNIT_ASSERT(dist < 10000);
     }
-    fgtest::shutdownTestGlobals();
+    FGTestApi::tearDown::shutdownTestGlobals();
 
 }
 
 void PosInitTests::testAirportOnlyStartup()
 {
-    fgtest::initTestGlobals("posinit");
+    FGTestApi::setUp::initTestGlobals("posinit");
     Options::reset();
     fgLoadProps("defaults.xml", globals->get_props());
 
@@ -94,13 +94,13 @@ void PosInitTests::testAirportOnlyStartup()
     double dist = SGGeodesy::distanceM(globals->get_aircraft_position(),
                                        FGAirport::getByIdent("EDDF")->geod());
     CPPUNIT_ASSERT(dist < 10000);
-    fgtest::shutdownTestGlobals();
+    FGTestApi::tearDown::shutdownTestGlobals();
 
 }
 
 void PosInitTests::testAirportAndMetarStartup()
 {
-    fgtest::initTestGlobals("posinit");
+    FGTestApi::setUp::initTestGlobals("posinit");
 
     Options::reset();
     fgLoadProps("defaults.xml", globals->get_props());
@@ -122,5 +122,5 @@ void PosInitTests::testAirportAndMetarStartup()
     ///sim/atc/runway
     CPPUNIT_ASSERT(globals->get_props()->getStringValue("sim/atc/runway") == std::string("26"));
 
-    fgtest::shutdownTestGlobals();
+    FGTestApi::tearDown::shutdownTestGlobals();
 }
