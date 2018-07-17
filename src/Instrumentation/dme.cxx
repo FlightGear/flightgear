@@ -139,6 +139,7 @@ void
 DME::reinit ()
 {
     _time_before_search_sec = 0;
+	clear();
 }
 
 void
@@ -177,26 +178,17 @@ DME::update (double delta_time_sec)
 
 
     // If it's off, don't bother.
-    if (!_serviceable_node->getBoolValue() ||
-        !_electrical_node->getBoolValue()){
-        _last_distance_nm = 0;
-        _in_range_node->setBoolValue(false);
-        _distance_node->setDoubleValue(0);
-        _speed_node->setDoubleValue(0);
-        _time_node->setDoubleValue(0);
-        _audioIdent->setIdent("", 0.0 );
-        _distance_string->setStringValue("");
-        _speed_string->setStringValue("");
-        _time_string->setStringValue("");
+    if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
+		clear();
         return;
     }
+
     // If it's on, but invalid source,don't bother.
-if (NULL == _navrecord ){
-        _distance_string->setStringValue("---");
-        _speed_string->setStringValue("---");
-        _time_string->setStringValue("--");
+	if (nullptr == _navrecord) {
+		clear();
         return;
     }
+
     // Calculate the distance to the transmitter
     double distance_nm = dist(_navrecord->cart(),
                   globals->get_aircraft_position_cart()) * SG_METER_TO_NM;
@@ -246,17 +238,23 @@ if (NULL == _navrecord ){
         }
         
     } else {
-        _last_distance_nm = 0;
-        _in_range_node->setBoolValue(false);
-        _distance_node->setDoubleValue(0);
-        _distance_string->setStringValue("---");
-        _speed_node->setDoubleValue(0);
-        _speed_string->setStringValue("---");
-        _time_node->setDoubleValue(0);
-        _time_string->setStringValue("--");
-        _audioIdent->setIdent("", 0.0 );
+		clear();
     }
+
     _audioIdent->update( delta_time_sec );
+}
+
+void DME::clear()
+{
+	_last_distance_nm = 0;
+	_in_range_node->setBoolValue(false);
+	_distance_node->setDoubleValue(0);
+	_distance_string->setStringValue("---");
+	_speed_node->setDoubleValue(0);
+	_speed_string->setStringValue("---");
+	_time_node->setDoubleValue(0);
+	_time_string->setStringValue("--");
+	_audioIdent->setIdent("", 0.0);
 }
 
 // end of dme.cxx

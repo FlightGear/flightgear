@@ -41,11 +41,12 @@ public:
     DME ( SGPropertyNode *node );
     virtual ~DME ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double delta_time_sec);
+    void init() override;
+    void reinit() override;
+    void update(double delta_time_sec) override;
 
 private:
+	void clear();
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
