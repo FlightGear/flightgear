@@ -58,6 +58,10 @@ public:
 // The custom test runner for the FlightGear test suite.
 class fgTestListener : public CppUnit::TestListener
 {
+protected:
+    // Failure state.
+    bool m_failure, m_error;
+
     public:
         // Constructor.
         fgTestListener(): m_failure(false), m_error(false), sum_time(0) { };
@@ -91,9 +95,6 @@ class fgTestListener : public CppUnit::TestListener
 
         // Test timings.
         clock_t m_time;
-
-        // Failure state.
-        bool m_failure, m_error;
 };
 
 
