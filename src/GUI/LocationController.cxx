@@ -375,6 +375,12 @@ LocationController::LocationController(QObject *parent) :
     m_detailQml = new QmlPositioned(this);
     m_baseQml = new QmlPositioned(this);
 
+    m_defaultAltitude = QuantityValue{Units::FeetMSL, 6000};
+    m_defaultAirspeed = QuantityValue{Units::Knots, 120};
+    m_defaultHeading = QuantityValue{Units::DegreesTrue, 0};
+    m_defaultOffsetDistance = QuantityValue{Units::NauticalMiles, 1.0};
+    m_defaultOffsetRadial = QuantityValue{Units::DegreesTrue, 90};
+
     // chain location and offset updated to description
     connect(this, &LocationController::baseLocationChanged,
             this, &LocationController::descriptionChanged);
@@ -392,10 +398,8 @@ void LocationController::setLaunchConfig(LaunchConfig *config)
 {
     m_config = config;
     connect(m_config, &LaunchConfig::collect, this, &LocationController::onCollectConfig);
-
     connect(m_config, &LaunchConfig::save, this, &LocationController::onSaveCurrentLocation);
     connect(m_config, &LaunchConfig::restore, this, &LocationController::onRestoreCurrentLocation);
-
 }
 
 void LocationController::restoreSearchHistory()
@@ -433,10 +437,10 @@ bool LocationController::isParkedLocation() const
 
 bool LocationController::isAirborneLocation() const
 {
-    const bool altIsPositive = (m_altitudeFt > 0);
+    const bool altIsPositive = (m_altitude.value > 0);
 
     if (m_locationIsLatLon) {
-        return (m_altitudeType != AltitudeType::Off) && altIsPositive;
+        return m_altitudeEnabled && altIsPositive;
     }
 
     if (m_airportLocation) {
@@ -454,10 +458,10 @@ bool LocationController::isAirborneLocation() const
     }
 
     // relative to a navaid or fix - base off altitude.
-    return (m_altitudeType != AltitudeType::Off) && altIsPositive;
+    return m_altitudeEnabled && altIsPositive;
 }
 
-int LocationController::offsetRadial() const
+QuantityValue LocationController::offsetRadial() const
 {
     return m_offsetRadial;
 }
@@ -646,7 +650,7 @@ QmlPositioned *LocationController::baseLocation() const
     return m_baseQml;
 }
 
-void LocationController::setOffsetRadial(int offsetRadial)
+void LocationController::setOffsetRadial(QuantityValue offsetRadial)
 {
     if (m_offsetRadial == offsetRadial)
         return;
@@ -655,12 +659,12 @@ void LocationController::setOffsetRadial(int offsetRadial)
     emit offsetChanged();
 }
 
-void LocationController::setOffsetNm(double offsetNm)
+void LocationController::setOffsetDistance(QuantityValue d)
 {
-    if (qFuzzyCompare(m_offsetNm, offsetNm))
+    if (m_offsetDistance == d)
         return;
 
-    m_offsetNm = offsetNm;
+    m_offsetDistance = d;
     emit offsetChanged();
 }
 
@@ -724,23 +728,17 @@ void LocationController::restoreLocation(QVariantMap l)
             m_baseQml->setInner(m_location);
         }
 
-        if (l.contains("altitude-type")) {
-            m_altitudeFt = l.value("altitude", 6000).toInt();
-            m_flightLevel = l.value("flight-level").toInt();
-            m_altitudeType = static_cast<AltitudeType>(l.value("altitude-type").toInt());
-        } else {
-            m_altitudeType = Off;
-        }
-
+        m_altitudeEnabled = l.contains("altitude");
         m_speedEnabled = l.contains("speed");
         m_headingEnabled = l.contains("heading");
 
-        m_airspeedKnots = l.value("speed", 120).toInt();
-        m_headingDeg = l.value("heading").toInt();
+        m_altitude = l.value("altitude", QVariant::fromValue(m_defaultAltitude)).value<QuantityValue>();
+        m_airspeed = l.value("speed", QVariant::fromValue(m_defaultAirspeed)).value<QuantityValue>();
+        m_heading = l.value("heading", QVariant::fromValue(m_defaultHeading)).value<QuantityValue>();
 
         m_offsetEnabled = l.value("offset-enabled").toBool();
-        m_offsetRadial = l.value("offset-bearing").toInt();
-        m_offsetNm = l.value("offset-distance", 10).toInt();
+        m_offsetRadial = l.value("offset-bearing", QVariant::fromValue(m_defaultOffsetRadial)).value<QuantityValue>();
+        m_offsetDistance = l.value("offset-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
         m_tuneNAV1 = l.value("tune-nav1-radio").toBool();
 
         if (m_airportLocation) {
@@ -766,7 +764,7 @@ void LocationController::restoreLocation(QVariantMap l)
             }
 
             m_onFinal = l.value("location-on-final").toBool();
-            m_offsetNm = l.value("location-apt-final-distance").toInt();
+            m_offsetDistance = l.value("location-apt-final-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
         } // of location is an airport
     } catch (const sg_exception&) {
         qWarning() << "Errors restoring saved location, clearing";
@@ -808,7 +806,7 @@ QVariantMap LocationController::saveLocation() const
 
         if (m_airportLocation) {
             locationSet.insert("location-on-final", m_onFinal);
-            locationSet.insert("location-apt-final-distance", m_offsetNm);
+            locationSet.insert("location-apt-final-distance", QVariant::fromValue(m_offsetDistance));
             if (m_useActiveRunway) {
                 locationSet.insert("location-apt-runway", "ACTIVE");
             } else if (m_detailLocation) {
@@ -822,30 +820,22 @@ QVariantMap LocationController::saveLocation() const
         } // of location is an airport
     } // of m_location is valid
 
-    if (m_altitudeType != Off) {
-        locationSet.insert("altitude-type", m_altitudeType);
-
-        if ((m_altitudeType == MSL_Feet) || (m_altitudeType == AGL_Feet)) {
-            locationSet.insert("altitude", m_altitudeFt);
-        }
-
-        if (m_altitudeType == FlightLevel) {
-            locationSet.insert("flight-level", m_flightLevel);
-        }
+    if (m_altitudeEnabled) {
+        locationSet.insert("altitude", QVariant::fromValue(m_altitude));
     }
 
     if (m_speedEnabled) {
-        locationSet.insert("speed", m_airspeedKnots);
+        locationSet.insert("speed", QVariant::fromValue(m_airspeed));
     }
 
     if (m_headingEnabled) {
-        locationSet.insert("heading", m_headingDeg);
+        locationSet.insert("heading", QVariant::fromValue(m_heading));
     }
 
     if (m_offsetEnabled) {
         locationSet.insert("offset-enabled", m_offsetEnabled);
-        locationSet.insert("offset-bearing", m_offsetRadial);
-        locationSet.insert("offset-distance",m_offsetNm);
+        locationSet.insert("offset-bearing", QVariant::fromValue(m_offsetRadial));
+        locationSet.insert("offset-distance", QVariant::fromValue(m_offsetDistance));
     }
 
     locationSet.insert("text", description());
@@ -916,7 +906,7 @@ void LocationController::setLocationProperties()
 
                 if (m_onFinal) {
                     fgSetDouble("/sim/presets/glideslope-deg", 3.0);
-                    fgSetDouble("/sim/presets/offset-distance-nm", m_offsetNm);
+                    fgSetDouble("/sim/presets/offset-distance-nm", m_offsetDistance.convertToUnit(Units::NauticalMiles).value);
                     fgSetBool("/sim/presets/on-ground", false);
                 }
             } else if (m_airportLocation->type() == FGPositioned::HELIPORT) {
@@ -961,46 +951,65 @@ void LocationController::setLocationProperties()
         
         applyPositionOffset();
         applyAltitude();
+        applyAirspeed();
     } // of navaid location
+}
+
+void LocationController::applyAirspeed()
+{
+    if (m_speedEnabled && (m_airspeed.unit != Units::NoUnits)) {
+        if (m_airspeed.unit == Units::Knots) {
+            m_config->setArg("vc", QString::number(m_airspeed.value));
+        } else if (m_airspeed.unit == Units::Mach) {
+            m_config->setArg("mach", QString::number(m_airspeed.value));
+        } else {
+            qWarning() << Q_FUNC_INFO << "unsupported airpseed unit" << m_airspeed.unit;
+        }
+    }
 }
 
 void LocationController::applyPositionOffset()
 {
-    if (m_speedEnabled) {
-        m_config->setArg("vc", QString::number(m_airspeedKnots));
-    }
-
-    if (m_headingEnabled) {
-        m_config->setArg("heading", QString::number(m_headingDeg));
+    if (m_headingEnabled && (m_heading.unit != Units::NoUnits)) {
+        if (m_heading.unit == Units::DegreesTrue) {
+            m_config->setArg("heading", QString::number(m_heading.value));
+        } else {
+            qWarning() << Q_FUNC_INFO << "unsupported heading unit" << m_heading.unit;
+        }
     }
 
     if (m_offsetEnabled) {
         // flip direction of azimuth to balance the flip done in fgApplyStartOffset
         // I don't know why that flip exists but changing it there will break
         // command-line compatability so compensating here instead
-        int offsetAzimuth = m_offsetRadial - 180;
+        int offsetAzimuth = m_offsetRadial.value - 180;
         m_config->setArg("offset-azimuth", QString::number(offsetAzimuth));
-        m_config->setArg("offset-distance", QString::number(m_offsetNm));
+        const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
+        m_config->setArg("offset-distance", QString::number(offsetNm));
     }
 }
 
 void LocationController::applyAltitude()
 {
-    switch (m_altitudeType) {
-    case Off:
+    if (!m_altitudeEnabled)
+        return;
+
+    switch (m_altitude.unit) {
+    default:
+        qWarning() << Q_FUNC_INFO << "unsupported altitdue unit";
         break;
-    case MSL_Feet:
-        m_config->setArg("altitude", QString::number(m_altitudeFt));
+    case Units::FeetMSL:
+        m_config->setArg("altitude", QString::number(m_altitude.value));
         break;
 
-    case AGL_Feet:
+    case Units::FeetAGL:
         // fixme - allow the sim to accpet AGL start position
-        m_config->setArg("altitude", QString::number(m_altitudeFt));
+        m_config->setArg("altitude", QString::number(m_altitude.value));
         break;
 
-    case FlightLevel:
+    case Units::FlightLevel:
         // FIXME - allow the sim to accept real FlightLevel arguments
-        m_config->setArg("altitude", QString::number(m_flightLevel * 100));
+        m_config->setArg("altitude", QString::number(m_altitude.value * 100));
         break;
     }
 }
@@ -1017,6 +1026,7 @@ void LocationController::onCollectConfig()
         m_config->setArg("lon", QString::number(m_geodLocation.getLongitudeDeg(), 'f', 8));
         applyPositionOffset();
         applyAltitude();
+        applyAirspeed();
         return;
     }
 
@@ -1044,13 +1054,11 @@ void LocationController::onCollectConfig()
 
                 if (m_onFinal) {
                     m_config->setArg("glideslope", std::string("3.0"));
-                    m_config->setArg("offset-distance", QString::number(m_offsetNm));
+                    const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
+                    m_config->setArg("offset-distance", QString::number(offsetNm));
                     m_config->setArg("on-ground", std::string("false"));
 
-                    if (m_speedEnabled) {
-                        m_config->setArg("vc", QString::number(m_airspeedKnots));
-                    }
-
+                    applyAirspeed();
                     applyAltitude();
                 }
             } else if (m_airportLocation->type() == FGPositioned::HELIPORT) {
@@ -1089,6 +1097,7 @@ void LocationController::onCollectConfig()
         m_config->setProperty("/sim/presets/navaid-id", QString::number(m_location->guid()));
         applyPositionOffset();
         applyAltitude();
+        applyAirspeed();
     } // of navaid location
 }
 
@@ -1110,30 +1119,6 @@ void LocationController::setNavRadioOption()
         QString adfOpt = QString("%1:%2").arg(heading).arg(khz);
         m_config->setArg("adf1", adfOpt);
     }
-}
-
-void LocationController::onAirportRunwayClicked(FGRunwayRef rwy)
-{
-    // if (rwy) {
-    //     m_ui->runwayRadio->setChecked(true);
-    //     int rwyIndex = m_ui->runwayCombo->findText(QString::fromStdString(rwy->ident()));
-    //     m_ui->runwayCombo->setCurrentIndex(rwyIndex);
-    //     m_ui->airportDiagram->setSelectedRunway(rwy);
-    // }
-
-    // updateDescription();
-}
-
-void LocationController::onAirportParkingClicked(FGParkingRef park)
-{
-    // if (park) {
-    //     m_ui->parkingRadio->setChecked(true);
-    //     int parkingIndex = m_ui->parkingCombo->findData(park->getIndex());
-    //     m_ui->parkingCombo->setCurrentIndex(parkingIndex);
-    //     m_ui->airportDiagram->setSelectedParking(park);
-    // }
-
-    // updateDescription();
 }
 
 QString compassPointFromHeading(int heading)
@@ -1173,6 +1158,7 @@ QString LocationController::description() const
         name = QString::fromStdString(m_location->name());
 
     name = fixNavaidName(name);
+    const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
 
     if (m_airportLocation) {
         const bool onRunway = (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY));
@@ -1181,7 +1167,7 @@ QString LocationController::description() const
 
         if (m_useActiveRunway) {
             if (m_onFinal) {
-                locationOnAirport = tr("on %1-mile final to active runway").arg(m_offsetNm);
+                locationOnAirport = tr("on %1-mile final to active runway").arg(offsetNm);
             } else {
                 locationOnAirport = tr("on active runway");
             }
@@ -1189,7 +1175,7 @@ QString LocationController::description() const
             QString runwayName = QString("runway %1").arg(QString::fromStdString(m_detailLocation->ident()));
 
             if (m_onFinal) {
-                locationOnAirport = tr("on %2-mile final to %1").arg(runwayName).arg(m_offsetNm);
+                locationOnAirport = tr("on %2-mile final to %1").arg(runwayName).arg(offsetNm);
             } else {
                 locationOnAirport = tr("on %1").arg(runwayName);
             }
@@ -1202,8 +1188,8 @@ QString LocationController::description() const
         QString offsetDesc = tr("at");
         if (m_offsetEnabled) {
             offsetDesc = tr("%1nm %2 of").
-                    arg(m_offsetNm, 0, 'f', 1).
-                    arg(compassPointFromHeading(m_offsetRadial));
+                    arg(offsetNm, 0, 'f', 1).
+                    arg(compassPointFromHeading(m_offsetRadial.value));
         }
 
         QString navaidType;

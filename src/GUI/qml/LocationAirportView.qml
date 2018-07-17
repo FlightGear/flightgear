@@ -29,7 +29,8 @@ Item {
             syncUIFromController();
         }
 
-        approachExtensionNm: _location.onFinal ? _location.offsetNm : -1.0
+        approachExtensionEnabled: _location.onFinal
+        approachExtension: _location.offsetDistance
     }
 
     // not very declarative, try to remove this over time
@@ -183,16 +184,12 @@ Item {
 
                     Row {
                         height: offsetNmEdit.height
-                        DoubleSpinbox {
+                        NumericalEdit {
                             id: offsetNmEdit
-                            value: _location.offsetNm
-                            onCommit: _location.offsetNm = newValue;
+                            quantity: _location.offsetDistance
+                            onCommit: _location.offsetDistance = newValue;
                             label: qsTr("At")
-                            suffix: "Nm"
-                            min: 0.0
-                            max: 40.0
-                            decimals: 1
-                            maxDigits: 5
+                            unitsMode: Units.Distance
                             live: true
                             anchors.verticalCenter: parent.verticalCenter
                             enabled: onFinalBox.enableOnFinal
@@ -216,17 +213,13 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
-                        IntegerSpinbox {
+                        NumericalEdit {
                             id: airspeedSpinbox
                             label: qsTr("Airspeed:")
-                            suffix: "kts"
-                            min: 0
-                            max: 10000 // more for spaceships?
-                            step: 5
-                            maxDigits: 5
+                            unitsMode: Units.SpeedOnlyKnots
                             enabled: _location.speedEnabled && onFinalBox.enableOnFinal
-                            value: _location.airspeedKnots
-                            onCommit: _location.airspeedKnots = newValue
+                            quantity: _location.airspeed
+                            onCommit: _location.airspeed = newValue
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }

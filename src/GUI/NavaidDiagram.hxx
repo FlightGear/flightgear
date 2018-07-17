@@ -23,6 +23,7 @@
 
 #include "BaseDiagram.hxx"
 #include "QmlPositioned.hxx"
+#include "UnitsModel.hxx"
 
 #include <Navaids/navrecord.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -34,10 +35,10 @@ class NavaidDiagram : public BaseDiagram
     Q_PROPERTY(qlonglong navaid READ navaid WRITE setNavaid NOTIFY locationChanged)
     Q_PROPERTY(QmlGeod geod READ geod WRITE setGeod NOTIFY locationChanged)
 
-    Q_PROPERTY(int headingDeg READ headingDeg WRITE setHeadingDeg NOTIFY offsetChanged)
-    Q_PROPERTY(int offsetBearingDeg READ offsetBearingDeg WRITE setOffsetBearingDeg NOTIFY offsetChanged)
+    Q_PROPERTY(QuantityValue heading READ heading WRITE setHeading NOTIFY offsetChanged)
+    Q_PROPERTY(QuantityValue offsetBearing READ offsetBearing WRITE setOffsetBearing NOTIFY offsetChanged)
     Q_PROPERTY(bool offsetEnabled READ isOffsetEnabled WRITE setOffsetEnabled NOTIFY offsetChanged)
-    Q_PROPERTY(double offsetDistanceNm READ offsetDistanceNm WRITE setOffsetDistanceNm NOTIFY offsetChanged)
+    Q_PROPERTY(QuantityValue offsetDistance READ offsetDistance WRITE setOffsetDistance NOTIFY offsetChanged)
 public:
     NavaidDiagram(QQuickItem* pr = nullptr);
 
@@ -54,17 +55,17 @@ public:
 
     void setOffsetEnabled(bool offset);
 
-    void setOffsetDistanceNm(double distanceNm);
-    double offsetDistanceNm() const
-    { return m_offsetDistanceNm; }
+    void setOffsetDistance(QuantityValue distance);
+    QuantityValue offsetDistance() const
+    { return m_offsetDistance; }
 
-    void setOffsetBearingDeg(int bearingDeg);
-    int offsetBearingDeg() const
-    { return m_offsetBearingDeg; }
+    void setOffsetBearing(QuantityValue bearing);
+    QuantityValue offsetBearing() const
+    { return m_offsetBearing; }
 
-    void setHeadingDeg(int headingDeg);
-    int headingDeg() const
-    { return m_headingDeg; }
+    void setHeading(QuantityValue heading);
+    QuantityValue heading() const
+    { return m_heading; }
 
 signals:
     void locationChanged();
@@ -78,10 +79,10 @@ private:
     FGPositionedRef m_navaid;
     SGGeod m_geod;
 
-    bool m_offsetEnabled;
-    double m_offsetDistanceNm;
-    int m_offsetBearingDeg;
-    int m_headingDeg;
+    bool m_offsetEnabled = false;
+    QuantityValue m_offsetDistance;
+    QuantityValue m_offsetBearing;
+    QuantityValue m_heading;
 };
 
 #endif // of GUI_NAVAID_DIAGRAM_HXX

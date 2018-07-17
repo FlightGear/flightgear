@@ -47,14 +47,17 @@
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "QmlRadioButtonHelper.hxx"
+#include "UnitsModel.hxx"
 
 using namespace simgear::pkg;
-
 
 LauncherController::LauncherController(QObject *parent, QWindow* window) :
     QObject(parent),
     m_window(window)
 {
+    qRegisterMetaType<QuantityValue>();
+    qRegisterMetaTypeStreamOperators<QuantityValue>("Quantity");
+
     m_serversModel = new MPServersModel(this);
     m_location = new LocationController(this);
     m_locationHistory = new RecentLocationsModel(this);
@@ -133,6 +136,9 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<RecentLocationsModel>("FlightGear.Launcher", 1, 0, "RecentLocationsModel", "no");
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
     qmlRegisterUncreatableType<MPServersModel>("FlightGear.Launcher", 1, 0, "MPServers", "Singleton API");
+
+    qmlRegisterUncreatableType<Units>("FlightGear", 1, 0, "Units", "Only for enum");
+    qmlRegisterType<UnitsModel>("FlightGear", 1, 0, "UnitsModel");
 
     qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
@@ -368,7 +374,8 @@ QString LauncherController::selectAircraftStateAutomatically()
         return {};
 
     if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("cruise")) {
-        if (m_location->altitudeFt() > 6000) {
+        const double altitudeFt = m_location->altitude().convertToUnit(Units::FeetMSL).value;
+        if (altitudeFt > 6000) {
             return "cruise";
         }
     }

@@ -29,6 +29,7 @@
 #include "QtLauncher_fwd.hxx"
 #include "LaunchConfig.hxx"
 #include "QmlPositioned.hxx"
+#include "UnitsModel.hxx"
 
 class NavSearchModel;
 
@@ -44,20 +45,16 @@ class LocationController : public QObject
     Q_PROPERTY(QList<QObject*> airportParkings READ airportParkings NOTIFY baseLocationChanged)
 
     Q_PROPERTY(bool offsetEnabled READ offsetEnabled WRITE setOffsetEnabled NOTIFY offsetChanged)
-    Q_PROPERTY(int offsetRadial READ offsetRadial WRITE setOffsetRadial NOTIFY offsetChanged)
-    Q_PROPERTY(bool offsetBearingIsTrue MEMBER m_offsetBearingIsTrue NOTIFY offsetChanged)
-    Q_PROPERTY(double offsetNm READ offsetNm WRITE setOffsetNm NOTIFY offsetChanged)
+    Q_PROPERTY(QuantityValue offsetRadial READ offsetRadial WRITE setOffsetRadial NOTIFY offsetChanged)
+    Q_PROPERTY(QuantityValue offsetDistance READ offsetDistance WRITE setOffsetDistance NOTIFY offsetChanged)
 
     Q_PROPERTY(bool headingEnabled MEMBER m_headingEnabled NOTIFY configChanged)
     Q_PROPERTY(bool speedEnabled MEMBER m_speedEnabled NOTIFY configChanged)
+    Q_PROPERTY(bool altitudeEnabled MEMBER m_altitudeEnabled NOTIFY configChanged)
 
-    Q_PROPERTY(AltitudeType altitudeType MEMBER m_altitudeType NOTIFY configChanged)
-
-    Q_PROPERTY(int headingDeg MEMBER m_headingDeg NOTIFY configChanged)
-    Q_PROPERTY(int altitudeFt MEMBER m_altitudeFt NOTIFY configChanged)
-    Q_PROPERTY(int flightLevel MEMBER m_flightLevel NOTIFY configChanged)
-
-    Q_PROPERTY(int airspeedKnots MEMBER m_airspeedKnots NOTIFY configChanged)
+    Q_PROPERTY(QuantityValue heading MEMBER m_heading NOTIFY configChanged)
+    Q_PROPERTY(QuantityValue altitude MEMBER m_altitude NOTIFY configChanged)
+    Q_PROPERTY(QuantityValue airspeed MEMBER m_airspeed NOTIFY configChanged)
     Q_PROPERTY(bool onFinal READ onFinal WRITE setOnFinal NOTIFY configChanged)
 
     Q_PROPERTY(bool isAirportLocation READ isAirportLocation NOTIFY baseLocationChanged)
@@ -77,16 +74,6 @@ class LocationController : public QObject
 public:
     explicit LocationController(QObject *parent = nullptr);
     ~LocationController();
-
-    enum AltitudeType
-    {
-        Off = 0,
-        MSL_Feet,
-        AGL_Feet,
-        FlightLevel
-    };
-
-    Q_ENUMS(AltitudeType)
 
     void setLaunchConfig(LaunchConfig* config);
 
@@ -109,11 +96,11 @@ public:
     /// used to automatically select aircraft state
     bool isAirborneLocation() const;
 
-    int offsetRadial() const;
+    QuantityValue offsetRadial() const;
 
-    double offsetNm() const
+    QuantityValue offsetDistance() const
     {
-        return m_offsetNm;
+        return m_offsetDistance;
     }
 
     Q_INVOKABLE void setBaseLocation(QmlPositioned* pos);
@@ -170,14 +157,14 @@ public:
         return m_locationIsLatLon;
     }
 
-    int altitudeFt() const
+    QuantityValue altitude() const
     {
-        return m_altitudeFt;
+        return m_altitude;
     }
 public slots:
-    void setOffsetRadial(int offsetRadial);
+    void setOffsetRadial(QuantityValue offsetRadial);
 
-    void setOffsetNm(double offsetNm);
+    void setOffsetDistance(QuantityValue offsetNm);
 
     void setOffsetEnabled(bool offsetEnabled);
 
@@ -201,17 +188,12 @@ private Q_SLOTS:
 private:
 
     void onSearchComplete();
-
-    void onAirportRunwayClicked(FGRunwayRef rwy);
-    void onAirportParkingClicked(FGParkingRef park);
-
-
     void addToRecent(FGPositionedRef pos);
-
     void setNavRadioOption();
 
     void applyPositionOffset();
     void applyAltitude();
+    void applyAirspeed();
 
     NavSearchModel* m_searchModel = nullptr;
 
@@ -227,20 +209,22 @@ private:
     QmlPositioned* m_baseQml = nullptr;
 
     bool m_offsetEnabled = false;
-    int m_offsetRadial = 0;
-    double m_offsetNm = 0.0;
-    bool m_offsetBearingIsTrue = false;
-    int m_headingDeg = 0;
-    int m_altitudeFt= 0;
-    int m_airspeedKnots = 150;
+    QuantityValue m_offsetRadial;
+    QuantityValue m_offsetDistance;
+    QuantityValue m_heading;
+    QuantityValue m_altitude;
+    QuantityValue m_airspeed;
+
+    QuantityValue m_defaultAirspeed, m_defaultAltitude,
+        m_defaultHeading, m_defaultOffsetDistance, m_defaultOffsetRadial;
+
     bool m_onFinal = false;
     bool m_useActiveRunway = true;
     bool m_tuneNAV1 = false;
     bool m_useAvailableParking;
     bool m_headingEnabled = false;
     bool m_speedEnabled = false;
-    AltitudeType m_altitudeType = Off;
-    int m_flightLevel = 0;
+    bool m_altitudeEnabled = false;
     bool m_skipFromArgs = false;
 };
 

@@ -41,7 +41,7 @@ Item {
             radius: Style.roundRadius * 1.5
 
             anchors.verticalCenter: parent.verticalCenter
-            color: (checked && enabled) ? Style.themeColor : "white"
+            color: enabled && (checked | mouseArea.containsMouse) ? Style.themeColor : "white"
             border.width: 1
             border.color: Style.inactiveThemeColor
 
@@ -72,5 +72,7 @@ Item {
 
         hoverEnabled: true
         onClicked: root.toggle(!checked)
+        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+
     }
 }

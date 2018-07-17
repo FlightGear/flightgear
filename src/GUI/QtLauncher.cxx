@@ -68,6 +68,7 @@
 
 #include "LauncherMainWindow.hxx"
 #include "LaunchConfig.hxx"
+#include "UnitsModel.hxx"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -310,6 +311,9 @@ void initQSettings()
     static bool qSettingsInitDone = false;
 
     if (!qSettingsInitDone) {
+        qRegisterMetaType<QuantityValue>();
+        qRegisterMetaTypeStreamOperators<QuantityValue>("QuantityValue");
+
         qSettingsInitDone = true;
         string fgHome = globals->get_fg_home().utf8Str();
 

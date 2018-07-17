@@ -22,9 +22,9 @@ Item {
         anchors.fill: parent
 
         offsetEnabled: _location.offsetEnabled
-        offsetBearingDeg: _location.offsetRadial
-        offsetDistanceNm: _location.offsetNm
-        headingDeg: _location.headingDeg
+        offsetBearing: _location.offsetRadial
+        offsetDistance: _location.offsetDistance
+        heading: _location.heading
     }
 
     Rectangle {
@@ -81,16 +81,12 @@ Item {
                     onCheckedChanged: _location.speedEnabled = checked;
                 }
 
-                IntegerSpinbox {
+                NumericalEdit {
                     label: qsTr("Airspeed:")
-                    suffix: "kts"
-                    min: 0
-                    max: 10000 // more for spaceships?
-                    step: 5
-                    maxDigits: 5
                     enabled: _location.speedEnabled
-                    value: _location.airspeedKnots
-                    onCommit: _location.airspeedKnots = newValue
+                    quantity: _location.airspeed
+                    onCommit: _location.airspeed = newValue
+                    unitsMode: Units.Speed
                 }
 
                 Item {
@@ -107,16 +103,12 @@ Item {
                     }
                 }
 
-                IntegerSpinbox {
+                NumericalEdit {
                     label: qsTr("Heading:")
-                    suffix: "deg" // FIXME use Unicode degree symbol
-                    min: 0
-                    max: 359
-                    live: true
-                    maxDigits: 3
+                    unitsMode: Units.Heading
                     enabled: _location.headingEnabled
-                    value: _location.headingDeg
-                    onCommit: _location.headingDeg = newValue
+                    quantity: _location.heading
+                    onCommit: _location.heading = newValue
                 }
             }
 
@@ -137,37 +129,23 @@ Item {
                     }
                 }
 
-                DoubleSpinbox {
+                NumericalEdit {
                     id: offsetNmEdit
-                    value: _location.offsetNm
-                    onCommit: _location.offsetNm = newValue
-                    min: 0.0
-                    max: 40.0
-                    suffix: "Nm"
-                    maxDigits: 5
-                    decimals: 1
+                    quantity: _location.offsetDistance
+                    onCommit: _location.offsetDistance = newValue
                     live: true
                     anchors.verticalCenter: parent.verticalCenter
                     enabled: offsetToggle.checked
+                    unitsMode: Units.Distance
                 }
 
-                StyledText {
-                    text: qsTr(" on bearing ")
-                    enabled: _location.offsetEnabled
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                IntegerSpinbox {
-                    id: offsetBearingEdit
-                    suffix: "deg" // FIXME use Unicode degree symbol
-                    min: 0
-                    max: 359
-                    maxDigits: 3
-                    live: true
-                    anchors.verticalCenter: parent.verticalCenter
+                NumericalEdit {
+                    label: qsTr(" on bearing ")
+                    unitsMode: Units.Heading
                     enabled: offsetToggle.checked
-                    value: _location.offsetRadial
+                    quantity: _location.offsetRadial
                     onCommit: _location.offsetRadial = newValue
+                    live: true
                 }
             }
         } // main layout column

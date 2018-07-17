@@ -114,6 +114,7 @@
         <file>qml/HeaderBox.qml</file>
         <file>qml/TimeEdit.qml</file>
         <file>qml/AirportEntry.qml</file>
+        <file>qml/NumericalEdit.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

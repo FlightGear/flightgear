@@ -25,6 +25,8 @@
 
 #include <QPixmap>
 
+#include "UnitsModel.hxx"
+
 #include <Airports/parking.hxx>
 #include <Airports/runways.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -39,7 +41,8 @@ class AirportDiagram : public BaseDiagram
     Q_PROPERTY(QmlPositioned* selection READ selection WRITE setSelection NOTIFY selectionChanged)
     Q_PROPERTY(qlonglong airport READ airportGuid WRITE setAirportGuid NOTIFY airportChanged)
 
-    Q_PROPERTY(double approachExtensionNm READ approachExtensionNm WRITE setApproachExtensionNm NOTIFY approachExtensionChanged)
+    Q_PROPERTY(bool approachExtensionEnabled READ approachExtensionEnabled WRITE setApproachExtensionEnabled NOTIFY approachExtensionChanged)
+    Q_PROPERTY(QuantityValue approachExtension READ approachExtension WRITE setApproachExtension NOTIFY approachExtensionChanged)
 public:
     AirportDiagram(QQuickItem* pr = nullptr);
     virtual ~AirportDiagram();
@@ -54,12 +57,18 @@ public:
 
     void setSelection(QmlPositioned* pos);
 
-    void setApproachExtensionNm(double distanceNm);
-    double approachExtensionNm() const;
+    void setApproachExtension(QuantityValue distance);
+    QuantityValue approachExtension() const;
 
     qlonglong airportGuid() const;
     void setAirportGuid(qlonglong guid);
 
+    bool approachExtensionEnabled() const
+    {
+        return m_approachExtensionEnabled;
+    }
+
+    void setApproachExtensionEnabled(bool e);
 Q_SIGNALS:
     void clicked(QmlPositioned* pos);
 
@@ -130,7 +139,8 @@ private:
 
     QPainterPath m_parkingIconPath, // arrow points right
         m_parkingIconLeftPath; // arrow points left
-    double m_approachDistanceNm;
+    QuantityValue m_approachDistance;
+    bool m_approachExtensionEnabled = false;
 
     QPainterPath m_helipadIconPath;
     FGPositionedRef m_selection;

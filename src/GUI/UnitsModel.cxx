@@ -1,0 +1,411 @@
+// UnitsModel.cxx - part of GUI launcher using Qt5
+//
+// Written by James Turner, started July 2018
+//
+// Copyright (C) 2018 James Turner <james@flightgear.org>
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#include "UnitsModel.hxx"
+
+#include <cmath>
+
+#include <simgear/constants.h>
+
+#include <QIntValidator>
+#include <QDoubleValidator>
+#include <QDataStream>
+#include <QDebug>
+
+namespace
+{
+
+struct UnitData
+{
+    UnitData(QString sn, QString ln, QString metrics, bool pfx = false) :
+        shortName(sn), longName(ln),
+        maxTextForMetrics(metrics),
+        isPrefix(pfx) {}
+
+    UnitData(QString sn, QString ln,
+             QString metrics,
+             bool pfx,
+             double min, double max,
+             double step = 1.0,
+             bool wraps = false,
+             int dps = 0) :
+        shortName(sn), longName(ln),
+        maxTextForMetrics(metrics),
+        isPrefix(pfx),
+        valueWraps(wraps),
+        minValue(min), maxValue(max), stepSize(step),
+        decimals(dps)
+    {}
+
+    QString shortName;
+    QString longName;
+    QString maxTextForMetrics;
+    bool isPrefix = false;
+    bool valueWraps = false;
+    double minValue = 0.0;
+    double maxValue = 9999999.0;
+    double stepSize = 1.0;
+    int decimals = 0;
+};
+
+std::vector<UnitData> static_unitData = {
+    { "", "", "" }, // noUnits
+    { "ft", "feet above sea-level (MSL)", "000000", false, -2000, 180000, 50},
+    { "ft AGL", "feet above ground level (AGL)", "000000", false, 0, 180000, 50},
+    { "FL", "Flight-level", "000", true /* prefix */, 0.0, 500.0, 5.0},
+    { "m", "meters above sea-level (MSL)", "000000", false, -500, 100000, 50},
+    { "kts", "Knots", "9999", false, 0, 999999, 10.0},
+    { "M", "Mach", "00.000", true /* prefix */, 0.0, 99.0, 0.05, false /* no wrap */, 3 /* decimal places */},
+    { "°True", "degrees true", "000", false, 0, 359, 5.0, true /* wraps */},
+    { "°Mag", "degrees magnetic", "000", false, 0, 359, 5.0, true /* wraps */},
+    { "UTC", "Universal coordinated time", ""},
+    { "Local", "Local time", ""},
+    { "Nm", "Nautical miles", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
+    { "Km", "Kilometers", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */}
+
+};
+
+// order here corresponds to the Mode enum
+std::vector<UnitsModel::UnitVec> static_modeData = {
+    { Units::FeetMSL, Units::FlightLevel},
+    { Units::FeetMSL, Units::FeetAGL, Units::FlightLevel},
+    { Units::FeetMSL, Units::MetersMSL, Units::FlightLevel},
+    { Units::Knots, Units::Mach },
+    { Units::Knots },
+    { Units::DegreesMagnetic, Units::DegreesTrue },
+    { Units::TimeLocal, Units::TimeUTC},
+    { Units::NauticalMiles }
+};
+
+const int UnitLongNameRole = Qt::UserRole + 1;
+const int UnitIsPrefixRole = Qt::UserRole + 2;
+const int UnitMinValueRole = Qt::UserRole + 3;
+const int UnitMaxValueRole = Qt::UserRole + 4;
+const int UnitStepSizeRole = Qt::UserRole + 5;
+const int UnitDecimalsRole = Qt::UserRole + 6;
+const int UnitValueWrapsRole = Qt::UserRole + 7;
+
+} // of anonymous namespace
+
+UnitsModel::UnitsModel()
+{
+    m_enabledUnits = static_modeData.at(m_mode);
+}
+
+int UnitsModel::rowCount(const QModelIndex &) const
+{
+    return m_enabledUnits.size();
+}
+
+QVariant UnitsModel::data(const QModelIndex &index, int role) const
+{
+    int row = index.row();
+    if ((row < 0) || (row >= m_enabledUnits.size()))
+        return {};
+
+    const Units::Type u = m_enabledUnits.at(row);
+    const UnitData& ud = static_unitData.at(u);
+
+    switch (role) {
+    case Qt::DisplayRole: return ud.shortName;
+    case UnitLongNameRole: return ud.longName;
+    case UnitIsPrefixRole: return ud.isPrefix;
+    case UnitMinValueRole: return ud.minValue;
+    case UnitMaxValueRole: return ud.maxValue;
+    case UnitStepSizeRole: return ud.stepSize;
+    case UnitValueWrapsRole: return ud.valueWraps;
+    case UnitDecimalsRole: return ud.decimals;
+    default:
+        break;
+    }
+
+    return {};
+}
+
+QValidator* UnitsModel::validator() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    if (ud.decimals > 0) {
+        return new QDoubleValidator(ud.minValue, ud.maxValue, ud.decimals);
+    }
+
+    if ((u == Units::TimeLocal) || (u == Units::TimeUTC)) {
+        return nullptr; // no validation
+    }
+
+    return new QIntValidator(static_cast<int>(ud.minValue),
+                             static_cast<int>(ud.maxValue));
+}
+
+QString UnitsModel::maxTextForMetrics() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.maxTextForMetrics;
+}
+
+bool UnitsModel::isPrefix() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.isPrefix;
+}
+
+bool UnitsModel::doesWrap() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.valueWraps;
+}
+
+QString UnitsModel::shortText() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.shortName;
+}
+
+Units::Type UnitsModel::selectedUnit() const
+{
+    return m_enabledUnits.at(m_activeIndex);
+}
+
+int UnitsModel::numChoices() const
+{
+    return m_enabledUnits.size();
+}
+
+QHash<int, QByteArray> UnitsModel::roleNames() const
+{
+    QHash<int, QByteArray> result = QAbstractListModel::roleNames();
+
+    result[Qt::DisplayRole] = "shortName";
+    result[UnitLongNameRole] = "longName";
+    result[UnitIsPrefixRole] = "isPrefix";
+    result[UnitValueWrapsRole] = "valueDoesWrap";
+    result[UnitMinValueRole] = "minValue";
+    result[UnitMaxValueRole] = "maxValue";
+    result[UnitStepSizeRole] = "stepSize";
+    result[UnitDecimalsRole] = "decimalPlaces";
+
+    return result;
+}
+
+int UnitsModel::numDecimals() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.decimals;
+}
+
+double UnitsModel::minValue() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.minValue;
+}
+
+double UnitsModel::maxValue() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.maxValue;
+}
+
+double UnitsModel::stepSize() const
+{
+    const auto u = m_enabledUnits.at(m_activeIndex);
+    const UnitData& ud = static_unitData.at(u);
+    return ud.stepSize;
+}
+
+void UnitsModel::setMode(Units::Mode mode)
+{
+    if (m_mode == mode)
+        return;
+
+    m_mode = mode;
+    emit modeChanged(m_mode);
+
+    beginResetModel();
+    m_enabledUnits = static_modeData.at(mode);
+    endResetModel();
+}
+
+void UnitsModel::setSelectedIndex(int selectedIndex)
+{
+    if (m_activeIndex == selectedIndex)
+        return;
+
+    if ((selectedIndex < 0) || (selectedIndex >= m_enabledUnits.size()))
+        return;
+
+    m_activeIndex = selectedIndex;
+    emit selectionChanged(m_activeIndex);
+}
+
+void UnitsModel::setSelectedUnit(int u)
+{
+    auto it = std::find(m_enabledUnits.begin(), m_enabledUnits.end(), static_cast<Units::Type>(u));
+    if (it == m_enabledUnits.end()) {
+        qWarning() << Q_FUNC_INFO << "unit" << u << "not enabled for mode" << m_mode;
+        return;
+    }
+
+    int index = std::distance(m_enabledUnits.begin(), it);
+    if (index != m_activeIndex) {
+        m_activeIndex = index;
+        emit selectionChanged(m_activeIndex);
+    }
+}
+
+QuantityValue::QuantityValue()
+{
+}
+
+QuantityValue::QuantityValue(Units::Type u, double v) :
+    value(v),
+    unit(u)
+{
+}
+
+QuantityValue QuantityValue::convertToUnit(Units::Type u) const
+{
+    // special case a no-change
+    if (unit == u)
+        return *this;
+
+    if (unit == Units::NoUnits) {
+        return {u, 0.0};
+    }
+
+    switch (u) {
+    case Units::NauticalMiles:
+    {
+        if (unit == Units::Kilometers) {
+            return {u, value * SG_METER_TO_NM * 1000};
+        }
+        break;
+    }
+
+    case Units::Kilometers:
+    {
+        if (unit == Units::NauticalMiles) {
+            return {u, value * SG_NM_TO_METER * 0.001};
+        }
+        break;
+    }
+
+    case Units::FeetMSL:
+    {
+        if (unit == Units::FlightLevel) {
+            return {u, value * 100};
+        } else if (unit == Units::MetersMSL) {
+            return {u, value * SG_METER_TO_FEET};
+        }
+        break;
+    }
+
+    case Units::Mach:
+    {
+        if (unit == Units::Knots) {
+            // obviously this depends on altitude, let's
+            // use the value at sea level for now
+            return {u, value / 667.0};
+        }
+    }
+
+    case Units::Knots:
+    {
+        if (unit == Units::Mach) {
+            // obviously this depends on altitude, let's
+            // use the value at sea level for now
+            return {u, value * 667.0};
+        }
+    }
+
+    case Units::DegreesMagnetic:
+    case Units::DegreesTrue:
+    {
+        // we don't have a location to apply mag-var, so just keep the
+        // current value
+        if ((unit == Units::DegreesMagnetic) || (unit == Units::DegreesTrue)) {
+            return {u, value};
+        }
+    }
+
+    case Units::FlightLevel:
+    {
+        if (unit == Units::FeetMSL) {
+            return {u, static_cast<double>(static_cast<int>(value / 100))};
+        }
+        if (unit == Units::MetersMSL) {
+            return {u, static_cast<double>(static_cast<int>(value * SG_METER_TO_FEET / 100))};
+        }
+        break;
+    }
+
+    default:
+        qWarning() << Q_FUNC_INFO << "unhandled case:" << u << "from" << unit;
+        break;
+    }
+
+    return {};
+}
+
+QuantityValue QuantityValue::convertToUnit(int u) const
+{
+    return convertToUnit(static_cast<Units::Type>(u));
+}
+
+bool QuantityValue::operator==(const QuantityValue &v) const
+{
+    if (v.unit != unit)
+        return false;
+
+    int dp = static_unitData.at(unit).decimals;
+    const auto aInt = static_cast<qlonglong>(value * pow(10, dp));
+    const auto bInt = static_cast<qlonglong>(v.value * pow(10, dp));
+    return aInt == bInt;
+}
+
+bool QuantityValue::operator!=(const QuantityValue &v) const
+{
+    return !(*this == v);
+}
+
+QDataStream &operator<<(QDataStream &out, const QuantityValue &value)
+{
+    out << static_cast<quint8>(value.unit);
+    if (value.unit != Units::NoUnits)
+        out << value.value;
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, QuantityValue &value)
+{
+    quint8 unit;
+    in >> unit;
+    value.unit = static_cast<Units::Type>(unit);
+    if (unit != Units::NoUnits)
+        in >> value.value;
+    return in;
+}

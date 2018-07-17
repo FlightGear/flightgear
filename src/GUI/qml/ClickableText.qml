@@ -6,15 +6,17 @@ Text {
     signal clicked();
 
     property bool clickable: true
+    property bool enabled: true
     property color baseTextColor: Style.baseTextColor
-    color: mouse.containsMouse ? Style.themeColor : baseTextColor
+    color: enabled ? (mouse.containsMouse ? Style.themeColor : baseTextColor) : Style.disabledTextColor
     font.pixelSize: Style.baseFontPixelSize
+    font.underline: mouse.containsMouse
 
     MouseArea {
         id: mouse
 
-        enabled: root.clickable
-        hoverEnabled: root.clickable
+        enabled: root.clickable && root.enabled
+        hoverEnabled: root.clickable && root.enabled
         anchors.fill: parent
 
         onClicked: parent.clicked();

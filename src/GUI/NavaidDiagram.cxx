@@ -30,13 +30,8 @@
 #include <Navaids/NavDataCache.hxx>
 
 NavaidDiagram::NavaidDiagram(QQuickItem* pr) :
-    BaseDiagram(pr),
-    m_offsetEnabled(false),
-    m_offsetDistanceNm(5.0),
-    m_offsetBearingDeg(0),
-    m_headingDeg(0)
+    BaseDiagram(pr)
 {
-
 }
 
 void NavaidDiagram::setNavaid(qlonglong nav)
@@ -81,23 +76,26 @@ void NavaidDiagram::setOffsetEnabled(bool offset)
     emit offsetChanged();
 }
 
-void NavaidDiagram::setOffsetDistanceNm(double distanceNm)
+void NavaidDiagram::setOffsetDistance(QuantityValue distanceNm)
 {
-    m_offsetDistanceNm = distanceNm;
+    if (distanceNm == m_offsetDistance)
+        return;
+
+    m_offsetDistance = distanceNm;
     update();
     emit offsetChanged();
 }
 
-void NavaidDiagram::setOffsetBearingDeg(int bearingDeg)
+void NavaidDiagram::setOffsetBearing(QuantityValue bearing)
 {
-    m_offsetBearingDeg = bearingDeg;
+    m_offsetBearing = bearing;
     update();
     emit offsetChanged();
 }
 
-void NavaidDiagram::setHeadingDeg(int headingDeg)
+void NavaidDiagram::setHeading(QuantityValue headingDeg)
 {
-    m_headingDeg = headingDeg;
+    m_heading = headingDeg;
     update();
     emit offsetChanged();
 }
@@ -108,8 +106,9 @@ void NavaidDiagram::paintContents(QPainter *painter)
 
     SGGeod aircraftPos = m_geod;
     if (m_offsetEnabled) {
-        double d = m_offsetDistanceNm * SG_NM_TO_METER;
-        SGGeod offsetGeod = SGGeodesy::direct(m_geod, m_offsetBearingDeg, d);
+
+        double d = m_offsetDistance.convertToUnit(Units::Kilometers).value * 1000;
+        SGGeod offsetGeod = SGGeodesy::direct(m_geod, m_offsetBearing.value, d);
         QPointF offset = project(offsetGeod);
 
         QPen pen(Qt::green);
@@ -120,7 +119,7 @@ void NavaidDiagram::paintContents(QPainter *painter)
         aircraftPos = offsetGeod;
     }
 
-    paintAirplaneIcon(painter, aircraftPos, m_headingDeg);
+    paintAirplaneIcon(painter, aircraftPos, m_heading.value);
 }
 
 void NavaidDiagram::doComputeBounds()
@@ -135,8 +134,8 @@ void NavaidDiagram::doComputeBounds()
     }
 
     if (m_offsetEnabled) {
-        double d = m_offsetDistanceNm * SG_NM_TO_METER;
-        SGGeod offsetPos = SGGeodesy::direct(m_geod, m_offsetBearingDeg, d);
+        double d = m_offsetDistance.convertToUnit(Units::Kilometers).value * 1000;
+        SGGeod offsetPos = SGGeodesy::direct(m_geod, m_offsetBearing.value, d);
         extendBounds(project(offsetPos));
     }
 }

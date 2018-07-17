@@ -91,8 +91,7 @@ static double unitLengthAfterMapping(const QTransform& t)
 }
 
 AirportDiagram::AirportDiagram(QQuickItem* pr) :
-    BaseDiagram(pr),
-    m_approachDistanceNm(-1.0)
+    BaseDiagram(pr)
 {
     m_parkingIconPath.moveTo(0,0);
     m_parkingIconPath.lineTo(-16, -16);
@@ -187,21 +186,21 @@ void AirportDiagram::setSelection(QmlPositioned* pos)
     update();
 }
 
-void AirportDiagram::setApproachExtensionNm(double distanceNm)
+void AirportDiagram::setApproachExtension(QuantityValue distance)
 {
-    if (m_approachDistanceNm == distanceNm) {
+    if (m_approachDistance == distance) {
         return;
     }
 
-    m_approachDistanceNm = distanceNm;
+    m_approachDistance = distance;
     recomputeBounds(true);
     update();
     emit approachExtensionChanged();
 }
 
-double AirportDiagram::approachExtensionNm() const
+QuantityValue AirportDiagram::approachExtension() const
 {
-    return m_approachDistanceNm;
+    return m_approachDistance;
 }
 
 QmlPositioned* AirportDiagram::selection() const
@@ -228,6 +227,16 @@ void AirportDiagram::setAirportGuid(qlonglong guid)
     }
     setAirport(m_airport);
     emit airportChanged();
+}
+
+void AirportDiagram::setApproachExtensionEnabled(bool e)
+{
+    if (m_approachExtensionEnabled == e)
+        return;
+    m_approachExtensionEnabled = e;
+    recomputeBounds(true);
+    update();
+    emit approachExtensionChanged();
 }
 
 void AirportDiagram::addRunway(FGRunwayRef rwy)
@@ -271,8 +280,8 @@ void AirportDiagram::doComputeBounds()
     }
 
     FGRunway* runwaySelection = fgpositioned_cast<FGRunway>(m_selection);
-    if (runwaySelection && (m_approachDistanceNm > 0.0)) {
-        double d = SG_NM_TO_METER * m_approachDistanceNm;
+    if (runwaySelection && m_approachExtensionEnabled) {
+        double d = m_approachDistance.convertToUnit(Units::Kilometers).value * 1000;
         QPointF pt = project(runwaySelection->pointOnCenterline(-d));
         extendBounds(pt);
     }
@@ -381,10 +390,10 @@ void AirportDiagram::paintContents(QPainter* p)
         headingDeg = runwaySelection->headingDeg();
     }
 
-    if (runwaySelection && (m_approachDistanceNm > 0.0)) {
+    if (runwaySelection && m_approachExtensionEnabled) {
         p->setTransform(t);
         // draw approach extension point
-        double d = SG_NM_TO_METER * m_approachDistanceNm;
+        double d = m_approachDistance.convertToUnit(Units::Kilometers).value * 1000;
         QPointF pt = project(runwaySelection->pointOnCenterline(-d));
         QPointF pt2 = project(runwaySelection->geod());
         QPen pen(Qt::yellow);

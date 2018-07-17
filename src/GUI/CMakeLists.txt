@@ -152,6 +152,8 @@ if (HAVE_QT)
                         QmlNavCacheWrapper.cxx
                         QmlRadioButtonHelper.cxx
                         QmlRadioButtonHelper.hxx
+                        UnitsModel.cxx
+                        UnitsModel.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
