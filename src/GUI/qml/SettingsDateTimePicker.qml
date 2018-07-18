@@ -33,7 +33,8 @@ SettingControl {
     function restoreState()
     {
         var rawValue = _config.getValueForKey("", root.setting, defaultValue);
-        if (rawValue.getFullYear() < 1800) {
+        var year = rawValue.getFullYear();
+        if (isNaN(year) || (year < 1800)) {
             // assume it's an invalid date, there doesn't seem to be a better
             // way to check date validity from JS :(
             rawValue = defaultValue
