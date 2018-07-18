@@ -48,6 +48,7 @@
 #include "NavaidDiagram.hxx"
 #include "QmlRadioButtonHelper.hxx"
 #include "UnitsModel.hxx"
+#include "NavaidSearchModel.hxx"
 
 using namespace simgear::pkg;
 
@@ -55,9 +56,6 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     QObject(parent),
     m_window(window)
 {
-    qRegisterMetaType<QuantityValue>();
-    qRegisterMetaTypeStreamOperators<QuantityValue>("Quantity");
-
     m_serversModel = new MPServersModel(this);
     m_location = new LocationController(this);
     m_locationHistory = new RecentLocationsModel(this);
@@ -137,6 +135,8 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<LaunchConfig>("FlightGear.Launcher", 1, 0, "LaunchConfig", "Singleton API");
     qmlRegisterUncreatableType<MPServersModel>("FlightGear.Launcher", 1, 0, "MPServers", "Singleton API");
 
+    qmlRegisterType<NavaidSearchModel>("FlightGear", 1, 0, "NavaidSearch");
+
     qmlRegisterUncreatableType<Units>("FlightGear", 1, 0, "Units", "Only for enum");
     qmlRegisterType<UnitsModel>("FlightGear", 1, 0, "UnitsModel");
 
@@ -157,6 +157,8 @@ void LauncherController::initQML()
     qmlRegisterType<AirportDiagram>("FlightGear", 1, 0, "AirportDiagram");
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
+
+    qmlRegisterSingletonType(QUrl("qrc:///qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
 
     QNetworkDiskCache* diskCache = new QNetworkDiskCache(this);
     SGPath cachePath = globals->get_fg_home() / "PreviewsCache";

@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import FlightGear 1.0
 import "."
 
 Item {
@@ -156,6 +157,16 @@ Item {
             MenuDivider {},
             MenuItem { text:qsTr("Quit"); shortcut: "Ctrl+Q"; onTriggered: _launcher.quit();  } 
         ]
+    }
+
+    Overlay {
+        id: popupOverlay
+        anchors.fill: parent
+        z: 200
+
+        Component.onCompleted: {
+            OverlayShared.globalOverlay = this
+        }
     }
 
 

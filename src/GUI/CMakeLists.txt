@@ -154,6 +154,8 @@ if (HAVE_QT)
                         QmlRadioButtonHelper.hxx
                         UnitsModel.cxx
                         UnitsModel.hxx
+                        NavaidSearchModel.hxx
+                        NavaidSearchModel.cxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

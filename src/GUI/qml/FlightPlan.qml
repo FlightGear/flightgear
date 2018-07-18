@@ -1,5 +1,6 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 import "."
 
 Item {
@@ -128,20 +129,17 @@ Item {
                 width: parent.width
                 spacing: Style.margin
 
-                IntegerSpinbox {
+                NumericalEdit {
                     label: qsTr("Cruise speed:")
-                    suffix: "kts"
-                    min: 0
-                    max: 10000 // more for spaceships?
-                    step: 5
-                    maxDigits: 5
+                    unitsMode: Units.Speed
                 }
 
                 // padding
                 Item { width: Style.strutSize; height: 1 }
 
-                LocationAltitudeRow {
-
+                NumericalEdit {
+                    label: qsTr("Cruise altitude:")
+                    unitsMode: Units.AltitudeIncludingMeters
                 }
             }
 
@@ -170,7 +168,7 @@ Item {
 
                 TimeEdit {
                     id: enrouteEstimate
-                    label: qsTr("Estimate enroute time:")
+                    label: qsTr("Estimated enroute time:")
                 }
 
                 Item { width: Style.strutSize; height: 1 }

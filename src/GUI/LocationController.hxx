@@ -31,7 +31,7 @@
 #include "QmlPositioned.hxx"
 #include "UnitsModel.hxx"
 
-class NavSearchModel;
+class NavaidSearchModel;
 
 class LocationController : public QObject
 {
@@ -39,7 +39,7 @@ class LocationController : public QObject
 
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
 
-    Q_PROPERTY(NavSearchModel* searchModel MEMBER m_searchModel CONSTANT)
+    Q_PROPERTY(NavaidSearchModel* searchModel MEMBER m_searchModel CONSTANT)
 
     Q_PROPERTY(QList<QObject*> airportRunways READ airportRunways NOTIFY baseLocationChanged)
     Q_PROPERTY(QList<QObject*> airportParkings READ airportParkings NOTIFY baseLocationChanged)
@@ -194,8 +194,9 @@ private:
     void applyPositionOffset();
     void applyAltitude();
     void applyAirspeed();
+    void applyOnFinal();
 
-    NavSearchModel* m_searchModel = nullptr;
+    NavaidSearchModel* m_searchModel = nullptr;
 
     FGPositionedRef m_location;
     FGAirportRef m_airportLocation; // valid if m_location is an FGAirport

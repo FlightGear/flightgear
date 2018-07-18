@@ -309,7 +309,7 @@ public:
     class ThreadedGUISearch
     {
     public:
-        ThreadedGUISearch(const std::string& term);
+        ThreadedGUISearch(const std::string& term, bool onlyAirports);
         ~ThreadedGUISearch();
 
         PositionedIDVec results() const;

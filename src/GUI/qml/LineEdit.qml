@@ -16,6 +16,8 @@ FocusScope {
 
     property bool useFullWidth: false
 
+    readonly property int xOffsetForEditFrame: editFrame.x
+
     implicitHeight: editFrame.height
     implicitWidth: suggestedWidth + label.implicitWidth + (Style.margin * 3)
 
