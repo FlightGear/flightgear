@@ -25,6 +25,9 @@ Item {
         _location.addToRecent(selectedLocation);
 
         if (selectedLocation.isAirportType) {
+            // default to using the active runway when making a selection
+            // via the GUI
+            _location.useActiveRunway = true
             detailLoader.sourceComponent = airportDetails
         } else {
             detailLoader.sourceComponent = navaidDetails
