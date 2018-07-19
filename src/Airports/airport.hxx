@@ -247,12 +247,18 @@ class FGAirport : public FGPositioned
       flightgear::SID* getSIDByIndex(unsigned int aIndex) const;
       flightgear::SID* findSIDWithIdent(const std::string& aIdent) const;
       flightgear::SIDList getSIDs() const;
-      
+    
+      flightgear::Transition* selectSIDByEnrouteTransition(FGPositioned* enroute) const;
+      flightgear::Transition* selectSIDByTransition(const std::string& aIdent) const;
+
       unsigned int numSTARs() const;
       flightgear::STAR* getSTARByIndex(unsigned int aIndex) const;
       flightgear::STAR* findSTARWithIdent(const std::string& aIdent) const;
       flightgear::STARList getSTARs() const;
-      
+    
+      flightgear::Transition* selectSTARByEnrouteTransition(FGPositioned* enroute) const;
+      flightgear::Transition* selectSTARByTransition(const std::string& aIdent) const;
+
       unsigned int numApproaches() const;
       flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
       flightgear::Approach* findApproachWithIdent(const std::string& aIdent) const;

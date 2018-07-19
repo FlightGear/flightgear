@@ -973,6 +973,54 @@ FGGroundNetwork *FGAirport::groundNetwork() const
     return _groundNetwork.get();
 }
 
+flightgear::Transition* FGAirport::selectSIDByEnrouteTransition(FGPositioned* enroute) const
+{
+    loadProcedures();
+    for (auto sid : mSIDs) {
+        auto trans = sid->findTransitionByEnroute(enroute);
+        if (trans) {
+            return trans;
+        }
+    }
+    return nullptr;
+}
+
+Transition *FGAirport::selectSIDByTransition(const string &aIdent) const
+{
+    loadProcedures();
+    for (auto sid : mSIDs) {
+        auto trans = sid->findTransitionByName(aIdent);
+        if (trans) {
+            return trans;
+        }
+    }
+    return nullptr;
+}
+
+flightgear::Transition* FGAirport::selectSTARByEnrouteTransition(FGPositioned* enroute) const
+{
+    loadProcedures();
+    for (auto star : mSTARs) {
+        auto trans = star->findTransitionByEnroute(enroute);
+        if (trans) {
+            return trans;
+        }
+    }
+    return nullptr;
+}
+
+Transition *FGAirport::selectSTARByTransition(const string &aIdent) const
+{
+    loadProcedures();
+    for (auto star : mSTARs) {
+        auto trans = star->findTransitionByName(aIdent);
+        if (trans) {
+            return trans;
+        }
+    }
+    return nullptr;
+}
+
 // get airport elevation
 double fgGetAirportElev( const std::string& id )
 {
