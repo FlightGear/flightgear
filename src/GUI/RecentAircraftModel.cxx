@@ -15,6 +15,9 @@ RecentAircraftModel::RecentAircraftModel(AircraftItemModel* acModel, QObject* pr
     QSettings settings;
     const QStringList urls = settings.value("recent-aircraft").toStringList();
     m_data = QUrl::fromStringList(urls);
+
+    connect(m_aircraftModel, &AircraftItemModel::contentsChanged,
+            this, &RecentAircraftModel::onModelContentsChanged);
 }
 
 void RecentAircraftModel::saveToSettings()
@@ -45,7 +48,7 @@ QVariant RecentAircraftModel::data(const QModelIndex &index, int role) const
     return {};
 }
 
-int RecentAircraftModel::rowCount(const QModelIndex &parent) const
+int RecentAircraftModel::rowCount(const QModelIndex&) const
 {
     return m_data.size();
 }
@@ -96,4 +99,9 @@ void RecentAircraftModel::insert(QUrl aircraftUrl)
     }
 
     emit isEmptyChanged();
+}
+
+void RecentAircraftModel::onModelContentsChanged()
+{
+    emit dataChanged(index(0), index(m_data.size() - 1));
 }

@@ -195,6 +195,7 @@ int AircraftItem::indexOfVariant(QUrl uri) const
 
 QVariant AircraftItem::status(int variant)
 {
+    Q_UNUSED(variant)
     if (needsMaintenance) {
         return LocalAircraftCache::AircraftUnmaintained;
     }
@@ -291,7 +292,7 @@ private:
         QByteArray cacheData;
         {
             QDataStream ds(&cacheData, QIODevice::WriteOnly);
-            quint32 count = m_nextCache.count();
+            quint32 count = static_cast<quint32>(m_nextCache.count());
             ds << CACHE_VERSION << count;
 
             Q_FOREACH(AircraftItemPtr item, m_nextCache.values()) {
@@ -384,7 +385,7 @@ private:
     bool m_done;
 };
 
-std::unique_ptr<LocalAircraftCache> static_cacheInstance;
+static std::unique_ptr<LocalAircraftCache> static_cacheInstance;
 
 LocalAircraftCache* LocalAircraftCache::instance()
 {

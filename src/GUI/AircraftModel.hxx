@@ -121,7 +121,7 @@ signals:
     
     void aircraftNeedingUpdatedChanged();
 
-    void catalogsRefreshed();
+    void contentsChanged();
 public slots:
     void setShowUpdateAll(bool showUpdateAll);
 
