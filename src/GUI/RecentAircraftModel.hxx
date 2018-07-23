@@ -35,6 +35,8 @@ signals:
     void isEmptyChanged();
 
 private:
+    void onModelContentsChanged();
+
     AircraftItemModel* m_aircraftModel;
     QList<QUrl> m_data;
 };

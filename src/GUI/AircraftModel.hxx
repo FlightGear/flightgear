@@ -112,8 +112,7 @@ signals:
     
     void aircraftInstallCompleted(QModelIndex index);
     
-    void catalogsRefreshed();
-
+    void contentsChanged();
 private slots:
     void onScanStarted();
     void onScanAddedItems(int count);

@@ -51,13 +51,13 @@ public:
         m_model->m_packageRoot->addDelegate(this);
     }
 
-    ~PackageDelegate()
+    ~PackageDelegate() override
     {
         m_model->m_packageRoot->removeDelegate(this);
     }
 
 protected:
-    virtual void catalogRefreshed(CatalogRef aCatalog, StatusCode aReason)
+    void catalogRefreshed(CatalogRef aCatalog, StatusCode aReason) override
     {
         if (aReason == STATUS_IN_PROGRESS) {
             // nothing to do
@@ -66,9 +66,7 @@ protected:
         } else {
             qWarning() << "failed refresh of"
                 << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
-        }
-
-        m_model->catalogsRefreshed();
+        }       
     }
 
     void startInstall(InstallRef aInstall) override
@@ -119,7 +117,7 @@ protected:
 
 
     virtual void dataForThumbnail(const std::string& aThumbnailUrl,
-                                  size_t length, const uint8_t* bytes)
+                                  size_t length, const uint8_t* bytes) override
     {
         QImage img = QImage::fromData(QByteArray::fromRawData(reinterpret_cast<const char*>(bytes), length));
         if (img.isNull()) {
@@ -220,11 +218,11 @@ void AircraftItemModel::refreshPackages()
 {
     simgear::pkg::PackageList newPkgs = m_packageRoot->allPackages();
     const int firstRow = m_cachedLocalAircraftCount;
-    const int newSize = newPkgs.size();
+    const int newSize = static_cast<int>(newPkgs.size());
     const int newTotalSize = firstRow + newSize;
 
     if (m_packages.size() != newPkgs.size()) {
-        int oldSize = m_packages.size();
+        const int oldSize = static_cast<int>(m_packages.size());
         if (newSize > oldSize) {
             // growing
             int firstNewRow = firstRow + oldSize;
@@ -247,11 +245,12 @@ void AircraftItemModel::refreshPackages()
     }
 
     emit dataChanged(index(firstRow), index(firstRow + newSize - 1));
+    emit contentsChanged();
 }
 
-int AircraftItemModel::rowCount(const QModelIndex& parent) const
+int AircraftItemModel::rowCount(const QModelIndex&) const
 {
-    return m_cachedLocalAircraftCount + m_packages.size();
+    return m_cachedLocalAircraftCount + static_cast<int>(m_packages.size());
 }
 
 QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
@@ -586,7 +585,7 @@ void AircraftItemModel::selectVariantForAircraftURI(QUrl uri)
         if (pkg) {
             for (size_t i=0; i < m_packages.size(); ++i) {
                 if (m_packages[i] == pkg) {
-                    modelIndex =  index(rowOffset + i);
+                    modelIndex =  index(rowOffset + static_cast<int>(i));
                     variantIndex = pkg->indexOfVariant(ident.toStdString());
                     break;
                 }
@@ -648,6 +647,7 @@ void AircraftItemModel::onScanAddedItems(int addedCount)
     m_delegateStates.insert(m_cachedLocalAircraftCount, newItemCount, {});
     m_cachedLocalAircraftCount += newItemCount;
     endInsertRows();
+    emit contentsChanged();
 }
 
 void AircraftItemModel::onLocalCacheCleared()
