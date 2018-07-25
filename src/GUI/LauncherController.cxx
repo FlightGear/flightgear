@@ -411,7 +411,9 @@ void LauncherController::updateSelectedAircraft()
     m_selectedAircraftInfo->setUri(m_selectedAircraft);
     QModelIndex index = m_aircraftModel->indexOfAircraftURI(m_selectedAircraft);
     if (index.isValid()) {
-        m_aircraftType = Airplane;
+        // we have to default to unknown here, until we have an explicit
+        // way to determine if it's a regular aircraft or not
+        m_aircraftType = Unknown;
         if (index.data(AircraftIsHelicopterRole).toBool()) {
             m_aircraftType = Helicopter;
         } else if (index.data(AircraftIsSeaplaneRole).toBool()) {

@@ -115,14 +115,23 @@ public:
             addType(FGPositioned::NDB);
         }
 
-        if (aircraft == LauncherController::Helicopter) {
-            addType(FGPositioned::HELIPAD);
-        }
+        addType(FGPositioned::AIRPORT);
 
-        if (aircraft == LauncherController::Seaplane) {
+        switch (aircraft) {
+        case LauncherController::Airplane:
+            break;
+                
+        case LauncherController::Helicopter:
+            addType(FGPositioned::HELIPORT);
+            break;
+                
+        case LauncherController::Seaplane:
             addType(FGPositioned::SEAPORT);
-        } else {
-            addType(FGPositioned::AIRPORT);
+            break;
+                
+        default:
+            addType(FGPositioned::HELIPORT);
+            addType(FGPositioned::SEAPORT);
         }
     }
 };

@@ -158,7 +158,8 @@ public:
 
     enum AircraftType
     {
-        Airplane = 0,
+        Unknown = 0,
+        Airplane,
         Seaplane,
         Helicopter,
         Airship

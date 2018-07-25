@@ -54,6 +54,7 @@ public:
 
     enum AircraftType
     {
+        Unknown = LauncherController::Unknown,
         Airplane = LauncherController::Airplane,
         Seaplane = LauncherController::Seaplane,
         Helicopter = LauncherController::Helicopter,
@@ -62,7 +63,7 @@ public:
 
     Q_ENUMS(AircraftType)
 
-    Q_INVOKABLE void setSearch(QString t, AircraftType aircraft);
+    Q_INVOKABLE void setSearch(QString t, AircraftType aircraft = Unknown);
 
     Q_INVOKABLE void clear();
 
