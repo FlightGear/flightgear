@@ -179,5 +179,31 @@ SGPath fgValidatePath (const SGPath& path, bool write)
     return SGPath();
 }
 
-// end of util.cxx
+std::string generateAuthorsText(SGPropertyNode* authors)
+{
+    std::string result;
+    for (auto a : authors->getChildren("author")) {
+        const std::string name = a->getStringValue("name");
+        if (name.empty())
+            continue;
 
+        if (!result.empty())
+            result += ", ";
+        result += a->getStringValue("name");
+    }
+    return result;
+}
+
+std::string flightgear::getAircraftAuthorsText()
+{
+    const auto authorsNode = fgGetNode("sim/authors");
+    if (authorsNode) {
+        // we have structured authors data
+        return generateAuthorsText(authorsNode);
+    }
+
+    // if we hit this point, there is no strucutred authors data
+    return fgGetString("/sim/author");
+}
+
+// end of util.cxx

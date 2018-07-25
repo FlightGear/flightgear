@@ -54,4 +54,15 @@ SGPath fgValidatePath(const SGPath& path, bool write);
  */
 void fgInitAllowedPaths();
 
+namespace flightgear
+{
+    /**
+     * @brief getAircraftAuthorsText - get the aircraft authors as a single
+     * string value. This will combine the new (structured) authors data if
+     * present, otherwise just return the old plain string
+     * @return
+     */
+    std::string getAircraftAuthorsText();
+}
+
 #endif // __UTIL_HXX

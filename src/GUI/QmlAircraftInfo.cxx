@@ -30,7 +30,7 @@ public:
         globals->packageRoot()->addDelegate(this);
     }
 
-    ~Delegate()
+    ~Delegate() override
     {
         globals->packageRoot()->removeDelegate(this);
     }
@@ -133,6 +133,19 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
     }
 
     return result;
+}
+
+static SGPropertyNode_ptr readAircraftAuthors(const SGPath& setXMLPath)
+{
+    SGPropertyNode_ptr root(new SGPropertyNode);
+    try {
+        readProperties(setXMLPath, root);
+    } catch (sg_exception&) {
+        return {}; // malformed include or XML, just bail
+    }
+
+    const auto authors = root->getNode("sim/authors");
+    return authors;
 }
 
 QString humanNameFromStateTag(const std::string& tag)
@@ -338,11 +351,37 @@ QString QmlAircraftInfo::description() const
 
 QString QmlAircraftInfo::authors() const
 {
+    SGPropertyNode_ptr structuredAuthors;
     if (_item) {
-        return resolveItem()->authors;
+        std::string path = pathOnDisk().toUtf8().toStdString();
+        structuredAuthors = readAircraftAuthors(SGPath::fromUtf8(path));
+        if (!structuredAuthors)
+            return resolveItem()->authors;
     } else if (_package) {
-        std::string authors = _package->getLocalisedProp("author", _variant);
-        return QString::fromStdString(authors);
+        if (_package->properties()->hasChild("authors")) {
+            structuredAuthors = _package->properties()->getChild("authors");
+        } else {
+            std::string authors = _package->getLocalisedProp("author", _variant);
+            return QString::fromStdString(authors);
+        }
+    }
+
+    if (structuredAuthors) {
+        // build formatted HTML based on authors data
+        QString html = "<ul>\n";
+        for (auto a : structuredAuthors->getChildren("author")) {
+            html += "<li>";
+            html += a->getStringValue("name");
+            if (a->hasChild("nick")) {
+                html += QStringLiteral(" '") + QString::fromStdString(a->getStringValue("nick")) + QStringLiteral("'");
+            }
+            if (a->hasChild("description")) {
+                html += QStringLiteral(" - <i>") +  QString::fromStdString(a->getStringValue("description")) + QStringLiteral("</i>");
+            }
+            html  += "</li>\n";
+        }
+        html += "<ul>\n";
+        return html;
     }
 
     return {};

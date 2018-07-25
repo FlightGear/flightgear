@@ -50,12 +50,13 @@
 #include <Main/fg_props.hxx>
 #include <Main/fg_os.hxx>
 #include <Main/locale.hxx>
+#include <Main/util.hxx>
 #include "splash.hxx"
 #include "renderer.hxx"
 
 #include <sstream>
 
-const char* LICENSE_URL_TEXT = "Licensed under the GNU GPL. See http://www.flightgear.org for more information";
+static const char* LICENSE_URL_TEXT = "Licensed under the GNU GPL. See http://www.flightgear.org for more information";
 
 class SplashScreenUpdateCallback : public osg::NodeCallback {
 public:
@@ -134,7 +135,7 @@ void SplashScreen::createNodes()
     geode->addDrawable(geometry);
 
     if (_legacySplashScreenMode) {
-        addText(geode, osg::Vec2(0.025, 0.025), 0.03,
+        addText(geode, osg::Vec2(0.025f, 0.025f), 0.03,
                 std::string("FlightGear ") + fgGetString("/sim/version/flightgear") +
                 std::string(" ") + std::string(LICENSE_URL_TEXT),
                 osgText::Text::LEFT_TOP,
@@ -145,15 +146,15 @@ void SplashScreen::createNodes()
 
         // order here is important so we can re-write first item with the
         // startup tip.
-        addText(geode, osg::Vec2(0.025, 0.15), 0.03, LICENSE_URL_TEXT,
+        addText(geode, osg::Vec2(0.025f, 0.15f), 0.03, LICENSE_URL_TEXT,
                 osgText::Text::LEFT_TOP,
                 nullptr,
                 0.6);
 
-        addText(geode, osg::Vec2(0.025, 0.025), 0.10, std::string("FlightGear ") + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
+        addText(geode, osg::Vec2(0.025f, 0.025f), 0.10, std::string("FlightGear ") + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
 
         if (!_aircraftLogoVertexArray) {
-            addText(geode, osg::Vec2(0.025, 0.935), 0.10,
+            addText(geode, osg::Vec2(0.025f, 0.935f), 0.10,
                     fgGetString("/sim/description"),
                     osgText::Text::LEFT_BOTTOM,
                     nullptr,
@@ -161,8 +162,9 @@ void SplashScreen::createNodes()
             _items.back().maxLineCount = 1;
         }
 
-        addText(geode, osg::Vec2(0.025, 0.940), 0.03,
-                fgGetString("/sim/author"),
+        const auto authors = flightgear::getAircraftAuthorsText();
+        addText(geode, osg::Vec2(0.025f, 0.940f), 0.03,
+                authors,
                 osgText::Text::LEFT_TOP,
                 nullptr,
                 0.6);
@@ -170,13 +172,13 @@ void SplashScreen::createNodes()
         _items.back().maxHeightFraction = 0.055;
     }
 
-    addText(geode, osg::Vec2(0.975, 0.935), 0.03,
+    addText(geode, osg::Vec2(0.975f, 0.935f), 0.03,
             "loading status",
             osgText::Text::RIGHT_BOTTOM,
             fgGetNode("/sim/startup/splash-progress-text", true),
             0.4);
 
-    addText(geode, osg::Vec2(0.975, 0.975), 0.03,
+    addText(geode, osg::Vec2(0.975f, 0.975f), 0.03,
             "spinner",
             osgText::Text::RIGHT_BOTTOM,
             fgGetNode("/sim/startup/splash-progress-spinner", true));
@@ -196,13 +198,13 @@ void SplashScreen::createNodes()
 
     _splashSpinnerVertexArray = new osg::Vec3Array;
     for (int i=0; i < 8; ++i) {
-        _splashSpinnerVertexArray->push_back(osg::Vec3(0.0, 0.0, -0.1));
+        _splashSpinnerVertexArray->push_back(osg::Vec3(0.0f, 0.0f, -0.1f));
     }
     geometry->setVertexArray(_splashSpinnerVertexArray);
 
     // QColor buttonColor(27, 122, 211);
     colorArray = new osg::Vec4Array;
-    colorArray->push_back(osg::Vec4(27 / 255.0, 122 / 255.0, 211 / 255.0, 0.75));
+    colorArray->push_back(osg::Vec4(27 / 255.0f, 122 / 255.0f, 211 / 255.0f, 0.75f));
     geometry->setColorArray(colorArray);
     geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
     geometry->addPrimitiveSet(new osg::DrawArrays(GL_QUADS, 0, 8));
