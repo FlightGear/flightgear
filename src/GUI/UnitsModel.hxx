@@ -86,6 +86,8 @@ public:
 
     QuantityValue(Units::Type u, double v);
 
+    QuantityValue(Units::Type u, int v);
+
     QuantityValue convertToUnit(Units::Type u) const;
 
     Q_INVOKABLE QuantityValue convertToUnit(int u) const;

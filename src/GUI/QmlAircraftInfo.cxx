@@ -49,6 +49,7 @@ protected:
 
     void installProgress(InstallRef aInstall, unsigned int bytes, unsigned int total) override
     {
+        Q_UNUSED(total)
         if (aInstall->package() == p->packageRef()) {
             p->setDownloadBytes(bytes);
         }
@@ -58,6 +59,7 @@ protected:
     {
         Q_UNUSED(aReason);
         if (aInstall->package() == p->packageRef()) {
+            p->_cachedProps.reset();
             p->checkForStates();
             p->infoChanged();
         }
@@ -135,19 +137,6 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
     return result;
 }
 
-static SGPropertyNode_ptr readAircraftAuthors(const SGPath& setXMLPath)
-{
-    SGPropertyNode_ptr root(new SGPropertyNode);
-    try {
-        readProperties(setXMLPath, root);
-    } catch (sg_exception&) {
-        return {}; // malformed include or XML, just bail
-    }
-
-    const auto authors = root->getNode("sim/authors");
-    return authors;
-}
-
 QString humanNameFromStateTag(const std::string& tag)
 {
     if (tag == "approach") return QObject::tr("On approach");
@@ -214,12 +203,12 @@ public:
         if (it == _data.end())
             return -1;
 
-        return std::distance(_data.begin(), it);
+        return static_cast<int>(std::distance(_data.begin(), it));
     }
 
-    int rowCount(const QModelIndex &parent) const override
+    int rowCount(const QModelIndex &) const override
     {
-        return _data.size();
+        return static_cast<int>(_data.size());
     }
 
     QVariant data(const QModelIndex &index, int role) const override
@@ -320,7 +309,7 @@ int QmlAircraftInfo::numVariants() const
         return _item->variants.size() + 1;
     } else if (_package) {
         // whereas for packaged aircraft we do
-        return _package->variants().size();
+        return static_cast<int>(_package->variants().size());
     }
 
     return 0;
@@ -353,8 +342,10 @@ QString QmlAircraftInfo::authors() const
 {
     SGPropertyNode_ptr structuredAuthors;
     if (_item) {
-        std::string path = pathOnDisk().toUtf8().toStdString();
-        structuredAuthors = readAircraftAuthors(SGPath::fromUtf8(path));
+        validateLocalProps();
+        if (_cachedProps)
+            structuredAuthors = _cachedProps->getNode("sim/authors");
+
         if (!structuredAuthors)
             return resolveItem()->authors;
     } else if (_package) {
@@ -531,7 +522,7 @@ QString QmlAircraftInfo::packageId() const
 int QmlAircraftInfo::packageSize() const
 {
     if (_package) {
-        return _package->fileSizeBytes();
+        return static_cast<int>(_package->fileSizeBytes());
     }
 
     return 0;
@@ -596,6 +587,31 @@ void QmlAircraftInfo::checkForStates()
     emit infoChanged();
 }
 
+void QmlAircraftInfo::validateLocalProps() const
+{
+    if (!_cachedProps) {
+        SGPath path;
+        if (_item) {
+            path = resolveItem()->path.toUtf8().toStdString();
+        } else if (_package) {
+            auto install = _package->existingInstall();
+            if (!install.valid())
+                return;
+
+            path = install->path();
+        }
+
+        if (!path.exists())
+            return;
+        _cachedProps = new SGPropertyNode;
+        try {
+            readProperties(path, _cachedProps);
+        } catch (sg_exception&) {
+            _cachedProps.reset();
+        }
+    }
+}
+
 void QmlAircraftInfo::setUri(QUrl u)
 {
     if (uri() == u)
@@ -604,6 +620,7 @@ void QmlAircraftInfo::setUri(QUrl u)
     _item.clear();
     _package.clear();
     _statesModel.reset(new StatesModel);
+    _cachedProps.clear();
 
     if (u.isLocalFile()) {
         _item = LocalAircraftCache::instance()->findItemWithUri(u);
@@ -651,25 +668,12 @@ void QmlAircraftInfo::setVariant(int variant)
         return;
 
     _variant = variant;
+    _cachedProps.clear();
+
     checkForStates();
 
     emit infoChanged();
     emit variantChanged(_variant);
-}
-
-void QmlAircraftInfo::requestInstallUpdate()
-{
-
-}
-
-void QmlAircraftInfo::requestUninstall()
-{
-
-}
-
-void QmlAircraftInfo::requestInstallCancel()
-{
-
 }
 
 QVariant QmlAircraftInfo::packageAircraftStatus(simgear::pkg::PackageRef p)
@@ -772,6 +776,76 @@ bool QmlAircraftInfo::haveExplicitAutoState() const
 StatesModel *QmlAircraftInfo::statesModel()
 {
     return _statesModel.data();
+}
+
+QuantityValue QmlAircraftInfo::cruiseSpeed() const
+{
+    validateLocalProps();
+    if (!_cachedProps) {
+        return {};
+    }
+
+    if (_cachedProps->hasValue("aircraft/performance/cruise/mach")) {
+        return QuantityValue{Units::Mach, _cachedProps->getDoubleValue("aircraft/performance/cruise/mach")};
+    }
+
+    if (_cachedProps->hasValue("aircraft/performance/cruise/airpseed-knots")) {
+        return QuantityValue{Units::Knots, _cachedProps->getIntValue("aircraft/performance/cruise/airpseed-knots")};
+    }
+
+    return {};
+}
+
+QuantityValue QmlAircraftInfo::approachSpeed() const
+{
+    validateLocalProps();
+    if (!_cachedProps) {
+        return {};
+    }
+
+    if (_cachedProps->hasValue("aircraft/performance/approach/airpseed-knots")) {
+        return QuantityValue{Units::Knots, _cachedProps->getIntValue("aircraft/performance/approach/airpseed-knots")};
+    }
+
+    return {};
+}
+
+QuantityValue QmlAircraftInfo::cruiseAltitude() const
+{
+    validateLocalProps();
+    if (!_cachedProps) {
+        return {};
+    }
+
+    if (_cachedProps->hasValue("aircraft/performance/cruise/flight-level")) {
+        return QuantityValue{Units::FlightLevel, _cachedProps->getIntValue("aircraft/performance/cruise/flight-level")};
+    }
+
+    if (_cachedProps->hasValue("aircraft/performance/cruise/airpseed-knots")) {
+        return QuantityValue{Units::FeetMSL, _cachedProps->getIntValue("aircraft/performance/cruise/altitude-ft")};
+    }
+
+    return {};
+}
+
+QString QmlAircraftInfo::icaoType() const
+{
+    validateLocalProps();
+    if (!_cachedProps) {
+        return {};
+    }
+
+    return QString::fromStdString(_cachedProps->getStringValue("aircraft/icao/type"));
+}
+
+bool QmlAircraftInfo::isSpeedBelowLimits(QuantityValue speed) const
+{
+    return true;
+}
+
+bool QmlAircraftInfo::isAltitudeBelowLimits(QuantityValue speed) const
+{
+    return true;
 }
 
 #include "QmlAircraftInfo.moc"

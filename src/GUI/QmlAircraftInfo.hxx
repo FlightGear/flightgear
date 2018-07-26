@@ -11,6 +11,8 @@
 #include <simgear/package/Catalog.hxx>
 #include <simgear/package/Package.hxx>
 
+#include "UnitsModel.hxx"
+
 struct AircraftItem;
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
@@ -25,20 +27,19 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(QVariantList previews READ previews NOTIFY infoChanged)
     Q_PROPERTY(int numVariants READ numVariants NOTIFY infoChanged)
+    Q_PROPERTY(QStringList variantNames READ variantNames NOTIFY infoChanged)
 
     Q_PROPERTY(QString name READ name NOTIFY infoChanged)
     Q_PROPERTY(QString description READ description NOTIFY infoChanged)
     Q_PROPERTY(QString authors READ authors NOTIFY infoChanged)
-
     Q_PROPERTY(QUrl thumbnail READ thumbnail NOTIFY infoChanged)
+    Q_PROPERTY(QVariantList ratings READ ratings NOTIFY infoChanged)
 
     Q_PROPERTY(QString pathOnDisk READ pathOnDisk NOTIFY infoChanged)
-
     Q_PROPERTY(QString packageId READ packageId NOTIFY infoChanged)
-
     Q_PROPERTY(int packageSize READ packageSize NOTIFY infoChanged)
-
     Q_PROPERTY(int downloadedBytes READ downloadedBytes NOTIFY downloadChanged)
+    Q_PROPERTY(bool isPackaged READ isPackaged NOTIFY infoChanged)
 
     Q_PROPERTY(QVariant status READ status NOTIFY infoChanged)
     Q_PROPERTY(QVariant installStatus READ installStatus NOTIFY downloadChanged)
@@ -49,21 +50,13 @@ class QmlAircraftInfo : public QObject
     Q_PROPERTY(QUrl supportUrl READ supportUrl NOTIFY infoChanged)
     Q_PROPERTY(QUrl wikipediaUrl READ wikipediaUrl NOTIFY infoChanged)
 
+    Q_PROPERTY(QuantityValue cruiseSpeed READ cruiseSpeed NOTIFY infoChanged)
+    Q_PROPERTY(QuantityValue cruiseAltitude READ cruiseAltitude NOTIFY infoChanged)
+    Q_PROPERTY(QuantityValue approachSpeed READ approachSpeed NOTIFY infoChanged)
 
-    Q_INVOKABLE void requestInstallUpdate();
-
-    Q_INVOKABLE void requestUninstall();
-
-    Q_INVOKABLE void requestInstallCancel();
-
-    Q_PROPERTY(QVariantList ratings READ ratings NOTIFY infoChanged)
-
-    Q_PROPERTY(QStringList variantNames READ variantNames NOTIFY infoChanged)
-
-    Q_PROPERTY(bool isPackaged READ isPackaged NOTIFY infoChanged)
+    Q_PROPERTY(QString icaoType READ icaoType NOTIFY infoChanged)
 
     Q_PROPERTY(bool hasStates READ hasStates NOTIFY infoChanged)
-
     Q_PROPERTY(StatesModel* statesModel READ statesModel NOTIFY infoChanged)
 
 public:
@@ -123,6 +116,16 @@ public:
     static const int StateExplicitRole;
 
     StatesModel* statesModel();
+
+    QuantityValue cruiseSpeed() const;
+    QuantityValue approachSpeed() const;
+    QuantityValue cruiseAltitude() const;
+
+    QString icaoType() const;
+
+    Q_INVOKABLE bool isSpeedBelowLimits(QuantityValue speed) const;
+    Q_INVOKABLE bool isAltitudeBelowLimits(QuantityValue speed) const;
+
 signals:
     void uriChanged();
     void infoChanged();
@@ -139,14 +142,20 @@ private:
     AircraftItemPtr resolveItem() const;
     void checkForStates();
 
+    void validateLocalProps() const;
+
     class Delegate;
     std::unique_ptr<Delegate> _delegate;
 
     simgear::pkg::PackageRef _package;
     AircraftItemPtr _item;
-    int _variant = 0;
+    quint32 _variant = 0;
     int _downloadBytes = 0;
     QScopedPointer<StatesModel> _statesModel;
+
+    /// if the aircraft is locally installed, this is the cached
+    /// parsed contents of the -set.xml.
+    mutable SGPropertyNode_ptr _cachedProps;
 };
 
 #endif // QMLAIRCRAFTINFO_HXX

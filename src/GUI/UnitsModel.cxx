@@ -287,6 +287,14 @@ QuantityValue::QuantityValue(Units::Type u, double v) :
 {
 }
 
+QuantityValue::QuantityValue(Units::Type u, int v) :
+    value(static_cast<double>(v)),
+    unit(u)
+{
+    assert(static_unitData.at(u).decimals == 0);
+}
+
+
 QuantityValue QuantityValue::convertToUnit(Units::Type u) const
 {
     // special case a no-change
@@ -331,6 +339,7 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
             // use the value at sea level for now
             return {u, value / 667.0};
         }
+        break;
     }
 
     case Units::Knots:
@@ -340,6 +349,7 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
             // use the value at sea level for now
             return {u, value * 667.0};
         }
+        break;
     }
 
     case Units::DegreesMagnetic:
@@ -350,6 +360,7 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
         if ((unit == Units::DegreesMagnetic) || (unit == Units::DegreesTrue)) {
             return {u, value};
         }
+        break;
     }
 
     case Units::FlightLevel:
