@@ -114,6 +114,31 @@ Rectangle {
 
                 }
 
+                // web-links row
+                Row {
+                    width: parent.width
+                    height: childrenRect.height
+                    spacing: Style.margin
+
+                    Weblink {
+                        visible: aircraft.homePage != ""
+                        label: qsTr("Website")
+                        link: aircraft.homePage
+                    }
+
+                    Weblink {
+                        visible: aircraft.supportUrl != ""
+                        label: qsTr("Support and issue reporting")
+                        link: aircraft.supportUrl
+                    }
+
+                    Weblink {
+                        visible: aircraft.wikipediaUrl != ""
+                        label: qsTr("Wikipedia")
+                        link: aircraft.wikipediaUrl
+                    }
+                }
+
                 AircraftDownloadPanel {
                     visible: aircraft.isPackaged
                     width: parent.width

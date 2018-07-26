@@ -483,6 +483,42 @@ QString QmlAircraftInfo::pathOnDisk() const
     return {};
 }
 
+QUrl QmlAircraftInfo::homePage() const
+{
+    if (_item) {
+        return resolveItem()->homepageUrl;
+    } else if (_package) {
+        const auto u = _package->properties()->getStringValue("urls/home-page");
+        return QUrl(QString::fromStdString(u));
+    }
+
+    return {};
+}
+
+QUrl QmlAircraftInfo::supportUrl() const
+{
+    if (_item) {
+        return resolveItem()->supportUrl;
+    } else if (_package) {
+        const auto u = _package->properties()->getStringValue("urls/support");
+        return QUrl(QString::fromStdString(u));
+    }
+
+    return {};
+}
+
+QUrl QmlAircraftInfo::wikipediaUrl() const
+{
+    if (_item) {
+        return resolveItem()->wikipediaUrl;
+    } else if (_package) {
+        const auto u = _package->properties()->getStringValue("urls/wikipedia");
+        return QUrl(QString::fromStdString(u));
+    }
+
+    return {};
+}
+
 QString QmlAircraftInfo::packageId() const
 {
     if (_package) {

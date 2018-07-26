@@ -117,6 +117,7 @@
         <file>qml/NumericalEdit.qml</file>
         <file>qml/Overlay.qml</file>
         <file>qml/OverlayShared.qml</file>
+        <file>qml/Weblink.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

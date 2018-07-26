@@ -56,7 +56,7 @@ struct AircraftItem
     QString path;
     QString description;
     QString longDescription;
-    QString authors;
+    QString authors; // legacy authors data only
     int ratings[4] = {0, 0, 0, 0};
     QString variantOf;
     QDateTime pathModTime;
@@ -68,7 +68,9 @@ struct AircraftItem
     QString thumbnailPath;
     QString minFGVersion;
     bool needsMaintenance = false;
-
+    QUrl homepageUrl;
+    QUrl wikipediaUrl;
+    QUrl supportUrl;
     QVariant status(int variant);
 private:
     mutable QPixmap m_thumbnail;

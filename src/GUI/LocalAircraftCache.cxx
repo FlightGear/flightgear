@@ -35,7 +35,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
-static quint32 CACHE_VERSION = 10;
+static quint32 CACHE_VERSION = 11;
 
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
 //const int STANDARD_THUMBNAIL_WIDTH = 172;
@@ -128,6 +128,10 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
     if (sim->hasChild("minimum-fg-version")) {
         minFGVersion = sim->getStringValue("minimum-fg-version");
     }
+
+    homepageUrl = QUrl(QString::fromStdString(sim->getStringValue("urls/home-page")));
+    supportUrl = QUrl(QString::fromStdString(sim->getStringValue("urls/support")));
+    wikipediaUrl = QUrl(QString::fromStdString(sim->getStringValue("urls/wikipedia")));
 }
 
 QString AircraftItem::baseName() const
@@ -150,6 +154,7 @@ void AircraftItem::fromDataStream(QDataStream& ds)
     ds >> thumbnailPath;
     ds >> minFGVersion;
     ds >> needsMaintenance >> usesHeliports >> usesSeaports;
+    ds >> homepageUrl >> supportUrl >> wikipediaUrl;
 }
 
 void AircraftItem::toDataStream(QDataStream& ds) const
@@ -165,6 +170,7 @@ void AircraftItem::toDataStream(QDataStream& ds) const
     ds << thumbnailPath;
     ds << minFGVersion;
     ds << needsMaintenance << usesHeliports << usesSeaports;
+    ds << homepageUrl << supportUrl << wikipediaUrl;
 }
 
 QPixmap AircraftItem::thumbnail(bool loadIfRequired) const

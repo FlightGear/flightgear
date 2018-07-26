@@ -45,6 +45,11 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(QString minimumFGVersion READ minimumFGVersion NOTIFY infoChanged)
 
+    Q_PROPERTY(QUrl homePage READ homePage NOTIFY infoChanged)
+    Q_PROPERTY(QUrl supportUrl READ supportUrl NOTIFY infoChanged)
+    Q_PROPERTY(QUrl wikipediaUrl READ wikipediaUrl NOTIFY infoChanged)
+
+
     Q_INVOKABLE void requestInstallUpdate();
 
     Q_INVOKABLE void requestUninstall();
@@ -78,6 +83,10 @@ public:
 
     QUrl thumbnail() const;
     QString pathOnDisk() const;
+
+    QUrl homePage() const;
+    QUrl supportUrl() const;
+    QUrl wikipediaUrl() const;
 
     QString packageId() const;
     int packageSize() const;
