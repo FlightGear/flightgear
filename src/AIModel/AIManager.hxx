@@ -120,8 +120,6 @@ private:
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
     SGPropertyNode_ptr _environmentVisiblity;
-    SGPropertyNode_ptr _mp_use_detailed_models;
-
 
     ai_list_type ai_list;
 

@@ -244,6 +244,8 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     setPath(scFileNode->getStringValue("model",
             fgGetString("/sim/multiplay/default-model", default_model)));
 
+    setFallbackModelIndex(scFileNode->getIntValue("fallback-model-index", 0));
+
     setHeading(scFileNode->getDoubleValue("heading", 0.0));
     setSpeed(scFileNode->getDoubleValue("speed", 0.0));
     setAltitude(scFileNode->getDoubleValue("altitude", 0.0));
@@ -446,24 +448,51 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
     std::vector<std::string> path_list;
 
     if (searchOrder == DATA_ONLY) {
+        SG_LOG(SG_AI, SG_DEBUG, "Resolving model path:  DATA only");
         auto p = simgear::SGModelLib::findDataFile(model_path);
         if (!p.empty()) {
             // We've got a model, use it
             _installed = true;
+            SG_LOG(SG_AI, SG_DEBUG, "Found model " << p);
             path_list.push_back(p);
         } else {
             // No model, so fall back to the default
             path_list.push_back(fgGetString("/sim/multiplay/default-model", default_model));
         }
     } else {
+        SG_LOG(SG_AI, SG_DEBUG, "Resolving model path:  PREFER_AI/PREFER_DATA");
         // We're either PREFER_AI or PREFER_DATA.  Find an AI model first.
         for (SGPath p : globals->get_data_paths("AI")) {
             p.append(model_path);
             if (p.exists()) {
+                SG_LOG(SG_AI, SG_DEBUG, "Found AI model: " << p.local8BitStr());
                 path_list.push_back(p.local8BitStr());
                 break;
             }
-        } // of AI data paths iteration
+        }
+
+        if (path_list.empty()) {
+            // Fall back on the fallback-model-index which is a lookup into
+            // /sim/multiplay/fallback-models/model[]
+            std::string fallback_path;
+            const SGPropertyNode* fallbackNode =
+              globals->get_props()->getNode("/sim/multiplay/fallback-models/model", _getFallbackModelIndex(), false);
+
+            if (fallbackNode != NULL) {
+              fallback_path = fallbackNode->getStringValue();
+            } else {
+              fallback_path = globals->get_props()->getNode("/sim/multiplay/fallback-models/model", 0, true)->getStringValue();
+            }
+
+            for (SGPath p : globals->get_data_paths()) {
+                p.append(fallback_path);
+                if (p.exists()) {
+                    SG_LOG(SG_AI, SG_DEBUG, "Found fallback model path for index " << _fallback_model_index << ": " << p.local8BitStr());
+                    path_list.push_back(p.local8BitStr());
+                    break;
+                }
+            }
+        }
 
         if ((searchOrder == PREFER_AI) && !path_list.empty()) {
             // if we prefer AI, and we've got a valid AI path from above, then use it, we're done
@@ -471,17 +500,12 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             return path_list;
         }
 
-        // At this point we've either still to find a valid path, or we're
-        // looking for a regular model to display at closer range.
+        // At this point we're looking for a regular model to display at closer range.
         auto p = simgear::SGModelLib::findDataFile(model_path);
         if (!p.empty()) {
             _installed = true;
+            SG_LOG(SG_AI, SG_DEBUG, "Found DATA model " << p);
             path_list.insert(path_list.begin(), p);
-        }
-
-        if (path_list.empty()) {
-          // No model found at all, so fall back to the default
-          path_list.push_back(fgGetString("/sim/multiplay/default-model", default_model));
         }
     }
 
@@ -503,10 +527,10 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
         return false;
     }
 
-    vector<string> model_list = resolveModelPath(searchOrder);
-
     props->addChild("type")->setStringValue("AI");
     _modeldata = new FGAIModelData(props);
+
+    vector<string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);
     _model->setName("AI-model range animation node");
 
@@ -980,6 +1004,10 @@ const char* FGAIBase::_getCallsign() const {
 
 const char* FGAIBase::_getSubmodel() const {
     return _submodel.c_str();
+}
+
+const int FGAIBase::_getFallbackModelIndex() const {
+    return _fallback_model_index;
 }
 
 void FGAIBase::CalculateMach() {

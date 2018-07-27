@@ -74,6 +74,7 @@ public:
     void updateInterior();
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
+    void setFallbackModelIndex(const int i );
     void setSMPath( const std::string& p );
     void setCallSign(const std::string& );
     void setSpeed( double speed_KTAS );
@@ -114,7 +115,7 @@ public:
     int _getSubID() const;
 
     bool getDie();
-	bool isValid() const;
+    bool isValid() const;
 
     void setFlightPlan(std::unique_ptr<FGAIFlightPlan> f);
 
@@ -208,7 +209,8 @@ protected:
     double rotation;     // value used by radar display instrument
     double ht_diff;      // value used by radar display instrument
 
-    std::string model_path;   //Path to the 3D model
+    std::string model_path;    // Path to the 3D model
+    int _fallback_model_index; // Index into /sim/multiplay/fallback-models[]
     SGModelPlacement aip;
 
     bool delete_me;
@@ -316,10 +318,9 @@ public:
     const char* _getTriggerNode() const;
     const char* _getName() const;
     const char* _getSubmodel() const;
-
+    const int   _getFallbackModelIndex() const;
 
     // These are used in the Mach number calculations
-
     double rho;
     double T;                             // temperature, degs farenheit
     double p;                             // pressure lbs/sq ft
@@ -346,6 +347,10 @@ inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
 
 inline void FGAIBase::setPath(const char* model ) {
     model_path.append(model);
+}
+
+inline void FGAIBase::setFallbackModelIndex(const int i ) {
+    _fallback_model_index = i;
 }
 
 inline void FGAIBase::setSMPath(const std::string& p) {

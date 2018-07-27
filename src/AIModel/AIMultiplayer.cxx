@@ -51,7 +51,7 @@ FGAIMultiplayer::FGAIMultiplayer() :
    playerLag = 0.03;
    compensateLag = 1;
 
-} 
+}
 
 FGAIMultiplayer::~FGAIMultiplayer() {
 }
@@ -59,6 +59,7 @@ FGAIMultiplayer::~FGAIMultiplayer() {
 bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
 {
     props->setStringValue("sim/model/path", model_path);
+    props->setIntValue("sim/model/fallback-model-index", _getFallbackModelIndex());
     //refuel_node = fgGetNode("systems/refuel/contact", true);
     isTanker = false; // do this until this property is
                       // passed over the net
@@ -86,7 +87,7 @@ void FGAIMultiplayer::bind() {
     //2018.1 mp-clock-mode indicates the clock mode that the client is running, so for backwards
     //       compatibility ensure this is initialized to 0 which means pre 2018.1
     props->setIntValue("sim/multiplay/mp-clock-mode", 0);
-    
+
     tie("refuel/contact", SGRawValuePointer<bool>(&contact));
     tie("tanker", SGRawValuePointer<bool>(&isTanker));
 
@@ -95,7 +96,7 @@ void FGAIMultiplayer::bind() {
 	_uBodyNode = props->getNode("velocities/uBody-fps", true);
 	_vBodyNode = props->getNode("velocities/vBody-fps", true);
 	_wBodyNode = props->getNode("velocities/wBody-fps", true);
-	
+
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 
@@ -209,7 +210,7 @@ void FGAIMultiplayer::update(double dt)
       if (fabs(err) < fabs(systemIncrement))
         systemIncrement = err;
       mTimeOffset += systemIncrement;
-      
+
       SG_LOG(SG_AI, SG_DEBUG, "Offset adjust system: time offset = "
              << mTimeOffset << ", expected longitudinal position error due to "
              " current adjustment of the offset: "
@@ -219,7 +220,7 @@ void FGAIMultiplayer::update(double dt)
 
 
   // Compute the time in the feeders time scale which fits the current time
-  // we need to 
+  // we need to
   double tInterp = curtime + mTimeOffset;
 
   SGVec3d ecPos;
@@ -266,14 +267,14 @@ void FGAIMultiplayer::update(double dt)
             case props::STRING:
             case props::UNSPECIFIED:
               pIt->second->setStringValue((*firstPropIt)->string_value);
-              //cout << "Str: " << (*firstPropIt)->string_value << "\n";    
+              //cout << "Str: " << (*firstPropIt)->string_value << "\n";
               break;
             default:
               // FIXME - currently defaults to float values
               pIt->second->setFloatValue((*firstPropIt)->float_value);
               //cout << "Unknown: " << (*firstPropIt)->float_value << "\n";
               break;
-          }            
+          }
         }
         else
         {
@@ -348,7 +349,7 @@ void FGAIMultiplayer::update(double dt)
                           case props::INT:
                           case props::BOOL:
                           case props::LONG:
-                              // Jean Pellotier, 2018-01-02 : we don't want interpolation for integer values, they are mostly used 
+                              // Jean Pellotier, 2018-01-02 : we don't want interpolation for integer values, they are mostly used
                               // for non linearly changing values (e.g. transponder etc ...)
                               // fixes: https://sourceforge.net/p/flightgear/codetickets/1885/
                               pIt->second->setIntValue((*nextPropIt)->int_value);
@@ -441,7 +442,7 @@ void FGAIMultiplayer::update(double dt)
     while (firstPropIt != firstPropItEnd) {
       PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
       //cout << " Setting property..." << (*firstPropIt)->id;
-      
+
       if (pIt != mPropertyMap.end())
       {
         switch ((*firstPropIt)->type) {
@@ -466,17 +467,17 @@ void FGAIMultiplayer::update(double dt)
             pIt->second->setFloatValue((*firstPropIt)->float_value);
             //cout << "Unk: " << (*firstPropIt)->float_value << "\n";
             break;
-        }            
+        }
       }
       else
       {
         SG_LOG(SG_AI, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
       }
-      
+
       ++firstPropIt;
     }
   }
-  
+
   // extract the position
   pos = SGGeod::fromCart(ecPos);
   double recent_alt_ft = altitude_ft;

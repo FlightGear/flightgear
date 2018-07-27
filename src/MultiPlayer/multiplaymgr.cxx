@@ -24,7 +24,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // $Id$
-//  
+//
 //////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
@@ -61,7 +61,7 @@ using namespace std;
 #define MAX_TEXT_SIZE 768 // Increased for 2017.3 to allow for long Emesary messages.
 /*
  * With the MP2017(V2) protocol it should be possible to transmit using a different type/encoding than the property has,
- * so it should be possible to transmit a bool as 
+ * so it should be possible to transmit a bool as
  */
 enum TransmissionType {
     TT_ASIS = 0, // transmit as defined in the property. This is the default
@@ -71,23 +71,23 @@ enum TransmissionType {
     TT_STRING = simgear::props::STRING,
     TT_SHORTINT = 0x100,
     TT_SHORT_FLOAT_NORM = 0x101, // -1 .. 1 encoded into a short int (16 bit)
-    TT_SHORT_FLOAT_1 = 0x102, //range -3276.7 .. 3276.7  float encoded into a short int (16 bit) 
-    TT_SHORT_FLOAT_2 = 0x103, //range -327.67 .. 327.67  float encoded into a short int (16 bit) 
-    TT_SHORT_FLOAT_3 = 0x104, //range -32.767 .. 32.767  float encoded into a short int (16 bit) 
-    TT_SHORT_FLOAT_4 = 0x105, //range -3.2767 .. 3.2767  float encoded into a short int (16 bit) 
+    TT_SHORT_FLOAT_1 = 0x102, //range -3276.7 .. 3276.7  float encoded into a short int (16 bit)
+    TT_SHORT_FLOAT_2 = 0x103, //range -327.67 .. 327.67  float encoded into a short int (16 bit)
+    TT_SHORT_FLOAT_3 = 0x104, //range -32.767 .. 32.767  float encoded into a short int (16 bit)
+    TT_SHORT_FLOAT_4 = 0x105, //range -3.2767 .. 3.2767  float encoded into a short int (16 bit)
     TT_BOOLARRAY,
     TT_CHAR,
     TT_NOSEND, // Do not send this property - probably the receive element for a custom encoded property
 };
 /*
  * Definitions for the version of the protocol to use to transmit the items defined in the IdPropertyList
- * 
+ *
  * The MP2017(V2) protocol allows for much better packing of strings, new types that are transmitted in 4bytes by transmitting
  * with short int (sometimes scaled) for the values (a lot of the properties that are transmitted will pack nicely into 16bits).
  * The MP2017(V2) protocol also allows for properties to be transmitted automatically as a different type and the encode/decode will
  * take this into consideration.
  * The pad magic is used to force older clients to use verifyProperties and as the first property transmitted is short int encoded it
- * will cause the rest of the packet to be discarded. This is the section of the packet that contains the properties defined in the list 
+ * will cause the rest of the packet to be discarded. This is the section of the packet that contains the properties defined in the list
  * here - the basic motion properties remain compatible, so the older client will see just the model, not chat, not animations etc.
  * The lower 16 bits of the prop_id (version) are the version and the upper 16bits are for meta data.
  */
@@ -114,20 +114,22 @@ const int BOOLARRAY_END_ID = BOOLARRAY_BASE_3;
 // Transmission uses a buffer to build the value for each array block.
 const int MAX_BOOL_BUFFERS = 3;
 
-// starting with 2018.1 we will now append new properties for each version at the end of the list - as this provides much 
+// starting with 2018.1 we will now append new properties for each version at the end of the list - as this provides much
 // better backwards compatibility.
 const int V2018_1_BASE = 11990;
 const int EMESARYBRIDGETYPE_BASE = 12200;
 const int EMESARYBRIDGE_BASE = 12000;
+const int V2018_3_BASE = 13000;
+const int FALLBACK_MODEL_ID = 13000;
 
 /*
  * definition of properties that are to be transmitted.
- * New for 2017.2: 
+ * New for 2017.2:
  * 1. TransmitAs - this causes the property to be transmitted on the wire using the
  *    specified format transparently.
  * 2. version - the minimum version of the protocol that is required to transmit a property.
  *    Does not apply to incoming properties - as these will be decoded correctly when received
- * 3. encode_for_transmit  - method that will convert from and to the packet for the value 
+ * 3. encode_for_transmit  - method that will convert from and to the packet for the value
  *    Allows specific conversion rules to be applied; such as conversion of a string to an integer for transmission.
  * 4. decode_received - decodes received data
  * - when using the encode/decode methods there should be both specified, however if the result of the encode
@@ -145,7 +147,7 @@ struct IdPropertyList {
     xdr_data_t* (*encode_for_transmit)(const IdPropertyList *propDef, const xdr_data_t*, FGPropertyData*);
     xdr_data_t* (*decode_received)(const IdPropertyList *propDef, const xdr_data_t*, FGPropertyData*);
 };
- 
+
 static const IdPropertyList* findProperty(unsigned id);
 
 /*
@@ -220,7 +222,7 @@ static const IdPropertyList sIdPropertyList[] = {
     { 105, "surface-positions/speedbrake-pos-norm",    simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
     { 106, "gear/tailhook/position-norm",              simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
     { 107, "gear/launchbar/position-norm",             simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
-    // 
+    //
     { 108, "gear/launchbar/state",                     simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, encode_launchbar_state_for_transmission, NULL },
     { 109, "gear/launchbar/holdback-position-norm",    simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
     { 110, "canopy/position-norm",                     simgear::props::FLOAT, TT_SHORT_FLOAT_NORM,  V1_1_PROP_ID, NULL, NULL },
@@ -538,7 +540,7 @@ static const IdPropertyList sIdPropertyList[] = {
     { BOOLARRAY_BASE_2 + 8, "sim/multiplay/generic/bool[39]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 9, "sim/multiplay/generic/bool[40]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 10, "sim/multiplay/generic/bool[41]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
-        // out of sequence between the block and the buffer becuase of a typo. repurpose the first as that way [72] will work 
+        // out of sequence between the block and the buffer becuase of a typo. repurpose the first as that way [72] will work
         // correctly on older versions.
     { BOOLARRAY_BASE_2 + 11, "sim/multiplay/generic/bool[91]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_2 + 12, "sim/multiplay/generic/bool[42]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
@@ -572,7 +574,7 @@ static const IdPropertyList sIdPropertyList[] = {
     { BOOLARRAY_BASE_3 + 8, "sim/multiplay/generic/bool[69]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 9, "sim/multiplay/generic/bool[70]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 10, "sim/multiplay/generic/bool[71]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
-        // out of sequence between the block and the buffer becuase of a typo. repurpose the first as that way [72] will work 
+        // out of sequence between the block and the buffer becuase of a typo. repurpose the first as that way [72] will work
         // correctly on older versions.
     { BOOLARRAY_BASE_3 + 11, "sim/multiplay/generic/bool[92]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
     { BOOLARRAY_BASE_3 + 12, "sim/multiplay/generic/bool[72]", simgear::props::BOOL, TT_BOOLARRAY,  V1_1_2_PROP_ID, NULL, NULL },
@@ -661,12 +663,14 @@ static const IdPropertyList sIdPropertyList[] = {
     { EMESARYBRIDGETYPE_BASE + 27, "sim/multiplay/emesary/bridge-type[27]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
     { EMESARYBRIDGETYPE_BASE + 28, "sim/multiplay/emesary/bridge-type[28]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
     { EMESARYBRIDGETYPE_BASE + 29, "sim/multiplay/emesary/bridge-type[29]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+
+    { FALLBACK_MODEL_ID, "sim/model/fallback-model-index", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
 };
 /*
  * For the 2017.x version 2 protocol the properties are sent in two partitions,
  * the first of these is a V1 protocol packet (which should be fine with all clients), and a V2 partition
  * which will contain the newly supported shortint and fixed string encoding schemes.
- * This is to possibly allow for easier V1/V2 conversion - as the packet can simply be truncated at the 
+ * This is to possibly allow for easier V1/V2 conversion - as the packet can simply be truncated at the
  * first V2 property based on ID.
  */
 const int MAX_PARTITIONS = 2;
@@ -692,7 +696,7 @@ namespace
     {
       return id < rhs.id;
     }
-  };    
+  };
 }
 
 const IdPropertyList* findProperty(unsigned id)
@@ -716,7 +720,7 @@ namespace
     while (xdr < end) {
       unsigned id = XDR_decode_uint32(*xdr);
       const IdPropertyList* plist = findProperty(id);
-    
+
       if (plist) {
         xdr++;
         // How we decode the remainder of the property depends on the type
@@ -764,7 +768,7 @@ namespace
           // cerr << "Unknown Prop type " << id << " " << type << "\n";
           xdr++;
           break;
-        }            
+        }
       }
       else {
         // give up; this is a malformed property list.
@@ -938,7 +942,7 @@ do_multiplayer_refreshserverlist (const SGPropertyNode * arg, SGPropertyNode * r
 //  MultiplayMgr constructor
 //
 //////////////////////////////////////////////////////////////////////
-FGMultiplayMgr::FGMultiplayMgr() 
+FGMultiplayMgr::FGMultiplayMgr()
 {
   mInitialised   = false;
   mHaveServer    = false;
@@ -960,7 +964,7 @@ FGMultiplayMgr::FGMultiplayMgr()
 //  MultiplayMgr destructor
 //
 //////////////////////////////////////////////////////////////////////
-FGMultiplayMgr::~FGMultiplayMgr() 
+FGMultiplayMgr::~FGMultiplayMgr()
 {
    globals->get_commands()->removeCommand("multiplayer-connect");
    globals->get_commands()->removeCommand("multiplayer-disconnect");
@@ -974,7 +978,7 @@ FGMultiplayMgr::~FGMultiplayMgr()
 //
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::init (void) 
+FGMultiplayMgr::init (void)
 {
   //////////////////////////////////////////////////
   //  Initialise object if not already done
@@ -995,18 +999,18 @@ FGMultiplayMgr::init (void)
   string rxAddress = fgGetString("/sim/multiplay/rxhost");
   short txPort = fgGetInt("/sim/multiplay/txport", 5000);
   string txAddress = fgGetString("/sim/multiplay/txhost");
-  
+
   int hz = fgGetInt("/sim/multiplay/tx-rate-hz", 10);
   if (hz < 1) {
     hz = 10;
   }
-  
+
   mDt = 1.0 / hz;
   mTimeUntilSend = 0.0;
-  
+
   mCallsign = fgGetString("/sim/multiplay/callsign");
   fgGetNode("/sim/multiplay/callsign", true)->setAttribute(SGPropertyNode::PRESERVE, true);
-    
+
   if ((!txAddress.empty()) && (txAddress!="0")) {
     mServer.set(txAddress.c_str(), txPort);
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
@@ -1038,7 +1042,7 @@ FGMultiplayMgr::init (void)
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxaddress="<<rxAddress );
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxport= "<<rxPort);
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-callsign= "<<mCallsign);
-  
+
   mSocket.reset(new simgear::Socket());
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_ALERT,
@@ -1052,7 +1056,7 @@ FGMultiplayMgr::init (void)
             << strerror(errno) << "(errno " << errno << ")");
     return;
   }
-  
+
   mPropertiesChanged = true;
   mListener = new MPPropertyListener(this);
   globals->get_props()->addChangeListener(mListener, false);
@@ -1077,28 +1081,28 @@ FGMultiplayMgr::init (void)
 //
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::shutdown (void) 
+FGMultiplayMgr::shutdown (void)
 {
   fgSetBool("/sim/multiplay/online", false);
-  
+
   if (mSocket.get()) {
     mSocket->close();
-    mSocket.reset(); 
+    mSocket.reset();
   }
-  
+
   MultiPlayerMap::iterator it = mMultiPlayerMap.begin(),
     end = mMultiPlayerMap.end();
   for (; it != end; ++it) {
     it->second->setDie(true);
   }
   mMultiPlayerMap.clear();
-  
+
   if (mListener) {
     globals->get_props()->removeChangeListener(mListener);
     delete mListener;
     mListener = NULL;
   }
-  
+
   mInitialised = false;
 } // FGMultiplayMgr::Close(void)
 //////////////////////////////////////////////////////////////////////
@@ -1182,7 +1186,7 @@ union FGMultiplayMgr::MsgBuf
     {
         return reinterpret_cast<const xdr_data_t*>(Msg + Header.MsgLen);
     }
-    
+
     xdr_data2_t double_val;
     char Msg[MAX_PACKET_SIZE];
     T_MsgHdr Header;
@@ -1237,7 +1241,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   /*
    * This is to provide a level of compatibility with the new V2 packets.
    * By setting padding it will force older clients to use verify properties which will
-   * bail out if there are any unknown props 
+   * bail out if there are any unknown props
    * MP2017(V2) (for V1 clients) will always have an unknown property because V2 transmits
    * the protocol version as the very first property as a shortint.
    */
@@ -1260,7 +1264,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
           PosMsg->linearAccel[i] = XDR_encode_float (0.0);
           PosMsg->angularAccel[i] = XDR_encode_float (0.0);
       }
-      // all other data remains unchanged (resend last state) 
+      // all other data remains unchanged (resend last state)
   }
   else
   {
@@ -1501,12 +1505,12 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                               // String is complicated. It consists of
                               // The length of the string
                               // The string itself
-                              // Padding to the nearest 4-bytes.        
+                              // Padding to the nearest 4-bytes.
                               const char* lcharptr = (*it)->string_value;
 
                               if (lcharptr != 0)
                               {
-                                  // Add the length         
+                                  // Add the length
                                   ////cout << "String length: " << strlen(lcharptr) << "\n";
                                   uint32_t len = strlen(lcharptr);
                                   if (len >= MAX_TEXT_SIZE)
@@ -1663,10 +1667,10 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
   //////////////////////////////////////////////////
   unsigned iNextBlockPosition = 0;
   T_ChatMsg ChatMsg;
-  
+
   char Msg[sizeof(T_MsgHdr) + sizeof(T_ChatMsg)];
   while (iNextBlockPosition < MsgText.length()) {
-    strncpy (ChatMsg.Text, 
+    strncpy (ChatMsg.Text,
              MsgText.substr(iNextBlockPosition, MAX_CHAT_MSG_LEN - 1).c_str(),
              MAX_CHAT_MSG_LEN);
     ChatMsg.Text[MAX_CHAT_MSG_LEN - 1] = '\0';
@@ -1676,8 +1680,8 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
     iNextBlockPosition += MAX_CHAT_MSG_LEN - 1;
 
   }
-  
-  
+
+
 } // FGMultiplayMgr::SendTextMessage ()
 //////////////////////////////////////////////////////////////////////
 
@@ -1686,10 +1690,10 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
 //  Name: ProcessData
 //  Description: Processes data waiting at the receive socket. The
 //  processing ends when there is no more data at the socket.
-//  
+//
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::update(double dt) 
+FGMultiplayMgr::update(double dt)
 {
   if (!mInitialised)
     return;
@@ -1712,7 +1716,7 @@ FGMultiplayMgr::update(double dt)
   do {
     MsgBuf msgBuf;
     //////////////////////////////////////////////////
-    //  Although the recv call asks for 
+    //  Although the recv call asks for
     //  MAX_PACKET_SIZE of data, the number of bytes
     //  returned will only be that of the next
     //  packet waiting to be processed.
@@ -1949,7 +1953,7 @@ FGMultiplayMgr::Send()
             break;
         }
         default:
-            // FIXME Currently default to a float. 
+            // FIXME Currently default to a float.
             //cout << "Unknown type when iterating through props: " << pData->type << "\n";
             pData->float_value = it->second->getFloatValue();
             break;
@@ -1977,6 +1981,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
    }
    const T_PositionMsg* PosMsg = Msg.posMsg();
    FGExternalMotionData motionInfo;
+   int fallback_model_index = 0;
    motionInfo.time = XDR_decode_double(PosMsg->time);
    motionInfo.lag = XDR_decode_double(PosMsg->lag);
    for (unsigned i = 0; i < 3; ++i)
@@ -2023,7 +2028,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
    // strict about the validity of the property values.
    const xdr_data_t* xdr = Msg.properties();
    const xdr_data_t* data = xdr;
-   
+
     /*
      * with V2 we use the pad to forcefully invoke older clients to verify (and discard)
      * our new protocol.
@@ -2066,7 +2071,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 
         // Check the ID actually exists and get the type
         const IdPropertyList* plist = findProperty(id);
-    
+
     if (plist)
     {
       FGPropertyData* pData = new FGPropertyData;
@@ -2184,7 +2189,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
                 // String is complicated. It consists of
                 // The length of the string
                 // The string itself
-                // Padding to the nearest 4-bytes.    
+                // Padding to the nearest 4-bytes.
                 uint32_t length = XDR_decode_uint32(*xdr);
                 xdr++;
                 //cout << length << " ";
@@ -2222,23 +2227,30 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
     }
     if (pData)
       motionInfo.properties.push_back(pData);
+
+      // Special case - we need the /sim/model/fallback-model-index to create
+      // the MP model
+      if (pData->id == FALLBACK_MODEL_ID) {
+        fallback_model_index = pData->int_value;
+        SG_LOG(SG_NETWORK, SG_DEBUG, "Found Fallback model index in message " << fallback_model_index);
+      }
     }
     else
     {
       // We failed to find the property. We'll try the next packet immediately.
       SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::ProcessPosMsg - "
              "message from " << MsgHdr->Callsign << " has unknown property id "
-             << id); 
+             << id);
 
-      // At this point the packet must be considered to be unreadable 
+      // At this point the packet must be considered to be unreadable
       // as we have no way of knowing the length of this property (it could be a string)
-      break; 
+      break;
     }
   }
  noprops:
   FGAIMultiplayer* mp = getMultiplayer(MsgHdr->Callsign);
   if (!mp)
-    mp = addMultiplayer(MsgHdr->Callsign, PosMsg->Model);
+    mp = addMultiplayer(MsgHdr->Callsign, PosMsg->Model, fallback_model_index);
   mp->addMotionInfo(motionInfo, stamp);
 } // FGMultiplayMgr::ProcessPosMsg()
 //////////////////////////////////////////////////////////////////////
@@ -2259,14 +2271,14 @@ FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
             << "Chat message received with insufficient data" );
     return;
   }
-  
+
   char *chatStr = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
   const T_ChatMsg* ChatMsg
       = reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr));
   strncpy(chatStr, ChatMsg->Text,
           MsgHdr->MsgLen - sizeof(T_MsgHdr));
   chatStr[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
-  
+
   SG_LOG (SG_NETWORK, SG_WARN, "Chat [" << MsgHdr->Callsign << "]"
            << " " << chatStr);
 
@@ -2301,13 +2313,15 @@ FGMultiplayMgr::FillMsgHdr(T_MsgHdr *MsgHdr, int MsgId, unsigned _len)
 
 FGAIMultiplayer*
 FGMultiplayMgr::addMultiplayer(const std::string& callsign,
-                               const std::string& modelName)
+                               const std::string& modelName,
+                               const int fallback_model_index)
 {
   if (0 < mMultiPlayerMap.count(callsign))
     return mMultiPlayerMap[callsign].get();
 
   FGAIMultiplayer* mp = new FGAIMultiplayer;
   mp->setPath(modelName.c_str());
+  mp->setFallbackModelIndex(fallback_model_index);
   mp->setCallSign(callsign);
   mMultiPlayerMap[callsign] = mp;
 
@@ -2338,21 +2352,21 @@ FGMultiplayMgr::findProperties()
   if (!mPropertiesChanged) {
     return;
   }
-  
+
   mPropertiesChanged = false;
-  
+
   for (unsigned i = 0; i < numProperties; ++i) {
       const char* name = sIdPropertyList[i].name;
       SGPropertyNode* pNode = globals->get_props()->getNode(name);
       if (!pNode) {
         continue;
       }
-      
+
       int id = sIdPropertyList[i].id;
       if (mPropertyMap.find(id) != mPropertyMap.end()) {
         continue; // already activated
       }
-      
+
       mPropertyMap[id] = pNode;
       mPropertyDefinition[id] = &sIdPropertyList[i];
       SG_LOG(SG_NETWORK, SG_DEBUG, "activating MP property:" << pNode->getPath());

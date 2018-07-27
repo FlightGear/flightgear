@@ -134,8 +134,6 @@ FGAIManager::init() {
     globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
     _environmentVisiblity = fgGetNode("/environment/visibility-m");
 
-    _mp_use_detailed_models = fgGetNode("/sim/multiplay/use-detailed-models", true);
-
     // Create an (invisible) AIAircraft representation of the current
     // users's aircraft, that mimicks the user aircraft's behavior.
 
@@ -315,7 +313,7 @@ FGAIManager::attach(FGAIBase *model)
         modelPolicy = FGAIBase::PREFER_AI;
         break;
     case FGAIBase::otMultiplayer:
-        modelPolicy = this->_mp_use_detailed_models->getBoolValue() ? FGAIBase::PREFER_DATA : FGAIBase::PREFER_AI;
+        modelPolicy = FGAIBase::PREFER_DATA;
         break;
     default:
         break;

@@ -23,7 +23,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // $Id$
-//  
+//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef MULTIPLAYMGR_H
@@ -50,24 +50,24 @@ class FGAIMultiplayer;
 
 class FGMultiplayMgr : public SGSubsystem
 {
-public:  
+public:
   FGMultiplayMgr();
   ~FGMultiplayMgr();
-  
+
   virtual void init(void);
   virtual void update(double dt);
-  
+
   virtual void shutdown(void);
   virtual void reinit();
-  
+
   // transmitter
-  
+
   void SendTextMessage(const std::string &sMsgText);
   // receiver
-  
+
 private:
   friend class MPPropertyListener;
-  
+
   void setPropertiesChanged()
   {
     mPropertiesChanged = true;
@@ -82,14 +82,15 @@ private:
   }
 
   void findProperties();
-  
+
   void Send();
   void SendMyPosition(const FGExternalMotionData& motionInfo);
   short get_scaled_short(double v, double scale);
 
   union MsgBuf;
   FGAIMultiplayer* addMultiplayer(const std::string& callsign,
-                                  const std::string& modelName);
+                                  const std::string& modelName,
+                                  const int fallback_model_index);
   FGAIMultiplayer* getMultiplayer(const std::string& callsign);
   void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
   void ProcessPosMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress,
@@ -106,7 +107,7 @@ private:
   bool mHaveServer;
   bool mInitialised;
   std::string mCallsign;
-  
+
   // Map between the property id's from the multiplayers network packets
   // and the property nodes
   typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
@@ -123,10 +124,9 @@ private:
   bool mPropertiesChanged;
 
   MPPropertyListener* mListener;
-  
+
   double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
   double mTimeUntilSend;
 };
 
 #endif
-
