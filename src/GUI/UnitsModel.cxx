@@ -21,6 +21,7 @@
 #include "UnitsModel.hxx"
 
 #include <cmath>
+#include <cassert>
 
 #include <simgear/constants.h>
 
