@@ -111,7 +111,7 @@ void CanvasPaintedDisplay::buildElements()
     // by walking their parent chain
     m_rootElement->setParent(m_connection);
 
-    connect(m_rootElement, &FGCanvasGroup::canvasSizeChanged,
+    connect(m_rootElement.data(), &FGCanvasGroup::canvasSizeChanged,
             this, &CanvasPaintedDisplay::onCanvasSizeChanged);
 
     onCanvasSizeChanged();

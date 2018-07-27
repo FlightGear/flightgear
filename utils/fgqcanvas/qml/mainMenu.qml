@@ -18,6 +18,8 @@ Rectangle {
         }
     }
 
+    Component.onCompleted: idleTimer.start();
+
     Image {
         opacity: __uiOpacity * 0.5
         source: "qrc:///images/checkerboard"
