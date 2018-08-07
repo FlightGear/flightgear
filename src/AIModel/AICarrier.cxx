@@ -35,7 +35,7 @@
 
 #include "AICarrier.hxx"
 
-FGAICarrier::FGAICarrier() : FGAIShip(otCarrier) {
+FGAICarrier::FGAICarrier() : FGAIShip(otCarrier), deck_altitude(65.0065) {
 }
 
 FGAICarrier::~FGAICarrier() {
@@ -49,6 +49,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
 
   setRadius(scFileNode->getDoubleValue("turn-radius-ft", 2000));
   setSign(scFileNode->getStringValue("pennant-number"));
+  setDeckAltitude(scFileNode->getDoubleValue("deck-altitude"));
   setWind_from_east(scFileNode->getDoubleValue("wind_from_east", 0));
   setWind_from_north(scFileNode->getDoubleValue("wind_from_north", 0));
   setTACANChannelID(scFileNode->getStringValue("TACAN-channel-ID", "029Y"));
@@ -110,6 +111,11 @@ void FGAICarrier::setMaxLong(double deg) {
 
 void FGAICarrier::setMinLong(double deg) {
     min_long = fabs(deg);
+}
+
+
+void FGAICarrier::setDeckAltitude(const double altitude_feet) {
+    deck_altitude = altitude_feet;
 }
 
 void FGAICarrier::setSign(const string& s) {
@@ -246,6 +252,8 @@ void FGAICarrier::bind() {
     FGAIShip::bind();
 
     props->untie("velocities/true-airspeed-kt");
+
+    props->getNode("position/deck-altitude-feet", true)->setDoubleValue(deck_altitude);
 
     tie("controls/flols/source-lights",
         SGRawValuePointer<int>(&source));

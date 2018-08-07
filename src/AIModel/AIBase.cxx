@@ -125,6 +125,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _parent(""),
     props( NULL ),
     model_removed( fgGetNode("/ai/models/model-removed", true) ),
+    replay_time(fgGetNode("sim/replay/time", true)),
     manager( NULL ),
     _installed(false),
     _impact_lat(0),
@@ -264,6 +265,8 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
 
 void FGAIBase::update(double dt) {
 
+    if (replay_time->getDoubleValue() > 0)
+        return;
     if (_otype == otStatic)
         return;
 

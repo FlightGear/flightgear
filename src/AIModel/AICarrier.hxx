@@ -46,6 +46,7 @@ public:
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
     void setSign(const string& );
+    void setDeckAltitude(const double altitude_feet);
     void setTACANChannelID(const string &);
 
     virtual void bind();
@@ -109,6 +110,7 @@ private:
 
     double dist;            // the distance of the eyepoint from the flols
     double angle;
+    double deck_altitude;
     int source;             // the flols light which is visible at the moment
     bool in_to_wind;
 

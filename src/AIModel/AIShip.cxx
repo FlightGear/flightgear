@@ -212,50 +212,58 @@ void FGAIShip::bind() {
 }
 
 void FGAIShip::update(double dt) {
-    //SG_LOG(SG_AI, SG_ALERT, "updating Ship: " << _name <<hdg<<pitch<<roll);
-    // For computation of rotation speeds we just use finite differences here.
-    // That is perfectly valid since this thing is not driven by accelerations
-    // but by just apply discrete changes at its velocity variables.
-    // Update the velocity information stored in those nodes.
-    // Transform that one to the horizontal local coordinate system.
-    SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
-    // The orientation of the ship wrt the horizontal local frame
-    SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-    // and postrotate the orientation of the AIModel wrt the horizontal
-    // local frame
-    SGQuatd ec2body = ec2hl*hl2body;
-    // The cartesian position of the ship in the wgs84 world
-    //SGVec3d cartPos = SGVec3d::fromGeod(pos);
+    if (replay_time->getDoubleValue() <= 0)
+    {
 
-    // The simulation time this transform is meant for
-    aip.setReferenceTime(globals->get_sim_time_sec());
-
-    // Compute the velocity in m/s in the body frame
-    aip.setBodyLinearVelocity(SGVec3d(0.51444444*speed, 0, 0));
-
-    FGAIBase::update(dt);
-    Run(dt);
-    Transform();
-    if (fp)
-        setXTrackError();
-
-    // Only change these values if we are able to compute them safely
-    if (SGLimits<double>::min() < dt) {
-        // Now here is the finite difference ...
-
+        //SG_LOG(SG_AI, SG_ALERT, "updating Ship: " << _name <<hdg<<pitch<<roll);
+        // For computation of rotation speeds we just use finite differences here.
+        // That is perfectly valid since this thing is not driven by accelerations
+        // but by just apply discrete changes at its velocity variables.
+        // Update the velocity information stored in those nodes.
         // Transform that one to the horizontal local coordinate system.
-        SGQuatd ec2hlNew = SGQuatd::fromLonLat(pos);
-        // compute the new orientation
-        SGQuatd hl2bodyNew = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-        // The rotation difference
-        SGQuatd dOr = inverse(ec2body)*ec2hlNew*hl2bodyNew;
-        SGVec3d dOrAngleAxis;
-        dOr.getAngleAxis(dOrAngleAxis);
-        // divided by the time difference provides a rotation speed vector
-        dOrAngleAxis /= dt;
+        SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
+        // The orientation of the ship wrt the horizontal local frame
+        SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        // and postrotate the orientation of the AIModel wrt the horizontal
+        // local frame
+        SGQuatd ec2body = ec2hl*hl2body;
+        // The cartesian position of the ship in the wgs84 world
+        //SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
-        aip.setBodyAngularVelocity(dOrAngleAxis);
+        // The simulation time this transform is meant for
+        aip.setReferenceTime(globals->get_sim_time_sec());
+
+        // Compute the velocity in m/s in the body frame
+        aip.setBodyLinearVelocity(SGVec3d(0.51444444*speed, 0, 0));
+
+        FGAIBase::update(dt);
+        Run(dt);
+        Transform();
+
+        if (fp)
+            setXTrackError();
+
+        // Only change these values if we are able to compute them safely
+        if (SGLimits<double>::min() < dt) {
+            // Now here is the finite difference ...
+
+            // Transform that one to the horizontal local coordinate system.
+            SGQuatd ec2hlNew = SGQuatd::fromLonLat(pos);
+            // compute the new orientation
+            SGQuatd hl2bodyNew = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+            // The rotation difference
+            SGQuatd dOr = inverse(ec2body)*ec2hlNew*hl2bodyNew;
+            SGVec3d dOrAngleAxis;
+            dOr.getAngleAxis(dOrAngleAxis);
+            // divided by the time difference provides a rotation speed vector
+            dOrAngleAxis /= dt;
+
+            aip.setBodyAngularVelocity(dOrAngleAxis);
+        }
     }
+    else
+        Transform();
+
 }
 
 void FGAIShip::Run(double dt) {

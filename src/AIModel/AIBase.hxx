@@ -168,6 +168,7 @@ protected:
     SGPropertyNode_ptr _selected_ac;
     SGPropertyNode_ptr props;
     SGPropertyNode_ptr trigger_node;
+    SGPropertyNode_ptr replay_time;
     SGPropertyNode_ptr model_removed; // where to report model removal
     FGAIManager* manager;
 
