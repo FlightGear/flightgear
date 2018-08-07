@@ -201,16 +201,20 @@ bool
 NewGUI::showDialog (const string &name)
 {
     // first, check if it's already shown
-    if (_active_dialogs.find(name) != _active_dialogs.end())
-      return true;
+    if (_active_dialogs.find(name) != _active_dialogs.end()){
+        _active_dialogs[name]->bringToFront();
+        return true;
+    }
   
     // check we know about the dialog by name
     if (_dialog_names.find(name) == _dialog_names.end()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
         return false;
     }
-    
     _active_dialogs[name] = new FGPUIDialog(getDialogProperties(name));
+    fgSetString("/sim/gui/dialogs/current-dialog", name);
+
+//    setActiveDialog(new FGPUIDialog(getDialogProperties(name)));
     return true;
 }
 
@@ -289,6 +293,9 @@ NewGUI::getDialog (const string &name)
 void
 NewGUI::setActiveDialog (FGDialog * dialog)
 {
+    if (dialog){
+        fgSetString("/sim/gui/dialogs/current-dialog", dialog->getName());
+    }
     _active_dialog = dialog;
 }
 

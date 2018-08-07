@@ -101,8 +101,8 @@ validate_format(const char *f)
 //
 class fgPopup : public puPopup {
 public:
-  fgPopup(int x, int y, bool r = true, bool d = true) :
-  puPopup(x, y), _draggable(d), _resizable(r), _dragging(false)
+  fgPopup(FGPUIDialog *parent_dialog, int x, int y, bool r = true, bool d = true) :
+  puPopup(x, y), _draggable(d), _resizable(r), _dragging(false), parentDialog(parent_dialog)
   {}
   int checkHit(int b, int up, int x, int y);
   int checkKey(int key, int updown);
@@ -114,6 +114,7 @@ public:
 private:
   enum { LEFT = 1, RIGHT = 2, TOP = 4, BOTTOM = 8 };
   bool _draggable;
+  FGPUIDialog *parentDialog;
   bool _resizable;
   bool _dragging;
   int _resizing;
@@ -310,9 +311,15 @@ puObject *fgPopup::getActiveInputField(puObject *object)
 int fgPopup::checkHit(int button, int updown, int x, int y)
 {
     int result = 0;
-    if (updown != PU_DRAG && !_dragging)
+    // still need to ensure that the hit is within this window. The code used to check _dragging 
+    // as well, however that had the unfortunate side effect of allowing clicks to pass through to 
+    // the underlying window. RJH-07-08-18.
+    if (updown == PU_UP || updown == PU_DOWN){
         result = puPopup::checkHit(button, updown, x, y);
-
+        if (result && parentDialog) {
+            fgSetString("/sim/gui/dialogs/current-dialog", parentDialog->getName());
+        }
+    }
     if (!_draggable)
        return result;
 
@@ -567,7 +574,6 @@ action_callback (puObject *object)
     gui->setActiveDialog(0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 // Static helper functions.
 ////////////////////////////////////////////////////////////////////////
@@ -662,7 +668,7 @@ FGPUIDialog::FGPUIDialog (SGPropertyNode *props) :
     _needsRelayout(false)
 {
     _module = string("__dlg:") + props->getStringValue("name", "[unnamed]");
-        
+    _name = props->getStringValue("name", "[unnamed]");
     SGPropertyNode *nasal = props->getNode("nasal");
     if (nasal) {
         _nasal_close = nasal->getNode("close");
@@ -708,6 +714,14 @@ FGPUIDialog::~FGPUIDialog ()
         delete _propertyObjects[i];
         _propertyObjects[i] = 0;
     }
+}
+
+void FGPUIDialog::bringToFront() {
+    puMoveToLast(_object);
+}
+std::string FGPUIDialog::getName()
+{
+    return _name;
 }
 
 void
@@ -833,6 +847,9 @@ FGPUIDialog::display (SGPropertyNode *props)
     // configuration file or from the layout widget.
     _object = makeObject(props, screenw, screenh);
 
+    //if (_object->getParent())
+    //    _object->getParent()-> //setActiveCallback(FGPUIDialog_active_callback);
+
     // Remove automatically generated properties, so the layout looks
     // the same next time around, or restore x and y to preserve negative coords.
     if (userx)
@@ -880,7 +897,7 @@ FGPUIDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeigh
         if (props->getBoolValue("modal", false))
             obj = new puDialogBox(x, y);
         else
-            obj = new fgPopup(x, y, resizable, draggable);
+            obj = new fgPopup(this, x, y, resizable, draggable);
         setupGroup(obj, props, width, height, true);
         setColor(obj, props);
         return obj;
@@ -1084,7 +1101,6 @@ FGPUIDialog::setupObject (puObject *object, SGPropertyNode *props)
     object->setLabelPlace(PUPLACE_CENTERED_RIGHT);
     object->makeReturnDefault(props->getBoolValue("default"));
     info->node = props;
-
     if (props->hasValue("legend")) {
         info->legend = props->getStringValue("legend");
         object->setLegend(info->legend.c_str());

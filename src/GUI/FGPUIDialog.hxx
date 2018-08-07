@@ -100,7 +100,9 @@ public:
     void setNeedsLayout() {
       _needsRelayout = true;
     }
-    
+    virtual std::string getName();
+    virtual void bringToFront();
+
     class ActiveWidget
     {
     public:
@@ -164,6 +166,7 @@ private:
     std::string _module;
     SGPropertyNode_ptr _nasal_close;
 
+    std::string _name;
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog

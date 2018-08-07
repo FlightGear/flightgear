@@ -59,6 +59,8 @@ public:
      */
     virtual void update () = 0;
 
+    virtual std::string getName() { return std::string(); }
+    virtual void bringToFront() {}
 protected:
     /**
      * Construct a new GUI widget configured by a property tree.
