@@ -70,13 +70,13 @@ macro(find_static_component comp libs)
     set( compLibName ${compLibBase}_LIBRARY )
 
     FIND_LIBRARY(${compLibName}_DEBUG
-      NAMES ${compLib}_d
+      NAMES ${compLib}_d plib_${compLib}_d
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
       PATHS ${ADDITIONAL_LIBRARY_PATHS}
     )
     FIND_LIBRARY(${compLibName}_RELEASE
-      NAMES ${compLib}
+      NAMES ${compLib} plib_${compLib}
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
       PATHS ${ADDITIONAL_LIBRARY_PATHS}
