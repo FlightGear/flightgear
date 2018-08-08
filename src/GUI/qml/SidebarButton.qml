@@ -18,6 +18,12 @@ Item {
 
     property string disabledText: ""
 
+    onEnabledChanged: {
+        // if we become enabled, ensure we hide the
+        // dsiabled prompt (can happen if hovering over 'fly!')
+        if (enabled) disabledTextBox.hide();
+    }
+
     Rectangle {
         id: baseRect
         anchors.fill: parent
