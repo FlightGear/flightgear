@@ -315,13 +315,17 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
 {
     _hidPath = devInfo->path;
 
-    std::wstring manufactuerName = std::wstring(devInfo->manufacturer_string),
+    std::wstring manufactuerName,
         productName = std::wstring(devInfo->product_string);
-    const auto serial = devInfo->serial_number;
-
-    SetName(simgear::strutils::convertWStringToUtf8(manufactuerName) + " " +
+    if (devInfo->manufacturer_string) {
+        manufactuerName = std::wstring(devInfo->manufacturer_string);
+        SetName(simgear::strutils::convertWStringToUtf8(manufactuerName) + " " +
             simgear::strutils::convertWStringToUtf8(productName));
+    } else {
+        SetName(simgear::strutils::convertWStringToUtf8(productName));
+    }
 
+    const auto serial = devInfo->serial_number;
     // every device so far encountered returns a blank serial number, so we
     // fall back to the device path to disambiguate.
     std::string path(devInfo->path);
