@@ -102,7 +102,7 @@ validate_format(const char *f)
 class fgPopup : public puPopup {
 public:
   fgPopup(FGPUIDialog *parent_dialog, int x, int y, bool r = true, bool d = true) :
-  puPopup(x, y), _draggable(d), _resizable(r), _dragging(false), parentDialog(parent_dialog)
+  puPopup(x, y), _draggable(d), parentDialog(parent_dialog), _resizable(r), _dragging(false)
   {}
   int checkHit(int b, int up, int x, int y);
   int checkKey(int key, int updown);
@@ -719,9 +719,9 @@ FGPUIDialog::~FGPUIDialog ()
 void FGPUIDialog::bringToFront() {
     puMoveToLast(_object);
 }
-std::string FGPUIDialog::getName()
+const char *FGPUIDialog::getName()
 {
-    return _name;
+    return _name.c_str();
 }
 
 void

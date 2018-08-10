@@ -59,7 +59,7 @@ public:
      */
     virtual void update () = 0;
 
-    virtual std::string getName() { return std::string(); }
+    virtual const char *getName() { return ""; }
     virtual void bringToFront() {}
 protected:
     /**

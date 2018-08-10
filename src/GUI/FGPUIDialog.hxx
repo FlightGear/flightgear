@@ -100,7 +100,7 @@ public:
     void setNeedsLayout() {
       _needsRelayout = true;
     }
-    virtual std::string getName();
+    virtual const char * getName();
     virtual void bringToFront();
 
     class ActiveWidget

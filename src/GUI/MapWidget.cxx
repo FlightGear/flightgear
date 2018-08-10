@@ -512,13 +512,15 @@ void MapWidget::doHit( int button, int updown, int x, int y )
     handlePan(x, y);
     return;
   }
-  
-  if (button == 3) { // mouse-wheel up
-    zoomIn();
-  } else if (button == 4) { // mouse-wheel down
-    zoomOut();
+  if (updown == PU_DOWN)
+  {
+      if (button == 3) { // mouse-wheel up
+          zoomIn();
+      }
+      else if (button == 4) { // mouse-wheel down
+          zoomOut();
+      }
   }
-  
   _hitLocation = SGVec2d(x - abox.min[0], y - abox.min[1]);
   if ((button == 2) && (updown == PU_DOWN)) {
     _clickGeod = unproject(_hitLocation - SGVec2d(_width>>1, _height>>1));
