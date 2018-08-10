@@ -2168,7 +2168,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 
 void Options::initPaths()
 {
-    BOOST_FOREACH(const string& pathOpt, valuesForOption("fg-aircraft")) {
+    for (const string& pathOpt : valuesForOption("fg-aircraft")) {
         PathList paths = SGPath::pathsFromLocal8Bit(pathOpt);
         globals->append_aircraft_paths(paths);
     }
@@ -2367,6 +2367,23 @@ int Options::parseOption(const string& s, bool fromConfigFile)
 
 int Options::addOption(const string &key, const string &value)
 {
+    if (key == "config") {
+        // occurs when the launcher adds --config options
+        SGPath path(value);
+        if (!path.exists()) {
+            return FG_OPTIONS_ERROR;
+        }
+
+        if (path.extension() == "xml") {
+            p->propertyFiles.push_back(path);
+        } else {
+            p->insertGroupMarker(); // begin a group for the config file
+            readConfig(path);
+        }
+
+        return FG_OPTIONS_OK;
+    }
+
   OptionDesc* desc = p->findOption(key);
   if (!desc) {
     flightgear::modalMessageBox("Unknown option", "Unknown command-line option: " + key);
@@ -2507,7 +2524,7 @@ OptionResult Options::processOptions()
     groupEnd = groupBegin;
   }
 
-  BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
+  for (const SGPath& file : p->propertyFiles) {
     SG_LOG(SG_GENERAL, SG_INFO,
            "Reading command-line property file " << file);
 	  readProperties(file, globals->get_props());
