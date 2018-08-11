@@ -36,6 +36,7 @@ class NavaidSearchModel : public QAbstractListModel
     Q_PROPERTY(bool haveExistingSearch READ haveExistingSearch NOTIFY haveExistingSearchChanged)
     Q_PROPERTY(bool airportsOnly MEMBER m_airportsOnly NOTIFY airportsOnlyChanged)
     Q_PROPERTY(int maxResults MEMBER m_maxResults NOTIFY maxResultsChanged)
+    Q_PROPERTY(int numResults READ numResults NOTIFY searchActiveChanged)
 
     Q_PROPERTY(qlonglong exactMatch READ exactMatch NOTIFY searchActiveChanged)
 
@@ -67,6 +68,8 @@ public:
 
     Q_INVOKABLE void clear();
 
+    Q_INVOKABLE qlonglong guidAtIndex(int index) const;
+
     bool isSearchActive() const
     {
         return m_searchActive;
@@ -86,6 +89,7 @@ public:
 
     qlonglong exactMatch() const;
 
+    int numResults() const;
 Q_SIGNALS:
     void searchComplete();
     void searchActiveChanged();
@@ -97,6 +101,8 @@ private slots:
     void onSearchResultsPoll();
 
 private:
+    void resort();
+
     PositionedIDVec m_ids;
     mutable FGPositionedList m_items;
     bool m_searchActive = false;

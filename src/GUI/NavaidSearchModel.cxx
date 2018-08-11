@@ -148,6 +148,14 @@ void NavaidSearchModel::clear()
     emit haveExistingSearchChanged();
 }
 
+qlonglong NavaidSearchModel::guidAtIndex(int index) const
+{
+    if ((index < 0) || (index >= m_ids.size()))
+        return 0;
+
+    return m_ids.at(index);
+}
+
 void NavaidSearchModel::setSearch(QString t, NavaidSearchModel::AircraftType aircraft)
 {
     beginResetModel();
@@ -160,18 +168,14 @@ void NavaidSearchModel::setSearch(QString t, NavaidSearchModel::AircraftType air
     IdentSearchFilter filter(static_cast<LauncherController::AircraftType>(aircraft), m_airportsOnly);
     FGPositionedList exactMatches = NavDataCache::instance()->findAllWithIdent(term, &filter, true);
 
-    // truncate based on max results
-    if ((m_maxResults > 0) && (exactMatches.size() > m_maxResults)) {
-        auto it = exactMatches.begin() + m_maxResults;
-        exactMatches.erase(it, exactMatches.end());
-    }
-
     m_ids.reserve(exactMatches.size());
     m_items.reserve(exactMatches.size());
     for (auto match : exactMatches) {
         m_ids.push_back(match->guid());
         m_items.push_back(match);
     }
+
+    resort();
     endResetModel();
 
     m_search.reset(new NavDataCache::ThreadedGUISearch(term, m_airportsOnly));
@@ -188,7 +192,10 @@ bool NavaidSearchModel::haveExistingSearch() const
 
 int NavaidSearchModel::rowCount(const QModelIndex &) const
 {
-    return m_ids.size();
+    if (m_maxResults > 0)
+        return std::min(static_cast<int>(m_ids.size()), m_maxResults);
+
+    return static_cast<int>(m_ids.size());
 }
 
 QVariant NavaidSearchModel::data(const QModelIndex &index, int role) const
@@ -239,6 +246,7 @@ void NavaidSearchModel::setItems(const FGPositionedList &items)
         m_ids.push_back(m_items[i]->guid());
     }
 
+    // don't sort in this case
     endResetModel();
     emit searchActiveChanged();
 }
@@ -265,6 +273,11 @@ qlonglong NavaidSearchModel::exactMatch() const
     return m_ids.back(); // which is also the front
 }
 
+int NavaidSearchModel::numResults() const
+{
+    return static_cast<int>(m_ids.size());
+}
+
 void NavaidSearchModel::onSearchResultsPoll()
 {
     if (m_search.isNull()) {
@@ -272,22 +285,14 @@ void NavaidSearchModel::onSearchResultsPoll()
     }
 
     PositionedIDVec newIds = m_search->results();
-    int newTotalSize = m_ids.size() + newIds.size();
-    if ((m_maxResults > 0) && (newTotalSize > m_maxResults)) {
-        // truncate new results as necessary
-        int numNewAllowed = m_maxResults - m_ids.size();
-        auto it = newIds.begin() + numNewAllowed;
-        newIds.erase(it, newIds.end());
-        // possible that newIDs is empty now
-    }
-
     if (!newIds.empty()) {
-        beginInsertRows(QModelIndex(), m_ids.size(), newIds.size() - 1);
+        beginResetModel(); // reset the model since we will re-sort
         for (auto id : newIds) {
             m_ids.push_back(id);
             m_items.push_back({}); // null ref
         }
-        endInsertRows();
+        resort();
+        endResetModel();
     }
 
     if (m_search->isComplete()) {
@@ -299,4 +304,32 @@ void NavaidSearchModel::onSearchResultsPoll()
     } else {
         QTimer::singleShot(100, this, SLOT(onSearchResultsPoll()));
     }
+}
+
+void NavaidSearchModel::resort()
+{
+    if (!m_airportsOnly) {
+        return;
+    }
+
+    // clear m_items
+    std::fill(m_items.begin(), m_items.end(), FGPositionedRef{});
+
+    // build runway length cache
+    std::map<PositionedID, double> longestRunwayCache;
+    for (auto a : m_ids) {
+        const FGAirportRef apt = FGPositioned::loadById<FGAirport>(a);
+        if (apt) {
+            const auto rwy = apt->longestRunway();
+            if (rwy) {
+                longestRunwayCache[a] = rwy->lengthFt();
+            }
+        }
+    }
+
+    std::sort(m_ids.begin(), m_ids.end(),
+              [&longestRunwayCache](const PositionedID a, const PositionedID& b)
+    {
+        return longestRunwayCache[a] > longestRunwayCache[b];
+    });
 }
