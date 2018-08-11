@@ -118,6 +118,9 @@
         <file>qml/Overlay.qml</file>
         <file>qml/OverlayShared.qml</file>
         <file>qml/Weblink.qml</file>
+        <file>qml/PlanAirportView.qml</file>
+        <file>qml/PlanRouteDetails.qml</file>
+        <file>qml/RouteLegsView.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

@@ -41,6 +41,7 @@ class AircraftItemModel;
 class QQuickItem;
 class LaunchConfig;
 class LocationController;
+class FlightPlanController;
 
 class LauncherController : public QObject
 {
@@ -54,6 +55,7 @@ class LauncherController : public QObject
     Q_PROPERTY(AircraftItemModel* baseAircraftModel MEMBER m_aircraftModel CONSTANT)
 
     Q_PROPERTY(LocationController* location MEMBER m_location CONSTANT)
+    Q_PROPERTY(FlightPlanController* flightPlan MEMBER m_flightPlan CONSTANT)
 
     Q_PROPERTY(MPServersModel* mpServersModel MEMBER m_serversModel CONSTANT)
 
@@ -246,6 +248,7 @@ private:
     AircraftProxyModel* m_aircraftWithUpdatesModel;
     MPServersModel* m_serversModel = nullptr;
     LocationController* m_location = nullptr;
+    FlightPlanController* m_flightPlan = nullptr;
 
     QUrl m_selectedAircraft;
     QString m_aircraftState;

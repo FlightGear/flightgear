@@ -46,9 +46,11 @@
 #include "PixmapImageItem.hxx"
 #include "AirportDiagram.hxx"
 #include "NavaidDiagram.hxx"
+#include "RouteDiagram.hxx"
 #include "QmlRadioButtonHelper.hxx"
 #include "UnitsModel.hxx"
 #include "NavaidSearchModel.hxx"
+#include "FlightPlanController.hxx"
 
 using namespace simgear::pkg;
 
@@ -65,6 +67,8 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     connect(m_config, &LaunchConfig::collect, this, &LauncherController::collectAircraftArgs);
     connect(m_config, &LaunchConfig::save, this, &LauncherController::saveAircraft);
     connect(m_config, &LaunchConfig::restore, this, &LauncherController::restoreAircraft);
+
+    m_flightPlan = new FlightPlanController(this, m_config);
 
     m_location->setLaunchConfig(m_config);
     connect(m_location, &LocationController::descriptionChanged,
@@ -126,6 +130,7 @@ void LauncherController::initQML()
 {
     qmlRegisterUncreatableType<LauncherController>("FlightGear.Launcher", 1, 0, "LauncherController", "no");
     qmlRegisterUncreatableType<LocationController>("FlightGear.Launcher", 1, 0, "LocationController", "no");
+    qmlRegisterUncreatableType<FlightPlanController>("FlightGear.Launcher", 1, 0, "FlightPlanController", "no");
 
     qmlRegisterType<LauncherArgumentTokenizer>("FlightGear.Launcher", 1, 0, "ArgumentTokenizer");
     qmlRegisterUncreatableType<QAbstractItemModel>("FlightGear.Launcher", 1, 0, "QAIM", "no");
@@ -156,6 +161,7 @@ void LauncherController::initQML()
     qmlRegisterType<PixmapImageItem>("FlightGear", 1, 0, "PixmapImage");
     qmlRegisterType<AirportDiagram>("FlightGear", 1, 0, "AirportDiagram");
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
+    qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
 
     qmlRegisterSingletonType(QUrl("qrc:///qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");

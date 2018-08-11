@@ -149,7 +149,7 @@ Item {
             MenuItem { text:qsTr("Save configuration as..."); shortcut: "Ctrl+S";
                 onTriggered: _launcher.saveConfigAs(); },
             MenuDivider {},
-            MenuItem { text:qsTr("Flight-planning"); onTriggered: root.enterFlightPlan(); shortcut: "Ctrl+P"; enabled: false},
+            MenuItem { text:qsTr("Flight-planning"); onTriggered: root.enterFlightPlan(); shortcut: "Ctrl+P"; enabled: true},
             MenuDivider {},
             MenuItem { text:qsTr("View command line"); onTriggered: _launcher.viewCommandLine(); shortcut: "Ctrl+L"},
             MenuItem { text:qsTr("Select data files location..."); onTriggered: _launcher.requestChangeDataPath(); },
