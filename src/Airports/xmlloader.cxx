@@ -49,17 +49,17 @@ void XMLLoader::load(FGGroundNetwork* net)
     return;
   }
 
-  SG_LOG(SG_NAVAID, SG_INFO, "reading groundnet data from " << path);
+  SG_LOG(SG_NAVAID, SG_DEBUG, "reading groundnet data from " << path);
   SGTimeStamp t;
   t.stamp();
   try {
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
   } catch (sg_exception& e) {
-    SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML failed:" << e.getFormattedMessage());
+    SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
 
-  SG_LOG(SG_NAVAID, SG_INFO, "parsing groundnet XML took " << t.elapsedMSec());
+  SG_LOG(SG_NAVAID, SG_DEBUG, "parsing groundnet XML took " << t.elapsedMSec());
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
