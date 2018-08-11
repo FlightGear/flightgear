@@ -96,6 +96,11 @@ protected:
     static SGGeod unproject(const QPointF &xy, const SGGeod &center);
 
     void paintAirplaneIcon(QPainter *painter, const SGGeod &geod, int headingDeg);
+    void paintAirways(QPainter* painter, const FGPositionedList& navs);
+
+    QPointF projectedPosition(PositionedID pid) const;
+    QPointF projectedPosition(FGPositionedRef pos) const;
+
 private:
     enum LabelPosition
     {
@@ -126,6 +131,8 @@ private:
 
     mutable QHash<PositionedID, LabelPosition> m_labelPositions;
     mutable QVector<QRect> m_labelRects;
+
+    mutable QHash<PositionedID, QPointF> m_projectedPositions;
 
     static int textFlagsForLabelPosition(LabelPosition pos);
 

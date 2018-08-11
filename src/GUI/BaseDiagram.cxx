@@ -32,8 +32,12 @@
 #include <Navaids/positioned.hxx>
 #include <Airports/airport.hxx>
 #include <Navaids/PolyLine.hxx>
+#include <Navaids/NavDataCache.hxx>
+#include <Navaids/airways.hxx>
 
 #include "QtLauncher_fwd.hxx"
+
+using namespace flightgear;
 
 /* equatorial and polar earth radius */
 const double rec  = 6378137;          // earth radius, equator (?)
@@ -103,7 +107,9 @@ void BaseDiagram::extendRect(QRectF &r, const QPointF &p)
 
 QRect BaseDiagram::rect() const
 {
-    return QRect(0, 0, width(), height());
+    return QRect(0, 0,
+                 static_cast<int>(width()),
+                 static_cast<int>(height()));
 }
 
 void BaseDiagram::paint(QPainter* p)
@@ -123,6 +129,7 @@ void BaseDiagram::paint(QPainter* p)
     m_baseDeviceTransform = p->deviceTransform();
     m_viewportTransform = transform();
     p->setWorldTransform(m_viewportTransform * m_baseDeviceTransform);
+    m_projectedPositions.clear();
 
     paintPolygonData(p);
     paintNavaids(p);
@@ -196,9 +203,8 @@ void BaseDiagram::paintGeodVec(QPainter* painter, const flightgear::SGGeodVec& v
 {
     QVector<QPointF> projected;
     projected.reserve(vec.size());
-    flightgear::SGGeodVec::const_iterator it;
-    for (it=vec.begin(); it != vec.end(); ++it) {
-        projected.append(project(*it));
+    for (auto v: vec) {
+        projected.append(project(v));
     }
 
     painter->drawPolyline(projected.data(), projected.size());
@@ -224,7 +230,7 @@ public:
 
     MapFilter(LauncherController::AircraftType aircraft)
     {
-      //  addType(FGPositioned::FIX);
+        addType(FGPositioned::FIX);
         addType(FGPositioned::NDB);
         addType(FGPositioned::VOR);
 
@@ -242,15 +248,13 @@ public:
     virtual bool pass(FGPositioned* aPos) const
     {
         bool ok = TypeFilter::pass(aPos);
-        // fix-filtering code disabled since fixed are entirely disabled
-#if 0
+
         if (ok && (aPos->type() == FGPositioned::FIX)) {
             // ignore fixes which end in digits
             if (aPos->ident().length() > 4 && isdigit(aPos->ident()[3]) && isdigit(aPos->ident()[4])) {
                 return false;
             }
         }
-#endif
         return ok;
     }
 };
@@ -301,6 +305,9 @@ void BaseDiagram::paintNavaids(QPainter* painter)
         ports.resize(40);
     }
 
+    // paint airways underneath
+    paintAirways(painter, navaids);
+
     m_labelRects.clear();
     m_labelRects.reserve(items.size());
     painter->setTransform(m_baseDeviceTransform);
@@ -314,6 +321,65 @@ void BaseDiagram::paintNavaids(QPainter* painter)
     }
 
     painter->restore();
+}
+
+void BaseDiagram::paintAirways(QPainter* painter, const FGPositionedList& navs)
+{
+    // FIXME: specify the network
+
+    struct AirwaySegment
+    {
+        AirwaySegment(PositionedID t, PositionedID f, int a) :
+            to(t), from(f), airway(a)
+        {}
+
+        PositionedID to, from;
+        int airway;
+    };
+
+    std::vector<AirwaySegment> segmentsToDraw;
+
+    for (auto n : navs) {
+        const auto navGuid = n->guid();
+        AirwayEdgeVec edges = NavDataCache::instance()->airwayEdgesFrom(Airway::HighLevel, n->guid());
+
+        for (auto e : edges) {
+            const auto edgeEndGuid = e.second;
+            auto it = std::find_if(segmentsToDraw.begin(), segmentsToDraw.end(),
+                                   [edgeEndGuid, navGuid](const AirwaySegment& segment)
+            {
+                return ((segment.to == edgeEndGuid) && (segment.from == navGuid)) ||
+                        ((segment.from == edgeEndGuid) && (segment.to == navGuid));
+            });
+            if (it == segmentsToDraw.end()) {
+                segmentsToDraw.emplace_back(navGuid, edgeEndGuid, e.first);
+            }
+        }
+    }
+
+    QVector<QLineF> lines;
+    lines.reserve(segmentsToDraw.size());
+
+    for (auto seg : segmentsToDraw) {
+        QPointF p1 = projectedPosition(seg.from);
+        QPointF p2 = projectedPosition(seg.to);
+
+        const auto d = QVector2D(p2 - p1).normalized();
+        p1 += (d.toPointF() * 100);
+        p2 += (d.toPointF() * -100);
+
+        lines.append(QLineF(p1, p2));
+    }
+
+    QPen linePen(Qt::cyan, 1);
+    linePen.setCosmetic(true);
+    painter->setPen(linePen);
+    painter->drawLines(lines);
+
+    // find airway names
+
+    // draw airway name on top
+
 }
 
 QRect boundsOfLines(const QVector<QLineF>& lines)
@@ -365,7 +431,7 @@ void BaseDiagram::paintNavaid(QPainter* painter, const FGPositionedRef &pos)
 
     if (drawAsIcon) {
         QPixmap pm = iconForPositioned(pos);
-        QPointF loc = m_viewportTransform.map(project(pos->geod()));
+        QPointF loc = m_viewportTransform.map(projectedPosition(pos));
         const auto sz = pm.size() / pm.devicePixelRatio();
         iconRect = QRect(QPoint(0,0), sz);
         iconRect.moveCenter(loc.toPoint());
@@ -573,6 +639,7 @@ void BaseDiagram::wheelEvent(QWheelEvent *we)
 
 void BaseDiagram::paintContents(QPainter* painter)
 {
+    Q_UNUSED(painter);
 }
 
 void BaseDiagram::recomputeBounds(bool resetZoom)
@@ -791,12 +858,7 @@ QPixmap BaseDiagram::iconForAirport(FGAirport* apt, const IconOptions& options)
 QVector<QLineF> BaseDiagram::projectAirportRuwaysWithCenter(FGAirportRef apt, const SGGeod& c)
 {
     QVector<QLineF> r;
-
-    const FGRunwayList& runways(apt->getRunwaysWithoutReciprocals());
-    FGRunwayList::const_iterator it;
-
-    for (it = runways.begin(); it != runways.end(); ++it) {
-        FGRunwayRef rwy = *it;
+    for (auto rwy : apt->getRunwaysWithoutReciprocals()) {
         QPointF p1 = project(rwy->geod(), c);
         QPointF p2 = project(rwy->end(), c);
         r.append(QLineF(p1, p2));
@@ -836,4 +898,28 @@ QVector<QLineF> BaseDiagram::projectAirportRuwaysIntoRect(FGAirportRef apt, cons
     }
 
     return r;
+}
+
+QPointF BaseDiagram::projectedPosition(PositionedID pid) const
+{
+    if (m_projectedPositions.contains(pid))
+        return m_projectedPositions.value(pid);
+
+    FGPositionedRef pos = NavDataCache::instance()->loadById(pid);
+    if (!pos)
+        return {};
+
+    QPointF pt = project(pos->geod());
+    m_projectedPositions[pid] = pt;
+    return pt;
+}
+
+QPointF BaseDiagram::projectedPosition(FGPositionedRef pos) const
+{
+    if (m_projectedPositions.contains(pos->guid()))
+        return m_projectedPositions.value(pos->guid());
+
+    QPointF pt = project(pos->geod());
+    m_projectedPositions[pos->guid()] = pt;
+    return pt;
 }
