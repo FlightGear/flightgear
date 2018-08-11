@@ -54,7 +54,9 @@ public:
         TimeUTC,
         TimeLocal,
         NauticalMiles,
-        Kilometers
+        Kilometers,
+        FreqMHz,    // for VORs, LOCs
+        FreqKHz     // for NDBs
     };
 
     enum Mode
@@ -91,6 +93,10 @@ public:
     QuantityValue convertToUnit(Units::Type u) const;
 
     Q_INVOKABLE QuantityValue convertToUnit(int u) const;
+
+    Q_INVOKABLE QString toString() const;
+
+    Q_INVOKABLE bool isValid() const;
 
     // precision aware comparisom
     bool operator==(const QuantityValue& v) const;

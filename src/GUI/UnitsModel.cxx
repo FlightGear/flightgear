@@ -79,7 +79,10 @@ std::vector<UnitData> static_unitData = {
     { "UTC", "Universal coordinated time", ""},
     { "Local", "Local time", ""},
     { "Nm", "Nautical miles", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
-    { "Km", "Kilometers", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */}
+    { "Km", "Kilometers", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
+
+    { "MHz", "MHz", "00000", false, 105, 140, 0.025, false /* no wrap */, 3 /* decimal places */},
+    { "KHz", "KHz", "00000", false, 200, 400, 1.0, false /* no wrap */, 0 /* decimal places */}
 
 };
 
@@ -295,7 +298,6 @@ QuantityValue::QuantityValue(Units::Type u, int v) :
     assert(static_unitData.at(u).decimals == 0);
 }
 
-
 QuantityValue QuantityValue::convertToUnit(Units::Type u) const
 {
     // special case a no-change
@@ -386,6 +388,30 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
 QuantityValue QuantityValue::convertToUnit(int u) const
 {
     return convertToUnit(static_cast<Units::Type>(u));
+}
+
+QString QuantityValue::toString() const
+{
+    if (unit == Units::NoUnits)
+        return "<no unit>";
+
+    const auto& data = static_unitData.at(unit);
+    int dp = data.decimals;
+    QString prefix;
+    QString suffix = data.shortName;
+    if (data.isPrefix)
+        std::swap(prefix, suffix);
+
+    if (dp == 0) {
+        return prefix + QString::number(static_cast<int>(value)) + suffix;
+    }
+
+    return prefix + QString::number(value, 'f', dp) + suffix;
+}
+
+bool QuantityValue::isValid() const
+{
+    return unit != Units::NoUnits;
 }
 
 bool QuantityValue::operator==(const QuantityValue &v) const
