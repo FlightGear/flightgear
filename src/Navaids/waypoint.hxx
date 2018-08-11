@@ -41,6 +41,7 @@ public:
   virtual std::string ident() const
     { return _ident; }
 
+    std::string icaoDescription() const override;
 protected:
   virtual void initFromProperties(SGPropertyNode_ptr aProp);
   virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
@@ -356,6 +357,8 @@ public:
 
     virtual std::string ident() const;
 
+    std::string airway() const
+    { return _airway; }
     WayptVec expandToWaypoints(WayptRef aPreceeding) const;
 private:
     std::string _airway;

@@ -24,6 +24,7 @@
 #include "waypoint.hxx"
 
 #include <simgear/structure/exception.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
@@ -69,6 +70,11 @@ void BasicWaypt::writeToProperties(SGPropertyNode_ptr aProp) const
   aProp->setDoubleValue("lat", _pos.getLatitudeDeg());
 }
 
+std::string BasicWaypt::icaoDescription() const
+{
+    return simgear::strutils::formatGeodAsString(_pos, simgear::strutils::LatLonFormat::ICAO_ROUTE_DEGREES);
+}
+    
 //////////////////////////////////////////////////////////////////////////////
 
 NavaidWaypoint::NavaidWaypoint(FGPositioned* aPos, RouteBase* aOwner) :
@@ -514,7 +520,8 @@ Via::Via(RouteBase *aOwner) :
 {
 }
 
-Via::Via(RouteBase *aOwner, const std::string &airwayName, FGPositioned *to) :
+Via::Via(RouteBase *aOwner, const std::string &airwayName,
+         FGPositioned *to) :
     Waypt(aOwner),
     _airway(airwayName),
     _to(to)
@@ -529,16 +536,17 @@ Via::~Via()
 void Via::initFromProperties(SGPropertyNode_ptr aProp)
 {
     if (!aProp->hasChild("airway") || !aProp->hasChild("to")) {
-        throw sg_io_exception("missing airway/to propertie",
+        throw sg_io_exception("missing airway/to properties",
                               "Via::initFromProperties");
     }
 
     Waypt::initFromProperties(aProp);
 
     _airway = aProp->getStringValue("airway");
-    Airway* way = Airway::findByIdent(_airway);
+
+    Airway* way = Airway::findByIdent(_airway, Airway::UnknownLevel);
     if (!way) {
-        throw sg_io_exception("unknown airway idnet: '" + _airway + "'",
+        throw sg_io_exception("unknown airway ident: '" + _airway + "'",
                               "Via::initFromProperties");
     }
 
@@ -549,10 +557,14 @@ void Via::initFromProperties(SGPropertyNode_ptr aProp)
                             aProp->getDoubleValue("lat"));
     }
 
-    FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, NULL);
+    FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, nullptr);
     if (!nav) {
         throw sg_io_exception("unknown navaid ident:" + idn,
                               "Via::initFromProperties");
+    }
+    
+    if (!way->containsNavaid(nav)) {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "VIA TO navaid: " << idn << " not found on airway " << _airway);
     }
 
     _to = nav;
@@ -574,12 +586,13 @@ WayptVec Via::expandToWaypoints(WayptRef aPreceeding) const
         throw sg_exception("invalid preceeding waypoint");
     }
 
-    Airway* way = Airway::findByIdent(_airway);
+    WayptRef toWp = new NavaidWaypoint(_to, nullptr);
+    Airway* way = Airway::findByIdentAndVia(_airway, aPreceeding, toWp);
     if (!way) {
         throw sg_exception("invalid airway");
     }
 
-    return way->via(aPreceeding, new NavaidWaypoint(_to, owner()));
+    return way->via(aPreceeding, toWp);
 }
 
 } // of namespace

@@ -19,9 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "config.h"
 
 #include "NavDataCache.hxx"
 
@@ -31,9 +29,6 @@
 #include <cassert>
 #include <stdint.h> // for int64_t
 #include <sstream>  // for std::ostringstream
-// boost
-#include <boost/foreach.hpp>
-
 
 #ifdef SYSTEM_SQLITE
 // the standard sqlite3.h doesn't give a way to set SQLITE_UINT64_TYPE,
@@ -79,6 +74,7 @@
 #include <Airports/gnnode.hxx>
 #include "CacheSchema.h"
 #include <GUI/MessageBox.hxx>
+#include <Navaids/airways.hxx>
 
 using std::string;
 
@@ -241,7 +237,7 @@ class NavDataCache::NavDataCachePrivate
 public:
   NavDataCachePrivate(const SGPath& p, NavDataCache* o) :
     outer(o),
-    db(NULL),
+    db(nullptr),
     path(p),
     readOnly(false),
     cacheHits(0),
@@ -323,7 +319,7 @@ public:
 
   void close()
   {
-    BOOST_FOREACH(sqlite3_stmt_ptr stmt, prepared) {
+    for (sqlite3_stmt_ptr stmt : prepared) {
       sqlite3_finalize(stmt);
     }
     prepared.clear();
@@ -487,7 +483,7 @@ public:
   void initTables()
   {
       string_list commands = simgear::strutils::split(SCHEMA_SQL, ";");
-      BOOST_FOREACH(std::string sql, commands) {
+      for (std::string sql : commands) {
           if (sql.empty()) {
               continue;
           }
@@ -614,17 +610,19 @@ public:
     sqlite3_bind_int(findILS, 5, FGPositioned::LOC);
 
   // airways
-    findAirway = prepare("SELECT rowid FROM airway WHERE network=?1 AND ident=?2");
+    findAirwayNet = prepare("SELECT rowid FROM airway WHERE network=?1 AND ident=?2");
+    findAirway = prepare("SELECT rowid FROM airway WHERE ident=?1");
+    loadAirway = prepare("SELECT ident, network FROM airway WHERE rowid=?1");
     insertAirway = prepare("INSERT INTO airway (ident, network) "
                            "VALUES (?1, ?2)");
 
     insertAirwayEdge = prepare("INSERT INTO airway_edge (network, airway, a, b) "
                                "VALUES (?1, ?2, ?3, ?4)");
 
-    isPosInAirway = prepare("SELECT rowid FROM airway_edge WHERE network=?1 AND a=?2");
+    isPosInAirway = prepare("SELECT rowid FROM airway_edge WHERE network=?1 AND (a=?2 OR b=?2)");
 
     airwayEdgesFrom = prepare("SELECT airway, b FROM airway_edge WHERE network=?1 AND a=?2");
-
+    airwayEdgesTo = prepare("SELECT airway, a FROM airway_edge WHERE network=?1 AND b=?2");
     airwayEdges = prepare("SELECT a, b FROM airway_edge WHERE airway=?1");
   }
 
@@ -836,7 +834,7 @@ public:
 
   void flushDeferredOctreeUpdates()
   {
-    BOOST_FOREACH(Octree::Branch* nd, deferredOctreeUpdates) {
+    for (Octree::Branch* nd : deferredOctreeUpdates) {
       sqlite3_bind_int64(updateOctreeChildren, 1, nd->guid());
       sqlite3_bind_int(updateOctreeChildren, 2, nd->childMask());
       execUpdate(updateOctreeChildren);
@@ -902,9 +900,10 @@ public:
   sqlite3_stmt_ptr runwayLengthFtQuery;
 
 // airways
-  sqlite3_stmt_ptr findAirway, insertAirwayEdge,
-    isPosInAirway, airwayEdgesFrom,
+  sqlite3_stmt_ptr findAirway, findAirwayNet, insertAirwayEdge,
+    isPosInAirway, airwayEdgesFrom, airwayEdgesTo,
     insertAirway, airwayEdges;
+  sqlite3_stmt_ptr loadAirway;
 
 // since there's many permutations of ident/name queries, we create
 // them programtically, but cache the exact query by its raw SQL once
@@ -1071,13 +1070,12 @@ void NavDataCache::NavDataCachePrivate::findDatFiles(
       const PathList files = simgear::Dir(datFilesDir).children(
         simgear::Dir::TYPE_FILE | simgear::Dir::NO_DOT_OR_DOTDOT);
 
-      for (PathList::const_iterator filesIt = files.begin();
-           filesIt != files.end(); filesIt++) {
-        const std::string name = filesIt->file();
+      for (auto f : files) {
+        const std::string name = f.file();
         if (simgear::strutils::ends_with(name, ".dat") ||
             simgear::strutils::ends_with(name, ".dat.gz")) {
-          result.paths.push_back(*filesIt);
-          result.totalSize += filesIt->sizeInBytes();
+          result.paths.push_back(f);
+          result.totalSize += f.sizeInBytes();
         }
       }
     }
@@ -1484,7 +1482,7 @@ void NavDataCache::doRebuild()
           stampCacheFile(d->carrierDatPath);
 
           st.stamp();
-          Airway::load(d->airwayDatPath);
+          Airway::loadAWYDat(d->airwayDatPath);
           stampCacheFile(d->airwayDatPath);
           SG_LOG(SG_NAVCACHE, SG_INFO, "awy.dat load took:" << st.elapsedMSec());
 
@@ -1591,7 +1589,7 @@ void NavDataCache::writeStringListProperty(const string& key, const string_list&
   sqlite_bind_stdstring(d->clearProperty, 1, key);
   d->execUpdate(d->clearProperty);
 
-  BOOST_FOREACH(string value, values) {
+  for (string value : values) {
     sqlite_bind_stdstring(d->writePropertyMulti, 1, key);
     sqlite_bind_stdstring(d->writePropertyMulti, 2, value);
     d->execInsert(d->writePropertyMulti);
@@ -2223,37 +2221,50 @@ NavDataCache::findILS(PositionedID airport, const string& aRunway, const string&
   return result;
 }
 
-int NavDataCache::findAirway(int network, const string& aName)
+int NavDataCache::findAirway(int network, const string& aName, bool create)
 {
-  sqlite3_bind_int(d->findAirway, 1, network);
-  sqlite_bind_stdstring(d->findAirway, 2, aName);
+  sqlite3_bind_int(d->findAirwayNet, 1, network);
+  sqlite_bind_stdstring(d->findAirwayNet, 2, aName);
+
+  int airway = 0;
+  if (d->execSelect(d->findAirwayNet)) {
+    // already exists
+    airway = sqlite3_column_int(d->findAirwayNet, 0);
+  } else if (create) {
+    d->reset(d->insertAirway);
+    sqlite_bind_stdstring(d->insertAirway, 1, aName);
+    sqlite3_bind_int(d->insertAirway, 2, network);
+    airway = d->execInsert(d->insertAirway);
+  } else {
+      // doesn't exist but don't create
+  }
+
+  d->reset(d->findAirwayNet);
+  return airway;
+}
+
+int NavDataCache::findAirway(const string& aName)
+{
+  sqlite_bind_stdstring(d->findAirway, 1, aName);
 
   int airway = 0;
   if (d->execSelect(d->findAirway)) {
     // already exists
     airway = sqlite3_column_int(d->findAirway, 0);
-  } else {
-    sqlite_bind_stdstring(d->insertAirway, 1, aName);
-    sqlite3_bind_int(d->insertAirway, 2, network);
-    airway = d->execInsert(d->insertAirway);
   }
 
   d->reset(d->findAirway);
   return airway;
 }
 
+
 void NavDataCache::insertEdge(int network, int airwayID, PositionedID from, PositionedID to)
 {
-  // assume all edges are bidirectional for the moment
-  for (int i=0; i<2; ++i) {
     sqlite3_bind_int(d->insertAirwayEdge, 1, network);
     sqlite3_bind_int(d->insertAirwayEdge, 2, airwayID);
     sqlite3_bind_int64(d->insertAirwayEdge, 3, from);
     sqlite3_bind_int64(d->insertAirwayEdge, 4, to);
     d->execInsert(d->insertAirwayEdge);
-
-    std::swap(from, to);
-  }
 }
 
 bool NavDataCache::isInAirwayNetwork(int network, PositionedID pos)
@@ -2280,11 +2291,41 @@ AirwayEdgeVec NavDataCache::airwayEdgesFrom(int network, PositionedID pos)
   }
 
   d->reset(d->airwayEdgesFrom);
+    
+// find bidirectional / backwsards edges
+    // at present all edges are bidirectional
+    sqlite3_bind_int(d->airwayEdgesTo, 1, network);
+    sqlite3_bind_int64(d->airwayEdgesTo, 2, pos);
+    
+    while (d->stepSelect(d->airwayEdgesTo)) {
+        result.push_back(AirwayEdge(
+                                    sqlite3_column_int(d->airwayEdgesTo, 0),
+                                    sqlite3_column_int64(d->airwayEdgesTo, 1)
+                                    ));
+    }
+    
+    d->reset(d->airwayEdgesTo);
+    
   return result;
+}
+    
+AirwayRef NavDataCache::loadAirway(int airwayID)
+{
+    sqlite3_bind_int(d->loadAirway, 1, airwayID);
+    bool ok = d->execSelect(d->loadAirway);
+    AirwayRef result;
+    if (ok) {
+        string ident = (char*) sqlite3_column_text(d->loadAirway, 0);
+        Airway::Level network = static_cast<Airway::Level>(sqlite3_column_int(d->loadAirway, 1));
+        result = new Airway(ident, network, airwayID, 0, 0);
+    }
+    d->reset(d->loadAirway);
+    return result;
 }
 
 PositionedIDVec NavDataCache::airwayWaypts(int id)
 {
+    d->reset(d->airwayEdges);
     sqlite3_bind_int(d->airwayEdges, 1, id);
 
     typedef std::pair<PositionedID, PositionedID> Edge;
@@ -2301,55 +2342,97 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
 
     d->reset(d->airwayEdges);
     if (rawEdges.empty()) {
-        return PositionedIDVec();
+        return {};
     }
 
 // linearize
-    PositionedIDDeque linearAirway;
-    PositionedID firstId = rawEdges.front().first,
-        lastId = rawEdges.front().second;
-    std::set<PositionedID> seen;
-
-    // first edge is trivial
-    linearAirway.push_back(firstId);
-    linearAirway.push_back(lastId);
-    seen.insert(firstId);
-    seen.insert(lastId);
-    rawEdges.pop_front();
-
+    PositionedIDVec result;
+    
     while (!rawEdges.empty()) {
-        Edge e = rawEdges.front();
+        bool didAddEdge = false;
+        std::set<PositionedID> seen;
+        EdgeVec nextDeque;
+        PositionedIDDeque linearAirway;
+        PositionedID firstId = rawEdges.front().first,
+            lastId = rawEdges.front().second;
+        
+        // first edge is trivial
+        linearAirway.push_back(firstId);
+        linearAirway.push_back(lastId);
+        seen.insert(firstId);
+        seen.insert(lastId);
         rawEdges.pop_front();
-
-    // look for new segments
-        if (e.first == firstId) {
-            linearAirway.push_front(e.second);
-            seen.insert(e.second);
-            firstId = e.second;
-            continue;
+        
+        while (!rawEdges.empty()) {
+            Edge e = rawEdges.front();
+            rawEdges.pop_front();
+            
+            bool seenFirst = (seen.find(e.first) != seen.end());
+            bool seenSecond = (seen.find(e.second) != seen.end());
+            
+            // duplicated segment, should be impossible
+            assert(!(seenFirst && seenSecond));
+            
+            if (!seenFirst && !seenSecond) {
+                // push back to try later on
+                nextDeque.push_back(e);
+                if (rawEdges.empty()) {
+                    rawEdges = nextDeque;
+                    nextDeque.clear();
+                    
+                    if (!didAddEdge) {
+                        // we have a disjoint, need to start a new section
+                        // break out of the inner while loop so the outer
+                        // one can process and restart
+                        break;
+                    }
+                    didAddEdge = false;
+                }
+                
+                continue;
+            }
+            
+            // we have an exterior edge, grow our current linear piece
+            if (seenFirst && (e.first == firstId)) {
+                linearAirway.push_front(e.second);
+                firstId = e.second;
+                seen.insert(e.second);
+            } else if (seenSecond && (e.second == firstId)) {
+                linearAirway.push_front(e.first);
+                firstId = e.first;
+                seen.insert(e.first);
+            } else if (seenFirst && (e.first == lastId)) {
+                linearAirway.push_back(e.second);
+                lastId = e.second;
+                seen.insert(e.second);
+            } else if (seenSecond && (e.second == lastId)) {
+                linearAirway.push_back(e.first);
+                lastId = e.first;
+                seen.insert(e.first);
+            }
+            didAddEdge = true;
+            
+            if (rawEdges.empty()) {
+                rawEdges = nextDeque;
+                nextDeque.clear();
+            }
         }
+        
+        if (!result.empty())
+            result.push_back(0);
+        result.insert(result.end(), linearAirway.begin(), linearAirway.end());
+    } // outer loop
+    
+    for (int i=0; i<result.size(); ++i) {
+        if (result.at(i) == 0) {
+            SG_LOG(SG_AUTOPILOT, SG_WARN, i << " break");
+        } else {
+            SG_LOG(SG_AUTOPILOT, SG_WARN, i << " " << loadById(result.at(i))->ident());
 
-        if (e.first == lastId) {
-            linearAirway.push_back(e.second);
-            seen.insert(e.second);
-            lastId = e.second;
-            continue;
         }
-
-    // look for seen segments - presumed to be reversed internal edges
-        if (seen.find(e.first) != seen.end()) {
-            // if it's the inverse of interior edge, both ends must have been
-            // seen. Otherwise it should have been an exterior edge and
-            // handled by the case above.
-            assert(seen.find(e.second) != seen.end());
-            continue;
-        }
-
-    // push back to try later on
-        rawEdges.push_back(e);
     }
-
-    return PositionedIDVec(linearAirway.begin(), linearAirway.end());
+    
+    return result;
 }
 
 PositionedID NavDataCache::findNavaidForRunway(PositionedID runway, FGPositioned::Type ty)

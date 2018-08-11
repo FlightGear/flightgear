@@ -185,14 +185,10 @@ SGGeod turnCenterFromExit(const SGGeod& pt, double outHeadingDeg,
 
 struct TurnInfo
 {
-    TurnInfo() : valid(false),
-    inboundCourseDeg(0.0),
-    turnAngleDeg(0.0) { }
-
-    bool valid;
     SGGeod turnCenter;
-    double inboundCourseDeg;
-    double turnAngleDeg;
+    double inboundCourseDeg = 0.0;
+    double turnAngleDeg = 0.0;
+    bool valid = false;
 };
 
 /**
@@ -337,7 +333,7 @@ public:
               (wpt->type()  == "via"))
       {
           // do nothing, we can't compute a valid leg course for these types
-          // we'll generate shrap turns in the path but that's no problem.
+          // we'll generate sharp turns in the path but that's no problem.
       } else if (wpt->type() == "runway") {
           FGRunway* rwy = static_cast<RunwayWaypt*>(wpt.get())->runway();
           flyOver = true;
@@ -840,7 +836,7 @@ RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
   d(new RoutePathPrivate)
 {
     for (int l=0; l<fp->numLegs(); ++l) {
-        Waypt *wpt = fp->legAtIndex(l)->waypoint();
+        WayptRef wpt = fp->legAtIndex(l)->waypoint();
         if (!wpt) {
             SG_LOG(SG_NAVAID, SG_DEV_ALERT, "Waypoint " << l << " of " << fp->numLegs() << "is NULL");
             break;
@@ -850,6 +846,18 @@ RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
 
     d->constrainLegCourses = fp->followLegTrackToFixes();
     commonInit();
+}
+
+
+RoutePath::RoutePath(const RoutePath& other)
+{
+    d.reset(new RoutePathPrivate(*other.d));
+}
+
+RoutePath& RoutePath::operator=(const RoutePath& other)
+{
+    d.reset(new RoutePathPrivate(*other.d));
+    return *this;
 }
 
 RoutePath::~RoutePath()

@@ -2377,7 +2377,7 @@ static naRef f_createViaTo(naContext c, naRef me, int argc, naRef* args)
     }
 
     std::string airwayName = naStr_data(args[0]);
-    Airway* airway = Airway::findByIdent(airwayName);
+    Airway* airway = Airway::findByIdent(airwayName, Airway::UnknownLevel);
     if (!airway) {
         naRuntimeError(c, "createViaTo: couldn't find airway with provided name");
     }

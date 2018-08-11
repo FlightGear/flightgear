@@ -265,12 +265,27 @@ Transition* ArrivalDeparture::findTransitionByEnroute(Waypt* aEnroute) const
   WptTransitionMap::const_iterator eit;
   for (eit = _enrouteTransitions.begin(); eit != _enrouteTransitions.end(); ++eit) {
     if (eit->second->enroute()->matches(aEnroute)) {
-      SG_LOG(SG_NAVAID, SG_INFO, ident() << " using enroute transition " << eit->second->ident());
       return eit->second;
     }
   } // of enroute transition iteration
   
   return NULL;
+}
+    
+Transition* ArrivalDeparture::findTransitionByEnroute(FGPositioned* aEnroute) const
+{
+    if (!aEnroute) {
+        return NULL;
+    }
+    
+    WptTransitionMap::const_iterator eit;
+    for (eit = _enrouteTransitions.begin(); eit != _enrouteTransitions.end(); ++eit) {
+        if (eit->second->enroute()->matches(aEnroute)) {
+            return eit->second;
+        }
+    } // of enroute transition iteration
+    
+    return NULL;
 }
 
 WayptRef ArrivalDeparture::findBestTransition(const SGGeod& aPos) const

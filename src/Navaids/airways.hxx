@@ -35,14 +35,30 @@ namespace flightgear {
 struct SearchContext;
 class AdjacentWaypoint;
 class InAirwayFilter;
+class Airway;
 
-class Airway
+using AirwayRef = SGSharedPtr<Airway>;
+
+class Airway : public RouteBase
 {
 public:
-  virtual std::string ident() const
+    enum Level {
+        UnknownLevel = 0,
+        LowLevel = 1, /// Victor airways
+        HighLevel = 2,  /// Jet airways
+        Both = 3
+    };
+    
+  std::string ident() const override
   { return _ident; }
   
-  static void load(const SGPath& path);
+  int cacheId() const
+  { return _cacheId; }
+
+  Level level() const
+  { return _level; }
+
+  static void loadAWYDat(const SGPath& path);
   
     double topAltitudeFt() const
     { return _topAltitudeFt; }
@@ -50,7 +66,21 @@ public:
     double bottomAltitudeFt() const
     { return _bottomAltitudeFt; }
 
-    static Airway* findByIdent(const std::string& aIdent);
+    static AirwayRef loadByCacheId(int cacheId);
+
+    static AirwayRef findByIdent(const std::string& aIdent, Level level);
+
+    /**
+     * Find the airway based on its ident. IF both high- and low- level idents
+     * exist, select the one which can route between the from and to waypoints
+     * correctly, preferring high-level airways.
+     */
+    static AirwayRef findByIdentAndVia(const std::string& aIdent, const WayptRef& from, const WayptRef& to);
+    
+    /**
+     * Find an airway by ident, and containing a particula rnavaid/fix. 
+     */
+    static AirwayRef findByIdentAndNavaid(const std::string& aIdent, const FGPositionedRef nav);
 
     WayptRef findEnroute(const std::string& aIdent) const;
 
@@ -59,6 +89,8 @@ public:
     WayptVec via(const WayptRef& from, const WayptRef& to) const;
 
     bool containsNavaid(const FGPositionedRef& navaid) const;
+
+    
 
   /**
    * Track a network of airways
@@ -81,13 +113,18 @@ public:
      */
     bool route(WayptRef aFrom, WayptRef aTo, WayptVec& aPath);
 
+    /**
+     * Overloaded version working with a raw SGGeod
+     */
+
+    std::pair<FGPositionedRef, bool> findClosestNode(const SGGeod& aGeod);
 
   private:    
     void addEdge(int aWay, const SGGeod& aStartPos,
                 const std::string& aStartIdent, 
                 const SGGeod& aEndPos, const std::string& aEndIdent);
   
-    int findAirway(const std::string& aName, double aTop, double aBase);
+    int findAirway(const std::string& aName);
 
     bool cleanGeneratedPath(WayptRef aFrom, WayptRef aTo, WayptVec& aPath,
                             bool exactTo, bool exactFrom);
@@ -114,18 +151,12 @@ public:
     std::pair<FGPositionedRef, bool> findClosestNode(WayptRef aRef);
     
     /**
-     * Overloaded version working with a raw SGGeod
-     */
-  
-    std::pair<FGPositionedRef, bool> findClosestNode(const SGGeod& aGeod);
-    
-    /**
      * cache which positioned items are in this network
      */
     typedef std::map<PositionedID, bool> NetworkMembershipDict;
     mutable NetworkMembershipDict _inNetworkCache;
     
-    int _networkID;
+    Level _networkID;
   };
 
 
@@ -133,17 +164,23 @@ public:
   static Network* lowLevel();
   
 private:
-  Airway(const std::string& aIdent, double aTop, double aBottom);
+  Airway(const std::string& aIdent, const Level level, int dbId, int aTop, int aBottom);
+
+  void loadWaypoints() const;
 
   WayptVec::const_iterator find(WayptRef wpt) const;
 
   friend class Network;
-  
-  std::string _ident;
-  double _topAltitudeFt;
-  double _bottomAltitudeFt;
-  
-  WayptVec _elements;
+    friend class NavDataCache;
+    
+  const std::string _ident;
+  const Level _level;
+  const int _cacheId;
+
+  int _topAltitudeFt;
+  int _bottomAltitudeFt;
+
+  mutable WayptVec _elements;
 };
 
 } // of namespace flightgear

@@ -56,6 +56,25 @@ using std::vector;
 using std::endl;
 using std::fstream;
 
+namespace {
+
+const string_list static_icaoFlightRulesCode = {
+    "V",
+    "I",
+    "Y",
+    "Z"
+};
+
+const string_list static_icaoFlightTypeCode = {
+    "S",
+    "N",
+    "G",
+    "M",
+    "X"
+};
+
+} // of anonymous namespace
+
 namespace flightgear {
 
 typedef std::vector<FlightPlan::DelegateFactory*> FPDelegateFactoryVec;
@@ -65,15 +84,16 @@ FlightPlan::FlightPlan() :
   _currentIndex(-1),
     _followLegTrackToFix(true),
     _aircraftCategory(ICAO_AIRCRAFT_CATEGORY_C),
-  _departureRunway(NULL),
-  _destinationRunway(NULL),
-  _sid(NULL),
-  _star(NULL),
-  _approach(NULL),
+  _departureRunway(nullptr),
+  _destinationRunway(nullptr),
+  _sid(nullptr),
+  _star(nullptr),
+  _approach(nullptr),
   _totalDistance(0.0)
 {
   _departureChanged = _arrivalChanged = _waypointsChanged = _currentWaypointChanged = false;
-  
+  _cruiseDataChanged = false;
+
   for (auto factory : static_delegateFactories) {
     Delegate* d = factory->createFlightPlanDelegate(this);
     if (d) { // factory might not always create a delegate
@@ -145,7 +165,7 @@ string FlightPlan::ident() const
 FlightPlan::Leg* FlightPlan::insertWayptAtIndex(Waypt* aWpt, int aIndex)
 {
   if (!aWpt) {
-    return NULL;
+    return nullptr;
   }
   
   WayptVec wps;
@@ -234,7 +254,8 @@ void FlightPlan::clear()
   _currentWaypointChanged = true;
   _arrivalChanged = true;
   _departureChanged = true;
-  
+  _cruiseDataChanged = true;
+
   _currentIndex = -1;
   for (Leg* l : _legs) {
     delete l;
@@ -382,14 +403,14 @@ int FlightPlan::findWayptIndex(const FGPositionedRef aPos) const
 FlightPlan::Leg* FlightPlan::currentLeg() const
 {
   if ((_currentIndex < 0) || (_currentIndex >= numLegs()))
-    return NULL;
+    return nullptr;
   return legAtIndex(_currentIndex);
 }
 
 FlightPlan::Leg* FlightPlan::previousLeg() const
 {
   if (_currentIndex <= 0) {
-    return NULL;
+    return nullptr;
   }
   
   return legAtIndex(_currentIndex - 1);
@@ -398,7 +419,7 @@ FlightPlan::Leg* FlightPlan::previousLeg() const
 FlightPlan::Leg* FlightPlan::nextLeg() const
 {
   if ((_currentIndex < 0) || ((_currentIndex + 1) >= numLegs())) {
-    return NULL;
+    return nullptr;
   }
   
   return legAtIndex(_currentIndex + 1);
@@ -481,14 +502,14 @@ void FlightPlan::setSID(SID* sid, const std::string& transition)
 void FlightPlan::setSID(Transition* trans)
 {
   if (!trans) {
-    setSID((SID*) NULL);
+    setSID(static_cast<SID*>(nullptr));
     return;
   }
   
   if (trans->parent()->type() != PROCEDURE_SID)
     throw sg_exception("FlightPlan::setSID: transition does not belong to a SID");
   
-  setSID((SID*) trans->parent(), trans->ident());
+  setSID(static_cast<SID*>(trans->parent()), trans->ident());
 }
   
 void FlightPlan::clearSID()
@@ -503,7 +524,7 @@ void FlightPlan::clearSID()
 Transition* FlightPlan::sidTransition() const
 {
   if (!_sid || _sidTransition.empty()) {
-    return NULL;
+    return nullptr;
   }
   
   return _sid->findTransitionByName(_sidTransition);
@@ -552,6 +573,19 @@ void FlightPlan::clearDestination()
   unlockDelegates();
 }
 
+FGAirportRef FlightPlan::alternate() const
+{
+    return _alternate;
+}
+
+void FlightPlan::setAlternate(FGAirportRef alt)
+{
+    lockDelegates();
+    _alternate = alt;
+    _arrivalChanged = true;
+    unlockDelegates();
+}
+
 void FlightPlan::setSTAR(STAR* star, const std::string& transition)
 {
   if (_star == star) {
@@ -587,11 +621,31 @@ void FlightPlan::clearSTAR()
   _starTransition.clear();
   unlockDelegates();
 }
+
+void FlightPlan::setEstimatedDurationMinutes(int mins)
+{
+    _estimatedDuration = mins;
+}
+
+void FlightPlan::computeDurationMinutes()
+{
+    if ((_cruiseAirspeedMach < 0.01) && (_cruiseAirspeedKnots < 10)) {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "can't compute duration, no cruise speed set");
+        return;
+    }
+
+    if ((_cruiseAltitudeFt < 100) && (_cruiseFlightLevel < 10)) {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "can't compute duration, no cruise altitude set");
+        return;
+    }
+
+
+}
   
 Transition* FlightPlan::starTransition() const
 {
   if (!_star || _starTransition.empty()) {
-    return NULL;
+    return nullptr;
   }
   
   return _star->findTransitionByName(_starTransition);
@@ -618,54 +672,108 @@ void FlightPlan::setApproach(flightgear::Approach *app)
   }
   unlockDelegates();
 }
-  
-bool FlightPlan::save(const SGPath& path)
+
+bool FlightPlan::save(std::ostream& stream) const
 {
-  SG_LOG(SG_NAVAID, SG_INFO, "Saving route to " << path);
+    try {
+        SGPropertyNode_ptr d(new SGPropertyNode);
+        saveToProperties(d);
+        writeProperties(stream, d, true);
+        return true;
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NAVAID, SG_ALERT, "Failed to save flight-plan " << e.getMessage());
+        return false;
+    }
+}
+    
+bool FlightPlan::save(const SGPath& path) const
+{
   try {
     SGPropertyNode_ptr d(new SGPropertyNode);
-    d->setIntValue("version", 2);
-    
-    if (_departure) {
-      d->setStringValue("departure/airport", _departure->ident());
-      if (_sid) {
-        d->setStringValue("departure/sid", _sid->ident());
-      }
-      
-      if (_departureRunway) {
-        d->setStringValue("departure/runway", _departureRunway->ident());
-      }
-    }
-    
-    if (_destination) {
-      d->setStringValue("destination/airport", _destination->ident());
-      if (_star) {
-        d->setStringValue("destination/star", _star->ident());
-      }
-      
-      if (_approach) {
-        d->setStringValue("destination/approach", _approach->ident());
-      }
-      
-      //d->setStringValue("destination/transition", destination->getStringValue("transition"));
-      
-      if (_destinationRunway) {
-        d->setStringValue("destination/runway", _destinationRunway->ident());
-      }
-    }
-    
-    // route nodes
-    SGPropertyNode* routeNode = d->getChild("route", 0, true);
-    for (unsigned int i=0; i<_legs.size(); ++i) {
-      Waypt* wpt = _legs[i]->waypoint();
-      wpt->saveAsNode(routeNode->getChild("wp", i, true));
-    } // of waypoint iteration
+    saveToProperties(d);
     writeProperties(path, d, true /* write-all */);
     return true;
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_ALERT, "Failed to save flight-plan '" << path << "'. " << e.getMessage());
     return false;
   }
+}
+
+void FlightPlan::saveToProperties(SGPropertyNode* d) const
+{
+    d->setIntValue("version", 2);
+    
+    // general data
+    d->setStringValue("flight-rules", static_icaoFlightRulesCode[static_cast<int>(_flightRules)]);
+    d->setStringValue("flight-type", static_icaoFlightTypeCode[static_cast<int>(_flightType)]);
+    if (!_callsign.empty()) {
+        d->setStringValue("callsign", _callsign);
+    }
+    if (!_remarks.empty()) {
+        d->setStringValue("remarks", _remarks);
+    }
+    if (!_aircraftType.empty()) {
+        d->setStringValue("aircraft-type", _aircraftType);
+    }
+    d->setIntValue("estimated-duration-minutes", _estimatedDuration);
+
+    if (_departure) {
+        d->setStringValue("departure/airport", _departure->ident());
+        if (_sid) {
+            if (!_sidTransition.empty()) {
+                d->setStringValue("departure/sid", _sidTransition);
+            } else {
+                d->setStringValue("departure/sid", _sid->ident());
+            }
+        }
+        
+        if (_departureRunway) {
+            d->setStringValue("departure/runway", _departureRunway->ident());
+        }
+    }
+    
+    if (_destination) {
+        d->setStringValue("destination/airport", _destination->ident());
+        if (_star) {
+            if (!_starTransition.empty()) {
+                d->setStringValue("destination/star", _starTransition);
+            } else {
+                d->setStringValue("destination/star", _star->ident());
+            }
+        }
+        
+        if (_approach) {
+            d->setStringValue("destination/approach", _approach->ident());
+        }
+        
+        if (_destinationRunway) {
+            d->setStringValue("destination/runway", _destinationRunway->ident());
+        }
+    }
+    
+    if (_alternate) {
+        d->setStringValue("alternate", _alternate->ident());
+    }
+    
+    // cruise data
+    if (_cruiseFlightLevel > 0) {
+        d->setIntValue("cruise/flight-level", _cruiseFlightLevel);
+    } else if (_cruiseAltitudeFt > 0) {
+        d->setIntValue("cruise/altitude-ft", _cruiseAltitudeFt);
+    }
+    
+    if (_cruiseAirspeedMach > 0.0) {
+        d->setDoubleValue("cruise/mach", _cruiseAirspeedMach);
+    } else if (_cruiseAirspeedKnots > 0) {
+        d->setIntValue("cruise/knots", _cruiseAirspeedKnots);
+    }
+    
+    // route nodes
+    SGPropertyNode* routeNode = d->getChild("route", 0, true);
+    for (unsigned int i=0; i<_legs.size(); ++i) {
+        Waypt* wpt = _legs[i]->waypoint();
+        wpt->saveAsNode(routeNode->getChild("wp", i, true));
+    } // of waypoint iteration
 }
 
 bool FlightPlan::load(const SGPath& path)
@@ -700,11 +808,50 @@ bool FlightPlan::load(const SGPath& path)
   // mark data as unchanged since this is a clean plan
   _arrivalChanged = false;
   _departureChanged = false;
-    
+  _cruiseDataChanged = true;
   _waypointsChanged = true;
   unlockDelegates();
 
   return Status;
+}
+    
+bool FlightPlan::load(std::istream &stream)
+{
+    SGPropertyNode_ptr routeData(new SGPropertyNode);
+    try {
+        readProperties(stream, routeData);
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
+               << "'. " << e.getMessage());
+        return false;
+    }
+    
+    if (!routeData.valid())
+        return false;
+    
+    bool Status = false;
+    lockDelegates();
+    try {
+        int version = routeData->getIntValue("version", 1);
+        if (version == 2) {
+            loadVersion2XMLRoute(routeData);
+            Status = true;
+        } else {
+            throw sg_io_exception("unsupported XML route version");
+        }
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
+               << "'. " << e.getMessage());
+        Status = false;
+    }
+    
+    _arrivalChanged = false;
+    _departureChanged = false;
+    _cruiseDataChanged = true;
+    _waypointsChanged = true;
+    unlockDelegates();
+    
+    return Status;
 }
 
 /** XML loader for GPX file format */
@@ -835,6 +982,23 @@ bool FlightPlan::loadXmlFormat(const SGPath& path)
 
 void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
 {
+    // general info
+
+    const auto rules = routeData->getStringValue("flight-rules", "V");
+    auto it = std::find(static_icaoFlightRulesCode.begin(),
+                        static_icaoFlightRulesCode.end(), rules);
+    _flightRules = static_cast<ICAOFlightRules>(std::distance(static_icaoFlightRulesCode.begin(), it));
+
+    const auto type = routeData->getStringValue("flight-type", "X");
+    auto it2 = std::find(static_icaoFlightTypeCode.begin(),
+                        static_icaoFlightTypeCode.end(), type);
+    _flightType = static_cast<ICAOFlightType>(std::distance(static_icaoFlightTypeCode.begin(), it2));
+
+    _callsign = routeData->getStringValue("callsign");
+    _remarks = routeData->getStringValue("remarks");
+    _aircraftType = routeData->getStringValue("aircraft-type");
+    _estimatedDuration = routeData->getIntValue("estimated-duration-minutes");
+
   // departure nodes
   SGPropertyNode* dep = routeData->getChild("departure");
   if (dep) {
@@ -847,9 +1011,14 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
       }
     
       if (dep->hasChild("sid")) {
-        setSID(_departure->findSIDWithIdent(dep->getStringValue("sid")));
+          const auto sid = dep->getStringValue("sid");
+          auto trans = _departure->selectSIDByTransition(sid);
+          if (trans) {
+              setSID(trans);
+          } else {
+              setSID(_departure->findSIDWithIdent(sid));
+          }
       }
-   // departure->setStringValue("transition", dep->getStringValue("transition"));
     }
   }
   
@@ -864,31 +1033,41 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
       }
       
       if (dst->hasChild("star")) {
-        setSTAR(_destination->findSTARWithIdent(dst->getStringValue("star")));
+          const auto star = dst->getStringValue("star");
+          auto trans = _destination->selectSTARByTransition(star);
+          if (trans) {
+              setSTAR(trans);
+          } else {
+              setSTAR(_destination->findSTARWithIdent(star));
+          }
       }
       
       if (dst->hasChild("approach")) {
         setApproach(_destination->findApproachWithIdent(dst->getStringValue("approach")));
       }
     }
-    
-   // destination->setStringValue("transition", dst->getStringValue("transition"));
   }
   
   // alternate
-  SGPropertyNode* alt = routeData->getChild("alternate");
-  if (alt) {
-    //alternate->setStringValue(alt->getStringValue("airport"));
+  if (routeData->hasChild("alternate")) {
+      setAlternate((FGAirport*) fgFindAirportID(routeData->getStringValue("alternate")));
   }
   
   // cruise
   SGPropertyNode* crs = routeData->getChild("cruise");
   if (crs) {
- //   cruise->setDoubleValue("speed-kts", crs->getDoubleValue("speed-kts"));
-   // cruise->setDoubleValue("mach", crs->getDoubleValue("mach"));
-   // cruise->setDoubleValue("altitude-ft", crs->getDoubleValue("altitude-ft"));
+      if (crs->hasChild("flight-level")) {
+          _cruiseFlightLevel = crs->getIntValue("flight-level");
+      } else if (crs->hasChild("altitude-ft")) {
+          _cruiseAltitudeFt = crs->getIntValue("altitude-ft");
+      }
+
+      if (crs->hasChild("mach")) {
+          _cruiseAirspeedMach = crs->getDoubleValue("mach");
+      } else if (crs->hasChild("knots")) {
+          _cruiseAirspeedKnots = crs->getIntValue("knots");
+      }
   } // of cruise data loading
-  
 }
 
 void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
@@ -901,7 +1080,7 @@ void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
   if (routeNode.valid()) {
     for (int i=0; i<routeNode->nChildren(); ++i) {
       SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
-      Leg* l = new Leg(this, Waypt::createFromProperties(NULL, wpNode));
+      Leg* l = new Leg(this, Waypt::createFromProperties(this, wpNode));
       _legs.push_back(l);
     } // of route iteration
   }
@@ -937,7 +1116,7 @@ WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
   if (aWP->hasChild("longitude-deg")) {
     // explicit longitude/latitude
     w = new BasicWaypt(SGGeod::fromDeg(aWP->getDoubleValue("longitude-deg"), 
-                                       aWP->getDoubleValue("latitude-deg")), ident, NULL);
+                                       aWP->getDoubleValue("latitude-deg")), ident, this);
     
   } else {
     string nid = aWP->getStringValue("navid", ident.c_str());
@@ -961,7 +1140,7 @@ WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
       SGGeodesy::direct(pos, radialDeg, offsetNm * SG_NM_TO_METER, pos, az2);
     }
     
-    w = new BasicWaypt(pos, ident, NULL);
+    w = new BasicWaypt(pos, ident, this);
   }
   
   double altFt = aWP->getDoubleValue("altitude-ft", -9999.9);
@@ -1031,7 +1210,7 @@ WayptRef intersectionFromString(FGPositionedRef p1,
     FGPositionedRef p2 = FGPositioned::findClosestWithIdent(pieces[2], basePosition);
     if (!p2) {
       SG_LOG( SG_NAVAID, SG_INFO, "Unable to find FGPositioned with ident:" << pieces[2]);
-      return NULL;
+      return nullptr;
     }
 
     double r1 = atof(pieces[1].c_str()),
@@ -1048,7 +1227,7 @@ WayptRef intersectionFromString(FGPositionedRef p1,
     }
 
     std::string name = p1->ident() + "-" + p2->ident();
-    return new BasicWaypt(intersection, name, NULL);
+    return new BasicWaypt(intersection, name, nullptr);
 }
 
 WayptRef wayptFromLonLatString(const std::string& target)
@@ -1077,25 +1256,24 @@ WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
     string_list pieces(simgear::strutils::split(target, "/"));
     if ((pieces.size() != 4) || (pieces[2] != "TO")) {
         SG_LOG( SG_NAVAID, SG_WARN, "Malformed VIA specification string:" << target);
-        return NULL;
+        return nullptr;
     }
-
-    // airway ident is pieces[1]
-    Airway* airway = Airway::findByIdent(pieces[1]);
-    if (airway == NULL) {
-        SG_LOG( SG_NAVAID, SG_WARN, "Unknown airway:" << pieces[1]);
-        return NULL;
-    }
-
+    
     // TO navaid is pieces[3]
-    FGPositionedRef nav = FGPositioned::findClosestWithIdent(pieces[3], basePosition, NULL);
-    if (!nav || !airway->containsNavaid(nav)) {
-        SG_LOG( SG_NAVAID, SG_WARN, "TO navaid:" << pieces[3] << " unknown or not on airway");
-        return NULL;
+    FGPositionedRef nav = FGPositioned::findClosestWithIdent(pieces[3], basePosition, nullptr);
+    if (!nav) {
+        SG_LOG( SG_NAVAID, SG_WARN, "TO navaid:" << pieces[3] << " unknown");
+        return nullptr;
+    }
+    
+    // airway ident is pieces[1]
+    Airway* airway = Airway::findByIdentAndNavaid(pieces[1], nav);
+    if (airway == nullptr) {
+        SG_LOG( SG_NAVAID, SG_WARN, "Unknown airway:" << pieces[1]);
+        return nullptr;
     }
 
-    Via* via = new Via(NULL, pieces[1], nav);
-    return via;
+    return new Via(nullptr, pieces[1], nav);
 }
 
 } // of anonymous namespace
@@ -1138,31 +1316,31 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
       FGPositionedRef p = FGPositioned::findClosestWithIdent(pieces.front(), basePosition);
       if (!p) {
         SG_LOG( SG_NAVAID, SG_INFO, "Unable to find FGPositioned with ident:" << pieces.front());
-        return NULL;
+        return nullptr;
       }
 
       if (pieces.size() == 1) {
-        wpt = new NavaidWaypoint(p, NULL);
+        wpt = new NavaidWaypoint(p, this);
       } else if (pieces.size() == 3) {
         // navaid/radial/distance-nm notation
         double radial = atof(pieces[1].c_str()),
         distanceNm = atof(pieces[2].c_str());
         radial += magvar;
-        wpt = new OffsetNavaidWaypoint(p, NULL, radial, distanceNm);
+        wpt = new OffsetNavaidWaypoint(p, this, radial, distanceNm);
       } else if (pieces.size() == 2) {
         FGAirport* apt = dynamic_cast<FGAirport*>(p.ptr());
         if (!apt) {
           SG_LOG(SG_NAVAID, SG_INFO, "Waypoint is not an airport:" << pieces.front());
-          return NULL;
+          return nullptr;
         }
 
         if (!apt->hasRunwayWithIdent(pieces[1])) {
           SG_LOG(SG_NAVAID, SG_INFO, "No runway: " << pieces[1] << " at " << pieces[0]);
-          return NULL;
+          return nullptr;
         }
 
         FGRunway* runway = apt->getRunwayByIdent(pieces[1]);
-        wpt = new NavaidWaypoint(runway, NULL);
+        wpt = new NavaidWaypoint(runway, this);
       } else if (pieces.size() == 4) {
         wpt = intersectionFromString(p, basePosition, magvar, pieces);
       }
@@ -1170,7 +1348,7 @@ WayptRef FlightPlan::waypointFromString(const string& tgt )
   
   if (!wpt) {
     SG_LOG(SG_NAVAID, SG_INFO, "Unable to parse waypoint:" << target);
-    return NULL;
+    return nullptr;
   }
   
   if (altSetting != RESTRICT_NONE) {
@@ -1185,7 +1363,7 @@ void FlightPlan::activate()
   FGRouteMgr* routeManager = globals->get_subsystem<FGRouteMgr>();
   if (routeManager) {
     if (routeManager->flightPlan() != this) {
-      SG_LOG(SG_NAVAID, SG_INFO, "setting new flight-plan on route-manager");
+      SG_LOG(SG_NAVAID, SG_DEBUG, "setting new flight-plan on route-manager");
       routeManager->setFlightPlan(this);
     }
   }
@@ -1208,7 +1386,7 @@ void FlightPlan::activate()
       _legs.erase(it);
       delete l;
       
-      // create new lefs and insert
+      // create new legs and insert
       it = _legs.begin();
       it += i;
       
@@ -1233,14 +1411,11 @@ void FlightPlan::activate()
 
 FlightPlan::Leg::Leg(FlightPlan* owner, WayptRef wpt) :
   _parent(owner),
-  _speedRestrict(RESTRICT_NONE),
-  _altRestrict(RESTRICT_NONE),
   _waypt(wpt)
 {
   if (!wpt.valid()) {
     throw sg_exception("can't create FlightPlan::Leg without underlying waypoint");
   }
-  _speed = _altitudeFt = 0;
 }
 
 FlightPlan::Leg* FlightPlan::Leg::cloneFor(FlightPlan* owner) const
@@ -1409,6 +1584,13 @@ void FlightPlan::unlockDelegates()
     }
   }
   
+  if (_cruiseDataChanged) {
+      _cruiseDataChanged = false;
+      for (auto d : _delegates) {
+        d->cruiseChanged();
+      }
+  }
+
   if (_waypointsChanged) {
     _waypointsChanged = false;
     rebuildLegData();
@@ -1508,5 +1690,283 @@ void FlightPlan::setIcaoAircraftCategory(const std::string& cat)
     _aircraftCategory = cat[0];
 }
 
+void FlightPlan::setIcaoAircraftType(const string &ty)
+{
+    _aircraftType = ty;
+}
+
+bool FlightPlan::parseICAOLatLon(const std::string& s, SGGeod& p)
+{
+    if (s.size() == 7) {
+        double latDegrees = std::stoi(s);
+        double lonDegrees = std::stoi(s.substr(3, 3));
+        if (s[2] == 'S') latDegrees = -latDegrees;
+        if (s[6] == 'W') lonDegrees = -lonDegrees;
+        p = SGGeod::fromDeg(lonDegrees, latDegrees);
+        return true;
+    } else if (s.size() == 11) {
+        // problem here is we have minutes, not decimal degrees
+        double latDegrees = std::stoi(s.substr(0, 2));
+        double latMinutes = std::stoi(s.substr(2, 2));
+        latDegrees += (latMinutes / 60.0);
+        double lonDegrees = std::stoi(s.substr(5, 3));
+        double lonMinutes = std::stoi(s.substr(8, 2));
+        lonDegrees += (lonMinutes / 60.0);
+
+        if (s[4] == 'S') latDegrees = -latDegrees;
+        if (s[10] == 'W') lonDegrees = -lonDegrees;
+        p = SGGeod::fromDeg(lonDegrees, latDegrees);
+        return true;
+    }
+
+    return false;
+}
+
+bool FlightPlan::parseICAORouteString(const std::string& routeData)
+{
+    auto tokens = simgear::strutils::split(routeData);
+    if (tokens.empty())
+        return false;
+    
+    std::string tk;
+    std::string nextToken;
+    
+    FGAirportRef firstICAO = FGAirport::findByIdent(tokens.front());
+    unsigned int i = 0;
+
+    if (firstICAO) {
+        // route string starts with an airport, let's see if it matches
+        // our departure airport
+        if (!_departure) {
+            setDeparture(firstICAO);
+        } else if (_departure != firstICAO) {
+            SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route begins with an airprot which is not the departure airport:" << tokens.front());
+            return false;
+        }
+        ++i; // either way, skip the ICAO token now
+    }
+
+    WayptVec enroute;
+    SGGeod currentPos;
+    if (_departure)
+        currentPos = _departure->geod();
+
+    for (; i < tokens.size(); ++i) {
+        tk = tokens.at(i);
+        // update current position for next search
+        if (!enroute.empty()) {
+            currentPos = enroute.back()->position();
+        }
+
+        if (isdigit(tk.front())) {
+            // might be a lat lon (but some airway idents also start with a digit...)
+            SGGeod geod;
+            bool ok = parseICAOLatLon(tk, geod);
+            if (ok) {
+                enroute.push_back(new BasicWaypt(geod, tk, this));
+                continue;
+            }
+        }
+
+        nextToken = (i < (tokens.size() - 1)) ? tokens.at(i+1) : std::string();
+
+        if (tk == "DCT") {
+            if (nextToken.empty()) {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route DIRECT segment missing waypoint");
+                return false;
+            }
+
+            FGPositionedRef wpt = FGPositioned::findClosestWithIdent(nextToken, currentPos);
+            if (!wpt) {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route waypoint not found:" << nextToken);
+                return false;
+            }
+            enroute.push_back(new NavaidWaypoint(wpt, this));
+            ++i;
+        } else if (tk == "STAR") {
+            // look for a STAR based on the preceeding transition point
+            auto starTrans = _destination->selectSTARByEnrouteTransition(enroute.back()->source());
+            if (!starTrans) {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route couldn't find STAR transitioning from " <<
+                       enroute.back()->source()->ident());
+            } else {
+                setSTAR(starTrans);
+            }
+        } else if (tk == "SID") {
+            // select a SID based on the next point
+            FGPositionedRef wpt = FGPositioned::findClosestWithIdent(nextToken, currentPos);
+            auto sidTrans = _departure->selectSIDByEnrouteTransition(wpt);
+            if (!sidTrans) {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route couldn't find SID transitioning to " << nextToken);
+            } else {
+                setSID(sidTrans);
+            }
+            ++i;
+        } else {
+            if (nextToken.empty()) {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route airway segment missing transition:" << tk);
+                return false;
+            }
+            
+            FGPositionedRef nav = FGPositioned::findClosestWithIdent(nextToken, currentPos);
+            if (!nav) {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route waypoint not found:" << nextToken);
+                return false;
+            }
+            
+            Airway* way = Airway::findByIdentAndNavaid(tk, nav);
+            if (way) {
+                enroute.push_back(new Via(this, tk, nav));
+                ++i;
+            } else {
+                SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route unknown airway:" << tk);
+                return false;
+            }
+        }
+    } // of token iteration
+    
+    lockDelegates();
+    _waypointsChanged = true;
+
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "adding waypoints from string");
+    // rebuild legs from waypoints we created
+    for (auto l : _legs) {
+        delete l;
+    }
+    _legs.clear();
+    insertWayptsAtIndex(enroute, 0);
+
+    unlockDelegates();
+
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "legs now:" << numLegs());
+
+    return true;
+}
+
+std::string FlightPlan::asICAORouteString() const
+{
+    std::string result;
+    if (!_sidTransition.empty())
+        result += _sidTransition + " ";
+
+    std::string currentAirwayIdent;
+    for (auto l : _legs) {
+        const auto wpt = l->waypoint();
+        if (wpt->flag(WPT_GENERATED)) {
+            if (wpt->flag(WPT_VIA)) {
+                AirwayRef awy = static_cast<Airway*>(wpt->owner());
+//                SG_LOG(SG_AUTOPILOT, SG_INFO, "via " << awy->ident() << " -> " << wpt->icaoDescription());
+                assert(awy);
+                if (currentAirwayIdent != awy->ident()) {
+                    if (!currentAirwayIdent.empty()) {
+                        result += currentAirwayIdent + " " + wpt->icaoDescription() + " ";
+                    }
+                    currentAirwayIdent = awy->ident();
+                }
+            }
+            continue;
+        } else if (!currentAirwayIdent.empty()) {
+            // completed an airway segment, ensure we insert the last piece
+            result += currentAirwayIdent + " ";
+            currentAirwayIdent.clear();
+        } else if (wpt->type() == "navaid") {
+            // technically we need DCT unless both ends of the leg are
+            // defined geographically
+            result += "DCT ";
+        }
+        result += wpt->icaoDescription() + " ";
+    }
+
+    if (!_starTransition.empty())
+        result += _starTransition;
+
+    return result;
+}
+
+void FlightPlan::setFlightRules(ICAOFlightRules rules)
+{
+    _flightRules = rules;
+}
+
+ICAOFlightRules FlightPlan::flightRules() const
+{
+    return _flightRules;
+}
+
+void FlightPlan::setCallsign(const std::string& callsign)
+{
+    _callsign = callsign;
+}
+    
+void FlightPlan::setRemarks(const std::string& remarks)
+{
+    _remarks = remarks;
+}
+
+void FlightPlan::setFlightType(ICAOFlightType type)
+{
+    _flightType = type;
+}
+
+ICAOFlightType FlightPlan::flightType() const
+{
+    return _flightType;
+}
+    
+void FlightPlan::setCruiseSpeedKnots(int kts)
+{
+    lockDelegates();
+    _cruiseAirspeedKnots = kts;
+    _cruiseAirspeedMach = 0.0;
+    _cruiseDataChanged = true;
+    unlockDelegates();
+}
+
+int FlightPlan::cruiseSpeedKnots() const
+{
+    return _cruiseAirspeedKnots;
+}
+
+void FlightPlan::setCruiseSpeedMach(double mach)
+{
+    lockDelegates();
+    _cruiseDataChanged = true;
+    _cruiseAirspeedMach = mach;
+    _cruiseAirspeedKnots = 0;
+    unlockDelegates();
+}
+
+double FlightPlan::cruiseSpeedMach() const
+{
+    return _cruiseAirspeedMach;
+}
+
+void FlightPlan::setCruiseFlightLevel(int flightLevel)
+{
+    lockDelegates();
+    _cruiseDataChanged = true;
+    _cruiseFlightLevel = flightLevel;
+    _cruiseAltitudeFt = 0;
+    unlockDelegates();
+}
+
+int FlightPlan::cruiseFlightLevel() const
+{
+    return _cruiseFlightLevel;
+}
+
+void FlightPlan::setCruiseAltitudeFt(int altFt)
+{
+    lockDelegates();
+    _cruiseDataChanged = true;
+    _cruiseAltitudeFt = altFt;
+    _cruiseFlightLevel = 0;
+    unlockDelegates();
+}
+
+int FlightPlan::cruiseAltitudeFt() const
+{
+    return _cruiseAltitudeFt;
+}
     
 } // of namespace flightgear

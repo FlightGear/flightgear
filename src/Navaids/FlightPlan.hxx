@@ -35,6 +35,23 @@ class FlightPlan;
 
 typedef SGSharedPtr<FlightPlan> FlightPlanRef;
 
+enum class ICAOFlightRules
+{
+    VFR = 0,
+    IFR,
+    IFR_VFR,    // type Y
+    VFR_IFR     // type Z
+};
+
+enum class ICAOFlightType
+{
+    Scheduled = 0,
+    NonScheduled,
+    GeneralAviation,
+    Military,
+    Other // type X
+};
+    
 class FlightPlan : public RouteBase
 {
 public:
@@ -53,7 +70,12 @@ public:
     std::string icaoAircraftCategory() const;
     void setIcaoAircraftCategory(const std::string& cat);
 
-  FlightPlan* clone(const std::string& newIdent = std::string()) const;
+    std::string icaoAircraftType() const
+    { return _aircraftType; }
+
+    void setIcaoAircraftType(const std::string& ty);
+
+    FlightPlan* clone(const std::string& newIdent = std::string()) const;
 
   /**
    * flight-plan leg encapsulation
@@ -62,7 +84,7 @@ public:
   {
   public:
     FlightPlan* owner() const
-    { return _parent; }
+    { return const_cast<FlightPlan*>(_parent); }
 
     Waypt* waypoint() const
     { return _waypt; }
@@ -87,6 +109,7 @@ public:
     double courseDeg() const;
     double distanceNm() const;
     double distanceAlongRoute() const;
+
   private:
     friend class FlightPlan;
 
@@ -94,16 +117,18 @@ public:
 
     Leg* cloneFor(FlightPlan* owner) const;
 
-    FlightPlan* _parent;
-    RouteRestriction _speedRestrict, _altRestrict;
-    int _speed;
-    int _altitudeFt;
+    const FlightPlan* _parent;
+    RouteRestriction _speedRestrict = RESTRICT_NONE,
+      _altRestrict = RESTRICT_NONE;
+    int _speed = 0;
+    int _altitudeFt = 0;
+
     WayptRef _waypt;
     /// length of this leg following the flown path
-    mutable double _pathDistance;
-    mutable double _courseDeg;
+    mutable double _pathDistance = -1.0;
+    mutable double _courseDeg = -1.0;
     /// total distance of this leg from departure point
-    mutable double _distanceAlongPath;
+    mutable double _distanceAlongPath = 11.0;
   };
 
   class Delegate
@@ -114,6 +139,7 @@ public:
     virtual void departureChanged() { }
     virtual void arrivalChanged() { }
     virtual void waypointsChanged() { }
+    virtual void cruiseChanged()  { }
     virtual void cleared() { }
     virtual void activated() { }
     virtual void currentWaypointChanged() { }
@@ -150,7 +176,7 @@ public:
   Leg* previousLeg() const;
 
   int numLegs() const
-  { return _legs.size(); }
+  { return static_cast<int>(_legs.size()); }
 
   Leg* legAtIndex(int index) const;
   int findLegIndex(const Leg* l) const;
@@ -159,7 +185,10 @@ public:
   int findWayptIndex(const FGPositionedRef aPos) const;
 
   bool load(const SGPath& p);
-  bool save(const SGPath& p);
+  bool save(const SGPath& p) const;
+
+    bool save(std::ostream& stream) const;
+    bool load(std::istream& stream);
 
   FGAirportRef departureAirport() const
   { return _departure; }
@@ -197,6 +226,9 @@ public:
 
     void clearDestination();
     
+    FGAirportRef alternate() const;
+    void setAlternate(FGAirportRef alt);
+
   /**
     * note setting an approach will implicitly update the destination
     * airport and runway to match
@@ -217,6 +249,17 @@ public:
   double totalDistanceNm() const
   { return _totalDistance; }
 
+  int estimatedDurationMinutes() const
+  { return _estimatedDuration; }
+
+  void setEstimatedDurationMinutes(int minutes);
+
+  /**
+   * @brief computeDurationMinutes - use performance data and cruise data
+   * to estimate enroute time
+   */
+  void computeDurationMinutes();
+
   /**
    * given a waypoint index, and an offset in NM, find the geodetic
    * position on the route path. I.e the point 10nm before or after
@@ -233,6 +276,45 @@ public:
    */
   WayptRef waypointFromString(const std::string& target);
 
+    /**
+     * attempt to replace the route waypoints (and potentially the SID and
+     * STAR) based on an ICAO standard route string, i.e item 15.
+     * Returns true if the rotue was parsed successfully (and this flight
+     * plan modified accordingly) or false if the string could not be
+     * parsed.
+     */
+    bool parseICAORouteString(const std::string& routeData);
+
+    std::string asICAORouteString() const;
+
+// ICAO flight-plan data
+    void setFlightRules(ICAOFlightRules rules);
+    ICAOFlightRules flightRules() const;
+    
+    void setFlightType(ICAOFlightType type);
+    ICAOFlightType flightType() const;
+    
+    void setCallsign(const std::string& callsign);
+    std::string callsign() const
+    { return _callsign; }
+    
+    void setRemarks(const std::string& remarks);
+    std::string remarks() const
+    { return _remarks; }
+    
+// cruise data
+    void setCruiseSpeedKnots(int kts);
+    int cruiseSpeedKnots() const;
+    
+    void setCruiseSpeedMach(double mach);
+    double cruiseSpeedMach() const;
+    
+    void setCruiseFlightLevel(int flightLevel);
+    int cruiseFlightLevel() const;
+    
+    void setCruiseAltitudeFt(int altFt);
+    int cruiseAltitudeFt() const;
+    
   /**
    * abstract interface for creating delegates automatically when a
    * flight-plan is created or loaded
@@ -258,8 +340,11 @@ private:
   bool _arrivalChanged,
     _departureChanged,
     _waypointsChanged,
-    _currentWaypointChanged;
+    _currentWaypointChanged,
+    _cruiseDataChanged;
 
+    void saveToProperties(SGPropertyNode* d) const;
+    
   bool loadXmlFormat(const SGPath& path);
   bool loadGpxFormat(const SGPath& path);
   bool loadPlainTextFormat(const SGPath& path);
@@ -270,13 +355,26 @@ private:
   WayptRef parseVersion1XMLWaypt(SGPropertyNode* aWP);
 
   double magvarDegAt(const SGGeod& pos) const;
+  bool parseICAOLatLon(const std::string &s, SGGeod &p);
 
   std::string _ident;
+  std::string _callsign;
+  std::string _remarks;
+  std::string _aircraftType;
+
   int _currentIndex;
     bool _followLegTrackToFix;
     char _aircraftCategory;
+    ICAOFlightType _flightType = ICAOFlightType::Other;
+    ICAOFlightRules _flightRules = ICAOFlightRules::VFR;
+    int _cruiseAirspeedKnots = 0;
+    double _cruiseAirspeedMach = 0.0;
+    int _cruiseFlightLevel = 0;
+    int _cruiseAltitudeFt = 0;
+    int _estimatedDuration = 0;
 
   FGAirportRef _departure, _destination;
+  FGAirportRef _alternate;
   FGRunway* _departureRunway, *_destinationRunway;
   SGSharedPtr<SID> _sid;
   SGSharedPtr<STAR> _star;
@@ -289,7 +387,7 @@ private:
   typedef std::vector<Leg*> LegVec;
   LegVec _legs;
 
-    std::vector<Delegate*> _delegates;
+  std::vector<Delegate*> _delegates;
 };
 
 } // of namespace flightgear

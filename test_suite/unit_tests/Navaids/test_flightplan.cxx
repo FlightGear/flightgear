@@ -11,6 +11,7 @@
 #include <Navaids/waypoint.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Navaids/airways.hxx>
 
 #include <Airports/airport.hxx>
 
@@ -129,8 +130,6 @@ void FlightplanTests::testRoutePathSkipped()
     // this tests skipping two preceeding points works as it should
     SGGeodVec vec = rtepath.pathForIndex(6);
     CPPUNIT_ASSERT(vec.size() == 9);
-
-
 }
 
 void FlightplanTests::testRoutePathTrivialFlightPlan()
@@ -148,4 +147,82 @@ void FlightplanTests::testRoutePathTrivialFlightPlan()
     }
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, fp1->totalDistanceNm(), 1e-9);
+}
+
+void FlightplanTests::testBasicAirways()
+{
+    Airway* awy = Airway::findByIdent("J547", Airway::HighLevel);
+    CPPUNIT_ASSERT_EQUAL(awy->ident(), std::string("J547"));
+    
+    FGAirportRef kord = FGAirport::findByIdent("KORD");
+    FlightPlanRef f = new FlightPlan;
+    f->setDeparture(kord);
+    
+    CPPUNIT_ASSERT(awy->findEnroute("KITOK"));
+    CPPUNIT_ASSERT(awy->findEnroute("LESUB"));
+
+    auto wpt = awy->findEnroute("FNT");
+    CPPUNIT_ASSERT(wpt);
+    CPPUNIT_ASSERT(wpt->ident() == "FNT");
+    CPPUNIT_ASSERT(wpt->source() == FGNavRecord::findClosestWithIdent("FNT", kord->geod()));
+
+    auto wptKUBBS = f->waypointFromString("KUBBS");
+    auto wptFNT = f->waypointFromString("FNT");
+    
+    CPPUNIT_ASSERT(awy->canVia(wptKUBBS, wptFNT));
+    
+    WayptVec path = awy->via(wptKUBBS, wptFNT);
+    CPPUNIT_ASSERT_EQUAL(4, static_cast<int>(path.size()));
+    
+    CPPUNIT_ASSERT_EQUAL(std::string("PMM"), path.at(0)->ident());
+    CPPUNIT_ASSERT_EQUAL(std::string("HASTE"), path.at(1)->ident());
+    CPPUNIT_ASSERT_EQUAL(std::string("DEWIT"), path.at(2)->ident());
+    CPPUNIT_ASSERT_EQUAL(std::string("FNT"), path.at(3)->ident());
+}
+
+void FlightplanTests::testAirwayNetworkRoute()
+{
+    FGAirportRef egph = FGAirport::findByIdent("EGPH");
+    FlightPlanRef f = new FlightPlan;
+    f->setDeparture(egph);
+    
+    auto highLevelNet = Airway::highLevel();
+    
+    auto wptTLA = f->waypointFromString("TLA");
+    auto wptCNA = f->waypointFromString("CNA");
+    
+    WayptVec route;
+    bool ok = highLevelNet->route(wptTLA, wptCNA, route);
+    CPPUNIT_ASSERT(ok);
+    
+    CPPUNIT_ASSERT_EQUAL(static_cast<int>(route.size()), 18);
+}
+
+void FlightplanTests::testParseICAORoute()
+{
+    FGAirportRef kord = FGAirport::findByIdent("KORD");
+    FlightPlanRef f = new FlightPlan;
+    f->setDeparture(kord);
+    f->setDestination(FGAirport::findByIdent("KSAN"));
+    
+    const char* route = "DCT JOT J26 IRK J96 SLN J18 GCK J96 CIM J134 GUP J96 KEYKE J134 DRK J78 LANCY J96 PKE";
+  //  const char* route = "DCT KUBBS J547 FNT Q824 HOCKE Q905 SIKBO Q907 MIILS N400A TUDEP NATW GISTI DCT SLANY UL9 DIKAS UL18 GAVGO UL9 KONAN UL607 UBIDU Y863 RUDUS T109 HAREM T104 ANORA STAR";
+    bool ok = f->parseICAORouteString(route);
+    CPPUNIT_ASSERT(ok);
+    
+    
+    
+}
+
+void FlightplanTests::testParseICANLowLevelRoute()
+{
+    const char* route = "DCT DPA V6 IOW V216 LAA V210 GOSIP V83 ACHES V210 BLOKE V83 ALS V210 RSK V95 INW V12 HOXOL V264 OATES V12 JUWSO V264 PKE";
+    
+    FGAirportRef kord = FGAirport::findByIdent("KORD");
+    FlightPlanRef f = new FlightPlan;
+    f->setDeparture(kord);
+    f->setDestination(FGAirport::findByIdent("KSAN"));
+    
+    bool ok = f->parseICAORouteString(route);
+    CPPUNIT_ASSERT(ok);
 }

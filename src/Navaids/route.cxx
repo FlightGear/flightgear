@@ -18,9 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+#include "config.h"
 
 #include "route.hxx"
 
@@ -49,6 +47,7 @@
 #include <Navaids/waypoint.hxx>
 #include <Navaids/LevelDXML.hxx>
 #include <Airports/airport.hxx>
+#include <Navaids/airways.hxx>
 
 using std::string;
 using std::vector;
@@ -65,12 +64,7 @@ bool isMachRestrict(RouteRestriction rr)
 }
 
 Waypt::Waypt(RouteBase* aOwner) :
-  _altitudeFt(0.0),
-  _speed(0.0),
-  _altRestrict(RESTRICT_NONE),
-  _speedRestrict(RESTRICT_NONE),
   _owner(aOwner),
-  _flags(0),
   _magVarDeg(NO_MAG_VAR)
 {
 }
@@ -81,7 +75,7 @@ Waypt::~Waypt()
 
 std::string Waypt::ident() const
 {
-  return "";
+  return {};
 }
 
 bool Waypt::flag(WayptFlag aFlag) const
@@ -108,7 +102,11 @@ bool Waypt::matches(Waypt* aOther) const
 
   return matches(aOther->position());
 }
-
+    
+bool Waypt::matches(FGPositioned* aPos) const
+{
+    return aPos && (aPos == source());
+}
 
 bool Waypt::matches(const SGGeod& aPos) const
 {
@@ -158,6 +156,11 @@ double Waypt::headingRadialDeg() const
   return 0.0;
 }
 
+std::string Waypt::icaoDescription() const
+{
+    return ident();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // persistence
 
@@ -191,9 +194,9 @@ static const char* restrictionToString(RouteRestriction aRestrict)
   }
 }
 
-Waypt* Waypt::createInstance(RouteBase* aOwner, const std::string& aTypeName)
+WayptRef Waypt::createInstance(RouteBase* aOwner, const std::string& aTypeName)
 {
-  Waypt* r = NULL;
+  WayptRef r;
   if (aTypeName == "basic") {
     r = new BasicWaypt(aOwner);
   } else if (aTypeName == "navaid") {
@@ -231,6 +234,16 @@ WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp
   if (!aProp->hasChild("type")) {
     throw sg_io_exception("bad props node, no type provided",
       "Waypt::createFromProperties");
+  }
+
+  flightgear::AirwayRef via;
+  if (aProp->hasChild("airway")) {
+      const auto level = static_cast<flightgear::Airway::Level>(aProp->getIntValue("network"));
+      via = flightgear::Airway::findByIdent(aProp->getStringValue("airway"), level);
+      if (via) {
+          // override owner if we are from an airway
+          aOwner = via.get();
+      }
   }
 
   try {
@@ -280,6 +293,10 @@ void Waypt::initFromProperties(SGPropertyNode_ptr aProp)
     setFlag(WPT_MISS, aProp->getBoolValue("miss"));
   }
 
+  if (aProp->hasChild("airway")) {
+      setFlag(WPT_VIA, true);
+  }
+
   if (aProp->hasChild("alt-restrict")) {
     _altRestrict = restrictionFromString(aProp->getStringValue("alt-restrict"));
     _altitudeFt = aProp->getDoubleValue("altitude-ft");
@@ -309,6 +326,12 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
 
   if (flag(WPT_APPROACH)) {
     aProp->setBoolValue("approach", true);
+  }
+
+  if (flag(WPT_VIA)) {
+      flightgear::AirwayRef awy = (flightgear::Airway*) _owner;
+      aProp->setStringValue("airway", awy->ident());
+      aProp->setIntValue("network", awy->level());
   }
 
   if (flag(WPT_MISS)) {

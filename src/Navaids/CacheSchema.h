@@ -1,7 +1,7 @@
 #ifndef FG_NAVCACHE_SCHEMA_HXX
 #define FG_NAVCACHE_SCHEMA_HXX
 
-const int SCHEMA_VERSION = 17;
+const int SCHEMA_VERSION = 19;
 
 #define SCHEMA_SQL \
 "CREATE TABLE properties (key VARCHAR, value VARCHAR);" \
@@ -31,7 +31,8 @@ const int SCHEMA_VERSION = 17;
 "CREATE INDEX airway_ident ON airway(ident);" \
 \
 "CREATE TABLE airway_edge (network INT,airway INT64,a INT64,b INT64);" \
-"CREATE INDEX airway_edge_from ON airway_edge(a);"
+"CREATE INDEX airway_edge_from ON airway_edge(a);" \
+"CREATE INDEX airway_edge_to ON airway_edge(b);"
 
 #endif
 

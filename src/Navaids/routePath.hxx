@@ -42,6 +42,9 @@ public:
   RoutePath(const flightgear::FlightPlan* fp);
   ~RoutePath();
 
+  RoutePath(const RoutePath& other);
+  RoutePath& operator=(const RoutePath& other);
+
   SGGeodVec pathForIndex(int index) const;
   
   SGGeod positionForIndex(int index) const;

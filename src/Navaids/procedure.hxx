@@ -204,7 +204,9 @@ public:
    * transitions in a human-meaningful way (including persistence).
    */
   Transition* findTransitionByName(const std::string& aIdent) const;
-  
+
+  Transition* findTransitionByEnroute(FGPositioned* aEnroute) const;
+
   Transition* findTransitionByEnroute(Waypt* aEnroute) const;
 protected:
     

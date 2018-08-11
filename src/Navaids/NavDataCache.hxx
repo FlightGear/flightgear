@@ -53,6 +53,9 @@ namespace Octree {
   class Branch;
 }
 
+    class Airway;
+    using AirwayRef = SGSharedPtr<Airway>;
+    
 class NavDataCache
 {
 public:
@@ -268,7 +271,9 @@ public:
   TypedPositionedVec getOctreeLeafChildren(int64_t octreeNodeId);
 
 // airways
-  int findAirway(int network, const std::string& aName);
+  int findAirway(int network, const std::string& aName, bool create);
+
+  int findAirway(const std::string& aName);
 
   /**
    * insert an edge between two positioned nodes, into the network.
@@ -282,11 +287,13 @@ public:
   bool isInAirwayNetwork(int network, PositionedID pos);
 
   /**
-   * retrive all the destination points reachcable from a positioned
+   * retrive all the destination points reachable from a positioned
    * in an airway
    */
   AirwayEdgeVec airwayEdgesFrom(int network, PositionedID pos);
-
+    
+    AirwayRef loadAirway(int airwayID);
+    
     /**
      * Waypoints on the airway
      */
