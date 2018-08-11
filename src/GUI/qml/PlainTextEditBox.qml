@@ -13,6 +13,8 @@ Rectangle {
     border.color: edit.activeFocus ? Style.frameColor : Style.minorFrameColor
     border.width: 1
 
+    signal editingFinished();
+
     TextEdit {
         id: edit
         enabled: editFrame.enabled
@@ -20,7 +22,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: Style.margin
-        height: Math.max(Style.strutSize * 4, implicitHeight)
+        height: Math.max(Style.strutSize * 2, implicitHeight)
         textFormat: TextEdit.PlainText
         font.family: "Courier"
         selectByMouse: true
@@ -33,6 +35,12 @@ Rectangle {
             visible: (edit.text.length == 0) && !edit.activeFocus
             font.family: "Courier"
             color: Style.disabledTextColor
+        }
+
+        onActiveFocusChanged: {
+            if (!activeFocus) {
+                editFrame.editingFinished()
+            }
         }
    }
 }

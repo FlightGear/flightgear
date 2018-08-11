@@ -8,6 +8,7 @@ FocusScope {
     property alias validator: edit.validator
     property alias text: edit.text
     property bool enabled: true
+    property bool commitOnReturn: true
 
     property alias suggestedWidthString: metrics.text
     readonly property int suggestedWidth: useFullWidth ? root.width
@@ -20,6 +21,12 @@ FocusScope {
 
     implicitHeight: editFrame.height
     implicitWidth: suggestedWidth + label.implicitWidth + (Style.margin * 3)
+
+    Keys.onReturnPressed: {
+        if (activeFocus && commitOnReturn) {
+            focus = false;
+        }
+    }
 
     TextMetrics {
         id: metrics

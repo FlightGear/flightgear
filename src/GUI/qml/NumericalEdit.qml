@@ -76,6 +76,31 @@ FocusScope {
         }
     }
 
+    function changeToUnits(unitIndex)
+    {
+        if (edit.activeFocus) {
+            // build up a quantity with the current text value, in the
+            // previous units. We need to parse as text before we
+            // change the selected unit
+            var q = root.quantity;
+            q.value = clampValue(parseTextAsValue());
+
+            // convert to the new quantity
+            units.selectedIndex = unitIndex;
+            var newQuantity = q.convertToUnit(units.selectedUnit)
+
+            console.info("Changing text to:" + newQuantity.value.toFixed(units.numDecimals));
+            edit.text = newQuantity.value.toFixed(units.numDecimals)
+
+            console.info("Change units commit:" + newQuantity.value)
+            commit(newQuantity);
+        } else {
+            // not focused, easy
+            units.selectedIndex = unitIndex;
+            root.commit(root.quantity.convertToUnit(units.selectedUnit));
+        }
+    }
+
     Component.onCompleted: {
         if (quantity.unit === Units.NoUnits) {
             var q = quantity;
@@ -185,6 +210,11 @@ FocusScope {
 
             Keys.onDownPressed: {
                 root.decrementValue();
+            }
+
+            Keys.onReturnPressed: {
+                root.focus = false;
+                // will trigger onActiveFocusChanged
             }
 
             onActiveFocusChanged: {
@@ -347,8 +377,7 @@ FocusScope {
                             hoverEnabled: true
 
                             onClicked: {
-                                units.selectedIndex = model.index;
-                                root.commit(root.quantity.convertToUnit(units.selectedUnit));
+                                root.changeToUnits(model.index);
                                 unitSelectionPopup.visible = false;
                             }
                         }

@@ -16,7 +16,7 @@ Item {
     property string headerText: ""
 
     implicitHeight: Math.max(label.implicitHeight, currentChoiceFrame.height)
-    implicitWidth: label.implicitWidth + Style.margin + currentChoiceFrame.__naturalWidth
+    implicitWidth: label.implicitWidth + (Style.margin * 2) + currentChoiceFrame.__naturalWidth
 
     function select(index)
     {
@@ -70,7 +70,7 @@ Item {
     StyledText {
         id: label
         anchors.left: root.left
-        anchors.leftMargin: 8
+        anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
         horizontalAlignment: Text.AlignRight
         enabled: root.enabled

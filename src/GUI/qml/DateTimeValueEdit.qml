@@ -81,6 +81,7 @@ FocusScope {
         height: parent.height
         width: metrics.width
         maximumLength: fieldWidth
+        font.pixelSize: Style.baseFontPixelSize
 
         Keys.onUpPressed: {
             incrementValue();
