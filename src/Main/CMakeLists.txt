@@ -28,6 +28,7 @@ set(SOURCES
     screensaver_control.cxx
     subsystemFactory.cxx
     util.cxx
+    XLIFFParser.cxx
     ${MS_RESOURCE_FILE}
 )
 
@@ -47,6 +48,7 @@ set(HEADERS
     screensaver_control.hxx
     subsystemFactory.hxx
     util.hxx
+    XLIFFParser.hxx
 )
 
 flightgear_component(Main "${SOURCES}" "${HEADERS}")

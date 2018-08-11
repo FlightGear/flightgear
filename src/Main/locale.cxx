@@ -18,9 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
@@ -31,11 +29,13 @@
 #include <cstddef>              // std::size_t
 #include <cassert>
 
+#include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include "fg_props.hxx"
 #include "locale.hxx"
+#include "XLIFFParser.hxx"
 
 using std::vector;
 using std::string;
@@ -188,7 +188,12 @@ FGLocale::selectLanguage(const char *language)
             break;
         }
     }
-
+    
+    if (_currentLocale && _currentLocale->hasChild("xliff")) {
+        parseXLIFF(_currentLocale);
+    }
+   
+    
     // load resource for system messages (translations for fgfs internal messages)
     loadResource("sys");
 
@@ -215,6 +220,28 @@ FGLocale::getPreferredLanguage() const
     return _currentLocaleString;
 }
 
+void FGLocale::parseXLIFF(SGPropertyNode* localeNode)
+{
+    SGPath path(globals->get_fg_root());
+    SGPath xliffPath = path / localeNode->getStringValue("xliff");
+    if (!xliffPath.exists()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "No XLIFF file at " << xliffPath);
+    } else {
+        SG_LOG(SG_GENERAL, SG_INFO, "Loading XLIFF file at " << xliffPath);
+        SGPropertyNode_ptr stringNode = localeNode->getNode("strings", 0, true);
+        try {
+            flightgear::XLIFFParser visitor(stringNode);
+            readXML(xliffPath, visitor);
+        } catch (sg_io_exception& ex) {
+            SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << path <<
+                   "\n\t" << ex.getMessage() << "\n\tat:" << ex.getLocation().asString());
+        } catch (sg_exception& ex) {
+            SG_LOG(SG_GENERAL, SG_WARN, "failure parsing XLIFF: " << path <<
+                   "\n\t" << ex.getMessage());
+        }
+    }
+}
+
 // Load strings for requested resource and locale.
 // Result is stored below "strings" in the property tree of the given locale.
 bool
@@ -222,6 +249,11 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
 {
     SGPath path( globals->get_fg_root() );
 
+    // already loaded
+    if (localeNode->hasChild("xliff")) {
+        return true;
+    }
+    
     SGPropertyNode* stringNode = localeNode->getNode("strings", 0, true);
 
     const char *path_str = stringNode->getStringValue(resource, nullptr);

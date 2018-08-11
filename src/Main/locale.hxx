@@ -24,7 +24,11 @@
 #include <string>
 #include <cstdarg> // for va_start/_end
 
-#include <simgear/props/props.hxx>
+#include <simgear/props/propsfwd.hxx>
+#include <simgear/misc/strutils.hxx>
+
+// forward decls
+class SGPath;
 
 ///////////////////////////////////////////////////////////////////////////////
 // FGLocale  //////////////////////////////////////////////////////////////////
@@ -138,6 +142,11 @@ protected:
     SGPropertyNode_ptr _defaultLocale;
     std::string _currentLocaleString;
 
+    /**
+     * Parse an XLIFF 1.2 file into the standard property structure underneath
+     * the provided locale node
+     */
+    void parseXLIFF(SGPropertyNode* node);
 private:
     /** Return a new string with the character encoding part of the locale
      *  spec removed., i.e., "de_DE.UTF-8" becomes "de_DE". If there is no
