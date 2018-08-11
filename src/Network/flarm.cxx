@@ -38,6 +38,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Include/version.h>
+#include <Include/build.h>
 
 #include "flarm.hxx"
 

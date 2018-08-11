@@ -83,6 +83,7 @@
 
 #include <osg/Version>
 #include <Include/version.h>
+#include <Include/build.h>
 #include <simgear/version.h>
 
 using std::string;
@@ -244,8 +245,8 @@ void fgSetDefaults ()
                          osg::Referenced::getThreadSafeReferenceCounting());
 #endif
     v->setValueReadOnly("revision", REVISION);
-    v->setValueReadOnly("build-number", HUDSON_BUILD_NUMBER);
-    v->setValueReadOnly("build-id", HUDSON_BUILD_ID);
+    v->setValueReadOnly("build-number", JENKINS_BUILD_NUMBER);
+    v->setValueReadOnly("build-id", JENKINS_BUILD_ID);
     v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
     v->setValueReadOnly("build-type", FG_BUILD_TYPE);
 
@@ -2752,7 +2753,7 @@ void Options::showVersion() const
 {
     cout << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
     cout << "Revision: " << REVISION << endl;
-    cout << "Build-Id: " << HUDSON_BUILD_ID << endl;
+    cout << "Build-Id: " << JENKINS_BUILD_ID << endl;
     cout << "Build-Type: " << FG_BUILD_TYPE << endl;
     cout << "FG_ROOT=" << globals->get_fg_root().utf8Str() << endl;
     cout << "FG_HOME=" << globals->get_fg_home().utf8Str() << endl;
@@ -2789,7 +2790,7 @@ void Options::printJSONReport() const
   cJSON_AddItemToObject(rootNode, "general", generalNode);
   cJSON_AddStringToObject(generalNode, "name", "FlightGear");
   cJSON_AddStringToObject(generalNode, "version", FLIGHTGEAR_VERSION);
-  cJSON_AddStringToObject(generalNode, "build ID", HUDSON_BUILD_ID);
+  cJSON_AddStringToObject(generalNode, "build ID", JENKINS_BUILD_ID);
   cJSON_AddStringToObject(generalNode, "build type", FG_BUILD_TYPE);
 
   cJSON *configNode = cJSON_CreateObject();

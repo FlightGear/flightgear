@@ -20,10 +20,7 @@
 //
 // $Id$
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
@@ -62,6 +59,7 @@
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
 #include <Include/version.h>
+#include <Include/build.h>
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>
@@ -295,9 +293,9 @@ int main ( int argc, char **argv )
 	} else {
 		global_crashRptEnabled = true;
 
-		crAddProperty("hudson-build-id", HUDSON_BUILD_ID);
+		crAddProperty("hudson-build-id", JENKINS_BUILD_ID);
 		char buf[16];
-		::snprintf(buf, 16, "%d", HUDSON_BUILD_NUMBER);
+		::snprintf(buf, 16, "%d", JENKINS_BUILD_NUMBER);
 		crAddProperty("hudson-build-number", buf);
     crAddProperty("git-revision", REVISION);
     crAddProperty("build-type", FG_BUILD_TYPE);

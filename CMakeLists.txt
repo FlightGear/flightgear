@@ -88,7 +88,7 @@ if (NOT versionFile)
     message(FATAL_ERROR "Unable to determine FlightGear version. Version file is missing.")
 endif()
 string(STRIP "${versionFile}" FLIGHTGEAR_VERSION)
-# add a dependency on the versino file
+# add a dependency on the version file
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS version)
 
 # FlightGear packaging (to build a source tarball)
@@ -110,12 +110,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 if(NOT "$ENV{BUILD_ID}" STREQUAL "")
-    set(HUDSON_BUILD_ID $ENV{BUILD_ID})
-    set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
-    message(STATUS "running under Hudson/Jenkins, build-number is ${HUDSON_BUILD_NUMBER}")
+    set(JENKINS_BUILD_ID $ENV{BUILD_ID})
+    set(JENKINS_BUILD_NUMBER $ENV{BUILD_NUMBER})
+    message(STATUS "running under Jenkins, build-number is ${JENKINS_BUILD_NUMBER}")
 else()
-    set(HUDSON_BUILD_NUMBER 0)
-    set(HUDSON_BUILD_ID "none")
+    set(JENKINS_BUILD_NUMBER 0)
+    set(JENKINS_BUILD_ID "none")
 endif()
 
 #####################################################################################
@@ -556,6 +556,12 @@ configure_file (
 configure_file (
     "${PROJECT_SOURCE_DIR}/src/Include/version.h.cmake-in"
     "${PROJECT_BINARY_DIR}/src/Include/version.h"
+)
+
+# finally the build-id info
+configure_file (
+    "${PROJECT_SOURCE_DIR}/src/Include/build.h.cmake-in"
+    "${PROJECT_BINARY_DIR}/src/Include/build.h"
 )
 
 add_subdirectory(3rdparty)

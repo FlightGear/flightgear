@@ -69,6 +69,7 @@ extern bool global_crashRptEnabled;
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Include/version.h>
+#include <Include/build.h>
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
@@ -493,8 +494,8 @@ int fgMainInit( int argc, char **argv )
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version " << version );
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Build Type " << FG_BUILD_TYPE );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR);
-	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << HUDSON_BUILD_NUMBER << ":"
-			<< HUDSON_BUILD_ID);
+	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << JENKINS_BUILD_NUMBER << ":"
+			<< JENKINS_BUILD_ID);
 
     // seed the random number generator
     sg_srandom_time();
@@ -512,7 +513,7 @@ int fgMainInit( int argc, char **argv )
     bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
     // an Info.plist bundle can't define command line arguments, but it can set
     // environment variables. This avoids needed a wrapper shell-script on OS-X.
-    showLauncher |= (::getenv("FG_LAUNCHER") != 0);
+    showLauncher |= (::getenv("FG_LAUNCHER") != nullptr);
     if (showLauncher) {
         // to minimise strange interactions when launcher and config files
         // set overlaping options, we disable the default files. Users can
@@ -624,7 +625,7 @@ int fgMainInit( int argc, char **argv )
     // clean up here; ensure we null globals to avoid
     // confusing the atexit() handler
     delete globals;
-    globals = NULL;
+    globals = nullptr;
 
     // delete the NavCache here. This will cause the destruction of many cached
     // objects (eg, airports, navaids, runways).
