@@ -367,7 +367,6 @@ void TerrainSamplerImplementation::init()
 
 void TerrainSamplerImplementation::postinit()
 {
-    SGSubsystemGroup::bind();// 
 }
 
 void TerrainSamplerImplementation::reinit()

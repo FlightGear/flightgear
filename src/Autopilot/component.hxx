@@ -42,7 +42,6 @@ private:
     SGSharedPtr<const SGCondition> _condition;
     SGPropertyNode_ptr _enable_prop;
     std::string * _enable_value;
-    std::string _name;
     bool _enabled;
 
 protected:

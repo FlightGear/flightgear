@@ -78,11 +78,6 @@ void CockpitDisplayManager::init()
     SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
                     << config << ":" << e.getFormattedMessage() );
   }
-
-  // bind() created instruments before init.
-  BOOST_FOREACH(std::string s, _displays) {
-      get_subsystem(s)->bind();
-  }
   
   SGSubsystemGroup::init();
 }
