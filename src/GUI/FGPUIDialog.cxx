@@ -103,7 +103,9 @@ class fgPopup : public puPopup {
 public:
   fgPopup(FGPUIDialog *parent_dialog, int x, int y, bool r = true, bool d = true) :
   puPopup(x, y), _draggable(d), parentDialog(parent_dialog), _resizable(r), _dragging(false)
-  {}
+  {
+      propCurrentDialog = fgGetNode("/sim/gui/dialogs/current-dialog", true);
+  }
   int checkHit(int b, int up, int x, int y);
   int checkKey(int key, int updown);
   int getHitObjects(puObject *, int x, int y);
@@ -114,6 +116,7 @@ public:
 private:
   enum { LEFT = 1, RIGHT = 2, TOP = 4, BOTTOM = 8 };
   bool _draggable;
+  SGPropertyNode_ptr propCurrentDialog;
   FGPUIDialog *parentDialog;
   bool _resizable;
   bool _dragging;
@@ -316,8 +319,9 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
     // the underlying window. RJH-07-08-18.
     if (updown == PU_UP || updown == PU_DOWN){
         result = puPopup::checkHit(button, updown, x, y);
-        if (result && parentDialog) {
-            fgSetString("/sim/gui/dialogs/current-dialog", parentDialog->getName());
+        // set current dialog name on mouse down.
+        if (updown == PU_DOWN && result && parentDialog && propCurrentDialog) {
+            propCurrentDialog->setStringValue(parentDialog->getName());
         }
     }
     if (!_draggable)
