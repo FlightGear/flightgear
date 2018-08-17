@@ -49,6 +49,7 @@
 #include <Navaids/routePath.hxx>
 #include <Navaids/airways.hxx>
 #include <Autopilot/route_mgr.hxx>
+#include <Aircraft/AircraftPerformance.hxx>
 
 using std::string;
 using std::vector;

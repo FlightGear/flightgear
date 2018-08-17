@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Edward d'Auvergne
+ * Copyright (C) 2018 James Turner
  *
  * This file is part of the program FlightGear.
  *
@@ -17,11 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_flightplan.hxx"
-#include "test_navaids2.hxx"
-#include "test_aircraftPerformance.hxx"
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(FlightplanTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavaidsTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AircraftPerformanceTests, "Unit tests");
+#ifndef _FG_AIRCRAFT_PERFORMANCE_UNIT_TESTS_HXX
+#define _FG_AIRCRAFT_PERFORMANCE_UNIT_TESTS_HXX
+
+
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
+
+
+class AircraftPerformanceTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(AircraftPerformanceTests);
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testAltitudeGradient);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testBasic();
+    void testAltitudeGradient();
+};
+
+#endif  // AircraftPerformanceTests

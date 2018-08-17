@@ -1,7 +1,21 @@
+// routePath.hxx - compute data about planned route
+//
+// Copyright (C) 2018  James Turner  <james@flightgear.org>
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include <algorithm>
 
@@ -16,6 +30,7 @@
 #include <Navaids/waypoint.hxx>
 #include <Navaids/FlightPlan.hxx>
 #include <Navaids/positioned.hxx>
+#include <Aircraft/AircraftPerformance.hxx>
 
 namespace flightgear {
 
@@ -589,26 +604,6 @@ public:
 
 typedef std::vector<WayptData> WayptDataVec;
 
-class PerformanceBracket
-{
-public:
-  PerformanceBracket(double atOrBelow, double climb, double descent, double speed, bool isMach = false) :
-    atOrBelowAltitudeFt(atOrBelow),
-    climbRateFPM(climb),
-    descentRateFPM(descent),
-    speedIASOrMach(speed),
-    speedIsMach(isMach)
-  { }
-  
-  double atOrBelowAltitudeFt;
-  double climbRateFPM;
-  double descentRateFPM;
-  double speedIASOrMach;
-  bool speedIsMach;
-};
-
-typedef std::vector<PerformanceBracket> PerformanceBracketVec;
-
 bool isDescentWaypoint(const WayptRef& wpt)
 {
   return (wpt->flag(WPT_APPROACH) && !wpt->flag(WPT_MISS)) || wpt->flag(WPT_ARRIVAL);
@@ -619,28 +614,9 @@ class RoutePath::RoutePathPrivate
 public:
     WayptDataVec waypoints;
 
-    char aircraftCategory;
-    PerformanceBracketVec perf;
-    double pathTurnRate;
+    AircraftPerformance perf;
     bool constrainLegCourses;
-  
-  PerformanceBracketVec::const_iterator
-  findPerformanceBracket(double altFt) const
-  {
-    PerformanceBracketVec::const_iterator r;
-    PerformanceBracketVec::const_iterator result = perf.begin();
 
-    for (r = perf.begin(); r != perf.end(); ++r) {
-      if (r->atOrBelowAltitudeFt > altFt) {
-        break;
-      }
-      
-      result = r;
-    } // of brackets iteration
-    
-    return result;
-  }
-  
   void computeDynamicPosition(int index)
   {
     auto previous(previousValidWaypoint(index));
@@ -653,18 +629,7 @@ public:
       HeadingToAltitude* h = (HeadingToAltitude*) wpt.get();
       
       double altFt = computeVNAVAltitudeFt(index - 1);
-      double altChange = h->altitudeFt() - altFt;
-      PerformanceBracketVec::const_iterator it = findPerformanceBracket(altFt);
-      double speedMSec = groundSpeedForAltitude(altFt) * SG_KT_TO_MPS;
-      double timeToChangeSec;
-      
-      if (isDescentWaypoint(wpt)) {
-        timeToChangeSec = (altChange / it->descentRateFPM) * 60.0;
-      } else {
-        timeToChangeSec = (altChange / it->climbRateFPM) * 60.0;
-      }
-
-      double distanceM = timeToChangeSec * speedMSec;
+      double distanceM = perf.distanceNmBetween(altFt, h->altitudeFt()) * SG_NM_TO_METER;
       double hdg = h->headingDegMagnetic() + magVarFor(previous->pos);
       waypoints[index].pos = SGGeodesy::direct(previous->turnExitPos, hdg, distanceM);
       waypoints[index].posValid = true;
@@ -742,12 +707,7 @@ public:
       
       double fixedAlt = altitudeForIndex(next);
       double distanceM = distanceBetweenIndices(index, next);
-      double speedMSec = groundSpeedForAltitude(fixedAlt) * SG_KT_TO_MPS;
-      double minutes = (distanceM / speedMSec) / 60.0;
-      
-      PerformanceBracketVec::const_iterator it = findPerformanceBracket(fixedAlt);
-      return fixedAlt + (it->descentRateFPM * minutes);
-
+      return perf.computePreviousAltitude(distanceM, fixedAlt);
     } else {
       // climb
       int prev = findPreceedingKnownAltitude(index);
@@ -757,13 +717,8 @@ public:
       
       double fixedAlt = altitudeForIndex(prev);
       double distanceM = distanceBetweenIndices(prev, index);
-      double speedMSec = groundSpeedForAltitude(fixedAlt) * SG_KT_TO_MPS;
-      double minutes = (distanceM / speedMSec) / 60.0;
-      
-      PerformanceBracketVec::const_iterator it = findPerformanceBracket(fixedAlt);
-      return fixedAlt + (it->climbRateFPM * minutes);
+      return perf.computeNextAltitude(distanceM, fixedAlt);
     }
-    
   }
   
   int findPreceedingKnownAltitude(int index) const
@@ -831,47 +786,6 @@ public:
     return 0.0;
   }
   
-  double groundSpeedForAltitude(double altitude) const
-  {
-      PerformanceBracketVec::const_iterator it = findPerformanceBracket(altitude);
-      if (it->speedIsMach) {
-          return 300.0;
-      } else {
-          // FIXME - convert IAS to ground-speed, using standard atmosphere / temperature model
-          return it->speedIASOrMach;
-      }
-
-#if 0
-    if (0) {
-      double mach;
-      
-      if (it->speedIsMach) {
-        mach = it->speedIASOrMach; // easy
-      } else {
-        const double Cs_0 = 661.4786; // speed of sound at sea level, knots
-        const double P_0 = 29.92126;
-        const double P = P_0 * pow(, );
-        // convert IAS (which we will treat as CAS) to Mach based on altitude
-      }
-      
-      double oatK;
-      double Cs = sqrt(SG_gamma * SG_R_m2_p_s2_p_K * oatK);
-      
-      double tas = mach * Cs;
-      
-/*
-      P_0= 29.92126 "Hg = 1013.25 mB = 2116.2166 lbs/ft^2
-      P= P_0*(1-6.8755856*10^-6*PA)^5.2558797, pressure altitude, PA<36,089.24ft
-      CS= 38.967854*sqrt(T+273.15)  where T is the (static/true) OAT in Celsius.
-      
-      DP=P_0*((1 + 0.2*(IAS/CS_0)^2)^3.5 -1)
-      M=(5*( (DP/P + 1)^(2/7) -1) )^0.5   (*)
-      TAS= M*CS
-*/
-    }
-#endif
-  }
-
   double distanceBetweenIndices(int from, int to) const
   {
     double total = 0.0;
@@ -883,40 +797,6 @@ public:
     return total;
   }
   
-  void initPerfData()
-  {
-      pathTurnRate = 3.0; // 3 deg/sec = 180deg/min = standard rate turn
-      switch (aircraftCategory) {
-      case ICAO_AIRCRAFT_CATEGORY_A:
-          perf.push_back(PerformanceBracket(4000, 600, 1200, 75));
-          perf.push_back(PerformanceBracket(10000, 600, 1200, 140));
-          break;
-
-      case ICAO_AIRCRAFT_CATEGORY_B:
-          perf.push_back(PerformanceBracket(4000, 100, 1200, 100));
-          perf.push_back(PerformanceBracket(10000, 800, 1200, 160));
-          perf.push_back(PerformanceBracket(18000, 600, 1800, 200));
-          break;
-
-      case ICAO_AIRCRAFT_CATEGORY_C:
-          perf.push_back(PerformanceBracket(4000, 1800, 1800, 150));
-          perf.push_back(PerformanceBracket(10000, 1800, 1800, 200));
-          perf.push_back(PerformanceBracket(18000, 1200, 1800, 270));
-          perf.push_back(PerformanceBracket(60000, 800, 1200, 0.80, true /* is Mach */));
-          break;
-
-      case ICAO_AIRCRAFT_CATEGORY_D:
-      case ICAO_AIRCRAFT_CATEGORY_E:
-      default:
-
-          perf.push_back(PerformanceBracket(4000, 1800, 1800, 180));
-          perf.push_back(PerformanceBracket(10000, 1800, 1800, 230));
-          perf.push_back(PerformanceBracket(18000, 1200, 1800, 270));
-          perf.push_back(PerformanceBracket(60000, 800, 1200, 0.87, true /* is Mach */));
-          break;
-      }
-  }
-
     WayptDataVec::iterator previousValidWaypoint(unsigned int index)
     {
         if (index == 0) {
@@ -968,7 +848,6 @@ RoutePath::RoutePath(const flightgear::FlightPlan* fp) :
         d->waypoints.push_back(WayptData(wpt));
     }
 
-    d->aircraftCategory = fp->icaoAircraftCategory()[0];
     d->constrainLegCourses = fp->followLegTrackToFixes();
     commonInit();
 }
@@ -978,16 +857,14 @@ RoutePath::~RoutePath()
 }
 
 void RoutePath::commonInit()
-{
-  d->initPerfData();
-  
+{  
   WayptDataVec::iterator it;
   for (it = d->waypoints.begin(); it != d->waypoints.end(); ++it) {
     it->initPass0();
   }
   
   for (unsigned int i=1; i<d->waypoints.size(); ++i) {
-    WayptData* nextPtr = ((i + 1) < d->waypoints.size()) ? &d->waypoints[i+1] : 0;
+    WayptData* nextPtr = ((i + 1) < d->waypoints.size()) ? &d->waypoints[i+1] : nullptr;
     d->waypoints[i].initPass1(d->waypoints[i-1], nextPtr);
   }
 
@@ -997,8 +874,7 @@ void RoutePath::commonInit()
       }
 
       double alt = 0.0; // FIXME
-      double gs = d->groundSpeedForAltitude(alt);
-      double radiusM = ((360.0 / d->pathTurnRate) * gs * SG_KT_TO_MPS) / SGMiscd::twopi();
+      double radiusM = d->perf.turnRadiusMForAltitude(alt);
 
       if (i > 0) {
           auto prevIt = d->previousValidWaypoint(i);
@@ -1142,12 +1018,12 @@ SGGeodVec RoutePath::pathForHold(Hold* hold) const
     double hdg = hold->inboundRadial();
     double turnDelta = 180.0 / turnSteps;
     double altFt = 0.0; // FIXME
-    double gsKts = d->groundSpeedForAltitude(altFt);
+    double gsKts = d->perf.groundSpeedForAltitudeKnots(altFt);
 
     SGGeodVec r;
     double az2;
-    double stepTime = turnDelta / d->pathTurnRate; // in seconds
-    double stepDist = gsKts * (stepTime / 3600.0) * SG_NM_TO_METER;
+    double stepTime = turnDelta / 3.0; // 3.0 is degrees/sec for standard rate turn
+    double stepDist = gsKts * SG_KT_TO_MPS * stepTime;
     double legDist = hold->isDistance() ?
     hold->timeOrDistance()
     : gsKts * (hold->timeOrDistance() / 3600.0);

@@ -6,6 +6,7 @@ set(SOURCES
 	flightrecorder.cxx
     FlightHistory.cxx
 		initialstate.cxx
+	AircraftPerformance.cxx
 	)
 
 set(HEADERS
@@ -14,6 +15,7 @@ set(HEADERS
 	flightrecorder.hxx
     FlightHistory.hxx
 		initialstate.hxx
+	AircraftPerformance.hxx
 	)
 
 

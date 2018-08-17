@@ -35,12 +35,6 @@ class FlightPlan;
 
 typedef SGSharedPtr<FlightPlan> FlightPlanRef;
 
-const char ICAO_AIRCRAFT_CATEGORY_A = 'A';
-const char ICAO_AIRCRAFT_CATEGORY_B = 'B';
-const char ICAO_AIRCRAFT_CATEGORY_C = 'C';
-const char ICAO_AIRCRAFT_CATEGORY_D = 'D';
-const char ICAO_AIRCRAFT_CATEGORY_E = 'E';
-
 class FlightPlan : public RouteBase
 {
 public:
