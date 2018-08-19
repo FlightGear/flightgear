@@ -78,7 +78,7 @@ namespace { // anonymous namespace
 
 void initNavCache()
 {
-    QString baseLabel = QT_TR_NOOP("Initialising navigation data, this may take several minutes");
+    QString baseLabel = QT_TRANSLATE_NOOP("initNavCache", "Initialising navigation data, this may take several minutes");
     NavDataCache* cache = NavDataCache::createInstance();
     if (cache->isRebuildRequired()) {
         QProgressDialog rebuildProgress(baseLabel,
@@ -101,24 +101,24 @@ void initNavCache()
 
             switch (phase) {
             case NavDataCache::REBUILD_READING_APT_DAT_FILES:
-                rebuildProgress.setLabelText(QT_TR_NOOP("Reading airport data"));
+                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Reading airport data"));
                 break;
 
             case NavDataCache::REBUILD_LOADING_AIRPORTS:
-                rebuildProgress.setLabelText(QT_TR_NOOP("Loading airports"));
+                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading airports"));
                 break;
 
             case NavDataCache::REBUILD_FIXES:
-                rebuildProgress.setLabelText(QT_TR_NOOP("Loading waypoint data"));
+                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading waypoint data"));
                 break;
 
             case NavDataCache::REBUILD_NAVAIDS:
-                rebuildProgress.setLabelText(QT_TR_NOOP("Loading navigation data"));
+                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading navigation data"));
                 break;
 
 
             case NavDataCache::REBUILD_POIS:
-                rebuildProgress.setLabelText(QT_TR_NOOP("Loading point-of-interest data"));
+                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading point-of-interest data"));
                 break;
 
             default:
@@ -159,12 +159,12 @@ protected:
         loadNaturalEarthFile("ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false);
         loadNaturalEarthFile("ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true);
 
-        qDebug() << "load basic data took" << st.elapsedMSec();
+        qInfo() << "load basic data took" << st.elapsedMSec();
 
         st.stamp();
         loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
 
-        qDebug() << "loading urban areas took:" << st.elapsedMSec();
+        qInfo() << "loading urban areas took:" << st.elapsedMSec();
     }
 
 private:
