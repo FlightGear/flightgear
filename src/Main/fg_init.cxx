@@ -1005,9 +1005,7 @@ void fgPostInitSubsystems()
     // Initialize the Nasal interpreter.
     // Do this last, so that the loaded scripts see initialized state
     ////////////////////////////////////////////////////////////////////////
-    FGNasalSys* nasal = globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
-    nasal->init();
-    SG_LOG(SG_GENERAL, SG_INFO, "Nasal init took:" << st.elapsedMSec());
+    globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
 
     // initialize methods that depend on other subsystems.
     st.stamp();
@@ -1102,11 +1100,8 @@ void fgStartNewReset()
     fgSetBool("/sim/freeze/master", true);
     
     SGSubsystemMgr* subsystemManger = globals->get_subsystem_mgr();
-    // Nasal is manually inited in fgPostInit, ensure it's already shutdown
+    // Nasal is added in fgPostInit, ensure it's already shutdown
     // before other subsystems, so Nasal listeners don't fire during shutdown
-    SGSubsystem* nasal = subsystemManger->get_subsystem("nasal");
-    nasal->shutdown();
-    nasal->unbind();
     subsystemManger->remove("nasal");
     
     subsystemManger->shutdown();
