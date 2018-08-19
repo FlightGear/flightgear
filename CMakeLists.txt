@@ -109,15 +109,6 @@ if(NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-if(NOT "$ENV{BUILD_ID}" STREQUAL "")
-    set(JENKINS_BUILD_ID $ENV{BUILD_ID})
-    set(JENKINS_BUILD_NUMBER $ENV{BUILD_NUMBER})
-    message(STATUS "running under Jenkins, build-number is ${JENKINS_BUILD_NUMBER}")
-else()
-    set(JENKINS_BUILD_NUMBER 0)
-    set(JENKINS_BUILD_ID "none")
-endif()
-
 #####################################################################################
 # Configure library search paths
 #####################################################################################
@@ -173,16 +164,6 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
     if (CPPUNIT_FOUND)
         set(SYSTEM_CPPUNIT_DEFAULT 1)
     endif()
-endif()
-
-find_package(Git)
-if (GIT_FOUND)
-    execute_process(COMMAND git --git-dir ${PROJECT_SOURCE_DIR}/.git rev-parse  HEAD
-        OUTPUT_VARIABLE REVISION
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    message(STATUS "Git revision is ${REVISION}")
-else()
-    set(REVISION "none")
 endif()
 
 # FlightGear build options
@@ -344,7 +325,7 @@ endif (USE_DBUS)
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    message(STATUS "Qt launcher enabled, checking for Qt 5.4 / qmake")
+    message(STATUS "Qt launcher enabled, checking for Qt >= 5.4 / qmake")
     find_package(Qt5 5.4 COMPONENTS Widgets Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
         message(STATUS "Will enable Qt launcher GUI")
@@ -558,11 +539,8 @@ configure_file (
     "${PROJECT_BINARY_DIR}/src/Include/version.h"
 )
 
-# finally the build-id info
-configure_file (
-    "${PROJECT_SOURCE_DIR}/src/Include/build.h.cmake-in"
-    "${PROJECT_BINARY_DIR}/src/Include/build.h"
-)
+# Setup build.h header, each build
+include( GenerateBuildInfo )
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)

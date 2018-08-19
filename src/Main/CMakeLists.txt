@@ -87,6 +87,8 @@ add_executable(fgfs
     ${EMBEDDED_RESOURCE_HEADERS}
 )
 
+add_dependencies(fgfs buildId)
+
 # MacOSX bundle packaging
 if(APPLE)
     setup_fgfs_bundle(fgfs)
