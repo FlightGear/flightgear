@@ -94,10 +94,10 @@ static std::string nameForUsage(uint32_t usagePage, uint32_t usage)
 class FGMacOSXEventInputPrivate
 {
 public:
-    IOHIDManagerRef hidManager;
-    FGMacOSXEventInput* p;
-    double currentDt;
-    int currentModifiers;
+    IOHIDManagerRef hidManager = nullptr;
+    FGMacOSXEventInput* p = nullptr;
+    double currentDt = 0.0;
+    int currentModifiers = 0;
 
     void matchedDevice(IOHIDDeviceRef device);
     void removedDevice(IOHIDDeviceRef device);
@@ -170,8 +170,8 @@ private:
 
     std::string nameForHIDElement(IOHIDElementRef element) const;
     
-    IOHIDDeviceRef _hid;
-    IOHIDQueueRef _queue;
+    IOHIDDeviceRef _hid = nullptr;
+    IOHIDQueueRef _queue = nullptr;
     FGMacOSXEventInputPrivate* _subsystem;
 
     typedef std::map<std::string, IOHIDElementRef> NameElementDict;
