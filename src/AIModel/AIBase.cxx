@@ -52,7 +52,7 @@
 #include "AIBase.hxx"
 #include "AIManager.hxx"
 
-const char *default_model = "Models/Geometry/glider.ac";
+static std::string default_model = "Models/Geometry/glider.ac";
 const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
@@ -61,12 +61,8 @@ using namespace simgear;
 
 class FGAIModelData : public simgear::SGModelData {
 public:
-    FGAIModelData(SGPropertyNode *root = NULL)
-        : _nasal( new FGNasalModelDataProxy(root) ),
-        _ready(false),
-        _initialized(false),
-        _hasInteriorPath(false),
-        _interiorLoaded(false)
+    FGAIModelData(SGPropertyNode *root = nullptr)
+        : _nasal( new FGNasalModelDataProxy(root) )
     {
     }
 
@@ -111,23 +107,17 @@ public:
 private:
     std::unique_ptr<FGNasalModelDataProxy> _nasal;
     std::string _fxpath;
-    bool _ready;
-    bool _initialized;
-
     std::string _interiorPath;
-    bool _hasInteriorPath;
-    bool _interiorLoaded;
+
+    bool _ready = false;
+    bool _initialized = false;
+    bool _hasInteriorPath = false;
+    bool _interiorLoaded = false;
 };
 
 FGAIBase::FGAIBase(object_type ot, bool enableHot) :
-    _max_speed(300),
-    _name(""),
-    _parent(""),
-    props( NULL ),
-    model_removed( fgGetNode("/ai/models/model-removed", true) ),
     replay_time(fgGetNode("sim/replay/time", true)),
-    manager( NULL ),
-    _installed(false),
+    model_removed( fgGetNode("/ai/models/model-removed", true) ),
     _impact_lat(0),
     _impact_lon(0),
     _impact_elev(0),
@@ -136,10 +126,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _impact_roll(0),
     _impact_speed(0),
     _refID( _newAIModelID() ),
-    _otype(ot),
-    _initialized(false),
-    _modeldata(0),
-    _fx(0)
+    _otype(ot)
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -153,8 +140,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _impact_reported = false;
     _collision_reported = false;
     _expiry_reported = false;
-
-    _subID = 0;
 
     _x_offset = 0;
     _y_offset = 0;
@@ -179,8 +164,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     ht_diff = 0;
 
     serviceable = false;
-
-    fp = 0;
 
     rho = 1;
     T = 280;
@@ -223,8 +206,8 @@ FGAIBase::removeModel()
         pSceneryManager->get_models_branch()->removeChild(aip.getSceneGraph());
         // withdraw from SGModelPlacement and drop own reference (unref)
         aip.clear();
-        _modeldata = 0;
-        _model = 0;
+        _modeldata = nullptr;
+        _model = nullptr;
 
         // pass it on to the pager, to be be deleted in the pager thread
         pSceneryManager->getPager()->queueDeleteRequest(temp);
@@ -232,8 +215,8 @@ FGAIBase::removeModel()
     else
     {
         aip.clear();
-        _model = 0;
-        _modeldata = 0;
+        _model = nullptr;
+        _modeldata = nullptr;
     }
 }
 
@@ -265,6 +248,7 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
 
 void FGAIBase::update(double dt) {
 
+    SG_UNUSED(dt);
     if (replay_time->getDoubleValue() > 0)
         return;
     if (_otype == otStatic)
@@ -481,7 +465,7 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             const SGPropertyNode* fallbackNode =
               globals->get_props()->getNode("/sim/multiplay/fallback-models/model", _getFallbackModelIndex(), false);
 
-            if (fallbackNode != NULL) {
+            if (fallbackNode != nullptr) {
               fallback_path = fallbackNode->getStringValue();
             } else {
               fallback_path = globals->get_props()->getNode("/sim/multiplay/fallback-models/model", 0, true)->getStringValue();
@@ -612,21 +596,22 @@ void FGAIBase::bind() {
     tie("position/global-x",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosX,
-        0));
+        nullptr));
     tie("position/global-y",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosY,
-        0));
+        nullptr));
     tie("position/global-z",
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosZ,
-        0));
+        nullptr));
     tie("callsign",
         SGRawValueMethods<FGAIBase,const char*>(*this,
         &FGAIBase::_getCallsign,
-        0));
+        nullptr));
     // 2018.2 - to ensure consistent properties also tie the callsign to where it would be in a local model.
-    tie("sim/multiplay/callsign", SGRawValueMethods<FGAIBase, const char*>(*this, &FGAIBase::_getCallsign, 0));
+    tie("sim/multiplay/callsign",
+        SGRawValueMethods<FGAIBase, const char*>(*this, &FGAIBase::_getCallsign, nullptr));
 
     tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
     tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
@@ -1009,7 +994,7 @@ const char* FGAIBase::_getSubmodel() const {
     return _submodel.c_str();
 }
 
-const int FGAIBase::_getFallbackModelIndex() const {
+int FGAIBase::_getFallbackModelIndex() const {
     return _fallback_model_index;
 }
 

@@ -17,8 +17,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIBASE_HXX
-#define _FG_AIBASE_HXX
+#ifndef FG_AIBASE_HXX
+#define FG_AIBASE_HXX
 
 #include <string>
 #include <osg/ref_ptr>
@@ -147,7 +147,7 @@ protected:
     double _roll_offset;
     double _yaw_offset;
 
-    double _max_speed;
+    double _max_speed = 300.0;
 
     std::string _path;
     std::string _callsign;
@@ -170,7 +170,7 @@ protected:
     SGPropertyNode_ptr trigger_node;
     SGPropertyNode_ptr replay_time;
     SGPropertyNode_ptr model_removed; // where to report model removal
-    FGAIManager* manager;
+    FGAIManager* manager = nullptr;
 
     // these describe the model's actual state
     SGGeod pos;         // WGS84 lat & lon in degrees, elev above sea-level in meters
@@ -218,8 +218,8 @@ protected:
     bool invisible;
     bool no_roll;
     bool serviceable;
-    bool _installed;
-    int _subID;
+    bool _installed = false;
+    int _subID = 0;
 
     double life;
 
@@ -249,7 +249,7 @@ protected:
 private:
     int _refID;
     object_type _otype;
-    bool _initialized;
+    bool _initialized = false;
     osg::ref_ptr<osg::PagedLOD> _model;
     osg::ref_ptr<osg::PagedLOD> _interior;
 
@@ -319,7 +319,7 @@ public:
     const char* _getTriggerNode() const;
     const char* _getName() const;
     const char* _getSubmodel() const;
-    const int   _getFallbackModelIndex() const;
+    int _getFallbackModelIndex() const;
 
     // These are used in the Mach number calculations
     double rho;
@@ -331,12 +331,13 @@ public:
     static const double e;
     static const double lbs_to_slugs;
 
-    inline double _getRange() { return range; };
-    inline double _getBearing() { return bearing; };
+    double _getRange() const { return range; }
+    double _getBearing() const { return bearing; }
 
     static bool _isNight();
 
-    std::string & getCallSign();
+    const std::string& getCallSign() const
+    { return _callsign; }
 };
 
 typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
@@ -402,9 +403,6 @@ inline void FGAIBase::setLatitude ( double latitude ) {
 
 inline void FGAIBase::setCallSign(const std::string& s) {
     _callsign = s;
-}
-inline std::string& FGAIBase::getCallSign() {
-    return _callsign;
 }
 
 inline void FGAIBase::setXoffset(double x) {
