@@ -307,7 +307,6 @@ bool FGFlarm::gen_message()
 // process a Flarm sentence
 void FGFlarm::parse_message(const std::vector<std::string>& tokens)
 {
-    string::size_type begin = 0, end;
     char nmea[256];
 
     if ( tokens[0] == "PFLAE" )
