@@ -2225,7 +2225,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
             break;
         }
     }
-    if (pData)
+    if (pData) {
       motionInfo.properties.push_back(pData);
 
       // Special case - we need the /sim/model/fallback-model-index to create
@@ -2234,6 +2234,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
         fallback_model_index = pData->int_value;
         SG_LOG(SG_NETWORK, SG_DEBUG, "Found Fallback model index in message " << fallback_model_index);
       }
+    }
     }
     else
     {
