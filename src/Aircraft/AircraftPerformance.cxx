@@ -18,6 +18,7 @@
 #include "AircraftPerformance.hxx"
 
 #include <cassert>
+#include <algorithm>
 
 #include <simgear/constants.h>
 
@@ -274,7 +275,7 @@ double oatKForAltitudeFt(int altitudeFt)
 
 double pressureAtAltitude(int altitude)
 {
-#if 0
+/*
   p= P_0*(1-6.8755856*10^-6 h)^5.2558797    h<36,089.24ft
   p_Tr= 0.2233609*P_0                  
   p=p_Tr*exp(-4.806346*10^-5(h-36089.24)) h>36,089.24ft 
@@ -283,7 +284,7 @@ double pressureAtAltitude(int altitude)
     6.8755856*10^-6 = T'/T_0, where T' is the standard temperature lapse rate and T_0 is the standard sea-level temperature.
     5.2558797 = Mg/RT', where M is the (average) molecular weight of air, g is the acceleration of gravity and R is the gas constant.
     4.806346*10^-5 = Mg/RT_tr, where T_tr is the temperature at the tropopause.
-#endif
+*/
 
     const double k = 6.8755856e-6;
     const double MgRT = 5.2558797;
