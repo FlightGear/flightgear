@@ -326,12 +326,15 @@ endif (USE_DBUS)
 ## Qt5 setup setup
 if (ENABLE_QT)
     message(STATUS "Qt launcher enabled, checking for Qt >= 5.4 / qmake")
-    find_package(Qt5 5.4 COMPONENTS Widgets Network Qml Quick Svg)
+    find_package(Qt5 5.4 COMPONENTS Widgets Network Qml Quick Svg LinguistTools)
     if (Qt5Widgets_FOUND)
         message(STATUS "Will enable Qt launcher GUI")
         message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
         message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
         set(HAVE_QT 1)
+
+
+        include (Translations)
     else()
         # don't try to build FGQCanvas if Qt wasn't found correctly
         set(ENABLE_FGQCANVAS OFF)

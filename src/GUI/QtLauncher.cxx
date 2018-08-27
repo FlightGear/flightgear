@@ -42,6 +42,7 @@
 #include <QDoubleSpinBox>
 #include <QThread>
 #include <QProcess>
+#include <QTranslator>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -206,9 +207,8 @@ private:
 static void initQtResources()
 {
     Q_INIT_RESOURCE(resources);
+    Q_INIT_RESOURCE(translations);
 }
-
-
 
 static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -240,7 +240,7 @@ namespace flightgear
 // cleanly on quit. However, at present, the official policy is that static
 // destruction is too late to call this, hence why we have shutdownQtApp()
 
-std::unique_ptr<QApplication> static_qApp;
+static std::unique_ptr<QApplication> static_qApp;
 
 // Only requires FGGlobals to be initialized if 'doInitQSettings' is true.
 // Safe to call several times.
@@ -285,6 +285,22 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         static_qApp->setDesktopFileName(
           QStringLiteral("org.flightgear.FlightGear.desktop"));
 #endif
+        QTranslator* fallbackTranslator = new QTranslator(static_qApp.get());
+        if (!fallbackTranslator->load(QLatin1String(":/FlightGear_en_US.qm"))) {
+            qWarning() << "Failed to load default (en) translations";
+            delete fallbackTranslator;
+        } else {
+            static_qApp->installTranslator(fallbackTranslator);
+        }
+
+        QTranslator* translator = new QTranslator(static_qApp.get());
+        // look up e.g. :/FlightGear_de.qm
+        if (translator->load(QLocale(), QLatin1String("FlightGear"), QLatin1String("_"), QLatin1String(":/"))) {
+            qInfo() << "Loaded translations";
+            static_qApp->installTranslator(translator);
+        } else {
+            delete translator;
+        }
 
         // reset numeric / collation locales as described at:
         // http://doc.qt.io/qt-5/qcoreapplication.html#details

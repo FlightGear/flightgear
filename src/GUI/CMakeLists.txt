@@ -70,7 +70,7 @@ if (HAVE_QT)
     qt5_wrap_ui(uic_sources SetupRootDialog.ui
                             InstallSceneryDialog.ui
                             )
-    qt5_add_resources(qrc_sources resources.qrc)
+    qt5_add_resources(qrc_sources resources.qrc ${PROJECT_BINARY_DIR}/translations.qrc)
 
     add_library(fglauncher QtLauncher.cxx
                             QtLauncher.hxx
