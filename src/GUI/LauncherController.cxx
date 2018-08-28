@@ -164,7 +164,7 @@ void LauncherController::initQML()
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
 
-    qmlRegisterSingletonType(QUrl("qrc:///qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
+    qmlRegisterSingletonType(QUrl("qrc:/qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
 
     QNetworkDiskCache* diskCache = new QNetworkDiskCache(this);
     SGPath cachePath = globals->get_fg_home() / "PreviewsCache";
