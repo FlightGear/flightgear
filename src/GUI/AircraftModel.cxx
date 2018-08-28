@@ -652,13 +652,15 @@ void AircraftItemModel::onScanAddedItems(int addedCount)
 
 void AircraftItemModel::onLocalCacheCleared()
 {
-    const int firstRow = 0;
-    const int lastRow = m_cachedLocalAircraftCount + 1;
+    if (m_cachedLocalAircraftCount > 0) {
+        const int firstRow = 0;
+        const int lastRow = m_cachedLocalAircraftCount - 1;
 
-    beginRemoveRows(QModelIndex(), firstRow, lastRow);
-    m_delegateStates.remove(0, m_cachedLocalAircraftCount);
-    m_cachedLocalAircraftCount = 0;
-    endRemoveRows();
+        beginRemoveRows(QModelIndex(), firstRow, lastRow);
+        m_delegateStates.remove(0, m_cachedLocalAircraftCount);
+        m_cachedLocalAircraftCount = 0;
+        endRemoveRows();
+    }
 }
 
 void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason)
