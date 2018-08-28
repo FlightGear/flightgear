@@ -40,4 +40,7 @@ if (${do_translate})
     endforeach()
 
     file(APPEND ${translation_res} "</qresource>\n</RCC>")
+
+    # set this so config.h can detect it
+    set(HAVE_QRC_TRANSLATIONS TRUE)
 endif() # of do translate

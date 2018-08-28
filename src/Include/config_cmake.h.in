@@ -65,3 +65,6 @@
 #define FG_BUILD_TYPE "@FG_BUILD_TYPE@"
 
 #define HAVE_PUI
+
+#cmakedefine HAVE_QRC_TRANSLATIONS
+

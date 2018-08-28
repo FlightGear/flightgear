@@ -207,7 +207,9 @@ private:
 static void initQtResources()
 {
     Q_INIT_RESOURCE(resources);
+#if defined(HAVE_QRC_TRANSLATIONS)
     Q_INIT_RESOURCE(translations);
+#endif
 }
 
 static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
