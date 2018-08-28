@@ -88,6 +88,8 @@ add_executable(fgfs
 )
 
 add_dependencies(fgfs buildId)
+# explicitly disable automoc for main fgfs target
+set_property(TARGET fgfs PROPERTY AUTOMOC OFF)
 
 # MacOSX bundle packaging
 if(APPLE)
