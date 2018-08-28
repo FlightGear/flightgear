@@ -142,6 +142,12 @@ FGLocale::findLocaleNode(const string& localeSpec)
 
     // try country's default resource, i.e. "de_DE" => "de"
     std::size_t pos = language.find('_');
+    if (pos == string::npos) {
+        // at least OS-X encodes these as en-GB and so on, so try hypens
+        // as well as underscores
+        pos = language.find('-');
+    }
+
     if ((pos != string::npos) && (pos > 0))
     {
         node = findLocaleNode(language.substr(0, pos));

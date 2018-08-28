@@ -20,23 +20,28 @@ if (${do_translate})
 
     add_custom_target(fgfs_qm_files ALL)
 
-    file(WRITE ${translation_res} "<RCC>\n<qresource prefix=\"/\">")
+    file(WRITE ${translation_res} "<RCC>\n<qresource prefix=\"/\">\n")
 
     # qm generation and installation
     foreach(LANG ${LANGUAGES})
-        set(out_file "${PROJECT_BINARY_DIR}/FlightGear_${LANG}.qm")
+        # trim down to a two-letter code for output. This will need to get
+        # smarter if we ever have different translations for a dialect,
+        # eg en_GB, fr_CA or pt_BR. 
+        string(SUBSTRING ${LANG} 0 2 simple_lang)
+
+        set(out_file "${PROJECT_BINARY_DIR}/FlightGear_${simple_lang}.qm")
         add_custom_command(
             OUTPUT ${out_file}
             COMMAND Qt5::lrelease ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf
                 -qm ${out_file}
             DEPENDS ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf
         )
-        add_custom_target(fgfs_${LANG}_qm ALL DEPENDS ${out_file})
+        add_custom_target(fgfs_${simple_lang}_qm ALL DEPENDS ${out_file})
 
-        add_dependencies(fgfs_qm_files fgfs_${LANG}_qm)
+        add_dependencies(fgfs_qm_files fgfs_${simple_lang}_qm)
 
         # local path needed here, not absolute
-        file(APPEND ${translation_res} "<file>FlightGear_${LANG}.qm</file>\n")
+        file(APPEND ${translation_res} "<file>FlightGear_${simple_lang}.qm</file>\n")
     endforeach()
 
     file(APPEND ${translation_res} "</qresource>\n</RCC>")

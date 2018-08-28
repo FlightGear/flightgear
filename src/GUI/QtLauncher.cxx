@@ -18,6 +18,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include "config.h"
+
 #include "QtLauncher.hxx"
 
 #include <locale.h>
@@ -296,7 +298,6 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         }
 
         QTranslator* translator = new QTranslator(static_qApp.get());
-        // look up e.g. :/FlightGear_de.qm
         if (translator->load(QLocale(), QLatin1String("FlightGear"), QLatin1String("_"), QLatin1String(":/"))) {
             qInfo() << "Loaded translations";
             static_qApp->installTranslator(translator);
