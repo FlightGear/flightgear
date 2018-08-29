@@ -74,6 +74,8 @@ using std::string;
 #include <Airports/runways.hxx>
 #include "od_gauge.hxx"
 
+using namespace flightgear;
+
 static const char *DEFAULT_FONT = "typewriter.txf";
 
 static

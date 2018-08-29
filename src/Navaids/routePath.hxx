@@ -32,9 +32,9 @@ namespace flightgear
   class Hold;
   class FlightPlan;
   class Via;
+    
+  typedef std::vector<SGGeod> SGGeodVec;
 }
-
-typedef std::vector<SGGeod> SGGeodVec;
 
 class RoutePath
 {
@@ -45,7 +45,7 @@ public:
   RoutePath(const RoutePath& other);
   RoutePath& operator=(const RoutePath& other);
 
-  SGGeodVec pathForIndex(int index) const;
+  flightgear::SGGeodVec pathForIndex(int index) const;
   
   SGGeod positionForIndex(int index) const;
 
@@ -67,11 +67,12 @@ private:
   double distanceForVia(flightgear::Via *via, int index) const;
 
 
-  SGGeodVec pathForHold(flightgear::Hold* hold) const;
-  SGGeodVec pathForVia(flightgear::Via* via, int index) const;
+  flightgear::SGGeodVec pathForHold(flightgear::Hold* hold) const;
+  flightgear::SGGeodVec pathForVia(flightgear::Via* via, int index) const;
   SGGeod positionAlongVia(flightgear::Via* via, int previousIndex, double distanceM) const;
   
-  void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, SGGeodVec& r) const;
+  void interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo,
+                              flightgear::SGGeodVec& r) const;
   
   
   std::unique_ptr<RoutePathPrivate> d;
