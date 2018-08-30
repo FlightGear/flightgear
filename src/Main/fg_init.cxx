@@ -193,6 +193,24 @@ public:
     _cache = autoSave->getNode("sim/startup/path-cache", true);
   }
   
+  /**
+   * @brief haveExplicitAircraft - check if the combination of /sim/aircraft
+   * and /sim/aircraft-dir defines an explicit -set.xml. We need to detect
+   * this case to short-circuit package detection
+   * @return
+   */
+  bool haveExplicitAircraft() const
+  {
+      const std::string aircraftDir = fgGetString("/sim/aircraft-dir", "");
+      if (aircraftDir.empty()) {
+          return false;
+      }
+
+      const std::string aircraft = fgGetString( "/sim/aircraft", "");
+      SGPath setFile = SGPath::fromUtf8(aircraftDir) / (aircraft + "-set.xml");
+      return setFile.exists();
+  }
+
   bool loadAircraft()
   {
     std::string aircraft = fgGetString( "/sim/aircraft", "");
@@ -624,11 +642,18 @@ int fgInitAircraft(bool reinit)
         flightgear::Options::sharedInstance()->initAircraft();
     }
     
+    FindAndCacheAircraft f(globals->get_props());
+    const bool haveExplicit = f.haveExplicitAircraft();
+
     SGSharedPtr<Root> pkgRoot(globals->packageRoot());
     SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
-
     string aircraftId(aircraftProp->getStringValue());
-    PackageRef acftPackage = pkgRoot->getPackageById(aircraftId);
+
+    PackageRef acftPackage;
+    if (!haveExplicit) {
+        acftPackage = pkgRoot->getPackageById(aircraftId);
+    }
+
     if (acftPackage) {
         if (acftPackage->isInstalled()) {
             SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from package:" << acftPackage->qualifiedId());
@@ -667,7 +692,6 @@ int fgInitAircraft(bool reinit)
 
     initAircraftDirsNasalSecurity();
 
-    FindAndCacheAircraft f(globals->get_props());
     if (!f.loadAircraft()) {
         return flightgear::FG_OPTIONS_ERROR;
     }
