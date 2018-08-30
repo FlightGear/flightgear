@@ -6,7 +6,7 @@ Item {
     id: root
 
     width: Style.strutSize * 2
-    height: Style.strutSize * 2
+    height: iconImage.height + label.height + Style.margin * 3
 
     property alias icon: iconImage.source
     property alias label: label.text
@@ -33,8 +33,9 @@ Item {
 
     Image {
         id: iconImage
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
         opacity: root.enabled ? 1.0 : 0.5
+        y: Style.margin
     }
 
     Text {

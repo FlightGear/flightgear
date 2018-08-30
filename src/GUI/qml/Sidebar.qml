@@ -12,6 +12,8 @@ Rectangle {
 
     readonly property int minimumHeight: mainColumn.childrenRect.height + flyButton.height
 
+    implicitWidth: flyButton.width
+
     signal selectPage(var pageSource);
 
     signal showMenu();
@@ -70,7 +72,6 @@ Rectangle {
         id: flyButton
         label: qsTr("Fly!")
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Style.margin
         enabled: _launcher.canFly
         disabledText: qsTr("The selected aircraft is not installed or has updates pending")
         icon: "qrc:///svg/toolbox-fly"

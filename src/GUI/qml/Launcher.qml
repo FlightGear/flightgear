@@ -79,7 +79,6 @@ Item {
 
     Sidebar {
         id: sidebar
-        width: Style.strutSize * 2
         height: parent.height
         z: 1
         pagesModel: pagesModel
