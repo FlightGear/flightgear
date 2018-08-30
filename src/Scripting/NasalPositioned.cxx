@@ -64,26 +64,26 @@ static void wayptGhostDestroy(void* g);
 static void legGhostDestroy(void* g);
 static void routeBaseGhostDestroy(void* g);
 
-naGhostType PositionedGhostType = { positionedGhostDestroy, "positioned" };
+static naGhostType PositionedGhostType = { positionedGhostDestroy, "positioned", nullptr, nullptr };
 
 static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-naGhostType AirportGhostType = { positionedGhostDestroy, "airport", airportGhostGetMember, 0 };
+static naGhostType AirportGhostType = { positionedGhostDestroy, "airport", airportGhostGetMember, nullptr };
 
 static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-naGhostType NavaidGhostType = { positionedGhostDestroy, "navaid", navaidGhostGetMember, 0 };
+static naGhostType NavaidGhostType = { positionedGhostDestroy, "navaid", navaidGhostGetMember, nullptr };
 
 static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-naGhostType RunwayGhostType = { positionedGhostDestroy, "runway", runwayGhostGetMember, 0 };
-naGhostType HelipadGhostType = { positionedGhostDestroy, "helipad", runwayGhostGetMember, 0 };
-naGhostType TaxiwayGhostType = { positionedGhostDestroy, "taxiway", runwayGhostGetMember, 0 };
+static naGhostType RunwayGhostType = { positionedGhostDestroy, "runway", runwayGhostGetMember, nullptr };
+static naGhostType HelipadGhostType = { positionedGhostDestroy, "helipad", runwayGhostGetMember, nullptr };
+static naGhostType TaxiwayGhostType = { positionedGhostDestroy, "taxiway", runwayGhostGetMember, nullptr };
 
 static const char* fixGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-naGhostType FixGhostType = { positionedGhostDestroy, "fix", fixGhostGetMember, 0 };
+static naGhostType FixGhostType = { positionedGhostDestroy, "fix", fixGhostGetMember, nullptr };
 
 static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void waypointGhostSetMember(naContext c, void* g, naRef field, naRef value);
 
-naGhostType WayptGhostType = { wayptGhostDestroy,
+static naGhostType WayptGhostType = { wayptGhostDestroy,
   "waypoint",
   wayptGhostGetMember,
   waypointGhostSetMember};
@@ -91,7 +91,7 @@ naGhostType WayptGhostType = { wayptGhostDestroy,
 static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void legGhostSetMember(naContext c, void* g, naRef field, naRef value);
 
-naGhostType FPLegGhostType = { legGhostDestroy,
+static naGhostType FPLegGhostType = { legGhostDestroy,
   "flightplan-leg",
   legGhostGetMember,
   legGhostSetMember};
@@ -99,14 +99,14 @@ naGhostType FPLegGhostType = { legGhostDestroy,
 static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef value);
 
-naGhostType FlightPlanGhostType = { routeBaseGhostDestroy,
+static naGhostType FlightPlanGhostType = { routeBaseGhostDestroy,
   "flightplan",
   flightplanGhostGetMember,
   flightplanGhostSetMember
 };
 
 static const char* procedureGhostGetMember(naContext c, void* g, naRef field, naRef* out);
-naGhostType ProcedureGhostType = { routeBaseGhostDestroy,
+static naGhostType ProcedureGhostType = { routeBaseGhostDestroy,
   "procedure",
   procedureGhostGetMember,
   0};
@@ -678,7 +678,8 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
     naVec_append(*out, flightplanPrototype);
-  } else if (!strcmp(fieldName, "id")) *out = stringToNasal(c, fp->ident());
+  }
+  else if (!strcmp(fieldName, "id")) *out = stringToNasal(c, fp->ident());
   else if (!strcmp(fieldName, "departure")) *out = ghostForAirport(c, fp->departureAirport());
   else if (!strcmp(fieldName, "destination")) *out = ghostForAirport(c, fp->destinationAirport());
   else if (!strcmp(fieldName, "departure_runway")) *out = ghostForRunway(c, fp->departureRunway());
@@ -689,11 +690,18 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   else if (!strcmp(fieldName, "star_trans")) *out = ghostForProcedure(c, fp->starTransition());
   else if (!strcmp(fieldName, "approach")) *out = ghostForProcedure(c, fp->approach());
   else if (!strcmp(fieldName, "current")) *out = naNum(fp->currentIndex());
-    else if (!strcmp(fieldName, "aircraftCategory")) *out = stringToNasal(c, fp->icaoAircraftCategory());
-    else if (!strcmp(fieldName, "followLegTrackToFix")) *out = naNum(fp->followLegTrackToFixes());
-    else if (!strcmp(fieldName, "active")) *out = naNum(fp->isActive());
+  else if (!strcmp(fieldName, "aircraftCategory")) *out = stringToNasal(c, fp->icaoAircraftCategory());
+  else if (!strcmp(fieldName, "followLegTrackToFix")) *out = naNum(fp->followLegTrackToFixes());
+  else if (!strcmp(fieldName, "active")) *out = naNum(fp->isActive());
+  else if (!strcmp(fieldName, "cruiseAltitudeFt")) *out = naNum(fp->cruiseAltitudeFt());
+  else if (!strcmp(fieldName, "cruiseFlightLevel")) *out = naNum(fp->cruiseFlightLevel());
+  else if (!strcmp(fieldName, "cruiseSpeedKt")) *out = naNum(fp->cruiseSpeedKnots());
+  else if (!strcmp(fieldName, "cruiseSpeedMach")) *out = naNum(fp->cruiseSpeedMach());
+  else if (!strcmp(fieldName, "remarks")) *out = stringToNasal(c, fp->remarks());
+  else if (!strcmp(fieldName, "callsign")) *out = stringToNasal(c, fp->callsign());
+
   else {
-    return 0;
+    return nullptr;
   }
 
   return "";
@@ -780,8 +788,14 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     }
 
     if (naIsString(value)) {
+      const std::string s(naStr_data(value));
       FGAirport* apt = fp->departureAirport();
-      fp->setSID(apt->findSIDWithIdent(naStr_data(value)));
+      auto trans = apt->selectSIDByTransition(s);
+      if (trans) {
+          fp->setSID(trans);
+      } else {
+          fp->setSID(apt->findSIDWithIdent(s));
+      }
       return;
     }
 
@@ -804,8 +818,14 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     }
 
     if (naIsString(value)) {
+      const std::string s(naStr_data(value));
       FGAirport* apt = fp->destinationAirport();
-      fp->setSTAR(apt->findSTARWithIdent(naStr_data(value)));
+      auto trans = apt->selectSTARByTransition(s);
+      if (trans) {
+          fp->setSTAR(trans);
+      } else {
+          fp->setSTAR(apt->findSTARWithIdent(s));
+      }
       return;
     }
 
@@ -838,8 +858,21 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
     fp->setIcaoAircraftCategory(naStr_data(value));
   } else if (!strcmp(fieldName, "followLegTrackToFix")) {
-    int b = (int) value.num;
-    fp->setFollowLegTrackToFixes(b);
+    fp->setFollowLegTrackToFixes(static_cast<bool>(value.num));
+  } else if (!strcmp(fieldName, "cruiseAltitudeFt")) {
+    fp->setCruiseAltitudeFt(static_cast<int>(value.num));
+  } else if (!strcmp(fieldName, "cruiseFlightLevel")) {
+    fp->setCruiseFlightLevel(static_cast<int>(value.num));
+  } else if (!strcmp(fieldName, "cruiseSpeedKt")) {
+    fp->setCruiseSpeedKnots(static_cast<int>(value.num));
+  } else if (!strcmp(fieldName, "cruiseSpeedMach")) {
+    fp->setCruiseSpeedMach(value.num);
+  } else if (!strcmp(fieldName, "callsign")) {
+      if (!naIsString(value)) naRuntimeError(c, "flightplan.callsign must be a string");
+      fp->setCallsign(naStr_data(value));
+  } else if (!strcmp(fieldName, "remarks")) {
+      if (!naIsString(value)) naRuntimeError(c, "flightplan.remarks must be a string");
+      fp->setRemarks(naStr_data(value));
   }
 }
 
