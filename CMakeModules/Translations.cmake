@@ -11,6 +11,7 @@ elseif(EXISTS ${FGDATA_SRC_DIR})
     set(do_translate TRUE)
 else()
     message(STATUS "Couldn't find translations data, will not include translated string in the executable")
+    set(do_translate FALSE)
 endif()
 
 find_package(Qt5 5.4 COMPONENTS LinguistTools)
