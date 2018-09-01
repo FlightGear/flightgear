@@ -13,6 +13,13 @@ else()
     message(STATUS "Couldn't find translations data, will not include translated string in the executable")
 endif()
 
+find_package(Qt5 5.4 COMPONENTS LinguistTools)
+if (${do_translate} AND NOT TARGET Qt5::lrelease)
+    set(do_translate FALSE)
+    message(STATUS "Built-in translations disabled becuase Qt5 lrelease tool was not found."
+        "\n(on Linux You may need to install an additional package containing the Qt5 translation tools)")
+endif()
+
 if (${do_translate})
     # FIXME - determine this based on subdirs of TRANSLATIONS_SRC_DIR
     set(LANGUAGES en_US de es nl fr it pl pt zh_CN)
