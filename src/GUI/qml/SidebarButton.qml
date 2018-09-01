@@ -5,8 +5,10 @@ import "."
 Item {
     id: root
 
+    readonly property int __smallMargin: 2
+
     width: Style.strutSize * 2
-    height: iconImage.height + label.height + Style.margin * 3
+    height: iconImage.height + label.height + Style.margin + (__smallMargin * 2)
 
     property alias icon: iconImage.source
     property alias label: label.text
@@ -35,7 +37,7 @@ Item {
         id: iconImage
         anchors.horizontalCenter: parent.horizontalCenter
         opacity: root.enabled ? 1.0 : 0.5
-        y: Style.margin
+       y: __smallMargin
     }
 
     Text {
@@ -46,7 +48,7 @@ Item {
         width: parent.width
         horizontalAlignment: Text.AlignHCenter
         anchors.top: iconImage.bottom
-        anchors.topMargin: Style.margin
+        anchors.topMargin: __smallMargin
         font.pixelSize: Style.baseFontPixelSize
     }
 
