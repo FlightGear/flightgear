@@ -153,28 +153,19 @@ public:
     }
 
 protected:
-    virtual void run() Q_DECL_OVERRIDE
+    void run() override
     {
-        SGTimeStamp st;
-        st.stamp();
-
         loadNaturalEarthFile("ne_10m_coastline.shp", flightgear::PolyLine::COASTLINE, false);
         loadNaturalEarthFile("ne_10m_rivers_lake_centerlines.shp", flightgear::PolyLine::RIVER, false);
         loadNaturalEarthFile("ne_10m_lakes.shp", flightgear::PolyLine::LAKE, true);
-
-        qInfo() << "load basic data took" << st.elapsedMSec();
-
-        st.stamp();
         loadNaturalEarthFile("ne_10m_urban_areas.shp", flightgear::PolyLine::URBAN, true);
-
-        qInfo() << "loading urban areas took:" << st.elapsedMSec();
     }
 
 private:
     Q_SLOT void onFinished()
     {
         flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
-        unsigned int numToAdd = std::min<unsigned long>(1000UL, m_parsedLines.size() - m_lineInsertCount);
+        unsigned int numToAdd = std::min<unsigned int>(1000U, static_cast<unsigned int>(m_parsedLines.size()) - m_lineInsertCount);
         flightgear::PolyLineList::const_iterator end = begin + numToAdd;
         flightgear::PolyLine::bulkAddToSpatialIndex(begin, end);
 
