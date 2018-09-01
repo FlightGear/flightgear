@@ -86,7 +86,12 @@ Item {
 
             StyledText { // heading text
                 id: airportHeading
-                width: parent.width
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    margins: Style.margin
+                }
+
                 font.pixelSize: Style.headingFontPixelSize
                 text: isHeliport ? qsTr("Heliport: ") + airportData.ident + " / " + airportData.name
                                  : qsTr("Airport: ") + airportData.ident + " / " + airportData.name

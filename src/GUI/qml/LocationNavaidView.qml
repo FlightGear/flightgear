@@ -59,14 +59,19 @@ Item {
 
             StyledText { // heading text
                 id: headingText
-                width: parent.width
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    margins: Style.margin
+                }
+
                 text: qsTr("Position: %1").arg(geod.toString(0));
                 font.pixelSize: Style.headingFontPixelSize
                 Binding {
                     when: navaidData.valid
                     target: headingText
                     property: "text"
-                    value: "Navaid: " + navaidData.ident + " / " + navaidData.name
+                    value: qsTr("Navaid: %1 / %2").arg(navaidData.ident).arg(navaidData.name)
                 }
             }
 
