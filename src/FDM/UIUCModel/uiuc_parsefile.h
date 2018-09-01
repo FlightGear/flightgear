@@ -23,7 +23,7 @@ class ParseFile
 {
         private:
                 
-                stack commands;
+                ::stack commands;
                 ifstream file;
                 void readFile();
 
@@ -37,7 +37,7 @@ class ParseFile
                 void removeComments(string& inputLine);
                 string getToken(string inputLine, int tokenNo);
                 void storeCommands(string inputLine);
-                stack getCommands();
+                ::stack getCommands();
 };
 
 #endif  // _PARSE_FILE_H_
