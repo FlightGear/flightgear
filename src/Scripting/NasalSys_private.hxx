@@ -68,4 +68,20 @@ private:
     naRef _start_element, _end_element, _data, _pi;
 };
 
+//
+// See the implementation of the settimer() extension function for
+// more notes.
+//
+struct NasalTimer
+{
+    NasalTimer(naRef handler, FGNasalSys* sys);
+    
+    void timerExpired();
+    ~NasalTimer();
+    
+    naRef handler;
+    int gcKey = 0;
+    FGNasalSys* nasal = nullptr;
+};
+
 #endif // of __NASALSYS_PRIVATE_HXX

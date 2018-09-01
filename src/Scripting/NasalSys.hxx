@@ -25,6 +25,8 @@ class SGCondition;
 class FGNasalModelData;
 class NasalCommand;
 class FGNasalModuleListener;
+struct NasalTimer;  ///< timer created by settimer
+class TimerObj;     ///< persistent timer created by maketimer
 
 namespace simgear { class BufferedLogCallback; }
 
@@ -35,10 +37,9 @@ class FGNasalSys : public SGSubsystem
 public:
     FGNasalSys();
     virtual ~FGNasalSys();
-    virtual void init();
-    virtual void shutdown();
-    
-    virtual void update(double dt);
+    void init() override;
+    void shutdown() override;
+    void update(double dt) override;
 
     // Loads a nasal script from an external file and inserts it as a
     // global module of the specified name.
@@ -167,19 +168,6 @@ private:
     // callback).
     bool _delay_load;
 
-    //
-    // FGTimer subclass for handling Nasal timer callbacks.
-    // See the implementation of the settimer() extension function for
-    // more notes.
-    //
-    struct NasalTimer {
-        virtual void timerExpired();
-        virtual ~NasalTimer() {}
-        naRef handler;
-        int gcKey;
-        FGNasalSys* nasal;
-    };
-
     // Listener
     std::map<int, FGNasalListener *> _listener;
     std::vector<FGNasalListener *> _dead_listener;
@@ -210,8 +198,25 @@ private:
     NasalCommandDict _commands;
     
     naRef _wrappedNodeFunc;
-public:
+    
+    // track NasalTimer instances (created via settimer() call) -
+    // this allows us to clean these up on shutdown
+    std::vector<NasalTimer*> _nasalTimers;
+
+    // NasalTimer is a friend to invoke handleTimer and do the actual
+    // dispatch of the settimer-d callback
+    friend NasalTimer;
+    
     void handleTimer(NasalTimer* t);
+    
+    // track persistent timers. These are owned from the Nasal side, so we
+    // only track a non-owning reference here.
+    std::vector<TimerObj*> _persistentTimers;
+    
+    friend TimerObj;
+    
+    void addPersistentTimer(TimerObj* pto);
+    void removePersistentTimer(TimerObj* obj);
 };
 
 #if 0

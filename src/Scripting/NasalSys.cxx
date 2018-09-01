@@ -90,7 +90,6 @@ void FGNasalModuleListener::valueChanged(SGPropertyNode*)
 
 //////////////////////////////////////////////////////////////////////////
 
-
 class TimerObj : public SGReferenced
 {
 public:
@@ -103,15 +102,17 @@ public:
     char nm[128];
     snprintf(nm, 128, "nasal-timer-%p", this);
     _name = nm;
-    _gcRoot =  sys->gcSave(f);
-    _gcSelf = sys->gcSave(self);
+    _gcRoot =  naGCSave(f);
+    _gcSelf = naGCSave(self);
+    sys->addPersistentTimer(this);
   }
 
   virtual ~TimerObj()
   {
     stop();
-    _sys->gcRelease(_gcRoot);
-    _sys->gcRelease(_gcSelf);
+    naGCRelease(_gcRoot);
+    naGCRelease(_gcSelf);
+      _sys->removePersistentTimer(this);
   }
 
   bool isRunning() const { return _isRunning; }
@@ -168,7 +169,7 @@ public:
       // event manager).
       _isRunning = false;
 
-    naRef *args = NULL;
+    naRef *args = nullptr;
     _sys->callMethod(_func, _self, 0, args, naNil() /* locals */);
   }
 
@@ -966,22 +967,24 @@ void FGNasalSys::shutdown()
 
     shutdownNasalPositioned();
 
-    map<int, FGNasalListener *>::iterator it, end = _listener.end();
-    for(it = _listener.begin(); it != end; ++it)
-        delete it->second;
+    for (auto l : _listener)
+        delete l.second;
     _listener.clear();
 
-    NasalCommandDict::iterator j = _commands.begin();
-    for (; j != _commands.end(); ++j) {
-        globals->get_commands()->removeCommand(j->first);
+    for (auto c : _commands) {
+        globals->get_commands()->removeCommand(c.first);
     }
     _commands.clear();
 
-    std::vector<FGNasalModuleListener*>::iterator k = _moduleListeners.begin();
-    for(; k!= _moduleListeners.end(); ++k)
-        delete *k;
+    for(auto ml : _moduleListeners)
+        delete ml;
     _moduleListeners.clear();
 
+    for (auto t : _nasalTimers) {
+        delete t;
+    }
+    _nasalTimers.clear();
+    
     naClearSaved();
 
     _string = naNil(); // will be freed by _context
@@ -994,6 +997,15 @@ void FGNasalSys::shutdown()
     _globals = naNil();
 
     naGC();
+    
+    // Destroy all queued ghosts : important to ensure persistent timers are
+    // destroyed now.
+    nasal::ghostProcessDestroyList();
+    
+    if (!_persistentTimers.empty()) {
+        SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << _persistentTimers.size());
+    }
+    
     _inited = false;
 }
 
@@ -1374,11 +1386,8 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
     name.append(std::to_string(naGetLine(c, 0)));
 
     // Generate and register a C++ timer handler
-    NasalTimer* t = new NasalTimer;
-    t->handler = handler;
-    t->gcKey = gcSave(handler);
-    t->nasal = this;
-
+    NasalTimer* t = new NasalTimer(handler, this);
+    _nasalTimers.push_back(t);
     globals->get_event_mgr()->addEvent(name,
                                        t, &NasalTimer::timerExpired,
                                        delta.num, simtime);
@@ -1387,7 +1396,10 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
     call(t->handler, 0, 0, naNil());
-    gcRelease(t->gcKey);
+    auto it =  std::find(_nasalTimers.begin(), _nasalTimers.end(), t);
+    assert(it != _nasalTimers.end());
+    _nasalTimers.erase(it);
+    delete t;
 }
 
 int FGNasalSys::gcSave(naRef r)
@@ -1402,11 +1414,26 @@ void FGNasalSys::gcRelease(int key)
 
 
 //------------------------------------------------------------------------------
-void FGNasalSys::NasalTimer::timerExpired()
+
+NasalTimer::NasalTimer(naRef h, FGNasalSys* sys) :
+    handler(h), nasal(sys)
+{
+    assert(sys);
+    gcKey = naGCSave(handler);
+}
+
+NasalTimer::~NasalTimer()
+{
+    naGCRelease(gcKey);
+}
+
+void NasalTimer::timerExpired()
 {
     nasal->handleTimer(this);
-    delete this;
+    // note handleTimer calls delete on us, don't do anything
+    // which requires 'this' to be valid here
 }
+
 
 int FGNasalSys::_listenerId = 0;
 
@@ -1504,6 +1531,18 @@ void FGNasalSys::removeCommand(const std::string& name)
     // will delete the NasalCommand instance
     globals->get_commands()->removeCommand(name);
     _commands.erase(it);
+}
+
+void FGNasalSys::addPersistentTimer(TimerObj* pto)
+{
+    _persistentTimers.push_back(pto);
+}
+
+void FGNasalSys::removePersistentTimer(TimerObj* obj)
+{
+    auto it = std::find(_persistentTimers.begin(), _persistentTimers.end(), obj);
+    assert(it != _persistentTimers.end());
+    _persistentTimers.erase(it);
 }
 
 //////////////////////////////////////////////////////////////////////////
