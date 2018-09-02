@@ -18,6 +18,8 @@ class FlightPlanController : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(bool enabled MEMBER _enabled NOTIFY enabledChanged)
+
     Q_PROPERTY(QString callsign READ callsign WRITE setCallsign NOTIFY infoChanged)
     Q_PROPERTY(QString remarks READ remarks WRITE setRemarks NOTIFY infoChanged)
     Q_PROPERTY(QString aircraftType READ aircraftType WRITE setAircraftType NOTIFY infoChanged)
@@ -110,6 +112,8 @@ signals:
     void infoChanged();
     void waypointsChanged();
     
+    void enabledChanged(bool enabled);
+
 public slots:
 
     void setFlightType(FlightType ty);
@@ -143,6 +147,7 @@ private:
     LegsModel* _legs = nullptr;
     std::unique_ptr<FPDelegate> _delegate;
     LaunchConfig* _config = nullptr;
+    bool _enabled = false;
 };
 
 #endif // FLIGHTPLANCONTROLLER_HXX

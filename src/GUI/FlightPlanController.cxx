@@ -204,6 +204,9 @@ void FlightPlanController::clearPlan()
     _fp->addDelegate(_delegate.get());
     _legs->setFlightPlan(fp);
     emit infoChanged();
+
+    _enabled = false;
+    emit enabledChanged(_enabled);
 }
 
 bool FlightPlanController::loadFromPath(QString path)
@@ -220,6 +223,9 @@ bool FlightPlanController::loadFromPath(QString path)
     _fp->addDelegate(_delegate.get());
     _legs->setFlightPlan(fp);
 
+    _enabled = true;
+    emit enabledChanged(_enabled);
+
     // notify that everything changed
     emit infoChanged();
     return true;
@@ -233,6 +239,9 @@ bool FlightPlanController::saveToPath(QString path) const
 
 void FlightPlanController::onCollectConfig()
 {
+    if (!_enabled)
+        return;
+
     SGPath p = globals->get_fg_home() / "launcher.fgfp";
     _fp->save(p);
     
@@ -248,6 +257,9 @@ void FlightPlanController::onSave()
 
 void FlightPlanController::onRestore()
 {
+    _enabled = _config->getValueForKey("", "fp-enabled", false).toBool();
+    emit enabledChanged(_enabled);
+
     std::string planXML = _config->getValueForKey("", "fp", QString()).toString().toStdString();
     if (!planXML.empty()) {
         std::istringstream ss(planXML);

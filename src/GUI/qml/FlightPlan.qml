@@ -36,9 +36,19 @@ Item {
             Row {
                 width: parent.width
                 spacing: Style.margin
-                height: childrenRect.height
+                height: loadButton.height
+
+                ToggleSwitch {
+                    label: qsTr("Fly with a flight-plan")
+                    checked: _launcher.flightPlan.enabled
+                    function toggle(newChecked) {
+                        _launcher.flightPlan.enabled = newChecked
+                    }
+                    anchors.verticalCenter: parent.verticalCenter
+                }
 
                 Button {
+                    id: loadButton
                     text: qsTr("Load");
                     onClicked: {
                         var ok = _launcher.flightPlan.loadPlan();
