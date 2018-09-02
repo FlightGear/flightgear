@@ -9,6 +9,8 @@
 #include <QDebug>
 #include <QIODevice>
 #include <QDataStream>
+#include <QClipboard>
+#include <QGuiApplication>
 
 static bool static_enableDownloadDirUI = true;
 static QSettings::Format static_binaryFormat = QSettings::InvalidFormat;
@@ -175,6 +177,46 @@ QString LaunchConfig::htmlForCommandLine()
     return html;
 }
 
+static QString formatArgForClipboard(const LaunchConfig::Arg& a)
+{
+    if (a.value.isEmpty()) {
+        return "--" + a.arg + " ";
+    } else if (a.arg == "prop") {
+        return "--" + a.arg + ":" + a.value + " ";
+    } else {
+        return "--" + a.arg + "=" + a.value + " ";
+    }
+}
+
+void LaunchConfig::copyCommandLine()
+{
+    QString r;
+
+    for (auto opt : flightgear::Options::sharedInstance()->extractOptions()) {
+        r += "--" + QString::fromStdString(opt) + " ";
+    }
+
+    reset();
+    collect();
+    const auto extraArgs = extraArgNames();
+
+    for (auto arg : valuesFromLauncher()) {
+        auto it = extraArgs.find(arg.arg.toStdString());
+        if (it != extraArgs.end()) {
+            continue; // skipped due to extra arg overriding
+        }
+
+        r += formatArgForClipboard(arg);
+    }
+
+    for (auto arg : valuesFromExtraArgs()) {
+        r += formatArgForClipboard(arg);
+    }
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(r);
+}
+
 bool LaunchConfig::saveConfigToINI()
 {
     // create settings using default type (INI) and path (inside FG_HOME),
@@ -228,7 +270,7 @@ QVariant LaunchConfig::getValueForKey(QString group, QString key, QVariant defau
 
     m_loadSaveSettings->beginGroup(group);
     auto v = m_loadSaveSettings->value(key, defaultValue);
-    bool convertedOk = v.convert(defaultValue.type());
+    bool convertedOk = v.convert(static_cast<int>(defaultValue.type()));
     if (!convertedOk) {
         qWarning() << "type forcing on loaded value failed:" << key << v << v.typeName() << defaultValue;
     }

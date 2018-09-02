@@ -57,6 +57,8 @@ public:
 
     Q_INVOKABLE QString htmlForCommandLine();
 
+    Q_INVOKABLE void copyCommandLine();
+
     bool saveConfigToINI();
     bool loadConfigFromINI();
 

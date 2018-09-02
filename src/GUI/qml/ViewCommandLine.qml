@@ -5,12 +5,31 @@ import "."
 
 Item {
 
+    Row {
+        id: buttonRow
+        spacing: Style.margin
+        height: childrenRect.height
+        anchors {
+            margins: Style.margin
+            top: parent.top
+            left: parent.left
+            right: parent.right
+        }
+
+        Button {
+            text: qsTr("Copy to clipboard")
+            onClicked: {
+                _config.copyCommandLine();
+            }
+        }
+    }
+
     Flickable {
         id: flick
         anchors {
             left: parent.left
             right: scrollbar.right
-            top: parent.top
+            top: buttonRow.bottom
             bottom: parent.bottom
             margins: Style.margin
         }
