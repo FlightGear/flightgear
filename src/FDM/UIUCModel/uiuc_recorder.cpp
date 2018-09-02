@@ -102,7 +102,7 @@ using std::endl;                // -dw
 
 void uiuc_recorder( double dt )
 {
-  stack command_list;
+  ::stack command_list;
   string linetoken;
   // static int init = 0;
   static int recordStep = 0;
