@@ -81,6 +81,8 @@ private:
   SGPropertyNode_ptr _warpDelta;
   SGPropertyNode_ptr _simTimeFactor;
   SGPropertyNode_ptr _mpClockNode;
+  SGPropertyNode_ptr _frameWait;
+  SGPropertyNode_ptr _maxFrameRate;
 
   bool _lastClockFreeze;
   bool _adjustWarpOnUnfreeze;

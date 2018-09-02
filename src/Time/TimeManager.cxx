@@ -83,7 +83,8 @@ void TimeManager::init()
   _timeOverride = fgGetNode("/sim/time/cur-time-override", true);
   _warp = fgGetNode("/sim/time/warp", true);
   _warp->addChangeListener(this);
-  
+  _maxFrameRate  = fgGetNode("/sim/frame-rate-throttle-hz", true);
+
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   
   SGPath zone(globals->get_fg_root());
@@ -114,7 +115,7 @@ void TimeManager::init()
     _timeDelta = fgGetNode("sim/time/delta-realtime-sec", true);
     _simTimeDelta = fgGetNode("sim/time/delta-sec", true);
     _mpClockNode = fgGetNode("sim/time/mp-clock-sec", true);
-
+    _frameWait = fgGetNode("sim/time/frame-wait-ms", true);
     _simTimeFactor = fgGetNode("/sim/speed-up", true);
     // use pre-set value but ensure we get a sane default
     if (!_simTimeDelta->hasValue()) {
@@ -343,13 +344,19 @@ void TimeManager::computeFrameRate()
 
 void TimeManager::throttleUpdateRate()
 {
-  // common case, no throttle requested
-  double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
+  double throttle_hz = _maxFrameRate->getDoubleValue();
+
+  // no delay required.
   if (throttle_hz <= 0)
-    return; // no-op
+  {
+      _frameWait->setDoubleValue(0);
+      return;
+  }
+  SGTimeStamp frameWaitStart = SGTimeStamp::now();
 
   // sleep for exactly 1/hz seconds relative to the past valid timestamp
-  SGTimeStamp::sleepUntil(_lastStamp + SGTimeStamp::fromSec(1/throttle_hz));
+  SGTimeStamp::sleepUntil(_lastStamp + SGTimeStamp::fromSec(1 / throttle_hz));
+  _frameWait->setDoubleValue(frameWaitStart.elapsedMSec());
 }
 
 // periodic time updater wrapper

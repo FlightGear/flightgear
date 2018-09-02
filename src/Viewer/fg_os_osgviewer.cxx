@@ -247,10 +247,16 @@ void fgOSOpenWindow(bool stencil)
     viewer->setSceneData(new osg::Group);
     globals->get_renderer()->setViewer(viewer.get());
 }
-
+SGPropertyNode* simHost = 0, *simFrameCount, *simTotalHostTime, *simFrameResetCount, *frameWait;
 void fgOSResetProperties()
 {
     SGPropertyNode* osgLevel = fgGetNode("/sim/rendering/osg-notify-level", true);
+    simTotalHostTime = fgGetNode("/sim/rendering/sim-host-total-ms", true);
+    simHost = fgGetNode("/sim/rendering/sim-host-avg-ms", true);
+    simFrameCount = fgGetNode("/sim/rendering/sim-frame-count", true);
+    simFrameResetCount = fgGetNode("/sim/rendering/sim-frame-count-reset", true);
+    frameWait = fgGetNode("/sim/time/frame-wait-ms", true);
+    simFrameResetCount->setBoolValue(false);
     NotifyLevelListener* l = new NotifyLevelListener;
     globals->addListenerToCleanup(l);
     osgLevel->addChangeListener(l, true);
@@ -287,6 +293,7 @@ void fgOSExit(int code)
     // sglog static, despite our best efforts in boostrap.cxx
     osg::setNotifyHandler(new osg::StandardNotifyHandler);
 }
+SGTimeStamp _lastUpdate;
 
 int fgOSMainLoop()
 {
@@ -298,8 +305,36 @@ int fgOSMainLoop()
     while (!viewer->done()) {
         fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
         if (idleFunc)
+        {
+            _lastUpdate.stamp();
             (*idleFunc)();
-
+            if (fgGetBool("/sim/position-finalized", false))
+            {
+                if (simHost && simFrameCount && simTotalHostTime && simFrameResetCount)
+                {
+                    int curFrameCount = simFrameCount->getIntValue();
+                    double totalSimTime = simTotalHostTime->getDoubleValue();
+                    if (simFrameResetCount->getBoolValue())
+                    {
+                        curFrameCount = 0;
+                        totalSimTime = 0;
+                        simFrameResetCount->setBoolValue(false);
+                    }
+                    double lastSimFrame_ms = _lastUpdate.elapsedMSec();
+                    double idle_wait = 0;
+                    if (frameWait)
+                        idle_wait = frameWait->getDoubleValue();
+                    if (lastSimFrame_ms > 0)
+                    {
+                        totalSimTime += lastSimFrame_ms - idle_wait;
+                        simTotalHostTime->setDoubleValue(totalSimTime);
+                        curFrameCount++;
+                        simFrameCount->setIntValue(curFrameCount);
+                        simHost->setDoubleValue(totalSimTime / curFrameCount);
+                    }
+                }
+            }
+        }
         globals->get_renderer()->update();
         viewer->frame( globals->get_sim_time_sec() );
     }
