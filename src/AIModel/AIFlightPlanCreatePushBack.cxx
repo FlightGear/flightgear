@@ -93,7 +93,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
   
     FGGroundNetwork* groundNet = dep->groundNetwork();
     FGParking *parking = gate.parking();
-    if (parking && parking->getPushBackPoint() != NULL) {
+    if (parking && parking->getPushBackPoint() != nullptr) {
         FGTaxiRoute route = groundNet->findShortestRoute(parking, parking->getPushBackPoint(), false);
       
         int size = route.size();
