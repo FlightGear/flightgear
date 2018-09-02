@@ -673,7 +673,7 @@ static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
 static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
-  FlightPlan* fp = (FlightPlan*) g;
+  FlightPlan* fp = static_cast<FlightPlan*>(g);
 
   if (!strcmp(fieldName, "parents")) {
     *out = naNewVector(c);
@@ -711,13 +711,13 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
 static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef value)
 {
   const char* fieldName = naStr_data(field);
-  FlightPlan* fp = (FlightPlan*) g;
+  FlightPlan* fp = static_cast<FlightPlan*>(g);
 
   if (!strcmp(fieldName, "id")) {
     if (!naIsString(value)) naRuntimeError(c, "flightplan.id must be a string");
     fp->setIdent(naStr_data(value));
   } else if (!strcmp(fieldName, "current")) {
-    int index = value.num;
+    int index = static_cast<int>(value.num);
     if ((index < 0) || (index >= fp->numLegs())) {
       return;
     }
@@ -1392,9 +1392,8 @@ static naRef f_findAirportsWithinRange(naContext c, naRef me, int argc, naRef* a
   FGPositionedList apts = FGPositioned::findWithinRange(pos, rangeNm, &filter);
   FGPositioned::sortByRange(apts, pos);
 
-  BOOST_FOREACH(FGPositionedRef a, apts) {
-    FGAirport* apt = (FGAirport*) a.get();
-    naVec_append(r, ghostForAirport(c, apt));
+  for (FGPositionedRef a : apts) {
+    naVec_append(r, ghostForAirport(c, fgpositioned_cast<FGAirport>(a)));
   }
 
   return r;
@@ -1416,10 +1415,8 @@ static naRef f_findAirportsByICAO(naContext c, naRef me, int argc, naRef* args)
   naRef r = naNewVector(c);
 
   FGPositionedList apts = FGPositioned::findAllWithIdent(prefix, &filter, false);
-
-  BOOST_FOREACH(FGPositionedRef a, apts) {
-    FGAirport* apt = (FGAirport*) a.get();
-    naVec_append(r, ghostForAirport(c, apt));
+  for (FGPositionedRef a : apts) {
+    naVec_append(r, ghostForAirport(c, fgpositioned_cast<FGAirport>(a)));
   }
 
   return r;
@@ -1458,12 +1455,12 @@ static naRef f_airport_comms(naContext c, naRef me, int argc, naRef* args)
         std::string commName = naStr_data(args[0]);
         FGPositioned::Type commType = FGPositioned::typeFromName(commName);
 
-        BOOST_FOREACH(flightgear::CommStation* comm, apt->commStationsOfType(commType)) {
+        for (auto comm : apt->commStationsOfType(commType)) {
             naVec_append(comms, naNum(comm->freqMHz()));
         }
     } else {
 // otherwise return a vector of hashes, one for each comm station.
-        BOOST_FOREACH(flightgear::CommStation* comm, apt->commStations()) {
+        for (auto comm : apt->commStations()) {
             naRef commHash = naNewHash(c);
             hashset(c, commHash, "frequency", naNum(comm->freqMHz()));
             hashset(c, commHash, "ident", stringToNasal(c, comm->ident()));
@@ -1533,7 +1530,7 @@ static naRef f_airport_sids(naContext c, naRef me, int argc, naRef* args)
   }
 
   if (rwy) {
-    BOOST_FOREACH(flightgear::SID* sid, rwy->getSIDs()) {
+    for (auto sid : rwy->getSIDs()) {
       naRef procId = stringToNasal(c, sid->ident());
       naVec_append(sids, procId);
     }
@@ -2164,42 +2161,42 @@ public:
     _gcSaveKey = _nasal->gcSave(ins);
   }
 
-  virtual ~NasalFPDelegate()
+  ~NasalFPDelegate() override
   {
     _nasal->gcRelease(_gcSaveKey);
   }
 
-  virtual void departureChanged()
+  void departureChanged() override
   {
     callDelegateMethod("departureChanged");
   }
 
-  virtual void arrivalChanged()
+  void arrivalChanged() override
   {
     callDelegateMethod("arrivalChanged");
   }
 
-  virtual void waypointsChanged()
+  void waypointsChanged() override
   {
     callDelegateMethod("waypointsChanged");
   }
 
-  virtual void currentWaypointChanged()
+  void currentWaypointChanged() override
   {
     callDelegateMethod("currentWaypointChanged");
   }
 
-  virtual void cleared()
+  void cleared() override
   {
     callDelegateMethod("cleared");
   }
 
-  virtual void endOfFlightPlan()
+  void endOfFlightPlan() override
   {
     callDelegateMethod("endOfFlightPlan");
   }
 
-  virtual void activated()
+  void activated() override
   {
     callDelegateMethod("activated");
   }
@@ -2231,7 +2228,7 @@ class NasalFPDelegateFactory : public FlightPlan::DelegateFactory
 public:
   NasalFPDelegateFactory(naRef code)
   {
-    _nasal = (FGNasalSys*) globals->get_subsystem("nasal");
+    _nasal = globals->get_subsystem<FGNasalSys>();
     _func = code;
     _gcSaveKey = _nasal->gcSave(_func);
   }
@@ -2241,14 +2238,14 @@ public:
     _nasal->gcRelease(_gcSaveKey);
   }
 
-  virtual FlightPlan::Delegate* createFlightPlanDelegate(FlightPlan* fp)
+  FlightPlan::Delegate* createFlightPlanDelegate(FlightPlan* fp) override
   {
     naRef args[1];
     naContext ctx = naNewContext();
     args[0] = ghostForFlightPlan(ctx, fp);
     naRef instance = _nasal->call(_func, 1, args, naNil());
 
-      FlightPlan::Delegate* result = NULL;
+      FlightPlan::Delegate* result = nullptr;
       if (!naIsNil(instance)) {
           // will GC-save instance
           result = new NasalFPDelegate(fp, _nasal, instance);
