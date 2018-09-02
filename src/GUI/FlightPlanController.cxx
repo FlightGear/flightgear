@@ -2,7 +2,7 @@
 
 #include <QDebug>
 #include <QAbstractListModel>
-#include <QQmlEngine>
+#include <QQmlComponent>
 #include <QFileDialog>
 #include <QTimer>
 
