@@ -121,15 +121,13 @@ bool FGTaxiSegment::hasBlock(time_t now)
 
 void FGTaxiSegment::unblock(time_t now)
 {
-    if (blockTimes.size()) {
-        BlockListIterator i = blockTimes.begin();
-        if (i->getTimeStamp() < (now - 30)) {
-            blockTimes.erase(i);
-        }
+    if (blockTimes.empty())
+        return;
+    
+    if (blockTimes.front().getTimeStamp() < (now - 30)) {
+        blockTimes.erase(blockTimes.begin());
     }
 }
-
-
 
 /***************************************************************************
  * FGTaxiRoute
