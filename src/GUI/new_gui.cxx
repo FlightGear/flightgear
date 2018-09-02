@@ -238,6 +238,10 @@ NewGUI::closeActiveDialog ()
 
     delete _active_dialog;
     _active_dialog = 0;
+    if (_active_dialogs.size())
+    {
+        fgSetString("/sim/gui/dialogs/current-dialog", _active_dialogs.begin()->second->getName());
+    }
     return true;
 }
 
