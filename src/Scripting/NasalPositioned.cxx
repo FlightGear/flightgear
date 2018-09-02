@@ -699,6 +699,7 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   else if (!strcmp(fieldName, "cruiseSpeedMach")) *out = naNum(fp->cruiseSpeedMach());
   else if (!strcmp(fieldName, "remarks")) *out = stringToNasal(c, fp->remarks());
   else if (!strcmp(fieldName, "callsign")) *out = stringToNasal(c, fp->callsign());
+  else if (!strcmp(fieldName, "estimatedDurationMins")) *out = naNum(fp->estimatedDurationMinutes());
 
   else {
     return nullptr;
@@ -868,11 +869,13 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
   } else if (!strcmp(fieldName, "cruiseSpeedMach")) {
     fp->setCruiseSpeedMach(value.num);
   } else if (!strcmp(fieldName, "callsign")) {
-      if (!naIsString(value)) naRuntimeError(c, "flightplan.callsign must be a string");
-      fp->setCallsign(naStr_data(value));
+    if (!naIsString(value)) naRuntimeError(c, "flightplan.callsign must be a string");
+    fp->setCallsign(naStr_data(value));
   } else if (!strcmp(fieldName, "remarks")) {
-      if (!naIsString(value)) naRuntimeError(c, "flightplan.remarks must be a string");
-      fp->setRemarks(naStr_data(value));
+    if (!naIsString(value)) naRuntimeError(c, "flightplan.remarks must be a string");
+    fp->setRemarks(naStr_data(value));
+  } else if (!strcmp(fieldName, "estimatedDurationMins")) {
+    fp->setEstimatedDurationMinutes(static_cast<int>(value.num));
   }
 }
 
@@ -2723,6 +2726,42 @@ static naRef f_flightplan_save(naContext c, naRef me, int argc, naRef* args)
   return naNum(ok);
 }
 
+static naRef f_flightplan_parseICAORoute(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "parseICAORoute called on non-flightplan object");
+  }
+
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "flightplan.parseICAORoute, no route argument");
+  }
+
+  bool ok = fp->parseICAORouteString(naStr_data(args[0]));
+  return naNum(ok);
+}
+
+static naRef f_flightplan_toICAORoute(naContext c, naRef me, int, naRef*)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "toICAORoute called on non-flightplan object");
+  }
+
+  return stringToNasal(c, fp->asICAORouteString());
+}
+
+static naRef f_flightplan_computeDuration(naContext c, naRef me, int, naRef*)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "computeDuration called on non-flightplan object");
+  }
+
+  fp->computeDurationMinutes();
+  return naNum(fp->estimatedDurationMinutes());
+}
+
 static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan::Leg* leg = fpLegGhost(me);
@@ -2965,6 +3004,9 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "finish", naNewFunc(c, naNewCCode(c, f_flightplan_finish)));
     hashset(c, flightplanPrototype, "activate", naNewFunc(c, naNewCCode(c, f_flightplan_activate)));
     hashset(c, flightplanPrototype, "indexOfWP", naNewFunc(c, naNewCCode(c, f_flightplan_indexOfWp)));
+    hashset(c, flightplanPrototype, "computeDuration", naNewFunc(c, naNewCCode(c, f_flightplan_computeDuration)));
+    hashset(c, flightplanPrototype, "parseICAORoute", naNewFunc(c, naNewCCode(c, f_flightplan_parseICAORoute)));
+    hashset(c, flightplanPrototype, "toICAORoute", naNewFunc(c, naNewCCode(c, f_flightplan_toICAORoute)));
 
     hashset(c, flightplanPrototype, "save", naNewFunc(c, naNewCCode(c, f_flightplan_save)));
 
