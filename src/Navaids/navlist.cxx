@@ -320,7 +320,24 @@ bool FGTACANList::add( FGTACANRecord *c )
     return true;
 }
 
-
+/*
+ * ref: 070031b3c01f64a44433e8cce742373f4c76b7ac
+ * The ground reply frequencies are used to keep channels 1-16 and 60-69 out of the VOR frequency range as those channels
+ * don't have VORs associated with them.
+ * - this method will therefore only be able to locate channels 17 to 59.
+ */
+FGTACANRecord *FGTACANList::findByFrequency(int frequency_kHz)
+{
+    //029Y    10925 (encoded) = 109.25 = 109250khz - so we divide the input by 10
+    int tfreq = frequency_kHz / 10;
+    for (tacan_ident_map_type::iterator it = ident_channels.begin(); it != ident_channels.end(); it++)
+    {
+        for (tacan_list_type::iterator lit = it->second.begin(); lit != it->second.end(); lit++)
+            if ((*lit)->get_freq() == tfreq)
+                return (*lit);
+    }
+    return nullptr;
+}
 // Given a TACAN Channel return the first matching frequency
 FGTACANRecord *FGTACANList::findByChannel( const string& channel )
 {

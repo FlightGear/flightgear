@@ -146,7 +146,10 @@ public:
     bool add( FGTACANRecord *r );
 
     // Given a TACAN Channel, return the appropriate frequency.
-    FGTACANRecord *findByChannel( const std::string& channel );
+    FGTACANRecord *findByChannel(const std::string& channel);
+
+    // Given a TACAN Channel, return the appropriate frequency.
+    FGTACANRecord *findByFrequency(int frequency_kHz);
 
 
 };

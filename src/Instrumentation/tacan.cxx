@@ -101,6 +101,8 @@ void TACAN::init()
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
 
     // Add/trigger change listener after creating all nodes
+    _frequency_node->addChangeListener(this);
+
     _channel_in0_node->addChangeListener(this);
     _channel_in1_node->addChangeListener(this);
     _channel_in2_node->addChangeListener(this);
@@ -289,24 +291,43 @@ TACAN::valueChanged(SGPropertyNode *prop)
     int index = prop->getIndex();
     std::string channel = _channel;
 
-    if (index) {  // channel digit or X/Y input
-        int c;
-        if (isdigit(c = _channel_in1_node->getStringValue()[0]))
-            channel[0] = c;
-        if (isdigit(c = _channel_in2_node->getStringValue()[0]))
-            channel[1] = c;
-        if (isdigit(c = _channel_in3_node->getStringValue()[0]))
-            channel[2] = c;
-        c = _channel_in4_node->getStringValue()[0];
-        if (c == 'X' || c == 'Y')
-            channel[3] = c;
+    if (std::string("selected-mhz") == prop->getName())
+    {
+        FGTACANRecord *rec= globals->get_channellist()->findByFrequency(prop->getDoubleValue()*1000);
+        if (rec != nullptr) {
+            channel = rec->get_channel();
+            _channel_in1_node->setStringValue(channel.substr(0, 1));
+            _channel_in2_node->setStringValue(channel.substr(1, 1));
+            _channel_in3_node->setStringValue(channel.substr(2, 1));
+            _channel_in4_node->setStringValue(channel.substr(3, 1));
+            index = 1;
+        }
+        else {
+            SG_LOG(SG_INSTR, SG_WARN, "Entered TACAN Frequency " << prop->getDoubleValue() << " does not map to a known TACAN channel");
+        }
+    }
+    else
+    {
+        if (index) {  // channel digit or X/Y input
+            int c;
+            if (isdigit(c = _channel_in1_node->getStringValue()[0]))
+                channel[0] = c;
+            if (isdigit(c = _channel_in2_node->getStringValue()[0]))
+                channel[1] = c;
+            if (isdigit(c = _channel_in3_node->getStringValue()[0]))
+                channel[2] = c;
+            c = _channel_in4_node->getStringValue()[0];
+            if (c == 'X' || c == 'Y')
+                channel[3] = c;
 
-    } else {      // channel number input
-        unsigned int f = prop->getIntValue();
-        if (f >= 1 && f <= 126) {
-            channel[0] = '0' + (f / 100) % 10;
-            channel[1] = '0' + (f / 10) % 10;
-            channel[2] = '0' + f % 10;
+        }
+        else {      // channel number input
+            unsigned int f = prop->getIntValue();
+            if (f >= 1 && f <= 126) {
+                channel[0] = '0' + (f / 100) % 10;
+                channel[1] = '0' + (f / 10) % 10;
+                channel[2] = '0' + f % 10;
+            }
         }
     }
 
