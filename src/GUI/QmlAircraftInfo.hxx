@@ -23,10 +23,10 @@ class QmlAircraftInfo : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QUrl uri READ uri WRITE setUri NOTIFY uriChanged)
-    Q_PROPERTY(int variant READ variant WRITE setVariant NOTIFY variantChanged)
+    Q_PROPERTY(quint32 variant READ variant WRITE setVariant NOTIFY variantChanged)
 
     Q_PROPERTY(QVariantList previews READ previews NOTIFY infoChanged)
-    Q_PROPERTY(int numVariants READ numVariants NOTIFY infoChanged)
+    Q_PROPERTY(quint32 numVariants READ numVariants NOTIFY infoChanged)
     Q_PROPERTY(QStringList variantNames READ variantNames NOTIFY infoChanged)
 
     Q_PROPERTY(QString name READ name NOTIFY infoChanged)
@@ -37,8 +37,8 @@ class QmlAircraftInfo : public QObject
 
     Q_PROPERTY(QString pathOnDisk READ pathOnDisk NOTIFY infoChanged)
     Q_PROPERTY(QString packageId READ packageId NOTIFY infoChanged)
-    Q_PROPERTY(int packageSize READ packageSize NOTIFY infoChanged)
-    Q_PROPERTY(int downloadedBytes READ downloadedBytes NOTIFY downloadChanged)
+    Q_PROPERTY(quint64 packageSize READ packageSize NOTIFY infoChanged)
+    Q_PROPERTY(quint64 downloadedBytes READ downloadedBytes NOTIFY downloadChanged)
     Q_PROPERTY(bool isPackaged READ isPackaged NOTIFY infoChanged)
 
     Q_PROPERTY(QVariant status READ status NOTIFY infoChanged)
@@ -65,7 +65,7 @@ public:
 
     QUrl uri() const;
 
-    int numVariants() const;
+    quint32 numVariants() const;
 
     QString name() const;
     QString description() const;
@@ -82,15 +82,15 @@ public:
     QUrl wikipediaUrl() const;
 
     QString packageId() const;
-    int packageSize() const;
-    int downloadedBytes() const;
+    quint64 packageSize() const;
+    quint64 downloadedBytes() const;
 
     QVariant status() const;
     QString minimumFGVersion() const;
 
     static QVariant packageAircraftStatus(simgear::pkg::PackageRef p);
 
-    int variant() const
+    quint32 variant() const
     {
         return _variant;
     }
@@ -99,7 +99,7 @@ public:
 
      simgear::pkg::PackageRef packageRef() const;
 
-    void setDownloadBytes(int bytes);
+    void setDownloadBytes(quint64 bytes);
 
     QStringList variantNames() const;
 
@@ -130,13 +130,13 @@ signals:
     void uriChanged();
     void infoChanged();
     void downloadChanged();
-    void variantChanged(int variant);
+    void variantChanged(quint32 variant);
 
 public slots:
 
     void setUri(QUrl uri);
 
-    void setVariant(int variant);
+    void setVariant(quint32 variant);
 
 private:
     AircraftItemPtr resolveItem() const;
@@ -150,7 +150,7 @@ private:
     simgear::pkg::PackageRef _package;
     AircraftItemPtr _item;
     quint32 _variant = 0;
-    int _downloadBytes = 0;
+    quint64 _downloadBytes = 0;
     QScopedPointer<StatesModel> _statesModel;
 
     /// if the aircraft is locally installed, this is the cached

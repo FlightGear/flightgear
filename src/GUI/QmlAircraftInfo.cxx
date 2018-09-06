@@ -302,14 +302,14 @@ QUrl QmlAircraftInfo::uri() const
     return {};
 }
 
-int QmlAircraftInfo::numVariants() const
+quint32 QmlAircraftInfo::numVariants() const
 {
     if (_item) {
         // for on-disk, we don't count the primary item
-        return _item->variants.size() + 1;
+        return static_cast<quint32>(_item->variants.size() + 1);
     } else if (_package) {
         // whereas for packaged aircraft we do
-        return static_cast<int>(_package->variants().size());
+        return static_cast<quint32>(_package->variants().size());
     }
 
     return 0;
@@ -519,16 +519,16 @@ QString QmlAircraftInfo::packageId() const
     return {};
 }
 
-int QmlAircraftInfo::packageSize() const
+quint64 QmlAircraftInfo::packageSize() const
 {
     if (_package) {
-        return static_cast<int>(_package->fileSizeBytes());
+        return _package->fileSizeBytes();
     }
 
     return 0;
 }
 
-int QmlAircraftInfo::downloadedBytes() const
+quint64 QmlAircraftInfo::downloadedBytes() const
 {
     return _downloadBytes;
 }
@@ -634,7 +634,7 @@ void QmlAircraftInfo::setUri(QUrl u)
         // we need to offset the variant index to allow for the different
         // indexing schemes here (primary included) and in the cache (primary
         // is not counted)
-        _variant = (vindex >= 0) ? vindex + 1 : 0;
+        _variant = (vindex >= 0) ? static_cast<quint32>(vindex + 1) : 0U;
     } else if (u.scheme() == "package") {
         auto ident = u.path().toStdString();
         try {
@@ -654,12 +654,12 @@ void QmlAircraftInfo::setUri(QUrl u)
     emit downloadChanged();
 }
 
-void QmlAircraftInfo::setVariant(int variant)
+void QmlAircraftInfo::setVariant(quint32 variant)
 {
     if (!_item && !_package)
         return;
 
-    if ((variant < 0) || (variant >= numVariants())) {
+    if (variant >= numVariants()) {
         qWarning() << Q_FUNC_INFO << uri() << "variant index out of range:" << variant;
         return;
     }
@@ -725,7 +725,7 @@ PackageRef QmlAircraftInfo::packageRef() const
     return _package;
 }
 
-void QmlAircraftInfo::setDownloadBytes(int bytes)
+void QmlAircraftInfo::setDownloadBytes(quint64 bytes)
 {
     _downloadBytes = bytes;
     emit downloadChanged();
@@ -743,7 +743,7 @@ QStringList QmlAircraftInfo::variantNames() const
             result.append(v->description);
         }
     } else if (_package) {
-        for (int vindex = 0; vindex < _package->variants().size(); ++vindex) {
+        for (quint32 vindex = 0; vindex < _package->variants().size(); ++vindex) {
             if (_package->nameForVariant(vindex).empty()) {
                 qWarning() << Q_FUNC_INFO << "missing description for variant" << vindex;
             }
