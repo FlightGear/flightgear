@@ -217,6 +217,8 @@ private:
     
     void addPersistentTimer(TimerObj* pto);
     void removePersistentTimer(TimerObj* obj);
+
+    static void logNasalStack(naContext context);
 };
 
 #if 0

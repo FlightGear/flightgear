@@ -718,8 +718,8 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     fp->setIdent(naStr_data(value));
   } else if (!strcmp(fieldName, "current")) {
     int index = static_cast<int>(value.num);
-    if ((index < 0) || (index >= fp->numLegs())) {
-      return;
+    if ((index < -1) || (index >= fp->numLegs())) {
+      naRuntimeError(c, "flightplan.current must be a valid index or -1");
     }
     fp->setCurrentIndex(index);
   } else if (!strcmp(fieldName, "departure")) {
@@ -2158,7 +2158,9 @@ public:
     _plan(fp),
     _instance(ins)
   {
-    _gcSaveKey = _nasal->gcSave(ins);
+      assert(fp);
+      assert(sys);
+      _gcSaveKey = _nasal->gcSave(ins);
   }
 
   ~NasalFPDelegate() override

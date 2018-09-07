@@ -283,12 +283,23 @@ naRef FGNasalSys::callWithContext(naContext ctx, naRef code, int argc, naRef* ar
 
 naRef FGNasalSys::callMethod(naRef code, naRef self, int argc, naRef* args, naRef locals)
 {
-  return naCallMethod(code, self, argc, args, locals);
+    try {
+        return naCallMethod(code, self, argc, args, locals);
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NASAL, SG_DEV_ALERT, "caught exception invoking nasal method:" << e.what());
+        return naNil();
+    }
 }
 
 naRef FGNasalSys::callMethodWithContext(naContext ctx, naRef code, naRef self, int argc, naRef* args, naRef locals)
 {
-  return naCallMethodCtx(ctx, code, self, argc, args, locals);
+    try {
+        return naCallMethodCtx(ctx, code, self, argc, args, locals);
+    } catch (sg_exception& e) {
+        SG_LOG(SG_NASAL, SG_DEV_ALERT, "caught exception invoking nasal method:" << e.what());
+        logNasalStack(ctx);
+        return naNil();
+    }
 }
 
 FGNasalSys::~FGNasalSys()
@@ -296,7 +307,7 @@ FGNasalSys::~FGNasalSys()
     if (_inited) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Nasal was not shutdown");
     }
-    nasalSys = 0;
+    nasalSys = nullptr;
 }
 
 bool FGNasalSys::parseAndRunWithOutput(const std::string& source, std::string& output, std::string& errors)
@@ -1189,16 +1200,23 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
 void FGNasalSys::logError(naContext context)
 {
     SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error: " << naGetError(context));
-    int stack_depth = naStackDepth(context);
-    if( stack_depth < 1 )
+    logNasalStack(context);
+}
+
+void FGNasalSys::logNasalStack(naContext context)
+{
+    const int stack_depth = naStackDepth(context);
+    if (stack_depth < 1)
       return;
+
     SG_LOG(SG_NASAL, SG_ALERT,
            "  at " << naStr_data(naGetSourceFile(context, 0)) <<
            ", line " << naGetLine(context, 0));
-    for(int i=1; i<stack_depth; i++)
+    for(int i=1; i<stack_depth; i++) {
         SG_LOG(SG_NASAL, SG_ALERT,
                "  called from: " << naStr_data(naGetSourceFile(context, i)) <<
                ", line " << naGetLine(context, i));
+    }
 }
 
 // Reads a script file, executes it, and places the resulting
