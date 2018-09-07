@@ -93,6 +93,8 @@ WeatherScenariosModel::WeatherScenariosModel(QObject *pr) :
                 continue;
             }
 
+            // omit the 'live data' option, we have a distinct UI for that, we'll
+            // pass --real-wxr option on launch
             if (scenario->getStringValue("local-weather/tile-type") == std::string("live")) {
                 continue;
             }
@@ -101,14 +103,18 @@ WeatherScenariosModel::WeatherScenariosModel(QObject *pr) :
             ws.name = QString::fromStdString(scenario->getStringValue("name"));
             ws.description = QString::fromStdString(scenario->getStringValue("description")).simplified();
             ws.metar = QString::fromStdString(scenario->getStringValue("metar"));
+            if (scenario->hasChild("local-weather")) {
+                ws.localWeatherTileManagement = QString::fromStdString(scenario->getStringValue("local-weather/tile-management"));
+                ws.localWeatherTileType = QString::fromStdString(scenario->getStringValue("local-weather/tile-type"));
+            }
             m_scenarios.push_back(ws);
         }
     }
 }
 
-int WeatherScenariosModel::rowCount(const QModelIndex &index) const
+int WeatherScenariosModel::rowCount(const QModelIndex&) const
 {
-    return m_scenarios.size();
+    return static_cast<int>(m_scenarios.size());
 }
 
 QVariant WeatherScenariosModel::data(const QModelIndex &index, int role) const
@@ -139,28 +145,42 @@ QHash<int, QByteArray> WeatherScenariosModel::roleNames() const
     return result;
 }
 
-QString WeatherScenariosModel::metarForItem(int index) const
+QString WeatherScenariosModel::metarForItem(quint32 index) const
 {
-    if ((index < 0) || (index >= m_scenarios.size())) {
-        return QString();
+    if (index >= m_scenarios.size()) {
+        return {};
     }
 
     return m_scenarios.at(index).metar;
 }
 
-QString WeatherScenariosModel::descriptionForItem(int index) const
+QString WeatherScenariosModel::descriptionForItem(quint32 index) const
 {
-    if ((index < 0) || (index >= m_scenarios.size())) {
-        return QString();
+    if (index >= m_scenarios.size()) {
+        return {};
     }
 
     return m_scenarios.at(index).description;
 }
 
-QString WeatherScenariosModel::nameForItem(int index) const
+QStringList WeatherScenariosModel::localWeatherData(quint32 index) const
 {
-    if ((index < 0) || (index >= m_scenarios.size())) {
-        return QString();
+    if (index >= m_scenarios.size()) {
+        return {};
+    }
+
+    const auto& s = m_scenarios.at(index);
+    if (s.localWeatherTileManagement.isEmpty() || s.localWeatherTileType.isEmpty()) {
+        return {};
+    }
+
+    return QStringList() << s.localWeatherTileManagement << s.localWeatherTileType;
+}
+
+QString WeatherScenariosModel::nameForItem(quint32 index) const
+{
+    if (index >= m_scenarios.size()) {
+        return {};
     }
 
     return m_scenarios.at(index).name;

@@ -182,11 +182,24 @@ Item {
                     // inside the sim
                     _config.setProperty("/nasal/local_weather/enabled", advancedWeather.checked);
 
+                    // Thorsten R advises that these are also needed for AW to startup
+                    // correctly.
+                    if (advancedWeather.checked) {
+                        _config.setProperty("/sim/gui/dialogs/metar/mode/global-weather", !advancedWeather.checked);
+                        _config.setProperty("/sim/gui/dialogs/metar/mode/local-weather", advancedWeather.checked);
+                        _config.setProperty("/sim/gui/dialogs/metar/mode/manual-weather", advancedWeather.checked);
+                    }
+
                     var index = weatherScenario.selectedIndex;
 
                     // set description from the weather scenarios, so Local-weather
                     // can run the appropriate simulation
-                    if (!fetchMetar.checked) {
+                    if (fetchMetar.checked) {
+                        if (advancedWeather.checked) {
+                            _config.setProperty("/local-weather/tmp/tile-management", "METAR");
+                            _config.setProperty("/local-weather/tmp/tile-type", "live");
+                        }
+                    } else {
                         if (weatherScenario.isCustomMETAR) {
                             _config.setArg("metar", customMETAR.value)
                         } else {
@@ -198,7 +211,18 @@ Item {
                         _config.setProperty("/environment/weather-scenario",
                                             _weatherScenarios.nameForItem(index))
 
-                    }
+                        if (advancedWeather.checked) {
+                            // set AW tile options
+                            var s = _weatherScenarios.localWeatherData(index);
+                            if (s.length === 0) {
+                                console.warn("Weather scenario " + _weatherScenarios.nameForItem(index)
+                                             + " does not specify local weather data");
+                            } else {
+                                _config.setProperty("/local-weather/tmp/tile-management", s[0]);
+                                _config.setProperty("/local-weather/tmp/tile-type", s[1]);
+                            }
+                        } // of using Advanced (local) weather
+                    } // of not using real-wxr
                 }
 
                 function summary()

@@ -46,17 +46,21 @@ public:
 
     QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE QString metarForItem(int index) const;
+    Q_INVOKABLE QString metarForItem(quint32 index) const;
 
-    Q_INVOKABLE QString nameForItem(int index) const;
+    Q_INVOKABLE QString nameForItem(quint32 index) const;
 
-    Q_INVOKABLE QString descriptionForItem(int index) const;
+    Q_INVOKABLE QString descriptionForItem(quint32 index) const;
+
+    Q_INVOKABLE QStringList localWeatherData(quint32 index) const;
 private:
     struct WeatherScenario
     {
         QString name;
         QString description;
         QString metar;
+        QString localWeatherTileType;
+        QString localWeatherTileManagement;
     };
 
     std::vector<WeatherScenario> m_scenarios;
@@ -64,7 +68,7 @@ private:
     enum {
         NameRole = Qt::UserRole + 1,
         DescriptionRole,
-        MetarRole
+        MetarRole,
     };
 };
 
