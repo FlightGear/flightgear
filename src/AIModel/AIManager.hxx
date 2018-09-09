@@ -92,6 +92,15 @@ public:
      * avoid correctly.
      */
     FGAIAircraft* getUserAircraft() const;
+    
+    bool isRadarEnabled() const
+    { return _radarEnabled; }
+    
+    bool enableRadarDebug() const
+    { return _radarDebugMode; }
+    
+    double radarRangeM() const
+    { return _radarRangeM; }
 private:
     // FGSubmodelMgr is a friend for access to the AI_list
     friend class FGSubmodelMgr;
@@ -120,7 +129,8 @@ private:
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
     SGPropertyNode_ptr _environmentVisiblity;
-
+    SGPropertyNode_ptr _groundSpeedKts_node;
+    
     ai_list_type ai_list;
 
     double user_altitude_agl;
@@ -146,6 +156,12 @@ private:
     ScenarioDict _scenarios;
 
     SGSharedPtr<FGAIAircraft> _userAircraft;
+    
+    SGPropertyNode_ptr _simRadarControl,
+        _radarRangeNode, _radarDebugNode;
+    bool _radarEnabled = true,
+        _radarDebugMode = false;
+    double _radarRangeM = 0.0;
 };
 
 #endif  // _FG_AIMANAGER_HXX

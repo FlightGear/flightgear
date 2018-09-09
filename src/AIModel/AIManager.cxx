@@ -133,7 +133,8 @@ FGAIManager::init() {
     globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
     globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
     _environmentVisiblity = fgGetNode("/environment/visibility-m");
-
+    _groundSpeedKts_node = fgGetNode("/velocities/groundspeed-kt", true);
+    
     // Create an (invisible) AIAircraft representation of the current
     // users's aircraft, that mimicks the user aircraft's behavior.
 
@@ -142,7 +143,16 @@ FGAIManager::init() {
     _userAircraft->setGeodPos(globals->get_aircraft_position());
     _userAircraft->setPerformance("", "jet_transport");
     _userAircraft->setHeading(fgGetDouble("/orientation/heading-deg"));
-    _userAircraft->setSpeed(fgGetDouble("/velocities/groundspeed-kt"));
+    _userAircraft->setSpeed(_groundSpeedKts_node->getDoubleValue());
+    
+    // radar properties
+    _simRadarControl = fgGetNode("/sim/controls/radar", true);
+    if (!_simRadarControl->hasValue()) {
+        // default to true, but only if not already set
+        _simRadarControl->setBoolValue(true);
+    }
+    _radarRangeNode = fgGetNode("/instrumentation/radar/range", true);
+    _radarDebugNode = fgGetNode("/instrumentation/radar/debug-mode", true);
 }
 
 void
@@ -241,7 +251,12 @@ FGAIManager::update(double dt)
         return;
 
     fetchUserState(dt);
-
+    
+    // fetch radar state. Ensure we only do this once per frame.
+    _radarEnabled = _simRadarControl->getBoolValue();
+    _radarDebugMode = _radarDebugNode->getBoolValue();
+    _radarRangeM = _radarRangeNode->getDoubleValue() * SG_NM_TO_METER;
+    
     // partition the list into dead followed by alive
     auto firstAlive =
       std::stable_partition(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::getDie));
@@ -348,7 +363,7 @@ FGAIManager::fetchUserState( double dt )
 
     _userAircraft->setGeodPos(globals->get_aircraft_position());
     _userAircraft->setHeading(user_heading);
-    _userAircraft->setSpeed(fgGetDouble("/velocities/groundspeed-kt"));
+    _userAircraft->setSpeed(_groundSpeedKts_node->getDoubleValue());
     _userAircraft->update(dt);
 }
 

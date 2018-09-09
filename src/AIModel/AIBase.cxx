@@ -672,30 +672,24 @@ void FGAIBase::removeSoundFx() {
 
 double FGAIBase::UpdateRadar(FGAIManager* manager)
 {
-    bool control = fgGetBool("/sim/controls/radar", true);
+    if (!manager->isRadarEnabled())
+        return 0.0;
 
-    if(!control) return 0;
-
-    double radar_range_m = fgGetDouble("/instrumentation/radar/range");
-    bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
-    radar_range_m *= SG_NM_TO_METER  * 1.1; // + 10%
-    radar_range_m *= radar_range_m; // squared
-
-    double d2 = distSqr(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
-    double range_ft = sqrt(d2) * SG_METER_TO_FEET;
-
-    if (!force_on && (d2 > radar_range_m)) {
-        return range_ft * range_ft;
+    const double radar_range_m = manager->radarRangeM() * 1.1; // + 10%
+    bool force_on = manager->enableRadarDebug();
+    double d = dist(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
+    double dFt = d * SG_METER_TO_FEET;
+    in_range = (d < radar_range_m);
+    
+    if (!force_on && in_range) {
+        return dFt * dFt;
     }
-
-    props->setBoolValue("radar/in-range", true);
 
     // copy values from the AIManager
     double user_heading   = manager->get_user_heading();
     double user_pitch     = manager->get_user_pitch();
 
-    range = range_ft * SG_FEET_TO_METER * SG_METER_TO_NM;
-
+    range = d * SG_METER_TO_NM;
     // calculate bearing to target
     bearing = SGGeodesy::courseDeg(globals->get_aircraft_position(), pos);
 
@@ -705,7 +699,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
 
     // calculate elevation to target
     ht_diff = altitude_ft - globals->get_aircraft_position().getElevationFt();
-    elevation = atan2( ht_diff, range_ft ) * SG_RADIANS_TO_DEGREES;
+    elevation = atan2( ht_diff, dFt ) * SG_RADIANS_TO_DEGREES;
 
     // calculate look up/down to target
     vert_offset = elevation - user_pitch;
@@ -731,7 +725,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     rotation = hdg - user_heading;
     SG_NORMALIZE_RANGE(rotation, 0.0, 360.0);
 
-    return range_ft * range_ft;
+    return dFt * dFt;
 }
 
 /*
