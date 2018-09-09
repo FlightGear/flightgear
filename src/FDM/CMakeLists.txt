@@ -7,7 +7,15 @@ set(SP_FDM_SOURCES
 	SP/Balloon.cxx
 	SP/BalloonSim.cpp
 	SP/MagicCarpet.cxx
-        SP/AISim.cpp
+    SP/AISim.cpp
+	)
+set (SP_FDM_HEADERS
+	SP/ACMS.hxx
+	SP/ADA.hxx
+	SP/MagicCarpet.hxx
+	SP/Balloon.h
+	SP/BalloonSim.h
+	SP/AISim.hpp
 	)
 endif()
 
@@ -135,11 +143,22 @@ set(SOURCES
 	${SP_FDM_SOURCES}
 	ExternalNet/ExternalNet.cxx
 	ExternalPipe/ExternalPipe.cxx
-        AIWake/AircraftMesh.cxx
-        AIWake/WakeMesh.cxx
-        AIWake/AeroElement.cxx
-        AIWake/AIWakeGroup.cxx
-        LaRCsim/ls_matrix.c
+	AIWake/AircraftMesh.cxx
+	AIWake/WakeMesh.cxx
+	AIWake/AeroElement.cxx
+	AIWake/AIWakeGroup.cxx
+	LaRCsim/ls_matrix.c
+	)
+
+set(HEADERS
+	NullFDM.hxx
+	TankProperties.hxx
+	UFO.hxx
+	fdm_shell.hxx
+	flight.hxx
+	flightProperties.hxx
+	groundcache.hxx
+	${SP_FDM_HEADERS}
 	)
 
 if(ENABLE_UIUC_MODEL)
