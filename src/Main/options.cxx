@@ -1556,7 +1556,7 @@ fgOptLoadTape(const char* arg)
       node->removeChangeListener( this );
 
       // tell the replay subsystem to load the tape
-      FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+      FGReplay* replay = globals->get_subsystem<FGReplay>();
       SGPropertyNode_ptr arg = new SGPropertyNode();
       arg->setStringValue("tape", _tape.utf8Str() );
       arg->setBoolValue( "same-aircraft", 0 );

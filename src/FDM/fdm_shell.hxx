@@ -42,19 +42,21 @@ class FDMShell : public SGSubsystem
 {
 public:
   FDMShell();
-  virtual ~FDMShell();
+  ~FDMShell() override;
   
-  virtual void init();
-  virtual void shutdown();
-  virtual void reinit();
-  virtual void postinit();
-    
-  virtual void bind();
-  virtual void unbind();
+  void init() override;
+  void shutdown() override;
+  void reinit() override;
+  void postinit() override;
   
-  virtual void update(double dt);
+  void bind() override;
+  void unbind() override;
+  
+  void update(double dt) override;
 
     FGInterface* getInterface() const;
+    
+    static const char* subsystemName() { return "flight"; }
 private:
 
   void createImplementation();

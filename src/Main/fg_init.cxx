@@ -981,7 +981,7 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("replay", new FGReplay);
+    globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::GENERAL);
     globals->add_subsystem("history", new FGFlightHistory);
     
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -1065,7 +1065,7 @@ void fgStartReposition()
   fgSetBool("/sim/signals/reinit", true);
   fgSetBool("/sim/crashed", false);
   
-  FDMShell* fdm = static_cast<FDMShell*>(globals->get_subsystem("flight"));
+  FDMShell* fdm = globals->get_subsystem<FDMShell>();
   fdm->unbind();
   
   // update our position based on current presets
@@ -1080,10 +1080,10 @@ void fgStartReposition()
   }
   
   // Initialize the FDM
-  globals->get_subsystem("flight")->reinit();
+  globals->get_subsystem<FDMShell>()->reinit();
   
   // reset replay buffers
-  globals->get_subsystem("replay")->reinit();
+  globals->get_subsystem<FGReplay>()->reinit();
   
   // ugly: finalizePosition waits for METAR to arrive for the new airport.
   // we don't re-init the environment manager here, since historically we did
@@ -1096,9 +1096,9 @@ void fgStartReposition()
     envMgr->get_subsystem("realwx")->reinit();
   }
   
-  // need to bind FDMshell again, since we manually unbound it above...
+  // need to bind FDMshell again
   fdm->bind();
-  
+
   // need to reset aircraft (systems/instruments/autopilot)
   // so they can adapt to current environment
   globals->get_subsystem("systems")->reinit();
