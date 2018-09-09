@@ -280,10 +280,10 @@ Item {
                 contents: [
                     SettingCheckbox {
                         id: terrasync
-                        label: "Download scenery automatically"
-                        description: "FlightGear can automatically download scenery as needed, and check for updates to "
+                        label: qsTr("Download scenery automatically")
+                        description: qsTr("FlightGear can automatically download scenery as needed, and check for updates to "
                             + "the scenery. If you disable this option, you will need to download & install scenery "
-                            + "using an alternative method."
+                            + "using an alternative method.")
                         keywords: ["terrasync", "download", "scenery"]
                         option: "terrasync"
                         setting: "terrasync"
@@ -409,9 +409,9 @@ Item {
                 function summary()
                 {
                     var result = [];
-                    if (rembrandt) result.push("Rembrandt");
+                    if (rembrandt) result.push(qsTr("Rembrandt"));
                     else if (alsEnabled) result.push("ALS");
-                    if (msaaEnabled) result.push("anti-aliasing");
+                    if (msaaEnabled) result.push(qsTr("anti-aliasing"));
                     return result;
                 }
 

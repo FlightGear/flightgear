@@ -117,18 +117,18 @@ Item {
                     SettingCheckbox {
                         id: advancedWeather
                         label: qsTr("Advanced weather modelling")
-                        description: "Detailed weather simulation based on local terrain and "
+                        description: qsTr("Detailed weather simulation based on local terrain and "
                                      + "atmospheric simulation. Note that using advanced weather with "
                                      + "real-world weather data (METAR) information may not show exactly "
                                      + "the conditions recorded, and is not recommended for multi-player "
-                                     + "flight since the weather simulation is not shared over the network."
+                                     + "flight since the weather simulation is not shared over the network.")
                         setting: "aws-enabled"
                     },
 
                     SettingCheckbox {
                         id: fetchMetar
                         label: qsTr("Real-world weather")
-                        description: "Download real-world weather from the NOAA servers based on location."
+                        description: qsTr("Download real-world weather from the NOAA servers based on location.")
                         option: "real-weather-fetch"
                         setting: "fetch-metar"
                     },
@@ -156,7 +156,7 @@ Item {
 
                         hidden: !weatherScenario.isCustomMETAR
                         enabled: !fetchMetar.checked
-                        label: "METAR"
+                        label: qsTr("METAR")
                         placeholder: "XXXX 012345Z 28035G50KT 250V300 9999 TSRA SCT022CB BKN030 13/09 Q1005"
                         useFullWidth: true
                         setting: "custom-metar"
@@ -228,8 +228,8 @@ Item {
                 function summary()
                 {
                     var result = [];
-                    if (advancedWeather.checked) result.push("advanced weather");
-                    if (fetchMetar.checked) result.push("real-world weather");
+                    if (advancedWeather.checked) result.push(qsTr("advanced weather"));
+                    if (fetchMetar.checked) result.push(qsTr("real-world weather"));
                     return result;
                 }
             }
