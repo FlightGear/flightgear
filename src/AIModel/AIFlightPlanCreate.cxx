@@ -498,7 +498,9 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     }
   
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
-    assert( rwy != NULL );
+    if (!rwy)
+        return false;
+    
     double airportElev = apt->getElevation();
     
     double d = accelDistance(vTaxiMetric, vRotateMetric, accelMetric) + ACCEL_POINT;
@@ -565,6 +567,9 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
         }
     } else {
         FGRunway* runway = apt->getRunwayByIdent(activeRunway);
+        if (!runway)
+            return false;
+        
         SGGeod cur = runway->end();
         if (!waypoints.empty()) {
           cur = waypoints.back()->getPos();
@@ -610,7 +615,8 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
-    assert( rwy != NULL );
+    if (!rwy)
+        return false;
 
     // Create a slow descent path that ends 250 lateral to the runway.
     double initialTurnRadius = getTurnRadius(vDescent, true);
@@ -924,7 +930,9 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
 
     char buffer[12];
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
-    assert( rwy != NULL );
+    if (!rwy)
+        return false;
+    
     SGGeod threshold = rwy->threshold();
     double currElev = threshold.getElevationFt();
   

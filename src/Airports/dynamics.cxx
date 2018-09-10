@@ -582,6 +582,10 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
             }
         } // of group building phase
 
+        if (groups.empty()) {
+            SG_LOG(SG_AI, SG_DEV_WARN, "fallbackGetActiveRunway: airport " << parent()->ident() << " has no runways");
+            return {};
+        }
 
         // select highest scored group based on cross/tail wind
         for (git = groups.begin(); git != groups.end(); ++git) {
@@ -656,7 +660,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
 
     if (!rwyPrefs.available()) {
         runway = fallbackGetActiveRunway(action, heading);
-        return true;
+        return !runway.empty();
     }
 
     RunwayGroup *currRunwayGroup = 0;
@@ -819,7 +823,7 @@ void FGAirportDynamics::getActiveRunway(const string & trafficType,
 string FGAirportDynamics::chooseRunwayFallback()
 {
     FGRunway *rwy = _ap->getActiveRunwayForUsage();
-    return rwy->ident();
+    return rwy ? rwy->ident() : std::string();
 }
 
 double FGAirportDynamics::getElevation() const
