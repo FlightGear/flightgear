@@ -46,6 +46,19 @@ FGElectricalComponent::FGElectricalComponent() :
 {
 }
 
+void FGElectricalComponent::add_prop(const std::string &s)
+{
+    auto nd = fgGetNode(s, true);
+    props.push_back(nd);
+}
+
+void FGElectricalComponent::publishVoltageToProps() const
+{
+    const auto v = get_volts();
+    for (const auto& nd : props) {
+        nd->setFloatValue(v);
+    }
+}
 
 FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
     kind = FG_SUPPLIER;
@@ -404,21 +417,27 @@ void FGElectricalSystem::init () {
 }
 
 
-void FGElectricalSystem::bind () {
+void FGElectricalSystem::bind ()
+{
+    _serviceable_node = fgGetNode("/systems/electrical/serviceable", true);
 }
 
 
-void FGElectricalSystem::unbind () {
+void FGElectricalSystem::unbind ()
+{
+    _serviceable_node.reset();
 }
 
 
-void FGElectricalSystem::update (double dt) {
+void FGElectricalSystem::update (double dt)
+{
     if ( !enabled ) {
         return;
     }
 
     // cout << "Updating electrical system, dt = " << dt << endl;
-
+    _serviceable = _serviceable_node->getBoolValue();
+    
     unsigned int i;
 
     // zero out the voltage before we start, but don't clear the
@@ -594,7 +613,7 @@ float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
 
     // determine the current to carry forward
     float volts = 0.0;
-    if ( !fgGetBool("/systems/electrical/serviceable") ) {
+    if ( !_serviceable) {
         volts = 0;
     } else if ( node->get_kind() == FGElectricalComponent::FG_SUPPLIER ) {
         // cout << s << "is a supplier (" << node->get_name() << ")" << endl;
@@ -657,10 +676,7 @@ float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
 
         node->set_available_amps( input_amps - total_load );
 
-        // publish values to specified properties
-        for ( i = 0; i < node->get_num_props(); ++i ) {
-            fgSetFloat( node->get_prop(i).c_str(), node->get_volts() );
-        }
+        node->publishVoltageToProps();
 
         /*
         cout << s << node->get_name() << " -> (volts) " << node->get_volts()

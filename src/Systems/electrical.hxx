@@ -24,19 +24,9 @@
 #ifndef _SYSTEMS_ELECTRICAL_HXX
 #define _SYSTEMS_ELECTRICAL_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
 
 #include <string>
 #include <vector>
-
-using std::string;
-using std::vector;
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -61,11 +51,10 @@ enum FGElectricalComponentType {
 
 protected:
 
-    typedef vector<FGElectricalComponent *> comp_list;
-    typedef vector<string> string_list;
+    using comp_list = std::vector<FGElectricalComponent *> ;
 
     int kind;
-    string name;
+    std::string name;
     float volts;
     float load_amps;            // sum of current draw (load) due to
                                 // this node and all it's children
@@ -74,14 +63,15 @@ protected:
 
     comp_list inputs;
     comp_list outputs;
-    string_list props;
+    
+    simgear::PropertyList props;
 
 public:
 
     FGElectricalComponent();
     virtual ~FGElectricalComponent() {}
 
-    inline const string& get_name() { return name; }
+    inline const std::string& get_name() { return name; }
 
     inline int get_kind() const { return kind; }
 
@@ -110,13 +100,9 @@ public:
         outputs.push_back( c );
     }
 
-    inline int get_num_props() const { return props.size(); }
-    inline const string& get_prop( const int i ) {
-        return props[i];
-    }
-    inline void add_prop( const string &s ) {
-        props.push_back( s );
-    }
+    void add_prop( const std::string &s );
+    
+    void publishVoltageToProps() const;
 
 };
 
@@ -246,16 +232,16 @@ public:
     FGElectricalSystem ( SGPropertyNode *node );
     virtual ~FGElectricalSystem ();
 
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
+    void init () override;
+    void bind () override;
+    void unbind () override;
+    void update (double dt) override;
 
     bool build (SGPropertyNode* config_props);
     float propagate( FGElectricalComponent *node, double dt,
                      float input_volts, float input_amps,
-                     string s = "" );
-    FGElectricalComponent *find ( const string &name );
+                     std::string s = "" );
+    FGElectricalComponent *find ( const std::string &name );
 
 protected:
 
@@ -263,12 +249,12 @@ protected:
 
 private:
 
-    string name;
+    std::string name;
     int num;
-    string path;
+    std::string path;
 
     bool enabled;
-
+    
     comp_list suppliers;
     comp_list buses;
     comp_list outputs;
@@ -276,6 +262,8 @@ private:
 
     SGPropertyNode_ptr _volts_out;
     SGPropertyNode_ptr _amps_out;
+    SGPropertyNode_ptr _serviceable_node;
+    bool _serviceable = true;
 };
 
 
