@@ -29,7 +29,7 @@ Item {
         height: radius * 2
         radius: Style.roundRadius
 
-        color: (checked && enabled) ? Style.frameColor : Style.minorFrameColor
+        color: (checked && root.enabled) ? Style.frameColor : Style.minorFrameColor
         anchors.left: parent.left
         anchors.leftMargin: Style.margin
         anchors.verticalCenter: parent.verticalCenter
@@ -41,7 +41,7 @@ Item {
             radius: Style.roundRadius * 1.5
 
             anchors.verticalCenter: parent.verticalCenter
-            color: enabled && (checked | mouseArea.containsMouse) ? Style.themeColor : "white"
+            color: root.enabled && (checked | mouseArea.containsMouse) ? Style.themeColor : "white"
             border.width: 1
             border.color: Style.inactiveThemeColor
 
