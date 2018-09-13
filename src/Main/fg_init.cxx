@@ -1187,8 +1187,8 @@ void fgStartNewReset()
     
     simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();
-        
     simgear::GlobalParticleCallback::setSwitch(NULL);
+    simgear::UniformFactory::instance()->reset();
     
     globals->resetPropertyRoot();
     // otherwise channels are duplicated
