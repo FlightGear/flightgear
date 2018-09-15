@@ -46,7 +46,6 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PISTON "$Id: FGPiston.h,v 1.39 2017/04/29 11:16:46 ehofman Exp $"
 #define FG_MAX_BOOST_SPEEDS 3
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -215,7 +214,6 @@ boostspeed they refer to:
     @author David Megginson (initial porting and additional code)
     @author Ron Jensen (additional engine code)
     @see Taylor, Charles Fayette, "The Internal Combustion Engine in Theory and Practice"
-    @version $Id: FGPiston.h,v 1.39 2017/04/29 11:16:46 ehofman Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -249,6 +247,7 @@ public:
   double getOilPressure_psi(void) const {return OilPressure_psi;}
   double getOilTemp_degF (void) const {return KelvinToFahrenheit(OilTemp_degK);}
   double getRPM(void) const {return RPM;}
+  double getAFR(void) const {return m_dot_fuel > 0.0 ? m_dot_air / m_dot_fuel : INFINITY;}
 
 protected:
 

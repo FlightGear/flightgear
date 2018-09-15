@@ -53,6 +53,7 @@ INCLUDES
 #include "models/FGAircraft.h"
 #include "models/FGAccelerations.h"
 #include "input_output/FGXMLFileRead.h"
+#include "FGTrim.h"
 
 using namespace std;
 
@@ -148,7 +149,7 @@ void FGInitialCondition::InitializeIC(void)
   lastAltitudeSet = setasl;
   lastLatitudeSet = setgeoc;
   enginesRunning = 0;
-  needTrim = 0;
+  trimRequested = TrimMode::tNone;
 }
 
 //******************************************************************************
@@ -178,9 +179,7 @@ void FGInitialCondition::SetVcalibratedKtsIC(double vcas)
 {
   double altitudeASL = position.GetAltitudeASL();
   double pressure = Atmosphere->GetPressure(altitudeASL);
-  double pressureSL = Atmosphere->GetPressureSL();
-  double rhoSL = Atmosphere->GetDensitySL();
-  double mach = MachFromVcalibrated(fabs(vcas)*ktstofps, pressure, pressureSL, rhoSL);
+  double mach = MachFromVcalibrated(fabs(vcas)*ktstofps, pressure);
   double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
 
   SetVtrueFpsIC(mach * soundSpeed);
@@ -691,13 +690,12 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 {
   double altitudeASL = position.GetAltitudeASL();
   double pressure = Atmosphere->GetPressure(altitudeASL);
-  double pressureSL = Atmosphere->GetPressureSL();
   double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   double rho = Atmosphere->GetDensity(altitudeASL);
   double rhoSL = Atmosphere->GetDensitySL();
 
   double mach0 = vt / soundSpeed;
-  double vc0 = VcalibratedFromMach(mach0, pressure, pressureSL, rhoSL);
+  double vc0 = VcalibratedFromMach(mach0, pressure);
   double ve0 = vt * sqrt(rho/rhoSL);
 
   double geodLatitude = position.GetGeodLatitudeRad();
@@ -715,7 +713,7 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
 
   switch(lastSpeedSet) {
     case setvc:
-      mach0 = MachFromVcalibrated(vc0, pressure, pressureSL, rhoSL);
+      mach0 = MachFromVcalibrated(vc0, pressure);
       SetVtrueFpsIC(mach0 * soundSpeed);
       break;
     case setmach:
@@ -834,12 +832,10 @@ double FGInitialCondition::GetVcalibratedKtsIC(void) const
 {
   double altitudeASL = position.GetAltitudeASL();
   double pressure = Atmosphere->GetPressure(altitudeASL);
-  double pressureSL = Atmosphere->GetPressureSL();
-  double rhoSL = Atmosphere->GetDensitySL();
   double soundSpeed = Atmosphere->GetSoundSpeed(altitudeASL);
   double mach = vt / soundSpeed;
 
-  return fpstokts * VcalibratedFromMach(mach, pressure, pressureSL, rhoSL);
+  return fpstokts * VcalibratedFromMach(mach, pressure);
 }
 
 //******************************************************************************
@@ -916,7 +912,8 @@ bool FGInitialCondition::Load(const SGPath& rstfile, bool useStoredPath)
   // Check to see if any engines are specified to be initialized in a running state
   Element* running_elements = document->FindElement("running");
   while (running_elements) {
-    enginesRunning |= 1 << int(running_elements->GetDataAsNumber());
+    int engineNumber = int(running_elements->GetDataAsNumber());
+    enginesRunning |= engineNumber == -1 ? engineNumber : 1 << engineNumber;
     running_elements = document->FindNextElement("running");
   }
 
@@ -975,6 +972,27 @@ bool FGInitialCondition::LoadLatitude(Element* position_el)
   }
 
   return true;
+}
+
+//******************************************************************************
+
+void FGInitialCondition::SetTrimRequest(std::string trim)
+{
+  std::string& trimOption = to_lower(trim);
+  if (trimOption == "1")
+    trimRequested = TrimMode::tGround;  // For backwards compatabiity
+  else if (trimOption == "longitudinal")
+    trimRequested = TrimMode::tLongitudinal;
+  else if (trimOption == "full")
+    trimRequested = TrimMode::tFull;
+  else if (trimOption == "ground")
+    trimRequested = TrimMode::tGround;
+  else if (trimOption == "pullup")
+    trimRequested = TrimMode::tPullup;
+  else if (trimOption == "custom")
+    trimRequested = TrimMode::tCustom;
+  else if (trimOption == "turn")
+    trimRequested = TrimMode::tTurn;
 }
 
 //******************************************************************************
@@ -1047,7 +1065,7 @@ bool FGInitialCondition::Load_v1(Element* document)
   if (document->FindElement("targetNlf"))
     SetTargetNlfIC(document->FindElementValueAsNumber("targetNlf"));
   if (document->FindElement("trim"))
-    needTrim = document->FindElementValueAsNumber("trim");
+    SetTrimRequest(document->FindElementValue("trim"));
 
   // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
   // This is the rotation rate of the "Local" frame, expressed in the local frame.
@@ -1486,6 +1504,11 @@ void FGInitialCondition::bind(FGPropertyManager* PropertyManager)
                        true);
   PropertyManager->Tie("ic/geod-alt-ft", &position,
                        &FGLocation::GetGeodAltitude);
+
+  PropertyManager->Tie("ic/targetNlf", this,
+                       &FGInitialCondition::GetTargetNlfIC,
+                       &FGInitialCondition::SetTargetNlfIC,
+                       true);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
