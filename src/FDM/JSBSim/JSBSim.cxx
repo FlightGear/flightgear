@@ -1096,9 +1096,7 @@ void FGJSBsim::set_V_calibrated_kts(double vc)
     fgic->SetVcalibratedKtsIC(vc);
   else {
     double p=pressure->getDoubleValue();
-    double psl=fdmex->GetAtmosphere()->GetPressureSL();
-    double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
-    double mach = FGJSBBase::MachFromVcalibrated(vc, p, psl, rhosl);
+    double mach = FGJSBBase::MachFromVcalibrated(vc, p);
     double temp = 1.8*(temperature->getDoubleValue()+273.15);
     double soundSpeed = sqrt(1.4*1716.0*temp);
     FGColumnVector3 vUVW = Propagate->GetUVW();
