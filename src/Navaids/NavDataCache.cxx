@@ -628,12 +628,14 @@ public:
 
   void writeIntProperty(const string& key, int value)
   {
-    sqlite_bind_stdstring(clearProperty, 1, key);
-    execUpdate(clearProperty);
+    if (!readOnly){
+      sqlite_bind_stdstring(clearProperty, 1, key);
+      execUpdate(clearProperty);
 
-    sqlite_bind_stdstring(writePropertyQuery, 1, key);
-    sqlite3_bind_int(writePropertyQuery, 2, value);
-    execUpdate(writePropertyQuery);
+      sqlite_bind_stdstring(writePropertyQuery, 1, key);
+      sqlite3_bind_int(writePropertyQuery, 2, value);
+      execUpdate(writePropertyQuery);
+    }
   }
 
 
@@ -1554,22 +1556,26 @@ void NavDataCache::writeIntProperty(const string& key, int value)
 
 void NavDataCache::writeStringProperty(const string& key, const string& value)
 {
-  sqlite_bind_stdstring(d->clearProperty, 1, key);
-  d->execUpdate(d->clearProperty);
+  if (!isReadOnly()) {
+    sqlite_bind_stdstring(d->clearProperty, 1, key);
+    d->execUpdate(d->clearProperty);
 
-  sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
-  sqlite_bind_stdstring(d->writePropertyQuery, 2, value);
-  d->execUpdate(d->writePropertyQuery);
+    sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
+    sqlite_bind_stdstring(d->writePropertyQuery, 2, value);
+    d->execUpdate(d->writePropertyQuery);
+  }
 }
 
 void NavDataCache::writeDoubleProperty(const string& key, const double& value)
 {
-  sqlite_bind_stdstring(d->clearProperty, 1, key);
-  d->execUpdate(d->clearProperty);
+  if (!isReadOnly()) {
+    sqlite_bind_stdstring(d->clearProperty, 1, key);
+    d->execUpdate(d->clearProperty);
 
-  sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
-  sqlite3_bind_double(d->writePropertyQuery, 2, value);
-  d->execUpdate(d->writePropertyQuery);
+    sqlite_bind_stdstring(d->writePropertyQuery, 1, key);
+    sqlite3_bind_double(d->writePropertyQuery, 2, value);
+    d->execUpdate(d->writePropertyQuery);
+  }
 }
 
 string_list NavDataCache::readStringListProperty(const string& key)
@@ -1586,13 +1592,15 @@ string_list NavDataCache::readStringListProperty(const string& key)
 
 void NavDataCache::writeStringListProperty(const string& key, const string_list& values)
 {
-  sqlite_bind_stdstring(d->clearProperty, 1, key);
-  d->execUpdate(d->clearProperty);
+  if (!isReadOnly()) {
+    sqlite_bind_stdstring(d->clearProperty, 1, key);
+    d->execUpdate(d->clearProperty);
 
-  for (string value : values) {
-    sqlite_bind_stdstring(d->writePropertyMulti, 1, key);
-    sqlite_bind_stdstring(d->writePropertyMulti, 2, value);
-    d->execInsert(d->writePropertyMulti);
+    for (string value : values) {
+      sqlite_bind_stdstring(d->writePropertyMulti, 1, key);
+      sqlite_bind_stdstring(d->writePropertyMulti, 2, value);
+      d->execInsert(d->writePropertyMulti);
+    }
   }
 }
 
@@ -1635,9 +1643,11 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
 
 void NavDataCache::stampCacheFile(const SGPath& path)
 {
-  sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.realpath().utf8Str());
-  sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
-  d->execInsert(d->stampFileCache);
+    if (!isReadOnly()){
+        sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.realpath().utf8Str());
+        sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
+        d->execInsert(d->stampFileCache);
+    }
 }
 
 void NavDataCache::beginTransaction()
