@@ -75,7 +75,7 @@ public:
     bool saveTape(const SGPropertyNode* ConfigData);
     bool loadTape(const SGPropertyNode* ConfigData);
 
-    static const char* subsystemName() { return "reply"; }
+    static const char* subsystemName() { return "replay"; }
 private:
     void clear();
     FGReplayData* record(double time);
