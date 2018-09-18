@@ -167,6 +167,4 @@ Item {
             OverlayShared.globalOverlay = this
         }
     }
-
-
 }

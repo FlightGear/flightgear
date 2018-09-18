@@ -62,7 +62,7 @@ Item {
             width: parent.width - 2
 
 // helper function called by BaseMenuItem on its parent, i.e,
-// us, to requestc closing the menu
+// us, to request closing the menu
             function requestClose()
             {
                 root.close();

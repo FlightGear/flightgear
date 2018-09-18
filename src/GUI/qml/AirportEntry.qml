@@ -1,5 +1,4 @@
 import QtQuick 2.4
-import QtQuick.Window 2.0
 import FlightGear 1.0
 import FlightGear.Launcher 1.0
 import "."
@@ -66,7 +65,9 @@ FocusScope
 
         onActiveFocusChanged: {
             if (activeFocus) {
-                OverlayShared.globalOverlay.showOverlayAtItemOffset(overlay, root, Qt.point(xOffsetForEditFrame, root.height + Style.margin))
+                OverlayShared.globalOverlay.showOverlayAtItemOffset(overlay, root,
+                                                                    Qt.point(xOffsetForEditFrame, root.height + Style.margin),
+                                                                    false /* don't offset */);
             } else {
                 OverlayShared.globalOverlay.dismissOverlay()
                 searchCompleter.clear();
