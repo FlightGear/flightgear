@@ -21,15 +21,13 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/compiler.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>             // strcmp()
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>             // strcmp()
 
 #if defined(SG_WINDOWS)
 #  include <io.h>               // isatty()

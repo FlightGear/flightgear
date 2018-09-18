@@ -371,9 +371,7 @@ NewGUI::readDir (const SGPath& path)
 
     flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
     flightgear::NavDataCache::Transaction txn(cache);
-    simgear::PathList xmls = dir.children(simgear::Dir::TYPE_FILE, ".xml");
-    
-    BOOST_FOREACH(SGPath xmlPath, xmls) {
+    for (SGPath xmlPath : dir.children(simgear::Dir::TYPE_FILE, ".xml")) {
       if (!cache->isCachedFileModified(xmlPath)) {
         // cached, easy
         string name = cache->readStringProperty(xmlPath.utf8Str());
