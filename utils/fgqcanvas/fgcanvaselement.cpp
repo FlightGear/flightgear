@@ -31,11 +31,11 @@
 
 QTransform qTransformFromCanvas(LocalProp* prop)
 {
-    float m[6] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 }; // identity matrix
-    for (int i =0; i< 6; ++i) {
+    double m[6] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 }; // identity matrix
+    for (unsigned int i =0; i< 6; ++i) {
         LocalProp* mProp =  prop->getOrCreateChildWithNameAndIndex(NameIndexTuple("m", i));
         if (!mProp->value().isNull()) {
-            m[i] = mProp->value().toFloat();
+            m[i] = mProp->value().toDouble();
         }
     }
 
@@ -73,6 +73,7 @@ bool FGCanvasElement::isHighlighted() const
 
 CanvasItem *FGCanvasElement::createQuickItem(QQuickItem *parent)
 {
+    Q_UNUSED(parent)
     return nullptr;
 }
 
