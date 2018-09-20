@@ -106,7 +106,7 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     m_aircraftModel->setPackageRoot(globals->packageRoot());
 
     m_subsystemIdleTimer = new QTimer(this);
-    m_subsystemIdleTimer->setInterval(0);
+    m_subsystemIdleTimer->setInterval(10);
     connect(m_subsystemIdleTimer, &QTimer::timeout, []()
        {globals->get_subsystem_mgr()->update(0.0);});
     m_subsystemIdleTimer->start();
