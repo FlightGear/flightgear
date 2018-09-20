@@ -753,6 +753,7 @@ static int
 fgOptParkpos( const char * arg )
 {
     fgSetString("/sim/presets/parkpos", arg);
+    fgSetBool("/sim/presets/parking-requested", true);
     return FG_OPTIONS_OK;
 }
 
@@ -1435,15 +1436,6 @@ fgOptRunway( const char *arg )
 }
 
 static int
-fgOptParking( const char *arg )
-{
-    cerr << "Processing argument " << arg << endl;
-    fgSetString("/sim/presets/parking", arg );
-    fgSetBool  ("/sim/presets/parking-requested", true );
-    return FG_OPTIONS_OK;
-}
-
-static int
 fgOptCallSign(const char * arg)
 {
     int i;
@@ -1820,7 +1812,7 @@ struct OptionDesc {
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {"ai-scenario",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptScenario },
-    {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
+    {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
     {"version",                      false, OPTION_IGNORE, "", false, "", 0 },
     {"json-report",                  false, OPTION_IGNORE, "", false, "", 0 },
     {"enable-fpe",                   false, OPTION_IGNORE, "", false, "", 0},
