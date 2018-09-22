@@ -1,11 +1,12 @@
 
 GET_FILENAME_COMPONENT(SRC_PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
 SET(FGDATA_SRC_DIR "${SRC_PARENT_DIR}/fgdata")
+set(xlf_file "en_US/FlightGear-Qt.xlf")
 
-if(EXISTS ${TRANSLATIONS_SRC_DIR})
+if(EXISTS "${TRANSLATIONS_SRC_DIR}/${xlf_file}")
     message(STATUS "Using explicitly defined translations from: ${TRANSLATIONS_SRC_DIR}")
     set(do_translate TRUE)
-elseif(EXISTS ${FGDATA_SRC_DIR})
+elseif(EXISTS "${FGDATA_SRC_DIR}/Translations/${xlf_file}")
     SET(TRANSLATIONS_SRC_DIR "${FGDATA_SRC_DIR}/Translations")
     message(STATUS "Found translations dir implicitly: ${TRANSLATIONS_SRC_DIR}")
     set(do_translate TRUE)
