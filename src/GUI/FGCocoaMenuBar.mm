@@ -1,6 +1,7 @@
 #include "FGCocoaMenuBar.hxx"
 
 #include <AppKit/NSMenu.h>
+#include <AppKit/NSApplication.h>
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
