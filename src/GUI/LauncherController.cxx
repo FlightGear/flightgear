@@ -392,8 +392,13 @@ QString LauncherController::selectAircraftStateAutomatically()
         return "approach";
     }
 
-    if (m_location->isParkedLocation() && m_selectedAircraftInfo->hasState("parked")) {
-        return "parked";
+    if (m_location->isParkedLocation()) {
+        if (m_selectedAircraftInfo->hasState("parked")) {
+            return "parked";
+        }
+        if (m_selectedAircraftInfo->hasState("parking")) {
+            return "parking";
+        }
     } else {
         // also try 'engines-running'?
         if (m_selectedAircraftInfo->hasState("take-off"))

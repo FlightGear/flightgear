@@ -140,8 +140,9 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
 QString humanNameFromStateTag(const std::string& tag)
 {
     if (tag == "approach") return QObject::tr("On approach");
-    if (tag == "take-off") return QObject::tr("Ready for Take-off");
-    if ((tag == "parking") || (tag == "cold-and-dark"))
+    if ((tag == "take-off") || (tag == "takeoff"))
+        return QObject::tr("Ready for Take-off");
+    if ((tag == "parked") || (tag == "parking") || (tag == "cold-and-dark"))
         return QObject::tr("Parked, cold & dark");
     if (tag == "auto")
         return QObject::tr("Automatic");
@@ -150,7 +151,7 @@ QString humanNameFromStateTag(const std::string& tag)
     if (tag == "taxi")
         return QObject::tr("Ready to taxi");
 
-    qWarning() << Q_FUNC_INFO << "add for" << QString::fromStdString(tag);
+    qWarning() << Q_FUNC_INFO << "add translation / string for" << QString::fromStdString(tag);
     // no mapping, let's use the tag directly
     return QString::fromStdString(tag);
 }
