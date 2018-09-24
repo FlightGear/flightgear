@@ -132,7 +132,9 @@ private:
 
     bool use_perf_vs;
     SGPropertyNode_ptr refuel_node;
-
+    SGPropertyNode_ptr tcasThreatNode;
+    SGPropertyNode_ptr tcasRANode;
+    
     // helpers for Run
     //TODO sort out which ones are better protected virtuals to allow
     //subclasses to override specific behaviour

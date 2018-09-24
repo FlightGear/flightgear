@@ -105,6 +105,9 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
 
     trackCache.remainingLength = 0;
     trackCache.startWptName = "-";
+    
+    tcasThreatNode = props->getNode("tcas/threat-level", true);
+    tcasRANode = props->getNode("tcas/ra-sense", true);
 }
 
 
@@ -443,15 +446,13 @@ void FGAIAircraft::assertSpeed(double speed)
 
 void FGAIAircraft::checkTcas(void)
 {
-    if (props->getIntValue("tcas/threat-level",0)==3)
+    if (tcasThreatNode->getIntValue()==3)
     {
-        int RASense = props->getIntValue("tcas/ra-sense",0);
-        if ((RASense>0)&&(tgt_vs<4000))
+        const int RASense = tcasRANode->getIntValue();
+        if ((RASense>0)&&(tgt_vs<4000)) {
             // upward RA: climb!
             tgt_vs = 4000;
-        else
-        if (RASense<0)
-        {
+        } else if (RASense<0) {
             // downward RA: descend!
             if (altitude_ft < 1000)
             {
