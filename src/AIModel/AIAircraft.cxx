@@ -446,7 +446,7 @@ void FGAIAircraft::assertSpeed(double speed)
 
 void FGAIAircraft::checkTcas(void)
 {
-    if (tcasThreatNode->getIntValue()==3)
+    if (tcasThreatNode && tcasThreatNode->getIntValue()==3)
     {
         const int RASense = tcasRANode->getIntValue();
         if ((RASense>0)&&(tgt_vs<4000)) {
