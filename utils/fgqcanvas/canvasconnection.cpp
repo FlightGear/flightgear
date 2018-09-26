@@ -207,6 +207,7 @@ void CanvasConnection::onTextMessageReceived(QString message)
     if (json.isObject()) {
         // process new nodes
         QJsonArray created = json.object().value("created").toArray();
+        qInfo() << "new nodes:" << created.size();
         Q_FOREACH (QJsonValue v, created) {
             QJsonObject newProp = v.toObject();
 
@@ -278,7 +279,10 @@ void CanvasConnection::onTextMessageReceived(QString message)
 
 void CanvasConnection::onWebSocketClosed()
 {
-    qDebug() << "saw web-socket closed";
+    if ((m_status == Connected) || (m_status == Connected)) {
+        qDebug() << "saw web-socket closed";
+    }
+
     m_localPropertyRoot.reset();
     idPropertyDict.clear();
 

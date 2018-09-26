@@ -83,7 +83,7 @@ void CanvasPaintedDisplay::setCanvas(CanvasConnection *canvas)
 
 void CanvasPaintedDisplay::onConnectionDestroyed()
 {
-    qDebug() << "saw connection destroyed";
+    qDebug() << Q_FUNC_INFO << "saw connection destroyed";
     m_connection = nullptr;
     delete m_rootElement;
 
@@ -97,8 +97,11 @@ void CanvasPaintedDisplay::onConnectionStatusChanged()
     {
         buildElements();
     } else {
-        qDebug() << Q_FUNC_INFO << "clearing root element";
-        delete m_rootElement;
+        if (m_rootElement) {
+            qDebug() << Q_FUNC_INFO << "clearing root element";
+            delete m_rootElement;
+            m_rootElement.clear();
+        }
         update();
     }
 }
