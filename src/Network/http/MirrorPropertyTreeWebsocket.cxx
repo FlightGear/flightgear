@@ -142,7 +142,7 @@ using std::string;
         {
         }
 
-        virtual void valueChanged(SGPropertyNode* node) override
+        void valueChanged(SGPropertyNode* node) override
         {
             auto it = idHash.find(node);
             if (it == idHash.end()) {
@@ -158,11 +158,16 @@ using std::string;
             }
         }
 
-        virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child) override
+        void childAdded(SGPropertyNode* parent, SGPropertyNode* child) override
         {
+            SG_UNUSED(parent);
+            recursiveAdd(child);            
+        }
 
-            const auto type = child->getType();
-            const auto& path = child->getPath();
+        void recursiveAdd(SGPropertyNode* node)
+        {
+            const auto type = node->getType();
+            const auto& path = node->getPath();
             auto rrIt = std::find_if(recentlyRemoved.begin(), recentlyRemoved.end(),
                                      [type, &path](const RecentlyRemovedNode& rr)
                                      { return (type == rr.type) && (path == rr.path); });
@@ -170,16 +175,26 @@ using std::string;
                 // recycle nodes which get thrashed from Nasal (deleted + re-created
                 // each time a Nasal timer fires)
                 removedNodes.erase(rrIt->id); // don't remove it!
-                idHash.insert(std::make_pair(child, rrIt->id));
-                changedNodes.insert(child);
+                idHash.insert(std::make_pair(node, rrIt->id));
+                changedNodes.insert(node);
                 recentlyRemoved.erase(rrIt);
+            #if defined (MIRROR_DEBUG)              
+                SG_LOG(SG_NETWORK, SG_INFO, "recycling node:" << path);
+            #endif
                 return;
             }
+        #if defined (MIRROR_DEBUG)    
+            SG_LOG(SG_NETWORK, SG_INFO, "new node:" << path);
+        #endif
+            newNodes.insert(node);
 
-            newNodes.insert(child);
+            int child = 0;
+            for (; child < node->nChildren(); ++child) {
+                recursiveAdd(node->getChild(child));
+            }
         }
 
-        virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child) override
+        void childRemoved(SGPropertyNode* parent, SGPropertyNode* child) override
         {
             changedNodes.erase(child); // have to do this here with the pointer valid
             newNodes.erase(child);
@@ -198,6 +213,9 @@ using std::string;
 
         void registerSubtree(SGPropertyNode* node)
         {
+#if defined (MIRROR_DEBUG)              
+            SG_LOG(SG_NETWORK, SG_INFO, "register subtree:" << node->getPath());
+#endif
             valueChanged(node);
 
             // and recurse
@@ -380,13 +398,11 @@ static void handleExecCommand(cJSON* json)
 #endif
 
 MirrorPropertyTreeWebsocket::MirrorPropertyTreeWebsocket(const std::string& path) :
+    _rootPath(path),
     _listener(new MirrorTreeListener),
     _minSendInterval(100)
 {
-    _subtreeRoot = globals->get_props()->getNode(path, true);
-    _subtreeRoot->addChangeListener(_listener.get());
-    _listener->registerSubtree(_subtreeRoot);
-    _lastSendTime = SGTimeStamp::now();
+    checkNodeExists();
 }
 
 MirrorPropertyTreeWebsocket::~MirrorPropertyTreeWebsocket()
@@ -395,16 +411,30 @@ MirrorPropertyTreeWebsocket::~MirrorPropertyTreeWebsocket()
 
 void MirrorPropertyTreeWebsocket::close()
 {
-    _subtreeRoot->removeChangeListener(_listener.get());
+    if (_subtreeRoot) {
+        _subtreeRoot->removeChangeListener(_listener.get());
+    }
+}
 
-  #if 0
-  SG_LOG(SG_NETWORK, SG_INFO, "closing PropertyChangeWebsocket #" << id);
-  _watchedNodes.clear();
-  #endif
+void MirrorPropertyTreeWebsocket::checkNodeExists()
+{
+    _subtreeRoot = globals->get_props()->getNode(_rootPath, false);
+    if (_subtreeRoot) {
+        _subtreeRoot->addChangeListener(_listener.get());
+        _listener->registerSubtree(_subtreeRoot);
+        _lastSendTime = SGTimeStamp::now();
+    }
 }
 
 void MirrorPropertyTreeWebsocket::handleRequest(const HTTPRequest & request, WebsocketWriter &writer)
 {
+    if (!_subtreeRoot) {
+        checkNodeExists();
+        if (!_subtreeRoot) {
+            return; // still no node exists, we can't process this
+        }
+    }
+
   if (request.Content.empty()) return;
 #if 0
   /*
@@ -463,6 +493,13 @@ void MirrorPropertyTreeWebsocket::handleRequest(const HTTPRequest & request, Web
 
 void MirrorPropertyTreeWebsocket::poll(WebsocketWriter & writer)
 {
+    if (!_subtreeRoot) {
+        checkNodeExists();
+        if (!_subtreeRoot) {
+            return;
+        }
+    }
+
     if (!_listener->haveChangesToSend()) {
         return;
     }

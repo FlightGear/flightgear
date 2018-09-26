@@ -610,8 +610,9 @@ Websocket * MongooseHttpd::newWebsocket(const string & uri)
     SG_LOG(SG_NETWORK, SG_INFO, "new PropertyChangeWebsocket for: " << uri);
     return new PropertyChangeWebsocket(&_propertyChangeObserver);
   } else if (uri.find("/PropertyTreeMirror/") == 0) {
-      SG_LOG(SG_NETWORK, SG_INFO, "new MirrorPropertyTreeWebsocket for: " << uri);
-    return new MirrorPropertyTreeWebsocket(uri.substr(20));
+    const auto path = uri.substr(20);
+    SG_LOG(SG_NETWORK, SG_INFO, "new MirrorPropertyTreeWebsocket for: " << path);
+    return new MirrorPropertyTreeWebsocket(path);
   }
   return NULL;
 }

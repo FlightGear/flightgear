@@ -38,15 +38,18 @@ class MirrorPropertyTreeWebsocket : public Websocket
 {
 public:
     MirrorPropertyTreeWebsocket(const std::string& path);
-  virtual ~MirrorPropertyTreeWebsocket();
+    ~MirrorPropertyTreeWebsocket() override;
 
-  virtual void close();
-  virtual void handleRequest(const HTTPRequest & request, WebsocketWriter & writer);
-  virtual void poll(WebsocketWriter & writer);
+    void close() override;
+    void handleRequest(const HTTPRequest & request, WebsocketWriter & writer) override;
+    void poll(WebsocketWriter & writer) override;
 
 private:
+    void checkNodeExists();
+
     friend class MirrorTreeListener;
 
+    std::string _rootPath;
     SGPropertyNode_ptr _subtreeRoot;
     std::unique_ptr<MirrorTreeListener> _listener;
     int _minSendInterval;
