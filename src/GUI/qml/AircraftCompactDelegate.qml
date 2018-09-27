@@ -43,24 +43,24 @@ Item {
         }
     }
 
-    Rectangle {
+    Item {
         id: thumbnailBox
-        // thumbnail border
+        width: 172
+        height: 128
 
-        y: Math.max(0, Math.round((contentBox.childrenRect.height - height) * 0.5))
+        Rectangle {
+            anchors.centerIn: parent
+            border.width: 1
+            border.color: "#7f7f7f"
+            width: thumbnail.width
+            height: thumbnail.height
 
-        border.width: 1
-        border.color: "#7f7f7f"
-
-        width: thumbnail.width
-        height: thumbnail.height
-
-        ThumbnailImage {
-            id: thumbnail
-
-            aircraftUri: model.uri
-            maximumSize.width: 172
-            maximumSize.height: 128
+            ThumbnailImage {
+                id: thumbnail
+                aircraftUri: model.uri
+                maximumSize.width: 172
+                maximumSize.height: 128
+            }
         }
     }
 
