@@ -227,6 +227,7 @@ void KLN89AptPage::Update(double dt) {
 				case 12:
 					// Lakebed
 					_kln89->DrawText("CLY", 2, 9, 2);
+					break;
 				default:
 					// erm? ...
 					_kln89->DrawText("MAT", 2, 9, 2);
@@ -276,6 +277,7 @@ void KLN89AptPage::Update(double dt) {
 				case 12:
 					// Lakebed
 					_kln89->DrawText("CLY", 2, 9, 0);
+					break;
 				default:
 					// erm? ...
 					_kln89->DrawText("MAT", 2, 9, 0);
