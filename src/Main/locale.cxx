@@ -41,8 +41,8 @@ using std::vector;
 using std::string;
 
 FGLocale::FGLocale(SGPropertyNode* root) :
-    _intl(root->getNode("/sim/intl",0, true)),
-    _defaultLocale(_intl->getChild("locale",0, true))
+	_intl(root->getNode("/sim/intl", 0, true)),
+	_defaultLocale(_intl->getChild("locale", 0, true))
 {
 }
 
@@ -73,19 +73,42 @@ string FGLocale::removeEncodingPart(const string& locale)
 string_list
 FGLocale::getUserLanguage()
 {
-    string_list result;
-    static wchar_t localeNameBuf[LOCALE_NAME_MAX_LENGTH];
+	unsigned long bufSize = 128;
+	wchar_t* localeNameBuf = reinterpret_cast<wchar_t*>(alloca(bufSize));
+	unsigned long numLanguages = 0;
 
-    if (GetUserDefaultLocaleName(localeNameBuf, LOCALE_NAME_MAX_LENGTH)) {
-        std::wstring ws(localeNameBuf);
-        std::string localeNameUTF8 = simgear::strutils::convertWStringToUtf8(ws);
+	bool ok = GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &numLanguages,
+		localeNameBuf, &bufSize);
+	if (!ok) {
+		// if we have a lot of languages, can fail, allocate a bigger
+		// buffer
+		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+			bufSize = 0;
+			GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &numLanguages,
+				nullptr, &bufSize);
+			localeNameBuf = reinterpret_cast<wchar_t*>(alloca(bufSize));
+			ok = GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &numLanguages,
+				localeNameBuf, &bufSize);
+		}
+	}
 
-        SG_LOG(SG_GENERAL, SG_INFO, "Detected user locale:" << localeNameUTF8);
-        result.push_back(localeNameUTF8);
-        return result;
-    } else {
-        SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected user locale");
-    }
+	if (!ok) {
+		SG_LOG(SG_GENERAL, SG_WARN, "Failed to detected user locale via GetUserPreferredUILanguages");
+		return{};
+	}
+
+	string_list result;
+	result.reserve(numLanguages);
+	for (unsigned int l = 0; l < numLanguages; ++l) {
+		std::wstring ws(localeNameBuf);
+		if (ws.empty())
+			break;
+
+		// skip to next string, past this string and trailing NULL
+		localeNameBuf += (ws.size() + 1);
+		result.push_back(simgear::strutils::convertWStringToUtf8(ws));
+		SG_LOG(SG_GENERAL, SG_INFO, "User langauge " << l << ":" << result.back());
+	}
 
     return result;
 }
