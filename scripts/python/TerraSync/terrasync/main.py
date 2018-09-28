@@ -324,34 +324,56 @@ class DownloadBoundaries:
         if top < bottom:
             raise ValueError("top cannot be less than bottom")
         if right < left:
-            raise ValueError("right cannot be less than left")
+            # right may be less than left when wrapping across the antimeridian
+            if not (left >= 0 and right < 0):
+                raise ValueError("right cannot be less than left")
 
         if top > 90 or bottom < -90:
             raise ValueError("top and bottom must be a valid latitude")
-        if left < -180 or right > 180:
+        if left < -180 or right >= 180:
             raise ValueError("left and right must be a valid longitude")
         self.top = top
         self.left = left
         self.bottom = bottom
         self.right = right
 
-    def is_coordinate_inside_boundaries(self, coordinate):
-        if coordinate.lat < self.bottom or coordinate.lat > self.top:
+    def is_coordinate_inside_boundaries(self, coordinate, isOuterBucket):
+        bigTileBottom = coordinate.lat
+        bigTileTop = bigTileBottom + (10 if isOuterBucket else 1)
+        bigTileLeft = coordinate.lon
+        bigTileRight = bigTileLeft + (10 if isOuterBucket else 1)
+
+        # if the two regions do not overlap then we are done
+        if bigTileTop <= self.bottom or bigTileBottom > self.top:
             return False
-        if coordinate.lon < self.left or coordinate.lon > self.right:
-            return False
+        if bigTileRight <= self.left or bigTileLeft > self.right:
+            # check for spanning across the antimeridian
+            if self.left >= 0 and self.right < 0:
+                # determine which side we are on and check of region overlap
+                if bigTileLeft >= 0:
+                    if bigTileRight <= self.left:
+                        return False
+                elif bigTileLeft > self.right:
+                    return False
+            else:
+                return False
+
+        # at least a partial overlap exists, so more processing will be needed
         return True
+
 
 def parse_terrasync_coordinate(coordinate):
     matches = re.match("(w|e)(\d{3})(n|s)(\d{2})", coordinate)
     if not matches:
         return None
+
     lon = int(matches.group(2))
     if matches.group(1) == "w":
         lon *= -1
     lat = int(matches.group(4))
     if matches.group(3) == "s":
         lat *= -1
+
     return Coordinate(lat, lon)
 
 
@@ -558,10 +580,12 @@ class TerraSync:
     def processDirectoryEntry(self, virtualPath, localPath, dirIndexHash):
         """Process a directory entry from a .dirindex file."""
         print("Processing '{}'...".format(virtualPath))
+        isOuterBucket = True if len(virtualPath.parts) <= 3 else False
 
         coord = parse_terrasync_coordinate(virtualPath.name)
+
         if (coord and
-            not self.downloadBoundaries.is_coordinate_inside_boundaries(coord)):
+            not self.downloadBoundaries.is_coordinate_inside_boundaries(coord, isOuterBucket)):
             self.report.addSkippedDueToBoundaries(virtualPath)
             return
 
