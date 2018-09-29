@@ -44,6 +44,7 @@
 
 #include "fgmetar.hxx"
 
+const double CAVOK_VISIBILITY = 9999.0;
 
 FGMetar::FGMetar(const string& icao) :
 	SGMetar(icao),
@@ -55,10 +56,10 @@ FGMetar::FGMetar(const string& icao) :
 	// CAVOK: visibility >= 10km; lowest cloud layer >= 5000 ft; any coverage
 	if (getCAVOK()) {
 		if (_min_visibility.getVisibility_m() == SGMetarNaN)
-			_min_visibility.set(12000.0);
+			_min_visibility.set(CAVOK_VISIBILITY);
 
 		if (_max_visibility.getVisibility_m() == SGMetarNaN)
-			_min_visibility.set(12000.0);
+			_min_visibility.set(CAVOK_VISIBILITY);
 
 		vector<SGMetarCloud> cv = _clouds;;
 		if (cv.empty()) {
