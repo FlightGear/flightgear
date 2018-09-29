@@ -207,7 +207,6 @@ void CanvasConnection::onTextMessageReceived(QString message)
     if (json.isObject()) {
         // process new nodes
         QJsonArray created = json.object().value("created").toArray();
-        qInfo() << "new nodes:" << created.size();
         Q_FOREACH (QJsonValue v, created) {
             QJsonObject newProp = v.toObject();
 
@@ -221,7 +220,7 @@ void CanvasConnection::onTextMessageReceived(QString message)
             LocalProp* newNode = propertyFromPath(localPath);
             newNode->setPosition(newProp.value("position").toInt());
             // store in the global dict
-            unsigned int propId = newProp.value("id").toInt();
+            int propId = newProp.value("id").toInt();
             if (idPropertyDict.contains(propId)) {
                 qWarning() << "duplicate add of:" << nodePath << "old is" << idPropertyDict.value(propId)->path();
             } else {
@@ -235,7 +234,7 @@ void CanvasConnection::onTextMessageReceived(QString message)
         // process removes
         QJsonArray removed = json.object().value("removed").toArray();
         Q_FOREACH (QJsonValue v, removed) {
-            unsigned int propId = v.toInt();
+            int propId = v.toInt();
             if (!idPropertyDict.contains(propId)) {
                 continue;
             }
@@ -261,7 +260,7 @@ void CanvasConnection::onTextMessageReceived(QString message)
                 continue;
             }
 
-            unsigned int propId = change.at(0).toInt();
+            int propId = change.at(0).toInt();
             if (!idPropertyDict.contains(propId)) {
                 qWarning() << "ignoring unknown prop ID " << propId;
                 continue;

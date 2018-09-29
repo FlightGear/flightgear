@@ -48,6 +48,7 @@ private:
     void markStrokeDirty();
 private:
     bool onChildAdded(LocalProp *prop) override;
+    bool onChildRemoved(LocalProp* prop) override;
 
     void rebuildPath() const;
     void rebuildPen() const;

@@ -527,6 +527,37 @@ bool FGCanvasPath::onChildAdded(LocalProp *prop)
     return false;
 }
 
+bool FGCanvasPath::onChildRemoved(LocalProp* prop)
+{
+    if (FGCanvasElement::onChildRemoved(prop)) {
+        return true;
+    }
+
+    const auto name = prop->name();
+    if (name == "rect") {
+        _isRect = false;
+        markPathDirty();
+        return true;
+    }
+
+    if ((name == "cmd") || (name == "coord") || (name == "svg")) {
+        markPathDirty();
+        return true;
+    }
+
+    if ((name == "cmd-geo") || (name == "coord-geo")) {
+        // ignored
+        return true;
+    }
+
+    if (name.startsWith("stroke")) {
+        markStrokeDirty();
+        return true;
+    }
+
+    return false;
+}
+
 typedef enum
 {
     PathClose                               = ( 0 << 1),
@@ -806,8 +837,8 @@ void FGCanvasPath::rebuildPathFromCommands(const std::vector<int>& commands, con
         bool isRelative = cmd & 0x1;
         const int op = cmd & ~0x1;
         const int cmdIndex = op >> 1;
-        const float baseX = isRelative ? newPath.currentPosition().x() : 0.0f;
-        const float baseY = isRelative ? newPath.currentPosition().y() : 0.0f;
+        const qreal baseX = isRelative ? newPath.currentPosition().x() : 0.0f;
+        const qreal baseY = isRelative ? newPath.currentPosition().y() : 0.0f;
 
         if ((currentCoord + CoordsPerCommand[cmdIndex]) > coords.size()) {
             qWarning() << "insufficient path data" << currentCoord << cmdIndex << CoordsPerCommand[cmdIndex] << coords.size();

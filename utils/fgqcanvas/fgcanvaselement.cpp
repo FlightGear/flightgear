@@ -151,7 +151,7 @@ void FGCanvasElement::polish()
         _fillColor = parseColorValue(getCascadedStyle("fill"));
         const auto opacity = getCascadedStyle("fill-opacity");
         if (!opacity.isNull()) {
-            _fillColor.setAlphaF(opacity.toFloat());
+            _fillColor.setAlphaF(opacity.toReal());
         }
 
         _styleDirty = false;
@@ -307,7 +307,7 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
     } else if (nm == "id") {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markSVGIDDirty);
         return true;
-    } else if (prop->name() == "update") {
+    } else if (nm == "update") {
         // disable updates optionally?
         return true;
     } else if ((nm == "clip") || (nm == "clip-frame")) {
@@ -320,11 +320,16 @@ bool FGCanvasElement::onChildAdded(LocalProp *prop)
         return true;
     }
 
-    if (prop->name() == "layer-type") {
+    if (nm == "symbol-type") {
+        // ignored for now
+        return true;
+    }
+
+    if (nm == "layer-type") {
         connect(prop, &LocalProp::valueChanged, [this](QVariant value)
         {qDebug() << "layer-type:" << value.toByteArray() << "on" << _propertyRoot->path(); });
         return true;
-    } else if (prop->name() == "z-index") {
+    } else if (nm == "z-index") {
         connect(prop, &LocalProp::valueChanged, this, &FGCanvasElement::markZIndexDirty);
         return true;
     }
@@ -355,12 +360,12 @@ QColor FGCanvasElement::fillColor() const
 void FGCanvasElement::onCenterChanged(QVariant value)
 {
     LocalProp* senderProp = static_cast<LocalProp*>(sender());
-    int centerTerm = senderProp->index();
+    const unsigned int centerTerm = senderProp->index();
 
     if (centerTerm == 0) {
-        _center.setX(value.toFloat());
+        _center.setX(value.toReal());
     } else {
-        _center.setY(value.toFloat());
+        _center.setY(value.toReal());
     }
 
     requestPolish();
@@ -522,10 +527,10 @@ void FGCanvasElement::parseCSSClip(QByteArray value)
         return;
     }
 
-    const float top = parseCSSValue(clipRectDesc.at(0));
-    const float right = parseCSSValue(clipRectDesc.at(1));
-    const float bottom = parseCSSValue(clipRectDesc.at(2));
-    const float left = parseCSSValue(clipRectDesc.at(3));
+    const qreal top = parseCSSValue(clipRectDesc.at(0));
+    const qreal right = parseCSSValue(clipRectDesc.at(1));
+    const qreal bottom = parseCSSValue(clipRectDesc.at(2));
+    const qreal left = parseCSSValue(clipRectDesc.at(3));
 
     _clipRect = QRectF(left, top, right - left, bottom - top);
   //  qDebug() << "final clip rect:" << _clipRect << "from" << value;
