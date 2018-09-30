@@ -35,6 +35,8 @@
 
 #include <3rdparty/cjson/cJSON.h>
 
+//#define MIRROR_DEBUG 1
+
 namespace flightgear {
 namespace http {
 
@@ -75,7 +77,7 @@ using std::string;
                 break;
 
             default:
-                SG_LOG(SG_NETWORK, SG_INFO, "implement me!" << type);
+                SG_LOG(SG_NETWORK, SG_DEV_ALERT, "MirrorPropTree PropertyValue : implement me!" << type);
                 break;
             }
         }
@@ -115,21 +117,22 @@ using std::string;
     };
 
 
-    struct RecentlyRemovedNode
+    struct RemovedNode
     {
-        RecentlyRemovedNode() { }
-
-        RecentlyRemovedNode(SGPropertyNode* node, unsigned int aId) :
-            type(node->getType()),
+        RemovedNode(SGPropertyNode* node, unsigned int aId) :
             path(node->getPath()),
             id(aId)
         {}
 
-        simgear::props::Type type = simgear::props::NONE;
         std::string path;
         unsigned int id = 0;
+        
+        bool operator==(const RemovedNode& other) const
+        {
+            return (path == other.path);
+        }
     };
-
+    
     class MirrorTreeListener : public SGPropertyChangeListener
     {
     public:
@@ -166,28 +169,40 @@ using std::string;
 
         void recursiveAdd(SGPropertyNode* node)
         {
-            const auto type = node->getType();
-            const auto& path = node->getPath();
-            auto rrIt = std::find_if(recentlyRemoved.begin(), recentlyRemoved.end(),
-                                     [type, &path](const RecentlyRemovedNode& rr)
-                                     { return (type == rr.type) && (path == rr.path); });
+            RemovedNode r(node, 0 /* id not actually used */);
+#if defined (MIRROR_DEBUG)
+            SG_LOG(SG_NETWORK, SG_INFO, "looking for RR:" << r.path);
+#endif
+            auto rrIt = std::find(recentlyRemoved.begin(), recentlyRemoved.end(), r);
             if (rrIt != recentlyRemoved.end()) {
+#if defined (MIRROR_DEBUG)
+                SG_LOG(SG_NETWORK, SG_INFO, "recycling node:" << node->getPath());
+#endif
+                const auto id = rrIt->id;
                 // recycle nodes which get thrashed from Nasal (deleted + re-created
                 // each time a Nasal timer fires)
-                removedNodes.erase(rrIt->id); // don't remove it!
-                idHash.insert(std::make_pair(node, rrIt->id));
-                changedNodes.insert(node);
+                removedNodes.erase(id); // don't remove it!
+                idHash.insert(std::make_pair(node, id));
+                
+                // we can still do change compression here, but this also
+                // deals with type mutation when removing + re-adding with a
+                // different type
+                PropertyValue newVal(node);
+                if (!previousValues[id].equals(node, newVal)) {
+                    previousValues[id] = newVal;
+                    changedNodes.insert(node);
+#if defined (MIRROR_DEBUG)
+                    SG_LOG(SG_NETWORK, SG_INFO, "\tand will actually change" << node->getPath());
+#endif
+                }
+                
                 recentlyRemoved.erase(rrIt);
-            #if defined (MIRROR_DEBUG)              
-                SG_LOG(SG_NETWORK, SG_INFO, "recycling node:" << path);
-            #endif
                 return;
             }
-        #if defined (MIRROR_DEBUG)    
-            SG_LOG(SG_NETWORK, SG_INFO, "new node:" << path);
-        #endif
+#if defined (MIRROR_DEBUG)
+            SG_LOG(SG_NETWORK, SG_INFO, "new node:" << node->getPath());
+#endif
             newNodes.insert(node);
-
             int child = 0;
             for (; child < node->nChildren(); ++child) {
                 recursiveAdd(node->getChild(child));
@@ -203,12 +218,17 @@ using std::string;
             if (it != idHash.end()) {
                 removedNodes.insert(it->second);
                 idHash.erase(it);
-
                 // record so we can map removed+add of the same property into
                 // a simple value change (this happens commonly with the canvas
                 // due to lazy Nasal scripting)
                 recentlyRemoved.emplace_back(child, it->second);
+#if defined (MIRROR_DEBUG)
+                SG_LOG(SG_NETWORK, SG_INFO, "adding RR:" << recentlyRemoved.back().path);
+#endif
             }
+#if defined (MIRROR_DEBUG)
+            SG_LOG(SG_NETWORK, SG_INFO, "saw remove of:" << child->getPath());
+#endif
         }
 
         void registerSubtree(SGPropertyNode* node)
@@ -228,7 +248,7 @@ using std::string;
         std::set<SGPropertyNode*> newNodes;
         std::set<SGPropertyNode*> changedNodes;
         std::set<PropertyId> removedNodes;
-
+        
         PropertyId idForProperty(SGPropertyNode* prop)
         {
             auto it = idHash.find(prop);
@@ -339,7 +359,7 @@ using std::string;
         /// track recently removed nodes in case they are re-created imemdiately
         /// after with the same type, since we can make this much more efficient
         /// when sending over the wire.
-        std::vector<RecentlyRemovedNode> recentlyRemoved;
+        std::vector<RemovedNode> recentlyRemoved;
     };
 
 #if 0
