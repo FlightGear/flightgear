@@ -240,6 +240,10 @@ public:
   void SetName( std::string name );
   std::string & GetName() { return name; }
 
+  void SetUniqueName(const std::string& name);
+  const std::string GetUniqueName() const
+  { return _uniqueName; }
+
   void SetSerialNumber( std::string serial );
   std::string& GetSerialNumber() { return serialNumber; }
     
@@ -280,6 +284,11 @@ protected:
   std::string nasalModule;
 
     report_setting_list_t reportSettings;
+
+  /// name, but with suffix / serial appended. This is important
+  /// when loading the device multiple times, to ensure the Nasal
+  /// module is unique
+  std::string _uniqueName;
 };
 
 typedef SGSharedPtr<FGInputDevice> FGInputDevice_ptr;

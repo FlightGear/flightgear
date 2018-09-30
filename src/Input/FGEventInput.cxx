@@ -241,11 +241,12 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
 {
   deviceNode = aDeviceNode;
 
-  nasalModule = string("__event:") + GetName();
+  // use _uniqueName here so each loaded device gets its own Nasal module
+  nasalModule = string("__event:") + _uniqueName;
 
-  PropertyList eventNodes = deviceNode->getChildren( "event" );
-  for( PropertyList::iterator it = eventNodes.begin(); it != eventNodes.end(); ++it )
-    AddHandledEvent( FGInputEvent::NewObject( this, *it ) );
+  for (auto ev : deviceNode->getChildren( "event" )) {
+    AddHandledEvent( FGInputEvent::NewObject( this, ev) );
+  }
 
   debugEvents = deviceNode->getBoolValue("debug-events", debugEvents );
   grab = deviceNode->getBoolValue("grab", grab );
@@ -300,7 +301,7 @@ void FGInputDevice::HandleEvent( FGEventData & eventData )
 {
   string eventName = TranslateEventName( eventData );  
   if( debugEvents ) {
-    SG_LOG(SG_INPUT, SG_INFO, GetName() << " has event " <<
+    SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " has event " <<
            eventName << " modifiers=" << eventData.modifiers << " value=" << eventData.value);
   }
     
@@ -312,6 +313,11 @@ void FGInputDevice::HandleEvent( FGEventData & eventData )
 void FGInputDevice::SetName( string name )
 {
   this->name = name; 
+}
+
+void FGInputDevice::SetUniqueName(const std::string &name)
+{
+  _uniqueName = name;
 }
 
 void FGInputDevice::SetSerialNumber( std::string serial )
@@ -393,12 +399,13 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
       configNode = configMap.configurationForDeviceName(nameWithSerial);
         SG_LOG(SG_INPUT, SG_INFO, "using instance-specific configuration for device "
                << nameWithSerial << " : " << configNode->getStringValue("source"));
+      inputDevice->SetUniqueName(nameWithSerial);
     }
   }
 
   // try instanced (counted) name
+  const auto nameWithIndex = computeDeviceIndexName(inputDevice);
   if (configNode == nullptr) {
-      const auto nameWithIndex = computeDeviceIndexName(inputDevice);
       if (configMap.hasConfiguration(nameWithIndex)) {
           configNode = configMap.configurationForDeviceName(nameWithIndex);
           SG_LOG(SG_INPUT, SG_INFO, "using instance-specific configuration for device "
@@ -406,7 +413,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
       }
   }
   
-    // otherwise try the unmodifed name for the device
+  // otherwise try the unmodifed name for the device
   if (configNode == nullptr) {
     if (!configMap.hasConfiguration(deviceName)) {
       SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << deviceName);
@@ -416,8 +423,13 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
     configNode = configMap.configurationForDeviceName(deviceName);
   }
     
-  // found - copy to /input/event/device[n]
+  // if we didn't generate a name based on the serial number,
+  // use the name with the index suffix _0, _1, etc
+  if (inputDevice->GetUniqueName().empty()) {
+    inputDevice->SetUniqueName(nameWithIndex);
+  }
 
+  // found - copy to /input/event/device[n]
   // find a free index
   unsigned int index;
   for ( index = 0; index < MAX_DEVICES; index++ ) {
@@ -426,7 +438,7 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   }
 
   if (index == MAX_DEVICES) {
-    SG_LOG(SG_INPUT, SG_WARN, "To many event devices - ignoring " << inputDevice->GetName() );
+    SG_LOG(SG_INPUT, SG_WARN, "To many event devices - ignoring " << inputDevice->GetUniqueName() );
     delete inputDevice;
     return INVALID_DEVICE_INDEX;
   }
@@ -449,11 +461,11 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
   }
   catch( ... ) {
     delete  inputDevice;
-    SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetName()  );
+    SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetUniqueName()  );
     return INVALID_DEVICE_INDEX;
   }
 
-  SG_LOG(SG_INPUT, SG_DEBUG, "using InputDevice " << inputDevice->GetName()  );
+  SG_LOG(SG_INPUT, SG_DEBUG, "using InputDevice " << inputDevice->GetUniqueName()  );
   return deviceNode->getIndex();
 }
 

@@ -315,28 +315,20 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
 {
     _hidPath = devInfo->path;
 
-    std::wstring manufactuerName,
+    std::wstring manufacturerName,
         productName = std::wstring(devInfo->product_string);
     if (devInfo->manufacturer_string) {
-        manufactuerName = std::wstring(devInfo->manufacturer_string);
-        SetName(simgear::strutils::convertWStringToUtf8(manufactuerName) + " " +
+        manufacturerName = std::wstring(devInfo->manufacturer_string);
+        SetName(simgear::strutils::convertWStringToUtf8(manufacturerName) + " " +
             simgear::strutils::convertWStringToUtf8(productName));
     } else {
         SetName(simgear::strutils::convertWStringToUtf8(productName));
     }
 
     const auto serial = devInfo->serial_number;
-    // every device so far encountered returns a blank serial number, so we
-    // fall back to the device path to disambiguate.
     std::string path(devInfo->path);
-    if ((serial == nullptr) || std::wcslen(serial) == 0) {
-        // use device path to disambiguate
-        if (!path.empty()) {
-            SG_LOG(SG_INPUT, SG_INFO, "Missing serial on device '" <<
-            simgear::strutils::convertWStringToUtf8(productName) << "', using path: " << path);
-            SetSerialNumber(path);
-        }
-    } else {
+    // most devices rreturnturn an empty serial number, unfortunately
+    if ((serial != nullptr) && std::wcslen(serial) > 0) {
         SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
     }
 }
@@ -488,11 +480,11 @@ void FGHIDDevice::scanItem(hid_item* item)
     auto report = getReport(ty, item->report_id, true /* create */);
     uint32_t bitOffset = report->currentBitSize();
 
-    SG_LOG(SG_INPUT, SG_INFO, "adding item:" << name);
+   // SG_LOG(SG_INPUT, SG_INFO, "adding item:" << name);
     Item* itemObject = new Item{name, bitOffset, item->report_size};
     itemObject->isRelative = hid_parse_is_relative(item);
 
-    SG_LOG(SG_INPUT, SG_INFO, "\t logical min-max:" << item->logical_min << " / " << item->logical_max);
+   // SG_LOG(SG_INPUT, SG_INFO, "\t logical min-max:" << item->logical_min << " / " << item->logical_max);
 
     itemObject->doSignExtend = (item->logical_min < 0) || (item->logical_max < 0);
     report->items.push_back(itemObject);
