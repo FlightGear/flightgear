@@ -2,7 +2,7 @@ import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
 import "." // -> forces the qmldir to be loaded
 
-Item
+FocusScope
 {
     id: root
 
@@ -136,6 +136,7 @@ Item
         }
 
         clip: true
+        focus: true
 
         // prevent mouse wheel interactions when the details view is
         // visible, since it has its own flickable
@@ -147,14 +148,6 @@ Item
         // saved here becuase we need to reset highlightMoveDuration
         // when doing a progrmatic set
         readonly property int __realHighlightMoveDuration: 200
-
-        Keys.onUpPressed: {
-
-        }
-
-        Keys.onDownPressed: {
-
-        }
 
         function updateSelectionFromLauncher()
         {
