@@ -755,6 +755,11 @@ bool
 FGProps::close()
 {
     SG_LOG( SG_IO, SG_INFO, "closing FGProps" );
+    for (auto channel : _activeChannels) {
+        channel->close();
+        delete channel;
+    }
+    _activeChannels.clear();
     return true;
 }
 
