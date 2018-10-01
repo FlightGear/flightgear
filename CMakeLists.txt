@@ -53,6 +53,8 @@ endif()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+
 project(FlightGear)
 
 # We have some custom .cmake scripts not in the official distribution.
@@ -66,11 +68,6 @@ if(InSourceBuild)
     message(WARNING  "Create a separate build directory instead (i.e. 'fgbuild') and call CMake from there: ")
     message(WARNING  "  mkdir ../fgbuild && cd ../fgbuild && cmake ${CMAKE_SOURCE_DIR}")
 endif(InSourceBuild)
-
-# using 10.7 because boost requires libc++ and 10.6 doesn't include it
-# Cmake documentation says we must set this before calling project(), but
-# it only seems to be picked up setting it /after/ the call to project()
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7")
 
 include(GNUInstallDirs)
 # System detection/default settings
