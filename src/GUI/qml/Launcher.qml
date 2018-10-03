@@ -38,6 +38,7 @@ Item {
         onSkipFromArgsChanged: pagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
     }
 
+    state: "loader"
     states: [
         State {
             name: "loader"
