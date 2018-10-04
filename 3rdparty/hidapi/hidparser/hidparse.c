@@ -184,8 +184,8 @@ int hid_parse_reportdesc(uint8_t* rdesc_buf, uint32_t rdesc_size, hid_item** ite
          uint8_t type    = (pfx >> 2) & 0x3; /* bits 3-2 */
          uint8_t tag     = pfx >> 4;
 
-        // fprintf(stderr, "short item: size=%d, bytes=%d, type = %d, tag=%d\n",
-         //       size, bytes, type, tag);
+     //    fprintf(stderr, "short item: size=%d, bytes=%d, type = %d, tag=%d\n",
+     //           size, bytes, type, tag);
 
          /* If it's a main item */
          if (type == 0)
@@ -194,7 +194,7 @@ int hid_parse_reportdesc(uint8_t* rdesc_buf, uint32_t rdesc_size, hid_item** ite
              {
              case HID_COLLECTION_ITEM:
              {
-                 //fprintf(stderr, "opening collection\n");
+          //       fprintf(stderr, "opening collection\n");
                  uint8_t flags = read_uint(size, p);
                  hid_item* col = build_collection(flags);
                  if (!current_collection) {
@@ -212,7 +212,7 @@ int hid_parse_reportdesc(uint8_t* rdesc_buf, uint32_t rdesc_size, hid_item** ite
             }
 
              case HID_END_COLLECTION_ITEM:
-                 //fprintf(stderr, "closing collection\n");
+              //   fprintf(stderr, "closing collection\n");
                  assert(current_collection);
                  current_collection = current_collection->parent;
                  break;
@@ -226,6 +226,8 @@ int hid_parse_reportdesc(uint8_t* rdesc_buf, uint32_t rdesc_size, hid_item** ite
 
                  for (i=0; i<report_count; ++i) {
                      hid_item* item = build_item(tag, flags, &current_state);
+                //     fprintf(stderr, "adding: %d report:%d bits:%d\n", item->type,
+                 //    item->report_id, item->report_size);
                      append_item(current_collection, item);
                  }
                  break;
@@ -270,10 +272,12 @@ int hid_parse_reportdesc(uint8_t* rdesc_buf, uint32_t rdesc_size, hid_item** ite
 
             case HID_REPORT_SIZE_ITEM:
                 current_state.report_size = read_uint(size, p);
+                //fprintf(stderr, "item size is:%d\n", current_state.report_size);
                 break;
 
             case HID_REPORT_COUNT_ITEM:
                 report_count = read_uint(size, p);
+                //fprintf(stderr, "item count is:%d\n", report_count);
                 break;
 
             case HID_POP_ITEM:

@@ -507,11 +507,14 @@ bool FGReportSetting::Test()
     return d;
 }
 
+static const char* hexTable = "0123456789ABCDEF";
+
+
 std::string FGReportSetting::reportBytes(const std::string& moduleName) const
 {
-    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    FGNasalSys *nas = globals->get_subsystem<FGNasalSys>();
     if (!nas) {
-        return std::string();
+        return {};
     }
 
     naRef module = nas->getModule(moduleName.c_str());
@@ -526,13 +529,38 @@ std::string FGReportSetting::reportBytes(const std::string& moduleName) const
     }
 
     naRef result = nas->call(func, 0, 0, naNil());
-    if (!naIsString(result)) {
-        return std::string();
+    if (naIsString(result)) {
+        size_t len = naStr_len(result);
+        char* bytes = naStr_data(result);
+        return std::string(bytes, len);
     }
 
-    size_t len = naStr_len(result);
-    char* bytes = naStr_data(result);
-    return std::string(bytes, len);
+    if (naIsVector(result)) {
+      int len = naVec_size(result);
+      std::string s;
+      for (int b=0; b < len; ++b) {
+        int num = naNumValue(naVec_get(result, b)).num;
+        s.push_back(static_cast<char>(num));
+      }
+
+      // can't access FGInputDevice here to check debugEvents flag
+#if 0
+      std::ostringstream byteString;
+      
+        for (int i=0; i<s.size(); ++i) {
+            uint8_t uc = static_cast<uint8_t>(s[i]);
+            byteString << hexTable[uc >> 4];
+            byteString << hexTable[uc & 0x0f];
+            byteString << " ";
+        }
+        SG_LOG(SG_INPUT, SG_INFO, "report bytes: (" << s.size() << ") " << byteString.str());
+#endif
+
+      return s;
+    }
+    
+    SG_LOG(SG_INPUT, SG_DEV_WARN, "bad return data from report setting");
+    return {};
 }
 
 void FGReportSetting::valueChanged(SGPropertyNode * node)

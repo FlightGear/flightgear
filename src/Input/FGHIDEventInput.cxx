@@ -34,6 +34,9 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/io/lowlevel.hxx>
 
+//#define HID_INPUT_DEBUG 1
+
+const char* hexTable = "0123456789ABCDEF";
 
 namespace HID
 {
@@ -102,6 +105,10 @@ namespace HID
         AD_CharacterReport = 0x2B,
         AD_DisplayData = 0x2C,
         AD_DisplayStatus = 0x2D,
+        AD_Rows = 0x35,
+        AD_Columns = 0x36,
+        AD_7SegmentDirectMap = 0x43,
+        AD_14SegmentDirectMap = 0x45,
         AD_DisplayBrightness = 0x46,
         AD_DisplayContrast = 0x47
     };
@@ -153,7 +160,9 @@ namespace HID
                 case AD_AlphanumericDisplay:       return "alphanumeric";
                 case AD_CharacterReport:           return "character-report";
                 case AD_DisplayData:               return "display-data";
-                case AD_DisplayBrightness:         return "display-brightness";
+                case AD_DisplayBrightness:         return "display-brightness"; 
+                case AD_7SegmentDirectMap:          return "seven-segment-direct";
+                case AD_14SegmentDirectMap:         return "fourteen-segment-direct";
 
                 default:
                     SG_LOG(SG_INPUT, SG_WARN, "Unhandled HID alphanumeric usage:" << usage);
@@ -331,6 +340,10 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
     if ((serial != nullptr) && std::wcslen(serial) > 0) {
         SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
     }
+
+#if defined(HID_INPUT_DEBUG)
+    SG_LOG(SG_INPUT, SG_INFO, "HID device:" << GetName() << " at path " << _hidPath);
+#endif
 }
 
 FGHIDDevice::~FGHIDDevice()
@@ -350,10 +363,30 @@ bool FGHIDDevice::Open()
 
     unsigned char reportDescriptor[1024];
     int descriptorSize = hid_get_descriptor(_device, reportDescriptor, 1024);
+    if (descriptorSize <= 0) {
+        SG_LOG(SG_INPUT, SG_WARN, "HID: " << GetUniqueName() << " failed to read HID descriptor");
+        return false;
+    }
+
+#if defined(HID_INPUT_DEBUG)
+    SG_LOG(SG_INPUT, SG_INFO, "\nHID: descriptor for:" << GetUniqueName());
+    {
+        std::ostringstream byteString;
+      
+        for (int i=0; i<descriptorSize; ++i) {
+            byteString << hexTable[reportDescriptor[i] >> 4];
+            byteString << hexTable[reportDescriptor[i] & 0x0f];
+            byteString << " ";
+        }
+        SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
+    }
+#endif
 
     hid_item* rootItem = nullptr;
     hid_parse_reportdesc(reportDescriptor, descriptorSize, &rootItem);
-
+#if defined(HID_INPUT_DEBUG)
+    SG_LOG(SG_INPUT, SG_INFO, "\nHID: scan for:" << GetUniqueName());
+#endif
     scanCollection(rootItem);
 
     hid_free_reportdesc(rootItem);
@@ -366,7 +399,10 @@ bool FGHIDDevice::Open()
         }
 
         FGInputEvent_ptr event = v.second;
-       // SG_LOG(SG_INPUT, SG_INFO, "found item for event:" << v.first);
+        if (debugEvents) {
+            SG_LOG(SG_INPUT, SG_INFO, "found item for event:" << v.first);
+        }
+        
         reportItem.second->event = event;
     }
 
@@ -480,12 +516,13 @@ void FGHIDDevice::scanItem(hid_item* item)
     auto report = getReport(ty, item->report_id, true /* create */);
     uint32_t bitOffset = report->currentBitSize();
 
-   // SG_LOG(SG_INPUT, SG_INFO, "adding item:" << name);
+    if (debugEvents) {
+        SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << ": add:" << name << ", bits: " << bitOffset << ":" << (int) item->report_size
+            << ", report=" << (int) item->report_id);
+    }
+
     Item* itemObject = new Item{name, bitOffset, item->report_size};
     itemObject->isRelative = hid_parse_is_relative(item);
-
-   // SG_LOG(SG_INPUT, SG_INFO, "\t logical min-max:" << item->logical_min << " / " << item->logical_max);
-
     itemObject->doSignExtend = (item->logical_min < 0) || (item->logical_max < 0);
     report->items.push_back(itemObject);
 }
@@ -574,17 +611,19 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      size_t length,
                                      double dt, int keyModifiers)
 {
-    //SG_LOG(SG_INPUT, SG_INFO, "Report " << report->number);
-#if 0
-    {
-        std::ostringstream byteString;
-        byteString << std::hex;
-        for (int i=0; i<length; ++i) {
-            byteString << (int) data[i] << " ";
+    if (debugEvents) {
+        SG_LOG(SG_INPUT, SG_INFO, "Report " << (int) report->number << length);
+        {
+            std::ostringstream byteString;
+        
+            for (int i=0; i<length; ++i) {
+                byteString << hexTable[data[i] >> 4];
+                byteString << hexTable[data[i] & 0x0f];
+                byteString << " ";
+            }
+            SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
         }
-        SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
     }
-#endif
 
     for (auto item : report->items) {
         int value = extractBits(data, length, item->bitOffset, item->bitSize);
@@ -608,7 +647,9 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
         if (!item->event)
             continue;
 
-        SG_LOG(SG_INPUT, SG_INFO, "\titem:" << item->name << " = " << value);
+        if (debugEvents) {
+            SG_LOG(SG_INPUT, SG_INFO, "\titem:" << item->name << " = " << value);
+        }
 
         HIDEventData event{item, value, dt, keyModifiers};
         HandleEvent(event);
@@ -759,8 +800,9 @@ void FGHIDEventInput::update(double dt)
 
 void FGHIDEventInput::FGHIDEventInputPrivate::evaluateDevice(hid_device_info* deviceInfo)
 {
-    SG_LOG(SG_INPUT, SG_DEBUG, "HID device:" << deviceInfo->product_string << " from " << deviceInfo->manufacturer_string);
-
+#if defined(HID_INPUT_DEBUG)
+    SG_LOG(SG_INPUT, SG_INFO, "HID device:" << deviceInfo->product_string << " from " << deviceInfo->manufacturer_string);
+#endif
     // allocate an input device, and add to the base class to see if we have
     // a config
     p->AddDevice(new FGHIDDevice(deviceInfo, p));
