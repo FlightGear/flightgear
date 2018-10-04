@@ -733,7 +733,7 @@ def parseCommandLine():
 
     parser.add_argument("--left", dest="left", type=int, default=-180, help="""\
       minimum longitude to include in download [default: %(default)d]""")
-    parser.add_argument("--right", dest="right", type=int, default=180,
+    parser.add_argument("--right", dest="right", type=int, default=179,
                         help="""\
       maximum longitude to include in download [default: %(default)d]""")
 
