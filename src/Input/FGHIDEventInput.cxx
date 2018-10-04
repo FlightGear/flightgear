@@ -596,7 +596,8 @@ void FGHIDDevice::update(double dt)
         const uint8_t reportNumber = _haveNumberedReports ? reportBuf[0] : 0;
         auto inputReport = getReport(HID::ReportType::In, reportNumber, false);
         if (!inputReport) {
-            SG_LOG(SG_INPUT, SG_WARN, "FGHIDDevice: Unknown input report number");
+            SG_LOG(SG_INPUT, SG_WARN, "FGHIDDevice: Unknown input report number:" << 
+                static_cast<int>(reportNumber));
         } else {
             uint8_t* reportBytes = _haveNumberedReports ? reportBuf + 1 : reportBuf;
             size_t reportSize = _haveNumberedReports ? readCount -  1 : readCount;
@@ -654,7 +655,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      double dt, int keyModifiers)
 {
     if (debugEvents) {
-        SG_LOG(SG_INPUT, SG_INFO, "Report " << (int) report->number << length);
+        SG_LOG(SG_INPUT, SG_INFO, "Report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
         
@@ -745,8 +746,15 @@ void FGHIDDevice::defineReport(SGPropertyNode_ptr reportNode)
                reportNode->getStringValue("type"));
         return;
     }
-    
-    auto report = new Report(rty);
+
+    const auto id = reportNode->getIntValue("id");
+    if (id > 0) {
+        _haveNumberedReports = true;
+    }
+
+    auto report = new Report(rty, id);
+    _reports.push_back(report);
+
     for (int c=0; c < nChildren; ++c) {
         const auto nd = reportNode->getChild(c);
         const int size = nd->getIntValue("size", 1); // default to a single bit
@@ -755,7 +763,7 @@ void FGHIDDevice::defineReport(SGPropertyNode_ptr reportNode)
             continue;
         }
         
-        if (!strcmp(nd->getName(), "type")) {
+        if (!strcmp(nd->getName(), "type") || !strcmp(nd->getName(), "id")) {
             continue; // already handled above
         }
         
@@ -766,7 +774,7 @@ void FGHIDDevice::defineReport(SGPropertyNode_ptr reportNode)
         std::string baseName = name.substr(0, lastHypen + 1);
         int baseIndex = std::stoi(name.substr(lastHypen + 1));
         
-        const bool isRelative = (name.find("rel-") >= 0);
+        const bool isRelative = (name.find("rel-") == 0);
         const bool isSigned = nd->getBoolValue("is-signed", false);
         
         for (uint8_t i=0; i < count; ++i) {
