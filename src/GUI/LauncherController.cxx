@@ -660,9 +660,13 @@ void LauncherController::requestInstallCancel(QUrl aircraftUri)
 
 void LauncherController::requestUpdateAllAircraft()
 {
-    const PackageList& toBeUpdated = globals->packageRoot()->packagesNeedingUpdate();
-    std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [](PackageRef pkg) {
-        globals->packageRoot()->scheduleToUpdate(pkg->install());
+    const auto pkgRoot = globals->packageRoot();
+    const PackageList& toBeUpdated = pkgRoot->packagesNeedingUpdate();
+    std::for_each(toBeUpdated.begin(), toBeUpdated.end(), [pkgRoot](PackageRef pkg) {
+        const auto ins = pkg->install();
+        if (!pkgRoot->isInstallQueued(ins)) {
+            pkgRoot->scheduleToUpdate(ins);
+        }
     });
 }
 
