@@ -70,7 +70,7 @@ public:
 
     AircraftItemModel(QObject* pr);
 
-    ~AircraftItemModel();
+    ~AircraftItemModel() override;
 
     void setPackageRoot(const simgear::pkg::RootRef& root);
 
@@ -135,6 +135,7 @@ private:
     QVariant dataFromPackage(const simgear::pkg::PackageRef& item,
                              const DelegateState& state, int role) const;
 
+    QVariant packageRating(const simgear::pkg::PackageRef& p, int ratingIndex) const;
     QVariant packageThumbnail(simgear::pkg::PackageRef p,
                               const DelegateState& state, bool download = true) const;
 

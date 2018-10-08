@@ -175,7 +175,7 @@ Rectangle {
                     AircraftRating {
                         title: qsTr("Flight model")
                         Binding on value {
-                            when: aircraft.ratings != undefined
+                            when: aircraft.ratings !== undefined
                             value: aircraft.ratings[0]
                         }
                     }
@@ -183,7 +183,7 @@ Rectangle {
                     AircraftRating {
                         title: qsTr("Systems")
                         Binding on value {
-                            when: aircraft.ratings != undefined
+                            when: aircraft.ratings !== undefined
                             value: aircraft.ratings[1]
                         }
                     }
@@ -196,7 +196,7 @@ Rectangle {
                     AircraftRating {
                         title: qsTr("Cockpit")
                         Binding on value {
-                            when: aircraft.ratings != undefined
+                            when: aircraft.ratings !== undefined
                             value: aircraft.ratings[2]
                         }
                     }
@@ -204,7 +204,7 @@ Rectangle {
                     AircraftRating {
                         title: qsTr("Exterior")
                         Binding on value {
-                            when: aircraft.ratings != undefined
+                            when: aircraft.ratings !== undefined
                             value: aircraft.ratings[3]
                         }
                     }

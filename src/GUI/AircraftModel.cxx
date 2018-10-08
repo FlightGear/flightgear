@@ -418,12 +418,7 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
     } else if (role == AircraftHasRatingsRole) {
         return item->properties()->hasChild("rating");
     } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
-        int ratingIndex = role - AircraftRatingRole;
-        SGPropertyNode* ratings = item->properties()->getChild("rating");
-        if (!ratings) {
-            return 0;
-        }
-        return ratings->getChild(ratingIndex)->getIntValue();
+        return packageRating(item, role - AircraftRatingRole);
     } else if (role == AircraftStatusRole) {
         return QmlAircraftInfo::packageAircraftStatus(item);
     } else if (role == AircraftMinVersionRole) {
@@ -434,6 +429,11 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
     }
 
     return QVariant();
+}
+
+QVariant AircraftItemModel::packageRating(const PackageRef& p, int ratingIndex) const
+{
+    return LocalAircraftCache::ratingFromProperties(p->properties()->getChild("rating"), ratingIndex);
 }
 
 QVariant AircraftItemModel::packageThumbnail(PackageRef p, const DelegateState& ds, bool download) const

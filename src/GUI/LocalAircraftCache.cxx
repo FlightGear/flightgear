@@ -70,11 +70,9 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
 
     if (sim->hasChild("rating")) {
         SGPropertyNode_ptr ratingsNode = sim->getNode("rating");
-        ratings[0] = ratingsNode->getIntValue("FDM");
-        ratings[1] = ratingsNode->getIntValue("systems");
-        ratings[2] = ratingsNode->getIntValue("cockpit");
-        ratings[3] = ratingsNode->getIntValue("model");
-
+        for (int i=0; i< 4; ++i) {
+            ratings[i] = LocalAircraftCache::ratingFromProperties(ratingsNode, i);
+        }
     }
 
     if (sim->hasChild("long-description")) {
@@ -570,6 +568,13 @@ bool LocalAircraftCache::isCandidateAircraftPath(QString path)
     }
 
     return (setXmlCount > 0);
+}
+
+int LocalAircraftCache::ratingFromProperties(SGPropertyNode* node, int ratingIndex)
+{
+    const char* names[] = {"FDM", "systems", "cockpit", "model"};
+    assert((ratingIndex >= 0) && (ratingIndex < 4));
+    return node->getIntValue(names[ratingIndex]);
 }
 
 #include "LocalAircraftCache.moc"

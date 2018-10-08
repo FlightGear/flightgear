@@ -32,6 +32,7 @@
 class QDataStream;
 struct AircraftItem;
 class AircraftScanThread;
+class SGPropertyNode;
 
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
@@ -129,6 +130,9 @@ public:
 
     Q_ENUMS(PackageStatus)
     Q_ENUMS(AircraftStatus)
+
+    // rating order is FDM, Systems, Cockpit, External model
+    static int ratingFromProperties(SGPropertyNode* node, int ratingIndex);
 signals:
 
     void scanStarted();

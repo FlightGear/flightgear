@@ -88,19 +88,19 @@ ListHeaderBox
                 }
 
                 RatingSlider {
-                    label: qsTr("Minimum visual model rating")
+                    label: qsTr("Minimum systems rating")
                     ratings: _launcher.browseAircraftModel.ratings
                     ratingIndex: 1
                 }
 
                 RatingSlider {
-                    label: qsTr("Minimum systems rating")
+                    label: qsTr("Minimum cockpit visual rating")
                     ratings: _launcher.browseAircraftModel.ratings
                     ratingIndex: 2
                 }
 
                 RatingSlider {
-                    label: qsTr("Minimum FDM rating")
+                    label: qsTr("Minimum exterial visual model rating")
                     ratings: _launcher.browseAircraftModel.ratings
                     ratingIndex: 3
                 }
