@@ -20,6 +20,8 @@
 
 #include "LocalAircraftCache.hxx"
 
+#include <cassert>
+
 #include <QDir>
 #include <QThread>
 #include <QMutex>
