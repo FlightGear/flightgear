@@ -58,6 +58,11 @@ Item {
                         var ok = _launcher.flightPlan.loadPlan();
                         if (ok) {
                             route.text = _launcher.flightPlan.icaoRoute;
+
+                            // we don't use a binding here, manually synchronise
+                            // these values
+                            departureEntry.selectAirport(_launcher.flightPlan.departure.guid);
+                            destinationICAO.selectAirport(_launcher.flightPlan.destination.guid);
                         }
                     }
                 }
@@ -192,6 +197,7 @@ Item {
                 spacing: Style.margin
 
                 AirportEntry {
+                    id: departureEntry
                     label: qsTr("Departure airport:")
 
                     Component.onCompleted: {

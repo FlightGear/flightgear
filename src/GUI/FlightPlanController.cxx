@@ -100,7 +100,7 @@ public:
             if (leg->waypoint()->source()) {
                 return QString::fromStdString(leg->waypoint()->source()->name());
             }
-            break;
+            return QString{}; // avoud undefined-value QML error if we return a null variant
         }
 
         case LegTerminatorTypeRole:
@@ -163,6 +163,7 @@ public:
     {
         QTimer::singleShot(0, p->_legs, &LegsModel::waypointsChanged);
         p->waypointsChanged();
+        p->infoChanged();
     }
 
     FlightPlanController* p;
