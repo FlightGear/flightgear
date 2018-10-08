@@ -4,6 +4,10 @@ import FlightGear 1.0
 import "."
 
 Item {
+    id: root
+
+    // same name as Summary page
+    signal showSelectedLocation();
 
     Flickable {
         id: flick
@@ -214,7 +218,25 @@ Item {
                     id: departureTime
                     label: qsTr("Departure time:")
                 }
+            }
 
+            Row {
+                height: childrenRect.height
+                width: parent.width
+                spacing: Style.margin
+                ClickableText {
+                    width: parent.width
+                    text: qsTr("The flight-plan departure airport (%1) is different to the " +
+                               "initial location (%2). Click here to set the initial location to " +
+                               "the flight-plan's airport.").
+                          arg(_launcher.flightPlan.departure.name).arg(_launcher.location.description)
+                    visible: _launcher.flightPlan.departure.valid &&
+                             (_launcher.flightPlan.departure.guid !== _location.base.guid)
+                    onClicked: {
+                        _location.setBaseLocation(_launcher.flightPlan.departure)
+                        root.showSelectedLocation();
+                    }
+                }
             }
 
             // cruising speed + level
