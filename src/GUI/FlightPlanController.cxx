@@ -478,7 +478,7 @@ void FlightPlanController::computeDuration()
 bool FlightPlanController::loadPlan()
 {
     QString file = QFileDialog::getOpenFileName(nullptr, tr("Load a flight-plan"),
-       {}, "*.fgfp");
+       {}, "*.fgfp *.gpx");
     if (file.isEmpty())
         return false;
 
