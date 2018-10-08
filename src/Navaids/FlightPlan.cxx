@@ -860,29 +860,28 @@ class GpxXmlVisitor : public XMLVisitor
 public:
     GpxXmlVisitor(FlightPlan* fp) : _fp(fp), _lat(-9999), _lon(-9999) {}
 
-    virtual void startElement (const char * name, const XMLAttributes &atts);
-    virtual void endElement (const char * name);
-    virtual void data (const char * s, int length);
+    void startElement (const char * name, const XMLAttributes &atts) override;
+    void endElement (const char * name) override;
+    void data (const char * s, int length) override;
 
+    const WayptVec& waypoints() const { return _waypoints; }
 private:
     FlightPlan* _fp;
-    double      _lat, _lon;
+    double      _lat, _lon, _elevationM;
     string      _element;
     string      _waypoint;
+    WayptVec    _waypoints;
 };
 
 void GpxXmlVisitor::startElement(const char * name, const XMLAttributes &atts)
 {
     _element = name;
-    if (strcmp(name, "rtept")==0)
-    {
-        _waypoint = "";
-        _lat = _lon = -9999;
-
+    if (!strcmp(name, "rtept")) {
+        _waypoint.clear();
+        _lat = _lon = _elevationM = -9999;
         const char* slat = atts.getValue("lat");
         const char* slon = atts.getValue("lon");
-        if (slat && slon)
-        {
+        if (slat && slon) {
             _lat = atof(slat);
             _lon = atof(slon);
         }
@@ -892,25 +891,42 @@ void GpxXmlVisitor::startElement(const char * name, const XMLAttributes &atts)
 void GpxXmlVisitor::data(const char * s, int length)
 {
     // use "name" when given, otherwise use "cmt" (comment) as ID
-    if ((_element == "name")||
-        ((_waypoint == "")&&(_element == "cmt")))
+    if ((_element == "name") ||
+        ((_waypoint.empty()) && (_element == "cmt")))
     {
-        char* buf = (char*) malloc(length+1);
-        memcpy(buf, s, length);
-        buf[length] = 0;
-        _waypoint = buf;
-        free(buf);
+        _waypoint = std::string(s, static_cast<size_t>(length));
+    }
+
+    if (_element == "ele") {
+        _elevationM = atof(s);
     }
 }
 
 void GpxXmlVisitor::endElement(const char * name)
 {
-    _element = "";
-    if (strcmp(name, "rtept") == 0)
-    {
-        if (_lon > -9990.0)
-        {
-            _fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(_lon, _lat), _waypoint.c_str(), NULL), -1);
+    _element.clear();
+    if (!strcmp(name, "rtept")) {
+        if (_lon > -9990.0) {
+            const auto geod = SGGeod::fromDeg(_lon, _lat);
+            auto pos = FGPositioned::findClosestWithIdent(_waypoint, geod);
+            WayptRef wp;
+
+            if (pos) {
+                // check distance
+                const auto dist = SGGeodesy::distanceM(geod, pos->geod());
+                if (dist < 800.0) {
+                    wp = new NavaidWaypoint(pos, _fp);
+                }
+            }
+
+            if (!wp) {
+                wp = new BasicWaypt(geod, _waypoint, _fp);
+            }
+
+            if (_elevationM > -9990.0) {
+                wp->setAltitude(_elevationM * SG_METER_TO_FEET, RESTRICT_AT);
+            }
+            _waypoints.push_back(wp);
         }
     }
 }
@@ -918,30 +934,47 @@ void GpxXmlVisitor::endElement(const char * name)
 /** Load a flightplan in GPX format */
 bool FlightPlan::loadGpxFormat(const SGPath& path)
 {
-    if (path.lower_extension() != "gpx")
-    {
+    if (path.lower_extension() != "gpx") {
         // not a valid GPX file
         return false;
     }
 
-    _legs.clear();
-    GpxXmlVisitor gpxVistor(this);
-    try
-    {
-        readXML(path, gpxVistor);
-    } catch (sg_exception& e)
-    {
+    GpxXmlVisitor gpxVisitor(this);
+    try {
+        readXML(path, gpxVisitor);
+    } catch (sg_exception& e) {
         // XML parsing fails => not a GPX XML file
         SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan in GPX format: '" << e.getOrigin()
                      << "'. " << e.getMessage());
         return false;
     }
 
-    if (numLegs() == 0)
-    {
+    if (gpxVisitor.waypoints().empty()) {
         SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan in GPX format. No route found.");
         return false;
     }
+
+    clear();
+
+    // copy in case we need to modify
+    WayptVec wps = gpxVisitor.waypoints();
+    // detect airports
+    const auto depApt = FGAirport::findByIdent(wps.front()->ident());
+    const auto destApt = FGAirport::findByIdent(wps.back()->ident());
+
+    if (depApt) {
+        wps.erase(wps.begin());
+        setDeparture(depApt);
+    }
+
+    // for a single-element waypoint list consisting of a single airport ID,
+    // don't crash
+    if (destApt && !wps.empty()) {
+        wps.pop_back();
+        setDestination(destApt);
+    }
+
+    insertWayptsAtIndex(wps, -1);
 
     return true;
 }
