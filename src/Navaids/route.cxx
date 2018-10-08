@@ -256,6 +256,9 @@ WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp
 
 // if we failed to make the waypoint, try again making a basic waypoint.
 // this handles the case where a navaid waypoint is missing, for example
+// we also reject navaids that don't look correct (too far form the specified
+// lat-lon, eg see https://sourceforge.net/p/flightgear/codetickets/1814/ )
+// and again fallback to here.
   WayptRef nd(new BasicWaypt(aOwner));
   nd->initFromProperties(aProp);
   return nd;

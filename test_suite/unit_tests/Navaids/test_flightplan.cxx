@@ -226,3 +226,51 @@ void FlightplanTests::testParseICANLowLevelRoute()
     bool ok = f->parseICAORouteString(route);
     CPPUNIT_ASSERT(ok);
 }
+
+// https://sourceforge.net/p/flightgear/codetickets/1814/
+void FlightplanTests::testBug1814()
+{
+    const std::string fpXML = R"(<?xml version="1.0" encoding="UTF-8"?>
+                    <PropertyList>
+                        <version type="int">2</version>
+                        <departure>
+                            <airport type="string">SAWG</airport>
+                            <runway type="string">25</runway>
+                        </departure>
+                        <destination>
+                            <airport type="string">SUMU</airport>
+                        </destination>
+                        <route>
+                              <wp n="6">
+                                    <type type="string">navaid</type>
+                                    <ident type="string">PUGLI</ident>
+                                    <lon type="double">-60.552200</lon>
+                                    <lat type="double">-40.490000</lat>
+                                  </wp>
+                            <wp n="7">
+                                <type type="string">navaid</type>
+                                <ident type="string">SIGUL</ident>
+                                <lon type="double">-59.655800</lon>
+                                <lat type="double">-38.312800</lat>
+                            </wp>
+                            <wp n="8">
+                                <type type="string">navaid</type>
+                                <ident type="string">MDP</ident>
+                                <lon type="double">-57.576400</lon>
+                                <lat type="double">-37.929800</lat>
+                            </wp>
+                        </route>
+                    </PropertyList>
+  )";
+
+    std::istringstream stream(fpXML);
+    FlightPlanRef f = new FlightPlan;
+    bool ok = f->load(stream);
+    CPPUNIT_ASSERT(ok);
+
+    auto leg = f->legAtIndex(1);
+    CPPUNIT_ASSERT_EQUAL(std::string("SIGUL"), leg->waypoint()->ident());
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(137, leg->distanceNm(), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(101, f->legAtIndex(2)->distanceNm(), 0.5);
+}

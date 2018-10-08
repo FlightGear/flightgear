@@ -369,6 +369,7 @@ AirwayRef Airway::findByIdentAndNavaid(const std::string& aIdent, const FGPositi
 
 WayptRef Airway::findEnroute(const std::string &aIdent) const
 {
+    loadWaypoints();
     auto it = std::find_if(_elements.begin(), _elements.end(),
                            [&aIdent](WayptRef w)
     {

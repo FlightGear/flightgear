@@ -119,10 +119,20 @@ void NavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
   
   // FIXME - resolve co-located DME, etc
   // is it sufficent just to ignore DMEs, actually?
-  FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, NULL);
+  FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, nullptr);
   if (!nav) {
     throw sg_io_exception("unknown navaid ident:" + idn, 
       "NavaidWaypoint::initFromProperties");
+  }
+
+  if (p.isValid() && (SGGeodesy::distanceM(nav->geod(), p) > 4000)) {
+      // the looked up navaid was more than 4000 metres from the lat/lon.
+      // in this case, throw an exception here so we fall back to using
+      // a basic waypoint
+      // see https://sourceforge.net/p/flightgear/codetickets/1814/
+      throw sg_io_exception("Waypoint navaid for ident:" + idn +
+                            " is too far from specified lat/lon in flight-plan",
+                            "NavaidWaypoint::initFromProperties");
   }
   
   _navaid = nav;

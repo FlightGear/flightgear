@@ -1111,9 +1111,8 @@ void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
   _legs.clear();
   SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);
   if (routeNode.valid()) {
-    for (int i=0; i<routeNode->nChildren(); ++i) {
-      SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
-      Leg* l = new Leg(this, Waypt::createFromProperties(this, wpNode));
+    for (auto wpNode : routeNode->getChildren("wp")) {
+      Leg* l = new Leg{this, Waypt::createFromProperties(this, wpNode)};
       _legs.push_back(l);
     } // of route iteration
   }

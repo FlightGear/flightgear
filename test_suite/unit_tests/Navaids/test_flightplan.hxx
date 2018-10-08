@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _FG_FLIGHTPLAN_UNIT_TESTS_HXX
-#define _FG_FLIGHTPLAN_UNIT_TESTS_HXX
+#ifndef FG_FLIGHTPLAN_UNIT_TESTS_HXX
+#define FG_FLIGHTPLAN_UNIT_TESTS_HXX
 
 
 #include <cppunit/extensions/HelperMacros.h>
@@ -37,6 +37,8 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testRoutePathTrivialFlightPlan);
     CPPUNIT_TEST(testBasicAirways);
     CPPUNIT_TEST(testAirwayNetworkRoute);
+    CPPUNIT_TEST(testBug1814);
+
   //  CPPUNIT_TEST(testParseICAORoute);
    // CPPUNIT_TEST(testParseICANLowLevelRoute);
     CPPUNIT_TEST_SUITE_END();
@@ -57,6 +59,7 @@ public:
     void testAirwayNetworkRoute();
     void testParseICAORoute();
     void testParseICANLowLevelRoute();
+    void testBug1814();
 };
 
-#endif  // _FG_FLIGHTPLAN_UNIT_TESTS_HXX
+#endif  // FG_FLIGHTPLAN_UNIT_TESTS_HXX
