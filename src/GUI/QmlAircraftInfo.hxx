@@ -126,6 +126,7 @@ public:
     Q_INVOKABLE bool isSpeedBelowLimits(QuantityValue speed) const;
     Q_INVOKABLE bool isAltitudeBelowLimits(QuantityValue speed) const;
 
+    Q_INVOKABLE bool hasTag(QString tag) const;
 signals:
     void uriChanged();
     void infoChanged();

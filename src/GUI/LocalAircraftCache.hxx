@@ -68,6 +68,7 @@ struct AircraftItem
     bool isPrimary = false;
     QString thumbnailPath;
     QString minFGVersion;
+    QStringList tags;
     bool needsMaintenance = false;
     QUrl homepageUrl;
     QUrl wikipediaUrl;

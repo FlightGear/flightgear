@@ -37,7 +37,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
-static quint32 CACHE_VERSION = 11;
+static quint32 CACHE_VERSION = 12;
 
 const int STANDARD_THUMBNAIL_HEIGHT = 128;
 //const int STANDARD_THUMBNAIL_WIDTH = 172;
@@ -103,8 +103,10 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
                 // could also consider vtol tag?
                 usesSeaports |= (strcmp(tagName, "seaplane") == 0);
                 usesSeaports |= (strcmp(tagName, "floats") == 0);
-
                 needsMaintenance |= (strcmp(tagName, "needs-maintenance") == 0);
+
+                // and actually store the tags
+                tags.push_back(QString::fromUtf8(tagName));
             }
         } // of tags iteration
     } // of set-xml has tags
@@ -155,6 +157,7 @@ void AircraftItem::fromDataStream(QDataStream& ds)
     ds >> minFGVersion;
     ds >> needsMaintenance >> usesHeliports >> usesSeaports;
     ds >> homepageUrl >> supportUrl >> wikipediaUrl;
+    ds >> tags;
 }
 
 void AircraftItem::toDataStream(QDataStream& ds) const
@@ -171,6 +174,7 @@ void AircraftItem::toDataStream(QDataStream& ds) const
     ds << minFGVersion;
     ds << needsMaintenance << usesHeliports << usesSeaports;
     ds << homepageUrl << supportUrl << wikipediaUrl;
+    ds << tags;
 }
 
 QPixmap AircraftItem::thumbnail(bool loadIfRequired) const

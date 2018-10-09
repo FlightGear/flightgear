@@ -214,7 +214,10 @@ public:
 
     QVariant data(const QModelIndex &index, int role) const override
     {
-        const StateInfo& s = _data.at(index.row());
+        size_t i;
+        if (!makeSafeIndex(index.row(), i))
+            return {};
+        const StateInfo& s = _data.at(i);
         if (role == Qt::DisplayRole) {
             if (s.name.isEmpty()) {
                 return humanNameFromStateTag(s.primaryTag());
@@ -244,19 +247,21 @@ public:
 
     Q_INVOKABLE QString descriptionForState(int row) const
     {
-        if ((row < 0) || (row >= _data.size()))
+        size_t index;
+        if (!makeSafeIndex(row, index))
             return {};
 
-        const StateInfo& s = _data.at(row);
+        const StateInfo& s = _data.at(index);
         return s.description;
     }
 
     Q_INVOKABLE QString tagForState(int row) const
     {
-        if ((row < 0) || (row >= _data.size()))
+        size_t index;
+        if (!makeSafeIndex(row, index))
             return {};
 
-        return QString::fromStdString(_data.at(row).primaryTag());
+        return QString::fromStdString(_data.at(index).primaryTag());
     }
 
     bool hasExplicitAuto() const
@@ -274,6 +279,15 @@ public:
         return indexForTag(st.toStdString()) != -1;
     }
 private:
+    bool makeSafeIndex(int row, size_t& t) const
+    {
+        if (row < 0) {
+            return false;
+        }
+        t = static_cast<size_t>(row);
+        return (t < _data.size());
+    }
+
     AircraftStateVec _data;
     bool _explicitAutoState = false;
 };
@@ -847,6 +861,19 @@ bool QmlAircraftInfo::isSpeedBelowLimits(QuantityValue speed) const
 bool QmlAircraftInfo::isAltitudeBelowLimits(QuantityValue speed) const
 {
     return true;
+}
+
+bool QmlAircraftInfo::hasTag(QString tag) const
+{
+    if (_item) {
+        return resolveItem()->tags.contains(tag);
+    } else if (_package) {
+        const auto& tags = _package->tags();
+        auto it = tags.find(tag.toStdString());
+        return (it != tags.end());
+    }
+
+    return false;
 }
 
 #include "QmlAircraftInfo.moc"

@@ -84,6 +84,8 @@ class LauncherController : public QObject
 
 	Q_PROPERTY(QSize minimumWindowSize READ minWindowSize WRITE setMinWindowSize NOTIFY minWindowSizeChanged)
 
+    Q_PROPERTY(QUrl flyIconUrl READ flyIconUrl NOTIFY selectedAircraftChanged)
+
 public:
     explicit LauncherController(QObject *parent, QWindow* win);
 
@@ -181,7 +183,10 @@ public:
 		return m_minWindowSize; 
 	}
 
-	void setMinWindowSize(QSize sz);
+    void setMinWindowSize(QSize sz);
+
+    QUrl flyIconUrl() const;
+
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -265,7 +270,7 @@ private:
 
 	bool m_inAppMode = false;
 	bool m_keepRunningInAppMode = false;
-	bool m_appModeResult = true;
+    bool m_appModeResult = true;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX
