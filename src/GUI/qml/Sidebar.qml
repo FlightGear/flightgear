@@ -74,7 +74,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         enabled: _launcher.canFly
         disabledText: qsTr("The selected aircraft is not installed or has updates pending")
-        icon: "qrc:///svg/toolbox-fly"
+        icon: _launcher.flyIconUrl
         onClicked: _launcher.fly();
     }
 }

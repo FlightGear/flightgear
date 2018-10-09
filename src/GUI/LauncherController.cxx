@@ -826,3 +826,16 @@ void LauncherController::setMinWindowSize(QSize sz)
 	m_window->setMinimumSize(sz);
 	emit minWindowSizeChanged();
 }
+
+QUrl LauncherController::flyIconUrl() const
+{
+    if (m_aircraftType == Helicopter) {
+        return QUrl{"qrc:///svg/toolbox-fly-heli"};
+    } else if (m_selectedAircraftInfo) {
+        if (m_selectedAircraftInfo->hasTag("spaceship")) {
+            return QUrl{"qrc:///svg/toolbox-fly-alt"};
+        }
+    }
+
+    return QUrl{"qrc:///svg/toolbox-fly"};
+}

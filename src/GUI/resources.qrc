@@ -135,5 +135,7 @@
         <file alias="toolbox-addons">assets/icons8-puzzle.svg</file>
         <file alias="toolbox-summary">assets/icons8-home.svg</file>
         <file alias="toolbox-aircraft">assets/icons8-aircraft.svg</file>
+        <file alias="toolbox-fly-alt">assets/icons8-rocket.svg</file>
+        <file alias="toolbox-fly-heli">assets/icons8-helicopter.svg</file>
     </qresource>
 </RCC>
