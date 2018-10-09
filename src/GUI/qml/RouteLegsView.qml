@@ -37,12 +37,19 @@ Rectangle
         text: "via XXXXX"
     }
 
+    TextMetrics {
+        id: legAltitudeWidth
+        font.pixelSize: Style.baseFontPixelSize
+        text: "at 40000"
+    }
+
     readonly property int legDistanceColumnStart: root.width - (legDistanceWidth.width + (Style.margin * 2))
-    readonly property int legBearingColumnStart: legDistanceColumnStart - (legBearingWidth.width + Style.margin)
+    readonly property int legBearingColumnStart: legDistanceColumnStart - (legBearingWidth.width + Style.strutSize)
+    readonly property int legAltitudeColumnStart: legBearingColumnStart - (legAltitudeWidth.width + Style.strutSize)
 
     // description string fills the middle space, gets elided
     readonly property int legDescriptionColumnStart: legIdentWidth.width + legViaWidth.width + Style.margin * 3
-    readonly property int legDescriptStringWidth: legBearingColumnStart - legDescriptionColumnStart
+    readonly property int legDescriptStringWidth: legAltitudeColumnStart - legDescriptionColumnStart
 
     Column {
         width: parent.width - Style.margin * 2
@@ -72,6 +79,22 @@ Rectangle
                     return s;
                 }
 
+                readonly property string altitude: {
+                    var rr = model.altitudeType;
+                    // corresponds to the RouteRestriction enum in route.hxx
+                    if (rr === 1) {
+                        return qsTr("at %1'").arg(model.altitudeFt);
+                    }
+                    if (rr === 2) {
+                        return qsTr("above %1'").arg(model.altitudeFt);
+                    }
+                    if (rr === 3) {
+                        return qsTr("below %1'").arg(model.altitudeFt);
+                    }
+
+                    return "";
+                }
+
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
                     id: rowLabel
@@ -98,6 +121,13 @@ Rectangle
                     x: legDescriptionColumnStart
                     width: legDescriptStringWidth
                     elide: Text.ElideRight
+                }
+
+                StyledText {
+                    x: legAltitudeColumnStart
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: (model.altitudeType > 0)
+                    text: delegateRect.altitude
                 }
 
                 StyledText {

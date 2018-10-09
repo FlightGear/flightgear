@@ -12,7 +12,6 @@ Item {
     function backToSearch()
     {
         detailLoader.sourceComponent = null
-        _location.setBaseLocation(null)
         if (!_location.searchModel.haveExistingSearch) {
             _location.showHistoryInSearchModel();
         }
@@ -282,7 +281,7 @@ Item {
         anchors { left: parent.left; top: parent.top; margins: Style.margin }
         width: Style.strutSize
         visible: detailLoader.visible
-        text: "< Back"
+        text: qsTr("< Back")
         onClicked: root.backToSearch();
     }
 }

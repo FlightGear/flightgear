@@ -26,6 +26,8 @@ const int LegAirwayIdentRole = Qt::UserRole + 3;
 const int LegTerminatorTypeRole = Qt::UserRole + 4;
 const int LegTerminatorNavNameRole = Qt::UserRole + 5;
 const int LegTerminatorNavFrequencyRole = Qt::UserRole + 6;
+const int LegAltitudeFtRole = Qt::UserRole + 7;
+const int LegAltitudeTypeRole = Qt::UserRole + 8;
 
 class LegsModel : public QAbstractListModel
 {
@@ -106,6 +108,12 @@ public:
         case LegTerminatorTypeRole:
             return QString::fromStdString(leg->waypoint()->type());
 
+        case LegAltitudeFtRole:
+            return leg->altitudeFt();
+
+        case LegAltitudeTypeRole:
+            return leg->altitudeRestriction();
+
         default:
             break;
         }
@@ -131,6 +139,8 @@ public:
         result[LegAirwayIdentRole] = "via";
         result[LegTerminatorTypeRole] = "wpType";
         result[LegTerminatorNavNameRole] = "toName";
+        result[LegAltitudeFtRole] = "altitudeFt";
+        result[LegAltitudeTypeRole] = "altitudeType";
 
         return result;
     }
