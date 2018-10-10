@@ -15,7 +15,7 @@
 
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
-
+#include <simgear/math/sg_geodesy.hxx>
 
 namespace FGTestApi {
 
@@ -59,6 +59,12 @@ void initTestGlobals(const std::string& testName)
 
 }  // End of namespace setUp.
 
+void setPosition(const SGGeod& g)
+{
+    globals->get_props()->setDoubleValue("position/latitude-deg", g.getLatitudeDeg());
+    globals->get_props()->setDoubleValue("position/longitude-deg", g.getLongitudeDeg());
+    globals->get_props()->setDoubleValue("position/altitude-ft", g.getElevationFt());
+}
 
 namespace tearDown {
 

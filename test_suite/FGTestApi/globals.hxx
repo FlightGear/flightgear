@@ -3,6 +3,8 @@
 
 #include <string>
 
+class SGGeod;
+
 namespace FGTestApi {
 
 namespace setUp {
@@ -11,6 +13,7 @@ void initTestGlobals(const std::string& testName);
 
 }  // End of namespace setUp.
 
+void setPosition(const SGGeod& g);
 
 namespace tearDown {
 

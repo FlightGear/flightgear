@@ -1,0 +1,206 @@
+#include "test_navRadio.hxx"
+
+#include <memory>
+#include <cstring>
+
+#include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/NavDataCache.hxx"
+
+#include <Navaids/NavDataCache.hxx>
+#include <Navaids/navrecord.hxx>
+#include <Navaids/navlist.hxx>
+
+#include <Instrumentation/navradio.hxx>
+
+// Set up function for each test.
+void NavRadioTests::setUp()
+{
+    FGTestApi::setUp::initTestGlobals("navradio");
+    FGTestApi::setUp::initNavDataCache();
+}
+
+
+// Clean up after each test.
+void NavRadioTests::tearDown()
+{
+    FGTestApi::tearDown::shutdownTestGlobals();
+}
+
+void NavRadioTests::setPositionAndStabilise(FGNavRadio* r, const SGGeod& g)
+{
+    FGTestApi::setPosition(g);
+    for (int i=0; i<60; ++i) {
+        r->update(0.1);
+    }
+}
+
+void NavRadioTests::testBasic()
+{
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", "navtest");
+    configNode->setIntValue("number", 2);
+    std::unique_ptr<FGNavRadio> r(new FGNavRadio(configNode));
+    
+    r->bind();
+    r->init();
+    
+    SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
+    node->setBoolValue("serviceable", true);
+    // needed for the radio to power up
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    node->setDoubleValue("frequencies/selected-mhz", 113.8);
+
+    SGGeod pos = SGGeod::fromDegFt(-3.352780, 55.499199, 20000);
+    setPositionAndStabilise(r.get(), pos);
+    
+    CPPUNIT_ASSERT(!strcmp("TLA", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
+}
+
+void NavRadioTests::testCDIDeflection()
+{
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", "navtest");
+    configNode->setIntValue("number", 2);
+    std::unique_ptr<FGNavRadio> r(new FGNavRadio(configNode));
+    
+    r->bind();
+    r->init();
+    
+    SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
+    node->setBoolValue("serviceable", true);
+    // needed for the radio to power up
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    node->setDoubleValue("frequencies/selected-mhz", 113.55);
+    
+    node->setDoubleValue("radials/selected-deg", 25);
+    
+    FGPositioned::TypeFilter f{FGPositioned::VOR};
+    FGNavRecordRef nav = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("MCT", SGGeod::fromDeg(-2.26, 53.3), &f));
+
+    // twist of MCT is 5.0, so we use a bearing of 20 here, not 25
+    SGGeod posOnRadial = SGGeodesy::direct(nav->geod(), 20.0, 10 * SG_NM_TO_METER);
+    posOnRadial.setElevationFt(10000);
+    setPositionAndStabilise(r.get(), posOnRadial);
+
+    CPPUNIT_ASSERT(!strcmp("MCT", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("crosstrack-error-m"), 0.01);
+    CPPUNIT_ASSERT(node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(!node->getBoolValue("to-flag"));
+
+    
+    // move off course
+    SGGeod posOffRadial = SGGeodesy::direct(nav->geod(), 15.0, 20 * SG_NM_TO_METER); // 5 degress off
+    posOffRadial.setElevationFt(12000);
+    setPositionAndStabilise(r.get(), posOffRadial);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.5, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    
+    double xtkE = sin(5.0 * SG_DEGREES_TO_RADIANS) * 20 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 50.0);
+    CPPUNIT_ASSERT(node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(!node->getBoolValue("to-flag"));
+    
+    posOffRadial = SGGeodesy::direct(nav->geod(), 28.0, 30 * SG_NM_TO_METER); // 8 degress off
+    posOffRadial.setElevationFt(16000);
+    setPositionAndStabilise(r.get(), posOffRadial);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-8.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.8, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    
+    xtkE = sin(-8.0 * SG_DEGREES_TO_RADIANS) * 30 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 50.0);
+
+    // move more than ten degrees off course
+    posOffRadial = SGGeodesy::direct(nav->geod(), 33.0, 40 * SG_NM_TO_METER); // 13 degress off
+    posOffRadial.setElevationFt(16000);
+    setPositionAndStabilise(r.get(), posOffRadial);
+    
+    // pegged to full deflection
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-10.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.0, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    
+    // cross track error is computed based on true deflection, not clamped
+    xtkE = sin(-13.0 * SG_DEGREES_TO_RADIANS) * 40 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 50.0);
+    CPPUNIT_ASSERT(node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(!node->getBoolValue("to-flag"));
+    
+// try on the TO side of the station
+    // let's use Perth VOR, but the Australian one to check southern
+    // hemisphere operation
+    node->setDoubleValue("frequencies/selected-mhz", 113.7);
+    node->setDoubleValue("radials/selected-deg", 42.0); // twist is -2.0
+    CPPUNIT_ASSERT(!strcmp("113.70", node->getStringValue("frequencies/selected-mhz-fmt")));
+
+    auto perthVOR = fgpositioned_cast<FGNavRecord>(
+        FGPositioned::findClosestWithIdent("PH", SGGeod::fromDeg(115.95, -31.9), &f));
+    
+    SGGeod p = SGGeodesy::direct(perthVOR->geod(), 220.0, 20 * SG_NM_TO_METER); // on the reciprocal radial
+    p.setElevationFt(12000);
+    setPositionAndStabilise(r.get(), p);
+    
+    CPPUNIT_ASSERT(!strcmp("PH", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(40.0, node->getDoubleValue("heading-deg"), 0.5);
+    
+    // actual radial has twist subtracted
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(222.0, node->getDoubleValue("radials/actual-deg"), 0.01);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("crosstrack-error-m"), 50.0);
+    CPPUNIT_ASSERT(!node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
+    
+// off course on the TO side
+    p = SGGeodesy::direct(perthVOR->geod(), 227.0, 100 * SG_NM_TO_METER);
+    p.setElevationFt(18000);
+    setPositionAndStabilise(r.get(), p);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(47.0, node->getDoubleValue("heading-deg"), 1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(229.0, node->getDoubleValue("radials/actual-deg"), 0.01);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(7.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.7, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    
+    xtkE = sin(7.0 * SG_DEGREES_TO_RADIANS) * 100 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 50.0);
+    CPPUNIT_ASSERT(!node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
+}
+
+void NavRadioTests::testILSBasic()
+{
+    
+    // also check ILS back course
+}
+
+void NavRadioTests::testGS()
+{
+    
+}
+
+void NavRadioTests::testILSFalseCourse()
+{
+    
+    // also GS false lobes
+}
+
+void NavRadioTests::testILSPaired()
+{
+    // EGPH and countless more
+}
+
+void NavRadioTests::testILSAdjacentPaired()
+{
+    // eg KJFK
+}

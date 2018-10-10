@@ -37,22 +37,29 @@ AudioIdent::AudioIdent( const std::string & fx_name, const double interval_secs,
 
 void AudioIdent::init()
 {
+    auto soundManager = globals->get_subsystem<SGSoundMgr>();
+    if (!soundManager)
+        return; // sound disabled
+    
     _timer = 0.0;
     _ident = "";
     _running = false;
-    _sgr = globals->get_subsystem<SGSoundMgr>()->find("avionics", true);
+    _sgr = soundManager->find("avionics", true);
     _sgr->tie_to_listener();
 }
 
 void AudioIdent::stop()
 {
-    if( _sgr->exists( _fx_name ) )
+    if (_sgr && _sgr->exists( _fx_name ) )
         _sgr->stop( _fx_name );
     _running = false;
 }
 
 void AudioIdent::start()
 {
+    if (!_sgr)
+        return;
+    
     _timer = _interval;
     _sgr->play_once(_fx_name);
     _running = true;
@@ -60,10 +67,11 @@ void AudioIdent::start()
 
 void AudioIdent::setVolumeNorm( double volumeNorm )
 {
+    if (!_sgr)
+        return;
+    
     SG_CLAMP_RANGE(volumeNorm, 0.0, 1.0);
-
     SGSoundSample *sound = _sgr->find( _fx_name );
-
     if ( sound != NULL ) {
         sound->set_volume( volumeNorm );
     }
@@ -71,6 +79,9 @@ void AudioIdent::setVolumeNorm( double volumeNorm )
 
 void AudioIdent::setIdent( const std::string & ident, double volumeNorm )
 {
+    if (!_sgr)
+        return;
+    
     // Signal may flicker very frequently (due to our realistic newnavradio...).
     // Avoid recreating identical sound samples all the time, instead turn off
     // volume when signal is lost, and save the most recent sample.

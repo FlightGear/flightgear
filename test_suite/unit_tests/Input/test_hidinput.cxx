@@ -20,7 +20,7 @@
 
 #include "test_hidinput.hxx"
 
-#include "test_suite/helpers/globals.hxx"
+#include "test_suite/FGTestApi/globals.hxx"
 
 #include <simgear/misc/test_macros.hxx>
 
