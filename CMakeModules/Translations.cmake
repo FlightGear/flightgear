@@ -24,7 +24,7 @@ endif()
 
 if (${do_translate})
     # FIXME - determine this based on subdirs of TRANSLATIONS_SRC_DIR
-    set(LANGUAGES en_US de es nl fr it pl pt zh_CN)
+    set(LANGUAGES en_US de es nl fr it pl pt ru zh_CN)
     set(translation_res "${PROJECT_BINARY_DIR}/translations.qrc")
 
     add_custom_target(fgfs_qm_files ALL)
