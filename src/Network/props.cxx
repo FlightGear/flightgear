@@ -471,13 +471,13 @@ FGProps::PropsChannel::foundTerminator()
             } else if ( command == "run" ) {
                 string tmp;
                 if ( tokens.size() >= 2 ) {
-                    SGPropertyNode args;
+                    SGPropertyNode_ptr args(new SGPropertyNode);
                     if ( tokens[1] == "reinit" ) {
                         for ( unsigned int i = 2; i < tokens.size(); ++i ) {
                             cout << "props: adding subsystem = " << tokens[i]
                                  << endl;
                             SGPropertyNode *node
-                                = args.getNode("subsystem", i-2, true);
+                                = args->getNode("subsystem", i-2, true);
                             node->setStringValue( tokens[i].c_str() );
                         }
                     } else if ( tokens[1] == "set-sea-level-air-temp-degc" ) {
@@ -485,7 +485,7 @@ FGProps::PropsChannel::foundTerminator()
                             cout << "props: set-sl command = " << tokens[i]
                                  << endl;
                             SGPropertyNode *node
-                                = args.getNode("temp-degc", i-2, true);
+                                = args->getNode("temp-degc", i-2, true);
                             node->setStringValue( tokens[i].c_str() );
                         }
                     } else if ( tokens[1] == "set-outside-air-temp-degc" ) {
@@ -493,7 +493,7 @@ FGProps::PropsChannel::foundTerminator()
                             cout << "props: set-oat command = " << tokens[i]
                                  << endl;
                             SGPropertyNode *node
-                                = args.getNode("temp-degc", i-2, true);
+                                = args->getNode("temp-degc", i-2, true);
                             node->setStringValue( tokens[i].c_str() );
                         }
                     } else if ( tokens[1] == "timeofday" ) {
@@ -501,7 +501,7 @@ FGProps::PropsChannel::foundTerminator()
                             cout << "props: time of day command = " << tokens[i]
                                  << endl;
                             SGPropertyNode *node
-                                = args.getNode("timeofday", i-2, true);
+                                = args->getNode("timeofday", i-2, true);
                             node->setStringValue( tokens[i].c_str() );
                         }
                     } else if ( tokens[1] == "play-audio-message" ) {
@@ -509,14 +509,13 @@ FGProps::PropsChannel::foundTerminator()
                             cout << "props: play audio message = " << tokens[2]
                                  << " " << tokens[3] << endl;
                             SGPropertyNode *node;
-                            node = args.getNode("path", 0, true);
+                            node = args->getNode("path", 0, true);
                             node->setStringValue( tokens[2].c_str() );
-                            node = args.getNode("file", 0, true);
+                            node = args->getNode("file", 0, true);
                             node->setStringValue( tokens[3].c_str() );
                        }
                     }
-                    if ( !globals->get_commands()
-                             ->execute(tokens[1].c_str(), &args, nullptr) )
+                    if ( !globals->get_commands() ->execute(tokens[1].c_str(), args, nullptr) )
                     {
                         SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");
