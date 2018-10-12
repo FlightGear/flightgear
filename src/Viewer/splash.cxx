@@ -184,7 +184,7 @@ void SplashScreen::createNodes()
             fgGetNode("/sim/startup/splash-progress-spinner", true));
 
     if (!strcmp(FG_BUILD_TYPE, "Nightly")) {
-        std::string unstableWarningText = globals->get_locale()->getLocalizedString("splash/unstable-warning", "sys", "unstable!");
+        std::string unstableWarningText = globals->get_locale()->getLocalizedString("unstable-warning", "sys", "unstable!");
         addText(geode, osg::Vec2(0.5, 0.5), 0.03,
               unstableWarningText,
               osgText::Text::CENTER_CENTER,
