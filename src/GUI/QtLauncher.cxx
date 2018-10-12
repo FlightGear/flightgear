@@ -281,7 +281,7 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
           QStringLiteral("org.flightgear.FlightGear.desktop"));
 #endif
         QTranslator* fallbackTranslator = new QTranslator(static_qApp.get());
-        if (!fallbackTranslator->load(QLatin1String(":/FlightGear_en_US.qm"))) {
+        if (!fallbackTranslator->load(QLatin1String(":/FlightGear_en.qm"))) {
             qWarning() << "Failed to load default (en) translations";
             delete fallbackTranslator;
         } else {
@@ -289,7 +289,19 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         }
 
         QTranslator* translator = new QTranslator(static_qApp.get());
-        if (translator->load(QLocale(), QLatin1String("FlightGear"), QLatin1String("_"), QLatin1String(":/"))) {
+        // check for --langauge=xx option and prefer that over QLocale
+        // detection of the locale if it exists
+        auto lang = Options::getArgValue(argc, argv, "--language");
+        if (!lang.empty()) {
+            QString localeFile = "FlightGear_" + QString::fromStdString(lang);
+            if (translator->load(localeFile, QLatin1String(":/"))) {
+                qInfo() << "Loaded translations based on --language from:" << localeFile;
+                static_qApp->installTranslator(translator);
+            } else {
+                qInfo() << "--langauge was set, but no translations found at:" << localeFile;
+                delete translator;
+            }
+        } else if (translator->load(QLocale(), QLatin1String("FlightGear"), QLatin1String("_"), QLatin1String(":/"))) {
             // QLocale().name() looks like ' "it_IT" ' (without the outer
             // quotes) when running FG on Linux with LANG=it_IT.UTF-8.
             qInfo() << "Loaded translations for locale" << QLocale().name();

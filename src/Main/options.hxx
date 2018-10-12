@@ -155,6 +155,17 @@ public:
    */
   static bool checkForArg(int argc, char* argv[], const char* arg);
 
+  /**
+   * @brief getArgValue - get the value of an argument if it exists, or
+   * an empty string otherwise
+   * @param argc
+   * @param argv
+   * @param checkArg : arg to look for, with '--' prefix
+   * @return value following '=' until the next white space
+   */
+  static std::string getArgValue(int argc, char* argv[], const char* checkArg);
+
+
       SGPath platformDefaultRoot() const;
 
       /**
