@@ -644,11 +644,10 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
   std::string text;
   if (identifier[0] != 0)
   {
-    std::string id = std::string("splash/") + identifier;
-    text = globals->get_locale()->getLocalizedString(id.c_str(), "sys", "");
+    text = globals->get_locale()->getLocalizedString(identifier, "sys");
 
     if( text.empty() )
-      text = "<incomplete language resource>: " + id;
+      text = std::string("<incomplete language resource>: ") + identifier;
   }
 
     if (!strcmp(identifier,"downloading-scenery")) {
