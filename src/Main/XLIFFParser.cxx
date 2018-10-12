@@ -56,9 +56,9 @@ void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
 
         _source.clear();
         _target.clear();
-        std::string as;
+        std::string as = atts.getValue("approved");
         if (as.empty()) {
-            _approved = true;
+            _approved = false;
         } else {
             _approved = simgear::strutils::to_bool(as);
         }
