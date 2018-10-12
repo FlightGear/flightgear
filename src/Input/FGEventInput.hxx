@@ -26,10 +26,14 @@
 #include "FGCommonInput.hxx"
 
 #include <vector>
+#include <memory>
 
 #include "FGButton.hxx"
 #include "FGDeviceConfigurationMap.hxx"
 #include <simgear/structure/subsystem_mgr.hxx>
+
+// forward decls
+class SGInterpTable;
 
 /*
  * A base structure for event data. 
@@ -179,6 +183,8 @@ protected:
 class FGAxisEvent : public FGInputEvent {
 public:
   FGAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node );
+  ~FGAxisEvent();
+    
   void SetMaxRange( double value ) { maxRange = value; }
   void SetMinRange( double value ) { minRange = value; }
   void SetRange( double min, double max ) { minRange = min; maxRange = max; }
@@ -192,6 +198,8 @@ protected:
   double lowThreshold;
   double highThreshold;
   double lastValue;
+  std::unique_ptr<SGInterpTable> interpolater;
+  bool mirrorInterpolater = false;
 };
 
 class FGRelAxisEvent : public FGAxisEvent {

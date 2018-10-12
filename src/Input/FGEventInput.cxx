@@ -30,6 +30,7 @@
 #include <simgear/io/sg_file.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/math/SGMath.hxx>
+#include <simgear/math/interpolater.hxx>
 #include <Scripting/NasalSys.hxx>
 
 using simgear::PropertyList;
@@ -153,6 +154,17 @@ FGAxisEvent::FGAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node ) :
   lowThreshold = node->getDoubleValue("low-threshold", -0.9);
   highThreshold = node->getDoubleValue("high-threshold", 0.9);
   lastValue = 9999999;
+    
+// interpolation of values
+  if (node->hasChild("interpolater")) {
+    interpolater.reset(new SGInterpTable{node->getChild("interpolater")});
+    mirrorInterpolater = node->getBoolValue("interpolater/mirrored", false);
+  }
+}
+
+FGAxisEvent::~FGAxisEvent()
+{
+    
 }
 
 void FGAxisEvent::fire( FGEventData & eventData )
@@ -170,6 +182,15 @@ void FGAxisEvent::fire( FGEventData & eventData )
   if( minRange != maxRange )
     ed.value = 2.0*(eventData.value-minRange)/(maxRange-minRange)-1.0;
 
+  if (interpolater) {
+    if ((ed.value < 0.0) && mirrorInterpolater) {
+      // mirror the positive interpolation for negative values
+      ed.value = -interpolater->interpolate(fabs(ed.value));
+    } else {
+      ed.value = interpolater->interpolate(ed.value);
+    }
+  }
+    
   FGInputEvent::fire( ed );
 }
 
