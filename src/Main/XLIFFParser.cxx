@@ -23,6 +23,7 @@
 // simgear
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/misc/strutils.hxx>
 
 using namespace flightgear;
 
@@ -51,6 +52,15 @@ void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
         if (_unitId.empty()) {
             SG_LOG(SG_GENERAL, SG_WARN, "XLIFF trans-unit with missing ID: line "
                    << getLine() << " of " << getPath());
+        }
+
+        _source.clear();
+        _target.clear();
+        std::string as;
+        if (as.empty()) {
+            _approved = true;
+        } else {
+            _approved = simgear::strutils::to_bool(as);
         }
     } else if (tag == "group") {
         _resource = atts.getValue("resname");
@@ -83,6 +93,11 @@ void XLIFFParser::finishTransUnit()
                << getLine() << " of " << getPath());
         return;
     }
+
+    if (!_approved || _target.empty()) {
+        // skip un-approved or missing translations
+        return;
+    }
     
     const auto slashPos = _unitId.find('/');
     const auto indexPos = _unitId.find(':');
@@ -109,11 +124,14 @@ void XLIFFParser::finishTransUnit()
 
 void XLIFFParser::data (const char * s, int len)
 {
-    _text += std::string(s, len);
+    _text += std::string(s, static_cast<size_t>(len));
 }
 
 
-void XLIFFParser::pi (const char * target, const char * data) {
+void XLIFFParser::pi (const char * target, const char * data)
+{
+    SG_UNUSED(target);
+    SG_UNUSED(data);
     //cout << "Processing instruction " << target << ' ' << data << endl;
 }
 
