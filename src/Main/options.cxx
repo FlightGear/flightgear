@@ -251,7 +251,7 @@ void fgSetDefaults ()
     v->setValueReadOnly("build-type", FG_BUILD_TYPE);
 
     char* envp = ::getenv( "http_proxy" );
-    if( envp != NULL )
+    if( envp != nullptr )
       fgSetupProxy( envp );
 }
 
@@ -2960,7 +2960,7 @@ bool Options::checkForArg(int argc, char* argv[], const char* checkArg)
 {
     for (int i = 0; i < argc; ++i) {
         char* arg = argv[i];
-        if (arg == 0) {
+        if (arg == nullptr) {
             continue;
         }
 
@@ -2979,6 +2979,26 @@ bool Options::checkForArg(int argc, char* argv[], const char* checkArg)
     }
 
     return false;
+}
+
+std::string Options::getArgValue(int argc, char* argv[], const char* checkArg)
+{
+    const auto len = strlen(checkArg);
+    for (int i = 0; i < argc; ++i) {
+        char* arg = argv[i];
+        if (arg == nullptr) {
+            continue;
+        }
+
+        if (strncmp(arg, checkArg, len) == 0) {
+            const auto alen = strlen(arg);
+            if ((alen - len) < 2)
+                return {}; // no value after the =, or missing = entirely
+            return std::string(arg + len + 1);
+        }
+    } // of args iteration
+
+    return {};
 }
 
 } // of namespace flightgear
