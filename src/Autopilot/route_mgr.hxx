@@ -208,6 +208,22 @@ private:
   
     double getDepartureFieldElevation() const;  
     double getDestinationFieldElevation() const;  
+
+    int getCruiseAltitudeFt() const;
+    void setCruiseAltitudeFt(int ft);
+
+    int getCruiseFlightLevel() const;
+    void setCruiseFlightLevel(int fl);
+
+    int getCruiseSpeedKnots() const;
+    void setCruiseSpeedKnots(int kts);
+
+    double getCruiseSpeedMach() const;
+    void setCruiseSpeedMach(double m);
+
+    std::string getAlternate() const;
+    std::string getAlternateName() const;
+    void setAlternate(const std::string &icao);
 };
 
 

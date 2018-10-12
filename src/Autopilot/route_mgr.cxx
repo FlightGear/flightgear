@@ -224,7 +224,6 @@ static bool commandDeleteWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 /////////////////////////////////////////////////////////////////////////////
 
 FGRouteMgr::FGRouteMgr() :
-  _plan(NULL),
   input(fgGetNode( RM "input", true )),
   mirror(fgGetNode( RM "route", true ))
 {
@@ -284,9 +283,9 @@ void FGRouteMgr::init() {
                                                          &FGRouteMgr::setSID));
   
   departure->tie("name", SGStringValueMethods<FGRouteMgr>(*this, 
-    &FGRouteMgr::getDepartureName, NULL));
+    &FGRouteMgr::getDepartureName, nullptr));
   departure->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
-                                                                             &FGRouteMgr::getDepartureFieldElevation, NULL));
+                                                                             &FGRouteMgr::getDepartureFieldElevation, nullptr));
   departure->getChild("etd", 0, true);
   departure->getChild("takeoff-time", 0, true);
 
@@ -306,25 +305,35 @@ void FGRouteMgr::init() {
                                                                 &FGRouteMgr::setApproach));
   
   destination->tie("name", SGStringValueMethods<FGRouteMgr>(*this, 
-    &FGRouteMgr::getDestinationName, NULL));
+    &FGRouteMgr::getDestinationName, nullptr));
   destination->tie("field-elevation-ft", SGRawValueMethods<FGRouteMgr, double>(*this, 
-                                                                      &FGRouteMgr::getDestinationFieldElevation, NULL));
+                                                                      &FGRouteMgr::getDestinationFieldElevation, nullptr));
   
   destination->getChild("eta", 0, true);
   destination->getChild("eta-seconds", 0, true);
   destination->getChild("touchdown-time", 0, true);
 
   alternate = fgGetNode(RM "alternate", true);
-  alternate->getChild("airport", 0, true);
-  alternate->getChild("runway", 0, true);
-  
+  alternate->tie("airport", SGStringValueMethods<FGRouteMgr>(*this,
+                             &FGRouteMgr::getAlternate,
+                            &FGRouteMgr::setAlternate));
+  alternate->tie("name", SGStringValueMethods<FGRouteMgr>(*this,
+    &FGRouteMgr::getAlternateName, nullptr));
+
   cruise = fgGetNode(RM "cruise", true);
-  cruise->getChild("altitude-ft", 0, true);
-  cruise->setDoubleValue("altitude-ft", 10000.0);
-  cruise->getChild("flight-level", 0, true);
-  cruise->getChild("speed-kts", 0, true);
-  cruise->setDoubleValue("speed-kts", 160.0);
-  
+  cruise->tie("altitude-ft", SGRawValueMethods<FGRouteMgr, int>(*this,
+                                                           &FGRouteMgr::getCruiseAltitudeFt,
+                                                           &FGRouteMgr::setCruiseAltitudeFt));
+  cruise->tie("flight-level", SGRawValueMethods<FGRouteMgr, int>(*this,
+                                                            &FGRouteMgr::getCruiseFlightLevel,
+                                                            &FGRouteMgr::setCruiseFlightLevel));
+  cruise->tie("speed-kts", SGRawValueMethods<FGRouteMgr, int>(*this,
+                                                         &FGRouteMgr::getCruiseSpeedKnots,
+                                                         &FGRouteMgr::setCruiseSpeedKnots));
+  cruise->tie("mach", SGRawValueMethods<FGRouteMgr, double>(*this,
+                                                       &FGRouteMgr::getCruiseSpeedMach,
+                                                       &FGRouteMgr::setCruiseSpeedMach));
+
   totalDistance = fgGetNode(RM "total-distance", true);
   totalDistance->setDoubleValue(0.0);
   distanceToGo = fgGetNode(RM "distance-remaining-nm", true);
@@ -866,7 +875,7 @@ void FGRouteMgr::setDepartureICAO(const std::string& aIdent)
     }
     
   if (aIdent.length() < 3) {
-    _plan->setDeparture((FGAirport*) NULL);
+    _plan->setDeparture((FGAirport*) nullptr);
   } else {
     _plan->setDeparture(FGAirport::findByIdent(aIdent));
   }
@@ -1182,6 +1191,95 @@ double FGRouteMgr::getDestinationFieldElevation() const
   }
   
   return _plan->destinationAirport()->elevation();
+}
+
+int FGRouteMgr::getCruiseAltitudeFt() const
+{
+    if (!_plan)
+        return 0;
+
+    return _plan->cruiseAltitudeFt();
+}
+
+void FGRouteMgr::setCruiseAltitudeFt(int ft)
+{
+    if (!_plan)
+        return;
+
+    _plan->setCruiseAltitudeFt(ft);
+}
+
+int FGRouteMgr::getCruiseFlightLevel() const
+{
+    if (!_plan)
+        return 0;
+
+    return _plan->cruiseFlightLevel();
+}
+
+void FGRouteMgr::setCruiseFlightLevel(int fl)
+{
+    if (!_plan)
+        return;
+
+    _plan->setCruiseFlightLevel(fl);
+}
+
+int FGRouteMgr::getCruiseSpeedKnots() const
+{
+    if (!_plan)
+        return 0;
+
+    return _plan->cruiseSpeedKnots();
+}
+
+void FGRouteMgr::setCruiseSpeedKnots(int kts)
+{
+    if (!_plan)
+        return;
+
+    _plan->setCruiseSpeedKnots(kts);
+}
+
+double FGRouteMgr::getCruiseSpeedMach() const
+{
+    if (!_plan)
+        return 0.0;
+
+    return _plan->cruiseSpeedMach();
+}
+
+void FGRouteMgr::setCruiseSpeedMach(double m)
+{
+    if (!_plan)
+        return;
+
+    _plan->setCruiseSpeedMach(m);
+}
+
+string FGRouteMgr::getAlternate() const
+{
+    if (!_plan || !_plan->alternate())
+        return {};
+
+    return _plan->alternate()->ident();
+}
+
+std::string FGRouteMgr::getAlternateName() const
+{
+    if (!_plan || !_plan->alternate())
+        return {};
+
+    return _plan->alternate()->name();
+}
+
+void FGRouteMgr::setAlternate(const string &icao)
+{
+    if (!_plan)
+        return;
+
+    _plan->setAlternate(FGAirport::findByIdent(icao));
+    alternate->fireValueChanged();
 }
 
 SGPropertyNode_ptr FGRouteMgr::wayptNodeAtIndex(int index) const
