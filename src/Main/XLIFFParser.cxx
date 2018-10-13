@@ -56,11 +56,11 @@ void XLIFFParser::startElement(const char *name, const XMLAttributes &atts)
 
         _source.clear();
         _target.clear();
-        std::string as = atts.getValue("approved");
-        if (as.empty()) {
+        const char* ac = atts.getValue("approved");
+        if (!ac || !strcmp(ac, "")) {
             _approved = false;
         } else {
-            _approved = simgear::strutils::to_bool(as);
+            _approved = simgear::strutils::to_bool(std::string{ac});
         }
     } else if (tag == "group") {
         _resource = atts.getValue("resname");
