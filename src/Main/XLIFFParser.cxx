@@ -20,6 +20,8 @@
 
 #include "XLIFFParser.hxx"
 
+#include <cstring>
+
 // simgear
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
