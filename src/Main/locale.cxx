@@ -320,8 +320,7 @@ FGLocale::loadResource(const char* resource)
     bool Ok = loadResource(_defaultLocale, resource);
 
     // also load language specific resource, unless identical
-    if ((_currentLocale!=0)&&
-        (_defaultLocale != _currentLocale))
+    if ((_currentLocale != nullptr) && (_defaultLocale != _currentLocale))
     {
         Ok &= loadResource(_currentLocale, resource);
     }
