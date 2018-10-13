@@ -21,6 +21,7 @@
 #include "XLIFFParser.hxx"
 
 #include <cstring>
+#include <string>
 
 // simgear
 #include <simgear/debug/logstream.hxx>
@@ -121,7 +122,8 @@ void XLIFFParser::finishTransUnit()
     }
     
     const auto id = _unitId.substr(slashPos + 1, indexPos - (slashPos + 1));
-    _resourceNode->setStringValue(id, _target);
+    const int index = std::stoi(_unitId.substr(indexPos+1));
+    _resourceNode->getNode(id, index, true)->setStringValue(_target);
 }
 
 void XLIFFParser::data (const char * s, int len)
