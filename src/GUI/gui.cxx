@@ -60,6 +60,8 @@ using namespace flightgear;
 
 puFont guiFnt = 0;
 
+// this is declared in puLocal.h, re-declare here so we can call it ourselves
+void puSetPasteBuffer  ( const char *ch ) ;
 
 /* -------------------------------------------------------------------------
 init the gui
@@ -79,6 +81,10 @@ public:
         
         puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
         puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
+
+        // ensure we set a non-NULL paste buffer so Ctrl-V doesn't crash us,
+        // with older versions of PLIB (pre 1.8.6)
+        puSetPasteBuffer(" ");
 
         // OSG Texture2D sets this, which breaks PLIB fntLoadTXF
         // force it back to zero so width passed to glTexImage2D is used
