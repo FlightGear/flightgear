@@ -3,11 +3,13 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
-#  include <windows.h>                     
+#  include <windows.h>          
+#else
+#  include <unistd.h> // for usleep           
 #endif
 
 #include <string.h>		// plib/js.h should really include this !!!!!!
-#include <plib/js.h>
+#include <js.h>
 
 #define Z 8
 

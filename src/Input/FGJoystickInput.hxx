@@ -30,7 +30,8 @@
 
 #include <memory> // for std::unique_ptr
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <plib/js.h>
+
+#include <js.h>
 
 ////////////////////////////////////////////////////////////////////////
 // The Joystick Input Class
