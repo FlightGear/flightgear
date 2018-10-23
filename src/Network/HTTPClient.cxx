@@ -47,10 +47,10 @@ typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
 typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
 typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
 
-const char* OFFICIAL_CATALOG_ID = "org.flightgear.fgaddon";
+const char* OFFICIAL_CATALOG_ID = "org.flightgear.fgaddon.stable_2018";
 
 // fallback URL is used when looking up a version-specific catalog fails
-const char* FALLBACK_CATALOG_URL = "http://mirrors.ibiblio.org/flightgear/ftp/Aircraft/catalog.xml";
+const char* FALLBACK_CATALOG_URL = "http://mirrors.ibiblio.org/flightgear/ftp/Aircraft-2018/catalog.xml";
 
 namespace {
 
