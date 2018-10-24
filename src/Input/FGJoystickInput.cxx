@@ -22,11 +22,13 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "FGJoystickInput.hxx"
+
+#if defined(SG_WINDOWS)
+#  include <windows.h>
+#endif
 
 #include <simgear/props/props_io.hxx>
 #include "FGDeviceConfigurationMap.hxx"
