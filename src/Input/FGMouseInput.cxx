@@ -685,10 +685,10 @@ void FGMouseInput::doMouseMotion (int x, int y, const osgGA::GUIEventAdapter* ea
   FGMouseCursor::instance()->mouseMoved();
 
   // TODO Get rid of this as soon as soon as cursor hide timeout works globally
-  if( ea->getHandled() )
-    return;
-
-  processMotion(x, y, ea);
+    
+    if (!ea->getHandled()) {
+        processMotion(x, y, ea);
+    }
     
   m.x = x;
   m.y = y;
