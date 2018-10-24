@@ -113,6 +113,9 @@ public:
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(~0u);
 
+        glEnable    ( GL_BLEND        ) ;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+        
         // reset pixel storage stuff for PLIB FNT drawing via glBitmap
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -348,7 +351,9 @@ void PUICamera::init(osg::Group* parent)
     stateSet->setRenderBinDetails(1001, "RenderBin");
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
     stateSet->setTextureAttribute(0, _fboTexture);
-    stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
+    
+    // use GL_ONE becuase we pre-multiplied by alpha when building the FBO texture
+    stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::ONE, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
     stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
