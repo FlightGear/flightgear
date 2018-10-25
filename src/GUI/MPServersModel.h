@@ -11,9 +11,14 @@ class MPServersModel : public QAbstractListModel
     Q_OBJECT
 
     Q_PROPERTY(bool valid READ valid NOTIFY validChanged)
+
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
+
+    Q_PROPERTY(QString currentServer READ currentServer NOTIFY currentIndexChanged)
+    Q_PROPERTY(int currentPort READ currentPort NOTIFY currentIndexChanged)
 public:
     MPServersModel(QObject* parent = nullptr);
-    ~MPServersModel();
+    ~MPServersModel() override;
 
     int rowCount(const QModelIndex& index) const override;
 
@@ -30,15 +35,22 @@ public:
 
     void requestRestore();
 
-    Q_INVOKABLE QString serverForIndex(int index) const;
-    Q_INVOKABLE int portForIndex(int index) const;
+    QString currentServer() const;
+    int currentPort() const;
 
     bool valid() const;
 
+    int currentIndex() const
+    {
+        return m_currentIndex;
+    }
+
+public slots:
+    void setCurrentIndex(int currentIndex);
+
 signals:
-    void restoreIndex(int index);
-    void restoreDefault();
     void validChanged();
+    void currentIndexChanged(int currentIndex);
 
 private:
 
@@ -54,6 +66,7 @@ private:
     };
 
     std::vector<ServerInfo> m_servers;
+    int m_currentIndex = 0;
 };
 
 #endif // MPSERVERSMODEL_H

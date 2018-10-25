@@ -7,11 +7,10 @@ Item {
     id: root
     property alias label: label.text
 
-    property var model: undefined
+    property var model: nil
     property string displayRole: "display"
     property bool enabled: true
     property int currentIndex: 0
-    property bool __dummy: false
     property string headerText: ""
 
     implicitHeight: Math.max(label.implicitHeight, currentChoiceFrame.height)
@@ -22,32 +21,11 @@ Item {
         root.currentIndex = index;
     }
 
-    Item {
-        Repeater {
-            id: internalModel
-            model: root.model
-
-            Item {
-                id: internalModelItem
-
-                // Taken from TableViewItemDelegateLoader.qml to follow QML role conventions
-                readonly property var text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
-                                                                                       : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
-                                                                                                                                            : modelData != undefined ? modelData : "" // Models without role
-                readonly property bool selected: root.currentIndex === model.index
-                readonly property QtObject modelObj: model
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        // hack to force updating of currentText after internalModel
-        // has been populated
-        __dummy = !__dummy
-    }
-
-    onModelChanged: {
-         __dummy = !__dummy // force update of currentText
+    ModelDataExtractor {
+        id: currentItemText
+        model: root.model
+        role: root.displayRole
+        index: root.currentIndex
     }
 
     function haveHeader()
@@ -60,10 +38,7 @@ Item {
         if ((currentIndex == -1) && haveHeader())
             return headerText;
 
-        var foo = __dummy; // fake propery dependency to update this
-        var item = internalModel.itemAt(currentIndex);
-        if (!item) return "";
-        return item.text
+        return currentItemText.data
     }
 
     StyledText {

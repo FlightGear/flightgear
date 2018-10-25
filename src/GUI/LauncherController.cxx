@@ -51,6 +51,7 @@
 #include "UnitsModel.hxx"
 #include "NavaidSearchModel.hxx"
 #include "FlightPlanController.hxx"
+#include "ModelDataExtractor.hxx"
 
 using namespace simgear::pkg;
 
@@ -163,6 +164,8 @@ void LauncherController::initQML()
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
+
+    qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
 
     qmlRegisterSingletonType(QUrl("qrc:/qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
 
