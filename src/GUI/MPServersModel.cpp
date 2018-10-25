@@ -140,6 +140,7 @@ void MPServersModel::onRefreshMPServersFailed(simgear::HTTP::Request*)
     m_servers.clear();
     endResetModel();
     emit validChanged();
+    emit currentIndexChanged(m_currentIndex);
     restoreMPServerSelection();
 }
 
@@ -150,19 +151,21 @@ void MPServersModel::restoreMPServerSelection()
         settings.beginGroup("mpSettings");
         QString host = settings.value("mp-server").toString();
         if (host == "__custom__") {
-            emit restoreIndex(m_servers.size());
+            setCurrentIndex(m_servers.size());
         } else {
             // restore a built-in server
             auto it = std::find_if(m_servers.begin(), m_servers.end(), [host](const ServerInfo& info)
             { return (info.host == host); });
 
             if (it != m_servers.end()) {
-                emit restoreIndex(std::distance(m_servers.begin(), it));
+                setCurrentIndex(std::distance(m_servers.begin(), it));
             } else {
-                emit restoreDefault();
+                setCurrentIndex(0);
             }
         }
 
+        // force a refresh on the QML side, since the model may have changed
+        emit currentIndexChanged(m_currentIndex);
         m_doRestoreMPServer = false;
     }
 }
@@ -172,38 +175,39 @@ void MPServersModel::requestRestore()
     m_doRestoreMPServer = true;
 }
 
-QString MPServersModel::serverForIndex(int index) const
+QString MPServersModel::currentServer() const
 {
     if (!valid()) {
-        return (index == 1) ? "__custom__" : "__noservers__";
+        return (m_currentIndex == 1) ? "__custom__" : "__noservers__";
     }
 
-    if ((index < 0) || (index > m_servers.size())) {
-        return QString();
-    }
-
-    if (index == m_servers.size()) {
+    if (m_currentIndex == m_servers.size()) {
         return "__custom__";
     }
 
-    return m_servers.at(index).host;
+    return m_servers.at(m_currentIndex).host;
 }
 
-int MPServersModel::portForIndex(int index) const
+int MPServersModel::currentPort() const
 {
     if (!valid())
         return 0;
 
-    if ((index < 0) || (index >= m_servers.size())) {
-        return 0;
-    }
-
-    return m_servers.at(index).port;
+    return m_servers.at(m_currentIndex).port;
 }
 
 bool MPServersModel::valid() const
 {
     return !m_servers.empty();
+}
+
+void MPServersModel::setCurrentIndex(int currentIndex)
+{
+    if (m_currentIndex == currentIndex)
+        return;
+
+    m_currentIndex = currentIndex;
+    emit currentIndexChanged(m_currentIndex);
 }
 
 MPServersModel::ServerInfo::ServerInfo(QString n, QString l, QString h, int p)

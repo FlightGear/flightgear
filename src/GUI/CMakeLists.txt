@@ -164,6 +164,8 @@ if (HAVE_QT)
                         FlightPlanController.hxx
                         RouteDiagram.cxx
                         RouteDiagram.hxx
+                        ModelDataExtractor.cxx
+                        ModelDataExtractor.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

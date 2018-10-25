@@ -179,9 +179,8 @@ Item {
                         description: qsTr("Select a server close to you for better responsiveness and reduced lag when flying online.")
                         choices: _launcher.mpServersModel
 
-                        readonly property bool currentIsCustom: (_launcher.mpServersModel.serverForIndex(selectedIndex) === "__custom__")
-                        readonly property bool currentIsNoServers: (_launcher.mpServersModel.serverForIndex(selectedIndex) === "__noservers__")
-
+                        readonly property bool currentIsCustom: (_launcher.mpServersModel.currentServer === "__custom__")
+                        readonly property bool currentIsNoServers: (_launcher.mpServersModel.currentServer === "__noservers__")
                         property string __savedServer;
 
                         keywords: ["server", "hostname"]
@@ -195,7 +194,7 @@ Item {
                         {
                             // these values match the code in MPServersModel.cpp, sorry for that
                             // nastyness
-                            _config.setValueForKey("mpSettings", "mp-server", _launcher.mpServersModel.serverForIndex(selectedIndex) );
+                            _config.setValueForKey("mpSettings", "mp-server", _launcher.mpServersModel.currentServer);
                         }
 
                         function restoreState()
@@ -203,11 +202,13 @@ Item {
                             // no-op, this is triggered by MPServersModel::restoreMPServerSelection
                         }
 
+                        // can't use a Binding here, since we need a bidrectional link
+                        onSelectedIndexChanged: _launcher.mpServersModel.currentIndex = selectedIndex
+
                         Connections
                         {
                             target: _launcher.mpServersModel
-                            onRestoreIndex: { mpServer.selectedIndex = index }
-                            onRestoreDefault: { mpServer.selectedIndex = 0; }
+                            onCurrentIndexChanged: mpServer.selectedIndex = _launcher.mpServersModel.currentIndex
                         }
                     },
 
@@ -229,26 +230,24 @@ Item {
                             console.warn("MP enabled but no valid server selected, skipping");
                         } else if (mpServer.currentIsCustom) {
                             var pieces = mpCustomServer.value.split(':')
-                            var port = defaultMPPort;
+                            var customPort = defaultMPPort;
                             if (pieces.length > 1) {
-                                port = pieces[1];
+                                customPort = pieces[1];
                             }
 
                             if (pieces[0].length > 0) {
                                 _config.setProperty("/sim/multiplay/txhost", pieces[0]);
-                                _config.setProperty("/sim/multiplay/txport", port);
+                                _config.setProperty("/sim/multiplay/txport", customPort);
                             } else {
                                 console.warn("Custom MP server selected but no hostname defined");
                             }
                         } else {
-                            var sel = mpServer.selectedIndex
-                            var host =  _launcher.mpServersModel.serverForIndex(sel);
-                            console.info("MP host is " + host)
+                            var host =  _launcher.mpServersModel.currentServer;
                             if (host.length > 0) {
                                 _config.setProperty("/sim/multiplay/txhost", host);
                             }
 
-                            var port = _launcher.mpServersModel.portForIndex(sel);
+                            var port = _launcher.mpServersModel.currentPort;
                             if (port === 0) {
                                 console.info("Using default MP port");
                                 port = defaultMPPort;
