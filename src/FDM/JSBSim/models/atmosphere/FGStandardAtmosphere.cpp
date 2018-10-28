@@ -258,8 +258,8 @@ double FGStandardAtmosphere::GetStdTemperature(double altitude) const
 
   if (GeoPotAlt >= 0.0)
     return StdAtmosTemperatureTable.GetValue(GeoPotAlt);
-
-  return StdAtmosTemperatureTable.GetValue(0.0) + GeoPotAlt*LapseRates[0];
+  else
+    return StdAtmosTemperatureTable.GetValue(0.0) + GeoPotAlt*LapseRates[0];
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
