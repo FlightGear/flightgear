@@ -48,6 +48,7 @@ public:
     void setSign(const string& );
     void setDeckAltitude(const double altitude_feet);
     void setTACANChannelID(const string &);
+    virtual double getDefaultModelRadius() { return 350.0; }
 
     virtual void bind();
     void UpdateWind ( double dt );

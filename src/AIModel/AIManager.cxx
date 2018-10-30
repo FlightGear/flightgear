@@ -105,9 +105,9 @@ private:
 
 FGAIManager::FGAIManager() :
     cb_ai_bare(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
-               fgGetNode("/sim/rendering/static-lod/ai-bare", true))),
+               fgGetNode("/sim/rendering/static-lod/aimp-bare", true))),
     cb_ai_detailed(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
-                   fgGetNode("/sim/rendering/static-lod/ai-detailed", true)))
+                   fgGetNode("/sim/rendering/static-lod/aimp-detailed", true)))
 {
 
 }

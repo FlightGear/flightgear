@@ -310,7 +310,7 @@ void FGAIBase::updateInterior()
         if(d2 <= _maxRangeInterior){ // if the AI is in-range we load the interior
             _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
             if(_interior.valid()){
-                _interior->setRange(0, 0.0, _maxRangeInterior);
+                _interior->setRange(modelHighDetailIndex, 0.0, _maxRangeInterior);
                 aip.add(_interior.get());
                 _modeldata->setInteriorLoaded(true);
                 SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
@@ -322,25 +322,54 @@ void FGAIBase::updateInterior()
 /** update LOD properties of the model */
 void FGAIBase::updateLOD()
 {
-    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 3000.0);
-    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 10000.0);
+    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/aimp-detailed", 3000.0);
+    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/aimp-bare", 10000.0);
 
-    _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/ai-interior", 50.0);
+    _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/aimp-interior", 50.0);
 
     if (_model.valid())
     {
-        if( maxRangeDetail == 0.0 )
+        bool pixel_mode = !fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
+        if (pixel_mode)
+            _model->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
+        else
+            _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+
+        if (maxRangeDetail < 0) // disable the bare model
         {
-            // Disable LOD.  The First entry in the LOD node is the most detailed
+            // Disable LOD.  The first entry in the LOD node is the most detailed
             // so use that.
-            _model->setRange(0, 0.0,     FLT_MAX);
             if (_model->getNumFileNames() == 2) {
-              _model->setRange(1, FLT_MAX, FLT_MAX);
+                _model->setRange(modelHighDetailIndex, 0.0, FLT_MAX); // all ranges.
+                _model->setRange(modelLowDetailIndex, FLT_MAX, FLT_MAX);
             }
+            else
+                _model->setRange(modelHighDetailIndex , 0.0, FLT_MAX); // all ranges.
+        }
+        else if (maxRangeBare == maxRangeDetail) // only use the bare model
+        {
+            double start_range, end_range;
+            if (pixel_mode) {
+                // pixels, so the start of the range is when we want this to be drawn. this should
+                // be zero pixels to ensure that something is visible.
+                start_range = maxRangeDetail;
+                end_range = FLT_MAX;
+            }
+            else {
+                // meters; so start from 0 end and at the max range.
+                start_range = maxRangeDetail;
+                end_range = FLT_MAX;
+            }
+            if (_model->getNumFileNames() == 2) {
+                _model->setRange(modelHighDetailIndex , FLT_MAX, FLT_MAX);
+                _model->setRange(modelLowDetailIndex , start_range, end_range);
+            }
+            else
+                _model->setRange(modelHighDetailIndex , start_range, end_range);
         }
         else
         {
-            if( fgGetBool("/sim/rendering/static-lod/ai-range-mode-pixel", false ) )
+            if(pixel_mode)
             {
                 /* In pixel size mode, the range sense is reversed, so we want the
                 * detailed model [0] to be displayed when the "range" is really
@@ -356,21 +385,28 @@ void FGAIBase::updateLOD()
                   maxRangeBare = maxRangeDetail;
                   SG_LOG(SG_AI,
                     SG_WARN,
-                    "/sim/rendering/static-lod/ai-bare greater " <<
-                    "than /sim/rendering/static-lod/ai-detailed when using " <<
-                    "/sim/rendering/static-lod/ai-range-mode-pixel=true.  Ignoring ai-bare."
+                    "/sim/rendering/static-lod/aimp-bare greater " <<
+                    "than /sim/rendering/static-lod/aimp-detailed when using " <<
+                    "/sim/rendering/static-lod/aimp-range-mode-distance=false.  Ignoring ai-bare."
                   );
                 }
 
-                _model->setRangeMode( osg::LOD::PIXEL_SIZE_ON_SCREEN );
                 if (_model->getNumFileNames() == 2) {
-                  _model->setRange(0, maxRangeDetail, 100000 );
-                  _model->setRange(1, maxRangeBare, maxRangeDetail);
+                    /*if (_model->getRadius() < 0)
+                    {
+                        osg::BoundingSphere bs = _model->computeBound();
+                        if (bs.radius() > 0) {
+                            _model->setRadius(bs.radius());
+                            _model->setCenterMode(osg::LOD::CenterMode::USER_DEFINED_CENTER);
+                        }
+                    }*/
+                  _model->setRange(modelHighDetailIndex , maxRangeDetail, 100000); // most detailed
+                  _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
                 } else {
                   /* If we have only one LoD for this model, then we want to
                    * display it from the smallest pixel value
                    */
-                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), 100000 );
+                  _model->setRange(modelHighDetailIndex , min(maxRangeBare, maxRangeDetail), 100000 );
                 }
             } else {
                 /* In non-pixel range mode we're dealing with straight distance.
@@ -384,20 +420,19 @@ void FGAIBase::updateLOD()
                    maxRangeBare = maxRangeDetail;
                    SG_LOG(SG_AI,
                      SG_WARN,
-                     "/sim/rendering/static-lod/ai-bare less than " <<
-                     "than /sim/rendering/static-lod/ai-detailed.  Ignoring ai-bare."
+                     "/sim/rendering/static-lod/aimp-bare less than " <<
+                     "than /sim/rendering/static-lod/aimp-detailed.  Ignoring ai-bare."
                    );
                  }
 
-                _model->setRangeMode( osg::LOD:: DISTANCE_FROM_EYE_POINT);
                 if (_model->getNumFileNames() == 2) {
-                  _model->setRange(0, 0, maxRangeDetail);
-                  _model->setRange(1, maxRangeDetail, maxRangeBare);
+                  _model->setRange(modelHighDetailIndex , 0, maxRangeDetail); // most detailed
+                  _model->setRange(modelLowDetailIndex , maxRangeDetail, maxRangeDetail+maxRangeBare); // least detailed
                 } else {
                   /* If we have only one LoD for this model, then we want to
                    * display it from whatever range.
                    */
-                  _model->setRange(0, 0, max(maxRangeBare, maxRangeDetail));
+                  _model->setRange(modelHighDetailIndex , 0, max(maxRangeBare, maxRangeDetail));
                 }
             }
         }
@@ -488,11 +523,13 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
         }
 
         // At this point we're looking for a regular model to display at closer range.
+        // From experimentation it seems to work best if the LODs are in the range list in terms of detail
+        // from lowest to highest - so insert this at the end.
         auto p = simgear::SGModelLib::findDataFile(model_path);
         if (!p.empty()) {
             _installed = true;
             SG_LOG(SG_AI, SG_DEBUG, "Found DATA model " << p);
-            path_list.insert(path_list.begin(), p);
+            path_list.insert(path_list.end(), p);
         }
     }
 
@@ -520,6 +557,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     vector<string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);
     _model->setName("AI-model range animation node");
+    _model->setRadius(getDefaultModelRadius());
 
     updateLOD();
     initModel();

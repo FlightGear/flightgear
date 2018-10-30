@@ -86,7 +86,7 @@ private:
     void schedule_tiles_at(const SGGeod& location, double rangeM);
 
     SGPropertyNode_ptr _visibilityMeters;
-    SGPropertyNode_ptr _maxTileRangeM, _disableNasalHooks;
+    SGPropertyNode_ptr _lodDetailed, _lodRoughDelta, _lodBareDelta, _disableNasalHooks;
     SGPropertyNode_ptr _scenery_loaded, _scenery_override;
 
     osg::ref_ptr<flightgear::SceneryPager> _pager;

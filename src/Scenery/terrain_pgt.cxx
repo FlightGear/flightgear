@@ -84,8 +84,8 @@ void FGPgtTerrain::init( osg::Group* terrain ) {
 
     options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
 
-    options->setPluginStringData("SimGear::BARE_LOD_RANGE", fgGetString("/sim/rendering/static-lod/bare", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
-    options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
+    options->setPluginStringData("SimGear::BARE_LOD_RANGE", fgGetString("/sim/rendering/static-lod/bare-delta", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
+    options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough-delta", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
     options->setPluginStringData("SimGear::ROUGH_LOD_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
     options->setPluginStringData("SimGear::RENDER_BUILDING_MESH", fgGetBool("/sim/rendering/building-mesh", false) ? "true" : "false");
 

@@ -116,7 +116,9 @@ FGTileMgr::FGTileMgr():
     _terra_sync(NULL),
     _listener(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
-    _maxTileRangeM(fgGetNode("/sim/rendering/static-lod/bare", true)),
+    _lodDetailed(fgGetNode("/sim/rendering/static-lod/detailed", true)),
+    _lodRoughDelta(fgGetNode("/sim/rendering/static-lod/rough-delta", true)),
+    _lodBareDelta(fgGetNode("/sim/rendering/static-lod/bare-delta", true)),
     _disableNasalHooks(fgGetNode("/sim/temp/disable-scenery-nasal", true)),
     _scenery_loaded(fgGetNode("/sim/sceneryloaded", true)),
     _scenery_override(fgGetNode("/sim/sceneryloaded-override", true)),
@@ -295,8 +297,11 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height << endl;
+    // starting with 2018.3 we will use deltas rather than absolutes as it is more intuitive for the user
+    // and somewhat easier to visualise
+    double maxTileRange = _lodDetailed->getDoubleValue() + _lodRoughDelta->getDoubleValue() + _lodBareDelta->getDoubleValue();
 
-    double tileRangeM = std::min(vis,_maxTileRangeM->getDoubleValue());
+    double tileRangeM = std::min(vis, maxTileRange);
     int xrange = (int)(tileRangeM / tile_width) + 1;
     int yrange = (int)(tileRangeM / tile_height) + 1;
     if ( xrange < 1 ) { xrange = 1; }
