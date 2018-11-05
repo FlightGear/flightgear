@@ -310,7 +310,7 @@ void FGAIBase::updateInterior()
         if(d2 <= _maxRangeInterior){ // if the AI is in-range we load the interior
             _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
             if(_interior.valid()){
-                _interior->setRange(0, 0.0, _maxRangeInterior);
+                _interior->setRange(modelHighDetailIndex, 0.0, _maxRangeInterior);
                 aip.add(_interior.get());
                 _modeldata->setInteriorLoaded(true);
                 SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
@@ -331,12 +331,14 @@ void FGAIBase::updateLOD()
     {
         if( maxRangeDetail == 0.0 )
         {
-            // Disable LOD.  The First entry in the LOD node is the most detailed
-            // so use that.
-            _model->setRange(0, 0.0,     FLT_MAX);
+            // Disable LOD.  If we have two models set them accordingly, otherwise and largely by 
+            // definition the only model must be the model that is used.
             if (_model->getNumFileNames() == 2) {
-              _model->setRange(1, FLT_MAX, FLT_MAX);
+                _model->setRange(modelHighDetailIndex, 0.0, FLT_MAX);
+                _model->setRange(modelLowDetailIndex, FLT_MAX, FLT_MAX);
             }
+            else
+                _model->setRange(0, 0.0, FLT_MAX);
         }
         else
         {
@@ -364,8 +366,8 @@ void FGAIBase::updateLOD()
 
                 _model->setRangeMode( osg::LOD::PIXEL_SIZE_ON_SCREEN );
                 if (_model->getNumFileNames() == 2) {
-                  _model->setRange(0, maxRangeDetail, 100000 );
-                  _model->setRange(1, maxRangeBare, maxRangeDetail);
+                  _model->setRange(modelHighDetailIndex , maxRangeDetail, 100000); // most detailed
+                  _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
                 } else {
                   /* If we have only one LoD for this model, then we want to
                    * display it from the smallest pixel value
@@ -391,8 +393,8 @@ void FGAIBase::updateLOD()
 
                 _model->setRangeMode( osg::LOD:: DISTANCE_FROM_EYE_POINT);
                 if (_model->getNumFileNames() == 2) {
-                  _model->setRange(0, 0, maxRangeDetail);
-                  _model->setRange(1, maxRangeDetail, maxRangeBare);
+                  _model->setRange(modelHighDetailIndex, 0, maxRangeDetail);
+                  _model->setRange(modelLowDetailIndex, maxRangeDetail, maxRangeBare);
                 } else {
                   /* If we have only one LoD for this model, then we want to
                    * display it from whatever range.
@@ -488,11 +490,13 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
         }
 
         // At this point we're looking for a regular model to display at closer range.
+        // From experimentation it seems to work best if the LODs are in the range list in terms of detail
+        // from lowest to highest - so insert this at the end.
         auto p = simgear::SGModelLib::findDataFile(model_path);
         if (!p.empty()) {
             _installed = true;
             SG_LOG(SG_AI, SG_DEBUG, "Found DATA model " << p);
-            path_list.insert(path_list.begin(), p);
+            path_list.insert(path_list.end(), p);
         }
     }
 
@@ -520,6 +524,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     vector<string> model_list = resolveModelPath(searchOrder);
     _model= SGModelLib::loadPagedModel(model_list, props, _modeldata);
     _model->setName("AI-model range animation node");
+    _model->setRadius(getDefaultModelRadius());
 
     updateLOD();
     initModel();

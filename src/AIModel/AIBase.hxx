@@ -55,6 +55,12 @@ public:
     FGAIBase(object_type ot, bool enableHot);
     virtual ~FGAIBase();
 
+    // these depend on the order in which the models are loaded. OSG is a little vague about this, but 
+    // from experimentation it seems to work best if the LODs are in the range list in terms of detail
+    // from lowest to highest
+    const int modelLowDetailIndex = 0;
+    const int modelHighDetailIndex = 1;
+
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
     enum ModelSearchOrder {
@@ -69,7 +75,8 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void reinit() {}
-
+    // default model radius for LOD. 
+    virtual double getDefaultModelRadius() { return 20.0; }
     void updateLOD();
     void updateInterior();
     void setManager(FGAIManager* mgr, SGPropertyNode* p);

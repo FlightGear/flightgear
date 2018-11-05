@@ -41,6 +41,7 @@ public:
     virtual void bind();
     virtual void update(double dt);
     virtual void reinit();
+    virtual double getDefaultModelRadius() { return 200.0; }
 
     void setRudder(float r);
     void setRoll(double rl);
