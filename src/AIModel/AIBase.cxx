@@ -310,7 +310,7 @@ void FGAIBase::updateInterior()
         if(d2 <= _maxRangeInterior){ // if the AI is in-range we load the interior
             _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
             if(_interior.valid()){
-                _interior->setRange(modelHighDetailIndex, 0.0, _maxRangeInterior);
+                _interior->setRange(0, 0.0, _maxRangeInterior);
                 aip.add(_interior.get());
                 _modeldata->setInteriorLoaded(true);
                 SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
@@ -344,7 +344,7 @@ void FGAIBase::updateLOD()
                 _model->setRange(modelLowDetailIndex, FLT_MAX, FLT_MAX);
             }
             else
-                _model->setRange(modelHighDetailIndex , 0.0, FLT_MAX); // all ranges.
+                _model->setRange(0, 0.0, FLT_MAX); // only one model.
         }
         else if (maxRangeBare == maxRangeDetail) // only use the bare model
         {
@@ -365,7 +365,7 @@ void FGAIBase::updateLOD()
                 _model->setRange(modelLowDetailIndex , start_range, end_range);
             }
             else
-                _model->setRange(modelHighDetailIndex , start_range, end_range);
+                _model->setRange(0, start_range, end_range);// only one model.
         }
         else
         {
@@ -403,10 +403,8 @@ void FGAIBase::updateLOD()
                   _model->setRange(modelHighDetailIndex , maxRangeDetail, 100000); // most detailed
                   _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
                 } else {
-                  /* If we have only one LoD for this model, then we want to
-                   * display it from the smallest pixel value
-                   */
-                  _model->setRange(modelHighDetailIndex , min(maxRangeBare, maxRangeDetail), 100000 );
+                  // we have only one model it obviously will have to be displayed from the smallest value
+                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), 100000 );
                 }
             } else {
                 /* In non-pixel range mode we're dealing with straight distance.
@@ -429,10 +427,7 @@ void FGAIBase::updateLOD()
                   _model->setRange(modelHighDetailIndex , 0, maxRangeDetail); // most detailed
                   _model->setRange(modelLowDetailIndex , maxRangeDetail, maxRangeDetail+maxRangeBare); // least detailed
                 } else {
-                  /* If we have only one LoD for this model, then we want to
-                   * display it from whatever range.
-                   */
-                  _model->setRange(modelHighDetailIndex , 0, max(maxRangeBare, maxRangeDetail));
+                  _model->setRange(0, 0, max(maxRangeBare, maxRangeDetail)); // only one model, so display from 0 to the highest value in meters
                 }
             }
         }
