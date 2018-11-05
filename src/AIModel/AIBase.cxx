@@ -310,7 +310,7 @@ void FGAIBase::updateInterior()
         if(d2 <= _maxRangeInterior){ // if the AI is in-range we load the interior
             _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
             if(_interior.valid()){
-                _interior->setRange(modelHighDetailIndex, 0.0, _maxRangeInterior);
+                _interior->setRange(0, 0.0, _maxRangeInterior);
                 aip.add(_interior.get());
                 _modeldata->setInteriorLoaded(true);
                 SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
@@ -392,7 +392,7 @@ void FGAIBase::updateLOD()
                  }
 
                 _model->setRangeMode( osg::LOD:: DISTANCE_FROM_EYE_POINT);
-                if (_model->getNumFileNames() == 2) {
+               x if (_model->getNumFileNames() == 2) {
                   _model->setRange(modelHighDetailIndex, 0, maxRangeDetail);
                   _model->setRange(modelLowDetailIndex, maxRangeDetail, maxRangeBare);
                 } else {
