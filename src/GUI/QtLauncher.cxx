@@ -418,8 +418,10 @@ void launcherSetSceneryPaths()
 
     // add the installation path since it contains default airport data,
     // if terrasync is disabled or on first-launch
-    globals->append_fg_scenery(globals->get_fg_root() / "Scenery");
-
+    const SGPath rootScenery = globals->get_fg_root() / "Scenery";
+    if (rootScenery.exists()) {
+        globals->append_fg_scenery(rootScenery);
+    }
 }
 
 bool runLauncherDialog()
