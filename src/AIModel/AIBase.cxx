@@ -77,8 +77,11 @@ public:
     void modelLoaded(const std::string& path, SGPropertyNode *prop, osg::Node *n)
     {
         // WARNING: Called in a separate OSG thread! Only use thread-safe stuff here...
-        if (_ready)
+        if (_ready && _modelLoaded.count(path) > 0)
             return;
+
+        _modelLoaded[path] = true;
+        _ready = true;
 
         if(prop->hasChild("interior-path")){
             _interiorPath = prop->getStringValue("interior-path");
@@ -88,7 +91,6 @@ public:
         _fxpath = prop->getStringValue("sound/path");
         _nasal->modelLoaded(path, prop, n);
 
-        _ready = true;
 
     }
 
@@ -109,6 +111,7 @@ private:
     std::string _fxpath;
     std::string _interiorPath;
 
+    std::map<string, bool> _modelLoaded;
     bool _ready = false;
     bool _initialized = false;
     bool _hasInteriorPath = false;
@@ -305,16 +308,21 @@ void FGAIBase::updateInterior()
     if(!_modeldata || !_modeldata->hasInteriorPath())
         return;
 
-    if(!_modeldata->getInteriorLoaded()){ // interior is not yet load
-        double d2 = dist(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
-        if(d2 <= _maxRangeInterior){ // if the AI is in-range we load the interior
-            _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
-            if(_interior.valid()){
-                _interior->setRange(0, 0.0, _maxRangeInterior);
-                aip.add(_interior.get());
-                _modeldata->setInteriorLoaded(true);
-                SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
+    if (!_modeldata->getInteriorLoaded()) { // interior is not yet load
+        _interior = SGModelLib::loadPagedModel(_modeldata->getInteriorPath(), props, _modeldata);
+        if (_interior.valid()) {
+            bool pixel_mode = !fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
+            if (pixel_mode) {
+                _interior->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
+                _interior->setRange(0, _maxRangeInterior, FLT_MAX);
             }
+            else {
+                _interior->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+                _interior->setRange(0, 0.0, _maxRangeInterior);
+            }
+            aip.add(_interior.get());
+            _modeldata->setInteriorLoaded(true);
+            SG_LOG(SG_AI, SG_INFO, "AIBase: Loaded interior model " << _interior->getName());
         }
     }
 }
@@ -324,7 +332,6 @@ void FGAIBase::updateLOD()
 {
     double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/aimp-detailed", 3000.0);
     double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/aimp-bare", 10000.0);
-
     _maxRangeInterior     = fgGetDouble("/sim/rendering/static-lod/aimp-interior", 50.0);
 
     if (_model.valid())
@@ -429,6 +436,16 @@ void FGAIBase::updateLOD()
                 } else {
                   _model->setRange(0, 0, max(maxRangeBare, maxRangeDetail)); // only one model, so display from 0 to the highest value in meters
                 }
+            }
+        }
+        if (_modeldata->getInteriorLoaded() && _interior.valid()) {
+            if (pixel_mode) {
+                _interior->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
+                _interior->setRange(0, _maxRangeInterior, FLT_MAX);
+            }
+            else {
+                _interior->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+                _interior->setRange(0, 0.0, _maxRangeInterior);
             }
         }
     }

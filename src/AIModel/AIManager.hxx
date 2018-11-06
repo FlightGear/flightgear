@@ -150,6 +150,7 @@ private:
 
     SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
     SGPropertyChangeCallback<FGAIManager> cb_ai_detailed;
+    SGPropertyChangeCallback<FGAIManager> cb_interior;
 
     class Scenario;
     typedef std::map<std::string, Scenario*> ScenarioDict;
