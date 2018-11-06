@@ -587,7 +587,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     }
 
     fgLoadProps("defaults.xml", globals->get_props());
-    SG_LOG(SG_GENERAL, SG_INFO, "Finished Reading global defaults");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Finished Reading global defaults");
 
     // do not load user settings when reset to default is requested, or if
     // told to explicitly ignore
