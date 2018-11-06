@@ -1,6 +1,7 @@
 #include "ModelDataExtractor.hxx"
 
 #include <QAbstractItemModel>
+#include <QDebug>
 
 ModelDataExtractor::ModelDataExtractor(QObject *parent) : QObject(parent)
 {
@@ -24,7 +25,15 @@ QVariant ModelDataExtractor::data() const
     }
 
     if (m_value.isArray()) {
-        return m_value.property(m_index).toVariant();
+        quint32 uIndex = static_cast<quint32>(m_index);
+        auto v = m_value.property(uIndex);
+        if (v.isQObject()) {
+            // handle the QList<QObject*> case
+            auto obj = v.toQObject();
+            return obj->property(m_role.toUtf8().constData());
+        }
+
+        return m_value.property(uIndex).toVariant();
     }
 
     return {};
@@ -51,6 +60,8 @@ void ModelDataExtractor::setModel(QJSValue model)
                     this, &ModelDataExtractor::onDataChanged);
 
             // ToDo: handle rows added / removed
+        } else {
+            qWarning() << "object but not a QAIM" << m_value.toQObject();
         }
     } else {
         // might be null, or an array

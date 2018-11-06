@@ -39,6 +39,9 @@ Item {
         if ((currentIndex == -1) && haveHeader())
             return headerText;
 
+        if (!currentItemText.data)
+            return "";
+
         return currentItemText.data
     }
 
