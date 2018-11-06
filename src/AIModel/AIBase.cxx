@@ -392,7 +392,7 @@ void FGAIBase::updateLOD()
                  }
 
                 _model->setRangeMode( osg::LOD:: DISTANCE_FROM_EYE_POINT);
-               x if (_model->getNumFileNames() == 2) {
+                 if (_model->getNumFileNames() == 2) {
                   _model->setRange(modelHighDetailIndex, 0, maxRangeDetail);
                   _model->setRange(modelLowDetailIndex, maxRangeDetail, maxRangeBare);
                 } else {
