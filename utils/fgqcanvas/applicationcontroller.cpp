@@ -33,6 +33,8 @@
 #include <QRegularExpression>
 #include <QDataStream>
 #include <QWindow>
+#include <QTimer>
+#include <QGuiApplication>
 
 #include "jsonutils.h"
 #include "canvasconnection.h"
@@ -52,6 +54,14 @@ ApplicationController::ApplicationController(QObject *parent)
     setStatus(Idle);
     rebuildConfigData();
     rebuildSnapshotData();
+
+    m_uiIdleTimer = new QTimer(this);
+    m_uiIdleTimer->setInterval(10 * 1000);
+    connect(m_uiIdleTimer, &QTimer::timeout, this,
+            &ApplicationController::onUIIdleTimeout);
+    m_uiIdleTimer->start();
+
+    qApp->installEventFilter(this);
 }
 
 ApplicationController::~ApplicationController()
@@ -319,6 +329,14 @@ void ApplicationController::openCanvas(QString path)
     emit activeCanvasesChanged();
 }
 
+void ApplicationController::closeCanvas(CanvasConnection *canvas)
+{
+    Q_ASSERT(m_activeCanvases.indexOf(canvas) >= 0);
+    m_activeCanvases.removeOne(canvas);
+    canvas->deleteLater();
+    emit activeCanvasesChanged();
+}
+
 QString ApplicationController::host() const
 {
     return m_host;
@@ -342,6 +360,14 @@ QQmlListProperty<CanvasConnection> ApplicationController::activeCanvases()
 QNetworkAccessManager *ApplicationController::netAccess() const
 {
     return m_netAccess;
+}
+
+bool ApplicationController::showUI() const
+{
+    if (m_blockUIIdle)
+        return true;
+
+    return m_showUI;
 }
 
 void ApplicationController::setHost(QString host)
@@ -405,6 +431,12 @@ void ApplicationController::onFinishedGetCanvasList()
 
     emit canvasListChanged();
     setStatus(SuccessfulQuery);
+}
+
+void ApplicationController::onUIIdleTimeout()
+{
+    m_showUI = false;
+    emit showUIChanged();
 }
 
 void ApplicationController::setStatus(ApplicationController::Status newStatus)
@@ -497,4 +529,29 @@ QByteArray ApplicationController::createSnapshot(QString name) const
     }
 
     return bytes;
+}
+
+bool ApplicationController::eventFilter(QObject* obj, QEvent* event)
+{
+    Q_UNUSED(obj);
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    case QEvent::TouchUpdate:
+    case QEvent::MouseMove:
+    case QEvent::TouchBegin:
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease:
+        if (!m_showUI) {
+            m_showUI = true;
+            emit showUIChanged();
+        } else {
+            m_uiIdleTimer->start();
+        }
+
+        break;
+    default:
+        break;
+    }
+
+    return false; //process as normal
 }

@@ -6,6 +6,8 @@ Item {
     property bool showDecorations: true
     property alias canvas: paintedDisplay.canvas
     property bool showUi: true
+    property bool showMenu: false
+
 
     Component.onCompleted: {
         if (canvas) {
@@ -74,6 +76,10 @@ Item {
             onReleased: {
                 root.saveGeometry();
             }
+
+            onPressAndHold: {
+                root.showMenu = true;
+            }
         }
 
         Rectangle {
@@ -108,6 +114,7 @@ Item {
             color: "orange"
             anchors.centerIn: parent
             text: "Canvas"
+            visible: !root.showMenu
         }
 
         Text {
@@ -133,5 +140,14 @@ Item {
             color: "white"
 
         }
+
+        CanvasMenu {
+            anchors.fill:parent
+            visible: root.showMenu
+            onMenuBack: root.showMenu = false
+            onCloseCanvas: _application.closeCanvas(canvas);
+            onReconnectCanvas: canvas.reconnect();
+        }
+
     }
 }

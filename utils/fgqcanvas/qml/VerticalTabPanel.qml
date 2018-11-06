@@ -26,8 +26,14 @@ Item {
         clip: true
 
         Loader {
+            id: loader
             anchors.fill: parent
             sourceComponent: (activeTab >= 0) ? tabs[activeTab] : null
+        }
+
+        Connections {
+            target: loader.item
+            onRequestPanelClose: root.activeTab = -1;
         }
     }
 
@@ -42,7 +48,7 @@ Item {
         MouseArea {
             id: splitterDrag
             height: parent.height
-            width: parent.width* 3
+            width: parent.width * 25
 
             drag.target: contentBox
             drag.axis: Drag.XAxis

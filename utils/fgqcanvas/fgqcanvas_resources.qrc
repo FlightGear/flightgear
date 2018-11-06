@@ -9,5 +9,6 @@
         <file>qml/LoadSavePanel.qml</file>
         <file>qml/VerticalTabPanel.qml</file>
         <file>qml/SnapshotsPanel.qml</file>
+        <file>qml/CanvasMenu.qml</file>
     </qresource>
 </RCC>

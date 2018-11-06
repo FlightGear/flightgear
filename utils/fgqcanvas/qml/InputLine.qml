@@ -39,6 +39,11 @@ Item {
                 verticalCenter: parent.verticalCenter
             }
 
+            onActiveFocusChanged: {
+                if (activeFocus) {
+                    selectAll();
+                }
+            }
 
             verticalAlignment: Text.AlignVCenter
 

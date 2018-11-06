@@ -26,6 +26,7 @@
 
 class CanvasConnection;
 class QWindow;
+class QTimer;
 
 class ApplicationController : public QObject
 {
@@ -46,6 +47,8 @@ class ApplicationController : public QObject
 
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
 
+    Q_PROPERTY(bool showUI READ showUI  NOTIFY showUIChanged)
+    Q_PROPERTY(bool blockUIIdle READ blockUIIdle WRITE setBlockUIIdle NOTIFY blockUIIdleChanged)
 public:
     explicit ApplicationController(QObject *parent = nullptr);
     ~ApplicationController();
@@ -68,6 +71,7 @@ public:
     Q_INVOKABLE void saveConfigChanges(int index);
 
     Q_INVOKABLE void openCanvas(QString path);
+    Q_INVOKABLE void closeCanvas(CanvasConnection* canvas);
 
     Q_INVOKABLE void saveSnapshot(QString snapshotName);
     Q_INVOKABLE void restoreSnapshot(int index);
@@ -104,6 +108,13 @@ public:
         return m_snapshots;
     }
 
+    bool showUI() const;
+
+    bool blockUIIdle() const
+    {
+        return m_blockUIIdle;
+    }
+
 signals:
 
     void hostChanged(QString host);
@@ -119,13 +130,29 @@ signals:
 
     void snapshotListChanged();
 
+    void showUIChanged();
+    void blockUIIdleChanged(bool blockUIIdle);
+
 public slots:
     void setHost(QString host);
 
     void setPort(unsigned int port);
 
+    void setBlockUIIdle(bool blockUIIdle)
+    {
+        if (m_blockUIIdle == blockUIIdle)
+            return;
+
+        m_blockUIIdle = blockUIIdle;
+        emit blockUIIdleChanged(m_blockUIIdle);
+    }
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override;
+
 private slots:
     void onFinishedGetCanvasList();
+    void onUIIdleTimeout();
 
 private:
     void setStatus(Status newStatus);
@@ -155,6 +182,9 @@ private:
     Qt::WindowState m_windowState = Qt::WindowNoState;
 
     bool m_daemonMode = false;
+    bool m_showUI = true;
+    bool m_blockUIIdle = false;
+    QTimer* m_uiIdleTimer;
 };
 
 #endif // APPLICATIONCONTROLLER_H

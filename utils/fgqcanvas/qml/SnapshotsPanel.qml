@@ -2,6 +2,8 @@ import QtQuick 2.0
 import FlightGear 1.0 as FG
 
 Item {
+    id: root
+    signal requestPanelClose();
 
     Rectangle {
         id: savePanel
@@ -106,6 +108,7 @@ Item {
                         anchors.fill: parent
                         onClicked: {
                             _application.restoreSnapshot(model.index);
+                            root.requestPanelClose();
                         }
 
                         drag.target: delegateFrame
