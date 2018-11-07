@@ -682,6 +682,9 @@ void LocationController::applyAirspeed()
     if (m_speedEnabled && (m_airspeed.unit != Units::NoUnits)) {
         if (m_airspeed.unit == Units::Knots) {
             m_config->setArg("vc", QString::number(m_airspeed.value));
+        } else if (m_airspeed.unit == Units::KilometersPerHour) {
+            const double vc = m_airspeed.convertToUnit(Units::Knots).value;
+            m_config->setArg("vc", QString::number(vc));
         } else if (m_airspeed.unit == Units::Mach) {
             m_config->setArg("mach", QString::number(m_airspeed.value));
         } else {
@@ -704,7 +707,7 @@ void LocationController::applyPositionOffset()
         // flip direction of azimuth to balance the flip done in fgApplyStartOffset
         // I don't know why that flip exists but changing it there will break
         // command-line compatability so compensating here instead
-        int offsetAzimuth = m_offsetRadial.value - 180;
+        int offsetAzimuth = static_cast<int>(m_offsetRadial.value) - 180;
         m_config->setArg("offset-azimuth", QString::number(offsetAzimuth));
         const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
         m_config->setArg("offset-distance", QString::number(offsetNm));
@@ -732,6 +735,15 @@ void LocationController::applyAltitude()
     case Units::FlightLevel:
         // FIXME - allow the sim to accept real FlightLevel arguments
         m_config->setArg("altitude", QString::number(m_altitude.value * 100));
+        break;
+
+    case Units::FeetAboveFieldElevation:
+        m_config->setArg("altitude", QString::number(m_altitude.value));
+        break;
+
+    case Units::MetersMSL:
+        const double ftMSL = m_altitude.convertToUnit(Units::FeetMSL).value;
+        m_config->setArg("altitude", QString::number(ftMSL));
         break;
     }
 }

@@ -120,6 +120,7 @@ Item {
             LocationAltitudeRow
             {
                 width: parent.width
+                unitsMode: Units.AltitudeIncludingMeters
             }
 
             // offset row

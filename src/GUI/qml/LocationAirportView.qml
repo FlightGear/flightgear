@@ -221,7 +221,7 @@ Item {
                         NumericalEdit {
                             id: airspeedSpinbox
                             label: qsTr("Airspeed:")
-                            unitsMode: Units.SpeedOnlyKnots
+                            unitsMode: Units.SpeedWithoutMach
                             enabled: _location.speedEnabled && onFinalBox.enableOnFinal
                             quantity: _location.airspeed
                             onCommit: _location.airspeed = newValue

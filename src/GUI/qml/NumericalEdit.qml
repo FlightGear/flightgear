@@ -102,7 +102,10 @@ FocusScope {
     }
 
     Component.onCompleted: {
-        if (quantity.unit === Units.NoUnits) {
+        // ensure any initial value is accepted by our mode.
+        // this stops people passing in completely wrong quantities
+        if (!units.isUnitInMode(quantity.unit)) {
+            console.warn("NumericalEdit: was inited with incorrect unit");
             var q = quantity;
             q.unit = units.selectedUnit;
             commit(q);
@@ -110,8 +113,16 @@ FocusScope {
     }
 
     onQuantityChanged: {
-        // ensure our units model is in sync
-        units.selectedUnit = quantity.unit
+        if (units.isUnitInMode(quantity.unit)) {
+            // ensure our units model is in sync
+            units.selectedUnit = quantity.unit
+        } else {
+            console.warn("Passed illegal quantity");
+            // reset back to something permitted
+            var q = quantity;
+            q.unit = units.selectedUnit;
+            commit(q);
+        }
     }
 
     TextMetrics {

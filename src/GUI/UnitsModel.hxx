@@ -45,10 +45,12 @@ public:
         NoUnits = 0,
         FeetMSL,
         FeetAGL,
+        FeetAboveFieldElevation,
         FlightLevel,
         MetersMSL,
         Knots,
         Mach,
+        KilometersPerHour,
         DegreesTrue,
         DegreesMagnetic,
         TimeUTC,
@@ -64,11 +66,12 @@ public:
         Altitude = 0,   // MSL, FlightLevel
         AltitudeIncludingAGL,
         AltitudeIncludingMeters,
-        Speed,  // Mach or knots
-        SpeedOnlyKnots = 4,
+        Speed,  // Mach or knots or KM/H
+        SpeedWithoutMach = 4,
         Heading, // degrees true or magnetic
         Timezone,
-        Distance = 7 // Nm only for now
+        Distance = 7, // Nm or Kilometers only for now
+        AltitudeIncludingMetersAndAboveField,
     };
 
     Q_ENUMS(Mode)
@@ -150,7 +153,7 @@ public:
 
     int selectedIndex() const
     {
-        return m_activeIndex;
+        return static_cast<int>(m_activeIndex);
     }
 
     double minValue() const;
@@ -165,6 +168,8 @@ public:
     QString shortText() const;
     Units::Type selectedUnit() const;
     int numChoices() const;
+
+    Q_INVOKABLE bool isUnitInMode(int unit) const;
 public slots:
     void setMode(Units::Mode mode);
 
@@ -178,7 +183,7 @@ signals:
 
 private:
     Units::Mode m_mode = Units::Altitude;
-    int m_activeIndex = 0;
+    quint32 m_activeIndex = 0;
     UnitVec m_enabledUnits;
 };
 

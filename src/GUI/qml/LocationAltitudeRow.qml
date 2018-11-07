@@ -8,6 +8,7 @@ Row {
     height: childrenRect.height
     spacing: Style.margin
     property bool enabled: true
+    property alias unitsMode: edit.unitsMode
 
     ToggleSwitch {
         id: altitudeToggle
@@ -23,9 +24,11 @@ Row {
     readonly property bool __rowEnabled: root.enabled && _location.altitudeEnabled
 
     NumericalEdit {
+        id: edit
         label: qsTr("Altitude:")
         enabled: __rowEnabled
         quantity: _location.altitude
         onCommit: _location.altitude = newValue
+        unitsMode: Units.AltitudeIncludingMetersAndAboveField
     }
 }

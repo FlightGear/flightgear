@@ -22,6 +22,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <algorithm>
 
 #include <simgear/constants.h>
 
@@ -70,10 +71,12 @@ std::vector<UnitData> static_unitData = {
     { "", "", "" }, // noUnits
     { "ft", "feet above sea-level (MSL)", "000000", false, -2000, 180000, 50},
     { "ft AGL", "feet above ground level (AGL)", "000000", false, 0, 180000, 50},
+    { "ft above field", "feet above airfield", "000000", false, 0, 180000, 50},
     { "FL", "Flight-level", "000", true /* prefix */, 0.0, 500.0, 5.0},
     { "m", "meters above sea-level (MSL)", "000000", false, -500, 100000, 50},
     { "kts", "Knots", "9999", false, 0, 999999, 10.0},
     { "M", "Mach", "00.000", true /* prefix */, 0.0, 99.0, 0.05, false /* no wrap */, 3 /* decimal places */},
+    { "KM/H", "Kilometers/hour", "9999", false, 0, 999999, 10.0},
     { "°True", "degrees true", "000", false, 0, 359, 5.0, true /* wraps */},
     { "°Mag", "degrees magnetic", "000", false, 0, 359, 5.0, true /* wraps */},
     { "UTC", "Universal coordinated time", ""},
@@ -91,11 +94,12 @@ std::vector<UnitsModel::UnitVec> static_modeData = {
     { Units::FeetMSL, Units::FlightLevel},
     { Units::FeetMSL, Units::FeetAGL, Units::FlightLevel},
     { Units::FeetMSL, Units::MetersMSL, Units::FlightLevel},
-    { Units::Knots, Units::Mach },
-    { Units::Knots },
+    { Units::Knots, Units::Mach, Units::KilometersPerHour },
+    { Units::Knots, Units::KilometersPerHour },
     { Units::DegreesMagnetic, Units::DegreesTrue },
     { Units::TimeLocal, Units::TimeUTC},
-    { Units::NauticalMiles }
+    { Units::NauticalMiles, Units::Kilometers },
+    { Units::FeetMSL, Units::MetersMSL, Units::FeetAboveFieldElevation},
 };
 
 const int UnitLongNameRole = Qt::UserRole + 1;
@@ -115,7 +119,7 @@ UnitsModel::UnitsModel()
 
 int UnitsModel::rowCount(const QModelIndex &) const
 {
-    return m_enabledUnits.size();
+    return static_cast<int>(m_enabledUnits.size());
 }
 
 QVariant UnitsModel::data(const QModelIndex &index, int role) const
@@ -194,7 +198,13 @@ Units::Type UnitsModel::selectedUnit() const
 
 int UnitsModel::numChoices() const
 {
-    return m_enabledUnits.size();
+    return static_cast<int>(m_enabledUnits.size());
+}
+
+bool UnitsModel::isUnitInMode(int unit) const
+{
+    auto it = std::find(m_enabledUnits.begin(), m_enabledUnits.end(), unit);
+    return it != m_enabledUnits.end();
 }
 
 QHash<int, QByteArray> UnitsModel::roleNames() const
@@ -274,9 +284,9 @@ void UnitsModel::setSelectedUnit(int u)
         return;
     }
 
-    int index = std::distance(m_enabledUnits.begin(), it);
+    auto index = std::distance(m_enabledUnits.begin(), it);
     if (index != m_activeIndex) {
-        m_activeIndex = index;
+        m_activeIndex = static_cast<quint32>(index);
         emit selectionChanged(m_activeIndex);
     }
 }
@@ -331,9 +341,19 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
             return {u, value * 100};
         } else if (unit == Units::MetersMSL) {
             return {u, value * SG_METER_TO_FEET};
+        } else if ((unit == Units::FeetAGL) || (unit == Units::FeetAboveFieldElevation)) {
+            return {u, value};
         }
         break;
     }
+
+    case Units::FeetAboveFieldElevation:
+    case Units::FeetAGL:
+        // treat as FeetMSL
+        return {u, convertToUnit(Units::FeetMSL).value};
+
+    case Units::MetersMSL:
+        return {u, convertToUnit(Units::FeetMSL).value * SG_FEET_TO_METER};
 
     case Units::Mach:
     {
@@ -341,6 +361,8 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
             // obviously this depends on altitude, let's
             // use the value at sea level for now
             return {u, value / 667.0};
+        } else if (unit == Units::KilometersPerHour) {
+            return convertToUnit(Units::Knots).convertToUnit(u);
         }
         break;
     }
@@ -351,9 +373,19 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
             // obviously this depends on altitude, let's
             // use the value at sea level for now
             return {u, value * 667.0};
+        } else if (unit == Units::KilometersPerHour) {
+            return {u, value * SG_KMH_TO_MPS * SG_MPS_TO_KT};
         }
         break;
     }
+
+    case Units::KilometersPerHour:
+        if (unit == Units::Knots) {
+            return {u, value * SG_KT_TO_MPS * SG_MPS_TO_KMH};
+        } else {
+            // round-trip via Knots
+            return convertToUnit(Units::Knots).convertToUnit(u);
+        }
 
     case Units::DegreesMagnetic:
     case Units::DegreesTrue:
@@ -367,15 +399,11 @@ QuantityValue QuantityValue::convertToUnit(Units::Type u) const
     }
 
     case Units::FlightLevel:
-    {
         if (unit == Units::FeetMSL) {
             return {u, static_cast<double>(static_cast<int>(value / 100))};
+        } else {
+            return convertToUnit(Units::FeetMSL).convertToUnit(u);
         }
-        if (unit == Units::MetersMSL) {
-            return {u, static_cast<double>(static_cast<int>(value * SG_METER_TO_FEET / 100))};
-        }
-        break;
-    }
 
     default:
         qWarning() << Q_FUNC_INFO << "unhandled case:" << u << "from" << unit;
