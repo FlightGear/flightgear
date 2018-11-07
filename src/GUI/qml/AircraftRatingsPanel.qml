@@ -4,7 +4,8 @@ import "."
 
 ListHeaderBox
 {
-    property ListView theList: null
+    id: root
+    signal clearSelection();
 
     contents: [
 
@@ -39,7 +40,7 @@ ListHeaderBox
             onClicked:  {
                 // clear selection so we don't jump to the selected item
                 // each time the proxy model changes.
-                theList.currentIndex = -1;
+                root.clearSelection();
                 editRatingsPanel.visible = true
 
             }

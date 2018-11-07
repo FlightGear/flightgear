@@ -10,10 +10,12 @@ Rectangle {
 
     implicitHeight: title.implicitHeight
 
-    radius: 4
+    radius: Style.roundRadius
     border.color: Style.frameColor
     border.width: headingMouseArea.containsMouse ? 1 : 0
     color: headingMouseArea.containsMouse ? "#7fffffff" : "transparent"
+
+    readonly property int centerX: width / 2
 
     readonly property bool __enabled: aircraftInfo.numVariants > 1
 
@@ -28,33 +30,53 @@ Rectangle {
 
     signal selected(var index)
 
-    Text {
-        id: title
-
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.right: upDownIcon.left
-        anchors.left: parent.left
-        anchors.leftMargin: 4
-        anchors.rightMargin: 4
-
-        horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: Style.baseFontPixelSize * 2
-        text: aircraftInfo.name
-        fontSizeMode: Text.Fit
-
-        elide: Text.ElideRight
-        maximumLineCount: 1
-        color: headingMouseArea.containsMouse ? Style.themeColor : Style.baseTextColor
-    }
 
 
-    Image {
-        id: upDownIcon
-        source: "qrc:///up-down-arrow"
-        anchors.right: parent.right
-        anchors.rightMargin: 8
-        anchors.verticalCenter: parent.verticalCenter
-        visible: __enabled
+
+//    Image {
+//        id: upDownIcon
+//        source: "qrc:///up-down-arrow"
+//        x: root.centerX + Math.min(title.implicitWidth * 0.5, title.width * 0.5)
+//        anchors.verticalCenter: parent.verticalCenter
+//        visible: __enabled
+//    }
+
+    Row {
+        anchors.centerIn: parent
+        height: title.implicitHeight
+        width: childrenRect.width
+
+        Text {
+            id: title
+
+            anchors.verticalCenter: parent.verticalCenter
+
+            // this ugly logic is to keep the up-down arrow at the right
+            // hand side of the text, but allow the font scaling to work if
+            // we're short on horizontal space
+            width: Math.min(implicitWidth,
+                            root.width - (Style.margin * 2) - (__enabled ? upDownIcon.implicitWidth : 0))
+
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
+            font.pixelSize: Style.baseFontPixelSize * 2
+            text: aircraftInfo.name
+            fontSizeMode: Text.Fit
+
+            elide: Text.ElideRight
+            maximumLineCount: 1
+            color: headingMouseArea.containsMouse ? Style.themeColor : Style.baseTextColor
+        }
+
+        Image {
+            id: upDownIcon
+            source: "qrc:///up-down-arrow"
+           // x: root.centerX + Math.min(title.implicitWidth * 0.5, title.width * 0.5)
+            anchors.verticalCenter: parent.verticalCenter
+            visible: __enabled
+            width: __enabled ? implicitWidth : 0
+        }
     }
 
     MouseArea {

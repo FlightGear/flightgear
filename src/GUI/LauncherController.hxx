@@ -86,6 +86,7 @@ class LauncherController : public QObject
 
     Q_PROPERTY(QUrl flyIconUrl READ flyIconUrl NOTIFY selectedAircraftChanged)
 
+    Q_PROPERTY(bool aircraftGridMode READ aircraftGridMode WRITE setAircraftGridMode NOTIFY aircraftGridModeChanged)
 public:
     explicit LauncherController(QObject *parent, QWindow* win);
 
@@ -187,6 +188,11 @@ public:
 
     QUrl flyIconUrl() const;
 
+    bool aircraftGridMode() const
+    {
+        return m_aircraftGridMode;
+    }
+
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -198,6 +204,8 @@ signals:
     void canFlyChanged();
 
     void viewCommandLine();
+
+    void aircraftGridModeChanged(bool aircraftGridMode);
 
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
@@ -217,6 +225,8 @@ public slots:
 
     void openConfig();
     void saveConfigAs();
+    void setAircraftGridMode(bool aircraftGridMode);
+
 private slots:
 
     void onAircraftInstalledCompleted(QModelIndex index);
@@ -271,6 +281,7 @@ private:
 	bool m_inAppMode = false;
 	bool m_keepRunningInAppMode = false;
     bool m_appModeResult = true;
+    bool m_aircraftGridMode;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX

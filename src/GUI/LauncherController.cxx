@@ -106,6 +106,8 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     LocalAircraftCache::instance()->scanDirs();
     m_aircraftModel->setPackageRoot(globals->packageRoot());
 
+    m_aircraftGridMode = settings.value("aircraftGridMode").toBool();
+
     m_subsystemIdleTimer = new QTimer(this);
     m_subsystemIdleTimer->setInterval(10);
     connect(m_subsystemIdleTimer, &QTimer::timeout, []()
@@ -821,13 +823,24 @@ void LauncherController::saveConfigAs()
     m_config->saveConfigToFile(file);
 }
 
+void LauncherController::setAircraftGridMode(bool aircraftGridMode)
+{
+    if (m_aircraftGridMode == aircraftGridMode)
+        return;
+
+    QSettings settings;
+    settings.setValue("aircraftGridMode", aircraftGridMode);
+    m_aircraftGridMode = aircraftGridMode;
+    emit aircraftGridModeChanged(m_aircraftGridMode);
+}
+
 void LauncherController::setMinWindowSize(QSize sz)
 {
-	if (sz == m_minWindowSize)
-		return;
+    if (sz == m_minWindowSize)
+        return;
 
-	m_window->setMinimumSize(sz);
-	emit minWindowSizeChanged();
+    m_window->setMinimumSize(sz);
+    emit minWindowSizeChanged();
 }
 
 QUrl LauncherController::flyIconUrl() const

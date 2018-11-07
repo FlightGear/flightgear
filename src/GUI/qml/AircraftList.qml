@@ -6,8 +6,15 @@ FocusScope
 {
     id: root
 
-    Component.onCompleted: {
-        aircraftList.updateSelectionFromLauncher();
+    property var __model: null
+    property Component __header: null
+    property string __lastState: "installed"
+
+    function updateSelectionFromLauncher()
+    {
+        if (aircraftContent.item) {
+            aircraftContent.item.updateSelectionFromLauncher();
+        }
     }
 
     Rectangle
@@ -15,6 +22,14 @@ FocusScope
         id: tabBar
         height: searchButton.height + (Style.margin * 2)
         width: parent.width
+
+        GridToggleButton {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: Style.margin
+            gridMode: !_launcher.aircraftGridMode
+            onClicked: _launcher.aircraftGridMode = !_launcher.aircraftGridMode
+        }
 
         Row {
             anchors.centerIn: parent
@@ -25,7 +40,7 @@ FocusScope
                 text: qsTr("Installed Aircraft")
                 onClicked: {
                     root.state = "installed"
-                    aircraftList.updateSelectionFromLauncher();
+                    root.updateSelectionFromLauncher();
                 }
                 active: root.state == "installed"
             }
@@ -35,7 +50,7 @@ FocusScope
                 text: qsTr("Browse")
                 onClicked: {
                     root.state = "browse"
-                    aircraftList.updateSelectionFromLauncher();
+                    root.updateSelectionFromLauncher();
                 }
                 active: root.state == "browse"
             }
@@ -46,7 +61,7 @@ FocusScope
                 text: qsTr("Updates")
                 onClicked: {
                     root.state = "updates"
-                    aircraftList.updateSelectionFromLauncher();
+                    root.updateSelectionFromLauncher();
                 }
                 active: root.state == "updates"
             }
@@ -64,7 +79,7 @@ FocusScope
             onSearch: {
                _launcher.searchAircraftModel.setAircraftFilterString(term)
                 root.state = "search"
-                aircraftList.updateSelectionFromLauncher();
+                root.updateSelectionFromLauncher();
             }
 
             active: root.state == "search"
@@ -81,89 +96,64 @@ FocusScope
     }
 
     Component {
-        id: highlight
-        Rectangle {
-            gradient: Gradient {
-                      GradientStop { position: 0.0; color: "#98A3B4" }
-                      GradientStop { position: 1.0; color: "#5A6B83" }
-                  }
-        }
-    }
-
-    Component {
         id: ratingsHeader
         AircraftRatingsPanel {
-            width: aircraftList.width - Style.strutSize * 2
-            x: (aircraftList.width - width) / 2
-            theList: aircraftList
+            width: aircraftContent.width
+            onClearSelection: {
+                _launcher.selectedAircraft = "";
+                root.updateSelectionFromLauncher()
+            }
         }
     }
 
     Component {
         id: noDefaultCatalogHeader
         NoDefaultCatalogPanel {
-            width: aircraftList.width - Style.strutSize * 2
-            x: (aircraftList.width - width) / 2
+            width: aircraftContent.width
         }
     }
 
     Component {
         id: updateAllHeader
         UpdateAllPanel {
-            width: aircraftList.width - Style.strutSize * 2
-            x: (aircraftList.width - width) / 2
+            width: aircraftContent.width
         }
     }
 
-    ListView {
-        id: aircraftList
+    Component {
+        id: emptyHeader
+        Item {
+        }
+    }
+
+    Loader {
+        id: aircraftContent
+        source: _launcher.aircraftGridMode ? "qrc:///qml/AircraftGridView.qml"
+                                           : "qrc:///qml/AircraftListView.qml"
 
         anchors {
             left: parent.left
             top: tabBarDivider.bottom
             bottom: parent.bottom
-            right: scrollbar.left
+            right: parent.right
             topMargin: Style.margin
         }
 
-        delegate: AircraftCompactDelegate {
-            onSelect: {
-                aircraftList.currentIndex = model.index;
-                _launcher.selectedAircraft = uri;
-            }
-
-            onShowDetails: root.showDetails(uri)
+        Binding {
+            target: aircraftContent.item
+            property: "model"
+            value: root.__model
         }
 
-        clip: true
-        focus: true
+        Binding {
+            target: aircraftContent.item
+            property: "header"
+            value: root.__header
+        }
 
-        // prevent mouse wheel interactions when the details view is
-        // visible, since it has its own flickable
-        enabled: !detailsView.visible
-
-        highlight: highlight
-        highlightMoveDuration: __realHighlightMoveDuration
-
-        // saved here becuase we need to reset highlightMoveDuration
-        // when doing a progrmatic set
-        readonly property int __realHighlightMoveDuration: 200
-
-        function updateSelectionFromLauncher()
-        {
-            model.selectVariantForAircraftURI(_launcher.selectedAircraft);
-            var row = model.indexForURI(_launcher.selectedAircraft);
-            if (row >= 0) {
-                // sequence here is necessary so progrommatic moves
-                // are instant
-                highlightMoveDuration = 0;
-                currentIndex = row;
-                highlightMoveDuration = __realHighlightMoveDuration;
-            } else {
-                // clear selection in view, so we don't show something
-                // erroneous such as the previous value
-                currentIndex = -1;
-            }
+        Connections {
+            target: aircraftContent.item
+            onShowDetails: root.showDetails(uri)
         }
     }
 
@@ -173,7 +163,7 @@ FocusScope
             left: parent.left
             top: tabBar.bottom
             bottom: parent.bottom
-            right: scrollbar.left
+            right: parent.right
         }
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -182,49 +172,42 @@ FocusScope
         visible: (root.state == "updates") && (_launcher.aircraftWithUpdatesModel.count == 0)
     }
 
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        anchors.top: tabBar.bottom
-        height: aircraftList.height
-        flickable: aircraftList
-    }
-
     state: "installed"
 
     states: [
         State {
             name: "installed"
             PropertyChanges {
-                target: aircraftList
-                model: _launcher.installedAircraftModel
+                target: root
+                __model: _launcher.installedAircraftModel
+                __header: emptyHeader
             }
         },
 
         State {
             name: "search"
             PropertyChanges {
-                target: aircraftList
-                model: _launcher.searchAircraftModel
-                header: null
+                target: root
+                __model: _launcher.searchAircraftModel
+                __header: emptyHeader
             }
         },
 
         State {
             name: "browse"
             PropertyChanges {
-                target: aircraftList
-                model: _launcher.browseAircraftModel
-                header: _addOns.showNoOfficialHangar ? noDefaultCatalogHeader : ratingsHeader
+                target: root
+                __model: _launcher.browseAircraftModel
+                __header: _addOns.showNoOfficialHangar ? noDefaultCatalogHeader : ratingsHeader
             }
         },
 
         State {
             name: "updates"
             PropertyChanges {
-                target: aircraftList
-                model: _launcher.aircraftWithUpdatesModel
-                header: (_launcher.aircraftWithUpdatesModel.count > 0) ? updateAllHeader : null
+                target: root
+                __model: _launcher.aircraftWithUpdatesModel
+                __header: (_launcher.aircraftWithUpdatesModel.count > 0) ? updateAllHeader : emptyHeader
             }
         }
     ]
@@ -239,6 +222,8 @@ FocusScope
 
     function goBack()
     {
+        // details view can change the aircraft URI / variant
+        updateSelectionFromLauncher();
         detailsView.visible = false;
     }
 
@@ -250,15 +235,9 @@ FocusScope
         Button {
             anchors { left: parent.left; top: parent.top; margins: Style.margin }
             width: Style.strutSize
-
             id: backButton
             text: "< Back"
-            onClicked: {
-                // ensure that if the variant was changed inside the detailsView,
-                // that we update our selection correctly
-                aircraftList.updateSelectionFromLauncher();
-                root.goBack();
-            }
+            onClicked: root.goBack();
         }
     }
 }

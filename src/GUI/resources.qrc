@@ -123,6 +123,10 @@
         <file>qml/RouteLegsView.qml</file>
         <file>qml/OverlayMenu.qml</file>
         <file>qml/PopupChoiceItem.qml</file>
+        <file>qml/AircraftGridDelegate.qml</file>
+        <file>qml/AircraftGridView.qml</file>
+        <file>qml/AircraftListView.qml</file>
+        <file>qml/GridToggleButton.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>
@@ -139,5 +143,7 @@
         <file alias="toolbox-aircraft">assets/icons8-aircraft.svg</file>
         <file alias="toolbox-fly-alt">assets/icons8-rocket.svg</file>
         <file alias="toolbox-fly-heli">assets/icons8-helicopter.svg</file>
+        <file alias="icon-grid-view">assets/icons8-grid-view.svg</file>
+        <file alias="icon-list-view">assets/icons8-menu.svg</file>
     </qresource>
 </RCC>

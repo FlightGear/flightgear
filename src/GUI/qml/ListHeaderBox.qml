@@ -11,7 +11,8 @@ Item {
 
     Rectangle {
         id: contentBox
-        width: parent.width
+        width: parent.width - Style.strutSize * 2
+        x: Style.strutSize
         height: Style.strutSize
         y: Style.margin
         color: "white"
