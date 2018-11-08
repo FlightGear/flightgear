@@ -686,7 +686,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     double dFt = d * SG_METER_TO_FEET;
     in_range = (d < radar_range_m);
     
-    if (!force_on && in_range) {
+    if (!force_on && !in_range) {
         return dFt * dFt;
     }
 
