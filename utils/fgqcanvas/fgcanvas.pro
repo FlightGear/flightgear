@@ -47,8 +47,8 @@ RESOURCES += \
 
 
 OTHER_FILES += \
-    qml/*
-
+    qml/* \
+    doc/*
 
 #Q_XCODE_DEVELOPMENT_TEAM.name = DEVELOPMENT_TEAM
 #Q_XCODE_DEVELOPMENT_TEAM.value = "James Turner"

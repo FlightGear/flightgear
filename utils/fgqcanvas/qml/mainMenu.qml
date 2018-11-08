@@ -57,6 +57,9 @@ Rectangle {
         SnapshotsPanel { }
     }
 
+    GetStarted {
+        anchors.centerIn: parent
+    }
 
 
 }

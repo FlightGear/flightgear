@@ -71,7 +71,7 @@ Item {
                     color: "#1f1f1f"
                     width: delegateFrame.width
                     height: delegateFrame.height
-
+                    clip: true
 
                     Button {
                         id: deleteButton

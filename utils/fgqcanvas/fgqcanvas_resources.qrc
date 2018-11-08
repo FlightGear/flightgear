@@ -10,5 +10,7 @@
         <file>qml/VerticalTabPanel.qml</file>
         <file>qml/SnapshotsPanel.qml</file>
         <file>qml/CanvasMenu.qml</file>
+        <file>qml/GetStarted.qml</file>
+        <file>doc/gettingStarted.html</file>
     </qresource>
 </RCC>

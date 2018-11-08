@@ -5,7 +5,7 @@ Item {
     property int activeTab: -1
     property var tabs: []
     property var titles: []
-    property int __panelWidth: 200
+    property int __panelWidth: 250
 
     readonly property int panelWidth: __panelWidth
 
@@ -34,6 +34,7 @@ Item {
         Connections {
             target: loader.item
             onRequestPanelClose: root.activeTab = -1;
+            ignoreUnknownSignals: true
         }
     }
 

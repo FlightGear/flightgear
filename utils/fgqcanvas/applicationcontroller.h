@@ -49,6 +49,9 @@ class ApplicationController : public QObject
 
     Q_PROPERTY(bool showUI READ showUI  NOTIFY showUIChanged)
     Q_PROPERTY(bool blockUIIdle READ blockUIIdle WRITE setBlockUIIdle NOTIFY blockUIIdleChanged)
+
+    Q_PROPERTY(QString gettingStartedText READ gettingStartedText CONSTANT)
+    Q_PROPERTY(bool showGettingStarted READ showGettingStarted WRITE setShowGettingStarted NOTIFY showGettingStartedChanged)
 public:
     explicit ApplicationController(QObject *parent = nullptr);
     ~ApplicationController();
@@ -115,6 +118,10 @@ public:
         return m_blockUIIdle;
     }
 
+    QString gettingStartedText() const;
+
+    bool showGettingStarted() const;
+
 signals:
 
     void hostChanged(QString host);
@@ -133,6 +140,8 @@ signals:
     void showUIChanged();
     void blockUIIdleChanged(bool blockUIIdle);
 
+    void showGettingStartedChanged(bool showGettingStarted);
+
 public slots:
     void setHost(QString host);
 
@@ -146,6 +155,8 @@ public slots:
         m_blockUIIdle = blockUIIdle;
         emit blockUIIdleChanged(m_blockUIIdle);
     }
+
+    void setShowGettingStarted(bool showGettingStarted);
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;

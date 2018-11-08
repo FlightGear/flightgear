@@ -35,6 +35,7 @@
 #include <QWindow>
 #include <QTimer>
 #include <QGuiApplication>
+#include <QSettings>
 
 #include "jsonutils.h"
 #include "canvasconnection.h"
@@ -44,8 +45,10 @@ ApplicationController::ApplicationController(QObject *parent)
     , m_status(Idle)
 {
     m_netAccess = new QNetworkAccessManager;
-    m_host = "localhost";
-    m_port = 8080;
+
+    QSettings settings;
+    m_host = settings.value("last-host", "localhost").toString();
+    m_port = settings.value("last-port", 8080).toUInt();
 
     QNetworkDiskCache* cache = new QNetworkDiskCache;
     cache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -245,10 +248,14 @@ void ApplicationController::query()
     if (m_host.isEmpty() || (m_port == 0))
         return;
 
+    QSettings settings;
+    settings.setValue("last-host", m_host);
+    settings.setValue("last-port", m_port);
+
     QUrl queryUrl;
     queryUrl.setScheme("http");
     queryUrl.setHost(m_host);
-    queryUrl.setPort(m_port);
+    queryUrl.setPort(static_cast<int>(m_port));
     queryUrl.setPath("/json/canvas/by-index");
     queryUrl.setQuery("d=2");
 
@@ -370,6 +377,19 @@ bool ApplicationController::showUI() const
     return m_showUI;
 }
 
+QString ApplicationController::gettingStartedText() const
+{
+    QFile f(":/doc/gettingStarted.html");
+    f.open(QIODevice::ReadOnly);
+    return QString::fromUtf8(f.readAll());
+}
+
+bool ApplicationController::showGettingStarted() const
+{
+    QSettings settings;
+    return settings.value("show-getting-started", true).toBool();
+}
+
 void ApplicationController::setHost(QString host)
 {
     if (m_host == host)
@@ -388,6 +408,16 @@ void ApplicationController::setPort(unsigned int port)
     m_port = port;
     emit portChanged(m_port);
     setStatus(Idle);
+}
+
+void ApplicationController::setShowGettingStarted(bool show)
+{
+    QSettings settings;
+    if (settings.value("show-getting-started", true).toBool() == show)
+        return;
+
+    settings.setValue("show-getting-started", show);
+    emit showGettingStartedChanged(show);
 }
 
 QJsonObject jsonPropNodeFindChild(QJsonObject obj, QByteArray name)
