@@ -331,7 +331,7 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
     aProp->setBoolValue("approach", true);
   }
 
-  if (flag(WPT_VIA)) {
+  if (flag(WPT_VIA) && _owner) {
       flightgear::AirwayRef awy = (flightgear::Airway*) _owner;
       aProp->setStringValue("airway", awy->ident());
       aProp->setIntValue("network", awy->level());

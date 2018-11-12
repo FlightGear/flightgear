@@ -557,9 +557,10 @@ static void buildWaypoints(AStarOpenNodeRef aNode, WayptVec& aRoute)
   for (n = aNode; n; n=n->previous) {
       // get / create airway to be the owner for this waypoint
       AirwayRef awy = Airway::loadByCacheId(n->airway);
-   //   assert(awy);
       auto wp = new NavaidWaypoint(n->node, awy);
-      wp->setFlag(WPT_VIA);
+      if (awy) {
+          wp->setFlag(WPT_VIA);
+      }
       wp->setFlag(WPT_GENERATED);
       aRoute[--count] = wp;
   }
