@@ -110,7 +110,6 @@
 
 #if defined(HAVE_QT)
 #include <GUI/QQuickDrawable.hxx>
-#include <Viewer/GraphicsWindowQt5.hxx>
 #endif
 
 #if defined(HAVE_PUI)
@@ -609,23 +608,22 @@ FGRenderer::setupView( void )
 
 #if defined(HAVE_PUI)
         _puiCamera = new flightgear::PUICamera;
-        _puiCamera->init(guiCamera);
+        _puiCamera->init(guiCamera, viewer);
 #endif
 
 #if defined(HAVE_QT)
         std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
-        auto graphicsWindowQt = dynamic_cast<GraphicsWindowQt5*>(guiCamera->getGraphicsContext());
+        auto graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(guiCamera->getGraphicsContext());
 
-        if (graphicsWindowQt && !rootQMLPath.empty()) {
+        if (!rootQMLPath.empty()) {
             _quickDrawable = new QQuickDrawable;
-            _quickDrawable->setup(graphicsWindowQt);
+            _quickDrawable->setup(graphicsWindow, viewer);
 
             _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
             geode->addDrawable(_quickDrawable);
         }
 #endif
-        // Draw first (eg. before Canvas GUI)
-        guiCamera->insertChild(0, geode);
+        guiCamera->addChild(geode);
         guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
 

@@ -23,7 +23,6 @@
 #include <string>
 
 #include <simgear/misc/sg_path.hxx>
-
 /**
  * open a URL using the system's web-browser
  */

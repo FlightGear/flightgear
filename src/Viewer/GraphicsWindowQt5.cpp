@@ -788,6 +788,9 @@ public:
 
     Qt5WindowingSystem()
     {
+#if OSG_VERSION_GREATER_THAN(3,5,9)
+        setName("FlightGearQt5");
+#endif
     }
 
     ~Qt5WindowingSystem()
@@ -899,6 +902,8 @@ void initQtWindowingSystem()
 {
 #if OSG_VERSION_LESS_THAN(3,5,2)
     osg::GraphicsContext::setWindowingSystemInterface(Qt5WindowingSystem::getInterface());
+#else
+    osg::GraphicsContext::getWindowingSystemInterfaces()->addWindowingSystemInterface(Qt5WindowingSystem::getInterface());
 #endif
 }
 

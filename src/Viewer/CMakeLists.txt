@@ -25,8 +25,10 @@ set(HEADERS
 	)
 
 if (Qt5Core_FOUND)
-    list(APPEND HEADERS GraphicsWindowQt5.hxx)
-    list(APPEND SOURCES GraphicsWindowQt5.cpp)
+    list(APPEND HEADERS GraphicsWindowQt5.hxx 
+					    OSGQtAdaption.hxx)
+    list(APPEND SOURCES GraphicsWindowQt5.cpp 
+						OSGQtAdaption.cxx)
 endif()
 
 if (YES)

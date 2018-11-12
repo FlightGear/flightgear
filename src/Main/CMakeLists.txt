@@ -149,3 +149,12 @@ if (MSVC)
   set_property(TARGET fgfs PROPERTY
   VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
 endif()
+
+if (TARGET Qt5::qmake)
+    get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
+    get_filename_component(_qt5_bin_dir ${_qt5_qmake_path} DIRECTORY)
+    get_filename_component(_qt5_root_dir ${_qt5_bin_dir} DIRECTORY)
+
+    # for QtPlatformHeaders
+    target_include_directories(fgfs PRIVATE ${_qt5_root_dir}/include)
+endif()
