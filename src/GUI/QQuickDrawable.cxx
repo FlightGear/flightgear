@@ -19,8 +19,13 @@
 
 #include <GUI/FGQmlInstance.hxx>
 #include <GUI/FGQmlPropertyNode.hxx>
+#include <GUI/FGQQWindowManager.hxx>
 
 #include <Viewer/GraphicsWindowQt5.hxx>
+
+#include <simgear/structure/commands.hxx>
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 /**
  * Helper run on Graphics thread to retrive its Qt wrapper
@@ -119,7 +124,7 @@ public:
     
     QOpenGLContext* qtContext = nullptr;
     
-    public slots:
+public slots:
     void onComponentLoaded()
     {
         if (qmlComponent->isError()) {
@@ -182,7 +187,9 @@ public:
             if (result && event->isAccepted()) {
                 return true;
             }
+            break;
         }
+
         default:
             break;
         }
@@ -199,6 +206,34 @@ static QObject* fgqmlinstance_provider(QQmlEngine *engine, QJSEngine *scriptEngi
     FGQmlInstance* instance = new FGQmlInstance;
     return instance;
 }
+
+static QObject* fgqq_windowManager_provider(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(scriptEngine)
+
+    FGQQWindowManager* instance = new FGQQWindowManager(engine);
+    return instance;
+}
+
+class ReloadCommand : public SGCommandMgr::Command
+{
+public:
+    ReloadCommand(QQuickDrawable* qq) :
+        _drawable(qq)
+    {}
+
+    bool operator() (const SGPropertyNode* aNode, SGPropertyNode * root) override
+    {
+        SG_UNUSED(aNode);
+        SG_UNUSED(root);
+        std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
+        _drawable->reload(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
+        return true;
+    }
+
+private:
+    QQuickDrawable* _drawable;
+};
 
 QQuickDrawable::QQuickDrawable() :
     d(new QQuickDrawablePrivate)
@@ -227,11 +262,14 @@ QQuickDrawable::QQuickDrawable() :
         doneQmlRegistration = true;
 
         // singleton system object
-        qmlRegisterSingletonType<FGQmlInstance>("flightgear.org", 1, 0, "System", fgqmlinstance_provider);
+        qmlRegisterSingletonType<FGQmlInstance>("FlightGear", 1, 0, "System", fgqmlinstance_provider);
+        qmlRegisterSingletonType<FGQmlInstance>("FlightGear", 1, 0, "WindowManager", fgqq_windowManager_provider);
 
         // QML types
-        qmlRegisterType<FGQmlPropertyNode>("flightgear.org", 1, 0, "Property");
+        qmlRegisterType<FGQmlPropertyNode>("FlightGear", 1, 0, "Property");
     }
+
+    globals->get_commands()->addCommandObject("reload-quick-gui", new ReloadCommand(this));
 }
 
 QQuickDrawable::~QQuickDrawable()
@@ -264,6 +302,12 @@ void QQuickDrawable::setup(osgViewer::GraphicsWindow* gw)
     d->quickWindow->setClearBeforeRendering(false);
     
     d->qmlEngine = new QQmlEngine;
+    
+    SGPath rootQMLPath = SGPath::fromUtf8(fgGetString("/sim/gui/qml-root-path"));
+    SG_LOG(SG_GENERAL, SG_INFO, "Root QML dir:" << rootQMLPath.dir());
+    d->qmlEngine->addImportPath(QString::fromStdString(rootQMLPath.dir()));
+   // d->qmlEngine->addImportPath(QStringLiteral("qrc:///"));
+
     if (!d->qmlEngine->incubationController())
         d->qmlEngine->setIncubationController(d->quickWindow->incubationController());
     
@@ -312,8 +356,20 @@ void QQuickDrawable::drawImplementation(osg::RenderInfo& renderInfo) const
     
 }
 
+void QQuickDrawable::reload(QUrl url)
+{
+    d->qmlEngine->clearComponentCache();
+    setSource(url);
+}
+
 void QQuickDrawable::setSource(QUrl url)
 {
+    if (d->rootItem)
+        delete d->rootItem;
+    if (d->qmlComponent)
+        delete d->qmlComponent;
+    d->rootItem = nullptr;
+
     d->qmlComponent = new QQmlComponent(d->qmlEngine, url);
     if (d->qmlComponent->isLoading()) {
         QObject::connect(d->qmlComponent, &QQmlComponent::statusChanged,
@@ -326,7 +382,7 @@ void QQuickDrawable::setSource(QUrl url)
 void QQuickDrawable::resize(int width, int height)
 {
     // we need to unscale from physical pixels back to logical, otherwise we end up double-scaled.
-    const float currentPixelRatio = d->graphicsWindow->getGLWindow()->devicePixelRatio();
+    const float currentPixelRatio = static_cast<float>(d->graphicsWindow->getGLWindow()->devicePixelRatio());
     const int logicalWidth = static_cast<int>(width / currentPixelRatio);
     const int logicalHeight = static_cast<int>(height / currentPixelRatio);
     

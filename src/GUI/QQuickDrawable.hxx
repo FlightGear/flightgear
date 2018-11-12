@@ -28,6 +28,8 @@ public:
 
   void setSource(QUrl url);
 
+  void reload(QUrl url);
+
   void resize(int width, int height);
 private:
   QQuickDrawablePrivate* d;

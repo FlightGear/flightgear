@@ -158,6 +158,8 @@ if (HAVE_QT)
                         QmlNavCacheWrapper.cxx
                         QmlRadioButtonHelper.cxx
                         QmlRadioButtonHelper.hxx
+                        QtHelpers.hxx
+                        QtHelpers.cxx
                         UnitsModel.cxx
                         UnitsModel.hxx
                         NavaidSearchModel.hxx
@@ -168,6 +170,8 @@ if (HAVE_QT)
                         RouteDiagram.hxx
                         ModelDataExtractor.cxx
                         ModelDataExtractor.hxx
+                        FGQQWindowManager.cxx
+                        FGQQWindowManager.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

@@ -56,7 +56,6 @@
         <file>qml/Style.qml</file>
         <file>qml/qmldir</file>
         <file>qml/ClickableText.qml</file>
-        <file>qml/LauncherSettings.qml</file>
         <file>qml/Section.qml</file>
         <file>qml/SettingControl.qml</file>
         <file>qml/SettingCheckbox.qml</file>
