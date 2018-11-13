@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Window 2.0
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 
 import "."
 
