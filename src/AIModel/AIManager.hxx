@@ -115,7 +115,8 @@ private:
 
     bool loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
     bool unloadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
-    bool addObjectCommand(const SGPropertyNode* definition);
+    bool addObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root);
+    bool removeObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root);
 
     bool removeObject(const SGPropertyNode* args);
     bool unloadScenario( const std::string &filename );

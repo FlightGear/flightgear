@@ -134,6 +134,8 @@ FGAIManager::init() {
 
     globals->get_commands()->addCommand("load-scenario", this, &FGAIManager::loadScenarioCommand);
     globals->get_commands()->addCommand("unload-scenario", this, &FGAIManager::unloadScenarioCommand);
+    globals->get_commands()->addCommand("add-aiobject", this, &FGAIManager::addObjectCommand);
+    globals->get_commands()->addCommand("remove-aiobject", this, &FGAIManager::removeObjectCommand);
     _environmentVisiblity = fgGetNode("/environment/visibility-m");
     _groundSpeedKts_node = fgGetNode("/velocities/groundspeed-kt", true);
     
@@ -213,6 +215,8 @@ FGAIManager::shutdown()
 
     globals->get_commands()->removeCommand("load-scenario");
     globals->get_commands()->removeCommand("unload-scenario");
+    globals->get_commands()->removeCommand("add-aiobject");
+    globals->get_commands()->removeCommand("remove-aiobject");
 }
 
 void
@@ -418,16 +422,19 @@ bool FGAIManager::unloadScenarioCommand(const SGPropertyNode * arg, SGPropertyNo
     return unloadScenario(name);
 }
 
-bool FGAIManager::addObjectCommand(const SGPropertyNode* definition)
+bool FGAIManager::addObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root)
 {
-    addObject(definition);
+    if (!arg){
+        return false;
+    }
+    addObject(arg);
     return true;
 }
 
 FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 {
     const std::string& type = definition->getStringValue("type", "aircraft");
-
+    
     FGAIBase* ai = NULL;
     if (type == "tanker") { // refueling scenarios
         ai = new FGAITanker;
@@ -463,6 +470,14 @@ FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 		SG_LOG(SG_AI, SG_ALERT, "killed invalid scenario "  << ai->_getName());
 	}
     return ai;
+}
+
+bool FGAIManager::removeObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root)
+{
+    if (!arg) {
+        return false;
+    }
+    return removeObject(arg);
 }
 
 bool FGAIManager::removeObject(const SGPropertyNode* args)
