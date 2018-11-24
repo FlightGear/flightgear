@@ -47,6 +47,7 @@
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
 #include <simgear/scene/sky/sky.hxx>
+#include <simgear/scene/util/SGSceneFeatures.hxx>
 
 #include <simgear/bvh/BVHNode.hxx>
 #include <simgear/bvh/BVHLineSegmentVisitor.hxx>
@@ -224,6 +225,49 @@ private:
     const simgear::BVHMaterial* _material;
     bool _haveHit;
 };
+class FGScenery::TextureCacheListener : public SGPropertyChangeListener
+{
+protected:
+    const char* root_node_path = "/sim/rendering/texture-cache";
+public:
+    TextureCacheListener()
+    {
+        SGPropertyNode_ptr textureCacheNode = fgGetNode(root_node_path, true);
+        setupPropertyListener(textureCacheNode, "cache-enabled");
+        setupPropertyListener(textureCacheNode, "compress-transparent");
+        setupPropertyListener(textureCacheNode, "compress-solid");
+        setupPropertyListener(textureCacheNode, "compress");
+    }
+
+    ~TextureCacheListener()
+    {
+        SGPropertyNode_ptr maskNode = fgGetNode(root_node_path);
+        for (int i = 0; i < maskNode->nChildren(); ++i) {
+            maskNode->getChild(i)->removeChangeListener(this);
+        }
+    }
+
+    void setupPropertyListener(SGPropertyNode_ptr textureCacheNode, const char *node)
+    {
+        textureCacheNode->getChild(node, 0, true)->addChangeListener(this, true);
+    }
+
+    virtual void valueChanged(SGPropertyNode * node)
+    {
+        bool b = node->getBoolValue();
+        std::string name(node->getNameString());
+
+        if (name == "cache-enabled") {
+            SGSceneFeatures::instance()->setTextureCacheActive(b);
+        }
+        else if (name == "compress-transparent" || name == "compress") {
+            SGSceneFeatures::instance()->setTextureCacheCompressionActiveTransparent(b);
+        }
+        else if (name == "compress-solid" || name == "compress") {
+            SGSceneFeatures::instance()->setTextureCacheCompressionActive(b);
+        }
+    }
+};
 
 class FGScenery::ScenerySwitchListener : public SGPropertyChangeListener
 {
@@ -285,7 +329,7 @@ private:
 
 // Scenery Management system
 FGScenery::FGScenery() :
-    _listener(NULL)
+    _listener(nullptr), _textureCacheListener(nullptr)
 {
     // keep reference to pager singleton, so it cannot be destroyed while FGScenery lives
     _pager = FGScenery::getPagerSingleton();
@@ -297,6 +341,7 @@ FGScenery::FGScenery() :
 FGScenery::~FGScenery()
 {
     delete _listener;
+    delete _textureCacheListener;
 }
 
 
@@ -364,7 +409,7 @@ void FGScenery::init() {
     _terrain->init( terrain_branch.get() );
 
     _listener = new ScenerySwitchListener(this);
-
+    _textureCacheListener = new TextureCacheListener();
     // Toggle the setup flag.
     _inited = true;
 }

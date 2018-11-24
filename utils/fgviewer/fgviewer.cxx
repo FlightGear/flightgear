@@ -207,6 +207,9 @@ main(int argc, char** argv)
     options->setPluginStringData("SimGear::FG_ROOT", fg_root.local8BitStr());
     // Omit building bounding volume trees, as the viewer will not run a simulation
     options->setPluginStringData("SimGear::BOUNDINGVOLUMES", "OFF");
+    GLint max_texture_size;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+    options->setPluginStringData("SimGear::MAXTEXTURESIZE", std::to_string(max_texture_size? max_texture_size:8192));
     viewer.setReaderWriterOptions(options.get());
 
     // Here, all arguments are processed

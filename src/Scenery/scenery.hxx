@@ -65,6 +65,9 @@ class FGScenery : public SGSubsystem
     osg::ref_ptr<flightgear::SceneryPager> _pager;
     ScenerySwitchListener* _listener;
 
+    class TextureCacheListener;
+    friend class TextureCacheListener;
+    TextureCacheListener* _textureCacheListener;
 public:
     FGScenery();
     ~FGScenery();

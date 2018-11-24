@@ -279,6 +279,12 @@ void FGGlobals::set_fg_home (const SGPath &home)
     fg_home = home.realpath();
 }
 
+void FGGlobals::set_texture_cache_dir(const SGPath &textureCache)
+{
+    texture_cache_dir = textureCache.realpath();
+}
+
+
 PathList FGGlobals::get_data_paths() const
 {
     PathList r(additional_data_paths);

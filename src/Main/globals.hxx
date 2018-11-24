@@ -103,6 +103,8 @@ private:
 
     // Users home directory for data
     SGPath fg_home;
+
+    SGPath texture_cache_dir;
     // Download directory
     SGPath download_dir;
     // Terrasync directory
@@ -199,7 +201,8 @@ public:
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }
 
     const SGPath &get_fg_root () const { return fg_root; }
-    void set_fg_root (const SGPath&root);
+    void set_fg_root(const SGPath&root);
+    void set_texture_cache_dir(const SGPath&textureCache);
 
     /**
      * Get list of data locations. fg_root is always the final item in the
@@ -231,6 +234,8 @@ public:
     // 'path' value taken from the property tree or any other Nasal-writable
     // place.
     void set_download_dir (const SGPath &path);
+
+    const SGPath &get_texture_cache_dir() const { return texture_cache_dir; }
 
     const SGPath &get_terrasync_dir () const { return terrasync_dir; }
     // The 'path' argument to set_terrasync_dir() must come from trustworthy

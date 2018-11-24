@@ -1731,6 +1731,7 @@ struct OptionDesc {
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
     {"terrasync-dir",                true,  OPTION_IGNORE,   "", false, "", 0 },
     {"download-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"texture-cache-dir",            true,  OPTION_IGNORE,   "", false, "", 0 },
     {"allow-nasal-read",             true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptAllowNasalRead },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
@@ -2460,15 +2461,21 @@ SGPath defaultDownloadDir()
 {
 #if defined(SG_WINDOWS)
     SGPath p(SGPath::documents());
-	if (p.isNull()) {
-		SG_LOG(SG_IO, SG_ALERT, "Failed to locate user's Documents directory, will default to FG_HOME");
-		// fall through to standard get_fg_home codepath
-	} else {
-		return p / "FlightGear";
-	}
+    if (p.isNull()) {
+        SG_LOG(SG_IO, SG_ALERT, "Failed to locate user's Documents directory, will default to FG_HOME");
+        // fall through to standard get_fg_home codepath
+    }
+    else {
+        return p / "FlightGear";
+    }
 #endif
 
     return globals->get_fg_home();
+}
+
+SGPath defaultTextureCacheDir()
+{
+    return defaultDownloadDir() / "TextureCache";
 }
 
 OptionResult Options::processOptions()
@@ -2552,6 +2559,29 @@ OptionResult Options::processOptions()
     // particular, it can't be influenced by Nasal code, not even indirectly
     // via a Nasal-writable place such as the property tree.
     globals->set_download_dir(downloadDir);
+
+    // Texture Cache directory handling
+    SGPath textureCacheDir = SGPath::fromLocal8Bit(
+        valueForOption("texture-cache-dir").c_str());
+    if (textureCacheDir.isNull()) {
+        textureCacheDir = defaultTextureCacheDir();
+        SG_LOG(SG_GENERAL, SG_INFO,
+            "Using default texture cache directory: " << textureCacheDir);
+    }
+    else {
+        SG_LOG(SG_GENERAL, SG_INFO,
+            "Using explicit texture cache directory: " << textureCacheDir);
+    }
+
+    simgear::Dir tcd(textureCacheDir);
+    if (!tcd.exists()) {
+        SG_LOG(SG_GENERAL, SG_INFO,
+            "Creating texture cache directory: " << textureCacheDir);
+        tcd.create(0755);
+    }
+
+    globals->set_texture_cache_dir(textureCacheDir);
+
 
     // TerraSync directory fixup
     SGPath terrasyncDir = SGPath::fromLocal8Bit(

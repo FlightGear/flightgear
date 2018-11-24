@@ -547,8 +547,8 @@ FGRenderer::init( void )
         SG_LOG(SG_VIEW, SG_WARN, "Unknown texture compression setting!");
       }
     }
-    
-// create sky, but can't build until setupView, since we depend
+    SGSceneFeatures::instance()->setTextureCompressionPath(globals->get_texture_cache_dir());
+    // create sky, but can't build until setupView, since we depend
 // on other subsystems to be inited, eg Ephemeris    
     _sky = new SGSky;
     
@@ -1554,6 +1554,14 @@ FGRenderer::update( ) {
     if (!_position_finalized || !_scenery_loaded->getBoolValue())
     {
         _splash_alpha->setDoubleValue(1.0);
+
+        GLint max_texture_size;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+        // abritrary range change as sometimes during init the device reports somewhat dubious values, so 
+        // we know that the size must be greater than size and that probably 9999999 is unreasonably large
+        if (max_texture_size > 0 && max_texture_size < 9999999)
+            SGSceneFeatures::instance()->setMaxTextureSize(max_texture_size);
+
         return;
     }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
