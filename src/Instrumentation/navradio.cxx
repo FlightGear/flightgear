@@ -201,10 +201,13 @@ FGNavRadio::init ()
     SGPropertyNode *subnode = node->getChild("frequencies", 0, true);
     freq_node = subnode->getChild("selected-mhz", 0, true);
     alt_freq_node = subnode->getChild("standby-mhz", 0, true);
+    freq_node->addChangeListener(this);
+    alt_freq_node->addChangeListener(this);
+
     fmt_freq_node = subnode->getChild("selected-mhz-fmt", 0, true);
     fmt_alt_freq_node = subnode->getChild("standby-mhz-fmt", 0, true);
     is_loc_freq_node = subnode->getChild("is-localizer-frequency", 0, true );
-
+    
     // radials
     subnode = node->getChild("radials", 0, true);
     sel_radial_node = subnode->getChild("selected-deg", 0, true);
@@ -376,15 +379,6 @@ FGNavRadio::update(double dt)
     return; // paused
   }
     
-  // Create "formatted" versions of the nav frequencies for
-  // instrument displays.
-  char tmp[16];
-  sprintf( tmp, "%.2f", freq_node->getDoubleValue() );
-  fmt_freq_node->setStringValue(tmp);
-  sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
-  fmt_alt_freq_node->setStringValue(tmp);
-  is_loc_freq_node->setBoolValue( IsLocalizerFrequency( freq_node->getDoubleValue() ));
-
   if (power_btn_node->getBoolValue() 
       && (bus_power_node->getDoubleValue() > 1.0)
       && nav_serviceable_node->getBoolValue() )
@@ -397,6 +391,18 @@ FGNavRadio::update(double dt)
   }
   
   updateAudio( dt );
+}
+
+void FGNavRadio::updateFormattedFrequencies()
+{
+    // Create "formatted" versions of the nav frequencies for
+    // instrument displays.
+    char tmp[16];
+    sprintf( tmp, "%.2f", freq_node->getDoubleValue() );
+    fmt_freq_node->setStringValue(tmp);
+    sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
+    fmt_alt_freq_node->setStringValue(tmp);
+    is_loc_freq_node->setBoolValue( IsLocalizerFrequency( freq_node->getDoubleValue() ));
 }
 
 void FGNavRadio::clearOutputs()
@@ -711,6 +717,10 @@ void FGNavRadio::valueChanged (SGPropertyNode* prop)
     // slave-to-GPS enabled/disabled, resync NAV station (update all outputs)
     _navaid = NULL;
     _time_before_search_sec = 0;
+  } else if ((prop == freq_node) || (prop == alt_freq_node)) {
+      updateFormattedFrequencies();
+      // force a frequency update
+      _time_before_search_sec = 0.0;
   }
 }
 

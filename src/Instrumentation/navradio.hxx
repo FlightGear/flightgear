@@ -164,6 +164,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     void updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm);
     void updateGPSSlaved();
     void updateCDI(double dt);
+    void updateFormattedFrequencies();
     
     void clearOutputs();
 
