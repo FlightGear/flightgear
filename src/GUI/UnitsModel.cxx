@@ -100,6 +100,7 @@ std::vector<UnitsModel::UnitVec> static_modeData = {
     { Units::TimeLocal, Units::TimeUTC},
     { Units::NauticalMiles, Units::Kilometers },
     { Units::FeetMSL, Units::MetersMSL, Units::FeetAboveFieldElevation},
+    { Units::DegreesTrue },
 };
 
 const int UnitLongNameRole = Qt::UserRole + 1;

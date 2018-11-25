@@ -72,6 +72,7 @@ public:
         Timezone,
         Distance = 7, // Nm or Kilometers only for now
         AltitudeIncludingMetersAndAboveField,
+        HeadingOnlyTrue
     };
 
     Q_ENUMS(Mode)
