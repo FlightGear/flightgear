@@ -18,9 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "SetupRootDialog.hxx"
 
@@ -41,6 +39,12 @@
 #include <Main/options.hxx>
 #include <Include/version.h>
 #include <Viewer/WindowBuilder.hxx>
+
+static QString rootPathKey()
+{
+    // return a settings key like fg-root-2018-3-0
+    return QString("fg-root-") + QString(FLIGHTGEAR_VERSION).replace('.', '-');
+}
 
 SetupRootDialog::SetupRootDialog(PromptState prompt) :
     QDialog(),
@@ -90,10 +94,11 @@ bool SetupRootDialog::runDialog(PromptState prompt)
     return true;
 }
 
+
 SGPath SetupRootDialog::restoreUserSelectedRoot()
 {
     QSettings settings;
-    QString path = settings.value("fg-root").toString();
+    QString path = settings.value(rootPathKey()).toString();
     if (path == "!ask") {
         bool ok = runDialog(ManualChoiceRequested);
         Q_ASSERT(ok);
@@ -193,7 +198,7 @@ void SetupRootDialog::onBrowse()
     globals->set_fg_root(m_browsedPath.toStdString());
 
     QSettings settings;
-    settings.setValue("fg-root", m_browsedPath);
+    settings.setValue(rootPathKey(), m_browsedPath);
 
     accept(); // we're done
 }
