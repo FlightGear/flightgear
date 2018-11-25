@@ -68,7 +68,8 @@ public:
         SpeedOnlyKnots = 4,
         Heading, // degrees true or magnetic
         Timezone,
-        Distance = 7 // Nm only for now
+        Distance = 7, // Nm only for now
+        HeadingOnlyTrue
     };
 
     Q_ENUMS(Mode)

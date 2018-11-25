@@ -110,7 +110,9 @@ Item {
 
                 NumericalEdit {
                     label: qsTr("Heading:")
-                    unitsMode: Units.Heading
+                    // FIXME: support passing a magnetic heading to FG
+                    // or compute magvar ourselves
+                    unitsMode: Units.HeadingOnlyTrue
                     enabled: _location.headingEnabled
                     quantity: _location.heading
                     onCommit: _location.heading = newValue
@@ -146,7 +148,7 @@ Item {
 
                 NumericalEdit {
                     label: qsTr(" on bearing ")
-                    unitsMode: Units.Heading
+                    unitsMode: Units.HeadingOnlyTrue
                     enabled: offsetToggle.checked
                     quantity: _location.offsetRadial
                     onCommit: _location.offsetRadial = newValue
