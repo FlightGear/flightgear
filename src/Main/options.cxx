@@ -2888,7 +2888,7 @@ void Options::setupRoot(int argc, char **argv)
   } else {
   // Next check if fg-root is set as an env variable
     char *envp = ::getenv( "FG_ROOT" );
-    if ( envp != NULL ) {
+    if ( envp != nullptr ) {
         root = SGPath::fromLocal8Bit(envp);
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
