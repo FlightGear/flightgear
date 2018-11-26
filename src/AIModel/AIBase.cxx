@@ -407,11 +407,11 @@ void FGAIBase::updateLOD()
                             _model->setCenterMode(osg::LOD::CenterMode::USER_DEFINED_CENTER);
                         }
                     }*/
-                  _model->setRange(modelHighDetailIndex , maxRangeDetail, 100000); // most detailed
+                  _model->setRange(modelHighDetailIndex , maxRangeDetail, FLT_MAX); // most detailed
                   _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
                 } else {
                   // we have only one model it obviously will have to be displayed from the smallest value
-                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), 100000 );
+                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), FLT_MAX );
                 }
             } else {
                 /* In non-pixel range mode we're dealing with straight distance.
