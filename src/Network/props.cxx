@@ -514,7 +514,20 @@ FGProps::PropsChannel::foundTerminator()
                             node = args->getNode("file", 0, true);
                             node->setStringValue( tokens[3].c_str() );
                        }
+                    } else {
+                        // generic parsing
+                        for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                            const auto pieces = simgear::strutils::split(tokens.at(i), "=");
+                            if (pieces.size() != 2) {
+                                SG_LOG(SG_NETWORK, SG_WARN, "malformed argument to Props protocol run:" << tokens.at(i));
+                                continue;
+                            }
+                            
+                            SGPropertyNode_ptr node= args->getNode(pieces.at(0), 0, true);
+                            node->setStringValue(pieces.at(1));
+                        }
                     }
+                    
                     if ( !globals->get_commands() ->execute(tokens[1].c_str(), args, nullptr) )
                     {
                         SG_LOG( SG_NETWORK, SG_ALERT,
