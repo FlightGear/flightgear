@@ -366,13 +366,13 @@ void FGAIBase::updateLOD()
 
                 _model->setRangeMode( osg::LOD::PIXEL_SIZE_ON_SCREEN );
                 if (_model->getNumFileNames() == 2) {
-                  _model->setRange(modelHighDetailIndex , maxRangeDetail, 100000); // most detailed
+                  _model->setRange(modelHighDetailIndex , maxRangeDetail, FLT_MAX); // most detailed
                   _model->setRange(modelLowDetailIndex , maxRangeBare, maxRangeDetail); // least detailed
                 } else {
                   /* If we have only one LoD for this model, then we want to
                    * display it from the smallest pixel value
                    */
-                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), 100000 );
+                  _model->setRange(0, min(maxRangeBare, maxRangeDetail), FLT_MAX );
                 }
             } else {
                 /* In non-pixel range mode we're dealing with straight distance.
