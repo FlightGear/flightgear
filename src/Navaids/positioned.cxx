@@ -431,11 +431,16 @@ FGPositionedRef FGPositioned::loadByIdImpl(PositionedID id)
   return flightgear::NavDataCache::instance()->loadById(id);
 }
 
-FGPositioned::TypeFilter::TypeFilter(Type aTy) :
-  mMinType(LAST_TYPE),
-  mMaxType(INVALID)
+FGPositioned::TypeFilter::TypeFilter(Type aTy)
 {
   addType(aTy);
+}
+
+FGPositioned::TypeFilter::TypeFilter(std::initializer_list<Type> types)
+{
+    for (auto t : types) {
+        addType(t);
+    }
 }
 
 void FGPositioned::TypeFilter::addType(Type aTy)

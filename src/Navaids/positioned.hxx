@@ -175,12 +175,15 @@ public:
   {
   public:
     TypeFilter(Type aTy = INVALID);
-    virtual bool pass(FGPositioned* aPos) const;
+      
+    TypeFilter(std::initializer_list<Type> types);
+      
+    bool pass(FGPositioned* aPos) const override;
     
-    virtual Type minType() const
+    Type minType() const override
     { return mMinType; }
     
-    virtual Type maxType() const
+    Type maxType() const override
     { return mMaxType; }
     
     void addType(Type aTy);
@@ -189,7 +192,8 @@ public:
   private:
       
     std::vector<Type> types;
-    Type mMinType, mMaxType;
+    Type mMinType = LAST_TYPE,
+      mMaxType = INVALID;
   };
   
   static FGPositionedList findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter);

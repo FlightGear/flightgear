@@ -180,8 +180,105 @@ void NavRadioTests::testCDIDeflection()
 
 void NavRadioTests::testILSBasic()
 {
+    // radio setup
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", "navtest");
+    configNode->setIntValue("number", 2);
+    std::unique_ptr<FGNavRadio> r(new FGNavRadio(configNode));
+    r->bind();
+    r->init();
+    
+    SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
+    node->setBoolValue("serviceable", true);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    
+    // test basic ILS: KSFO 28L
+    FGPositioned::TypeFilter f{{FGPositioned::VOR, FGPositioned::ILS, FGPositioned::LOC}};
+    FGNavRecordRef ils = fgpositioned_cast<FGNavRecord>(
+        FGPositioned::findClosestWithIdent("ISFO", SGGeod::fromDeg(-112, 37.6), &f));
+    CPPUNIT_ASSERT(ils->type() == FGPositioned::ILS);
+    
+    node->setDoubleValue("frequencies/selected-mhz", 109.55);
+   // node->setDoubleValue("radials/selected-deg", 42.0); // twist is -2.0
+    CPPUNIT_ASSERT(!strcmp("109.55", node->getStringValue("frequencies/selected-mhz-fmt")));
+
+    // note we need full precision here, due to ILS sensitivity
+    SGGeod p = SGGeodesy::direct(ils->geod(), 117.932, 10 * SG_NM_TO_METER);
+    p.setElevationFt(2500);
+    setPositionAndStabilise(r.get(), p);
+    
+    CPPUNIT_ASSERT(!strcmp("ISFO", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(297.9, node->getDoubleValue("radials/target-radial-deg"), 0.1);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(297.9, node->getDoubleValue("heading-deg"), 1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(117.932, node->getDoubleValue("radials/actual-deg"), 0.1);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("crosstrack-error-m"), 10.0);
+    CPPUNIT_ASSERT(!node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
+    
+    //  1 degree offset
+    p = SGGeodesy::direct(ils->geod(), 116.932, 6 * SG_NM_TO_METER);
+    p.setElevationFt(1500);
+    setPositionAndStabilise(r.get(), p);
+    
+    const double locWidth = ils->localizerWidth();
+    const double deflectionScale = 20.0 / locWidth; // 20 degrees is full VOR swing (-10 to +10 degrees)
+    
+    CPPUNIT_ASSERT(!strcmp("ISFO", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(297.9, node->getDoubleValue("radials/target-radial-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(296.9, node->getDoubleValue("heading-deg"), 1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(116.932, node->getDoubleValue("radials/actual-deg"), 0.1);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.0 * deflectionScale, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    
+    double xtkE = sin(-1.0 * SG_DEGREES_TO_RADIANS) * 6.0 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 1.0);
+    CPPUNIT_ASSERT(!node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
+    
+    
+    // test pegged (4 degrees off course)
+    p = SGGeodesy::direct(ils->geod(), 121.932, 3 * SG_NM_TO_METER);
+    p.setElevationFt(600);
+    setPositionAndStabilise(r.get(), p);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(301.9, node->getDoubleValue("heading-deg"), 1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(121.932, node->getDoubleValue("radials/actual-deg"), 0.1);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    
+    xtkE = sin(4.0 * SG_DEGREES_TO_RADIANS) * 3.0 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 1.0);
+    CPPUNIT_ASSERT(!node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
+    
     
     // also check ILS back course
+    // 1 degree offset on the BC
+    p = SGGeodesy::direct(ils->geod(), 298.932, 4 * SG_NM_TO_METER);
+    p.setElevationFt(1500);
+    setPositionAndStabilise(r.get(), p);
+
+    CPPUNIT_ASSERT(!strcmp("ISFO", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(297.9, node->getDoubleValue("radials/target-radial-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(118.9, node->getDoubleValue("heading-deg"), 1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(298.932, node->getDoubleValue("radials/actual-deg"), 0.1);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.0 * deflectionScale, node->getDoubleValue("heading-needle-deflection"), 0.1);
+    
+    xtkE = sin(-1.0 * SG_DEGREES_TO_RADIANS) * 4.0 * SG_NM_TO_METER;
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(xtkE, node->getDoubleValue("crosstrack-error-m"), 1.0);
+    
+    // these don't change for an ILS
+    CPPUNIT_ASSERT(!node->getBoolValue("from-flag"));
+    CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
 }
 
 void NavRadioTests::testGS()
