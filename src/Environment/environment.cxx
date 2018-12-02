@@ -765,15 +765,21 @@ FGEnvironment::_recalc_alt_pt ()
 void
 FGEnvironment::_recalc_density ()
 {
-  double pressure_psf = pressure_inhg * 70.7487;
+  const double pressure_psf = pressure_inhg * 70.7487;
   
   // adjust for humidity
   // calculations taken from USA Today (oops!) at
   // http://www.usatoday.com/weather/basics/density-calculations.htm
-  double temperature_degk = temperature_degc + 273.15;
-  double pressure_mb = pressure_inhg * 33.86;
-  double vapor_pressure_mb =
+  const double temperature_degk = temperature_degc + 273.15;
+  const double pressure_mb = pressure_inhg * 33.86;
+  const double vapor_pressure_mb =
     6.11 * pow(10.0, 7.5 * dewpoint_degc / (237.7 + dewpoint_degc));
+  
+  if ((pressure_mb <= 0.0) || (vapor_pressure_mb <= 0.0)) {
+    density_slugft3 = 0.0;
+    return;
+  }
+  
   double virtual_temperature_degk = temperature_degk / (1 - (vapor_pressure_mb / pressure_mb) * (1.0 - 0.622));
   double virtual_temperature_degr = virtual_temperature_degk * 1.8;
 
@@ -786,11 +792,15 @@ FGEnvironment::_recalc_density ()
 void
 FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
 {
-  double pressure_mb = pressure_inhg * 33.86;
-  double vaporpressure = 6.11 * pow(10.0, ((7.5 * dewpoint_degc) / (237.7 + dewpoint_degc)));
+  const double pressure_mb = pressure_inhg * 33.86;
+  const double vaporpressure = 6.11 * pow(10.0, ((7.5 * dewpoint_degc) / (237.7 + dewpoint_degc)));
+  const double virtual_temp = (temperature_degc + 273.15) / (1 - 0.379 * (vaporpressure/pressure_mb));
 
-  double virtual_temp = (temperature_degc + 273.15) / (1 - 0.379 * (vaporpressure/pressure_mb));
-
+  if ((pressure_mb <= 0.0) || (virtual_temp < 0.0)) {
+    density_tropo_avg_kgm3 = 0.0;
+    return;
+  }
+  
   double density_half = (100 * pressure_mb * exp(-altitude_half_to_sun_m / 8000))
       / (287.05 * virtual_temp);
   double density_tropo = (100 * pressure_mb * exp((-1 * altitude_tropo_top_m) / 8000))
