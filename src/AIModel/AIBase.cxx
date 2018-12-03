@@ -329,20 +329,28 @@ void FGAIBase::updateLOD()
 
     if (_model.valid())
     {
-        if( maxRangeDetail == 0.0 )
+        bool pixel_mode = fgGetBool("/sim/rendering/static-lod/ai-range-mode-pixel", false);
+
+        if( (int)maxRangeDetail == (int)maxRangeBare) // high detail only
         {
             // Disable LOD.  If we have two models set them accordingly, otherwise and largely by 
             // definition the only model must be the model that is used.
             if (_model->getNumFileNames() == 2) {
-                _model->setRange(modelHighDetailIndex, 0.0, FLT_MAX);
-                _model->setRange(modelLowDetailIndex, FLT_MAX, FLT_MAX);
+                if (pixel_mode) {
+                    _model->setRange(modelHighDetailIndex, maxRangeDetail, FLT_MAX);
+                }
+                else {
+                    _model->setRange(modelHighDetailIndex, 0.0, maxRangeDetail);
+                }
+                _model->setRange(modelLowDetailIndex, 0.0, 0.0); // turn off
             }
-            else
+            else {
                 _model->setRange(0, 0.0, FLT_MAX);
+            }
         }
         else
         {
-            if( fgGetBool("/sim/rendering/static-lod/ai-range-mode-pixel", false ) )
+            if( pixel_mode)
             {
                 /* In pixel size mode, the range sense is reversed, so we want the
                 * detailed model [0] to be displayed when the "range" is really
