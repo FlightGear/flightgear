@@ -337,42 +337,35 @@ void FGAIBase::updateLOD()
     if (_model.valid())
     {
         bool pixel_mode = !fgGetBool("/sim/rendering/static-lod/aimp-range-mode-distance", false);
-        if (pixel_mode)
+        if (pixel_mode) {
             _model->setRangeMode(osg::LOD::PIXEL_SIZE_ON_SCREEN);
-        else
+        }
+        else {
             _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+        }
 
-        if (maxRangeDetail < 0) // disable the bare model
+        if (maxRangeDetail < 0)
         {
-            // Disable LOD.  The first entry in the LOD node is the most detailed
-            // so use that.
+            // High detail model (only)
+            // - disables the low detail detail model by setting its visibility from 0 to 0
             if (_model->getNumFileNames() == 2) {
                 _model->setRange(modelHighDetailIndex, 0.0, FLT_MAX); // all ranges.
-                _model->setRange(modelLowDetailIndex, FLT_MAX, FLT_MAX);
-            }
-            else
-                _model->setRange(0, 0.0, FLT_MAX); // only one model.
-        }
-        else if (maxRangeBare == maxRangeDetail) // only use the bare model
-        {
-            double start_range, end_range;
-            if (pixel_mode) {
-                // pixels, so the start of the range is when we want this to be drawn. this should
-                // be zero pixels to ensure that something is visible.
-                start_range = maxRangeDetail;
-                end_range = FLT_MAX;
+                _model->setRange(modelLowDetailIndex, 0.0, 0.0); // turn it off
             }
             else {
-                // meters; so start from 0 end and at the max range.
-                start_range = maxRangeDetail;
-                end_range = FLT_MAX;
+                _model->setRange(0, 0.0, FLT_MAX); // only one model.
             }
+        }
+        else if ((int)maxRangeBare == (int)maxRangeDetail) 
+        {
+            // low detail model  (only)
             if (_model->getNumFileNames() == 2) {
-                _model->setRange(modelHighDetailIndex , FLT_MAX, FLT_MAX);
-                _model->setRange(modelLowDetailIndex , start_range, end_range);
+                _model->setRange(modelHighDetailIndex, 0, 0); // turn it off
+                _model->setRange(modelLowDetailIndex, 0, FLT_MAX);
             }
-            else
-                _model->setRange(0, start_range, end_range);// only one model.
+            else {
+                _model->setRange(0, 0, FLT_MAX);
+            }
         }
         else
         {
@@ -418,23 +411,23 @@ void FGAIBase::updateLOD()
                  * We use the detailed model [0] for when we are up to the detailed
                  * range, and the less complex model [1] (if available) for further
                  * away up to the bare range.
+                 * - in this case the maxRangeBare is a delta on top of maxRangeDetail.
                  */
 
-                 if (maxRangeBare < maxRangeDetail) {
-                   // Sanity check that we have sensible values.
-                   maxRangeBare = maxRangeDetail;
-                   SG_LOG(SG_AI,
-                     SG_WARN,
-                     "/sim/rendering/static-lod/aimp-bare less than " <<
-                     "than /sim/rendering/static-lod/aimp-detailed.  Ignoring ai-bare."
-                   );
-                 }
+                if (maxRangeBare <= 0) {
+                    // Sanity check that we have sensible values.
+                    maxRangeBare = 1;
+                    SG_LOG(SG_AI,
+                        SG_ALERT,
+                        "/sim/rendering/static-lod/aimp-bare is <= 0. This should be a delta on top of aimp-detailed in meters mode. setting to 1.");
+                }
+
 
                 if (_model->getNumFileNames() == 2) {
                   _model->setRange(modelHighDetailIndex , 0, maxRangeDetail); // most detailed
                   _model->setRange(modelLowDetailIndex , maxRangeDetail, maxRangeDetail+maxRangeBare); // least detailed
                 } else {
-                  _model->setRange(0, 0, max(maxRangeBare, maxRangeDetail)); // only one model, so display from 0 to the highest value in meters
+                  _model->setRange(0, 0, maxRangeBare + maxRangeDetail); // only one model, so display from 0 to the highest value in meters
                 }
             }
         }
