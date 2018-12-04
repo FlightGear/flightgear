@@ -162,7 +162,10 @@ void fgSetDefaults ()
     fgSetDouble("/sim/presets/speed-north-fps", 0.0);
     fgSetDouble("/sim/presets/speed-east-fps", 0.0);
     fgSetDouble("/sim/presets/speed-down-fps", 0.0);
+    fgSetDouble("/sim/presets/offset-distance-nm", 0.0);
 
+    fgSetBool("/sim/presets/runway-requested", false);
+    
     fgSetBool("/sim/presets/onground", true);
     fgSetBool("/sim/presets/trim", false);
 
