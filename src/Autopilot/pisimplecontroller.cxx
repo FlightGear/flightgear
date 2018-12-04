@@ -62,7 +62,7 @@ void PISimpleController::update( bool firstTime, double dt )
         _int_sum = 0.0;
     }
 
-    if ( _debug ) std::cout << "Updating " << get_name() << std::endl;
+    if ( _debug ) std::cout << "Updating " << subsystemId() << std::endl;
     double y_n = _valueInput.get_value();
     double r_n = _referenceInput.get_value();
                   

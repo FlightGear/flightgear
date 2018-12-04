@@ -814,17 +814,17 @@ void DigitalFilter::update( bool firstTime, double dt)
     switch( _initializeTo ) {
 
       case INITIALIZE_INPUT:
-        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to " << _valueInput.get_value() );
+        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << subsystemId() << " to " << _valueInput.get_value() );
         _implementation->initialize( _valueInput.get_value() );
         break;
 
       case INITIALIZE_OUTPUT:
-        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to " << get_output_value() );
+        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << subsystemId() << " to " << get_output_value() );
         _implementation->initialize( get_output_value() );
         break;
 
       default:
-        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to (uninitialized)" );
+        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << subsystemId() << " to (uninitialized)" );
         break;
     }
   }

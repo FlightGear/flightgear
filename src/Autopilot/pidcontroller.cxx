@@ -116,7 +116,7 @@ void PIDController::update( bool firstTime, double dt )
     elapsedTime = 0.0;
 
     if( Ts > SGLimitsd::min()) {
-        if( _debug ) cout <<  "Updating " << get_name()
+        if( _debug ) cout <<  "Updating " << subsystemId()
                           << " Ts " << Ts << endl;
 
         double y_n = _valueInput.get_value();

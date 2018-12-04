@@ -63,7 +63,7 @@ void Logic::update( bool firstTime, double dt )
     if( a != q ) {
       using std::endl;
       using std::cout;
-      cout << "updating logic \"" << get_name() << "\"" << endl;
+      cout << "updating logic \"" << subsystemId() << "\"" << endl;
       cout << "prev. Output:" << q << endl;
       cout << "new   Output:" << a << endl;
     }

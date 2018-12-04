@@ -70,7 +70,7 @@ bool Component::configure( SGPropertyNode& cfg_node,
 {
   if ( cfg_name == "name" )
   {
-    _name = cfg_node.getStringValue();
+    set_name(cfg_node.getStringValue());
     return true;
   }
 

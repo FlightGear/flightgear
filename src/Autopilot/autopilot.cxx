@@ -168,15 +168,14 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
     }
 
     Component * component = (*componentForge[childName])(*prop_root, *node);
-    if( component->get_name().length() == 0 ) {
+    if( component->subsystemId().length() == 0 ) {
       std::ostringstream buf;
       buf <<  "unnamed_component_" << i;
-      component->set_name( buf.str() );
     }
 
     double updateInterval = node->getDoubleValue( "update-interval-secs", 0.0 );
 
-    SG_LOG( SG_AUTOPILOT, SG_DEBUG, "adding  autopilot component \"" << childName << "\" as \"" << component->get_name() << "\" with interval=" << updateInterval );
+    SG_LOG( SG_AUTOPILOT, SG_DEBUG, "adding  autopilot component \"" << childName << "\" as \"" << component->subsystemId() << "\" with interval=" << updateInterval );
     add_component(component,updateInterval);
   }
 }
@@ -203,14 +202,14 @@ void Autopilot::add_component( Component * component, double updateInterval )
   if( component == NULL ) return;
 
   // check for duplicate name
-  std::string name = component->get_name();
+  std::string name = component->subsystemId();
   for( unsigned i = 0; get_subsystem( name.c_str() ) != NULL; i++ ) {
       std::ostringstream buf;
-      buf <<  component->get_name() << "_" << i;
+      buf <<  component->subsystemId() << "_" << i;
       name = buf.str();
   }
-  if( name != component->get_name() )
-    SG_LOG( SG_AUTOPILOT, SG_WARN, "Duplicate autopilot component " << component->get_name() << ", renamed to " << name );
+  if( name != component->subsystemId() )
+    SG_LOG( SG_AUTOPILOT, SG_WARN, "Duplicate autopilot component " << component->subsystemId() << ", renamed to " << name );
 
   set_subsystem( name.c_str(), component, updateInterval );
 }

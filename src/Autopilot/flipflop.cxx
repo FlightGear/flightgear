@@ -463,7 +463,7 @@ bool FlipFlop::configure( SGPropertyNode& cfg_node,
 void FlipFlop::update( bool firstTime, double dt )
 {
   if( _implementation == NULL ) {
-    SG_LOG( SG_AUTOPILOT, SG_ALERT, "No flip-flop implementation for " << get_name() << endl );
+    SG_LOG( SG_AUTOPILOT, SG_ALERT, "No flip-flop implementation for " << subsystemId() << endl );
     return;
   }
 
@@ -475,7 +475,7 @@ void FlipFlop::update( bool firstTime, double dt )
     set_output( q );
 
     if(_debug) {
-      cout << "updating flip-flop \"" << get_name() << "\"" << endl;
+      cout << "updating flip-flop \"" << subsystemId() << "\"" << endl;
       cout << "prev. Output:" << q0 << endl;
       for( InputMap::const_iterator it = _input.begin(); it != _input.end(); ++it ) 
         cout << "Input \"" << (*it).first << "\":" << (*it).second->test() << endl;

@@ -103,18 +103,6 @@ public:
                             SGPropertyNode& cfg );
 
     /**
-     * @brief getter for the name property
-     * @return the name of the component
-     */
-    inline const std::string& get_name() const { return _name; }
-
-    /**
-     * @brief setter for the name property
-     * @param name the name of the component
-     */
-    inline void set_name( const std::string & name ) { _name = name; }
-
-    /**
      * @brief check if this component is enabled as configured in the
      * &lt;enable&gt; section
      * @return true if the enable-condition is true.
