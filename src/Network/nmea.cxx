@@ -244,7 +244,7 @@ void FGNMEA::parse_message(const std::vector<std::string>& tokens)
 {
     double lon_deg, lon_min, lat_deg, lat_min;
     double lon, lat;
-    string::size_type begin = 0, end;
+   // string::size_type begin = 0, end;
 
     if (tokens[0] == "GPRMC" ) {
         // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E,A*XX
