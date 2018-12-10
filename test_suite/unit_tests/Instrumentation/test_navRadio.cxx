@@ -281,9 +281,120 @@ void NavRadioTests::testILSBasic()
     CPPUNIT_ASSERT(node->getBoolValue("to-flag"));
 }
 
+
+
 void NavRadioTests::testGS()
 {
+    // radio setup
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", "navtest");
+    configNode->setIntValue("number", 2);
+    std::unique_ptr<FGNavRadio> r(new FGNavRadio(configNode));
+    r->bind();
+    r->init();
     
+    SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
+    node->setBoolValue("serviceable", true);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    
+    // EDDT 28R
+    FGPositioned::TypeFilter f{FGPositioned::GS};
+    FGNavRecordRef gs = fgpositioned_cast<FGNavRecord>(
+                                                        FGPositioned::findClosestWithIdent("ITLW", SGGeod::fromDeg(13, 52), &f));
+    CPPUNIT_ASSERT(gs->type() == FGPositioned::GS);
+    node->setDoubleValue("frequencies/selected-mhz", 110.10);
+    CPPUNIT_ASSERT(!strcmp("110.10", node->getStringValue("frequencies/selected-mhz-fmt")));
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(gs->glideSlopeAngleDeg(), 3.0, 0.001);
+    double gsAngleRad = gs->glideSlopeAngleDeg() * SG_DEGREES_TO_RADIANS;
+    
+    /////////////
+    // derive the GS geometry in cartesian vectors, to match what
+    // navradio.cxx does
+    SGGeod aboveGS = gs->geod();
+    aboveGS.setElevationM(gs->geod().getElevationM() + 100.0);
+    SGVec3d gsVerticalAxis = SGVec3d::fromGeod(aboveGS) - gs->cart();
+    // intentionally different approach to what navradio uses
+    
+    gsVerticalAxis *= 0.01; // make it per meter, since we used 100m above
+    
+    // dervice the baseline
+    SGQuatd baseLineRot = SGQuatd::fromLonLat(gs->geod()) * SGQuatd::fromHeadAttBankDeg(80.828, 0, 0);
+    SGVec3d gsAltAxis = baseLineRot.backTransform(SGVec3d(1.0, 0.0, 0.0));
+  
+    const SGVec3d gsCart = gs->cart();
+    
+   //////////////////
+    
+    SGVec3d radioPos = gsCart;
+    radioPos += (gsVerticalAxis * tan(gsAngleRad) * 8 * SG_NM_TO_METER);
+    radioPos += (gsAltAxis * 8 * SG_NM_TO_METER);
+
+    setPositionAndStabilise(r.get(), SGGeod::fromCart(radioPos));
+    
+    CPPUNIT_ASSERT(!strcmp("ITLW", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, node->getDoubleValue("gs-direct-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("gs-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("gs-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT(node->getBoolValue("gs-in-range"));
+    
+// 0.5 degree offset above
+    gsAngleRad = (gs->glideSlopeAngleDeg() + 0.5) * SG_DEGREES_TO_RADIANS;
+    radioPos = gsCart;
+    radioPos += (gsVerticalAxis * tan(gsAngleRad) * 4 * SG_NM_TO_METER);
+    radioPos += (gsAltAxis * 4 * SG_NM_TO_METER);
+    
+    setPositionAndStabilise(r.get(), SGGeod::fromCart(radioPos));
+    
+    CPPUNIT_ASSERT(!strcmp("ITLW", node->getStringValue("nav-id")));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.5, node->getDoubleValue("gs-direct-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-2.5, node->getDoubleValue("gs-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.714, node->getDoubleValue("gs-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT(node->getBoolValue("gs-in-range"));
+
+// 1 degree below (danger!)
+    gsAngleRad = (gs->glideSlopeAngleDeg() - 1.0) * SG_DEGREES_TO_RADIANS;
+    radioPos = gsCart;
+    radioPos += (gsVerticalAxis * tan(gsAngleRad) * 2 * SG_NM_TO_METER);
+    radioPos += (gsAltAxis * 2 * SG_NM_TO_METER);
+    
+    setPositionAndStabilise(r.get(), SGGeod::fromCart(radioPos));
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, node->getDoubleValue("gs-direct-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.5, node->getDoubleValue("gs-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("gs-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT(node->getBoolValue("gs-in-range"));
+    
+// false course above, reversed
+    gsAngleRad = (gs->glideSlopeAngleDeg() + 3.0) * SG_DEGREES_TO_RADIANS;
+    radioPos = gsCart;
+    radioPos += (gsVerticalAxis * tan(gsAngleRad) * 5 * SG_NM_TO_METER);
+    radioPos += (gsAltAxis * 5 * SG_NM_TO_METER);
+    
+    setPositionAndStabilise(r.get(), SGGeod::fromCart(radioPos));
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(6.0, node->getDoubleValue("gs-direct-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("gs-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("gs-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT(node->getBoolValue("gs-in-range"));
+    
+    // false course above, reversed, 0.35 offset below
+    gsAngleRad = (gs->glideSlopeAngleDeg() + 2.65) * SG_DEGREES_TO_RADIANS;
+    radioPos = gsCart;
+    radioPos += (gsVerticalAxis * tan(gsAngleRad) * 3 * SG_NM_TO_METER);
+    radioPos += (gsAltAxis * 3 * SG_NM_TO_METER);
+    
+    setPositionAndStabilise(r.get(), SGGeod::fromCart(radioPos));
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, node->getDoubleValue("signal-quality-norm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(5.65, node->getDoubleValue("gs-direct-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.75, node->getDoubleValue("gs-needle-deflection"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.5, node->getDoubleValue("gs-needle-deflection-norm"), 0.01);
+    CPPUNIT_ASSERT(node->getBoolValue("gs-in-range"));
 }
 
 void NavRadioTests::testILSFalseCourse()
