@@ -97,6 +97,13 @@ class FGNavRecord : public FGPositioned
     */
     double localizerWidth() const;
 
+    /**
+     * extract the glide slope angle, in degrees, from the multiuse field
+     * Return 0.0 for non-GS navaids (including an ILS or LOC - you need
+     * to call this on the paired GS record.
+     */
+    double glideSlopeAngleDeg() const;
+    
     void bindToNode(SGPropertyNode* nd) const;
     void unbindFromNode(SGPropertyNode* nd) const;
 

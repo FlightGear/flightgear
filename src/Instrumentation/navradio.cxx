@@ -958,8 +958,7 @@ void FGNavRadio::updateNav()
       SG_NORMALIZE_RANGE(target_radial, 0.0, 360.0);
 
       if (_gs) {
-        int tmp = (int)(_gs->get_multiuse() / 1000.0);
-        target_gs = (double)tmp / 100.0;
+        target_gs = _gs->glideSlopeAngleDeg();
 
         double gs_radial = fmod(_gs->get_multiuse(), 1000.0);
         SG_NORMALIZE_RANGE(gs_radial, 0.0, 360.0);

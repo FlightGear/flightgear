@@ -124,6 +124,17 @@ void FGNavRecord::updateFromXML(const SGGeod& geod, double heading)
     multiuse = heading;
 }
 
+double FGNavRecord::glideSlopeAngleDeg() const
+{
+    if (type() != FGPositioned::GS) {
+        SG_LOG(SG_NAVAID, SG_DEV_WARN, "called glideSlopeAngleDeg on non-GS navaid:" << ident());
+        return 0.0;
+    }
+    
+    const auto tmp = static_cast<int>(get_multiuse() / 1000.0);
+    return static_cast<double>(tmp) / 100.0;
+}
+
 //------------------------------------------------------------------------------
 FGMobileNavRecord::FGMobileNavRecord( PositionedID aGuid,
                                       Type type,
