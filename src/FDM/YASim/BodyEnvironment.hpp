@@ -19,6 +19,7 @@ struct State {
     float  rot[3] {0, 0, 0};    // rotational velocity
     float  acc[3] {0, 0, 0};    // acceleration
     float  racc[3] {0, 0, 0};   // rotational acceleration
+    double dt {0};              // time offset
 
     // Simple initialization
     State() {

@@ -453,6 +453,7 @@ public:
         _bodyToWorld(SGMatrixd::unit()),
         _linearVelocity(0, 0, 0),
         _angularVelocity(0, 0, 0),
+        _foundId(false),
         _time(t)
     { }
     
@@ -541,12 +542,13 @@ FGGroundCache::get_body(double t, SGMatrixd& bodyToWorld, SGVec3d& linearVel,
     t += cache_time_offset;
     BodyFinder bodyFinder(id, t);
     _localBvhTree->accept(bodyFinder);
-    if (bodyFinder.empty())
-        return false;
 
     bodyToWorld = bodyFinder.getBodyToWorld();
     linearVel = bodyFinder.getLinearVelocity();
     angularVel = bodyFinder.getAngularVelocity();
+
+    if (bodyFinder.empty())
+        return false;
 
     return true;
 }

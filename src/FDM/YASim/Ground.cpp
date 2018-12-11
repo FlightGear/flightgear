@@ -17,7 +17,8 @@ Ground::~Ground()
 }
 
 void Ground::getGroundPlane(const double pos[3],
-                            double plane[4], float vel[3])
+                            double plane[4], float vel[3],
+                            unsigned int &body)
 {
     // ground.  Calculate a cartesian coordinate for the ground under
     // us, find the (geodetic) up vector normal to the ground, then
@@ -31,13 +32,23 @@ void Ground::getGroundPlane(const double pos[3],
     vel[0] = 0.0;
     vel[1] = 0.0;
     vel[2] = 0.0;
+
+    body = 0;
 }
 
 void Ground::getGroundPlane(const double pos[3],
                             double plane[4], float vel[3],
-                            const simgear::BVHMaterial **material)
+                            const simgear::BVHMaterial **material,
+                            unsigned int &body)
 {
-    getGroundPlane(pos,plane,vel);
+    getGroundPlane(pos,plane,vel,body);
+}
+
+bool Ground::getBody(double t, double bodyToWorld[16], double linearVel[3],
+                     double angularVel[3], unsigned int &body)
+{
+    return getBody(t, bodyToWorld, linearVel,
+	    angularVel, body);
 }
 
 bool Ground::caughtWire(const double pos[4][3])

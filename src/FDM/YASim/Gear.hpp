@@ -8,6 +8,7 @@ class BVHMaterial;
 
 namespace yasim {
 
+class Ground;
 class RigidBody;
 struct State;
 
@@ -62,10 +63,14 @@ public:
     void setInitialLoad(float l) { _initialLoad = l; }
     float getInitialLoad() {return _initialLoad; }
     void setIgnoreWhileSolving(bool c) { _ignoreWhileSolving = c; }
+    void setStiction(bool s) { _stiction = s; }
+    bool getStiction() { return _stiction; }
+    void setStictionABS(bool a) { _stiction_abs = a; }
+    bool getStictionABS() { return _stiction_abs; }
 
     void setGlobalGround(double* global_ground, float* global_vel,
         double globalX, double globalY,
-        const simgear::BVHMaterial *material);
+                         const simgear::BVHMaterial *material, unsigned int body);
     void getGlobalGround(double* global_ground);
     float getCasterAngle() { return _casterAngle; }
     float getRollSpeed() { return _rollSpeed; }
@@ -78,7 +83,9 @@ public:
     // vector, and a ground plane (all specified in local coordinates)
     // and make a force and point of application (i.e. ground contact)
     // available via getForce().
-    void calcForce(RigidBody* body, State* s, float* v, float* rot);
+    void calcForce(Ground *g_cb, RigidBody* body, State* s, float* v, float* rot);
+    void calcForceWithoutStiction(float wgt, float steer[3], float skid[3], float *cv, float *force);
+    void calcForceWithStiction(Ground *g_cb, State *s, float wgt, float steer[3], float skid[3], float *cv, float *force);
 
     // Computed values: total force, weight-on-wheels (force normal to
     // ground) and compression fraction.
@@ -90,12 +97,23 @@ public:
     bool getIgnoreWhileSolving() {return _ignoreWhileSolving; }
     void setContactPoint(bool c) { _isContactPoint=c; }
 
+    // Update the stuck point after all integrator's iterations
+    void updateStuckPoint(State* s);
+    void getStuckPoint(double *out);
+    void setStuckPoint(double *in);
+
 private:
     float calcFriction(float wgt, float v);
     float calcFrictionFluid(float wgt, float v);
+    void calcFriction(float *gpos, float *cv, float *steer, float *skid, float wgt, float *force);
+    void calcFrictionFluid(float *cv, float *steer, float *skid, float wgt, float *force);
 
+    float _fric_spring;
     bool _castering;
+    bool _rolling;
+    bool _slipping;
     float _pos[3];
+    double _stuck[3];
     float _cmpr[3];
     float _spring;
     float _damp;
@@ -121,6 +139,8 @@ private:
     float _speed_planing;
     float _reduceFrictionByExtension;
     bool _ignoreWhileSolving;
+    bool _stiction;
+    bool _stiction_abs;
 
     double _ground_frictionFactor;
     double _ground_rollingFriction;
@@ -130,6 +150,9 @@ private:
     bool _ground_isSolid;
     double _global_x;
     double _global_y;
+    unsigned int _body_id;
+    double _ground_rot[9];
+    double _ground_trans[3];
 };
 
 }; // namespace yasim

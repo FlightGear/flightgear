@@ -718,13 +718,15 @@ FGInterface::get_body_m(double t, simgear::BVHNode::Id id,
 {
   SGMatrixd _bodyToWorld;
   SGVec3d _linearVel, _angularVel;
-  if (!ground_cache.get_body(t, _bodyToWorld, _linearVel, _angularVel, id))
-    return false;
+  bool _foundID = ground_cache.get_body(t, _bodyToWorld, _linearVel, _angularVel, id);
 
   assign(linearVel, _linearVel);
   assign(angularVel, _angularVel);
-  for (unsigned i = 0; i < 16; ++i)
+  for (unsigned int i = 0; i < 16; ++i)
       bodyToWorld[i] = _bodyToWorld.data()[i];
+
+  if (!_foundID)
+    return false;
 
   return true;
 }

@@ -22,13 +22,13 @@ FGGround::~FGGround()
 }
 
 void FGGround::getGroundPlane(const double pos[3],
-                              double plane[4], float vel[3])
+                              double plane[4], float vel[3],
+                              unsigned int &body)
 {
     // Return values for the callback.
     double cp[3], dvel[3], dangvel[3];
     const simgear::BVHMaterial* material;
-    simgear::BVHNode::Id id;
-    _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, material, id);
+    _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, material, body);
 
     // The plane below the actual contact point.
     plane[3] = plane[0]*cp[0] + plane[1]*cp[1] + plane[2]*cp[2];
@@ -38,17 +38,26 @@ void FGGround::getGroundPlane(const double pos[3],
 
 void FGGround::getGroundPlane(const double pos[3],
                               double plane[4], float vel[3],
-                              const simgear::BVHMaterial **material)
+                              const simgear::BVHMaterial **material,
+                              unsigned int &body)
 {
     // Return values for the callback.
     double cp[3], dvel[3], dangvel[3];
-    simgear::BVHNode::Id id;
-    _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, *material, id);
+    _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, *material, body);
 
     // The plane below the actual contact point.
     plane[3] = plane[0]*cp[0] + plane[1]*cp[1] + plane[2]*cp[2];
 
     for(int i=0; i<3; i++) vel[i] = dvel[i];
+}
+
+bool FGGround::getBody(double t, double bodyToWorld[16], double linearVel[3],
+                       double angularVel[3], unsigned int &body)
+{
+    if (!_iface->get_body_m(_toff + t , body, bodyToWorld, linearVel, angularVel))
+        return false;
+
+    return true;
 }
 
 bool FGGround::caughtWire(const double pos[4][3])

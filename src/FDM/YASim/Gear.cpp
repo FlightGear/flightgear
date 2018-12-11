@@ -5,6 +5,7 @@
 
 #include "Math.hpp"
 #include "BodyEnvironment.hpp"
+#include "Ground.hpp"
 #include "RigidBody.hpp"
 
 #include <cfloat>
@@ -13,6 +14,7 @@
 #include "Gear.hpp"
 namespace yasim {
 static const float YASIM_PI = 3.14159265358979323846;
+static const float DEG2RAD = YASIM_PI / 180.0;
 static const float maxGroundBumpAmplitude=0.4;
         //Amplitude can be positive and negative
 
@@ -20,11 +22,12 @@ Gear::Gear()
 {
     int i;
     for(i=0; i<3; i++)
-        _pos[i] = _cmpr[i] = 0;
+        _pos[i] = _cmpr[i] = _stuck[i] = 0;
     _spring = 1;
     _damp = 0;
     _sfric = 0.8f;
     _dfric = 0.7f;
+    _fric_spring = 0.005f; // Spring length = 5 mm
     _brake = 0;
     _rot = 0;
     _initialLoad = 0;
@@ -46,16 +49,21 @@ Gear::Gear()
     _speed_planing = 0;
     _isContactPoint = 0;
     _ignoreWhileSolving = 0;
+    _stiction = false;
+    _stiction_abs = false;
 
     for(i=0; i<3; i++)
         _global_ground[i] = _global_vel[i] = 0;
     _global_ground[2] = 1;
     _global_ground[3] = -1e3;
+
+    Math::zero3(_ground_trans);
+    Math::identity33(_ground_rot);
 }
 
 void Gear::setGlobalGround(double *global_ground, float* global_vel,
                            double globalX, double globalY,
-                           const simgear::BVHMaterial *material)
+                           const simgear::BVHMaterial *material, unsigned int body)
 {
     int i;
     double frictionFactor,rollingFriction,loadCapacity,loadResistance,bumpiness;
@@ -88,7 +96,7 @@ void Gear::setGlobalGround(double *global_ground, float* global_vel,
     _ground_isSolid = isSolid;
     _global_x = globalX;
     _global_y = globalY;
-
+    _body_id = body;
 }
 
 void Gear::getGlobalGround(double* global_ground)
@@ -135,7 +143,7 @@ void Gear::integrate(float dt)
     return;
 }
 
-void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
+void Gear::calcForce(Ground *g_cb, RigidBody* body, State *s, float* v, float* rot)
 {
     // Init the return values
     int i;
@@ -298,16 +306,67 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
         _rollSpeed = vsteer;
         _casterAngle = _rot;
     }
+
+    if (!_stiction) {
+        // original static friction function
+        calcForceWithoutStiction(wgt, steer, skid, cv, _force);
+    }
+    else {
+        // static friction feature based on spring attached to stuck point
+        calcForceWithStiction(g_cb, s, wgt, steer, skid, cv, _force);
+    }
+}
+
+void Gear::calcForceWithStiction(Ground *g_cb, State *s, float wgt, float steer[3], float skid[3], float *cv, float *force)
+{
+    float ffric[3];
+    if(_ground_isSolid) {
+        float stuckf[3];
+        double stuckd[3], lVel[3], aVel[3];
+        double body_xform[16];
+
+        // get AI body transform
+        g_cb->getBody(s->dt, body_xform, lVel, aVel, _body_id);
+        Math::set3(&body_xform[12], _ground_trans);
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                _ground_rot[i*3+j] = body_xform[i*4+j];
+            }
+        }
+
+        // translate and rotate stuck point in global coordinate space - compensate
+        // AI body movement
+        getStuckPoint(stuckd);
+
+        // convert global point to local aircraft reference coordinates
+        s->posGlobalToLocal(stuckd, stuckf);
+        calcFriction(stuckf, cv, steer, skid, wgt, ffric);
+    }
+    else {
+        calcFrictionFluid(cv, steer, skid, wgt, ffric);
+    }
+
+    // Phoo!  All done.  Add it up and get out of here.
+    Math::add3(ffric, force, force);
+}
+
+void Gear::calcForceWithoutStiction(float wgt, float steer[3], float skid[3], float *cv, float *force)
+{
+    // Get the velocities in the steer and skid directions
+    float vsteer, vskid;
+    vsteer = Math::dot3(cv, steer);
+    vskid  = Math::dot3(cv, skid);
+
+    float tmp[3];
     float fsteer,fskid;
-    if(_ground_isSolid)
-    {
+    if(_ground_isSolid) {
         fsteer = (_brake * _ground_frictionFactor
-                    +(1-_brake)*_ground_rollingFriction
-                 )*calcFriction(wgt, vsteer);
+                  +(1-_brake)*_ground_rollingFriction
+                  )*calcFriction(wgt, vsteer);
         fskid  = calcFriction(wgt, vskid)*(_ground_frictionFactor);
     }
-    else
-    {
+    else {
         fsteer = calcFrictionFluid(wgt, vsteer)*_ground_frictionFactor;
         fskid  = 10*calcFrictionFluid(wgt, vskid)*_ground_frictionFactor;
         //factor 10: floats have different drag in x and y.
@@ -323,10 +382,10 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 
     // Phoo!  All done.  Add it up and get out of here.
     Math::mul3(fsteer, steer, tmp);
-    Math::add3(tmp, _force, _force);
+    Math::add3(tmp, force, force);
 
     Math::mul3(fskid, skid, tmp);
-    Math::add3(tmp, _force, _force);
+    Math::add3(tmp, force, force);
 }
 
 float Gear::calcFriction(float wgt, float v) //used on solid ground
@@ -349,5 +408,245 @@ float Gear::calcFrictionFluid(float wgt, float v) //used on fluid ground
     else return wgt * _dfric*v*v*0.01;
     //*0.01: to get _dfric of the same size than _dfric on solid
 }
+
+//used on solid ground
+void Gear::calcFriction(float *stuck, float *cv, float *steer, float *skid
+                        , float wgt, float *force)
+{
+    // Calculate the gear's movement
+    float dgear[3];
+    Math::sub3(_contact, stuck, dgear);
+
+    // Get the movement in the steer and skid directions
+    float dsteer, dskid;
+    dsteer = Math::dot3(dgear, steer);
+    dskid  = Math::dot3(dgear, skid);
+
+    // Get the velocities in the steer and skid directions
+    float vsteer, vskid;
+    vsteer = Math::dot3(cv, steer);
+    vskid  = Math::dot3(cv, skid);
+
+    // If rolling and slipping are false, the gear is stopped
+    _rolling  = false;
+    _slipping = false;
+    // Detect if it is slipping
+    if (Math::sqrt(dskid*dskid + dsteer*dsteer*(_brake/_sfric)) > _fric_spring)
+    {
+        // Turn on our ABS ;)
+        // This is off by default, because we don't want ABS on helicopters
+        // as their "wheels" should be locked all the time
+        if (_stiction && _stiction_abs && (Math::abs(dskid) < _fric_spring))
+            {
+                float bl;
+                bl = _sfric - _sfric * (Math::abs(dskid) / _fric_spring);
+                if (_brake > bl) _brake = bl;
+            }
+        else
+            _slipping = true;
+    }
+
+
+    float fric, fspring, fdamper, brake, tmp[3];
+    if (!_slipping)
+    {
+        // Calculate the steer force.
+        // Brake is limited between 0 and 1, wheel lock on 1.
+        brake = _brake > _sfric ? 1 : _brake/_sfric;
+        fspring = Math::abs((dsteer / _fric_spring) * wgt * _sfric);
+        // Set _rolling so the stuck point is updated
+        if ((Math::abs(dsteer) > _fric_spring) || (fspring > brake * wgt * _sfric))
+        {
+            _rolling = true;
+            fric  = _ground_rollingFriction * wgt * _sfric; // Rolling
+            fric += _brake * wgt * _sfric * _ground_frictionFactor; // Brake
+            if (vsteer > 0) fric = -fric;
+        }
+        else // Stopped
+        {
+            fdamper  = Math::abs(vsteer * wgt * _sfric);
+            fdamper *= ((dsteer * vsteer) > 0) ? 1 : -1;
+            fric  = fspring + fdamper;
+            fric *= brake * _ground_frictionFactor
+                    + (1 - brake) * _ground_rollingFriction;
+            if (dsteer > 0) fric = -fric;
+        }
+        Math::mul3(fric, steer, force);
+
+        // Calculate the skid force.
+        fspring = Math::abs((dskid / _fric_spring) * wgt * _sfric);
+        fdamper  = Math::abs(vskid * wgt * _sfric);
+        fdamper *= ((dskid * vskid) > 0) ? 1 : -1;
+        fric = _ground_frictionFactor * (fspring + fdamper);
+        if (dskid > 0) fric = -fric;
+
+        Math::mul3(fric, skid, tmp);
+        Math::add3(force, tmp, force);
+
+        // The damper can add a lot of force,
+        // if it is to big, then it will slip
+        if (Math::mag3(force) > wgt * _sfric * _ground_frictionFactor)
+        {
+            _slipping = true;
+            _rolling = false;
+        }
+    }
+    if (_slipping)
+    {
+        // Get the direction of movement
+        float dir[3];
+        Math::unit3(dgear, dir);
+
+        // Calculate the steer force.
+        // brake is limited between 0 and 1, wheel lock on 1
+        brake = _brake > _dfric ? 1 : _brake/_dfric;
+        fric  = wgt * _dfric * Math::abs(Math::dot3(dir, steer));
+        fric *= _ground_rollingFriction * (1 - brake)
+                + _ground_frictionFactor * brake;
+        if (vsteer > 0) fric = -fric;
+        Math::mul3(fric, steer, force);
+
+        // Calculate the skid force.
+        fric  = wgt * _dfric * _ground_frictionFactor;
+        // Multiply by 1 when no brake, else reduce the turning component
+        fric *= (1 - brake) + Math::abs(Math::dot3(dir, skid)) * brake;
+        if (vskid > 0) fric = -fric;
+
+        Math::mul3(fric, skid, tmp);
+        Math::add3(force, tmp, force);
+    }
+
+    //reduce friction if wanted by _reduceFrictionByExtension
+    float factor = (1-_frac)*(1-_reduceFrictionByExtension)+_frac*1;
+    factor = Math::clamp(factor,0,1);
+    Math::mul3(factor, force, force);
+}
+
+//used on fluid ground
+void Gear::calcFrictionFluid(float *cv, float *steer, float *skid, float wgt, float *force)
+{
+    // How slow is stopped?  1 cm/second?
+    const float STOP = 0.01f;
+    const float iSTOP = 1.0f/STOP;
+    float vsteer, vskid;
+    vsteer = Math::dot3(cv, steer);
+    vskid  = Math::dot3(cv, skid);
+
+    float tmp[3];
+    float fric;
+    // Calculate the steer force
+    float v = Math::abs(vsteer);
+    if(v < STOP) fric = v*iSTOP * wgt * _sfric;
+    else fric = wgt * _dfric*v*v*0.01;
+    //*0.01: to get _dfric of the same size than _dfric on solid
+    if (v > 0) fric = -fric;
+    Math::mul3(_ground_frictionFactor * fric, steer, force);
+
+    // Calculate the skid force
+    v = Math::abs(vskid);
+    if(v < STOP) fric = v*iSTOP * wgt * _sfric;
+    else fric = wgt * _dfric*v*v*0.01;
+    //*0.01: to get _dfric of the same size than _dfric on solid
+    if (v > 0) fric = -fric;
+    Math::mul3(10 * _ground_frictionFactor * fric, skid, tmp);
+    Math::add3(force, tmp, force);
+    //factor 10: floats have different drag in x and y.
+}
+
+// account for translation and rotation due to movements of AI body
+// doubles used since operations are taking place in global coordinate system
+void Gear::getStuckPoint(double *out)
+{
+    // get stuck point and add in AI body movement
+    Math::tmul33(_ground_rot, _stuck, out);
+    out[0] += _ground_trans[0];
+    out[1] += _ground_trans[1];
+    out[2] += _ground_trans[2];
+}
+
+void Gear::setStuckPoint(double *in)
+{
+    // Undo stuck point AI body movement and save as global coordinate
+    in[0] -= _ground_trans[0];
+    in[1] -= _ground_trans[1];
+    in[2] -= _ground_trans[2];
+    Math::vmul33(_ground_rot, in, _stuck);
+}
+
+void Gear::updateStuckPoint(State* s)
+{
+    float stuck[3];
+    double stuckd[3];
+
+    // get stuck point and update with AI body movement
+    getStuckPoint(stuckd);
+
+    // Convert stuck point to aircraft coordinates
+    s->posGlobalToLocal(stuckd, stuck);
+
+    // The ground plane transformed to the local frame.
+    float ground[4];
+    s->planeGlobalToLocal(_global_ground, ground);
+    float gup[3]; // "up" unit vector from the ground
+    Math::set3(ground, gup);
+    Math::mul3(-1, gup, gup);
+
+    float xhat[] = {1,0,0};
+    float skid[3], steer[3];
+    Math::cross3(gup, xhat, skid);  // up cross xhat =~ skid
+    Math::unit3(skid, skid);        //               == skid
+    Math::cross3(skid, gup, steer); // skid cross up == steer
+
+    if(_rot != 0) {
+        // Correct for a rotation
+        float srot = Math::sin(_rot);
+        float crot = Math::cos(_rot);
+        float tx = steer[0];
+        float ty = steer[1];
+        steer[0] =  crot*tx + srot*ty;
+        steer[1] = -srot*tx + crot*ty;
+
+        tx = skid[0];
+        ty = skid[1];
+
+        skid[0] =  crot*tx + srot*ty;
+        skid[1] = -srot*tx + crot*ty;
+    }
+
+    if (_rolling)
+    {
+        // Calculate the gear's movement
+        float tmp[3];
+        Math::sub3(_contact, stuck, tmp);
+        // Get the movement in the skid and steer directions
+        float dskid, dsteer;
+        dskid  = Math::dot3(tmp, skid);
+        dsteer = Math::dot3(tmp, steer);
+        // The movement is not always exactly on the steer axis
+        // so we should allow some empirical "slip" because of
+        // the wheel flexibility (max 5 degrees)
+        // FIXME: This angle should depend on the tire type/condition
+        //        Is 5 degrees a good value?
+        float rad = (dskid / _fric_spring) * 5.0 * DEG2RAD;
+        dskid -= Math::abs(dsteer) * Math::tan(rad);
+
+        Math::mul3(dskid, skid, tmp);
+        Math::sub3(_contact, tmp, stuck);
+    }
+    else if (_slipping) {
+        Math::set3(_contact, stuck);
+    }
+
+    if (_rolling || _slipping)
+    {
+        // convert from local reference to global coordinates
+        s->posLocalToGlobal(stuck, stuckd);
+
+        // undo AI body rotations and translations and save stuck point in global coordinate space
+        setStuckPoint(stuckd);
+    }
+}
+
+
 }; // namespace yasim
 

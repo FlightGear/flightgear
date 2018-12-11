@@ -993,6 +993,8 @@ void FGFDM::parseGear(const XMLAttributes* a)
     g->setSpringFactorNotPlaning(attrf(a, "spring-factor-not-planing", 1));
     g->setSpeedPlaning(attrf(a, "speed-planing", 0) * KTS2MPS);
     g->setReduceFrictionByExtension(attrf(a, "reduce-friction-by-extension", 0));
+    g->setStiction(attrf(a, "stiction", 0));
+    g->setStictionABS(attrf(a, "stiction-abs", 0));
     _airplane.addGear(g);    
 }
 

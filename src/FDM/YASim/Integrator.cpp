@@ -136,6 +136,7 @@ void Integrator::calcNewInterval()
         }
         for(j=0; j<9; j++)
             stmp.orient[j] = ori[i][j];
+        stmp.dt = dt - _dt;
 	_env->calcForces(&stmp);
 
 	_body->getAccel(acc[i]);

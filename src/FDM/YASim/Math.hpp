@@ -51,9 +51,15 @@ public:
         out[1] = v[1];
         out[2] = v[2];
     }
+    static inline void  set3(const double* v, double* out) {
+        out[0] = v[0];
+        out[1] = v[1];
+        out[2] = v[2];
+    }
 
     static void  zero3(float* out) { out[0] = out[1] = out[2] = 0; }
-    
+    static void  zero3(double* out) { out[0] = out[1] = out[2] = 0; }
+
     static inline float dot3(const float* a, const float* b) {
         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
     }
@@ -98,6 +104,21 @@ public:
     //                          3 4 5
     //                          6 7 8
 
+    static inline void set33(float* a, float* b)
+    {
+        for (int i=0; i < 9; i++)
+            a[i] = b[i];
+    }
+
+    static inline void identity33(double* a)
+    {
+        for(int y = 0; y < 3; y++) {
+            for(int x = 0; x < 3; x++) {
+                a[y*3 + x] = ((x == y) ? 1.0 : 0.0);
+            }
+        }
+    }
+
     // Multiply two matrices
     static void mmul33(const float* a, const float* b, float* out) {
         float tmp[9];
@@ -125,10 +146,38 @@ public:
         out[2] = x*m[6] + y*m[7] + z*m[8];
     }
 
+    static inline void vmul33(float* m, double* v, double* out) {
+        double x = v[0], y = v[1], z = v[2];
+        out[0] = x*m[0] + y*m[1] + z*m[2];
+        out[1] = x*m[3] + y*m[4] + z*m[5];
+        out[2] = x*m[6] + y*m[7] + z*m[8];
+    }
+
+    static inline void vmul33(double* m, double* v, double* out) {
+        double x = v[0], y = v[1], z = v[2];
+        out[0] = x*m[0] + y*m[1] + z*m[2];
+        out[1] = x*m[3] + y*m[4] + z*m[5];
+        out[2] = x*m[6] + y*m[7] + z*m[8];
+    }
+
     // Multiply the vector by the matrix transpose.  Or pre-multiply the
     // matrix by v as a row vector.  Same thing.
     static inline void tmul33(const float* m, const float* v, float* out) {
         float x = v[0], y = v[1], z = v[2];
+        out[0] = x*m[0] + y*m[3] + z*m[6];
+        out[1] = x*m[1] + y*m[4] + z*m[7];
+        out[2] = x*m[2] + y*m[5] + z*m[8];
+    }
+
+    static inline void tmul33(float* m, double* v, double* out) {
+        double x = v[0], y = v[1], z = v[2];
+        out[0] = x*m[0] + y*m[3] + z*m[6];
+        out[1] = x*m[1] + y*m[4] + z*m[7];
+        out[2] = x*m[2] + y*m[5] + z*m[8];
+    }
+
+    static inline void tmul33(double* m, double* v, double* out) {
+        double x = v[0], y = v[1], z = v[2];
         out[0] = x*m[0] + y*m[3] + z*m[6];
         out[1] = x*m[1] + y*m[4] + z*m[7];
         out[2] = x*m[2] + y*m[5] + z*m[8];

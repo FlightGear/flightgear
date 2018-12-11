@@ -192,7 +192,8 @@ void Model::setGroundEffect(const float* pos, float span, float mul)
 void Model::updateGround(State* s)
 {
     float dummy[3];
-    _ground_cb->getGroundPlane(s->pos, _global_ground, dummy);
+    unsigned int body;
+    _ground_cb->getGroundPlane(s->pos, _global_ground, dummy, body);
 
     int i;
     // The landing gear
@@ -215,8 +216,8 @@ void Model::updateGround(State* s)
         double global_ground[4];
         float global_vel[3];
         const simgear::BVHMaterial* material;
-        _ground_cb->getGroundPlane(pt, global_ground, global_vel, &material);
-        g->setGlobalGround(global_ground, global_vel, pt[0], pt[1], material);
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel, &material, body);
+        g->setGlobalGround(global_ground, global_vel, pt[0], pt[1], material, body);
     }
 
     for(i=0; i<_hitches.size(); i++) {
@@ -234,7 +235,7 @@ void Model::updateGround(State* s)
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel, body);
         h->setGlobalGround(global_ground, global_vel);
     }
 
@@ -248,7 +249,7 @@ void Model::updateGround(State* s)
         double pt[3];
         _hook->getTipGlobalPosition(s, pt);
         double global_ground[4];
-        _ground_cb->getGroundPlane(pt, global_ground, dummy);
+        _ground_cb->getGroundPlane(pt, global_ground, dummy, body);
         _hook->setGlobalGround(global_ground);
     }
 
@@ -257,7 +258,7 @@ void Model::updateGround(State* s)
         double pt[3];
         _launchbar->getTipGlobalPosition(s, pt);
         double global_ground[4];
-        _ground_cb->getGroundPlane(pt, global_ground, dummy);
+        _ground_cb->getGroundPlane(pt, global_ground, dummy, body);
         _launchbar->setGlobalGround(global_ground);
     }
 }
@@ -394,7 +395,7 @@ void Model::calcForces(State* s)
         float force[3], contact[3];
         Gear* g = (Gear*)_gears.get(i);
 
-        g->calcForce(&_body, s, lv, lrot);
+        g->calcForce(_ground_cb, &_body, s, lv, lrot);
         g->getForce(force, contact);
         _body.addForce(contact, force);
     }
@@ -455,6 +456,7 @@ void Model::newState(State* s)
 	    if(dist < min)
 	        min = dist;
         }
+        g->updateStuckPoint(s);
     }
     _agl = min;
     if(_agl < -1) // Allow for some integration slop

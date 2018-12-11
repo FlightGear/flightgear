@@ -19,11 +19,16 @@ public:
     virtual ~FGGround();
 
     virtual void getGroundPlane(const double pos[3],
-                                double plane[4], float vel[3]);
+                                double plane[4], float vel[3],
+                                unsigned int &body);
 
     virtual void getGroundPlane(const double pos[3],
                                 double plane[4], float vel[3],
-                                const simgear::BVHMaterial **material);
+                                const simgear::BVHMaterial **material,
+                                unsigned int &body);
+
+    virtual bool getBody(double t, double bodyToWorld[16], double linearVel[3],
+                         double angularVel[3], unsigned int &id);
 
     virtual bool caughtWire(const double pos[4][3]);
 

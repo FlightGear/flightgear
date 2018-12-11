@@ -850,7 +850,8 @@ void Rotor::testForRotorGroundContact(Ground * ground_cb,State *s)
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        unsigned int body;
+        ground_cb->getGroundPlane(pt, global_ground, global_vel, body);
         // find h, the distance to the ground 
         // The ground plane transformed to the local frame.
         float ground[4];
@@ -898,7 +899,8 @@ float Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s,
             // Ask for the ground plane in the global coordinate system
             double global_ground[4];
             float global_vel[3];
-            ground_cb->getGroundPlane(pt, global_ground, global_vel);
+            unsigned int body;
+            ground_cb->getGroundPlane(pt, global_ground, global_vel, body);
             // find h, the distance to the ground 
             // The ground plane transformed to the local frame.
             float ground[4];
@@ -937,7 +939,8 @@ float Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s,
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        unsigned int body;
+        ground_cb->getGroundPlane(pt, global_ground, global_vel, body);
         // find h, the distance to the ground 
         // The ground plane transformed to the local frame.
         float ground[4];
