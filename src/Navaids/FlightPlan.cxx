@@ -1264,13 +1264,26 @@ WayptRef intersectionFromString(FGPositionedRef p1,
 
 WayptRef wayptFromLonLatString(const std::string& target)
 {
-    SGGeod g;
-    const bool defaultToLonLat = true; // parseStringAsGeod would otherwise default to lat,lon
-    if (!simgear::strutils::parseStringAsGeod(target, &g, defaultToLonLat)) {
+    // permit lat,lon/radial/offset format
+    string_list pieces(simgear::strutils::split(target, "/"));
+    if ((pieces.size() != 1) && (pieces.size() != 3)) {
         return {};
     }
     
-    // build a short name, like
+    SGGeod g;
+    const bool defaultToLonLat = true; // parseStringAsGeod would otherwise default to lat,lon
+    if (!simgear::strutils::parseStringAsGeod(pieces[0], &g, defaultToLonLat)) {
+        return {};
+    }
+    
+    if (pieces.size() == 3) {
+        // process offset
+        const double bearing = std::stod(pieces[1]);
+        const double distanceNm = std::stod(pieces[2]);
+        g = SGGeodesy::direct(g, bearing, distanceNm * SG_NM_TO_METER);
+    }
+    
+    // build a short name
     const int lonDeg = static_cast<int>(g.getLongitudeDeg());
     const int latDeg = static_cast<int>(g.getLatitudeDeg());
 
