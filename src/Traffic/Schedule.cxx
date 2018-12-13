@@ -450,21 +450,18 @@ bool FGAISchedule::scheduleFlights(time_t now)
         initialized = true;
     }
   
-    if (sglog().would_log(SG_AI, SG_BULK))
-    {
-        time_t arr, dep;
-        dep = flight->getDepartureTime();
-        arr = flight->getArrivalTime();
-        string depT = asctime(gmtime(&dep));
-        string arrT = asctime(gmtime(&arr));
-        depT = depT.substr(0,24);
-        arrT = arrT.substr(0,24);
-        SG_LOG(SG_AI, SG_BULK, "  Flight " << flight->getCallSign() << ":"
-                                 << "  "        << flight->getDepartureAirport()->getId() << ":"
-                                 << "  "        << depT << ":"
-                                 << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
-                                 << "  "        << arrT << ":");
-    }
+    time_t arr, dep;
+    dep = flight->getDepartureTime();
+    arr = flight->getArrivalTime();
+    string depT = asctime(gmtime(&dep));
+    string arrT = asctime(gmtime(&arr));
+    depT = depT.substr(0,24);
+    arrT = arrT.substr(0,24);
+    SG_LOG(SG_AI, SG_BULK, "  Flight " << flight->getCallSign() << ":"
+                             << "  "        << flight->getDepartureAirport()->getId() << ":"
+                             << "  "        << depT << ":"
+                             << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
+                             << "  "        << arrT << ":");
   
     flights.push_back(flight);
 
