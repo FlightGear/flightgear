@@ -50,7 +50,7 @@ FGAIMultiplayer::FGAIMultiplayer() :
    lastUpdateTime = 0;
    playerLag = 0.03;
    compensateLag = 1;
-
+   _searchOrder = PREFER_DATA;
 }
 
 FGAIMultiplayer::~FGAIMultiplayer() {

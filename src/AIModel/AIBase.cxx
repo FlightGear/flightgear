@@ -247,6 +247,23 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
         setSMPath(submodels->getStringValue("path", ""));
     }
 
+    string searchOrder = scFileNode->getStringValue("search-order", "");
+    if (!searchOrder.empty()) {           
+        if (searchOrder == "DATA_ONLY") {
+            _searchOrder = DATA_ONLY;
+        } else if (searchOrder == "PREFER_AI") {
+            _searchOrder = PREFER_AI;
+        } else if (searchOrder == "PREFER_DATA") {
+            _searchOrder = PREFER_DATA;
+        } else
+            SG_LOG(SG_AI, SG_WARN, "invalid model search order " << searchOrder << ". Use either DATA_ONLY, PREFER_AI or PREFER_DATA");
+        
+    }
+    
+    const string modelLowres = scFileNode->getStringValue("model-lowres", "");
+    if (!modelLowres.empty()) {
+        setPathLowres(modelLowres);
+    }
 }
 
 void FGAIBase::update(double dt) {
@@ -482,6 +499,14 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             _installed = true;
             SG_LOG(SG_AI, SG_DEBUG, "Found model " << p);
             path_list.push_back(p);
+            
+            if (!model_path_lowres.empty()) {
+                p = simgear::SGModelLib::findDataFile(model_path_lowres);
+                if (!p.empty()) {
+                    //lowres model needs to be the first in the list
+                    path_list.insert(path_list.begin(),p);
+                }
+            }
         } else {
             // No model, so fall back to the default
             path_list.push_back(fgGetString("/sim/multiplay/default-model", default_model));

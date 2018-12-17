@@ -108,6 +108,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     
     tcasThreatNode = props->getNode("tcas/threat-level", true);
     tcasRANode = props->getNode("tcas/ra-sense", true);
+    _searchOrder = PREFER_AI;
 }
 
 

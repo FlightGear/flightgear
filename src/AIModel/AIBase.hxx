@@ -81,6 +81,7 @@ public:
     void updateInterior();
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
+    void setPathLowres( std::string model );
     void setFallbackModelIndex(const int i );
     void setSMPath( const std::string& p );
     void setCallSign(const std::string& );
@@ -218,6 +219,7 @@ protected:
     double ht_diff;      // value used by radar display instrument
 
     std::string model_path;    // Path to the 3D model
+    std::string model_path_lowres;    // Path to optional low res 3D model
     int _fallback_model_index; // Index into /sim/multiplay/fallback-models[]
     SGModelPlacement aip;
 
@@ -244,6 +246,7 @@ protected:
     double _impact_roll;
     double _impact_speed;
 
+    ModelSearchOrder _searchOrder = DATA_ONLY;
     void Transform();
     void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
@@ -345,6 +348,7 @@ public:
 
     const std::string& getCallSign() const
     { return _callsign; }
+    const ModelSearchOrder getSearchOrder() const {return _searchOrder;}
 };
 
 typedef SGSharedPtr<FGAIBase> FGAIBasePtr;
@@ -356,6 +360,10 @@ inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
 
 inline void FGAIBase::setPath(const char* model ) {
     model_path.append(model);
+}
+
+inline void FGAIBase::setPathLowres(std::string model ) {
+    model_path_lowres.append(model);
 }
 
 inline void FGAIBase::setFallbackModelIndex(const int i ) {

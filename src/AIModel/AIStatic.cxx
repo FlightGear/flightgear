@@ -34,6 +34,7 @@ using std::string;
 
 
 FGAIStatic::FGAIStatic() : FGAIBase(otStatic, false) {
+    _searchOrder = PREFER_AI;
 }
 
 

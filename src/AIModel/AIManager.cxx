@@ -327,20 +327,7 @@ FGAIManager::attach(FGAIBase *model)
     model->setManager(this, p);
     ai_list.push_back(model);
 
-    FGAIBase::ModelSearchOrder modelPolicy = FGAIBase::DATA_ONLY;
-    switch (model->getType()) {
-    case FGAIBase::otAircraft:
-    case FGAIBase::otStatic:
-        modelPolicy = FGAIBase::PREFER_AI;
-        break;
-    case FGAIBase::otMultiplayer:
-        modelPolicy = FGAIBase::PREFER_DATA;
-        break;
-    default:
-        break;
-    }
-
-    model->init(modelPolicy);
+    model->init(model->getSearchOrder());
     model->bind();
     p->setBoolValue("valid", true);
 }
