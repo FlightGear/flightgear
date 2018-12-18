@@ -75,7 +75,7 @@ void TimeManager::init()
   _firstUpdate = true;
   _inited = true;
   _dtRemainder = 0.0;
-  _mpProtocolClock = 0.0;
+  _mpProtocolClock = _steadyClock = 0.0;
   _adjustWarpOnUnfreeze = false;
   
   _maxDtPerFrame = fgGetNode("/sim/max-simtime-per-frame", true);
@@ -114,13 +114,21 @@ void TimeManager::init()
     _modelHz = fgGetNode("sim/model-hz", true);
     _timeDelta = fgGetNode("sim/time/delta-realtime-sec", true);
     _simTimeDelta = fgGetNode("sim/time/delta-sec", true);
-    _mpClockNode = fgGetNode("sim/time/mp-clock-sec", true);
+    _mpProtocolClockNode = fgGetNode("sim/time/mp-clock-sec", true);
+    _steadyClockNode = fgGetNode("sim/time/steady-clock-sec", true);
+    _mpClockOffset = fgGetNode("sim/time/mp-clock-offset-sec", true);
+    _steadyClockDrift = fgGetNode("sim/time/steady-clock-drift-ms", true);
+    _computeDrift = fgGetNode("sim/time/compute-clock-drift", true);
     _frameWait = fgGetNode("sim/time/frame-wait-ms", true);
     _simTimeFactor = fgGetNode("/sim/speed-up", true);
     // use pre-set value but ensure we get a sane default
     if (!_simTimeDelta->hasValue()) {
         _simTimeFactor->setDoubleValue(1.0);
     }
+    if (!_mpClockOffset->hasValue()) {
+        _mpClockOffset->setDoubleValue(0.0);
+    }
+    _computeDrift->setBoolValue(true);
 }
 
 void TimeManager::unbind()
@@ -138,7 +146,11 @@ void TimeManager::unbind()
     _modelHz.clear();
     _timeDelta.clear();
     _simTimeDelta.clear();
-    _mpClockNode.clear();
+    _mpProtocolClockNode.clear();
+    _steadyClockNode.clear();
+    _mpClockOffset.clear();
+    _steadyClockDrift.clear();
+    _computeDrift.clear();
     _simTimeFactor.clear();
 }
 
@@ -189,7 +201,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 
     // we initialise the mp protocol clock  with the system clock.
     _systemStamp.systemClockHoursAndMinutes();
-    _mpProtocolClock = _systemStamp.toSecs();
+    _steadyClock = _systemStamp.toSecs();
 
     _firstUpdate = false;
     _lastClockFreeze = _clockFreeze->getBoolValue();
@@ -208,6 +220,16 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 
   SGTimeStamp currentStamp;
   currentStamp.stamp();
+
+  // if asked, we compute the drift between the steady clock and the system clock
+
+  if (_computeDrift->getBoolValue()) {
+      _systemStamp.systemClockHoursAndMinutes();
+      double clockdrift = _steadyClock + (currentStamp - _lastStamp).toSecs()
+        + _dtRemainder - _systemStamp.toSecs();
+      _steadyClockDrift->setDoubleValue(clockdrift * 1000.0);
+      _computeDrift->setBoolValue(false);
+  }
 
   // this dt will be clamped by the max sim time by frame.
   double dt = (currentStamp - _lastStamp).toSecs();
@@ -260,9 +282,11 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 
   _lastStamp = currentStamp;
   globals->inc_sim_time_sec(simDt);
-  _mpProtocolClock += mpProtocolDt;
+  _steadyClock += mpProtocolDt;
+  _mpProtocolClock = _steadyClock + _mpClockOffset->getDoubleValue();
 
-  _mpClockNode->setDoubleValue(_mpProtocolClock);
+  _steadyClockNode->setDoubleValue(_steadyClock);
+  _mpProtocolClockNode->setDoubleValue(_mpProtocolClock);
 
 // These are useful, especially for Nasal scripts.
   _timeDelta->setDoubleValue(realDt);

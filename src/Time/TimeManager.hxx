@@ -48,6 +48,7 @@ public:
   void setTimeOffset(const std::string& offset_type, long int offset);
 
   inline double getMPProtocolClockSec() const { return _mpProtocolClock; }
+  inline double getSteadyClockSec() const { return _steadyClock; }
     
   static const char* subsystemName() { return "time"; }
 private:
@@ -80,7 +81,11 @@ private:
   SGPropertyNode_ptr _warp;
   SGPropertyNode_ptr _warpDelta;
   SGPropertyNode_ptr _simTimeFactor;
-  SGPropertyNode_ptr _mpClockNode;
+  SGPropertyNode_ptr _mpProtocolClockNode;
+  SGPropertyNode_ptr _steadyClockNode;
+  SGPropertyNode_ptr _mpClockOffset;
+  SGPropertyNode_ptr _steadyClockDrift;
+  SGPropertyNode_ptr _computeDrift;
   SGPropertyNode_ptr _frameWait;
   SGPropertyNode_ptr _maxFrameRate;
 
@@ -94,6 +99,7 @@ private:
   time_t _lastFrameTime;
   double _frameLatencyMax;
   double _mpProtocolClock;
+  double _steadyClock;
   int _frameCount;
   
   SGPropertyNode_ptr _sceneryLoaded;
