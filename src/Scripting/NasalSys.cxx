@@ -243,9 +243,9 @@ FGNasalSys::FGNasalSys() :
     _string = naNil();
     _wrappedNodeFunc = naNil();
 
-    _log = new simgear::BufferedLogCallback(SG_NASAL, SG_INFO);
+    _log.reset(new simgear::BufferedLogCallback(SG_NASAL, SG_INFO));
     _log->truncateAt(255);
-    sglog().addCallback(_log);
+    sglog().addCallback(_log.get());
 
     naSetErrorHandler(&logError);
 }
@@ -307,6 +307,8 @@ FGNasalSys::~FGNasalSys()
     if (_inited) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Nasal was not shutdown");
     }
+    sglog().removeCallback(_log.get());
+    
     nasalSys = nullptr;
 }
 

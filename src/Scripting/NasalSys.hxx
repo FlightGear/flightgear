@@ -17,7 +17,7 @@
 #endif
 
 #include <map>
-
+#include <memory>
 
 class FGNasalScript;
 class FGNasalListener;
@@ -154,7 +154,7 @@ public:
     /// retrive the associated log object, for displaying log
     /// output somewhere (a UI, presumably)
     simgear::BufferedLogCallback* log() const
-    { return _log; }
+    { return _log.get(); }
 
     static const char* subsystemName() { return "nasal"; }
 private:
@@ -192,7 +192,7 @@ private:
 
     SGPropertyNode_ptr _cmdArg;
 
-    simgear::BufferedLogCallback* _log;
+    std::unique_ptr<simgear::BufferedLogCallback> _log;
     
     typedef std::map<std::string, NasalCommand*> NasalCommandDict;
     NasalCommandDict _commands;
