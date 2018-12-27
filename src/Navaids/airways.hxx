@@ -119,6 +119,7 @@ public:
 
     std::pair<FGPositionedRef, bool> findClosestNode(const SGGeod& aGeod);
 
+    FGPositionedRef findNodeByIdent(const std::string& ident, const SGGeod& near) const;
   private:    
     void addEdge(int aWay, const SGGeod& aStartPos,
                 const std::string& aStartIdent, 

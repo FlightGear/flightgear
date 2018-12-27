@@ -181,8 +181,18 @@ void Airway::loadAWYDat(const SGPath& path)
 WayptVec::const_iterator Airway::find(WayptRef wpt) const
 {
     assert(!_elements.empty());
+    if (wpt->type() == "via") {
+      // map vias to their end navaid / fix, so chaining them
+      // together works. (Temporary waypoint is discarded after search)
+      wpt = new NavaidWaypoint(wpt->source(), wpt->owner());
+    }
+
     return std::find_if(_elements.begin(), _elements.end(),
-                     [wpt] (const WayptRef& w) { return w->matches(wpt); });
+                        [wpt] (const WayptRef& w)
+                        {
+                            if (!w) return false;
+                            return w->matches(wpt);
+                        });
 }
 
 bool Airway::canVia(const WayptRef& from, const WayptRef& to) const
@@ -286,7 +296,10 @@ AirwayRef Airway::findByIdent(const std::string& aIdent, Level level)
 {
     auto it = std::find_if(static_airwaysCache.begin(), static_airwaysCache.end(),
                            [aIdent, level](const AirwayRef& awy)
-    { return (awy->_level == level) && (awy->ident() == aIdent); });
+    { 
+      if ((level != Both) && (awy->_level != level)) return false;
+      return (awy->ident() == aIdent); 
+    });
     if (it != static_airwaysCache.end()) {
         return *it;
     }
@@ -294,7 +307,6 @@ AirwayRef Airway::findByIdent(const std::string& aIdent, Level level)
     NavDataCache* ndc = NavDataCache::instance();
     int airwayId = ndc->findAirway(level, aIdent, false);
     if (airwayId == 0) {
-        SG_LOG(SG_GENERAL, SG_INFO, "fooooo");
         return {};
     }
 
@@ -508,7 +520,7 @@ Airway::Network::findClosestNode(WayptRef aRef)
 class InAirwayFilter : public FGPositioned::Filter
 {
 public:
-  InAirwayFilter(Airway::Network* aNet) :
+  InAirwayFilter(const Airway::Network* aNet) :
     _net(aNet)
   { ; }
   
@@ -524,7 +536,7 @@ public:
   { return FGPositioned::VOR; }
   
 private:
-  Airway::Network* _net;
+  const Airway::Network* _net;
 };
 
 std::pair<FGPositionedRef, bool> 
@@ -539,6 +551,13 @@ Airway::Network::findClosestNode(const SGGeod& aGeod)
   }
   
   return make_pair(r, exact);
+}
+
+FGPositionedRef
+Airway::Network::findNodeByIdent(const std::string& ident, const SGGeod& near) const
+{
+    InAirwayFilter f(this);
+    return FGPositioned::findClosestWithIdent(ident, near, &f);
 }
 
 /////////////////////////////////////////////////////////////////////////////
