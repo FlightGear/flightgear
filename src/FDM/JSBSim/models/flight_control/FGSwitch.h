@@ -7,21 +7,21 @@
  ------------- Copyright (C) 2002 jon@jsbsim.org  -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
 HISTORY
 --------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ INCLUDES
 
 #include "FGFCSComponent.h"
 #include "math/FGCondition.h"
-#include "math/FGPropertyValue.h"
+#include "math/FGParameterValue.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -115,10 +115,12 @@ Here's an example:
 Note: In the "logic" attribute, "AND" is the default logic, if none is supplied.
 
 The above example specifies that the default value of the component (i.e. the
-output property of the component, addressed by the property, ap/roll-ap-autoswitch)
-is 0.0.  If or when the attitude hold switch is selected (property
-ap/attitude_hold takes the value 1), the value of the switch component will be
-whatever value fcs/roll-ap-error-summer is.
+output property of the component, addressed by the property,
+ap/roll-ap-autoswitch) is 0.0.
+
+If or when the attitude hold switch is selected (property ap/attitude_hold takes
+the value 1), the value of the switch component will be whatever value
+fcs/roll-ap-error-summer is.
 
 @author Jon S. Berndt
 */
@@ -145,54 +147,28 @@ public:
 
 private:
 
-  struct test {
+  struct Test {
     FGCondition* condition;
     bool Default;
-    double OutputVal;
-    FGPropertyValue *OutputProp;
-    float sign;
+    FGParameter_ptr OutputValue;
 
-    double GetValue(void) {
-      if (OutputProp == 0L) return OutputVal;
-      else                  return OutputProp->GetValue()*sign;
-    }
+    // constructor for the test structure
+    Test(void) : condition(nullptr), Default(false) {}
 
-    test(void) { // constructor for the test structure
-      Default    = false;
-      OutputVal  = 0.0;
-      OutputProp = 0L;
-      sign       = 1.0;
-    }
-
-    void setTestValue(std::string value, std::string Name,
-                      FGPropertyManager* propMan)
+    void setTestValue(const std::string &value, const std::string &Name,
+                      FGPropertyManager* pm)
     {
       if (value.empty()) {
-        std::cerr << "No VALUE supplied for switch component: " << Name << std::endl;
-      } else {
-        if (is_number(value)) {
-          OutputVal = atof(value.c_str());
-        } else {
-          // "value" must be a property if execution passes to here.
-          if (value[0] == '-') {
-            sign = -1.0;
-            value.erase(0,1);
-          } else {
-            sign = 1.0;
-          }
-          FGPropertyNode *node = propMan->GetNode(value, false);
-          if (node) {
-            OutputProp = new FGPropertyValue(node);
-          } else {
-            OutputProp = new FGPropertyValue(value, propMan);
-          }
-        }
-      }
+        std::cerr << "No VALUE supplied for switch component: " << Name
+                  << std::endl;
+      } else
+        OutputValue = new FGParameterValue(value, pm);
     }
 
+    std::string GetOutputName(void) const {return OutputValue->GetName();}
   };
 
-  std::vector <test*> tests;
+  std::vector <Test*> tests;
   bool initialized = false;
 
   void VerifyProperties(void);

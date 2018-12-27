@@ -71,13 +71,10 @@ FGSummer::~FGSummer()
 
 bool FGSummer::Run(void )
 {
-  unsigned int idx;
-
   Output = 0.0;
 
-  for (idx=0; idx<InputNodes.size(); idx++) {
-    Output += InputNodes[idx]->getDoubleValue() * InputSigns[idx];
-  }
+  for (auto node: InputNodes)
+    Output += node->getDoubleValue();
 
   Output += Bias;
 
@@ -113,17 +110,11 @@ void FGSummer::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
       cout << "      INPUTS: " << endl;
-      for (unsigned i=0;i<InputNodes.size();i++) {
-        if (InputSigns[i] < 0)
-          cout << "       -" << InputNames[i] << endl;
-        else
-          cout << "       " << InputNames[i] << endl;
-      }
+      for (auto node: InputNodes)
+        cout << "       " << node->GetNameWithSign() << endl;
       if (Bias != 0.0) cout << "       Bias: " << Bias << endl;
-      if (IsOutput) {
-        for (unsigned int i=0; i<OutputNodes.size(); i++)
-          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
-      }
+      for (auto node: OutputNodes)
+        cout << "      OUTPUT: " << node->GetName() << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

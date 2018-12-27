@@ -1,8 +1,8 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  Header: FGTemplateFunc.h
+  Header: FGParameterValue.h
   Author: Bertrand Coconnier
-  Date started: March 10 2018
+  Date started: December 09 2018
 
   --------- Copyright (C) 2018  B. Coconnier (bcoconni@users.sf.net) -----------
 
@@ -27,14 +27,14 @@
   SENTRY
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGTEMPLATEFUNC_H
-#define FGTEMPLATEFUNC_H
+#ifndef FGPARAMETERVALUE_H
+#define FGPARAMETERVALUE_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   INCLUDES
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "math/FGFunction.h"
+#include "math/FGRealValue.h"
 #include "math/FGPropertyValue.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,40 +43,52 @@
 
 namespace JSBSim {
 
+class FGPropertyManager;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   CLASS DOCUMENTATION
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+/** Represents a either a real value or a property value
+    @author Bertrand Coconnier
+*/
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  DECLARATION: FGTemplateFunc
+  DECLARATION: FGParameterValue
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTemplateFunc : public FGFunction
+class FGParameterValue : public FGParameter
 {
 public:
-
-  FGTemplateFunc(FGPropertyManager* pm, Element* element)
-    : FGFunction(pm)
-  {
-    var = new FGPropertyValue(nullptr);
-    Load(element, var);
-    CheckMinArguments(element, 1);
-    CheckMaxArguments(element, 1);
+  FGParameterValue(const std::string& value, FGPropertyManager* pm) {
+    if (is_number(value)) {
+      param = new FGRealValue(atof(value.c_str()));
+    } else {
+      // "value" must be a property if execution passes to here.
+      param = new FGPropertyValue(value, pm);
+    }
   }
 
-  double GetValue(FGPropertyNode* node) {
-    var->SetNode(node);
-    return FGFunction::GetValue();
+  double GetValue(void) const override { return param->GetValue(); }
+  bool IsConstant(void) const override { return param->IsConstant(); }
+
+  std::string GetName(void) const override {
+    FGPropertyValue* v = dynamic_cast<FGPropertyValue*>(param.ptr());
+    if (v)
+      return v->GetNameWithSign();
+    else
+      return to_string(param->GetValue());
   }
 
+  bool IsLateBound(void) const {
+    FGPropertyValue* v = dynamic_cast<FGPropertyValue*>(param.ptr());
+    return v != nullptr && v->IsLateBound();
+  }
 private:
-  /** FGTemplateFunc must not be bound to the property manager. The bind method
-      is therefore made private and overloaded as a no-op */
-  void bind(Element*, const std::string&) override {}
-  FGPropertyValue_ptr var;
+  FGParameter_ptr param;
 };
 
-typedef SGSharedPtr<FGTemplateFunc> FGTemplateFunc_ptr;
+typedef SGSharedPtr<FGParameterValue> FGParameterValue_ptr;
 
 } // namespace JSBSim
 

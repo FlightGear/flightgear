@@ -7,21 +7,21 @@
  ------------- Copyright (C) 2000 -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
@@ -37,11 +37,13 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGGain.h"
-#include "input_output/FGXMLElement.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
+
+#include "FGGain.h"
+#include "input_output/FGXMLElement.h"
+#include "math/FGParameterValue.h"
 
 using namespace std;
 
@@ -53,39 +55,29 @@ CLASS IMPLEMENTATION
 
 FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
-  Element *scale_element, *zero_centered;
-  string strScheduledBy, gain_string, sZeroCentered;
-
-  GainPropertyNode = 0;
-  GainPropertySign = 1.0;
-  Gain = 1.000;
-  Rows = 0;
-  Table = 0;
+  Gain = nullptr;
+  Table = nullptr;
   InMin = -1.0;
   InMax =  1.0;
   OutMin = OutMax = 0.0;
 
   if (Type == "PURE_GAIN") {
     if ( !element->FindElement("gain") ) {
-      cerr << highint << "      No GAIN specified (default: 1.0)" << normint << endl;
+      cerr << element->ReadFrom()
+           << highint << "      No GAIN specified (default: 1.0)" << normint
+           << endl;
     }
   }
 
-  if ( element->FindElement("gain") ) {
-    gain_string = element->FindElementValue("gain");
-    if (!is_number(gain_string)) { // property
-      if (gain_string[0] == '-') {
-       GainPropertySign = -1.0;
-       gain_string.erase(0,1);
-      }
-      GainPropertyNode = PropertyManager->GetNode(gain_string);
-    } else {
-      Gain = element->FindElementValueAsNumber("gain");
-    }
-  }
+  string gain_string = "1.0";
+  Element* gain_element = element->FindElement("gain");
+  if (gain_element)
+    gain_string = gain_element->GetDataLine();
+
+  Gain = new FGParameterValue(gain_string, PropertyManager);
 
   if (Type == "AEROSURFACE_SCALE") {
-    scale_element = element->FindElement("domain");
+    Element* scale_element = element->FindElement("domain");
     if (scale_element) {
       if (scale_element->FindElement("max") && scale_element->FindElement("min") )
       {
@@ -100,15 +92,16 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       OutMax = scale_element->FindElementValueAsNumber("max");
       OutMin = scale_element->FindElementValueAsNumber("min");
     } else {
-      cerr << "Maximum and minimum output values must be supplied for the "
+      cerr << scale_element->ReadFrom()
+           << "Maximum and minimum output values must be supplied for the "
               "aerosurface scale component" << endl;
-      exit(-1);
+      throw("Some inputs are missing.");
     }
     ZeroCentered = true;
-    zero_centered = element->FindElement("zero_centered");
+    Element* zero_centered = element->FindElement("zero_centered");
     //ToDo if zero centered, then mins must be <0 and max's must be >0
     if (zero_centered) {
-      sZeroCentered = element->FindElementValue("zero_centered");
+      string sZeroCentered = element->FindElementValue("zero_centered");
       if (sZeroCentered == string("0") || sZeroCentered == string("false")) {
         ZeroCentered = false;
       }
@@ -119,8 +112,10 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
     if (element->FindElement("table")) {
       Table = new FGTable(PropertyManager, element->FindElement("table"));
     } else {
-      cerr << "A table must be provided for the scheduled gain component" << endl;
-      exit(-1);
+      cerr << element->ReadFrom()
+           << "A table must be provided for the scheduled gain component"
+           << endl;
+      throw("Some inputs are missing.");
     }
   }
 
@@ -144,9 +139,7 @@ bool FGGain::Run(void )
 {
   double SchedGain = 1.0;
 
-  Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
-
-  if (GainPropertyNode != 0) Gain = GainPropertyNode->getDoubleValue() * GainPropertySign;
+  Input = InputNodes[0]->getDoubleValue();
 
   if (Type == "PURE_GAIN") {                       // PURE_GAIN
 
@@ -171,7 +164,7 @@ bool FGGain::Run(void )
       Output = OutMin + ((Input - InMin) / (InMax - InMin)) * (OutMax - OutMin);
     }
 
-    Output *= Gain;
+    Output *= Gain->GetValue();
   }
 
   Clip();
@@ -205,20 +198,12 @@ void FGGain::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
-      if (InputSigns[0] < 0)
-        cout << "      INPUT: -" << InputNodes[0]->GetName() << endl;
-      else
-        cout << "      INPUT: " << InputNodes[0]->GetName() << endl;
+      cout << "      INPUT: " << InputNodes[0]->GetNameWithSign() << endl;
+      cout << "      GAIN: " << Gain->GetName() << endl;
 
-      if (GainPropertyNode != 0) {
-        cout << "      GAIN: " << GainPropertyNode->GetName() << endl;
-      } else {
-        cout << "      GAIN: " << Gain << endl;
-      }
-      if (IsOutput) {
-        for (unsigned int i=0; i<OutputNodes.size(); i++)
-          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
-      }
+      for (auto node: OutputNodes)
+        cout << "      OUTPUT: " << node->getName() << endl;
+
       if (Type == "AEROSURFACE_SCALE") {
         cout << "      In/Out Mapping:" << endl;
         cout << "        Input MIN: " << InMin << endl;

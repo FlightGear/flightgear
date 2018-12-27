@@ -7,21 +7,21 @@
  ------------- Copyright (C) 2000 -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
@@ -37,10 +37,12 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
+
 #include "FGDeadBand.h"
 #include "input_output/FGXMLElement.h"
 #include "input_output/FGPropertyManager.h"
-#include <iostream>
+#include "math/FGParameterValue.h"
 
 using namespace std;
 
@@ -52,31 +54,22 @@ CLASS IMPLEMENTATION
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGDeadBand::FGDeadBand(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
+FGDeadBand::FGDeadBand(FGFCS* fcs, Element* element)
+  : FGFCSComponent(fcs, element)
 {
-  string width_string;
 
-  WidthPropertyNode = 0;
-  WidthPropertySign = 1.0;
+  Width = nullptr;
   gain = 1.0;
-  width = 0.0;
 
-  if ( element->FindElement("width") ) {
-    width_string = element->FindElementValue("width");
-    if (!is_number(width_string)) { // property
-      if (width_string[0] == '-') {
-       WidthPropertySign = -1.0;
-       width_string.erase(0,1);
-      }
-      WidthPropertyNode = PropertyManager->GetNode(width_string);
-    } else {
-      width = element->FindElementValueAsNumber("width");
-    }
-  }
+  string width_string = "0.0";
+  Element* width_element = element->FindElement("width");
+  if (width_element)
+    width_string = width_element->GetDataLine();
 
-  if (element->FindElement("gain")) {
+  Width = new FGParameterValue(width_string, PropertyManager);
+
+  if (element->FindElement("gain"))
     gain = element->FindElementValueAsNumber("gain");
-  }
 
   FGFCSComponent::bind();
   Debug(0);
@@ -93,16 +86,14 @@ FGDeadBand::~FGDeadBand()
 
 bool FGDeadBand::Run(void )
 {
-  Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
+  Input = InputNodes[0]->getDoubleValue();
 
-  if (WidthPropertyNode != 0) {
-    width = WidthPropertyNode->getDoubleValue() * WidthPropertySign;
-  }
+  double HalfWidth = 0.5*Width;
 
-  if (Input < -width/2.0) {
-    Output = (Input + width/2.0)*gain;
-  } else if (Input > width/2.0) {
-    Output = (Input - width/2.0)*gain;
+  if (Input < -HalfWidth) {
+    Output = (Input + HalfWidth)*gain;
+  } else if (Input > HalfWidth) {
+    Output = (Input - HalfWidth)*gain;
   } else {
     Output = 0.0;
   }
@@ -139,16 +130,11 @@ void FGDeadBand::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
       cout << "      INPUT: " << InputNodes[0]->GetName() << endl;
-      if (WidthPropertyNode != 0) {
-        cout << "      DEADBAND WIDTH: " << WidthPropertyNode->GetName() << endl;
-      } else {
-        cout << "      DEADBAND WIDTH: " << width << endl;
-      }
+      cout << "      DEADBAND WIDTH: " << Width->GetName() << endl;
       cout << "      GAIN: " << gain << endl;
-      if (IsOutput) {
-        for (unsigned int i=0; i<OutputNodes.size(); i++)
-          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
-      }
+
+      for (auto node: OutputNodes)
+        cout << "      OUTPUT: " << node->getName() << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

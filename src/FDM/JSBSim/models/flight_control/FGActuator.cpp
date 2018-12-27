@@ -151,12 +151,12 @@ void FGActuator::ResetPastStates(void)
 
 bool FGActuator::Run(void )
 {
-  Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
+  Input = InputNodes[0]->getDoubleValue();
 
   if( fcs->GetTrimStatus() ) initialized = 0;
 
   if (fail_zero) Input = 0;
-  if (fail_hardover) Input =  Input >= 0.0 ? clipmax : clipmin;
+  if (fail_hardover) Input = Input < 0.0 ? ClipMin->GetValue() : ClipMax->GetValue();
 
   Output = Input; // Perfect actuator. At this point, if no failures are present
                   // and no subsequent lag, limiting, etc. is done, the output
@@ -183,9 +183,16 @@ bool FGActuator::Run(void )
   Clip();
 
   if (clip) {
+    double clipmax = ClipMax->GetValue();
     saturated = false;
-    if (Output >= clipmax && clipmax != 0) saturated = true;
-    else if (Output <= clipmin && clipmin != 0) saturated = true;
+
+    if (Output >= clipmax && clipmax != 0)
+      saturated = true;
+    else{
+      double clipmin = ClipMin->GetValue();
+      if (Output <= clipmin && clipmin != 0)
+        saturated = true;
+    }
   }
 
   if (IsOutput) SetOutput();
@@ -320,14 +327,11 @@ void FGActuator::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
-      if (InputSigns[0] < 0)
-        cout << "      INPUT: -" << InputNames[0] << endl;
-      else
-        cout << "      INPUT: " << InputNames[0] << endl;
+      cout << "      INPUT: " << InputNodes[0]->GetNameWithSign() << endl;
 
-      if (IsOutput) {
-        for (unsigned int i=0; i<OutputNodes.size(); i++)
-          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      if (!OutputNodes.empty()) {
+        for (auto node: OutputNodes)
+          cout << "      OUTPUT: " << node->GetName() << endl;
       }
       if (bias != 0.0) cout << "      Bias: " << bias << endl;
       if (rate_limit_incr != 0) {
