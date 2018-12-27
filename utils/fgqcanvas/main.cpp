@@ -19,6 +19,7 @@
 #include <QQmlEngine>
 #include <QQuickView>
 #include <QQmlContext>
+#include <QCommandLineParser>
 
 #include "canvasitem.h"
 #include "applicationcontroller.h"
@@ -34,6 +35,13 @@ int main(int argc, char *argv[])
     a.setOrganizationDomain("flightgear.org");
     a.setOrganizationName("FlightGear");
 
+    QCommandLineParser parser;
+    parser.addPositionalArgument("config", QCoreApplication::translate("main", "JSON configuration to load"));
+    QCommandLineOption framelessOption(QStringList() << "frameless",
+                                   QCoreApplication::translate("main", "Use a frameless window"));
+    parser.addOption(framelessOption);
+    parser.process(a);
+
     ApplicationController appController;
 
     qmlRegisterType<CanvasItem>("FlightGear", 1, 0, "CanvasItem");
@@ -45,12 +53,16 @@ int main(int argc, char *argv[])
 
     QQuickView quickView;
     appController.setWindow(&quickView);
-
+    if (parser.isSet(framelessOption)) {
+        quickView.setFlag(Qt::FramelessWindowHint, true);
+    }
     quickView.rootContext()->setContextProperty("_application", &appController);
 
-    if (argc > 1) {
+    const QStringList args = parser.positionalArguments();
+
+    if (!args.empty()) {
         appController.setDaemonMode();
-        appController.loadFromFile(QString::fromLocal8Bit(argv[1]));
+        appController.loadFromFile(args.front());
     } else {
         quickView.setWidth(1024);
         quickView.setHeight(768);
