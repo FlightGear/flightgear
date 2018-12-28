@@ -382,15 +382,17 @@ const FGColumnVector3& FGLGear::GetBodyForces(FGSurface *surface)
       LMultiplier[ftSide].value = 0.0;
       LMultiplier[ftDynamic].value = 0.0;
 
-      // Let wheel spin down slowly
-      vWhlVelVec(eX) -= 13.0 * in.TotalDeltaT;
-      if (vWhlVelVec(eX) < 0.0) vWhlVelVec(eX) = 0.0;
-
       // Return to neutral position between 1.0 and 0.8 gear pos.
       SteerAngle *= max(gearPos-0.8, 0.0)/0.2;
 
       ResetReporting();
     }
+  }
+
+  if (!WOW) {
+    // Let wheel spin down slowly
+    vWhlVelVec(eX) -= 13.0 * in.TotalDeltaT;
+    if (vWhlVelVec(eX) < 0.0) vWhlVelVec(eX) = 0.0;
   }
 
   if (!fdmex->GetTrimStatus()) {
