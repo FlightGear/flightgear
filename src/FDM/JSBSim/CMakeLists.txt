@@ -132,6 +132,7 @@ set(SOURCES
     math/FGRealValue.cpp
     math/FGRungeKutta.cpp
     math/FGTable.cpp
+    math/FGTemplateFunc.cpp
     models/FGAccelerations.cpp
     models/FGAerodynamics.cpp
     models/FGAircraft.cpp
