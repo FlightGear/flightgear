@@ -273,19 +273,29 @@ FGJSBsim::FGJSBsim( double dt )
       double d;
       SGPropertyNode * node = fgGetNode("/consumables/fuel/tank", i, true);
       FGTank* tank = Propulsion->GetTank(i);
+      SGPropertyNode * prop = node->getNode( "density-ppg", true );
 
-      d = node->getNode( "density-ppg", true )->getDoubleValue();
+      d = prop->getDoubleValue();
       if( d > 0.0 ) {
         tank->SetDensity( d );
       } else {
-        node->getNode( "density-ppg", true )->setDoubleValue( SG_MAX2<double>(tank->GetDensity(), 0.1) );
+        prop->setDoubleValue( SG_MAX2<double>(tank->GetDensity(), 0.1) );
       }
 
-      d = node->getNode( "level-lbs", true )->getDoubleValue();
+      prop = node->getNode( "level-lbs", true );
+      d = prop->getDoubleValue();
       if( d > 0.0 ) {
         tank->SetContents( d );
       } else {
-        node->getNode( "level-lbs", true )->setDoubleValue( tank->GetContents() );
+        prop->setDoubleValue( tank->GetContents() );
+      }
+
+      prop = node->getNode( "unusable-gal_us", true );
+      d = prop->getDoubleValue();
+      if ( d > 0.0 ) {
+        tank->SetUnusableVolume( d );
+      } else {
+        prop->setDoubleValue(tank->GetUnusableVolume());
       }
       /* Capacity is read-only in FGTank and can't be overwritten from FlightGear */
       node->getNode("capacity-gal_us", true )->setDoubleValue( tank->GetCapacityGallons() );
