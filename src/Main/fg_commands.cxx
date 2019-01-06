@@ -430,7 +430,7 @@ do_property_adjust (const SGPropertyNode * arg, SGPropertyNode * root)
   if (arg->hasValue("step"))
       amount = arg->getDoubleValue("step");
   else
-      amount = (arg->getDoubleValue("factor", 1)
+      amount = (arg->getDoubleValue("factor", 1.0)
                 * arg->getDoubleValue("offset"));
 
   double unmodifiable, modifiable;
@@ -463,7 +463,7 @@ static bool
 do_property_multiply (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   SGPropertyNode * prop = get_prop(arg,root);
-  double factor = arg->getDoubleValue("factor", 1);
+  double factor = arg->getDoubleValue("factor", 1.0);
 
   double unmodifiable, modifiable;
   split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
