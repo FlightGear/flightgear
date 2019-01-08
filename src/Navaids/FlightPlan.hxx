@@ -89,7 +89,7 @@ public:
     Waypt* waypoint() const
     { return _waypt; }
 
-    // reutrn the next leg after this one
+    // return the next leg after this one
     Leg* nextLeg() const;
 
     unsigned int index() const;

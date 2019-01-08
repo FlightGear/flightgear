@@ -1312,13 +1312,13 @@ WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
     }
     
     // airway ident is pieces[1]
-    Airway* airway = Airway::findByIdentAndNavaid(pieces[1], nav);
-    if (airway == nullptr) {
+    AirwayRef airway = Airway::findByIdentAndNavaid(pieces[1], nav);
+    if (!airway) {
         SG_LOG( SG_NAVAID, SG_WARN, "Unknown airway:" << pieces[1]);
         return nullptr;
     }
 
-    return new Via(nullptr, pieces[1], nav);
+    return new Via(nullptr, airway, nav);
 }
 
 } // of anonymous namespace
@@ -1477,6 +1477,9 @@ FlightPlan::Leg* FlightPlan::Leg::cloneFor(FlightPlan* owner) const
   
 FlightPlan::Leg* FlightPlan::Leg::nextLeg() const
 {
+  if ((index() + 1) >= _parent->_legs.size())
+    return nullptr;
+    
   return _parent->legAtIndex(index() + 1);
 }
 
@@ -1785,7 +1788,7 @@ bool FlightPlan::parseICAORouteString(const std::string& routeData)
         if (!_departure) {
             setDeparture(firstICAO);
         } else if (_departure != firstICAO) {
-            SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route begins with an airprot which is not the departure airport:" << tokens.front());
+            SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route begins with an airport which is not the departure airport:" << tokens.front());
             return false;
         }
         ++i; // either way, skip the ICAO token now
@@ -1853,15 +1856,35 @@ bool FlightPlan::parseICAORouteString(const std::string& routeData)
                 return false;
             }
             
-            FGPositionedRef nav = FGPositioned::findClosestWithIdent(nextToken, currentPos);
+            auto nav = Airway::highLevel()->findNodeByIdent(nextToken, currentPos);
+            if (!nav)
+                nav = Airway::lowLevel()->findNodeByIdent(nextToken, currentPos);
             if (!nav) {
                 SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route waypoint not found:" << nextToken);
                 return false;
             }
             
-            Airway* way = Airway::findByIdentAndNavaid(tk, nav);
+            WayptRef toNav = new NavaidWaypoint(nav, nullptr); // temp waypoint for lookup
+            WayptRef previous;
+            if (enroute.empty()) {
+                if (_sid) {
+                    if (!_sidTransition.empty()) {
+                        previous = _sid->findTransitionByName(_sidTransition)->enroute();
+                    } else {
+                        // final wayypoint of common section
+                        previous = _sid->common().back();
+                    }
+                } else {
+                    SG_LOG(SG_AUTOPILOT, SG_WARN, "initial airway needs anchor point from SID:" << tk);
+                    return false;
+                }
+            } else {
+                previous = enroute.back();
+            }
+            
+            AirwayRef  way = Airway::findByIdentAndVia(tk, enroute.back(), toNav);
             if (way) {
-                enroute.push_back(new Via(this, tk, nav));
+                enroute.push_back(new Via(this, way, nav));
                 ++i;
             } else {
                 SG_LOG(SG_AUTOPILOT, SG_WARN, "ICAO route unknown airway:" << tk);
@@ -1893,27 +1916,25 @@ std::string FlightPlan::asICAORouteString() const
     std::string result;
     if (!_sidTransition.empty())
         result += _sidTransition + " ";
-
-    std::string currentAirwayIdent;
+    
     for (auto l : _legs) {
         const auto wpt = l->waypoint();
+        
+        AirwayRef nextLegAirway;
+        if (l->nextLeg() && l->nextLeg()->waypoint()->flag(WPT_VIA)) {
+            nextLegAirway = static_cast<Airway*>(l->nextLeg()->waypoint()->owner());
+        }
+        
         if (wpt->flag(WPT_GENERATED)) {
             if (wpt->flag(WPT_VIA)) {
                 AirwayRef awy = static_cast<Airway*>(wpt->owner());
-//                SG_LOG(SG_AUTOPILOT, SG_INFO, "via " << awy->ident() << " -> " << wpt->icaoDescription());
-                assert(awy);
-                if (currentAirwayIdent != awy->ident()) {
-                    if (!currentAirwayIdent.empty()) {
-                        result += currentAirwayIdent + " " + wpt->icaoDescription() + " ";
-                    }
-                    currentAirwayIdent = awy->ident();
+                if (awy == nextLegAirway) {
+                    // skipepd entirely, next leg will output the airway
+                    continue;
                 }
+                
+                result += awy->ident() + " ";
             }
-            continue;
-        } else if (!currentAirwayIdent.empty()) {
-            // completed an airway segment, ensure we insert the last piece
-            result += currentAirwayIdent + " ";
-            currentAirwayIdent.clear();
         } else if (wpt->type() == "navaid") {
             // technically we need DCT unless both ends of the leg are
             // defined geographically
