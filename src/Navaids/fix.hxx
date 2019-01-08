@@ -36,6 +36,9 @@ public:
   FGFix(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos);
   inline ~FGFix(void) {}
 
+  static bool isType(FGPositioned::Type ty)
+   { return (ty == FGPositioned::FIX); }
+
   inline const std::string& get_ident() const { return ident(); }
   inline double get_lon() const { return longitude(); }
   inline double get_lat() const { return latitude(); }
