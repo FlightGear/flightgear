@@ -522,7 +522,7 @@ SGGeod Via::position() const
 
 string Via::ident() const
 {
-    return "VIA " + _airway + " TO " + _to->ident();
+    return "VIA " + _airway->ident() + " TO " + _to->ident();
 }
 
 Via::Via(RouteBase *aOwner) :
@@ -530,17 +530,15 @@ Via::Via(RouteBase *aOwner) :
 {
 }
 
-Via::Via(RouteBase *aOwner, const std::string &airwayName,
-         FGPositioned *to) :
+Via::Via(RouteBase *aOwner, AirwayRef awy, FGPositionedRef to) :
     Waypt(aOwner),
-    _airway(airwayName),
+    _airway(awy),
     _to(to)
 {
 }
 
 Via::~Via()
 {
-
 }
 
 void Via::initFromProperties(SGPropertyNode_ptr aProp)
@@ -552,11 +550,11 @@ void Via::initFromProperties(SGPropertyNode_ptr aProp)
 
     Waypt::initFromProperties(aProp);
 
-    _airway = aProp->getStringValue("airway");
-
-    Airway* way = Airway::findByIdent(_airway, Airway::UnknownLevel);
-    if (!way) {
-        throw sg_io_exception("unknown airway ident: '" + _airway + "'",
+    const std::string ident = aProp->getStringValue("airway");
+    const Airway::Level level = static_cast<Airway::Level>(aProp->getIntValue("level", Airway::Both));
+    _airway = Airway::findByIdent(ident, level);
+    if (!_airway) {
+        throw sg_io_exception("unknown airway ident: '" + ident + "'",
                               "Via::initFromProperties");
     }
 
@@ -573,7 +571,8 @@ void Via::initFromProperties(SGPropertyNode_ptr aProp)
                               "Via::initFromProperties");
     }
     
-    if (!way->containsNavaid(nav)) {
+    if (!_airway->containsNavaid(nav)) {
+        // warn but don't block this
         SG_LOG(SG_AUTOPILOT, SG_WARN, "VIA TO navaid: " << idn << " not found on airway " << _airway);
     }
 
@@ -583,7 +582,9 @@ void Via::initFromProperties(SGPropertyNode_ptr aProp)
 void Via::writeToProperties(SGPropertyNode_ptr aProp) const
 {
     Waypt::writeToProperties(aProp);
-    aProp->setStringValue("airway", _airway);
+    aProp->setStringValue("airway", _airway->ident());
+    aProp->setIntValue("level", _airway->level());
+    
     aProp->setStringValue("to", _to->ident());
     // write lon/lat to disambiguate
     aProp->setDoubleValue("lon", _to->geod().getLongitudeDeg());
@@ -597,12 +598,7 @@ WayptVec Via::expandToWaypoints(WayptRef aPreceeding) const
     }
 
     WayptRef toWp = new NavaidWaypoint(_to, nullptr);
-    Airway* way = Airway::findByIdentAndVia(_airway, aPreceeding, toWp);
-    if (!way) {
-        throw sg_exception("invalid airway");
-    }
-
-    return way->via(aPreceeding, toWp);
+    return _airway->via(aPreceeding, toWp);
 }
 
 } // of namespace

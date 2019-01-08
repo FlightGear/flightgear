@@ -23,6 +23,7 @@
 #include <Airports/airports_fwd.hxx>
 #include <Navaids/route.hxx>
 #include <Navaids/positioned.hxx>
+#include <Navaids/airways.hxx>
 
 namespace flightgear
 {
@@ -344,24 +345,28 @@ class Via : public Waypt
 {
 public:
     Via(RouteBase* aOwner);
-    Via(RouteBase* aOwner, const std::string& airwayName, FGPositioned* to);
+    Via(RouteBase* aOwner, AirwayRef airway, FGPositionedRef to);
     virtual ~Via();
 
-    virtual void initFromProperties(SGPropertyNode_ptr aProp);
-    virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+    void initFromProperties(SGPropertyNode_ptr aProp) override;
+    void writeToProperties(SGPropertyNode_ptr aProp) const override;
 
-    virtual std::string type() const
+    std::string type() const override
     { return "via"; }
 
-    virtual SGGeod position() const;
+    SGGeod position() const override;
 
-    virtual std::string ident() const;
+    std::string ident() const override;
 
-    std::string airway() const
+    AirwayRef airway() const
     { return _airway; }
+
+    FGPositioned* source() const override
+    { return _to.ptr(); }
+
     WayptVec expandToWaypoints(WayptRef aPreceeding) const;
 private:
-    std::string _airway;
+    AirwayRef _airway;
     FGPositionedRef _to;
 };
   
