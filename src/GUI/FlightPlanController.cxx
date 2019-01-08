@@ -52,9 +52,18 @@ public:
         if (!leg)
             return {};
 
+        const auto wp = leg->waypoint();
+        
         switch (role) {
-        case Qt::DisplayRole:
+        case Qt::DisplayRole: {
+            if (wp->type() == "via") {
+                // we want the end waypoint name
+                return QString::fromStdString(wp->source()->ident());
+            }
+            
             return QString::fromStdString(leg->waypoint()->ident());
+        }
+                
         case LegDistanceRole:
             return QVariant::fromValue(QuantityValue{Units::NauticalMiles, leg->distanceNm()});
         case LegTrackRole:
@@ -62,17 +71,15 @@ public:
 
         case LegAirwayIdentRole:
         {
-            const auto wp = leg->waypoint();
+            AirwayRef awy;
             if (wp->type() == "via") {
                 auto via = static_cast<flightgear::Via*>(leg->waypoint());
-                return QString::fromStdString(via->airway());
+                awy = via->airway();
+            } else if (wp->flag(WPT_VIA)) {
+                awy = static_cast<Airway*>(wp->owner());
             }
-
-            if (wp->flag(WPT_VIA)) {
-                AirwayRef awy = static_cast<Airway*>(wp->owner());
-                return QString::fromStdString(awy->ident());
-            }
-            break;
+            
+            return awy ? QString::fromStdString(awy->ident()) : QVariant{};
         }
 
         case LegTerminatorNavRole:
