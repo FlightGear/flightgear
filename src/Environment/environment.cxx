@@ -796,7 +796,7 @@ FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
   const double vaporpressure = 6.11 * pow(10.0, ((7.5 * dewpoint_degc) / (237.7 + dewpoint_degc)));
   const double virtual_temp = (temperature_degc + 273.15) / (1 - 0.379 * (vaporpressure/pressure_mb));
 
-  if ((pressure_mb <= 0.0) || (virtual_temp < 0.0)) {
+  if ((pressure_mb <= 0.0) || (virtual_temp <= 0.0)) {
     density_tropo_avg_kgm3 = 0.0;
     return;
   }
