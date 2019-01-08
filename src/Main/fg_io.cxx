@@ -431,3 +431,19 @@ void
 FGIO::unbind()
 {
 }
+
+bool FGIO::isMultiplayerRequested()
+{
+    // launcher sets these properties directly, as does the in-sim dialog
+    std::string txAddress = fgGetString("/sim/multiplay/txhost");
+    if (!txAddress.empty()) return true;
+    
+    // check the channel options list for a multiplay setting - this
+    // is easier than checking the raw Options arguments, but works before
+    // this subsytem is actuallyt created.
+    auto channels = globals->get_channel_options_list();
+    auto it = std::find_if(channels->begin(), channels->end(),
+                           [](const std::string& channelOption)
+                           { return (channelOption.find("multiplay") == 0); });
+    return it != channels->end();
+}

@@ -48,6 +48,12 @@ public:
 
     void shutdown();
 
+    /**
+     * helper to determine early in startup, if MP will be used.
+     * This information is needed in the position-init code, to adjust the
+     * start position off active runways.
+     */
+    static bool isMultiplayerRequested();
 private:
 
     void add_channel(const std::string& config);
