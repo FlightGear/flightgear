@@ -36,7 +36,7 @@ Item {
     // not very declarative, try to remove this over time
     function syncUIFromController()
     {
-        if (_location.detail.type == Positioned.Parking) {
+        if (_location.useAvailableParking || (_location.detail.type == Positioned.Parking)) {
             parkingRadio.select()
             parkingChoice.syncCurrentIndex();
         } else {

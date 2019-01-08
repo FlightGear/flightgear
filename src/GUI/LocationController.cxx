@@ -147,6 +147,9 @@ void LocationController::onSaveCurrentLocation()
 bool LocationController::isParkedLocation() const
 {
     if (m_airportLocation) {
+        if (m_useAvailableParking)
+            return true;
+
         if (m_detailLocation && (m_detailLocation->type() == FGPositioned::PARKING)) {
             return true;
         }
@@ -248,6 +251,7 @@ void LocationController::setDetailLocation(QmlPositioned* pos)
     } else {
         m_detailLocation = pos->inner();
         m_useActiveRunway = false;
+        m_useAvailableParking = false;
         m_detailQml->setInner(pos->inner());
     }
 
@@ -278,6 +282,7 @@ void LocationController::setUseActiveRunway(bool b)
     m_useActiveRunway = b;
     if (m_useActiveRunway) {
         m_detailLocation.clear(); // clear any specific runway
+        m_useAvailableParking = false;
     }
     emit configChanged();
 }
@@ -425,6 +430,7 @@ void LocationController::setUseAvailableParking(bool useAvailableParking)
     m_useAvailableParking = useAvailableParking;
     if (m_useAvailableParking) {
         m_detailLocation.clear(); // clear any specific runway
+        m_useActiveRunway = false;
     }
     emit configChanged();
 }
@@ -465,6 +471,7 @@ void LocationController::restoreLocation(QVariantMap l)
 
         if (m_airportLocation) {
             m_useActiveRunway = false;
+            m_useAvailableParking = false;
             m_detailLocation.clear();
 
             if (l.contains("location-apt-runway")) {
@@ -478,7 +485,11 @@ void LocationController::restoreLocation(QVariantMap l)
                 }
             } else if (l.contains("location-apt-parking")) {
                 QString parking = l.value("location-apt-parking").toString();
-                m_detailLocation = m_airportLocation->groundNetwork()->findParkingByName(parking.toStdString());
+                if (parking == QStringLiteral("AVAILABLE")) {
+                    m_useAvailableParking = true;
+                } else {
+                    m_detailLocation = m_airportLocation->groundNetwork()->findParkingByName(parking.toStdString());
+                }
             }
 
             if (m_detailLocation) {
@@ -531,6 +542,8 @@ QVariantMap LocationController::saveLocation() const
             locationSet.insert("location-apt-final-distance", QVariant::fromValue(m_offsetDistance));
             if (m_useActiveRunway) {
                 locationSet.insert("location-apt-runway", "ACTIVE");
+            } else if (m_useAvailableParking) {
+                locationSet.insert("location-apt-parking", "AVAILABLE");
             } else if (m_detailLocation) {
                 const auto detailType = m_detailLocation->type();
                 if (detailType == FGPositioned::RUNWAY) {
@@ -612,6 +625,8 @@ void LocationController::setLocationProperties()
         if (m_useActiveRunway) {
             // automatic runway choice
             // we can't set navaid here
+        } else if (m_useAvailableParking) {
+            fgSetString("/sim/presets/parkpos", "AVAILABLE");
         } else if (onRunway) {
             if (m_airportLocation->type() == FGPositioned::AIRPORT) {
                 // explicit runway choice
@@ -792,6 +807,8 @@ void LocationController::onCollectConfig()
         if (m_useActiveRunway) {
             // pick by default
             applyOnFinal();
+        } else if (m_useAvailableParking) {
+             m_config->setArg("parkpos", QStringLiteral("AVAILABLE"));
         } else if (onRunway) {
             if (m_airportLocation->type() == FGPositioned::AIRPORT) {
                 m_config->setArg("runway", QString::fromStdString(m_detailLocation->ident()));
@@ -914,6 +931,8 @@ QString LocationController::description() const
             } else {
                 locationOnAirport = tr("on active runway");
             }
+        } else if (m_useAvailableParking) {
+            locationOnAirport = tr("at an available parking position");
         } if (onRunway) {
             QString runwayName = QString("runway %1").arg(QString::fromStdString(m_detailLocation->ident()));
 
