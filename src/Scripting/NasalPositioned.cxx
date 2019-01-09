@@ -1075,6 +1075,13 @@ static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef
     } else {
       *out = naNil();
     }
+  } else if (!strcmp(fieldName, "colocated_dme")) {
+      FGNavRecordRef dme = FGPositioned::loadById<FGNavRecord>(nav->colocatedDME());
+      if (dme) {
+          *out = ghostForNavaid(c, dme);
+      } else {
+          *out = naNil();
+      }
   } else if (!strcmp(fieldName, "dme")) {
     *out = naNum(nav->hasDME());
   } else if (!strcmp(fieldName, "vortac")) {
@@ -1087,6 +1094,8 @@ static const char* navaidGhostGetMember(naContext c, void* g, naRef field, naRef
     } else {
       *out = naNil();
     }
+  } else if (!strcmp(fieldName, "guid")) {
+      *out = naNum(nav->guid());
   } else {
     return 0;
   }
@@ -1102,6 +1111,9 @@ static const char* fixGhostGetMember(naContext c, void* g, naRef field, naRef* o
   if (!strcmp(fieldName, "id")) *out = stringToNasal(c, fix->ident());
   else if (!strcmp(fieldName, "lat")) *out = naNum(fix->get_lat());
   else if (!strcmp(fieldName, "lon")) *out = naNum(fix->get_lon());
+    // for homogenity with other values returned by navinfo()
+  else if (!strcmp(fieldName, "type")) *out = stringToNasal(c, "fix");
+  else if (!strcmp(fieldName, "name")) *out = stringToNasal(c, fix->ident());
   else {
     return 0;
   }
