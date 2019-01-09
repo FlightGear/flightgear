@@ -2433,9 +2433,10 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
         result.insert(result.end(), linearAirway.begin(), linearAirway.end());
     } // outer loop
     
+    SG_LOG(SG_AUTOPILOT, SG_WARN, "Airway:" << id);
     for (int i=0; i<result.size(); ++i) {
         if (result.at(i) == 0) {
-            SG_LOG(SG_AUTOPILOT, SG_WARN, i << " break");
+            SG_LOG(SG_AUTOPILOT, SG_WARN, i << " <break>");
         } else {
             SG_LOG(SG_AUTOPILOT, SG_WARN, i << " " << loadById(result.at(i))->ident());
 
