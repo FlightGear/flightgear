@@ -1694,8 +1694,14 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
   }
 
   FGRunway* rwy = NULL;
+  STAR* star = nullptr;
   if (argc > 0 && (rwy = runwayGhost(args[0]))) {
     // ok
+  } else if (argc > 0 && (procedureGhost(args[0]))) {
+      Procedure* proc = procedureGhost(args[0]);
+      if (proc->type() != PROCEDURE_STAR)
+          return naNil();
+      star = static_cast<STAR*>(proc);
   } else if (argc > 0 && naIsString(args[0])) {
     if (!apt->hasRunwayWithIdent(naStr_data(args[0]))) {
       return naNil();
@@ -1713,14 +1719,29 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
       naRef procId = stringToNasal(c, s->ident());
       naVec_append(approaches, procId);
     }
+  } else if (star) {
+      std::set<std::string> appIds;
+      for (auto rwy : star->runways()) {
+          for (auto app : rwy->getApproaches()) {
+              appIds.insert(app->ident());
+          }
+      }
+      
+      for (auto s : appIds) {
+          naVec_append(approaches, stringToNasal(c, s));
+      }
   } else {
     // no runway specified, report them all
+    RunwayVec runways;
+    if (star)
+        runways = star->runways();
+      
     for (unsigned int s=0; s<apt->numApproaches(); ++s) {
       Approach* app = apt->getApproachByIndex(s);
       if ((ty != PROCEDURE_INVALID) && (app->type() != ty)) {
         continue;
       }
-
+        
       naRef procId = stringToNasal(c, app->ident());
       naVec_append(approaches, procId);
     }
