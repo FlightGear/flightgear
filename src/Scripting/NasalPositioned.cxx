@@ -18,9 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include <cstring>
 
@@ -109,6 +107,12 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
 static naGhostType ProcedureGhostType = { routeBaseGhostDestroy,
   "procedure",
   procedureGhostGetMember,
+  0};
+
+static const char* airwayGhostGetMember(naContext c, void* g, naRef field, naRef* out);
+static naGhostType AirwayGhostType = { routeBaseGhostDestroy,
+  "airway",
+  airwayGhostGetMember,
   0};
 
 static void hashset(naContext c, naRef hash, const char* key, naRef val)
@@ -260,6 +264,13 @@ static FlightPlan* flightplanGhost(naRef r)
   return 0;
 }
 
+static Airway* airwayGhost(naRef r)
+{
+  if (naGhost_type(r) == &AirwayGhostType)
+    return (Airway*) naGhost_ptr(r);
+  return 0;
+}
+
 static void routeBaseGhostDestroy(void* g)
 {
     RouteBase* r = (RouteBase*) g;
@@ -272,6 +283,7 @@ static naRef flightplanPrototype;
 static naRef geoCoordClass;
 static naRef fpLegPrototype;
 static naRef procedurePrototype;
+static naRef airwayPrototype;
 
 naRef ghostForAirport(naContext c, const FGAirport* apt)
 {
@@ -373,6 +385,17 @@ naRef ghostForProcedure(naContext c, const Procedure* proc)
   return naNewGhost2(c, &ProcedureGhostType, (void*) proc);
 }
 
+naRef ghostForAirway(naContext c, const Airway* awy)
+{
+  if (!awy) {
+    return naNil();
+  }
+
+  Airway::get(awy); // take a ref
+  return naNewGhost2(c, &AirwayGhostType, (void*) awy);
+}
+
+
 static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
@@ -432,6 +455,9 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
 static naRef waypointNavaid(naContext c, Waypt* wpt)
 {
   FGPositioned* pos = wpt->source();
+  if (pos && pos->type() == FGPositioned::FIX) {
+     return ghostForFix(c, fgpositioned_cast<FGFix>(pos));
+  }
 
   if (!FGPositioned::isNavaidType(pos)) {
     return naNil();
@@ -476,10 +502,28 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
   else if (!strcmp(fieldName, "wp_lon") || !strcmp(fieldName, "lon")) *out = naNum(wpt->position().getLongitudeDeg());
   else if (!strcmp(fieldName, "wp_parent_name")) {
     Procedure* proc = dynamic_cast<Procedure*>(wpt->owner());
-    *out = proc ? stringToNasal(c, proc->ident()) : naNil();
+    if (proc) {
+      *out = stringToNasal(c, proc->ident());
+    } else {
+      Airway* airway = dynamic_cast<Airway*>(wpt->owner());
+      if (airway) {
+        *out = stringToNasal(c, airway->ident());
+      } else {
+        *out = naNil();
+      }
+    }
   } else if (!strcmp(fieldName, "wp_parent")) {
     Procedure* proc = dynamic_cast<Procedure*>(wpt->owner());
-    *out = ghostForProcedure(c, proc);
+    if (proc) {
+      *out = ghostForProcedure(c, proc);
+    } else {
+      Airway* airway = dynamic_cast<Airway*>(wpt->owner());
+      if (airway) {
+        *out = ghostForAirway(c, airway);
+      } else {
+        *out = naNil();
+      }
+    }
   } else if (!strcmp(fieldName, "fly_type")) {
     if (wpt->type() == "hold") {
       *out = stringToNasal(c, "Hold");
@@ -494,6 +538,14 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
     *out = waypointAirport(c, wpt);
   } else if (!strcmp(fieldName, "runway")) {
     *out = waypointRunway(c, wpt);
+  } else if (!strcmp(fieldName, "airway")) {
+    if (wpt->type() == "via") {
+      AirwayRef awy = static_cast<Via*>(wpt)->airway();
+      assert(awy);
+      *out = ghostForAirway(c, awy);
+    } else {
+      *out = naNil();
+    }
   } else if (wpt->type() == "hold") {
     // hold-specific properties
     const auto hold = static_cast<Hold*>(wpt);
@@ -941,6 +993,30 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
   return "";
 }
 
+static const char* airwayGhostGetMember(naContext c, void* g, naRef field, naRef* out)
+{
+  const char* fieldName = naStr_data(field);
+  Airway* awy = (Airway*) g;
+
+  if (!strcmp(fieldName, "parents")) {
+    *out = naNewVector(c);
+    naVec_append(*out, airwayPrototype);
+  } else if (!strcmp(fieldName, "id")) *out = stringToNasal(c, awy->ident());
+  else if (!strcmp(fieldName, "level")) {
+    const auto level = awy->level();
+    switch (level) {
+    case Airway::HighLevel:       *out = stringToNasal(c, "high"); break;
+    case Airway::LowLevel:        *out = stringToNasal(c, "low"); break;
+    case Airway::Both:            *out = stringToNasal(c, "both"); break;
+    default:                      *out = naNil();
+    }
+  } else {
+    return 0;
+  }
+
+  return "";
+}
+
 static const char* runwayGhostGetMember(naContext c, void* g, naRef field, naRef* out)
 {
   const char* fieldName = naStr_data(field);
@@ -1114,6 +1190,11 @@ static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
       result = wayptGhost(args[offset])->position();
       return 1;
     }
+      
+      if (gt == &FPLegGhostType) {
+          result = fpLegGhost(args[offset])->waypoint()->position();
+          return 1;
+      }
   }
 
   if (geodFromHash(args[offset], result)) {
@@ -2350,6 +2431,64 @@ static naRef f_airwaySearch(naContext c, naRef me, int argc, naRef* args)
   return convertWayptVecToNasal(c, route);
 }
 
+static FGPositionedRef positionedFromArg(naRef ref)
+{
+  if (!naIsGhost(ref)) 
+    return {};
+
+  naGhostType* gt = naGhost_type(ref);
+  if (gt == &AirportGhostType)
+    return airportGhost(ref);
+
+  if (gt == &NavaidGhostType)
+    return navaidGhost(ref);
+
+  if (gt == &RunwayGhostType)
+    return runwayGhost(ref);
+
+  if (gt == &TaxiwayGhostType)
+    return taxiwayGhost(ref);
+
+  if (gt == &FixGhostType)
+    return fixGhost(ref);
+
+  if ((gt == &WayptGhostType) || (gt == &FPLegGhostType))
+    return wayptGhost(ref)->source();
+
+  return {};
+}
+
+static naRef f_findAirway(naContext c, naRef me, int argc, naRef* args)
+{
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "findAirway needs at least one string arguments");
+  }
+
+  std::string ident = naStr_data(args[0]);
+  FGPositionedRef pos;
+  Airway::Level level = Airway::Both;
+  if (argc >= 2) {
+    pos = positionedFromArg(args[1]);
+    if (naIsString(args[1])) {
+      // level spec, 
+    }
+  }
+
+  AirwayRef awy;
+  if (pos) {
+    SG_LOG(SG_NASAL, SG_INFO, "Pevious navaid for airway():" << pos->ident());
+    awy = Airway::findByIdentAndNavaid(ident, pos);
+  } else {
+    awy = Airway::findByIdent(ident, level);
+  }
+
+  if (!awy)
+    return naNil();
+
+  return ghostForAirway(c, awy.get());
+}
+
+
 static naRef f_createWP(naContext c, naRef me, int argc, naRef* args)
 {
   SGGeod pos;
@@ -2412,9 +2551,10 @@ static naRef f_createViaTo(naContext c, naRef me, int argc, naRef* args)
     }
 
     std::string airwayName = naStr_data(args[0]);
-    Airway* airway = Airway::findByIdent(airwayName, Airway::UnknownLevel);
+    AirwayRef airway = Airway::findByIdent(airwayName, Airway::Both);
     if (!airway) {
-        naRuntimeError(c, "createViaTo: couldn't find airway with provided name");
+        naRuntimeError(c, "createViaTo: couldn't find airway with provided name: %s", 
+          naStr_data(args[0]));
     }
 
     FGPositionedRef nav;
@@ -2437,7 +2577,50 @@ static naRef f_createViaTo(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "createViaTo: navaid not on airway");
     }
 
-    Via* via = new Via(NULL, airwayName, nav);
+    Via* via = new Via(nullptr, airway, nav);
+    return ghostForWaypt(c, via);
+}
+
+static naRef f_createViaFromTo(naContext c, naRef me, int argc, naRef* args)
+{
+    if (argc != 3) {
+        naRuntimeError(c, "createViaFromTo: needs exactly three arguments");
+    }
+
+    auto from = positionedFromArg(args[0]);
+    if (!from) {
+      naRuntimeError(c, "createViaFromTo: from wp not found");
+    }
+
+    std::string airwayName = naStr_data(args[1]);
+    AirwayRef airway = Airway::findByIdentAndNavaid(airwayName, from);
+    if (!airway) {
+        naRuntimeError(c, "createViaFromTo: couldn't find airway with provided name: %s from wp %s", 
+          naStr_data(args[0]), 
+          from->ident().c_str());
+    }
+
+    FGPositionedRef nav;
+    if (naIsString(args[2])) {
+        WayptRef enroute = airway->findEnroute(naStr_data(args[2]));
+        if (!enroute) {
+            naRuntimeError(c, "unknown waypoint on airway %s: %s",
+                           naStr_data(args[1]), naStr_data(args[2]));
+        }
+
+        nav = enroute->source();
+    } else {
+        nav = positionedFromArg(args[2]);
+        if (!nav) {
+            naRuntimeError(c, "createViaFromTo: arg[2] is not a navaid");
+        }
+    }
+
+    if (!airway->containsNavaid(nav)) {
+        naRuntimeError(c, "createViaFromTo: navaid not on airway");
+    }
+
+    Via* via = new Via(nullptr, airway, nav);
     return ghostForWaypt(c, via);
 }
 
@@ -2926,6 +3109,24 @@ static naRef f_procedure_route(naContext c, naRef me, int argc, naRef* args)
   return convertWayptVecToNasal(c, r);
 }
 
+static naRef f_airway_contains(naContext c, naRef me, int argc, naRef* args)
+{
+  Airway* awy = airwayGhost(me);
+  if (!awy) {
+    naRuntimeError(c, "airway.contains called on non-airway object");
+  }
+
+  if (argc < 1) {
+    naRuntimeError(c, "missing arg to airway.contains");
+  }
+
+  auto pos = positionedFromArg(args[0]);
+  if (!pos) {
+    return naNum(0);
+  }
+
+  return naNum(awy->containsNavaid(pos));
+}
 
 // Table of extension functions.  Terminate with zeros.
 static struct { const char* name; naCFunction func; } funcs[] = {
@@ -2953,8 +3154,10 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "createWP", f_createWP },
   { "createWPFrom", f_createWPFrom },
   { "createViaTo", f_createViaTo },
+  { "createViaFromTo", f_createViaFromTo },
   { "createDiscontinuity", f_createDiscontinuity },
   { "airwaysRoute", f_airwaySearch },
+  { "airway", f_findAirway },
   { "magvar", f_magvar },
   { "courseAndDistance", f_courseAndDistance },
   { "greatCircleMove", f_greatCircleMove },
@@ -3020,6 +3223,10 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, fpLegPrototype, "setAltitude", naNewFunc(c, naNewCCode(c, f_leg_setAltitude)));
     hashset(c, fpLegPrototype, "path", naNewFunc(c, naNewCCode(c, f_leg_path)));
     hashset(c, fpLegPrototype, "courseAndDistanceFrom", naNewFunc(c, naNewCCode(c, f_leg_courseAndDistanceFrom)));
+
+    airwayPrototype = naNewHash(c);
+    naSave(c, airwayPrototype);
+    hashset(c, airwayPrototype, "contains", naNewFunc(c, naNewCCode(c, f_airway_contains)));
 
     for(int i=0; funcs[i].name; i++) {
       hashset(c, globals, funcs[i].name,
