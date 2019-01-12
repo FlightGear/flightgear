@@ -345,6 +345,30 @@ naRef ghostForFix(naContext c, const FGFix* r)
   return naNewGhost2(c, &FixGhostType, (void*) r);
 }
 
+naRef ghostForPositioned(naContext c, FGPositionedRef pos)
+{
+    if (!pos) {
+        return naNil();
+    }
+    
+    switch (pos->type()) {
+    case FGPositioned::VOR:
+    case FGPositioned::NDB:
+    case FGPositioned::TACAN:
+    case FGPositioned::DME:
+    case FGPositioned::ILS:
+        return ghostForNavaid(c, fgpositioned_cast<FGNavRecord>(pos));
+    case FGPositioned::FIX:
+        return ghostForFix(c, fgpositioned_cast<FGFix>(pos));
+    case FGPositioned::HELIPAD:
+        return ghostForHelipad(c, fgpositioned_cast<FGHelipad>(pos));
+    case FGPositioned::RUNWAY:
+        return ghostForRunway(c, fgpositioned_cast<FGRunway>(pos));
+    default:
+        SG_LOG(SG_NASAL, SG_DEV_ALERT, "Type lacks Nasal ghost mapping:" << pos->typeString());
+        return naNil();
+    }
+}
 
 naRef ghostForWaypt(naContext c, const Waypt* wpt)
 {
@@ -454,16 +478,12 @@ static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRe
 // Return the navaid ghost associated with a waypoint of navaid type.
 static naRef waypointNavaid(naContext c, Waypt* wpt)
 {
-  FGPositioned* pos = wpt->source();
-  if (pos && pos->type() == FGPositioned::FIX) {
-     return ghostForFix(c, fgpositioned_cast<FGFix>(pos));
-  }
-
-  if (!FGPositioned::isNavaidType(pos)) {
-    return naNil();
-  }
-
-  return ghostForNavaid(c, static_cast<FGNavRecord*>(pos));
+    FGPositioned* pos = wpt->source();
+    if (!pos || (!FGNavRecord::isNavaidType(pos) && !fgpositioned_cast<FGFix>(pos))) {
+        return naNil();
+    }
+    
+    return ghostForPositioned(c, wpt->source());
 }
 
 // Return the airport ghost associated with a waypoint of airport or runway
@@ -473,7 +493,7 @@ static naRef waypointAirport(naContext c, Waypt* wpt)
   FGPositioned* pos = wpt->source();
 
   if (FGPositioned::isRunwayType(pos)) {
-    pos = static_cast<FGRunway*>(pos) -> airport();
+    pos = static_cast<FGRunway*>(pos)->airport();
   } else if (!FGPositioned::isAirportType(pos)) {
     return naNil();
   }
@@ -501,18 +521,13 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
   else if (!strcmp(fieldName, "wp_lat") || !strcmp(fieldName, "lat")) *out = naNum(wpt->position().getLatitudeDeg());
   else if (!strcmp(fieldName, "wp_lon") || !strcmp(fieldName, "lon")) *out = naNum(wpt->position().getLongitudeDeg());
   else if (!strcmp(fieldName, "wp_parent_name")) {
-    Procedure* proc = dynamic_cast<Procedure*>(wpt->owner());
-    if (proc) {
-      *out = stringToNasal(c, proc->ident());
-    } else {
-      Airway* airway = dynamic_cast<Airway*>(wpt->owner());
-      if (airway) {
-        *out = stringToNasal(c, airway->ident());
+      if (wpt->owner()) {
+          *out = stringToNasal(c, wpt->owner()->ident());
       } else {
-        *out = naNil();
+          *out = naNil();
       }
-    }
   } else if (!strcmp(fieldName, "wp_parent")) {
+      // TODO add ghostForRouteElement to cover all this
     Procedure* proc = dynamic_cast<Procedure*>(wpt->owner());
     if (proc) {
       *out = ghostForProcedure(c, proc);
@@ -821,6 +836,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
 
     naRuntimeError(c, "bad argument type setting departure runway");
   } else if (!strcmp(fieldName, "destination_runway")) {
+      if (naIsNil(value)) {
+          fp->setDestination(static_cast<FGRunway*>(nullptr));
+          return;
+      }
+      
     FGRunway* rwy = runwayGhost(value);
     if (rwy){
       fp->setDestination(rwy);
@@ -2104,6 +2124,33 @@ static naRef f_findFixesByIdent(naContext c, naRef me, int argc, naRef* args)
   return r;
 }
 
+static naRef f_findByIdent(naContext c, naRef me, int argc, naRef* args)
+{
+    if ((argc < 2) || !naIsString(args[0]) || !naIsString(args[1]) ) {
+        naRuntimeError(c, "finxByIdent: expects ident and type as first two args");
+    }
+    
+    std::string ident(naStr_data(args[0]));
+    std::string typeSpec(naStr_data(args[1]));
+    
+    // optional specify search pos as final argument
+    SGGeod pos = globals->get_aircraft_position();
+    geodFromArgs(args, 2, argc, pos);
+    FGPositioned::TypeFilter filter(FGPositioned::TypeFilter::fromString(typeSpec));
+    
+    naRef r = naNewVector(c);
+
+    FGPositionedList matches = FGPositioned::findAllWithIdent(ident, &filter);
+    FGPositioned::sortByRange(matches, pos);
+    
+    for (auto f : matches) {
+        naVec_append(r, ghostForPositioned(c, f));
+    }
+    
+    return r;
+}
+
+
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_magvar(naContext c, naRef me, int argc, naRef* args)
 {
@@ -3181,6 +3228,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "findNavaidsByFrequencyMHz", f_findNavaidsByFrequency },
   { "findNavaidsByID", f_findNavaidsByIdent },
   { "findFixesByID", f_findFixesByIdent },
+  { "findByIdent", f_findByIdent },
   { "flightplan", f_flightplan },
   { "createFlightplan", f_createFlightplan },
   { "registerFlightPlanDelegate", f_registerFPDelegate },
