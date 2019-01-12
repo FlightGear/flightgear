@@ -554,7 +554,7 @@ void FlightPlan::setDestination(FGRunway* rwy)
   lockDelegates();
   _arrivalChanged = true;
   _destinationRunway = rwy;
-  if (_destination != rwy->airport()) {
+  if (rwy && (_destination != rwy->airport())) {
     _destination = rwy->airport();
     clearSTAR();
   }
