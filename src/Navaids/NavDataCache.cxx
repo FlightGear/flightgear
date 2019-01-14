@@ -2030,17 +2030,30 @@ NavDataCache::getOctreeLeafChildren(int64_t octreeNodeId)
  * implement the AirportList dialog. It's unfortunate that it needs to reside
  * here, but for now it's least ugly solution.
  */
-char** NavDataCache::searchAirportNamesAndIdents(const std::string& aFilter)
+char** NavDataCache::searchAirportNamesAndIdents(const std::string& searchInput)
 {
   sqlite3_stmt_ptr stmt;
   unsigned int numMatches = 0, numAllocated = 16;
+  string heliport("HELIPORT");
+  bool heli_p = searchInput.substr(0, heliport.length()) == heliport;
+  auto pos = searchInput.find(":");
+  string aFilter((pos != string::npos) ? searchInput.substr(pos+1) : searchInput);  
   string searchTerm("%" + aFilter + "%");
-  if (aFilter.empty()) {
+
+  if (aFilter.empty() && !heli_p) {
     stmt = d->getAllAirports;
     numAllocated = 4096; // start much larger for all airports
   } else {
     stmt = d->searchAirports;
     sqlite_bind_stdstring(stmt, 1, searchTerm);
+    if (heli_p) {
+        sqlite3_bind_int(stmt, 2, FGPositioned::HELIPORT);
+        sqlite3_bind_int(stmt, 3, FGPositioned::HELIPORT);
+    }
+    else {
+        sqlite3_bind_int(stmt, 2, FGPositioned::AIRPORT);
+        sqlite3_bind_int(stmt, 3, FGPositioned::SEAPORT);
+    }
   }
 
   char** result = (char**) malloc(sizeof(char*) * numAllocated);
