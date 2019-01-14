@@ -85,8 +85,13 @@ void NavdataVisitor::startElement(const char* name, const XMLAttributes &atts)
     _transWaypts.clear();
   } else if (tag == "RunwayTransition") {
     _transIdent = atts.getValue("Runway");
-    _transition = new Transition(_transIdent, PROCEDURE_RUNWAY_TRANSITION, _procedure);
-    _transWaypts.clear();
+      if (!_airport->hasRunwayWithIdent(_transIdent)) {
+          _transIdent.clear();
+          _transition = nullptr;
+      } else {
+          _transition = new Transition(_transIdent, PROCEDURE_RUNWAY_TRANSITION, _procedure);
+          _transWaypts.clear();
+      }
   } else {
     // nothing here, we warn on unrecognized in endElement
   }
@@ -108,9 +113,13 @@ void NavdataVisitor::processRunways(ArrivalDeparture* aProc, const XMLAttributes
   
   vector<string> rwys;
   boost::split(rwys, v, boost::is_any_of(" ,"));
-  for (unsigned int r=0; r<rwys.size(); ++r) {
-    FGRunway* rwy = _airport->getRunwayByIdent(rwys[r]);
-    aProc->addRunway(rwy);
+  for (auto rwy :  rwys) {
+      if (!_airport->hasRunwayWithIdent(rwy)) {
+          SG_LOG(SG_NAVAID, SG_DEV_WARN, "Procedure file " << _path << " references unknown airport runway:" << rwy);
+          continue;
+      }
+          
+    aProc->addRunway(_airport->getRunwayByIdent(rwy));
   }
 }
 
@@ -143,6 +152,11 @@ void NavdataVisitor::endElement(const char* name)
     _transition->setPrimary(_transWaypts);
     _approach->addTransition(_transition);
   } else if (tag == "RunwayTransition") {
+      if (!_transition) {
+          // transition was skipped for some reason
+          return;
+      }
+      
     ArrivalDeparture* ad;
     if (_sid) {
       // SID waypoints are stored backwards, to share code with STARs
@@ -225,8 +239,15 @@ Waypt* NavdataVisitor::buildWaypoint(RouteBase* owner)
     wp = new BasicWaypt(pos, _wayptName, owner);
   } else if (_wayptType == "Runway") {
     string ident = _wayptName.substr(2);
-    FGRunwayRef rwy = _airport->getRunwayByIdent(ident);
-    wp = new RunwayWaypt(rwy, owner);
+      if (_airport->hasRunwayWithIdent(ident)) {
+          FGRunwayRef rwy = _airport->getRunwayByIdent(ident);
+          wp = new RunwayWaypt(rwy, owner);
+      } else {
+          SG_LOG(SG_NAVAID, SG_DEV_WARN, "Missing runway " << ident << " reading " << _path);
+          SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
+          // fall back to a basic WP
+          wp = new BasicWaypt(pos, _wayptName, owner);
+      }
   } else if (_wayptType == "Hold") {
     SGGeod pos(SGGeod::fromDeg(_longitude, _latitude));
     Hold* h = new Hold(pos, _wayptName, owner);
@@ -301,7 +322,10 @@ void NavdataVisitor::finishApproach()
   }
   
   if (!rwy) {
-    throw sg_format_exception("Malformed approach, no runway waypt", _ident);
+      SG_LOG(SG_NAVAID, SG_DEV_WARN, "Parsing:" << _path << " found approach without a runway:" << _ident);
+      delete _approach;
+      _approach = nullptr;
+      return;
   }
   
   WayptVec primary(_waypoints.begin(), it);
