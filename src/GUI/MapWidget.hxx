@@ -70,6 +70,7 @@ private:
   bool drawLineClipped(const SGVec2d& a, const SGVec2d& b);
   
   void drawAirport(FGAirport* apt);
+  void drawHeliport(FGAirport* apt);
   int scoreAirportRunways(FGAirport* apt);
   void drawRunwayPre(FGRunway* rwy);
   void drawRunway(FGRunway* rwy);

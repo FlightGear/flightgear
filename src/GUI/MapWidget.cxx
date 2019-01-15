@@ -388,23 +388,29 @@ namespace
 class MapAirportFilter : public FGAirport::AirportFilter
 {
 public:
-    MapAirportFilter(SGPropertyNode_ptr nd)
+    MapAirportFilter(SGPropertyNode_ptr nd) :
+        _heliports(nd->getBoolValue("draw-heliports", false)),
+        _hardRunwaysOnly( nd->getBoolValue("hard-surfaced-airports", true)),
+        _minLengthFt(fgGetDouble("/sim/navdb/min-runway-length-ft", 2000))
     {
-        _heliports = nd->getBoolValue("show-heliports", false);
-        _hardRunwaysOnly = nd->getBoolValue("hard-surfaced-airports", true);
-        _minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft", 2000);
     }
     
-    virtual FGPositioned::Type maxType() const {
+    FGPositioned::Type maxType() const override
+    {
         return _heliports ? FGPositioned::HELIPORT : FGPositioned::AIRPORT;
     }
     
-    virtual bool passAirport(FGAirport* aApt) const {
-        if (_hardRunwaysOnly) {
+    FGPositioned::Type minType() const override
+    {
+        return FGPositioned::AIRPORT;
+    }
+
+    bool passAirport(FGAirport* aApt) const override
+    {
+        if (_hardRunwaysOnly && !aApt->isHeliport()) {
             return aApt->hasHardRunwayOfLengthFt(_minLengthFt);
         }
-        
-        return true;
+        return (aApt->type() <= maxType()) && (aApt->type() >= minType());
     }
     
     void showAll()
@@ -413,9 +419,9 @@ public:
     }
     
 private:
-    bool _heliports;
+    const bool _heliports;
     bool _hardRunwaysOnly;
-    double _minLengthFt;
+    const double _minLengthFt;
 };
 
 class NavaidFilter : public FGPositioned::Filter
@@ -1068,16 +1074,19 @@ void MapWidget::drawPositioned()
       FGPositionedRef p = _itemsToDraw[i];
       switch (p->type()) {
           case FGPositioned::AIRPORT:
-              drawAirport((FGAirport*) p.get());
+              drawAirport(fgpositioned_cast<FGAirport>(p));
+              break;
+          case FGPositioned::HELIPORT:
+              drawHeliport(fgpositioned_cast<FGAirport>(p));
               break;
           case FGPositioned::NDB:
-              drawNDB(false, (FGNavRecord*) p.get());
+              drawNDB(false, fgpositioned_cast<FGNavRecord>(p));
               break;
           case FGPositioned::VOR:
-              drawVOR(false, (FGNavRecord*) p.get());
+              drawVOR(false, fgpositioned_cast<FGNavRecord>(p));
               break;
           case FGPositioned::FIX:
-              drawFix((FGFix*) p.get());
+              drawFix(fgpositioned_cast<FGFix>(p));
               break;
          case FGPositioned::TOWN:
           case FGPositioned::CITY:
@@ -1356,6 +1365,28 @@ void MapWidget::drawAirport(FGAirport* apt)
   }  // of runway iteration
 
 }
+
+
+void MapWidget::drawHeliport(FGAirport* apt)
+{
+  SGVec2d pos = project(apt->geod());
+  glLineWidth(1.0);
+  glColor3f(1.0, 0.0, 1.0);
+  circleAt(pos, 16, 5.0);
+
+  if (validDataForKey(apt)) {
+    setAnchorForKey(apt, pos);
+    return;
+  }
+
+  MapData* d = createDataForKey(apt);
+  d->setLabel(apt->ident());
+  d->setPriority(40);
+  d->setOffset(MapData::VALIGN_CENTER | MapData::HALIGN_LEFT, 10);
+  d->setAnchor(pos);
+
+}
+
 
 int MapWidget::scoreAirportRunways(FGAirport* apt)
 {
