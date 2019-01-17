@@ -2088,7 +2088,7 @@ Options::~Options()
 {
 }
 
-void Options::init(int argc, char **argv, const SGPath& appDataPath)
+OptionResult Options::init(int argc, char **argv, const SGPath& appDataPath)
 {
 // first, process the command line
   bool inOptions = true;
@@ -2123,8 +2123,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
   if (!p->shouldLoadDefaultConfig) {
-    setupRoot(argc, argv);
-    return;
+    return setupRoot(argc, argv);
   }
 
 // then config files
@@ -2152,8 +2151,11 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
 // setup FG_ROOT
-  setupRoot(argc, argv);
-
+  auto res = setupRoot(argc, argv);
+  if (res != FG_OPTIONS_OK) {
+    return res;
+  }
+    
 // system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
   std::string nameForError = config.utf8Str();
@@ -2182,6 +2184,8 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       "If you created this file intentionally, please move it to '" +
       nameForError + "'.");
   }
+    
+    return FG_OPTIONS_OK;
 }
 
 void Options::initPaths()
@@ -2931,7 +2935,7 @@ string_list Options::extractOptions() const
     return result;
 }
 
-void Options::setupRoot(int argc, char **argv)
+OptionResult Options::setupRoot(int argc, char **argv)
 {
     SGPath root;
     bool usingDefaultRoot = false;
@@ -2974,7 +2978,10 @@ void Options::setupRoot(int argc, char **argv)
     // we still want to use the GUI in that case
     if (versionComp != 0) {
         flightgear::initApp(argc, argv);
-        SetupRootDialog::runDialog(usingDefaultRoot);
+        bool ok = SetupRootDialog::runDialog(usingDefaultRoot);
+        if (!ok) {
+            return FG_OPTIONS_EXIT;
+        }
     }
 #else
     SG_UNUSED(usingDefaultRoot);
@@ -2998,6 +3005,7 @@ void Options::setupRoot(int argc, char **argv)
         std::string(FLIGHTGEAR_VERSION) + "' is required.");
   }
 #endif
+    return FG_OPTIONS_OK;
 }
 
 bool Options::shouldLoadDefaultConfig() const

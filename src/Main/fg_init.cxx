@@ -558,7 +558,10 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     fgSetDefaults();
     flightgear::Options* options = flightgear::Options::sharedInstance();
     if (!reinit) {
-        options->init(argc, argv, dataPath);
+        auto result = options->init(argc, argv, dataPath);
+        if (result != flightgear::FG_OPTIONS_OK) {
+            return result;
+        }
     }
 
     // establish default for developer-mode based upon compiled build types
