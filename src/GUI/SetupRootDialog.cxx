@@ -90,7 +90,7 @@ bool SetupRootDialog::runDialog(PromptState prompt)
     SetupRootDialog dlg(prompt);
     dlg.exec();
     if (dlg.result() != QDialog::Accepted) {
-        exit(-1);
+        return false;
     }
 
     return true;
@@ -104,7 +104,10 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
 	bool ask = flightgear::checkKeyboardModifiersForSettingFGRoot();
     if (ask || (path == QStringLiteral("!ask"))) {
         bool ok = runDialog(ManualChoiceRequested);
-        Q_ASSERT(ok);
+        if (!ok) {
+            exit(-1);
+        }
+
         // run dialog either exit()s or sets fg_root, so this
         // behaviour is safe and correct.
         return globals->get_fg_root();
@@ -127,7 +130,10 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
         // okay, we don't have an acceptable FG_DATA anywhere we can find, we
         // have to ask the user what they want to do.
         bool ok = runDialog(VersionCheckFailed);
-        Q_ASSERT(ok);
+        if (!ok) {
+            exit(-1);
+        }
+
         // run dialog either exit()s or sets fg_root, so this
         // behaviour is safe and correct.
         return globals->get_fg_root();

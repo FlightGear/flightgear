@@ -79,8 +79,8 @@ public:
   /**
    * pass command line arguments, read default config files
    */
-  void init(int argc, char* argv[], const SGPath& appDataPath);
-  
+  OptionResult init(int argc, char* argv[], const SGPath& appDataPath);
+
   /**
     * parse a config file (eg, .fgfsrc) 
     */
@@ -188,15 +188,16 @@ private:
 
   void processArgResult(int result);
 
-    /**
-     * Setup the root base, and check it's valid. Bails out with exit(-1) if
-     * the root package was not found or is the incorrect version. Argv/argv
+  /**
+     * Setup the root base, and check it's valid. If
+     * the root package was not found or is the incorrect version,
+     * returns FG_OPTIONS_ERROR. Argv/argv
      * are passed since we might potentially show a GUI dialog at this point
      * to help the user our (finding a base package), and hence need to init Qt.
      */
-  void setupRoot(int argc, char **argv);
+  OptionResult setupRoot(int argc, char** argv);
 
-  
+
   class OptionsPrivate;
   std::unique_ptr<OptionsPrivate> p;
 };

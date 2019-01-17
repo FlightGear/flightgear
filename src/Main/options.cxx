@@ -2098,7 +2098,7 @@ Options::~Options()
 {
 }
 
-void Options::init(int argc, char **argv, const SGPath& appDataPath)
+OptionResult Options::init(int argc, char** argv, const SGPath& appDataPath)
 {
 // first, process the command line
   bool inOptions = true;
@@ -2143,8 +2143,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
   if (!p->shouldLoadDefaultConfig) {
-    setupRoot(argc, argv);
-    return;
+      return setupRoot(argc, argv);
   }
 
 // then config files
@@ -2172,7 +2171,10 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
   }
 
 // setup FG_ROOT
-  setupRoot(argc, argv);
+  auto res = setupRoot(argc, argv);
+  if (res != FG_OPTIONS_OK) {
+      return res;
+  }
 
 // system.fgfsrc is disabled, as we no longer allow anything in fgdata to set
 // fg-root/fg-home/fg-aircraft and hence control what files Nasal can access
@@ -2202,6 +2204,8 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       "If you created this file intentionally, please move it to '" +
       nameForError + "'.");
   }
+
+  return FG_OPTIONS_OK;
 }
 
 void Options::initPaths()
@@ -2952,14 +2956,14 @@ string_list Options::extractOptions() const
     return result;
 }
 
-void Options::setupRoot(int argc, char **argv)
+OptionResult Options::setupRoot(int argc, char** argv)
 {
     SGPath root(globals->get_fg_root());
     bool usingDefaultRoot = false;
 
     // root has already been set, so skip the fg_root setting and validation.
     if (!root.isNull()) {
-        return;
+        return FG_OPTIONS_OK;
     }
 
   if (isOptionSet("fg-root")) {
@@ -2998,7 +3002,11 @@ void Options::setupRoot(int argc, char **argv)
     // a command-line, env-var or default root this check can fail and
     // we still want to use the GUI in that case
     if (versionComp != 0) {
-        SetupRootDialog::runDialog(usingDefaultRoot);
+        flightgear::initApp(argc, argv);
+        bool ok = SetupRootDialog::runDialog(usingDefaultRoot);
+        if (!ok) {
+            return FG_OPTIONS_EXIT;
+        }
     }
 #else
     SG_UNUSED(usingDefaultRoot);
@@ -3022,6 +3030,7 @@ void Options::setupRoot(int argc, char **argv)
         std::string(FLIGHTGEAR_VERSION) + "' is required.");
   }
 #endif
+    return FG_OPTIONS_OK;
 }
 
 bool Options::shouldLoadDefaultConfig() const
