@@ -140,7 +140,7 @@ private:
     mutable ReferenceFrame _clipFrame = ReferenceFrame::GLOBAL;
 
     void parseCSSClip(QByteArray value);
-    float parseCSSValue(QByteArray value) const;
+    double parseCSSValue(QByteArray value) const;
 };
 
 using FGCanvasElementVec = std::vector<FGCanvasElement*>;

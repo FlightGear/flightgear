@@ -218,13 +218,13 @@ signals:
     void strokeChanged(QPen stroke);
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override
     {
         QQuickItem::geometryChanged(newGeometry, oldGeometry);
         update();
     }
 
-    QRectF boundingRect() const
+    QRectF boundingRect() const override
     {
         if ((width() == 0.0) || (height() == 0.0)) {
             return QRectF(0.0, 0.0, implicitWidth(), implicitHeight());

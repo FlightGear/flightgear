@@ -175,30 +175,34 @@ void FGCanvasElement::paint(FGCanvasPaintContext *context) const
     QPainter* p = context->painter();
     p->save();
 
+    QTransform combined = combinedTransform();
 
     if (_hasClip)
     {
+        QTransform t = p->transform();
+
         // clip is defined in the global coordinate system
-        if (_clipFrame != ReferenceFrame::GLOBAL) {
-            qWarning() << Q_FUNC_INFO << "implement support for non-global clips";
+        if (_clipFrame == ReferenceFrame::GLOBAL) {
+            // this rpelaces the transform entirely
+            p->setTransform(context->globalCoordinateTransform());
+        } else if (_clipFrame == ReferenceFrame::LOCAL) {
+            p->setTransform(combined,  true /* combine */);
+        } else if (_clipFrame == ReferenceFrame::PARENT) {
+            // incoming transform is already our parent
+        } else {
+            qWarning() << "Unhandled clip type:" << static_cast<int>(_clipFrame) << "at" << property()->path();
         }
+
 #if defined(DEBUG_PAINTING)
-        p->save();
-        p->setTransform(context->globalCoordinateTransform());
         p->setPen(Qt::yellow);
         p->setBrush(QBrush(Qt::yellow, Qt::DiagCrossPattern));
         p->drawRect(_clipRect);
-        p->restore();
 #endif
-
-        QTransform t = p->transform();
-        p->setTransform(context->globalCoordinateTransform());
-        p->setClipRect(_clipRect);
         p->setClipping(true);
-        p->setTransform(t);
+        p->setClipRect(_clipRect);
+        p->setTransform(t); // restore the previous transformation
     }
 
-    QTransform combined = combinedTransform();
     p->setTransform(combined,  true /* combine */);
 
     if (!_fillColor.isValid()) {
@@ -385,7 +389,7 @@ void FGCanvasElement::markClipDirty()
     requestPolish();
 }
 
-float FGCanvasElement::parseCSSValue(QByteArray value) const
+double FGCanvasElement::parseCSSValue(QByteArray value) const
 {
     value = value.trimmed();
     // deal with %, px suffixes
@@ -396,7 +400,7 @@ float FGCanvasElement::parseCSSValue(QByteArray value) const
         value.truncate(value.length() - 2);
     }
     bool ok = false;
-    float v = value.toFloat(&ok);
+    qreal v = value.toDouble(&ok);
     if (!ok) {
         qWarning() << "failed to parse:" << value;
     }
@@ -406,7 +410,7 @@ float FGCanvasElement::parseCSSValue(QByteArray value) const
 QColor FGCanvasElement::parseColorValue(QVariant value) const
 {
     QString colorString = value.toString();
-    if (colorString.isEmpty() || colorString == "none") {
+    if (colorString.isEmpty() || (colorString == QStringLiteral("none"))) {
         return QColor(); // return an invalid color
     }
 

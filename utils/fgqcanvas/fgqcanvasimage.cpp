@@ -89,13 +89,13 @@ public:
     }
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override
     {
         QQuickItem::geometryChanged(newGeometry, oldGeometry);
         update();
     }
 
-    QRectF boundingRect() const
+    QRectF boundingRect() const override
     {
         if (!widthValid() || !heightValid()) {
             return QRectF(QPointF(), m_size);

@@ -210,7 +210,12 @@ void FGCanvasText::dumpElement()
 void FGCanvasText::doPaint(FGCanvasPaintContext *context) const
 {
     context->painter()->setFont(_font);
-    context->painter()->setPen(fillColor());
+    QColor c = fillColor();
+    if (!c.isValid()) {
+        c = Qt::white;
+    }
+
+    context->painter()->setPen(c);
     context->painter()->setBrush(Qt::NoBrush);
     QRectF rect(0, 0, 1000, 1000);
 
