@@ -386,6 +386,7 @@ QString ApplicationController::gettingStartedText() const
 
 bool ApplicationController::showGettingStarted() const
 {
+    if (m_daemonMode) return false;
     QSettings settings;
     return settings.value("show-getting-started", true).toBool();
 }
