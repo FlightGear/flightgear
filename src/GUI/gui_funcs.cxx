@@ -441,16 +441,20 @@ namespace
 
     SGPath nextScreenshotPath(const SGPath& screenshotDir)
     {
-        char filename[32];
-        static int count = 1;
-        while (count < 0x7fff) {
-            if (count < 1000) {
-                // zero-pad for backwards compatability
-                snprintf(filename, 32, "fgfs-screen-%03d.png", count++);
-            } else {
-                snprintf(filename, 32, "fgfs-screen-%d.png", count++);
-            }
-            
+        char filename[60];
+        int count = 0;
+        while (count < 100) { // 100 per second should be more than enough.
+            char time_str[20];
+            time_t calendar_time = time(NULL);
+            struct tm *tmUTC;
+            tmUTC = gmtime(&calendar_time);
+            strftime(time_str, sizeof(time_str), "%Y%m%d%H%M%S", tmUTC);
+
+            if (count)
+                snprintf(filename, 32, "fgfs-%s-%d.png", time_str, count++);
+            else
+                snprintf(filename, 32, "fgfs-%s.png", time_str);
+
             SGPath p = screenshotDir / filename;
             if (!p.exists()) {
                 return p;
