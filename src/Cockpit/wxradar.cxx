@@ -1090,8 +1090,12 @@ wxRadarBg::updateFont()
         _font = font;
         _font->setMinFilterHint(osg::Texture::NEAREST);
         _font->setMagFilterHint(osg::Texture::NEAREST);
+#if OSG_VERSION_LESS_THAN(3,5,6)
         _font->setGlyphImageMargin(0);
         _font->setGlyphImageMarginRatio(0);
+#else
+//OSG:TODO: need 3.5.7 version of this.
+#endif
     }
 
     for (int i=0;i<4;i++)
