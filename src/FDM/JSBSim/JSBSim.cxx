@@ -1344,20 +1344,20 @@ bool FGJSBsim::update_ground_cache(const FGLocation& cart, double dt)
   bool cache_ok = prepare_ground_cache_ft( t0, t0 + dt, cart_pos,
                                            groundCacheRadius );
   if (!cache_ok) {
-    SG_LOG(SG_FLIGHT, SG_WARN,
-           "FGInterface is being called without scenery below the aircraft!");
+    //SG_LOG(SG_FLIGHT, SG_WARN,
+    //       "FGInterface is being called without scenery below the aircraft!");
 
-    SG_LOG(SG_FLIGHT, SG_WARN, "altitude         = "
-                      << fgic->GetAltitudeASLFtIC());
+    //SG_LOG(SG_FLIGHT, SG_WARN, "altitude         = "
+    //                  << fgic->GetAltitudeASLFtIC());
 
-    SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = "
-                      << get_Sea_level_radius());
+    //SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = "
+    //                  << get_Sea_level_radius());
 
-    SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = "
-                      << fgic->GetLatitudeRadIC());
+    //SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = "
+    //                  << fgic->GetLatitudeRadIC());
 
-    SG_LOG(SG_FLIGHT, SG_WARN, "longitude        = "
-                      << fgic->GetLongitudeRadIC());
+    //SG_LOG(SG_FLIGHT, SG_WARN, "longitude        = "
+    //                  << fgic->GetLongitudeRadIC());
   }
 
   return cache_ok;

@@ -393,10 +393,12 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
             _altitude = alt;
     }
     
-    // Still not sucessful??
-    if (!found_ground)
-        SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build "
-               "cache without any scenery below the aircraft");
+    // RJH: 2018-12-31: Remove this message as it happens too frequently when flying over areas of missing terrain
+    //                  and realistically it doesn't really give much information to help identify or resolve a problem
+    //                  which is evident when looking out of the window.
+    //if (!found_ground)
+    //    SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build "
+    //           "cache without any scenery below the aircraft");
 
 #ifdef GROUNDCACHE_DEBUG
     t0 = SGTimeStamp::now() - t0;
