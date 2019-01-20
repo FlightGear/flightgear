@@ -84,7 +84,7 @@ namespace canvas
     {
       SGPath valid_path = fgValidatePath(p, false);
       if( !valid_path.isNull() )
-        return osgDB::readImageFile(valid_path.local8BitStr());
+        return osgDB::readRefImageFile(valid_path.local8BitStr());
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: reading '" << path << "' denied");
     }
