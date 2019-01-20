@@ -90,6 +90,8 @@ protected:
 
 #endif
 
+double PUICamera::pixelRatio;
+
 class PUIDrawable : public osg::Drawable
 {
 public:
@@ -285,9 +287,8 @@ void PUICamera::puGetWindowSize(int* width, int* height)
         return;
 
     osg::Viewport* vport = camera->getViewport();
-    const double ratio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
-    *width = static_cast<int>(vport->width() / ratio);
-    *height = static_cast<int>(vport->height() / ratio);
+    *width = static_cast<int>(vport->width() / pixelRatio);
+    *height = static_cast<int>(vport->height() / pixelRatio);
 }
 
 void PUICamera::initPUI()
@@ -296,10 +297,10 @@ void PUICamera::initPUI()
                      PUICamera::puGetWindowSize, nullptr);
     puRealInit();
 }
-
 PUICamera::PUICamera() :
     osg::Camera()
 {
+    pixelRatio = 1.0;
 }
 
 void PUICamera::init(osg::Group* parent)
@@ -388,9 +389,9 @@ void PUICamera::manuallyResizeFBO(int width, int height)
 
 void PUICamera::resizeUi(int width, int height)
 {
-    double ratio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
-    const int scaledWidth = static_cast<int>(width / ratio);
-    const int scaledHeight = static_cast<int>(height / ratio);
+    pixelRatio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
+    const int scaledWidth = static_cast<int>(width / pixelRatio);
+    const int scaledHeight = static_cast<int>(height / pixelRatio);
     
     setViewport(0, 0, scaledWidth, scaledHeight);
 #if OSG_VERSION_LESS_THAN(3,4,0)

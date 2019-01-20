@@ -47,7 +47,7 @@ private:
     class UpdateViewportAndFBOAfterTextureResizeCallback;
     UpdateViewportAndFBOAfterTextureResizeCallback* _resizeCullCallback = nullptr;
 #endif
-    
+    static double pixelRatio;
     void manuallyResizeFBO(int width, int height);
 
     osg::Texture2D* _fboTexture = nullptr;
