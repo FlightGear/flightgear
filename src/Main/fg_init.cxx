@@ -1147,7 +1147,7 @@ void fgStartNewReset()
             try {
                 subsystemManger->remove(nm.c_str());
             } catch (std::exception& e) {
-                SG_LOG(SG_GENERAL, SG_INFO, "caught std::exception shutting down:" << nm);
+                SG_LOG(SG_GENERAL, SG_INFO, "caught " << e.what() << " << shutting down:" << nm);
             } catch (...) {
                 SG_LOG(SG_GENERAL, SG_INFO, "caught generic exception shutting down:" << nm);
             }
@@ -1233,9 +1233,9 @@ void fgStartNewReset()
 
     sgUserDataInit( globals->get_props() );
 
-    viewer->getDatabasePager()->setUpThreads(1, 1);
+    viewer->getDatabasePager()->setUpThreads(20, 1);
     
-    // must do this before preinit for Rembrandt
+    // must do this before preinit for Rembrandthe
     flightgear::CameraGroup::buildDefaultGroup(viewer.get());
     render->preinit();
     viewer->startThreading();
