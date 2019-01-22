@@ -326,9 +326,6 @@ FGStgTerrain::get_elevation_m(const SGGeod& geod, double& alt,
   alt = geodEnd.getElevationM();
   if (material) {
       *material = intersectVisitor.getMaterial();
-      SG_LOG(SG_TERRAIN, SG_DEBUG, "FGStgTerrain::get_elevation_m: alt " << alt << " material " << *material );
-  } else {
-      SG_LOG(SG_TERRAIN, SG_DEBUG, "FGStgTerrain::get_elevation_m: alt " << alt << " no material " );
   }
   
   return true;
@@ -339,8 +336,6 @@ FGStgTerrain::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& di
                                            SGVec3d& nearestHit,
                                            const osg::Node* butNotFrom)
 {
-  SG_LOG(SG_TERRAIN, SG_DEBUG, "FGStgTerrain::get_cart_ground_intersection");
-
   // We assume that starting positions in the center of the earth are invalid
   if ( norm1(pos) < 1 )
     return false;
