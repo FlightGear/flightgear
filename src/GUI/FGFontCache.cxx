@@ -100,6 +100,7 @@ FGFontCache::~FGFontCache()
    PuFontMap::iterator it, end = _puFonts.end();
    for (it = _puFonts.begin(); it != end; ++it)
        delete it->second;
+   _puFonts.clear();
 }
 
 inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
