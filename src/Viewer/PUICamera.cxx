@@ -90,7 +90,7 @@ protected:
 
 #endif
 
-double PUICamera::pixelRatio;
+double static_pixelRatio = 1.0;
 
 class PUIDrawable : public osg::Drawable
 {
@@ -149,12 +149,11 @@ public:
     {
         if (ea.getHandled()) return false;
         
-        const double ratio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
         // PUI expects increasing downward mouse coords
         const int fixedY = (ea.getMouseYOrientation() == osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS) ?
                             ea.getWindowHeight() - ea.getY() : ea.getY();
-        const int scaledX = static_cast<int>(ea.getX() / ratio);
-        const int scaledY = static_cast<int>(fixedY / ratio);
+        const int scaledX = static_cast<int>(ea.getX() / static_pixelRatio);
+        const int scaledY = static_cast<int>(fixedY / static_pixelRatio);
         
         switch(ea.getEventType())
         {
@@ -287,8 +286,8 @@ void PUICamera::puGetWindowSize(int* width, int* height)
         return;
 
     osg::Viewport* vport = camera->getViewport();
-    *width = static_cast<int>(vport->width() / pixelRatio);
-    *height = static_cast<int>(vport->height() / pixelRatio);
+    *width = static_cast<int>(vport->width() / static_pixelRatio);
+    *height = static_cast<int>(vport->height() / static_pixelRatio);
 }
 
 void PUICamera::initPUI()
@@ -300,7 +299,6 @@ void PUICamera::initPUI()
 PUICamera::PUICamera() :
     osg::Camera()
 {
-    pixelRatio = 1.0;
 }
 
 void PUICamera::init(osg::Group* parent)
@@ -389,9 +387,9 @@ void PUICamera::manuallyResizeFBO(int width, int height)
 
 void PUICamera::resizeUi(int width, int height)
 {
-    pixelRatio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
-    const int scaledWidth = static_cast<int>(width / pixelRatio);
-    const int scaledHeight = static_cast<int>(height / pixelRatio);
+    static_pixelRatio = fgGetDouble("/sim/rendering/gui-pixel-ratio", 1.0);
+    const int scaledWidth = static_cast<int>(width / static_pixelRatio);
+    const int scaledHeight = static_cast<int>(height / static_pixelRatio);
     
     setViewport(0, 0, scaledWidth, scaledHeight);
 #if OSG_VERSION_LESS_THAN(3,4,0)
