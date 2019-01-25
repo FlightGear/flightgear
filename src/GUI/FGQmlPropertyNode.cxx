@@ -1,3 +1,21 @@
+// Copyright (C) 2020  James Turner  <james@flightgear.org>
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#include "config.h"
+
 #include "FGQmlPropertyNode.hxx"
 
 #include <QVector3D>
@@ -120,6 +138,7 @@ void FGQmlPropertyNode::setNode(SGPropertyNode_ptr node)
     emit parentPropChanged(parentProp());
     emit pathChanged(path());
     emit valueChangedNotify(value());
+    emit childPropsChanged();
 }
 
 SGPropertyNode_ptr FGQmlPropertyNode::node() const
@@ -135,9 +154,40 @@ void FGQmlPropertyNode::valueChanged(SGPropertyNode *node)
     emit valueChangedNotify(value());
 }
 
+void FGQmlPropertyNode::childAdded(SGPropertyNode* pr, SGPropertyNode* child)
+{
+    if (pr == _prop) {
+        emit childPropsChanged();
+    }
+}
+
+void FGQmlPropertyNode::childRemoved(SGPropertyNode* pr, SGPropertyNode* child)
+{
+    if (pr == _prop) {
+        emit childPropsChanged();
+    }
+}
+
 void FGQmlPropertyNode::setPath(QString path)
 {
     SGPropertyNode_ptr node = fgGetNode(path.toStdString(), false /* don't create */);
     setNode(node);
 }
 
+
+int FGQmlPropertyNode::childCount() const
+{
+    if (!_prop)
+        return 0;
+    return _prop->nChildren();
+}
+
+FGQmlPropertyNode* FGQmlPropertyNode::childAt(int index) const
+{
+    if (!_prop || (_prop->nChildren() <= index))
+        return nullptr;
+
+    auto pp = new FGQmlPropertyNode;
+    pp->setNode(_prop->getChild(index));
+    return pp;
+}

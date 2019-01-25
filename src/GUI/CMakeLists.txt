@@ -112,8 +112,6 @@ if (HAVE_QT)
                             LaunchConfig.hxx
                             MPServersModel.cpp
                             MPServersModel.h
-                            PathUrlHelper.cxx
-                            PathUrlHelper.hxx
                             RecentAircraftModel.cxx
                             RecentAircraftModel.hxx
                             RecentLocationsModel.cxx
@@ -176,12 +174,16 @@ if (HAVE_QT)
                         FlightPlanController.hxx
                         RouteDiagram.cxx
                         RouteDiagram.hxx
+                        StackController.cxx
+                        StackController.hxx
                         ModelDataExtractor.cxx
                         ModelDataExtractor.hxx
                         HoverArea.cxx
                         HoverArea.hxx
                         FGQQWindowManager.cxx
                         FGQQWindowManager.hxx
+                        PathUrlHelper.cxx
+                        PathUrlHelper.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

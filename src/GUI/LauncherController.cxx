@@ -27,35 +27,36 @@
 #include <Main/fg_props.hxx>
 #include "version.h"
 
-#include "QtLauncher.hxx"
-#include "QmlAircraftInfo.hxx"
-#include "LauncherArgumentTokenizer.hxx"
-#include "PathUrlHelper.hxx"
-#include "PopupWindowTracker.hxx"
-#include "RecentAircraftModel.hxx"
-#include "RecentLocationsModel.hxx"
-#include "ThumbnailImageItem.hxx"
-#include "PreviewImageItem.hxx"
-#include "MPServersModel.h"
-#include "AircraftSearchFilterModel.hxx"
-#include "DefaultAircraftLocator.hxx"
-#include "LaunchConfig.hxx"
 #include "AircraftModel.hxx"
-#include "LocationController.hxx"
-#include "QmlPositioned.hxx"
-#include "PixmapImageItem.hxx"
+#include "AircraftSearchFilterModel.hxx"
 #include "AirportDiagram.hxx"
 #include "CarrierDiagram.hxx"
-#include "NavaidDiagram.hxx"
-#include "RouteDiagram.hxx"
-#include "QmlRadioButtonHelper.hxx"
-#include "UnitsModel.hxx"
-#include "NavaidSearchModel.hxx"
-#include "FlightPlanController.hxx"
-#include "ModelDataExtractor.hxx"
 #include "CarriersLocationModel.hxx"
-#include "SetupRootDialog.hxx"
+#include "DefaultAircraftLocator.hxx"
+#include "FlightPlanController.hxx"
 #include "HoverArea.hxx"
+#include "LaunchConfig.hxx"
+#include "LauncherArgumentTokenizer.hxx"
+#include "LocationController.hxx"
+#include "MPServersModel.h"
+#include "ModelDataExtractor.hxx"
+#include "NavaidDiagram.hxx"
+#include "NavaidSearchModel.hxx"
+#include "PathUrlHelper.hxx"
+#include "PixmapImageItem.hxx"
+#include "PopupWindowTracker.hxx"
+#include "PreviewImageItem.hxx"
+#include "QmlAircraftInfo.hxx"
+#include "QmlPositioned.hxx"
+#include "QmlRadioButtonHelper.hxx"
+#include "QtLauncher.hxx"
+#include "RecentAircraftModel.hxx"
+#include "RecentLocationsModel.hxx"
+#include "RouteDiagram.hxx"
+#include "SetupRootDialog.hxx"
+#include "StackController.hxx"
+#include "ThumbnailImageItem.hxx"
+#include "UnitsModel.hxx"
 
 using namespace simgear::pkg;
 
@@ -154,7 +155,7 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<Units>("FlightGear", 1, 0, "Units", "Only for enum");
     qmlRegisterType<UnitsModel>("FlightGear", 1, 0, "UnitsModel");
 
-    qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
+    qmlRegisterType<FileDialogWrapper>("FlightGear", 1, 0, "FileDialog");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
     qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
 
@@ -174,6 +175,7 @@ void LauncherController::initQML()
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
     qmlRegisterType<HoverArea>("FlightGear", 1, 0, "HoverArea");
+    qmlRegisterType<StackController>("FlightGear", 1, 0, "StackController");
 
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
 
