@@ -154,6 +154,8 @@ public slots:
         // The root item is ready. Associate it with the window.
         rootItem->setParentItem(quickWindow->contentItem());
         syncRequired = true;
+        rootItem->setWidth(quickWindow->width());
+        rootItem->setHeight(quickWindow->height());
     }
     
     void onSceneChanged()

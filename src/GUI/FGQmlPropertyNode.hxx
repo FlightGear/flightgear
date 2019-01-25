@@ -17,6 +17,9 @@ public:
     Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged)
     Q_PROPERTY(FGQmlPropertyNode* parentProp READ parentProp NOTIFY parentPropChanged)
 
+//    Q_PROPERTY(QQmlListProperty* childProps READ childProps NOTIFY childPropsChanged)
+
+    
     Q_INVOKABLE bool set(QVariant newValue);
 
     // children accessor
@@ -34,6 +37,8 @@ protected:
     // SGPropertyChangeListener API
 
       void valueChanged(SGPropertyNode * node) override;
+    void childAdded(SGPropertyNode* pr, SGPropertyNode* child) override;
+    void childRemoved(SGPropertyNode* pr, SGPropertyNode* child) override;
 
 signals:
 
@@ -42,7 +47,8 @@ signals:
       void pathChanged(QString path);
 
       void parentPropChanged(FGQmlPropertyNode* parentProp);
-
+    void childPropsChanged();
+    
 public slots:
 
     void setPath(QString path);

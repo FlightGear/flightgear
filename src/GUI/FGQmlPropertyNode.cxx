@@ -135,6 +135,20 @@ void FGQmlPropertyNode::valueChanged(SGPropertyNode *node)
     emit valueChangedNotify(value());
 }
 
+void FGQmlPropertyNode::childAdded(SGPropertyNode* pr, SGPropertyNode* child)
+{
+    if (pr == _prop) {
+        emit childPropsChanged();
+    }
+}
+
+void FGQmlPropertyNode::childRemoved(SGPropertyNode* pr, SGPropertyNode* child)
+{
+    if (pr == _prop) {
+        emit childPropsChanged();
+    }
+}
+
 void FGQmlPropertyNode::setPath(QString path)
 {
     SGPropertyNode_ptr node = fgGetNode(path.toStdString(), false /* don't create */);

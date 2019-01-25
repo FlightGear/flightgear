@@ -110,8 +110,6 @@ if (HAVE_QT)
                             LaunchConfig.hxx
                             MPServersModel.cpp
                             MPServersModel.h
-                            PathUrlHelper.cxx
-                            PathUrlHelper.hxx
                             RecentAircraftModel.cxx
                             RecentAircraftModel.hxx
                             RecentLocationsModel.cxx
@@ -133,7 +131,7 @@ if (HAVE_QT)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
     add_library(fgqmlui QQuickDrawable.cxx
-                        QQuickDrawable.hxx                    
+                        QQuickDrawable.hxx
                         QtQuickFGCanvasItem.cxx
                         QtQuickFGCanvasItem.hxx
                         PropertyItemModel.cxx
@@ -168,10 +166,14 @@ if (HAVE_QT)
                         FlightPlanController.hxx
                         RouteDiagram.cxx
                         RouteDiagram.hxx
+                        StackController.cxx
+                        StackController.hxx
                         ModelDataExtractor.cxx
                         ModelDataExtractor.hxx
                         FGQQWindowManager.cxx
                         FGQQWindowManager.hxx
+                        PathUrlHelper.cxx
+                        PathUrlHelper.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

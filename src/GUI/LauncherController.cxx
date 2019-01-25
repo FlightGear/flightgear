@@ -52,6 +52,7 @@
 #include "NavaidSearchModel.hxx"
 #include "FlightPlanController.hxx"
 #include "ModelDataExtractor.hxx"
+#include "StackController.hxx"
 
 using namespace simgear::pkg;
 
@@ -148,7 +149,7 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<Units>("FlightGear", 1, 0, "Units", "Only for enum");
     qmlRegisterType<UnitsModel>("FlightGear", 1, 0, "UnitsModel");
 
-    qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
+    qmlRegisterType<FileDialogWrapper>("FlightGear", 1, 0, "FileDialog");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
     qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
 
@@ -166,6 +167,7 @@ void LauncherController::initQML()
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
+    qmlRegisterType<StackController>("FlightGear", 1, 0, "StackController");
 
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
 
