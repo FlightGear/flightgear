@@ -117,7 +117,11 @@ void FGPgtTerrain::init( osg::Group* terrain ) {
         options->setDem(_dem);
 
         SG_LOG(SG_TERRAIN, SG_INFO, "Terrain init - Load w180s90-360x180.pgt" );
+#if OSG_VERSION_LESS_THAN(3,4,0)
+        osg::ref_ptr<osg::Node> loadedModel = osgDB::readNodeFile("w180s90-360x180.pgt", options.get());
+#else
         osg::ref_ptr<osg::Node> loadedModel = osgDB::readRefNodeFile("w180s90-360x180.pgt", options.get());
+#endif
         if ( loadedModel ) {
             terrain_branch->addChild( loadedModel.get() );
 

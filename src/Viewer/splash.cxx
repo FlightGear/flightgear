@@ -81,7 +81,11 @@ SplashScreen::~SplashScreen()
 
 void SplashScreen::createNodes()
 {
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    _splashImage = osgDB::readImageFile(selectSplashImage());
+#else
     _splashImage = osgDB::readRefImageFile(selectSplashImage());
+#endif
 
     int width = _splashImage->s();
     int height = _splashImage->t();
@@ -281,7 +285,11 @@ void SplashScreen::setupLogoImage()
         return;
     }
 
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    _logoImage = osgDB::readImageFile(logoPath.utf8Str());
+#else
     _logoImage = osgDB::readRefImageFile(logoPath.utf8Str());
+#endif
     if (!_logoImage) {
         return;
     }

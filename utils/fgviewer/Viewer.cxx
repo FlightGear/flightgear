@@ -553,7 +553,11 @@ Viewer::insertSceneData(const std::string& fileName, const osgDB::Options* optio
     insertSceneData(proxyNode);
     return true;
 #else
+#if OSG_VERSION_LESS_THAN(3,4,0)
+    osg::ref_ptr<osg::Node> node = osgDB::readNodeFile(fileName, options);
+#else
     osg::ref_ptr<osg::Node> node = osgDB::readRefNodeFile(fileName, options);
+#endif
     if (!node.valid())
         return false;
     insertSceneData(node.get());
