@@ -291,6 +291,10 @@ void LauncherController::collectAircraftArgs()
     Q_FOREACH(QString path, settings.value("aircraft-paths").toStringList()) {
         m_config->setArg("fg-aircraft", path);
     }
+
+    Q_FOREACH(QString path, settings.value("addon-module-paths").toStringList()) {
+        m_config->setArg("addon", path);
+    }
 }
 
 void LauncherController::saveAircraft()

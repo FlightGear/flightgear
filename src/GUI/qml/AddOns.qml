@@ -138,6 +138,73 @@ Item {
             }
 
             AddOnsHeader {
+                id: addonModuleHeader
+                title: qsTr("Add-on Module folders")
+                description: qsTr("To use Add-on Modules that you download yourself, FlightGear needs to " +
+                                  "know the folder(s) containing the Add-on Modules.")
+                showAddButton: true
+                onAdd: {
+                    var newPath =_addOns.addAddOnModulePath();
+                    if (newPath !== "") {
+                        _addOns.modulePaths.push(newPath)
+                    }
+                }
+            }
+
+            Rectangle {
+                width: parent.width
+                height: addonModulePathsColumn.childrenRect.height + 1
+                border.width: 1
+                border.color: Style.frameColor
+                clip: true
+
+                Column {
+                    id: addonModulePathsColumn
+                    width: parent.width - Style.margin * 2
+                    x: Style.margin
+
+                    Repeater {
+                        id: addonModulesPathsRepeater
+                        model: _addOns.modulePaths
+                        delegate: PathListDelegate {
+                            width: addonModulePathsColumn.width
+                            deletePromptText: qsTr("Remove the add-on module folder: '%1' from the list? (The folder contents will not be changed)").arg(modelData);
+                            modelCount: _addOns.modulePaths.length
+
+                            onPerformDelete: {
+                                var modifiedPaths = _addOns.modulePaths.slice()
+                                modifiedPaths.splice(model.index, 1);
+                                _addOns.modulePaths = modifiedPaths;
+                            }
+
+                            onPerformMove: {
+                                var modifiedPaths = _addOns.modulePaths.slice()
+                                modifiedPaths.splice(model.index, 1);
+                                modifiedPaths.splice(newIndex, 0, modelData)
+                                _addOns.modulePaths = modifiedPaths;
+                            }
+                        }
+                    }
+
+                    StyledText {
+                        visible: (addonModulesPathsRepeater.count == 0)
+                        width: parent.width
+                        text : qsTr("No custom add-on module paths are configured.");
+                    }
+                }
+
+
+            }
+
+    //////////////////////////////////////////////////////////////////
+
+            Item {
+                // spacing item
+                width: parent.width
+                height: Style.margin * 2
+            }
+
+            AddOnsHeader {
                 id: sceneryHeader
                 title: qsTr("Additional scenery folders")
                 description: qsTr("To use scenery you download yourself, FlightGear needs " +

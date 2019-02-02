@@ -34,6 +34,7 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent) :
     QSettings settings;
     m_sceneryPaths = settings.value("scenery-paths").toStringList();
     m_aircraftPaths = settings.value("aircraft-paths").toStringList();
+    m_addonModulePaths = settings.value("addon-module-paths").toStringList();
 
     qmlRegisterUncreatableType<AddOnsController>("FlightGear.Launcher", 1, 0, "AddOnsControllers", "no");
     qmlRegisterUncreatableType<CatalogListModel>("FlightGear.Launcher", 1, 0, "CatalogListModel", "no");
@@ -47,6 +48,11 @@ QStringList AddOnsController::aircraftPaths() const
 QStringList AddOnsController::sceneryPaths() const
 {
     return m_sceneryPaths;
+}
+
+QStringList AddOnsController::modulePaths() const
+{
+    return m_addonModulePaths;
 }
 
 QString AddOnsController::addAircraftPath() const
@@ -78,6 +84,43 @@ QString AddOnsController::addAircraftPath() const
         mb.setText(tr("No aircraft found in the folder '%1' - add anyway?").arg(path));
         mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         mb.setDefaultButton(QMessageBox::No);
+        mb.exec();
+
+        if (mb.result() == QMessageBox::No) {
+            return {};
+        }
+    }
+
+    return path;
+}
+
+
+QString AddOnsController::addAddOnModulePath() const
+{
+    QString path = QFileDialog::getExistingDirectory(nullptr, tr("Choose addon module folder"));
+    if (path.isEmpty()) {
+        return {};
+
+    }
+
+    // validation
+    SGPath p(path.toStdString());
+    bool isValid = false;
+
+    for (const auto& file: {"addon-config.xml", "addon-main.nas"}) {
+        if ((p / file).exists()) {
+            isValid = true;
+            break;
+        }
+    }
+
+    if (!isValid) {
+        QMessageBox mb;
+        mb.setText(tr("The folder '%1' doesn't appear to contain an addon module - add anyway?").arg(path));
+        mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        mb.setDefaultButton(QMessageBox::No);
+        mb.setInformativeText(tr("Added modules should contain at least both of the following "
+                                 "files: addon-config.xml, addon-main.nas."));
         mb.exec();
 
         if (mb.result() == QMessageBox::No) {
@@ -171,6 +214,19 @@ void AddOnsController::setSceneryPaths(QStringList sceneryPaths)
     flightgear::launcherSetSceneryPaths();
 
     emit sceneryPathsChanged(m_sceneryPaths);
+}
+
+void AddOnsController::setModulePaths(QStringList modulePaths)
+{
+    if (m_addonModulePaths == modulePaths)
+        return;
+
+    m_addonModulePaths = modulePaths;
+
+    QSettings settings;
+    settings.setValue("addon-module-paths", m_addonModulePaths);
+
+    emit modulePathsChanged(m_addonModulePaths);
 }
 
 void AddOnsController::officialCatalogAction(QString s)

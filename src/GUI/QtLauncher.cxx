@@ -63,6 +63,8 @@
 #include <Navaids/navrecord.hxx>
 #include <Navaids/SHPParser.hxx>
 #include <Airports/airport.hxx>
+#include <Add-ons/AddonManager.hxx>
+
 
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
@@ -390,7 +392,6 @@ void restartTheApp()
 #endif
     qApp->exit(-1);
 }
-
 
 void launcherSetSceneryPaths()
 {
