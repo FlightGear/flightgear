@@ -204,7 +204,7 @@ static bool commandRequestMetar(const SGPropertyNode * arg, SGPropertyNode * roo
   }
   
   string icao(arg->getStringValue("station"));
-  std::transform(icao.begin(), icao.end(), icao.begin(), static_cast<int(*)(int)>(std::tolower));
+  std::transform(icao.begin(), icao.end(), icao.begin(), static_cast<int(*)(int)>(std::toupper));
 
   string path = arg->getStringValue("path");
   self->addMetarAtPath(path, icao);
@@ -470,7 +470,7 @@ void NoaaMetarRealWxController::requestMetar
   };
 
   string upperId = id;
-  std::transform(upperId.begin(), upperId.end(), upperId.begin(), static_cast<int(*)(int)>(std::tolower));
+  std::transform(upperId.begin(), upperId.end(), upperId.begin(), static_cast<int(*)(int)>(std::toupper));
 
   SG_LOG
   (
