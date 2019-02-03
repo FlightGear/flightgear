@@ -239,7 +239,8 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     setLongitude(scFileNode->getDoubleValue("longitude", 0.0));
     setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
     setBank(scFileNode->getDoubleValue("roll", 0.0));
-
+    setPitch(scFileNode->getDoubleValue("pitch", 0.0));
+    
     SGPropertyNode* submodels = scFileNode->getChild("submodels");
 
     if (submodels) {
@@ -707,7 +708,13 @@ void FGAIBase::bind() {
     props->setDoubleValue("controls/flight/target-hdg", hdg);
     props->setDoubleValue("controls/flight/target-roll", roll);
 
-    props->setStringValue("controls/flight/longitude-mode", "alt");
+    props->setStringValue("controls/flight/vertical-mode", "alt");
+
+    // The property above was incorrectly labelled 'longitude-mode' up until
+    // FG 2018.4, so create an alias in case anyone is relying on the old name
+    auto node = props->getNode("controls/flight/longitude-mode", true);
+    node->alias(props->getNode("controls/flight/vertical-mode"));
+    
     props->setDoubleValue("controls/flight/target-alt", altitude_ft);
     props->setDoubleValue("controls/flight/target-pitch", pitch);
 

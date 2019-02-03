@@ -1041,7 +1041,7 @@ void FGAIAircraft::updatePrimaryTargetValues(double dt, bool& flightplanActive, 
         }
 
         string lon_mode
-        = props->getStringValue("controls/flight/longitude-mode");
+        = props->getStringValue("controls/flight/vertical-mode");
         if ( lon_mode == "alt" ) {
             double alt = props->getDoubleValue("controls/flight/target-alt" );
             ClimbTo( alt );
