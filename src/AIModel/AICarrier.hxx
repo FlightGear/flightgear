@@ -79,6 +79,15 @@ public:
     static SGSharedPtr<FGAICarrier> findCarrierByNameOrPennant(const std::string& namePennant);    
     
     static std::pair<bool, SGGeod> initialPositionForCarrier(const std::string& namePennant);
+    
+    /**
+     * for a given scenario node, check for carriers within, and write nodes with
+     * names, pennants and initial position into the second argument.
+     * This is used to support 'start on a carrier', since we can quickly find
+     * the corresponding scenario file to be loaded.
+     */
+    static void extractNamesPennantsFromScenario(SGPropertyNode_ptr xmlNode, SGPropertyNode_ptr scenario);
+
 private:
   /// Is sufficient to be private, stores a possible position to place an
   /// aircraft on start

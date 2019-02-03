@@ -63,9 +63,16 @@ public:
     inline double get_user_roll() const { return user_roll; }
     inline double get_user_agl() const { return user_altitude_agl; }
 
-    bool loadScenario( const std::string &filename );
+    bool loadScenario( const std::string &id );
 
-    static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
+    /**
+     * Static helper to register scenarios. This has to happen very early because
+     * we need carrier scenarios to start the position-init process for a
+     * carrier start.
+     */
+    static void registerScenarios();
+    static SGPropertyNode_ptr registerScenarioFile(const SGPath& p);
+    static SGPropertyNode_ptr loadScenarioFile(const std::string& id);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);
     bool isVisible(const SGGeod& pos) const;

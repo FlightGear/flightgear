@@ -601,30 +601,34 @@ void FGAICarrier::UpdateJBD(double dt, double jbd_transition_time) {
 
 std::pair<bool, SGGeod> FGAICarrier::initialPositionForCarrier(const std::string& namePennant)
 {
-    SGPropertyNode_ptr aiRoot = fgGetNode("/sim/ai", true);
-    for (const auto scenarioFileNode : aiRoot->getChildren("scenario")) {
-        SGPropertyNode_ptr s = FGAIManager::loadScenarioFile(scenarioFileNode->getStringValue());
-        if (!s || !s->hasChild("scenario")) {
+    FGAIManager::registerScenarios();
+    // this is actually a three-layer search (we want the scenario with the
+    // carrier with the correct penanant or name. Sometimes an XPath for
+    // properties would be quite handy :)
+    
+    for (auto s : fgGetNode("/sim/ai/scenarios")->getChildren("scenario")) {
+        auto carriers = s->getChildren("carrier");
+        auto it = std::find_if(carriers.begin(), carriers.end(),
+                               [namePennant] (const SGPropertyNode* n)
+        {
+            // don't want to use a recursive lambda here, so inner search is a flat loop
+            for (auto n : n->getChildren("name")) {
+                if (n->getStringValue() == namePennant) return true;
+            }
+            return false;
+        });
+        if (it == carriers.end()) {
             continue;
         }
         
-        const std::string carrierType("carrier");
-        SGPropertyNode_ptr scenario = s->getChild("scenario");
-        for (int i = 0; i < scenario->nChildren(); i++) {
-            SGPropertyNode* c = scenario->getChild(i);
-            if (c->getStringValue("type") != carrierType) {
-                continue;
-            }
-            
-            const auto pennant = c->getStringValue("pennant-number");
-            const auto name = c->getStringValue("name");
-            if (pennant == namePennant || name == namePennant) {
-                SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
-                carrier->readFromScenario(c);
-                return std::make_pair(true, carrier->getGeodPos());
-            }
-        } // of objects in scenario iteration
-    } // of scenario files iteration
+        // mark the scenario for loading (which will happen in post-init of the AIManager)
+        fgGetNode("/sim/ai/")->addChild("scenario")->setStringValue(s->getStringValue("id"));
+        
+        // read out the initial-position
+        SGGeod geod = SGGeod::fromDeg((*it)->getDoubleValue("longitude"),
+                                      (*it)->getDoubleValue("latitude"));
+        return std::make_pair(true,  geod);
+    } // of scenarios iteration
     
     return std::make_pair(false, SGGeod());
 }
@@ -648,3 +652,27 @@ SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::stri
     return {};
 }
 
+void FGAICarrier::extractNamesPennantsFromScenario(SGPropertyNode_ptr xmlNode, SGPropertyNode_ptr scenario)
+{
+    for (auto c : xmlNode->getChildren("entry")) {
+        if (c->getStringValue("type") != std::string("carrier"))
+            continue;
+        
+        const std::string name = c->getStringValue("name");
+        const std::string pennant = c->getStringValue("pennant-number");
+        if (name.empty() && pennant.empty()) {
+            continue;
+        }
+        
+        SGPropertyNode_ptr carrierNode = scenario->addChild("carrier");
+
+        // extract the initial position from the scenario
+        carrierNode->setDoubleValue("longitude", c->getDoubleValue("longitude"));
+        carrierNode->setDoubleValue("latitude", c->getDoubleValue("latitude"));
+
+        // the find code above just looks for anything called a name (so alias
+        // are possible, for example)
+        if (!name.empty()) carrierNode->addChild("name")->setStringValue(name);
+        if (!pennant.empty()) carrierNode->addChild("name")->setStringValue(pennant);
+    }
+}

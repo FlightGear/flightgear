@@ -32,6 +32,7 @@
 #include <Main/fg_props.hxx>
 #include <Airports/airport.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Add-ons/AddonManager.hxx>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"
@@ -46,6 +47,8 @@
 #include "AIWingman.hxx"
 #include "AIGroundVehicle.hxx"
 #include "AIEscort.hxx"
+
+static bool static_haveRegisteredScenarios = false;
 
 class FGAIManager::Scenario
 {
@@ -157,6 +160,89 @@ FGAIManager::init() {
     }
     _radarRangeNode = fgGetNode("/instrumentation/radar/range", true);
     _radarDebugNode = fgGetNode("/instrumentation/radar/debug-mode", true);
+
+    // register scenarios if we didn't do it already
+    registerScenarios();
+}
+
+void FGAIManager::registerScenarios()
+{
+    // depending on if we're using a carrier startup, this function may get
+    // called early or during normal FGAIManager init, so guard against double
+    // invocation.
+    // we clear this flag on shudtdown so reset works as expected
+    if (static_haveRegisteredScenarios)
+        return;
+    
+    static_haveRegisteredScenarios = true;
+    
+    // find all scenarios at standard locations (for driving the GUI)
+    std::vector<SGPath> scenarioSearchPaths;
+    scenarioSearchPaths.push_back(globals->get_fg_root() / "AI");
+    scenarioSearchPaths.push_back(globals->get_fg_home() / "Scenarios");
+    scenarioSearchPaths.push_back(SGPath(fgGetString("/sim/aircraft-dir")) / "Scenarios");
+    
+    // add-on scenario directories
+    const auto& addonsManager = flightgear::addons::AddonManager::instance();
+    for (auto a : addonsManager->registeredAddons()) {
+        scenarioSearchPaths.push_back(a->getBasePath() / "Scenarios");
+    }
+    
+    SGPropertyNode_ptr scenariosNode = fgGetNode("/sim/ai/scenarios", true);
+    for (auto p : scenarioSearchPaths) {
+        if (!p.exists())
+            continue;
+        
+        simgear::Dir dir(p);
+        for (auto xmlPath : dir.children(simgear::Dir::TYPE_FILE, ".xml")) {
+            registerScenarioFile(xmlPath);
+        } // of xml files in the scenario dir iteration
+    } // of scenario dirs iteration
+}
+
+SGPropertyNode_ptr FGAIManager::registerScenarioFile(const SGPath& xmlPath)
+{
+    if (!xmlPath.exists()) return {};
+    
+    auto scenariosNode = fgGetNode("/sim/ai/scenarios", true);
+    SGPropertyNode_ptr sNode;
+    
+    try {
+        SGPropertyNode_ptr scenarioProps(new SGPropertyNode);
+        readProperties(xmlPath, scenarioProps);
+        
+        for (auto xs : scenarioProps->getChildren("scenario")) {
+            if (!xs->hasChild("name") || !xs->hasChild("description")) {
+                SG_LOG(SG_AI, SG_DEV_WARN, "Scenario is missing name/description:" << xmlPath);
+            }
+            
+            sNode = scenariosNode->addChild("scenario");
+            
+            const auto bareName = xmlPath.file_base();
+            sNode->setStringValue("id", bareName);
+            sNode->setStringValue("path", xmlPath.utf8Str());
+            
+            if (xs->hasChild("name")) {
+                sNode->setStringValue("name", xs->getStringValue("name"));
+            } else {
+                auto cleanedName = bareName;
+               // replace _ and - in bareName with spaces
+                // auto s = simgear::strutils::srep
+                sNode->setStringValue("name", cleanedName);
+            }
+            
+            if (xs->hasChild("description")) {
+                sNode->setStringValue("description", xs->getStringValue("description"));
+            }
+            
+            FGAICarrier::extractNamesPennantsFromScenario(xs, sNode);
+        } // of scenarios in the XML file
+    } catch (std::exception&) {
+        SG_LOG(SG_AI, SG_WARN, "Skipping malformed scenario file:" << xmlPath);
+        sNode.reset();
+    }
+    
+    return sNode;
 }
 
 void
@@ -175,7 +261,7 @@ FGAIManager::postinit()
             continue;
 
         if (_scenarios.find(name) != _scenarios.end()) {
-            SG_LOG(SG_AI, SG_WARN, "won't load scenario '" << name << "' twice");
+            SG_LOG(SG_AI, SG_DEV_WARN, "won't load scenario '" << name << "' twice");
             continue;
         }
 
@@ -212,7 +298,8 @@ FGAIManager::shutdown()
     ai_list.clear();
     _environmentVisiblity.clear();
     _userAircraft.clear();
-
+    static_haveRegisteredScenarios = false;
+    
     globals->get_commands()->removeCommand("load-scenario");
     globals->get_commands()->removeCommand("unload-scenario");
     globals->get_commands()->removeCommand("add-aiobject");
@@ -393,10 +480,7 @@ bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode
     bool ok = loadScenario(name);
     if (ok) {
         // create /sim/ai node for consistency
-        int index = 0;
-        for (; root->hasChild("scenario", index); ++index) {}
-
-        SGPropertyNode* scenarioNode = root->getChild("scenario", index, true);
+        SGPropertyNode* scenarioNode = root->addChild("scenario");
         scenarioNode->setStringValue(name);
     }
 
@@ -491,9 +575,9 @@ FGAIBasePtr FGAIManager::getObjectFromProperty(const SGPropertyNode* aProp) cons
 }
 
 bool
-FGAIManager::loadScenario( const string &filename )
+FGAIManager::loadScenario( const string &id )
 {
-    SGPropertyNode_ptr file = loadScenarioFile(filename);
+    SGPropertyNode_ptr file = loadScenarioFile(id);
     if (!file) {
         return false;
     }
@@ -503,7 +587,8 @@ FGAIManager::loadScenario( const string &filename )
         return false;
     }
 
-    _scenarios[filename] = new Scenario(this, filename, scNode);
+    assert(_scenarios.find(id) == _scenarios.end());
+    _scenarios[id] = new Scenario(this, id, scNode);
     return true;
 }
 
@@ -511,17 +596,16 @@ FGAIManager::loadScenario( const string &filename )
 bool
 FGAIManager::unloadScenario( const string &filename)
 {
-    ScenarioDict::iterator it = _scenarios.find(filename);
+    auto it = _scenarios.find(filename);
     if (it == _scenarios.end()) {
         SG_LOG(SG_AI, SG_WARN, "unload scenario: not found:" << filename);
         return false;
     }
 
 // remove /sim/ai node
-    unsigned int index = 0;
-    for (SGPropertyNode* n = NULL; (n = root->getChild("scenario", index)) != NULL; ++index) {
+    for (auto n : root->getChildren("scenario")) {
         if (n->getStringValue() == filename) {
-            root->removeChild("scenario", index);
+            root->removeChild(n);
             break;
         }
     }
@@ -534,12 +618,8 @@ FGAIManager::unloadScenario( const string &filename)
 void
 FGAIManager::unloadAllScenarios()
 {
-    ScenarioDict::iterator it = _scenarios.begin();
-    for (; it != _scenarios.end(); ++it) {
-        delete it->second;
-    } // of scenarios iteration
-
-
+    std::for_each(_scenarios.begin(), _scenarios.end(),
+                  [](const ScenarioDict::value_type& v) { delete v.second; });
     // remove /sim/ai node
     root->removeChildren("scenario");
     _scenarios.clear();
@@ -547,19 +627,26 @@ FGAIManager::unloadAllScenarios()
 
 
 SGPropertyNode_ptr
-FGAIManager::loadScenarioFile(const std::string& filename)
+FGAIManager::loadScenarioFile(const std::string& scenarioName)
 {
-    SGPath path(globals->get_fg_root());
-    path.append("AI/" + filename + ".xml");
-    try {
-        SGPropertyNode_ptr root = new SGPropertyNode;
-        readProperties(path, root);
-        return root;
-    } catch (const sg_exception &t) {
-        SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
-            << path << "': " << t.getFormattedMessage());
+    auto s = fgGetNode("/sim/ai/scenarios");
+    if (!s) return {};
+    
+    for (auto n : s->getChildren("scenario")) {
+        if (n->getStringValue("id") == scenarioName) {
+            SGPath path{n->getStringValue("path")};
+            try {
+                SGPropertyNode_ptr root = new SGPropertyNode;
+                readProperties(path, root);
+                return root;
+            } catch (const sg_exception &t) {
+                SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
+                       << path << "': " << t.getFormattedMessage());
+            }
+        }
     }
-    return 0;
+    
+    return {};
 }
 
 const FGAIBase *

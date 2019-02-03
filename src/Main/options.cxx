@@ -65,6 +65,7 @@
 #include <GUI/SetupRootDialog.hxx>
 #endif
 
+#include <AIModel/AIManager.hxx>
 #include <Add-ons/AddonManager.hxx>
 #include <Main/locale.hxx>
 #include <Navaids/NavDataCache.hxx>
@@ -1408,17 +1409,29 @@ fgOptLivery( const char *arg )
 static int
 fgOptScenario( const char *arg )
 {
-    SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
-    vector<SGPropertyNode_ptr> scenarii = ai_node->getChildren( "scenario" );
-    int index = -1;
-    for ( size_t i = 0; i < scenarii.size(); ++i ) {
-        int ind = scenarii[i]->getIndex();
-        if ( index < ind ) {
-            index = ind;
+    SGPath path(arg);
+    std::string name(arg);
+    if (path.exists()) {
+        if (path.isRelative()) {
+            // make absolute
+            path = simgear::Dir::current().path() / arg;
         }
+        
+        // create description node
+        auto n = FGAIManager::registerScenarioFile(path);
+        if (!n) {
+            SG_LOG(SG_GENERAL, SG_WARN, "failed to read scenario file at:" << path);
+            return FG_OPTIONS_ERROR;
+        }
+        
+        // also set the /sim/ai/scenario entry so we load it on startup
+        name = path.file_base();
     }
-    SGPropertyNode_ptr scenario = ai_node->getNode( "scenario", index + 1, true );
-    scenario->setStringValue( arg );
+    
+    // add the 'load it' node
+    SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
+    ai_node->addChild("scenario")->setStringValue(name);
+    
     return FG_OPTIONS_OK;
 }
 
