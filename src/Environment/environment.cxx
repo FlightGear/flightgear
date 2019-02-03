@@ -25,8 +25,6 @@
 
 #include <cmath>
 
-#include <boost/tuple/tuple.hpp>
-
 #include <simgear/props/props.hxx>
 #include <simgear/math/SGMath.hxx>
 
@@ -756,7 +754,7 @@ FGEnvironment::_recalc_alt_pt ()
 #endif
   double press = pressure_inhg * inHg;
   double temp = temperature_degc + freezing;
-  boost::tie(press, temp) = PT_vs_hpt(elevation_ft * foot, 
+  std::tie(press, temp) = PT_vs_hpt(elevation_ft * foot,
         pressure_sea_level_inhg * inHg, temperature_sea_level_degc + freezing);
   temperature_degc = temp - freezing;
   pressure_inhg = press / inHg;

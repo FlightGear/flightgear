@@ -27,7 +27,6 @@
 #include "realwx_ctrl.hxx"
 
 #include <algorithm>
-#include <boost/algorithm/string/case_conv.hpp>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -205,7 +204,8 @@ static bool commandRequestMetar(const SGPropertyNode * arg, SGPropertyNode * roo
   }
   
   string icao(arg->getStringValue("station"));
-  boost::to_upper(icao);
+  std::transform(icao.begin(), icao.end(), icao.begin(), static_cast<int(*)(int)>(std::tolower));
+
   string path = arg->getStringValue("path");
   self->addMetarAtPath(path, icao);
   return true;
@@ -469,7 +469,8 @@ void NoaaMetarRealWxController::requestMetar
       LiveMetarProperties_ptr _metarDataHandler;
   };
 
-  string upperId = boost::to_upper_copy(id);
+  string upperId = id;
+  std::transform(upperId.begin(), upperId.end(), upperId.begin(), static_cast<int(*)(int)>(std::tolower));
 
   SG_LOG
   (

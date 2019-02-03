@@ -1,5 +1,3 @@
-#include <boost/tuple/tuple.hpp>
-
 #include <simgear/math/SGMath.hxx>
 #include <simgear/debug/logstream.hxx>
 
@@ -161,7 +159,7 @@ void FGAtmoCache::tabulate() {
 
     for (double hgt = -1000; hgt <= 32000;) {
         double press,temp;
-        boost::tie(press, temp) = PT_vs_hpt(hgt);
+        std::tie(press, temp) = PT_vs_hpt(hgt);
         a_tvs_p->addEntry(press / inHg, hgt / foot);
 
 #ifdef DEBUG_EXPORT_P_H
@@ -213,7 +211,7 @@ void FGAtmoCache::check_model() {
         using namespace atmodel;
         cache();
         double press,temp;
-        boost::tie(press, temp) = PT_vs_hpt(height);
+        std::tie(press, temp) = PT_vs_hpt(height);
         cout << "Height: " << height
              << " \tpressure: " << press << endl;
         cout << "Check:  "
