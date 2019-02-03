@@ -27,6 +27,7 @@
 #include "realwx_ctrl.hxx"
 
 #include <algorithm>
+#include <cctype>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>

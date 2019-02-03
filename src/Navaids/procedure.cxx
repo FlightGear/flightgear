@@ -27,6 +27,7 @@
 #include <Airports/runways.hxx>
 #include <Navaids/waypoint.hxx>
 
+#include <iterator> // required for WIN
 using std::string;
 
 namespace flightgear
