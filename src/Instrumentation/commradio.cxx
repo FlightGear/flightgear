@@ -26,7 +26,6 @@
 #include "commradio.hxx"
 
 #include <assert.h>
-#include <boost/foreach.hpp>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/props/propertyObject.hxx>

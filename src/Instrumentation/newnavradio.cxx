@@ -27,7 +27,6 @@
 #include "newnavradio.hxx"
 
 #include <assert.h>
-#include <boost/foreach.hpp>
 
 #include <simgear/math/interpolater.hxx>
 #include <simgear/sg_inlines.h>
@@ -864,7 +863,7 @@ NavRadioImpl::NavRadioImpl( SGPropertyNode_ptr node ) :
 
 NavRadioImpl::~NavRadioImpl()
 {
-  BOOST_FOREACH( NavRadioComponent * p, _components ) {
+  for( auto p : _components ) {
     delete p;
   }
 }
@@ -904,7 +903,7 @@ void NavRadioImpl::update( double dt )
       _stationTTL = 0.0;
   }
 
-  BOOST_FOREACH( NavRadioComponent * p, _components ) {
+  for( auto p : _components ) {
       if( _stationTTL <= 0.0 )
           p->search( _frequency, position );
       p->update( dt, position );
