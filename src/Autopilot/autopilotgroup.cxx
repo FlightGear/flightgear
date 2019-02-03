@@ -35,7 +35,6 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
 #include <Main/fg_props.hxx>
-#include <boost/foreach.hpp>
 
 using std::vector;
 using simgear::PropertyList;
@@ -131,8 +130,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode,
   if( !rootNode )
     return;
 
-  BOOST_FOREACH( SGPropertyNode_ptr autopilotNode,
-                 rootNode->getChildren(childName) )
+  for( auto autopilotNode : rootNode->getChildren(childName) )
   {
     SGPropertyNode_ptr pathNode = autopilotNode->getNode("path");
     if( !pathNode )
