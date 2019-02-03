@@ -27,7 +27,6 @@
 #include "realwx_ctrl.hxx"
 
 #include <algorithm>
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include <simgear/structure/exception.hxx>
@@ -265,7 +264,7 @@ void BasicRealWxController::init()
                                                         _requester,
                                                         getMetarMaxAgeMin()));
     
-    BOOST_FOREACH( SGPropertyNode_ptr n, _rootNode->getChildren("metar") ) {
+    for( auto n : _rootNode->getChildren("metar") ) {
         SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
         addMetarAtPath(metarNode->getPath(), "");
     }
@@ -305,7 +304,7 @@ void BasicRealWxController::update( double dt )
   if( _enabled ) {
     bool firstIteration = !_wasEnabled;
     // clock tick for every METAR in stock
-    BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
+    for(auto p : _metarProperties) {
       // first round? All received METARs are outdated
       if( firstIteration ) p->resetTimeToLive();
       p->update(dt);
