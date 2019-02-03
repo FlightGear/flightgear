@@ -148,7 +148,7 @@ void LauncherArgumentTokenizer::setArgString(QString argString)
 
 const std::set<std::string> positionalArgs({
     "lat", "lon", "vor", "ndb", "fix"
-    "airport", "parkpos", "runway"
+    "airport", "parkpos", "runway", "carrier"
 });
 
 bool LauncherArgumentTokenizer::haveArgsIn(const std::set<std::string>& args) const

@@ -275,7 +275,9 @@ Item {
             }
 
             ClickableText {
-                text: _launcher.location.description
+                enabled: !_location.skipFromArgs
+                text: _location.skipFromArgs ? qsTr("<i>set from user arguments (in Settings)</i>")
+                                             : _launcher.location.description
                 font.pixelSize: Style.headingFontPixelSize
                 width: summaryGrid.middleColumnWidth
                 onClicked: root.showSelectedLocation()
@@ -284,7 +286,7 @@ Item {
             HistoryPopup {
                 id: locationHistoryPopup
                 model: _launcher.locationHistory
-                enabled: !_launcher.aircraftHistory.isEmpty
+                enabled: !_launcher.aircraftHistory.isEmpty && !_location.skipFromArgs
                 onSelected: {
                     _launcher.restoreLocation(_launcher.locationHistory.locationAt(index))
                 }
