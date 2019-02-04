@@ -18,9 +18,6 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_dir.hxx>
 
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/foreach.hpp>
-
 #include <Add-ons/AddonManager.hxx>
 #include <Main/fg_props.hxx>
 
@@ -155,7 +152,7 @@ NewGUI::reset (bool reload)
     for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); ++iter)
         openDialogs.push_back(iter->first);
 
-    BOOST_FOREACH(string d, openDialogs)
+    for (auto d : openDialogs)
         closeDialog(d);
 
     setStyle();
@@ -174,7 +171,7 @@ NewGUI::reset (bool reload)
     bind();
 
     // open dialogs again
-    BOOST_FOREACH(string d, openDialogs)
+    for (auto d : openDialogs)
         showDialog(d);
 }
 

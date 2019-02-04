@@ -25,7 +25,6 @@
 #include <Aircraft/FlightHistory.hxx>
 #include <Main/fg_props.hxx>
 #include <sstream>
-#include <boost/lexical_cast.hpp>
 
 using std::string;
 using std::stringstream;
@@ -287,13 +286,13 @@ bool FlightHistoryUriHandler::handleRequest(const HTTPRequest & request,
 	} else if (requestPath == "track.json") {
 		size_t count = -1;
 		try {
-		  count = boost::lexical_cast<size_t>(request.RequestVariables.get("count"));
+            count = std::stoul(request.RequestVariables.get("count"));
 		}
 		catch( ... ) {
 		}
 		size_t last = 0;
 		try {
-			last = boost::lexical_cast<size_t>(request.RequestVariables.get("last"));
+			last = std::stoul(request.RequestVariables.get("last"));
 		}
 		catch( ... ) {
 		}

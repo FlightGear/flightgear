@@ -28,8 +28,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include <boost/algorithm/string.hpp>
-
 #include <simgear/environment/metar.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -542,8 +540,7 @@ int main(int argc, char *argv[])
                 "http://tgftp.nws.noaa.gov/data/observations/metar/stations/";
                 HTTP::MemoryRequest* mr = new HTTP::MemoryRequest
                 (
-                    NOAA_BASE_URL
-                  + boost::to_upper_copy<std::string>(argv[i]) + ".TXT"
+                    NOAA_BASE_URL + strutils::uppercase(argv[i]) + ".TXT"
                 );
                 HTTP::Request_ptr own(mr);
                 http.makeRequest(mr);

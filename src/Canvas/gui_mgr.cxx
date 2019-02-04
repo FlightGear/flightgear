@@ -34,8 +34,6 @@
 #include <osgViewer/Viewer>
 #include <osgGA/GUIEventHandler>
 
-#include <boost/bind.hpp>
-
 class DesktopGroup;
 typedef SGSharedPtr<DesktopGroup> DesktopPtr;
 typedef SGWeakPtr<DesktopGroup> DesktopWeakPtr;
@@ -682,7 +680,7 @@ void GUIMgr::init()
   sc::Canvas::addPlacementFactory
   (
     "window",
-    boost::bind(&GUIMgr::addWindowPlacement, this, _1, _2)
+   std::bind(&GUIMgr::addWindowPlacement, this, std::placeholders::_1, std::placeholders::_2)
   );
 
   _desktop->getProps()->fireCreatedRecursive();

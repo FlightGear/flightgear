@@ -23,19 +23,12 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <cstdio>
 
 #include <simgear/compiler.h>
-
 #include "route_mgr.hxx"
-
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/foreach.hpp>
 
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
@@ -945,7 +938,7 @@ flightgear::SID* createDefaultSID(FGRunway* aRunway, double enrouteCourse)
     wpts.push_back(w);
   }
   
-  BOOST_FOREACH(Waypt* w, wpts) {
+  for (Waypt* w : wpts) {
     w->setFlag(WPT_DEPARTURE);
     w->setFlag(WPT_GENERATED);
   }
@@ -1103,7 +1096,7 @@ flightgear::Approach* createDefaultApproach(FGRunway* aRunway, double aEnrouteCo
   w->setAltitude(thresholdElevFt + approachHeightFt, RESTRICT_AT);
   wpts.push_back(w);
     
-  BOOST_FOREACH(Waypt* w, wpts) {
+  for (Waypt* w : wpts) {
     w->setFlag(WPT_APPROACH);
     w->setFlag(WPT_GENERATED);
   }

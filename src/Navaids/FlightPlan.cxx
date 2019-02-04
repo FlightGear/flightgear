@@ -27,10 +27,6 @@
 #include <fstream>
 #include <cassert>
 
-// Boost
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string.hpp>
-
 // SimGear
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -1325,7 +1321,7 @@ WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
 
 WayptRef FlightPlan::waypointFromString(const string& tgt )
 {
-  string target(boost::to_upper_copy(tgt));  
+  string target = simgear::strutils::uppercase(tgt);
   // extract altitude
   double altFt = 0.0;
   RouteRestriction altSetting = RESTRICT_NONE;

@@ -19,15 +19,11 @@
 //
 //
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "NavDisplay.hxx"
 
 #include <cassert>
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 #include <algorithm>
 
 #include <osg/Array>
@@ -196,8 +192,7 @@ public:
             return false;
         }
         
-        type = node->getStringValue("type");
-        boost::to_lower(type);
+        type = simgear::strutils::lowercase(node->getStringValue("type"));
         SGPropertyNode* enableNode = node->getChild("enable");
         if (enableNode) { 
             enable.reset(sgReadCondition(fgGetNode("/"), enableNode));
@@ -227,13 +222,13 @@ public:
     
     bool matches(const string_set& states) const
     {
-        BOOST_FOREACH(const string& s, required_states) {
+        for (auto s : required_states) {
             if (states.count(s) == 0) {
                 return false;
             }
         }
         
-        BOOST_FOREACH(const string& s, excluded_states) {
+        for (auto s : excluded_states) {
             if (states.count(s) != 0) {
                 return false;
             }
@@ -479,7 +474,7 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
         _definitions.push_back(def);
     } // of symbol definition parsing
     
-    BOOST_FOREACH(SGPropertyNode* rule, symbolsNode->getChildren("rule")) {
+    for (SGPropertyNode* rule : symbolsNode->getChildren("rule")) {
         SymbolRule* r = new SymbolRule;
         if (!r->initFromNode(rule, this)) {
             delete r;
@@ -719,18 +714,18 @@ NavDisplay::update (double delta_time_sec)
   _texCoords->clear();
   _textGeode->removeDrawables(0, _textGeode->getNumDrawables());
   
-  BOOST_FOREACH(SymbolInstance* si, _symbols) {
+  for (SymbolInstance* si : _symbols) {
       delete si;
   }
   _symbols.clear();
   
-  BOOST_FOREACH(SymbolDef* d, _definitions) {
+  for (SymbolDef* d : _definitions) {
     d->instanceCount = 0;
     d->textEnabled = d->textEnable.get() ? d->textEnable->test() : true;
   }
   
   bool enableChanged = false;
-  BOOST_FOREACH(SymbolRule* r, _rules) {
+  for (SymbolRule* r : _rules) {
       enableChanged |= r->checkEnabled();
   }
   
@@ -928,7 +923,7 @@ public:
 void NavDisplay::addSymbolsToScene()
 {
     std::sort(_symbols.begin(), _symbols.end(), OrderByZ());
-    BOOST_FOREACH(SymbolInstance* sym, _symbols) {
+    for (SymbolInstance* sym : _symbols) {
         addSymbolToScene(sym);
     }
 }
@@ -1015,8 +1010,7 @@ void NavDisplay::findItems()
     
   // sort by distance from pos, so symbol limits are accurate
     FGPositioned::sortByRange(_itemsInRange, _pos);
-  
-    BOOST_FOREACH(FGPositioned* pos, _itemsInRange) {
+    for (FGPositioned* pos : _itemsInRange) {
         foundPositionedItem(pos);
     }
 }
@@ -1068,7 +1062,7 @@ void NavDisplay::processRoute()
         computeWayptPropsAndHeading(wpt, g, vars, heading);
 
         osg::Vec2 projected = projectGeod(g);
-        BOOST_FOREACH(SymbolRule* r, rules) {
+        for (SymbolRule* r : rules) {
             addSymbolInstance(projected, heading, r->getDefinition(), vars);
             
             if (r->getDefinition()->drawRouteLeg) {
@@ -1120,7 +1114,7 @@ FGNavRecord* NavDisplay::processNavRadio(const SGPropertyNode_ptr& radio)
 
 bool NavDisplay::anyRuleForType(const string& type) const
 {
-    BOOST_FOREACH(SymbolRule* r, _rules) {
+    for (SymbolRule* r : _rules) {
         if (!r->enabled) {
             continue;
         }
@@ -1135,7 +1129,7 @@ bool NavDisplay::anyRuleForType(const string& type) const
 
 void NavDisplay::findRules(const string& type, const string_set& states, SymbolRuleVector& rules)
 {
-    BOOST_FOREACH(SymbolRule* candidate, _rules) {
+    for (SymbolRule* candidate : _rules) {
         if (!candidate->enabled || (candidate->type != type)) {
             continue;
         }
@@ -1155,8 +1149,7 @@ bool NavDisplay::isPositionedShown(FGPositioned* pos)
 
 void NavDisplay::isPositionedShownInner(FGPositioned* pos, SymbolRuleVector& rules)
 {
-  string type = FGPositioned::nameForType(pos->type());
-  boost::to_lower(type);
+  string type = simgear::strutils::lowercase(FGPositioned::nameForType(pos->type()));
   if (!anyRuleForType(type)) {
     return; // not diplayed at all, we're done
   }
@@ -1189,7 +1182,7 @@ void NavDisplay::foundPositionedItem(FGPositioned* pos)
         projected = projectGeod(rwy->threshold());
     }
     
-    BOOST_FOREACH(SymbolRule* r, rules) {
+    for (SymbolRule* r : rules) {
         SymbolInstance* ins = addSymbolInstance(projected, heading, r->getDefinition(), vars);
         if ((ins)&&(pos->type() == FGPositioned::RUNWAY)) {
             FGRunway* rwy = (FGRunway*) pos;
@@ -1345,7 +1338,7 @@ void NavDisplay::processAI()
         model->setIntValue("flight-level", fl * 10);
                                             
         osg::Vec2 projected = projectGeod(aiModelPos);
-        BOOST_FOREACH(SymbolRule* r, rules) {
+        for (SymbolRule* r : rules) {
             addSymbolInstance(projected, heading, r->getDefinition(), (SGPropertyNode*) model);
         }
     } // of ai models iteration
@@ -1399,7 +1392,7 @@ bool NavDisplay::isProjectedClipped(const osg::Vec2& projected) const
 void NavDisplay::addTestSymbol(const std::string& type, const std::string& states, const SGGeod& pos, double heading, SGPropertyNode* vars)
 {
   string_set stateSet;
-  BOOST_FOREACH(std::string s, simgear::strutils::split(states, ",")) {
+  for (auto s : simgear::strutils::split(states, ",")) {
     stateSet.insert(s);
   }
   
@@ -1410,7 +1403,7 @@ void NavDisplay::addTestSymbol(const std::string& type, const std::string& state
   }
     
   osg::Vec2 projected = projectGeod(pos);
-  BOOST_FOREACH(SymbolRule* r, rules) {
+  for (SymbolRule* r : rules) {
     addSymbolInstance(projected, heading, r->getDefinition(), vars);
   }
 }
@@ -1454,7 +1447,7 @@ void NavDisplay::addRule(SymbolRule* r)
 
 void NavDisplay::computeCustomSymbolStates(const SGPropertyNode* sym, string_set& states)
 {
-  BOOST_FOREACH(SGPropertyNode* st, sym->getChildren("state")) {
+  for (SGPropertyNode* st : sym->getChildren("state")) {
     states.insert(st->getStringValue());
   }
 }
@@ -1481,7 +1474,7 @@ void NavDisplay::processCustomSymbols()
  
     
     osg::Vec2 projected = projectGeod(pos);
-    BOOST_FOREACH(SymbolRule* r, rules) {
+    for (SymbolRule* r : rules) {
       addSymbolInstance(projected, heading, r->getDefinition(), symNode);
     }
   } // of custom symbols iteration

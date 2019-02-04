@@ -18,9 +18,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "positioned.hxx"
 
@@ -30,9 +28,6 @@
 #include <queue>
 #include <memory>
 
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -216,7 +211,7 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {NULL, INVALID}
   };
   
-  std::string lowerName(boost::to_lower_copy(aName));
+  std::string lowerName = simgear::strutils::lowercase(aName);
   
   for (const NameTypeEntry* n = names; (n->_name != NULL); ++n) {
     if (::strcmp(n->_name, lowerName.c_str()) == 0) {
@@ -464,7 +459,7 @@ FGPositioned::TypeFilter::fromString(const std::string& aFilterSpec)
   string_list parts = simgear::strutils::split(aFilterSpec, ",");
   TypeFilter f;
   
-  BOOST_FOREACH(std::string token, parts) {
+  for (std::string token : parts) {
     f.addType(typeFromName(token));
   }
   

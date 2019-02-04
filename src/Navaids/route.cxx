@@ -26,10 +26,6 @@
 #include <map>
 #include <fstream>
 
-// Boost
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 // SimGear
 #include <simgear/structure/exception.hxx>
@@ -166,7 +162,7 @@ std::string Waypt::icaoDescription() const
 
 static RouteRestriction restrictionFromString(const char* aStr)
 {
-  std::string l = boost::to_lower_copy(std::string(aStr));
+  std::string l = simgear::strutils::lowercase(aStr);
 
   if (l == "at") return RESTRICT_AT;
   if (l == "above") return RESTRICT_ABOVE;

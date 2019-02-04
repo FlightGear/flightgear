@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <Main/locale.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
-#include <boost/lexical_cast.hpp>
 
 #include <map>
 #include <vector>
@@ -38,7 +37,7 @@ static string EMPTY("");
 
 std::string ATCSpeech::getSpokenDigit( int i )
 {
-  string key = "n" + boost::lexical_cast<std::string>( i );
+  string key = "n" + std::to_string(i);
   return globals->get_locale()->getLocalizedString(key.c_str(), "atc", "" );
 }
 

@@ -4,10 +4,9 @@
 
 #include "LevelDXML.hxx"
 
-#include <boost/algorithm/string.hpp>
-
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Navaids/waypoint.hxx>
 #include <Airports/airport.hxx>
@@ -111,9 +110,8 @@ void NavdataVisitor::processRunways(ArrivalDeparture* aProc, const XMLAttributes
     return;
   }
   
-  vector<string> rwys;
-  boost::split(rwys, v, boost::is_any_of(" ,"));
-  for (auto rwy :  rwys) {
+  auto rwys = simgear::strutils::split_on_any_of(v, " ,");
+  for (auto rwy : rwys) {
       if (!_airport->hasRunwayWithIdent(rwy)) {
           SG_LOG(SG_NAVAID, SG_DEV_WARN, "Procedure file " << _path << " references unknown airport runway:" << rwy);
           continue;
