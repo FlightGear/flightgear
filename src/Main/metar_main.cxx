@@ -35,6 +35,8 @@
 #include <simgear/io/HTTPMemoryRequest.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/misc/strutils.hxx>
+
 
 using namespace std;
 using namespace simgear;
