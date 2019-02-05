@@ -26,6 +26,7 @@
 #include <map>
 #include <fstream>
 #include <cassert>
+#include <algorithm>
 
 // SimGear
 #include <simgear/structure/exception.hxx>

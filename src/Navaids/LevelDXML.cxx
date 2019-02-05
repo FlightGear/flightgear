@@ -2,6 +2,8 @@
 # include "config.h"
 #endif
 
+#include <algorithm>
+
 #include "LevelDXML.hxx"
 
 #include <simgear/structure/exception.hxx>
