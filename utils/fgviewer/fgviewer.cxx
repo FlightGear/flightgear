@@ -20,6 +20,7 @@
 #include <config.h>
 #endif
 
+#include <osg/Version>
 #include <osg/ArgumentParser>
 #include <osgDB/ReadFile>
 #include <osgViewer/ViewerEventHandlers>

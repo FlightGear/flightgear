@@ -22,6 +22,7 @@
 
 #include "Viewer.hxx"
 
+#include <osg/Version>
 #include <osg/ArgumentParser>
 #include <osg/ProxyNode>
 #include <osg/PagedLOD>

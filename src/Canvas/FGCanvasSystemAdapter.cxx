@@ -23,6 +23,7 @@
 #include <Network/HTTPClient.hxx>
 #include <Viewer/renderer.hxx>
 
+#include <osg/Version>
 #include <osgDB/ReadFile>
 #include <stdexcept>
 
