@@ -612,8 +612,8 @@ std::pair<bool, SGGeod> FGAICarrier::initialPositionForCarrier(const std::string
                                [namePennant] (const SGPropertyNode* n)
         {
             // don't want to use a recursive lambda here, so inner search is a flat loop
-            for (auto n : n->getChildren("name")) {
-                if (n->getStringValue() == namePennant) return true;
+            for (auto nameChild : n->getChildren("name")) {
+                if (nameChild->getStringValue() == namePennant) return true;
             }
             return false;
         });
