@@ -62,7 +62,7 @@ static void wayptGhostDestroy(void* g);
 static void legGhostDestroy(void* g);
 static void routeBaseGhostDestroy(void* g);
 
-static naGhostType PositionedGhostType = { positionedGhostDestroy, "positioned", nullptr, nullptr };
+///static naGhostType PositionedGhostType = { positionedGhostDestroy, "positioned", nullptr, nullptr };
 
 static const char* airportGhostGetMember(naContext c, void* g, naRef field, naRef* out);
 static naGhostType AirportGhostType = { positionedGhostDestroy, "airport", airportGhostGetMember, nullptr };

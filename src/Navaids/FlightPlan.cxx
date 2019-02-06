@@ -1677,7 +1677,9 @@ void FlightPlan::unregisterDelegateFactory(DelegateFactory* df)
 void FlightPlan::addDelegate(Delegate* d)
 {
   assert(d);
+#ifndef NDEBUG
   auto it = std::find(_delegates.begin(), _delegates.end(), d);
+#endif
   assert(it == _delegates.end());
   _delegates.push_back(d);
 }
