@@ -18,9 +18,7 @@
 
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <cmath>
 
@@ -29,7 +27,6 @@
 #include "radio.hxx"
 #include <simgear/scene/material/mat.hxx>
 #include <Scenery/scenery.hxx>
-#include <boost/scoped_array.hpp>
 
 #define WITH_POINT_TO_POINT 1
 #include "itm.cpp"
@@ -386,7 +383,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	elevations.push_front(num_points -1);
 
 	int size = elevations.size();
-        boost::scoped_array<double> itm_elev( new double[size] );
+    std::vector<double> itm_elev(size);
 
 	for(int i=0;i<size;i++) {
 		itm_elev[i]=elevations[i];
@@ -394,18 +391,18 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	if((transmission_type == 3) || (transmission_type == 4)) {
 		// the sender and receiver roles are switched
-		ITM::point_to_point(itm_elev.get(), receiver_height, transmitter_height,
+		ITM::point_to_point(itm_elev.data(), receiver_height, transmitter_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
-			calculate_clutter_loss(frq_mhz, itm_elev.get(), materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
+			calculate_clutter_loss(frq_mhz, itm_elev.data(), materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
 	}
 	else {
-		ITM::point_to_point(itm_elev.get(), transmitter_height, receiver_height,
+		ITM::point_to_point(itm_elev.data(), transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
-			calculate_clutter_loss(frq_mhz, itm_elev.get(), materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
+			calculate_clutter_loss(frq_mhz, itm_elev.data(), materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
 	}
 	
 	double pol_loss = 0.0;

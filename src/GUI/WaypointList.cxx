@@ -7,7 +7,6 @@
 #include "WaypointList.hxx"
 
 #include <algorithm>
-#include <boost/tuple/tuple.hpp>
 
 #include <plib/puAux.h>
 

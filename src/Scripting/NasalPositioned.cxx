@@ -24,10 +24,6 @@
 
 #include "NasalPositioned.hxx"
 
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/tuple/tuple.hpp> // for boost::tie
-
 #include <simgear/sg_inlines.h>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/magvar/magvar.hxx>
@@ -992,7 +988,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
   else if (!strcmp(fieldName, "radio")) *out = procedureRadioType(c, proc->type());
   else if (!strcmp(fieldName, "runways")) {
     *out = naNewVector(c);
-    BOOST_FOREACH(FGRunwayRef rwy, proc->runways()) {
+    for (FGRunwayRef rwy : proc->runways()) {
       naVec_append(*out, stringToNasal(c, rwy->ident()));
     }
   } else if (!strcmp(fieldName, "transitions")) {
@@ -1003,7 +999,7 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
 
     ArrivalDeparture* ad = static_cast<ArrivalDeparture*>(proc);
     *out = naNewVector(c);
-    BOOST_FOREACH(std::string id, ad->transitionIdents()) {
+    for (std::string id : ad->transitionIdents()) {
       naVec_append(*out, stringToNasal(c, id));
     }
   } else {
@@ -1417,7 +1413,7 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   if(mat) {
     matdata = naNewHash(c);
     naRef names = naNewVector(c);
-    BOOST_FOREACH(const std::string& n, mat->get_names())
+    for (const std::string& n : mat->get_names())
       naVec_append(names, stringToNasal(c, n));
 
     HASHSET("names", 5, names);
@@ -1595,8 +1591,7 @@ static naRef f_airport_runway(naContext c, naRef me, int argc, naRef* args)
     naRuntimeError(c, "airport.runway expects a runway ident argument");
   }
 
-  std::string ident(naStr_data(args[0]));
-  boost::to_upper(ident);
+  std::string ident = simgear::strutils::uppercase(naStr_data(args[0]));
 
   if (apt->hasRunwayWithIdent(ident)) {
     return ghostForRunway(c, apt->getRunwayByIdent(ident));
@@ -1679,7 +1674,7 @@ static naRef f_airport_stars(naContext c, naRef me, int argc, naRef* args)
   }
 
   if (rwy) {
-    BOOST_FOREACH(flightgear::STAR* s, rwy->getSTARs()) {
+    for (flightgear::STAR* s : rwy->getSTARs()) {
       naRef procId = stringToNasal(c, s->ident());
       naVec_append(stars, procId);
     }
@@ -1705,8 +1700,7 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
 
   ProcedureType ty = PROCEDURE_INVALID;
   if ((argc > 1) && naIsString(args[1])) {
-    std::string u(naStr_data(args[1]));
-    boost::to_upper(u);
+    std::string u = simgear::strutils::uppercase(naStr_data(args[1]));
     if (u == "NDB") ty = PROCEDURE_APPROACH_NDB;
     if (u == "VOR") ty = PROCEDURE_APPROACH_VOR;
     if (u == "ILS") ty = PROCEDURE_APPROACH_ILS;
@@ -1731,7 +1725,7 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
   }
 
   if (rwy) {
-    BOOST_FOREACH(Approach* s, rwy->getApproaches()) {
+    for (Approach* s : rwy->getApproaches()) {
       if ((ty != PROCEDURE_INVALID) && (s->type() != ty)) {
         continue;
       }
@@ -1964,7 +1958,7 @@ static naRef f_findNavaidsWithinRange(naContext c, naRef me, int argc, naRef* ar
   FGPositionedList navs = FGPositioned::findWithinRange(pos, rangeNm, &filter);
   FGPositioned::sortByRange(navs, pos);
 
-  BOOST_FOREACH(FGPositionedRef a, navs) {
+  for (FGPositionedRef a : navs) {
     FGNavRecord* nav = (FGNavRecord*) a.get();
     naVec_append(r, ghostForNavaid(c, nav));
   }
@@ -2093,7 +2087,7 @@ static naRef f_findNavaidsByIdent(naContext c, naRef me, int argc, naRef* args)
   naRef r = naNewVector(c);
   nav_list_type navs = FGNavList::findByIdentAndFreq(pos, ident, 0.0, &filter);
 
-  BOOST_FOREACH(nav_rec_ptr a, navs) {
+  for (nav_rec_ptr a : navs) {
     naVec_append(r, ghostForNavaid(c, a.ptr()));
   }
 
@@ -2117,7 +2111,7 @@ static naRef f_findFixesByIdent(naContext c, naRef me, int argc, naRef* args)
   FGPositionedList fixes = FGPositioned::findAllWithIdent(ident, &filter);
   FGPositioned::sortByRange(fixes, pos);
 
-  BOOST_FOREACH(FGPositionedRef f, fixes) {
+  for (FGPositionedRef f : fixes) {
     naVec_append(r, ghostForFix(c, (FGFix*) f.ptr()));
   }
 
@@ -2474,7 +2468,7 @@ static WayptRef wayptFromArg(naRef arg)
 static naRef convertWayptVecToNasal(naContext c, const WayptVec& wps)
 {
   naRef result = naNewVector(c);
-  BOOST_FOREACH(WayptRef wpt, wps) {
+  for (WayptRef wpt : wps) {
     naVec_append(result, ghostForWaypt(c, wpt.get()));
   }
   return result;
@@ -3093,7 +3087,7 @@ static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
   SGGeodVec gv(path.pathForIndex(leg->index()));
 
   naRef result = naNewVector(c);
-  BOOST_FOREACH(SGGeod p, gv) {
+  for (SGGeod p : gv) {
     // construct a geo.Coord!
     naRef coord = naNewHash(c);
     hashset(c, coord, "lat", naNum(p.getLatitudeDeg()));

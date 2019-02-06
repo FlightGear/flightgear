@@ -24,7 +24,6 @@
 #include <Airports/airport.hxx>
 #include <ATC/CommStation.hxx>
 #include <3rdparty/cjson/cJSON.h>
-#include <boost/lexical_cast.hpp>
 
 using std::string;
 
@@ -305,9 +304,9 @@ bool NavdbUriHandler::handleRequest(const HTTPRequest & request, HTTPResponse & 
 
     double lat, lon, range = -1;
     try {
-      lat = boost::lexical_cast<double>(request.RequestVariables.get("lat"));
-      lon = boost::lexical_cast<double>(request.RequestVariables.get("lon"));
-      range = boost::lexical_cast<double>(request.RequestVariables.get("range"));
+      lat = std::stod(request.RequestVariables.get("lat"));
+      lon = std::stod(request.RequestVariables.get("lon"));
+      range = std::stod(request.RequestVariables.get("range"));
     }
     catch (...) {
       goto fail;

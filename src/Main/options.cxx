@@ -31,7 +31,6 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_dir.hxx>
 
-#include <boost/foreach.hpp>
 #include <3rdparty/cjson/cJSON.h>
 
 #include <cmath>        // rint()

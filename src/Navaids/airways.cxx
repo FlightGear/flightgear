@@ -21,6 +21,7 @@
 
 #include "airways.hxx"
 
+#include <tuple>
 #include <algorithm>
 #include <set>
 
@@ -28,9 +29,6 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
-
-#include <boost/foreach.hpp>
-#include <boost/tuple/tuple.hpp>
 
 #include <Main/globals.hxx>
 #include <Navaids/positioned.hxx>
@@ -448,8 +446,8 @@ bool Airway::Network::route(WayptRef aFrom, WayptRef aTo,
 
   FGPositionedRef from, to;
   bool exactTo, exactFrom;
-  boost::tie(from, exactFrom) = findClosestNode(aFrom);
-  boost::tie(to, exactTo) = findClosestNode(aTo);
+  std::tie(from, exactFrom) = findClosestNode(aFrom);
+  std::tie(to, exactTo) = findClosestNode(aTo);
   
 #ifdef DEBUG_AWY_SEARCH
   SG_LOG(SG_NAVAID, SG_INFO, "from:" << from->ident() << "/" << from->name());

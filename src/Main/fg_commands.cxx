@@ -45,8 +45,6 @@
 #include "main.hxx"
 #include "positioninit.hxx"
 
-#include <boost/scoped_array.hpp>
-
 #if FG_HAVE_GPERFTOOLS
 # include <google/profiler.h>
 #endif

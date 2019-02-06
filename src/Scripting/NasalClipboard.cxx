@@ -24,7 +24,6 @@
 #include "NasalSys.hxx"
 #include <simgear/nasal/cppbind/NasalCallContext.hxx>
 
-#include <boost/algorithm/string/case_conv.hpp>
 #include <cstddef>
 
 /*

@@ -43,9 +43,6 @@
 
 #include <string>
 
-#include <boost/algorithm/string/compare.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
 #include <osgViewer/Viewer>
 
 #include <simgear/canvas/Canvas.hxx>
@@ -159,7 +156,6 @@ using std::endl;
 using std::cerr;
 using std::cout;
 
-using namespace boost::algorithm;
 using namespace simgear::pkg;
 
 extern osg::ref_ptr<osgViewer::Viewer> viewer;
@@ -326,7 +322,7 @@ private:
     vector<SGPropertyNode_ptr> cache = _cache->getChildren("aircraft");
     for (unsigned int i = 0; i < cache.size(); i++) {
       const char *name = cache[i]->getStringValue("file", "");
-      if (!boost::equals(_searchAircraft, name, is_iequal())) {
+      if (!simgear::strutils::iequals(_searchAircraft, name)) {
         continue;
       }
       
@@ -363,7 +359,7 @@ private:
     n->setStringValue(p.dir());
     n->setAttribute(SGPropertyNode::USERARCHIVE, true);
 
-    if ( boost::equals(fileName, _searchAircraft.c_str(), is_iequal()) ) {
+    if (simgear::strutils::iequals(fileName, _searchAircraft)) {
         _foundPath = p;
         return VISIT_DONE;
     }

@@ -24,12 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include <stdlib.h>
-
-// Boost
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/foreach.hpp>
+#include <cstdlib>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
@@ -190,7 +185,7 @@ public:
     void valueChanged(SGPropertyNode* node)
     {
         osg::NotifySeverity severity = osg::WARN;
-        string val = boost::to_lower_copy(string(node->getStringValue()));
+        string val = simgear::strutils::lowercase(node->getStringValue());
 
         if (val == "fatal") {
             severity = osg::FATAL;
@@ -543,7 +538,7 @@ void fgSetMouseCursor(int cursor)
 
     std::vector<osgViewer::GraphicsWindow*> windows;
     viewer->getWindows(windows);
-    BOOST_FOREACH(osgViewer::GraphicsWindow* gw, windows) {
+    for (osgViewer::GraphicsWindow* gw : windows) {
         setMouseCursor(gw, cursor);
     }
 }

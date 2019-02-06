@@ -9,8 +9,6 @@
 
 #include "gps.hxx"
 
-#include <boost/tuple/tuple.hpp>
-
 #include <memory>
 #include <set>
 #include <cstring>

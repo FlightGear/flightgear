@@ -24,7 +24,6 @@
 #include <Main/fg_props.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/strutils.hxx>
-#include <boost/lexical_cast.hpp>
 
 #include <vector>
 #include <map>
@@ -186,15 +185,15 @@ static DOMElement * renderPropertyValueElement( SGPropertyNode_ptr node )
         root->setAttribute( "type", "text" );
         root->setAttribute( "name", node->getDisplayName() );
         root->setAttribute( "value", htmlSpecialChars(value) );
-        root->setAttribute( "size", boost::lexical_cast<std::string>( len ) );
+        root->setAttribute( "size", std::to_string(len) );
         root->setAttribute( "maxlength", "2047" );
     } else {
         int rows = (len / 60)+1;
         int cols = 60;
         root = new DOMNode( "textarea" );
         root->setAttribute( "name", node->getDisplayName() );
-        root->setAttribute( "cols", boost::lexical_cast<std::string>( cols ) );
-        root->setAttribute( "rows", boost::lexical_cast<std::string>( rows ) );
+        root->setAttribute( "cols", std::to_string( cols ) );
+        root->setAttribute( "rows", std::to_string( rows ) );
         root->setAttribute( "maxlength", "2047" );
         root->addChild( new DOMTextElement( htmlSpecialChars(value) ) );
     }

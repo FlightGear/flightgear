@@ -22,7 +22,6 @@
 
 #include <config.h>
 
-#include <boost/foreach.hpp>
 #include <algorithm>
 
 #include <osgViewer/Viewer>
@@ -295,7 +294,7 @@ PathList FGGlobals::get_data_paths() const
 PathList FGGlobals::get_data_paths(const std::string& suffix) const
 {
     PathList r;
-    BOOST_FOREACH(SGPath p, get_data_paths()) {
+    for (SGPath p : get_data_paths()) {
         p.append(suffix);
         if (p.exists()) {
             r.push_back(p);
@@ -316,7 +315,7 @@ void FGGlobals::append_data_path(const SGPath& path)
 
 SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
 {
-    BOOST_FOREACH(SGPath p, additional_data_paths) {
+    for (SGPath p : additional_data_paths) {
         p.append(pathSuffix);
         if (p.exists()) {
             return p;
