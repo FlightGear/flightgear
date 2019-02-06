@@ -71,8 +71,21 @@ void
 VerticalSpeedIndicator::update (double dt)
 {
     if (_serviceable_node->getBoolValue()) {
-        double pressure_inHg = _pressure_node->getDoubleValue() ;
-        double pressure_Pa = pressure_inHg * SG_INHG_TO_PA;
+        const double pressure_inHg = _pressure_node->getDoubleValue() ;
+        const double pressure_Pa = pressure_inHg * SG_INHG_TO_PA;
+
+        // this occurs if the static pressure source didn't report valid data
+        // yet. Don't continue processing here since we will generate NaNs
+        // when dividing by zero
+        if (_casing_pressure_Pa < 1e-3) {
+            if (pressure_Pa > 1e3) {
+                // once the pressure becomes valid, reinit
+                reinit();
+            } else {
+                return; // no more processing
+            }
+        }
+
         double Fsign = 0.;
         double orifice_mach = 0.0;
 

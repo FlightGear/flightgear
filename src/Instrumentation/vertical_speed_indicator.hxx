@@ -45,13 +45,13 @@ public:
 
 private:
 
-    double _casing_pressure_Pa;
-    double _casing_airmass_kg;
-    double _casing_density_kgpm3;
-    double _orifice_massflow_kgps;
+    double _casing_pressure_Pa = 0.0;
+    double _casing_airmass_kg = 0.0;
+    double _casing_density_kgpm3 = 0.0;
+    double _orifice_massflow_kgps = 0.0;
 
-    std::string _name;
-    int _num;
+    const std::string _name;
+    const int _num;
     std::string _static_pressure;
     std::string _static_temperature;
 
