@@ -539,7 +539,7 @@ int main(int argc, char *argv[])
 			try
 			{
               static const std::string NOAA_BASE_URL =
-                "http://tgftp.nws.noaa.gov/data/observations/metar/stations/";
+                "https://tgftp.nws.noaa.gov/data/observations/metar/stations/";
                 HTTP::MemoryRequest* mr = new HTTP::MemoryRequest
                 (
                     NOAA_BASE_URL + strutils::uppercase(argv[i]) + ".TXT"
@@ -558,7 +558,7 @@ int main(int argc, char *argv[])
 
                 if( !mr->isComplete() )
                   throw sg_io_exception("metar download timed out");
-                if( mr->responseCode() != 200 )
+                if( mr->responseCode() >= 400 )
                 {
                   std::cerr << "metar download failed: "
                             << mr->url()
