@@ -155,7 +155,7 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
     else if(!strcmp(a, "preserve"))    attr = SGPropertyNode::PRESERVE;
     else if(!strcmp(a, "protected"))    attr = SGPropertyNode::PROTECTED;
-    
+
     else {
         naRuntimeError(c, "props.getAttribute() with invalid attribute");
         return naNil();
@@ -180,7 +180,7 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
                        node->getPath().c_str());
         return naNil();
     }
-    
+
     MOVETARGET(naVec_size(argv) > 2, false);
     naRef val = naVec_get(argv, 0);
     if(naVec_size(argv) == 1 && naIsNum(val)) {
@@ -441,10 +441,10 @@ static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* nam
         } else if (naIsVector(val)) {
             char nameBuf[1024];
             for (int i = 0; i < naVec_size(val); i++) {
-                #ifndef NDEBUG
                 const auto len = ::snprintf(nameBuf, sizeof(nameBuf), "%s[%i]", name, i);
-                #endif
-                assert(len < (int) sizeof(nameBuf));
+                if ((len < 0) || (len >= (int) sizeof(nameBuf))) {
+                  naRuntimeError(c, "Failed to create buffer for property name in setChildren");
+                }
                 ret = f_setChildrenHelper(c, node, nameBuf, naVec_get(val, i));
             }
         } else if (naIsNil(val)) {
@@ -668,7 +668,7 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
                        n->getPath() << " is protected");
                 continue;
             }
-            
+
             node->removeChild(i);
             naVec_append(result, propNodeGhostCreate(c, n));
         }
