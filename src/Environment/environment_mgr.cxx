@@ -80,6 +80,7 @@ void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
 }
 
 FGEnvironmentMgr::FGEnvironmentMgr () :
+    SGSubsystemGroup("FGEnvironmentMgr"),
   _environment(new FGEnvironment()),
   fgClouds(nullptr),
   _cloudLayersDirty(true),

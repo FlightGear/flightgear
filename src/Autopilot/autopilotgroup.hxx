@@ -37,7 +37,7 @@ public:
     virtual void addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config ) = 0;
     virtual void removeAutopilot( const std::string & name ) = 0;
 protected:
-    FGXMLAutopilotGroup() : SGSubsystemGroup() {}
+    FGXMLAutopilotGroup() : SGSubsystemGroup("FGXMLAutopilotGroup") {}
 
 };
 

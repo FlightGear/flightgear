@@ -93,14 +93,19 @@ void FGNasalModuleListener::valueChanged(SGPropertyNode*)
 class TimerObj : public SGReferenced
 {
 public:
-  TimerObj(FGNasalSys* sys, naRef f, naRef self, double interval) :
+  TimerObj(Context *c, FGNasalSys* sys, naRef f, naRef self, double interval) :
     _sys(sys),
     _func(f),
     _self(self),
     _interval(interval)
   {
     char nm[128];
-    snprintf(nm, 128, "nasal-timer-%p", this);
+    if (c) {
+        snprintf(nm, 128, "maketimer-%s:%d", naStr_data(naGetSourceFile(c, 0)), naGetLine(c, 0));
+    }
+    else {
+        snprintf(nm, 128, "maketimer-%p", this);
+    }
     _name = nm;
     _gcRoot =  naGCSave(f);
     _gcSelf = naGCSave(self);
@@ -547,7 +552,7 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
     func = args[2];
   }
 
-  TimerObj* timerObj = new TimerObj(nasalSys, func, self, args[0].num);
+  TimerObj* timerObj = new TimerObj(c, nasalSys, func, self, args[0].num);
   return nasal::to_nasal(c, timerObj);
 }
 
@@ -1400,7 +1405,7 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
     bool simtime = (argc > 2 && naTrue(args[2])) ? false : true;
 
     // A unique name for the timer based on the file name and line number of the function.
-    std::string name = "NasalTimer-";
+    std::string name = "settimer-";
     name.append(naStr_data(naGetSourceFile(c, 0)));
     name.append(":");
     name.append(std::to_string(naGetLine(c, 0)));

@@ -49,6 +49,7 @@
 #include "tcas.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr () :
+  SGSubsystemGroup("FGInstrumentMgr"),
   _explicitGps(false)
 {    
 }

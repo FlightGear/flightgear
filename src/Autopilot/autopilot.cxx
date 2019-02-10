@@ -120,7 +120,8 @@ static ComponentForge componentForge;
 Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode ) :
   _name("unnamed autopilot"),
   _serviceable(true),
-  _rootNode(rootNode)
+  _rootNode(rootNode),
+  SGSubsystemGroup("Autopilot")
 {
   if (componentForge.empty())
   {

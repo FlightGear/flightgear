@@ -144,7 +144,7 @@ FGGlobals *globals = NULL;
 // Constructor
 FGGlobals::FGGlobals() :
     renderer( new FGRenderer ),
-    subsystem_mgr( new SGSubsystemMgr ),
+    subsystem_mgr( new SGSubsystemMgr("subsystem_mgr") ),
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),

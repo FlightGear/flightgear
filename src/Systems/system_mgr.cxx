@@ -28,7 +28,7 @@
 #include "vacuum.hxx"
 
 
-FGSystemMgr::FGSystemMgr ()
+FGSystemMgr::FGSystemMgr () :SGSubsystemGroup("FGSystemMgr")
 {
     SGPropertyNode_ptr config_props = new SGPropertyNode;
 
