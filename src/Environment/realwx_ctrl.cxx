@@ -443,7 +443,7 @@ void NoaaMetarRealWxController::requestMetar
 
       virtual void onDone()
       {
-        if( responseCode() >= 400 )
+        if( responseCode() != 200 )
         {
           SG_LOG
           (
