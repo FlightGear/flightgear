@@ -224,7 +224,7 @@ void SplashScreen::createNodes()
     _splashQuadCamera->setClearMask( 0 );
     _splashQuadCamera->setAllowEventFocus(false);
     _splashQuadCamera->setCullingActive(false);
-    _splashQuadCamera->setRenderOrder(osg::Camera::POST_RENDER, 20000);
+    _splashQuadCamera->setRenderOrder(osg::Camera::NESTED_RENDER, 20000);
     
     stateSet = _splashQuadCamera->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);

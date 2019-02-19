@@ -68,3 +68,4 @@
 
 #cmakedefine HAVE_QRC_TRANSLATIONS
 
+#cmakedefine ENABLE_COMPOSITOR
