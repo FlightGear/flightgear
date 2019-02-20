@@ -27,6 +27,7 @@
 #include <simgear/math/SGRect.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx> // for copyProperties
+#include <simgear/structure/exception.hxx>
 #include <simgear/structure/OSGUtils.hxx>
 #include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
@@ -682,16 +683,20 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         // If no width or height has been specified, fill the entire window
         viewportNode->getDoubleValue("width", window->gc->getTraits()->width),
         viewportNode->getDoubleValue("height",window->gc->getTraits()->height));
-    std::string comp_path = cameraNode->getStringValue("compositor",
-                                                       "Compositor/default");
+    std::string default_compositor =
+        fgGetString("/sim/rendering/default-compositor", "Compositor/default");
+    std::string compositor_path =
+        cameraNode->getStringValue("compositor", default_compositor.c_str());
     Compositor *compositor = Compositor::create(_viewer,
                                                 window->gc,
                                                 viewport,
-                                                comp_path);
-    if (compositor)
+                                                compositor_path);
+    if (compositor) {
         info->compositor = compositor;
-    else
-        SG_LOG(SG_INPUT, SG_WARN, "Unable to build Compositor");
+    } else {
+        throw sg_exception(std::string("Failed to create Compositor in path '") +
+                           compositor_path + "'");
+    }
 
     // Distortion camera needs the viewport which is created by addCamera().
     if (psNode) {
