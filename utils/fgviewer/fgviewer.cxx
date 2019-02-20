@@ -254,7 +254,7 @@ main(int argc, char** argv)
     osg::ref_ptr<osg::Node> loadedModel;
     if (1 < arguments.argc()) {
         // read the scene from the list of file specified command line args.
-#if OSG_VERSION_LESS_THAN(3,4,0)
+#if OSG_VERSION_LESS_THAN(3,4,1)
         loadedModel = osgDB::readNodeFiles(arguments, options.get());
 #else
         loadedModel = osgDB::readRefNodeFiles(arguments, options.get());
