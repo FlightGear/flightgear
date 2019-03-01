@@ -1748,6 +1748,8 @@ struct OptionDesc {
     {"terrasync-dir",                true,  OPTION_IGNORE,   "", false, "", 0 },
     {"download-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
     {"texture-cache-dir",            true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"enable-texture-cache",         false, OPTION_BOOL,   "/sim/rendering/texture-cache/cache-enabled", true, "", 0 },
+    {"disable-texture-cache",        false, OPTION_BOOL,   "/sim/rendering/texture-cache/cache-enabled", false, "", 0 },
     {"allow-nasal-read",             true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptAllowNasalRead },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
