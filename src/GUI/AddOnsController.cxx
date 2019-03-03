@@ -14,9 +14,12 @@
 #include <Main/globals.hxx>
 #include <Network/HTTPClient.hxx>
 
+#include "Add-ons/Addon.hxx"
+#include "Add-ons/addon_fwd.hxx"
 #include "LocalAircraftCache.hxx"
 #include "LauncherMainWindow.hxx"
 #include "CatalogListModel.hxx"
+#include "AddonsModel.hxx"
 #include "InstallSceneryDialog.hxx"
 #include "QtLauncher.hxx"
 
@@ -31,13 +34,38 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent) :
 
     connect(m_catalogs, &CatalogListModel::catalogsChanged, this, &AddOnsController::onCatalogsChanged);
 
+    m_addonsModuleModel = new AddonsModel(this);
+    connect(m_addonsModuleModel, &AddonsModel::modulesChanged, this, &AddOnsController::onAddonsChanged);
+
+    using namespace flightgear::addons;
     QSettings settings;
     m_sceneryPaths = settings.value("scenery-paths").toStringList();
     m_aircraftPaths = settings.value("aircraft-paths").toStringList();
-    m_addonModulePaths = settings.value("addon-module-paths").toStringList();
+
+    int size = settings.beginReadArray("addon-modules");
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+
+        QString path = settings.value("path").toString();
+        m_addonModulePaths.push_back( path );
+        const SGPath addonPath(path.toStdString());
+
+        bool enable = settings.value("enable").toBool();
+
+        try {
+            auto addon = Addon::fromAddonDir<AddonRef>(addonPath);
+            m_addonsModuleModel->append(path, addon, enable);
+        }
+        catch (const sg_exception &e) {
+            string msg = "Error getting add-on metadata: " + e.getFormattedMessage();
+            SG_LOG(SG_GENERAL, SG_ALERT, msg);
+        }
+    }
+    settings.endArray();
 
     qmlRegisterUncreatableType<AddOnsController>("FlightGear.Launcher", 1, 0, "AddOnsControllers", "no");
     qmlRegisterUncreatableType<CatalogListModel>("FlightGear.Launcher", 1, 0, "CatalogListModel", "no");
+    qmlRegisterUncreatableType<AddonsModel>("FlightGear.Launcher", 1, 0, "AddonsModel", "no");
 }
 
 QStringList AddOnsController::aircraftPaths() const
@@ -107,7 +135,7 @@ QString AddOnsController::addAddOnModulePath() const
     SGPath p(path.toStdString());
     bool isValid = false;
 
-    for (const auto& file: {"addon-config.xml", "addon-main.nas"}) {
+    for (const auto& file: {"addon-metadata.xml", "addon-main.nas"}) {
         if ((p / file).exists()) {
             isValid = true;
             break;
@@ -120,12 +148,26 @@ QString AddOnsController::addAddOnModulePath() const
         mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         mb.setDefaultButton(QMessageBox::No);
         mb.setInformativeText(tr("Added modules should contain at least both of the following "
-                                 "files: addon-config.xml, addon-main.nas."));
+                                 "files: addon-metadata.xml, addon-main.nas."));
         mb.exec();
 
         if (mb.result() == QMessageBox::No) {
             return {};
         }
+    }
+
+    using namespace flightgear::addons;
+    const SGPath addonPath(path.toStdString());
+
+    try {
+        // when newly added, enable by default
+        auto addon = Addon::fromAddonDir<AddonRef>(addonPath);
+        if (!m_addonsModuleModel->append(path, addon, true)) {
+            path = QString("");
+        }
+    } catch (const sg_exception &e) {
+        string msg = "Error getting add-on metadata: " + e.getFormattedMessage();
+        SG_LOG(SG_GENERAL, SG_ALERT, msg);
     }
 
     return path;
@@ -216,6 +258,12 @@ void AddOnsController::setSceneryPaths(QStringList sceneryPaths)
     emit sceneryPathsChanged(m_sceneryPaths);
 }
 
+void AddOnsController::setAddons(AddonsModel* addons)
+{
+    
+}
+
+
 void AddOnsController::setModulePaths(QStringList modulePaths)
 {
     if (m_addonModulePaths == modulePaths)
@@ -223,10 +271,22 @@ void AddOnsController::setModulePaths(QStringList modulePaths)
 
     m_addonModulePaths = modulePaths;
 
+    m_addonsModuleModel->resetData(modulePaths);
+
     QSettings settings;
-    settings.setValue("addon-module-paths", m_addonModulePaths);
+    int i = 0;
+    settings.beginWriteArray("addon-modules");
+    for (const QString& path : modulePaths) {
+        if (m_addonsModuleModel->containsPath(path)) {
+            settings.setArrayIndex(i++);
+            settings.setValue("path", path);
+            settings.setValue("enable", m_addonsModuleModel->getPathEnable(path));
+        }
+    }
+    settings.endArray();
 
     emit modulePathsChanged(m_addonModulePaths);
+    emit modulesChanged();
 }
 
 void AddOnsController::officialCatalogAction(QString s)
@@ -268,3 +328,17 @@ void AddOnsController::onCatalogsChanged()
     emit isOfficialHangarRegisteredChanged();
 }
 
+
+void AddOnsController::onAddonsChanged()
+{
+    QSettings settings;
+
+    int i = 0;
+    settings.beginWriteArray("addon-modules");
+    for (const auto& path : m_addonModulePaths) {
+        settings.setArrayIndex(i++);
+        settings.setValue("path", path);
+        settings.setValue("enable", m_addonsModuleModel->getPathEnable(path));
+    }
+    settings.endArray();
+}

@@ -120,6 +120,8 @@ if (HAVE_QT)
                             LauncherController.hxx
                             AddOnsController.cxx
                             AddOnsController.hxx
+                            AddonsModel.cxx
+                            AddonsModel.hxx
                             PixmapImageItem.cxx
                             PixmapImageItem.hxx
                             ${uic_sources}
