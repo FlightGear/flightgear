@@ -281,7 +281,7 @@ void SplashScreen::setupLogoImage()
 {
     // check for a logo image, add underneath other text
     SGPath logoPath = globals->resolve_maybe_aircraft_path(fgGetString("/sim/startup/splash-logo-image"));
-    if (!logoPath.exists()) {
+    if (!logoPath.exists() || !logoPath.isFile()) {
         return;
     }
 
