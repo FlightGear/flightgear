@@ -417,11 +417,11 @@ void FGGroundNetwork::blockSegmentsEndingAt(FGTaxiSegment *seg, int blockId, tim
     if (!seg)
         throw sg_exception("Passed invalid segment");
 
-    FGTaxiNode *node = seg->getEnd();
+    const FGTaxiNode *node = seg->endNode;
     FGTaxiSegmentVector::iterator tsi;
     for ( tsi = segments.begin(); tsi != segments.end(); tsi++) {
         FGTaxiSegment* otherSegment = *tsi;
-        if ((otherSegment->getEnd() == node) && (otherSegment != seg)) {
+        if ((otherSegment->endNode == node) && (otherSegment != seg)) {
             otherSegment->block(blockId, blockTime, now);
         }
     }
