@@ -321,9 +321,25 @@ void PropertyList::updateTextForEntry(NodeData& data)
     line << name;
 
     int children = node->nChildren();
-    if (children)
+    if (children) {
         line << '/';
-
+        if (_verbose) {
+            const SGPropertyNode* id = node->getChild("id");
+            const SGPropertyNode* name = node->getChild("name");
+            if (id || name) {
+                line << " (";
+                if (id) {
+                    line << "id: " << id->getStringValue();
+                    if (name != NULL)
+                        line << ", ";
+                } else if (name) {
+                    line << "name: " << name->getStringValue();
+                }
+                line << ")";
+            }
+        }
+    }
+    
     if (!children || (_verbose && node->hasValue())) {
         if (node->getType() == props::STRING
                 || node->getType() == props::UNSPECIFIED)
