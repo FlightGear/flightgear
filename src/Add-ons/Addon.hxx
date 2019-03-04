@@ -34,6 +34,7 @@
 #include "addon_fwd.hxx"
 #include "contacts.hxx"
 #include "AddonVersion.hxx"
+#include "pointer_traits.hxx"
 
 namespace flightgear
 {
@@ -87,6 +88,13 @@ public:
   // Parse the add-on metadata file inside 'addonPath' (as defined by
   // getMetadataFile()) and return the corresponding Addon instance.
   static Addon fromAddonDir(const SGPath& addonPath);
+
+  template<class T>
+  static T fromAddonDir(const SGPath& addonPath)
+  {
+    using ptr_traits = shared_ptr_traits<T>;
+    return ptr_traits::makeStrongRef(fromAddonDir(addonPath));
+  }
 
   std::string getId() const;
 

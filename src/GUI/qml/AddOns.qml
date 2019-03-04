@@ -3,12 +3,38 @@ import FlightGear.Launcher 1.0
 import "."
 
 Item {
+     id: root
     Flickable {
         id: flick
         height: parent.height
         width: parent.width - scrollbar.width
         flickableDirection: Flickable.VerticalFlick
         contentHeight: contents.childrenRect.height
+        function showDetails(index)
+        {
+            // set URI, start animation
+            // change state
+            detailsView.mdx = index;
+            detailsView.visible = true
+            contents.visible = false
+        }
+
+        function goBack()
+        {
+            detailsView.visible = false
+            contents.visible = true
+        }
+
+        AddonsDetailsView
+        {
+            id: detailsView
+            anchors.fill: parent
+            visible: false
+            onGoBack: {
+                flick.goBack();
+            }
+
+        }
 
         Column {
             id: contents
@@ -144,7 +170,7 @@ Item {
                                   "know the folder(s) containing the Add-on Modules.")
                 showAddButton: true
                 onAdd: {
-                    var newPath =_addOns.addAddOnModulePath();
+                    var newPath = _addOns.addAddOnModulePath();
                     if (newPath !== "") {
                         _addOns.modulePaths.push(newPath)
                     }
@@ -165,10 +191,10 @@ Item {
 
                     Repeater {
                         id: addonModulesPathsRepeater
-                        model: _addOns.modulePaths
-                        delegate: PathListDelegate {
+                        model: _addOns.modules
+                        delegate: AddOnsDelegate {
                             width: addonModulePathsColumn.width
-                            deletePromptText: qsTr("Remove the add-on module folder: '%1' from the list? (The folder contents will not be changed)").arg(modelData);
+                            deletePromptText: qsTr("Remove the add-on module folder: '%1' from the list? (The folder contents will not be changed)").arg(model.path);
                             modelCount: _addOns.modulePaths.length
 
                             onPerformDelete: {
@@ -180,8 +206,12 @@ Item {
                             onPerformMove: {
                                 var modifiedPaths = _addOns.modulePaths.slice()
                                 modifiedPaths.splice(model.index, 1);
-                                modifiedPaths.splice(newIndex, 0, modelData)
+                                modifiedPaths.splice(newIndex, 0, model.path)
                                 _addOns.modulePaths = modifiedPaths;
+                            }
+
+                            onShowDetails: {
+                                flick.showDetails(detailIndex)
                             }
                         }
                     }

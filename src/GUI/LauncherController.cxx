@@ -292,9 +292,19 @@ void LauncherController::collectAircraftArgs()
         m_config->setArg("fg-aircraft", path);
     }
 
-    Q_FOREACH(QString path, settings.value("addon-module-paths").toStringList()) {
-        m_config->setArg("addon", path);
+    // add-on module paths
+    int size = settings.beginReadArray("addon-modules");
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+
+        QString path = settings.value("path").toString();
+        bool enable = settings.value("enable").toBool();
+        if (enable) {
+            m_config->setArg("addon", path);
+        }
     }
+    settings.endArray();
+
 }
 
 void LauncherController::saveAircraft()

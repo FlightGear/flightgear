@@ -85,6 +85,8 @@
         <file>qml/DeleteButton.qml</file>
         <file>qml/YesNoPanel.qml</file>
         <file>qml/PathListDelegate.qml</file>
+        <file>qml/AddOnsDelegate.qml</file>
+        <file>qml/AddonsDetailsView.qml</file>
         <file>qml/AddCatalogPanel.qml</file>
         <file>qml/LineEdit.qml</file>
         <file>qml/LocationAirportView.qml</file>

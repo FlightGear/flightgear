@@ -5,6 +5,7 @@
 #include <QStringList>
 
 class CatalogListModel;
+class AddonsModel;
 class LauncherMainWindow;
 
 class AddOnsController : public QObject
@@ -16,7 +17,7 @@ class AddOnsController : public QObject
     Q_PROPERTY(QStringList modulePaths READ modulePaths WRITE setModulePaths NOTIFY modulePathsChanged)
 
     Q_PROPERTY(CatalogListModel* catalogs READ catalogs CONSTANT)
-
+    Q_PROPERTY(AddonsModel* modules READ modules NOTIFY modulesChanged)
     Q_PROPERTY(bool isOfficialHangarRegistered READ isOfficialHangarRegistered NOTIFY isOfficialHangarRegisteredChanged)
     Q_PROPERTY(bool showNoOfficialHangar READ showNoOfficialHangar NOTIFY showNoOfficialHangarChanged)
 
@@ -29,6 +30,9 @@ public:
 
     CatalogListModel* catalogs() const
     { return m_catalogs; }
+
+    AddonsModel* modules() const
+    { return m_addonsModuleModel; }
 
     Q_INVOKABLE QString addAircraftPath() const;
     Q_INVOKABLE QString addSceneryPath() const;
@@ -44,10 +48,12 @@ public:
     bool showNoOfficialHangar() const;
 
     Q_INVOKABLE void officialCatalogAction(QString s);
+
 signals:
     void aircraftPathsChanged(QStringList aircraftPaths);
     void sceneryPathsChanged(QStringList sceneryPaths);
     void modulePathsChanged(QStringList modulePaths);
+    void modulesChanged();
 
     void isOfficialHangarRegisteredChanged();
     void showNoOfficialHangarChanged();
@@ -56,6 +62,8 @@ public slots:
     void setAircraftPaths(QStringList aircraftPaths);
     void setSceneryPaths(QStringList sceneryPaths);
     void setModulePaths(QStringList modulePaths);
+    void setAddons(AddonsModel* addons);
+    void onAddonsChanged(void);
 
 private:
     bool shouldShowOfficialCatalogMessage() const;
@@ -63,6 +71,8 @@ private:
 
     LauncherMainWindow* m_launcher;
     CatalogListModel* m_catalogs = nullptr;
+    AddonsModel* m_addonsModuleModel = nullptr;
+
     QStringList m_aircraftPaths;
     QStringList m_sceneryPaths;
     QStringList m_addonModulePaths;
