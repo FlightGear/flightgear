@@ -54,6 +54,9 @@
 #include <ATC/atc_mgr.hxx>
 #include <AIModel/AIManager.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
+#if defined(ENABLE_SWIFT)
+#  include <Network/Swift/swift_connection.hxx>
+#endif
 #include <AIModel/submodel.hxx>
 #include <Aircraft/controls.hxx>
 #include <Input/input.hxx>
@@ -107,6 +110,9 @@ SGSubsystem* createSubsystemByName(const std::string& name)
 #endif
 #ifdef ENABLE_IAX
     MAKE_SUB(FGCom, "fgcom");
+#endif
+#ifdef ENABLE_SWIFT
+    MAKE_SUB(SwiftConnection, "swift");
 #endif
     MAKE_SUB(FGLight, "lighting");
     MAKE_SUB(FGAircraftModel, "aircraft-model");

@@ -73,3 +73,6 @@ endif()
 
 add_subdirectory(http)
 
+if(ENABLE_SWIFT)
+	add_subdirectory(Swift)
+endif()

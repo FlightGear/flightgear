@@ -30,6 +30,7 @@
 #include <cstring>             // strcmp()
 
 #if defined(SG_WINDOWS)
+#define _WINSOCKAPI_
 #  include <io.h>               // isatty()
 #  include <process.h>          // _getpid()
 #  include <Windows.h>
@@ -117,6 +118,9 @@
 
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
+#if defined(ENABLE_SWIFT)
+#include <Network/Swift/swift_connection.hxx>
+#endif
 #include <FDM/fdm_shell.hxx>
 #include <Environment/ephemeris.hxx>
 #include <Environment/environment_mgr.hxx>
@@ -572,6 +576,12 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     fgSetBool("/sim/developer-mode", developerMode);
     sglog().setDeveloperMode(developerMode);
 
+#ifdef ENABLE_SWIFT
+    //Set standard settings for swift connection
+    fgSetString("/sim/swift/adress","127.0.0.1");
+    fgSetString("/sim/swift/port","45003");
+#endif
+
     // Read global defaults from $FG_ROOT/defaults
     SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
     SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
@@ -936,6 +946,14 @@ void fgCreateSubsystems(bool duringReset) {
     ////////////////////////////////////////////////////////////////////
 
     globals->add_subsystem("mp", new FGMultiplayMgr, SGSubsystemMgr::POST_FDM);
+
+#ifdef ENABLE_SWIFT
+    ////////////////////////////////////////////////////////////////////
+    // Initialize Swift subsystem
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("swift", new SwiftConnection, SGSubsystemMgr::POST_FDM);
+#endif
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager

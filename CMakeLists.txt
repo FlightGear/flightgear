@@ -202,6 +202,7 @@ option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" 
 option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code" OFF)
 option(ENABLE_PLIB_JOYSTICK  "Set to ON to enable legacy joystick code (default)" ON)
 option(ENABLE_COMPOSITOR "Set to ON to enable the Compositor-based Viewer" OFF)
+option(ENABLE_SWIFT      "Set to ON to build the swift module" OFF)
 
 
 # Test-suite options.
@@ -262,6 +263,21 @@ if(EVENT_INPUT)
         list(APPEND EVENT_INPUT_LIBRARIES hidapi)
     endif()
 endif(EVENT_INPUT)
+
+if (ENABLE_SWIFT)
+    message(STATUS "SWIFT support requested, checking for DBus/libEvent")
+    # DBUS
+    find_package(DBus REQUIRED)
+    list(APPEND PLATFORM_LIBS ${DBUS_LIBRARIES})
+
+    #libevent
+    find_package(LibEvent REQUIRED)
+    list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
+
+    if (NOT DBUS_LIBRARIES OR NOT LIBEVENT_LIB)
+        message(FATAL_ERROR "SWIFT support requested, please ensure DBus/libEvent are available")
+    endif()
+endif()
 
 # check required dependencies
 find_package(Boost REQUIRED)
@@ -497,7 +513,9 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${SIMGEAR_INCLUDE_DIRS}
     ${PLIB_INCLUDE_DIR}
-    ${SQLITE3_INCLUDED_DIR} )
+    ${SQLITE3_INCLUDED_DIR}
+    ${DBUS_INCLUDE_DIRS}
+    ${LIBEVENT_INCLUDE_DIR}	)
 
 if (USE_AEONWAVE)
     find_package(AAX REQUIRED)
