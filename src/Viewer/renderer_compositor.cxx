@@ -730,7 +730,9 @@ FGRenderer::update( ) {
         ->getLightNodeMask(_updateVisitor.get());
     if (_panel_hotspots->getBoolValue())
         cullMask |= simgear::PICK_BIT;
-    CameraGroup::getDefault()->setCameraCullMasks(cullMask);
+    camera->setCullMask(cullMask);
+    camera->setCullMaskLeft(cullMask);
+    camera->setCullMaskRight(cullMask);
 }
 
 void

@@ -111,7 +111,7 @@ struct CameraInfo : public osg::Referenced
      * so they can avoid recalculating them.
      */
     osg::Matrix viewMatrix, projMatrix;
-    /** The Compositor used to manage the pipeline of this camera
+    /** The Compositor used to manage the pipeline of this camera.
      */
     osg::ref_ptr<simgear::compositor::Compositor> compositor;
 };
@@ -170,9 +170,6 @@ public:
      * current viewport.
      */
     void setCameraParameters(float vfov, float aspectRatio);
-    /** Set the cull mask on all non-GUI cameras
-     */
-    void setCameraCullMasks(osg::Node::NodeMask nm);
     /** Update camera properties after a resize event.
      */
     void resized();
