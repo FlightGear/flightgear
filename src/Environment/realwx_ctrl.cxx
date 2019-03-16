@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -411,12 +412,19 @@ public:
     {
     }
 private:
-    
+    std::string noaa_base_url;
 };
 
 NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNode ) :
   BasicRealWxController(rootNode, this )
 {
+    // default to hardcoded URL for compatibility
+    noaa_base_url = "https://tgftp.nws.noaa.gov/data/observations/metar/stations/[station].TXT";
+
+    // override with environment/realwx/metar-url (if present)
+    SGPropertyNode *urlNode = _rootNode->getNode("metar-url", false);
+    if (urlNode != nullptr)
+        noaa_base_url = urlNode->getStringValue();
 }
 
 void NoaaMetarRealWxController::requestMetar
@@ -425,15 +433,14 @@ void NoaaMetarRealWxController::requestMetar
   const std::string& id
 )
 {
-  static const std::string NOAA_BASE_URL =
-    "https://tgftp.nws.noaa.gov/data/observations/metar/stations/";
   class NoaaMetarGetRequest:
     public simgear::HTTP::MemoryRequest
   {
     public:
       NoaaMetarGetRequest( LiveMetarProperties_ptr metarDataHandler,
-                           const std::string& stationId ):
-        MemoryRequest(NOAA_BASE_URL + stationId + ".TXT"),
+                           const std::string& stationId, 
+                           const std::string &base_url):
+        MemoryRequest(std::regex_replace(base_url, std::regex("\\[station\\]"),stationId)),
         _metarDataHandler(metarDataHandler)
       {
         std::ostringstream buf;
@@ -482,7 +489,7 @@ void NoaaMetarRealWxController::requestMetar
   );
   FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
   if (http) {
-      http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId));
+      http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId, noaa_base_url));
   }
 }
 
