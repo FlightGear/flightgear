@@ -28,7 +28,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <regex>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -440,7 +439,7 @@ void NoaaMetarRealWxController::requestMetar
       NoaaMetarGetRequest( LiveMetarProperties_ptr metarDataHandler,
                            const std::string& stationId, 
                            const std::string &base_url):
-        MemoryRequest(std::regex_replace(base_url, std::regex("\\[station\\]"),stationId)),
+        MemoryRequest( simgear::strutils::replace(base_url, "[station]",stationId) ),
         _metarDataHandler(metarDataHandler)
       {
         std::ostringstream buf;
