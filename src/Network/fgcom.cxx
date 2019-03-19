@@ -97,7 +97,11 @@ FGCom::FGCom() :
     _register(true),
     _enabled(false),
     _initialized(false),
-    _listener_active(0)
+    _listener_active(0),
+    _commFrequencyNode(nullptr),
+    _ptt_node(nullptr),
+    _selected_comm_node(nullptr),
+    _currentCallIdent(-1)
 {
 }
 
@@ -128,9 +132,8 @@ void FGCom::bind()
   _username_node           = reg_node->getChild( "username", 0, true );
   _password_node           = reg_node->getChild( "password", 0, true );
 
-  _comm0_node              = fgGetNode("/instrumentation/comm[0]/frequencies/selected-mhz", true);
-  _comm1_node              = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
-  _ptt0_node               = fgGetNode("/instrumentation/comm[0]/ptt", true); //FIXME: what about /instrumentation/comm[1]/ptt ?
+  _ptt_node                = fgGetNode("/controls/radios/comm-ptt", true);
+  _selected_comm_node      = fgGetNode("/controls/radios/comm-radio-selected", true);
   _callsign_node           = fgGetNode("/sim/multiplay/callsign", true);
   _text_node               = fgGetNode("/sim/messages/atc", true );
   _version_node            = fgGetNode("/sim/version/flightgear", true );
@@ -169,6 +172,9 @@ void FGCom::bind()
   if ( !_showMessages_node->hasValue() )
       _showMessages_node->setBoolValue(false);
 
+  _mpTransmitFrequencyNode = fgGetNode("sim/multiplay/comm-transmit-frequency-hz", 0, true);
+  _mpTransmitPowerNode = fgGetNode("sim/multiplay/comm-transmit-power-norm", 0, true);
+      
   _selectedOutput_node->addChangeListener(this);
   _selectedInput_node->addChangeListener(this);
   _speakerLevel_node->addChangeListener(this);
@@ -176,9 +182,8 @@ void FGCom::bind()
   _micBoost_node->addChangeListener(this);
   _micLevel_node->addChangeListener(this);
   _enabled_node->addChangeListener(this);
-  _comm0_node->addChangeListener(this);
-  _comm1_node->addChangeListener(this);
-  _ptt0_node->addChangeListener(this);
+  _ptt_node->addChangeListener(this);
+  _selected_comm_node->addChangeListener(this);
   _test_node->addChangeListener(this);
 }
 
@@ -197,13 +202,8 @@ void FGCom::init()
   _register         = _register_node->getBoolValue();
   _username         = _username_node->getStringValue();
   _password         = _password_node->getStringValue();
-  _selectedComm     = 0;
 
-  _currentComm0     = _comm0_node->getDoubleValue();
-  _currentComm1     = _comm1_node->getDoubleValue();
-
-  _comm0Changed     = false;
-  _comm1Changed     = false;
+  _currentCommFrequency = 0;
 
   _maxRange         = MAX_RANGE;
   _minRange         = MIN_RANGE;
@@ -317,53 +317,103 @@ void FGCom::postinit()
     iaxc_millisleep(50);
 
     // Do the first call at start
-    const double freq = _comm0_node->getDoubleValue();
-    _currentFreqKhz = 10 * static_cast<int>(freq * 100 + 0.25);
-    std::string num = computePhoneNumber(freq, getAirportCode(freq));
-    if( !num.empty() ) {
-      _callComm0 = iaxc_call(num.c_str());
-    }
-    if( _callComm0 == -1 )
-      SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
+    setupCommFrequency();
+    connectToCommFrequency();
 }
 
+double FGCom::getCurrentFrequencyKhz() const {
+    return 10 * static_cast<int>(_currentCommFrequency * 100 + 0.25); 
+}
 
+void FGCom::setupCommFrequency(int channel) {
+    if (channel < 1) {
+        if (_selected_comm_node != nullptr) {
+            channel = _selected_comm_node->getIntValue();
+        }
+    }
+    // always fallback to comm 1
+    if (channel < 1) {
+        channel = 1;
+    }
 
-void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
-{
+    if (channel > 0)
+    {
+        channel--; // adjust back to zero based index.
+        SGPropertyNode *commRadioNode = fgGetNode("/instrumentation/")->getChild("comm", channel, false);
+        if (commRadioNode) {
+            SGPropertyNode *frequencyNode = commRadioNode->getChild("frequencies");
+            if (frequencyNode) {
+                frequencyNode = frequencyNode->getChild("selected-mhz");
+                if (frequencyNode) {
+                    if (_commFrequencyNode != frequencyNode) {
+                        if (_commFrequencyNode)
+                            _commFrequencyNode->removeChangeListener(this);
+                        _commFrequencyNode = frequencyNode;
+                        _commFrequencyNode->addChangeListener(this);
+                    }
+                    _currentCommFrequency = frequencyNode->getDoubleValue();
+                    return;
+                }
+            }
+        }
+        SG_LOG(SG_IO, SG_INFO, "FGCom: setupCommFrequency node listener failed: channel " << channel);
+    }
 
-    _currentFreqKhz = 10 * static_cast<int>(freqMHz * 100 + 0.25);
+    if (_commFrequencyNode)
+        _commFrequencyNode->removeChangeListener(this);
+    SG_LOG(SG_IO, SG_INFO, "FGCom: setupCommFrequency invalid channel " << channel);
 
-    if (!changed) {
-        if( !isInRange(freqMHz) ) {
-            iaxc_dump_call_number(callNo);
-            callNo = -1;
-            return;
-        } else {
-            if(callNo != -1)
+    _currentCommFrequency = 0;
+}
+
+void FGCom::connectToCommFrequency() {
+    // ensure that the current comm is still in range
+    if (_currentCallFrequency && !isInRange(_currentCallFrequency)) {
+        SG_LOG(SG_IO, SG_WARN, "FGCom: call out of range of: " << _currentCallFrequency);
+        _currentCallFrequency = 0;
+    }
+
+    if (_currentCallFrequency != _currentCommFrequency || _currentCallIdent == -1) {
+        if (_currentCallIdent != -1) {
+            iaxc_dump_call_number(_currentCallIdent);
+            SG_LOG(SG_IO, SG_INFO, "FGCom: dump_call_number " << _currentCallIdent);
+            _currentCallIdent = -1;
+        }
+
+        if (_currentCallIdent == -1)
+        {
+            std::string num = computePhoneNumber(_currentCommFrequency, getAirportCode(_currentCommFrequency));
+            _processingTimer.stamp();
+            if (!isInRange(_currentCommFrequency)) {
+                if (_currentCallIdent != -1) {
+                    SG_LOG(SG_IO, SG_INFO, "FGCom: disconnect call as not in range " << _currentCallIdent);
+                    if (_currentCallIdent != -1) {
+                        iaxc_dump_call_number(_currentCallIdent);
+                        _currentCallIdent = -1;
+                    }
+                }
                 return;
+            }
+            if (!num.empty()) {
+                _currentCallIdent = iaxc_call(num.c_str());
+                if (_currentCallIdent == -1)
+                    SG_LOG(SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str());
+                else {
+                    SG_LOG(SG_IO, SG_DEBUG, "FGCom: call established " << num.c_str() << " Freq: " << _currentCommFrequency);
+                    _currentCallFrequency = _currentCommFrequency;
+                }
+            }
+            else
+                SG_LOG(SG_IO, SG_WARN, "FGCom: frequency " << _currentCommFrequency << " does not map to valid IAX address");
         }
     }
+}
 
-    changed = false; // FIXME, out-params are confusing
-
-    if( callNo != -1 ) {
-        iaxc_dump_call_number( callNo );
-        callNo = -1;
-    }
-
-    if(_p.elapsedMSec() > IAX_DELAY) {
-        std::string num = computePhoneNumber(freqMHz, getAirportCode(freqMHz));
-        if( !isInRange(freqMHz) )
-            return;
-        if( !num.empty() ) {
-            callNo = iaxc_call(num.c_str());
-
-            if( callNo == -1 )
-                SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
-        }
-    } else {
-        changed = true;
+void FGCom::updateCall()
+{
+    if (_processingTimer.elapsedMSec() > IAX_DELAY) {
+        _processingTimer.stamp();
+        connectToCommFrequency();
     }
 }
 
@@ -371,17 +421,11 @@ void FGCom::updateCall(bool& changed, int& callNo, double freqMHz)
 
 void FGCom::update(double dt)
 {
-    if ( !_enabled || !_initialized ) {
+    if (!_enabled || !_initialized) {
         return;
     }
 
-    // For now we manage FGCom for only one freq because IAXClient
-    // is not able to handle multiple calls at same time.
-    if( _selectedComm == 0) {
-        updateCall(_comm0Changed, _callComm0, _comm0_node->getDoubleValue());
-    } else {
-        updateCall(_comm1Changed, _callComm0, _comm1_node->getDoubleValue());
-    }
+    updateCall();
 }
 
 
@@ -404,8 +448,6 @@ void FGCom::shutdown()
   static_instance = NULL;
 }
 
-
-
 void FGCom::valueChanged(SGPropertyNode *prop)
 {
   if (prop == _enabled_node) {
@@ -423,26 +465,38 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     return;
   }
 
-  if (prop == _ptt0_node && _enabled) {
-    if( _ptt0_node->getIntValue() == 2 ) {
-      if( _selectedComm == 0 ) {
-          SG_LOG( SG_IO, SG_INFO, "FGCom: change comm source to comm[1]" );
-          _comm1Changed = true;
-          _selectedComm = 1;
-      } else {
-          SG_LOG( SG_IO, SG_INFO, "FGCom: change comm source to comm[0]" );
-          _comm0Changed = true;
-          _selectedComm = 0;
+  if (prop == _selected_comm_node && _enabled) {
+      setupCommFrequency();
+      SG_LOG(SG_IO, SG_INFO, "FGCom: change comm frequency (selected node): set to " << _currentCommFrequency);
+  }
+
+  if (prop == _commFrequencyNode && _enabled) {
+      setupCommFrequency();
+      SG_LOG(SG_IO, SG_INFO, "FGCom: change comm frequency (property updated): set to " << _currentCommFrequency);
+  }
+
+  if (prop == _ptt_node && _enabled) {
+      if (_ptt_node->getIntValue()) {
+          // ensure that we are on the right channel by calling setupCommFrequency with the value of the PTT node.
+          // the two properties for the ptt channel and the current channel should be on the same channel
+          // but if not this will flip the radio for transmit and listen to whichever frequency last did a PTT
+          //
+          // NOTE: Probably the whole thing needs re-writing to be multi-comm capable; but fgcomm has always been a bit 
+          //       single oriented and I don't know if it would even work (with the right logic) in multi-channel mode.
+          setupCommFrequency(_ptt_node->getIntValue());
+          iaxc_output_level_set(0.0);
+          iaxc_input_level_set(_micLevel_node->getFloatValue()); //0.0 = min , 1.0 = max
+          _mpTransmitFrequencyNode->setValue(_currentCallFrequency * 1000000);
+          _mpTransmitPowerNode->setValue(1.0);
+          SG_LOG(SG_IO, SG_INFO, "FGCom: PTT active: " << _currentCallFrequency);
       }
-      return;
-    }
-    if( _ptt0_node->getBoolValue() ) {
-      iaxc_output_level_set( 0.0 );
-      iaxc_input_level_set( _micLevel_node->getFloatValue() ); //0.0 = min , 1.0 = max
-    } else {
-      iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
-      iaxc_input_level_set( 0.0 );
-    }
+      else {
+          iaxc_output_level_set(_speakerLevel_node->getFloatValue());
+          iaxc_input_level_set(0.0);
+          SG_LOG(SG_IO, SG_INFO, "FGCom: PTT release: " << _currentCallFrequency);
+          _mpTransmitFrequencyNode->setValue(0);
+          _mpTransmitPowerNode->setValue(0);
+      }
   }
 
   if (prop == _test_node) {
@@ -492,22 +546,6 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     //iaxc_input_level_set(micLevel);
   }
 
-  if (prop == _comm0_node) {
-    if( _currentComm0 != prop->getDoubleValue() ) {
-      _currentComm0 = prop->getDoubleValue();
-      _p.stamp();
-      _comm0Changed = true;
-    }
-  }
-
-  if (prop == _comm1_node) {
-    if( _currentComm1 != prop->getDoubleValue() ) {
-      _currentComm1 = prop->getDoubleValue();
-      _p.stamp();
-      _comm1Changed = true;
-    }
-  }
-
   _listener_active--;
 }
 
@@ -523,9 +561,9 @@ void FGCom::testMode(bool testMode)
     std::string num = computePhoneNumber(TEST_FREQ, NULL_ICAO);
     if( num.size() > 0 ) {
       iaxc_millisleep(IAX_DELAY);
-      _callComm0 = iaxc_call(num.c_str());
+      _currentCallIdent = iaxc_call(num.c_str());
     }
-    if( _callComm0 == -1 )
+    if( _currentCallIdent == -1 )
       SG_LOG( SG_IO, SG_DEBUG, "FGCom: cannot call " << num.c_str() );
   } else {
     if( _initialized ) {
@@ -533,7 +571,7 @@ void FGCom::testMode(bool testMode)
       iaxc_millisleep(IAX_DELAY);
       iaxc_input_level_set( 0.0 );
       iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
-      _callComm0 = -1;
+      _currentCallIdent = -1;
       _enabled = true;
     }
   }
@@ -551,14 +589,14 @@ std::string FGCom::getAirportCode(const double& freq)
   SGGeod aircraftPos = globals->get_aircraft_position();
 
   for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
-    if(special_freq[i] == _currentFreqKhz) {
+    if(special_freq[i] == getCurrentFrequencyKhz()) {
       return NULL_ICAO;
     }
   }
 
-  flightgear::CommStation* apt = flightgear::CommStation::findByFreq(_currentFreqKhz, aircraftPos);
+  flightgear::CommStation* apt = flightgear::CommStation::findByFreq(getCurrentFrequencyKhz(), aircraftPos);
   if( !apt ) {
-    apt = flightgear::CommStation::findByFreq(_currentFreqKhz-10, aircraftPos); // Check for 8.33KHz
+    apt = flightgear::CommStation::findByFreq(getCurrentFrequencyKhz() -10, aircraftPos); // Check for 8.33KHz
     if( !apt ) {
       return std::string();
     }
@@ -630,7 +668,7 @@ std::string FGCom::computePhoneNumber(const double& freq, const std::string& ica
 bool FGCom::isInRange(const double &freq) const
 {
     for(size_t i=0; i<sizeof(special_freq)/sizeof(special_freq[0]); i++) { // Check if it's a special freq
-      if( (special_freq[i]) == _currentFreqKhz ) {
+      if( (special_freq[i]) == getCurrentFrequencyKhz()) {
         return 1;
       }
     }

@@ -121,6 +121,7 @@ const int EMESARYBRIDGETYPE_BASE = 12200;
 const int EMESARYBRIDGE_BASE = 12000;
 const int V2018_3_BASE = 13000;
 const int FALLBACK_MODEL_ID = 13000;
+const int V2019_3_BASE = 13001;
 
 /*
  * definition of properties that are to be transmitted.
@@ -665,6 +666,9 @@ static const IdPropertyList sIdPropertyList[] = {
     { EMESARYBRIDGETYPE_BASE + 29, "sim/multiplay/emesary/bridge-type[29]", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
 
     { FALLBACK_MODEL_ID, "sim/model/fallback-model-index", simgear::props::INT, TT_SHORTINT,  V1_1_2_PROP_ID, NULL, NULL },
+    { V2019_3_BASE,   "sim/multiplay/comm-transmit-frequency-hz", simgear::props::INT, TT_INT,  V1_1_2_PROP_ID, NULL, NULL },
+    { V2019_3_BASE+1, "sim/multiplay/comm-transmit-power-norm", simgear::props::INT, TT_SHORT_FLOAT_NORM ,  V1_1_2_PROP_ID, NULL, NULL },
+    // Add new MP properties here
 };
 /*
  * For the 2017.x version 2 protocol the properties are sent in two partitions,

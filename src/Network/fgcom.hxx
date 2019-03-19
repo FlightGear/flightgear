@@ -41,9 +41,9 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
 
   private:
 
-    SGPropertyNode_ptr _ptt0_node;                            // instrumentation/nav[0]/ptt
-    SGPropertyNode_ptr _comm0_node;                           // instrumentation/comm[0]/frequencies/selected-mhz
-    SGPropertyNode_ptr _comm1_node;                           // instrumentation/comm[1]/frequencies/selected-mhz
+    SGPropertyNode_ptr _ptt_node;                             // PTT; nonzero int indicating channel number (instrumentation/comm/[channel-1])
+    SGPropertyNode_ptr _selected_comm_node;                   // selected channel (fgcom); nonzero channel int indicating channel number (instrumentation/comm/[channel-1])
+    SGPropertyNode_ptr _commFrequencyNode;                    // current comm node in use; e.g. /instrumentation/comm[0]
     SGPropertyNode_ptr _test_node;                            // sim/fgcom/test
     SGPropertyNode_ptr _text_node;                            // sim/fgcom/text
     SGPropertyNode_ptr _server_node;                          // sim/fgcom/server
@@ -64,37 +64,37 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _selectedInput_node;                   // sim/fgcom/device-input
     SGPropertyNode_ptr _selectedOutput_node;                  // sim/fgcom/device-output
     SGPropertyNode_ptr _showMessages_node;                    // sim/fgcom/show-messages
-
+    SGPropertyNode_ptr _mpTransmitFrequencyNode;              // sim/multiplay/comm-transmit-frequency-mhz
+    SGPropertyNode_ptr _mpTransmitPowerNode;                  // sim/multiplay/comm-transmit-power-norm
 
 
     double   _maxRange;
     double   _minRange;
-    double   _currentComm0;
-    double   _currentComm1;
-    bool     _comm0Changed;
-    bool     _comm1Changed;
+    double   _currentCommFrequency;
+    double   _currentCallFrequency;
     bool     _register;
     bool     _enabled;
     bool     _initialized;
     int      _regId;
-    int      _callComm0;
+    int      _currentCallIdent;
     //int      _callComm1;
     int      _listener_active;
-    int      _currentFreqKhz;
-    int      _selectedComm;
     std::string   _server;
     std::string   _callsign;
     std::string   _username;
     std::string   _password;
-    SGTimeStamp   _p;
+    SGTimeStamp   _processingTimer;
     SGGeod        _aptPos;
 
     std::string   computePhoneNumber(const double& freq, const std::string& icao) const;
     std::string   getAirportCode(const double& freq);
-    SGGeod        getAirportPos(const double& freq) const;
+//    SGGeod        getAirportPos(const double& freq) const;
+    void          setupCommFrequency(int channel = -1);
+    double        getCurrentFrequencyKhz() const;
     bool          isInRange(const double& freq) const;
-    
-    void updateCall(bool& changed, int& callNo, double freqMHz);
+
+    void updateCall();
+    void connectToCommFrequency();
     void testMode(bool testMode);
 
 };
