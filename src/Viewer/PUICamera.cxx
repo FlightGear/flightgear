@@ -32,6 +32,7 @@
 #include <osgUtil/CullVisitor>
 #include <osgGA/GUIEventHandler>
 #include <osgGA/GUIEventAdapter>
+#include <osgViewer/Viewer>
 
 #include <plib/pu.h>
 
@@ -301,7 +302,7 @@ PUICamera::PUICamera() :
 {
 }
 
-void PUICamera::init(osg::Group* parent)
+void PUICamera::init(osg::Group* parent, osgViewer::Viewer* viewer)
 {
     setName("PUI FBO camera");
     
@@ -363,11 +364,6 @@ void PUICamera::init(osg::Group* parent)
     fsQuadGeode->addDrawable(_fullScreenQuad);
     fsQuadGeode->setName("PUI fullscreen Geode");
     fsQuadGeode->setNodeMask(SG_NODEMASK_GUI_BIT);
-    
-    // set the event callback on the Geode; if we set it on the Drawable,
-    // osgGA calls it twice (as a NodeCallback and also a Drawable::EventCallback)
-    fsQuadGeode->setEventCallback(new PUIEventHandler(this));
-
     parent->addChild(this);
     parent->addChild(fsQuadGeode);
     
@@ -376,6 +372,11 @@ void PUICamera::init(osg::Group* parent)
         osg::Viewport* vport = camera->getViewport();
         resizeUi(vport->width(), vport->height());
     }
+    
+    // push_front so we keep the order of event handlers the opposite of
+    // the rendering order (i.e top-most UI layer has the front-most event
+    // handler)
+    viewer->getEventHandlers().push_front(new PUIEventHandler(this));
 }
 
 // remove once we require OSG 3.4
@@ -400,12 +401,13 @@ void PUICamera::resizeUi(int width, int height)
     resizeAttachments(scaledWidth, scaledHeight);
 #endif
 
+    const float puiZ = 1.0;
     // resize the full-screen quad
     osg::Vec3Array* fsQuadVertices = static_cast<osg::Vec3Array*>(_fullScreenQuad->getVertexArray());
-    (*fsQuadVertices)[0] = osg::Vec3(0.0, height, 0.0);
-    (*fsQuadVertices)[1] = osg::Vec3(0.0, 0.0, 0.0);
-    (*fsQuadVertices)[2] = osg::Vec3(width, 0.0, 0.0);
-    (*fsQuadVertices)[3] = osg::Vec3(width, height, 0.0);
+    (*fsQuadVertices)[0] = osg::Vec3(0.0, height, puiZ);
+    (*fsQuadVertices)[1] = osg::Vec3(0.0, 0.0, puiZ);
+    (*fsQuadVertices)[2] = osg::Vec3(width, 0.0, puiZ);
+    (*fsQuadVertices)[3] = osg::Vec3(width, height, puiZ);
 
     fsQuadVertices->dirty();
 }

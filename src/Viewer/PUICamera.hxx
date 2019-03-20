@@ -26,6 +26,11 @@ namespace osg
     class Geometry;
 }
 
+namespace osgViewer
+{
+    class Viewer;
+}
+
 namespace flightgear
 {
 
@@ -41,7 +46,8 @@ public:
 
     // osg::Camera already defines a resize() so use this name
     void resizeUi(int width, int height);
-    void init(osg::Group *parent);
+    
+    void init(osg::Group *parent, osgViewer::Viewer* viewer);
 private:
 #if OSG_VERSION_LESS_THAN(3,4,0)
     class UpdateViewportAndFBOAfterTextureResizeCallback;

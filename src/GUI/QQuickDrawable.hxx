@@ -6,6 +6,11 @@
 
 #include <osgViewer/GraphicsWindow>
 
+namespace osgViewer
+{
+    class Viewer;
+}
+
 class QQuickDrawablePrivate;
 
 class QQuickDrawable : public osg::Drawable
@@ -24,7 +29,7 @@ public:
 
   //virtual void accept(osg::PrimitiveFunctor& functor) const;
 
-  void setup(osgViewer::GraphicsWindow* gw);
+  void setup(osgViewer::GraphicsWindow* gw, osgViewer::Viewer* viewer);
 
   void setSource(QUrl url);
 

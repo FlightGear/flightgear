@@ -1,4 +1,4 @@
-
+#include "config.h"
 
 #include "QQuickDrawable.hxx"
 
@@ -15,7 +15,10 @@
 #include <QCoreApplication>
 
 #include <osg/GraphicsContext>
+#include <osgGA/GUIEventHandler>
+#include <osgGA/GUIEventAdapter>
 #include <osgViewer/GraphicsWindow>
+#include <osgViewer/Viewer>
 
 #include <GUI/FGQmlInstance.hxx>
 #include <GUI/FGQmlPropertyNode.hxx>
@@ -26,6 +29,61 @@
 #include <simgear/structure/commands.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+
+#if defined(HAVE_PUI)
+    #include <plib/pu.h>
+#endif
+
+using namespace osgGA;
+
+struct QtKey {
+    QtKey(int _o, int _q, QString _s = {}) : osg(_o), qt(_q), s(_s) {}
+    
+    int osg;
+    int qt;
+    QString s;
+};
+
+const std::initializer_list<QtKey> keymapInit = {
+    // contains all the key mappings except 0..9 and A..Z which are generated
+    // programatically
+    
+    {GUIEventAdapter::KEY_Space, Qt::Key_Space, " "},
+    {GUIEventAdapter::KEY_Escape, Qt::Key_Escape, "\x1B"},
+    {GUIEventAdapter::KEY_Return, Qt::Key_Return, "\r"},
+    {GUIEventAdapter::KEY_Tab, Qt::Key_Tab, "\t"},
+    {GUIEventAdapter::KEY_BackSpace, Qt::Key_Backspace, "\x08"},
+    {GUIEventAdapter::KEY_Delete, Qt::Key_Delete, "\x7f"},
+
+    {GUIEventAdapter::KEY_Period, Qt::Key_Period, "."},
+    {GUIEventAdapter::KEY_Comma, Qt::Key_Comma, ","},
+    {GUIEventAdapter::KEY_Colon, Qt::Key_Colon, ":"},
+    {GUIEventAdapter::KEY_Quote, Qt::Key_QuoteLeft, "'"},
+    {GUIEventAdapter::KEY_Quotedbl, Qt::Key_QuoteDbl, "\""},
+    {GUIEventAdapter::KEY_Underscore, Qt::Key_Underscore, "_"},
+    {GUIEventAdapter::KEY_Plus, Qt::Key_Plus, "+"},
+    {GUIEventAdapter::KEY_Minus, Qt::Key_Minus, "-"},
+    {GUIEventAdapter::KEY_Asterisk, Qt::Key_Asterisk, "*"},
+    {GUIEventAdapter::KEY_Equals, Qt::Key_Equal, "="},
+    {GUIEventAdapter::KEY_Slash, Qt::Key_Slash, "/"},
+    
+    {GUIEventAdapter::KEY_Left, Qt::Key_Left},
+    {GUIEventAdapter::KEY_Right, Qt::Key_Right},
+    {GUIEventAdapter::KEY_Up, Qt::Key_Up},
+    {GUIEventAdapter::KEY_Down, Qt::Key_Down},
+    
+    {GUIEventAdapter::KEY_Shift_L, Qt::Key_Shift},
+    {GUIEventAdapter::KEY_Shift_R, Qt::Key_Shift},
+    {GUIEventAdapter::KEY_Control_L, Qt::Key_Control},
+    {GUIEventAdapter::KEY_Control_R, Qt::Key_Control},
+    {GUIEventAdapter::KEY_Meta_L, Qt::Key_Meta},
+    {GUIEventAdapter::KEY_Meta_R, Qt::Key_Meta},
+
+
+
+};
+
+std::vector<QtKey> global_keymap;
 
 /**
  * Helper run on Graphics thread to retrive its Qt wrapper
@@ -170,6 +228,7 @@ public slots:
     
     bool eventFilter(QObject* obj, QEvent* event) override
     {
+#if 0
         if (obj != graphicsWindow->getGLWindow()) {
             return false;
         }
@@ -195,7 +254,7 @@ public slots:
         default:
             break;
         }
-        
+#endif
         return false;
     }
 };
@@ -235,6 +294,211 @@ public:
 
 private:
     QQuickDrawable* _drawable;
+};
+
+class QuickEventHandler : public GUIEventHandler
+{
+public:
+    QuickEventHandler(QQuickDrawablePrivate* p) :
+        _drawable(p)
+    {
+        populateKeymap();
+    }
+
+    bool handle(const GUIEventAdapter &ea, GUIActionAdapter &aa, osg::Object *, osg::NodeVisitor*) override
+    {
+        Q_UNUSED(aa);
+
+        if (ea.getHandled()) return false;
+
+        // frame event, ho hum ...
+        if (ea.getEventType() == GUIEventAdapter::FRAME) {
+            if (_drawable->syncRequired) {
+                _drawable->renderControl->polishItems();
+                _drawable->syncRequired = false;
+                _drawable->renderControl->sync();
+            }
+
+            return false;
+        }
+        
+     //   qInfo() << "GA:" << ea.getX() << "," << ea.getY() << ", window:" << ea.getWindowX() << "," << ea.getWindowY();
+        
+        // Qt expects increasing downward mouse coords
+        const float fixedY = (ea.getMouseYOrientation() == GUIEventAdapter::Y_INCREASING_UPWARDS) ?
+                            ea.getWindowHeight() - ea.getY() : ea.getY();
+        
+       // qInfo() << "\tfixed Y" << fixedY;
+        
+        const double pixelRatio = _drawable->graphicsWindow->getGLWindow()->devicePixelRatio();
+
+        QPointF pointInWindow{ea.getX() / pixelRatio, fixedY / pixelRatio};
+        QPointF screenPt = pointInWindow +
+                QPointF{ea.getWindowX() / pixelRatio, ea.getWindowY() / pixelRatio};
+
+      //  const int scaledX = static_cast<int>(ea.getX() / static_pixelRatio);
+       // const int scaledY = static_cast<int>(fixedY / static_pixelRatio);
+
+        switch(ea.getEventType())
+        {
+            case(GUIEventAdapter::DRAG):
+            case(GUIEventAdapter::MOVE):
+            {
+                QMouseEvent m(QEvent::MouseMove, pointInWindow, pointInWindow, screenPt,
+                              Qt::NoButton,
+                              osgButtonMaskToQt(ea), osgModifiersToQt(ea));
+                QCoreApplication::sendEvent(_drawable->quickWindow, &m);
+                return m.isAccepted();
+            }
+
+            case(GUIEventAdapter::PUSH):
+            case(GUIEventAdapter::RELEASE):
+            {
+                const bool isUp = (ea.getEventType() == GUIEventAdapter::RELEASE);
+                QMouseEvent m(isUp ? QEvent::MouseButtonRelease : QEvent::MouseButtonPress,
+                               pointInWindow, pointInWindow, screenPt,
+                          osgButtonToQt(ea),
+                          osgButtonMaskToQt(ea), osgModifiersToQt(ea));
+                QCoreApplication::sendEvent(_drawable->quickWindow, &m);
+                
+                if (!isUp) {
+                    if (m.isAccepted()) {
+                        // deactivate PUI
+                        auto active = puActiveWidget();
+                        if (active) {
+                            active->invokeDownCallback();
+                        }
+                    }
+                
+                    // on mouse downs which we don't accept, take focus back
+//                    qInfo() << "Clearing QQ focus";
+//                    auto focused = _drawable->quickWindow->activeFocusItem();
+//                    if (focused) {
+//                        focused->setFocus(false, Qt::MouseFocusReason);
+//                    }
+                }
+                
+                return m.isAccepted();
+            }
+
+            case(GUIEventAdapter::KEYDOWN):
+            case(GUIEventAdapter::KEYUP):
+            {
+                const bool isKeyRelease = (ea.getEventType() == GUIEventAdapter::KEYUP);
+                const auto& key = osgKeyToQt(ea.getKey());
+                QString s = key.s;
+                
+                QKeyEvent k(isKeyRelease ? QEvent::KeyRelease : QEvent::KeyPress,
+                            key.qt, osgModifiersToQt(ea), s);
+                QCoreApplication::sendEvent(_drawable->quickWindow, &k);
+                return k.isAccepted();
+            }
+
+//            case osgGA::GUIEventAdapter::SCROLL:
+//            {
+//                const int button = buttonForScrollEvent(ea);
+//                if (button != PU_NOBUTTON) {
+//                    // sent both down and up events for a single scroll, for
+//                    // compatability
+//                    bool handled = puMouse(button, PU_DOWN, scaledX, scaledY);
+//                    handled |= puMouse(button, PU_UP, scaledX, scaledY);
+//                    return handled;
+//                }
+//                return false;
+//            }
+
+//            case (osgGA::GUIEventAdapter::RESIZE):
+//                _puiCamera->resizeUi(ea.getWindowWidth(), ea.getWindowHeight());
+//                break;
+
+            default:
+                return false;
+        }
+
+        return false;
+    }
+private:
+    Qt::MouseButtons osgButtonMaskToQt(const osgGA::GUIEventAdapter &ea) const
+    {
+        const int mask = ea.getButtonMask();
+        Qt::MouseButtons result = Qt::NoButton;
+        if (mask & osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON)
+           result |= Qt::LeftButton;
+
+        if (mask & osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON)
+           result |= Qt::MiddleButton;
+
+        if (mask & osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON)
+           result |= Qt::RightButton;
+
+        return result;
+    }
+
+    Qt::MouseButton osgButtonToQt(const osgGA::GUIEventAdapter &ea) const
+    {
+        switch (ea.getButton()) {
+        case osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON:     return Qt::LeftButton;
+        case osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON:   return Qt::MiddleButton;
+        case osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON:    return Qt::RightButton;
+
+        default:
+            break;
+        }
+
+        return Qt::NoButton;
+    }
+
+    Qt::KeyboardModifiers osgModifiersToQt(const osgGA::GUIEventAdapter &ea) const
+    {
+        Qt::KeyboardModifiers result = Qt::NoModifier;
+        const int mask = ea.getModKeyMask();
+        if (mask & osgGA::GUIEventAdapter::MODKEY_ALT) result |= Qt::AltModifier;
+        if (mask & osgGA::GUIEventAdapter::MODKEY_CTRL) result |= Qt::ControlModifier;
+        if (mask & osgGA::GUIEventAdapter::MODKEY_META) result |= Qt::MetaModifier;
+        if (mask & osgGA::GUIEventAdapter::MODKEY_SHIFT) result |= Qt::ShiftModifier;
+        return result;
+    }
+
+    QtKey osgKeyToQt(int code) const
+    {
+        auto it = std::lower_bound(global_keymap.begin(), global_keymap.end(),
+                                     QtKey{code, 0, {}},
+                                     [](const QtKey& a, const QtKey& b) { return a.osg < b.osg; });
+        if ((it == global_keymap.end()) || (it->osg != code)) {
+            qWarning() << "no mapping defined for OSG key:" << code;
+            return {0, 0, ""};
+        }
+        
+        return *it;
+    }
+    
+    void populateKeymap()
+    {
+        if (!global_keymap.empty())
+            return;
+        
+        // regular keymappsing for A..Z and 0..9
+        for (int i=0; i<10; ++i) {
+            global_keymap.emplace_back(GUIEventAdapter::KEY_0 + i, Qt::Key_0 + i, QString::number(i));
+        }
+        
+        for (int i=0; i<26; ++i) {
+            global_keymap.emplace_back(GUIEventAdapter::KEY_A + i, Qt::Key_A + i, QChar::fromLatin1('a' + i));
+        }
+        
+        for (int i=0; i<26; ++i) {
+            global_keymap.emplace_back('A' + i, Qt::Key_A + i, QChar::fromLatin1('A' + i));
+        }
+        
+        // custom key mappsing
+        global_keymap.insert(global_keymap.end(), keymapInit);
+        
+        // sort by OSG code for fast lookups
+        std::sort(global_keymap.begin(), global_keymap.end(),
+                  [](const QtKey& a, const QtKey& b) { return a.osg < b.osg; });
+    }
+    
+    QQuickDrawablePrivate* _drawable;
 };
 
 QQuickDrawable::QQuickDrawable() :
@@ -281,7 +545,7 @@ QQuickDrawable::~QQuickDrawable()
     delete d;
 }
 
-void QQuickDrawable::setup(osgViewer::GraphicsWindow* gw)
+void QQuickDrawable::setup(osgViewer::GraphicsWindow* gw, osgViewer::Viewer* viewer)
 {
     osg::GraphicsContext* gc = gw;
     
@@ -324,23 +588,19 @@ void QQuickDrawable::setup(osgViewer::GraphicsWindow* gw)
                      d, &QQuickDrawablePrivate::onSceneChanged);
     QObject::connect(d->renderControl, &QQuickRenderControl::renderRequested,
                      d, &QQuickDrawablePrivate::onRenderRequested);
-    
+  
+#if 0
     // insert ourselves as a filter on the GraphicsWindow, so we can intercept
     // events directly and pass on to our window
     d->graphicsWindow->getGLWindow()->installEventFilter(d);
+#endif
+
+    viewer->getEventHandlers().push_front(new QuickEventHandler(d));
 }
 
 void QQuickDrawable::drawImplementation(osg::RenderInfo& renderInfo) const
 {
-    if (d->syncRequired) {
-        // should happen on the main thread
-        d->renderControl->polishItems();
-        
-        d->syncRequired = false;
-        // must ensure the GUI thread is blocked for this
-        d->renderControl->sync();
-        // can unblock now
-    }
+
     
     QOpenGLFunctions* glFuncs = d->qtContext->functions();
     // prepare any state QQ2 needs
@@ -354,7 +614,10 @@ void QQuickDrawable::drawImplementation(osg::RenderInfo& renderInfo) const
     
     d->renderControl->render();
     
-    glFuncs->glFlush();
+    // otherwise the PUI camera gets confused
+    d->quickWindow->resetOpenGLState();
+
+  //  glFuncs->glFlush();
     
 }
 
@@ -387,13 +650,14 @@ void QQuickDrawable::resize(int width, int height)
     const float currentPixelRatio = static_cast<float>(d->graphicsWindow->getGLWindow()->devicePixelRatio());
     const int logicalWidth = static_cast<int>(width / currentPixelRatio);
     const int logicalHeight = static_cast<int>(height / currentPixelRatio);
-    
+
     if (d->rootItem) {
         d->rootItem->setWidth(logicalWidth);
         d->rootItem->setHeight(logicalHeight);
     }
     
     d->quickWindow->setGeometry(0, 0, logicalWidth, logicalHeight);
+#
 }
 
 #include "QQuickDrawable.moc"
