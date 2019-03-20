@@ -638,10 +638,6 @@ bool LauncherController::validateMetarString(QString metar)
 
 void LauncherController::requestInstallUpdate(QUrl aircraftUri)
 {
-    // also select, otherwise UI is confusing
-    m_selectedAircraft = aircraftUri;
-    updateSelectedAircraft();
-
     simgear::pkg::PackageRef pref = packageForAircraftURI(aircraftUri);
     if (pref) {
         if (pref->isInstalled()) {
