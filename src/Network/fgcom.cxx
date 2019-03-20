@@ -331,9 +331,15 @@ void FGCom::setupCommFrequency(int channel) {
             channel = _selected_comm_node->getIntValue();
         }
     }
-    // always fallback to comm 1
+    // disconnect if channel set to 0
     if (channel < 1) {
-        channel = 1;
+        if (_currentCallIdent != -1) {
+            iaxc_dump_call_number(_currentCallIdent);
+            SG_LOG(SG_IO, SG_INFO, "FGCom: disconnect as channel 0 " << _currentCallIdent);
+            _currentCallIdent = -1;
+        }
+        _currentCommFrequency = 0;
+        return;
     }
 
     if (channel > 0)
@@ -371,6 +377,16 @@ void FGCom::connectToCommFrequency() {
     if (_currentCallFrequency && !isInRange(_currentCallFrequency)) {
         SG_LOG(SG_IO, SG_WARN, "FGCom: call out of range of: " << _currentCallFrequency);
         _currentCallFrequency = 0;
+    }
+
+    // don't connected (and disconnect if already connected) when tuned freq is 0
+    if (_currentCommFrequency < 1) {
+        if (_currentCallIdent != -1) {
+            iaxc_dump_call_number(_currentCallIdent);
+            SG_LOG(SG_IO, SG_INFO, "FGCom: disconnect as freq 0: current call " << _currentCallIdent);
+            _currentCallIdent = -1;
+        }        
+        return;
     }
 
     if (_currentCallFrequency != _currentCommFrequency || _currentCallIdent == -1) {
