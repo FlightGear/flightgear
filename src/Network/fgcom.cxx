@@ -312,7 +312,7 @@ void FGCom::postinit()
 
     // Mute the mic and set speaker at start
     iaxc_input_level_set( 0.0 );
-    iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
+    iaxc_output_level_set(getCurrentCommVolume());
 
     iaxc_millisleep(50);
 
@@ -321,6 +321,17 @@ void FGCom::postinit()
     connectToCommFrequency();
 }
 
+double FGCom::getCurrentCommVolume() const {
+    double rv = 1.0;
+
+    if (_speakerLevel_node)
+        rv = _speakerLevel_node->getFloatValue();
+
+    if (_commVolumeNode)
+        rv = rv * _commVolumeNode->getFloatValue();
+
+    return rv;
+}
 double FGCom::getCurrentFrequencyKhz() const {
     return 10 * static_cast<int>(_currentCommFrequency * 100 + 0.25); 
 }
@@ -348,6 +359,7 @@ void FGCom::setupCommFrequency(int channel) {
         SGPropertyNode *commRadioNode = fgGetNode("/instrumentation/")->getChild("comm", channel, false);
         if (commRadioNode) {
             SGPropertyNode *frequencyNode = commRadioNode->getChild("frequencies");
+            _commVolumeNode = commRadioNode->getChild("volume");
             if (frequencyNode) {
                 frequencyNode = frequencyNode->getChild("selected-mhz");
                 if (frequencyNode) {
@@ -493,13 +505,8 @@ void FGCom::valueChanged(SGPropertyNode *prop)
 
   if (prop == _ptt_node && _enabled) {
       if (_ptt_node->getIntValue()) {
-          // ensure that we are on the right channel by calling setupCommFrequency with the value of the PTT node.
-          // the two properties for the ptt channel and the current channel should be on the same channel
-          // but if not this will flip the radio for transmit and listen to whichever frequency last did a PTT
-          //
-          // NOTE: Probably the whole thing needs re-writing to be multi-comm capable; but fgcomm has always been a bit 
-          //       single oriented and I don't know if it would even work (with the right logic) in multi-channel mode.
-          setupCommFrequency(_ptt_node->getIntValue());
+          // ensure that we are on the right channel by calling setupCommFrequency  
+          setupCommFrequency();
           iaxc_output_level_set(0.0);
           iaxc_input_level_set(_micLevel_node->getFloatValue()); //0.0 = min , 1.0 = max
           _mpTransmitFrequencyNode->setValue(_currentCallFrequency * 1000000);
@@ -507,7 +514,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
           SG_LOG(SG_IO, SG_INFO, "FGCom: PTT active: " << _currentCallFrequency);
       }
       else {
-          iaxc_output_level_set(_speakerLevel_node->getFloatValue());
+          iaxc_output_level_set(getCurrentCommVolume());
           iaxc_input_level_set(0.0);
           SG_LOG(SG_IO, SG_INFO, "FGCom: PTT release: " << _currentCallFrequency);
           _mpTransmitFrequencyNode->setValue(0);
@@ -586,7 +593,7 @@ void FGCom::testMode(bool testMode)
       iaxc_dump_all_calls();
       iaxc_millisleep(IAX_DELAY);
       iaxc_input_level_set( 0.0 );
-      iaxc_output_level_set( _speakerLevel_node->getFloatValue() );
+      iaxc_output_level_set(getCurrentCommVolume());
       _currentCallIdent = -1;
       _enabled = true;
     }

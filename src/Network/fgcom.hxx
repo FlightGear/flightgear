@@ -44,6 +44,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr _ptt_node;                             // PTT; nonzero int indicating channel number (instrumentation/comm/[channel-1])
     SGPropertyNode_ptr _selected_comm_node;                   // selected channel (fgcom); nonzero channel int indicating channel number (instrumentation/comm/[channel-1])
     SGPropertyNode_ptr _commFrequencyNode;                    // current comm node in use; e.g. /instrumentation/comm[0]
+    SGPropertyNode_ptr _commVolumeNode;                       // current volume node in use; e.g. /instrumentation/comm[0]/volume
     SGPropertyNode_ptr _test_node;                            // sim/fgcom/test
     SGPropertyNode_ptr _text_node;                            // sim/fgcom/text
     SGPropertyNode_ptr _server_node;                          // sim/fgcom/server
@@ -91,6 +92,7 @@ class FGCom : public SGSubsystem, public SGPropertyChangeListener
 //    SGGeod        getAirportPos(const double& freq) const;
     void          setupCommFrequency(int channel = -1);
     double        getCurrentFrequencyKhz() const;
+    double        getCurrentCommVolume() const;
     bool          isInRange(const double& freq) const;
 
     void updateCall();
