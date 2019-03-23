@@ -642,17 +642,23 @@ void BaseDiagram::paintContents(QPainter* painter)
     Q_UNUSED(painter);
 }
 
-void BaseDiagram::recomputeBounds(bool resetZoom)
+void BaseDiagram::recomputeBounds(bool doResetZoom)
 {
     m_bounds = QRectF();
     doComputeBounds();
 
-    if (resetZoom) {
-        m_autoScalePan = true;
-        m_scale = 1.0;
-        m_panOffset = QPointF();
+    if (doResetZoom) {
+        resetZoom();
     }
 
+    update();
+}
+
+void BaseDiagram::resetZoom()
+{
+    m_autoScalePan = true;
+    m_scale = 1.0;
+    m_panOffset = QPointF();
     update();
 }
 

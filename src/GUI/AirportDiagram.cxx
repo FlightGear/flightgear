@@ -165,7 +165,6 @@ void AirportDiagram::setAirport(FGAirportRef apt)
 
     clearIgnoredNavaids();
     addIgnoredNavaid(apt);
-
     recomputeBounds(true);
     update();
 }
@@ -182,7 +181,7 @@ void AirportDiagram::setSelection(QmlPositioned* pos)
         m_selection = pos->inner();
     }
     emit selectionChanged();
-    recomputeBounds(true);
+    recomputeBounds(false);
     update();
 }
 
@@ -193,7 +192,7 @@ void AirportDiagram::setApproachExtension(QuantityValue distance)
     }
 
     m_approachDistance = distance;
-    recomputeBounds(true);
+    recomputeBounds(false);
     update();
     emit approachExtensionChanged();
 }

@@ -24,6 +24,7 @@ Item {
             if (pos === null)
                 return;
 
+            console.info("Saw airport click on:" + pos.ident)
             _location.setDetailLocation(pos)
             diagram.selection = pos
             syncUIFromController();
@@ -36,7 +37,7 @@ Item {
     // not very declarative, try to remove this over time
     function syncUIFromController()
     {
-        if (_location.useAvailableParking || (_location.detail.type == Positioned.Parking)) {
+        if (_location.useAvailableParking || (_location.detail.type === Positioned.Parking)) {
             parkingRadio.select()
             parkingChoice.syncCurrentIndex();
         } else {
@@ -292,18 +293,21 @@ Item {
                     function syncCurrentIndex()
                     {
                         if (_location.useAvailableParking) {
+                            console.info("Parking: controller says use available")
                             currentIndex = -1;
                             return;
                         }
 
                         for (var i=0; i < _location.airportParkings.length; ++i) {
                             if (_location.airportParkings[i].equals(_location.detail)) {
+                                console.info("Found explicit parking " + _location.detail.ident + " at index " + i);
                                 currentIndex = i;
                                 return;
                             }
                         }
 
                         // not found, default to available
+                        console.info("Couldn't find parking at airport:" + _location.detail.ident)
                         currentIndex = -1;
                     }
 

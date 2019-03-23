@@ -249,6 +249,7 @@ void LocationController::setDetailLocation(QmlPositioned* pos)
         m_detailLocation.clear();
         m_detailQml->setInner({});
     } else {
+        qInfo() << Q_FUNC_INFO << "pos:" << pos->ident();
         m_detailLocation = pos->inner();
         m_useActiveRunway = false;
         m_useAvailableParking = false;

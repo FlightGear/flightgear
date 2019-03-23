@@ -57,6 +57,8 @@ public:
     void setAircraftType(LauncherController::AircraftType type);
 
     QRect rect() const;
+    
+    Q_INVOKABLE void resetZoom();
 protected:
     void paint(QPainter* p) override;
 
