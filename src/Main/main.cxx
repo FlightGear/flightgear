@@ -55,6 +55,7 @@ extern bool global_crashRptEnabled;
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include <Add-ons/AddonManager.hxx>
 #include <Main/locale.hxx>
@@ -122,6 +123,8 @@ static void fgMainLoop( void )
     // update all subsystems
     globals->get_subsystem_mgr()->update(sim_dt);
 
+    // flush commands waiting in the queue
+    SGCommandMgr::instance()->executedQueuedCommands();
     simgear::AtomicChangeListener::fireChangeListeners();
 }
 
@@ -290,7 +293,7 @@ static void fgIdleFunction ( void ) {
         // Initialize the property-based built-in commands
         ////////////////////////////////////////////////////////////////////
         fgInitCommands();
-				fgInitSceneCommands();
+        fgInitSceneCommands();
 
         flightgear::registerSubsystemCommands(globals->get_commands());
 

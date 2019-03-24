@@ -970,6 +970,10 @@ static struct {
 void
 fgInitCommands ()
 {
+  // set our property root as the implicit default root for the
+  // command managr
+  SGCommandMgr::instance()->setImplicitRoot(globals->get_props());
+    
   SG_LOG(SG_GENERAL, SG_BULK, "Initializing basic built-in commands:");
   for (int i = 0; built_ins[i].name != 0; i++) {
     SG_LOG(SG_GENERAL, SG_BULK, "  " << built_ins[i].name);

@@ -1194,6 +1194,9 @@ void fgStartNewReset()
     fgInitConfig(0, NULL, true);
     fgInitGeneral(); // all of this?
     
+    // set out new property root on the command manager
+    SGCommandMgr::instance()->setImplicitRoot(globals->get_props());
+    
     flightgear::Options::sharedInstance()->processOptions();
 
     // Rebuild the lists of allowed paths for cases where a path comes from an
