@@ -37,8 +37,8 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testRoutePathTrivialFlightPlan);
     CPPUNIT_TEST(testBasicAirways);
     CPPUNIT_TEST(testAirwayNetworkRoute);
-  //  CPPUNIT_TEST(testParseICAORoute);
-   // CPPUNIT_TEST(testParseICANLowLevelRoute);
+    CPPUNIT_TEST(testRoutPathWpt0Midflight);
+       // CPPUNIT_TEST(testParseICANLowLevelRoute);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -57,6 +57,7 @@ public:
     void testAirwayNetworkRoute();
     void testParseICAORoute();
     void testParseICANLowLevelRoute();
+    void testRoutPathWpt0Midflight();
 };
 
 #endif  // _FG_FLIGHTPLAN_UNIT_TESTS_HXX

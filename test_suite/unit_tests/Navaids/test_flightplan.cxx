@@ -12,6 +12,7 @@
 #include <Navaids/navlist.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/airways.hxx>
+#include <Navaids/fix.hxx>
 
 #include <Airports/airport.hxx>
 
@@ -147,6 +148,30 @@ void FlightplanTests::testRoutePathTrivialFlightPlan()
     }
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, fp1->totalDistanceNm(), 1e-9);
+}
+
+void FlightplanTests::testRoutPathWpt0Midflight()
+{
+    // test behaviour of RoutePath when WP0 is not a runway
+    // happens for the Airbus ND which removes past wpts when sequencing
+    
+    FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
+                                   "ROKME WOVAB");
+    RoutePath rtepath(fp1);
+    
+    SGGeodVec vec = rtepath.pathForIndex(0);
+    
+    FGAirportRef ksfo = FGAirport::findByIdent("KSFO");
+    FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME", ksfo->geod()));
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec.front().getLongitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec.front().getLatitudeDeg(), 0.01);
+    
+    SGGeodVec vec2 = rtepath.pathForIndex(1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec2.front().getLongitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec2.front().getLatitudeDeg(), 0.01);
+
+    //CPPUNIT_ASSERT(vec.front()
 }
 
 void FlightplanTests::testBasicAirways()
