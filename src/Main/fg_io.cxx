@@ -442,6 +442,9 @@ bool FGIO::isMultiplayerRequested()
     // is easier than checking the raw Options arguments, but works before
     // this subsytem is actuallyt created.
     auto channels = globals->get_channel_options_list();
+    if (!channels)
+        return false; // happens running tests
+    
     auto it = std::find_if(channels->begin(), channels->end(),
                            [](const std::string& channelOption)
                            { return (channelOption.find("multiplay") == 0); });

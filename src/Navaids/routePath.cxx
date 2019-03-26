@@ -405,8 +405,12 @@ public:
               legCourseTrue = rwy->headingDeg();
               flyOver = true;
           } else {
-              // don't set legCourseValid
+              legCourseValid = true;
+              legCourseTrue = next.legCourseTrue;
               turnExitAngle = 0.0;
+              turnExitPos = pos;
+              flyOver = true;
+              return;
           }
       }
 
