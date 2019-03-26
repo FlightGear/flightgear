@@ -359,6 +359,8 @@ void FGCom::setupCommFrequency(int channel) {
         SGPropertyNode *commRadioNode = fgGetNode("/instrumentation/")->getChild("comm", channel, false);
         if (commRadioNode) {
             SGPropertyNode *frequencyNode = commRadioNode->getChild("frequencies");
+            if (_commVolumeNode)
+                _commVolumeNode->removeChangeListener(this);
             _commVolumeNode = commRadioNode->getChild("volume");
             if (frequencyNode) {
                 frequencyNode = frequencyNode->getChild("selected-mhz");
@@ -368,6 +370,7 @@ void FGCom::setupCommFrequency(int channel) {
                             _commFrequencyNode->removeChangeListener(this);
                         _commFrequencyNode = frequencyNode;
                         _commFrequencyNode->addChangeListener(this);
+                        _commVolumeNode->addChangeListener(this);
                     }
                     _currentCommFrequency = frequencyNode->getDoubleValue();
                     return;
@@ -493,6 +496,18 @@ void FGCom::valueChanged(SGPropertyNode *prop)
     return;
   }
 
+  if (prop == _commVolumeNode && _enabled) {
+      if (_ptt_node->getIntValue()) {
+          SG_LOG(SG_IO, SG_INFO, "FGCom: ignoring change comm volume as PTT pressed");
+      }
+      else
+      {
+          iaxc_input_level_set(0.0);
+          iaxc_output_level_set(getCurrentCommVolume());
+          SG_LOG(SG_IO, SG_INFO, "FGCom: change comm volume=" << _commVolumeNode->getFloatValue());
+      }
+  }
+
   if (prop == _selected_comm_node && _enabled) {
       setupCommFrequency();
       SG_LOG(SG_IO, SG_INFO, "FGCom: change comm frequency (selected node): set to " << _currentCommFrequency);
@@ -516,7 +531,7 @@ void FGCom::valueChanged(SGPropertyNode *prop)
       else {
           iaxc_output_level_set(getCurrentCommVolume());
           iaxc_input_level_set(0.0);
-          SG_LOG(SG_IO, SG_INFO, "FGCom: PTT release: " << _currentCallFrequency);
+          SG_LOG(SG_IO, SG_INFO, "FGCom: PTT release: " << _currentCallFrequency << " vol=" << getCurrentCommVolume());
           _mpTransmitFrequencyNode->setValue(0);
           _mpTransmitPowerNode->setValue(0);
       }
