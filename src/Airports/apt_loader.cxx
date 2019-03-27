@@ -60,6 +60,8 @@
 using std::vector;
 using std::string;
 
+namespace strutils = simgear::strutils;
+
 
 static FGPositioned::Type fptypeFromRobinType(unsigned int aType)
 {
@@ -129,12 +131,20 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file,
                                   stripped_line);
       }
     } else {     // second line of the file
-      std::istringstream s(line);
-      int apt_dat_format_version;
-      s >> apt_dat_format_version;
-      SG_LOG( SG_GENERAL, SG_INFO,
-              "apt.dat format version (" << apt_dat << "): " <<
-              apt_dat_format_version );
+      vector<string> fields(strutils::split(line, 0, 1));
+
+      if (fields.empty()) {
+        string errMsg = "unable to parse format version: empty line";
+        SG_LOG(SG_GENERAL, SG_ALERT, apt_dat << ": " << errMsg);
+        throw sg_format_exception("cannot parse '" + apt_dat + "': " + errMsg,
+                                  string());
+      } else {
+        unsigned int aptDatFormatVersion =
+          strutils::readNonNegativeInt<unsigned int>(fields[0]);
+        SG_LOG(SG_GENERAL, SG_INFO,
+               "apt.dat format version (" << apt_dat << "): " <<
+               aptDatFormatVersion);
+      }
     }
   } // end of the apt.dat header
 
