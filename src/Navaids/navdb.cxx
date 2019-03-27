@@ -31,6 +31,7 @@
 #include <cstddef>              // std::size_t
 #include <cerrno>
 #include <limits>
+#include <stdexcept>
 
 #include "navdb.hxx"
 
@@ -446,14 +447,25 @@ void NavLoader::loadNav(const SGPath& path, std::size_t bytesReadSoFar,
 
   unsigned int lineNumber;
   unsigned long version;
+  vector<string> fields(simgear::strutils::split(line, 0, 1));
 
   try {
-    vector<string> fields(simgear::strutils::split(line, 0, 1));
+    if (fields.empty()) {
+      throw std::logic_error("");
+    }
     version = std::stoul(fields[0]);
   } catch (const std::logic_error&) {
-    std::string errMsg = utf8Path + ": unable to parse version from header";
     std::string strippedLine = simgear::strutils::stripTrailingNewlines(line);
-    SG_LOG(SG_NAVAID, SG_ALERT, errMsg << ": " << strippedLine );
+    std::string errMsg = utf8Path + ": ";
+
+    if (fields.empty()) {
+      errMsg += "unable to parse version: empty line";
+      SG_LOG(SG_NAVAID, SG_ALERT, errMsg);
+    } else {
+      errMsg += "unable to parse version from header";
+      SG_LOG(SG_NAVAID, SG_ALERT, errMsg << ": " << strippedLine);
+    }
+
     throw sg_format_exception(errMsg, strippedLine);
   }
 
