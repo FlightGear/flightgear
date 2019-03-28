@@ -61,6 +61,8 @@
 using std::string;
 using std::vector;
 
+namespace strutils = simgear::strutils;
+
 // Duplicate navaids with the same ident will be removed if the disance
 // between them is less than this.
 static const double DUPLICATE_DETECTION_RADIUS_NM = 10;
@@ -156,7 +158,7 @@ static bool canBeDuplicate(FGPositionedRef ref, FGPositioned::Type type,
 // corresponding data into the NavDataCache.
 PositionedID NavLoader::processNavLine(
   const string& line, const string& utf8Path, unsigned int lineNum,
-  FGPositioned::Type type, unsigned long version)
+  FGPositioned::Type type, unsigned int version)
 {
   NavDataCache* cache = NavDataCache::instance();
   int rowCode, elev_ft, freq, range;
@@ -446,28 +448,32 @@ void NavLoader::loadNav(const SGPath& path, std::size_t bytesReadSoFar,
   }
 
   unsigned int lineNumber;
-  unsigned long version;
+  unsigned int version;
   vector<string> fields(simgear::strutils::split(line, 0, 1));
 
   try {
     if (fields.empty()) {
-      throw std::logic_error("");
+      throw sg_format_exception();
     }
-    version = std::stoul(fields[0]);
-  } catch (const std::logic_error&) {
+    version = strutils::readNonNegativeInt<unsigned int>(fields[0]);
+  } catch (const sg_exception& exc) {
     std::string strippedLine = simgear::strutils::stripTrailingNewlines(line);
     std::string errMsg = utf8Path + ": ";
 
     if (fields.empty()) {
-      errMsg += "unable to parse version: empty line";
+      errMsg += "unable to parse format version: empty line";
       SG_LOG(SG_NAVAID, SG_ALERT, errMsg);
     } else {
-      errMsg += "unable to parse version from header";
-      SG_LOG(SG_NAVAID, SG_ALERT, errMsg << ": " << strippedLine);
+      errMsg += "unable to parse format version";
+      SG_LOG(SG_NAVAID, SG_ALERT,
+             errMsg << " (" << exc.what() << "): " << strippedLine);
     }
 
     throw sg_format_exception(errMsg, strippedLine);
   }
+
+  SG_LOG(SG_NAVAID, SG_INFO,
+         "nav.dat format version (" << utf8Path << "): " << version);
 
   for (lineNumber = 3; std::getline(in, line); lineNumber++) {
     processNavLine(line, utf8Path, lineNumber, FGPositioned::INVALID, version);

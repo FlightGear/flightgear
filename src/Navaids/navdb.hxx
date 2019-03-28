@@ -58,9 +58,9 @@ class NavLoader {
                                 const std::string& utf8Path,
                                 unsigned int lineNum,
                                 FGPositioned::Type type = FGPositioned::INVALID,
-                                unsigned long version = 810);
+                                unsigned int version = 810);
 };
 
 } // of namespace flightgear
-  
+
 #endif // _FG_NAVDB_HXX
