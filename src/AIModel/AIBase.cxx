@@ -62,7 +62,7 @@ using namespace simgear;
 class FGAIModelData : public simgear::SGModelData {
 public:
     FGAIModelData(SGPropertyNode *root = nullptr)
-        : _nasal( new FGNasalModelDataProxy(root) )
+      : _root (root)
     {
     }
 
@@ -81,7 +81,6 @@ public:
             return;
 
         _modelLoaded[path] = true;
-        _ready = true;
 
         if(prop->hasChild("interior-path")){
             _interiorPath = prop->getStringValue("interior-path");
@@ -89,9 +88,10 @@ public:
         }
 
         _fxpath = prop->getStringValue("sound/path");
-        _nasal->modelLoaded(path, prop, n);
-
-
+        _nasal[path] = std::unique_ptr<FGNasalModelDataProxy>(new FGNasalModelDataProxy(_root));
+        _nasal[path]->modelLoaded(path, prop, n);
+        _ready = true;
+        _initialized = false;
     }
 
     /** init hook to be called after model is loaded.
@@ -107,15 +107,16 @@ public:
     bool hasInteriorPath(void) { return _hasInteriorPath;}
     inline std::string& getInteriorPath() { return _interiorPath; }
 private:
-    std::unique_ptr<FGNasalModelDataProxy> _nasal;
     std::string _fxpath;
     std::string _interiorPath;
 
     std::map<string, bool> _modelLoaded;
+    std::map<string, std::unique_ptr<FGNasalModelDataProxy>> _nasal;
     bool _ready = false;
     bool _initialized = false;
     bool _hasInteriorPath = false;
     bool _interiorLoaded = false;
+    SGPropertyNode* _root;
 };
 
 FGAIBase::FGAIBase(object_type ot, bool enableHot) :
@@ -240,7 +241,7 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
     setBank(scFileNode->getDoubleValue("roll", 0.0));
     setPitch(scFileNode->getDoubleValue("pitch", 0.0));
-    
+
     SGPropertyNode* submodels = scFileNode->getChild("submodels");
 
     if (submodels) {
@@ -249,7 +250,7 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     }
 
     string searchOrder = scFileNode->getStringValue("search-order", "");
-    if (!searchOrder.empty()) {           
+    if (!searchOrder.empty()) {
         if (searchOrder == "DATA_ONLY") {
             _searchOrder = DATA_ONLY;
         } else if (searchOrder == "PREFER_AI") {
@@ -258,9 +259,9 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
             _searchOrder = PREFER_DATA;
         } else
             SG_LOG(SG_AI, SG_WARN, "invalid model search order " << searchOrder << ". Use either DATA_ONLY, PREFER_AI or PREFER_DATA");
-        
+
     }
-    
+
     const string modelLowres = scFileNode->getStringValue("model-lowres", "");
     if (!modelLowres.empty()) {
         setPathLowres(modelLowres);
@@ -281,20 +282,7 @@ void FGAIBase::update(double dt) {
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
 
-    if ( _fx )
-    {
-        // update model's audio sample values
-        _fx->set_position_geod( pos );
-
-        SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-        _fx->set_orientation( orient );
-
-        SGVec3d velocity;
-        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec,
-                            pitch*speed );
-        _fx->set_velocity( velocity );
-    }
-    else if ((_modeldata)&&(_modeldata->needInitilization()))
+    if ((_modeldata)&&(_modeldata->needInitilization()))
     {
         // process deferred nasal initialization,
         // which must be done in main thread
@@ -308,6 +296,9 @@ void FGAIBase::update(double dt) {
             {
                 props->setStringValue("sim/sound/path", fxpath.c_str());
 
+                // Remove any existing sound FX (e.g. from another model)
+                removeSoundFx();
+
                 // initialize the sound configuration
                 std::stringstream name;
                 name <<  "aifx:";
@@ -316,6 +307,20 @@ void FGAIBase::update(double dt) {
                 _fx->init();
             }
         }
+    }
+
+    if ( _fx )
+    {
+        // update model's audio sample values
+        _fx->set_position_geod( pos );
+
+        SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        _fx->set_orientation( orient );
+
+        SGVec3d velocity;
+        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec,
+                            pitch*speed );
+        _fx->set_velocity( velocity );
     }
 
     updateInterior();
@@ -374,7 +379,7 @@ void FGAIBase::updateLOD()
                 _model->setRange(0, 0.0, FLT_MAX); // only one model.
             }
         }
-        else if ((int)maxRangeBare == (int)maxRangeDetail) 
+        else if ((int)maxRangeBare == (int)maxRangeDetail)
         {
             // low detail model  (only)
             if (_model->getNumFileNames() == 2) {
@@ -500,7 +505,7 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             _installed = true;
             SG_LOG(SG_AI, SG_DEBUG, "Found model " << p);
             path_list.push_back(p);
-            
+
             if (!model_path_lowres.empty()) {
                 p = simgear::SGModelLib::findDataFile(model_path_lowres);
                 if (!p.empty()) {
@@ -714,7 +719,7 @@ void FGAIBase::bind() {
     // FG 2018.4, so create an alias in case anyone is relying on the old name
     auto node = props->getNode("controls/flight/longitude-mode", true);
     node->alias(props->getNode("controls/flight/vertical-mode"));
-    
+
     props->setDoubleValue("controls/flight/target-alt", altitude_ft);
     props->setDoubleValue("controls/flight/target-pitch", pitch);
 
@@ -755,7 +760,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     double d = dist(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
     double dFt = d * SG_METER_TO_FEET;
     in_range = (d < radar_range_m);
-    
+
     if (!force_on && !in_range) {
         return dFt * dFt;
     }
