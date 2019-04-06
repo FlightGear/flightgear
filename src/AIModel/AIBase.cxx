@@ -62,7 +62,7 @@ using namespace simgear;
 class FGAIModelData : public simgear::SGModelData {
 public:
     FGAIModelData(SGPropertyNode *root = nullptr)
-        : _nasal( new FGNasalModelDataProxy(root) )
+      : _root (root)
     {
     }
 
@@ -80,16 +80,18 @@ public:
         if (_ready)
             return;
 
+        _modelLoaded[path] = true;
+
         if(prop->hasChild("interior-path")){
             _interiorPath = prop->getStringValue("interior-path");
             _hasInteriorPath = true;
         }
 
         _fxpath = prop->getStringValue("sound/path");
-        _nasal->modelLoaded(path, prop, n);
-
+        _nasal[path] = std::unique_ptr<FGNasalModelDataProxy>(new FGNasalModelDataProxy(_root));
+        _nasal[path]->modelLoaded(path, prop, n);
         _ready = true;
-
+        _initialized = false;
     }
 
     /** init hook to be called after model is loaded.
@@ -105,14 +107,16 @@ public:
     bool hasInteriorPath(void) { return _hasInteriorPath;}
     inline std::string& getInteriorPath() { return _interiorPath; }
 private:
-    std::unique_ptr<FGNasalModelDataProxy> _nasal;
     std::string _fxpath;
     std::string _interiorPath;
 
+    std::map<string, bool> _modelLoaded;
+    std::map<string, std::unique_ptr<FGNasalModelDataProxy>> _nasal;
     bool _ready = false;
     bool _initialized = false;
     bool _hasInteriorPath = false;
     bool _interiorLoaded = false;
+    SGPropertyNode* _root;
 };
 
 FGAIBase::FGAIBase(object_type ot, bool enableHot) :
@@ -260,20 +264,7 @@ void FGAIBase::update(double dt) {
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
 
-    if ( _fx )
-    {
-        // update model's audio sample values
-        _fx->set_position_geod( pos );
-
-        SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-        _fx->set_orientation( orient );
-
-        SGVec3d velocity;
-        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec,
-                            pitch*speed );
-        _fx->set_velocity( velocity );
-    }
-    else if ((_modeldata)&&(_modeldata->needInitilization()))
+    if ((_modeldata)&&(_modeldata->needInitilization()))
     {
         // process deferred nasal initialization,
         // which must be done in main thread
@@ -287,6 +278,9 @@ void FGAIBase::update(double dt) {
             {
                 props->setStringValue("sim/sound/path", fxpath.c_str());
 
+                // Remove any existing sound FX (e.g. from another model)
+                removeSoundFx();
+
                 // initialize the sound configuration
                 std::stringstream name;
                 name <<  "aifx:";
@@ -295,6 +289,20 @@ void FGAIBase::update(double dt) {
                 _fx->init();
             }
         }
+    }
+
+    if ( _fx )
+    {
+        // update model's audio sample values
+        _fx->set_position_geod( pos );
+
+        SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        _fx->set_orientation( orient );
+
+        SGVec3d velocity;
+        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec,
+                            pitch*speed );
+        _fx->set_velocity( velocity );
     }
 
     updateInterior();
@@ -333,7 +341,7 @@ void FGAIBase::updateLOD()
 
         if( (int)maxRangeDetail == (int)maxRangeBare) // high detail only
         {
-            // Disable LOD.  If we have two models set them accordingly, otherwise and largely by 
+            // Disable LOD.  If we have two models set them accordingly, otherwise and largely by
             // definition the only model must be the model that is used.
             if (_model->getNumFileNames() == 2) {
                 if (pixel_mode) {
@@ -693,7 +701,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
     double d = dist(SGVec3d::fromGeod(pos), globals->get_aircraft_position_cart());
     double dFt = d * SG_METER_TO_FEET;
     in_range = (d < radar_range_m);
-    
+
     if (!force_on && !in_range) {
         return dFt * dFt;
     }
