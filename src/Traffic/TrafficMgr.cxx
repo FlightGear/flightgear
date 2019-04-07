@@ -427,7 +427,9 @@ FGTrafficManager::FGTrafficManager() :
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
   realWxEnabled("/environment/realwx/enabled"),
-  metarValid("/environment/metar/valid")
+  metarValid("/environment/metar/valid"),
+  active("/sim/traffic-manager/active"),
+  aiDataUpdateNow("/sim/terrasync/ai-data-update-now")
 {
 }
 
@@ -442,6 +444,7 @@ void FGTrafficManager::shutdown()
       if (doingInit) {
         scheduleParser.reset();
         doingInit = false;
+        active = false;
       }
 
       return;
@@ -497,6 +500,30 @@ void FGTrafficManager::shutdown()
     doingInit = false;
     inited = false;
     trafficSyncRequested = false;
+    active = false;
+}
+
+bool FGTrafficManager::doDataSync()
+{
+    simgear::SGTerraSync* terraSync = static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
+    bool doDataSync = fgGetBool("/sim/terrasync/ai-data-enabled");
+    if (doDataSync && terraSync) {
+        if (!trafficSyncRequested) {
+            SG_LOG(SG_AI, SG_INFO, "Sync of AI traffic via TerraSync enabled");
+            terraSync->scheduleDataDir("AI/Traffic");
+            trafficSyncRequested = true;
+        }
+
+        if (terraSync->isDataDirPending("AI/Traffic")) {
+            return false; // remain in the init state
+        }
+
+        trafficSyncRequested = false;
+        return true;
+
+        SG_LOG(SG_AI, SG_INFO, "Traffic files sync complete");
+    }
+    return true;
 }
 
 void FGTrafficManager::init()
@@ -512,21 +539,9 @@ void FGTrafficManager::init()
       return;
 
     assert(!doingInit);
-    simgear::SGTerraSync* terraSync = static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
-    bool doDataSync = fgGetBool("/sim/terrasync/ai-data-enabled");
-    if (doDataSync && terraSync) {
-        if (!trafficSyncRequested) {
-            SG_LOG(SG_AI, SG_INFO, "Sync of AI traffic via TerraSync enabled");
-            terraSync->scheduleDataDir("AI/Traffic");
-            trafficSyncRequested = true;
-        }
 
-        if (terraSync->isDataDirPending("AI/Traffic")) {
-            return; // remain in the init state
-        }
-
-        SG_LOG(SG_AI, SG_INFO, "Traffic files sync complete");
-    }
+    if (!doDataSync())
+        return; // remain in the init state whilst updating
 
     doingInit = true;
     if (string(fgGetString("/sim/traffic-manager/datafile")).empty()) {
@@ -575,6 +590,7 @@ void FGTrafficManager::init()
         }
         //exit(1);
     }
+    active = true;
 }
 
 
@@ -600,6 +616,7 @@ void FGTrafficManager::finishInit()
 
     doingInit = false;
     inited = true;
+    active = true;
 }
 
 void FGTrafficManager::loadHeuristics()
@@ -697,6 +714,11 @@ void FGTrafficManager::update(double dt)
     if (!metarReady(dt))
         return;
 
+    if (aiDataUpdateNow)
+    {
+        aiDataUpdateNow = false;
+        shutdown();
+    }
     if (!aiEnabled)
     {
         // traffic depends on AI module

@@ -93,10 +93,11 @@ private:
   void readTimeTableFromFile(SGPath infilename);
     void Tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = " ");
 
-  simgear::PropertyObject<bool> enabled, aiEnabled, realWxEnabled, metarValid;
+  simgear::PropertyObject<bool> enabled, aiEnabled, realWxEnabled, metarValid, active, aiDataUpdateNow;
   
   void loadHeuristics();
   
+  bool doDataSync();
   void finishInit();
   void shutdown();
   
