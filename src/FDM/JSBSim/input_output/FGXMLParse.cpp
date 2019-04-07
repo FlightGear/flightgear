@@ -50,8 +50,7 @@ using namespace std;
 
 FGXMLParse::FGXMLParse(void)
 {
-  first_element_read = false;
-  current_element = document = 0L;
+  current_element = document = nullptr;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,8 +63,7 @@ void FGXMLParse::startXML(void)
 
 void FGXMLParse::reset(void)
 {
-  first_element_read = false;
-  current_element = document = 0L;
+  current_element = document = nullptr;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,18 +75,28 @@ void FGXMLParse::endXML(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGXMLParse::dumpDataLines(void)
+{
+  if (!working_string.empty()) {
+    for (auto s: split(working_string, '\n'))
+      current_element->AddData(s);
+  }
+  working_string.erase();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGXMLParse::startElement (const char * name, const XMLAttributes &atts)
 {
   string Name(name);
   Element *temp_element;
 
-  working_string.erase();
-
-  if (!first_element_read) {
+  if (!document) {
     document = new Element(Name);
     current_element = document;
-    first_element_read = true;
   } else {
+    dumpDataLines();
+
     temp_element = new Element(Name);
     temp_element->SetParent(current_element);
     current_element->AddChildElement(temp_element);
@@ -113,11 +121,7 @@ void FGXMLParse::startElement (const char * name, const XMLAttributes &atts)
 
 void FGXMLParse::endElement (const char * name)
 {
-  if (!working_string.empty()) {
-    vector <string> work_strings = split(working_string, '\n');
-    for (unsigned int i=0; i<work_strings.size(); i++) current_element->AddData(work_strings[i]);
-  }
-
+  dumpDataLines();
   current_element = current_element->GetParent();
 }
 

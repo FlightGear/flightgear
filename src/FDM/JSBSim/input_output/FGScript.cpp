@@ -142,9 +142,6 @@ bool FGScript::LoadScript(const SGPath& script, double default_dT,
     return false;
   }
 
-  // Make sure that the desired time is reached and executed.
-  EndTime += 0.99*FDMExec->GetDeltaT();
-
   if (default_dT == 0.0)
     dt = run_element->GetAttributeValueAsNumber("dt");
   else {
@@ -154,6 +151,9 @@ bool FGScript::LoadScript(const SGPath& script, double default_dT,
   }
 
   FDMExec->Setdt(dt);
+
+  // Make sure that the desired time is reached and executed.
+  EndTime += 0.99*FDMExec->GetDeltaT();
   
   // read aircraft and initialization files
 

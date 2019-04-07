@@ -159,21 +159,26 @@ FGQuaternion FGMatrix33::GetQuaternion(void) const
 FGColumnVector3 FGMatrix33::GetEuler(void) const
 {
   FGColumnVector3 mEulerAngles;
+  bool GimbalLock = false;
+  
+  if (data[6] <= -1.0) {
+    mEulerAngles(2) = 0.5*M_PI;
+    GimbalLock = true;
+  }
+  else if (1.0 <= data[6]) {
+    mEulerAngles(2) = -0.5*M_PI;
+    GimbalLock = true;
+  }
+  else
+    mEulerAngles(2) = asin(-data[6]);
 
-  if (data[8] == 0.0)
-    mEulerAngles(1) = 0.5*M_PI;
+  if (GimbalLock)
+    mEulerAngles(1) = atan2(-data[5], data[4]);
   else
     mEulerAngles(1) = atan2(data[7], data[8]);
   
-  if (data[6] < -1.0)
-    mEulerAngles(2) = 0.5*M_PI;
-  else if (1.0 < data[6])
-    mEulerAngles(2) = -0.5*M_PI;
-  else
-    mEulerAngles(2) = asin(-data[6]);
-  
-  if (data[0] == 0.0)
-    mEulerAngles(3) = 0.5*M_PI;
+  if (GimbalLock)
+    mEulerAngles(3) = 0.0;
   else {
     double psi = atan2(data[3], data[0]);
     if (psi < 0.0)

@@ -82,7 +82,8 @@ public:
   void reset(void);
 
 private:
-  bool first_element_read;
+  void dumpDataLines(void);
+
   mutable std::string working_string;
   Element_ptr document;
   Element *current_element;
