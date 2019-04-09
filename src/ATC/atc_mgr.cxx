@@ -100,7 +100,31 @@ void FGATCManager::postinit()
     FGAirportDynamicsRef dcs(flightgear::AirportDynamicsManager::find(airport));
     if (dcs && onGround) {// && !runway.empty()) {
 
-        ParkingAssignment pk(dcs->getParkingByName(parking));
+        ParkingAssignment pk;
+
+        if (parking == "AVAILABLE") {
+            double radius = fgGetDouble("/sim/dimensions/radius-m");
+            if (radius > 0) {
+                pk = dcs->getAvailableParking(radius, string(), string(), string());
+                if (pk.isValid()) {
+                    fgGetString("/sim/presets/parkpos");
+                    fgSetString("/sim/presets/parkpos", pk.parking()->getName());
+                }
+            }
+            
+            if (!pk.isValid()) {
+                FGParkingList pkl(dcs->getParkings(true, "gate"));
+                if (!pkl.empty()) {
+                    std::sort(pkl.begin(), pkl.end(), [](const FGParkingRef& a, const FGParkingRef& b) {
+                        return a->getRadius() > b->getRadius();
+                    });
+                    pk = ParkingAssignment(pkl.front(), dcs);
+                    fgSetString("/sim/presets/parkpos", pkl.front()->getName());
+                }
+            }
+        } else {
+            pk = dcs->getParkingByName(parking);
+        }
       
         if (pk.isValid()) {
             dcs->setParkingAvailable(pk.parking(), false);

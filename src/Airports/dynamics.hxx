@@ -140,6 +140,8 @@ public:
      */
     ParkingAssignment getParkingByName(const std::string& name) const;
 
+    FGParkingRef getOccupiedParkingByName(const std::string& name) const;
+
     // ATC related functions.
     FGStartupController    *getStartupController()    {
         return &startupController;

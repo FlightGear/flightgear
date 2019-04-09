@@ -254,62 +254,19 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
       return true;
   }
 
-  ParkingAssignment pka;
-  double radius = fgGetDouble("/sim/dimensions/radius-m");
-  if ((parkpos == "AVAILABLE") && (radius > 0)) {
-
-    try {
-      acData = globals->get_fg_home();
-      acData.append("aircraft-data");
-      string acfile = fgGetString("/sim/aircraft") + string(".xml");
-      acData.append(acfile);
-      SGPropertyNode root;
-      readProperties(acData, &root);
-      SGPropertyNode * node = root.getNode("sim");
-      fltType    = node->getStringValue("aircraft-class", "NONE"     );
-      acOperator = node->getStringValue("aircraft-operator", "NONE"     );
-    } catch (const sg_exception &) {
-      SG_LOG(SG_GENERAL, SG_INFO,
-             "Could not load aircraft aircrat type and operator information from: " << acData << ". Using defaults");
-
-      // cout << path.str() << endl;
-    }
-    if (fltType.empty() || fltType == "NONE") {
-      SG_LOG(SG_GENERAL, SG_INFO,
-             "Aircraft type information not found in: " << acData << ". Using default value");
-      fltType = fgGetString("/sim/aircraft-class"   );
-    }
-    if (acOperator.empty() || fltType == "NONE") {
-      SG_LOG(SG_GENERAL, SG_INFO,
-             "Aircraft operator information not found in: " << acData << ". Using default value");
-      acOperator = fgGetString("/sim/aircraft-operator"   );
-    }
-
-
-    pka = dcs->getAvailableParking(radius, fltType, acType, acOperator);
-    if (pka.isValid()) {
-        // why is the following line necessary?
-      fgGetString("/sim/presets/parkpos");
-      fgSetString("/sim/presets/parkpos", pka.parking()->getName());
-    } else {
-      SG_LOG( SG_GENERAL, SG_ALERT,
-             "Failed to find a suitable parking at airport " << id );
-      return false;
-    }
-  } else {
-
-    pka = dcs->getParkingByName(parkpos);
-    if (!pka.isValid()) {
-      SG_LOG( SG_GENERAL, SG_ALERT,
-               "Failed to find a parking at airport " << id << ":" << parkpos);
-      return false;
-    }
+  // this works because the second time we run this function, in finalizePosition,
+  // the ATC-manager has run its postinit which reads/sets /sim/presets/parkpos
+  // it will hold the parking assignment so AI acft don't occupy the same
+  // parking spot. We simply need to use the same parking it already found
+  FGParkingRef pkr = dcs->getOccupiedParkingByName(parkpos);
+  if (!pkr.valid()) {
+    SG_LOG( SG_GENERAL, SG_ALERT,
+            "Failed to find a parking at airport " << id << ":" << parkpos);
+    return false;
   }
-  // Why is the following line necessary?
-  fgGetString("/sim/presets/parkpos");
-  fgSetString("/sim/presets/parkpos", pka.parking()->getName());
-  
-  fgApplyStartOffset(pka.parking()->geod(), pka.parking()->getHeading());
+
+  fgSetString("/sim/presets/parkpos", pkr->getName());
+  fgApplyStartOffset(pkr->geod(), pkr->getHeading());
   return true;
 }
 
