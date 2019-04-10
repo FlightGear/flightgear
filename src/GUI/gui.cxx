@@ -55,6 +55,7 @@
 #include "layout.hxx"
 
 #include <osg/GraphicsContext>
+#include <osg/GLExtensions>
 
 using namespace flightgear;
 
@@ -149,6 +150,12 @@ struct GeneralInitOperation : public GraphicsContextOperation
 
         glGetIntegerv( GL_DEPTH_BITS, &tmp );
         simRendering->setIntValue("depth-buffer-bits", tmp);
+        
+        const osg::GLExtensions* extensions = gc->getState()->get<osg::GLExtensions>();
+        if (extensions->glVertexAttribDivisor) {
+            SG_LOG( SG_GENERAL, SG_INFO, "VertexAttribDivisor supported");
+        }
+        
     }
 };
 
