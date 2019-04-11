@@ -764,6 +764,14 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
     // apply migration filters for each property in turn
     deleteProperties(&oldProps, blacklist);
 
+    // manual migrations
+    // migrate pre-2019.1 sense of /sim/mouse/invert-mouse-wheel
+    if (foundVersion.first < 2019) {
+        SGPropertyNode_ptr wheelNode = oldProps.getNode("/sim/mouse/invert-mouse-wheel");
+        if (wheelNode) {
+            wheelNode->setBoolValue(!wheelNode->getBoolValue());
+        }
+    }
     // copy remaining props out
     copyProperties(&oldProps, props);
 
