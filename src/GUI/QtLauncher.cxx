@@ -290,6 +290,8 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
             static_qApp->installTranslator(fallbackTranslator);
         }
 
+        qInfo() << "UI languages:" << QLocale().uiLanguages();
+        
         QTranslator* translator = new QTranslator(static_qApp.get());
         // check for --langauge=xx option and prefer that over QLocale
         // detection of the locale if it exists
