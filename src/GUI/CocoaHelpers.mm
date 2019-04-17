@@ -17,6 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#include <config.h>
+
 #include "CocoaHelpers.h"
 #include "CocoaHelpers_private.h"
 
@@ -34,11 +36,18 @@
 
 // simgear
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/structure/commands.hxx>
 
 // flightgear
 #include <GUI/MessageBox.hxx>
 #include <Main/options.hxx>
 #include <Main/locale.hxx>
+#include <Main/globals.hxx>
+
+#if defined(HAVE_QT)
+#  include <GUI/QtLauncher.hxx>
+#endif
 
 NSString* stdStringToCocoa(const std::string& s)
 {
@@ -164,4 +173,52 @@ void transformToForegroundApp()
 
     
     [[NSApplication sharedApplication] activateIgnoringOtherApps: YES];
+}
+
+@interface FlightGearNSAppDelegate  : NSObject <NSApplicationDelegate>
+@end
+
+@implementation FlightGearNSAppDelegate
+
+
+// it would be lovely to do the following, but the return code doesn't
+// seem to work as documented - maybe it's ignored due to newer process
+// management
+#if 0
+- (NSApplicationTerminateReply) applicationShouldTerminate:(NSApplication *)sender
+{    
+    SGCommandMgr* mgr = SGCommandMgr::instance();
+    SGPropertyNode_ptr propArgs(new SGPropertyNode);
+    propArgs->setStringValue("dialog-name", "exit");
+    mgr->execute("dialog-show", propArgs, globals->get_props());
+    
+    return NSTerminateCancel;
+}
+#endif
+
+- (void) applicationWillTerminate:(NSNotification *)notification
+{
+    SG_LOG(SG_GENERAL, SG_INFO, "macOS quit occuring");
+#if defined(HAVE_QT)
+    flightgear::shutdownQtApp();
+#endif
+}
+
+@end
+
+void cocoaRegisterTerminateHandler()
+{
+    FlightGearNSAppDelegate* delegate = [[FlightGearNSAppDelegate alloc] init];
+    
+    auto *app = [NSApplication sharedApplication];
+    [[NSNotificationCenter defaultCenter]
+     addObserver:delegate
+     selector:@selector(applicationWillTerminate:)
+     name:NSApplicationWillTerminateNotification object:app];
+#if 9
+    [[NSNotificationCenter defaultCenter]
+     addObserver:delegate
+     selector:@selector(applicationShouldTerminate:)
+     name:NSApplicationWillTerminateNotification object:app];
+#endif
 }
