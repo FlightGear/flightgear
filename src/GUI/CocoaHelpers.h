@@ -41,4 +41,10 @@ SGPath platformDefaultDataPath();
  */
 void transformToForegroundApp();
 
+/**
+ * AppKit shuts us down via exit(), the code in main to cleanup is not run
+ * in that scenario. Do some cleanup manually to avoid crashes on exit.
+ */
+void cocoaRegisterTerminateHandler();
+
 #endif // of FG_GUI_COCOA_HELPERS_H
