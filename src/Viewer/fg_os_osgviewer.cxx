@@ -66,6 +66,10 @@
 #include <QCoreApplication>
 #endif
 
+#if defined(SG_MAC)
+#  include <GUI/CocoaHelpers.h>
+#endif
+
 // Static linking of OSG needs special macros
 #ifdef OSG_LIBRARY_STATIC
 #include <osgDB/Registry>
@@ -371,6 +375,10 @@ void fgOSInit(int* argc, char** argv)
         SG_LOG(SG_GL, SG_INFO, "Using stock OSG implementation of GraphicsWindow");
     }
 #endif
+#if defined(SG_MAC)
+    cocoaRegisterTerminateHandler();
+#endif
+    
     globals->get_renderer()->init();
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
