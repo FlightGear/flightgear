@@ -49,7 +49,7 @@ FGSubmodelMgr::~FGSubmodelMgr()
 
 FGAIManager* FGSubmodelMgr::aiManager()
 {
-   return (FGAIManager*)globals->get_subsystem("ai-model");
+   return globals->get_subsystem<FGAIManager>();
 }
 
 void FGSubmodelMgr::init()
@@ -98,6 +98,12 @@ void FGSubmodelMgr::postinit()
 
     //_model_added_node = fgGetNode("ai/models/model-added", true);
     //_model_added_node->addChangeListener(this, false);
+}
+
+void FGSubmodelMgr::shutdown()
+{
+    std::for_each(submodels.begin(), submodels.end(), [](submodel* sm) { delete sm; });
+    submodels.clear();
 }
 
 void FGSubmodelMgr::bind()
@@ -388,18 +394,7 @@ void FGSubmodelMgr::transform(submodel *sm)
     userpos.setLongitudeDeg(IC.lon);
     userpos.setElevationFt(IC.alt);
 
-    if (sm->offsets_in_meter) {
-        _x_offset = -sm->x_offset->get_value() * SG_METER_TO_FEET;
-        _y_offset =  sm->y_offset->get_value() * SG_METER_TO_FEET;
-        _z_offset =  sm->z_offset->get_value() * SG_METER_TO_FEET;
-    }
-    else {
-        _x_offset = sm->x_offset->get_value();
-        _y_offset = sm->y_offset->get_value();
-        _z_offset = sm->z_offset->get_value();
-    }
-
-    setOffsetPos();
+    setOffsetPos(sm);
 
     // Compute initial orientation using yaw and pitch offsets and parent's orientation
     const double yaw_offset = sm->yaw_offset->get_value();
@@ -436,12 +431,6 @@ void FGSubmodelMgr::transform(submodel *sm)
         double ic_roll;
         ic_quat.getEulerDeg(IC.azimuth, IC.elevation, ic_roll);
     }
-}
-
-void FGSubmodelMgr::updatelat(double lat)
-{
-    ft_per_deg_latitude = 366468.96 - 3717.12 * cos(lat / SG_RADIANS_TO_DEGREES);
-    ft_per_deg_longitude = 365228.16 * cos(lat / SG_RADIANS_TO_DEGREES);
 }
 
 void FGSubmodelMgr::loadAI()
@@ -695,18 +684,22 @@ void FGSubmodelMgr::loadSubmodels()
     subsubmodels.clear();
 }
 
-SGVec3d FGSubmodelMgr::getCartOffsetPos() const
+SGVec3d FGSubmodelMgr::getCartOffsetPos(submodel* sm) const
 {
-    // Convert geodetic positions to geocentered
-    SGVec3d cartuserPos = SGVec3d::fromGeod(userpos);
-
     // Transform to the right coordinate frame, configuration is done in
     // the x-forward, y-right, z-up coordinates (feet), computation
     // in the simulation usual body x-forward, y-right, z-down coordinates
     // (meters) )
-    SGVec3d _off(_x_offset * SG_FEET_TO_METER,
-        _y_offset * SG_FEET_TO_METER,
-        -_z_offset * SG_FEET_TO_METER);
+    SGVec3d offset;
+    if (sm->offsets_in_meter) {
+        offset = SGVec3d(-sm->x_offset->get_value(),
+                         sm->y_offset->get_value(),
+                         -sm->z_offset->get_value());
+    } else {
+        offset = SGVec3d(sm->x_offset->get_value() * SG_FEET_TO_METER,
+                         sm->y_offset->get_value() * SG_FEET_TO_METER,
+                         -sm->z_offset->get_value() * SG_FEET_TO_METER);
+    }
 
     // Transform the user position to the horizontal local coordinate system.
     SGQuatd hlTrans = SGQuatd::fromLonLat(userpos);
@@ -718,19 +711,23 @@ SGVec3d FGSubmodelMgr::getCartOffsetPos() const
        IC.elevation,
        IC.roll);
 
+    // postrotate by any pitch/heasing/roll offset
+    hlTrans *= SGQuatd::fromYawPitchRollDeg(sm->yaw_offset->get_value(),
+                                            sm->pitch_offset->get_value(),
+                                            0.0);
+    
     // The offset converted to the usual body fixed coordinate system
     // rotated to the earth-fixed coordinates axis
-    SGVec3d off = hlTrans.backTransform(_off);
+    SGVec3d off = hlTrans.backTransform(offset);
 
     // Add the position offset of the user model to get the geocentered position
-    SGVec3d offsetPos = cartuserPos + off;
-    return offsetPos;
+    return SGVec3d::fromGeod(userpos); + off;
 }
 
-void FGSubmodelMgr::setOffsetPos()
+void FGSubmodelMgr::setOffsetPos(submodel* sm)
 {
     // Convert the offset geocentered position to geodetic
-    SGVec3d cartoffsetPos = getCartOffsetPos();
+    SGVec3d cartoffsetPos = getCartOffsetPos(sm);
     SGGeodesy::SGCartToGeod(cartoffsetPos, offsetpos);
 }
 

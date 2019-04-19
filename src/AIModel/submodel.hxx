@@ -7,10 +7,6 @@
 #ifndef __SYSTEMS_SUBMODEL_HXX
 #define __SYSTEMS_SUBMODEL_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
@@ -99,15 +95,16 @@ public:
     }   IC_struct;
 
     FGSubmodelMgr();
-    ~FGSubmodelMgr();
+    ~FGSubmodelMgr() override;
 
     void load();
-    void init();
-    void postinit();
-    void bind();
-    void unbind();
-    void update(double dt);
-    void updatelat(double lat);
+
+    void init() override;
+    void postinit() override;
+    void bind() override;
+    void unbind() override;
+    void update(double dt) override;
+    void shutdown() override;
 
 private:
 
@@ -119,9 +116,6 @@ private:
     submodel_vector_iterator   submodel_iterator, subsubmodel_iterator;
 
     int index;
-
-    double ft_per_deg_longitude;
-    double ft_per_deg_latitude;
 
     double x_offset, y_offset, z_offset;
     double pitch_offset, yaw_offset;
@@ -189,8 +183,9 @@ private:
 
     SGGeod userpos;
     SGGeod offsetpos;
-    SGVec3d getCartOffsetPos() const;
-    void setOffsetPos();
+    
+    SGVec3d getCartOffsetPos(submodel* sm) const;
+    void setOffsetPos(submodel* sm);
 
 };
 
