@@ -35,6 +35,21 @@ TestPilot::TestPilot(SGPropertyNode_ptr props) :
         _propRoot = globals->get_props();
     }
     
+    _latProp = _propRoot->getNode("position/latitude-deg", true);
+    _lonProp = _propRoot->getNode("position/longitude-deg", true);
+    _altitudeProp = _propRoot->getNode("position/altitude-ft", true);
+    _headingProp = _propRoot->getNode("orientation/heading-deg", true);
+    _speedKnotsProp = _propRoot->getNode("velocities/speed-knots", true);
+    _verticalFPMProp = _propRoot->getNode("velocities/vertical-fpm", true);
+
+    
+    SGPropertyNode_ptr _latProp;
+    SGPropertyNode_ptr _lonProp;
+    SGPropertyNode_ptr _altitudeProp;
+    SGPropertyNode_ptr _headingProp;
+    SGPropertyNode_ptr _speedKnotsProp;
+    SGPropertyNode_ptr _verticalFPMProp;
+    
     globals->add_subsystem("flight", this, SGSubsystemMgr::FDM);
 }
 
@@ -73,9 +88,48 @@ void TestPilot::turnToCourse(double deg)
     _turnActive = true;
     _targetCourseDeg = deg;
 }
+
+void TestPilot::flyHeading(double hdg)
+{
+    _lateralMode = LateralMode::Heading;
+    _turnActive = true;
+    _targetCourseDeg = hdg;
+}
+    
+void TestPilot::flyGPSCourse(GPS *gps)
+{
+    _gps = gps;
+    _gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    _lateralMode = LateralMode::GPSCourse;
+    _turnActive = false;
+}
+
+void TestPilot::flyDirectTo(const SGGeod& target)
+{
+    _lateralMode = LateralMode::Direct;
+    _targetPos = target;
+}
     
 void TestPilot::updateValues(double dt)
 {
+    if (_gps && (_lateralMode == LateralMode::GPSCourse)) {
+        const double deviationDeg = _gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg");
+        _targetCourseDeg = _gpsNode->getDoubleValue("wp/leg-true-course-deg");
+        _targetCourseDeg -= deviationDeg;
+        SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
+        if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {
+            _turnActive = true;
+        }
+    }
+    
+    if (_lateralMode == LateralMode::Direct) {
+        _targetCourseDeg = SGGeodesy::courseDeg(globals->get_aircraft_position(), _targetPos);
+        SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
+        if (!_turnActive && (fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {
+            _turnActive = true;
+        }
+    }
+    
     if (_turnActive) {
         if (fabs(_targetCourseDeg - _trueCourseDeg) < 0.1) {
             _trueCourseDeg = _targetCourseDeg;
@@ -84,13 +138,16 @@ void TestPilot::updateValues(double dt)
             // standard 2-minute turn, 180-deg min, thus 3-degrees per second
             double turnDeg = 3.0 * dt;
             double errorDeg = _targetCourseDeg - _trueCourseDeg;
-            if (fabs(errorDeg) > 180.0) {
-                errorDeg = 360.0 - errorDeg;
+            if (errorDeg > 180.0) {
+                errorDeg = errorDeg -= 360;
+            } else if (errorDeg < -180) {
+                errorDeg += 360.0;
             }
             
             turnDeg = copysign(turnDeg, errorDeg);
             // simple integral
             _trueCourseDeg += std::min(turnDeg, errorDeg);
+            SG_NORMALIZE_RANGE(_trueCourseDeg, 0.0, 360.0);
         }
     }
     
@@ -115,14 +172,13 @@ void TestPilot::updateValues(double dt)
 
 void TestPilot::setPosition(const SGGeod& pos)
 {
-    _propRoot->setDoubleValue("position/latitude-deg", pos.getLatitudeDeg());
-    _propRoot->setDoubleValue("position/longitude-deg", pos.getLongitudeDeg());
-    _propRoot->setDoubleValue("position/altitude-ft", pos.getElevationFt());
+    _latProp->setDoubleValue(pos.getLatitudeDeg());
+    _lonProp->setDoubleValue(pos.getLongitudeDeg());
+    _altitudeProp->setDoubleValue(pos.getElevationFt());
     
-    _propRoot->setDoubleValue("orientation/heading-deg", _trueCourseDeg);
-    _propRoot->setDoubleValue("velocities/speed-knots", _speedKnots);
-    _propRoot->setDoubleValue("velocities/vertical-fpm", _vspeedFPM);
-
+    _headingProp->setDoubleValue(_trueCourseDeg);
+    _speedKnotsProp->setDoubleValue(_speedKnots);
+    _verticalFPMProp->setDoubleValue(_vspeedFPM);
 }
     
 void TestPilot::setTargetAltitudeFtMSL(double altFt)

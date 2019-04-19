@@ -20,8 +20,10 @@
 #include "test_flightplan.hxx"
 #include "test_navaids2.hxx"
 #include "test_aircraftPerformance.hxx"
+#include "test_routeManager.hxx"
 
 // Set up the unit tests.
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(FlightplanTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavaidsTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AircraftPerformanceTests, "Unit tests");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(RouteManagerTests, "Unit tests");

@@ -23,6 +23,9 @@
 #include <simgear/props/propsfwd.hxx>
 #include <simgear/math/SGMathFwd.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGGeod.hxx>
+
+class GPS;
 
 namespace FGTestApi {
 
@@ -47,14 +50,22 @@ public:
     void setVerticalFPM(double fpm);
     void setTargetAltitudeFtMSL(double altFt);
 
-    // flyGreatCircle ...
-
     // void setTurnRateDegSec();
 
     void init() override;
     void update(double dT) override;
 
+    void flyHeading(double hdg);
+    void flyDirectTo(const SGGeod& target);
+    void flyGPSCourse(GPS *gps);
 private:
+    enum class LateralMode
+    {
+        Heading,
+        Direct,
+        GPSCourse
+    };
+    
     void updateValues(double dt);
     void setPosition(const SGGeod& pos);
 
@@ -68,6 +79,19 @@ private:
     bool _altActive = false;
     double _targetCourseDeg = 0.0;
     double _targetAltitudeFt = 0.0;
+  
+    LateralMode _lateralMode = LateralMode::Heading;
+    SGGeod _targetPos;
+    GPS* _gps = nullptr;
+    
+    SGPropertyNode_ptr _latProp;
+    SGPropertyNode_ptr _lonProp;
+    SGPropertyNode_ptr _altitudeProp;
+    SGPropertyNode_ptr _headingProp;
+    SGPropertyNode_ptr _speedKnotsProp;
+    SGPropertyNode_ptr _verticalFPMProp;
+    
+    SGPropertyNode_ptr _gpsNode;
 };
 
 } // of namespace FGTestApi
