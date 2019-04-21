@@ -1,6 +1,6 @@
 find_package(PNG)
 find_package(OpenGL)
-find_package(GLEW )
+find_package(GLEW)
 find_package(Freetype)
 
 if ((NOT PNG_FOUND) OR (NOT OPENGL_FOUND) OR (NOT GLEW_FOUND) OR (NOT FREETYPE_FOUND))
@@ -94,7 +94,7 @@ if(${BCMHOST_INCLUDE_DIR} STREQUAL "BCMHOST_INCLUDE_DIR-NOTFOUND")
     target_link_libraries(fgpanel
       ${OPENGL_LIBRARIES}
       ${GLUT_LIBRARIES}
-      ${GLEW_LIBRARIES}
+      GLEW::GLEW
       )
   else(GLUT_FOUND)
     message(STATUS "glut NOT found, can't build fgpanel")
