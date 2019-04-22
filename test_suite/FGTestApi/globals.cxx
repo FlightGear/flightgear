@@ -66,6 +66,16 @@ void setPosition(const SGGeod& g)
     globals->get_props()->setDoubleValue("position/altitude-ft", g.getElevationFt());
 }
 
+void runForTime(double t)
+{
+    int ticks = t * 120.0;
+    assert(ticks > 0);
+
+    for (int t = 0; t < ticks; ++t) {
+        globals->get_subsystem_mgr()->update(1 / 120.0);
+    }
+}
+
 namespace tearDown {
 
 void shutdownTestGlobals()

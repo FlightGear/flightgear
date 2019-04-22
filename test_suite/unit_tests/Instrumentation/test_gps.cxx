@@ -24,6 +24,7 @@
 
 #include "test_suite/FGTestApi/globals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
+#include "test_suite/FGTestApi/TestPilot.hxx"
 
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
@@ -32,26 +33,12 @@
 #include <Instrumentation/gps.hxx>
 #include <Instrumentation/navradio.hxx>
 
-namespace {
-
-    class GPSShutdowner {
-    public:
-        GPSShutdowner(GPS* g) : gps(g) { }
-        ~GPSShutdowner() {
-            gps->unbind();
-        }
-    private:
-        GPS* gps;
-    };
-}
-
 // Set up function for each test.
 void GPSTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("gps");
     FGTestApi::setUp::initNavDataCache();
 }
-
 
 // Clean up after each test.
 void GPSTests::tearDown()
@@ -67,15 +54,15 @@ void GPSTests::setPositionAndStabilise(GPS* gps, const SGGeod& g)
     }
 }
 
-std::unique_ptr<GPS> GPSTests::setupStandardGPS(SGPropertyNode_ptr config,
-                                                const std::string name, const int index)
+GPS* GPSTests::setupStandardGPS(SGPropertyNode_ptr config,
+                                const std::string name, const int index)
 {
     SGPropertyNode_ptr configNode(config.valid() ? config
                                                  : SGPropertyNode_ptr{new SGPropertyNode});
     configNode->setStringValue("name", name);
     configNode->setIntValue("number", index);
     
-    std::unique_ptr<GPS> gps(new GPS(configNode));
+    GPS* gps(new GPS(configNode));
     
     SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation", true)->getChild(name, index, true);
     node->setBoolValue("serviceable", true);
@@ -84,35 +71,52 @@ std::unique_ptr<GPS> GPSTests::setupStandardGPS(SGPropertyNode_ptr config,
     gps->bind();
     gps->init();
     
+    globals->add_subsystem("gps", gps, SGSubsystemMgr::POST_FDM);
     return gps;
 }
 
 void GPSTests::testBasic()
 {
     auto gps = setupStandardGPS();
-    GPSShutdowner gs(gps.get());
     
     FGPositioned::TypeFilter f{FGPositioned::VOR};
     auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
     SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 45.0, 5.0 * SG_NM_TO_METER);
     
-    setPositionAndStabilise(gps.get(), p1);
+    setPositionAndStabilise(gps, p1);
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLongitudeDeg(), gpsNode->getDoubleValue("indicated-longitude-deg"), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLatitudeDeg(), gpsNode->getDoubleValue("indicated-latitude-deg"), 0.01);
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->setSpeedKts(120);
+    pilot->setCourseTrue(225.0);
+    
+    FGTestApi::runForTime(30.0);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(225, gpsNode->getDoubleValue("indicated-track-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(120, gpsNode->getDoubleValue("indicated-ground-speed-kt"), 1);
+    
+    // 120kts =
+    double speedMSec = 120 * SG_KT_TO_MPS;
+    double components = speedMSec * (1.0 / sqrt(2.0));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-components, gpsNode->getDoubleValue("ew-velocity-msec"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-components, gpsNode->getDoubleValue("ns-velocity-msec"), 0.1);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(120 * (30.0 / 3600), gpsNode->getDoubleValue("odometer"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(120 * (30.0 / 3600), gpsNode->getDoubleValue("trip-odometer"), 0.1);
 }
 
 void GPSTests::testOBSMode()
 {
     auto gps = setupStandardGPS();
-    GPSShutdowner gs(gps.get());
 
     FGPositioned::TypeFilter f{FGPositioned::VOR};
     auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
     SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 45.0, 5.0 * SG_NM_TO_METER);
     
-    setPositionAndStabilise(gps.get(), p1);
+    setPositionAndStabilise(gps, p1);
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLongitudeDeg(), gpsNode->getDoubleValue("indicated-longitude-deg"), 0.01);
@@ -132,7 +136,7 @@ void GPSTests::testOBSMode()
     // select OBS mode one it
     gpsNode->setStringValue("command", "obs");
     
-    setPositionAndStabilise(gps.get(), p1);
+    setPositionAndStabilise(gps, p1);
 
     CPPUNIT_ASSERT_EQUAL(std::string{"obs"}, std::string{gpsNode->getStringValue("mode")});
     CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, gpsNode->getDoubleValue("wp/wp[1]/distance-nm"), 0.01);
@@ -141,11 +145,38 @@ void GPSTests::testOBSMode()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(bodrumVOR->get_lat(), gpsNode->getDoubleValue("wp/wp[1]/latitude-deg"), 0.01);
     
     CPPUNIT_ASSERT_DOUBLES_EQUAL(225.0, gpsNode->getDoubleValue("desired-course-deg"), 0.01);
-
-    
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
 
+    // off axis, angular
+    SGGeod p2 = SGGeodesy::direct(bodrumVOR->geod(), 40.0, 4.0 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, p2);
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"obs"}, std::string{gpsNode->getStringValue("mode")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gpsNode->getDoubleValue("wp/wp[1]/distance-nm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(220.0, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(225.0, gpsNode->getDoubleValue("desired-course-deg"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-5.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
+    
+    // off axis, perpendicular
+    SGGeod p3 = SGGeodesy::direct(p1, 135, 0.5 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, p3);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(225.0, gpsNode->getDoubleValue("desired-course-deg"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.5, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+}
+
+void GPSTests::testDirectTo()
+{
+    auto gps = setupStandardGPS();
+    
+   
+    
+    FGPositioned::TypeFilter f{FGPositioned::VOR};
+    auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
+    SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 45.0, 5.0 * SG_NM_TO_METER);
+    
+    setPositionAndStabilise(gps, p1);
 }
 
 void GPSTests::testNavRadioSlave()

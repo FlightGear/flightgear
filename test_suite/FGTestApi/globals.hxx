@@ -15,6 +15,8 @@ void initTestGlobals(const std::string& testName);
 
 void setPosition(const SGGeod& g);
 
+void runForTime(double t);
+
 namespace tearDown {
 
 void shutdownTestGlobals();

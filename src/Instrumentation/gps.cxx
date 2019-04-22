@@ -492,7 +492,7 @@ GPS::updateBasicData(double dt)
   double vertical_speed_mpm = ((_indicated_pos.getElevationM() - _last_pos.getElevationM()) * 60 / dt);
   _last_vertical_speed = vertical_speed_mpm * SG_METER_TO_FEET;
   
-  speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/10.0);
+  speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/5.0);
   _last_speed_kts = speed_kt;
   
   SGGeod g = _indicated_pos;

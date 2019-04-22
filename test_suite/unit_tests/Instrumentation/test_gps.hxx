@@ -42,12 +42,13 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testConfigAutopilotDrive);
     CPPUNIT_TEST(testTurnAnticipation);
     CPPUNIT_TEST(testOBSMode);
+    CPPUNIT_TEST(testDirectTo);
 
     CPPUNIT_TEST_SUITE_END();
 
     void setPositionAndStabilise(GPS* gps, const SGGeod& g);
 
-    std::unique_ptr<GPS> setupStandardGPS(SGPropertyNode_ptr config = {},
+    GPS* setupStandardGPS(SGPropertyNode_ptr config = {},
                                           const std::string name = "gps", const int index = 0);
 
 public:
@@ -63,6 +64,7 @@ public:
     void testConfigAutopilotDrive();
     void testTurnAnticipation();
     void testOBSMode();
+    void testDirectTo();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX
