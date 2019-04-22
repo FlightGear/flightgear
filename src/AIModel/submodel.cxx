@@ -721,7 +721,7 @@ SGVec3d FGSubmodelMgr::getCartOffsetPos(submodel* sm) const
     SGVec3d off = hlTrans.backTransform(offset);
 
     // Add the position offset of the user model to get the geocentered position
-    return SGVec3d::fromGeod(userpos); + off;
+    return SGVec3d::fromGeod(userpos) + off;
 }
 
 void FGSubmodelMgr::setOffsetPos(submodel* sm)
