@@ -221,16 +221,15 @@ void SplashScreen::createNodes()
     _splashQuadCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     _splashQuadCamera->setViewMatrix(osg::Matrix::identity());
     _splashQuadCamera->setProjectionMatrixAsOrtho2D(0.0, 1.0, 0.0, 1.0);
-    _splashQuadCamera->setClearMask( 0 );
     _splashQuadCamera->setAllowEventFocus(false);
     _splashQuadCamera->setCullingActive(false);
-    _splashQuadCamera->setRenderOrder(osg::Camera::NESTED_RENDER, 20000);
+    _splashQuadCamera->setRenderOrder(osg::Camera::NESTED_RENDER);
     
     stateSet = _splashQuadCamera->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setAttribute(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA), osg::StateAttribute::ON);
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-    stateSet->setRenderBinDetails(1, "RenderBin");
+    stateSet->setRenderBinDetails(1000, "RenderBin");
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
     
     geometry = osg::createTexturedQuadGeometry(osg::Vec3(0.0, 0.0, 0.0),
