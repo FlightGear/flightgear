@@ -947,8 +947,8 @@ const char* GPS::getWP0Ident() const
   
 // work around std::string::c_str() storage lifetime with libc++
 // real fix is to allow tie-ing with std::string instead of char*
-  static char identBuf[8];
-  strncpy(identBuf, _prevWaypt->ident().c_str(), 8);
+  static char identBuf[16];
+  strncpy(identBuf, _prevWaypt->ident().c_str(), 15);
 
   return identBuf;
 }
@@ -975,8 +975,8 @@ const char* GPS::getWP1Ident() const
   
 // work around std::string::c_str() storage lifetime with libc++
 // real fix is to allow tie-ing with std::string instead of char*
-  static char identBuf[8];
-  strncpy(identBuf, _currentWaypt->ident().c_str(), 8);
+  static char identBuf[16];
+  strncpy(identBuf, _currentWaypt->ident().c_str(), 15);
     
   return identBuf;
 }
