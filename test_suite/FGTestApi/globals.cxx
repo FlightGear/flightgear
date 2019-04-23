@@ -17,6 +17,12 @@
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <Airports/airport.hxx>
+#include <Navaids/FlightPlan.hxx>
+#include <Navaids/waypoint.hxx>
+
+using namespace flightgear;
+
 namespace FGTestApi {
 
 namespace setUp {
@@ -56,6 +62,36 @@ void initTestGlobals(const std::string& testName)
      */
     globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
 }
+
+void populateFP(flightgear::FlightPlanRef f,
+                 const std::string& depICAO, const std::string& depRunway,
+                 const std::string& destICAO, const std::string& destRunway,
+                 const std::string& waypoints)
+{
+    FGAirportRef depApt = FGAirport::getByIdent(depICAO);
+    f->setDeparture(depApt->getRunwayByIdent(depRunway));
+
+
+    FGAirportRef destApt = FGAirport::getByIdent(destICAO);
+    f->setDestination(destApt->getRunwayByIdent(destRunway));
+
+    // since we don't have the Nasal route-manager delegate, insert the
+    // runway waypoints manually
+    
+    f->insertWayptAtIndex(new RunwayWaypt(f->departureRunway(), f), -1);
+    
+    for (auto ws : simgear::strutils::split(waypoints)) {
+        WayptRef wpt = f->waypointFromString(ws);
+        f->insertWayptAtIndex(wpt, -1);
+    }
+    
+  
+    auto destRwy = f->destinationRunway();
+    f->insertWayptAtIndex(new BasicWaypt(destRwy->pointOnCenterline(-8 * SG_NM_TO_METER),
+                                         destRwy->ident() + "-8", f), -1);
+    f->insertWayptAtIndex(new RunwayWaypt(destRwy, f), -1);
+}
+
 
 }  // End of namespace setUp.
 

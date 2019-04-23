@@ -33,25 +33,12 @@ void FlightplanTests::tearDown()
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
-
-FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunway,
+static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunway,
                          const std::string& destICAO, const std::string& destRunway,
                          const std::string& waypoints)
 {
     FlightPlanRef f = new FlightPlan;
-
-    FGAirportRef depApt = FGAirport::getByIdent(depICAO);
-    f->setDeparture(depApt->getRunwayByIdent(depRunway));
-
-
-    FGAirportRef destApt = FGAirport::getByIdent(destICAO);
-    f->setDestination(destApt->getRunwayByIdent(destRunway));
-
-    for (auto ws : simgear::strutils::split(waypoints)) {
-        WayptRef wpt = f->waypointFromString(ws);
-        f->insertWayptAtIndex(wpt, -1);
-    }
-
+    FGTestApi::setUp::populateFPWithoutNasal(f, depICAO, depRunway, destICAO, destRunway, waypoints);
     return f;
 }
 
@@ -67,13 +54,18 @@ void FlightplanTests::testBasic()
     CPPUNIT_ASSERT(fp1->destinationAirport()->ident() == "EHAM");
     CPPUNIT_ASSERT(fp1->destinationRunway()->ident() == "24");
 
-    CPPUNIT_ASSERT_EQUAL(fp1->numLegs(), 2);
+    CPPUNIT_ASSERT_EQUAL(fp1->numLegs(), 5);
 
-    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "TNT");
-    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->name() == "TRENT VOR-DME");
+    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "23L");
+    
+    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->ident() == "TNT");
+    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->name() == "TRENT VOR-DME");
 
-    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->ident() == "CLN");
-    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->name() == "CLACTON VOR-DME");
+    CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->ident() == "CLN");
+    CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->name() == "CLACTON VOR-DME");
+    
+    CPPUNIT_ASSERT(fp1->legAtIndex(4)->waypoint()->source()->ident() == "24");
+
 }
 
 void FlightplanTests::testRoutePathBasic()
@@ -103,8 +95,8 @@ void FlightplanTests::testRoutePathBasic()
     double distM = SGGeodesy::distanceM(bne->geod(), civ->geod());
     double trackDeg = SGGeodesy::courseDeg(bne->geod(), civ->geod());
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(trackDeg, rtepath.trackForIndex(3), 0.5);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(distM, rtepath.distanceForIndex(3), 2000); // 2km precision, allow for turns
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(trackDeg, rtepath.trackForIndex(4), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(distM, rtepath.distanceForIndex(4), 2000); // 2km precision, allow for turns
 
 }
 
@@ -120,16 +112,16 @@ void FlightplanTests::testRoutePathSkipped()
     RoutePath rtepath(fp1);
 
     // skipped point uses inbound track
-    CPPUNIT_ASSERT_EQUAL(rtepath.trackForIndex(3), rtepath.trackForIndex(4));
+    CPPUNIT_ASSERT_EQUAL(rtepath.trackForIndex(4), rtepath.trackForIndex(5));
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, rtepath.distanceForIndex(4), 1e-9);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, rtepath.distanceForIndex(5), 1e-9);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, rtepath.distanceForIndex(6), 1e-9);
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(101000, rtepath.distanceForIndex(6), 1000);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(101000, rtepath.distanceForIndex(7), 1000);
 
 
     // this tests skipping two preceeding points works as it should
-    SGGeodVec vec = rtepath.pathForIndex(6);
+    SGGeodVec vec = rtepath.pathForIndex(7);
     CPPUNIT_ASSERT(vec.size() == 9);
 }
 
@@ -147,7 +139,33 @@ void FlightplanTests::testRoutePathTrivialFlightPlan()
         rtepath.distanceForIndex(leg);
     }
 
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, fp1->totalDistanceNm(), 1e-9);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(19.68, fp1->totalDistanceNm(), 0.1);
+}
+
+void FlightplanTests::testRoutePathVec()
+{
+    FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
+                                   "ROKME WOVAB");
+    RoutePath rtepath(fp1);
+    
+    SGGeodVec vec = rtepath.pathForIndex(0);
+    
+    FGAirportRef ksfo = FGAirport::findByIdent("KSFO");
+    FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME", ksfo->geod()));
+    auto depRwy = fp1->departureRunway();
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(depRwy->geod().getLongitudeDeg(), vec.front().getLongitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(depRwy->geod().getLatitudeDeg(), vec.front().getLatitudeDeg(), 0.01);
+    
+    SGGeodVec vec1 = rtepath.pathForIndex(1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec1.back().getLongitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec1.back().getLatitudeDeg(), 0.01);
+    
+    SGGeodVec vec2 = rtepath.pathForIndex(2);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec2.front().getLongitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec2.front().getLatitudeDeg(), 0.01);
+    
+    //CPPUNIT_ASSERT(vec.front()
 }
 
 void FlightplanTests::testRoutPathWpt0Midflight()
@@ -157,6 +175,9 @@ void FlightplanTests::testRoutPathWpt0Midflight()
     
     FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
                                    "ROKME WOVAB");
+    // actually delete leg 0 so we start at ROKME
+    fp1->deleteIndex(0);
+    
     RoutePath rtepath(fp1);
     
     SGGeodVec vec = rtepath.pathForIndex(0);

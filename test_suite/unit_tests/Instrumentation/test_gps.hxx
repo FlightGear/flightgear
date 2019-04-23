@@ -39,10 +39,10 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE(GPSTests);
     CPPUNIT_TEST(testBasic);
     CPPUNIT_TEST(testNavRadioSlave);
-    CPPUNIT_TEST(testConfigAutopilotDrive);
     CPPUNIT_TEST(testTurnAnticipation);
     CPPUNIT_TEST(testOBSMode);
     CPPUNIT_TEST(testDirectTo);
+    CPPUNIT_TEST(testLegMode);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -50,7 +50,8 @@ class GPSTests : public CppUnit::TestFixture
 
     GPS* setupStandardGPS(SGPropertyNode_ptr config = {},
                                           const std::string name = "gps", const int index = 0);
-
+    void setupRouteManager();
+    
 public:
     // Set up function for each test.
     void setUp();
@@ -61,10 +62,10 @@ public:
     // The tests.
     void testBasic();
     void testNavRadioSlave();
-    void testConfigAutopilotDrive();
     void testTurnAnticipation();
     void testOBSMode();
     void testDirectTo();
+    void testLegMode();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX

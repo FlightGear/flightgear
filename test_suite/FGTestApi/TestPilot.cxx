@@ -50,7 +50,7 @@ void TestPilot::resetAtPosition(const SGGeod& pos)
 
 void TestPilot::init()
 {
-        
+    _vspeedFPM = 1200;
 }
 
 void TestPilot::update(double dt)
@@ -98,6 +98,18 @@ void TestPilot::updateValues(double dt)
     double d = _speedKnots * SG_KT_TO_MPS * dt;
     SGGeod newPos = SGGeodesy::direct(currentPos, _trueCourseDeg, d);
     
+    if (_altActive) {
+        if (fabs(_targetAltitudeFt - currentPos.getElevationFt()) < 1) {
+            _altActive = false;
+            newPos.setElevationFt(_targetAltitudeFt);
+        } else {
+            double errorFt = _targetAltitudeFt - currentPos.getElevationFt();
+            double vspeed = std::min(fabs(errorFt),_vspeedFPM * dt / 60.0);
+            double dv = copysign(vspeed, errorFt);
+            newPos.setElevationFt(currentPos.getElevationFt() + dv);
+        }
+    }
+    
     setPosition(newPos);
 }
 
@@ -109,7 +121,14 @@ void TestPilot::setPosition(const SGGeod& pos)
     
     _propRoot->setDoubleValue("orientation/heading-deg", _trueCourseDeg);
     _propRoot->setDoubleValue("velocities/speed-knots", _speedKnots);
+    _propRoot->setDoubleValue("velocities/vertical-fpm", _vspeedFPM);
 
+}
+    
+void TestPilot::setTargetAltitudeFtMSL(double altFt)
+{
+    _targetAltitudeFt = altFt;
+    _altActive = true;
 }
 
 } // of namespace

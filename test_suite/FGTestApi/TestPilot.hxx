@@ -65,6 +65,7 @@ private:
     double _vspeedFPM = 0.0;
 
     bool _turnActive = false;
+    bool _altActive = false;
     double _targetCourseDeg = 0.0;
     double _targetAltitudeFt = 0.0;
 };
