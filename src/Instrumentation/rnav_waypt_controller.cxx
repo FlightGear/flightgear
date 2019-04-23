@@ -320,7 +320,7 @@ public:
     bearingAircraftRunwayEnd	= SGGeodesy::courseDeg(_rnav->position(), _runway->end());
     _distanceAircraftRunwayEnd	= SGGeodesy::distanceM(_rnav->position(), _runway->end());
 
-    double _courseDev = bearingAircraftRunwayEnd - _targetTrack;
+    _courseDev = bearingAircraftRunwayEnd - _targetTrack;
     SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
     
     if ((fabs(_courseDev) > _rnav->overflightArmAngleDeg()) && (_distanceAircraftRunwayEnd < _rnav->overflightArmDistanceM())) {
