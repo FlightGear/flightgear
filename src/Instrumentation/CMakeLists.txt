@@ -1,6 +1,7 @@
 include(FlightGearComponent)
 
 set(SOURCES
+    AbstractInstrument.cxx
     adf.cxx
     airspeed_indicator.cxx
     altimeter.cxx
@@ -62,6 +63,7 @@ set(SOURCES
     )
 
 set(HEADERS
+    AbstractInstrument.hxx
     adf.hxx
     airspeed_indicator.hxx
     altimeter.hxx
@@ -111,6 +113,6 @@ set(HEADERS
     KLN89/kln89_page_usr.hxx
     KLN89/kln89_page_vor.hxx
     KLN89/kln89_page_alt.hxx
-    )   
-    
+    )
+
 flightgear_component(Instruments "${SOURCES}" "${HEADERS}")

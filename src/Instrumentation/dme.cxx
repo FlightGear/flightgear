@@ -80,10 +80,9 @@ DME::DME ( SGPropertyNode *node )
       _last_frequency_mhz(-1),
       _time_before_search_sec(0),
       _navrecord(NULL),
-      _name(node->getStringValue("name", "dme")),
-      _num(node->getIntValue("number", 0)),
       _audioIdent(NULL)
 {
+    readConfig(node, "dme");
 }
 
 DME::~DME ()
@@ -94,13 +93,10 @@ DME::~DME ()
 void
 DME::init ()
 {
-    std::string branch;
-    branch = "/instrumentation/" + _name;
-
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-
-    _serviceable_node = node->getChild("serviceable", 0, true);
-    _electrical_node = fgGetNode("/systems/electrical/outputs/dme", true);
+    std::string branch = nodePath();
+    SGPropertyNode *node = fgGetNode(branch, true );
+    initServicePowerProperties(node);
+    
     SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
     _source_node = fnode->getChild("source", 0, true);
     _frequency_node = fnode->getChild("selected-mhz", 0, true);
@@ -127,9 +123,9 @@ DME::init ()
     _time_string->setStringValue("--");
 
     std::ostringstream temp;
-    temp << _name << "-ident-" << _num;
+    temp << name() << "-ident-" << number();
     if( NULL == _audioIdent ) 
-        _audioIdent = new DMEAudioIdent( temp.str() );
+        _audioIdent = new DMEAudioIdent(temp.str());
     _audioIdent->init();
 
     reinit();
@@ -148,11 +144,12 @@ DME::update (double delta_time_sec)
     if( delta_time_sec < SGLimitsd::min() )
         return;  //paused
     char tmp[16];
-                                // Figure out the source
+    
+    // Figure out the source
     const char * source = _source_node->getStringValue();
     if (source[0] == '\0') {
         std::string branch;
-        branch = "/instrumentation/" + _name + "/frequencies/selected-mhz";
+        branch = "/instrumentation/" + name() + "/frequencies/selected-mhz";
         _source_node->setStringValue(branch.c_str());
         source = _source_node->getStringValue();
     }
@@ -176,13 +173,12 @@ DME::update (double delta_time_sec)
       _navrecord = FGNavList::findByFreq(frequency_mhz, pos, &filter);
     }
 
-
     // If it's off, don't bother.
-    if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
-		clear();
+    if (!isServiceableAndPowered()) {
+        clear();
         return;
     }
-
+    
     // If it's on, but invalid source,don't bother.
 	if (nullptr == _navrecord) {
 		clear();

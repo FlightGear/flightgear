@@ -7,8 +7,7 @@
 #ifndef __INSTRUMENTS_DME_HXX
 #define __INSTRUMENTS_DME_HXX 1
 
-#include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <Instrumentation/AbstractInstrument.hxx>
 
 // forward decls
 class FGNavRecord;
@@ -33,7 +32,7 @@ class FGNavRecord;
  * /instrumentation/"name"/indicated-ground-speed-kt
  * /instrumentation/"name"/indicated-time-kt
  */
-class DME : public SGSubsystem
+class DME : public AbstractInstrument
 {
 
 public:
@@ -48,8 +47,6 @@ public:
 private:
 	void clear();
 
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _source_node;
     SGPropertyNode_ptr _frequency_node;
 
@@ -69,10 +66,6 @@ private:
     double _time_before_search_sec;
 
     FGNavRecord * _navrecord;
-
-    std::string _name;
-
-    int _num;
 
     class AudioIdent * _audioIdent;
 };
