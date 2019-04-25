@@ -32,6 +32,7 @@
 #include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/viewer/Compositor.hxx>
 
 #include <algorithm>
@@ -130,7 +131,8 @@ relativeProjection(const osg::Matrix& P0, const osg::Matrix& R, const osg::Vec2d
 
 namespace flightgear
 {
-using namespace simgear::compositor;
+using namespace simgear;
+using namespace compositor;
 
 class CameraGroupListener : public SGPropertyChangeListener {
 public:
@@ -687,10 +689,14 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         fgGetString("/sim/rendering/default-compositor", "Compositor/default");
     std::string compositor_path =
         cameraNode->getStringValue("compositor", default_compositor.c_str());
+    osg::ref_ptr<SGReaderWriterOptions> options =
+        SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+    options->setPropertyNode(globals->get_props());
     Compositor *compositor = Compositor::create(_viewer,
                                                 window->gc,
                                                 viewport,
-                                                compositor_path);
+                                                compositor_path,
+                                                options);
     if (compositor) {
         info->compositor = compositor;
     } else {
