@@ -48,12 +48,29 @@ void AbstractInstrument::initServicePowerProperties(SGPropertyNode* node)
     if (_serviceableNode->getType() == simgear::props::NONE)
         _serviceableNode->setBoolValue(true);
     
+    _powerButtonNode = node->getChild("power-btn", 0, true);
+    
+    // if the user didn't define a node, default to true
+    if (_powerButtonNode->getType() == simgear::props::NONE)
+        _powerButtonNode->setBoolValue(true);
+    
     _powerSupplyNode = fgGetNode(_powerSupplyPath, true);
+    
+     node->tie( "operable", SGRawValueMethods<AbstractInstrument,bool>
+               ( *this, &AbstractInstrument::isServiceableAndPowered ) );
+}
+
+void AbstractInstrument::unbind()
+{
+    auto nd = fgGetNode(nodePath());
+    if (nd) {
+        nd->untie("operable");
+    }
 }
 
 bool AbstractInstrument::isServiceableAndPowered() const
 {
-    if (!_serviceableNode->getBoolValue())
+    if (!_serviceableNode->getBoolValue() || !_powerButtonNode->getBoolValue())
         return false;
     
     if (_powerSupplyNode->getDoubleValue() < _minimumSupplyVolts)

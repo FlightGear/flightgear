@@ -41,7 +41,6 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
     // property inputs
     SGPropertyNode_ptr is_valid_node;   // is station data valid (may be way out
                                         // of range.)
-    SGPropertyNode_ptr power_btn_node;
     SGPropertyNode_ptr freq_node;       // primary freq
     SGPropertyNode_ptr alt_freq_node;   // standby freq
     SGPropertyNode_ptr is_loc_freq_node;// is the primary freq a loc/gs (paired) freq?
@@ -113,7 +112,6 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
 
     // internal (private) values
 
-    bool _operable; ///< is the unit serviceable, on, powered, etc
     int play_count;
     bool _nav_search;
     double _last_freq;
@@ -167,9 +165,6 @@ class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
 
     FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
     
-    /// accessor for tied, read-only 'operable' property
-    bool isOperable() const
-      { return _operable; }
       
   // implement SGPropertyChangeListener
     virtual void valueChanged (SGPropertyNode * prop);
@@ -180,8 +175,6 @@ public:
 
     void init ();
     void reinit ();
-    void bind ();
-    void unbind ();
     void update (double dt);
 
     // Update nav/adf radios based on current postition

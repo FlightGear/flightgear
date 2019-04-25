@@ -38,12 +38,14 @@ protected:
     std::string name() const { return _name; }
     int number() const { return _index; }
     
+    void unbind() override;
 private:
     std::string _name;
     int _index = 0;
     std::string _powerSupplyPath;
     
     SGPropertyNode_ptr _serviceableNode;
+    SGPropertyNode_ptr _powerButtonNode;
     double _minimumSupplyVolts;
     SGPropertyNode_ptr _powerSupplyNode;
 };

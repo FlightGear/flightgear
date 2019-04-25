@@ -103,7 +103,6 @@ static std::unique_ptr<SGInterpTable> static_terminalRangeInterp,
 
 // Constructor
 FGNavRadio::FGNavRadio(SGPropertyNode *node) :
-    _operable(false),
     play_count(0),
     _nav_search(true),
     _last_freq(0.0),
@@ -174,8 +173,6 @@ FGNavRadio::init ()
     
     // inputs
     is_valid_node = node->getChild("data-is-valid", 0, true);
-    power_btn_node = node->getChild("power-btn", 0, true);
-    power_btn_node->setBoolValue( true );
     vol_btn_node = node->getChild("volume", 0, true);
     ident_btn_node = node->getChild("ident", 0, true);
     ident_btn_node->setBoolValue( true );
@@ -278,20 +275,6 @@ FGNavRadio::reinit ()
     _time_before_search_sec = -1.0;
 }
 
-void
-FGNavRadio::bind ()
-{
-    _radio_node->tie( "operable", SGRawValueMethods<FGNavRadio,bool>( *this, &FGNavRadio::isOperable ) );
-}
-
-
-void
-FGNavRadio::unbind ()
-{
-    _radio_node->untie("operable");
-}
-
-
 // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
 double FGNavRadio::adjustNavRange( double stationElev, double aircraftElev,
                                  double nominalRange )
@@ -379,9 +362,8 @@ FGNavRadio::update(double dt)
     return; // paused
   }
     
-  if (!isServiceableAndPowered() || !power_btn_node->getBoolValue())
+  if (isServiceableAndPowered())
   {
-    _operable = true;
     updateReceiver(dt);
     updateCDI(dt);
   } else {
@@ -426,7 +408,6 @@ void FGNavRadio::clearOutputs()
   is_valid_node->setBoolValue(false);
   nav_id_node->setStringValue("");
   
-  _operable = false;
   _navaid = NULL;
 }
 
@@ -866,8 +847,7 @@ void FGNavRadio::updateAudio( double dt )
   
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-  if (!power_btn_node->getBoolValue()
-      || !isServiceableAndPowered()
+  if (!isServiceableAndPowered()
       || !ident_btn_node->getBoolValue()
       || !audio_btn_node->getBoolValue() ) {
     _audioIdent->setIdent("", 0.0 );

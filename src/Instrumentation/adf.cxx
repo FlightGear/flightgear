@@ -96,19 +96,13 @@ ADF::init ()
     _bearing_node       = node->getChild("indicated-bearing-deg", 0, true);
     _ident_node         = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
-    _power_btn_node     = node->getChild("power-btn", 0, true);
-    _operable_node      = node->getChild("operable", 0, true);
-
+  
     // frequency properties
     SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
     _frequency_node       = fnode->getChild("selected-khz", 0, true);
 
     // foreign simulator properties
     _heading_node       = fgGetNode("/orientation/heading-deg", true);
-
-    // backward compatibility check
-    if (_power_btn_node->getType() == simgear::props::NONE) 
-      _power_btn_node->setBoolValue(true); // front end didn't implement a power button
 
     // sound support (audible ident code)
     SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
@@ -124,14 +118,11 @@ void
 ADF::update (double delta_time_sec)
 {
     // If it's off, don't waste any time.
-    if (!isServiceableAndPowered() || !_power_btn_node->getBoolValue()) {
+    if (!isServiceableAndPowered()) {
         _in_range_node->setBoolValue(false);
-        _operable_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
-
-    _operable_node->setBoolValue(true);
 
     string mode = _mode_node->getStringValue();
     if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);

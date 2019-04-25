@@ -64,8 +64,6 @@ private:
     SGPropertyNode_ptr _ident_node;
     SGPropertyNode_ptr _ident_audible_node;
     SGPropertyNode_ptr _volume_node;
-    SGPropertyNode_ptr _power_btn_node;
-    SGPropertyNode_ptr _operable_node;
 
     double _time_before_search_sec;
 
