@@ -116,8 +116,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     last_xtrack_error(0.0),
     xrate_ms(0.0),
     _localizerWidth(5.0),
-    _name(node->getStringValue("name", "nav")),
-    _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0),
     _gsCart(SGVec3d::zeros()),
     _gsAxis(SGVec3d::zeros()),
@@ -130,6 +128,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _gsNeedleDeflectionNorm(0.0),
     _audioIdent(NULL)
 {
+    readConfig(node, "nav");
+    
     if (!static_terminalRangeInterp.get()) {
     // one-time interpolator init
       SGPath path( globals->get_fg_root() );
@@ -145,8 +145,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
       static_highRangeInterp.reset(new SGInterpTable(high));
     }
   
-    string branch("/instrumentation/" + _name);
-    _radio_node = fgGetNode(branch.c_str(), _num, true);
+    string branch = nodePath();
+    _radio_node = fgGetNode(branch.c_str(), true);
 }
 
 
@@ -169,9 +169,9 @@ void
 FGNavRadio::init ()
 {
     SGPropertyNode* node = _radio_node.get();
-    bus_power_node = 
-        fgGetNode(("/systems/electrical/outputs/" + _name).c_str(), true);
-
+ 
+    initServicePowerProperties(node);
+    
     // inputs
     is_valid_node = node->getChild("data-is-valid", 0, true);
     power_btn_node = node->getChild("power-btn", 0, true);
@@ -261,7 +261,7 @@ FGNavRadio::init ()
     _magvarNode = fgGetNode("/environment/magnetic-variation-deg", true);
     
     std::ostringstream temp;
-    temp << _name << "-ident-" << _num;
+    temp << name() << "-ident-" << number();
     if( NULL == _audioIdent ) 
         _audioIdent = new VORAudioIdent( temp.str() );
     _audioIdent->init();
@@ -379,9 +379,7 @@ FGNavRadio::update(double dt)
     return; // paused
   }
     
-  if (power_btn_node->getBoolValue() 
-      && (bus_power_node->getDoubleValue() > 1.0)
-      && nav_serviceable_node->getBoolValue() )
+  if (!isServiceableAndPowered() || !power_btn_node->getBoolValue())
   {
     _operable = true;
     updateReceiver(dt);
@@ -869,7 +867,7 @@ void FGNavRadio::updateAudio( double dt )
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
   if (!power_btn_node->getBoolValue()
-      || !(bus_power_node->getDoubleValue() > 1.0)
+      || !isServiceableAndPowered()
       || !ident_btn_node->getBoolValue()
       || !audio_btn_node->getBoolValue() ) {
     _audioIdent->setIdent("", 0.0 );

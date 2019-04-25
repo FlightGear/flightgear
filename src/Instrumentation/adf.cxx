@@ -62,8 +62,6 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
 
 ADF::ADF (SGPropertyNode *node )
     :
-    _name(node->getStringValue("name", "adf")),
-    _num(node->getIntValue("number", 0)),
     _time_before_search_sec(0),
     _last_frequency_khz(-1),
     _transmitter_valid(false),
@@ -75,6 +73,7 @@ ADF::ADF (SGPropertyNode *node )
     _last_volume(-1),
     _sgr(0)
 {
+    readConfig(node, "adf");
 }
 
 ADF::~ADF ()
@@ -84,10 +83,11 @@ ADF::~ADF ()
 void
 ADF::init ()
 {
-    string branch;
-    branch = "/instrumentation/" + _name;
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    string branch = nodePath();
+    SGPropertyNode *node = fgGetNode(branch.c_str(), true );
 
+    initServicePowerProperties(node);
+    
     // instrument properties
     _error_node         = node->getChild("error-deg", 0, true);
     _mode_node          = node->getChild("mode", 0, true);
@@ -96,7 +96,6 @@ ADF::init ()
     _bearing_node       = node->getChild("indicated-bearing-deg", 0, true);
     _ident_node         = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
-    _serviceable_node   = node->getChild("serviceable", 0, true);
     _power_btn_node     = node->getChild("power-btn", 0, true);
     _operable_node      = node->getChild("operable", 0, true);
 
@@ -105,7 +104,6 @@ ADF::init ()
     _frequency_node       = fnode->getChild("selected-khz", 0, true);
 
     // foreign simulator properties
-    _electrical_node    = fgGetNode("/systems/electrical/outputs/adf", true);
     _heading_node       = fgGetNode("/orientation/heading-deg", true);
 
     // backward compatibility check
@@ -118,17 +116,15 @@ ADF::init ()
     _sgr->tie_to_listener();
 
     std::ostringstream temp;
-    temp << _name << _num;
+    temp << name() << number();
     _adf_ident = temp.str();
 }
 
 void
 ADF::update (double delta_time_sec)
 {
-                                // If it's off, don't waste any time.
-    if (_electrical_node->getDoubleValue() < 8.0
-            || !_serviceable_node->getBoolValue()
-            || !_power_btn_node->getBoolValue()     ) {
+    // If it's off, don't waste any time.
+    if (!isServiceableAndPowered() || !_power_btn_node->getBoolValue()) {
         _in_range_node->setBoolValue(false);
         _operable_node->setBoolValue(false);
         _ident_node->setStringValue("");

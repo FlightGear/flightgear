@@ -28,15 +28,15 @@
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
+
+#include <Instrumentation/AbstractInstrument.hxx>
 
 class SGSampleGroup;
 
-class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
+class FGNavRadio : public AbstractInstrument, public SGPropertyChangeListener
 {
     SGPropertyNode_ptr _radio_node;
-    SGPropertyNode_ptr bus_power_node;
 
     // property inputs
     SGPropertyNode_ptr is_valid_node;   // is station data valid (may be way out
@@ -129,9 +129,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double last_xtrack_error;
     double xrate_ms;
     double _localizerWidth; // cached localizer width in degrees
-    
-    std::string _name;
-    int _num;
 
     // internal periodic station search timer
     double _time_before_search_sec;

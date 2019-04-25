@@ -7,15 +7,9 @@
 #ifndef __INSTRUMENTS_ADF_HXX
 #define __INSTRUMENTS_ADF_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <string>
 
-#include <simgear/props/props.hxx>
-
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <Instrumentation/AbstractInstrument.hxx>
 #include <simgear/math/SGMath.hxx>
 
 class SGSampleGroup;
@@ -43,7 +37,7 @@ class SGSampleGroup;
  * /instrumentation/adf/indicated-bearing-deg
  * /instrumentation/adf/ident
  */
-class ADF : public SGSubsystem
+class ADF : public AbstractInstrument
 {
 
 public:
@@ -60,13 +54,8 @@ private:
 
     void search (double frequency, const SGGeod& pos);
 
-    std::string _name;
-    unsigned int _num;
-
     SGPropertyNode_ptr _heading_node;
-    SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _error_node;
-    SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _frequency_node;
     SGPropertyNode_ptr _mode_node;
 
