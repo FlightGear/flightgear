@@ -57,6 +57,9 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment ver
 
 project(FlightGear)
 
+# Define SRC_PARENT_DIR as the parent directory of the project source directory
+get_filename_component(SRC_PARENT_DIR ${PROJECT_SOURCE_DIR} DIRECTORY)
+
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
@@ -94,6 +97,9 @@ include( ConfigureCPack )
 # FlightGear base package path
 if (FG_DATA_DIR)
     message(STATUS "Using explicit data directory for base package: ${FG_DATA_DIR}")
+elseif(IS_DIRECTORY "${SRC_PARENT_DIR}/fgdata")
+    set(FG_DATA_DIR "${SRC_PARENT_DIR}/fgdata")
+    message(STATUS "Using data directory for base package: ${FG_DATA_DIR}")
 else()
     set(FG_DATA_DIR "${CMAKE_INSTALL_PREFIX}/lib/FlightGear" CACHE PATH "Default location where data files are located")
     message(STATUS "Using default data directory for base package:  ${FG_DATA_DIR}")
