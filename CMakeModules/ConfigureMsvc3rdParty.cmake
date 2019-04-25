@@ -1,7 +1,7 @@
 # ConfigureMsvc3rdParty.cmake - Configure 3rd Party Library Paths on Windows
 
 if (MSVC)
-    GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_BINARY_DIR} PATH)
+    get_filename_component(PARENT_DIR ${PROJECT_BINARY_DIR} DIRECTORY)
     if (CMAKE_CL_64)
         SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty.x64")
     else (CMAKE_CL_64)
@@ -52,7 +52,8 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
         # if this variable was not set by the user, set it to 3rdparty root's
         # parent dir, which is the normal location for people using our
         # windows-3rd-party repo
-        GET_FILENAME_COMPONENT(MSVC_ROOT_PARENT_DIR ${MSVC_3RDPARTY_ROOT} PATH)
+        get_filename_component(MSVC_ROOT_PARENT_DIR ${MSVC_3RDPARTY_ROOT}
+                               DIRECTORY)
         set(BOOST_INCLUDEDIR ${MSVC_ROOT_PARENT_DIR})
         message(STATUS "BOOST_INCLUDEDIR is ${BOOST_INCLUDEDIR}")
       endif()
