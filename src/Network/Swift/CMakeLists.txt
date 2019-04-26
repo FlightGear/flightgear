@@ -11,7 +11,7 @@ set(SOURCES
 	plugin.cpp
 	service.cpp
 	traffic.cpp
-	swiftaircraft.cpp
+	SwiftAircraft.cpp
 	SwiftAircraftManager.cpp
 	)
 
@@ -27,7 +27,7 @@ set(HEADERS
 	plugin.h
 	service.h
 	traffic.h
-	swiftaircraft.h
+	SwiftAircraft.h
 	SwiftAircraftManager.h
 	)
     	
