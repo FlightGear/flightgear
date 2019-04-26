@@ -216,9 +216,49 @@ void GPSTests::testDirectTo()
     
     FGPositioned::TypeFilter f{FGPositioned::VOR};
     auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
-    SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 45.0, 5.0 * SG_NM_TO_METER);
+    SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 30.0, 16.0 * SG_NM_TO_METER);
     
     setPositionAndStabilise(gps, p1);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    
+    // load into the scratch
+    gpsNode->setStringValue("scratch/query", "BDR");
+    gpsNode->setStringValue("scratch/type", "vor");
+    gpsNode->setStringValue("command", "search");
+    
+    CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("scratch/valid"));
+    
+    gpsNode->setStringValue("command", "direct");
+    setPositionAndStabilise(gps, p1);
+
+    CPPUNIT_ASSERT_EQUAL(std::string{"dto"}, std::string{gpsNode->getStringValue("mode")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLongitudeDeg(), gpsNode->getDoubleValue("wp/wp[0]/longitude-deg"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLatitudeDeg(), gpsNode->getDoubleValue("wp/wp[0]/latitude-deg"), 0.01);
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"BDR"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(16.0, gpsNode->getDoubleValue("wp/wp[1]/distance-nm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(210, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(bodrumVOR->get_lon(), gpsNode->getDoubleValue("wp/wp[1]/longitude-deg"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(bodrumVOR->get_lat(), gpsNode->getDoubleValue("wp/wp[1]/latitude-deg"), 0.01);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    
+    // move off the direct-to line, check everything works
+    
+    SGGeod p2 = SGGeodesy::direct(bodrumVOR->geod(), 35.0, 12.0 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, p2);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-5, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
+    
+    SGGeod p3 = SGGeodesy::direct(p1, 210, 6.0 * SG_NM_TO_METER);
+    SGGeod xtk = SGGeodesy::direct(p3, 120, 0.8 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, xtk);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/ourse-error-nm"), 0.1);
+    
+    SGGeod xtk2 = SGGeodesy::direct(p3, 120, -1.8 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, xtk2);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.8, gpsNode->getDoubleValue("wp/wp[1]/ourse-error-nm"), 0.1);
 }
 
 void GPSTests::testNavRadioSlave()
@@ -338,6 +378,69 @@ void GPSTests::testLegMode()
 #endif
     CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("wp/wp[1]/to-flag"));
     CPPUNIT_ASSERT_EQUAL(false, gpsNode->getBoolValue("wp/wp[1]/from-flag"));
+}
+
+void GPSTests::testDirectToLegOnFlightplan()
+{
+    setupRouteManager();
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFP(fp, "EBBR", "07L", "EGGD", "27",
+                                 "NIK COA DVR TAWNY WOD");
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    
+    CPPUNIT_ASSERT(rm->activate());
+    
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    
+    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
+    CPPUNIT_ASSERT_EQUAL(std::string{"EBBR-07L"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(65.0, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(65.0, gpsNode->getDoubleValue("desired-course-deg"), 0.5);
+    
+    // initiate a direct to
+    SGGeod p2 = fp->departureRunway()->pointOnCenterline(5.0* SG_NM_TO_METER);
+    setPositionAndStabilise(gps, p2);
+    
+    auto doverVOR = fp->legAtIndex(3)->waypoint()->source();
+    
+    double distanceToDover = SGGeodesy::distanceNm(p2, doverVOR->geod());
+    double bearingToDover = SGGeodesy::courseDeg(p2, doverVOR->geod());
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"DVR"}, doverVOR->ident());
+    gpsNode->setStringValue("scratch/ident", "DVR");
+    gpsNode->setDoubleValue("scratch/longitude-deg", doverVOR->geod().getLongitudeDeg());
+    gpsNode->setDoubleValue("scratch/latitude-deg", doverVOR->geod().getLatitudeDeg());
+
+    gpsNode->setStringValue("command", "direct");
+
+    CPPUNIT_ASSERT_EQUAL(std::string{"dto"}, std::string{gpsNode->getStringValue("mode")});
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(p2.getLongitudeDeg(), gpsNode->getDoubleValue("wp/wp[0]/longitude-deg"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(p2.getLatitudeDeg(), gpsNode->getDoubleValue("wp/wp[0]/latitude-deg"), 0.01);
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"DVR"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(distanceToDover, gpsNode->getDoubleValue("wp/wp[1]/distance-nm"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(bearingToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(doverVOR->geod().getLongitudeDeg(), gpsNode->getDoubleValue("wp/wp[1]/longitude-deg"), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(doverVOR->geod().getLatitudeDeg(), gpsNode->getDoubleValue("wp/wp[1]/latitude-deg"), 0.01);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    
 }
 
 void GPSTests::testTurnAnticipation()

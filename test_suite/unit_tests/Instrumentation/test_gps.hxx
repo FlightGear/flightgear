@@ -43,7 +43,8 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testOBSMode);
     CPPUNIT_TEST(testDirectTo);
     CPPUNIT_TEST(testLegMode);
-
+    CPPUNIT_TEST(testDirectToLegOnFlightplan);
+    
     CPPUNIT_TEST_SUITE_END();
 
     void setPositionAndStabilise(GPS* gps, const SGGeod& g);
@@ -66,6 +67,7 @@ public:
     void testOBSMode();
     void testDirectTo();
     void testLegMode();
+    void testDirectToLegOnFlightplan();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX
