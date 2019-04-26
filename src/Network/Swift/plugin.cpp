@@ -61,7 +61,7 @@ void CPlugin::startServer()
     std::string listenAddress = "tcp:host=" + ip + ",port=" + port;
     if (! m_dbusP2PServer->listen(listenAddress))
     {
-        m_service->addTextMessage("XSwiftBus startup failed!");
+        m_service->addTextMessage("FGSwiftBus startup failed!");
         return;
     }
     m_dbusP2PServer->setDispatcher(&m_dbusDispatcher);
