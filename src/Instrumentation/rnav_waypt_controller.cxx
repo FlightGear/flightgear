@@ -75,7 +75,7 @@ void WayptController::init()
 void WayptController::setDone()
 {
   if (_isDone) {
-    SG_LOG(SG_AUTOPILOT, SG_WARN, "already done @ WayptController::setDone");
+    SG_LOG(SG_AUTOPILOT, SG_DEV_WARN, "already done @ WayptController::setDone");
   }
   
   _isDone = true;
