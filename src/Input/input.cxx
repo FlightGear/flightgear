@@ -33,27 +33,24 @@
 #include "FGKeyboardInput.hxx"
 
 #if defined(ENABLE_PLIB_JOYSTICK)
-#include "FGJoystickInput.hxx"
+  #include "FGJoystickInput.hxx"
 #endif
 
 #ifdef WITH_EVENTINPUT
-#if defined( SG_WINDOWS )
-//to be developed
-//#include "FGDirectXEventInput.hxx"
-//#define INPUTEVENT_CLASS FGDirectXEventInput
-#elif defined ( SG_MAC )
-#include "FGMacOSXEventInput.hxx"
-#define INPUTEVENT_CLASS FGMacOSXEventInput
-#else
-#include "FGLinuxEventInput.hxx"
-#define INPUTEVENT_CLASS FGLinuxEventInput
-#endif
+  #if defined ( SG_MAC )
+    #include "FGMacOSXEventInput.hxx"
+    #define INPUTEVENT_CLASS FGMacOSXEventInput
+  #elif defined(SG_WINDOWS)
 
-#if defined(ENABLE_HID_INPUT)
-#include "FGHIDEventInput.hxx"
-#endif
+  #else
+    #include "FGLinuxEventInput.hxx"
+    #define INPUTEVENT_CLASS FGLinuxEventInput
+  #endif
 
-#endif
+  #if defined(ENABLE_HID_INPUT)
+    #include "FGHIDEventInput.hxx"
+  #endif
+#endif // of WITH_EVENTINPUT
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGInput.

@@ -25,6 +25,7 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 
 #include <hidapi/hidapi.h>
 #include <hidapi/hidparse.h>

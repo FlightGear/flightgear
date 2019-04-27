@@ -21,8 +21,23 @@ add_library(hidapi STATIC
     ${HIDAPI_SOURCES} 
 )
 
+# only needed for Linux, but doesn't do any harm here
 target_link_libraries(hidapi ${UDEV_LIBRARIES})
 
+if(WIN32)
+    find_library(SETUP_API_LIB Setupapi)
+	if (NOT SETUP_API_LIB)
+		message(WARNING "Failed to find Setupapi.lib")
+	endif()
+
+    target_link_libraries(hidapi ${SETUP_API_LIB})
+endif()
+
+
+if(APPLE)
+    find_library(IOKIT_FRAMEWORK IOKit)
+    target_link_libraries(hidapi ${IOKIT_FRAMEWORK})
+endif()
 
 target_include_directories(hidapi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/hidapi)
 target_include_directories(hidapi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
