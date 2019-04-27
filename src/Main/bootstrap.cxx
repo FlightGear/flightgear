@@ -134,9 +134,22 @@ static void initFPE(bool)
 #if defined(SG_WINDOWS)
 int main ( int argc, char **argv );
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                             LPSTR lpCmdLine, int nCmdShow) {
+                             LPSTR lpCmdLine, int nCmdShow) 
+{
+	// convert wchar_t args to UTF-8 which is what we expect cross-platform
+    int     numArgs  = 0;
+	LPWSTR* wideArgs = CommandLineToArgvW(GetCommandLineW(), &numArgs);
 
-  main( __argc, __argv );
+	std::vector<char*> utf8Args;
+    utf8Args.reserve(numArgs);
+
+	for (int a = 0; a < numArgs; ++a) {
+		const auto s = simgear::strutils::convertWStringToUtf8(wideArgs[a]);
+		// note we leak these (strudp calls malloc) but not a big concern
+        utf8Args[a] = strdup(s.c_str());
+	}
+
+	main(numArgs, utf8Args.data());
 }
 #endif
 
