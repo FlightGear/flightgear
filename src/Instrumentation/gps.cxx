@@ -860,6 +860,14 @@ void GPS::wp1Changed()
   } else {
     _wayptController->update(0.0);
     _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
+    
+    // synchronise these properties immediately
+    SGGeod p(_wayptController->position());
+    _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
+    _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
+    _currentWayptNode->setDoubleValue("altitude-ft", p.getElevationFt());
+      
+    _desiredCourse = getLegMagCourse();
   }
 }
 

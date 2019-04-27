@@ -688,9 +688,14 @@ void DirectToController::init()
 void DirectToController::update(double)
 {
   double courseOriginToAircraft;
-
-  courseOriginToAircraft 		= SGGeodesy::courseDeg(_origin,_rnav->position());
-
+  double az2, distanceOriginToAircraft;
+  SGGeodesy::inverse(_origin,_rnav->position(), courseOriginToAircraft, az2, distanceOriginToAircraft);
+  if (distanceOriginToAircraft < 100.0) {
+    // if we are very close to the origin point, use the target track so
+    // course deviation comes out as zero
+    courseOriginToAircraft = _targetTrack;
+  }
+    
   _courseAircraftToTarget		= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
   _distanceAircraftTargetMeter	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
