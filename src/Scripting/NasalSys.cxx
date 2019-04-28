@@ -99,9 +99,9 @@ public:
     _self(self),
     _interval(interval)
   {
-    char nm[128];
+    char nm[256];
     if (c) {
-        snprintf(nm, 128, "maketimer-%s:%d", naStr_data(naGetSourceFile(c, 0)), naGetLine(c, 0));
+        snprintf(nm, 128, "maketimer-[%p]-%s:%d", (void*)this, naStr_data(naGetSourceFile(c, 0)), naGetLine(c, 0));
     }
     else {
         snprintf(nm, 128, "maketimer-%p", this);
