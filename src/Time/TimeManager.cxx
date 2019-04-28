@@ -450,7 +450,7 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
      warp = 0;
   }
   
-  if( fgGetBool("/sim/time/warp-easing", false) ) {
+  if( fgGetBool("/sim/time/warp-easing", false) && !fgGetBool("/devices/status/keyboard/ctrl", false)) {
     double duration = fgGetDouble("/sim/time/warp-easing-duration-secs", 5.0 );
     const string easing = fgGetString("/sim/time/warp-easing-method", "swing" );
     SGPropertyNode n;
