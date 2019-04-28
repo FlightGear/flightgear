@@ -356,7 +356,8 @@ FGRenderer::FGRenderer() :
     _fogDensity( new osg::Uniform( "fg_FogDensity", 0.0001f ) ),
     _shadowNumber( new osg::Uniform( "fg_ShadowNumber", (int)4 ) ),
     _shadowDistances( new osg::Uniform( "fg_ShadowDistances", osg::Vec4f(5.0, 50.0, 500.0, 5000.0 ) ) ),
-    _depthInColor( new osg::Uniform( "fg_DepthInColor", false ) )
+    _depthInColor( new osg::Uniform( "fg_DepthInColor", false ) ),
+    MaximumTextureSize(0)
 {
     // it's not the real root, whatever that means
     _root = new osg::Group;
@@ -1555,13 +1556,18 @@ FGRenderer::update( ) {
     {
         _splash_alpha->setDoubleValue(1.0);
 
-        GLint max_texture_size;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-        // abritrary range change as sometimes during init the device reports somewhat dubious values, so 
-        // we know that the size must be greater than size and that probably 9999999 is unreasonably large
-        if (max_texture_size > 0 && max_texture_size < 9999999)
-            SGSceneFeatures::instance()->setMaxTextureSize(max_texture_size);
-
+        if (!MaximumTextureSize) {
+            osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+            if (guiCamera) {
+                GraphicsContext *gc = guiCamera->getGraphicsContext();
+                osg::GLExtensions* gl2ext = gc->getState()->get<osg::GLExtensions>();
+                if (gl2ext) {
+                    MaximumTextureSize = gl2ext->maxTextureSize;
+                    SGSceneFeatures::instance()->setMaxTextureSize(MaximumTextureSize);
+                    SG_LOG(SG_VIEW, SG_INFO, "FGRenderer:: Maximum texture size " << MaximumTextureSize);
+                }
+            }
+        }
         return;
     }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();

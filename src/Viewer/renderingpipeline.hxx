@@ -86,6 +86,7 @@ public:
 
     std::vector<osg::ref_ptr<Buffer> > buffers;
     std::vector<osg::ref_ptr<Stage> > stages;
+    int MaximumTextureSize;
 
     friend FGRenderingPipeline* flightgear::makeRenderingPipeline(const std::string& name,
                    const simgear::SGReaderWriterOptions* options);

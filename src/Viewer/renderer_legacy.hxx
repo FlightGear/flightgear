@@ -151,6 +151,7 @@ protected:
     size_t _numCascades;
     float _cascadeFar[4];
     bool _useColorForDepth;
+    int MaximumTextureSize;
 
     typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
     SGPropertyChangeListenerVec _listeners;
