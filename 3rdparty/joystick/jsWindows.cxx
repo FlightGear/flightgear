@@ -179,7 +179,7 @@ jsJoystick::jsJoystick ( int ident )
   id = ident ;
   os = new struct os_specific_s;
 
-  if (ident >= 0 && ident < (int)joyGetNumDevs()) {
+  if (ident >= 0 && static_cast<unsigned int>(ident) < joyGetNumDevs()) {
         os->js_id = JOYSTICKID1 + ident;
         open();
   }
