@@ -21,10 +21,13 @@
      $Id: jsWindows.cxx 2164 2011-01-22 22:47:30Z fayjf $
 */
 
+#include <string>
+
 #include "js.h"
 
 #include <Windows.h>
 
+#include <cassert>
 #include <cstring>
 #include <RegStr.h> // for REGSTR_PATH_JOYCONFIG, etc
 #include <simgear/debug/logstream.hxx>
@@ -38,7 +41,23 @@ struct os_specific_s {
   static bool getOEMProductName ( jsJoystick* joy, char *buf, int buf_sz ) ;
 };
 
+// Give a human-readable interpretation of joyGetDevCaps()'s return value
+static std::string joyGetDevCaps_errorString(MMRESULT errorCode)
+{
+  switch (errorCode) {
+  case MMSYSERR_NODRIVER:
+    return "joystick driver not present, or specified joystick identifier is "
+           "invalid";
+  case MMSYSERR_INVALPARAM:
+    return "invalid parameter passed to joyGetDevCaps()";
+  case JOYERR_NOERROR:
+    return "no error";
+  default:
+    assert(false);
+  }
 
+  return "bug: the program should not get here";
+}
 
 // Inspired by
 // http://msdn.microsoft.com/archive/en-us/dnargame/html/msdn_sidewind3d.asp
@@ -119,11 +138,21 @@ void jsJoystick::open ()
 
   memset ( &(os->jsCaps), 0, sizeof(os->jsCaps) ) ;
 
-  error = ( joyGetDevCaps( os->js_id, &(os->jsCaps), sizeof(os->jsCaps) )
-                 != JOYERR_NOERROR ) ;
+  const auto joyGetDevCaps_res = joyGetDevCaps(os->js_id, &(os->jsCaps),
+                                               sizeof(os->jsCaps));
+  error = (joyGetDevCaps_res != JOYERR_NOERROR);
+
+  if (error) {
+    SG_LOG(SG_INPUT, SG_DEBUG,
+           "joyGetDevCaps reported: "
+           << joyGetDevCaps_errorString(joyGetDevCaps_res));
+  }
+
   num_buttons = os->jsCaps.wNumButtons ;
   if ( os->jsCaps.wNumAxes == 0 )
   {
+    SG_LOG(SG_INPUT, SG_DEBUG,
+           "Joystick reported zero axes currently in use (JOYCAPS.wNumAxes)");
     num_axes = 0 ;
     setError () ;
   }
@@ -184,6 +213,8 @@ jsJoystick::jsJoystick ( int ident )
         open();
   }
   else {
+        SG_LOG(SG_INPUT, SG_DEBUG,
+               "Joystick identifier not in the range of valid ids");
         num_axes = 0;
         setError();
   }
