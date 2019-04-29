@@ -186,9 +186,13 @@ bool CService::getTaxiLightsOn() const
 	return fgGetBool("/controls/lighting/taxi-light"); 
 }
 
-double CService::getQNH() const 
+double CService::getPressAlt() const 
 { 
-	return fgGetDouble("/environment/pressure-sea-level-inhg"); 
+	if (fgGetBool("/instrumentation/altimeter/serviceable")){
+		return fgGetDouble("/instrumentation/altimeter/pressure-alt-ft");
+	} else {
+		return fgGetDouble("/position/altitude-ft");
+	}
 }
 
 void CService::setCom1Active(int freq) 
@@ -303,7 +307,7 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
                 double       pitch       = getPitch();
                 double       roll        = getRoll();
                 double       trueHeading = getTrueHeading();
-                double       qnh         = getQNH();
+                double       pressAlt    = getPressAlt();
                 CDBusMessage reply       = CDBusMessage::createReply(sender, serial);
                 reply.beginArgumentWrite();
                 reply.appendArgument(lat);
@@ -313,7 +317,7 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
                 reply.appendArgument(pitch);
                 reply.appendArgument(roll);
                 reply.appendArgument(trueHeading);
-                reply.appendArgument(qnh);
+                reply.appendArgument(pressAlt);
                 sendDBusMessage(reply);
             });
         } else if (message.getMethodName() == "getAircraftModelPath") {
@@ -428,9 +432,9 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
             queueDBusCall([=]() {
                 sendDBusReply(sender, serial, getTaxiLightsOn());
             });
-        } else if (message.getMethodName() == "getQNHInHg") {
+        } else if (message.getMethodName() == "getPressAlt") {
             queueDBusCall([=]() {
-                sendDBusReply(sender, serial, getQNH());
+                sendDBusReply(sender, serial, getPressAlt());
             });
         } else if (message.getMethodName() == "setCom1ActiveKhz") {
             maybeSendEmptyDBusReply(wantsReply, sender, serial);

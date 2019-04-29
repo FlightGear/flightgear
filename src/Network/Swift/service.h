@@ -154,8 +154,8 @@ public:
     //! Get whether taxi lights are on
     bool getTaxiLightsOn() const;
 
-    //! Get barometric pressure at sea level in inches of mercury.
-    double getQNH() const;
+    //! Get pressure altitude in ft
+    double getPressAlt() const;
 
     //! Set the current COM1 active frequency in kHz
     void setCom1Active(int freq);
