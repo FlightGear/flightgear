@@ -64,6 +64,9 @@ public:
     //! DBus object path
     static const std::string& ObjectPath();
 
+    //! Getting flightgear version
+    static std::string getVersionNumber();
+
     ////! Add a text message to the on-screen display, with RGB components in the range [0,1]
     void addTextMessage(const std::string& text);
 

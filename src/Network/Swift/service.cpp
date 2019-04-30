@@ -49,6 +49,12 @@ const std::string& CService::ObjectPath()
     return s;
 }
 
+// Static method
+std::string CService::getVersionNumber()
+{
+    return fgGetString("/sim/version/flightgear");
+}
+
 void CService::addTextMessage(const std::string& text)
 {
     if (text.empty()) { return; }
@@ -319,6 +325,10 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
                 reply.appendArgument(trueHeading);
                 reply.appendArgument(pressAlt);
                 sendDBusMessage(reply);
+            });
+        } else if (message.getMethodName() == "getVersionNumber") {
+            queueDBusCall([=]() {
+                sendDBusReply(sender, serial, getVersionNumber());
             });
         } else if (message.getMethodName() == "getAircraftModelPath") {
             queueDBusCall([=]() {
