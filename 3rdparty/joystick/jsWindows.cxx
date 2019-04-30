@@ -27,10 +27,11 @@
 
 #include <Windows.h>
 
-#include <cassert>
 #include <cstring>
 #include <RegStr.h> // for REGSTR_PATH_JOYCONFIG, etc
+
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 #define _JS_MAX_AXES_WIN 8  /* X,Y,Z,R,U,V,POV_X,POV_Y */
 
@@ -53,10 +54,14 @@ static std::string joyGetDevCaps_errorString(MMRESULT errorCode)
   case JOYERR_NOERROR:
     return "no error";
   default:
-    assert(false);
+    throw sg_exception(
+      "Unexpected value passed to joyGetDevCaps_errorString(): "
+      + std::to_string(errorCode));
   }
 
-  return "bug: the program should not get here";
+  throw sg_exception("This code path should be unreachable; value "
+                     "passed to joyGetDevCaps_errorString(): "
+                     + std::to_string(errorCode));
 }
 
 // Inspired by
