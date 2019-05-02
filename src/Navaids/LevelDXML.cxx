@@ -222,7 +222,9 @@ void NavdataVisitor::endElement(const char* name)
     _overflightWaypt = (_text == "Fly-over");
   } else if ((tag == "AltitudeCons") ||
              (tag == "BankLimit") ||
-             (tag == "Sp_Turn"))
+             (tag == "Sp_Turn") ||
+             (tag == "Airport") ||
+             (tag == "ProceduresDB"))
   {
     // ignored but don't warn
   } else {
