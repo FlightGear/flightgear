@@ -37,6 +37,7 @@
 #include <simgear/nasal/cppbind/to_nasal.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include "NasalAddons.hxx"
 #include "NasalSGPath.hxx"
@@ -208,6 +209,35 @@ static void f_timerObj_setSimTime(TimerObj& timer, naContext c, naRef value)
 
     timer.setSimTime(nasal::from_nasal<bool>(c, value));
 }
+////////////////////
+/// Timestamp - used to provide millisecond based timing of operations. See SGTimeStamp
+class TimeStampObj : public SGReferenced
+{
+public:
+    TimeStampObj(Context *c, FGNasalSys* sys) :
+        _sys(sys)
+    {
+    }
+
+    virtual ~TimeStampObj()
+    {
+    }
+
+    void stamp()
+    {
+        timestamp.stamp();
+    }
+    int elapsedMSec()
+    {
+        return timestamp.elapsedMSec();
+    }
+private:
+    SGTimeStamp timestamp;
+    FGNasalSys* _sys;
+};
+
+typedef SGSharedPtr<TimeStampObj> TimeStampObjRef;
+typedef nasal::Ghost<TimeStampObjRef> NasalTimeStampObj;
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -556,6 +586,12 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
   return nasal::to_nasal(c, timerObj);
 }
 
+static naRef f_maketimeStamp(naContext c, naRef me, int argc, naRef* args)
+{
+    TimeStampObj* timeStampObj = new TimeStampObj(c, nasalSys);
+    return nasal::to_nasal(c, timeStampObj);
+}
+
 // setlistener(func, property, bool) extension function.  Falls through to
 // FGNasalSys::setListener().  See there for docs.
 static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
@@ -878,6 +914,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "parse_markdown", f_parse_markdown },
     { "md5", f_md5 },
     { "systime", f_systime },
+    { "maketimestamp", f_maketimeStamp},
     { 0, 0 }
 };
 
@@ -945,6 +982,11 @@ void FGNasalSys::init()
       .member("singleShot", &TimerObj::isSingleShot, &TimerObj::setSingleShot)
       .member("simulatedTime", &TimerObj::isSimTime, &f_timerObj_setSimTime)
       .member("isRunning", &TimerObj::isRunning);
+
+    NasalTimeStampObj::init("TimeStamp")
+        .method("stamp", &TimeStampObj::stamp)
+        .method("elapsedMSec", &TimeStampObj::elapsedMSec)
+        ;
 
     flightgear::addons::initAddonClassesForNasal(_globals, _context);
 
