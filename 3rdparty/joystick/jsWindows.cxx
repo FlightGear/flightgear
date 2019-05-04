@@ -51,12 +51,20 @@ static std::string joyGetDevCaps_errorString(MMRESULT errorCode)
            "invalid";
   case MMSYSERR_INVALPARAM:
     return "invalid parameter passed to joyGetDevCaps()";
+  // joyGetDevCaps() appears to return undocumented values, see
+  // https://sourceforge.net/p/flightgear/mailman/message/36657149/
+  case MMSYSERR_BADDEVICEID:    // fallthrough
+  case JOYERR_PARMS:
+    return "invalid joystick identifier";
+  case JOYERR_UNPLUGGED:
+    return "joystick not connected to the system";
   case JOYERR_NOERROR:
     return "no error";
   default:
-    throw sg_exception(
-      "Unexpected value passed to joyGetDevCaps_errorString(): "
-      + std::to_string(errorCode));
+    // Don't throw an exception, since joyGetDevCaps()'s documentation isn't
+    // correct (we can't be sure to have covered all possible return values).
+    return "unexpected value passed to joyGetDevCaps_errorString(): "
+           + std::to_string(errorCode);
   }
 
   throw sg_exception("This code path should be unreachable; value "
