@@ -211,12 +211,15 @@ static void f_timerObj_setSimTime(TimerObj& timer, naContext c, naRef value)
 }
 ////////////////////
 /// Timestamp - used to provide millisecond based timing of operations. See SGTimeStamp
+////
+/// 0.373404us to perform elapsedUSec from Nasal : Tested i7-4790K, Win64 
 class TimeStampObj : public SGReferenced
 {
 public:
     TimeStampObj(Context *c, FGNasalSys* sys) :
         _sys(sys)
     {
+        timestamp.stamp();
     }
 
     virtual ~TimeStampObj()
@@ -227,9 +230,13 @@ public:
     {
         timestamp.stamp();
     }
-    int elapsedMSec()
+    double elapsedMSec()
     {
         return timestamp.elapsedMSec();
+    }
+    double elapsedUSec()
+    {
+        return timestamp.elapsedUSec();
     }
 private:
     SGTimeStamp timestamp;
@@ -986,6 +993,7 @@ void FGNasalSys::init()
     NasalTimeStampObj::init("TimeStamp")
         .method("stamp", &TimeStampObj::stamp)
         .method("elapsedMSec", &TimeStampObj::elapsedMSec)
+        .method("elapsedUSec", &TimeStampObj::elapsedUSec)
         ;
 
     flightgear::addons::initAddonClassesForNasal(_globals, _context);
