@@ -61,9 +61,7 @@ set(HEADERS
     models/FGOutput.h
     models/FGPropagate.h
     models/FGPropulsion.h
-    models/atmosphere/FGMSIS.h
     models/atmosphere/FGStandardAtmosphere.h
-    models/atmosphere/FGMars.h
     models/atmosphere/FGWinds.h
     models/flight_control/FGAccelerometer.h
     models/flight_control/FGActuator.h
@@ -154,10 +152,7 @@ set(SOURCES
     models/FGOutput.cpp
     models/FGPropagate.cpp
     models/FGPropulsion.cpp
-    models/atmosphere/FGMSIS.cpp
-    models/atmosphere/FGMSISData.cpp
     models/atmosphere/FGStandardAtmosphere.cpp
-    models/atmosphere/FGMars.cpp
     models/atmosphere/FGWinds.cpp
     models/flight_control/FGAccelerometer.cpp
     models/flight_control/FGActuator.cpp
