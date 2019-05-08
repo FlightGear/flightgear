@@ -707,8 +707,8 @@ bool FGJSBsim::copy_to_JSBsim()
 
     Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
     Atmosphere->SetPressureSL(FGAtmosphere::eInchesHg, pressureSL->getDoubleValue());
-    // static_cast<FGStandardAtmosphere*>(Atmosphere)->SetDewPoint(FGAtmosphere::eCelsius,
-    //                                                             dew_point->getDoubleValue());
+    static_cast<FGStandardAtmosphere*>(Atmosphere)->SetDewPoint(FGAtmosphere::eCelsius,
+                                                                dew_point->getDoubleValue());
 
     Winds->SetTurbType((FGWinds::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
     switch( Winds->GetTurbType() ) {
