@@ -504,7 +504,7 @@ TCAS::AdvisoryCoordinator::update(int mode)
     }
 
     /* [TCASII]: "Aural annunciations are inhibited below 500+/-100 feet AGL." */
-    if ((tcas->threatDetector.getRadarAlt() > 500)&&
+    if ((tcas->threatDetector.getRadarAlt() > tcas->_TAInhbAlt) &&
         (mode >= SwitchTaOnly))
         tcas->annunciator.trigger(current, revertedRA);
     else
@@ -633,7 +633,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
     currentThreat.relativeAltitudeFt = altFt - self.pressureAltFt;
 
     // save computation time: don't care when relative altitude is excessive
-    if (fabs(currentThreat.relativeAltitudeFt) > 10000)
+    if (fabs(currentThreat.relativeAltitudeFt) > tcas->_verticalRange)
         return threatLevel;
 
     // position data of current intruder
@@ -645,7 +645,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
     calcRangeBearing(self.lat, self.lon, lat, lon, distanceNm, bearing);
 
     // save computation time: don't care for excessive distances (also captures NaNs...)
-    if ((distanceNm > 10)||(distanceNm < 0))
+    if ((distanceNm > tcas->_lateralRange) || (distanceNm < 0))
         return threatLevel;
 
     currentThreat.verticalFps = pModel->getDoubleValue("velocities/vertical-speed-fps");
@@ -653,8 +653,8 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
     /* Detect proximity targets
      * [TCASII]: "Any target that is less than 6 nmi in range and within +/-1200ft
      *  vertically, but that does not meet the intruder or threat criteria." */
-    if ((distanceNm < 6)&&
-        (fabs(currentThreat.relativeAltitudeFt) < 1200))
+    if ((distanceNm < tcas->_proxLatRange) &&
+        (fabs(currentThreat.relativeAltitudeFt) < tcas->_proxVertRange))
     {
         // at least a proximity target
         threatLevel = ThreatProximity;
@@ -1050,13 +1050,13 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
     {
         /* [TCASII]: "... less than 360 feet, TCAS considers the reporting aircraft
          *   to be on the ground. If TCAS determines the intruder to be on the ground, it
-         *   inhibits the generation of advisories against this aircraft."*/
-        if (altFt < 360)
+         * New custom logic for the A320 - if enabled explicitly this will only occur if your altitude is less than 1700 */
+        if ((altFt < tcas->_intruderInhbAlt) && (!tcas->_intruderInhbSelfAltToggle || pSelf->radarAltFt < tcas->_intruderInhbSelfAlt))
             threatLevel = ThreatTA;
 
         /* [EUROACAS]: "Certain RAs are inhibited at altitudes based on inputs from the radio altimeter:
          *   [..] (c)1000ft (+/- 100ft) and below, all RAs are inhibited;" */
-        if (pSelf->radarAltFt < 1000)
+        if (pSelf->radarAltFt < tcas->_RAInhbAlt)
             threatLevel = ThreatTA;
         
         // RAs only issued in mode "Auto" (= "TA/RA" mode)
@@ -1124,7 +1124,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
         /* [TCASII]: "TCAS is designed to inhibit Increase Descent RAs below 1450 feet AGL; */
         
         /* [TCASII]: "Descend RAs below 1100 feet AGL;" (inhibited) */
-        if (pSelf->radarAltFt < 1100)
+        if (pSelf->radarAltFt < tcas->_DesInhbAlt)
         {
             RA &= ~AdvisoryDescend;
             //TODO Support "Do not descend" RA
@@ -1152,6 +1152,17 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
 TCAS::TCAS(SGPropertyNode* pNode) :
     name("tcas"),
     num(0),
+	_verticalRange(10000),
+	_lateralRange(10),
+	_proxVertRange(1200),
+	_proxLatRange(6),
+	_incDesInhbAlt(1450),
+	_DesInhbAlt(1100),
+	_RAInhbAlt(1000),
+	_TAInhbAlt(500),
+	_intruderInhbAlt(360),
+	_intruderInhbSelfAltToggle(false),
+	_intruderInhbSelfAlt(1700),
     nextUpdateTime(0),
     selfTestStep(0),
     properties_handler(this),
@@ -1166,11 +1177,38 @@ TCAS::TCAS(SGPropertyNode* pNode) :
         SGPropertyNode* pChild = pNode->getChild(i);
         string cname = pChild->getName();
         string cval = pChild->getStringValue();
+        int cintval = pChild->getIntValue();
 
+		if (cintval < 0 || cintval == NULL) {
+            SG_LOG(SG_INSTR, SG_WARN, "Error in TCAS config logic: value less than zero or nil. Skipping!");
+        }
+		
         if (cname == "name")
             name = cval;
         else if (cname == "number")
-            num = pChild->getIntValue();
+            num = cintval;
+        else if (cname == "vertical-range" && cintval > 0)
+            _verticalRange = cintval;
+        else if (cname == "lateral-range" && cintval > 0)
+            _lateralRange = cintval;
+        else if (cname == "prox-vertical-range" && cintval > 0)
+            _proxVertRange = cintval;
+        else if (cname == "prox-lateral-range" && cintval > 0)
+            _proxLatRange = cintval;
+        else if (cname == "inc-des-inhb-alt" && cintval > 0)
+            _incDesInhbAlt = cintval;
+        else if (cname == "des-inhb-alt" && cintval > 0)
+            _DesInhbAlt = cintval;
+        else if (cname == "ra-inhb-alt" && cintval > 0)
+            _RAInhbAlt = cintval;
+        else if (cname == "ta-inhb-alt" && cintval > 0)
+            _TAInhbAlt = cintval;
+        else if (cname == "intruder-inhb-alt" && cintval > 0)
+            _intruderInhbAlt = cintval;
+        else if (cname == "intruder-use-self-alt")
+            _intruderInhbSelfAltToggle = pChild->getBoolValue();
+        else if (cname == "intruder-self-alt" && cintval > 0)
+            _intruderInhbSelfAlt = cintval;
         else
         {
             SG_LOG(SG_INSTR, SG_WARN, "Error in TCAS config logic");

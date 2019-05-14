@@ -387,6 +387,20 @@ public:
     virtual void init   (void);
     virtual void reinit (void);
     virtual void update (double dt);
+
+	
+    /* configuration options */
+    int  _verticalRange;
+    int  _lateralRange;
+    int  _proxVertRange;
+    int  _proxLatRange;
+    int  _incDesInhbAlt;
+    int  _DesInhbAlt;
+    int  _RAInhbAlt;
+    int  _TAInhbAlt;
+    int  _intruderInhbAlt;
+    bool _intruderInhbSelfAltToggle;
+    int  _intruderInhbSelfAlt;
 };
 
 #ifdef _MSC_VER
