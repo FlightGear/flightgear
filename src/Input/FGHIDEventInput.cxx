@@ -342,8 +342,10 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
 {
     _hidPath = devInfo->path;
 
-    std::wstring manufacturerName,
-        productName = std::wstring(devInfo->product_string);
+    std::wstring manufacturerName, productName;
+    productName = devInfo->product_string ? std::wstring(devInfo->product_string)
+                                          : L"unknown HID device";
+    
     if (devInfo->manufacturer_string) {
         manufacturerName = std::wstring(devInfo->manufacturer_string);
         SetName(simgear::strutils::convertWStringToUtf8(manufacturerName) + " " +
