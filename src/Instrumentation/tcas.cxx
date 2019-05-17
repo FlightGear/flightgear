@@ -1187,27 +1187,27 @@ TCAS::TCAS(SGPropertyNode* pNode) :
             name = cval;
         else if (cname == "number")
             num = cintval;
-        else if (cname == "vertical-range" && cintval > 0)
+        else if (cname == "vertical-range-ft" && cintval > 0)
             _verticalRange = cintval;
-        else if (cname == "lateral-range" && cintval > 0)
+        else if (cname == "lateral-range-nm" && cintval > 0)
             _lateralRange = cintval;
-        else if (cname == "prox-vertical-range" && cintval > 0)
+        else if (cname == "proximate-vertical-range-ft" && cintval > 0)
             _proxVertRange = cintval;
-        else if (cname == "prox-lateral-range" && cintval > 0)
+        else if (cname == "proximate-lateral-range-nm" && cintval > 0)
             _proxLatRange = cintval;
-        else if (cname == "inc-des-inhb-alt" && cintval > 0)
+        else if (cname == "increase-descent-inhibit-alt-ft" && cintval > 0)
             _incDesInhbAlt = cintval;
-        else if (cname == "des-inhb-alt" && cintval > 0)
+        else if (cname == "descend-inhibit-alt-ft" && cintval > 0)
             _DesInhbAlt = cintval;
-        else if (cname == "ra-inhb-alt" && cintval > 0)
+        else if (cname == "ra-inhibit-alt-ft" && cintval > 0)
             _RAInhbAlt = cintval;
-        else if (cname == "ta-inhb-alt" && cintval > 0)
+        else if (cname == "ta-inhibit-alt-ft" && cintval > 0)
             _TAInhbAlt = cintval;
-        else if (cname == "intruder-inhb-alt" && cintval > 0)
+        else if (cname == "intruder-inhibit-alt-ft" && cintval > 0)
             _intruderInhbAlt = cintval;
-        else if (cname == "intruder-use-self-alt")
+        else if (cname == "intruder-use-own-alt")
             _intruderInhbSelfAltToggle = pChild->getBoolValue();
-        else if (cname == "intruder-self-alt" && cintval > 0)
+        else if (cname == "intruder-minimum-own-alt-ft" && cintval > 0)
             _intruderInhbSelfAlt = cintval;
         else
         {
