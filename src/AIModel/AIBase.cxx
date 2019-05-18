@@ -87,6 +87,12 @@ public:
             _hasInteriorPath = true;
         }
 
+        // save radius of loaded model for updating LOD
+        auto bs = n->getBound();
+        if (bs.valid()) {
+            _radius = bs.radius();
+        }
+
         _fxpath = prop->getStringValue("sound/path");
         _nasal[path] = std::unique_ptr<FGNasalModelDataProxy>(new FGNasalModelDataProxy(_root));
         _nasal[path]->modelLoaded(path, prop, n);
@@ -106,6 +112,7 @@ public:
     bool getInteriorLoaded(void) { return _interiorLoaded;}
     bool hasInteriorPath(void) { return _hasInteriorPath;}
     inline std::string& getInteriorPath() { return _interiorPath; }
+    inline float getRadius() { return _radius; }
 private:
     std::string _fxpath;
     std::string _interiorPath;
@@ -116,6 +123,7 @@ private:
     bool _initialized = false;
     bool _hasInteriorPath = false;
     bool _interiorLoaded = false;
+    float _radius = -1.0;
     SGPropertyNode* _root;
 };
 
@@ -290,6 +298,16 @@ void FGAIBase::update(double dt) {
         // process deferred nasal initialization,
         // which must be done in main thread
         _modeldata->init();
+
+        // update LOD radius from loaded modeldata
+        auto radius = _modeldata->getRadius();
+        if (radius > 0) {
+            _model->setRadius(radius);
+            _model->dirtyBound();
+        }
+        else {
+            SG_LOG(SG_AI, SG_WARN, "AIBase: model radius not set.");
+        }
 
         // sound initialization
         if (fgGetBool("/sim/sound/aimodels/enabled",false))
