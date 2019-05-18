@@ -297,8 +297,14 @@ void FGAIBase::update(double dt) {
         _modeldata->init();
 
         // update LOD radius from loaded modeldata
-        _model->setRadius(_modeldata->getRadius());
-        _model->dirtyBound();
+        auto radius = _modeldata->getRadius();
+        if (radius > 0) {
+            _model->setRadius(radius);
+            _model->dirtyBound();
+        }
+        else {
+            SG_LOG(SG_AI, SG_WARN, "AIBase: model radius not set.");
+        }
 
         // sound initialization
         if (fgGetBool("/sim/sound/aimodels/enabled",false))
