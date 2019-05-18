@@ -394,6 +394,18 @@ void FGSubmodelMgr::transform(submodel *sm)
     userpos.setLongitudeDeg(IC.lon);
     userpos.setElevationFt(IC.alt);
 
+    if (sm->offsets_in_meter) {
+        _x_offset = -sm->x_offset->get_value() * SG_METER_TO_FEET;
+        _y_offset =  sm->y_offset->get_value() * SG_METER_TO_FEET;
+        _z_offset =  sm->z_offset->get_value() * SG_METER_TO_FEET;
+    }
+    else {
+        _x_offset = sm->x_offset->get_value();
+        _y_offset = sm->y_offset->get_value();
+        _z_offset = sm->z_offset->get_value();
+    }
+    
+    // this updates the 'offsetpos' member of us
     setOffsetPos(sm);
 
     // Compute initial orientation using yaw and pitch offsets and parent's orientation
