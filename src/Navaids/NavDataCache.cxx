@@ -26,6 +26,7 @@
 // std
 #include <cstddef>  // for std::size_t
 #include <map>
+#include <cstring>  // for memcoy
 #include <cassert>
 #include <stdint.h> // for int64_t
 #include <sstream>  // for std::ostringstream

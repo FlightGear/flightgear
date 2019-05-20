@@ -25,6 +25,7 @@
 // std
 #include <map>
 #include <fstream>
+#include <cstring>
 #include <cassert>
 #include <algorithm>
 

@@ -24,6 +24,7 @@
 
 #include <map>
 #include <set>
+#include <cstring> // strcmp
 #include <algorithm> // for sort
 #include <queue>
 #include <memory>
