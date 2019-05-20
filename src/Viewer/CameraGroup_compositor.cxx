@@ -830,23 +830,66 @@ osg::Camera* getGUICamera(CameraGroup* cgroup)
     return cgroup->getGUICamera()->compositor->getPass(0)->camera;
 }
 
+static bool
+computeCameraIntersection(const CameraGroup *cgroup,
+                          const CameraInfo *cinfo,
+                          const osg::Vec2d &windowPos,
+                          osgUtil::LineSegmentIntersector::Intersections &intersections)
+{
+    if (!(cinfo->flags & CameraInfo::DO_INTERSECTION_TEST))
+        return false;
+
+    const osg::Viewport *viewport = cinfo->compositor->getViewport();
+    SGRect<double> viewportRect(viewport->x(), viewport->y(),
+                                viewport->x() + viewport->width() - 1.0,
+                                viewport->y() + viewport->height()- 1.0);
+    double epsilon = 0.5;
+    if (!viewportRect.contains(windowPos.x(), windowPos.y(), epsilon))
+        return false;
+
+    osg::Vec4d start(windowPos.x(), windowPos.y(), 0.0, 1.0);
+    osg::Vec4d end(windowPos.x(), windowPos.y(), 1.0, 1.0);
+    osg::Matrix windowMat = viewport->computeWindowMatrix();
+    osg::Matrix invViewMat = osg::Matrix::inverse(cinfo->viewMatrix);
+    osg::Matrix invProjMat = osg::Matrix::inverse(cinfo->projMatrix * windowMat);
+    start = start * invProjMat;
+    end = end * invProjMat;
+    start /= start.w();
+    end /= end.w();
+    start = start * invViewMat;
+    end = end * invViewMat;
+
+    osg::ref_ptr<osgUtil::LineSegmentIntersector> picker =
+        new osgUtil::LineSegmentIntersector(osgUtil::Intersector::MODEL,
+                                            osg::Vec3d(start.x(), start.y(), start.z()),
+                                            osg::Vec3d(end.x(), end.y(), end.z()));
+    osgUtil::IntersectionVisitor iv(picker);
+    iv.setTraversalMask(simgear::PICK_BIT);
+
+    const_cast<CameraGroup *>(cgroup)->getViewer()->getCamera()->accept(iv);
+    if (picker->containsIntersections()) {
+        intersections = picker->getIntersections();
+        return true;
+    }
+
+    return false;
+}
+
 bool computeIntersections(const CameraGroup* cgroup,
                           const osg::Vec2d& windowPos,
                           osgUtil::LineSegmentIntersector::Intersections& intersections)
 {
     // test the GUI first
     CameraInfo* guiCamera = cgroup->getGUICamera();
-    if (guiCamera && guiCamera->compositor->computeIntersection(windowPos, intersections))
+    if (guiCamera && computeCameraIntersection(cgroup, guiCamera, windowPos, intersections))
         return true;
 
     // Find camera that contains event
-    for (const auto &info : cgroup->_cameras) {
-        if (info == guiCamera)
-            continue;
-        if (!(info->flags & CameraInfo::DO_INTERSECTION_TEST))
+    for (const auto &cinfo : cgroup->_cameras) {
+        if (cinfo == guiCamera)
             continue;
 
-        if (info->compositor->computeIntersection(windowPos, intersections))
+        if (computeCameraIntersection(cgroup, cinfo, windowPos, intersections))
             return true;
     }
 
