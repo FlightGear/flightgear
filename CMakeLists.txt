@@ -271,15 +271,19 @@ endif(EVENT_INPUT)
 if (ENABLE_SWIFT)
     message(STATUS "SWIFT support requested, checking for DBus/libEvent")
     # DBUS
-    find_package(DBus REQUIRED)
-    list(APPEND PLATFORM_LIBS ${DBUS_LIBRARIES})
+    find_package(DBus)
 
     #libevent
-    find_package(LibEvent REQUIRED)
-    list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
+    find_package(LibEvent)
 
-    if (NOT DBUS_LIBRARIES OR NOT LIBEVENT_LIB)
-        message(FATAL_ERROR "SWIFT support requested, please ensure DBus/libEvent are available")
+    if (DBUS_LIBRARIES AND DBUS_INCLUDE_DIRS AND LIBEVENT_LIB AND LIBEVENT_INCLUDE_DIR)
+    list(APPEND PLATFORM_LIBS ${DBUS_LIBRARIES})
+    list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
+    include_directories(${DBUS_INCLUDE_DIRS}
+    ${LIBEVENT_INCLUDE_DIR})
+    else()
+        message(WARNING "SWIFT support requested, but dbus and/or LibEvent not found. Swift support is disabled")
+        set(ENABLE_SWIFT 0)
     endif()
 endif()
 
@@ -521,9 +525,7 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${SIMGEAR_INCLUDE_DIRS}
     ${PLIB_INCLUDE_DIR}
-    ${SQLITE3_INCLUDED_DIR}
-    ${DBUS_INCLUDE_DIRS}
-    ${LIBEVENT_INCLUDE_DIR}	)
+    ${SQLITE3_INCLUDED_DIR} )
 
 if (USE_AEONWAVE)
     find_package(AAX REQUIRED)
