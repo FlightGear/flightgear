@@ -205,7 +205,7 @@ option(ENABLE_DEMCONVERT "Set to ON to build the dem conversion tool (default)" 
 option(ENABLE_HID_INPUT  "Set to ON to build HID-based input code" ON)
 option(ENABLE_PLIB_JOYSTICK  "Set to ON to enable legacy joystick code (default)" ON)
 option(ENABLE_COMPOSITOR "Set to ON to enable the Compositor-based Viewer" OFF)
-option(ENABLE_SWIFT      "Set to ON to build the swift module" OFF)
+option(ENABLE_SWIFT      "Set to ON to build the swift module" ON)
 
 
 # Test-suite options.
@@ -258,7 +258,7 @@ if(EVENT_INPUT)
             message(STATUS "event-based input enabled. Using ${UDEV_LIBRARIES}")
         endif()
     else()
-        # Windows 
+        # Windows
         add_definitions(-DWITH_EVENTINPUT)
     endif()
 
@@ -269,20 +269,20 @@ if(EVENT_INPUT)
 endif(EVENT_INPUT)
 
 if (ENABLE_SWIFT)
-    message(STATUS "SWIFT support requested, checking for DBus/libEvent")
     # DBUS
     find_package(DBus)
 
     #libevent
     find_package(LibEvent)
 
-    if (DBUS_LIBRARIES AND DBUS_INCLUDE_DIRS AND LIBEVENT_LIB AND LIBEVENT_INCLUDE_DIR)
-    list(APPEND PLATFORM_LIBS ${DBUS_LIBRARIES})
-    list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
-    include_directories(${DBUS_INCLUDE_DIRS}
-    ${LIBEVENT_INCLUDE_DIR})
+    if (DBUS_FOUND AND LIBEVENT_FOUND)
+        list(APPEND PLATFORM_LIBS ${DBUS_LIBRARIES})
+        list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
+
+        # FIXME, make this target specific, not a global include setting
+        include_directories(${DBUS_INCLUDE_DIRS} ${LIBEVENT_INCLUDE_DIR})
     else()
-        message(WARNING "SWIFT support requested, but dbus and/or LibEvent not found. Swift support is disabled")
+        message(WARNING "SWIFT support disabled, dbus and/or LibEvent not found")
         set(ENABLE_SWIFT 0)
     endif()
 endif()
