@@ -1,5 +1,5 @@
-// dbus-dispatcher.cpp 
-// 
+// dbus-dispatcher.cpp
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -20,6 +20,15 @@
 #include "dbusdispatcher.h"
 #include "dbusconnection.h"
 #include <algorithm>
+
+namespace { // anonymosu namespace
+    
+template <typename T, typename... Args>
+std::unique_ptr<T> our_make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+} // end of anonymous namespace
 
 namespace FGSwiftBus
 {
@@ -198,7 +207,7 @@ namespace FGSwiftBus
         if (dbus_watch_get_enabled(watch) == FALSE) { return true; }
 
         int fd = dbus_watch_get_unix_fd(watch);
-        m_watchers.emplace(fd, new WatchHandler(m_eventBase.get(), watch));
+        m_watchers.emplace(fd, our_make_unique<WatchHandler>(m_eventBase.get(), watch));
         return true;
     }
 
