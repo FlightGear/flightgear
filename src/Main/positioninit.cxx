@@ -663,9 +663,8 @@ bool initPosition()
   }
   
   if ( !set_pos ) {
-    // No lon/lat specified, no airport specified, use the default airport
-    // TODO: don't hardcode this. Really.
-    const FGAirport* airport = fgFindAirportID("PHNL");
+    const std::string defaultAirportId = fgGetString("/sim/presets/airport-id");
+    const FGAirport* airport = fgFindAirportID(defaultAirportId);
     if( airport ) {
       const SGGeod & airportGeod = airport->geod();
       fgSetDouble("/sim/presets/longitude-deg", airportGeod.getLongitudeDeg());
@@ -675,7 +674,8 @@ bool initPosition()
       // Let's hope KSFO still exists somehow
       fgSetDouble("/sim/presets/longitude-deg", -122.374843);
       fgSetDouble("/sim/presets/latitude-deg", 37.619002);
-      SG_LOG(SG_GENERAL, SG_ALERT, "Sorry, the default airport seems to be unknown.");
+      SG_LOG(SG_GENERAL, SG_ALERT, "Sorry, the default airport ('" << defaultAirportId
+             << "') seems to be unknown.");
     }
   }
   
