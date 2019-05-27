@@ -35,8 +35,6 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/io/lowlevel.hxx>
 
-//#define HID_INPUT_DEBUG 1
-
 const char* hexTable = "0123456789ABCDEF";
 
 namespace HID
@@ -361,9 +359,7 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
         SetSerialNumber(simgear::strutils::convertWStringToUtf8(serial));
     }
 
-#if defined(HID_INPUT_DEBUG)
-    SG_LOG(SG_INPUT, SG_INFO, "HID device:" << GetName() << " at path " << _hidPath);
-#endif
+    SG_LOG(SG_INPUT, SG_DEBUG, "HID device:" << GetName() << " at path " << _hidPath);
 }
 
 FGHIDDevice::~FGHIDDevice()
@@ -380,7 +376,9 @@ void FGHIDDevice::Configure(SGPropertyNode_ptr node)
     
     if (node->hasChild("hid-descriptor")) {
         _haveLocalDescriptor = true;
-        SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " will configure using local HID descriptor");
+        if (debugEvents) {
+            SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " will configure using local HID descriptor");
+        }
         
         for (auto report : node->getChild("hid-descriptor")->getChildren("report")) {
             defineReport(report);
@@ -392,7 +390,8 @@ bool FGHIDDevice::Open()
 {
     _device = hid_open_path(_hidPath.c_str());
     if (_device == nullptr) {
-        SG_LOG(SG_INPUT, SG_WARN, "HID: Failed to open:" << _hidPath);
+        SG_LOG(SG_INPUT, SG_WARN, GetUniqueName() << ": HID: Failed to open:" << _hidPath);
+        SG_LOG(SG_INPUT, SG_WARN, "\tnote on Linux you may need to adjust permissions of the device using UDev rules.");
         return false;
     }
 
@@ -411,7 +410,7 @@ bool FGHIDDevice::Open()
 
         FGInputEvent_ptr event = v.second;
         if (debugEvents) {
-            SG_LOG(SG_INPUT, SG_INFO, "found item for event:" << v.first);
+            SG_LOG(SG_INPUT, SG_INFO, "\tfound item for event:" << v.first);
         }
         
         reportItem.second->event = event;
@@ -422,6 +421,12 @@ bool FGHIDDevice::Open()
     
 bool FGHIDDevice::parseUSBHIDDescriptor()
 {
+#if defined(SG_WINDOWS)
+    SG_LOG(SG_INPUT, SG_ALERT, GetUniqueName() << ": on Windows, there is no way to extract the UDB-HID report descriptor. "
+           << "\nPlease supply the report descriptor in the device XML configuration.");
+    return false;
+#endif
+    
     unsigned char reportDescriptor[1024];
     int descriptorSize = hid_get_descriptor(_device, reportDescriptor, 1024);
     if (descriptorSize <= 0) {
@@ -429,25 +434,26 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
         return false;
     }
     
-#if defined(HID_INPUT_DEBUG)
-    SG_LOG(SG_INPUT, SG_INFO, "\nHID: descriptor for:" << GetUniqueName());
-    {
-        std::ostringstream byteString;
-        
-        for (int i=0; i<descriptorSize; ++i) {
-            byteString << hexTable[reportDescriptor[i] >> 4];
-            byteString << hexTable[reportDescriptor[i] & 0x0f];
-            byteString << " ";
+    if (debugEvents) {
+        SG_LOG(SG_INPUT, SG_INFO, "\nHID: descriptor for:" << GetUniqueName());
+        {
+            std::ostringstream byteString;
+            
+            for (int i=0; i<descriptorSize; ++i) {
+                byteString << hexTable[reportDescriptor[i] >> 4];
+                byteString << hexTable[reportDescriptor[i] & 0x0f];
+                byteString << " ";
+            }
+            SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
         }
-        SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
     }
-#endif
     
     hid_item* rootItem = nullptr;
     hid_parse_reportdesc(reportDescriptor, descriptorSize, &rootItem);
-#if defined(HID_INPUT_DEBUG)
-    SG_LOG(SG_INPUT, SG_INFO, "\nHID: scan for:" << GetUniqueName());
-#endif
+    if (debugEvents) {
+        SG_LOG(SG_INPUT, SG_INFO, "\nHID: scan for:" << GetUniqueName());
+    }
+    
     parseCollection(rootItem);
     
     hid_free_reportdesc(rootItem);
@@ -599,7 +605,7 @@ void FGHIDDevice::update(double dt)
         const uint8_t reportNumber = _haveNumberedReports ? reportBuf[0] : 0;
         auto inputReport = getReport(HID::ReportType::In, reportNumber, false);
         if (!inputReport) {
-            SG_LOG(SG_INPUT, SG_WARN, "FGHIDDevice: Unknown input report number:" << 
+            SG_LOG(SG_INPUT, SG_WARN, GetName() << ": FGHIDDevice: Unknown input report number:" <<
                 static_cast<int>(reportNumber));
         } else {
             uint8_t* reportBytes = _haveNumberedReports ? reportBuf + 1 : reportBuf;
@@ -639,7 +645,7 @@ void FGHIDDevice::sendReport(Report* report) const
     }
 
     reportLength /= 8;
-// send the data, based on th report type
+// send the data, based on the report type
     if (report->type == HID::ReportType::Feature) {
         hid_send_feature_report(_device, reportBytes, reportLength + 1);
     } else {
@@ -658,7 +664,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      double dt, int keyModifiers)
 {
     if (debugEvents) {
-        SG_LOG(SG_INPUT, SG_INFO, "Report:" << (int) report->number << ", len=" << length);
+        SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDeivce received input report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
         
@@ -707,12 +713,30 @@ void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& da
     if (!_device) {
         return;
     }
+    
+    if (debugEvents) {
+        SG_LOG(SG_INPUT, SG_INFO, GetName() << ": FGHIDDevice: Sending feature report:" << (int) reportId << ", len=" << data.size());
+        {
+            std::ostringstream byteString;
+            
+            for (int i=0; i<data.size(); ++i) {
+                byteString << hexTable[data[i] >> 4];
+                byteString << hexTable[data[i] & 0x0f];
+                byteString << " ";
+            }
+            SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
+        }
+    }
 
     uint8_t buf[65];
     size_t len = std::min(data.length() + 1, sizeof(buf));
     buf[0] = reportId;
     memcpy(buf + 1, data.data(), len - 1);
-    hid_send_feature_report(_device, buf, len);
+    size_t r = hid_send_feature_report(_device, buf, len);
+    if (r < 0) {
+        SG_LOG(SG_INPUT, SG_WARN, GetName() << ": FGHIDDevice: Sending feature report failed, error-string is:\n"
+               << simgear::strutils::error_string(errno));
+    }
 }
 
 const char *FGHIDDevice::TranslateEventName(FGEventData &eventData)
@@ -725,7 +749,7 @@ void FGHIDDevice::Send(const char *eventName, double value)
 {
     auto item = itemWithName(eventName);
     if (item.second == nullptr) {
-        SG_LOG(SG_INPUT, SG_WARN, "FGHIDDevice: unknown item name:" << eventName);
+        SG_LOG(SG_INPUT, SG_WARN, GetName() << ": FGHIDDevice:unknown item name:" << eventName);
         return;
     }
 
@@ -745,7 +769,7 @@ void FGHIDDevice::defineReport(SGPropertyNode_ptr reportNode)
     uint32_t bitCount = 0;
     const auto rty = HID::reportTypeFromString(reportNode->getStringValue("type"));
     if (rty == HID::ReportType::Invalid) {
-        SG_LOG(SG_INPUT, SG_WARN, "FGHIDDevice: invalid report type:" <<
+        SG_LOG(SG_INPUT, SG_WARN, GetName() << ": FGHIDDevice: invalid report type:" <<
                reportNode->getStringValue("type"));
         return;
     }
@@ -899,10 +923,7 @@ void FGHIDEventInput::update(double dt)
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void FGHIDEventInput::FGHIDEventInputPrivate::evaluateDevice(hid_device_info* deviceInfo)
-{
-#if defined(HID_INPUT_DEBUG)
-    SG_LOG(SG_INPUT, SG_INFO, "HID device:" << deviceInfo->product_string << " from " << deviceInfo->manufacturer_string);
-#endif
+{    
     // allocate an input device, and add to the base class to see if we have
     // a config
     p->AddDevice(new FGHIDDevice(deviceInfo, p));
