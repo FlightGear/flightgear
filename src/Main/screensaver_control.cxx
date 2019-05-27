@@ -20,9 +20,9 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
+#include <simgear/compiler.h>
+
 #ifdef HAVE_DBUS
 #include <dbus/dbus.h>//Uses the low-level libdbus rather than GDBus/QtDBus to avoid adding more dependencies than necessary.  http://dbus.freedesktop.org/doc/api/html/index.html
 #endif
@@ -38,7 +38,7 @@
 */
 void fgOSDisableScreensaver()
 {
-#ifdef HAVE_DBUS
+#if defined(HAVE_DBUS) && defined(SG_UNIX) && !defined(SG_MAC)
     DBusConnection *dbus_connection;
     DBusMessage *dbus_inhibit_screenlock;
     unsigned int window_id=1000;//fake-it doesn't seem to care
