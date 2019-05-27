@@ -276,11 +276,10 @@ if (ENABLE_SWIFT)
     find_package(LibEvent)
 
     if (DBUS_FOUND AND LIBEVENT_FOUND)
-        list(APPEND PLATFORM_LIBS ${DBUS_LIBRARIES})
+        message(STATUS "SWIFT support enabled")
         list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
-
         # FIXME, make this target specific, not a global include setting
-        include_directories(${DBUS_INCLUDE_DIRS} ${LIBEVENT_INCLUDE_DIR})
+        include_directories(${LIBEVENT_INCLUDE_DIR})
     else()
         message(WARNING "SWIFT support disabled, dbus and/or LibEvent not found")
         set(ENABLE_SWIFT 0)

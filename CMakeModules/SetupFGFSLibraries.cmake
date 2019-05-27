@@ -26,8 +26,14 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} iaxclient_lib ${OPENAL_LIBRARY})
     endif()
 
-    if(USE_DBUS)
-        target_link_libraries(${target} ${DBUS_LDFLAGS})
+    # manually created DBus target
+    if(TARGET DBus)
+        target_link_libraries(${target} DBus)
+    endif()
+
+    # PkgCOnfig::DBUS target
+    if(TARGET PkgConfig::DBUS)
+        target_link_libraries(${target} PkgConfig::DBUS)
     endif()
 
     if(FG_HAVE_GPERFTOOLS)
