@@ -142,7 +142,7 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 
     set(USE_DBUS_DEFAULT 1)
 
-    find_package(UDev)
+    find_package(UDev QUIET)
     if(UDEV_FOUND)
         set(EVENT_INPUT_DEFAULT 1)
     endif(UDEV_FOUND)

@@ -33,7 +33,7 @@ elseif(APPLE)
     target_link_libraries(hidapi ${IOKIT_FRAMEWORK})
 else()
     # Linux-y things
-    find_package(UDev)
+    find_package(UDev QUIET)
     if (UDEV_FOUND)
         target_link_libraries(hidapi ${UDEV_LIBRARIES})
     else()
