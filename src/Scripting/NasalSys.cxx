@@ -1534,7 +1534,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     }
 
     if(node->isTied())
-        SG_LOG(SG_NASAL, SG_DEBUG, "Attaching listener to tied property " <<
+        SG_LOG(SG_NASAL, SG_DEV_ALERT, "ERROR: Cannot add listener to tied property " <<
                 node->getPath());
 
     naRef code = argc > 1 ? args[1] : naNil();
@@ -1543,8 +1543,8 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    int init = argc > 2 && naIsNum(args[2]) ? int(args[2].num) : 0;
-    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1;
+    int init = argc > 2 && naIsNum(args[2]) ? int(args[2].num) : 0; // do not trigger when created
+    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1; // trigger will always be triggered when the property is written 
     FGNasalListener *nl = new FGNasalListener(node, code, this,
             gcSave(code), _listenerId, init, type);
 
