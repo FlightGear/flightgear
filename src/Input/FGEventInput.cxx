@@ -190,7 +190,7 @@ void FGAxisEvent::fire( FGEventData & eventData )
       ed.value = interpolater->interpolate(ed.value);
     }
   }
-    
+
   FGInputEvent::fire( ed );
 }
 
@@ -240,6 +240,15 @@ void FGButtonEvent::fire( FGEventData & eventData )
   }
           
   lastState = pressed;
+}
+
+void FGButtonEvent::update( double dt )
+{
+  if (repeatable && lastState) {
+      // interval / dt handling is done by base ::fire method
+      FGEventData ed{1.0, dt, 0 /* modifiers */};
+      FGInputEvent::fire( ed );
+  }
 }
 
 FGInputDevice::~FGInputDevice()

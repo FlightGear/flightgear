@@ -175,6 +175,7 @@ public:
   FGButtonEvent( FGInputDevice * device, SGPropertyNode_ptr node );
   virtual void fire( FGEventData & eventData );
 
+  void update( double dt ) override;
 protected:
   bool repeatable;
   bool lastState;
