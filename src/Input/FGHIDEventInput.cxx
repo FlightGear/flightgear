@@ -667,8 +667,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
         SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDeivce received input report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
-        
-            for (int i=0; i<length; ++i) {
+            for (size_t i=0; i<length; ++i) {
                 byteString << hexTable[data[i] >> 4];
                 byteString << hexTable[data[i] & 0x0f];
                 byteString << " ";
