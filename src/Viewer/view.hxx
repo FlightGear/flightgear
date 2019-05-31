@@ -58,7 +58,9 @@ public:
         FG_LOOKAT = 1
     };
 
-    static View* createFromProperties(SGPropertyNode_ptr props);
+    // view_index is to allow us to look up corresponding view information for
+    // multiplayer aircraft.
+    static View* createFromProperties(SGPropertyNode_ptr props, int view_index=-1);
 
     // Destructor
     virtual ~View();
@@ -129,6 +131,12 @@ public:
     void setPositionOffsets (double x_offset_m,
                              double y_offset_m,
                              double z_offset_m);
+    double getAdjustXOffset_m () const { return _adjust_offset_m.x(); }
+    double getAdjustYOffset_m () const { return _adjust_offset_m.y(); }
+    double getAdjustZOffset_m () const { return _adjust_offset_m.z(); }
+    void setAdjustXOffset_m (double x_adjust_offset_m);
+    void setAdjustYOffset_m (double y_adjust_offset_m);
+    void setAdjustZOffset_m (double z_adjust_offset_m);
 
     // Reference orientation rotations...
     //   These are rotations that represent the plane attitude effect on
@@ -196,10 +204,10 @@ private:
          double roll_offset_deg,
          double fov_deg, double aspect_ratio_multiplier,
          double target_x_offset_m, double target_y_offset_m,
-         double target_z_offset_m, double near_m, bool internal );
+         double target_z_offset_m, double near_m, bool internal,
+         bool lookat_agl, double lookat_agl_damping, int view_index );
 
     void set_clean() { _dirty = false; }
-    void updateData();
 
     void setHeadingOffset_deg_property (double heading_offset_deg);
     void setPitchOffset_deg_property(double pitch_offset_deg);
@@ -297,10 +305,14 @@ private:
         _fov_deg = fov_deg;
     }
 
+    double get_fov_user() const { return _fov_user_deg; }
+    void set_fov_user( double fov_deg ) { _fov_user_deg = fov_deg; }
+    
     //////////////////////////////////////////////////////////////////
     // private data                                                 //
     //////////////////////////////////////////////////////////////////
 
+    SGPropertyNode_ptr _config;
     std::string _name, _typeString;
 
     // flag forcing a recalc of derived view parameters
@@ -329,12 +341,34 @@ private:
     SGVec3d _dampTarget; ///< current target value we are damping towards
     SGVec3d _dampOutput; ///< current output of damping filter
     SGVec3d _dampFactor; ///< weighting of the damping filter
+    
+    /* Generic damping support. */
+    struct Damping {
+    
+       Damping(double factor, double min, double max);
+       void     setTarget(double target);
+       void     update(double dt, void* id);
+       double   get();
+       void     setGet(double& io);
 
+       private:
+           void*    _id;
+           double   _min;
+           double   _max;
+           double   _target;
+           double   _factor;
+           double   _current;
+    };
+    
+    Damping _lookat_agl_damping;
+    
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
     SGVec3d _offset_m;
     SGVec3d _configOffset_m;
+    
+    SGVec3d _adjust_offset_m;
 
     // Target offsets from FDM origin (for "lookat" targets) The X
     // axis is positive out the tail, Y is out the right wing, and Z
@@ -358,6 +392,12 @@ private:
 
     // internal view (e.g. cockpit) flag
     bool _internal;
+    
+    // Dynamically update view angle and field of view so that we always
+    // include the target and the ground below it.
+    bool _lookat_agl;
+    
+    int _view_index;
 
     // view is looking from a model
     bool _from_model;
@@ -366,6 +406,10 @@ private:
     // view is looking at a model
     bool _at_model;
     int _at_model_index;  // number of model (for multi model)
+    
+    // Field of view as requested by user. Usually copied directly into the
+    // actual field of view, except for Tower AGL view.
+    double _fov_user_deg;
 
     // the nominal field of view (angle, in degrees)
     double _fov_deg;

@@ -293,6 +293,10 @@ FGInterface::bind ()
                       &FGInterface::get_Psi_deg,
                       &FGInterface::set_Psi_deg, false);
   fgSetArchivable("/orientation/heading-deg");
+  _tiedProperties.Tie("/orientation/true-heading-deg", this,
+                      &FGInterface::get_Psi_deg,
+                      &FGInterface::set_Psi_deg, false);
+  fgSetArchivable("/orientation/true-heading-deg");
   _tiedProperties.Tie("/orientation/track-deg", this,
                       &FGInterface::get_Track); // read-only
   _tiedProperties.Tie("/orientation/path-deg", this,
