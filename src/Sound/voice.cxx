@@ -29,10 +29,7 @@
 #include <simgear/compiler.h>
 #include <Main/fg_props.hxx>
 #include "voice.hxx"
-
-#if defined(ENABLE_FLITE)
 #include "flitevoice.hxx"
-#endif
 
 #define VOICE "/sim/sound/voices"
 
@@ -99,12 +96,8 @@ void FGVoiceMgr::init()
         SG_LOG(SG_SOUND, SG_WARN, "failed to create festival voice, falling back to flite voice" );
       }
     }
-#if defined(ENABLE_FLITE)
-    SG_LOG(SG_SOUND,SG_INFO,"creating flite voice" );
+
     _voices.push_back(new FGFLITEVoice(this, voice));
-#else
-    SG_LOG(SG_SOUND,SG_ALERT,"non festival voice not supported." );
-#endif
   }
 
 #if defined(ENABLE_THREADS)

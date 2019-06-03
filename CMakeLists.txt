@@ -552,10 +552,8 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
 
-if (ENABLE_FLITE)
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include )
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include )
-endif()
+include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include )
+include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include )
 
 add_definitions(-DHAVE_CONFIG_H)
 

@@ -29,9 +29,7 @@
 class FGSampleQueue;
 class SGSoundMgr;
 class Listener;
-#if defined(ENABLE_FLITE)
 class VoiceSynthesizer;
-#endif
 
 #ifdef ENABLE_AUDIO_SUPPORT
 class FGSoundManager : public SGSoundMgr
@@ -47,9 +45,9 @@ public:
 
     void activate(bool State);
     void update_device_list();
-#if defined(ENABLE_FLITE)
+
     VoiceSynthesizer * getSynthesizer( const std::string & voice );
-#endif
+
 private:
     bool stationaryView() const;
 
@@ -62,9 +60,8 @@ private:
     SGPropertyNode_ptr _sound_working, _sound_enabled, _volume, _device_name;
     SGPropertyNode_ptr _velocityNorthFPS, _velocityEastFPS, _velocityDownFPS;
     std::unique_ptr<Listener> _listener;
-#if defined(ENABLE_FLITE)
+
     std::map<std::string,VoiceSynthesizer*> _synthesizers;
-#endif
 };
 #else
 #include "Main/fg_props.hxx"

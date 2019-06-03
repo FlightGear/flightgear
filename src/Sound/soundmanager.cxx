@@ -17,17 +17,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/sound/soundmgr.hxx>
 #include <simgear/structure/commands.hxx>
 
-#if defined(ENABLE_FLITE)
 #include "VoiceSynthesizer.hxx"
-#endif
-
 #include "sample_queue.hxx"
 #include "soundmanager.hxx"
 #include <Main/globals.hxx>
@@ -80,7 +75,7 @@ void FGSoundManager::init()
     _velocityNorthFPS = fgGetNode("velocities/speed-north-fps", true);
     _velocityEastFPS  = fgGetNode("velocities/speed-east-fps", true);
     _velocityDownFPS  = fgGetNode("velocities/speed-down-fps", true);
-  
+
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
     scenery_loaded->addChangeListener(_listener.get());
 
@@ -94,7 +89,7 @@ void FGSoundManager::shutdown()
 {
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
     scenery_loaded->removeChangeListener(_listener.get());
-    
+
     stop();
 
     _queue.clear();
@@ -235,7 +230,6 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
     }
 }
 
-#if defined(ENABLE_FLITE)
 VoiceSynthesizer * FGSoundManager::getSynthesizer( const std::string & voice )
 {
   std::map<std::string,VoiceSynthesizer*>::iterator it = _synthesizers.find(voice);
@@ -246,5 +240,5 @@ VoiceSynthesizer * FGSoundManager::getSynthesizer( const std::string & voice )
   }
   return it->second;
 }
-#endif
+
 #endif // ENABLE_AUDIO_SUPPORT

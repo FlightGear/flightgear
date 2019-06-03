@@ -38,11 +38,9 @@
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
 
-#if defined(ENABLE_FLITE)
 #include <Sound/soundmanager.hxx>
 #include <simgear/sound/sample_group.hxx>
 #include <Sound/VoiceSynthesizer.hxx>
-#endif
 
 #include "frequencyformatter.hxx"
 
@@ -51,7 +49,6 @@ namespace Instrumentation {
 using simgear::PropertyObject;
 using std::string;
 
-#if defined(ENABLE_FLITE)
 class AtisSpeaker: public SGPropertyChangeListener, SoundSampleReadyListener {
 public:
   AtisSpeaker();
@@ -147,7 +144,6 @@ void AtisSpeaker::SoundSampleReady(SGSharedPtr<SGSoundSample> sample)
   // we are now in the synthesizers worker thread!
   _spokenAtis.push(sample);
 }
-#endif
 
 SignalQualityComputer::~SignalQualityComputer()
 {
@@ -205,7 +201,7 @@ public:
   void bind(SGPropertyNode* rn)
   {
       _rootNode = rn;
-      
+
       _PO_stationType = PropertyObject<string>(_rootNode->getNode("station-type", true));
       _PO_stationName = PropertyObject<string>(_rootNode->getNode("station-name", true));
       _PO_airportId = PropertyObject<string>(_rootNode->getNode("airport-id", true));
@@ -216,7 +212,7 @@ public:
       _PO_trackDistance_m = PropertyObject<double>(_rootNode->getNode("track-distance-m", true));
       _PO_heightAboveStation_ft = PropertyObject<double>(_rootNode->getNode("height-above-station-ft", true));
   }
-    
+
   virtual ~OutputProperties()
   {
   }
@@ -323,7 +319,7 @@ void MetarBridge::requestMetarForId(std::string & id)
     _metarPropertiesNode->getNode("valid", true)->setBoolValue(false);
     _metarPropertiesNode->getNode("time-to-live", true)->setDoubleValue(0.0);
   } else {
-    // use the present weather to generate the ATIS. 
+    // use the present weather to generate the ATIS.
     if ( NULL != _atisNode && false == _requestedId.empty()) {
       CurrentWeatherATISInformationProvider provider(_requestedId);
       _atisNode->setStringValue(_atisEncoder.encodeATIS(&provider));
@@ -487,9 +483,7 @@ private:
 
   bool _useEightPointThree = false;
   MetarBridgeRef _metarBridge;
-  #if defined(ENABLE_FLITE)
   AtisSpeaker _atisSpeaker;
-  #endif
   SGSharedPtr<FrequencyFormatterBase> _useFrequencyFormatter;
   SGSharedPtr<FrequencyFormatterBase> _stbyFrequencyFormatter;
   const SignalQualityComputerRef _signalQualityComputer;
@@ -497,9 +491,7 @@ private:
   double _stationTTL;
   double _frequency;
   flightgear::CommStationRef _commStationForFrequency;
-  #if defined(ENABLE_FLITE)
   SGSharedPtr<SGSampleGroup> _sampleGroup;
-  #endif
 
   PropertyObject<double> _volume_norm;
   PropertyObject<string> _atis;
@@ -528,21 +520,20 @@ void CommRadioImpl::bind()
 {
   SGPropertyNode_ptr n = fgGetNode(nodePath(), true);
   OutputProperties::bind(n);
-    
+
   _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
   _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
   _addNoise = PropertyObject<bool>(_rootNode->getNode("add-noise", true));
   _cutoffSignalQuality = PropertyObject<double>(_rootNode->getNode("cutoff-signal-quality", true));
-    
+
   _metarBridge->setAtisNode(_atis.node());
-#if defined(ENABLE_FLITE)
   _atis.node()->addChangeListener(&_atisSpeaker);
-#endif
+
   // link the metar node. /environment/metar[3] is comm1 and /environment[4] is comm2.
   // see FGDATA/Environment/environment.xml
   _metarBridge->setMetarPropertiesRoot(fgGetNode("/environment", true)->getNode("metar", number() + 3, true));
   _metarBridge->bind();
-  
+
   if (_useEightPointThree) {
     _useFrequencyFormatter = new EightPointThreeFrequencyFormatter(
                                                                    _rootNode->getNode("frequencies", true),
@@ -565,24 +556,23 @@ void CommRadioImpl::bind()
                                                     _rootNode->getNode("frequencies/selected-mhz", true),
                                                     _rootNode->getNode("frequencies/selected-mhz-fmt", true),
                                                     0.025, 118.0, 137.0);
-    
+
     _stbyFrequencyFormatter = new FrequencyFormatter(
                                                      _rootNode->getNode("frequencies/standby-mhz", true),
                                                      _rootNode->getNode("frequencies/standby-mhz-fmt", true),
                                                      0.025, 118.0, 137.0);
-    
-    
+
+
   }
 }
 
 void CommRadioImpl::unbind()
 {
-#if defined(ENABLE_FLITE)
   _atis.node()->removeChangeListener(&_atisSpeaker);
   if (_sampleGroup.valid()) {
       globals->get_subsystem<SGSoundMgr>()->remove(getSampleGroupRefname());
   }
-#endif
+
   _metarBridge->unbind();
   AbstractInstrument::unbind();
 }
@@ -617,7 +607,6 @@ void CommRadioImpl::update(double dt)
     return;
   }
 
-#if defined(ENABLE_FLITE)
   {
     static const char * atisSampleRefName = "atis";
     static const char * noiseSampleRefName = "noise";
@@ -660,7 +649,6 @@ void CommRadioImpl::update(double dt)
       _sampleGroup->set_volume(_signalQuality_norm >= _cutoffSignalQuality ? _volume_norm : 0.0);
     }
   }
-#endif
 
   if (!isServiceableAndPowered()) {
     _metarBridge->clearMetar();
@@ -697,9 +685,8 @@ void CommRadioImpl::update(double dt)
   _stationName = _commStationForFrequency->ident();
   _airportId = _commStationForFrequency->airport()->getId();
 
-#if defined(ENABLE_FLITE)
   _atisSpeaker.setStationId(_airportId);
-#endif
+
   switch (_commStationForFrequency->type()) {
     case FGPositioned::FREQ_ATIS:
       case FGPositioned::FREQ_AWOS: {
