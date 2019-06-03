@@ -14,10 +14,6 @@
 #include "WindowSystemAdapter.hxx"
 #include "renderer.hxx"
 
-#if !defined(X_DISPLAY_MISSING)
-#define X_DOUBLE_SCROLL_BUG 1
-#endif
-
 #ifdef SG_MAC
 // hack - during interactive resize on Mac, OSG queues and then flushes
 // a large number of resize events, without doing any drawing.
@@ -174,11 +170,7 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
     case osgGA::GUIEventAdapter::SCROLL:
     {
         bool mainWindow = eventToViewport(ea, us, x, y);
-#ifdef X_DOUBLE_SCROLL_BUG
-        scrollButtonPressed = !scrollButtonPressed;
-        if (!scrollButtonPressed) // Drop the button release event
-            return true;
-#endif
+
         int button;
         if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_2D) {
             if (ea.getScrollingDeltaY() > 0)
