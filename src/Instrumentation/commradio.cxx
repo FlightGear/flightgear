@@ -201,17 +201,22 @@ private:
 
 class OutputProperties: public OnExitHandler {
 public:
-  OutputProperties(SGPropertyNode_ptr rootNode)
-      : _rootNode(rootNode), _signalQuality_norm(0.0), _slantDistance_m(0.0), _trueBearingTo_deg(0.0), _trueBearingFrom_deg(0.0), _trackDistance_m(
-          0.0), _heightAboveStation_ft(0.0),
 
-      _PO_stationType(rootNode->getNode("station-type", true)), _PO_stationName(rootNode->getNode("station-name", true)), _PO_airportId(
-          rootNode->getNode("airport-id", true)), _PO_signalQuality_norm(rootNode->getNode("signal-quality-norm", true)), _PO_slantDistance_m(
-          rootNode->getNode("slant-distance-m", true)), _PO_trueBearingTo_deg(rootNode->getNode("true-bearing-to-deg", true)), _PO_trueBearingFrom_deg(
-          rootNode->getNode("true-bearing-from-deg", true)), _PO_trackDistance_m(rootNode->getNode("track-distance-m", true)), _PO_heightAboveStation_ft(
-          rootNode->getNode("height-above-station-ft", true))
+  void bind(SGPropertyNode* rn)
   {
+      _rootNode = rn;
+      
+      _PO_stationType = PropertyObject<string>(_rootNode->getNode("station-type", true));
+      _PO_stationName = PropertyObject<string>(_rootNode->getNode("station-name", true));
+      _PO_airportId = PropertyObject<string>(_rootNode->getNode("airport-id", true));
+      _PO_signalQuality_norm = PropertyObject<double>(_rootNode->getNode("signal-quality-norm", true));
+      _PO_slantDistance_m = PropertyObject<double>(_rootNode->getNode("slant-distance-m", true));
+      _PO_trueBearingTo_deg = PropertyObject<double>(_rootNode->getNode("true-bearing-to-deg", true));
+      _PO_trueBearingFrom_deg = PropertyObject<double>(_rootNode->getNode("true-bearing-from-deg", true));
+      _PO_trackDistance_m = PropertyObject<double>(_rootNode->getNode("track-distance-m", true));
+      _PO_heightAboveStation_ft = PropertyObject<double>(_rootNode->getNode("height-above-station-ft", true));
   }
+    
   virtual ~OutputProperties()
   {
   }
@@ -222,12 +227,12 @@ protected:
   std::string _stationType;
   std::string _stationName;
   std::string _airportId;
-  double _signalQuality_norm;
-  double _slantDistance_m;
-  double _trueBearingTo_deg;
-  double _trueBearingFrom_deg;
-  double _trackDistance_m;
-  double _heightAboveStation_ft;
+  double _signalQuality_norm = 0.0;
+  double _slantDistance_m = 0.0;
+  double _trueBearingTo_deg = 0.0;
+  double _trueBearingFrom_deg = 0.0;
+  double _trackDistance_m = 0.0;
+  double _heightAboveStation_ft = 0.0;
 
 private:
   PropertyObject<string> _PO_stationType;
@@ -469,10 +474,10 @@ public:
   CommRadioImpl(SGPropertyNode_ptr node);
   virtual ~CommRadioImpl();
 
-  virtual void update(double dt);
-  virtual void init();
-  void bind();
-  void unbind();
+  void update(double dt) override;
+  void init() override;
+  void bind() override;
+  void unbind() override;
 
 private:
   string getSampleGroupRefname() const
@@ -480,7 +485,7 @@ private:
     return _rootNode->getPath();
   }
 
-  int _num;
+  bool _useEightPointThree = false;
   MetarBridgeRef _metarBridge;
   #if defined(ENABLE_FLITE)
   AtisSpeaker _atisSpeaker;
@@ -496,9 +501,6 @@ private:
   SGSharedPtr<SGSampleGroup> _sampleGroup;
   #endif
 
-  PropertyObject<bool> _serviceable;
-  PropertyObject<bool> _power_btn;
-  PropertyObject<bool> _power_good;
   PropertyObject<double> _volume_norm;
   PropertyObject<string> _atis;
   PropertyObject<bool> _addNoise;
@@ -507,54 +509,15 @@ private:
 };
 
 CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
-    : OutputProperties(
-        fgGetNode("/instrumentation", true)->getNode(node->getStringValue("name", "comm"), node->getIntValue("number", 0), true)),
-        _num(node->getIntValue("number", 0)),
-        _metarBridge(new MetarBridge()),
+    :   _metarBridge(new MetarBridge()),
         _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer()),
 
         _stationTTL(0.0),
         _frequency(-1.0),
-        _commStationForFrequency(NULL),
-
-        _serviceable(_rootNode->getNode("serviceable", true)),
-        _power_btn(_rootNode->getNode("power-btn", true)),
-        _power_good(_rootNode->getNode("power-good", true)),
-        _volume_norm(_rootNode->getNode("volume", true)),
-        _atis(_rootNode->getNode("atis", true)),
-        _addNoise(_rootNode->getNode("add-noise", true)),
-        _cutoffSignalQuality(_rootNode->getNode("cutoff-signal-quality", true))
+        _commStationForFrequency(NULL)
 {
-  if( node->getBoolValue("eight-point-three", false ) ) {
-	  _useFrequencyFormatter = new EightPointThreeFrequencyFormatter(
-		  _rootNode->getNode("frequencies", true),
-		  "selected-mhz",
-		  "selected-mhz-fmt",
-		  "selected-channel-width-khz",
-		  "selected-real-frequency-mhz",
-		  "selected-channel"
-		  );
-	  _stbyFrequencyFormatter = new EightPointThreeFrequencyFormatter(
-		  _rootNode->getNode("frequencies", true),
-		  "standby-mhz",
-		  "standby-mhz-fmt",
-		  "standby-channel-width-khz",
-		  "standby-real-frequency-mhz",
-		  "standby-channel"
-		  );
-  } else {
-      _useFrequencyFormatter = new FrequencyFormatter(
-    	  _rootNode->getNode("frequencies/selected-mhz", true),
-          _rootNode->getNode("frequencies/selected-mhz-fmt", true),
-		  0.025, 118.0, 137.0);
-
-      _stbyFrequencyFormatter = new FrequencyFormatter(
-    	  _rootNode->getNode("frequencies/standby-mhz", true),
-          _rootNode->getNode("frequencies/standby-mhz-fmt", true),
-		  0.025, 118.0, 137.0);
-
-
-  }
+  readConfig(node, "comm");
+  _useEightPointThree = node->getBoolValue("eight-point-three", false );
 }
 
 CommRadioImpl::~CommRadioImpl()
@@ -563,14 +526,53 @@ CommRadioImpl::~CommRadioImpl()
 
 void CommRadioImpl::bind()
 {
+  SGPropertyNode_ptr n = fgGetNode(nodePath(), true);
+  OutputProperties::bind(n);
+    
+  _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
+  _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
+  _addNoise = PropertyObject<bool>(_rootNode->getNode("add-noise", true));
+  _cutoffSignalQuality = PropertyObject<double>(_rootNode->getNode("cutoff-signal-quality", true));
+    
   _metarBridge->setAtisNode(_atis.node());
 #if defined(ENABLE_FLITE)
   _atis.node()->addChangeListener(&_atisSpeaker);
 #endif
   // link the metar node. /environment/metar[3] is comm1 and /environment[4] is comm2.
   // see FGDATA/Environment/environment.xml
-  _metarBridge->setMetarPropertiesRoot(fgGetNode("/environment", true)->getNode("metar", _num + 3, true));
+  _metarBridge->setMetarPropertiesRoot(fgGetNode("/environment", true)->getNode("metar", number() + 3, true));
   _metarBridge->bind();
+  
+  if (_useEightPointThree) {
+    _useFrequencyFormatter = new EightPointThreeFrequencyFormatter(
+                                                                   _rootNode->getNode("frequencies", true),
+                                                                   "selected-mhz",
+                                                                   "selected-mhz-fmt",
+                                                                   "selected-channel-width-khz",
+                                                                   "selected-real-frequency-mhz",
+                                                                   "selected-channel"
+                                                                   );
+    _stbyFrequencyFormatter = new EightPointThreeFrequencyFormatter(
+                                                                    _rootNode->getNode("frequencies", true),
+                                                                    "standby-mhz",
+                                                                    "standby-mhz-fmt",
+                                                                    "standby-channel-width-khz",
+                                                                    "standby-real-frequency-mhz",
+                                                                    "standby-channel"
+                                                                    );
+  } else {
+    _useFrequencyFormatter = new FrequencyFormatter(
+                                                    _rootNode->getNode("frequencies/selected-mhz", true),
+                                                    _rootNode->getNode("frequencies/selected-mhz-fmt", true),
+                                                    0.025, 118.0, 137.0);
+    
+    _stbyFrequencyFormatter = new FrequencyFormatter(
+                                                     _rootNode->getNode("frequencies/standby-mhz", true),
+                                                     _rootNode->getNode("frequencies/standby-mhz-fmt", true),
+                                                     0.025, 118.0, 137.0);
+    
+    
+  }
 }
 
 void CommRadioImpl::unbind()
@@ -582,14 +584,14 @@ void CommRadioImpl::unbind()
   }
 #endif
   _metarBridge->unbind();
+  AbstractInstrument::unbind();
 }
 
 void CommRadioImpl::init()
 {
-  // initialize power_btn to true if unset
-  string s = _power_btn.node()->getStringValue();
-  if (s.empty()) _power_btn = true;
+  initServicePowerProperties(_rootNode);
 
+  string s;
   // initialize squelch to a sane value if unset
   s = _cutoffSignalQuality.node()->getStringValue();
   if (s.empty()) _cutoffSignalQuality = 0.4;
@@ -660,7 +662,7 @@ void CommRadioImpl::update(double dt)
   }
 #endif
 
-  if (false == (_power_btn) || false == (_serviceable)) {
+  if (!isServiceableAndPowered()) {
     _metarBridge->clearMetar();
     _atis = "";
     _stationTTL = 0.0;

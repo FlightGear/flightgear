@@ -24,7 +24,7 @@
 #define _FG_INSTRUMENTATION_COMMRADIO_HXX
 
 #include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <Instrumentation/AbstractInstrument.hxx>
 
 namespace Instrumentation {
 
@@ -36,7 +36,7 @@ public:
 
 typedef SGSharedPtr<SignalQualityComputer> SignalQualityComputerRef;
 
-class CommRadio : public SGSubsystem
+class CommRadio : public AbstractInstrument
 {
 public:
   static SGSubsystem * createInstance( SGPropertyNode_ptr rootNode );
