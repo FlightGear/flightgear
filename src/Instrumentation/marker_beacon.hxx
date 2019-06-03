@@ -24,27 +24,22 @@
 #ifndef _FG_MARKER_BEACON_HXX
 #define _FG_MARKER_BEACON_HXX
 
-
-#include <Main/fg_props.hxx>
-
 #include <simgear/compiler.h>
-#include <simgear/structure/subsystem_mgr.hxx>
+
+#include <Instrumentation/AbstractInstrument.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 class SGSampleGroup;
 
-class FGMarkerBeacon : public SGSubsystem
+class FGMarkerBeacon : public AbstractInstrument
 {
 
     // Inputs
     SGPropertyNode_ptr lon_node;
     SGPropertyNode_ptr lat_node;
     SGPropertyNode_ptr alt_node;
-    SGPropertyNode_ptr bus_power;
-    SGPropertyNode_ptr power_btn;
     SGPropertyNode_ptr audio_btn;
     SGPropertyNode_ptr audio_vol;
-    SGPropertyNode_ptr serviceable;
     SGPropertyNode_ptr sound_working;
 
     bool outer_marker;
@@ -55,9 +50,6 @@ class FGMarkerBeacon : public SGSubsystem
     bool outer_blink;
     bool middle_blink;
     bool inner_blink;
-
-    std::string name;
-    int num;
 
     // internal periodic station search timer
     double _time_before_search_sec;
@@ -76,11 +68,11 @@ public:
     FGMarkerBeacon(SGPropertyNode *node);
     ~FGMarkerBeacon();
 
-    void init ();
-    void reinit ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
+    void init () override;
+    void reinit () override;
+    void bind () override;
+    void unbind () override;
+    void update (double dt) override;
 
     void search ();
 
@@ -88,9 +80,6 @@ public:
     inline bool get_inner_blink () const { return inner_blink; }
     inline bool get_middle_blink () const { return middle_blink; }
     inline bool get_outer_blink () const { return outer_blink; }
-    inline bool has_power() const {
-        return power_btn->getBoolValue() && (bus_power->getDoubleValue() > 1.0);
-    }
 };
 
 

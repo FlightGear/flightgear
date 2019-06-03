@@ -21,9 +21,7 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <stdio.h>	// snprintf
 
@@ -32,6 +30,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/sample_group.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "marker_beacon.hxx"
@@ -42,31 +41,14 @@ using std::string;
 
 // Constructor
 FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
-    audio_vol(NULL),
     outer_blink(false),
     middle_blink(false),
     inner_blink(false),
-    name("marker-beacon"),
-    num(0),
-    _time_before_search_sec(0.0),
-    _sgr(NULL)
+    _time_before_search_sec(0.0)
 {
-    for ( int i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN,
-                    "Error in marker beacon config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
+    // backwards-compatability supply path
+    setDefaultPowerSupplyPath("/systems/electrical/outputs/nav[0]");
+    readConfig(node, "marker-beacon");
 }
 
 
@@ -79,27 +61,19 @@ FGMarkerBeacon::~FGMarkerBeacon()
 void
 FGMarkerBeacon::init ()
 {
-    string branch;
-    branch = "/instrumentation/" + name;
-
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(nodePath(), true );
+    initServicePowerProperties(node);
+    
     // Inputs
     sound_working = fgGetNode("/sim/sound/working", true);
     lon_node = fgGetNode("/position/longitude-deg", true);
     lat_node = fgGetNode("/position/latitude-deg", true);
     alt_node = fgGetNode("/position/altitude-ft", true);
-    bus_power = fgGetNode("/systems/electrical/outputs/nav[0]", true);
-    power_btn = node->getChild("power-btn", 0, true);
     audio_btn = node->getChild("audio-btn", 0, true);
     audio_vol = node->getChild("volume", 0, true);
-    serviceable = node->getChild("serviceable", 0, true);
 
-    if (power_btn->getType() == simgear::props::NONE)
-        power_btn->setBoolValue( true );
     if (audio_btn->getType() == simgear::props::NONE)
         audio_btn->setBoolValue( true );
-    if (serviceable->getType() == simgear::props::NONE)
-        serviceable->setBoolValue( true );
 
     SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
     _sgr = smgr->find("avionics", true);
@@ -119,8 +93,7 @@ FGMarkerBeacon::reinit ()
 void
 FGMarkerBeacon::bind ()
 {
-    string branch;
-    branch = "/instrumentation/" + name;
+    string branch = nodePath();
 
     fgTie((branch + "/inner").c_str(), this,
           &FGMarkerBeacon::get_inner_blink);
@@ -136,12 +109,13 @@ FGMarkerBeacon::bind ()
 void
 FGMarkerBeacon::unbind ()
 {
-    string branch;
-    branch = "/instrumentation/" + name;
+    string branch = nodePath();
 
     fgUntie((branch + "/inner").c_str());
     fgUntie((branch + "/middle").c_str());
     fgUntie((branch + "/outer").c_str());
+    
+    AbstractInstrument::unbind();
 }
 
 
@@ -160,8 +134,7 @@ FGMarkerBeacon::update(double dt)
         search();
     }
 
-    if ( has_power() && serviceable->getBoolValue()
-            && sound_working->getBoolValue()) {
+    if ( isServiceableAndPowered()  && sound_working->getBoolValue()) {
 
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
@@ -287,7 +260,7 @@ void FGMarkerBeacon::search()
 
     outer_marker = middle_marker = inner_marker = false;
 
-    if ( b == NULL || !inrange || !has_power() || !serviceable->getBoolValue() )
+    if ( b == NULL || !inrange || !isServiceableAndPowered())
     {
         // cout << "no marker" << endl;
         _sgr->stop( "outer-marker" );

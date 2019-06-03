@@ -25,6 +25,7 @@ class AbstractInstrument : public SGSubsystem
 public:
 
 protected:
+    
     void readConfig(SGPropertyNode* config,
                     std::string defaultName);
     
@@ -42,6 +43,12 @@ protected:
     
     void setMinimumSupplyVolts(double v);
     
+    /**
+     * specify the default path to use to power the instrument, if it's non-
+     * standard.
+     */
+    void setDefaultPowerSupplyPath(const std::string &p);
+
     virtual bool isPowerSwitchOn() const;
 private:
     std::string _name;

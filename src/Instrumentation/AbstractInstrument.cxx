@@ -26,7 +26,10 @@ void AbstractInstrument::readConfig(SGPropertyNode* config,
 {
     _name = config->getStringValue("name", defaultName.c_str());
     _index = config->getIntValue("number", 0);
-    _powerSupplyPath = "/systems/electrical/outputs/" + defaultName;
+    if (_powerSupplyPath.empty()) {
+        _powerSupplyPath = "/systems/electrical/outputs/" + defaultName;
+    }
+    
     if (config->hasChild("power-supply")) {
         _powerSupplyPath = config->getStringValue("power-supply");
     }
@@ -77,6 +80,11 @@ bool AbstractInstrument::isServiceableAndPowered() const
         return false;
     
     return true;
+}
+
+void AbstractInstrument::setDefaultPowerSupplyPath(const std::string &p)
+{
+    _powerSupplyPath = p;
 }
 
 void AbstractInstrument::setMinimumSupplyVolts(double v)
