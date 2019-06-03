@@ -70,11 +70,21 @@ void AbstractInstrument::unbind()
 
 bool AbstractInstrument::isServiceableAndPowered() const
 {
-    if (!_serviceableNode->getBoolValue() || !_powerButtonNode->getBoolValue())
+    if (!_serviceableNode->getBoolValue() || !isPowerSwitchOn())
         return false;
     
     if (_powerSupplyNode->getDoubleValue() < _minimumSupplyVolts)
         return false;
     
     return true;
+}
+
+void AbstractInstrument::setMinimumSupplyVolts(double v)
+{
+    _minimumSupplyVolts = v;
+}
+
+bool AbstractInstrument::isPowerSwitchOn() const
+{
+    return _powerButtonNode->getBoolValue();
 }

@@ -22,25 +22,24 @@
 #ifndef TRANSPONDER_HXX
 #define TRANSPONDER_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#include <Main/fg_props.hxx>
+#include <Instrumentation/AbstractInstrument.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 
-class Transponder : public SGSubsystem, public SGPropertyChangeListener
+class Transponder : public AbstractInstrument, public SGPropertyChangeListener
 {
 public:
     Transponder(SGPropertyNode *node);
     virtual ~Transponder();
 
-    virtual void init ();
-    virtual void update (double dt);
-    virtual void bind();
-    virtual void unbind();
+    void init () override;
+    void update (double dt) override;
+    void bind() override;
+    void unbind() override;
+    
+protected:
+    bool isPowerSwitchOn() const override;
     
 private:
     enum Mode
@@ -73,8 +72,6 @@ private:
     SGPropertyNode_ptr _pressureAltitude_node;
     SGPropertyNode_ptr _autoGround_node;
     SGPropertyNode_ptr _airspeedIndicator_node;
-    SGPropertyNode_ptr _busPower_node;
-    SGPropertyNode_ptr _serviceable_node;
 
     SGPropertyNode_ptr _mode_node;
     SGPropertyNode_ptr _knob_node;
@@ -84,7 +81,7 @@ private:
     simgear::TiedPropertyList _tiedProperties;
     
     SGPropertyNode_ptr _identBtn_node;
-    bool _identMode;
+    bool _identMode = false;
     bool _kt70Compat;
     
     // Outputs
@@ -96,20 +93,18 @@ private:
     SGPropertyNode_ptr _airspeed_node;
 
     // Internal
-    std::string _name;
-    int _num;
     Mode _mode;
     KnobPosition _knob;
     double _identTime;
-    int _listener_active;
+    int _listener_active = 0;
     double _requiredBusVolts;
     std::string _altitudeSourcePath;
     std::string _autoGroundPath;
     std::string _airspeedSourcePath;
     
-    void valueChanged (SGPropertyNode *);
+    void valueChanged (SGPropertyNode *) override;
+    
     int setMinMax(int val);
-    bool has_power() const;
 };
 
 #endif // TRANSPONDER_HXX

@@ -45,9 +45,7 @@
 // this is /instrumentation/airspeed-indicator/indicated-speed-kt but this can be
 // changed by setting the airspeed-path property as shown above.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "transponder.hxx"
 
@@ -66,15 +64,17 @@ const int INVALID_ALTITUDE = -9999;
 const int INVALID_AIRSPEED = -9999;
 const int INVALID_ID = -9999;
 
-Transponder::Transponder(SGPropertyNode *node)
-    :
-    _identMode(false),
-    _name(node->getStringValue("name", "transponder")),
-    _num(node->getIntValue("number", 0)),
-    _mode((Mode) node->getIntValue("mode", 1)),
-    _listener_active(0)
+Transponder::Transponder(SGPropertyNode *node) :
+    _mode((Mode) node->getIntValue("mode", 1))
 {
-    _requiredBusVolts = node->getDoubleValue("bus-volts", 8.0);
+    readConfig(node, "transponder");
+
+    // ensure older power-supply name works
+    if (node->hasChild("bus-volts")) {
+        SG_LOG(SG_INSTR, SG_DEV_WARN, "Transponder: use new supply-volatge prop: 'minimum-supply-volts' instead of 'bus-volts'");
+        setMinimumSupplyVolts(node->getDoubleValue("bus-volts", 8.0));
+    }
+    
     _altitudeSourcePath = node->getStringValue("encoder-path", "/instrumentation/altimeter");
     _autoGroundPath = node->getStringValue("auto-ground");
     _airspeedSourcePath = node->getStringValue("airspeed-path", "/instrumentation/airspeed-indicator/indicated-speed-kt");
@@ -89,10 +89,10 @@ Transponder::~Transponder()
 
 void Transponder::init()
 {
-    SGPropertyNode *node = fgGetNode("/instrumentation/" + _name, _num, true );
+    SGPropertyNode *node = fgGetNode(nodePath(), true);
+    initServicePowerProperties(node);
 
     // Inputs
-    _busPower_node = fgGetNode("/systems/electrical/outputs/transponder", true);
     _pressureAltitude_node = fgGetNode(_altitudeSourcePath, true);
     _autoGround_node = fgGetNode(_autoGroundPath, true);
     _airspeedIndicator_node = fgGetNode(_airspeedSourcePath, true);
@@ -123,9 +123,6 @@ void Transponder::init()
     _identBtn_node->setBoolValue(false);
     _identBtn_node->addChangeListener(this);
     
-    _serviceable_node = node->getChild("serviceable", 0, true);
-    _serviceable_node->setBoolValue(true);
-    
     _idCode_node = node->getChild("id-code", 0, true);
     _idCode_node->addChangeListener(this);
     // set default, but don't overwrite value from defaults.xml or -set.xml
@@ -153,7 +150,7 @@ void Transponder::init()
 void Transponder::bind()
 {
     if (_kt70Compat) {
-        SGPropertyNode *node = fgGetNode("/instrumentation/" + _name, _num, true );
+        SGPropertyNode *node = fgGetNode(nodePath(), true );
         _tiedProperties.setRoot(node);
         
         _tiedProperties.Tie("annunciators/fl", this,
@@ -174,12 +171,12 @@ void Transponder::bind()
 void Transponder::unbind()
 {
     _tiedProperties.Untie();
+    AbstractInstrument::unbind();
 }
-
 
 void Transponder::update(double dt)
 {
-    if (has_power() && _serviceable_node->getBoolValue())
+    if (isServiceableAndPowered())
     {
         // Mode C & S send also altitude
         Mode effectiveMode = (_knob == KNOB_ALT || _knob == KNOB_GROUND) ? _mode : MODE_A;
@@ -243,7 +240,7 @@ void Transponder::update(double dt)
         }
     }
     else
-    {
+    { // un-powered or u/s
       _altitude_node->setIntValue(INVALID_ALTITUDE);
       _altitudeValid_node->setBoolValue(false);
       _ident_node->setBoolValue(false);
@@ -314,11 +311,6 @@ void Transponder::valueChanged(SGPropertyNode *prop)
     _listener_active--;
 }
 
-bool Transponder::has_power() const
-{
-    return (_knob_node->getIntValue() > KNOB_STANDBY) && (_busPower_node->getDoubleValue() > _requiredBusVolts);
-}
-
 bool Transponder::getFLAnnunciator() const
 {
     return (_knob == KNOB_ALT) || (_knob == KNOB_GROUND) || (_knob == KNOB_TEST);
@@ -348,4 +340,10 @@ bool Transponder::getReplyAnnunciator() const
 {
     return _identMode || (_knob == KNOB_TEST);
 }
+
+bool Transponder::isPowerSwitchOn() const
+{
+    return (_knob_node->getIntValue() > KNOB_STANDBY);
+}
+
 

@@ -39,6 +39,10 @@ protected:
     int number() const { return _index; }
     
     void unbind() override;
+    
+    void setMinimumSupplyVolts(double v);
+    
+    virtual bool isPowerSwitchOn() const;
 private:
     std::string _name;
     int _index = 0;
