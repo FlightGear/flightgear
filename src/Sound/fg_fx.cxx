@@ -61,6 +61,10 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
     _internal = _props->getNode("sim/current-view/internal", true);
 
+    _atc_enabled = _props->getNode("sim/sound/atc/enabled", true);
+    _atc_volume = _props->getNode("sim/sound/atc/volume", true);
+    _atc_ext = _props->getNode("sim/sound/atc/external-view", true);
+
     _smgr = globals->get_subsystem<FGSoundManager>();
     if (!_smgr) {
       return;
@@ -70,13 +74,14 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _refname = refname;
     _smgr->add(this, refname);
 
-    if (!_is_aimodel)
+    if (!_is_aimodel) // only for the main aircraft
     {
         _avionics = _smgr->find("avionics", true);
         _avionics->tie_to_listener();
+        
+        _atc = _smgr->find("atc", true);
+        _atc->tie_to_listener();
     }
-    else
-        _avionics = NULL;
 }
 
 void FGFX::unbind()
@@ -176,15 +181,28 @@ FGFX::update (double dt)
 
       
     if ( _enabled->getBoolValue() ) {
-        if ( _avionics && _avionics_enabled->getBoolValue())
+        if ( _avionics)
         {
-            if (_avionics_ext->getBoolValue() || _internal->getBoolValue()) {
+            const bool e = _avionics_enabled->getBoolValue();
+            if (e && (_avionics_ext->getBoolValue() || _internal->getBoolValue())) {
                 // avionics sound is enabled
                 _avionics->resume(); // no-op if already in resumed state
                 _avionics->set_volume( _avionics_volume->getFloatValue() );
             }
             else
                 _avionics->suspend();
+        }
+        
+        if ( _atc)
+        {
+            const bool e = _atc_enabled->getBoolValue();
+            if (e && (_atc_ext->getBoolValue() || _internal->getBoolValue())) {
+                // ATC sound is enabled
+                _atc->resume(); // no-op if already in resumed state
+                _atc->set_volume( _atc_volume->getFloatValue() );
+            }
+            else
+                _atc->suspend();
         }
 
         set_volume( _volume->getDoubleValue() );

@@ -52,16 +52,18 @@ public:
     FGFX ( const std::string &refname, SGPropertyNode *props = 0 );
     virtual ~FGFX ();
 
-    virtual void init ();
-    virtual void reinit ();
-    virtual void update (double dt);
-            void unbind();
+    void init ();
+    void reinit ();
+    void update (double dt) override;
+    void unbind();
 
 private:
 
     bool _active;
     bool _is_aimodel;
     SGSharedPtr<SGSampleGroup> _avionics;
+    SGSharedPtr<SGSampleGroup> _atc;
+    
     std::vector<SGXmlSound *> _sound;
 
     SGPropertyNode_ptr _props;
@@ -71,6 +73,9 @@ private:
     SGPropertyNode_ptr _avionics_volume;
     SGPropertyNode_ptr _avionics_ext;
     SGPropertyNode_ptr _internal;
+    SGPropertyNode_ptr _atc_enabled;
+    SGPropertyNode_ptr _atc_volume;
+    SGPropertyNode_ptr _atc_ext;
 };
 
 
