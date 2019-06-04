@@ -133,7 +133,7 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
   assert(smgr != NULL);
 
-  SG_LOG(SG_INSTR,SG_INFO,"AtisSpeaker voice is " << voice );
+  SG_LOG(SG_INSTR, SG_DEBUG,"AtisSpeaker voice is " << voice );
   FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
 
   synthesizer->synthesize(_synthesizeRequest);
@@ -259,8 +259,6 @@ private:
 
 class MetarBridge: public SGReferenced, public SGPropertyChangeListener {
 public:
-  MetarBridge();
-  ~MetarBridge();
 
   void bind();
   void unbind();
@@ -282,19 +280,11 @@ private:
   std::string _requestedId;
   SGPropertyNode_ptr _realWxEnabledNode;
   SGPropertyNode_ptr _metarPropertiesNode;
-  SGPropertyNode * _atisNode;
+    SGPropertyNode * _atisNode = nullptr;
   ATISEncoder _atisEncoder;
 };
+
 typedef SGSharedPtr<MetarBridge> MetarBridgeRef;
-
-MetarBridge::MetarBridge()
-    : _atisNode(0)
-{
-}
-
-MetarBridge::~MetarBridge()
-{
-}
 
 void MetarBridge::bind()
 {
@@ -476,11 +466,6 @@ public:
   void unbind() override;
 
 private:
-  string getSampleGroupRefname() const
-  {
-    return _rootNode->getPath();
-  }
-
   bool _useEightPointThree = false;
   MetarBridgeRef _metarBridge;
   AtisSpeaker _atisSpeaker;
@@ -488,27 +473,29 @@ private:
   SGSharedPtr<FrequencyFormatterBase> _stbyFrequencyFormatter;
   const SignalQualityComputerRef _signalQualityComputer;
 
-  double _stationTTL;
-  double _frequency;
+  double _stationTTL = 0.0;
+  double _frequency = -1.0;
   flightgear::CommStationRef _commStationForFrequency;
-  SGSharedPtr<SGSampleGroup> _sampleGroup;
 
   PropertyObject<double> _volume_norm;
   PropertyObject<string> _atis;
   PropertyObject<bool> _addNoise;
   PropertyObject<double> _cutoffSignalQuality;
+  
+  std::string _soundPrefix;
+  void stopAudio();
+  void updateAudio();
+  
+  SGSampleGroup* _sampleGroup = nullptr;
 
 };
 
-CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node)
-    :   _metarBridge(new MetarBridge()),
-        _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer()),
-
-        _stationTTL(0.0),
-        _frequency(-1.0),
-        _commStationForFrequency(NULL)
+CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :
+  _metarBridge(new MetarBridge),
+  _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer)
 {
   readConfig(node, "comm");
+  _soundPrefix = name() + "_" + std::to_string(number()) + "_";
   _useEightPointThree = node->getBoolValue("eight-point-three", false );
 }
 
@@ -569,10 +556,9 @@ void CommRadioImpl::bind()
 void CommRadioImpl::unbind()
 {
   _atis.node()->removeChangeListener(&_atisSpeaker);
-  if (_sampleGroup.valid()) {
-      globals->get_subsystem<SGSoundMgr>()->remove(getSampleGroupRefname());
-  }
-
+  
+  stopAudio();
+  
   _metarBridge->unbind();
   AbstractInstrument::unbind();
 }
@@ -589,6 +575,11 @@ void CommRadioImpl::init()
   // initialize add-noize to true if unset
   s = _addNoise.node()->getStringValue();
   if (s.empty()) _addNoise = true;
+  
+  auto soundManager = globals->get_subsystem<SGSoundMgr>();
+  if (soundManager) {
+    _sampleGroup = soundManager->find("atc", false);
+  }
 }
 
 void CommRadioImpl::update(double dt)
@@ -607,53 +598,11 @@ void CommRadioImpl::update(double dt)
     return;
   }
 
-  {
-    static const char * atisSampleRefName = "atis";
-    static const char * noiseSampleRefName = "noise";
-
-    if (_atisSpeaker.hasSpokenAtis()) {
-      // the speaker has created a new atis sample
-      if (!_sampleGroup.valid()) {
-        // create a sample group for our instrument on the fly
-          SGSoundMgr * smgr = globals->get_subsystem<SGSoundMgr>();
-
-        _sampleGroup = smgr->find(getSampleGroupRefname(), true);
-        _sampleGroup->tie_to_listener();
-        if (_addNoise) {
-          SGSharedPtr<SGSoundSample> noise = new SGSoundSample("Sounds/radionoise.wav", globals->get_fg_root());
-          _sampleGroup->add(noise, noiseSampleRefName);
-          _sampleGroup->play_looped(noiseSampleRefName);
-        }
-
-      }
-      // remove previous atis sample
-      _sampleGroup->remove(atisSampleRefName);
-      // add and play the new atis sample
-      SGSharedPtr<SGSoundSample> sample = _atisSpeaker.getSpokenAtis();
-      _sampleGroup->add(sample, atisSampleRefName);
-      _sampleGroup->play_looped(atisSampleRefName);
-    }
-
-    if (_sampleGroup.valid()) {
-      if (_addNoise) {
-        // if noise is configured and there is a noise sample
-        // scale noise and signal volume by signalQuality.
-        SGSoundSample * s = _sampleGroup->find(noiseSampleRefName);
-        if ( NULL != s) {
-          s->set_volume(1.0 - _signalQuality_norm);
-          s = _sampleGroup->find(atisSampleRefName);
-          s->set_volume(_signalQuality_norm);
-        }
-      }
-      // master volume for radio, mute on bad signal quality
-      _sampleGroup->set_volume(_signalQuality_norm >= _cutoffSignalQuality ? _volume_norm : 0.0);
-    }
-  }
-
   if (!isServiceableAndPowered()) {
     _metarBridge->clearMetar();
     _atis = "";
     _stationTTL = 0.0;
+    stopAudio();
     return;
   }
 
@@ -672,8 +621,11 @@ void CommRadioImpl::update(double dt)
 
   }
 
-  if (false == _commStationForFrequency.valid()) return;
-
+  if (false == _commStationForFrequency.valid()) {
+    stopAudio();
+    return;
+  }
+  
   _slantDistance_m = dist(_commStationForFrequency->cart(), SGVec3d::fromGeod(position));
 
   SGGeodesy::inverse(position, _commStationForFrequency->geod(), _trueBearingTo_deg, _trueBearingFrom_deg, _trackDistance_m);
@@ -703,6 +655,58 @@ void CommRadioImpl::update(double dt)
       _metarBridge->clearMetar();
       _atis = "";
       break;
+  }
+  
+  updateAudio();
+}
+
+void CommRadioImpl::updateAudio()
+{
+  if (!_sampleGroup)
+    return;
+  
+  const string noiseRef = _soundPrefix + "_noise";
+  const string atisRef = _soundPrefix + "_atis";
+
+  SGSoundSample* noiseSample = _sampleGroup->find(noiseRef);
+  
+  // create noise sample if necessary, and play forever
+  if (_addNoise && !noiseSample) {
+    SGSharedPtr<SGSoundSample> noise = new SGSoundSample("Sounds/radionoise.wav", globals->get_fg_root());
+    _sampleGroup->add(noise, noiseRef);
+    _sampleGroup->play_looped(noiseRef);
+    noiseSample = noise;
+  }
+  
+  if (_atisSpeaker.hasSpokenAtis()) {
+    // the speaker has created a new atis sample
+    // remove previous atis sample
+    _sampleGroup->remove(atisRef);
+    
+    SGSharedPtr<SGSoundSample> sample = _atisSpeaker.getSpokenAtis();
+    _sampleGroup->add(sample, atisRef);
+    _sampleGroup->play_looped(atisRef);
+  }
+  
+  // adjust volumes
+  double atisVolume = (_signalQuality_norm >= _cutoffSignalQuality) ? _volume_norm : 0.0;
+  if (_addNoise) {
+    const double noiseVol = (1.0 - _signalQuality_norm) * _volume_norm;
+    atisVolume = _signalQuality_norm * _volume_norm;
+    noiseSample->set_volume(noiseVol);
+  }
+  
+  SGSoundSample* s = _sampleGroup->find(atisRef);
+  if (s) {
+    s->set_volume(atisVolume);
+  }
+}
+  
+void CommRadioImpl::stopAudio()
+{
+  if (_sampleGroup) {
+    _sampleGroup->remove(_soundPrefix + "_noise");
+    _sampleGroup->remove(_soundPrefix + "_atis");
   }
 }
 
