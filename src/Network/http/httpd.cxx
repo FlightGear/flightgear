@@ -426,8 +426,13 @@ int WebsocketConnection::onConnect(struct mg_connection * connection)
 int WebsocketConnection::request(struct mg_connection * connection)
 {
   setConnection(connection);
+  if ((connection->wsbits & 0x0f) >= 0x8) {
+    // control opcode (close/ping/pong)
+    return MG_MORE;
+  }
+
   MongooseHTTPRequest request(connection);
-  SG_LOG(SG_NETWORK, SG_INFO, "WebsocketConnection::request for " << request.Uri);
+  SG_LOG(SG_NETWORK, SG_DEBUG, "WebsocketConnection::request for " << request.Uri);
 
   if ( NULL == _websocket) {
     SG_LOG(SG_NETWORK, SG_ALERT, "httpd: unhandled websocket uri: " << request.Uri);
