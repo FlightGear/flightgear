@@ -76,13 +76,13 @@ private:
     double   _minRange;
     double   _currentCommFrequency;
     double   _currentCallFrequency;
-    bool     _register;
-    bool     _enabled;
-    bool     _initialized;
+    bool     _register = true;
+    bool     _enabled = false;
+    bool     _initialized = false;
     int      _regId;
-    int      _currentCallIdent;
+    int      _currentCallIdent = -1;
     //int      _callComm1;
-    int      _listener_active;
+    int      _listener_active = 0;
     std::string   _server;
     std::string   _callsign;
     std::string   _username;
