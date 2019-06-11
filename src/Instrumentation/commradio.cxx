@@ -494,6 +494,9 @@ CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :
   _metarBridge(new MetarBridge),
   _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer)
 {
+  // set a special value to indicate we don't require a power supply node
+  // by default
+  setDefaultPowerSupplyPath("NO_DEFAULT");
   readConfig(node, "comm");
   _soundPrefix = name() + "_" + std::to_string(number()) + "_";
   _useEightPointThree = node->getBoolValue("eight-point-three", false );
@@ -689,11 +692,12 @@ void CommRadioImpl::updateAudio()
   }
   
   // adjust volumes
-  double atisVolume = (_signalQuality_norm >= _cutoffSignalQuality) ? _volume_norm : 0.0;
+  const bool doSquelch = (_signalQuality_norm < _cutoffSignalQuality);
+  double atisVolume = doSquelch ? 0.0 : _volume_norm;
   if (_addNoise) {
     const double noiseVol = (1.0 - _signalQuality_norm) * _volume_norm;
     atisVolume = _signalQuality_norm * _volume_norm;
-    noiseSample->set_volume(noiseVol);
+    noiseSample->set_volume(doSquelch ? 0.0: noiseVol);
   }
   
   SGSoundSample* s = _sampleGroup->find(atisRef);
