@@ -56,6 +56,8 @@ extern bool global_crashRptEnabled;
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/emesary/emesary.hxx>
+#include <simgear/emesary/notifications.hxx>
 
 #include <Add-ons/AddonManager.hxx>
 #include <Main/locale.hxx>
@@ -101,11 +103,52 @@ using std::vector;
 extern int _bootstrap_OSInit;
 
 static SGPropertyNode_ptr frame_signal;
+static SGPropertyNode_ptr nasal_gc_threaded;
+static SGPropertyNode_ptr nasal_gc_threaded_wait;
 
-// What should we do when we have nothing else to do?  Let's get ready
-// for the next move and update the display?
+#ifdef NASAL_BACKGROUND_GC_THREAD
+extern "C" {
+    extern void startNasalBackgroundGarbageCollection();
+    extern void stopNasalBackgroundGarbageCollection();
+    extern void performNasalBackgroundGarbageCollection();
+    extern void awaitNasalGarbageCollectionComplete(bool can_wait);
+}
+#endif
+static  simgear::Notifications::MainLoopNotification mln_begin(simgear::Notifications::MainLoopNotification::Type::Begin);
+static  simgear::Notifications::MainLoopNotification mln_end(simgear::Notifications::MainLoopNotification::Type::End);
+static  simgear::Notifications::MainLoopNotification mln_started(simgear::Notifications::MainLoopNotification::Type::Started);
+static  simgear::Notifications::MainLoopNotification mln_stopped(simgear::Notifications::MainLoopNotification::Type::Stopped);
+static  simgear::Notifications::NasalGarbageCollectionConfigurationNotification *ngccn = nullptr;
+// This method is usually called after OSG has finished rendering a frame in what OSG calls an idle handler and
+// is reposonsible for invoking all of the relevant per frame processing; most of which is handled by subsystems.
 static void fgMainLoop( void )
 {
+    //
+    // the Nasal GC will automatically run when (during allocation) it discovers that more space is needed.
+    // This has a cost of between 5ms and 50ms (depending on the amount of currently active Nasal).
+    // The result is unscheduled and unpredictable pauses during normal operation when the garbage collector
+    // runs; which typically occurs at intervals between 1sec and 20sec.
+    // 
+    // The solution to this, which overall increases CPU load, is to use a thread to do this; as Nasal is thread safe
+    // so what we do is to launch the garbage collection at the end of the main loop and then wait for completion at the start of the
+    // next main loop.
+    // So although the overall CPU is increased it has little effect on the frame rate; if anything it is an overall benefit
+    // as there are no unscheduled long duration frames.
+    //
+    // The implementation appears to work fine without waiting for completion at the start of the frame - so
+    // this wait at the start can be disabled by setting the property /sim/nasal-gc-threaded-wait to false.
+
+    // first we see if the config has changed. The notification will return true from SetActive/SetWait when the
+    // value has been changed - and thus we notify the Nasal system that it should configure itself accordingly.
+    auto use_threaded_gc = nasal_gc_threaded->getBoolValue();
+    auto threaded_wait = nasal_gc_threaded_wait->getBoolValue();
+    bool notify_gc_config = false;
+    notify_gc_config = ngccn->SetActive(use_threaded_gc);
+    notify_gc_config |= ngccn->SetWait(threaded_wait);
+    if (notify_gc_config)
+         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(*ngccn);
+
+     simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_begin);
 
     if (sglog().has_popup()) {
         std::string s = sglog().get_popup();
@@ -126,6 +169,8 @@ static void fgMainLoop( void )
     // flush commands waiting in the queue
     SGCommandMgr::instance()->executedQueuedCommands();
     simgear::AtomicChangeListener::fireChangeListeners();
+
+     simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_end);
 }
 
 static void initTerrasync()
@@ -240,6 +285,8 @@ static void registerMainLoop()
 {
     // stash current frame signal property
     frame_signal = fgGetNode("/sim/signals/frame", true);
+    nasal_gc_threaded = fgGetNode("/sim/nasal-gc-threaded", true);
+    nasal_gc_threaded_wait = fgGetNode("/sim/nasal-gc-threaded-wait", true);
     fgRegisterIdleHandler( fgMainLoop );
 }
 
@@ -376,6 +423,10 @@ static void fgIdleFunction ( void ) {
         // run the main loop.
         fgSetBool("sim/sceneryloaded", false);
         registerMainLoop();
+        
+        ngccn = new simgear::Notifications::NasalGarbageCollectionConfigurationNotification(nasal_gc_threaded->getBoolValue(), nasal_gc_threaded_wait->getBoolValue());
+         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(*ngccn);
+         simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_started);
     }
 
     if ( idle_state == 2000 ) {
@@ -546,8 +597,8 @@ int fgMainInit( int argc, char **argv )
     }
 
 #if defined(HAVE_QT)
+    flightgear::initApp(argc, argv);
     if (showLauncher) {
-        flightgear::initApp(argc, argv);
         flightgear::checkKeyboardModifiersForSettingFGRoot();
 
         if (!flightgear::runLauncherDialog()) {
@@ -626,6 +677,8 @@ int fgMainInit( int argc, char **argv )
     int result = fgOSMainLoop();
     frame_signal.clear();
     fgOSCloseWindow();
+
+     simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_stopped);
 
     simgear::clearEffectCache();
 
