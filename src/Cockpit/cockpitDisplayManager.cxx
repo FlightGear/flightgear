@@ -42,7 +42,6 @@ namespace flightgear
 {
 
 CockpitDisplayManager::CockpitDisplayManager () 
-    : SGSubsystemGroup("CockpitDisplayManager") 
 {
 }
 

@@ -38,7 +38,7 @@ public:
     virtual void removeAutopilot( const std::string & name ) = 0;
 
 protected:
-    FGXMLAutopilotGroup() : SGSubsystemGroup("FGXMLAutopilotGroup") {}
+    FGXMLAutopilotGroup() : SGSubsystemGroup() {}
 };
 
 #endif // _XMLAUTO_HXX

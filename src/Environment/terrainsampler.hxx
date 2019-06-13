@@ -30,7 +30,6 @@ namespace Environment {
 class TerrainSampler : public SGSubsystemGroup
 {
 public:
-    TerrainSampler() : SGSubsystemGroup("TerrainSampler") {}
     static TerrainSampler * createInstance( SGPropertyNode_ptr rootNode );
 };
 
