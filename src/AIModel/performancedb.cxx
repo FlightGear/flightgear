@@ -13,12 +13,10 @@
 #include <Main/globals.hxx>
 #include <cstring>
 #include <iostream>
-#include <fstream>
 
 #include "performancedata.hxx"
 
 using std::string;
-using std::cerr;
 
 PerformanceDB::PerformanceDB()
 {

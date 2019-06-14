@@ -186,17 +186,17 @@ bool FGGroundController::checkTransmissionState(int minState, int maxState, Traf
     int state = i->getState();
     if ((state >= minState) && (state <= maxState) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-            //cerr << "Checking state " << state << " for " << i->getAircraft()->getCallSign() << endl;
+			SG_LOG(SG_ATC, SG_DEBUG, "Checking state " << state << " for " << i->getAircraft()->getCallSign());
             SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
                 trans_num->setIntValue(-1);
                 // PopupCallback(n);
-                //cerr << "Selected transmission message " << n << endl;
+				SG_LOG(SG_ATC, SG_DEBUG, "Selected transmission message " << n);
                 //FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
-                //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
+				SG_LOG(SG_ATC, SG_DEBUG, "creating message for " << i->getAircraft()->getCallSign());
                 transmit(&(*i), dynamics, msgId, msgDir, false);
                 return false;
             }
@@ -362,7 +362,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
             for (TrafficVectorIterator i =
                         towerController->getActiveTraffic().begin();
                     i != towerController->getActiveTraffic().end(); i++) {
-                //cerr << "Comparing " << current->getId() << " and " << i->getId() << endl;
+				SG_LOG(SG_ATC, SG_BULK, "Comparing " << current->getId() << " and " << i->getId());
                 SGGeod other(SGGeod::fromDegM(i->getLongitude(),
                                               i->getLatitude(),
                                               i->getAltitude()));
@@ -371,10 +371,9 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                 if (bearing > 180)
                     bearing = 360 - bearing;
                 if ((dist < mindist) && (bearing < 60.0)) {
-                    //cerr << "Current aircraft " << current->getAircraft()->getTrafficRef()->getCallSign()
-                    //     << " is closest to " << i->getAircraft()->getTrafficRef()->getCallSign()
-                    //     << ", which has status " << i->getAircraft()->isScheduledForTakeoff()
-                    //     << endl;
+                    //SG_LOG(SG_ATC, SG_BULK, "Current aircraft " << current->getAircraft()->getTrafficRef()->getCallSign()
+                    //   << " is closest to " << i->getAircraft()->getTrafficRef()->getCallSign()
+                    //   << ", which has status " << i->getAircraft()->isScheduledForTakeoff());
                     mindist = dist;
                     closest = i;
 //                    minbearing = bearing;
@@ -481,7 +480,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
         return;
     }
     if (current->getAircraft()->getTakeOffStatus() == 2) {
-        //cerr << current->getAircraft()->getCallSign() << ". Taxi in position and hold" << endl;
+        SG_LOG(SG_ATC, SG_DEBUG, current->getAircraft()->getCallSign() << ". Taxi in position and hold");
         current->setHoldPosition(false);
         current->clearSpeedAdjustment();
         return;
@@ -536,21 +535,21 @@ void FGGroundController::checkHoldPosition(int id, double lat,
     }
     if (current->getState() == 0) {
         if ((origStatus != currStatus) && available) {
-            //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
+			SG_LOG(SG_ATC, SG_DEBUG, "Issuing hold short instruction " << currStatus << " " << available);
             if (currStatus == true) { // No has a hold short instruction
                 transmit(&(*current), dynamics, MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
-                //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
+                SG_LOG(SG_ATC, SG_DEBUG, "Transmitting hold short instruction " << currStatus << " " << available);
                 current->setState(1);
             } else {
                 transmit(&(*current), dynamics, MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
-                //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
+                SG_LOG(SG_ATC, SG_DEBUG, "Transmitting resume instruction " << currStatus << " " << available);
                 current->setState(2);
             }
             lastTransmission = now;
             available = false;
             // Don't act on the changed instruction until the transmission is confirmed
             // So set back to original status
-            //cerr << "Current state " << current->getState() << endl;
+			SG_LOG(SG_ATC, SG_DEBUG, "Current state " << current->getState());
         }
 
     }
@@ -569,7 +568,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
         current->setHoldPosition(false);
     }
     if (current->getAircraft()->getTakeOffStatus() && (current->getState() == 0)) {
-        //cerr << "Scheduling " << current->getAircraft()->getCallSign() << " for hold short" << endl;
+		SG_LOG(SG_ATC, SG_DEBUG, "Scheduling " << current->getAircraft()->getCallSign() << " for hold short");
         current->setState(6);
     }
     if (checkTransmissionState(6,6, current, now, MSG_REPORT_RUNWAY_HOLD_SHORT, ATC_AIR_TO_GROUND)) {
@@ -602,7 +601,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
 
 bool FGGroundController::checkForCircularWaits(int id)
 {
-    //cerr << "Performing Wait check " << id << endl;
+	SG_LOG(SG_ATC, SG_DEBUG, "Performing Wait check " << id);
     int target = 0;
     TrafficVectorIterator current, other;
     TrafficVectorIterator i = activeTraffic.begin();
@@ -628,7 +627,7 @@ bool FGGroundController::checkForCircularWaits(int id)
     int counter = 0;
 
     if (id == target) {
-        //cerr << "aircraft waits for user" << endl;
+		SG_LOG(SG_ATC, SG_DEBUG, "aircraft waits for user");
         return false;
     }
 
@@ -648,9 +647,9 @@ bool FGGroundController::checkForCircularWaits(int id)
             return false;
         }
         if (i == activeTraffic.end() || (trafficSize == 0)) {
-            //cerr << "[Waiting for traffic at Runway: DONE] " << endl << endl;;
+			SG_LOG(SG_ATC, SG_DEBUG, "[Waiting for traffic at Runway: DONE] ");
             // The target id is not found on the current network, which means it's at the tower
-            //SG_LOG(SG_GENERAL, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
+            SG_LOG(SG_ATC, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
             return false;
         }
         other = i;
@@ -660,20 +659,20 @@ bool FGGroundController::checkForCircularWaits(int id)
         // the setWaitsForID(id) is set to current when the aircraft
         // is waiting for the user controlled aircraft.
         //if (current->getId() == other->getId()) {
-        //    cerr << "Caught the impossible trap" << endl;
-        //    cerr << "Current = " << current->getId() << endl;
-        //    cerr << "Other   = " << other  ->getId() << endl;
+        //    SG_LOG(SG_ATC, SG_DEBUG, "Caught the impossible trap");
+        //    SG_LOG(SG_ATC, SG_DEBUG, "Current = " << current->getId());
+        //    SG_LOG(SG_ATC, SG_DEBUG, "Other   = " << other  ->getId());
         //    for (TrafficVectorIterator at = activeTraffic.begin();
         //          at != activeTraffic.end();
         //          at++) {
-        //        cerr << "currently active aircraft : " << at->getCallSign() << " with Id " << at->getId() << " waits for " << at->getWaitsForId() << endl;
+        //          SG_LOG(SG_ATC, SG_BULK, "currently active aircraft : " << at->getCallSign() << " with Id " << at->getId() << " waits for " << at->getWaitsForId());
         //    }
         //    exit(1);
         if (current->getId() == other->getId())
             return false;
         //}
-        //cerr << current->getCallSign() << " (" << current->getId()  << ") " << " -> " << other->getCallSign()
-        //     << " (" << other->getId()  << "); " << endl;;
+        //SG_LOG(SG_ATC, SG_DEBUG, current->getCallSign() << " (" << current->getId()  << ") " << " -> " << other->getCallSign()
+        //     << " (" << other->getId()  << "); ");
         //current = other;
     }
 
@@ -683,7 +682,7 @@ bool FGGroundController::checkForCircularWaits(int id)
 
 
     //if (printed)
-    //   cerr << "[done] " << endl << endl;;
+	    SG_LOG(SG_ATC, SG_DEBUG, "[done] ");
     if (id == target) {
         SG_LOG(SG_GENERAL, SG_WARN,
                "Detected circular wait condition: Id = " << id <<
@@ -767,7 +766,7 @@ void FGGroundController::render(bool visible)
         //int nr = ;
         globals->get_scenery()->get_scene_graph()->removeChild(group);
         //while (group->getNumChildren()) {
-        //  cerr << "Number of children: " << group->getNumChildren() << endl;
+        //   SG_LOG(SG_ATC, SG_DEBUG, "Number of children: " << group->getNumChildren());
         //simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
         //osg::MatrixTransform *obj_trans = (osg::MatrixTransform*) group->getChild(0);
         //geode->releaseGLObjects();
@@ -802,7 +801,7 @@ void FGGroundController::render(bool visible)
                 double coveredDistance = length * 0.5;
                 SGGeod center;
                 SGGeodesy::direct(start, heading, coveredDistance, center, az2);
-                //std::cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << std::endl;
+				SG_LOG(SG_ATC, SG_BULK, "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading);
                 ///////////////////////////////////////////////////////////////////////////////
                 // Make a helper function out of this
                 osg::Matrix obj_pos;
@@ -816,7 +815,7 @@ void FGGroundController::render(bool visible)
                     elevationStart = ((i)->getAircraft()->_getAltitude());
                 }
                 double elevationEnd   = segment->getEnd()->getElevationM();
-                //cerr << "Using elevation " << elevationEnd << endl;
+				SG_LOG(SG_ATC, SG_DEBUG, "Using elevation " << elevationEnd);
 
                 if ((elevationEnd == 0) || (elevationEnd = parent->getElevation())) {
                     SGGeod center2 = end;
@@ -835,7 +834,7 @@ void FGGroundController::render(bool visible)
 
                 double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
 
-                //cerr << "1. Using mean elevation : " << elevationMean << " and " << slope << endl;
+				SG_LOG(SG_ATC, SG_DEBUG, "1. Using mean elevation : " << elevationMean << " and " << slope);
 
                 WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), elevationMean+ 0.5, -(heading), slope );
 
@@ -866,7 +865,7 @@ void FGGroundController::render(bool visible)
                 group->addChild( obj_trans );
                 /////////////////////////////////////////////////////////////////////
             } else {
-                //std::cerr << "BIG FAT WARNING: current position is here : " << pos << std::endl;
+				SG_LOG(SG_ATC, SG_INFO, "BIG FAT WARNING: current position is here : " << pos);
             }
             // Next: Draw the other taxi segments.
             for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
@@ -909,7 +908,7 @@ void FGGroundController::render(bool visible)
                     double length         = segmentK->getLength();
                     double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
 
-                    // cerr << "2. Using mean elevation : " << elevationMean << " and " << slope << endl;
+					SG_LOG(SG_ATC, SG_DEBUG, "2. Using mean elevation : " << elevationMean << " and " << slope);
 
                     SGGeod segCenter = segmentK->getCenter();
                     WorldCoordinate( obj_pos, segCenter.getLatitudeDeg(), segCenter.getLongitudeDeg(),

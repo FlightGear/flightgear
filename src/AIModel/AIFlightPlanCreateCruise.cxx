@@ -24,7 +24,6 @@
 #endif
 
 #include <fstream>
-#include <iostream>
 
 #include <Airports/airport.hxx>
 #include <Airports/runways.hxx>
@@ -39,7 +38,6 @@
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 
-using std::iostream;
 using std::string;
 
 /*
@@ -135,7 +133,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 	     dep->getId().c_str(),
 	     arr->getId().c_str());
     routefile.append(buffer);
-    cerr << "trying to read " << routefile.c_str()<< endl;
+    SG_LOG(SG_AI, SG_DEBUG, "trying to read " << routefile.c_str());
     //exit(1);
     if (routefile.exists())
       {
@@ -157,14 +155,14 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     int node;
     if (route.empty()) {
       // if no route could be found, create a direct gps route...
-      cerr << "still no route found from " << dep->getName() << " to << " << arr->getName() <<endl;
+      SG_LOG(SG_AI, SG_DEBUG, "still no route found from " << dep->getName() << " to << " << arr->getName());
 
       //exit(1);
     } else {
       while(route.next(&node))
 	{
 	  FGNode *fn = globals->get_airwaynet()->findNode(node);
-	  //cerr << "Checking status of each waypoint: " << fn->getIdent();
+	  SG_LOG(SG_AI, SG_BULK, "Checking status of each waypoint: " << fn->getIdent());
 
 	  SGWayPoint first(init_waypoint->longitude,
 			   init_waypoint->latitude,
@@ -192,23 +190,23 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 	  // in our flight plan:
 	  // 1) current waypoint is less then 100 miles away OR
 	  // 2) curren waypoint is ahead of us, at any distance
-	  //cerr << " Distance : " << dist << " : Course diff " << crsDiff 
-	  //     << " crs to dest : " << course
-	  //     << " crs to wpt  : " << crse;
+	  SG_LOG(SG_AI, SG_BULK, " Distance : " << dist << " : Course diff " << crsDiff 
+	       << " crs to dest : " << course
+	       << " crs to wpt  : " << crse);
 	  if ((dist > 20.0) && (crsDiff > 90.0))
 	    {
 	      //useWpt = false;
 	      // Once we start including waypoints, we have to continue, even though
 	      // one of the following way point would suffice.
 	      // so once is the useWpt flag is set to true, we cannot reset it to false.
-	      //cerr << " discarding " << endl;
+	      SG_LOG(SG_AI, SG_BULK, " discarding ");
 	      //   << ": Course difference = " << crsDiff
 	      //  << "Course = " << course
-	      // << "crse   = " << crse << endl;
+	      // << "crse   = " << crse);
 	    }
 	  else {
 	    //i = ids.end()-1;
-	    //cerr << " accepting " << endl;
+	    SG_LOG(SG_AI, SG_BULK, " accepting ")
 
 	    //ids.pop_back();
 	    wpt = new waypoint;
@@ -240,7 +238,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 					 activeRunway,
 					 &rwy)))
   {
-    cout << "Failed to find runway for " << arr->getId() << endl;
+    SG_LOG(SG_AI, SG_WARN, "Failed to find runway for " << arr->getId());
     // Hmm, how do we handle a potential error like this?
     exit(1);
   }
@@ -248,12 +246,9 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     //arr->getActiveRunway(string("com"), 1, test);
     //exit(1);
 
-    //cerr << "Altitude = " << alt << endl;
-    //cerr << "Done" << endl;
-    //if (arr->getId() == "EHAM")
-    //  {
-    //    cerr << "Creating cruise to EHAM " << latitude << " " << longitude << endl;
-    //  }
+    SG_LOG(SG_AI, SG_DEBUG, "Altitude = " << alt);
+    SG_LOG(SG_AI, SG_DEBUG, "Done");
+    SG_LOG(SG_AI, SG_DEBUG, "Creating cruise to " << arr->getId() << " " << latitude << " " << longitude);
     heading = rwy._heading;
     azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }

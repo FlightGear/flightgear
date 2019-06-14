@@ -20,8 +20,6 @@
 #  include <config.h>
 #endif
 
-#include <iostream>
-
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -47,7 +45,6 @@
 #include "AIFlightPlan.hxx"
 #include "AIAircraft.hxx"
 
-using std::cerr;
 using std::string;
 
 FGAIWaypoint::FGAIWaypoint() {
@@ -379,8 +376,8 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
   /*
   if ((lead_distance > (3*turn_radius)) && (current->on_ground == false)) {
-      // cerr << "Warning: Lead-in distance is large. Inbound = " << inbound
-      //      << ". Outbound = " << outbound << ". Lead in angle = " << leadInAngle  << ". Turn radius = " << turn_radius << endl;
+      SG_LOG(SG_AI, SG_ALERT, "Warning: Lead-in distance is large. Inbound = " << inbound
+            << ". Outbound = " << outbound << ". Lead in angle = " << leadInAngle  << ". Turn radius = " << turn_radius);
        lead_distance = 3 * turn_radius;
        return;
   }
@@ -431,7 +428,7 @@ void FGAIFlightPlan::resetWaypoints()
       wpt->setFlaps_down  ( (*i)->getFlaps_down() );
       wpt->setFinished    ( false                 );
       wpt->setOn_ground   ( (*i)->getOn_ground()  );
-      //cerr << "Recycling waypoint " << wpt->name << endl;
+	  SG_LOG(SG_AI, SG_DEBUG, "Recycling waypoint " << wpt->getName());
       deleteWaypoints();
       pushBackWaypoint(wpt);
     }
