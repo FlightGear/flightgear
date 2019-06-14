@@ -116,6 +116,7 @@ add_executable(run_test_suite
     ${TESTSUITE_SOURCES}
     ${TESTSUITE_HEADERS}
 )
+add_dependencies(run_test_suite buildId)
 set_target_properties(run_test_suite
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
