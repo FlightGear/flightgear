@@ -56,7 +56,7 @@ extern bool global_crashRptEnabled;
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/commands.hxx>
-#include <simgear/emesary/emesary.hxx>
+#include <simgear/emesary/Emesary.hxx>
 #include <simgear/emesary/notifications.hxx>
 
 #include <Add-ons/AddonManager.hxx>
