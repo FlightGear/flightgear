@@ -431,7 +431,7 @@ void FGFDM::setOutputProperties(float dt)
         Rotor*r=(Rotor*)_airplane.getRotorgear()->getRotor(i);
         int j = 0;
         float f;
-        char b[256];
+        char b[300];
         while((j = r->getValueforFGSet(j, b, &f)))
             if(b[0]) fgSetFloat(b,f);
         j=0;
