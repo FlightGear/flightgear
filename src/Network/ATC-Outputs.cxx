@@ -273,8 +273,8 @@ bool FGATCOutput::open( int lock_fd ) {
     analog_out_fd = ::open( analog_out_file, O_WRONLY );
     if ( analog_out_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", analog_out_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", analog_out_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -282,8 +282,8 @@ bool FGATCOutput::open( int lock_fd ) {
     lamps_fd = ::open( lamps_file, O_WRONLY );
     if ( lamps_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", lamps_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", lamps_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -291,8 +291,8 @@ bool FGATCOutput::open( int lock_fd ) {
     radio_display_fd = ::open( radio_display_file, O_RDWR );
     if ( radio_display_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", radio_display_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", radio_display_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -300,8 +300,8 @@ bool FGATCOutput::open( int lock_fd ) {
     stepper_fd = ::open( stepper_file, O_RDWR );
     if ( stepper_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", stepper_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", stepper_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -1076,8 +1076,8 @@ bool FGATCOutput::close() {
     result = ::close( lamps_fd );
     if ( result == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", lamps_file );
+	char msg[300];
+	snprintf( msg, 300, "Error closing %s", lamps_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -1085,8 +1085,8 @@ bool FGATCOutput::close() {
     result = ::close( radio_display_fd );
     if ( result == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", radio_display_file );
+	char msg[300];
+	snprintf( msg, 300, "Error closing %s", radio_display_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -1094,8 +1094,8 @@ bool FGATCOutput::close() {
     result = ::close( stepper_fd );
     if ( result == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", stepper_file );
+	char msg[300];
+	snprintf( msg, 300, "Error closing %s", stepper_file );
 	perror( msg );
 	exit( -1 );
     }

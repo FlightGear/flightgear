@@ -158,8 +158,8 @@ bool FGATCInput::open() {
     analog_in_fd = ::open( analog_in_file, O_RDONLY );
     if ( analog_in_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", analog_in_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", analog_in_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -167,8 +167,8 @@ bool FGATCInput::open() {
     radios_fd = ::open( radios_file, O_RDWR );
     if ( radios_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", radios_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", radios_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -176,8 +176,8 @@ bool FGATCInput::open() {
     switches_fd = ::open( switches_file, O_RDONLY );
     if ( switches_fd == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", switches_file );
+	char msg[300];
+	snprintf( msg, 300, "Error opening %s", switches_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -989,8 +989,8 @@ bool FGATCInput::close() {
     result = ::close( analog_in_fd );
     if ( result == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", analog_in_file );
+	char msg[300];
+	snprintf( msg, 300, "Error closing %s", analog_in_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -998,8 +998,8 @@ bool FGATCInput::close() {
     result = ::close( radios_fd );
     if ( result == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", radios_file );
+	char msg[300];
+	snprintf( msg, 300, "Error closing %s", radios_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -1007,8 +1007,8 @@ bool FGATCInput::close() {
     result = ::close( switches_fd );
     if ( result == -1 ) {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", switches_file );
+	char msg[300];
+	snprintf( msg, 300, "Error closing %s", switches_file );
 	perror( msg );
 	exit( -1 );
     }
