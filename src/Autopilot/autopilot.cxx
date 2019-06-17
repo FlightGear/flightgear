@@ -118,10 +118,10 @@ void readInterfaceProperties( SGPropertyNode_ptr prop_root,
 static ComponentForge componentForge;
 
 Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode ) :
+  SGSubsystemGroup("Autopilot"),
   _name("unnamed autopilot"),
   _serviceable(true),
-  _rootNode(rootNode),
-  SGSubsystemGroup("Autopilot")
+  _rootNode(rootNode)
 {
   if (componentForge.empty())
   {
