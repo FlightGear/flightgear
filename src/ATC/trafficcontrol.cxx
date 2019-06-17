@@ -1107,7 +1107,8 @@ FGATCInstruction FGTowerController::getInstruction(int id)
 }
 
 void FGTowerController::render(bool visible) {
-	SG_LOG(SG_ATC, SG_INFO, "FGTowerController::render function not yet implemented");
+	// this should be bulk, since its called quite often
+	SG_LOG(SG_ATC, SG_BULK, "FGTowerController::render function not yet implemented");
 }
 
 string FGTowerController::getName() {
