@@ -1787,7 +1787,8 @@ ActiveRunway *FGApproachController::getRunway(const string& name)
 }
 
 void FGApproachController::render(bool visible) {
-	SG_LOG(SG_ATC, SG_INFO, "FGApproachController::render function not yet implemented");
+	// Must be BULK in order to prevent it being called each frame
+	SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
 }
 
 
