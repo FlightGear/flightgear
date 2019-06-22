@@ -158,6 +158,8 @@ if (HAVE_QT)
                         ThumbnailImageItem.hxx
                         PopupWindowTracker.cxx
                         PopupWindowTracker.hxx
+                        QmlPropertyModel.hxx
+                        QmlPropertyModel.cxx
                         QmlPositioned.hxx
                         QmlPositioned.cxx
                         QmlNavCacheWrapper.hxx

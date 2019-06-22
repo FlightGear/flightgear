@@ -1,4 +1,6 @@
-// Copyright (C) 2020  James Turner  <james@flightgear.org>
+// FGQmlPropertyNode.hxx - expose SGPropertyNode to QML
+//
+// Copyright (C) 2019  James Turner  <james@flightgear.org>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -64,6 +66,8 @@ public:
 
     int childCount() const;
     FGQmlPropertyNode* childAt(int index) const;
+
+    static QVariant propertyValueAsVariant(SGPropertyNode* p);
 
 protected:
     // SGPropertyChangeListener API

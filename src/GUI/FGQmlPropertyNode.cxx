@@ -1,4 +1,6 @@
-// Copyright (C) 2020  James Turner  <james@flightgear.org>
+// FGQmlPropertyNode.cxx - expose SGPropertyNode to QML
+//
+// Copyright (C) 2019  James Turner  <james@flightgear.org>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -74,32 +76,7 @@ bool FGQmlPropertyNode::set(QVariant newValue)
 
 QVariant FGQmlPropertyNode::value() const
 {
-    if (!_prop)
-        return {};
-
-    switch (_prop->getType()) {
-    case simgear::props::INT:
-    case simgear::props::LONG:
-        return _prop->getIntValue();
-    case simgear::props::BOOL:      return _prop->getBoolValue();
-    case simgear::props::DOUBLE:    return _prop->getDoubleValue();
-    case simgear::props::FLOAT:     return _prop->getFloatValue();
-    case simgear::props::STRING:    return QString::fromStdString(_prop->getStringValue());
-
-    case simgear::props::VEC3D: {
-         const SGVec3d v3 = _prop->getValue<SGVec3d>();
-         return QVariant::fromValue(QVector3D(v3.x(), v3.y(), v3.z()));
-    }
-
-    case simgear::props::VEC4D: {
-         const SGVec4d v4 = _prop->getValue<SGVec4d>();
-         return QVariant::fromValue(QVector4D(v4.x(), v4.y(), v4.z(), v4.w()));
-    }
-    default:
-        break;
-    }
-
-    return {}; // null qvariant
+    return propertyValueAsVariant(_prop);
 }
 
 QString FGQmlPropertyNode::path() const
@@ -144,6 +121,36 @@ void FGQmlPropertyNode::setNode(SGPropertyNode_ptr node)
 SGPropertyNode_ptr FGQmlPropertyNode::node() const
 {
     return _prop;
+}
+
+QVariant FGQmlPropertyNode::propertyValueAsVariant(SGPropertyNode* p)
+{
+    if (!p)
+        return {};
+
+    switch (p->getType()) {
+    case simgear::props::INT:
+    case simgear::props::LONG:
+        return p->getIntValue();
+    case simgear::props::BOOL: return p->getBoolValue();
+    case simgear::props::DOUBLE: return p->getDoubleValue();
+    case simgear::props::FLOAT: return p->getFloatValue();
+    case simgear::props::STRING: return QString::fromStdString(p->getStringValue());
+
+    case simgear::props::VEC3D: {
+        const SGVec3d v3 = p->getValue<SGVec3d>();
+        return QVariant::fromValue(QVector3D(v3.x(), v3.y(), v3.z()));
+    }
+
+    case simgear::props::VEC4D: {
+        const SGVec4d v4 = p->getValue<SGVec4d>();
+        return QVariant::fromValue(QVector4D(v4.x(), v4.y(), v4.z(), v4.w()));
+    }
+    default:
+        break;
+    }
+
+    return {}; // null qvariant
 }
 
 void FGQmlPropertyNode::valueChanged(SGPropertyNode *node)
