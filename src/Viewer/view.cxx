@@ -643,11 +643,6 @@ View::recalc ()
   set_clean();
 }
 
-static FGAIMultiplayer* get_multiplayer(const std::string& callsign)
-{
-  return dynamic_cast<FGMultiplayMgr*>(globals->get_subsystem("mp"))->getMultiplayer(callsign);
-}
-
 
 /* Gets position and orientation of user aircraft or multiplayer aircraft.
 
@@ -679,21 +674,6 @@ static void getAircraftPositionOrientation(
     roll  = globals->get_props()->getDoubleValue(root + "/orientation/roll-deg");
 }
 
-
-/* If <node>/<relative_path> exists, set <found>=true and return as a
-double. Otherwise leaves <found> unchanged and returns <default_value). */
-static double getDoubleValue(
-        SGPropertyNode* node,
-        const std::string& relative_path,
-        double default_value,
-        bool& found
-        )
-{
-    node = node->getNode(relative_path);
-    if (!node) return default_value;
-    found = true;
-    return node->getDoubleValue();
-}
 
 /* Finds the offset of a view position from an aircraft model's origin.
 
@@ -739,7 +719,7 @@ static bool getViewOffsets(
     /* View offsets are in /ai/models/multiplayer[]/set/sim/view[]/config/. We assume
     that <root> is /ai/models/multiplayer[]. */
     std::string   callsign = globals->get_props()->getStringValue(root + "/callsign");
-    FGAIMultiplayer*  multiplayer = get_multiplayer(callsign);
+    FGAIMultiplayer*  multiplayer = globals->get_subsystem<FGMultiplayMgr>()->getMultiplayer(callsign);
     if (multiplayer) {
       sim = multiplayer->getPropertyRoot()->getNode("set/sim");
     }
@@ -749,15 +729,13 @@ static bool getViewOffsets(
     /* Most (all?) -set.xml files don't define an offset for view 7, Model
     View, so we instead use the offsets for view 1, Helicopter View. */
     SGPropertyNode* sim_view = sim->getNode("view", view_index == 7 ? 1 : view_index);
-    offset_m.x() = getDoubleValue(sim_view, "config/" + infix + "x-offset-m", 0, found_any);
-    offset_m.y() = getDoubleValue(sim_view, "config/" + infix + "y-offset-m", 0, found_any);
-    offset_m.z() = getDoubleValue(sim_view, "config/" + infix + "z-offset-m", 0, found_any);
+    offset_m.x() = sim_view->getDoubleValue("config/" + infix + "x-offset-m", 0);
+    offset_m.y() = sim_view->getDoubleValue("config/" + infix + "y-offset-m", 0);
+    offset_m.z() = sim_view->getDoubleValue("config/" + infix + "z-offset-m", 0);
   }
   else
   {
-    offset_m.x() = 0;
-    offset_m.y() = 0;
-    offset_m.z() = 0;
+    offset_m = SGVec3d::zeros();
   }
   offset_m += adjust;
   return found_any;
@@ -841,6 +819,125 @@ View::recalcLookFrom ()
   mViewOrientation = ec2body*mViewOffsetOr*q;
 }
 
+
+/* Change angle and field of view so that we can see the aircraft and the
+ground immediately below it. */
+
+/* Some aircraft appear to have elevation that is slightly below ground level
+when on the ground, e.g.  SenecaII, which makes get_elevation_m() fail. So we
+pass a slightly incremented elevation. */
+void View::handleAGL(const std::string& root)
+{
+  /* Change angle and field of view so that we can see the aircraft and the
+  ground immediately below it. */
+
+  /* Some aircraft appear to have elevation that is slightly below ground
+  level when on the ground, e.g.  SenecaII, which makes get_elevation_m()
+  fail. So we pass a slightly incremented elevation. */
+  double                      ground_altitude = 0;
+  const simgear::BVHMaterial* material = NULL;
+  SGGeod                      target_plus = _target;
+  target_plus.setElevationM(target_plus.getElevationM() + 1);
+  bool ok = globals->get_scenery()->get_elevation_m(target_plus, ground_altitude, &material);
+
+  if (!ok)
+  {
+      /* Just in case get_elevation_m() fails, we may as well use sea level. */
+      ground_altitude = 0;
+      SG_LOG(SG_FLIGHT, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
+  }
+
+  double    h_distance = SGGeodesy::distanceM(_position, _target);
+  if (h_distance == 0) {
+      /* Not sure this should ever happen, but we need to handle this here
+      otherwise we'll get divide-by-zero. Just use whatever field of view the
+      user has set. */
+      set_fov(_fov_user_deg);
+  }
+  else {
+    /* Find vertical region we want to be able to see. */
+    double  relative_height_target = _target.getElevationM() - _position.getElevationM();
+    double  relative_height_ground = ground_altitude - _position.getElevationM();
+
+    /* We expand the field of view so that it hopefully shows the
+    whole aircraft and a little more of the ground.
+
+    We use chase-distance as a crude measure of the aircraft's size. There
+    doesn't seem to be any more definitive information.
+
+    We damp our measure of ground level, to avoid the view jumping around if
+    an aircraft flies over buildings.
+    */
+
+    relative_height_ground -= 2;
+
+    double    chase_distance_m;
+    if (root == "") {
+        chase_distance_m = globals->get_props()->getDoubleValue("sim/chase-distance-m");
+    }
+    else {
+        chase_distance_m = globals->get_props()->getDoubleValue(root + "/set/sim/chase-distance-m");
+        if (chase_distance_m == 0)    chase_distance_m = 50;
+    }
+    double    aircraft_size_vertical = fabs(chase_distance_m) * 0.3;
+    double    aircraft_size_horizontal = fabs(chase_distance_m) * 0.9;
+
+    double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
+    double    relative_height_ground_ = relative_height_ground;
+    _lookat_agl_damping.updateTarget(relative_height_ground);
+    if (relative_height_ground > relative_height_target) {
+        /* Damping of relative_height_ground can result in it being
+        temporarily above the aircraft, so we ensure the aircraft is visible.
+        */
+        relative_height_ground = relative_height_ground_;
+    }
+
+    double  angle_v_target = atan(relative_height_target_plus / h_distance);
+    double  angle_v_ground = atan(relative_height_ground / h_distance);
+
+    /* The target we want to use is determined by the midpoint of the two
+    angles we've calculated. */
+    double  angle_v_mid = (angle_v_target + angle_v_ground) / 2;
+    _target.setElevationM(_position.getElevationM() + h_distance * tan(angle_v_mid));
+
+    /* Set field of view. We use fabs to avoid things being upside down if
+    target is below ground level (e.g. new multiplayer aircraft are briefly
+    at -9999ft). */
+    double  fov_v = fabs(angle_v_target - angle_v_ground);
+    double  fov_v_deg = fov_v / 3.1415 * 180;
+
+    set_fov( fov_v_deg);
+
+    /* Ensure that we can see entire horizontal extent of the aircraft
+    (assuming airplane is horizontal), and also correct things if display
+    aspect ratio results in set_fov() not setting the vertical field of view
+    that we want. */
+    double  fov_h;
+    fov_h = 2 * atan(aircraft_size_horizontal / 2 / h_distance);
+    double  fov_h_deg = fov_h / 3.1415 * 180;
+
+    double  correction_v = fov_v_deg / get_v_fov();
+    double  correction_h = fov_h_deg / get_h_fov();
+    double  correction = std::max(correction_v, correction_h);
+    if (correction > 1) {
+        fov_v_deg *= correction;
+    }
+
+    /* Apply scaling from user field of view setting. */
+    fov_v_deg *= _fov_user_deg / _configFOV_deg;
+    set_fov(fov_v_deg);
+
+    SG_LOG(SG_FLIGHT, SG_DEBUG, ""
+            << " _position=" << _position
+            << " _target=" << _target
+            << " ground_altitude=" << ground_altitude
+            << " relative_height_target_plus=" << relative_height_target_plus
+            << " relative_height_ground=" << relative_height_ground
+            );
+  }
+}
+
+
 /* Views of an aircraft e.g. Helicopter View. */
 void
 View::recalcLookAt ()
@@ -908,113 +1005,7 @@ View::recalcLookAt ()
   }
 
   if (_lookat_agl) {
-    /* Change angle and field of view so that we can see the aircraft and the
-    ground immediately below it. */
-    
-    /* Some aircraft appear to have elevation that is slightly below ground
-    level when on the ground, e.g.  SenecaII, which makes get_elevation_m()
-    fail. So we pass a slightly incremented elevation. */
-    double                      ground_altitude = 0;
-    const simgear::BVHMaterial* material = NULL;
-    SGGeod                      target_plus = _target;
-    target_plus.setElevationM(target_plus.getElevationM() + 1);
-    bool ok = globals->get_scenery()->get_elevation_m(target_plus, ground_altitude, &material);
-    
-    if (!ok)
-    {
-        /* Just in case get_elevation_m() fails, we may as well use sea level. */
-        ground_altitude = 0;
-        SG_LOG(SG_FLIGHT, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
-    }
-    
-    double    h_distance = SGGeodesy::distanceM(_position, _target);
-    if (h_distance == 0) {
-        /* Not sure this should ever happen, but we need to handle this here
-        otherwise we'll get divide-by-zero. Just use whatever field of view the
-        user has set. */
-        set_fov(_fov_user_deg);
-    }
-    else {
-      /* Find vertical region we want to be able to see. */
-      double  relative_height_target = _target.getElevationM() - _position.getElevationM();
-      double  relative_height_ground = ground_altitude - _position.getElevationM();
-
-      /* We expand the field of view so that it hopefully shows the
-      whole aircraft and a little more of the ground.
-      
-      We use chase-distance as a crude measure of the aircraft's size. There
-      doesn't seem to be any more definitive information.
-      
-      We damp our measure of ground level, to avoid the view jumping around if
-      an aircraft flies over buildings.
-      */
-      
-      relative_height_ground -= 2;
-      
-      double    chase_distance_m;
-      if (root == "") {
-          chase_distance_m = globals->get_props()->getDoubleValue("sim/chase-distance-m");
-      }
-      else {
-          chase_distance_m = globals->get_props()->getDoubleValue(root + "/set/sim/chase-distance-m");
-          if (chase_distance_m == 0)    chase_distance_m = 50;
-      }
-      double    aircraft_size_vertical = fabs(chase_distance_m) * 0.3;
-      double    aircraft_size_horizontal = fabs(chase_distance_m) * 0.9;
-      
-      double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
-      double    relative_height_ground_ = relative_height_ground;
-      _lookat_agl_damping.setGet(relative_height_ground);
-      if (relative_height_ground > relative_height_target) {
-          /* Damping of relative_height_ground can result in it being
-          temporarily above the aircraft, so we ensure the aircraft is visible.
-          */
-          relative_height_ground = relative_height_ground_;
-      }
-
-      double  angle_v_target = atan(relative_height_target_plus / h_distance);
-      double  angle_v_ground = atan(relative_height_ground / h_distance);
-
-      /* The target we want to use is determined by the midpoint of the two
-      angles we've calculated. */
-      double  angle_v_mid = (angle_v_target + angle_v_ground) / 2;
-      _target.setElevationM(_position.getElevationM() + h_distance * tan(angle_v_mid));
-
-      /* Set field of view. We use fabs to avoid things being upside down if
-      target is below ground level (e.g. new multiplayer aircraft are briefly
-      at -9999ft). */
-      double  fov_v = fabs(angle_v_target - angle_v_ground);
-      double  fov_v_deg = fov_v / 3.1415 * 180;
-
-      set_fov( fov_v_deg);
-
-      /* Ensure that we can see entire horizontal extent of the aircraft
-      (assuming airplane is horizontal), and also correct things if display
-      aspect ratio results in set_fov() not setting the vertical field of view
-      that we want. */
-      double  fov_h;
-      fov_h = 2 * atan(aircraft_size_horizontal / 2 / h_distance);
-      double  fov_h_deg = fov_h / 3.1415 * 180;
-
-      double  correction_v = fov_v_deg / get_v_fov();
-      double  correction_h = fov_h_deg / get_h_fov();
-      double  correction = std::max(correction_v, correction_h);
-      if (correction > 1) {
-          fov_v_deg *= correction;
-      }
-
-      /* Apply scaling from user field of view setting. */
-      fov_v_deg *= _fov_user_deg / _configFOV_deg;
-      set_fov(fov_v_deg);
-
-      SG_LOG(SG_FLIGHT, SG_DEBUG, ""
-              << " _position=" << _position
-              << " _target=" << _target
-              << " ground_altitude=" << ground_altitude
-              << " relative_height_target_plus=" << relative_height_target_plus
-              << " relative_height_ground=" << relative_height_ground
-              );
-    }
+    handleAGL(root);
   }
   else {
     set_fov(_fov_user_deg);
@@ -1150,7 +1141,7 @@ double View::Damping::get()
   return _current;
 }
 
-void View::Damping::setGet(double& io)
+void View::Damping::updateTarget(double& io)
 {
     setTarget(io);
     io = get();

@@ -267,6 +267,7 @@ private:
     void setTargetHeading_deg (double heading_deg);
     void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
 
+    void handleAGL(const std::string& root);
 
     // Orientation offsets rotations from reference orientation.
     // Goal settings are for smooth transition from prior
@@ -349,7 +350,7 @@ private:
        void     setTarget(double target);
        void     update(double dt, void* id);
        double   get();
-       void     setGet(double& io);
+       void     updateTarget(double& io);
 
        private:
            void*    _id;

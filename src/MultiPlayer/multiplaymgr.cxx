@@ -44,6 +44,7 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIMultiplayer.hxx>
@@ -2322,32 +2323,6 @@ FGMultiplayMgr::FillMsgHdr(T_MsgHdr *MsgHdr, int MsgId, unsigned _len)
 }
 
 
-static bool starts_with(const std::string& s, const std::string& prefix)
-{
-    return s.substr(0, prefix.size()) == prefix;
-}
-static bool ends_with(const std::string& s, const std::string& suffix)
-{
-    return s.substr(s.size()-suffix.size()) == suffix;
-}
-
-/* Outputs a SGPropertyNode to a stream, for debugging. */
-static std::ostream& output(std::ostream& s, const SGPropertyNode& node, std::string prefix="")
-{
-    s << prefix << node.getName() << ": "
-            << "index=" << node.getIndex() << ": "
-            << "position=" << node.getPosition() << ": "
-            ;
-    node.printOn(s);
-    s << "\n";
-    
-    for (int i=0; i<node.nChildren(); ++i) {
-        const SGPropertyNode* node_child = node.getChild(i);
-        output(s, *node_child, prefix + "    ");
-    }
-    return s;
-}
-
 /* If <from>/<path> exists and <to>/<path> doesn't, copy the former to the
 latter. */
 static void copy_default(SGPropertyNode* from, const char* path, SGPropertyNode* to) {
@@ -2357,6 +2332,18 @@ static void copy_default(SGPropertyNode* from, const char* path, SGPropertyNode*
             to->setDoubleValue(path, from_->getDoubleValue());
         }
     }
+}
+
+static std::string  makeStringPropertyNameSafe(const std::string& s)
+{
+  std::string   ret;
+  for (size_t i=0; i<s.size(); ++i) {
+    char    c = s[i];
+    if (i==0 && !isalpha(c) && c!='_')  c = '_';
+    if (!isalnum(c) && c!='.' && c!='_' && c!='-')  c = '_';
+    ret += c;
+  }
+  return ret;
 }
 
 FGAIMultiplayer*
@@ -2395,7 +2382,8 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   
   SGPropertyNode* set = NULL;
   
-  if (ends_with(modelName, ".xml") && starts_with(modelName, "Aircraft/")) {
+  if (simgear::strutils::ends_with(modelName, ".xml")
+      && simgear::strutils::starts_with(modelName, "Aircraft/")) {
   
     std::string tail = modelName.substr(strlen("Aircraft/"));
     
@@ -2408,39 +2396,34 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
     dirs.push_back(fgdata_aircraft);
     
     SGPath model_file;
-    std::string model_file_head;
-    std::string model_file_tail;
-    std::string aircraft_dir;
-    PathList::const_iterator it;
-    for ( it = dirs.begin(); it != dirs.end(); ++it) {
-      model_file = *it;
-      model_file.append(tail);
-      if (model_file.exists()) {
-        model_file_head = it->str() + '/';
-        model_file_tail = model_file.str().substr(model_file_head.size());
-        ssize_t p = model_file_tail.find('/');
-        aircraft_dir = model_file_head + model_file_tail.substr(0, p);
-        break;
-      }
-    }
-    if (it == dirs.end()) {
-        /* We failed to find model file. */
-    }
-    else {
-      /* Try each -set.xml file in <modelName> aircraft directory. In theory
+    PathList::const_iterator it = std::find_if(dirs.begin(), dirs.end(),
+        [&](SGPath dir) {
+            model_file = dir;
+            model_file.append(tail);
+            return model_file.exists();
+        });
+    
+    if (it != dirs.end()) {
+      /* We've found the model file.
+      
+      Now try each -set.xml file in <modelName> aircraft directory. In theory
       an aircraft could have a -set.xml in an unrelated directory so we should
       scan all directories in globals->get_aircraft_paths(), but in practice
       most -set.xml files and models are in the same aircraft directory. */
+      std::string model_file_head = it->str() + '/';
+      std::string model_file_tail = model_file.str().substr(model_file_head.size());
+      ssize_t p = model_file_tail.find('/');
+      std::string aircraft_dir = model_file_head + model_file_tail.substr(0, p);
       simgear::Dir  dir(aircraft_dir);
       std::vector<SGPath>   dir_contents = dir.children(0 /*types*/, "-set.xml");
       /* simgear::Dir::children() claims that second param is glob, but
       actually it's just a suffix. */
       
-      for (size_t i=0; i<dir_contents.size(); ++i) {
+      for (auto path: dir_contents) {
         set = mp->_getProps()->addChild("set");
         bool    ok = true;
         try {
-          readProperties(dir_contents[i], set);
+          readProperties(path, set);
         }
         catch ( const std::exception &e ) {
           ok = false;
@@ -2504,14 +2487,8 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   necessary, but simpifies debugging a lot and seems pretty lightweight. Note
   that we need to avoid special characters in the node name, otherwise the
   property system forces a fatal error. */
-  std::string   path = "/ai/models/callsigns/";
-  for (size_t i=0; i<callsign.size(); ++i) {
-    char    c = callsign[i];
-    if (i==0 && !isalpha(c) && c!='_')  c = '_';
-    if (!isalnum(c) && c!='.' && c!='_' && c!='-')  c = '_';
-    path += c;
-  }
-  globals->get_props()->setIntValue( path, mp->_getProps()->getIndex());
+  std::string   path = "/ai/models/callsigns/" + makeStringPropertyNameSafe(callsign);
+  globals->get_props()->setIntValue(path, mp->_getProps()->getIndex());
   
   return mp;
 }
