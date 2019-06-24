@@ -103,10 +103,9 @@ void Approach::addTransition(Transition* aTrans)
 bool Approach::route(WayptRef aIAF, WayptVec& aWps)
 {
   if (aIAF.valid()) {
-    WptTransitionMap::iterator it;
     bool haveTrans = false;
-    for (it = _transitions.begin(); it != _transitions.end(); ++it) {
-      Transition* t= it->second;
+    for (auto te : _transitions) {
+      auto t = te.second;
       if (t->enroute()->matches(aIAF)) {
         t->route(aWps);
         haveTrans = true;
@@ -115,13 +114,28 @@ bool Approach::route(WayptRef aIAF, WayptVec& aWps)
     } // of transitions iteration
     
     if (!haveTrans) {
-      SG_LOG(SG_NAVAID, SG_INFO, "approach " << ident() << " has no transition " <<
-        "for IAF: " << aIAF->ident());
-      return false;
+      if (_primary.front()->matches(aIAF)) {
+        // direct IAF on the approach, no transition is needed
+      } else {
+        // we couldn't find the IAF at the front of any obvious thing - either
+        // the primary waypoints or any transition we have defined.
+        // warn and just use the primary waypoints down below
+        SG_LOG(SG_NAVAID, SG_INFO, "approach " << ident() << " has no transition " <<
+               "for IAF: " << aIAF->ident());
+        return false;
+      }
     }
   }
   
-  return routeFromVectors(aWps);
+  bool ok = routeFromVectors(aWps);
+  
+  if (ok && !aWps.empty() && aIAF.valid() && aWps.front()->matches(aIAF)) {
+    // don't duplicate the IAF into the route we return. This avoids a
+    // duplicated waypt between the end of a STAR and the approach
+    aWps.erase(aWps.begin());
+  }
+  
+  return ok;
 }
 
 bool Approach::routeFromVectors(WayptVec& aWps)
