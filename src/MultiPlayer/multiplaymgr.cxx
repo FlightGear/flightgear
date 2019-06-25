@@ -2464,11 +2464,8 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   views.
   */
   SGPropertyNode*   view_1 = set_sim->getNode("view", 1);
-  int views_with_default_z_offset_m[] = {1, 2, 3, 5, 7, 8};
-  for (unsigned i=0;
-      i != sizeof(views_with_default_z_offset_m)/sizeof(views_with_default_z_offset_m[0]);
-      ++i) {
-    int j = views_with_default_z_offset_m[i];
+  std::initializer_list<int>    views_with_default_z_offset_m = {1, 2, 3, 5, 7, 8};
+  for (int j: views_with_default_z_offset_m) {
     SGPropertyNode* v = set_sim->getChild("view", j);
     if (!v) {
         v = set_sim->addChild("view", j, false /*append*/);
