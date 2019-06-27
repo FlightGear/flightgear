@@ -47,12 +47,13 @@ void NavRadioTests::testBasic()
     SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
     node->setBoolValue("serviceable", true);
     // needed for the radio to power up
-    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/nav", 6.0);
     node->setDoubleValue("frequencies/selected-mhz", 113.8);
 
     SGGeod pos = SGGeod::fromDegFt(-3.352780, 55.499199, 20000);
     setPositionAndStabilise(r.get(), pos);
     
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("operable"));
     CPPUNIT_ASSERT(!strcmp("TLA", node->getStringValue("nav-id")));
     CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
 }
@@ -70,7 +71,7 @@ void NavRadioTests::testCDIDeflection()
     SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
     node->setBoolValue("serviceable", true);
     // needed for the radio to power up
-    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/nav", 6.0);
     node->setDoubleValue("frequencies/selected-mhz", 113.55);
     
     node->setDoubleValue("radials/selected-deg", 25);
@@ -83,6 +84,7 @@ void NavRadioTests::testCDIDeflection()
     posOnRadial.setElevationFt(10000);
     setPositionAndStabilise(r.get(), posOnRadial);
 
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("operable"));
     CPPUNIT_ASSERT(!strcmp("MCT", node->getStringValue("nav-id")));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection"), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, node->getDoubleValue("heading-needle-deflection-norm"), 0.01);
@@ -190,7 +192,7 @@ void NavRadioTests::testILSBasic()
     
     SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
     node->setBoolValue("serviceable", true);
-    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/nav", 6.0);
     
     // test basic ILS: KSFO 28L
     FGPositioned::TypeFilter f{{FGPositioned::VOR, FGPositioned::ILS, FGPositioned::LOC}};
@@ -295,7 +297,7 @@ void NavRadioTests::testGS()
     
     SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
     node->setBoolValue("serviceable", true);
-    globals->get_props()->setDoubleValue("systems/electrical/outputs/navtest", 6.0);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/nav", 6.0);
     
     // EDDT 28R
     FGPositioned::TypeFilter f{FGPositioned::GS};
