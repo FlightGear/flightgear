@@ -17,10 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_navRadio.hxx"
-#include "test_commRadio.hxx"
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavRadioTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommRadioTests, "Unit tests");
+#ifndef _FG_COMMRADIO_UNIT_TESTS_HXX
+#define _FG_COMMRADIO_UNIT_TESTS_HXX
 
+
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
+
+class SGSubsystem;
+class SGGeod;
+
+// The flight plan unit tests.
+class CommRadioTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(CommRadioTests);
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testWith8Point3Mode);
+    
+    CPPUNIT_TEST_SUITE_END();
+
+    void setPositionAndStabilise(SGSubsystem* r, const SGGeod& g);
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testBasic();
+    void testWith8Point3Mode();
+};
+
+#endif  // _FG_COMMRADIO_UNIT_TESTS_HXX
