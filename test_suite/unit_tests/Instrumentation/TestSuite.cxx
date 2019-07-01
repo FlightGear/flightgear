@@ -18,9 +18,6 @@
  */
 
 #include "test_navRadio.hxx"
-#include "test_commRadio.hxx"
 
 // Set up the unit tests.
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavRadioTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(CommRadioTests, "Unit tests");
-

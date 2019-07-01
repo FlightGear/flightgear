@@ -131,9 +131,7 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   }
 
   FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
-  if (!smgr) {
-    return;
-  }
+  assert(smgr != NULL);
 
   SG_LOG(SG_INSTR, SG_DEBUG,"AtisSpeaker voice is " << voice );
   FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
@@ -380,32 +378,18 @@ private:
 	EightPointThreeFrequencyFormatter( const EightPointThreeFrequencyFormatter & );
 	EightPointThreeFrequencyFormatter & operator = ( const EightPointThreeFrequencyFormatter & );
 
-    void valueChanged (SGPropertyNode * prop)
-    {
-      if( prop == _channel.node() )
-        setFrequency(prop->getDoubleValue());
-      else if( prop == _channelNum.node() )
-        setChannel(prop->getIntValue());
-    }
+	void valueChanged (SGPropertyNode * prop) {
+		if( prop == _channel.node() )
+			setFrequency(prop->getDoubleValue());
+		else if( prop == _channelNum.node() )
+			setChannel(prop->getIntValue());
+	}
 
 	void setChannel( int channel ) {
 		channel %= 3040;
 		if( channel < 0 ) channel += 3040;
-      
-        double f = 118.000 + 0.025*(channel/4);
-        if (channel % 4) {
-           f += 0.005*(channel%4); // 8.3khz channel
-        } else {
-          // 25Khz channel, but we need to adjust to displayed (not real)
-          // frequency back down for the xxx.x25 and xxx.x75 cases
-          const int lowDigits = channel % 16;
-          const bool is25KhzQuarterChannel = (lowDigits == 4) | (lowDigits == 12);
-          if (is25KhzQuarterChannel) {
-            f -= 0.005;
-          }
-        }
-
-		_channel = f; // recurses to update frequency values
+		double f = 118.000 + 0.025*(channel/4) + 0.005*(channel%4);
+		if( f != _channel )	_channel = f;
 	}
 
 	void setFrequency( double channel ) {
@@ -421,22 +405,17 @@ private:
 		// sanitize range and round to nearest kHz.
 		unsigned c = static_cast<int>(SGMiscd::round(SGMiscd::clip( channel, 118.0, 136.99 ) * 1000));
 
-        const int lowDigits = c % 100;
-        const bool is25KhzQuarterChannel = (lowDigits == 20) | (lowDigits == 70);
-        if (is25KhzQuarterChannel) {
-          c += 5;
-        }
-      
 		if ( (c % 25)  == 0 ) {
 			// legacy 25kHz channels continue to be just that.
 			_channelSpacing = 25.0;
 			_frequency = c / 1000.0;
 
 			int channelNum = (c-118000)/25*4;
-          
-          if ( channelNum != _channelNum ) {
-            _channelNum = channelNum;
-          }
+			if( channelNum != _channelNum ) _channelNum = channelNum;
+
+			if( _frequency != channel ) {
+				_channel = _frequency; //triggers recursion
+			}
 		} else {
 			_channelSpacing = 8.33;
 
@@ -469,6 +448,7 @@ private:
     PropertyObject<double> _channelSpacing;
     PropertyObject<string> _formattedChannel;
     PropertyObject<int>   _channelNum;
+
 };
 
 
