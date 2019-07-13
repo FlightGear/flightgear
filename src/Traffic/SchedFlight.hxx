@@ -117,8 +117,6 @@ typedef std::vector<FGScheduledFlight*>::iterator FGScheduledFlightVecIterator;
 
 typedef std::map < std::string, FGScheduledFlightVec > FGScheduledFlightMap;
 
-FGScheduledFlight* createScheduledFlightWithInfo(string curAirport, string destination, string FlightRules, string callsign);
-
 bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b);
 
 

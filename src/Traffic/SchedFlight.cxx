@@ -290,17 +290,6 @@ bool FGScheduledFlight::initializeAirports()
   return true;
 }
 
-// Function to create a new instance of FGScheduledFlight for use with the ATC code
-FGScheduledFlight* createScheduledFlightWithInfo(string departure, string destination, string FlightRules, string callsign){
-	FGScheduledFlight *flight = new FGScheduledFlight;
-	flight->setDepartureAirport(departure);
-	flight->setArrivalAirport(destination);
-	flight->initializeAirports();
-	flight->setFlightRules(FlightRules);
-	flight->setCallSign(callsign);
-	return flight;
-}
-
 bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b) 
 { 
   return (*a) < (*b); 

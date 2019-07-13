@@ -3,6 +3,9 @@
  * Written by Durk Talsma. Started August 1, 2010; based on earlier work
  * by David C. Luff
  *
+ * Updated by Jonathan Redpath. Started June 12, 2019. Documenting and extending
+ * functionality of the ATC subsystem
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -21,7 +24,7 @@
  **************************************************************************/
 
 /**************************************************************************
- * The ATC Manager interfaces the users aircraft with the AI traffic system
+ * The ATC Manager interfaces the users aircraft within the AI traffic system
  * and also monitors the ongoing AI traffic patterns for potential conflicts
  * and interferes where necessary.
  *************************************************************************/
@@ -47,7 +50,9 @@ private:
     bool networkVisible;
     bool initSucceeded;
     SGPropertyNode_ptr trans_num;
-
+    string destination;
+    // SGSharedPtr<FGScheduledFlight> userAircraftScheduledFlight;
+    
 public:
     FGATCManager();
     ~FGATCManager();
