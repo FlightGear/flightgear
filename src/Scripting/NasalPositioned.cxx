@@ -2805,6 +2805,12 @@ static naRef f_flightplan_insertWaypoints(naContext c, naRef me, int argc, naRef
     naRuntimeError(c, "flightplan.insertWaypoints called on non-flightplan object");
   }
 
+  // don't warn when passing a nil to this, which can happen in certain
+  // procedure construction situations
+  if (naIsNil(args[0])) {
+    return naNil();
+  }
+
   WayptVec wps;
   if (!naIsVector(args[0])) {
     naRuntimeError(c, "flightplan.insertWaypoints expects vector as first arg");
