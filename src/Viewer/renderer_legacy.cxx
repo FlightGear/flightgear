@@ -347,6 +347,7 @@ bool FGScenerySwitchCallback::scenery_enabled = false;
 
 FGRenderer::FGRenderer() :
     _sky(NULL),
+    MaximumTextureSize(0),
     _ambientFactor( new osg::Uniform( "fg_SunAmbientColor", osg::Vec4f() ) ),
     _sunDiffuse( new osg::Uniform( "fg_SunDiffuseColor", osg::Vec4f() ) ),
     _sunSpecular( new osg::Uniform( "fg_SunSpecularColor", osg::Vec4f() ) ),
@@ -356,8 +357,7 @@ FGRenderer::FGRenderer() :
     _fogDensity( new osg::Uniform( "fg_FogDensity", 0.0001f ) ),
     _shadowNumber( new osg::Uniform( "fg_ShadowNumber", (int)4 ) ),
     _shadowDistances( new osg::Uniform( "fg_ShadowDistances", osg::Vec4f(5.0, 50.0, 500.0, 5000.0 ) ) ),
-    _depthInColor( new osg::Uniform( "fg_DepthInColor", false ) ),
-    MaximumTextureSize(0)
+    _depthInColor( new osg::Uniform( "fg_DepthInColor", false ) )
 {
     // it's not the real root, whatever that means
     _root = new osg::Group;

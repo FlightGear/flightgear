@@ -62,7 +62,7 @@ FGViewMgr::init ()
     SGPropertyNode *n = config_list[i];
     SGPropertyNode *config = n->getChild("config", 0, true);
 
-      flightgear::View* v = flightgear::View::createFromProperties(config);
+      flightgear::View* v = flightgear::View::createFromProperties(config, n->getIndex());
       if (v) {
           add_view(v);
       }

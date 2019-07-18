@@ -68,6 +68,7 @@ public:
     void SendTextMessage(const std::string &sMsgText);
     // receiver
 
+  FGAIMultiplayer* getMultiplayer(const std::string& callsign);
 private:
     friend class MPPropertyListener;
 
@@ -94,7 +95,6 @@ private:
     FGAIMultiplayer* addMultiplayer(const std::string& callsign,
                                     const std::string& modelName,
                                     const int fallback_model_index);
-    FGAIMultiplayer* getMultiplayer(const std::string& callsign);
     void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
     void ProcessPosMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress,
                        long stamp);

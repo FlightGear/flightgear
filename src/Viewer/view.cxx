@@ -39,10 +39,13 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
+#include <MultiPlayer/multiplaymgr.hxx>
+#include <AIModel/AIMultiplayer.hxx>
 #include "CameraGroup.hxx"
 
 using namespace flightgear;
-
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGViewer.
 ////////////////////////////////////////////////////////////////////////
@@ -56,7 +59,9 @@ View::View( ViewType Type, bool from_model, int from_model_index,
                     double roll_offset_deg,
                     double fov_deg, double aspect_ratio_multiplier,
                     double target_x_offset_m, double target_y_offset_m,
-                    double target_z_offset_m, double near_m, bool internal ):
+                    double target_z_offset_m, double near_m, bool internal,
+                    bool lookat_agl, double lookat_agl_damping,
+                    int view_index ):
     _dirty(true),
     _roll_deg(0),
     _pitch_deg(0),
@@ -64,6 +69,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _target_roll_deg(0),
     _target_pitch_deg(0),
     _target_heading_deg(0),
+    _lookat_agl_damping(lookat_agl_damping /*damping*/, 0 /*min*/, 0 /*max*/),
     _scaling_type(FG_SCALING_MAX)
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
@@ -73,8 +79,10 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _at_model = at_model;
     _at_model_index = at_model_index;
 
-    _internal = internal;
-
+    _internal = internal; _internal = true;
+    _lookat_agl = lookat_agl;
+    _view_index = view_index;
+    
     _dampFactor = SGVec3d::zeros();
     _dampOutput = SGVec3d::zeros();
     _dampTarget = SGVec3d::zeros();
@@ -109,6 +117,8 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     }
 
     _configFOV_deg = _fov_deg;
+    
+    _fov_user_deg = _fov_deg;
 
     _aspect_ratio_multiplier = aspect_ratio_multiplier;
     _target_offset_m.x() = target_x_offset_m;
@@ -120,7 +130,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     // a reasonable guess for init, so that the math doesn't blow up
 }
 
-View* View::createFromProperties(SGPropertyNode_ptr config)
+View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
 {
     double aspect_ratio_multiplier
         = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
@@ -128,7 +138,9 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
     // find out if this is an internal view (e.g. in cockpit, low near plane)
     // FIXME : should be a child of config
     bool internal = config->getParent()->getBoolValue("internal", false);
-
+    
+    std::string root = config->getPath();
+    // Will typically be /sim/view[]/config.
 
     // FIXME:
     // this is assumed to be an aircraft model...we will need to read
@@ -166,6 +178,8 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
         double target_x_offset_m = config->getDoubleValue("target-x-offset-m");
         double target_y_offset_m = config->getDoubleValue("target-y-offset-m");
         double target_z_offset_m = config->getDoubleValue("target-z-offset-m");
+        bool lookat_agl = config->getBoolValue("lookat-agl");
+        double lookat_agl_damping = config->getDoubleValue("lookat-agl-damping");
 
         v = new View ( FG_LOOKAT, from_model, from_model_index,
                            at_model, at_model_index,
@@ -174,7 +188,8 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
                            heading_offset_deg, pitch_offset_deg,
                            roll_offset_deg, fov_deg, aspect_ratio_multiplier,
                            target_x_offset_m, target_y_offset_m,
-                         target_z_offset_m, near_m, internal );
+                           target_z_offset_m, near_m, internal, lookat_agl,
+                           lookat_agl_damping, view_index );
         if (!from_model) {
             v->_targetProperties.init(config, "target-");
         }
@@ -184,7 +199,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
                        x_offset_m, y_offset_m, z_offset_m,
                        heading_offset_deg, pitch_offset_deg,
                        roll_offset_deg, fov_deg, aspect_ratio_multiplier,
-                         0, 0, 0, near_m, internal );
+                         0, 0, 0, near_m, internal, false, 0.0, view_index );
     }
 
     if (!from_model) {
@@ -194,6 +209,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config)
     v->_name = config->getParent()->getStringValue("name");
     v->_typeString = type;
     v->_configHeadingOffsetDeg = config->getDoubleValue("default-heading-offset-deg");
+    v->_config = config;
 
     return v;
 }
@@ -251,7 +267,7 @@ View::bind ()
 
 
     _tiedProperties.Tie("field-of-view", this,
-                        &View::get_fov, &View::set_fov,
+                        &View::get_fov_user, &View::set_fov_user,
                         false);
     fgSetArchivable("/sim/current-view/field-of-view");
 
@@ -270,12 +286,12 @@ View::bind ()
     _tiedProperties.Tie("viewer-lat-deg", this, &View::getLat_deg);
     _tiedProperties.Tie("viewer-elev-ft", this, &View::getElev_ft);
 
-    _tiedProperties.Tie("x-offset-m", this, &View::getXOffset_m,
-                        &View::setXOffset_m, false);
-    _tiedProperties.Tie("y-offset-m", this, &View::getYOffset_m,
-                        &View::setYOffset_m, false);
-    _tiedProperties.Tie("z-offset-m", this, &View::getZOffset_m,
-                        &View::setZOffset_m, false);
+    _tiedProperties.Tie("x-offset-m", this, &View::getAdjustXOffset_m,
+                        &View::setAdjustXOffset_m, false);
+    _tiedProperties.Tie("y-offset-m", this, &View::getAdjustYOffset_m,
+                        &View::setAdjustYOffset_m, false);
+    _tiedProperties.Tie("z-offset-m", this, &View::getAdjustZOffset_m,
+                        &View::setAdjustZOffset_m, false);
 
     _tiedProperties.Tie("target-x-offset-m", this, &View::getTargetXOffset_m,
                         &View::setTargetXOffset_m, false);
@@ -340,6 +356,7 @@ void View::resetOffsetsAndFOV()
 {
     _target_offset_m = _configTargetOffset_m;
     _offset_m = _configOffset_m;
+    _adjust_offset_m = SGVec3d();
     _pitch_offset_deg = _configPitchOffsetDeg;
     _heading_offset_deg = _configHeadingOffsetDeg;
     _roll_offset_deg = _configRollOffsetDeg;
@@ -478,6 +495,27 @@ View::setTargetZOffset_m (double target_z_offset_m)
 }
 
 void
+View::setAdjustXOffset_m (double x_offset_m)
+{
+  _dirty = true;
+  _adjust_offset_m.x() = x_offset_m;
+}
+
+void
+View::setAdjustYOffset_m (double y_offset_m)
+{
+  _dirty = true;
+  _adjust_offset_m.y() = y_offset_m;
+}
+
+void
+View::setAdjustZOffset_m (double z_offset_m)
+{
+  _dirty = true;
+  _adjust_offset_m.z() = z_offset_m;
+}
+
+void
 View::setPositionOffsets (double x_offset_m, double y_offset_m, double z_offset_m)
 {
   _dirty = true;
@@ -605,24 +643,154 @@ View::recalc ()
   set_clean();
 }
 
+
+/* Gets position and orientation of user aircraft or multiplayer aircraft.
+
+root:
+    Location of aircraft position and oriention properties. Use '' for user's
+    aircraft, or /ai/models/multiplayer[] for a multiplayer aircraft.
+
+position:
+head:
+pitch:
+roll:
+    Out parameters.
+*/
+static void getAircraftPositionOrientation(
+    const std::string& root,
+    SGGeod& position,
+    double& head,
+    double& pitch,
+    double& roll
+    )
+{
+    position = SGGeod::fromDegFt(
+        globals->get_props()->getDoubleValue(root + "/position/longitude-deg"),
+        globals->get_props()->getDoubleValue(root + "/position/latitude-deg"),
+        globals->get_props()->getDoubleValue(root + "/position/altitude-ft")
+        );
+    head  = globals->get_props()->getDoubleValue(root + "/orientation/true-heading-deg");
+    pitch = globals->get_props()->getDoubleValue(root + "/orientation/pitch-deg");
+    roll  = globals->get_props()->getDoubleValue(root + "/orientation/roll-deg");
+}
+
+
+/* Finds the offset of a view position from an aircraft model's origin.
+
+We look in either /sim/view[]/config/ for user's aircraft, or
+/ai/models/multiplayer[]/set/sim/view[]/config/ for multiplayer aircraft.
+
+If offset information is not available because we can't find the -set.xml files
+for a multiplayer aircraft), we set all elements of offset_m to zero.
+
+root:
+    Path that defines which aircraft. Either '' to use the user's aircraft, or
+    /ai/models/multiplayer[].
+view_index:
+    The view number. We will look in .../sim/view[view_index].
+infix: 
+    We look at .../view[view_index]/config/<infix>x-offset-m etc. Views appear
+    to use 'z-offset-m' to define the location of pilot's eyes in cockpit
+    view, but 'target-z-offset' when defining viewpoint of other views such as
+    Helicopter View. So one should typically set <infix> to '' or 'target-'.
+adjust:
+    Added on to the return value. Can be used to add in the affects of the user
+    adjusting the view position.
+offset_m:
+    Out param.
+
+Returns true if any component (x, y or z) was found, otherwise false.
+*/
+static bool getViewOffsets(
+    const std::string& root,
+    int view_index,
+    const std::string& infix,
+    const SGVec3d& adjust,
+    SGVec3d& offset_m
+    )
+{
+  SGPropertyNode* sim = NULL;
+  
+  if (root == "") {
+    /* View offsets are in /sim/view[]/config/. */
+    sim = globals->get_props()->getNode("sim");
+  }
+  else {
+    /* View offsets are in /ai/models/multiplayer[]/set/sim/view[]/config/. We assume
+    that <root> is /ai/models/multiplayer[]. */
+    std::string   callsign = globals->get_props()->getStringValue(root + "/callsign");
+    FGAIMultiplayer*  multiplayer = globals->get_subsystem<FGMultiplayMgr>()->getMultiplayer(callsign);
+    if (multiplayer) {
+      sim = multiplayer->getPropertyRoot()->getNode("set/sim");
+    }
+  }
+  bool  found_any = false;
+  if (sim) {
+    /* Most (all?) -set.xml files don't define an offset for view 7, Model
+    View, so we instead use the offsets for view 1, Helicopter View. */
+    SGPropertyNode* sim_view = sim->getNode("view", view_index == 7 ? 1 : view_index);
+    offset_m.x() = sim_view->getDoubleValue("config/" + infix + "x-offset-m", 0);
+    offset_m.y() = sim_view->getDoubleValue("config/" + infix + "y-offset-m", 0);
+    offset_m.z() = sim_view->getDoubleValue("config/" + infix + "z-offset-m", 0);
+  }
+  else
+  {
+    offset_m = SGVec3d::zeros();
+  }
+  offset_m += adjust;
+  return found_any;
+}
+    
 // recalculate for LookFrom view type...
+// E.g. Cockpit View and Tower View Look From.
 void
 View::recalcLookFrom ()
 {
-  // Update location data ...
-  if ( _from_model ) {
-    _position = globals->get_aircraft_position();
-    globals->get_aircraft_orientation(_heading_deg, _pitch_deg, _roll_deg);
+  std::string   root = std::string(_config->getStringValue("root"));
+  if (root == "/")   root = "";
+  /* <root> will be either '' which means we are viewing the user's aircraft,
+  or /ai/models/multiplayer[] which means we are viewing a multiplayer
+  aircraft. */
+  
+  double head;
+  double pitch;
+  double roll;
+  
+  if (_from_model ) {
+    /* Look up aircraft position; this works for user's aircaft or multiplayer
+    aircraft. */
+    getAircraftPositionOrientation( root, _position, head, pitch, roll);
   }
-
-  double head = _heading_deg;
-  double pitch = _pitch_deg;
-  double roll = _roll_deg;
-  if ( !_from_model ) {
-    // update from our own data...
-    setDampTarget(roll, pitch, head);
-    getDampOutput(roll, pitch, head);
+  else {
+    /* Tower View Look From. This isn't multiplayer, so <root> will be ''.
+    
+    <_config> will be /sim/view[4]/config, so <_config>/eye-lon-deg-path
+    will be /sim/view[4]/config/eye-lon-deg-path which will contain
+    /sim/tower/longitude-deg (see fgdata:defaults.xml).
+    
+    <root> will be '' so we'll end up looking at /sim/tower/longitude-deg
+    
+    [Might be nice to make a 'TowerView Look From Multiplayer' that uses the
+    tower that is nearest to a particular multiplayer aircraft. We'd end up
+    looking at /ai/models/multiplayer[]/sim/tower/longitude-deg, so we'd need
+    to somehow set up /ai/models/multiplayer[]/sim/tower. ]
+    */
+    _position = SGGeod::fromDegFt(
+        globals->get_props()->getDoubleValue(root + "/" + _config->getStringValue("eye-lon-deg-path")),
+        globals->get_props()->getDoubleValue(root + "/" + _config->getStringValue("eye-lat-deg-path")),
+        globals->get_props()->getDoubleValue(root + "/" + _config->getStringValue("eye-alt-ft-path"))
+        );
+    head  = globals->get_props()->getDoubleValue(root + "/" + _config->getStringValue("eye-heading-deg-path"));
+    pitch = globals->get_props()->getDoubleValue(root + "/" + _config->getStringValue("eye-pitch-deg-path"));
+    roll  = globals->get_props()->getDoubleValue(root + "/" + _config->getStringValue("eye-roll-deg-path"));
   }
+  
+  /* Find the offset of the view position relative to the aircraft model's
+  origin. */
+  SGVec3d offset_m;
+  getViewOffsets(root, _view_index, "" /*infix*/, _adjust_offset_m, offset_m);
+  
+  set_fov(_fov_user_deg);
 
   // The rotation rotating from the earth centerd frame to
   // the horizontal local frame
@@ -646,41 +814,204 @@ View::recalcLookFrom ()
   // This is rotates the x-forward, y-right, z-down coordinate system the where
   // simulation runs into the OpenGL camera system with x-right, y-up, z-back.
   SGQuatd q(-0.5, -0.5, 0.5, 0.5);
-
-  _absolute_view_pos = position + (ec2body*q).backTransform(_offset_m);
+  
+  _absolute_view_pos = position + (ec2body*q).backTransform(offset_m);
   mViewOrientation = ec2body*mViewOffsetOr*q;
 }
 
+
+/* Change angle and field of view so that we can see the aircraft and the
+ground immediately below it. */
+
+/* Some aircraft appear to have elevation that is slightly below ground level
+when on the ground, e.g.  SenecaII, which makes get_elevation_m() fail. So we
+pass a slightly incremented elevation. */
+void View::handleAGL(const std::string& root)
+{
+  /* Change angle and field of view so that we can see the aircraft and the
+  ground immediately below it. */
+
+  /* Some aircraft appear to have elevation that is slightly below ground
+  level when on the ground, e.g.  SenecaII, which makes get_elevation_m()
+  fail. So we pass a slightly incremented elevation. */
+  double                      ground_altitude = 0;
+  const simgear::BVHMaterial* material = NULL;
+  SGGeod                      target_plus = _target;
+  target_plus.setElevationM(target_plus.getElevationM() + 1);
+  bool ok = globals->get_scenery()->get_elevation_m(target_plus, ground_altitude, &material);
+
+  if (!ok)
+  {
+      /* Just in case get_elevation_m() fails, we may as well use sea level. */
+      ground_altitude = 0;
+      SG_LOG(SG_FLIGHT, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
+  }
+
+  double    h_distance = SGGeodesy::distanceM(_position, _target);
+  if (h_distance == 0) {
+      /* Not sure this should ever happen, but we need to handle this here
+      otherwise we'll get divide-by-zero. Just use whatever field of view the
+      user has set. */
+      set_fov(_fov_user_deg);
+  }
+  else {
+    /* Find vertical region we want to be able to see. */
+    double  relative_height_target = _target.getElevationM() - _position.getElevationM();
+    double  relative_height_ground = ground_altitude - _position.getElevationM();
+
+    /* We expand the field of view so that it hopefully shows the
+    whole aircraft and a little more of the ground.
+
+    We use chase-distance as a crude measure of the aircraft's size. There
+    doesn't seem to be any more definitive information.
+
+    We damp our measure of ground level, to avoid the view jumping around if
+    an aircraft flies over buildings.
+    */
+
+    relative_height_ground -= 2;
+
+    double    chase_distance_m;
+    if (root == "") {
+        chase_distance_m = globals->get_props()->getDoubleValue("sim/chase-distance-m");
+    }
+    else {
+        chase_distance_m = globals->get_props()->getDoubleValue(root + "/set/sim/chase-distance-m");
+        if (chase_distance_m == 0)    chase_distance_m = 50;
+    }
+    double    aircraft_size_vertical = fabs(chase_distance_m) * 0.3;
+    double    aircraft_size_horizontal = fabs(chase_distance_m) * 0.9;
+
+    double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
+    double    relative_height_ground_ = relative_height_ground;
+    _lookat_agl_damping.updateTarget(relative_height_ground);
+    if (relative_height_ground > relative_height_target) {
+        /* Damping of relative_height_ground can result in it being
+        temporarily above the aircraft, so we ensure the aircraft is visible.
+        */
+        relative_height_ground = relative_height_ground_;
+    }
+
+    double  angle_v_target = atan(relative_height_target_plus / h_distance);
+    double  angle_v_ground = atan(relative_height_ground / h_distance);
+
+    /* The target we want to use is determined by the midpoint of the two
+    angles we've calculated. */
+    double  angle_v_mid = (angle_v_target + angle_v_ground) / 2;
+    _target.setElevationM(_position.getElevationM() + h_distance * tan(angle_v_mid));
+
+    /* Set field of view. We use fabs to avoid things being upside down if
+    target is below ground level (e.g. new multiplayer aircraft are briefly
+    at -9999ft). */
+    double  fov_v = fabs(angle_v_target - angle_v_ground);
+    double  fov_v_deg = fov_v / 3.1415 * 180;
+
+    set_fov( fov_v_deg);
+
+    /* Ensure that we can see entire horizontal extent of the aircraft
+    (assuming airplane is horizontal), and also correct things if display
+    aspect ratio results in set_fov() not setting the vertical field of view
+    that we want. */
+    double  fov_h;
+    fov_h = 2 * atan(aircraft_size_horizontal / 2 / h_distance);
+    double  fov_h_deg = fov_h / 3.1415 * 180;
+
+    double  correction_v = fov_v_deg / get_v_fov();
+    double  correction_h = fov_h_deg / get_h_fov();
+    double  correction = std::max(correction_v, correction_h);
+    if (correction > 1) {
+        fov_v_deg *= correction;
+    }
+
+    /* Apply scaling from user field of view setting. */
+    fov_v_deg *= _fov_user_deg / _configFOV_deg;
+    set_fov(fov_v_deg);
+
+    SG_LOG(SG_FLIGHT, SG_DEBUG, ""
+            << " _position=" << _position
+            << " _target=" << _target
+            << " ground_altitude=" << ground_altitude
+            << " relative_height_target_plus=" << relative_height_target_plus
+            << " relative_height_ground=" << relative_height_ground
+            );
+  }
+}
+
+
+/* Views of an aircraft e.g. Helicopter View. */
 void
 View::recalcLookAt ()
 {
-  // The geodetic position of our target to look at
+  std::string   root = std::string(_config->getStringValue("root"));
+  if (root == "/")   root = "";
+  /* <root> will be either '' which means we are viewing the user's aircraft,
+  or /ai/models/multiplayer[] which means we are viewing a multiplayer
+  aircraft. */
+  
+  /* 2019-06-12: i think maybe all LookAt views have _at_model=true? */
   if ( _at_model ) {
-    _target = globals->get_aircraft_position();
-    globals->get_aircraft_orientation(_target_heading_deg,
-                                      _target_pitch_deg,
-                                      _target_roll_deg);
-  } else {
-    // if not model then calculate our own target position...
-    setDampTarget(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
-    getDampOutput(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
+    getAircraftPositionOrientation(
+            root,
+            _target,
+            _target_heading_deg,
+            _target_pitch_deg,
+            _target_roll_deg
+            );
   }
-
+  
+  double eye_heading;
+  double eye_roll;
+  double eye_pitch;
+  
+  {
+    SGPropertyNode* sim = globals->get_props()->getNode("sim");
+    SGPropertyNode* sim_view = sim->getNode("view", _view_index);
+    
+    eye_heading = globals->get_props()->getDoubleValue(root + sim_view->getStringValue("config/eye-heading-deg-path"));
+    eye_roll    = globals->get_props()->getDoubleValue(root + sim_view->getStringValue("config/eye-roll-deg-path"));
+    eye_pitch   = globals->get_props()->getDoubleValue(root + sim_view->getStringValue("config/eye-pitch-deg-path"));
+    
+    setDampTarget(eye_roll, eye_pitch, eye_heading);
+    getDampOutput(eye_roll, eye_pitch, eye_heading);
+  }
+  
   SGQuatd geodTargetOr = SGQuatd::fromYawPitchRollDeg(_target_heading_deg,
                                                    _target_pitch_deg,
                                                    _target_roll_deg);
   SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(_target);
 
+  SGVec3d target_pos_off;
+  getViewOffsets(root, _view_index, "target-", SGVec3d(), target_pos_off);
+  target_pos_off = SGVec3d(
+        -target_pos_off.z(),
+        target_pos_off.x(),
+        -target_pos_off.y()
+        );
+  target_pos_off = (geodTargetHlOr*geodTargetOr).backTransform(target_pos_off);    
 
-  if ( _from_model ) {
-    _position = globals->get_aircraft_position();
-    globals->get_aircraft_orientation(_heading_deg, _pitch_deg, _roll_deg);
-  } else {
-    // update from our own data, just the rotation here...
-    setDampTarget(_roll_deg, _pitch_deg, _heading_deg);
-    getDampOutput(_roll_deg, _pitch_deg, _heading_deg);
+  SGVec3d targetCart = SGVec3d::fromGeod(_target);
+  SGVec3d targetCart2 = targetCart + target_pos_off;
+  SGGeodesy::SGCartToGeod(targetCart2, _target);
+
+  _position = _target;
+  
+  {
+    const char* eye_lon_deg_path    = _config->getStringValue("eye-lon-deg-path");
+    const char* eye_lat_deg_path    = _config->getStringValue("eye-lat-deg-path");
+    const char* eye_alt_ft_path     = _config->getStringValue("eye-alt-ft-path");
+    if (eye_lon_deg_path && eye_lon_deg_path[0])    _position.setLongitudeDeg(globals->get_props()->getDoubleValue(eye_lon_deg_path));
+    if (eye_lat_deg_path && eye_lon_deg_path[0])    _position.setLatitudeDeg(globals->get_props()->getDoubleValue(eye_lat_deg_path));
+    if (eye_alt_ft_path && eye_alt_ft_path[0])      _position.setElevationFt(globals->get_props()->getDoubleValue(eye_alt_ft_path));
   }
-  SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(_heading_deg, _pitch_deg, _roll_deg);
+
+  if (_lookat_agl) {
+    handleAGL(root);
+  }
+  else {
+    set_fov(_fov_user_deg);
+  }
+  
+  SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(eye_heading, eye_pitch, eye_roll);
   SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(_position);
 
   // the rotation offset, don't know why heading is negative here ...
@@ -689,6 +1020,7 @@ View::recalcLookAt ()
                                  _roll_offset_deg);
 
   // Offsets to the eye position
+  getViewOffsets(root, _view_index, "", _adjust_offset_m, _offset_m);
   SGVec3d eyeOff(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
   SGQuatd ec2eye = geodEyeHlOr*geodEyeOr;
   SGVec3d eyeCart = SGVec3d::fromGeod(_position);
@@ -697,12 +1029,6 @@ View::recalcLookAt ()
   SGVec3d atCart = SGVec3d::fromGeod(_target);
 
   // add target offsets to at_position...
-  SGVec3d target_pos_off(-_target_offset_m.z(), _target_offset_m.x(),
-                         -_target_offset_m.y());
-  target_pos_off = (geodTargetHlOr*geodTargetOr).backTransform(target_pos_off);
-  atCart += target_pos_off;
-  eyeCart += target_pos_off;
-
   // Compute the eyepoints orientation and position
   // wrt the earth centered frame - that is global coorinates
   _absolute_view_pos = eyeCart;
@@ -768,6 +1094,59 @@ View::updateDampOutput(double dt)
   } // of dt subdivision by interval
 }
 
+
+View::Damping::Damping(double damping, double min, double max)
+: _id(NULL), _min(min), _max(max), _target(0), _factor(pow(10, -damping)), _current(0)
+{
+}
+
+void View::Damping::setTarget(double target)
+{
+  _target = target;
+}
+
+void View::Damping::update(double dt, void* id)
+{
+  if (id != _id || dt > 1.0) {
+    _current = _target;
+    _id = id;
+    return;
+  }
+  const double interval = 0.01;
+  while (dt > interval) {
+
+    if (_factor <= 0.0) {
+      // un-damped, set output to target directly
+      _current = _target;
+      continue;
+    }
+
+    double d = _current - _target;
+    if (_max > _min) {
+        if (d > _max) {
+          _current -= (_max - _min);
+        } else if (d < _min) {
+          _current += (_max - _min);
+        }
+    }
+
+    _current = (_target * _factor) + _current * (1.0 - _factor);
+
+    dt -= interval;
+  }
+}
+
+double View::Damping::get()
+{
+  return _current;
+}
+
+void View::Damping::updateTarget(double& io)
+{
+    setTarget(io);
+    io = get();
+}
+
 double
 View::get_h_fov()
 {
@@ -822,36 +1201,11 @@ View::get_v_fov()
 }
 
 void
-View::updateData()
-{
-    if (!_from_model) {
-        SGGeod pos = _eyeProperties.position();
-        SGVec3d att = _eyeProperties.attitude();
-        setPosition(pos);
-        setOrientation(att[2], att[1], att[0]);
-    } else {
-        set_dirty();
-    }
-
-    // if lookat (type 1) then get target data...
-    if (getType() == FG_LOOKAT) {
-        if (!_from_model) {
-            SGGeod pos = _targetProperties.position();
-            SGVec3d att = _targetProperties.attitude();
-            setTargetPosition(pos);
-            setTargetOrientation(att[2], att[1], att[0]);
-        } else {
-            set_dirty();
-        }
-    }
-}
-
-void
 View::update (double dt)
 {
-    updateData();
-    recalc();
+  recalc();
   updateDampOutput(dt);
+  _lookat_agl_damping.update(dt, NULL /*id*/);
 
   int i;
   int dt_ms = int(dt * 1000);

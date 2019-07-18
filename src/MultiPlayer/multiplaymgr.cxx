@@ -37,11 +37,14 @@
 #include <errno.h>
 
 #include <simgear/misc/stdint.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIMultiplayer.hxx>
@@ -959,7 +962,10 @@ FGMultiplayMgr::FGMultiplayMgr()
   pMultiPlayDebugLevel = fgGetNode("/sim/multiplay/debug-level", true);
   pMultiPlayTransmitPropertyBase = fgGetNode("/sim/multiplay/transmit-filter-property-base", true);
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
-  pMultiPlayRange->setIntValue(100);
+  if (pMultiPlayRange->getIntValue() == 0) {
+    /* Only set if currently zero - this allows override e.g. in ~/.fgfsrc. */
+    pMultiPlayRange->setIntValue(100);
+  }
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -2316,6 +2322,30 @@ FGMultiplayMgr::FillMsgHdr(T_MsgHdr *MsgHdr, int MsgId, unsigned _len)
   MsgHdr->Callsign[MAX_CALLSIGN_LEN - 1] = '\0';
 }
 
+
+/* If <from>/<path> exists and <to>/<path> doesn't, copy the former to the
+latter. */
+static void copy_default(SGPropertyNode* from, const char* path, SGPropertyNode* to) {
+    SGPropertyNode* from_ = from->getNode(path);
+    if (from_) {
+        if (!to->getNode(path)) {
+            to->setDoubleValue(path, from_->getDoubleValue());
+        }
+    }
+}
+
+static std::string  makeStringPropertyNameSafe(const std::string& s)
+{
+  std::string   ret;
+  for (size_t i=0; i<s.size(); ++i) {
+    char    c = s[i];
+    if (i==0 && !isalpha(c) && c!='_')  c = '_';
+    if (!isalnum(c) && c!='.' && c!='_' && c!='-')  c = '_';
+    ret += c;
+  }
+  return ret;
+}
+
 FGAIMultiplayer*
 FGMultiplayMgr::addMultiplayer(const std::string& callsign,
                                const std::string& modelName,
@@ -2338,7 +2368,125 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
     for (unsigned i = 0; i < numProperties; ++i)
       mp->addPropertyId(sIdPropertyList[i].id, sIdPropertyList[i].name);
   }
+  
+  /* Try to find a -set.xml for <modelName>, so that we can use its view
+  parameters. If found, we install it into a 'set' property node.
+  
+  If we are reusing an old entry in /ai/models/multiplayer[], there
+  might be an old set/ node, so remove it.
+  
+  todo: maybe we should cache the -set.xml nodes in memory and/or share them in
+  properties?
+  */
+  mp->_getProps()->removeChildren("set");
+  
+  SGPropertyNode* set = NULL;
+  
+  if (simgear::strutils::ends_with(modelName, ".xml")
+      && simgear::strutils::starts_with(modelName, "Aircraft/")) {
+  
+    std::string tail = modelName.substr(strlen("Aircraft/"));
+    
+    PathList    dirs(globals->get_aircraft_paths());
+    
+    /* Need to append <fgdata>/Aircraft, otherwise we won't be able to find
+    c172p. */
+    SGPath  fgdata_aircraft = globals->get_fg_root();
+    fgdata_aircraft.append("Aircraft");
+    dirs.push_back(fgdata_aircraft);
+    
+    SGPath model_file;
+    PathList::const_iterator it = std::find_if(dirs.begin(), dirs.end(),
+        [&](SGPath dir) {
+            model_file = dir;
+            model_file.append(tail);
+            return model_file.exists();
+        });
+    
+    if (it != dirs.end()) {
+      /* We've found the model file.
+      
+      Now try each -set.xml file in <modelName> aircraft directory. In theory
+      an aircraft could have a -set.xml in an unrelated directory so we should
+      scan all directories in globals->get_aircraft_paths(), but in practice
+      most -set.xml files and models are in the same aircraft directory. */
+      std::string model_file_head = it->str() + '/';
+      std::string model_file_tail = model_file.str().substr(model_file_head.size());
+      ssize_t p = model_file_tail.find('/');
+      std::string aircraft_dir = model_file_head + model_file_tail.substr(0, p);
+      simgear::Dir  dir(aircraft_dir);
+      std::vector<SGPath>   dir_contents = dir.children(0 /*types*/, "-set.xml");
+      /* simgear::Dir::children() claims that second param is glob, but
+      actually it's just a suffix. */
+      
+      for (auto path: dir_contents) {
+        set = mp->_getProps()->addChild("set");
+        bool    ok = true;
+        try {
+          readProperties(path, set);
+        }
+        catch ( const std::exception &e ) {
+          ok = false;
+        }
+        if (ok) {
+          SGPropertyNode* sim_model_path = set->getNode("sim/model/path");
+          if (sim_model_path && sim_model_path->getStringValue() == modelName) {
+            /* We've found (and loaded) a matching -set.xml. */
+            break;
+          }
+        }
+        mp->_getProps()->removeChildren("set");
+        set = NULL;
+      }
+    }
+  }
+  
+  /* Copy [set]/sim/chase-distance-m (or -25 if not present) into
+  mp->set/sim/view[]/config/z-offset-m if not there. This attempts to mimic
+  what fgdata/defaults.xml does when it defines default views. Also copy
+  view[1]'s config into other views if not specified. */
+  double  sim_chase_distance_m = -25;
+  if (set) {
+    sim_chase_distance_m = set->getDoubleValue("sim/chase-distance-m", sim_chase_distance_m);
+  }
+  else {
+    set = mp->_getProps()->addChild("set");
+    set->setDoubleValue("sim/chase-distance-m", sim_chase_distance_m);
+  }
+  SGPropertyNode*   set_sim = set->getNode("sim");
+  
+  /* For views that are similar to Helicopter View, copy across Helicopter View
+  target offsets if not specified. E.g. this allows Tower View AGL to work on
+  aircraft that don't know about it but need non-zero target-*-offset-m values
+  to centre the view on the middle of the aircraft.
 
+  This mimics what fgdata:Nasal/view.nas:manager does for the user aircraft's
+  views.
+  */
+  SGPropertyNode*   view_1 = set_sim->getNode("view", 1);
+  std::initializer_list<int>    views_with_default_z_offset_m = {1, 2, 3, 5, 7, 8};
+  for (int j: views_with_default_z_offset_m) {
+    SGPropertyNode* v = set_sim->getChild("view", j);
+    if (!v) {
+        v = set_sim->addChild("view", j, false /*append*/);
+    }
+    SGPropertyNode* z_offset_m = v->getChild("config/z-offset-m");
+    if (!z_offset_m) {
+        v->setDoubleValue("config/z-offset-m", sim_chase_distance_m);
+    }
+    copy_default(view_1, "config/target-x-offset-m", v);
+    copy_default(view_1, "config/target-y-offset-m", v);
+    copy_default(view_1, "config/target-z-offset-m", v);
+  }
+  
+  /* Create a node /ai/models/callsigns/<callsign> containing the index of the
+  callsign's aircraft's entry in /ai/models/multiplayer[]. This isn't strictly
+  necessary, but simpifies debugging a lot and seems pretty lightweight. Note
+  that we need to avoid special characters in the node name, otherwise the
+  property system forces a fatal error. */
+  std::string   path = "/ai/models/callsigns/" + makeStringPropertyNameSafe(callsign);
+  globals->get_props()->setIntValue(path, mp->_getProps()->getIndex());
+  
   return mp;
 }
 
