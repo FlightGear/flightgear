@@ -34,10 +34,13 @@
 
 
 #include <simgear/structure/subsystem_mgr.hxx>
-
+#include <simgear/structure/SGReferenced.hxx>
 
 #include <ATC/trafficcontrol.hxx>
 #include <ATC/atcdialog.hxx>
+#include <AIModel/AIAircraft.hxx>
+#include <Traffic/Schedule.hxx>
+#include <Traffic/SchedFlight.hxx>
 
 typedef std::vector<FGATCController*> AtcVec;
 typedef std::vector<FGATCController*>::iterator AtcVecIterator;
@@ -51,7 +54,9 @@ private:
     bool initSucceeded;
     SGPropertyNode_ptr trans_num;
     string destination;
-    // SGSharedPtr<FGScheduledFlight> userAircraftScheduledFlight;
+
+    std::unique_ptr<FGAISchedule> userAircraftTrafficRef;
+    std::unique_ptr<FGScheduledFlight> userAircraftScheduledFlight;
     
 public:
     FGATCManager();

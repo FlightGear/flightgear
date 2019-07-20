@@ -40,6 +40,7 @@
 #ifndef _FGSCHEDFLIGHT_HXX_
 #define _FGSCHEDFLIGHT_HXX_
 
+
 class FGAirport;
 
 class FGScheduledFlight

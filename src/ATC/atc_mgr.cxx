@@ -81,10 +81,9 @@ void FGATCManager::postinit()
     destination = fgGetString("/autopilot/route-manager/destination/airport");
     
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
-    FGAIAircraft* userAircraft = aiManager->getUserAircraft();
-
+    auto userAircraft = aiManager->getUserAircraft();
     string callsign = userAircraft->getCallSign();
-
+    
     double aircraftRadius = 40; // note that this is currently hardcoded to a one-size-fits all JumboJet value. Should change later.
     
     // In case a destination is not set yet, make it equal to the current airport
@@ -94,19 +93,19 @@ void FGATCManager::postinit()
 
     // NEXT UP: Create a traffic schedule and fill that with appropriate information. This we can use for flight planning.
     // Note that these are currently only defaults. 
-    FGAISchedule *trafficRef = new FGAISchedule;
-    trafficRef->setFlightType("gate");
+	userAircraftTrafficRef.reset(new FGAISchedule);
+    userAircraftTrafficRef->setFlightType("gate");
 
-    FGScheduledFlight* userAircraftScheduledFlight = new FGScheduledFlight;
-    userAircraftScheduledFlight->setDepartureAirport(curAirport);
-    userAircraftScheduledFlight->setArrivalAirport(destination);
-    userAircraftScheduledFlight->initializeAirports();
-    userAircraftScheduledFlight->setFlightRules("IFR");
-    userAircraftScheduledFlight->setCallSign(callsign);
+	userAircraftScheduledFlight.reset(new FGScheduledFlight);
+	userAircraftScheduledFlight->setDepartureAirport(curAirport);
+	userAircraftScheduledFlight->setArrivalAirport(destination);
+	userAircraftScheduledFlight->initializeAirports();
+	userAircraftScheduledFlight->setFlightRules("IFR");
+	userAircraftScheduledFlight->setCallSign(callsign);
     
-    trafficRef->assign(userAircraftScheduledFlight);
+    userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
     std::unique_ptr<FGAIFlightPlan> fp ;
-    userAircraft->setTrafficRef(trafficRef);
+    userAircraft->setTrafficRef(userAircraftTrafficRef.get());
     
     string flightPlanName = curAirport + "-" + destination + ".xml";
     //double cruiseAlt = 100; // Doesn't really matter right now.
@@ -229,6 +228,8 @@ Override of SGSubsystem::shutdown()
 void FGATCManager::shutdown()
 {
     activeStations.clear();
+    userAircraftTrafficRef.reset();
+    userAircraftScheduledFlight.reset();
 }
 
 /**
@@ -267,6 +268,17 @@ void FGATCManager::update ( double time ) {
     FGAIAircraft* user_ai_ac = aiManager->getUserAircraft();
     FGAIFlightPlan *fp = user_ai_ac->GetFlightPlan();
     
+    // Update destination
+    string result = fgGetString("/autopilot/route-manager/destination/airport");
+    if (destination != result && result != "") {
+        destination = result;
+        userAircraftScheduledFlight->setArrivalAirport(destination);
+		userAircraftTrafficRef->clearAllFlights();
+		userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
+        
+        auto userAircraft = aiManager->getUserAircraft();
+        userAircraft->setTrafficRef(userAircraftTrafficRef.get());
+    }
 
     /* test code : find out how the routing develops */
     if (fp) {

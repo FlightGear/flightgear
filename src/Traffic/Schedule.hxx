@@ -132,6 +132,7 @@ class FGAISchedule
   double       getScore   () { return score; };
   void         setHeading (); 
   void         assign         (FGScheduledFlight *ref);
+  void         clearAllFlights();
   void         setFlightType  (const std::string& val) { flightType = val; };
   FGScheduledFlight*findAvailableFlight (const std::string& currentDestination, const std::string &req, time_t min=0, time_t max=0);
   // used to sort in descending order of score: I've probably found a better way to

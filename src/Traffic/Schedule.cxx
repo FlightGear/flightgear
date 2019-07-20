@@ -413,6 +413,11 @@ void FGAISchedule::setHeading()
 
 void FGAISchedule::assign(FGScheduledFlight *ref) { flights.push_back(ref); }
 
+/**
+Warning - will empty the flights vector no matter what. Use with caution!
+*/
+void FGAISchedule::clearAllFlights() { flights.clear(); }
+
 bool FGAISchedule::scheduleFlights(time_t now)
 {
     //string startingPort;

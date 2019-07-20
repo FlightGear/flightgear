@@ -52,7 +52,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiBackward = vTaxi * (-2.0/3.0);
     double vTaxiReduced  = vTaxi * (2.0/3.0);
-	
+    
     // Active runway can be conditionally set by ATC, so at the start of a new flight, this
     // must be reset.
     activeRunway.clear();

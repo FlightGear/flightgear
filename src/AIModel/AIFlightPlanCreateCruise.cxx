@@ -42,9 +42,9 @@ using std::string;
 
 /*
 void FGAIFlightPlan::evaluateRoutePart(double deplat,
-				       double deplon,
-				       double arrlat,
-				       double arrlon)
+                       double deplon,
+                       double arrlat,
+                       double arrlon)
 {
   // First do a prescan of all the waypoints that are within a reasonable distance of the
   // ideal route.
@@ -82,27 +82,27 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
     intVecIterator j = nodes.end();
     while (i != nodes.end())
     {
-		j = nodes.end();
-		while (j != i)
-		{
-			j--;
-			FGAirRoute routePart = globals->get_airwaynet()->findShortestRoute(*i, *j);
-			if (!(routePart.empty()))
-			{
-				airRoute.add(routePart);
-				i = j;
-				break;
-			}
-		}
-		i++;
-	}
+        j = nodes.end();
+        while (j != i)
+        {
+            j--;
+            FGAirRoute routePart = globals->get_airwaynet()->findShortestRoute(*i, *j);
+            if (!(routePart.empty()))
+            {
+                airRoute.add(routePart);
+                i = j;
+                break;
+            }
+        }
+        i++;
+    }
 }
 
 */
 /*
 void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
-				  FGAirport *arr, double latitude,
-				  double longitude, double speed, double alt)
+                  FGAirport *arr, double latitude,
+                  double longitude, double speed, double alt)
 {
   bool useInitialWayPoint = true;
   bool useCurrentWayPoint = false;
@@ -130,17 +130,17 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     pushBackWaypoint(init_waypoint);
     routefile.append("Data/AI/FlightPlans");
     snprintf(buffer, 32, "%s-%s.txt",
-	     dep->getId().c_str(),
-	     arr->getId().c_str());
+         dep->getId().c_str(),
+         arr->getId().c_str());
     routefile.append(buffer);
     SG_LOG(SG_AI, SG_DEBUG, "trying to read " << routefile.c_str());
     //exit(1);
     if (routefile.exists())
       {
-	 sg_gzifstream in( routefile.str() );
-	do {
-	  in >> route;
-	} while (!(in.eof()));
+     sg_gzifstream in( routefile.str() );
+    do {
+      in >> route;
+    } while (!(in.eof()));
       }
     else {
     //int runwayId = apt->getDynamics()->getGroundNetwork()->findNearestNode(lat2, lon2);
@@ -148,7 +148,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     //int endId   = globals->get_airwaynet()->findNearestNode(arr->getLatitude(), arr->getLongitude());
     //FGAirRoute route;
     evaluateRoutePart(dep->getLatitude(), dep->getLongitude(),
-		      arr->getLatitude(), arr->getLongitude());
+              arr->getLatitude(), arr->getLongitude());
     //exit(1);
     }
     route.first();
@@ -160,83 +160,83 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
       //exit(1);
     } else {
       while(route.next(&node))
-	{
-	  FGNode *fn = globals->get_airwaynet()->findNode(node);
-	  SG_LOG(SG_AI, SG_BULK, "Checking status of each waypoint: " << fn->getIdent());
+    {
+      FGNode *fn = globals->get_airwaynet()->findNode(node);
+      SG_LOG(SG_AI, SG_BULK, "Checking status of each waypoint: " << fn->getIdent());
 
-	  SGWayPoint first(init_waypoint->longitude,
-			   init_waypoint->latitude,
-			   alt);
-	  SGWayPoint curr (fn->getLongitude(),
-			   fn->getLatitude(),
-			   alt);
-	  SGWayPoint arr  (arr->getLongitude(),
-			   arr->getLatitude(),
-			   alt);
-	  
-	  double crse, crsDiff;
-	  double dist;
-	  first.CourseAndDistance(arr,   &course, &distance);
-	  first.CourseAndDistance(curr, &crse, &dist);
+      SGWayPoint first(init_waypoint->longitude,
+               init_waypoint->latitude,
+               alt);
+      SGWayPoint curr (fn->getLongitude(),
+               fn->getLatitude(),
+               alt);
+      SGWayPoint arr  (arr->getLongitude(),
+               arr->getLatitude(),
+               alt);
+      
+      double crse, crsDiff;
+      double dist;
+      first.CourseAndDistance(arr,   &course, &distance);
+      first.CourseAndDistance(curr, &crse, &dist);
 
-	  dist *= SG_METER_TO_NM;
+      dist *= SG_METER_TO_NM;
 
-	  // We're only interested in the absolute value of crsDiff
-	  // wich should fall in the 0-180 deg range.
-	  crsDiff = fabs(crse-course);
-	  if (crsDiff > 180)
-	    crsDiff = 360-crsDiff;
-	  // These are the three conditions that we consider including
-	  // in our flight plan:
-	  // 1) current waypoint is less then 100 miles away OR
-	  // 2) curren waypoint is ahead of us, at any distance
-	  SG_LOG(SG_AI, SG_BULK, " Distance : " << dist << " : Course diff " << crsDiff 
-	       << " crs to dest : " << course
-	       << " crs to wpt  : " << crse);
-	  if ((dist > 20.0) && (crsDiff > 90.0))
-	    {
-	      //useWpt = false;
-	      // Once we start including waypoints, we have to continue, even though
-	      // one of the following way point would suffice.
-	      // so once is the useWpt flag is set to true, we cannot reset it to false.
-	      SG_LOG(SG_AI, SG_BULK, " discarding ");
-	      //   << ": Course difference = " << crsDiff
-	      //  << "Course = " << course
-	      // << "crse   = " << crse);
-	    }
-	  else {
-	    //i = ids.end()-1;
-	    SG_LOG(SG_AI, SG_BULK, " accepting ")
+      // We're only interested in the absolute value of crsDiff
+      // wich should fall in the 0-180 deg range.
+      crsDiff = fabs(crse-course);
+      if (crsDiff > 180)
+        crsDiff = 360-crsDiff;
+      // These are the three conditions that we consider including
+      // in our flight plan:
+      // 1) current waypoint is less then 100 miles away OR
+      // 2) curren waypoint is ahead of us, at any distance
+      SG_LOG(SG_AI, SG_BULK, " Distance : " << dist << " : Course diff " << crsDiff 
+           << " crs to dest : " << course
+           << " crs to wpt  : " << crse);
+      if ((dist > 20.0) && (crsDiff > 90.0))
+        {
+          //useWpt = false;
+          // Once we start including waypoints, we have to continue, even though
+          // one of the following way point would suffice.
+          // so once is the useWpt flag is set to true, we cannot reset it to false.
+          SG_LOG(SG_AI, SG_BULK, " discarding ");
+          //   << ": Course difference = " << crsDiff
+          //  << "Course = " << course
+          // << "crse   = " << crse);
+        }
+      else {
+        //i = ids.end()-1;
+        SG_LOG(SG_AI, SG_BULK, " accepting ")
 
-	    //ids.pop_back();
-	    wpt = new waypoint;
-	    wpt->name      = "Airway"; // fixme: should be the name of the waypoint
-	    wpt->latitude  = fn->getLatitude();
-	    wpt->longitude = fn->getLongitude();
-	    //wpt->altitude  = apt->getElevation(); // should maybe be tn->elev too
-	    wpt->altitude  = alt;
-	    wpt->speed     = 450; //speed;
-	    wpt->crossat   = -10000;
-	    wpt->gear_down = false;
-	    wpt->flaps_down= false;
-	    wpt->finished  = false;
-	    wpt->on_ground = false;
-	    pushBackWaypoint(wpt);
-	  }
+        //ids.pop_back();
+        wpt = new waypoint;
+        wpt->name      = "Airway"; // fixme: should be the name of the waypoint
+        wpt->latitude  = fn->getLatitude();
+        wpt->longitude = fn->getLongitude();
+        //wpt->altitude  = apt->getElevation(); // should maybe be tn->elev too
+        wpt->altitude  = alt;
+        wpt->speed     = 450; //speed;
+        wpt->crossat   = -10000;
+        wpt->gear_down = false;
+        wpt->flaps_down= false;
+        wpt->finished  = false;
+        wpt->on_ground = false;
+        pushBackWaypoint(wpt);
+      }
 
-	  if (!(routefile.exists()))
-	    {
-	      route.first();
-	      fstream outf( routefile.c_str(), fstream::out );
-	      while (route.next(&node))
-		outf << node << endl;
-	    }
-	}
+      if (!(routefile.exists()))
+        {
+          route.first();
+          fstream outf( routefile.c_str(), fstream::out );
+          while (route.next(&node))
+        outf << node << endl;
+        }
+    }
     }
     arr->getDynamics()->getActiveRunway("com", 2, activeRunway);
     if (!(globals->get_runways()->search(arr->getId(),
-					 activeRunway,
-					 &rwy)))
+                     activeRunway,
+                     &rwy)))
   {
     SG_LOG(SG_AI, SG_WARN, "Failed to find runway for " << arr->getId());
     // Hmm, how do we handle a potential error like this?
@@ -258,8 +258,8 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     // runway during initial cruise. This needs to be
     // fixed later.
     geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth,
-			110000,
-			&lat2, &lon2, &az2 );
+            110000,
+            &lat2, &lon2, &az2 );
     wpt = new waypoint;
     wpt->name      = "BOD"; //wpt_node->getStringValue("name", "END");
     wpt->latitude  = lat2;
@@ -284,9 +284,9 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
  * do any dynamic route computation.
  ******************************************************************/
 bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
-				  FGAirport *arr, double latitude, 
-				  double longitude, double speed, 
-				  double alt, const string& fltType)
+                  FGAirport *arr, double latitude, 
+                  double longitude, double speed, 
+                  double alt, const string& fltType)
 {
   double vCruise = ac->getPerformance()->vCruise();
   FGAIWaypoint *wpt;
