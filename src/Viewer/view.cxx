@@ -128,6 +128,8 @@ View::View( ViewType Type, bool from_model, int from_model_index,
 
     _ground_level_nearplane_m = near_m;
     // a reasonable guess for init, so that the math doesn't blow up
+
+    resetOffsetsAndFOV();
 }
 
 View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
@@ -356,7 +358,7 @@ void View::resetOffsetsAndFOV()
 {
     _target_offset_m = _configTargetOffset_m;
     _offset_m = _configOffset_m;
-    _adjust_offset_m = SGVec3d();
+    _adjust_offset_m = SGVec3d::zeros();
     _pitch_offset_deg = _configPitchOffsetDeg;
     _heading_offset_deg = _configHeadingOffsetDeg;
     _roll_offset_deg = _configRollOffsetDeg;
@@ -981,7 +983,7 @@ View::recalcLookAt ()
   SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(_target);
 
   SGVec3d target_pos_off;
-  getViewOffsets(root, _view_index, "target-", SGVec3d(), target_pos_off);
+  getViewOffsets(root, _view_index, "target-", SGVec3d::zeros(), target_pos_off);
   target_pos_off = SGVec3d(
         -target_pos_off.z(),
         target_pos_off.x(),
