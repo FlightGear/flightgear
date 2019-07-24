@@ -187,6 +187,8 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 
     clip = true;
   }
+  else
+      ClipMin = ClipMin = new FGRealValue(0.0);
 
   Debug(0);
 }
