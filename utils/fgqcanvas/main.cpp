@@ -20,6 +20,7 @@
 #include <QQuickView>
 #include <QQmlContext>
 #include <QCommandLineParser>
+#include <QScreen>
 
 #include "canvasitem.h"
 #include "applicationcontroller.h"
@@ -39,7 +40,10 @@ int main(int argc, char *argv[])
     parser.addPositionalArgument("config", QCoreApplication::translate("main", "JSON configuration to load"));
     QCommandLineOption framelessOption(QStringList() << "frameless",
                                    QCoreApplication::translate("main", "Use a frameless window"));
+    QCommandLineOption screenOption(QStringList() << "screen",
+                                   QCoreApplication::translate("main", "Run full-screen on <scren>"), "screen");
     parser.addOption(framelessOption);
+    parser.addOption(screenOption);
     parser.process(a);
 
     ApplicationController appController;
@@ -56,6 +60,38 @@ int main(int argc, char *argv[])
     if (parser.isSet(framelessOption)) {
         quickView.setFlag(Qt::FramelessWindowHint, true);
     }
+
+    bool restoreWindowState = true;
+    if (parser.isSet(screenOption)) {
+        QString screenName = parser.value(screenOption);
+        QStringList allScreenNames;
+
+        QScreen* found = nullptr;
+        Q_FOREACH(QScreen* s, a.screens()) {
+            allScreenNames << s->name();
+            if (s->name() == screenName) {
+                found = s;
+                break;
+            }
+        }
+
+        if (!found) {
+            qFatal("Unable to find screen: %s: screens are: %s", screenName.toLatin1().data(),
+                   allScreenNames.join(",").toLatin1().data());
+        }
+
+        quickView.setScreen(found);
+        quickView.setGeometry(found->geometry());
+        quickView.setFlag(Qt::FramelessWindowHint, true);
+        restoreWindowState = false;
+
+        qInfo() << "Requested to run on screen:" << screenName << "with geometry" << found->geometry();
+    } else {
+        // windows mode, default geeometry
+        quickView.setWidth(1024);
+        quickView.setHeight(768);
+    }
+
     quickView.rootContext()->setContextProperty("_application", &appController);
 
     const QStringList args = parser.positionalArguments();
@@ -63,16 +99,15 @@ int main(int argc, char *argv[])
     if (!args.empty()) {
         appController.setDaemonMode();
         appController.loadFromFile(args.front());
-    } else {
-        quickView.setWidth(1024);
-        quickView.setHeight(768);
     }
 
-    quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
     quickView.setResizeMode(QQuickView::SizeRootObjectToView);
+    quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
     quickView.show();
 
-    appController.restoreWindowState();
+    if (restoreWindowState) {
+        appController.restoreWindowState();
+    }
 
     int result = a.exec();
 
