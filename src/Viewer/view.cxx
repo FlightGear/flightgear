@@ -79,7 +79,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _at_model = at_model;
     _at_model_index = at_model_index;
 
-    _internal = internal; _internal = true;
+    _internal = internal;
     _lookat_agl = lookat_agl;
     _view_index = view_index;
     
