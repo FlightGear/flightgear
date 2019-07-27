@@ -962,10 +962,7 @@ FGMultiplayMgr::FGMultiplayMgr()
   pMultiPlayDebugLevel = fgGetNode("/sim/multiplay/debug-level", true);
   pMultiPlayTransmitPropertyBase = fgGetNode("/sim/multiplay/transmit-filter-property-base", true);
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
-  if (pMultiPlayRange->getIntValue() == 0) {
-    /* Only set if currently zero - this allows override e.g. in ~/.fgfsrc. */
-    pMultiPlayRange->setIntValue(100);
-  }
+  pMultiPlayRange->setIntValue(100);
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
