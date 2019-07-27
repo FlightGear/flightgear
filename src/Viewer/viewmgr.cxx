@@ -26,6 +26,7 @@
 #endif
 
 #include "viewmgr.hxx"
+#include "ViewPropertyEvaluator.hxx"
 
 #include <simgear/compiler.h>
 #include <simgear/scene/util/OsgMath.hxx>
@@ -124,6 +125,8 @@ FGViewMgr::unbind ()
 
   _tiedProperties.Untie();
     _viewNumberProp.clear();
+    
+    ViewPropertyEvaluator::clear();
 }
 
 void
