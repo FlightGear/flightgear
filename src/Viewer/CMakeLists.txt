@@ -6,6 +6,7 @@ set(SOURCES
 	WindowSystemAdapter.cxx
 	fg_os_osgviewer.cxx
 	fgviewer.cxx
+        ViewPropertyEvaluator.cxx
 	splash.cxx
 	view.cxx
 	viewmgr.cxx
