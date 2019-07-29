@@ -393,7 +393,7 @@ namespace ViewPropertyEvaluator {
     SGPropertyNode* getNodeSGNode(Node& node, bool cache=true)
     {
         assert(node._begin[0] == '(');
-        assert(node.child);
+        assert(node._child);
         if (node._rescan) {
             node._rescan = false;
             if (!node._sgnode || node._child->_rescan) {
