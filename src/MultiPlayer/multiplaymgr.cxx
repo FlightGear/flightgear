@@ -1753,7 +1753,7 @@ FGMultiplayMgr::update(double dt)
         if (::WSAGetLastError() != WSAEWOULDBLOCK) // this is normal on a receive when there is no data
         {
             // with Winsock the error will not be the actual problem.
-            SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. WSAGetLastError=" << ::WSAGetLastError());
+            SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. WSAGetLastError=" << ::WSAGetLastError());
         }
 #else
         SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
@@ -1765,7 +1765,7 @@ FGMultiplayMgr::update(double dt)
     // status is positive: bytes received
     bytes = (ssize_t) RecvStatus;
     if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
-      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
+      SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - "
               << "received message with insufficient data" );
       break;
     }
@@ -1780,20 +1780,24 @@ FGMultiplayMgr::update(double dt)
     MsgHdr->ReplyPort   = XDR_decode_uint32 (MsgHdr->ReplyPort);
     MsgHdr->Callsign[MAX_CALLSIGN_LEN -1] = '\0';
     if (MsgHdr->Magic != MSG_MAGIC) {
-      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
+        SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid magic number!" );
       break;
     }
     if (MsgHdr->Version != PROTO_VER) {
-      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
+        SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid protocol number!" );
       break;
     }
     if (static_cast<ssize_t>(MsgHdr->MsgLen) != bytes) {
-      SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
+        SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - "
              << "message from " << MsgHdr->Callsign << " has invalid length!");
       break;
     }
+    //hexdump the incoming packet
+    if (pMultiPlayDebugLevel->getIntValue() & 16)
+        SG_LOG_HEXDUMP(SG_NETWORK, SG_INFO, msgBuf.Msg, MsgHdr->MsgLen);
+
     //////////////////////////////////////////////////
     //  Process messages
     //////////////////////////////////////////////////
@@ -1810,7 +1814,7 @@ FGMultiplayMgr::update(double dt)
     case OLD_POS_DATA_ID:
       break;
     default:
-      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
+        SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - "
               << "Unknown message Id received: " << MsgHdr->MsgId );
       break;
     }
