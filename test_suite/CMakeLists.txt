@@ -71,6 +71,7 @@ add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s A
 # Unit test suites.
 add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AddonManagementTests)
 add_test(AeroElementUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AeroElementTests)
+add_test(AircraftPerformanceTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AircraftPerformanceTests)
 add_test(AutosaveMigrationUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AutosaveMigrationTests)
 add_test(FlightplanUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u FlightplanTests)
 if(ENABLE_HID_INPUT)
@@ -80,6 +81,7 @@ add_test(LaRCSimMatrixUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -
 add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u MktimeTests)
 add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NasalSysTests)
 add_test(NavaidsUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NavaidsTests)
+add_test(NavRadioTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NavRadioTests)
 add_test(PosInitUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u PosInitTests)
 add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u YASimAtmosphereTests)
 
