@@ -90,7 +90,7 @@ class capturedIO
 capturedIO & getIOstreams(sgDebugPriority p=SG_BULK);
 
 // Set up to capture all the simgear logging priorities as separate streams.
-void setupLogging(sgDebugPriority);
+void setupLogging(sgDebugPriority, bool);
 
 // Deactivate all the simgear logging priority IO captures.
 void stopLogging();

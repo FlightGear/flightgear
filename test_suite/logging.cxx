@@ -82,7 +82,7 @@ capturedIO & getIOstreams(sgDebugPriority p)
 
 
 // Set up to capture all the simgear logging priorities as separate streams.
-void setupLogging(sgDebugPriority p)
+void setupLogging(sgDebugPriority p, bool split)
 {
     // Get the single logstream instance.
     logstream &log = sglog();
@@ -95,12 +95,20 @@ void setupLogging(sgDebugPriority p)
 
     // IO capture.
     capturedIO &obj = getIOstreams(p);
-    log.addCallback(obj.callback_interleaved);
-    log.addCallback(obj.callback_bulk_only);
-    log.addCallback(obj.callback_debug_only);
-    log.addCallback(obj.callback_info_only);
-    log.addCallback(obj.callback_warn_only);
-    log.addCallback(obj.callback_alert_only);
+    if (!split)
+        log.addCallback(obj.callback_interleaved);
+    else {
+        if (p <= SG_BULK)
+            log.addCallback(obj.callback_bulk_only);
+        if (p <= SG_DEBUG)
+            log.addCallback(obj.callback_debug_only);
+        if (p <= SG_INFO)
+            log.addCallback(obj.callback_info_only);
+        if (p <= SG_WARN)
+            log.addCallback(obj.callback_warn_only);
+        if (p <= SG_ALERT)
+            log.addCallback(obj.callback_alert_only);
+    }
 }
 
 

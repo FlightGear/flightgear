@@ -90,6 +90,7 @@ int main(int argc, char **argv)
     // Declarations.
     int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1, status_fgdata=-1;
     bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false, run_fgdata=false;
+    bool        logSplit=false;
     bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
     char        firstchar;
@@ -166,6 +167,10 @@ int main(int argc, char **argv)
                 return 1;
             }
 
+        // Log splitting.
+        } else if (arg == "--log-split") {
+            logSplit = true;
+
         // Verbose output.
         } else if (arg == "-v" || arg == "--verbose") {
             verbose = true;
@@ -217,6 +222,8 @@ int main(int argc, char **argv)
         std::cout << "  Logging options:" << std::endl;
         std::cout << "    --log-level={bulk,debug,info,warn,alert,popup,dev_warn,dev_alert}" << std::endl;
         std::cout << "                        specify the minimum logging level to output" << std::endl;
+        std::cout << "    --log-split         output the different non-interleaved log streams" << std::endl;
+        std::cout << "                        sequentially" << std::endl;
         std::cout << std::endl;
         std::cout << "  Verbosity options:" << std::endl;
         std::cout << "    -v, --verbose       verbose output including names and timings for all" << std::endl;
@@ -251,7 +258,7 @@ int main(int argc, char **argv)
     if (debug)
         sglog().setLogLevels(SG_ALL, logPriority);
     else
-        setupLogging(logPriority);
+        setupLogging(logPriority, logSplit);
 
     // Execute each of the test suite categories.
     if (run_system)
