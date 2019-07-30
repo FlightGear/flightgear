@@ -93,34 +93,36 @@ int main(int argc, char **argv)
     bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
     char        firstchar;
-    std::string fgRoot;
+    std::string arg, fgRoot;
 
     // Argument parsing.
     for (int i = 1; i < argc; i++) {
         firstchar = '\0';
+        arg = argv[i];
+
         if (i < argc-1)
             firstchar = argv[i+1][0];
 
         // System test.
-        if (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--system-tests") == 0) {
+        if (arg == "-s" || arg == "--system-tests") {
             run_system = true;
             if (firstchar != '-')
                 subset_system = argv[i+1];
 
         // Unit test.
-        } else if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--unit-tests") == 0) {
+        } else if (arg == "-u" || arg == "--unit-tests") {
             run_unit = true;
             if (firstchar != '-')
                 subset_unit = argv[i+1];
 
         // GUI test.
-        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--gui-tests") == 0) {
+        } else if (arg == "-g" || arg == "--gui-tests") {
             run_gui = true;
             if (firstchar != '-')
                 subset_gui = argv[i+1];
 
         // Simgear test.
-        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--simgear-tests") == 0) {
+        } else if (arg == "-m" || arg == "--simgear-tests") {
             run_simgear = true;
             if (firstchar != '-')
                 subset_simgear = argv[i+1];
@@ -132,27 +134,27 @@ int main(int argc, char **argv)
                 subset_fgdata = argv[i+1];
 
         // Verbose output.
-        } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
+        } else if (arg == "-v" || arg == "--verbose") {
             verbose = true;
 
         // CTest suitable output.
-        } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--ctest") == 0) {
+        } else if (arg == "-c" || arg == "--ctest") {
             ctest_output = true;
 
         // Debug output.
-        } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
+        } else if (arg == "-d" || arg == "--debug") {
             debug = true;
 
         // No summary output.
-        } else if (strcmp(argv[i], "--no-summary") == 0) {
+        } else if (arg == "--no-summary") {
             printSummary = false;
 
         // Help.
-        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+        } else if (arg == "-h" || arg == "--help") {
             help = true;
 
         // FGData path.
-        } else if (strcmp(argv[i], "--fg-root") == 0) {
+        } else if (arg == "--fg-root") {
             if (firstchar != '-')
                 fgRoot = argv[i+1];
         }
