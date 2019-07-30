@@ -65,12 +65,12 @@ void fgCompilerOutputter::printFailureDetail(CppUnit::TestFailure *failure)
         test_io = *test_iter;
 
     // SG_LOG IO streams.
-    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_BULK priority", test_io.sg_bulk, true);
-    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_BULK only priority", test_io.sg_bulk_only);
-    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_DEBUG only priority", test_io.sg_debug_only);
-    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_INFO only priority", test_io.sg_info_only);
-    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_WARN only priority", test_io.sg_warn_only);
-    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_ALERT only priority", test_io.sg_alert_only);
+    fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, "+test_io.log_priority+" priority", test_io.sg_interleaved, true);
+    //fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_BULK only priority", test_io.sg_bulk_only);
+    //fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_DEBUG only priority", test_io.sg_debug_only);
+    //fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_INFO only priority", test_io.sg_info_only);
+    //fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_WARN only priority", test_io.sg_warn_only);
+    //fgCompilerOutputter::printIOStreamMessages("SG_LOG, SG_ALL class, SG_ALERT only priority", test_io.sg_alert_only);
 
     // Default IO streams.
     fgCompilerOutputter::printIOStreamMessages("STDOUT and STDERR", test_io.stdio);
@@ -96,7 +96,7 @@ void fgCompilerOutputter::printFailureReport()
 }
 
 
-void fgCompilerOutputter::printIOStreamMessages(const char *heading, string messages, bool empty)
+void fgCompilerOutputter::printIOStreamMessages(string heading, string messages, bool empty)
 {
     // Silence.
     if (!empty && messages.size() == 0)

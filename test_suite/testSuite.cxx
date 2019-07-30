@@ -93,7 +93,11 @@ int main(int argc, char **argv)
     bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
     char        firstchar;
-    std::string arg, fgRoot;
+    std::string arg, fgRoot, logLevel;
+    size_t      delimPos;
+
+    // The default logging priority to show.
+    sgDebugPriority logPriority=SG_INFO;
 
     // Argument parsing.
     for (int i = 1; i < argc; i++) {
@@ -132,6 +136,35 @@ int main(int argc, char **argv)
             run_fgdata = true;
             if (firstchar != '-')
                 subset_fgdata = argv[i+1];
+
+        // Log level.
+        } else if (arg.find( "--log-level" ) == 0) {
+            // Process the command line level.
+            delimPos = arg.find('=');
+            logLevel = arg.substr(delimPos + 1);
+
+            // Convert.
+            if (logLevel == "bulk")
+                logPriority = SG_BULK;
+            else if (logLevel == "debug")
+                logPriority = SG_DEBUG;
+            else if (logLevel == "info")
+                logPriority = SG_INFO;
+            else if (logLevel == "warn")
+                logPriority = SG_WARN;
+            else if (logLevel == "alert")
+                logPriority = SG_ALERT;
+            else if (logLevel == "popup")
+                logPriority = SG_POPUP;
+            else if (logLevel == "dev_warn")
+                logPriority = SG_DEV_WARN;
+            else if (logLevel == "dev_alert")
+                logPriority = SG_DEV_ALERT;
+            else {
+                std::cout << "The log level setting of \"" << logLevel << "\" must be one of {bulk,debug,info,warn,alert,popup,dev_warn,dev_alert}.\n\n";
+                std::cout.flush();
+                return 1;
+            }
 
         // Verbose output.
         } else if (arg == "-v" || arg == "--verbose") {
@@ -181,6 +214,10 @@ int main(int argc, char **argv)
         std::cout << "    the individual test name.  The test names can revealed with the verbose" << std::endl;
         std::cout << "    option." << std::endl;
         std::cout << std::endl;
+        std::cout << "  Logging options:" << std::endl;
+        std::cout << "    --log-level={bulk,debug,info,warn,alert,popup,dev_warn,dev_alert}" << std::endl;
+        std::cout << "                        specify the minimum logging level to output" << std::endl;
+        std::cout << std::endl;
         std::cout << "  Verbosity options:" << std::endl;
         std::cout << "    -v, --verbose       verbose output including names and timings for all" << std::endl;
         std::cout << "                        tests." << std::endl;
@@ -212,9 +249,9 @@ int main(int argc, char **argv)
     // Set up logging.
     sglog().setDeveloperMode(true);
     if (debug)
-        sglog().setLogLevels(SG_ALL, SG_BULK);
+        sglog().setLogLevels(SG_ALL, logPriority);
     else
-        setupLogging();
+        setupLogging(logPriority);
 
     // Execute each of the test suite categories.
     if (run_system)

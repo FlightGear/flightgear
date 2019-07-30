@@ -31,8 +31,9 @@
 // Data structure for holding the captured IO for a failed test.
 struct TestIOCapt {
     std::string name;
+    std::string log_priority;
     std::string stdio;
-    std::string sg_bulk;
+    std::string sg_interleaved;
     std::string sg_bulk_only;
     std::string sg_debug_only;
     std::string sg_info_only;
