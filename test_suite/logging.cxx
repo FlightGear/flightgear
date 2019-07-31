@@ -18,6 +18,8 @@
  */
 
 
+#include <iomanip>
+
 #include "logging.hxx"
 
 #include <simgear/debug/OsgIoCapture.hxx>
@@ -28,15 +30,24 @@ static capturedIO *_iostreams = NULL;
 
 
 // capturedIO constructor.
-capturedIO::capturedIO(sgDebugPriority p)
+capturedIO::capturedIO(sgDebugClass c, sgDebugPriority p)
 {
-    callback_interleaved = new StreamLogCallback(sg_interleaved, SG_ALL, p, false);
-    callback_bulk_only = new StreamLogCallback(sg_bulk_only, SG_ALL, SG_BULK, true);
-    callback_debug_only = new StreamLogCallback(sg_debug_only, SG_ALL, SG_DEBUG, true);
-    callback_info_only = new StreamLogCallback(sg_info_only, SG_ALL, SG_INFO, true);
-    callback_warn_only = new StreamLogCallback(sg_warn_only, SG_ALL, SG_WARN, true);
-    callback_alert_only = new StreamLogCallback(sg_alert_only, SG_ALL, SG_ALERT, true);
+    callback_interleaved = new StreamLogCallback(sg_interleaved, c, p, false);
+    callback_bulk_only = new StreamLogCallback(sg_bulk_only, c, SG_BULK, true);
+    callback_debug_only = new StreamLogCallback(sg_debug_only, c, SG_DEBUG, true);
+    callback_info_only = new StreamLogCallback(sg_info_only, c, SG_INFO, true);
+    callback_warn_only = new StreamLogCallback(sg_warn_only, c, SG_WARN, true);
+    callback_alert_only = new StreamLogCallback(sg_alert_only, c, SG_ALERT, true);
 
+    // Store the class as a string.
+    if (c == SG_ALL)
+        log_class = "SG_ALL";
+    else {
+        std::stringstream stream;
+        stream << "0x" << std::right << std::setfill('0') << std::setw(8) << std::hex << c;
+        log_class = stream.str();
+    }
+    
     // Store the priority as a string.
     if (p == SG_BULK)
         log_priority = "SG_BULK";
@@ -70,11 +81,11 @@ capturedIO::~capturedIO()
 
 
 // Return the global stream capture data structure, creating it if needed.
-capturedIO & getIOstreams(sgDebugPriority p)
+capturedIO & getIOstreams(sgDebugClass c, sgDebugPriority p)
 {
     // Initialise the global stream capture data structure, if needed.
     if (!_iostreams)
-        _iostreams = new capturedIO(p);
+        _iostreams = new capturedIO(c, p);
 
     // Return a pointer to the global object.
     return *_iostreams;
@@ -82,7 +93,7 @@ capturedIO & getIOstreams(sgDebugPriority p)
 
 
 // Set up to capture all the simgear logging priorities as separate streams.
-void setupLogging(sgDebugPriority p, bool split)
+void setupLogging(sgDebugClass c, sgDebugPriority p, bool split)
 {
     // Get the single logstream instance.
     logstream &log = sglog();
@@ -94,7 +105,7 @@ void setupLogging(sgDebugPriority p, bool split)
     osg::setNotifyHandler(new NotifyLogger);
 
     // IO capture.
-    capturedIO &obj = getIOstreams(p);
+    capturedIO &obj = getIOstreams(c, p);
     if (!split)
         log.addCallback(obj.callback_interleaved);
     else {

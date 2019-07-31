@@ -88,6 +88,7 @@ void fgTestListener::endTest(CppUnit::Test *test)
 
         // The simgear logstreams.
         capturedIO &obj = getIOstreams();
+        test_io.log_class = obj.log_class;
         test_io.log_priority = obj.log_priority;
         test_io.sg_interleaved = obj.sg_interleaved.str();
         test_io.sg_bulk_only = obj.sg_bulk_only.str();

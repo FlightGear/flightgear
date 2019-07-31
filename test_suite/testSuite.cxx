@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
@@ -94,10 +95,11 @@ int main(int argc, char **argv)
     bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
     char        firstchar;
-    std::string arg, fgRoot, logLevel;
+    std::string arg, delim, fgRoot, logClassVal, logClassItem, logLevel, val;
     size_t      delimPos;
 
-    // The default logging priority to show.
+    // The default logging class and priority to show.
+    unsigned int    logClass=SG_ALL;
     sgDebugPriority logPriority=SG_INFO;
 
     // Argument parsing.
@@ -137,6 +139,94 @@ int main(int argc, char **argv)
             run_fgdata = true;
             if (firstchar != '-')
                 subset_fgdata = argv[i+1];
+
+        // Log class.
+        } else if (arg.find( "--log-class" ) == 0) {
+            // Process the command line.
+            logClass = SG_NONE;
+            delimPos = arg.find('=');
+            logClassVal = arg.substr(delimPos + 1);
+
+            // Convert the command line value into a string array.
+            std::replace(logClassVal.begin(), logClassVal.end(), ',', ' ');
+            std::vector<std::string> logClasses;
+            stringstream temp(logClassVal);
+            while (temp >> val)
+                logClasses.push_back(val);
+
+            // Build up the value.
+            for (auto const& logClassItem: logClasses)
+                if (logClassItem == "none")
+                    logClass |= SG_NONE;
+                else if (logClassItem == "terrain")
+                    logClass |= SG_TERRAIN;
+                else if (logClassItem == "astro")
+                    logClass |= SG_ASTRO;
+                else if (logClassItem == "flight")
+                    logClass |= SG_FLIGHT;
+                else if (logClassItem == "input")
+                    logClass |= SG_INPUT;
+                else if (logClassItem == "gl")
+                    logClass |= SG_GL;
+                else if (logClassItem == "view")
+                    logClass |= SG_VIEW;
+                else if (logClassItem == "cockpit")
+                    logClass |= SG_COCKPIT;
+                else if (logClassItem == "general")
+                    logClass |= SG_GENERAL;
+                else if (logClassItem == "math")
+                    logClass |= SG_MATH;
+                else if (logClassItem == "event")
+                    logClass |= SG_EVENT;
+                else if (logClassItem == "aircraft")
+                    logClass |= SG_AIRCRAFT;
+                else if (logClassItem == "autopilot")
+                    logClass |= SG_AUTOPILOT;
+                else if (logClassItem == "io")
+                    logClass |= SG_IO;
+                else if (logClassItem == "clipper")
+                    logClass |= SG_CLIPPER;
+                else if (logClassItem == "network")
+                    logClass |= SG_NETWORK;
+                else if (logClassItem == "atc")
+                    logClass |= SG_ATC;
+                else if (logClassItem == "nasal")
+                    logClass |= SG_NASAL;
+                else if (logClassItem == "instrumentation")
+                    logClass |= SG_INSTR;
+                else if (logClassItem == "systems")
+                    logClass |= SG_SYSTEMS;
+                else if (logClassItem == "ai")
+                    logClass |= SG_AI;
+                else if (logClassItem == "environment")
+                    logClass |= SG_ENVIRONMENT;
+                else if (logClassItem == "sound")
+                    logClass |= SG_SOUND;
+                else if (logClassItem == "navaid")
+                    logClass |= SG_NAVAID;
+                else if (logClassItem == "gui")
+                    logClass |= SG_GUI;
+                else if (logClassItem == "terrasync")
+                    logClass |= SG_TERRASYNC;
+                else if (logClassItem == "particles")
+                    logClass |= SG_PARTICLES;
+                else if (logClassItem == "headless")
+                    logClass |= SG_HEADLESS;
+                else if (logClassItem == "osg")
+                    logClass |= SG_OSG;
+                else if (logClassItem == "undefined")
+                    logClass |= SG_UNDEFD;
+                else if (logClassItem == "all")
+                    logClass |= SG_ALL;
+                else {
+                    std::cout << "The log class \"" << logClassItem << "\" must be one of:" << std::endl;
+                    std::cout << "    {none, terrain, astro, flight, input, gl, view, cockpit, general, math," << std::endl;
+                    std::cout << "    event, aircraft, autopilot, io, clipper, network, atc, nasal," << std::endl;
+                    std::cout << "    instrumentation, systems, ai, environment, sound, navaid, gui, terrasync," << std::endl;
+                    std::cout << "    particles, headless, osg, undefined, all}" << std::endl << std::endl;
+                    std::cout.flush();
+                    return 1;
+                }
 
         // Log level.
         } else if (arg.find( "--log-level" ) == 0) {
@@ -222,6 +312,12 @@ int main(int argc, char **argv)
         std::cout << "  Logging options:" << std::endl;
         std::cout << "    --log-level={bulk,debug,info,warn,alert,popup,dev_warn,dev_alert}" << std::endl;
         std::cout << "                        specify the minimum logging level to output" << std::endl;
+        std::cout << "    --log-class=[none, terrain, astro, flight, input, gl, view, cockpit," << std::endl;
+        std::cout << "                 general, math, event, aircraft, autopilot, io, clipper," << std::endl;
+        std::cout << "                 network, atc, nasal, instrumentation, systems, ai, environment," << std::endl;
+        std::cout << "                 sound, navaid, gui, terrasync, particles, headless, osg," << std::endl;
+        std::cout << "                 undefined, all]" << std::endl;
+        std::cout << "                        select the logging class(es) to output" << std::endl;
         std::cout << "    --log-split         output the different non-interleaved log streams" << std::endl;
         std::cout << "                        sequentially" << std::endl;
         std::cout << std::endl;
@@ -256,9 +352,9 @@ int main(int argc, char **argv)
     // Set up logging.
     sglog().setDeveloperMode(true);
     if (debug)
-        sglog().setLogLevels(SG_ALL, logPriority);
+        sglog().setLogLevels(sgDebugClass(logClass), logPriority);
     else
-        setupLogging(logPriority, logSplit);
+        setupLogging(sgDebugClass(logClass), logPriority, logSplit);
 
     // Execute each of the test suite categories.
     if (run_system)

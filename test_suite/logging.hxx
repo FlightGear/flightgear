@@ -62,7 +62,7 @@ class capturedIO
 {
     public:
         // Constructor and destructor.
-        capturedIO(sgDebugPriority);
+        capturedIO(sgDebugClass, sgDebugPriority);
         ~capturedIO();
 
         // The IO streams.
@@ -81,16 +81,17 @@ class capturedIO
         StreamLogCallback *callback_warn_only;
         StreamLogCallback *callback_alert_only;
 
-        // The logging priority text.
+        // The logging class and priority text.
+        std::string log_class;
         std::string log_priority;
 };
 
 
 // Return the global stream capture data structure, creating it if needed.
-capturedIO & getIOstreams(sgDebugPriority p=SG_BULK);
+capturedIO & getIOstreams(sgDebugClass c=SG_ALL, sgDebugPriority p=SG_BULK);
 
 // Set up to capture all the simgear logging priorities as separate streams.
-void setupLogging(sgDebugPriority, bool);
+void setupLogging(sgDebugClass, sgDebugPriority, bool);
 
 // Deactivate all the simgear logging priority IO captures.
 void stopLogging();
