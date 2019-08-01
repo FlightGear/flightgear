@@ -1179,8 +1179,8 @@ TCAS::TCAS(SGPropertyNode* pNode) :
         string cval = pChild->getStringValue();
         int cintval = pChild->getIntValue();
 
-        if (cintval < 0 || cintval == NULL) {
-            SG_LOG(SG_INSTR, SG_WARN, "Error in TCAS config logic: value less than zero or nil. Skipping!");
+        if (cintval < 0 ) {
+            SG_LOG(SG_INSTR, SG_WARN, "Error in TCAS config logic: value less than zero. Skipping!");
         }
 
         if (cname == "name")
