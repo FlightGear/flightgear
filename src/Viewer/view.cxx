@@ -670,14 +670,14 @@ static void getAircraftPositionOrientation(
     )
 {
     position = SGGeod::fromDegFt(
-        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/position/longitude-deg)"),
-        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/position/latitude-deg)"),
-        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/position/altitude-ft)")
+        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/longitude-deg)"),
+        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/latitude-deg)"),
+        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/altitude-ft)")
         );
     
-    head  = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/orientation/true-heading-deg)");
-    pitch = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/orientation/pitch-deg)");
-    roll  = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/orientation/roll-deg)");
+    head  = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/orientation/true-heading-deg)");
+    pitch = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/orientation/pitch-deg)");
+    roll  = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/orientation/roll-deg)");
 }
 
 
@@ -713,29 +713,29 @@ static void getViewOffsets(
     SGVec3d& offset_m
     )
 {
-    std::string root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number)]/config/root)");
+    std::string root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
     if (root == "/") {
         if (target_infix) {
-            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number)]/config/target-x-offset-m)");
-            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number)]/config/target-y-offset-m)");
-            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number)]/config/target-z-offset-m)");
+            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-x-offset-m)");
+            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-y-offset-m)");
+            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-z-offset-m)");
         }
         else {
-            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number)]/config/x-offset-m)");
-            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number)]/config/y-offset-m)");
-            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number)]/config/z-offset-m)");
+            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/x-offset-m)");
+            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/y-offset-m)");
+            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
         }
     }
     else {
         if (target_infix) {
-            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/view[(/sim/current-view/view-number)]/config/target-x-offset-m)");
-            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/view[(/sim/current-view/view-number)]/config/target-y-offset-m)");
-            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/view[(/sim/current-view/view-number)]/config/target-z-offset-m)");
+            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/target-x-offset-m)");
+            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/target-y-offset-m)");
+            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/target-z-offset-m)");
         }
         else {
-            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/view[(/sim/current-view/view-number)]/config/x-offset-m)");
-            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/view[(/sim/current-view/view-number)]/config/y-offset-m)");
-            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/view[(/sim/current-view/view-number)]/config/z-offset-m)");
+            offset_m.x() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/x-offset-m)");
+            offset_m.y() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/y-offset-m)");
+            offset_m.z() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
         }
     }
     offset_m += adjust;
@@ -768,13 +768,13 @@ View::recalcLookFrom ()
     to somehow set up /ai/models/multiplayer[]/sim/tower. ]
     */
     _position = SGGeod::fromDegFt(
-        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-lon-deg-path))"),
-        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-lat-deg-path))"),
-        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-alt-ft-path))")
+        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))"),
+        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lat-deg-path))"),
+        ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-alt-ft-path))")
         );
-    head    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-heading-deg-path))");
-    pitch   = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-pitch-deg-path))");
-    roll    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-roll-deg-path))");
+    head    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-heading-deg-path))");
+    pitch   = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-pitch-deg-path))");
+    roll    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-roll-deg-path))");
   }
   
   /* Find the offset of the view position relative to the aircraft model's
@@ -864,13 +864,13 @@ void View::handleAGL()
     relative_height_ground -= 2;
 
     double    chase_distance_m;
-    const std::string&  root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number)]/config/root)");
+    const std::string&  root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
     if (root == "/") {
         chase_distance_m = ViewPropertyEvaluator::getDoubleValue("(/sim/chase-distance-m)", -25);
     }
     else {
         chase_distance_m = ViewPropertyEvaluator::getDoubleValue(
-                "((/sim/view[(/sim/current-view/view-number)]/config/root)/set/sim/chase-distance-m)",
+                "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/chase-distance-m)",
                 -25
                 );
     }
@@ -947,9 +947,9 @@ View::recalcLookAt ()
             );
   }
   
-  double eye_heading = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-heading-deg-path))");
-  double eye_roll    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-roll-deg-path))");
-  double eye_pitch   = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number)]/config/root)/(/sim/view[(/sim/current-view/view-number)]/config/eye-pitch-deg-path))");
+  double eye_heading = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-heading-deg-path))");
+  double eye_roll    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-roll-deg-path))");
+  double eye_pitch   = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-pitch-deg-path))");
     
   setDampTarget(eye_roll, eye_pitch, eye_heading);
   getDampOutput(eye_roll, eye_pitch, eye_heading);
@@ -976,19 +976,19 @@ View::recalcLookAt ()
   
   _position.setLongitudeDeg(
           ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number)]/config/eye-lon-deg-path))",
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))",
                   _position.getLongitudeDeg()
                   )
           );
   _position.setLatitudeDeg(
           ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number)]/config/eye-lat-deg-path))",
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lat-deg-path))",
                   _position.getLatitudeDeg()
                   )
           );
   _position.setElevationFt(
           ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number)]/config/eye-alt-ft-path))",
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-alt-ft-path))",
                   _position.getElevationFt()
                   )
           );
