@@ -60,9 +60,9 @@
 /* Module properties:
  *
  *   serviceable             enable/disable TCAS processing
- *   
+ *
  *   voice/file-prefix       path (and optional prefix) for sound sample files
- *                           (only evaluated at start-up)  
+ *                           (only evaluated at start-up)
  *
  *   inputs/mode             TCAS mode selection: 0=off,1=standby,2=TA only,3=auto(TA/RA)
  *   inputs/self-test        trigger self-test sequence
@@ -127,12 +127,12 @@ using std::string;
 // constants //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-/** Sensitivity Level Definition and Alarm Thresholds (TCASII, Version 7) 
+/** Sensitivity Level Definition and Alarm Thresholds (TCASII, Version 7)
  *  Max Own        |    |TA-level                |RA-level
  *  Altitude(ft)   | SL |Tau(s),DMOD(nm),ALIM(ft)|Tau(s),DMOD(nm),ALIM(ft) */
 const TCAS::SensitivityLevel
 TCAS::ThreatDetector::sensitivityLevels[] = {
-   { 1000,           2,  {20,   0.30,     850},  {0,    0,        0  }}, 
+   { 1000,           2,  {20,   0.30,     850},  {0,    0,        0  }},
    { 2350,           3,  {25,   0.33,     850},  {15,   0.20,     300}},
    { 5000,           4,  {30,   0.48,     850},  {20,   0.35,     300}},
    {10000,           5,  {40,   0.75,     850},  {25,   0.55,     350}},
@@ -169,7 +169,7 @@ relAngle(float Heading1, float Heading2)
 }
 #endif
 
-/** calculate range and bearing of lat2/lon2 relative to lat1/lon1 */ 
+/** calculate range and bearing of lat2/lon2 relative to lat1/lon1 */
 static void
 calcRangeBearing(double lat1, double lon1, double lat2, double lon2,
                  double &rangeNm, double &bearing)
@@ -247,7 +247,7 @@ void
 TCAS::Annunciator::update(void)
 {
     voicePlayer.update();
-    
+
     /* [TCASII]: "The priority scheme gives ground proximity warning systems (GPWS)
      *   a higher annunciation priority than a TCAS alert. TCAS aural annunciation will
      *   be inhibited during the time that a GPWS alert is active." */
@@ -515,7 +515,7 @@ TCAS::AdvisoryCoordinator::update(int mode)
     }
 
     previous = current;
-    
+
     /* [TCASII] "[..] also performs the function of setting flags that control the displays.
      *   The traffic display, the RA display, [..] use these flags to alert the pilot to
      *   the presence of TAs and RAs." */
@@ -577,7 +577,7 @@ TCAS::ThreatDetector::update(void)
     checkCount = 0;
 #endif
 
-    // determine current altitude's "Sensitivity Level Definition and Alarm Thresholds" 
+    // determine current altitude's "Sensitivity Level Definition and Alarm Thresholds"
     int sl=0;
     for (sl=0;((self.radarAltFt > sensitivityLevels[sl].maxAltitude)&&
                (sensitivityLevels[sl].maxAltitude));sl++);
@@ -649,7 +649,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
         return threatLevel;
 
     currentThreat.verticalFps = pModel->getDoubleValue("velocities/vertical-speed-fps");
-    
+
     /* Detect proximity targets
      * [TCASII]: "Any target that is less than 6 nmi in range and within +/-1200ft
      *  vertically, but that does not meet the intruder or threat criteria." */
@@ -674,7 +674,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
     }
     else
         currentThreat.isTracked = false;
-    
+
     // first stage: vertical movement
     checkVerticalThreat();
 
@@ -706,8 +706,8 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
     cout << "#" << checkCount << ": " << pModel->getStringValue("callsign") << endl;
 #endif
 
-    
-    /* [TCASII]: "For either a TA or an RA to be issued, both the range and 
+
+    /* [TCASII]: "For either a TA or an RA to be issued, both the range and
      *    vertical criteria, in terms of tau or the fixed thresholds, must be
      *    satisfied only one of the criteria is satisfied, TCAS will not issue
      *    an advisory." */
@@ -720,7 +720,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
         currentThreat.callsign = pModel->getStringValue("callsign");
 
     tcas->tracker.add(currentThreat.callsign, threatLevel);
-    
+
     // check existing threat level
     if (currentThreat.isTracked)
     {
@@ -731,8 +731,8 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 
     // find all resolution options for this conflict
     threatLevel = tcas->advisoryGenerator.resolution(mode, threatLevel, distanceNm, altFt, heading, velocityKt);
-   
-    
+
+
 #ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
     printf("  threat: distance: %4.1f, bearing: %4.1f, alt: %5.1f, velocity: %4.1f, heading: %4.1f, vspeed: %4.1f, "
            "own alt: %5.1f, own heading: %4.1f, own velocity: %4.1f, vertical tau: %3.2f"
@@ -816,7 +816,7 @@ TCAS::ThreatDetector::horizontalThreat(float bearing, float distanceNm, float he
     float vyKt = cos(heading*SGD_DEGREES_TO_RADIANS)*velocityKt - cos(self.heading*SGD_DEGREES_TO_RADIANS)*self.velocityKt;
 
     // calculate horizontal closing speed
-    float closingSpeedKt2 = vxKt*vxKt+vyKt*vyKt; 
+    float closingSpeedKt2 = vxKt*vxKt+vyKt*vyKt;
     float closingSpeedKt  = sqrt(closingSpeedKt2);
 
     /* [TCASII]: "The range tau is equal to the slant range (nmi) divided by the closing speed
@@ -844,7 +844,7 @@ TCAS::ThreatDetector::horizontalThreat(float bearing, float distanceNm, float he
     currentThreat.horizontalTA   = (distanceNm < TA_rangeNm);
     currentThreat.horizontalRA   = (distanceNm < RA_rangeNm);
     currentThreat.horizontalTau  = -1;
-    
+
     if ((currentThreat.horizontalRA)&&
         (currentThreat.verticalRA))
     {
@@ -866,7 +866,7 @@ TCAS::ThreatDetector::horizontalThreat(float bearing, float distanceNm, float he
          * => r2'(t) = b + a*2*t
          * at t=tau:
          *    r2'(tau) = 0 = b + 2*a*tau
-         * => tau = -b/(2*a) 
+         * => tau = -b/(2*a)
          */
         float sx = sin(bearing*SGD_DEGREES_TO_RADIANS)*distanceNm;
         float sy = cos(bearing*SGD_DEGREES_TO_RADIANS)*distanceNm;
@@ -882,7 +882,7 @@ TCAS::ThreatDetector::horizontalThreat(float bearing, float distanceNm, float he
 #endif
         if (tau > pAlarmThresholds->RA.Tau)
             tau = pAlarmThresholds->RA.Tau;
-        
+
         // remember time to horizontal CPA
         currentThreat.horizontalTau = tau;
     }
@@ -977,7 +977,7 @@ TCAS::AdvisoryGenerator::determineRAsense(int& RASense, bool& isCrossing)
              *   geometry. The first step in the process is to select the RA sense, i.e., upward or downward." */
     RASense = 0;
     isCrossing = false;
-    
+
     /* [TCASII]: "Based on the range and altitude tracks of the intruder, the CAS logic models the
      *   intruder's flight path from its present position to CPA. The CAS logic then models upward
      *   and downward sense RAs for own aircraft [..] to determine which sense provides the most
@@ -1000,7 +1000,7 @@ TCAS::AdvisoryGenerator::determineRAsense(int& RASense, bool& isCrossing)
         // threat is above and RA is crossing
         if (fabs(downSenseRelAltFt) > pAlarmThresholds->TA.ALIM)
         {
-            // non-crossing descend is sufficient 
+            // non-crossing descend is sufficient
             RASense = -1;
         }
         else
@@ -1016,7 +1016,7 @@ TCAS::AdvisoryGenerator::determineRAsense(int& RASense, bool& isCrossing)
         // threat is below and RA is crossing
         if (fabs(upSenseRelAltFt) > pAlarmThresholds->TA.ALIM)
         {
-            // non-crossing climb is sufficient 
+            // non-crossing climb is sufficient
             RASense = 1;
         }
         else
@@ -1058,13 +1058,13 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
          *   [..] (c)1000ft (+/- 100ft) and below, all RAs are inhibited;" */
         if (pSelf->radarAltFt < tcas->_RAInhbAlt)
             threatLevel = ThreatTA;
-        
+
         // RAs only issued in mode "Auto" (= "TA/RA" mode)
         if (mode != SwitchAuto)
             threatLevel = ThreatTA;
     }
 
-    bool isCrossing = false; 
+    bool isCrossing = false;
     int RASense = 0;
     // determine suitable RAs
     if (threatLevel == ThreatRA)
@@ -1081,7 +1081,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
             if ((pSelf->verticalFps < -1000/60.0)&&
                 (!isCrossing))
             {
-                // currently descending, see if reducing current descent is sufficient 
+                // currently descending, see if reducing current descent is sufficient
                 float relAltFt = verticalSeparation(-500/60.0);
                 if (relAltFt > pAlarmThresholds->TA.ALIM)
                     RA |= AdvisoryAdjustVSpeed;
@@ -1098,7 +1098,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
             if ((pSelf->verticalFps > 1000/60.0)&&
                 (!isCrossing))
             {
-                // currently climbing, see if reducing current climb is sufficient 
+                // currently climbing, see if reducing current climb is sufficient
                 float relAltFt = verticalSeparation(500/60.0);
                 if (relAltFt < -pAlarmThresholds->TA.ALIM)
                     RA |= AdvisoryAdjustVSpeed;
@@ -1113,16 +1113,16 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
          *   and are currently well separated in altitude, TCAS will first issue a vertical speed
          *   limit (Negative) RA to reinforce the pilots' likely intention to level off at adjacent
          *   flight levels." */
-        
+
         //TODO
         /* [TCASII]: "[..] if the CAS logic determines that the response to a Positive RA has provided
          *   ALIM feet of vertical separation before CPA, the initial RA will be weakened to either a
          *   Do Not Descend RA (after an initial Climb RA) or a Do Not Climb RA (after an initial
          *   Descend RA)." */
-        
+
         //TODO
         /* [TCASII]: "TCAS is designed to inhibit Increase Descent RAs below 1450 feet AGL; */
-        
+
         /* [TCASII]: "Descend RAs below 1100 feet AGL;" (inhibited) */
         if (pSelf->radarAltFt < tcas->_DesInhbAlt)
         {
@@ -1141,7 +1141,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
     newAdvisory.RA          = RA;
     newAdvisory.threatLevel = threatLevel;
     tcas->advisoryCoordinator.add(newAdvisory);
-    
+
     return threatLevel;
 }
 
@@ -1152,17 +1152,17 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
 TCAS::TCAS(SGPropertyNode* pNode) :
     name("tcas"),
     num(0),
-	_verticalRange(10000),
-	_lateralRange(10),
-	_proxVertRange(1200),
-	_proxLatRange(6),
-	_incDesInhbAlt(1450),
-	_DesInhbAlt(1100),
-	_RAInhbAlt(1000),
-	_TAInhbAlt(500),
-	_intruderInhbAlt(360),
-	_intruderInhbSelfAltToggle(false),
-	_intruderInhbSelfAlt(1700),
+        _verticalRange(10000),
+        _lateralRange(10),
+        _proxVertRange(1200),
+        _proxLatRange(6),
+        _incDesInhbAlt(1450),
+        _DesInhbAlt(1100),
+        _RAInhbAlt(1000),
+        _TAInhbAlt(500),
+        _intruderInhbAlt(360),
+        _intruderInhbSelfAltToggle(false),
+        _intruderInhbSelfAlt(1700),
     nextUpdateTime(0),
     selfTestStep(0),
     properties_handler(this),
@@ -1179,10 +1179,10 @@ TCAS::TCAS(SGPropertyNode* pNode) :
         string cval = pChild->getStringValue();
         int cintval = pChild->getIntValue();
 
-		if (cintval < 0 || cintval == NULL) {
+        if (cintval < 0 || cintval == NULL) {
             SG_LOG(SG_INSTR, SG_WARN, "Error in TCAS config logic: value less than zero or nil. Skipping!");
         }
-		
+
         if (cname == "name")
             name = cval;
         else if (cname == "number")
@@ -1240,7 +1240,7 @@ TCAS::bind(void)
 
     nodeServiceable  = node->getNode("serviceable", true);
 
-    // TCAS mode selection (0=off, 1=standby, 2=TA only, 3=auto(TA/RA) ) 
+    // TCAS mode selection (0=off, 1=standby, 2=TA only, 3=auto(TA/RA) )
     nodeModeSwitch   = node->getNode("inputs/mode", true);
     // self-test button
     nodeSelfTest     = node->getNode("inputs/self-test", true);
