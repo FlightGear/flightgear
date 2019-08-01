@@ -55,13 +55,17 @@ namespace ViewPropertyEvaluator {
         - will behave like this:
 
             globals->get_props()->getDoubleValue(
-                    globals->get_props()->getStringValue("/sim/view[0]/config/root")
-                    + "/position/altitude-ft"
+                    globals->get_props()->getStringValue(
+                            "/sim/view[0]/config/root",
+                            true |*create*|
+                            )
+                            + "/position/altitude-ft",
+                    true |*create *|
                     );
 
         In this example, an internal listener will be set up to detect changes
         to property '/sim/view[0]/config/root'; if this listener has not fired,
-        we will use a cached SGPropertyNode* directly without querying the
+        we will use a cached SGPropertyNode_ptr* directly without querying the
         property tree.
         
         Note that with ViewPropertyEvaluator::getDoubleValue, while the final
@@ -72,14 +76,12 @@ namespace ViewPropertyEvaluator {
     
     Missing property nodes:
     
-        If a property node does not exist with the required path, we use "" as
-        the value.
+        If a spec (or part of a spec) evaluates to a property node path that
+        does not exist, a new property node is created with value "".
 
-        We do not attempt to detect the creation of such property nodes,
-        because simgear's doesn't really support this. Typically the path will
-        depend on other properties which do exist, and which change when the
-        missing property node is created, in which case we will re-evaluate
-        correctly.
+        [This allows us to set up a listener for the property node so we can
+        detect changes to its value; it might be nice to instead add something
+        to Simgear that allows one to listen to creation of a particular path.]
     */
     
 

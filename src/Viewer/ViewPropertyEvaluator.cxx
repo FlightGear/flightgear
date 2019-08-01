@@ -401,7 +401,7 @@ namespace ViewPropertyEvaluator {
                 SGPropertyNode* sgnode = NULL;
                 if (path != "") {
                     debug.statsAdd( "propertypath_getNode");
-                    sgnode = globals->get_props()->getNode(path);
+                    sgnode = globals->get_props()->getNode(path, true /*create*/);
                     if (!sgnode) {
                         debug.statsAdd( "propertypath_getNode_failed");
                         SG_LOG(SG_VIEW, SG_DEBUG, ": getNodeSGNode(): getNode() failed, path='" << path << "'");
