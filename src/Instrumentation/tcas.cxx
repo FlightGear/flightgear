@@ -1152,17 +1152,6 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
 TCAS::TCAS(SGPropertyNode* pNode) :
     name("tcas"),
     num(0),
-        _verticalRange(10000),
-        _lateralRange(10),
-        _proxVertRange(1200),
-        _proxLatRange(6),
-        _incDesInhbAlt(1450),
-        _DesInhbAlt(1100),
-        _RAInhbAlt(1000),
-        _TAInhbAlt(500),
-        _intruderInhbAlt(360),
-        _intruderInhbSelfAltToggle(false),
-        _intruderInhbSelfAlt(1700),
     nextUpdateTime(0),
     selfTestStep(0),
     properties_handler(this),
@@ -1170,7 +1159,18 @@ TCAS::TCAS(SGPropertyNode* pNode) :
     tracker(this),
     advisoryCoordinator(this),
     advisoryGenerator(this),
-    annunciator(this)
+    annunciator(this),
+    _verticalRange(10000),
+    _lateralRange(10),
+    _proxVertRange(1200),
+    _proxLatRange(6),
+    _incDesInhbAlt(1450),
+    _DesInhbAlt(1100),
+    _RAInhbAlt(1000),
+    _TAInhbAlt(500),
+    _intruderInhbAlt(360),
+    _intruderInhbSelfAltToggle(false),
+    _intruderInhbSelfAlt(1700)
 {
     for (int i = 0; i < pNode->nChildren(); ++i)
     {
