@@ -254,11 +254,6 @@ FGViewMgr::setView (int newview)
     if (get_current_view()) {
         get_current_view()->bind();
     }
-
-    // force an update now, to avoid returning bogus data.
-    // real fix would to be make all the accessors use the dirty mechanism
-    // on FGViewer, so update() is a no-op.
-    update(0.0);
 }
 
 
