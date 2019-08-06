@@ -707,7 +707,7 @@ static void getViewOffsets(
     )
 {
     std::string root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
-    if (root == "/") {
+    if (root == "/" || root == "") {
         if (target_infix) {
             offset_m.x() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-x-offset-m)");
             offset_m.y() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-y-offset-m)");
