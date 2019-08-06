@@ -196,9 +196,6 @@ View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
                            target_x_offset_m, target_y_offset_m,
                            target_z_offset_m, near_m, internal, lookat_agl,
                            lookat_agl_damping, view_index );
-        if (!from_model) {
-            v->_targetProperties.init(config, "target-");
-        }
     } else {
         v = new View ( FG_LOOKFROM, from_model, from_model_index,
                        false, 0, 0.0, 0.0, 0.0,
@@ -206,10 +203,6 @@ View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
                        heading_offset_deg, pitch_offset_deg,
                        roll_offset_deg, fov_deg, aspect_ratio_multiplier,
                          0, 0, 0, near_m, internal, false, 0.0, view_index );
-    }
-
-    if (!from_model) {
-        v->_eyeProperties.init(config, "eye-");
     }
 
     v->_name = config->getParent()->getStringValue("name");
@@ -1438,73 +1431,6 @@ double View::getElev_ft() const
 {
     return _position.getElevationFt();
 }
-
-View::PositionAttitudeProperties::PositionAttitudeProperties()
-{
-}
-
-View::PositionAttitudeProperties::~PositionAttitudeProperties()
-{
-}
-
-void View::PositionAttitudeProperties::init(SGPropertyNode_ptr parent, const std::string& prefix)
-{
-    _lonPathProp = parent->getNode(prefix + "lon-deg-path", true);
-    _latPathProp = parent->getNode(prefix + "lat-deg-path", true);
-    _altPathProp = parent->getNode(prefix + "alt-ft-path", true);
-    _headingPathProp = parent->getNode(prefix + "heading-deg-path", true);
-    _pitchPathProp = parent->getNode(prefix + "pitch-deg-path", true);
-    _rollPathProp = parent->getNode(prefix + "roll-deg-path", true);
-
-    // update the real properties now
-    valueChanged(NULL);
-
-    _lonPathProp->addChangeListener(this);
-    _latPathProp->addChangeListener(this);
-    _altPathProp->addChangeListener(this);
-    _headingPathProp->addChangeListener(this);
-    _pitchPathProp->addChangeListener(this);
-    _rollPathProp->addChangeListener(this);
-}
-
-void View::PositionAttitudeProperties::valueChanged(SGPropertyNode* node)
-{
-    _lonProp = resolvePathProperty(_lonPathProp);
-    _latProp = resolvePathProperty(_latPathProp);
-    _altProp = resolvePathProperty(_altPathProp);
-    _headingProp = resolvePathProperty(_headingPathProp);
-    _pitchProp = resolvePathProperty(_pitchPathProp);
-    _rollProp = resolvePathProperty(_rollPathProp);
-}
-
-SGPropertyNode_ptr View::PositionAttitudeProperties::resolvePathProperty(SGPropertyNode_ptr p)
-{
-    if (!p)
-        return SGPropertyNode_ptr();
-
-    std::string path = p->getStringValue();
-    if (path.empty())
-        return SGPropertyNode_ptr();
-
-    return fgGetNode(path, true);
-}
-
-SGGeod View::PositionAttitudeProperties::position() const
-{
-    double lon = _lonProp ? _lonProp->getDoubleValue() : 0.0;
-    double lat = _latProp ? _latProp->getDoubleValue() : 0.0;
-    double alt = _altProp ? _altProp->getDoubleValue() : 0.0;
-    return SGGeod::fromDegFt(lon, lat, alt);
-}
-
-SGVec3d View::PositionAttitudeProperties::attitude() const
-{
-    double heading = _headingProp ? _headingProp->getDoubleValue() : 0.0;
-    double pitch = _pitchProp ? _pitchProp->getDoubleValue() : 0.0;
-    double roll = _rollProp ? _rollProp->getDoubleValue() : 0.0;
-    return SGVec3d(heading, pitch, roll);
-}
-
 
 // Register the subsystem.
 #if 0
