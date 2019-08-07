@@ -71,6 +71,13 @@ void helpPrintout(std::ostream &stream) {
     stream << std::endl;
     stream << "  FG options:" << std::endl;
     stream << "    --fg-root           the path to FGData" << std::endl;
+    stream << std::endl;
+    stream << "Environmental variables:" << std::endl;
+    stream << "  FG_TEST_LOG_LEVEL     equivalent to the --log-level option." << std::endl;
+    stream << "  FG_TEST_LOG_CLASS     equivalent to the --log-class option." << std::endl;
+    stream << "  FG_TEST_LOG_SPLIT     equivalent to the --log-split option." << std::endl;
+    stream << "  FG_TEST_TIMINGS       equivalent to the -t or --timings option." << std::endl;
+    stream << "  FG_TEST_DEBUG         equivalent to the -d or --debug option." << std::endl;
     stream.flush();
 }
 
@@ -273,6 +280,20 @@ int main(int argc, char **argv)
     // The default logging class and priority to show.
     sgDebugClass    logClass=SG_ALL;
     sgDebugPriority logPriority=SG_INFO;
+
+    // Process environmental variables before the command line options.
+    if (getenv("FG_TEST_LOG_LEVEL"))
+        logPriority = processLogPriority(getenv("FG_TEST_LOG_LEVEL"), failure);
+    if (getenv("FG_TEST_LOG_CLASS"))
+        logClass = processLogClass(getenv("FG_TEST_LOG_CLASS"), failure);
+    if (getenv("FG_TEST_LOG_SPLIT"))
+        logSplit = true;
+    if (getenv("FG_TEST_TIMINGS"))
+        timings = true;
+    if (getenv("FG_TEST_DEBUG"))
+        debug = true;
+    if (failure)
+        return 1;
 
     // Argument parsing.
     for (int i = 1; i < argc; i++) {
