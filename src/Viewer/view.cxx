@@ -829,7 +829,7 @@ void View::handleAGL()
   {
       /* Just in case get_elevation_m() fails, we may as well use sea level. */
       ground_altitude = 0;
-      SG_LOG(SG_FLIGHT, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
+      SG_LOG(SG_VIEW, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
   }
 
   double    h_distance = SGGeodesy::distanceM(_position, _target);
@@ -858,7 +858,7 @@ void View::handleAGL()
 
     double    chase_distance_m;
     const std::string&  root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
-    if (root == "/") {
+    if (root == "/" || root == "") {
         chase_distance_m = ViewPropertyEvaluator::getDoubleValue("(/sim/chase-distance-m)", -25);
     }
     else {
@@ -915,7 +915,8 @@ void View::handleAGL()
     fov_v_deg *= _fov_user_deg / _configFOV_deg;
     set_fov(fov_v_deg);
 
-    SG_LOG(SG_FLIGHT, SG_DEBUG, ""
+    SG_LOG(SG_VIEW, SG_DEBUG, ""
+            << " fov_v_deg=" << fov_v_deg
             << " _position=" << _position
             << " _target=" << _target
             << " ground_altitude=" << ground_altitude
@@ -926,7 +927,7 @@ void View::handleAGL()
 }
 
 
-/* Views of an aircraft e.g. Helicopter View. */
+/* Views of an aircraft e.g. Helicopter View and Tower View. */
 void
 View::recalcLookAt ()
 {
@@ -967,24 +968,35 @@ View::recalcLookAt ()
 
   _position = _target;
   
-  _position.setLongitudeDeg(
-          ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))",
-                  _position.getLongitudeDeg()
-                  )
-          );
-  _position.setLatitudeDeg(
-          ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lat-deg-path))",
-                  _position.getLatitudeDeg()
-                  )
-          );
-  _position.setElevationFt(
-          ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-alt-ft-path))",
-                  _position.getElevationFt()
-                  )
-          );
+  const std::string&    tail = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path)");
+  
+  if (tail != "") {
+    /* <tail> will typically be /sim/tower/longitude-deg, so that this view's
+    eye position is from the tower rather than relative to the aircraft.
+
+    If we are viewing a multiplayer aircraft, the nearest tower
+    will be in /sim/view[]/config/root/sim/tower/longitude-deg (see
+    FGEnvironmentMgr::updateClosestAirport()), so we use a prefix to select
+    either /sim/tower/longitude-deg or multiplayer's tower. */
+    _position.setLongitudeDeg(
+            ViewPropertyEvaluator::getDoubleValue(
+                    "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))",
+                    _position.getLongitudeDeg()
+                    )
+            );
+    _position.setLatitudeDeg(
+            ViewPropertyEvaluator::getDoubleValue(
+                    "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lat-deg-path))",
+                    _position.getLatitudeDeg()
+                    )
+            );
+    _position.setElevationFt(
+            ViewPropertyEvaluator::getDoubleValue(
+                    "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-alt-ft-path))",
+                    _position.getElevationFt()
+                    )
+            );
+  }
 
   if (_lookat_agl) {
     handleAGL();
