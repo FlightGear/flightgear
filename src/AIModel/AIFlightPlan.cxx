@@ -339,10 +339,7 @@ void FGAIFlightPlan::eraseLastWaypoint()
     wpt_iterator++;
 }
 
-
-
-
-// gives distance in feet from a position to a waypoint
+// gives distance in meters from a position to a waypoint
 double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const{
   return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), wp->getPos());
 }
