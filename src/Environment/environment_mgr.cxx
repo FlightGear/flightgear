@@ -34,6 +34,8 @@
 #include <Main/main.hxx>
 #include <Main/fg_props.hxx>
 #include <Viewer/renderer.hxx>
+#include <Viewer/ViewPropertyEvaluator.hxx>
+
 #include <FDM/flight.hxx>
 
 #include "environment.hxx"
@@ -112,12 +114,34 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   delete _environment;
 }
 
+struct FGEnvironmentMgrMultiplayerListener : SGPropertyChangeListener {
+    FGEnvironmentMgrMultiplayerListener(FGEnvironmentMgr* environmentmgr)
+    :
+    _environmentmgr(environmentmgr)
+    {
+        _node = fgGetNode("/sim/current-view/model-view", true /*create*/);
+        _node->addChangeListener(this);
+    }
+    virtual void valueChanged(SGPropertyNode* node)
+    {
+        _environmentmgr->updateClosestAirport();
+    }
+    virtual ~FGEnvironmentMgrMultiplayerListener()
+    {
+        _node->removeChangeListener(this);
+    }
+    private:
+        FGEnvironmentMgr*   _environmentmgr;
+        SGPropertyNode_ptr  _node;
+};
+
 SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
 {
 
   InitStatus r = SGSubsystemGroup::incrementalInit();
   if (r == INIT_DONE) {
     fgClouds->Init();
+    _multiplayerListener = new FGEnvironmentMgrMultiplayerListener(this);
     globals->get_event_mgr()->addTask("updateClosestAirport", this,
                                       &FGEnvironmentMgr::updateClosestAirport, 30 );
   }
@@ -129,6 +153,8 @@ void
 FGEnvironmentMgr::shutdown()
 {
   globals->get_event_mgr()->removeTask("updateClosestAirport");
+  delete _multiplayerListener;
+  _multiplayerListener = NULL;
   SGSubsystemGroup::shutdown();
 }
 
@@ -272,7 +298,46 @@ FGEnvironmentMgr::updateClosestAirport()
                   nearestAirport->ident().c_str());
     }
   }
-
+  
+  {
+    /* If we are viewing a multiplayer aircraft, find nearest airport so that
+    Tower View etc works. */
+    std::string   view_config_root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
+    
+    if (view_config_root != "/" && view_config_root != "") {
+      /* We are currently viewing a multiplayer aircraft. */
+      
+      SGGeod  pos = SGGeod::fromDegFt(
+          ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/longitude-deg)"),
+          ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/latitude-deg)"),
+          ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/altitude-ft)")
+          );
+      FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
+      
+      if (nearestAirport) {
+        std::string   path = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)/sim/tower/");
+        fgSetString(path + "airport-id", nearestAirport->getId());
+        
+        if (nearestAirport->hasTower()) {
+          SGGeod  tower_pos = nearestAirport->getTowerLocation();
+          fgSetDouble(path + "latitude-deg", tower_pos.getLatitudeDeg());
+          fgSetDouble(path + "longitude-deg", tower_pos.getLongitudeDeg());
+          fgSetDouble(path + "altitude-ft", tower_pos.getElevationFt());
+          SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "airport-id=" << nearestAirport->getId() << " tower_pos=" << tower_pos);
+        }
+        else {
+          /* Use location of airport. */
+          fgSetDouble(path + "latitude-deg", nearestAirport->getLatitude());
+          fgSetDouble(path + "longitude-deg", nearestAirport->getLongitude());
+          fgSetDouble(path + "altitude-ft", nearestAirport->getElevation() + 20);
+          SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "no tower for airport-id=" << nearestAirport->getId());
+        }
+      }
+      else {
+        SG_LOG(SG_ENVIRONMENT,SG_DEBUG,"FGEnvironmentMgr::update: No airport within 100NM range of current multiplayer aircraft");
+      }
+    }
+  }
 }
 
 FGEnvironment

@@ -32,6 +32,7 @@ class FGEnvironment;
 class FGClouds;
 class FGPrecipitationMgr;
 class SGSky;
+struct FGEnvironmentMgrMultiplayerListener;
 
 /**
  * Manage environment information.
@@ -71,6 +72,7 @@ public:
     virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 
 private:
+    friend FGEnvironmentMgrMultiplayerListener;
     void updateClosestAirport();
 
     double get_cloud_layer_span_m (int index) const;
@@ -95,6 +97,7 @@ private:
     bool _cloudLayersDirty;
     simgear::TiedPropertyList _tiedProperties;
     SGPropertyChangeListener * _3dCloudsEnableListener;
+    FGEnvironmentMgrMultiplayerListener * _multiplayerListener;
     SGSky* _sky;
 };
 
