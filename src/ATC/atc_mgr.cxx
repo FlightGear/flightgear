@@ -273,6 +273,7 @@ void FGATCManager::update ( double time ) {
     if (destination != result && result != "") {
         destination = result;
         userAircraftScheduledFlight->setArrivalAirport(destination);
+		userAircraftScheduledFlight->initializeAirports();
 		userAircraftTrafficRef->clearAllFlights();
 		userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
         

@@ -57,6 +57,7 @@ static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name)
     return 0;
 }
 
+// help function to make a string all uppercase
 static void atcUppercase(string &s) {
     for(unsigned int i=0; i<s.size(); ++i) {
         s[i] = toupper(s[i]);
@@ -184,20 +185,23 @@ static bool doFrequencyDisplay( const SGPropertyNode* args, SGPropertyNode * roo
     return true;
 }
 
+// Initialize instance variable to NULL - first instance not yet generated
+// first call to instance() will create a new instance, therafter return that instance
 FGATCDialogNew * FGATCDialogNew::_instance = NULL;
 
+// Constructor function, assign values
 FGATCDialogNew::FGATCDialogNew()
     : _gui(NULL),
       dialogVisible(true)
 {
 }
 
+// Destructor
 FGATCDialogNew::~FGATCDialogNew()
 {
 }
 
-
-
+// Init function, sets up instance of FGATCDialogNew on first call of instance()
 void FGATCDialogNew::init() {
     // Add ATC-dialog to the command list
     globals->get_commands()->addCommand("ATC-dialog", FGATCDialogNew::popup );
@@ -209,8 +213,6 @@ void FGATCDialogNew::init() {
     //globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
     globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
 }
-
-
 
 // Display the ATC popup dialog box with options relevant to the users current situation.
 //
@@ -224,7 +226,9 @@ void FGATCDialogNew::init() {
 
 void FGATCDialogNew::addEntry(int nr, const std::string& txt) {
     commands.clear();
+	// Append the text to the string list
     commands.push_back(txt);
+	// Always will show this option
     commands.push_back(string("Toggle ground network visibility"));
 }
 
@@ -232,8 +236,7 @@ void FGATCDialogNew::removeEntry(int nr) {
     commands.clear();
 }
 
-
-
+// toggle state of dialogVisible
 void FGATCDialogNew::PopupDialog() {
     dialogVisible = !dialogVisible;
     return;
@@ -246,6 +249,8 @@ void FGATCDialogNew::update(double dt) {
 //      fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
 
     const char *dialog_name = "atc-dialog";
+	
+	// check gui subsystem
     _gui = (NewGUI *)globals->get_subsystem("gui");
     if (!_gui) {
         return;

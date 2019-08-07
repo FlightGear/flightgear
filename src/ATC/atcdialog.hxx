@@ -63,6 +63,9 @@ public:
         return true;
     }
   
+    // Generate new instance of FGATCDialogNew if it hasn't yet been generated
+	// Call constructor and init() functions
+	// If it has been generated, will return that instance
     inline static FGATCDialogNew * instance() {
         if( _instance != NULL ) return _instance;
         _instance = new FGATCDialogNew();
