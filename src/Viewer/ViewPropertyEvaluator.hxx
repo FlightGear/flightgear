@@ -116,6 +116,13 @@ namespace ViewPropertyEvaluator {
     struct Dump {};
     std::ostream& operator << (std::ostream& out, const Dump& dump);
     
+    struct DumpOne {
+        explicit DumpOne(const char* spec);
+        const char* _spec;
+    };
+    std::ostream& operator << (std::ostream& out, const DumpOne& dumpone);
+    
+    
     /* Clears all internal state. */
     void clear();
 
