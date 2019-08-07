@@ -29,7 +29,7 @@
 
 
 // Execute all test suites for the given test category.
-int testRunner(const std::string& type, const std::string& title, char *subset, bool verbose, bool ctest_output, bool debug)
+int testRunner(const std::string& type, const std::string& title, char *subset, bool timings, bool ctest_output, bool debug)
 {
     // Declarations.
     CppUnit::TextTestRunner runner;
@@ -45,7 +45,7 @@ int testRunner(const std::string& type, const std::string& title, char *subset, 
     fgTestListener *testListener;
     testListener = new fgTestListener;
     runner.eventManager().addListener(testListener);
-    testListener->verbose = verbose;
+    testListener->timings = timings;
     testListener->ctest_output = ctest_output;
     testListener->debug = debug;
 

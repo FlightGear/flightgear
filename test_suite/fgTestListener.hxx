@@ -84,7 +84,7 @@ protected:
         std::vector<TestIOCapt> io_capt;
 
         // Output settings.
-        bool verbose;
+        bool timings;
         bool ctest_output;
         bool debug;
 

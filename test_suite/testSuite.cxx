@@ -92,7 +92,7 @@ int main(int argc, char **argv)
     int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1, status_fgdata=-1;
     bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false, run_fgdata=false;
     bool        logSplit=false;
-    bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
+    bool        timings=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
     char        firstchar;
     std::string arg, delim, fgRoot, logClassVal, logClassItem, logLevel, val;
@@ -261,9 +261,9 @@ int main(int argc, char **argv)
         } else if (arg == "--log-split") {
             logSplit = true;
 
-        // Verbose output.
-        } else if (arg == "-v" || arg == "--verbose") {
-            verbose = true;
+        // Timing output.
+        } else if (arg == "-t" || arg == "--timings") {
+            timings = true;
 
         // CTest suitable output.
         } else if (arg == "-c" || arg == "--ctest") {
@@ -322,7 +322,7 @@ int main(int argc, char **argv)
         std::cout << "                        sequentially" << std::endl;
         std::cout << std::endl;
         std::cout << "  Verbosity options:" << std::endl;
-        std::cout << "    -v, --verbose       verbose output including names and timings for all" << std::endl;
+        std::cout << "    -t, --timings       verbose output including names and timings for all" << std::endl;
         std::cout << "                        tests." << std::endl;
         std::cout << "    -c, --ctest         simplified output suitable for running via CTest." << std::endl;
         std::cout << "    -d, --debug         disable IO capture for debugging (super verbose output)." << std::endl;
@@ -358,15 +358,15 @@ int main(int argc, char **argv)
 
     // Execute each of the test suite categories.
     if (run_system)
-        status_system = testRunner("System tests", "System / functional tests", subset_system, verbose, ctest_output, debug);
+        status_system = testRunner("System tests", "System / functional tests", subset_system, timings, ctest_output, debug);
     if (run_unit)
-        status_unit = testRunner("Unit tests", "Unit tests", subset_unit, verbose, ctest_output, debug);
+        status_unit = testRunner("Unit tests", "Unit tests", subset_unit, timings, ctest_output, debug);
     if (run_gui && 0) // Disabled as there are no GUI tests yet.
-        status_gui = testRunner("GUI tests", "GUI tests", subset_gui, verbose, ctest_output, debug);
+        status_gui = testRunner("GUI tests", "GUI tests", subset_gui, timings, ctest_output, debug);
     if (run_simgear)
-        status_simgear = testRunner("Simgear unit tests", "Simgear unit tests", subset_simgear, verbose, ctest_output, debug);
+        status_simgear = testRunner("Simgear unit tests", "Simgear unit tests", subset_simgear, timings, ctest_output, debug);
     if (run_fgdata)
-        status_fgdata = testRunner("FGData tests", "FGData tests", subset_fgdata, verbose, ctest_output, debug);
+        status_fgdata = testRunner("FGData tests", "FGData tests", subset_fgdata, timings, ctest_output, debug);
 
     // Summary printout.
     if (printSummary && !ctest_output)
