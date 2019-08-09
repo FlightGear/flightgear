@@ -74,6 +74,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _target_pitch_deg(0),
     _target_heading_deg(0),
     _lookat_agl_damping(lookat_agl_damping /*damping*/, 0 /*min*/, 0 /*max*/),
+    _lookat_agl_ground_altitude(0),
     _scaling_type(FG_SCALING_MAX)
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
@@ -825,10 +826,18 @@ void View::handleAGL()
   target_plus.setElevationM(target_plus.getElevationM() + 1);
   bool ok = globals->get_scenery()->get_elevation_m(target_plus, ground_altitude, &material);
 
-  if (!ok)
-  {
-      /* Just in case get_elevation_m() fails, we may as well use sea level. */
-      ground_altitude = 0;
+  if (ok) {
+    _lookat_agl_ground_altitude = ground_altitude;
+  }
+  else {
+      /* get_elevation_m() can fail if scenery has been un-cached, which
+      appears to happen quite often with remote multiplayer aircraft, so we
+      preserve the previous ground altitude to give some consistency and avoid
+      confusing zooming when switching between views.
+
+      [Might be better to have per-aircraft state too, so that switching
+      between multiplayer aircraft doesn't cause zooming.] */
+      ground_altitude = _lookat_agl_ground_altitude;
       SG_LOG(SG_VIEW, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
   }
 
@@ -877,6 +886,7 @@ void View::handleAGL()
         /* Damping of relative_height_ground can result in it being
         temporarily above the aircraft, so we ensure the aircraft is visible.
         */
+        _lookat_agl_damping.reset(relative_height_ground_);
         relative_height_ground = relative_height_ground_;
     }
 
@@ -1139,6 +1149,12 @@ void View::Damping::updateTarget(double& io)
 {
     setTarget(io);
     io = get();
+}
+
+void View::Damping::reset(double target)
+{
+    _target = target;
+    _current = target;
 }
 
 double

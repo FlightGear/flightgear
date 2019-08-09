@@ -350,6 +350,7 @@ private:
        void     update(double dt, void* id);
        double   get();
        void     updateTarget(double& io);
+       void     reset(double target);
 
        private:
            void*    _id;
@@ -361,6 +362,7 @@ private:
     };
     
     Damping _lookat_agl_damping;
+    double  _lookat_agl_ground_altitude;
     
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
