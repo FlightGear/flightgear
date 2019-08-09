@@ -143,7 +143,7 @@ SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
     fgClouds->Init();
     _multiplayerListener = new FGEnvironmentMgrMultiplayerListener(this);
     globals->get_event_mgr()->addTask("updateClosestAirport", this,
-                                      &FGEnvironmentMgr::updateClosestAirport, 30 );
+                                      &FGEnvironmentMgr::updateClosestAirport, 10 );
   }
 
   return r;
