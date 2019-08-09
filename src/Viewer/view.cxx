@@ -876,6 +876,12 @@ void View::handleAGL()
                 -25
                 );
     }
+    if (chase_distance_m == 0) {
+        /* ViewPropertyEvaluator::getDoubleValue() doesn't handle default
+        values very well because it always creates empty nodes if they don't
+        exist. So we override the value here. */
+        chase_distance_m = -25;
+    }
     double    aircraft_size_vertical = fabs(chase_distance_m) * 0.3;
     double    aircraft_size_horizontal = fabs(chase_distance_m) * 0.9;
 
