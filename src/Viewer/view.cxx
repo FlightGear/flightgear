@@ -895,6 +895,14 @@ void View::handleAGL()
         _lookat_agl_damping.reset(relative_height_ground_);
         relative_height_ground = relative_height_ground_;
     }
+    
+    /* Apply scaling from user field of view setting, altering only
+    relative_height_ground so that the aircraft is always in view. */
+    {
+        double  delta = relative_height_target_plus - relative_height_ground;
+        delta *= (_fov_user_deg / _configFOV_deg);
+        relative_height_ground = relative_height_target_plus - delta;
+    }
 
     double  angle_v_target = atan(relative_height_target_plus / h_distance);
     double  angle_v_ground = atan(relative_height_ground / h_distance);
@@ -925,11 +933,8 @@ void View::handleAGL()
     double  correction = std::max(correction_v, correction_h);
     if (correction > 1) {
         fov_v_deg *= correction;
+        set_fov(fov_v_deg);
     }
-
-    /* Apply scaling from user field of view setting. */
-    fov_v_deg *= _fov_user_deg / _configFOV_deg;
-    set_fov(fov_v_deg);
 
     SG_LOG(SG_VIEW, SG_DEBUG, ""
             << " fov_v_deg=" << fov_v_deg
@@ -938,6 +943,7 @@ void View::handleAGL()
             << " ground_altitude=" << ground_altitude
             << " relative_height_target_plus=" << relative_height_target_plus
             << " relative_height_ground=" << relative_height_ground
+            << " chase_distance_m=" << chase_distance_m
             );
   }
 }
