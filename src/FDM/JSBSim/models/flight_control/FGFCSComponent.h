@@ -113,12 +113,11 @@ protected:
   unsigned int delay;
   int index;
   double dt;
-  bool IsOutput;
   bool clip, cyclic_clip;
 
   void Delay(void);
   void Clip(void);
-  virtual void bind();
+  virtual void bind(Element* el);
   virtual void Debug(int from);
 };
 

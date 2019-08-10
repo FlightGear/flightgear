@@ -9,21 +9,21 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
@@ -73,13 +73,13 @@ CLASS IMPLEMENTATION
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Constructor
 
-FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
+FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr)
+  : Root(root), FDMctr(fdmctr)
 {
   Frame           = 0;
-  Error           = 0;
-  IC              = 0;
-  Trim            = 0;
-  Script          = 0;
+  IC              = nullptr;
+  Trim            = nullptr;
+  Script          = nullptr;
   disperse        = 0;
 
   RootDir = "";
@@ -291,8 +291,6 @@ bool FGFDMExec::DeAllocate(void)
   delete IC;
   delete Trim;
 
-  Error       = 0;
-
   modelLoaded = false;
   return modelLoaded;
 }
@@ -345,8 +343,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
   case eInput:
     break;
   case eInertial:
-    Inertial->in.Radius        = Propagate->GetRadius();
-    Inertial->in.Latitude      = Propagate->GetLatitude();
+    Inertial->in.Position      = Propagate->GetLocation();
     break;
   case eAtmosphere:
     Atmosphere->in.altitudeASL = Propagate->GetAltitudeASL();
@@ -457,7 +454,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     BuoyantForces->in.Density     = Atmosphere->GetDensity();
     BuoyantForces->in.Pressure    = Atmosphere->GetPressure();
     BuoyantForces->in.Temperature = Atmosphere->GetTemperature();
-    BuoyantForces->in.gravity     = Inertial->gravity();
+    BuoyantForces->in.gravity     = Inertial->GetGravity().Magnitude();
     break;
   case eMassBalance:
     MassBalance->in.GasInertia  = BuoyantForces->GetGasMassInertia();
@@ -490,8 +487,7 @@ void FGFDMExec::LoadInputs(unsigned int idx)
     Accelerations->in.GroundMoment  = GroundReactions->GetMoments();
     Accelerations->in.Force    = Aircraft->GetForces();
     Accelerations->in.GroundForce   = GroundReactions->GetForces();
-    Accelerations->in.GAccel   = Inertial->GetGAccel(Propagate->GetRadius());
-    Accelerations->in.J2Grav  = Inertial->GetGravityJ2(Propagate->GetLocation());
+    Accelerations->in.vGravAccel = Inertial->GetGravity();
     Accelerations->in.vPQRi    = Propagate->GetPQRi();
     Accelerations->in.vPQR     = Propagate->GetPQR();
     Accelerations->in.vUVW     = Propagate->GetUVW();
@@ -672,8 +668,8 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
   modelName = model; // Set the class modelName attribute
 
   if( AircraftPath.isNull() || EnginePath.isNull() || SystemsPath.isNull()) {
-    cerr << "Error: attempted to load aircraft with undefined ";
-    cerr << "aircraft, engine, and system paths" << endl;
+    cerr << "Error: attempted to load aircraft with undefined "
+         << "aircraft, engine, and system paths" << endl;
     return false;
   }
 

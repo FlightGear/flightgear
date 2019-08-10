@@ -38,7 +38,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
-#include "input_output/FGXMLElement.h"
 #include "models/FGFCS.h"
 #include "math/FGParameterValue.h"
 
@@ -55,8 +54,8 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
   Element *input_element,*init_element, *clip_el;
   Input = Output = delay_time = 0.0;
   delay = index = 0;
-  ClipMin = ClipMax = nullptr;
-  IsOutput = clip = cyclic_clip = false;
+  ClipMin = ClipMax = new FGRealValue(0.0);
+  clip = cyclic_clip = false;
   dt = fcs->GetChannelDeltaT();
 
   PropertyManager = fcs->GetPropertyManager();
@@ -129,7 +128,6 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 
   Element *out_elem = element->FindElement("output");
   while (out_elem) {
-    IsOutput = true;
     string output_node_name = out_elem->GetDataLine();
     FGPropertyNode* OutputNode = PropertyManager->GetNode( output_node_name, true );
     OutputNodes.push_back(OutputNode);
@@ -185,8 +183,6 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 
     clip = true;
   }
-  else
-      ClipMin = ClipMin = new FGRealValue(0.0);
 
   Debug(0);
 }
@@ -250,15 +246,22 @@ void FGFCSComponent::Clip(void)
 // properties in the FCS component name attribute. The old way is supported in
 // code at this time, but deprecated.
 
-void FGFCSComponent::bind(void)
+void FGFCSComponent::bind(Element* el)
 {
   string tmp;
-  if (Name.find("/") == string::npos) {
+  if (Name.find("/") == string::npos)
     tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
-  } else {
+  else
     tmp = Name;
+
+  FGPropertyNode* node = PropertyManager->GetNode(tmp, true);
+
+  if (node)
+    OutputNodes.push_back(node);
+  else {
+    cerr << el->ReadFrom()
+         << "Could not get or create property " << tmp << endl;
   }
-  PropertyManager->Tie( tmp, this, &FGFCSComponent::GetOutput);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

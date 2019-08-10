@@ -100,9 +100,9 @@ public:
   }
 
   /** Compute the altitude above ground. */
-  virtual double GetAGLevel(double t, const FGLocation& l,
-                            FGLocation& cont, FGColumnVector3& n,
-                            FGColumnVector3& v, FGColumnVector3& w) const {
+  double GetAGLevel(double t, const FGLocation& l, FGLocation& cont,
+                    FGColumnVector3& n, FGColumnVector3& v, FGColumnVector3& w)
+      const override {
     double contact[3], normal[3], vel[3], angularVel[3];
     double agl = mInterface->get_agl_ft(t, l, SG_METER_TO_FEET*2, contact,
                                         normal, vel, angularVel);
@@ -113,14 +113,14 @@ public:
     return agl;
   }
 
-  virtual double GetTerrainGeoCentRadius(double t, const FGLocation& l) const {
+  double GetTerrainGeoCentRadius(double t, const FGLocation& l) const override {
     double contact[3], normal[3], vel[3], angularVel[3];
     mInterface->get_agl_ft(t, l, SG_METER_TO_FEET*2, contact,
                            normal, vel, angularVel);
     return sqrt(contact[0]*contact[0]+contact[1]*contact[1]+contact[2]*contact[2]);
   }
 
-  virtual double GetSeaLevelRadius(const FGLocation& l) const {
+  double GetSeaLevelRadius(const FGLocation& l) const override {
     double seaLevelRadius, latGeoc;
 
     sgGeodToGeoc(l.GetGeodLatitudeRad(), l.GetGeodAltitude(),
@@ -129,8 +129,7 @@ public:
     return seaLevelRadius * SG_METER_TO_FEET;
   }
 
-  virtual void SetTerrainGeoCentRadius(double radius) {}
-  virtual void SetSeaLevelRadius(double radius) {}
+  void SetTerrainGeoCentRadius(double radius) override {}
 private:
   FGJSBsim* mInterface;
 };

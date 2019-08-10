@@ -7,21 +7,21 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
 HISTORY
 --------------------------------------------------------------------------------
@@ -39,11 +39,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "models/FGModel.h"
-#include "math/FGColumnVector3.h"
 #include "math/FGLocation.h"
 #include "math/FGQuaternion.h"
-#include "math/FGMatrix33.h"
-#include <deque>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -425,9 +422,15 @@ public:
       */
   double GetLocalTerrainRadius(void) const;
 
-  double GetEarthPositionAngle(void) const { return VState.vLocation.GetEPA(); }
+  /** Returns the Earth position angle.
+      @return Earth position angle in radians.
+   */
+  double GetEarthPositionAngle(void) const { return epa; }
 
-  double GetEarthPositionAngleDeg(void) const { return GetEarthPositionAngle()*radtodeg;}
+  /** Returns the Earth position angle in degrees.
+      @return Earth position angle in degrees.
+  */
+  double GetEarthPositionAngleDeg(void) const { return epa*radtodeg;}
 
   const FGColumnVector3& GetTerrainVelocity(void) const { return LocalTerrainVelocity; }
   const FGColumnVector3& GetTerrainAngularVelocity(void) const { return LocalTerrainAngularVelocity; }
@@ -483,11 +486,13 @@ public:
   const FGMatrix33& GetTb2i(void) const { return Tb2i; }
 
   /** Retrieves the ECEF-to-ECI transformation matrix.
-      @return a reference to the ECEF-to-ECI transformation matrix.  */
+      @return a reference to the ECEF-to-ECI transformation matrix.
+      @see SetEarthPositionAngle */
   const FGMatrix33& GetTec2i(void) const { return Tec2i; }
 
   /** Retrieves the ECI-to-ECEF transformation matrix.
-      @return a reference to the ECI-to-ECEF matrix.  */
+      @return a reference to the ECI-to-ECEF matrix.
+      @see SetEarthPositionAngle */
   const FGMatrix33& GetTi2ec(void) const { return Ti2ec; }
 
   /** Retrieves the ECEF-to-local transformation matrix.
@@ -503,18 +508,25 @@ public:
   const FGMatrix33& GetTl2ec(void) const { return Tl2ec; }
 
   /** Retrieves the local-to-inertial transformation matrix.
-      @return a reference to the local-to-inertial transformation matrix.  */
+      @return a reference to the local-to-inertial transformation matrix.
+      @see SetEarthPositionAngle */
   const FGMatrix33& GetTl2i(void) const { return Tl2i; }
 
   /** Retrieves the inertial-to-local transformation matrix.
-      @return a reference to the inertial-to-local matrix.  */
+      @return a reference to the inertial-to-local matrix.
+      @see SetEarthPositionAngle */
   const FGMatrix33& GetTi2l(void) const { return Ti2l; }
 
   const VehicleState& GetVState(void) const { return VState; }
 
   void SetVState(const VehicleState& vstate);
 
-  void SetEarthPositionAngle(double epa) {VState.vLocation.SetEarthPositionAngle(epa);}
+  /** Sets the Earth position angle.
+      This is the relative angle around the Z axis of the ECEF frame with
+      respect to the inertial frame.
+      @param EPA Earth position angle in radians.
+   */
+  void SetEarthPositionAngle(double EPA) {epa = EPA;}
 
   void SetInertialOrientation(const FGQuaternion& Qi);
   void SetInertialVelocity(const FGColumnVector3& Vi);
@@ -566,7 +578,6 @@ public:
   }
   void SetAltitudeASLmeters(double altASL) { SetAltitudeASL(altASL/fttom); }
 
-  void SetSeaLevelRadius(double tt);
   void SetTerrainElevation(double tt);
   void SetDistanceAGL(double tt);
   void SetDistanceAGLKm(double tt);
@@ -625,6 +636,7 @@ private:
   FGMatrix33 Tb2i;   // body to ECI frame rotation matrix
   FGMatrix33 Ti2l;
   FGMatrix33 Tl2i;
+  double epa;        // Earth Position Angle
 
   FGQuaternion Qec2b;
 

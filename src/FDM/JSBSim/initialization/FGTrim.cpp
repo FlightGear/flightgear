@@ -7,21 +7,21 @@
  --------- Copyright (C) 1999  Anthony K. Peden (apeden@earthlink.net) ---------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
  HISTORY
 --------------------------------------------------------------------------------
@@ -43,7 +43,6 @@ INCLUDES
 
 #include <iomanip>
 #include "FGTrim.h"
-#include "models/FGGroundReactions.h"
 #include "models/FGInertial.h"
 #include "models/FGAccelerations.h"
 #include "models/FGMassBalance.h"
@@ -412,6 +411,9 @@ void FGTrim::trimOnGround(void)
     }
   }
 
+  if (contacts.size() < 3)
+    return;
+
   // Remove the contact point that is closest to the ground from the list:
   // the rotation axis will be going thru this point so we need to remove it
   // to avoid divisions by zero that could result from the computation of
@@ -724,7 +726,7 @@ bool FGTrim::checkLimits(FGTrimAxis& axis)
 
 void FGTrim::setupPullup() {
   double g,q,cgamma;
-  g=fdmex->GetInertial()->gravity();
+  g=fdmex->GetInertial()->GetGravity().Magnitude();
   cgamma=cos(fgic.GetFlightPathAngleRadIC());
   cout << "setPitchRateInPullup():  " << g << ", " << cgamma << ", "
        << fgic.GetVtrueFpsIC() << endl;
@@ -742,7 +744,7 @@ void FGTrim::setupTurn(void){
   phi = fgic.GetPhiRadIC();
   if( fabs(phi) > 0.001 && fabs(phi) < 1.56 ) {
     targetNlf = 1 / cos(phi);
-    g = fdmex->GetInertial()->gravity();
+    g = fdmex->GetInertial()->GetGravity().Magnitude();
     psidot = g*tan(phi) / fgic.GetUBodyFpsIC();
     cout << targetNlf << ", " << psidot << endl;
   }
@@ -754,7 +756,7 @@ void FGTrim::setupTurn(void){
 void FGTrim::updateRates(void){
   if( mode == tTurn ) {
     double phi = fgic.GetPhiRadIC();
-    double g = fdmex->GetInertial()->gravity();
+    double g = fdmex->GetInertial()->GetGravity().Magnitude();
     double p,q,r,theta;
     if(fabs(phi) > 0.001 && fabs(phi) < 1.56 ) {
       theta=fgic.GetThetaRadIC();
@@ -771,7 +773,7 @@ void FGTrim::updateRates(void){
     fgic.SetRRadpsIC(r);
   } else if( mode == tPullup && fabs(targetNlf-1) > 0.01) {
       double g,q,cgamma;
-      g=fdmex->GetInertial()->gravity();
+      g=fdmex->GetInertial()->GetGravity().Magnitude();
       cgamma=cos(fgic.GetFlightPathAngleRadIC());
       q=g*(targetNlf-cgamma)/fgic.GetVtrueFpsIC();
       fgic.SetQRadpsIC(q);

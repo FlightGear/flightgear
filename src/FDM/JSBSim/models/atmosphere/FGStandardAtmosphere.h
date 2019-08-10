@@ -240,8 +240,6 @@ public:
   //@{
   /// Returns the standard density at a specified altitude
   virtual double GetStdDensity(double altitude) const;
-  /// Returns the standard density at a specified altitude
-  double GetDensity(double altitude) const override;
   //@}
 
   //  *************************************************************************
@@ -273,6 +271,11 @@ public:
   void SetRelativeHumidity(double RH);
   /// Returns the relative humidity in percent.
   double GetRelativeHumidity(void) const;
+  /** Sets the vapor mass per million of dry air mass units.
+      @param frac The fraction of water in ppm of dry air. */
+  void SetVaporMassFractionPPM(double frac);
+  /// Returns the vapor mass per million of dry air mass units (ppm).
+  double GetVaporMassFractionPPM(void) const;
   //@}
 
   /// Prints the U.S. Standard Atmosphere table.
@@ -285,7 +288,7 @@ protected:
   double TemperatureBias;
   double TemperatureDeltaGradient;
   double GradientFadeoutAltitude;
-  double VaporPressure;
+  double VaporMassFraction;
   double SaturatedVaporPressure;
 
   FGTable StdAtmosTemperatureTable;
@@ -342,8 +345,8 @@ protected:
   /// Calculate the pressure of water vapor with the Magnus formula.
   double CalculateVaporPressure(double temperature);
 
-  /// Validate the value of the vapor pressure
-  void ValidateVaporPressure(double geometricAlt);
+  /// Validate the value of the vapor mass fraction
+  void ValidateVaporMassFraction(double geometricAlt);
 
   /// Calculate the SL density
   void CalculateSLDensity(void) { SLdensity = SLpressure / (Reng * SLtemperature); }
@@ -355,15 +358,20 @@ protected:
   void Debug(int from) override;
 
   /// Earth radius in ft as defined for ISA 1976
-  static const double EarthRadius;
-  /// Constants for the Magnus formula (vapor pressure)
-  static const double a, b, c;
+  static constexpr double EarthRadius = 6356766.0 / fttom;
+  /** Sonntag constants based on ref [2]. They are valid for temperatures
+      between -45 degC (-49 degF) and 60 degC (140 degF) with a precision of
+      +/-0.35 degC (+/-0.63 degF) */
+  static constexpr double a = 611.2/psftopa; // psf
+  static constexpr double b = 17.62; // 1/degC
+  static constexpr double c = 243.12; // degC
   /// Mean molecular weight for water - slug/mol
-  static const double Mwater;
+  static constexpr double Mwater = 18.016 * kgtoslug / 1000.0;
+  static constexpr double Rdry = Rstar / Mair;
+  static constexpr double Rwater = Rstar / Mwater;
 };
 
 } // namespace JSBSim
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
-

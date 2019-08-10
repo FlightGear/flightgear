@@ -9,21 +9,21 @@
  -------           (C) 2011  Ola Røer Thorsen (ola@silentwings.no) -----------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU Lesser General Public License as published by the Free Software
- Foundation; either version 2 of the License, or (at your option) any later
- version.
+ the terms of the GNU Lesser General Public License as published by the Free
+ Software Foundation; either version 2 of the License, or (at your option) any
+ later version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU Lesser General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
- Further information about the GNU Lesser General Public License can also be found on
- the world wide web at http://www.gnu.org.
+ Further information about the GNU Lesser General Public License can also be
+ found on the world wide web at http://www.gnu.org.
 
 HISTORY
 -------------------------------------------------------------------------------
@@ -226,20 +226,6 @@ public:
       and semiminor axis lengths */
   void SetEllipse(double semimajor, double semiminor);
 
-  /** Sets the Earth position angle.
-      This is the relative orientation of the ECEF frame with respect to the
-      Inertial frame.
-      @param EPA Earth fixed frame (ECEF) rotation offset about the axis with
-                 respect to the Inertial (ECI) frame in radians. */
-  void SetEarthPositionAngle(double EPA) {epa = EPA; mCacheValid = false;}
-
-  /** Increments the Earth position angle.
-      This is the relative orientation of the ECEF frame with respect to the
-      Inertial frame.
-      @param delta delta to the Earth fixed frame (ECEF) rotation offset about the axis with
-                 respect to the Inertial (ECI) frame in radians. */
-  void IncrementEarthPositionAngle(double delta) {epa += delta; mCacheValid = false;}
-
   /** Get the longitude.
       @return the longitude in rad of the location represented with this
       class instance. The returned values are in the range between
@@ -301,13 +287,6 @@ public:
       return -mTec2l(3,3)/cLat;
   }
 
-  /** Return the Earth Position Angle.
-      This is the relative orientation of the ECEF frame with respect to the
-      Inertial frame.
-      @return the Earth fixed frame (ECEF) rotation offset about the axis with
-              respect to the Inertial (ECI) frame in radians. */
-  double GetEPA() const {return epa;}
-
   /** Get the distance from the center of the earth.
       @return the distance of the location represented with this class
       instance to the center of the earth in ft. The radius value is
@@ -350,7 +329,7 @@ public:
       @return the altitude ASL in feet.
       @see SetGroundCallback */
   double GetAltitudeASL(void) const
-  { ComputeDerived(); return GroundCallback->GetAltitude(*this); }
+  { return GetRadius() - GetSeaLevelRadius(); }
 
   /** Get the altitude above ground level.
       @return the altitude AGL in feet.
@@ -405,34 +384,6 @@ public:
       @return a const reference to the rotation matrix of the transform from
       the earth centered frame to the local horizontal frame. */
   const FGMatrix33& GetTec2l(void) const { ComputeDerived(); return mTec2l; }
-
-  /** Transform matrix from inertial to earth centered frame.
-      @return a const reference to the rotation matrix of the transform from
-      the inertial frame to the earth centered frame (ECI to ECEF).
-      @see SetEarthPositionAngle
-      @see IncrementEarthPositionAngle */
-  const FGMatrix33& GetTi2ec(void) const { ComputeDerived(); return mTi2ec; }
-
-  /** Transform matrix from the earth centered to inertial frame.
-      @return a const reference to the rotation matrix of the transform from
-      the earth centered frame to the inertial frame (ECEF to ECI).
-      @see SetEarthPositionAngle
-      @see IncrementEarthPositionAngle */
-  const FGMatrix33& GetTec2i(void) const { ComputeDerived(); return mTec2i; }
-
-  /** Transform matrix from the inertial to local horizontal frame.
-      @return a const reference to the rotation matrix of the transform from
-      the inertial frame to the local horizontal frame.
-      @see SetEarthPositionAngle
-      @see IncrementEarthPositionAngle */
-  const FGMatrix33& GetTi2l(void) const {ComputeDerived(); return mTi2l;}
-
-  /** Transform matrix from local horizontal to inertial frame.
-      @return a const reference to the rotation matrix of the transform from
-      the local horizontal frame to the inertial frame.
-      @see SetEarthPositionAngle
-      @see IncrementEarthPositionAngle */
-  const FGMatrix33& GetTl2i(void) const {ComputeDerived(); return mTl2i;}
 
   /** Get the geodetic distance between the current location and a given
       location. This corresponds to the shortest distance between the two
@@ -641,12 +592,6 @@ private:
   /** The cached rotation matrices from and to the associated frames. */
   mutable FGMatrix33 mTl2ec;
   mutable FGMatrix33 mTec2l;
-  mutable FGMatrix33 mTi2ec;
-  mutable FGMatrix33 mTec2i;
-  mutable FGMatrix33 mTi2l;
-  mutable FGMatrix33 mTl2i;
-
-  double epa;
 
   /* Terms for geodetic latitude calculation. Values are from WGS84 model */
   double a;    // Earth semimajor axis in feet
