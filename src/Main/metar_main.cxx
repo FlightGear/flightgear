@@ -42,7 +42,7 @@ using namespace std;
 using namespace simgear;
 
 // text color
-#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined ( sgi )
+#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined ( sgi )
 #	define R "\033[31;1m"		// red
 #	define G "\033[32;1m"		// green
 #	define Y "\033[33;1m"		// yellow

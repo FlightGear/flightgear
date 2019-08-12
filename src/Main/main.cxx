@@ -93,6 +93,10 @@ extern bool global_crashRptEnabled;
 #include <GUI/QtLauncher.hxx>
 #endif
 
+#ifdef __OpenBSD__
+#include <sys/resource.h>
+#endif
+
 using namespace flightgear;
 
 using std::cerr;
@@ -532,7 +536,7 @@ int fgMainInit( int argc, char **argv )
     // level once startup is done.
     sglog().setLogLevels( SG_ALL, SG_INFO );
     sglog().setStartupLoggingEnabled(true);
-
+    
     globals = new FGGlobals;
     if (!fgInitHome()) {
         return EXIT_FAILURE;
@@ -553,6 +557,29 @@ int fgMainInit( int argc, char **argv )
 
 #if OSG_VERSION_LESS_THAN(3,4,1)
     SG_LOG(SG_GENERAL, SG_ALERT, "Minimum supported OpenScenegraph is V3.4.1 - currently using " << osgGetVersion() << " This can cause fatal OSG 'final reference count' errors at runtime");
+#endif
+
+#ifdef __OpenBSD__
+    {
+        /* OpenBSD defaults to a small maximum data segment, which can cause
+        flightgear to crash with SIGBUS, so output a warning if this is likely.
+        */
+        struct rlimit   rlimit;
+        int e = getrlimit(RLIMIT_DATA, &rlimit);
+        if (e) {
+            SG_LOG( SG_GENERAL, SG_INFO, "This is OpenBSD; getrlimit() failed: " << strerror(errno));
+        }
+        else {
+            long long   required = 4LL * (1LL<<30);
+            if (rlimit.rlim_cur < required) {
+                SG_LOG( SG_GENERAL, SG_POPUP, ""
+                        << "Max data segment (" << rlimit.rlim_cur << "bytes) too small.\n"
+                        << "This can cause Flightgear to crash due to SIGBUS.\n"
+                        << "E.g. increase with 'ulimit -d " << required/1024 << "'."
+                        );
+            }
+        }
+    }
 #endif
 
     // seed the random number generator

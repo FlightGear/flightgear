@@ -136,7 +136,8 @@ elseif(WIN32)
     MESSAGE("Installing: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
 
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
-	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR
+	${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
     find_package(Threads REQUIRED)
     find_package(X11 REQUIRED)
 
@@ -233,6 +234,10 @@ if(SP_FDMS)
     set(ENABLE_SP_FDM 1)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include)
+endif()
+
 if(ENABLE_FGCOM)
   set(ENABLE_IAX 1)
   include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
@@ -246,7 +251,7 @@ if(EVENT_INPUT)
       add_definitions(-DWITH_EVENTINPUT)
       find_library(IOKIT_FRAMEWORK IOKit)
       list(APPEND EVENT_INPUT_LIBRARIES ${IOKIT_FRAMEWORK})
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux|FreeBSD")
+    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux|FreeBSD|OpenBSD")
         if(NOT UDEV_FOUND)
             message(WARNING "UDev not found, event input is disabled!")
             set(EVENT_INPUT 0)
@@ -320,6 +325,10 @@ if (MSVC)
     include_directories( ${CRASHRPT_INCLUDE_DIR})
 	endif()
 endif()
+
+#if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+#    include_directories("${CMAKE_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include")
+#endif()
 
 ##############################################################################
 ## Sqlite3 setup
