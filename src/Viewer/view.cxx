@@ -356,7 +356,7 @@ void View::resetOffsetsAndFOV()
 {
     _target_offset_m = _configTargetOffset_m;
     _offset_m = _configOffset_m;
-    _adjust_offset_m = SGVec3d::zeros();
+    _adjust_offset_m = _configOffset_m;
     _pitch_offset_deg = _configPitchOffsetDeg;
     _heading_offset_deg = _configHeadingOffsetDeg;
     _roll_offset_deg = _configRollOffsetDeg;
@@ -694,8 +694,11 @@ infix:
     view, but 'target-z-offset' when defining viewpoint of other views such as
     Helicopter View. So one should typically set <infix> to '' or 'target-'.
 adjust:
-    Added on to the return value. Can be used to add in the affects of the user
-    adjusting the view position.
+    If not NULL, typically points to copy of offsets in
+    /sim/current-view/?-offset-m, and we add *adjust to the return value, and
+    also subtract /sim/view[]/config/?-offset-m. We do the latter to preserve
+    expectations that /sim/current-view/?-offset-m includes the view offset, so
+    that aircraft that define custom view behaviour continue to work correctly.
 offset_m:
     Out param.
 
@@ -703,7 +706,7 @@ Returns true if any component (x, y or z) was found, otherwise false.
 */
 static void getViewOffsets(
     bool target_infix,
-    const SGVec3d& adjust,
+    const SGVec3d* adjust,
     SGVec3d& offset_m
     )
 {
@@ -732,7 +735,15 @@ static void getViewOffsets(
             offset_m.z() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
         }
     }
-    offset_m += adjust;
+    if (adjust) {
+        SGVec3d offset = *adjust;
+        /* Note that we subtract the raw /sim/view[]/config/?-offset-m
+        regardless of whether we are viwing a multiplayer aircraft or not. */
+        offset.x() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/x-offset-m)");
+        offset.y() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/y-offset-m)");
+        offset.z() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
+        offset_m += offset;
+    }
 }
     
 // recalculate for LookFrom view type...
@@ -774,7 +785,7 @@ View::recalcLookFrom ()
   /* Find the offset of the view position relative to the aircraft model's
   origin. */
   SGVec3d offset_m;
-  getViewOffsets(false /*target_infix*/, _adjust_offset_m, offset_m);
+  getViewOffsets(false /*target_infix*/, &_adjust_offset_m, offset_m);
   
   set_fov(_fov_user_deg);
 
@@ -976,7 +987,7 @@ View::recalcLookAt ()
   SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(_target);
 
   SGVec3d target_pos_off;
-  getViewOffsets(true /*target_infix*/, SGVec3d::zeros(), target_pos_off);
+  getViewOffsets(true /*target_infix*/, NULL /*adjust*/, target_pos_off);
   target_pos_off = SGVec3d(
         -target_pos_off.z(),
         target_pos_off.x(),
@@ -1036,7 +1047,7 @@ View::recalcLookAt ()
                                  _roll_offset_deg);
 
   // Offsets to the eye position
-  getViewOffsets(false /*target_infix*/, _adjust_offset_m, _offset_m);
+  getViewOffsets(false /*target_infix*/, &_adjust_offset_m, _offset_m);
   SGVec3d eyeOff(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
   SGQuatd ec2eye = geodEyeHlOr*geodEyeOr;
   SGVec3d eyeCart = SGVec3d::fromGeod(_position);
