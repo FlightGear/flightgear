@@ -39,9 +39,9 @@
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
   inited(false),
-  config_list(fgGetNode("/sim", true)->getChildren("view")),
-  current(0)
+  config_list(fgGetNode("/sim", true)->getChildren("view"))
 {
+    current = fgGetNode("/sim/current-view/view-number")->getIntValue();
 }
 
 // Destructor
