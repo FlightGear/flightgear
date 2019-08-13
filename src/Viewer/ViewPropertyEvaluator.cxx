@@ -549,6 +549,21 @@ namespace ViewPropertyEvaluator {
         return out;
     }
     
+    DumpOne::DumpOne(const char* spec)
+    : _spec(spec)
+    {}
+    
+    std::ostream& operator << (std::ostream& out, const DumpOne& dumpone)
+    {
+        out << "ViewPropertyEvaluator\n";
+        std::shared_ptr<Sequence> sequence = getSequence(dumpone._spec);
+        if (sequence) {
+            out << "    " << ": spec: '" << dumpone._spec << "'\n";
+            out << SequenceDump(*sequence, "        ", true /*deep*/);
+        }
+        return out;
+    }
+    
     void clear()
     {
         spec_to_sequence.clear();

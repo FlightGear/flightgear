@@ -172,7 +172,6 @@ public:
 
     // Vectors and positions...
 
-    const SGVec3d& get_view_pos() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGVec3d& getViewPosition() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGQuatd& getViewOrientation() { if ( _dirty ) { recalc(); } return mViewOrientation; }
     const SGQuatd& getViewOrientationOffset() { if ( _dirty ) { recalc(); } return mViewOffsetOr; }
@@ -351,6 +350,7 @@ private:
        void     update(double dt, void* id);
        double   get();
        void     updateTarget(double& io);
+       void     reset(double target);
 
        private:
            void*    _id;
@@ -362,6 +362,7 @@ private:
     };
     
     Damping _lookat_agl_damping;
+    double  _lookat_agl_ground_altitude;
     
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
@@ -418,44 +419,6 @@ private:
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
-
-    class PositionAttitudeProperties : public SGPropertyChangeListener
-    {
-    public:
-        PositionAttitudeProperties();
-
-        void init(SGPropertyNode_ptr parent, const std::string& prefix);
-
-        virtual ~PositionAttitudeProperties();
-
-        SGGeod position() const;
-        SGVec3d attitude() const; // as heading pitch roll
-
-    protected:
-        virtual void valueChanged(SGPropertyNode* prop);
-
-    private:
-        // disable copy
-        PositionAttitudeProperties(const PositionAttitudeProperties&);
-
-        SGPropertyNode_ptr resolvePathProperty(SGPropertyNode_ptr p);
-
-        SGPropertyNode_ptr _lonProp,
-            _latProp,
-            _altProp,
-            _headingProp,
-            _pitchProp,
-            _rollProp;
-        SGPropertyNode_ptr _lonPathProp,
-            _latPathProp,
-            _altPathProp,
-            _headingPathProp,
-            _pitchPathProp,
-            _rollPathProp;
-    };
-
-    PositionAttitudeProperties _eyeProperties;
-    PositionAttitudeProperties _targetProperties;
 
     //////////////////////////////////////////////////////////////////
     // private functions                                            //

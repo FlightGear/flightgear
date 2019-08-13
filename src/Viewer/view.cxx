@@ -74,6 +74,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _target_pitch_deg(0),
     _target_heading_deg(0),
     _lookat_agl_damping(lookat_agl_damping /*damping*/, 0 /*min*/, 0 /*max*/),
+    _lookat_agl_ground_altitude(0),
     _scaling_type(FG_SCALING_MAX)
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
@@ -196,9 +197,6 @@ View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
                            target_x_offset_m, target_y_offset_m,
                            target_z_offset_m, near_m, internal, lookat_agl,
                            lookat_agl_damping, view_index );
-        if (!from_model) {
-            v->_targetProperties.init(config, "target-");
-        }
     } else {
         v = new View ( FG_LOOKFROM, from_model, from_model_index,
                        false, 0, 0.0, 0.0, 0.0,
@@ -206,10 +204,6 @@ View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
                        heading_offset_deg, pitch_offset_deg,
                        roll_offset_deg, fov_deg, aspect_ratio_multiplier,
                          0, 0, 0, near_m, internal, false, 0.0, view_index );
-    }
-
-    if (!from_model) {
-        v->_eyeProperties.init(config, "eye-");
     }
 
     v->_name = config->getParent()->getStringValue("name");
@@ -362,7 +356,7 @@ void View::resetOffsetsAndFOV()
 {
     _target_offset_m = _configTargetOffset_m;
     _offset_m = _configOffset_m;
-    _adjust_offset_m = SGVec3d::zeros();
+    _adjust_offset_m = _configOffset_m;
     _pitch_offset_deg = _configPitchOffsetDeg;
     _heading_offset_deg = _configHeadingOffsetDeg;
     _roll_offset_deg = _configRollOffsetDeg;
@@ -700,8 +694,11 @@ infix:
     view, but 'target-z-offset' when defining viewpoint of other views such as
     Helicopter View. So one should typically set <infix> to '' or 'target-'.
 adjust:
-    Added on to the return value. Can be used to add in the affects of the user
-    adjusting the view position.
+    If not NULL, typically points to copy of offsets in
+    /sim/current-view/?-offset-m, and we add *adjust to the return value, and
+    also subtract /sim/view[]/config/?-offset-m. We do the latter to preserve
+    expectations that /sim/current-view/?-offset-m includes the view offset, so
+    that aircraft that define custom view behaviour continue to work correctly.
 offset_m:
     Out param.
 
@@ -709,12 +706,12 @@ Returns true if any component (x, y or z) was found, otherwise false.
 */
 static void getViewOffsets(
     bool target_infix,
-    const SGVec3d& adjust,
+    const SGVec3d* adjust,
     SGVec3d& offset_m
     )
 {
     std::string root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
-    if (root == "/") {
+    if (root == "/" || root == "") {
         if (target_infix) {
             offset_m.x() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-x-offset-m)");
             offset_m.y() = ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/target-y-offset-m)");
@@ -738,7 +735,15 @@ static void getViewOffsets(
             offset_m.z() = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
         }
     }
-    offset_m += adjust;
+    if (adjust) {
+        SGVec3d offset = *adjust;
+        /* Note that we subtract the raw /sim/view[]/config/?-offset-m
+        regardless of whether we are viwing a multiplayer aircraft or not. */
+        offset.x() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/x-offset-m)");
+        offset.y() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/y-offset-m)");
+        offset.z() -= ViewPropertyEvaluator::getDoubleValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/z-offset-m)");
+        offset_m += offset;
+    }
 }
     
 // recalculate for LookFrom view type...
@@ -780,7 +785,7 @@ View::recalcLookFrom ()
   /* Find the offset of the view position relative to the aircraft model's
   origin. */
   SGVec3d offset_m;
-  getViewOffsets(false /*target_infix*/, _adjust_offset_m, offset_m);
+  getViewOffsets(false /*target_infix*/, &_adjust_offset_m, offset_m);
   
   set_fov(_fov_user_deg);
 
@@ -832,11 +837,19 @@ void View::handleAGL()
   target_plus.setElevationM(target_plus.getElevationM() + 1);
   bool ok = globals->get_scenery()->get_elevation_m(target_plus, ground_altitude, &material);
 
-  if (!ok)
-  {
-      /* Just in case get_elevation_m() fails, we may as well use sea level. */
-      ground_altitude = 0;
-      SG_LOG(SG_FLIGHT, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
+  if (ok) {
+    _lookat_agl_ground_altitude = ground_altitude;
+  }
+  else {
+      /* get_elevation_m() can fail if scenery has been un-cached, which
+      appears to happen quite often with remote multiplayer aircraft, so we
+      preserve the previous ground altitude to give some consistency and avoid
+      confusing zooming when switching between views.
+
+      [Might be better to have per-aircraft state too, so that switching
+      between multiplayer aircraft doesn't cause zooming.] */
+      ground_altitude = _lookat_agl_ground_altitude;
+      SG_LOG(SG_VIEW, SG_DEBUG, "get_elevation_m() failed. _target=" << _target << "\n");
   }
 
   double    h_distance = SGGeodesy::distanceM(_position, _target);
@@ -865,7 +878,7 @@ void View::handleAGL()
 
     double    chase_distance_m;
     const std::string&  root = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/root)");
-    if (root == "/") {
+    if (root == "/" || root == "") {
         chase_distance_m = ViewPropertyEvaluator::getDoubleValue("(/sim/chase-distance-m)", -25);
     }
     else {
@@ -873,6 +886,12 @@ void View::handleAGL()
                 "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/set/sim/chase-distance-m)",
                 -25
                 );
+    }
+    if (chase_distance_m == 0) {
+        /* ViewPropertyEvaluator::getDoubleValue() doesn't handle default
+        values very well because it always creates empty nodes if they don't
+        exist. So we override the value here. */
+        chase_distance_m = -25;
     }
     double    aircraft_size_vertical = fabs(chase_distance_m) * 0.3;
     double    aircraft_size_horizontal = fabs(chase_distance_m) * 0.9;
@@ -884,7 +903,16 @@ void View::handleAGL()
         /* Damping of relative_height_ground can result in it being
         temporarily above the aircraft, so we ensure the aircraft is visible.
         */
+        _lookat_agl_damping.reset(relative_height_ground_);
         relative_height_ground = relative_height_ground_;
+    }
+    
+    /* Apply scaling from user field of view setting, altering only
+    relative_height_ground so that the aircraft is always in view. */
+    {
+        double  delta = relative_height_target_plus - relative_height_ground;
+        delta *= (_fov_user_deg / _configFOV_deg);
+        relative_height_ground = relative_height_target_plus - delta;
     }
 
     double  angle_v_target = atan(relative_height_target_plus / h_distance);
@@ -916,24 +944,23 @@ void View::handleAGL()
     double  correction = std::max(correction_v, correction_h);
     if (correction > 1) {
         fov_v_deg *= correction;
+        set_fov(fov_v_deg);
     }
 
-    /* Apply scaling from user field of view setting. */
-    fov_v_deg *= _fov_user_deg / _configFOV_deg;
-    set_fov(fov_v_deg);
-
-    SG_LOG(SG_FLIGHT, SG_DEBUG, ""
+    SG_LOG(SG_VIEW, SG_DEBUG, ""
+            << " fov_v_deg=" << fov_v_deg
             << " _position=" << _position
             << " _target=" << _target
             << " ground_altitude=" << ground_altitude
             << " relative_height_target_plus=" << relative_height_target_plus
             << " relative_height_ground=" << relative_height_ground
+            << " chase_distance_m=" << chase_distance_m
             );
   }
 }
 
 
-/* Views of an aircraft e.g. Helicopter View. */
+/* Views of an aircraft e.g. Helicopter View and Tower View. */
 void
 View::recalcLookAt ()
 {
@@ -960,7 +987,7 @@ View::recalcLookAt ()
   SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(_target);
 
   SGVec3d target_pos_off;
-  getViewOffsets(true /*target_infix*/, SGVec3d::zeros(), target_pos_off);
+  getViewOffsets(true /*target_infix*/, NULL /*adjust*/, target_pos_off);
   target_pos_off = SGVec3d(
         -target_pos_off.z(),
         target_pos_off.x(),
@@ -974,24 +1001,35 @@ View::recalcLookAt ()
 
   _position = _target;
   
-  _position.setLongitudeDeg(
-          ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))",
-                  _position.getLongitudeDeg()
-                  )
-          );
-  _position.setLatitudeDeg(
-          ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lat-deg-path))",
-                  _position.getLatitudeDeg()
-                  )
-          );
-  _position.setElevationFt(
-          ViewPropertyEvaluator::getDoubleValue(
-                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/eye-alt-ft-path))",
-                  _position.getElevationFt()
-                  )
-          );
+  const std::string&    tail = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path)");
+  
+  if (tail != "") {
+    /* <tail> will typically be /sim/tower/longitude-deg, so that this view's
+    eye position is from the tower rather than relative to the aircraft.
+
+    If we are viewing a multiplayer aircraft, the nearest tower
+    will be in /sim/view[]/config/root/sim/tower/longitude-deg (see
+    FGEnvironmentMgr::updateClosestAirport()), so we use a prefix to select
+    either /sim/tower/longitude-deg or multiplayer's tower. */
+    _position.setLongitudeDeg(
+            ViewPropertyEvaluator::getDoubleValue(
+                    "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))",
+                    _position.getLongitudeDeg()
+                    )
+            );
+    _position.setLatitudeDeg(
+            ViewPropertyEvaluator::getDoubleValue(
+                    "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lat-deg-path))",
+                    _position.getLatitudeDeg()
+                    )
+            );
+    _position.setElevationFt(
+            ViewPropertyEvaluator::getDoubleValue(
+                    "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-alt-ft-path))",
+                    _position.getElevationFt()
+                    )
+            );
+  }
 
   if (_lookat_agl) {
     handleAGL();
@@ -1009,7 +1047,7 @@ View::recalcLookAt ()
                                  _roll_offset_deg);
 
   // Offsets to the eye position
-  getViewOffsets(false /*target_infix*/, _adjust_offset_m, _offset_m);
+  getViewOffsets(false /*target_infix*/, &_adjust_offset_m, _offset_m);
   SGVec3d eyeOff(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
   SGQuatd ec2eye = geodEyeHlOr*geodEyeOr;
   SGVec3d eyeCart = SGVec3d::fromGeod(_position);
@@ -1134,6 +1172,12 @@ void View::Damping::updateTarget(double& io)
 {
     setTarget(io);
     io = get();
+}
+
+void View::Damping::reset(double target)
+{
+    _target = target;
+    _current = target;
 }
 
 double
@@ -1438,73 +1482,6 @@ double View::getElev_ft() const
 {
     return _position.getElevationFt();
 }
-
-View::PositionAttitudeProperties::PositionAttitudeProperties()
-{
-}
-
-View::PositionAttitudeProperties::~PositionAttitudeProperties()
-{
-}
-
-void View::PositionAttitudeProperties::init(SGPropertyNode_ptr parent, const std::string& prefix)
-{
-    _lonPathProp = parent->getNode(prefix + "lon-deg-path", true);
-    _latPathProp = parent->getNode(prefix + "lat-deg-path", true);
-    _altPathProp = parent->getNode(prefix + "alt-ft-path", true);
-    _headingPathProp = parent->getNode(prefix + "heading-deg-path", true);
-    _pitchPathProp = parent->getNode(prefix + "pitch-deg-path", true);
-    _rollPathProp = parent->getNode(prefix + "roll-deg-path", true);
-
-    // update the real properties now
-    valueChanged(NULL);
-
-    _lonPathProp->addChangeListener(this);
-    _latPathProp->addChangeListener(this);
-    _altPathProp->addChangeListener(this);
-    _headingPathProp->addChangeListener(this);
-    _pitchPathProp->addChangeListener(this);
-    _rollPathProp->addChangeListener(this);
-}
-
-void View::PositionAttitudeProperties::valueChanged(SGPropertyNode* node)
-{
-    _lonProp = resolvePathProperty(_lonPathProp);
-    _latProp = resolvePathProperty(_latPathProp);
-    _altProp = resolvePathProperty(_altPathProp);
-    _headingProp = resolvePathProperty(_headingPathProp);
-    _pitchProp = resolvePathProperty(_pitchPathProp);
-    _rollProp = resolvePathProperty(_rollPathProp);
-}
-
-SGPropertyNode_ptr View::PositionAttitudeProperties::resolvePathProperty(SGPropertyNode_ptr p)
-{
-    if (!p)
-        return SGPropertyNode_ptr();
-
-    std::string path = p->getStringValue();
-    if (path.empty())
-        return SGPropertyNode_ptr();
-
-    return fgGetNode(path, true);
-}
-
-SGGeod View::PositionAttitudeProperties::position() const
-{
-    double lon = _lonProp ? _lonProp->getDoubleValue() : 0.0;
-    double lat = _latProp ? _latProp->getDoubleValue() : 0.0;
-    double alt = _altProp ? _altProp->getDoubleValue() : 0.0;
-    return SGGeod::fromDegFt(lon, lat, alt);
-}
-
-SGVec3d View::PositionAttitudeProperties::attitude() const
-{
-    double heading = _headingProp ? _headingProp->getDoubleValue() : 0.0;
-    double pitch = _pitchProp ? _pitchProp->getDoubleValue() : 0.0;
-    double roll = _rollProp ? _rollProp->getDoubleValue() : 0.0;
-    return SGVec3d(heading, pitch, roll);
-}
-
 
 // Register the subsystem.
 #if 0
