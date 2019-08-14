@@ -490,8 +490,8 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
       }
   }
   catch( ... ) {
-    delete  inputDevice;
     SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetUniqueName()  );
+    delete  inputDevice;
     return INVALID_DEVICE_INDEX;
   }
 
