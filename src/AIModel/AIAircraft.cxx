@@ -125,6 +125,7 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 
     FGAIBase::readFromScenario(scFileNode);
 
+    //acwakecategory = scFileNode->getStringValue("class", "jet_transport");
     setPerformance("", scFileNode->getStringValue("class", "jet_transport"));
     setFlightPlan(scFileNode->getStringValue("flightplan"),
                   scFileNode->getBoolValue("repeat", false));
@@ -194,7 +195,7 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
     // enough
      if (manager){
         UpdateRadar(manager);
-	invisible = !manager->isVisible(pos);
+    invisible = !manager->isVisible(pos);
      }
   }
 
@@ -664,7 +665,7 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction) {
         // if circular waits are resolved.
         // For now, just take the offending aircraft 
         // out of the scene
-	setDie(true);
+    setDie(true);
         // a more proper way should be - of course - to
         // let an offending aircraft take an evasive action
         // for instance taxi back a little bit.
@@ -681,7 +682,7 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction) {
     } else {
         if (holdPos) {
             //if (trafficRef)
-            //	cerr << trafficRef->getCallSign() << " Resuming Taxi." << endl;
+            //  cerr << trafficRef->getCallSign() << " Resuming Taxi." << endl;
             holdPos = false;
         }
         // Change speed Instruction. This can only be excecuted when there is no
@@ -1094,7 +1095,7 @@ void FGAIAircraft::updateHeading(double dt) {
 //                bank_sense = 1.0;
             }
             //if (trafficRef)
-            //	cerr << trafficRef->getCallSign() << " Heading " 
+            //  cerr << trafficRef->getCallSign() << " Heading " 
             //         << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
             //if (headingDiff > 60) {
             groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);

@@ -71,57 +71,87 @@ void clearTrafficControllers(TrafficVector& vec)
 /***************************************************************************
  * ActiveRunway
  **************************************************************************/
+/* 
+* Fetch next slot for the active runway
+* @param eta time of slot requested
+* @return newEta: next slot available; starts at eta paramater
+* and adds separation as needed
+*/
 time_t ActiveRunway::requestTimeSlot(time_t eta)
 {
     time_t newEta;
-    time_t separation = 90;
+    // default separation - 60 seconds
+    time_t separation = 60;
+    //if (wakeCategory == "heavy_jet") {
+    //   SG_LOG(SG_ATC, SG_DEBUG, "Heavy jet, using extra separation");
+    //    time_t separation = 120;
+    //}
     bool found = false;
+    
+    // if the aircraft is the first arrival, add to the vector and return eta directly
     if (estimatedArrivalTimes.empty()) {
         estimatedArrivalTimes.push_back(eta);
+        SG_LOG(SG_ATC, SG_DEBUG, "Checked eta slots, using" << eta);
         return eta;
     } else {
+        // First check the already assigned slots to see where we need to fit the flight in
         TimeVectorIterator i = estimatedArrivalTimes.begin();
-		SG_LOG(SG_ATC, SG_DEBUG, "Checking eta slots " << eta << ": ");
+        SG_LOG(SG_ATC, SG_DEBUG, "Checking eta slots " << eta << ": ");
+        
+        // is this needed - just a debug output?
         for (i = estimatedArrivalTimes.begin();
                 i != estimatedArrivalTimes.end(); i++) {
-			SG_LOG(SG_ATC, SG_BULK, "Stored time : " << (*i));
+            SG_LOG(SG_ATC, SG_BULK, "Stored time : " << (*i));
         }
+        
+        // if the flight is before the first scheduled slot + separation
         i = estimatedArrivalTimes.begin();
         if ((eta + separation) < (*i)) {
             newEta = eta;
-            found = true;
-			SG_LOG(SG_ATC, SG_BULK, "Storing at beginning");
+            SG_LOG(SG_ATC, SG_BULK, "Storing at beginning");
+            SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta);
+            slotHousekeeping(newEta);
+            return newEta;
         }
+        
+        // else, look through the rest of the slots
         while ((i != estimatedArrivalTimes.end()) && (!found)) {
             TimeVectorIterator j = i + 1;
+            
+            // if the flight is after the last scheduled slot check if separation is needed
             if (j == estimatedArrivalTimes.end()) {
                 if (((*i) + separation) < eta) {
-					SG_LOG(SG_ATC, SG_BULK, "Storing at end");
+                    SG_LOG(SG_ATC, SG_BULK, "Storing at end");
                     newEta = eta;
                 } else {
                     newEta = (*i) + separation;
-					SG_LOG(SG_ATC, SG_BULK, "Storing at end + separation");
+                    SG_LOG(SG_ATC, SG_BULK, "Storing at end + separation");
                 }
+                SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta);
+                slotHousekeeping(newEta);
+                return newEta;
             } else {
-                if ((((*j) - (*i)) > (separation * 2))) {       // found a potential slot
+                // potential slot found
+                // check the distance between the previous and next slots
+                // distance msut be greater than 2* separation
+                if ((((*j) - (*i)) > (separation * 2))) {
                     // now check whether this slot is usable:
-                    // 1) eta should fall between the two points
-                    //    i.e. eta > i AND eta < j
-                    //
-					SG_LOG(SG_ATC, SG_DEBUG, "Found potential slot after " << (*i));
+                    // eta should fall between the two points
+                    // i.e. eta > i AND eta < j
+                    SG_LOG(SG_ATC, SG_DEBUG, "Found potential slot after " << (*i));
                     if (eta > (*i) && (eta < (*j))) {
                         found = true;
                         if (eta < ((*i) + separation)) {
                             newEta = (*i) + separation;
-							SG_LOG(SG_ATC, SG_BULK, "Using  original" << (*i) << " + separation ");
+                            SG_LOG(SG_ATC, SG_BULK, "Using  original" << (*i) << " + separation ");
                         } else {
                             newEta = eta;
-							SG_LOG(SG_ATC, SG_BULK, "Using original after " << (*i));
+                            SG_LOG(SG_ATC, SG_BULK, "Using original after " << (*i));
                         }
                     } else if (eta < (*i)) {
                         found = true;
                         newEta = (*i) + separation;
-						SG_LOG(SG_ATC, SG_BULK, "Using delayed slot after " << (*i));
+                        SG_LOG(SG_ATC, SG_BULK, "Using delayed slot after " << (*i));
                     }
                     /*
                        if (((*j) - separation) < eta) {
@@ -139,33 +169,39 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
             i++;
         }
     }
-	SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta);
 
+    SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta);
+    slotHousekeeping(newEta);
+    return newEta;
+}
+
+void ActiveRunway::slotHousekeeping(time_t newEta)
+{
+    // add the slot to the vector and resort the vector
     estimatedArrivalTimes.push_back(newEta);
     sort(estimatedArrivalTimes.begin(), estimatedArrivalTimes.end());
-    // do some housekeeping : remove any timestamps that are past
-
+    
+    // do some housekeeping : remove any slots that are past
     time_t now = globals->get_time_params()->get_cur_time();
 
     TimeVectorIterator i = estimatedArrivalTimes.begin();
     while (i != estimatedArrivalTimes.end()) {
         if ((*i) < now) {
-			SG_LOG(SG_ATC, SG_BULK, "Deleting timestamp " << (*i) << " (now = " << now << "). ");
+            SG_LOG(SG_ATC, SG_BULK, "Deleting timestamp " << (*i) << " (now = " << now << "). ");
             estimatedArrivalTimes.erase(i);
             i = estimatedArrivalTimes.begin();
         } else {
             i++;
         }
     }
-    return newEta;
 }
 
 void ActiveRunway::printDepartureCue()
 {
-	SG_LOG(SG_ATC, SG_DEBUG, "Departure cue for " << rwy << ": ");
+    SG_LOG(SG_ATC, SG_DEBUG, "Departure cue for " << rwy << ": ");
     for (AircraftVecIterator atc = departureCue.begin(); atc != departureCue.end(); atc++) {
-		SG_LOG(SG_ATC, SG_DEBUG, "     " << (*atc)->getCallSign() << " " << (*atc)->getTakeOffStatus());
-		SG_LOG(SG_ATC, SG_DEBUG, " " << (*atc)->_getLatitude() << " " << (*atc)->_getLongitude() << (*atc)->getSpeed() << " " << (*atc)->getAltitude());
+        SG_LOG(SG_ATC, SG_DEBUG, "     " << (*atc)->getCallSign() << " " << (*atc)->getTakeOffStatus());
+        SG_LOG(SG_ATC, SG_DEBUG, " " << (*atc)->_getLatitude() << " " << (*atc)->_getLongitude() << (*atc)->getSpeed() << " " << (*atc)->getAltitude());
     }
     
 }
@@ -206,10 +242,11 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
         FGAIFlightPlan * route)
 {
 
+    SG_LOG(SG_ATC, SG_DEBUG, "Position: " << pos);
     currentPos = pos;
     if (! intentions.empty()) {
         intVecIterator i = intentions.begin();
-        if ((*i) != pos) {
+        if ((*i) != currentPos) {
             SG_LOG(SG_ATC, SG_ALERT,
                    "Error in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
         }
@@ -217,8 +254,8 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     } else {
         //FGAIFlightPlan::waypoint* const wpt= route->getCurrentWaypoint();
         int size = route->getNrOfWayPoints();
-		SG_LOG(SG_ATC, SG_DEBUG, "Setting pos" << pos);
-		SG_LOG(SG_ATC, SG_DEBUG, "Setting intentions");
+        SG_LOG(SG_ATC, SG_DEBUG, "Setting pos" << currentPos);
+        SG_LOG(SG_ATC, SG_DEBUG, "Setting intentions");
         for (int i = 2; i < size; i++) {
             int val = route->getRouteIndex(i);
             intentions.push_back(val);
@@ -245,14 +282,14 @@ FGAIAircraft* FGTrafficRecord::getAircraft() const
 bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
 {
     bool result = false;
-	SG_LOG(SG_ATC, SG_BULK, "Start check 1");
+    SG_LOG(SG_ATC, SG_BULK, "Start check 1");
     if (currentPos == other.currentPos) {
-		SG_LOG(SG_ATC, SG_DEBUG, ": Check Position and intentions: we are on the same taxiway; Index = " << currentPos);
+        SG_LOG(SG_ATC, SG_BULK, ": Check Position and intentions: we are on the same taxiway; Index = " << currentPos);
         result = true;
     }
     //  else if (! other.intentions.empty())
     //     {
-	//       SG_LOG(SG_ATC, SG_BULK, "Start check 2");
+    //       SG_LOG(SG_ATC, SG_BULK, "Start check 2");
     //       intVecIterator i = other.intentions.begin();
     //       while (!((i == other.intentions.end()) || ((*i) == currentPos)))
     //     i++;
@@ -261,7 +298,7 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
     //     result = true;
     //       }
     else if (! intentions.empty()) {
-	    SG_LOG(SG_ATC, SG_BULK, "Start check 3");
+        SG_LOG(SG_ATC, SG_BULK, "Start check 3");
         intVecIterator i = intentions.begin();
         //while (!((i == intentions.end()) || ((*i) == other.currentPos)))
         while (i != intentions.end()) {
@@ -271,11 +308,11 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
             i++;
         }
         if (i != intentions.end()) {
-			SG_LOG(SG_ATC, SG_DEBUG, ": Check Position and intentions: .other.current matches Index = " << (*i));
+            SG_LOG(SG_ATC, SG_BULK, ": Check Position and intentions: .other.current matches Index = " << (*i));
             result = true;
         }
     }
-	SG_LOG(SG_ATC, SG_BULK, "Done!");
+    SG_LOG(SG_ATC, SG_BULK, "Done!");
     return result;
 }
 
@@ -309,7 +346,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
             if ((*i) > 0) {
                 if (currentTargetNode ==
                         net->findSegment(*i)->getEnd()->getIndex()) {
-					SG_LOG(SG_ATC, SG_BULK, "Current crosses at " << currentTargetNode);
+                    SG_LOG(SG_ATC, SG_BULK, "Current crosses at " << currentTargetNode);
                     return currentTargetNode;
                 }
             }
@@ -321,7 +358,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
             if ((*i) > 0) {
                 if (otherTargetNode ==
                         net->findSegment(*i)->getEnd()->getIndex()) {
-					SG_LOG(SG_ATC, SG_BULK, "Other crosses at " << currentTargetNode);
+                    SG_LOG(SG_ATC, SG_BULK, "Other crosses at " << currentTargetNode);
                     return otherTargetNode;
                 }
             }
@@ -331,7 +368,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
         for (i = intentions.begin(); i != intentions.end(); i++) {
             for (j = other.intentions.begin(); j != other.intentions.end();
                     j++) {
-				SG_LOG(SG_ATC, SG_BULK, "finding segment " << *i << " and " << *j);
+                SG_LOG(SG_ATC, SG_BULK, "finding segment " << *i << " and " << *j);
                 if (((*i) > 0) && ((*j) > 0)) {
                     currentTargetNode =
                         net->findSegment(*i)->getEnd()->getIndex();
@@ -392,7 +429,7 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
 {
     // Check if current segment is the reverse segment for the other aircraft
     FGTaxiSegment *opp;
-	SG_LOG(SG_ATC, SG_BULK, "Current segment " << currentPos);
+    SG_LOG(SG_ATC, SG_BULK, "Current segment " << currentPos);
     if ((currentPos > 0) && (other.currentPos > 0)) {
         opp = net->findSegment(currentPos)->opposite();
         if (opp) {
@@ -409,7 +446,7 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
                         if (net->findSegment(*i)->getStart()->getIndex() ==
                                 node) {
                             {
-								SG_LOG(SG_ATC, SG_BULK, "Found the node " << node);
+                                SG_LOG(SG_ATC, SG_BULK, "Found the node " << node);
                                 return true;
                             }
                         }
@@ -418,19 +455,19 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
             if (! other.intentions.empty()) {
                 for (intVecIterator j = other.intentions.begin();
                         j != other.intentions.end(); j++) {
-					SG_LOG(SG_ATC, SG_BULK, "Current segment 1 " << (*i));
+                    SG_LOG(SG_ATC, SG_BULK, "Current segment 1 " << (*i));
                     if ((*i) > 0) {
                         if ((opp = net->findSegment(*i)->opposite())) {
                             if (opp->getIndex() ==
                                     net->findSegment(*j)->getIndex()) {
                                 SG_LOG(SG_ATC, SG_BULK, "Nodes " << net->findSegment(*i)->getIndex()
                                    << " and  " << net->findSegment(*j)->getIndex()
-									<< " are opposites ");
+                                    << " are opposites ");
                                 if (net->findSegment(*i)->getStart()->
                                         getIndex() == node) {
                                     {
-										SG_LOG(SG_ATC, SG_BULK, "Found the node " << node);
-										return true;
+                                        SG_LOG(SG_ATC, SG_BULK, "Found the node " << node);
+                                        return true;
                                     }
                                 }
                             }
@@ -510,7 +547,7 @@ bool FGATCInstruction::hasInstruction() const
 
 FGATCController::FGATCController()
 {
-	SG_LOG(SG_ATC, SG_DEBUG, "running FGATController constructor");
+    SG_LOG(SG_ATC, SG_DEBUG, "running FGATController constructor");
     dt_count = 0;
     available = true;
     lastTransmission = 0;
@@ -566,7 +603,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         instructionText = "taxi";
     }
    
-	SG_LOG(SG_ATC, SG_DEBUG, "transmitting for: " << sender << "Leg = " << rec->getLeg());
+    SG_LOG(SG_ATC, SG_DEBUG, "transmitting for: " << sender << "Leg = " << rec->getLeg());
     switch (rec->getLeg()) {
     case 1:
     case 2:
@@ -726,7 +763,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
                + activeRunway
                + ". " + sender + ".";
         //text = "test1";
-		SG_LOG(SG_ATC, SG_DEBUG, "1 Currently at leg " << rec->getLeg());
+        SG_LOG(SG_ATC, SG_DEBUG, "1 Currently at leg " << rec->getLeg());
         break;
     case MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
@@ -734,19 +771,19 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
                //                + activeRunway
                + ". " + sender + ".";
         //text = "test2";
-		SG_LOG(SG_ATC, SG_DEBUG, "2 Currently at leg " << rec->getLeg());
+        SG_LOG(SG_ATC, SG_DEBUG, "2 Currently at leg " << rec->getLeg());
         break;
     case MSG_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
         text = receiver + " Contact Tower at " + towerFreqStr + ". " + sender + ".";
         //text = "test3";
-		SG_LOG(SG_ATC, SG_DEBUG, "3 Currently at leg " << rec->getLeg());
+        SG_LOG(SG_ATC, SG_DEBUG, "3 Currently at leg " << rec->getLeg());
         break;
     case MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
         text = receiver + " Roger, switching to tower at " + towerFreqStr + ". " + sender + ".";
         //text = "test4";
-		SG_LOG(SG_ATC, SG_DEBUG, "4 Currently at leg " << rec->getLeg());
+        SG_LOG(SG_ATC, SG_DEBUG, "4 Currently at leg " << rec->getLeg());
         break;
     default:
         //text = "test3";
@@ -760,7 +797,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
         int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
         int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
-		SG_LOG(SG_ATC, SG_DEBUG, "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl);
+        SG_LOG(SG_ATC, SG_DEBUG, "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl);
 
         // Display ATC message only when one of the radios is tuned
         // the relevant frequency.
@@ -770,28 +807,28 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             ((onBoardRadioFreqI0 == stationFreq)||
              (onBoardRadioFreqI1 == stationFreq))) {
             if (rec->allowTransmissions()) {
-            	
-            	if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
-					SG_LOG(SG_ATC, SG_DEBUG, "Using ITM radio propagation");
-            		FGRadioTransmission* radio = new FGRadioTransmission();
-            		SGGeod sender_pos;
-            		double sender_alt_ft, sender_alt;
-            		if(ground_to_air) {
+                
+                if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
+                    SG_LOG(SG_ATC, SG_DEBUG, "Using ITM radio propagation");
+                    FGRadioTransmission* radio = new FGRadioTransmission();
+                    SGGeod sender_pos;
+                    double sender_alt_ft, sender_alt;
+                    if(ground_to_air) {
                   sender_pos = parent->parent()->geod();
-			         }
-			        else {
-			              sender_alt_ft = rec->getAltitude();
-			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;
-			              sender_pos= SGGeod::fromDegM( rec->getLongitude(),
-			                     rec->getLatitude(), sender_alt );
-			      	}
-			      	double frequency = ((double)stationFreq) / 100;
-            		radio->receiveATC(sender_pos, frequency, text, ground_to_air);
-            		delete radio;
-            	}
-            	else {
-            		fgSetString("/sim/messages/atc", text.c_str());
-            	}
+                     }
+                    else {
+                          sender_alt_ft = rec->getAltitude();
+                          sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+                          sender_pos= SGGeod::fromDegM( rec->getLongitude(),
+                                 rec->getLatitude(), sender_alt );
+                    }
+                    double frequency = ((double)stationFreq) / 100;
+                    radio->receiveATC(sender_pos, frequency, text, ground_to_air);
+                    delete radio;
+                }
+                else {
+                    fgSetString("/sim/messages/atc", text.c_str());
+                }
             }
         }
     } else {
@@ -915,7 +952,7 @@ void FGTowerController::announcePosition(int id,
             rwy->addToDepartureCue(ref);
         }
 
-		SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getDepartureCueSize() << " for takeoff ");
+        SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getDepartureCueSize() << " for takeoff ");
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
     }
@@ -988,6 +1025,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     // only bother with aircraft that have a takeoff status of 2, since those are essentially under tower control
     FGAIAircraft* ac= rwy->getFirstAircraftInDepartureCue();
     if (ac->getTakeOffStatus() == 1) {
+        // transmit takeoff clearance
         ac->setTakeOffStatus(2);
     }
     if (current.getAircraft()->getTakeOffStatus() == 2) {
@@ -1006,6 +1044,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
             FGAIAircraft *ac = rwy->getFirstOfStatus(1);
             if (ac)
                 ac->setTakeOffStatus(2);
+                // transmit takeoff clearacne? But why twice?
         }
     }
 } 
@@ -1049,7 +1088,7 @@ void FGTowerController::signOff(int id)
     } else {
         i->getAircraft()->resetTakeOffStatus();
         i = activeTraffic.erase(i);
-		SG_LOG(SG_ATC, SG_INFO, "Signing off from tower controller");
+        SG_LOG(SG_ATC, SG_INFO, "Signing off from tower controller");
     }
 }
 
@@ -1107,8 +1146,8 @@ FGATCInstruction FGTowerController::getInstruction(int id)
 }
 
 void FGTowerController::render(bool visible) {
-	// this should be bulk, since its called quite often
-	SG_LOG(SG_ATC, SG_BULK, "FGTowerController::render function not yet implemented");
+    // this should be bulk, since its called quite often
+    SG_LOG(SG_ATC, SG_BULK, "FGTowerController::render function not yet implemented");
 }
 
 string FGTowerController::getName() {
@@ -1249,7 +1288,7 @@ void FGStartupController::signOff(int id)
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
     } else {
-		SG_LOG(SG_ATC, SG_DEBUG, i->getAircraft()->getCallSign() << " signing off from startupcontroller");
+        SG_LOG(SG_ATC, SG_DEBUG, i->getAircraft()->getCallSign() << " signing off from startupcontroller");
         i = activeTraffic.erase(i);
     }
 }
@@ -1261,22 +1300,22 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
     if ((state == st) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
 
-			SG_LOG(SG_ATC, SG_BULK, "Checking state " << st << " for " << i->getAircraft()->getCallSign());
+            SG_LOG(SG_ATC, SG_BULK, "Checking state " << st << " for " << i->getAircraft()->getCallSign());
             SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
                 trans_num->setIntValue(-1);
                 // PopupCallback(n);
-				SG_LOG(SG_ATC, SG_BULK, "Selected transmission message " << n);
+                SG_LOG(SG_ATC, SG_BULK, "Selected transmission message " << n);
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
-				SG_LOG(SG_ATC, SG_BULK, "Creating message for " << i->getAircraft()->getCallSign());
+                SG_LOG(SG_ATC, SG_BULK, "Creating message for " << i->getAircraft()->getCallSign());
                 transmit(&(*i), &(*parent), msgId, msgDir, false);
                 return false;
             }
         }
         if (now > startTime) {
-			SG_LOG(SG_ATC, SG_BULK, "Transmitting startup msg");
+            SG_LOG(SG_ATC, SG_BULK, "Transmitting startup msg");
             transmit(&(*i), &(*parent), msgId, msgDir, true);
             i->updateState();
             lastTransmission = now;
@@ -1381,7 +1420,7 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 
 void FGStartupController::render(bool visible)
 {
-	SG_LOG(SG_ATC, SG_DEBUG, "Rendering startup controller");
+    SG_LOG(SG_ATC, SG_DEBUG, "Rendering startup controller");
     SGMaterialLib *matlib = globals->get_matlib();
     if (group) {
         //int nr = ;
@@ -1411,7 +1450,7 @@ void FGStartupController::render(bool visible)
             if (i->isActive(300)) {
                 // Handle start point
                 int pos = i->getCurrentPosition();
-				SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos);
+                SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos);
                 if (pos > 0) {
                     FGTaxiSegment *segment = groundNet->findSegment(pos);
                     SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
@@ -1425,7 +1464,7 @@ void FGStartupController::render(bool visible)
                     double coveredDistance = length * 0.5;
                     SGGeod center;
                     SGGeodesy::direct(start, heading, coveredDistance, center, az2);
-					SG_LOG(SG_ATC, SG_BULK, "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading);
+                    SG_LOG(SG_ATC, SG_BULK, "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading);
                     ///////////////////////////////////////////////////////////////////////////////
                     // Make a helper function out of this
                     osg::Matrix obj_pos;
@@ -1457,7 +1496,7 @@ void FGStartupController::render(bool visible)
 
                     double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
 
-					SG_LOG(SG_ATC, SG_BULK, "1. Using mean elevation : " << elevationMean << " and " << slope);
+                    SG_LOG(SG_ATC, SG_BULK, "1. Using mean elevation : " << elevationMean << " and " << slope);
 
                     WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), elevationMean + 0.5 + dx, -(heading), slope );
                     ;
@@ -1489,13 +1528,13 @@ void FGStartupController::render(bool visible)
                     group->addChild( obj_trans );
                     /////////////////////////////////////////////////////////////////////
                 } else {
-					SG_LOG(SG_ATC, SG_DEBUG, "BIG FAT WARNING: current position is here : " << pos);
+                    SG_LOG(SG_ATC, SG_DEBUG, "BIG FAT WARNING: current position is here : " << pos);
                 }
                 for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
                     osg::Matrix obj_pos;
                     int k = (*j);
                     if (k > 0) {
-						SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k);
+                        SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k);
                         osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                         obj_trans->setDataVariance(osg::Object::STATIC);
                         FGTaxiSegment *segment  = groundNet->findSegment(k);
@@ -1566,7 +1605,7 @@ void FGStartupController::render(bool visible)
                         //->addChild( obj_trans );
                         group->addChild( obj_trans );
                     } else {
-						SG_LOG(SG_ATC, SG_DEBUG, "BIG FAT WARNING: k is here : " << pos);
+                        SG_LOG(SG_ATC, SG_DEBUG, "BIG FAT WARNING: k is here : " << pos);
                     }
                 }
                 dx += 0.2;
@@ -1664,7 +1703,7 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
         current = i;
-		SG_LOG(SG_ATC, SG_BULK, "ApproachController: checking for speed");
+        SG_LOG(SG_ATC, SG_BULK, "ApproachController: checking for speed");
         time_t time_diff =
             current->getAircraft()->
             checkForArrivalTime(string("final001"));
@@ -1787,8 +1826,8 @@ ActiveRunway *FGApproachController::getRunway(const string& name)
 }
 
 void FGApproachController::render(bool visible) {
-	// Must be BULK in order to prevent it being called each frame
-	SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
+    // Must be BULK in order to prevent it being called each frame
+    SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
 }
 
 

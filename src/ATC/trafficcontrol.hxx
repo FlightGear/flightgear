@@ -352,7 +352,8 @@ public:
         currentlyCleared = number;
     };
     time_t requestTimeSlot(time_t eta);
-
+    //time_t requestTimeSlot(time_t eta, std::string wakeCategory);
+    void slotHousekeeping(time_t newEta);
     int getDepartureCueSize() {
         return departureCue.size();
     };

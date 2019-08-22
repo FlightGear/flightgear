@@ -290,7 +290,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         }
     }
     
-	FGTaxiRoute taxiRoute;
+    FGTaxiRoute taxiRoute;
     if ( runwayNode )
         taxiRoute = gn->findShortestRoute(node, runwayNode);
 

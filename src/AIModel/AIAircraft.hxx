@@ -101,7 +101,8 @@ public:
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     const std::string& atGate();
-
+    std::string acwakecategory;
+    
     int getTakeOffStatus() { return takeOffStatus; };
 
     void checkTcas();
