@@ -71,7 +71,8 @@ void clearTrafficControllers(TrafficVector& vec)
 /***************************************************************************
  * ActiveRunway
  **************************************************************************/
-/* 
+ 
+/*
 * Fetch next slot for the active runway
 * @param eta time of slot requested
 * @return newEta: next slot available; starts at eta paramater
@@ -196,19 +197,21 @@ void ActiveRunway::slotHousekeeping(time_t newEta)
     }
 }
 
-void ActiveRunway::printDepartureCue()
+/* Output the contents of the departure queue vector nicely formatted*/
+void ActiveRunway::printdepartureQueue()
 {
-    SG_LOG(SG_ATC, SG_DEBUG, "Departure cue for " << rwy << ": ");
-    for (AircraftVecIterator atc = departureCue.begin(); atc != departureCue.end(); atc++) {
+    SG_LOG(SG_ATC, SG_DEBUG, "Departure queue for " << rwy << ": ");
+    for (AircraftVecIterator atc = departureQueue.begin(); atc != departureQueue.end(); atc++) {
         SG_LOG(SG_ATC, SG_DEBUG, "     " << (*atc)->getCallSign() << " " << (*atc)->getTakeOffStatus());
         SG_LOG(SG_ATC, SG_DEBUG, " " << (*atc)->_getLatitude() << " " << (*atc)->_getLongitude() << (*atc)->getSpeed() << " " << (*atc)->getAltitude());
     }
     
 }
 
+/* Fetch the first aircraft in the departure cue with a certain status */
 FGAIAircraft* ActiveRunway::getFirstOfStatus(int stat)
 {
-    for (AircraftVecIterator atc =departureCue.begin(); atc != departureCue.end(); atc++) {
+    for (AircraftVecIterator atc =departureQueue.begin(); atc != departureQueue.end(); atc++) {
         if ((*atc)->getTakeOffStatus() == stat)
             return (*atc);
     }
@@ -220,6 +223,7 @@ FGAIAircraft* ActiveRunway::getFirstOfStatus(int stat)
 /***************************************************************************
  * FGTrafficRecord
  **************************************************************************/
+ 
 FGTrafficRecord::FGTrafficRecord():
         id(0), waitsForId(0),
         currentPos(0),
@@ -273,12 +277,10 @@ FGAIAircraft* FGTrafficRecord::getAircraft() const
     return aircraft.ptr();
 }
 
-/**
- * Check if another aircraft is ahead of the current one, and on the same
- * return true / false is the is/isn't the case.
- *
- ****************************************************************************/
-
+/*
+* Check if another aircraft is ahead of the current one, and on the same taxiway
+* @return true / false if this is/isn't the case.
+*/
 bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
 {
     bool result = false;
@@ -511,11 +513,11 @@ bool FGTrafficRecord::pushBackAllowed() const
 
 
 
-
 /***************************************************************************
  * FGATCInstruction
- *
+ * 
  **************************************************************************/
+ 
 FGATCInstruction::FGATCInstruction()
 {
     holdPattern = false;
@@ -537,17 +539,15 @@ bool FGATCInstruction::hasInstruction() const
             || changeAltitude || resolveCircularWait);
 }
 
+
+
 /***************************************************************************
  * FGATCController
  *
  **************************************************************************/
 
-
-
-
 FGATCController::FGATCController()
 {
-    SG_LOG(SG_ATC, SG_DEBUG, "running FGATController constructor");
     dt_count = 0;
     available = true;
     lastTransmission = 0;
@@ -560,6 +560,15 @@ FGATCController::~FGATCController()
 {
     FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
     mgr->removeController(this);
+}
+
+void FGATCController::init()
+{
+    if (!initialized) {
+        FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+        mgr->addController(this);
+        initialized = true;
+    }
 }
 
 string FGATCController::getGateName(FGAIAircraft * ref)
@@ -630,6 +639,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             getName() + "-Tower";
         break;
     }
+	
     // Swap sender and receiver value in case of a ground to air transmission
     if (msgDir == ATC_GROUND_TO_AIR) {
         string tmp = sender;
@@ -637,6 +647,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         receiver = tmp;
         ground_to_air=1;
     }
+	
     switch (msgId) {
     case MSG_ANNOUNCE_ENGINE_START:
         text = sender + ". Ready to Start up.";
@@ -790,6 +801,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         text = text + sender + ". Transmitting unknown Message.";
         break;
     }
+	
     if (audible) {
         double onBoardRadioFreq0 =
             fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
@@ -836,10 +848,14 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     }
 }
 
-
+/*
+* Format integer frequency xxxyy as xxx.yy
+* @param freq - integer value
+* @return the formatted string
+*/
 string FGATCController::formatATCFrequency3_2(int freq)
 {
-    char buffer[7];
+    char buffer[7]; // does this ever need to be freed?
     snprintf(buffer, 7, "%3.2f", ((float) freq / 100.0));
     return string(buffer);
 }
@@ -858,15 +874,6 @@ string FGATCController::genTransponderCode(const string& fltRules)
     }
 }
 
-void FGATCController::init()
-{
-    if (!initialized) {
-        FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
-        mgr->addController(this);
-        initialized = true;
-    }
-}
-
 void FGATCController::eraseDeadTraffic(TrafficVector& vec)
 {
     auto it = std::remove_if(vec.begin(), vec.end(), [](const FGTrafficRecord& traffic)
@@ -880,10 +887,12 @@ void FGATCController::eraseDeadTraffic(TrafficVector& vec)
 }
 
 
+
 /***************************************************************************
  * class FGTowerController
- *
+ * subclass of FGATCController
  **************************************************************************/
+ 
 FGTowerController::FGTowerController(FGAirportDynamics *par) :
         FGATCController()
 {
@@ -945,14 +954,14 @@ void FGTowerController::announcePosition(int id,
         }
         if (rwy == activeRunways.end()) {
             ActiveRunway aRwy(intendedRoute->getRunway(), id);
-            aRwy.addToDepartureCue(ref);
+            aRwy.addTodepartureQueue(ref);
             activeRunways.push_back(aRwy);
             rwy = (activeRunways.end()-1);
         } else {
-            rwy->addToDepartureCue(ref);
+            rwy->addTodepartureQueue(ref);
         }
 
-        SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getDepartureCueSize() << " for takeoff ");
+        SG_LOG(SG_ATC, SG_DEBUG, ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getdepartureQueueSize() << " for takeoff ");
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
     }
@@ -996,7 +1005,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     ActiveRunwayVecIterator rwy = activeRunways.begin();
     //if (parent->getId() == fgGetString("/sim/presets/airport-id")) {
     //    for (rwy = activeRunways.begin(); rwy != activeRunways.end(); rwy++) {
-    //        rwy->printDepartureCue();
+    //        rwy->printdepartureQueue();
     //    }
     //}
     
@@ -1010,7 +1019,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
 
     // only bother running the following code if the current aircraft is the
     // first in line for depature
-    /* if (current.getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
+    /* if (current.getAircraft() == rwy->getFirstAircraftIndepartureQueue()) {
         if (rwy->getCleared()) {
             if (id == rwy->getCleared()) {
                 current.setHoldPosition(false);
@@ -1023,7 +1032,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
         }
     } */
     // only bother with aircraft that have a takeoff status of 2, since those are essentially under tower control
-    FGAIAircraft* ac= rwy->getFirstAircraftInDepartureCue();
+    FGAIAircraft* ac= rwy->getFirstAircraftIndepartureQueue();
     if (ac->getTakeOffStatus() == 1) {
         // transmit takeoff clearance
         ac->setTakeOffStatus(2);
@@ -1039,7 +1048,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
             current.setHoldPosition(false);
         }
     } else {
-        if (current.getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
+        if (current.getAircraft() == rwy->getFirstAircraftIndepartureQueue()) {
             rwy->setCleared(id);
             FGAIAircraft *ac = rwy->getFirstOfStatus(1);
             if (ac)
@@ -1076,7 +1085,7 @@ void FGTowerController::signOff(int id)
         }
         if (rwy != activeRunways.end()) {
             rwy->setCleared(0);
-            rwy->updateDepartureCue();
+            rwy->updatedepartureQueue();
         } else {
             SG_LOG(SG_ATC, SG_ALERT,
                    "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff at " << SG_ORIGIN);
@@ -1163,7 +1172,7 @@ void FGTowerController::update(double dt)
 
 /***************************************************************************
  * class FGStartupController
- *
+ * subclass of FGATCController
  **************************************************************************/
 FGStartupController::FGStartupController(FGAirportDynamics *par):
         FGATCController()
@@ -1628,8 +1637,9 @@ void FGStartupController::update(double dt)
 
 /***************************************************************************
  * class FGApproachController
- *
+ * subclass of FGATCController
  **************************************************************************/
+ 
 FGApproachController::FGApproachController(FGAirportDynamics *par):
         FGATCController()
 {
@@ -1829,8 +1839,6 @@ void FGApproachController::render(bool visible) {
     // Must be BULK in order to prevent it being called each frame
     SG_LOG(SG_ATC, SG_BULK, "FGApproachController::render function not yet implemented");
 }
-
-
 
 string FGApproachController::getName() {
     return string(parent->getId() + "-approach");

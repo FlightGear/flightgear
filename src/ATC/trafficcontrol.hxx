@@ -74,8 +74,8 @@ private:
     double heading;
     double alt;
 public:
-
     FGATCInstruction();
+	
     bool hasInstruction   () const;
     bool getHoldPattern   () const {
         return holdPattern;
@@ -92,7 +92,10 @@ public:
     bool getChangeAltitude() const {
         return changeAltitude;
     };
-
+    bool getCheckForCircularWait() const {
+        return resolveCircularWait;
+    };
+	
     double getSpeed       () const {
         return speed;
     };
@@ -101,10 +104,6 @@ public:
     };
     double getAlt         () const {
         return alt;
-    };
-
-    bool getCheckForCircularWait() const {
-        return resolveCircularWait;
     };
 
     void setHoldPattern   (bool val) {
@@ -122,11 +121,10 @@ public:
     void setChangeAltitude(bool val) {
         changeAltitude = val;
     };
-
     void setResolveCircularWait (bool val) {
         resolveCircularWait = val;
     };
-
+	
     void setSpeed       (double val) {
         speed   = val;
     };
@@ -324,7 +322,7 @@ private:
     int currentlyCleared;
     double distanceToFinal;
     TimeVector estimatedArrivalTimes;
-    AircraftVec departureCue;
+    AircraftVec departureQueue;
 
 public:
     ActiveRunway(const std::string& r, int cc) {
@@ -345,8 +343,8 @@ public:
     //time_t getEstApproachTime() { return estimatedArrival; };
 
     //void setEstApproachTime(time_t time) { estimatedArrival = time; };
-    void addToDepartureCue(FGAIAircraft *ac) {
-        departureCue.push_back(ac);
+    void addTodepartureQueue(FGAIAircraft *ac) {
+        departureQueue.push_back(ac);
     };
     void setCleared(int number) {
         currentlyCleared = number;
@@ -354,17 +352,17 @@ public:
     time_t requestTimeSlot(time_t eta);
     //time_t requestTimeSlot(time_t eta, std::string wakeCategory);
     void slotHousekeeping(time_t newEta);
-    int getDepartureCueSize() {
-        return departureCue.size();
+    int getdepartureQueueSize() {
+        return departureQueue.size();
     };
-    FGAIAircraft* getFirstAircraftInDepartureCue() {
-        return departureCue.size() ? *(departureCue.begin()) : NULL;
+    FGAIAircraft* getFirstAircraftIndepartureQueue() {
+        return departureQueue.size() ? *(departureQueue.begin()) : NULL;
     };
     FGAIAircraft* getFirstOfStatus(int stat);
-    void updateDepartureCue() {
-        departureCue.erase(departureCue.begin());
+    void updatedepartureQueue() {
+        departureQueue.erase(departureQueue.begin());
     }
-    void printDepartureCue();
+    void printdepartureQueue();
 };
 
 /**

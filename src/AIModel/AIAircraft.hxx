@@ -179,7 +179,7 @@ private:
 
     bool needsTaxiClearance;
     bool _needsGroundElevation;
-    int  takeOffStatus; // 1 = joined departure cue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 
+    int  takeOffStatus; // 1 = joined departure queue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
