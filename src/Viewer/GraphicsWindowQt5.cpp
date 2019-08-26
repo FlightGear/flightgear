@@ -429,7 +429,7 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     getState()->setGraphicsContext(this);
     getState()->setContextID( osg::GraphicsContext::createNewContextID() );
 
-#if (OPENSCENEGRAPH_MAJOR_VERSION == 3) && (OPENSCENEGRAPH_MINOR_VERSION >= 4)
+#if OSG_VERSION_GREATER_OR_EQUAL(3, 4, 0)
     // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
 #endif
@@ -640,7 +640,7 @@ bool GraphicsWindowQt5::realizeImplementation()
         _window->show();
     }
 
-#if (OPENSCENEGRAPH_MAJOR_VERSION == 3) && (OPENSCENEGRAPH_MINOR_VERSION >= 4)
+#if OSG_VERSION_GREATER_OR_EQUAL(3, 4, 0)
     // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
 #endif

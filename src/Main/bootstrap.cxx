@@ -55,6 +55,7 @@
 
 #include <osg/Texture>
 #include <osg/BufferObject>
+#include <osg/Version>
 
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
@@ -337,7 +338,7 @@ int main ( int argc, char **argv )
         sglog();
 
 
-#if (OPENSCENEGRAPH_MAJOR_VERSION == 3) && (OPENSCENEGRAPH_MINOR_VERSION < 5)
+#if OSG_VERSION_LESS_THAN(3, 5, 0)
         // similar to above, ensure some static maps inside OSG exist before
         // we register our at-exit handler, otherwise the statics are gone
         // when fg_terminate runs, which causes crashes.
