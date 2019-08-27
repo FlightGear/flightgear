@@ -679,7 +679,9 @@ int fgMainInit( int argc, char **argv )
     fgInitSecureMode();
     fgInitAircraftPaths(false);
 
-    configResult = fgInitAircraft(false);
+    addons::AddonManager::createInstance();
+
+    configResult = flightgear::Options::sharedInstance()->processOptions();
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
     } else if ((configResult == flightgear::FG_OPTIONS_EXIT) ||
@@ -688,9 +690,7 @@ int fgMainInit( int argc, char **argv )
         return EXIT_SUCCESS;
     }
 
-    addons::AddonManager::createInstance();
-
-    configResult = flightgear::Options::sharedInstance()->processOptions();
+    configResult = fgInitAircraft(false, fgGetBool("/sim/presets/aircraft-search"));
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
     } else if (configResult == flightgear::FG_OPTIONS_EXIT) {

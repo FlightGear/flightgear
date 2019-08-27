@@ -1848,6 +1848,7 @@ struct OptionDesc {
     {"addon",                        true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptAddon },
     {"data",                         true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptAdditionalDataDir },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
+    {"aircraft-search",              false, OPTION_BOOL, "", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },
 #ifdef ENABLE_IAX

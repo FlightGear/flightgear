@@ -54,7 +54,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit );
 
 void fgInitAircraftPaths(bool reinit);
 
-int fgInitAircraft(bool reinit);
+int fgInitAircraft(bool reinit, bool aircraftSearch);
 
 // log various settings / configuration state
 void fgOutputSettings();

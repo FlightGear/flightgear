@@ -212,7 +212,7 @@ public:
       return setFile.exists();
   }
 
-  bool loadAircraft()
+  bool loadAircraftInternal()
   {
     std::string aircraft = fgGetString( "/sim/aircraft", "");
     if (aircraft.empty()) {
@@ -245,8 +245,8 @@ public:
 
         checkAircraftMinVersion();
 
-          // apply state after the -set.xml, but before any options are are set
-          flightgear::applyInitialState();
+        // apply state after the -set.xml, but before any options are are set
+        flightgear::applyInitialState();
         return true;
       } else {
         SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
@@ -274,12 +274,6 @@ public:
     }
     
     if (_foundPath.isNull()) {
-      SG_LOG(SG_GENERAL, SG_ALERT,
-             "Cannot find the specified aircraft: '" << aircraft << "'");
-      flightgear::fatalMessageBoxWithoutExit(
-        "Aircraft not found",
-        "The requested aircraft (" + aircraft + ") could not be found "
-        "in any of the search paths.");
       return false;
     }
     
@@ -308,6 +302,136 @@ public:
       checkAircraftMinVersion();
 
     return true;
+  }
+  
+  /* Implements simple cin/cout text interface that allows user to search for
+  an aircraft to use. Returns with /sim/aircraft set to aircraft name. This can
+  be an invalid name. */
+  void loadAircraftSearch()
+  {
+    /* We let the user repeatedly search until they have selected an aircraft
+    name. */
+    for(;;) {
+    
+      std::string   search_string;
+      std::cout << "\n";
+      std::cout << "Enter aircraft-name search string (case insensitive, blank for all)...? ";
+      std::cout.flush();
+      std::getline(std::cin, search_string);
+      simgear::strutils::lowercase(search_string);
+      std::cout << "Aircraft names containing '" << search_string << "' are:\n";
+
+      std::vector<std::string>  matches;
+      
+      vector<SGPropertyNode_ptr> cache = _cache->getChildren("aircraft");
+      
+      /* Show matching aircraft. Outer loop iterates twice, first iteration
+      finds maximum length of aircraft names to that second iteration can
+      format things nicely. */
+      size_t name_max = 0;
+      for (int j=0; j<2; ++j) {
+        for (unsigned i = 0; i < cache.size(); i++) {
+          std::string name = cache[i]->getStringValue("file", "");
+          if (simgear::strutils::ends_with(name, "-set.xml")) {
+              name = name.substr(0, name.size() - 8);
+          }
+          simgear::strutils::lowercase(name);
+          if (name.find(search_string) != std::string::npos) {
+            if (j==0) {
+              name_max = std::max(name_max, name.size());
+            }
+            else {
+              std::cout << "    "
+                    << std::setw(4) << matches.size()
+                    << ": " << std::setw(name_max) << std::left << name << std::right
+                    << " (" << cache[i]->getStringValue("path", "") << ")"
+                    << "\n";
+              matches.push_back(name);
+            }
+          }
+        }
+      }
+      
+      if (matches.empty()) {
+        std::cout << "[No matches]\n";
+      }
+      
+      /* Ask user to select an aircraft name; we loop until we get valid choice
+      from user. */
+      for(;;) {
+        std::cout << "\n";
+        if (matches.empty()) {
+          std::cout << "Enter aircraft name, or blank to search again...? ";
+        }
+        else {
+          std::cout << "Enter number of aircraft to use in above list, or aircraft name, or blank to search again...? ";
+        }
+        std::cout.flush();
+        std::string s;
+        std::getline(std::cin, s);
+
+        if (s == "") {
+            /* Search again. */
+            break;
+        }
+
+        std::stringstream ss(s);
+        int n;
+        ss >> n;
+
+        if (ss) {
+          if (n < 0 || n >= (int) matches.size()) {
+            if (matches.empty()) {
+              std::cout << "List is empty so no number is acceptable\n";
+            }
+            else {
+              std::cout << "Number out of range " << 0 << ".." << matches.size()-1 << "\n";
+            }
+            continue;
+          }
+
+          std::cout << "Using: " << matches[n] << "\n";
+          fgSetString("/sim/aircraft", matches[n]);
+          return;
+        }
+
+        /* <s> is not a number, so use it directly as name of aircraft. */
+        std::cout << "Using: " << s << "\n";
+        fgSetString("/sim/aircraft", s);
+        return;
+      }
+    }
+  }
+  
+  bool loadAircraft(bool allowSearch)
+  {
+    if (allowSearch) {
+      /* Use loadAircraftSearch() if we fail to find aircraft.
+      loadAircraftSearch() can return with invalid aircraft, so we loop until
+      loadAircraftInternal() succeeds. */
+      for(;;) {
+        bool ret = loadAircraftInternal();
+        if (ret)    return ret;
+        
+        std::string aircraft = fgGetString( "/sim/aircraft", "");
+        std::cout << "\n";
+        std::cout << "Cannot find aircraft-name '" << aircraft << "'.\n";
+        loadAircraftSearch();
+      }
+    }
+    else {
+      bool ret = loadAircraftInternal();
+      if (!ret) {
+        std::string aircraft = fgGetString( "/sim/aircraft", "");
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Cannot find the specified aircraft: '" << aircraft << "'");
+        flightgear::fatalMessageBoxWithoutExit(
+          "Aircraft not found",
+          "The requested aircraft (" + aircraft + ") could not be found "
+          "in any of the search paths.");
+      }
+      return ret;
+    }
   }
   
 private:
@@ -731,7 +855,7 @@ void fgInitAircraftPaths(bool reinit)
   }
 }
 
-int fgInitAircraft(bool reinit)
+int fgInitAircraft(bool reinit, bool aircraftSearch)
 {
     if (!reinit) {
         auto r = flightgear::Options::sharedInstance()->initAircraft();
@@ -791,7 +915,7 @@ int fgInitAircraft(bool reinit)
 
     initAircraftDirsNasalSecurity();
 
-    if (!f.loadAircraft()) {
+    if (!f.loadAircraft(aircraftSearch)) {
         return flightgear::FG_OPTIONS_ERROR;
     }
     
@@ -1369,7 +1493,7 @@ void fgStartNewReset()
 
     fgGetNode("/sim")->removeChild("aircraft-dir");
     fgInitAircraftPaths(true);
-    fgInitAircraft(true);
+    fgInitAircraft(true, false /*aircraftSearch*/);
     
     render = new FGRenderer;
     render->setEventHandler(eventHandler);
