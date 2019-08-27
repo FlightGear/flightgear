@@ -274,7 +274,7 @@ void BasicRealWxController::init()
     update(0); // fetch data ASAP
     
     globals->get_event_mgr()->addTask("checkNearbyMetar", this,
-                                      &BasicRealWxController::checkNearbyMetar, 60 );
+                                      &BasicRealWxController::checkNearbyMetar, 10 );
 }
 
 void BasicRealWxController::reinit()
@@ -395,7 +395,6 @@ void BasicRealWxController::checkNearbyMetar()
     catch( sg_exception & ) {
       return;
     }
-    
 }
 
 
