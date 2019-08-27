@@ -532,7 +532,6 @@ FGATCInstruction::FGATCInstruction()
     alt = 0;
 }
 
-
 bool FGATCInstruction::hasInstruction() const
 {
     return (holdPattern || holdPosition || changeSpeed || changeHeading

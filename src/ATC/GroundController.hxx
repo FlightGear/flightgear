@@ -76,7 +76,7 @@ public:
     };
 
 
-
+	virtual TrafficVectorIterator searchActiveTraffic(int id);
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon, double hdg, double spd, double alt,
                                   double radius, int leg, FGAIAircraft *aircraft);
