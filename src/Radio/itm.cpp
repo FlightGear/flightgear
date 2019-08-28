@@ -20,6 +20,12 @@
  * [Alg 0.0]               please refer to algorithm 0.0 from itm_alg.pdf    *
  *                                                                           *
  * Holger Schurig, DH3HS                                                     *
+ *                                                                           *
+ *****************************************************************************
+ *                                                                           *
+ * 2019.07.08 - Fix shadowing of static variable in adiff() function         *
+ * Ferran Obón Santacana                                                     *
+ *                                                                           *
 \*****************************************************************************/
 
 
@@ -278,7 +284,7 @@ double  adiff(double s, prop_type &prop)
 
 		// :11: Prepare initial diffraction constants, page 5
 		double q = prop.h_g[0] * prop.h_g[1];
-		double qk = prop.h_e[0] * prop.h_e[1] - q;
+		qk = prop.h_e[0] * prop.h_e[1] - q;
 
 		if (prop.mdp < 0.0)
 			q += 10.0; // "C" from [Alg 4.9]
