@@ -20,14 +20,13 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <cmath>
 #include <algorithm>
 #include <fstream>
 #include <map>
+#include <algorithm>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -105,17 +104,10 @@ bool compare_trafficrecords(FGTrafficRecord a, FGTrafficRecord b)
 */
 TrafficVectorIterator FGGroundController::searchActiveTraffic(int id)
 {
-    // Possible optimization - investigate using map instead of vector
-    TrafficVectorIterator i = activeTraffic.begin();
-    if (!activeTraffic.empty()) {
-        while (i != activeTraffic.end()) {
-            if (i->getId() == id) {
-                break;
-            }
-            i++;
-        }
-    }
-    return i;
+    return std::find_if(activeTraffic.begin(), activeTraffic.end(),
+                        [id] (const FGTrafficRecord& rec)
+                        { return rec.getId() == id; }
+                        );
 }
 
 void FGGroundController::announcePosition(int id,
@@ -226,20 +218,10 @@ void FGGroundController::updateAircraftInformation(int id, double lat, double lo
     // Transmit confirmation ...
     // Probably use a status mechanism similar to the Engine start procedure in the startup controller.
 
-    // leave this here until I figure out what current, closest is all about
-    TrafficVectorIterator i = activeTraffic.begin();
-    // Search search if the current id has an entry
-    // This might be faster using a map instead of a vector, but let's start by taking a safe route
+    // Search the activeTraffic vector to find a traffic vector with our id
+    TrafficVectorIterator i = searchActiveTraffic(id);
     TrafficVectorIterator current, closest;
-    if (activeTraffic.size()) {
-        //while ((i->getId() != id) && i != activeTraffic.end()) {
-        while (i != activeTraffic.end()) {
-            if (i->getId() == id) {
-                break;
-            }
-            i++;
-        }
-    }
+   
     // update position of the current aircraft
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
@@ -313,20 +295,12 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
 {
 
     TrafficVectorIterator current, closest, closestOnNetwork;
-    TrafficVectorIterator i = activeTraffic.begin();
     bool otherReasonToSlowDown = false;
     // bool previousInstruction;
-    if (activeTraffic.size()) {
-        //while ((i->getId() != id) && (i != activeTraffic.end()))
-        while (i != activeTraffic.end()) {
-            if (i->getId() == id) {
-                break;
-            }
-            i++;
-        }
-    } else {
+	TrafficVectorIterator i = searchActiveTraffic(id);
+    if (!activeTraffic.size()) {
         return;
-    }
+	}
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment at " << SG_ORIGIN);
@@ -409,10 +383,10 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
         }
         */
         
-		// Clear any active speed adjustment, check if the aircraft needs to brake
+        // Clear any active speed adjustment, check if the aircraft needs to brake
         current->clearSpeedAdjustment();
         bool needBraking = false;
-		
+        
         if (current->checkPositionAndIntentions(*closest)
                 || otherReasonToSlowDown) {
             double maxAllowableDistance =
@@ -423,7 +397,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                     return;
                 else
                     current->setWaitsForId(closest->getId());
-				
+                
                 if (closest->getId() != current->getId()) {
                     current->setSpeedAdjustment(closest->getSpeed() *
                                                 (mindist / 100));
@@ -438,7 +412,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                 } else {
                     current->setSpeedAdjustment(0);     // This can only happen when the user aircraft is the one closest
                 }
-				
+                
                 if (mindist < maxAllowableDistance) {
                     //double newSpeed = (maxAllowableDistance-mindist);
                     //current->setSpeedAdjustment(newSpeed);
@@ -449,7 +423,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                 }
             }
         }
-		
+        
         if ((closest->getId() == closestOnNetwork->getId()) && (current->getPriority() < closest->getPriority()) && needBraking) {
             swap(current, closest);
         }
@@ -1073,10 +1047,11 @@ bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
         FGTaxiSegment* segment = network->findSegment(pos);
         length = segment->getLength();
         if (segment->hasBlock(now)) {
-            //SG_LOG(SG_GENERAL, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
+            SG_LOG(SG_ATC, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
         }
 
     }
+	
     intVecIterator ivi;
     for (ivi = i->getIntentions().begin(); ivi != i->getIntentions().end(); ivi++) {
         int segIndex = (*ivi);
@@ -1087,6 +1062,7 @@ bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
             }
         }
     }
+	
     //after this, ivi points just behind the last valid unblocked taxi segment.
     for (intVecIterator j = i->getIntentions().begin(); j != ivi; j++) {
         int pos = (*j);

@@ -249,6 +249,7 @@ FGAirport *FGScheduledFlight::getDepartureAirport()
   else
     return 0;
 }
+
 FGAirport * FGScheduledFlight::getArrivalAirport  ()
 {
    if (!(initialized))

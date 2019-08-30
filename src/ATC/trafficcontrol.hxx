@@ -179,16 +179,16 @@ public:
     void setLeg(int lg) {
         leg = lg;
     };
-    int getId() {
+    int getId() const {
         return id;
     };
-    int getState() {
+    int getState() const {
         return state;
     };
     void setState(int s) {
         state = s;
     }
-    FGATCInstruction getInstruction() {
+    FGATCInstruction getInstruction() const {
         return instruction;
     };
     bool hasInstruction() {
