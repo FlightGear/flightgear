@@ -36,9 +36,12 @@
 #include <QTimer>
 #include <QGuiApplication>
 #include <QSettings>
+#include <QQuickView>
+#include <QQmlContext>
 
 #include "jsonutils.h"
 #include "canvasconnection.h"
+#include "WindowData.h"
 
 ApplicationController::ApplicationController(QObject *parent)
     : QObject(parent)
@@ -72,18 +75,6 @@ ApplicationController::~ApplicationController()
     delete m_netAccess;
 }
 
-void ApplicationController::setWindow(QWindow *window)
-{
-    m_window = window;
-}
-
-void ApplicationController::restoreWindowState()
-{
-    if (!m_window)
-        return;
-    m_window->setWindowState(m_windowState);
-}
-
 void ApplicationController::loadFromFile(QString path)
 {
     if (!QFile::exists(path)) {
@@ -102,6 +93,42 @@ void ApplicationController::loadFromFile(QString path)
 void ApplicationController::setDaemonMode()
 {
     m_daemonMode = true;
+}
+
+void ApplicationController::createWindows()
+{
+    if (m_windowList.empty()) {
+        defineDefaultWindow();
+    }
+
+    for (int index = 0; index < m_windowList.size(); ++index) {
+        auto wd = m_windowList.at(index);
+        QQuickView* qqv = new QQuickView;
+        qqv->rootContext()->setContextProperty("_application", this);
+        qqv->rootContext()->setContextProperty("_windowNumber", index);
+        qqv->setResizeMode(QQuickView::SizeRootObjectToView);
+        qqv->setSource(QUrl{"qrc:///qml/Window.qml"});
+        qqv->setTitle(wd->title());
+
+        if (m_daemonMode) {
+            qqv->setScreen(wd->screen());
+            qqv->setGeometry(wd->windowRect());
+            qqv->setWindowState(wd->windowState());
+        } else {
+            // interactive mode, restore window size etc
+
+        }
+
+        qqv->show();
+    }
+}
+
+void ApplicationController::defineDefaultWindow()
+{
+    auto w = new WindowData(this);
+    w->setWindowRect(QRect{0, 0, 1024, 768});
+    m_windowList.append(w);
+    emit windowListChanged();
 }
 
 void ApplicationController::save(QString configName)
@@ -364,6 +391,11 @@ QQmlListProperty<CanvasConnection> ApplicationController::activeCanvases()
     return QQmlListProperty<CanvasConnection>(this, m_activeCanvases);
 }
 
+QQmlListProperty<WindowData> ApplicationController::windowList()
+{
+    return QQmlListProperty<WindowData>(this, m_windowList);
+}
+
 QNetworkAccessManager *ApplicationController::netAccess() const
 {
     return m_netAccess;
@@ -371,6 +403,9 @@ QNetworkAccessManager *ApplicationController::netAccess() const
 
 bool ApplicationController::showUI() const
 {
+    if (m_daemonMode)
+        return false;
+
     if (m_blockUIIdle)
         return true;
 
@@ -490,10 +525,12 @@ QByteArray ApplicationController::saveState(QString name) const
     }
 
     json["canvases"] = canvases;
-    if (m_window) {
-        json["window-rect"] = rectToJsonArray(m_window->geometry());
-        json["window-state"] = static_cast<int>(m_window->windowState());
+
+    QJsonArray windows;
+    Q_FOREACH (auto w, m_windowList) {
+        windows.append(w->saveState());
     }
+    json["windows"] = windows;
 
     // background color?
 
@@ -509,18 +546,29 @@ void ApplicationController::restoreState(QByteArray bytes)
     QJsonDocument jsonDoc = QJsonDocument::fromJson(bytes);
     QJsonObject json = jsonDoc.object();
 
-    if (m_window) {
-        QRect r = jsonArrayToRect(json.value("window-rect").toArray());
-        if (r.isValid()) {
-            m_window->setGeometry(r);
-        }
-
-        // we have to cache the state becuase it seems to be ignored
-        // before show is called();
-        m_windowState = static_cast<Qt::WindowState>(json.value("window-state").toInt());
-        m_window->setWindowState(m_windowState);
+    // clear windows
+    Q_FOREACH(auto w, m_windowList) {
+        w->deleteLater();
     }
-    // background color
+    m_windowList.clear();
+
+    for (auto w : json.value("windows").toArray()) {
+        auto wd = new WindowData(this);
+        m_windowList.append(wd);
+        wd->restoreState(w.toObject());
+    }
+
+    if (m_windowList.isEmpty()) {
+        // check for previous single-window data
+        auto w = new WindowData(this);
+        if (json.contains("window-rect")) {
+            w->setWindowRect(jsonArrayToRect(json.value("window-rect").toArray()));
+        }
+        if (json.contains("window-state")) {
+            w->setWindowState(static_cast<Qt::WindowState>(json.value("window-state").toInt()));
+        }
+        m_windowList.append(w);
+    }
 
     for (auto c : json.value("canvases").toArray()) {
         auto cc = new CanvasConnection(this);
@@ -533,6 +581,7 @@ void ApplicationController::restoreState(QByteArray bytes)
         cc->reconnect();
     }
 
+    emit windowListChanged();
     emit activeCanvasesChanged();
 }
 

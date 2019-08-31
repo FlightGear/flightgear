@@ -27,6 +27,7 @@
 #include "canvasdisplay.h"
 #include "canvasconnection.h"
 #include "canvaspainteddisplay.h"
+#include "WindowData.h"
 
 int main(int argc, char *argv[])
 {
@@ -38,12 +39,6 @@ int main(int argc, char *argv[])
 
     QCommandLineParser parser;
     parser.addPositionalArgument("config", QCoreApplication::translate("main", "JSON configuration to load"));
-    QCommandLineOption framelessOption(QStringList() << "frameless",
-                                   QCoreApplication::translate("main", "Use a frameless window"));
-    QCommandLineOption screenOption(QStringList() << "screen",
-                                   QCoreApplication::translate("main", "Run full-screen on <scren>"), "screen");
-    parser.addOption(framelessOption);
-    parser.addOption(screenOption);
     parser.process(a);
 
     ApplicationController appController;
@@ -52,47 +47,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<CanvasDisplay>("FlightGear", 1, 0, "CanvasDisplay");
     qmlRegisterType<CanvasPaintedDisplay>("FlightGear", 1, 0, "PaintedCanvasDisplay");
 
+    qmlRegisterUncreatableType<WindowData>("FlightGear", 1, 0, "WindowData", "Don't create me");
     qmlRegisterUncreatableType<CanvasConnection>("FlightGear", 1, 0, "CanvasConnection", "Don't create me");
     qmlRegisterUncreatableType<ApplicationController>("FlightGear", 1, 0, "Application", "Can't create");
-
-    QQuickView quickView;
-    appController.setWindow(&quickView);
-    if (parser.isSet(framelessOption)) {
-        quickView.setFlag(Qt::FramelessWindowHint, true);
-    }
-
-    bool restoreWindowState = true;
-    if (parser.isSet(screenOption)) {
-        QString screenName = parser.value(screenOption);
-        QStringList allScreenNames;
-
-        QScreen* found = nullptr;
-        Q_FOREACH(QScreen* s, a.screens()) {
-            allScreenNames << s->name();
-            if (s->name() == screenName) {
-                found = s;
-                break;
-            }
-        }
-
-        if (!found) {
-            qFatal("Unable to find screen: %s: screens are: %s", screenName.toLatin1().data(),
-                   allScreenNames.join(",").toLatin1().data());
-        }
-
-        quickView.setScreen(found);
-        quickView.setGeometry(found->geometry());
-        quickView.setFlag(Qt::FramelessWindowHint, true);
-        restoreWindowState = false;
-
-        qInfo() << "Requested to run on screen:" << screenName << "with geometry" << found->geometry();
-    } else {
-        // windows mode, default geeometry
-        quickView.setWidth(1024);
-        quickView.setHeight(768);
-    }
-
-    quickView.rootContext()->setContextProperty("_application", &appController);
 
     const QStringList args = parser.positionalArguments();
 
@@ -101,15 +58,8 @@ int main(int argc, char *argv[])
         appController.loadFromFile(args.front());
     }
 
-    quickView.setResizeMode(QQuickView::SizeRootObjectToView);
-    quickView.setSource(QUrl("qrc:///qml/mainMenu.qml"));
-    quickView.show();
-
-    if (restoreWindowState) {
-        appController.restoreWindowState();
-    }
+    appController.createWindows();
 
     int result = a.exec();
-
     return result;
 }

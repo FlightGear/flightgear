@@ -27,6 +27,7 @@
 class CanvasConnection;
 class QWindow;
 class QTimer;
+class WindowData;
 
 class ApplicationController : public QObject
 {
@@ -42,6 +43,7 @@ class ApplicationController : public QObject
 
 
     Q_PROPERTY(QQmlListProperty<CanvasConnection> activeCanvases READ activeCanvases NOTIFY activeCanvasesChanged)
+    Q_PROPERTY(QQmlListProperty<WindowData> windowList READ windowList NOTIFY windowListChanged)
 
     Q_ENUMS(Status)
 
@@ -54,15 +56,12 @@ class ApplicationController : public QObject
     Q_PROPERTY(bool showGettingStarted READ showGettingStarted WRITE setShowGettingStarted NOTIFY showGettingStartedChanged)
 public:
     explicit ApplicationController(QObject *parent = nullptr);
-    ~ApplicationController();
-
-    void setWindow(QWindow* window);
-
-    void restoreWindowState();
+    ~ApplicationController() override;
 
     void loadFromFile(QString path);
 
     void setDaemonMode();
+    void createWindows();
 
     Q_INVOKABLE void query();
     Q_INVOKABLE void cancelQuery();
@@ -86,6 +85,7 @@ public:
     QVariantList canvases() const;
 
     QQmlListProperty<CanvasConnection> activeCanvases();
+    QQmlListProperty<WindowData> windowList();
 
     QNetworkAccessManager* netAccess() const;
 
@@ -129,6 +129,7 @@ signals:
     void portChanged(unsigned int port);
 
     void activeCanvasesChanged();
+    void windowListChanged();
 
     void canvasListChanged();
     void statusChanged(Status status);
@@ -179,6 +180,8 @@ private:
 
     QByteArray createSnapshot(QString name) const;
 
+    void defineDefaultWindow();
+
     QString m_host;
     unsigned int m_port;
     QVariantList m_canvases;
@@ -189,8 +192,7 @@ private:
     QNetworkReply* m_query = nullptr;
     QVariantList m_snapshots;
 
-    QWindow* m_window = nullptr;
-    Qt::WindowState m_windowState = Qt::WindowNoState;
+    QList<WindowData*> m_windowList;
 
     bool m_daemonMode = false;
     bool m_showUI = true;

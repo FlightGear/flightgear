@@ -6,6 +6,7 @@ TARGET = fgqcanvas
 TEMPLATE = app
 
 SOURCES += main.cpp\
+    WindowData.cpp \
     fgcanvasgroup.cpp \
     fgcanvaselement.cpp \
     fgcanvaspaintcontext.cpp \
@@ -25,6 +26,7 @@ SOURCES += main.cpp\
 
 
 HEADERS +=  \
+    WindowData.h \
     fgcanvasgroup.h \
     fgcanvaselement.h \
     fgcanvaspaintcontext.h \
@@ -48,7 +50,8 @@ RESOURCES += \
 
 OTHER_FILES += \
     qml/* \
-    doc/*
+    doc/* \
+    config/*
 
 #Q_XCODE_DEVELOPMENT_TEAM.name = DEVELOPMENT_TEAM
 #Q_XCODE_DEVELOPMENT_TEAM.value = "James Turner"

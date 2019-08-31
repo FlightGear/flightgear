@@ -1,0 +1,38 @@
+{
+    "canvases": [
+        {
+            "path": "/canvas/by-index/texture[4]",
+            "rect": [
+                300,
+                253,
+                852,
+                745
+            ],
+            "url": "ws://localhost:8080/PropertyTreeMirror/canvas/by-index/texture[4]"
+        },
+        {
+            "path": "/canvas/by-index/texture[7]",
+            "rect": [
+                1171,
+                259,
+                747,
+                711
+            ],
+            "window":1,
+            "url": "ws://localhost:8080/PropertyTreeMirror/canvas/by-index/texture[7]"
+        }
+    ],
+    "configName": "738_captain",
+    "windows": [
+        {
+            "title": "First Window",
+            "rect":[100, 100, 500, 300]
+        },
+
+        {
+            "title": "Another Window",
+            "rect":[150, 400, 500, 300],
+            "screen":"Colour LCD"
+        }
+    ]
+}

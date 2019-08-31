@@ -1,13 +1,15 @@
 import QtQuick 2.0
-import FlightGear 1.0 as FG
+import QtQuick.Window 2.4 as QQ2W
 
 Rectangle {
     width: 1024
     height: 768
     color: "black"
 
-    property double __uiOpacity: _application.showUI ? 1.0 : 0.0
+    // only show the UI on the main window
+    property double __uiOpacity: (isMainWindow && _application.showUI) ? 1.0 : 0.0
     property bool __uiVisible: true
+    readonly property bool isMainWindow: (_windowNumber === 0)
 
     Behavior on __uiOpacity {
         SequentialAnimation {
@@ -27,9 +29,25 @@ Rectangle {
 
     Repeater {
         model: _application.activeCanvases
-        delegate: CanvasFrame {
-            id: display
-            canvas: modelData
+
+        // we use a loader to only create canvases on the correct window
+        // by driving the 'active' property
+        delegate: Loader {
+            id: canvasLoader
+            sourceComponent: canvasFrame
+            active: modelData.windowIndex === _windowNumber
+
+            Binding {
+                target: canvasLoader.item
+                property: "canvas"
+                value: model.modelData
+            }
+        }
+    }
+
+    Component {
+        id: canvasFrame
+        CanvasFrame {
             showUi: __uiVisible
         }
     }
@@ -58,6 +76,7 @@ Rectangle {
     }
 
     GetStarted {
+        visible: isMainWindow
         anchors.centerIn: parent
     }
 

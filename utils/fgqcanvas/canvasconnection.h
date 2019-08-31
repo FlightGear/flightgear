@@ -46,6 +46,8 @@ class CanvasConnection : public QObject
     Q_PROPERTY(QPointF origin READ origin WRITE setOrigin NOTIFY geometryChanged)
     Q_PROPERTY(QSizeF size READ size WRITE setSize NOTIFY geometryChanged)
 
+    Q_PROPERTY(int windowIndex READ windowIndex WRITE setWindowIndex NOTIFY geometryChanged)
+
     Q_PROPERTY(QUrl webSocketUrl READ webSocketUrl NOTIFY webSocketUrlChanged)
     Q_PROPERTY(QString rootPath READ rootPath NOTIFY rootPathChanged)
 public:
@@ -83,6 +85,13 @@ public:
     QPointF origin() const;
 
     QSizeF size() const;
+
+    int windowIndex() const
+    {
+        return m_windowIndex;
+    }
+
+    void setWindowIndex(int index);
 
     LocalProp* propertyRoot() const;
 
@@ -132,6 +141,7 @@ private:
     QUrl m_webSocketUrl;
     QByteArray m_rootPropertyPath;
     QRectF m_destRect;
+    int m_windowIndex = 0;
 
     QWebSocket m_webSocket;
     QNetworkAccessManager* m_netAccess = nullptr;

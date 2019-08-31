@@ -77,6 +77,7 @@ QJsonObject CanvasConnection::saveState() const
     json["url"] = m_webSocketUrl.toString();
     json["path"] = QString::fromUtf8(m_rootPropertyPath);
     json["rect"] = rectToJsonArray(m_destRect.toRect());
+    json["window"] = m_windowIndex;
     return json;
 }
 
@@ -85,6 +86,10 @@ bool CanvasConnection::restoreState(QJsonObject state)
     m_webSocketUrl = state.value("url").toString();
     m_rootPropertyPath = state.value("path").toString().toUtf8();
     m_destRect = jsonArrayToRect(state.value("rect").toArray());
+
+    if (state.contains("window")) {
+        m_windowIndex = state.value("window").toInt();
+    }
 
     emit geometryChanged();
     emit rootPathChanged();
@@ -165,6 +170,14 @@ QPointF CanvasConnection::origin() const
 QSizeF CanvasConnection::size() const
 {
     return m_destRect.size();
+}
+
+void CanvasConnection::setWindowIndex(int index)
+{
+    if (m_windowIndex != index) {
+        m_windowIndex = index;
+        emit geometryChanged();
+    }
 }
 
 LocalProp *CanvasConnection::propertyRoot() const

@@ -108,7 +108,6 @@ void CanvasPaintedDisplay::onConnectionStatusChanged()
 
 void CanvasPaintedDisplay::buildElements()
 {
-    qDebug() << Q_FUNC_INFO;
     m_rootElement = new FGCanvasGroup(nullptr, m_connection->propertyRoot());
     // this is important to elements can discover their connection
     // by walking their parent chain
