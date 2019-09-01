@@ -205,8 +205,7 @@ public:
 
   /**
    * Helper to implement the AirportSearch widget. Optimised text search of
-   * airport names and idents, returning a list suitable for passing directly
-   * to PLIB.
+   * airport names and idents.
    */
   char** searchAirportNamesAndIdents(const std::string& aFilter);
 

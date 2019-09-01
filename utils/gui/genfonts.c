@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 		{ "Helvetica14",  "-adobe-helvetica-medium-r-*-*-*-140-75-75-*-*-iso8859-1",       2, 5 },
 		{ "Vera12B",      "-*-bitstream vera sans-bold-r-*-*-*-120-75-75-*-*-iso8859-1",   2, 4 },
 		//"Helvetica14B", "-adobe-helvetica-bold-r-*-*-*-140-75-75-*-*-iso8859-1",
-// freeglut/plib
+// freeglut
 		{ "Fixed8x13",    "-misc-fixed-medium-r-normal--13-120-75-75-C-80-iso8859-1",      0, 4 },
 		{ "Fixed9x15",    "-misc-fixed-medium-r-normal--15-140-75-75-C-90-iso8859-1",      0, 4 },
 		{ "Helvetica10",  "-adobe-helvetica-medium-r-normal--10-100-75-75-p-56-iso8859-1", 0, 4 },

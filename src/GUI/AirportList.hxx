@@ -4,7 +4,6 @@
 #define __AIRPORTLIST_HXX
 
 #include <simgear/compiler.h>
-#include <plib/puAux.h>
 #include "FGPUIDialog.hxx"
 
 class FGAirportList;

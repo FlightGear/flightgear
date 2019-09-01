@@ -28,7 +28,7 @@ AirportList::create_list()
    char **content = FGAirport::searchNamesAndIdents(_filter);
    int n = (content[0] != NULL) ? 1 : 0;
     
-    // work around plib 2006/04/18 bug: lists with no entries cause crash on arrow-up
+    // work around: lists with no entries cause crash on arrow-up
     newList(n > 0 ? content : 0);
 
     if (_content)

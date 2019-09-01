@@ -17,8 +17,6 @@
 #include <osg/GL>
 #include <zlib.h>
 
-#include <plib/sg.h>
-
 /**
  * A class to encapsulate all the info surrounding an OpenGL texture
  * and also query various info and load various file formats
