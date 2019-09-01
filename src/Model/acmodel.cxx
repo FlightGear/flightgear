@@ -32,12 +32,18 @@ static osg::Node *
 fgLoad3DModelPanel(const SGPath &path, SGPropertyNode *prop_root)
 {
     bool loadPanels = true;
-    osg::Node* node = simgear::SGModelLib::loadModel(path.utf8Str(), prop_root, NULL, loadPanels);
+    bool autoTooltipsMaster = fgGetBool("/sim/rendering/automatic-animation-tooltips/enabled");
+    int autoTooltipsMasterMax = fgGetInt("/sim/rendering/automatic-animation-tooltips/max-count");
+    SG_LOG(SG_INPUT, SG_DEBUG, ""
+            << " autoTooltipsMaster=" << autoTooltipsMaster
+            << " autoTooltipsMasterMax=" << autoTooltipsMasterMax
+            );
+    osg::Node* node = simgear::SGModelLib::loadModel(path.utf8Str(), prop_root, NULL, loadPanels, autoTooltipsMaster, autoTooltipsMasterMax);
     if (node)
         node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
     return node;
 }
-
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGAircraftModel
 ////////////////////////////////////////////////////////////////////////
