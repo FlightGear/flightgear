@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick.Window 2.4 as QQ2W
 
 Rectangle {
     width: 1024
