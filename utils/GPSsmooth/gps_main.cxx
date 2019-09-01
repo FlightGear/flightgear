@@ -11,8 +11,6 @@
 #include <iostream>
 #include <string>
 
-#include <plib/sg.h>
-
 #include <simgear/io/lowlevel.hxx> // endian tests
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -472,8 +470,8 @@ int main( int argc, char **argv ) {
         /* Convert to ms */
         double elapsed_us = (current_time_stamp - last_time_stamp).toUSecs();
         if ( elapsed_us < (frame_us - 2000) ) {
-            double requested_us = (frame_us - elapsed_us) - 2000 ;
-            ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
+            double requested_us = (frame_us - elapsed_us) - 2000;
+            SGTimeStamp::sleepForMSec((int)(requested_us / 1000.0));
         }
         current_time_stamp.stamp();
         while ( (current_time_stamp - last_time_stamp).toUSecs() < frame_us ) {
