@@ -8,7 +8,7 @@
 #  include <unistd.h> // for usleep           
 #endif
 
-#include <string.h>		// plib/js.h should really include this !!!!!!
+#include <string.h>
 #include <js.h>
 
 #define Z 8
