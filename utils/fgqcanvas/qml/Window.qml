@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick.Window 2.4 as QQ2W
 
 Rectangle {
     width: 1024
@@ -7,9 +6,15 @@ Rectangle {
     color: "black"
 
     // only show the UI on the main window
-    property double __uiOpacity: (isMainWindow && _application.showUI) ? 1.0 : 0.0
+    property double __uiOpacity: __shouldShowUi ? 1.0 : 0.0
     property bool __uiVisible: true
+    readonly property bool __shouldShowUi: (isMainWindow && _application.showUI)
     readonly property bool isMainWindow: (_windowNumber === 0)
+
+    Component.onCompleted: {
+        // synchronize insitial state of this
+        __uiVisible = __shouldShowUi;
+    }
 
     Behavior on __uiOpacity {
         SequentialAnimation {
