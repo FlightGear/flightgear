@@ -14,12 +14,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "WindowBuilder.hxx"
-
+#include <osg/Version>
 #include "WindowSystemAdapter.hxx"
 #include <Main/fg_props.hxx>
 
@@ -72,6 +70,14 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
 {
     GraphicsContext::WindowingSystemInterface* wsi
         = osg::GraphicsContext::getWindowingSystemInterface();
+#if defined(HAVE_QT) && OSG_VERSION_GREATER_THAN(3,5,9)
+    if (usingQtGraphicsWindow) {
+        // use the correct WSI for OpenSceneGraph >= 3.6
+        wsi = osg::GraphicsContext::getWindowingSystemInterface("FlightGearQt5");
+    }
+#endif
+
+
     defaultTraits = new osg::GraphicsContext::Traits;
     auto traits = defaultTraits.get();
     
@@ -108,6 +114,9 @@ void WindowBuilder::makeDefaultTraits(bool stencil)
         data->createFullscreen = wantFullscreen;
         data->isPrimaryWindow = true;
         
+#if OSG_VERSION_GREATER_THAN(3,5,9)
+        traits->windowingSystemPreference = "FlightGearQt5";
+#endif
         traits->inheritedWindowData = data;
         traits->windowDecoration = true;
         traits->supportsResize = true;
