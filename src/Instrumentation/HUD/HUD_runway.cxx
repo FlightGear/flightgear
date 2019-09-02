@@ -77,7 +77,7 @@ void HUD::Runway::draw()
 
     glPushAttrib(GL_LINE_STIPPLE | GL_LINE_STIPPLE_PATTERN | GL_LINE_WIDTH);
     float projMat[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
-    float modelView[4][4];
+    double modelView[4][4];
     bool anyLines;
     //Get the current view
 //    FGViewer* curr_view = globals->get_viewmgr()->get_current_view();
@@ -98,13 +98,13 @@ void HUD::Runway::draw()
     get_rwy_points(_points3d);
 
     //Create a rotation matrix to correct for any offsets (other than default offsets) to the model view matrix
-    sgMat4 xy; //rotation about the Rxy, negate the sin's on Ry
+    dMat4 xy; //rotation about the Rxy, negate the sin's on Ry
     xy[0][0] = cYaw,         xy[1][0] = 0.0f,   xy[2][0] = -sYaw,        xy[3][0] = 0.0f;
     xy[0][1] = sPitch*-sYaw, xy[1][1] = cPitch, xy[2][1] = -sPitch*cYaw, xy[3][1] = 0.0f;
     xy[0][2] = cPitch*sYaw,  xy[1][2] = sPitch, xy[2][2] = cPitch*cYaw,  xy[3][2] = 0.0f;
     xy[0][3] = 0.0f,         xy[1][3] = 0.0f,   xy[2][3] = 0.0f,         xy[3][3] = 1.0f;
     //Re-center the model view
-    sgPostMultMat4(modelView,xy);
+    dPostMultMat4(modelView, xy);
     //copy float matrices to double
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -154,7 +154,7 @@ FGRunway* HUD::Runway::get_active_runway()
 
 
 
-void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
+void HUD::Runway::get_rwy_points(dVec3 *_points3d)
 {
     double alt = _runway->geod().getElevationM();
     double length = _runway->lengthM() * 0.5;
@@ -181,11 +181,11 @@ void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
 }
 
 
-bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& point1, const sgdVec3& point2)
+bool HUD::Runway::drawLine(const dVec3& a1, const dVec3& a2, const dVec3& point1, const dVec3& point2)
 {
-    sgdVec3 p1, p2;
-    sgdCopyVec3(p1, point1);
-    sgdCopyVec3(p2, point2);
+    dVec3 p1, p2;
+    dCopyVec3(p1, point1);
+    dCopyVec3(p2, point2);
     bool p1Inside = (p1[0] >= _left && p1[0] <= _right && p1[1] >= _bottom && p1[1] <= _top);
     bool p1Insight = (p1[2] >= 0.0 && p1[2] < 1.0);
     bool p1Valid = p1Insight && p1Inside;
@@ -200,12 +200,12 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
         glEnd();
 
     } else if (p1Valid) { //p1 is valid and p2 is not, calculate a new valid point
-        sgdVec3 vec = {a2[0] - a1[0], a2[1] - a1[1], a2[2] - a1[2]};
+        dVec3 vec = {a2[0] - a1[0], a2[1] - a1[1], a2[2] - a1[2]};
         //create the unit vector
-        sgdScaleVec3(vec, 1.0 / sgdLengthVec3(vec));
-        sgdVec3 newPt;
-        sgdCopyVec3(newPt, a1);
-        sgdAddVec3(newPt, vec);
+        dScaleVec3(vec, 1.0 / dLengthVec3(vec));
+        dVec3 newPt;
+        dCopyVec3(newPt, a1);
+        dAddVec3(newPt, vec);
         if (simgear::project(newPt[0], newPt[1], newPt[2], _mm, _pm, _view,
                              &p2[0], &p2[1], &p2[2])
                 && (p2[2] > 0 && p2[2] < 1.0)) {
@@ -217,12 +217,12 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
         }
 
     } else if (p2Valid) { //p2 is valid and p1 is not, calculate a new valid point
-        sgdVec3 vec = {a1[0] - a2[0], a1[1] - a2[1], a1[2] - a2[2]};
+        dVec3 vec = {a1[0] - a2[0], a1[1] - a2[1], a1[2] - a2[2]};
         //create the unit vector
-        sgdScaleVec3(vec, 1.0 / sgdLengthVec3(vec));
-        sgdVec3 newPt;
-        sgdCopyVec3(newPt, a2);
-        sgdAddVec3(newPt, vec);
+        dScaleVec3(vec, 1.0 / dLengthVec3(vec));
+        dVec3 newPt;
+        dCopyVec3(newPt, a2);
+        dAddVec3(newPt, vec);
         if (simgear::project(newPt[0], newPt[1], newPt[2], _mm, _pm, _view,
                              &p1[0], &p1[1], &p1[2])
                 && (p1[2] > 0 && p1[2] < 1.0)) {
@@ -248,7 +248,7 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
 }
 
 
-void HUD::Runway::boundPoint(const sgdVec3& v, sgdVec3& m)
+void HUD::Runway::boundPoint(const dVec3& v, dVec3& m)
 {
     double y = v[1];
     if (m[1] < v[1])
@@ -276,7 +276,7 @@ void HUD::Runway::boundPoint(const sgdVec3& v, sgdVec3& m)
 }
 
 
-bool HUD::Runway::boundOutsidePoints(sgdVec3& v, sgdVec3& m)
+bool HUD::Runway::boundOutsidePoints(dVec3& v, dVec3& m)
 {
     bool pointsInvalid = (v[1] > _top && m[1] > _top) ||
                          (v[1] < _bottom && m[1] < _bottom) ||

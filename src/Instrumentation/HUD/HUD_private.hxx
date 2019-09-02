@@ -1,4 +1,4 @@
-// HUD_private.hxx -- Intenral delcerations for the HUD
+// HUD_private.hxx -- Internal declarations for the HUD
 //
 // Written by Michele America, started September 1997.
 //
@@ -35,7 +35,7 @@
 #include <simgear/constants.h>
 #include <simgear/props/props.hxx>
 
-#include <plib/sg.h> // for lingering sgdVec3 usage below
+#include "HUD_math.hxx"
 
 class FGFontCache;
 class fntRenderer;
@@ -366,16 +366,16 @@ public:
     virtual void draw();
 
 private:
-    void boundPoint(const sgdVec3& v, sgdVec3& m);
-    bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
-    bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
+    void boundPoint(const dVec3& v, dVec3& m);
+    bool boundOutsidePoints(dVec3& v, dVec3& m);
+    bool drawLine(const dVec3& a1, const dVec3& a2, const dVec3& p1, const dVec3& p2);
     void drawArrow();
     FGRunway* get_active_runway();
-    void get_rwy_points(sgdVec3 *points);
+    void get_rwy_points(dVec3 *points);
     void setLineWidth();
 
     SGPropertyNode_ptr _agl;
-    sgdVec3 _points3d[6], _points2d[6];
+    dVec3 _points3d[6], _points2d[6];
     double _mm[16];
     double _pm[16];
     double _arrow_scale;  // scales of runway indication arrow
