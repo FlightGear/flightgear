@@ -85,12 +85,6 @@
 }
 
 {
-    known-plib-bug/already_reported(Cond)
-    Cond
-    fun:removeEntity__7ssgListUi
-}
-
-{
     zlib/pthread-bug(PThread)
     PThread
     fun:pthread_error

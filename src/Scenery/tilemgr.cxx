@@ -369,10 +369,10 @@ void FGTileMgr::update_queues(bool& isDownloadingScenery)
         e = tile_cache.get_current();
         if ( e )
         {
-            // Prepare the ssg nodes corresponding to each tile.
-            // Set the ssg transform and update it's range selector
+            // Prepare the nodes corresponding to each tile.
+            // Set the transform and update it's range selector
             // based on current visibilty
-            e->prep_ssg_node(vis);
+            e->prep_scenegraph_node(vis);
             
             if (!e->is_loaded()) {
                 bool nonExpiredOrCurrent = !e->is_expired(current_time) || e->is_current_view();

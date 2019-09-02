@@ -292,12 +292,6 @@ void fgHiResDump()
     trTileBuffer(tr, GL_RGB, GL_UNSIGNED_BYTE, tile);
     trImageSize(tr, imageWidth, imageHeight);
     trRowOrder(tr, TR_TOP_TO_BOTTOM);
-    // OSGFIXME
-//     sgFrustum *frustum = ssgGetFrustum();
-//     trFrustum(tr,
-//               frustum->getLeft(), frustum->getRight(),
-//               frustum->getBot(),  frustum->getTop(), 
-//               frustum->getNear(), frustum->getFar());
 	
     /* Prepare ppm output file */
     while (count < 1000) {

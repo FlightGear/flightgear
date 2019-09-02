@@ -26,7 +26,7 @@
 /**
  * Cropped texture (should migrate out into FGFS).
  *
- * This structure wraps an SSG texture with cropping information.
+ * This structure wraps an texture with cropping information.
  */
 class FGCroppedTexture : public SGReferenced {
 public:

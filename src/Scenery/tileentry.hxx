@@ -54,7 +54,7 @@ public:
 
 private:
 
-    // pointer to ssg range selector for this tile
+    // pointer to range selector for this tile
     osg::ref_ptr<osg::LOD> _node;
     // Reference to DatabaseRequest object set and used by the
     // osgDB::DatabasePager.
@@ -81,9 +81,9 @@ public:
     // Destructor
     ~TileEntry();
 
-    // Update the ssg transform node for this tile so it can be
+    // Update the transform node for this tile so it can be
     // properly drawn relative to our (0,0,0) point
-    void prep_ssg_node(float vis);
+    void prep_scenegraph_node(float vis);
 
     /**
      * Transition to OSG database pager

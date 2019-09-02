@@ -74,9 +74,9 @@ TileEntry::~TileEntry ()
 {
 }
 
-// Update the ssg transform node for this tile so it can be
+// Update the transform node for this tile so it can be
 // properly drawn relative to our (0,0,0) point
-void TileEntry::prep_ssg_node(float vis) {
+void TileEntry::prep_scenegraph_node(float vis) {
     if (!is_loaded())
         return;
     // visibility can change from frame to frame so we update the

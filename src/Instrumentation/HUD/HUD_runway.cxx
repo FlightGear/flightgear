@@ -95,17 +95,8 @@ void HUD::Runway::draw()
     double sPitch = sin(pitch), cPitch = cos(pitch),
            sYaw = sin(yaw), cYaw = cos(yaw);
 
-    //Set the camera to the cockpit view to get the view of the runway from the cockpit
-    // OSGFIXME
-//     ssgSetCamera((sgVec4 *)_cockpit_view->get_VIEW());
     get_rwy_points(_points3d);
-    //Get the current project matrix
-    // OSGFIXME
-//     ssgGetProjectionMatrix(projMat);
-//    const sgVec4 *viewMat = globals->get_current_view()->get_VIEW();
-    //Get the current model view matrix (cockpit view)
-    // OSGFIXME
-//     ssgGetModelviewMatrix(modelView);
+
     //Create a rotation matrix to correct for any offsets (other than default offsets) to the model view matrix
     sgMat4 xy; //rotation about the Rxy, negate the sin's on Ry
     xy[0][0] = cYaw,         xy[1][0] = 0.0f,   xy[2][0] = -sYaw,        xy[3][0] = 0.0f;
@@ -149,9 +140,6 @@ void HUD::Runway::draw()
         drawArrow(); //draw indication arrow
     }
 
-    //Set the camera back to the current view
-    // OSGFIXME
-//     ssgSetCamera((sgVec4 *)curr_view);
     glPopAttrib();
 }
 

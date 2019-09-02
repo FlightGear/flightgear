@@ -112,8 +112,6 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
             list(APPEND outDeps ${PUNAME} "fnt" "sg")
         elseif (${c} STREQUAL "puaux")
             list(APPEND outDeps ${PUNAME} "fnt" "sg")
-        elseif (${c} STREQUAL "ssg")
-            list(APPEND outDeps "sg")
         endif()
     endforeach()
 
