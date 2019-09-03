@@ -8,6 +8,7 @@
 #define QmlPropertyModel_hpp
 
 #include <QAbstractListModel>
+#include <memory>
 
 class FGQmlPropertyModel : public QAbstractListModel
 {
