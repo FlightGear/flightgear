@@ -1,0 +1,4 @@
+moc_*
+*.moc
+fgqcanvas
+qrc_*.cpp
