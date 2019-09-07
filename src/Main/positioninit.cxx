@@ -593,6 +593,125 @@ static bool fgSetPosFromFix( const string& id, PositionedID guid )
   return true;
 }
 
+/* Extracts ICAO from airport description string returned by
+FGAirport::searchNamesAndIdents(). Returns "" if not found. */
+static std::string findIcao(const std::string& airport)
+{
+  size_t    a = airport.rfind('(');
+  size_t    b = airport.rfind(')');
+  if (a == std::string::npos || b == std::string::npos || b < a) {
+    return "";
+  }
+  std::string   icao = airport.substr(a + 1, b-1 - a);
+  return icao;
+}
+
+/* Implements simple cin/cout text interface that allows user to search for an
+airport. Returns non-NULL FGAirport*. */
+static const FGAirport* searchAirport(const std::string& initial_search)
+{
+  for (int it=0;; ++it) {
+    std::string   search_string;
+    if (it == 0 && initial_search != "") {
+        search_string = initial_search;
+    }
+    else {
+      std::cout << "\n";
+      std::cout << "Enter airport search string (blank for all)...? ";
+      std::cout.flush();
+      std::getline(std::cin, search_string);
+    }
+    
+    std::cout << "Airports matching '" << search_string << "' are:\n";
+    
+    char**    airports = FGAirport::searchNamesAndIdents(search_string);
+    int   airports_num = 0;
+    for (char** a=airports; *a; ++a) {
+      airports_num += 1;
+    }
+    
+    for (int i=0; i<airports_num; ++i) {
+      std::cout << "    "
+          << std::setw(4) << i
+          << ": " << airports[i]
+          << "\n";
+    }
+    
+    if (airports_num == 0) {
+      std::cout << "[No matches]\n";
+    }
+    else if (airports_num == 1 && it == 0) {
+      /* Short-cut first time if search is unambigious, so for example
+      --airport=gatwick works with no further user input. */
+      std::string icao = findIcao(airports[0]);
+      if (icao != "") {
+        const FGAirport* airport = fgFindAirportID(icao);
+        if (airport) {
+          std::cout << "Using single matching airport: " << airports[0] << "\n";
+          std::cout.flush();
+          return airport;
+        }
+      }
+    }
+    
+    for(;;) {
+      std::cout << "\n";
+      if (airports_num == 0) {
+        std::cout << "Enter airport ICAO, or blank to search again...? ";
+      }
+      else {
+        std::cout << "Enter number of airport to use in above list, or airport ICAO, or blank to search again...? ";
+      }
+      std::cout.flush();
+      std::string s;
+      std::getline(std::cin, s);
+      if (s == "") {
+        /* Search again. */
+        break;
+      }
+      std::stringstream ss(s);
+      int n;
+      ss >> n;
+
+      if (ss) {
+        if (n < 0 || n >= airports_num) {
+          if (airports_num == 0) {
+            std::cout << "List is empty so no number is acceptable\n";
+          }
+          else {
+            std::cout << "Number out of range " << 0 << ".." << airports_num-1 << "\n";
+          }
+          continue;
+        }
+
+        std::cout << "Using: " << airports[n] << "\n";
+        std::string icao = findIcao(airports[n]);
+        if (icao == "") {
+          std::cout << "Cannot extract ICAO from '" << airports[n] << "'\n";
+          continue;
+        }
+        else {
+          const FGAirport* airport = fgFindAirportID(icao);
+          if (airport) {
+            std::cout.flush();
+            return airport;
+          }
+          std::cout << "Failed to find airport for ICAO=" << icao << "\n";
+          continue;
+        }
+      }
+
+      /* <s> is not a number, so use it directly as ICAO. */
+      const FGAirport* airport = fgFindAirportID(s);
+      if (airport) {
+        std::cout.flush();
+        return airport;
+      }
+      std::cout << "Failed to find ICAO '" << s << "'\n";
+    }
+  }
+}
+
 // Set the initial position based on presets (or defaults)
 bool initPosition()
 {
@@ -751,6 +870,9 @@ bool initPosition()
   if ( !set_pos ) {
     const std::string defaultAirportId = fgGetString("/sim/presets/airport-id");
     const FGAirport* airport = fgFindAirportID(defaultAirportId);
+    if (!airport && fgGetBool("/sim/presets/airport-search")) {
+      airport = searchAirport(defaultAirportId);
+    }
     if( airport ) {
       const SGGeod & airportGeod = airport->geod();
       fgSetDouble("/sim/presets/longitude-deg", airportGeod.getLongitudeDeg());
