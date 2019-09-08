@@ -303,6 +303,19 @@ do_dialog_show (const SGPropertyNode * arg, SGPropertyNode * root)
     return true;
 }
 
+/**
+ * Built-in command: Show an XML-configured dialog.
+ *
+ * dialog-name: the name of the GUI dialog to display.
+ */
+static bool
+do_dialog_toggle (const SGPropertyNode * arg, SGPropertyNode * root)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    gui->toggleDialog(arg->getStringValue("dialog-name"));
+    return true;
+}
+
 
 /**
  * Built-in Command: Hide the active XML-configured dialog.
@@ -516,6 +529,7 @@ static struct {
     { "tile-cache-reload", do_tile_cache_reload },
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
+    { "dialog-toggle", do_dialog_toggle },
     { "dialog-close", do_dialog_close },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },

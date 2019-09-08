@@ -218,6 +218,19 @@ NewGUI::showDialog (const string &name)
 }
 
 bool
+NewGUI::toggleDialog (const string &name)
+{
+    if (_active_dialogs.find(name) == _active_dialogs.end()) {
+        showDialog(name);
+        return true;
+    }
+    else {
+        closeDialog(name);
+        return false;
+    }
+}
+
+bool
 NewGUI::closeActiveDialog ()
 {
     if (_active_dialog == 0)

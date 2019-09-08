@@ -82,6 +82,14 @@ public:
      */
     virtual bool showDialog (const std::string &name);
 
+    /**
+     * Toggle display of a dialog box.
+     *
+     * @param name The name of the dialog box.
+     * @return true if the dialog is being displayed, false otherwise.
+     */
+    virtual bool toggleDialog (const std::string &name);
+
 
     /**
      * Close the currenty active dialog.  This function is intended to
