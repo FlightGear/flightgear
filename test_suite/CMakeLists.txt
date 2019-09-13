@@ -10,6 +10,7 @@ foreach(test_category
         simgear_tests
         system_tests
         unit_tests
+        fgdata_tests
     )
     add_subdirectory(${test_category})
 endforeach(test_category)
@@ -90,6 +91,8 @@ add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest
 # Simgear unit test suites.
 add_test(MathGeodesySimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m MathGeodesyTests)
 add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m SimgearPropsTests)
+
+# FGData test suites.
 
 #-----------------------------------------------------------------------------
 # Set up the binary.

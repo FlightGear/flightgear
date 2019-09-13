@@ -29,7 +29,7 @@ using namespace std;
 
 
 // Print out a summary of the relax test suite.
-void summary(CppUnit::OStream &stream, int system_result, int unit_result, int gui_result, int simgear_result)
+void summary(CppUnit::OStream &stream, int system_result, int unit_result, int gui_result, int simgear_result, int fgdata_result)
 {
     int synopsis = 0;
 
@@ -69,6 +69,13 @@ void summary(CppUnit::OStream &stream, int system_result, int unit_result, int g
         synopsis += simgear_result;
     }
 
+    // FGData test summary.
+    if (fgdata_result != -1) {
+        text = "FGData tests";
+        printSummaryLine(stream, text, fgdata_result);
+        synopsis += fgdata_result;
+    }
+
     // Synopsis.
     text ="Synopsis";
     printSummaryLine(stream, text, synopsis);
@@ -81,10 +88,10 @@ void summary(CppUnit::OStream &stream, int system_result, int unit_result, int g
 int main(int argc, char **argv)
 {
     // Declarations.
-    int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1;
-    bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false;
+    int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1, status_fgdata=-1;
+    bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false, run_fgdata=false;
     bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
-    char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL;
+    char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
     char        firstchar;
     std::string fgRoot;
 
@@ -117,6 +124,12 @@ int main(int argc, char **argv)
             run_simgear = true;
             if (firstchar != '-')
                 subset_simgear = argv[i+1];
+
+        // FGData test.
+        } else if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--fgdata-tests") == 0) {
+            run_fgdata = true;
+            if (firstchar != '-')
+                subset_fgdata = argv[i+1];
 
         // Verbose output.
         } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
@@ -156,6 +169,7 @@ int main(int argc, char **argv)
         std::cout << "    -u, --unit-tests    execute the unit tests." << std::endl;
         std::cout << "    -g, --gui-tests     execute the GUI tests." << std::endl;
         std::cout << "    -m, --simgear-tests execute the simgear tests." << std::endl;
+        std::cout << "    -f, --fgdata-tests  execute the FGData tests." << std::endl;
         std::cout << std::endl;
         std::cout << "    The -s, -u, -g, and -m options accept an optional argument to perform a" << std::endl;
         std::cout << "    subset of all tests.  This argument should either be the name of a test" << std::endl;
@@ -179,11 +193,12 @@ int main(int argc, char **argv)
     }
 
     // Turn on all tests if no subset was specified.
-    if (!run_system && !run_unit && !run_gui && !run_simgear) {
+    if (!run_system && !run_unit && !run_gui && !run_simgear && !run_fgdata) {
         run_system = true;
         run_unit = true;
         run_gui = true;
         run_simgear = true;
+        run_fgdata = true;
     }
 
     // Set up the data store singleton and FGData path.
@@ -208,10 +223,12 @@ int main(int argc, char **argv)
         status_gui = testRunner("GUI tests", "GUI tests", subset_gui, verbose, ctest_output, debug);
     if (run_simgear)
         status_simgear = testRunner("Simgear unit tests", "Simgear unit tests", subset_simgear, verbose, ctest_output, debug);
+    if (run_fgdata)
+        status_fgdata = testRunner("FGData tests", "FGData tests", subset_fgdata, verbose, ctest_output, debug);
 
     // Summary printout.
     if (printSummary && !ctest_output)
-        summary(cerr, status_system, status_unit, status_gui, status_simgear);
+        summary(cerr, status_system, status_unit, status_gui, status_simgear, status_fgdata);
 
     // Deactivate the logging.
     if (!debug)
@@ -225,6 +242,8 @@ int main(int argc, char **argv)
     if (status_gui > 0)
         return 1;
     if (status_simgear > 0)
+        return 1;
+    if (status_fgdata > 0)
         return 1;
 
     // Success.
