@@ -298,23 +298,26 @@ void Model::calcForces(State* s)
 
     // Do each surface, remembering that the local velocity at each
     // point is different due to rotation.
-    float faero[3] {0,0,0};    
-    for(i=0; i<_surfaces.size(); i++) {
-      Surface* sf = (Surface*)_surfaces.get(i);
+    float faero[3] {0,0,0};
+    if (!_surfaces.empty()) {
+        // approx mach number for aircraft (instead of per surface)
+        float vs[3] {0,0,0}, pos[3] {0,0,0};
+        localWind(pos, s, vs, alt);
+        float mach = _atmo.machFromSpeed(Math::mag3(vs));
+        for (i=0; i<_surfaces.size(); i++) {
+            Surface* sf = (Surface*)_surfaces.get(i);
+            // Vsurf = wind - velocity + (rot cross (cg - pos))
+            sf->getPosition(pos);
+            localWind(pos, s, vs, alt);
 
-      // Vsurf = wind - velocity + (rot cross (cg - pos))
-      float vs[3], pos[3];
-      sf->getPosition(pos);
-      localWind(pos, s, vs, alt);
+            float force[3], torque[3];
+            sf->calcForce(vs, _atmo.getDensity(), mach, force, torque);
+            Math::add3(faero, force, faero);
 
-      float force[3], torque[3];
-      sf->calcForce(vs, _atmo.getDensity(), force, torque);
-      Math::add3(faero, force, faero);
-
-      _body.addForce(pos, force);
-      _body.addTorque(torque);
+            _body.addForce(pos, force);
+            _body.addTorque(torque);
+        }
     }
-
     for (j=0; j<_rotorgear.getRotors()->size();j++)
     {
         Rotor* r = (Rotor *)_rotorgear.getRotors()->get(j);

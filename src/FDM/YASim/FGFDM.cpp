@@ -597,6 +597,15 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
         dragFactor = attrf(a, "effectiveness", 1);
     }
     w->setSectionDrag(_wingSection, dragFactor);
+    if (a->hasAttribute("flow")) {
+        const char* flowregime = a->getValue("flow");
+        if (!strcmp(flowregime,"TRANSONIC")) {
+            w->setFlowRegime(FLOW_TRANSONIC);
+            w->setCriticalMachNumber(attrf(a, "mcrit", 0.6f));
+        }
+    } else {
+        w->setFlowRegime(FLOW_SUBSONIC);
+    }
     _currObj = w;
 }
 

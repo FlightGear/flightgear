@@ -29,7 +29,11 @@ public:
     float getTemperature() const { return _temperature; }
     float getPressure() const { return _pressure; }
     float getDensity() const { return _density; }
+    float speedFromMach(float mach);
+    float speedFromVCAS(float vcas);
+    float machFromSpeed(float spd);
     
+    // static methods
     static float getStdTemperature(float alt);
     static float getStdPressure(float alt);
     static float getStdDensity(float alt);
@@ -39,10 +43,8 @@ public:
     static float calcMach(float spd, float temp);
     static float calcStdDensity(float pressure, float temp);
 
-    static float spdFromMach(float mach, float temp);
-    static float spdFromVCAS(float vcas, float pressure, float temp);
-    float spdFromMach(float mach);
-    float spdFromVCAS(float vcas);
+    static float speedFromMach(float mach, float temp);
+    static float speedFromVCAS(float vcas, float pressure, float temp);
     
     // Given ambient ("0") pressure/density/temperature values,
     // calculate the properties of static air (air accelerated to the

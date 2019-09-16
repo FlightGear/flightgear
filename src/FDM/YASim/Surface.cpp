@@ -34,6 +34,10 @@ Surface::Surface(Version* version, const float* pos, float c0 = 1 ) :
         _incidenceN->setFloatValue(0);
         _twistN = _surfN->getNode("twist-deg", true);
         _twistN->setFloatValue(0);
+        _pgCorrectionN = _surfN->getNode("pg-correction", true);
+        _pgCorrectionN->setFloatValue(1);
+        _dcdwaveN = _surfN->getNode("wavedrag", true);
+        _dcdwaveN->setFloatValue(1);        
         _surfN->getNode("pos-x", true)->setFloatValue(pos[0]);
         _surfN->getNode("pos-y", true)->setFloatValue(pos[1]);
         _surfN->getNode("pos-z", true)->setFloatValue(pos[2]);
@@ -123,10 +127,12 @@ void Surface::setSpoilerPos(float pos)
   }
 }
 
+
 // Calculate the aerodynamic force given a wind vector v (in the
-// aircraft's "local" coordinates) and an air density rho.  Returns a
-// torque about the Y axis ("pitch"), too.
-void Surface::calcForce(const float* v, const float rho, float* out, float* torque)
+// aircraft's "local" coordinates), an air density rho and the freestream 
+// mach number (for compressibility correction).  Returns a torque about 
+// the Y axis ("pitch"), too.
+void Surface::calcForce(const float* v, const float rho, float mach, float* out, float* torque)
 {
     // initialize outputs to zero
     Math::zero3(out);
@@ -172,6 +178,21 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
     out[2] += stallLift;
     out[2] += flaplift;
 
+    //compute Prandtl/Glauert compressibility factor
+    float pg_correction {1};
+    float wavedrag {0};
+    if (_flow == FLOW_TRANSONIC) {
+        pg_correction = Math::polynomial(pg_coefficients, mach);
+        out[2] *= pg_correction;
+
+        // Add mach dependent wave drag (Perkins and Hage)
+        if (mach > _Mcrit) {
+            wavedrag = 9.5f * Math::pow(mach-_Mcrit, 2.8f) + 0.00193f;
+            out[0] += wavedrag;
+        } 
+    }
+
+
     // Airfoil lift (pre-stall and zero-alpha) torques "up" (negative
     // torque) around the Y axis, while flap lift pushes down.  Both
     // forces are considered to act at one third chord from the
@@ -191,6 +212,9 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
     // Diddle the induced drag
     Math::mul3(-1*_inducedDrag*out[2]*lwind[2], lwind, lwind);
     Math::add3(lwind, out, out);
+    
+    // Add mach dependent wave drag
+    
 
     // Reverse the incidence rotation to get back to surface
     // coordinates. Since out[] is now the force vector and is
@@ -217,6 +241,8 @@ void Surface::calcForce(const float* v, const float rho, float* out, float* torq
       _fzN->setFloatValue(out[2]);
       _alphaN->setFloatValue(_alpha);
       _stallAlphaN->setFloatValue(_stallAlpha);      
+      _pgCorrectionN->setFloatValue(pg_correction);
+      _dcdwaveN->setFloatValue(wavedrag);
     }
 }
 
@@ -265,11 +291,11 @@ float Surface::stallFunc(float* v)
 
     // consider slat position, moves the stall aoa some degrees
     if(i == 0) {
-	if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
-	    _stallAlpha += _slatPos * _slatAlpha;
-	} else {
-	    _stallAlpha += _slatAlpha;
-	}
+        if( _version->isVersionOrNewer( Version::YASIM_VERSION_32 )) {
+            _stallAlpha += _slatPos * _slatAlpha;
+        } else {
+            _stallAlpha += _slatAlpha;
+        }
     }
 
     // Beyond the stall

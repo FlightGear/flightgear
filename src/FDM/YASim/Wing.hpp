@@ -41,6 +41,11 @@ enum WingFlaps {
     WING_SLAT,
 };
 
+enum FlowRegime {
+    FLOW_SUBSONIC,
+    FLOW_TRANSONIC
+};
+
 class Wing {
     SGPropertyNode_ptr _wingN {nullptr};
     
@@ -110,10 +115,11 @@ class Wing {
         // segment to that along the X (drag) direction.
         void setLiftRatio(float ratio);
         void multiplyLiftRatio(float factor);
+        float getLiftRatio() const { return _liftRatio; };
 
         void newSurface(Version* _version, float* pos, float* orient, float chord,
             bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler, 
-            float weight, float twist);
+            float weight, float twist, FlowRegime flow, float mcrit);
         int numSurfaces() const { return _surfs.size(); }
         Surface* getSurface(int n) { return ((SurfRec*)_surfs.get(n))->surface; }
         float getSurfaceWeight(int n) const { return ((SurfRec*)_surfs.get(n))->weight; }
@@ -133,13 +139,16 @@ class Wing {
     float _aspectRatio {0};
     float _meanChord {0};
     Chord _mac;
-    float _taper {1};
+    float _taper {1.0f};
     float _incidence {0};
     float _incidenceMin {INCIDENCE_MIN};
     float _incidenceMax {INCIDENCE_MAX};
     float _weight {0};
     float _sweepLEMin {0};
     float _sweepLEMax {0};
+    FlowRegime _flow {FLOW_SUBSONIC};
+    float _Mcrit {1.0f};
+    
 
     //-- private methods
     //copy float[3] to chord x,y,z
@@ -155,7 +164,8 @@ public:
     ~Wing();
 
     int addWingSection(float* base, float chord, float wingLength, 
-        float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0, float camber = 0, float idrag = 1, float incidence = 0);
+        float taper = 1, float sweep = 0, float dihedral = 0, float twist = 0, 
+        float camber = 0, float idrag = 1, float incidence = 0);
 
     void setFlapParams(int section, WingFlaps type, FlapParams fp);
     void setSectionDrag(int section, float pdrag);
@@ -172,6 +182,8 @@ public:
     void setIncidenceMax(float max) { _incidenceMax = max; };
     float getIncidenceMin() const { return _incidenceMin; };
     float getIncidenceMax() const { return _incidenceMax; };
+    void setFlowRegime(FlowRegime flow) { _flow = flow; };
+    void setCriticalMachNumber(float m) { _Mcrit = m; };
     // write mass (= _weight * scale) to property tree
     void weight2mass(float scale);
     
@@ -189,7 +201,9 @@ public:
     float getMACz() const { return _mac.z; }; // get z-coord of MAC leading edge 
     float getSweepLEMin() const { return _sweepLEMin; }; //min sweep angle of leading edge
     float getSweepLEMax() const { return _sweepLEMax; }; //max sweep angle of leading edge
-   
+    FlowRegime getFlowRegime() const { return _flow; };
+    
+    float getCriticalMachNumber() const { return _Mcrit; };   
 //-----------------------------    
     // propergate the control axes value for the sub-surfaces
     void setFlapPos(WingFlaps type, float lval, float rval = 0);

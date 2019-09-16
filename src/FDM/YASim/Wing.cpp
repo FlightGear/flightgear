@@ -69,6 +69,9 @@ int Wing::addWingSection(float* base, float chord, float wingLength, float taper
     }
     _chord2float(ws->_tipChord, _tip);    
     _wingSpan = 2 * _tip[1];
+    if (_area > 0.0f) {
+        _aspectRatio = _wingSpan*_wingSpan/_area;
+    }    
     _taper = ws->_tipChord.length / ((WingSection*)_sections.get(0))->_rootChord.length;
     return ws->_id;
 }
@@ -205,12 +208,12 @@ void Wing::setSectionStallParams(int section, StallParams sp)
     
 void Wing::setFlapPos(WingFlaps type,float lval, float rval)
 {
-    float min {-1};
+    float min {-1.0f};
     if (type == WING_SPOILER || type == WING_SLAT) {
-        min = 0;
+        min = 0.0f;
     }
-    lval = Math::clamp(lval, min, 1);
-    rval = Math::clamp(rval, min, 1);
+    lval = Math::clamp(lval, min, 1.0f);
+    rval = Math::clamp(rval, min, 1.0f);
     WingSection* ws;
     for (int section=0; section < _sections.size(); section++) 
     {        
@@ -340,12 +343,12 @@ void Wing::compile()
                 float twist = ws->_twist * frac;
 
                 ws->newSurface(_version, pos, ws->_orient, chord,
-                               hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist);
+                               hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist, _flow, _Mcrit);
 
                 if(_mirror) {
                     pos[1] = -pos[1];
                     ws->newSurface(_version, pos, ws->_rightOrient, chord,
-                                hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist);                
+                                hasFlap0, hasFlap1, hasSlat, hasSpoiler, weight, twist, _flow, _Mcrit);                
                 }
             }
         }
@@ -428,12 +431,13 @@ void Wing::WingSection::multiplyLiftRatio(float factor)
     setLiftRatio(_liftRatio * factor);
 }
 
-void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient, float chord, bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler, float weight, float twist)
+void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient, float chord, bool hasFlap0, bool hasFlap1, bool hasSlat, bool hasSpoiler, float weight, float twist, FlowRegime flow, float mcrit)
 {
     Surface* s = new Surface(_version, pos, weight);
 
     s->setOrientation(orient);
     s->setChord(chord);
+    s->setFlowRegime(flow);
 
     // Camber is expressed as a fraction of stall peak, so convert.
     s->setZeroAlphaLift(_camber*_stallParams.peak);
@@ -480,7 +484,10 @@ void Wing::WingSection::newSurface(Version* _version, float* pos, float* orient,
     if(hasSpoiler) _flapSurfs[WING_SPOILER].add(s);
 
     s->setInducedDrag(_inducedDrag);
-
+    if(flow == FLOW_TRANSONIC) {
+        s->setCriticalMachNumber(mcrit);
+    }
+    
     SurfRec *sr = new SurfRec();
     sr->surface = s;
     sr->weight = weight;

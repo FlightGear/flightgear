@@ -2,6 +2,7 @@
 #define _MATH_HPP
 
 #include <cmath>
+#include <vector>
 
 namespace yasim {
 
@@ -17,6 +18,18 @@ public:
     static float weightedMean(float x1, float w1, float x2, float w2) {
         return (x1*w1 + x2*w2)/(w1+w2);
     }
+
+    // calc polynomial
+    static float polynomial(const std::vector<float>& coefficients, float x) {
+        float powX {1}; // init = x^0 = 1
+        float result {0};
+        for (auto &coeff : coefficients) {
+            result += coeff * powX;
+            powX *= x;
+        }
+        return result;
+    }
+    
     // Simple wrappers around library routines
     static inline float abs(float f)  { return (float)::fabs(f); }
     static inline float sqrt(float f) { return (float)::sqrt(f); }
