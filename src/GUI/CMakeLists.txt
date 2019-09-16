@@ -186,6 +186,8 @@ if (HAVE_QT)
                         FGQQWindowManager.hxx
                         PathUrlHelper.cxx
                         PathUrlHelper.hxx
+                        DialogStateController.cxx
+                        DialogStateController.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

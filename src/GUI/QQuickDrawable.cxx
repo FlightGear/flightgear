@@ -39,14 +39,13 @@
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Viewer>
 
-//#include <GUI/DialogStateController.hxx>
+#include <GUI/DialogStateController.hxx>
 #include <GUI/FGQQWindowManager.hxx>
 #include <GUI/FGQmlInstance.hxx>
 #include <GUI/FGQmlPropertyNode.hxx>
-#include <Viewer/OSGQtAdaption.hxx>
-
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Viewer/OSGQtAdaption.hxx>
 #include <simgear/structure/commands.hxx>
 
 #if defined(HAVE_PUI)
@@ -464,7 +463,7 @@ QQuickDrawable::QQuickDrawable() : d(new QQuickDrawablePrivate)
 
         // QML types
         qmlRegisterType<FGQmlPropertyNode>("FlightGear", 1, 0, "Property");
-        //qmlRegisterType<DialogStateController>("FlightGear", 1, 0, "DialogStateController");
+        qmlRegisterType<DialogStateController>("FlightGear", 1, 0, "DialogStateController");
     }
 }
 

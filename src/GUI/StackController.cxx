@@ -31,9 +31,29 @@ QUrl StackController::currentPageSource() const
     return m_stack.front();
 }
 
-void StackController::push(QUrl page)
+QString StackController::currentPageTitle() const
+{
+    if (m_stack.empty())
+        return {};
+    return m_titles.front();
+}
+
+QString StackController::previousPageTitle() const
+{
+    if (m_titles.size() < 2)
+        return {};
+    return m_titles.at(1);
+}
+
+bool StackController::canGoBack() const
+{
+    return (m_stack.size() > 1);
+}
+
+void StackController::push(QUrl page, QString title)
 {
     m_stack.push_front(page);
+    m_titles.push_front(title);
     emit currentPageChanged();
 }
 
@@ -42,12 +62,16 @@ void StackController::pop()
     if (m_stack.empty())
         return;
     m_stack.pop_front();
+    m_titles.pop_front();
     emit currentPageChanged();
 }
 
-void StackController::replace(QUrl url)
+void StackController::replace(QUrl url, QString title)
 {
     m_stack.clear();
     m_stack.push_back(url);
+    m_titles.clear();
+    m_titles.push_back(title);
+
     emit currentPageChanged();
 }

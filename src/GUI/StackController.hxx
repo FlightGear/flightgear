@@ -32,20 +32,30 @@ class StackController : public QObject
 
     Q_PROPERTY(QUrl currentPageSource READ currentPageSource NOTIFY currentPageChanged)
 
+    Q_PROPERTY(bool canGoBack READ canGoBack NOTIFY currentPageChanged)
+
+    Q_PROPERTY(QString currentPageTitle READ currentPageTitle NOTIFY currentPageChanged)
+    Q_PROPERTY(QString previousPageTitle READ previousPageTitle NOTIFY currentPageChanged)
+
 public:
     StackController();
 
-    Q_INVOKABLE void push(QUrl page);
+    Q_INVOKABLE void push(QUrl page, QString title);
     Q_INVOKABLE void pop();
-    Q_INVOKABLE void replace(QUrl url);
+    Q_INVOKABLE void replace(QUrl url, QString title);
 
     QUrl currentPageSource() const;
+
+    bool canGoBack() const;
+    QString currentPageTitle() const;
+    QString previousPageTitle() const;
 
 signals:
     void currentPageChanged();
 
 private:
     QVector<QUrl> m_stack;
+    QVector<QString> m_titles;
 };
 
 #endif // FG_GUI_STACK_CONTROLLER_HXX
