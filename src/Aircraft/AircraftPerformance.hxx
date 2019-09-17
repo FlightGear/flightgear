@@ -18,6 +18,7 @@
 #ifndef AIRCRAFTPERFORMANCE_HXX
 #define AIRCRAFTPERFORMANCE_HXX
 
+#include <string>
 #include <vector>
 #include <functional>
 
