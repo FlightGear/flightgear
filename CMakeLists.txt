@@ -611,3 +611,23 @@ ADD_CUSTOM_TARGET(uninstall
 # The test suite.
 enable_testing()
 add_subdirectory(test_suite EXCLUDE_FROM_ALL)
+
+if(ENABLE_AUTOTESTING)
+    set(TEST_SUITE_COMMENT "Running the full FlightGear test suite.")
+    if(WIN32)
+        set(TEST_SUITE_COMMAND "run_test_suite.exe")
+        set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}")
+    else()
+        set(TEST_SUITE_COMMAND "run_test_suite")
+        set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}")
+    endif(WIN32)
+else()
+    set(TEST_SUITE_COMMENT "Building the FlightGear test suite.")
+endif(ENABLE_AUTOTESTING)
+
+add_custom_target(test_suite
+    ${TEST_SUITE_COMMAND}
+    DEPENDS run_test_suite
+    WORKING_DIRECTORY ${TEST_SUITE_WORKING_DIRECTORY}
+    COMMENT ${TEST_SUITE_COMMENT}
+)

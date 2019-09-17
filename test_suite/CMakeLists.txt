@@ -126,25 +126,6 @@ set_target_properties(run_test_suite
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
 )
-if(ENABLE_AUTOTESTING)
-    set(TEST_SUITE_COMMENT "Running the full FlightGear test suite.")
-    if(WIN32)
-        set(TEST_SUITE_COMMAND "run_test_suite.exe")
-        set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}")
-    else()
-        set(TEST_SUITE_COMMAND "run_test_suite")
-        set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}")
-    endif(WIN32)
-else()
-    set(TEST_SUITE_COMMENT "Building the FlightGear test suite.")
-endif(ENABLE_AUTOTESTING)
-
-add_custom_target(test_suite
-    ${TEST_SUITE_COMMAND}
-    DEPENDS run_test_suite
-    WORKING_DIRECTORY ${TEST_SUITE_WORKING_DIRECTORY}
-    COMMENT ${TEST_SUITE_COMMENT}
-)
 
 # Set up the target links.
 setup_fgfs_libraries(run_test_suite)
