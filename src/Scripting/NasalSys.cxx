@@ -503,11 +503,28 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
     return naNum(result);
 }
 
+
+struct SimNasalLogFileLine : SGPropertyChangeListener
+{
+    SimNasalLogFileLine() {
+        SGPropertyNode* node = fgGetNode("/sim/nasal-log-file-line", true /*create*/);
+        node->addChangeListener(this, true /*initial*/);
+    }
+    virtual void valueChanged(SGPropertyNode* node) {
+        _file_line = node->getIntValue();
+    }
+    
+    static bool _file_line;
+};
+
+bool    SimNasalLogFileLine::_file_line = false;
+
 // print() extension function.  Concatenates and prints its arguments
 // to the FlightGear log.  Uses the highest log level (SG_ALERT), to
 // make sure it appears.  Is there better way to do this?
 static naRef f_print(naContext c, naRef me, int argc, naRef* args)
 {
+    static SimNasalLogFileLine  snlfl;
     string buf;
     int n = argc;
     for(int i=0; i<n; i++) {
@@ -515,7 +532,27 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
         if(naIsNil(s)) continue;
         buf += naStr_data(s);
     }
-    SG_LOG(SG_NASAL, SG_ALERT, buf);
+    if (snlfl._file_line) {
+        /* Copy what SG_LOG() does, but use nasal file:line instead of
+        our own __FILE__ and __LINE__. */
+        if (sglog().would_log(SG_NASAL, SG_ALERT)) {
+            int frame = 0;
+            const char* file = naStr_data(naGetSourceFile(c, 0));
+            if (simgear::strutils::ends_with( file, "/globals.nas")) {
+                /* This generally means have been called by globals.nas's
+                printf function; go one step up the stack so we give the
+                file:line of the caller of printf, which is generally more
+                useful. */
+                frame += 1;
+                file = naStr_data(naGetSourceFile(c, frame));
+            }
+            int line = naGetLine(c, frame);
+            sglog().log(SG_NASAL, SG_ALERT, file, line, buf);
+        }
+    }
+    else {
+        SG_LOG(SG_NASAL, SG_ALERT, buf);
+    }
     return naNum(buf.length());
 }
 
