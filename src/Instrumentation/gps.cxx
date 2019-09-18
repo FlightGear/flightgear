@@ -61,7 +61,7 @@ static const char* makeTTWString(double TTW)
 GPS::Config::Config() :
   _enableTurnAnticipation(true),
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
-  _overflightDistance(0.0),
+  _overflightDistance(0.02),
   _overflightArmDistance(1.0),
   _overflightArmAngle(90.0),
   _waypointAlertTime(30.0),
