@@ -209,6 +209,77 @@ void RouteManagerTests::testDefaultSID()
     CPPUNIT_ASSERT(fp1->isActive());
 }
 
+void RouteManagerTests::testDirectToLegOnFlightplanAndResume()
+{
+ //   FGTestApi::setUp::logPositionToKML("rm_dto_resume_leg");
+
+    // this is very similar to the identiucally name dtest in GPSTests, but relies on the Nasal
+    // route manager delegate to perform the same task
+    FlightPlanRef fp1 = makeTestFP("EBBR", "07L", "EGGD", "27",
+                                   "NIK COA DVR TAWNY WOD");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    rm->setFlightPlan(fp1);
+   // FGTestApi::writeFlightPlanToKML(fp1);
+
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps", true);
+    auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
+
+    CPPUNIT_ASSERT(!strcmp("obs", gpsNode->getStringValue("mode")));
+    rm->activate();
+    
+    CPPUNIT_ASSERT(fp1->isActive());
+
+    FGTestApi::setPosition(fp1->departureRunway()->pointOnCenterline(0.0));
+    FGTestApi::runForTime(10.0); // let the GPS stabilize
+
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
+    CPPUNIT_ASSERT_EQUAL(std::string{"EBBR-07L"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    
+    CPPUNIT_ASSERT_EQUAL(0, rmNode->getIntValue("current-wp"));
+    auto wp0Node = rmNode->getNode("wp");
+    CPPUNIT_ASSERT(!strcmp("EBBR-07L", wp0Node->getStringValue("id")));
+    
+    auto wp1Node = rmNode->getNode("wp[1]");
+    CPPUNIT_ASSERT(!strcmp("NIK", wp1Node->getStringValue("id")));
+
+    // initiate a direct to
+    SGGeod p2 = fp1->departureRunway()->pointOnCenterline(5.0* SG_NM_TO_METER);
+    FGTestApi::setPosition(p2);
+
+    auto doverVOR = fp1->legAtIndex(3)->waypoint()->source();
+    
+    double distanceToDover = SGGeodesy::distanceNm(p2, doverVOR->geod());
+    double bearingToDover = SGGeodesy::courseDeg(p2, doverVOR->geod());
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"DVR"}, doverVOR->ident());
+    gpsNode->setStringValue("scratch/ident", "DVR");
+    gpsNode->setDoubleValue("scratch/longitude-deg", doverVOR->geod().getLongitudeDeg());
+    gpsNode->setDoubleValue("scratch/latitude-deg", doverVOR->geod().getLatitudeDeg());
+    gpsNode->setStringValue("command", "direct");
+    CPPUNIT_ASSERT_EQUAL(std::string{"dto"}, std::string{gpsNode->getStringValue("mode")});
+    
+    // check that upon reaching DOVER, we sequence to TAWNY and resume leg mode
+    // this is handled by the default delegate in Nasal
+    
+    SGGeod posNearDover = SGGeodesy::direct(p2, bearingToDover, (distanceToDover - 8.0) * SG_NM_TO_METER);
+    FGTestApi::setPosition(posNearDover);
+
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(posNearDover);
+    pilot->setSpeedKts(250);
+    pilot->flyGPSCourse(m_gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp1] () {
+        if (fp1->currentIndex() == 4) {
+            return true;
+        }
+        return false;
+    });
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
+}
+
 void RouteManagerTests::testDefaultApproach()
 {
     

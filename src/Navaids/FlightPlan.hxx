@@ -142,6 +142,17 @@ public:
     virtual void cruiseChanged()  { }
     virtual void cleared() { }
     virtual void activated() { }
+    
+      /**
+       * Invoked when the C++ code determines the active leg is done / next
+       * leg should be sequenced. The default route-manager delegate will
+       * advance to the next waypoint when handling this.
+       *
+       * If multiple delegates are installed, take special care not to sequence
+       * the waypoint twice.
+       */
+    virtual void sequence() { }
+    
     virtual void currentWaypointChanged() { }
     virtual void endOfFlightPlan() { }
   protected:
@@ -163,6 +174,8 @@ public:
   int currentIndex() const
   { return _currentIndex; }
 
+  void sequence();
+    
   void setCurrentIndex(int index);
 
   void activate();
@@ -331,6 +344,8 @@ public:
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
 private:
+  friend class Leg;
+  
   void lockDelegates();
   void unlockDelegates();
 

@@ -93,6 +93,12 @@ void initTestGlobals(const std::string& testName)
     
 bool logPositionToKML(const std::string& testName)
 {
+    // clear any previous state
+    if (global_loggingToKML) {
+        global_kmlStream.close();
+        global_lineStringOpen = false;
+    }
+    
     SGPath p = SGPath::desktop() / (testName + ".kml");
     global_kmlStream.open(p);
     if (!global_kmlStream.is_open()) {
@@ -322,6 +328,7 @@ void shutdownTestGlobals()
         global_kmlStream << "</Document>\n"
         "</kml>" << endl;
         global_kmlStream.close();
+        global_loggingToKML = false;
     }
 }
 

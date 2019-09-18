@@ -50,6 +50,8 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testOverflightSequencing);
     CPPUNIT_TEST(testOffcourseSequencing);
     CPPUNIT_TEST(testLegIntercept);
+    CPPUNIT_TEST(testDirectToLegOnFlightplanAndResumeBuiltin);
+    CPPUNIT_TEST(testBuiltinRevertToOBSAtEnd);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -80,6 +82,8 @@ public:
     void testOffcourseSequencing();
     void testOverflightSequencing();
     void testLegIntercept();
+    void testDirectToLegOnFlightplanAndResumeBuiltin();
+    void testBuiltinRevertToOBSAtEnd();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX

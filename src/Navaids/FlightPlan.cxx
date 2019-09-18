@@ -359,6 +359,15 @@ void FlightPlan::setCurrentIndex(int index)
   unlockDelegates();
 }
 
+void FlightPlan::sequence()
+{
+    lockDelegates();
+    for (auto d : _delegates) {
+        d->sequence();
+    }
+    unlockDelegates();
+}
+    
 void FlightPlan::finish()
 {
   if (_currentIndex == -1) {

@@ -45,9 +45,10 @@ class TestFPDelegate : public FlightPlan::Delegate
 public:
     FlightPlanRef thePlan;
     int sequenceCount = 0;
-#if 0
+
     void sequence() override
     {
+        
         ++sequenceCount;
         int newIndex = thePlan->currentIndex() + 1;
         if (newIndex >= thePlan->numLegs()) {
@@ -57,11 +58,11 @@ public:
         
         thePlan->setCurrentIndex(newIndex);
     }
-#endif
     
     void currentWaypointChanged() override
     {
     }
+    
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -292,6 +293,7 @@ void GPSTests::testLegMode()
     setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
 
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
 
     CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
@@ -307,9 +309,7 @@ void GPSTests::testLegMode()
     FGTestApi::runForTime(60.0);
 
     // check we sequenced to NIK
-#if 0
     CPPUNIT_ASSERT_EQUAL(1, testDelegate->sequenceCount);
-#endif
     CPPUNIT_ASSERT_EQUAL(1, fp->currentIndex());
 
     CPPUNIT_ASSERT_EQUAL(std::string{"EBBR-07L"}, std::string{gpsNode->getStringValue("wp/wp[0]/ID")});
@@ -336,9 +336,7 @@ void GPSTests::testLegMode()
     pilot->setCourseTrue(270);
     FGTestApi::runForTime(120.0);
 
-#if 0
     CPPUNIT_ASSERT_EQUAL(2, testDelegate->sequenceCount);
-#endif
     CPPUNIT_ASSERT_EQUAL(2, fp->currentIndex());
     CPPUNIT_ASSERT_EQUAL(std::string{"NIK"}, std::string{gpsNode->getStringValue("wp/wp[0]/ID")});
     CPPUNIT_ASSERT_EQUAL(std::string{"COA"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
@@ -417,6 +415,57 @@ void GPSTests::testLegMode()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(261.55, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
 }
 
+void GPSTests::testBuiltinRevertToOBSAtEnd()
+{
+    //FGTestApi::setUp::logPositionToKML("gps_route_end_revert_to_obs");
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
+                                             "NIK COA DVR TAWNY BDN");
+    
+   // FGTestApi::writeFlightPlanToKML(fp);
+
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    
+    CPPUNIT_ASSERT(rm->activate());
+    
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    
+    // move to point 18.0 nm after BDN
+    auto posNearApproach = fp->pointAlongRoute(5, 18.0);
+    setPositionAndStabilise(gps, posNearApproach);
+    fp->setCurrentIndex(6);
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(posNearApproach);
+    pilot->setSpeedKts(250);
+    pilot->flyGPSCourse(gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(600.0, [gpsNode] () {
+        const std::string mode = gpsNode->getStringValue("mode");
+        if (mode == "obs") {
+            return true;
+        }
+        return false;
+    });
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(std::string{"obs"}, std::string{gpsNode->getStringValue("mode")});
+    // should have deactivated
+    CPPUNIT_ASSERT_EQUAL(false, fp->isActive());
+}
+
 void GPSTests::testDirectToLegOnFlightplan()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
@@ -439,8 +488,9 @@ void GPSTests::testDirectToLegOnFlightplan()
     setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
-    
+
     CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
     CPPUNIT_ASSERT_EQUAL(std::string{"EBBR-07L"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
     
@@ -476,7 +526,72 @@ void GPSTests::testDirectToLegOnFlightplan()
     
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+}
+
+void GPSTests::testDirectToLegOnFlightplanAndResumeBuiltin()
+{
+    // this tests uses the legacy built-in sequencing behaviour of the GPS
+    // which is now handled by the Nasal delegate in some cases.
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+   // FGTestApi::setUp::logPositionToKML("gps_dto_resume_leg");
+
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
+                                             "NIK COA DVR TAWNY WOD");
     
+    //FGTestApi::writeFlightPlanToKML(fp);
+    
+    CPPUNIT_ASSERT(rm->activate());
+        auto gps = setupStandardGPS();
+    
+    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
+    CPPUNIT_ASSERT_EQUAL(std::string{"EBBR-07L"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(65.0, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(65.0, gpsNode->getDoubleValue("desired-course-deg"), 0.5);
+    
+    // initiate a direct to
+    SGGeod p2 = fp->departureRunway()->pointOnCenterline(5.0* SG_NM_TO_METER);
+    setPositionAndStabilise(gps, p2);
+    
+    auto doverVOR = fp->legAtIndex(3)->waypoint()->source();
+    
+    double distanceToDover = SGGeodesy::distanceNm(p2, doverVOR->geod());
+    double bearingToDover = SGGeodesy::courseDeg(p2, doverVOR->geod());
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"DVR"}, doverVOR->ident());
+    gpsNode->setStringValue("scratch/ident", "DVR");
+    gpsNode->setDoubleValue("scratch/longitude-deg", doverVOR->geod().getLongitudeDeg());
+    gpsNode->setDoubleValue("scratch/latitude-deg", doverVOR->geod().getLatitudeDeg());
+    gpsNode->setStringValue("command", "direct");
+    CPPUNIT_ASSERT_EQUAL(std::string{"dto"}, std::string{gpsNode->getStringValue("mode")});
+    
+    // check that upon reaching DOVER, we sequence to TAWNY and resume leg mode
+    // note this behaviour is from the old C++ sequencing
+    
+    SGGeod posNearDover = SGGeodesy::direct(p2, bearingToDover, (distanceToDover - 8.0) * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, posNearDover);
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(posNearDover);
+    pilot->setSpeedKts(250);
+    pilot->flyGPSCourse(gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 4) {
+            return true;
+        }
+        return false;
+    });
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
 }
 
 void GPSTests::testLongLeg()
@@ -495,8 +610,9 @@ void GPSTests::testLongLeg()
     fp->addDelegate(testDelegate);
     auto gps = setupStandardGPS();
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
-    
+
     // custom CDI deflection output
     gpsNode->setDoubleValue("config/cdi-max-deflection-nm", 20.0);
     
@@ -588,6 +704,7 @@ void GPSTests::testLongLegWestbound()
     auto gps = setupStandardGPS();
   
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
     // custom CDI deflection output
     gpsNode->setDoubleValue("config/cdi-max-deflection-nm", 25.0);
@@ -670,6 +787,7 @@ void GPSTests::testOverflightSequencing()
     auto gps = setupStandardGPS();
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
     
     // very tight tolerance on the overflight. We need a little bit or the
@@ -766,6 +884,7 @@ void GPSTests::testOffcourseSequencing()
     auto gps = setupStandardGPS();
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
     gpsNode->setDoubleValue("config/over-flight-distance-nm", 0.01);
     
@@ -912,6 +1031,7 @@ void GPSTests::testOffsetFlight()
     auto gps = setupStandardGPS();
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
     gpsNode->setDoubleValue("config/over-flight-distance-nm", 0.01);
     
@@ -1000,6 +1120,7 @@ void GPSTests::testLegIntercept()
     auto gps = setupStandardGPS();
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
     
     

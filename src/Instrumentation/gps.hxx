@@ -62,20 +62,20 @@ class GPS : public SGSubsystem,
 public:
     GPS (SGPropertyNode *node, bool defaultGPSMode = false);
     GPS ();
-    virtual ~GPS ();
+    virtual ~GPS();
 
-    // Subsystem API.
-    void bind() override;
+  // SGSubsystem interface
     void init() override;
     void reinit() override;
+    void bind() override;
     void unbind() override;
-    void update(double delta_time_sec) override;
+    void update (double delta_time_sec) override;
 
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "gps"; }
 
-    // RNAV interface
-    virtual SGGeod position();
+  // RNAV interface
+    SGGeod position() override;
     virtual double trackDeg();
     virtual double groundSpeedKts();
     virtual double vspeedFPM();
@@ -85,7 +85,8 @@ public:
     virtual double overflightArmDistanceM();
     virtual double overflightArmAngleDeg();
     virtual SGGeod previousLegWaypointPosition(bool& isValid);
-    double turnRadiusNm(const double groundSpeedKnots) override;
+
+    double turnRadiusNm(double groundSpeedKnots) override;
 private:
     friend class SearchFilter;
 
@@ -150,6 +151,8 @@ private:
          */
         bool followLegTrackToFix() const      { return _followLegTrackToFix; }
 
+        
+        bool delegateDoesSequencing() const    { return _delegateSequencing; }
     private:
         bool _enableTurnAnticipation;
 
@@ -182,6 +185,10 @@ private:
 
         // do we fly direct to fixes, or follow the leg track closely?
         bool _followLegTrackToFix;
+        
+        // do we handle waypoint sequencing ourselves, or let the delegate do it?
+        // default is we do it, for backwards compatability
+        bool _delegateSequencing = false;
     };
 
     class SearchFilter : public FGPositioned::Filter
@@ -317,17 +324,17 @@ private:
     void tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
                            const char* lonStr, const char* latStr, const char* altStr);
 
-    // FlightPlan::Delegate
-    virtual void currentWaypointChanged();
-    virtual void waypointsChanged();
-    virtual void cleared();
-    virtual void endOfFlightPlan();
-
-    void sequence();
+// FlightPlan::Delegate
+    void currentWaypointChanged() override;
+    void waypointsChanged() override;
+    void cleared() override;
+    void endOfFlightPlan() override;
+    
+    void doSequence();
     void routeManagerFlightPlanChanged(SGPropertyNode*);
     void routeActivated(SGPropertyNode*);
 
-    // members
+// members
     SGPropertyNode_ptr _gpsNode;
     SGPropertyNode_ptr _currentWayptNode;
     SGPropertyNode_ptr _magvar_node;

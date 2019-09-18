@@ -2362,6 +2362,11 @@ public:
   {
     callDelegateMethod("activated");
   }
+    
+  void sequence() override
+  {
+    callDelegateMethod("sequence");
+  }
 private:
 
   void callDelegateMethod(const char* method)
