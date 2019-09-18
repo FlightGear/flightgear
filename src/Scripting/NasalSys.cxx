@@ -186,6 +186,9 @@ public:
 
   bool isSingleShot() const
   { return _singleShot; }
+    
+  const std::string& name() const
+  { return _name; }
 private:
   std::string _name;
   FGNasalSys* _sys;
@@ -1072,6 +1075,10 @@ void FGNasalSys::shutdown()
     
     if (!_persistentTimers.empty()) {
         SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << _persistentTimers.size());
+        
+        for (auto pt : _persistentTimers) {
+            SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
+        }
     }
     
     _inited = false;
@@ -1157,7 +1164,7 @@ void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
 {
     if (! scripts.empty())
     {
-        SGPropertyNode* nasal = globals->get_props()->getNode("nasal");
+        SGPropertyNode* nasal = globals->get_props()->getNode("nasal", true);
         SGPropertyNode* module_node = nasal->getChild(moduleName,0,true);
         for (unsigned int i=0; i<scripts.size(); ++i) {
             SGPropertyNode* pFileNode = module_node->getChild("file",i,true);
