@@ -75,7 +75,7 @@ void RouteManagerTests::tearDown()
 
 void RouteManagerTests::testBasic()
 {
-    FGTestApi::setUp::logPositionToKML("rm_basic");
+    //FGTestApi::setUp::logPositionToKML("rm_basic");
     
     FlightPlanRef fp1 = makeTestFP("EGLC", "27", "EHAM", "06",
                                    "CLN IDESI RINIS VALKO RIVER RTM EKROS");
