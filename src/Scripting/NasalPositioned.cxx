@@ -1401,7 +1401,12 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   double elev = argc == 3 ? naNumValue(args[2]).num : 10000;
   const simgear::BVHMaterial *material;
   SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
-  if(!globals->get_scenery()->get_elevation_m(geod, elev, &material))
+    
+  const auto scenery = globals->get_scenery();
+  if (scenery == nullptr)
+    return naNil();
+    
+  if(!scenery->get_elevation_m(geod, elev, &material))
     return naNil();
 
   naRef vec = naNewVector(c);
