@@ -230,8 +230,7 @@ void GPSTests::testDirectTo()
     CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("scratch/valid"));
     
     gpsNode->setStringValue("command", "direct");
-    setPositionAndStabilise(gps, p1);
-
+    
     CPPUNIT_ASSERT_EQUAL(std::string{"dto"}, std::string{gpsNode->getStringValue("mode")});
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLongitudeDeg(), gpsNode->getDoubleValue("wp/wp[0]/longitude-deg"), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLatitudeDeg(), gpsNode->getDoubleValue("wp/wp[0]/latitude-deg"), 0.01);
@@ -254,11 +253,11 @@ void GPSTests::testDirectTo()
     SGGeod p3 = SGGeodesy::direct(p1, 210, 6.0 * SG_NM_TO_METER);
     SGGeod xtk = SGGeodesy::direct(p3, 120, 0.8 * SG_NM_TO_METER);
     setPositionAndStabilise(gps, xtk);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/ourse-error-nm"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     
     SGGeod xtk2 = SGGeodesy::direct(p3, 120, -1.8 * SG_NM_TO_METER);
     setPositionAndStabilise(gps, xtk2);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.8, gpsNode->getDoubleValue("wp/wp[1]/ourse-error-nm"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
 }
 
 void GPSTests::testNavRadioSlave()
@@ -276,7 +275,7 @@ void GPSTests::testLegMode()
     
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
-    FGTestApi::setUp::populateFP(fp, "EBBR", "07L", "EGGD", "27",
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                    "NIK COA DVR TAWNY WOD");
     
     // takes the place of the Nasal delegates
@@ -352,32 +351,67 @@ void GPSTests::testLegMode()
     // check course deviation / cross-track error
     SGGeod doverPos = fp->currentLeg()->waypoint()->position();
     double course = SGGeodesy::courseDeg(coaPos, doverPos);
-
+    double revCourse = SGGeodesy::courseDeg(doverPos, coaPos);
+    
+    setPositionAndStabilise(gps, coaPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(course, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
     
-    SGGeod off1 = SGGeodesy::direct(coaPos, course + 5.0, 8 * SG_NM_TO_METER);
+    SGGeod off1 = SGGeodesy::direct(doverPos, revCourse - 5.0, 16 * SG_NM_TO_METER);
     setPositionAndStabilise(gps, off1);
     
     double courseToDover = SGGeodesy::courseDeg(off1, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
 
-    // right of the desired course, negative sign, ho hum
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(-5.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    // left of the desired course, negative sign
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
     CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("wp/wp[1]/to-flag"));
     CPPUNIT_ASSERT_EQUAL(false, gpsNode->getBoolValue("wp/wp[1]/from-flag"));
     
-    SGGeod off2 = SGGeodesy::direct(doverPos, course - 5.0, -18 * SG_NM_TO_METER);
+    SGGeod off2 = SGGeodesy::direct(doverPos, revCourse + 8.0, 40 * SG_NM_TO_METER);
     setPositionAndStabilise(gps, off2);
     
     courseToDover = SGGeodesy::courseDeg(off2, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
-    // disabled becuase GPS course deviation is using from the FROM wp, when
-    // it should be using the TO point (DVR in this case)
-#if 0
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
-#endif
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-8.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+
     CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("wp/wp[1]/to-flag"));
     CPPUNIT_ASSERT_EQUAL(false, gpsNode->getBoolValue("wp/wp[1]/from-flag"));
+    
+    // check cross-track error calculation
+    SGGeod alongTrack = SGGeodesy::direct(coaPos, course, 20 * SG_NM_TO_METER);
+    SGGeod offTrack = SGGeodesy::direct(alongTrack, course + 90, SG_NM_TO_METER * 0.7);
+    
+    setPositionAndStabilise(gps, offTrack);
+    courseToDover = SGGeodesy::courseDeg(offTrack, doverPos);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.7, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    
+    SGGeod offTrack2 = SGGeodesy::direct(alongTrack, courseToDover - 90, SG_NM_TO_METER * 3.4);
+    setPositionAndStabilise(gps, offTrack2);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-3.4, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+
+    // check cross track very close to COA
+    SGGeod alongTrack11 = SGGeodesy::direct(coaPos, course, 0.3);
+    SGGeod offTrack25 = SGGeodesy::direct(alongTrack11, course + 90, SG_NM_TO_METER * -3.2);
+    setPositionAndStabilise(gps, offTrack25);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-3.2, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(course, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
+
+    // check cross track very close to DVR
+    double distanceCOA_DVR = SGGeodesy::distanceM(coaPos, doverPos);
+    SGGeod alongTrack2 = SGGeodesy::direct(coaPos, course, distanceCOA_DVR - 0.3);
+    SGGeod offTrack3 = SGGeodesy::direct(alongTrack2, course + 90, SG_NM_TO_METER * 1.6);
+    setPositionAndStabilise(gps, offTrack3);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.6, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(revCourse + 180.0, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
+
+    // check cross track in the middle
+    SGGeod alongTrack3 = SGGeodesy::direct(coaPos, course, distanceCOA_DVR * 0.52);
+    SGGeod offTrack4 = SGGeodesy::direct(alongTrack3, course + 90, SG_NM_TO_METER * 15.6);
+    setPositionAndStabilise(gps, offTrack4);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(15.6, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(261.55, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
 }
 
 void GPSTests::testDirectToLegOnFlightplan()
@@ -387,7 +421,7 @@ void GPSTests::testDirectToLegOnFlightplan()
     
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
-    FGTestApi::setUp::populateFP(fp, "EBBR", "07L", "EGGD", "27",
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                  "NIK COA DVR TAWNY WOD");
     
     // takes the place of the Nasal delegates
