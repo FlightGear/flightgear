@@ -330,6 +330,8 @@ GPS::update (double delta_time_sec)
       
       _desiredCourse = getLegMagCourse();
       
+      _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
+        
       updateTurn();
       updateRouteData();
     }
@@ -877,6 +879,12 @@ void GPS::wp1Changed()
     return;
   if (_mode == "leg") {
     _wayptController.reset(WayptController::createForWaypt(this, _currentWaypt));
+    if (_currentWaypt->type() == "hold") {
+      // pass the hold count through
+      auto leg = _route->currentLeg();
+      auto holdCtl = static_cast<flightgear::HoldCtl*>(_wayptController.get());
+      holdCtl->setHoldCount(leg->holdCount());
+    }
   } else if (_mode == "obs") {
     _wayptController.reset(new OBSController(this, _currentWaypt));
   } else if (_mode == "dto") {
@@ -884,11 +892,14 @@ void GPS::wp1Changed()
   }
 
   _wayptController->init();
+  _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
 
   if (_mode == "obs") {
     _legDistanceNm = -1.0;
   } else {
     _wayptController->update(0.0);
+    _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
+
     _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
     
     // synchronise these properties immediately
@@ -1158,7 +1169,9 @@ void GPS::setCommand(const char* aCmd)
       // use the current waypoint if one exists
       selectOBSMode(isScratchPositionValid() ? nullptr : _currentWaypt);
   } else if (!strcmp(aCmd, "leg")) {
-    selectLegMode();
+      selectLegMode();
+  } else if (!strcmp(aCmd, "exit-hold")) {
+      commandExitHold();
 #if FG_210_COMPAT
   } else if (!strcmp(aCmd, "load-route-wpt")) {
       loadRouteWaypoint();
@@ -1639,6 +1652,16 @@ void GPS::tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
   if (altStr) {
     tie(aNode, altStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getElevationFt, NULL));
   }
+}
+
+void GPS::commandExitHold()
+{
+    if (_currentWaypt && (_currentWaypt->type() == "hold")) {
+        auto holdCtl = static_cast<flightgear::HoldCtl*>(_wayptController.get());
+        holdCtl->exitHold();
+    } else {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:exit hold requested, but not currently in a hold");
+    }
 }
 
 

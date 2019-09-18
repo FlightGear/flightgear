@@ -272,11 +272,6 @@ public:
     } else {
       pos = wpt->position();
       posValid = true;
-      
-      if (ty == "hold") {
-        legCourseTrue = wpt->headingRadialDeg() + magVarFor(pos);
-        legCourseValid = true;
-      }
     } // of static waypt
   }
 
@@ -328,9 +323,7 @@ public:
           return;
       }
 
-      if ((wpt->type() == "hold") ||
-              (wpt->type() == "discontinuity") ||
-              (wpt->type()  == "via"))
+      if ((wpt->type() == "discontinuity") ||  (wpt->type()  == "via"))
       {
           // do nothing, we can't compute a valid leg course for these types
           // we'll generate sharp turns in the path but that's no problem.
@@ -941,10 +934,6 @@ SGGeodVec RoutePath::pathForIndex(int index) const
       return pathForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
   }
   
-  if (ty== "hold") {
-    return pathForHold((Hold*) d->waypoints[index].wpt.get());
-  }
-
     auto prevIt = d->previousValidWaypoint(index);
     if (prevIt != d->waypoints.end()) {
         prevIt->turnExitPath(r);
@@ -961,6 +950,13 @@ SGGeodVec RoutePath::pathForIndex(int index) const
     } // of have previous waypoint
 
     w.turnEntryPath(r);
+    
+    // hold is the normal leg and then the hold waypoints as well
+    if (ty== "hold") {
+        const auto h = static_cast<Hold*>(d->waypoints[index].wpt.get());
+        const auto holdPath = pathForHold(h);
+        r.insert(r.end(), holdPath.begin(), holdPath.end());
+    }
   
   if (ty == "runway") {
     // runways get an extra point, at the end. this is particularly

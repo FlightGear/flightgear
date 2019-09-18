@@ -251,7 +251,8 @@ private:
     void defineWaypoint();
     void insertWaypointAtIndex(int aIndex);
     void removeWaypointAtIndex(int aIndex);
-
+    void commandExitHold();
+    
     // tied-property getter/setters
     double getScratchDistance() const;
     double getScratchMagBearing() const;

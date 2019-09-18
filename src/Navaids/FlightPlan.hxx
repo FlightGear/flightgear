@@ -92,6 +92,18 @@ public:
     // return the next leg after this one
     Leg* nextLeg() const;
 
+    /**
+     * requesting holding at the waypoint upon reaching it. This will
+     * convert the waypt to a Hold if not already defined as one, but
+     * with default hold data.
+     *
+     * If the waypt is not of a type suitable for holding at, returns false
+     * (eg a runway or dynamic waypoint)
+     */
+    bool setHoldCount(int count);
+    
+    int holdCount() const;
+    
     unsigned int index() const;
 
     int altitudeFt() const;
@@ -123,6 +135,12 @@ public:
     int _speed = 0;
     int _altitudeFt = 0;
 
+    // if > 0, we will hold at the waypoint using
+    // the published hold side/course
+    // This only works if _waypt is a Hold, either defined by a procedure
+    // or modified to become one
+    int _holdCount = 0;
+      
     WayptRef _waypt;
     /// length of this leg following the flown path
     mutable double _pathDistance = -1.0;

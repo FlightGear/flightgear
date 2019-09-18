@@ -19,9 +19,11 @@
 
 #include "test_navRadio.hxx"
 #include "test_gps.hxx"
+#include "test_hold_controller.hxx"
 
 // Set up the unit tests.
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NavRadioTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(GPSTests, "Unit tests");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(HoldControllerTests, "Unit tests");
 
 
