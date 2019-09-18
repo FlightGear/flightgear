@@ -329,16 +329,16 @@ void GPSTests::testLegMode()
     const double legCourse = SGGeodesy::courseDeg(depRwy->end(), nikPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(legCourse, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
 
-#if 0
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(legCourse - 270, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
-#endif
+    const double crsToNIK = SGGeodesy::courseDeg(p2, nikPos);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToNIK - legCourse, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
     
     pilot->setSpeedKts(200);
     pilot->setCourseTrue(270);
     FGTestApi::runForTime(120.0);
 
-    
-   // CPPUNIT_ASSERT_EQUAL(2, testDelegate->sequenceCount);
+#if 0
+    CPPUNIT_ASSERT_EQUAL(2, testDelegate->sequenceCount);
+#endif
     CPPUNIT_ASSERT_EQUAL(2, fp->currentIndex());
     CPPUNIT_ASSERT_EQUAL(std::string{"NIK"}, std::string{gpsNode->getStringValue("wp/wp[0]/ID")});
     CPPUNIT_ASSERT_EQUAL(std::string{"COA"}, std::string{gpsNode->getStringValue("wp/wp[1]/ID")});
@@ -366,10 +366,8 @@ void GPSTests::testLegMode()
     
     double courseToDover = SGGeodesy::courseDeg(off1, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-5.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
 
-#if 0
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
-#endif
     CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("wp/wp[1]/to-flag"));
     CPPUNIT_ASSERT_EQUAL(false, gpsNode->getBoolValue("wp/wp[1]/from-flag"));
     
@@ -378,9 +376,7 @@ void GPSTests::testLegMode()
     
     courseToDover = SGGeodesy::courseDeg(off2, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
-#if 0
-   CPPUNIT_ASSERT_DOUBLES_EQUAL(-8.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
-#endif
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(8.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
     CPPUNIT_ASSERT_EQUAL(true, gpsNode->getBoolValue("wp/wp[1]/to-flag"));
     CPPUNIT_ASSERT_EQUAL(false, gpsNode->getBoolValue("wp/wp[1]/from-flag"));
     
@@ -411,17 +407,14 @@ void GPSTests::testLegMode()
     SGGeod offTrack3 = SGGeodesy::direct(alongTrack2, course + 90, SG_NM_TO_METER * 1.6);
     setPositionAndStabilise(gps, offTrack3);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.6, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
-#if 0
     CPPUNIT_ASSERT_DOUBLES_EQUAL(revCourse + 180.0, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
-#endif
+
     // check cross track in the middle
     SGGeod alongTrack3 = SGGeodesy::direct(coaPos, course, distanceCOA_DVR * 0.52);
     SGGeod offTrack4 = SGGeodesy::direct(alongTrack3, course + 90, SG_NM_TO_METER * 15.6);
     setPositionAndStabilise(gps, offTrack4);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-15.6, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
-#if 0
     CPPUNIT_ASSERT_DOUBLES_EQUAL(261.55, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
-#endif
 }
 
 void GPSTests::testDirectToLegOnFlightplan()

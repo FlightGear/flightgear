@@ -189,27 +189,25 @@ public:
 
   virtual void init()
   {
-	double courseOriginTarget;
 	bool isPreviousLegValid = false;
 
 	_waypointOrigin = _rnav->previousLegWaypointPosition(isPreviousLegValid);
 
-	courseOriginTarget 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
-
+	_initialLegCourse 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
 	_courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
 	_distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
 
 	// check reach the leg in 45Deg or going direct
-	bool canReachLeg = (fabs(courseOriginTarget -_courseAircraftToTarget) < 45.0);
+	bool canReachLeg = (fabs(_initialLegCourse -_courseAircraftToTarget) < 45.0);
 
-	if ( isPreviousLegValid && canReachLeg){
-		_targetTrack = courseOriginTarget;
-	}else{
-		_targetTrack = _courseAircraftToTarget;
-		_waypointOrigin	 = _rnav->position();
+	if (isPreviousLegValid && canReachLeg) {
+      _targetTrack = _initialLegCourse;
+	} else {
+      _targetTrack = _courseAircraftToTarget;
+      _initialLegCourse = _courseAircraftToTarget;
+      _waypointOrigin = _rnav->position();
 	}
-
   }
 
   virtual void update(double)
@@ -220,24 +218,69 @@ public:
     _courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
     _distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
-    _courseDev = -(_courseOriginToAircraft - _targetTrack);
+    // from the Aviation Formulary
+#if 0
+      Suppose you are proceeding on a great circle route from A to B (course =crs_AB) and end up at D,
+      perhaps off course. (We presume that A is ot a pole!) You can calculate the course from A to D
+      (crs_AD) and the distance from A to D (dist_AD) using the formulae above. In terms of these the
+      cross track error, XTD, (distance off course) is given by
+      
+      XTD =asin(sin(dist_AD)*sin(crs_AD-crs_AB))
+      (positive XTD means right of course, negative means left)
+      (If the point A is the N. or S. Pole replace crs_AD-crs_AB with
+       lon_D-lon_B or lon_B-lon_D, respectively.)
+#endif
+    // however, just for fun, our convention for polarity of the cross-track
+    // sign is opposite, so we add a -ve to the computation below.
+      
+    double distOriginAircraftRad = _distanceOriginAircraftMetre * SG_METER_TO_NM * SG_NM_TO_RAD;
+    double xtkRad = asin(sin(distOriginAircraftRad) * sin((_courseOriginToAircraft - _initialLegCourse) * SG_DEGREES_TO_RADIANS));
+      
+    // convert to NM and flip sign for consistency with existing code.
+    // since we derive the abeam point and course-deviation from this, and
+    // thus the GPS cdi-deflection, if we don't fix this here, the sign of
+    // all of those comes out backwards.
+    _crossTrackError = -(xtkRad * SG_RAD_TO_NM);
+
+    /*
+     The "along track distance", ATD, the distance from A along the course towards B
+     to the point abeam D is given by:
+     ATD=acos(cos(dist_AD)/cos(XTD))
+     */
+    double atd = acos(cos(distOriginAircraftRad) / cos(xtkRad));
+    const double atdM = atd * SG_RAD_TO_NM * SG_NM_TO_METER;
+    SGGeod abeamPoint = SGGeodesy::direct(_waypointOrigin, _initialLegCourse, atdM);
+    
+    // if we're close to the target point, we enter something similar to the VOR zone
+    // of confusion. Force target track to the final course from the origin.
+    if (_distanceAircraftTargetMetre < (SG_NM_TO_METER * 2.0)) {
+      _targetTrack = SGGeodesy::courseDeg(_waypt->position(), _waypointOrigin) + 180.0;
+      SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+    } else {
+      // use the abeam point to compute the desired course
+      double desiredCourse = SGGeodesy::courseDeg(abeamPoint, _waypt->position());
+      _targetTrack = desiredCourse;
+    }
+    
+    _courseDev = _courseAircraftToTarget - _targetTrack;
+    SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
 
     bool isMinimumOverFlightDistanceReached = _distanceAircraftTargetMetre < _rnav->overflightDistanceM();
     bool isOverFlightConeArmed 				= _distanceAircraftTargetMetre < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
-    bool leavingOverFlightCone 				= (fabs(_courseAircraftToTarget - _targetTrack) > _rnav->overflightArmAngleDeg());
-
-    if( isMinimumOverFlightDistanceReached ){
-    	_toFlag = false;
-    	setDone();
-    }else{
-		if( isOverFlightConeArmed ){
-			_toFlag = false;
-			if ( leavingOverFlightCone ) {
-				setDone();
-			}
-		}else{
-			_toFlag = true;
-		}
+    bool leavingOverFlightCone 				= (fabs(_courseDev) > _rnav->overflightArmAngleDeg());
+    
+    if ( isMinimumOverFlightDistanceReached ){
+      _toFlag = false;
+      setDone();
+    } else {
+      if( isOverFlightConeArmed ){
+        _toFlag = false;
+        if ( leavingOverFlightCone ) {
+          setDone();
+        }
+      }else{
+        _toFlag = true;
+      }
     }
   }
 
@@ -248,7 +291,7 @@ public:
 
   virtual double xtrackErrorNm() const
   {
-	  return greatCircleCrossTrackError(_distanceOriginAircraftMetre * SG_METER_TO_NM, _courseDev);
+    return _crossTrackError;
   }
 
   virtual bool toFlag() const
@@ -278,12 +321,14 @@ private:
    * A(from), B(to), D(position) perhaps off course
    */
   SGGeod _waypointOrigin;
+  double _initialLegCourse;
   double _distanceOriginAircraftMetre;
   double _distanceAircraftTargetMetre;
   double _courseOriginToAircraft;
   double _courseAircraftToTarget;
   double _courseDev;
   bool _toFlag;
+  double _crossTrackError;
 
 };
 

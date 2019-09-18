@@ -85,7 +85,7 @@ public:
     virtual double overflightArmDistanceM();
     virtual double overflightArmAngleDeg();
     virtual SGGeod previousLegWaypointPosition(bool& isValid);
-
+    double turnRadiusNm(const double groundSpeedKnots) override;
 private:
     friend class SearchFilter;
 

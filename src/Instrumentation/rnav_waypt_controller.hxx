@@ -77,6 +77,20 @@ public:
    */
   virtual SGGeod previousLegWaypointPosition(bool& isValid)= 0;
 
+  /**
+   * @brief compute turn radius based on current ground-speed
+   */
+  
+  double turnRadiusNm()
+  {
+    return turnRadiusNm(groundSpeedKts());
+  }
+  
+  /**
+   * @brief compute the turn radius (based on standard rate turn) for
+   * a given ground speed in knots.
+   */
+  virtual double turnRadiusNm(const double groundSpeedKnots) = 0;
 };
 
 class WayptController

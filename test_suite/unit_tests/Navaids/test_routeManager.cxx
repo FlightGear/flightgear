@@ -169,9 +169,6 @@ void RouteManagerTests::testBasic()
     // slightly rapid descent 
     pilot->setTargetAltitudeFtMSL(3000);
 
-    // temporary until GPS course / deviation fixes are merged
-    return;
-    
     ok = FGTestApi::runForTimeWithCheck(6000.0, [rmNode] () {
         if (rmNode->getIntValue("current-wp") == 7) return true;
         return false;

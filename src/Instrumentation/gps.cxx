@@ -723,6 +723,11 @@ double GPS::computeTurnProgress(double aBearing) const
   return (aBearing - startBearing) / _turnAngle;
 }
 
+double GPS::turnRadiusNm(const double groundSpeedKnots)
+{
+    return computeTurnRadiusNm(groundSpeedKnots);
+}
+
 void GPS::computeTurnData()
 {
   _computeTurnData = false;

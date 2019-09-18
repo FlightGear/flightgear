@@ -115,9 +115,7 @@ void TestPilot::updateValues(double dt)
     if (_gps && (_lateralMode == LateralMode::GPSCourse)) {
         const double deviationDeg = _gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg");
         _targetCourseDeg = _gpsNode->getDoubleValue("wp/leg-true-course-deg");
-        
-        // leave out for now
-        // _targetCourseDeg += deviationDeg;
+        _targetCourseDeg += deviationDeg;
         
         SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
         if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {
