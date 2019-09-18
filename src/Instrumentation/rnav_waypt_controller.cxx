@@ -699,8 +699,7 @@ void DirectToController::update(double)
   _courseAircraftToTarget		= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
   _distanceAircraftTargetMeter	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
-  _courseDev = -(courseOriginToAircraft - _targetTrack);
-
+  _courseDev = _courseAircraftToTarget - _targetTrack;
   SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
 
   bool isMinimumOverFlightDistanceReached 	= _distanceAircraftTargetMeter < _rnav->overflightDistanceM();
