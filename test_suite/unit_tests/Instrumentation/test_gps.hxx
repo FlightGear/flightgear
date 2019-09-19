@@ -44,6 +44,8 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testDirectTo);
     CPPUNIT_TEST(testLegMode);
     CPPUNIT_TEST(testDirectToLegOnFlightplan);
+    CPPUNIT_TEST(testLongLeg);
+    CPPUNIT_TEST(testLongLegWestbound);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -68,6 +70,8 @@ public:
     void testDirectTo();
     void testLegMode();
     void testDirectToLegOnFlightplan();
+    void testLongLeg();
+    void testLongLegWestbound();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX
