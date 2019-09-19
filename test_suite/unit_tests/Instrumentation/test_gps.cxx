@@ -645,6 +645,256 @@ void GPSTests::testLongLegWestbound()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(expectedDefl1 * 10.0, gpsNode->getDoubleValue("cdi-deflection"), 0.01);
 }
 
+void GPSTests::testOverflightSequencing()
+{
+    // check that we sequence as we pass over the top
+    
+    FGTestApi::setUp::logPositionToKML("gps_sequence");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    
+    // let's use New Zealand for some southern hemisphere confusion :)
+    
+    // this route has some deliberately sharp turns to work the turn code
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
+                                             "ALADA NS WB WN MAMOD KAPTI OH");
+    
+    FGTestApi::writeFlightPlanToKML(fp);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    
+    // very tight tolerance on the overflight. We need a little bit or the
+    // test-piot gets confused right on top
+    gpsNode->setDoubleValue("config/over-flight-distance-nm", 0.01);
+    
+    // enroute to NELSON VOR
+    fp->setCurrentIndex(2);
+    SGGeod pos = fp->pointAlongRoute(2, -5.0);
+    setPositionAndStabilise(gps, pos);
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(pos);
+    pilot->setSpeedKts(300); // decent speed to make things tougher
+    pilot->flyGPSCourse(gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 3) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // check we're on top of NELSON
+    auto nelsonVOR = fp->legAtIndex(2)->waypoint()->source();
+    CPPUNIT_ASSERT_EQUAL(std::string{"NELSON VOR-DME"}, nelsonVOR->name());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, SGGeodesy::distanceNm(globals->get_aircraft_position(),  nelsonVOR->geod()), 0.1);
+    
+    FGTestApi::runForTime(120.0);
+    // check we're on course to Woodburne
+    
+    auto woodbourneVOR = fp->legAtIndex(3)->waypoint()->source();
+    const double crsToWB = SGGeodesy::courseDeg(globals->get_aircraft_position(),  woodbourneVOR->geod());
+    const double crsNSWB = SGGeodesy::courseDeg(nelsonVOR->geod(), woodbourneVOR->geod());
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToWB, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsNSWB, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    // point a bit before MAMOD
+    SGGeod pos2 = fp->pointAlongRoute(5, -5.0);
+    setPositionAndStabilise(gps, pos2);
+    fp->setCurrentIndex(5);
+    auto mamod = fp->legAtIndex(5)->waypoint()->source();
+
+    ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 6) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // check we're on top of MAMOD
+    CPPUNIT_ASSERT_EQUAL(std::string{"MAMOD"}, mamod->name());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, SGGeodesy::distanceNm(globals->get_aircraft_position(),  mamod->geod()), 0.1);
+    
+    FGTestApi::runForTime(180.0);
+    // check we're on course to KAPTI
+    
+    auto kapti = fp->legAtIndex(6)->waypoint()->source();
+    const double crsKapti = SGGeodesy::courseDeg(globals->get_aircraft_position(),  kapti->geod());
+    const double crsMamodKapti = SGGeodesy::courseDeg(mamod->geod(), kapti->geod());
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsKapti, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsMamodKapti, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+}
+
+void GPSTests::testOffcourseSequencing()
+{
+    // ensure that if we pass through the overflight arm cone, but not
+    // over the waypoint direclty, we still sequence at the mid-point
+    
+    FGTestApi::setUp::logPositionToKML("gps_sequence_off");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    
+    
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
+                                             "ALADA NS WB WN MAMOD KAPTI OH");
+
+    FGTestApi::writeFlightPlanToKML(fp);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    gpsNode->setDoubleValue("config/over-flight-distance-nm", 0.01);
+    
+    // enroute to NELSON VOR
+    fp->setCurrentIndex(2);
+    SGGeod pos = fp->pointAlongRoute(2, -5.0);
+    
+    pos = SGGeodesy::direct(pos, 180, 1.5 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, pos);
+    
+    
+    auto nelsonVOR = fp->legAtIndex(2)->waypoint()->source();
+    CPPUNIT_ASSERT_EQUAL(std::string{"NELSON VOR-DME"}, nelsonVOR->name());
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(pos);
+    pilot->setSpeedKts(300); // decent speed to make things tougher
+    
+    // since we're south of the route, but will fly parallel to it, we won't
+    // pass over NELSON directly.
+    
+    const double legCourse =  gpsNode->getDoubleValue("wp/leg-true-course-deg");
+    pilot->turnToCourse(legCourse);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 3) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // check we're close NELSON
+    const double distToNELSON = SGGeodesy::distanceNm(globals->get_aircraft_position(),  nelsonVOR->geod());
+    CPPUNIT_ASSERT(distToNELSON < 1.0);
+    
+    const double bearingToNELSON = SGGeodesy::courseDeg(globals->get_aircraft_position(),  nelsonVOR->geod());
+    // find the inbound course from ALADA at NELSON
+    double finalLegTrack = SGGeodesy::courseDeg(nelsonVOR->geod(), fp->legAtIndex(1)->waypoint()->position()) + 180.0;
+    SG_NORMALIZE_RANGE(finalLegTrack, 0.0, 360.0);
+    
+    double dev = bearingToNELSON - finalLegTrack;
+    SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
+    double absDeviation = fabs(dev);
+    
+    // 90 is the overflight arm angle, i.e we sequence as soon as the waypoint is abeam us
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(90.0, absDeviation, 1.0);
+    
+    pilot->flyGPSCourse(gps);
+    FGTestApi::runForTime(120.0);
+    // check we're on course to Woodburne
+    
+    auto woodbourneVOR = fp->legAtIndex(3)->waypoint()->source();
+    const double crsToWB = SGGeodesy::courseDeg(globals->get_aircraft_position(),  woodbourneVOR->geod());
+    const double crsNSWB = SGGeodesy::courseDeg(nelsonVOR->geod(), woodbourneVOR->geod());
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToWB, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsNSWB, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+   
+    // let's go wide at MAMOD
+    SGGeod pos2 = fp->pointAlongRoute(5, -5.0);
+    pos2 = SGGeodesy::direct(pos2, 180, 0.8 * SG_NM_TO_METER);
+
+    fp->setCurrentIndex(5);
+    setPositionAndStabilise(gps, pos2);
+    // start facing the right way
+    pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    pilot->flyHeading(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    auto mamod = fp->legAtIndex(5)->waypoint()->source();
+    
+    ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 6) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // check we're on top of MAMOD
+    CPPUNIT_ASSERT_EQUAL(std::string{"MAMOD"}, mamod->name());
+    const double distToMAMOD = SGGeodesy::distanceNm(globals->get_aircraft_position(),  mamod->geod());
+    CPPUNIT_ASSERT(distToMAMOD < 1.0);
+    
+    // check the angle we sequenced at
+    const double bearingToMAMOD = SGGeodesy::courseDeg(globals->get_aircraft_position(),  mamod->geod());
+    // find the inbound course from WELLINGTON at MAMOD
+    finalLegTrack = SGGeodesy::courseDeg(mamod->geod(), fp->legAtIndex(4)->waypoint()->position()) + 180.0;
+    
+    SG_NORMALIZE_RANGE(finalLegTrack, 0.0, 360.0);
+    dev = bearingToMAMOD - finalLegTrack;
+    SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
+    absDeviation = fabs(dev);
+    
+    // 90 is the overflight arm angle, i.e we sequence as soon as the waypoint is abeam us
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(90.0, absDeviation, 1.0);
+    
+ 
+    // check we don't sequence, if we're too far off course
+    
+    SGGeod pos3 = fp->pointAlongRoute(6, -5.0);
+    pos3 = SGGeodesy::direct(pos3, 90, 1.8 * SG_NM_TO_METER);
+    
+    fp->setCurrentIndex(6);
+    setPositionAndStabilise(gps, pos3);
+    // start facing the right way
+    pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    pilot->flyHeading(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    
+    ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() != 6) {
+            CPPUNIT_ASSERT(false);
+            return true;
+        }
+        return false;
+    });
+    
+    
+}
+
+void GPSTests::testOffsetFlight()
+{
+    // verify the XTK value during waypoint transitions, especially that we
+    // don't get any weird discontinuities
+    
+}
+
 void GPSTests::testTurnAnticipation()
 {
 }

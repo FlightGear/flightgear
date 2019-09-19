@@ -3,10 +3,13 @@
 
 #include <string>
 #include <functional>
+#include <vector>
 
+#include <simgear/math/SGGeod.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
-class SGGeod;
+typedef std::vector<SGGeod> SGGeodVec;
+
 
 namespace flightgear
 {
@@ -21,7 +24,7 @@ namespace setUp {
 void initTestGlobals(const std::string& testName);
 
 bool logPositionToKML(const std::string& testName);
-
+    
 void initStandardNasal();
 
 void populateFPWithoutNasal(flightgear::FlightPlanRef f,
@@ -43,6 +46,10 @@ void runForTime(double t);
     using RunCheck = std::function<bool(void)>;
     
 bool runForTimeWithCheck(double t, RunCheck check);
+
+void writeFlightPlanToKML(flightgear::FlightPlanRef fp);
+    
+void writeGeodsToKML(const std::string &label, const SGGeodVec& geods);
     
 namespace tearDown {
 

@@ -113,9 +113,20 @@ void TestPilot::flyDirectTo(const SGGeod& target)
 void TestPilot::updateValues(double dt)
 {
     if (_gps && (_lateralMode == LateralMode::GPSCourse)) {
-        const double deviationDeg = _gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg");
+        double deviationDeg = _gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg");
         _targetCourseDeg = _gpsNode->getDoubleValue("wp/leg-true-course-deg");
-        _targetCourseDeg += deviationDeg;
+        
+        const double absDev = fabs(deviationDeg);
+        const double minInterceptAngle = 1.5;
+        // if we're getting close to the leg track, artifically keep the deviation a bit up,
+        // to avoid really slow convergence on it
+        if ((absDev > 0.05) && (absDev < minInterceptAngle)) {
+            deviationDeg = copysign(minInterceptAngle, deviationDeg);
+        }
+        
+        // set how aggressively we try to correct our course
+        const double courseCorrectionFactor = 8.0;
+        _targetCourseDeg += courseCorrectionFactor * deviationDeg;
         
         SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
         if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {
@@ -145,9 +156,14 @@ void TestPilot::updateValues(double dt)
                 errorDeg += 360.0;
             }
             
+            // clamp turn to error value
+            turnDeg = std::min(turnDeg, fabs(errorDeg));
+            
+            // and now ensure we follow the correct sign
             turnDeg = copysign(turnDeg, errorDeg);
+            
             // simple integral
-            _trueCourseDeg += std::min(turnDeg, errorDeg);
+            _trueCourseDeg += turnDeg;
             SG_NORMALIZE_RANGE(_trueCourseDeg, 0.0, 360.0);
         }
     }

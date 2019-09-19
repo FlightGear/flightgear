@@ -24,6 +24,7 @@
 #include <Airports/airport.hxx>
 #include <Navaids/FlightPlan.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/routePath.hxx>
 
 #include <Scripting/NasalSys.hxx>
 
@@ -270,6 +271,35 @@ bool runForTimeWithCheck(double t, RunCheck check)
     
     return false;
 }
+
+void writeFlightPlanToKML(flightgear::FlightPlanRef fp)
+{
+    RoutePath rpath(fp);
+    
+    SGGeodVec fullPath;
+    for (int i=0; i<fp->numLegs(); ++i) {
+        SGGeodVec legPath = rpath.pathForIndex(i);
+        fullPath.insert(fullPath.end(), legPath.begin(), legPath.end());
+    }
+    
+    writeGeodsToKML("FlightPlan", fullPath);
+}
+    
+void writeGeodsToKML(const std::string &label, const SGGeodVec& geods)
+{
+    if (global_lineStringOpen) {
+        endCurrentLineString();
+    }
+    
+    beginLineString(label);
+    
+    for (const auto& g : geods) {
+        logCoordinate(g);
+    }
+    
+    endCurrentLineString();
+}
+
     
 namespace tearDown {
 
