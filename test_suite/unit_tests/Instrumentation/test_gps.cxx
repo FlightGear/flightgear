@@ -649,7 +649,7 @@ void GPSTests::testOverflightSequencing()
 {
     // check that we sequence as we pass over the top
     
-    FGTestApi::setUp::logPositionToKML("gps_sequence");
+  //  FGTestApi::setUp::logPositionToKML("gps_sequence");
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
@@ -660,7 +660,7 @@ void GPSTests::testOverflightSequencing()
     FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
                                              "ALADA NS WB WN MAMOD KAPTI OH");
     
-    FGTestApi::writeFlightPlanToKML(fp);
+//    FGTestApi::writeFlightPlanToKML(fp);
     
     // takes the place of the Nasal delegates
     auto testDelegate = new TestFPDelegate;
@@ -747,7 +747,7 @@ void GPSTests::testOffcourseSequencing()
     // ensure that if we pass through the overflight arm cone, but not
     // over the waypoint direclty, we still sequence at the mid-point
     
-    FGTestApi::setUp::logPositionToKML("gps_sequence_off");
+ //   FGTestApi::setUp::logPositionToKML("gps_sequence_off");
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
@@ -756,7 +756,7 @@ void GPSTests::testOffcourseSequencing()
     FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
                                              "ALADA NS WB WN MAMOD KAPTI OH");
 
-    FGTestApi::writeFlightPlanToKML(fp);
+   // FGTestApi::writeFlightPlanToKML(fp);
     
     // takes the place of the Nasal delegates
     auto testDelegate = new TestFPDelegate;
@@ -893,6 +893,91 @@ void GPSTests::testOffsetFlight()
     // verify the XTK value during waypoint transitions, especially that we
     // don't get any weird discontinuities
     
+   // FGTestApi::setUp::logPositionToKML("gps_offset_flight");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    
+    
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "UHMA", "01", "PAMR", "25",
+                                             "SOMEG BE KIVAK BET");
+    
+   // FGTestApi::writeFlightPlanToKML(fp);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    gpsNode->setDoubleValue("config/over-flight-distance-nm", 0.01);
+    
+    // enroute to BERINGOVSKY NDB
+    fp->setCurrentIndex(2);
+ 
+    SGGeod pos = fp->pointAlongRoute(2, -10.0);
+    pos = SGGeodesy::direct(pos, 180, 2.0 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, pos);
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(pos);
+    pilot->setSpeedKts(300); // decent speed to make things tougher
+    
+    // start facing the right way
+    pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    pilot->flyGPSCourseOffset(gps, 0.8);
+    
+    FGTestApi::runForTime(90.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 3) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+
+    FGTestApi::runForTime(120.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+
+    // fly until we cross the awkward line :)
+    ok = FGTestApi::runForTimeWithCheck(6000.0, [] () {
+        const double lon = globals->get_aircraft_position().getLongitudeDeg();
+        if ((lon > -178.0) && (lon < -170.0)) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    
+    // and try an inside corrner
+    fp->setCurrentIndex(3);
+    pos = fp->pointAlongRoute(3, -18.0);
+    pos = SGGeodesy::direct(pos, 180, 2.0 * SG_NM_TO_METER);
+    setPositionAndStabilise(gps, pos);
+    pilot->resetAtPosition(pos);
+    // start facing the right way
+    pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    
+    FGTestApi::runForTime(120.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    
+    ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 4) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    FGTestApi::runForTime(120.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+
 }
 
 void GPSTests::testTurnAnticipation()

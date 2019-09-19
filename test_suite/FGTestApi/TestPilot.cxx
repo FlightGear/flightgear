@@ -103,6 +103,15 @@ void TestPilot::flyGPSCourse(GPS *gps)
     _lateralMode = LateralMode::GPSCourse;
     _turnActive = false;
 }
+    
+void TestPilot::flyGPSCourseOffset(GPS *gps, double offsetNm)
+{
+    _gps = gps;
+    _gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    _lateralMode = LateralMode::GPSOffset;
+    _courseOffsetNm = offsetNm;
+    _turnActive = false;
+}
 
 void TestPilot::flyDirectTo(const SGGeod& target)
 {
@@ -127,6 +136,22 @@ void TestPilot::updateValues(double dt)
         // set how aggressively we try to correct our course
         const double courseCorrectionFactor = 8.0;
         _targetCourseDeg += courseCorrectionFactor * deviationDeg;
+        
+        SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
+        if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {
+            _turnActive = true;
+        }
+    }
+    
+    if (_gps && (_lateralMode == LateralMode::GPSOffset)) {
+        _targetCourseDeg = _gpsNode->getDoubleValue("wp/leg-true-course-deg");
+
+        double crossTrack =  _gpsNode->getDoubleValue("wp/wp[1]/course-error-nm");
+        double offsetError = crossTrack - _courseOffsetNm;
+
+        const double offsetCorrectionFactor = 25.0;
+        const double correction = offsetError * offsetCorrectionFactor;
+        _targetCourseDeg += correction;
         
         SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
         if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {

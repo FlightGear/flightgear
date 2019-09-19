@@ -58,12 +58,16 @@ public:
     void flyHeading(double hdg);
     void flyDirectTo(const SGGeod& target);
     void flyGPSCourse(GPS *gps);
+    
+    void flyGPSCourseOffset(GPS *gps, double offsetNm);
+
 private:
     enum class LateralMode
     {
         Heading,
         Direct,
-        GPSCourse
+        GPSCourse,
+        GPSOffset
     };
     
     void updateValues(double dt);
@@ -83,6 +87,7 @@ private:
     LateralMode _lateralMode = LateralMode::Heading;
     SGGeod _targetPos;
     GPS* _gps = nullptr;
+    double _courseOffsetNm =0.0;
     
     SGPropertyNode_ptr _latProp;
     SGPropertyNode_ptr _lonProp;
