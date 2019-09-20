@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
@@ -26,6 +27,184 @@
 #include "logging.hxx"
 
 using namespace std;
+
+
+// The help message.
+void helpPrintout(std::ostream &stream) {
+    stream << "Usage: run_test_suite [options]" << std::endl << std::endl;
+    stream << "Options:" << std::endl;
+    stream << "  -h, --help            show this help message and exit." << std::endl;
+    stream << std::endl;
+    stream << "  Test selection options:" << std::endl;
+    stream << "    -s, --system-tests  execute the system/functional tests." << std::endl;
+    stream << "    -u, --unit-tests    execute the unit tests." << std::endl;
+    stream << "    -g, --gui-tests     execute the GUI tests." << std::endl;
+    stream << "    -m, --simgear-tests execute the simgear tests." << std::endl;
+    stream << "    -f, --fgdata-tests  execute the FGData tests." << std::endl;
+    stream << std::endl;
+    stream << "    The -s, -u, -g, and -m options accept an optional argument to perform a" << std::endl;
+    stream << "    subset of all tests.  This argument should either be the name of a test" << std::endl;
+    stream << "    suite or the full name of an individual test." << std::endl;
+    stream << std::endl;
+    stream << "    Full test names consist of the test suite name, the separator '::' and then" << std::endl;
+    stream << "    the individual test name.  The test names can revealed with the verbose" << std::endl;
+    stream << "    option." << std::endl;
+    stream << std::endl;
+    stream << "  Logging options:" << std::endl;
+    stream << "    --log-level={bulk,debug,info,warn,alert,popup,dev_warn,dev_alert}" << std::endl;
+    stream << "                        specify the minimum logging level to output" << std::endl;
+    stream << "    --log-class=[none, terrain, astro, flight, input, gl, view, cockpit," << std::endl;
+    stream << "                 general, math, event, aircraft, autopilot, io, clipper," << std::endl;
+    stream << "                 network, atc, nasal, instrumentation, systems, ai, environment," << std::endl;
+    stream << "                 sound, navaid, gui, terrasync, particles, headless, osg," << std::endl;
+    stream << "                 undefined, all]" << std::endl;
+    stream << "                        select the logging class(es) to output" << std::endl;
+    stream << "    --log-split         output the different non-interleaved log streams" << std::endl;
+    stream << "                        sequentially" << std::endl;
+    stream << std::endl;
+    stream << "  Verbosity options:" << std::endl;
+    stream << "    -t, --timings       verbose output including names and timings for all" << std::endl;
+    stream << "                        tests." << std::endl;
+    stream << "    -c, --ctest         simplified output suitable for running via CTest." << std::endl;
+    stream << "    -d, --debug         disable IO capture for debugging (super verbose output)." << std::endl;
+    stream << "    --no-summary        disable the final summary printout." << std::endl;
+    stream << std::endl;
+    stream << "  FG options:" << std::endl;
+    stream << "    --fg-root           the path to FGData" << std::endl;
+    stream << std::endl;
+    stream << "Environmental variables:" << std::endl;
+    stream << "  FG_TEST_LOG_LEVEL     equivalent to the --log-level option." << std::endl;
+    stream << "  FG_TEST_LOG_CLASS     equivalent to the --log-class option." << std::endl;
+    stream << "  FG_TEST_LOG_SPLIT     equivalent to the --log-split option." << std::endl;
+    stream << "  FG_TEST_TIMINGS       equivalent to the -t or --timings option." << std::endl;
+    stream << "  FG_TEST_DEBUG         equivalent to the -d or --debug option." << std::endl;
+    stream.flush();
+}
+
+
+// Convert the log class comma separated string list into a simgear debug class value.
+sgDebugClass processLogClass(std::string classList, bool &failure) {
+    // Declarations.
+    std::string logClassItem, val;
+    unsigned int logClass=0;
+
+    // Convert the command line value into a string array.
+    std::replace(classList.begin(), classList.end(), ',', ' ');
+    std::vector<std::string> logClasses;
+    stringstream temp(classList);
+    while (temp >> val)
+        logClasses.push_back(val);
+
+    // Build up the value.
+    for (auto const& logClassItem: logClasses)
+        if (logClassItem == "none")
+            logClass |= SG_NONE;
+        else if (logClassItem == "terrain")
+            logClass |= SG_TERRAIN;
+        else if (logClassItem == "astro")
+            logClass |= SG_ASTRO;
+        else if (logClassItem == "flight")
+            logClass |= SG_FLIGHT;
+        else if (logClassItem == "input")
+            logClass |= SG_INPUT;
+        else if (logClassItem == "gl")
+            logClass |= SG_GL;
+        else if (logClassItem == "view")
+            logClass |= SG_VIEW;
+        else if (logClassItem == "cockpit")
+            logClass |= SG_COCKPIT;
+        else if (logClassItem == "general")
+            logClass |= SG_GENERAL;
+        else if (logClassItem == "math")
+            logClass |= SG_MATH;
+        else if (logClassItem == "event")
+            logClass |= SG_EVENT;
+        else if (logClassItem == "aircraft")
+            logClass |= SG_AIRCRAFT;
+        else if (logClassItem == "autopilot")
+            logClass |= SG_AUTOPILOT;
+        else if (logClassItem == "io")
+            logClass |= SG_IO;
+        else if (logClassItem == "clipper")
+            logClass |= SG_CLIPPER;
+        else if (logClassItem == "network")
+            logClass |= SG_NETWORK;
+        else if (logClassItem == "atc")
+            logClass |= SG_ATC;
+        else if (logClassItem == "nasal")
+            logClass |= SG_NASAL;
+        else if (logClassItem == "instrumentation")
+            logClass |= SG_INSTR;
+        else if (logClassItem == "systems")
+            logClass |= SG_SYSTEMS;
+        else if (logClassItem == "ai")
+            logClass |= SG_AI;
+        else if (logClassItem == "environment")
+            logClass |= SG_ENVIRONMENT;
+        else if (logClassItem == "sound")
+            logClass |= SG_SOUND;
+        else if (logClassItem == "navaid")
+            logClass |= SG_NAVAID;
+        else if (logClassItem == "gui")
+            logClass |= SG_GUI;
+        else if (logClassItem == "terrasync")
+            logClass |= SG_TERRASYNC;
+        else if (logClassItem == "particles")
+            logClass |= SG_PARTICLES;
+        else if (logClassItem == "headless")
+            logClass |= SG_HEADLESS;
+        else if (logClassItem == "osg")
+            logClass |= SG_OSG;
+        else if (logClassItem == "undefined")
+            logClass |= SG_UNDEFD;
+        else if (logClassItem == "all")
+            logClass |= SG_ALL;
+        else {
+            std::cout << "The log class \"" << logClassItem << "\" must be one of:" << std::endl;
+            std::cout << "    {none, terrain, astro, flight, input, gl, view, cockpit, general, math," << std::endl;
+            std::cout << "    event, aircraft, autopilot, io, clipper, network, atc, nasal," << std::endl;
+            std::cout << "    instrumentation, systems, ai, environment, sound, navaid, gui, terrasync," << std::endl;
+            std::cout << "    particles, headless, osg, undefined, all}" << std::endl << std::endl;
+            std::cout.flush();
+            failure = true;
+        }
+
+    // Return a simgear debug class.
+    return sgDebugClass(logClass);
+}
+
+
+// Convert the log priority string into a simgear debug priority value.
+sgDebugPriority processLogPriority(std::string logLevel, bool &failure) {
+    // Declarations.
+    sgDebugPriority logPriority=SG_INFO;
+
+    // Conversion.
+    if (logLevel == "bulk")
+        logPriority = SG_BULK;
+    else if (logLevel == "debug")
+        logPriority = SG_DEBUG;
+    else if (logLevel == "info")
+        logPriority = SG_INFO;
+    else if (logLevel == "warn")
+        logPriority = SG_WARN;
+    else if (logLevel == "alert")
+        logPriority = SG_ALERT;
+    else if (logLevel == "popup")
+        logPriority = SG_POPUP;
+    else if (logLevel == "dev_warn")
+        logPriority = SG_DEV_WARN;
+    else if (logLevel == "dev_alert")
+        logPriority = SG_DEV_ALERT;
+    else {
+        std::cout << "The log level setting of \"" << logLevel << "\" must be one of {bulk,debug,info,warn,alert,popup,dev_warn,dev_alert}.\n\n";
+        std::cout.flush();
+        failure = true;
+    }
+
+    // Return the simgear debug priority.
+    return logPriority;
+}
 
 
 // Print out a summary of the relax test suite.
@@ -90,37 +269,60 @@ int main(int argc, char **argv)
     // Declarations.
     int         status_gui=-1, status_simgear=-1, status_system=-1, status_unit=-1, status_fgdata=-1;
     bool        run_system=false, run_unit=false, run_gui=false, run_simgear=false, run_fgdata=false;
-    bool        verbose=false, ctest_output=false, debug=false, printSummary=true, help=false;
+    bool        logSplit=false;
+    bool        timings=false, ctest_output=false, debug=false, printSummary=true, help=false;
     char        *subset_system=NULL, *subset_unit=NULL, *subset_gui=NULL, *subset_simgear=NULL, *subset_fgdata=NULL;
+    bool        failure=false;
     char        firstchar;
-    std::string fgRoot;
+    std::string arg, delim, fgRoot, logClassVal, logLevel;
+    size_t      delimPos;
+
+    // The default logging class and priority to show.
+    sgDebugClass    logClass=SG_ALL;
+    sgDebugPriority logPriority=SG_INFO;
+
+    // Process environmental variables before the command line options.
+    if (getenv("FG_TEST_LOG_LEVEL"))
+        logPriority = processLogPriority(getenv("FG_TEST_LOG_LEVEL"), failure);
+    if (getenv("FG_TEST_LOG_CLASS"))
+        logClass = processLogClass(getenv("FG_TEST_LOG_CLASS"), failure);
+    if (getenv("FG_TEST_LOG_SPLIT"))
+        logSplit = true;
+    if (getenv("FG_TEST_TIMINGS"))
+        timings = true;
+    if (getenv("FG_TEST_DEBUG"))
+        debug = true;
+    if (failure)
+        return 1;
 
     // Argument parsing.
     for (int i = 1; i < argc; i++) {
         firstchar = '\0';
+        arg = argv[i];
+
         if (i < argc-1)
             firstchar = argv[i+1][0];
 
         // System test.
-        if (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "--system-tests") == 0) {
+        if (arg == "-s" || arg == "--system-tests") {
             run_system = true;
             if (firstchar != '-')
                 subset_system = argv[i+1];
 
         // Unit test.
-        } else if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--unit-tests") == 0) {
+        } else if (arg == "-u" || arg == "--unit-tests") {
             run_unit = true;
             if (firstchar != '-')
                 subset_unit = argv[i+1];
 
         // GUI test.
-        } else if (strcmp(argv[i], "-g") == 0 || strcmp(argv[i], "--gui-tests") == 0) {
+        } else if (arg == "-g" || arg == "--gui-tests") {
             run_gui = true;
             if (firstchar != '-')
                 subset_gui = argv[i+1];
 
         // Simgear test.
-        } else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--simgear-tests") == 0) {
+        } else if (arg == "-m" || arg == "--simgear-tests") {
             run_simgear = true;
             if (firstchar != '-')
                 subset_simgear = argv[i+1];
@@ -131,28 +333,51 @@ int main(int argc, char **argv)
             if (firstchar != '-')
                 subset_fgdata = argv[i+1];
 
-        // Verbose output.
-        } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
-            verbose = true;
+        // Log class.
+        } else if (arg.find( "--log-class" ) == 0) {
+            // Process the command line.
+            logClass = SG_NONE;
+            delimPos = arg.find('=');
+            logClassVal = arg.substr(delimPos + 1);
+            logClass = processLogClass(logClassVal, failure);
+            if (failure)
+                return 1;
+
+        // Log level.
+        } else if (arg.find( "--log-level" ) == 0) {
+            // Process the command line level.
+            delimPos = arg.find('=');
+            logLevel = arg.substr(delimPos + 1);
+            logPriority = processLogPriority(logLevel, failure);
+            if (failure)
+                return 1;
+
+        // Log splitting.
+        } else if (arg == "--log-split") {
+            logSplit = true;
+
+        // Timing output.
+        } else if (arg == "-t" || arg == "--timings") {
+            timings = true;
 
         // CTest suitable output.
-        } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--ctest") == 0) {
+        } else if (arg == "-c" || arg == "--ctest") {
             ctest_output = true;
 
         // Debug output.
-        } else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0) {
+        } else if (arg == "-d" || arg == "--debug") {
             debug = true;
 
         // No summary output.
-        } else if (strcmp(argv[i], "--no-summary") == 0) {
+        } else if (arg == "--no-summary") {
             printSummary = false;
 
         // Help.
-        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+        } else if (arg == "-h" || arg == "--help") {
             help = true;
 
         // FGData path.
-        } else if (strcmp(argv[i], "--fg-root") == 0) {
+        } else if (arg == "--fg-root") {
             if (firstchar != '-')
                 fgRoot = argv[i+1];
         }
@@ -160,35 +385,7 @@ int main(int argc, char **argv)
 
     // Help.
     if (help) {
-        std::cout << "Usage: run_test_suite [options]" << std::endl << std::endl;
-        std::cout << "Options:" << std::endl;
-        std::cout << "  -h, --help            show this help message and exit." << std::endl;
-        std::cout << std::endl;
-        std::cout << "  Test selection options:" << std::endl;
-        std::cout << "    -s, --system-tests  execute the system/functional tests." << std::endl;
-        std::cout << "    -u, --unit-tests    execute the unit tests." << std::endl;
-        std::cout << "    -g, --gui-tests     execute the GUI tests." << std::endl;
-        std::cout << "    -m, --simgear-tests execute the simgear tests." << std::endl;
-        std::cout << "    -f, --fgdata-tests  execute the FGData tests." << std::endl;
-        std::cout << std::endl;
-        std::cout << "    The -s, -u, -g, and -m options accept an optional argument to perform a" << std::endl;
-        std::cout << "    subset of all tests.  This argument should either be the name of a test" << std::endl;
-        std::cout << "    suite or the full name of an individual test." << std::endl;
-        std::cout << std::endl;
-        std::cout << "    Full test names consist of the test suite name, the separator '::' and then" << std::endl;
-        std::cout << "    the individual test name.  The test names can revealed with the verbose" << std::endl;
-        std::cout << "    option." << std::endl;
-        std::cout << std::endl;
-        std::cout << "  Verbosity options:" << std::endl;
-        std::cout << "    -v, --verbose       verbose output including names and timings for all" << std::endl;
-        std::cout << "                        tests." << std::endl;
-        std::cout << "    -c, --ctest         simplified output suitable for running via CTest." << std::endl;
-        std::cout << "    -d, --debug         disable IO capture for debugging (super verbose output)." << std::endl;
-        std::cout << "    --no-summary        disable the final summary printout." << std::endl;
-        std::cout << std::endl;
-        std::cout << "  FG options:" << std::endl;
-        std::cout << "    --fg-root           the path to FGData" << std::endl;
-        std::cout.flush();
+        helpPrintout(std::cout);
         return 0;
     }
 
@@ -210,21 +407,21 @@ int main(int argc, char **argv)
     // Set up logging.
     sglog().setDeveloperMode(true);
     if (debug)
-        sglog().setLogLevels(SG_ALL, SG_BULK);
+        sglog().setLogLevels(sgDebugClass(logClass), logPriority);
     else
-        setupLogging();
+        setupLogging(sgDebugClass(logClass), logPriority, logSplit);
 
     // Execute each of the test suite categories.
     if (run_system)
-        status_system = testRunner("System tests", "System / functional tests", subset_system, verbose, ctest_output, debug);
+        status_system = testRunner("System tests", "System / functional tests", subset_system, timings, ctest_output, debug);
     if (run_unit)
-        status_unit = testRunner("Unit tests", "Unit tests", subset_unit, verbose, ctest_output, debug);
+        status_unit = testRunner("Unit tests", "Unit tests", subset_unit, timings, ctest_output, debug);
     if (run_gui && 0) // Disabled as there are no GUI tests yet.
-        status_gui = testRunner("GUI tests", "GUI tests", subset_gui, verbose, ctest_output, debug);
+        status_gui = testRunner("GUI tests", "GUI tests", subset_gui, timings, ctest_output, debug);
     if (run_simgear)
-        status_simgear = testRunner("Simgear unit tests", "Simgear unit tests", subset_simgear, verbose, ctest_output, debug);
+        status_simgear = testRunner("Simgear unit tests", "Simgear unit tests", subset_simgear, timings, ctest_output, debug);
     if (run_fgdata)
-        status_fgdata = testRunner("FGData tests", "FGData tests", subset_fgdata, verbose, ctest_output, debug);
+        status_fgdata = testRunner("FGData tests", "FGData tests", subset_fgdata, timings, ctest_output, debug);
 
     // Summary printout.
     if (printSummary && !ctest_output)
