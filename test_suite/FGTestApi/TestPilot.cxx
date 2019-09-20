@@ -19,6 +19,8 @@
 
 #include "TestPilot.hxx"
 
+#include <algorithm>
+
 #include <simgear/math/SGGeodesy.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/math/SGGeod.hxx>
@@ -135,7 +137,9 @@ void TestPilot::updateValues(double dt)
         
         // set how aggressively we try to correct our course
         const double courseCorrectionFactor = 8.0;
-        _targetCourseDeg += courseCorrectionFactor * deviationDeg;
+        double correction = courseCorrectionFactor * deviationDeg;
+        SG_CLAMP_RANGE(correction, -45.0, 45.0);
+        _targetCourseDeg += correction;
         
         SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
         if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {

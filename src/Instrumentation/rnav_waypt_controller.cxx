@@ -204,6 +204,8 @@ public:
 	if (isPreviousLegValid && canReachLeg) {
       _targetTrack = _initialLegCourse;
 	} else {
+      // can't reach the leg with out a crazy turn, just go direct to the
+      // destination waypt
       _targetTrack = _courseAircraftToTarget;
       _initialLegCourse = _courseAircraftToTarget;
       _waypointOrigin = _rnav->position();

@@ -980,6 +980,127 @@ void GPSTests::testOffsetFlight()
 
 }
 
+void GPSTests::testLegIntercept()
+{
+  //  FGTestApi::setUp::logPositionToKML("gps_intercept");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    
+        FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
+                                             "ALADA NS WB WN MAMOD KAPTI OH");
+    
+   // FGTestApi::writeFlightPlanToKML(fp);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setStringValue("command", "leg");
+    
+    
+    // enroute to NELSON VOR
+    fp->setCurrentIndex(2);
+    
+    
+    // point that should intercept
+    SGGeod pos = fp->pointAlongRoute(1, 5.0);
+    pos = SGGeodesy::direct(pos, 0, 12.0 * SG_NM_TO_METER);
+
+    setPositionAndStabilise(gps, pos);
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(pos);
+    pilot->setCourseTrue(180.0); // start facing an annoying direction
+    pilot->setSpeedKts(300); // decent speed to make things tougher
+    pilot->flyGPSCourse(gps);
+    
+    auto courseErrorNode = gpsNode->getNode("wp/wp[1]/course-error-nm");
+    bool ok = FGTestApi::runForTimeWithCheck(600.0, [courseErrorNode]() {
+        return fabs(courseErrorNode->getDoubleValue()) < 0.1;
+    });
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(2, fp->currentIndex()); // shouldn;t have sequenced
+    
+// repeat this test from right of the leg, and much further out
+    pos = fp->pointAlongRoute(1, -5.0);
+    pos = SGGeodesy::direct(pos, 240, 10.0 * SG_NM_TO_METER);
+    
+    // cycle the GPS mode to re-do the intercept logic
+    setPositionAndStabilise(gps, pos);
+    gpsNode->setStringValue("command", "obs");
+    gpsNode->setStringValue("command", "leg");
+
+    pilot->resetAtPosition(pos);
+    pilot->setCourseTrue(360.0);
+    pilot->setSpeedKts(300);
+    pilot->flyGPSCourse(gps);
+    
+    ok = FGTestApi::runForTimeWithCheck(600.0, [courseErrorNode]() {
+        return fabs(courseErrorNode->getDoubleValue()) < 0.1;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+// repeat much closer to NELSON
+    pos = fp->pointAlongRoute(2, -10.0);
+    pos = SGGeodesy::direct(pos, 180, 5.0 * SG_NM_TO_METER);
+    
+    // cycle the GPS mode to re-do the intercept logic
+    setPositionAndStabilise(gps, pos);
+    gpsNode->setStringValue("command", "obs");
+    gpsNode->setStringValue("command", "leg");
+    
+    pilot->resetAtPosition(pos);
+    pilot->setCourseTrue(300.0); // awkward course
+    pilot->setSpeedKts(300);
+    pilot->flyGPSCourse(gps);
+    
+    ok = FGTestApi::runForTimeWithCheck(600.0, [courseErrorNode]() {
+        return fabs(courseErrorNode->getDoubleValue()) < 0.1;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+// now try a start location well outside the 45-degree envelope
+    pos = fp->pointAlongRoute(2, -5.0);
+    pos = SGGeodesy::direct(pos, 160, 18.0 * SG_NM_TO_METER);
+    
+    // cycle the GPS mode to re-do the intercept logic
+    setPositionAndStabilise(gps, pos);
+    gpsNode->setStringValue("command", "obs");
+    gpsNode->setStringValue("command", "leg");
+    
+    pilot->resetAtPosition(pos);
+    pilot->setCourseTrue(45.0); // awkward course
+    pilot->setSpeedKts(300);
+    pilot->flyGPSCourse(gps);
+    
+    auto nelsonVORPos = fp->legAtIndex(2)->waypoint()->position();
+    const double crsToNS = SGGeodesy::courseDeg(globals->get_aircraft_position(), nelsonVORPos);
+    const double crsFromStart = SGGeodesy::courseDeg(pos, nelsonVORPos);
+    
+    // we should be established on a direct to, from our start pos, let's check
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToNS, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsFromStart, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    // run until we sequence, which should happen as normal
+    ok = FGTestApi::runForTimeWithCheck(6000.0, [fp] () {
+        if (fp->currentIndex() == 3) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // check we manage the punishing turn back onto track
+    FGTestApi::runForTime(180.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+}
+
 void GPSTests::testTurnAnticipation()
 {
 }
