@@ -498,6 +498,14 @@ GPS::updateBasicData(double dt)
   double track2_deg;
   SGGeodesy::inverse(_last_pos, _indicated_pos, _last_true_track, track2_deg, distance_m );
     
+// detect repositions
+// setting this value high enough hypersonic aircraft but not spaceships
+  if ((distance_m / dt) > 100000.0) {
+    SG_LOG(SG_INSTR, SG_DEBUG, "GPS detected reposition, resetting data");
+    _dataValid = false;
+    return;
+  }
+    
   double speed_kt = ((distance_m * SG_METER_TO_NM) * ((1 / dt) * 3600.0));
   double vertical_speed_mpm = ((_indicated_pos.getElevationM() - _last_pos.getElevationM()) * 60 / dt);
   _last_vertical_speed = vertical_speed_mpm * SG_METER_TO_FEET;
