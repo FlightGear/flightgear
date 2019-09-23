@@ -599,6 +599,19 @@ static void waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldNa
       if (!naIsString(value)) naRuntimeError(c, "fly_type must be a string");
       bool flyOver = (strcmp(naStr_data(value), "flyOver") == 0);
       wpt->setFlag(WPT_OVERFLIGHT, flyOver);
+  } else if (wpt->type() == "hold") {
+      const auto hold = static_cast<Hold*>(wpt);
+      if (!strcmp(fieldName, "hold_heading_radial_deg")) {
+          if (!naIsNum(value)) naRuntimeError(c, "set hold_heading_radial_deg: invalid hold radial");
+          hold->setHoldRadial(value.num);
+      } else if (!strcmp("hold_is_left_handed", fieldName)) {
+          bool leftHanded = static_cast<int>(value.num) > 0;
+          if (leftHanded) {
+              hold->setLeftHanded();
+          } else{
+            hold->setRightHanded();
+          }
+      }
   }
 }
 
@@ -711,6 +724,8 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
     *out = naNewFunc(c, naNewCCode(c, f_fpLeg_navaid));
   } else if (!strcmp(fieldName, "runway")) {
     *out = naNewFunc(c, naNewCCode(c, f_fpLeg_runway));
+  } else if (!strcmp(fieldName, "hold_count")) {
+    *out = naNum(leg->holdCount());
   } else { // check for fields defined on the underlying waypoint
     return waypointCommonGetMember(c, wpt, fieldName, out);
   }
@@ -730,7 +745,13 @@ static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
 
-  waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
+  if (!strcmp(fieldName, "hold_count")) {
+    const int count = static_cast<int>(value.num);
+    // this may upgrade the waypoint to a hold
+    leg->setHoldCount(count);
+  } else {
+    waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
+  }
 }
 
 static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, naRef* out)
