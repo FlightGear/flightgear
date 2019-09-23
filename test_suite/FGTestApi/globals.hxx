@@ -8,13 +8,12 @@
 #include <simgear/math/SGGeod.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
-typedef std::vector<SGGeod> SGGeodVec;
-
-
 namespace flightgear
 {
     class FlightPlan;
     typedef SGSharedPtr<FlightPlan> FlightPlanRef;
+    
+    typedef std::vector<SGGeod> SGGeodVec;
 }
 
 namespace FGTestApi {
@@ -49,7 +48,7 @@ bool runForTimeWithCheck(double t, RunCheck check);
 
 void writeFlightPlanToKML(flightgear::FlightPlanRef fp);
     
-void writeGeodsToKML(const std::string &label, const SGGeodVec& geods);
+void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geods);
     
 namespace tearDown {
 

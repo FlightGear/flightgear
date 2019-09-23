@@ -291,7 +291,7 @@ void writeFlightPlanToKML(flightgear::FlightPlanRef fp)
     writeGeodsToKML("FlightPlan", fullPath);
 }
     
-void writeGeodsToKML(const std::string &label, const SGGeodVec& geods)
+void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geods)
 {
     if (global_lineStringOpen) {
         endCurrentLineString();
