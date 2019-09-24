@@ -104,6 +104,9 @@ public:
     
     int holdCount() const;
     
+      
+    bool convertWaypointToHold();
+      
     unsigned int index() const;
 
     int altitudeFt() const;
@@ -122,6 +125,12 @@ public:
     double distanceNm() const;
     double distanceAlongRoute() const;
 
+    /**
+     * helper function, if the waypoint is modified in some way, to
+     * notify the flightplan owning this leg, and hence any delegates
+     * obsering us
+     */
+    void markWaypointDirty();
   private:
     friend class FlightPlan;
 

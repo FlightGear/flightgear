@@ -38,17 +38,22 @@ void populateFPWithNasal(flightgear::FlightPlanRef f,
     
 }  // End of namespace setUp.
 
+// helpers during tests
+    
 void setPosition(const SGGeod& g);
-
+void setPositionAndStabilise(const SGGeod& g);
+    
 void runForTime(double t);
 
-    using RunCheck = std::function<bool(void)>;
+using RunCheck = std::function<bool(void)>;
     
 bool runForTimeWithCheck(double t, RunCheck check);
 
 void writeFlightPlanToKML(flightgear::FlightPlanRef fp);
     
 void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geods);
+
+bool executeNasal(const std::string& code);
     
 namespace tearDown {
 

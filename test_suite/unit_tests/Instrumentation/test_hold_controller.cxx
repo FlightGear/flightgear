@@ -124,14 +124,14 @@ void HoldControllerTests::setupRouteManager()
 
 void HoldControllerTests::testHoldEntryDirect()
 {
-    FGTestApi::setUp::logPositionToKML("hold_direct_entry");
+  //  FGTestApi::setUp::logPositionToKML("hold_direct_entry");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                  "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+   // FGTestApi::writeFlightPlanToKML(fp);
 
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -238,14 +238,14 @@ void HoldControllerTests::testHoldEntryDirect()
 
 void HoldControllerTests::testHoldEntryTeardrop()
 {
-    FGTestApi::setUp::logPositionToKML("hold_teardrop_entry");
+  //  FGTestApi::setUp::logPositionToKML("hold_teardrop_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -352,14 +352,14 @@ void HoldControllerTests::testHoldEntryTeardrop()
 
 void HoldControllerTests::testHoldEntryParallel()
 {
-    FGTestApi::setUp::logPositionToKML("hold_parallel_entry");
+    //FGTestApi::setUp::logPositionToKML("hold_parallel_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+ //   FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -456,14 +456,14 @@ void HoldControllerTests::testHoldEntryParallel()
 
 void HoldControllerTests::testLeftHoldEntryDirect()
 {
-    FGTestApi::setUp::logPositionToKML("hold_left_direct_entry");
+ //   FGTestApi::setUp::logPositionToKML("hold_left_direct_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -571,14 +571,14 @@ void HoldControllerTests::testLeftHoldEntryDirect()
 
 void HoldControllerTests::testLeftHoldEntryTeardrop()
 {
-    FGTestApi::setUp::logPositionToKML("hold_left_teardrop_entry");
+    //FGTestApi::setUp::logPositionToKML("hold_left_teardrop_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+   // FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -683,14 +683,14 @@ void HoldControllerTests::testLeftHoldEntryTeardrop()
 
 void HoldControllerTests::testLeftHoldEntryParallel()
 {
-    FGTestApi::setUp::logPositionToKML("hold_left_parallel_entry");
+  //  FGTestApi::setUp::logPositionToKML("hold_left_parallel_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -789,14 +789,14 @@ void HoldControllerTests::testLeftHoldEntryParallel()
 
 void HoldControllerTests::testHoldNotEntered()
 {
-    FGTestApi::setUp::logPositionToKML("hold_no_entry");
+   // FGTestApi::setUp::logPositionToKML("hold_no_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -877,14 +877,14 @@ void HoldControllerTests::testHoldNotEntered()
 
 void HoldControllerTests::testHoldEntryOffCourse()
 {
-    FGTestApi::setUp::logPositionToKML("hold_entry_off-course");
+  //  FGTestApi::setUp::logPositionToKML("hold_entry_off-course");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;

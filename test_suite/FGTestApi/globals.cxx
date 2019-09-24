@@ -230,6 +230,15 @@ void setPosition(const SGGeod& g)
     globals->get_props()->setDoubleValue("position/longitude-deg", g.getLongitudeDeg());
     globals->get_props()->setDoubleValue("position/altitude-ft", g.getElevationFt());
 }
+    
+void setPositionAndStabilise(const SGGeod& g)
+{
+    setPosition(g);
+    for (int i=0; i<60; ++i) {
+       globals->get_subsystem_mgr()->update(0.015);
+    }
+}
+
 
 void runForTime(double t)
 {
@@ -306,6 +315,22 @@ void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geod
     endCurrentLineString();
 }
 
+bool executeNasal(const std::string& code)
+{
+    auto nasal = globals->get_subsystem<FGNasalSys>();
+    if (!nasal) {
+        throw sg_exception("Nasal not available");
+    }
+    
+    std::string output, errors;
+    bool ok = nasal->parseAndRunWithOutput(code, output, errors);
+    if (!errors.empty()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Errors running Nasal:" << errors);
+        return false;
+    }
+    
+    return ok;
+}
     
 namespace tearDown {
 

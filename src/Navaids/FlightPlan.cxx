@@ -1576,45 +1576,54 @@ double FlightPlan::Leg::distanceAlongRoute() const
   return _distanceAlongPath;
 }
   
+    
+bool FlightPlan::Leg::convertWaypointToHold()
+{
+  const auto wty = _waypt->type();
+  if (wty == "hold") {
+    return true;
+  }
+  
+  if ((wty != "basic") && (wty != "navaid")) {
+    SG_LOG(SG_INSTR, SG_WARN, "convertWaypointToHold: cannot convert waypt " << index() << " " << _waypt->ident() << " to a hold");
+    return false;
+  }
+  
+  auto hold = new Hold(_waypt->position(), _waypt->ident(), const_cast<FlightPlan*>(_parent));
+  
+  // default to a 1 minute hold with the radial being our arrival radial
+  hold->setHoldTime(60.0);
+  hold->setHoldRadial(_courseDeg);
+  _waypt = hold;  // we drop our reference to the old waypoint
+  
+  markWaypointDirty();
+  
+  return true;
+}
+    
 bool FlightPlan::Leg::setHoldCount(int count)
 {
   if (count == 0) {
     _holdCount = count;
     return true;
   }
-  
-  const auto wty = _waypt->type();
-  bool fireWaypointsChanged = false;
-  
-  if (wty != "hold") {
-    // upgrade to a hold if possible
-    if ((wty == "basic") || (wty == "navaid")) {
-      auto hold = new Hold(_waypt->position(), _waypt->ident(), const_cast<FlightPlan*>(_parent));
-      
-      // default to a 1 minute hold with the radial being our arrival radial
-      hold->setHoldTime(60.0);
-      hold->setHoldRadial(_courseDeg);
-      fireWaypointsChanged = true;
-      _waypt = hold;  // we drop our reference to the old waypoint
-    } else {
-      SG_LOG(SG_INSTR, SG_WARN, "setHoldCount: cannot convert waypt " << index() << " " << _waypt->ident() << " to a hold");
-      return false;
-    }
+    
+  if (!convertWaypointToHold()) {
+    return false;
   }
   
   _holdCount = count;
+  markWaypointDirty();
+  return true;
+}
   
-  if (fireWaypointsChanged) {
-    SG_LOG(SG_INSTR, SG_INFO, "setHoldCount: changed waypoint type, notifying deleagtes the FP changed");
-
+  void FlightPlan::Leg::markWaypointDirty()
+  {
     auto fp = owner();
     fp->lockDelegates();
     fp->_waypointsChanged = true;
     fp->unlockDelegates();
   }
-  
-  return true;
-}
   
 int FlightPlan::Leg::holdCount() const
 {

@@ -567,8 +567,8 @@ void GPS::currentWaypointChanged()
   int index = _route->currentIndex(),
     count = _route->numLegs();
   if ((index < 0) || (index >= count)) {
-    _currentWaypt=NULL;
-    _prevWaypt=NULL;
+    _currentWaypt=nullptr;
+    _prevWaypt=nullptr;
     // no active leg on the route
     return;
   }

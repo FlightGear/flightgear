@@ -584,7 +584,7 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
   return "";
 }
 
-static void waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldName, naRef value)
+static bool waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldName, naRef value)
 {
   if (!strcmp(fieldName, "wp_role")) {
     if (!naIsString(value)) naRuntimeError(c, "wp_role must be a string");
@@ -612,7 +612,12 @@ static void waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldNa
             hold->setRightHanded();
           }
       }
+  } else {
+      // nothing changed
+      return false;
   }
+    
+    return true;
 }
 
 static const char* wayptGhostGetMember(naContext c, void* g, naRef field, naRef* out)
@@ -744,13 +749,25 @@ static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
 {
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
-
+  
+  bool didChange = false;
   if (!strcmp(fieldName, "hold_count")) {
     const int count = static_cast<int>(value.num);
     // this may upgrade the waypoint to a hold
-    leg->setHoldCount(count);
+    if (!leg->setHoldCount(count))
+      naRuntimeError(c, "unable to set hold on leg waypoint: maybe unsuitable waypt type?");
+  } else if (!strcmp(fieldName, "hold_heading_radial_deg")) {
+    if (!leg->convertWaypointToHold())
+      naRuntimeError(c, "couldn't convert leg waypoint into a hold");
+    
+    // now we can call the base method
+    didChange = waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
   } else {
-    waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
+    didChange = waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
+  }
+  
+  if (didChange) {
+    leg->markWaypointDirty();
   }
 }
 

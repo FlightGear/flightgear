@@ -37,7 +37,7 @@ class RouteManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testDefaultSID);
     CPPUNIT_TEST(testDefaultApproach);
     CPPUNIT_TEST(testDirectToLegOnFlightplanAndResume);
-    
+    CPPUNIT_TEST(testHoldFromNasal);
     CPPUNIT_TEST_SUITE_END();
 
    // void setPositionAndStabilise(FGNavRadio* r, const SGGeod& g);
@@ -56,7 +56,7 @@ public:
     void testDefaultSID();
     void testDefaultApproach();
     void testDirectToLegOnFlightplanAndResume();
-    
+    void testHoldFromNasal();
 private:
     GPS* m_gps = nullptr;
 };

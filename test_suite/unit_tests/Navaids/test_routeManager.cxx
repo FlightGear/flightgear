@@ -198,7 +198,6 @@ void RouteManagerTests::testDefaultSID()
     auto rm = globals->get_subsystem<FGRouteMgr>();
     rm->setFlightPlan(fp1);
     
-    auto gpsNode = globals->get_props()->getNode("instrumentation/gps", true);
     auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
     rmNode->setStringValue("departure/sid", "DEFAULT");
     
@@ -285,3 +284,130 @@ void RouteManagerTests::testDefaultApproach()
     
 }
 
+void RouteManagerTests::testHoldFromNasal()
+{
+   // FGTestApi::setUp::logPositionToKML("rm_hold_from_nasal");
+
+    // test that Nasal can set a hold-count (implicitly converting a leg
+    // to a Hold waypt), configure the hold radial, and exit the hold
+    
+    FlightPlanRef fp1 = makeTestFP("NZCH", "02", "NZAA", "05L",
+                                   "ALADA NS WB WN MAMOD KAPTI OH");
+    fp1->setIdent("testplan");
+    fp1->setCruiseFlightLevel(360);
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    rm->setFlightPlan(fp1);
+  //  FGTestApi::writeFlightPlanToKML(fp1);
+
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps", true);
+    CPPUNIT_ASSERT(!strcmp("obs", gpsNode->getStringValue("mode")));
+    
+    rm->activate();
+    
+    CPPUNIT_ASSERT(fp1->isActive());
+    CPPUNIT_ASSERT(!strcmp("leg", gpsNode->getStringValue("mode")));
+
+    SGGeod posEnrouteToWB = fp1->pointAlongRoute(3, -10.0);
+    FGTestApi::setPositionAndStabilise(posEnrouteToWB);
+    
+    // sequence everything to the correct wp
+    fp1->setCurrentIndex(3);
+
+    // setup some hold data from Nasal. To make it more challenging,
+    // do it once the wp is already active
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.hold_count = 4;
+        leg.hold_heading_radial_deg = 310;
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // check the value updated in the leg
+    CPPUNIT_ASSERT_EQUAL(4, fp1->legAtIndex(3)->holdCount());
+
+    // check we converted to a hold
+    auto wp = fp1->legAtIndex(3)->waypoint();
+    auto holdWpt = static_cast<flightgear::Hold*>(wp);
+
+    CPPUNIT_ASSERT_EQUAL(wp->type(), std::string{"hold"});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(310.0, holdWpt->headingRadialDeg(), 0.5);
+    
+    // establish the test pilot at this position too
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(posEnrouteToWB);
+    pilot->setSpeedKts(250);
+    pilot->flyGPSCourse(m_gps);
+    pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    
+    // run for a bit to stabilize everything
+    FGTestApi::runForTime(5.0);
+    
+    // check we upgraded to a hold controller internally, and are flying to it :)
+    auto statusNode = gpsNode->getNode("rnav-controller-status");
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg-to-hold"}, std::string{statusNode->getStringValue()});
+    
+    // check we're on the leg
+    
+    auto wbPos = fp1->legAtIndex(3)->waypoint()->position();
+    auto nsPos = fp1->legAtIndex(2)->waypoint()->position();
+    const double crsToWB = SGGeodesy::courseDeg(globals->get_aircraft_position(), wbPos);
+    const double crsNSWB = SGGeodesy::courseDeg(nsPos,wbPos);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToWB, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsNSWB, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    // fly into the hold, should be teardrop entry
+    ok = FGTestApi::runForTimeWithCheck(600.0, [statusNode] () {
+        std::string s = statusNode->getStringValue();
+        if (s == "entry-teardrop") return true;
+        return false;
+    });
+    
+    CPPUNIT_ASSERT(ok);
+    
+    ok = FGTestApi::runForTimeWithCheck(600.0, [statusNode] () {
+        std::string s = statusNode->getStringValue();
+        if (s == "hold-inbound") return true;
+        return false;
+    });
+    
+    ok = FGTestApi::runForTimeWithCheck(600.0, [statusNode] () {
+        std::string s = statusNode->getStringValue();
+        if (s == "hold-outbound") return true;
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+
+    // half way through the outbound turn
+    FGTestApi::runForTime(30.0);
+
+    ok = FGTestApi::executeNasal(R"(
+                                 setprop("/instrumentation/gps/command", "exit-hold");
+                                )");
+    CPPUNIT_ASSERT(ok);
+
+    // no change yet
+    CPPUNIT_ASSERT_EQUAL(std::string{"hold-outbound"}, std::string{statusNode->getStringValue()});
+    
+    // then we fly inbound
+    ok = FGTestApi::runForTimeWithCheck(600.0, [statusNode] () {
+        std::string s = statusNode->getStringValue();
+        if (s == "hold-inbound") return true;
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+
+    // and then we exit
+    ok = FGTestApi::runForTimeWithCheck(600.0, [fp1] () {
+        if (fp1->currentIndex() == 4) return true;
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // get back on course
+    FGTestApi::runForTime(60.0);
+}

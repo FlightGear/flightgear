@@ -82,14 +82,6 @@ void GPSTests::tearDown()
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
-void GPSTests::setPositionAndStabilise(GPS* gps, const SGGeod& g)
-{
-    FGTestApi::setPosition(g);
-    for (int i=0; i<60; ++i) {
-        gps->update(0.015);
-    }
-}
-
 GPS* GPSTests::setupStandardGPS(SGPropertyNode_ptr config,
                                 const std::string name, const int index)
 {
@@ -123,13 +115,13 @@ void GPSTests::setupRouteManager()
 
 void GPSTests::testBasic()
 {
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
     
     FGPositioned::TypeFilter f{FGPositioned::VOR};
     auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
     SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 45.0, 5.0 * SG_NM_TO_METER);
     
-    setPositionAndStabilise(gps, p1);
+    FGTestApi::setPositionAndStabilise(p1);
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLongitudeDeg(), gpsNode->getDoubleValue("indicated-longitude-deg"), 0.01);
@@ -156,14 +148,14 @@ void GPSTests::testBasic()
 
 void GPSTests::testOBSMode()
 {
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
 
     FGPositioned::TypeFilter f{FGPositioned::VOR};
     auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
     SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 45.0, 5.0 * SG_NM_TO_METER);
     
-    setPositionAndStabilise(gps, p1);
-    
+    FGTestApi::setPositionAndStabilise(p1);
+
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLongitudeDeg(), gpsNode->getDoubleValue("indicated-longitude-deg"), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(p1.getLatitudeDeg(), gpsNode->getDoubleValue("indicated-latitude-deg"), 0.01);
@@ -182,7 +174,7 @@ void GPSTests::testOBSMode()
     // select OBS mode one it
     gpsNode->setStringValue("command", "obs");
     
-    setPositionAndStabilise(gps, p1);
+    FGTestApi::setPositionAndStabilise(p1);
 
     CPPUNIT_ASSERT_EQUAL(std::string{"obs"}, std::string{gpsNode->getStringValue("mode")});
     CPPUNIT_ASSERT_DOUBLES_EQUAL(5.0, gpsNode->getDoubleValue("wp/wp[1]/distance-nm"), 0.01);
@@ -196,7 +188,7 @@ void GPSTests::testOBSMode()
 
     // off axis, angular
     SGGeod p2 = SGGeodesy::direct(bodrumVOR->geod(), 40.0, 4.0 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, p2);
+    FGTestApi::setPositionAndStabilise(p2);
     
     CPPUNIT_ASSERT_EQUAL(std::string{"obs"}, std::string{gpsNode->getStringValue("mode")});
     CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gpsNode->getDoubleValue("wp/wp[1]/distance-nm"), 0.01);
@@ -206,7 +198,7 @@ void GPSTests::testOBSMode()
     
     // off axis, perpendicular
     SGGeod p3 = SGGeodesy::direct(p1, 135, 0.5 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, p3);
+    FGTestApi::setPositionAndStabilise(p3);
     
     CPPUNIT_ASSERT_DOUBLES_EQUAL(225.0, gpsNode->getDoubleValue("desired-course-deg"), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.5, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
@@ -214,15 +206,13 @@ void GPSTests::testOBSMode()
 
 void GPSTests::testDirectTo()
 {
-    auto gps = setupStandardGPS();
-    
-   
+    setupStandardGPS();
     
     FGPositioned::TypeFilter f{FGPositioned::VOR};
     auto bodrumVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("BDR", SGGeod::fromDeg(27.6, 37), &f));
     SGGeod p1 = SGGeodesy::direct(bodrumVOR->geod(), 30.0, 16.0 * SG_NM_TO_METER);
     
-    setPositionAndStabilise(gps, p1);
+    FGTestApi::setPositionAndStabilise(p1);
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     
@@ -251,16 +241,16 @@ void GPSTests::testDirectTo()
     // move off the direct-to line, check everything works
     
     SGGeod p2 = SGGeodesy::direct(bodrumVOR->geod(), 35.0, 12.0 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, p2);
+    FGTestApi::setPositionAndStabilise(p2);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(5, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.1);
     
     SGGeod p3 = SGGeodesy::direct(p1, 210, 6.0 * SG_NM_TO_METER);
     SGGeod xtk = SGGeodesy::direct(p3, 120, 0.8 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, xtk);
+    FGTestApi::setPositionAndStabilise(xtk);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     
     SGGeod xtk2 = SGGeodesy::direct(p3, 120, -1.8 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, xtk2);
+    FGTestApi::setPositionAndStabilise(xtk2);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.8, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
 }
 
@@ -288,9 +278,9 @@ void GPSTests::testLegMode()
     CPPUNIT_ASSERT(rm->activate());
     
     fp->addDelegate(testDelegate);
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
     
-    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+    FGTestApi::setPositionAndStabilise(fp->departureRunway()->pointOnCenterline(0.0));
 
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
@@ -320,7 +310,7 @@ void GPSTests::testLegMode()
     
     SGGeod nikPos = fp->currentLeg()->waypoint()->position();
     SGGeod p2 = SGGeodesy::direct(nikPos, 90, 5 * SG_NM_TO_METER); // due east of NIK
-    setPositionAndStabilise(gps, p2);
+    FGTestApi::setPositionAndStabilise(p2);
     
     CPPUNIT_ASSERT_DOUBLES_EQUAL(270, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
 
@@ -356,11 +346,11 @@ void GPSTests::testLegMode()
     double course = SGGeodesy::courseDeg(coaPos, doverPos);
     double revCourse = SGGeodesy::courseDeg(doverPos, coaPos);
     
-    setPositionAndStabilise(gps, coaPos);
+    FGTestApi::setPositionAndStabilise(coaPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(course, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
     
     SGGeod off1 = SGGeodesy::direct(doverPos, revCourse - 5.0, 16 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, off1);
+    FGTestApi::setPositionAndStabilise(off1);
     
     double courseToDover = SGGeodesy::courseDeg(off1, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
@@ -370,7 +360,7 @@ void GPSTests::testLegMode()
     CPPUNIT_ASSERT_EQUAL(false, gpsNode->getBoolValue("wp/wp[1]/from-flag"));
     
     SGGeod off2 = SGGeodesy::direct(doverPos, revCourse + 8.0, 40 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, off2);
+    FGTestApi::setPositionAndStabilise(off2);
     
     courseToDover = SGGeodesy::courseDeg(off2, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
@@ -382,20 +372,20 @@ void GPSTests::testLegMode()
     SGGeod alongTrack = SGGeodesy::direct(coaPos, course, 20 * SG_NM_TO_METER);
     SGGeod offTrack = SGGeodesy::direct(alongTrack, course + 90, SG_NM_TO_METER * 0.7);
     
-    setPositionAndStabilise(gps, offTrack);
+    FGTestApi::setPositionAndStabilise(offTrack);
     courseToDover = SGGeodesy::courseDeg(offTrack, doverPos);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToDover, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-0.7, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     
     SGGeod offTrack2 = SGGeodesy::direct(alongTrack, courseToDover - 90, SG_NM_TO_METER * 3.4);
-    setPositionAndStabilise(gps, offTrack2);
+    FGTestApi::setPositionAndStabilise(offTrack2);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(3.4, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
 
     // check cross track very close to COA
     SGGeod alongTrack11 = SGGeodesy::direct(coaPos, course, 0.3);
     SGGeod offTrack25 = SGGeodesy::direct(alongTrack11, course + 90, SG_NM_TO_METER * -3.2);
-    setPositionAndStabilise(gps, offTrack25);
+    FGTestApi::setPositionAndStabilise(offTrack25);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(3.2, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(course, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
 
@@ -403,14 +393,14 @@ void GPSTests::testLegMode()
     double distanceCOA_DVR = SGGeodesy::distanceM(coaPos, doverPos);
     SGGeod alongTrack2 = SGGeodesy::direct(coaPos, course, distanceCOA_DVR - 0.3);
     SGGeod offTrack3 = SGGeodesy::direct(alongTrack2, course + 90, SG_NM_TO_METER * 1.6);
-    setPositionAndStabilise(gps, offTrack3);
+    FGTestApi::setPositionAndStabilise(offTrack3);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-1.6, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(revCourse + 180.0, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
 
     // check cross track in the middle
     SGGeod alongTrack3 = SGGeodesy::direct(coaPos, course, distanceCOA_DVR * 0.52);
     SGGeod offTrack4 = SGGeodesy::direct(alongTrack3, course + 90, SG_NM_TO_METER * 15.6);
-    setPositionAndStabilise(gps, offTrack4);
+    FGTestApi::setPositionAndStabilise(offTrack4);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-15.6, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(261.55, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.1);
 }
@@ -437,14 +427,14 @@ void GPSTests::testBuiltinRevertToOBSAtEnd()
     fp->addDelegate(testDelegate);
     auto gps = setupStandardGPS();
     
-    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+    FGTestApi::setPositionAndStabilise(fp->departureRunway()->pointOnCenterline(0.0));
 
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setStringValue("command", "leg");
     
     // move to point 18.0 nm after BDN
     auto posNearApproach = fp->pointAlongRoute(5, 18.0);
-    setPositionAndStabilise(gps, posNearApproach);
+    FGTestApi::setPositionAndStabilise(posNearApproach);
     fp->setCurrentIndex(6);
     
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
@@ -482,10 +472,9 @@ void GPSTests::testDirectToLegOnFlightplan()
     CPPUNIT_ASSERT(rm->activate());
     
     fp->addDelegate(testDelegate);
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
     
-    
-    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+    FGTestApi::setPositionAndStabilise(fp->departureRunway()->pointOnCenterline(0.0));
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
@@ -499,7 +488,7 @@ void GPSTests::testDirectToLegOnFlightplan()
     
     // initiate a direct to
     SGGeod p2 = fp->departureRunway()->pointOnCenterline(5.0* SG_NM_TO_METER);
-    setPositionAndStabilise(gps, p2);
+    FGTestApi::setPositionAndStabilise(p2);
     
     auto doverVOR = fp->legAtIndex(3)->waypoint()->source();
     
@@ -545,7 +534,7 @@ void GPSTests::testDirectToLegOnFlightplanAndResumeBuiltin()
     CPPUNIT_ASSERT(rm->activate());
         auto gps = setupStandardGPS();
     
-    setPositionAndStabilise(gps, fp->departureRunway()->pointOnCenterline(0.0));
+    FGTestApi::setPositionAndStabilise(fp->departureRunway()->pointOnCenterline(0.0));
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setStringValue("command", "leg");
@@ -558,7 +547,7 @@ void GPSTests::testDirectToLegOnFlightplanAndResumeBuiltin()
     
     // initiate a direct to
     SGGeod p2 = fp->departureRunway()->pointOnCenterline(5.0* SG_NM_TO_METER);
-    setPositionAndStabilise(gps, p2);
+    FGTestApi::setPositionAndStabilise(p2);
     
     auto doverVOR = fp->legAtIndex(3)->waypoint()->source();
     
@@ -576,7 +565,7 @@ void GPSTests::testDirectToLegOnFlightplanAndResumeBuiltin()
     // note this behaviour is from the old C++ sequencing
     
     SGGeod posNearDover = SGGeodesy::direct(p2, bearingToDover, (distanceToDover - 8.0) * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, posNearDover);
+    FGTestApi::setPositionAndStabilise(posNearDover);
     
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->resetAtPosition(posNearDover);
@@ -608,7 +597,7 @@ void GPSTests::testLongLeg()
     CPPUNIT_ASSERT(rm->activate());
     
     fp->addDelegate(testDelegate);
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
     gpsNode->setStringValue("command", "leg");
@@ -625,7 +614,7 @@ void GPSTests::testLongLeg()
     
     fp->setCurrentIndex(2);
 // initial course at VNY
-    setPositionAndStabilise(gps, vanNuysVOR->geod());
+    FGTestApi::setPositionAndStabilise(vanNuysVOR->geod());
     
     const double initialCourse = SGGeodesy::courseDeg(vanNuysVOR->geod(), teterboroVOR->geod());
     const double distanceM = SGGeodesy::distanceM(vanNuysVOR->geod(), teterboroVOR->geod());
@@ -640,7 +629,7 @@ void GPSTests::testLongLeg()
 
 // part of the way, check enroute leg course
     const SGGeod onTheWay = SGGeodesy::direct(vanNuysVOR->geod(), initialCourse, distanceM * 0.7);
-    setPositionAndStabilise(gps, onTheWay);
+    FGTestApi::setPositionAndStabilise(onTheWay);
 
     const double courseNow = SGGeodesy::courseDeg(onTheWay, teterboroVOR->geod());
     const double distNow = SGGeodesy::distanceM(onTheWay, teterboroVOR->geod());
@@ -656,7 +645,7 @@ void GPSTests::testLongLeg()
 // check a seriously abeam point, we got far of course
     // to the right of the course, i.e desired track is to our left, so -ve
     const SGGeod offTheWay = SGGeodesy::direct(onTheWay, courseNow + 90, SG_NM_TO_METER * 13.5);
-    setPositionAndStabilise(gps, offTheWay);
+    FGTestApi::setPositionAndStabilise(offTheWay);
     const double courseFromOff1 = SGGeodesy::courseDeg(offTheWay, teterboroVOR->geod());
     const double dist2 = SGGeodesy::distanceM(offTheWay, teterboroVOR->geod());
 
@@ -673,7 +662,7 @@ void GPSTests::testLongLeg()
     const SGGeod onTheWay2 = SGGeodesy::direct(vanNuysVOR->geod(), initialCourse, distanceM * 0.92);
     const double courseOn2 = SGGeodesy::courseDeg(onTheWay2, teterboroVOR->geod());
     const SGGeod off2 = SGGeodesy::direct(onTheWay2, courseOn2 - 90, SG_NM_TO_METER * 31.2);
-    setPositionAndStabilise(gps, off2);
+    FGTestApi::setPositionAndStabilise(off2);
     const double courseFromOff2 = SGGeodesy::courseDeg(off2, teterboroVOR->geod());
     const double dist3 = SGGeodesy::distanceM(off2, teterboroVOR->geod());
     
@@ -701,7 +690,7 @@ void GPSTests::testLongLegWestbound()
     CPPUNIT_ASSERT(rm->activate());
     
     fp->addDelegate(testDelegate);
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
   
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
@@ -717,7 +706,7 @@ void GPSTests::testLongLegWestbound()
     
     fp->setCurrentIndex(2);
     // initial course at VNY
-    setPositionAndStabilise(gps, volloVOR->geod());
+    FGTestApi::setPositionAndStabilise(volloVOR->geod());
     
     const double initialCourse = SGGeodesy::courseDeg(volloVOR->geod(), gaktu->geod());
     const double distanceM = SGGeodesy::distanceM(volloVOR->geod(), gaktu->geod());
@@ -732,7 +721,7 @@ void GPSTests::testLongLegWestbound()
 
     // part of the way, check enroute leg course
     const SGGeod onTheWay = SGGeodesy::direct(volloVOR->geod(), initialCourse, distanceM * 0.4);
-    setPositionAndStabilise(gps, onTheWay);
+    FGTestApi::setPositionAndStabilise(onTheWay);
     
     const double courseNow = SGGeodesy::courseDeg(onTheWay, gaktu->geod());
     const double distNow = SGGeodesy::distanceM(onTheWay, gaktu->geod());
@@ -748,7 +737,7 @@ void GPSTests::testLongLegWestbound()
     // check a seriously abeam point, we got far of course
     // to the right of the course, i.e desired track is to our left, so -ve
     const SGGeod offTheWay = SGGeodesy::direct(onTheWay, courseNow + 90, SG_NM_TO_METER * 18.6);
-    setPositionAndStabilise(gps, offTheWay);
+    FGTestApi::setPositionAndStabilise(offTheWay);
     const double courseFromOff1 = SGGeodesy::courseDeg(offTheWay, gaktu->geod());
     const double dist2 = SGGeodesy::distanceM(offTheWay, gaktu->geod());
     
@@ -797,7 +786,7 @@ void GPSTests::testOverflightSequencing()
     // enroute to NELSON VOR
     fp->setCurrentIndex(2);
     SGGeod pos = fp->pointAlongRoute(2, -5.0);
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->resetAtPosition(pos);
@@ -831,7 +820,7 @@ void GPSTests::testOverflightSequencing()
     
     // point a bit before MAMOD
     SGGeod pos2 = fp->pointAlongRoute(5, -5.0);
-    setPositionAndStabilise(gps, pos2);
+    FGTestApi::setPositionAndStabilise(pos2);
     fp->setCurrentIndex(5);
     auto mamod = fp->legAtIndex(5)->waypoint()->source();
 
@@ -893,7 +882,7 @@ void GPSTests::testOffcourseSequencing()
     SGGeod pos = fp->pointAlongRoute(2, -5.0);
     
     pos = SGGeodesy::direct(pos, 180, 1.5 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     
     
     auto nelsonVOR = fp->legAtIndex(2)->waypoint()->source();
@@ -952,7 +941,7 @@ void GPSTests::testOffcourseSequencing()
     pos2 = SGGeodesy::direct(pos2, 180, 0.8 * SG_NM_TO_METER);
 
     fp->setCurrentIndex(5);
-    setPositionAndStabilise(gps, pos2);
+    FGTestApi::setPositionAndStabilise(pos2);
     // start facing the right way
     pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
     pilot->flyHeading(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
@@ -991,7 +980,7 @@ void GPSTests::testOffcourseSequencing()
     pos3 = SGGeodesy::direct(pos3, 90, 1.8 * SG_NM_TO_METER);
     
     fp->setCurrentIndex(6);
-    setPositionAndStabilise(gps, pos3);
+    FGTestApi::setPositionAndStabilise(pos3);
     // start facing the right way
     pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
     pilot->flyHeading(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
@@ -1040,7 +1029,7 @@ void GPSTests::testOffsetFlight()
  
     SGGeod pos = fp->pointAlongRoute(2, -10.0);
     pos = SGGeodesy::direct(pos, 180, 2.0 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->resetAtPosition(pos);
@@ -1079,7 +1068,7 @@ void GPSTests::testOffsetFlight()
     fp->setCurrentIndex(3);
     pos = fp->pointAlongRoute(3, -18.0);
     pos = SGGeodesy::direct(pos, 180, 2.0 * SG_NM_TO_METER);
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     pilot->resetAtPosition(pos);
     // start facing the right way
     pilot->setCourseTrue(gpsNode->getDoubleValue("wp/leg-true-course-deg"));
@@ -1132,7 +1121,7 @@ void GPSTests::testLegIntercept()
     SGGeod pos = fp->pointAlongRoute(1, 5.0);
     pos = SGGeodesy::direct(pos, 0, 12.0 * SG_NM_TO_METER);
 
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->resetAtPosition(pos);
     pilot->setCourseTrue(180.0); // start facing an annoying direction
@@ -1151,7 +1140,7 @@ void GPSTests::testLegIntercept()
     pos = SGGeodesy::direct(pos, 240, 10.0 * SG_NM_TO_METER);
     
     // cycle the GPS mode to re-do the intercept logic
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     gpsNode->setStringValue("command", "obs");
     gpsNode->setStringValue("command", "leg");
 
@@ -1170,7 +1159,7 @@ void GPSTests::testLegIntercept()
     pos = SGGeodesy::direct(pos, 180, 5.0 * SG_NM_TO_METER);
     
     // cycle the GPS mode to re-do the intercept logic
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     gpsNode->setStringValue("command", "obs");
     gpsNode->setStringValue("command", "leg");
     
@@ -1189,7 +1178,7 @@ void GPSTests::testLegIntercept()
     pos = SGGeodesy::direct(pos, 160, 18.0 * SG_NM_TO_METER);
     
     // cycle the GPS mode to re-do the intercept logic
-    setPositionAndStabilise(gps, pos);
+    FGTestApi::setPositionAndStabilise(pos);
     gpsNode->setStringValue("command", "obs");
     gpsNode->setStringValue("command", "leg");
     
