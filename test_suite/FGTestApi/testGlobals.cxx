@@ -56,19 +56,9 @@ void initTestGlobals(const std::string& testName)
     }
 
     globals->set_fg_home(homePath);
-    
     auto props = globals->get_props();
     props->setStringValue("sim/fg-home", homePath.utf8Str());
-    props->setStringValue("sim/flight-model", "null");
-    props->setStringValue("sim/aircraft", "test-suite-aircraft");
     
-    props->setDoubleValue("sim/current-view/config/default-field-of-view-deg", 90.0);
-    // ensure /sim/view/config exists
-    props->setBoolValue("sim/view/config/foo", false);
-    
-    props->setBoolValue("sim/rendering/precipitation-gui-enable", false);
-    props->setBoolValue("sim/rendering/precipitation-aircraft-enable", false);
-
     // Activate headless mode.
     globals->set_headless(true);
 
@@ -85,10 +75,6 @@ void initTestGlobals(const std::string& testName)
      * destroyed via the subsystem manager.
      */
     globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
-
-    // Nasal needs the interpolator running
-    globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
-
 }
     
 bool logPositionToKML(const std::string& testName)
@@ -124,11 +110,26 @@ void initStandardNasal()
     
     auto nasalNode = globals->get_props()->getNode("nasal", true);
     
+// set various props to reduce Nasal errors
+    auto props = globals->get_props();
+    props->setStringValue("sim/flight-model", "null");
+    props->setStringValue("sim/aircraft", "test-suite-aircraft");
+    
+    props->setDoubleValue("sim/current-view/config/default-field-of-view-deg", 90.0);
+    // ensure /sim/view/config exists
+    props->setBoolValue("sim/view/config/foo", false);
+    
+    props->setBoolValue("sim/rendering/precipitation-gui-enable", false);
+    props->setBoolValue("sim/rendering/precipitation-aircraft-enable", false);
+    
 // disable various larger modules
     nasalNode->setBoolValue("canvas/enabled", false);
     nasalNode->setBoolValue("jetways/enabled", false);
     nasalNode->setBoolValue("jetways_edit/enabled", false);
     nasalNode->setBoolValue("local_weather/enabled", false);
+
+    // Nasal needs the interpolator running
+    globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
 
     // will be inited, since we already did that
     globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
@@ -289,6 +290,9 @@ bool runForTimeWithCheck(double t, RunCheck check)
 
 void writeFlightPlanToKML(flightgear::FlightPlanRef fp)
 {
+    if (!global_loggingToKML)
+        return;
+    
     RoutePath rpath(fp);
     
     SGGeodVec fullPath;
