@@ -2,7 +2,7 @@
 
 #include "test_suite/dataStore.hxx"
 
-#include "globals.hxx"
+#include "testGlobals.hxx"
 
 #include <simgear/io/iostreams/sgstream.hxx>
 

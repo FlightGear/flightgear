@@ -1,6 +1,6 @@
 #include "test_flightplan.hxx"
 
-#include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <simgear/misc/strutils.hxx>

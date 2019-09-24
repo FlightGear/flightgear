@@ -21,7 +21,7 @@
 #include "test_AddonManagement.hxx"
 
 #include "config.h"
-#include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/testGlobals.hxx"
 
 #include <sstream>
 #include <string>

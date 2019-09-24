@@ -18,7 +18,7 @@
 
 #include "test_posinit.hxx"
 
-#include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <simgear/props/props_io.hxx>
