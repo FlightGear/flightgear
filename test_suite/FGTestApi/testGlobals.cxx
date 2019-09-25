@@ -150,7 +150,9 @@ void populateFPWithoutNasal(flightgear::FlightPlanRef f,
     // since we don't have the Nasal route-manager delegate, insert the
     // runway waypoints manually
     
-    f->insertWayptAtIndex(new RunwayWaypt(f->departureRunway(), f), -1);
+    auto depRwy = new RunwayWaypt(f->departureRunway(), f);
+    depRwy->setFlag(WPT_DEPARTURE);
+    f->insertWayptAtIndex(depRwy, -1);
     
     for (auto ws : simgear::strutils::split(waypoints)) {
         WayptRef wpt = f->waypointFromString(ws);
@@ -245,9 +247,11 @@ void runForTime(double t)
 {
     int ticks = t * 120.0;
     assert(ticks > 0);
-
+    const double dt = 1 / 120.0;
+    
     for (int t = 0; t < ticks; ++t) {
-        globals->get_subsystem_mgr()->update(1 / 120.0);
+        globals->inc_sim_time_sec(dt);
+        globals->get_subsystem_mgr()->update(dt);
         if (global_loggingToKML) {
             logCoordinate(globals->get_aircraft_position());
         }
@@ -258,13 +262,14 @@ bool runForTimeWithCheck(double t, RunCheck check)
 {
     const int tickHz = 30;
     const double tickDuration = 1.0 / tickHz;
-    
+
     int ticks = static_cast<int>(t * tickHz);
     assert(ticks > 0);
     const int logInterval = 2 * tickHz; // every two seconds
     int nextLog = 0;
     
     for (int t = 0; t < ticks; ++t) {
+        globals->inc_sim_time_sec(tickDuration);
         globals->get_subsystem_mgr()->update(tickDuration);
         
         if (global_loggingToKML) {

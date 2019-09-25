@@ -179,12 +179,12 @@ private:
      * modified (waypoints added, inserted, removed). Notably, this fires the
      * 'edited' signal.
      */
-    virtual void waypointsChanged();
+    void waypointsChanged() override;
 
     void update_mirror();
 
-    virtual void currentWaypointChanged();
-
+    void currentWaypointChanged() override;
+    
     // tied getters and setters
     std::string getDepartureICAO() const;
     std::string getDepartureName() const;
