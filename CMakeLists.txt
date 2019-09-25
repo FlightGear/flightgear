@@ -614,7 +614,7 @@ add_subdirectory(test_suite EXCLUDE_FROM_ALL)
 
 add_custom_target(test_suite
     ${TEST_SUITE_COMMAND}
-    DEPENDS run_test_suite
+    DEPENDS fgfs_test_suite
     WORKING_DIRECTORY ${TEST_SUITE_WORKING_DIRECTORY}
     COMMENT ${TEST_SUITE_COMMENT}
 )

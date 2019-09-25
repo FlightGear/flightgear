@@ -65,32 +65,32 @@ endif()
 include(Dart)
 
 # System test suites.
-add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s AeroMeshTests)
-#add_test(GPSSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s GPSTests)
-#add_test(NavaidsSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s NavaidsTests)
+add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s AeroMeshTests)
+#add_test(GPSSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s GPSTests)
+#add_test(NavaidsSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s NavaidsTests)
 
 # Unit test suites.
-add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AddonManagementTests)
-add_test(AeroElementUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AeroElementTests)
-add_test(AircraftPerformanceTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AircraftPerformanceTests)
-add_test(AutosaveMigrationUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u AutosaveMigrationTests)
-add_test(FlightplanUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u FlightplanTests)
+add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AddonManagementTests)
+add_test(AeroElementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AeroElementTests)
+add_test(AircraftPerformanceTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AircraftPerformanceTests)
+add_test(AutosaveMigrationUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AutosaveMigrationTests)
+add_test(FlightplanUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u FlightplanTests)
 if(ENABLE_HID_INPUT)
-    add_test(HIDInputUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u HIDInputTests)
+    add_test(HIDInputUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u HIDInputTests)
 endif()
-add_test(LaRCSimMatrixUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u LaRCSimMatrixTests)
-add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u MktimeTests)
-add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NasalSysTests)
-add_test(NavaidsUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NavaidsTests)
-add_test(NavRadioTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u NavRadioTests)
-add_test(PosInitUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u PosInitTests)
-add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -u YASimAtmosphereTests)
+add_test(LaRCSimMatrixUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u LaRCSimMatrixTests)
+add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u MktimeTests)
+add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NasalSysTests)
+add_test(NavaidsUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavaidsTests)
+add_test(NavRadioTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavRadioTests)
+add_test(PosInitUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u PosInitTests)
+add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u YASimAtmosphereTests)
 
 # GUI test suites.
 
 # Simgear unit test suites.
-add_test(MathGeodesySimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m MathGeodesyTests)
-add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -m SimgearPropsTests)
+add_test(MathGeodesySimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -m MathGeodesyTests)
+add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -m SimgearPropsTests)
 
 # FGData test suites.
 
@@ -113,7 +113,7 @@ get_property(EMBEDDED_RESOURCE_SOURCES GLOBAL PROPERTY EMBEDDED_RESOURCE_SOURCES
 get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS)
 
 # Set up the separate executable for running the test suite.
-add_executable(run_test_suite
+add_executable(fgfs_test_suite
     ${FG_SOURCES}
     ${FG_HEADERS}
     ${EMBEDDED_RESOURCE_SOURCES}
@@ -121,17 +121,17 @@ add_executable(run_test_suite
     ${TESTSUITE_SOURCES}
     ${TESTSUITE_HEADERS}
 )
-add_dependencies(run_test_suite buildId)
-set_target_properties(run_test_suite
+add_dependencies(fgfs_test_suite buildId)
+set_target_properties(fgfs_test_suite
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
 )
 if(ENABLE_AUTOTESTING)
     if(WIN32)
-        set(TEST_SUITE_COMMAND "run_test_suite.exe")
+        set(TEST_SUITE_COMMAND "fgfs_test_suite.exe")
         set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}")
     else()
-        set(TEST_SUITE_COMMAND "run_test_suite")
+        set(TEST_SUITE_COMMAND "fgfs_test_suite")
         set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}")
     endif(WIN32)
     set(TEST_SUITE_COMMENT "Running the full FlightGear test suite: ${TEST_SUITE_WORKING_DIRECTORY}/${TEST_SUITE_COMMAND}")
@@ -152,7 +152,7 @@ set(TEST_SUITE_COMMENT
 )
 
 # Set up the target links.
-setup_fgfs_libraries(run_test_suite)
+setup_fgfs_libraries(fgfs_test_suite)
 
 # Additional libraries just for the test suite.
-target_link_libraries(run_test_suite ${CPPUNIT_LIBRARIES})
+target_link_libraries(fgfs_test_suite ${CPPUNIT_LIBRARIES})
