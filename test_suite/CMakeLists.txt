@@ -127,32 +127,34 @@ set_target_properties(fgfs_test_suite
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
 )
 if(ENABLE_AUTOTESTING)
-    if(WIN32)
-        set(TEST_SUITE_COMMAND "fgfs_test_suite.exe")
-        set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}/${CMAKE_BUILD_TYPE}")
-    else()
-        set(TEST_SUITE_COMMAND "fgfs_test_suite")
-        set(TEST_SUITE_WORKING_DIRECTORY "${TESTSUITE_OUTPUT_DIR}")
-    endif(WIN32)
-    set(TEST_SUITE_COMMENT "Running the full FlightGear test suite: ${TEST_SUITE_WORKING_DIRECTORY}/${TEST_SUITE_COMMAND}")
+    set(TEST_SUITE_COMMENT "Running the full FlightGear test suite")
 else()
     set(TEST_SUITE_COMMENT "Building the FlightGear test suite.")
 endif(ENABLE_AUTOTESTING)
-set(TEST_SUITE_COMMAND
-    ${TEST_SUITE_COMMAND}
-    PARENT_SCOPE
-)
-set(TEST_SUITE_WORKING_DIRECTORY
-    ${TEST_SUITE_WORKING_DIRECTORY}
-    PARENT_SCOPE
-)
-set(TEST_SUITE_COMMENT
-    ${TEST_SUITE_COMMENT}
-    PARENT_SCOPE
-)
 
 # Set up the target links.
 setup_fgfs_libraries(fgfs_test_suite)
 
 # Additional libraries just for the test suite.
 target_link_libraries(fgfs_test_suite ${CPPUNIT_LIBRARIES})
+
+# target to run the tests
+if (MSVC)
+  if (TARGET Qt5::qmake)
+    # property is the full path to qmake.exe
+    get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
+    get_filename_component(_qt5_bin_dir ${_qt5_qmake_path} DIRECTORY)
+    file(TO_NATIVE_PATH "${_qt5_bin_dir}" _qt5_bin_dir_native)
+  endif()
+
+  file(TO_NATIVE_PATH "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
+  file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
+
+  set(CMAKE_MSVCIDE_RUN_PATH "${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
+endif()
+
+add_custom_target(test_suite
+    fgfs_test_suite
+    DEPENDS fgfs_test_suite
+    COMMENT ${TEST_SUITE_COMMENT}
+)

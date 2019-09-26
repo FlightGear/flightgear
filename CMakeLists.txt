@@ -607,14 +607,6 @@ CONFIGURE_FILE(
 ADD_CUSTOM_TARGET(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
-
 # The test suite.
 enable_testing()
 add_subdirectory(test_suite EXCLUDE_FROM_ALL)
-
-add_custom_target(test_suite
-    ${TEST_SUITE_COMMAND}
-    DEPENDS fgfs_test_suite
-    WORKING_DIRECTORY ${TEST_SUITE_WORKING_DIRECTORY}
-    COMMENT ${TEST_SUITE_COMMENT}
-)
