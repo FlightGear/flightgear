@@ -46,6 +46,9 @@ void fgCompilerOutputter::printFailureDetail(CppUnit::TestFailure *failure)
     vector<TestIOCapt>::iterator test_iter;
 
     // Initial separator.
+#ifdef _WIN32
+    fg_stream << endl;
+#endif
     fg_stream << string(WIDTH_DIVIDER, '=') << endl;
 
     // Test info.
@@ -128,6 +131,9 @@ void fgCompilerOutputter::printIOStreamMessages(string heading, string messages,
 void fgCompilerOutputter::printSuiteStats()
 {
     // A divider.
+#ifdef _WIN32
+    fg_stream << endl;
+#endif
     fg_stream << string(WIDTH_DIVIDER, '-') << endl;
 
     // Timing and test count line.
