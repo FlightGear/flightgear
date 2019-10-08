@@ -15,7 +15,7 @@ def main():
     # parking brake on
     fg['/controls/parking-brake'] = 1
 
-    heading = fg['/orientation/heading-deg']
+   # heading = fg['/orientation/heading-deg']
 
     # Switch to external view for for 'walk around'.
     fg.view_next()
