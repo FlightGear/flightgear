@@ -215,7 +215,7 @@ void MetarProperties::set_metar( const char * metarString )
     try {
         m = new FGMetar( metarString );
     }
-    catch( sg_io_exception ) {
+    catch( sg_io_exception& ) {
         SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << metarString );
         _metarValidNode->setBoolValue(false);
         return;
