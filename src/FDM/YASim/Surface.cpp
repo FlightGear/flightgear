@@ -182,12 +182,20 @@ void Surface::calcForce(const float* v, const float rho, float mach, float* out,
     float pg_correction {1};
     float wavedrag {0};
     if (_flow == FLOW_TRANSONIC) {
-        pg_correction = Math::polynomial(pg_coefficients, mach);
+        if (mach < 0.8f) {
+            pg_correction = 1.0f/sqrt(1.0f-(mach*mach));
+        }
+        if ((mach >= 0.8f) && (mach < 1.2f)) {
+            pg_correction = Math::polynomial(pg_coefficients, mach);
+        }
+        if (mach >= 1.2f) {
+            pg_correction = 2.0f/(((mach*mach)-1.0f)*YASIM_PI);
+        }
         out[2] *= pg_correction;
 
         // Add mach dependent wave drag (Perkins and Hage)
         if (mach > _Mcrit) {
-            wavedrag = 9.5f * Math::pow(mach-_Mcrit, 2.8f) + 0.00193f;
+            wavedrag = 9.5f * Math::pow((mach > 1.0f ? 1.0f : mach)-_Mcrit, 2.8f) + 0.00193f;
             out[0] += wavedrag;
         } 
     }

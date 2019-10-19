@@ -135,10 +135,9 @@ private:
     float _alpha {0};
 
     FlowRegime _flow{FLOW_SUBSONIC};
-    float _Mcrit {1.0f};
+    float _Mcrit {0.6f};
 
-    std::vector<float> pg_coefficients {1, -0.163f, 5.877f, -39.157f, 104.694f,
-        -111.838f, 46.749f, -5.313f};
+    std::vector<float> pg_coefficients {-1.7671f, 0.4495f, 10.3423f, -6.9237f};
     
     SGPropertyNode* _fxN;
     SGPropertyNode* _fyN;
