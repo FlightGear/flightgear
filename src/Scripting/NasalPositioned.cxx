@@ -2942,7 +2942,7 @@ static naRef f_flightplan_pathGeod(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan* fp = flightplanGhost(me);
   if (!fp) {
-    naRuntimeError(c, "flightplan.clone called on non-flightplan object");
+    naRuntimeError(c, "flightplan.pathGeod called on non-flightplan object");
   }
 
   if ((argc < 1) || !naIsNum(args[0])) {
