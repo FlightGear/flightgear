@@ -53,6 +53,7 @@ private:
     const char * get_station_id() const { return _station_id.c_str(); }
     void set_station_id( const char * value );
     const char * get_decoded() const { return _decoded.c_str(); }
+    const char * get_description() const { return _description.c_str(); }
     double get_magnetic_variation_deg() const;
     double get_magnetic_dip_deg() const;
     double get_wind_from_north_fps() const { return _wind_from_north_fps; }
@@ -97,6 +98,7 @@ private:
     int _hour;
     int _minute;
     bool _cavok;
+    std::string _description;
 protected:
     simgear::TiedPropertyList _tiedProperties;
     MagneticVariation * _magneticVariation;

@@ -183,6 +183,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("minute", &_minute );
   _tiedProperties.Tie("decoded", this, &MetarProperties::get_decoded );
   _tiedProperties.Tie("cavok", &_cavok );
+  _tiedProperties.Tie("description", this, &MetarProperties::get_description );
 }
 
 MetarProperties::~MetarProperties()
@@ -422,6 +423,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
     _minute = m->getMinute();
     _cavok = m->getCAVOK();
     _metarValidNode->setBoolValue(true);
+    _description = m->getDescription(8);
 }
 
 void MetarProperties::setStationId( const std::string & value )
