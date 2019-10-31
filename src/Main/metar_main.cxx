@@ -282,13 +282,14 @@ void usage()
 		"       -c|--command-line    print command line\n"
 		"       -e E|--elevation E   set airport elevation to E meters\n"
 		"                            (added to cloud bases in command line mode)\n"
+		"       -s|--string <METAR string>\n"
 		"Environment:\n"
 		"       http_proxy           set proxy in the form \"http://host:port/\"\n"
 		"\n"
 		"Examples:\n"
 		"       $ metar ksfo koak\n"
 		"       $ metar -c ksfo -r ksfo\n"
-		"       $ metar \"LOWL 161500Z 19004KT 160V240 9999 FEW035 SCT300 29/23 Q1006 NOSIG\"\n"
+		"       $ metar -s \"LOWL 161500Z 19004KT 160V240 9999 FEW035 SCT300 29/23 Q1006 NOSIG\"\n"
 		"       $ fgfs  `metar -e 183 -c loww`\n"
 		"       $ http_proxy=http://localhost:3128/ metar ksfo\n"
 		"\n"
@@ -329,7 +330,17 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 			elevation = strtod(argv[i], 0);
-		} else {
+        }
+        else if (!strcmp(argv[i], "-s") || !strcmp(argv[i], "--string")) {
+            if (++i >= argc) {
+                cerr << "-s option used with out string\n";
+                return 1;
+            }
+            const char* string = argv[i];
+            SGMetar metar(string);
+            printReport(&metar);
+        }
+		else {
 			static bool shown = false;
 			if (verbose && !shown) {
 				cerr << "Proxy host: '" << proxy_host << "'" << endl;
