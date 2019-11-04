@@ -207,6 +207,10 @@ FGAircraftModel::update (double dt)
                        _speed_e->getDoubleValue(),
                        _speed_d->getDoubleValue() );
   _fx->set_velocity( _velocity );
+
+  float temp_c = fgGetFloat("/environment/temperature-degc");
+  float humidity = fgGetFloat("/environment/relative-humidity");
+  _fx->set_atmosphere( temp_c, humidity );
 }
 
 
