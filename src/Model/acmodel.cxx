@@ -210,7 +210,8 @@ FGAircraftModel::update (double dt)
 
   float temp_c = fgGetFloat("/environment/temperature-degc");
   float humidity = fgGetFloat("/environment/relative-humidity");
-  _fx->set_atmosphere( temp_c, humidity );
+  float pressure = fgGetFloat("/environment/pressure-inhg")*SG_INHG_TO_PA/1000.0f;
+  _fx->set_atmosphere( temp_c, humidity, pressure );
 }
 
 
