@@ -423,7 +423,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
     _minute = m->getMinute();
     _cavok = m->getCAVOK();
     _metarValidNode->setBoolValue(true);
-    _description = m->getDescription(8);
+    _description = m->getDescription(-1);
 }
 
 void MetarProperties::setStationId( const std::string & value )
