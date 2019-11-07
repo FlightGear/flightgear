@@ -2933,8 +2933,13 @@ string_list Options::extractOptions() const
 
 void Options::setupRoot(int argc, char **argv)
 {
-    SGPath root;
+    SGPath root(globals->get_fg_root());
     bool usingDefaultRoot = false;
+
+    // root has already been set, so skip the fg_root setting and validation.
+    if (!root.isNull()) {
+        return;
+    }
 
   if (isOptionSet("fg-root")) {
       root = SGPath::fromLocal8Bit(valueForOption("fg-root").c_str()); // easy!
