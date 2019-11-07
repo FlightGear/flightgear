@@ -72,9 +72,11 @@ add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s 
 # Unit test suites.
 add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AddonManagementTests)
 add_test(AeroElementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AeroElementTests)
-add_test(AircraftPerformanceTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AircraftPerformanceTests)
+add_test(AircraftPerformanceUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AircraftPerformanceTests)
 add_test(AutosaveMigrationUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AutosaveMigrationTests)
 add_test(FlightplanUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u FlightplanTests)
+add_test(GPSUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u GPSTests)
+add_test(HoldControllerUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u HoldControllerTests)
 if(ENABLE_HID_INPUT)
     add_test(HIDInputUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u HIDInputTests)
 endif()
@@ -82,8 +84,10 @@ add_test(LaRCSimMatrixUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest 
 add_test(MktimeUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u MktimeTests)
 add_test(NasalSysUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NasalSysTests)
 add_test(NavaidsUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavaidsTests)
-add_test(NavRadioTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavRadioTests)
+add_test(NavRadioUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u NavRadioTests)
 add_test(PosInitUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u PosInitTests)
+add_test(RNAVProcedureUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u RNAVProcedureTests)
+add_test(RouteManagerUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u RouteManagerTests)
 add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u YASimAtmosphereTests)
 
 # GUI test suites.
