@@ -2115,7 +2115,10 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 
   // establish log-level before anything else - otherwise it is not possible
   // to show extra (debug/info/warning) messages for the start-up phase.
-  fgOptLogLevel(valueForOption("log-level", "alert").c_str());
+  // Leave the simgear logstream default value of SG_ALERT if the argument is
+  // not supplied.
+  if (isOptionSet("log-level"))
+      fgOptLogLevel(valueForOption("log-level").c_str());
 
   simgear::PathList::const_iterator i;
   for (i = p->configFiles.begin(); i != p->configFiles.end(); ++i) {
