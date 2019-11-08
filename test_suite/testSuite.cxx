@@ -403,6 +403,9 @@ int main(int argc, char **argv)
     if (data.findFGRoot(fgRoot, debug) != 0) {
         return 1;
     }
+    if (data.validateFGRoot() != 0) {
+        return 1;
+    }
 
     // Set up logging.
     sglog().setDeveloperMode(true);
