@@ -130,11 +130,13 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
   while (out_elem) {
     string output_node_name = out_elem->GetDataLine();
     FGPropertyNode* OutputNode = PropertyManager->GetNode( output_node_name, true );
-    OutputNodes.push_back(OutputNode);
     if (!OutputNode) {
-      cerr << endl << "  Unable to process property: " << output_node_name << endl;
+      cerr << out_elem->ReadFrom() << "  Unable to process property: "
+           << output_node_name << endl;
       throw(string("Invalid output property name in flight control definition"));
     }
+    OutputNodes.push_back(OutputNode);
+    OutputNode->setDoubleValue(Output); // Initialize the output node to a sensible value
     out_elem = element->FindNextElement("output");
   }
 
