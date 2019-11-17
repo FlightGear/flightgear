@@ -200,7 +200,7 @@ private:
   double GetIyy(void) const { return mJ(2,2); }
   double GetIzz(void) const { return mJ(3,3); }
   double GetIxy(void) const { return -mJ(1,2); }
-  double GetIxz(void) const { return -mJ(1,3); }
+  double GetIxz(void) const { return mJ(1,3); }
   double GetIyz(void) const { return -mJ(2,3); }
 
   /** The PointMass structure encapsulates a point mass object, moments of inertia
