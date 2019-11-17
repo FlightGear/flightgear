@@ -270,8 +270,10 @@ void FGFCSComponent::bind(Element* el)
 
   FGPropertyNode* node = PropertyManager->GetNode(tmp, true);
 
-  if (node)
+  if (node) {
+    node->setDoubleValue(Output);
     OutputNodes.push_back(node);
+  }
   else {
     cerr << el->ReadFrom()
          << "Could not get or create property " << tmp << endl;
