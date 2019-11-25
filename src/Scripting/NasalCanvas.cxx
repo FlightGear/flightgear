@@ -72,6 +72,7 @@ typedef nasal::Ghost<sc::CanvasPtr> NasalCanvas;
 typedef nasal::Ghost<sc::ElementPtr> NasalElement;
 typedef nasal::Ghost<sc::GroupPtr> NasalGroup;
 typedef nasal::Ghost<sc::TextPtr> NasalText;
+typedef nasal::Ghost<sc::ImagePtr> NasalImage;
 
 typedef nasal::Ghost<sc::LayoutItemRef> NasalLayoutItem;
 typedef nasal::Ghost<sc::LayoutRef> NasalLayout;
@@ -398,6 +399,29 @@ static naRef f_newAsBase(const nasal::CallContext& ctx)
   return ctx.to_nasal<Base*>(new Type());
 }
 
+static naRef f_imageFillRect(sc::Image& img, const nasal::CallContext& ctx)
+{
+    const SGRecti r = ctx.requireArg<SGRecti>(0);
+    if (ctx.isString(1)) {
+        img.fillRect(r, ctx.getArg<std::string>(1));
+    } else {
+        img.fillRect(r, ctx.requireArg<osg::Vec4>(1));
+    }
+    return naNil();
+}
+
+static naRef f_imageSetPixel(sc::Image& img, const nasal::CallContext& ctx)
+{
+    const int s = ctx.requireArg<int>(0);
+    const int t = ctx.requireArg<int>(1);
+    if (ctx.isString(2)) {
+        img.setPixel(s, t, ctx.getArg<std::string>(2));
+    } else {
+        img.setPixel(s, t, ctx.requireArg<osg::Vec4>(2));
+    }
+    return naNil();
+}
+
 naRef initNasalCanvas(naRef globals, naContext c)
 {
   nasal::Hash globals_module(globals, c),
@@ -507,6 +531,11 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("getNearestCursor", &sc::Text::getNearestCursor)
     .method("getCursorPos", &sc::Text::getCursorPos);
 
+  NasalImage::init("canvas.Image")
+    .bases<NasalElement>()
+    .method("fillRect", &f_imageFillRect)
+    .method("setPixel", &f_imageSetPixel);
+    
   //----------------------------------------------------------------------------
   // Layouting
 
