@@ -20,6 +20,7 @@
 #include "rnav_waypt_controller.hxx"
 
 #include <cassert>
+#include <stdexcept>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/exception.hxx>
@@ -1016,6 +1017,8 @@ double HoldCtl::courseDeviationDeg() const
       case HOLD_INBOUND:    return "hold-inbound";
       case HOLD_EXITING:    return "hold-exiting";
     }
+
+    throw std::domain_error("Unsupported HoldState.");
   }
 
 ///////////////////////////////////////////////////////////////////////////////////
