@@ -9,7 +9,7 @@ function(setup_fgfs_embedded_resources)
     set_property(GLOBAL APPEND PROPERTY EMBEDDED_RESOURCE_SOURCES ${SOURCES})
     set_property(GLOBAL APPEND PROPERTY EMBEDDED_RESOURCE_HEADERS ${HEADERS})
 
-    # set the flag for CMake polocy 00071, ensure Qt AUTOfoo don't process
+    # set the flag for CMake policy 00071, ensure Qt AUTOfoo don't process
     # generated files
     foreach(sourcefile IN LISTS ${SOURCES} ${HEADERS})
       set_property(SOURCE ${sourcefile} PROPERTY SKIP_AUTOMOC ON)
