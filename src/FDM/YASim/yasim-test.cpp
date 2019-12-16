@@ -142,6 +142,73 @@ void yasim_drag(Airplane* a, const float aoa, const float alt, Airplane::Configu
     printf("# cd_min %g at %d kts\n", cd_min, cd_min_kts);
 }
 
+/* Returns AoA for zero lift at specified altitude and speed. */
+float yasim_find_zero_lift_aoa(Airplane* a, const float alt, float kts, Airplane::Configuration cfgID, float* acc)
+{
+    _setup(a, cfgID, alt);
+    float   aoa_deg = 0;
+    float   aoa_deg_delta = 10;
+    while (1) {
+        float aoa = aoa_deg * DEG2RAD;
+        _calculateAcceleration(a, aoa, kts * KTS2MPS, acc);
+        float lift = acc[2];
+        if (lift > 0)   aoa_deg -= aoa_deg_delta;
+        if (lift < 0)   aoa_deg += aoa_deg_delta;
+        aoa_deg_delta /= 2;
+        if (aoa_deg_delta < 0.001)    break;
+        //printf("aoa_deg=%g\n", aoa_deg);
+    }
+    //printf("alt=%g kts=%g: aoa_deg=%g\n", alt, kts, aoa_deg);
+    return aoa_deg;
+}
+
+/* Returns info about best speed at a particular height. */
+void yasim_best_speed_at_height(Airplane* a, const float alt, Airplane::Configuration cfgID,
+        bool verbose, float& o_best_speed_kts, float& o_best_drag, float& o_best_aoa_deg)
+{
+    o_best_speed_kts = 0;
+    o_best_drag = 1e9;
+    /* Could probably use a gradient-descent method, but for now we just use
+    linear list of speeds. */
+    for (float kts = 50; kts < 600; kts += 1) {
+        float acc[3];
+        float aoa_deg = yasim_find_zero_lift_aoa(a, alt, kts, cfgID, acc);
+        float aoa = aoa_deg * DEG2RAD;
+        float drag = acc[0] / -9.8;
+        float idrag = 9.8 * tan(aoa);
+        float drag_total = drag + idrag;
+        if (verbose) {
+            printf("acc=(% 10.4f % 10.2g % 10.4f)."
+                    " alt=% 10.4f kts=% 10.4f: aoa_deg=% 10.4f drag=% 10.4f"
+                    " idrag=% 10.4f drag_total=% 10.4f\n",
+                    acc[0], acc[1], acc[2],
+                    alt, kts, aoa_deg, drag,
+                    idrag, drag_total);
+        }
+        if (drag_total < o_best_drag) {
+            o_best_speed_kts = kts;
+            o_best_drag = drag_total;
+            o_best_aoa_deg = aoa_deg;
+        }
+    }
+}
+
+/* Shows best speed at various heights. */
+void yasim_show_best_speed_at_heights(Airplane* a, Airplane::Configuration cfgID)
+{
+    for (int alt_ft=0; alt_ft < 50*1000; alt_ft += 1000) {
+        float alt_m = alt_ft * 12.0 * 2.54 / 100.0;
+        float best_speed_kts;
+        float best_drag;
+        float best_aoa_deg;
+        yasim_best_speed_at_height(a, alt_m, cfgID, false /*verbose*/,
+                best_speed_kts, best_drag, best_aoa_deg);
+        printf("altitude=% 6ift: best_speed=%gkts best_aoa=%.2fdeg drag=%g\n",
+                alt_ft, best_speed_kts, best_aoa_deg, best_drag);
+    }
+}
+
+
 void findMinSpeed(Airplane* a, float alt)
 {
     a->addControlSetting(Airplane::CRUISE, DEF_PROP_ELEVATOR_TRIM, 0.7f);
@@ -238,6 +305,8 @@ int usage()
     fprintf(stderr, "  yasim <aircraft.xml> [-test] [-a meters] [-s kts] [-approach | -cruise] ]\n");
     fprintf(stderr, "                       -g print lift/drag table: aoa, lift, drag, lift/drag \n");
     fprintf(stderr, "                       -d print drag over TAS: kts, drag\n");
+    fprintf(stderr, "                       -D print kts at lowest drag at specified altitude\n");
+    fprintf(stderr, "                       --aD print kts at lowest drag at different altitudes\n");
     fprintf(stderr, "                       -a set altitude in meters!\n");
     fprintf(stderr, "                       -s set speed in knots\n");
     fprintf(stderr, "                       -m print mass distribution table: id, x, y, z, mass \n");
@@ -302,8 +371,8 @@ int main(int argc, char** argv)
                 yasim_masses(a);
             }
         } 
-        else if(strcmp(argv[2], "-d") == 0) {
-            float alt = 2000, aoa = a->getCruiseAoA();
+        else if(!strcmp(argv[2], "-d") || !strcmp(argv[2], "-D") || !strcmp(argv[2], "--aD")) {
+            float alt = 2000;
             for(int i=3; i<argc; i++) {
                 if (std::strcmp(argv[i], "-a") == 0) {
                     if (i+1 < argc) alt = std::atof(argv[++i]);
@@ -312,7 +381,20 @@ int main(int argc, char** argv)
                 else if(std::strcmp(argv[i], "-cruise") == 0) cfg = Airplane::CRUISE;
                 else return usage();
             }
-            yasim_drag(a, aoa, alt, cfg);
+            if (strcmp(argv[2], "-d") == 0) {
+                float aoa = a->getCruiseAoA();
+                yasim_drag(a, aoa, alt, cfg);
+            }
+            else if (!strcmp(argv[2], "-D")) {
+                float best_speed_kts;
+                float best_drag;
+                float best_aoa_deg;
+                yasim_best_speed_at_height(a, alt, cfg, true /*verbose*/, best_speed_kts, best_drag, best_aoa_deg);
+                printf("altitude=%gm: best speed=%g best_aoa_deg=%g drag=%g\n", alt, best_speed_kts, best_aoa_deg, best_drag);
+            }
+            else if (!strcmp(argv[2], "--aD")) {
+                yasim_show_best_speed_at_heights(a, cfg);
+            }
         }
         else if(strcmp(argv[2], "-m") == 0) {
             yasim_masses(a);
