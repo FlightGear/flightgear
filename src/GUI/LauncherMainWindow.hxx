@@ -47,7 +47,7 @@ public:
 
     bool wasRejected();
 
-
+    bool event(QEvent *event) override;
 private:
     LauncherController* m_controller;
 };
