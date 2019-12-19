@@ -59,9 +59,10 @@ public:
     static bool isMultiplayerRequested();
 
 private:
-    void add_channel(const std::string& config);
+    FGProtocol* add_channel(const std::string& config);
+    
     FGProtocol* parse_port_config( const std::string& cfgstr );
-
+    FGProtocol* parse_port_config( const string_list& tokens );
 private:
     // define the global I/O channel list
     //io_container global_io_list;
@@ -70,6 +71,9 @@ private:
     ProtocolVec io_channels;
 
     SGPropertyNode_ptr _realDeltaTime;
+    
+    bool commandAddChannel(const SGPropertyNode * arg, SGPropertyNode * root);
+    bool commandRemoveChannel(const SGPropertyNode * arg, SGPropertyNode * root);
 };
 
 #endif // _FG_IO_HXX

@@ -33,7 +33,7 @@ FGProtocol::FGProtocol() :
     count(0),
     dir(SG_IO_NONE),
     enabled(false),
-    io(NULL)
+    io(nullptr)
 {
 }
 
@@ -42,6 +42,10 @@ FGProtocol::~FGProtocol() {
     delete io;
 }
 
+void FGProtocol::set_name(const std::string& n)
+{
+    m_name = n;
+}
 
 // standard I/O channel open routine
 bool FGProtocol::open() {
