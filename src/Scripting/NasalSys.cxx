@@ -590,6 +590,8 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
   } else if ((argc == 3) && naIsFunc(args[2])) {
     self = args[1];
     func = args[2];
+  } else {
+    naRuntimeError(c, "bad function/self arguments to maketimer");
   }
 
   TimerObj* timerObj = new TimerObj(c, nasalSys, func, self, args[0].num);
