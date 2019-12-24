@@ -20,3 +20,4 @@ build*/
 *.qmlc
 CMakeLists.txt.user
 *.pro.user
+nbproject
