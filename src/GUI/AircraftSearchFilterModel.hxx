@@ -29,6 +29,10 @@ public:
 
     Q_INVOKABLE void selectVariantForAircraftURI(QUrl uri);
 
+    Q_INVOKABLE void loadRatingsSettings();
+
+    Q_INVOKABLE void saveRatingsSettings();
+
     QList<int> ratings() const
     {
         return m_ratings;

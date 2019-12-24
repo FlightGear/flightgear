@@ -142,7 +142,8 @@ public:
     // used on the summary screen
     Q_INVOKABLE QVariantList defaultSplashUrls() const;
 
-
+    Q_INVOKABLE QVariant loadUISetting(QString name, QVariant defaultValue) const;
+    Q_INVOKABLE void saveUISetting(QString name, QVariant value) const;
 
     LaunchConfig* config() const
     { return m_config; }

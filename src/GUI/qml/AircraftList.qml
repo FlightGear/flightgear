@@ -17,6 +17,10 @@ FocusScope
         }
     }
 
+    Component.onCompleted: {
+        _launcher.browseAircraftModel.loadRatingsSettings();
+    }
+
     Rectangle
     {
         id: tabBar

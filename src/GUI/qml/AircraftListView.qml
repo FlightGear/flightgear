@@ -12,6 +12,9 @@ Item {
 
     function updateSelectionFromLauncher()
     {
+        if (!model)
+            return;
+
         model.selectVariantForAircraftURI(_launcher.selectedAircraft);
         var row = model.indexForURI(_launcher.selectedAircraft);
         if (row >= 0) {

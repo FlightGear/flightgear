@@ -1,5 +1,8 @@
 #include "AircraftSearchFilterModel.hxx"
 
+#include <QSettings>
+#include <QDebug>
+
 #include "AircraftModel.hxx"
 #include <simgear/package/Package.hxx>
 
@@ -185,5 +188,30 @@ bool AircraftProxyModel::filterAircraft(const QModelIndex &sourceIndex) const
     }
 
     return false;
+}
+
+void AircraftProxyModel::loadRatingsSettings()
+{
+    QSettings settings;
+    m_ratingsFilter = settings.value("enable-ratings-filter", true).toBool();
+    QVariantList vRatings = settings.value("ratings-filter").toList();
+    if (vRatings.size() == 4) {
+        for (int i=0; i < 4; ++i) {
+            m_ratings[i] = vRatings.at(i).toInt();
+        }
+    }
+
+    invalidate();
+}
+
+void AircraftProxyModel::saveRatingsSettings()
+{
+    QSettings settings;
+    settings.setValue("enable-ratings-filter", m_ratingsFilter);
+    QVariantList vRatings;
+    for (int i=0; i < 4; ++i) {
+        vRatings.append(m_ratings.at(i));
+    }
+    settings.setValue("ratings-filter", vRatings);
 }
 

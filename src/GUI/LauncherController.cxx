@@ -722,6 +722,20 @@ QVariantList LauncherController::defaultSplashUrls() const
     return urls;
 }
 
+QVariant LauncherController::loadUISetting(QString name, QVariant defaultValue) const
+{
+    QSettings settings;
+    if (!settings.contains(name))
+        return defaultValue;
+    return settings.value(name);
+}
+
+void LauncherController::saveUISetting(QString name, QVariant value) const
+{
+    QSettings settings;
+    settings.setValue(name, value);
+}
+
 void LauncherController::onAircraftInstalledCompleted(QModelIndex index)
 {
     maybeUpdateSelectedAircraft(index);
