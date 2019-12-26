@@ -116,6 +116,9 @@ get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 get_property(EMBEDDED_RESOURCE_SOURCES GLOBAL PROPERTY EMBEDDED_RESOURCE_SOURCES)
 get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS)
 
+set_source_files_properties(${EMBEDDED_RESOURCE_SOURCES} PROPERTIES GENERATED TRUE)
+set_source_files_properties(${EMBEDDED_RESOURCE_HEADERS} PROPERTIES GENERATED TRUE)
+
 # Set up the separate executable for running the test suite.
 add_executable(fgfs_test_suite
     ${FG_SOURCES}
@@ -125,7 +128,8 @@ add_executable(fgfs_test_suite
     ${TESTSUITE_SOURCES}
     ${TESTSUITE_HEADERS}
 )
-add_dependencies(fgfs_test_suite buildId)
+
+add_dependencies(fgfs_test_suite buildId embeddedresources)
 set_target_properties(fgfs_test_suite
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
