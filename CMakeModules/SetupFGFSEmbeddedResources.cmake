@@ -25,12 +25,4 @@ function(setup_fgfs_embedded_resources)
           "Either MSVC_3RDPARTY_ROOT or MSVC_3RDPARTY_DIR is empty or unset")
       endif()
     endif()
-
-    add_custom_command(
-      OUTPUT ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-             ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
-      COMMAND fgrcc --root=${CMAKE_SOURCE_DIR} --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx --init-func-name=initFlightGearEmbeddedResources --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-      DEPENDS
-        fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-    )
 endfunction()

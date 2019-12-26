@@ -73,6 +73,9 @@ get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
 get_property(EMBEDDED_RESOURCE_SOURCES GLOBAL PROPERTY EMBEDDED_RESOURCE_SOURCES)
 get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS)
 
+set_source_files_properties(${EMBEDDED_RESOURCE_SOURCES} PROPERTIES GENERATED TRUE)
+set_source_files_properties(${EMBEDDED_RESOURCE_HEADERS} PROPERTIES GENERATED TRUE)
+
 # important we pass WIN32 here so the console is optional. Other
 # platforms ignore this option. If a console is needed we allocate
 # it manually via AllocConsole()
@@ -87,7 +90,7 @@ add_executable(fgfs
     ${EMBEDDED_RESOURCE_HEADERS}
 )
 
-add_dependencies(fgfs buildId)
+add_dependencies(fgfs buildId embeddedresources)
 # explicitly disable automoc for main fgfs target
 set_property(TARGET fgfs PROPERTY AUTOMOC OFF)
 
