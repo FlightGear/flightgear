@@ -31,30 +31,30 @@ public:
     float getVehicleRadius(void) const { return _vehicle_radius; }
 
 private:
-    struct EngRec { 
-        char* prefix {nullptr}; 
-        Thruster* eng {nullptr}; 
+    struct EngRec {
+        char* prefix {nullptr};
+        Thruster* eng {nullptr};
     };
-    struct WeightRec { 
+    struct WeightRec {
         char* prop {nullptr};
         float size {0};
         int handle {0};
     };
-    struct ControlOutput { 
+    struct ControlOutput {
         int handle {0};
         SGPropertyNode* prop {nullptr};
         ControlMap::ControlType control;
         bool left {false};
         float min {0};
-        float max {0}; 
+        float max {0};
     };
 
     void parseAirplane(const XMLAttributes* a);
     void parseApproachCruise(const XMLAttributes* a, const char* name);
     void parseSolveWeight(const XMLAttributes* a);
     void parseCockpit(const XMLAttributes* a);
-    
-    
+
+
     void setOutputProperties(float dt);
 
     void parseRotor(const XMLAttributes* a, const char* name);
@@ -64,9 +64,10 @@ private:
     void parseWeight(const XMLAttributes* a);
     void parseStall(const XMLAttributes* a);
     void parseFlap(const XMLAttributes* a, const char* name);
-    
+
     void parseTurbineEngine(const XMLAttributes* a);
     void parsePistonEngine(const XMLAttributes* a);
+    void parseElectricEngine(const XMLAttributes* a);
     void parsePropeller(const XMLAttributes* a);
     void parseThruster(const XMLAttributes* a);
     void parseJet(const XMLAttributes* a);
@@ -83,15 +84,15 @@ private:
     void parseControlIn(const XMLAttributes* a);
     void parseControlOut(const XMLAttributes* a);
     void parseControlSpeed(const XMLAttributes* a);
-    
-    
+
+
     int attri(const XMLAttributes* atts, const char* attr);
-    int attri(const XMLAttributes* atts, const char* attr, int def); 
+    int attri(const XMLAttributes* atts, const char* attr, int def);
     float attrf(const XMLAttributes* atts, const char* attr);
-    float attrf(const XMLAttributes* atts, const char* attr, float def); 
+    float attrf(const XMLAttributes* atts, const char* attr, float def);
     void attrf_xyz(const XMLAttributes* atts, float* out);
     double attrd(const XMLAttributes* atts, const char* attr);
-    double attrd(const XMLAttributes* atts, const char* attr, double def); 
+    double attrd(const XMLAttributes* atts, const char* attr, double def);
     bool attrb(const XMLAttributes* atts, const char* attr);
 
     // The core Airplane object we manage.
