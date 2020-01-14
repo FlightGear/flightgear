@@ -86,11 +86,15 @@ private:
   typedef std::map<unsigned, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
 
-  double mTimeOffset;
   bool mTimeOffsetSet;
-  double playerLag;
+  bool realTime;
   int compensateLag;
+  double playerLag;
+  double mTimeOffset;
   double lastUpdateTime;
+  double lastTime;
+  double lagPpsAveraged;
+  double rawLag, rawLagMod, lagModAveraged;
 
   /// Properties which are for now exposed for testing
   bool mAllowExtrapolation;
