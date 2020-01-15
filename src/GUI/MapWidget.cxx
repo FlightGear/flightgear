@@ -500,6 +500,13 @@ void MapWidget::setProperty(SGPropertyNode_ptr prop)
   _root->setBoolValue("draw-data", false);
   _root->setBoolValue("draw-flight-history", false);
   _root->setBoolValue("magnetic-headings", true);
+
+  /* If /gui/map/key-pan is undefined, fgdata's gui/dialogs/map.xml will set it
+  to "" when it opens map, so if we see this we change to default value of 1.
+  */
+  if (!strcmp( _root->getStringValue("key-pan"), "")) {
+    _root->setIntValue("key-pan", 1);
+  }
 }
 
 void MapWidget::setSize(int w, int h)
@@ -554,6 +561,16 @@ int MapWidget::checkKey (int key, int updown )
 {
   if ((updown == PU_UP) || !isVisible () || !isActive () || (window != puGetWindow())) {
     return FALSE ;
+  }
+  
+  bool key_pan = _root->getIntValue("key-pan");
+  if (!key_pan && (0
+        || key == PU_KEY_UP
+        || key == PU_KEY_DOWN
+        || key == PU_KEY_LEFT
+        || key == PU_KEY_RIGHT
+        )) {
+    return FALSE;
   }
 
   switch (key)
