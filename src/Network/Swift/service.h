@@ -199,6 +199,44 @@ public:
 protected:
     DBusHandlerResult dbusMessageHandler(const CDBusMessage& message) override;
 
+private:
+    SGPropertyNode* versionNode;
+    SGPropertyNode* textMessageNode;
+    SGPropertyNode* aircraftModelPathNode;
+    //SGPropertyNode* aircraftLiveryNode;
+    //SGPropertyNode* aircraftIcaoCodeNode;
+    SGPropertyNode* aircraftDescriptionNode;
+    SGPropertyNode* isPausedNode;
+    SGPropertyNode* latitudeNode;
+    SGPropertyNode* longitudeNode;
+    SGPropertyNode* altitudeMSLNode;
+    SGPropertyNode* heightAGLNode;
+    SGPropertyNode* groundSpeedNode;
+    SGPropertyNode* pitchNode;
+    SGPropertyNode* rollNode;
+    SGPropertyNode* trueHeadingNode;
+    SGPropertyNode* wheelsOnGroundNode;
+    SGPropertyNode* com1ActiveNode;
+    SGPropertyNode* com1StandbyNode;
+    SGPropertyNode* com2ActiveNode;
+    SGPropertyNode* com2StandbyNode;
+    SGPropertyNode* transponderCodeNode;
+    SGPropertyNode* transponderModeNode;
+    SGPropertyNode* transponderIdentNode;
+    SGPropertyNode* beaconLightsNode;
+    SGPropertyNode* landingLightsNode;
+    SGPropertyNode* navLightsNode;
+    SGPropertyNode* strobeLightsNode;
+    SGPropertyNode* taxiLightsNode;
+    SGPropertyNode* altimeterServiceableNode;
+    SGPropertyNode* pressAltitudeFtNode;
+    SGPropertyNode* flapsDeployRatioNode;
+    SGPropertyNode* gearDeployRatioNode;
+    SGPropertyNode* speedBrakeDeployRatioNode;
+    //SGPropertyNode* numberEnginesNode;
+    //SGPropertyNode* engineN1PercentageNode;
+    SGPropertyNode* aircraftNameNode;
+
 };
 } // namespace FGSwiftBus
 
