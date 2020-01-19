@@ -193,6 +193,9 @@ public:
     //! Get the ratio how much the speedbrakes surfaces are extended (0.0 is fully retracted, and 1.0 is fully extended)
     double getSpeedBrakeRatio() const;
 
+    //! Get ground elevation at aircraft current position
+    double getGroundElevation() const;
+
     //! Perform generic processing
     int process();
 
@@ -233,6 +236,7 @@ private:
     SGPropertyNode* flapsDeployRatioNode;
     SGPropertyNode* gearDeployRatioNode;
     SGPropertyNode* speedBrakeDeployRatioNode;
+    SGPropertyNode* groundElevation;
     //SGPropertyNode* numberEnginesNode;
     //SGPropertyNode* engineN1PercentageNode;
     SGPropertyNode* aircraftNameNode;

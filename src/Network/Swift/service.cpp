@@ -68,6 +68,7 @@ CService::CService()
     gearDeployRatioNode = fgGetNode("/gear/gear/position-norm");
     speedBrakeDeployRatioNode = fgGetNode("/surface-positions/speedbrake-pos-norm");
     aircraftNameNode = fgGetNode("/sim/aircraft");
+    groundElevation = fgGetNode("/position/ground-elev-m");
 
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Service initialized");
 }
@@ -298,6 +299,11 @@ double CService::getSpeedBrakeRatio() const
 	return speedBrakeDeployRatioNode->getFloatValue();
 }
 
+double CService::getGroundElevation() const
+{
+    return groundElevation->getDoubleValue();
+}
+
 std::string CService::getAircraftModelFilename() const
 {
     std::string modelFileName = getAircraftName();
@@ -481,6 +487,10 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
         } else if (message.getMethodName() == "getPressAlt") {
             queueDBusCall([=]() {
                 sendDBusReply(sender, serial, getPressAlt());
+            });
+        } else if (message.getMethodName() == "getGroundElevation") {
+            queueDBusCall([=]() {
+                sendDBusReply(sender, serial, getGroundElevation());
             });
         } else if (message.getMethodName() == "setCom1ActiveKhz") {
             maybeSendEmptyDBusReply(wantsReply, sender, serial);
