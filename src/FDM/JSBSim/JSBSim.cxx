@@ -154,7 +154,7 @@ std::map<std::string,int> FGJSBsim::TURBULENCE_TYPE_NAMES;
 static FGTurbulenceSeverityTable TurbulenceSeverityTable;
 
 FGJSBsim::FGJSBsim( double dt )
-  : FGInterface(dt)
+  : FGInterface(dt), delta_t(dt)
 {
     bool result;
     if( TURBULENCE_TYPE_NAMES.empty() ) {
@@ -237,7 +237,7 @@ FGJSBsim::FGJSBsim( double dt )
 
     terrain = fgGetNode("/sim/fdm/surface", true);
 
-    fdmex->Setdt( dt );
+//  fdmex->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path, engine_path, systems_path,
                                fgGetString("/sim/aero"), false );
@@ -433,7 +433,6 @@ void FGJSBsim::init()
     common_init();
 
     copy_to_JSBsim();
-    fdmex->Resume();
     fdmex->RunIC();     //loop JSBSim once w/o integrating
     if (fgGetBool("/sim/presets/running")) {
       Propulsion->InitRunning(-1);
@@ -466,6 +465,8 @@ void FGJSBsim::init()
       }
       do_trim();
       needTrim = false;
+      fdmex->Setdt( delta_t );
+      fdmex->Resume();
     }
 
     copy_from_JSBsim(); //update the bus
