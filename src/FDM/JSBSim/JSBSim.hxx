@@ -307,6 +307,7 @@ private:
     JSBSim::FGColumnVector3 hook_root_struct;
     double hook_length;
 
+    double delta_t;
     bool crashed;
 
     AircraftMesh_ptr mesh;
