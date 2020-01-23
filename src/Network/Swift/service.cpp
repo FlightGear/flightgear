@@ -37,7 +37,7 @@ CService::CService()
 {
     // Initialize node pointers
     versionNode = fgGetNode("/sim/version/flightgear");
-    textMessageNode = fgGetNode("/sim/message/copilot");
+    textMessageNode = fgGetNode("/sim/messages/copilot");
     aircraftModelPathNode = fgGetNode("/sim/aircraft-dir");
     aircraftDescriptionNode = fgGetNode("/sim/description");
     isPausedNode = fgGetNode("/sim/freeze/master");
