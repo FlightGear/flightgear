@@ -462,11 +462,17 @@ void FGJSBsim::init()
         fgic->SetVNorthFpsIC(gndVelNED(1));
         fgic->SetVEastFpsIC(gndVelNED(2));
         fgic->SetVDownFpsIC(gndVelNED(3));
+
+        fdmex->Resume();
+        do_trim();
       }
-      do_trim();
-      needTrim = false;
+      else
+      {
+        do_trim();
+        fdmex->Resume();
+      }
       fdmex->Setdt( delta_t );
-      fdmex->Resume();
+      needTrim = false;
     }
 
     copy_from_JSBsim(); //update the bus
