@@ -1846,6 +1846,7 @@ struct OptionDesc {
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
+    {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {0}
 };
 
