@@ -98,9 +98,9 @@ private:
     void clearAxesAndButtons();
   };
     
+  bool initializing[MAX_JOYSTICKS];
   joystick joysticks[MAX_JOYSTICKS];
   void updateJoystick(int index, joystick* joy, double dt);
-
 };
 
 #endif
