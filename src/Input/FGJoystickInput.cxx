@@ -355,7 +355,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   // https://sourceforge.net/p/flightgear/codetickets/2185/
   if (initializing[index]) {
     for (int j = 0; j < joy->naxes; j++) {
-      if (fabsf(axis_values[j] > 0.5f)) return;
+      if (fabsf(axis_values[j]) > 0.5f) return;
     }
     initializing[index] = false;
   }
