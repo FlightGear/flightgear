@@ -65,7 +65,7 @@ public:
     static const std::string& ObjectPath();
 
     //! Getting flightgear version
-    static std::string getVersionNumber();
+    static int getVersionNumber();
 
     ////! Add a text message to the on-screen display, with RGB components in the range [0,1]
     void addTextMessage(const std::string& text);
@@ -203,7 +203,6 @@ protected:
     DBusHandlerResult dbusMessageHandler(const CDBusMessage& message) override;
 
 private:
-    SGPropertyNode* versionNode;
     SGPropertyNode* textMessageNode;
     SGPropertyNode* aircraftModelPathNode;
     //SGPropertyNode* aircraftLiveryNode;

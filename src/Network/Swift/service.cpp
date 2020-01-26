@@ -31,12 +31,13 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
 
+#define FGSWIFTBUS_API_VERSION 1;
+
 namespace FGSwiftBus {
 
 CService::CService()
 {
     // Initialize node pointers
-    versionNode = fgGetNode("/sim/version/flightgear");
     textMessageNode = fgGetNode("/sim/messages/copilot");
     aircraftModelPathNode = fgGetNode("/sim/aircraft-dir");
     aircraftDescriptionNode = fgGetNode("/sim/description");
@@ -85,9 +86,9 @@ const std::string& CService::ObjectPath()
 }
 
 // Static method
-std::string CService::getVersionNumber()
+int CService::getVersionNumber()
 {
-    return fgGetString("/sim/version/flightgear");
+    return FGSWIFTBUS_API_VERSION;
 }
 
 void CService::addTextMessage(const std::string& text)
