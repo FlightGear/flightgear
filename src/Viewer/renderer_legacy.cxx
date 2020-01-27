@@ -179,26 +179,26 @@ public:
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
-      
+
     // HUD can be NULL
       HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
       if (hud) {
           hud->draw(state);
       }
-      
+
     glPopClientAttrib();
     glPopAttrib();
   }
 
   virtual osg::Object* cloneType() const { return new SGHUDDrawable; }
   virtual osg::Object* clone(const osg::CopyOp&) const { return new SGHUDDrawable; }
-  
+
 private:
 };
 
 class FGLightSourceUpdateCallback : public osg::NodeCallback {
 public:
-  
+
   /**
    * @param isSun true if the light is the actual sun i.e., for
    * illuminating the moon.
@@ -209,19 +209,19 @@ public:
     : NodeCallback(nc, op), _isSun(nc._isSun)
   {}
   META_Object(flightgear,FGLightSourceUpdateCallback);
-  
+
   virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
   {
     assert(dynamic_cast<osg::LightSource*>(node));
     osg::LightSource* lightSource = static_cast<osg::LightSource*>(node);
     osg::Light* light = lightSource->getLight();
-    
+
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
       if (!l) {
           // lighting is down during re-init
           return;
       }
-      
+
     if (_isSun) {
       light->setAmbient(Vec4(0.0f, 0.0f, 0.0f, 0.0f));
       light->setDiffuse(Vec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -364,12 +364,12 @@ FGRenderer::FGRenderer() :
     _root->setName("fakeRoot");
 
     _updateVisitor = new SGUpdateVisitor;
-  
+
   // when Rembrandt is enabled, we use this group to access the whole
   // scene. Since the only child is the _viewerSceneRoot, we could
   // simply copy the reference, we don't need the additional group.
     _deferredRealRoot = new osg::Group;
-    
+
    _numCascades = 4;
    _cascadeFar[0] = 5.f;
    _cascadeFar[1] = 50.f;
@@ -383,12 +383,12 @@ FGRenderer::~FGRenderer()
     for (; i != _listeners.end(); ++i) {
         delete *i;
     }
-    
+
     // replace the viewer's scene completely
     if (getViewer()) {
         getViewer()->setSceneData(new osg::Group);
     }
-    
+
     delete _sky;
 }
 
@@ -421,7 +421,7 @@ FGRenderer::preinit( void )
             camera->addChild(_splash);
         }
     }
-    
+
     _frameStamp = new osg::FrameStamp;
     viewer->setFrameStamp(_frameStamp.get());
     // Scene doesn't seem to pass the frame stamp to the update
@@ -429,7 +429,7 @@ FGRenderer::preinit( void )
     _updateVisitor->setFrameStamp(_frameStamp.get());
     viewer->setUpdateVisitor(_updateVisitor.get());
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
-    
+
     // hide the menubar if it overlaps the window, so the splash screen
     // is completely visible. We reset this value when the splash screen
     // is fading out.
@@ -470,7 +470,7 @@ FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
     _listeners.push_back(l);
     fgAddChangeListener(l, path);
 }
-                                    
+
 void
 FGRenderer::init( void )
 {
@@ -507,7 +507,7 @@ FGRenderer::init( void )
         _pipeline = makeRenderingPipeline(_renderer, 0);
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _position_finalized = fgGetNode("/sim/position-finalized", true);
-    
+
     _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
     _virtual_cockpit  = fgGetNode("/sim/virtual-cockpit", true);
 
@@ -519,17 +519,19 @@ FGRenderer::init( void )
 
     _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
     _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
+    _triangle_directional_lights = fgGetNode("/sim/rendering/triangle-directional-lights", true);
     _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
 
     _altitude_ft = fgGetNode("/position/altitude-ft", true);
 
     _cloud_status = fgGetNode("/environment/clouds/status", true);
     _visibility_m = fgGetNode("/environment/visibility-m", true);
-    
+
     bool use_point_sprites = _point_sprites->getBoolValue();
     bool distance_attenuation = _distance_attenuation->getBoolValue();
+    bool triangles = _triangle_directional_lights->getBoolValue();
 
-    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation );
+    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation, triangles );
 
     if (const char* tc = fgGetString("/sim/rendering/texture-compression", NULL)) {
       if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||
@@ -550,9 +552,9 @@ FGRenderer::init( void )
     }
     SGSceneFeatures::instance()->setTextureCompressionPath(globals->get_texture_cache_dir());
     // create sky, but can't build until setupView, since we depend
-// on other subsystems to be inited, eg Ephemeris    
+// on other subsystems to be inited, eg Ephemeris
     _sky = new SGSky;
-    
+
     SGPath texture_path(globals->get_fg_root());
     texture_path.append("Textures");
     texture_path.append("Sky");
@@ -560,7 +562,7 @@ FGRenderer::init( void )
         SGCloudLayer * layer = new SGCloudLayer(texture_path.local8BitStr());
         _sky->add_cloud_layer(layer);
     }
-    
+
     _sky->texture_path( texture_path.local8BitStr() );
 
     if (!_classicalRenderer) {
@@ -621,7 +623,7 @@ FGRenderer::buildClassicalPipeline(CameraGroup* cgroup, unsigned flags, osg::Cam
     // The camera group will always update the camera
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
     info->name = "classic";
-    
+
     Camera* farCamera = 0;
     if ((flags & (CameraGroup::GUI | CameraGroup::ORTHO)) == 0) {
         farCamera = new Camera;
@@ -1094,7 +1096,7 @@ FGRenderer::buildDeferredPipeline(CameraGroup* cgroup, unsigned flags, osg::Came
     return buildCameraFromRenderingPipeline(_pipeline, cgroup, flags, camera, view, projection, gc);
 }
 
-osg::Camera* 
+osg::Camera*
 FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const FGRenderingPipeline::Pass* pass )
 {
     osg::Camera* camera = new osg::Camera;
@@ -1149,7 +1151,7 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const F
     return camera;
 }
 
-osg::Camera* 
+osg::Camera*
 FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, osg::GraphicsContext* gc, const FGRenderingPipeline::Stage* stage )
 {
     osg::Camera* camera = buildDeferredFullscreenCamera(info, static_cast<const FGRenderingPipeline::Pass*>(stage));
@@ -1269,7 +1271,7 @@ FGRenderer::buildLightingSkyCloudsPass(FGRenderingPipeline::Pass* pass)
     Group* group = new Group;
     group->setName("skyCloudsGroup");
     group->setNodeMask(simgear::BACKGROUND_BIT);
-    
+
     StateSet* ss = group->getOrCreateStateSet();
     ss->setAttributeAndModes( new osg::ColorMask( true, true, true, false ), osg::StateAttribute::ON );
     group->addChild( _sky->getPreRoot() );
@@ -1345,7 +1347,7 @@ CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rp
 {
     CameraInfo* info = new CameraInfo(flags);
     buildBuffers(rpipe, info);
-    
+
     for (size_t i = 0; i < rpipe->stages.size(); ++i) {
         osg::ref_ptr<FGRenderingPipeline::Stage> stage = rpipe->stages[i];
         buildStage(info, stage, cgroup, camera, view, projection, gc);
@@ -1359,26 +1361,26 @@ CameraInfo* FGRenderer::buildCameraFromRenderingPipeline(FGRenderingPipeline* rp
 void FGRenderer::setupRoot()
 {
     osg::StateSet* stateSet = _root->getOrCreateStateSet();
-    
+
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
-    
+
     stateSet->setAttribute(new osg::Depth(osg::Depth::LESS));
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-    
+
     stateSet->setAttribute(new osg::BlendFunc);
     stateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
-    
+
     stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
-    
+
     // this will be set below
     stateSet->setMode(GL_NORMALIZE, osg::StateAttribute::OFF);
-    
+
     osg::Material* material = new osg::Material;
     stateSet->setAttribute(material);
-    
+
     stateSet->setTextureAttribute(0, new osg::TexEnv);
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
-    
+
     osg::Hint* hint = new osg::Hint(GL_FOG_HINT, GL_DONT_CARE);
     hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/fog"));
     stateSet->setAttribute(hint);
@@ -1395,7 +1397,7 @@ void FGRenderer::setupRoot()
     hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/perspective-correction"));
     stateSet->setAttribute(hint);
 }
-                                    
+
 void
 FGRenderer::setupView( void )
 {
@@ -1409,7 +1411,7 @@ FGRenderer::setupView( void )
     osg::PolygonOffset::setFactorMultiplier(1);
 
     setupRoot();
-  
+
 // build the sky
     Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
 
@@ -1427,11 +1429,11 @@ FGRenderer::setupView( void )
                   *ephemerisSub->data(),
                   fgGetNode("/environment", true),
                   opt.get());
-    
+
     viewer->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    
-  
+
+
     // need to update the light on every frame
     // OSG LightSource objects are rather confusing. OSG only supports
     // the 10 lights specified by OpenGL itself; if more than one
@@ -1441,7 +1443,7 @@ FGRenderer::setupView( void )
     // LightSource is just a shortcut for setting up a state set that
     // has the corresponding OpenGL light enabled: a LightSource will
     // affect geometry anywhere in the scene graph that has its light
-    // number enabled in a state set. 
+    // number enabled in a state set.
     osg::ref_ptr<LightSource> lightSource = new LightSource;
     lightSource->setName("FGLightSource");
     lightSource->getLight()->setDataVariance(Object::DYNAMIC);
@@ -1450,7 +1452,7 @@ FGRenderer::setupView( void )
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
     lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
     _viewerSceneRoot->addChild(lightSource);
-    
+
     // we need a white diffuse light for the phase of the moon
     osg::ref_ptr<LightSource> sunLight = new osg::LightSource;
     sunLight->setName("sunLightSource");
@@ -1459,23 +1461,23 @@ FGRenderer::setupView( void )
     sunLight->setUpdateCallback(new FGLightSourceUpdateCallback(true));
     sunLight->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     sunLight->setLocalStateSetModes(osg::StateAttribute::ON);
-    
+
     // Hang a StateSet above the sky subgraph in order to turn off
     // light 0
     Group* skyGroup = _sky->getPreRoot();
     StateSet* skySS = skyGroup->getOrCreateStateSet();
     skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
     sunLight->addChild(skyGroup);
-    
+
     if ( _classicalRenderer ) {
         _root->addChild(sunLight);
     }
-  
+
     osg::Group* sceneGroup = globals->get_scenery()->get_scene_graph();
     sceneGroup->setName("rendererScene");
     sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);
     _root->addChild(sceneGroup);
-  
+
     // setup state-set for main scenery (including models and aircraft)
     osg::StateSet* stateSet = sceneGroup->getOrCreateStateSet();
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
@@ -1525,7 +1527,7 @@ FGRenderer::setupView( void )
         guiCamera->insertChild(0, geode);
         guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
-    
+
     osg::Switch* sw = new osg::Switch;
     sw->setName("scenerySwitch");
     sw->setUpdateCallback(new FGScenerySwitchCallback);
@@ -1538,7 +1540,7 @@ FGRenderer::setupView( void )
       _viewerSceneRoot->addChild(_sky->getCloudRoot());
       _viewerSceneRoot->addChild(FGCreateRedoutNode());
     }
-  
+
     // Attach empty program to the scene root so that shader programs
     // don't leak into state sets (effects) that shouldn't have one.
     stateSet = _viewerSceneRoot->getOrCreateStateSet();
@@ -1612,7 +1614,7 @@ FGRenderer::update( ) {
     flightgear::View *current__view = globals->get_current_view();
     // Force update of center dependent values ...
     current__view->set_dirty();
-  
+
     osg::Camera *camera = viewer->getCamera();
 
     osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 250000
@@ -1625,7 +1627,7 @@ FGRenderer::update( ) {
     camera->setClearColor(clear_color);
 
     updateSky();
-    
+
     // need to call the update visitor once
     _frameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
     _updateVisitor->setViewData(current__view->getViewPosition(),
@@ -1655,18 +1657,18 @@ FGRenderer::updateSky()
     // update fog params if visibility has changed
     double visibility_meters = _visibility_m->getDoubleValue();
     _sky->set_visibility(visibility_meters);
-    
+
     double altitude_m = _altitude_ft->getDoubleValue() * SG_FEET_TO_METER;
     _sky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    
+
     // The sun and moon distances are scaled down versions
     // of the actual distance to get both the moon and the sun
     // within the range of the far clip plane.
     // Moon distance:    384,467 kilometers
     // Sun distance: 150,000,000 kilometers
-    
+
     double sun_horiz_eff, moon_horiz_eff;
     if (_horizon_effect->getBoolValue()) {
         sun_horiz_eff
@@ -1682,7 +1684,7 @@ FGRenderer::updateSky()
     }
 
 
-    
+
     SGSkyState sstate;
     sstate.pos       = globals->get_current_view()->getViewPosition();
     sstate.pos_geod  = globals->get_current_view()->getPosition();
@@ -1692,7 +1694,7 @@ FGRenderer::updateSky()
     sstate.sun_dist  = 50000.0 * sun_horiz_eff;
     sstate.moon_dist = 40000.0 * moon_horiz_eff;
     sstate.sun_angle = l->get_sun_angle();
-    
+
     SGSkyColor scolor;
     scolor.sky_color   = SGVec3f(l->sky_color().data());
     scolor.adj_sky_color = SGVec3f(l->adj_sky_color().data());
@@ -1706,7 +1708,7 @@ FGRenderer::updateSky()
     _sky->reposition( sstate, *ephemerisSub->data(), delta_time_sec );
     _sky->repaint( scolor, *ephemerisSub->data() );
 }
-                                    
+
 void
 FGRenderer::resize( int width, int height )
 {
@@ -1799,12 +1801,12 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
          ++hit) {
         const osg::NodePath& np = hit->nodePath;
         osg::NodePath::const_reverse_iterator npi;
-        
+
         for (npi = np.rbegin(); npi != np.rend(); ++npi) {
             SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
             if (!ud || (ud->getNumPickCallbacks() == 0))
                 continue;
-            
+
             for (unsigned i = 0; i < ud->getNumPickCallbacks(); ++i) {
                 SGPickCallback* pickCallback = ud->getPickCallback(i);
                 if (!pickCallback)
@@ -1821,7 +1823,7 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
             } // of installed pick callbacks iteration
         } // of reverse node path walk
     }
-    
+
     return result;
 }
 
@@ -1848,7 +1850,7 @@ FGRenderer::removeCamera(osg::Camera* camera)
 {
     _viewerSceneRoot->removeChild(camera);
 }
-                                    
+
 void
 FGRenderer::setPlanes( double zNear, double zFar )
 {
@@ -1939,7 +1941,7 @@ public:
         }
         cout << endl;
     }
-    
+
     void doTraversal(Camera* camera, Node* root, Viewport* viewport)
     {
         ref_ptr<RefMatrix> projection
@@ -2019,7 +2021,7 @@ public:
                 modelview = createOrReuseMatrix(*getModelViewMatrix()
                                                 * camera.getViewMatrix());
             }
-            else {              // pre multiply 
+            else {              // pre multiply
                 projection = createOrReuseMatrix(camera.getProjectionMatrix()
                                                  * (*getProjectionMatrix()));
                 modelview = createOrReuseMatrix(camera.getViewMatrix()
@@ -2034,10 +2036,10 @@ public:
             pushViewport(camera.getViewport());
 
         pushProjectionMatrix(projection);
-        pushModelViewMatrix(modelview, camera.getReferenceFrame());    
+        pushModelViewMatrix(modelview, camera.getReferenceFrame());
 
         traverse(camera);
-    
+
         // restore the previous model view matrix.
         popModelViewMatrix();
 
@@ -2079,4 +2081,3 @@ bool printVisibleSceneInfo(FGRenderer* renderer)
 
 }
 // end of renderer.cxx
-    
