@@ -358,8 +358,12 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   // Joystick axes can get initialized to extreme values, at least on Linux.
   // https://sourceforge.net/p/flightgear/codetickets/2185/
   if (initializing[index]) {
+    float axis_values[MAX_JOYSTICK_AXES];
+    int buttons;
+
+    js->rawRead(&buttons, axis_values);
     for (int j = 0; j < joy->naxes; j++) {
-      if (fabsf(axis_values[j]) > 0.5f) return;
+      if (fabsf(axis_values[j]) > js->getSaturation(j)) return;
     }
     initializing[index] = false;
   }
