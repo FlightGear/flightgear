@@ -346,7 +346,7 @@ naRef ghostForPositioned(naContext c, FGPositionedRef pos)
     if (!pos) {
         return naNil();
     }
-    
+
     switch (pos->type()) {
     case FGPositioned::VOR:
     case FGPositioned::NDB:
@@ -478,7 +478,7 @@ static naRef waypointNavaid(naContext c, Waypt* wpt)
     if (!pos || (!FGNavRecord::isNavaidType(pos) && !fgpositioned_cast<FGFix>(pos))) {
         return naNil();
     }
-    
+
     return ghostForPositioned(c, wpt->source());
 }
 
@@ -616,7 +616,7 @@ static bool waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldNa
       // nothing changed
       return false;
   }
-    
+
     return true;
 }
 
@@ -701,6 +701,12 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
 {
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
+  if (!leg) {
+      *out = naNil();
+      naRuntimeError(c, "leg ghost member fetched, but no associated leg object found");
+      return "";
+  }
+
   Waypt* wpt = leg->waypoint();
 
   if (!strcmp(fieldName, "parents")) {
@@ -732,7 +738,11 @@ static const char* legGhostGetMember(naContext c, void* g, naRef field, naRef* o
   } else if (!strcmp(fieldName, "hold_count")) {
     *out = naNum(leg->holdCount());
   } else { // check for fields defined on the underlying waypoint
-    return waypointCommonGetMember(c, wpt, fieldName, out);
+    if (wpt) { // FIXME null check shouldn't be required, check refcount
+        return waypointCommonGetMember(c, wpt, fieldName, out);
+    } else {
+        naRuntimeError(c, "leg ghost member fetched, but no underlying waypoint object found");
+    }
   }
 
   return ""; // success
@@ -749,7 +759,7 @@ static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
 {
   const char* fieldName = naStr_data(field);
   FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
-  
+
   bool didChange = false;
   if (!strcmp(fieldName, "hold_count")) {
     const int count = static_cast<int>(value.num);
@@ -759,13 +769,13 @@ static void legGhostSetMember(naContext c, void* g, naRef field, naRef value)
   } else if (!strcmp(fieldName, "hold_heading_radial_deg")) {
     if (!leg->convertWaypointToHold())
       naRuntimeError(c, "couldn't convert leg waypoint into a hold");
-    
+
     // now we can call the base method
     didChange = waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
   } else {
     didChange = waypointCommonSetMember(c, leg->waypoint(), fieldName, value);
   }
-  
+
   if (didChange) {
     leg->markWaypointDirty();
   }
@@ -874,7 +884,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
           fp->setDestination(static_cast<FGRunway*>(nullptr));
           return;
       }
-      
+
     FGRunway* rwy = runwayGhost(value);
     if (rwy){
       fp->setDestination(rwy);
@@ -1256,7 +1266,7 @@ static int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result)
       result = wayptGhost(args[offset])->position();
       return 1;
     }
-      
+
       if (gt == &FPLegGhostType) {
           result = fpLegGhost(args[offset])->waypoint()->position();
           return 1;
@@ -1366,30 +1376,30 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 */
 static naRef f_get_cart_ground_intersection(naContext c, naRef me, int argc, naRef* args)
 {
-	SGVec3d dir;
-	SGVec3d pos;
+    SGVec3d dir;
+    SGVec3d pos;
 
-	if (argc != 2)
-		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects 2 arguments");
+    if (argc != 2)
+        naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects 2 arguments");
 
-	if (!vec3dFromHash(args[0], pos))
-		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position:hash{x,y,z}, direction:hash{x,y,z}) expects argument(0) to be hash of position containing x,y,z");
+    if (!vec3dFromHash(args[0], pos))
+        naRuntimeError(c, "geod_hash get_cart_ground_intersection(position:hash{x,y,z}, direction:hash{x,y,z}) expects argument(0) to be hash of position containing x,y,z");
 
-	if (!vec3dFromHash(args[1], dir))
-		naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects argument(1) to be hash of direction containing x,y,z");
+    if (!vec3dFromHash(args[1], dir))
+        naRuntimeError(c, "geod_hash get_cart_ground_intersection(position: hash{x,y,z}, direction:hash{x,y,z}) expects argument(1) to be hash of direction containing x,y,z");
 
-	SGVec3d nearestHit;
-	if (!globals->get_scenery()->get_cart_ground_intersection(pos, dir, nearestHit))
-		return naNil();
+    SGVec3d nearestHit;
+    if (!globals->get_scenery()->get_cart_ground_intersection(pos, dir, nearestHit))
+        return naNil();
 
-	const SGGeod geodHit = SGGeod::fromCart(nearestHit);
+    const SGGeod geodHit = SGGeod::fromCart(nearestHit);
 
-	// build a hash for returned intersection
-	naRef intersection_h = naNewHash(c);
-	hashset(c, intersection_h, "lat", naNum(geodHit.getLatitudeDeg()));
-	hashset(c, intersection_h, "lon", naNum(geodHit.getLongitudeDeg()));
-	hashset(c, intersection_h, "elevation", naNum(geodHit.getElevationM()));
-	return intersection_h;
+    // build a hash for returned intersection
+    naRef intersection_h = naNewHash(c);
+    hashset(c, intersection_h, "lat", naNum(geodHit.getLatitudeDeg()));
+    hashset(c, intersection_h, "lon", naNum(geodHit.getLongitudeDeg()));
+    hashset(c, intersection_h, "elevation", naNum(geodHit.getElevationM()));
+    return intersection_h;
 }
 
 // convert from aircraft reference frame to global (ECEF) cartesian
@@ -1439,11 +1449,11 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   double elev = argc == 3 ? naNumValue(args[2]).num : 10000;
   const simgear::BVHMaterial *material;
   SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
-    
+
   const auto scenery = globals->get_scenery();
   if (scenery == nullptr)
     return naNil();
-    
+
   if(!scenery->get_elevation_m(geod, elev, &material))
     return naNil();
 
@@ -1783,7 +1793,7 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
               appIds.insert(app->ident());
           }
       }
-      
+
       for (auto s : appIds) {
           naVec_append(approaches, stringToNasal(c, s));
       }
@@ -1792,13 +1802,13 @@ static naRef f_airport_approaches(naContext c, naRef me, int argc, naRef* args)
     RunwayVec runways;
     if (star)
         runways = star->runways();
-      
+
     for (unsigned int s=0; s<apt->numApproaches(); ++s) {
       Approach* app = apt->getApproachByIndex(s);
       if ((ty != PROCEDURE_INVALID) && (app->type() != ty)) {
         continue;
       }
-        
+
       naRef procId = stringToNasal(c, app->ident());
       naVec_append(approaches, procId);
     }
@@ -2166,24 +2176,24 @@ static naRef f_findByIdent(naContext c, naRef me, int argc, naRef* args)
     if ((argc < 2) || !naIsString(args[0]) || !naIsString(args[1]) ) {
         naRuntimeError(c, "finxByIdent: expects ident and type as first two args");
     }
-    
+
     std::string ident(naStr_data(args[0]));
     std::string typeSpec(naStr_data(args[1]));
-    
+
     // optional specify search pos as final argument
     SGGeod pos = globals->get_aircraft_position();
     geodFromArgs(args, 2, argc, pos);
     FGPositioned::TypeFilter filter(FGPositioned::TypeFilter::fromString(typeSpec));
-    
+
     naRef r = naNewVector(c);
 
     FGPositionedList matches = FGPositioned::findAllWithIdent(ident, &filter);
     FGPositioned::sortByRange(matches, pos);
-    
+
     for (auto f : matches) {
         naVec_append(r, ghostForPositioned(c, f));
     }
-    
+
     return r;
 }
 
@@ -2235,7 +2245,7 @@ static naRef f_formatLatLon(naContext c, naRef me, int argc, naRef* args)
   if (argOffset == 0) {
     naRuntimeError(c, "invalid arguments to formatLatLon, expect a geod or lat,lon");
   }
-  
+
   simgear::strutils::LatLonFormat format =
     static_cast<simgear::strutils::LatLonFormat>(fgGetInt("/sim/lon-lat-format"));
   if (argOffset < argc && naIsNum(args[argOffset])) {
@@ -2244,7 +2254,7 @@ static naRef f_formatLatLon(naContext c, naRef me, int argc, naRef* args)
       naRuntimeError(c, "invalid lat-lon format requested");
     }
   }
-  
+
   const auto s = simgear::strutils::formatGeodAsString(p, format);
   return stringToNasal(c, s);
 }
@@ -2254,13 +2264,13 @@ static naRef f_parseStringAsLatLonValue(naContext c, naRef me, int argc, naRef* 
   if ((argc < 1) || !naIsString(args[0])) {
     naRuntimeError(c, "Missing / bad argument to parseStringAsLatLonValue");
   }
-  
+
   double value;
   bool ok = simgear::strutils::parseStringAsLatLonValue(naStr_data(args[0]), value);
   if (!ok) {
     return naNil();
   }
-  
+
   return naNum(value);
 }
 
@@ -2400,7 +2410,7 @@ public:
   {
     callDelegateMethod("activated");
   }
-    
+
   void sequence() override
   {
     callDelegateMethod("sequence");
@@ -2555,7 +2565,7 @@ static naRef f_airwaySearch(naContext c, naRef me, int argc, naRef* args)
 
 static FGPositionedRef positionedFromArg(naRef ref)
 {
-  if (!naIsGhost(ref)) 
+  if (!naIsGhost(ref))
     return {};
 
   naGhostType* gt = naGhost_type(ref);
@@ -2592,7 +2602,7 @@ static naRef f_findAirway(naContext c, naRef me, int argc, naRef* args)
   if (argc >= 2) {
     pos = positionedFromArg(args[1]);
     if (naIsString(args[1])) {
-      // level spec, 
+      // level spec,
     }
   }
 
@@ -2675,7 +2685,7 @@ static naRef f_createViaTo(naContext c, naRef me, int argc, naRef* args)
     std::string airwayName = naStr_data(args[0]);
     AirwayRef airway = Airway::findByIdent(airwayName, Airway::Both);
     if (!airway) {
-        naRuntimeError(c, "createViaTo: couldn't find airway with provided name: %s", 
+        naRuntimeError(c, "createViaTo: couldn't find airway with provided name: %s",
           naStr_data(args[0]));
     }
 
@@ -2717,8 +2727,8 @@ static naRef f_createViaFromTo(naContext c, naRef me, int argc, naRef* args)
     std::string airwayName = naStr_data(args[1]);
     AirwayRef airway = Airway::findByIdentAndNavaid(airwayName, from);
     if (!airway) {
-        naRuntimeError(c, "createViaFromTo: couldn't find airway with provided name: %s from wp %s", 
-          naStr_data(args[0]), 
+        naRuntimeError(c, "createViaFromTo: couldn't find airway with provided name: %s from wp %s",
+          naStr_data(args[0]),
           from->ident().c_str());
     }
 
