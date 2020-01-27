@@ -122,7 +122,7 @@ void FGJoystickInput::init()
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     jsJoystick * js = new jsJoystick(i);
     joysticks[i].plibJS.reset(js);
-    initializing[i] = true;
+    joysticks[i].initializing = true;
     
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
@@ -343,31 +343,37 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   
   jsJoystick * js = joy->plibJS.get();
   if (js == 0 || js->notWorking()) {
-    initializing[index] = true;
+    joysticks[index].initializing = true;
     if (js) {
-      jsJoystick * js = new jsJoystick(index);
-      joysticks[index].plibJS.reset(js);
+      joysticks[index].plibJS.reset( new jsJoystick(index) );
     }
     return;
   }
   
   js->read(&buttons, axis_values);
   if (js->notWorking()) { // If js is disconnected
-    initializing[index] = true;
+    joysticks[index].initializing = true;
     return;
   }
 
   // Joystick axes can get initialized to extreme values, at least on Linux.
+  // Wait until one of the axes get a different value before continuing.
   // https://sourceforge.net/p/flightgear/codetickets/2185/
-  if (initializing[index]) {
-    float axis_values[MAX_JOYSTICK_AXES];
-    int buttons;
+  if (joysticks[index].initializing) {
 
-    js->rawRead(&buttons, axis_values);
-    for (int j = 0; j < joy->naxes; j++) {
-      if (fabsf(axis_values[j]) > js->getSaturation(j)) return;
+    if (!joysticks[index].initialized) {
+      js->read(NULL, joysticks[index].values);
+      joysticks[index].initialized = true;
     }
-    initializing[index] = false;
+
+    int j;
+    for (j = 0; j < joy->naxes; j++) {
+      if (axis_values[j] != joysticks[index].values[j]) break;
+    }
+    if (j == joy->naxes) {
+      return;
+    }
+    joysticks[index].initializing = false;
   }
   
   // Update device status
