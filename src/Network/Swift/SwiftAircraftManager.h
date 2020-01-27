@@ -30,7 +30,7 @@ public:
     ~FGSwiftAircraftManager();
     std::map<std::string, FGSwiftAircraft*> aircraftByCallsign;
     bool                          addPlane(std::string callsign, std::string modelString);
-    void                          updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<bool> onGrounds);
+    void                          updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<double> groundspeeds, std::vector<bool> onGrounds);
     void                          getRemoteAircraftData(std::vector<std::string>& callsigns, std::vector<double>& latitudesDeg, std::vector<double>& longitudesDeg,
                                                         std::vector<double>& elevationsM, std::vector<double>& verticalOffsets) const;
     void                          removePlane(std::string callsign);

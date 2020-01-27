@@ -42,7 +42,7 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 
-FGSwiftAircraft::FGSwiftAircraft(std::string callsign, std::string modelpath)
+FGSwiftAircraft::FGSwiftAircraft(std::string callsign, std::string modelpath, SGPropertyNode* p)
 {
     using namespace simgear;
     _model = SGModelLib::loadModel(modelpath);
@@ -52,10 +52,14 @@ FGSwiftAircraft::FGSwiftAircraft(std::string callsign, std::string modelpath)
         aip.setVisible(true);
         aip.update();
         globals->get_scenery()->get_models_branch()->addChild(aip.getSceneGraph());
+
+        props = p;
+        props->setStringValue("callsign", callsign);
+        props->setBoolValue("valid",true);
     }
 }
 
-bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation)
+bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed)
 {
 
     position = newPosition;
@@ -64,12 +68,32 @@ bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation)
     aip.setRollDeg(orientation.y());
     aip.setHeadingDeg(orientation.z());
     aip.update();
+
+    //Update props
+    props->setDoubleValue("orientation/pitch-deg", orientation.x());
+    props->setDoubleValue("orientation/roll-deg", orientation.y());
+    props->setDoubleValue("orientation/true-heading-deg", orientation.z());
+    SGVec3d cartPos = SGVec3d::fromGeod(position);
+
+    props->setDoubleValue("position/global-x", cartPos.x());
+    props->setDoubleValue("position/global-y", cartPos.y());
+    props->setDoubleValue("position/global-z", cartPos.z());
+
+
+    props->setDoubleValue("position/latitude-deg", position.getLatitudeDeg());
+    props->setDoubleValue("position/longitude-deg", position.getLongitudeDeg());
+    props->setDoubleValue("position/altitude-ft", position.getElevationFt());
+
+	props->setDoubleValue("velocities/true-airspeed-kt", groundspeed);
+
     return true;
 }
 
 
 FGSwiftAircraft::~FGSwiftAircraft()
 {
+    props->setBoolValue("valid",false);
+    props->setIntValue("id",-1);
     aip.setVisible(false);
 }
 

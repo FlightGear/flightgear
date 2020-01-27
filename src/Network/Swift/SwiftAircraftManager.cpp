@@ -19,6 +19,7 @@
 
 #include "SwiftAircraftManager.h"
 #include "SwiftAircraft.h"
+#include <Main/globals.hxx>
 
 FGSwiftAircraftManager::FGSwiftAircraftManager()
 {
@@ -33,17 +34,29 @@ bool FGSwiftAircraftManager::addPlane(std::string callsign, std::string modelStr
     if (aircraftByCallsign.find(callsign) != aircraftByCallsign.end())
         return false;
 
-    FGSwiftAircraft* curAircraft = new FGSwiftAircraft(callsign, modelString);
+    const char* typeString = "swift";
+    SGPropertyNode* root = globals->get_props()->getNode("ai/models",true);
+    SGPropertyNode* p;
+    int i;
+    for(i = 0; i < 10000; i++){
+        p = root->getNode(typeString,i,false);
+
+        if(!p || !p->getBoolValue("valid",false))
+            break;
+    }
+    p = root->getNode(typeString,i,true);
+    p->setIntValue("id",i);
+    FGSwiftAircraft* curAircraft = new FGSwiftAircraft(callsign, modelString, p);
     aircraftByCallsign.insert(std::pair<std::string, FGSwiftAircraft*>(callsign, curAircraft));
     return true;
 }
 
-void FGSwiftAircraftManager::updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<bool> onGrounds)
+void FGSwiftAircraftManager::updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<double> groundspeeds, std::vector<bool> onGrounds)
 {
 	for (int i = 0; i < callsigns.size(); i++) {
         auto it = aircraftByCallsign.find(callsigns.at(i));
 		if (it != aircraftByCallsign.end()) {
-            it->second->updatePosition(positions.at(i), orientations.at(i));
+            it->second->updatePosition(positions.at(i), orientations.at(i), groundspeeds.at(i));
 		}
 	}
 

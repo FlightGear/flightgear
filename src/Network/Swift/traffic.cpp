@@ -192,6 +192,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             std::vector<double>      pitches;
             std::vector<double>      rolls;
             std::vector<double>      headings;
+            std::vector<double>      groundspeeds;
             std::vector<bool>        onGrounds;
             message.beginArgumentRead();
             message.getArgument(callsigns);
@@ -201,6 +202,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             message.getArgument(pitches);
             message.getArgument(rolls);
             message.getArgument(headings);
+            message.getArgument(groundspeeds);
             message.getArgument(onGrounds);
             queueDBusCall([=]() {
                 std::vector<SGGeod> positions;
@@ -215,7 +217,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
                     positions.push_back(newPos);
                     orientations.push_back(vec);
                 }
-                acm->updatePlanes(callsigns, positions, orientations, onGrounds);
+                acm->updatePlanes(callsigns, positions, orientations, groundspeeds, onGrounds);
             });
         } else if (message.getMethodName() == "getRemoteAircraftData") {
             std::vector<std::string> requestedcallsigns;

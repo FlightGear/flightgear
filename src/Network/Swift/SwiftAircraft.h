@@ -41,8 +41,8 @@ class PagedLOD;
 class FGSwiftAircraft
 {
 public:
-    FGSwiftAircraft(std::string callsign, std::string modelpath);
-    bool updatePosition(SGGeod newPosition, SGVec3d orientation);
+    FGSwiftAircraft(std::string callsign, std::string modelpath, SGPropertyNode* p);
+    bool updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed);
     ~FGSwiftAircraft();
     std::string getName() { return _model->getName(); };
     double      getLatDeg();
@@ -52,6 +52,7 @@ public:
 
 private:
     SGGeod position;
+    SGPropertyNode* props;
     osg::ref_ptr<osg::Node> _model;
     SGModelPlacement aip;
 	inline bool operator<(std::string extCallsign);
