@@ -101,11 +101,13 @@ private:
       axis * axes;
       FGButton * buttons;
       bool predefined;
+      bool initializing = true;
+      bool initialized = false;
+      float values[MAX_JOYSTICK_AXES];
 
       void clearAxesAndButtons();
     };
 
-    bool initializing[MAX_JOYSTICKS];
     joystick joysticks[MAX_JOYSTICKS];
     void updateJoystick(int index, joystick* joy, double dt);
 };
