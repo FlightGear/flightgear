@@ -97,11 +97,10 @@ private:
       bool initializing = true;
       bool initialized = false;
       float values[MAX_JOYSTICK_AXES];
-      
+
       void clearAxesAndButtons();
     };
 
-    
     joystick joysticks[MAX_JOYSTICKS];
     void updateJoystick(int index, joystick* joy, double dt);
 };
