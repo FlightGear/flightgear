@@ -590,7 +590,7 @@ bool
 TCAS::ThreatDetector::checkTransponder(const SGPropertyNode* pModel, float velocityKt)
 {
     const string name = pModel->getName();
-    if (name != "multiplayer" && name != "aircraft")
+    if (name != "multiplayer" && name != "aircraft" && name != "swift")
     {
         // assume non-MP/non-AI planes (e.g. ships) have no transponder
         return false;
