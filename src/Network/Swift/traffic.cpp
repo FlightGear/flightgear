@@ -45,6 +45,8 @@ CTraffic::CTraffic()
 CTraffic::~CTraffic()
 {
     cleanup();
+    delete acm;
+    acm = nullptr;
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Traffic stopped");
 }
 
