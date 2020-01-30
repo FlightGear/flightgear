@@ -42,7 +42,7 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 
-FGSwiftAircraft::FGSwiftAircraft(std::string callsign, std::string modelpath, SGPropertyNode* p)
+FGSwiftAircraft::FGSwiftAircraft(const std::string& callsign, const std::string& modelpath, SGPropertyNode* p)
 {
     using namespace simgear;
     _model = SGModelLib::loadModel(modelpath);
@@ -112,7 +112,7 @@ double FGSwiftAircraft::getFudgeFactor()
 	return 0; 
 }
 
-inline bool FGSwiftAircraft::operator<(std::string extCallsign)
+inline bool FGSwiftAircraft::operator<(const std::string& extCallsign)
 {
     return _model->getName().compare(extCallsign);
 }

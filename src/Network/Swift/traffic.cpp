@@ -209,7 +209,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             queueDBusCall([=]() {
                 std::vector<SGGeod> positions;
                 std::vector<SGVec3d> orientations;
-                for (int i = 0; i < latitudes.size(); i++) {
+                for (long unsigned int i = 0; i < latitudes.size(); i++) {
                     SGGeod newPos;
                     newPos.setLatitudeDeg(latitudes.at(i));
                     newPos.setLongitudeDeg(longitudes.at(i));

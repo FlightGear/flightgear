@@ -52,7 +52,7 @@ public:
 
     bool startServer(const SGPropertyNode* arg, SGPropertyNode* root);
     bool stopServer(const SGPropertyNode* arg, SGPropertyNode* root);
-    FGSwiftBus::CPlugin* plug;
+    FGSwiftBus::CPlugin* plug{};
 
 private:
     bool serverRunning = false;

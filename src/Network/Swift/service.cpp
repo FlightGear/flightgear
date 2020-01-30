@@ -19,17 +19,9 @@
 
 #include "service.h"
 #include <Main/fg_props.hxx>
-#include <algorithm>
 #include <iostream>
-#include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/io/raw_socket.hxx>
-#include <simgear/misc/stdint.hxx>
-#include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
-#include <simgear/structure/event_mgr.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/timing/timestamp.hxx>
 
 #define FGSWIFTBUS_API_VERSION 1;
 
@@ -169,22 +161,22 @@ bool CService::getAllWheelsOnGround() const
 
 int CService::getCom1Active() const 
 { 
-	return com1ActiveNode->getDoubleValue() * 1000;
+	return (int)com1ActiveNode->getDoubleValue() * 1000;
 }
 
 int CService::getCom1Standby() const 
 { 
-	return com1StandbyNode->getDoubleValue() * 1000;
+	return (int)com1StandbyNode->getDoubleValue() * 1000;
 }
 
 int CService::getCom2Active() const 
 { 
-	return com2ActiveNode->getDoubleValue() * 1000;
+	return (int)com2ActiveNode->getDoubleValue() * 1000;
 }
 
 int CService::getCom2Standby() const 
 { 
-	return com2StandbyNode->getDoubleValue() * 1000;
+	return (int)com2StandbyNode->getDoubleValue() * 1000;
 }
 
 int CService::getTransponderCode() const 
