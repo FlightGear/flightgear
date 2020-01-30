@@ -24,6 +24,13 @@ void FlightplanTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("flightplan");
     FGTestApi::setUp::initNavDataCache();
+    
+    globals->get_subsystem_mgr()->init();
+
+    FGTestApi::setUp::initStandardNasal();
+
+    globals->get_subsystem_mgr()->postinit();
+    globals->get_subsystem_mgr()->bind();
 }
 
 
@@ -57,13 +64,13 @@ void FlightplanTests::testBasic()
     CPPUNIT_ASSERT_EQUAL(fp1->numLegs(), 5);
 
     CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "23L");
-    
+
     CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->ident() == "TNT");
     CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->name() == "TRENT VOR-DME");
 
     CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->ident() == "CLN");
     CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->name() == "CLACTON VOR-DME");
-    
+
     CPPUNIT_ASSERT(fp1->legAtIndex(4)->waypoint()->source()->ident() == "24");
 
 }
@@ -147,24 +154,24 @@ void FlightplanTests::testRoutePathVec()
     FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
                                    "ROKME WOVAB");
     RoutePath rtepath(fp1);
-    
+
     SGGeodVec vec = rtepath.pathForIndex(0);
-    
+
     FGAirportRef ksfo = FGAirport::findByIdent("KSFO");
     FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME", ksfo->geod()));
     auto depRwy = fp1->departureRunway();
-    
+
     CPPUNIT_ASSERT_DOUBLES_EQUAL(depRwy->geod().getLongitudeDeg(), vec.front().getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(depRwy->geod().getLatitudeDeg(), vec.front().getLatitudeDeg(), 0.01);
-    
+
     SGGeodVec vec1 = rtepath.pathForIndex(1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec1.back().getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec1.back().getLatitudeDeg(), 0.01);
-    
+
     SGGeodVec vec2 = rtepath.pathForIndex(2);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec2.front().getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec2.front().getLatitudeDeg(), 0.01);
-    
+
     //CPPUNIT_ASSERT(vec.front()
 }
 
@@ -172,22 +179,22 @@ void FlightplanTests::testRoutPathWpt0Midflight()
 {
     // test behaviour of RoutePath when WP0 is not a runway
     // happens for the Airbus ND which removes past wpts when sequencing
-    
+
     FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
                                    "ROKME WOVAB");
     // actually delete leg 0 so we start at ROKME
     fp1->deleteIndex(0);
-    
+
     RoutePath rtepath(fp1);
-    
+
     SGGeodVec vec = rtepath.pathForIndex(0);
-    
+
     FGAirportRef ksfo = FGAirport::findByIdent("KSFO");
     FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME", ksfo->geod()));
-    
+
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec.front().getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec.front().getLatitudeDeg(), 0.01);
-    
+
     SGGeodVec vec2 = rtepath.pathForIndex(1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec2.front().getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec2.front().getLatitudeDeg(), 0.01);
@@ -199,11 +206,11 @@ void FlightplanTests::testBasicAirways()
 {
     Airway* awy = Airway::findByIdent("J547", Airway::HighLevel);
     CPPUNIT_ASSERT_EQUAL(awy->ident(), std::string("J547"));
-    
+
     FGAirportRef kord = FGAirport::findByIdent("KORD");
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(kord);
-    
+
     CPPUNIT_ASSERT(awy->findEnroute("KITOK"));
     CPPUNIT_ASSERT(awy->findEnroute("LESUB"));
 
@@ -214,12 +221,12 @@ void FlightplanTests::testBasicAirways()
 
     auto wptKUBBS = f->waypointFromString("KUBBS");
     auto wptFNT = f->waypointFromString("FNT");
-    
+
     CPPUNIT_ASSERT(awy->canVia(wptKUBBS, wptFNT));
-    
+
     WayptVec path = awy->via(wptKUBBS, wptFNT);
     CPPUNIT_ASSERT_EQUAL(4, static_cast<int>(path.size()));
-    
+
     CPPUNIT_ASSERT_EQUAL(std::string("PMM"), path.at(0)->ident());
     CPPUNIT_ASSERT_EQUAL(std::string("HASTE"), path.at(1)->ident());
     CPPUNIT_ASSERT_EQUAL(std::string("DEWIT"), path.at(2)->ident());
@@ -231,16 +238,16 @@ void FlightplanTests::testAirwayNetworkRoute()
     FGAirportRef egph = FGAirport::findByIdent("EGPH");
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(egph);
-    
+
     auto highLevelNet = Airway::highLevel();
-    
+
     auto wptTLA = f->waypointFromString("TLA");
     auto wptCNA = f->waypointFromString("CNA");
-    
+
     WayptVec route;
     bool ok = highLevelNet->route(wptTLA, wptCNA, route);
     CPPUNIT_ASSERT(ok);
-    
+
     CPPUNIT_ASSERT_EQUAL(static_cast<int>(route.size()), 18);
 }
 
@@ -250,25 +257,25 @@ void FlightplanTests::testParseICAORoute()
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(kord);
     f->setDestination(FGAirport::findByIdent("KSAN"));
-    
+
     const char* route = "DCT JOT J26 IRK J96 SLN J18 GCK J96 CIM J134 GUP J96 KEYKE J134 DRK J78 LANCY J96 PKE";
   //  const char* route = "DCT KUBBS J547 FNT Q824 HOCKE Q905 SIKBO Q907 MIILS N400A TUDEP NATW GISTI DCT SLANY UL9 DIKAS UL18 GAVGO UL9 KONAN UL607 UBIDU Y863 RUDUS T109 HAREM T104 ANORA STAR";
     bool ok = f->parseICAORouteString(route);
     CPPUNIT_ASSERT(ok);
-    
-    
-    
+
+
+
 }
 
 void FlightplanTests::testParseICANLowLevelRoute()
 {
     const char* route = "DCT DPA V6 IOW V216 LAA V210 GOSIP V83 ACHES V210 BLOKE V83 ALS V210 RSK V95 INW V12 HOXOL V264 OATES V12 JUWSO V264 PKE";
-    
+
     FGAirportRef kord = FGAirport::findByIdent("KORD");
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(kord);
     f->setDestination(FGAirport::findByIdent("KSAN"));
-    
+
     bool ok = f->parseICAORouteString(route);
     CPPUNIT_ASSERT(ok);
 }
@@ -319,4 +326,17 @@ void FlightplanTests::testBug1814()
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(137, leg->distanceNm(), 0.5);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(101, f->legAtIndex(2)->distanceNm(), 0.5);
+}
+
+void FlightplanTests::testSegfaultWaypointGhost() {
+    // checking for a segfault here, no segfault indicates success. A runtime error in the log is acceptable here.
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = createFlightplan();
+        fp.departure = airportinfo("BIKF");
+        fp.destination = airportinfo("EGLL");
+        var wp = fp.getWP(1);
+        fp.deleteWP(1);
+        print(wp.wp_name);
+    )");
+    CPPUNIT_ASSERT(ok);
 }
