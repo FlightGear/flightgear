@@ -44,7 +44,10 @@ CPlugin::CPlugin()
 
 CPlugin::~CPlugin()
 {
-    m_dbusConnection->close();
+    if(m_dbusConnection)
+    {
+        m_dbusConnection->close();
+    }
     m_shouldStop = true;
     if (m_dbusThread.joinable()) { m_dbusThread.join(); }
 }
