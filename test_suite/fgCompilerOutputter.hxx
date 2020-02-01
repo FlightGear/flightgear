@@ -81,8 +81,8 @@ class fgCompilerOutputter : public CppUnit::CompilerOutputter
         bool debug;
 
         // Simgear logstream IO printout.
-        void printIOStreamMessages(const char *heading, std::string messages, bool empty);
-        void printIOStreamMessages(const char *heading, std::string messages) {printIOStreamMessages(heading, messages, false);}
+        void printIOStreamMessages(std::string heading, std::string messages, bool empty);
+        void printIOStreamMessages(std::string heading, std::string messages) {printIOStreamMessages(heading, messages, false);}
 };
 
 

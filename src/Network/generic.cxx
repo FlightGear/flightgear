@@ -753,13 +753,14 @@ bool FGGeneric::close() {
 void
 FGGeneric::reinit()
 {
-    SGPath path( globals->get_fg_root() );
-    path.append("Protocol");
-    path.append(file_name.c_str());
-
-    SG_LOG(SG_NETWORK, SG_INFO, "Reading communication protocol from "
-                                << path);
-
+    SGPath path = globals->resolve_maybe_aircraft_path("Protocol/" + file_name);
+    if (!path.exists()) {
+        SG_LOG(SG_NETWORK, SG_WARN, "Couldn't find protocol file for '" << file_name << "'");
+        return;
+    }
+    
+    SG_LOG(SG_NETWORK, SG_INFO, "Reading communication protocol from " << path);
+   
     SGPropertyNode root;
     try {
         readProperties(path, &root);

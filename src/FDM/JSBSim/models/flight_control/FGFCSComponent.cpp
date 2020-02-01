@@ -129,12 +129,17 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
   Element *out_elem = element->FindElement("output");
   while (out_elem) {
     string output_node_name = out_elem->GetDataLine();
+    bool node_exists = PropertyManager->HasNode(output_node_name);
     FGPropertyNode* OutputNode = PropertyManager->GetNode( output_node_name, true );
-    OutputNodes.push_back(OutputNode);
     if (!OutputNode) {
-      cerr << endl << "  Unable to process property: " << output_node_name << endl;
+      cerr << out_elem->ReadFrom() << "  Unable to process property: "
+           << output_node_name << endl;
       throw(string("Invalid output property name in flight control definition"));
     }
+    OutputNodes.push_back(OutputNode);
+    // Initialize to a sensible value.
+    if (!node_exists)
+        OutputNode->setDoubleValue(Output);
     out_elem = element->FindNextElement("output");
   }
 
@@ -227,13 +232,25 @@ void FGFCSComponent::Clip(void)
 {
   if (clip) {
     double vmin = ClipMin->GetValue();
-    if (cyclic_clip) {
+    double vmax = ClipMax->GetValue();
+    double range = vmax - vmin;
+
+    if (range < 0.0) {
+        cerr << "Trying to clip with a max value (" << vmax << ") from "
+             << ClipMax->GetName() << " lower than the min value (" << vmin
+             << ") from " << ClipMin->GetName() << "." << endl
+             << "Clipping is ignored." << endl;
+      return;
+    }
+
+    if (cyclic_clip && range != 0.0) {
       double value = Output - vmin;
-      double range = ClipMax->GetValue() - vmin;
       Output = fmod(value, range) + vmin;
+      if (Output < vmin)
+        Output += range;
     }
     else
-      Output = Constrain(vmin, Output, ClipMax->GetValue());
+      Output = Constrain(vmin, Output, vmax);
   }
 }
 
@@ -254,10 +271,14 @@ void FGFCSComponent::bind(Element* el)
   else
     tmp = Name;
 
+  bool node_exists = PropertyManager->HasNode(tmp);
   FGPropertyNode* node = PropertyManager->GetNode(tmp, true);
 
-  if (node)
+  if (node) {
     OutputNodes.push_back(node);
+    if (!node_exists)
+      node->setDoubleValue(Output);
+  }
   else {
     cerr << el->ReadFrom()
          << "Could not get or create property " << tmp << endl;

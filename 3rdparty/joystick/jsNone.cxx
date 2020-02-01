@@ -22,6 +22,10 @@
 
 #include "js.h"
 
+#ifdef __OpenBSD__
+  #define TRUE JS_TRUE
+#endif
+
 struct os_specific_s ;
 
 

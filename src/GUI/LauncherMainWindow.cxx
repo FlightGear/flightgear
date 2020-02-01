@@ -128,6 +128,14 @@ LauncherMainWindow::~LauncherMainWindow()
 {
 }
 
+bool LauncherMainWindow::event(QEvent *event)
+{
+    if (event->type() == QEvent::Close) {
+        m_controller->saveSettings();
+    }
+    return QQuickView::event(event);
+}
+
 bool LauncherMainWindow::execInApp()
 {
 	m_controller->setInAppMode();

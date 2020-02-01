@@ -59,8 +59,8 @@ void fgTestListener::endTest(CppUnit::Test *test)
     else
         cerr << '.';
 
-    // Verbose output.
-    if (verbose || ctest_output || debug) {
+    // Timing output.
+    if (timings || ctest_output || debug) {
         // Test timing.
         float time = ((float)(clock()-m_time))/CLOCKS_PER_SEC;
         char buffer[100];
@@ -88,7 +88,9 @@ void fgTestListener::endTest(CppUnit::Test *test)
 
         // The simgear logstreams.
         capturedIO &obj = getIOstreams();
-        test_io.sg_bulk = obj.sg_bulk.str();
+        test_io.log_class = obj.log_class;
+        test_io.log_priority = obj.log_priority;
+        test_io.sg_interleaved = obj.sg_interleaved.str();
         test_io.sg_bulk_only = obj.sg_bulk_only.str();
         test_io.sg_debug_only = obj.sg_debug_only.str();
         test_io.sg_info_only = obj.sg_info_only.str();
@@ -100,7 +102,6 @@ void fgTestListener::endTest(CppUnit::Test *test)
     }
 }
 
-
 // Override the base class function to capture IO streams.
 void fgTestListener::startTest(CppUnit::Test *test)
 {
@@ -108,7 +109,7 @@ void fgTestListener::startTest(CppUnit::Test *test)
     if (!debug) {
         // Clear the simgear logstream buffers.
         capturedIO &obj = getIOstreams();
-        obj.sg_bulk.str("");
+        obj.sg_interleaved.str("");
         obj.sg_bulk_only.str("");
         obj.sg_debug_only.str("");
         obj.sg_info_only.str("");

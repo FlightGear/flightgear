@@ -20,7 +20,7 @@
 
 #include "test_autosaveMigration.hxx"
 
-#include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/testGlobals.hxx"
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>

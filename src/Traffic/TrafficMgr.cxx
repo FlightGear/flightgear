@@ -45,6 +45,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 
 
 #include <string>
@@ -59,11 +60,10 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/threads/SGThread.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <simgear/xml/easyxml.hxx>
-#include <simgear/threads/SGThread.hxx>
-#include <simgear/threads/SGGuard.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
 #include <AIModel/AIAircraft.hxx>
@@ -124,7 +124,7 @@ public:
 
   bool isFinished() const
   {
-    SGGuard<SGMutex> g(_lock);
+    std::lock_guard<std::mutex> g(_lock);
     return _isFinished;
   }
 
@@ -137,7 +137,7 @@ public:
           }
       }
 
-    SGGuard<SGMutex> g(_lock);
+    std::lock_guard<std::mutex> g(_lock);
     _isFinished = true;
   }
 
@@ -394,7 +394,7 @@ private:
     }
 
   FGTrafficManager* _trafficManager;
-  mutable SGMutex _lock;
+  mutable std::mutex _lock;
   bool _isFinished;
   bool _cancelThread;
   simgear::PathList _trafficDirPaths;

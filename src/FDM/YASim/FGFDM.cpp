@@ -597,6 +597,20 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
         dragFactor = attrf(a, "effectiveness", 1);
     }
     w->setSectionDrag(_wingSection, dragFactor);
+    if (a->hasAttribute("flow")) {
+        const char* flowregime = a->getValue("flow");
+        if (!strcmp(flowregime,"TRANSONIC")) {
+            w->setFlowRegime(FLOW_TRANSONIC);
+            const float mcrit = attrf(a,"mcrit", 0.6f);
+            if ( (mcrit > 0.0f) && (mcrit <= 1.0f)) {
+                w->setCriticalMachNumber(mcrit);
+            } else {
+                SG_LOG(SG_FLIGHT, SG_ALERT, "YASim warning: invalid input for critical mach number. Defaulting to mcrit=0.6.");
+            }
+        }
+    } else {
+        w->setFlowRegime(FLOW_SUBSONIC);
+    }
     _currObj = w;
 }
 

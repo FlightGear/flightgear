@@ -359,6 +359,15 @@ void FlightPlan::setCurrentIndex(int index)
   unlockDelegates();
 }
 
+void FlightPlan::sequence()
+{
+    lockDelegates();
+    for (auto d : _delegates) {
+        d->sequence();
+    }
+    unlockDelegates();
+}
+    
 void FlightPlan::finish()
 {
   if (_currentIndex == -1) {
@@ -1567,6 +1576,60 @@ double FlightPlan::Leg::distanceAlongRoute() const
   return _distanceAlongPath;
 }
   
+    
+bool FlightPlan::Leg::convertWaypointToHold()
+{
+  const auto wty = _waypt->type();
+  if (wty == "hold") {
+    return true;
+  }
+  
+  if ((wty != "basic") && (wty != "navaid")) {
+    SG_LOG(SG_INSTR, SG_WARN, "convertWaypointToHold: cannot convert waypt " << index() << " " << _waypt->ident() << " to a hold");
+    return false;
+  }
+  
+  auto hold = new Hold(_waypt->position(), _waypt->ident(), const_cast<FlightPlan*>(_parent));
+  
+  // default to a 1 minute hold with the radial being our arrival radial
+  hold->setHoldTime(60.0);
+  hold->setHoldRadial(_courseDeg);
+  _waypt = hold;  // we drop our reference to the old waypoint
+  
+  markWaypointDirty();
+  
+  return true;
+}
+    
+bool FlightPlan::Leg::setHoldCount(int count)
+{
+  if (count == 0) {
+    _holdCount = count;
+    return true;
+  }
+    
+  if (!convertWaypointToHold()) {
+    return false;
+  }
+  
+  _holdCount = count;
+  markWaypointDirty();
+  return true;
+}
+  
+  void FlightPlan::Leg::markWaypointDirty()
+  {
+    auto fp = owner();
+    fp->lockDelegates();
+    fp->_waypointsChanged = true;
+    fp->unlockDelegates();
+  }
+  
+int FlightPlan::Leg::holdCount() const
+{
+  return _holdCount;
+}
+
 void FlightPlan::rebuildLegData()
 {
   _totalDistance = 0.0;

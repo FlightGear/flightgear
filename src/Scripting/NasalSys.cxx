@@ -186,6 +186,9 @@ public:
 
   bool isSingleShot() const
   { return _singleShot; }
+    
+  const std::string& name() const
+  { return _name; }
 private:
   std::string _name;
   FGNasalSys* _sys;
@@ -1072,6 +1075,10 @@ void FGNasalSys::shutdown()
     
     if (!_persistentTimers.empty()) {
         SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << _persistentTimers.size());
+        
+        for (auto pt : _persistentTimers) {
+            SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
+        }
     }
     
     _inited = false;
@@ -1157,7 +1164,7 @@ void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
 {
     if (! scripts.empty())
     {
-        SGPropertyNode* nasal = globals->get_props()->getNode("nasal");
+        SGPropertyNode* nasal = globals->get_props()->getNode("nasal", true);
         SGPropertyNode* module_node = nasal->getChild(moduleName,0,true);
         for (unsigned int i=0; i<scripts.size(); ++i) {
             SGPropertyNode* pFileNode = module_node->getChild("file",i,true);
@@ -1533,10 +1540,14 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    if(node->isTied())
-        SG_LOG(SG_NASAL, SG_DEV_ALERT, "ERROR: Cannot add listener to tied property " <<
-                node->getPath());
-
+    if (node->isTied()) {
+        const auto isSafe = node->getAttribute(SGPropertyNode::LISTENER_SAFE);
+        if (!isSafe) {
+            SG_LOG(SG_NASAL, SG_DEV_ALERT, "ERROR: Cannot add listener to tied property " <<
+                     node->getPath());
+        }
+    }
+    
     naRef code = argc > 1 ? args[1] : naNil();
     if(!(naIsCode(code) || naIsCCode(code) || naIsFunc(code))) {
         naRuntimeError(c, "setlistener() with invalid function argument");

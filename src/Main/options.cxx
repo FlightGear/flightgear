@@ -1846,6 +1846,7 @@ struct OptionDesc {
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
+    {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {0}
 };
 
@@ -2115,7 +2116,10 @@ OptionResult Options::init(int argc, char **argv, const SGPath& appDataPath)
 
   // establish log-level before anything else - otherwise it is not possible
   // to show extra (debug/info/warning) messages for the start-up phase.
-  fgOptLogLevel(valueForOption("log-level", "alert").c_str());
+  // Leave the simgear logstream default value of SG_ALERT if the argument is
+  // not supplied.
+  if (isOptionSet("log-level"))
+      fgOptLogLevel(valueForOption("log-level").c_str());
 
   simgear::PathList::const_iterator i;
   for (i = p->configFiles.begin(); i != p->configFiles.end(); ++i) {
@@ -2937,8 +2941,13 @@ string_list Options::extractOptions() const
 
 OptionResult Options::setupRoot(int argc, char **argv)
 {
-    SGPath root;
+    SGPath root(globals->get_fg_root());
     bool usingDefaultRoot = false;
+
+    // root has already been set, so skip the fg_root setting and validation.
+    if (!root.isNull()) {
+        return;
+    }
 
   if (isOptionSet("fg-root")) {
       root = SGPath::fromLocal8Bit(valueForOption("fg-root").c_str()); // easy!

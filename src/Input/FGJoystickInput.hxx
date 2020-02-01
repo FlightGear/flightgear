@@ -101,6 +101,9 @@ private:
       axis * axes;
       FGButton * buttons;
       bool predefined;
+      bool initializing = true;
+      bool initialized = false;
+      float values[MAX_JOYSTICK_AXES];
 
       void clearAxesAndButtons();
     };

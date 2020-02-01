@@ -30,6 +30,8 @@
 #  include <windows.h>
 #endif
 
+#include <cmath>
+
 #include <simgear/props/props_io.hxx>
 #include "FGDeviceConfigurationMap.hxx"
 #include <Main/fg_props.hxx>
@@ -118,6 +120,7 @@ void FGJoystickInput::init()
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     jsJoystick * js = new jsJoystick(i);
     joysticks[i].plibJS.reset(js);
+    joysticks[i].initializing = true;
     
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
@@ -337,12 +340,39 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   float delay;
   
   jsJoystick * js = joy->plibJS.get();
-  if (js == 0 || js->notWorking())
+  if (js == 0 || js->notWorking()) {
+    joysticks[index].initializing = true;
+    if (js) {
+      joysticks[index].plibJS.reset( new jsJoystick(index) );
+    }
     return;
+  }
   
   js->read(&buttons, axis_values);
-  if (js->notWorking()) // If js is disconnected
+  if (js->notWorking()) { // If js is disconnected
+    joysticks[index].initializing = true;
     return;
+  }
+
+  // Joystick axes can get initialized to extreme values, at least on Linux.
+  // Wait until one of the axes get a different value before continuing.
+  // https://sourceforge.net/p/flightgear/codetickets/2185/
+  if (joysticks[index].initializing) {
+
+    if (!joysticks[index].initialized) {
+      js->read(NULL, joysticks[index].values);
+      joysticks[index].initialized = true;
+    }
+
+    int j;
+    for (j = 0; j < joy->naxes; j++) {
+      if (axis_values[j] != joysticks[index].values[j]) break;
+    }
+    if (j == joy->naxes) {
+      return;
+    }
+    joysticks[index].initializing = false;
+  }
   
   // Update device status
   SGPropertyNode_ptr status = status_node->getChild("joystick", index, true);

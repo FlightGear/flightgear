@@ -48,6 +48,7 @@ endif()
 
 target_link_libraries(fgviewer
 	SimGearScene SimGearCore
+  ${OPENGL_LIBRARIES}
 	${FGVIEWER_RTI_LIBRARIES}
     ${GDAL_LIBRARY}
 )

@@ -77,6 +77,20 @@ public:
    */
   virtual SGGeod previousLegWaypointPosition(bool& isValid)= 0;
 
+  /**
+   * @brief compute turn radius based on current ground-speed
+   */
+  
+  double turnRadiusNm()
+  {
+    return turnRadiusNm(groundSpeedKts());
+  }
+  
+  /**
+   * @brief compute the turn radius (based on standard rate turn) for
+   * a given ground speed in knots.
+   */
+  virtual double turnRadiusNm(const double groundSpeedKnots) = 0;
 };
 
 class WayptController
@@ -102,18 +116,14 @@ public:
    * Bearing to the waypoint, if this value is meaningful.
    * Default implementation returns the target track
    */
-  virtual double trueBearingDeg() const
-    { return _targetTrack; }
+  virtual double trueBearingDeg() const;
 
-  virtual double targetTrackDeg() const 
-    { return _targetTrack; }
+  virtual double targetTrackDeg() const;
 
-  virtual double xtrackErrorNm() const
-    { return 0.0; }
-
-  virtual double courseDeviationDeg() const
-    { return 0.0; }
-
+  virtual double xtrackErrorNm() const;
+  
+  virtual double courseDeviationDeg() const;
+  
   /**
    * Position associated with the waypt. For static waypoints, this is
    * simply the waypoint position itself; for dynamic points, it's the
@@ -124,8 +134,7 @@ public:
   /**
    * Is this controller finished?
    */
-  bool isDone() const
-    { return _isDone; }
+  bool isDone() const;
 
   /**
    * to/from flag - true = to, false = from. Defaults to 'true' because
@@ -134,6 +143,13 @@ public:
    */
   virtual bool toFlag() const
     { return true; }
+  
+  /**
+   * Allow waypoints to indicate a status value as a string.
+   * Useful for more complex controllers, which may have capture / exit
+   * states
+   */
+  virtual std::string status() const;
     
   /**
    * Static factory method, given a waypoint, return a controller bound
@@ -153,6 +169,14 @@ protected:
   RNAV* _rnav;
   
   void setDone();
+  
+  // take asubcontroller ref (will be destroyed automatically)
+  // pass nullptr to clear any activ esubcontroller
+  // the subcontroller will be initialised
+  void setSubController(WayptController* sub);
+  
+  // if a subcontroller exists, we can delegate to it automatically
+  std::unique_ptr<WayptController> _subController;
 private:
   bool _isDone;
 };
@@ -205,6 +229,71 @@ private:
   double _courseAircraftToTarget;
 };
 
+class HoldCtl : public WayptController
+{
+  enum HoldState {
+    HOLD_INIT,
+    LEG_TO_HOLD,
+    ENTRY_DIRECT,
+    ENTRY_PARALLEL, // flying the outbound part of a parallel entry
+    ENTRY_PARALLEL_OUTBOUND,
+    ENTRY_PARALLEL_INBOUND,
+    ENTRY_TEARDROP, // flying the outbound leg of teardrop entry
+    HOLD_OUTBOUND,
+    HOLD_INBOUND,
+    HOLD_EXITING, // we are going to exit the hold
+  };
+  
+  HoldState _state = HOLD_INIT;
+  double _holdCourse = 0.0;
+  double _holdLegTime = 60.0;
+  double _holdLegDistance = 0.0;
+  double _holdCount = 0;
+  bool _leftHandTurns = false;
+    
+  bool _inTurn = false;
+  SGGeod _turnCenter;
+  double _turnEndAngle, _turnRadius;
+  SGGeod _segmentEnd;
+  
+  bool checkOverHold();
+  void checkInitialEntry(double dNm);
+    
+  void startInboundTurn();
+  void startOutboundTurn();
+  void startParallelEntryTurn();
+  void exitTurn();
+  
+  SGGeod outboundEndPoint();
+  SGGeod outboundTurnCenter();
+  SGGeod inboundTurnCenter();
+  
+  double holdLegLengthNm() const;
+  
+    /**
+     * are we turning left? This is basically the )leftHandTurns member,
+     * but if we're in the inbound turn of a parallel entry, it's flipped
+     */
+    bool inLeftTurn() const;
+  
+  void computeEntry();
+public:
+  HoldCtl(RNAV* aRNAV, const WayptRef& aWpt);
+  
+  void setHoldCount(int count);
+  void exitHold();
+    
+  void init() override;
+  void update(double) override;
+  
+  double distanceToWayptM() const override;
+  SGGeod position() const override;
+  double xtrackErrorNm() const override;
+  double courseDeviationDeg() const override;
+    
+  std::string status() const override;
+};
+    
 } // of namespace flightgear
 
 #endif

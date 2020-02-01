@@ -163,6 +163,7 @@ void segfault_handler(int signo) {
 
   fprintf(stderr, "Error: caught signal %d:\n", signo);
 
+  #ifndef __OpenBSD__
   size = backtrace(array, 128);
   if (size) {
     char** list = backtrace_symbols(array, size);
@@ -199,6 +200,7 @@ void segfault_handler(int signo) {
     free(fname);
     free(list);
   }
+  #endif
 
   std::abort();
 }

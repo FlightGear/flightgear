@@ -84,4 +84,8 @@ function(setup_fgfs_libraries target)
     if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
         target_link_libraries(${target} execinfo)
     endif()
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+        target_link_libraries(${target} execinfo)
+    endif()
 endfunction()

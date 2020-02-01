@@ -41,6 +41,7 @@ public:
     // FGData path functions.
     int findFGRoot(const std::string& fgRootCmdLineOpt, bool debug = false);
     SGPath getFGRoot();
+    int validateFGRoot();
 
 private:
     DataStore() = default;

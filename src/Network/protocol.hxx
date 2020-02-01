@@ -55,7 +55,8 @@ private:
     bool enabled;
 
     SGIOChannel *io;
-
+    std::string m_name;
+    
 public:
 
     FGProtocol();
@@ -92,6 +93,10 @@ public:
 
     inline SGIOChannel *get_io_channel() const { return io; }
     inline void set_io_channel( SGIOChannel *c ) { io = c; }
+    
+    // allow storing an identifying name on the Protocol instance
+    void set_name(const std::string& n);
+    std::string get_name() const { return m_name; }
 };
 
 

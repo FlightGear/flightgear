@@ -20,6 +20,11 @@
 
 #include <iostream>
 
+#include <simgear/misc/strutils.hxx>
+
+#include <Main/fg_init.hxx>
+
+#include <Include/version.h>
 #include "config.h"
 
 #include "dataStore.hxx"
@@ -100,4 +105,31 @@ int DataStore::findFGRoot(const std::string& fgRootCmdLineOpt, bool debug)
 SGPath DataStore::getFGRoot()
 {
     return _fgRootPath;
+}
+
+// Perform a version validation of FGData, returning zero if ok.
+int DataStore::validateFGRoot()
+{
+    // The FGData version.
+    SGPath root = getFGRoot();
+    std::string base_version = fgBasePackageVersion(root);
+    if (base_version.empty()) {
+        std::cout << "Base package not found." << std::endl;
+        std::cout << "Required FGData files not found, please check your configuration." << std::endl;
+        std::cout << "Looking for FGData files in '" << root.str() << "'." << std::endl;
+        std::cout.flush();
+        return 1;
+    }
+
+    // Comparison of only the major and minor version numbers.
+    const int versionComp = simgear::strutils::compare_versions(FLIGHTGEAR_VERSION, base_version, 2);
+    if (versionComp != 0) {
+        std::cout << "Base package version mismatch." << std::endl;
+        std::cout << "Version check failed, please check your configuration." << std::endl;
+        std::cout << "The FGData version '" << base_version << "' in '" << root.str();
+        std::cout << "does not match the FlightGear version '" << std::string(FLIGHTGEAR_VERSION);
+        std::cout << "'." << std::endl;
+        std::cout.flush();
+    }
+    return versionComp;
 }

@@ -93,15 +93,7 @@ void FGCom::iaxTextEvent(struct iaxc_ev_text text)
 
 
 
-FGCom::FGCom() :
-    _register(true),
-    _enabled(false),
-    _initialized(false),
-    _listener_active(0),
-    _commFrequencyNode(nullptr),
-    _ptt_node(nullptr),
-    _selected_comm_node(nullptr),
-    _currentCallIdent(-1)
+FGCom::FGCom()
 {
 }
 

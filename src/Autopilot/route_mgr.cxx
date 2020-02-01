@@ -348,6 +348,7 @@ void FGRouteMgr::init() {
   _flightplanChanged = fgGetNode(RM "signals/flightplan-changed", true);
   
   _currentWpt = fgGetNode(RM "current-wp", true);
+  _currentWpt->setAttribute(SGPropertyNode::LISTENER_SAFE, true);
   _currentWpt->tie(SGRawValueMethods<FGRouteMgr, int>
     (*this, &FGRouteMgr::currentIndex, &FGRouteMgr::jumpToIndex));
       

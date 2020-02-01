@@ -50,6 +50,12 @@ FGAIMultiplayer::FGAIMultiplayer() :
    lastUpdateTime = 0;
    playerLag = 0.03;
    compensateLag = 1;
+   realTime = false;
+   lastTime=0.0;
+   lagPpsAveraged = 1.0;
+   rawLag = 0.0;
+   rawLagMod = 0.0;
+   lagModAveraged = 0.0;
    _searchOrder = PREFER_DATA;
 }
 
@@ -152,72 +158,95 @@ void FGAIMultiplayer::update(double dt)
   // requested time to the most recent available packet. This is the
   // target we want to reach in average.
   double lag = it->second.lag;
+
+  rawLag = curentPkgTime - curtime;
+  realTime = false; //default behaviour
+
   if (!mTimeOffsetSet) {
     mTimeOffsetSet = true;
     mTimeOffset = curentPkgTime - curtime - lag;
+    lastTime = curentPkgTime;
+    lagModAveraged = remainder((curentPkgTime - curtime), 3600.0);
+    props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
+    props->setDoubleValue("lag/lag-mod-averaged", lagModAveraged);
   } else {
-	  double offset = 0.0;
+      if ((curentPkgTime - lastTime) != 0) {
+        lagPpsAveraged = 0.99 * lagPpsAveraged + 0.01 * fabs( 1 / (lastTime - curentPkgTime));
+        lastTime = curentPkgTime;
+        rawLagMod = remainder(rawLag, 3600.0);
+        lagModAveraged = lagModAveraged *0.99 + 0.01 * rawLagMod;
+        props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
+        props->setDoubleValue("lag/lag-mod-averaged", lagModAveraged);
+      }
 
-		//spectator mode, more late to be in the interpolation zone
+      double offset = 0.0;
+
+        //spectator mode, more late to be in the interpolation zone
     if (compensateLag == 3) { offset = curentPkgTime -curtime -lag + playerLag;
 
-		  // old behaviour
+       // old behaviour
     } else if (compensateLag == 1) { offset = curentPkgTime - curtime - lag;
 
     // using the prediction mode to display the mpaircraft in the futur/past with given playerlag value
     //currently compensatelag = 2
+    } else if (fabs(lagModAveraged) < 0.3) {
+        mTimeOffset = (round(rawLag/3600))*3600; //real time mode if close enough
+        realTime = true;
+
     } else { offset = curentPkgTime - curtime + 0.48*lag + playerLag;
     }
-    if ((!mAllowExtrapolation && offset + lag < mTimeOffset)
-        || (offset - 10 > mTimeOffset)) {
-      mTimeOffset = offset;
-      SG_LOG(SG_AI, SG_DEBUG, "Resetting time offset adjust system to "
-             "avoid extrapolation: time offset = " << mTimeOffset);
-    } else {
-      // the error of the offset, respectively the negative error to avoid
-      // a minus later ...
-      double err = offset - mTimeOffset;
-      // limit errors leading to shorter lag values somehow, that is late
-      // arriving packets will pessimize the overall lag much more than
-      // early packets will shorten the overall lag
-      double sysSpeed;
 
-  //trying to slow the rudderlag phenomenon thus using more the prediction system
-  //if we are off by less than 1.5s, do a little correction, and bigger step above 1.5s
-	  if (fabs(err) < 1.5) {
-		if (err < 0) {
-		  sysSpeed = mLagAdjustSystemSpeed*err*0.01;
-	    } else {
-		sysSpeed = SGMiscd::min(0.5*err*err, 0.05);
-		}
-	  } else {
-		if (err < 0) {
+    if (!realTime) {
 
-			// Ok, we have some very late packets and nothing newer increase the
-			// lag by the given speedadjust
-			sysSpeed = mLagAdjustSystemSpeed*err;
-		} else {
-			// We have a too pessimistic display delay shorten that a small bit
-			sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
-	   }
-	  }
+      if ((!mAllowExtrapolation && offset + lag < mTimeOffset)
+            || (offset - 10 > mTimeOffset)) {
+        mTimeOffset = offset;
+        SG_LOG(SG_AI, SG_DEBUG, "Resetting time offset adjust system to "
+               "avoid extrapolation: time offset = " << mTimeOffset);
+      } else {
+          // the error of the offset, respectively the negative error to avoid
+          // a minus later ...
+        double err = offset - mTimeOffset;
+          // limit errors leading to shorter lag values somehow, that is late
+          // arriving packets will pessimize the overall lag much more than
+          // early packets will shorten the overall lag
+        double sysSpeed;
+          //trying to slow the rudderlag phenomenon thus using more the prediction system
+          //if we are off by less than 1.5s, do a little correction, and bigger step above 1.5s
+        if (fabs(err) < 1.5) {
+          if (err < 0) {
+            sysSpeed = mLagAdjustSystemSpeed*err*0.01;
+          } else {
+            sysSpeed = SGMiscd::min(0.5*err*err, 0.05);
+          }
+        } else {
+          if (err < 0) {
+
+              // Ok, we have some very late packets and nothing newer increase the
+              // lag by the given speedadjust
+            sysSpeed = mLagAdjustSystemSpeed*err;
+          } else {
+                // We have a too pessimistic display delay shorten that a small bit
+            sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
+          }
+        }
 
 
       // simple euler integration for that first order system including some
       // overshooting guard to prevent to aggressive system speeds
       // (stiff systems) to explode the systems state
-      double systemIncrement = dt*sysSpeed;
-      if (fabs(err) < fabs(systemIncrement))
-        systemIncrement = err;
-      mTimeOffset += systemIncrement;
+        double systemIncrement = dt*sysSpeed;
+        if (fabs(err) < fabs(systemIncrement))
+          systemIncrement = err;
+        mTimeOffset += systemIncrement;
 
-      SG_LOG(SG_AI, SG_DEBUG, "Offset adjust system: time offset = "
+        SG_LOG(SG_AI, SG_DEBUG, "Offset adjust system: time offset = "
              << mTimeOffset << ", expected longitudinal position error due to "
              " current adjustment of the offset: "
              << fabs(norm(it->second.linearVel)*systemIncrement));
+      }
     }
   }
-
 
   // Compute the time in the feeders time scale which fits the current time
   // we need to
@@ -227,9 +256,10 @@ void FGAIMultiplayer::update(double dt)
   SGQuatf ecOrient;
   SGVec3f ecLinearVel;
 
-  if (tInterp <= curentPkgTime) {
+  if (tInterp < curentPkgTime) {
     // Ok, we need a time prevous to the last available packet,
     // that is good ...
+    // the case tInterp = curentPkgTime need to be in the interpolation, to avoid a bug zeroing the position
 
     // Find the first packet before the target time
     MotionInfo::iterator nextIt = mMotionInfo.upper_bound(tInterp);

@@ -287,6 +287,8 @@ void FGAIShip::Run(double dt) {
         if (speed_diff < 0.0)
             speed -= _speed_constant * dt;
 
+    } else {
+        speed = tgt_speed;
     }
 
     // do not allow unreasonable speeds

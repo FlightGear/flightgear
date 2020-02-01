@@ -1,6 +1,6 @@
 #include "testAeroMesh.hxx"
 
-#include "test_suite/FGTestApi/globals.hxx"
+#include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/PrivateAccessorFDM.hxx"
 #include "test_suite/FGTestApi/scene_graph.hxx"
 

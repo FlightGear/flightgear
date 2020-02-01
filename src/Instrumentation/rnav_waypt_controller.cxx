@@ -20,6 +20,7 @@
 #include "rnav_waypt_controller.hxx"
 
 #include <cassert>
+#include <stdexcept>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/exception.hxx>
@@ -71,11 +72,20 @@ WayptController::~WayptController()
 void WayptController::init()
 {
 }
+  
+bool WayptController::isDone() const
+{
+  if (_subController) {
+    return _subController->isDone();
+  }
+  
+  return _isDone;
+}
 
 void WayptController::setDone()
 {
   if (_isDone) {
-    SG_LOG(SG_AUTOPILOT, SG_WARN, "already done @ WayptController::setDone");
+    SG_LOG(SG_AUTOPILOT, SG_DEV_WARN, "already done @ WayptController::setDone");
   }
   
   _isDone = true;
@@ -92,6 +102,53 @@ double WayptController::timeToWaypt() const
   return (distanceToWayptM() / gs);
 }
 
+std::string WayptController::status() const
+{
+    return {};
+}
+
+void WayptController::setSubController(WayptController* sub)
+{
+  _subController.reset(sub);
+  if (_subController) {
+    // seems like a good idea to check this
+    assert(_subController->_rnav == _rnav);
+    _subController->init();
+  }
+}
+
+double WayptController::trueBearingDeg() const
+{
+  if (_subController)
+    return _subController->trueBearingDeg();
+  
+  return _targetTrack;
+}
+  
+double WayptController::targetTrackDeg() const
+{
+  if (_subController)
+    return _subController->targetTrackDeg();
+  
+  return _targetTrack;
+}
+  
+double WayptController::xtrackErrorNm() const
+{
+  if (_subController)
+    return _subController->xtrackErrorNm();
+  
+  return 0.0;
+}
+
+double WayptController::courseDeviationDeg() const
+{
+  if (_subController)
+    return _subController->courseDeviationDeg();
+  
+  return 0.0;
+}
+  
 //////////////
 
 class BasicWayptCtl : public WayptController
@@ -189,27 +246,27 @@ public:
 
   virtual void init()
   {
-	double courseOriginTarget;
 	bool isPreviousLegValid = false;
 
 	_waypointOrigin = _rnav->previousLegWaypointPosition(isPreviousLegValid);
 
-	courseOriginTarget 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
-
+	_initialLegCourse 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
 	_courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
 	_distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
 
 	// check reach the leg in 45Deg or going direct
-	bool canReachLeg = (fabs(courseOriginTarget -_courseAircraftToTarget) < 45.0);
+	bool canReachLeg = (fabs(_initialLegCourse -_courseAircraftToTarget) < 45.0);
 
-	if ( isPreviousLegValid && canReachLeg){
-		_targetTrack = courseOriginTarget;
-	}else{
-		_targetTrack = _courseAircraftToTarget;
-		_waypointOrigin	 = _rnav->position();
+	if (isPreviousLegValid && canReachLeg) {
+      _targetTrack = _initialLegCourse;
+	} else {
+      // can't reach the leg with out a crazy turn, just go direct to the
+      // destination waypt
+      _targetTrack = _courseAircraftToTarget;
+      _initialLegCourse = _courseAircraftToTarget;
+      _waypointOrigin = _rnav->position();
 	}
-
   }
 
   virtual void update(double)
@@ -220,24 +277,69 @@ public:
     _courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
     _distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
-    _courseDev = -(_courseOriginToAircraft - _targetTrack);
+    // from the Aviation Formulary
+#if 0
+      Suppose you are proceeding on a great circle route from A to B (course =crs_AB) and end up at D,
+      perhaps off course. (We presume that A is ot a pole!) You can calculate the course from A to D
+      (crs_AD) and the distance from A to D (dist_AD) using the formulae above. In terms of these the
+      cross track error, XTD, (distance off course) is given by
+      
+      XTD =asin(sin(dist_AD)*sin(crs_AD-crs_AB))
+      (positive XTD means right of course, negative means left)
+      (If the point A is the N. or S. Pole replace crs_AD-crs_AB with
+       lon_D-lon_B or lon_B-lon_D, respectively.)
+#endif
+    // however, just for fun, our convention for polarity of the cross-track
+    // sign is opposite, so we add a -ve to the computation below.
+      
+    double distOriginAircraftRad = _distanceOriginAircraftMetre * SG_METER_TO_NM * SG_NM_TO_RAD;
+    double xtkRad = asin(sin(distOriginAircraftRad) * sin((_courseOriginToAircraft - _initialLegCourse) * SG_DEGREES_TO_RADIANS));
+      
+    // convert to NM and flip sign for consistency with existing code.
+    // since we derive the abeam point and course-deviation from this, and
+    // thus the GPS cdi-deflection, if we don't fix this here, the sign of
+    // all of those comes out backwards.
+    _crossTrackError = -(xtkRad * SG_RAD_TO_NM);
+
+    /*
+     The "along track distance", ATD, the distance from A along the course towards B
+     to the point abeam D is given by:
+     ATD=acos(cos(dist_AD)/cos(XTD))
+     */
+    double atd = acos(cos(distOriginAircraftRad) / cos(xtkRad));
+    const double atdM = atd * SG_RAD_TO_NM * SG_NM_TO_METER;
+    SGGeod abeamPoint = SGGeodesy::direct(_waypointOrigin, _initialLegCourse, atdM);
+    
+    // if we're close to the target point, we enter something similar to the VOR zone
+    // of confusion. Force target track to the final course from the origin.
+    if (_distanceAircraftTargetMetre < (SG_NM_TO_METER * 2.0)) {
+      _targetTrack = SGGeodesy::courseDeg(_waypt->position(), _waypointOrigin) + 180.0;
+      SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+    } else {
+      // use the abeam point to compute the desired course
+      double desiredCourse = SGGeodesy::courseDeg(abeamPoint, _waypt->position());
+      _targetTrack = desiredCourse;
+    }
+    
+    _courseDev = _courseAircraftToTarget - _targetTrack;
+    SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
 
     bool isMinimumOverFlightDistanceReached = _distanceAircraftTargetMetre < _rnav->overflightDistanceM();
     bool isOverFlightConeArmed 				= _distanceAircraftTargetMetre < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
-    bool leavingOverFlightCone 				= (fabs(_courseAircraftToTarget - _targetTrack) > _rnav->overflightArmAngleDeg());
-
-    if( isMinimumOverFlightDistanceReached ){
-    	_toFlag = false;
-    	setDone();
-    }else{
-		if( isOverFlightConeArmed ){
-			_toFlag = false;
-			if ( leavingOverFlightCone ) {
-				setDone();
-			}
-		}else{
-			_toFlag = true;
-		}
+    bool leavingOverFlightCone 				= (fabs(_courseDev) > _rnav->overflightArmAngleDeg());
+    
+    if ( isMinimumOverFlightDistanceReached ){
+      _toFlag = false;
+      setDone();
+    } else {
+      if( isOverFlightConeArmed ){
+        _toFlag = false;
+        if ( leavingOverFlightCone ) {
+          setDone();
+        }
+      }else{
+        _toFlag = true;
+      }
     }
   }
 
@@ -248,7 +350,7 @@ public:
 
   virtual double xtrackErrorNm() const
   {
-	  return greatCircleCrossTrackError(_distanceOriginAircraftMetre * SG_METER_TO_NM, _courseDev);
+    return _crossTrackError;
   }
 
   virtual bool toFlag() const
@@ -278,12 +380,14 @@ private:
    * A(from), B(to), D(position) perhaps off course
    */
   SGGeod _waypointOrigin;
+  double _initialLegCourse;
   double _distanceOriginAircraftMetre;
   double _distanceAircraftTargetMetre;
   double _courseOriginToAircraft;
   double _courseAircraftToTarget;
   double _courseDev;
   bool _toFlag;
+  double _crossTrackError;
 
 };
 
@@ -320,7 +424,7 @@ public:
     bearingAircraftRunwayEnd	= SGGeodesy::courseDeg(_rnav->position(), _runway->end());
     _distanceAircraftRunwayEnd	= SGGeodesy::distanceM(_rnav->position(), _runway->end());
 
-    double _courseDev = bearingAircraftRunwayEnd - _targetTrack;
+    _courseDev = bearingAircraftRunwayEnd - _targetTrack;
     SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
     
     if ((fabs(_courseDev) > _rnav->overflightArmAngleDeg()) && (_distanceAircraftRunwayEnd < _rnav->overflightArmDistanceM())) {
@@ -577,62 +681,348 @@ private:
   double _distanceNm;
 };
 
-class HoldCtl : public WayptController
+
+HoldCtl::HoldCtl(RNAV* aRNAV, const WayptRef& aWpt) :
+  WayptController(aRNAV, aWpt)
+  
 {
-public:
-  HoldCtl(RNAV* aRNAV, const WayptRef& aWpt) :
-    WayptController(aRNAV, aWpt)
-    
-  {
-
-  }
-
-  virtual void init()
-  {
-  }
-  
-  virtual void update(double)
-  {
-    // fly inbound / outbound sides, or execute the turn
-  #if 0
-    if (inTurn) {
-    
-      targetTrack += dt * turnRateSec * turnDirection;
-      if (inbound) {
-        if .. targetTrack has passed inbound radial, doen with this turn
-      } else {
-        if target track has passed reciprocal radial done with turn
-      }
-    } else {
-      check time / distance elapsed
-      
-      if (sideDone) {
-        inTurn = true;
-        inbound = !inbound;
-        nextHeading = inbound;
-        if (!inbound) {
-          nextHeading += 180.0;
-          SG_NORMALIZE_RANGE(nextHeading, 0.0, 360.0);
-        }
-      }
-    
+  // find published hold for aWpt
+  // do we have this?!
+    if (aWpt->type() == "hold") {
+        const auto hold = static_cast<Hold*>(aWpt.ptr());
+        _holdCourse = hold->inboundRadial();
+        if (hold->isDistance())
+            _holdLegDistance = hold->timeOrDistance();
+        else
+            _holdLegTime = hold->timeOrDistance();
+        _leftHandTurns = hold->isLeftHanded();
     }
+}
+
+void HoldCtl::init()
+{
+  _segmentEnd = _waypt->position();
+  _state = LEG_TO_HOLD;
   
-  #endif
+  // use leg controller to fly us to the hold point - this also gives
+  // the normal legl behaviour if the hold is not enabled
+  setSubController(new LegWayptCtl(_rnav, _waypt));
+}
+  
+void HoldCtl::computeEntry()
+{
+  const double entryCourse = SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
+  const double diff = SGMiscd::normalizePeriodic( -180.0, 180.0, _holdCourse - entryCourse);
+  
+  if (_leftHandTurns) {
+    if ((diff > -70) && (diff < 120.0)) {
+      _state = ENTRY_DIRECT;
+    } else if (diff < 0.0) {
+      _state = ENTRY_PARALLEL;
+    } else {
+      _state = ENTRY_TEARDROP;
+    }
+  } else {
+    // right handed entry angles
+    if ((diff > -120) && (diff < 70.0)) {
+      _state = ENTRY_DIRECT;
+    } else if (diff > 0.0) {
+      _state = ENTRY_PARALLEL;
+    } else {
+      _state = ENTRY_TEARDROP;
+    }
+  }
+}
+    
+void HoldCtl::update(double dt)
+{
+  const auto rnavPos = _rnav->position();
+  const double dEnd = SGGeodesy::distanceNm(rnavPos, _segmentEnd);
+  
+  // fly inbound / outbound sides, or execute the turn
+  switch (_state) {
+    case LEG_TO_HOLD:
+      // update the leg controller
+      _subController->update(dt);
+      break;
+      
+    case HOLD_EXITING:
+      // in the common case of a hold in a procedure, we often just fly
+      // the hold waypoint as leg. Keep running the Leg sub-controller until
+      // it's done (WayptController::isDone calls the subcController
+      // automaticlaly)
+      if (_subController) {
+        _subController->update(dt);
+      }
+      break;
+
+    default:
+      break;
+  }
+  
+  if (_inTurn) {
+    const double turnOffset = inLeftTurn() ? 90 : -90;
+    const double bearingTurnCenter = SGGeodesy::courseDeg(rnavPos, _turnCenter);
+    _targetTrack = bearingTurnCenter + turnOffset;
+    SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+
+    const double angleToTurn = SGMiscd::normalizePeriodic( -180.0, 180.0, _targetTrack - _turnEndAngle);
+    if (fabs(angleToTurn) < 0.5) {
+      exitTurn();
+    }
+  } else if (_state == LEG_TO_HOLD) {
+    checkInitialEntry(dEnd);
+  } else if ((_state == HOLD_INBOUND) || (_state == ENTRY_PARALLEL_INBOUND)) {
+    if (checkOverHold()) {
+      // we are done
+    } else {
+      // straight line XTK/deviation
+      // computed on-demand in xtrackErrorNm so nothing to do here
+    }
+  } else if ((_state == HOLD_OUTBOUND) || (_state == ENTRY_TEARDROP)) {
+    if (dEnd < 0.2) {
+      startInboundTurn();
+    } else {
+      // straight line XTK
+    }
+  } else if (_state == ENTRY_PARALLEL_OUTBOUND) {
+    if (dEnd < 0.2) {
+      startParallelEntryTurn(); // opposite direction to normal
+    } else {
+      // straight line XTK
+    }
+  }
+}
+  
+void HoldCtl::setHoldCount(int count)
+{
+  _holdCount = count;
+}
+    
+void HoldCtl::exitHold()
+{
+  _holdCount = 0;
+}
+
+bool HoldCtl::checkOverHold()
+{
+  // check distance to entry fix
+  const double d = SGGeodesy::distanceNm(_rnav->position(), _waypt->position());
+  if (d > 0.2) {
+      return false;
+  }
+  
+  if (_holdCount == 0) {
     setDone();
+    return true;
+  }
+    
+    startOutboundTurn();
+  return true;
+}
+    
+void HoldCtl::checkInitialEntry(double dNm)
+{
+  _turnRadius = _rnav->turnRadiusNm();
+  if (dNm > _turnRadius) {
+    // keep going;
+    return;
   }
   
-  virtual double distanceToWayptM() const
+  if (_holdCount == 0) {
+    // we're done, but we want to keep the leg controller going until
+    // we're right on top
+    setDone();
+    
+    // ensure we keep running the Leg cub-controller until it's done,
+    // which happens a bit later
+    _state = HOLD_EXITING;
+    return;
+  }
+  
+  // clear the leg controller we were using to fly us to the hold
+  setSubController(nullptr);
+  computeEntry();
+  
+  if (_state == ENTRY_DIRECT) {
+    startOutboundTurn();
+  } else if (_state == ENTRY_TEARDROP) {
+    _targetTrack = _holdCourse + (_leftHandTurns ? -150 : 150);
+    SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+    _segmentEnd = outboundEndPoint();
+  } else {
+    // parallel entry
+    assert(_state == ENTRY_PARALLEL);
+    _state = ENTRY_PARALLEL_OUTBOUND;
+    _targetTrack = _holdCourse + 180;
+    SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+    const double legLengthM = holdLegLengthNm() * SG_NM_TO_METER;
+    _segmentEnd = SGGeodesy::direct(_waypt->position(), _holdCourse, -legLengthM);
+  }
+}
+
+void HoldCtl::startInboundTurn()
+{
+  _state = HOLD_INBOUND;
+  _inTurn = true;
+  _turnCenter = inboundTurnCenter();
+  _turnRadius = _rnav->turnRadiusNm();
+  _turnEndAngle = _holdCourse;
+  SG_NORMALIZE_RANGE(_turnEndAngle, 0.0, 360.0);
+}
+
+void HoldCtl::startOutboundTurn()
+{
+  _state = HOLD_OUTBOUND;
+  _inTurn = true;
+  _turnCenter = outboundTurnCenter();
+  _turnRadius = _rnav->turnRadiusNm();
+  _turnEndAngle = _holdCourse + 180.0;
+  SG_NORMALIZE_RANGE(_turnEndAngle, 0.0, 360.0);
+}
+  
+void HoldCtl::startParallelEntryTurn()
+{
+  _state = ENTRY_PARALLEL_INBOUND;
+  _inTurn = true;
+  _turnRadius = _rnav->turnRadiusNm();
+  _turnCenter = inboundTurnCenter();
+  _turnEndAngle = _holdCourse + (_leftHandTurns ? 45.0 : -45.0);
+  SG_NORMALIZE_RANGE(_turnEndAngle, 0.0, 360.0);
+}
+  
+void HoldCtl::exitTurn()
+{
+  _inTurn = false;
+  switch (_state) {
+  case HOLD_INBOUND:
+      _targetTrack = _holdCourse;
+      _segmentEnd = _waypt->position();
+      break;
+      
+  case ENTRY_PARALLEL_INBOUND:
+      // possible improvement : fly the current track until the bearing tp
+      // the hold point matches the hold radial. This would cause us to fly
+      // a neater parallel entry, rather than flying to the hold point
+      // direct from where we are now.
+       _targetTrack = SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
+      _segmentEnd = _waypt->position();
+      break;
+          
+  case HOLD_OUTBOUND:
+      _targetTrack = _holdCourse + 180.0;
+      SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+      // start a timer for timed holds?
+      _segmentEnd = outboundEndPoint();
+      break;
+      
+  default:
+      SG_LOG(SG_INSTR, SG_DEV_WARN, "HoldCOntroller: bad state at exitTurn:" << _state);
+  }
+}
+  
+SGGeod HoldCtl::outboundEndPoint()
+{
+  // FIXME flip for left hand-turns
+  const double turnRadiusM = _rnav->turnRadiusNm() * SG_NM_TO_METER;
+  const double legLengthM = holdLegLengthNm() * SG_NM_TO_METER;
+  const auto p1 = SGGeodesy::direct(_waypt->position(), _holdCourse, -legLengthM);
+  const double turnOffset = _leftHandTurns ? -90 : 90;
+  return SGGeodesy::direct(p1, _holdCourse + turnOffset, turnRadiusM * 2.0);
+}
+
+SGGeod HoldCtl::outboundTurnCenter()
+{
+  const double turnOffset = _leftHandTurns ? -90 : 90;
+  return SGGeodesy::direct(_waypt->position(), _holdCourse + turnOffset, _rnav->turnRadiusNm() * SG_NM_TO_METER);
+}
+  
+SGGeod HoldCtl::inboundTurnCenter()
+{
+  const double legLengthM = holdLegLengthNm() * SG_NM_TO_METER;
+  const auto p1 = SGGeodesy::direct(_waypt->position(), _holdCourse, -legLengthM);
+  const double turnOffset = _leftHandTurns ? -90 : 90;
+  return SGGeodesy::direct(p1, _holdCourse + turnOffset, _rnav->turnRadiusNm() * SG_NM_TO_METER);
+}
+        
+double HoldCtl::distanceToWayptM() const
+{
+  return -1.0;
+}
+
+SGGeod HoldCtl::position() const
+{
+  return _waypt->position();
+}
+  
+bool HoldCtl::inLeftTurn() const
+{
+    return (_state == ENTRY_PARALLEL_INBOUND) ? !_leftHandTurns : _leftHandTurns;
+}
+
+double HoldCtl::holdLegLengthNm() const
+{
+  const double gs = _rnav->groundSpeedKts();
+  if (_holdLegTime > 0.0) {
+    return _holdLegTime * gs / 3600.0;
+  }
+  
+  return _holdLegDistance;
+}
+  
+double HoldCtl::xtrackErrorNm() const
+{
+  if (_subController) {
+    return _subController->xtrackErrorNm();
+  }
+  
+  if (_inTurn) {
+    const double dR = SGGeodesy::distanceNm(_turnCenter, _rnav->position());
+    const double xtk = dR - _turnRadius;
+    return inLeftTurn() ? -xtk : xtk;
+  } else {
+      const double courseToSegmentEnd = SGGeodesy::courseDeg(_rnav->position(), _segmentEnd);
+      const double courseDev = courseToSegmentEnd - _targetTrack;
+      const auto d = SGGeodesy::distanceNm(_rnav->position(), _segmentEnd);
+      return greatCircleCrossTrackError(d, courseDev);
+  }
+}
+      
+double HoldCtl::courseDeviationDeg() const
+{
+  if (_subController) {
+    return _subController->courseDeviationDeg();
+  }
+  
+  // convert XTK to 'dots' deviation
+  // assuming 10-degree peg to peg, this means 0.1nm of course is
+  // one degree of error, feels about right for a hold
+  return xtrackErrorNm() * 10.0;
+}
+    
+  std::string HoldCtl::status() const
   {
-    return -1.0;
+    switch (_state) {
+      case LEG_TO_HOLD:     return "leg-to-hold";
+      case HOLD_INIT:       return "hold-init";
+      case ENTRY_DIRECT:    return "entry-direct";
+      case ENTRY_PARALLEL:
+      case ENTRY_PARALLEL_OUTBOUND:
+      case ENTRY_PARALLEL_INBOUND:
+        return "entry-parallel";
+      case ENTRY_TEARDROP:
+        return "entry-teardrop";
+        
+      case HOLD_OUTBOUND:   return "hold-outbound";
+      case HOLD_INBOUND:    return "hold-inbound";
+      case HOLD_EXITING:    return "hold-exiting";
+    }
+
+    throw std::domain_error("Unsupported HoldState.");
   }
 
-  virtual SGGeod position() const
-  {
-    return _waypt->position();
-  }
-};
-
+///////////////////////////////////////////////////////////////////////////////////
+  
 class VectorsCtl : public WayptController
 {
 public:
@@ -688,14 +1078,18 @@ void DirectToController::init()
 void DirectToController::update(double)
 {
   double courseOriginToAircraft;
-
-  courseOriginToAircraft 		= SGGeodesy::courseDeg(_origin,_rnav->position());
-
+  double az2, distanceOriginToAircraft;
+  SGGeodesy::inverse(_origin,_rnav->position(), courseOriginToAircraft, az2, distanceOriginToAircraft);
+  if (distanceOriginToAircraft < 100.0) {
+    // if we are very close to the origin point, use the target track so
+    // course deviation comes out as zero
+    courseOriginToAircraft = _targetTrack;
+  }
+    
   _courseAircraftToTarget		= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
   _distanceAircraftTargetMeter	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
-  _courseDev = -(courseOriginToAircraft - _targetTrack);
-
+  _courseDev = _courseAircraftToTarget - _targetTrack;
   SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
 
   bool isMinimumOverFlightDistanceReached 	= _distanceAircraftTargetMeter < _rnav->overflightDistanceM();

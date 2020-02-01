@@ -48,6 +48,7 @@ FORWARD DECLARATIONSS
 namespace JSBSim {
 
 class FGPropagate;
+class FGGroundReactions;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -67,8 +68,8 @@ CLASS DOCUMENTATION
     sign of the inertia cross products are not modified by JSBSim so in most
     cases, negative values should be provided for <ixy>, <ixz> and <iyz>.
 
-    <h3>Configuration File Format:</h3>
-@code
+    <h3>Configuration File Format for \<mass_balance> Section:</h3>
+@code{.xml}
     <mass_balance>
         <ixx unit="{SLUG*FT2 | KG*M2}"> {number} </ixx>
         <iyy unit="{SLUG*FT2 | KG*M2}"> {number} </iyy>
@@ -113,17 +114,20 @@ public:
   bool Load(Element* el);
   bool InitModel(void) override;
   /** Runs the Mass Balance model; called by the Executive
-      Can pass in a value indicating if the executive is directing the simulation to Hold.
-      @param Holding if true, the executive has been directed to hold the sim from 
-                     advancing time. Some models may ignore this flag, such as the Input
-                     model, which may need to be active to listen on a socket for the
-                     "Resume" command to be given.
-      @return false if no error */
+      Can pass in a value indicating if the executive is directing the
+      simulation to Hold.
+      @param Holding if true, the executive has been directed to hold the sim
+                     from advancing time. Some models may ignore this flag, such
+                     as the Input model, which may need to be active to listen
+                     on a socket for the "Resume" command to be given.  @return
+                     false if no error */
   bool Run(bool Holding) override;
 
   double GetMass(void) const {return Mass;}
   double GetWeight(void) const {return Weight;}
   double GetEmptyWeight(void) const {return EmptyWeight;}
+  /** Returns the coordinates of the center of gravity expressed in the
+      structural frame. */
   const FGColumnVector3& GetXYZcg(void) const {return vXYZcg;}
   double GetXYZcg(int axis) const  {return vXYZcg(axis);}
   const FGColumnVector3& GetDeltaXYZcg(void) const {return vDeltaXYZcg;}
@@ -170,7 +174,9 @@ public:
   double GetTotalPointMassWeight(void) const;
 
   const FGColumnVector3& GetPointMassMoment(void);
+  /// Returns the inertia matrix expressed in the body frame.
   const FGMatrix33& GetJ(void) const {return mJ;}
+  /// Returns the inverse of the inertia matrix expressed in the body frame.
   const FGMatrix33& GetJinv(void) const {return mJinv;}
   void SetAircraftBaseInertias(const FGMatrix33& BaseJ) {baseJ = BaseJ;}
   void GetMassPropertiesReport(int i);
@@ -186,6 +192,7 @@ public:
 
 private:
   FGPropagate* Propagate;
+  FGGroundReactions* GroundReactions;
   double Weight;
   double EmptyWeight;
   double Mass;
@@ -206,7 +213,7 @@ private:
   double GetIyy(void) const { return mJ(2,2); }
   double GetIzz(void) const { return mJ(3,3); }
   double GetIxy(void) const { return -mJ(1,2); }
-  double GetIxz(void) const { return -mJ(1,3); }
+  double GetIxz(void) const { return mJ(1,3); }
   double GetIyz(void) const { return -mJ(2,3); }
 
   /** The PointMass structure encapsulates a point mass object, moments of inertia

@@ -42,6 +42,7 @@ INCLUDES
 
 #include "FGMassBalance.h"
 #include "FGFDMExec.h"
+#include "FGGroundReactions.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
@@ -53,15 +54,16 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
+FGMassBalance::FGMassBalance(FGFDMExec* fdmex)
+  : FGModel(fdmex), GroundReactions(nullptr)
 {
   Name = "FGMassBalance";
   Weight = EmptyWeight = Mass = 0.0;
 
-  vbaseXYZcg.InitMatrix(0.0);
-  vXYZcg.InitMatrix(0.0);
-  vLastXYZcg.InitMatrix(0.0);
-  vDeltaXYZcg.InitMatrix(0.0);
+  vbaseXYZcg.InitMatrix();
+  vXYZcg.InitMatrix();
+  vLastXYZcg.InitMatrix();
+  vDeltaXYZcg.InitMatrix();
   baseJ.InitMatrix();
   mJ.InitMatrix();
   mJinv.InitMatrix();
@@ -88,8 +90,9 @@ bool FGMassBalance::InitModel(void)
 {
   if (!FGModel::InitModel()) return false;
 
-  vLastXYZcg.InitMatrix(0.0);
-  vDeltaXYZcg.InitMatrix(0.0);
+  GroundReactions = FDMExec->GetGroundReactions();
+  vLastXYZcg.InitMatrix();
+  vDeltaXYZcg.InitMatrix();
 
   return true;
 }
@@ -206,7 +209,9 @@ bool FGMassBalance::Run(bool Holding)
   vDeltaXYZcgBody = StructuralToBody(vLastXYZcg) - StructuralToBody(vXYZcg);
   vLastXYZcg = vXYZcg;
 
-  if (FDMExec->GetHoldDown())
+  // Compensate displacements of the structural frame when the mass distribution
+  // is modified while the aircraft is in contact with the ground.
+  if (FDMExec->GetHoldDown() || GroundReactions->GetWOW())
     Propagate->NudgeBodyLocation(vDeltaXYZcgBody);
 
 // Calculate new total moments of inertia
@@ -227,7 +232,8 @@ bool FGMassBalance::Run(bool Holding)
   Ixz = -mJ(1,3);
   Iyz = -mJ(2,3);
 
-// Calculate inertia matrix inverse (ref. Stevens and Lewis, "Flight Control & Simulation")
+// Calculate inertia matrix inverse (ref. Stevens and Lewis, "Flight Control &
+// Simulation")
 
   k1 = (Iyy*Izz - Iyz*Iyz);
   k2 = (Iyz*Ixz + Ixy*Izz);
@@ -338,7 +344,7 @@ const FGMatrix33& FGMassBalance::CalculatePMInertias(void)
 {
   if (PointMasses.empty()) return pmJ;
 
-  pmJ = FGMatrix33();
+  pmJ.InitMatrix();
 
   for (auto pm: PointMasses) {
     pmJ += GetPointmassInertia( lbtoslug * pm->Weight, pm->Location );

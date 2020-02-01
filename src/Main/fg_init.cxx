@@ -532,6 +532,17 @@ static void createBaseStorageDirForAddons(const SGPath& exportDir)
     }
 }
 
+struct SimLogFileLine : SGPropertyChangeListener
+{
+    SimLogFileLine() {
+        fgAddChangeListener(this, "/sim/log-file-line");
+    }
+    virtual void valueChanged(SGPropertyNode* node) {
+        bool    fileLine = node->getBoolValue();
+        sglog().setFileLine(fileLine);
+    }
+};
+
 // Read in configuration (file and command line)
 int fgInitConfig ( int argc, char **argv, bool reinit )
 {
@@ -578,6 +589,8 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 
     fgSetBool("/sim/developer-mode", developerMode);
     sglog().setDeveloperMode(developerMode);
+    
+    static SimLogFileLine   simLogFileLine;
 
 #ifdef ENABLE_SWIFT
     //Set standard settings for swift connection

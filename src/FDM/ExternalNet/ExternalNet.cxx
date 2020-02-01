@@ -48,12 +48,14 @@ public:
     HTTPClient ( const char* host, int port, const char* path ) :
         done( false )
     {
-	open ();
-	connect (host, port);
+        open ();
+        connect (host, port);
 
-  char buffer[256];
-  ::snprintf (buffer, 256, "GET %s HTTP/1.0\r\n\r\n", path );
-	bufferSend(buffer, strlen(buffer) ) ;
+        char buffer[256];
+        ::snprintf (buffer, 255, "GET %s HTTP/1.0\r\n\r\n", path);
+        buffer[255] = '\0';
+
+        bufferSend(buffer, strlen(buffer) ) ;
 
         poller.addChannel(this);
         start.stamp();
@@ -61,13 +63,14 @@ public:
 
     virtual void handleBufferRead (simgear::NetBuffer& buffer)
     {
-	const char* s = buffer.getData();
-	while (*s)
-	    fputc(*s++,stdout);
+        const char* s = buffer.getData();
+        while (*s)
+            fputc(*s++, stdout);
 
-	printf("done\n");
-	buffer.remove();
-	printf("after buffer.remove()\n");
+        printf("done\n");
+
+        buffer.remove();
+
         done = true;
     }
 

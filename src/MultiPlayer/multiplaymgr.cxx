@@ -1679,7 +1679,7 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
   while (iNextBlockPosition < MsgText.length()) {
     strncpy (ChatMsg.Text,
              MsgText.substr(iNextBlockPosition, MAX_CHAT_MSG_LEN - 1).c_str(),
-             MAX_CHAT_MSG_LEN);
+             MAX_CHAT_MSG_LEN - 1);
     ChatMsg.Text[MAX_CHAT_MSG_LEN - 1] = '\0';
     memcpy (Msg, &MsgHdr, sizeof(T_MsgHdr));
     memcpy (Msg + sizeof(T_MsgHdr), &ChatMsg, sizeof(T_ChatMsg));

@@ -335,14 +335,14 @@ void YASim::copyToYASim(bool copyState)
         Math::tmul33(s.orient, v, v);
         break;
     case KNOTS:
-        v[0] = atmo.spdFromVCAS(get_V_calibrated_kts()/MPS2KTS);
+        v[0] = atmo.speedFromVCAS(get_V_calibrated_kts()/MPS2KTS);
         v[1] = 0;
         v[2] = 0;
         Math::tmul33(s.orient, v, v);
         needCopy = true;
         break;
     case MACH:
-        v[0] = atmo.spdFromMach(get_Mach_number());
+        v[0] = atmo.speedFromMach(get_Mach_number());
         v[1] = 0;
         v[2] = 0;
         Math::tmul33(s.orient, v, v);

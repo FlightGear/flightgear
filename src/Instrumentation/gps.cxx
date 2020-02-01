@@ -22,6 +22,7 @@
 #include "Navaids/navrecord.hxx"
 #include "Navaids/FlightPlan.hxx"
 #include <Navaids/routePath.hxx>
+#include <Instrumentation/rnav_waypt_controller.hxx>
 
 #include "Airports/airport.hxx"
 #include "Airports/runways.hxx"
@@ -61,7 +62,7 @@ static const char* makeTTWString(double TTW)
 GPS::Config::Config() :
   _enableTurnAnticipation(true),
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
-  _overflightDistance(0.0),
+  _overflightDistance(0.02),
   _overflightArmDistance(1.0),
   _overflightArmAngle(90.0),
   _waypointAlertTime(30.0),
@@ -87,6 +88,7 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "over-flight-distance-nm", SGRawValuePointer<double>(&_overflightDistance));
   aOwner->tie(aCfg, "over-flight-arm-distance-nm", SGRawValuePointer<double>(&_overflightArmDistance));
   aOwner->tie(aCfg, "over-flight-arm-angle-deg", SGRawValuePointer<double>(&_overflightArmAngle));
+  aOwner->tie(aCfg, "delegate-sequencing", SGRawValuePointer<bool>(&_delegateSequencing));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -106,7 +108,7 @@ GPS::GPS ( SGPropertyNode *node, bool defaultGPSMode) :
   _callbackFlightPlanChanged(SGPropertyChangeCallback<GPS>(this,&GPS::routeManagerFlightPlanChanged,
                                                            fgGetNode("/autopilot/route-manager/signals/flightplan-changed", true))),
   _callbackRouteActivated(SGPropertyChangeCallback<GPS>(this,&GPS::routeActivated,
-                                                      fgGetNode("/autopilot/route-manager/active", true)))
+                                                        fgGetNode("/autopilot/route-manager/active", true)))
 {
   string branch = "/instrumentation/" + _name;
   _gpsNode = fgGetNode(branch.c_str(), _num, true );
@@ -328,6 +330,8 @@ GPS::update (double delta_time_sec)
       
       _desiredCourse = getLegMagCourse();
       
+      _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
+        
       updateTurn();
       updateRouteData();
     }
@@ -339,21 +343,19 @@ GPS::update (double delta_time_sec)
   
   if (_dataValid && (_mode == "init")) {
     // will select LEG mode if the route is active
-    routeManagerFlightPlanChanged(NULL);
-    
-    FGRouteMgr* routeMgr = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
-    if (!routeMgr->isRouteActive()) {
+    routeManagerFlightPlanChanged(nullptr);
+    FGRouteMgr* routeMgr = globals->get_subsystem<FGRouteMgr>();
+      
+    if (!routeMgr || !routeMgr->isRouteActive()) {
       // initialise in OBS mode, with waypt set to the nearest airport.
       // keep in mind at this point, _dataValid is not set
-      unique_ptr<FGPositioned::Filter> f(new FGAirport::HardSurfaceFilter());
-      FGPositionedRef apt = FGPositioned::findClosest(_indicated_pos, 20.0, f.get());
+      FGAirport::HardSurfaceFilter f;
+      FGPositionedRef apt = FGPositioned::findClosest(_indicated_pos, 20.0, &f);
       if (apt) {
-        selectOBSMode(new flightgear::NavaidWaypoint(apt, NULL));
+        selectOBSMode(new flightgear::NavaidWaypoint(apt, nullptr));
       } else {
-          selectOBSMode(NULL);
+        selectOBSMode(nullptr);
       }
-        
-        
     }
 
     if (_mode != "init")
@@ -372,8 +374,12 @@ void GPS::routeManagerFlightPlanChanged(SGPropertyNode*)
     _route->removeDelegate(this);
   }
   
-  SG_LOG(SG_INSTR, SG_INFO, "GPS saw route-manager flight-plan replaced.");
-  FGRouteMgr* routeMgr = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  SG_LOG(SG_INSTR, SG_DEBUG, "GPS saw route-manager flight-plan replaced.");
+  FGRouteMgr* routeMgr = globals->get_subsystem<FGRouteMgr>();
+  if (!routeMgr) {
+    return;
+  }
+    
   _route = routeMgr->flightPlan();
   if (_route) {
     _route->addDelegate(this);
@@ -388,21 +394,27 @@ void GPS::routeManagerFlightPlanChanged(SGPropertyNode*)
 
 void GPS::routeActivated(SGPropertyNode* aNode)
 {
-  bool isActive = aNode->getBoolValue();
-  if (isActive) {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS::route activated, switching to LEG mode");
-    selectLegMode();
-    
-    // if we've already passed the current waypoint, sequence.
-    if (_dataValid && getWP1FromFlag()) {
-      SG_LOG(SG_INSTR, SG_INFO, "GPS::route activated, FROM wp1, sequencing");
-      sequence();
+    // if the delegate is handling this, don't do anything else ourselves
+    if (_config.delegateDoesSequencing()) {
+        return;
     }
-  } else if (_mode == "leg") {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS::route deactivated, switching to OBS mode");
-    selectOBSMode(_currentWaypt);
-  }
+    
+    bool isActive = aNode->getBoolValue();
+    if (isActive) {
+        SG_LOG(SG_INSTR, SG_INFO, "GPS::route activated, switching to LEG mode");
+        selectLegMode();
+        
+        // if we've already passed the current waypoint, sequence.
+        if (_dataValid && getWP1FromFlag()) {
+            SG_LOG(SG_INSTR, SG_INFO, "GPS::route activated, FROM wp1, sequencing");
+            sequence();
+        }
+    } else if (_mode == "leg") {
+        SG_LOG(SG_INSTR, SG_INFO, "GPS::route deactivated, switching to OBS mode");
+        selectOBSMode(_currentWaypt);
+    }
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // implement the RNAV interface 
@@ -488,11 +500,19 @@ GPS::updateBasicData(double dt)
   double track2_deg;
   SGGeodesy::inverse(_last_pos, _indicated_pos, _last_true_track, track2_deg, distance_m );
     
+// detect repositions
+// setting this value high enough hypersonic aircraft but not spaceships
+  if ((distance_m / dt) > 100000.0) {
+    SG_LOG(SG_INSTR, SG_DEBUG, "GPS detected reposition, resetting data");
+    _dataValid = false;
+    return;
+  }
+    
   double speed_kt = ((distance_m * SG_METER_TO_NM) * ((1 / dt) * 3600.0));
   double vertical_speed_mpm = ((_indicated_pos.getElevationM() - _last_pos.getElevationM()) * 60 / dt);
   _last_vertical_speed = vertical_speed_mpm * SG_METER_TO_FEET;
   
-  speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/10.0);
+  speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/5.0);
   _last_speed_kts = speed_kt;
   
   SGGeod g = _indicated_pos;
@@ -538,11 +558,6 @@ GPS::updateTrackingBug()
   _magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
 }
 
-void GPS::endOfFlightPlan()
-{
-  selectOBSMode(_currentWaypt);
-}
-
 void GPS::currentWaypointChanged()
 {
   if (!_route) {
@@ -552,8 +567,8 @@ void GPS::currentWaypointChanged()
   int index = _route->currentIndex(),
     count = _route->numLegs();
   if ((index < 0) || (index >= count)) {
-    _currentWaypt=NULL;
-    _prevWaypt=NULL;
+    _currentWaypt=nullptr;
+    _prevWaypt=nullptr;
     // no active leg on the route
     return;
   }
@@ -580,35 +595,70 @@ void GPS::waypointsChanged()
     return;
   }
   
-  SG_LOG(SG_INSTR, SG_INFO, "GPS route edited while in LEG mode, updating waypoints");
+  SG_LOG(SG_INSTR, SG_DEBUG, "GPS route edited while in LEG mode, updating waypoints");
   currentWaypointChanged();
 }
 
-void GPS::cleared()
-{
-    if (_mode != "leg") {
-        return;
-    }
-    
-    selectOBSMode(_currentWaypt);
-}
-
-void GPS::sequence()
+void GPS::doSequence()
 {
     if (!_route) {
         return;
     }
   
-    int nextIndex = _route->currentIndex() + 1;
-    if (nextIndex >= _route->numLegs()) {
-        SG_LOG(SG_INSTR, SG_INFO, "sequenced final leg, end of route");
-        _route->finish();
-        selectOBSMode(_currentWaypt);
+    if (_config.delegateDoesSequencing()) {
+        // new style behaviour : let the delegate handle it
+        _route->sequence();
+    } else {
+        // backwards compatible behaviour : we do it ourselves
+        if (_mode == "dto") {
+            SG_LOG(SG_INSTR, SG_INFO, "GPS DTO reached destination point");
+            if (_route && _route->isActive()) {
+                // check if our destination point is on the active route,
+                // in which case resume leg mode
+                const int index = _route->findWayptIndex(_currentWaypt->position());
+                if (index >= 0) {
+                    SG_LOG(SG_INSTR, SG_INFO, "GPS DTO resuming LEG mode at " << _route->legAtIndex(index)->waypoint()->ident());
+                    _mode = "leg";
+                    _route->setCurrentIndex(index);
+                    return;
+                }
+            }
+            
+            // if we didn't enter LEG mode, drop back to OBS
+            selectOBSMode(_currentWaypt);
+        } else if (_mode == "leg") {
+            const int nextIndex = _route->currentIndex() + 1;
+            if (nextIndex >= _route->numLegs()) {
+                SG_LOG(SG_INSTR, SG_INFO, "GPS built-in sequencing, reached end of route,");
+                _route->finish();
+                selectOBSMode(_currentWaypt);
+            } else {
+                // sequence ourselves
+                _route->setCurrentIndex(nextIndex);
+            }
+        }
+    }
+}
+
+void GPS::cleared()
+{
+    // if the aircraft delegates handle sequencing, don't do
+    // anything here
+    if (_config.delegateDoesSequencing()) {
         return;
     }
     
-    // will callback into currentWaypointChanged
-    _route->setCurrentIndex(nextIndex);
+    // backwards compatability : select OBS mode
+    if (_mode == "leg") {
+        selectOBSMode(_currentWaypt);
+    }
+}
+
+void GPS::endOfFlightPlan()
+{
+    // backwards compatability - same logic as 'cleared', revert to OBS mode
+    // if we're in leg mode
+    cleared();
 }
 
 void GPS::updateTurn()
@@ -647,7 +697,7 @@ void GPS::updateTurn()
   if (_inTurn && !_turnSequenced && (progress > 0.5)) {
     _turnSequenced = true;
      SG_LOG(SG_INSTR, SG_INFO, "turn passed midpoint, sequencing");
-     sequence();
+     doSequence();
   }
   
   if (_inTurn && (progress >= 1.0)) {
@@ -670,37 +720,10 @@ void GPS::updateTurn()
 
 void GPS::updateOverflight()
 {
-  if (!_wayptController->isDone()) {
-    return;
+  if (_wayptController->isDone()) {
+      doSequence();
+      _computeTurnData = true;
   }
-  
-  if (_mode == "dto") {
-    SG_LOG(SG_INSTR, SG_INFO, "GPS DTO reached destination point");
-    
-    // check for wp1 being on active route - resume leg mode
-    if (_route) {
-      int index = _route->findWayptIndex(_currentWaypt->position());
-      if (index >= 0) {
-        SG_LOG(SG_INSTR, SG_INFO, "GPS DTO, resuming LEG mode at wp:" << index);
-        _mode = "leg";
-        _route->setCurrentIndex(index);
-        sequence(); // and sequence to the next point
-      }
-    }
-    
-    if (_mode == "dto") {
-      // if we didn't enter leg mode, drop back to OBS mode
-      // select OBS mode, but keep current waypoint-as is
-      _mode = "obs";
-      wp1Changed();
-    }
-  } else if (_mode == "leg") {
-    SG_LOG(SG_INSTR, SG_DEBUG, "GPS doing overflight sequencing");
-    sequence();
-  } else if (_mode == "obs") {
-    // nothing to do here, TO/FROM will update but that's fine
-  }
-  _computeTurnData = true;
 }
 
 void GPS::beginTurn()
@@ -790,6 +813,12 @@ void GPS::updateTurnData()
   SGGeodesy::direct(_turnPt, offsetBearing, d * SG_NM_TO_METER, _turnCentre, az2); 
 }
 
+double GPS::turnRadiusNm(double groundSpeedKts)
+{
+    return computeTurnRadiusNm(groundSpeedKts);
+}
+
+
 double GPS::computeTurnRadiusNm(double aGroundSpeedKts) const
 {
 	// turn time is seconds to execute a 360 turn. 
@@ -805,15 +834,18 @@ double GPS::computeTurnRadiusNm(double aGroundSpeedKts) const
 void GPS::updateRouteData()
 {
   double totalDistance = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
-  // walk all waypoints from wp2 to route end, and sum
-  for (int i=_route->currentIndex()+1; i<_route->numLegs(); ++i) {
-    FlightPlan::Leg* leg = _route->legAtIndex(i);
-    // omit missed-approach waypoints in distance calculation
-    if (leg->waypoint()->flag(WPT_MISS))
-      continue;
-      
-    totalDistance += leg->distanceNm();
-  }
+
+    if (_route) {
+        // walk all waypoints from wp2 to route end, and sum
+        for (int i=_route->currentIndex()+1; i<_route->numLegs(); ++i) {
+            auto leg = _route->legAtIndex(i);
+            // omit missed-approach waypoints in distance calculation
+            if (leg->waypoint()->flag(WPT_MISS))
+                continue;
+            
+            totalDistance += leg->distanceNm();
+        }
+    }
   
   _routeDistanceNm->setDoubleValue(totalDistance * SG_METER_TO_NM);
   if (_last_speed_kts > 1.0) {
@@ -847,6 +879,12 @@ void GPS::wp1Changed()
     return;
   if (_mode == "leg") {
     _wayptController.reset(WayptController::createForWaypt(this, _currentWaypt));
+    if (_currentWaypt->type() == "hold") {
+      // pass the hold count through
+      auto leg = _route->currentLeg();
+      auto holdCtl = static_cast<flightgear::HoldCtl*>(_wayptController.get());
+      holdCtl->setHoldCount(leg->holdCount());
+    }
   } else if (_mode == "obs") {
     _wayptController.reset(new OBSController(this, _currentWaypt));
   } else if (_mode == "dto") {
@@ -854,12 +892,23 @@ void GPS::wp1Changed()
   }
 
   _wayptController->init();
+  _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
 
   if (_mode == "obs") {
     _legDistanceNm = -1.0;
   } else {
     _wayptController->update(0.0);
+    _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
+
     _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
+    
+    // synchronise these properties immediately
+    SGGeod p(_wayptController->position());
+    _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
+    _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
+    _currentWayptNode->setDoubleValue("altitude-ft", p.getElevationFt());
+      
+    _desiredCourse = getLegMagCourse();
   }
 }
 
@@ -947,8 +996,8 @@ const char* GPS::getWP0Ident() const
   
 // work around std::string::c_str() storage lifetime with libc++
 // real fix is to allow tie-ing with std::string instead of char*
-  static char identBuf[8];
-  strncpy(identBuf, _prevWaypt->ident().c_str(), 8);
+  static char identBuf[16];
+  strncpy(identBuf, _prevWaypt->ident().c_str(), 15);
 
   return identBuf;
 }
@@ -975,8 +1024,8 @@ const char* GPS::getWP1Ident() const
   
 // work around std::string::c_str() storage lifetime with libc++
 // real fix is to allow tie-ing with std::string instead of char*
-  static char identBuf[8];
-  strncpy(identBuf, _currentWaypt->ident().c_str(), 8);
+  static char identBuf[16];
+  strncpy(identBuf, _currentWaypt->ident().c_str(), 15);
     
   return identBuf;
 }
@@ -1116,9 +1165,13 @@ void GPS::setCommand(const char* aCmd)
   if (!strcmp(aCmd, "direct")) {
     directTo();
   } else if (!strcmp(aCmd, "obs")) {
-    selectOBSMode(NULL);
+      // valid scratch data is always used, if it's not valid we will
+      // use the current waypoint if one exists
+      selectOBSMode(isScratchPositionValid() ? nullptr : _currentWaypt);
   } else if (!strcmp(aCmd, "leg")) {
-    selectLegMode();
+      selectLegMode();
+  } else if (!strcmp(aCmd, "exit-hold")) {
+      commandExitHold();
 #if FG_210_COMPAT
   } else if (!strcmp(aCmd, "load-route-wpt")) {
       loadRouteWaypoint();
@@ -1599,6 +1652,16 @@ void GPS::tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef,
   if (altStr) {
     tie(aNode, altStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getElevationFt, NULL));
   }
+}
+
+void GPS::commandExitHold()
+{
+    if (_currentWaypt && (_currentWaypt->type() == "hold")) {
+        auto holdCtl = static_cast<flightgear::HoldCtl*>(_wayptController.get());
+        holdCtl->exitHold();
+    } else {
+        SG_LOG(SG_INSTR, SG_WARN, "GPS:exit hold requested, but not currently in a hold");
+    }
 }
 
 

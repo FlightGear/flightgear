@@ -1,0 +1,5 @@
+moc_*
+*.moc
+fgqcanvas
+qrc_*.cpp
+fgcanvas.pro.user*

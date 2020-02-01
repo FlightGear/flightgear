@@ -4,6 +4,7 @@
 #include <simgear/props/props.hxx>
 #include "Version.hpp"
 #include "Math.hpp"
+#include "Wing.hpp"
 
 namespace yasim {
 
@@ -83,10 +84,16 @@ public:
     // Induced drag multiplier
     void setInducedDrag(float mul) { _inducedDrag = mul; }
 
-    void calcForce(const float* v, const float rho, float* out, float* torque);
+    void calcForce(const float* v, const float rho, float mach, float* out, float* torque);
 
     float getAlpha() const { return _alpha; };
     float getStallAlpha() const { return _stallAlpha; };
+    
+    void setFlowRegime(FlowRegime flow) { _flow = flow; };
+    FlowRegime getFlowRegime() { return _flow; };
+    
+    void setCriticalMachNumber(float mach) { _Mcrit = mach; };
+    float getCriticalMachNumber() const { return _Mcrit; };
     
 private:
     SGPropertyNode_ptr _surfN;
@@ -127,6 +134,11 @@ private:
     float _stallAlpha {0};
     float _alpha {0};
 
+    FlowRegime _flow{FLOW_SUBSONIC};
+    float _Mcrit {0.6f};
+
+    std::vector<float> pg_coefficients {-1.7671f, 0.4495f, 10.3423f, -6.9237f};
+    
     SGPropertyNode* _fxN;
     SGPropertyNode* _fyN;
     SGPropertyNode* _fzN;
@@ -138,6 +150,8 @@ private:
     SGPropertyNode* _fabsN;
     SGPropertyNode* _incidenceN;
     SGPropertyNode* _twistN;
+    SGPropertyNode* _pgCorrectionN;
+    SGPropertyNode* _dcdwaveN;
 };
 
 }; // namespace yasim

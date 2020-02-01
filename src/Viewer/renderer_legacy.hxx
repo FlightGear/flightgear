@@ -64,7 +64,7 @@ public:
     void resize(int width, int height );
 
     void update();
-  
+
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     PickList pick(const osg::Vec2& windowPos);
@@ -85,7 +85,7 @@ public:
     void addCamera(osg::Camera* camera, bool useSceneData);
 
     void removeCamera(osg::Camera* camera);
-  
+
     /** Add a camera to the group. The camera is added to the viewer
      * as a slave. See osgViewer::Viewer::addSlave.
      * @param flags properties of the camera; see CameraGroup::Flags
@@ -126,20 +126,20 @@ public:
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
-    
+
     osg::ref_ptr<osg::FrameStamp> _frameStamp;
     osg::ref_ptr<SGUpdateVisitor> _updateVisitor;
     osg::ref_ptr<osg::Group> _viewerSceneRoot;
     osg::ref_ptr<osg::Group> _deferredRealRoot;
     osg::ref_ptr<osg::Group> _root;
-    
+
     SGPropertyNode_ptr _scenery_loaded, _position_finalized;
-    
-    
+
+
     SGPropertyNode_ptr _splash_alpha;
-    SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation;
+    SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation, _triangle_directional_lights;
     SGPropertyNode_ptr _textures;
-    SGPropertyNode_ptr _cloud_status, _visibility_m; 
+    SGPropertyNode_ptr _cloud_status, _visibility_m;
     SGPropertyNode_ptr _xsize, _ysize;
     SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
     SGPropertyNode_ptr _virtual_cockpit;
@@ -155,7 +155,7 @@ protected:
 
     typedef std::vector<SGPropertyChangeListener*> SGPropertyChangeListenerVec;
     SGPropertyChangeListenerVec _listeners;
-    
+
     flightgear::CameraInfo* buildCameraFromRenderingPipeline(FGRenderingPipeline* rpipe, flightgear::CameraGroup* cgroup, unsigned flags, osg::Camera* camera,
                                         const osg::Matrix& view, const osg::Matrix& projection, osg::GraphicsContext* gc);
 
@@ -186,11 +186,11 @@ protected:
     osg::ref_ptr<osg::Uniform> _depthInColor;
 
     osg::ref_ptr<FGRenderingPipeline> _pipeline;
-    
+
     void addChangeListener(SGPropertyChangeListener* l, const char* path);
-    
+
     void updateSky();
-  
+
     void setupRoot();
 
     SplashScreen* _splash;

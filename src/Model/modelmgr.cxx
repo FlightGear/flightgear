@@ -166,10 +166,11 @@ FGModelMgr::unbind ()
 
 namespace
 {
-double testNan(double val) throw (sg_range_exception)
+double testNan(double val)
 {
     if (SGMisc<double>::isNaN(val))
         throw sg_range_exception("value is nan");
+
     return val;
 }
 

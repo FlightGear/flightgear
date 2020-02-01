@@ -9,7 +9,7 @@ function(setup_fgfs_embedded_resources)
     set_property(GLOBAL APPEND PROPERTY EMBEDDED_RESOURCE_SOURCES ${SOURCES})
     set_property(GLOBAL APPEND PROPERTY EMBEDDED_RESOURCE_HEADERS ${HEADERS})
 
-    # set the flag for CMake polocy 00071, ensure Qt AUTOfoo don't process
+    # set the flag for CMake policy 00071, ensure Qt AUTOfoo don't process
     # generated files
     foreach(sourcefile IN LISTS ${SOURCES} ${HEADERS})
       set_property(SOURCE ${sourcefile} PROPERTY SKIP_AUTOMOC ON)
@@ -25,12 +25,4 @@ function(setup_fgfs_embedded_resources)
           "Either MSVC_3RDPARTY_ROOT or MSVC_3RDPARTY_DIR is empty or unset")
       endif()
     endif()
-
-    add_custom_command(
-      OUTPUT ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
-             ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
-      COMMAND fgrcc --root=${CMAKE_SOURCE_DIR} --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx --init-func-name=initFlightGearEmbeddedResources --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-      DEPENDS
-        fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-    )
 endfunction()

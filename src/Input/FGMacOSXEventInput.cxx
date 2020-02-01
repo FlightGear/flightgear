@@ -329,14 +329,14 @@ FGMacOSXInputDevice::FGMacOSXInputDevice(IOHIDDeviceRef hidRef,
     _hid = hidRef;
     CFRetain(_hid);
     _subsystem = subsys;
-
-    CFIndex maxDepth = 128;
-    _queue = IOHIDQueueCreate(kCFAllocatorDefault, _hid, maxDepth, kIOHIDOptionsTypeNone);
 }
 
 FGMacOSXInputDevice::~FGMacOSXInputDevice()
 {
-    CFRelease(_queue);
+    if (_queue) {
+        CFRelease(_queue);
+    }
+    
     CFRelease(_hid);
 }
 
@@ -348,9 +348,11 @@ bool FGMacOSXInputDevice::Open()
     }
     
     IOHIDDeviceScheduleWithRunLoop(_hid, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-
     // IOHIDQueueRegisterValueAvailableCallback(_queue, valueAvailableCallback, this);
-
+    
+    CFIndex maxDepth = 128;
+    _queue = IOHIDQueueCreate(kCFAllocatorDefault, _hid, maxDepth, kIOHIDOptionsTypeNone);
+    
     IOHIDQueueScheduleWithRunLoop(_queue, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     IOHIDQueueStart(_queue);
     

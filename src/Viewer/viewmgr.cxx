@@ -112,6 +112,7 @@ FGViewMgr::bind()
     _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
     _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
     _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
+    _viewNumberProp->setAttribute(SGPropertyNode::LISTENER_SAFE, true);
 }
 
 

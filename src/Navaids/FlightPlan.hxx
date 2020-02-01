@@ -92,6 +92,21 @@ public:
     // return the next leg after this one
     Leg* nextLeg() const;
 
+    /**
+     * requesting holding at the waypoint upon reaching it. This will
+     * convert the waypt to a Hold if not already defined as one, but
+     * with default hold data.
+     *
+     * If the waypt is not of a type suitable for holding at, returns false
+     * (eg a runway or dynamic waypoint)
+     */
+    bool setHoldCount(int count);
+    
+    int holdCount() const;
+    
+      
+    bool convertWaypointToHold();
+      
     unsigned int index() const;
 
     int altitudeFt() const;
@@ -110,6 +125,12 @@ public:
     double distanceNm() const;
     double distanceAlongRoute() const;
 
+    /**
+     * helper function, if the waypoint is modified in some way, to
+     * notify the flightplan owning this leg, and hence any delegates
+     * obsering us
+     */
+    void markWaypointDirty();
   private:
     friend class FlightPlan;
 
@@ -123,6 +144,12 @@ public:
     int _speed = 0;
     int _altitudeFt = 0;
 
+    // if > 0, we will hold at the waypoint using
+    // the published hold side/course
+    // This only works if _waypt is a Hold, either defined by a procedure
+    // or modified to become one
+    int _holdCount = 0;
+      
     WayptRef _waypt;
     /// length of this leg following the flown path
     mutable double _pathDistance = -1.0;
@@ -142,6 +169,17 @@ public:
     virtual void cruiseChanged()  { }
     virtual void cleared() { }
     virtual void activated() { }
+    
+      /**
+       * Invoked when the C++ code determines the active leg is done / next
+       * leg should be sequenced. The default route-manager delegate will
+       * advance to the next waypoint when handling this.
+       *
+       * If multiple delegates are installed, take special care not to sequence
+       * the waypoint twice.
+       */
+    virtual void sequence() { }
+    
     virtual void currentWaypointChanged() { }
     virtual void endOfFlightPlan() { }
   protected:
@@ -163,6 +201,8 @@ public:
   int currentIndex() const
   { return _currentIndex; }
 
+  void sequence();
+    
   void setCurrentIndex(int index);
 
   void activate();
@@ -331,6 +371,8 @@ public:
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
 private:
+  friend class Leg;
+  
   void lockDelegates();
   void unlockDelegates();
 

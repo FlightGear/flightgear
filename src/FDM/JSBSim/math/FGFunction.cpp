@@ -802,6 +802,9 @@ FGFunction::~FGFunction()
 
 bool FGFunction::IsConstant(void) const
 {
+  // Functions without parameters are assumed to be non-const
+  if (Parameters.empty()) return false;
+
   for (auto p: Parameters) {
     if (!p->IsConstant())
       return false;

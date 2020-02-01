@@ -40,6 +40,7 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include <Network/protocol.hxx>
 #include <Network/ATC-Main.hxx>
@@ -87,24 +88,29 @@ FGIO::~FGIO()
 
 
 // configure a port based on the config string
+
 FGProtocol*
 FGIO::parse_port_config( const string& config )
 {
     SG_LOG( SG_IO, SG_INFO, "Parse I/O channel request: " << config );
-
     string_list tokens = simgear::strutils::split( config, "," );
     if (tokens.empty())
     {
         SG_LOG( SG_IO, SG_ALERT,
                 "Port configuration error: empty config string" );
-        return NULL;
+        return nullptr;
     }
+    
+    return parse_port_config(tokens);
+}
 
-    string protocol = tokens[0];
+FGProtocol*
+FGIO::parse_port_config( const string_list& tokens )
+{
+    const string protocol = tokens[0];
     SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
-    FGProtocol *io = NULL;
-
+    FGProtocol *io = nullptr;
     try
     {
         if ( protocol == "atcsim" ) {
@@ -319,7 +325,7 @@ FGIO::parse_port_config( const string& config )
     }
     else
     {
-        SG_LOG( SG_IO, SG_ALERT, "Unknown transport medium \"" << medium << "\" in \"" << config << "\"");
+        SG_LOG( SG_IO, SG_ALERT, "Unknown transport medium \"" << medium << "\" for \"" << protocol << "\"");
         delete io;
         return nullptr;
     }
@@ -342,32 +348,35 @@ FGIO::init()
     // port onto the port list copies the structure and destroys the
     // original, which closes the port and frees up the fd ... doh!!!
 
-    string_list::iterator i = globals->get_channel_options_list()->begin();
-    string_list::iterator end = globals->get_channel_options_list()->end();
-    for (; i != end; ++i ) {
-        add_channel( *i );
+    for (const auto config : *(globals->get_channel_options_list())) {
+        add_channel(config);
     } // of channel options iteration
+    
+    auto cmdMgr = globals->get_commands();
+    cmdMgr->addCommand("add-io-channel", this, &FGIO::commandAddChannel);
+    cmdMgr->addCommand("remove-io-channel", this, &FGIO::commandRemoveChannel);
 }
 
 // add another I/O channel
-void FGIO::add_channel(const string& config)
+FGProtocol* FGIO::add_channel(const string& config)
 {
     // parse the configuration string and store the results in the
     // appropriate FGIOChannel structure
     FGProtocol *p = parse_port_config( config );
     if (!p)
     {
-        return;
+        return nullptr;
     }
 
     p->open();
     if ( !p->is_enabled() ) {
         SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
         delete p;
-        return;
+        return nullptr;
     }
 
     io_channels.push_back( p );
+    return p;
 }
 
 void
@@ -420,6 +429,10 @@ FGIO::shutdown()
     }
 
     io_channels.clear();
+    
+    auto cmdMgr = globals->get_commands();
+    cmdMgr->removeCommand("add-io-channel");
+    cmdMgr->removeCommand("remove-io-channel");
 }
 
 void
@@ -440,7 +453,7 @@ bool FGIO::isMultiplayerRequested()
     
     // check the channel options list for a multiplay setting - this
     // is easier than checking the raw Options arguments, but works before
-    // this subsytem is actuallyt created.
+    // this subsytem is actually created.
     auto channels = globals->get_channel_options_list();
     if (!channels)
         return false; // happens running tests
@@ -450,6 +463,57 @@ bool FGIO::isMultiplayerRequested()
                            { return (channelOption.find("multiplay") == 0); });
     return it != channels->end();
 }
+
+bool FGIO::commandAddChannel(const SGPropertyNode * arg, SGPropertyNode * root)
+{
+    if (!arg->hasChild("config")) {
+        SG_LOG(SG_NETWORK, SG_WARN, "add-io-channel: missing 'config' argument");
+        return false;
+    }
+    
+    const string name = arg->getStringValue("name");
+    const string config = arg->getStringValue("config");
+    auto protocol = add_channel(config);
+    if (!protocol) {
+        SG_LOG(SG_NETWORK, SG_WARN, "add-io-channel: adding channel failed");
+        return false;
+    }
+    
+    if (!name.empty()) {
+        // TODO: add entry to /io/channels/<name>
+        
+        // set the name so we can find the protocol again in the
+        // future
+        protocol->set_name(name);
+    }
+    
+    return true;
+}
+
+bool FGIO::commandRemoveChannel(const SGPropertyNode * arg, SGPropertyNode * root)
+{
+    if (!arg->hasChild("name")) {
+        SG_LOG(SG_NETWORK, SG_WARN, "remove-io-channel: missing 'name' argument");
+    }
+    
+    const string name = arg->getStringValue("name");
+    auto it = find_if(io_channels.begin(), io_channels.end(),
+                      [name](const FGProtocol* proto)
+                      { return proto->get_name() == name; });
+    if (it == io_channels.end()) {
+        SG_LOG(SG_NETWORK, SG_WARN, "remove-io-channel: no channel with name:" + name);
+        return false;
+    }
+    
+    FGProtocol* p = *it;
+    if (p->is_enabled()) {
+        p->close();
+    }
+    delete p;
+    io_channels.erase(it);
+    return true;
+}
+
 
 // Register the subsystem.
 SGSubsystemMgr::Registrant<FGIO> registrantFGIO;
