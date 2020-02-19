@@ -186,7 +186,7 @@ public:
 
   bool isSingleShot() const
   { return _singleShot; }
-    
+
   const std::string& name() const
   { return _name; }
 private:
@@ -215,7 +215,7 @@ static void f_timerObj_setSimTime(TimerObj& timer, naContext c, naRef value)
 ////////////////////
 /// Timestamp - used to provide millisecond based timing of operations. See SGTimeStamp
 ////
-/// 0.373404us to perform elapsedUSec from Nasal : Tested i7-4790K, Win64 
+/// 0.373404us to perform elapsedUSec from Nasal : Tested i7-4790K, Win64
 class TimeStampObj : public SGReferenced
 {
 public:
@@ -353,7 +353,7 @@ FGNasalSys::~FGNasalSys()
         SG_LOG(SG_GENERAL, SG_ALERT, "Nasal was not shutdown");
     }
     sglog().removeCallback(_log.get());
-    
+
     nasalSys = nullptr;
 }
 
@@ -367,7 +367,7 @@ bool FGNasalSys::parseAndRunWithOutput(const std::string& source, std::string& o
         return false;
     }
     naRef result = callWithContext(ctx, code, 0, 0, naNil());
-    
+
     // if there was a result value, try to convert it to a string
     // value.
     if (!naIsNil(result)) {
@@ -376,7 +376,7 @@ bool FGNasalSys::parseAndRunWithOutput(const std::string& source, std::string& o
             output = naStr_data(s);
         }
     }
-    
+
     naFreeContext(ctx);
     return true;
 }
@@ -1055,7 +1055,7 @@ void FGNasalSys::shutdown()
         delete t;
     }
     _nasalTimers.clear();
-    
+
     naClearSaved();
 
     _string = naNil(); // will be freed by _context
@@ -1068,19 +1068,19 @@ void FGNasalSys::shutdown()
     _globals = naNil();
 
     naGC();
-    
+
     // Destroy all queued ghosts : important to ensure persistent timers are
     // destroyed now.
     nasal::ghostProcessDestroyList();
-    
+
     if (!_persistentTimers.empty()) {
         SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << _persistentTimers.size());
-        
+
         for (auto pt : _persistentTimers) {
             SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
         }
     }
-    
+
     _inited = false;
 }
 
@@ -1173,8 +1173,14 @@ void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
         if (!module_node->hasChild("enabled",0))
         {
             SGPropertyNode* node = module_node->getChild("enabled",0,true);
-            node->setBoolValue(true);
-            node->setAttribute(SGPropertyNode::USERARCHIVE,true);
+            node->setBoolValue(false);
+            node->setAttribute(SGPropertyNode::USERARCHIVE,false);
+            SG_LOG(SG_NASAL, SG_ALERT, "Nasal module " <<
+            moduleName <<
+            " present in FGDATA/Nasal but not configured in defaults.xml. " <<
+            " Please add an entry to defaults.xml, and set "
+            << node->getPath() <<
+            "=true to load the module on-demand at runtime when required.");
         }
     }
 }
@@ -1377,7 +1383,7 @@ naRef FGNasalSys::parse(naContext ctx, const char* filename,
             " in "<< filename <<", line " << errLine;
         errors = errorMessageStream.str();
         SG_LOG(SG_NASAL, SG_ALERT, errors);
-               
+
         return naNil();
     }
 
@@ -1547,7 +1553,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
                      node->getPath());
         }
     }
-    
+
     naRef code = argc > 1 ? args[1] : naNil();
     if(!(naIsCode(code) || naIsCCode(code) || naIsFunc(code))) {
         naRuntimeError(c, "setlistener() with invalid function argument");
@@ -1555,7 +1561,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     }
 
     int init = argc > 2 && naIsNum(args[2]) ? int(args[2].num) : 0; // do not trigger when created
-    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1; // trigger will always be triggered when the property is written 
+    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1; // trigger will always be triggered when the property is written
     FGNasalListener *nl = new FGNasalListener(node, code, this,
             gcSave(code), _listenerId, init, type);
 
