@@ -127,14 +127,14 @@ void LiveMetarProperties::handleMetarData( const std::string & data )
         m = new FGMetar(data.c_str());
     }
     catch( sg_io_exception  &) {
-        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << data );
+        SG_LOG( SG_ENVIRONMENT, SG_ALERT, "Can't parse metar: " << data );
         _failure = true;
         return;
     }
 
     if (_maxAge && (m->getAge_min() > _maxAge)) {
         // METAR is older than max-age, ignore
-        SG_LOG( SG_ENVIRONMENT, SG_DEBUG, "Ignoring outdated METAR for " << getStationId());
+        SG_LOG( SG_ENVIRONMENT, SG_ALERT, "Ignoring outdated METAR for " << getStationId() << " (see /environment/params/metar-max-age-min)");
         return;
     }
   
