@@ -184,6 +184,7 @@ class DirIndex:
     def __init__(self, dirIndexFile):
         self.d = []
         self.f = []
+        self.t = []
         self.version = 0
         self.path = None        # will be a VirtualPath instance when set
 
@@ -221,6 +222,9 @@ class DirIndex:
             elif tokens[0] == "f":
                 self.f.append({ 'name': tokens[1], 'hash': tokens[2], 'size': tokens[3] })
 
+            elif tokens[0] == "t":
+                self.t.append({ 'name': tokens[1], 'hash': tokens[2], 'size': tokens[3] })
+
     def _sanityCheck(self):
         if self.path is None:
             assert self._rawContents is not None
@@ -238,6 +242,9 @@ class DirIndex:
 
     def getDirectories(self):
         return self.d
+
+    def getTarballs(self):
+        return self.t
 
     def getFiles(self):
         return self.f
@@ -638,6 +645,14 @@ class TerraSync:
                                        join(relativeBase, d),
                                        subdir['hash'])
             serverDirs.append(d)
+
+        for tarball in dirIndex.getTarballs():
+            # Tarballs are handled the same as normal files.
+            f = tarball['name']
+            self.processFileEntry(virtualBase / f,
+                                  join(relativeBase, f),
+                                  tarball['hash'])
+            serverFiles.append(f)
 
         localFullPath = join(self.target, relativeBase)
         localFiles = [ f for f in listdir(localFullPath)
