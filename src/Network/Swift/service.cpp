@@ -160,23 +160,23 @@ bool CService::getAllWheelsOnGround() const
 }
 
 int CService::getCom1Active() const 
-{ 
-	return (int)com1ActiveNode->getDoubleValue() * 1000;
+{
+	return (int)(com1ActiveNode->getDoubleValue() * 1000);
 }
 
 int CService::getCom1Standby() const 
 { 
-	return (int)com1StandbyNode->getDoubleValue() * 1000;
+	return (int)(com1StandbyNode->getDoubleValue() * 1000);
 }
 
 int CService::getCom2Active() const 
 { 
-	return (int)com2ActiveNode->getDoubleValue() * 1000;
+	return (int)(com2ActiveNode->getDoubleValue() * 1000);
 }
 
 int CService::getCom2Standby() const 
 { 
-	return (int)com2StandbyNode->getDoubleValue() * 1000;
+	return (int)(com2StandbyNode->getDoubleValue() * 1000);
 }
 
 int CService::getTransponderCode() const 
