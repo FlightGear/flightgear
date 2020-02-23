@@ -18,7 +18,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 		set(JS_LIBS ${USBHID_LIBRARY})
 		set(JS_SOURCES js.cxx jsBSD.cxx)
 else()
-		message(WARNING "Unsupported platform for  Joystick")
+		message(WARNING "Unsupported platform for Joystick")
 		set(JS_SOURCES js.cxx jsNone.cxx)
 endif()
 
