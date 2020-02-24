@@ -252,8 +252,21 @@ void FGMacOSXEventInputPrivate::matchedDevice(IOHIDDeviceRef device)
     std::string manufacturer = getDeviceStringProperty(device, CFSTR(kIOHIDManufacturerKey));
     std::string serial = getDeviceStringProperty(device, CFSTR(kIOHIDSerialNumberKey));
     
+// filter out keyboard and mouse devices : this is especially important for
+// Catalina TCC hardening to avoid secuirty alerts
+    int usagePage, usage;
+    getDeviceIntProperty(device,  CFSTR(kIOHIDPrimaryUsagePageKey), usagePage);
+    getDeviceIntProperty(device,  CFSTR(kIOHIDPrimaryUsageKey), usage);
+    
+    if (usagePage == kHIDPage_GenericDesktop) {
+        if ((usage == kHIDUsage_GD_Keyboard) || (usage == kHIDUsage_GD_Mouse)) {
+            SG_LOG(SG_INPUT, SG_INFO, "MacOSX-EventInput: skipping device:" << productName << "( from " << manufacturer << ") becuase it is a keyboard or mouse");
+            return;
+        }
+    }
+    
     SG_LOG(SG_INPUT, SG_DEBUG, "MacOSX-EventInput: matched device:" << productName << "( from " << manufacturer << ")");
-
+            
     // allocate a Mac input device, and add to the base class to see if we have
     // a config
 
