@@ -102,8 +102,6 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
             this, &LauncherController::updateSelectedAircraft);
 
     QSettings settings;
-    LocalAircraftCache::instance()->setPaths(settings.value("aircraft-paths").toStringList());
-    LocalAircraftCache::instance()->scanDirs();
     m_aircraftModel->setPackageRoot(globals->packageRoot());
 
     m_aircraftGridMode = settings.value("aircraftGridMode").toBool();
@@ -280,31 +278,6 @@ void LauncherController::collectAircraftArgs()
             m_config->setArg("state", state);
         }
     }
-
-    // scenery paths
-    QSettings settings;
-    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
-        m_config->setArg("fg-scenery", path);
-    }
-
-    // aircraft paths
-    Q_FOREACH(QString path, settings.value("aircraft-paths").toStringList()) {
-        m_config->setArg("fg-aircraft", path);
-    }
-
-    // add-on module paths
-    int size = settings.beginReadArray("addon-modules");
-    for (int i = 0; i < size; ++i) {
-        settings.setArrayIndex(i);
-
-        QString path = settings.value("path").toString();
-        bool enable = settings.value("enable").toBool();
-        if (enable) {
-            m_config->setArg("addon", path);
-        }
-    }
-    settings.endArray();
-
 }
 
 void LauncherController::saveAircraft()

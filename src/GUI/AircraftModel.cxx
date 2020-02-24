@@ -42,6 +42,19 @@ const int STANDARD_THUMBNAIL_HEIGHT = 128;
 
 using namespace simgear::pkg;
 
+bool isPackageFailure(Delegate::StatusCode status)
+{
+    switch (status) {
+    case Delegate::STATUS_SUCCESS:
+    case Delegate::STATUS_REFRESHED:
+    case Delegate::STATUS_IN_PROGRESS:
+        return false;
+
+    default:
+        return true;
+    }
+}
+
 class PackageDelegate : public simgear::pkg::Delegate
 {
 public:
@@ -77,8 +90,8 @@ protected:
 
     void installProgress(InstallRef aInstall, unsigned int bytes, unsigned int total) override
     {
-        Q_UNUSED(bytes);
-        Q_UNUSED(total);
+        Q_UNUSED(bytes)
+        Q_UNUSED(total)
         QModelIndex mi(indexForPackage(aInstall->package()));
         m_model->dataChanged(mi, mi);
     }
@@ -104,7 +117,7 @@ protected:
 
     void installStatusChanged(InstallRef aInstall, StatusCode aReason) override
     {
-        Q_UNUSED(aReason);
+        Q_UNUSED(aReason)
         QModelIndex mi(indexForPackage(aInstall->package()));
         m_model->dataChanged(mi, mi);
     }
@@ -261,7 +274,7 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
     }
 
     if (row >= m_cachedLocalAircraftCount) {
-        quint32 packageIndex = row - m_cachedLocalAircraftCount;
+        quint32 packageIndex = static_cast<quint32>(row - m_cachedLocalAircraftCount);
         const PackageRef& pkg(m_packages[packageIndex]);
         InstallRef ex = pkg->existingInstall();
 
@@ -392,6 +405,10 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
             if (i->hasUpdate()) {
                 return LocalAircraftCache::PackageUpdateAvailable;
             }
+
+            const auto status = i->status();
+            if (isPackageFailure(status))
+                return LocalAircraftCache::PackageInstallFailed;
 
             return LocalAircraftCache::PackageInstalled;
         } else {

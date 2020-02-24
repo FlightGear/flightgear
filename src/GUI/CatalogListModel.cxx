@@ -93,13 +93,13 @@ void CatalogListModel::resetData()
 
 int CatalogListModel::rowCount(const QModelIndex& parent) const
 {
-    return m_catalogs.size();
+    Q_UNUSED(parent)
+    return static_cast<int>(m_catalogs.size());
 }
 
 QVariant CatalogListModel::data(const QModelIndex& index, int role) const
 {
-    simgear::pkg::CatalogRef cat = m_catalogs.at(index.row());
-
+    const auto cat = m_catalogs.at(static_cast<size_t>(index.row()));
     if (role == Qt::DisplayRole) {
         QString name = QString::fromStdString(cat->name());
         QString desc;
@@ -139,6 +139,8 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
         return translateStatusForCatalog(cat);
     } else if (role == CatalogIsNewlyAdded) {
         return (cat == m_newlyAddedCatalog);
+    } else if (role == CatalogEnabled) {
+        return cat->isUserEnabled();
     }
 
     return QVariant();
@@ -146,13 +148,18 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
 
 bool CatalogListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    auto cat = m_catalogs.at(static_cast<size_t>(index.row()));
+    if (role == CatalogEnabled) {
+        cat->setUserEnabled(value.toBool());
+        return true;
+    }
     return false;
 }
 
 Qt::ItemFlags CatalogListModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags r = Qt::ItemIsSelectable;
-    const auto cat = m_catalogs.at(index.row());
+    const auto cat = m_catalogs.at(static_cast<size_t>(index.row()));
     if (cat->isEnabled()) {
         r |= Qt::ItemIsEnabled;
     }
@@ -168,28 +175,27 @@ QHash<int, QByteArray> CatalogListModel::roleNames() const
     result[CatalogNameRole] = "name";
     result[CatalogStatusRole] = "status";
     result[CatalogIsNewlyAdded] = "isNewlyAdded";
-
+    result[CatalogEnabled] = "enabled";
     return result;
 }
 
 void CatalogListModel::removeCatalog(int index)
 {
-    if ((index < 0) || (index >= m_catalogs.size())) {
+    if ((index < 0) || (index >= static_cast<int>(m_catalogs.size()))) {
         return;
     }
 
-    const std::string removeId = m_catalogs.at(index)->id();
+    const std::string removeId = m_catalogs.at(static_cast<size_t>(index))->id();
     m_packageRoot->removeCatalogById(removeId);
     resetData();
 }
 
 void CatalogListModel::refreshCatalog(int index)
 {
-    if ((index < 0) || (index >= m_catalogs.size())) {
+    if ((index < 0) || (index >= static_cast<int>(m_catalogs.size()))) {
         return;
     }
-
-    m_catalogs.at(index)->refresh();
+    m_catalogs.at(static_cast<size_t>(index))->refresh();
 }
 
 void CatalogListModel::installDefaultCatalog()
@@ -221,7 +227,7 @@ int CatalogListModel::indexOf(QUrl url)
     if (it == m_catalogs.end())
         return -1;
 
-    return std::distance(m_catalogs.begin(), it);
+    return static_cast<int>(std::distance(m_catalogs.begin(), it));
 }
 
 void CatalogListModel::finalizeAddCatalog()
@@ -237,7 +243,7 @@ void CatalogListModel::finalizeAddCatalog()
         return;
     }
 
-    const int row = std::distance(m_catalogs.begin(), it);
+    const int row = static_cast<int>(std::distance(m_catalogs.begin(), it));
     m_newlyAddedCatalog.clear();
     emit isAddingCatalogChanged();
     emit statusOfAddingCatalogChanged();

@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import "."
 
 Item {
     property bool checked: false
@@ -11,7 +12,7 @@ Item {
         id: checkBox
         width: 18
         height: 18
-        border.color: mouseArea.containsMouse ? "#68A6E1" : "#9f9f9f"
+        border.color: mouseArea.containsMouse ? Style.frameColor : Style.inactiveThemeColor
         border.width: 1
         anchors.left: parent.left
         anchors.leftMargin: 8
@@ -22,7 +23,7 @@ Item {
             height: 12
             anchors.centerIn: parent
             id: checkMark
-            color: "#9f9f9f"
+            color: Style.themeColor
             visible: checked
         }
     }
@@ -41,5 +42,6 @@ Item {
         onClicked: {
             checked = !checked
         }
+        cursorShape: Qt.PointingHandCursor
     }
 }

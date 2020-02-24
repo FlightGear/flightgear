@@ -126,7 +126,8 @@ public:
         PackageUpdateAvailable,
         PackageQueued,
         PackageDownloading,
-        NotPackaged
+        NotPackaged,
+        PackageInstallFailed
     };
 
     Q_ENUMS(PackageStatus)

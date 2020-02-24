@@ -124,6 +124,8 @@ if (HAVE_QT)
                             AddonsModel.hxx
                             PixmapImageItem.cxx
                             PixmapImageItem.hxx
+                            PathListModel.cxx
+                            PathListModel.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})

@@ -74,6 +74,7 @@
 #include "LauncherMainWindow.hxx"
 #include "LaunchConfig.hxx"
 #include "UnitsModel.hxx"
+#include "PathListModel.hxx"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -403,7 +404,7 @@ void launcherSetSceneryPaths()
 // positions
     QSettings settings;
     // append explicit scenery paths
-    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
+    Q_FOREACH(QString path, PathListModel::readEnabledPaths("scenery-paths")) {
         globals->append_fg_scenery(path.toStdString());
     }
 
