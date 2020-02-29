@@ -42,15 +42,16 @@ class FGSwiftAircraft
 {
 public:
     FGSwiftAircraft(const std::string& callsign, const std::string& modelpath, SGPropertyNode* p);
-    bool updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed);
+    bool updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed, bool initPos);
     ~FGSwiftAircraft();
     std::string getName() { return _model->getName(); };
-    double      getLatDeg();
-    double      getLongDeg();
-    double      getGroundElevation();
-    double      getFudgeFactor();
+    double      getLatDeg() const;
+    double      getLongDeg() const;
+    double      getGroundElevation(double, double) const;
+    double      getFudgeFactor() const;
 
 private:
+    bool initPos;
     SGGeod position;
     SGPropertyNode* props;
     osg::ref_ptr<osg::Node> _model;

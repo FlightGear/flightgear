@@ -18,6 +18,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SwiftAircraft.h"
+#include <Scenery/scenery.hxx>
 #include <vector>
 
 #ifndef FGSWIFTAIRCRAFTMANAGER_H
@@ -35,5 +36,6 @@ public:
                                                         std::vector<double>& elevationsM, std::vector<double>& verticalOffsets) const;
     void                          removePlane(const std::string& callsign);
 	void removeAllPlanes();
+	double getElevationAtPosition(const std::string &callsign, double latitudeDeg, double longitudeDeg, double altitudeMeters) const;
 };
 #endif

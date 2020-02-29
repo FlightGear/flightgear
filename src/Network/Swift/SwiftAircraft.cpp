@@ -57,9 +57,10 @@ FGSwiftAircraft::FGSwiftAircraft(const std::string& callsign, const std::string&
         props->setStringValue("callsign", callsign);
         props->setBoolValue("valid",true);
     }
+    initPos = false;
 }
 
-bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed)
+bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed, bool initPos)
 {
 
     position = newPosition;
@@ -68,6 +69,8 @@ bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation, do
     aip.setRollDeg(orientation.y());
     aip.setHeadingDeg(orientation.z());
     aip.update();
+
+    this->initPos = initPos;
 
     //Update props
     props->setDoubleValue("orientation/pitch-deg", orientation.x());
@@ -97,17 +100,17 @@ FGSwiftAircraft::~FGSwiftAircraft()
     aip.setVisible(false);
 }
 
-double FGSwiftAircraft::getLatDeg() 
+double FGSwiftAircraft::getLatDeg() const
 { 
 	return position.getLatitudeDeg();
 }
 
-double FGSwiftAircraft::getLongDeg() 
+double FGSwiftAircraft::getLongDeg() const
 { 
 	return position.getLongitudeDeg();
 }
 
-double FGSwiftAircraft::getFudgeFactor() 
+double FGSwiftAircraft::getFudgeFactor() const
 { 
 	return 0; 
 }
@@ -117,10 +120,15 @@ inline bool FGSwiftAircraft::operator<(const std::string& extCallsign)
     return _model->getName().compare(extCallsign);
 }
 
-double FGSwiftAircraft::getGroundElevation()
+double FGSwiftAircraft::getGroundElevation(double latitudeDeg, double longitudeDeg) const
 {
-    double alt;
-    globals->get_scenery()->get_elevation_m(position,alt,0);
-    return alt; 
+    if(!initPos) { return std::numeric_limits<double>::quiet_NaN(); }
+    double alt = 0;
+    SGGeod pos;
+    pos.setElevationFt(30000);
+    pos.setLatitudeDeg(latitudeDeg);
+    pos.setLongitudeDeg(longitudeDeg);
+    globals->get_scenery()->get_elevation_m(pos,alt,0,_model.get());
+    return alt;
 		
 }

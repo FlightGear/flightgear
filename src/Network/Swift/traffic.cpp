@@ -241,6 +241,27 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
                 reply.appendArgument(verticalOffsets);
                 sendDBusMessage(reply);
             });
+        }
+        else if (message.getMethodName() == "getElevationAtPosition")
+        {
+            std::string callsign;
+            double latitudeDeg;
+            double longitudeDeg;
+            double altitudeMeters;
+            message.beginArgumentRead();
+            message.getArgument(callsign);
+            message.getArgument(latitudeDeg);
+            message.getArgument(longitudeDeg);
+            message.getArgument(altitudeMeters);
+            queueDBusCall([ = ]()
+                          {
+                              double elevation = acm->getElevationAtPosition(callsign, latitudeDeg, longitudeDeg, altitudeMeters);
+                              CDBusMessage reply = CDBusMessage::createReply(sender, serial);
+                              reply.beginArgumentWrite();
+                              reply.appendArgument(callsign);
+                              reply.appendArgument(elevation);
+                              sendDBusMessage(reply);
+                          });
         } else {
             // Unknown message. Tell DBus that we cannot handle it
             return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
