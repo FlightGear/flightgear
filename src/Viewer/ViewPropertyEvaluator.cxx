@@ -488,7 +488,12 @@ namespace ViewPropertyEvaluator {
     {
         SGPropertyNode* node = getSequenceNode(sequence);
         if (node) {
-            return node->getDoubleValue();
+            if (node->getStringValue()[0] != 0) {
+                return node->getDoubleValue();
+            }
+            /* If we reach here, the node exists but its value is an empty
+            string, so node->getDoubleValue() would return 0 which isn't
+            useful, so instead we return default_. */
         }
         return default_;
     }
