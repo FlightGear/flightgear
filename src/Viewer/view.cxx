@@ -1031,6 +1031,25 @@ View::recalcLookAt ()
             );
   }
 
+  _target.setLongitudeDeg(
+          ViewPropertyEvaluator::getDoubleValue(
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/target-lon-deg-path))",
+                  _target.getLongitudeDeg()
+                  )
+          );
+  _target.setLatitudeDeg(
+          ViewPropertyEvaluator::getDoubleValue(
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/target-lat-deg-path))",
+                  _target.getLatitudeDeg()
+                  )
+          );
+  _target.setElevationFt(
+          ViewPropertyEvaluator::getDoubleValue(
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/target-alt-ft-path))",
+                  _target.getElevationFt()
+                  )
+          );
+
   if (_lookat_agl) {
     handleAGL();
   }
