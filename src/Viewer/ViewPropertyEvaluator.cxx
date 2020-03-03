@@ -498,6 +498,17 @@ namespace ViewPropertyEvaluator {
         return default_;
     }
 
+    bool getSequenceBoolValue(Sequence& sequence, bool default_)
+    {
+        SGPropertyNode* node = getSequenceNode(sequence);
+        if (node) {
+            if (node->getStringValue()[0] != 0) {
+                return node->getBoolValue();
+            }
+        }
+        return default_;
+    }
+
     const std::string& getStringValue(const char* spec)
     {
         std::shared_ptr<Sequence>   sequence = getSequence(spec);
@@ -512,6 +523,17 @@ namespace ViewPropertyEvaluator {
             abort();
         }
         double ret = getSequenceDoubleValue(*sequence, default_);
+        return ret;
+    }
+
+    bool getBoolValue(const char* spec, bool default_)
+    {
+        std::shared_ptr<Sequence>   sequence = getSequence(spec);
+        if (sequence->_nodes.size() != 1 || sequence->_nodes.front()->_begin[0] != '(') {
+            SG_LOG(SG_VIEW, SG_DEBUG,  "bad sequence for getBoolValue() - must have outermost '(...)': '" << spec);
+            abort();
+        }
+        bool ret = getSequenceBoolValue(*sequence, default_);
         return ret;
     }
 

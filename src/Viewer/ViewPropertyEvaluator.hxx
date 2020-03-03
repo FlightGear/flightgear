@@ -106,6 +106,9 @@ namespace ViewPropertyEvaluator {
     node, instead it always calls <top-level-node>->getDoubleValue().
     */
     double getDoubleValue(const char* spec, double default_=0);
+
+    /* Similar to getDoubleValue(). */
+    bool getBoolValue(const char* spec, bool default_=false);
     
     
     /* Outputs detailed information about all specs that have been seen.
