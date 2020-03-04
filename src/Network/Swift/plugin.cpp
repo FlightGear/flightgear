@@ -82,7 +82,7 @@ void CPlugin::startServer()
 
 float CPlugin::startServerDeferred(float, float, int, void* refcon)
 {
-    auto* plugin = static_cast<CPlugin*>(refcon);
+    auto plugin = static_cast<CPlugin*>(refcon);
     if (!plugin->m_isRunning) {
         plugin->startServer();
         plugin->m_isRunning = true;

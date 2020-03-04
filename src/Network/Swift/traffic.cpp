@@ -38,15 +38,13 @@ namespace FGSwiftBus {
 
 CTraffic::CTraffic()
 {
-    acm = new FGSwiftAircraftManager();
+    acm.reset(new FGSwiftAircraftManager());
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Traffic started");
 }
 
 CTraffic::~CTraffic()
 {
     cleanup();
-    delete acm;
-    acm = nullptr;
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Traffic stopped");
 }
 
@@ -64,7 +62,7 @@ const std::string& CTraffic::ObjectPath()
 
 void CTraffic::planeLoaded(void* id, bool succeeded, void* self)
 {
-    auto* traffic = static_cast<CTraffic*>(self);
+    auto traffic = static_cast<CTraffic*>(self);
     auto  planeIt = traffic->m_planesById.find(id);
     if (planeIt == traffic->m_planesById.end()) { return; }
 
@@ -255,7 +253,11 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             message.getArgument(altitudeMeters);
             queueDBusCall([ = ]()
                           {
-                              double elevation = acm->getElevationAtPosition(callsign, latitudeDeg, longitudeDeg, altitudeMeters);
+                              SGGeod pos;
+                              pos.setLatitudeDeg(latitudeDeg);
+                              pos.setLongitudeDeg(longitudeDeg);
+                              pos.setElevationM(altitudeMeters);
+                              double elevation = acm->getElevationAtPosition(callsign, pos);
                               CDBusMessage reply = CDBusMessage::createReply(sender, serial);
                               reply.beginArgumentWrite();
                               reply.appendArgument(callsign);

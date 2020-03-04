@@ -42,7 +42,7 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 
-FGSwiftAircraft::FGSwiftAircraft(const std::string& callsign, const std::string& modelpath, SGPropertyNode* p)
+FGSwiftAircraft::FGSwiftAircraft(const std::string& callsign, const std::string& modelpath, SGPropertyNode_ptr p)
 {
     using namespace simgear;
     _model = SGModelLib::loadModel(modelpath);
@@ -57,7 +57,6 @@ FGSwiftAircraft::FGSwiftAircraft(const std::string& callsign, const std::string&
         props->setStringValue("callsign", callsign);
         props->setBoolValue("valid",true);
     }
-    initPos = false;
 }
 
 bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed, bool initPos)
@@ -120,15 +119,15 @@ inline bool FGSwiftAircraft::operator<(const std::string& extCallsign)
     return _model->getName().compare(extCallsign);
 }
 
-double FGSwiftAircraft::getGroundElevation(double latitudeDeg, double longitudeDeg) const
+double FGSwiftAircraft::getGroundElevation(const SGGeod& pos) const
 {
     if(!initPos) { return std::numeric_limits<double>::quiet_NaN(); }
     double alt = 0;
-    SGGeod pos;
-    pos.setElevationFt(30000);
-    pos.setLatitudeDeg(latitudeDeg);
-    pos.setLongitudeDeg(longitudeDeg);
-    globals->get_scenery()->get_elevation_m(pos,alt,0,_model.get());
+    SGGeod posReq;
+    posReq.setElevationFt(30000);
+    posReq.setLatitudeDeg(pos.getLatitudeDeg());
+    posReq.setLongitudeDeg(pos.getLongitudeDeg());
+    globals->get_scenery()->get_elevation_m(posReq,alt,0,_model.get());
     return alt;
 		
 }

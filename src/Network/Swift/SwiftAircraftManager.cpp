@@ -34,8 +34,8 @@ bool FGSwiftAircraftManager::addPlane(const std::string& callsign, std::string m
         return false;
 
     const char* typeString = "swift";
-    SGPropertyNode* root = globals->get_props()->getNode("ai/models",true);
-    SGPropertyNode* p;
+    SGPropertyNode_ptr root = globals->get_props()->getNode("ai/models",true);
+    SGPropertyNode_ptr p;
     int i;
     for(i = 0; i < 10000; i++){
         p = root->getNode(typeString,i,false);
@@ -45,7 +45,7 @@ bool FGSwiftAircraftManager::addPlane(const std::string& callsign, std::string m
     }
     p = root->getNode(typeString,i,true);
     p->setIntValue("id",i);
-    auto* curAircraft = new FGSwiftAircraft(callsign, std::move(modelString), p);
+    auto curAircraft = new FGSwiftAircraft(callsign, std::move(modelString), p);
     aircraftByCallsign.insert(std::pair<std::string, FGSwiftAircraft*>(callsign, curAircraft));
     return true;
 }
@@ -79,9 +79,13 @@ void FGSwiftAircraftManager::getRemoteAircraftData(std::vector<std::string>& cal
         const FGSwiftAircraft *aircraft = it->second;
         assert(aircraft);
 
-        const double latDeg = aircraft->getLatDeg();
-        const double lonDeg = aircraft->getLongDeg();
-        double groundElevation = aircraft->getGroundElevation(latDeg, lonDeg);
+
+        SGGeod pos;
+        pos.setLatitudeDeg(aircraft->getLatDeg());
+        pos.setLongitudeDeg(aircraft->getLongDeg());
+        const double latDeg = pos.getLatitudeDeg();
+        const double lonDeg = pos.getLongitudeDeg();
+        double groundElevation = aircraft->getGroundElevation(pos);
 
         double fudgeFactor     = aircraft->getFudgeFactor();
         (void)fudgeFactor;
@@ -110,12 +114,11 @@ void FGSwiftAircraftManager::removeAllPlanes()
     }
 }
 
-double FGSwiftAircraftManager::getElevationAtPosition(const std::string &callsign, double latitudeDeg,
-                                                    double longitudeDeg, double altitudeMeters) const
+double FGSwiftAircraftManager::getElevationAtPosition(const std::string &callsign, const SGGeod& pos) const
 {
     auto it = aircraftByCallsign.find(callsign);
     if(it != aircraftByCallsign.end()){
-        return it->second->getGroundElevation(latitudeDeg, longitudeDeg);
+        return it->second->getGroundElevation(pos);
     }
     return std::numeric_limits<double>::quiet_NaN();
 }
