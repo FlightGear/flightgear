@@ -337,6 +337,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   int modifiers = fgGetKeyModifiers();
   int buttons;
   bool pressed, last_state;
+  bool axes_initialized;
   float delay;
   
   jsJoystick * js = joy->plibJS.get();
@@ -357,6 +358,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   // Joystick axes can get initialized to extreme values, at least on Linux.
   // Wait until one of the axes get a different value before continuing.
   // https://sourceforge.net/p/flightgear/codetickets/2185/
+  axes_initialized = true;
   if (joysticks[index].initializing) {
 
     if (!joysticks[index].initialized) {
@@ -368,16 +370,19 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
     for (j = 0; j < joy->naxes; j++) {
       if (axis_values[j] != joysticks[index].values[j]) break;
     }
-    if (j == joy->naxes) {
-      return;
+    if (j < joy->naxes) {
+      joysticks[index].initializing = false;
+    } else {
+      axes_initialized = false;
     }
-    joysticks[index].initializing = false;
   }
   
   // Update device status
   SGPropertyNode_ptr status = status_node->getChild("joystick", index, true);
-  for (int j = 0; j < MAX_JOYSTICK_AXES; j++) {
-    status->getChild("axis", j, true)->setFloatValue(axis_values[j]);
+  if (axes_initialized) {
+    for (int j = 0; j < MAX_JOYSTICK_AXES; j++) {
+      status->getChild("axis", j, true)->setFloatValue(axis_values[j]);
+    }
   }
   
   for (int j = 0; j < MAX_JOYSTICK_BUTTONS; j++) {
@@ -385,36 +390,38 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   }
   
   // Fire bindings for the axes.
-  for (int j = 0; j < joy->naxes; j++) {
-    axis &a = joy->axes[j];
+  if (axes_initialized) {
+    for (int j = 0; j < joy->naxes; j++) {
+      axis &a = joy->axes[j];
     
-    // Do nothing if the axis position
-    // is unchanged; only a change in
-    // position fires the bindings.
-    // But only if there are bindings
-    if (fabs(axis_values[j] - a.last_value) > a.tolerance
-        && a.bindings[KEYMOD_NONE].size() > 0 ) {
-      a.last_value = axis_values[j];
-      for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
-        a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
-    }
+      // Do nothing if the axis position
+      // is unchanged; only a change in
+      // position fires the bindings.
+      // But only if there are bindings
+      if (fabs(axis_values[j] - a.last_value) > a.tolerance
+          && a.bindings[KEYMOD_NONE].size() > 0 ) {
+        a.last_value = axis_values[j];
+        for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
+          a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
+      }
     
-    // do we have to emulate axis buttons?
-    last_state = joy->axes[j].low.last_state || joy->axes[j].high.last_state;
-    pressed = axis_values[j] < a.low_threshold || axis_values[j] > a.high_threshold;
-    delay = (pressed ? last_state ? a.interval_sec : a.delay_sec : a.release_delay_sec );
-    if(pressed || last_state) a.last_dt += dt;
-    else a.last_dt = 0;
-    if(a.last_dt >= delay) {
-      if (a.low.bindings[modifiers].size())
-        joy->axes[j].low.update( modifiers, axis_values[j] < a.low_threshold );
+      // do we have to emulate axis buttons?
+      last_state = joy->axes[j].low.last_state || joy->axes[j].high.last_state;
+      pressed = axis_values[j] < a.low_threshold || axis_values[j] > a.high_threshold;
+      delay = (pressed ? last_state ? a.interval_sec : a.delay_sec : a.release_delay_sec );
+      if(pressed || last_state) a.last_dt += dt;
+      else a.last_dt = 0;
+      if(a.last_dt >= delay) {
+        if (a.low.bindings[modifiers].size())
+          joy->axes[j].low.update( modifiers, axis_values[j] < a.low_threshold );
       
-      if (a.high.bindings[modifiers].size())
-        joy->axes[j].high.update( modifiers, axis_values[j] > a.high_threshold );
+        if (a.high.bindings[modifiers].size())
+          joy->axes[j].high.update( modifiers, axis_values[j] > a.high_threshold );
       
-      a.last_dt -= delay;
-    }
-  } // of axes iteration
+        a.last_dt -= delay;
+      }
+    } // of axes iteration
+  } // axes_initialized
   
   // Fire bindings for the buttons.
   for (int j = 0; j < joy->nbuttons; j++) {
