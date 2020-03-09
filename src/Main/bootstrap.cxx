@@ -142,7 +142,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	LPWSTR* wideArgs = CommandLineToArgvW(GetCommandLineW(), &numArgs);
 
 	std::vector<char*> utf8Args;
-    utf8Args.reserve(numArgs);
+    utf8Args.resize(numArgs);
 
 	for (int a = 0; a < numArgs; ++a) {
 		const auto s = simgear::strutils::convertWStringToUtf8(wideArgs[a]);
