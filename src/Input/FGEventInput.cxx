@@ -537,9 +537,6 @@ bool FGReportSetting::Test()
     return d;
 }
 
-static const char* hexTable = "0123456789ABCDEF";
-
-
 std::string FGReportSetting::reportBytes(const std::string& moduleName) const
 {
     FGNasalSys *nas = globals->get_subsystem<FGNasalSys>();
@@ -576,7 +573,8 @@ std::string FGReportSetting::reportBytes(const std::string& moduleName) const
       // can't access FGInputDevice here to check debugEvents flag
 #if 0
       std::ostringstream byteString;
-      
+      static const char* hexTable = "0123456789ABCDEF";
+
         for (int i=0; i<s.size(); ++i) {
             uint8_t uc = static_cast<uint8_t>(s[i]);
             byteString << hexTable[uc >> 4];

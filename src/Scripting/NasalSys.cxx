@@ -219,15 +219,12 @@ static void f_timerObj_setSimTime(TimerObj& timer, naContext c, naRef value)
 class TimeStampObj : public SGReferenced
 {
 public:
-    TimeStampObj(Context *c, FGNasalSys* sys) :
-        _sys(sys)
+    TimeStampObj(Context *c)
     {
         timestamp.stamp();
     }
 
-    virtual ~TimeStampObj()
-    {
-    }
+    virtual ~TimeStampObj() = default;
 
     void stamp()
     {
@@ -243,7 +240,6 @@ public:
     }
 private:
     SGTimeStamp timestamp;
-    FGNasalSys* _sys;
 };
 
 typedef SGSharedPtr<TimeStampObj> TimeStampObjRef;
@@ -600,7 +596,7 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_maketimeStamp(naContext c, naRef me, int argc, naRef* args)
 {
-    TimeStampObj* timeStampObj = new TimeStampObj(c, nasalSys);
+    TimeStampObj* timeStampObj = new TimeStampObj(c);
     return nasal::to_nasal(c, timeStampObj);
 }
 
