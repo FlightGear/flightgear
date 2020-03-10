@@ -61,8 +61,8 @@ add_custom_target(ts)
 foreach(lang ${LANGUAGES})
     add_custom_target(
         ts_${lang}
-        COMMAND Qt5::lupdate ${CMAKE_SOURCE_DIR}/src/gui
-            -locations relative -ts ${TRANSLATIONS_SRC_DIR}/${lang}/FlightGear-Qt.xlf
+        COMMAND Qt5::lupdate ${CMAKE_SOURCE_DIR}/src/GUI
+            -locations relative  -no-ui-lines -ts ${TRANSLATIONS_SRC_DIR}/${lang}/FlightGear-Qt.xlf
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
     add_dependencies(ts ts_${lang})
