@@ -235,7 +235,9 @@ static void wayptGhostDestroy(void* g)
 
 static void legGhostDestroy(void* g)
 {
-  // nothing for now
+  FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
+  if (!FlightPlan::Leg::put(leg)) // unref
+    delete leg;
 }
 
 
@@ -382,6 +384,7 @@ naRef ghostForLeg(naContext c, const FlightPlan::Leg* leg)
     return naNil();
   }
 
+  FlightPlan::Leg::get(leg); // take a ref
   return naNewGhost2(c, &FPLegGhostType, (void*) leg);
 }
 
@@ -3143,7 +3146,7 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
 static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan::Leg* leg = fpLegGhost(me);
-  if (!leg) {
+  if (!leg || !leg->owner()) {
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
 
@@ -3165,7 +3168,7 @@ static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
 static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef* args)
 {
     FlightPlan::Leg* leg = fpLegGhost(me);
-    if (!leg) {
+    if (!leg || !leg->owner()) {
         naRuntimeError(c, "leg.courseAndDistanceFrom called on non-flightplan-leg object");
     }
 

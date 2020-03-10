@@ -25,12 +25,9 @@ void FlightplanTests::setUp()
     FGTestApi::setUp::initTestGlobals("flightplan");
     FGTestApi::setUp::initNavDataCache();
     
-    globals->get_subsystem_mgr()->init();
-
-    FGTestApi::setUp::initStandardNasal();
-
-    globals->get_subsystem_mgr()->postinit();
     globals->get_subsystem_mgr()->bind();
+    globals->get_subsystem_mgr()->init();
+    globals->get_subsystem_mgr()->postinit();
 }
 
 
@@ -61,7 +58,7 @@ void FlightplanTests::testBasic()
     CPPUNIT_ASSERT(fp1->destinationAirport()->ident() == "EHAM");
     CPPUNIT_ASSERT(fp1->destinationRunway()->ident() == "24");
 
-    CPPUNIT_ASSERT_EQUAL(fp1->numLegs(), 5);
+    CPPUNIT_ASSERT_EQUAL(5, fp1->numLegs());
 
     CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "23L");
 
@@ -328,15 +325,72 @@ void FlightplanTests::testBug1814()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(101, f->legAtIndex(2)->distanceNm(), 0.5);
 }
 
-void FlightplanTests::testSegfaultWaypointGhost() {
-    // checking for a segfault here, no segfault indicates success. A runtime error in the log is acceptable here.
-    bool ok = FGTestApi::executeNasal(R"(
-        var fp = createFlightplan();
-        fp.departure = airportinfo("BIKF");
-        fp.destination = airportinfo("EGLL");
-        var wp = fp.getWP(1);
-        fp.deleteWP(1);
-        print(wp.wp_name);
-    )");
+void FlightplanTests::testLoadSaveMachRestriction()
+{
+    const std::string fpXML = R"(<?xml version="1.0" encoding="UTF-8"?>
+       <PropertyList>
+           <version type="int">2</version>
+           <departure>
+               <airport type="string">SAWG</airport>
+               <runway type="string">25</runway>
+           </departure>
+           <destination>
+               <airport type="string">SUMU</airport>
+           </destination>
+           <route>
+                <wp n="0">
+                  <type type="string">navaid</type>
+                  <ident type="string">PUGLI</ident>
+                  <lon type="double">-60.552200</lon>
+                  <lat type="double">-40.490000</lat>
+                </wp>
+                <wp n="1">
+                  <type type="string">basic</type>
+                  <alt-restrict type="string">at</alt-restrict>
+                  <altitude-ft type="double">36000</altitude-ft>
+                  <speed-restrict type="string">mach</speed-restrict>
+                  <speed type="double">1.24</speed>
+                  <ident type="string">SV002</ident>
+                  <lon type="double">-115.50531</lon>
+                  <lat type="double">37.89523</lat>
+                </wp>
+                <wp n="2">
+                     <type type="string">navaid</type>
+                     <ident type="string">SIGUL</ident>
+                     <lon type="double">-60.552200</lon>
+                     <lat type="double">-40.490000</lat>
+                   </wp>
+           </route>
+       </PropertyList>
+     )";
+    
+     std::istringstream stream(fpXML);
+     FlightPlanRef f = new FlightPlan;
+     bool ok = f->load(stream);
+     CPPUNIT_ASSERT(ok);
+
+     auto leg = f->legAtIndex(1);
+    CPPUNIT_ASSERT_EQUAL(SPEED_RESTRICT_MACH, leg->speedRestriction());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.24, leg->speedMach(), 0.01);
+    
+    auto firstLeg = f->legAtIndex(0);
+    firstLeg->setSpeed(SPEED_RESTRICT_MACH, 1.56);
+    
+    // upgrade to a hold and set the count
+    f->legAtIndex(2)->setHoldCount(8);
+    
+    // round trip through XML to check :)
+    std::ostringstream ss;
+    f->save(ss);
+    
+    std::istringstream iss(ss.str());
+    FlightPlanRef f2 = new FlightPlan;
+    ok = f2->load(iss);
     CPPUNIT_ASSERT(ok);
+    
+    auto leg3 = f2->legAtIndex(0);
+    CPPUNIT_ASSERT_EQUAL(SPEED_RESTRICT_MACH, leg3->speedRestriction());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.56, leg3->speedMach(), 0.01);
+    
+    CPPUNIT_ASSERT_EQUAL(8, f2->legAtIndex(2)->holdCount());
 }

@@ -75,6 +75,9 @@ const string_list static_icaoFlightTypeCode = {
 
 namespace flightgear {
 
+// implemented in route.cxx
+const char* restrictionToString(RouteRestriction aRestrict);
+
 typedef std::vector<FlightPlan::DelegateFactory*> FPDelegateFactoryVec;
 static FPDelegateFactoryVec static_delegateFactories;
   
@@ -108,11 +111,6 @@ FlightPlan::~FlightPlan()
         if (d->_deleteWithPlan) {
             delete d;
         }
-    }
-
-// delete legs
-    for (auto l : _legs) {
-        delete l;
     }
 }
   
@@ -160,7 +158,7 @@ string FlightPlan::ident() const
   return _ident;
 }
   
-FlightPlan::Leg* FlightPlan::insertWayptAtIndex(Waypt* aWpt, int aIndex)
+FlightPlan::LegRef FlightPlan::insertWayptAtIndex(Waypt* aWpt, int aIndex)
 {
   if (!aWpt) {
     return nullptr;
@@ -189,9 +187,7 @@ void FlightPlan::insertWayptsAtIndex(const WayptVec& wps, int aIndex)
     index = _legs.size();
   }
   
-  LegVec::iterator it = _legs.begin();
-  it += index;
-  
+  auto it = _legs.begin() + index;
   int endIndex = index + wps.size() - 1;
   if (_currentIndex >= endIndex) {
     _currentIndex += wps.size();
@@ -199,7 +195,7 @@ void FlightPlan::insertWayptsAtIndex(const WayptVec& wps, int aIndex)
  
   LegVec newLegs;
   for (WayptRef wp : wps) {
-    newLegs.push_back(new Leg(this, wp));
+      newLegs.push_back(LegRef{new Leg(this, wp)});
   }
   
   lockDelegates();
@@ -223,12 +219,11 @@ void FlightPlan::deleteIndex(int aIndex)
   lockDelegates();
   _waypointsChanged = true;
   
-  LegVec::iterator it = _legs.begin();
-  it += index;
-  Leg* l = *it;
+  auto it = _legs.begin() + index;
+  LegRef l = *it;
   _legs.erase(it);
-  delete l;
-  
+  l->_parent = nullptr; // orphan the leg so it's clear from Nasal
+    
   if (_currentIndex == index) {
     // current waypoint was removed
     _currentWaypointChanged = true;
@@ -255,43 +250,18 @@ void FlightPlan::clear()
   _cruiseDataChanged = true;
 
   _currentIndex = -1;
-  for (Leg* l : _legs) {
-    delete l;
-  }
   _legs.clear();  
   
     notifyCleared();
   unlockDelegates();
 }
   
-class RemoveWithFlag
-{
-public:
-  RemoveWithFlag(WayptFlag f) : flag(f), delCount(0) { }
-  
-  int numDeleted() const { return delCount; }
-  
-  bool operator()(FlightPlan::Leg* leg) const
-  {
-    if (leg->waypoint()->flag(flag)) {
-      delete leg;
-      ++delCount;
-      return true;
-    }
-    
-    return false;
-  }
-private:
-  WayptFlag flag;
-  mutable int delCount;
-};
-  
 int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
 {
   int count = 0;
 // first pass, fix up currentIndex
   for (int i=0; i<_currentIndex; ++i) {
-    Leg* l = _legs[i];
+    const auto& l = _legs.at(i);
     if (l->waypoint()->flag(flag)) {
       ++count;
     }
@@ -311,13 +281,21 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
     // and let the use re-activate.
     // http://code.google.com/p/flightgear-bugs/issues/detail?id=1134
     if (currentIsBeingCleared) {
-        SG_LOG(SG_GENERAL, SG_INFO, "currentIsBeingCleared:" << currentIsBeingCleared);
+        SG_LOG(SG_GENERAL, SG_INFO, "FlightPlan::clearWayptsWithFlag: currentIsBeingCleared:" << currentIsBeingCleared);
         _currentIndex = -1;
     }
   
 // now delete and remove
-  RemoveWithFlag rf(flag);
-  auto it = std::remove_if(_legs.begin(), _legs.end(), rf);
+    int numDeleted = 0;
+    auto it = std::remove_if(_legs.begin(), _legs.end(),
+        [flag, &numDeleted](const LegRef& leg)
+    {
+        if (leg->waypoint()->flag(flag)) {
+            ++numDeleted;
+            return true;
+        }
+        return false;
+    });
   if (it == _legs.end()) {
     return 0; // nothing was cleared, don't fire the delegate
   }
@@ -335,7 +313,7 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
   }
   
   unlockDelegates();
-  return rf.numDeleted();
+  return numDeleted;
 }
     
 bool FlightPlan::isActive() const
@@ -407,14 +385,14 @@ int FlightPlan::findWayptIndex(const FGPositionedRef aPos) const
   return -1;
 }
 
-FlightPlan::Leg* FlightPlan::currentLeg() const
+FlightPlan::LegRef FlightPlan::currentLeg() const
 {
   if ((_currentIndex < 0) || (_currentIndex >= numLegs()))
     return nullptr;
   return legAtIndex(_currentIndex);
 }
 
-FlightPlan::Leg* FlightPlan::previousLeg() const
+FlightPlan::LegRef FlightPlan::previousLeg() const
 {
   if (_currentIndex <= 0) {
     return nullptr;
@@ -423,7 +401,7 @@ FlightPlan::Leg* FlightPlan::previousLeg() const
   return legAtIndex(_currentIndex - 1);
 }
 
-FlightPlan::Leg* FlightPlan::nextLeg() const
+FlightPlan::LegRef FlightPlan::nextLeg() const
 {
   if ((_currentIndex < 0) || ((_currentIndex + 1) >= numLegs())) {
     return nullptr;
@@ -432,19 +410,19 @@ FlightPlan::Leg* FlightPlan::nextLeg() const
   return legAtIndex(_currentIndex + 1);
 }
 
-FlightPlan::Leg* FlightPlan::legAtIndex(int index) const
+FlightPlan::LegRef FlightPlan::legAtIndex(int index) const
 {
   if ((index < 0) || (index >= numLegs())) {
     throw sg_range_exception("index out of range", "FlightPlan::legAtIndex");
   }
   
-  return _legs[index];
+    return _legs.at(index);
 }
   
-int FlightPlan::findLegIndex(const Leg *l) const
+int FlightPlan::findLegIndex(const Leg* l) const
 {
   for (unsigned int i=0; i<_legs.size(); ++i) {
-    if (_legs[i] == l) {
+    if (_legs.at(i).get() == l) {
       return i;
     }
   }
@@ -778,8 +756,11 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
     // route nodes
     SGPropertyNode* routeNode = d->getChild("route", 0, true);
     for (unsigned int i=0; i<_legs.size(); ++i) {
-        Waypt* wpt = _legs[i]->waypoint();
-        wpt->saveAsNode(routeNode->getChild("wp", i, true));
+        auto  leg = _legs.at(i);
+        Waypt* wpt = leg->waypoint();
+        auto legNode = routeNode->getChild("wp", i, true);
+        wpt->saveAsNode(legNode);
+        leg->writeToProperties(legNode);
     } // of waypoint iteration
 }
 
@@ -1119,7 +1100,20 @@ void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
   SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);
   if (routeNode.valid()) {
     for (auto wpNode : routeNode->getChildren("wp")) {
-      Leg* l = new Leg{this, Waypt::createFromProperties(this, wpNode)};
+        auto wp = Waypt::createFromProperties(this, wpNode);
+      LegRef l = new Leg{this, wp};
+      // sync leg restrictions with waypoint ones
+        if (wp->speedRestriction() != RESTRICT_NONE) {
+            l->setSpeed(wp->speedRestriction(), wp->speed());
+        }
+        
+        if (wp->altitudeRestriction() != RESTRICT_NONE) {
+            l->setAltitude(wp->altitudeRestriction(), wp->altitudeFt());
+        }
+        
+        if (wpNode->hasChild("hold-count")) {
+            l->setHoldCount(wpNode->getIntValue("hold-count"));
+        }
       _legs.push_back(l);
     } // of route iteration
   }
@@ -1135,7 +1129,7 @@ void FlightPlan::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
   SGPropertyNode_ptr routeNode = routeData->getChild("route", 0);    
   for (int i=0; i<routeNode->nChildren(); ++i) {
     SGPropertyNode_ptr wpNode = routeNode->getChild("wp", i);
-    Leg* l = new Leg(this, parseVersion1XMLWaypt(wpNode));
+    LegRef l = new Leg(this, parseVersion1XMLWaypt(wpNode));
     _legs.push_back(l);
   } // of route iteration
   _waypointsChanged = true;
@@ -1218,7 +1212,7 @@ bool FlightPlan::loadPlainTextFormat(const SGPath& path)
         throw sg_io_exception("Failed to create waypoint from line '" + line + "'.");
       }
       
-      _legs.push_back(new Leg(this, w));
+      _legs.push_back(LegRef{new Leg(this, w)});
     } // of line iteration
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load route from: '" << path << "'. " << e.getMessage());
@@ -1425,26 +1419,23 @@ void FlightPlan::activate()
   _currentIndex = 0;
   _currentWaypointChanged = true;
   
-  for (unsigned int i=0; i < _legs.size(); ) {
+  for (unsigned int i=1; i < _legs.size(); ) {
     if (_legs[i]->waypoint()->type() == "via") {
       WayptRef preceeding = _legs[i - 1]->waypoint();
       Via* via = static_cast<Via*>(_legs[i]->waypoint());
       WayptVec wps = via->expandToWaypoints(preceeding);
       
       // delete the VIA leg
-      LegVec::iterator it = _legs.begin();
-      it += i;
-      Leg* l = *it;
+      auto it = _legs.begin() + i;
+      LegRef l = *it;
       _legs.erase(it);
-      delete l;
       
       // create new legs and insert
-      it = _legs.begin();
-      it += i;
+        it = _legs.begin() + i;
       
       LegVec newLegs;
       for (WayptRef wp : wps) {
-        newLegs.push_back(new Leg(this, wp));
+          newLegs.push_back(LegRef{new Leg(this, wp)});
       }
       
       _waypointsChanged = true;
@@ -1629,6 +1620,28 @@ int FlightPlan::Leg::holdCount() const
 {
   return _holdCount;
 }
+
+void FlightPlan::Leg::writeToProperties(SGPropertyNode* aProp) const
+{
+    if (_speedRestrict != RESTRICT_NONE) {
+        aProp->setStringValue("speed-restrict", restrictionToString(_speedRestrict));
+        if (_speedRestrict == SPEED_RESTRICT_MACH) {
+            aProp->setDoubleValue("speed", speedMach());
+        } else {
+            aProp->setDoubleValue("speed", _speed);
+        }
+    }
+  
+    if (_altRestrict != RESTRICT_NONE) {
+        aProp->setStringValue("alt-restrict", restrictionToString(_altRestrict));
+        aProp->setDoubleValue("altitude-ft", _altitudeFt);
+    }
+    
+    if (_holdCount > 0) {
+        aProp->setDoubleValue("hold-count", _holdCount);
+    }
+}
+
 
 void FlightPlan::rebuildLegData()
 {

@@ -18,32 +18,19 @@
  */
 
 
-#ifndef FG_FLIGHTPLAN_UNIT_TESTS_HXX
-#define FG_FLIGHTPLAN_UNIT_TESTS_HXX
-
+#pragma once
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>
 
 
 // The flight plan unit tests.
-class FlightplanTests : public CppUnit::TestFixture
+class FPNasalTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
-    CPPUNIT_TEST_SUITE(FlightplanTests);
+    CPPUNIT_TEST_SUITE(FPNasalTests);
     CPPUNIT_TEST(testBasic);
-    CPPUNIT_TEST(testRoutePathBasic);
-    CPPUNIT_TEST(testRoutePathSkipped);
-    CPPUNIT_TEST(testRoutePathTrivialFlightPlan);
-    CPPUNIT_TEST(testBasicAirways);
-    CPPUNIT_TEST(testAirwayNetworkRoute);
-    CPPUNIT_TEST(testBug1814);
-    CPPUNIT_TEST(testRoutPathWpt0Midflight);
-    CPPUNIT_TEST(testRoutePathVec);
-    CPPUNIT_TEST(testLoadSaveMachRestriction);
-    
-  //  CPPUNIT_TEST(testParseICAORoute);
-   // CPPUNIT_TEST(testParseICANLowLevelRoute);
+    CPPUNIT_TEST(testSegfaultWaypointGhost);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -55,17 +42,5 @@ public:
 
     // The tests.
     void testBasic();
-    void testRoutePathBasic();
-    void testRoutePathSkipped();
-    void testRoutePathTrivialFlightPlan();
-    void testBasicAirways();
-    void testAirwayNetworkRoute();
-    void testParseICAORoute();
-    void testParseICANLowLevelRoute();
-    void testBug1814();
-    void testRoutPathWpt0Midflight();
-    void testRoutePathVec();
-    void testLoadSaveMachRestriction();
+    void testSegfaultWaypointGhost();
 };
-
-#endif  // FG_FLIGHTPLAN_UNIT_TESTS_HXX
