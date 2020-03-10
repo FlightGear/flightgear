@@ -253,6 +253,7 @@ public:
     {
         m_done = true;
     }
+
 Q_SIGNALS:
     void addedItems();
 
@@ -522,10 +523,15 @@ AircraftItemPtr LocalAircraftCache::findItemWithUri(QUrl aircraftUri) const
 void LocalAircraftCache::abandonCurrentScan()
 {
     if (m_scanThread) {
+        // don't fire onScanFinished when the thread ends
+        disconnect(m_scanThread.get(), &AircraftScanThread::finished, this,
+                &LocalAircraftCache::onScanFinished);
+
         m_scanThread->setDone();
-        m_scanThread->wait(1000);
+        if (!m_scanThread->wait(2000)) {
+            qWarning() << Q_FUNC_INFO << "scan thread failed to terminate";
+        }
         m_scanThread.reset();
-        qWarning() << Q_FUNC_INFO << "current scan abandonded";
     }
 }
 

@@ -42,7 +42,9 @@ Item {
             anchors.left: parent.left
             height: parent.height
             onCheckedChanged: {
-               model.enabled = checked;
+                if (model.enabled !== checked) {
+                    model.enabled = checked;
+                }
             }
          }
 

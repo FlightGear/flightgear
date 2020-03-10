@@ -404,7 +404,7 @@ void launcherSetSceneryPaths()
 // positions
     QSettings settings;
     // append explicit scenery paths
-    Q_FOREACH(QString path, PathListModel::readEnabledPaths("scenery-paths")) {
+    Q_FOREACH(QString path, PathListModel::readEnabledPaths("scenery-paths-v2")) {
         globals->append_fg_scenery(path.toStdString());
     }
 
