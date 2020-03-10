@@ -42,7 +42,7 @@ public slots:
     void removePath(int index);
     void appendPath(QString path);
 
-    void sawpIndices(int indexA, int indexB);
+    void swapIndices(int indexA, int indexB);
 
 private:
     struct PathEntry {

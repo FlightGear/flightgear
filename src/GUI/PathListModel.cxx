@@ -167,7 +167,7 @@ void PathListModel::appendPath(QString path)
     emit countChanged();
 }
 
-void PathListModel::sawpIndices(int indexA, int indexB)
+void PathListModel::swapIndices(int indexA, int indexB)
 {
     if ((indexA < 0) || (indexA >= static_cast<int>(mPaths.size()))) {
         qWarning() << Q_FUNC_INFO << "index invalid:" << indexA;
