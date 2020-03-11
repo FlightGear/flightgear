@@ -127,7 +127,7 @@ namespace canvas
     SG_LOG( SG_IO,
             SG_ALERT,
             "FGCanvasSystemAdapter: Failed to get HTTP subsystem" );
-    return 0;
+    return nullptr;
   }
 
 }

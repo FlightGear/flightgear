@@ -104,7 +104,7 @@ bool logPositionToKML(const std::string& testName)
     return true;
 }
     
-void initStandardNasal()
+void initStandardNasal(bool withCanvas)
 {
     fgInitAllowedPaths();
     
@@ -123,7 +123,7 @@ void initStandardNasal()
     props->setBoolValue("sim/rendering/precipitation-aircraft-enable", false);
     
 // disable various larger modules
-    nasalNode->setBoolValue("canvas/enabled", false);
+    nasalNode->setBoolValue("canvas/enabled", withCanvas);
     nasalNode->setBoolValue("jetways/enabled", false);
     nasalNode->setBoolValue("jetways_edit/enabled", false);
     nasalNode->setBoolValue("local_weather/enabled", false);
