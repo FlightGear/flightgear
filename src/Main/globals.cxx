@@ -808,6 +808,14 @@ FGGlobals::loadUserSettings(SGPath userDataPath)
     } else {
         tryAutosaveMigration(userDataPath, &autosave);
     }
+    /* Before 2020-03-10, we could save portions of the /ai/models/ tree, which
+    confuses things when loaded again. So delete any such items if they have
+    been loaded. */
+    SGPropertyNode* ai = autosave.getNode("ai");
+    if (ai) {
+        SGPropertyNode* ai_models = ai->getNode("models");
+        ai->removeChildren("models");
+    }
     copyProperties(&autosave, globals->get_props());
 }
 
