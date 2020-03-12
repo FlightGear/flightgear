@@ -110,7 +110,7 @@ FGAircraftModel::init ()
     // no models loaded, load the glider instead
     if (!_aircraft.get()) {
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
-        osg::Node* model = fgLoad3DModelPanel( SGPath::fromLocal8Bit("Models/Geometry/glider.ac"),
+        osg::Node* model = fgLoad3DModelPanel( SGPath::fromUtf8("Models/Geometry/glider.ac"),
                                    globals->get_props());
         _aircraft.reset(new SGModelPlacement);
         _aircraft->init(model);

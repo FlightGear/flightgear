@@ -247,34 +247,6 @@ typedef nasal::Ghost<TimeStampObjRef> NasalTimeStampObj;
 
 ///////////////////////////////////////////////////////////////////////////
 
-// Read and return file contents in a single buffer.  Note use of
-// stat() to get the file size.  This is a win32 function, believe it
-// or not. :) Note the REALLY IMPORTANT use of the "b" flag to fopen.
-// Text mode brain damage will kill us if we're trying to do bytewise
-// I/O.
-static char* readfile(const char* file, int* lenOut)
-{
-    struct stat data;
-    if(stat(file, &data) != 0) return 0;
-    FILE* f = fopen(file, "rb");
-    if(!f) return 0;
-    char* buf = new char[data.st_size];
-    *lenOut = fread(buf, 1, data.st_size, f);
-    fclose(f);
-    if(*lenOut != data.st_size) {
-        // Shouldn't happen, but warn anyway since it represents a
-        // platform bug and not a typical runtime error (missing file,
-        // etc...)
-        SG_LOG(SG_NASAL, SG_ALERT,
-               "ERROR in Nasal initialization: " <<
-               "short count returned from fread() of " << file <<
-               ".  Check your C library!");
-        delete[] buf;
-        return 0;
-    }
-    return buf;
-}
-
 FGNasalSys::FGNasalSys() :
     _inited(false)
 {
@@ -1292,19 +1264,21 @@ void FGNasalSys::logNasalStack(naContext context)
 // name.
 bool FGNasalSys::loadModule(SGPath file, const char* module)
 {
-    int len = 0;
-    std::string pdata = file.local8BitStr();
-    char* buf = readfile(pdata.c_str(), &len);
-    if(!buf) {
-        SG_LOG(SG_NASAL, SG_ALERT,
-               "Nasal error: could not read script file " << file
-               << " into module " << module);
+    if (!file.exists()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Cannot load module, missing file:" << file);
         return false;
     }
 
-    bool ok = createModule(module, pdata.c_str(), buf, len);
-    delete[] buf;
-    return ok;
+    sg_ifstream file_in(file);
+    string buf;
+    while (!file_in.eof()) {
+        char bytes[8192];
+        file_in.read(bytes, 8192);
+        buf.append(bytes, file_in.gcount());
+    }
+    file_in.close();
+    auto pathStr = file.utf8Str();
+    return createModule(module, pathStr.c_str(), buf.data(), buf.length());
 }
 
 // Parse and run.  Save the local variables namespace, as it will
