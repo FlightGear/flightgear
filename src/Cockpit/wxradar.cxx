@@ -1084,7 +1084,7 @@ wxRadarBg::updateFont()
     }
     
     osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
-    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.local8BitStr(), fontOptions.get());
+    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.utf8Str(), fontOptions.get());
 
     if (font != 0) {
         _font = font;

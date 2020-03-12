@@ -27,6 +27,7 @@
 #include <plib/pu.h>
 
 #include <simgear/props/props.hxx>
+#include <simgear/misc/sg_dir.hxx>
 
 #include <Main/globals.hxx>
 
@@ -211,26 +212,19 @@ FGFontCache::getfntpath(const std::string& name)
 
 bool FGFontCache::initializeFonts()
 {
-    static std::string fontext("txf");
+    static std::string fontext(",txf");
     init();
-    std::string fontPath = _path.local8BitStr();
-    ulDir* fontdir = ulOpenDir(fontPath.c_str());
-    if (!fontdir)
-        return false;
-    const ulDirEnt *dirEntry;
-    while ((dirEntry = ulReadDir(fontdir)) != 0) {
-        SGPath path(_path);
-        path.append(dirEntry->d_name);
-        if (path.extension() == fontext) {
-            fntTexFont* f = new fntTexFont;
-            std::string ps = path.local8BitStr();
-            if (f->load(ps.c_str()))
-                _texFonts[std::string(dirEntry->d_name)] = f;
-            else
-                delete f;
-        }
+
+    auto dir = simgear::Dir(_path);
+    for (auto p : dir.children(simgear::Dir::TYPE_FILE, fontext)) {
+        fntTexFont* f = new fntTexFont;
+        // FIXME : this will fail when fonts are on UTF8 paths
+        if (f->load(p.local8BitStr()))
+            _texFonts[p.file()] = f;
+        else
+            delete f;
     }
-    ulCloseDir(fontdir);
+
     return true;
 }
 

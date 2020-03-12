@@ -544,7 +544,7 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
         for (SGPath p : globals->get_data_paths("AI")) {
             p.append(model_path);
             if (p.exists()) {
-                SG_LOG(SG_AI, SG_DEBUG, "Found AI model: " << p.local8BitStr());
+                SG_LOG(SG_AI, SG_DEBUG, "Found AI model: " << p);
                 path_list.push_back(p.local8BitStr());
                 break;
             }

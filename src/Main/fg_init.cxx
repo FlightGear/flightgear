@@ -483,7 +483,7 @@ bool fgInitHome()
     }
 
     char buf[16];
-    std::string ps = pidPath.local8BitStr();
+    std::string ps = pidPath.utf8Str();
 
     // do open+unlink trick to the file is deleted on exit, even if we
     // crash or exit(-1)
@@ -873,8 +873,7 @@ void fgCreateSubsystems(bool duringReset) {
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( fgGetString("/sim/rendering/materials-file") );
-    if ( ! globals->get_matlib()->load(globals->get_fg_root().local8BitStr(), mpath.local8BitStr(),
-            globals->get_props()) ) {
+    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath, globals->get_props()) ) {
        throw sg_io_exception("Error loading materials file", mpath);
     }
 

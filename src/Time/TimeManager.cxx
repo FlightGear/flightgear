@@ -386,9 +386,7 @@ void TimeManager::throttleUpdateRate()
 // periodic time updater wrapper
 void TimeManager::updateLocalTime() 
 {
-  SGPath zone(globals->get_fg_root());
-  zone.append("Timezone");
-  _impl->updateLocal(globals->get_aircraft_position(), zone.local8BitStr());
+  _impl->updateLocal(globals->get_aircraft_position(), globals->get_fg_root() / "Timezone");
 }
 
 void TimeManager::initTimeOffset()
