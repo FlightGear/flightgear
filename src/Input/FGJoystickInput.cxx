@@ -346,7 +346,11 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   if (js == 0 || js->notWorking()) {
     joysticks[index].initializing = true;
     if (js) {
-      joysticks[index].plibJS.reset( new jsJoystick(index) );
+      joysticks[index].init_dt += dt;
+      if (joysticks[index].init_dt >= 1.0) {
+        joysticks[index].plibJS.reset( new jsJoystick(index) );
+        joysticks[index].init_dt = 0.0;
+      }
     }
     return;
   }
