@@ -76,7 +76,7 @@ string FLITEVoiceSynthesizer::getVoicePath( voice_t voice )
 {
   if( voice < 0 || voice >= VOICE_UNKNOWN ) return string("");
   SGPath voicePath = globals->get_fg_root() / "ATC" /  VOICE_FILES[voice];
-  return voicePath.local8BitStr();
+  return voicePath.utf8Str();
 }
 
 string FLITEVoiceSynthesizer::getVoicePath( const string & voice )

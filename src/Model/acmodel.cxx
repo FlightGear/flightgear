@@ -33,7 +33,7 @@ static osg::Node *
 fgLoad3DModelPanel(const SGPath &path, SGPropertyNode *prop_root)
 {
     bool loadPanels = true;
-    osg::Node* node = simgear::SGModelLib::loadModel(path.local8BitStr(), prop_root, NULL, loadPanels);
+    osg::Node* node = simgear::SGModelLib::loadModel(path.utf8Str(), prop_root, NULL, loadPanels);
     if (node)
         node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
     return node;

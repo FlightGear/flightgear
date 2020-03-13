@@ -1136,7 +1136,7 @@ FGRenderer::buildDeferredFullscreenCamera( flightgear::CameraInfo* info, const F
     g->setUseDisplayList(false);
     simgear::EffectGeode* eg = new simgear::EffectGeode;
     osg::ref_ptr<SGReaderWriterOptions> opt;
-    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     simgear::Effect* effect = simgear::makeEffect(pass->effect, true, opt.get());
     if (effect) {
@@ -1189,7 +1189,7 @@ FGRenderer::buildDeferredDisplayCamera( osg::Camera* camera, flightgear::CameraI
     g->setUseDisplayList(false); //DEBUG
     simgear::EffectGeode* eg = new simgear::EffectGeode;
     osg::ref_ptr<SGReaderWriterOptions> opt;
-    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     simgear::Effect* effect = simgear::makeEffect(stage->effect, true, opt.get());
     if (!effect) {
@@ -1422,7 +1422,7 @@ FGRenderer::setupView( void )
     // Moon diameter:    3,476 kilometers
     // Sun diameter: 1,390,000 kilometers
     osg::ref_ptr<SGReaderWriterOptions> opt;
-    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+    opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
                   463.3, 361.8,

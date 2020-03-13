@@ -359,7 +359,7 @@ static void fgIdleFunction ( void ) {
         flightgear::initPosition();
         flightgear::initTowerLocationListener();
 
-        simgear::SGModelLib::init(globals->get_fg_root().local8BitStr(), globals->get_props());
+        simgear::SGModelLib::init(globals->get_fg_root().utf8Str(), globals->get_props());
 
         auto timeManager = globals->get_subsystem<TimeManager>();
         timeManager->init();

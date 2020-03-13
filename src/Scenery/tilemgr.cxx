@@ -168,9 +168,8 @@ void FGTileMgr::reinit()
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const PathList &sc = globals->get_fg_scenery();
     fp.clear();
-    PathList::const_iterator it;
-    for (it = sc.begin(); it != sc.end(); ++it) {
-        fp.push_back(it->local8BitStr());
+    for (auto it = sc.begin(); it != sc.end(); ++it) {
+        fp.push_back(it->utf8Str());
     }
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().utf8Str());
     

@@ -774,7 +774,7 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     std::wstring wmodestr = simgear::strutils::convertUtf8ToWString(modestr);
     f = _wfopen(fp.c_str(), wmodestr.c_str());
 #else
-    std::string fp = filename.local8BitStr();
+    std::string fp = filename.utf8Str();
     f = fopen(fp.c_str(), modestr);
 #endif
     if(!f) naRuntimeError(c, strerror(errno));
