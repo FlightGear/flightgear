@@ -45,6 +45,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -55,6 +56,7 @@
 #include "renderer.hxx"
 
 #include <sstream>
+
 
 static const char* LICENSE_URL_TEXT = "Licensed under the GNU GPL. See http://www.flightgear.org for more information";
 
@@ -81,13 +83,21 @@ SplashScreen::~SplashScreen()
 
 void SplashScreen::createNodes()
 {
+    std::string splashImage = selectSplashImage();
 #if OSG_VERSION_LESS_THAN(3,4,0)
-    _splashImage = osgDB::readImageFile(selectSplashImage());
+    _splashImage = osgDB::readImageFile(splashImage);
 #else
-    _splashImage = osgDB::readRefImageFile(selectSplashImage());
+    auto staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
+    staticOptions->setLoadOriginHint(simgear::SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
+    _splashImage = osgDB::readRefImageFile(splashImage, staticOptions);
+//    _splashImage       = osgDB::readRefImageFile(selectSplashImage());
 #endif
 
-    int width = _splashImage->s();
+    if (!_splashImage){
+        SG_LOG(SG_VIEW, SG_INFO, "Splash Image " << splashImage << " failed to load");
+        return;
+    }
+    int width               = _splashImage->s();
     int height = _splashImage->t();
     _splashImageAspectRatio = static_cast<double>(width) / height;
 
@@ -287,9 +297,12 @@ void SplashScreen::setupLogoImage()
 #if OSG_VERSION_LESS_THAN(3,4,0)
     _logoImage = osgDB::readImageFile(logoPath.utf8Str());
 #else
-    _logoImage = osgDB::readRefImageFile(logoPath.utf8Str());
+    auto staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
+    staticOptions->setLoadOriginHint(simgear::SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
+    _logoImage = osgDB::readRefImageFile(logoPath.utf8Str(), staticOptions);
 #endif
     if (!_logoImage) {
+        SG_LOG(SG_VIEW, SG_INFO, "Splash logo image " << logoPath << " failed to load");
         return;
     }
 
