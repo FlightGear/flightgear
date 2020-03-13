@@ -370,10 +370,7 @@ if (ENABLE_QT)
     find_package(Qt5 5.4 COMPONENTS Widgets Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
         message(STATUS "Will enable Qt launcher GUI")
-        message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
-        message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
         set(HAVE_QT 1)
-
         include (Translations)
     else()
         # don't try to build FGQCanvas if Qt wasn't found correctly
