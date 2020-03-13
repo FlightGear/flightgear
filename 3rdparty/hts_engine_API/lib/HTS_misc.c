@@ -75,14 +75,51 @@ typedef struct _HTS_Data {
    size_t index;
 } HTS_Data;
 
+#if defined(_WIN32)
+
+#include <windows.h>
+
+#define MAX_PATH_SIZE 8192
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+
+// Encode 'path' which is assumed UTF-8 string, into UNICODE string.
+// wbuf and wbuf_len is a target buffer and its length.
+static void to_wchar(const char *path, wchar_t *wbuf, size_t wbuf_len) {
+  char buf[MAX_PATH_SIZE * 2], buf2[MAX_PATH_SIZE * 2], *p;
+
+  strncpy(buf, path, sizeof(buf));
+  buf[sizeof(buf) - 1] = '\0';
+
+  // Trim trailing slashes. Leave backslash for paths like "X:\"
+  p = buf + strlen(buf) - 1;
+  while (p > buf && p[-1] != ':' && (p[0] == '\\' || p[0] == '/')) *p-- = '\0';
+
+  // Convert to Unicode and back. If doubly-converted string does not
+  // match the original, something is fishy, reject.
+  memset(wbuf, 0, wbuf_len * sizeof(wchar_t));
+  MultiByteToWideChar(CP_UTF8, 0, buf, -1, wbuf, (int) wbuf_len);
+  WideCharToMultiByte(CP_UTF8, 0, wbuf, (int) wbuf_len, buf2, sizeof(buf2),
+                      NULL, NULL);
+  if (strcmp(buf, buf2) != 0) {
+    wbuf[0] = L'\0';
+  }
+}
+#endif
+
 /* HTS_fopen_from_fn: wrapper for fopen */
 HTS_File *HTS_fopen_from_fn(const char *name, const char *opt)
 {
    HTS_File *fp = (HTS_File *) HTS_calloc(1, sizeof(HTS_File));
 
    fp->type = HTS_FILE;
+#if defined(_WIN32)
+    wchar_t wpath[MAX_PATH_SIZE], wmode[10];
+    to_wchar(name, wpath, ARRAY_SIZE(wpath));
+    to_wchar(opt, wmode, ARRAY_SIZE(wmode));
+    fp->pointer = (void*) _wfopen(wpath, wmode);
+#else
    fp->pointer = (void *) fopen(name, opt);
-
+#endif
    if (fp->pointer == NULL) {
       HTS_error(0, "HTS_fopen: Cannot open %s.\n", name);
       HTS_free(fp);
