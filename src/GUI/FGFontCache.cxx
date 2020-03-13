@@ -13,17 +13,13 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
+#include <config.h>
 
 #include "FGFontCache.hxx"
 
-#include <plib/fnt.h>
+// this is our one in 3rdparty
+#include "fnt.h"
+
 #include <plib/pu.h>
 
 #include <simgear/props/props.hxx>
@@ -212,14 +208,13 @@ FGFontCache::getfntpath(const std::string& name)
 
 bool FGFontCache::initializeFonts()
 {
-    static std::string fontext(",txf");
+    static std::string fontext(".txf");
     init();
 
     auto dir = simgear::Dir(_path);
     for (auto p : dir.children(simgear::Dir::TYPE_FILE, fontext)) {
         fntTexFont* f = new fntTexFont;
-        // FIXME : this will fail when fonts are on UTF8 paths
-        if (f->load(p.local8BitStr()))
+        if (f->load(p))
             _texFonts[p.file()] = f;
         else
             delete f;

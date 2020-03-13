@@ -382,7 +382,7 @@ else()
 endif (ENABLE_QT)
 ##############################################################################
 
-find_package(PLIB REQUIRED puaux pu fnt)
+find_package(PLIB REQUIRED puaux pu)
 
 # FlightGear and SimGear versions need to match major + minor
 # split version string into components, note CMAKE_MATCH_0 is the entire regexp match

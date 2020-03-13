@@ -109,9 +109,9 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
             # handle MSVC confusion over pu/pui naming, by removing
             # 'pu' and then adding it back
             list(REMOVE_ITEM outDeps "pu" "fnt" "sg")
-            list(APPEND outDeps ${PUNAME} "fnt" "sg")
+            list(APPEND outDeps ${PUNAME} "sg")
         elseif (${c} STREQUAL "puaux")
-            list(APPEND outDeps ${PUNAME} "fnt" "sg")
+            list(APPEND outDeps ${PUNAME} "sg")
         elseif (${c} STREQUAL "ssg")
             list(APPEND outDeps "sg")
         endif()
