@@ -781,6 +781,58 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     return naIOGhost(c, f);
 }
 
+static naRef ftype(naContext ctx, const SGPath& f)
+{
+    const char* t = "unk";
+    if (f.isFile()) t = "reg";
+    else if(f.isDir()) t = "dir";
+    return naStr_fromdata(naNewString(ctx), t, strlen(t));
+}
+
+// io.stat with UTF-8 path support, replaces the default one in
+// Nasal iolib.c which does not hsupport UTF-8 paths
+static naRef f_custom_stat(naContext ctx, naRef me, int argc, naRef* args)
+{
+    naRef pathArg = argc > 0 ? naStringValue(ctx, args[0]) : naNil();
+    if (!naIsString(pathArg))
+        naRuntimeError(ctx, "bad argument to stat()");
+    
+    const auto path = SGPath::fromUtf8(naStr_data(pathArg));
+    if (!path.exists()) {
+        return naNil();
+    }
+    
+    const SGPath filename = fgValidatePath(path, false );
+    if (filename.isNull()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "stat(): reading '" <<
+        naStr_data(pathArg) << "' denied (unauthorized directory - authorization"
+        " no longer follows symlinks; to authorize reading additional "
+        "directories, pass them to --allow-nasal-read)");
+        naRuntimeError(ctx, "stat(): access denied (unauthorized directory)");
+        return naNil();
+    }
+   
+    naRef result = naNewVector(ctx);
+    naVec_setsize(ctx, result, 12);
+    
+    // every use in fgdata/Nasal only uses stat() to test existence of
+    // files, not to check any of this information.
+    int n = 0;
+    naVec_set(result, n++, naNum(0)); // device
+    naVec_set(result, n++, naNum(0)); // inode
+    naVec_set(result, n++, naNum(0)); // mode
+    naVec_set(result, n++, naNum(0)); // nlink
+    naVec_set(result, n++, naNum(0)); // uid
+    naVec_set(result, n++, naNum(0)); // guid
+    naVec_set(result, n++, naNum(0)); // rdev
+    naVec_set(result, n++, naNum(filename.sizeInBytes())); // size
+    naVec_set(result, n++, naNum(0)); // atime
+    naVec_set(result, n++, naNum(0)); // mtime
+    naVec_set(result, n++, naNum(0)); // ctime
+    naVec_set(result, n++, ftype(ctx, filename));
+    return result;
+}
+
 // Parse XML file.
 //     parsexml(<path> [, <start-tag> [, <end-tag> [, <data> [, <pi>]]]]);
 //
@@ -937,6 +989,7 @@ void FGNasalSys::init()
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
     nasal::Hash io_module = getGlobals().get<nasal::Hash>("io");
     io_module.set("open", f_open);
+    io_module.set("stat", f_custom_stat);
 
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
