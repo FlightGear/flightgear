@@ -42,10 +42,10 @@ if(NOT FG_BUILD_TYPE)
 endif()
 
 if(APPLE)
-        set(CMAKE_INSTALL_RPATH "@loader_path/../Frameworks")
-        # when building, don't use the install RPATH already
-        # (but later on when installing)
-        SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+	set(CMAKE_INSTALL_RPATH "@loader_path/../Frameworks")
+	# when building, don't use the install RPATH already
+	# (but later on when installing)
+	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
 
 # let's use & require C++11 - note these are only functional with CMake 3.1
@@ -132,8 +132,8 @@ elseif(WIN32)
     MESSAGE("Installing: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
 
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
-        ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR
-        ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
+	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR
+	${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
     find_package(Threads REQUIRED)
     find_package(X11 REQUIRED)
 
@@ -307,12 +307,12 @@ find_package(OpenSceneGraph 3.2.0 REQUIRED
 )
 
 if (MSVC)
-        find_package(CrashRpt)
-        if (CRASHRPT_FOUND)
-                set(HAVE_CRASHRPT 1)
-                message(STATUS "Using CrashRpt")
+	find_package(CrashRpt)
+	if (CRASHRPT_FOUND)
+		set(HAVE_CRASHRPT 1)
+		message(STATUS "Using CrashRpt")
     include_directories( ${CRASHRPT_INCLUDE_DIR})
-        endif()
+	endif()
 endif()
 
 #if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
@@ -403,16 +403,8 @@ if(ENABLE_PROFILE)
 endif()
 
 if(ENABLE_RTI)
-    find_package(PkgConfig)
-    if(PKG_CONFIG_FOUND)
-      set(ENV{PKG_CONFIG_PATH} "${CMAKE_INSTALL_PREFIX}/${_LIBDIR_DEFAULT}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-      pkg_check_modules(RTI hla-rti13)
-    endif(PKG_CONFIG_FOUND)
-    if(RTI_FOUND)
-      message(STATUS "RTI: ENABLED")
-    else()
-      message(STATUS "RTI: DISABLED")
-    endif(RTI_FOUND)
+    message(STATUS "RTI: ENABLED")
+    set(FG_HAVE_HLA 1)
 else()
     message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)

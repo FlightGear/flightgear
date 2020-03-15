@@ -7,7 +7,7 @@ function(setup_fgfs_libraries target)
     #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
 
     if(RTI_FOUND)
-        set(HLA_LIBRARIES ${RTI_LIBRARIES})
+        set(HLA_LIBRARIES ${RTI_LDFLAGS})
     else()
         set(HLA_LIBRARIES "")
     endif()
