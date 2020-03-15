@@ -555,15 +555,13 @@ FGRenderer::init( void )
 // on other subsystems to be inited, eg Ephemeris
     _sky = new SGSky;
 
-    SGPath texture_path(globals->get_fg_root());
-    texture_path.append("Textures");
-    texture_path.append("Sky");
+    const SGPath texture_path = globals->get_fg_root() / "Textures" / "Sky";
     for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        SGCloudLayer * layer = new SGCloudLayer(texture_path.local8BitStr());
+        SGCloudLayer * layer = new SGCloudLayer(texture_path);
         _sky->add_cloud_layer(layer);
     }
 
-    _sky->texture_path( texture_path.local8BitStr() );
+    _sky->set_texture_path( texture_path );
 
     if (!_classicalRenderer) {
         eventHandler->setChangeStatsCameraRenderOrder( true );

@@ -822,7 +822,7 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
     bool ok = true;
 
     /* open output stream *******************************************/
-    gzContainerWriter output(Filename.local8BitStr(), FlightRecorderFileMagic);
+    gzContainerWriter output(Filename, FlightRecorderFileMagic);
     if (!output.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file" << Filename);
@@ -940,7 +940,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
     bool ok = true;
 
     /* open input stream ********************************************/
-    gzContainerReader input(Filename.local8BitStr(), FlightRecorderFileMagic);
+    gzContainerReader input(Filename, FlightRecorderFileMagic);
     if (input.eof() || !input.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file " << Filename);
