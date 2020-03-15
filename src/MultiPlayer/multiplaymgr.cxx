@@ -2381,7 +2381,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   */
   mp->_getProps()->removeChildren("set");
   
-  SGPropertyNode* set = NULL;
+  SGPropertyNode_ptr    set;
   
   if (simgear::strutils::ends_with(modelName, ".xml")
       && simgear::strutils::starts_with(modelName, "Aircraft/")) {
@@ -2444,8 +2444,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
             break;
           }
         }
-        delete set;
-        set = NULL;
+        set.reset();
       }
     }
   }
