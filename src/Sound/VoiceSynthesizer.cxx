@@ -53,7 +53,7 @@ void FLITEVoiceSynthesizer::WorkerThread::run()
 
     // marker value indicating termination requested
     if ((request.speed < 0.0) && (request.volume < 0.0)) {
-      SG_LOG(SG_SOUND, SG_INFO, "FLITE synthesis thread exiting");
+      SG_LOG(SG_SOUND, SG_DEBUG, "FLITE synthesis thread exiting");
       return;
     }
 
@@ -106,7 +106,6 @@ FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
   // push the special marker value
   _requests.push(SynthesizeRequest::cancelThreadRequest());
   _worker->join();
-  SG_LOG(SG_SOUND, SG_INFO, "FLITE synthesis thread joined OK");
   Flite_HTS_Engine_clear(_engine);
 }
 
