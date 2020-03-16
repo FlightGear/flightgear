@@ -34,6 +34,9 @@ QString fixNavaidName(QString s)
     QStringList words = s.split(QChar(' '));
     QStringList changedWords;
     Q_FOREACH(QString w, words) {
+        if (w.isEmpty())
+            continue;
+            
         QString up = w.toUpper();
 
         // expand common abbreviations
