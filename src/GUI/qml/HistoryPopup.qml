@@ -37,11 +37,12 @@ Item {
             hoverEnabled: root.enabled
             enabled: root.enabled
             onClicked: {
-                var screenPos = _launcher.mapToGlobal(button, Qt.point(-popupFrame.width, 0))
-                popupFrame.x = screenPos.x;
-                popupFrame.y = screenPos.y;
-                popupFrame.visible = true
-                tracker.window = popupFrame
+                var pop = popup.createObject(root)
+                var screenPos = _launcher.mapToGlobal(button, Qt.point(-pop.width, 0))
+                pop.y = screenPos.y;
+                pop.x = screenPos.x;
+                tracker.window = pop;
+                pop.show();
             }
         }
     }
@@ -50,51 +51,54 @@ Item {
         id: tracker
     }
 
-    Window {
-        id: popupFrame
+    Component {
+        id: popup
 
-        flags: Qt.Popup
-        height: choicesColumn.childrenRect.height + Style.margin * 2
-        width: choicesColumn.childrenRect.width + Style.margin * 2
-        visible: false
-        color: "white"
+        Window {
+            id: popupFrame
 
-        Rectangle {
-            border.width: 1
-            border.color: Style.minorFrameColor
-            anchors.fill: parent
-        }
+            flags: Qt.Popup
+            height: choicesColumn.childrenRect.height + Style.margin * 2
+            width: choicesColumn.childrenRect.width + Style.margin * 2
+            color: "white"
 
-        // text repeater
-        Column {
-            id: choicesColumn
-            spacing: Style.margin
-            x: Style.margin
-            y: Style.margin
+            Rectangle {
+                border.width: 1
+                border.color: Style.minorFrameColor
+                anchors.fill: parent
+            }
 
-            Repeater {
-                id: choicesRepeater
-                model: root.model
-                delegate:
-                    StyledText {
-                        id: choiceText
+            // text repeater
+            Column {
+                id: choicesColumn
+                spacing: Style.margin
+                x: Style.margin
+                y: Style.margin
 
-                        // Taken from TableViewItemDelegateLoader.qml to follow QML role conventions
-                        text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
-                                                                         : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
-                                                                                                                              : modelData != undefined ? modelData : "" // Models without role
-                        height: implicitHeight + Style.margin
+                Repeater {
+                    id: choicesRepeater
+                    model: root.model
+                    delegate:
+                        StyledText {
+                            id: choiceText
 
-                        MouseArea {
-                            width: popupFrame.width // full width of the popup
-                            height: parent.height
-                            onClicked: {
-                                popupFrame.visible = false
-                                root.selected(model.index);
+                            // Taken from TableViewItemDelegateLoader.qml to follow QML role conventions
+                            text: model && model.hasOwnProperty(displayRole) ? model[displayRole] // Qml ListModel and QAbstractItemModel
+                                                                             : modelData && modelData.hasOwnProperty(displayRole) ? modelData[displayRole] // QObjectList / QObject
+                                                                                                                                  : modelData != undefined ? modelData : "" // Models without role
+                            height: implicitHeight + Style.margin
+
+                            MouseArea {
+                                width: popupFrame.width // full width of the popup
+                                height: parent.height
+                                onClicked: {
+                                    root.selected(model.index);
+                                    popupFrame.close()
+                                }
                             }
-                        }
-                    } // of Text delegate
-            } // text repeater
-        } // text column
-    } // of popup Window
+                        } // of Text delegate
+                } // text repeater
+            } // text column
+        } // of popup Window
+    }
 }
