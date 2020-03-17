@@ -52,6 +52,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/package/Root.hxx>
 #include <simgear/package/Catalog.hxx>
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Install.hxx>
@@ -451,6 +452,15 @@ bool runLauncherDialog()
     }
 
     fgInitPackageRoot();
+
+    // setup package language
+    auto lang = options->valueForOption("language");
+    if (!lang.empty()) {
+        globals->packageRoot()->setLocale(lang);
+    } else {
+        const auto langName = QLocale::languageToString(QLocale{}.language());
+        globals->packageRoot()->setLocale(langName.toStdString());
+    }
 
     // startup the HTTP system now since packages needs it
     FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
