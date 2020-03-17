@@ -183,6 +183,7 @@ void LauncherController::setInAppMode()
 	m_inAppMode = true;
 	m_keepRunningInAppMode = true;
 	m_appModeResult = true;
+    emit inAppChanged();
 }
 
 bool LauncherController::keepRunningInAppMode() const

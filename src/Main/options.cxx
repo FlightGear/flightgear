@@ -2953,7 +2953,6 @@ void Options::setupRoot(int argc, char **argv)
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
 #if defined(HAVE_QT)
-        flightgear::initApp(argc, argv);
         root = SetupRootDialog::restoreUserSelectedRoot();
 #endif
         if (root.isNull()) {
@@ -2979,7 +2978,6 @@ void Options::setupRoot(int argc, char **argv)
     // a command-line, env-var or default root this check can fail and
     // we still want to use the GUI in that case
     if (versionComp != 0) {
-        flightgear::initApp(argc, argv);
         SetupRootDialog::runDialog(usingDefaultRoot);
     }
 #else

@@ -541,6 +541,10 @@ int fgMainInit( int argc, char **argv )
     if (!fgInitHome()) {
         return EXIT_FAILURE;
     }
+    
+#if defined(HAVE_QT)
+    flightgear::initApp(argc, argv);
+#endif
 
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
@@ -624,10 +628,8 @@ int fgMainInit( int argc, char **argv )
     }
 
 #if defined(HAVE_QT)
-    flightgear::initApp(argc, argv);
     if (showLauncher) {
         flightgear::checkKeyboardModifiersForSettingFGRoot();
-
         if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }

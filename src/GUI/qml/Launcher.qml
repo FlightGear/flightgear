@@ -6,7 +6,7 @@ Item {
     id: root
     // order of this model sets the order of buttons in the sidebar
     ListModel {
-        id: pagesModel
+        id: startupPagesModel
         ListElement { title: qsTr("Summary"); pageSource: "qrc:///qml/Summary.qml"; iconPath: "qrc:///svg/toolbox-summary"; state:"loader" }
         ListElement { title: qsTr("Aircraft"); pageSource: "qrc:///qml/AircraftList.qml"; iconPath: "qrc:///svg/toolbox-aircraft"; state:"loader" }
         
@@ -28,6 +28,18 @@ Item {
 
     }
 
+    ListModel {
+        id: inAppPagesModel
+        ListElement { title: qsTr("Summary"); pageSource: "qrc:///qml/Summary.qml"; iconPath: "qrc:///svg/toolbox-summary"; state:"loader" }
+        ListElement { title: qsTr("Aircraft"); pageSource: "qrc:///qml/AircraftList.qml"; iconPath: "qrc:///svg/toolbox-aircraft"; state:"loader" }
+
+        ListElement {
+            title: qsTr("Location"); pageSource: "qrc:///qml/Location.qml";
+            iconPath: "qrc:///toolbox-location"; state:"loader"
+        }
+    }
+
+
     Component.onCompleted:
     {
        _launcher.minimumWindowSize = Qt.size(Style.strutSize * 12, sidebar.minimumHeight);
@@ -35,7 +47,7 @@ Item {
 
     Connections {
         target: _location
-        onSkipFromArgsChanged: pagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
+        onSkipFromArgsChanged: startupPagesModel.setProperty(2, "buttonDisabled", _location.skipFromArgs)
     }
 
     state: "loader"
@@ -82,7 +94,7 @@ Item {
         id: sidebar
         height: parent.height
         z: 1
-        pagesModel: pagesModel
+        pagesModel: _launcher.inAppMode ? inAppPagesModel : startupPagesModel
         selectedPage: 0 // open on the summary page
 
         onShowMenu: menu.show();
@@ -127,7 +139,7 @@ Item {
     function selectPage(index)
     {
         sidebar.setSelectedPage(index);
-        var page = pagesModel.get(index);
+        var page = sidebar.pagesModel.get(index);
         pageLoader.source = page.pageSource
         root.state = page.state
     }
