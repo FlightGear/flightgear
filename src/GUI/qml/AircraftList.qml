@@ -28,6 +28,7 @@ FocusScope
         width: parent.width
 
         GridToggleButton {
+            id: gridModeToggle
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: Style.margin
@@ -132,7 +133,8 @@ FocusScope
 
     Loader {
         id: aircraftContent
-        source: _launcher.aircraftGridMode ? "qrc:///qml/AircraftGridView.qml"
+        // we use gridModeToggle vis to mean enabled, effectively
+        source: (gridModeToggle.visible && _launcher.aircraftGridMode) ? "qrc:///qml/AircraftGridView.qml"
                                            : "qrc:///qml/AircraftListView.qml"
 
         anchors {
@@ -186,6 +188,10 @@ FocusScope
                 __model: _launcher.installedAircraftModel
                 __header: emptyHeader
             }
+
+            PropertyChanges {
+                target: gridModeToggle; visible: true
+            }
         },
 
         State {
@@ -194,6 +200,10 @@ FocusScope
                 target: root
                 __model: _launcher.searchAircraftModel
                 __header: emptyHeader
+            }
+
+            PropertyChanges {
+                target: gridModeToggle; visible: true
             }
         },
 
@@ -204,6 +214,10 @@ FocusScope
                 __model: _launcher.browseAircraftModel
                 __header: _addOns.showNoOfficialHangar ? noDefaultCatalogHeader : ratingsHeader
             }
+
+            PropertyChanges {
+                target: gridModeToggle; visible: true
+            }
         },
 
         State {
@@ -212,6 +226,10 @@ FocusScope
                 target: root
                 __model: _launcher.aircraftWithUpdatesModel
                 __header: (_launcher.aircraftWithUpdatesModel.count > 0) ? updateAllHeader : emptyHeader
+            }
+
+            PropertyChanges {
+                target: gridModeToggle; visible: false
             }
         }
     ]
