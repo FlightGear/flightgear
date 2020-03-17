@@ -473,35 +473,56 @@ bool fgInitHome()
 	}
 #else
 // write our PID, and check writeability
-    SGPath pidPath(dataPath, "fgfs.pid");
-    if (pidPath.exists()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
-        // set a marker property so terrasync/navcache don't try to write
-        // from secondary instances
-        fgSetBool("/sim/fghome-readonly", true);
-        return true;
-    }
-
-    char buf[16];
+    SGPath pidPath(dataPath, "fgfs_lock.pid");
     std::string ps = pidPath.utf8Str();
 
-    // do open+unlink trick to the file is deleted on exit, even if we
-    // crash or exit(-1)
-    ssize_t len = snprintf(buf, 16, "%d", getpid());
-    int fd = ::open(ps.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0644);
-    if (fd >= 0) {
-        result = ::write(fd, buf, len) == len;
-        if( ::unlink(ps.c_str()) != 0 ) // delete file when app quits
-          result = false;
-    }
+    if (pidPath.exists()) {
+        int fd = ::open(ps.c_str(), O_RDONLY, 0644);
+        if (fd < 0) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "failed to open local file:" << pidPath
+                   << "\n\tdue to:" << simgear::strutils::error_string(errno));
+            return false;
+        }
+        
+        int err = ::flock(fd, LOCK_EX | LOCK_NB);
+        if (err < 0) {
+            if ( errno ==  EWOULDBLOCK) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
+                // set a marker property so terrasync/navcache don't try to write
+                // from secondary instances
+                fgSetBool("/sim/fghome-readonly", true);
+                return true;
+            } else {
+                SG_LOG(SG_GENERAL, SG_ALERT, "failed to lock file:" << pidPath
+                       << "\n\tdue to:" << simgear::strutils::error_string(errno));
+                return false;
+            }
+        }
+        
+       // we locked it!
+        result = true;
+    } else {
+        char buf[16];
+       std::string ps = pidPath.utf8Str();
 
-    if (!result) {
-        flightgear::fatalMessageBoxWithoutExit(
-            "File permissions problem",
-            "Can't write to user-data storage folder, check file permissions "
-            "and FG_HOME.",
-            "User-data at '" + dataPath.utf8Str() + "'.");
-        return false;
+       ssize_t len = snprintf(buf, 16, "%d\n", getpid());
+       int fd = ::open(ps.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd < 0) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "failed to open local file:" << pidPath
+               << "\n\tdue to:" << simgear::strutils::error_string(errno));
+            return false;
+        }
+            
+        write(fd, buf, len);
+        
+        int err = flock(fd, LOCK_EX);
+        if (err != 0) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "failed to lock file:" << pidPath
+            << "\n\tdue to:" << simgear::strutils::error_string(errno));
+            return false;
+        }
+        
+        result = true;
     }
 #endif
     fgSetBool("/sim/fghome-readonly", false);
@@ -514,6 +535,11 @@ void fgShutdownHome()
 	if (static_fgHomeWriteMutex) {
 		CloseHandle(static_fgHomeWriteMutex);
 	}
+#else
+    if (fgGetBool("/sim/fghome-readonly") == false) {
+        SGPath pidPath = globals->get_fg_home() / "fgfs_lock.pid";
+        pidPath.remove();
+    }
 #endif
 }
 

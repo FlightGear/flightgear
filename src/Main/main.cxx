@@ -706,7 +706,8 @@ int fgMainInit( int argc, char **argv )
     int result = fgOSMainLoop();
     frame_signal.clear();
     fgOSCloseWindow();
-
+    fgShutdownHome();
+    
      simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_stopped);
 
     simgear::clearEffectCache();
