@@ -86,8 +86,11 @@ public:
      * This is used to support 'start on a carrier', since we can quickly find
      * the corresponding scenario file to be loaded.
      */
-    static void extractNamesPennantsFromScenario(SGPropertyNode_ptr xmlNode, SGPropertyNode_ptr scenario);
+    static void extractCarriersFromScenario(SGPropertyNode_ptr xmlNode, SGPropertyNode_ptr scenario);
 
+    bool getFLOLSPositionHeading(SGGeod &pos, double &heading) const;
+
+    double getFLOLFSGlidepathAngleDeg() const;
 private:
   /// Is sufficient to be private, stores a possible position to place an
   /// aircraft on start
@@ -115,8 +118,10 @@ private:
     list<ParkPosition> ppositions;    // List of positions where an aircraft can start.
     string sign;                      // The sign of this carrier.
 
-    // these describe the flols
-    SGVec3d flols_off;
+   // these describe the flols
+    SGVec3d _flolsPosOffset;
+    double _flolsHeadingOffsetDeg = 0.0; ///< angle in degrees offset from the carrier centerline
+    double _flolsApproachAngle = 3.0; ///< glidepath angle for the FLOLS
 
     double dist;            // the distance of the eyepoint from the flols
     double angle;

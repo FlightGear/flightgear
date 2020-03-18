@@ -1423,7 +1423,7 @@ fgOptScenario( const char *arg )
         }
         
         // create description node
-        auto n = FGAIManager::registerScenarioFile(path);
+        auto n = FGAIManager::registerScenarioFile(globals->get_props(), path);
         if (!n) {
             SG_LOG(SG_GENERAL, SG_WARN, "failed to read scenario file at:" << path);
             return FG_OPTIONS_ERROR;

@@ -91,6 +91,7 @@
         <file>qml/LineEdit.qml</file>
         <file>qml/LocationAirportView.qml</file>
         <file>qml/LocationNavaidView.qml</file>
+        <file>qml/LocationCarrierView.qml</file>
         <file alias="linear-spinner">qml/icons8-linear-spinner.gif</file>
         <file alias="ellipsis-icon">qml/icons8-ellipsis-filled-50.png</file>
         <file>qml/RadioButton.qml</file>
@@ -130,6 +131,7 @@
         <file>qml/AircraftListView.qml</file>
         <file>qml/GridToggleButton.qml</file>
         <file>qml/EnableDisableButton.qml</file>
+        <file>qml/IconButton.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>
@@ -149,5 +151,7 @@
         <file alias="icon-grid-view">assets/icons8-grid-view.svg</file>
         <file alias="icon-list-view">assets/icons8-menu.svg</file>
         <file alias="icon-hide">assets/icons8-hide-50.png</file>
+        <file alias="icon-carrier">assets/icons8-cargo-ship-50.png</file>
+        <file alias="aircraft-carrier">assets/aircraft-carrier-icon.png</file>
     </qresource>
 </RCC>

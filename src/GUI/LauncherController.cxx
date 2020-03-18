@@ -52,6 +52,7 @@
 #include "NavaidSearchModel.hxx"
 #include "FlightPlanController.hxx"
 #include "ModelDataExtractor.hxx"
+#include "CarriersLocationModel.hxx"
 
 using namespace simgear::pkg;
 
@@ -142,6 +143,7 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<MPServersModel>("FlightGear.Launcher", 1, 0, "MPServers", "Singleton API");
 
     qmlRegisterType<NavaidSearchModel>("FlightGear", 1, 0, "NavaidSearch");
+    qmlRegisterType<CarriersLocationModel>("FlightGear", 1, 0, "CarriersModel");
 
     qmlRegisterUncreatableType<Units>("FlightGear", 1, 0, "Units", "Only for enum");
     qmlRegisterType<UnitsModel>("FlightGear", 1, 0, "UnitsModel");

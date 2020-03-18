@@ -126,6 +126,8 @@ if (HAVE_QT)
                             PixmapImageItem.hxx
                             PathListModel.cxx
                             PathListModel.hxx
+                            CarriersLocationModel.cxx
+                            CarriersLocationModel.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
