@@ -515,7 +515,7 @@ bool fgInitHome()
         }
             
         int err = write(fd, buf, len);
-        if (err != 0) {
+        if (err < 0) {
             SG_LOG(SG_GENERAL, SG_ALERT, "failed to write to lock file:" << pidPath
             << "\n\tdue to:" << simgear::strutils::error_string(errno));
             return false;
