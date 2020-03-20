@@ -60,6 +60,8 @@
 
 static const char* LICENSE_URL_TEXT = "Licensed under the GNU GPL. See http://www.flightgear.org for more information";
 
+using namespace simgear;
+
 class SplashScreenUpdateCallback : public osg::NodeCallback {
 public:
     virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
@@ -87,10 +89,9 @@ void SplashScreen::createNodes()
 #if OSG_VERSION_LESS_THAN(3,4,0)
     _splashImage = osgDB::readImageFile(splashImage);
 #else
-    auto staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
-    staticOptions->setLoadOriginHint(simgear::SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
+    osg::ref_ptr<SGReaderWriterOptions> staticOptions = SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
+    staticOptions->setLoadOriginHint(SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
     _splashImage = osgDB::readRefImageFile(splashImage, staticOptions);
-//    _splashImage       = osgDB::readRefImageFile(selectSplashImage());
 #endif
 
     if (!_splashImage){
