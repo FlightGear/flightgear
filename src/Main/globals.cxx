@@ -811,7 +811,6 @@ FGGlobals::loadUserSettings(SGPath userDataPath)
     been loaded. */
     SGPropertyNode* ai = autosave.getNode("ai");
     if (ai) {
-        SGPropertyNode* ai_models = ai->getNode("models");
         ai->removeChildren("models");
     }
     copyProperties(&autosave, globals->get_props());
