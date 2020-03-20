@@ -40,6 +40,7 @@
 #  include <sys/types.h>        
 #  include <sys/stat.h>
 #  include <fcntl.h>
+#  include <sys/file.h>
 #endif
 
 #include <string>
@@ -513,9 +514,14 @@ bool fgInitHome()
             return false;
         }
             
-        write(fd, buf, len);
-        
-        int err = flock(fd, LOCK_EX);
+        int err = write(fd, buf, len);
+        if (err != 0) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "failed to write to lock file:" << pidPath
+            << "\n\tdue to:" << simgear::strutils::error_string(errno));
+            return false;
+        }
+
+        err = flock(fd, LOCK_EX);
         if (err != 0) {
             SG_LOG(SG_GENERAL, SG_ALERT, "failed to lock file:" << pidPath
             << "\n\tdue to:" << simgear::strutils::error_string(errno));
