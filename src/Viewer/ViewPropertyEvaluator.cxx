@@ -487,15 +487,26 @@ namespace ViewPropertyEvaluator {
     double getSequenceDoubleValue(Sequence& sequence, double default_)
     {
         SGPropertyNode* node = getSequenceNode(sequence);
-        if (node) {
-            if (node->getStringValue()[0] != 0) {
-                return node->getDoubleValue();
-            }
+        if (!node) {
+            return default_;
+        }
+        if (!node->getParent()) {
+            /* Root node. */
+            return default_;
+        }
+        if (node->getType() == simgear::props::BOOL) {
+            /* 2020-03-22: there is a problem with aircraft rah-66 setting type
+            of the root node to bool which gives string value "false". So we
+            force a return of default_. */
+            return default_;
+        }
+        if (node->getStringValue()[0] == 0) {
             /* If we reach here, the node exists but its value is an empty
             string, so node->getDoubleValue() would return 0 which isn't
             useful, so instead we return default_. */
+            return default_;
         }
-        return default_;
+        return node->getDoubleValue();
     }
 
     bool getSequenceBoolValue(Sequence& sequence, bool default_)
@@ -725,5 +736,9 @@ namespace ViewPropertyEvaluator {
         }
         return out;
     }
-
+    
+    void dump()
+    {
+        std::cerr << Dump() << "\n";
+    }
 }
