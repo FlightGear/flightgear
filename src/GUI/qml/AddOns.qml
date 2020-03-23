@@ -125,7 +125,7 @@ Item {
                             deletePromptText: qsTr("Remove the aircraft folder: '%1' from the list? (The folder contents will not be changed)").arg(model.path);
                             modelCount: _addOns.aircraftPaths.count
                             onPerformDelete: _addOns.aircraftPaths.removePath(model.index)
-                            onPerformMove: _addOns.aircraftPaths.sawpIndices(model.index, newIndex);
+                            onPerformMove: _addOns.aircraftPaths.swapIndices(model.index, newIndex);
                         }
                     }
 
