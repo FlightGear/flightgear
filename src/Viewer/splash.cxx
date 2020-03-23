@@ -295,11 +295,12 @@ void SplashScreen::setupLogoImage()
         return;
     }
 
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    _logoImage = osgDB::readImageFile(logoPath.utf8Str());
-#else
-    auto staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
+    osg::ref_ptr<simgear::SGReaderWriterOptions> staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
     staticOptions->setLoadOriginHint(simgear::SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
+
+#if OSG_VERSION_LESS_THAN(3, 4, 0)
+    _logoImage = osgDB::readImageFile(logoPath.utf8Str(), staticOptions);
+#else
     _logoImage = osgDB::readRefImageFile(logoPath.utf8Str(), staticOptions);
 #endif
     if (!_logoImage) {
