@@ -438,12 +438,11 @@ void LocalAircraftCache::scanDirs()
 
     QStringList dirs = m_paths;
 
-    Q_FOREACH(SGPath ap, globals->get_aircraft_paths()) {
+    for (SGPath ap : globals->get_aircraft_paths()) {
         dirs << QString::fromStdString(ap.utf8Str());
     }
 
-    SGPath rootAircraft(globals->get_fg_root());
-    rootAircraft.append("Aircraft");
+    SGPath rootAircraft = globals->get_fg_root() / "Aircraft";
     dirs << QString::fromStdString(rootAircraft.utf8Str());
 
     m_scanThread.reset(new AircraftScanThread(dirs));
