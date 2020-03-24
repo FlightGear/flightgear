@@ -108,7 +108,7 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     m_aircraftGridMode = settings.value("aircraftGridMode").toBool();
 
     m_subsystemIdleTimer = new QTimer(this);
-    m_subsystemIdleTimer->setInterval(10);
+    m_subsystemIdleTimer->setInterval(5);
     connect(m_subsystemIdleTimer, &QTimer::timeout, []()
        {globals->get_subsystem_mgr()->update(0.0);});
     m_subsystemIdleTimer->start();
