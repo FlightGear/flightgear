@@ -235,7 +235,7 @@ int fntTexFont::loadTXF ( const SGPath& path, GLenum mag, GLenum min )
           (float)( glyph.y_off + glyph.h ) / (float) max_height ) ;
   }
 
-  exists [ ' ' ] = FALSE ;
+  exists [ static_cast<int>(' ') ] = FALSE ;
 
   /*
     Load the image part of the file
