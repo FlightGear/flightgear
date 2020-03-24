@@ -133,6 +133,17 @@ public:
   }
 };
 
+class CompositorEffectsProvider : public simgear::ResourceProvider {
+public:
+    CompositorEffectsProvider() :
+        simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL) {
+    }
+    SGPath resolve(const std::string &aResource, SGPath&) const override {
+        const SGPath p = globals->get_fg_root() / "Compositor" / aResource;
+        return p.exists() ? p : SGPath();
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGGlobals.
 ////////////////////////////////////////////////////////////////////////
@@ -165,6 +176,9 @@ FGGlobals::FGGlobals() :
     resMgr->addProvider(new AircraftResourceProvider());
     resMgr->addProvider(new CurrentAircraftDirProvider());
     resMgr->addProvider(new flightgear::addons::ResourceProvider());
+#ifdef ENABLE_COMPOSITOR
+    resMgr->addProvider(new CompositorEffectsProvider());
+#endif
     initProperties();
 }
 
