@@ -18,26 +18,26 @@ public:
     FGGround(FGInterface *iface);
     virtual ~FGGround();
 
-    virtual void getGroundPlane(const double pos[3],
+    void getGroundPlane(const double pos[3],
                                 double plane[4], float vel[3],
-                                unsigned int &body);
+                                unsigned int &body) override;
 
-    virtual void getGroundPlane(const double pos[3],
+    void getGroundPlane(const double pos[3],
                                 double plane[4], float vel[3],
                                 const simgear::BVHMaterial **material,
-                                unsigned int &body);
+                                unsigned int &body) override;
 
-    virtual bool getBody(double t, double bodyToWorld[16], double linearVel[3],
-                         double angularVel[3], unsigned int &id);
+    bool getBody(double t, double bodyToWorld[16], double linearVel[3],
+                         double angularVel[3], unsigned int &id) override;
 
-    virtual bool caughtWire(const double pos[4][3]);
+    bool caughtWire(const double pos[4][3]) override;
 
-    virtual bool getWire(double end[2][3], float vel[2][3]);
+    bool getWire(double end[2][3], float vel[2][3]) override;
 
-    virtual void releaseWire(void);
+    void releaseWire(void) override;
 
-    virtual float getCatapult(const double pos[3],
-                              double end[2][3], float vel[2][3]);
+    float getCatapult(const double pos[3],
+                              double end[2][3], float vel[2][3]) override;
 
     void setTimeOffset(double toff);
 
