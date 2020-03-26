@@ -38,8 +38,6 @@
 
 #include "QmlAircraftInfo.hxx"
 
-const int STANDARD_THUMBNAIL_HEIGHT = 128;
-
 using namespace simgear::pkg;
 
 bool isPackageFailure(Delegate::StatusCode status)
@@ -70,18 +68,7 @@ public:
     }
 
 protected:
-    void catalogRefreshed(CatalogRef aCatalog, StatusCode aReason) override
-    {
-        if (aReason == STATUS_IN_PROGRESS) {
-            // nothing to do
-        } else if ((aReason == STATUS_REFRESHED) || (aReason == STATUS_SUCCESS)) {
-            m_model->refreshPackages();
-        } else {
-            qWarning() << "failed refresh of"
-                << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
-        }       
-    }
-
+    void catalogRefreshed(CatalogRef aCatalog, StatusCode aReason) override;
     void startInstall(InstallRef aInstall) override
     {
         QModelIndex mi(indexForPackage(aInstall->package()));
@@ -128,44 +115,6 @@ protected:
         m_model->dataChanged(mi, mi);
     }
 
-
-    virtual void dataForThumbnail(const std::string& aThumbnailUrl,
-                                  size_t length, const uint8_t* bytes) override
-    {
-        QImage img = QImage::fromData(QByteArray::fromRawData(reinterpret_cast<const char*>(bytes), length));
-        if (img.isNull()) {
-            qWarning() << "failed to load image data for URL:" <<
-                QString::fromStdString(aThumbnailUrl);
-            return;
-        }
-
-        QPixmap pix = QPixmap::fromImage(img);
-        if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
-            pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
-        }
-
-        QString url = QString::fromStdString(aThumbnailUrl);
-        m_model->m_downloadedPixmapCache.insert(url, pix);
-
-        // notify any affected items. Linear scan here avoids another map/dict structure.
-        for (auto pkg : m_model->m_packages) {
-            const size_t variantCount = pkg->variants().size();
-            bool notifyChanged = false;
-
-            for (size_t v=0; v < variantCount; ++v) {
-                const Package::Thumbnail& thumb(pkg->thumbnailForVariant(v));
-                if (thumb.url == aThumbnailUrl) {
-                    notifyChanged = true;
-                }
-            }
-
-            if (notifyChanged) {
-                QModelIndex mi = indexForPackage(pkg);
-                m_model->dataChanged(mi, mi);
-            }
-        } // of packages iteration
-    }
-
 private:
     QModelIndex indexForPackage(const PackageRef& ref) const
     {
@@ -182,6 +131,22 @@ private:
     AircraftItemModel* m_model;
 };
 
+void PackageDelegate::catalogRefreshed(CatalogRef aCatalog, StatusCode aReason)
+{
+    if (aReason == STATUS_IN_PROGRESS) {
+        // nothing to do
+    } else if ((aReason == STATUS_REFRESHED) || (aReason == STATUS_SUCCESS)) {
+        m_model->refreshPackages();
+    } else {
+        qWarning() << "failed refresh of"
+            << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief AircraftItemModel::AircraftItemModel
+/// \param pr
+///
 AircraftItemModel::AircraftItemModel(QObject* pr) :
     QAbstractListModel(pr)
 {
@@ -322,16 +287,12 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
         }
 
         return item->description;
-    } else if (role == Qt::DecorationRole) {
-        return item->thumbnail();
     } else if (role == AircraftPathRole) {
         return item->path;
     } else if (role == AircraftAuthorsRole) {
         return item->authors;
     } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
         return item->ratings[role - AircraftRatingRole];
-    } else if (role == AircraftThumbnailRole) {
-        return item->thumbnail();
     } else if (role == AircraftPackageIdRole) {
         // can we fake an ID? otherwise fall through to a null variant
     } else if (role == AircraftPackageStatusRole) {
@@ -367,10 +328,6 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
 
 QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const DelegateState& state, int role) const
 {
-    if (role == Qt::DecorationRole) {
-        role = AircraftThumbnailRole;
-    }
-
     if (role >= AircraftVariantDescriptionRole) {
         int variantIndex = role - AircraftVariantDescriptionRole;
         QString desc = QString::fromStdString(item->nameForVariant(variantIndex));
@@ -418,8 +375,6 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         // this value wants the number of aditional variants, i.e not
         // including the primary. Hence the -1 term.
         return static_cast<quint32>(item->variants().size() - 1);
-    } else if (role == AircraftThumbnailRole) {
-        return packageThumbnail(item, state);
     } else if (role == AircraftAuthorsRole) {
         std::string authors = item->getLocalisedProp("author", state.variant);
         if (!authors.empty()) {
@@ -453,42 +408,6 @@ QVariant AircraftItemModel::packageRating(const PackageRef& p, int ratingIndex) 
     return LocalAircraftCache::ratingFromProperties(p->properties()->getChild("rating"), ratingIndex);
 }
 
-QVariant AircraftItemModel::packageThumbnail(PackageRef p, const DelegateState& ds, bool download) const
-{
-    const Package::Thumbnail& thumb(p->thumbnailForVariant(ds.variant));
-    if (thumb.url.empty()) {
-        return QVariant();
-    }
-
-    QString urlQString(QString::fromStdString(thumb.url));
-    if (m_downloadedPixmapCache.contains(urlQString)) {
-        // cache hit, easy
-        return m_downloadedPixmapCache.value(urlQString);
-    }
-
-// check the on-disk store.
-    InstallRef ex = p->existingInstall();
-    if (ex.valid()) {
-        SGPath thumbPath = ex->path() / thumb.path;
-        if (thumbPath.exists()) {
-            QPixmap pix;
-            pix.load(QString::fromStdString(thumbPath.utf8Str()));
-            // resize to the standard size
-            if (pix.height() > STANDARD_THUMBNAIL_HEIGHT) {
-                pix = pix.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT);
-            }
-            m_downloadedPixmapCache[urlQString] = pix;
-            return pix;
-        }
-    } // of have existing install
-
-    if (download) {
-        m_packageRoot->requestThumbnailData(thumb.url);
-    }
-
-    return QVariant();
-}
-
 bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value, int role)
   {
       int row = index.row();
@@ -517,7 +436,6 @@ QHash<int, QByteArray> AircraftItemModel::roleNames() const
     result[AircraftAuthorsRole] = "authors";
     result[AircraftVariantCountRole] = "variantCount";
     result[AircraftLongDescriptionRole] = "description";
-    result[AircraftThumbnailRole] = "thumbnail";
     result[AircraftPackageSizeRole] = "packageSizeBytes";
     result[AircraftPackageStatusRole] = "packageStatus";
 

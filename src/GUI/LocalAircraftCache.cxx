@@ -177,23 +177,6 @@ void AircraftItem::toDataStream(QDataStream& ds) const
     ds << tags;
 }
 
-QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
-{
-    if (m_thumbnail.isNull() && loadIfRequired) {
-        QFileInfo info(path);
-        QDir dir = info.dir();
-        if (dir.exists(thumbnailPath)) {
-            m_thumbnail.load(dir.filePath(thumbnailPath));
-            // resize to the standard size
-            if (m_thumbnail.height() > STANDARD_THUMBNAIL_HEIGHT) {
-                m_thumbnail = m_thumbnail.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
-            }
-        }
-    }
-
-    return m_thumbnail;
-}
-
 int AircraftItem::indexOfVariant(QUrl uri) const
 {
     const QString path = uri.toLocalFile();
