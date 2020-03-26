@@ -629,7 +629,6 @@ int fgMainInit( int argc, char **argv )
 
 #if defined(HAVE_QT)
     if (showLauncher) {
-        flightgear::checkKeyboardModifiersForSettingFGRoot();
         if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }

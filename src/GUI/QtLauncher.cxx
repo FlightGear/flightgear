@@ -356,18 +356,21 @@ void initQSettings()
 bool checkKeyboardModifiersForSettingFGRoot()
 {
     initQSettings();
-
+#if defined(Q_OS_WIN)
+    const auto altState = GetAsyncKeyState(VK_MENU);
+    const auto shiftState = GetAsyncKeyState(VK_SHIFT);
+    if ((altState < 0) || (shiftState < 0))
+#else
     Qt::KeyboardModifiers mods = qApp->queryKeyboardModifiers();
-    if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
+    if (mods & (Qt::AltModifier | Qt::ShiftModifier))
+#endif
+    {
         qWarning() << "Alt/shift pressed during launch";
-        QSettings settings;
-        settings.setValue("fg-root", "!ask");
         return true;
     }
 
     return false;
 }
-
 
 void restartTheApp()
 {

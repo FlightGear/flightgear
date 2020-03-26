@@ -53,6 +53,7 @@
 #include "FlightPlanController.hxx"
 #include "ModelDataExtractor.hxx"
 #include "CarriersLocationModel.hxx"
+#include "SetupRootDialog.hxx"
 
 using namespace simgear::pkg;
 
@@ -767,7 +768,7 @@ void LauncherController::requestChangeDataPath()
 {
 	QString currentLocText;
 	QSettings settings;
-	QString root = settings.value("fg-root").toString();
+	QString root = settings.value(SetupRootDialog::rootPathKey()).toString();
 	if (root.isNull()) {
 		currentLocText = tr("Currently the built-in data files are being used");
 	}
@@ -791,12 +792,7 @@ void LauncherController::requestChangeDataPath()
 		return;
 	}
 
-	{
-		QSettings settings;
-		// set the option to the magic marker value
-		settings.setValue("fg-root", "!ask");
-	} // scope the ensure settings are written nicely
-
+    SetupRootDialog::askRootOnNextLaunch();
     flightgear::restartTheApp();
 }
 
