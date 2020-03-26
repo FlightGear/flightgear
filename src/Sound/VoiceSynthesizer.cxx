@@ -123,7 +123,11 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, doub
   ALsizei rate, count;
   if ( FALSE == Flite_HTS_Engine_synthesize_samples_mono16(_engine, text.c_str(), &data, &count, &rate)) return NULL;
 
-  return new SGSoundSample(&data,
+  auto buf = std::unique_ptr<unsigned char, decltype(free)*>{
+    reinterpret_cast<unsigned char*>( data ),
+    free
+  };
+  return new SGSoundSample(buf,
                            count * sizeof(short),
                            rate,
                            SG_SAMPLE_MONO16);
