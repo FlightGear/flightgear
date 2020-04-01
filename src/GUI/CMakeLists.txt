@@ -172,6 +172,8 @@ if (HAVE_QT)
                         RouteDiagram.hxx
                         ModelDataExtractor.cxx
                         ModelDataExtractor.hxx
+                        HoverArea.cxx
+                        HoverArea.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

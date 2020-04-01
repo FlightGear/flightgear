@@ -132,6 +132,9 @@
         <file>qml/GridToggleButton.qml</file>
         <file>qml/EnableDisableButton.qml</file>
         <file>qml/IconButton.qml</file>
+        <file>qml/FavouriteToggleButton.qml</file>
+        <file alias="favourite-icon-filled">assets/icons8-christmas-star-filled.png</file>
+        <file alias="favourite-icon-outline">assets/icons8-christmas-star-outline.png</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">preview-close.png</file>

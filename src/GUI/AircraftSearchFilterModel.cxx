@@ -14,6 +14,8 @@ AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source)
     setSortCaseSensitivity(Qt::CaseInsensitive);
     setFilterCaseSensitivity(Qt::CaseInsensitive);
 
+
+
     // important we sort on the primary name role and not Qt::DisplayRole
     // otherwise the aircraft jump when switching variant
     setSortRole(AircraftVariantDescriptionRole);
@@ -113,6 +115,15 @@ void AircraftProxyModel::setHaveUpdateFilterEnabled(bool e)
     invalidate();
 }
 
+void AircraftProxyModel::setShowFavourites(bool e)
+{
+    if (e == m_onlyShowFavourites)
+        return;
+
+    m_onlyShowFavourites = e;
+    invalidate();
+}
+
 bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
@@ -143,6 +154,11 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
         default:
             break;
         }
+    }
+
+    if (m_onlyShowFavourites) {
+        if (!index.data(AircraftIsFavouriteRole).toBool())
+            return false;
     }
 
     // if there is no search active, i.e we are browsing, we might apply the

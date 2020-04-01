@@ -51,6 +51,7 @@ class LauncherController : public QObject
     Q_PROPERTY(AircraftProxyModel* aircraftWithUpdatesModel MEMBER m_aircraftWithUpdatesModel CONSTANT)
     Q_PROPERTY(AircraftProxyModel* browseAircraftModel MEMBER m_browseAircraftModel CONSTANT)
     Q_PROPERTY(AircraftProxyModel* searchAircraftModel MEMBER m_aircraftSearchModel CONSTANT)
+    Q_PROPERTY(AircraftProxyModel* favouriteAircraftModel MEMBER m_favouriteAircraftModel CONSTANT)
 
     Q_PROPERTY(AircraftItemModel* baseAircraftModel MEMBER m_aircraftModel CONSTANT)
 
@@ -269,6 +270,8 @@ private:
     AircraftProxyModel* m_aircraftSearchModel;
     AircraftProxyModel* m_browseAircraftModel;
     AircraftProxyModel* m_aircraftWithUpdatesModel;
+    AircraftProxyModel* m_favouriteAircraftModel;
+
     MPServersModel* m_serversModel = nullptr;
     LocationController* m_location = nullptr;
     FlightPlanController* m_flightPlan = nullptr;

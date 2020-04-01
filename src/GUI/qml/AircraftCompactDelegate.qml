@@ -1,5 +1,7 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
+
 import "."
 
 Item {
@@ -77,18 +79,38 @@ Item {
 
         spacing: Style.margin
 
-        AircraftVariantChoice {
-            id: titleBox
-
+        Item {
+            height: titleBox.height
             width: parent.width
 
-            aircraft: model.uri;
-            currentIndex: model.activeVariant
-            onSelected: {
-                model.activeVariant = index
-                root.select(model.uri)
+            FavouriteToggleButton {
+                id: favourite
+                checked: model.favourite
+                anchors.verticalCenter: parent.verticalCenter
+                onToggle: {
+                    model.favourite = on;
+                }
+            }
+
+            AircraftVariantChoice {
+                id: titleBox
+
+                anchors {
+                    left: favourite.right
+                    leftMargin: Style.margin
+                    right: parent.right
+                }
+
+                aircraft: model.uri;
+                currentIndex: model.activeVariant
+                onSelected: {
+                    model.activeVariant = index
+                    root.select(model.uri)
+                }
             }
         }
+
+
 
         StyledText {
             id: description

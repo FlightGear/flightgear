@@ -1,5 +1,6 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 import "."
 
 Item {
@@ -87,10 +88,21 @@ Item {
         }
     }
 
-    MouseArea {
+    FavouriteToggleButton {
+        id: favourite
+        anchors {
+            left: parent.left
+            top: parent.top
+            margins: Style.margin
+        }
+
+        visible: hover.containsMouse || model.favourite
+        checked: model.favourite
+        onToggle: { model.favourite = on; }
+    }
+
+    HoverArea {
         id: hover
         anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
     }
 } // of root item

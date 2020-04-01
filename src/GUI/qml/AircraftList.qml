@@ -51,6 +51,16 @@ FocusScope
             }
 
             TabButton {
+                id: favouritesButton
+                text: qsTr("Favourites")
+                onClicked: {
+                    root.state = "favourites"
+                    root.updateSelectionFromLauncher();
+                }
+                active: root.state == "favourites"
+            }
+
+            TabButton {
                 id: browseButton
                 text: qsTr("Browse")
                 onClicked: {
@@ -231,7 +241,22 @@ FocusScope
             PropertyChanges {
                 target: gridModeToggle; visible: false
             }
+        },
+
+        State {
+            name: "favourites"
+
+            PropertyChanges {
+                target: root
+                __model: _launcher.favouriteAircraftModel
+                __header: emptyHeader
+            }
+
+            PropertyChanges {
+                target: gridModeToggle; visible: true
+            }
         }
+
     ]
 
     function showDetails(uri)

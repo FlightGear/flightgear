@@ -60,6 +60,8 @@ public slots:
     void setInstalledFilterEnabled(bool e);
 
     void setHaveUpdateFilterEnabled(bool e);
+
+    void setShowFavourites(bool e);
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
@@ -69,6 +71,7 @@ private:
     bool m_ratingsFilter = true;
     bool m_onlyShowInstalled = false;
     bool m_onlyShowWithUpdate = false;
+    bool m_onlyShowFavourites = false;
 
     QList<int> m_ratings;
     QString m_filterString;

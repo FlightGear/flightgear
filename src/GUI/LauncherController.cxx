@@ -54,6 +54,7 @@
 #include "ModelDataExtractor.hxx"
 #include "CarriersLocationModel.hxx"
 #include "SetupRootDialog.hxx"
+#include "HoverArea.hxx"
 
 using namespace simgear::pkg;
 
@@ -91,6 +92,9 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     m_browseAircraftModel->setRatingFilterEnabled(true);
 
     m_aircraftSearchModel = new AircraftProxyModel(this, m_aircraftModel);
+
+    m_favouriteAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
+    m_favouriteAircraftModel->setShowFavourites(true);
 
     m_aircraftHistory = new RecentAircraftModel(m_aircraftModel, this);
 
@@ -167,6 +171,7 @@ void LauncherController::initQML()
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
+    qmlRegisterType<HoverArea>("FlightGear", 1, 0, "HoverArea");
 
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
 
