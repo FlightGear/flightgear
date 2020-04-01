@@ -43,6 +43,10 @@ private:
     SGPropertyNode_ptr _offset;
     SGPropertyNode_ptr _uyear, _umonth, _uday, _uhour, _umin, _usec, _uwday, _udsec;
     SGPropertyNode_ptr _ryear, _rmonth, _rday, _rhour, _rmin, _rsec, _rwday, _rdsec;
+    
+    SGPropertyNode_ptr _headingMagnetic, _trackMagnetic;
+    SGPropertyNode_ptr _magVar;
+    SGPropertyNode_ptr _trueHeading, _trueTrack;
 };
 
 
