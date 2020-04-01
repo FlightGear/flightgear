@@ -312,6 +312,7 @@ private:
     std::string _hidPath;
     hid_device* _device = nullptr;
     bool _haveNumberedReports = false;
+    bool _debugRaw = false;
     
     /// set if we parsed the device description our XML
     /// instead of from the USB data. Useful on Windows where the data
@@ -394,6 +395,10 @@ void FGHIDDevice::Configure(SGPropertyNode_ptr node)
             SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " will configure using XML-defined raw HID descriptor");
         }
     }
+    
+    if (node->getBoolValue("hid-debug-raw")) {
+        _debugRaw = true;
+    }
 }
 
 bool FGHIDDevice::Open()
@@ -453,7 +458,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
     }
 #endif
     
-    if (debugEvents) {
+    if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, "\nHID: descriptor for:" << GetUniqueName());
         {
             std::ostringstream byteString;
@@ -664,6 +669,18 @@ void FGHIDDevice::sendReport(Report* report) const
     }
 
     reportLength /= 8;
+    
+    if (_debugRaw) {
+        std::ostringstream byteString;
+        for (size_t i=0; i<reportLength; ++i) {
+            byteString << hexTable[reportBytes[i] >> 4];
+            byteString << hexTable[reportBytes[i] & 0x0f];
+            byteString << " ";
+        }
+        SG_LOG(SG_INPUT, SG_INFO, "sending bytes: " << byteString.str());
+    }
+    
+
 // send the data, based on the report type
     if (report->type == HID::ReportType::Feature) {
         hid_send_feature_report(_device, reportBytes, reportLength + 1);
@@ -682,7 +699,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      size_t length,
                                      double dt, int keyModifiers)
 {
-    if (debugEvents) {
+    if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDeivce received input report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
@@ -717,7 +734,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
         if (!item->event)
             continue;
 
-        if (debugEvents) {
+        if (_debugRaw) {
             SG_LOG(SG_INPUT, SG_INFO, "\titem:" << item->name << " = " << value);
         }
 
@@ -732,7 +749,7 @@ void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& da
         return;
     }
     
-    if (debugEvents) {
+    if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, GetName() << ": FGHIDDevice: Sending feature report:" << (int) reportId << ", len=" << data.size());
         {
             std::ostringstream byteString;
