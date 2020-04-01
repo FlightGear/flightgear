@@ -89,7 +89,8 @@ void
 FGPanel::init () {
   // Textured Layer Shaders
   const char V_Textured_Layer_Shader_Str[] =
-#ifdef _GLES2
+#ifdef _RPI
+    "#version 100                               \n"
     "attribute vec4 a_position;                 \n"
     "attribute vec2 a_tex_coord;                \n"
     "varying vec2 v_tex_coord;                  \n"
@@ -106,7 +107,8 @@ FGPanel::init () {
     "}                                          \n";
 
   const char F_Textured_Layer_Shader_Str[] =
-#ifdef _GLES2
+#ifdef _RPI
+    "#version 100                                            \n"
     "precision mediump float;                                \n"
     "varying vec2 v_tex_coord;                               \n"
 #else

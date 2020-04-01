@@ -36,7 +36,6 @@
 #include <GLUT/glut.h>
 #elif defined (_GLES2)
 #include <GLES2/gl2.h>
-#include "GLES_utils.hxx"
 #else
 #include <GL/glew.h> // Must be included before <GL/gl.h>
 #include <GL/gl.h>
