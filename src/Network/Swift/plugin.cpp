@@ -44,7 +44,10 @@ CPlugin::CPlugin()
 
 CPlugin::~CPlugin()
 {
-    m_dbusConnection->close();
+    if(m_dbusConnection)
+    {
+        m_dbusConnection->close();
+    }
     m_shouldStop = true;
     if (m_dbusThread.joinable()) { m_dbusThread.join(); }
 }
@@ -79,7 +82,7 @@ void CPlugin::startServer()
 
 float CPlugin::startServerDeferred(float, float, int, void* refcon)
 {
-    auto* plugin = static_cast<CPlugin*>(refcon);
+    auto plugin = static_cast<CPlugin*>(refcon);
     if (!plugin->m_isRunning) {
         plugin->startServer();
         plugin->m_isRunning = true;

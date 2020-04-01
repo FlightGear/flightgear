@@ -189,6 +189,11 @@ void FGUFO::update( double dt ) {
     set_V_north(cos(heading) * velocity * SG_METER_TO_FEET);
     set_V_east(sin(heading) * velocity * SG_METER_TO_FEET);
     set_V_down(-real_climb_rate);
+    
+    //we assume the ufo only fly along the roll axis, providing a velocity to allow lag compensation
+    _set_Velocities_Body(  velocity * SG_METER_TO_FEET,
+                          0 ,
+                          0 );
 }
 
 

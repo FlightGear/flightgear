@@ -719,7 +719,7 @@ clearLocation ()
 static int
 fgOptAddon(const char *arg)
 {
-  const SGPath addonPath = SGPath::fromLocal8Bit(arg);
+  const SGPath addonPath = SGPath::fromUtf8(arg);
   const auto& addonManager = addons::AddonManager::instance();
 
   try {
@@ -904,7 +904,7 @@ fgOptRoc( const char *arg )
 static int
 fgOptFgScenery( const char *arg )
 {
-    globals->append_fg_scenery(SGPath::pathsFromLocal8Bit(arg));
+    globals->append_fg_scenery(SGPath::pathsFromUtf8(arg));
     return FG_OPTIONS_OK;
 }
 
@@ -921,7 +921,7 @@ fgOptEnhancedLighting( const char *arg )
 static int
 fgOptAllowNasalRead( const char *arg )
 {
-    PathList paths = SGPath::pathsFromLocal8Bit(arg);
+    PathList paths = SGPath::pathsFromUtf8(arg);
     if(paths.size() == 0) {
         SG_LOG(SG_GENERAL, SG_WARN, "--allow-nasal-read requires a list of directories to allow");
     }
@@ -1121,7 +1121,7 @@ fgOptLogDir(const char* arg)
     if (!strcmp(arg, "desktop")) {
         dirPath = SGPath::desktop();
     } else {
-        dirPath = SGPath::fromLocal8Bit(arg);
+        dirPath = SGPath::fromUtf8(arg);
     }
 
     if (!dirPath.isDir()) {
@@ -1423,7 +1423,7 @@ fgOptScenario( const char *arg )
         }
         
         // create description node
-        auto n = FGAIManager::registerScenarioFile(path);
+        auto n = FGAIManager::registerScenarioFile(globals->get_props(), path);
         if (!n) {
             SG_LOG(SG_GENERAL, SG_WARN, "failed to read scenario file at:" << path);
             return FG_OPTIONS_ERROR;
@@ -1556,7 +1556,7 @@ fgOptLoadTape(const char* arg)
   class DelayedTapeLoader : SGPropertyChangeListener {
   public:
     DelayedTapeLoader( const char * tape ) :
-      _tape(SGPath::fromLocal8Bit(tape))
+      _tape(SGPath::fromUtf8(tape))
     {
       SGPropertyNode_ptr n = fgGetNode("/sim/signals/fdm-initialized", true);
       n->addChangeListener( this );
@@ -1846,6 +1846,7 @@ struct OptionDesc {
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
+    {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {0}
 };
 
@@ -2103,7 +2104,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       processArgResult(result);
     } else {
     // XML properties file
-        SGPath f = SGPath::fromLocal8Bit(argv[i]);
+        SGPath f = SGPath::fromUtf8(argv[i]);
       if (!f.exists()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f);
       } else {
@@ -2190,7 +2191,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
 void Options::initPaths()
 {
     for (const string& pathOpt : valuesForOption("fg-aircraft")) {
-        PathList paths = SGPath::pathsFromLocal8Bit(pathOpt);
+        PathList paths = SGPath::pathsFromUtf8(pathOpt);
         globals->append_aircraft_paths(paths);
     }
 
@@ -2240,7 +2241,7 @@ void Options::initAircraft()
   }
 
   if (isOptionSet("aircraft-dir")) {
-    SGPath aircraftDirPath = SGPath::fromLocal8Bit(valueForOption("aircraft-dir").c_str());
+    SGPath aircraftDirPath = SGPath::fromUtf8(valueForOption("aircraft-dir"));
     globals->append_read_allowed_paths(aircraftDirPath);
 
     // Set this now, so it's available in FindAndCacheAircraft. Use realpath()
@@ -2564,8 +2565,7 @@ OptionResult Options::processOptions()
   }
 
     // Download dir fix-up
-    SGPath downloadDir = SGPath::fromLocal8Bit(
-      valueForOption("download-dir").c_str());
+    SGPath downloadDir = SGPath::fromUtf8(valueForOption("download-dir"));
     if (downloadDir.isNull()) {
         downloadDir = defaultDownloadDir();
         SG_LOG(SG_GENERAL, SG_INFO,
@@ -2588,8 +2588,7 @@ OptionResult Options::processOptions()
     globals->set_download_dir(downloadDir);
 
     // Texture Cache directory handling
-    SGPath textureCacheDir = SGPath::fromLocal8Bit(
-        valueForOption("texture-cache-dir").c_str());
+    SGPath textureCacheDir = SGPath::fromUtf8(valueForOption("texture-cache-dir"));
     if (textureCacheDir.isNull()) {
         textureCacheDir = defaultTextureCacheDir();
         SG_LOG(SG_GENERAL, SG_INFO,
@@ -2611,8 +2610,7 @@ OptionResult Options::processOptions()
 
 
     // TerraSync directory fixup
-    SGPath terrasyncDir = SGPath::fromLocal8Bit(
-      valueForOption("terrasync-dir").c_str());
+    SGPath terrasyncDir = SGPath::fromUtf8(valueForOption("terrasync-dir"));
     if (terrasyncDir.isNull()) {
       terrasyncDir = downloadDir / "TerraSync";
       // No “default” qualifier here, because 'downloadDir' may be non-default
@@ -2945,17 +2943,16 @@ void Options::setupRoot(int argc, char **argv)
     }
 
   if (isOptionSet("fg-root")) {
-      root = SGPath::fromLocal8Bit(valueForOption("fg-root").c_str()); // easy!
+      root = SGPath::fromUtf8(valueForOption("fg-root")); // easy!
       SG_LOG(SG_GENERAL, SG_INFO, "set from command-line argument: fg_root = " << root );
   } else {
   // Next check if fg-root is set as an env variable
     char *envp = ::getenv( "FG_ROOT" );
     if ( envp != nullptr ) {
-        root = SGPath::fromLocal8Bit(envp);
+        root = SGPath::fromEnv("FG_ROOT");
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
 #if defined(HAVE_QT)
-        flightgear::initApp(argc, argv);
         root = SetupRootDialog::restoreUserSelectedRoot();
 #endif
         if (root.isNull()) {
@@ -2981,7 +2978,6 @@ void Options::setupRoot(int argc, char **argv)
     // a command-line, env-var or default root this check can fail and
     // we still want to use the GUI in that case
     if (versionComp != 0) {
-        flightgear::initApp(argc, argv);
         SetupRootDialog::runDialog(usingDefaultRoot);
     }
 #else

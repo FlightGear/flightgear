@@ -690,7 +690,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     std::string compositor_path =
         cameraNode->getStringValue("compositor", default_compositor.c_str());
     osg::ref_ptr<SGReaderWriterOptions> options =
-        SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+        SGReaderWriterOptions::fromPath(globals->get_fg_root());
     options->setPropertyNode(globals->get_props());
     Compositor *compositor = Compositor::create(_viewer,
                                                 window->gc,

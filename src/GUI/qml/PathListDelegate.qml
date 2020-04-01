@@ -36,9 +36,25 @@ Item {
         height: Math.max(label.implicitHeight, pathDeleteButton.height)
         width: delegateRoot.width
 
+        Checkbox {
+            id: enableCheckbox
+            checked: model.enabled
+            anchors.left: parent.left
+            height: parent.height
+            onCheckedChanged: {
+                if (model.enabled !== checked) {
+                    model.enabled = checked;
+                }
+            }
+         }
+
         MouseArea {
             id: pathDelegateHover
-            anchors.fill: parent
+            anchors.left: enableCheckbox.right
+            anchors.leftMargin: Style.margin
+            anchors.right: parent.right
+            height: parent.height
+
             hoverEnabled: true
             acceptedButtons: Qt.NoButton
 
@@ -46,10 +62,10 @@ Item {
             // MouseArea, so nested containsMouse logic works
             ClickableText {
                 id: label
-                text: modelData
+                text: model.path
                 onClicked: {
                     // open the location
-                    _addOns.openDirectory(modelData)
+                    _addOns.openDirectory(model.path)
                 }
                 anchors.left: parent.left
                 anchors.right: reorderButton.left
@@ -58,6 +74,8 @@ Item {
 
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
+
+                font.strikeout: enableCheckbox.checked === false
             }
 
             DeleteButton {
@@ -88,7 +106,7 @@ Item {
                     delegateRoot.performMove(model.index + 1)
                 }
             }
-        }
+        } // of MouseArea for hover
 
         YesNoPanel {
             id: confirmDeletePath

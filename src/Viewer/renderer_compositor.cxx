@@ -414,6 +414,7 @@ FGRenderer::init( void )
     _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
     _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
+    _triangle_directional_lights = fgGetNode("/sim/rendering/triangle-directional-lights", true);
     _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
     _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
 
@@ -424,8 +425,9 @@ FGRenderer::init( void )
 
     bool use_point_sprites = _point_sprites->getBoolValue();
     bool distance_attenuation = _distance_attenuation->getBoolValue();
+    bool triangles = _triangle_directional_lights->getBoolValue();
 
-    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation );
+    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation, triangles );
 
     if (const char* tc = fgGetString("/sim/rendering/texture-compression", NULL)) {
       if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||
@@ -449,15 +451,13 @@ FGRenderer::init( void )
 // on other subsystems to be inited, eg Ephemeris
     _sky = new SGSky;
 
-    SGPath texture_path(globals->get_fg_root());
-    texture_path.append("Textures");
-    texture_path.append("Sky");
+    const SGPath texture_path = globals->get_fg_root() / "Textures" / "Sky";
     for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        SGCloudLayer * layer = new SGCloudLayer(texture_path.local8BitStr());
+        SGCloudLayer * layer = new SGCloudLayer(texture_path);
         _sky->add_cloud_layer(layer);
     }
 
-    _sky->texture_path( texture_path.local8BitStr() );
+    _sky->set_texture_path( texture_path );
 
     // XXX: Should always be true
     eventHandler->setChangeStatsCameraRenderOrder( true );
@@ -527,7 +527,7 @@ FGRenderer::setupView( void )
     // Moon diameter:    3,476 kilometers
     // Sun diameter: 1,390,000 kilometers
     osg::ref_ptr<simgear::SGReaderWriterOptions> opt;
-    opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+    opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
                   463.3, 361.8,
@@ -657,7 +657,7 @@ FGRenderer::update( ) {
 
         GLint max_texture_size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-        // abritrary range change as sometimes during init the device reports somewhat dubious values, so 
+        // abritrary range change as sometimes during init the device reports somewhat dubious values, so
         // we know that the size must be greater than size and that probably 9999999 is unreasonably large
         if (max_texture_size > 0 && max_texture_size < 9999999)
             SGSceneFeatures::instance()->setMaxTextureSize(max_texture_size);

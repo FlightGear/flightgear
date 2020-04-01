@@ -17,9 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <algorithm>
 #include <string>
@@ -35,11 +33,13 @@
 
 #include "AICarrier.hxx"
 
-FGAICarrier::FGAICarrier() : FGAIShip(otCarrier), deck_altitude(65.0065) {
+FGAICarrier::FGAICarrier() :
+    FGAIShip(otCarrier),
+    deck_altitude(65.0065)
+{
 }
 
-FGAICarrier::~FGAICarrier() {
-}
+FGAICarrier::~FGAICarrier() = default;
 
 void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   if (!scFileNode)
@@ -67,11 +67,14 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
     // Transform to the right coordinate frame, configuration is done in
     // the usual x-back, y-right, z-up coordinates, computations
     // in the simulation usual body x-forward, y-right, z-down coordinates
-    flols_off(0) = - flols->getDoubleValue("x-offset-m", 0);
-    flols_off(1) = flols->getDoubleValue("y-offset-m", 0);
-    flols_off(2) = - flols->getDoubleValue("z-offset-m", 0);
+    _flolsPosOffset(0) = - flols->getDoubleValue("x-offset-m", 0);
+    _flolsPosOffset(1) = flols->getDoubleValue("y-offset-m", 0);
+    _flolsPosOffset(2) = - flols->getDoubleValue("z-offset-m", 0);
+
+    _flolsHeadingOffsetDeg = flols->getDoubleValue("heading-offset-deg", 0.0);
+    _flolsApproachAngle = flols->getDoubleValue("glidepath-angle-deg", 3.0);
   } else
-    flols_off = SGVec3d::zeros();
+    _flolsPosOffset = SGVec3d::zeros();
 
   std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("parking-pos");
   std::vector<SGPropertyNode_ptr>::const_iterator it;
@@ -180,13 +183,13 @@ void FGAICarrier::update(double dt) {
     // rotate the eyepoint wrt carrier vector into the carriers frame
     eyeWrtCarrier = ec2body.transform(eyeWrtCarrier);
     // the eyepoints vector wrt the flols position
-    SGVec3d eyeWrtFlols = eyeWrtCarrier - flols_off;
+    SGVec3d eyeWrtFlols = eyeWrtCarrier - _flolsPosOffset;
 
     // the distance from the eyepoint to the flols
     dist = norm(eyeWrtFlols);
 
     // now the angle, positive angles are upwards
-    if (fabs(dist) < SGLimits<float>::min()) {
+    if (fabs(dist) < SGLimits<double>::min()) {
       angle = 0;
     } else {
       double sAngle = -eyeWrtFlols(2)/dist;
@@ -327,11 +330,9 @@ bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
 {
 
     // FIXME: does not yet cover rotation speeds.
-    list<ParkPosition>::iterator it = ppositions.begin();
-    while (it != ppositions.end()) {
+    for (const auto& ppos : ppositions) {
         // Take either the specified one or the first one ...
-        if ((*it).name == id || id.empty()) {
-            ParkPosition ppos = *it;
+        if (ppos.name == id || id.empty()) {
             SGVec3d cartPos = getCartPosAt(ppos.offset);
             geodPos = SGGeod::fromCart(cartPos);
             hdng = hdg + ppos.heading_deg;
@@ -341,10 +342,26 @@ bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
             uvw = SGVec3d(chdng*speed_fps, shdng*speed_fps, 0);
             return true;
         }
-        ++it;
     }
 
     return false;
+}
+
+bool FGAICarrier::getFLOLSPositionHeading(SGGeod& geodPos, double& heading) const
+{
+    SGVec3d cartPos = getCartPosAt(_flolsPosOffset);
+    geodPos = SGGeod::fromCart(cartPos);
+
+    // at present we don't support a heading offset for the FLOLS, so
+    // heading is just the carrier heading
+    heading = hdg + _flolsHeadingOffsetDeg;
+
+    return true;
+}
+
+double FGAICarrier::getFLOLFSGlidepathAngleDeg() const
+{
+    return _flolsApproachAngle;
 }
 
 // find relative wind
@@ -371,8 +388,7 @@ void FGAICarrier::UpdateWind( double dt) {
     + (rel_wind_speed_from_north_kts * rel_wind_speed_from_north_kts));
 
     //calculate the relative wind direction
-    rel_wind_from_deg = atan2(rel_wind_speed_from_east_kts, rel_wind_speed_from_north_kts)
-                            * SG_RADIANS_TO_DEGREES;
+    rel_wind_from_deg = SGMiscd::rad2deg(atan2(rel_wind_speed_from_east_kts, rel_wind_speed_from_north_kts));
 
     //calculate rel wind
     rel_wind = rel_wind_from_deg - hdg;
@@ -640,7 +656,7 @@ SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::stri
         return {};
     }
     
-    for (const auto aiObject : aiManager->get_ai_list()) {
+    for (const auto& aiObject : aiManager->get_ai_list()) {
         if (aiObject->isa(FGAIBase::otCarrier)) {
             SGSharedPtr<FGAICarrier> c = static_cast<FGAICarrier*>(aiObject.get());
             if ((c->sign == namePennant) || (c->_getName() == namePennant)) {
@@ -652,7 +668,7 @@ SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::stri
     return {};
 }
 
-void FGAICarrier::extractNamesPennantsFromScenario(SGPropertyNode_ptr xmlNode, SGPropertyNode_ptr scenario)
+void FGAICarrier::extractCarriersFromScenario(SGPropertyNode_ptr xmlNode, SGPropertyNode_ptr scenario)
 {
     for (auto c : xmlNode->getChildren("entry")) {
         if (c->getStringValue("type") != std::string("carrier"))
@@ -673,6 +689,14 @@ void FGAICarrier::extractNamesPennantsFromScenario(SGPropertyNode_ptr xmlNode, S
         // the find code above just looks for anything called a name (so alias
         // are possible, for example)
         if (!name.empty()) carrierNode->addChild("name")->setStringValue(name);
-        if (!pennant.empty()) carrierNode->addChild("name")->setStringValue(pennant);
+        if (!pennant.empty()) {
+            carrierNode->addChild("name")->setStringValue(pennant);
+            carrierNode->addChild("pennant-number")->setStringValue(pennant);
+        }
+
+        // extact parkings
+        for (auto p : c->getChildren("parking-pos")) {
+            carrierNode->addChild("parking-pos")->setStringValue(p->getStringValue("name"));
+        }
     }
 }

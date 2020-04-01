@@ -19,9 +19,10 @@ if (${do_translate} AND NOT TARGET Qt5::lrelease)
         "\n(on Linux You may need to install an additional package containing the Qt5 translation tools)")
 endif()
 
+# FIXME - determine this based on subdirs of TRANSLATIONS_SRC_DIR
+set(LANGUAGES en_US de es nl fr it pl pt ru zh_CN)
+
 if (${do_translate})
-    # FIXME - determine this based on subdirs of TRANSLATIONS_SRC_DIR
-    set(LANGUAGES en_US de es nl fr it pl pt ru zh_CN)
     set(translation_res "${PROJECT_BINARY_DIR}/translations.qrc")
 
     add_custom_target(fgfs_qm_files ALL)
@@ -55,3 +56,14 @@ if (${do_translate})
     # set this so config.h can detect it
     set(HAVE_QRC_TRANSLATIONS TRUE)
 endif() # of do translate
+
+add_custom_target(ts)
+foreach(lang ${LANGUAGES})
+    add_custom_target(
+        ts_${lang}
+        COMMAND Qt5::lupdate ${CMAKE_SOURCE_DIR}/src/GUI
+            -locations relative  -no-ui-lines -ts ${TRANSLATIONS_SRC_DIR}/${lang}/FlightGear-Qt.xlf
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+    add_dependencies(ts ts_${lang})
+endforeach()

@@ -54,7 +54,7 @@ void Ephemeris::init()
 {
   SGPath ephem_data_path(globals->get_fg_root());
   ephem_data_path.append("Astro");
-  _impl.reset(new SGEphemeris(ephem_data_path.local8BitStr()));
+  _impl.reset(new SGEphemeris(ephem_data_path));
 
   tieStar("/ephemeris/sun/xs", _impl->get_sun(), &Star::getxs);
   tieStar("/ephemeris/sun/ys", _impl->get_sun(), &Star::getys);

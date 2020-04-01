@@ -1205,9 +1205,12 @@ const CameraInfo* CameraGroup::getGUICamera() const
   
 Camera* getGUICamera(CameraGroup* cgroup)
 {
+    if (!cgroup)
+        return nullptr;
+    
     const CameraInfo* info = cgroup->getGUICamera();
     if (!info) {
-        return NULL;
+        return nullptr;
     }
     
     return info->getCamera(MAIN_CAMERA);

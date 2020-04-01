@@ -41,6 +41,10 @@ public:
     static bool runDialog(bool usingDefaultRoot);
 
     static SGPath restoreUserSelectedRoot();
+    
+    static void askRootOnNextLaunch();
+    
+    static QString rootPathKey();
 private slots:
 
     void onBrowse();

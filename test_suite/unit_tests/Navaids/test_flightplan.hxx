@@ -40,6 +40,7 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testBug1814);
     CPPUNIT_TEST(testRoutPathWpt0Midflight);
     CPPUNIT_TEST(testRoutePathVec);
+    CPPUNIT_TEST(testLoadSaveMachRestriction);
     
   //  CPPUNIT_TEST(testParseICAORoute);
    // CPPUNIT_TEST(testParseICANLowLevelRoute);
@@ -64,6 +65,7 @@ public:
     void testBug1814();
     void testRoutPathWpt0Midflight();
     void testRoutePathVec();
+    void testLoadSaveMachRestriction();
 };
 
 #endif  // FG_FLIGHTPLAN_UNIT_TESTS_HXX

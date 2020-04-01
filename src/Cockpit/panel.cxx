@@ -47,7 +47,7 @@
 
 #include <simgear/compiler.h>
 
-#include <plib/fnt.h>
+#include "fnt.h"
 
 #include <boost/foreach.hpp>
 #include <simgear/debug/logstream.hxx>

@@ -27,29 +27,32 @@ public:
     void startInstall(pkg::InstallRef) override {}
     void installProgress(pkg::InstallRef, unsigned int, unsigned int) override {}
     void finishInstall(pkg::InstallRef, StatusCode ) override {}
-
     void dataForThumbnail(const std::string& aThumbnailUrl,
-            size_t length, const uint8_t* bytes) override
-    {
-        if (aThumbnailUrl != owner->url().toString().toStdString()) {
-            return;
-        }
-
-        QImage img = QImage::fromData(QByteArray::fromRawData(reinterpret_cast<const char*>(bytes), length));
-        if (img.isNull()) {
-            if (length > 0) {
-                // warn if we had valid bytes but couldn't load it, i.e corrupted data or similar
-                qWarning() << "failed to load image data for URL:" << QString::fromStdString(aThumbnailUrl);
-                owner->clearImage();
-            }
-            return;
-        }
-
-        owner->setImage(img);
-    }
+                          size_t length, const uint8_t* bytes) override;
 
     ThumbnailImageItem* owner;
 };
+
+void ThumbnailImageItem::ThumbnailPackageDelegate::dataForThumbnail(const std::string& aThumbnailUrl,
+        size_t length, const uint8_t* bytes)
+{
+    if (aThumbnailUrl != owner->url().toString().toStdString()) {
+        return;
+    }
+
+    const auto iLength = static_cast<int>(length);
+    QImage img = QImage::fromData(QByteArray::fromRawData(reinterpret_cast<const char*>(bytes), iLength));
+    if (img.isNull()) {
+        if (length > 0) {
+            // warn if we had valid bytes but couldn't load it, i.e corrupted data or similar
+            qWarning() << "failed to load image data for URL:" << QString::fromStdString(aThumbnailUrl);
+            owner->clearImage();
+        }
+        return;
+    }
+
+    owner->setImage(img);
+}
 
 ThumbnailImageItem::ThumbnailImageItem(QQuickItem* parent) :
     QQuickItem(parent),
@@ -81,7 +84,7 @@ QSGNode *ThumbnailImageItem::updatePaintNode(QSGNode* oldNode, QQuickItem::Updat
             textureNode->setOwnsTexture(true);
         }
 
-        QSGTexture* tex = window()->createTextureFromImage(m_image);
+        QSGTexture* tex = window()->createTextureFromImage(m_image, QQuickWindow::TextureIsOpaque);
         textureNode->setTexture(tex);
         textureNode->markDirty(QSGBasicGeometryNode::DirtyMaterial);
         m_imageDirty = false;
@@ -123,7 +126,7 @@ void ThumbnailImageItem::setAircraftUri(QString uri)
         pkg::Root* root = globals->packageRoot();
         pkg::PackageRef package = root->getPackageById(packageId);
         if (package) {
-            int variant = package->indexOfVariant(packageId);
+            auto variant = package->indexOfVariant(packageId);
             const auto thumbnail = package->thumbnailForVariant(variant);
             m_imageUrl = QUrl(QString::fromStdString(thumbnail.url));
             if (m_imageUrl.isValid()) {

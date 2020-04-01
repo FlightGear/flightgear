@@ -76,6 +76,8 @@ void FGSoundManager::init()
     _velocityEastFPS  = fgGetNode("velocities/speed-east-fps", true);
     _velocityDownFPS  = fgGetNode("velocities/speed-down-fps", true);
 
+    _frozen = fgGetNode("sim/freeze/master");
+
     SGPropertyNode_ptr scenery_loaded = fgGetNode("sim/sceneryloaded", true);
     scenery_loaded->addChangeListener(_listener.get());
 
@@ -159,9 +161,9 @@ bool FGSoundManager::stationaryView() const
 // Actual sound update is triggered by the subsystem manager.
 void FGSoundManager::update(double dt)
 {
-    if (is_active() && _is_initialized && _sound_working->getBoolValue())
+    if (is_working() && _is_initialized && _sound_working->getBoolValue())
     {
-        bool enabled = _sound_enabled->getBoolValue();
+        bool enabled = _sound_enabled->getBoolValue() && !_frozen->getBoolValue();
         if (enabled != _enabled)
         {
             if (enabled)

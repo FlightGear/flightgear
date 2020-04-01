@@ -24,35 +24,49 @@ QVariant ModelDataExtractor::data() const
         return m_model->data(m, role);
     }
 
-    if (m_value.isArray()) {
+    if (!m_stringsModel.empty()) {
+        if ((m_index < 0) || (m_index >= m_stringsModel.size()))
+            return {};
+
+        return m_stringsModel.at(m_index);
+    }
+
+    if (m_rawModel.isArray()) {
         quint32 uIndex = static_cast<quint32>(m_index);
-        auto v = m_value.property(uIndex);
+        auto v = m_rawModel.property(uIndex);
         if (v.isQObject()) {
             // handle the QList<QObject*> case
             auto obj = v.toQObject();
             return obj->property(m_role.toUtf8().constData());
         }
 
-        return m_value.property(uIndex).toVariant();
+        return m_rawModel.property(uIndex).toVariant();
     }
 
+    qWarning() << "Unable to convert model data:" << m_rawModel.toString();
     return {};
 }
 
-void ModelDataExtractor::setModel(QJSValue model)
+void ModelDataExtractor::clear()
 {
-    if (m_value.equals(model))
-        return;
-
     if (m_model) {
         // disconnect from everything
         disconnect(m_model, nullptr, this, nullptr);
         m_model = nullptr;
     }
 
-    m_value = model;
-    if (m_value.isQObject()) {
-        m_model = qobject_cast<QAbstractItemModel*>(m_value.toQObject());
+}
+
+void ModelDataExtractor::setModel(QJSValue raw)
+{
+    if (m_rawModel.strictlyEquals(raw))
+        return;
+
+    clear();
+    m_rawModel = raw;
+
+    if (raw.isQObject()) {
+        m_model = qobject_cast<QAbstractItemModel*>(raw.toQObject());
         if (m_model) {
             connect(m_model, &QAbstractItemModel::modelReset,
                     this, &ModelDataExtractor::dataChanged);
@@ -61,10 +75,24 @@ void ModelDataExtractor::setModel(QJSValue model)
 
             // ToDo: handle rows added / removed
         } else {
-            qWarning() << "object but not a QAIM" << m_value.toQObject();
+            qWarning() << "object but not a QAIM" << raw.toQObject();
         }
-    } else {
-        // might be null, or an array
+    } else if (raw.isArray()) {
+
+    } else if (raw.isVariant() || raw.isObject()) {
+        // special case the QStringList case
+
+        // for reasons I don't understand yet, QStringList returned as a
+        // property value to JS, does not show up as a variant-in-JS-Value above
+        // (so ::isVariant returns false), but conversion to a variant
+        // works. Hence the 'raw.isObject' above
+
+        const auto var = raw.toVariant();
+        if (var.type() == QVariant::StringList) {
+            m_stringsModel = var.toStringList();
+        } else {
+            qWarning() << Q_FUNC_INFO << "variant but not a QStringList" << var;
+        }
     }
 
     emit modelChanged();

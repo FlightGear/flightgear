@@ -2002,7 +2002,7 @@ MapWidget::DrawAIObject::DrawAIObject(SGPropertyNode* m, const SGGeod& g) :
     heading = model->getDoubleValue("orientation/true-heading-deg");
     
     if ((name == "aircraft") || (name == "multiplayer") ||
-        (name == "wingman") || (name == "tanker"))
+        (name == "wingman") || (name == "tanker") || (name == "swift"))
     {
         speedKts = static_cast<int>(model->getDoubleValue("velocities/true-airspeed-kt"));
         label = model->getStringValue("callsign", "<>");

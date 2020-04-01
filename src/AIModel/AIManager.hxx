@@ -73,8 +73,8 @@ public:
      * we need carrier scenarios to start the position-init process for a
      * carrier start.
      */
-    static void registerScenarios();
-    static SGPropertyNode_ptr registerScenarioFile(const SGPath& p);
+    static void registerScenarios(SGPropertyNode_ptr root = {});
+    static SGPropertyNode_ptr registerScenarioFile(SGPropertyNode_ptr root, const SGPath& p);
     static SGPropertyNode_ptr loadScenarioFile(const std::string& id);
 
     FGAIBasePtr addObject(const SGPropertyNode* definition);

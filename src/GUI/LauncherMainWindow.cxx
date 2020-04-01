@@ -68,9 +68,8 @@ LauncherMainWindow::LauncherMainWindow() :
     connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
 
     m_controller->initialRestoreSettings();
-    flightgear::launcherSetSceneryPaths();
 
-    auto addOnsCtl = new AddOnsController(this);
+    auto addOnsCtl = new AddOnsController(this, m_controller->config());
 
     ////////////
 #if defined(Q_OS_WIN)

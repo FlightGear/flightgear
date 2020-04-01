@@ -190,6 +190,12 @@ void FDMShell::update(double dt)
         
         fgSetBool("/sim/fdm-initialized", true);
         fgSetBool("/sim/signals/fdm-initialized", true);
+
+        if (!copyProperties(_props->getNode("fdm", true),
+                                     _initialFdmProperties))
+        {
+            SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
+        }
     }
   }
 

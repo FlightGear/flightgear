@@ -51,7 +51,7 @@ class NavaidSearchModel : public QAbstractListModel
     };
 
 public:
-    NavaidSearchModel() { }
+    NavaidSearchModel(QObject* parent = nullptr);
 
     enum AircraftType
     {

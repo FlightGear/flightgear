@@ -32,6 +32,7 @@
 #include "UnitsModel.hxx"
 
 class NavaidSearchModel;
+class CarriersLocationModel;
 
 class LocationController : public QObject
 {
@@ -40,6 +41,7 @@ class LocationController : public QObject
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
 
     Q_PROPERTY(NavaidSearchModel* searchModel MEMBER m_searchModel CONSTANT)
+    Q_PROPERTY(CarriersLocationModel* carriersModel MEMBER m_carriersModel CONSTANT)
 
     Q_PROPERTY(QList<QObject*> airportRunways READ airportRunways NOTIFY baseLocationChanged)
     Q_PROPERTY(QList<QObject*> airportParkings READ airportParkings NOTIFY baseLocationChanged)
@@ -67,6 +69,13 @@ class LocationController : public QObject
     Q_PROPERTY(QmlPositioned* base READ baseLocation CONSTANT)
     Q_PROPERTY(QmlPositioned* detail READ detail CONSTANT)
     Q_PROPERTY(bool isBaseLatLon READ isBaseLatLon NOTIFY baseLocationChanged)
+
+    Q_PROPERTY(bool isCarrier READ isCarrier NOTIFY baseLocationChanged)
+    Q_PROPERTY(QString carrier READ carrierName WRITE setCarrierLocation NOTIFY baseLocationChanged)
+    Q_PROPERTY(QStringList carrierParkings READ carrierParkings NOTIFY baseLocationChanged)
+    Q_PROPERTY(bool useCarrierFLOLS READ useCarrierFLOLS WRITE setUseCarrierFLOLS NOTIFY configChanged)
+    Q_PROPERTY(QString carrierParking READ carrierParking WRITE setCarrierParking NOTIFY configChanged)
+
 
     // allow collecting the location properties to be disabled, if the
     // user is setting conflicting ones
@@ -110,6 +119,9 @@ public:
     QmlGeod baseGeod() const;
     void setBaseGeod(QmlGeod geod);
 
+    QString carrierName() const;
+    void setCarrierLocation(QString name);
+
     bool isAirportLocation() const;
 
     bool offsetEnabled() const
@@ -138,6 +150,9 @@ public:
 
     Q_INVOKABLE QmlGeod parseStringAsGeod(QString string) const;
 
+    QString carrierParking() const;
+    void setCarrierParking(QString name);
+
     bool tuneNAV1() const
     {
         return m_tuneNAV1;
@@ -161,6 +176,19 @@ public:
     {
         return m_altitude;
     }
+
+    bool isCarrier() const
+    {
+        return m_locationIsCarrier;
+    }
+
+    QStringList carrierParkings() const;
+
+    bool useCarrierFLOLS() const
+    {
+        return m_useCarrierFLOLS;
+    }
+
 public slots:
     void setOffsetRadial(QuantityValue offsetRadial);
 
@@ -174,6 +202,8 @@ public slots:
 
     void setUseAvailableParking(bool useAvailableParking);
 
+    void setUseCarrierFLOLS(bool useCarrierFLOLS);
+
 Q_SIGNALS:
     void descriptionChanged();
     void offsetChanged();
@@ -186,6 +216,7 @@ private Q_SLOTS:
     void onRestoreCurrentLocation();
     void onSaveCurrentLocation();
 private:
+    void clearLocation();
 
     void onSearchComplete();
     void addToRecent(FGPositionedRef pos);
@@ -197,12 +228,15 @@ private:
     void applyOnFinal();
 
     NavaidSearchModel* m_searchModel = nullptr;
+    CarriersLocationModel* m_carriersModel = nullptr;
 
     FGPositionedRef m_location;
     FGAirportRef m_airportLocation; // valid if m_location is an FGAirport
     FGPositionedRef m_detailLocation; // parking stand or runway detail
     bool m_locationIsLatLon = false;
     SGGeod m_geodLocation;
+    bool m_locationIsCarrier = false;
+    QString m_carrierName;
 
     FGPositionedList m_recentLocations;
     LaunchConfig* m_config = nullptr;
@@ -227,6 +261,10 @@ private:
     bool m_speedEnabled = false;
     bool m_altitudeEnabled = false;
     bool m_skipFromArgs = false;
+
+    bool m_useCarrierFLOLS = false;
+    QString m_carrierParking;
+    QStringList m_carrierParkings;
 };
 
 #endif // LOCATION_CONTROLLER_HXX

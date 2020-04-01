@@ -186,7 +186,7 @@ public:
 
   bool isSingleShot() const
   { return _singleShot; }
-    
+
   const std::string& name() const
   { return _name; }
 private:
@@ -215,19 +215,16 @@ static void f_timerObj_setSimTime(TimerObj& timer, naContext c, naRef value)
 ////////////////////
 /// Timestamp - used to provide millisecond based timing of operations. See SGTimeStamp
 ////
-/// 0.373404us to perform elapsedUSec from Nasal : Tested i7-4790K, Win64 
+/// 0.373404us to perform elapsedUSec from Nasal : Tested i7-4790K, Win64
 class TimeStampObj : public SGReferenced
 {
 public:
-    TimeStampObj(Context *c, FGNasalSys* sys) :
-        _sys(sys)
+    TimeStampObj(Context *c)
     {
         timestamp.stamp();
     }
 
-    virtual ~TimeStampObj()
-    {
-    }
+    virtual ~TimeStampObj() = default;
 
     void stamp()
     {
@@ -243,41 +240,12 @@ public:
     }
 private:
     SGTimeStamp timestamp;
-    FGNasalSys* _sys;
 };
 
 typedef SGSharedPtr<TimeStampObj> TimeStampObjRef;
 typedef nasal::Ghost<TimeStampObjRef> NasalTimeStampObj;
 
 ///////////////////////////////////////////////////////////////////////////
-
-// Read and return file contents in a single buffer.  Note use of
-// stat() to get the file size.  This is a win32 function, believe it
-// or not. :) Note the REALLY IMPORTANT use of the "b" flag to fopen.
-// Text mode brain damage will kill us if we're trying to do bytewise
-// I/O.
-static char* readfile(const char* file, int* lenOut)
-{
-    struct stat data;
-    if(stat(file, &data) != 0) return 0;
-    FILE* f = fopen(file, "rb");
-    if(!f) return 0;
-    char* buf = new char[data.st_size];
-    *lenOut = fread(buf, 1, data.st_size, f);
-    fclose(f);
-    if(*lenOut != data.st_size) {
-        // Shouldn't happen, but warn anyway since it represents a
-        // platform bug and not a typical runtime error (missing file,
-        // etc...)
-        SG_LOG(SG_NASAL, SG_ALERT,
-               "ERROR in Nasal initialization: " <<
-               "short count returned from fread() of " << file <<
-               ".  Check your C library!");
-        delete[] buf;
-        return 0;
-    }
-    return buf;
-}
 
 FGNasalSys::FGNasalSys() :
     _inited(false)
@@ -353,7 +321,7 @@ FGNasalSys::~FGNasalSys()
         SG_LOG(SG_GENERAL, SG_ALERT, "Nasal was not shutdown");
     }
     sglog().removeCallback(_log.get());
-    
+
     nasalSys = nullptr;
 }
 
@@ -367,7 +335,7 @@ bool FGNasalSys::parseAndRunWithOutput(const std::string& source, std::string& o
         return false;
     }
     naRef result = callWithContext(ctx, code, 0, 0, naNil());
-    
+
     // if there was a result value, try to convert it to a string
     // value.
     if (!naIsNil(result)) {
@@ -376,7 +344,7 @@ bool FGNasalSys::parseAndRunWithOutput(const std::string& source, std::string& o
             output = naStr_data(s);
         }
     }
-    
+
     naFreeContext(ctx);
     return true;
 }
@@ -590,6 +558,8 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
   } else if ((argc == 3) && naIsFunc(args[2])) {
     self = args[1];
     func = args[2];
+  } else {
+    naRuntimeError(c, "bad function/self arguments to maketimer");
   }
 
   TimerObj* timerObj = new TimerObj(c, nasalSys, func, self, args[0].num);
@@ -598,7 +568,7 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_maketimeStamp(naContext c, naRef me, int argc, naRef* args)
 {
-    TimeStampObj* timeStampObj = new TimeStampObj(c, nasalSys);
+    TimeStampObj* timeStampObj = new TimeStampObj(c);
     return nasal::to_nasal(c, timeStampObj);
 }
 
@@ -804,11 +774,63 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     std::wstring wmodestr = simgear::strutils::convertUtf8ToWString(modestr);
     f = _wfopen(fp.c_str(), wmodestr.c_str());
 #else
-    std::string fp = filename.local8BitStr();
+    std::string fp = filename.utf8Str();
     f = fopen(fp.c_str(), modestr);
 #endif
     if(!f) naRuntimeError(c, strerror(errno));
     return naIOGhost(c, f);
+}
+
+static naRef ftype(naContext ctx, const SGPath& f)
+{
+    const char* t = "unk";
+    if (f.isFile()) t = "reg";
+    else if(f.isDir()) t = "dir";
+    return naStr_fromdata(naNewString(ctx), t, strlen(t));
+}
+
+// io.stat with UTF-8 path support, replaces the default one in
+// Nasal iolib.c which does not hsupport UTF-8 paths
+static naRef f_custom_stat(naContext ctx, naRef me, int argc, naRef* args)
+{
+    naRef pathArg = argc > 0 ? naStringValue(ctx, args[0]) : naNil();
+    if (!naIsString(pathArg))
+        naRuntimeError(ctx, "bad argument to stat()");
+    
+    const auto path = SGPath::fromUtf8(naStr_data(pathArg));
+    if (!path.exists()) {
+        return naNil();
+    }
+    
+    const SGPath filename = fgValidatePath(path, false );
+    if (filename.isNull()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "stat(): reading '" <<
+        naStr_data(pathArg) << "' denied (unauthorized directory - authorization"
+        " no longer follows symlinks; to authorize reading additional "
+        "directories, pass them to --allow-nasal-read)");
+        naRuntimeError(ctx, "stat(): access denied (unauthorized directory)");
+        return naNil();
+    }
+   
+    naRef result = naNewVector(ctx);
+    naVec_setsize(ctx, result, 12);
+    
+    // every use in fgdata/Nasal only uses stat() to test existence of
+    // files, not to check any of this information.
+    int n = 0;
+    naVec_set(result, n++, naNum(0)); // device
+    naVec_set(result, n++, naNum(0)); // inode
+    naVec_set(result, n++, naNum(0)); // mode
+    naVec_set(result, n++, naNum(0)); // nlink
+    naVec_set(result, n++, naNum(0)); // uid
+    naVec_set(result, n++, naNum(0)); // guid
+    naVec_set(result, n++, naNum(0)); // rdev
+    naVec_set(result, n++, naNum(filename.sizeInBytes())); // size
+    naVec_set(result, n++, naNum(0)); // atime
+    naVec_set(result, n++, naNum(0)); // mtime
+    naVec_set(result, n++, naNum(0)); // ctime
+    naVec_set(result, n++, ftype(ctx, filename));
+    return result;
 }
 
 // Parse XML file.
@@ -967,6 +989,7 @@ void FGNasalSys::init()
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
     nasal::Hash io_module = getGlobals().get<nasal::Hash>("io");
     io_module.set("open", f_open);
+    io_module.set("stat", f_custom_stat);
 
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
@@ -1055,7 +1078,7 @@ void FGNasalSys::shutdown()
         delete t;
     }
     _nasalTimers.clear();
-    
+
     naClearSaved();
 
     _string = naNil(); // will be freed by _context
@@ -1068,19 +1091,19 @@ void FGNasalSys::shutdown()
     _globals = naNil();
 
     naGC();
-    
+
     // Destroy all queued ghosts : important to ensure persistent timers are
     // destroyed now.
     nasal::ghostProcessDestroyList();
-    
+
     if (!_persistentTimers.empty()) {
         SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant persistent timer count:" << _persistentTimers.size());
-        
+
         for (auto pt : _persistentTimers) {
             SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
         }
     }
-    
+
     _inited = false;
 }
 
@@ -1173,8 +1196,14 @@ void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
         if (!module_node->hasChild("enabled",0))
         {
             SGPropertyNode* node = module_node->getChild("enabled",0,true);
-            node->setBoolValue(true);
-            node->setAttribute(SGPropertyNode::USERARCHIVE,true);
+            node->setBoolValue(false);
+            node->setAttribute(SGPropertyNode::USERARCHIVE,false);
+            SG_LOG(SG_NASAL, SG_ALERT, "Nasal module " <<
+            moduleName <<
+            " present in FGDATA/Nasal but not configured in defaults.xml. " <<
+            " Please add an entry to defaults.xml, and set "
+            << node->getPath() <<
+            "=true to load the module on-demand at runtime when required.");
         }
     }
 }
@@ -1288,19 +1317,21 @@ void FGNasalSys::logNasalStack(naContext context)
 // name.
 bool FGNasalSys::loadModule(SGPath file, const char* module)
 {
-    int len = 0;
-    std::string pdata = file.local8BitStr();
-    char* buf = readfile(pdata.c_str(), &len);
-    if(!buf) {
-        SG_LOG(SG_NASAL, SG_ALERT,
-               "Nasal error: could not read script file " << file
-               << " into module " << module);
+    if (!file.exists()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Cannot load module, missing file:" << file);
         return false;
     }
 
-    bool ok = createModule(module, pdata.c_str(), buf, len);
-    delete[] buf;
-    return ok;
+    sg_ifstream file_in(file);
+    string buf;
+    while (!file_in.eof()) {
+        char bytes[8192];
+        file_in.read(bytes, 8192);
+        buf.append(bytes, file_in.gcount());
+    }
+    file_in.close();
+    auto pathStr = file.utf8Str();
+    return createModule(module, pathStr.c_str(), buf.data(), buf.length());
 }
 
 // Parse and run.  Save the local variables namespace, as it will
@@ -1377,7 +1408,7 @@ naRef FGNasalSys::parse(naContext ctx, const char* filename,
             " in "<< filename <<", line " << errLine;
         errors = errorMessageStream.str();
         SG_LOG(SG_NASAL, SG_ALERT, errors);
-               
+
         return naNil();
     }
 
@@ -1547,7 +1578,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
                      node->getPath());
         }
     }
-    
+
     naRef code = argc > 1 ? args[1] : naNil();
     if(!(naIsCode(code) || naIsCCode(code) || naIsFunc(code))) {
         naRuntimeError(c, "setlistener() with invalid function argument");
@@ -1555,7 +1586,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     }
 
     int init = argc > 2 && naIsNum(args[2]) ? int(args[2].num) : 0; // do not trigger when created
-    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1; // trigger will always be triggered when the property is written 
+    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1; // trigger will always be triggered when the property is written
     FGNasalListener *nl = new FGNasalListener(node, code, this,
             gcSave(code), _listenerId, init, type);
 

@@ -177,23 +177,6 @@ void AircraftItem::toDataStream(QDataStream& ds) const
     ds << tags;
 }
 
-QPixmap AircraftItem::thumbnail(bool loadIfRequired) const
-{
-    if (m_thumbnail.isNull() && loadIfRequired) {
-        QFileInfo info(path);
-        QDir dir = info.dir();
-        if (dir.exists(thumbnailPath)) {
-            m_thumbnail.load(dir.filePath(thumbnailPath));
-            // resize to the standard size
-            if (m_thumbnail.height() > STANDARD_THUMBNAIL_HEIGHT) {
-                m_thumbnail = m_thumbnail.scaledToHeight(STANDARD_THUMBNAIL_HEIGHT, Qt::SmoothTransformation);
-            }
-        }
-    }
-
-    return m_thumbnail;
-}
-
 int AircraftItem::indexOfVariant(QUrl uri) const
 {
     const QString path = uri.toLocalFile();
@@ -253,6 +236,7 @@ public:
     {
         m_done = true;
     }
+
 Q_SIGNALS:
     void addedItems();
 
@@ -437,12 +421,11 @@ void LocalAircraftCache::scanDirs()
 
     QStringList dirs = m_paths;
 
-    Q_FOREACH(SGPath ap, globals->get_aircraft_paths()) {
+    for (SGPath ap : globals->get_aircraft_paths()) {
         dirs << QString::fromStdString(ap.utf8Str());
     }
 
-    SGPath rootAircraft(globals->get_fg_root());
-    rootAircraft.append("Aircraft");
+    SGPath rootAircraft = globals->get_fg_root() / "Aircraft";
     dirs << QString::fromStdString(rootAircraft.utf8Str());
 
     m_scanThread.reset(new AircraftScanThread(dirs));
@@ -522,10 +505,15 @@ AircraftItemPtr LocalAircraftCache::findItemWithUri(QUrl aircraftUri) const
 void LocalAircraftCache::abandonCurrentScan()
 {
     if (m_scanThread) {
+        // don't fire onScanFinished when the thread ends
+        disconnect(m_scanThread.get(), &AircraftScanThread::finished, this,
+                &LocalAircraftCache::onScanFinished);
+
         m_scanThread->setDone();
-        m_scanThread->wait(1000);
+        if (!m_scanThread->wait(2000)) {
+            qWarning() << Q_FUNC_INFO << "scan thread failed to terminate";
+        }
         m_scanThread.reset();
-        qWarning() << Q_FUNC_INFO << "current scan abandonded";
     }
 }
 

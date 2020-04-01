@@ -41,12 +41,9 @@ Item {
         width: delegateRoot.width
 
        Checkbox {
-           id: chkbox
+           id: enableCheckbox
            checked: model.enable
-           width: 30
            anchors.left: parent.left
-           anchors.right: addonsDelegateHover.left
-           anchors.rightMargin: Style.margin
            height: contentRect.height
            onCheckedChanged: {
                _addOns.modules.enable(model.index, checked)       
@@ -59,7 +56,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
-            anchors.left: chkbox.right
+            anchors.left: enableCheckbox.right
 
             hoverEnabled: true
             acceptedButtons: Qt.NoButton

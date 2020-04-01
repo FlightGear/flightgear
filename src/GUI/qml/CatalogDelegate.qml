@@ -26,11 +26,18 @@ Item {
         }
     }
 
+    function isDisabled()
+    {
+        return (model.status !== CatalogListModel.Ok) ||
+                (enableCheckbox.checked === false);
+    }
+
     Item
     {
         anchors.top: divider.bottom
         height: catalogTextColumn.childrenRect.height + Style.margin * 2
         width: parent.width
+
 
         Column {
             id: catalogTextColumn
@@ -42,11 +49,28 @@ Item {
             anchors.rightMargin: Style.margin
             spacing: Style.margin
 
-            StyledText {
-                font.pixelSize: Style.subHeadingFontPixelSize
-                font.bold: true
-                width: parent.width
-                text: model.name
+            Row {
+                spacing: Style.margin
+                height: headingText.height
+
+                Checkbox {
+                    id: enableCheckbox
+                    checked: model.enabled
+                    height: parent.height
+                    onCheckedChanged: model.enable = checked;
+                    // only allow the user to toggle enable/disable if
+                    // the catalog is valid
+                    visible: (model.status === CatalogListModel.Ok)
+                }
+
+                StyledText {
+                    id: headingText
+                    font.pixelSize: Style.subHeadingFontPixelSize
+                    font.bold: true
+                    width: catalogTextColumn.width - enableCheckbox.width
+                    text: model.name
+                    font.strikeout: delegateRoot.isDisabled();
+                }
             }
 
             StyledText {

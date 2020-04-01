@@ -71,11 +71,11 @@ public:
         _unloadScript = nasalScripts->getStringValue("unload");
         std::string loadScript = nasalScripts->getStringValue("load");
         if (!loadScript.empty()) {
-            FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+            FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
             std::string moduleName = "scenario_" + _internalName;
             nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
                                    loadScript.c_str(), loadScript.size(),
-                                   0);
+                                   nullptr);
         }
     }
 
@@ -85,7 +85,7 @@ public:
                       [](FGAIBasePtr ai) { ai->setDie(true); });
 
 
-        FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+        FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
         if (!nasalSys)
             return;
 
@@ -93,7 +93,7 @@ public:
         if (!_unloadScript.empty()) {
             nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
                                    _unloadScript.c_str(), _unloadScript.size(),
-                                   0);
+                                   nullptr);
         }
 
         nasalSys->deleteModule(moduleName.c_str());
@@ -165,16 +165,19 @@ FGAIManager::init() {
     registerScenarios();
 }
 
-void FGAIManager::registerScenarios()
+void FGAIManager::registerScenarios(SGPropertyNode_ptr root)
 {
-    // depending on if we're using a carrier startup, this function may get
-    // called early or during normal FGAIManager init, so guard against double
-    // invocation.
-    // we clear this flag on shudtdown so reset works as expected
-    if (static_haveRegisteredScenarios)
-        return;
-    
-    static_haveRegisteredScenarios = true;
+    if (!root) {
+        // depending on if we're using a carrier startup, this function may get
+        // called early or during normal FGAIManager init, so guard against double
+        // invocation.
+        // we clear this flag on shudtdown so reset works as expected
+        if (static_haveRegisteredScenarios)
+            return;
+
+        static_haveRegisteredScenarios = true;
+        root = globals->get_props();
+    }
     
     // find all scenarios at standard locations (for driving the GUI)
     std::vector<SGPath> scenarioSearchPaths;
@@ -184,27 +187,29 @@ void FGAIManager::registerScenarios()
     
     // add-on scenario directories
     const auto& addonsManager = flightgear::addons::AddonManager::instance();
-    for (auto a : addonsManager->registeredAddons()) {
-        scenarioSearchPaths.push_back(a->getBasePath() / "Scenarios");
+    if (addonsManager) {
+        for (auto a : addonsManager->registeredAddons()) {
+            scenarioSearchPaths.push_back(a->getBasePath() / "Scenarios");
+        }
     }
-    
-    SGPropertyNode_ptr scenariosNode = fgGetNode("/sim/ai/scenarios", true);
+
+    SGPropertyNode_ptr scenariosNode = root->getNode("/sim/ai/scenarios", true);
     for (auto p : scenarioSearchPaths) {
         if (!p.exists())
             continue;
         
         simgear::Dir dir(p);
         for (auto xmlPath : dir.children(simgear::Dir::TYPE_FILE, ".xml")) {
-            registerScenarioFile(xmlPath);
+            registerScenarioFile(root, xmlPath);
         } // of xml files in the scenario dir iteration
     } // of scenario dirs iteration
 }
 
-SGPropertyNode_ptr FGAIManager::registerScenarioFile(const SGPath& xmlPath)
+SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, const SGPath& xmlPath)
 {
     if (!xmlPath.exists()) return {};
     
-    auto scenariosNode = fgGetNode("/sim/ai/scenarios", true);
+    auto scenariosNode = root->getNode("/sim/ai/scenarios", true);
     SGPropertyNode_ptr sNode;
     
     try {
@@ -235,7 +240,7 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(const SGPath& xmlPath)
                 sNode->setStringValue("description", xs->getStringValue("description"));
             }
             
-            FGAICarrier::extractNamesPennantsFromScenario(xs, sNode);
+            FGAICarrier::extractCarriersFromScenario(xs, sNode);
         } // of scenarios in the XML file
     } catch (std::exception&) {
         SG_LOG(SG_AI, SG_WARN, "Skipping malformed scenario file:" << xmlPath);
@@ -367,7 +372,7 @@ FGAIManager::update(double dt)
     for (FGAIBase* base : ai_list) {
         try {
             if (base->isa(FGAIBase::otThermal)) {
-                processThermal(dt, (FGAIThermal*)base);
+                processThermal(dt, static_cast<FGAIThermal*>(base));
             } else {
                 base->update(dt);
             }
@@ -428,7 +433,7 @@ bool FGAIManager::isVisible(const SGGeod& pos) const
 int
 FGAIManager::getNumAiObjects() const
 {
-    return ai_list.size();
+    return static_cast<int>(ai_list.size());
 }
 
 void
@@ -489,12 +494,14 @@ bool FGAIManager::loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode
 
 bool FGAIManager::unloadScenarioCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
+    SG_UNUSED(root);
     std::string name = arg->getStringValue("name");
     return unloadScenario(name);
 }
 
 bool FGAIManager::addObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root)
 {
+    SG_UNUSED(root);
     if (!arg){
         return false;
     }
@@ -506,7 +513,7 @@ FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 {
     const std::string& type = definition->getStringValue("type", "aircraft");
     
-    FGAIBase* ai = NULL;
+    FGAIBase* ai = nullptr;
     if (type == "tanker") { // refueling scenarios
         ai = new FGAITanker;
     } else if (type == "wingman") {
@@ -545,6 +552,7 @@ FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 
 bool FGAIManager::removeObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root)
 {
+    SG_UNUSED(root);
     if (!arg) {
         return false;
     }
@@ -703,7 +711,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         }
         ++ai_list_itr;
     }
-    return 0;
+    return nullptr;
 }
 
 double

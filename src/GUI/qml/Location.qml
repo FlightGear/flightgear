@@ -9,6 +9,9 @@ Item {
     property bool __searchActive: false
     property string lastSearch
 
+    property bool showCarriers: false
+    readonly property var locationModel: showCarriers ? _location.carriersModel : _location.searchModel
+
     function backToSearch()
     {
         detailLoader.sourceComponent = null
@@ -33,6 +36,13 @@ Item {
         }
     }
 
+    function selectCarrier(name)
+    {
+        selectedLocation.guid = 0;
+        _location.carrier = name;
+        detailLoader.sourceComponent = carrierDetails
+    }
+
     Component.onCompleted: {
         // important so we can leave the location page and return to it,
         // preserving the state
@@ -46,6 +56,8 @@ Item {
             }
         } else if (_location.isBaseLatLon) {
             detailLoader.sourceComponent = navaidDetails
+        } else if (_location.isCarrier) {
+            detailLoader.sourceComponent = carrierDetails;
         } else {
             _location.showHistoryInSearchModel();
         }
@@ -66,6 +78,13 @@ Item {
         id: navaidDetails
         LocationNavaidView {
             id: navaidView
+        }
+    }
+
+    Component {
+        id: carrierDetails
+        LocationCarrierView {
+            id: carrierView
         }
     }
 
@@ -129,7 +148,11 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked:  {
-                        root.selectLocation(model.guid, model.type);
+                        if (root.showCarriers) {
+                            root.selectCarrier(model.name);
+                        } else {
+                            root.selectLocation(model.guid, model.type);
+                        }
                     }
                 }
             }
@@ -160,10 +183,12 @@ Item {
         anchors.topMargin: Style.margin
     }
 
+
+
     SearchButton {
         id: searchButton
 
-        anchors.right: parent.right
+        anchors.right: carriersButton.left
         anchors.top: headerText.bottom
         anchors.left: parent.left
         anchors.margins: Style.margin
@@ -172,7 +197,8 @@ Item {
         placeholder: qsTr("Search for an airport or navaid");
 
         onSearch: {
-            // when th search term is cleared, show the history
+            root.showCarriers = false;
+            // when the search term is cleared, show the history
             if (term == "") {
                 _location.showHistoryInSearchModel();
                 return;
@@ -188,6 +214,18 @@ Item {
 
             root.lastSearch = term;
             _location.searchModel.setSearch(term, _launcher.aircraftType)
+        }
+    }
+
+    IconButton {
+        id: carriersButton
+        anchors.top: headerText.bottom
+        anchors.right: parent.right
+        anchors.margins: Style.margin
+        icon: "qrc:///svg/icon-carrier"
+
+        onClicked:  {
+            root.showCarriers = true;
         }
     }
 
@@ -220,12 +258,12 @@ Item {
         anchors.topMargin: Style.margin
         width: parent.width
         anchors.bottom: parent.bottom
-        model: _location.searchModel
+        model: root.locationModel
         delegate: locationSearchDelegate
         clip: true
 
         header: Item {
-            visible: _location.searchModel.isSearchActive
+            visible: !root.showCarriers && _location.searchModel.isSearchActive
             width: parent.width
             height: visible ? 50 : 0
 
@@ -246,7 +284,7 @@ Item {
         footer: Item {
             width: parent.width
             height: noResultsText.height
-            visible: (parent.count === 0) && !_location.searchModel.isSearchActive
+            visible: !root.showCarriers && (parent.count === 0) && !_location.searchModel.isSearchActive
             Text {
                 id: noResultsText
                 width: parent.width

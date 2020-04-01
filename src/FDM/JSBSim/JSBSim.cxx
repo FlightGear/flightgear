@@ -198,6 +198,7 @@ FGJSBsim::FGJSBsim( double dt )
 
     PropertyManager = new FGPropertyManager( (FGPropertyNode*)globals->get_props() );
     fdmex = new FGFDMExec( PropertyManager );
+    fdmex->Hold();
 
     // Register ground callback.
     fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
@@ -383,6 +384,15 @@ FGJSBsim::FGJSBsim( double dt )
 
     mesh = new AircraftMesh(fgGetDouble("/fdm/jsbsim/metrics/bw-ft"),
                             fgGetDouble("/fdm/jsbsim/metrics/cbarw-ft"));
+
+    // Trim once to initialize all output parameters
+    FGTrim *fgtrim = new FGTrim(fdmex,tFull);
+    fgtrim->DoTrim();
+    delete fgtrim;
+
+    string directive_file = fgGetString("/sim/jsbsim/output-directive-file");
+    if (!directive_file.empty())
+      fdmex->SetOutputDirectives(directive_file);
 }
 
 /******************************************************************************/
@@ -427,6 +437,7 @@ void FGJSBsim::init()
     common_init();
 
     copy_to_JSBsim();
+    fdmex->Resume();
     fdmex->RunIC();     //loop JSBSim once w/o integrating
     if (fgGetBool("/sim/presets/running")) {
       Propulsion->InitRunning(-1);

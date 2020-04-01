@@ -162,6 +162,8 @@ void FGATCDialogNew::frequencyDisplay(const std::string& ident)
         buf[7] = '\0';
 
         entry->setStringValue("text[1]/label", buf);
+        entry->setStringValue("button[0]/binding/value", buf);
+        entry->setStringValue("button[1]/binding/value", buf);
     }
 
     _gui->showDialog(dialog_name);

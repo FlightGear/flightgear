@@ -297,6 +297,7 @@ Item {
                 text: qsTr("Settings:")
                 horizontalAlignment: Text.AlignRight
                 font.pixelSize: Style.headingFontPixelSize
+                visible: !_launcher.inAppMode
             }
 
             StyledText {
@@ -306,6 +307,7 @@ Item {
                 maximumLineCount: 2
                 elide: Text.ElideRight
                 width: summaryGrid.middleColumnWidth
+                visible: !_launcher.inAppMode
             }
 
             Item {

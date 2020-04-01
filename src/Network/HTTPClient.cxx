@@ -47,10 +47,10 @@ typedef nasal::Ghost<pkg::PackageRef> NasalPackage;
 typedef nasal::Ghost<pkg::CatalogRef> NasalCatalog;
 typedef nasal::Ghost<pkg::InstallRef> NasalInstall;
 
-const char* OFFICIAL_CATALOG_ID = "org.flightgear.fgaddon.trunk";
+static const char* OFFICIAL_CATALOG_ID = "org.flightgear.fgaddon.trunk";
 
 // fallback URL is used when looking up a version-specific catalog fails
-const char* FALLBACK_CATALOG_URL = "http://mirrors.ibiblio.org/flightgear/ftp/Aircraft-trunk/catalog.xml";
+static const char* FALLBACK_CATALOG_URL = "http://mirrors.ibiblio.org/flightgear/ftp/Aircraft-trunk/catalog.xml";
 
 namespace {
 
@@ -274,7 +274,7 @@ void FGHTTPClient::postinit()
   
   pkg::Root* packageRoot = globals->packageRoot();
   if (packageRoot) {
-    FGNasalSys* nasalSys = (FGNasalSys*) globals->get_subsystem("nasal");
+    FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
     nasal::Hash nasalGlobals = nasalSys->getGlobals();
     nasal::Hash nasalPkg = nasalGlobals.createHash("pkg"); // module
     nasalPkg.set("root", packageRoot);

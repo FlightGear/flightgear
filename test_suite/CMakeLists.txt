@@ -135,6 +135,7 @@ set_target_properties(fgfs_test_suite
     RUNTIME_OUTPUT_DIRECTORY "${TESTSUITE_OUTPUT_DIR}"
 )
 if(ENABLE_AUTOTESTING)
+    set(TEST_SUITE_COMMAND "fgfs_test_suite")
     set(TEST_SUITE_COMMENT "Running the full FlightGear test suite")
 else()
     set(TEST_SUITE_COMMENT "Building the FlightGear test suite.")
@@ -162,7 +163,7 @@ if (MSVC)
 endif()
 
 add_custom_target(test_suite
-    fgfs_test_suite
+    ${TEST_SUITE_COMMAND}
     DEPENDS fgfs_test_suite
     COMMENT ${TEST_SUITE_COMMENT}
 )

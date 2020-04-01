@@ -30,6 +30,7 @@
 #include <cassert>
 #include <stdint.h> // for int64_t
 #include <sstream>  // for std::ostringstream
+#include <mutex>
 
 #ifdef SYSTEM_SQLITE
 // the standard sqlite3.h doesn't give a way to set SQLITE_UINT64_TYPE,
@@ -54,7 +55,6 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/threads/SGThread.hxx>
-#include <simgear/threads/SGGuard.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -172,7 +172,7 @@ public:
 
   bool isFinished() const
   {
-    SGGuard<SGMutex> g(_lock);
+    std::lock_guard<std::mutex> g(_lock);
     return _isFinished;
   }
 
@@ -183,7 +183,7 @@ public:
     _cache->doRebuild();
     SG_LOG(SG_NAVCACHE, SG_INFO, "cache rebuild took:" << st.elapsedMSec() << "msec");
 
-    SGGuard<SGMutex> g(_lock);
+    std::lock_guard<std::mutex> g(_lock);
     _isFinished = true;
     _phase = NavDataCache::REBUILD_DONE;
   }
@@ -191,7 +191,7 @@ public:
     NavDataCache::RebuildPhase currentPhase() const
     {
         NavDataCache::RebuildPhase ph;
-        SGGuard<SGMutex> g(_lock);
+        std::lock_guard<std::mutex> g(_lock);
         ph = _phase;
         return ph;
     }
@@ -199,14 +199,14 @@ public:
     unsigned int completionPercent() const
     {
         unsigned int perc = 0;
-        SGGuard<SGMutex> g(_lock);
+        std::lock_guard<std::mutex> g(_lock);
         perc = _completionPercent;
         return perc;
     }
 
     void setProgress(NavDataCache::RebuildPhase ph, unsigned int percent)
     {
-        SGGuard<SGMutex> g(_lock);
+        std::lock_guard<std::mutex> g(_lock);
         _phase = ph;
         _completionPercent = percent;
     }
@@ -215,7 +215,7 @@ private:
   NavDataCache* _cache;
     NavDataCache::RebuildPhase _phase;
     unsigned int _completionPercent;
-  mutable SGMutex _lock;
+  mutable std::mutex _lock;
   bool _isFinished;
 };
 
@@ -2529,7 +2529,7 @@ public:
                 break;
             } else if (err == SQLITE_ROW) {
                 PositionedID r = sqlite3_column_int64(query, 0);
-                SGGuard<SGMutex> g(lock);
+                std::lock_guard<std::mutex> g(lock);
                 results.push_back(r);
             } else if (err == SQLITE_BUSY) {
                 // sleep a tiny amount
@@ -2540,11 +2540,11 @@ public:
             }
         }
 
-        SGGuard<SGMutex> g(lock);
+        std::lock_guard<std::mutex> g(lock);
         isComplete = true;
     }
 
-    SGMutex lock;
+    std::mutex lock;
     sqlite3* db;
     sqlite3_stmt_ptr query;
     PositionedIDVec results;
@@ -2576,7 +2576,7 @@ NavDataCache::ThreadedGUISearch::ThreadedGUISearch(const std::string& term, bool
 NavDataCache::ThreadedGUISearch::~ThreadedGUISearch()
 {
     {
-        SGGuard<SGMutex> g(d->lock);
+        std::lock_guard<std::mutex> g(d->lock);
         d->quit = true;
     }
 
@@ -2589,7 +2589,7 @@ PositionedIDVec NavDataCache::ThreadedGUISearch::results() const
 {
     PositionedIDVec r;
     {
-        SGGuard<SGMutex> g(d->lock);
+        std::lock_guard<std::mutex> g(d->lock);
         r = std::move(d->results);
     }
     return r;
@@ -2597,7 +2597,7 @@ PositionedIDVec NavDataCache::ThreadedGUISearch::results() const
 
 bool NavDataCache::ThreadedGUISearch::isComplete() const
 {
-    SGGuard<SGMutex> g(d->lock);
+    std::lock_guard<std::mutex> g(d->lock);
     return d->isComplete;
 }
 

@@ -2,6 +2,7 @@
 foreach( simgear_test_category
         math
         props
+        canvas 
     )
 
     add_subdirectory(${simgear_test_category})

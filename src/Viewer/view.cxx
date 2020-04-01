@@ -1000,17 +1000,9 @@ View::recalcLookAt ()
   SGGeodesy::SGCartToGeod(targetCart2, _target);
 
   _position = _target;
-  
-  const std::string&    tail = ViewPropertyEvaluator::getStringValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path)");
-  
-  if (tail != "") {
-    /* <tail> will typically be /sim/tower/longitude-deg, so that this view's
-    eye position is from the tower rather than relative to the aircraft.
 
-    If we are viewing a multiplayer aircraft, the nearest tower
-    will be in /sim/view[]/config/root/sim/tower/longitude-deg (see
-    FGEnvironmentMgr::updateClosestAirport()), so we use a prefix to select
-    either /sim/tower/longitude-deg or multiplayer's tower. */
+  bool  eye_fixed = ViewPropertyEvaluator::getBoolValue("(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-fixed)");
+  if (eye_fixed) {
     _position.setLongitudeDeg(
             ViewPropertyEvaluator::getDoubleValue(
                     "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-lon-deg-path))",
@@ -1030,6 +1022,25 @@ View::recalcLookAt ()
                     )
             );
   }
+
+  _target.setLongitudeDeg(
+          ViewPropertyEvaluator::getDoubleValue(
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/target-lon-deg-path))",
+                  _target.getLongitudeDeg()
+                  )
+          );
+  _target.setLatitudeDeg(
+          ViewPropertyEvaluator::getDoubleValue(
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/target-lat-deg-path))",
+                  _target.getLatitudeDeg()
+                  )
+          );
+  _target.setElevationFt(
+          ViewPropertyEvaluator::getDoubleValue(
+                  "((/sim/view[(/sim/current-view/view-number-raw)]/config/root)(/sim/view[(/sim/current-view/view-number-raw)]/config/target-alt-ft-path))",
+                  _target.getElevationFt()
+                  )
+          );
 
   if (_lookat_agl) {
     handleAGL();

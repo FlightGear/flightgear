@@ -148,15 +148,10 @@ void RunwayList::set(const std::string & tp, const std::string & lst)
     //    timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
     //    timeCopy = timeCopy.substr(2,timeCopy.length());
     type = tp;
-    
-    
-    
-    BOOST_FOREACH(std::string s, strutils::split(lst, ",")) {
-        std::string ident = strutils::strip(s);
-        
+    for (const auto s : strutils::split(lst, ",")) {
+        auto ident = strutils::strip(s);
         // http://code.google.com/p/flightgear-bugs/issues/detail?id=1137
         if ((ident.size() < 2) || !isdigit(ident[1])) {
-            SG_LOG(SG_GENERAL, SG_INFO, "RunwayList::set: padding runway ident '" << ident << "'");
             ident = "0" + ident;
         }
         

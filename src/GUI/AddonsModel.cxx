@@ -37,7 +37,7 @@ AddonsModel::AddonsModel(QObject* pr) :
     int roleValue = IdRole;
 
     for (auto it = m_roles.begin(); it != m_roles.end(); ++it) {
-        QByteArray name = (*it).toLocal8Bit();
+        QByteArray name = it->toUtf8();
         m_roleToName[roleValue] = name;
         m_nameToRole[*it] = roleValue++;
     }

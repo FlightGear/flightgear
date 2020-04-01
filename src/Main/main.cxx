@@ -359,7 +359,7 @@ static void fgIdleFunction ( void ) {
         flightgear::initPosition();
         flightgear::initTowerLocationListener();
 
-        simgear::SGModelLib::init(globals->get_fg_root().local8BitStr(), globals->get_props());
+        simgear::SGModelLib::init(globals->get_fg_root().utf8Str(), globals->get_props());
 
         auto timeManager = globals->get_subsystem<TimeManager>();
         timeManager->init();
@@ -541,6 +541,10 @@ int fgMainInit( int argc, char **argv )
     if (!fgInitHome()) {
         return EXIT_FAILURE;
     }
+    
+#if defined(HAVE_QT)
+    flightgear::initApp(argc, argv);
+#endif
 
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
@@ -624,10 +628,7 @@ int fgMainInit( int argc, char **argv )
     }
 
 #if defined(HAVE_QT)
-    flightgear::initApp(argc, argv);
     if (showLauncher) {
-        flightgear::checkKeyboardModifiersForSettingFGRoot();
-
         if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }
@@ -704,7 +705,8 @@ int fgMainInit( int argc, char **argv )
     int result = fgOSMainLoop();
     frame_signal.clear();
     fgOSCloseWindow();
-
+    fgShutdownHome();
+    
      simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_stopped);
 
     simgear::clearEffectCache();

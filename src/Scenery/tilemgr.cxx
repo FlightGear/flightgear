@@ -168,14 +168,13 @@ void FGTileMgr::reinit()
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const PathList &sc = globals->get_fg_scenery();
     fp.clear();
-    PathList::const_iterator it;
-    for (it = sc.begin(); it != sc.end(); ++it) {
-        fp.push_back(it->local8BitStr());
+    for (auto it = sc.begin(); it != sc.end(); ++it) {
+        fp.push_back(it->utf8Str());
     }
-    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
+    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().utf8Str());
     
     if (_terra_sync) {
-      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().local8BitStr());
+      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().utf8Str());
     }
     
     if (!_disableNasalHooks->getBoolValue())

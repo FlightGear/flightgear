@@ -118,6 +118,7 @@ private:
     SGPropertyNode_ptr replay_time;
     SGPropertyNode_ptr replay_time_str;
     SGPropertyNode_ptr replay_looped;
+    SGPropertyNode_ptr replay_duration_act;
     SGPropertyNode_ptr speed_up;
 
     double m_high_res_time;    // default: 60 secs of high res data

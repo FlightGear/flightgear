@@ -80,7 +80,7 @@ public:
   /**
    * flight-plan leg encapsulation
    */
-  class Leg
+  class Leg : public SGReferenced
   {
   public:
     FlightPlan* owner() const
@@ -138,6 +138,8 @@ public:
 
     Leg* cloneFor(FlightPlan* owner) const;
 
+      void writeToProperties(SGPropertyNode* node) const;
+      
     const FlightPlan* _parent;
     RouteRestriction _speedRestrict = RESTRICT_NONE,
       _altRestrict = RESTRICT_NONE;
@@ -157,6 +159,8 @@ public:
     /// total distance of this leg from departure point
     mutable double _distanceAlongPath = 11.0;
   };
+    
+  using LegRef = SGSharedPtr<Leg>;
 
   class Delegate
   {
@@ -191,7 +195,7 @@ public:
     bool _deleteWithPlan = false;
   };
 
-  Leg* insertWayptAtIndex(Waypt* aWpt, int aIndex);
+  LegRef insertWayptAtIndex(Waypt* aWpt, int aIndex);
   void insertWayptsAtIndex(const WayptVec& wps, int aIndex);
 
   void deleteIndex(int index);
@@ -211,15 +215,14 @@ public:
 
     bool isActive() const;
     
-  Leg* currentLeg() const;
-  Leg* nextLeg() const;
-  Leg* previousLeg() const;
+  LegRef currentLeg() const;
+  LegRef nextLeg() const;
+  LegRef previousLeg() const;
 
   int numLegs() const
   { return static_cast<int>(_legs.size()); }
 
-  Leg* legAtIndex(int index) const;
-  int findLegIndex(const Leg* l) const;
+  LegRef legAtIndex(int index) const;
 
   int findWayptIndex(const SGGeod& aPos) const;
   int findWayptIndex(const FGPositionedRef aPos) const;
@@ -373,6 +376,8 @@ public:
 private:
   friend class Leg;
   
+  int findLegIndex(const Leg* l) const;
+    
   void lockDelegates();
   void unlockDelegates();
 
@@ -426,7 +431,7 @@ private:
   double _totalDistance;
   void rebuildLegData();
 
-  typedef std::vector<Leg*> LegVec;
+  using LegVec = std::vector<LegRef>;
   LegVec _legs;
 
   std::vector<Delegate*> _delegates;

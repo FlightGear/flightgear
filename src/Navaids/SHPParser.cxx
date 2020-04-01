@@ -91,8 +91,13 @@ namespace flightgear
 void SHPParser::parsePolyLines(const SGPath& aPath, PolyLine::Type aTy,
                                PolyLineList& aResult, bool aClosed)
 {
-    std::string s = aPath.local8BitStr();
+#if defined(SG_WINDOWS)
+	const auto ws = aPath.wstr();
+	gzFile file = gzopen_w(ws.c_str(), "rb");
+#else
+    const auto s = aPath.utf8Str();
     gzFile file = gzopen(s.c_str(), "rb");
+#endif
     if (!file) {
         throw sg_io_exception("couldn't open file:", aPath);
     }

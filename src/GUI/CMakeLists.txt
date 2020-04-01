@@ -124,6 +124,10 @@ if (HAVE_QT)
                             AddonsModel.hxx
                             PixmapImageItem.cxx
                             PixmapImageItem.hxx
+                            PathListModel.cxx
+                            PathListModel.hxx
+                            CarriersLocationModel.cxx
+                            CarriersLocationModel.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
@@ -168,6 +172,8 @@ if (HAVE_QT)
                         RouteDiagram.hxx
                         ModelDataExtractor.cxx
                         ModelDataExtractor.hxx
+                        HoverArea.cxx
+                        HoverArea.hxx
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)

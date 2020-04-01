@@ -49,6 +49,7 @@
 using std::endl;
 using std::string;
 
+
 namespace flightgear
 {
     
@@ -68,8 +69,11 @@ static bool global_callbackRegistered = false;
 
 static void finalizePosition();
 
+namespace { // annonymous namepsace to avoid warnings about inline classes
+
 // Set current tower position lon/lat given an airport id
-static bool fgSetTowerPosFromAirportID( const string& id) {
+bool fgSetTowerPosFromAirportID( const string& id)
+{
   const FGAirport *a = fgFindAirportID( id);
   if (a) {
     SGGeod tower = a->getTowerLocation();
@@ -80,12 +84,12 @@ static bool fgSetTowerPosFromAirportID( const string& id) {
   } else {
     return false;
   }
-
 }
 
 class FGTowerLocationListener : public SGPropertyChangeListener {
 
-  void valueChanged(SGPropertyNode* node) {
+  void valueChanged(SGPropertyNode* node) override
+  {
     string id(node->getStringValue());
     if (fgGetBool("/sim/tower/auto-position",true))
     {
@@ -115,6 +119,9 @@ class FGClosestTowerLocationListener : public SGPropertyChangeListener
     }
   }
 };
+
+} // of anonymous namespace
+
 
 void initTowerLocationListener() {
 
@@ -160,10 +167,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
       aHeading = aTargetHeading;
     }
 
-    SGGeod offset;
-    double az2; // dummy
-    SGGeodesy::direct(startPos, offsetAzimuth + 180, offsetDistance, offset, az2);
-    startPos = offset;
+    startPos = SGGeodesy::direct(startPos, offsetAzimuth + 180, offsetDistance);
   }
 
     setInitialPosition(startPos, aHeading);
@@ -184,7 +188,7 @@ std::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
         // add a margin, try to keep the entire aeroplane comfortable off the
         // runway.
         double margin = startOffset + (runway->widthM() * 1.5);
-        FGTaxiNodeRef taxiNode = groundNet ? groundNet->findNearestNodeOffRunway(pos, runway, margin) : 0;
+        FGTaxiNodeRef taxiNode = groundNet ? groundNet->findNearestNodeOffRunway(pos, runway, margin) : FGTaxiNodeRef{};
         if (taxiNode) {
             // set this so multiplayer.nas can inform the user
             fgSetBool("/sim/presets/avoided-mp-runway", true);
@@ -313,11 +317,10 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
 }
 
 
-static void fgSetDistOrAltFromGlideSlope() {
-  // cout << "fgSetDistOrAltFromGlideSlope()" << endl;
+static void fgSetDistOrAltFromGlideSlope()
+{
   string apt_id = fgGetString("/sim/presets/airport-id");
-  double gs = fgGetDouble("/sim/presets/glideslope-deg")
-  * SG_DEGREES_TO_RADIANS ;
+  double gs = SGMiscd::deg2rad(fgGetDouble("/sim/presets/glideslope-deg"));
   double od = fgGetDouble("/sim/presets/offset-distance-nm");
   double alt = fgGetDouble("/sim/presets/altitude-ft");
 
@@ -363,9 +366,7 @@ static bool fgSetPosFromNAV( const string& id,
                              FGPositioned::Type type,
                              PositionedID guid)
 {
-    FGNavRecord* nav = 0;
-
-
+    FGNavRecordRef nav;
     if (guid != 0) {
         nav = FGPositioned::loadById<FGNavRecord>(guid);
         if (!nav)
@@ -383,14 +384,14 @@ static bool fgSetPosFromNAV( const string& id,
         if( navlist.size() > 1 ) {
           std::ostringstream buf;
           buf << "Ambigous NAV-ID: '" << id << "'. Specify id and frequency. Available stations:" << endl;
-          for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
+          for( const auto& nav : navlist ) {
             // NDB stored in kHz, VOR stored in MHz * 100 :-P
-            double factor = (*it)->type() == FGPositioned::NDB ? 1.0 : 1/100.0;
-            string unit = (*it)->type() == FGPositioned::NDB ? "kHz" : "MHz";
-            buf << (*it)->ident() << " "
-            << std::setprecision(5) << (double)((*it)->get_freq() * factor) << " "
-            << (*it)->get_lat() << "/" << (*it)->get_lon()
-            << endl;
+            double factor = nav->type() == FGPositioned::NDB ? 1.0 : 1/100.0;
+            string unit = nav->type() == FGPositioned::NDB ? "kHz" : "MHz";
+            buf << nav->ident() << " "
+                << std::setprecision(5) << static_cast<double>(nav->get_freq() * factor) << " "
+                << nav->get_lat() << "/" << nav->get_lon()
+                << endl;
           }
 
           SG_LOG( SG_GENERAL, SG_ALERT, buf.str() );
@@ -413,12 +414,37 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
     // so our PagedLOD is loaded
     fgSetDouble("/sim/presets/longitude-deg",  initialPos.second.getLongitudeDeg());
     fgSetDouble("/sim/presets/latitude-deg",  initialPos.second.getLatitudeDeg());
-    SG_LOG( SG_GENERAL, SG_INFO, "Initial carrier pos = " << initialPos.second );
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Initial carrier pos = " << initialPos.second );
     return VicinityPosition;
   }
   
   SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = " << carrier );
   return Failure;
+}
+
+static InitPosResult checkCarrierSceneryLoaded(const SGSharedPtr<FGAICarrier> carrierRef)
+{
+    SGVec3d cartPos = carrierRef->getCartPos();
+    auto framestamp = globals->get_renderer()->getViewer()->getFrameStamp();
+    simgear::CheckSceneryVisitor csnv(globals->get_scenery()->getPager(),
+                                      toOsg(cartPos),
+                                      100.0 /* range in metres */,
+                                      framestamp);
+
+    // currently the PagedLODs will not be loaded by the DatabasePager
+    // while the splashscreen is there, so CheckSceneryVisitor force-loads
+    // missing objects in the main thread
+    carrierRef->getSceneBranch()->accept(csnv);
+    if (!csnv.isLoaded()) {
+      return ContinueWaiting;
+    }
+
+    // and then wait for the load to actually be synced to the main thread
+    if (carrierRef->getSceneBranch()->getNumChildren() < 1) {
+      return ContinueWaiting;
+    }
+
+    return VicinityPosition;
 }
 
 // Set current_options lon/lat given an aircraft carrier id
@@ -432,24 +458,9 @@ static InitPosResult setFinalPosFromCarrier( const string& carrier, const string
     return Failure;
   }
   
-  SGVec3d cartPos = carrierRef->getCartPos();
-  auto framestamp = globals->get_renderer()->getViewer()->getFrameStamp();
-  simgear::CheckSceneryVisitor csnv(globals->get_scenery()->getPager(),
-                                    toOsg(cartPos),
-                                    100.0 /* range in metres */,
-                                    framestamp);
-  
-  // currently the PagedLODs will not be loaded by the DatabasePager
-  // while the splashscreen is there, so CheckSceneryVisitor force-loads
-  // missing objects in the main thread
-  carrierRef->getSceneBranch()->accept(csnv);
-  if (!csnv.isLoaded()) {
-    return ContinueWaiting;
-  }
-  
-  // and then wait for the load to actually be synced to the main thread
-  if (carrierRef->getSceneBranch()->getNumChildren() < 1) {
-    return ContinueWaiting;
+  auto res = checkCarrierSceneryLoaded(carrierRef);
+  if (res != VicinityPosition) {
+      return res; // either failrue or keep waiting for scenery load
   }
   
   SGGeod geodPos;
@@ -492,10 +503,55 @@ static InitPosResult setFinalPosFromCarrier( const string& carrier, const string
   return Failure;
 }
 
+static InitPosResult setFinalPosFromCarrierFLOLS(const string& carrier)
+{
+    SGSharedPtr<FGAICarrier> carrierRef = FGAICarrier::findCarrierByNameOrPennant(carrier);
+    if (!carrierRef) {
+      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
+             << carrier );
+      return Failure;
+    }
+
+    auto res = checkCarrierSceneryLoaded(carrierRef);
+    if (res != VicinityPosition) {
+        return res; // either failure or keep waiting for scenery load
+    }
+
+    SGGeod flolsPosition;
+    double headingToFLOLS;
+    if (!carrierRef->getFLOLSPositionHeading(flolsPosition, headingToFLOLS)) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Unable to compiute FLOLS position for carrier = "
+               << carrier );
+        return Failure;
+    }
+
+    const auto flolsElevationFt = flolsPosition.getElevationFt();
+    double gs = SGMiscd::deg2rad(carrierRef->getFLOLFSGlidepathAngleDeg());
+    const double od = fgGetDouble("/sim/presets/offset-distance-nm");
+
+    // start position, but with altitude not set
+    SGGeod startPos = SGGeodesy::direct(flolsPosition, headingToFLOLS + 180, od * SG_NM_TO_METER);
+
+    const double offsetFt = od * SG_NM_TO_METER * SG_METER_TO_FEET;
+    startPos.setElevationFt(fabs(offsetFt*tan(gs)) + flolsElevationFt);
+
+    fgSetDouble("/sim/presets/longitude-deg",  startPos.getLongitudeDeg());
+    fgSetDouble("/sim/presets/latitude-deg",  startPos.getLatitudeDeg());
+    fgSetDouble("/sim/presets/altitude-ft", startPos.getElevationFt());
+    fgSetDouble("/sim/presets/heading-deg", headingToFLOLS);
+    fgSetDouble("/position/longitude-deg",  startPos.getLongitudeDeg());
+    fgSetDouble("/position/latitude-deg",  startPos.getLatitudeDeg());
+    fgSetDouble("/position/altitude-ft", startPos.getElevationFt());
+    fgSetDouble("/orientation/heading-deg", headingToFLOLS);
+    fgSetBool("/sim/presets/onground", false);
+
+    return ExactPosition;
+}
+
 // Set current_options lon/lat given a fix ident and GUID
 static bool fgSetPosFromFix( const string& id, PositionedID guid )
 {
-    FGPositioned* fix = NULL;
+    FGPositionedRef fix;
     if (guid != 0) {
         fix = FGPositioned::loadById<FGPositioned>(guid);
     } else {
@@ -521,8 +577,7 @@ bool initPosition()
     global_callbackRegistered = true;
   }
   
-  double gs = fgGetDouble("/sim/presets/glideslope-deg")
-  * SG_DEGREES_TO_RADIANS ;
+  double gs = SGMiscd::deg2rad(fgGetDouble("/sim/presets/glideslope-deg"));
   double od = fgGetDouble("/sim/presets/offset-distance-nm");
   double alt = fgGetDouble("/sim/presets/altitude-ft");
   
@@ -762,20 +817,29 @@ void finalizePosition()
      */
     std::string carrier = fgGetString("/sim/presets/carrier");
     std::string parkpos = fgGetString("/sim/presets/parkpos");
+    std::string runway = fgGetString("/sim/presets/runway");
     std::string apt = fgGetString("/sim/presets/airport-id");
+    const bool rwy_req = fgGetBool("/sim/presets/runway-requested");
 
     if (!carrier.empty())
     {
-        const auto res = setFinalPosFromCarrier(carrier, parkpos);
-        if (res == ExactPosition) {
+        const bool atFLOLS = rwy_req && (runway == "FLOLS");
+        InitPosResult carrierResult;
+        if (atFLOLS) {
+            carrierResult = setFinalPosFromCarrierFLOLS(carrier);
+        } else {
+            carrierResult = setFinalPosFromCarrier(carrier, parkpos);
+        }
+        if (carrierResult == ExactPosition) {
             done = true;
-        } else if (res == Failure) {
+        } else if (carrierResult == Failure) {
             SG_LOG(SG_GENERAL, SG_ALERT, "secondary carrier init failed");
             done = true;
         } else {
             done = false;
             // 60 second timeout on waiting for the carrier to load
             if (global_finalizeTime.elapsedMSec() > 60000) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Timeout waiting for carrier scenery to load, will start on the water.");
                 done = true;
             }
         }

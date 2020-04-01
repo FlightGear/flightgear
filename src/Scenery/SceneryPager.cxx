@@ -110,8 +110,9 @@ void SceneryPager::signalEndFrame()
     }
     if (!_pagerRequests.empty()) {
         arePagerRequests = true;
-        for_each(_pagerRequests.begin(), _pagerRequests.end(),
-                 bind2nd(mem_fun_ref(&PagerRequest::doRequest), this));
+        for (auto req : _pagerRequests) {
+            req.doRequest(this);
+        }
         _pagerRequests.clear();
     }
     if (areDeleteRequests && !arePagerRequests) {

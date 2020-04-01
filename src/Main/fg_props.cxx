@@ -230,16 +230,6 @@ setFreeze (bool f)
 {
     frozen = f;
 
-    // Stop sound on a pause
-    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
-    if ( smgr != NULL ) {
-        if ( f ) {
-            smgr->suspend();
-        } else if (fgGetBool("/sim/sound/working")) {
-            smgr->resume();
-        }
-    }
-
     // Pause the particle system
     simgear::Particles::setFrozen(f);
 }

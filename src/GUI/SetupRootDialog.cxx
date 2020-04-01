@@ -40,7 +40,9 @@
 #include <Include/version.h>
 #include <Viewer/WindowBuilder.hxx>
 
-static QString rootPathKey()
+#include "QtLauncher.hxx"
+
+QString SetupRootDialog::rootPathKey()
 {
     // return a settings key like fg-root-2018-3-0
     return QString("fg-root-") + QString(FLIGHTGEAR_VERSION).replace('.', '-');
@@ -99,7 +101,8 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
 {
     QSettings settings;
     QString path = settings.value(rootPathKey()).toString();
-    if (path == "!ask") {
+	bool ask = flightgear::checkKeyboardModifiersForSettingFGRoot();
+    if (ask || (path == QStringLiteral("!ask"))) {
         bool ok = runDialog(ManualChoiceRequested);
         Q_ASSERT(ok);
         // run dialog either exit()s or sets fg_root, so this
@@ -108,7 +111,7 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
     }
 
     if (path.isEmpty()) {
-        return std::string(); // use the default path
+        return SGPath{}; // use the default path
     }
 
     if (validatePath(path) && validateVersion(path)) {
@@ -118,7 +121,7 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
         // let's see if the default root is acceptable, in which case we will
         // switch to it. (This gives a more friendly upgrade experience).
         if (defaultRootAcceptable()) {
-            return std::string(); // use the default path
+            return SGPath{}; // use the default path
         }
 
         // okay, we don't have an acceptable FG_DATA anywhere we can find, we
@@ -129,6 +132,13 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
         // behaviour is safe and correct.
         return globals->get_fg_root();
     }
+}
+
+void SetupRootDialog::askRootOnNextLaunch()
+{
+    QSettings settings;
+    // set the option to the magic marker value
+    settings.setValue(rootPathKey(), "!ask");
 }
 
 bool SetupRootDialog::validatePath(QString path)
@@ -216,7 +226,7 @@ void SetupRootDialog::onUseDefaults()
     m_browsedPath = QString::fromStdString(r.utf8Str());
     globals->set_fg_root(r);
     QSettings settings;
-    settings.remove("fg-root"); // remove any setting
+    settings.remove(rootPathKey()); // remove any setting
     accept();
 }
 

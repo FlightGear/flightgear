@@ -101,6 +101,15 @@ FocusScope {
         }
     }
 
+    function showUnitsMenu()
+    {
+
+        var screenPos = _launcher.mapToGlobal(editFrame, Qt.point(0, editFrame.height))
+        var pop = popup.createObject(root, {x:screenPos.x, y:screenPos.y })
+        tracker.window = pop;
+        pop.show();
+    }
+
     Component.onCompleted: {
         // ensure any initial value is accepted by our mode.
         // this stops people passing in completely wrong quantities
@@ -196,7 +205,7 @@ FocusScope {
             anchors.left: parent.left
             anchors.margins: Style.margin
             text: visible ? units.shortText : ""
-            onClicked: unitSelectionPopup.show()
+            onClicked: root.showUnitsMenu()
             clickable: (units.numChoices > 1)
         }
 
@@ -251,7 +260,7 @@ FocusScope {
             anchors.baseline: edit.baseline
             anchors.right: upDownArea.left
             text: visible ? units.shortText : ""
-            onClicked: unitSelectionPopup.show()
+            onClicked: root.showUnitsMenu();
             clickable: (units.numChoices > 1)
         }
 
@@ -324,76 +333,69 @@ FocusScope {
         id: tracker
     }
 
-    Window {
-        id: unitSelectionPopup
-        visible: false
-        flags: Qt.Popup
-        color: "white"
-        height: choicesColumn.childrenRect.height + Style.margin * 2
-        width: choicesColumn.width + Style.margin * 2
+    Component {
+        id: popup
+        Window {
+            id: unitSelectionPopup
+            flags: Qt.Popup
+            color: "white"
+            height: choicesColumn.childrenRect.height + Style.margin * 2
+            width: choicesColumn.width + Style.margin * 2
 
-        function show()
-        {
-            var screenPos = _launcher.mapToGlobal(editFrame, Qt.point(0, editFrame.height))
-            unitSelectionPopup.x = screenPos.x;
-            unitSelectionPopup.y = screenPos.y;
-            unitSelectionPopup.visible = true
-            tracker.window = unitSelectionPopup
-        }
-
-        Rectangle {
-            border.width: 1
-            border.color: Style.minorFrameColor
-            anchors.fill: parent
-        }
-
-        // choice layout column
-        Column {
-            id: choicesColumn
-            spacing: Style.margin
-            x: Style.margin
-            y: Style.margin
-            width: menuWidth
-
-
-            function calculateMenuWidth()
-            {
-                var minWidth = 0;
-                for (var i = 0; i < choicesRepeater.count; i++) {
-                    minWidth = Math.max(minWidth, choicesRepeater.itemAt(i).implicitWidth);
-                }
-                return minWidth;
+            Rectangle {
+                border.width: 1
+                border.color: Style.minorFrameColor
+                anchors.fill: parent
             }
 
-            readonly property int menuWidth: calculateMenuWidth()
+            // choice layout column
+            Column {
+                id: choicesColumn
+                spacing: Style.margin
+                x: Style.margin
+                y: Style.margin
+                width: menuWidth
 
-            // main item repeater
-            Repeater {
-                id: choicesRepeater
-                model: units
-                delegate:
-                    Text {
-                        id: choiceText
-                        readonly property bool selected: units.selectedIndex === model.index
 
-                        text: model.longName
-                        height: implicitHeight + Style.margin
-                        font.pixelSize: Style.baseFontPixelSize
-                        color: choiceArea.containsMouse ? Style.themeColor : Style.baseTextColor
+                function calculateMenuWidth()
+                {
+                    var minWidth = 0;
+                    for (var i = 0; i < choicesRepeater.count; i++) {
+                        minWidth = Math.max(minWidth, choicesRepeater.itemAt(i).implicitWidth);
+                    }
+                    return minWidth;
+                }
 
-                        MouseArea {
-                            id: choiceArea
-                            width: unitSelectionPopup.width // full width of the popup
-                            height: parent.height
-                            hoverEnabled: true
+                readonly property int menuWidth: calculateMenuWidth()
 
-                            onClicked: {
-                                root.changeToUnits(model.index);
-                                unitSelectionPopup.visible = false;
+                // main item repeater
+                Repeater {
+                    id: choicesRepeater
+                    model: units
+                    delegate:
+                        Text {
+                            id: choiceText
+                            readonly property bool selected: units.selectedIndex === model.index
+
+                            text: model.longName
+                            height: implicitHeight + Style.margin
+                            font.pixelSize: Style.baseFontPixelSize
+                            color: choiceArea.containsMouse ? Style.themeColor : Style.baseTextColor
+
+                            MouseArea {
+                                id: choiceArea
+                                width: unitSelectionPopup.width // full width of the popup
+                                height: parent.height
+                                hoverEnabled: true
+
+                                onClicked: {
+                                    root.changeToUnits(model.index);
+                                    unitSelectionPopup.close();
+                                }
                             }
-                        }
-                    } // of Text delegate
-            } // text repeater
-        } // text column
-    }
+                        } // of Text delegate
+                } // text repeater
+            } // text column
+        }
+    } // of popup component
 }

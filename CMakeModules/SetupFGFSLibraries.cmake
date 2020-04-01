@@ -66,6 +66,8 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} PLIBJoystick)
     endif()
 
+    target_link_libraries(${target} PLIBFont)
+
     if(SYSTEM_HTS_ENGINE)
         target_link_libraries(${target} flite_hts ${HTS_ENGINE_LIBRARIES})
     else()
