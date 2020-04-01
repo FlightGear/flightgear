@@ -38,10 +38,9 @@
 
 #ifdef WITH_EVENTINPUT
   #if defined ( SG_MAC )
-    #include "FGMacOSXEventInput.hxx"
-    #define INPUTEVENT_CLASS FGMacOSXEventInput
+    // we use HID
   #elif defined(SG_WINDOWS)
-
+    // we use HID
   #else
     #include "FGLinuxEventInput.hxx"
     #define INPUTEVENT_CLASS FGLinuxEventInput
