@@ -68,7 +68,7 @@ protected:
 private:
     bool filterAircraft(const QModelIndex& sourceIndex) const;
 
-    bool m_ratingsFilter = true;
+    bool m_ratingsFilter = false;
     bool m_onlyShowInstalled = false;
     bool m_onlyShowWithUpdate = false;
     bool m_onlyShowFavourites = false;

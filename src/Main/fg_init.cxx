@@ -628,7 +628,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 #endif
 
     // Read global defaults from $FG_ROOT/defaults
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Reading global defaults");
     SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
     if (!defaultsXML.exists()) {
         flightgear::fatalMessageBoxThenExit(

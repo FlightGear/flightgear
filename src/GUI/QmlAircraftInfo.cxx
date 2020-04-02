@@ -36,6 +36,8 @@ public:
     }
 
 protected:
+    void finishInstall(InstallRef aInstall, StatusCode aReason) override;
+
     void catalogRefreshed(CatalogRef, StatusCode) override
     {
     }
@@ -55,19 +57,9 @@ protected:
         }
     }
 
-    void finishInstall(InstallRef aInstall, StatusCode aReason) override
-    {
-        Q_UNUSED(aReason);
-        if (aInstall->package() == p->packageRef()) {
-            p->_cachedProps.reset();
-            p->checkForStates();
-            p->infoChanged();
-        }
-    }
-
     void installStatusChanged(InstallRef aInstall, StatusCode aReason) override
     {
-        Q_UNUSED(aReason);
+        Q_UNUSED(aReason)
         if (aInstall->package() == p->packageRef()) {
             p->downloadChanged();
         }
@@ -84,6 +76,16 @@ private:
 
     QmlAircraftInfo* p;
 };
+
+void QmlAircraftInfo::Delegate::finishInstall(InstallRef aInstall, StatusCode aReason)
+{
+    Q_UNUSED(aReason)
+    if (aInstall->package() == p->packageRef()) {
+        p->_cachedProps.reset();
+        p->checkForStates();
+        p->infoChanged();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -441,7 +443,7 @@ QVariantList QmlAircraftInfo::previews() const
             for (auto p : previews) {
                 SGPath localPreviewPath = ex->path() / p.path;
                 if (!localPreviewPath.exists()) {
-                    qWarning() << "missing local preview" << QString::fromStdString(localPreviewPath.utf8Str());
+                    // this happens when the aircraft is being installed, for example
                     continue;
                 }
                 result.append(QUrl::fromLocalFile(QString::fromStdString(localPreviewPath.utf8Str())));
