@@ -111,7 +111,7 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
         // malformed include or XML, just bail
         return {};
     }
-    
+
     if (!root->getNode("sim/state")) {
         return {};
     }
@@ -143,7 +143,7 @@ QString humanNameFromStateTag(const std::string& tag)
 {
     if (tag == "approach") return QObject::tr("On approach");
     if ((tag == "take-off") || (tag == "takeoff"))
-        return QObject::tr("Ready for Take-off");
+        return QObject::tr("Ready for take-off");
     if ((tag == "parked") || (tag == "parking") || (tag == "cold-and-dark"))
         return QObject::tr("Parked, cold & dark");
     if (tag == "auto")
@@ -152,6 +152,10 @@ QString humanNameFromStateTag(const std::string& tag)
         return QObject::tr("Cruise");
     if (tag == "taxi")
         return QObject::tr("Ready to taxi");
+    if (tag == "carrier-approach")
+        return QObject::tr("On approach to a carrier");
+    if (tag == "carrier-take-off")
+        return QObject::tr("Ready for catapult launch");
 
     qWarning() << Q_FUNC_INFO << "add translation / string for" << QString::fromStdString(tag);
     // no mapping, let's use the tag directly
@@ -879,4 +883,3 @@ bool QmlAircraftInfo::hasTag(QString tag) const
 }
 
 #include "QmlAircraftInfo.moc"
-

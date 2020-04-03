@@ -389,6 +389,10 @@ QString LauncherController::selectAircraftStateAutomatically()
         }
     }
 
+    if (m_location->isCarrier() && m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("carrier-approach")) {
+        return "carrier-approach";
+    }
+
     if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("approach")) {
         return "approach";
     }
@@ -400,10 +404,14 @@ QString LauncherController::selectAircraftStateAutomatically()
         if (m_selectedAircraftInfo->hasState("parking")) {
             return "parking";
         }
-    } else {
-        // also try 'engines-running'?
-        if (m_selectedAircraftInfo->hasState("take-off"))
-            return "take-off";
+    }
+
+    if (m_location->isCarrier() && m_selectedAircraftInfo->hasState("carrier-take-off")) {
+        return "carrier-take-off";
+    }
+
+    if (m_selectedAircraftInfo->hasState("take-off")) {
+        return "take-off";
     }
 
     return {}; // failed to compute, give up
