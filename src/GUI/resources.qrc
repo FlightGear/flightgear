@@ -155,6 +155,6 @@
         <file alias="icon-list-view">assets/icons8-menu.svg</file>
         <file alias="icon-hide">assets/icons8-hide-50.png</file>
         <file alias="icon-carrier">assets/icons8-cargo-ship-50.png</file>
-        <file alias="aircraft-carrier">assets/aircraft-carrier-icon.png</file>
+        <file alias="aircraft-carrier">assets/aircraft-carrier-icon.svg</file>
     </qresource>
 </RCC>
