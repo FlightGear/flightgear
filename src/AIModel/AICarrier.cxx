@@ -621,7 +621,7 @@ std::pair<bool, SGGeod> FGAICarrier::initialPositionForCarrier(const std::string
     // this is actually a three-layer search (we want the scenario with the
     // carrier with the correct penanant or name. Sometimes an XPath for
     // properties would be quite handy :)
-    
+
     for (auto s : fgGetNode("/sim/ai/scenarios")->getChildren("scenario")) {
         auto carriers = s->getChildren("carrier");
         auto it = std::find_if(carriers.begin(), carriers.end(),
@@ -636,16 +636,16 @@ std::pair<bool, SGGeod> FGAICarrier::initialPositionForCarrier(const std::string
         if (it == carriers.end()) {
             continue;
         }
-        
+
         // mark the scenario for loading (which will happen in post-init of the AIManager)
         fgGetNode("/sim/ai/")->addChild("scenario")->setStringValue(s->getStringValue("id"));
-        
+
         // read out the initial-position
         SGGeod geod = SGGeod::fromDeg((*it)->getDoubleValue("longitude"),
                                       (*it)->getDoubleValue("latitude"));
         return std::make_pair(true,  geod);
     } // of scenarios iteration
-    
+
     return std::make_pair(false, SGGeod());
 }
 
@@ -655,7 +655,7 @@ SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::stri
     if (!aiManager) {
         return {};
     }
-    
+
     for (const auto& aiObject : aiManager->get_ai_list()) {
         if (aiObject->isa(FGAIBase::otCarrier)) {
             SGSharedPtr<FGAICarrier> c = static_cast<FGAICarrier*>(aiObject.get());
@@ -664,7 +664,7 @@ SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::stri
             }
         }
     } // of all objects iteration
-    
+
     return {};
 }
 
@@ -673,18 +673,21 @@ void FGAICarrier::extractCarriersFromScenario(SGPropertyNode_ptr xmlNode, SGProp
     for (auto c : xmlNode->getChildren("entry")) {
         if (c->getStringValue("type") != std::string("carrier"))
             continue;
-        
+
         const std::string name = c->getStringValue("name");
         const std::string pennant = c->getStringValue("pennant-number");
         if (name.empty() && pennant.empty()) {
             continue;
         }
-        
+
         SGPropertyNode_ptr carrierNode = scenario->addChild("carrier");
 
         // extract the initial position from the scenario
         carrierNode->setDoubleValue("longitude", c->getDoubleValue("longitude"));
         carrierNode->setDoubleValue("latitude", c->getDoubleValue("latitude"));
+
+        // A description of the carrier is also available from the entry.  Primarily for use by the launcher
+        carrierNode->setStringValue("description", c->getStringValue("description"));
 
         // the find code above just looks for anything called a name (so alias
         // are possible, for example)

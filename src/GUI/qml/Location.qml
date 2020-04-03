@@ -109,6 +109,10 @@ Item {
                     return "%1 - %2 (%3 MHz)".arg(model.ident).arg(model.name).arg(freq);
                 }
 
+                if (model.type === "Carrier") {
+                  return "%1 - %2\n%3".arg(model.ident).arg(model.name).arg(model.description);
+                }
+
                 // general case
                 return "%1 - %2".arg(model.ident).arg(model.name);
             }
@@ -225,7 +229,13 @@ Item {
         icon: "qrc:///svg/icon-carrier"
 
         onClicked:  {
-            root.showCarriers = true;
+            root.showCarriers = ! root.showCarriers;
+
+            if (root.showCarriers) {
+              this.icon = "qrc:///svg/icon-airport"
+            } else {
+              this.icon = "qrc:///svg/icon-carrier"
+            }
         }
     }
 

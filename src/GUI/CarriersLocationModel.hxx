@@ -30,7 +30,8 @@ public:
         NameRole = Qt::UserRole + 4,
         IconRole = Qt::UserRole + 5,
         TypeRole = Qt::UserRole + 6,
-        NavFrequencyRole = Qt::UserRole + 7
+        NavFrequencyRole = Qt::UserRole + 7,
+        DescriptionRole = Qt::UserRole + 8
     };
 
     int indexOf(const QString name) const;
@@ -46,6 +47,7 @@ private:
         QString mScenario; // scenario ID for loading
         QString mCallsign; // pennant-number
         QString mName;
+        QString mDescription;
         SGGeod mInitialLocation;
         // icon?
         QString mTACAN;
