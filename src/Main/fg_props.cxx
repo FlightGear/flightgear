@@ -420,7 +420,7 @@ FGProperties::bind ()
     _headingMagnetic = fgGetNode("/orientation/heading-magnetic-deg", true);
     _trackMagnetic = fgGetNode("/orientation/track-magnetic-deg", true);
     _magVar = fgGetNode("/environment/magnetic-variation-deg", true);
-    _trueHeading = fgGetNode("/orientatino/heading-deg", true);
+    _trueHeading = fgGetNode("/orientation/heading-deg", true);
     _trueTrack = fgGetNode("/orientation/track-deg", true);
 }
 
