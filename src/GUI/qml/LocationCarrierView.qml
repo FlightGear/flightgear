@@ -46,7 +46,7 @@ Item {
 
         height: selectionGrid.height + Style.margin * 2
 
-        // set opacity here only, so we don't make the whole summary pannel translucent
+        // set opacity here only, so we don't make the whole summary panel translucent
         Rectangle {
             id: background
             anchors.fill: parent
@@ -139,6 +139,17 @@ Item {
                     onCommit: _location.airspeed = newValue
                     anchors.verticalCenter: parent.verticalCenter
                 }
+
+                Item {
+                    height: 1; width: Style.strutSize
+                }
+
+                LocationAltitudeRow
+                {
+                    enabled: flolsRadio.selected
+                    width: parent.width
+                }
+
             } // of FLOLS row
 
             // parking row
@@ -162,7 +173,7 @@ Item {
                 }
 
                 StyledText {
-                    text: qsTr("Parking")
+                    text: qsTr("On deck")
                     anchors.verticalCenter: parent.verticalCenter
                     enabled: parkingRadio.selected
                 }

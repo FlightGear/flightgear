@@ -365,8 +365,8 @@ void LocationController::showHistoryInSearchModel()
 	const std::string tutorialICAO = "PHTO"; // C172P tutorial aiurport
 
 	// remove them from the recent locations
-    auto it = std::remove_if(locs.begin(), locs.end(), 
-		[defaultICAO, tutorialICAO](FGPositionedRef pos) 
+    auto it = std::remove_if(locs.begin(), locs.end(),
+		[defaultICAO, tutorialICAO](FGPositionedRef pos)
 	{
         return (pos->ident() == defaultICAO) || (pos->ident() == tutorialICAO);
     });
@@ -593,7 +593,7 @@ bool LocationController::shouldStartPaused() const
     if (m_useCarrierFLOLS) {
         return true;
     }
-    
+
     if (!m_location) {
         return false; // defaults to on-ground at the default airport
     }
@@ -709,7 +709,7 @@ void LocationController::setLocationProperties()
             // treat the FLOLS as a runway, for the purposes of communication with position-init
             fgSetString("/sim/presets/runway", "FLOLS");
             fgSetDouble("/sim/presets/offset-distance-nm", m_offsetDistance.convertToUnit(Units::NauticalMiles).value);
-
+            applyAltitude();
             applyAirspeed();
         } else if (!m_carrierParking.isEmpty()) {
             fgSetString("/sim/presets/parkpos", m_carrierParking.toStdString());
@@ -792,11 +792,11 @@ void LocationController::setLocationProperties()
             default:
                 break;
         }
-        
+
         // set disambiguation property
         globals->get_props()->setIntValue("/sim/presets/navaid-id",
                                           static_cast<int>(m_location->guid()));
-        
+
         applyPositionOffset();
         applyAltitude();
         applyAirspeed();
@@ -847,7 +847,7 @@ void LocationController::applyAltitude()
 
     switch (m_altitude.unit) {
     default:
-        qWarning() << Q_FUNC_INFO << "unsupported altitdue unit";
+        qWarning() << Q_FUNC_INFO << "unsupported altitude unit";
         break;
     case Units::FeetMSL:
         m_config->setArg("altitude", QString::number(m_altitude.value));
@@ -915,6 +915,7 @@ void LocationController::onCollectConfig()
             m_config->setArg("runway", QStringLiteral("FLOLS"));
             const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
             m_config->setArg("offset-distance", QString::number(offsetNm));
+            applyAltitude();
             applyAirspeed();
         }
 
