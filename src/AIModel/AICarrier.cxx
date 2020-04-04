@@ -72,7 +72,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
     _flolsPosOffset(2) = - flols->getDoubleValue("z-offset-m", 0);
 
     _flolsHeadingOffsetDeg = flols->getDoubleValue("heading-offset-deg", 0.0);
-    _flolsApproachAngle = flols->getDoubleValue("glidepath-angle-deg", 3.0);
+    _flolsApproachAngle = flols->getDoubleValue("glidepath-angle-deg", 3.5);
   } else
     _flolsPosOffset = SGVec3d::zeros();
 
