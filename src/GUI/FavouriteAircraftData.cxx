@@ -2,6 +2,8 @@
 
 #include <QSettings>
 
+#include <memory>
+
 static std::unique_ptr<FavouriteAircraftData> static_instance;
 
 FavouriteAircraftData *FavouriteAircraftData::instance()
