@@ -196,8 +196,10 @@ void YASim::init()
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground.
+    bool respect_external_gear_state = fgGetBool("/fdm/yasim/respect-external-gear-state");
     double runway_altitude = get_Runway_altitude();
     if(get_Altitude() - runway_altitude < 50) {
+        bool gear_state = fgGetBool("/controls/gear/gear-down");
         fgSetBool("/controls/gear/gear-down", false);
         float minGearZ = 1e18;
         for(int i=0; i<airplane->numGear(); i++) {
@@ -209,9 +211,9 @@ void YASim::init()
         }
         _set_Altitude(runway_altitude - minGearZ*M2FT);
         // ground start-up: gear down
-        fgSetBool("/controls/gear/gear-down", true);
+        fgSetBool("/controls/gear/gear-down", respect_external_gear_state ? gear_state : true);
     }
-    else
+    else if (! respect_external_gear_state)
     {
         // airborne start-up: gear up
         fgSetBool("/controls/gear/gear-down", false);
@@ -300,7 +302,7 @@ void YASim::copyToYASim(bool copyState)
     atmo.setDensity(dens);
     atmo.setTemperature(temp);
     atmo.setPressure(pressure);
-                            
+
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
     yasim::State s;
@@ -380,9 +382,9 @@ void YASim::copyToYASim(bool copyState)
 // These are set below:
 // _set_Accels_Local
 // _set_Accels_Body
-// _set_Accels_CG_Body 
+// _set_Accels_CG_Body
 // _set_Accels_Pilot_Body
-// _set_Accels_CG_Body_N 
+// _set_Accels_CG_Body_N
 // _set_Velocities_Local
 // _set_Velocities_Ground
 // _set_Velocities_Body
