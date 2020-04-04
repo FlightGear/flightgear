@@ -14,6 +14,7 @@
 #include <Main/globals.hxx>
 
 #include "LocalAircraftCache.hxx"
+#include "FavouriteAircraftData.hxx"
 
 using namespace simgear::pkg;
 
@@ -305,6 +306,8 @@ QmlAircraftInfo::QmlAircraftInfo(QObject *parent)
     , _delegate(new Delegate(this))
 {
     qmlRegisterUncreatableType<StatesModel>("FlightGear.Launcher", 1, 0, "StatesModel", "no");
+    connect(FavouriteAircraftData::instance(), &FavouriteAircraftData::changed,
+            this, &QmlAircraftInfo::onFavouriteChanged);
 }
 
 QmlAircraftInfo::~QmlAircraftInfo()
@@ -673,6 +676,7 @@ void QmlAircraftInfo::setUri(QUrl u)
     emit uriChanged();
     emit infoChanged();
     emit downloadChanged();
+    emit favouriteChanged();
 }
 
 void QmlAircraftInfo::setVariant(quint32 variant)
@@ -695,6 +699,19 @@ void QmlAircraftInfo::setVariant(quint32 variant)
 
     emit infoChanged();
     emit variantChanged(_variant);
+}
+
+void QmlAircraftInfo::setFavourite(bool favourite)
+{
+    FavouriteAircraftData::instance()->setFavourite(uri(), favourite);
+}
+
+void QmlAircraftInfo::onFavouriteChanged(QUrl u)
+{
+    if (u != uri())
+        return;
+
+    emit favouriteChanged();
 }
 
 QVariant QmlAircraftInfo::packageAircraftStatus(simgear::pkg::PackageRef p)
@@ -880,6 +897,11 @@ bool QmlAircraftInfo::hasTag(QString tag) const
     }
 
     return false;
+}
+
+bool QmlAircraftInfo::favourite() const
+{
+    return FavouriteAircraftData::instance()->isFavourite(uri());
 }
 
 #include "QmlAircraftInfo.moc"

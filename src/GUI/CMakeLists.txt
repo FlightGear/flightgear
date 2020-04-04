@@ -128,6 +128,8 @@ if (HAVE_QT)
                             PathListModel.hxx
                             CarriersLocationModel.cxx
                             CarriersLocationModel.hxx
+                            FavouriteAircraftData.cxx
+                            FavouriteAircraftData.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})

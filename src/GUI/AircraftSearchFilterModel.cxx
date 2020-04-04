@@ -4,6 +4,8 @@
 #include <QDebug>
 
 #include "AircraftModel.hxx"
+#include "FavouriteAircraftData.hxx"
+
 #include <simgear/package/Package.hxx>
 
 AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source) :
@@ -121,6 +123,13 @@ void AircraftProxyModel::setShowFavourites(bool e)
         return;
 
     m_onlyShowFavourites = e;
+    if (e) {
+        setDynamicSortFilter(false);
+        connect(FavouriteAircraftData::instance(), &FavouriteAircraftData::changed,
+                [this]() {
+            this->invalidate();
+        });
+    }
     invalidate();
 }
 

@@ -146,9 +146,6 @@ private:
     void installSucceeded(QModelIndex index);
     void installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason);
     
-    void loadFavourites();
-    void saveFavourites();
-
 private:
     PackageDelegate* m_delegate = nullptr;
 
@@ -156,8 +153,6 @@ private:
 
     simgear::pkg::RootRef m_packageRoot;
     simgear::pkg::PackageList m_packages;
-
-    QVector<QUrl> m_favourites;
     int m_cachedLocalAircraftCount = 0;
 
 };

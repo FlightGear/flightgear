@@ -59,6 +59,7 @@ class QmlAircraftInfo : public QObject
     Q_PROPERTY(bool hasStates READ hasStates NOTIFY infoChanged)
     Q_PROPERTY(StatesModel* statesModel READ statesModel NOTIFY infoChanged)
 
+    Q_PROPERTY(bool favourite READ favourite WRITE setFavourite NOTIFY favouriteChanged)
 public:
     explicit QmlAircraftInfo(QObject *parent = nullptr);
     virtual ~QmlAircraftInfo();
@@ -127,11 +128,14 @@ public:
     Q_INVOKABLE bool isAltitudeBelowLimits(QuantityValue speed) const;
 
     Q_INVOKABLE bool hasTag(QString tag) const;
+    bool favourite() const;
+
 signals:
     void uriChanged();
     void infoChanged();
     void downloadChanged();
     void variantChanged(quint32 variant);
+    void favouriteChanged();
 
 public slots:
 
@@ -139,6 +143,10 @@ public slots:
 
     void setVariant(quint32 variant);
 
+    void setFavourite(bool favourite);
+
+private slots:
+    void onFavouriteChanged(QUrl u);
 private:
     AircraftItemPtr resolveItem() const;
     void checkForStates();

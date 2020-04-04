@@ -38,6 +38,7 @@
 #include <Include/version.h>
 
 #include "QmlAircraftInfo.hxx"
+#include "FavouriteAircraftData.hxx"
 
 using namespace simgear::pkg;
 
@@ -160,8 +161,6 @@ AircraftItemModel::AircraftItemModel(QObject* pr) :
             this, &AircraftItemModel::onScanAddedItems);
     connect(cache, &LocalAircraftCache::cleared,
             this, &AircraftItemModel::onLocalCacheCleared);
-
-    loadFavourites();
 }
 
 AircraftItemModel::~AircraftItemModel()
@@ -246,7 +245,7 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
     if (role == AircraftIsFavouriteRole) {
         // recursive call here, hope that's okay
         const auto uri = data(index, AircraftURIRole).toUrl();
-        return m_favourites.contains(uri);
+        return FavouriteAircraftData::instance()->isFavourite(uri);
     }
 
     if (row >= m_cachedLocalAircraftCount) {
@@ -433,17 +432,11 @@ bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value,
           emit dataChanged(index, index);
           return true;
       } else if (role == AircraftIsFavouriteRole) {
-          bool f = value.toBool();
           const auto uri = data(index, AircraftURIRole).toUrl();
-          const auto cur = m_favourites.contains(uri);
-          if (f && !cur) {
-              m_favourites.append(uri);
-          } else if (!f && cur) {
-              m_favourites.removeOne(uri);
+          bool changed = FavouriteAircraftData::instance()->setFavourite(uri, value.toBool());
+          if (changed) {
+              emit dataChanged(index, index);
           }
-
-          saveFavourites();
-          emit dataChanged(index, index);
       }
 
       return false;
@@ -666,21 +659,3 @@ bool AircraftItemModel::isIndexRunnable(const QModelIndex& index) const
     return !ex->isDownloading();
 }
 
-void AircraftItemModel::loadFavourites()
-{
-    m_favourites.clear();
-    QSettings settings;
-    Q_FOREACH(auto v, settings.value("favourite-aircraft").toList()) {
-        m_favourites.append(v.toUrl());
-    }
-}
-
-void AircraftItemModel::saveFavourites()
-{
-    QVariantList favs;
-    Q_FOREACH(auto u, m_favourites) {
-        favs.append(u);
-    }
-    QSettings settings;
-    settings.setValue("favourite-aircraft", favs);
-}
