@@ -797,7 +797,7 @@ void FGFDM::parseTurbineEngine(const XMLAttributes* a)
     ((PropEngine*)_currObj)->setEngine(eng);
 }
 
-void FGFDM::parseElectricEngine(XMLAttributes* a)
+void FGFDM::parseElectricEngine(const XMLAttributes* a)
 {
     //Kv is expected to be given as RPM in XML
     float Kv = attrf(a, "Kv") * RPM2RAD;
