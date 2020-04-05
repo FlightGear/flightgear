@@ -6,14 +6,13 @@ import "."
 Item {
     property alias geod: diagram.geod
 
-    NavaidDiagram {
+    CarrierDiagram {
         id: diagram
         anchors.fill: parent
 
-        offsetEnabled: _location.offsetEnabled
-        offsetBearing: _location.offsetRadial
+        offsetEnabled:  _location.useCarrierFLOLS
         offsetDistance: _location.offsetDistance
-        heading: _location.heading
+        abeam:          _location.abeam
     }
 
     Component.onCompleted: {
@@ -22,7 +21,9 @@ Item {
 
     function syncUIFromController()
     {
-        if (_location.useCarrierFLOLS) {
+        if (_location.abeam) {
+            abeamRadio.select()
+        } else if (_location.useCarrierFLOLS) {
             flolsRadio.select()
         } else {
             parkingRadio.select();
@@ -76,7 +77,7 @@ Item {
                 font.pixelSize: Style.headingFontPixelSize
             }
 
-            // on FLOLS offset
+            // on final approach
             Row {
                 anchors.left: parent.left
                 anchors.leftMargin: Style.margin
@@ -89,9 +90,12 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     group: radioGroup
                     onClicked: {
-                        if (selected) _location.useCarrierFLOLS = selected
+                        if (selected) {
+                          _location.useCarrierFLOLS = selected;
+                          _location.abeam = false;
+                        }
                     }
-                    selected: _location.useCarrierFLOLS
+                    selected: _location.useCarrierFLOLS && (!_location.abeam)
                 }
 
                 StyledText {
@@ -101,6 +105,47 @@ Item {
                 }
 
 
+            }
+
+            // Abeam the FLOLS
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: Style.margin
+                anchors.right: parent.right
+                anchors.rightMargin: Style.margin
+                spacing: Style.margin
+
+                RadioButton {
+                    id: abeamRadio
+                    anchors.verticalCenter: parent.verticalCenter
+                    group: radioGroup
+                    onClicked: {
+                        if (selected) _location.abeam = _location.useCarrierFLOLS = true
+                    }
+                    selected: _location.abeam
+                }
+
+                StyledText {
+                    text: qsTr("Abeam carrier at 180 degrees")
+                    anchors.verticalCenter: parent.verticalCenter
+                    enabled: abeamRadio.selected
+                }
+            }
+
+            // Offset selection
+            readonly property bool offsetEnabled: (flolsRadio.selected || abeamRadio.selected)
+
+            Row {
+                anchors.left: parent.left
+                anchors.leftMargin: Style.margin
+                anchors.right: parent.right
+                anchors.rightMargin: Style.margin
+                spacing: Style.margin
+
+                Item {
+                    height: 1; width: Style.strutSize
+                }
+
                 NumericalEdit {
                     id: offsetNmEdit
                     quantity: _location.offsetDistance
@@ -109,13 +154,13 @@ Item {
                     unitsMode: Units.Distance
                     live: true
                     anchors.verticalCenter: parent.verticalCenter
-                    enabled: flolsRadio.selected
+                    enabled: selectionGrid.offsetEnabled
                 }
 
                 StyledText {
                     text: qsTr(" from the FLOLS (aka the ball)")
                     anchors.verticalCenter: parent.verticalCenter
-                    enabled: flolsRadio.selected
+                    enabled: selectionGrid.offsetEnabled
                 }
 
                 Item {
@@ -124,7 +169,7 @@ Item {
 
                 ToggleSwitch {
                     id: airspeedToggle
-                    enabled: flolsRadio.selected
+                    enabled: selectionGrid.offsetEnabled
                     checked: _location.speedEnabled
                     onCheckedChanged: _location.speedEnabled = checked;
                     anchors.verticalCenter: parent.verticalCenter
@@ -134,7 +179,7 @@ Item {
                     id: airspeedSpinbox
                     label: qsTr("Airspeed:")
                     unitsMode: Units.SpeedWithoutMach
-                    enabled: _location.speedEnabled && flolsRadio.selected
+                    enabled: _location.speedEnabled && selectionGrid.offsetEnabled
                     quantity: _location.airspeed
                     onCommit: _location.airspeed = newValue
                     anchors.verticalCenter: parent.verticalCenter
@@ -146,11 +191,11 @@ Item {
 
                 LocationAltitudeRow
                 {
-                    enabled: flolsRadio.selected
+                    enabled: selectionGrid.offsetEnabled
                     width: parent.width
                 }
 
-            } // of FLOLS row
+            } // of Offset selection
 
             // parking row
             Row {
@@ -170,6 +215,7 @@ Item {
                     onClicked: {
                         if (selected) parkingChoice.setLocation();
                     }
+                    selected : (! _location.abeam) && (! _location.useCarrierFLOLS)
                 }
 
                 StyledText {

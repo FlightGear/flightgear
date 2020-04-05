@@ -503,7 +503,7 @@ static InitPosResult setFinalPosFromCarrier( const string& carrier, const string
   return Failure;
 }
 
-static InitPosResult setFinalPosFromCarrierFLOLS(const string& carrier)
+static InitPosResult setFinalPosFromCarrierFLOLS(const string& carrier, bool abeam)
 {
     SGSharedPtr<FGAICarrier> carrierRef = FGAICarrier::findCarrierByNameOrPennant(carrier);
     if (!carrierRef) {
@@ -530,7 +530,13 @@ static InitPosResult setFinalPosFromCarrierFLOLS(const string& carrier)
     const double od = fgGetDouble("/sim/presets/offset-distance-nm");
 
     // start position
-    SGGeod startPos = SGGeodesy::direct(flolsPosition, headingToFLOLS + 180, od * SG_NM_TO_METER);
+    SGGeod startPos;
+    if (abeam) {
+      // If we're starting from the abeam position, we are opposite the FLOLS, downwind on a left hand circuit
+      startPos = SGGeodesy::direct(flolsPosition, headingToFLOLS - 90, od * SG_NM_TO_METER);
+    } else {
+      startPos = SGGeodesy::direct(flolsPosition, headingToFLOLS + 180, od * SG_NM_TO_METER);
+    }
 
     double alt = fgGetDouble("/sim/presets/altitude-ft");
 
@@ -545,7 +551,7 @@ static InitPosResult setFinalPosFromCarrierFLOLS(const string& carrier)
     fgSetDouble("/sim/presets/longitude-deg",  startPos.getLongitudeDeg());
     fgSetDouble("/sim/presets/latitude-deg",  startPos.getLatitudeDeg());
     fgSetDouble("/sim/presets/altitude-ft", startPos.getElevationFt());
-    fgSetDouble("/sim/presets/heading-deg", headingToFLOLS);
+    fgSetDouble("/sim/presets/heading-deg", abeam ? (headingToFLOLS - 180) : headingToFLOLS);
     fgSetDouble("/position/longitude-deg",  startPos.getLongitudeDeg());
     fgSetDouble("/position/latitude-deg",  startPos.getLatitudeDeg());
     fgSetDouble("/position/altitude-ft", startPos.getElevationFt());
@@ -827,13 +833,14 @@ void finalizePosition()
     std::string runway = fgGetString("/sim/presets/runway");
     std::string apt = fgGetString("/sim/presets/airport-id");
     const bool rwy_req = fgGetBool("/sim/presets/runway-requested");
+    const bool abeam = fgGetBool("/sim/presets/carrier-abeam");
 
     if (!carrier.empty())
     {
         const bool atFLOLS = rwy_req && (runway == "FLOLS");
         InitPosResult carrierResult;
         if (atFLOLS) {
-            carrierResult = setFinalPosFromCarrierFLOLS(carrier);
+            carrierResult = setFinalPosFromCarrierFLOLS(carrier, abeam);
         } else {
             carrierResult = setFinalPosFromCarrier(carrier, parkpos);
         }

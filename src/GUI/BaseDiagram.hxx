@@ -57,7 +57,7 @@ public:
     void setAircraftType(LauncherController::AircraftType type);
 
     QRect rect() const;
-    
+
     Q_INVOKABLE void resetZoom();
 protected:
     void paint(QPainter* p) override;
@@ -78,7 +78,7 @@ protected:
     void extendBounds(const QPointF& p, double radiusM = 1.0);
     QPointF project(const SGGeod& geod) const;
     QTransform transform() const;
-    
+
     void clearIgnoredNavaids();
     void addIgnoredNavaid(FGPositionedRef pos);
 
@@ -98,6 +98,7 @@ protected:
     static SGGeod unproject(const QPointF &xy, const SGGeod &center);
 
     void paintAirplaneIcon(QPainter *painter, const SGGeod &geod, int headingDeg);
+    void paintCarrierIcon(QPainter *painter, const SGGeod &geod, int headingDeg);
     void paintAirways(QPainter* painter, const FGPositionedList& navs);
 
     QPointF projectedPosition(PositionedID pid) const;

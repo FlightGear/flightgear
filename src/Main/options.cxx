@@ -165,7 +165,7 @@ void fgSetDefaults ()
     fgSetDouble("/sim/presets/offset-distance-nm", 0.0);
 
     fgSetBool("/sim/presets/runway-requested", false);
-    
+
     fgSetBool("/sim/presets/onground", true);
     fgSetBool("/sim/presets/trim", false);
 
@@ -1421,22 +1421,22 @@ fgOptScenario( const char *arg )
             // make absolute
             path = simgear::Dir::current().path() / arg;
         }
-        
+
         // create description node
         auto n = FGAIManager::registerScenarioFile(globals->get_props(), path);
         if (!n) {
             SG_LOG(SG_GENERAL, SG_WARN, "failed to read scenario file at:" << path);
             return FG_OPTIONS_ERROR;
         }
-        
+
         // also set the /sim/ai/scenario entry so we load it on startup
         name = path.file_base();
     }
-    
+
     // add the 'load it' node
     SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
     ai_node->addChild("scenario")->setStringValue(name);
-    
+
     return FG_OPTIONS_OK;
 }
 
@@ -1680,6 +1680,7 @@ struct OptionDesc {
     {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
     {"ndb-frequency",                true,  OPTION_DOUBLE, "/sim/presets/ndb-freq", false, "", fgOptVOR },
     {"carrier",                      true,  OPTION_FUNC,   "", false, "", fgOptCarrier },
+    {"carrier-abeam",                true,  OPTION_BOOL,   "/sim/presets/carrier-abeam", true, "", 0 },
     {"parkpos",                      true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
     {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },
     {"offset-distance",              true,  OPTION_DOUBLE, "/sim/presets/offset-distance-nm", false, "", 0 },

@@ -45,6 +45,7 @@
 #include "QmlPositioned.hxx"
 #include "PixmapImageItem.hxx"
 #include "AirportDiagram.hxx"
+#include "CarrierDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "RouteDiagram.hxx"
 #include "QmlRadioButtonHelper.hxx"
@@ -168,6 +169,7 @@ void LauncherController::initQML()
 
     qmlRegisterType<PixmapImageItem>("FlightGear", 1, 0, "PixmapImage");
     qmlRegisterType<AirportDiagram>("FlightGear", 1, 0, "AirportDiagram");
+    qmlRegisterType<CarrierDiagram>("FlightGear", 1, 0, "CarrierDiagram");
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");

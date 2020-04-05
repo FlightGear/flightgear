@@ -75,6 +75,7 @@ class LocationController : public QObject
     Q_PROPERTY(QStringList carrierParkings READ carrierParkings NOTIFY baseLocationChanged)
     Q_PROPERTY(bool useCarrierFLOLS READ useCarrierFLOLS WRITE setUseCarrierFLOLS NOTIFY configChanged)
     Q_PROPERTY(QString carrierParking READ carrierParking WRITE setCarrierParking NOTIFY configChanged)
+    Q_PROPERTY(bool abeam READ abeam WRITE setAbeam NOTIFY configChanged)
 
 
     // allow collecting the location properties to be disabled, if the
@@ -189,6 +190,11 @@ public:
         return m_useCarrierFLOLS;
     }
 
+    bool abeam() const
+    {
+        return m_abeam;
+    }
+
 public slots:
     void setOffsetRadial(QuantityValue offsetRadial);
 
@@ -203,6 +209,8 @@ public slots:
     void setUseAvailableParking(bool useAvailableParking);
 
     void setUseCarrierFLOLS(bool useCarrierFLOLS);
+
+    void setAbeam(bool abeam);
 
 Q_SIGNALS:
     void descriptionChanged();
@@ -261,6 +269,7 @@ private:
     bool m_speedEnabled = false;
     bool m_altitudeEnabled = false;
     bool m_skipFromArgs = false;
+    bool m_abeam;
 
     bool m_useCarrierFLOLS = false;
     QString m_carrierParking;

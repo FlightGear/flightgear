@@ -84,6 +84,8 @@ if (HAVE_QT)
                             BaseDiagram.hxx
                             AirportDiagram.cxx
                             AirportDiagram.hxx
+                            CarrierDiagram.cxx
+                            CarrierDiagram.hxx
                             NavaidDiagram.cxx
                             NavaidDiagram.hxx
                             SetupRootDialog.cxx
@@ -139,7 +141,7 @@ if (HAVE_QT)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
 
     add_library(fgqmlui QQuickDrawable.cxx
-                        QQuickDrawable.hxx                    
+                        QQuickDrawable.hxx
                         QtQuickFGCanvasItem.cxx
                         QtQuickFGCanvasItem.hxx
                         PropertyItemModel.cxx
