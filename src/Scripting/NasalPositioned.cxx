@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <cstring>
+#include <algorithm>
 
 #include "NasalPositioned.hxx"
 
@@ -2446,7 +2447,8 @@ private:
 class NasalFPDelegateFactory : public FlightPlan::DelegateFactory
 {
 public:
-  NasalFPDelegateFactory(naRef code)
+  NasalFPDelegateFactory(naRef code, const std::string& id) :
+        _id(id)
   {
     _nasal = globals->get_subsystem<FGNasalSys>();
     _func = code;
@@ -2474,7 +2476,11 @@ public:
       naFreeContext(ctx);
       return result;
   }
+    
+  const std::string& id() const
+    { return _id; }
 private:
+  const std::string _id;
   FGNasalSys* _nasal;
   naRef _func;
   int _gcSaveKey;
@@ -2499,10 +2505,45 @@ static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
   if ((argc < 1) || !naIsFunc(args[0])) {
     naRuntimeError(c, "non-function argument to registerFlightPlanDelegate");
   }
-  NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0]);
-  FlightPlan::registerDelegateFactory(factory);
+    
+    const std::string delegateId = (argc > 1) ? naStr_data(args[1]) : std::string{};
+    if (!delegateId.empty()) {
+        auto it = std::find_if(static_nasalDelegateFactories.begin(), static_nasalDelegateFactories.end(),
+                                  [delegateId](NasalFPDelegateFactory* delegate) {
+               return delegate->id() == delegateId;
+           });
+        if (it != static_nasalDelegateFactories.end()) {
+            naRuntimeError(c, "duplicate delegate ID at registerFlightPlanDelegate: %s", delegateId.c_str());
+        }
+    }
+    
+    NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0], delegateId);
+    FlightPlan::registerDelegateFactory(factory);
     static_nasalDelegateFactories.push_back(factory);
-  return naNil();
+    return naNil();
+}
+
+static naRef f_unregisterFPDelegate(naContext c, naRef me, int argc, naRef* args)
+{
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "non-string argument to unregisterFlightPlanDelegate");
+  }
+
+    const std::string delegateId = naStr_data(args[0]);
+    auto it = std::find_if(static_nasalDelegateFactories.begin(), static_nasalDelegateFactories.end(),
+                           [delegateId](NasalFPDelegateFactory* delegate) {
+        return delegate->id() == delegateId;
+    });
+    
+    if (it == static_nasalDelegateFactories.end()) {
+        SG_LOG(SG_NASAL, SG_DEV_WARN, "f_unregisterFPDelegate: no de;egate with ID:" << delegateId);
+        return naNil();
+    }
+    
+    FlightPlan::unregisterDelegateFactory(*it);
+    static_nasalDelegateFactories.erase(it);
+    
+    return naNil();
 }
 
 static WayptRef wayptFromArg(naRef arg)
@@ -3295,6 +3336,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "flightplan", f_flightplan },
   { "createFlightplan", f_createFlightplan },
   { "registerFlightPlanDelegate", f_registerFPDelegate },
+  { "unregisterFlightPlanDelegate", f_unregisterFPDelegate},
   { "createWP", f_createWP },
   { "createWPFrom", f_createWPFrom },
   { "createViaTo", f_createViaTo },
