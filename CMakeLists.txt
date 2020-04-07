@@ -76,7 +76,7 @@ include(GNUInstallDirs)
 # System detection/default settings
 include( DetectDistro )
 include( DetectBrowser )
-
+include( ExportDebugSymbols )
 set(CMAKE_DEBUG_POSTFIX          "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX        ""  CACHE STRING "add a postfix, usually empty on windows")
 set(CMAKE_RELWITHDEBINFO_POSTFIX ""  CACHE STRING "add a postfix, usually empty on windows")
@@ -305,6 +305,13 @@ find_package(OpenSceneGraph 3.2.0 REQUIRED
   osgViewer
   osgGA
 )
+
+find_package(sentry)
+
+if (TARGET sentry::sentry)
+    message(STATUS "Sentry.io crash reporting enabled")
+    set(HAVE_SENTRY 1)
+endif()
 
 if (MSVC)
 	find_package(CrashRpt)

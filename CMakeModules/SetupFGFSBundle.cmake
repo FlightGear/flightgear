@@ -7,7 +7,7 @@ function(setup_fgfs_bundle target)
     # in our local CMakeModules dir
     set_target_properties(${target} PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST FlightGearBundleInfo.plist.in
-        MACOSX_BUNDLE_GUI_IDENTIFIER "org.flightgear.FlightGear"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "org.flightgear.mac-nightly"
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${FLIGHTGEAR_VERSION}
         MACOSX_BUNDLE_LONG_VERSION_STRING "FlightGear ${FLIGHTGEAR_VERSION} Nightly"
         MACOSX_BUNDLE_BUNDLE_VERSION ${FLIGHTGEAR_VERSION}
