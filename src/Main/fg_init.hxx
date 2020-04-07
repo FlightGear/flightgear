@@ -35,6 +35,8 @@ class SGPath;
 // Return the current base package version
 std::string fgBasePackageVersion(const SGPath& path);
 
+SGPath fgHomePath();
+
 bool fgInitHome();
 void fgShutdownHome();
 

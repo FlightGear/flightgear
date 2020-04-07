@@ -1,8 +1,6 @@
-// bootstrap.cxx -- replacement bootstrap routines for the test suite.
+// sentryIntegration.hxx - Interface with Sentry.io crash reporting
 //
-// Written by Edward d'Auvergne, started May 2017.
-//
-// Copyright (C) 2017 Edward d'Auvergne
+// Copyright (C) 2020 James Turner  james@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -17,10 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
 
-#include <iostream>
+#pragma once
 
-int _bootstrap_OSInit;
-std::string hostname;
+#include <string>
+
+namespace flightgear
+{
+void initSentry();
+
+void shutdownSentry();
+
+bool isSentryEnabled();
+
+void addSentryBreadcrumb(const std::string& msg, const std::string& level);
+
+void addSentryTag(const char* tag, const char* value);
+
+void addSentryTag(const std::string& tag, const std::string& value);
+
+
+} // of namespace flightgear
+

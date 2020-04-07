@@ -47,8 +47,6 @@
 
 #cmakedefine HAVE_DBUS
 
-#cmakedefine HAVE_CRASHRPT
-
 #cmakedefine ENABLE_HID_INPUT
 #cmakedefine ENABLE_PLIB_JOYSTICK
 

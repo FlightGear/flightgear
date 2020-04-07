@@ -65,19 +65,13 @@
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <GUI/MessageBox.hxx>
 
 #include "fg_os.hxx"
 
 #if defined(HAVE_QT)
 #include <GUI/QtLauncher.hxx>
-#endif
-
-#if defined(HAVE_CRASHRPT)
-	#include <CrashRpt.h>
-
-bool global_crashRptEnabled = false;
-
 #endif
 
 using std::cerr;
@@ -260,62 +254,23 @@ int main ( int argc, char **argv )
   char _hostname[256];
   gethostname(_hostname, 256);
   hostname = _hostname;
-
   signal(SIGPIPE, SIG_IGN);
-# ifndef NDEBUG
-  signal(SIGSEGV, segfault_handler);
-# endif
 #endif
 
   _bootstrap_OSInit = 0;
+    
+#if defined(HAVE_SENTRY)
+    if (flightgear::Options::checkForArg(argc, argv, "enable-sentry")) {
+        flightgear::initSentry();
+    }
+#endif
 
-#if defined(HAVE_CRASHRPT)
-	// Define CrashRpt configuration parameters
-	CR_INSTALL_INFO info;
-	memset(&info, 0, sizeof(CR_INSTALL_INFO));
-	info.cb = sizeof(CR_INSTALL_INFO);
-	info.pszAppName = "FlightGear";
-	info.pszAppVersion = FLIGHTGEAR_VERSION;
-	info.pszEmailSubject = "FlightGear " FLIGHTGEAR_VERSION " crash report";
-	info.pszEmailTo = "fgcrash@goneabitbursar.com";
-	info.pszUrl = "http://fgfs.goneabitbursar.com/crashreporter/crashrpt.php";
-	info.uPriorities[CR_HTTP] = 3;
-	info.uPriorities[CR_SMTP] = 2;
-	info.uPriorities[CR_SMAPI] = 1;
-
-	// Install all available exception handlers
-	info.dwFlags |= CR_INST_ALL_POSSIBLE_HANDLERS;
-
-	// Restart the app on crash
-	info.dwFlags |= CR_INST_SEND_QUEUED_REPORTS;
-
-	// automatically install handlers for all threads
-	info.dwFlags |= CR_INST_AUTO_THREAD_HANDLERS;
-
-	// Define the Privacy Policy URL
-	info.pszPrivacyPolicyURL = "http://flightgear.org/crash-privacypolicy.html";
-
-	// Install crash reporting
-	int nResult = crInstall(&info);
-	if(nResult!=0) {
-		// don't warn about missing CrashRpt in developer builds
-		if (strcmp(FG_BUILD_TYPE, "Dev") != 0) {
-			char buf[1024];
-			crGetLastErrorMsg(buf, 1024);
-			flightgear::modalMessageBox("CrashRpt setup failed",
-				"Failed to setup crash-reporting engine, check the installation is not damaged.",
-				buf);
-		}
-	} else {
-		global_crashRptEnabled = true;
-
-		crAddProperty("hudson-build-id", JENKINS_BUILD_ID);
-		char buf[16];
-		::snprintf(buf, 16, "%d", JENKINS_BUILD_NUMBER);
-		crAddProperty("hudson-build-number", buf);
-    crAddProperty("git-revision", REVISION);
-    crAddProperty("build-type", FG_BUILD_TYPE);
-	}
+// if we're not using the normal crash-reported, install our
+// custom segfault handler on Linux, in debug builds
+#if !defined(SG_WINDOWS) && !defined(NDEBUG)
+    if (!flightgear::isSentryEnabled()) {
+        signal(SIGSEGV, segfault_handler);
+    }
 #endif
 
     initFPE(flightgear::Options::checkForArg(argc, argv, "enable-fpe"));
@@ -377,11 +332,6 @@ int main ( int argc, char **argv )
 #if defined(HAVE_QT)
     flightgear::shutdownQtApp();
 #endif
-
-#if defined(HAVE_CRASHRPT)
-	crUninstall();
-#endif
-
     return exitStatus;
 }
 
@@ -407,4 +357,5 @@ void fgExitCleanup() {
     simgear::GroundLightManager::instance()->getGroundLightStateSet()->clear();
 
     simgear::shutdownLogging();
+    flightgear::shutdownSentry();
 }

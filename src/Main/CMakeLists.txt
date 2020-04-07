@@ -29,6 +29,7 @@ set(SOURCES
     subsystemFactory.cxx
     util.cxx
     XLIFFParser.cxx
+    sentryIntegration.cxx
     ${MS_RESOURCE_FILE}
 )
 
@@ -49,6 +50,7 @@ set(HEADERS
     subsystemFactory.hxx
     util.hxx
     XLIFFParser.hxx
+    sentryIntegration.hxx
 )
 
 flightgear_component(Main "${SOURCES}" "${HEADERS}")

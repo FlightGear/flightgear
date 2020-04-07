@@ -20,10 +20,7 @@
 //
 // $Id$
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/compiler.h>
 #include <simgear/props/props_io.hxx>
@@ -34,13 +31,6 @@
 #include <osg/GraphicsContext>
 #include <osgDB/Registry>
 
-#if defined(HAVE_CRASHRPT)
-	#include <CrashRpt.h>
-
-// defined in bootstrap.cxx
-extern bool global_crashRptEnabled;
-
-#endif
 
 // Class references
 #include <simgear/canvas/VGInitOperation.hxx>
@@ -85,6 +75,7 @@ extern bool global_crashRptEnabled;
 #include "screensaver_control.hxx"
 #include "subsystemFactory.hxx"
 #include "options.hxx"
+#include <Main/sentryIntegration.hxx>
 
 #include <simgear/embedded_resources/EmbeddedResourceManager.hxx>
 #include <EmbeddedResources/FlightGear-resources.hxx>
@@ -214,6 +205,10 @@ static void initTerrasync()
 
     terra_sync->bind();
     terra_sync->init();
+    
+    if (fgGetBool("/sim/terrasync/enabled")) {
+        flightgear::addSentryTag("terrasync", "enabled");
+    }
 }
 
 static void fgSetVideoOptions()
@@ -255,6 +250,10 @@ static void fgSetVideoOptions()
 
 static void checkOpenGLVersion()
 {
+    flightgear::addSentryTag("gl-version", fgGetString("/sim/rendering/gl-version"));
+    flightgear::addSentryTag("gl-renderer", fgGetString("/sim/rendering/gl-vendor"));
+    flightgear::addSentryTag("gl-vendor", fgGetString("/sim/rendering/gl-renderer"));
+    
 #if defined(SG_MAC)
     // Mac users can't upgrade their drivers, so complaining about
     // versions doesn't help them much
@@ -430,9 +429,12 @@ static void fgIdleFunction ( void ) {
         ngccn = new simgear::Notifications::NasalGarbageCollectionConfigurationNotification(nasal_gc_threaded->getBoolValue(), nasal_gc_threaded_wait->getBoolValue());
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(*ngccn);
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_started);
+        
+        flightgear::addSentryBreadcrumb("entering main loop", "info");
     }
 
     if ( idle_state == 2000 ) {
+        flightgear::addSentryBreadcrumb("starting reset", "info");
         fgStartNewReset();
         idle_state = 2005;
     }
@@ -517,15 +519,6 @@ static void logToHome()
         logPath.append("fgfs.log");
     }
     sglog().logToFile(logPath, SG_ALL, SG_INFO);
-
-#if defined(HAVE_CRASHRPT)
-	if (global_crashRptEnabled) {
-		crAddFile2(logPath.c_str(), NULL, "FlightGear Log File", CR_AF_MAKE_FILE_COPY);
-		SG_LOG( SG_GENERAL, SG_INFO, "CrashRpt enabled");
-	} else {
-		SG_LOG(SG_GENERAL, SG_WARN, "CrashRpt enabled at compile time but failed to install");
-	}
-#endif
 }
 
 // Main top level initialization
@@ -551,6 +544,10 @@ int fgMainInit( int argc, char **argv )
         logToHome();
     }
 
+    if (readOnlyFGHome) {
+        flightgear::addSentryTag("fghome-readonly", "true");
+    }
+
     std::string version(FLIGHTGEAR_VERSION);
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version " << version );
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Build Type " << FG_BUILD_TYPE );
@@ -562,6 +559,9 @@ int fgMainInit( int argc, char **argv )
     SG_LOG(SG_GENERAL, SG_ALERT, "Minimum supported OpenScenegraph is V3.4.1 - currently using " << osgGetVersion() << " This can cause fatal OSG 'final reference count' errors at runtime");
 #endif
 
+    flightgear::addSentryTag("jenkins-build-number", JENKINS_BUILD_NUMBER);
+    flightgear::addSentryTag("osg-version", osgGetVersion());
+    
 #ifdef __OpenBSD__
     {
         /* OpenBSD defaults to a small maximum data segment, which can cause
@@ -628,9 +628,12 @@ int fgMainInit( int argc, char **argv )
 
 #if defined(HAVE_QT)
     if (showLauncher) {
+        flightgear::addSentryBreadcrumb("starting launcher", "info");
         if (!flightgear::runLauncherDialog()) {
             return EXIT_SUCCESS;
         }
+
+        flightgear::addSentryBreadcrumb("completed launcher", "info");
     }
 #else
     if (showLauncher) {
@@ -692,6 +695,7 @@ int fgMainInit( int argc, char **argv )
 
     if (fgGetBool("/sim/ati-viewport-hack", true)) {
         SG_LOG(SG_GENERAL, SG_WARN, "Enabling ATI/AMD viewport hack");
+        flightgear::addSentryTag("ati-viewport-hack", "enabled");
         ATIScreenSizeHack();
     }
 

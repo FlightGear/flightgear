@@ -40,10 +40,6 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} ${GooglePerfTools_LIBRARIES})
     endif()
 
-    if(CRASHRPT_FOUND)
-        target_link_libraries(${target} ${CRASHRPT_LIBRARY})
-    endif()
-
     if(X11_FOUND)
         target_link_libraries(${target} ${X11_LIBRARIES})
     endif()

@@ -151,6 +151,7 @@
 #include "positioninit.hxx"
 #include "util.hxx"
 #include "AircraftDirVisitorBase.hxx"
+#include <Main/sentryIntegration.hxx>
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h> // for Mac impl of platformDefaultDataPath()
@@ -449,9 +450,14 @@ static SGPath platformDefaultDataPath()
 static HANDLE static_fgHomeWriteMutex = nullptr;
 #endif
 
+SGPath fgHomePath()
+{
+    return SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
+}
+
 bool fgInitHome()
 {
-  SGPath dataPath = SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
+  SGPath dataPath = fgHomePath();
   globals->set_fg_home(dataPath);
     
     simgear::Dir fgHome(dataPath);
@@ -718,6 +724,8 @@ int fgInitAircraft(bool reinit)
     SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
     string aircraftId(aircraftProp->getStringValue());
 
+    flightgear::addSentryTag("aircraft", aircraftId);
+        
     PackageRef acftPackage;
     if (!haveExplicit) {
         acftPackage = pkgRoot->getPackageById(aircraftId);
@@ -1131,6 +1139,8 @@ void fgStartReposition()
   SGPropertyNode *master_freeze = fgGetNode("/sim/freeze/master");
   SG_LOG( SG_GENERAL, SG_INFO, "fgStartReposition()");
   
+  flightgear::addSentryBreadcrumb("start reposition", "info");
+
   // ensure we are frozen
   bool freeze = master_freeze->getBoolValue();
   if ( !freeze ) {
@@ -1149,8 +1159,7 @@ void fgStartReposition()
   // main-loop
   flightgear::initPosition();
   
-  simgear::SGTerraSync* terraSync =
-  static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
+  auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
   if (terraSync) {
     terraSync->reposition();
   }

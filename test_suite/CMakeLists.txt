@@ -50,9 +50,11 @@ if (NOT SYSTEM_CPPUNIT)
     get_property(CPPUNIT_SOURCES GLOBAL PROPERTY CPPUNIT_SOURCES)
     get_property(CPPUNIT_HEADERS GLOBAL PROPERTY CPPUNIT_HEADERS)
 
-    include_directories("${PROJECT_SOURCE_DIR}/3rdparty/cppunit/include")
 
     add_library(CppUnitLib STATIC ${CPPUNIT_SOURCES} ${CPPUNIT_HEADERS})
+
+    target_include_directories(CppUnitLib PUBLIC "${PROJECT_SOURCE_DIR}/3rdparty/cppunit/include")
+
     set(CPPUNIT_LIBRARIES CppUnitLib)
 else()
     message(STATUS "CppUnit: Linking to the system supplied CppUnit library")
@@ -143,6 +145,8 @@ endif(ENABLE_AUTOTESTING)
 
 # Set up the target links.
 setup_fgfs_libraries(fgfs_test_suite)
+
+target_compile_definitions(fgfs_test_suite PUBLIC BUILDING_TESTSUITE)
 
 # Additional libraries just for the test suite.
 target_link_libraries(fgfs_test_suite ${CPPUNIT_LIBRARIES})
