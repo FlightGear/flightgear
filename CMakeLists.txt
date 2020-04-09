@@ -314,7 +314,7 @@ find_package(OpenSceneGraph 3.2.0 REQUIRED
   osgGA
 )
 
-find_package(sentry)
+find_package(sentry QUIET)
 
 if (TARGET sentry::sentry)
     message(STATUS "Sentry.io crash reporting enabled")

@@ -1,9 +1,9 @@
-find_package(PNG)
-find_package(OpenGL)
-find_package(Freetype)
+find_package(PNG QUIET)
+find_package(OpenGL QUIET)
+find_package(Freetype QUIET)
 
-find_package(GLUT)
-find_package(GLEW)
+find_package(GLUT QUIET)
+find_package(GLEW QUIET)
 
 if(NOT ${GLUT_FOUND})
   message(WARNING "GLUT NOT found, can't build FGPanel")
