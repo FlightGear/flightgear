@@ -29,7 +29,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <boost/foreach.hpp>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
@@ -143,8 +142,7 @@ FGRunwayMap FGAirport::getRunwayMap() const
 
   double minLengthFt = fgGetDouble("/sim/navdb/min-runway-length-ft");
 
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways)
-  {
+  for (auto rwy : mRunways) {
     // ignore unusably short runways
     // TODO other methods don't check this...
     if( rwy->lengthFt() >= minLengthFt )
@@ -160,8 +158,7 @@ FGHelipadMap FGAirport::getHelipadMap() const
   loadHelipads();
   FGHelipadMap map;
 
-  BOOST_FOREACH(PositionedID id, mHelipads)
-  {
+  for (auto id : mHelipads) {
     FGHelipad* rwy = loadById<FGHelipad>(id);
     map[ rwy->ident() ] = rwy;
   }
@@ -173,7 +170,7 @@ FGHelipadMap FGAirport::getHelipadMap() const
 bool FGAirport::hasRunwayWithIdent(const std::string& aIdent) const
 {
   loadRunways();
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+  for (auto rwy : mRunways) {
     if (rwy->ident() == aIdent) {
       return true;
     }
@@ -193,12 +190,12 @@ bool FGAirport::hasHelipadWithIdent(const std::string& aIdent) const
 FGRunwayRef FGAirport::getRunwayByIdent(const std::string& aIdent) const
 {
   loadRunways();
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+  for (auto rwy : mRunways) {
     if (rwy->ident() == aIdent) {
       return rwy;
     }
   }
-  
+
   SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
   throw sg_range_exception("unknown runway " + aIdent + " at airport:" + ident(), "FGAirport::getRunwayByIdent");
 }
@@ -219,10 +216,10 @@ FGHelipadRef FGAirport::getHelipadByIdent(const std::string& aIdent) const
 FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading, struct FindBestRunwayForHeadingParams * parms ) const
 {
   loadRunways();
-  
+
   FGRunway* result = NULL;
   double currentBestQuality = 0.0;
-  
+
   struct FindBestRunwayForHeadingParams fbrfhp;
   if( NULL != parms ) fbrfhp = *parms;
 
@@ -234,14 +231,14 @@ FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading, struct FindBest
     fbrfhp.deviationWeight = searchNode->getDoubleValue("deviation-weight", fbrfhp.deviationWeight );
     fbrfhp.ilsWeight = searchNode->getDoubleValue("ils-weight", fbrfhp.ilsWeight );
   }
-    
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+
+  for (auto rwy : mRunways) {
     double good = rwy->score( fbrfhp.lengthWeight,  fbrfhp.widthWeight,  fbrfhp.surfaceWeight,  fbrfhp.ilsWeight );
     double dev = aHeading - rwy->headingDeg();
     SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
     double bad = fabs( fbrfhp.deviationWeight * dev) + 1e-20;
     double quality = good / bad;
-    
+
     if (quality > currentBestQuality) {
       currentBestQuality = quality;
       result = rwy;
@@ -255,11 +252,11 @@ FGRunwayRef FGAirport::findBestRunwayForHeading(double aHeading, struct FindBest
 FGRunwayRef FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
 {
   loadRunways();
-  
+
   FGRunway* result = NULL;
   double currentLowestDev = 180.0;
-  
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+
+  for (auto rwy : mRunways) {
     double inboundCourse = SGGeodesy::courseDeg(aPos, rwy->end());
     double dev = inboundCourse - rwy->headingDeg();
     SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
@@ -270,7 +267,7 @@ FGRunwayRef FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
       result = rwy;
     }
   } // of runway iteration
-  
+
   return result;
 
 }
@@ -279,8 +276,8 @@ FGRunwayRef FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
 bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
 {
   loadRunways();
-  
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+
+  for (auto rwy : mRunways) {
     if (rwy->isHardSurface() && (rwy->lengthFt() >= aLengthFt)) {
       return true; // we're done!
     }
@@ -294,7 +291,7 @@ FGRunwayRef FGAirport::longestRunway() const
     FGRunwayRef r;
     loadRunways();
 
-    BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+    for (auto rwy : mRunways) {
         if (!r || (r->lengthFt() < rwy->lengthFt())) {
              r = rwy;
         }
@@ -315,10 +312,10 @@ FGRunwayList FGAirport::getRunways() const
 FGRunwayList FGAirport::getRunwaysWithoutReciprocals() const
 {
   loadRunways();
-  
+
   FGRunwayList r;
-  
-  BOOST_FOREACH(FGRunwayRef rwy, mRunways) {
+
+  for (auto rwy : mRunways) {
     FGRunway* recip = rwy->reciprocalRunway();
     if (recip) {
       FGRunwayList::iterator it = std::find(r.begin(), r.end(), recip);
@@ -326,10 +323,10 @@ FGRunwayList FGAirport::getRunwaysWithoutReciprocals() const
         continue; // reciprocal already in result set, don't include us
       }
     }
-    
+
     r.push_back(rwy);
   }
-  
+
   return r;
 }
 
@@ -379,20 +376,20 @@ FGPavementList FGAirport::getPavements() const
 FGRunwayRef FGAirport::getActiveRunwayForUsage() const
 {
   FGEnvironmentMgr* envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
-  
+
   // This forces West-facing rwys to be used in no-wind situations
   // which is consistent with Flightgear's initial setup.
   double hdg = 270;
-  
+
   if (envMgr) {
     FGEnvironment stationWeather(envMgr->getEnvironment(geod()));
-  
+
     double windSpeed = stationWeather.get_wind_speed_kt();
     if (windSpeed > 0.0) {
       hdg = stationWeather.get_wind_from_heading_deg();
     }
   }
-  
+
   return findBestRunwayForHeading(hdg);
 }
 
@@ -404,7 +401,7 @@ FGAirportRef FGAirport::findClosest( const SGGeod& aPos,
   AirportFilter aptFilter;
   if( !filter )
     filter = &aptFilter;
-  
+
   return static_pointer_cast<FGAirport>
   (
     FGPositioned::findClosest(aPos, aCuttofNm, filter)
@@ -495,7 +492,7 @@ const FGAirport *fgFindAirportID( const std::string& id)
     if ( id.empty() ) {
         return NULL;
     }
-    
+
     return FGAirport::findByIdent(id);
 }
 
@@ -510,12 +507,12 @@ void FGAirport::loadRunways() const
   if (mRunwaysLoaded) {
     return; // already loaded, great
   }
-  
+
   loadSceneryDefinitions();
-  
+
   mRunwaysLoaded = true;
   PositionedIDVec rwys(itemsOfType(FGPositioned::RUNWAY));
-  BOOST_FOREACH(PositionedID id, rwys) {
+  for (auto id : rwys) {
     mRunways.push_back(loadById<FGRunway>(id));
   }
 }
@@ -535,7 +532,7 @@ void FGAirport::loadTaxiways() const
   if (mTaxiwaysLoaded) {
     return; // already loaded, great
   }
-  
+
   mTaxiwaysLoaded =  true;
   mTaxiways = itemsOfType(FGPositioned::TAXIWAY);
 }
@@ -545,14 +542,14 @@ void FGAirport::loadProcedures() const
   if (mProceduresLoaded) {
     return;
   }
-  
+
   mProceduresLoaded = true;
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "procedures", path)) {
     SG_LOG(SG_GENERAL, SG_INFO, "no procedures data available for " << ident());
     return;
   }
-  
+
   SG_LOG(SG_GENERAL, SG_INFO, ident() << ": loading procedures from " << path);
   RouteBase::loadAirportProcedures(path, const_cast<FGAirport*>(this));
 }
@@ -562,14 +559,14 @@ void FGAirport::loadSceneryDefinitions() const
   if (mThresholdDataLoaded) {
     return;
   }
-  
+
   mThresholdDataLoaded = true;
-  
+
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "threshold", path)) {
     return; // no XML threshold data
   }
-  
+
   try {
     SGPropertyNode_ptr rootNode = new SGPropertyNode;
     readProperties(path, rootNode);
@@ -588,7 +585,7 @@ void FGAirport::readThresholdData(SGPropertyNode* aRoot)
       *t1 = runway->getChild("threshold", 1);
     assert(t0);
     assert(t1); // too strict? maybe we should finally allow single-ended runways
-    
+
     processThreshold(t0);
     processThreshold(t1);
   } // of runways iteration
@@ -598,17 +595,17 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
 {
   // first, let's identify the current runway
   std::string rwyIdent(aThreshold->getStringValue("rwy"));
-  NavDataCache* cache = NavDataCache::instance(); 
+  NavDataCache* cache = NavDataCache::instance();
   PositionedID id = cache->airportItemWithIdent(guid(), FGPositioned::RUNWAY, rwyIdent);
-  
+
   double lon = aThreshold->getDoubleValue("lon"),
   lat = aThreshold->getDoubleValue("lat");
   SGGeod newThreshold(SGGeod::fromDegM(lon, lat, elevationM()));
-  
+
   double newHeading = aThreshold->getDoubleValue("hdg-deg");
   double newDisplacedThreshold = aThreshold->getDoubleValue("displ-m");
   double newStopway = aThreshold->getDoubleValue("stopw-m");
-  
+
   if (id == 0) {
     SG_LOG(SG_GENERAL, SG_DEBUG, "FGAirport::processThreshold: "
            "found runway not defined in the global data:" << ident() << "/" << rwyIdent);
@@ -645,7 +642,7 @@ void FGAirport::validateTowerData() const
   if (mTowerDataLoaded) {
     return;
   }
-  
+
   mTowerDataLoaded = true;
 
 // first, load data from the cache (apt.dat)
@@ -672,12 +669,12 @@ void FGAirport::validateTowerData() const
     mTowerPosition = tower->geod();
     mHasTower = true;
   }
-  
+
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "twr", path)) {
     return; // no XML tower data, base position is fine
   }
-  
+
   try {
     SGPropertyNode_ptr rootNode = new SGPropertyNode;
     readProperties(path, rootNode);
@@ -691,9 +688,9 @@ void FGAirport::validateTowerData() const
 void FGAirport::readTowerData(SGPropertyNode* aRoot)
 {
   SGPropertyNode* twrNode = aRoot->getChild("tower")->getChild("twr");
-  double lat = twrNode->getDoubleValue("lat"), 
-    lon = twrNode->getDoubleValue("lon"), 
-    elevM = twrNode->getDoubleValue("elev-m");  
+  double lat = twrNode->getDoubleValue("lat"),
+    lon = twrNode->getDoubleValue("lon"),
+    elevM = twrNode->getDoubleValue("elev-m");
 // tower elevation is AGL, not AMSL. Since we don't want to depend on the
 // scenery for a precise terrain elevation, we use the field elevation
 // (this is also what the apt.dat code does)
@@ -706,16 +703,16 @@ void FGAirport::validateILSData()
   if (mILSDataLoaded) {
     return;
   }
-  
+
   // to avoid re-entrancy on this code-path, ensure we set loaded
   // immediately.
   mILSDataLoaded = true;
-    
+
   SGPath path;
   if (!XMLLoader::findAirportData(ident(), "ils", path)) {
     return; // no XML ILS data
   }
-  
+
   try {
       SGPropertyNode_ptr rootNode = new SGPropertyNode;
       readProperties(path, rootNode);
@@ -732,7 +729,7 @@ bool FGAirport::hasTower() const
 }
 
 void FGAirport::readILSData(SGPropertyNode* aRoot)
-{  
+{
   NavDataCache* cache = NavDataCache::instance();
   // find the entry matching the runway
   SGPropertyNode* runwayNode, *ilsNode;
@@ -750,12 +747,12 @@ void FGAirport::readILSData(SGPropertyNode* aRoot)
                ilsNode->getStringValue("nav-id"));
         continue;
       }
-      
+
       double hdgDeg = ilsNode->getDoubleValue("hdg-deg"),
         lon = ilsNode->getDoubleValue("lon"),
         lat = ilsNode->getDoubleValue("lat"),
         elevM = ilsNode->getDoubleValue("elev-m");
- 
+
       FGNavRecordRef nav(FGPositioned::loadById<FGNavRecord>(ils));
       assert(nav.valid());
       nav->updateFromXML(SGGeod::fromDegM(lon, lat, elevM), hdgDeg);
@@ -801,7 +798,7 @@ flightgear::SID* FGAirport::findSIDWithIdent(const std::string& aIdent) const
       return mSIDs[i];
     }
   }
-  
+
   return NULL;
 }
 
@@ -835,7 +832,7 @@ STAR* FGAirport::findSTARWithIdent(const std::string& aIdent) const
       return mSTARs[i];
     }
   }
-  
+
   return NULL;
 }
 
@@ -868,7 +865,7 @@ Approach* FGAirport::findApproachWithIdent(const std::string& aIdent) const
       return mApproaches[i];
     }
   }
-  
+
   return NULL;
 }
 
@@ -893,13 +890,12 @@ FGAirport::commStations() const
 {
   NavDataCache* cache = NavDataCache::instance();
   CommStationList result;
-  BOOST_FOREACH(PositionedID pos, cache->airportItemsOfType(guid(),
-                                                            FGPositioned::FREQ_GROUND,
-                                                            FGPositioned::FREQ_UNICOM))
-  {
+  for (auto pos : cache->airportItemsOfType(guid(),
+                                            FGPositioned::FREQ_GROUND,
+                                            FGPositioned::FREQ_UNICOM)) {
     result.push_back( loadById<CommStation>(pos) );
   }
-  
+
   return result;
 }
 
@@ -908,10 +904,10 @@ FGAirport::commStationsOfType(FGPositioned::Type aTy) const
 {
   NavDataCache* cache = NavDataCache::instance();
   CommStationList result;
-  BOOST_FOREACH(PositionedID pos, cache->airportItemsOfType(guid(), aTy)) {
+  for (auto pos : cache->airportItemsOfType(guid(), aTy)) {
     result.push_back( loadById<CommStation>(pos) );
   }
-  
+
   return result;
 }
 
@@ -924,32 +920,32 @@ public:
     {
         assert(pos->type() == FGPositioned::AIRPORT);
         FGAirport* apt = static_cast<FGAirport*>(pos.get());
-        BOOST_FOREACH(FGRunway* rwy, apt->getRunwaysWithoutReciprocals()) {
+        for (auto rwy : apt->getRunwaysWithoutReciprocals()) {
             _sizeMetric += static_cast<int>(rwy->lengthFt());
         }
     }
-    
+
     bool operator<(const AirportWithSize& other) const
     {
         return _sizeMetric < other._sizeMetric;
     }
-    
+
     FGPositionedRef pos() const
     { return _pos; }
 private:
     FGPositionedRef _pos;
     unsigned int _sizeMetric;
-    
+
 };
 
 void FGAirport::sortBySize(FGPositionedList& airportList)
 {
     std::vector<AirportWithSize> annotated;
-    BOOST_FOREACH(FGPositionedRef p, airportList) {
+    for (auto p : airportList) {
         annotated.push_back(AirportWithSize(p));
     }
     std::sort(annotated.begin(), annotated.end());
-    
+
     for (unsigned int i=0; i<annotated.size(); ++i) {
         airportList[i] = annotated[i].pos();
     }

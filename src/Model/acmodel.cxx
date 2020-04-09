@@ -8,7 +8,6 @@
 #endif
 
 #include <cstring>		// for strcmp()
-#include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
@@ -61,25 +60,25 @@ FGAircraftModel::~FGAircraftModel ()
   shutdown();
 }
 
-void 
+void
 FGAircraftModel::init ()
 {
     if (_aircraft.get()) {
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "FGAircraftModel::init: already inited");
         return;
     }
-    
+
     SGPropertyNode_ptr sim = fgGetNode("/sim", true);
-    BOOST_FOREACH(SGPropertyNode_ptr model, sim->getChildren("model")) {
+    for (auto model : sim->getChildren("model")) {
         std::string path = model->getStringValue("path", "Models/Geometry/glider.ac");
         std::string usage = model->getStringValue("usage", "external");
-        
+
         SGPath resolvedPath = globals->resolve_aircraft_path(path);
         if (resolvedPath.isNull()) {
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to find aircraft model: " << path);
             continue;
         }
-        
+
         osg::Node* node = NULL;
         try {
             node = fgLoad3DModelPanel( resolvedPath, globals->get_props());
@@ -87,7 +86,7 @@ FGAircraftModel::init ()
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
             SG_LOG(SG_AIRCRAFT, SG_ALERT, "  " << ex.getFormattedMessage());
         }
-        
+
         if (usage == "interior") {
             // interior model
             if (!_interior.get()) {
@@ -106,7 +105,7 @@ FGAircraftModel::init ()
             }
         } // of model usage switch
     } // of models iteration
-    
+
     // no models loaded, load the glider instead
     if (!_aircraft.get()) {
         SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
@@ -119,7 +118,7 @@ FGAircraftModel::init ()
 
   osg::Node* node = _aircraft->getSceneGraph();
   globals->get_scenery()->get_aircraft_branch()->addChild(node);
-    
+
     if (_interior.get()) {
         node = _interior->getSceneGraph();
         globals->get_scenery()->get_interior_branch()->addChild(node);
@@ -182,13 +181,13 @@ FGAircraftModel::update (double dt)
   } else {
     _aircraft->setVisible(true);
   }
-    
+
     double heading, pitch, roll;
     globals->get_aircraft_orientation(heading, pitch, roll);
     SGQuatd orient = SGQuatd::fromYawPitchRollDeg(heading, pitch, roll);
-    
+
     SGGeod pos = globals->get_aircraft_position();
-    
+
     _aircraft->setPosition(pos);
     _aircraft->setOrientation(orient);
     _aircraft->update();
@@ -198,11 +197,11 @@ FGAircraftModel::update (double dt)
         _interior->setOrientation(orient);
         _interior->update();
     }
-    
+
   // update model's audio sample values
   _fx->set_position_geod( pos );
   _fx->set_orientation( orient );
- 
+
   _velocity = SGVec3d( _speed_n->getDoubleValue(),
                        _speed_e->getDoubleValue(),
                        _speed_d->getDoubleValue() );

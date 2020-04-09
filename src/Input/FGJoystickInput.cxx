@@ -36,7 +36,6 @@
 #include "FGDeviceConfigurationMap.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <boost/foreach.hpp>
 
 using simgear::PropertyList;
 
@@ -102,7 +101,7 @@ void FGJoystickInput::_remove(bool all)
         // do not remove predefined joysticks info on reinit
         if (all || (!joy->predefined))
             js_nodes->removeChild("js", i);
-        
+
         joy->plibJS.reset();
         joy->clearAxesAndButtons();
     }
@@ -121,7 +120,7 @@ void FGJoystickInput::init()
     jsJoystick * js = new jsJoystick(i);
     joysticks[i].plibJS.reset(js);
     joysticks[i].initializing = true;
-    
+
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
       continue;
@@ -261,7 +260,7 @@ void FGJoystickInput::postinit()
               n_axis = num_node->getIntValue("unix", -1);
           }
         #endif
-          
+
           // Silently ignore platforms that are not specified within the
           // <number></number> section
           if (n_axis < 0) {
@@ -300,7 +299,7 @@ void FGJoystickInput::postinit()
     // Initialize the buttons.
     //
     PropertyList buttons = js_node->getChildren("button");
-    BOOST_FOREACH( SGPropertyNode * button_node, buttons ) {
+    for (auto button_node : buttons ) {
       size_t n_but = button_node->getIndex();
 
       const SGPropertyNode * num_node = button_node->getChild("number");
@@ -339,7 +338,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
   bool pressed, last_state;
   bool axes_initialized;
   float delay;
-  
+
   jsJoystick * js = joy->plibJS.get();
   if (js == 0 || js->notWorking()) {
     joysticks[index].initializing = true;
@@ -352,7 +351,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
     }
     return;
   }
-  
+
   js->read(&buttons, axis_values);
   if (js->notWorking()) { // If js is disconnected
     joysticks[index].initializing = true;
@@ -380,7 +379,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
       axes_initialized = false;
     }
   }
-  
+
   // Update device status
   SGPropertyNode_ptr status = status_node->getChild("joystick", index, true);
   if (axes_initialized) {
@@ -388,16 +387,16 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
       status->getChild("axis", j, true)->setFloatValue(axis_values[j]);
     }
   }
-  
+
   for (int j = 0; j < MAX_JOYSTICK_BUTTONS; j++) {
     status->getChild("button", j, true)->setBoolValue((buttons & (1u << j)) > 0 );
   }
-  
+
   // Fire bindings for the axes.
   if (axes_initialized) {
     for (int j = 0; j < joy->naxes; j++) {
       axis &a = joy->axes[j];
-    
+
       // Do nothing if the axis position
       // is unchanged; only a change in
       // position fires the bindings.
@@ -408,7 +407,7 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
         for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
           a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
       }
-    
+
       // do we have to emulate axis buttons?
       last_state = joy->axes[j].low.last_state || joy->axes[j].high.last_state;
       pressed = axis_values[j] < a.low_threshold || axis_values[j] > a.high_threshold;
@@ -418,15 +417,15 @@ void FGJoystickInput::updateJoystick(int index, FGJoystickInput::joystick* joy, 
       if(a.last_dt >= delay) {
         if (a.low.bindings[modifiers].size())
           joy->axes[j].low.update( modifiers, axis_values[j] < a.low_threshold );
-      
+
         if (a.high.bindings[modifiers].size())
           joy->axes[j].high.update( modifiers, axis_values[j] > a.high_threshold );
-      
+
         a.last_dt -= delay;
       }
     } // of axes iteration
   } // axes_initialized
-  
+
   // Fire bindings for the buttons.
   for (int j = 0; j < joy->nbuttons; j++) {
     FGButton &b = joy->buttons[j];

@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <fstream>
 #include <map>
-#include <boost/foreach.hpp>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
@@ -96,7 +95,7 @@ void FGTaxiSegment::block(int id, time_t blockTime, time_t now)
 {
     BlockListIterator i = blockTimes.begin();
     while (i != blockTimes.end()) {
-        if (i->getId() == id) 
+        if (i->getId() == id)
             break;
         i++;
     }
@@ -123,7 +122,7 @@ void FGTaxiSegment::unblock(time_t now)
 {
     if (blockTimes.empty())
         return;
-    
+
     if (blockTimes.front().getTimeStamp() < (now - 30)) {
         blockTimes.erase(blockTimes.begin());
     }
@@ -145,7 +144,7 @@ bool FGTaxiRoute::next(FGTaxiNodeRef& node, int *rte)
         *rte = *(currRoute);
         currRoute++;
     } else {
-        // Handle special case for the first node. 
+        // Handle special case for the first node.
         *rte = -1 * *(currRoute);
     }
     currNode++;
@@ -167,7 +166,7 @@ FGGroundNetwork::FGGroundNetwork(FGAirport* airport) :
 FGGroundNetwork::~FGGroundNetwork()
 {
 
-  BOOST_FOREACH(FGTaxiSegment* seg, segments) {
+  for (auto seg : segments) {
     delete seg;
   }
 }
@@ -180,16 +179,16 @@ void FGGroundNetwork::init()
     }
 
     hasNetwork = true;
-    int index = 1;  
-  
+    int index = 1;
+
   // establish pairing of segments
-    BOOST_FOREACH(FGTaxiSegment* segment, segments) {
+    for (auto segment : segments) {
       segment->setIndex(index++);
-      
+
       if (segment->oppositeDirection) {
         continue; // already established
       }
-      
+
       FGTaxiSegment* opp = findSegment(segment->endNode, segment->startNode);
       if (opp) {
         assert(opp->oppositeDirection == NULL);
@@ -197,7 +196,7 @@ void FGGroundNetwork::init()
         opp->oppositeDirection = segment;
       }
     }
-  
+
     networkInitialized = true;
 }
 
@@ -290,7 +289,7 @@ const FGParkingList &FGGroundNetwork::allParkings() const
 }
 
 FGTaxiSegment *FGGroundNetwork::findSegment(unsigned idx) const
-{ 
+{
     if ((idx > 0) && (idx <= segments.size()))
         return segments[idx - 1];
     else {
@@ -304,19 +303,19 @@ FGTaxiSegment* FGGroundNetwork::findSegment(const FGTaxiNode* from, const FGTaxi
   if (from == 0) {
     return NULL;
   }
-  
+
   // completely boring linear search of segments. Can be improved if/when
   // this ever becomes a hot-spot
-    BOOST_FOREACH(FGTaxiSegment* seg, segments) {
+    for (auto seg : segments) {
       if (seg->startNode != from) {
         continue;
       }
-      
+
       if ((to == 0) || (seg->endNode == to)) {
         return seg;
       }
     }
-  
+
     return NULL; // not found
 }
 
@@ -332,7 +331,7 @@ public:
   ShortestPathData() :
     score(HUGE_VAL)
   {}
-  
+
   double score;
   FGTaxiNodeRef previousNode;
 };
@@ -352,12 +351,12 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
     while (!unvisited.empty()) {
         // find lowest scored unvisited
         FGTaxiNodeRef best = unvisited.front();
-        BOOST_FOREACH(FGTaxiNodeRef i, unvisited) {
+        for (auto i : unvisited) {
             if (searchData[i].score < searchData[best].score) {
                 best = i;
             }
         }
-      
+
       // remove 'best' from the unvisited set
         FGTaxiNodeVectorIterator newend =
             remove(unvisited.begin(), unvisited.end(), best);
@@ -366,8 +365,8 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
         if (best == end) { // found route or best not connected
             break;
         }
-      
-        BOOST_FOREACH(FGTaxiNodeRef target, segmentsFrom(best)) {
+
+        for (auto target : segmentsFrom(best)) {
             double edgeLength = dist(best->cart(), target->cart());
             double alt = searchData[best].score + edgeLength + edgePenalty(target);
             if (alt < searchData[target].score) {    // Relax (u,v)
@@ -384,22 +383,22 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
                    "Failed to find route from waypoint " << start << " to "
                    << end << " at " << parent->getId());
         }
-      
+
         return FGTaxiRoute();
     }
-  
+
     // assemble route from backtrace information
     FGTaxiNodeVector nodes;
     intVec routes;
     FGTaxiNode *bt = end;
-    
+
     while (searchData[bt].previousNode != 0) {
         nodes.push_back(bt);
         FGTaxiSegment *segment = findSegment(searchData[bt].previousNode, bt);
         int idx = segment->getIndex();
         routes.push_back(idx);
         bt = searchData[bt].previousNode;
-        
+
     }
     nodes.push_back(start);
     reverse(nodes.begin(), nodes.end());
@@ -513,4 +512,3 @@ const intVec& FGGroundNetwork::getGroundFrequencies() const
 {
     return freqGround;
 }
-

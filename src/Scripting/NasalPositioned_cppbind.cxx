@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <functional>
 
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include <simgear/misc/ListDiff.hxx>

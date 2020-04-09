@@ -51,7 +51,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
@@ -130,7 +129,7 @@ public:
 
   virtual void run()
   {
-      BOOST_FOREACH(SGPath p, _trafficDirPaths) {
+      for (const auto& p : _trafficDirPaths) {
           parseTrafficDir(p);
           if (_cancelThread) {
               return;
@@ -378,11 +377,11 @@ private:
         simgear::Dir trafficDir(path);
         simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
 
-        BOOST_FOREACH(SGPath p, d) {
+        for (const auto& p : d) {
             simgear::Dir d2(p);
             SG_LOG(SG_AI, SG_DEBUG, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
-            BOOST_FOREACH(SGPath xml, trafficFiles) {
+            for (const auto& xml : trafficFiles) {
                 readXML(xml, *this);
                 if (_cancelThread) {
                     return;
@@ -481,7 +480,7 @@ void FGTrafficManager::shutdown()
         }
     }
 
-    BOOST_FOREACH(FGAISchedule* acft, scheduledAircraft) {
+    for (auto acft : scheduledAircraft) {
         if (saveData) {
             cachefile << acft->getRegistration() << " "
                 << acft->getRunCount() << " "
@@ -602,7 +601,7 @@ void FGTrafficManager::finishInit()
     loadHeuristics();
     PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
     // Do sorting and scoring separately, to take advantage of the "homeport" variable
-    BOOST_FOREACH(FGAISchedule* schedule, scheduledAircraft) {
+    for (auto schedule : scheduledAircraft) {
         schedule->setScore();
         if (!perfDB->havePerformanceDataForAircraftType(schedule->getAircraft())) {
             SG_LOG(SG_AI, SG_DEV_WARN, "AI-Traffic: schedule aircraft missing performance data:" << schedule->getAircraft());

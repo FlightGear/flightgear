@@ -2,8 +2,6 @@
 
 #include "gnnode.hxx"
 
-#include <boost/foreach.hpp>
-
 #include "groundnetwork.hxx"
 
 #include <Navaids/NavDataCache.hxx>
@@ -25,7 +23,7 @@ FGTaxiNode::FGTaxiNode(int index, const SGGeod& pos,
   holdType(aHoldType),
   m_isPushback(false)
 {
-  
+
 }
 
 FGTaxiNode::~FGTaxiNode()
@@ -54,7 +52,7 @@ double FGTaxiNode::getElevationFt()
       modifyPosition(newPos);
     }
   }
-  
+
   return pos.getElevationFt();
 }
 

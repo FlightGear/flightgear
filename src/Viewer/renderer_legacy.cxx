@@ -33,8 +33,6 @@
 #include <vector>
 #include <typeinfo>
 
-#include <boost/foreach.hpp>
-
 #include <osg/ref_ptr>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
@@ -753,7 +751,7 @@ void attachBufferToCamera( CameraInfo* info, osg::Camera* camera, osg::Camera::B
 }
 
 void buildAttachments(CameraInfo* info, osg::Camera* camera, const std::string& name, const std::vector<ref_ptr<FGRenderingPipeline::Attachment> > &attachments) {
-    BOOST_FOREACH(ref_ptr<FGRenderingPipeline::Attachment> attachment, attachments) {
+    for (auto attachment : attachments) {
         if (attachment->valid())
             attachBufferToCamera( info, camera, attachment->component, name, attachment->buffer );
     }
@@ -1069,7 +1067,7 @@ FGRenderer::buildDeferredLightingCamera( flightgear::CameraInfo* info, osg::Grap
 
     osg::Switch* lightingGroup = new osg::Switch;
 
-    BOOST_FOREACH( osg::ref_ptr<FGRenderingPipeline::Pass> pass, stage->passes ) {
+    for (auto pass : stage->passes ) {
         ref_ptr<Node> node = buildPass(info, pass);
         if (node.valid()) {
             lightingGroup->addChild(node);

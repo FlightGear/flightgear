@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <cstring>
 
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <osgViewer/Viewer>
@@ -39,12 +38,12 @@ HWND getMainViewerHWND()
         if (strcmp((*it)->className(), "GraphicsWindowWin32")) {
             continue;
         }
-        
-        osgViewer::GraphicsWindowWin32* platformWin = 
+
+        osgViewer::GraphicsWindowWin32* platformWin =
             static_cast<osgViewer::GraphicsWindowWin32*>(*it);
         return platformWin->getHWND();
     }
-    
+
     return 0;
 }
 
@@ -53,7 +52,7 @@ bool labelIsSeparator(const std::string& s)
     std::string t = "---";
     if (s.compare(0, t.length(), t) == 0)
         return true;
-    else 
+    else
         return false;
 }
 
@@ -63,7 +62,7 @@ LRESULT CALLBACK menubarWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 
 	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
-} 
+}
 
 } // of anonymous namespace
 
@@ -79,7 +78,7 @@ public:
   {
     fireBindingList(itemBindings[commandId]);
   }
-  
+
   HWND mainWindow;
   HMENU menuBar;
   bool visible;
@@ -90,15 +89,15 @@ public:
 
 };
 
-FGWindowsMenuBar::FGWindowsMenuBar() : 
+FGWindowsMenuBar::FGWindowsMenuBar() :
   p(new WindowsMenuBarPrivate)
 {
-  
+
 }
 
 FGWindowsMenuBar::~FGWindowsMenuBar()
 {
-  
+
 }
 
 FGWindowsMenuBar::WindowsMenuBarPrivate::WindowsMenuBarPrivate() :
@@ -107,7 +106,7 @@ FGWindowsMenuBar::WindowsMenuBarPrivate::WindowsMenuBarPrivate() :
 	mainWindow = getMainViewerHWND();
 	menuBar = 0;
 }
-  
+
 FGWindowsMenuBar::WindowsMenuBarPrivate::~WindowsMenuBarPrivate()
 {
 	if (menuBar) {
@@ -117,19 +116,19 @@ FGWindowsMenuBar::WindowsMenuBarPrivate::~WindowsMenuBarPrivate()
 }
 
 void FGWindowsMenuBar::init()
-{    
+{
     int menuIndex = 0;
     SGPropertyNode_ptr props = fgGetNode("/sim/menubar/default",true);
-    
+
     p->menuBar = CreateMenu();
 //	p->baseMenuProc = (WNDPROC) ::SetWindowLongPtr((HWND) p->mainWindow, GWL_WNDPROC, (LONG_PTR) menubarWindowProc);
 
-    BOOST_FOREACH(SGPropertyNode_ptr n, props->getChildren("menu")) {
+    for (auto n : props->getChildren("menu")) {
         // synchronise menu with properties
         std::string l = getLocalizedLabel(n);
         std::string label = strutils::simplify(l).c_str();
         HMENU menuItems = CreatePopupMenu();
-        
+
         if (!n->hasValue("enabled")) {
             n->setBoolValue("enabled", true);
         }
@@ -138,12 +137,12 @@ void FGWindowsMenuBar::init()
 
 		UINT flags = MF_POPUP;
 		AppendMenu(p->menuBar, flags, (UINT) menuItems, label.c_str());
-      
+
         // submenu
         int subMenuIndex = 0;
         SGPropertyNode* menuNode = n;
-        BOOST_FOREACH(SGPropertyNode_ptr n2, menuNode->getChildren("item")) {
-        
+        for (auto n2 : menuNode->getChildren("item")) {
+
             if (!n2->hasValue("enabled")) {
                 n2->setBoolValue("enabled", true);
             }
@@ -151,7 +150,7 @@ void FGWindowsMenuBar::init()
             std::string l2 = getLocalizedLabel(n2);
             std::string label2 = strutils::simplify(l2).c_str();
             std::string shortcut = n2->getStringValue("key");
-            
+
             SGBindingList bl = readBindingList(n->getChildren("binding"), globals->get_props());
 			UINT commandId = p->itemBindings.size();
 			p->itemBindings.push_back(bl);
@@ -181,7 +180,7 @@ bool FGWindowsMenuBar::isVisible() const
 }
 
 void FGWindowsMenuBar::show()
-{ 
+{
     SetMenu(p->mainWindow, p->menuBar);
 	p->visible = true;
 }

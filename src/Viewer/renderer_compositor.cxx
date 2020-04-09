@@ -33,8 +33,6 @@
 #include <vector>
 #include <typeinfo>
 
-#include <boost/foreach.hpp>
-
 #include <osg/ref_ptr>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>

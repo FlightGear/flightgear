@@ -26,7 +26,6 @@
 #endif
 
 #include <cassert>
-#include <boost/foreach.hpp>
 #include <algorithm>
 
 #include <simgear/debug/logstream.hxx>
@@ -48,7 +47,7 @@ class NavRecordDistanceSortPredicate
 public:
   NavRecordDistanceSortPredicate( const SGGeod & position ) :
   _position(SGVec3d::fromGeod(position)) {}
-  
+
   bool operator()( const nav_rec_ptr & n1, const nav_rec_ptr & n2 )
   {
     if( n1 == NULL || n2 == NULL ) return false;
@@ -56,7 +55,7 @@ public:
   }
 private:
   SGVec3d _position;
-  
+
 };
 
 // discount navids if they conflict with another on the same frequency
@@ -68,15 +67,15 @@ bool navidUsable(FGNavRecord* aNav, const SGGeod &aircraft)
   if (!r || !r->reciprocalRunway()) {
     return true;
   }
-  
+
   // check if the runway frequency is paired
   FGNavRecord* locA = r->ILS();
   FGNavRecord* locB = r->reciprocalRunway()->ILS();
-  
+
   if (!locA || !locB || (locA->get_freq() != locB->get_freq())) {
     return true; // not paired, ok
   }
-  
+
   // okay, both ends have an ILS, and they're paired. We need to select based on
   // aircraft position. What we're going to use is *runway* (not navid) position,
   // ie whichever runway end we are closer too. This makes back-course / missed
@@ -86,7 +85,7 @@ bool navidUsable(FGNavRecord* aNav, const SGGeod &aircraft)
   SG_NORMALIZE_RANGE(hdgDiff, -180.0, 180.0);
   return (fabs(hdgDiff) < 90.0);
 }
-  
+
 } // of anonymous namespace
 
 // FGNavList ------------------------------------------------------------------
@@ -141,13 +140,13 @@ public:
     TypeFilter(FGPositioned::DME, FGPositioned::TACAN)
   {
   }
-  
+
   virtual bool pass(FGPositioned* pos) const
   {
     if (pos->type() == FGPositioned::TACAN) {
       return true;
     }
-    
+
     assert(pos->type() == FGPositioned::DME);
     string::size_type loc1 = pos->name().find( "TACAN" );
     string::size_type loc2 = pos->name().find( "VORTAC" );
@@ -195,30 +194,30 @@ FGNavRecordRef FGNavList::findByFreq( double freq,
   if (stations.empty()) {
     return NULL;
   }
-  
+
 // now walk the (sorted) results list to find a usable, in-range navaid
   SGVec3d acCart(SGVec3d::fromGeod(position));
   double min_dist
     = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
-    
-  BOOST_FOREACH(PositionedID id, stations) {
+
+  for (auto id : stations) {
     FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (filter && !filter->pass(station)) {
       continue;
     }
-    
+
     double d2 = distSqr(station->cart(), acCart);
     if (d2 > min_dist) {
     // since results are sorted by proximity, as soon as we pass the
     // distance cutoff we're done - fall out and return NULL
       break;
     }
-    
+
     if (navidUsable(station, position)) {
       return station;
     }
   }
-    
+
 // fell out of the loop, no usable match
   return NULL;
 }
@@ -232,7 +231,7 @@ FGNavRecordRef FGNavList::findByFreq(double freq, TypeFilter* filter)
     return NULL;
   }
 
-  BOOST_FOREACH(PositionedID id, stations) {
+  for (auto id : stations) {
     FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (filter->pass(station)) {
       return station;
@@ -246,13 +245,13 @@ nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
                                        TypeFilter* filter)
 {
   nav_list_type stations;
-  
+
   flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
     // note this frequency is passed in 'database units', which depend on the
     // type of navaid being requested
   int f = static_cast<int>(freq * 100 + 0.5);
   PositionedIDVec ids(cache->findNavaidsByFreq(f, position, filter));
-  
+
   for (PositionedID id : ids) {
     FGNavRecordRef station = FGPositioned::loadById<FGNavRecord>(id);
     if (!filter->pass(station)) {
@@ -261,7 +260,7 @@ nav_list_type FGNavList::findAllByFreq( double freq, const SGGeod& position,
 
     stations.push_back(station);
   }
-  
+
   return stations;
 }
 
@@ -270,9 +269,9 @@ nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double fr
 {
   nav_list_type reply;
   int f = (int)(freq*100.0 + 0.5);
-  
+
   FGPositionedList stations = FGPositioned::findAllWithIdent(ident, filter);
-  BOOST_FOREACH(FGPositionedRef ref, stations) {
+  for (auto ref : stations) {
     FGNavRecord* nav = static_cast<FGNavRecord*>(ref.ptr());
     if ( f <= 0.0 || nav->get_freq() == f) {
       reply.push_back( nav );
@@ -349,5 +348,3 @@ FGTACANRecord *FGTACANList::findByChannel( const string& channel )
     }
     return NULL;
 }
-
-

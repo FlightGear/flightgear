@@ -4,8 +4,6 @@
 
 #include "performancedb.hxx"
 
-#include <boost/foreach.hpp>
-
 #include <simgear/sg_inlines.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
@@ -13,6 +11,7 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 
@@ -73,7 +72,7 @@ PerformanceData* PerformanceDB::getDataFor(const string& acType, const string& a
     if (it != _db.end()) {
         return it->second;
     }
-    
+
     const string& alias = findAlias(acType);
     it = _db.find(alias);
     if (it != _db.end()) {
@@ -131,13 +130,13 @@ void PerformanceDB::load(const SGPath& filename)
                        "Error reading AI aircraft performance database: unknown base type " << baseName);
                 return;
               }
-              
+
               // clone base data to 'inherit' from it
-              data = new PerformanceData(baseData); 
+              data = new PerformanceData(baseData);
             } else {
               data = new PerformanceData;
             }
-          
+
             data->initFromProps(db_node);
             const string& name  = db_node->getStringValue("type", "heavy_jet");
             registerPerformanceData(name, data);
@@ -147,8 +146,8 @@ void PerformanceDB::load(const SGPath& filename)
                 SG_LOG(SG_AI, SG_ALERT, "performance DB alias entry with no <alias> definition");
                 continue;
             }
-          
-            BOOST_FOREACH(SGPropertyNode* matchNode, db_node->getChildren("match")) {
+
+            for (auto matchNode : db_node->getChildren("match")) {
                 const string& match(matchNode->getStringValue());
                 _aliases.push_back(StringPair(match, alias));
             }
@@ -160,12 +159,12 @@ void PerformanceDB::load(const SGPath& filename)
 
 const string& PerformanceDB::findAlias(const string& acType) const
 {
-    BOOST_FOREACH(const StringPair& alias, _aliases) {
+    for (const auto& alias : _aliases) {
         if (acType.find(alias.first) == 0) { // matched!
             return alias.second;
         }
     } // of alias iteration
-  
+
     static const string empty;
     return empty;
 }

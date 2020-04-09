@@ -6,7 +6,7 @@
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
 //  License, or (at your option) any later version.
-// 
+//
 //  This program is distributed in the hope that it will be useful, but
 //  WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -49,7 +49,6 @@
 
 #include "fnt.h"
 
-#include <boost/foreach.hpp>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -61,7 +60,7 @@
 #include <Viewer/viewmgr.hxx>
 #include <Viewer/view.hxx>
 #include <Time/light.hxx>
-#include <GUI/FGFontCache.hxx>	
+#include <GUI/FGFontCache.hxx>
 #include <Instrumentation/dclgps.hxx>
 
 #define WIN_X 0
@@ -110,7 +109,7 @@ FGTextureManager::createTexture (const std::string &relativePath, bool staticTex
     texture = SGLoadTexture2D(staticTexture, tpath);
 
     _textureMap[relativePath] = texture;
-    if (!_textureMap[relativePath].valid()) 
+    if (!_textureMap[relativePath].valid())
       SG_LOG( SG_COCKPIT, SG_ALERT, "Texture *still* doesn't exist" );
     SG_LOG( SG_COCKPIT, SG_DEBUG, "Created texture " << relativePath );
   }
@@ -220,15 +219,15 @@ double
 FGPanel::getAspectScale() const
 {
   // set corner-coordinates correctly
-  
+
   int xsize = _xsize_node->getIntValue();
   int ysize = _ysize_node->getIntValue();
   float aspect_adjust = get_aspect_adjust(xsize, ysize);
-  
+
   if (aspect_adjust < 1.0)
     return ysize / (double) WIN_H;
   else
-    return xsize /(double) WIN_W;  
+    return xsize /(double) WIN_W;
 }
 
 /**
@@ -246,14 +245,14 @@ void FGPanel::updateMouseDelay(double dt)
   while (_mouseActionRepeat < 0.0) {
     _mouseActionRepeat += MOUSE_ACTION_REPEAT_INTERVAL;
     _mouseInstrument->doMouseAction(_mouseButton, 0, _mouseX, _mouseY);
-    
+
   }
 }
 
 void
 FGPanel::draw(osg::State& state)
 {
-    
+
   // In 3D mode, it's possible that we are being drawn exactly on top
   // of an existing polygon.  Use an offset to prevent z-fighting.  In
   // 2D mode, this is a no-op.
@@ -268,7 +267,7 @@ FGPanel::draw(osg::State& state)
     panelStateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     panelStateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     panelStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
-  
+
     osg::Material* material = new osg::Material;
     material->setColorMode(osg::Material::AMBIENT_AND_DIFFUSE);
     material->setDiffuse(osg::Material::FRONT_AND_BACK, osg::Vec4(1, 1, 1, 1));
@@ -276,7 +275,7 @@ FGPanel::draw(osg::State& state)
     material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     material->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     panelStateSet->setAttribute(material);
-    
+
     panelStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     panelStateSet->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK));
     panelStateSet->setAttributeAndModes(new osg::Depth(osg::Depth::LEQUAL));
@@ -419,7 +418,7 @@ FGPanel::draw(osg::State& state)
     glPushAttrib(GL_ENABLE_BIT);
     glDisable(GL_COLOR_MATERIAL);
     glColor3f(1, 1, 0);
-    
+
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots(state);
 
@@ -430,7 +429,7 @@ FGPanel::draw(osg::State& state)
 
     int x0, y0, x1, y1;
     getLogicalExtent(x0, y0, x1, y1);
-    
+
     glBegin(GL_LINE_LOOP);
     glVertex2f(x0, y0);
     glVertex2f(x1, y0);
@@ -438,7 +437,7 @@ FGPanel::draw(osg::State& state)
     glVertex2f(x0, y1);
     glEnd();
 #endif
-    
+
     glPopAttrib();
 
     state.popStateSet();
@@ -564,7 +563,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   // Having fixed up the coordinates, fall through to the local
   // coordinate handler.
   return doLocalMouseAction(button, updown, x, y);
-} 
+}
 
 void FGPanel::setDepthTest (bool enable) {
     _enable_depth_test = enable;
@@ -572,30 +571,30 @@ void FGPanel::setDepthTest (bool enable) {
 
 class IntRect
 {
-  
+
 public:
-  IntRect() : 
-    x0(std::numeric_limits<int>::max()), 
-    y0(std::numeric_limits<int>::max()), 
-    x1(std::numeric_limits<int>::min()), 
-    y1(std::numeric_limits<int>::min()) 
+  IntRect() :
+    x0(std::numeric_limits<int>::max()),
+    y0(std::numeric_limits<int>::max()),
+    x1(std::numeric_limits<int>::min()),
+    y1(std::numeric_limits<int>::min())
   { }
-  
+
   IntRect(int x, int y, int w, int h) :
     x0(x), y0(y), x1(x + w), y1( y + h)
-  { 
+  {
     if (x1 < x0) {
       std::swap(x0, x1);
     }
-    
+
     if (y1 < y0) {
       std::swap(y0, y1);
     }
-    
+
     assert(x0 <= x1);
     assert(y0 <= y1);
   }
-  
+
   void extend(const IntRect& r)
   {
     x0 = std::min(x0, r.x0);
@@ -603,17 +602,17 @@ public:
     x1 = std::max(x1, r.x1);
     y1 = std::max(y1, r.y1);
   }
-  
+
   int x0, y0, x1, y1;
 };
 
 void FGPanel::getLogicalExtent(int &x0, int& y0, int& x1, int &y1)
-{  
+{
   IntRect result;
-  BOOST_FOREACH(FGPanelInstrument *inst, _instruments) {
+  for (auto inst : _instruments) {
     inst->extendRect(result);
   }
-  
+
   x0 = result.x0;
   y0 = result.y0;
   x1 = result.x1;
@@ -771,9 +770,9 @@ FGPanelInstrument::extendRect(IntRect& r) const
 {
   IntRect instRect(_x, _y, _w, _h);
   r.extend(instRect);
-  
-  BOOST_FOREACH(FGPanelAction* act, _actions) {
-    r.extend(IntRect(getXPos() + act->getX(), 
+
+  for (auto act : _actions) {
+    r.extend(IntRect(getXPos() + act->getX(),
                      getYPos() + act->getY(),
                      act->getWidth(),
                      act->getHeight()
@@ -827,7 +826,7 @@ FGLayeredInstrument::draw (osg::State& state)
 {
   if (!test())
     return;
-  
+
   for (int i = 0; i < (int)_layers.size(); i++) {
     glPushMatrix();
     _layers[i]->draw(state);
@@ -930,7 +929,7 @@ FGInstrumentLayer::transform () const
       } else {
 	val = t->table->interpolate(val) * t->factor + t->offset;
       }
-      
+
       switch (t->type) {
       case FGPanelTransformation::XSHIFT:
 	glTranslatef(val, 0.0, 0.0);
@@ -1012,7 +1011,7 @@ FGTexturedLayer::draw (osg::State& state)
   if (test()) {
     int w2 = _w / 2;
     int h2 = _h / 2;
-    
+
     transform();
     state.pushStateSet(_texture.getTexture());
     state.apply();
@@ -1076,7 +1075,7 @@ FGTextLayer::draw (osg::State& state)
     if (!font) {
         return; // don't crash on missing fonts
     }
-    
+
     text_renderer.setFont(font);
 
     text_renderer.setPointSize(_pointSize);
@@ -1174,7 +1173,7 @@ FGTextLayer::Chunk::Chunk (const std::string &text, const std::string &fmt)
     _fmt(simgear::strutils::sanitizePrintfFormat(fmt))
 {
   _text = text;
-  if (_fmt.empty()) 
+  if (_fmt.empty())
     _fmt = "%s";
 }
 

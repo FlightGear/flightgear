@@ -5,8 +5,6 @@
 #include <windows.h>
 #include <Shlobj.h>
 
-#include <boost/foreach.hpp>
-
 #include <osgViewer/Viewer>
 #include <osgViewer/api/Win32/GraphicsWindowWin32>
 
@@ -32,12 +30,12 @@ HWND getMainViewerHWND()
         if (strcmp((*it)->className(), "GraphicsWindowWin32")) {
             continue;
         }
-        
-        osgViewer::GraphicsWindowWin32* platformWin = 
+
+        osgViewer::GraphicsWindowWin32* platformWin =
             static_cast<osgViewer::GraphicsWindowWin32*>(*it);
         return platformWin->getHWND();
     }
-    
+
     return 0;
 }
 
@@ -78,7 +76,7 @@ void WindowsFileDialog::exec()
     std::string extensions;
     size_t extensionsLen;
     if (!_filterPatterns.empty()) {
-        BOOST_FOREACH(std::string ext, _filterPatterns) {
+        for (const auto& ext : _filterPatterns) {
             if (!simgear::strutils::starts_with(ext, "*.")) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "WindowsFileDialog: can't use pattern on Windows:" << ext);
                 continue;
@@ -89,14 +87,14 @@ void WindowsFileDialog::exec()
         opf.lpstrFilter = (LPCSTR) malloc(extensionsLen);
         memcpy((void*)opf.lpstrFilter, (void*)extensions.data(), extensionsLen);
     }
-    
+
 	std::string s = _initialPath.local8BitStr();
     opf.lpstrInitialDir =  const_cast<char *>(s.c_str());
-    
+
     if (_showHidden) {
         opf.Flags = OFN_PATHMUSTEXIST;
     }
-    
+
     if (_usage == USE_SAVE_FILE) {
         if (GetSaveFileNameA(&opf)) {
             std::string stringPath(opf.lpstrFile);

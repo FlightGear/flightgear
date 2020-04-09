@@ -24,7 +24,6 @@
 #include "MouseCursor.hxx"
 
 #include <cstring>
-#include <boost/foreach.hpp>
 
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Viewer>
@@ -48,7 +47,7 @@
 
 namespace
 {
-    
+
 /**
  * @brief when no native cursor implementation is available, use the osgViewer support. This
  * has several limitations but is better than nothing
@@ -62,7 +61,7 @@ public:
         mCursor(osgViewer::GraphicsWindow::InheritCursor)
     {
         mActualCursor = mCursor;
-        
+
         globals->get_renderer()->getViewer()->getWindows(mWindows);
     }
 
@@ -71,27 +70,27 @@ public:
         mCursor = translateCursor(aCursor);
         updateCursor();
     }
-    
+
     virtual void setCursorVisible(bool aVis)
     {
         if (mCursorObscured == aVis) {
             return;
         }
-        
+
         mCursorVisible = aVis;
         updateCursor();
     }
-    
+
     virtual void hideCursorUntilMouseMove()
     {
         if (mCursorObscured) {
             return;
         }
-        
+
         mCursorObscured = true;
         updateCursor();
     }
-    
+
     virtual void mouseMoved()
     {
         if (mCursorObscured) {
@@ -111,10 +110,10 @@ private:
         case CURSOR_LEFT_RIGHT: return osgViewer::GraphicsWindow::LeftRightCursor;
         case CURSOR_UP_DOWN: return osgViewer::GraphicsWindow::UpDownCursor;
         default:
-			return osgViewer::GraphicsWindow::RightArrowCursor;  
+			return osgViewer::GraphicsWindow::RightArrowCursor;
         }
     }
-    
+
     void updateCursor()
     {
         osgViewer::GraphicsWindow::MouseCursor cur = osgViewer::GraphicsWindow::InheritCursor;
@@ -123,24 +122,24 @@ private:
         } else {
             cur = mCursor;
         }
-        
+
         if (cur == mActualCursor) {
             return;
         }
-        
-        BOOST_FOREACH(osgViewer::GraphicsWindow* gw, mWindows) {
+
+        for (auto gw : mWindows) {
             gw->setCursor(cur);
         }
-        
+
         mActualCursor = cur;
     }
-    
+
     bool mCursorObscured;
     bool mCursorVisible;
     osgViewer::GraphicsWindow::MouseCursor mCursor, mActualCursor;
     std::vector<osgViewer::GraphicsWindow*> mWindows;
 };
-    
+
 } // of anonymous namespace
 
 static FGMouseCursor* static_instance = NULL;
@@ -162,7 +161,7 @@ FGMouseCursor* FGMouseCursor::instance()
 	// set osgViewer cursor inherit, otherwise it will interefere
 		std::vector<osgViewer::GraphicsWindow*> gws;
 		globals->get_renderer()->getViewer()->getWindows(gws);
-		BOOST_FOREACH(osgViewer::GraphicsWindow* gw, gws) {
+		for (auto gw : gws) {
             gw->setCursor(osgViewer::GraphicsWindow::InheritCursor);
         }
 
@@ -173,18 +172,18 @@ FGMouseCursor* FGMouseCursor::instance()
 	// and create our real implementation
 	//	static_instance = new WindowsMouseCursor;
 	#endif
-        
+
         // X11
-                
+
         if (static_instance == NULL) {
             static_instance = new StockOSGCursor;
         }
-        
+
         // initialise mouse-hide delay from global properties
-        
+
         globals->get_commands()->addCommand("set-cursor", static_instance, &FGMouseCursor::setCursorCommand);
     }
-    
+
     return static_instance;
 }
 
@@ -197,7 +196,7 @@ void FGMouseCursor::setAutoHideTimeMsec(unsigned int aMsec)
 bool FGMouseCursor::setCursorCommand(const SGPropertyNode* arg, SGPropertyNode*)
 {
     // JMT 2013 - I would prefer this was a seperate 'warp' command, but
-    // historically set-cursor has done both. 
+    // historically set-cursor has done both.
     if (arg->hasValue("x") || arg->hasValue("y")) {
         SGPropertyNode *mx = fgGetNode("/devices/status/mice/mouse/x", true);
         SGPropertyNode *my = fgGetNode("/devices/status/mice/mouse/y", true);
@@ -208,8 +207,8 @@ bool FGMouseCursor::setCursorCommand(const SGPropertyNode* arg, SGPropertyNode*)
         my->setIntValue(y);
     }
 
-    
-    Cursor c = cursorFromString(arg->getStringValue("cursor"));    
+
+    Cursor c = cursorFromString(arg->getStringValue("cursor"));
     setCursor(c);
     return true;
 }
@@ -226,7 +225,7 @@ const MouseCursorMap mouse_cursor_map[] = {
     { "hand", FGMouseCursor::CURSOR_HAND },
     { "closed-hand", FGMouseCursor::CURSOR_CLOSED_HAND },
     { "text", FGMouseCursor::CURSOR_IBEAM },
-    
+
 // aliases
     { "drag-horizontal", FGMouseCursor::CURSOR_LEFT_RIGHT },
     { "drag-vertical", FGMouseCursor::CURSOR_UP_DOWN },

@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <boost/foreach.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
@@ -85,12 +84,12 @@ FGAISchedule::FGAISchedule(const string& model,
                            const string& port,
                            const string& reg,
                            const string& flightId,
-                           bool   hvy, 
+                           bool   hvy,
                            const string& act,
                            const string& arln,
                            const string& mclass,
                            const string& fltpe,
-                           double rad, 
+                           double rad,
                            double grnd)
     : heavy(hvy),
       radius(rad),
@@ -106,8 +105,8 @@ FGAISchedule::FGAISchedule(const string& model,
       valid(true),
       scheduleComplete(false)
 {
-  modelPath        = model; 
-  livery           = lvry; 
+  modelPath        = model;
+  livery           = lvry;
   homePort         = port;
   registration     = reg;
   flightIdentifier = flightId;
@@ -166,7 +165,7 @@ FGAISchedule::~FGAISchedule()
       delete (*flt);
     }
   flights.clear();*/
-} 
+}
 
 bool FGAISchedule::init()
 {
@@ -176,10 +175,10 @@ bool FGAISchedule::init()
   //tm *temp = currTimeDate->getGmt();
   //char buffer[512];
   //sgTimeFormatTime(&targetTimeDate, buffer);
-  //cout << "Scheduled Time " << buffer << endl; 
+  //cout << "Scheduled Time " << buffer << endl;
   //cout << "Time :" << time(NULL) << " SGTime : " << sgTimeGetGMT(temp) << endl;
-  /*for (FGScheduledFlightVecIterator i = flights.begin(); 
-       i != flights.end(); 
+  /*for (FGScheduledFlightVecIterator i = flights.begin();
+       i != flights.end();
        i++)
     {
       //i->adjustTime(now);
@@ -189,7 +188,7 @@ bool FGAISchedule::init()
   //sort(flights.begin(), flights.end());
   // Since time isn't initialized yet when this function is called,
   // Find the closest possible airport.
-  // This should give a reasonable initialization order. 
+  // This should give a reasonable initialization order.
   //setClosestDistanceToUser();
   return true;
 }
@@ -227,23 +226,23 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
 
   // Sort all the scheduled flights according to scheduled departure time.
   // Because this is done at every update, we only need to check the status
-  // of the first listed flight. 
+  // of the first listed flight.
   //sort(flights.begin(), flights.end(), compareScheduledFlights);
-  
+
   if (firstRun) {
      if (fgGetBool("/sim/traffic-manager/instantaneous-action") == true) {
-         deptime = now; // + rand() % 300; // Wait up to 5 minutes until traffic starts moving to prevent too many aircraft 
+         deptime = now; // + rand() % 300; // Wait up to 5 minutes until traffic starts moving to prevent too many aircraft
                                    // from cluttering the gate areas.
      }
      firstRun = false;
   }
-  
+
   FGScheduledFlight* flight = flights.front();
   if (!deptime) {
     deptime = flight->getDepartureTime();
     //cerr << "Setting departure time " << deptime << endl;
   }
-    
+
   if (aiAircraft) {
     if (aiAircraft->getDie()) {
       aiAircraft = NULL;
@@ -251,25 +250,25 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
       return true; // in visual range, let the AIManager handle it
     }
   }
-  
-  // This flight entry is entirely in the past, do we need to 
-  // push it forward in time to the next scheduled departure. 
+
+  // This flight entry is entirely in the past, do we need to
+  // push it forward in time to the next scheduled departure.
   if (flight->getArrivalTime() < now) {
     SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is in the Past");
     // Don't just update: check whether we need to load a new leg. etc.
     // This update occurs for distant aircraft, so we can update the current leg
-    // and detach it from the current list of aircraft. 
+    // and detach it from the current list of aircraft.
     flight->update();
     flights.erase(flights.begin()); // pop_front(), effectively
     return true; // processing complete
   }
-  
+
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
   if (!dep || !arr) {
     return true; // processing complete
   }
-    
+
   double speed = 450.0;
   if (dep != arr) {
     totalTimeEnroute = flight->getArrivalTime() - flight->getDepartureTime();
@@ -277,16 +276,16 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
       elapsedTimeEnroute   = now - flight->getDepartureTime();
       //remainingTimeEnroute = totalTimeEnroute - elapsedTimeEnroute;
       double x = elapsedTimeEnroute / (double) totalTimeEnroute;
-      
+
     // current pos is based on great-circle course between departure/arrival,
     // with percentage of distance travelled, based upon percentage of time
     // enroute elapsed.
       double course, az2, distanceM;
       SGGeodesy::inverse(dep->geod(), arr->geod(), course, az2, distanceM);
       double coveredDistance = distanceM * x;
-      
+
       SGGeodesy::direct(dep->geod(), course, coveredDistance, position, az2);
-      
+
       SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is in progress, %=" << x);
       speed = ((distanceM - coveredDistance) * SG_METER_TO_NM) / 3600.0;
     } else {
@@ -303,7 +302,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     elapsedTimeEnroute = 0;
     position = dep->geod();
   }
-    
+
   // cartesian calculations are more numerically stable over the (potentially)
   // large distances involved here: see bug #80
   distanceToUser = dist(userCart, SGVec3d::fromGeod(position)) * SG_METER_TO_NM;
@@ -314,7 +313,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   // one hour flight time, so that would be a good approximate point
   // to start a more detailed simulation of this aircraft.
   SG_LOG (SG_AI, SG_BULK, "Traffic manager: " << registration << " is scheduled for a flight from "
-	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: " 
+	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: "
              << distanceToUser);
   if (distanceToUser >= TRAFFICTOAIDISTTOSTART) {
     return true; // out of visual range, for the moment.
@@ -335,15 +334,15 @@ bool FGAISchedule::validModelPath(const std::string& modelPath)
 
 SGPath FGAISchedule::resolveModelPath(const std::string& modelPath)
 {
-    BOOST_FOREACH(SGPath aiPath, globals->get_data_paths("AI")) {
+    for (auto aiPath : globals->get_data_paths("AI")) {
         aiPath.append(modelPath);
         if (aiPath.exists()) {
             return aiPath;
         }
     }
-    
+
     // check aircraft dirs
-    BOOST_FOREACH(SGPath aircraftPath, globals->get_aircraft_paths()) {
+    for (auto aircraftPath : globals->get_aircraft_paths()) {
         SGPath mp = aircraftPath / modelPath;
         if (mp.exists()) {
             return mp;
@@ -371,14 +370,14 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aiAircraft->setAltitude(flight->getCruiseAlt()*100); // convert from FL to feet
   aiAircraft->setSpeed(0);
   aiAircraft->setBank(0);
-      
+
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft, flightPlanName, courseToDest, deptime,
-                                            dep, arr, true, radius, 
-                                            flight->getCruiseAlt()*100, 
-                                            position.getLatitudeDeg(), 
-                                            position.getLongitudeDeg(), 
-                                            speedKnots, flightType, acType, 
+                                            dep, arr, true, radius,
+                                            flight->getCruiseAlt()*100,
+                                            position.getLatitudeDeg(),
+                                            position.getLongitudeDeg(),
+                                            speedKnots, flightType, acType,
                                             airline));
   if (fp->isValidPlan()) {
         aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
@@ -390,7 +389,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
                 nodeForAircraft->getChild("departure-time-sec", 0, true)->setIntValue(deptime);
             }
             if (arr) {
-                nodeForAircraft->getChild("arrival-airport-id", 0, true)->setStringValue(arr->getId());                        
+                nodeForAircraft->getChild("arrival-airport-id", 0, true)->setStringValue(arr->getId());
 		// arrival time not known here
             }
         }
@@ -407,8 +406,8 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
 }
 
 // Create an initial heading for user controlled aircraft.
-void FGAISchedule::setHeading()  
-{ 
+void FGAISchedule::setHeading()
+{
     courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());
 }
 
@@ -449,7 +448,7 @@ bool FGAISchedule::scheduleFlights(time_t now)
         //runCount++;
         initialized = true;
     }
-  
+
     time_t arr, dep;
     dep = flight->getDepartureTime();
     arr = flight->getArrivalTime();
@@ -462,7 +461,7 @@ bool FGAISchedule::scheduleFlights(time_t now)
                              << "  "        << depT << ":"
                              << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
                              << "  "        << arrT << ":");
-  
+
     flights.push_back(flight);
 
     // continue processing until complete, or preempt after timeout
@@ -485,12 +484,12 @@ bool FGAISchedule::next()
     flights.front()->release();
     flights.erase(flights.begin());
   }
-  
+
   FGScheduledFlight *flight = findAvailableFlight(currentDestination, flightIdentifier);
   if (!flight) {
     return false;
   }
-  
+
   currentDestination = flight->getArrivalAirport()->getId();
 /*
   time_t arr, dep;
@@ -501,7 +500,7 @@ bool FGAISchedule::next()
 
   depT = depT.substr(0,24);
   arrT = arrT.substr(0,24);
-  //cerr << "  " << flight->getCallSign() << ":" 
+  //cerr << "  " << flight->getCallSign() << ":"
   //     << "  " << flight->getDepartureAirport()->getId() << ":"
   //     << "  " << depT << ":"
   //     << " \"" << flight->getArrivalAirport()->getId() << "\"" << ":"
@@ -618,7 +617,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
           }
 
           // So, if we actually get here, we have a winner
-          //cerr << "found flight: " << req << " : " << currentDestination << " : " <<       
+          //cerr << "found flight: " << req << " : " << currentDestination << " : " <<
           //         (*i)->getArrivalAirport()->getId() << endl;
           (*i)->lock();
           return (*i);
@@ -634,7 +633,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
 
 int FGAISchedule::groundTimeFromRadius()
 {
-    if (radius < 10) 
+    if (radius < 10)
         return 15 * 60;
     else if (radius < 15)
         return 20 * 60;
@@ -644,7 +643,7 @@ int FGAISchedule::groundTimeFromRadius()
         return 50 * 60;
     else if (radius < 30)
         return 90 * 60;
-    else 
+    else
         return 120 * 60;
 }
 
@@ -652,22 +651,22 @@ int FGAISchedule::groundTimeFromRadius()
 double FGAISchedule::getSpeed()
 {
   FGScheduledFlightVecIterator i = flights.begin();
- 
+
   FGAirport* dep = (*i)->getDepartureAirport(),
    *arr = (*i)->getArrivalAirport();
   double dist = SGGeodesy::distanceNm(dep->geod(), arr->geod());
   double remainingTimeEnroute = (*i)->getArrivalTime() - (*i)->getDepartureTime();
 
   double speed = 0.0;
-  if (remainingTimeEnroute > 0.01) 
+  if (remainingTimeEnroute > 0.01)
     speed = dist / (remainingTimeEnroute/3600.0);
 
   SG_CLAMP_RANGE(speed, 300.0, 500.0);
   return speed;
 }
 
-void FGAISchedule::setScore   () 
-{ 
+void FGAISchedule::setScore   ()
+{
     if (runCount) {
         score = ((double) hits / (double) runCount);
     } else {
@@ -681,15 +680,14 @@ void FGAISchedule::setScore   ()
 }
 
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
-{ 
-  return (*a) < (*b); 
-} 
+{
+  return (*a) < (*b);
+}
 
 bool FGAISchedule::operator< (const FGAISchedule &other) const
-{ 
+{
     //cerr << "Sorting " << registration << " and "  << other.registration << endl;
     double currentScore = score       * (1.5 - lastRun);
     double otherScore   = other.score * (1.5 - other.lastRun);
     return currentScore > otherScore;
 }
-

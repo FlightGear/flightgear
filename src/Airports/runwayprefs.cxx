@@ -29,8 +29,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <boost/foreach.hpp>
-
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -154,7 +152,7 @@ void RunwayList::set(const std::string & tp, const std::string & lst)
         if ((ident.size() < 2) || !isdigit(ident[1])) {
             ident = "0" + ident;
         }
-        
+
         preferredRunways.push_back(ident);
     }
 }
@@ -226,10 +224,10 @@ void RunwayGroup::setActive(const FGAirport * airport,
             // Test each runway listed in the preference to see if it's possible to use
             // If one runway of the selection isn't allowed, we need to exclude this
             // preference, however, we don't want to stop right there, because we also
-            // don't want to randomly swap runway preferences, unless there is a need to. 
+            // don't want to randomly swap runway preferences, unless there is a need to.
             //
             validSelection = true;
-            
+
             for (int j = 0; j < activeRwys; j++) {
                 std::string ident(rwyList[j].getRwyList(i));
                 if (!airport->hasRunwayWithIdent(ident)) {
@@ -288,7 +286,7 @@ void RunwayGroup::setActive(const FGAirport * airport,
             return;
         }
         // If this didn't work, due to heavy winds, try again
-        // but select only one landing and one takeoff runway. 
+        // but select only one landing and one takeoff runway.
         choice[0] = 0;
         choice[1] = 0;
         for (int i = activeRwys - 1; i; i--) {

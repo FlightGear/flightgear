@@ -26,8 +26,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/foreach.hpp>
-
 #include <simgear/compiler.h>
 
 #include <Environment/environment_mgr.hxx>
@@ -67,24 +65,24 @@ public:
     assert(dyn);
     retain(); // initial count of 1
   }
-  
+
   ~ParkingAssignmentPrivate()
   {
     dynamics->releaseParking(parking);
   }
-  
+
   void release()
   {
     if ((--refCount) == 0) {
       delete this;
     }
   }
-  
+
   void retain()
   {
     ++refCount;
   }
-  
+
   unsigned int refCount;
   FGParkingRef parking;
   FGAirportDynamicsRef dynamics;
@@ -101,7 +99,7 @@ ParkingAssignment::~ParkingAssignment()
     _sharedData->release();
   }
 }
-  
+
 ParkingAssignment::ParkingAssignment(FGParking* pk, FGAirportDynamics* dyn) :
   _sharedData(NULL)
 {
@@ -123,17 +121,17 @@ void ParkingAssignment::operator=(const ParkingAssignment& aOther)
   if (_sharedData == aOther._sharedData) {
     return; // self-assignment, special case
   }
-  
+
   if (_sharedData) {
     _sharedData->release();
   }
-  
+
   _sharedData = aOther._sharedData;
   if (_sharedData) {
     _sharedData->retain();
   }
 }
-  
+
 void ParkingAssignment::release()
 {
   if (_sharedData) {
@@ -244,11 +242,11 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
         if (!isParkingAvailable(parking)) {
           continue;
         }
-        
+
         if (parking->getRadius() < radius) {
             continue;
         }
-        
+
         if (!flType.empty() && (parking->getType() != flType)) {
             continue;
         }
@@ -269,7 +267,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
 
         candidates.push_back(parking);
     }
-    
+
     if (candidates.empty()) {
         return nullptr;
     }
@@ -280,7 +278,7 @@ FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const stri
               [](const FGParkingRef& a, const FGParkingRef& b) {
                   return a->getRadius() < b->getRadius();
               });
-    
+
     setParkingAvailable(candidates.front(), false);
     return candidates.front();
 }
@@ -295,13 +293,13 @@ ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const st
                                             const string & airline)
 {
   SG_UNUSED(acType); // sadly not used at the moment
-  
+
   // most exact seach - airline codes must be present and match
   FGParking* result = innerGetAvailableParking(radius, flType, airline, true);
   if (result) {
     return ParkingAssignment(result, this);
   }
-  
+
   // more tolerant - gates with empty airline codes are permitted
   result = innerGetAvailableParking(radius, flType, airline, false);
   if (result) {
@@ -357,7 +355,7 @@ void FGAirportDynamics::releaseParking(FGParking* id)
   if (it == occupiedParkings.end()) {
     return;
   }
-  
+
   occupiedParkings.erase(it);
 }
 
@@ -622,7 +620,7 @@ string FGAirportDynamics::fallbackGetActiveRunway(int action, double heading)
 
         // assign takeoff and landing runways
         FallbackRunwayGroup bestGroup = groups.front();
-        
+
         _lastFallbackUpdate.stamp();
         _fallbackRunwayCounter = 0;
         _fallbackDepartureRunways.clear();
@@ -721,7 +719,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
 
         // Keep a history of the currently active runways, to ensure
         // that an already established selection of runways will not
-        // be overridden once a more preferred selection becomes 
+        // be overridden once a more preferred selection becomes
         // available as that can lead to random runway swapping.
         if (trafficType == "com") {
             currentlyActive = &comActive;
@@ -745,7 +743,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
                                    windHeading,
                                    maxTail, maxCross, currentlyActive);
 
-        // Note that I SHOULD keep multiple lists in memory, one for 
+        // Note that I SHOULD keep multiple lists in memory, one for
         // general aviation, one for commercial and one for military
         // traffic.
         currentlyActive->clear();
@@ -757,7 +755,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
             if (type == "landing") {
                 landing.push_back(name);
                 currentlyActive->push_back(name);
-                //cerr << "Landing " << name << endl; 
+                //cerr << "Landing " << name << endl;
             }
             if (type == "takeoff") {
                 takeoff.push_back(name);
@@ -768,7 +766,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         //cerr << endl;
     }
 
-    if (action == 1)            // takeoff 
+    if (action == 1)            // takeoff
     {
         int nr = takeoff.size();
         if (nr) {
@@ -806,7 +804,7 @@ string FGAirportDynamics::chooseRwyByHeading(stringVec rwys,
             " not found at " << _ap->ident());
           continue;
         }
-        
+
         FGRunway *rwy = _ap->getRunwayByIdent((*i));
         rwyHeading = rwy->headingDeg();
         headingError = fabs(heading - rwyHeading);
@@ -848,8 +846,8 @@ const string FGAirportDynamics::getId() const
 }
 
 // Experimental: Return a different ground frequency depending on the leg of the
-// Flight. Leg should always have a minimum value of two when this function is called. 
-// Note that in this scheme, the assignment of various frequencies to various ground 
+// Flight. Leg should always have a minimum value of two when this function is called.
+// Note that in this scheme, the assignment of various frequencies to various ground
 // operations is completely arbitrary. As such, is a short cut I need to take now,
 // so that at least I can start working on assigning different frequencies to different
 // operations.
@@ -919,7 +917,7 @@ const std::string FGAirportDynamics::getAtisSequence()
    char atisSequenceString[2];
    atisSequenceString[0] = 'a' + atisSequenceIndex;
    atisSequenceString[1] = 0;
-   
+
    return globals->get_locale()->getLocalizedString(atisSequenceString, "atc", "unknown");
 }
 
@@ -937,8 +935,8 @@ int FGAirportDynamics::updateAtisSequence(int interval, bool forceUpdate)
     atisSequenceTimeStamp += (interval * steps);
     if (forceUpdate && (steps == 0)) {
         ++steps; // a "special" ATIS update is required
-    } 
-    
+    }
+
     atisSequenceIndex = (atisSequenceIndex + steps) % 26;
     // return a huge value if no update occurred
     return (atisSequenceIndex + (steps ? 0 : 26*1000));

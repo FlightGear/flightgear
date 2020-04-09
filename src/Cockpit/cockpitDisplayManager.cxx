@@ -28,8 +28,6 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/props/props_io.hxx>
 
-#include <boost/foreach.hpp>
-
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
@@ -41,7 +39,7 @@
 namespace flightgear
 {
 
-CockpitDisplayManager::CockpitDisplayManager () 
+CockpitDisplayManager::CockpitDisplayManager ()
 {
 }
 
@@ -78,7 +76,7 @@ void CockpitDisplayManager::init()
     SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
                     << config << ":" << e.getFormattedMessage() );
   }
-  
+
   SGSubsystemGroup::init();
 }
 
@@ -95,7 +93,7 @@ bool CockpitDisplayManager::build (SGPropertyNode* config_props)
         if (index > 0)
             subsystemname << '['<< index << ']';
         std::string id = subsystemname.str();
-      
+
         if ( name == "radar" ) {
             set_subsystem( id, new wxRadarBg ( node ) );
 
@@ -104,10 +102,10 @@ bool CockpitDisplayManager::build (SGPropertyNode* config_props)
 
         } else if ( name == "air-ground-radar" ) {
             set_subsystem( id, new agRadar( node ) );
-      
+
         } else if ( name == "navigation-display" ) {
             set_subsystem( id, new NavDisplay( node ) );
-            
+
         } else {
             // probably a regular instrument
             continue;

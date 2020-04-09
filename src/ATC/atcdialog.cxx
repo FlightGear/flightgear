@@ -24,8 +24,6 @@
 
 #include "atcdialog.hxx"
 
-#include <boost/foreach.hpp>
-
 #include <simgear/constants.h>
 #include <simgear/structure/commands.hxx>
 #include <simgear/compiler.h>
@@ -265,7 +263,7 @@ void FGATCDialogNew::update(double dt) {
     char buf[bufsize];
     int commandNr = 0;
     // loop over all entries that should fill up the dialog; use 10 items for now...
-    BOOST_FOREACH(const std::string& i, commands) {
+    for (const auto& i : commands) {
         snprintf(buf, bufsize, "/sim/atc/opt[%d]", commandNr);
         fgSetBool(buf, false);
         SGPropertyNode *entry = button_group->getNode("button", commandNr, true);

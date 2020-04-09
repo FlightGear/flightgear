@@ -27,7 +27,6 @@
 #include "FlightHistory.hxx"
 
 #include <algorithm>
-#include <boost/foreach.hpp>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
@@ -58,7 +57,7 @@ void FGFlightHistory::init()
                << ", defaulting to " << m_sampleInterval);
         m_sampleInterval = 1.0;
     }
-    
+
   // cap memory use at 4MB
     m_maxMemoryUseBytes = fgGetInt("/sim/history/max-memory-use-bytes", 1024 * 1024 * 4);
     m_weightOnWheels = NULL;
@@ -67,7 +66,7 @@ void FGFlightHistory::init()
         m_weightOnWheels = fgGetNode("/gear/gear[1]/wow", 0, true);
         m_lastWoW = m_weightOnWheels->getBoolValue();
     }
-    
+
     // force bucket re-allocation
     m_validSampleCount = SAMPLE_BUCKET_WIDTH;
     m_lastCaptureTime = globals->get_sim_time_sec();
@@ -89,15 +88,15 @@ void FGFlightHistory::update(double dt)
     if ((dt == 0.0) || !m_enabled->getBoolValue()) {
         return; // paused or disabled
     }
-    
+
     if (m_weightOnWheels) {
-        
+
         if (m_lastWoW && !m_weightOnWheels->getBoolValue()) {
             SG_LOG(SG_FLIGHT, SG_INFO, "history: detected main-gear takeoff, clearing history");
             clear();
         }
     } // of rest-on-takeoff enabled
-    
+
 // spatial check - moved at least 1m since last capture
     if (!m_buckets.empty()) {
         SGVec3d lastCaptureCart(SGVec3d::fromGeod(m_buckets.back()->samples[m_validSampleCount - 1].position));
@@ -106,7 +105,7 @@ void FGFlightHistory::update(double dt)
             return;
         }
     }
-    
+
     double elapsed = globals->get_sim_time_sec() - m_lastCaptureTime;
     if (elapsed > m_sampleInterval) {
         capture();
@@ -122,7 +121,7 @@ void FGFlightHistory::allocateNewBucket()
     } else {
         bucket = new SampleBucket;
     }
-    
+
     m_buckets.push_back(bucket);
     m_validSampleCount = 0;
 }
@@ -133,19 +132,19 @@ void FGFlightHistory::capture()
         // bucket is full, allocate a new one
         allocateNewBucket();
     }
-    
+
     m_lastCaptureTime = globals->get_sim_time_sec();
     Sample* sample = m_buckets.back()->samples + m_validSampleCount;
-    
+
     sample->simTimeMSec = static_cast<size_t>(m_lastCaptureTime * 1000.0);
     sample->position = globals->get_aircraft_position();
-    
+
     double heading, pitch, roll;
     globals->get_aircraft_orientation(heading, pitch, roll);
     sample->heading = static_cast<float>(heading);
     sample->pitch = static_cast<float>(pitch);
     sample->roll = static_cast<float>(roll);
-    
+
     ++m_validSampleCount;
 }
 
@@ -156,7 +155,7 @@ PagedPathForHistory_ptr FGFlightHistory::pagedPathForHistory(size_t max_entries,
         return result;
     }
 
-    BOOST_FOREACH(SampleBucket* bucket, m_buckets) {
+    for (auto bucket : m_buckets) {
         unsigned int count = (bucket == m_buckets.back() ? m_validSampleCount : SAMPLE_BUCKET_WIDTH);
 
         // iterate over all the valid samples in the bucket
@@ -189,14 +188,14 @@ SGGeodVec FGFlightHistory::pathForHistory(double minEdgeLengthM) const
     if (m_buckets.empty()) {
         return result;
     }
-    
+
     result.push_back(m_buckets.front()->samples[0].position);
     SGVec3d lastOutputCart = SGVec3d::fromGeod(result.back());
     double minLengthSqr = minEdgeLengthM * minEdgeLengthM;
-    
-    BOOST_FOREACH(SampleBucket* bucket, m_buckets) {
+
+    for (auto bucket : m_buckets) {
         unsigned int count = (bucket == m_buckets.back() ? m_validSampleCount : SAMPLE_BUCKET_WIDTH);
-    
+
         // iterate over all the valid samples in the bucket
         for (unsigned int index = 0; index < count; ++index) {
             SGGeod g = bucket->samples[index].position;
@@ -207,13 +206,13 @@ SGGeodVec FGFlightHistory::pathForHistory(double minEdgeLengthM) const
             }
         } // of samples iteration
     } // of buckets iteration
-    
+
     return result;
 }
 
 void FGFlightHistory::clear()
 {
-    BOOST_FOREACH(SampleBucket* ptr, m_buckets) {
+    for (auto ptr : m_buckets) {
         delete ptr;
     }
     m_buckets.clear();

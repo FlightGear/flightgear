@@ -2,7 +2,7 @@
  * PositionedOctree - define a spatial octree containing Positioned items
  * arranged by their global cartesian position.
  */
- 
+
 // Written by James Turner, started 2012.
 //
 // Copyright (C) 2012 James Turner
@@ -33,8 +33,6 @@
 #include <cstring> // for memset
 #include <iostream>
 
-#include <boost/foreach.hpp>
-
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -44,7 +42,7 @@ namespace flightgear
 
 namespace Octree
 {
-  
+
 Node* global_spatialOctree = NULL;
 
 
@@ -73,7 +71,7 @@ Leaf::Leaf(const SGBoxd& aBox, int64_t aIdent) :
   childrenLoaded(false)
 {
 }
-  
+
 void Leaf::visit(const SGVec3d& aPos, double aCutoff,
                    FGPositioned::Filter* aFilter,
                    FindNearestResults& aResults, FindNearestPQueue&)
@@ -81,35 +79,35 @@ void Leaf::visit(const SGVec3d& aPos, double aCutoff,
   int previousResultsSize = aResults.size();
   int addedCount = 0;
   NavDataCache* cache = NavDataCache::instance();
-  
+
   loadChildren();
-  
+
   ChildMap::const_iterator it = children.lower_bound(aFilter->minType());
   ChildMap::const_iterator end = children.upper_bound(aFilter->maxType());
-  
+
   for (; it != end; ++it) {
     FGPositioned* p = cache->loadById(it->second);
     double d = dist(aPos, p->cart());
     if (d > aCutoff) {
       continue;
     }
-    
+
     if (aFilter && !aFilter->pass(p)) {
       continue;
     }
-    
+
     ++addedCount;
     aResults.push_back(OrderedPositioned(p, d));
   }
-  
+
   if (addedCount == 0) {
     return;
   }
-  
+
   // keep aResults sorted
   // sort the new items, usually just one or two items
   std::sort(aResults.begin() + previousResultsSize, aResults.end());
-  
+
   // merge the two sorted ranges together - in linear time
   std::inplace_merge(aResults.begin(),
                      aResults.begin() + previousResultsSize, aResults.end());
@@ -120,23 +118,23 @@ void Leaf::insertChild(FGPositioned::Type ty, PositionedID id)
   assert(childrenLoaded);
   children.insert(children.end(), TypedPositioned(ty, id));
 }
-  
+
 void Leaf::loadChildren()
 {
   if (childrenLoaded) {
     return;
   }
-  
+
   NavDataCache* cache = NavDataCache::instance();
-  BOOST_FOREACH(TypedPositioned tp, cache->getOctreeLeafChildren(guid())) {
+  for (const auto& tp : cache->getOctreeLeafChildren(guid())) {
     children.insert(children.end(), tp);
   } // of leaf members iteration
-  
+
   childrenLoaded = true;
 }
-    
+
 ///////////////////////////////////////////////////////////////////////////////
-    
+
 Branch::Branch(const SGBoxd& aBox, int64_t aIdent) :
   Node(aBox, aIdent),
   childrenLoaded(false)
@@ -153,16 +151,16 @@ void Branch::visit(const SGVec3d& aPos, double aCutoff,
     if (!children[i]) {
       continue;
     }
-    
+
     double d = children[i]->distToNearest(aPos);
     if (d > aCutoff) {
       continue; // exceeded cutoff
     }
-    
+
     aQ.push(Ordered<Node*>(children[i], d));
   } // of child iteration
 }
-    
+
 void Branch::visitForLines(const SGVec3d& aPos, double aCutoff,
                            PolyLineList& aLines,
                            FindLinesDeque& aQ) const
@@ -174,12 +172,12 @@ void Branch::visitForLines(const SGVec3d& aPos, double aCutoff,
         if (!children[i]) {
             continue;
         }
-        
+
         double d = children[i]->distToNearest(aPos);
         if (d > aCutoff) {
             continue; // exceeded cutoff
         }
-        
+
         aQ.push_back(children[i]);
     } // of child iteration
 }
@@ -217,21 +215,21 @@ Node* Branch::childForPos(const SGVec3d& aCart) const
 {
   assert(contains(aCart));
   int childIndex = 0;
-  
+
   SGVec3d center(_box.getCenter());
 // tests must match indices in SGbox::getCorner
   if (aCart.x() < center.x()) {
     childIndex += 1;
   }
-  
+
   if (aCart.y() < center.y()) {
     childIndex += 2;
   }
-  
+
   if (aCart.z() < center.z()) {
     childIndex += 4;
   }
-  
+
   return childAtIndex(childIndex);
 }
 
@@ -241,21 +239,21 @@ Node* Branch::childAtIndex(int childIndex) const
   if (!child) { // lazy building of children
     SGBoxd cb(boxForChild(childIndex));
     double d2 = dot(cb.getSize(), cb.getSize());
-    
+
     assert(((_ident << 3) >> 3) == _ident);
-    
+
     // child index is 0..7, so 3-bits is sufficient, and hence we can
     // pack 20 levels of octree into a int64, which is plenty
     int64_t childIdent = (_ident << 3) | childIndex;
-    
+
     if (d2 < LEAF_SIZE_SQR) {
       child = new Leaf(cb, childIdent);
     } else {
       child = new Branch(cb, childIdent);
     }
-    
+
     children[childIndex] = child;
-    
+
     if (childrenLoaded) {
     // childrenLoad is done, so we're defining a new node - add it to the
     // cache too.
@@ -265,25 +263,25 @@ Node* Branch::childAtIndex(int childIndex) const
 
   return children[childIndex];
 }
-  
+
 void Branch::loadChildren() const
 {
   if (childrenLoaded) {
     return;
   }
-  
+
   int childrenMask = NavDataCache::instance()->getOctreeBranchChildren(guid());
   for (int i=0; i<8; ++i) {
     if ((1 << i) & childrenMask) {
       childAtIndex(i); // accessing will create!
     }
   } // of child index iteration
-  
+
 // set this after creating the child nodes, so the cache update logic
 // in childAtIndex knows any future created children need to be added.
   childrenLoaded = true;
 }
-  
+
 int Branch::childMask() const
 {
   int result = 0;
@@ -292,7 +290,7 @@ int Branch::childMask() const
       result |= 1 << i;
     }
   }
-  
+
   return result;
 }
 
@@ -306,7 +304,7 @@ bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
 
   SGTimeStamp tm;
   tm.stamp();
-    
+
   while (!pq.empty() && (tm.elapsedMSec() < aCutoffMsec)) {
     if (!results.empty()) {
       // terminate the search if we have sufficent results, and we are
@@ -318,10 +316,10 @@ bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
         break;
       }
     }
-  
+
     Node* nd = pq.top().get();
     pq.pop();
-  
+
     nd->visit(aPos, cut, aFilter, results, pq);
   } // of queue iteration
 
@@ -333,7 +331,7 @@ bool findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
   for (unsigned int r=0; r<numResults; ++r) {
     aResults[r] = results[r].get();
   }
-    
+
   return !pq.empty();
 }
 
@@ -347,11 +345,11 @@ bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filte
 
   SGTimeStamp tm;
   tm.stamp();
-  
+
   while (!pq.empty() && (tm.elapsedMSec() < aCutoffMsec)) {
     Node* nd = pq.top().get();
     pq.pop();
-  
+
     nd->visit(aPos, rng, aFilter, results, pq);
   } // of queue iteration
 
@@ -361,10 +359,10 @@ bool findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filte
   for (unsigned int r=0; r<numResults; ++r) {
     aResults[r] = results[r].get();
   }
-      
+
   return !pq.empty();
 }
-      
+
 } // of namespace Octree
 
 } // of namespace flightgear

@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <fstream>
 #include <map>
-#include <boost/foreach.hpp>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -137,9 +136,9 @@ void FGGroundController::announcePosition(int id,
         if (leg == 2) {
             activeTraffic.push_front(rec);
         } else {
-            activeTraffic.push_back(rec);   
+            activeTraffic.push_back(rec);
         }
-        
+
     } else {
         i->setPositionAndIntentions(currentPosition, intendedRoute);
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -355,7 +354,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                 closest = i;
                 closestOnNetwork = i;
 //                minbearing = bearing;
-                
+
             }
         }
         //Check traffic at the tower controller
@@ -417,7 +416,7 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
                     current->setSpeedAdjustment(closest->getSpeed() *
                                                 (mindist / 100));
                     needBraking = true;
-                    
+
 //                     if (
 //                         closest->getAircraft()->getTakeOffStatus() &&
 //                         (current->getAircraft()->getTrafficRef()->getDepartureAirport() ==  closest->getAircraft()->getTrafficRef()->getDepartureAirport()) &&
@@ -476,7 +475,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
                "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkHoldPosition at " << SG_ORIGIN);
     }
     current = i;
-    // 
+    //
     if (current->getAircraft()->getTakeOffStatus() == 1) {
         current->setHoldPosition(true);
         return;
@@ -496,7 +495,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
         nextRoute    = (*(i->getIntentions().begin()));
     } else {
         nextRoute = 0;
-    }       
+    }
     if (currentRoute > 0) {
         FGTaxiSegment *tx = network->findSegment(currentRoute);
         FGTaxiSegment *nx;
@@ -527,7 +526,7 @@ void FGGroundController::checkHoldPosition(int id, double lat,
                 }
                 ivi++;
             }
-        } 
+        }
     }
     bool currStatus = current->hasHoldPosition();
     current->setHoldPosition(origStatus);
@@ -788,7 +787,7 @@ void FGGroundController::render(bool visible)
 
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
             // Handle start point i.e. the segment that is connected to the aircraft itself on the starting end
-            // and to the the first "real" taxi segment on the other end. 
+            // and to the the first "real" taxi segment on the other end.
             const int pos = i->getCurrentPosition();
             if (pos > 0) {
                 FGTaxiSegment* segment = network->findSegment(pos);
@@ -869,7 +868,7 @@ void FGGroundController::render(bool visible)
             } else {
                 //std::cerr << "BIG FAT WARNING: current position is here : " << pos << std::endl;
             }
-            // Next: Draw the other taxi segments. 
+            // Next: Draw the other taxi segments.
             for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
                 osg::Matrix obj_pos;
                 const int k = (*j);
