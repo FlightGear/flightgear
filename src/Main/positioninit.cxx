@@ -837,7 +837,7 @@ void finalizePosition()
 
     if (!carrier.empty())
     {
-        const bool atFLOLS = rwy_req && (runway == "FLOLS");
+        const bool    atFLOLS = rwy_req && (runway == "FLOLS" || parkpos == "FLOLS");
         InitPosResult carrierResult;
         if (atFLOLS) {
             carrierResult = setFinalPosFromCarrierFLOLS(carrier, abeam);
