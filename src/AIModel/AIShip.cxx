@@ -330,11 +330,11 @@ void FGAIShip::Run(double dt) {
 		}
 
 	} else {
-		
+
 		if (fabs(speed) <= 40)
            _sp_turn_radius_ft = _fixed_turn_radius;
 		else {
-			// adjust turn radius for speed. 
+			// adjust turn radius for speed.
 			_sp_turn_radius_ft = turn_radius_ft;
 		}
 	}
@@ -588,11 +588,11 @@ double FGAIShip::getCourse(double lat, double lon, double lat2, double lon2) con
     //calculate the bearing and range of the second pos from the first
     geo_inverse_wgs_84(lat, lon, lat2, lon2, &course, &recip, &distance);
     if (tgt_speed >= 0) {
-        return course;
         SG_LOG(SG_AI, SG_DEBUG, "AIShip: course " << course);
+        return course;
     } else {
-        return recip;
         SG_LOG(SG_AI, SG_DEBUG, "AIShip: recip " << recip);
+        return recip;
     }
 }
 
