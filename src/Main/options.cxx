@@ -21,9 +21,7 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
@@ -1720,6 +1718,7 @@ struct OptionDesc {
     {"notrim",                       false, OPTION_BOOL,   "/sim/presets/trim", false, "", 0 },
     {"on-ground",                    false, OPTION_BOOL,   "/sim/presets/onground", true, "", 0 },
     {"in-air",                       false, OPTION_BOOL,   "/sim/presets/onground", false, "", 0 },
+    {"disable-hold-short",           false, OPTION_BOOL,   "/sim/presets/mp-hold-short-override", true, "", 0 },
     {"fog-disable",                  false, OPTION_STRING, "/sim/rendering/fog", false, "disabled", 0 },
     {"fog-fastest",                  false, OPTION_STRING, "/sim/rendering/fog", false, "fastest", 0 },
     {"fog-nicest",                   false, OPTION_STRING, "/sim/rendering/fog", false, "nicest", 0 },

@@ -180,7 +180,9 @@ std::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
     double startOffset = fgGetDouble("/sim/airport/runways/start-offset-m", 5.0);
     SGGeod pos = runway->pointOnCenterline(startOffset);
 
-    if (FGIO::isMultiplayerRequested() && (fabs(offsetNm) <0.1)) {
+    const bool overrideHoldShort = fgGetBool("/sim/presets/mp-hold-short-override", false);
+
+    if (!overrideHoldShort && FGIO::isMultiplayerRequested() && (fabs(offsetNm) <0.1)) {
         SG_LOG( SG_GENERAL, SG_WARN, "Requested to start on " << runway->airport()->ident() << "/" <<
                runway->ident() << ", MP is enabled so computing hold short position to avoid runway incursion");
 
