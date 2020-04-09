@@ -8,11 +8,6 @@
 #  include <netinet/in.h>       // htonl() ntohl()
 #endif
 
-#ifndef _WIN32
-#  include <strings.h>		// for bzero()
-#else
-#  define bzero(a,b) memset(a,0,b)
-#endif
 #include <iostream>
 #include <string>
 
@@ -999,11 +994,11 @@ int main( int argc, char **argv ) {
         double current_time = 0.0;
         double last_time = 0.0;
 
-        gps gpspacket; bzero( &gpspacket, sizeof(gpspacket) );
-	imu imupacket; bzero( &imupacket, sizeof(imupacket) );
-	nav navpacket; bzero( &navpacket, sizeof(navpacket) );
-	servo servopacket; bzero( &servopacket, sizeof(servopacket) );
-	health healthpacket; bzero( &healthpacket, sizeof(healthpacket) );
+        gps gpspacket; memset( &gpspacket, 0, sizeof gpspacket );
+	imu imupacket; memset( &imupacket, 0, sizeof imupacket );
+	nav navpacket; memset( &navpacket, 0, sizeof navpacket );
+	servo servopacket; memset( &servopacket, 0, sizeof servopacket );
+	health healthpacket; memset( &healthpacket, 0, sizeof healthpacket );
 
         double gps_time = 0.0;
         double imu_time = 0.0;
