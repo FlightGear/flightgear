@@ -396,7 +396,7 @@ void FGGlobals::append_read_allowed_paths(const SGPath &path)
 {
     SGPath abspath(path.realpath());
     if (!abspath.exists()) {
-        SG_LOG(SG_GENERAL, SG_WARN, "read-allowed path not found:" << abspath);
+        SG_LOG(SG_IO, SG_DEBUG, "read-allowed path not found:" << abspath);
         return;
     }
     extra_read_allowed_paths.push_back(abspath);

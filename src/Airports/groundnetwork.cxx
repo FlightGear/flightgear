@@ -170,10 +170,6 @@ FGGroundNetwork::~FGGroundNetwork()
   BOOST_FOREACH(FGTaxiSegment* seg, segments) {
     delete seg;
   }
-
-  // owning references to ground-net nodes will also drop
-
-  SG_LOG(SG_NAVAID, SG_INFO, "destroying ground net for " << parent->ident());
 }
 
 void FGGroundNetwork::init()
