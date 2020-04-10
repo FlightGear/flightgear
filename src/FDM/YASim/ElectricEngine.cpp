@@ -2,6 +2,7 @@
 // Based on original patch from Ian Dall <ian@beware.dropbear.id.au>
 // Date:   Wed Jan 11 22:35:24 2012 +1030
 // #595 Support for electric motors in YASim (patch provided)
+// Improved by ThunderFly s.r.o. <info@thunderfly.cz>
 ////////////////////////////////////////////////////////
 
 #include "Atmosphere.hpp"
@@ -9,14 +10,14 @@
 #include "ElectricEngine.hpp"
 namespace yasim {
 
-// explain parameters!
-ElectricEngine::ElectricEngine(float V, float Kv, float Rm) :
+// idealized DC electric motor model
+ElectricEngine::ElectricEngine(float voltage, float Kv, float Rm) :
     _Rm(Rm)
 {
     _running = false;
-    _omega0 = V * Kv;
-    _K = 1/Kv;
-    _torque0 = _K * _K * _omega0 / _Rm;
+    _omega0 = voltage * Kv; // calculate RPM of unloaded motor
+    _K = 1/Kv; // calculate reciprocal value of motor velocity constant
+    _torque0 = _K * _K * _omega0 / _Rm; // rough estimate of full load torque valid for DC electric motor invalid for BLDC
 }
 
 void ElectricEngine::calc(float pressure, float temp, float omega)

@@ -799,11 +799,10 @@ void FGFDM::parseTurbineEngine(const XMLAttributes* a)
 
 void FGFDM::parseElectricEngine(const XMLAttributes* a)
 {
-    //Kv is expected to be given as RPM in XML
-    float Kv = attrf(a, "Kv") * RPM2RAD;
-    float V = attrf(a, "V");
-    float Rm = attrf(a, "Rm");
-    ElectricEngine* eng = new ElectricEngine(V, Kv, Rm);
+    float Kv = attrf(a, "Kv") * RPM2RAD; //Kv is expected to be given as RPM per volt in XML
+    float voltage = attrf(a, "voltage"); // voltage applied at the motor windings in volts
+    float Rm = attrf(a, "Rm"); // winding resistance in Ohms
+    ElectricEngine* eng = new ElectricEngine(voltage, Kv, Rm);
 
     ((PropEngine*)_currObj)->setEngine(eng);
 }
