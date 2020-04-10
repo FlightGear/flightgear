@@ -91,8 +91,8 @@ Item {
         var defaultValue = ("defaultValue" in root) ? root.defaultValue : undefined;
         var rawValue = _config.getValueForKey("", root.setting, defaultValue);
 
-        // console.warn("restoring state for " + root.setting + ", got raw value " + rawValue + " with type " + typeof(rawValue))
-        if (rawValue !== defaultValue) {
+        //console.warn("restoring state for " + root.setting + ", got raw value " + rawValue + " with type " + typeof(rawValue))
+        if (rawValue !== undefined) {
             setValue(rawValue);
         }
     }

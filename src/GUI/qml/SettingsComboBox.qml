@@ -30,4 +30,9 @@ SettingControl {
         anchors.topMargin: Style.margin
         width: root.width
     }
+
+     function setValue(newValue)
+     {
+         popup.currentIndex =  newValue;
+     }
 }
