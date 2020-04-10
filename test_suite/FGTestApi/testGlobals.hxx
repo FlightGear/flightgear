@@ -24,7 +24,7 @@ void initTestGlobals(const std::string& testName);
 
 bool logPositionToKML(const std::string& testName);
     
-void initStandardNasal();
+void initStandardNasal(bool withCanvas = false);
 
 void populateFPWithoutNasal(flightgear::FlightPlanRef f,
                          const std::string& depICAO, const std::string& depRunway,

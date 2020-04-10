@@ -23,11 +23,7 @@ add_library(hidapi STATIC
 )
 
 if(WIN32)
-    find_library(SETUP_API_LIB Setupapi)
-	if (NOT SETUP_API_LIB)
-        message(FATAL_ERROR "Failed to find Setupapi.lib")
-    endif()
-    target_link_libraries(hidapi ${SETUP_API_LIB})
+    target_link_libraries(hidapi PUBLIC SetupApi)
 elseif(APPLE)
     find_library(IOKIT_FRAMEWORK IOKit)
     target_link_libraries(hidapi ${IOKIT_FRAMEWORK})

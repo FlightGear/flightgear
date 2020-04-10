@@ -175,7 +175,7 @@ static RouteRestriction restrictionFromString(const char* aStr)
     "Route restrictFromString");
 }
 
-static const char* restrictionToString(RouteRestriction aRestrict)
+const char* restrictionToString(RouteRestriction aRestrict)
 {
   switch (aRestrict) {
   case RESTRICT_AT: return "at";

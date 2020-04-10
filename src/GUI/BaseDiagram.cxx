@@ -155,6 +155,25 @@ void BaseDiagram::paintAirplaneIcon(QPainter* painter, const SGGeod& geod, int h
     painter->restore();
 }
 
+void BaseDiagram::paintCarrierIcon(QPainter* painter, const SGGeod& geod, int headingDeg)
+{
+    QPointF pos = project(geod);
+    QPixmap pix(":/svg/aircraft-carrier");
+    pos = m_viewportTransform.map(pos);
+    painter->save();
+    painter->setWorldTransform(m_baseDeviceTransform);
+
+    painter->translate(pos.x(), pos.y());
+    painter->rotate(headingDeg);
+
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+    QRect carrierIconRect = pix.rect();
+    carrierIconRect.moveCenter(QPoint(0,0));
+    painter->drawPixmap(carrierIconRect, pix);
+
+    painter->restore();
+}
+
 void BaseDiagram::paintPolygonData(QPainter* painter)
 {
     QTransform invT = m_viewportTransform.inverted();

@@ -62,7 +62,12 @@ public:
         _manager(manager),
         _useVBOsProp(fgGetNode("/sim/rendering/use-vbos", true)),
         _enableCacheProp(fgGetNode("/sim/tile-cache/enable", true)),
-        _pagedLODMaximumProp(fgGetNode("/sim/rendering/max-paged-lod", true))
+        _pagedLODMaximumProp(fgGetNode("/sim/rendering/max-paged-lod", true)),
+        _lodDetailed(fgGetNode("/sim/rendering/static-lod/detailed", true)),
+        _lodRoughDelta(fgGetNode("/sim/rendering/static-lod/rough-delta", true)),
+        _lodBareDelta(fgGetNode("/sim/rendering/static-lod/bare-delta", true)),
+        _lodRough(fgGetNode("/sim/rendering/static-lod/rough", true)),
+        _lodBare(fgGetNode("/sim/rendering/static-lod/bare", true))
     {
         _useVBOsProp->addChangeListener(this, true);
       
@@ -78,6 +83,9 @@ public:
             _pagedLODMaximumProp->setIntValue(current);
         }
         _pagedLODMaximumProp->addChangeListener(this, true);
+        _lodDetailed->addChangeListener(this, true);
+        _lodBareDelta->addChangeListener(this, true);
+        _lodRoughDelta->addChangeListener(this, true);
     }
     
     ~TileManagerListener()
@@ -85,6 +93,9 @@ public:
         _useVBOsProp->removeChangeListener(this);
         _enableCacheProp->removeChangeListener(this);
         _pagedLODMaximumProp->removeChangeListener(this);
+        _lodDetailed->removeChangeListener(this);
+        _lodBareDelta->removeChangeListener(this);
+        _lodRoughDelta->removeChangeListener(this);
     }
     
     virtual void valueChanged(SGPropertyNode* prop)
@@ -92,13 +103,20 @@ public:
         if (prop == _useVBOsProp) {
             bool useVBOs = prop->getBoolValue();
             _manager->_options->setPluginStringData("SimGear::USE_VBOS",
-                                                useVBOs ? "ON" : "OFF");
+                                                    useVBOs ? "ON" : "OFF");
         } else if (prop == _enableCacheProp) {
             _manager->_enableCache = prop->getBoolValue();
         } else if (prop == _pagedLODMaximumProp) {
-          int v = prop->getIntValue();
-          osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
-          viewer->getDatabasePager()->setTargetMaximumNumberOfPageLOD(v);
+            int                             v = prop->getIntValue();
+            osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
+            viewer->getDatabasePager()->setTargetMaximumNumberOfPageLOD(v);
+        } else if (prop == _lodDetailed || prop == _lodBareDelta || prop == _lodRoughDelta) {
+            // compatibility with earlier versions; set the static lod ranges appropriately as otherwise (bad) self managed
+            // LOD on scenery with range animations doesn't work.
+            // see also /sim/rendering/enable-range-lod-animations - which is false by default in > 2019.2 which also fixes
+            // the scenery but in a more efficient way.
+            _lodBare->setDoubleValue(_lodDetailed->getDoubleValue() + _lodRoughDelta->getDoubleValue());
+            _lodRough->setDoubleValue(_lodBare->getDoubleValue() + _lodBareDelta->getDoubleValue());
         }
     }
     
@@ -106,7 +124,13 @@ private:
     FGTileMgr* _manager;
     SGPropertyNode_ptr _useVBOsProp,
       _enableCacheProp,
-      _pagedLODMaximumProp;
+      _pagedLODMaximumProp,
+      _lodDetailed,
+      _lodRoughDelta,
+      _lodBareDelta,
+      _lodRough,
+      _lodBare
+        ;
 };
 
 FGTileMgr::FGTileMgr():
@@ -168,14 +192,13 @@ void FGTileMgr::reinit()
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const PathList &sc = globals->get_fg_scenery();
     fp.clear();
-    PathList::const_iterator it;
-    for (it = sc.begin(); it != sc.end(); ++it) {
-        fp.push_back(it->local8BitStr());
+    for (auto it = sc.begin(); it != sc.end(); ++it) {
+        fp.push_back(it->utf8Str());
     }
-    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().local8BitStr());
+    _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().utf8Str());
     
     if (_terra_sync) {
-      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().local8BitStr());
+      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().utf8Str());
     }
     
     if (!_disableNasalHooks->getBoolValue())

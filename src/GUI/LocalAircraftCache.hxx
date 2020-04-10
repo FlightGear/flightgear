@@ -49,8 +49,6 @@ struct AircraftItem
 
     void toDataStream(QDataStream& ds) const;
 
-    QPixmap thumbnail(bool loadIfRequired = true) const;
-
     int indexOfVariant(QUrl uri) const;
 
     bool excluded = false;
@@ -75,7 +73,6 @@ struct AircraftItem
     QUrl supportUrl;
     QVariant status(int variant);
 private:
-    mutable QPixmap m_thumbnail;
 };
 
 class LocalAircraftCache : public QObject
@@ -126,7 +123,8 @@ public:
         PackageUpdateAvailable,
         PackageQueued,
         PackageDownloading,
-        NotPackaged
+        NotPackaged,
+        PackageInstallFailed
     };
 
     Q_ENUMS(PackageStatus)

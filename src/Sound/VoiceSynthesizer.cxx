@@ -53,7 +53,7 @@ void FLITEVoiceSynthesizer::WorkerThread::run()
 
     // marker value indicating termination requested
     if ((request.speed < 0.0) && (request.volume < 0.0)) {
-      SG_LOG(SG_SOUND, SG_INFO, "FLITE synthesis thread exiting");
+      SG_LOG(SG_SOUND, SG_DEBUG, "FLITE synthesis thread exiting");
       return;
     }
 
@@ -76,7 +76,7 @@ string FLITEVoiceSynthesizer::getVoicePath( voice_t voice )
 {
   if( voice < 0 || voice >= VOICE_UNKNOWN ) return string("");
   SGPath voicePath = globals->get_fg_root() / "ATC" /  VOICE_FILES[voice];
-  return voicePath.local8BitStr();
+  return voicePath.utf8Str();
 }
 
 string FLITEVoiceSynthesizer::getVoicePath( const string & voice )
@@ -106,7 +106,6 @@ FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
   // push the special marker value
   _requests.push(SynthesizeRequest::cancelThreadRequest());
   _worker->join();
-  SG_LOG(SG_SOUND, SG_INFO, "FLITE synthesis thread joined OK");
   Flite_HTS_Engine_clear(_engine);
 }
 
@@ -124,7 +123,11 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, doub
   ALsizei rate, count;
   if ( FALSE == Flite_HTS_Engine_synthesize_samples_mono16(_engine, text.c_str(), &data, &count, &rate)) return NULL;
 
-  return new SGSoundSample(&data,
+  auto buf = std::unique_ptr<unsigned char, decltype(free)*>{
+    reinterpret_cast<unsigned char*>( data ),
+    free
+  };
+  return new SGSoundSample(buf,
                            count * sizeof(short),
                            rate,
                            SG_SAMPLE_MONO16);

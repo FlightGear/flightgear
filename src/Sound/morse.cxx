@@ -190,10 +190,13 @@ SGSoundSample *FGMorse::make_ident( const std::string& id, const int freq ) {
     length += 2 * SPACE_SIZE;
 
     // 2. Allocate space for the message
-    const unsigned char* buffer = (const unsigned char *)malloc(length);
+    auto buffer = std::unique_ptr<unsigned char, decltype(free)*>{
+          reinterpret_cast<unsigned char*>( malloc( length ) ),
+          free
+    };
 
     // 3. Assemble the message;
-    unsigned char *buf_ptr = (unsigned char*)buffer;
+    unsigned char *buf_ptr = buffer.get();
 
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
@@ -232,7 +235,7 @@ SGSoundSample *FGMorse::make_ident( const std::string& id, const int freq ) {
     buf_ptr += SPACE_SIZE;
 
     // 4. create the simple sound and return
-    SGSoundSample *sample = new SGSoundSample( &buffer, length,
+    SGSoundSample *sample = new SGSoundSample( buffer, length,
                                                BYTES_PER_SECOND );
 
     sample->set_reference_dist( 10.0 );

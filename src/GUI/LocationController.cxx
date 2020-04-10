@@ -31,10 +31,12 @@
 #include <simgear/structure/exception.hxx>
 
 #include "AirportDiagram.hxx"
+#include "CarrierDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "LaunchConfig.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "NavaidSearchModel.hxx"
+#include "CarriersLocationModel.hxx"
 
 #include <Airports/airport.hxx>
 #include <Airports/groundnetwork.hxx>
@@ -53,10 +55,8 @@ const unsigned int MAX_RECENT_LOCATIONS = 64;
 QVariant savePositionList(const FGPositionedList& posList)
 {
     QVariantList vl;
-    FGPositionedList::const_iterator it;
-    for (it = posList.begin(); it != posList.end(); ++it) {
+    for (const auto& pos : posList) {
         QVariantMap vm;
-        FGPositionedRef pos = *it;
         vm.insert("ident", QString::fromStdString(pos->ident()));
         vm.insert("type", pos->type());
         vm.insert("lat", pos->geod().getLatitudeDeg());
@@ -70,7 +70,7 @@ FGPositionedList loadPositionedList(QVariant v)
 {
     QVariantList vl = v.toList();
     FGPositionedList result;
-    result.reserve(vl.size());
+    result.reserve(static_cast<size_t>(vl.size()));
     NavDataCache* cache = NavDataCache::instance();
 
     Q_FOREACH(QVariant v, vl) {
@@ -93,9 +93,10 @@ FGPositionedList loadPositionedList(QVariant v)
 LocationController::LocationController(QObject *parent) :
     QObject(parent)
 {
-    m_searchModel = new NavaidSearchModel;
+    m_searchModel = new NavaidSearchModel(this);
     m_detailQml = new QmlPositioned(this);
     m_baseQml = new QmlPositioned(this);
+    m_carriersModel = new CarriersLocationModel(this);
 
     m_defaultAltitude = QuantityValue{Units::FeetMSL, 6000};
     m_defaultAirspeed = QuantityValue{Units::Knots, 120};
@@ -112,9 +113,7 @@ LocationController::LocationController(QObject *parent) :
             this, &LocationController::descriptionChanged);
 }
 
-LocationController::~LocationController()
-{
-}
+LocationController::~LocationController() = default;
 
 void LocationController::setLaunchConfig(LaunchConfig *config)
 {
@@ -196,35 +195,63 @@ void LocationController::setBaseGeod(QmlGeod geod)
     if (m_locationIsLatLon && (m_geodLocation == geod.geod()))
         return;
 
+    clearLocation();
     m_locationIsLatLon = true;
     m_geodLocation = geod.geod();
+    emit baseLocationChanged();
+}
+
+QString LocationController::carrierName() const
+{
+    return m_carrierName;
+}
+
+void LocationController::setCarrierLocation(QString name)
+{
+    const auto cIndex = m_carriersModel->indexOf(name);
+    clearLocation();
+    if (cIndex < 0) {
+        qWarning() << "invalid carrier name:" << name;
+        return;
+    }
+
+    m_locationIsCarrier = true;
+    m_carrierName = name;
+    m_geodLocation = m_carriersModel->geodForIndex(cIndex);
+    m_carrierParkings = m_carriersModel->parkingsForIndex(cIndex);
+
+    emit baseLocationChanged();
+}
+
+void LocationController::clearLocation()
+{
+    m_locationIsLatLon = false;
+    m_locationIsCarrier = false;
+    m_abeam = false;
     m_location.clear();
+    m_carrierName.clear();
     m_airportLocation.clear();
     m_detailLocation.clear();
+    m_detailQml->setGuid(0);
+    m_baseQml->setGuid(0);
+    m_carrierParkings.clear();
+    m_carrierParking.clear();
     emit baseLocationChanged();
 }
 
 void LocationController::setBaseLocation(QmlPositioned* pos)
 {
     if (!pos) {
-        m_location.clear();
-        m_detailLocation.clear();
-        m_detailQml->setGuid(0);
-        m_baseQml->setGuid(0);
-        m_airportLocation.clear();
-        m_locationIsLatLon = false;
-        emit baseLocationChanged();
+        clearLocation();
         return;
     }
 
     if (pos->inner() == m_location)
         return;
 
-    m_locationIsLatLon = false;
+    clearLocation();
     m_location = pos->inner();
     m_baseQml->setGuid(pos->guid());
-    m_detailLocation.clear();
-    m_detailQml->setGuid(0);
 
     if (FGPositioned::isAirportType(m_location.ptr())) {
         m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
@@ -249,7 +276,6 @@ void LocationController::setDetailLocation(QmlPositioned* pos)
         m_detailLocation.clear();
         m_detailQml->setInner({});
     } else {
-        qInfo() << Q_FUNC_INFO << "pos:" << pos->ident();
         m_detailLocation = pos->inner();
         m_useActiveRunway = false;
         m_useAvailableParking = false;
@@ -261,7 +287,7 @@ void LocationController::setDetailLocation(QmlPositioned* pos)
 
 QmlGeod LocationController::baseGeod() const
 {
-    if (m_locationIsLatLon)
+    if (m_locationIsLatLon || m_locationIsCarrier)
         return m_geodLocation;
 
     if (m_location)
@@ -341,8 +367,8 @@ void LocationController::showHistoryInSearchModel()
 	const std::string tutorialICAO = "PHTO"; // C172P tutorial aiurport
 
 	// remove them from the recent locations
-    auto it = std::remove_if(locs.begin(), locs.end(), 
-		[defaultICAO, tutorialICAO](FGPositionedRef pos) 
+    auto it = std::remove_if(locs.begin(), locs.end(),
+		[defaultICAO, tutorialICAO](FGPositionedRef pos)
 	{
         return (pos->ident() == defaultICAO) || (pos->ident() == tutorialICAO);
     });
@@ -368,6 +394,33 @@ QmlGeod LocationController::parseStringAsGeod(QString string) const
     return QmlGeod(g);
 }
 
+QString LocationController::carrierParking() const
+{
+    if (!m_locationIsCarrier)
+        return {};
+    return m_carrierParking;
+}
+
+void LocationController::setCarrierParking(QString name)
+{
+    if (!m_locationIsCarrier) {
+        qWarning() << "active location is not a carrier";
+        return;
+    }
+
+    if (m_carrierParking == name)
+        return;
+
+    if (!m_carrierParkings.contains(name)) {
+        qWarning() << "parking '" << name << "' not found in carrier parking list";
+        return;
+    }
+
+    m_carrierParking = name;
+    m_useCarrierFLOLS = false;
+    emit configChanged();
+}
+
 QmlPositioned *LocationController::detail() const
 {
     return m_detailQml;
@@ -376,6 +429,11 @@ QmlPositioned *LocationController::detail() const
 QmlPositioned *LocationController::baseLocation() const
 {
     return m_baseQml;
+}
+
+QStringList LocationController::carrierParkings() const
+{
+    return m_carrierParkings;
 }
 
 void LocationController::setOffsetRadial(QuantityValue offsetRadial)
@@ -436,27 +494,32 @@ void LocationController::setUseAvailableParking(bool useAvailableParking)
     emit configChanged();
 }
 
+void LocationController::setUseCarrierFLOLS(bool useCarrierFLOLS)
+{
+    if (!m_locationIsCarrier) {
+        qWarning() << "location is not a carrier";
+        return;
+    }
+
+    if (m_useCarrierFLOLS == useCarrierFLOLS)
+        return;
+
+    m_useCarrierFLOLS = useCarrierFLOLS;
+    m_carrierParking.clear();
+    emit configChanged();
+}
+
+void LocationController::setAbeam(bool abeam)
+{
+  m_abeam = abeam;
+  emit configChanged();
+}
+
 void LocationController::restoreLocation(QVariantMap l)
 {
-    try {
-        if (l.contains("location-lat")) {
-            m_locationIsLatLon = true;
-            m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
-                                             l.value("location-lat").toDouble());
-            m_location.clear();
-            m_airportLocation.clear();
-            m_baseQml->setInner(nullptr);
-        } else if (l.contains("location-id")) {
-            m_location = NavDataCache::instance()->loadById(l.value("location-id").toULongLong());
-            m_locationIsLatLon = false;
-            if (FGPositioned::isAirportType(m_location.ptr())) {
-                m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
-            } else {
-                m_airportLocation.clear();
-            }
-            m_baseQml->setInner(m_location);
-        }
+    clearLocation();
 
+    try {
         m_altitudeEnabled = l.contains("altitude");
         m_speedEnabled = l.contains("speed");
         m_headingEnabled = l.contains("heading");
@@ -470,10 +533,34 @@ void LocationController::restoreLocation(QVariantMap l)
         m_offsetDistance = l.value("offset-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
         m_tuneNAV1 = l.value("tune-nav1-radio").toBool();
 
+        if (l.contains("location-lat")) {
+            m_locationIsLatLon = true;
+            m_geodLocation = SGGeod::fromDeg(l.value("location-lon").toDouble(),
+                                             l.value("location-lat").toDouble());
+        } else if (l.contains("carrier")) {
+            setCarrierLocation(l.value("carrier").toString());
+            if (l.contains("carrier-flols")) {
+                setUseCarrierFLOLS(l.value("carrier-flols").toBool());
+                setAbeam(l.value("abeam").toBool());
+                // overwrite value form above, intentionally
+                m_offsetDistance = l.value("location-carrier-flols-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
+            } else if (l.contains("carrier-parking")) {
+                setCarrierParking(l.value("carrier-parking").toString());
+            }
+        } else if (l.contains("location-id")) {
+            m_location = NavDataCache::instance()->loadById(l.value("location-id").toLongLong());
+            m_locationIsLatLon = false;
+            if (FGPositioned::isAirportType(m_location.ptr())) {
+                m_airportLocation = static_cast<FGAirport*>(m_location.ptr());
+            } else {
+                m_airportLocation.clear();
+            }
+            m_baseQml->setInner(m_location);
+        }
+
         if (m_airportLocation) {
             m_useActiveRunway = false;
             m_useAvailableParking = false;
-            m_detailLocation.clear();
 
             if (l.contains("location-apt-runway")) {
                 QString runway = l.value("location-apt-runway").toString().toUpper();
@@ -498,14 +585,12 @@ void LocationController::restoreLocation(QVariantMap l)
             }
 
             m_onFinal = l.value("location-on-final").toBool();
+            setAbeam(l.value("abeam").toBool());
             m_offsetDistance = l.value("location-apt-final-distance", QVariant::fromValue(m_defaultOffsetDistance)).value<QuantityValue>();
         } // of location is an airport
     } catch (const sg_exception&) {
         qWarning() << "Errors restoring saved location, clearing";
-        m_location.clear();
-        m_airportLocation.clear();
-        m_baseQml->setInner(nullptr);
-        m_offsetEnabled = false;
+        clearLocation();
     }
 
     baseLocationChanged();
@@ -515,6 +600,10 @@ void LocationController::restoreLocation(QVariantMap l)
 
 bool LocationController::shouldStartPaused() const
 {
+    if (m_useCarrierFLOLS) {
+        return true;
+    }
+
     if (!m_location) {
         return false; // defaults to on-ground at the default airport
     }
@@ -535,12 +624,22 @@ QVariantMap LocationController::saveLocation() const
     if (m_locationIsLatLon) {
         locationSet.insert("location-lat", m_geodLocation.getLatitudeDeg());
         locationSet.insert("location-lon", m_geodLocation.getLongitudeDeg());
+    } else if (m_locationIsCarrier) {
+        locationSet.insert("carrier", m_carrierName);
+        if (m_useCarrierFLOLS) {
+            locationSet.insert("carrier-flols", true);
+            locationSet.insert("location-carrier-flols-distance", QVariant::fromValue(m_offsetDistance));
+            locationSet.insert("abeam", m_abeam);
+        } else if (!m_carrierParking.isEmpty()) {
+            locationSet.insert("carrier-parking", m_carrierParking);
+        }
     } else if (m_location) {
         locationSet.insert("location-id", static_cast<qlonglong>(m_location->guid()));
 
         if (m_airportLocation) {
             locationSet.insert("location-on-final", m_onFinal);
             locationSet.insert("location-apt-final-distance", QVariant::fromValue(m_offsetDistance));
+            locationSet.insert("abeam", m_abeam);
             if (m_useActiveRunway) {
                 locationSet.insert("location-apt-runway", "ACTIVE");
             } else if (m_useAvailableParking) {
@@ -588,7 +687,7 @@ void LocationController::setLocationProperties()
         "runway-requested" << "navaid-id" << "offset-azimuth-deg" <<
         "offset-distance-nm" << "glideslope-deg" <<
         "speed-set" << "on-ground" << "airspeed-kt" <<
-        "airport-id" << "runway" << "parkpos";
+        "airport-id" << "runway" << "parkpos" << "carrier" << "abeam";
 
     Q_FOREACH(QString s, props) {
         SGPropertyNode* c = presets->getChild(s.toStdString());
@@ -604,6 +703,8 @@ void LocationController::setLocationProperties()
         fgSetDouble("/position/longitude-deg", m_geodLocation.getLongitudeDeg());
 
         applyPositionOffset();
+        applyAltitude();
+        applyAirspeed();
         return;
     }
 
@@ -611,6 +712,28 @@ void LocationController::setLocationProperties()
     fgSetDouble("/sim/presets/longitude-deg", 9999.0);
     fgSetDouble("/sim/presets/altitude-ft", -9999.0);
     fgSetDouble("/sim/presets/heading-deg", 9999.0);
+
+    if (m_locationIsCarrier) {
+        fgSetString("/sim/presets/carrier", m_carrierName.toStdString());
+
+        if (m_useCarrierFLOLS) {
+            fgSetBool("/sim/presets/runway-requested", true );
+            // treat the FLOLS as a runway, for the purposes of communication with position-init
+            fgSetString("/sim/presets/runway", "FLOLS");
+            fgSetDouble("/sim/presets/offset-distance-nm", m_offsetDistance.convertToUnit(Units::NauticalMiles).value);
+            fgSetBool("/sim/presets/abeam", m_abeam);
+            applyAltitude();
+            applyAirspeed();
+        } else if (!m_carrierParking.isEmpty()) {
+            fgSetString("/sim/presets/parkpos", m_carrierParking.toStdString());
+        }
+
+        if (m_tuneNAV1) {
+            // tune TACAN to the carrier
+            qInfo() << "Implement TACAN tuning";
+        }
+        return;
+    }
 
     if (!m_location) {
         return;
@@ -620,6 +743,7 @@ void LocationController::setLocationProperties()
         fgSetString("/sim/presets/airport-id", m_airportLocation->ident());
         fgSetBool("/sim/presets/on-ground", true);
         fgSetBool("/sim/presets/airport-requested", true);
+        fgSetBool("/sim/presets/abeam", m_abeam);
 
         const bool onRunway = (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY));
         const bool atParking = (m_detailLocation && (m_detailLocation->type() == FGPositioned::PARKING));
@@ -681,12 +805,12 @@ void LocationController::setLocationProperties()
                 break;
             default:
                 break;
-        };
-        
+        }
+
         // set disambiguation property
         globals->get_props()->setIntValue("/sim/presets/navaid-id",
                                           static_cast<int>(m_location->guid()));
-        
+
         applyPositionOffset();
         applyAltitude();
         applyAirspeed();
@@ -737,7 +861,7 @@ void LocationController::applyAltitude()
 
     switch (m_altitude.unit) {
     default:
-        qWarning() << Q_FUNC_INFO << "unsupported altitdue unit";
+        qWarning() << Q_FUNC_INFO << "unsupported altitude unit";
         break;
     case Units::FeetMSL:
         m_config->setArg("altitude", QString::number(m_altitude.value));
@@ -793,6 +917,24 @@ void LocationController::onCollectConfig()
         applyPositionOffset();
         applyAltitude();
         applyAirspeed();
+        return;
+    }
+
+    if (m_locationIsCarrier) {
+        m_config->setArg("carrier", m_carrierName);
+
+        if (!m_carrierParking.isEmpty()) {
+            m_config->setArg("parkpos", m_carrierParking);
+        } else if (m_useCarrierFLOLS) {
+            m_config->setArg("runway", QStringLiteral("FLOLS"));
+            const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
+            m_config->setArg("offset-distance", QString::number(offsetNm));
+
+            if (m_abeam) m_config->setArg("carrier-abeam", QStringLiteral("true"));
+            applyAltitude();
+            applyAirspeed();
+        }
+
         return;
     }
 
@@ -852,7 +994,7 @@ void LocationController::onCollectConfig()
                 break;
             default:
                 break;
-        };
+        }
 
         // set disambiguation property
         m_config->setProperty("/sim/presets/navaid-id", QString::number(m_location->guid()));
@@ -904,12 +1046,27 @@ QString compassPointFromHeading(int heading)
 
 QString LocationController::description() const
 {
+    const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
+
     if (!m_location) {
         if (m_locationIsLatLon) {
             const auto s = simgear::strutils::formatGeodAsString(m_geodLocation,
                                                                  simgear::strutils::LatLonFormat::DECIMAL_DEGREES,
                                                                  simgear::strutils::DegreeSymbol::UTF8_DEGREE);
             return tr("at position %1").arg(QString::fromStdString(s));
+        }
+
+        if (m_locationIsCarrier) {
+            QString pennant = m_carriersModel->pennantForIndex(m_carriersModel->indexOf(m_carrierName));
+            QString locationToCarrier;
+            if (m_abeam) {
+              locationToCarrier = tr("%1nm abeam").arg(offsetNm);
+            } else if (m_useCarrierFLOLS) {
+              locationToCarrier = tr("on %1nm final to").arg(offsetNm);
+            } else {
+              locationToCarrier = tr("on deck at %1 on").arg(m_carrierParking);
+            }
+            return tr("%1 carrier %2 (%3)").arg(locationToCarrier).arg(m_carrierName).arg(pennant);
         }
 
         return tr("No location selected");
@@ -919,7 +1076,6 @@ QString LocationController::description() const
         name = QString::fromStdString(m_location->name());
 
     name = fixNavaidName(name);
-    const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
 
     if (m_airportLocation) {
         const bool onRunway = (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY));
@@ -952,7 +1108,7 @@ QString LocationController::description() const
         if (m_offsetEnabled) {
             offsetDesc = tr("%1nm %2 of").
                     arg(offsetNm, 0, 'f', 1).
-                    arg(compassPointFromHeading(m_offsetRadial.value));
+                    arg(compassPointFromHeading(static_cast<int>(m_offsetRadial.value)));
         }
 
         QString navaidType;

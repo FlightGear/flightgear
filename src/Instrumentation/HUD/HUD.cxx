@@ -35,7 +35,7 @@
 #include <simgear/props/props_io.hxx>
 #include <osg/GLU>
 
-#include <plib/fnt.h>
+#include "fnt.h"
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

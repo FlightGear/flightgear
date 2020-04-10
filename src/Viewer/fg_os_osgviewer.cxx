@@ -361,7 +361,6 @@ void fgOSInit(int* argc, char** argv)
 #if defined(HAVE_QT)
     global_usingGraphicsWindowQt = fgGetBool("/sim/rendering/graphics-window-qt", false);
     if (global_usingGraphicsWindowQt) {
-        flightgear::initApp(*argc, argv);
         SG_LOG(SG_GL, SG_INFO, "Using Qt implementation of GraphicsWindow");
         flightgear::initQtWindowingSystem();
     } else {

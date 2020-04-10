@@ -133,6 +133,17 @@ public:
   }
 };
 
+class CompositorEffectsProvider : public simgear::ResourceProvider {
+public:
+    CompositorEffectsProvider() :
+        simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL) {
+    }
+    SGPath resolve(const std::string &aResource, SGPath&) const override {
+        const SGPath p = globals->get_fg_root() / "Compositor" / aResource;
+        return p.exists() ? p : SGPath();
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGGlobals.
 ////////////////////////////////////////////////////////////////////////
@@ -165,6 +176,9 @@ FGGlobals::FGGlobals() :
     resMgr->addProvider(new AircraftResourceProvider());
     resMgr->addProvider(new CurrentAircraftDirProvider());
     resMgr->addProvider(new flightgear::addons::ResourceProvider());
+#ifdef ENABLE_COMPOSITOR
+    resMgr->addProvider(new CompositorEffectsProvider());
+#endif
     initProperties();
 }
 
@@ -364,9 +378,7 @@ void FGGlobals::append_fg_scenery (const SGPath &path)
 
     // tell the ResouceManager about the scenery path
     // needed to load Models from this scenery path
-    simgear::ResourceManager::instance()->addBasePath(abspath.local8BitStr(),
-                                                      simgear::ResourceManager::PRIORITY_DEFAULT);
-    simgear::Dir dir(abspath);
+    simgear::ResourceManager::instance()->addBasePath(abspath, simgear::ResourceManager::PRIORITY_DEFAULT);
 
     fg_scenery.push_back(abspath);
     extra_read_allowed_paths.push_back(abspath);
@@ -807,6 +819,13 @@ FGGlobals::loadUserSettings(SGPath userDataPath)
       }
     } else {
         tryAutosaveMigration(userDataPath, &autosave);
+    }
+    /* Before 2020-03-10, we could save portions of the /ai/models/ tree, which
+    confuses things when loaded again. So delete any such items if they have
+    been loaded. */
+    SGPropertyNode* ai = autosave.getNode("ai");
+    if (ai) {
+        ai->removeChildren("models");
     }
     copyProperties(&autosave, globals->get_props());
 }

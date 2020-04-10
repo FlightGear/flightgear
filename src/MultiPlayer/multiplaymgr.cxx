@@ -2381,7 +2381,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   */
   mp->_getProps()->removeChildren("set");
   
-  SGPropertyNode* set = NULL;
+  SGPropertyNode_ptr    set;
   
   if (simgear::strutils::ends_with(modelName, ".xml")
       && simgear::strutils::starts_with(modelName, "Aircraft/")) {
@@ -2421,7 +2421,15 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
       actually it's just a suffix. */
       
       for (auto path: dir_contents) {
-        set = mp->_getProps()->addChild("set");
+        /* Load into a local SGPropertyNode.
+        
+        As of 2020-03-08 we don't load directly into the global property tree
+        because that appears to result in runtime-specific multiplayer values
+        being written to autosave*.xml and reloaded next time fgfs is run,
+        which results in lots of bogus properties within /ai/multiplayer. So
+        instead we load into a local SGPropertyNode, then copy selected values
+        into the global tree below. */
+        set = new SGPropertyNode;
         bool    ok = true;
         try {
           readProperties(path, set);
@@ -2436,26 +2444,42 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
             break;
           }
         }
-        mp->_getProps()->removeChildren("set");
-        set = NULL;
+        set.reset();
       }
     }
   }
   
-  /* Copy [set]/sim/chase-distance-m (or -25 if not present) into
-  mp->set/sim/view[]/config/z-offset-m if not there. This attempts to mimic
-  what fgdata/defaults.xml does when it defines default views. Also copy
-  view[1]'s config into other views if not specified. */
+  // Copy values from our local <set>/sim/view[]/config/* into global
+  // /ai/models/multiplayer/set/sim/view[]/config/ so that we have view offsets
+  // available for this multiplayer aircraft.
+  SGPropertyNode* global_set = mp->_getProps()->addChild("set");
+  SGPropertyNode* global_sim = global_set->addChild("sim");
   double  sim_chase_distance_m = -25;
   if (set) {
-    sim_chase_distance_m = set->getDoubleValue("sim/chase-distance-m", sim_chase_distance_m);
+    SGPropertyNode* sim = set->getChild("sim");
+    if (sim) {
+      /* Override <sim_chase_distance_m> if present. */
+      sim_chase_distance_m = sim->getDoubleValue("chase-distance-m", sim_chase_distance_m);
+      global_sim->setDoubleValue("chase-distance-m", sim_chase_distance_m);
+      
+      simgear::PropertyList   views = sim->getChildren("view");
+      for (auto view: views) {
+        int view_index = view->getIndex();
+        SGPropertyNode* global_view = global_sim->addChild("view", view_index, false /*append*/);
+        assert(global_view->getIndex() == view_index);
+        SGPropertyNode* config = view->getChild("config");
+        SGPropertyNode* global_config = global_view->addChild("config");
+        if (config) {
+          int config_children_n = config->nChildren();
+          for (int i=0; i<config_children_n; ++i) {
+            SGPropertyNode* node = config->getChild(i);
+            global_config->setDoubleValue(node->getName(), node->getDoubleValue());
+          }
+        }
+      }
+    }
   }
-  else {
-    set = mp->_getProps()->addChild("set");
-    set->setDoubleValue("sim/chase-distance-m", sim_chase_distance_m);
-  }
-  SGPropertyNode*   set_sim = set->getNode("sim");
-  
+    
   /* For views that are similar to Helicopter View, copy across Helicopter View
   target offsets if not specified. E.g. this allows Tower View AGL to work on
   aircraft that don't know about it but need non-zero target-*-offset-m values
@@ -2464,14 +2488,16 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   This mimics what fgdata:Nasal/view.nas:manager does for the user aircraft's
   views.
   */
-  SGPropertyNode*   view_1 = set_sim->getNode("view", 1);
+  SGPropertyNode*   view_1 = global_sim->getNode("view", 1);
   std::initializer_list<int>    views_with_default_z_offset_m = {1, 2, 3, 5, 7};
   for (int j: views_with_default_z_offset_m) {
-    SGPropertyNode* v = set_sim->getChild("view", j);
+    SGPropertyNode* v = global_sim->getChild("view", j);
     if (!v) {
-        v = set_sim->addChild("view", j, false /*append*/);
+        v = global_sim->addChild("view", j, false /*append*/);
     }
     SGPropertyNode* z_offset_m = v->getChild("config/z-offset-m");
+    /* Setting config/z-offset-m default to <sim_chase_distance_m> here mimics
+    what fgdata/defaults.xml does when it defines default views. */
     if (!z_offset_m) {
         v->setDoubleValue("config/z-offset-m", sim_chase_distance_m);
     }

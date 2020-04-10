@@ -176,12 +176,12 @@ void FGAxisEvent::fire( FGEventData & eventData )
   // We need a copy of the  FGEventData struct to set the new value and to avoid side effects
   FGEventData ed = eventData;
 
-  if( fabs(ed.value) < deadband )
-    ed.value = 0.0;
-
   if( minRange != maxRange )
     ed.value = 2.0*(eventData.value-minRange)/(maxRange-minRange)-1.0;
 
+  if( fabs(ed.value) < deadband )
+    ed.value = 0.0;
+    
   if (interpolater) {
     if ((ed.value < 0.0) && mirrorInterpolater) {
       // mirror the positive interpolation for negative values
@@ -537,9 +537,6 @@ bool FGReportSetting::Test()
     return d;
 }
 
-static const char* hexTable = "0123456789ABCDEF";
-
-
 std::string FGReportSetting::reportBytes(const std::string& moduleName) const
 {
     FGNasalSys *nas = globals->get_subsystem<FGNasalSys>();
@@ -576,7 +573,8 @@ std::string FGReportSetting::reportBytes(const std::string& moduleName) const
       // can't access FGInputDevice here to check debugEvents flag
 #if 0
       std::ostringstream byteString;
-      
+      static const char* hexTable = "0123456789ABCDEF";
+
         for (int i=0; i<s.size(); ++i) {
             uint8_t uc = static_cast<uint8_t>(s[i]);
             byteString << hexTable[uc >> 4];

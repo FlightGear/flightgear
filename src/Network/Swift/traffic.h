@@ -99,7 +99,7 @@ private:
     bool m_emitSimFrame = true;
 
 
-    FGSwiftAircraftManager* acm;
+    std::unique_ptr<FGSwiftAircraftManager> acm;
 
     static void planeLoaded(void* id, bool succeeded, void* self);
 };

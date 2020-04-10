@@ -139,12 +139,13 @@ FGReplay::clear()
 void
 FGReplay::init()
 {
-    disable_replay  = fgGetNode("/sim/replay/disable",      true);
-    replay_master   = fgGetNode("/sim/replay/replay-state", true);
-    replay_time     = fgGetNode("/sim/replay/time",         true);
-    replay_time_str = fgGetNode("/sim/replay/time-str",     true);
-    replay_looped   = fgGetNode("/sim/replay/looped",       true);
-    speed_up        = fgGetNode("/sim/speed-up",            true);
+    disable_replay       = fgGetNode("/sim/replay/disable",      true);
+    replay_master        = fgGetNode("/sim/replay/replay-state", true);
+    replay_time          = fgGetNode("/sim/replay/time",         true);
+    replay_time_str      = fgGetNode("/sim/replay/time-str",     true);
+    replay_looped        = fgGetNode("/sim/replay/looped",       true);
+    replay_duration_act  = fgGetNode("/sim/replay/duration-act", true);
+    speed_up             = fgGetNode("/sim/speed-up",            true);
 
     // alias to keep backward compatibility
     fgGetNode("/sim/freeze/replay-state", true)->alias(replay_master);
@@ -431,8 +432,8 @@ FGReplay::update( double dt )
                 fgSetDouble( "/sim/replay/start-time", startTime );
                 fgSetDouble( "/sim/replay/end-time", endTime );
                 double duration = 0;
-                if (replay_looped->getBoolValue())
-                    fgGetDouble("/sim/replay/duration");
+                if (replay_duration_act->getBoolValue())
+                    duration = fgGetDouble("/sim/replay/duration");
                 if( duration && (duration < (endTime - startTime)) ) {
                     current_time = endTime - duration;
                 } else {
@@ -822,7 +823,7 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
     bool ok = true;
 
     /* open output stream *******************************************/
-    gzContainerWriter output(Filename.local8BitStr(), FlightRecorderFileMagic);
+    gzContainerWriter output(Filename, FlightRecorderFileMagic);
     if (!output.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file" << Filename);
@@ -940,7 +941,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
     bool ok = true;
 
     /* open input stream ********************************************/
-    gzContainerReader input(Filename.local8BitStr(), FlightRecorderFileMagic);
+    gzContainerReader input(Filename, FlightRecorderFileMagic);
     if (input.eof() || !input.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file " << Filename);

@@ -451,15 +451,13 @@ FGRenderer::init( void )
 // on other subsystems to be inited, eg Ephemeris
     _sky = new SGSky;
 
-    SGPath texture_path(globals->get_fg_root());
-    texture_path.append("Textures");
-    texture_path.append("Sky");
+    const SGPath texture_path = globals->get_fg_root() / "Textures" / "Sky";
     for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        SGCloudLayer * layer = new SGCloudLayer(texture_path.local8BitStr());
+        SGCloudLayer * layer = new SGCloudLayer(texture_path);
         _sky->add_cloud_layer(layer);
     }
 
-    _sky->texture_path( texture_path.local8BitStr() );
+    _sky->set_texture_path( texture_path );
 
     // XXX: Should always be true
     eventHandler->setChangeStatsCameraRenderOrder( true );
@@ -529,7 +527,7 @@ FGRenderer::setupView( void )
     // Moon diameter:    3,476 kilometers
     // Sun diameter: 1,390,000 kilometers
     osg::ref_ptr<simgear::SGReaderWriterOptions> opt;
-    opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root().local8BitStr());
+    opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
                   463.3, 361.8,

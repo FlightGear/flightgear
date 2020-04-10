@@ -34,6 +34,9 @@ QString fixNavaidName(QString s)
     QStringList words = s.split(QChar(' '));
     QStringList changedWords;
     Q_FOREACH(QString w, words) {
+        if (w.isEmpty())
+            continue;
+            
         QString up = w.toUpper();
 
         // expand common abbreviations
@@ -150,10 +153,17 @@ void NavaidSearchModel::clear()
 
 qlonglong NavaidSearchModel::guidAtIndex(int index) const
 {
-    if ((index < 0) || (index >= m_ids.size()))
+    const size_t uIndex = static_cast<size_t>(index);
+    if ((index < 0) || (uIndex >= m_ids.size()))
         return 0;
 
-    return m_ids.at(index);
+    return m_ids.at(uIndex);
+}
+
+NavaidSearchModel::NavaidSearchModel(QObject *parent) :
+    QAbstractListModel(parent)
+{
+
 }
 
 void NavaidSearchModel::setSearch(QString t, NavaidSearchModel::AircraftType aircraft)

@@ -28,6 +28,8 @@ if (ENABLE_HID_INPUT)
     add_subdirectory(hidapi)
 endif()
 
+add_subdirectory(fonts)
+
 if (ENABLE_PLIB_JOYSTICK)
     add_subdirectory(joystick)
 endif()

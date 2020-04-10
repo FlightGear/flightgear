@@ -47,9 +47,8 @@ static int CALLBACK BrowseFolderCallback(
     if (uMsg == BFFM_INITIALIZED) {
 		// set the initial directory now
 		WindowsFileDialog* dlg = reinterpret_cast<WindowsFileDialog*>(lpData);
-		std::string s = dlg->getDirectory().local8BitStr();
-		LPCTSTR path = s.c_str();
-        ::SendMessage(hwnd, BFFM_SETSELECTION, true, (LPARAM) path);
+		const auto w = dlg->getDirectory().wstr();
+        ::SendMessageW(hwnd, BFFM_SETSELECTIONW, true, (LPARAM) w.c_str());
     }
     return 0;
 }

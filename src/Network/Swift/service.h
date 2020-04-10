@@ -65,7 +65,7 @@ public:
     static const std::string& ObjectPath();
 
     //! Getting flightgear version
-    static std::string getVersionNumber();
+    static int getVersionNumber();
 
     ////! Add a text message to the on-screen display, with RGB components in the range [0,1]
     void addTextMessage(const std::string& text);
@@ -193,11 +193,52 @@ public:
     //! Get the ratio how much the speedbrakes surfaces are extended (0.0 is fully retracted, and 1.0 is fully extended)
     double getSpeedBrakeRatio() const;
 
+    //! Get ground elevation at aircraft current position
+    double getGroundElevation() const;
+
     //! Perform generic processing
     int process();
 
 protected:
     DBusHandlerResult dbusMessageHandler(const CDBusMessage& message) override;
+
+private:
+    SGPropertyNode_ptr textMessageNode;
+    SGPropertyNode_ptr aircraftModelPathNode;
+    //SGPropertyNode_ptr aircraftLiveryNode;
+    //SGPropertyNode_ptr aircraftIcaoCodeNode;
+    SGPropertyNode_ptr aircraftDescriptionNode;
+    SGPropertyNode_ptr isPausedNode;
+    SGPropertyNode_ptr latitudeNode;
+    SGPropertyNode_ptr longitudeNode;
+    SGPropertyNode_ptr altitudeMSLNode;
+    SGPropertyNode_ptr heightAGLNode;
+    SGPropertyNode_ptr groundSpeedNode;
+    SGPropertyNode_ptr pitchNode;
+    SGPropertyNode_ptr rollNode;
+    SGPropertyNode_ptr trueHeadingNode;
+    SGPropertyNode_ptr wheelsOnGroundNode;
+    SGPropertyNode_ptr com1ActiveNode;
+    SGPropertyNode_ptr com1StandbyNode;
+    SGPropertyNode_ptr com2ActiveNode;
+    SGPropertyNode_ptr com2StandbyNode;
+    SGPropertyNode_ptr transponderCodeNode;
+    SGPropertyNode_ptr transponderModeNode;
+    SGPropertyNode_ptr transponderIdentNode;
+    SGPropertyNode_ptr beaconLightsNode;
+    SGPropertyNode_ptr landingLightsNode;
+    SGPropertyNode_ptr navLightsNode;
+    SGPropertyNode_ptr strobeLightsNode;
+    SGPropertyNode_ptr taxiLightsNode;
+    SGPropertyNode_ptr altimeterServiceableNode;
+    SGPropertyNode_ptr pressAltitudeFtNode;
+    SGPropertyNode_ptr flapsDeployRatioNode;
+    SGPropertyNode_ptr gearDeployRatioNode;
+    SGPropertyNode_ptr speedBrakeDeployRatioNode;
+    SGPropertyNode_ptr groundElevation;
+    //SGPropertyNode_ptr numberEnginesNode;
+    //SGPropertyNode_ptr engineN1PercentageNode;
+    SGPropertyNode_ptr aircraftNameNode;
 
 };
 } // namespace FGSwiftBus

@@ -108,7 +108,9 @@ std::vector<T> extract( const std::vector<C1>& in,
                         T (C2::*getter)() const )
 {
   std::vector<T> ret(in.size());
-  std::transform(in.begin(), in.end(), ret.begin(), std::mem_fun(getter));
+  std::transform(in.begin(), in.end(), ret.begin(), [getter](const C1& c)
+                 { return (c->*getter)(); }
+                 );
   return ret;
 }
 

@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <cstring>
+#include <algorithm>
 
 #include "NasalPositioned.hxx"
 
@@ -235,7 +236,9 @@ static void wayptGhostDestroy(void* g)
 
 static void legGhostDestroy(void* g)
 {
-  // nothing for now
+  FlightPlan::Leg* leg = (FlightPlan::Leg*) g;
+  if (!FlightPlan::Leg::put(leg)) // unref
+    delete leg;
 }
 
 
@@ -382,6 +385,7 @@ naRef ghostForLeg(naContext c, const FlightPlan::Leg* leg)
     return naNil();
   }
 
+  FlightPlan::Leg::get(leg); // take a ref
   return naNewGhost2(c, &FPLegGhostType, (void*) leg);
 }
 
@@ -1454,8 +1458,10 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   if (scenery == nullptr)
     return naNil();
 
-  if(!scenery->get_elevation_m(geod, elev, &material))
-    return naNil();
+  if(!scenery->get_elevation_m(geod, elev, &material)) {
+      SG_LOG(SG_TERRAIN, SG_DEV_WARN, "Nasal geodinfo() querying location with no loaded tiles:" << geod);
+      return naNil();
+  }
 
   naRef vec = naNewVector(c);
   naVec_append(vec, naNum(elev));
@@ -2441,7 +2447,8 @@ private:
 class NasalFPDelegateFactory : public FlightPlan::DelegateFactory
 {
 public:
-  NasalFPDelegateFactory(naRef code)
+  NasalFPDelegateFactory(naRef code, const std::string& id) :
+        _id(id)
   {
     _nasal = globals->get_subsystem<FGNasalSys>();
     _func = code;
@@ -2469,7 +2476,11 @@ public:
       naFreeContext(ctx);
       return result;
   }
+    
+  const std::string& id() const
+    { return _id; }
 private:
+  const std::string _id;
   FGNasalSys* _nasal;
   naRef _func;
   int _gcSaveKey;
@@ -2494,10 +2505,45 @@ static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
   if ((argc < 1) || !naIsFunc(args[0])) {
     naRuntimeError(c, "non-function argument to registerFlightPlanDelegate");
   }
-  NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0]);
-  FlightPlan::registerDelegateFactory(factory);
+    
+    const std::string delegateId = (argc > 1) ? naStr_data(args[1]) : std::string{};
+    if (!delegateId.empty()) {
+        auto it = std::find_if(static_nasalDelegateFactories.begin(), static_nasalDelegateFactories.end(),
+                                  [delegateId](NasalFPDelegateFactory* delegate) {
+               return delegate->id() == delegateId;
+           });
+        if (it != static_nasalDelegateFactories.end()) {
+            naRuntimeError(c, "duplicate delegate ID at registerFlightPlanDelegate: %s", delegateId.c_str());
+        }
+    }
+    
+    NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0], delegateId);
+    FlightPlan::registerDelegateFactory(factory);
     static_nasalDelegateFactories.push_back(factory);
-  return naNil();
+    return naNil();
+}
+
+static naRef f_unregisterFPDelegate(naContext c, naRef me, int argc, naRef* args)
+{
+  if ((argc < 1) || !naIsString(args[0])) {
+    naRuntimeError(c, "non-string argument to unregisterFlightPlanDelegate");
+  }
+
+    const std::string delegateId = naStr_data(args[0]);
+    auto it = std::find_if(static_nasalDelegateFactories.begin(), static_nasalDelegateFactories.end(),
+                           [delegateId](NasalFPDelegateFactory* delegate) {
+        return delegate->id() == delegateId;
+    });
+    
+    if (it == static_nasalDelegateFactories.end()) {
+        SG_LOG(SG_NASAL, SG_DEV_WARN, "f_unregisterFPDelegate: no de;egate with ID:" << delegateId);
+        return naNil();
+    }
+    
+    FlightPlan::unregisterDelegateFactory(*it);
+    static_nasalDelegateFactories.erase(it);
+    
+    return naNil();
 }
 
 static WayptRef wayptFromArg(naRef arg)
@@ -3143,7 +3189,7 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
 static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
 {
   FlightPlan::Leg* leg = fpLegGhost(me);
-  if (!leg) {
+  if (!leg || !leg->owner()) {
     naRuntimeError(c, "leg.setAltitude called on non-flightplan-leg object");
   }
 
@@ -3165,7 +3211,7 @@ static naRef f_leg_path(naContext c, naRef me, int argc, naRef* args)
 static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef* args)
 {
     FlightPlan::Leg* leg = fpLegGhost(me);
-    if (!leg) {
+    if (!leg || !leg->owner()) {
         naRuntimeError(c, "leg.courseAndDistanceFrom called on non-flightplan-leg object");
     }
 
@@ -3290,6 +3336,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
   { "flightplan", f_flightplan },
   { "createFlightplan", f_createFlightplan },
   { "registerFlightPlanDelegate", f_registerFPDelegate },
+  { "unregisterFlightPlanDelegate", f_unregisterFPDelegate},
   { "createWP", f_createWP },
   { "createWPFrom", f_createWPFrom },
   { "createViaTo", f_createViaTo },

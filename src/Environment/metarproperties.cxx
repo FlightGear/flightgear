@@ -184,6 +184,9 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("decoded", this, &MetarProperties::get_decoded );
   _tiedProperties.Tie("cavok", &_cavok );
   _tiedProperties.Tie("description", this, &MetarProperties::get_description );
+    
+    // mark proeprties as listener-safe, we invoke valueChanged explicitly
+    _tiedProperties.setAttribute(SGPropertyNode::LISTENER_SAFE, true);
 }
 
 MetarProperties::~MetarProperties()
@@ -422,6 +425,7 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
     _hour = m->getHour();
     _minute = m->getMinute();
     _cavok = m->getCAVOK();
+    _tiedProperties.fireValueChanged();
     _metarValidNode->setBoolValue(true);
     _description = m->getDescription(-1);
 }

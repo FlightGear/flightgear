@@ -7,7 +7,7 @@ function(setup_fgfs_libraries target)
     #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
 
     if(RTI_FOUND)
-        set(HLA_LIBRARIES ${RTI_LIBRARIES})
+        set(HLA_LIBRARIES ${RTI_LDFLAGS})
     else()
         set(HLA_LIBRARIES "")
     endif()
@@ -65,6 +65,8 @@ function(setup_fgfs_libraries target)
     if (ENABLE_PLIB_JOYSTICK)
         target_link_libraries(${target} PLIBJoystick)
     endif()
+
+    target_link_libraries(${target} PLIBFont)
 
     if(SYSTEM_HTS_ENGINE)
         target_link_libraries(${target} flite_hts ${HTS_ENGINE_LIBRARIES})

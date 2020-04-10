@@ -153,7 +153,7 @@ public:
         _nd(nd)
     {}
     
-    virtual void valueChanged (SGPropertyNode * prop)
+    void valueChanged (SGPropertyNode * prop) override
     {
         _nd->invalidatePositionedCache();
     }
@@ -168,7 +168,7 @@ public:
     _nd(nd)
   {}
   
-  virtual void valueChanged (SGPropertyNode * prop)
+  void valueChanged (SGPropertyNode * prop) override
   {
     _nd->forceUpdate();
   }
@@ -256,7 +256,7 @@ public:
   // record instances for limiting by count
     int instanceCount;
 private:
-    SymbolDef* definition;
+    SymbolDef* definition = nullptr;
     
     std::unique_ptr<SGCondition> enable;
     string_set required_states;
@@ -459,7 +459,7 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     SGPropertyNode* symbol;
 
     map<string, SymbolDef*> definitionDict;
-    for (int i = 0; (symbol = symbolsNode->getChild("symbol", i)) != NULL; ++i) {
+    for (int i = 0; (symbol = symbolsNode->getChild("symbol", i)) != nullptr; ++i) {
         SymbolDef* def = new SymbolDef;
         if (!def->initFromNode(symbol, this)) {
           delete def;
@@ -539,7 +539,7 @@ NavDisplay::init ()
     }
   
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
-    _symbolTexture = SGLoadTexture2D(tpath, NULL, false, false);
+    _symbolTexture = SGLoadTexture2D(tpath, nullptr, false, false);
 
     _odg = new FGODGauge;
     _odg->setSize(_Instrument->getIntValue("texture-size", 512));
@@ -777,7 +777,7 @@ NavDisplay::updateFont()
     }
 
     osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
-    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.local8BitStr(), fontOptions.get());
+    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.utf8Str(), fontOptions.get());
 
     if (font != 0) {
         _font = font;
@@ -958,7 +958,7 @@ public:
   
     double minRunwayLengthFt;
   
-    virtual bool pass(FGPositioned* aPos) const
+    bool pass(FGPositioned* aPos) const override
     {
         if (aPos->type() == FGPositioned::FIX) {
             string ident(aPos->ident());
@@ -979,11 +979,13 @@ public:
         return _owner->isPositionedShown(aPos);
     }
 
-    virtual FGPositioned::Type minType() const {
+    FGPositioned::Type minType() const override
+    {
         return FGPositioned::AIRPORT;
     }
 
-    virtual FGPositioned::Type maxType() const {
+    FGPositioned::Type maxType() const override
+    {
         return FGPositioned::OBSTACLE;
     }
   
@@ -1105,7 +1107,7 @@ FGNavRecord* NavDisplay::processNavRadio(const SGPropertyNode_ptr& radio)
   FGNavRecord* nav = FGNavList::findByFreq(mhz, _pos, FGNavList::navFilter());
     if (!nav || (nav->ident() != radio->getStringValue("nav-id"))) {
         // station was not found
-        return NULL;
+        return nullptr;
     }
     
     
@@ -1367,11 +1369,11 @@ void NavDisplay::computeAIStates(const SGPropertyNode* ai, string_set& states)
 SymbolInstance* NavDisplay::addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars)
 {
     if (isProjectedClipped(proj)) {
-        return NULL;
+        return nullptr;
     }
     
     if ((def->limitCount > 0) && (def->instanceCount >= def->limitCount)) {
-      return NULL;
+      return nullptr;
     }
   
     ++def->instanceCount;
@@ -1416,28 +1418,28 @@ void NavDisplay::addTestSymbols()
   double dummy;
   SGGeodesy::direct(_pos, 45.0, 20.0 * SG_NM_TO_METER, a1, dummy);
   
-  addTestSymbol("airport", "", a1, 0.0, NULL);
+  addTestSymbol("airport", "", a1, 0.0, nullptr);
   
   SGGeodesy::direct(_pos, 95.0, 40.0 * SG_NM_TO_METER, a1, dummy);
   
-  addTestSymbol("vor", "", a1, 0.0, NULL);
+  addTestSymbol("vor", "", a1, 0.0, nullptr);
   
   SGGeodesy::direct(_pos, 120, 80.0 * SG_NM_TO_METER, a1, dummy);
   
-  addTestSymbol("airport", "destination", a1, 0.0, NULL);
+  addTestSymbol("airport", "destination", a1, 0.0, nullptr);
   
   SGGeodesy::direct(_pos, 80.0, 20.0 * SG_NM_TO_METER, a1, dummy);  
-  addTestSymbol("fix", "", a1, 0.0, NULL);
+  addTestSymbol("fix", "", a1, 0.0, nullptr);
 
   
   SGGeodesy::direct(_pos, 140.0, 20.0 * SG_NM_TO_METER, a1, dummy);  
-  addTestSymbol("fix", "", a1, 0.0, NULL);
+  addTestSymbol("fix", "", a1, 0.0, nullptr);
   
   SGGeodesy::direct(_pos, 110.0, 10.0 * SG_NM_TO_METER, a1, dummy);  
-  addTestSymbol("fix", "", a1, 0.0, NULL);
+  addTestSymbol("fix", "", a1, 0.0, nullptr);
   
   SGGeodesy::direct(_pos, 110.0, 5.0 * SG_NM_TO_METER, a1, dummy);  
-  addTestSymbol("fix", "", a1, 0.0, NULL);
+  addTestSymbol("fix", "", a1, 0.0, nullptr);
 }
 
 void NavDisplay::addRule(SymbolRule* r)

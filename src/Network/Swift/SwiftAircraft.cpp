@@ -42,7 +42,7 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 
-FGSwiftAircraft::FGSwiftAircraft(std::string callsign, std::string modelpath)
+FGSwiftAircraft::FGSwiftAircraft(const std::string& callsign, const std::string& modelpath, SGPropertyNode_ptr p)
 {
     using namespace simgear;
     _model = SGModelLib::loadModel(modelpath);
@@ -52,10 +52,14 @@ FGSwiftAircraft::FGSwiftAircraft(std::string callsign, std::string modelpath)
         aip.setVisible(true);
         aip.update();
         globals->get_scenery()->get_models_branch()->addChild(aip.getSceneGraph());
+
+        props = p;
+        props->setStringValue("callsign", callsign);
+        props->setBoolValue("valid",true);
     }
 }
 
-bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation)
+bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed, bool initPos)
 {
 
     position = newPosition;
@@ -64,39 +68,66 @@ bool FGSwiftAircraft::updatePosition(SGGeod newPosition, SGVec3d orientation)
     aip.setRollDeg(orientation.y());
     aip.setHeadingDeg(orientation.z());
     aip.update();
+
+    this->initPos = initPos;
+
+    //Update props
+    props->setDoubleValue("orientation/pitch-deg", orientation.x());
+    props->setDoubleValue("orientation/roll-deg", orientation.y());
+    props->setDoubleValue("orientation/true-heading-deg", orientation.z());
+    SGVec3d cartPos = SGVec3d::fromGeod(position);
+
+    props->setDoubleValue("position/global-x", cartPos.x());
+    props->setDoubleValue("position/global-y", cartPos.y());
+    props->setDoubleValue("position/global-z", cartPos.z());
+
+
+    props->setDoubleValue("position/latitude-deg", position.getLatitudeDeg());
+    props->setDoubleValue("position/longitude-deg", position.getLongitudeDeg());
+    props->setDoubleValue("position/altitude-ft", position.getElevationFt());
+
+	props->setDoubleValue("velocities/true-airspeed-kt", groundspeed);
+
     return true;
 }
 
 
 FGSwiftAircraft::~FGSwiftAircraft()
 {
+    props->setBoolValue("valid",false);
+    props->setIntValue("id",-1);
     aip.setVisible(false);
 }
 
-double FGSwiftAircraft::getLatDeg() 
+double FGSwiftAircraft::getLatDeg() const
 { 
 	return position.getLatitudeDeg();
 }
 
-double FGSwiftAircraft::getLongDeg() 
+double FGSwiftAircraft::getLongDeg() const
 { 
 	return position.getLongitudeDeg();
 }
 
-double FGSwiftAircraft::getFudgeFactor() 
+double FGSwiftAircraft::getFudgeFactor() const
 { 
 	return 0; 
 }
 
-inline bool FGSwiftAircraft::operator<(std::string extCallsign)
+inline bool FGSwiftAircraft::operator<(const std::string& extCallsign)
 {
     return _model->getName().compare(extCallsign);
 }
 
-double FGSwiftAircraft::getGroundElevation()
+double FGSwiftAircraft::getGroundElevation(const SGGeod& pos) const
 {
-    double alt;
-    globals->get_scenery()->get_elevation_m(position,alt,0);
-    return alt; 
+    if(!initPos) { return std::numeric_limits<double>::quiet_NaN(); }
+    double alt = 0;
+    SGGeod posReq;
+    posReq.setElevationFt(30000);
+    posReq.setLatitudeDeg(pos.getLatitudeDeg());
+    posReq.setLongitudeDeg(pos.getLongitudeDeg());
+    globals->get_scenery()->get_elevation_m(posReq,alt,0,_model.get());
+    return alt;
 		
 }

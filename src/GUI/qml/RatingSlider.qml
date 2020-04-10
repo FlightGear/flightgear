@@ -15,5 +15,6 @@ Slider {
 
     onValueChanged: {
          ratings[ratingIndex] = value
+        _launcher.browseAircraftModel.saveRatingsSettings();
     }
 }

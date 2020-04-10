@@ -83,7 +83,7 @@ void FGFDM::iterate(float dt)
         _airplane.setFuel(i, LBS2KG * _tank_level_lbs[i]->getFloatValue());
     }
     _airplane.calcFuelWeights();
-    
+
     setOutputProperties(dt);
 }
 
@@ -109,7 +109,7 @@ void FGFDM::init()
     _yasimN->getNode("config-version",true)->setIntValue(_airplane.getVersion());
     _yasimN->getNode("model/cg-x-min",true)->setFloatValue(_airplane.getCGHardLimitXMin());
     _yasimN->getNode("model/cg-x-max",true)->setFloatValue(_airplane.getCGHardLimitXMax());
-    
+
     // prepare nodes for write at runtime
     _cg_x = _yasimN->getNode("cg-x-m", true);
     _cg_xmacN = _yasimN->getNode("cg-x-mac", true);
@@ -127,7 +127,7 @@ void FGFDM::init()
     _arxN = _yasimN->getNode("accelerations/arot-x", true);
     _aryN = _yasimN->getNode("accelerations/arot-y", true);
     _arzN = _yasimN->getNode("accelerations/arot-z", true);
-    
+
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
@@ -203,9 +203,9 @@ void FGFDM::init()
         fgSetDouble(buf, CM2GALS * _airplane.getTankCapacity(i)/density);
     }
 
-    // This has a nasty habit of being false at startup.  That's not
-    // good.
-    fgSetBool("/controls/gear/gear-down", true);
+    if (_yasimN->getBoolValue("respect-external-gear-state") == false) {
+        fgSetBool("/controls/gear/gear-down", true);
+    }
 
     _airplane.getModel()->setTurbulence(_turb);
 }
@@ -215,45 +215,45 @@ void FGFDM::startElement(const char* name, const XMLAttributes &a)
 {
     //XMLAttributes* a = (XMLAttributes*)&atts;
     float v[3] {0,0,0};
-    
+
     if(!strcmp(name, "airplane")) { parseAirplane(&a); }
-    else if(!strcmp(name, "approach") || !strcmp(name, "cruise")) { 
-        parseApproachCruise(&a, name);         
-    } 
-    else if(!strcmp(name, "solve-weight")) { parseSolveWeight(&a); } 
+    else if(!strcmp(name, "approach") || !strcmp(name, "cruise")) {
+        parseApproachCruise(&a, name);
+    }
+    else if(!strcmp(name, "solve-weight")) { parseSolveWeight(&a); }
     else if(!strcmp(name, "cockpit")) { parseCockpit(&a); }
     else if(!strcmp(name, "rotor")) { parseRotor(&a, name); }
     else if(!strcmp(name, "rotorgear")) { parseRotorGear(&a); }
-    else if(!strcmp(name, "wing") || !strcmp(name, "hstab") || !strcmp(name, "vstab") || !strcmp(name, "mstab")) { 
-        parseWing(&a, name, &_airplane); 
-    } 
+    else if(!strcmp(name, "wing") || !strcmp(name, "hstab") || !strcmp(name, "vstab") || !strcmp(name, "mstab")) {
+        parseWing(&a, name, &_airplane);
+    }
     else if(!strcmp(name, "piston-engine")) { parsePistonEngine(&a); }
     else if(!strcmp(name, "turbine-engine")) { parseTurbineEngine(&a); }
-    else if(!strcmp(name, "propeller")) { parsePropeller(&a); } 
+    else if(!strcmp(name, "propeller")) { parsePropeller(&a); }
     else if(!strcmp(name, "thruster")) { parseThruster(&a); }
-    else if(!strcmp(name, "jet")) { parseJet(&a); } 
+    else if(!strcmp(name, "jet")) { parseJet(&a); }
     else if(!strcmp(name, "hitch")) { parseHitch(&a); }
-    else if(!strcmp(name, "tow")) { parseTow(&a); } 
-    else if(!strcmp(name, "winch")) { parseWinch(&a); } 
-    else if(!strcmp(name, "gear")) { parseGear(&a); } 
-    else if(!strcmp(name, "hook")) { parseHook(&a); } 
-    else if(!strcmp(name, "launchbar")) { parseLaunchbar(&a); } 
-    else if(!strcmp(name, "fuselage")) { parseFuselage(&a); } 
-    else if(!strcmp(name, "tank")) { parseTank(&a); } 
-    else if(!strcmp(name, "ballast")) { parseBallast(&a); } 
-    else if(!strcmp(name, "weight")) { parseWeight(&a); } 
+    else if(!strcmp(name, "tow")) { parseTow(&a); }
+    else if(!strcmp(name, "winch")) { parseWinch(&a); }
+    else if(!strcmp(name, "gear")) { parseGear(&a); }
+    else if(!strcmp(name, "hook")) { parseHook(&a); }
+    else if(!strcmp(name, "launchbar")) { parseLaunchbar(&a); }
+    else if(!strcmp(name, "fuselage")) { parseFuselage(&a); }
+    else if(!strcmp(name, "tank")) { parseTank(&a); }
+    else if(!strcmp(name, "ballast")) { parseBallast(&a); }
+    else if(!strcmp(name, "weight")) { parseWeight(&a); }
     else if(!strcmp(name, "stall")) { parseStall(&a); }
     else if(!strcmp(name, "flap0") || !strcmp(name, "flap1") || !strcmp(name, "spoiler") || !strcmp(name, "slat")) {
         parseFlap(&a, name);
-    } 
+    }
     else if(!strcmp(name, "actionpt")) {
         attrf_xyz(&a, v);
         ((Thruster*)_currObj)->setPosition(v);
-    } 
+    }
     else if(!strcmp(name, "dir")) {
         attrf_xyz(&a, v);
         ((Thruster*)_currObj)->setDirection(v);
-    } 
+    }
     else if(!strcmp(name, "control-setting")) { parseControlSetting(&a); }
     else if(!strcmp(name, "control-input")) { parseControlIn(&a); }
     else if(!strcmp(name, "control-output")) { parseControlOut(&a); }
@@ -267,34 +267,34 @@ void FGFDM::startElement(const char* name, const XMLAttributes &a)
 void FGFDM::parseAirplane(const XMLAttributes* a)
 {
     float f {0};
-    if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; } 
-    else if (a->hasAttribute("mass-lbs")) { f = attrf(a, "mass-lbs") * LBS2KG; } 
+    if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; }
+    else if (a->hasAttribute("mass-lbs")) { f = attrf(a, "mass-lbs") * LBS2KG; }
     else if (a->hasAttribute("mass-kg")) { f = attrf(a, "mass-kg"); }
     else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, airplane needs one of {mass-lbs, mass-kg}");
-        exit(1);       
+        exit(1);
     }
     _airplane.setEmptyWeight(f);
     if(a->hasAttribute("version")) { _airplane.setVersion(a->getValue("version")); }
     if( !_airplane.isVersionOrNewer( Version::YASIM_VERSION_CURRENT ) ) {
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "This aircraft does not use the latest yasim configuration version.");
     }
-    _airplane.setDesiredCGRangeInPercentOfMAC(attrf(a, "cg-min", 0.25f), attrf(a, "cg-max", 0.3f)); 
-    
+    _airplane.setDesiredCGRangeInPercentOfMAC(attrf(a, "cg-min", 0.25f), attrf(a, "cg-max", 0.3f));
+
     if (a->hasAttribute("mtow-lbs")) { _airplane.setMTOW(attrf(a, "mtow-lbs") * LBS2KG); }
     else if (a->hasAttribute("mtow-kg")) { _airplane.setMTOW(attrf(a, "mtow-kg")); }
-    if (a->hasAttribute("solver-mode")) { _airplane.setSolverMode(attri(a, "solver-mode")); }    
+    if (a->hasAttribute("solver-mode")) { _airplane.setSolverMode(attri(a, "solver-mode")); }
 }
 
 void FGFDM::parseApproachCruise(const XMLAttributes* a, const char* name)
-{      
+{
     float spd, alt = 0;
     if (a->hasAttribute("speed")) { spd = attrf(a, "speed") * KTS2MPS; }
     else if (a->hasAttribute("speed-kt")) { spd = attrf(a, "speed-kt") * KTS2MPS; }
     else if (a->hasAttribute("speed-kmh")) { spd = attrf(a, "speed-kmh") * KMH2MPS; }
     else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, "<< name << " needs one of {speed-kt, speed-kmh}");
-        exit(1);       
+        exit(1);
     }
     if (a->hasAttribute("alt")) { alt = attrf(a, "alt") * FT2M; }
     else if (a->hasAttribute("alt-ft")) { alt = attrf(a, "alt-ft") * FT2M; }
@@ -320,7 +320,7 @@ void FGFDM::parseSolveWeight(const XMLAttributes* a)
     else if(a->hasAttribute("weight-kg")) { f = attrf(a, "weight-kg"); }
     else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, solve-weight needs one of {weight-lbs, weight-kg}");
-        exit(1);       
+        exit(1);
     }
     _airplane.addSolutionWeight(_airplaneCfg, idx, f);
 }
@@ -507,7 +507,7 @@ void FGFDM::setOutputProperties(float dt)
             // cockpit code can scale them to the right values.
             float pnorm = j->getPerfNorm();
             moveprop(node, "oilp-norm", pnorm, dt/3); // 3s seek time
-            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s 
+            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s
             moveprop(node, "itt-norm", pnorm, dt/1); // 1s
         }
     }
@@ -522,17 +522,17 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
         defDihed = 90;
         mirror = false;
     }
-    
+
     float base[3] {0,0,0};
     float chord {0};
     float length = attrf(a, "length");
 
-    // positive incidence/twist means positive AoA (leading edge up). 
+    // positive incidence/twist means positive AoA (leading edge up).
     // Due to the coordinate system used in class Surface the sign will be inverted (only) there.
     float incidence {0};
     float twist = attrf(a, "twist", 0) * DEG2RAD;
-    
-    // if this element is declared as section of a wing, skip attributes 
+
+    // if this element is declared as section of a wing, skip attributes
     // that are ignored in class Wing anyway because they are calculated
     float isSection = attrb(a, "append");
     if (!isSection) {
@@ -542,12 +542,12 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     }
     else {
         if (a->hasAttribute("x") || a->hasAttribute("y") || a->hasAttribute("z") ||
-            a->hasAttribute("chord") || a->hasAttribute("incidence") 
+            a->hasAttribute("chord") || a->hasAttribute("incidence")
         ) {
-            SG_LOG(SG_FLIGHT, SG_WARN, "YASim warning: redundant attribute in wing definition \n" 
+            SG_LOG(SG_FLIGHT, SG_WARN, "YASim warning: redundant attribute in wing definition \n"
             "when using <wing append=\"1\" ...> x, y, z, chord and incidence will be ignored. ");
         }
-    } 
+    }
 
     // optional attributes (with defaults)
     float sweep = attrf(a, "sweep", 0) * DEG2RAD;
@@ -559,17 +559,17 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     if (!airplane->isVersionOrNewer(Version::YASIM_VERSION_2017_2) && (camber == 0)) {
         SG_LOG(SG_FLIGHT, SG_DEV_WARN, "YASIM warning: versions before 2017.2 are buggy for wings with camber=0");
     }
-    
+
     // The 70% is a magic number that sorta kinda seems to match known
     // throttle settings to approach speed.
     float idrag = 0.7*attrf(a, "idrag", 1);
-   
+
     // get wing object by type
     Wing* w;
     if (!strcmp(type, "wing"))
     {
         w = airplane->getWing();
-    } 
+    }
     else if (!strcmp(type, "hstab")) {
         w = airplane->getTail();
         if (a->hasAttribute("incidence-max-deg")) w->setIncidenceMax(attrf(a, "incidence-max-deg") * DEG2RAD);
@@ -577,23 +577,23 @@ void FGFDM::parseWing(const XMLAttributes* a, const char* type, Airplane* airpla
     } else {
         w = new Wing(airplane, mirror);
     }
-    // add section; if wing object has already section, base will be overridden 
+    // add section; if wing object has already section, base will be overridden
     // by tip of last section
     _wingSection = w->addWingSection(base, chord, length, taper, sweep, dihedral, twist, camber, idrag, incidence);
     if (!strcmp(type, "vstab") || !strcmp(type, "mstab"))
     {
         airplane->addVStab(w);
-    } 
+    }
 
     float dragFactor = attrf(a, "pdrag", 1);
     if (a->hasAttribute("effectiveness")) {
-/* FIXME: 
+/* FIXME:
  * check if all attibutes have "good" names and update parser AND documentation together
  * only after that issue warnings
         SG_LOG(SG_FLIGHT, SG_ALERT, "Warning: " <<
                "deprecated attribute 'effectiveness' in YASim configuration file.  " <<
                "Use 'pdrag' instead to add parasitic drag.");
-*/       
+*/
         dragFactor = attrf(a, "effectiveness", 1);
     }
     w->setSectionDrag(_wingSection, dragFactor);
@@ -674,9 +674,9 @@ void FGFDM::parseRotor(const XMLAttributes* a, const char* type)
     w->setTiltCenterZ(attrf(a,"tiltcenterz",0.0));
     w->setDownwashFactor(attrf(a, "downwashfactor", 1));
     if(attrb(a,"ccw"))
-       w->setCcw(1); 
+       w->setCcw(1);
     if(attrb(a,"sharedflaphinge"))
-       w->setSharedFlapHinge(true); 
+       w->setSharedFlapHinge(true);
 
     if(a->hasAttribute("name"))      w->setName(a->getValue("name"));
     if(a->hasAttribute("alphaout0")) w->setAlphaoutput(0,a->getValue("alphaout0"));
@@ -692,7 +692,7 @@ void FGFDM::parseRotor(const XMLAttributes* a, const char* type)
     w->setForceAtPitchA(attrf(a, "forceatpitch-a", 3000));
     w->setPowerAtPitch0(attrf(a, "poweratpitch-0", 300));
     w->setPowerAtPitchB(attrf(a, "poweratpitch-b", 3000));
-    if(attrb(a,"notorque")) w->setNotorque(1); 
+    if(attrb(a,"notorque")) w->setNotorque(1);
 
 #define p(x) if (a->hasAttribute(#x)) w->setParameter((char *)#x,attrf(a,#x) );
 #define p2(x,y) if (a->hasAttribute(y)) w->setParameter((char *)#x,attrf(a,y) );
@@ -726,7 +726,7 @@ void FGFDM::parseRotor(const XMLAttributes* a, const char* type)
 #undef p
 #undef p2
     _currObj = w;
-    _airplane.getModel()->getRotorgear()->addRotor(w);    
+    _airplane.getModel()->getRotorgear()->addRotor(w);
 } //parseRotor
 
 void FGFDM::parseRotorGear(const XMLAttributes* a)
@@ -758,7 +758,7 @@ void FGFDM::parsePistonEngine(const XMLAttributes* a)
         eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
 
     if(a->hasAttribute("compression"))
-        eng->setCompression(attrf(a, "compression"));        
+        eng->setCompression(attrf(a, "compression"));
 
     if(a->hasAttribute("min-throttle"))
         eng->setMinThrottle(attrf(a, "min-throttle"));
@@ -809,7 +809,7 @@ void FGFDM::parsePropeller(const XMLAttributes* a)
         if(a->hasAttribute("displacement"))
             eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
         if(a->hasAttribute("compression"))
-            eng->setCompression(attrf(a, "compression"));        
+            eng->setCompression(attrf(a, "compression"));
         if(a->hasAttribute("turbo-mul")) {
             float mul = attrf(a, "turbo-mul");
             float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
@@ -878,7 +878,7 @@ void FGFDM::parseThruster(const XMLAttributes* a)
     _airplane.addThruster(j, 0, v);
     v[0] = attrf(a, "vx"); v[1] = attrf(a, "vy"); v[2] = attrf(a, "vz");
     j->setDirection(v);
-    j->setThrust(attrf(a, "thrust") * LBS2N);    
+    j->setThrust(attrf(a, "thrust") * LBS2N);
 }
 
 void FGFDM::parseJet(const XMLAttributes* a)
@@ -893,8 +893,8 @@ void FGFDM::parseJet(const XMLAttributes* a)
     else if(a->hasAttribute("mass-kg")) { mass = attrf(a, "mass-kg"); }
     else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, jet needs one of {mass-lbs, mass-kg}");
-        exit(1);       
-    }       
+        exit(1);
+    }
     j->setMaxThrust(attrf(a, "thrust") * LBS2N, attrf(a, "afterburner", 0) * LBS2N);
     j->setVectorAngle(attrf(a, "rotate", 0) * DEG2RAD);
     j->setReverseThrust(attrf(a, "reverse", 0.2));
@@ -913,7 +913,7 @@ void FGFDM::parseJet(const XMLAttributes* a)
         j->setVMax(attrf(a, "exhaust-speed") * KTS2MPS);
     if(a->hasAttribute("spool-time"))
         j->setSpooling(attrf(a, "spool-time"));
-    
+
     j->setPosition(v);
     _airplane.addThruster(j, mass, v);
     char buf[64];
@@ -921,7 +921,7 @@ void FGFDM::parseJet(const XMLAttributes* a)
     EngRec* er = new EngRec();
     er->eng = j;
     er->prefix = strdup(buf);
-    _thrusters.add(er);    
+    _thrusters.add(er);
 }
 
 void FGFDM::parseHitch(const XMLAttributes* a)
@@ -932,9 +932,9 @@ void FGFDM::parseHitch(const XMLAttributes* a)
     attrf_xyz(a, v);
     h->setPosition(v);
     if(a->hasAttribute("force-is-calculated-by-other")) h->setForceIsCalculatedByOther(attrb(a,"force-is-calculated-by-other"));
-    _airplane.addHitch(h);    
+    _airplane.addHitch(h);
 }
-    
+
 void FGFDM::parseTow(const XMLAttributes* a)
 {
     Hitch* h = (Hitch*)_currObj;
@@ -947,9 +947,9 @@ void FGFDM::parseTow(const XMLAttributes* a)
     if(a->hasAttribute("weight-per-meter"))
         h->setTowWeightPerM(attrf(a, "weight-per-meter"));
     if(a->hasAttribute("mp-auto-connect-period"))
-        h->setMpAutoConnectPeriod(attrf(a, "mp-auto-connect-period"));    
+        h->setMpAutoConnectPeriod(attrf(a, "mp-auto-connect-period"));
 }
-    
+
 void FGFDM::parseWinch(const XMLAttributes* a)
 {
     Hitch* h = (Hitch*)_currObj;
@@ -969,7 +969,7 @@ void FGFDM::parseWinch(const XMLAttributes* a)
     if(a->hasAttribute("max-tow-length"))
         h->setWinchMaxTowLength(attrf(a, "max-tow-length"));
     if(a->hasAttribute("min-tow-length"))
-        h->setWinchMinTowLength(attrf(a, "min-tow-length"));    
+        h->setWinchMinTowLength(attrf(a, "min-tow-length"));
 }
 
 void FGFDM::parseGear(const XMLAttributes* a)
@@ -1009,7 +1009,7 @@ void FGFDM::parseGear(const XMLAttributes* a)
     g->setReduceFrictionByExtension(attrf(a, "reduce-friction-by-extension", 0));
     g->setStiction(attrf(a, "stiction", 0));
     g->setStictionABS(attrf(a, "stiction-abs", 0));
-    _airplane.addGear(g);    
+    _airplane.addGear(g);
 }
 
 void FGFDM::parseHook(const XMLAttributes* a)
@@ -1045,7 +1045,7 @@ void FGFDM::parseLaunchbar(const XMLAttributes* a)
     l->setDownAngle(attrf(a, "down-angle", 45) * DEG2RAD);
     l->setUpAngle(attrf(a, "up-angle", -45) * DEG2RAD);
     l->setHoldbackLength(attrf(a, "holdback-length", 2.0));
-    _airplane.addLaunchbar(l);    
+    _airplane.addLaunchbar(l);
 }
 
 void FGFDM::parseFuselage(const XMLAttributes* a)
@@ -1081,7 +1081,7 @@ void FGFDM::parseTank(const XMLAttributes* a)
     float v[3];
     attrf_xyz(a, v);
     float density = 6.0; // gasoline, in lbs/gal
-    if(a->hasAttribute("jet")) density = 6.72; 
+    if(a->hasAttribute("jet")) density = 6.72;
     density *= LBS2KG*CM2GALS;
     float capacity = 0;
     if(a->hasAttribute("capacity")) { capacity = attrf(a, "capacity") * LBS2KG; }
@@ -1089,7 +1089,7 @@ void FGFDM::parseTank(const XMLAttributes* a)
     else if(a->hasAttribute("capacity-kg")) { capacity = attrf(a, "capacity-kg"); }
     else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, tank needs one of {capacity-lbs, capacity-kg}");
-        exit(1);                 
+        exit(1);
     }
     _airplane.addTank(v, capacity, density);
 }
@@ -1099,12 +1099,12 @@ void FGFDM::parseBallast(const XMLAttributes* a)
     float v[3];
     float f;
     attrf_xyz(a, v);
-    if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; } 
-    else if (a->hasAttribute("mass-lbs")) { f = attrf(a, "mass-lbs") * LBS2KG; } 
+    if(a->hasAttribute("mass")) { f = attrf(a, "mass") * LBS2KG; }
+    else if (a->hasAttribute("mass-lbs")) { f = attrf(a, "mass-lbs") * LBS2KG; }
     else if (a->hasAttribute("mass-kg")) { f = attrf(a, "mass-kg"); }
     else {
         SG_LOG(SG_FLIGHT,SG_ALERT,"YASim fatal: missing attribute, airplane needs one of {mass-lbs, mass-kg}");
-        exit(1);       
+        exit(1);
     }
     _airplane.addBallast(v, f);
 }
@@ -1145,7 +1145,7 @@ void FGFDM::parseFlap(const XMLAttributes* a, const char* name)
     fp.end = attrf(a, "end");
     if (!strcmp(name, "slat")) {
         fp.aoa = attrf(a, "aoa");
-    } 
+    }
     else {
         fp.lift =  attrf(a, "lift");
     }
@@ -1173,7 +1173,7 @@ void FGFDM::parseControlSetting(const XMLAttributes* a)
 
 void FGFDM::parseControlIn(const XMLAttributes* a)
 {
-    // map input property to a YASim control 
+    // map input property to a YASim control
     ControlMap::ControlType control = ControlMap::parseControl(a->getValue("control"));
     int opt = 0;
     opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
@@ -1251,7 +1251,7 @@ float FGFDM::attrf(const XMLAttributes* atts, const char* attr, float def)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
-    else         return (float)atof(val);    
+    else         return (float)atof(val);
 }
 
 void FGFDM::attrf_xyz(const XMLAttributes* atts, float* out)

@@ -51,7 +51,8 @@ bool SwiftConnection::startServer(const SGPropertyNode* arg, SGPropertyNode* roo
 
 bool SwiftConnection::stopServer(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    SwiftConnection::plug->~CPlugin();
+    delete SwiftConnection::plug;
+    SwiftConnection::plug = nullptr;
     fgSetBool("/sim/swift/serverRunning", false);
 	serverRunning = false;
     return true;
@@ -68,9 +69,9 @@ SwiftConnection::~SwiftConnection()
     shutdown();
 }
 
-void SwiftConnection::init(void)
+void SwiftConnection::init()
 {
-	if (initialized == false) {
+	if (!initialized) {
         globals->get_commands()->addCommand("swiftStart", this, &SwiftConnection::startServer);
         globals->get_commands()->addCommand("swiftStop", this, &SwiftConnection::stopServer);
         fgSetBool("/sim/swift/available", true);
@@ -81,14 +82,14 @@ void SwiftConnection::init(void)
 
 void SwiftConnection::update(double delta_time_sec)
 {
-	if (serverRunning == true) {
+	if (serverRunning) {
         SwiftConnection::plug->fastLoop();
 	}
 }
 
-void SwiftConnection::shutdown(void)
+void SwiftConnection::shutdown()
 {
-	if (initialized == true) {
+	if (initialized) {
         globals->get_commands()->removeCommand("swiftStart");
         globals->get_commands()->removeCommand("swiftStop");
         fgSetBool("/sim/swift/available", false);

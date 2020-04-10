@@ -505,7 +505,7 @@ void FGTrafficManager::shutdown()
 
 bool FGTrafficManager::doDataSync()
 {
-    simgear::SGTerraSync* terraSync = static_cast<simgear::SGTerraSync*>(globals->get_subsystem("terrasync"));
+    auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
     bool doDataSync = fgGetBool("/sim/terrasync/ai-data-enabled");
     if (doDataSync && terraSync) {
         if (!trafficSyncRequested) {

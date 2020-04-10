@@ -38,6 +38,7 @@ const int CatalogStatusRole = Qt::UserRole + 5;
 const int CatalogDescriptionRole = Qt::UserRole + 6;
 const int CatalogNameRole = Qt::UserRole + 7;
 const int CatalogIsNewlyAdded = Qt::UserRole + 8;
+const int CatalogEnabled = Qt::UserRole + 9;
 
 class CatalogDelegate;
 

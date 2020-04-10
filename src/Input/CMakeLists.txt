@@ -1,8 +1,7 @@
 include(FlightGearComponent)
 
 IF(APPLE)
-	set(EVENT_INPUT_SOURCES FGMacOSXEventInput.cxx)
-	set(EVENT_INPUT_HEADERS FGMacOSXEventInput.hxx)
+	# no Mac implemention, use HID
 elseif(WIN32)
 	# no Win32 specific implementation, at least for now
 else()

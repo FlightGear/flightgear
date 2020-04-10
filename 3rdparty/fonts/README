@@ -1,0 +1,2 @@
+This is PLIB's 'fnt' library, extracted and modified
+- added UTF8 path support, especially for Windows

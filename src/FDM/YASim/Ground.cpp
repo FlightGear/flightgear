@@ -8,14 +8,6 @@
 #include "Ground.hpp"
 namespace yasim {
 
-Ground::Ground()
-{
-}
-
-Ground::~Ground()
-{
-}
-
 void Ground::getGroundPlane(const double pos[3],
                             double plane[4], float vel[3],
                             unsigned int &body)
@@ -47,8 +39,7 @@ void Ground::getGroundPlane(const double pos[3],
 bool Ground::getBody(double t, double bodyToWorld[16], double linearVel[3],
                      double angularVel[3], unsigned int &body)
 {
-    return getBody(t, bodyToWorld, linearVel,
-	    angularVel, body);
+    return false;
 }
 
 bool Ground::caughtWire(const double pos[4][3])

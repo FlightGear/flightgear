@@ -52,6 +52,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/package/Root.hxx>
 #include <simgear/package/Catalog.hxx>
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Install.hxx>
@@ -74,6 +75,7 @@
 #include "LauncherMainWindow.hxx"
 #include "LaunchConfig.hxx"
 #include "UnitsModel.hxx"
+#include "PathListModel.hxx"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -354,18 +356,21 @@ void initQSettings()
 bool checkKeyboardModifiersForSettingFGRoot()
 {
     initQSettings();
-
+#if defined(Q_OS_WIN)
+    const auto altState = GetAsyncKeyState(VK_MENU);
+    const auto shiftState = GetAsyncKeyState(VK_SHIFT);
+    if ((altState < 0) || (shiftState < 0))
+#else
     Qt::KeyboardModifiers mods = qApp->queryKeyboardModifiers();
-    if (mods & (Qt::AltModifier | Qt::ShiftModifier)) {
+    if (mods & (Qt::AltModifier | Qt::ShiftModifier))
+#endif
+    {
         qWarning() << "Alt/shift pressed during launch";
-        QSettings settings;
-        settings.setValue("fg-root", "!ask");
         return true;
     }
 
     return false;
 }
-
 
 void restartTheApp()
 {
@@ -403,7 +408,7 @@ void launcherSetSceneryPaths()
 // positions
     QSettings settings;
     // append explicit scenery paths
-    Q_FOREACH(QString path, settings.value("scenery-paths").toStringList()) {
+    Q_FOREACH(QString path, PathListModel::readEnabledPaths("scenery-paths-v2")) {
         globals->append_fg_scenery(path.toStdString());
     }
 
@@ -450,6 +455,15 @@ bool runLauncherDialog()
     }
 
     fgInitPackageRoot();
+
+    // setup package language
+    auto lang = options->valueForOption("language");
+    if (!lang.empty()) {
+        globals->packageRoot()->setLocale(lang);
+    } else {
+        const auto langName = QLocale::languageToString(QLocale{}.language());
+        globals->packageRoot()->setLocale(langName.toStdString());
+    }
 
     // startup the HTTP system now since packages needs it
     FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();

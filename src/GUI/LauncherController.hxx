@@ -51,6 +51,7 @@ class LauncherController : public QObject
     Q_PROPERTY(AircraftProxyModel* aircraftWithUpdatesModel MEMBER m_aircraftWithUpdatesModel CONSTANT)
     Q_PROPERTY(AircraftProxyModel* browseAircraftModel MEMBER m_browseAircraftModel CONSTANT)
     Q_PROPERTY(AircraftProxyModel* searchAircraftModel MEMBER m_aircraftSearchModel CONSTANT)
+    Q_PROPERTY(AircraftProxyModel* favouriteAircraftModel MEMBER m_favouriteAircraftModel CONSTANT)
 
     Q_PROPERTY(AircraftItemModel* baseAircraftModel MEMBER m_aircraftModel CONSTANT)
 
@@ -85,6 +86,8 @@ class LauncherController : public QObject
 	Q_PROPERTY(QSize minimumWindowSize READ minWindowSize WRITE setMinWindowSize NOTIFY minWindowSizeChanged)
 
     Q_PROPERTY(QUrl flyIconUrl READ flyIconUrl NOTIFY selectedAircraftChanged)
+    
+    Q_PROPERTY(bool inAppMode READ inApp NOTIFY inAppChanged)
 
     Q_PROPERTY(bool aircraftGridMode READ aircraftGridMode WRITE setAircraftGridMode NOTIFY aircraftGridModeChanged)
 public:
@@ -142,7 +145,8 @@ public:
     // used on the summary screen
     Q_INVOKABLE QVariantList defaultSplashUrls() const;
 
-
+    Q_INVOKABLE QVariant loadUISetting(QString name, QVariant defaultValue) const;
+    Q_INVOKABLE void saveUISetting(QString name, QVariant value) const;
 
     LaunchConfig* config() const
     { return m_config; }
@@ -193,6 +197,10 @@ public:
         return m_aircraftGridMode;
     }
 
+    bool  inApp() const
+    {
+        return m_inAppMode;
+    }
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -207,6 +215,7 @@ signals:
 
     void aircraftGridModeChanged(bool aircraftGridMode);
 
+    void inAppChanged();
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
 
@@ -261,6 +270,8 @@ private:
     AircraftProxyModel* m_aircraftSearchModel;
     AircraftProxyModel* m_browseAircraftModel;
     AircraftProxyModel* m_aircraftWithUpdatesModel;
+    AircraftProxyModel* m_favouriteAircraftModel;
+
     MPServersModel* m_serversModel = nullptr;
     LocationController* m_location = nullptr;
     FlightPlanController* m_flightPlan = nullptr;

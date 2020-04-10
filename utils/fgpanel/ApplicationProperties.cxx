@@ -16,7 +16,6 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-
 #ifdef _WIN32
 # include <direct.h> // for getcwd()
 #else // !_WIN32

@@ -20,15 +20,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <string.h>
 
 #include <simgear/compiler.h>
 
-#include <boost/foreach.hpp>
 #include <string>
 
 #include <osg/ref_ptr>
@@ -67,11 +64,9 @@ public:
     }
 
 
-    ~FGAIModelData()
-    {
-    }
+    ~FGAIModelData() = default;
 
-    virtual FGAIModelData* clone() const { return new FGAIModelData(); }
+    FGAIModelData* clone() const override { return new FGAIModelData(); }
 
     /** osg callback, thread-safe */
     void modelLoaded(const std::string& path, SGPropertyNode *prop, osg::Node *n)
@@ -516,7 +511,7 @@ void FGAIBase::Transform() {
  */
 std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder)
 {
-    std::vector<std::string> path_list;
+    string_list path_list;
 
     if (searchOrder == DATA_ONLY) {
         SG_LOG(SG_AI, SG_DEBUG, "Resolving model path:  DATA only");
@@ -536,7 +531,8 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             }
         } else {
             // No model, so fall back to the default
-            path_list.push_back(fgGetString("/sim/multiplay/default-model", default_model));
+            const SGPath defaultModelPath = SGPath::fromUtf8(fgGetString("/sim/multiplay/default-model", default_model));
+            path_list.push_back(defaultModelPath.utf8Str());
         }
     } else {
         SG_LOG(SG_AI, SG_DEBUG, "Resolving model path:  PREFER_AI/PREFER_DATA");
@@ -544,8 +540,8 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
         for (SGPath p : globals->get_data_paths("AI")) {
             p.append(model_path);
             if (p.exists()) {
-                SG_LOG(SG_AI, SG_DEBUG, "Found AI model: " << p.local8BitStr());
-                path_list.push_back(p.local8BitStr());
+                SG_LOG(SG_AI, SG_DEBUG, "Found AI model: " << p);
+                path_list.push_back(p.utf8Str());
                 break;
             }
         }
@@ -566,8 +562,8 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             for (SGPath p : globals->get_data_paths()) {
                 p.append(fallback_path);
                 if (p.exists()) {
-                    SG_LOG(SG_AI, SG_DEBUG, "Found fallback model path for index " << _fallback_model_index << ": " << p.local8BitStr());
-                    path_list.push_back(p.local8BitStr());
+                    SG_LOG(SG_AI, SG_DEBUG, "Found fallback model path for index " << _fallback_model_index << ": " << p);
+                    path_list.push_back(p.utf8Str());
                     break;
                 }
             }

@@ -41,19 +41,21 @@ class PagedLOD;
 class FGSwiftAircraft
 {
 public:
-    FGSwiftAircraft(std::string callsign, std::string modelpath);
-    bool updatePosition(SGGeod newPosition, SGVec3d orientation);
+    FGSwiftAircraft(const std::string& callsign, const std::string& modelpath, SGPropertyNode_ptr p);
+    bool updatePosition(SGGeod newPosition, SGVec3d orientation, double groundspeed, bool initPos);
     ~FGSwiftAircraft();
     std::string getName() { return _model->getName(); };
-    double      getLatDeg();
-    double      getLongDeg();
-    double      getGroundElevation();
-    double      getFudgeFactor();
+    double      getLatDeg() const;
+    double      getLongDeg() const;
+    double      getGroundElevation(const SGGeod& pos) const;
+    double      getFudgeFactor() const;
 
 private:
+    bool initPos = false;
     SGGeod position;
+    SGPropertyNode_ptr props;
     osg::ref_ptr<osg::Node> _model;
     SGModelPlacement aip;
-	inline bool operator<(std::string extCallsign);
+	inline bool operator<(const std::string& extCallsign);
 };
 #endif

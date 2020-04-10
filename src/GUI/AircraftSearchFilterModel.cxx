@@ -1,6 +1,11 @@
 #include "AircraftSearchFilterModel.hxx"
 
+#include <QSettings>
+#include <QDebug>
+
 #include "AircraftModel.hxx"
+#include "FavouriteAircraftData.hxx"
+
 #include <simgear/package/Package.hxx>
 
 AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source) :
@@ -10,6 +15,8 @@ AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source)
     setSourceModel(source);
     setSortCaseSensitivity(Qt::CaseInsensitive);
     setFilterCaseSensitivity(Qt::CaseInsensitive);
+
+
 
     // important we sort on the primary name role and not Qt::DisplayRole
     // otherwise the aircraft jump when switching variant
@@ -110,6 +117,22 @@ void AircraftProxyModel::setHaveUpdateFilterEnabled(bool e)
     invalidate();
 }
 
+void AircraftProxyModel::setShowFavourites(bool e)
+{
+    if (e == m_onlyShowFavourites)
+        return;
+
+    m_onlyShowFavourites = e;
+    if (e) {
+        setDynamicSortFilter(false);
+        connect(FavouriteAircraftData::instance(), &FavouriteAircraftData::changed,
+                [this]() {
+            this->invalidate();
+        });
+    }
+    invalidate();
+}
+
 bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
@@ -140,6 +163,11 @@ bool AircraftProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sour
         default:
             break;
         }
+    }
+
+    if (m_onlyShowFavourites) {
+        if (!index.data(AircraftIsFavouriteRole).toBool())
+            return false;
     }
 
     // if there is no search active, i.e we are browsing, we might apply the
@@ -185,5 +213,30 @@ bool AircraftProxyModel::filterAircraft(const QModelIndex &sourceIndex) const
     }
 
     return false;
+}
+
+void AircraftProxyModel::loadRatingsSettings()
+{
+    QSettings settings;
+    m_ratingsFilter = settings.value("enable-ratings-filter", true).toBool();
+    QVariantList vRatings = settings.value("ratings-filter").toList();
+    if (vRatings.size() == 4) {
+        for (int i=0; i < 4; ++i) {
+            m_ratings[i] = vRatings.at(i).toInt();
+        }
+    }
+
+    invalidate();
+}
+
+void AircraftProxyModel::saveRatingsSettings()
+{
+    QSettings settings;
+    settings.setValue("enable-ratings-filter", m_ratingsFilter);
+    QVariantList vRatings;
+    for (int i=0; i < 4; ++i) {
+        vRatings.append(m_ratings.at(i));
+    }
+    settings.setValue("ratings-filter", vRatings);
 }
 

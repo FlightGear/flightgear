@@ -15,6 +15,7 @@ ListHeaderBox
 
             onCheckedChanged: {
                 _launcher.browseAircraftModel.ratingsFilterEnabled = checked
+                 _launcher.saveUISetting("enable-ratings-filter", checked);
             }
 
             label: qsTr("Filter using ratings")

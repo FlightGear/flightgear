@@ -76,7 +76,7 @@ include(GNUInstallDirs)
 # System detection/default settings
 include( DetectDistro )
 include( DetectBrowser )
-
+include( ExportDebugSymbols )
 set(CMAKE_DEBUG_POSTFIX          "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX        ""  CACHE STRING "add a postfix, usually empty on windows")
 set(CMAKE_RELWITHDEBINFO_POSTFIX ""  CACHE STRING "add a postfix, usually empty on windows")
@@ -123,11 +123,7 @@ IF(APPLE)
     find_library(COCOA_LIBRARY Cocoa)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
 elseif(WIN32)
-    find_library(SETUP_API_LIB Setupapi)
-    if (SETUP_API_LIB)
-        set(EVENT_INPUT_DEFAULT 1)
-    endif()
-
+    set(EVENT_INPUT_DEFAULT 1)
     list(APPEND PLATFORM_LIBS "Shlwapi.lib")
 
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "bin")
@@ -265,14 +261,7 @@ if(EVENT_INPUT)
             message(STATUS "event-based input enabled. Using ${UDEV_LIBRARIES}")
         endif()
     else()
-        # Windows
-        if (NOT SETUP_API_LIB)
-            message(WARNING "Setupapi.lib not found, HID/event input is disabled")
-            set(ENABLE_HID_INPUT 0)
-            set(EVENT_INPUT 0)
-        else()
-            add_definitions(-DWITH_EVENTINPUT)
-        endif()
+        add_definitions(-DWITH_EVENTINPUT)
     endif()
 
     if (ENABLE_HID_INPUT)
@@ -282,7 +271,15 @@ if(EVENT_INPUT)
 endif(EVENT_INPUT)
 
 if (ENABLE_SWIFT)
-    # DBUS
+# DBUS
+
+    # our local FindDBus.cmake file uses pkg-config on non-Windows
+    # we want to ensure our local prefixes are searched, so set this
+    set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH 1)
+
+    # unfortunately CMAKE_INSTALL_PREFIX is not searched, so add that manually
+    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
+
     find_package(DBus)
 
     #libevent
@@ -316,6 +313,13 @@ find_package(OpenSceneGraph 3.2.0 REQUIRED
   osgViewer
   osgGA
 )
+
+find_package(sentry QUIET)
+
+if (TARGET sentry::sentry)
+    message(STATUS "Sentry.io crash reporting enabled")
+    set(HAVE_SENTRY 1)
+endif()
 
 if (MSVC)
 	find_package(CrashRpt)
@@ -370,10 +374,7 @@ if (ENABLE_QT)
     find_package(Qt5 5.4 COMPONENTS Widgets Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
         message(STATUS "Will enable Qt launcher GUI")
-        message(STATUS "  Qt5Widgets version: ${Qt5Widgets_VERSION_STRING}")
-        message(STATUS "  Qt5Widgets include dir: ${Qt5Widgets_INCLUDE_DIRS}")
         set(HAVE_QT 1)
-
         include (Translations)
     else()
         # don't try to build FGQCanvas if Qt wasn't found correctly
@@ -385,7 +386,7 @@ else()
 endif (ENABLE_QT)
 ##############################################################################
 
-find_package(PLIB REQUIRED puaux pu fnt)
+find_package(PLIB REQUIRED puaux pu)
 
 # FlightGear and SimGear versions need to match major + minor
 # split version string into components, note CMAKE_MATCH_0 is the entire regexp match
@@ -418,10 +419,7 @@ endif()
 
 if(ENABLE_RTI)
     message(STATUS "RTI: ENABLED")
-    find_package(RTI)
-    if(RTI_FOUND)
-        set(FG_HAVE_HLA 1)
-    endif(RTI_FOUND)
+    set(FG_HAVE_HLA 1)
 else()
     message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)

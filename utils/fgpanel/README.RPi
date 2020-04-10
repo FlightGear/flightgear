@@ -15,10 +15,10 @@ INSTALLATION
    The source code of FGPanel can easily be adapted to other embedded devices supporting OpenGL ES 2.0.
 
 3. Build FGPanel only (don't build all components on the Raspberry Pi as this will take ages!!!):
-        make -- fgpanel
+        make -- fgpanel-egl fgpanel
 
-USAGE
-=====
+USAGE (fgpanel-egl)
+===================
 
 1. Increase the amount of GPU memory by editing the /boot/config.txt file.
    Add the following line (this is for Raspberry Pi model 1B with 512 Mb of memory):
@@ -30,9 +30,20 @@ USAGE
 3. Stop X server. FGPanel runs in the console (Linux framebuffer).
 
 4. Start FGPanel as usual but as ROOT or use the 'sudo' command (see README):
-        sudo -- utils/fgpanel/fgpanel --fg-root=/path/to/fg/data --panel=Aircraft/MyAircraft/Panels/MyPanel.xml
+        sudo -- utils/fgpanel/fgpanel-egl --fg-root=/path/to/fg/data --panel=Aircraft/MyAircraft/Panels/MyPanel.xml
 
    ROOT privileges are required to access the GPU of the Raspberry Pi.
+
+USAGE (fgpanel)
+===================
+
+1. Activate the Full KMS driver on the Raspberry Pi using the raspi-config program:
+        Advanced Options -> GL Driver -> Full KMS
+
+2. Reboot. The Full KMS driver should be activated.
+
+3. When X server is running, start FGPanel as usual (see README):
+        utils/fgpanel/fgpanel --fg-root=/path/to/fg/data --panel=Aircraft/MyAircraft/Panels/MyPanel.xml
 
 FEATURES
 ========

@@ -230,16 +230,6 @@ setFreeze (bool f)
 {
     frozen = f;
 
-    // Stop sound on a pause
-    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
-    if ( smgr != NULL ) {
-        if ( f ) {
-            smgr->suspend();
-        } else if (fgGetBool("/sim/sound/working")) {
-            smgr->resume();
-        }
-    }
-
     // Pause the particle system
     simgear::Particles::setFrozen(f);
 }
@@ -336,28 +326,6 @@ getGMTString ()
   return buf;
 }
 
-/**
- * Return the current heading in degrees.
- */
-static double
-getHeadingMag ()
-{
-  double magheading = fgGetDouble("/orientation/heading-deg") -
-    fgGetDouble("/environment/magnetic-variation-deg");
-  return SGMiscd::normalizePeriodic(0, 360, magheading );
-}
-
-/**
- * Return the current track in degrees.
- */
-static double
-getTrackMag ()
-{
-  double magtrack = fgGetDouble("/orientation/track-deg") -
-    fgGetDouble("/environment/magnetic-variation-deg");
-  return SGMiscd::normalizePeriodic(0, 360, magtrack );
-}
-
 ////////////////////////////////////////////////////////////////////////
 // Tie the properties.
 ////////////////////////////////////////////////////////////////////////
@@ -449,9 +417,11 @@ FGProperties::bind ()
   _tiedProperties.Tie<const char*>("/position/latitude-string", getLatitudeString);
   _tiedProperties.Tie<const char*>("/position/longitude-string", getLongitudeString);
 
-  // Orientation
-  _tiedProperties.Tie<double>("/orientation/heading-magnetic-deg", getHeadingMag);
-  _tiedProperties.Tie<double>("/orientation/track-magnetic-deg", getTrackMag);
+    _headingMagnetic = fgGetNode("/orientation/heading-magnetic-deg", true);
+    _trackMagnetic = fgGetNode("/orientation/track-magnetic-deg", true);
+    _magVar = fgGetNode("/environment/magnetic-variation-deg", true);
+    _trueHeading = fgGetNode("/orientation/heading-deg", true);
+    _trueTrack = fgGetNode("/orientation/track-deg", true);
 }
 
 void
@@ -491,6 +461,10 @@ FGProperties::update (double dt)
     _rmin->setIntValue(r->tm_min);
     _rsec->setIntValue(r->tm_sec);
     _rwday->setIntValue(r->tm_wday);
+    
+    const double magvar = _magVar->getDoubleValue();
+    _headingMagnetic->setDoubleValue(_trueHeading->getDoubleValue() - magvar);
+    _trackMagnetic->setDoubleValue(_trueTrack->getDoubleValue() - magvar);
 }
 
 

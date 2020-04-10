@@ -84,6 +84,8 @@ if (HAVE_QT)
                             BaseDiagram.hxx
                             AirportDiagram.cxx
                             AirportDiagram.hxx
+                            CarrierDiagram.cxx
+                            CarrierDiagram.hxx
                             NavaidDiagram.cxx
                             NavaidDiagram.hxx
                             SetupRootDialog.cxx
@@ -110,6 +112,8 @@ if (HAVE_QT)
                             LaunchConfig.hxx
                             MPServersModel.cpp
                             MPServersModel.h
+                            PathUrlHelper.cxx
+                            PathUrlHelper.hxx
                             RecentAircraftModel.cxx
                             RecentAircraftModel.hxx
                             RecentLocationsModel.cxx
@@ -122,6 +126,12 @@ if (HAVE_QT)
                             AddonsModel.hxx
                             PixmapImageItem.cxx
                             PixmapImageItem.hxx
+                            PathListModel.cxx
+                            PathListModel.hxx
+                            CarriersLocationModel.cxx
+                            CarriersLocationModel.hxx
+                            FavouriteAircraftData.cxx
+                            FavouriteAircraftData.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})
@@ -172,6 +182,8 @@ if (HAVE_QT)
                         StackController.hxx
                         ModelDataExtractor.cxx
                         ModelDataExtractor.hxx
+                        HoverArea.cxx
+                        HoverArea.hxx
                         FGQQWindowManager.cxx
                         FGQQWindowManager.hxx
                         PathUrlHelper.cxx

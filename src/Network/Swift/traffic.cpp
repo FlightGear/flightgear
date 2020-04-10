@@ -38,7 +38,7 @@ namespace FGSwiftBus {
 
 CTraffic::CTraffic()
 {
-    acm = new FGSwiftAircraftManager();
+    acm.reset(new FGSwiftAircraftManager());
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Traffic started");
 }
 
@@ -62,7 +62,7 @@ const std::string& CTraffic::ObjectPath()
 
 void CTraffic::planeLoaded(void* id, bool succeeded, void* self)
 {
-    auto* traffic = static_cast<CTraffic*>(self);
+    auto traffic = static_cast<CTraffic*>(self);
     auto  planeIt = traffic->m_planesById.find(id);
     if (planeIt == traffic->m_planesById.end()) { return; }
 
@@ -192,6 +192,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             std::vector<double>      pitches;
             std::vector<double>      rolls;
             std::vector<double>      headings;
+            std::vector<double>      groundspeeds;
             std::vector<bool>        onGrounds;
             message.beginArgumentRead();
             message.getArgument(callsigns);
@@ -201,11 +202,12 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             message.getArgument(pitches);
             message.getArgument(rolls);
             message.getArgument(headings);
+            message.getArgument(groundspeeds);
             message.getArgument(onGrounds);
             queueDBusCall([=]() {
                 std::vector<SGGeod> positions;
                 std::vector<SGVec3d> orientations;
-                for (int i = 0; i < latitudes.size(); i++) {
+                for (long unsigned int i = 0; i < latitudes.size(); i++) {
                     SGGeod newPos;
                     newPos.setLatitudeDeg(latitudes.at(i));
                     newPos.setLongitudeDeg(longitudes.at(i));
@@ -215,7 +217,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
                     positions.push_back(newPos);
                     orientations.push_back(vec);
                 }
-                acm->updatePlanes(callsigns, positions, orientations, onGrounds);
+                acm->updatePlanes(callsigns, positions, orientations, groundspeeds, onGrounds);
             });
         } else if (message.getMethodName() == "getRemoteAircraftData") {
             std::vector<std::string> requestedcallsigns;
@@ -237,6 +239,31 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
                 reply.appendArgument(verticalOffsets);
                 sendDBusMessage(reply);
             });
+        }
+        else if (message.getMethodName() == "getElevationAtPosition")
+        {
+            std::string callsign;
+            double latitudeDeg;
+            double longitudeDeg;
+            double altitudeMeters;
+            message.beginArgumentRead();
+            message.getArgument(callsign);
+            message.getArgument(latitudeDeg);
+            message.getArgument(longitudeDeg);
+            message.getArgument(altitudeMeters);
+            queueDBusCall([ = ]()
+                          {
+                              SGGeod pos;
+                              pos.setLatitudeDeg(latitudeDeg);
+                              pos.setLongitudeDeg(longitudeDeg);
+                              pos.setElevationM(altitudeMeters);
+                              double elevation = acm->getElevationAtPosition(callsign, pos);
+                              CDBusMessage reply = CDBusMessage::createReply(sender, serial);
+                              reply.beginArgumentWrite();
+                              reply.appendArgument(callsign);
+                              reply.appendArgument(elevation);
+                              sendDBusMessage(reply);
+                          });
         } else {
             // Unknown message. Tell DBus that we cannot handle it
             return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;

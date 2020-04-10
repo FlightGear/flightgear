@@ -450,6 +450,20 @@ Item {
                         enabled: !renderSection.rembrandt
                         property var data: [0, 2, 4];
                         defaultIndex: 0
+                    },
+
+                    SettingCheckbox {
+                        id: compressTextures
+                        setting: "texture-compression"
+                        keywords: ["texture", "compresseion", "memory", "dxt", "cache"]
+                        // no option, since we need to set a property
+                        advanced: true
+
+                        label: qsTr("Cache graphics for faster loading")
+                        description: qsTr("By converting images used in rendering to an optimised format " +
+                                          "loading times and memory use can be improved. This will consume " +
+                                          "some disk space and take initial time while images are converted, " +
+                                          "but subsequent loads will be faster, and use less memory.")
                     }
 
                 ]
@@ -465,6 +479,8 @@ Item {
                     if (alsEnabled) {
                         _config.setProperty("/sim/rendering/shaders/skydome", true);
                     }
+
+                    _config.setProperty("/sim/rendering/texture-cache/cache-enabled", compressTextures.value);
                 }
             }
 

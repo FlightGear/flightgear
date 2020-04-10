@@ -7,13 +7,15 @@
 class CatalogListModel;
 class AddonsModel;
 class LauncherMainWindow;
+class PathListModel;
+class LaunchConfig;
 
 class AddOnsController : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QStringList aircraftPaths READ aircraftPaths WRITE setAircraftPaths NOTIFY aircraftPathsChanged)
-    Q_PROPERTY(QStringList sceneryPaths READ sceneryPaths WRITE setSceneryPaths NOTIFY sceneryPathsChanged)
+    Q_PROPERTY(PathListModel* aircraftPaths READ aircraftPaths CONSTANT)
+    Q_PROPERTY(PathListModel* sceneryPaths READ sceneryPaths CONSTANT)
     Q_PROPERTY(QStringList modulePaths READ modulePaths WRITE setModulePaths NOTIFY modulePathsChanged)
 
     Q_PROPERTY(CatalogListModel* catalogs READ catalogs CONSTANT)
@@ -22,10 +24,10 @@ class AddOnsController : public QObject
     Q_PROPERTY(bool showNoOfficialHangar READ showNoOfficialHangar NOTIFY showNoOfficialHangarChanged)
 
 public:
-    explicit AddOnsController(LauncherMainWindow *parent = nullptr);
+    explicit AddOnsController(LauncherMainWindow *parent, LaunchConfig* config);
 
-    QStringList aircraftPaths() const;
-    QStringList sceneryPaths() const;
+    PathListModel* aircraftPaths() const;
+    PathListModel* sceneryPaths() const;
     QStringList modulePaths() const;
 
     CatalogListModel* catalogs() const
@@ -50,8 +52,6 @@ public:
     Q_INVOKABLE void officialCatalogAction(QString s);
 
 signals:
-    void aircraftPathsChanged(QStringList aircraftPaths);
-    void sceneryPathsChanged(QStringList sceneryPaths);
     void modulePathsChanged(QStringList modulePaths);
     void modulesChanged();
 
@@ -59,11 +59,11 @@ signals:
     void showNoOfficialHangarChanged();
 
 public slots:
-    void setAircraftPaths(QStringList aircraftPaths);
-    void setSceneryPaths(QStringList sceneryPaths);
     void setModulePaths(QStringList modulePaths);
     void setAddons(AddonsModel* addons);
     void onAddonsChanged(void);
+
+    void collectArgs();
 
 private:
     bool shouldShowOfficialCatalogMessage() const;
@@ -72,9 +72,10 @@ private:
     LauncherMainWindow* m_launcher;
     CatalogListModel* m_catalogs = nullptr;
     AddonsModel* m_addonsModuleModel = nullptr;
+    LaunchConfig* m_config = nullptr;
 
-    QStringList m_aircraftPaths;
-    QStringList m_sceneryPaths;
+    PathListModel* m_aircraftPaths = nullptr;
+    PathListModel* m_sceneryPaths = nullptr;
     QStringList m_addonModulePaths;
 };
 

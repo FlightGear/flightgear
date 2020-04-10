@@ -22,12 +22,15 @@
 #include "AddonsModel.hxx"
 #include "InstallSceneryDialog.hxx"
 #include "QtLauncher.hxx"
+#include "PathListModel.hxx"
+#include "LaunchConfig.hxx"
 
 //////////////////////////////////////////////////////////////////////////
 
-AddOnsController::AddOnsController(LauncherMainWindow *parent) :
+AddOnsController::AddOnsController(LauncherMainWindow *parent, LaunchConfig* config) :
     QObject(parent),
-    m_launcher(parent)
+    m_launcher(parent),
+    m_config(config)
 {
     m_catalogs = new CatalogListModel(this,
                                       simgear::pkg::RootRef(globals->packageRoot()));
@@ -38,10 +41,32 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent) :
     connect(m_addonsModuleModel, &AddonsModel::modulesChanged, this, &AddOnsController::onAddonsChanged);
 
     using namespace flightgear::addons;
-    QSettings settings;
-    m_sceneryPaths = settings.value("scenery-paths").toStringList();
-    m_aircraftPaths = settings.value("aircraft-paths").toStringList();
 
+    m_sceneryPaths = new PathListModel(this);
+    connect(m_sceneryPaths, &PathListModel::enabledPathsChanged, [this] () {
+        m_sceneryPaths->saveToSettings("scenery-paths-v2");
+        flightgear::launcherSetSceneryPaths();
+    });
+    m_sceneryPaths->loadFromSettings("scenery-paths-v2");
+
+    m_aircraftPaths = new PathListModel(this);
+    m_aircraftPaths->loadFromSettings("aircraft-paths-v2");
+
+    // sync up the aircraft cache now
+    auto aircraftCache = LocalAircraftCache::instance();
+    aircraftCache->setPaths(m_aircraftPaths->enabledPaths());
+    aircraftCache->scanDirs();
+
+    // watch for future changes
+    connect(m_aircraftPaths, &PathListModel::enabledPathsChanged, [this] () {
+        m_aircraftPaths->saveToSettings("aircraft-paths-v2");
+
+        auto aircraftCache = LocalAircraftCache::instance();
+        aircraftCache->setPaths(m_aircraftPaths->enabledPaths());
+        aircraftCache->scanDirs();
+    });
+
+    QSettings settings;
     int size = settings.beginReadArray("addon-modules");
     for (int i = 0; i < size; ++i) {
         settings.setArrayIndex(i);
@@ -66,14 +91,18 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent) :
     qmlRegisterUncreatableType<AddOnsController>("FlightGear.Launcher", 1, 0, "AddOnsControllers", "no");
     qmlRegisterUncreatableType<CatalogListModel>("FlightGear.Launcher", 1, 0, "CatalogListModel", "no");
     qmlRegisterUncreatableType<AddonsModel>("FlightGear.Launcher", 1, 0, "AddonsModel", "no");
+    qmlRegisterUncreatableType<PathListModel>("FlightGear.Launcher", 1, 0, "PathListMode", "no");
+
+    connect(m_config, &LaunchConfig::collect,
+            this, &AddOnsController::collectArgs);
 }
 
-QStringList AddOnsController::aircraftPaths() const
+PathListModel* AddOnsController::aircraftPaths() const
 {
     return m_aircraftPaths;
 }
 
-QStringList AddOnsController::sceneryPaths() const
+PathListModel* AddOnsController::sceneryPaths() const
 {
     return m_sceneryPaths;
 }
@@ -119,6 +148,7 @@ QString AddOnsController::addAircraftPath() const
         }
     }
 
+    m_aircraftPaths->appendPath(path);
     return path;
 }
 
@@ -206,6 +236,7 @@ QString AddOnsController::addSceneryPath() const
         }
     }
 
+    m_sceneryPaths->appendPath(path);
     return path;
 }
 
@@ -225,37 +256,6 @@ void AddOnsController::openDirectory(QString path)
 {
     QUrl u = QUrl::fromLocalFile(path);
     QDesktopServices::openUrl(u);
-}
-
-void AddOnsController::setAircraftPaths(QStringList aircraftPaths)
-{
-    if (m_aircraftPaths == aircraftPaths)
-        return;
-
-    m_aircraftPaths = aircraftPaths;
-    emit aircraftPathsChanged(m_aircraftPaths);
-
-
-    QSettings settings;
-    settings.setValue("aircraft-paths", m_aircraftPaths);
-    auto aircraftCache = LocalAircraftCache::instance();
-    aircraftCache->setPaths(m_aircraftPaths);
-    aircraftCache->scanDirs();
-}
-
-void AddOnsController::setSceneryPaths(QStringList sceneryPaths)
-{
-    if (m_sceneryPaths == sceneryPaths)
-        return;
-
-    m_sceneryPaths = sceneryPaths;
-
-    QSettings settings;
-    settings.setValue("scenery-paths", m_sceneryPaths);
-
-    flightgear::launcherSetSceneryPaths();
-
-    emit sceneryPathsChanged(m_sceneryPaths);
 }
 
 void AddOnsController::setAddons(AddonsModel* addons)
@@ -339,6 +339,34 @@ void AddOnsController::onAddonsChanged()
         settings.setArrayIndex(i++);
         settings.setValue("path", path);
         settings.setValue("enable", m_addonsModuleModel->getPathEnable(path));
+    }
+    settings.endArray();
+}
+
+void AddOnsController::collectArgs()
+{
+    // scenery paths
+    Q_FOREACH(QString path, m_sceneryPaths->enabledPaths()) {
+        m_config->setArg("fg-scenery", path);
+    }
+
+    // aircraft paths
+    Q_FOREACH(QString path, m_aircraftPaths->enabledPaths()) {
+        m_config->setArg("fg-aircraft", path);
+    }
+
+    // add-on module paths
+    // we could query this directly from AddonsModel, but this is simpler right now
+    QSettings settings;
+    int size = settings.beginReadArray("addon-modules");
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+
+        QString path = settings.value("path").toString();
+        bool enable = settings.value("enable").toBool();
+        if (enable) {
+            m_config->setArg("addon", path);
+        }
     }
     settings.endArray();
 }

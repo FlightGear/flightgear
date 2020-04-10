@@ -29,6 +29,10 @@ public:
 
     Q_INVOKABLE void selectVariantForAircraftURI(QUrl uri);
 
+    Q_INVOKABLE void loadRatingsSettings();
+
+    Q_INVOKABLE void saveRatingsSettings();
+
     QList<int> ratings() const
     {
         return m_ratings;
@@ -56,15 +60,18 @@ public slots:
     void setInstalledFilterEnabled(bool e);
 
     void setHaveUpdateFilterEnabled(bool e);
+
+    void setShowFavourites(bool e);
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
 private:
     bool filterAircraft(const QModelIndex& sourceIndex) const;
 
-    bool m_ratingsFilter = true;
+    bool m_ratingsFilter = false;
     bool m_onlyShowInstalled = false;
     bool m_onlyShowWithUpdate = false;
+    bool m_onlyShowFavourites = false;
 
     QList<int> m_ratings;
     QString m_filterString;

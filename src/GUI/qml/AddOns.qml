@@ -102,12 +102,7 @@ Item {
                 description: qsTr("To use aircraft you download yourself, FlightGear needs to " +
                                   "know the folder(s) containing the aircraft data.")
                 showAddButton: true
-                onAdd: {
-                    var newPath =_addOns.addAircraftPath();
-                    if (newPath !== "") {
-                        _addOns.aircraftPaths.push(newPath)
-                    }
-                }
+                onAdd: _addOns.addAircraftPath();
             }
 
             Rectangle {
@@ -127,21 +122,10 @@ Item {
                         model: _addOns.aircraftPaths
                         delegate: PathListDelegate {
                             width: aircraftPathsColumn.width
-                            deletePromptText: qsTr("Remove the aircraft folder: '%1' from the list? (The folder contents will not be changed)").arg(modelData);
-                            modelCount: _addOns.aircraftPaths.length
-
-                            onPerformDelete: {
-                                var modifiedPaths = _addOns.aircraftPaths.slice()
-                                modifiedPaths.splice(model.index, 1);
-                                _addOns.aircraftPaths = modifiedPaths;
-                            }
-
-                            onPerformMove: {
-                                var modifiedPaths = _addOns.aircraftPaths.slice()
-                                modifiedPaths.splice(model.index, 1);
-                                modifiedPaths.splice(newIndex, 0, modelData)
-                                _addOns.aircraftPaths = modifiedPaths;
-                            }
+                            deletePromptText: qsTr("Remove the aircraft folder: '%1' from the list? (The folder contents will not be changed)").arg(model.path);
+                            modelCount: _addOns.aircraftPaths.count
+                            onPerformDelete: _addOns.aircraftPaths.removePath(model.index)
+                            onPerformMove: _addOns.aircraftPaths.swapIndices(model.index, newIndex);
                         }
                     }
 
@@ -241,12 +225,7 @@ Item {
                                   "to know the folders containing the scenery data. " +
                                   "Adjust the order of the list to control which scenery is used in a region.");
                 showAddButton: true
-                onAdd: {
-                    var newPath =_addOns.addSceneryPath();
-                    if (newPath !== "") {
-                        _addOns.sceneryPaths.push(newPath)
-                    }
-                }
+                onAdd: _addOns.addSceneryPath();
             }
 
             Rectangle {
@@ -267,21 +246,10 @@ Item {
 
                         delegate: PathListDelegate {
                             width: sceneryPathsColumn.width
-                            deletePromptText: qsTr("Remove the scenery folder: '%1' from the list? (The folder contents will not be changed)").arg(modelData);
-                            modelCount: _addOns.sceneryPaths.length
-
-                            onPerformDelete: {
-                                var modifiedPaths = _addOns.sceneryPaths.slice()
-                                modifiedPaths.splice(model.index, 1);
-                                _addOns.sceneryPaths = modifiedPaths;
-                            }
-
-                            onPerformMove: {
-                                var modifiedPaths = _addOns.sceneryPaths.slice()
-                                modifiedPaths.splice(model.index, 1);
-                                modifiedPaths.splice(newIndex, 0, modelData)
-                                _addOns.sceneryPaths = modifiedPaths;
-                            }
+                            deletePromptText: qsTr("Remove the scenery folder: '%1' from the list? (The folder contents will not be changed)").arg(model.path);
+                            modelCount: _addOns.sceneryPaths.count
+                            onPerformDelete: _addOns.sceneryPaths.removePath(model.index)
+                            onPerformMove: _addOns.sceneryPaths.swapIndices(model.index, newIndex);
                         }
                     }
 
@@ -304,14 +272,10 @@ Item {
                         var path = _addOns.installCustomScenery();
                         if (path !== "") {
                             // insert into scenery paths if not already present
-                            var sceneryPaths = _addOns.sceneryPaths
-                            for (var i = 0; i < sceneryPaths.length; i++) {
-                                if (sceneryPaths[i] === path)
-                                    return; // found, we are are done
-                            }
+
 
                             // not found, add it
-                            _addOns.sceneryPaths.push(path);
+                            _addOns.sceneryPaths.appendPath(path);
                         }
                     }
                 }

@@ -20,7 +20,7 @@ public:
 
     QJSValue model() const
     {
-        return m_value;
+        return m_rawModel;
     }
 
     int index() const
@@ -52,8 +52,12 @@ private slots:
     void onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight);
 
 private:
+    void clear();
+
     QAbstractItemModel* m_model = nullptr;
-    QJSValue m_value;
+    QJSValue m_rawModel;
+    QStringList m_stringsModel;
+
     int m_index = 0;
     QString m_role;
 };

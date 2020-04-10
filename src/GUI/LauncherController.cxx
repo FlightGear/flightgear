@@ -45,6 +45,7 @@
 #include "QmlPositioned.hxx"
 #include "PixmapImageItem.hxx"
 #include "AirportDiagram.hxx"
+#include "CarrierDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "RouteDiagram.hxx"
 #include "QmlRadioButtonHelper.hxx"
@@ -52,6 +53,9 @@
 #include "NavaidSearchModel.hxx"
 #include "FlightPlanController.hxx"
 #include "ModelDataExtractor.hxx"
+#include "CarriersLocationModel.hxx"
+#include "SetupRootDialog.hxx"
+#include "HoverArea.hxx"
 #include "StackController.hxx"
 
 using namespace simgear::pkg;
@@ -91,6 +95,9 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
 
     m_aircraftSearchModel = new AircraftProxyModel(this, m_aircraftModel);
 
+    m_favouriteAircraftModel = new AircraftProxyModel(this, m_aircraftModel);
+    m_favouriteAircraftModel->setShowFavourites(true);
+
     m_aircraftHistory = new RecentAircraftModel(m_aircraftModel, this);
 
     connect(m_aircraftModel, &AircraftItemModel::aircraftInstallCompleted,
@@ -110,7 +117,7 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
     m_aircraftGridMode = settings.value("aircraftGridMode").toBool();
 
     m_subsystemIdleTimer = new QTimer(this);
-    m_subsystemIdleTimer->setInterval(10);
+    m_subsystemIdleTimer->setInterval(5);
     connect(m_subsystemIdleTimer, &QTimer::timeout, []()
        {globals->get_subsystem_mgr()->update(0.0);});
     m_subsystemIdleTimer->start();
@@ -145,11 +152,12 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<MPServersModel>("FlightGear.Launcher", 1, 0, "MPServers", "Singleton API");
 
     qmlRegisterType<NavaidSearchModel>("FlightGear", 1, 0, "NavaidSearch");
+    qmlRegisterType<CarriersLocationModel>("FlightGear", 1, 0, "CarriersModel");
 
     qmlRegisterUncreatableType<Units>("FlightGear", 1, 0, "Units", "Only for enum");
     qmlRegisterType<UnitsModel>("FlightGear", 1, 0, "UnitsModel");
 
-    qmlRegisterType<FileDialogWrapper>("FlightGear", 1, 0, "FileDialog");
+    qmlRegisterType<FileDialogWrapper>("FlightGear.Launcher", 1, 0, "FileDialog");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
     qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
 
@@ -164,9 +172,11 @@ void LauncherController::initQML()
 
     qmlRegisterType<PixmapImageItem>("FlightGear", 1, 0, "PixmapImage");
     qmlRegisterType<AirportDiagram>("FlightGear", 1, 0, "AirportDiagram");
+    qmlRegisterType<CarrierDiagram>("FlightGear", 1, 0, "CarrierDiagram");
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
+    qmlRegisterType<HoverArea>("FlightGear", 1, 0, "HoverArea");
     qmlRegisterType<StackController>("FlightGear", 1, 0, "StackController");
 
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
@@ -187,6 +197,7 @@ void LauncherController::setInAppMode()
 	m_inAppMode = true;
 	m_keepRunningInAppMode = true;
 	m_appModeResult = true;
+    emit inAppChanged();
 }
 
 bool LauncherController::keepRunningInAppMode() const
@@ -409,6 +420,10 @@ QString LauncherController::selectAircraftStateAutomatically()
         }
     }
 
+    if (m_location->isCarrier() && m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("carrier-approach")) {
+        return "carrier-approach";
+    }
+
     if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("approach")) {
         return "approach";
     }
@@ -424,6 +439,14 @@ QString LauncherController::selectAircraftStateAutomatically()
         // also try 'engines-running'?
         if (m_selectedAircraftInfo->hasState("take-off"))
             return "take-off";
+    }
+
+    if (m_location->isCarrier() && m_selectedAircraftInfo->hasState("carrier-take-off")) {
+        return "carrier-take-off";
+    }
+
+    if (m_selectedAircraftInfo->hasState("take-off")) {
+        return "take-off";
     }
 
     return {}; // failed to compute, give up
@@ -724,6 +747,20 @@ QVariantList LauncherController::defaultSplashUrls() const
     return urls;
 }
 
+QVariant LauncherController::loadUISetting(QString name, QVariant defaultValue) const
+{
+    QSettings settings;
+    if (!settings.contains(name))
+        return defaultValue;
+    return settings.value(name);
+}
+
+void LauncherController::saveUISetting(QString name, QVariant value) const
+{
+    QSettings settings;
+    settings.setValue(name, value);
+}
+
 void LauncherController::onAircraftInstalledCompleted(QModelIndex index)
 {
     maybeUpdateSelectedAircraft(index);
@@ -779,7 +816,7 @@ void LauncherController::requestChangeDataPath()
 {
 	QString currentLocText;
 	QSettings settings;
-	QString root = settings.value("fg-root").toString();
+	QString root = settings.value(SetupRootDialog::rootPathKey()).toString();
 	if (root.isNull()) {
 		currentLocText = tr("Currently the built-in data files are being used");
 	}
@@ -809,6 +846,7 @@ void LauncherController::requestChangeDataPath()
 		settings.setValue("fg-root", "!ask");
 	} // scope the ensure settings are written nicely
 
+    SetupRootDialog::askRootOnNextLaunch();
     flightgear::restartTheApp();
 }
 
