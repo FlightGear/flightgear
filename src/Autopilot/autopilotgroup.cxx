@@ -121,8 +121,6 @@ SGSubsystem::InitStatus FGXMLAutopilotGroupImplementation::incrementalInit()
 void FGXMLAutopilotGroupImplementation::init()
 {
   initFrom(fgGetNode("/sim/systems"), _nodeName.c_str());
-
-  SGSubsystemGroup::bind();
   SGSubsystemGroup::init();
 }
 
