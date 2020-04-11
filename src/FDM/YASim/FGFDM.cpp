@@ -204,9 +204,9 @@ void FGFDM::init()
         fgSetDouble(buf, CM2GALS * _airplane.getTankCapacity(i)/density);
     }
 
-    // This has a nasty habit of being false at startup.  That's not
-    // good.
-    fgSetBool("/controls/gear/gear-down", true);
+    if (_yasimN->getBoolValue("respect-external-gear-state") == false) {
+        fgSetBool("/controls/gear/gear-down", true);
+    }
 
     _airplane.getModel()->setTurbulence(_turb);
 }

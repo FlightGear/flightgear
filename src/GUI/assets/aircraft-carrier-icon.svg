@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="87.149193"
+   height="37.111004"
+   viewBox="0 0 461.16447 196.37906"
+   version="1.1"
+   id="svg8"
+   inkscape:export-filename="/home/stuart/bitmap.png"
+   inkscape:export-xdpi="2.8"
+   inkscape:export-ydpi="2.8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="aircraft-carrier-icon.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4"
+     inkscape:cx="82.435073"
+     inkscape:cy="-17.019439"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="2493"
+     inkscape:window-height="1385"
+     inkscape:window-x="67"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     fit-margin-top="5"
+     fit-margin-left="5"
+     fit-margin-right="5"
+     fit-margin-bottom="5"
+     units="px"
+     scale-x="10" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline"
+     transform="translate(319.16852,-98.581295)">
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#009bff;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m -290.00765,177.53052 7.30519,71.36096 55.25252,16.03618 215.076885,1.06907 30.407428,-31.5378 94.930487,-12.2944 -1.4833,-45.43582 -94.559656,-10.69078 -31.890713,-38.48681 -219.155941,2.13815 -8.15808,34.74504 z"
+       id="Outline"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path826"
+       sodipodi:nodetypes="cccccccccccc" />
+    <path
+       style="fill:#009bff;fill-opacity:1;fill-rule:evenodd;stroke:#009bff;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m -82.210854,265.48522 0.200595,-46.99016 h -24.786801 l -0.73387,13.23009 -59.39478,-0.54281 -0.6013,33.61805 z"
+       id="Island"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path828"
+       sodipodi:nodetypes="ccccccc" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#009aff;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m -286.7815,192.23034 4.44986,40.62497"
+       id="path832"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#009aff;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m -14.968809,127.55112 -271.812691,64.67922 2.97333,48.86685 300.730074,-75.05926"
+       id="LandingMarks"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path834"
+       sodipodi:nodetypes="cccc" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#009aff;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M -47.355536,198.09657 100.08338,193.60644"
+       id="Cat1"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path836" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#009aff;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M -44.09832,226.88876 102.04272,209.30242"
+       id="Cat2"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path836"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#009aff;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:29.99999994, 4.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       d="M -273.57231,212.56627 -18.148692,149.13964"
+       id="Centerline"
+       inkscape:connector-curvature="0"
+       inkscape:label="#path853"
+       sodipodi:nodetypes="cc" />
+  </g>
+</svg>

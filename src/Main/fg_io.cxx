@@ -216,11 +216,12 @@ FGIO::parse_port_config( const string_list& tokens )
                         "(one argument expected: --hla-local=<federationname>" );
                 return NULL;
             }
-            tokens.insert(tokens.begin(), "");
-            tokens.insert(tokens.begin(), "60");
-            tokens.insert(tokens.begin(), "bi");
-            tokens.push_back("fg-local.xml");
-            return new FGHLA(tokens);
+            std::vector<std::string> HLA_tokens (tokens);
+            HLA_tokens.insert(HLA_tokens.begin(), "");
+            HLA_tokens.insert(HLA_tokens.begin(), "60");
+            HLA_tokens.insert(HLA_tokens.begin(), "bi");
+            HLA_tokens.push_back("fg-local.xml");
+            return new FGHLA(HLA_tokens);
         }
 #endif
         else {

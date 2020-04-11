@@ -171,7 +171,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
     double fov_deg = config->getDoubleValue("default-field-of-view-deg");
     double near_m = config->getDoubleValue("ground-level-nearplane-m");
 
-    View* v = 0;
+    View* v = nullptr;
     // supporting two types "lookat" = 1 and "lookfrom" = 0
     const char *type = config->getParent()->getStringValue("type");
     if (!strcmp(type, "lookat")) {

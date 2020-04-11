@@ -955,6 +955,17 @@ naRef FGNasalSys::cmdArgGhost()
     return propNodeGhost(_cmdArg);
 }
 
+void FGNasalSys::initLogLevelConstants()
+{
+    hashset(_globals, "LOG_BULK", naNum(SG_BULK));
+    hashset(_globals, "LOG_WARN", naNum(SG_WARN));
+    hashset(_globals, "LOG_DEBUG", naNum(SG_DEBUG));
+    hashset(_globals, "LOG_INFO", naNum(SG_INFO));
+    hashset(_globals, "LOG_ALERT", naNum(SG_ALERT));
+    hashset(_globals, "DEV_WARN", naNum(SG_DEV_WARN));
+    hashset(_globals, "DEV_ALERT", naNum(SG_DEV_ALERT));
+}
+
 void FGNasalSys::setCmdArg(SGPropertyNode* aNode)
 {
     _cmdArg = aNode;
@@ -983,6 +994,8 @@ void FGNasalSys::init()
     hashset(_globals, "thread", naInit_thread(_context));
     hashset(_globals, "utf8", naInit_utf8(_context));
 
+    initLogLevelConstants();
+    
     // Add our custom extension functions:
     for(i=0; funcs[i].name; i++)
         hashset(_globals, funcs[i].name,

@@ -35,7 +35,7 @@ if(RTI_FOUND)
     HLAWindowDrawable.cxx
     HLAWindowDrawableClass.cxx
   )
-  set(FGVIEWER_RTI_LIBRARIES ${RTI_LIBRARIES})
+  set(FGVIEWER_RTI_LIBRARIES ${RTI_LDFLAGS})
 else()
   set(FGVIEWER_RTI_LIBRARIES "")
   set(FGVIEWER_RTI_SOURCES "")
@@ -47,9 +47,9 @@ if(X11_FOUND)
 endif()
 
 target_link_libraries(fgviewer
-	SimGearScene SimGearCore
+        SimGearScene SimGearCore
   ${OPENGL_LIBRARIES}
-	${FGVIEWER_RTI_LIBRARIES}
+        ${FGVIEWER_RTI_LIBRARIES}
     ${GDAL_LIBRARY}
 )
 install(TARGETS fgviewer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -389,7 +389,27 @@ private:
       } else {
           SG_LOG(SG_AIRCRAFT, SG_DEV_ALERT, "Aircraft does not specify a minimum FG version: please add one at /sim/minimum-fg-version");
       }
-
+      
+      auto compatNodes = globals->get_props()->getNode("/sim")->getChildren("compatible-fg-version");
+      if (!compatNodes.empty()) {
+          bool showCompatWarning = true;
+          
+          // if we have at least one compatibility node, then it needs to match
+          for (const auto& cn : compatNodes) {
+              const auto v = cn->getStringValue();
+              if (simgear::strutils::compareVersionToWildcard(FLIGHTGEAR_VERSION, v)) {
+                  showCompatWarning = false;
+                  break;
+              }
+          }
+          
+          if (showCompatWarning) {
+              flightgear::modalMessageBox("Aircraft not compatible with this version",
+              "The selected aircraft has not been checked for compatability with this version of FlightGear (" FLIGHTGEAR_VERSION  "). "
+                                          "Some aircraft features might not work, or might be displayed incorrectly.");
+          }
+      }
+      
       return true;
   }
   
@@ -628,7 +648,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 #endif
 
     // Read global defaults from $FG_ROOT/defaults
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading global defaults");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Reading global defaults");
     SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
     if (!defaultsXML.exists()) {
         flightgear::fatalMessageBoxThenExit(

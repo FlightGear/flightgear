@@ -312,11 +312,15 @@ private:
     std::string _hidPath;
     hid_device* _device = nullptr;
     bool _haveNumberedReports = false;
+    bool _debugRaw = false;
     
     /// set if we parsed the device description our XML
     /// instead of from the USB data. Useful on Windows where the data
     /// is inaccessible, or devices with broken descriptors
     bool _haveLocalDescriptor = false;
+    
+    /// allow specifying the descriptor as hex bytes in XML
+    std::vector<uint8_t>_rawXMLDescriptor;
     
     // all sets which will be send on the next update() call.
     std::set<Report*> _dirtyReports;
@@ -384,6 +388,17 @@ void FGHIDDevice::Configure(SGPropertyNode_ptr node)
             defineReport(report);
         }
     }
+    
+    if (node->hasChild("hid-raw-descriptor")) {
+        _rawXMLDescriptor = simgear::strutils::decodeHex(node->getStringValue("hid-raw-descriptor"));
+        if (debugEvents) {
+            SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " will configure using XML-defined raw HID descriptor");
+        }
+    }
+    
+    if (node->getBoolValue("hid-debug-raw")) {
+        _debugRaw = true;
+    }
 }
 
 bool FGHIDDevice::Open()
@@ -395,6 +410,19 @@ bool FGHIDDevice::Open()
         return false;
     }
 
+#if !defined(SG_WINDOWS)
+    if (_rawXMLDescriptor.empty()) {
+        _rawXMLDescriptor.resize(2048);
+        int descriptorSize = hid_get_descriptor(_device, _rawXMLDescriptor.data(), _rawXMLDescriptor.size());
+        if (descriptorSize <= 0) {
+           SG_LOG(SG_INPUT, SG_WARN, "HID: " << GetUniqueName() << " failed to read HID descriptor");
+           return false;
+        }
+        
+        _rawXMLDescriptor.resize(descriptorSize);
+    }
+#endif
+    
     if (!_haveLocalDescriptor) {
         bool ok = parseUSBHIDDescriptor();
         if (!ok)
@@ -422,26 +450,22 @@ bool FGHIDDevice::Open()
 bool FGHIDDevice::parseUSBHIDDescriptor()
 {
 #if defined(SG_WINDOWS)
-    SG_LOG(SG_INPUT, SG_ALERT, GetUniqueName() << ": on Windows, there is no way to extract the UDB-HID report descriptor. "
-           << "\nPlease supply the report descriptor in the device XML configuration.");
-    return false;
-#endif
-    
-    unsigned char reportDescriptor[1024];
-    int descriptorSize = hid_get_descriptor(_device, reportDescriptor, 1024);
-    if (descriptorSize <= 0) {
-        SG_LOG(SG_INPUT, SG_WARN, "HID: " << GetUniqueName() << " failed to read HID descriptor");
+    if (_rawXMLDescriptor.empty()) {
+        SG_LOG(SG_INPUT, SG_ALERT, GetUniqueName() << ": on Windows, there is no way to extract the UDB-HID report descriptor. "
+               << "\nPlease supply the report descriptor in the device XML configuration.");
+        SG_LOG(SG_INPUT, SG_ALERT, "See this page:<> for information on extracting the report descriptor on Windows");
         return false;
     }
+#endif
     
-    if (debugEvents) {
+    if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, "\nHID: descriptor for:" << GetUniqueName());
         {
             std::ostringstream byteString;
             
-            for (int i=0; i<descriptorSize; ++i) {
-                byteString << hexTable[reportDescriptor[i] >> 4];
-                byteString << hexTable[reportDescriptor[i] & 0x0f];
+            for (auto i=0; i<_rawXMLDescriptor.size(); ++i) {
+                byteString << hexTable[_rawXMLDescriptor[i] >> 4];
+                byteString << hexTable[_rawXMLDescriptor[i] & 0x0f];
                 byteString << " ";
             }
             SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
@@ -449,7 +473,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
     }
     
     hid_item* rootItem = nullptr;
-    hid_parse_reportdesc(reportDescriptor, descriptorSize, &rootItem);
+    hid_parse_reportdesc(_rawXMLDescriptor.data(), _rawXMLDescriptor.size(), &rootItem);
     if (debugEvents) {
         SG_LOG(SG_INPUT, SG_INFO, "\nHID: scan for:" << GetUniqueName());
     }
@@ -645,6 +669,18 @@ void FGHIDDevice::sendReport(Report* report) const
     }
 
     reportLength /= 8;
+    
+    if (_debugRaw) {
+        std::ostringstream byteString;
+        for (size_t i=0; i<reportLength; ++i) {
+            byteString << hexTable[reportBytes[i] >> 4];
+            byteString << hexTable[reportBytes[i] & 0x0f];
+            byteString << " ";
+        }
+        SG_LOG(SG_INPUT, SG_INFO, "sending bytes: " << byteString.str());
+    }
+    
+
 // send the data, based on the report type
     if (report->type == HID::ReportType::Feature) {
         hid_send_feature_report(_device, reportBytes, reportLength + 1);
@@ -663,7 +699,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
                                      size_t length,
                                      double dt, int keyModifiers)
 {
-    if (debugEvents) {
+    if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, GetName() << " FGHIDDeivce received input report:" << (int) report->number << ", len=" << length);
         {
             std::ostringstream byteString;
@@ -698,7 +734,7 @@ void FGHIDDevice::processInputReport(Report* report, unsigned char* data,
         if (!item->event)
             continue;
 
-        if (debugEvents) {
+        if (_debugRaw) {
             SG_LOG(SG_INPUT, SG_INFO, "\titem:" << item->name << " = " << value);
         }
 
@@ -713,7 +749,7 @@ void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& da
         return;
     }
     
-    if (debugEvents) {
+    if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, GetName() << ": FGHIDDevice: Sending feature report:" << (int) reportId << ", len=" << data.size());
         {
             std::ostringstream byteString;

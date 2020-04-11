@@ -39,9 +39,6 @@
 
 static quint32 CACHE_VERSION = 12;
 
-const int STANDARD_THUMBNAIL_HEIGHT = 128;
-//const int STANDARD_THUMBNAIL_WIDTH = 172;
-
 AircraftItem::AircraftItem()
 {
 }

@@ -90,8 +90,9 @@ Item {
 
         var defaultValue = ("defaultValue" in root) ? root.defaultValue : undefined;
         var rawValue = _config.getValueForKey("", root.setting, defaultValue);
-      // console.warn("restoring state for " + root.setting + ", got raw value " + rawValue + " with type " + typeof(rawValue))
-        if (rawValue !== undefined) {
+
+        // console.warn("restoring state for " + root.setting + ", got raw value " + rawValue + " with type " + typeof(rawValue))
+        if (rawValue !== defaultValue) {
             setValue(rawValue);
         }
     }
@@ -99,6 +100,6 @@ Item {
     function setValue(newValue)
     {
         // hook method so controls can override
-        this.value = newValue
+        root.value = newValue
     }
 }

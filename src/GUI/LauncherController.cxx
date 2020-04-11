@@ -45,6 +45,7 @@
 #include "QmlPositioned.hxx"
 #include "PixmapImageItem.hxx"
 #include "AirportDiagram.hxx"
+#include "CarrierDiagram.hxx"
 #include "NavaidDiagram.hxx"
 #include "RouteDiagram.hxx"
 #include "QmlRadioButtonHelper.hxx"
@@ -168,6 +169,7 @@ void LauncherController::initQML()
 
     qmlRegisterType<PixmapImageItem>("FlightGear", 1, 0, "PixmapImage");
     qmlRegisterType<AirportDiagram>("FlightGear", 1, 0, "AirportDiagram");
+    qmlRegisterType<CarrierDiagram>("FlightGear", 1, 0, "CarrierDiagram");
     qmlRegisterType<NavaidDiagram>("FlightGear", 1, 0, "NavaidDiagram");
     qmlRegisterType<RouteDiagram>("FlightGear", 1, 0, "RouteDiagram");
     qmlRegisterType<QmlRadioButtonGroup>("FlightGear", 1, 0, "RadioButtonGroup");
@@ -389,6 +391,10 @@ QString LauncherController::selectAircraftStateAutomatically()
         }
     }
 
+    if (m_location->isCarrier() && m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("carrier-approach")) {
+        return "carrier-approach";
+    }
+
     if (m_location->isAirborneLocation() && m_selectedAircraftInfo->hasState("approach")) {
         return "approach";
     }
@@ -400,10 +406,14 @@ QString LauncherController::selectAircraftStateAutomatically()
         if (m_selectedAircraftInfo->hasState("parking")) {
             return "parking";
         }
-    } else {
-        // also try 'engines-running'?
-        if (m_selectedAircraftInfo->hasState("take-off"))
-            return "take-off";
+    }
+
+    if (m_location->isCarrier() && m_selectedAircraftInfo->hasState("carrier-take-off")) {
+        return "carrier-take-off";
+    }
+
+    if (m_selectedAircraftInfo->hasState("take-off")) {
+        return "take-off";
     }
 
     return {}; // failed to compute, give up
