@@ -28,8 +28,7 @@ class PropertySetter;
 
 typedef vector<PropertySetter*> PropertySetterVector;
 
-class FGPanelProtocol : public SGSubsystem
-{
+class FGPanelProtocol : public SGSubsystem {
 public:
     FGPanelProtocol (SGPropertyNode_ptr a_Root);
     virtual ~FGPanelProtocol ();

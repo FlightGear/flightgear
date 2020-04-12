@@ -21,7 +21,7 @@ target_link_libraries(fgai
   SimGearCore SimGearScene
   ${OPENSCENEGRAPH_LIBRARIES}
   ${OPENGL_LIBRARIES}
-  ${RTI_LIBRARIES}
+  ${RTI_LDFLAGS}
 )
 
 install(TARGETS fgai RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

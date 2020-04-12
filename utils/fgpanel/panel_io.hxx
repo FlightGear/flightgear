@@ -31,8 +31,7 @@
 
 #include "FGPanel.hxx"
 
-class FGReadablePanel : public FGPanel
-{
+class FGReadablePanel : public FGPanel {
 public:
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "readable-panel"; }

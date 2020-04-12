@@ -155,59 +155,71 @@ Rectangle {
                     visible: aircraft.previews.length > 0
                 }
 
-                Grid {
-                    id: ratingGrid
-                    anchors.left: parent.left
+                Row {
+                    height: ratingGrid.height
+                    width: parent.width
+                    spacing: Style.strutSize
 
-                    visible: aircraft.ratings !== undefined
-
-                    rows: 2
-                    columns: 3
-                    rowSpacing: Style.margin
-                    columnSpacing: Style.margin
-
-                    StyledText {
-                        id: ratingsLabel
-                        text: qsTr("Ratings:")
-                    }
-
-
-                    AircraftRating {
-                        title: qsTr("Flight model")
-                        Binding on value {
-                            when: aircraft.ratings !== undefined
-                            value: aircraft.ratings[0]
+                    FavouriteToggleButton {
+                        checked: aircraft.favourite
+                        onToggle: {
+                            aircraft.favourite = on;
                         }
                     }
 
-                    AircraftRating {
-                        title: qsTr("Systems")
-                        Binding on value {
-                            when: aircraft.ratings !== undefined
-                            value: aircraft.ratings[1]
-                        }
-                    }
+                    Grid {
+                        id: ratingGrid
 
-                    Item {
-                        width: ratingsLabel.width
-                        height: 1
-                    } // placeholder
+                        visible: aircraft.ratings !== undefined
 
-                    AircraftRating {
-                        title: qsTr("Cockpit")
-                        Binding on value {
-                            when: aircraft.ratings !== undefined
-                            value: aircraft.ratings[2]
-                        }
-                    }
+                        rows: 2
+                        columns: 3
+                        rowSpacing: Style.margin
+                        columnSpacing: Style.margin
 
-                    AircraftRating {
-                        title: qsTr("Exterior")
-                        Binding on value {
-                            when: aircraft.ratings !== undefined
-                            value: aircraft.ratings[3]
+                        StyledText {
+                            id: ratingsLabel
+                            text: qsTr("Ratings:")
                         }
-                    }
+
+
+                        AircraftRating {
+                            title: qsTr("Flight model")
+                            Binding on value {
+                                when: aircraft.ratings !== undefined
+                                value: aircraft.ratings[0]
+                            }
+                        }
+
+                        AircraftRating {
+                            title: qsTr("Systems")
+                            Binding on value {
+                                when: aircraft.ratings !== undefined
+                                value: aircraft.ratings[1]
+                            }
+                        }
+
+                        Item {
+                            width: ratingsLabel.width
+                            height: 1
+                        } // placeholder
+
+                        AircraftRating {
+                            title: qsTr("Cockpit")
+                            Binding on value {
+                                when: aircraft.ratings !== undefined
+                                value: aircraft.ratings[2]
+                            }
+                        }
+
+                        AircraftRating {
+                            title: qsTr("Exterior")
+                            Binding on value {
+                                when: aircraft.ratings !== undefined
+                                value: aircraft.ratings[3]
+                            }
+                        }
+                    } // of rating grid
                 }
 
                 StyledText {

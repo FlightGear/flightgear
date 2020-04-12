@@ -38,6 +38,7 @@
 #include <Include/version.h>
 
 #include "QmlAircraftInfo.hxx"
+#include "FavouriteAircraftData.hxx"
 
 using namespace simgear::pkg;
 
@@ -125,7 +126,7 @@ private:
             return QModelIndex();
         }
 
-        int offset = std::distance(m_model->m_packages.begin(), it);
+        const int offset = static_cast<int>(std::distance(m_model->m_packages.begin(), it));
         return m_model->index(offset + m_model->m_cachedLocalAircraftCount);
     }
 
@@ -138,6 +139,8 @@ void PackageDelegate::catalogRefreshed(CatalogRef aCatalog, StatusCode aReason)
         // nothing to do
     } else if ((aReason == STATUS_REFRESHED) || (aReason == STATUS_SUCCESS)) {
         m_model->refreshPackages();
+    } else if (aReason ==  FAIL_VERSION) {
+        // silent about this
     } else {
         qWarning() << "failed refresh of"
             << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
@@ -158,8 +161,6 @@ AircraftItemModel::AircraftItemModel(QObject* pr) :
             this, &AircraftItemModel::onScanAddedItems);
     connect(cache, &LocalAircraftCache::cleared,
             this, &AircraftItemModel::onLocalCacheCleared);
-
-    loadFavourites();
 }
 
 AircraftItemModel::~AircraftItemModel()
@@ -244,7 +245,7 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
     if (role == AircraftIsFavouriteRole) {
         // recursive call here, hope that's okay
         const auto uri = data(index, AircraftURIRole).toUrl();
-        return m_favourites.contains(uri);
+        return FavouriteAircraftData::instance()->isFavourite(uri);
     }
 
     if (row >= m_cachedLocalAircraftCount) {
@@ -338,7 +339,7 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
 QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const DelegateState& state, int role) const
 {
     if (role >= AircraftVariantDescriptionRole) {
-        int variantIndex = role - AircraftVariantDescriptionRole;
+        const unsigned int variantIndex = static_cast<unsigned int>(role - AircraftVariantDescriptionRole);
         QString desc = QString::fromStdString(item->nameForVariant(variantIndex));
         if (desc.isEmpty()) {
             desc = tr("Missing description for: %1").arg(QString::fromStdString(item->id()));
@@ -431,17 +432,11 @@ bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value,
           emit dataChanged(index, index);
           return true;
       } else if (role == AircraftIsFavouriteRole) {
-          bool f = value.toBool();
           const auto uri = data(index, AircraftURIRole).toUrl();
-          const auto cur = m_favourites.contains(uri);
-          if (f && !cur) {
-              m_favourites.append(uri);
-          } else if (!f && cur) {
-              m_favourites.removeOne(uri);
+          bool changed = FavouriteAircraftData::instance()->setFavourite(uri, value.toBool());
+          if (changed) {
+              emit dataChanged(index, index);
           }
-
-          saveFavourites();
-          emit dataChanged(index, index);
       }
 
       return false;
@@ -493,9 +488,10 @@ QModelIndex AircraftItemModel::indexOfAircraftURI(QUrl uri) const
 
         PackageRef pkg = m_packageRoot->getPackageById(ident.toStdString());
         if (pkg) {
-            for (size_t i=0; i < m_packages.size(); ++i) {
-                if (m_packages[i] == pkg) {
-                    return index(rowOffset + i);
+            const auto numPackages = m_packages.size();
+            for (unsigned int i=0; i < numPackages; ++i) {
+                if (m_packages.at(i) == pkg) {
+                    return index(static_cast<int>(rowOffset + i));
                 }
             } // of linear package scan
         }
@@ -542,7 +538,7 @@ void AircraftItemModel::selectVariantForAircraftURI(QUrl uri)
         if (pkg) {
             for (size_t i=0; i < m_packages.size(); ++i) {
                 if (m_packages[i] == pkg) {
-                    modelIndex =  index(rowOffset + static_cast<int>(i));
+                    modelIndex = index(rowOffset + static_cast<int>(i));
                     variantIndex = pkg->indexOfVariant(ident.toStdString());
                     break;
                 }
@@ -663,21 +659,3 @@ bool AircraftItemModel::isIndexRunnable(const QModelIndex& index) const
     return !ex->isDownloading();
 }
 
-void AircraftItemModel::loadFavourites()
-{
-    m_favourites.clear();
-    QSettings settings;
-    Q_FOREACH(auto v, settings.value("favourite-aircraft").toList()) {
-        m_favourites.append(v.toUrl());
-    }
-}
-
-void AircraftItemModel::saveFavourites()
-{
-    QVariantList favs;
-    Q_FOREACH(auto u, m_favourites) {
-        favs.append(u);
-    }
-    QSettings settings;
-    settings.setValue("favourite-aircraft", favs);
-}

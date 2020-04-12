@@ -48,6 +48,9 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
     set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib  )
     set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
 
+    # ensure 3rdparty/lib/cmake is searched
+    list(APPEND CMAKE_PREFIX_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR})
+
     if(NOT BOOST_INCLUDEDIR)
         # if this variable was not set by the user, set it to 3rdparty root's
         # parent dir, which is the normal location for people using our

@@ -35,26 +35,32 @@ GLint FGTextLayer::Text_Layer_Color_Loc (0);
 bool
 FGTextLayer::Init () {
   const char V_Text_Layer_Shader_Str[] =
-#ifdef _GLES2
+#ifdef _RPI
+    "#version 100                               \n"
     "attribute vec4 a_position;                 \n"
     "attribute vec2 a_tex_coord;                \n"
+    "varying vec2 v_tex_coord;                  \n"
 #else
-    "#version 330                               \n"
+    "#version 130                               \n"
     "in vec4 a_position;                        \n"
     "in vec2 a_tex_coord;                       \n"
+    "out vec2 v_tex_coord;                      \n"
 #endif
     "uniform mat4 u_mvp_matrix;                 \n"
-    "varying vec2 v_tex_coord;                  \n"
     "void main () {                             \n"
     "  gl_Position = u_mvp_matrix * a_position; \n"
     "  v_tex_coord = a_tex_coord;               \n"
     "}                                          \n";
 
   const char F_Text_Layer_Shader_Str[] =
-#ifdef _GLES2
+#ifdef _RPI
+    "#version 100                                                   \n"
     "precision mediump float;                                       \n"
-#endif
     "varying vec2 v_tex_coord;                                      \n"
+#else
+    "#version 130                                                   \n"
+    "in vec2 v_tex_coord;                                           \n"
+#endif
     "uniform sampler2D u_texture;                                   \n"
     "uniform vec4 u_color;                                          \n"
     "void main () {                                                 \n"

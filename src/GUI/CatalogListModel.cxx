@@ -111,7 +111,7 @@ QVariant CatalogListModel::data(const QModelIndex& index, int role) const
                 desc = tr("The catalog data was not found on the server at the expected location (URL)");
                 break;
             case Delegate::FAIL_VERSION:
-                desc =  tr("The catalog is not comaptible with the version of FlightGear");
+                desc =  tr("The catalog is not compatible with the version of FlightGear");
                 break;
             case Delegate::FAIL_HTTP_FORBIDDEN:
                 desc = tr("The catalog server is blocking access from some reason (forbidden)");

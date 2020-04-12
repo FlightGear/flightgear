@@ -2449,9 +2449,9 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
     }
   }
   
-  /* Copy values from our local <set>/sim/view[]/config/* into global
-  /ai/models/multiplayer/set/sim/view[]/config/ so that we have view offsets
-  available for this multiplayer aircraft. */
+  // Copy values from our local <set>/sim/view[]/config/* into global
+  // /ai/models/multiplayer/set/sim/view[]/config/ so that we have view offsets
+  // available for this multiplayer aircraft.
   SGPropertyNode* global_set = mp->_getProps()->addChild("set");
   SGPropertyNode* global_sim = global_set->addChild("sim");
   double  sim_chase_distance_m = -25;

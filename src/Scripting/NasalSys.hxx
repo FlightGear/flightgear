@@ -162,6 +162,18 @@ public:
     { return _log.get(); }
 
 private:
+    void initLogLevelConstants();
+    
+    void loadPropertyScripts();
+    void loadPropertyScripts(SGPropertyNode* n);
+    void loadScriptDirectory(simgear::Dir nasalDir);
+    void addModule(std::string moduleName, simgear::PathList scripts);
+    static void logError(naContext);
+    naRef parse(naContext ctx, const char* filename, const char* buf, int len,
+               std::string& errors);
+    naRef genPropsModule();
+
+private:
     //friend class FGNasalScript;
     friend class FGNasalListener;
     friend class FGNasalModuleListener;
@@ -179,15 +191,6 @@ private:
     std::vector<FGNasalModuleListener*> _moduleListeners;
 
     static int _listenerId;
-
-    void loadPropertyScripts();
-    void loadPropertyScripts(SGPropertyNode* n);
-    void loadScriptDirectory(simgear::Dir nasalDir);
-    void addModule(std::string moduleName, simgear::PathList scripts);
-    static void logError(naContext);
-    naRef parse(naContext ctx, const char* filename, const char* buf, int len,
-                std::string& errors);
-    naRef genPropsModule();
 
     bool _inited;
     naContext _context;

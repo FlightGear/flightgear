@@ -12,7 +12,7 @@ CarriersLocationModel::CarriersLocationModel(QObject *parent)
     SGPropertyNode_ptr localRoot(new SGPropertyNode);
     FGAIManager::registerScenarios(localRoot);
 
-// this code encodes some scenario structre, sorry
+// this code encodes some scenario structure, sorry
     for (auto s : localRoot->getNode("sim/ai/scenarios")->getChildren("scenario")) {
         const std::string scenarioId = s->getStringValue("id");
         for (auto c : s->getChildren("carrier")) {
@@ -26,6 +26,7 @@ void CarriersLocationModel::processCarrier(const string &scenario, SGPropertyNod
     const auto name = QString::fromStdString(carrierNode->getStringValue("name"));
     const auto pennant = QString::fromStdString(carrierNode->getStringValue("pennant-number"));
     const auto tacan = QString::fromStdString(carrierNode->getStringValue("TACAN-channel-ID"));
+    const auto desc = QString::fromStdString(carrierNode->getStringValue("description"));
     SGGeod geod = SGGeod::fromDeg(carrierNode->getDoubleValue("longitude"),
                                   carrierNode->getDoubleValue("latitude"));
 
@@ -38,6 +39,7 @@ void CarriersLocationModel::processCarrier(const string &scenario, SGPropertyNod
                             QString::fromStdString(scenario),
                             pennant,
                             name,
+                            desc,
                             geod,
                             tacan,
                             parkings
@@ -65,6 +67,8 @@ QVariant CarriersLocationModel::data(const QModelIndex &index, int role) const
     case NameRole:          return c.mName;
    // case GeodRole:          return QVariant::fromValue(c.mInitialLocation);
     case IdentRole:         return c.mCallsign;
+    case DescriptionRole:   return c.mDescription;
+    case TypeRole:          return "Carrier";
     case IconRole:          return QPixmap(":/svg/aircraft-carrier");
     default:
         break;
@@ -83,6 +87,7 @@ QHash<int, QByteArray> CarriersLocationModel::roleNames() const
     result[NameRole] = "name";
     result[IconRole] = "icon";
     result[TypeRole] = "type";
+    result[DescriptionRole] = "description";
     result[NavFrequencyRole] = "frequency";
     return result;
 }

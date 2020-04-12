@@ -561,7 +561,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
 
   SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
 
-  if( updown != MOUSE_BUTTON_DOWN )
+  if( updown == MOUSE_BUTTON_UP )
   {
     // Execute the mouse up event in any case, may be we should
     // stop processing here?
@@ -572,7 +572,7 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     {
       SGPickCallbackPtr& cb = callbacks.front();
       const SGSceneryPick* pick = getPick(pickList, cb);
-      cb->buttonReleased(ea->getModKeyMask(), *ea, pick ? &pick->info : 0);
+      cb->buttonReleased(ea->getModKeyMask(), *ea, pick ? &pick->info : nullptr);
 
       callbacks.pop_front();
     }

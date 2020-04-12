@@ -176,12 +176,12 @@ void FGAxisEvent::fire( FGEventData & eventData )
   // We need a copy of the  FGEventData struct to set the new value and to avoid side effects
   FGEventData ed = eventData;
 
-  if( fabs(ed.value) < deadband )
-    ed.value = 0.0;
-
   if( minRange != maxRange )
     ed.value = 2.0*(eventData.value-minRange)/(maxRange-minRange)-1.0;
 
+  if( fabs(ed.value) < deadband )
+    ed.value = 0.0;
+    
   if (interpolater) {
     if ((ed.value < 0.0) && mirrorInterpolater) {
       // mirror the positive interpolation for negative values

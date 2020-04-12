@@ -14,6 +14,7 @@
 #include <Main/globals.hxx>
 
 #include "LocalAircraftCache.hxx"
+#include "FavouriteAircraftData.hxx"
 
 using namespace simgear::pkg;
 
@@ -36,6 +37,8 @@ public:
     }
 
 protected:
+    void finishInstall(InstallRef aInstall, StatusCode aReason) override;
+
     void catalogRefreshed(CatalogRef, StatusCode) override
     {
     }
@@ -55,19 +58,9 @@ protected:
         }
     }
 
-    void finishInstall(InstallRef aInstall, StatusCode aReason) override
-    {
-        Q_UNUSED(aReason);
-        if (aInstall->package() == p->packageRef()) {
-            p->_cachedProps.reset();
-            p->checkForStates();
-            p->infoChanged();
-        }
-    }
-
     void installStatusChanged(InstallRef aInstall, StatusCode aReason) override
     {
-        Q_UNUSED(aReason);
+        Q_UNUSED(aReason)
         if (aInstall->package() == p->packageRef()) {
             p->downloadChanged();
         }
@@ -84,6 +77,16 @@ private:
 
     QmlAircraftInfo* p;
 };
+
+void QmlAircraftInfo::Delegate::finishInstall(InstallRef aInstall, StatusCode aReason)
+{
+    Q_UNUSED(aReason)
+    if (aInstall->package() == p->packageRef()) {
+        p->_cachedProps.reset();
+        p->checkForStates();
+        p->infoChanged();
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +112,7 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
         // malformed include or XML, just bail
         return {};
     }
-    
+
     if (!root->getNode("sim/state")) {
         return {};
     }
@@ -141,7 +144,7 @@ QString humanNameFromStateTag(const std::string& tag)
 {
     if (tag == "approach") return QObject::tr("On approach");
     if ((tag == "take-off") || (tag == "takeoff"))
-        return QObject::tr("Ready for Take-off");
+        return QObject::tr("Ready for take-off");
     if ((tag == "parked") || (tag == "parking") || (tag == "cold-and-dark"))
         return QObject::tr("Parked, cold & dark");
     if (tag == "auto")
@@ -150,6 +153,10 @@ QString humanNameFromStateTag(const std::string& tag)
         return QObject::tr("Cruise");
     if (tag == "taxi")
         return QObject::tr("Ready to taxi");
+    if (tag == "carrier-approach")
+        return QObject::tr("On approach to a carrier");
+    if (tag == "carrier-take-off")
+        return QObject::tr("Ready for catapult launch");
 
     qWarning() << Q_FUNC_INFO << "add translation / string for" << QString::fromStdString(tag);
     // no mapping, let's use the tag directly
@@ -299,6 +306,8 @@ QmlAircraftInfo::QmlAircraftInfo(QObject *parent)
     , _delegate(new Delegate(this))
 {
     qmlRegisterUncreatableType<StatesModel>("FlightGear.Launcher", 1, 0, "StatesModel", "no");
+    connect(FavouriteAircraftData::instance(), &FavouriteAircraftData::changed,
+            this, &QmlAircraftInfo::onFavouriteChanged);
 }
 
 QmlAircraftInfo::~QmlAircraftInfo()
@@ -441,7 +450,7 @@ QVariantList QmlAircraftInfo::previews() const
             for (auto p : previews) {
                 SGPath localPreviewPath = ex->path() / p.path;
                 if (!localPreviewPath.exists()) {
-                    qWarning() << "missing local preview" << QString::fromStdString(localPreviewPath.utf8Str());
+                    // this happens when the aircraft is being installed, for example
                     continue;
                 }
                 result.append(QUrl::fromLocalFile(QString::fromStdString(localPreviewPath.utf8Str())));
@@ -667,6 +676,7 @@ void QmlAircraftInfo::setUri(QUrl u)
     emit uriChanged();
     emit infoChanged();
     emit downloadChanged();
+    emit favouriteChanged();
 }
 
 void QmlAircraftInfo::setVariant(quint32 variant)
@@ -689,6 +699,19 @@ void QmlAircraftInfo::setVariant(quint32 variant)
 
     emit infoChanged();
     emit variantChanged(_variant);
+}
+
+void QmlAircraftInfo::setFavourite(bool favourite)
+{
+    FavouriteAircraftData::instance()->setFavourite(uri(), favourite);
+}
+
+void QmlAircraftInfo::onFavouriteChanged(QUrl u)
+{
+    if (u != uri())
+        return;
+
+    emit favouriteChanged();
 }
 
 QVariant QmlAircraftInfo::packageAircraftStatus(simgear::pkg::PackageRef p)
@@ -876,5 +899,9 @@ bool QmlAircraftInfo::hasTag(QString tag) const
     return false;
 }
 
-#include "QmlAircraftInfo.moc"
+bool QmlAircraftInfo::favourite() const
+{
+    return FavouriteAircraftData::instance()->isFavourite(uri());
+}
 
+#include "QmlAircraftInfo.moc"

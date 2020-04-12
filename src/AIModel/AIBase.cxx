@@ -20,15 +20,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <string.h>
 
 #include <simgear/compiler.h>
 
-#include <boost/foreach.hpp>
 #include <string>
 
 #include <osg/ref_ptr>
@@ -67,11 +64,9 @@ public:
     }
 
 
-    ~FGAIModelData()
-    {
-    }
+    ~FGAIModelData() = default;
 
-    virtual FGAIModelData* clone() const { return new FGAIModelData(); }
+    FGAIModelData* clone() const override { return new FGAIModelData(); }
 
     /** osg callback, thread-safe */
     void modelLoaded(const std::string& path, SGPropertyNode *prop, osg::Node *n)

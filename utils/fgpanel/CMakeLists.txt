@@ -1,13 +1,26 @@
-find_package(PNG)
-find_package(OpenGL)
-find_package(GLEW)
-find_package(Freetype)
+find_package(PNG QUIET)
+find_package(OpenGL QUIET)
+find_package(Freetype QUIET)
 
-if ((NOT PNG_FOUND) OR (NOT OPENGL_FOUND) OR (NOT GLEW_FOUND) OR (NOT FREETYPE_FOUND))
+find_package(GLUT QUIET)
+find_package(GLEW QUIET)
+
+if(NOT ${GLUT_FOUND})
+  message(WARNING "GLUT NOT found, can't build FGPanel")
+  set(WITH_FGPANEL 0)
+  return()
+endif()
+
+if(NOT ${GLEW_FOUND})
+  message(WARNING "GLEW NOT found, can't build FGPanel")
+  set(WITH_FGPANEL 0)
+  return()
+endif()
+
+if((NOT PNG_FOUND) OR (NOT OPENGL_FOUND) OR (NOT FREETYPE_FOUND))
   message(WARNING "FGPanel enabled, but some dependencies are missing")
   message(STATUS "libPNG: ${PNG_FOUND}")
   message(STATUS "OpenGL: ${OPENGL_FOUND}")
-  message(STATUS "GLEW: ${GLEW_FOUND}")
   message(STATUS "Freetype: ${FREETYPE_FOUND}")
   return()
 endif()
@@ -18,21 +31,7 @@ find_path(BCMHOST_INCLUDE_DIR
   NO_DEFAULT_PATH
   )
 
-include_directories(
-  ${FREETYPE_INCLUDE_DIRS}
-  ${PNG_INCLUDE_DIR}
-  )
-
-if(${BCMHOST_INCLUDE_DIR} STREQUAL "BCMHOST_INCLUDE_DIR-NOTFOUND")
-else()
-  # CMAKE > 3.1 : target_sources(fgpanel
-  set(TARGET_SOURCES
-    GLES_utils.cxx
-    GLES_utils.hxx
-    )
-endif()
-
-add_executable(fgpanel
+set(TARGET_SOURCES
   main.cxx
   ApplicationProperties.hxx
   ApplicationProperties.cxx
@@ -74,45 +73,71 @@ add_executable(fgpanel
   panel_io.hxx
   GL_utils.cxx
   GL_utils.hxx
-  ${TARGET_SOURCES}
   )
+
+add_executable(fgpanel ${TARGET_SOURCES})
 
 target_link_libraries(fgpanel
   SimGearCore
   ${PNG_LIBRARIES}
   ${FREETYPE_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+    ${GLUT_LIBRARIES}
+    ${GLEW_LIBRARIES}
   )
 
-if(${BCMHOST_INCLUDE_DIR} STREQUAL "BCMHOST_INCLUDE_DIR-NOTFOUND")
-  find_package(GLUT REQUIRED)
-  if(GLUT_FOUND)
-    message(STATUS "found GLUT inc ${GLUT_INCLUDE_DIR}, lib ${GLUT_LIBRARIES} ")
-    if (MSVC)
-        add_definitions( -DFREEGLUT_LIB_PRAGMAS=0 )
-    endif ()
+target_include_directories(fgpanel PUBLIC
+  ${FREETYPE_INCLUDE_DIRS}
+  ${PNG_INCLUDE_DIR}
+  ${GLEW_INCLUDE_DIRS}
+  )
 
-    target_link_libraries(fgpanel
-      ${OPENGL_LIBRARIES}
-      ${GLUT_LIBRARIES}
-      GLEW::GLEW
+  if(MSVC)
+    target_compile_definitions(fgpanel PUBLIC
+      -DFREEGLUT_LIB_PRAGMAS=0
       )
-  else(GLUT_FOUND)
-    message(STATUS "glut NOT found, can't build fgpanel")
-  endif(GLUT_FOUND)
-else()
+  endif(MSVC)
+
+if(BCMHOST_INCLUDE_DIR)
   message(STATUS "found Raspberry Pi")
 
-  target_link_libraries(fgpanel
-    -lGLESv2 -lEGL -lm -lbcm_host -L/opt/vc/lib
+  add_executable(fgpanel-egl ${TARGET_SOURCES}
+    GLES_utils.cxx
+    GLES_utils.hxx
     )
-
-  include_directories(
+  target_include_directories(fgpanel-egl PUBLIC
+    ${FREETYPE_INCLUDE_DIRS}
+    ${PNG_INCLUDE_DIR}
     ${BCMHOST_INCLUDE_DIR}
     ${BCMHOST_INCLUDE_DIR}/interface/vcos/pthreads
     ${BCMHOST_INCLUDE_DIR}/interface/vmcs_host/linux
     )
 
-  add_definitions(-D_GLES2 -D_RPI)
-endif()
+  target_link_libraries(fgpanel-egl
+    SimGearCore
+    ${PNG_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    -lbrcmGLESv2 -lbrcmEGL -lm -lbcm_host -L/opt/vc/lib
+    )
 
-install(TARGETS fgpanel RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  target_compile_definitions(fgpanel-egl PUBLIC
+    -D_GLES2 -D_RPI
+    )
+  target_compile_definitions(fgpanel PUBLIC
+    -D_RPI
+    )
+  message(STATUS "FGPanel (Raspberry Pi) : ENABLED")
+  install(TARGETS fgpanel-egl RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+else(BCMHOST_INCLUDE_DIR)
+  message(STATUS "FGPanel (Raspberry Pi) : DISABLED")
+endif(BCMHOST_INCLUDE_DIR)
+
+
+
+
+if(WITH_FGPANEL)
+  message(STATUS "FGPanel : ENABLED")
+  install(TARGETS fgpanel RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+else(WITH_FGPANEL)
+  message(WARNING "FGPanel : DISABLED")
+endif(WITH_FGPANEL)

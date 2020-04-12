@@ -70,3 +70,5 @@
 #cmakedefine ENABLE_COMPOSITOR
 
 #cmakedefine ENABLE_SWIFT
+
+#cmakedefine HAVE_SENTRY

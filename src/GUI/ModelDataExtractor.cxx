@@ -43,7 +43,10 @@ QVariant ModelDataExtractor::data() const
         return m_rawModel.property(uIndex).toVariant();
     }
 
-    qWarning() << "Unable to convert model data:" << m_rawModel.toString();
+    if (!m_rawModel.isUndefined() && !m_rawModel.isNull()) {
+        qWarning() << "Unable to convert model data:" << m_rawModel.toString();
+    }
+
     return {};
 }
 
