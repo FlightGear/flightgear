@@ -160,7 +160,7 @@ namespace HID
                 case AD_AlphanumericDisplay:       return "alphanumeric";
                 case AD_CharacterReport:           return "character-report";
                 case AD_DisplayData:               return "display-data";
-                case AD_DisplayBrightness:         return "display-brightness"; 
+                case AD_DisplayBrightness:         return "display-brightness";
                 case AD_7SegmentDirectMap:          return "seven-segment-direct";
                 case AD_14SegmentDirectMap:         return "fourteen-segment-direct";
 
@@ -244,7 +244,7 @@ public:
     bool Open() override;
     void Close() override;
     void Configure(SGPropertyNode_ptr node) override;
-    
+
     void update(double dt) override;
     const char *TranslateEventName(FGEventData &eventData) override;
     void Send( const char * eventName, double value ) override;
@@ -307,21 +307,21 @@ private:
     int maybeSignExtend(Item* item, int inValue);
 
     void defineReport(SGPropertyNode_ptr reportNode);
-    
+
     std::vector<Report*> _reports;
     std::string _hidPath;
     hid_device* _device = nullptr;
     bool _haveNumberedReports = false;
     bool _debugRaw = false;
-    
+
     /// set if we parsed the device description our XML
     /// instead of from the USB data. Useful on Windows where the data
     /// is inaccessible, or devices with broken descriptors
     bool _haveLocalDescriptor = false;
-    
+
     /// allow specifying the descriptor as hex bytes in XML
     std::vector<uint8_t>_rawXMLDescriptor;
-    
+
     // all sets which will be send on the next update() call.
     std::set<Report*> _dirtyReports;
 };
@@ -347,7 +347,7 @@ FGHIDDevice::FGHIDDevice(hid_device_info *devInfo, FGHIDEventInput *)
     std::wstring manufacturerName, productName;
     productName = devInfo->product_string ? std::wstring(devInfo->product_string)
                                           : L"unknown HID device";
-    
+
     if (devInfo->manufacturer_string) {
         manufacturerName = std::wstring(devInfo->manufacturer_string);
         SetName(simgear::strutils::convertWStringToUtf8(manufacturerName) + " " +
@@ -377,25 +377,25 @@ void FGHIDDevice::Configure(SGPropertyNode_ptr node)
 {
     // base class first
     FGInputDevice::Configure(node);
-    
+
     if (node->hasChild("hid-descriptor")) {
         _haveLocalDescriptor = true;
         if (debugEvents) {
             SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " will configure using local HID descriptor");
         }
-        
+
         for (auto report : node->getChild("hid-descriptor")->getChildren("report")) {
             defineReport(report);
         }
     }
-    
+
     if (node->hasChild("hid-raw-descriptor")) {
         _rawXMLDescriptor = simgear::strutils::decodeHex(node->getStringValue("hid-raw-descriptor"));
         if (debugEvents) {
             SG_LOG(SG_INPUT, SG_INFO, GetUniqueName() << " will configure using XML-defined raw HID descriptor");
         }
     }
-    
+
     if (node->getBoolValue("hid-debug-raw")) {
         _debugRaw = true;
     }
@@ -418,17 +418,17 @@ bool FGHIDDevice::Open()
            SG_LOG(SG_INPUT, SG_WARN, "HID: " << GetUniqueName() << " failed to read HID descriptor");
            return false;
         }
-        
+
         _rawXMLDescriptor.resize(descriptorSize);
     }
 #endif
-    
+
     if (!_haveLocalDescriptor) {
         bool ok = parseUSBHIDDescriptor();
         if (!ok)
             return false;
     }
-    
+
     for (auto& v : handledEvents) {
         auto reportItem = itemWithName(v.first);
         if (!reportItem.second) {
@@ -440,13 +440,13 @@ bool FGHIDDevice::Open()
         if (debugEvents) {
             SG_LOG(SG_INPUT, SG_INFO, "\tfound item for event:" << v.first);
         }
-        
+
         reportItem.second->event = event;
     }
 
     return true;
 }
-    
+
 bool FGHIDDevice::parseUSBHIDDescriptor()
 {
 #if defined(SG_WINDOWS)
@@ -457,12 +457,12 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
         return false;
     }
 #endif
-    
+
     if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, "\nHID: descriptor for:" << GetUniqueName());
         {
             std::ostringstream byteString;
-            
+
             for (auto i=0; i<_rawXMLDescriptor.size(); ++i) {
                 byteString << hexTable[_rawXMLDescriptor[i] >> 4];
                 byteString << hexTable[_rawXMLDescriptor[i] & 0x0f];
@@ -471,15 +471,15 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
             SG_LOG(SG_INPUT, SG_INFO, "\tbytes: " << byteString.str());
         }
     }
-    
+
     hid_item* rootItem = nullptr;
     hid_parse_reportdesc(_rawXMLDescriptor.data(), _rawXMLDescriptor.size(), &rootItem);
     if (debugEvents) {
         SG_LOG(SG_INPUT, SG_INFO, "\nHID: scan for:" << GetUniqueName());
     }
-    
+
     parseCollection(rootItem);
-    
+
     hid_free_reportdesc(rootItem);
     return true;
 }
@@ -669,7 +669,7 @@ void FGHIDDevice::sendReport(Report* report) const
     }
 
     reportLength /= 8;
-    
+
     if (_debugRaw) {
         std::ostringstream byteString;
         for (size_t i=0; i<reportLength; ++i) {
@@ -679,7 +679,7 @@ void FGHIDDevice::sendReport(Report* report) const
         }
         SG_LOG(SG_INPUT, SG_INFO, "sending bytes: " << byteString.str());
     }
-    
+
 
 // send the data, based on the report type
     if (report->type == HID::ReportType::Feature) {
@@ -748,13 +748,13 @@ void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& da
     if (!_device) {
         return;
     }
-    
+
     if (_debugRaw) {
         SG_LOG(SG_INPUT, SG_INFO, GetName() << ": FGHIDDevice: Sending feature report:" << (int) reportId << ", len=" << data.size());
         {
             std::ostringstream byteString;
-            
-            for (int i=0; i<data.size(); ++i) {
+
+            for (unsigned int i=0; i<data.size(); ++i) {
                 byteString << hexTable[data[i] >> 4];
                 byteString << hexTable[data[i] & 0x0f];
                 byteString << " ";
@@ -797,7 +797,7 @@ void FGHIDDevice::Send(const char *eventName, double value)
     item.second->lastValue = intValue;
     _dirtyReports.insert(item.first);
 }
-    
+
 void FGHIDDevice::defineReport(SGPropertyNode_ptr reportNode)
 {
     const int nChildren = reportNode->nChildren();
@@ -824,21 +824,21 @@ void FGHIDDevice::defineReport(SGPropertyNode_ptr reportNode)
             bitCount += size;
             continue;
         }
-        
+
         if (!strcmp(nd->getName(), "type") || !strcmp(nd->getName(), "id")) {
             continue; // already handled above
         }
-        
+
         // allow repeating items
         uint8_t count = nd->getIntValue("count", 1);
         std::string name = nd->getNameString();
         const auto lastHypen = name.rfind("-");
         std::string baseName = name.substr(0, lastHypen + 1);
         int baseIndex = std::stoi(name.substr(lastHypen + 1));
-        
+
         const bool isRelative = (name.find("rel-") == 0);
         const bool isSigned = nd->getBoolValue("is-signed", false);
-        
+
         for (uint8_t i=0; i < count; ++i) {
             std::ostringstream oss;
             oss << baseName << (baseIndex + i);
@@ -962,7 +962,7 @@ SGSubsystemMgr::Registrant<FGHIDEventInput> registrantFGHIDEventInput;
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void FGHIDEventInput::FGHIDEventInputPrivate::evaluateDevice(hid_device_info* deviceInfo)
-{    
+{
     // allocate an input device, and add to the base class to see if we have
     // a config
     p->AddDevice(new FGHIDDevice(deviceInfo, p));

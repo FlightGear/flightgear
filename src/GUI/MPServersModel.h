@@ -66,7 +66,7 @@ private:
     };
 
     std::vector<ServerInfo> m_servers;
-    int m_currentIndex = 0;
+    unsigned int m_currentIndex = 0;
 };
 
 #endif // MPSERVERSMODEL_H

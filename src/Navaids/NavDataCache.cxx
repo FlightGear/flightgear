@@ -1251,12 +1251,12 @@ NavDataCache::NavDataCache()
             }
         }
     } // of retry loop
-    
+
     double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
     SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
     Octree::global_spatialOctree =
     new Octree::Branch(SGBox<double>(-earthExtent, earthExtent), 1);
-    
+
     // Update d->aptDatFilesInfo, d->metarDatPath, d->navDatPath, etc.
     updateListsOfDatFiles();
 }
@@ -2038,7 +2038,7 @@ char** NavDataCache::searchAirportNamesAndIdents(const std::string& searchInput)
   string heliport("HELIPORT");
   bool heli_p = searchInput.substr(0, heliport.length()) == heliport;
   auto pos = searchInput.find(":");
-  string aFilter((pos != string::npos) ? searchInput.substr(pos+1) : searchInput);  
+  string aFilter((pos != string::npos) ? searchInput.substr(pos+1) : searchInput);
   string searchTerm("%" + aFilter + "%");
 
   if (aFilter.empty() && !heli_p) {
@@ -2315,24 +2315,24 @@ AirwayEdgeVec NavDataCache::airwayEdgesFrom(int network, PositionedID pos)
   }
 
   d->reset(d->airwayEdgesFrom);
-    
+
 // find bidirectional / backwsards edges
     // at present all edges are bidirectional
     sqlite3_bind_int(d->airwayEdgesTo, 1, network);
     sqlite3_bind_int64(d->airwayEdgesTo, 2, pos);
-    
+
     while (d->stepSelect(d->airwayEdgesTo)) {
         result.push_back(AirwayEdge(
                                     sqlite3_column_int(d->airwayEdgesTo, 0),
                                     sqlite3_column_int64(d->airwayEdgesTo, 1)
                                     ));
     }
-    
+
     d->reset(d->airwayEdgesTo);
-    
+
   return result;
 }
-    
+
 AirwayRef NavDataCache::loadAirway(int airwayID)
 {
     sqlite3_bind_int(d->loadAirway, 1, airwayID);
@@ -2371,7 +2371,7 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
 
 // linearize
     PositionedIDVec result;
-    
+
     while (!rawEdges.empty()) {
         bool didAddEdge = false;
         std::set<PositionedID> seen;
@@ -2379,31 +2379,31 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
         PositionedIDDeque linearAirway;
         PositionedID firstId = rawEdges.front().first,
             lastId = rawEdges.front().second;
-        
+
         // first edge is trivial
         linearAirway.push_back(firstId);
         linearAirway.push_back(lastId);
         seen.insert(firstId);
         seen.insert(lastId);
         rawEdges.pop_front();
-        
+
         while (!rawEdges.empty()) {
             Edge e = rawEdges.front();
             rawEdges.pop_front();
-            
+
             bool seenFirst = (seen.find(e.first) != seen.end());
             bool seenSecond = (seen.find(e.second) != seen.end());
-            
+
             // duplicated segment, should be impossible
             assert(!(seenFirst && seenSecond));
-            
+
             if (!seenFirst && !seenSecond) {
                 // push back to try later on
                 nextDeque.push_back(e);
                 if (rawEdges.empty()) {
                     rawEdges = nextDeque;
                     nextDeque.clear();
-                    
+
                     if (!didAddEdge) {
                         // we have a disjoint, need to start a new section
                         // break out of the inner while loop so the outer
@@ -2412,10 +2412,10 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
                     }
                     didAddEdge = false;
                 }
-                
+
                 continue;
             }
-            
+
             // we have an exterior edge, grow our current linear piece
             if (seenFirst && (e.first == firstId)) {
                 linearAirway.push_front(e.second);
@@ -2435,20 +2435,20 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
                 seen.insert(e.first);
             }
             didAddEdge = true;
-            
+
             if (rawEdges.empty()) {
                 rawEdges = nextDeque;
                 nextDeque.clear();
             }
         }
-        
+
         if (!result.empty())
             result.push_back(0);
         result.insert(result.end(), linearAirway.begin(), linearAirway.end());
     } // outer loop
-    
+
     SG_LOG(SG_AUTOPILOT, SG_WARN, "Airway:" << id);
-    for (int i=0; i<result.size(); ++i) {
+    for (unsigned int i=0; i<result.size(); ++i) {
         if (result.at(i) == 0) {
             SG_LOG(SG_AUTOPILOT, SG_WARN, i << " <break>");
         } else {
@@ -2456,7 +2456,7 @@ PositionedIDVec NavDataCache::airwayWaypts(int id)
 
         }
     }
-    
+
     return result;
 }
 
