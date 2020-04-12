@@ -60,7 +60,7 @@ private:
     
 public:
     FGATCManager();
-    ~FGATCManager();
+    virtual ~FGATCManager();
 
     // Subsystem API.
     void postinit() override;
