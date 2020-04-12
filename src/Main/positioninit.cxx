@@ -362,7 +362,7 @@ static void fgSetDistOrAltFromGlideSlope()
 }
 
 
-// Set current_options lon/lat given an airport id and heading (degrees)
+// Set current_options lon/lat given a Nav ID or GUID
 static bool fgSetPosFromNAV( const string& id,
                              const double& freq,
                              FGPositioned::Type type,
@@ -516,6 +516,7 @@ static InitPosResult setFinalPosFromCarrierFLOLS(const string& carrier, bool abe
 
     auto res = checkCarrierSceneryLoaded(carrierRef);
     if (res != VicinityPosition) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "carrier scenery not yet loaded");
         return res; // either failure or keep waiting for scenery load
     }
 
@@ -637,6 +638,7 @@ bool initPosition()
 
   SGPropertyNode *hdg_preset = fgGetNode("/sim/presets/heading-deg", true);
   double hdg = hdg_preset->getDoubleValue();
+  double original_hdg = hdg_preset->getDoubleValue();
 
   // save some start parameters, so that we can later say what the
   // user really requested. TODO generalize that and move it to options.cxx
@@ -708,8 +710,11 @@ bool initPosition()
     }
   }
 
-  if (hdg_preset->getDoubleValue() > 9990.0)
-    hdg_preset->setDoubleValue(hdg);
+  if (original_hdg < 9990.0) {
+    // The user-set heading may be overridden by the setPosFromAirportID above.
+    SG_LOG(SG_GENERAL, SG_ALERT, "Setting heading preset to  : " << original_hdg);
+    hdg_preset->setDoubleValue(original_hdg);
+  }
 
   if ( !set_pos && !vor.empty() ) {
     // a VOR is requested
