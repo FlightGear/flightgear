@@ -115,8 +115,8 @@ public:
             // LOD on scenery with range animations doesn't work.
             // see also /sim/rendering/enable-range-lod-animations - which is false by default in > 2019.2 which also fixes
             // the scenery but in a more efficient way.
-            _lodBare->setDoubleValue(_lodDetailed->getDoubleValue() + _lodRoughDelta->getDoubleValue());
-            _lodRough->setDoubleValue(_lodBare->getDoubleValue() + _lodBareDelta->getDoubleValue());
+            _lodRough->setDoubleValue(_lodDetailed->getDoubleValue() + _lodRoughDelta->getDoubleValue());
+            _lodBare->setDoubleValue(_lodRough->getDoubleValue() + _lodBareDelta->getDoubleValue());
         }
     }
     
@@ -204,9 +204,13 @@ void FGTileMgr::reinit()
     if (!_disableNasalHooks->getBoolValue())
       _options->setModelData(new FGNasalModelDataProxy);
 
-    _options->setPluginStringData("SimGear::LOD_RANGE_BARE", fgGetString("/sim/rendering/static-lod/bare", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
-    _options->setPluginStringData("SimGear::LOD_RANGE_ROUGH", fgGetString("/sim/rendering/static-lod/rough", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
-    _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
+    double detailed = fgGetDouble("/sim/rendering/static-lod/detailed", SG_OBJECT_RANGE_DETAILED);
+    double rough    = fgGetDouble("/sim/rendering/static-lod/rough-delta", SG_OBJECT_RANGE_ROUGH) + detailed;
+    double bare     = fgGetDouble("/sim/rendering/static-lod/bare", SG_OBJECT_RANGE_BARE) + rough;
+        
+    _options->setPluginStringData("SimGear::LOD_RANGE_BARE", std::to_string(bare));
+    _options->setPluginStringData("SimGear::LOD_RANGE_ROUGH", std::to_string(rough));
+    _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", std::to_string(detailed));
 
     string_list scenerySuffixes;
     for (auto node : fgGetNode("/sim/rendering/", true)->getChildren("scenery-path-suffix")) {
