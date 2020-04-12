@@ -24,6 +24,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>
+#include "Airports/airport.hxx"
 
 
 // The unit tests of the FGNasalSys subsystem.
@@ -31,9 +32,36 @@ class PosInitTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(PosInitTests);
+
+    // Airport-based tests
+    CPPUNIT_TEST(testAirportAltitudeOffsetStartup);
     CPPUNIT_TEST(testAirportAndMetarStartup);
+    CPPUNIT_TEST(testAirportAndRunwayStartup);
+    CPPUNIT_TEST(testAirportAndAvailableParkingStartup);
+    CPPUNIT_TEST(testAirportAndParkingStartup);
     CPPUNIT_TEST(testAirportOnlyStartup);
+    CPPUNIT_TEST(testAirportRunwayOffsetAltitudeStartup);
+    CPPUNIT_TEST(testAirportRunwayOffsetGlideslopeStartup);
     CPPUNIT_TEST(testDefaultStartup);
+
+    // Navaid tests
+    CPPUNIT_TEST(testVOROnlyStartup);
+    CPPUNIT_TEST(testVOROffsetAltitudeHeadingStartup);
+    CPPUNIT_TEST(testFixOnlyStartup);
+    CPPUNIT_TEST(testFixOffsetAltitudeHeadingStartup);
+    CPPUNIT_TEST(testNDBOnlyStartup);
+    CPPUNIT_TEST(testNDBOffsetAltitudeHeadingStartup);
+
+    CPPUNIT_TEST(testLatLonStartup);
+    //CPPUNIT_TEST(testLatLonOffsetStartup); This is not yet supported.
+
+
+    // Carrier tests
+    // We are not able to test the carrier code thoroughly as it depends
+    // heavily on finalizePosition(), which requires that the carrier model
+    // itself be loaded into the scenegraph.
+    CPPUNIT_TEST(testCarrierStartup);
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -44,9 +72,41 @@ public:
     void tearDown();
 
     // The tests.
+    void testAirportAltitudeOffsetStartup();
     void testAirportAndMetarStartup();
+    void testAirportAndAvailableParkingStartup();
+    void testAirportAndParkingStartup();
+    void testAirportAndRunwayStartup();
     void testAirportOnlyStartup();
+    void testAirportRunwayOffsetAltitudeStartup();
+    void testAirportRunwayOffsetGlideslopeStartup();
     void testDefaultStartup();
+
+    // Navaid tests
+    void testVOROnlyStartup();
+    void testVOROffsetAltitudeHeadingStartup();
+    void testFixOnlyStartup();
+    void testFixOffsetAltitudeHeadingStartup();
+    void testNDBOnlyStartup();
+    void testNDBOffsetAltitudeHeadingStartup();
+
+    //Lat Lon tests
+    void testLatLonStartup();
+    void testLatLonOffsetStartup();
+
+    //Carrier tests
+    void testCarrierStartup();
+
+private:
+    // Helper functions for tests.  Return void as they use CPPUNIT_ASSERT
+    void checkAlt(float value);
+    void checkHeading(float value);
+    void checkPosition(SGGeod expectedPos, float delta=1000.0);
+    void checkClosestAirport(std::string icao);
+    void checkStringProp(std::string property, std::string expected);
+    void checkRunway(std::string expected);
+    void checkOnGround();
+    void checkInAir();
 };
 
 #endif  // _FG_POSINIT_UNIT_TESTS_HXX
