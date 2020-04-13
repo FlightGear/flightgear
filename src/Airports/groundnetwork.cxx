@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <fstream>
 #include <map>
+#include <iterator>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
