@@ -166,6 +166,10 @@ static void initTerrasync()
 
 static void fgSetVideoOptions()
 {
+    SGPath userDataPath = globals->get_fg_home();
+    SGPath autosaveFile = globals->autosaveFilePath(userDataPath);
+    if (autosaveFile.exists()) return;
+
     std::string vendor = fgGetString("/sim/rendering/gl-vendor");
     SGPath path(globals->get_fg_root());
     path.append("Video");
@@ -192,11 +196,6 @@ static void fgSetVideoOptions()
             } catch (sg_exception& e) {
                 SG_LOG(SG_INPUT, SG_WARN, "failed to read video settings:" << e.getMessage()
                 << "(from " << e.getOrigin() << ")");
-            }
-
-            flightgear::Options* options = flightgear::Options::sharedInstance();
-            if (!options->isOptionSet("ignore-autosave")) {
-                globals->loadUserSettings();
             }
         }
     }
