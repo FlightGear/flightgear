@@ -92,10 +92,13 @@ void SceneryPager::PagerRequest::doRequest(SceneryPager* pager)
                                _options.get());
     }
 }
+extern void awaitFrameFinish();
 
 void SceneryPager::signalEndFrame()
 {
-    using namespace std;
+        awaitFrameFinish();
+
+        using namespace std;
     bool areDeleteRequests = false;
     bool arePagerRequests = false;
     if (!_deleteRequests.empty()) {

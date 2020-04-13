@@ -129,10 +129,18 @@ FGViewMgr::unbind ()
     
     ViewPropertyEvaluator::clear();
 }
-
+extern bool delayedViewUpdate;
+static double      lastDt = 0;
 void
 FGViewMgr::update (double dt)
 {
+	if (delayedViewUpdate) {
+        if (dt != 0) {
+            lastDt = dt;
+			return;
+		}
+        dt = lastDt;
+	}
     flightgear::View* currentView = get_current_view();
     if (!currentView) {
         return;

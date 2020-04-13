@@ -293,38 +293,34 @@ void fgOSExit(int code)
     osg::setNotifyHandler(new osg::StandardNotifyHandler);
 }
 SGTimeStamp _lastUpdate;
+#include <simgear/threads/SGThread.hxx>
 
-int fgOSMainLoop()
+class ThreadedIdleFunc : public SGExclusiveThread
 {
-    viewer->setReleaseContextAtEndOfFrameHint(false);
-    if (!viewer->isRealized()) {
-        viewer->realize();
-    }
+public:
+    ThreadedIdleFunc() : SGExclusiveThread() {}
+    virtual ~ThreadedIdleFunc() {}
 
-    while (!viewer->done()) {
+    virtual int process()
+    {
         fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
-        if (idleFunc)
-        {
+        if (idleFunc) {
             _lastUpdate.stamp();
             (*idleFunc)();
-            if (fgGetBool("/sim/position-finalized", false))
-            {
-                if (simHost && simFrameCount && simTotalHostTime && simFrameResetCount)
-                {
-                    int curFrameCount = simFrameCount->getIntValue();
-                    double totalSimTime = simTotalHostTime->getDoubleValue();
-                    if (simFrameResetCount->getBoolValue())
-                    {
+            if (fgGetBool("/sim/position-finalized", false)) {
+                if (simHost && simFrameCount && simTotalHostTime && simFrameResetCount) {
+                    int    curFrameCount = simFrameCount->getIntValue();
+                    double totalSimTime  = simTotalHostTime->getDoubleValue();
+                    if (simFrameResetCount->getBoolValue()) {
                         curFrameCount = 0;
-                        totalSimTime = 0;
+                        totalSimTime  = 0;
                         simFrameResetCount->setBoolValue(false);
                     }
                     double lastSimFrame_ms = _lastUpdate.elapsedMSec();
-                    double idle_wait = 0;
+                    double idle_wait       = 0;
                     if (frameWait)
                         idle_wait = frameWait->getDoubleValue();
-                    if (lastSimFrame_ms > 0)
-                    {
+                    if (lastSimFrame_ms > 0) {
                         totalSimTime += lastSimFrame_ms - idle_wait;
                         simTotalHostTime->setDoubleValue(totalSimTime);
                         curFrameCount++;
@@ -334,9 +330,58 @@ int fgOSMainLoop()
                 }
             }
         }
-        globals->get_renderer()->update();
-        viewer->frame( globals->get_sim_time_sec() );
+        return 1; // indicates that the process ran.
     }
+};
+#include <Viewer/viewmgr.hxx>
+bool delayedViewUpdate = false;
+bool experimentalThreading = false;
+ThreadedIdleFunc idleThread;
+
+void awaitFrameFinish()
+{
+    if (experimentalThreading)
+    idleThread.awaitCompletion();
+}
+int              fgOSMainLoop()
+{
+    viewer->setReleaseContextAtEndOfFrameHint(false);
+    if (!viewer->isRealized()) {
+        viewer->realize();
+    }
+    bool first_time = true;
+    idleThread.ensure_running();
+    double last_time_sec = globals->get_sim_time_sec();
+    SGPropertyNode* propExperimentalThreading = fgGetNode("/sim/a-enable-experimental-threading", true);
+    while (!viewer->done())
+    {
+        FGViewMgr* viewMgr = globals->get_viewmgr();
+        experimentalThreading = propExperimentalThreading->getBoolValue();
+        if (first_time || !experimentalThreading) {
+            globals->get_renderer()->update();
+            delayedViewUpdate = false;
+            idleThread.release();
+            idleThread.awaitCompletion();
+            viewer->frame(globals->get_sim_time_sec());
+            last_time_sec = globals->get_sim_time_sec();
+            first_time    = false;
+        } else {
+//            delayedViewUpdate = true;
+            idleThread.awaitCompletion();
+            globals->get_renderer()->update();
+            //            viewMgr->update(0);
+            viewer->advance(last_time_sec);
+            viewer->eventTraversal();
+            viewer->updateTraversal();
+
+			idleThread.release();
+            viewer->renderingTraversals();
+
+			last_time_sec = globals->get_sim_time_sec();
+//            viewer->advance(last_time_sec);
+			}
+    }
+    idleThread.stop();
 
     return status;
 }
