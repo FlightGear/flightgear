@@ -125,6 +125,41 @@ static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
     return NASTR(t);
 }
 
+// Check if type of a property is numeric (returns 0 or 1).
+// Forms:
+//    props.Node.isNumeric(string relative_path);
+//    props.Node.isNumeric();
+static naRef f_isNumeric(naContext c, naRef me, int argc, naRef* args)
+{
+    using namespace simgear;
+    NODEARG();
+    MOVETARGET(naVec_size(argv) > 0, false);
+    switch(node->getType()) {
+    case props::INT:
+    case props::LONG:
+    case props::FLOAT:
+    case props::DOUBLE: return naNum(true);
+    default:
+        break;
+    }
+    return naNum(false);
+}
+
+// Check if type of a property is integer (returns 0 or 1).
+// Forms:
+//    props.Node.isInt(string relative_path);
+//    props.Node.isInt();
+static naRef f_isInt(naContext c, naRef me, int argc, naRef* args)
+{
+    using namespace simgear;
+    NODEARG();
+    MOVETARGET(naVec_size(argv) > 0, false);
+    if (node->getType() == props::INT) {
+        return naNum(true);
+    }
+    return naNum(false);
+}
+
 
 // Get an attribute of a property by name (returns true/false).
 // Forms:
@@ -826,6 +861,8 @@ static struct {
     { f_getNode,            "_getNode"            },
     { f_new,                "_new"                },
     { f_globals,            "_globals"            },
+    { f_isNumeric,          "_isNumeric"          },
+    { f_isInt,              "_isInt"              },
     { 0, 0 }
 };
 
