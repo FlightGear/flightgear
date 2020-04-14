@@ -110,8 +110,7 @@ else()
 endif()
 
 if (TARGET sentry::sentry)
-#    disabling this for now until Sentry-native fixes their CMake export :)
-#    target_link_libraries(fgfs sentry::sentry)
+    target_link_libraries(fgfs sentry::sentry)
 endif()
 
 if (TARGET sentry_crashpad::handler)
