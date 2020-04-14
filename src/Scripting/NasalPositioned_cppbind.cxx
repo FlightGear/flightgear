@@ -28,8 +28,6 @@
 #include <algorithm>
 #include <functional>
 
-#include <boost/algorithm/string/case_conv.hpp>
-
 #include <simgear/misc/ListDiff.hxx>
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
@@ -89,14 +87,14 @@ static naRef f_navaid_course(FGNavRecord& nav, naContext)
 }
 
 //------------------------------------------------------------------------------
-static FGRunwayBaseRef f_airport_runway(FGAirport& apt, std::string ident)
+static FGRunwayBaseRef f_airport_runway(FGAirport& apt, const std::string& ident)
 {
-  boost::to_upper(ident);
+  const std::string Id = simgear::strutils::uppercase (ident);
 
-  if( apt.hasRunwayWithIdent(ident) )
-    return apt.getRunwayByIdent(ident);
-  else if( apt.hasHelipadWithIdent(ident) )
-    return apt.getHelipadByIdent(ident);
+  if( apt.hasRunwayWithIdent(Id) )
+    return apt.getRunwayByIdent(Id);
+  else if( apt.hasHelipadWithIdent(Id) )
+    return apt.getHelipadByIdent(Id);
 
   return 0;
 }
@@ -184,10 +182,9 @@ static naRef f_airport_approaches(FGAirport& apt, const nasal::CallContext& ctx)
   FGRunway* rwy = runwayFromNasalArg(apt, ctx);
 
   flightgear::ProcedureType type = flightgear::PROCEDURE_INVALID;
-  std::string type_str = ctx.getArg<std::string>(1);
+  const std::string type_str = simgear::strutils::uppercase (ctx.getArg<std::string>(1));
   if( !type_str.empty() )
   {
-    boost::to_upper(type_str);
     if(      type_str == "NDB" ) type = flightgear::PROCEDURE_APPROACH_NDB;
     else if( type_str == "VOR" ) type = flightgear::PROCEDURE_APPROACH_VOR;
     else if( type_str == "ILS" ) type = flightgear::PROCEDURE_APPROACH_ILS;
