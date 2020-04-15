@@ -394,3 +394,68 @@ void FlightplanTests::testLoadSaveMachRestriction()
     
     CPPUNIT_ASSERT_EQUAL(8, f2->legAtIndex(2)->holdCount());
 }
+
+void FlightplanTests::testBasicDiscontinuity()
+{
+    FlightPlanRef fp1 = makeTestFP("LIRF", "34L", "LEBL", "25R",
+                                   "ESINO GITRI BALEN MUREN TOSNU");
+
+    const auto tdBefore = fp1->totalDistanceNm();
+    
+    
+    const SGGeod balenPos = fp1->legAtIndex(3)->waypoint()->position();
+    const SGGeod murenPos = fp1->legAtIndex(4)->waypoint()->position();
+    
+    // total distance should not change
+    fp1->insertWayptAtIndex(new Discontinuity(fp1), 4); // betwee BALEN and MUREN
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(tdBefore, fp1->totalDistanceNm(), 1.0);
+
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(4)->courseDeg(),
+                                 SGGeodesy::courseDeg(balenPos, murenPos), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(4)->distanceNm(), 0.0, 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(5)->courseDeg(),
+                                 SGGeodesy::courseDeg(balenPos, murenPos), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(5)->distanceNm(),
+                                 SGGeodesy::distanceNm(balenPos, murenPos), 0.1);
+    
+    // remove the discontinuity
+    fp1->deleteIndex(4);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(4)->courseDeg(),
+                                 SGGeodesy::courseDeg(balenPos, murenPos), 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(4)->distanceNm(),
+                                 SGGeodesy::distanceNm(balenPos, murenPos), 0.1);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(tdBefore, fp1->totalDistanceNm(), 1.0);
+
+}
+
+void FlightplanTests::testOnlyDiscontinuityRoute()
+{
+    FlightPlanRef f = new FlightPlan;
+    FGAirportRef depApt = FGAirport::getByIdent("LFBD");
+    f->setDeparture(depApt);
+
+
+    FGAirportRef destApt = FGAirport::getByIdent("EHAM");
+    f->setDestination(destApt);
+
+    f->insertWayptAtIndex(new Discontinuity(f), 0);
+    
+    RoutePath rp1(f);
+    
+    // discontinuity should act like a straight segment between preceeding and following
+    const double d = SGGeodesy::distanceNm(depApt->geod(), destApt->geod());
+   // CPPUNIT_ASSERT_DOUBLES_EQUAL(rp1.distanceForIndex(0), d, 0.5);
+    
+    // start inserting waypoints ahead of the DISCON, Boeing FPL style
+    WayptRef wpt = f->waypointFromString("LMG");
+    f->insertWayptAtIndex(wpt, 0);
+    
+    wpt = f->waypointFromString("KUKOR");
+    f->insertWayptAtIndex(wpt, 1);
+    
+    wpt = f->waypointFromString("EPL");
+    f->insertWayptAtIndex(wpt, 2);
+}

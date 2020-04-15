@@ -156,6 +156,10 @@ void populateFPWithoutNasal(flightgear::FlightPlanRef f,
     
     for (auto ws : simgear::strutils::split(waypoints)) {
         WayptRef wpt = f->waypointFromString(ws);
+        if (!wpt) {
+            SG_LOG(SG_NAVAID, SG_ALERT, "No waypoint created for:" << ws);
+            continue;
+        }
         f->insertWayptAtIndex(wpt, -1);
     }
     

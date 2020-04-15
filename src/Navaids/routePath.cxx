@@ -287,7 +287,8 @@ public:
   // compute leg courses for all static legs (both ends are fixed)
   void initPass1(const WayptData& previous, WayptData* next)
   {
-    if (wpt->type() == "vectors") {
+    const auto ty = wpt->type();
+    if ((ty == "vectors") || (ty == "discontinuity")) {
       // relying on the fact vectors will be followed by a static fix/wpt
       if (next && next->posValid) {
         posValid = true;
@@ -295,7 +296,7 @@ public:
       }
     }
 
-    if (wpt->type() == "via") {
+    if (ty == "via") {
         // even though both ends may be known, we don't
         // want to compute a leg course for a VIA
     } else if (posValid && !legCourseValid && previous.posValid) {
@@ -309,7 +310,11 @@ public:
             // use the runway departure end pos
             FGRunway* rwy = static_cast<RunwayWaypt*>(previous.wpt.get())->runway();
             legCourseTrue = SGGeodesy::courseDeg(rwy->end(), pos);
-        } else if (wpt->type() != "runway") {
+        } else if (ty == "discontinuity") {
+            // we want to keep the path across DISCONs sharp (no turn entry/exit)
+            // so we keep the leg course invalid, even though we actually
+            // could compute it
+        } else if (ty != "runway") {
             // need to wait to compute runway leg course
             legCourseTrue = SGGeodesy::courseDeg(previous.pos, pos);
             legCourseValid = true;
@@ -323,7 +328,7 @@ public:
           return;
       }
 
-      if ((wpt->type() == "discontinuity") ||  (wpt->type()  == "via"))
+      if ((wpt->type() == "via") || (wpt->type() == "discontinuty"))
       {
           // do nothing, we can't compute a valid leg course for these types
           // we'll generate sharp turns in the path but that's no problem.
@@ -792,14 +797,13 @@ public:
   
     WayptDataVec::iterator previousValidWaypoint(unsigned int index)
     {
-        if (index == 0) {
-            return waypoints.end();
-        }
-
-        while (waypoints[--index].skipped) {
-            // waypoint zero should be unskippable, this assert verified that
-            assert(index > 0);
-        }
+        do {
+            if (index == 0) {
+                return waypoints.end();
+            }
+            
+            --index;
+        } while (waypoints.at(index).skipped || (waypoints.at(index).wpt->type() == "discontinuity"));
 
         return waypoints.begin() + index;
     }
@@ -822,7 +826,7 @@ public:
         }
 
         ++it;
-        while ((it != waypoints.end()) && it->skipped) {
+        while ((it != waypoints.end()) && (it->skipped || (it->wpt->type() == "discontinuity"))) {
             ++it;
         }
         return it;
@@ -870,7 +874,8 @@ void RoutePath::commonInit()
   
   for (unsigned int i=1; i<d->waypoints.size(); ++i) {
     WayptData* nextPtr = ((i + 1) < d->waypoints.size()) ? &d->waypoints[i+1] : nullptr;
-    d->waypoints[i].initPass1(d->waypoints[i-1], nextPtr);
+    auto prev = d->previousValidWaypoint(i);
+    d->waypoints[i].initPass1(*prev, nextPtr);
   }
 
   for (unsigned int i=0; i<d->waypoints.size(); ++i) {
@@ -1073,8 +1078,13 @@ double RoutePath::computeDistanceForIndex(int index) const
         return 0.0;
     }
 
-    if (it->wpt->type() == "via") {
+    const auto ty = it->wpt->type();
+    if (ty == "via") {
         return distanceForVia(static_cast<Via*>(it->wpt.get()), index);
+    }
+    
+    if (ty == "discontinuity") {
+        return 0.0;
     }
 
     auto prevIt = d->previousValidWaypoint(index);
