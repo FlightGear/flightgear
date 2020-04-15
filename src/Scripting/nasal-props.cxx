@@ -154,7 +154,7 @@ static naRef f_isInt(naContext c, naRef me, int argc, naRef* args)
     using namespace simgear;
     NODEARG();
     MOVETARGET(naVec_size(argv) > 0, false);
-    if (node->getType() == props::INT) {
+    if ((node->getType() == props::INT) || (node->getType() == props::LONG)) {
         return naNum(true);
     }
     return naNum(false);
