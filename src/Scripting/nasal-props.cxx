@@ -430,6 +430,38 @@ static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
     return naNum(node->setDoubleValue(r.num));
 }
 
+static naRef f_adjustValue(naContext c, naRef me, int argc, naRef* args)
+{
+    using namespace simgear;
+
+    NODEARG();
+    MOVETARGET(naVec_size(argv) > 1, false);
+    naRef r = naNumValue(naVec_get(argv, 0));
+    if (naIsNil(r))
+        naRuntimeError(c, "props.adjustValue() with non-number");
+
+    if (SGMisc<double>::isNaN(r.num)) {
+        naRuntimeError(c, "props.adjustValue() passed a NaN");
+    }
+
+    switch(node->getType()) {
+    case props::BOOL:
+    case props::INT:
+    case props::LONG:
+    case props::FLOAT:
+    case props::DOUBLE:
+        // fall through
+        break;
+
+    default:
+        naRuntimeError(c, "props.adjustValue() called on non-numeric type");
+        return naNil();
+    }
+
+    const auto dv = node->getDoubleValue();
+    return naNum(node->setDoubleValue(dv + r.num));
+}
+
 // Forward declaration
 static naRef f_setChildrenHelper(naContext c, SGPropertyNode_ptr node, char* name, naRef val);
 
@@ -863,6 +895,7 @@ static struct {
     { f_globals,            "_globals"            },
     { f_isNumeric,          "_isNumeric"          },
     { f_isInt,              "_isInt"              },
+    { f_adjustValue,        "_adjustValue"        },
     { 0, 0 }
 };
 
