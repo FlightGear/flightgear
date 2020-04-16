@@ -20,7 +20,7 @@ if (${do_translate} AND NOT TARGET Qt5::lrelease)
 endif()
 
 # FIXME - determine this based on subdirs of TRANSLATIONS_SRC_DIR
-set(LANGUAGES en_US de es nl fr it pl pt ru zh_CN)
+set(LANGUAGES en_US de es nl fr it pl pt ru zh_CN ca sk)
 
 if (${do_translate})
     set(translation_res "${PROJECT_BINARY_DIR}/translations.qrc")
