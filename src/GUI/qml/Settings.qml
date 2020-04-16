@@ -116,11 +116,22 @@ Item {
                         hidden: _osName !== "win"
                         keywords: ["console", "terminal", "log", "debug"]
                         setting: "console"
+                    },
+
+                    SettingCheckbox {
+                        id: enableCrashReporting
+                        label: qsTr("Enable crash & error reporting")
+                        description: qsTr("Send crash and error reports to the development team for analysis.")
+                        defaultValue: true
+                        hidden: (_osName !== "win") && (_osName !== "mac")
+                        keywords: ["crash", "report", "telemetry"]
+                        setting: "enable-sentry"
                     }
                 ]
 
                 onApply: {
-                    if (!showConsoleWin.hidden && showConsoleWin.checked) _config.setArg("console")
+                    if (!showConsoleWin.hidden && showConsoleWin.checked) _config.setArg("console");
+                    if (!enableCrashReporting.hidden && enableCrashReporting.checked) _config.setArg("enable-sentry");
                 }
             }
 
