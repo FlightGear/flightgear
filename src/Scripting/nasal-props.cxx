@@ -415,6 +415,20 @@ static naRef f_setBoolValue(naContext c, naRef me, int argc, naRef* args)
     return naNum(node->setBoolValue(naTrue(val) ? true : false));
 }
 
+static naRef f_toggleBoolValue(naContext c, naRef me, int argc, naRef* args)
+{
+    using namespace simgear;
+
+    NODEARG();
+    MOVETARGET(naVec_size(argv) > 0, false);
+    if (node->getType() != props::BOOL) {
+        naRuntimeError(c, "props.toggleBoolValue() on non-bool prop");
+    }
+
+    const auto val = node->getBoolValue();
+    return naNum(node->setBoolValue(val ? false : true));
+}
+
 static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -877,6 +891,7 @@ static struct {
     { f_setValues,          "_setValues"          },
     { f_setIntValue,        "_setIntValue"        },
     { f_setBoolValue,       "_setBoolValue"       },
+    { f_toggleBoolValue,    "_toggleBoolValue"    },
     { f_setDoubleValue,     "_setDoubleValue"     },
     { f_getParent,          "_getParent"          },
     { f_getChild,           "_getChild"           },
