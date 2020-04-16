@@ -61,6 +61,7 @@ public:
     
     void flyGPSCourseOffset(GPS *gps, double offsetNm);
 
+    bool isOnHeading(double heading) const;
 private:
     enum class LateralMode
     {

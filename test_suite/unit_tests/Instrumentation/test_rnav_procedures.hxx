@@ -39,11 +39,11 @@ class RNAVProcedureTests : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE(RNAVProcedureTests);
     
     CPPUNIT_TEST(testEGPH_TLA6C);
-  
+    CPPUNIT_TEST(testHeadingToAlt);
     
     CPPUNIT_TEST_SUITE_END();
 
-    void setPositionAndStabilise(GPS* gps, const SGGeod& g);
+    void setPositionAndStabilise(const SGGeod& g);
 
     GPS* setupStandardGPS(SGPropertyNode_ptr config = {},
         const std::string name = "gps", const int index = 0);
@@ -60,7 +60,7 @@ public:
     //void testBasic();
     
     void testEGPH_TLA6C();
-    
+    void testHeadingToAlt();
 private:
     GPS* m_gps = nullptr;
     SGPropertyNode_ptr m_gpsNode;

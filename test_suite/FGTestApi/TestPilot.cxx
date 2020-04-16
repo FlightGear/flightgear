@@ -80,6 +80,11 @@ void TestPilot::setSpeedKts(double knots)
     _speedKnots = knots;
 }
 
+void TestPilot::setVerticalFPM(double fpm)
+{
+    _vspeedFPM = fpm;
+}
+
 void TestPilot::setCourseTrue(double deg)
 {
     _trueCourseDeg = deg;
@@ -231,6 +236,12 @@ void TestPilot::setTargetAltitudeFtMSL(double altFt)
 {
     _targetAltitudeFt = altFt;
     _altActive = true;
+}
+
+bool TestPilot::isOnHeading(double heading) const
+{
+    const double hdgDelta = (_trueCourseDeg - heading);
+    return fabs(hdgDelta) < 0.5;
 }
 
 } // of namespace
