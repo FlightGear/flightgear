@@ -40,6 +40,7 @@ class RNAVProcedureTests : public CppUnit::TestFixture
     
     CPPUNIT_TEST(testEGPH_TLA6C);
     CPPUNIT_TEST(testHeadingToAlt);
+    CPPUNIT_TEST(testUglyHeadingToAlt);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -61,6 +62,7 @@ public:
     
     void testEGPH_TLA6C();
     void testHeadingToAlt();
+    void testUglyHeadingToAlt();
 private:
     GPS* m_gps = nullptr;
     SGPropertyNode_ptr m_gpsNode;

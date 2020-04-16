@@ -262,6 +262,97 @@ void RNAVProcedureTests::testHeadingToAlt()
      FGTestApi::runForTime(40.0);
 }
 
+// ugly version: the heading to hold will be very mis-aligned with
+// the course when the leg is sequenced. (more than 90 degrees turn(
+void RNAVProcedureTests::testUglyHeadingToAlt()
+{
+    auto vhhh = FGAirport::findByIdent("VHHH");
+    FGTestApi::setUp::logPositionToKML("heading_to_alt_ugly");
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    fp->addDelegate(testDelegate);
+
+    rm->setFlightPlan(fp);
+    
+    // we don't have Nasal, but our delegate does the same work
+    FGTestApi::setUp::populateFPWithNasal(fp, "VHHH", "07L", "EGLL", "27R", "HAZEL");
+    
+    auto wp = new HeadingToAltitude(fp, "TO_4000", 210);
+    wp->setAltitude(4000, RESTRICT_ABOVE);
+    fp->insertWayptAtIndex(wp, 1); // between the runway WP and HAZEL
+
+    FGTestApi::writeFlightPlanToKML(fp);
+
+    auto depRwy = fp->departureRunway();
+    
+    setupStandardGPS();
+    setPositionAndStabilise(fp->departureRunway()->pointOnCenterline(0.0));
+
+    fp->activate();
+    m_gpsNode->setStringValue("command", "leg");
+
+    CPPUNIT_ASSERT_EQUAL(fp->currentIndex(), 0);
+
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(depRwy->pointOnCenterline(0.0));
+    pilot->setCourseTrue(depRwy->headingDeg());
+    pilot->setSpeedKts(200);
+    pilot->flyGPSCourse(m_gps);
+    
+    // check we sequence to the heading-to-alt wp
+    bool ok = FGTestApi::runForTimeWithCheck(240.0, [fp] () {
+      if (fp->currentIndex() == 1) {
+          return true;
+      }
+      return false;
+    });
+    CPPUNIT_ASSERT(ok);
+
+    // leisurely climb out
+    pilot->setVerticalFPM(1800);
+    pilot->setTargetAltitudeFtMSL(8000);
+
+    CPPUNIT_ASSERT_EQUAL(std::string{"VHHH-07L"}, std::string{m_gpsNode->getStringValue("wp/wp[0]/ID")});
+    CPPUNIT_ASSERT_EQUAL(std::string{"TO_4000"}, std::string{m_gpsNode->getStringValue("wp/wp[1]/ID")});
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(210.0, m_gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(210.0, m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    // fly until we're turned to to heading
+    ok = FGTestApi::runForTimeWithCheck(120, [pilot] () {
+        return pilot->isOnHeading(210.0);
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // capture the position now
+    SGGeod posAtHdgAltStart = globals->get_aircraft_position();
+    FGTestApi::runForTime(40.0);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(210.0, m_gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(210.0, m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    const double crs = SGGeodesy::courseDeg(posAtHdgAltStart, globals->get_aircraft_position());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(210.0, crs, 1.0);
+    
+    ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        return (fp->currentIndex() == 2);
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(4000.0, globals->get_aircraft_position().getElevationFt(), 100.0);
+
+     FGTestApi::runForTime(40.0);
+}
+
+
 void RNAVProcedureTests::testEGPH_TLA6C()
 {
     
