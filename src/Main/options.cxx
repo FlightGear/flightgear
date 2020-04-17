@@ -698,6 +698,7 @@ clearLocation ()
     fgSetString("/sim/presets/ndb-id", "");
     fgSetString("/sim/presets/carrier", "");
     fgSetString("/sim/presets/parkpos", "");
+    fgSetString("/sim/presets/carrier-position", "");
     fgSetString("/sim/presets/fix", "");
 }
 
@@ -753,6 +754,13 @@ fgOptCarrier( const char * arg )
 {
     clearLocation();
     fgSetString("/sim/presets/carrier", arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptCarrierPos( const char * arg )
+{
+    fgSetString("/sim/presets/carrier-position", arg);
     return FG_OPTIONS_OK;
 }
 
@@ -1679,8 +1687,7 @@ struct OptionDesc {
     {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
     {"ndb-frequency",                true,  OPTION_DOUBLE, "/sim/presets/ndb-freq", false, "", fgOptVOR },
     {"carrier",                      true,  OPTION_FUNC,   "", false, "", fgOptCarrier },
-    {"carrier-abeam",                true,  OPTION_BOOL,   "/sim/presets/carrier-abeam", true, "", 0 },
-    {"parkpos",                      true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
+    {"carrier-position",             true,  OPTION_FUNC,   "", false, "", fgOptCarrierPos },
     {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },
     {"offset-distance",              true,  OPTION_DOUBLE, "/sim/presets/offset-distance-nm", false, "", 0 },
     {"offset-azimuth",               true,  OPTION_DOUBLE, "/sim/presets/offset-azimuth-deg", false, "", 0 },
@@ -1839,6 +1846,7 @@ struct OptionDesc {
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {"ai-scenario",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptScenario },
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
+    {"parkpos",                      true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
     {"version",                      false, OPTION_IGNORE, "", false, "", 0 },
     {"json-report",                  false, OPTION_IGNORE, "", false, "", 0 },
     {"enable-fpe",                   false, OPTION_IGNORE, "", false, "", 0},

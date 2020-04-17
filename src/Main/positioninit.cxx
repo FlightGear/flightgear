@@ -836,20 +836,35 @@ void finalizePosition()
      * carrier, recalculate the 'initial' position here
      */
     std::string carrier = fgGetString("/sim/presets/carrier");
+    std::string carrierpos = fgGetString("/sim/presets/carrier-position");
     std::string parkpos = fgGetString("/sim/presets/parkpos");
     std::string runway = fgGetString("/sim/presets/runway");
     std::string apt = fgGetString("/sim/presets/airport-id");
-    const bool rwy_req = fgGetBool("/sim/presets/runway-requested");
-    const bool abeam = fgGetBool("/sim/presets/carrier-abeam");
 
     if (!carrier.empty())
     {
-        const bool    atFLOLS = rwy_req && (runway == "FLOLS" || parkpos == "FLOLS");
+        /* /sim/presets/carrier-position can take a number of different values
+           - name of a parking/cataputt
+           - FLOLS - to position on final approach
+           - abeam - on an abeam position from the FLOLS, heading downwind
+           - <empty> indicating a start position of a catapult
+        */
+
+        // Convert to lower case to simplify comparison
+        std::transform(carrierpos.begin(),
+                       carrierpos.end(),
+                       carrierpos.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+
+        const bool    inair = (carrierpos == "flols") || (carrierpos == "abeam");
+        const bool    abeam = (carrierpos == "abeam");
         InitPosResult carrierResult;
-        if (atFLOLS) {
+        if (inair) {
             carrierResult = setFinalPosFromCarrierFLOLS(carrier, abeam);
         } else {
-            carrierResult = setFinalPosFromCarrier(carrier, parkpos);
+            // We don't simply use carrierpos as it is now lower case, and the
+            // search against parking/catapult positions is case-sensitive.
+            carrierResult = setFinalPosFromCarrier(carrier, fgGetString("/sim/presets/carrier-position"));
         }
         if (carrierResult == ExactPosition) {
             done = true;

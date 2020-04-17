@@ -687,7 +687,7 @@ void LocationController::setLocationProperties()
         "runway-requested" << "navaid-id" << "offset-azimuth-deg" <<
         "offset-distance-nm" << "glideslope-deg" <<
         "speed-set" << "on-ground" << "airspeed-kt" <<
-        "airport-id" << "runway" << "parkpos" << "carrier" << "abeam";
+        "airport-id" << "runway" << "parkpos" << "carrier" << "carrier-position";
 
     Q_FOREACH(QString s, props) {
         SGPropertyNode* c = presets->getChild(s.toStdString());
@@ -717,15 +717,16 @@ void LocationController::setLocationProperties()
         fgSetString("/sim/presets/carrier", m_carrierName.toStdString());
 
         if (m_useCarrierFLOLS) {
-            fgSetBool("/sim/presets/runway-requested", true );
-            // treat the FLOLS as a runway, for the purposes of communication with position-init
-            fgSetString("/sim/presets/runway", "FLOLS");
+            if (m_abeam) {
+              fgSetString("/sim/presets/carrier-position", "abeam");
+            } else {
+              fgSetString("/sim/presets/carrier-position", "FLOLS");
+            }
             fgSetDouble("/sim/presets/offset-distance-nm", m_offsetDistance.convertToUnit(Units::NauticalMiles).value);
-            fgSetBool("/sim/presets/abeam", m_abeam);
             applyAltitude();
             applyAirspeed();
         } else if (!m_carrierParking.isEmpty()) {
-            fgSetString("/sim/presets/parkpos", m_carrierParking.toStdString());
+            fgSetString("/sim/presets/carrier-position", m_carrierParking.toStdString());
         }
 
         if (m_tuneNAV1) {
@@ -924,13 +925,16 @@ void LocationController::onCollectConfig()
         m_config->setArg("carrier", m_carrierName);
 
         if (!m_carrierParking.isEmpty()) {
-            m_config->setArg("parkpos", m_carrierParking);
+            m_config->setArg("carrier-position", m_carrierParking);
         } else if (m_useCarrierFLOLS) {
-            m_config->setArg("runway", QStringLiteral("FLOLS"));
+            if (m_abeam) {
+              m_config->setArg("carrier-position", QStringLiteral("abeam"));
+            } else {
+              m_config->setArg("carrier-position", QStringLiteral("FLOLS"));
+            }
             const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
             m_config->setArg("offset-distance", QString::number(offsetNm));
 
-            if (m_abeam) m_config->setArg("carrier-abeam", QStringLiteral("true"));
             applyAltitude();
             applyAirspeed();
         }
@@ -951,7 +955,7 @@ void LocationController::onCollectConfig()
             // pick by default
             applyOnFinal();
         } else if (m_useAvailableParking) {
-             m_config->setArg("parkpos", QStringLiteral("AVAILABLE"));
+             m_config->setArg("parking-id", QStringLiteral("AVAILABLE"));
         } else if (onRunway) {
             if (m_airportLocation->type() == FGPositioned::AIRPORT) {
                 m_config->setArg("runway", QString::fromStdString(m_detailLocation->ident()));
@@ -969,7 +973,7 @@ void LocationController::onCollectConfig()
             }
         } else if (atParking) {
             // parking selection
-            m_config->setArg("parkpos", QString::fromStdString(m_detailLocation->ident()));
+            m_config->setArg("parking-id", QString::fromStdString(m_detailLocation->ident()));
         }
         // of location is an airport
     } else {

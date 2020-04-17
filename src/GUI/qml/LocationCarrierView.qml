@@ -63,7 +63,7 @@ Item {
         Column {
             id: selectionGrid
             spacing: Style.margin
-            width: parent.width
+            width: parent.width * 0.3
 
             StyledText { // heading text
                 id: headingText
@@ -103,8 +103,6 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     enabled: flolsRadio.selected
                 }
-
-
             }
 
             // Abeam the FLOLS
@@ -132,70 +130,6 @@ Item {
                 }
             }
 
-            // Offset selection
-            readonly property bool offsetEnabled: (flolsRadio.selected || abeamRadio.selected)
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: Style.margin
-                anchors.right: parent.right
-                anchors.rightMargin: Style.margin
-                spacing: Style.margin
-
-                Item {
-                    height: 1; width: Style.strutSize
-                }
-
-                NumericalEdit {
-                    id: offsetNmEdit
-                    quantity: _location.offsetDistance
-                    onCommit: _location.offsetDistance = newValue;
-                    label: qsTr("at")
-                    unitsMode: Units.Distance
-                    live: true
-                    anchors.verticalCenter: parent.verticalCenter
-                    enabled: selectionGrid.offsetEnabled
-                }
-
-                StyledText {
-                    text: qsTr(" from the FLOLS (aka the ball)")
-                    anchors.verticalCenter: parent.verticalCenter
-                    enabled: selectionGrid.offsetEnabled
-                }
-
-                Item {
-                    height: 1; width: Style.strutSize
-                }
-
-                ToggleSwitch {
-                    id: airspeedToggle
-                    enabled: selectionGrid.offsetEnabled
-                    checked: _location.speedEnabled
-                    onCheckedChanged: _location.speedEnabled = checked;
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                NumericalEdit {
-                    id: airspeedSpinbox
-                    label: qsTr("Airspeed:")
-                    unitsMode: Units.SpeedWithoutMach
-                    enabled: _location.speedEnabled && selectionGrid.offsetEnabled
-                    quantity: _location.airspeed
-                    onCommit: _location.airspeed = newValue
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Item {
-                    height: 1; width: Style.strutSize
-                }
-
-                LocationAltitudeRow
-                {
-                    enabled: selectionGrid.offsetEnabled
-                    width: parent.width
-                }
-
-            } // of Offset selection
 
             // parking row
             Row {
@@ -213,7 +147,11 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     group: radioGroup
                     onClicked: {
-                        if (selected) parkingChoice.setLocation();
+                        if (selected) {
+                          parkingChoice.setLocation();
+                          _location.useCarrierFLOLS = false;
+                          _location.abeam = false;
+                        }
                     }
                     selected : (! _location.abeam) && (! _location.useCarrierFLOLS)
                 }
@@ -256,9 +194,85 @@ Item {
                     }
                 }
             }
+        }
+
+        Column {
+            id: offsetGrid
+            spacing: Style.margin
+            anchors.leftMargin: Style.margin
+            anchors.right: parent.right
+            anchors.rightMargin: Style.margin
+            width: parent.width * 0.7
+            anchors.verticalCenter: parent.verticalCenter
+
+            // Offset selection
+            readonly property bool offsetEnabled: (flolsRadio.selected || abeamRadio.selected)
+
+            Row {
+                anchors.right: parent.right
+                anchors.left: parent.left
+                anchors.leftMargin: Style.margin
+                anchors.rightMargin: Style.margin
+                width : parent.width * 0.7
+
+                NumericalEdit {
+                    id: offsetNmEdit
+                    quantity: _location.offsetDistance
+                    onCommit: _location.offsetDistance = newValue;
+                    label: qsTr("at")
+                    unitsMode: Units.Distance
+                    live: true
+                    anchors.verticalCenter: parent.verticalCenter
+                    enabled: offsetGrid.offsetEnabled
+                }
+
+                StyledText {
+                    text: qsTr(" from the FLOLS (aka the ball)")
+                    anchors.verticalCenter: parent.verticalCenter
+                    enabled: offsetGrid.offsetEnabled
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.left: parent.left
+                anchors.leftMargin: Style.margin
+                anchors.rightMargin: Style.margin
+                width : parent.width * 0.7
+
+                ToggleSwitch {
+                    id: airspeedToggle
+                    enabled: offsetGrid.offsetEnabled
+                    checked: _location.speedEnabled
+                    onCheckedChanged: _location.speedEnabled = checked;
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                NumericalEdit {
+                    id: airspeedSpinbox
+                    label: qsTr("Airspeed:")
+                    unitsMode: Units.SpeedWithoutMach
+                    enabled: _location.speedEnabled && offsetGrid.offsetEnabled
+                    quantity: _location.airspeed
+                    onCommit: _location.airspeed = newValue
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Item {
+                    height: 1; width: Style.strutSize
+                }
+
+                LocationAltitudeRow
+                {
+                    enabled: offsetGrid.offsetEnabled
+                    width: parent.width
+                }
+
+            } // of Offset selection
 
             ToggleSwitch {
                 anchors.left: parent.left
+                anchors.right: parent.right
                 anchors.leftMargin: Style.margin
                 label: qsTr("Tune navigation radio (TACAN) to carrier")
                 checked: _location.tuneNAV1
