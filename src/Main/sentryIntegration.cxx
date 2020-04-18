@@ -27,10 +27,10 @@
 
 using namespace std;
 
-static bool static_sentryEnabled = false;
-
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
+
+static bool static_sentryEnabled = false;
 
 #include <sentry.h>
 
