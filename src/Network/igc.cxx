@@ -68,6 +68,7 @@ bool IGCProtocol::gen_Hrecords()
 #endif
 
     length = snprintf(buf, FG_MAX_MSG_SIZE,
+                    "AXYYZZZFlightGear\r\n"         // Manufacturer code 
                     "HFDTE%02d%02d%02d\r\n"         // date: DDMMYY
                     "HFFXA001\r\n"                  // fix accuracy (1 meter)
                     "HFGTYGliderType:%s\r\n"        // aircraft type
