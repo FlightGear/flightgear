@@ -24,6 +24,7 @@
 #include <osg/PagedLOD>
 
 // simgear
+#include <simgear/misc/strutils.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
@@ -835,11 +836,11 @@ void finalizePosition()
      * loaded. => When requested "initial preset position" relates to a
      * carrier, recalculate the 'initial' position here
      */
-    std::string carrier = fgGetString("/sim/presets/carrier");
-    std::string carrierpos = fgGetString("/sim/presets/carrier-position");
-    std::string parkpos = fgGetString("/sim/presets/parkpos");
-    std::string runway = fgGetString("/sim/presets/runway");
-    std::string apt = fgGetString("/sim/presets/airport-id");
+    const std::string carrier = fgGetString("/sim/presets/carrier");
+    const std::string carrierpos = fgGetString("/sim/presets/carrier-position");
+    const std::string parkpos = fgGetString("/sim/presets/parkpos");
+    const std::string runway = fgGetString("/sim/presets/runway");
+    const std::string apt = fgGetString("/sim/presets/airport-id");
 
     if (!carrier.empty())
     {
@@ -851,20 +852,17 @@ void finalizePosition()
         */
 
         // Convert to lower case to simplify comparison
-        std::transform(carrierpos.begin(),
-                       carrierpos.end(),
-                       carrierpos.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+        std::string cpos = simgear::strutils::lowercase(carrierpos);
 
-        const bool    inair = (carrierpos == "flols") || (carrierpos == "abeam");
-        const bool    abeam = (carrierpos == "abeam");
+        const bool    inair = (cpos == "flols") || (cpos == "abeam");
+        const bool    abeam = (cpos == "abeam");
         InitPosResult carrierResult;
         if (inair) {
             carrierResult = setFinalPosFromCarrierFLOLS(carrier, abeam);
         } else {
-            // We don't simply use carrierpos as it is now lower case, and the
+            // We don't simply use cpos as it is lower case, and the
             // search against parking/catapult positions is case-sensitive.
-            carrierResult = setFinalPosFromCarrier(carrier, fgGetString("/sim/presets/carrier-position"));
+            carrierResult = setFinalPosFromCarrier(carrier, carrierpos);
         }
         if (carrierResult == ExactPosition) {
             done = true;
