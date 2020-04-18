@@ -323,6 +323,12 @@ void FGAICarrier::bind() {
     props->setStringValue("sign", sign.c_str());
     props->setBoolValue("controls/lighting/deck-lights", false);
     props->setDoubleValue("controls/lighting/flood-lights-red-norm", 0);
+
+    // Write out a list of the parking positions - useful for the UI to select
+    // from
+    for (const auto& ppos : ppositions) {
+        if (ppos.name != "") props->addChild("parking-pos")->setStringValue("name", ppos.name);
+    }
 }
 
 bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
