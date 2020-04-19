@@ -21,8 +21,10 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#include <direct.h>
+#  include <windows.h>
+#  include <direct.h>
+#else
+#  include <unistd.h>
 #endif
 
 #ifdef __APPLE__
