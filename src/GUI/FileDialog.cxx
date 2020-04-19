@@ -22,11 +22,7 @@
 #  include "config.h"
 #endif
 
-
 #include "FileDialog.hxx"
-
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
 
 #include <simgear/nasal/cppbind/Ghost.hxx>
 
@@ -137,7 +133,7 @@ void FGFileDialog::setCallbackFromNasal(const nasal::CallContext& ctx)
     setCallback(new NasalCallback(func, object));
 }
 
-typedef boost::shared_ptr<FGFileDialog> FileDialogPtr;
+typedef std::shared_ptr<FGFileDialog> FileDialogPtr;
 typedef nasal::Ghost<FileDialogPtr> NasalFileDialog;
 
 /**

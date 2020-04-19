@@ -20,7 +20,7 @@
 #define NASAL_CLIPOARD_HXX_
 
 #include <simgear/nasal/nasal.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 
 class FGNasalSys;
@@ -39,7 +39,7 @@ class NasalClipboard
       PRIMARY
     };
 
-    typedef boost::shared_ptr<NasalClipboard> Ptr;
+    typedef std::shared_ptr<NasalClipboard> Ptr;
 
     virtual void update() {}
     virtual std::string getText(Type type = CLIPBOARD) = 0;

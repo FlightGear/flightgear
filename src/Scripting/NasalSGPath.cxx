@@ -25,14 +25,10 @@
 #include <Main/util.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 
-
-typedef boost::shared_ptr<SGPath> SGPathRef;
+typedef std::shared_ptr<SGPath> SGPathRef;
 typedef nasal::Ghost<SGPathRef> NasalSGPath;
 
 SGPath::Permissions checkIORules(const SGPath& path)
