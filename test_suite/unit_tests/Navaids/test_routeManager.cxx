@@ -295,20 +295,19 @@ void RouteManagerTests::testSequenceDiscontinuityAndResume()
      auto gpsNode = globals->get_props()->getNode("instrumentation/gps", true);
    //  auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
 
+    auto balenLeg = fp1->legAtIndex(2);
+    auto pos = fp1->pointAlongRoute(2, -8.0); // 8nm before BALEN
+    FGTestApi::setPosition(pos);
+    FGTestApi::runForTime(10.0); // let the GPS stabilize
+    
      CPPUNIT_ASSERT(!strcmp("obs", gpsNode->getStringValue("mode")));
      rm->activate();
      
      CPPUNIT_ASSERT(fp1->isActive());
 
-    auto balenLeg = fp1->legAtIndex(2);
-    auto pos = fp1->pointAlongRoute(2, -8.0); // 8nm before BALEN
-    
-    
+    CPPUNIT_ASSERT(std::string{"leg"} == gpsNode->getStringValue("mode"));
     fp1->setCurrentIndex(2);
     
-     FGTestApi::setPosition(pos);
-     FGTestApi::runForTime(10.0); // let the GPS stabilize
-
     auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
     pilot->resetAtPosition(pos);
     pilot->setCourseTrue(270);
