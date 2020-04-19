@@ -459,3 +459,18 @@ void FlightplanTests::testOnlyDiscontinuityRoute()
     wpt = f->waypointFromString("EPL");
     f->insertWayptAtIndex(wpt, 2);
 }
+
+void FlightplanTests::testLeadingWPDynamic()
+{
+    FlightPlanRef f = new FlightPlan;
+    // plan has no departure, so this discon is floating
+    f->insertWayptAtIndex(new Discontinuity(f), 0);
+    
+    auto ha = new HeadingToAltitude(f, "TO_3000", 90);
+    ha->setAltitude(3000, RESTRICT_AT);
+    f->insertWayptAtIndex(ha, 1);
+    
+    RoutePath rp1(f);
+    // distance will be invalid, but shouldn;t assert or crash :)
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, f->totalDistanceNm(), 0.001);
+}
