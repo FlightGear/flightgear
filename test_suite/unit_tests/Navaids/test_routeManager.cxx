@@ -279,6 +279,83 @@ void RouteManagerTests::testDirectToLegOnFlightplanAndResume()
     CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
 }
 
+void RouteManagerTests::testSequenceDiscontinuityAndResume()
+{
+    FGTestApi::setUp::logPositionToKML("rm_seq_discon_resume_leg");
+
+    FlightPlanRef fp1 = makeTestFP("LIRF", "16R", "LEBL", "07L",
+                                    "GITRI BALEN MUREN TOSNU");
+    
+    
+    fp1->insertWayptAtIndex(new Discontinuity(fp1), 3);
+
+     auto rm = globals->get_subsystem<FGRouteMgr>();
+     rm->setFlightPlan(fp1);
+
+     auto gpsNode = globals->get_props()->getNode("instrumentation/gps", true);
+   //  auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
+
+     CPPUNIT_ASSERT(!strcmp("obs", gpsNode->getStringValue("mode")));
+     rm->activate();
+     
+     CPPUNIT_ASSERT(fp1->isActive());
+
+    auto balenLeg = fp1->legAtIndex(2);
+    auto pos = fp1->pointAlongRoute(2, -8.0); // 8nm before BALEN
+    
+    
+    fp1->setCurrentIndex(2);
+    
+     FGTestApi::setPosition(pos);
+     FGTestApi::runForTime(10.0); // let the GPS stabilize
+
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(pos);
+    pilot->setCourseTrue(270);
+    pilot->setSpeedKts(250);
+    pilot->flyGPSCourse(m_gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [gpsNode] () {
+        return (gpsNode->getStringValue("mode") == std::string{"obs"});
+    });
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(2, fp1->currentIndex()); // shouldn't sequence
+    
+    FGTestApi::runForTime(30.0);
+    
+    
+    // 2nm before MUREN : this should be on the GC course from BALEN
+    auto pos2 = fp1->pointAlongRoute(4, -6.0);
+    FGTestApi::setPosition(pos2);
+    FGTestApi::runForTime(2.0); // let the GPS stabilize
+
+    // initiate a direct-to the next real WP
+    const auto murenPos = fp1->legAtIndex(4)->waypoint()->position();
+   gpsNode->setStringValue("scratch/ident", "MUREN");
+   gpsNode->setDoubleValue("scratch/longitude-deg", murenPos.getLongitudeDeg());
+   gpsNode->setDoubleValue("scratch/latitude-deg", murenPos.getLatitudeDeg());
+   gpsNode->setStringValue("command", "direct");
+   CPPUNIT_ASSERT_EQUAL(std::string{"dto"}, std::string{gpsNode->getStringValue("mode")});
+
+    pilot->resetAtPosition(pos2);
+    pilot->flyGPSCourse(m_gps);
+    
+    ok = FGTestApi::runForTimeWithCheck(600.0, [fp1] () {
+        if (fp1->currentIndex() == 5) {
+            return true;
+        }
+        return false;
+    });
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(std::string{"leg"}, std::string{gpsNode->getStringValue("mode")});
+    CPPUNIT_ASSERT_EQUAL(5, fp1->currentIndex());
+    
+    FGTestApi::runForTime(30.0);
+
+}
+
 void RouteManagerTests::testDefaultApproach()
 {
     

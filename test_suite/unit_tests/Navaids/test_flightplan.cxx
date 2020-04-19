@@ -405,6 +405,7 @@ void FlightplanTests::testBasicDiscontinuity()
     
     const SGGeod balenPos = fp1->legAtIndex(3)->waypoint()->position();
     const SGGeod murenPos = fp1->legAtIndex(4)->waypoint()->position();
+    const auto crs = SGGeodesy::courseDeg(balenPos, murenPos);
     
     // total distance should not change
     fp1->insertWayptAtIndex(new Discontinuity(fp1), 4); // betwee BALEN and MUREN
@@ -419,6 +420,20 @@ void FlightplanTests::testBasicDiscontinuity()
                                  SGGeodesy::courseDeg(balenPos, murenPos), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fp1->legAtIndex(5)->distanceNm(),
                                  SGGeodesy::distanceNm(balenPos, murenPos), 0.1);
+    
+    // ensure that pointAlongRoute works correctly going into the DISCON
+    
+    
+    const auto pos1 = fp1->pointAlongRoute(3, 20.0);
+    const auto validP1 = SGGeodesy::direct(balenPos, crs, 20.0 * SG_NM_TO_METER);
+    
+    CPPUNIT_ASSERT(SGGeodesy::distanceM(pos1, validP1) < 500.0);
+    
+    const auto pos2 = fp1->pointAlongRoute(5, -10.0);
+    const auto crs2 = SGGeodesy::courseDeg(murenPos, balenPos);
+    const auto validP2 = SGGeodesy::direct(murenPos, crs2, 10.0 * SG_NM_TO_METER);
+    
+    CPPUNIT_ASSERT(SGGeodesy::distanceM(pos2, validP2) < 500.0);
     
     // remove the discontinuity
     fp1->deleteIndex(4);

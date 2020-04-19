@@ -632,7 +632,7 @@ public:
   void computeDynamicPosition(int index)
   {
     auto previous(previousValidWaypoint(index));
-    if ((previous == waypoints.end()) || !previous->posValid);
+    if ((previous == waypoints.end()) || !previous->posValid)
     {
       SG_LOG(SG_NAVAID, SG_WARN, "couldn't compute position for dynamic waypoint: no preceeding valid waypoint");
       return;
@@ -1165,69 +1165,80 @@ double RoutePath::distanceBetweenIndices(int from, int to) const
 
 SGGeod RoutePath::positionForDistanceFrom(int index, double distanceM) const
 {
-    int sz = (int) d->waypoints.size();
-    if (index < 0) {
-        index = sz - 1; // map negative values to end of the route
+  int sz = (int) d->waypoints.size();
+  if (index < 0) {
+    index = sz - 1; // map negative values to end of the route
+  }
+  
+  if ((index < 0) || (index >= sz)) {
+    throw sg_range_exception("waypt index out of range",
+                             "RoutePath::positionForDistanceFrom");
+  }
+  
+  // find the actual leg we're within
+  if (distanceM < 0.0) {
+    // scan backwards
+    while ((index > 0) && (distanceM < 0.0)) {
+      // we are looking at index n, say 4, but with a negative distance.
+      // we want to look at index n-1 (so, 3), and see if this makes
+      // distance positive. We need to offset by distance from 3 -> 4,
+      // which is waypoint 4's path distance.
+      
+      // note pathDistanceM is 0 for skipped waypoints, so this works out
+      distanceM += d->waypoints[index].pathDistanceM;
+      --index;
     }
-
-    if ((index < 0) || (index >= sz)) {
-        throw sg_range_exception("waypt index out of range",
-                                 "RoutePath::positionForDistanceFrom");
-    }
-
-    // find the actual leg we're within
+    
     if (distanceM < 0.0) {
-        // scan backwards
-        while ((index > 0) && (distanceM < 0.0)) {
-            // we are looking at index n, say 4, but with a negative distance.
-            // we want to look at index n-1 (so, 3), and see if this makes
-            // distance positive. We need to offset by distance from 3 -> 4,
-            // which is waypoint 4's path distance.
-            distanceM += d->waypoints[index].pathDistanceM;
-            --index;
-        }
-
-        if (distanceM < 0.0) {
-            // still negative, return route start
-            return d->waypoints[0].pos;
-        }
-
-    } else {
-        // scan forwards
-        int nextIndex = index + 1;
-        while ((nextIndex < sz) && (d->waypoints[nextIndex].pathDistanceM < distanceM)) {
-            distanceM -= d->waypoints[nextIndex].pathDistanceM;
-            index = nextIndex++;
-        }
+      // still negative, return route start
+      return d->waypoints[0].pos;
     }
-
-    if ((index + 1) >= sz) {
-        // past route end, just return final position
-        return d->waypoints[sz - 1].pos;
+    
+  } else {
+    // scan forwards
+    int nextIndex = index + 1;
+    while ((nextIndex < sz) && (d->waypoints[nextIndex].pathDistanceM < distanceM)) {
+      distanceM -= d->waypoints[nextIndex].pathDistanceM;
+      index = nextIndex++;
     }
-
-
-    const WayptData& wpt(d->waypoints[index]);
-    const WayptData& next(d->waypoints[index+1]);
-    if (next.wpt->type() == "via") {
-        return positionAlongVia(static_cast<Via*>(next.wpt.get()), index, distanceM);
-    }
-
-    if (wpt.turnPathDistanceM > distanceM) {
-        // on the exit path of current wpt
-        return wpt.pointAlongExitPath(distanceM);
-    } else {
-        distanceM -= wpt.turnPathDistanceM;
-    }
-
-    double corePathDistance = next.pathDistanceM - next.turnPathDistanceM;
-    if (next.hasEntry && (distanceM > corePathDistance)) {
-        // on the entry path of next waypoint
-        return next.pointAlongEntryPath(distanceM - corePathDistance);
-    }
-
-    // linear between turn exit and turn entry points
-    return SGGeodesy::direct(wpt.turnExitPos, next.legCourseTrue, distanceM);
+  }
+  
+  auto nextIt = d->nextValidWaypoint(index);
+  if (nextIt == d->waypoints.end()) {
+    // past route end, just return final position
+    return d->waypoints[sz - 1].pos;
+  }
+  
+  // this is important so we start from a valid WP if we're
+  // working either side of a DISCON
+  auto curIt = d->previousValidWaypoint(nextIt);
+  if (curIt == d->waypoints.end()) {
+    SG_LOG(SG_NAVAID, SG_WARN, "Couldn't find valid preceeding waypoint " << index);
+    return nextIt->pos;
+  }
+  
+  const WayptData& wpt = *curIt;
+  const WayptData& next = *nextIt;
+  
+  if (next.wpt->type() == "via") {
+    return positionAlongVia(static_cast<Via*>(next.wpt.get()), index, distanceM);
+  }
+  
+  if (wpt.turnPathDistanceM > distanceM) {
+    // on the exit path of current wpt
+    return wpt.pointAlongExitPath(distanceM);
+  } else {
+    distanceM -= wpt.turnPathDistanceM;
+  }
+  
+  double corePathDistance = next.pathDistanceM - next.turnPathDistanceM;
+  if (next.hasEntry && (distanceM > corePathDistance)) {
+    // on the entry path of next waypoint
+    return next.pointAlongEntryPath(distanceM - corePathDistance);
+  }
+  
+  // linear between turn exit and turn entry points
+  return SGGeodesy::direct(wpt.turnExitPos, next.legCourseTrue, distanceM);
 }
 
 SGGeod RoutePath::positionAlongVia(Via* via, int previousIndex, double distanceM) const
