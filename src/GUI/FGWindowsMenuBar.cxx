@@ -3,8 +3,6 @@
 #include <windows.h>
 #include <cstring>
 
-#include <boost/lexical_cast.hpp>
-
 #include <osgViewer/Viewer>
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/api/Win32/GraphicsWindowWin32>

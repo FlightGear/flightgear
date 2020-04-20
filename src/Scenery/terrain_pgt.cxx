@@ -26,8 +26,6 @@
 
 #ifdef ENABLE_GDAL
 
-#include <boost/lexical_cast.hpp>
-
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 
@@ -84,9 +82,15 @@ void FGPgtTerrain::init( osg::Group* terrain ) {
 
     options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().utf8Str());
 
-    options->setPluginStringData("SimGear::BARE_LOD_RANGE", fgGetString("/sim/rendering/static-lod/bare-delta", boost::lexical_cast<string>(SG_OBJECT_RANGE_BARE)));
-    options->setPluginStringData("SimGear::ROUGH_LOD_RANGE", fgGetString("/sim/rendering/static-lod/rough-delta", boost::lexical_cast<string>(SG_OBJECT_RANGE_ROUGH)));
-    options->setPluginStringData("SimGear::ROUGH_LOD_DETAILED", fgGetString("/sim/rendering/static-lod/detailed", boost::lexical_cast<string>(SG_OBJECT_RANGE_DETAILED)));
+    options->setPluginStringData("SimGear::BARE_LOD_RANGE",
+                                 fgGetString("/sim/rendering/static-lod/bare-delta",
+                                             std::to_string(SG_OBJECT_RANGE_BARE)));
+    options->setPluginStringData("SimGear::ROUGH_LOD_RANGE",
+                                 fgGetString("/sim/rendering/static-lod/rough-delta",
+                                             std::to_string(SG_OBJECT_RANGE_ROUGH)));
+    options->setPluginStringData("SimGear::ROUGH_LOD_DETAILED",
+                                 fgGetString("/sim/rendering/static-lod/detailed",
+                                             std::to_string(SG_OBJECT_RANGE_DETAILED)));
     options->setPluginStringData("SimGear::RENDER_BUILDING_MESH", fgGetBool("/sim/rendering/building-mesh", false) ? "true" : "false");
 
     options->setPluginStringData("SimGear::FG_EARTH", "ON");

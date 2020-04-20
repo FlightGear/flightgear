@@ -28,8 +28,6 @@
 #include <algorithm>
 #include <functional>
 
-#include <boost/lexical_cast.hpp>
-
 #include <osgViewer/Viewer>
 #include <osgDB/Registry>
 

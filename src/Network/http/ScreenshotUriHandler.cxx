@@ -36,7 +36,6 @@
 #include <Viewer/renderer.hxx>
 
 #include <queue>
-#include <boost/lexical_cast.hpp>
 
 using std::string;
 using std::vector;
@@ -526,11 +525,11 @@ bool ScreenshotUriHandler::poll(Connection * connection)
     SG_LOG(SG_NETWORK, SG_DEBUG, "Screenshot is ready, size=" << screenshot.size());
 
       if (screenshotRequest->isStream()) {
-        string s( BOUNDARY "\r\nContent-Type: image/");
-        s.append(screenshotRequest->getType()).append("\r\nContent-Length:");
-        s += boost::lexical_cast<string>(screenshot.size());
-        s += "\r\n\r\n";
-        connection->write(s.c_str(), s.length());
+        std::ostringstream ss;
+        ss << BOUNDARY << "\r\nContent-Type: image/";
+        ss << screenshotRequest->getType() << "\r\nContent-Length:";
+        ss << screenshot.size() << "\r\n\r\n";
+        connection->write(ss.str().c_str(), ss.str().length());
       }
 
       connection->write(screenshot.data(), screenshot.size());
@@ -566,11 +565,11 @@ bool ScreenshotUriHandler::poll(Connection * connection)
   SG_LOG(SG_NETWORK, SG_DEBUG, "CanvasImage is ready, size=" << canvasimage.size());
 
   if (canvasimageRequest->isStream()) {
-      string s(BOUNDARY "\r\nContent-Type: image/");
-      s.append(canvasimageRequest->getType()).append("\r\nContent-Length:");
-      s += boost::lexical_cast<string>(canvasimage.size());
-      s += "\r\n\r\n";
-      connection->write(s.c_str(), s.length());
+      std::ostringstream ss;
+      ss << BOUNDARY << "\r\nContent-Type: image/";
+      ss << canvasimageRequest->getType() << "\r\nContent-Length:";
+      ss << canvasimage.size() << "\r\n\r\n";
+      connection->write(ss.str().c_str(), ss.str().length());
   }
   connection->write(canvasimage.data(), canvasimage.size());
   if (canvasimageRequest->isStream()) {
@@ -587,4 +586,3 @@ bool ScreenshotUriHandler::poll(Connection * connection)
 
 } // namespace http
 } // namespace flightgear
-
