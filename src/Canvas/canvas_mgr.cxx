@@ -18,6 +18,8 @@
 
 #include "canvas_mgr.hxx"
 
+#include <boost/bind.hpp>
+
 #include <Cockpit/od_gauge.hxx>
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalModelData.hxx>

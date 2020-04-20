@@ -13,8 +13,6 @@
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <cstring> // for strlen
 
@@ -171,8 +169,8 @@ FGNasalModelData* FGNasalModelData::getByModuleId(unsigned int id)
   (
     _loaded_models.begin(),
     _loaded_models.end(),
-    boost::bind(&FGNasalModelData::_module_id, _1) == id
-  );
+    [id] (const FGNasalModelData* const data) {
+        return data->_module_id == id; });
 
   if( it != _loaded_models.end() )
     return *it;
