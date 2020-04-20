@@ -9,6 +9,9 @@ namespace setUp {
 
 void initNavDataCache()
 {
+    if (flightgear::NavDataCache::instance())
+        return;
+    
     flightgear::NavDataCache* cache = flightgear::NavDataCache::createInstance();
     if (cache->isRebuildRequired()) {
         std::cerr << "Navcache rebuild for testing" << std::flush;

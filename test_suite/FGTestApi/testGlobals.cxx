@@ -214,6 +214,11 @@ void populateFPWithNasal(flightgear::FlightPlanRef f,
         global_kmlStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << endl;
     }
 
+    void rawLogCoordinate(const SGGeod& pos)
+    {
+        global_kmlStream << pos.getLongitudeDeg() << "," << pos.getLatitudeDeg() << " " << endl;
+    }
+
     void endCurrentLineString()
     {
         global_lineStringOpen = false;
@@ -308,6 +313,10 @@ void writeFlightPlanToKML(flightgear::FlightPlanRef fp)
     for (int i=0; i<fp->numLegs(); ++i) {
         SGGeodVec legPath = rpath.pathForIndex(i);
         fullPath.insert(fullPath.end(), legPath.begin(), legPath.end());
+        
+        auto wp = fp->legAtIndex(i)->waypoint();
+        SGGeod legWPPosition = wp->position();
+        writePointToKML("WP " + wp->ident(), legWPPosition);
     }
     
     writeGeodsToKML("FlightPlan", fullPath);
@@ -326,6 +335,18 @@ void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geod
     }
     
     endCurrentLineString();
+}
+
+void writePointToKML(const std::string& ident, const SGGeod& pos)
+{
+    global_kmlStream << "<Placemark>\n";
+    global_kmlStream << "<name>"  << ident << "</name>\n";
+    global_kmlStream << "<Point>\n";
+    global_kmlStream << "<coordinates>\n";
+    rawLogCoordinate(pos);
+    global_kmlStream << "</coordinates>\n";
+    global_kmlStream << "</Point>\n";
+    global_kmlStream << "</Placemark>\n";
 }
 
 bool executeNasal(const std::string& code)

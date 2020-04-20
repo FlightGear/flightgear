@@ -452,6 +452,11 @@ bool FGAirport::TypeRunwayFilter::pass(FGPositioned* pos) const
   return true;
 }
 
+void FGAirport::clearAirportsCache()
+{
+    airportCache.clear();
+}
+
 //------------------------------------------------------------------------------
 FGAirportRef FGAirport::findByIdent(const std::string& aIdent)
 {

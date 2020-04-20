@@ -304,6 +304,8 @@ class FGAirport : public FGPositioned
     flightgear::CommStationList commStationsOfType(FGPositioned::Type aTy) const;
     
     flightgear::CommStationList commStations() const;
+    
+    static void clearAirportsCache();
 private:
     static flightgear::AirportCache airportCache;
 

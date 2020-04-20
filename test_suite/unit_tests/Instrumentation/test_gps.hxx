@@ -53,6 +53,7 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testDirectToLegOnFlightplanAndResumeBuiltin);
     CPPUNIT_TEST(testBuiltinRevertToOBSAtEnd);
     CPPUNIT_TEST(testRadialIntercept);
+    CPPUNIT_TEST(testDMEIntercept);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -86,6 +87,7 @@ public:
     void testDirectToLegOnFlightplanAndResumeBuiltin();
     void testBuiltinRevertToOBSAtEnd();
     void testRadialIntercept();
+    void testDMEIntercept();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX

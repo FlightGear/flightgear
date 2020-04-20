@@ -52,6 +52,7 @@ bool runForTimeWithCheck(double t, RunCheck check);
 void writeFlightPlanToKML(flightgear::FlightPlanRef fp);
     
 void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geods);
+void writePointToKML(const std::string& ident, const SGGeod& pos);
 
 bool executeNasal(const std::string& code);
     

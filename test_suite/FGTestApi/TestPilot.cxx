@@ -141,9 +141,24 @@ void TestPilot::updateValues(double dt)
         }
         
         // set how aggressively we try to correct our course
-        const double courseCorrectionFactor = 8.0;
+        double courseCorrectionFactor = 8.0;
+        double crossTrack =  _gpsNode->getDoubleValue("wp/wp[1]/course-error-nm");
+        
+        
         double correction = courseCorrectionFactor * deviationDeg;
-        SG_CLAMP_RANGE(correction, -45.0, 45.0);
+        double maxOffset = 45;
+        
+        // don't make really sharp turns if we're getting close
+        if (fabs(crossTrack) < 1.0) {
+            maxOffset *= 0.5;
+        }
+        
+        // *really* don't make sharp turns if we're getting really close :)
+        if (fabs(crossTrack) < 0.2) {
+            maxOffset *= 0.5;
+        }
+        
+        SG_CLAMP_RANGE(correction, -maxOffset, maxOffset);
         _targetCourseDeg += correction;
         
         SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);

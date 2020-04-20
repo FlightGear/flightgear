@@ -462,3 +462,60 @@ void RNAVProcedureTests::testEGPH_TLA6C()
     CPPUNIT_ASSERT_EQUAL(std::string{"TLA"}, fp->legAtIndex(5)->waypoint()->ident());
     CPPUNIT_ASSERT_EQUAL(std::string{"TLA"}, std::string{m_gpsNode->getStringValue("wp/wp[1]/ID")});
 }
+
+void RNAVProcedureTests::testLFKC_AJO1R()
+{
+    auto lfkc = FGAirport::findByIdent("LFKC");
+    auto sid = lfkc->findSIDWithIdent("AJO1R");
+    // procedures not loaded, abandon test
+    if (!sid)
+        return;
+    
+  //  FGTestApi::setUp::logPositionToKML("procedure_LFKC_AJO1R");
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    fp->addDelegate(testDelegate);
+    
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithNasal(fp, "LFKC", "36", "EGLL", "27R", "");
+    
+    fp->setSID(sid);
+    
+    CPPUNIT_ASSERT_EQUAL(std::string{"BEBEV"}, fp->legAtIndex(4)->waypoint()->ident());
+    CPPUNIT_ASSERT_EQUAL(std::string{"AJO"}, fp->legAtIndex(5)->waypoint()->ident());
+    double d = fp->legAtIndex(5)->distanceAlongRoute();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(72, d, 1.0); // ensure the route didn't blow up to 0,0
+    
+    FGRunwayRef departureRunway = fp->departureRunway();
+   // FGTestApi::writeFlightPlanToKML(fp);
+    
+    CPPUNIT_ASSERT(rm->activate());
+    
+    setupStandardGPS();
+    
+    FGTestApi::setPositionAndStabilise(departureRunway->threshold());
+    m_gpsNode->setStringValue("command", "leg");
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(globals->get_aircraft_position());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(departureRunway->headingDeg(), m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    pilot->setCourseTrue(m_gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    pilot->setSpeedKts(220);
+    pilot->flyGPSCourse(m_gps);
+    
+    FGTestApi::runForTime(20.0);
+    // check we're somewhere along the runway, on the centerline
+    // and still on waypoint zero
+    
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 1) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+}

@@ -766,7 +766,7 @@ void GPSTests::testOverflightSequencing()
     FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
                                              "ALADA NS WB WN MAMOD KAPTI OH");
     
-//    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
     
     // takes the place of the Nasal delegates
     auto testDelegate = new TestFPDelegate;
@@ -1217,13 +1217,16 @@ void GPSTests::testTurnAnticipation()
 
 void GPSTests::testRadialIntercept()
 {
-    //FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
+   // FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
        
     FGTestApi::setUp::populateFPWithoutNasal(fp, "LFKC", "36", "LIRF", "25", "BUNAX BEBEV AJO");
+    
+    // set BUNAX as overflight
+    fp->legAtIndex(1)->waypoint()->setFlag(WPT_OVERFLIGHT);
     
     // insert KC502 manually
     fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(8.78333, 42.566), "KC502", fp), 1);
@@ -1233,7 +1236,7 @@ void GPSTests::testRadialIntercept()
     auto intc = new RadialIntercept(fp, "INTC", pos, 230, 5);
     fp->insertWayptAtIndex(intc, 3);
     
-  //  FGTestApi::writeFlightPlanToKML(fp);
+    //FGTestApi::writeFlightPlanToKML(fp);
     
 // position slightly before BUNAX
     SGGeod initPos = fp->pointAlongRoute(2, -3.0);
@@ -1272,4 +1275,70 @@ void GPSTests::testRadialIntercept()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
     
     FGTestApi::runForTime(30.0);
+}
+
+
+void GPSTests::testDMEIntercept()
+{
+    //FGTestApi::setUp::logPositionToKML("gps_dme_intercept");
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    
+    // manually consturct something close to the publichsed approach transition for EGPH ILS 06
+    
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EGLL", "27R", "EGPH", "06", "SHAPP TLA");
+    
+    //   DMEIntercept(RouteBase* aOwner, const std::string& aIdent, const SGGeod& aPos,
+   //   double aCourseDeg, double aDistanceNm);
+    auto dmeArc = new DMEIntercept(fp, "TLA-11", SGGeod::fromDeg(-3.352833, 55.499145), 323.0, 11.0);
+    fp->insertWayptAtIndex(dmeArc, 3);
+    
+    // now a normal WP
+    fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(-3.636708, 55.689981), "D3230", fp), 4);
+    
+    auto dmeArc2 = new DMEIntercept(fp, "TLA-20", SGGeod::fromDeg(-3.352833, 55.499145), 323.0, 20.0);
+    fp->insertWayptAtIndex(dmeArc2, 5);
+    
+    // and another normal WP
+    fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(-3.751056, 55.766122), "D323U", fp), 6);
+    
+    // and another one
+    fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(-3.690845, 55.841378), "CI06", fp), 7);
+    
+   // FGTestApi::writeFlightPlanToKML(fp);
+
+    // position slightly before TLA
+    SGGeod initPos = fp->pointAlongRoute(2, -2.0);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    FGTestApi::setPositionAndStabilise(initPos);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setStringValue("command", "leg");
+    
+    fp->setCurrentIndex(2);
+    
+    CPPUNIT_ASSERT_EQUAL(string{"TLA"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
+   // CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(initPos);
+    pilot->setCourseTrue(fp->legAtIndex(2)->courseDeg());
+    pilot->setSpeedKts(220); 
+    pilot->flyGPSCourse(gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(1200.0, [fp]() {
+        return fp->currentIndex() == 8;
+    });
+    CPPUNIT_ASSERT(ok);
+   
 }

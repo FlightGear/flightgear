@@ -1264,12 +1264,17 @@ NavDataCache::NavDataCache()
 NavDataCache::~NavDataCache()
 {
   assert(static_instance == this);
-  static_instance = NULL;
+  static_instance = nullptr;
   d.reset();
+
+// ensure we wip the airports cache too, or we'll get out
+// of sync during tests
+  FGAirport::clearAirportsCache();
 }
 
 NavDataCache* NavDataCache::createInstance()
 {
+    assert(static_instance == nullptr);
     static_instance = new NavDataCache;
     return static_instance;
 }

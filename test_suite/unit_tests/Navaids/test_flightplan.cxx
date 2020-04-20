@@ -495,6 +495,8 @@ void FlightplanTests::testRadialIntercept()
     // replicate AJO1R departure
     FlightPlanRef f = makeTestFP("LFKC", "36", "LIRF", "25", "BUNAX BEBEV AJO");
     
+    // set BUNAX as overflight
+    f->legAtIndex(1)->waypoint()->setFlag(WPT_OVERFLIGHT);
     f->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(8.78333, 42.566), "KC502", f), 1);
 
     SGGeod pos = SGGeod::fromDeg(8.445556,42.216944);
