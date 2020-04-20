@@ -101,6 +101,35 @@ void addSentryTag(const char* tag, const char* value)
     sentry_set_tag(tag, value);
 }
 
+void sentryReportNasalError(const std::string& msg, const string_list& stack)
+{
+    if (!static_sentryEnabled)
+        return;
+#if 0
+    sentry_value_t exc = sentry_value_new_object();
+    sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(msg.c_str()));
+
+    sentry_value_t stackData = sentry_value_new_list();
+    for (const auto& nasalFrame : stack) {
+        sentry_value_append(stackData, sentry_value_new_string(nasalFrame.c_str()));
+    }
+    sentry_value_set_by_key(exc, "stack", stackData);
+
+    
+    sentry_value_t event = sentry_value_new_event();
+    sentry_value_set_by_key(event, "exception", exc);
+    
+    // add the Nasal stack trace data
+    
+    // capture the C++ stack-trace. Probably not that useful but can't hurt
+    sentry_event_value_add_stacktrace(event, nullptr, 0);
+    
+    sentry_capture_event(event);
+    
+#endif
+}
+
 } // of namespace
 
 #else
@@ -128,6 +157,10 @@ void addSentryBreadcrumb(const std::string&, const std::string&)
 }
 
 void addSentryTag(const char*, const char*)
+{
+}
+
+void sentryReportNasalError(const std::string&, const string_list&)
 {
 }
 

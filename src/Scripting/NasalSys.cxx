@@ -55,6 +55,7 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 using std::map;
 using std::string;
@@ -310,7 +311,9 @@ naRef FGNasalSys::callMethodWithContext(naContext ctx, naRef code, naRef self, i
         return naCallMethodCtx(ctx, code, self, argc, args, locals);
     } catch (sg_exception& e) {
         SG_LOG(SG_NASAL, SG_DEV_ALERT, "caught exception invoking nasal method:" << e.what());
-        logNasalStack(ctx);
+        string_list nasalStack;
+        logNasalStack(ctx, nasalStack);
+        flightgear::sentryReportNasalError(string{"Exception invoking nasal method:"} + e.what(), nasalStack);
         return naNil();
     }
 }
@@ -1305,23 +1308,34 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
 // Logs a runtime error, with stack trace, to the FlightGear log stream
 void FGNasalSys::logError(naContext context)
 {
-    SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error: " << naGetError(context));
-    logNasalStack(context);
+    string errorMessage = naGetError(context);
+    SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error: " << errorMessage);
+    
+    string_list nasalStack;
+    logNasalStack(context, nasalStack);
+    flightgear::sentryReportNasalError(errorMessage, nasalStack);
 }
 
-void FGNasalSys::logNasalStack(naContext context)
+void FGNasalSys::logNasalStack(naContext context, string_list& stack)
 {
     const int stack_depth = naStackDepth(context);
     if (stack_depth < 1)
       return;
 
+    stack.push_back(string{naStr_data(naGetSourceFile(context, 0))} +
+                    ", line " + std::to_string(naGetLine(context, 0)));
+    
     SG_LOG(SG_NASAL, SG_ALERT,
            "  at " << naStr_data(naGetSourceFile(context, 0)) <<
            ", line " << naGetLine(context, 0));
+    
     for(int i=1; i<stack_depth; i++) {
         SG_LOG(SG_NASAL, SG_ALERT,
                "  called from: " << naStr_data(naGetSourceFile(context, i)) <<
                ", line " << naGetLine(context, i));
+        
+        stack.push_back(string{naStr_data(naGetSourceFile(context, i))} +
+                        ", line " + std::to_string(naGetLine(context, i)));
     }
 }
 
