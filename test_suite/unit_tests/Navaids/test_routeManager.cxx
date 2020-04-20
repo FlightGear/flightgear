@@ -281,7 +281,7 @@ void RouteManagerTests::testDirectToLegOnFlightplanAndResume()
 
 void RouteManagerTests::testSequenceDiscontinuityAndResume()
 {
-    FGTestApi::setUp::logPositionToKML("rm_seq_discon_resume_leg");
+  //  FGTestApi::setUp::logPositionToKML("rm_seq_discon_resume_leg");
 
     FlightPlanRef fp1 = makeTestFP("LIRF", "16R", "LEBL", "07L",
                                     "GITRI BALEN MUREN TOSNU");

@@ -1215,3 +1215,61 @@ void GPSTests::testTurnAnticipation()
 {
 }
 
+void GPSTests::testRadialIntercept()
+{
+    //FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+       
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "LFKC", "36", "LIRF", "25", "BUNAX BEBEV AJO");
+    
+    // insert KC502 manually
+    fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(8.78333, 42.566), "KC502", fp), 1);
+    
+    
+    SGGeod pos = SGGeod::fromDeg(8.445556,42.216944);
+    auto intc = new RadialIntercept(fp, "INTC", pos, 230, 5);
+    fp->insertWayptAtIndex(intc, 3);
+    
+  //  FGTestApi::writeFlightPlanToKML(fp);
+    
+// position slightly before BUNAX
+    SGGeod initPos = fp->pointAlongRoute(2, -3.0);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    FGTestApi::setPositionAndStabilise(initPos);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setStringValue("command", "leg");
+    
+    fp->setCurrentIndex(2);
+
+    CPPUNIT_ASSERT_EQUAL(string{"BUNAX"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+
+  
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(initPos);
+    pilot->setCourseTrue(fp->legAtIndex(2)->courseDeg());
+    pilot->setSpeedKts(300); // decent speed to make things tougher
+    pilot->flyGPSCourse(gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(600.0, [fp]() {
+        return fp->currentIndex() == 4;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    // flying to BEBEV now
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+    
+    FGTestApi::runForTime(30.0);
+}

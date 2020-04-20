@@ -489,3 +489,18 @@ void FlightplanTests::testLeadingWPDynamic()
     // distance will be invalid, but shouldn;t assert or crash :)
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, f->totalDistanceNm(), 0.001);
 }
+
+void FlightplanTests::testRadialIntercept()
+{
+    // replicate AJO1R departure
+    FlightPlanRef f = makeTestFP("LFKC", "36", "LIRF", "25", "BUNAX BEBEV AJO");
+    
+    f->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(8.78333, 42.566), "KC502", f), 1);
+
+    SGGeod pos = SGGeod::fromDeg(8.445556,42.216944);
+    auto intc = new RadialIntercept(f, "INTC", pos, 230, 5);
+    f->insertWayptAtIndex(intc, 3); // between BUNAX and BEBEV
+    
+    RoutePath rtepath(f);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(232, f->legAtIndex(3)->courseDeg(), 1.0);
+}

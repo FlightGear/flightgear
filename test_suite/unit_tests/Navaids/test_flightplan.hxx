@@ -44,6 +44,7 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testOnlyDiscontinuityRoute);
     CPPUNIT_TEST(testBasicDiscontinuity);
     CPPUNIT_TEST(testLeadingWPDynamic);
+    CPPUNIT_TEST(testRadialIntercept);
     
   //  CPPUNIT_TEST(testParseICAORoute);
    // CPPUNIT_TEST(testParseICANLowLevelRoute);
@@ -72,6 +73,7 @@ public:
     void testBasicDiscontinuity();
     void testOnlyDiscontinuityRoute();
     void testLeadingWPDynamic();
+    void testRadialIntercept();
 };
 
 #endif  // FG_FLIGHTPLAN_UNIT_TESTS_HXX

@@ -177,7 +177,7 @@ void RNAVProcedureTests::testBasic()
 void RNAVProcedureTests::testHeadingToAlt()
 {
     auto vhhh = FGAirport::findByIdent("VHHH");
-    FGTestApi::setUp::logPositionToKML("heading_to_alt");
+   // FGTestApi::setUp::logPositionToKML("heading_to_alt");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -195,7 +195,7 @@ void RNAVProcedureTests::testHeadingToAlt()
     wp->setAltitude(4000, RESTRICT_ABOVE);
     fp->insertWayptAtIndex(wp, 1); // between the runway WP and HAZEL
 
-    FGTestApi::writeFlightPlanToKML(fp);
+   // FGTestApi::writeFlightPlanToKML(fp);
 
     auto depRwy = fp->departureRunway();
     
@@ -267,7 +267,7 @@ void RNAVProcedureTests::testHeadingToAlt()
 void RNAVProcedureTests::testUglyHeadingToAlt()
 {
     auto vhhh = FGAirport::findByIdent("VHHH");
-    FGTestApi::setUp::logPositionToKML("heading_to_alt_ugly");
+  //  FGTestApi::setUp::logPositionToKML("heading_to_alt_ugly");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -285,7 +285,7 @@ void RNAVProcedureTests::testUglyHeadingToAlt()
     wp->setAltitude(4000, RESTRICT_ABOVE);
     fp->insertWayptAtIndex(wp, 1); // between the runway WP and HAZEL
 
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
 
     auto depRwy = fp->departureRunway();
     
@@ -363,7 +363,7 @@ void RNAVProcedureTests::testEGPH_TLA6C()
     if (!sid)
         return;
     
-    FGTestApi::setUp::logPositionToKML("procedure_egph_tla6c");
+   // FGTestApi::setUp::logPositionToKML("procedure_egph_tla6c");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -388,7 +388,7 @@ void RNAVProcedureTests::testEGPH_TLA6C()
     
     CPPUNIT_ASSERT_EQUAL(std::string{"D346T"}, fp->legAtIndex(3)->waypoint()->ident());
     
-    FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
 
     CPPUNIT_ASSERT(rm->activate());
    
