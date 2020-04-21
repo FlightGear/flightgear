@@ -11,9 +11,10 @@
 #  include <sys/time.h>  // gettimeofday
 #endif
 
-#include <string.h>
+#include <algorithm>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fstream>
