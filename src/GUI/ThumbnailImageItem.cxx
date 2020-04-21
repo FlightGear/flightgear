@@ -83,8 +83,11 @@ QSGNode *ThumbnailImageItem::updatePaintNode(QSGNode* oldNode, QQuickItem::Updat
             textureNode = new QSGSimpleTextureNode;
             textureNode->setOwnsTexture(true);
         }
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
         QSGTexture* tex = window()->createTextureFromImage(m_image, QQuickWindow::TextureIsOpaque);
+#else
+        QSGTexture* tex = window()->createTextureFromImage(m_image);
+#endif
         textureNode->setTexture(tex);
         textureNode->markDirty(QSGBasicGeometryNode::DirtyMaterial);
         m_imageDirty = false;
