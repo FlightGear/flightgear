@@ -96,15 +96,15 @@ public:
         func(f),
         object(obj)
     {
-        FGNasalSys* sys = static_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
+        FGNasalSys* sys = globals->get_subsystem<FGNasalSys>();
         _gcKeys[0] = sys->gcSave(f);
         _gcKeys[1] = sys->gcSave(obj);
     }
     
-    virtual void onFileDialogDone(FGFileDialog* instance, const SGPath& aPath)
+    void onFileDialogDone(FGFileDialog* instance, const SGPath& aPath) override
     {
-        FGNasalSys* sys = static_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
-        
+        FGNasalSys* sys = globals->get_subsystem<FGNasalSys>();
+
         naContext ctx = naNewContext();
         naRef args[1];
         args[0] = nasal::to_nasal(ctx, aPath);
@@ -115,7 +115,10 @@ public:
     
     ~NasalCallback()
     {
-        FGNasalSys* sys = static_cast<FGNasalSys*>(globals->get_subsystem("nasal"));
+        FGNasalSys* sys = globals->get_subsystem<FGNasalSys>();
+        if (!sys) // happens during Nasal shutdown on reset
+            return;
+        
         sys->gcRelease(_gcKeys[0]);
         sys->gcRelease(_gcKeys[1]);
     }

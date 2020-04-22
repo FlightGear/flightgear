@@ -86,7 +86,7 @@ public:
 
 
         FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
-        if (!nasalSys)
+        if (!nasalSys) // happens during shutdown / reset
             return;
 
         std::string moduleName = "scenario_" + _internalName;
