@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Edward d'Auvergne
+ * Copyright (C) 2020 James Turner
  *
  * This file is part of the program FlightGear.
  *
@@ -17,9 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "testNasalSys.hxx"
-#include "testGC.hxx"
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NasalSysTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(NasalGCTests, "Unit tests");
+#pragma once
+
+
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
+
+
+class NasalGCTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(NasalGCTests);
+    CPPUNIT_TEST(testDummy);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testDummy();
+};

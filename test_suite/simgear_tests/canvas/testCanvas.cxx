@@ -10,6 +10,8 @@
 
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/FGCanvasSystemAdapter.hxx>
+extern bool global_nasalMinimalInit;
+
 
 void verifyPixel(osg::Image* img, int x, int y, const uint8_t* pixel)
 {
@@ -19,6 +21,7 @@ void verifyPixel(osg::Image* img, int x, int y, const uint8_t* pixel)
 
 void CanvasTests::setUp()
 {
+    global_nasalMinimalInit = false;
     FGTestApi::setUp::initTestGlobals("canvas");
 
     // Canvas needs loadxml command

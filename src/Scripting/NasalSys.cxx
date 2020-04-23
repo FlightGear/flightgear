@@ -64,7 +64,12 @@ using std::vector;
 
 void postinitNasalGUI(naRef globals, naContext c);
 
-static FGNasalSys* nasalSys = 0;
+static FGNasalSys* nasalSys = nullptr;
+
+// this is used by the test-suite to simplify
+// how much Nasal modules we load by default
+bool global_nasalMinimalInit = false;
+
 
 // Listener class for loading Nasal modules on demand
 class FGNasalModuleListener : public SGPropertyChangeListener
@@ -1016,14 +1021,16 @@ void FGNasalSys::init()
     naSave(_context, _string);
     initNasalString(_globals, _string, _context);
 
-    initNasalPositioned(_globals, _context);
-    initNasalPositioned_cppbind(_globals, _context);
-    initNasalAircraft(_globals, _context);
-    NasalClipboard::init(this);
-    initNasalCanvas(_globals, _context);
-    initNasalCondition(_globals, _context);
-    initNasalHTTP(_globals, _context);
-    initNasalSGPath(_globals, _context);
+    if (!global_nasalMinimalInit) {
+        initNasalPositioned(_globals, _context);
+        initNasalPositioned_cppbind(_globals, _context);
+        initNasalAircraft(_globals, _context);
+        NasalClipboard::init(this);
+        initNasalCanvas(_globals, _context);
+        initNasalCondition(_globals, _context);
+        initNasalHTTP(_globals, _context);
+        initNasalSGPath(_globals, _context);
+    }
 
     NasalTimerObj::init("Timer")
       .method("start", &TimerObj::start)
@@ -1038,6 +1045,13 @@ void FGNasalSys::init()
         .method("elapsedMSec", &TimeStampObj::elapsedMSec)
         .method("elapsedUSec", &TimeStampObj::elapsedUSec)
         ;
+
+    // everything after here, skip if we're doing minimal init, so
+    // we don'tload FG_DATA/Nasal or add-ons
+    if (global_nasalMinimalInit) {
+        _inited = true;
+        return;
+    }
 
     flightgear::addons::initAddonClassesForNasal(_globals, _context);
 
