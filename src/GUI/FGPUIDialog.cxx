@@ -666,22 +666,21 @@ copy_from_pui (puObject *object, SGPropertyNode *node)
 
 FGPUIDialog::FGPUIDialog (SGPropertyNode *props) :
     FGDialog(props),
-    _object(0),
-    _gui((NewGUI *)globals->get_subsystem("gui")),
+    _object(nullptr),
+    _gui(globals->get_subsystem<NewGUI>()),
     _props(props),
     _needsRelayout(false)
 {
     _module = string("__dlg:") + props->getStringValue("name", "[unnamed]");
     _name = props->getStringValue("name", "[unnamed]");
     SGPropertyNode *nasal = props->getNode("nasal");
-    if (nasal) {
+    auto nas = globals->get_subsystem<FGNasalSys>();
+    if (nasal && nas) {
         _nasal_close = nasal->getNode("close");
         SGPropertyNode *open = nasal->getNode("open");
         if (open) {
             const char *s = open->getStringValue();
-            FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-            if (nas)
-                nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), props);
+            nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), props);
         }
     }
     display(props);
@@ -694,7 +693,7 @@ FGPUIDialog::~FGPUIDialog ()
     _props->setIntValue("lastx", x);
     _props->setIntValue("lasty", y);
 
-    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    auto nas = globals->get_subsystem<FGNasalSys>();
     if (nas) {
         if (_nasal_close) {
             const char *s = _nasal_close->getStringValue();
