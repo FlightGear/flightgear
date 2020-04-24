@@ -35,7 +35,7 @@ void AbstractInstrument::readConfig(SGPropertyNode* config,
     }
     
     // the default output values are volts, but various places have been
-    // treating the value as a bool,, so we default to 1.0 as our minimum
+    // treating the value as a bool, so we default to 1.0 as our minimum
     // supply volts
     _minimumSupplyVolts = config->getDoubleValue("minimum-supply-volts", 1.0);
 }
