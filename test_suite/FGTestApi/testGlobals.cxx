@@ -2,6 +2,7 @@
 
 #include "test_suite/dataStore.hxx"
 
+#include "TestDataLogger.hxx"
 #include "testGlobals.hxx"
 
 #include <simgear/io/iostreams/sgstream.hxx>
@@ -254,15 +255,30 @@ void setPositionAndStabilise(const SGGeod& g)
 
 void runForTime(double t)
 {
-    int ticks = t * 120.0;
+    const int tickHz = 30;
+    const double tickDuration = 1.0 / tickHz;
+
+    int ticks = static_cast<int>(t * tickHz);
     assert(ticks > 0);
-    const double dt = 1 / 120.0;
-    
+
+    const int logInterval = 0.5 * tickHz;
+    int nextLog = 0;
+
     for (int t = 0; t < ticks; ++t) {
-        globals->inc_sim_time_sec(dt);
-        globals->get_subsystem_mgr()->update(dt);
-        if (global_loggingToKML) {
-            logCoordinate(globals->get_aircraft_position());
+        globals->inc_sim_time_sec(tickDuration);
+        globals->get_subsystem_mgr()->update(tickDuration);
+
+        if (nextLog == 0) {
+            if (global_loggingToKML) {
+                logCoordinate(globals->get_aircraft_position());
+            }
+
+            if (DataLogger::isActive()) {
+                DataLogger::instance()->writeRecord();
+            }
+            nextLog = logInterval;
+        } else {
+            nextLog--;
         }
     }
 }
@@ -274,22 +290,26 @@ bool runForTimeWithCheck(double t, RunCheck check)
 
     int ticks = static_cast<int>(t * tickHz);
     assert(ticks > 0);
-    const int logInterval = 2 * tickHz; // every two seconds
+    const int logInterval = 0.5 * tickHz;
     int nextLog = 0;
     
     for (int t = 0; t < ticks; ++t) {
         globals->inc_sim_time_sec(tickDuration);
         globals->get_subsystem_mgr()->update(tickDuration);
-        
-        if (global_loggingToKML) {
-            if (nextLog == 0) {
+
+        if (nextLog == 0) {
+            if (global_loggingToKML) {
                 logCoordinate(globals->get_aircraft_position());
-                nextLog = logInterval;
-            } else {
-                nextLog--;
             }
+
+            if (DataLogger::isActive()) {
+                DataLogger::instance()->writeRecord();
+            }
+            nextLog = logInterval;
+        } else {
+            nextLog--;
         }
-        
+
         bool done = check();
         if (done) {
             if (global_loggingToKML) {
