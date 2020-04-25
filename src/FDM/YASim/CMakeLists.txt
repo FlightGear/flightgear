@@ -4,6 +4,7 @@ set(COMMON
 	Airplane.cpp
 	Atmosphere.cpp
 	ControlMap.cpp
+	ElectricEngine.cpp
 	FGFDM.cpp
 	Gear.cpp
 	Glue.cpp

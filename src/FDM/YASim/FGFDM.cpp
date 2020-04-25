@@ -20,6 +20,7 @@
 #include "Propeller.hpp"
 #include "PistonEngine.hpp"
 #include "TurbineEngine.hpp"
+#include "ElectricEngine.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
 #include "Hitch.hpp"
@@ -229,6 +230,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &a)
     }
     else if(!strcmp(name, "piston-engine")) { parsePistonEngine(&a); }
     else if(!strcmp(name, "turbine-engine")) { parseTurbineEngine(&a); }
+    else if(!strcmp(name, "electric-engine")) { parseElectricEngine(&a); }
     else if(!strcmp(name, "propeller")) { parsePropeller(&a); }
     else if(!strcmp(name, "thruster")) { parseThruster(&a); }
     else if(!strcmp(name, "jet")) { parseJet(&a); }
@@ -794,6 +796,17 @@ void FGFDM::parseTurbineEngine(const XMLAttributes* a)
 
     ((PropEngine*)_currObj)->setEngine(eng);
 }
+
+void FGFDM::parseElectricEngine(const XMLAttributes* a)
+{
+    float Kv = attrf(a, "Kv") * RPM2RAD; //Kv is expected to be given as RPM per volt in XML
+    float voltage = attrf(a, "voltage"); // voltage applied at the motor windings in volts
+    float Rm = attrf(a, "Rm"); // winding resistance in Ohms
+    ElectricEngine* eng = new ElectricEngine(voltage, Kv, Rm);
+
+    ((PropEngine*)_currObj)->setEngine(eng);
+}
+
 
 void FGFDM::parsePropeller(const XMLAttributes* a)
 {
