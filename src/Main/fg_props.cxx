@@ -463,8 +463,11 @@ FGProperties::update (double dt)
     _rwday->setIntValue(r->tm_wday);
     
     const double magvar = _magVar->getDoubleValue();
-    _headingMagnetic->setDoubleValue(_trueHeading->getDoubleValue() - magvar);
-    _trackMagnetic->setDoubleValue(_trueTrack->getDoubleValue() - magvar);
+    const auto hdgMag = SGMiscd::normalizePeriodic(0, 360.0, _trueHeading->getDoubleValue() - magvar);
+    _headingMagnetic->setDoubleValue(hdgMag);
+    
+    const auto trackMag = SGMiscd::normalizePeriodic(0, 360.0, _trueTrack->getDoubleValue() - magvar);
+    _trackMagnetic->setDoubleValue(trackMag);
 }
 
 
