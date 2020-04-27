@@ -31,9 +31,17 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} DBus)
     endif()
 
-    # PkgCOnfig::DBUS target
-    if(TARGET PkgConfig::DBUS)
-        target_link_libraries(${target} PkgConfig::DBUS)
+    # PkgConfig::DBUS target
+
+    if(CMAKE_VERSION VERSION_LESS 3.6)
+        if(DBUS_FOUND)
+            target_link_libraries(${target} ${DBUS_LDFLAGS})
+        endif()
+    else()
+        # PkgConfig::DBUS target
+        if(TARGET PkgConfig::DBUS)
+            target_link_libraries(${target} PkgConfig::DBUS)
+        endif()
     endif()
 
     if(FG_HAVE_GPERFTOOLS)
