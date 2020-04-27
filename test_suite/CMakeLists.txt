@@ -76,7 +76,6 @@ add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctes
 add_test(AeroElementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AeroElementTests)
 add_test(AircraftPerformanceUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AircraftPerformanceTests)
 add_test(AutosaveMigrationUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AutosaveMigrationTests)
-add_test(CanvasUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u CanvasTests)
 add_test(FlightplanUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u FlightplanTests)
 add_test(FPNasalUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u FPNasalTests)
 add_test(GPSUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u GPSTests)
@@ -97,6 +96,7 @@ add_test(YASimAtmosphereUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctes
 # GUI test suites.
 
 # Simgear unit test suites.
+add_test(CanvasSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -m CanvasTests)
 add_test(MathGeodesySimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -m MathGeodesyTests)
 add_test(SimgearPropsSimgearUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -m SimgearPropsTests)
 
