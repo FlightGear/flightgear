@@ -216,14 +216,13 @@ void HUD::draw3D()
     using namespace osg;
     flightgear::View* view = globals->get_current_view();
 
-    const float normal_aspect = 640.0f / 480.0f;
-    float current_aspect = 1.0f / view->get_aspect_ratio();
-
     // Standard fgfs projection, with essentially meaningless clip
     // planes (we'll map the whole HUD plane to z=-1)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    Matrixf proj = Matrixf::perspective(view->get_v_fov(), current_aspect, 0.1, 10);
+    Matrixf proj
+        = Matrixf::perspective(view->get_v_fov(), 1/view->get_aspect_ratio(),
+                               0.1, 10);
     glLoadMatrix(proj.ptr());
 
     glMatrixMode(GL_MODELVIEW);
@@ -254,10 +253,7 @@ void HUD::draw3D()
 
     // Convert the 640x480 "HUD standard" coordinate space to a square
     // about the origin in the range [-1:1] at depth of -1
-    float aspect_adjust = current_aspect > normal_aspect ?
-        current_aspect / normal_aspect :
-        normal_aspect / current_aspect;
-    glScalef(1.0 / (320 * aspect_adjust), 1.0 / (240 * aspect_adjust), 1);
+    glScalef(1.0 / 320, 1.0 / 240, 1);
     glTranslatef(-320, -240, -1);
 
     common_draw();
