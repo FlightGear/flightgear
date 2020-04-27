@@ -19,7 +19,12 @@ else()
 	include(FindPkgConfig)
 
 	if(PKG_CONFIG_FOUND)
-		pkg_check_modules(DBUS IMPORTED_TARGET dbus-1)
+		# FIXME : clean this up once we requrie CMake 3.6
+		if(CMAKE_VERSION VERSION_LESS 3.6)
+			pkg_check_modules(DBUS dbus-1)
+		else()
+			pkg_check_modules(DBUS IMPORTED_TARGET dbus-1)
+		endif()
 	endif (PKG_CONFIG_FOUND)
 
 	if(DBUS_FOUND)
