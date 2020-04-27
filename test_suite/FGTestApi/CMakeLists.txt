@@ -5,6 +5,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/PrivateAccessorFDM.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_graph.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/TestPilot.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/NasalUnitTesting_TestSuite.cxx
     PARENT_SCOPE
 )
 

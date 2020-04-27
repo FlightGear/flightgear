@@ -14,6 +14,7 @@ set(SOURCES
   NasalString.cxx
   NasalModelData.cxx
   NasalSGPath.cxx
+  NasalUnitTesting.cxx
 )
 
 set(HEADERS

@@ -60,14 +60,6 @@ public:
                      std::string& output,
                      std::string& errors);
 
-    // Slightly more complicated hook to get a handle to a precompiled
-    // Nasal script that can be invoked via a call() method.  The
-    // caller is expected to delete the FGNasalScript returned from
-    // this function.  The "name" argument specifies the "file name"
-    // for the source code that will be printed in Nasal stack traces
-    // on error.
- //   FGNasalScript* parseScript(const char* src, const char* name=0);
-
     // Implementation of the settimer extension function
     void setTimer(naContext c, int argc, naRef* args);
 

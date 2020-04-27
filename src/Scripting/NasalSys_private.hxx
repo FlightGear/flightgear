@@ -84,4 +84,8 @@ struct NasalTimer
     FGNasalSys* nasal = nullptr;
 };
 
+// declare the interface to the unit-testing module
+naRef initNasalUnitTestCppUnit(naRef globals, naContext c);
+naRef initNasalUnitTestInSim(naRef globals, naContext c);
+
 #endif // of __NASALSYS_PRIVATE_HXX

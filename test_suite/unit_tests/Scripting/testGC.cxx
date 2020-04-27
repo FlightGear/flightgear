@@ -40,8 +40,13 @@ void NasalGCTests::setUp()
 
     globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
 
+    globals->get_subsystem_mgr()->bind();
+    globals->get_subsystem_mgr()->init();
+    
     global_nasalMinimalInit = true;
     globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
+    
+    globals->get_subsystem_mgr()->postinit();
 }
 
 

@@ -1,7 +1,20 @@
+// Copyright (C) 2013  James Turner
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
@@ -52,6 +65,7 @@
 #include "NasalCondition.hxx"
 #include "NasalHTTP.hxx"
 #include "NasalString.hxx"
+#include "NasalUnitTesting.hxx"
 
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
@@ -257,7 +271,7 @@ typedef nasal::Ghost<TimeStampObjRef> NasalTimeStampObj;
 FGNasalSys::FGNasalSys() :
     _inited(false)
 {
-    nasalSys = this;
+     nasalSys = this;
     _context = 0;
     _globals = naNil();
     _string = naNil();
@@ -1021,6 +1035,12 @@ void FGNasalSys::init()
     naSave(_context, _string);
     initNasalString(_globals, _string, _context);
 
+#if defined (BUILDING_TESTSUITE)
+    initNasalUnitTestCppUnit(_globals, _context);
+#else
+    initNasalUnitTestInSim(_globals, _context);
+#endif
+
     if (!global_nasalMinimalInit) {
         initNasalPositioned(_globals, _context);
         initNasalPositioned_cppbind(_globals, _context);
@@ -1091,6 +1111,7 @@ void FGNasalSys::shutdown()
     }
 
     shutdownNasalPositioned();
+    shutdownNasalUnitTestInSim();
 
     for (auto l : _listener)
         delete l.second;
@@ -1134,7 +1155,7 @@ void FGNasalSys::shutdown()
             SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
         }
     }
-
+    
     _inited = false;
 }
 
@@ -1157,12 +1178,11 @@ void FGNasalSys::update(double)
 {
     if( NasalClipboard::getInstance() )
         NasalClipboard::getInstance()->update();
-    if(!_dead_listener.empty()) {
-        vector<FGNasalListener *>::iterator it, end = _dead_listener.end();
-        for(it = _dead_listener.begin(); it != end; ++it) delete *it;
-        _dead_listener.clear();
-    }
-
+    
+    std::for_each(_dead_listener.begin(), _dead_listener.end(),
+                  []( FGNasalListener* l) { delete l; });
+    _dead_listener.clear();
+    
     if (!_loadList.empty())
     {
         if( _delay_load )
@@ -1643,8 +1663,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
 naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 {
     naRef id = argc > 0 ? args[0] : naNil();
-    map<int, FGNasalListener *>::iterator it = _listener.find(int(id.num));
-
+    auto it = _listener.find(int(id.num));
     if(!naIsNum(id) || it == _listener.end() || it->second->_dead) {
         naRuntimeError(c, "removelistener() with invalid listener id");
         return naNil();
