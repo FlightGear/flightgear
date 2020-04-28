@@ -21,7 +21,6 @@
 #include <Main/fg_props.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/sound/readwav.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/threads/SGThread.hxx>
 
@@ -119,8 +118,8 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, doub
   HTS_Engine_add_half_tone(&_engine->engine, -4.0 + 8.0 * pitch );
 
     
-  ALvoid* data;
-  ALsizei rate, count;
+  void* data;
+  int rate, count;
   if ( FALSE == Flite_HTS_Engine_synthesize_samples_mono16(_engine, text.c_str(), &data, &count, &rate)) return NULL;
 
   auto buf = std::unique_ptr<unsigned char, decltype(free)*>{
