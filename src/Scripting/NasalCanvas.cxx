@@ -534,7 +534,8 @@ naRef initNasalCanvas(naRef globals, naContext c)
   NasalImage::init("canvas.Image")
     .bases<NasalElement>()
     .method("fillRect", &f_imageFillRect)
-    .method("setPixel", &f_imageSetPixel);
+    .method("setPixel", &f_imageSetPixel)
+    .method("dirtyPixels", &sc::Image::dirtyPixels);
     
   //----------------------------------------------------------------------------
   // Layouting
