@@ -2251,7 +2251,8 @@ void Options::initAircraft()
 
   if (isOptionSet("aircraft-dir")) {
     SGPath aircraftDirPath = SGPath::fromUtf8(valueForOption("aircraft-dir"));
-    globals->append_read_allowed_paths(aircraftDirPath);
+    SGPath realAircraftPath = aircraftDirPath.realpath();
+    globals->append_read_allowed_paths(realAircraftPath);
 
     // Set this now, so it's available in FindAndCacheAircraft. Use realpath()
     // as in FGGlobals::append_aircraft_path(), otherwise fgValidatePath()
@@ -2259,7 +2260,7 @@ void Options::initAircraft()
     // is a symlink (which is not a problem, since it was given as is by the
     // user---this is very different from a symlink *under* the aircraft dir
     // or a scenery dir).
-    fgSetString("/sim/aircraft-dir", aircraftDirPath.realpath().utf8Str());
+    fgSetString("/sim/aircraft-dir", realAircraftPath.utf8Str());
   }
 
     if (isOptionSet("state")) {
