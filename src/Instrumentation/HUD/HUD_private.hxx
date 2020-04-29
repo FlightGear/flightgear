@@ -337,6 +337,7 @@ private:
     bool   _target_spot;
     bool   _target_markers;
     bool   _velocity_vector;
+    bool   _ground_velocity_vector;
     bool   _drift_marker;
     bool   _alpha_bracket;
     bool   _energy_marker;

@@ -64,6 +64,7 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _target_spot(n->getBoolValue("enable-target-spot")),
     _target_markers(n->getBoolValue("enable-target-markers")),
     _velocity_vector(n->getBoolValue("enable-velocity-vector")),
+    _ground_velocity_vector(n->getBoolValue("enable-ground-velocity-vector")),
     _drift_marker(n->getBoolValue("enable-drift-marker")),
     _alpha_bracket(n->getBoolValue("enable-alpha-bracket")),
     _energy_marker(n->getBoolValue("enable-energy-marker")),
@@ -148,14 +149,40 @@ void HUD::Ladder::draw(void)
     float up_vel, ground_vel, actslope = 0.0, psi = 0.0;
     float vel_x = 0.0, vel_y = 0.0, drift;
     float alpha;
+    
+    if (_ground_velocity_vector || _velocity_vector) {
+        Vxx = get__Vx();
+        Vyy = get__Vy();
+        Vzz = get__Vz();
+    }
+
+    if (_ground_velocity_vector) {
+        double gvel_x = atan2(Vyy, Vxx) * SGD_RADIANS_TO_DEGREES * _compression;
+        double gvel_y = -atan2(Vzz, Vxx) * SGD_RADIANS_TO_DEGREES * _compression;
+    
+        /* \ /
+            |
+        */
+        int outer = 8;
+        int inner = 2;
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(gvel_x - outer, gvel_y + outer);
+        glVertex2f(gvel_x - inner, gvel_y + inner);
+        glEnd();
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(gvel_x + outer, gvel_y + outer);
+        glVertex2f(gvel_x + inner, gvel_y + inner);
+        glEnd();
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(gvel_x + 0, gvel_y - inner*3/2);
+        glVertex2f(gvel_x + 0, gvel_y - outer*3/2);
+        glEnd();
+    }
 
     if (_velocity_vector) {
         drift = get__beta();
         alpha = get__alpha();
 
-        Vxx = get__Vx();
-        Vyy = get__Vy();
-        Vzz = get__Vz();
         Axx = get__Ax();
         Ayy = get__Ay();
         Azz = get__Az();
