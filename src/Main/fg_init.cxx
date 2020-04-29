@@ -347,6 +347,7 @@ private:
   
   virtual VisitResult visit(const SGPath& p)
   {
+      SGPath realPath = p.realpath();
     // create cache node
     int i = 0;
     while (1) {
@@ -356,17 +357,17 @@ private:
     
     SGPropertyNode *n, *entry = _cache->getChild("aircraft", --i, true);
 
-    std::string fileName(p.file());
+    std::string fileName(realPath.file());
     n = entry->getNode("file", true);
     n->setStringValue(fileName);
     n->setAttribute(SGPropertyNode::USERARCHIVE, true);
 
     n = entry->getNode("path", true);
-    n->setStringValue(p.dir());
+    n->setStringValue(realPath.dir());
     n->setAttribute(SGPropertyNode::USERARCHIVE, true);
 
     if (simgear::strutils::iequals(fileName, _searchAircraft)) {
-        _foundPath = p;
+        _foundPath = realPath;
         return VISIT_DONE;
     }
 
