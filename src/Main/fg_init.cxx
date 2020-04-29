@@ -514,7 +514,9 @@ bool fgInitHome()
         int err = ::flock(fd, LOCK_EX | LOCK_NB);
         if (err < 0) {
             if ( errno ==  EWOULDBLOCK) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
+                SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only. ");
+                SG_LOG(SG_GENERAL, SG_ALERT, "Couldn't flock() file at:" << pidPath);
+
                 // set a marker property so terrasync/navcache don't try to write
                 // from secondary instances
                 fgSetBool("/sim/fghome-readonly", true);
