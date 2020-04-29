@@ -789,8 +789,8 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
 
     // inform the user
     FGLocale *locale = globals->get_locale();
-    const auto title = locale->getLocalizedString("settings-migration-title", "dialog", "Settings migrated");
-    const auto msg = locale->getLocalizedString("settings-migration-text", "dialog",
+    const auto title = locale->getLocalizedString("settings-migration-title", "sys", "Settings migrated");
+    const auto msg = locale->getLocalizedString("settings-migration-text", "sys",
                                                 "Saved settings were migrated from a previous version of FlightGear. "
                                                 "If you encounter any problems when using the system, try restoring "
                                                 "the default settings, before reporting a problem. "
