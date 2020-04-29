@@ -83,9 +83,24 @@ using std::string;
 
 namespace { // anonymous namespace
 
+struct ProgressLabel {
+    NavDataCache::RebuildPhase phase;
+    const char* label;
+};
+
+static std::initializer_list<ProgressLabel> progressStrings = {
+    {NavDataCache::REBUILD_READING_APT_DAT_FILES, QT_TRANSLATE_NOOP("initNavCache","Reading airport data")},
+    {NavDataCache::REBUILD_LOADING_AIRPORTS, QT_TRANSLATE_NOOP("initNavCache","Loading airports")},
+    {NavDataCache::REBUILD_FIXES, QT_TRANSLATE_NOOP("initNavCache","Loading waypoint data")},
+    {NavDataCache::REBUILD_NAVAIDS, QT_TRANSLATE_NOOP("initNavCache","Loading navigation data")},
+    {NavDataCache::REBUILD_POIS, QT_TRANSLATE_NOOP("initNavCache","Loading point-of-interest data")}
+};
+
 void initNavCache()
 {
-    QString baseLabel = QT_TRANSLATE_NOOP("initNavCache", "Initialising navigation data, this may take several minutes");
+    const char* baseLabelKey = QT_TRANSLATE_NOOP("initNavCache", "Initialising navigation data, this may take several minutes");
+    QString baseLabel= qApp->translate("initNavCache", baseLabelKey);
+
     NavDataCache* cache = NavDataCache::createInstance();
     if (cache->isRebuildRequired()) {
         QProgressDialog rebuildProgress(baseLabel,
@@ -106,37 +121,20 @@ void initNavCache()
             SGTimeStamp::sleepForMSec(50);
             phase = cache->rebuild();
 
-            switch (phase) {
-            case NavDataCache::REBUILD_READING_APT_DAT_FILES:
-                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Reading airport data"));
-                break;
-
-            case NavDataCache::REBUILD_LOADING_AIRPORTS:
-                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading airports"));
-                break;
-
-            case NavDataCache::REBUILD_FIXES:
-                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading waypoint data"));
-                break;
-
-            case NavDataCache::REBUILD_NAVAIDS:
-                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading navigation data"));
-                break;
-
-
-            case NavDataCache::REBUILD_POIS:
-                rebuildProgress.setLabelText(QT_TRANSLATE_NOOP("initNavCache","Loading point-of-interest data"));
-                break;
-
-            default:
+            auto it = std::find_if(progressStrings.begin(), progressStrings.end(), [phase]
+                                   (const ProgressLabel& l) { return l.phase == phase; });
+            if (it == progressStrings.end()) {
                 rebuildProgress.setLabelText(baseLabel);
+            } else {
+                QString trans = qApp->translate("initNavCache", it->label);
+                rebuildProgress.setLabelText(trans);
             }
 
             if (phase == NavDataCache::REBUILD_UNKNOWN) {
                 rebuildProgress.setValue(0);
                 rebuildProgress.setMaximum(0);
             } else {
-                rebuildProgress.setValue(cache->rebuildPhaseCompletionPercentage());
+                rebuildProgress.setValue(static_cast<int>(cache->rebuildPhaseCompletionPercentage()));
                 rebuildProgress.setMaximum(100);
             }
 
