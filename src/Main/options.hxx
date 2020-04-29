@@ -130,7 +130,7 @@ public:
   /**
    * init the aircraft options
    */
-  void initAircraft();
+  OptionResult initAircraft();
   
   /**
    * should defualt configuration files be loaded and processed or not?

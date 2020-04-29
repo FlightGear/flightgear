@@ -647,7 +647,9 @@ int fgMainInit( int argc, char **argv )
     configResult = fgInitAircraft(false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
         return EXIT_FAILURE;
-    } else if (configResult == flightgear::FG_OPTIONS_EXIT) {
+    } else if ((configResult == flightgear::FG_OPTIONS_EXIT) ||
+               (configResult == flightgear::FG_OPTIONS_SHOW_AIRCRAFT))
+    {
         return EXIT_SUCCESS;
     }
 

@@ -2211,7 +2211,7 @@ void Options::initPaths()
 
 }
 
-void Options::initAircraft()
+OptionResult Options::initAircraft()
 {
   string aircraft;
   if (isOptionSet("aircraft")) {
@@ -2246,7 +2246,8 @@ void Options::initAircraft()
                        aircraft_paths.end());
 
     fgShowAircraft(path_list);
-    exit(0);
+    // this is to indicate that we did show it
+    return FG_OPTIONS_SHOW_AIRCRAFT;
   }
 
   if (isOptionSet("aircraft-dir")) {
@@ -2268,6 +2269,8 @@ void Options::initAircraft()
         // can't validate this until the -set.xml is parsed
         fgSetString("/sim/aircraft-state", stateName);
     }
+    
+    return FG_OPTIONS_OK;
 }
 
 void Options::processArgResult(int result)

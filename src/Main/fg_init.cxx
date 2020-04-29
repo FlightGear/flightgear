@@ -717,7 +717,9 @@ void fgInitAircraftPaths(bool reinit)
 int fgInitAircraft(bool reinit)
 {
     if (!reinit) {
-        flightgear::Options::sharedInstance()->initAircraft();
+        auto r = flightgear::Options::sharedInstance()->initAircraft();
+        if (r == flightgear::FG_OPTIONS_SHOW_AIRCRAFT)
+            return r;
     }
     
     FindAndCacheAircraft f(globals->get_props());
