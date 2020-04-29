@@ -788,11 +788,14 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
     copyProperties(&oldProps, props);
 
     // inform the user
-    flightgear::modalMessageBox("Settings migrated",
-                                "Saved settings were migrated from a previous version of FlightGear. "
-                                "If you encounter any problems when using the system, try restoring "
-                                "the default settings, before reporting a problem. "
-                                "Saved settings can affect the appearance, performance and features of the simulator.");
+    FGLocale *locale = globals->get_locale();
+    const auto title = locale->getLocalizedString("settings-migration-title", "dialog", "Settings migrated");
+    const auto msg = locale->getLocalizedString("settings-migration-text", "dialog",
+                                                "Saved settings were migrated from a previous version of FlightGear. "
+                                                "If you encounter any problems when using the system, try restoring "
+                                                "the default settings, before reporting a problem. "
+                                                "Saved settings can affect the appearance, performance and features of the simulator.");
+    flightgear::modalMessageBox(title, msg);
 }
 
 // Load user settings from the autosave file (normally in $FG_HOME)
