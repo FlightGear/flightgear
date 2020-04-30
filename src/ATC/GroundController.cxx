@@ -1047,7 +1047,7 @@ bool FGGroundController::updateActiveTraffic(TrafficVectorIterator i,
         FGTaxiSegment* segment = network->findSegment(pos);
         length = segment->getLength();
         if (segment->hasBlock(now)) {
-            SG_LOG(SG_ATC, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
+            SG_LOG(SG_ATC, SG_BULK, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
         }
 
     }

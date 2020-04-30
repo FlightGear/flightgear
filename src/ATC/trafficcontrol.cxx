@@ -1071,7 +1071,7 @@ void FGTowerController::signOff(int id)
     } else {
         i->getAircraft()->resetTakeOffStatus();
         i = activeTraffic.erase(i);
-        SG_LOG(SG_ATC, SG_INFO, "Signing off from tower controller");
+        SG_LOG(SG_ATC, SG_DEBUG, "Signing off from tower controller");
     }
 }
 
