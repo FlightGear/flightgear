@@ -76,7 +76,10 @@ typedef enum {
   WPT_APPROACH      = 1 << 11,
 
   /// waypoint prodcued by expanding a VIA segment
-  WPT_VIA           = 1 << 12
+  WPT_VIA           = 1 << 12,
+    
+    // waypoint should be hidden from maps, etc
+    WPT_HIDDEN      = 1 << 13
 } WayptFlag;
 
 typedef enum {

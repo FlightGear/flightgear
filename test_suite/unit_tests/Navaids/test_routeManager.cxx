@@ -11,6 +11,7 @@
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
+#include <Navaids/routePath.hxx>
 
 // we need a default GPS instrument, hard to test seperately for now
 #include <Instrumentation/gps.hxx>
@@ -358,6 +359,62 @@ void RouteManagerTests::testSequenceDiscontinuityAndResume()
 void RouteManagerTests::testDefaultApproach()
 {
     
+}
+
+void RouteManagerTests::testHiddenWaypoints()
+{
+    FlightPlanRef fp1 = makeTestFP("NZCH", "02", "NZAA", "05L",
+                                   "ALADA NS WB WN MAMOD KAPTI OH");
+    fp1->setIdent("testplan");
+    fp1->setCruiseFlightLevel(360);
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    rm->setFlightPlan(fp1);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps", true);
+    CPPUNIT_ASSERT(!strcmp("obs", gpsNode->getStringValue("mode")));
+    
+    // FIXME: use real Nasal test macros soon
+    auto testNode = globals->get_props()->getNode("test-data", true);
+    
+    fp1->legAtIndex(3)->waypoint()->setFlag(WPT_HIDDEN);
+    
+    // ensure no visual path is generated for hidden waypoints
+    RoutePath path(fp1);
+    CPPUNIT_ASSERT(path.pathForIndex(3).empty());
+    
+    
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        setprop("/test-data/a", fp.numRemainingWaypoints());
+    )");
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(fp1->numLegs(), testNode->getIntValue("a"));
+    
+    rm->activate();
+    fp1->setCurrentIndex(2);
+    
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        setprop("/test-data/a", fp.numRemainingWaypoints());
+        setprop("/test-data/b", fp.currentWP(2).id);
+    )");
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(7, testNode->getIntValue("a"));
+    CPPUNIT_ASSERT_EQUAL(std::string{"WN"}, std::string{testNode->getStringValue("b")});
+    
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        setprop("/test-data/c", fp.currentWP(-1).id);
+                                 
+        # ensure invalid offset returns nil
+        setprop("/test-data/d", fp.currentWP(-100) == nil);
+    )");
+    
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(std::string{"ALADA"}, std::string{testNode->getStringValue("c")});
+    CPPUNIT_ASSERT_EQUAL(true, testNode->getBoolValue("d"));
 }
 
 void RouteManagerTests::testHoldFromNasal()

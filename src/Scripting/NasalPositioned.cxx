@@ -561,6 +561,8 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
     } else {
       *out = naNil();
     }
+  } else if (!strcmp(fieldName, "hidden")) {
+      *out = naNum(wpt->flag(WPT_HIDDEN));
   } else if (wpt->type() == "hold") {
     // hold-specific properties
     const auto hold = static_cast<Hold*>(wpt);
@@ -603,6 +605,9 @@ static bool waypointCommonSetMember(naContext c, Waypt* wpt, const char* fieldNa
       if (!naIsString(value)) naRuntimeError(c, "fly_type must be a string");
       bool flyOver = (strcmp(naStr_data(value), "flyOver") == 0);
       wpt->setFlag(WPT_OVERFLIGHT, flyOver);
+  } else if (!strcmp(fieldName, "hidden")) {
+      if (!naIsNum(value)) naRuntimeError(c, "wpt.hidden must be a number");
+      wpt->setFlag(WPT_HIDDEN, static_cast<int>(value.num) != 0);
   } else if (wpt->type() == "hold") {
       const auto hold = static_cast<Hold*>(wpt);
       if (!strcmp(fieldName, "hold_heading_radial_deg")) {
@@ -2834,7 +2839,17 @@ static naRef f_flightplan_currentWP(naContext c, naRef me, int argc, naRef* args
   if (!fp) {
     naRuntimeError(c, "flightplan.currentWP called on non-flightplan object");
   }
-  return ghostForLeg(c, fp->currentLeg());
+    
+  int index = fp->currentIndex();
+  if (argc > 0) {
+    index += static_cast<int>(naNumValue(args[0]).num);
+  }
+  
+  if ((index < 0) || (index >= fp->numLegs())) {
+    return naNil();
+  }
+      
+  return ghostForLeg(c, fp->legAtIndex(index));
 }
 
 static naRef f_flightplan_nextWP(naContext c, naRef me, int argc, naRef* args)
@@ -2853,6 +2868,21 @@ static naRef f_flightplan_numWaypoints(naContext c, naRef me, int argc, naRef* a
     naRuntimeError(c, "flightplan.numWaypoints called on non-flightplan object");
   }
   return naNum(fp->numLegs());
+}
+
+static naRef f_flightplan_numRemainingWaypoints(naContext c, naRef me, int argc, naRef* args)
+{
+  FlightPlan* fp = flightplanGhost(me);
+  if (!fp) {
+    naRuntimeError(c, "flightplan.f_flightplan_numRemainingWaypoints called on non-flightplan object");
+  }
+  
+  // for an inactive flightplan, just reutnr the total number of WPs
+  if (fp->currentIndex() < 0) {
+    return naNum(fp->numLegs());
+  }
+  
+  return naNum(fp->numLegs() - fp->currentIndex());
 }
 
 static naRef f_flightplan_appendWP(naContext c, naRef me, int argc, naRef* args)
@@ -3382,6 +3412,8 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "getPlanSize", naNewFunc(c, naNewCCode(c, f_flightplan_numWaypoints)));
     // alias to this name also
     hashset(c, flightplanPrototype, "numWaypoints", naNewFunc(c, naNewCCode(c, f_flightplan_numWaypoints)));
+    hashset(c, flightplanPrototype, "numRemainingWaypoints", naNewFunc(c, naNewCCode(c, f_flightplan_numRemainingWaypoints)));
+  
     hashset(c, flightplanPrototype, "appendWP", naNewFunc(c, naNewCCode(c, f_flightplan_appendWP)));
     hashset(c, flightplanPrototype, "insertWP", naNewFunc(c, naNewCCode(c, f_flightplan_insertWP)));
     hashset(c, flightplanPrototype, "deleteWP", naNewFunc(c, naNewCCode(c, f_flightplan_deleteWP)));

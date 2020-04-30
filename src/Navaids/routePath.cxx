@@ -940,47 +940,52 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   const WayptData& w(d->waypoints[index]);
   const std::string& ty(w.wpt->type());
   SGGeodVec r;
-
-    if (d->waypoints[index].skipped) {
-        return SGGeodVec();
-    }
-
-  if (ty == "vectors") {
-      // ideally we'd show a stippled line to connect the route?
-    return SGGeodVec();
-  }
-
-  if (ty == "discontinuity") {
-    return SGGeodVec(); // no points for a discontinuity of course
-  }
-
-  if (ty == "via") {
-      return pathForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
+  
+  if (d->waypoints[index].skipped) {
+    return {};
   }
   
-    auto prevIt = d->previousValidWaypoint(index);
-    if (prevIt != d->waypoints.end()) {
-        prevIt->turnExitPath(r);
-      
-        SGGeod from = prevIt->turnExitPos,
-            to = w.turnEntryPos;
-      
-      // compute rounding offset, we want to round towards the direction of travel
-      // which depends on the east/west sign of the longitude change
-      double lonDelta = to.getLongitudeDeg() - from.getLongitudeDeg();
-      if (fabs(lonDelta) > 0.5) {
-        interpolateGreatCircle(from, to, r);
-      }
-    } // of have previous waypoint
-
-    w.turnEntryPath(r);
+  // don't show any path
+  if (w.wpt->flag(WPT_HIDDEN)) {
+    return {};
+  }
+  
+  if (ty == "vectors") {
+    // ideally we'd show a stippled line to connect the route?
+    return {};
+  }
+  
+  if (ty == "discontinuity") {
+    return {}; // no points for a discontinuity of course
+  }
+  
+  if (ty == "via") {
+    return pathForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
+  }
+  
+  auto prevIt = d->previousValidWaypoint(index);
+  if (prevIt != d->waypoints.end()) {
+    prevIt->turnExitPath(r);
     
-    // hold is the normal leg and then the hold waypoints as well
-    if (ty== "hold") {
-        const auto h = static_cast<Hold*>(d->waypoints[index].wpt.get());
-        const auto holdPath = pathForHold(h);
-        r.insert(r.end(), holdPath.begin(), holdPath.end());
+    SGGeod from = prevIt->turnExitPos,
+    to = w.turnEntryPos;
+    
+    // compute rounding offset, we want to round towards the direction of travel
+    // which depends on the east/west sign of the longitude change
+    double lonDelta = to.getLongitudeDeg() - from.getLongitudeDeg();
+    if (fabs(lonDelta) > 0.5) {
+      interpolateGreatCircle(from, to, r);
     }
+  } // of have previous waypoint
+  
+  w.turnEntryPath(r);
+  
+  // hold is the normal leg and then the hold waypoints as well
+  if (ty== "hold") {
+    const auto h = static_cast<Hold*>(d->waypoints[index].wpt.get());
+    const auto holdPath = pathForHold(h);
+    r.insert(r.end(), holdPath.begin(), holdPath.end());
+  }
   
   if (ty == "runway") {
     // runways get an extra point, at the end. this is particularly

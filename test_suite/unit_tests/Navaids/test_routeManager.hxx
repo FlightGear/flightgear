@@ -39,6 +39,7 @@ class RouteManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testDirectToLegOnFlightplanAndResume);
     CPPUNIT_TEST(testHoldFromNasal);
     CPPUNIT_TEST(testSequenceDiscontinuityAndResume);
+    CPPUNIT_TEST(testHiddenWaypoints);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -60,6 +61,7 @@ public:
     void testDirectToLegOnFlightplanAndResume();
     void testHoldFromNasal();
     void testSequenceDiscontinuityAndResume();
+    void testHiddenWaypoints();
 private:
     GPS* m_gps = nullptr;
 };
