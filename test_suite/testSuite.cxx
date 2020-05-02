@@ -58,9 +58,9 @@ void helpPrintout(std::ostream &stream) {
     stream << "                 network, atc, nasal, instrumentation, systems, ai, environment," << std::endl;
     stream << "                 sound, navaid, gui, terrasync, particles, headless, osg," << std::endl;
     stream << "                 undefined, all]" << std::endl;
-    stream << "                        select the logging class(es) to output" << std::endl;
+    stream << "                        select the logging class(es) to output." << std::endl;
     stream << "    --log-split         output the different non-interleaved log streams" << std::endl;
-    stream << "                        sequentially" << std::endl;
+    stream << "                        sequentially." << std::endl;
     stream << std::endl;
     stream << "  Verbosity options:" << std::endl;
     stream << "    -t, --timings       verbose output including names and timings for all" << std::endl;
@@ -70,7 +70,7 @@ void helpPrintout(std::ostream &stream) {
     stream << "    --no-summary        disable the final summary printout." << std::endl;
     stream << std::endl;
     stream << "  FG options:" << std::endl;
-    stream << "    --fg-root           the path to FGData" << std::endl;
+    stream << "    --fg-root           the path to FGData." << std::endl;
     stream << std::endl;
     stream << "Environmental variables:" << std::endl;
     stream << "  FG_TEST_LOG_LEVEL     equivalent to the --log-level option." << std::endl;
@@ -78,6 +78,9 @@ void helpPrintout(std::ostream &stream) {
     stream << "  FG_TEST_LOG_SPLIT     equivalent to the --log-split option." << std::endl;
     stream << "  FG_TEST_TIMINGS       equivalent to the -t or --timings option." << std::endl;
     stream << "  FG_TEST_DEBUG         equivalent to the -d or --debug option." << std::endl;
+    stream << "  FG_ROOT               the path to FGData.  The order of precedence is" << std::endl;
+    stream << "                         --fg-root, the FG_DATA_DIR CMake option, FG_ROOT," << std::endl;
+    stream << "                        '../fgdata/', and '../data/'." << std::endl;
     stream.flush();
 }
 
