@@ -456,7 +456,7 @@ SGPath fgHomePath()
     return SGPath::fromEnv("FG_HOME", platformDefaultDataPath());
 }
 
-bool fgInitHome()
+InitHomeResult fgInitHome()
 {
   SGPath dataPath = fgHomePath();
   globals->set_fg_home(dataPath);
@@ -471,16 +471,16 @@ bool fgInitHome()
           "Problem setting up user data",
           "Unable to create the user-data storage folder at '" +
           dataPath.utf8Str() + "'.");
-        return false;
+        return InitHomeAbort;
     }
     
     if (fgGetBool("/sim/fghome-readonly", false)) {
         // user / config forced us into readonly mode, fine
         SG_LOG(SG_GENERAL, SG_INFO, "Running with FG_HOME readonly");
-        return true;
+        return InitHomeExplicitReadOnly;
     }
     
-	bool result = false;
+    InitHomeResult result = InitHomeOkay;
 #if defined(SG_WINDOWS)
 	// don't use a PID file on Windows, because deleting on close is
 	// unreliable and causes false-positives. Instead, use a named
@@ -490,14 +490,14 @@ bool fgInitHome()
 	if (static_fgHomeWriteMutex == nullptr) {
 		printf("CreateMutex error: %d\n", GetLastError());
 		SG_LOG(SG_GENERAL, SG_POPUP, "Failed to create mutex for multi-app protection");
-		return false;
+        return InitHomeAbort;
 	} else if (GetLastError() == ERROR_ALREADY_EXISTS) {
 		SG_LOG(SG_GENERAL, SG_ALERT, "flightgear instance already running, switching to FG_HOME read-only.");
 		fgSetBool("/sim/fghome-readonly", true);
-		return true;
+        return InitHomeReadOnly;
 	} else {
 		SG_LOG(SG_GENERAL, SG_INFO, "Created multi-app mutex, we are in writeable mode");
-		result = true;
+        result = InitHomeOkay;
 	}
 #else
 // write our PID, and check writeability
@@ -509,7 +509,7 @@ bool fgInitHome()
         if (fd < 0) {
             SG_LOG(SG_GENERAL, SG_ALERT, "failed to open local file:" << pidPath
                    << "\n\tdue to:" << simgear::strutils::error_string(errno));
-            return false;
+            return InitHomeAbort;
         }
         
         int err = ::flock(fd, LOCK_EX | LOCK_NB);
@@ -521,16 +521,16 @@ bool fgInitHome()
                 // set a marker property so terrasync/navcache don't try to write
                 // from secondary instances
                 fgSetBool("/sim/fghome-readonly", true);
-                return true;
+                return InitHomeReadOnly;
             } else {
                 SG_LOG(SG_GENERAL, SG_ALERT, "failed to lock file:" << pidPath
                        << "\n\tdue to:" << simgear::strutils::error_string(errno));
-                return false;
+                return InitHomeAbort;
             }
         }
         
        // we locked it!
-        result = true;
+        result = InitHomeOkay;
     } else {
         char buf[16];
        std::string ps = pidPath.utf8Str();
@@ -540,24 +540,24 @@ bool fgInitHome()
         if (fd < 0) {
             SG_LOG(SG_GENERAL, SG_ALERT, "failed to open local file:" << pidPath
                << "\n\tdue to:" << simgear::strutils::error_string(errno));
-            return false;
+            return InitHomeAbort;
         }
             
         int err = write(fd, buf, len);
         if (err < 0) {
             SG_LOG(SG_GENERAL, SG_ALERT, "failed to write to lock file:" << pidPath
             << "\n\tdue to:" << simgear::strutils::error_string(errno));
-            return false;
+            return InitHomeAbort;
         }
 
         err = flock(fd, LOCK_EX);
         if (err != 0) {
             SG_LOG(SG_GENERAL, SG_ALERT, "failed to lock file:" << pidPath
             << "\n\tdue to:" << simgear::strutils::error_string(errno));
-            return false;
+            return InitHomeAbort;
         }
         
-        result = true;
+        result = InitHomeOkay;
     }
 #endif
     fgSetBool("/sim/fghome-readonly", false);
@@ -575,6 +575,16 @@ void fgShutdownHome()
         SGPath pidPath = globals->get_fg_home() / "fgfs_lock.pid";
         pidPath.remove();
     }
+#endif
+}
+
+void fgDeleteLockFile()
+{
+#if defined(SG_WINDOWS)
+    // there's no file here, so we can't actually delete anything
+#else
+    SGPath pidPath = globals->get_fg_home() / "fgfs_lock.pid";
+    pidPath.remove();
 #endif
 }
 

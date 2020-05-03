@@ -2,7 +2,7 @@
 //
 // Written by James Turner, started December 2014.
 //
-// Copyright (C) 2014 James Turner <zakalawe@mac.com>
+// Copyright (C) 2014 James Turner <james@flightgear.org>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -18,8 +18,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef FG_QTLAUNCHER_HXX
-#define FG_QTLAUNCHER_HXX
+#pragma once
+
+class SGPath;
 
 namespace flightgear
 {
@@ -42,6 +43,14 @@ namespace flightgear
 
   bool runInAppLauncherDialog();
 
+  enum LockFileDialogResult
+  {
+    LockFileContinue,
+    LockFileReset
+  };
+
+  LockFileDialogResult showLockFileDialog();
+
   /**
    * @brief restartTheApp quit the application and relaunch it, passing the
    * --launcher flag explicitly.
@@ -50,5 +59,3 @@ namespace flightgear
 
   void launcherSetSceneryPaths();
 }
-
-#endif // of FG_QTLAUNCHER_HXX

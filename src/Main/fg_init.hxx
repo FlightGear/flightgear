@@ -37,8 +37,17 @@ std::string fgBasePackageVersion(const SGPath& path);
 
 SGPath fgHomePath();
 
-bool fgInitHome();
+enum InitHomeResult
+{
+    InitHomeOkay,
+    InitHomeReadOnly,
+    InitHomeExplicitReadOnly,
+    InitHomeAbort
+};
+
+InitHomeResult fgInitHome();
 void fgShutdownHome();
+void fgDeleteLockFile();
 
 // Read in configuration (file and command line)
 int fgInitConfig ( int argc, char **argv, bool reinit );

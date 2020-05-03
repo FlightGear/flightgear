@@ -530,13 +530,31 @@ int fgMainInit( int argc, char **argv )
     sglog().setStartupLoggingEnabled(true);
     
     globals = new FGGlobals;
-    if (!fgInitHome()) {
-        return EXIT_FAILURE;
+    auto initHomeResult = fgInitHome();
+    if (initHomeResult == InitHomeAbort) {
+        flightgear::fatalMessageBoxThenExit("Unable to create lock file",
+                                "Flightgear was unable to create the lock file in FG_HOME");
     }
     
 #if defined(HAVE_QT)
     flightgear::initApp(argc, argv);
 #endif
+
+    // check if the launcher is requested, since it affects config file parsing
+    bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
+    // an Info.plist bundle can't define command line arguments, but it can set
+    // environment variables. This avoids needed a wrapper shell-script on OS-X.
+    showLauncher |= (::getenv("FG_LAUNCHER") != nullptr);
+
+    if (showLauncher && (initHomeResult == InitHomeReadOnly)) {
+// show this message early, if we can
+        auto r = flightgear::showLockFileDialog();
+        if (r == flightgear::LockFileReset) {
+            SG_LOG( SG_GENERAL, SG_ALERT, "Deleting lock file at user request");
+            fgDeleteLockFile();
+            fgSetBool("/sim/fghome-readonly", false);
+        }
+    }
 
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
@@ -597,23 +615,11 @@ int fgMainInit( int argc, char **argv )
     upper_case_property("/sim/tower/airport-id");
     upper_case_property("/autopilot/route-manager/input");
 
-// check if the launcher is requested, since it affects config file parsing
-    bool showLauncher = flightgear::Options::checkForArg(argc, argv, "launcher");
-    // an Info.plist bundle can't define command line arguments, but it can set
-    // environment variables. This avoids needed a wrapper shell-script on OS-X.
-    showLauncher |= (::getenv("FG_LAUNCHER") != nullptr);
     if (showLauncher) {
         // to minimise strange interactions when launcher and config files
         // set overlaping options, we disable the default files. Users can
         // still explicitly request config files via --config options if they choose.
         flightgear::Options::sharedInstance()->setShouldLoadDefaultConfig(false);
-    }
-
-    if (showLauncher && readOnlyFGHome) {
-        // this is perhaps not what the user wanted, let's inform them
-        flightgear::modalMessageBox("Multiple copies of FlightGear",
-                                    "Another copy of FlightGear is already running on this computer, "
-                                    "so this copy will run in read-only mode.");
     }
 
     // Load the configuration parameters.  (Command line options

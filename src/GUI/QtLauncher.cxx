@@ -30,21 +30,15 @@
 #include <QProgressDialog>
 #include <QDir>
 #include <QFileInfo>
-#include <QPixmap>
 #include <QTimer>
 #include <QDebug>
-#include <QCompleter>
-#include <QListView>
 #include <QSettings>
 #include <QUrl>
-#include <QAction>
-#include <QDateTime>
 #include <QApplication>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
 #include <QThread>
 #include <QProcess>
 #include <QTranslator>
+#include <QMessageBox>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -504,6 +498,26 @@ bool runInAppLauncherDialog()
     }
 
     return true;
+}
+
+LockFileDialogResult showLockFileDialog()
+{
+    QMessageBox mb;
+    mb.setIconPixmap(QPixmap(":/app-icon-large"));
+    mb.setWindowTitle("Multiple copies of Flightgear running");
+    mb.setText("Flightgear has detected another copy is already running. "
+               "This copy will run in read-only mode, so downloads will not be possible, "
+               "and settings will not be saved.");
+    mb.setInformativeText("If you are sure another copy is not running on this computer, "
+                       "you can choose to reset the lock file to prevent seeing this message again.");
+    mb.addButton(QMessageBox::Ok);
+    mb.setDefaultButton(QMessageBox::Ok);
+    mb.addButton(QMessageBox::Reset);
+
+    int r = mb.exec();
+    if (r == QMessageBox::Reset)
+        return LockFileReset;
+    return LockFileContinue;
 }
 
 } // of namespace flightgear
