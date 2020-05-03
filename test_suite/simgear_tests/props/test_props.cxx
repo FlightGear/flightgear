@@ -20,6 +20,7 @@
 
 #include "test_props.hxx"
 
+#include <simgear/props/props_io.hxx>
 
 // Set up function for each test.
 void SimgearPropsTests::setUp()
@@ -49,4 +50,32 @@ void SimgearPropsTests::testAliasLeak()
     // Aliased node.
     alias = tree->getNode("test-alias", true);
     alias->alias("test-node");
+}
+
+void SimgearPropsTests::testPropsCopyIf()
+{
+// dummy property tree structure
+    tree->setIntValue("a/a/a", 42);
+    tree->setStringValue("a/a/b", "foo");
+    tree->setIntValue("a/a/c[2]", 99);
+    tree->setIntValue("a/a/d", 1);
+    tree->setIntValue("a/b/a[0]", 50);
+    tree->setIntValue("a/b/a[1]", 100);
+    tree->setStringValue("a/b/b", "foo");
+
+    SGPropertyNode_ptr destA(new SGPropertyNode);
+
+    copyPropertiesIf(tree, destA, [](const SGPropertyNode* src) {
+        // always copy non-leaf nodes
+        if (src->nChildren() > 0) 
+            return true;
+
+        return (src->getType() == simgear::props::INT) &&
+            src->getIntValue() > 50;
+    });
+
+    CPPUNIT_ASSERT_EQUAL(1, destA->getNode("a/a")->nChildren()); // only 99
+    CPPUNIT_ASSERT_EQUAL(99, destA->getIntValue("a/a/c[2]"));
+    CPPUNIT_ASSERT_EQUAL(1, destA->getNode("a/b")->nChildren()); // only 100
+    CPPUNIT_ASSERT_EQUAL(100, destA->getIntValue("a/b/a[1]"));
 }

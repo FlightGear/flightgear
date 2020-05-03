@@ -34,6 +34,7 @@ class SimgearPropsTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(SimgearPropsTests);
     CPPUNIT_TEST(testAliasLeak);
+    CPPUNIT_TEST(testPropsCopyIf);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -45,7 +46,7 @@ public:
 
     // The tests.
     void testAliasLeak();
-
+    void testPropsCopyIf();
 private:
     // A property tree.
     SGPropertyNode *tree;

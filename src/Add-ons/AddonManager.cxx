@@ -96,13 +96,33 @@ AddonManager::loadConfigFileIfExists(const SGPath& configFile)
     return;
   }
 
+  SGPropertyNode_ptr configProps(new SGPropertyNode);
   try {
-    readProperties(configFile, globals->get_props());
+    readProperties(configFile, configProps);
   } catch (const sg_exception &e) {
     throw errors::error_loading_config_file(
       "unable to load add-on config file '" + configFile.utf8Str() + "': " +
       e.getFormattedMessage());
   }
+  
+  // bug https://sourceforge.net/p/flightgear/codetickets/2059/
+  // since we're loading this after autosave.xml is loaded, the defaults
+  // always take precedence. To fix this, only copy a value from the
+  // addon-config if it's not makred as ARCHIVE. (We assume ARCHIVE props
+  // came from autosave.xml)
+  copyPropertiesIf(configProps, globals->get_props(), [](const SGPropertyNode* src) {
+    if (src->nChildren() > 0)
+      return true;
+    
+    // find the correspnding destination node
+    auto dstNode = globals->get_props()->getNode(src->getPath());
+    if (!dstNode)
+      return true; // easy, just copy it
+    
+    // copy if it's NOT marked archive. In other words, we can replace
+    // values from defaults, but not autosave
+    return dstNode->getAttribute(SGPropertyNode::ARCHIVE) == false;
+  });
 
   SG_LOG(SG_GENERAL, SG_INFO,
          "Loaded add-on config file: '" << configFile.utf8Str() + "'");
