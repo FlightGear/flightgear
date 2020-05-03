@@ -3,6 +3,9 @@
 #include <memory>
 #include <cstring>
 
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
+
 #include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestPilot.hxx"
@@ -543,4 +546,54 @@ void RouteManagerTests::testHoldFromNasal()
     
     // get back on course
     FGTestApi::runForTime(60.0);
+}
+
+// check that when loading a GPX, airport waypoints are created
+// by the default delegate
+// https://sourceforge.net/p/flightgear/codetickets/2227/
+void RouteManagerTests::loadGPX()
+{
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    
+    FlightPlanRef f = new FlightPlan;
+    rm->setFlightPlan(f);
+    
+    SGPath gpxPath = simgear::Dir::current().path() / "test_gpx.gpx";
+    {
+        sg_ofstream s(gpxPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" creator="SkyVector" version="1.1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <rte>
+    <name>KJFK-KBOS</name>
+    <rtept lat="40.639928" lon="-73.778692">
+      <name>KJFK</name>
+      <overfly>false</overfly>
+    </rtept>
+    <rtept lat="41.641106" lon="-72.547419">
+      <name>HFD</name>
+      <overfly>false</overfly>
+    </rtept>
+    <rtept lat="42.362944" lon="-71.006389">
+      <name>KBOS</name>
+      <overfly>false</overfly>
+    </rtept>
+
+  </rte>
+</gpx>
+        )";
+    }
+    
+    CPPUNIT_ASSERT(f->load(gpxPath));
+    
+    auto kbos = FGAirport::getByIdent("KBOS");
+    auto kjfk = FGAirport::getByIdent("KJFK");
+    CPPUNIT_ASSERT_EQUAL(kjfk, f->departureAirport());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGRunway*>(nullptr), f->departureRunway());
+    CPPUNIT_ASSERT_EQUAL(3, f->numLegs());
+    CPPUNIT_ASSERT_EQUAL(kbos, f->destinationAirport());
+
+    auto wp1 = f->legAtIndex(1);
+    CPPUNIT_ASSERT_EQUAL(std::string{"HFD"}, wp1->waypoint()->ident());
+    
+
 }

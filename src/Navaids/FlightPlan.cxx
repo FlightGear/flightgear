@@ -766,41 +766,45 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
 
 bool FlightPlan::load(const SGPath& path)
 {
-  if (!path.exists())
-  {
-    SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << path
-           << "'. The file does not exist.");
-    return false;
-  }
-
-  SG_LOG(SG_NAVAID, SG_INFO, "going to read flight-plan from:" << path);
-  
-  bool Status = false;
-  lockDelegates();
-
-  // try different file formats
-  if (loadGpxFormat(path)) // GPX format
-      Status = true;
-  else
-  if (loadXmlFormat(path)) // XML property data
-      Status = true;
-  else
-  if (loadPlainTextFormat(path)) // simple textual list of waypoints
-      Status = true;
-
-  
-  if (Status == true) {
-    setIdent(path.file_base());
-  }
-  
-  // mark data as unchanged since this is a clean plan
-  _arrivalChanged = false;
-  _departureChanged = false;
-  _cruiseDataChanged = true;
-  _waypointsChanged = true;
-  unlockDelegates();
-
-  return Status;
+    if (!path.exists()) {
+        SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << path
+               << "'. The file does not exist.");
+        return false;
+    }
+    
+    SG_LOG(SG_NAVAID, SG_INFO, "going to read flight-plan from:" << path);
+    
+    bool Status = false;
+    lockDelegates();
+    
+    // try different file formats
+    if (loadGpxFormat(path)) { // GPX format
+        _arrivalChanged = true;
+        _departureChanged = true;
+        Status = true;
+    } else if (loadXmlFormat(path)) { // XML property data
+        // we don't want to re-compute the arrival / departure after
+        // a load, since we assume the flight-plan had it specified already
+        // especially, the XML might have a SID/STAR embedded, which we don't
+        // want to lose
+        _arrivalChanged = false;
+        _departureChanged = false;
+        Status = true;
+    } else if (loadPlainTextFormat(path)) { // simple textual list of waypoints
+        _arrivalChanged = true;
+        _departureChanged = true;
+        Status = true;
+    }
+    
+    if (Status == true) {
+        setIdent(path.file_base());
+    }
+    
+    _cruiseDataChanged = true;
+    _waypointsChanged = true;
+    unlockDelegates();
+    
+    return Status;
 }
     
 bool FlightPlan::load(std::istream &stream)
