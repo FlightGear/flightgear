@@ -546,6 +546,7 @@ int fgMainInit( int argc, char **argv )
     // environment variables. This avoids needed a wrapper shell-script on OS-X.
     showLauncher |= (::getenv("FG_LAUNCHER") != nullptr);
 
+#if defined(HAVE_QT)
     if (showLauncher && (initHomeResult == InitHomeReadOnly)) {
 // show this message early, if we can
         auto r = flightgear::showLockFileDialog();
@@ -555,7 +556,8 @@ int fgMainInit( int argc, char **argv )
             fgSetBool("/sim/fghome-readonly", false);
         }
     }
-
+#endif
+    
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
         // now home is initialised, we can log to a file inside it
