@@ -492,6 +492,10 @@ endif()
 if(WIN32)
 
     if(MSVC)
+        # override CMake default RelWithDebInfo flags. This is important to ensure
+        # good performance
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MT /Zi /O2 /Ob2 /D NDEBUG")
+
         set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP /O2")
         if(ENABLE_SIMD)
           if (X86)
