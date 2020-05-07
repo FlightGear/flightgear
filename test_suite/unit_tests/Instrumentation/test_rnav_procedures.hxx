@@ -42,6 +42,7 @@ class RNAVProcedureTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testHeadingToAlt);
     CPPUNIT_TEST(testUglyHeadingToAlt);
     CPPUNIT_TEST(testLFKC_AJO1R);
+    CPPUNIT_TEST(testTransitions);
     CPPUNIT_TEST_SUITE_END();
 
     void setPositionAndStabilise(const SGGeod& g);
@@ -64,6 +65,7 @@ public:
     void testHeadingToAlt();
     void testUglyHeadingToAlt();
     void testLFKC_AJO1R();
+    void testTransitions();
 private:
     GPS* m_gps = nullptr;
     SGPropertyNode_ptr m_gpsNode;

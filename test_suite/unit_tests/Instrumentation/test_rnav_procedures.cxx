@@ -519,3 +519,27 @@ void RNAVProcedureTests::testLFKC_AJO1R()
     });
     CPPUNIT_ASSERT(ok);
 }
+
+void RNAVProcedureTests::testTransitions()
+{
+    auto kjfk = FGAirport::findByIdent("kjfk");
+    //auto sid = kjfk->findSIDWithIdent("DEEZZ5.13L");
+    auto sid = kjfk->selectSIDByTransition("CANDR");
+    // procedures not loaded, abandon test
+    if (!sid)
+        return;
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    fp->addDelegate(testDelegate);
+    
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithNasal(fp, "KJFK", "13L", "KCLE", "24R", "");
+    
+    fp->setSID(sid);
+    CPPUNIT_ASSERT_EQUAL(7, fp->numLegs());
+    auto wp = fp->legAtIndex(6);
+    CPPUNIT_ASSERT_EQUAL(std::string{"CANDR"}, wp->waypoint()->ident());
+}
