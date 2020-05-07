@@ -46,7 +46,8 @@ namespace flightgear
   enum LockFileDialogResult
   {
     LockFileContinue,
-    LockFileReset
+    LockFileReset,
+    LockFileQuit
   };
 
   LockFileDialogResult showLockFileDialog();

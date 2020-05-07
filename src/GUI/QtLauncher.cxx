@@ -500,23 +500,40 @@ bool runInAppLauncherDialog()
     return true;
 }
 
+static const char* static_lockFileDialog_Title =
+    QT_TRANSLATE_NOOP("LockFileDialog", "Multiple copies of FlightGear running");
+static const char* static_lockFileDialog_Text =
+    QT_TRANSLATE_NOOP("LockFileDialog",
+                      "FlightGear has detected another copy is already running. "
+                      "This copy will run in read-only mode, so downloads will not be possible, "
+                      "and settings will not be saved.");
+static const char* static_lockFileDialog_Info =
+    QT_TRANSLATE_NOOP("LockFileDialog",
+                      "If you are sure another copy is not running on this computer, "
+                      "you can choose to reset the lock file, and run this copy as normal. "
+                       "Alternatively, you can close this copy of the software.");
+
 LockFileDialogResult showLockFileDialog()
 {
+    QString title = qApp->translate("LockFileDialog", static_lockFileDialog_Title);
+    QString text = qApp->translate("LockFileDialog", static_lockFileDialog_Text);
+    QString infoText = qApp->translate("LockFileDialog", static_lockFileDialog_Info);
+
     QMessageBox mb;
     mb.setIconPixmap(QPixmap(":/app-icon-large"));
-    mb.setWindowTitle("Multiple copies of Flightgear running");
-    mb.setText("Flightgear has detected another copy is already running. "
-               "This copy will run in read-only mode, so downloads will not be possible, "
-               "and settings will not be saved.");
-    mb.setInformativeText("If you are sure another copy is not running on this computer, "
-                       "you can choose to reset the lock file to prevent seeing this message again.");
+    mb.setWindowTitle(title);
+    mb.setText(text);
+    mb.setInformativeText(infoText);
     mb.addButton(QMessageBox::Ok);
     mb.setDefaultButton(QMessageBox::Ok);
     mb.addButton(QMessageBox::Reset);
+    mb.addButton(QMessageBox::Close);
 
     int r = mb.exec();
     if (r == QMessageBox::Reset)
         return LockFileReset;
+    if (r == QMessageBox::Close)
+        return LockFileQuit;
     return LockFileContinue;
 }
 

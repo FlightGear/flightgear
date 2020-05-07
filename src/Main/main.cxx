@@ -554,6 +554,8 @@ int fgMainInit( int argc, char **argv )
             SG_LOG( SG_GENERAL, SG_ALERT, "Deleting lock file at user request");
             fgDeleteLockFile();
             fgSetBool("/sim/fghome-readonly", false);
+        } else if (r == flightgear::LockFileQuit) {
+            return EXIT_SUCCESS;
         }
     }
 #endif
