@@ -106,7 +106,12 @@ void FGXMLAutopilotGroupImplementation::reinit()
 {
   SGSubsystemGroup::unbind();
   clearSubsystems();
-
+  
+  // ensure we bind again, so the SGSubsystemGroup state is correct before
+  // we call init. Since there's no actual group members at this point (we
+  // cleared them just above) this is purely to ensure SGSubsystemGroup::_state
+  // is BIND, so that ::init doesn't assert
+  SGSubsystemGroup::bind();
   init();
 }
 
