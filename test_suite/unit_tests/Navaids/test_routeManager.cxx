@@ -594,6 +594,85 @@ void RouteManagerTests::loadGPX()
 
     auto wp1 = f->legAtIndex(1);
     CPPUNIT_ASSERT_EQUAL(std::string{"HFD"}, wp1->waypoint()->ident());
+    auto wp2 = f->legAtIndex(2);
+    CPPUNIT_ASSERT_EQUAL(std::string{"KBOS"}, wp2->waypoint()->ident());
+}
+
+// The same test as above, but for a file exported from the route manager or online
+void RouteManagerTests::loadFgfp()
+{
+    auto rm = globals->get_subsystem<FGRouteMgr>();
     
+    FlightPlanRef f = new FlightPlan;
+    rm->setFlightPlan(f);
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+              <departure>
+                <airport type="string">EDDM</airport>
+                <runway type="string">08R</runway>
+              </departure>
+              <destination>
+                <airport type="string">EDDF</airport>
+              </destination>
+              <route>
+                <wp>
+                  <type type="string">runway</type>
+                  <departure type="bool">true</departure>
+                  <ident type="string">08R</ident>
+                  <icao type="string">EDDM</icao>
+                </wp>
+                <wp n="1">
+                  <type type="string">navaid</type>
+                  <ident type="string">GIVMI</ident>
+                  <lon type="double">11.364700</lon>
+                  <lat type="double">48.701100</lat>
+                </wp>
+                <wp n="2">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERNAS</ident>
+                  <lon type="double">11.219400</lon>
+                  <lat type="double">48.844700</lat>
+                </wp>
+                <wp n="3">
+                  <type type="string">navaid</type>
+                  <ident type="string">TALAL</ident>
+                  <lon type="double">11.085300</lon>
+                  <lat type="double">49.108300</lat>
+                </wp>
+                <wp n="4">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERMEL</ident>
+                  <lon type="double">11.044700</lon>
+                  <lat type="double">49.187800</lat>
+                </wp>
+                <wp n="5">
+                  <type type="string">navaid</type>
+                  <ident type="string">PSA</ident>
+                  <lon type="double">9.348300</lon>
+                  <lat type="double">49.862200</lat>
+                </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    CPPUNIT_ASSERT(f->load(fgfpPath));
+    
+    auto eddm = FGAirport::getByIdent("EDDM");
+    auto eddf = FGAirport::getByIdent("EDDF");
+    CPPUNIT_ASSERT_EQUAL(eddm, f->departureAirport());
+    CPPUNIT_ASSERT_EQUAL(eddm->getRunwayByIdent("08R")->ident(), f->departureRunway()->ident());
+    CPPUNIT_ASSERT_EQUAL(7, f->numLegs());
+    CPPUNIT_ASSERT_EQUAL(eddf, f->destinationAirport());
+
+    auto wp1 = f->legAtIndex(1);
+    CPPUNIT_ASSERT_EQUAL(std::string{"GIVMI"}, wp1->waypoint()->ident());
+    auto wp2 = f->legAtIndex(6);
+    CPPUNIT_ASSERT_EQUAL(std::string{"EDDF"}, wp2->waypoint()->ident());
 
 }
