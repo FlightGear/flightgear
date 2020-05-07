@@ -492,7 +492,12 @@ endif()
 if(WIN32)
 
     if(MSVC)
-        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS /MP /O2")
+        # override CMake default RelWithDebInfo flags. This is important to ensure
+        # good performance
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
+        set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
+
+        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
         if(ENABLE_SIMD)
           if (X86)
             SET(CMAKE_C_FLAGS_RELEASE "/O2 /arch:SSE /arch:SSE2")
