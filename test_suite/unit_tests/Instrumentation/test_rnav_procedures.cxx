@@ -93,6 +93,30 @@ public:
             }
         }
     }
+	
+	void arrivalChanged() override
+    {
+        // mimic the default delegate, inserting the STAR waypoints
+        
+        // clear anything existing
+        thePlan->clearWayptsWithFlag(WPT_ARRIVAL);
+        
+        // insert waypt for the destination runway
+        auto dr = new RunwayWaypt(thePlan->destinationRunway(), thePlan);
+        dr->setFlag(WPT_ARRIVAL);
+        thePlan->insertWayptAtIndex(dr, 0);
+        
+        if (thePlan->star()) {
+            WayptVec starRoute;
+            bool ok = thePlan->star()->route(thePlan->destinationRunway(), nullptr, starRoute);
+            if (!ok)
+                throw sg_exception("failed to route via STAR");
+            int insertIndex = 1;
+            for (auto w : starRoute) {
+                thePlan->insertWayptAtIndex(w, insertIndex++);
+            }
+        }
+    }
 };
 
 } // of anonymous namespace
@@ -520,14 +544,17 @@ void RNAVProcedureTests::testLFKC_AJO1R()
     CPPUNIT_ASSERT(ok);
 }
 
-void RNAVProcedureTests::testTransitions()
+void RNAVProcedureTests::testTransitionsSID()
 {
     auto kjfk = FGAirport::findByIdent("kjfk");
     //auto sid = kjfk->findSIDWithIdent("DEEZZ5.13L");
+    // the method used by nasal to search for a transition only accepts transition ID as argument
+    // - not the associated SID. I believe this is an issue. This code will try to load DEEZZ5.04L!
     auto sid = kjfk->selectSIDByTransition("CANDR");
     // procedures not loaded, abandon test
     if (!sid)
         return;
+
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     
@@ -542,4 +569,29 @@ void RNAVProcedureTests::testTransitions()
     CPPUNIT_ASSERT_EQUAL(7, fp->numLegs());
     auto wp = fp->legAtIndex(6);
     CPPUNIT_ASSERT_EQUAL(std::string{"CANDR"}, wp->waypoint()->ident());
+}
+
+void RNAVProcedureTests::testTransitionsSTAR()
+{
+    auto kjfk = FGAirport::findByIdent("kjfk");
+    //auto star = kjfk->findSIDWithIdent("DEEZZ5.13L");
+    auto star = kjfk->selectSTARByTransition("SEY");
+    // procedures not loaded, abandon test
+    if (!star)
+        return;
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    fp->addDelegate(testDelegate);
+    
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithNasal(fp, "KBOS", "22R", "KJFK", "22L", "");
+    
+    fp->setSTAR(star);
+    CPPUNIT_ASSERT_EQUAL(8, fp->numLegs());
+    auto wp = fp->legAtIndex(1);
+    CPPUNIT_ASSERT_EQUAL(std::string{"SEY"}, wp->waypoint()->ident());
 }
