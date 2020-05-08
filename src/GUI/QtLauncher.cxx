@@ -277,7 +277,7 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
           QStringLiteral("org.flightgear.FlightGear.desktop"));
 #endif
         QTranslator* fallbackTranslator = new QTranslator(static_qApp.get());
-        if (!fallbackTranslator->load(QLatin1String(":/FlightGear_en.qm"))) {
+        if (!fallbackTranslator->load(QLatin1String(":/FlightGear_en_US.qm"))) {
             qWarning() << "Failed to load default (en) translations";
             delete fallbackTranslator;
         } else {
