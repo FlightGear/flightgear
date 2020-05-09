@@ -93,8 +93,8 @@ public:
             }
         }
     }
-	
-	void arrivalChanged() override
+    
+    void arrivalChanged() override
     {
         // mimic the default delegate, inserting the STAR waypoints
         
@@ -569,6 +569,7 @@ void RNAVProcedureTests::testTransitionsSID()
     CPPUNIT_ASSERT_EQUAL(7, fp->numLegs());
     auto wp = fp->legAtIndex(6);
     CPPUNIT_ASSERT_EQUAL(std::string{"CANDR"}, wp->waypoint()->ident());
+    CPPUNIT_ASSERT(rm->activate());
 }
 
 void RNAVProcedureTests::testTransitionsSTAR()
@@ -594,4 +595,63 @@ void RNAVProcedureTests::testTransitionsSTAR()
     CPPUNIT_ASSERT_EQUAL(8, fp->numLegs());
     auto wp = fp->legAtIndex(1);
     CPPUNIT_ASSERT_EQUAL(std::string{"SEY"}, wp->waypoint()->ident());
+    CPPUNIT_ASSERT(rm->activate());
+}
+
+void RNAVProcedureTests::testLEBL_LARP2F()
+{
+    auto lebl = FGAirport::findByIdent("LEBL");
+    auto sid = lebl->findSIDWithIdent("LARP2F.25L");
+    // procedures not loaded, abandon test
+    if (!sid)
+        return;
+
+    FGTestApi::setUp::logPositionToKML("procedure_LEBL-LARP2F");
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    fp->addDelegate(testDelegate);
+    
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithNasal(fp, "LEBL", "25L", "LEIB", "06", "");
+    
+    fp->setSID(sid);
+    // I don't know if this should pass or not! 
+    // If its a bug, wrap next line in CPPUNIT_ASSERT_ASSERTION_FAIL
+    CPPUNIT_ASSERT_EQUAL(fp->legAtIndex(1)->waypoint()->position(), SGGeod::fromDeg(0, 0)); 
+    CPPUNIT_ASSERT_EQUAL(std::string{"LARPA"}, fp->legAtIndex(8)->waypoint()->ident());
+    double d = fp->legAtIndex(8)->distanceAlongRoute();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(47.7, d, 1.0); // ensure the route didn't blow up
+    
+    FGTestApi::writeFlightPlanToKML(fp);
+
+    CPPUNIT_ASSERT(rm->activate());
+    
+    FGRunwayRef departureRunway = fp->departureRunway();
+    
+    setupStandardGPS();
+    
+    FGTestApi::setPositionAndStabilise(departureRunway->threshold());
+    m_gpsNode->setStringValue("command", "leg");
+    
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(globals->get_aircraft_position());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(departureRunway->headingDeg(), m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    pilot->setCourseTrue(m_gpsNode->getDoubleValue("wp/leg-true-course-deg"));
+    pilot->setSpeedKts(220);
+    pilot->flyGPSCourse(m_gps);
+    FGTestApi::runForTime(20.0);
+    bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+        if (fp->currentIndex() == 1) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    FGTestApi::runForTime(180.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(199, m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
 }
