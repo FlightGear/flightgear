@@ -131,7 +131,7 @@ long TileCache::get_first_expired_tile() const
 {
   const_tile_map_iterator current = tile_cache.begin();
   const_tile_map_iterator end = tile_cache.end();
-  
+
   for ( ; current != end; ++current ) {
     TileEntry *e = current->second;
     if (!e->is_current_view() && e->is_expired(current_time))
@@ -139,7 +139,7 @@ long TileCache::get_first_expired_tile() const
       return current->first;
     }
   }
-  
+
   return -1; // no expired tile found
 }
 
@@ -215,7 +215,7 @@ void TileCache::request_tile(TileEntry* t,float priority,bool current_view,doubl
 
     if (current_view)
     {
-        t->update_time_expired( current_time );
+        t->update_time_expired( current_time + request_time );
         t->set_current_view( true );
     }
     else
