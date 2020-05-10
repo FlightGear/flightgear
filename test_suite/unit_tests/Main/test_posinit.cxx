@@ -67,7 +67,6 @@ void PosInitTests::checkPosition(SGGeod expectedPos, float delta)
 {
   double dist = SGGeodesy::distanceM(globals->get_aircraft_position(),
                                      expectedPos);
-  std::cerr << "Position distance " << dist << "\n";
   CPPUNIT_ASSERT_MESSAGE("Unexpected Position", dist < delta);
 }
 
@@ -184,6 +183,7 @@ void PosInitTests::testAirportAndRunwayStartup()
 
     checkClosestAirport(std::string("EDDF"));
     checkPosition(FGAirport::getByIdent("EDDF")->geod(), 10000.0);
+    checkHeading(250.0);
 }
 
 void PosInitTests::testAirportAndParkingStartup()
@@ -532,5 +532,44 @@ void PosInitTests::testCarrierStartup()
     initPosition();
 
     checkPosition(SGGeod::fromDeg(-122.6, 37.8), 100.0);
+    checkOnGround();
+}
+
+void PosInitTests::testAirportRepositionAirport()
+{
+    {
+        Options* opts = Options::sharedInstance();
+        opts->setShouldLoadDefaultConfig(false);
+
+        const char* args[] = {"dummypath", "--airport=EDDF", "--runway=25C"};
+        opts->init(3, (char**) args, SGPath());
+        opts->processOptions();
+    }
+
+    std::cout << "Preset heading " << fgGetDouble("/sim/presets/heading-deg") << "\n";
+
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
+    checkRunway(std::string("25C"));
+    initPosition();
+
+    checkClosestAirport(std::string("EDDF"));
+    checkPosition(FGAirport::getByIdent("EDDF")->geod(), 10000.0);
+    checkHeading(250.0);
+
+    std::cout << "Preset heading " << fgGetDouble("/sim/presets/heading-deg") << "\n";
+
+    // Now re-position to KSFO runway
+    // Reset the Lat/Lon as these will be used in preference to the airport ID
+    fgSetDouble("/sim/presets/longitude-deg", -9990.00);
+    fgSetDouble("/sim/presets/latitude-deg",  -9990.00);
+    fgSetString("/sim/presets/airport-id", "KHAF");
+    fgSetDouble("/sim/presets/heading-deg",  9990.00);
+    fgSetString("/sim/presets/runway", "12");
+    initPosition();
+
+    checkClosestAirport(std::string("KHAF"));
+    checkPosition(FGAirport::getByIdent("KHAF")->geod(), 5000.0);
+    checkHeading(137.0); // Lots of magnetic variation in SF Bay area!
     checkOnGround();
 }

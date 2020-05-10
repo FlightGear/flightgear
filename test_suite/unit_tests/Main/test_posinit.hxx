@@ -55,12 +55,14 @@ class PosInitTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testLatLonStartup);
     //CPPUNIT_TEST(testLatLonOffsetStartup); This is not yet supported.
 
-
     // Carrier tests
     // We are not able to test the carrier code thoroughly as it depends
     // heavily on finalizePosition(), which requires that the carrier model
     // itself be loaded into the scenegraph.
     CPPUNIT_TEST(testCarrierStartup);
+
+    // Reposition tests
+    CPPUNIT_TEST(testAirportRepositionAirport);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -96,6 +98,9 @@ public:
 
     //Carrier tests
     void testCarrierStartup();
+
+    //Reposition tests
+    void testAirportRepositionAirport();
 
 private:
     // Helper functions for tests.  Return void as they use CPPUNIT_ASSERT
