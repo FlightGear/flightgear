@@ -67,9 +67,9 @@ private:
      * to outermost sequence.
      */
     float _priority;
-    /** Flag indicating if tile belongs to current view. */ 
+    /** Flag indicating if tile belongs to current view. */
     bool _current_view;
-    /** Time when tile expires. */ 
+    /** Time when tile expires. */
     double _time_expired;
 
 public:
@@ -129,7 +129,7 @@ public:
     inline bool is_current_view() const { return _current_view; }
 
     /**
-     * Return true if the tile entry is still needed, otherwise return false
+     * Return false if the tile entry is still needed, otherwise return true
      * indicating that the tile is no longer in active use.
      */
     inline bool is_expired(double current_time) const { return (_current_view) ? false : (current_time > _time_expired); }
@@ -142,4 +142,4 @@ public:
     }
 };
 
-#endif // _TILEENTRY_HXX 
+#endif // _TILEENTRY_HXX

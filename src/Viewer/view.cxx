@@ -87,7 +87,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     _internal = internal;
     _lookat_agl = lookat_agl;
     _view_index = view_index;
-    
+
     _dampFactor = SGVec3d::zeros();
     _dampOutput = SGVec3d::zeros();
     _dampTarget = SGVec3d::zeros();
@@ -122,7 +122,7 @@ View::View( ViewType Type, bool from_model, int from_model_index,
     }
 
     _configFOV_deg = _fov_deg;
-    
+
     _fov_user_deg = _fov_deg;
 
     _aspect_ratio_multiplier = aspect_ratio_multiplier;
@@ -145,7 +145,7 @@ View* View::createFromProperties(SGPropertyNode_ptr config, int view_index)
     // find out if this is an internal view (e.g. in cockpit, low near plane)
     // FIXME : should be a child of config
     bool internal = config->getParent()->getBoolValue("internal", false);
-    
+
     std::string root = config->getPath();
     // Will typically be /sim/view[]/config.
 
@@ -229,6 +229,10 @@ View::init ()
 void
 View::bind ()
 {
+    // Perform an immediate recalculation to ensure that the data for the
+    // viewer position is correct.
+    recalc();
+
     _tiedProperties.setRoot(fgGetNode("/sim/current-view", true));
     _tiedProperties.Tie("heading-offset-deg", this,
                          &View::getHeadingOffset_deg,
@@ -668,7 +672,7 @@ static void getAircraftPositionOrientation(
         ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/latitude-deg)"),
         ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/position/altitude-ft)")
         );
-    
+
     head  = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/orientation/true-heading-deg)");
     pitch = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/orientation/pitch-deg)");
     roll  = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/orientation/roll-deg)");
@@ -688,7 +692,7 @@ root:
     /ai/models/multiplayer[].
 view_index:
     The view number. We will look in .../sim/view[view_index].
-infix: 
+infix:
     We look at .../view[view_index]/config/<infix>x-offset-m etc. Views appear
     to use 'z-offset-m' to define the location of pilot's eyes in cockpit
     view, but 'target-z-offset' when defining viewpoint of other views such as
@@ -745,7 +749,7 @@ static void getViewOffsets(
         offset_m += offset;
     }
 }
-    
+
 // recalculate for LookFrom view type...
 // E.g. Cockpit View and Tower View Look From.
 void
@@ -754,7 +758,7 @@ View::recalcLookFrom ()
   double head;
   double pitch;
   double roll;
-  
+
   if (_from_model ) {
     /* Look up aircraft position; this works for user's aircaft or multiplayer
     aircraft. */
@@ -762,11 +766,11 @@ View::recalcLookFrom ()
   }
   else {
     /* Tower View Look From.
-    
+
     <_config> will be /sim/view[4]/config, so <_config>/eye-lon-deg-path
     will be /sim/view[4]/config/eye-lon-deg-path which will contain
     /sim/tower/longitude-deg (see fgdata:defaults.xml).
-    
+
     [Might be nice to make a 'TowerView Look From Multiplayer' that uses the
     tower that is nearest to a particular multiplayer aircraft. We'd end up
     looking at /ai/models/multiplayer[]/sim/tower/longitude-deg, so we'd need
@@ -781,12 +785,12 @@ View::recalcLookFrom ()
     pitch   = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-pitch-deg-path))");
     roll    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-roll-deg-path))");
   }
-  
+
   /* Find the offset of the view position relative to the aircraft model's
   origin. */
   SGVec3d offset_m;
   getViewOffsets(false /*target_infix*/, &_adjust_offset_m, offset_m);
-  
+
   set_fov(_fov_user_deg);
 
   // The rotation rotating from the earth centerd frame to
@@ -811,7 +815,7 @@ View::recalcLookFrom ()
   // This is rotates the x-forward, y-right, z-down coordinate system the where
   // simulation runs into the OpenGL camera system with x-right, y-up, z-back.
   SGQuatd q(-0.5, -0.5, 0.5, 0.5);
-  
+
   _absolute_view_pos = position + (ec2body*q).backTransform(offset_m);
   mViewOrientation = ec2body*mViewOffsetOr*q;
 }
@@ -906,7 +910,7 @@ void View::handleAGL()
         _lookat_agl_damping.reset(relative_height_ground_);
         relative_height_ground = relative_height_ground_;
     }
-    
+
     /* Apply scaling from user field of view setting, altering only
     relative_height_ground so that the aircraft is always in view. */
     {
@@ -973,14 +977,14 @@ View::recalcLookAt ()
             _target_roll_deg
             );
   }
-  
+
   double eye_heading = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-heading-deg-path))");
   double eye_roll    = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-roll-deg-path))");
   double eye_pitch   = ViewPropertyEvaluator::getDoubleValue("((/sim/view[(/sim/current-view/view-number-raw)]/config/root)/(/sim/view[(/sim/current-view/view-number-raw)]/config/eye-pitch-deg-path))");
-    
+
   setDampTarget(eye_roll, eye_pitch, eye_heading);
   getDampOutput(eye_roll, eye_pitch, eye_heading);
-  
+
   SGQuatd geodTargetOr = SGQuatd::fromYawPitchRollDeg(_target_heading_deg,
                                                    _target_pitch_deg,
                                                    _target_roll_deg);
@@ -993,7 +997,7 @@ View::recalcLookAt ()
         target_pos_off.x(),
         -target_pos_off.y()
         );
-  target_pos_off = (geodTargetHlOr*geodTargetOr).backTransform(target_pos_off);    
+  target_pos_off = (geodTargetHlOr*geodTargetOr).backTransform(target_pos_off);
 
   SGVec3d targetCart = SGVec3d::fromGeod(_target);
   SGVec3d targetCart2 = targetCart + target_pos_off;
@@ -1048,7 +1052,7 @@ View::recalcLookAt ()
   else {
     set_fov(_fov_user_deg);
   }
-  
+
   SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(eye_heading, eye_pitch, eye_roll);
   SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(_position);
 
