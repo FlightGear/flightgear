@@ -470,12 +470,16 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
      endif()
 
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-      set(CMAKE_C_FLAGS
-        "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
-      set(CMAKE_CXX_FLAGS
-        "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
-    endif()
+    # disabled by James - these cause weridness for multi-config generators
+    # since they set thge flags for all configurations
+    # need to find a better way to adjust these
+     
+    # if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    #   set(CMAKE_C_FLAGS
+    #     "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
+    #   set(CMAKE_CXX_FLAGS
+    #     "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
+    # endif()
 
     if (ENABLE_SIMD)
       if (X86 OR X86_64)
