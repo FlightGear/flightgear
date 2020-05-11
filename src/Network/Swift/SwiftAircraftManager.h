@@ -17,9 +17,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include "SwiftAircraft.h"
 #include <Scenery/scenery.hxx>
+#include <AIModel/AISwiftAircraft.h>
+#include <AIModel/AIManager.hxx>
+
 #include <vector>
+#include <unordered_map>
 
 #ifndef FGSWIFTAIRCRAFTMANAGER_H
 #define FGSWIFTAIRCRAFTMANAGER_H
@@ -29,7 +32,6 @@ class FGSwiftAircraftManager
 public:
     FGSwiftAircraftManager();
     ~FGSwiftAircraftManager();
-    std::map<std::string, FGSwiftAircraft*> aircraftByCallsign;
     bool                          addPlane(const std::string& callsign, std::string modelString);
     void                          updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<double> groundspeeds, std::vector<bool> onGrounds);
     void                          getRemoteAircraftData(std::vector<std::string>& callsigns, std::vector<double>& latitudesDeg, std::vector<double>& longitudesDeg,
@@ -37,5 +39,8 @@ public:
     void                          removePlane(const std::string& callsign);
 	void removeAllPlanes();
 	double getElevationAtPosition(const std::string &callsign, const SGGeod& pos) const;
+
+private:
+    std::unordered_map<std::string, FGAISwiftAircraft*> aircraftByCallsign;
 };
 #endif

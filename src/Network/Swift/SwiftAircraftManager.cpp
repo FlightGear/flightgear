@@ -18,47 +18,37 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "SwiftAircraftManager.h"
-#include "SwiftAircraft.h"
 #include <Main/globals.hxx>
 #include <utility>
 
 FGSwiftAircraftManager::FGSwiftAircraftManager()
-= default;
+{
+}
 
 FGSwiftAircraftManager::~FGSwiftAircraftManager()
 = default;
 
 bool FGSwiftAircraftManager::addPlane(const std::string& callsign, std::string modelString)
 {
-    if (aircraftByCallsign.find(callsign) != aircraftByCallsign.end())
-        return false;
+    this->removePlane(callsign); // Remove plane if already exists e.g. when rematching is done.
+    auto curAircraft = new FGAISwiftAircraft(callsign, modelString);
+    globals->get_subsystem<FGAIManager>()->attach(curAircraft);
 
-    const char* typeString = "swift";
-    SGPropertyNode_ptr root = globals->get_props()->getNode("ai/models",true);
-    SGPropertyNode_ptr p;
-    int i;
-    for(i = 0; i < 10000; i++){
-        p = root->getNode(typeString,i,false);
-
-        if(!p || !p->getBoolValue("valid",false))
-            break;
-    }
-    p = root->getNode(typeString,i,true);
-    p->setIntValue("id",i);
-    auto curAircraft = new FGSwiftAircraft(callsign, std::move(modelString), p);
-    aircraftByCallsign.insert(std::pair<std::string, FGSwiftAircraft*>(callsign, curAircraft));
+    aircraftByCallsign.insert(std::pair<std::string, FGAISwiftAircraft*>(callsign, curAircraft));
     return true;
 }
 
 void FGSwiftAircraftManager::updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<double> groundspeeds, std::vector<bool> onGrounds)
 {
-	for (long unsigned int i = 0; i < callsigns.size(); i++) {
-        auto it = aircraftByCallsign.find(callsigns.at(i));
-		if (it != aircraftByCallsign.end()) {
-            it->second->updatePosition(positions.at(i), orientations.at(i), groundspeeds.at(i),true);
-		}
-	}
 
+	for (long unsigned int i = 0; i < callsigns.size(); i++)
+    {
+        auto it = aircraftByCallsign.find(callsigns.at(i));
+        if(it != aircraftByCallsign.end())
+        {
+            it->second->updatePosition(positions.at(i), orientations.at(i), groundspeeds.at(i),true);
+        }
+    }
 }
 
 void FGSwiftAircraftManager::getRemoteAircraftData(std::vector<std::string>& callsigns, std::vector<double>& latitudesDeg, std::vector<double>& longitudesDeg, std::vector<double>& elevationsM, std::vector<double>& verticalOffsets) const
@@ -76,19 +66,17 @@ void FGSwiftAircraftManager::getRemoteAircraftData(std::vector<std::string>& cal
         const auto it = aircraftByCallsign.find(requestedCallsign);
         if(it == aircraftByCallsign.end()) { continue; }
 
-        const FGSwiftAircraft *aircraft = it->second;
+        const FGAISwiftAircraft* aircraft = it->second;
         assert(aircraft);
 
 
         SGGeod pos;
-        pos.setLatitudeDeg(aircraft->getLatDeg());
-        pos.setLongitudeDeg(aircraft->getLongDeg());
+        pos.setLatitudeDeg(aircraft->_getLatitude());
+        pos.setLongitudeDeg(aircraft->_getLongitude());
         const double latDeg = pos.getLatitudeDeg();
         const double lonDeg = pos.getLongitudeDeg();
         double groundElevation = aircraft->getGroundElevation(pos);
 
-        double fudgeFactor     = aircraft->getFudgeFactor();
-        (void)fudgeFactor;
         callsigns.push_back(requestedCallsign);
         latitudesDeg.push_back(latDeg);
         longitudesDeg.push_back(lonDeg);
@@ -100,25 +88,29 @@ void FGSwiftAircraftManager::getRemoteAircraftData(std::vector<std::string>& cal
 void FGSwiftAircraftManager::removePlane(const std::string& callsign)
 {
     auto it = aircraftByCallsign.find(callsign);
-    if (it != aircraftByCallsign.end()) {
-		delete it->second;
+    if(it != aircraftByCallsign.end())
+    {
+        it->second->setDie(true);
         aircraftByCallsign.erase(it);
     }
 }
 
 void FGSwiftAircraftManager::removeAllPlanes()
 {
-    for (auto it = aircraftByCallsign.begin(); it != aircraftByCallsign.end(); ++it) {
-        delete it->second;
-        aircraftByCallsign.erase(it);
+    for(auto it = aircraftByCallsign.begin(); it!= aircraftByCallsign.end();)
+    {
+        it->second->setDie(true);
+        it = aircraftByCallsign.erase(it);
     }
 }
 
 double FGSwiftAircraftManager::getElevationAtPosition(const std::string &callsign, const SGGeod& pos) const
 {
     auto it = aircraftByCallsign.find(callsign);
-    if(it != aircraftByCallsign.end()){
+    if(it != aircraftByCallsign.end())
+    {
         return it->second->getGroundElevation(pos);
     }
+    // Aircraft not found in list
     return std::numeric_limits<double>::quiet_NaN();
 }
