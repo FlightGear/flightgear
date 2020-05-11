@@ -22,10 +22,20 @@
 #include <utility>
 
 FGSwiftAircraftManager::FGSwiftAircraftManager()
-= default;
+{
+    m_initialized = true;
+}
 
 FGSwiftAircraftManager::~FGSwiftAircraftManager()
-= default;
+{
+    this->removeAllPlanes();
+    m_initialized = false;
+}
+
+bool FGSwiftAircraftManager::isInitialized() const
+{
+    return m_initialized;
+}
 
 bool FGSwiftAircraftManager::addPlane(const std::string& callsign, const std::string& modelString)
 {

@@ -39,8 +39,11 @@ public:
     void                          removePlane(const std::string& callsign);
 	void removeAllPlanes();
 	double getElevationAtPosition(const std::string &callsign, const SGGeod& pos) const;
+    bool                                                isInitialized() const;
 
 private:
     std::unordered_map<std::string, FGAISwiftAircraft*> aircraftByCallsign;
+    bool m_initialized = false;
+
 };
 #endif

@@ -34,7 +34,6 @@ namespace FGSwiftBus {
 
 CTraffic::CTraffic()
 {
-    acm.reset(new FGSwiftAircraftManager());
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Traffic started");
 }
 
@@ -58,7 +57,8 @@ const std::string& CTraffic::ObjectPath()
 
 bool CTraffic::initialize()
 {
-    return true;
+    acm.reset(new FGSwiftAircraftManager());
+    return acm->isInitialized();
 }
 
 void CTraffic::emitSimFrame()
@@ -77,12 +77,13 @@ void CTraffic::emitPlaneAdded(const std::string& callsign)
 
 void CTraffic::cleanup()
 {
-    acm->removeAllPlanes();
+    acm.reset();
 }
 
 void CTraffic::dbusDisconnectedHandler()
 {
-    acm->removeAllPlanes();
+    if(acm)
+        acm->removeAllPlanes();
 }
 
 const char* introspection_traffic = DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_NODE;
