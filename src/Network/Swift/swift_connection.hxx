@@ -1,4 +1,4 @@
-// swift_conection.hxx 
+// swift_connection.hxx
 // 
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>

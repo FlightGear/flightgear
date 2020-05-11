@@ -25,10 +25,6 @@
 #include "traffic.h"
 #include "SwiftAircraftManager.h"
 #include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <cstring>
-#include <ctime>
 #include <iostream>
 
 
@@ -60,25 +56,8 @@ const std::string& CTraffic::ObjectPath()
     return s;
 }
 
-void CTraffic::planeLoaded(void* id, bool succeeded, void* self)
-{
-    auto traffic = static_cast<CTraffic*>(self);
-    auto  planeIt = traffic->m_planesById.find(id);
-    if (planeIt == traffic->m_planesById.end()) { return; }
-
-    if (succeeded) {
-        traffic->emitPlaneAdded(planeIt->second->callsign);
-    } else {
-        traffic->emitPlaneAddingFailed(planeIt->second->callsign);
-    }
-}
-
 bool CTraffic::initialize()
 {
-    m_initialized = true;
-
-    m_enabled = true;
-
     return true;
 }
 
@@ -96,20 +75,7 @@ void CTraffic::emitPlaneAdded(const std::string& callsign)
     sendDBusMessage(signalPlaneAdded);
 }
 
-void CTraffic::emitPlaneAddingFailed(const std::string& callsign)
-{
-    CDBusMessage signalPlaneAddingFailed = CDBusMessage::createSignal(FGSWIFTBUS_TRAFFIC_OBJECTPATH, FGSWIFTBUS_TRAFFIC_INTERFACENAME, "remoteAircraftAddingFailed");
-    signalPlaneAddingFailed.beginArgumentWrite();
-    signalPlaneAddingFailed.appendArgument(callsign);
-    sendDBusMessage(signalPlaneAddingFailed);
-}
-
 void CTraffic::cleanup()
-{
-    acm->removeAllPlanes();
-}
-
-void CTraffic::removeAllPlanes()
 {
     acm->removeAllPlanes();
 }
@@ -272,20 +238,12 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
     return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-int CTraffic::process()
-{
-    invokeQueuedDBusCalls();
-    return 1;
-}
+    int CTraffic::process()
+    {
+        invokeQueuedDBusCalls();
+        return 1;
+    }
 
-//! memcmp function which ignores the header ("size" member) and compares only the payload (the rest of the struct)
-template <typename T>
-int memcmpPayload(T* dst, T* src)
-{
-    return std::memcmp(reinterpret_cast<char*>(dst) + sizeof(dst->size),
-                       reinterpret_cast<char*>(src) + sizeof(src->size),
-                       sizeof(*dst) - sizeof(dst->size));
-}
 } // namespace FGSwiftBus
 
 //! \endcond

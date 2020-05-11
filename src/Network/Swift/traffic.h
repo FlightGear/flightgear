@@ -54,9 +54,6 @@ public:
     //! Initialize the multiplayer planes rendering and return true if successful
     bool initialize();
 
-    //! Remove all traffic aircraft
-    void removeAllPlanes();
-
     //! Perform generic processing
     int process();
 
@@ -68,40 +65,17 @@ protected:
     DBusHandlerResult dbusMessageHandler(const CDBusMessage& message) override;
 
 private:
-    bool m_initialized = false;
-    bool m_enabled     = false;
-
     void emitPlaneAdded(const std::string& callsign);
-    void emitPlaneAddingFailed(const std::string& callsign);
     void cleanup();
 
     struct Plane {
         void*                                 id = nullptr;
         std::string                           callsign;
-        std::string                           aircraftIcao;
-        std::string                           airlineIcao;
-        std::string                           livery;
-        std::string                           modelName;
-        bool                                  hasSurfaces = false;
-        bool                                  hasXpdr     = false;
         char                                  label[32]{};
-        float                                 targetGearPosition = 0;
-        std::chrono::system_clock::time_point prevSurfacesLerpTime;
     };
-
-    std::unordered_map<std::string, Plane*> m_planesByCallsign;
-    std::unordered_map<void*, Plane*>       m_planesById;
-    std::vector<std::string>                m_followPlaneViewSequence;
-    std::chrono::system_clock::time_point   m_timestampLastSimFrame = std::chrono::system_clock::now();
-
-    std::string m_followPlaneViewCallsign;
-
+    
     bool m_emitSimFrame = true;
-
-
     std::unique_ptr<FGSwiftAircraftManager> acm;
-
-    static void planeLoaded(void* id, bool succeeded, void* self);
 };
 } // namespace FGSwiftBus
 

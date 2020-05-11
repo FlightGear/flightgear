@@ -1,4 +1,4 @@
-// AISwiftAircraft.h - Derived AIBase class for swift aircrafts
+// AISwiftAircraft.h - Derived AIBase class for swift aircraft
 //
 // Copyright (C) 2020 - swift Project Community / Contributors (http://swift-project.org/)
 // Written by Lars Toenning <dev@ltoenning.de> started on April 2020.
