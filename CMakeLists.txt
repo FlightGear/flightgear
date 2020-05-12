@@ -316,9 +316,14 @@ find_package(OpenSceneGraph 3.2.0 REQUIRED
 
 find_package(sentry QUIET)
 
+set(sentry_api_key $ENV{FLIGHTGEAR_SENTRY_API_KEY})
 if (TARGET sentry::sentry)
-    message(STATUS "Sentry.io crash reporting enabled")
-    set(HAVE_SENTRY 1)
+    if (NOT sentry_api_key)
+        message(STATUS "Sentry.io crash reporting detected, but FLIGHTGEAR_SENTRY_API_KEY not set")
+    else()
+        message(STATUS "Sentry.io crash reporting enabled")
+        set(HAVE_SENTRY 1)
+    endif()
 endif()
 
 #if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")

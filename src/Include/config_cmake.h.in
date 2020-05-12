@@ -70,3 +70,4 @@
 #cmakedefine ENABLE_SWIFT
 
 #cmakedefine HAVE_SENTRY
+#define SENTRY_API_KEY "@sentry_api_key@"

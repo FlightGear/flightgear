@@ -40,7 +40,10 @@ namespace flightgear
 void initSentry()
 {
     sentry_options_t *options = sentry_options_new();
-    sentry_options_set_dsn(options, "https://3a3f0bf24d5d482388dd060860c18ffe@sentry.io/5188535");
+    // API key is defined in config.h, set in an environment variable prior
+    // to running CMake, so it can be customised. Env var at build time is:
+    // FLIGHTGEAR_SENTRY_API_KEY
+    sentry_options_set_dsn(options, SENTRY_API_KEY);
     
     if (strcmp(FG_BUILD_TYPE, "Dev") == 0) {
         sentry_options_set_release(options, "flightgear-dev@" FLIGHTGEAR_VERSION);
