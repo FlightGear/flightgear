@@ -37,6 +37,12 @@ if (${do_translate})
         string(SUBSTRING ${LANG} 0 2 simple_lang)
 
         set(out_file "${PROJECT_BINARY_DIR}/FlightGear_${simple_lang}.qm")
+        # avoid issue if the FGData we found is a different version, and a translation is
+        # missing: just skip it
+        if (NOT EXISTS ${TRANSLATIONS_SRC_DIR}/${simple_lang}/FlightGear-Qt.xlf)
+            continue()
+        endif()
+
         add_custom_command(
             OUTPUT ${out_file}
             COMMAND Qt5::lrelease ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf
