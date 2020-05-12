@@ -31,6 +31,12 @@ if (${do_translate})
 
     # qm generation and installation
     foreach(LANG ${LANGUAGES})
+        # avoid issue if the FGData we found is a different version, and a translation is
+        # missing: just skip it
+        if (NOT EXISTS ${TRANSLATIONS_SRC_DIR}/${LANG}/FlightGear-Qt.xlf)
+            continue()
+        endif()
+
         set(out_file "${PROJECT_BINARY_DIR}/FlightGear_${LANG}.qm")
         add_custom_command(
             OUTPUT ${out_file}
