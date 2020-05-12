@@ -106,15 +106,18 @@ void initNavCache()
                                            | Qt::WindowSystemMenuHint
                                            | Qt::MSWindowsFixedSizeDialogHint);
         rebuildProgress.setWindowModality(Qt::WindowModal);
+        rebuildProgress.setMinimumWidth(600);
         rebuildProgress.show();
-
-        NavDataCache::RebuildPhase phase = cache->rebuild();
-
-        while (phase != NavDataCache::REBUILD_DONE) {
-            // sleep to give the rebuild thread more time
-            SGTimeStamp::sleepForMSec(50);
-            phase = cache->rebuild();
-
+    
+        QTimer updateTimer;
+        updateTimer.setInterval(500);
+        QObject::connect(&updateTimer, &QTimer::timeout, [&cache, &rebuildProgress, &baseLabel]() {
+            auto phase = cache->rebuild();
+            if (phase == NavDataCache::REBUILD_DONE) {
+                rebuildProgress.done(0);
+                return;
+            }
+            
             auto it = std::find_if(progressStrings.begin(), progressStrings.end(), [phase]
                                    (const ProgressLabel& l) { return l.phase == phase; });
             if (it == progressStrings.end()) {
@@ -131,9 +134,11 @@ void initNavCache()
                 rebuildProgress.setValue(static_cast<int>(cache->rebuildPhaseCompletionPercentage()));
                 rebuildProgress.setMaximum(100);
             }
-
-            QCoreApplication::processEvents();
-        }
+        });
+        
+        updateTimer.start(); // timer won't actually run until we process events
+        rebuildProgress.exec();
+        updateTimer.stop();
     }
 }
 
