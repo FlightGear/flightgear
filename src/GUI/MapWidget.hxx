@@ -33,7 +33,9 @@ public:
   virtual void setSize(int width, int height);
   virtual void doHit( int button, int updown, int x, int y ) ;
   virtual void draw( int dx, int dy ) ;
-  virtual int checkKey(int key, int updown);
+  
+    // disable key handling for now
+    //virtual int checkKey(int key, int updown);
     
   void setProperty(SGPropertyNode_ptr prop);
     

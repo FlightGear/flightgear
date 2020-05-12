@@ -557,6 +557,7 @@ void MapWidget::handlePan(int x, int y)
   _hitLocation = SGVec2d(x,y);
 }
 
+#if 0
 int MapWidget::checkKey (int key, int updown )
 {
   if ((updown == PU_UP) || !isVisible () || !isActive () || (window != puGetWindow())) {
@@ -607,6 +608,8 @@ int MapWidget::checkKey (int key, int updown )
 
   return TRUE ;
 }
+#endif
+
 
 void MapWidget::pan(const SGVec2d& delta)
 {
