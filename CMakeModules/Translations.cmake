@@ -19,8 +19,24 @@ if (${do_translate} AND NOT TARGET Qt5::lrelease)
         "\n(on Linux You may need to install an additional package containing the Qt5 translation tools)")
 endif()
 
-# FIXME - determine this based on subdirs of TRANSLATIONS_SRC_DIR
-set(LANGUAGES en_US de es nl fr it pl pt ru zh_CN ca sk)
+
+function(translation_dir_list result curdir)
+  file(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  set(dirlist "")
+  foreach(child ${children})
+    if (${child} STREQUAL "default")
+        continue()
+    endif()
+
+    if (IS_DIRECTORY ${curdir}/${child})
+      list(APPEND dirlist ${child})
+    endif()
+  endforeach()
+  set(${result} ${dirlist} PARENT_SCOPE)
+endfunction()
+
+translation_dir_list(LANGUAGES ${TRANSLATIONS_SRC_DIR})
+message(STATUS "Detected language files: ${LANGUAGES}")
 
 if (${do_translate})
     set(translation_res "${PROJECT_BINARY_DIR}/translations.qrc")
