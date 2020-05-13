@@ -35,10 +35,10 @@ function(translation_dir_list result curdir)
   set(${result} ${dirlist} PARENT_SCOPE)
 endfunction()
 
-translation_dir_list(LANGUAGES ${TRANSLATIONS_SRC_DIR})
-message(STATUS "Detected language files: ${LANGUAGES}")
-
 if (${do_translate})
+    translation_dir_list(LANGUAGES ${TRANSLATIONS_SRC_DIR})
+    message(STATUS "Detected language files: ${LANGUAGES}")
+
     set(translation_res "${PROJECT_BINARY_DIR}/translations.qrc")
 
     add_custom_target(fgfs_qm_files ALL)
@@ -72,15 +72,17 @@ if (${do_translate})
 
     # set this so config.h can detect it
     set(HAVE_QRC_TRANSLATIONS TRUE)
+
+    add_custom_target(ts)
+    
+    foreach(lang ${LANGUAGES})
+        add_custom_target(
+            ts_${lang}
+            COMMAND Qt5::lupdate ${CMAKE_SOURCE_DIR}/src/GUI
+                -locations relative  -no-ui-lines -ts ${TRANSLATIONS_SRC_DIR}/${lang}/FlightGear-Qt.xlf
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+        add_dependencies(ts ts_${lang})
+    endforeach()
 endif() # of do translate
 
-add_custom_target(ts)
-foreach(lang ${LANGUAGES})
-    add_custom_target(
-        ts_${lang}
-        COMMAND Qt5::lupdate ${CMAKE_SOURCE_DIR}/src/GUI
-            -locations relative  -no-ui-lines -ts ${TRANSLATIONS_SRC_DIR}/${lang}/FlightGear-Qt.xlf
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    )
-    add_dependencies(ts ts_${lang})
-endforeach()
