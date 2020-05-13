@@ -116,7 +116,7 @@ void initNavCache()
         rebuildProgress.show();
     
         QTimer updateTimer;
-        updateTimer.setInterval(500);
+        updateTimer.setInterval(100);
         QObject::connect(&updateTimer, &QTimer::timeout, [&cache, &rebuildProgress, &baseLabel]() {
             auto phase = cache->rebuild();
             if (phase == NavDataCache::REBUILD_DONE) {
