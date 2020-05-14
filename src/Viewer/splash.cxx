@@ -208,10 +208,16 @@ void SplashScreen::createNodes()
 
 #if defined(ENABLE_COMPOSITOR)
     auto compositorText = globals->get_locale()->getLocalizedString("compositor-enabled", "sys", "Compositor");
-    addText(geode, osg::Vec2(0.5f, 0.55f), 0.03,
+    addText(geode, osg::Vec2(0.5f, 0.5f), 0.03,
             compositorText,
             osgText::Text::CENTER_CENTER,
             nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
+
+    std::string compositorWarningText = "The compositor is still in development, please expect some visual bugs";
+    addText(geode, osg::Vec2(0.5, 0.55), 0.03,
+              compositorWarningText,
+              osgText::Text::CENTER_CENTER,
+              nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
 #endif
 
 
