@@ -97,6 +97,12 @@ LauncherMainWindow::LauncherMainWindow() :
     ctx->setContextProperty("_location", m_controller->location());
     ctx->setContextProperty("_osName", osName);
 
+#if defined(ENABLE_COMPOSITOR)
+    ctx->setContextProperty("_haveCompositor", true);
+#else
+    ctx->setContextProperty("_haveCompositor", false);
+#endif
+
     auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
     ctx->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
