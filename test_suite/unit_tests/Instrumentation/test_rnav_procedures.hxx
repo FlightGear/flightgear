@@ -45,6 +45,7 @@ class RNAVProcedureTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testTransitionsSID);
     CPPUNIT_TEST(testTransitionsSTAR);
     CPPUNIT_TEST(testLEBL_LARP2F);
+	CPPUNIT_TEST(testIndexOf);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -71,6 +72,7 @@ public:
     void testTransitionsSID();
     void testTransitionsSTAR();
     void testLEBL_LARP2F();
+	void testIndexOf();
 private:
     GPS* m_gps = nullptr;
     SGPropertyNode_ptr m_gpsNode;

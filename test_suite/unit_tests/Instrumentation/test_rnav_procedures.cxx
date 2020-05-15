@@ -655,3 +655,31 @@ void RNAVProcedureTests::testLEBL_LARP2F()
     FGTestApi::runForTime(180.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(199, m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
 }
+
+// This could probably be in a better place but this allows it to access TestDelegate.
+// Also it does relate to procedures as its a bug that only occurs with procedures
+void RNAVProcedureTests::testIndexOf()
+{
+	auto egkk = FGAirport::findByIdent("EGKK");
+    auto sid = egkk->findSIDWithIdent("SAM3P");
+    // procedures not loaded, abandon test
+    if (!sid)
+        return;
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    fp->addDelegate(testDelegate);
+    
+    rm->setFlightPlan(fp);
+    FGTestApi::setUp::populateFPWithNasal(fp, "EGKK", "08R", "EGJJ", "27", "LELNA");
+    
+    fp->setSID(sid);
+	FGPositioned::TypeFilter f{FGPositioned::VOR};
+    auto southamptonVOR = fgpositioned_cast<FGNavRecord>(FGPositioned::findClosestWithIdent("SAM", SGGeod::fromDeg(-1.25, 51.0), &f));
+	auto SAM = fp->legAtIndex(6)->waypoint();
+	CPPUNIT_ASSERT_EQUAL(southamptonVOR->ident(), SAM->ident());
+	CPPUNIT_ASSERT_EQUAL(6, fp->findWayptIndex(southamptonVOR));
+}
