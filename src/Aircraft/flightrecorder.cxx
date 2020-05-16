@@ -36,15 +36,19 @@
 #include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 #include "flightrecorder.hxx"
+#include <MultiPlayer/multiplaymgr.hxx>
+#include <MultiPlayer/mpmessages.hxx>
 
 using namespace FlightRecorder;
 using std::string;
 
 FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
     m_RecorderNode(fgGetNode("/sim/flight-recorder", true)),
+    m_ReplayMultiplayer(fgGetNode("/sim/replay/multiplayer", true)),
     m_TotalRecordSize(0),
     m_ConfigName(pConfigName),
-    m_usingDefaultConfig(false)
+    m_usingDefaultConfig(false),
+    m_MultiplayMgr(globals->get_subsystem<FGMultiplayMgr>())
 {
 }
 
@@ -308,23 +312,6 @@ FGFlightRecorder::processSignalList(const char* pSignalType, TSignalList& Signal
     }
 }
 
-/** Get an empty container for a single capture. */
-FGReplayData*
-FGFlightRecorder::createEmptyRecord(void)
-{
-    if (!m_TotalRecordSize)
-        return NULL;
-    FGReplayData* p = (FGReplayData*) new unsigned char[m_TotalRecordSize];
-    return p;
-}
-
-/** Free given container with capture data. */
-void
-FGFlightRecorder::deleteRecord(FGReplayData* pRecord)
-{
-    delete[] pRecord;
-}
-
 /** Capture data.
  * When pBuffer==NULL new memory is allocated.
  * If pBuffer!=NULL memory of given buffer is reused.
@@ -334,16 +321,15 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* pRecycledBuffer)
 {
     if (!pRecycledBuffer)
     {
-        pRecycledBuffer = createEmptyRecord();
+        pRecycledBuffer = new FGReplayData;
         if (!pRecycledBuffer)
             return NULL;
     }
-    unsigned char* pBuffer = (unsigned char*) pRecycledBuffer;
-
     int Offset = 0;
     pRecycledBuffer->sim_time = SimTime;
-    Offset += sizeof(double);
-
+    pRecycledBuffer->raw_data.resize( m_TotalRecordSize);
+    char* pBuffer = &pRecycledBuffer->raw_data.front();
+    
     // 64bit aligned data first!
     {
         // capture doubles
@@ -417,9 +403,26 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* pRecycledBuffer)
         }
     }
 
-    assert(Offset == m_TotalRecordSize);
+    assert(Offset + sizeof(double) == m_TotalRecordSize);
+    
+    // If m_ReplayMultiplayer is true, move all recent
+    // multiplayer messages from m_MultiplayMgr into
+    // pRecycledBuffer->multiplayer_messages. Otherwise clear m_MultiplayMgr's
+    // list of recent messages.
+    //
+    pRecycledBuffer->multiplayer_messages.clear();
+    bool    replayMultiplayer = m_ReplayMultiplayer->getBoolValue();
+    for(;;) {
+        auto MultiplayerMessage = m_MultiplayMgr->popMessageHistory();
+        if (!MultiplayerMessage) {
+            break;
+        }
+        if (replayMultiplayer) {
+            pRecycledBuffer->multiplayer_messages.push_back( MultiplayerMessage);
+        }
+    }
 
-    return (FGReplayData*) pBuffer;
+    return pRecycledBuffer;
 }
 
 /** Do interpolation as defined by given interpolation type and weighting ratio. */
@@ -465,8 +468,8 @@ weighting(TInterpolation interpolation, double ratio, double v1,double v2)
 void
 FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const FGReplayData* _pLastBuffer)
 {
-    const char* pLastBuffer = (const char*) _pLastBuffer;
-    const char* pBuffer = (const char*) _pNextBuffer;
+    const char* pLastBuffer = (_pLastBuffer) ? &_pLastBuffer->raw_data.front() : nullptr;
+    const char* pBuffer = (_pNextBuffer) ? &_pNextBuffer->raw_data.front() : nullptr;
     if (!pBuffer)
         return;
 
@@ -486,8 +489,6 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
                 ratio = 1.0;
         }
     }
-
-    Offset += sizeof(double);
 
     // 64bit aligned data first!
     {
@@ -572,6 +573,11 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
         {
             m_CaptureBool[i].Signal->setBoolValue(0 != (pFlags[i>>3] & (1 << (i&7))));
         }
+    }
+    
+    // Replay any multiplayer messages.
+    for ( auto multiplayer_message: _pNextBuffer->multiplayer_messages) {
+        m_MultiplayMgr->pushMessageHistory(multiplayer_message);
     }
 }
 

@@ -109,22 +109,22 @@ FGReplay::clear()
 {
     while ( !short_term.empty() )
     {
-        m_pRecorder->deleteRecord(short_term.front());
+        delete short_term.front();
         short_term.pop_front();
     }
     while ( !medium_term.empty() )
     {
-        m_pRecorder->deleteRecord(medium_term.front());
+        delete medium_term.front();
         medium_term.pop_front();
     }
     while ( !long_term.empty() )
     {
-        m_pRecorder->deleteRecord(long_term.front());
+        delete long_term.front();
         long_term.pop_front();
     }
     while ( !recycler.empty() )
     {
-        m_pRecorder->deleteRecord(recycler.front());
+        delete recycler.front();
         recycler.pop_front();
     }
 
@@ -213,7 +213,7 @@ FGReplay::fillRecycler()
                              (m_low_res_time*m_long_sample_rate));
     for (int i = 0; i < estNrObjects; i++)
     {
-        FGReplayData* r = m_pRecorder->createEmptyRecord();
+        FGReplayData* r = new FGReplayData;
         if (r)
             recycler.push_back(r);
         else
@@ -753,7 +753,9 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
            !output.fail())
     {
         const FGReplayData* pRecord = *it++;
-        output.write((char*)pRecord, RecordSize);
+        assert(RecordSize == pRecord->raw_data.size());
+        output.write(reinterpret_cast<const char*>(&pRecord->sim_time), sizeof(pRecord->sim_time));
+        output.write(&pRecord->raw_data.front(), pRecord->raw_data.size());
         CheckCount++;
     }
 
@@ -796,8 +798,10 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
     size_t CheckCount = 0;
     for (CheckCount=0; (CheckCount<Count)&&(!input.eof()); ++CheckCount)
     {
-        FGReplayData* pBuffer = pRecorder->createEmptyRecord();
-        input.read((char*) pBuffer, RecordSize);
+        FGReplayData* pBuffer = new FGReplayData;
+        input.read(reinterpret_cast<char*>(&pBuffer->sim_time), sizeof(pBuffer->sim_time));
+        pBuffer->raw_data.resize(RecordSize);
+        input.read(&pBuffer->raw_data.front(), RecordSize);
         ReplayData.push_back(pBuffer);
     }
 

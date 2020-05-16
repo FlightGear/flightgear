@@ -24,6 +24,7 @@
 #define FLIGHTRECORDER_HXX_
 
 #include <simgear/props/props.hxx>
+#include <MultiPlayer/multiplaymgr.hxx>
 #include "replay.hxx"
 
 namespace FlightRecorder
@@ -55,11 +56,9 @@ public:
 
     void            reinit              (void);
     void            reinit              (SGPropertyNode_ptr ConfigNode);
-    FGReplayData*   createEmptyRecord   (void);
     FGReplayData*   capture             (double SimTime, FGReplayData* pRecycledBuffer);
     void            replay              (double SimTime, const FGReplayData* pNextBuffer,
                                          const FGReplayData* pLastBuffer = NULL);
-    void            deleteRecord        (FGReplayData* pRecord);
 
     int             getRecordSize       (void) { return m_TotalRecordSize;}
     void            getConfig           (SGPropertyNode* root);
@@ -78,6 +77,7 @@ private:
 
     SGPropertyNode_ptr m_RecorderNode;
     SGPropertyNode_ptr m_ConfigNode;
+    SGPropertyNode_ptr m_ReplayMultiplayer;
 
     FlightRecorder::TSignalList m_CaptureDouble;
     FlightRecorder::TSignalList m_CaptureFloat;
@@ -89,6 +89,7 @@ private:
     int m_TotalRecordSize;
     std::string m_ConfigName;
     bool m_usingDefaultConfig;
+    FGMultiplayMgr* m_MultiplayMgr;
 };
 
 #endif /* FLIGHTRECORDER_HXX_ */

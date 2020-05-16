@@ -34,6 +34,7 @@
 const int MIN_MP_PROTOCOL_VERSION = 1;
 const int MAX_MP_PROTOCOL_VERSION = 2;
 
+#include <deque>
 #include <string>
 #include <vector>
 #include <memory>
@@ -69,6 +70,10 @@ public:
     // receiver
 
   FGAIMultiplayer* getMultiplayer(const std::string& callsign);
+
+    std::shared_ptr<vector<char>> popMessageHistory();
+    void pushMessageHistory(std::shared_ptr<vector<char>> message);
+
 private:
     friend class MPPropertyListener;
 
@@ -100,6 +105,8 @@ private:
                        long stamp);
     void ProcessChatMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress);
     bool isSane(const FGExternalMotionData& motionInfo);
+    int GetMsgNetwork(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress);
+    int GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress);
 
     /// maps from the callsign string to the FGAIMultiplayer
     typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
@@ -120,6 +127,7 @@ private:
     SGPropertyNode *pMultiPlayDebugLevel;
     SGPropertyNode *pMultiPlayRange;
     SGPropertyNode *pMultiPlayTransmitPropertyBase;
+    SGPropertyNode *pReplayState;
 
     typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
     PropertyDefinitionMap mPropertyDefinition;
@@ -130,6 +138,9 @@ private:
 
     double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
     double mTimeUntilSend;
+    
+    std::deque<std::shared_ptr<std::vector<char>>>  mRecordMessageQueue;
+    std::deque<std::shared_ptr<std::vector<char>>>  mReplayMessageQueue;
 };
 
 #endif

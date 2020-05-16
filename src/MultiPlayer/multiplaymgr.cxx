@@ -963,6 +963,7 @@ FGMultiplayMgr::FGMultiplayMgr()
   pMultiPlayTransmitPropertyBase = fgGetNode("/sim/multiplay/transmit-filter-property-base", true);
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
   pMultiPlayRange->setIntValue(100);
+  pReplayState = fgGetNode("/sim/replay/replay-state", true);
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -1692,6 +1693,127 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
 } // FGMultiplayMgr::SendTextMessage ()
 //////////////////////////////////////////////////////////////////////
 
+
+// If a message is available from mSocket, copies into <msgBuf>, converts
+// endiness of the T_MsgHdr, and returns length.
+//
+// Otherwise returns 0.
+//
+int FGMultiplayMgr::GetMsgNetwork(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
+{
+        //////////////////////////////////////////////////
+        //  Although the recv call asks for
+        //  MAX_PACKET_SIZE of data, the number of bytes
+        //  returned will only be that of the next
+        //  packet waiting to be processed.
+        //////////////////////////////////////////////////
+        int RecvStatus = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
+                                  &SenderAddress);
+        //////////////////////////////////////////////////
+        //  no Data received
+        //////////////////////////////////////////////////
+        if (RecvStatus == 0)
+            return 0;
+
+        // socket error reported?
+        // errno isn't thread-safe - so only check its value when
+        // socket return status < 0 really indicates a failure.
+        if ((RecvStatus < 0)&&
+            ((errno == EAGAIN) || (errno == 0))) // MSVC output "NoError" otherwise
+        {
+            // ignore "normal" errors
+            return 0;
+        }
+
+        if (RecvStatus<0)
+        {
+    #ifdef _WIN32
+            if (::WSAGetLastError() != WSAEWOULDBLOCK) // this is normal on a receive when there is no data
+            {
+                // with Winsock the error will not be the actual problem.
+                SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. WSAGetLastError=" << ::WSAGetLastError());
+            }
+    #else
+            SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
+                << strerror(errno) << "(errno " << errno << ")");
+    #endif
+            return 0;
+        }
+        
+        T_MsgHdr* MsgHdr = msgBuf.msgHdr();
+        MsgHdr->Magic       = XDR_decode_uint32 (MsgHdr->Magic);
+        MsgHdr->Version     = XDR_decode_uint32 (MsgHdr->Version);
+        MsgHdr->MsgId       = XDR_decode_uint32 (MsgHdr->MsgId);
+        MsgHdr->MsgLen      = XDR_decode_uint32 (MsgHdr->MsgLen);
+        MsgHdr->ReplyPort   = XDR_decode_uint32 (MsgHdr->ReplyPort);
+        MsgHdr->Callsign[MAX_CALLSIGN_LEN -1] = '\0';
+        
+        return RecvStatus;
+}
+
+// Returns message in msgBuf out-param.
+//
+// If we are in replay mode, we return recorded messages (omitting recorded
+// chat messages), and live chat messages from mSocket.
+//
+int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
+{
+    if (pReplayState->getIntValue()) {
+        // We are replaying, so return non-chat multiplayer messages from
+        // mReplayMessageQueue and live chat messages from mSocket.
+        //
+        for(;;) {
+        
+            if (mReplayMessageQueue.empty()) {
+                // No recorded messages available, so look for chat messages
+                // only from <mSocket>.
+                //
+                int RecvStatus = GetMsgNetwork(msgBuf, SenderAddress);
+                if (RecvStatus == 0) {
+                    // No recorded messages, and no live messages, so return 0.
+                    return 0;
+                }
+                if (msgBuf.Header.MsgId == CHAT_MSG_ID) {
+                    return RecvStatus;
+                }
+                // If we get here, there is a live message but it is a
+                // multiplayer aircraft position so we ignore it while
+                // replaying.
+                //
+            }
+            else {
+                // Replay recorded message, unless it is a chat message.
+                //
+                std::shared_ptr<std::vector<char>> replayMessage = mReplayMessageQueue.front();
+                mReplayMessageQueue.pop_front();
+                assert(replayMessage->size() <= sizeof(msgBuf));
+                int length = replayMessage->size();
+                memcpy(&msgBuf.Msg, &replayMessage->front(), length);
+                // Don't return chat messages.
+                if (msgBuf.Header.MsgId != CHAT_MSG_ID) {
+                    SG_LOG(SG_NETWORK, SG_INFO,
+                            "replaying message length=" << replayMessage->size()
+                            << ". num remaining messages=" << mReplayMessageQueue.size()
+                            );
+                    return length;
+                }
+            }
+        }
+    }
+    else {
+        int length = GetMsgNetwork(msgBuf, SenderAddress);
+        
+        // Make raw incoming packet available to recording code.
+        if (length) {
+            std::shared_ptr<std::vector<char>> data( new std::vector<char>(length));
+            memcpy( &data->front(), msgBuf.Msg, length);
+            mRecordMessageQueue.push_back(data);
+        }
+        return length;
+    }
+}
+
+
 //////////////////////////////////////////////////////////////////////
 //
 //  Name: ProcessData
@@ -1721,47 +1843,12 @@ FGMultiplayMgr::update(double dt)
   //////////////////////////////////////////////////
   ssize_t bytes;
   do {
-    MsgBuf msgBuf;
-    //////////////////////////////////////////////////
-    //  Although the recv call asks for
-    //  MAX_PACKET_SIZE of data, the number of bytes
-    //  returned will only be that of the next
-    //  packet waiting to be processed.
-    //////////////////////////////////////////////////
+    MsgBuf  msgBuf;
     simgear::IPAddress SenderAddress;
-    int RecvStatus = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
-                              &SenderAddress);
-    //////////////////////////////////////////////////
-    //  no Data received
-    //////////////////////////////////////////////////
-    if (RecvStatus == 0)
-        break;
-
-    // socket error reported?
-    // errno isn't thread-safe - so only check its value when
-    // socket return status < 0 really indicates a failure.
-    if ((RecvStatus < 0)&&
-        ((errno == EAGAIN) || (errno == 0))) // MSVC output "NoError" otherwise
-    {
-        // ignore "normal" errors
+    int RecvStatus = GetMsg(msgBuf, SenderAddress);
+    if (RecvStatus == 0) {
         break;
     }
-
-    if (RecvStatus<0)
-    {
-#ifdef _WIN32
-        if (::WSAGetLastError() != WSAEWOULDBLOCK) // this is normal on a receive when there is no data
-        {
-            // with Winsock the error will not be the actual problem.
-            SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. WSAGetLastError=" << ::WSAGetLastError());
-        }
-#else
-        SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
-            << strerror(errno) << "(errno " << errno << ")");
-#endif
-        break;
-    }
-
     // status is positive: bytes received
     bytes = (ssize_t) RecvStatus;
     if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
@@ -1769,16 +1856,11 @@ FGMultiplayMgr::update(double dt)
               << "received message with insufficient data" );
       break;
     }
+    
     //////////////////////////////////////////////////
     //  Read header
     //////////////////////////////////////////////////
     T_MsgHdr* MsgHdr = msgBuf.msgHdr();
-    MsgHdr->Magic       = XDR_decode_uint32 (MsgHdr->Magic);
-    MsgHdr->Version     = XDR_decode_uint32 (MsgHdr->Version);
-    MsgHdr->MsgId       = XDR_decode_uint32 (MsgHdr->MsgId);
-    MsgHdr->MsgLen      = XDR_decode_uint32 (MsgHdr->MsgLen);
-    MsgHdr->ReplyPort   = XDR_decode_uint32 (MsgHdr->ReplyPort);
-    MsgHdr->Callsign[MAX_CALLSIGN_LEN -1] = '\0';
     if (MsgHdr->Magic != MSG_MAGIC) {
         SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid magic number!" );
@@ -2265,6 +2347,24 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
     mp = addMultiplayer(MsgHdr->Callsign, PosMsg->Model, fallback_model_index);
   mp->addMotionInfo(motionInfo, stamp);
 } // FGMultiplayMgr::ProcessPosMsg()
+
+
+std::shared_ptr<std::vector<char>> FGMultiplayMgr::popMessageHistory()
+{
+    if (mRecordMessageQueue.empty()) {
+        return nullptr;
+    }
+
+    std::shared_ptr<std::vector<char>> ret = mRecordMessageQueue.front();
+    mRecordMessageQueue.pop_front();
+    return ret;
+}
+
+void FGMultiplayMgr::pushMessageHistory(std::shared_ptr<std::vector<char>> message)
+{
+    mReplayMessageQueue.push_back(message);
+}
+
 //////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////

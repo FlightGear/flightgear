@@ -40,9 +40,13 @@
 class FGFlightRecorder;
 
 typedef struct {
+
     double sim_time;
-    char   raw_data;
-    /* more data here, hidden to the outside world */
+    // Our aircraft state.
+    std::vector<char>   raw_data;
+    
+    // Incoming multiplayer messages.
+    std::vector<std::shared_ptr<std::vector<char>>> multiplayer_messages;
 } FGReplayData;
 
 typedef struct {
