@@ -317,18 +317,18 @@ FGFlightRecorder::processSignalList(const char* pSignalType, TSignalList& Signal
  * If pBuffer!=NULL memory of given buffer is reused.
  */
 FGReplayData*
-FGFlightRecorder::capture(double SimTime, FGReplayData* pRecycledBuffer)
+FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
 {
-    if (!pRecycledBuffer)
+    if (!ReplayData)
     {
-        pRecycledBuffer = new FGReplayData;
-        if (!pRecycledBuffer)
+        ReplayData = new FGReplayData;
+        if (!ReplayData)
             return NULL;
     }
     int Offset = 0;
-    pRecycledBuffer->sim_time = SimTime;
-    pRecycledBuffer->raw_data.resize( m_TotalRecordSize);
-    char* pBuffer = &pRecycledBuffer->raw_data.front();
+    ReplayData->sim_time = SimTime;
+    ReplayData->raw_data.resize( m_TotalRecordSize);
+    char* pBuffer = &ReplayData->raw_data.front();
     
     // 64bit aligned data first!
     {
@@ -407,10 +407,10 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* pRecycledBuffer)
     
     // If m_ReplayMultiplayer is true, move all recent
     // multiplayer messages from m_MultiplayMgr into
-    // pRecycledBuffer->multiplayer_messages. Otherwise clear m_MultiplayMgr's
+    // ReplayData->multiplayer_messages. Otherwise clear m_MultiplayMgr's
     // list of recent messages.
     //
-    pRecycledBuffer->multiplayer_messages.clear();
+    ReplayData->multiplayer_messages.clear();
     bool    replayMultiplayer = m_ReplayMultiplayer->getBoolValue();
     for(;;) {
         auto MultiplayerMessage = m_MultiplayMgr->popMessageHistory();
@@ -418,11 +418,12 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* pRecycledBuffer)
             break;
         }
         if (replayMultiplayer) {
-            pRecycledBuffer->multiplayer_messages.push_back( MultiplayerMessage);
+            ReplayData->multiplayer_messages.push_back( MultiplayerMessage);
         }
     }
-
-    return pRecycledBuffer;
+    ReplayData->UpdateStats();
+    
+    return ReplayData;
 }
 
 /** Do interpolation as defined by given interpolation type and weighting ratio. */

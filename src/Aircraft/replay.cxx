@@ -55,6 +55,69 @@ using simgear::gzContainerWriter;
 /** Magic string to verify valid FG flight recorder tapes. */
 static const char* const FlightRecorderFileMagic = "FlightGear Flight Recorder Tape";
 
+void FGReplayData::UpdateStats()
+{
+    size_t  bytes_raw_data_old = m_bytes_raw_data;
+    size_t  bytes_multiplayer_messages_old = m_bytes_multiplayer_messages;
+    size_t  num_multiplayer_messages_old = m_num_multiplayer_messages;
+    
+    m_bytes_raw_data = raw_data.size();
+    m_bytes_multiplayer_messages = 0;
+    for ( auto m: multiplayer_messages) {
+        m_bytes_multiplayer_messages += m->size();
+    }
+    m_num_multiplayer_messages = multiplayer_messages.size();
+    
+    // Update global stats by adding how much we have changed since last time
+    // UpdateStats() was called.
+    //
+    s_bytes_raw_data += m_bytes_raw_data - bytes_raw_data_old;
+    s_bytes_multiplayer_messages += m_bytes_multiplayer_messages - bytes_multiplayer_messages_old;
+    s_num_multiplayer_messages += m_num_multiplayer_messages - num_multiplayer_messages_old;
+    
+    if (!s_prop_num) s_prop_num = fgGetNode("/sim/replay/datastats_num", true);
+    if (!s_prop_bytes_raw_data) s_prop_bytes_raw_data = fgGetNode("/sim/replay/datastats_bytes_raw_data", true);
+    if (!s_prop_bytes_multiplayer_messages) s_prop_bytes_multiplayer_messages = fgGetNode("/sim/replay/datastats_bytes_multiplayer_messages", true);
+    if (!s_prop_num_multiplayer_messages) s_prop_num_multiplayer_messages = fgGetNode("/sim/replay/datastats_num_multiplayer_messages", true);
+    
+    s_prop_num->setLongValue(s_num);
+    s_prop_bytes_raw_data->setLongValue(s_bytes_raw_data);
+    s_prop_bytes_multiplayer_messages->setLongValue(s_bytes_multiplayer_messages);
+    s_prop_num_multiplayer_messages->setLongValue(s_num_multiplayer_messages);
+}
+
+FGReplayData::FGReplayData()
+{
+    s_num += 1;
+}
+
+FGReplayData::~FGReplayData()
+{
+    s_bytes_raw_data -= m_bytes_raw_data;
+    s_bytes_multiplayer_messages -= m_bytes_multiplayer_messages;
+    s_num_multiplayer_messages -= m_num_multiplayer_messages;
+    s_num -= 1;
+}
+
+void FGReplayData::resetStatisticsProperties()
+{
+    s_prop_num.reset();
+    s_prop_bytes_raw_data.reset();
+    s_prop_bytes_multiplayer_messages.reset();
+    s_prop_num_multiplayer_messages.reset();
+}
+
+size_t   FGReplayData::s_num = 0;
+size_t   FGReplayData::s_bytes_raw_data = 0;
+size_t   FGReplayData::s_bytes_multiplayer_messages = 0;
+size_t   FGReplayData::s_num_multiplayer_messages = 0;
+
+SGPropertyNode_ptr   FGReplayData::s_prop_num;
+SGPropertyNode_ptr   FGReplayData::s_prop_bytes_raw_data;
+SGPropertyNode_ptr   FGReplayData::s_prop_bytes_multiplayer_messages;
+SGPropertyNode_ptr   FGReplayData::s_prop_num_multiplayer_messages;
+
+
 namespace ReplayContainer
 {
     enum Type

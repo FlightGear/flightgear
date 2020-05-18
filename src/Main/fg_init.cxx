@@ -1359,6 +1359,8 @@ void fgStartNewReset()
     
     fgOSResetProperties();
 
+    FGReplayData::resetStatisticsProperties();
+
 // init some things manually
 // which do not follow the regular init pattern
     

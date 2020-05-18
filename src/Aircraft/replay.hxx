@@ -39,7 +39,7 @@
 
 class FGFlightRecorder;
 
-typedef struct {
+struct FGReplayData {
 
     double sim_time;
     // Our aircraft state.
@@ -47,7 +47,30 @@ typedef struct {
     
     // Incoming multiplayer messages.
     std::vector<std::shared_ptr<std::vector<char>>> multiplayer_messages;
-} FGReplayData;
+    
+    // Updates static statistics defined below. 
+    void UpdateStats();
+
+    // Resets out static property nodes; to be called by fgStartNewReset().
+    static void resetStatisticsProperties();
+    
+    FGReplayData();
+    ~FGReplayData();
+    
+    size_t  m_bytes_raw_data = 0;
+    size_t  m_bytes_multiplayer_messages = 0;
+    size_t  m_num_multiplayer_messages = 0;
+    
+    // Statistics about replay data, also properties /sim/replay/datastats_*.
+    static size_t   s_num;
+    static size_t   s_bytes_raw_data;
+    static size_t   s_bytes_multiplayer_messages;
+    static size_t   s_num_multiplayer_messages;
+    static SGPropertyNode_ptr   s_prop_num;
+    static SGPropertyNode_ptr   s_prop_bytes_raw_data;
+    static SGPropertyNode_ptr   s_prop_bytes_multiplayer_messages;
+    static SGPropertyNode_ptr   s_prop_num_multiplayer_messages;
+};
 
 typedef struct {
     double sim_time;
