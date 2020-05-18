@@ -113,6 +113,8 @@ void initNavCache()
                                            | Qt::MSWindowsFixedSizeDialogHint);
         rebuildProgress.setWindowModality(Qt::WindowModal);
         rebuildProgress.setMinimumWidth(600);
+        rebuildProgress.setAutoReset(false);
+        rebuildProgress.setAutoClose(false);
         rebuildProgress.show();
     
         QTimer updateTimer;
