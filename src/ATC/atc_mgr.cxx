@@ -138,8 +138,8 @@ void FGATCManager::postinit()
                     fgSetString("/sim/presets/parkpos", pkl.front()->getName());
                 }
             }
-        } else {
-            pk = dcs->getParkingByName(parking);
+        } else if (!parking.empty()) {
+            pk = dcs->getAvailableParkingByName(parking);
         }
       
         if (pk.isValid()) {
@@ -191,6 +191,18 @@ void FGATCManager::postinit()
             userAircraft->setTakeOffStatus(2);
         } else {
             // We're on the ground somewhere. Handle this case later.
+            
+            // important : we are on the ground, so reset the AIFlightPlan back to
+            // a default one. Otherwise, in the reposition case, we end up with a
+            // stale flight-plan which confuses other code (eg, PositionInit::finalizeForParking)
+            // see unit test: PosInitTests::testRepositionAtOccupied
+            
+            fp.reset(new FGAIFlightPlan);
+            userAircraft->FGAIBase::setFlightPlan(std::move(fp));
+            controller = nullptr;
+            
+            initSucceeded = true; // should be false?
+            return;
         }
         
         if (fp) {
@@ -201,12 +213,15 @@ void FGATCManager::postinit()
      }
 
     // Create an initial flightplan and assign it to the ai_ac. We won't use this flightplan, but it is necessary to
-    // keep the ATC code happy. 
+    // keep the ATC code happy.
+    // note in the reposition case, 'fp' is only the new FlightPlan; if we didn't create one here.
+    // we will continue using the existing flight plan (and not restart it, for example)
     if (fp) {
         fp->restart();
         fp->setLeg(leg);
         userAircraft->FGAIBase::setFlightPlan(std::move(fp));
     }
+    
     if (controller) {
         FGAIFlightPlan* plan = userAircraft->GetFlightPlan();
         controller->announcePosition(userAircraft->getID(), plan, plan->getCurrentWaypoint()->getRouteIndex(),
@@ -230,6 +245,22 @@ void FGATCManager::shutdown()
     activeStations.clear();
     userAircraftTrafficRef.reset();
     userAircraftScheduledFlight.reset();
+}
+
+void FGATCManager::reposition()
+{
+    prevController = controller = nullptr;
+    
+// remove any parking assignment form the user flight-plan, so it's
+// available again. postinit() will recompute a new value if required
+    FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    auto userAircraft = aiManager->getUserAircraft();
+    if (userAircraft && userAircraft->GetFlightPlan()) {
+        auto userAIFP = userAircraft->GetFlightPlan();
+        userAIFP->setGate({}); // clear any assignment
+    }
+    
+    postinit(); // critical for position-init logic
 }
 
 /**

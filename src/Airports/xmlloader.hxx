@@ -29,6 +29,8 @@ public:
   static void load(FGGroundNetwork*  net);
   static void load(FGSidStar*          s);
   
+  static void loadFromStream(FGGroundNetwork* net, std::istream& inData);
+
   /**
    * Search the scenery for a file name of the form:
    *   I/C/A/ICAO.filename.xml

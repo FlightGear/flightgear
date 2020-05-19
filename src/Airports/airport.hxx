@@ -306,6 +306,12 @@ class FGAirport : public FGPositioned
     flightgear::CommStationList commStations() const;
     
     static void clearAirportsCache();
+    
+    
+#if defined(BUILDING_TESTSUITE)
+    // helper to allow testing without needing a full Airports heirarchy
+    void testSuiteInjectGroundnetXML(const std::string& xmlData);
+#endif
 private:
     static flightgear::AirportCache airportCache;
 

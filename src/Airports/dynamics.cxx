@@ -324,6 +324,22 @@ ParkingAssignment FGAirportDynamics::getParkingByName(const std::string& name) c
     return ParkingAssignment();
 }
 
+ParkingAssignment FGAirportDynamics::getAvailableParkingByName(const std::string & name)
+{
+    const FGParkingList& parkings(parent()->groundNetwork()->allParkings());
+    auto it = std::find_if(parkings.begin(), parkings.end(), [this, name] (FGParkingRef parking){
+       if (parking->name() != name)
+           return false;
+        
+        return this->isParkingAvailable(parking);
+    });
+    
+    if (it == parkings.end())
+        return {}; // no assignment possible
+    
+    return {*it, this};
+}
+
 FGParkingRef FGAirportDynamics::getOccupiedParkingByName(const std::string& name) const
 {
     auto it = std::find_if(occupiedParkings.begin(), occupiedParkings.end(),

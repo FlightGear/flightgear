@@ -629,7 +629,9 @@ FGAIManager::unloadAllScenarios()
     std::for_each(_scenarios.begin(), _scenarios.end(),
                   [](const ScenarioDict::value_type& v) { delete v.second; });
     // remove /sim/ai node
-    root->removeChildren("scenario");
+    if(root) {
+        root->removeChildren("scenario");
+    }
     _scenarios.clear();
 }
 

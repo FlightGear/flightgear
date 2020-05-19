@@ -30,7 +30,13 @@ bool initPosition();
     
 // Listen to /sim/tower/airport-id and set tower view position accordingly
 void initTowerLocationListener();
-  
+
+#if defined(BUILDING_TESTSUITE)
+// allow this to be manually invoked for position init testing
+void finalizePosition();
+
+#endif
+
 } // of namespace flightgear
 
 #endif // of FG_POSITION_INIT_HXX

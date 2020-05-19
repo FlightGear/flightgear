@@ -1196,6 +1196,12 @@ void fgStartReposition()
     envMgr->get_subsystem("realwx")->reinit();
   }
   
+    // needed for parking assignment to work after reposition
+    auto atcManager = globals->get_subsystem<FGATCManager>();
+    if (atcManager) {
+        atcManager->reposition();
+    }
+
   // need to bind FDMshell again
   fdm->bind();
 

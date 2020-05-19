@@ -62,6 +62,16 @@ void XMLLoader::load(FGGroundNetwork* net)
   SG_LOG(SG_NAVAID, SG_DEBUG, "parsing groundnet XML took " << t.elapsedMSec());
 }
 
+void XMLLoader::loadFromStream(FGGroundNetwork* net, std::istream& inData)
+{
+  try {
+      FGGroundNetXMLLoader visitor(net);
+      readXML(inData, visitor);
+  } catch (sg_exception& e) {
+    SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
+  }
+}
+
 void XMLLoader::load(FGRunwayPreference* p) {
   FGRunwayPreferenceXMLLoader visitor(p);
   loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);

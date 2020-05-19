@@ -956,6 +956,20 @@ void FGAirport::sortBySize(FGPositionedList& airportList)
     }
 }
 
+#if defined(BUILDING_TESTSUITE)
+
+void FGAirport::testSuiteInjectGroundnetXML(const std::string& xmlData)
+{
+    _groundNetwork.reset(new FGGroundNetwork(const_cast<FGAirport*>(this)));
+
+    std::istringstream is(xmlData);
+    XMLLoader::loadFromStream(_groundNetwork.get(), is);
+
+    _groundNetwork->init();
+}
+
+#endif
+
 FGAirportDynamicsRef FGAirport::getDynamics() const
 {
     return flightgear::AirportDynamicsManager::find(const_cast<FGAirport*>(this));
@@ -965,9 +979,7 @@ FGGroundNetwork *FGAirport::groundNetwork() const
 {
     if (!_groundNetwork.get()) {
         _groundNetwork.reset(new FGGroundNetwork(const_cast<FGAirport*>(this)));
-
         XMLLoader::load(_groundNetwork.get());
-
         _groundNetwork->init();
     }
 

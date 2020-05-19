@@ -140,6 +140,12 @@ public:
      */
     ParkingAssignment getParkingByName(const std::string& name) const;
 
+    /**
+      * find a parking by name, if available. If the name is non-unique, consider all copies for
+            * availabiity (i.e try them all)
+     */
+    ParkingAssignment getAvailableParkingByName(const std::string & name);
+    
     FGParkingRef getOccupiedParkingByName(const std::string& name) const;
 
     // ATC related functions.

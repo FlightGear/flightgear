@@ -66,12 +66,17 @@ public:
     void postinit() override;
     void shutdown() override;
     void update(double time) override;
-
+    
+    
+    
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "ATC"; }
 
     void addController(FGATCController *controller);
     void removeController(FGATCController* controller);
+    
+    void reposition();
+
 };
 
 #endif // _ATC_MRG_HXX_

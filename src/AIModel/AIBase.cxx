@@ -619,7 +619,11 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
         aip.init( _model.get() );
         aip.setVisible(true);
         invisible = false;
-        globals->get_scenery()->get_models_branch()->addChild(aip.getSceneGraph());
+        
+        auto scenery = globals->get_scenery();
+        if (scenery) {
+            scenery->get_models_branch()->addChild(aip.getSceneGraph());
+        }
         _initialized = true;
 
         SG_LOG(SG_AI, SG_DEBUG, "AIBase: Loaded model " << model_path);

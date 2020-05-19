@@ -40,8 +40,11 @@
 #include <Airports/airport.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/groundnetwork.hxx>
+
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AICarrier.hxx>
+#include <AIModel/AIAircraft.hxx>
+#include <AIModel/AIFlightPlan.hxx>
 
 #include <Scenery/scenery.hxx>
 #include <GUI/MessageBox.hxx>
@@ -68,7 +71,7 @@ namespace flightgear
 static SGTimeStamp global_finalizeTime;
 static bool global_callbackRegistered = false;
 
-static void finalizePosition();
+void finalizePosition();
 
 namespace { // annonymous namepsace to avoid warnings about inline classes
 
@@ -235,42 +238,39 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     return true;
 }
 
-// Set current_options lon/lat given an airport id and parkig position name
-static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& parkpos )
+static bool airportParkingSetVicinity(const string& id)
 {
-  string fltType;
-  string acOperator;
-  string acType; // Currently not used by findAvailable parking, so safe to leave empty.
-  SGPath acData;
-  if ( id.empty() )
-    return false;
+    const FGAirport* apt = fgFindAirportID(id);
+    if (!apt) {
+      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
+      return false;
+    }
+    
+    setInitialPosition(apt->geod(), 0.0);
+    return true;
+}
 
-  const FGAirport* apt = fgFindAirportID(id);
-  if (!apt) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
-    return false;
-  }
-
-  FGAirportDynamicsRef dcs = apt->getDynamics();
-  if (!dcs) {
-      // this happens during initPosition(), because the dynamics manager and
-      // ATC manager aren't running yet. We want to set an interim position
-      // so METAR and tile-loading can proceed, and then we're set the final
-      // position by call this this function again during finalizePosition
-      setInitialPosition(apt->geod(), 0.0);
-      return true;
-  }
-
-  // this works because the second time we run this function, in finalizePosition,
-  // the ATC-manager has run its postinit which reads/sets /sim/presets/parkpos
-  // it will hold the parking assignment so AI acft don't occupy the same
-  // parking spot. We simply need to use the same parking it already found
-  FGParkingRef pkr = dcs->getOccupiedParkingByName(parkpos);
-  if (!pkr.valid()) {
-    SG_LOG( SG_GENERAL, SG_ALERT,
-            "Failed to find a parking at airport " << id << ":" << parkpos);
-    return false;
-  }
+// Set current_options lon/lat given an airport id and parkig position name
+static bool finalizePositionForParkpos( const string& id, const string& parkpos )
+{
+    auto aiManager = globals->get_subsystem<FGAIManager>();
+    if (!aiManager || !aiManager->getUserAircraft()) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "finalizePositionForParkpos: >> failed to find AI manager / user aircraft");
+        return false;
+    }
+    
+    auto userAIFP = aiManager->getUserAircraft()->GetFlightPlan();
+    if (!userAIFP) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "finalizePositionForParkpos: >> failed to find user aircraft AI flight-plan");
+        return false;
+    }
+    
+    auto pkr = userAIFP->getParkingGate();
+    if (!pkr) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find a parking at airport " << id << ":" << parkpos);
+        return false;
+    }
 
   fgSetString("/sim/presets/parkpos", pkr->getName());
   fgApplyStartOffset(pkr->geod(), pkr->getHeading());
@@ -681,7 +681,8 @@ bool initPosition()
     // since this depends on parking, which is part of dynamics, and hence
     // also depends on ATC (the ground controller), we need to defer this
     // until position finalisation
-    if ( fgSetPosFromAirportIDandParkpos( apt, parkpos ) ) {
+    // the rest of the work happens in finalizePosFromParkpos
+    if ( airportParkingSetVicinity( apt ) ) {
       // set tower position
       fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
       fgSetString("/sim/tower/airport-id",  apt.c_str());
@@ -881,7 +882,14 @@ void finalizePosition()
     } else if (!apt.empty() && !parkpos.empty()) {
         // parking position depends on ATC / dynamics code to assign spaces,
         // so we wait until this point to initialise
-        fgSetPosFromAirportIDandParkpos(apt, parkpos);
+        bool ok = finalizePositionForParkpos(apt, parkpos);
+        if (!ok) {
+            SG_LOG(SG_GENERAL, SG_WARN, "finalizePositionForParkPos failed, reverting to best runway");
+            
+            // clear this so finalizeMetar works as expected
+            fgSetString("/sim/presets/parkpos", "");
+            finalizeMetar();
+        }
     } else {
         done = finalizeMetar();
     }
