@@ -378,7 +378,7 @@ int FlightPlan::findWayptIndex(const SGGeod& aPos) const
 int FlightPlan::findWayptIndex(const FGPositionedRef aPos) const
 {
   for (int i=0; i<numLegs(); ++i) {
-    if (_legs[i]->waypoint()->source() == aPos) {
+    if (_legs[i]->waypoint()->matches(aPos)) {
       return i;
     }
   }

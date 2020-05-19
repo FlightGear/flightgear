@@ -101,7 +101,15 @@ bool Waypt::matches(Waypt* aOther) const
     
 bool Waypt::matches(FGPositioned* aPos) const
 {
-    return aPos && (aPos == source());
+    if (!aPos)
+        return false;
+    
+    // if w ehave no source, match on position and ident
+    if (!source()) {
+        return (ident() == aPos->ident()) && matches(aPos->geod());
+    }
+    
+    return (aPos == source());
 }
 
 bool Waypt::matches(const SGGeod& aPos) const
