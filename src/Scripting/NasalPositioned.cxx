@@ -2426,6 +2426,11 @@ public:
   {
     callDelegateMethod("sequence");
   }
+    
+    void loaded() override
+    {
+        callDelegateMethod("loaded");
+    }
 private:
 
   void callDelegateMethod(const char* method)

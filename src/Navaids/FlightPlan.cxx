@@ -334,6 +334,7 @@ void FlightPlan::setCurrentIndex(int index)
   lockDelegates();
   _currentIndex = index;
   _currentWaypointChanged = true;
+    _didLoadFP = true;
   unlockDelegates();
 }
 
@@ -764,6 +765,16 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
     } // of waypoint iteration
 }
 
+static bool anyWaypointsWithFlag(FlightPlan* plan, WayptFlag flag)
+{
+    bool r = false;
+    plan->forEachLeg([&r, flag](FlightPlan::Leg* l) {
+        if (l->waypoint()->flags() && flag) {
+            r = true;
+        }
+    });
+}
+
 bool FlightPlan::load(const SGPath& path)
 {
     if (!path.exists()) {
@@ -787,8 +798,13 @@ bool FlightPlan::load(const SGPath& path)
         // a load, since we assume the flight-plan had it specified already
         // especially, the XML might have a SID/STAR embedded, which we don't
         // want to lose
-        _arrivalChanged = false;
-        _departureChanged = false;
+        
+        // however, we do want to run the normal delegate if no procedure was
+        // defined. We'll use the presence of waypoints tagged to decide
+        const bool hasArrival = anyWaypointsWithFlag(this, WPT_ARRIVAL);
+        const bool hasDeparture = anyWaypointsWithFlag(this, WPT_DEPARTURE);
+        _arrivalChanged = !hasArrival;
+        _departureChanged = !hasDeparture;
         Status = true;
     } else if (loadPlainTextFormat(path)) { // simple textual list of waypoints
         _arrivalChanged = true;
@@ -1696,6 +1712,13 @@ void FlightPlan::unlockDelegates()
     return;
   }
   
+    if (_didLoadFP) {
+        _didLoadFP = false;
+        for (auto d : _delegates) {
+          d->loaded();
+        }
+    }
+    
   if (_departureChanged) {
     _departureChanged = false;
     for (auto d : _delegates) {
@@ -2114,5 +2137,10 @@ int FlightPlan::cruiseAltitudeFt() const
 {
     return _cruiseAltitudeFt;
 }
-    
+
+void FlightPlan::forEachLeg(const LegVisitor& lv)
+{
+    std::for_each(_legs.begin(), _legs.end(), lv);
+}
+
 } // of namespace flightgear

@@ -24,6 +24,8 @@
 #ifndef FG_FLIGHTPLAN_HXX
 #define FG_FLIGHTPLAN_HXX
 
+#include <functional>
+
 #include <Navaids/route.hxx>
 #include <Airports/airport.hxx>
 
@@ -186,6 +188,8 @@ public:
     
     virtual void currentWaypointChanged() { }
     virtual void endOfFlightPlan() { }
+      
+      virtual void loaded() { }
   protected:
     Delegate();
 
@@ -373,6 +377,9 @@ public:
 
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);
+    
+    using LegVisitor = std::function<void(Leg*)>;
+    void forEachLeg(const LegVisitor& lv);
 private:
   friend class Leg;
   
@@ -384,12 +391,13 @@ private:
   void notifyCleared();
     
   unsigned int _delegateLock = 0;
-  bool _arrivalChanged,
-    _departureChanged,
-    _waypointsChanged,
-    _currentWaypointChanged,
-    _cruiseDataChanged;
-
+  bool _arrivalChanged = false,
+    _departureChanged = false,
+    _waypointsChanged = false,
+    _currentWaypointChanged = false,
+    _cruiseDataChanged = false;
+  bool _didLoadFP = false;
+    
     void saveToProperties(SGPropertyNode* d) const;
     
   bool loadXmlFormat(const SGPath& path);

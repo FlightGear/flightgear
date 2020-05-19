@@ -599,7 +599,7 @@ void RouteManagerTests::loadGPX()
 }
 
 // The same test as above, but for a file exported from the route manager or online
-void RouteManagerTests::loadFgfp()
+void RouteManagerTests::loadFGFP()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
