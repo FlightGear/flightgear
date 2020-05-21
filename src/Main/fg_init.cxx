@@ -676,7 +676,13 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
             defaultsXML.utf8Str());
     }
 
-    fgLoadProps("defaults.xml", globals->get_props());
+    if(!fgLoadProps("defaults.xml", globals->get_props()))
+    {
+        flightgear::fatalMessageBoxThenExit(
+            "Corrupted file",
+            "Couldn't load an essential simulator data file as it is corrupted.",
+            defaultsXML.utf8Str());
+    }
     SG_LOG(SG_GENERAL, SG_DEBUG, "Finished Reading global defaults");
 
     // do not load user settings when reset to default is requested, or if
