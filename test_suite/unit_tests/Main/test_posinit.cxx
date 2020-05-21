@@ -615,6 +615,35 @@ void PosInitTests::testAirportRepositionAirport()
    
 }
 
+void PosInitTests::testParkInvalid()
+{
+    {
+        Options* opts = Options::sharedInstance();
+        opts->setShouldLoadDefaultConfig(false);
+        const char* args[] = {"dummypath", "--airport=EDDF", "--parkpos=foobar"};
+        opts->init(3, (char**) args, SGPath());
+        opts->processOptions();
+    }
+    
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(! fgGetBool("/sim/presets/runway-requested"));
+
+    checkStringProp("/sim/presets/parkpos", "foobar");
+    initPosition();
+    
+    auto apt = FGAirport::getByIdent("EDDF");
+    
+
+    fgSetDouble("/environment/metar/base-wind-dir-deg",  350.0);
+    fgSetBool("/environment/metar/valid", true);
+    
+    simulateFinalizePosition();
+    checkClosestAirport(std::string("EDDF"));
+    // we should be on the best runway, let's see
+    auto runway = apt->getRunwayByIdent("36");
+    checkPosition(runway->threshold());
+}
+
 void PosInitTests::testParkAtOccupied()
 {
     {
@@ -800,6 +829,51 @@ void PosInitTests::testRepositionAtOccupied()
     auto dynamics = apt->getDynamics();
     dynamics->setParkingAvailable(parking2, false);
     
+    simulateStartReposition();
+    finalizePosition();
+        
+    // we should be on the best runway, let's see
+    auto runway = apt->getRunwayByIdent("36");
+    checkPosition(runway->threshold());
+}
+
+
+void PosInitTests::testRepositionAtInvalid()
+{
+     {
+        Options* opts = Options::sharedInstance();
+        opts->setShouldLoadDefaultConfig(false);
+
+        const char* args[] = {"dummypath", "--airport=EDDF", "--parkpos=F235"};
+        opts->init(3, (char**) args, SGPath());
+        opts->processOptions();
+    }
+
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(! fgGetBool("/sim/presets/runway-requested"));
+
+    checkStringProp("/sim/presets/parkpos", "F235");
+    initPosition();
+
+    auto apt = FGAirport::getByIdent("EDDF");
+    auto parking1 = apt->groundNetwork()->findParkingByName("F235");
+         
+
+    fgSetDouble("/environment/metar/base-wind-dir-deg",  350.0);
+    fgSetBool("/environment/metar/valid", true);
+
+    simulateFinalizePosition();
+
+    checkClosestAirport(std::string("EDDF"));
+    checkPosition(parking1->geod(), 20);
+
+    //////////
+    fgSetDouble("/sim/presets/longitude-deg", -9990.00);
+    fgSetDouble("/sim/presets/latitude-deg",  -9990.00);
+    fgSetString("/sim/presets/airport-id", "EDDF");
+    fgSetDouble("/sim/presets/heading-deg",  9990.00);
+    fgSetString("/sim/presets/parkpos", "foobarzot");
+
     simulateStartReposition();
     finalizePosition();
         

@@ -45,6 +45,8 @@ class PosInitTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testDefaultStartup);
     CPPUNIT_TEST(testRepositionAtParking);
     CPPUNIT_TEST(testParkAtOccupied);
+    CPPUNIT_TEST(testParkInvalid);
+    
     
     // Navaid tests
     CPPUNIT_TEST(testVOROnlyStartup);
@@ -67,6 +69,7 @@ class PosInitTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testAirportRepositionAirport);
     CPPUNIT_TEST(testRepositionAtSameParking);
     CPPUNIT_TEST(testRepositionAtOccupied);
+    CPPUNIT_TEST(testRepositionAtInvalid);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -90,6 +93,7 @@ public:
     void testAirportRunwayOffsetGlideslopeStartup();
     void testDefaultStartup();
     void testParkAtOccupied();
+    void testParkInvalid();
     
     // Navaid tests
     void testVOROnlyStartup();
@@ -111,7 +115,7 @@ public:
     void testRepositionAtParking();
     void testRepositionAtSameParking();
     void testRepositionAtOccupied();
-    
+    void testRepositionAtInvalid();
 private:
     // Helper functions for tests.  Return void as they use CPPUNIT_ASSERT
     void checkAlt(float value);

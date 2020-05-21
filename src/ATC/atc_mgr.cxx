@@ -193,11 +193,9 @@ void FGATCManager::postinit()
             // We're on the ground somewhere. Handle this case later.
             
             // important : we are on the ground, so reset the AIFlightPlan back to
-            // a default one. Otherwise, in the reposition case, we end up with a
+            // an empty one. Otherwise, in the reposition case, we end up with a
             // stale flight-plan which confuses other code (eg, PositionInit::finalizeForParking)
             // see unit test: PosInitTests::testRepositionAtOccupied
-            
-            fp.reset(new FGAIFlightPlan);
             userAircraft->FGAIBase::setFlightPlan(std::move(fp));
             controller = nullptr;
             
