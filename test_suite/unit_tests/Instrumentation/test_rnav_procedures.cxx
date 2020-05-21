@@ -80,15 +80,18 @@ public:
         // insert waypt for the dpearture runway
         auto dr = new RunwayWaypt(thePlan->departureRunway(), thePlan);
         dr->setFlag(WPT_DEPARTURE);
+        dr->setFlag(WPT_GENERATED);
         thePlan->insertWayptAtIndex(dr, 0);
         
         if (thePlan->sid()) {
             WayptVec sidRoute;
-            bool ok = thePlan->sid()->route(thePlan->departureRunway(), nullptr, sidRoute);
+            bool ok = thePlan->sid()->route(thePlan->departureRunway(), thePlan->sidTransition(), sidRoute);
             if (!ok)
                 throw sg_exception("failed to route via SID");
             int insertIndex = 1;
             for (auto w : sidRoute) {
+                w->setFlag(WPT_DEPARTURE);
+                w->setFlag(WPT_GENERATED);
                 thePlan->insertWayptAtIndex(w, insertIndex++);
             }
         }
@@ -104,15 +107,18 @@ public:
         // insert waypt for the destination runway
         auto dr = new RunwayWaypt(thePlan->destinationRunway(), thePlan);
         dr->setFlag(WPT_ARRIVAL);
-        thePlan->insertWayptAtIndex(dr, 0);
+        dr->setFlag(WPT_GENERATED);
+        auto leg = thePlan->insertWayptAtIndex(dr, -1);
         
         if (thePlan->star()) {
             WayptVec starRoute;
-            bool ok = thePlan->star()->route(thePlan->destinationRunway(), nullptr, starRoute);
+            bool ok = thePlan->star()->route(thePlan->destinationRunway(), thePlan->starTransition(), starRoute);
             if (!ok)
                 throw sg_exception("failed to route via STAR");
-            int insertIndex = 1;
+            int insertIndex = leg->index();
             for (auto w : starRoute) {
+                w->setFlag(WPT_ARRIVAL);
+                w->setFlag(WPT_GENERATED);
                 thePlan->insertWayptAtIndex(w, insertIndex++);
             }
         }
@@ -201,7 +207,7 @@ void RNAVProcedureTests::testBasic()
 void RNAVProcedureTests::testHeadingToAlt()
 {
     auto vhhh = FGAirport::findByIdent("VHHH");
-   // FGTestApi::setUp::logPositionToKML("heading_to_alt");
+//    FGTestApi::setUp::logPositionToKML("heading_to_alt");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -219,7 +225,7 @@ void RNAVProcedureTests::testHeadingToAlt()
     wp->setAltitude(4000, RESTRICT_ABOVE);
     fp->insertWayptAtIndex(wp, 1); // between the runway WP and HAZEL
 
-   // FGTestApi::writeFlightPlanToKML(fp);
+  //  FGTestApi::writeFlightPlanToKML(fp);
 
     auto depRwy = fp->departureRunway();
     
@@ -237,8 +243,10 @@ void RNAVProcedureTests::testHeadingToAlt()
     pilot->setSpeedKts(200);
     pilot->flyGPSCourse(m_gps);
     
+    CPPUNIT_ASSERT_EQUAL(fp->currentIndex(), 0);
+
     // check we sequence to the heading-to-alt wp
-    bool ok = FGTestApi::runForTimeWithCheck(240.0, [fp] () {
+    bool ok = FGTestApi::runForTimeWithCheck(300.0, [fp] () {
       if (fp->currentIndex() == 1) {
           return true;
       }
@@ -410,7 +418,11 @@ void RNAVProcedureTests::testEGPH_TLA6C()
     CPPUNIT_ASSERT_EQUAL(std::string{"D242H"}, d242Wpt->ident());
     CPPUNIT_ASSERT_EQUAL(true, d242Wpt->flag(WPT_OVERFLIGHT));
     
-    CPPUNIT_ASSERT_EQUAL(std::string{"D346T"}, fp->legAtIndex(3)->waypoint()->ident());
+    const auto wp3Ident = fp->legAtIndex(3)->waypoint()->ident();
+    
+    // depeding which versino fo the procedures we loaded, we can find
+    // one ID or the other
+    CPPUNIT_ASSERT((wp3Ident == "D346T") || (wp3Ident == "D345T"));
     
   //  FGTestApi::writeFlightPlanToKML(fp);
 
@@ -547,10 +559,10 @@ void RNAVProcedureTests::testLFKC_AJO1R()
 void RNAVProcedureTests::testTransitionsSID()
 {
     auto kjfk = FGAirport::findByIdent("kjfk");
-    //auto sid = kjfk->findSIDWithIdent("DEEZZ5.13L");
-    // the method used by nasal to search for a transition only accepts transition ID as argument
-    // - not the associated SID. I believe this is an issue. This code will try to load DEEZZ5.04L!
-    auto sid = kjfk->selectSIDByTransition("CANDR");
+    auto runway = kjfk->getRunwayByIdent("13L");
+    
+
+    auto sid = kjfk->selectSIDByTransition(runway, "CANDR");
     // procedures not loaded, abandon test
     if (!sid)
         return;
@@ -566,7 +578,7 @@ void RNAVProcedureTests::testTransitionsSID()
     FGTestApi::setUp::populateFPWithNasal(fp, "KJFK", "13L", "KCLE", "24R", "");
     
     fp->setSID(sid);
-    CPPUNIT_ASSERT_EQUAL(7, fp->numLegs());
+    CPPUNIT_ASSERT_EQUAL(8, fp->numLegs());
     auto wp = fp->legAtIndex(6);
     CPPUNIT_ASSERT_EQUAL(std::string{"CANDR"}, wp->waypoint()->ident());
     CPPUNIT_ASSERT(rm->activate());
@@ -575,8 +587,8 @@ void RNAVProcedureTests::testTransitionsSID()
 void RNAVProcedureTests::testTransitionsSTAR()
 {
     auto kjfk = FGAirport::findByIdent("kjfk");
-    //auto star = kjfk->findSIDWithIdent("DEEZZ5.13L");
-    auto star = kjfk->selectSTARByTransition("SEY");
+    auto runway = kjfk->getRunwayByIdent("22L");
+    auto star = kjfk->selectSTARByTransition(runway, "SEY");
     // procedures not loaded, abandon test
     if (!star)
         return;
@@ -592,7 +604,7 @@ void RNAVProcedureTests::testTransitionsSTAR()
     FGTestApi::setUp::populateFPWithNasal(fp, "KBOS", "22R", "KJFK", "22L", "");
     
     fp->setSTAR(star);
-    CPPUNIT_ASSERT_EQUAL(8, fp->numLegs());
+    CPPUNIT_ASSERT_EQUAL(9, fp->numLegs());
     auto wp = fp->legAtIndex(1);
     CPPUNIT_ASSERT_EQUAL(std::string{"SEY"}, wp->waypoint()->ident());
     CPPUNIT_ASSERT(rm->activate());

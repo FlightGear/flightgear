@@ -30,76 +30,85 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 
+#include <cppunit/TestAssert.h>
+
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 
-#if 0
-typedef nasal::Ghost<simgear::HTTP::Request_ptr> NasalRequest;
-typedef nasal::Ghost<simgear::HTTP::FileRequestRef> NasalFileRequest;
-typedef nasal::Ghost<simgear::HTTP::MemoryRequestRef> NasalMemoryRequest;
-
-FGHTTPClient& requireHTTPClient(const nasal::ContextWrapper& ctx)
+static naRef f_assert(const nasal::CallContext& ctx )
 {
-  FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
-  if( !http )
-    ctx.runtimeError("Failed to get HTTP subsystem");
-
-  return *http;
-}
-
-/**
- * http.save(url, filename)
- */
-static naRef f_http_save(const nasal::CallContext& ctx)
-{
-  const std::string url = ctx.requireArg<std::string>(0);
-
-  // Check for write access to target file
-  const std::string filename = ctx.requireArg<std::string>(1);
-  const SGPath validated_path = fgValidatePath(filename, true);
-
-  if( validated_path.isNull() )
-    ctx.runtimeError("Access denied: can not write to %s", filename.c_str());
-
-  return ctx.to_nasal
-  (
-    requireHTTPClient(ctx).client()->save(url, validated_path.utf8Str())
-  );
-}
-
-/**
- * http.load(url)
- */
-static naRef f_http_load(const nasal::CallContext& ctx)
-{
-  const std::string url = ctx.requireArg<std::string>(0);
-  return ctx.to_nasal( requireHTTPClient(ctx).client()->load(url) );
-}
-
-static naRef f_request_abort( simgear::HTTP::Request&,
-                              const nasal::CallContext& ctx )
-{
-    // we need a request_ptr for cancel, not a reference. So extract
-    // the me object from the context directly.
-    simgear::HTTP::Request_ptr req = ctx.from_nasal<simgear::HTTP::Request_ptr>(ctx.me);
-    requireHTTPClient(ctx).client()->cancelRequest(req);
+    bool pass = ctx.requireArg<bool>(0);
+    auto msg = ctx.getArg<string>(1, "assert failed:");
+    
+    CppUnit::Asserter::failIf(!pass, "assertion failed:" + msg,
+                              CppUnit::SourceLine{"Nasal source line", 0});
+    if (!pass) {
+        ctx.runtimeError(msg.c_str());
+    }
     return naNil();
 }
 
-#endif
+static naRef f_fail(const nasal::CallContext& ctx )
+{
+    auto msg = ctx.getArg<string>(0);
+    
+    CppUnit::Asserter::fail("assertion failed:" + msg,
+                              CppUnit::SourceLine{"Nasal source line", 0});
+    
+    ctx.runtimeError("Test failed: %s", msg.c_str());
+    return naNil();
+}
+
+static naRef f_assert_equal(const nasal::CallContext& ctx )
+{
+    naRef argA = ctx.requireArg<naRef>(0);
+    naRef argB = ctx.requireArg<naRef>(1);
+    auto msg = ctx.getArg<string>(2, "assert_equal failed");
+
+    bool same = naEqual(argA, argB);
+    if (!same) {
+
+        string aStr = ctx.from_nasal<string>(argA);
+        string bStr = ctx.from_nasal<string>(argB);
+        msg += "; expected:" + aStr + ", actual:" + bStr;
+
+        ctx.runtimeError(msg.c_str());
+    }
+    
+    return naNil();
+}
+
+static naRef f_assert_doubles_equal(const nasal::CallContext& ctx )
+{
+    double argA = ctx.requireArg<double>(0);
+    double argB = ctx.requireArg<double>(1);
+    double tolerance = ctx.requireArg<double>(2);
+
+    auto msg = ctx.getArg<string>(3, "assert_doubles_equal failed");
+
+    const bool same = fabs(argA - argB) < tolerance;
+    if (!same) {
+        msg += "; expected:" + std::to_string(argA) + ", actual:" + std::to_string(argB);
+    //    static_activeTest->failure = true;
+    //    static_activeTest->failureMessage = msg;
+        ctx.runtimeError(msg.c_str());
+    }
+    
+    return naNil();
+}
 
 //------------------------------------------------------------------------------
-naRef initNasalUnitTestCppUnit(naRef globals, naContext c)
+naRef initNasalUnitTestCppUnit(naRef nasalGlobals, naContext c)
 {
- 
+    nasal::Hash globals_module(nasalGlobals, c),
+            unitTest = globals_module.createHash("unitTest");
 
-  nasal::Hash globals_module(globals, c),
-              unitTest = globals_module.createHash("unitTest");
-
-//  http.set("save", f_http_save);
-//  http.set("load", f_http_load);
-
+    unitTest.set("assert", f_assert);
+    unitTest.set("fail", f_fail);
+    unitTest.set("assert_equal", f_assert_equal);
+    unitTest.set("assert_doubles_equal", f_assert_doubles_equal);
+    
   return naNil();
 }

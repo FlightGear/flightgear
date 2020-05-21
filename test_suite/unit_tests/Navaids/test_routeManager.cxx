@@ -23,6 +23,8 @@
 
 using namespace flightgear;
 
+static bool static_haveProcedures = false;
+
 static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunway,
                          const std::string& destICAO, const std::string& destRunway,
                          const std::string& waypoints)
@@ -38,6 +40,12 @@ void RouteManagerTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("routemanager");
     FGTestApi::setUp::initNavDataCache();
+    
+    SGPath proceduresPath = SGPath::fromEnv("FG_PROCEDURES_PATH");
+    if (proceduresPath.exists()) {
+        static_haveProcedures = true;
+        globals->append_fg_scenery(proceduresPath);
+    }
     
     globals->add_new_subsystem<FGRouteMgr>();
     
@@ -675,4 +683,51 @@ void RouteManagerTests::loadFGFP()
     auto wp2 = f->legAtIndex(6);
     CPPUNIT_ASSERT_EQUAL(std::string{"EDDF"}, wp2->waypoint()->ident());
 
+}
+
+void RouteManagerTests::testRouteWithProcedures()
+{
+    if (!static_haveProcedures)
+        return;
+    
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    
+    FlightPlanRef f = new FlightPlan;
+    rm->setFlightPlan(f);
+    
+    auto kjfk = FGAirport::findByIdent("KJFK");
+    auto eham = FGAirport::findByIdent("EHAM");
+    f->setDeparture(kjfk->getRunwayByIdent("13L"));
+    f->setSID(kjfk->findSIDWithIdent("DEEZZ5.13L"), "CANDR");
+    
+    f->setDestination(eham->getRunwayByIdent("18R"));
+    f->setSTAR(eham->findSTARWithIdent("EEL1A"), "BEDUM");
+    
+    f->setApproach(eham->findApproachWithIdent("VDM18R"));
+    
+    auto w = f->waypointFromString("TOMYE");
+    f->insertWayptAtIndex(w, f->indexOfFirstNonDepartureWaypoint());
+    
+    auto w2 = f->waypointFromString("DEVOL");
+    f->insertWayptAtIndex(w2, f->indexOfFirstArrivalWaypoint());
+    
+    // let's check what we got
+    
+    auto endOfSID = f->legAtIndex(f->indexOfFirstNonDepartureWaypoint() - 1);
+    CPPUNIT_ASSERT_EQUAL(endOfSID->waypoint()->ident(), string{"CANDR"});
+    
+    auto startOfSTAR = f->legAtIndex(f->indexOfFirstArrivalWaypoint());
+    CPPUNIT_ASSERT_EQUAL(startOfSTAR->waypoint()->ident(), string{"BEDUM"});
+    
+    auto endOfSTAR = f->legAtIndex(f->indexOfFirstApproachWaypoint() - 1);
+    CPPUNIT_ASSERT_EQUAL(endOfSTAR->waypoint()->ident(), string{"ARTIP"});
+    
+    auto startOfApproach = f->legAtIndex(f->indexOfFirstApproachWaypoint());
+    CPPUNIT_ASSERT_EQUAL(startOfApproach->waypoint()->ident(), string{"D070O"});
+    
+    auto landingRunway = f->legAtIndex(f->indexOfDestinationRunwayWaypoint());
+    CPPUNIT_ASSERT(landingRunway->waypoint()->source() == f->destinationRunway());
+    
+    auto firstMiss = f->legAtIndex(f->indexOfDestinationRunwayWaypoint() + 1);
+    CPPUNIT_ASSERT_EQUAL(firstMiss->waypoint()->ident(), string{"(461)"});
 }

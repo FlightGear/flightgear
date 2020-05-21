@@ -42,6 +42,7 @@ class RouteManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testHiddenWaypoints);
     CPPUNIT_TEST(loadGPX);
     CPPUNIT_TEST(loadFGFP);
+    CPPUNIT_TEST(testRouteWithProcedures);
     
     CPPUNIT_TEST_SUITE_END();
 
@@ -66,6 +67,8 @@ public:
     void testHiddenWaypoints();
     void loadGPX();
     void loadFGFP();
+    void testRouteWithProcedures();
+    
 private:
     GPS* m_gps = nullptr;
 };

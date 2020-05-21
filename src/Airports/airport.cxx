@@ -998,10 +998,13 @@ flightgear::Transition* FGAirport::selectSIDByEnrouteTransition(FGPositioned* en
     return nullptr;
 }
 
-Transition *FGAirport::selectSIDByTransition(const string &aIdent) const
+Transition *FGAirport::selectSIDByTransition(const FGRunway* runway,  const string &aIdent) const
 {
     loadProcedures();
     for (auto sid : mSIDs) {
+        if (runway && !sid->isForRunway(runway))
+            continue;
+        
         auto trans = sid->findTransitionByName(aIdent);
         if (trans) {
             return trans;
@@ -1022,10 +1025,13 @@ flightgear::Transition* FGAirport::selectSTARByEnrouteTransition(FGPositioned* e
     return nullptr;
 }
 
-Transition *FGAirport::selectSTARByTransition(const string &aIdent) const
+Transition *FGAirport::selectSTARByTransition(const FGRunway* runway, const string &aIdent) const
 {
     loadProcedures();
     for (auto star : mSTARs) {
+        if (runway && !star->isForRunway(runway))
+            continue;
+        
         auto trans = star->findTransitionByName(aIdent);
         if (trans) {
             return trans;

@@ -78,7 +78,7 @@ namespace flightgear {
 // implemented in route.cxx
 const char* restrictionToString(RouteRestriction aRestrict);
 
-typedef std::vector<FlightPlan::DelegateFactory*> FPDelegateFactoryVec;
+typedef std::vector<FlightPlan::DelegateFactoryRef> FPDelegateFactoryVec;
 static FPDelegateFactoryVec static_delegateFactories;
   
 FlightPlan::FlightPlan() :
@@ -98,7 +98,7 @@ FlightPlan::FlightPlan() :
   for (auto factory : static_delegateFactories) {
     Delegate* d = factory->createFlightPlanDelegate(this);
     if (d) { // factory might not always create a delegate
-      d->_deleteWithPlan = true;
+      d->_factory = factory; // record for clean-up purposes
       addDelegate(d);
     }
   }
@@ -106,10 +106,11 @@ FlightPlan::FlightPlan() :
   
 FlightPlan::~FlightPlan()
 {
-// delete all delegates which we own.
+// clean up delegates
     for (auto d : _delegates) {
-        if (d->_deleteWithPlan) {
-            delete d;
+        if (d->_factory) {
+            auto f = d->_factory;
+            f->destroyFlightPlanDelegate(this,  d);
         }
     }
 }
@@ -334,7 +335,6 @@ void FlightPlan::setCurrentIndex(int index)
   lockDelegates();
   _currentIndex = index;
   _currentWaypointChanged = true;
-    _didLoadFP = true;
   unlockDelegates();
 }
 
@@ -474,7 +474,7 @@ void FlightPlan::clearDeparture()
   
 void FlightPlan::setSID(SID* sid, const std::string& transition)
 {
-  if (sid == _sid) {
+  if ((sid == _sid) && (_sidTransition == transition)) {
     return;
   }
   
@@ -574,7 +574,7 @@ void FlightPlan::setAlternate(FGAirportRef alt)
 
 void FlightPlan::setSTAR(STAR* star, const std::string& transition)
 {
-  if (_star == star) {
+  if ((_star == star) && (_starTransition == transition)) {
     return;
   }
   
@@ -706,11 +706,9 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
     if (_departure) {
         d->setStringValue("departure/airport", _departure->ident());
         if (_sid) {
-            if (!_sidTransition.empty()) {
-                d->setStringValue("departure/sid", _sidTransition);
-            } else {
-                d->setStringValue("departure/sid", _sid->ident());
-            }
+            d->setStringValue("departure/sid", _sid->ident());
+            if (!_sidTransition.empty())
+                d->setStringValue("departure/sid_trans", _sidTransition);
         }
         
         if (_departureRunway) {
@@ -721,11 +719,9 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
     if (_destination) {
         d->setStringValue("destination/airport", _destination->ident());
         if (_star) {
-            if (!_starTransition.empty()) {
-                d->setStringValue("destination/star", _starTransition);
-            } else {
-                d->setStringValue("destination/star", _star->ident());
-            }
+             d->setStringValue("destination/star", _star->ident());
+             if (!_starTransition.empty())
+                 d->setStringValue("destination/star_trans", _starTransition);
         }
         
         if (_approach) {
@@ -769,10 +765,12 @@ static bool anyWaypointsWithFlag(FlightPlan* plan, WayptFlag flag)
 {
     bool r = false;
     plan->forEachLeg([&r, flag](FlightPlan::Leg* l) {
-        if (l->waypoint()->flags() && flag) {
+        if (l->waypoint()->flags() & flag) {
             r = true;
         }
     });
+    
+    return r;
 }
 
 bool FlightPlan::load(const SGPath& path)
@@ -818,6 +816,8 @@ bool FlightPlan::load(const SGPath& path)
     
     _cruiseDataChanged = true;
     _waypointsChanged = true;
+    _didLoadFP = true;
+
     unlockDelegates();
     
     return Status;
@@ -853,10 +853,22 @@ bool FlightPlan::load(std::istream &stream)
         Status = false;
     }
     
-    _arrivalChanged = false;
-    _departureChanged = false;
+    // we don't want to re-compute the arrival / departure after
+     // a load, since we assume the flight-plan had it specified already
+     // especially, the XML might have a SID/STAR embedded, which we don't
+     // want to lose
+    
+     // however, we do want to run the normal delegate if no procedure was
+     // defined. We'll use the presence of waypoints tagged to decide
+     const bool hasArrival = anyWaypointsWithFlag(this, WPT_ARRIVAL);
+     const bool hasDeparture = anyWaypointsWithFlag(this, WPT_DEPARTURE);
+     _arrivalChanged = !hasArrival;
+     _departureChanged = !hasDeparture;
+    
     _cruiseDataChanged = true;
     _waypointsChanged = true;
+    _didLoadFP = true;
+
     unlockDelegates();
     
     return Status;
@@ -1052,13 +1064,13 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
       }
     
       if (dep->hasChild("sid")) {
+          // previously, we would write a transition id for 'SID' if set,
+          // but this is ambigous. Starting with 2020.2, we only every try
+          // to parse this value as a SID, and look for a seperate sid_trans
+          // value
+          const string trans = dep->getStringValue("sid_trans");
           const auto sid = dep->getStringValue("sid");
-          auto trans = _departure->selectSIDByTransition(sid);
-          if (trans) {
-              setSID(trans);
-          } else {
-              setSID(_departure->findSIDWithIdent(sid));
-          }
+          setSID(_departure->findSIDWithIdent(sid), trans);
       }
     }
   }
@@ -1074,14 +1086,12 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
       }
       
       if (dst->hasChild("star")) {
+          // prior to 2020.2 we would attempt to treat 'star' as a
+          // transiiton ID, but this is ambiguous. Look for a seperate value now
           const auto star = dst->getStringValue("star");
-          auto trans = _destination->selectSTARByTransition(star);
-          if (trans) {
-              setSTAR(trans);
-          } else {
-              setSTAR(_destination->findSTARWithIdent(star));
-          }
-      }
+          const string trans = dst->getStringValue("star_trans");
+          setSTAR(_destination->findSTARWithIdent(star), trans);
+      } // of STAR processing
       
       if (dst->hasChild("approach")) {
         setApproach(_destination->findApproachWithIdent(dst->getStringValue("approach")));
@@ -1758,7 +1768,7 @@ void FlightPlan::unlockDelegates()
   --_delegateLock;
 }
   
-void FlightPlan::registerDelegateFactory(DelegateFactory* df)
+void FlightPlan::registerDelegateFactory(DelegateFactoryRef df)
 {
   auto it = std::find(static_delegateFactories.begin(), static_delegateFactories.end(), df);
   if (it != static_delegateFactories.end()) {
@@ -1768,7 +1778,7 @@ void FlightPlan::registerDelegateFactory(DelegateFactory* df)
   static_delegateFactories.push_back(df);
 }
   
-void FlightPlan::unregisterDelegateFactory(DelegateFactory* df)
+void FlightPlan::unregisterDelegateFactory(DelegateFactoryRef df)
 {
   auto it = std::find(static_delegateFactories.begin(), static_delegateFactories.end(), df);
   if (it == static_delegateFactories.end()) {
@@ -2142,5 +2152,66 @@ void FlightPlan::forEachLeg(const LegVisitor& lv)
 {
     std::for_each(_legs.begin(), _legs.end(), lv);
 }
+
+
+int FlightPlan::indexOfFirstNonDepartureWaypoint() const
+{
+    const auto numLegs = _legs.size();
+    for (int i = 0; i < numLegs; ++i) {
+        if (!(_legs.at(i)->waypoint()->flags() & WPT_DEPARTURE))
+            return i ;
+    }
+    
+    // all waypoints are marked as departure
+    return -1;
+}
+
+int FlightPlan::indexOfFirstArrivalWaypoint() const
+{
+    const auto numLegs = _legs.size();
+    for (int i = 0; i < numLegs; ++i) {
+        if (_legs.at(i)->waypoint()->flags() & WPT_ARRIVAL)
+            return i;
+    }
+    
+    // no waypoints are marked as arrival
+    return -1;
+}
+
+int FlightPlan::indexOfFirstApproachWaypoint() const
+{
+    const auto numLegs = _legs.size();
+    for (int i = 0; i < numLegs; ++i) {
+        if (_legs.at(i)->waypoint()->flags() & WPT_APPROACH)
+            return i;
+    }
+    
+    // no waypoints are marked as arrival
+    return -1;
+}
+
+int FlightPlan::indexOfDestinationRunwayWaypoint() const
+{
+    if (!_destinationRunway)
+        return -1;
+    
+    // work backwards in case the departure and destination match
+    // this way we'll find the one we want
+    for (int i = numLegs() - 1; i >= 0; i--) {
+        if (_legs.at(i)->waypoint()->source() == _destinationRunway) {
+            return i;
+        }
+    }
+    
+    return -1;
+}
+
+void FlightPlan::DelegateFactory::destroyFlightPlanDelegate(FlightPlan* fp, Delegate* d)
+{
+    // mimic old behaviour before destroyFlightPlanDelegate was added
+    SG_UNUSED(fp);
+    delete d;
+}
+
 
 } // of namespace flightgear

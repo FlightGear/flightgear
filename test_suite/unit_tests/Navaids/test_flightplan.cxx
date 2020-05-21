@@ -4,6 +4,8 @@
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 
 #include <simgear/misc/strutils.hxx>
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 
 #include <Navaids/FlightPlan.hxx>
 #include <Navaids/routePath.hxx>
@@ -18,12 +20,114 @@
 
 using namespace flightgear;
 
+static bool static_haveProcedures = false;
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+namespace {
+class TestFPDelegate : public FlightPlan::Delegate
+{
+public:
+    TestFPDelegate(FlightPlan* plan) :
+        _plan(plan)
+    {}
+    
+    virtual ~TestFPDelegate()
+    {
+    }
+    
+    void sequence() override
+    {
+    }
+    
+    void currentWaypointChanged() override
+    {
+    }
+    
+    void departureChanged() override
+    {
+        sawDepartureChange = true;
+    }
+    
+    void arrivalChanged() override
+    {
+        sawArrivalChange = true;
+    }
+    
+    void loaded() override
+    {
+        didLoad = true;
+    }
+    
+    FlightPlan* _plan = nullptr;
+    bool didLoad = false;
+    bool sawDepartureChange = false;
+    bool sawArrivalChange = false;
+};
+
+class TestFPDelegateFactory : public FlightPlan::DelegateFactory
+{
+public:
+    TestFPDelegateFactory() = default;
+    virtual ~TestFPDelegateFactory() = default;
+
+  FlightPlan::Delegate* createFlightPlanDelegate(FlightPlan* fp) override
+  {
+      auto d = new TestFPDelegate(fp);
+      _instances.push_back(d);
+      return d;
+  }
+    
+    void destroyFlightPlanDelegate(FlightPlan* fp, FlightPlan::Delegate* d) override
+    {
+        auto it = std::find_if(_instances.begin(), _instances.end(), [d] (TestFPDelegate* fpd) {
+            return fpd == d;
+        });
+        
+        CPPUNIT_ASSERT(it != _instances.end());
+        
+        _instances.erase(it);
+        delete d;
+    }
+    
+    static TestFPDelegate* delegateForPlan(FlightPlan* fp);
+    
+    std::vector<TestFPDelegate*> _instances;
+};
+
+std::shared_ptr<TestFPDelegateFactory> static_factory;
+
+TestFPDelegate* TestFPDelegateFactory::delegateForPlan(FlightPlan* fp)
+{
+    auto it = std::find_if(static_factory->_instances.begin(),
+                           static_factory->_instances.end(),
+                           [fp] (TestFPDelegate* del) {
+        return del->_plan == fp;
+    });
+    
+    if (it == static_factory->_instances.end())
+        return nullptr;
+    
+    return *it;
+}
+
+} // of anonymous namespace
+
+/////////////////////////////////////////////////////////////////////////////
+
 
 // Set up function for each test.
 void FlightplanTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("flightplan");
     FGTestApi::setUp::initNavDataCache();
+    
+    SGPath proceduresPath = SGPath::fromEnv("FG_PROCEDURES_PATH");
+    if (proceduresPath.exists()) {
+        static_haveProcedures = true;
+        globals->append_fg_scenery(proceduresPath);
+    }
     
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
@@ -35,6 +139,11 @@ void FlightplanTests::setUp()
 void FlightplanTests::tearDown()
 {
     FGTestApi::tearDown::shutdownTestGlobals();
+    
+    if (static_factory) {
+        FlightPlan::unregisterDelegateFactory(static_factory);
+        static_factory.reset();
+    }
 }
 
 static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunway,
@@ -505,4 +614,238 @@ void FlightplanTests::testRadialIntercept()
     
     RoutePath rtepath(f);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(232, f->legAtIndex(3)->courseDeg(), 1.0);
+}
+
+void FlightplanTests::loadFGFPWithoutDepartureArrival()
+{
+    static_factory = std::make_shared<TestFPDelegateFactory>();
+    FlightPlan::registerDelegateFactory(static_factory);
+
+    FlightPlanRef f = new FlightPlan;
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_without_dep_arr.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+              <departure>
+                <airport type="string">EDDM</airport>
+                <runway type="string">08R</runway>
+              </departure>
+              <destination>
+                <airport type="string">EDDF</airport>
+              </destination>
+              <route>
+                <wp n="1">
+                  <type type="string">navaid</type>
+                  <ident type="string">GIVMI</ident>
+                  <lon type="double">11.364700</lon>
+                  <lat type="double">48.701100</lat>
+                </wp>
+                <wp n="2">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERNAS</ident>
+                  <lon type="double">11.219400</lon>
+                  <lat type="double">48.844700</lat>
+                </wp>
+                <wp n="3">
+                  <type type="string">navaid</type>
+                  <ident type="string">TALAL</ident>
+                  <lon type="double">11.085300</lon>
+                  <lat type="double">49.108300</lat>
+                </wp>
+                <wp n="4">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERMEL</ident>
+                  <lon type="double">11.044700</lon>
+                  <lat type="double">49.187800</lat>
+                </wp>
+                <wp n="5">
+                  <type type="string">navaid</type>
+                  <ident type="string">PSA</ident>
+                  <lon type="double">9.348300</lon>
+                  <lat type="double">49.862200</lat>
+                </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
+    CPPUNIT_ASSERT(!ourDelegate->didLoad);
+    
+    CPPUNIT_ASSERT(f->load(fgfpPath));
+    
+    CPPUNIT_ASSERT(ourDelegate->didLoad);
+    CPPUNIT_ASSERT(ourDelegate->sawArrivalChange);
+    CPPUNIT_ASSERT(ourDelegate->sawDepartureChange);
+}
+
+void FlightplanTests::loadFGFPWithEmbeddedProcedures()
+{
+    static_factory = std::make_shared<TestFPDelegateFactory>();
+    FlightPlan::registerDelegateFactory(static_factory);
+
+    FlightPlanRef f = new FlightPlan;
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_with_dep_arr.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+              <departure>
+                <airport type="string">EDDM</airport>
+                <runway type="string">08R</runway>
+              </departure>
+              <destination>
+                <airport type="string">EDDF</airport>
+              </destination>
+              <route>
+                    <wp>
+                      <type type="string">runway</type>
+                      <departure type="bool">true</departure>
+                      <ident type="string">08R</ident>
+                      <icao type="string">EDDM</icao>
+                    </wp>
+                <wp n="1">
+                  <type type="string">navaid</type>
+                  <ident type="string">GIVMI</ident>
+                  <lon type="double">11.364700</lon>
+                  <lat type="double">48.701100</lat>
+                </wp>
+                <wp n="2">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERNAS</ident>
+                  <lon type="double">11.219400</lon>
+                  <lat type="double">48.844700</lat>
+                </wp>
+                <wp n="3">
+                  <type type="string">navaid</type>
+                  <ident type="string">TALAL</ident>
+                  <lon type="double">11.085300</lon>
+                  <lat type="double">49.108300</lat>
+                </wp>
+                <wp n="4">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERMEL</ident>
+                  <lon type="double">11.044700</lon>
+                  <lat type="double">49.187800</lat>
+                </wp>
+                <wp n="5">
+                  <type type="string">navaid</type>
+                  <ident type="string">PSA</ident>
+                  <lon type="double">9.348300</lon>
+                  <lat type="double">49.862200</lat>
+                </wp>
+        
+                    <wp>
+                      <type type="string">runway</type>
+                      <arrival type="bool">true</arrival>
+                      <ident type="string">36</ident>
+                      <icao type="string">EDDF</icao>
+                    </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
+    CPPUNIT_ASSERT(!ourDelegate->didLoad);
+    
+    CPPUNIT_ASSERT(f->load(fgfpPath));
+    
+    CPPUNIT_ASSERT(ourDelegate->didLoad);
+    CPPUNIT_ASSERT(!ourDelegate->sawArrivalChange);
+    CPPUNIT_ASSERT(!ourDelegate->sawDepartureChange);
+}
+
+void FlightplanTests::loadFGFPWithOldProcedures()
+{
+    if (!static_haveProcedures)
+        return;
+    
+    FlightPlanRef f = new FlightPlan;
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_old_procedure_idents.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+              <departure>
+                <airport type="string">KJFK</airport>
+                <runway type="string">13L</runway>
+                <sid type="string">CANDR</sid>
+              </departure>
+              <destination>
+                <airport type="string">EHAM</airport>
+                <star type="string">BEDUM</star>
+              </destination>
+              <route>
+                    <wp>
+                      <type type="string">runway</type>
+                      <arrival type="bool">true</arrival>
+                      <ident type="string">36</ident>
+                      <icao type="string">EDDF</icao>
+                    </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    auto kjfk = FGAirport::findByIdent("KJFK");
+    auto eham = FGAirport::findByIdent("EHAM");
+    CPPUNIT_ASSERT(f->load(fgfpPath));
+    
+    CPPUNIT_ASSERT(f->sid() == nullptr);
+    CPPUNIT_ASSERT(f->star() == nullptr);
+}
+
+void FlightplanTests::loadFGFPWithProcedureIdents()
+{
+    if (!static_haveProcedures)
+        return;
+    
+    FlightPlanRef f = new FlightPlan;
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_procedure_idents.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+              <departure>
+                <airport type="string">KJFK</airport>
+                <runway type="string">13L</runway>
+                <sid type="string">DEEZZ5.13L</sid>
+                <sid_trans type="string">CANDR</sid_trans>
+              </departure>
+              <destination>
+                <airport type="string">EHAM</airport>
+                <star type="string">EEL1A</star>
+                <star_trans type="string">KUBAT</star_trans>
+              </destination>
+              <route>
+                    <wp>
+                      <type type="string">runway</type>
+                      <arrival type="bool">true</arrival>
+                      <ident type="string">36</ident>
+                      <icao type="string">EDDF</icao>
+                    </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    auto kjfk = FGAirport::findByIdent("KJFK");
+    auto eham = FGAirport::findByIdent("EHAM");
+    CPPUNIT_ASSERT(f->load(fgfpPath));
+    
+    CPPUNIT_ASSERT_EQUAL(f->sid()->ident(), string{"DEEZZ5.13L"});
+    CPPUNIT_ASSERT_EQUAL(f->sidTransition()->ident(), string{"CANDR"});
+    
+    CPPUNIT_ASSERT_EQUAL(f->star()->ident(), string{"EEL1A"});
+    CPPUNIT_ASSERT_EQUAL(f->starTransition()->ident(), string{"KUBAT"});
 }

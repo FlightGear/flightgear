@@ -180,9 +180,6 @@ naRef initNasalUnitTestInSim(naRef nasalGlobals, naContext c)
     unitTest.set("assert_equal", f_assert_equal);
     unitTest.set("assert_doubles_equal", f_assert_doubles_equal);
 
-//  http.set("save", f_http_save);
-//  http.set("load", f_http_load);
-
     globals->get_commands()->addCommand("nasal-test", &command_executeNasalTest);
     globals->get_commands()->addCommand("nasal-test-dir", &command_executeNasalTestDir);
 

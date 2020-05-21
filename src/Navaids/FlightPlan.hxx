@@ -164,6 +164,9 @@ public:
     
   using LegRef = SGSharedPtr<Leg>;
 
+  class DelegateFactory;
+  using DelegateFactoryRef = std::shared_ptr<DelegateFactory>;
+
   class Delegate
   {
   public:
@@ -195,8 +198,9 @@ public:
 
   private:
     friend class FlightPlan;
-
-    bool _deleteWithPlan = false;
+    
+    // record the factory which created us, so we have the option to clean up
+    DelegateFactoryRef _factory;
   };
 
   LegRef insertWayptAtIndex(Waypt* aWpt, int aIndex);
@@ -231,6 +235,11 @@ public:
   int findWayptIndex(const SGGeod& aPos) const;
   int findWayptIndex(const FGPositionedRef aPos) const;
 
+    int indexOfFirstNonDepartureWaypoint() const;
+    int indexOfFirstArrivalWaypoint() const;
+    int indexOfFirstApproachWaypoint() const;
+    int indexOfDestinationRunwayWaypoint() const;
+    
   bool load(const SGPath& p);
   bool save(const SGPath& p) const;
 
@@ -370,10 +379,11 @@ public:
   {
   public:
     virtual Delegate* createFlightPlanDelegate(FlightPlan* fp) = 0;
+    virtual void destroyFlightPlanDelegate(FlightPlan* fp, Delegate* d);
   };
-
-  static void registerDelegateFactory(DelegateFactory* df);
-  static void unregisterDelegateFactory(DelegateFactory* df);
+    
+  static void registerDelegateFactory(DelegateFactoryRef df);
+  static void unregisterDelegateFactory(DelegateFactoryRef df);
 
   void addDelegate(Delegate* d);
   void removeDelegate(Delegate* d);

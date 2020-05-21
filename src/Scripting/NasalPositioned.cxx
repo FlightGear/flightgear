@@ -916,12 +916,12 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     if (naIsString(value)) {
       const std::string s(naStr_data(value));
       FGAirport* apt = fp->departureAirport();
-      auto trans = apt->selectSIDByTransition(s);
-      if (trans) {
-          fp->setSID(trans);
-      } else {
-          fp->setSID(apt->findSIDWithIdent(s));
+      auto sid = apt->findSIDWithIdent(s);
+      if (!sid) {
+          naRuntimeError(c, "Unknown SID %s at %s", s.c_str(), apt->ident().c_str());
       }
+        
+      fp->setSID(sid);
       return;
     }
 
@@ -930,7 +930,43 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
       return;
     }
 
-    naRuntimeError(c, "bad argument type setting SID");
+      naRuntimeError(c, "bad argument type setting SID");
+  } else if (!strcmp(fieldName, "sid_trans")) {
+      Procedure* proc = procedureGhost(value);
+      if (proc && (proc->type() == PROCEDURE_TRANSITION)) {
+        fp->setSID((Transition*) proc);
+        return;
+      }
+      
+      if (naIsString(value)) {
+          const std::string s(naStr_data(value));
+          Transition* trans = nullptr;
+          
+          if (fp->sid()) {
+              trans = fp->sid()->findTransitionByName(s);
+              if (!trans) {
+                  naRuntimeError(c, "No such transition %s for SID %s at %s",
+                                 s.c_str(),
+                                 fp->sid()->ident().c_str(),
+                                 fp->departureAirport()->ident().c_str());
+              }
+          } else {
+              trans = fp->departureAirport()->selectSIDByTransition(fp->departureRunway(), s);
+              if (!trans) {
+                  naRuntimeError(c, "Couldn't find SID transition to %s at %s",
+                  s.c_str(),
+                  fp->departureAirport()->ident().c_str());
+              }
+          }
+          
+          if (trans) {
+              fp->setSID(trans);
+          }
+          
+          return;
+      }
+
+      naRuntimeError(c, "bad argument type setting sid_trans");
   } else if (!strcmp(fieldName, "star")) {
     Procedure* proc = procedureGhost(value);
     if (proc && (proc->type() == PROCEDURE_STAR)) {
@@ -946,12 +982,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     if (naIsString(value)) {
       const std::string s(naStr_data(value));
       FGAirport* apt = fp->destinationAirport();
-      auto trans = apt->selectSTARByTransition(s);
-      if (trans) {
-          fp->setSTAR(trans);
-      } else {
-          fp->setSTAR(apt->findSTARWithIdent(s));
-      }
+        auto star = apt->findSTARWithIdent(s);
+        if (!star) {
+            naRuntimeError(c, "Unknown SID %s at %s", s.c_str(), apt->ident().c_str());
+        }
+       fp->setSTAR(star);
       return;
     }
 
@@ -961,6 +996,42 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
     }
 
     naRuntimeError(c, "bad argument type setting STAR");
+  } else if (!strcmp(fieldName, "star_trans")) {
+      Procedure* proc = procedureGhost(value);
+      if (proc && (proc->type() == PROCEDURE_TRANSITION)) {
+        fp->setSTAR((Transition*) proc);
+        return;
+      }
+      
+      if (naIsString(value)) {
+          const std::string s(naStr_data(value));
+          Transition* trans = nullptr;
+          
+          if (fp->star()) {
+              trans = fp->star()->findTransitionByName(s);
+              if (!trans) {
+                  naRuntimeError(c, "No such transition %s for STAR %s at %s",
+                                 s.c_str(),
+                                 fp->star()->ident().c_str(),
+                                 fp->destinationAirport()->ident().c_str());
+              }
+          } else {
+              trans = fp->destinationAirport()->selectSTARByTransition(fp->destinationRunway(), s);
+              if (!trans) {
+                  naRuntimeError(c, "Couldn't find STAR transition to %s at %s",
+                  s.c_str(),
+                  fp->destinationAirport()->ident().c_str());
+              }
+          }
+          
+          if (trans) {
+              fp->setSTAR(trans);
+          }
+          
+          return;
+      }
+
+      naRuntimeError(c, "bad argument type setting star_trans");
   } else if (!strcmp(fieldName, "approach")) {
     Procedure* proc = procedureGhost(value);
     if (proc && Approach::isApproach(proc->type())) {
@@ -2487,6 +2558,11 @@ public:
       return result;
   }
     
+  void destroyFlightPlanDelegate(FlightPlan* fp, FlightPlan::Delegate* d) override
+  {
+      delete d;
+  }
+    
   const std::string& id() const
     { return _id; }
 private:
@@ -2496,16 +2572,12 @@ private:
   int _gcSaveKey;
 };
 
-static std::vector<NasalFPDelegateFactory*> static_nasalDelegateFactories;
+static std::vector<FlightPlan::DelegateFactoryRef> static_nasalDelegateFactories;
 
 void shutdownNasalPositioned()
 {
-    std::vector<NasalFPDelegateFactory*>::iterator it;
-    for (it = static_nasalDelegateFactories.begin();
-         it != static_nasalDelegateFactories.end(); ++it)
-    {
-        FlightPlan::unregisterDelegateFactory(*it);
-        delete (*it);
+    for (auto f : static_nasalDelegateFactories) {
+        FlightPlan::unregisterDelegateFactory(f);
     }
     static_nasalDelegateFactories.clear();
 }
@@ -2519,15 +2591,17 @@ static naRef f_registerFPDelegate(naContext c, naRef me, int argc, naRef* args)
     const std::string delegateId = (argc > 1) ? naStr_data(args[1]) : std::string{};
     if (!delegateId.empty()) {
         auto it = std::find_if(static_nasalDelegateFactories.begin(), static_nasalDelegateFactories.end(),
-                                  [delegateId](NasalFPDelegateFactory* delegate) {
-               return delegate->id() == delegateId;
+                                  [delegateId](FlightPlan::DelegateFactoryRef factory)
+        {
+            auto nfpd = static_cast<NasalFPDelegateFactory*>(factory.get());
+            return nfpd->id() == delegateId;
            });
         if (it != static_nasalDelegateFactories.end()) {
             naRuntimeError(c, "duplicate delegate ID at registerFlightPlanDelegate: %s", delegateId.c_str());
         }
     }
     
-    NasalFPDelegateFactory* factory = new NasalFPDelegateFactory(args[0], delegateId);
+    auto factory = std::make_shared<NasalFPDelegateFactory>(args[0], delegateId);
     FlightPlan::registerDelegateFactory(factory);
     static_nasalDelegateFactories.push_back(factory);
     return naNil();
@@ -2541,12 +2615,13 @@ static naRef f_unregisterFPDelegate(naContext c, naRef me, int argc, naRef* args
 
     const std::string delegateId = naStr_data(args[0]);
     auto it = std::find_if(static_nasalDelegateFactories.begin(), static_nasalDelegateFactories.end(),
-                           [delegateId](NasalFPDelegateFactory* delegate) {
-        return delegate->id() == delegateId;
+                           [delegateId](FlightPlan::DelegateFactoryRef factory) {
+        auto nfpd = static_cast<NasalFPDelegateFactory*>(factory.get());
+        return nfpd->id() == delegateId;
     });
     
     if (it == static_nasalDelegateFactories.end()) {
-        SG_LOG(SG_NASAL, SG_DEV_WARN, "f_unregisterFPDelegate: no de;egate with ID:" << delegateId);
+        SG_LOG(SG_NASAL, SG_DEV_WARN, "f_unregisterFPDelegate: no delegate with ID:" << delegateId);
         return naNil();
     }
     
