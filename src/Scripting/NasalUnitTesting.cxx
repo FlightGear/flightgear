@@ -47,7 +47,8 @@ struct ActiveTest
 {
     bool failure = false;
     std::string failureMessage;
-    std::string failureLocation;
+    std::string failureFileName;
+    int failLineNumber;
 };
 
 static std::unique_ptr<ActiveTest> static_activeTest;
@@ -68,9 +69,9 @@ static naRef f_assert(const nasal::CallContext& ctx )
         
         static_activeTest->failure = true;
         static_activeTest->failureMessage = msg;
-        // capture location
-        
-        
+        static_activeTest->failureFileName = ctx.from_nasal<string>(naGetSourceFile(ctx.c_ctx(), 0));
+        static_activeTest->failLineNumber = naGetLine(ctx.c_ctx(), 0);
+
         ctx.runtimeError("Test assert failed");
     }
     
@@ -91,9 +92,12 @@ static naRef f_fail(const nasal::CallContext& ctx )
    
    static_activeTest->failure = true;
    static_activeTest->failureMessage = msg;
-    ctx.runtimeError("Test failed");
+   static_activeTest->failureFileName = ctx.from_nasal<string>(naGetSourceFile(ctx.c_ctx(), 0));
+   static_activeTest->failLineNumber = naGetLine(ctx.c_ctx(), 0);
 
-    return naNil();
+   ctx.runtimeError("Test failed");
+
+   return naNil();
 }
 
 static naRef f_assert_equal(const nasal::CallContext& ctx )
@@ -109,6 +113,8 @@ static naRef f_assert_equal(const nasal::CallContext& ctx )
         msg += "; expected:" + aStr + ", actual:" + bStr;
         static_activeTest->failure = true;
         static_activeTest->failureMessage = msg;
+        static_activeTest->failureFileName = ctx.from_nasal<string>(naGetSourceFile(ctx.c_ctx(), 0));
+        static_activeTest->failLineNumber = naGetLine(ctx.c_ctx(), 0);
         ctx.runtimeError(msg.c_str());
     }
     
@@ -128,6 +134,8 @@ static naRef f_assert_doubles_equal(const nasal::CallContext& ctx )
         msg += "; expected:" + std::to_string(argA) + ", actual:" + std::to_string(argB);
         static_activeTest->failure = true;
         static_activeTest->failureMessage = msg;
+        static_activeTest->failureFileName = ctx.from_nasal<string>(naGetSourceFile(ctx.c_ctx(), 0));
+        static_activeTest->failLineNumber = naGetLine(ctx.c_ctx(), 0);
         ctx.runtimeError(msg.c_str());
     }
     
@@ -256,10 +264,9 @@ bool executeNasalTest(const SGPath& path)
            
            nasalSys->callWithContext(ctx, value.getValue<naRef>(), 0, nullptr, localNS.get_naRef());
            if (static_activeTest->failure) {
-               SG_LOG(SG_NASAL, SG_DEV_WARN, value.getKey() << ": Test failure:" << static_activeTest->failureMessage);
+               SG_LOG(SG_NASAL, SG_DEV_WARN, value.getKey() << ": Test failure:" << static_activeTest->failureMessage << "\n\tat: " << static_activeTest->failureFileName << ": " << static_activeTest->failLineNumber);
            } else {
                SG_LOG(SG_NASAL, SG_INFO, value.getKey() << ": Test passed");
-
            }
            
            if (naIsFunc(tearDown)) {

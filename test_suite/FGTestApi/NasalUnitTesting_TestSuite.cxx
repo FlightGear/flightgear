@@ -37,13 +37,19 @@
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 
+static CppUnit::SourceLine nasalSourceLine(onst nasal::CallContext& ctx)
+{
+    const string fileName = ctx.from_nasal<string>(naGetSourceFile(ctx.c_ctx(), 0));
+    const int lineNumber = naGetLine(ctx.c_ctx(), 0);
+    return CppUnit::SourceLine(fileName, lineNumber);
+}
+
 static naRef f_assert(const nasal::CallContext& ctx )
 {
     bool pass = ctx.requireArg<bool>(0);
     auto msg = ctx.getArg<string>(1, "assert failed:");
-    
-    CppUnit::Asserter::failIf(!pass, "assertion failed:" + msg,
-                              CppUnit::SourceLine{"Nasal source line", 0});
+
+    CppUnit::Asserter::failIf(!pass, "assertion failed:" + msg, nasalSourceLine(ctx));
     if (!pass) {
         ctx.runtimeError(msg.c_str());
     }
@@ -53,10 +59,10 @@ static naRef f_assert(const nasal::CallContext& ctx )
 static naRef f_fail(const nasal::CallContext& ctx )
 {
     auto msg = ctx.getArg<string>(0);
-    
+
     CppUnit::Asserter::fail("assertion failed:" + msg,
-                              CppUnit::SourceLine{"Nasal source line", 0});
-    
+                            nasalSourceLine(ctx));
+
     ctx.runtimeError("Test failed: %s", msg.c_str());
     return naNil();
 }
@@ -74,6 +80,7 @@ static naRef f_assert_equal(const nasal::CallContext& ctx )
         string bStr = ctx.from_nasal<string>(argB);
         msg += "; expected:" + aStr + ", actual:" + bStr;
 
+        CppUnit::Asserter::fail(msg, nasalSourceLine(ctx));
         ctx.runtimeError(msg.c_str());
     }
     
@@ -91,8 +98,7 @@ static naRef f_assert_doubles_equal(const nasal::CallContext& ctx )
     const bool same = fabs(argA - argB) < tolerance;
     if (!same) {
         msg += "; expected:" + std::to_string(argA) + ", actual:" + std::to_string(argB);
-    //    static_activeTest->failure = true;
-    //    static_activeTest->failureMessage = msg;
+        CppUnit::Asserter::fail(msg, nasalSourceLine(ctx));
         ctx.runtimeError(msg.c_str());
     }
     
