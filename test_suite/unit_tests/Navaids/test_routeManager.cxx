@@ -730,4 +730,25 @@ void RouteManagerTests::testRouteWithProcedures()
     
     auto firstMiss = f->legAtIndex(f->indexOfDestinationRunwayWaypoint() + 1);
     CPPUNIT_ASSERT_EQUAL(firstMiss->waypoint()->ident(), string{"(461)"});
+
+    // check it in Nasal too
+    bool ok = FGTestApi::executeNasal(
+        R"(
+        var f = flightplan();
+        var depEnd = f.getWP(f.firstNonDepartureLeg - 1);
+        var firstArrival = f.getWP(f.firstArrivalLeg);
+        var firstApproach = f.getWP(f.firstApproachLeg);
+        var destRunway = f.getWP(f.destination_runway_leg);
+                                      
+        unitTest.assert_equal(depEnd.id, 'CANDR');
+                                      
+        var firstEnroute = f.getWP(f.firstNonDepartureLeg );
+        unitTest.assert_equal(firstEnroute.id, 'TOMYE');
+                                      
+        unitTest.assert_equal(firstArrival.id, 'BEDUM');
+        unitTest.assert_equal(firstApproach.id, 'D070O');
+        unitTest.assert_equal(destRunway.id, '18R');
+    )");
+
+    CPPUNIT_ASSERT(ok);
 }

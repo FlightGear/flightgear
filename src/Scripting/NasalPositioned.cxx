@@ -820,6 +820,14 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
   else if (!strcmp(fieldName, "remarks")) *out = stringToNasal(c, fp->remarks());
   else if (!strcmp(fieldName, "callsign")) *out = stringToNasal(c, fp->callsign());
   else if (!strcmp(fieldName, "estimatedDurationMins")) *out = naNum(fp->estimatedDurationMinutes());
+  else if (!strcmp(fieldName, "firstNonDepartureLeg"))
+      *out = naNum(fp->indexOfFirstNonDepartureWaypoint());
+  else if (!strcmp(fieldName, "firstArrivalLeg"))
+      *out = naNum(fp->indexOfFirstArrivalWaypoint());
+  else if (!strcmp(fieldName, "firstApproachLeg"))
+      *out = naNum(fp->indexOfFirstApproachWaypoint());
+  else if (!strcmp(fieldName, "destination_runway_leg"))
+      *out = naNum(fp->indexOfDestinationRunwayWaypoint());
 
   else {
     return nullptr;
