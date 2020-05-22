@@ -15,6 +15,7 @@ set(SOURCES
   NasalModelData.cxx
   NasalSGPath.cxx
   NasalUnitTesting.cxx
+  NasalFlightPlan.cxx
 )
 
 set(HEADERS
@@ -30,6 +31,7 @@ set(HEADERS
   NasalString.hxx
   NasalModelData.hxx
   NasalSGPath.hxx
+  NasalFlightPlan.hxx
 )
 
 if(WIN32)

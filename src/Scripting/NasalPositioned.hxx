@@ -23,10 +23,26 @@
 
 #include <simgear/nasal/nasal.h>
 
+#include <Navaids/positioned.hxx>
+
+
 // forward decls
 class SGGeod;
+class FGRunway;
+class FGAirport;
 
 bool geodFromHash(naRef ref, SGGeod& result); 
+
+FGAirport* airportGhost(naRef r);
+FGRunway* runwayGhost(naRef r);
+
+naRef ghostForPositioned(naContext c, FGPositionedRef pos);
+naRef ghostForRunway(naContext c, const FGRunway* r);
+naRef ghostForAirport(naContext c, const FGAirport* apt);
+
+FGPositioned* positionedGhost(naRef r);
+FGPositionedRef positionedFromArg(naRef ref);
+int geodFromArgs(naRef* args, int offset, int argc, SGGeod& result);
 
 naRef initNasalPositioned(naRef globals, naContext c);
 naRef initNasalPositioned_cppbind(naRef globals, naContext c);

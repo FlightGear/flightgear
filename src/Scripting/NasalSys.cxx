@@ -54,17 +54,18 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include "NasalAddons.hxx"
-#include "NasalSGPath.hxx"
-#include "NasalSys.hxx"
-#include "NasalSys_private.hxx"
 #include "NasalAircraft.hxx"
-#include "NasalModelData.hxx"
-#include "NasalPositioned.hxx"
 #include "NasalCanvas.hxx"
 #include "NasalClipboard.hxx"
 #include "NasalCondition.hxx"
+#include "NasalFlightPlan.hxx"
 #include "NasalHTTP.hxx"
+#include "NasalModelData.hxx"
+#include "NasalPositioned.hxx"
+#include "NasalSGPath.hxx"
 #include "NasalString.hxx"
+#include "NasalSys.hxx"
+#include "NasalSys_private.hxx"
 #include "NasalUnitTesting.hxx"
 
 #include <Main/globals.hxx>
@@ -1043,6 +1044,7 @@ void FGNasalSys::init()
 
     if (!global_nasalMinimalInit) {
         initNasalPositioned(_globals, _context);
+        initNasalFlightPlan(_globals, _context);
         initNasalPositioned_cppbind(_globals, _context);
         initNasalAircraft(_globals, _context);
         NasalClipboard::init(this);
@@ -1111,6 +1113,7 @@ void FGNasalSys::shutdown()
     }
 
     shutdownNasalPositioned();
+    shutdownNasalFlightPlan();
     shutdownNasalUnitTestInSim();
 
     for (auto l : _listener)
