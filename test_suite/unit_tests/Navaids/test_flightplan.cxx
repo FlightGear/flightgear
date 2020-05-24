@@ -851,3 +851,102 @@ void FlightplanTests::loadFGFPWithProcedureIdents()
     CPPUNIT_ASSERT_EQUAL(f->star()->ident(), string{"EEL1A"});
     CPPUNIT_ASSERT_EQUAL(f->starTransition()->ident(), string{"KUBAT"});
 }
+
+void FlightplanTests::testCloningBasic()
+{
+    FlightPlanRef fp1 = makeTestFP("EGCC", "23L", "EHAM", "24",
+                                   "TNT CLN");
+    fp1->setIdent("testplan");
+    
+    auto fp2 = fp1->clone("testplan2");
+
+    CPPUNIT_ASSERT(fp2->ident() == "testplan2");
+    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGCC");
+    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "23L");
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM");
+    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "24");
+
+    CPPUNIT_ASSERT_EQUAL(5, fp2->numLegs());
+
+    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "23L");
+    CPPUNIT_ASSERT(fp2->legAtIndex(1)->waypoint()->source()->ident() == "TNT");
+    CPPUNIT_ASSERT(fp2->legAtIndex(2)->waypoint()->source()->ident() == "CLN");
+
+}
+
+void FlightplanTests::testCloningFGFP()
+{
+    static_factory = std::make_shared<TestFPDelegateFactory>();
+    FlightPlan::registerDelegateFactory(static_factory);
+
+    FlightPlanRef fp1 = new FlightPlan;
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_cloning.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+              <departure>
+                <airport type="string">EDDM</airport>
+                <runway type="string">08R</runway>
+              </departure>
+              <destination>
+                <airport type="string">EDDF</airport>
+              </destination>
+              <route>
+                <wp n="1">
+                  <type type="string">navaid</type>
+                  <ident type="string">GIVMI</ident>
+                  <lon type="double">11.364700</lon>
+                  <lat type="double">48.701100</lat>
+                </wp>
+                <wp n="2">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERNAS</ident>
+                  <lon type="double">11.219400</lon>
+                  <lat type="double">48.844700</lat>
+                </wp>
+                <wp n="3">
+                  <type type="string">navaid</type>
+                  <ident type="string">TALAL</ident>
+                  <lon type="double">11.085300</lon>
+                  <lat type="double">49.108300</lat>
+                </wp>
+                <wp n="4">
+                  <type type="string">navaid</type>
+                  <ident type="string">ERMEL</ident>
+                  <lon type="double">11.044700</lon>
+                  <lat type="double">49.187800</lat>
+                </wp>
+                <wp n="5">
+                  <type type="string">navaid</type>
+                  <ident type="string">PSA</ident>
+                  <lon type="double">9.348300</lon>
+                  <lat type="double">49.862200</lat>
+                </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(fp1);
+    CPPUNIT_ASSERT(!ourDelegate->didLoad);
+    
+    CPPUNIT_ASSERT(fp1->load(fgfpPath));
+    
+    CPPUNIT_ASSERT(ourDelegate->didLoad);
+    CPPUNIT_ASSERT(ourDelegate->sawArrivalChange);
+    CPPUNIT_ASSERT(ourDelegate->sawDepartureChange);
+    
+    auto fp2 = fp1->clone();
+    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EDDM");
+    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R");
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EDDF");
+
+    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "08R");
+    CPPUNIT_ASSERT(fp2->legAtIndex(1)->waypoint()->source()->ident() == "GIVMI");
+    CPPUNIT_ASSERT(fp2->legAtIndex(6)->waypoint()->source()->ident() == "PSA");
+    CPPUNIT_ASSERT_EQUAL(7, fp2->numLegs());
+    
+}

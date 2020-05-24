@@ -49,6 +49,8 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(loadFGFPWithEmbeddedProcedures);
     CPPUNIT_TEST(loadFGFPWithOldProcedures);
     CPPUNIT_TEST(loadFGFPWithProcedureIdents);
+    CPPUNIT_TEST(testCloningBasic);
+    CPPUNIT_TEST(testCloningFGFP);
     
   //  CPPUNIT_TEST(testParseICAORoute);
    // CPPUNIT_TEST(testParseICANLowLevelRoute);
@@ -82,6 +84,8 @@ public:
     void loadFGFPWithEmbeddedProcedures();
     void loadFGFPWithOldProcedures();
     void loadFGFPWithProcedureIdents();
+    void testCloningBasic();
+    void testCloningFGFP();
 };
 
 #endif  // FG_FLIGHTPLAN_UNIT_TESTS_HXX
