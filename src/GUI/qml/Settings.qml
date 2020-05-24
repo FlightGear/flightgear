@@ -497,7 +497,7 @@ Item {
 
                     if (_haveCompositor) {
                         if (alsEnabled) {
-                            _config.setArg("compositor", "Compositor/ALS");
+                            _config.setArg("compositor", "Compositor/als");
                         } else if (renderer.selectedIndex == 2) {
                             _config.setArg("compositor", "Compositor/low-spec")
                         }
