@@ -19,6 +19,7 @@
 #include "airports_fwd.hxx"
 
 class XMLVisitor; // ffrom easyxml.hxx
+class SGPath;
 
 class XMLLoader {
 public:
@@ -30,6 +31,7 @@ public:
   static void load(FGSidStar*          s);
   
   static void loadFromStream(FGGroundNetwork* net, std::istream& inData);
+  static void loadFromPath(FGGroundNetwork* net, const SGPath& path);
 
   /**
    * Search the scenery for a file name of the form:

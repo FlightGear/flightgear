@@ -16,6 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include "config.h"
 #include "test_posinit.hxx"
 
 #include <thread>
@@ -43,8 +44,6 @@
 
 #include "ATC/atc_mgr.hxx"
 
-#include "test_suite/test_data/EDDF.groundnet.xml"
-
 using namespace flightgear;
 
 void PosInitTests::setUp()
@@ -57,7 +56,9 @@ void PosInitTests::setUp()
     // ensure EDDF has a valid ground net for parking testing
     FGAirport::clearAirportsCache();
     auto apt = FGAirport::getByIdent("EDDF");
-    apt->testSuiteInjectGroundnetXML(data_EDDF_groundnet_xml);
+
+
+    apt->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EDDF.groundnet.xml");
     
     globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
     globals->add_new_subsystem<PerformanceDB>();

@@ -1,5 +1,7 @@
 #include "test_flightplan.hxx"
 
+#include <algorithm>
+
 #include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 

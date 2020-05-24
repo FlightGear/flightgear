@@ -958,13 +958,10 @@ void FGAirport::sortBySize(FGPositionedList& airportList)
 
 #if defined(BUILDING_TESTSUITE)
 
-void FGAirport::testSuiteInjectGroundnetXML(const std::string& xmlData)
+void FGAirport::testSuiteInjectGroundnetXML(const SGPath& path)
 {
     _groundNetwork.reset(new FGGroundNetwork(const_cast<FGAirport*>(this)));
-
-    std::istringstream is(xmlData);
-    XMLLoader::loadFromStream(_groundNetwork.get(), is);
-
+    XMLLoader::loadFromPath(_groundNetwork.get(), path);
     _groundNetwork->init();
 }
 

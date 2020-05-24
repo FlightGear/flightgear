@@ -1,5 +1,4 @@
-// define the XML data as a C++11 raw string literal
-std::string data_EDDF_groundnet_xml = R"(<?xml version="1.0"?>
+<?xml version="1.0"?>
 <groundnet>
   <version>1</version>
   <parkingList>
@@ -810,5 +809,5 @@ std::string data_EDDF_groundnet_xml = R"(<?xml version="1.0"?>
         <arc begin="110" end="262" isPushBackRoute="1" name="A1"  />
  </TaxiWaySegments>
 </groundnet>
-)";
+
 

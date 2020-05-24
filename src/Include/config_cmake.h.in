@@ -59,6 +59,8 @@
 #cmakedefine HAVE_FTIME
 #cmakedefine HAVE_GETTIMEOFDAY
 
+#define FG_TEST_SUITE_DATA "@FG_TEST_SUITE_DATA@"
+
 #define FG_BUILD_TYPE "@FG_BUILD_TYPE@"
 
 #define HAVE_PUI

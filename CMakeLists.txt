@@ -577,6 +577,8 @@ include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include )
 
 add_definitions(-DHAVE_CONFIG_H)
 
+set(FG_TEST_SUITE_DATA "${CMAKE_SOURCE_DIR}/test_suite/test_data")
+
 check_function_exists(mkfifo HAVE_MKFIFO)
 
 # configure a header file to pass some of the CMake settings

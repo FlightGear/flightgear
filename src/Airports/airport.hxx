@@ -310,7 +310,7 @@ class FGAirport : public FGPositioned
     
 #if defined(BUILDING_TESTSUITE)
     // helper to allow testing without needing a full Airports heirarchy
-    void testSuiteInjectGroundnetXML(const std::string& xmlData);
+    void testSuiteInjectGroundnetXML(const SGPath& path);
 #endif
 private:
     static flightgear::AirportCache airportCache;

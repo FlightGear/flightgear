@@ -37,7 +37,7 @@
 #include <simgear/nasal/cppbind/NasalHash.hxx>
 #include <simgear/nasal/cppbind/Ghost.hxx>
 
-static CppUnit::SourceLine nasalSourceLine(onst nasal::CallContext& ctx)
+static CppUnit::SourceLine nasalSourceLine(const nasal::CallContext& ctx)
 {
     const string fileName = ctx.from_nasal<string>(naGetSourceFile(ctx.c_ctx(), 0));
     const int lineNumber = naGetLine(ctx.c_ctx(), 0);
