@@ -950,3 +950,29 @@ void FlightplanTests::testCloningFGFP()
     CPPUNIT_ASSERT_EQUAL(7, fp2->numLegs());
     
 }
+
+void FlightplanTests::testCloningProcedures() {
+    // procedures not loaded, abandon test
+    if (!static_haveProcedures)
+        return;
+    
+    static_factory = std::make_shared<TestFPDelegateFactory>();
+    FlightPlan::registerDelegateFactory(static_factory);
+    
+    auto egkk = FGAirport::findByIdent("EGKK");
+    auto sid = egkk->findSIDWithIdent("SAM3P");
+    
+    FlightPlanRef fp1 = makeTestFP("EGKK", "08R", "EGJJ", "27",
+                                   "");
+    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(fp1);
+    
+    fp1->setSID(sid);
+    auto fp2 = fp1->clone();
+    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGKK");
+    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R");
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EGJJ");
+    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "27");
+
+    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "08R");
+    CPPUNIT_ASSERT_EQUAL(fp2->sid()->ident(), string{"SAM3P"});
+}
