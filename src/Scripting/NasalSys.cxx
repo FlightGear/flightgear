@@ -820,12 +820,12 @@ static naRef f_custom_stat(naContext ctx, naRef me, int argc, naRef* args)
     naRef pathArg = argc > 0 ? naStringValue(ctx, args[0]) : naNil();
     if (!naIsString(pathArg))
         naRuntimeError(ctx, "bad argument to stat()");
-    
+
     const auto path = SGPath::fromUtf8(naStr_data(pathArg));
     if (!path.exists()) {
         return naNil();
     }
-    
+
     const SGPath filename = fgValidatePath(path, false );
     if (filename.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "stat(): reading '" <<
@@ -835,10 +835,10 @@ static naRef f_custom_stat(naContext ctx, naRef me, int argc, naRef* args)
         naRuntimeError(ctx, "stat(): access denied (unauthorized directory)");
         return naNil();
     }
-   
+
     naRef result = naNewVector(ctx);
     naVec_setsize(ctx, result, 12);
-    
+
     // every use in fgdata/Nasal only uses stat() to test existence of
     // files, not to check any of this information.
     int n = 0;
@@ -1019,7 +1019,7 @@ void FGNasalSys::init()
     hashset(_globals, "utf8", naInit_utf8(_context));
 
     initLogLevelConstants();
-    
+
     // Add our custom extension functions:
     for(i=0; funcs[i].name; i++)
         hashset(_globals, funcs[i].name,
@@ -1079,7 +1079,7 @@ void FGNasalSys::init()
 
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
-    loadScriptDirectory(nasalDir);
+    loadScriptDirectory(nasalDir, globals->get_props()->getNode("/sim/nasal-load-priority"));
 
     // Add modules in Nasal subdirectories to property tree
     simgear::PathList directories = nasalDir.children(simgear::Dir::TYPE_DIR+
@@ -1158,7 +1158,7 @@ void FGNasalSys::shutdown()
             SG_LOG(SG_NASAL, SG_DEV_WARN, "Extant:" << pt << " : " << pt->name());
         }
     }
-    
+
     _inited = false;
 }
 
@@ -1181,11 +1181,11 @@ void FGNasalSys::update(double)
 {
     if( NasalClipboard::getInstance() )
         NasalClipboard::getInstance()->update();
-    
+
     std::for_each(_dead_listener.begin(), _dead_listener.end(),
                   []( FGNasalListener* l) { delete l; });
     _dead_listener.clear();
-    
+
     if (!_loadList.empty())
     {
         if( _delay_load )
@@ -1223,17 +1223,33 @@ bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
   return p1.file() < p2.file();
 }
 
-// Loads all scripts in given directory
-void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
+// Loads all scripts in given directory, with an optional partial ordering of
+// files defined in loadorder.
+void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* loadorder)
 {
     simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
+
+    if (loadorder != nullptr && loadorder->hasChild("file")) {
+      // Load any scripts defined in the loadorder in order, removing them from
+      // the list so they don't get loaded twice.
+      simgear::PropertyList files = loadorder->getChildren("file");
+
+      auto loadAndErase = [ &scripts, &nasalDir, this ] (SGPropertyNode_ptr n) {
+        SGPath p = SGPath(nasalDir.path(), n->getStringValue());
+        auto script = std::find(scripts.begin(), scripts.end(), p);
+        if (script != scripts.end()) {
+          this->loadModule(p, p.file_base().c_str());
+          scripts.erase(script);
+        }
+      };
+
+      std::for_each(files.begin(), files.end(), loadAndErase);
+    }
+
+    // Load any remaining scripts.
     // Note: simgear::Dir already reports file entries in a deterministic order,
     // so a fixed loading sequence is guaranteed (same for every user)
-    for (unsigned int i=0; i<scripts.size(); ++i) {
-      SGPath fullpath(scripts[i]);
-      SGPath file = fullpath.file();
-      loadModule(fullpath, file.base().c_str());
-    }
+    std::for_each(scripts.begin(), scripts.end(), [this](SGPath p) { this->loadModule(p, p.file_base().c_str()); });
 }
 
 // Create module with list of scripts
@@ -1348,7 +1364,7 @@ void FGNasalSys::logError(naContext context)
 {
     string errorMessage = naGetError(context);
     SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error: " << errorMessage);
-    
+
     string_list nasalStack;
     logNasalStack(context, nasalStack);
     flightgear::sentryReportNasalError(errorMessage, nasalStack);
@@ -1362,16 +1378,16 @@ void FGNasalSys::logNasalStack(naContext context, string_list& stack)
 
     stack.push_back(string{naStr_data(naGetSourceFile(context, 0))} +
                     ", line " + std::to_string(naGetLine(context, 0)));
-    
+
     SG_LOG(SG_NASAL, SG_ALERT,
            "  at " << naStr_data(naGetSourceFile(context, 0)) <<
            ", line " << naGetLine(context, 0));
-    
+
     for(int i=1; i<stack_depth; i++) {
         SG_LOG(SG_NASAL, SG_ALERT,
                "  called from: " << naStr_data(naGetSourceFile(context, i)) <<
                ", line " << naGetLine(context, i));
-        
+
         stack.push_back(string{naStr_data(naGetSourceFile(context, i))} +
                         ", line " + std::to_string(naGetLine(context, i)));
     }

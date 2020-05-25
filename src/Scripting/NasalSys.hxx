@@ -155,10 +155,10 @@ public:
 
 private:
     void initLogLevelConstants();
-    
+
     void loadPropertyScripts();
     void loadPropertyScripts(SGPropertyNode* n);
-    void loadScriptDirectory(simgear::Dir nasalDir);
+    void loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* loadorder);
     void addModule(std::string moduleName, simgear::PathList scripts);
     static void logError(naContext);
     naRef parse(naContext ctx, const char* filename, const char* buf, int len,
