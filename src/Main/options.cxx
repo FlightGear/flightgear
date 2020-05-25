@@ -2103,6 +2103,13 @@ OptionResult Options::init(int argc, char** argv, const SGPath& appDataPath)
 // first, process the command line
   bool inOptions = true;
   for (int i=1; i<argc; ++i) {
+      // important : on first run after the Gatekeeper quarantine flag is
+      // cleared, launchd passes us a null argument here. Avoid dying in
+      // that case.
+      if (!argv[i]) {
+          continue;
+      }
+
     if (inOptions && (argv[i][0] == '-')) {
       if (strcmp(argv[i], "--") == 0) { // end of options delimiter
         inOptions = false;
