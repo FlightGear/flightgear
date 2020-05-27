@@ -112,10 +112,10 @@ AlignAfterOpenBracket: Align
 #        int ccc  = 23;
 
 # Rational:  Average FG style with minimal diff.
-#AlignConsecutiveAssignments: false
+AlignConsecutiveAssignments: false
 
 # Rational:  Preservation of formatting.
-AlignConsecutiveAssignments: true
+#AlignConsecutiveAssignments: true
 
 
 # **AlignConsecutiveDeclarations** (``bool``)
@@ -131,8 +131,7 @@ AlignConsecutiveAssignments: true
 
 # Rational:  Average FG style with minimal diff.
 # Rational:  Preservation of formatting.
-AlignConsecutiveDeclarations: true
-
+AlignConsecutiveDeclarations: false
 
 # **AlignEscapedNewlines** (``EscapedNewlineAlignmentStyle``)
 #     Options for aligning backslashes in escaped newlines.
