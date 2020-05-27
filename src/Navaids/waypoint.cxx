@@ -196,6 +196,7 @@ RunwayWaypt::RunwayWaypt(FGRunway* aPos, RouteBase* aOwner) :
   Waypt(aOwner),
   _runway(aPos)
 {
+    assert(aPos != nullptr);
 }
 
 RunwayWaypt::RunwayWaypt(RouteBase* aOwner) :

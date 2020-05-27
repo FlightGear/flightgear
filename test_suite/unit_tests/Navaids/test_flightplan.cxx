@@ -8,6 +8,7 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Navaids/FlightPlan.hxx>
 #include <Navaids/routePath.hxx>
@@ -47,15 +48,82 @@ public:
     {
     }
     
+    void waypointsChanged() override
+    {
+        sawWaypointsChange = true;
+    }
+    
     void departureChanged() override
     {
         sawDepartureChange = true;
+
+        
+        // mimic the default delegate, inserting the SID waypoints
+        
+        // clear anything existing
+        _plan->clearWayptsWithFlag(WPT_DEPARTURE);
+        
+        // insert waypt for the dpearture runway
+        auto dr = new RunwayWaypt(_plan->departureRunway(), _plan);
+        dr->setFlag(WPT_DEPARTURE);
+        dr->setFlag(WPT_GENERATED);
+        _plan->insertWayptAtIndex(dr, 0);
+        
+        if (_plan->sid()) {
+            WayptVec sidRoute;
+            bool ok = _plan->sid()->route(_plan->departureRunway(), _plan->sidTransition(), sidRoute);
+            if (!ok)
+                throw sg_exception("failed to route via SID");
+            int insertIndex = 1;
+            for (auto w : sidRoute) {
+                w->setFlag(WPT_DEPARTURE);
+                w->setFlag(WPT_GENERATED);
+                _plan->insertWayptAtIndex(w, insertIndex++);
+            }
+        }
     }
     
     void arrivalChanged() override
     {
         sawArrivalChange = true;
+
+        // mimic the default delegate, inserting the STAR waypoints
+        
+        // clear anything existing
+        _plan->clearWayptsWithFlag(WPT_ARRIVAL);
+        
+        if (!_plan->destinationAirport()) {
+            return;
+        }
+        
+        if (!_plan->destinationRunway()) {
+            auto ap = new NavaidWaypoint(_plan->destinationAirport(), _plan);
+            ap->setFlag(WPT_ARRIVAL);
+            ap->setFlag(WPT_GENERATED);
+            _plan->insertWayptAtIndex(ap, -1);
+            return;
+        }
+        
+        // insert waypt for the destination runway
+        auto dr = new RunwayWaypt(_plan->destinationRunway(), _plan);
+        dr->setFlag(WPT_ARRIVAL);
+        dr->setFlag(WPT_GENERATED);
+        auto leg = _plan->insertWayptAtIndex(dr, -1);
+        
+        if (_plan->star()) {
+            WayptVec starRoute;
+            bool ok = _plan->star()->route(_plan->destinationRunway(), _plan->starTransition(), starRoute);
+            if (!ok)
+                throw sg_exception("failed to route via STAR");
+            int insertIndex = leg->index();
+            for (auto w : starRoute) {
+                w->setFlag(WPT_ARRIVAL);
+                w->setFlag(WPT_GENERATED);
+                _plan->insertWayptAtIndex(w, insertIndex++);
+            }
+        }
     }
+    
     
     void loaded() override
     {
@@ -66,6 +134,7 @@ public:
     bool didLoad = false;
     bool sawDepartureChange = false;
     bool sawArrivalChange = false;
+    bool sawWaypointsChange = false;
 };
 
 class TestFPDelegateFactory : public FlightPlan::DelegateFactory
@@ -940,13 +1009,21 @@ void FlightplanTests::testCloningFGFP()
     CPPUNIT_ASSERT(ourDelegate->sawDepartureChange);
     
     auto fp2 = fp1->clone();
+    auto secondDelegate = TestFPDelegateFactory::delegateForPlan(fp2);
+
+    CPPUNIT_ASSERT(secondDelegate->didLoad);
+    CPPUNIT_ASSERT(secondDelegate->sawWaypointsChange);
+    CPPUNIT_ASSERT(!secondDelegate->sawArrivalChange);
+    CPPUNIT_ASSERT(!secondDelegate->sawDepartureChange);
+    
     CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EDDM");
     CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R");
     CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EDDF");
 
-    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "08R");
-    CPPUNIT_ASSERT(fp2->legAtIndex(1)->waypoint()->source()->ident() == "GIVMI");
-    CPPUNIT_ASSERT(fp2->legAtIndex(6)->waypoint()->source()->ident() == "PSA");
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(0)->waypoint()->source()->ident(), string{"08R"});
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(1)->waypoint()->source()->ident(), string{"GIVMI"});
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(5)->waypoint()->source()->ident(), string{"PSA"});
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(6)->waypoint()->source()->ident(), string{"EDDF"});
     CPPUNIT_ASSERT_EQUAL(7, fp2->numLegs());
     
 }
@@ -962,17 +1039,26 @@ void FlightplanTests::testCloningProcedures() {
     auto egkk = FGAirport::findByIdent("EGKK");
     auto sid = egkk->findSIDWithIdent("SAM3P");
     
-    FlightPlanRef fp1 = makeTestFP("EGKK", "08R", "EGJJ", "27",
+    FlightPlanRef fp1 = makeTestFP("EGKK", "08R", "EHAM", "18R",
                                    "");
     auto ourDelegate = TestFPDelegateFactory::delegateForPlan(fp1);
     
     fp1->setSID(sid);
+    auto eham = FGAirport::findByIdent("EHAM");
+    auto eel1A = eham->findSTARWithIdent("EEL1A");
+    fp1->setSTAR(eel1A, "BEDUM");
+    
     auto fp2 = fp1->clone();
     CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGKK");
     CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R");
-    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EGJJ");
-    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "27");
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM");
+    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "18R");
 
     CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "08R");
     CPPUNIT_ASSERT_EQUAL(fp2->sid()->ident(), string{"SAM3P"});
+    
+    CPPUNIT_ASSERT_EQUAL(fp2->star()->ident(), string{"EEL1A"});
+    CPPUNIT_ASSERT_EQUAL(fp2->starTransition()->ident(), string{"BEDUM"});
+
+
 }

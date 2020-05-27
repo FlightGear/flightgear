@@ -132,15 +132,17 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
   } else if (_destination) {
     c->setDestination(_destination);
   }
-  
-  c->setSTAR(_star);
-  c->setSID(_sid);
-  
-// mark data as unchanged since this is a clean plan
+
+  c->setSTAR(_star, _starTransition);
+  c->setSID(_sid, _sidTransition);
+
+  // mark data as unchanged since this is a clean plan
   c->_arrivalChanged = false;
   c->_departureChanged = false;
-    
-// copy legs
+
+  c->_didLoadFP = true; // set the loaded flag to give delegates a chance
+
+  // copy legs
   c->_waypointsChanged = true;
   for (int l=0; l < numLegs(); ++l) {
     c->_legs.push_back(_legs[l]->cloneFor(c));
