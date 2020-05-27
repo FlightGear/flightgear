@@ -289,8 +289,13 @@ public:
     * note setting an approach will implicitly update the destination
     * airport and runway to match
     */
-  void setApproach(Approach* app);
+    void setApproach(Approach* app, const std::string& transition = {});
 
+    void setApproach(Transition* approachWithTrans);
+
+    
+    Transition* approachTransition() const;
+    
   STAR* star() const
   { return _star; }
 
@@ -444,7 +449,7 @@ private:
   SGSharedPtr<SID> _sid;
   SGSharedPtr<STAR> _star;
   SGSharedPtr<Approach> _approach;
-  std::string _sidTransition, _starTransition;
+  std::string _sidTransition, _starTransition, _approachTransition;
 
   double _totalDistance;
   void rebuildLegData();

@@ -208,3 +208,47 @@ void FPNasalTests::testSTARTransitionAPI()
     
     CPPUNIT_ASSERT_EQUAL(fp->star()->ident(), string{"RIXE3A.26L"});
 }
+
+void FPNasalTests::testApproachTransitionAPI()
+{
+    if (!static_haveProcedures) {
+        return;
+    }
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan();
+        fp.departure = airportinfo("EGLL");
+        fp.destination = airportinfo("EDDM");
+                                      
+        var star = fp.destination.getStar("RIXE3A.08L");
+                                      
+        unitTest.assert(star != nil, "STAR not found");
+        unitTest.assert_equal(star.id, "RIXE3A.08L", "Incorrect STAR loaded");
+
+        fp.star = star;
+        fp.destination_runway = fp.destination.runway('08L');
+                                      
+        var approach = fp.destination.getApproach("ILS08L");
+        unitTest.assert(approach != nil, "No approach loaded");
+                                      
+        var trans = approach.transition('LUL1C');
+                    
+        unitTest.assert(trans != nil, "approach transition not found");
+        unitTest.assert_equal(trans.id, "LUL1C", "Incorrect approach transition loaded");
+                                      
+        fp.approach = trans;
+                  
+        unitTest.assert_equal(fp.approach.id, "ILS08L", "Incorrect approach returned");
+        unitTest.assert_equal(fp.approach_trans.id, "LUL1C", "Incorrect transition returned");
+    )");
+
+    CPPUNIT_ASSERT(ok);
+
+    auto fp = rm->flightPlan();
+
+    CPPUNIT_ASSERT(fp->approach());
+    CPPUNIT_ASSERT_EQUAL(string{"LUL1C"}, fp->approachTransition()->ident());
+    CPPUNIT_ASSERT_EQUAL(string{"ILS08L"}, fp->approach()->ident());
+}

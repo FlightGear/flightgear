@@ -600,6 +600,8 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
         *out = ghostForProcedure(c, fp->starTransition());
     else if (!strcmp(fieldName, "approach"))
         *out = ghostForProcedure(c, fp->approach());
+    else if (!strcmp(fieldName, "approach_trans"))
+        *out = ghostForProcedure(c, fp->approachTransition());
     else if (!strcmp(fieldName, "current"))
         *out = naNum(fp->currentIndex());
     else if (!strcmp(fieldName, "aircraftCategory"))
@@ -849,6 +851,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
             return;
         }
 
+        if (proc && (proc->type() == PROCEDURE_TRANSITION)) {
+            fp->setApproach((Transition*)proc);
+            return;
+        }
+
         if (naIsString(value)) {
             FGAirport* apt = fp->destinationAirport();
             fp->setApproach(apt->findApproachWithIdent(naStr_data(value)));
@@ -856,11 +863,42 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
         }
 
         if (naIsNil(value)) {
-            fp->setApproach(nullptr);
+            fp->setApproach(static_cast<Approach*>(nullptr));
             return;
         }
 
         naRuntimeError(c, "bad argument type setting approach");
+    } else if (!strcmp(fieldName, "approach_trans")) {
+        Procedure* proc = procedureGhost(value);
+        if (proc && (proc->type() == PROCEDURE_TRANSITION)) {
+            fp->setApproach((Transition*)proc);
+            return;
+        }
+
+        if (naIsString(value)) {
+            const std::string s(naStr_data(value));
+            Transition* trans = nullptr;
+
+            if (fp->approach()) {
+                trans = fp->approach()->findTransitionByName(s);
+                if (!trans) {
+                    naRuntimeError(c, "No such transition %s for approach %s at %s",
+                                   s.c_str(),
+                                   fp->approach()->ident().c_str(),
+                                   fp->destinationAirport()->ident().c_str());
+                }
+            } else {
+                naRuntimeError(c, "No approach selected, can't set approach_trans");
+            }
+
+            if (trans) {
+                fp->setApproach(trans);
+            }
+
+            return;
+        }
+
+        naRuntimeError(c, "bad argument type setting star_trans");
     } else if (!strcmp(fieldName, "aircraftCategory")) {
         if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
         fp->setIcaoAircraftCategory(naStr_data(value));
@@ -934,14 +972,21 @@ static const char* procedureGhostGetMember(naContext c, void* g, naRef field, na
             naVec_append(*out, stringToNasal(c, rwy->ident()));
         }
     } else if (!strcmp(fieldName, "transitions")) {
-        if ((proc->type() != PROCEDURE_SID) && (proc->type() != PROCEDURE_STAR)) {
+        const auto ty = proc->type();
+        string_list idents;
+        if (Approach::isApproach(ty)) {
+            const auto app = static_cast<Approach*>(proc);
+            idents = app->transitionIdents();
+        } else if ((ty == PROCEDURE_SID) || (ty == PROCEDURE_STAR)) {
+            ArrivalDeparture* ad = static_cast<ArrivalDeparture*>(proc);
+            idents = ad->transitionIdents();
+        } else {
             *out = naNil();
             return "";
         }
 
-        ArrivalDeparture* ad = static_cast<ArrivalDeparture*>(proc);
         *out = naNewVector(c);
-        for (std::string id : ad->transitionIdents()) {
+        for (std::string id : idents) {
             naVec_append(*out, stringToNasal(c, id));
         }
     } else {
@@ -1890,14 +1935,53 @@ static naRef f_procedure_transition(naContext c, naRef me, int argc, naRef* args
         naRuntimeError(c, "procedure.transition called on non-procedure object");
     }
 
-    if ((proc->type() != PROCEDURE_SID) && (proc->type() != PROCEDURE_STAR)) {
+    const string ident{naStr_data(args[0])};
+    const auto ty = proc->type();
+    if (Approach::isApproach(ty)) {
+        const auto app = static_cast<Approach*>(proc);
+        const auto trans = app->findTransitionByName(ident);
+        return ghostForProcedure(c, trans);
+    }
+
+    if ((ty != PROCEDURE_SID) && (ty != PROCEDURE_STAR)) {
         naRuntimeError(c, "procedure.transition called on non-SID or -STAR");
     }
 
     ArrivalDeparture* ad = (ArrivalDeparture*)proc;
-    Transition*       trans = ad->findTransitionByName(naStr_data(args[0]));
+    Transition* trans = ad->findTransitionByName(ident);
 
     return ghostForProcedure(c, trans);
+}
+
+static naRef approachRoute(Approach* app, naContext c, int argc, naRef* args)
+{
+    int argOffset = 0;
+    FGRunway* rwy = runwayGhost(args[0]);
+    if (rwy) ++argOffset;
+
+    WayptVec r;
+    Transition* trans = nullptr;
+    WayptRef iaf;
+
+    if (argOffset < argc) {
+        // one of these might work, never both
+        trans = (Transition*)procedureGhost(args[argOffset]);
+        iaf = wayptFromArg(args[argOffset]);
+
+        if (trans) {
+            bool ok = app->routeWithTransition(rwy, trans, r);
+            if (!ok)
+                return naNil();
+
+            return convertWayptVecToNasal(c, r);
+        }
+    }
+
+    bool ok = app->route(rwy, iaf, r);
+    if (!ok)
+        return naNil();
+
+    return convertWayptVecToNasal(c, r);
 }
 
 static naRef f_procedure_route(naContext c, naRef me, int argc, naRef* args)
@@ -1907,22 +1991,11 @@ static naRef f_procedure_route(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "procedure.route called on non-procedure object");
     }
 
-    // wrapping up tow different routines here - approach routing from the IAF
+    // wrapping up tow different routines here - approach routing
     // to the associated runway, and SID/STAR routing via an enroute transition
     // and possibly a runway transition or not.
     if (Approach::isApproach(proc->type())) {
-        WayptRef iaf;
-        if (argc > 0) {
-            iaf = wayptFromArg(args[0]);
-        }
-
-        WayptVec  r;
-        Approach* app = (Approach*)proc;
-        if (!app->route(iaf, r)) {
-            return naNil();
-        }
-
-        return convertWayptVecToNasal(c, r);
+        return approachRoute(static_cast<Approach*>(proc), c, argc, args);
     } else if ((proc->type() != PROCEDURE_SID) && (proc->type() != PROCEDURE_STAR)) {
         naRuntimeError(c, "procedure.route called on unsuitable procedure type");
     }

@@ -1607,7 +1607,13 @@ naRef initNasalPositioned(naRef globals, naContext c)
     hashset(c, airportPrototype, "parking", naNewFunc(c, naNewCCode(c, f_airport_parking)));
     hashset(c, airportPrototype, "getSid", naNewFunc(c, naNewCCode(c, f_airport_getSid)));
     hashset(c, airportPrototype, "getStar", naNewFunc(c, naNewCCode(c, f_airport_getStar)));
-    hashset(c, airportPrototype, "getIAP", naNewFunc(c, naNewCCode(c, f_airport_getApproach)));
+
+    naRef approachFunc = naNewFunc(c, naNewCCode(c, f_airport_getApproach));
+
+    // allow this to be used under either name
+    hashset(c, airportPrototype, "getIAP", approachFunc);
+    hashset(c, airportPrototype, "getApproach", approachFunc);
+
     hashset(c, airportPrototype, "findBestRunwayForPos", naNewFunc(c, naNewCCode(c, f_airport_findBestRunway)));
     hashset(c, airportPrototype, "tostring", naNewFunc(c, naNewCCode(c, f_airport_toString)));
 

@@ -1123,7 +1123,7 @@ void FGRouteMgr::setApproach(const std::string& aIdent)
   }
   
   if (!apt || aIdent.empty()) {
-    _plan->setApproach(NULL);
+      _plan->setApproach(static_cast<Approach*>(nullptr));
   } else {
     _plan->setApproach(apt->findApproachWithIdent(aIdent));
   }

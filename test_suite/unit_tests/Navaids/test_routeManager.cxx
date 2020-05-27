@@ -752,3 +752,68 @@ void RouteManagerTests::testRouteWithProcedures()
 
     CPPUNIT_ASSERT(ok);
 }
+
+void RouteManagerTests::testRouteWithApproachProcedures()
+{
+    if (!static_haveProcedures)
+        return;
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+
+    FlightPlanRef f = new FlightPlan;
+    rm->setFlightPlan(f);
+
+    auto kjfk = FGAirport::findByIdent("KJFK");
+    auto eddm = FGAirport::findByIdent("EDDM");
+    f->setDeparture(kjfk->getRunwayByIdent("13L"));
+
+    f->setDestination(eddm->getRunwayByIdent("08R"));
+    f->setSTAR(eddm->findSTARWithIdent("ABGA3A.08R"));
+
+    f->setApproach(eddm->findApproachWithIdent("ILS08R"), "NAP08");
+
+    auto w = f->waypointFromString("TOMYE");
+    f->insertWayptAtIndex(w, f->indexOfFirstNonDepartureWaypoint());
+
+    auto w2 = f->waypointFromString("DEVOL");
+    f->insertWayptAtIndex(w2, f->indexOfFirstArrivalWaypoint());
+
+    // let's check what we got
+
+    auto startOfSTAR = f->legAtIndex(f->indexOfFirstArrivalWaypoint());
+    CPPUNIT_ASSERT_EQUAL(startOfSTAR->waypoint()->ident(), string{"ABGAS"});
+
+    auto endOfSTAR = f->legAtIndex(f->indexOfFirstApproachWaypoint() - 1);
+    CPPUNIT_ASSERT_EQUAL(endOfSTAR->waypoint()->ident(), string{"MIQ"});
+
+    auto startOfApproach = f->legAtIndex(f->indexOfFirstApproachWaypoint());
+    CPPUNIT_ASSERT_EQUAL(startOfApproach->waypoint()->ident(), string{"NAPSA"});
+
+    auto startOfCoreApproach = f->legAtIndex(f->indexOfFirstApproachWaypoint() + 6);
+    CPPUNIT_ASSERT_EQUAL(startOfCoreApproach->waypoint()->ident(), string{"BEGEN"});
+
+    auto landingRunway = f->legAtIndex(f->indexOfDestinationRunwayWaypoint());
+    CPPUNIT_ASSERT(landingRunway->waypoint()->source() == f->destinationRunway());
+
+
+    //    // check it in Nasal too
+    //    bool ok = FGTestApi::executeNasal(
+    //        R"(
+    //        var f = flightplan();
+    //        var depEnd = f.getWP(f.firstNonDepartureLeg - 1);
+    //        var firstArrival = f.getWP(f.firstArrivalLeg);
+    //        var firstApproach = f.getWP(f.firstApproachLeg);
+    //        var destRunway = f.getWP(f.destination_runway_leg);
+    //
+    //        unitTest.assert_equal(depEnd.id, 'CANDR');
+    //
+    //        var firstEnroute = f.getWP(f.firstNonDepartureLeg );
+    //        unitTest.assert_equal(firstEnroute.id, 'TOMYE');
+    //
+    //        unitTest.assert_equal(firstArrival.id, 'BEDUM');
+    //        unitTest.assert_equal(firstApproach.id, 'D070O');
+    //        unitTest.assert_equal(destRunway.id, '18R');
+    //    )");
+    //
+    //    CPPUNIT_ASSERT(ok);
+}

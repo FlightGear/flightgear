@@ -43,7 +43,8 @@ class RouteManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(loadGPX);
     CPPUNIT_TEST(loadFGFP);
     CPPUNIT_TEST(testRouteWithProcedures);
-    
+    CPPUNIT_TEST(testRouteWithApproachProcedures);
+
     CPPUNIT_TEST_SUITE_END();
 
    // void setPositionAndStabilise(FGNavRadio* r, const SGGeod& g);
@@ -68,7 +69,8 @@ public:
     void loadGPX();
     void loadFGFP();
     void testRouteWithProcedures();
-    
+    void testRouteWithApproachProcedures();
+
 private:
     GPS* m_gps = nullptr;
 };

@@ -33,6 +33,8 @@ class FPNasalTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testSegfaultWaypointGhost);
     CPPUNIT_TEST(testSIDTransitionAPI);
     CPPUNIT_TEST(testSTARTransitionAPI);
+    CPPUNIT_TEST(testApproachTransitionAPI);
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -47,4 +49,5 @@ public:
     void testSegfaultWaypointGhost();
     void testSIDTransitionAPI();
     void testSTARTransitionAPI();
+    void testApproachTransitionAPI();
 };

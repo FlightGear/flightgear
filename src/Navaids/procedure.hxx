@@ -130,7 +130,9 @@ public:
    * segment. Return false if no valid transition from the specified IAF
    * could be found
    */
-  bool route(WayptRef aIAF, WayptVec& aWps);
+  bool route(FGRunwayRef runway, WayptRef aIAF, WayptVec& aWps);
+
+  bool routeWithTransition(FGRunwayRef runway, Transition* trans, WayptVec& aWps);
 
   /**
    * Build route as above, but ignore transitions, and assume radar
@@ -148,7 +150,12 @@ public:
   { return _type; }
     
   static Approach* createTempApproach(const std::string& aIdent, FGRunway* aRunway, const WayptVec& aPath);
-private:
+
+  string_list transitionIdents() const;
+
+  Transition* findTransitionByName(const std::string& aIdent) const;
+
+  private:
   friend class NavdataVisitor;
   
   Approach(const std::string& aIdent, ProcedureType ty);

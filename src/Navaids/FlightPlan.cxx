@@ -529,7 +529,7 @@ void FlightPlan::setDestination(FGAirport* apt)
   _destination = apt;
   _destinationRunway = nullptr;
   clearSTAR();
-  setApproach(nullptr);
+  setApproach(static_cast<Approach*>(nullptr));
   unlockDelegates();
 }
     
@@ -557,7 +557,7 @@ void FlightPlan::clearDestination()
   _destination = nullptr;
   _destinationRunway = nullptr;
   clearSTAR();
-  setApproach(nullptr);
+  setApproach(static_cast<Approach*>(nullptr));
   unlockDelegates();
 }
 
@@ -638,16 +638,17 @@ Transition* FlightPlan::starTransition() const
   
   return _star->findTransitionByName(_starTransition);
 }
-  
-void FlightPlan::setApproach(flightgear::Approach *app)
+
+void FlightPlan::setApproach(flightgear::Approach* app, const std::string& trans)
 {
-  if (_approach == app) {
-    return;
-  }
-  
+    if ((_approach == app) && (trans == _approachTransition)) {
+        return;
+    }
+
   lockDelegates();
   _arrivalChanged = true;
   _approach = app;
+  _approachTransition = trans;
   if (app) {
     // keep runway + airport in sync
     if (_destinationRunway != _approach->runway()) {
@@ -659,6 +660,29 @@ void FlightPlan::setApproach(flightgear::Approach *app)
     }
   }
   unlockDelegates();
+}
+
+void FlightPlan::setApproach(Transition* approachWithTrans)
+{
+    if (!approachWithTrans) {
+        setApproach((Approach*)nullptr);
+        return;
+    }
+
+    if (!Approach::isApproach(approachWithTrans->parent()->type()))
+        throw sg_exception("FlightPlan::setApproach: transition does not belong to an approach");
+
+    setApproach(static_cast<Approach*>(approachWithTrans->parent()),
+                approachWithTrans->ident());
+}
+
+Transition* FlightPlan::approachTransition() const
+{
+    if (!_approach || _approachTransition.empty()) {
+        return nullptr;
+    }
+
+    return _approach->findTransitionByName(_approachTransition);
 }
 
 bool FlightPlan::save(std::ostream& stream) const
@@ -728,6 +752,8 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
         
         if (_approach) {
             d->setStringValue("destination/approach", _approach->ident());
+            if (!_approachTransition.empty())
+                d->setStringValue("destination/approach_trans", _approachTransition);
         }
         
         if (_destinationRunway) {
@@ -1096,7 +1122,9 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
       } // of STAR processing
       
       if (dst->hasChild("approach")) {
-        setApproach(_destination->findApproachWithIdent(dst->getStringValue("approach")));
+          auto app = _destination->findApproachWithIdent(dst->getStringValue("approach"));
+          const auto trans = dst->getStringValue("approach_trans");
+          setApproach(app, trans);
       }
     }
   }

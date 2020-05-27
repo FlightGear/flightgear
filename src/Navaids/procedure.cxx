@@ -101,7 +101,17 @@ void Approach::addTransition(Transition* aTrans)
   aTrans->mark(WPT_APPROACH);
 }
 
-bool Approach::route(WayptRef aIAF, WayptVec& aWps)
+bool Approach::routeWithTransition(FGRunwayRef runway, Transition* trans, WayptVec& aWps)
+{
+    if (!trans)
+        return false;
+
+    trans->route(aWps);
+    bool ok = routeFromVectors(aWps);
+    return ok;
+}
+
+bool Approach::route(FGRunwayRef runway, WayptRef aIAF, WayptVec& aWps)
 {
   if (aIAF.valid()) {
     bool haveTrans = false;
@@ -153,7 +163,29 @@ bool Approach::isApproach(ProcedureType ty)
 {
   return (ty >= PROCEDURE_APPROACH_ILS) && (ty <= PROCEDURE_APPROACH_RNAV);
 }
-  
+
+string_list Approach::transitionIdents() const
+{
+    string_list r;
+    r.reserve(_transitions.size());
+    for (const auto t : _transitions) {
+        r.push_back(t.second->ident());
+    }
+    return r;
+}
+
+Transition* Approach::findTransitionByName(const string& aIdent) const
+{
+    auto it = std::find_if(_transitions.begin(), _transitions.end(), [aIdent](const WptTransitionMap::value_type& t) {
+        return aIdent == t.second->ident();
+    });
+
+    if (it == _transitions.end())
+        return nullptr;
+
+    return it->second;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 
 ArrivalDeparture::ArrivalDeparture(const string& aIdent, FGAirport* apt) :
