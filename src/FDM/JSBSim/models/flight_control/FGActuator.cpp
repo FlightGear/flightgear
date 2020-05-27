@@ -39,7 +39,7 @@ INCLUDES
 
 #include "FGActuator.h"
 #include "input_output/FGXMLElement.h"
-#include "math/FGRealValue.h"
+#include "math/FGParameterValue.h"
 #include "models/FGFCS.h"
 
 using namespace std;
@@ -59,7 +59,8 @@ FGActuator::FGActuator(FGFCS* fcs, Element* element)
   PreviousHystOutput = 0.0;
   PreviousRateLimOutput = 0.0;
   PreviousLagInput = PreviousLagOutput = 0.0;
-  bias = lag = hysteresis_width = deadband_width = 0.0;
+  bias = hysteresis_width = deadband_width = 0.0;
+  lag = nullptr;
   rate_limit_incr = rate_limit_decr = 0; // no limit
   fail_zero = fail_hardover = fail_stuck = false;
   ca = cb = 0.0;
@@ -78,22 +79,9 @@ FGActuator::FGActuator(FGFCS* fcs, Element* element)
   // a property.
   Element* ratelim_el = element->FindElement("rate_limit");
   while ( ratelim_el ) {
-    FGParameter* rate_limit = 0;
     string rate_limit_str = ratelim_el->GetDataLine();
-
-    trim(rate_limit_str);
-    if (is_number(rate_limit_str))
-      rate_limit = new FGRealValue(fabs(atof(rate_limit_str.c_str())));
-    else {
-      if (rate_limit_str[0] == '-') rate_limit_str.erase(0,1);
-      FGPropertyNode* rate_limit_prop = PropertyManager->GetNode(rate_limit_str, true);
-      if (!rate_limit_prop) {
-        std::cerr << "No such property, " << rate_limit_str << " for rate limiting" << std::endl;
-        ratelim_el = element->FindNextElement("rate_limit");
-        continue;
-      }
-      rate_limit = new FGPropertyValue(rate_limit_prop);
-    }
+    FGParameter* rate_limit = new FGParameterValue(rate_limit_str,
+                                                   PropertyManager);
 
     if (ratelim_el->HasAttribute("sense")) {
       string sense = ratelim_el->GetAttributeValue("sense");
@@ -111,11 +99,13 @@ FGActuator::FGActuator(FGFCS* fcs, Element* element)
   if ( element->FindElement("bias") ) {
     bias = element->FindElementValueAsNumber("bias");
   }
-  if ( element->FindElement("lag") ) {
-    lag = element->FindElementValueAsNumber("lag");
-    double denom = 2.00 + dt*lag;
-    ca = dt*lag / denom;
-    cb = (2.00 - dt*lag) / denom;
+
+  // Lag if specified can be numeric or a property
+  Element* lag_el = element->FindElement("lag");
+  if ( lag_el ) {
+    string lag_str = lag_el->GetDataLine();
+    lag = new FGParameterValue(lag_str, PropertyManager);
+    InitializeLagCoefficients();
   }
 
   bind(element);
@@ -130,6 +120,8 @@ FGActuator::~FGActuator()
   delete rate_limit_incr;
   if (rate_limit_decr != rate_limit_incr)
     delete rate_limit_decr;
+
+  delete lag;
 
   Debug(1);
 }
@@ -165,7 +157,7 @@ bool FGActuator::Run(void )
   if (fail_stuck) {
     Output = PreviousOutput;
   } else {
-    if (lag != 0.0)              Lag();        // models actuator lag
+    if (lag)                Lag();        // models actuator lag
     if (rate_limit_incr != 0 || rate_limit_decr != 0) RateLimit();  // limit the actuator rate
     if (deadband_width != 0.0)   Deadband();
     if (hysteresis_width != 0.0) Hysteresis();
@@ -212,8 +204,12 @@ void FGActuator::Lag(void)
   // for this Lag filter
   double input = Output;
 
-  if ( initialized )
+  if (initialized) {
+    // Check if lag value has changed via dynamic property
+    if (lagVal != lag->GetValue())
+      InitializeLagCoefficients();
     Output = ca * (input + PreviousLagInput) + PreviousLagOutput * cb;
+  }
 
   PreviousLagInput = input;
   PreviousLagOutput = Output;
@@ -300,6 +296,16 @@ void FGActuator::bind(Element* el)
   PropertyManager->Tie( tmp_hardover, this, &FGActuator::GetFailHardover, &FGActuator::SetFailHardover);
   PropertyManager->Tie( tmp_stuck, this, &FGActuator::GetFailStuck, &FGActuator::SetFailStuck);
   PropertyManager->Tie( tmp_sat, this, &FGActuator::IsSaturated);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGActuator::InitializeLagCoefficients()
+{
+  lagVal = lag->GetValue();
+  double denom = 2.00 + dt * lagVal;
+  ca = dt * lagVal / denom;
+  cb = (2.00 - dt * lagVal) / denom;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
