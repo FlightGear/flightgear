@@ -73,6 +73,10 @@ public:
 
     std::shared_ptr<vector<char>> popMessageHistory();
     void pushMessageHistory(std::shared_ptr<vector<char>> message);
+    
+    // Remove motion information for all multiplayer aircraft, e.g. when
+    // scrubbing during replay.
+    void ClearMotion();
 
 private:
     friend class MPPropertyListener;

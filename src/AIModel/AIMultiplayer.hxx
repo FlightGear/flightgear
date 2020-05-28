@@ -72,6 +72,8 @@ public:
 
   SGPropertyNode* getPropertyRoot()
   { return props; }
+  
+  void clearMotionInfo();
 
   virtual const char* getTypeString(void) const { return "multiplayer"; }
 

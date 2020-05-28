@@ -605,3 +605,9 @@ FGAIMultiplayer::setDoubleProperty(const std::string& prop, double val)
   SGPropertyNode* pNode = props->getChild(prop.c_str(), true);
   pNode->setDoubleValue(val);
 }
+
+void FGAIMultiplayer::clearMotionInfo()
+{
+    mMotionInfo.clear();
+    mLastTimestamp = 0;
+}

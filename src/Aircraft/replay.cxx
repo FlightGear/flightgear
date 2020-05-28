@@ -27,6 +27,7 @@
 
 #include <cstdio>
 #include <float.h>
+#include <string.h>
 
 #include <simgear/constants.h>
 #include <simgear/structure/exception.hxx>
@@ -37,6 +38,7 @@
 #include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_props.hxx>
+#include <MultiPlayer/mpmessages.hxx>
 
 #include "replay.hxx"
 #include "flightrecorder.hxx"
@@ -60,26 +62,26 @@ void FGReplayData::UpdateStats()
     size_t  bytes_raw_data_old = m_bytes_raw_data;
     size_t  bytes_multiplayer_messages_old = m_bytes_multiplayer_messages;
     size_t  num_multiplayer_messages_old = m_num_multiplayer_messages;
-    
+
     m_bytes_raw_data = raw_data.size();
     m_bytes_multiplayer_messages = 0;
     for ( auto m: multiplayer_messages) {
         m_bytes_multiplayer_messages += m->size();
     }
     m_num_multiplayer_messages = multiplayer_messages.size();
-    
+
     // Update global stats by adding how much we have changed since last time
     // UpdateStats() was called.
     //
     s_bytes_raw_data += m_bytes_raw_data - bytes_raw_data_old;
     s_bytes_multiplayer_messages += m_bytes_multiplayer_messages - bytes_multiplayer_messages_old;
     s_num_multiplayer_messages += m_num_multiplayer_messages - num_multiplayer_messages_old;
-    
+
     if (!s_prop_num) s_prop_num = fgGetNode("/sim/replay/datastats_num", true);
     if (!s_prop_bytes_raw_data) s_prop_bytes_raw_data = fgGetNode("/sim/replay/datastats_bytes_raw_data", true);
     if (!s_prop_bytes_multiplayer_messages) s_prop_bytes_multiplayer_messages = fgGetNode("/sim/replay/datastats_bytes_multiplayer_messages", true);
     if (!s_prop_num_multiplayer_messages) s_prop_num_multiplayer_messages = fgGetNode("/sim/replay/datastats_num_multiplayer_messages", true);
-    
+
     s_prop_num->setLongValue(s_num);
     s_prop_bytes_raw_data->setLongValue(s_bytes_raw_data);
     s_prop_bytes_multiplayer_messages->setLongValue(s_bytes_multiplayer_messages);
@@ -143,12 +145,14 @@ FGReplay::FGReplay() :
     last_lt_time(0.0),
     last_msg_time(0),
     last_replay_state(0),
+    replay_time_prev(-1.0),
     m_high_res_time(60.0),
     m_medium_res_time(600.0),
     m_low_res_time(3600.0),
     m_medium_sample_rate(0.5), // medium term sample rate (sec)
     m_long_sample_rate(5.0),   // long term sample rate (sec)
-    m_pRecorder(new FGFlightRecorder("replay-config"))
+    m_pRecorder(new FGFlightRecorder("replay-config")),
+    m_MultiplayMgr(globals->get_subsystem<FGMultiplayMgr>())
 {
 }
 
@@ -407,7 +411,57 @@ FGReplay::start(bool NewTape)
     }
     loadMessages();
 
+    m_MultiplayMgr->ClearMotion();
+
     return true;
+}
+
+static const char* MultiplayerMessageCallsign(const std::vector<char>& raw_message)
+{
+    const T_MsgHdr* header = reinterpret_cast<const T_MsgHdr*>(&raw_message.front());
+    return header->Callsign;
+}
+
+static bool CallsignsEqual(const std::vector<char>& a_message, const std::vector<char>& b_message)
+{
+    const char* a_callsign = MultiplayerMessageCallsign(a_message);
+    const char* b_callsign = MultiplayerMessageCallsign(b_message);
+    return 0 == strncmp(a_callsign, b_callsign, MAX_CALLSIGN_LEN);
+}
+
+// Moves all multiplayer packets from first item in <list> to second item in
+// <list>, but only for callsigns that are not already mentioned in the second
+// item's list.
+//
+// To be called before first item is discarded, so that we don't end up with
+// large gaps in multiplayer information when replaying - this can cause
+// multiplayer aircraft to spuriously disappear and reappear.
+//
+static void MoveFrontMultiplayerPackets(replay_list_type& list)
+{
+    auto it = list.begin();
+    FGReplayData* a = *it;
+    ++it;
+    if (it == list.end()) {
+        return;
+    }
+    FGReplayData* b = *it;
+
+    // Copy all multiplayer packets in <a> that are for multiplayer aircraft
+    // that are not in <b>, into <b>'s multiplayer_messages.
+    //
+    for (auto a_message: a->multiplayer_messages) {
+        bool found = false;
+        for (auto b_message: b->multiplayer_messages) {
+            if (CallsignsEqual(*a_message, *b_message)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            b->multiplayer_messages.push_back(a_message);
+        }
+    }
 }
 
 /** 
@@ -503,7 +557,13 @@ FGReplay::update( double dt )
                     current_time = startTime;
                 }
             }
-            bool IsFinished = replay( replay_time->getDoubleValue() );
+            if (current_time != replay_time_prev) {
+                // User has skipped backwards or forward. Reset list of multiplayer aircraft.
+                //
+                m_MultiplayMgr->ClearMotion();
+            }
+
+            bool IsFinished = replay( current_time );
             if (IsFinished)
             {
                 if (!was_finished_already)
@@ -519,6 +579,7 @@ FGReplay::update( double dt )
                 was_finished_already = false;
             }
             replay_time->setDoubleValue(current_time);
+            replay_time_prev = current_time;
             char StrBuffer[30];
             printTimeStr(StrBuffer,current_time);
             replay_time_str->setStringValue((const char*)StrBuffer);
@@ -562,7 +623,7 @@ FGReplay::update( double dt )
     // update the short term list
     short_term.push_back( r );
     FGReplayData *st_front = short_term.front();
-    
+
     if (!st_front)
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "ReplaySystem: Inconsistent data!");
@@ -573,6 +634,7 @@ FGReplay::update( double dt )
         while ( sim_time - st_front->sim_time > m_high_res_time )
         {
             st_front = short_term.front();
+            MoveFrontMultiplayerPackets(short_term);
             recycler.push_back(st_front);
             short_term.pop_front();
         }
@@ -591,6 +653,7 @@ FGReplay::update( double dt )
                 while ( sim_time - mt_front->sim_time > m_medium_res_time )
                 {
                     mt_front = medium_term.front();
+                    MoveFrontMultiplayerPackets(medium_term);
                     recycler.push_back(mt_front);
                     medium_term.pop_front();
                 }
@@ -608,6 +671,7 @@ FGReplay::update( double dt )
                         while ( sim_time - lt_front->sim_time > m_low_res_time )
                         {
                             lt_front = long_term.front();
+                            MoveFrontMultiplayerPackets(long_term);
                             recycler.push_back(lt_front);
                             long_term.pop_front();
                         }
@@ -797,7 +861,7 @@ FGReplay::get_end_time()
 
 /** Save raw replay data in a separate container */
 static bool
-saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData, size_t RecordSize)
+saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData, size_t RecordSize, bool multiplayer)
 {
     // get number of records in this stream
     size_t Count = ReplayData.size();
@@ -819,6 +883,16 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
         assert(RecordSize == pRecord->raw_data.size());
         output.write(reinterpret_cast<const char*>(&pRecord->sim_time), sizeof(pRecord->sim_time));
         output.write(&pRecord->raw_data.front(), pRecord->raw_data.size());
+
+        if (multiplayer) {
+            size_t  num_messages = pRecord->multiplayer_messages.size();
+            output.write(reinterpret_cast<const char*>(&num_messages), sizeof(num_messages));
+            for ( auto message: pRecord->multiplayer_messages) {
+                size_t message_size = message->size();
+                output.write(reinterpret_cast<const char*>(&message_size), sizeof(message_size));
+                output.write(&message->front(), message_size);
+            }
+        }
         CheckCount++;
     }
 
@@ -835,7 +909,7 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
 
 /** Load raw replay data from a separate container */
 static bool
-loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_list_type& ReplayData, size_t RecordSize)
+loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_list_type& ReplayData, size_t RecordSize, bool multiplayer)
 {
     size_t Size = 0;
     simgear::ContainerType Type = ReplayContainer::Invalid;
@@ -866,6 +940,18 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
         pBuffer->raw_data.resize(RecordSize);
         input.read(&pBuffer->raw_data.front(), RecordSize);
         ReplayData.push_back(pBuffer);
+
+        if (multiplayer) {
+            size_t  num_messages = 0;
+            input.read(reinterpret_cast<char*>(&num_messages), sizeof(num_messages));
+            for (size_t i=0; i<num_messages; ++i) {
+                size_t  message_size;
+                input.read(reinterpret_cast<char*>(&message_size), sizeof(message_size));
+                std::shared_ptr<std::vector<char>>  message(new std::vector<char>(message_size));
+                input.read(&message->front(), message_size);
+                pBuffer->multiplayer_messages.push_back( message);
+            }
+        }
     }
 
     // did we get all we have hoped for?
@@ -915,12 +1001,14 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
         size_t RecordSize = Config->getIntValue("recorder/record-size", 0);
         SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Total signal count: " <<  Config->getIntValue("recorder/signal-count", 0)
                << ", record size: " << RecordSize);
+        bool multiplayer = MetaDataProps->getBoolValue("meta/multiplayer", 0);
+
         if (ok)
-            ok &= saveRawReplayData(output, short_term,  RecordSize);
+            ok &= saveRawReplayData(output, short_term,  RecordSize, multiplayer);
         if (ok)
-            ok &= saveRawReplayData(output, medium_term, RecordSize);
+            ok &= saveRawReplayData(output, medium_term, RecordSize, multiplayer);
         if (ok)
-            ok &= saveRawReplayData(output, long_term,   RecordSize);
+            ok &= saveRawReplayData(output, long_term,   RecordSize, multiplayer);
         Config = 0;
     }
 
@@ -963,6 +1051,8 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
     {
         copyProperties(ConfigData->getNode("user-data"), meta->getNode("user-data", 0, true));
     }
+
+    meta->setBoolValue("multiplayer", fgGetBool("/sim/replay/multiplayer", false));
 
     // store replay messages
     copyProperties(fgGetNode("/sim/replay/messages", 0, true), myMetaData->getNode("messages", 0, true));
@@ -1120,12 +1210,14 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
                        << ", expected size was " << OriginalSize << ".");
             }
 
+            bool multiplayer = UserData->getBoolValue("multiplayer", 0);
+
             if (ok)
-                ok &= loadRawReplayData(input, m_pRecorder, short_term,  RecordSize);
+                ok &= loadRawReplayData(input, m_pRecorder, short_term,  RecordSize, multiplayer);
             if (ok)
-                ok &= loadRawReplayData(input, m_pRecorder, medium_term, RecordSize);
+                ok &= loadRawReplayData(input, m_pRecorder, medium_term, RecordSize, multiplayer);
             if (ok)
-                ok &= loadRawReplayData(input, m_pRecorder, long_term,   RecordSize);
+                ok &= loadRawReplayData(input, m_pRecorder, long_term,   RecordSize, multiplayer);
 
             // restore replay messages
             if (ok)

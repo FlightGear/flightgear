@@ -34,6 +34,8 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#include <MultiPlayer/multiplaymgr.hxx>
+
 #include <deque>
 #include <vector>
 
@@ -147,6 +149,7 @@ private:
     SGPropertyNode_ptr replay_looped;
     SGPropertyNode_ptr replay_duration_act;
     SGPropertyNode_ptr speed_up;
+    double replay_time_prev;    // Used to detect jumps while replaying.
 
     double m_high_res_time;    // default: 60 secs of high res data
     double m_medium_res_time;  // default: 10 mins of 1 fps data
@@ -155,7 +158,9 @@ private:
     double m_medium_sample_rate; // medium term sample rate (sec)
     double m_long_sample_rate;   // long term sample rate (sec)
 
-    FGFlightRecorder* m_pRecorder;
+    FGFlightRecorder*   m_pRecorder;
+    
+    FGMultiplayMgr*     m_MultiplayMgr;    
 };
 
 #endif // _FG_REPLAY_HXX

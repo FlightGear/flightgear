@@ -1784,7 +1784,7 @@ int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
             else {
                 // Replay recorded message, unless it is a chat message.
                 //
-                std::shared_ptr<std::vector<char>> replayMessage = mReplayMessageQueue.front();
+                auto replayMessage = mReplayMessageQueue.front();
                 mReplayMessageQueue.pop_front();
                 assert(replayMessage->size() <= sizeof(msgBuf));
                 int length = replayMessage->size();
@@ -1915,6 +1915,14 @@ FGMultiplayMgr::update(double dt)
   }
 } // FGMultiplayMgr::ProcessData(void)
 //////////////////////////////////////////////////////////////////////
+
+void FGMultiplayMgr::ClearMotion()
+{
+    SG_LOG(SG_NETWORK, SG_DEBUG, "Clearing all motion info");
+    for (auto it: mMultiPlayerMap) {
+        it.second->clearMotionInfo();
+    }
+}
 
 void
 FGMultiplayMgr::Send()
@@ -2355,7 +2363,7 @@ std::shared_ptr<std::vector<char>> FGMultiplayMgr::popMessageHistory()
         return nullptr;
     }
 
-    std::shared_ptr<std::vector<char>> ret = mRecordMessageQueue.front();
+    auto ret = mRecordMessageQueue.front();
     mRecordMessageQueue.pop_front();
     return ret;
 }

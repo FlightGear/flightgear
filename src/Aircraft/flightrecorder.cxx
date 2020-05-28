@@ -576,9 +576,16 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
         }
     }
     
-    // Replay any multiplayer messages.
-    for ( auto multiplayer_message: _pNextBuffer->multiplayer_messages) {
-        m_MultiplayMgr->pushMessageHistory(multiplayer_message);
+    // Replay any multiplayer messages. But don't send the same multiplayer
+    // messages repeatedly when we are called with a timestamp that ends up
+    // picking the same _pNextBuffer as last time.
+    //
+    static const FGReplayData* _pNextBuffer_prev = nullptr;
+    if ( _pNextBuffer != _pNextBuffer_prev) {
+        _pNextBuffer_prev = _pNextBuffer;
+        for (auto multiplayer_message: _pNextBuffer->multiplayer_messages) {
+            m_MultiplayMgr->pushMessageHistory(multiplayer_message);
+        }
     }
 }
 
