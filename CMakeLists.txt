@@ -497,7 +497,9 @@ if(WIN32)
         set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
 
         set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
-        set(SIMD_COMPILER_FLAGS "/arch:SSE /arch:SSE2")
+        if (X86)
+            set(SIMD_COMPILER_FLAGS "/arch:SSE /arch:SSE2")
+        endif()
 
         if (NOT OSG_FSTREAM_EXPORT_FIXED AND ${MSVC_VERSION} GREATER 1599)
           message(STATUS "For better linking performance, use OSG with fixed fstream header")
