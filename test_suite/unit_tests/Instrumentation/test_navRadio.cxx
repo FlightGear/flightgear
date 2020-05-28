@@ -414,3 +414,65 @@ void NavRadioTests::testILSAdjacentPaired()
 {
     // eg KJFK
 }
+
+void NavRadioTests::testGlideslopeLongDistance()
+{
+    // radio setup
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", "navtest");
+    configNode->setIntValue("number", 2);
+    std::unique_ptr<FGNavRadio> r(new FGNavRadio(configNode));
+    r->bind();
+    r->init();
+
+    SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
+    node->setBoolValue("serviceable", true);
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/nav", 6.0);
+
+    // EGLL 27L
+    FGPositioned::TypeFilter f{FGPositioned::GS};
+    FGNavRecordRef gs = fgpositioned_cast<FGNavRecord>(
+        FGPositioned::findClosestWithIdent("ILL", SGGeod::fromDeg(0, 51), &f));
+    CPPUNIT_ASSERT(gs->type() == FGPositioned::GS);
+    node->setDoubleValue("frequencies/selected-mhz", 109.50);
+    CPPUNIT_ASSERT(!strcmp("109.50", node->getStringValue("frequencies/selected-mhz-fmt")));
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(gs->glideSlopeAngleDeg(), 3.0, 0.001);
+    double gsAngleRad = gs->glideSlopeAngleDeg() * SG_DEGREES_TO_RADIANS;
+
+    // standard approach (per charts)
+    SGGeod p = SGGeodesy::direct(gs->geod(), 90, 7.5 * SG_NM_TO_METER);
+    p.setElevationFt(2500);
+    setPositionAndStabilise(r.get(), p);
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("gs-in-range"));
+
+    // normal approach
+    p = SGGeodesy::direct(gs->geod(), 90, 9 * SG_NM_TO_METER);
+    p.setElevationFt(3000);
+    setPositionAndStabilise(r.get(), p);
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("gs-in-range"));
+
+    // in our current nav data, the GS range is defined as 10nm, so the gs-in-range
+    // is false for these
+
+    // 4000 feet intercept
+    p = SGGeodesy::direct(gs->geod(), 90, 12 * SG_NM_TO_METER);
+    p.setElevationFt(4000);
+    setPositionAndStabilise(r.get(), p);
+    CPPUNIT_ASSERT_EQUAL(false, node->getBoolValue("gs-in-range"));
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
+
+    // further back
+    p = SGGeodesy::direct(gs->geod(), 90, 17.5 * SG_NM_TO_METER);
+    p.setElevationFt(4000);
+    setPositionAndStabilise(r.get(), p);
+    CPPUNIT_ASSERT_EQUAL(false, node->getBoolValue("gs-in-range"));
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
+
+    // really pushing it
+    p = SGGeodesy::direct(gs->geod(), 90, 25 * SG_NM_TO_METER);
+    p.setElevationFt(4000);
+    setPositionAndStabilise(r.get(), p);
+    CPPUNIT_ASSERT_EQUAL(false, node->getBoolValue("gs-in-range"));
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
+}

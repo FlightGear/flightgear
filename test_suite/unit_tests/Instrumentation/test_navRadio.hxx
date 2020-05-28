@@ -41,6 +41,7 @@ class NavRadioTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testILSFalseCourse);
     CPPUNIT_TEST(testILSPaired);
     CPPUNIT_TEST(testILSAdjacentPaired);
+    CPPUNIT_TEST(testGlideslopeLongDistance);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -62,6 +63,7 @@ public:
     void testILSFalseCourse();
     void testILSPaired();
     void testILSAdjacentPaired();
+    void testGlideslopeLongDistance();
 };
 
 #endif  // _FG_NAVRADIO_UNIT_TESTS_HXX
