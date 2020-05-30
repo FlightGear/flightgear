@@ -662,10 +662,9 @@ public:
       double track = i->courseDegMagnetic() + magVar;
       bool ok = geocRadialIntersection(prevGc, track, navid, radial, rGc);
       if (!ok) {
-        SGGeoc navidAdjusted;
         // try pulling backward along the radial in case we're too close.
         // suggests bad procedure construction if this is happening!
-        SGGeodesy::advanceRadM(navid, radial, SG_NM_TO_METER * -10, navidAdjusted);
+          SGGeoc navidAdjusted = SGGeodesy::advanceDegM(navid, radial, -10 * SG_NM_TO_METER);
 
         // try again
         ok = geocRadialIntersection(prevGc, track, navidAdjusted, radial, rGc);
@@ -691,9 +690,8 @@ public:
       double distRad = di->dmeDistanceNm() * SG_NM_TO_RAD;
       SGGeoc rGc;
       
-      SGGeoc bPt;
       double crs = di->courseDegMagnetic() + magVarFor(wpt->position());
-      SGGeodesy::advanceRadM(prevGc, crs, 100 * SG_NM_TO_RAD, bPt);
+      SGGeoc bPt = SGGeodesy::advanceDegM(prevGc, crs, 1e5);
       
       double dNm = pointsKnownDistanceFromGC(prevGc, bPt, navid, distRad);
       if (dNm < 0.0) {

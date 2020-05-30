@@ -28,8 +28,6 @@
 #include <Airports/runways.hxx>
 #include "Main/util.hxx" // for fgLowPass
 
-#include "test_suite/FGTestApi/TestDataLogger.hxx"
-
 extern double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& d, double dist);
 
 namespace flightgear
@@ -757,9 +755,7 @@ public:
           // try with a backwards offset from the waypt pos, in case the
           // procedure waypt location is too close. (eg, KSFO OCEAN SID)
 
-          SGGeoc navidAdjusted;
-          SGGeodesy::advanceRadM(geocWayptPos, _trueRadial, SG_NM_TO_METER * -10, navidAdjusted);
-
+          SGGeoc navidAdjusted = SGGeodesy::advanceDegM(geocWayptPos, _trueRadial, -10 * SG_NM_TO_METER);
           ok = geocRadialIntersection(geocPos, _targetTrack,
                                       navidAdjusted, _trueRadial, c);
           if (!ok) {
@@ -916,9 +912,7 @@ public:
         double distRad = _dme->dmeDistanceNm() * SG_NM_TO_RAD;
 
         // compute radial GC course
-        SGGeoc bPt;
-        SGGeodesy::advanceRadM(geocPos, _targetTrack, 100 * SG_NM_TO_RAD, bPt);
-
+        SGGeoc bPt = SGGeodesy::advanceDegM(geocPos, _targetTrack, 1e5);
         double dNm = pointsKnownDistanceFromGC(geocPos, bPt, navid, distRad);
         if (dNm < 0.0) {
             SG_LOG(SG_AUTOPILOT, SG_WARN, "DMEInterceptCtl::position failed");

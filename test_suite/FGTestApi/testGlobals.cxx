@@ -329,17 +329,15 @@ void writeFlightPlanToKML(flightgear::FlightPlanRef fp)
     
     RoutePath rpath(fp);
     
-    SGGeodVec fullPath;
     for (int i=0; i<fp->numLegs(); ++i) {
         SGGeodVec legPath = rpath.pathForIndex(i);
-        fullPath.insert(fullPath.end(), legPath.begin(), legPath.end());
-        
         auto wp = fp->legAtIndex(i)->waypoint();
+
+        writeGeodsToKML("FP-leg-" + wp->ident(), legPath);
+        
         SGGeod legWPPosition = wp->position();
         writePointToKML("WP " + wp->ident(), legWPPosition);
     }
-    
-    writeGeodsToKML("FlightPlan", fullPath);
 }
     
 void writeGeodsToKML(const std::string &label, const flightgear::SGGeodVec& geods)
