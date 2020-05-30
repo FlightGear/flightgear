@@ -98,6 +98,8 @@ private:
     SGPropertyNode_ptr _verticalFPMProp;
     
     SGPropertyNode_ptr _gpsNode;
+    SGPropertyNode_ptr _gpsLegCourse;
+    SGPropertyNode_ptr _courseErrorNm;
 };
 
 } // of namespace FGTestApi

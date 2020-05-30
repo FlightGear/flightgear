@@ -27,6 +27,8 @@
 
 #include <Main/globals.hxx>
 
+#include "TestDataLogger.hxx"
+
 namespace FGTestApi {
 
 TestPilot::TestPilot(SGPropertyNode_ptr props) :
@@ -107,6 +109,9 @@ void TestPilot::flyGPSCourse(GPS *gps)
 {
     _gps = gps;
     _gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    _gpsLegCourse = _gpsNode->getNode("wp/leg-true-course-deg", true);
+    _courseErrorNm = _gpsNode->getNode("wp/wp[1]/course-error-nm", true);
+    
     _lateralMode = LateralMode::GPSCourse;
     _turnActive = false;
 }
@@ -115,6 +120,9 @@ void TestPilot::flyGPSCourseOffset(GPS *gps, double offsetNm)
 {
     _gps = gps;
     _gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    _gpsLegCourse = _gpsNode->getNode("wp/leg-true-course-deg", true);
+    _courseErrorNm = _gpsNode->getNode("wp/wp[1]/course-error-nm", true);
+    
     _lateralMode = LateralMode::GPSOffset;
     _courseOffsetNm = offsetNm;
     _turnActive = false;
@@ -128,39 +136,48 @@ void TestPilot::flyDirectTo(const SGGeod& target)
     
 void TestPilot::updateValues(double dt)
 {
+    auto dl = DataLogger::instance();
+
     if (_gps && (_lateralMode == LateralMode::GPSCourse)) {
-        double deviationDeg = _gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg");
-        _targetCourseDeg = _gpsNode->getDoubleValue("wp/leg-true-course-deg");
-        
-        const double absDev = fabs(deviationDeg);
-        const double minInterceptAngle = 1.5;
-        // if we're getting close to the leg track, artifically keep the deviation a bit up,
-        // to avoid really slow convergence on it
-        if ((absDev > 0.05) && (absDev < minInterceptAngle)) {
-            deviationDeg = copysign(minInterceptAngle, deviationDeg);
-        }
+        _targetCourseDeg = _gpsLegCourse->getDoubleValue();
         
         // set how aggressively we try to correct our course
-        double courseCorrectionFactor = 8.0;
-        double crossTrack =  _gpsNode->getDoubleValue("wp/wp[1]/course-error-nm");
+        double courseCorrectionFactor = 64.0;
+        double crossTrack = _courseErrorNm->getDoubleValue();
         
+        dl->recordSamplePoint("TP-error-nm", crossTrack);
+
+        SG_CLAMP_RANGE(crossTrack, -2.0, 2.0); // clamp to 2nm deviation
+        double correction = courseCorrectionFactor * crossTrack;
+        const double maxCorrectionAngle = 45;
         
-        double correction = courseCorrectionFactor * deviationDeg;
-        double maxOffset = 45;
+        dl->recordSamplePoint("TP-base-correction-deg", correction);
         
-        // don't make really sharp turns if we're getting close
+        // within 1nm of the desired course, start to bias
+        // based on heading error. This is to reduce overshooting
+        // while still keeping the responsiveness high
         if (fabs(crossTrack) < 1.0) {
-            maxOffset *= 0.5;
+            // compensate for heading
+            double headingError = _targetCourseDeg - _trueCourseDeg;
+            SG_NORMALIZE_RANGE(headingError, -180.0, 180.0);
+            if (fabs(headingError) > 90.0) {
+                // we're pointing the wrong way, don't compensate
+                // otherwise we get into knots trying to make the
+                // turn back the right way
+            } else {
+                const double p = 1.0 - fabs(crossTrack);
+                const double headingErrorFactor = 0.6;
+                correction += p * headingError * headingErrorFactor;
+            }
         }
         
-        // *really* don't make sharp turns if we're getting really close :)
-        if (fabs(crossTrack) < 0.2) {
-            maxOffset *= 0.5;
-        }
-        
-        SG_CLAMP_RANGE(correction, -maxOffset, maxOffset);
+        dl->recordSamplePoint("TP-correction-deg", correction);
+
+        SG_CLAMP_RANGE(correction, -maxCorrectionAngle, maxCorrectionAngle);
         _targetCourseDeg += correction;
         
+        dl->recordSamplePoint("TP-target-deg", _targetCourseDeg);
+
         SG_NORMALIZE_RANGE(_targetCourseDeg, 0.0, 360.0);
         if (!_turnActive &&(fabs(_trueCourseDeg - _targetCourseDeg) > 0.5)) {
             _turnActive = true;
@@ -168,9 +185,9 @@ void TestPilot::updateValues(double dt)
     }
     
     if (_gps && (_lateralMode == LateralMode::GPSOffset)) {
-        _targetCourseDeg = _gpsNode->getDoubleValue("wp/leg-true-course-deg");
+        _targetCourseDeg = _gpsLegCourse->getDoubleValue();
 
-        double crossTrack =  _gpsNode->getDoubleValue("wp/wp[1]/course-error-nm");
+        double crossTrack =  _courseErrorNm->getDoubleValue();
         double offsetError = crossTrack - _courseOffsetNm;
 
         const double offsetCorrectionFactor = 25.0;
@@ -197,13 +214,10 @@ void TestPilot::updateValues(double dt)
             _turnActive = false;
         } else {
             // standard 2-minute turn, 180-deg min, thus 3-degrees per second
-            double turnDeg = 3.0 * dt;
+            
+            double turnDeg = 5.0 * dt;
             double errorDeg = _targetCourseDeg - _trueCourseDeg;
-            if (errorDeg > 180.0) {
-                errorDeg = errorDeg -= 360;
-            } else if (errorDeg < -180) {
-                errorDeg += 360.0;
-            }
+            SG_NORMALIZE_RANGE(errorDeg, -180.0, 180.0);
             
             // clamp turn to error value
             turnDeg = std::min(turnDeg, fabs(errorDeg));
