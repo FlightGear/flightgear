@@ -238,14 +238,14 @@ void HoldControllerTests::testHoldEntryDirect()
 
 void HoldControllerTests::testHoldEntryTeardrop()
 {
-  //  FGTestApi::setUp::logPositionToKML("hold_teardrop_entry");
+    FGTestApi::setUp::logPositionToKML("hold_teardrop_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
-  //  FGTestApi::writeFlightPlanToKML(fp);
+    FGTestApi::writeFlightPlanToKML(fp);
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -291,7 +291,7 @@ void HoldControllerTests::testHoldEntryTeardrop()
     CPPUNIT_ASSERT_EQUAL(std::string{"DVR"}, std::string{m_gpsNode->getStringValue("wp/wp[1]/ID")});
     CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToDover, m_gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(legCrs, m_gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, m_gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
 
     

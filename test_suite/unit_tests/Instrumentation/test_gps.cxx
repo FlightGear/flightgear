@@ -25,6 +25,7 @@
 #include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestPilot.hxx"
+#include "test_suite/FGTestApi/TestDataLogger.hxx"
 
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
@@ -1091,7 +1092,7 @@ void GPSTests::testOffsetFlight()
 
 void GPSTests::testLegIntercept()
 {
-  //  FGTestApi::setUp::logPositionToKML("gps_intercept");
+    FGTestApi::setUp::logPositionToKML("gps_intercept");
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
@@ -1099,7 +1100,14 @@ void GPSTests::testLegIntercept()
         FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
                                              "ALADA NS WB WN MAMOD KAPTI OH");
     
-   // FGTestApi::writeFlightPlanToKML(fp);
+//    auto dl =  FGTestApi::DataLogger::instance();
+//   dl->initTest("gps_leg_intercept");
+//   dl->recordProperty("gps-error-nm", globals->get_props()->getNode("instrumentation/gps/wp/wp[1]/course-error-nm", true));
+//   dl->recordProperty("gps-dev-deg", globals->get_props()->getNode("instrumentation/gps/wp/wp[1]/course-deviation-deg", true));
+//   dl->recordProperty("hdg", globals->get_props()-> getNode("orientation/heading-deg", true));
+//   dl->recordProperty("leg-track", globals->get_props()->getNode("instrumentation/gps/wp/leg-true-course-deg", true));
+       
+    FGTestApi::writeFlightPlanToKML(fp);
     
     // takes the place of the Nasal delegates
     auto testDelegate = new TestFPDelegate;
@@ -1110,6 +1118,7 @@ void GPSTests::testLegIntercept()
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setBoolValue("config/enable-fly-by", true);
     gpsNode->setStringValue("command", "leg");
     
     
@@ -1209,15 +1218,167 @@ void GPSTests::testLegIntercept()
     // check we manage the punishing turn back onto track
     FGTestApi::runForTime(180.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    
+// similar, but onthe other side, so closer aligned to the exit course at nelson.
+// this should do a fly-by
+    
+   
+    pos = fp->pointAlongRoute(2, -4.0);
+    pos = SGGeodesy::direct(pos, 1, 10.0 * SG_NM_TO_METER);
+    fp->setCurrentIndex(2);
+    
+    // cycle the GPS mode to re-do the intercept logic
+    FGTestApi::setPositionAndStabilise(pos);
+    gpsNode->setStringValue("command", "obs");
+    gpsNode->setStringValue("command", "leg");
+    
+    pilot->resetAtPosition(pos);
+    pilot->setCourseTrue(320.0); // awkward course
+    pilot->setSpeedKts(300);
+    pilot->flyGPSCourse(gps);
+    
+    const double crsToNS2 = SGGeodesy::courseDeg(globals->get_aircraft_position(), nelsonVORPos);
+    const double crsFromStart2 = SGGeodesy::courseDeg(pos, nelsonVORPos);
+    
+    // we should be established on a direct to, from our start pos, let's check
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToNS2, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(crsFromStart2, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    // run until we sequence, which should happen as normal
+    ok = FGTestApi::runForTimeWithCheck(6000.0, [fp] () {
+        if (fp->currentIndex() == 3) {
+            return true;
+        }
+        return false;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
+    // check we are on course the whole way through
+    FGTestApi::runForTime(10);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.1);
 }
 
 void GPSTests::testTurnAnticipation()
 {
+    FGTestApi::setUp::logPositionToKML("gps_flyby_sequence");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+       
+   // this route has some deliberately sharp turns to work the turn code
+   FGTestApi::setUp::populateFPWithoutNasal(fp, "LEMG", "30", "EIDW", "28",
+                                            "BLN VTB TLD DELOG IDRIK ARE KOFAL STU VATRY");
+    
+//    auto dl =  FGTestApi::DataLogger::instance();
+//    dl->initTest("gps_flyby_sequence");
+//    dl->recordProperty("gps-error-nm", globals->get_props()->getNode("instrumentation/gps/wp/wp[1]/course-error-nm", true));
+//    dl->recordProperty("gps-dev-deg", globals->get_props()->getNode("instrumentation/gps/wp/wp[1]/course-deviation-deg", true));
+//    dl->recordProperty("hdg", globals->get_props()-> getNode("orientation/heading-deg", true));
+//    dl->recordProperty("leg-track", globals->get_props()->getNode("instrumentation/gps/wp/leg-true-course-deg", true));
+
+                       
+    FGTestApi::writeFlightPlanToKML(fp);
+       
+       // takes the place of the Nasal delegates
+       auto testDelegate = new TestFPDelegate;
+       testDelegate->thePlan = fp;
+       CPPUNIT_ASSERT(rm->activate());
+       fp->addDelegate(testDelegate);
+       auto gps = setupStandardGPS();
+       
+       auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+       gpsNode->setBoolValue("config/delegate-sequencing", true);
+        gpsNode->setBoolValue("config/enable-fly-by", true);
+       gpsNode->setStringValue("command", "leg");
+       
+       
+       // enroute to VILLATOBAS VOR
+       fp->setCurrentIndex(2);
+       SGGeod pos = fp->pointAlongRoute(2, -5.0);
+       FGTestApi::setPositionAndStabilise(pos);
+       
+       auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+       pilot->resetAtPosition(pos);
+       pilot->setSpeedKts(300); // decent speed to make things tougher
+       pilot->flyGPSCourse(gps);
+       
+       bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+           if (fp->currentIndex() == 3) {
+               return true;
+           }
+           return false;
+       });
+       CPPUNIT_ASSERT(ok);
+       
+       // check we sequenced at the half way point
+       auto vtbVOR = fp->legAtIndex(2)->waypoint()->source();
+       CPPUNIT_ASSERT_EQUAL(std::string{"VILLATOBAS VOR-DME"}, vtbVOR->name());
+       
+    const double courseToVTB = SGGeodesy::courseDeg(globals->get_aircraft_position(), vtbVOR->geod());
+    // course should be half-way between the inbound and outbound leg courses, and then offset
+    // let's see
+    double ht = (fp->legAtIndex(3)->courseDeg() - fp->legAtIndex(2)->courseDeg());
+    SG_NORMALIZE_RANGE(ht, -180.0, 180.0);
+    ht *= 0.5;
+    ht += fp->legAtIndex(2)->courseDeg();
+    ht += 90;
+    SG_NORMALIZE_RANGE(ht, 0.0, 360.0);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(ht, courseToVTB, 5.0);
+    
+    FGTestApi::runForTime(30.0);
+       // check we're on course to TOLEDO
+       
+       auto toledoVOR = fp->legAtIndex(3)->waypoint()->source();
+      // const double crsToWB = SGGeodesy::courseDeg(globals->get_aircraft_position(),  woodbourneVOR->geod());
+      // const double crsNSWB = SGGeodesy::courseDeg(nelsonVOR->geod(), woodbourneVOR->geod());
+       
+   //   CPPUNIT_ASSERT_DOUBLES_EQUAL(crsToWB, gpsNode->getDoubleValue("wp/wp[1]/bearing-true-deg"), 0.5);
+     //  CPPUNIT_ASSERT_DOUBLES_EQUAL(crsNSWB, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 0.5);
+       CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+       CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+// check a right-hand turn
+    pos = fp->pointAlongRoute(3, -5.0);
+    FGTestApi::setPositionAndStabilise(pos);
+     pilot->resetAtPosition(pos);
+    
+     ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
+         if (fp->currentIndex() == 4) {
+             return true;
+         }
+         return false;
+     });
+     CPPUNIT_ASSERT(ok);
+    
+    
+    const double courseToTLD = SGGeodesy::courseDeg(globals->get_aircraft_position(), toledoVOR->geod());
+    // course should be half-way between the inbound and outbound leg courses, and then offset
+    // let's see
+    ht = (fp->legAtIndex(4)->courseDeg() - fp->legAtIndex(3)->courseDeg());
+    SG_NORMALIZE_RANGE(ht, -180.0, 180.0);
+    ht *= 0.5;
+    ht += fp->legAtIndex(3)->courseDeg();
+    ht -= 90; // right hand turn
+    SG_NORMALIZE_RANGE(ht, 0.0, 360.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(courseToTLD, ht, 5.0);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+    
+    FGTestApi::runForTime(30.0);
+    
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-error-nm"), 0.05);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gpsNode->getDoubleValue("wp/wp[1]/course-deviation-deg"), 0.5);
+
 }
 
 void GPSTests::testRadialIntercept()
 {
-   // FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
+    FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -1236,7 +1397,7 @@ void GPSTests::testRadialIntercept()
     auto intc = new RadialIntercept(fp, "INTC", pos, 230, 5);
     fp->insertWayptAtIndex(intc, 3);
     
-    //FGTestApi::writeFlightPlanToKML(fp);
+    FGTestApi::writeFlightPlanToKML(fp);
     
 // position slightly before BUNAX
     SGGeod initPos = fp->pointAlongRoute(2, -3.0);
@@ -1280,7 +1441,7 @@ void GPSTests::testRadialIntercept()
 
 void GPSTests::testDMEIntercept()
 {
-    //FGTestApi::setUp::logPositionToKML("gps_dme_intercept");
+    FGTestApi::setUp::logPositionToKML("gps_dme_intercept");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -1307,7 +1468,7 @@ void GPSTests::testDMEIntercept()
     // and another one
     fp->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(-3.690845, 55.841378), "CI06", fp), 7);
     
-   // FGTestApi::writeFlightPlanToKML(fp);
+    FGTestApi::writeFlightPlanToKML(fp);
 
     // position slightly before TLA
     SGGeod initPos = fp->pointAlongRoute(2, -2.0);
@@ -1323,6 +1484,7 @@ void GPSTests::testDMEIntercept()
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setBoolValue("config/enable-fly-by", true);
     gpsNode->setStringValue("command", "leg");
     
     fp->setCurrentIndex(2);
