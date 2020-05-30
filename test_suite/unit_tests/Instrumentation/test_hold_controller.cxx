@@ -238,7 +238,7 @@ void HoldControllerTests::testHoldEntryDirect()
 
 void HoldControllerTests::testHoldEntryTeardrop()
 {
-    FGTestApi::setUp::logPositionToKML("hold_teardrop_entry");
+  //  FGTestApi::setUp::logPositionToKML("hold_teardrop_entry");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;

@@ -1092,7 +1092,7 @@ void GPSTests::testOffsetFlight()
 
 void GPSTests::testLegIntercept()
 {
-    FGTestApi::setUp::logPositionToKML("gps_intercept");
+  //  FGTestApi::setUp::logPositionToKML("gps_intercept");
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
@@ -1263,7 +1263,7 @@ void GPSTests::testLegIntercept()
 
 void GPSTests::testTurnAnticipation()
 {
-    FGTestApi::setUp::logPositionToKML("gps_flyby_sequence");
+    //FGTestApi::setUp::logPositionToKML("gps_flyby_sequence");
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
     rm->setFlightPlan(fp);
@@ -1378,7 +1378,7 @@ void GPSTests::testTurnAnticipation()
 
 void GPSTests::testRadialIntercept()
 {
-    FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
+   // FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;
@@ -1413,6 +1413,7 @@ void GPSTests::testRadialIntercept()
     
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
     gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setBoolValue("config/enable-fly-by", false);
     gpsNode->setStringValue("command", "leg");
     
     fp->setCurrentIndex(2);
@@ -1434,14 +1435,38 @@ void GPSTests::testRadialIntercept()
     
     // flying to BEBEV now
     CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
-    
     FGTestApi::runForTime(30.0);
+    
+// repeat but with fly-by enabled
+  gpsNode->setBoolValue("config/enable-fly-by", true);
+    gpsNode->setStringValue("command", "obs");
+  
+    FGTestApi::setPositionAndStabilise(initPos);
+      pilot->resetAtPosition(initPos);
+  fp->setCurrentIndex(2);
+    gpsNode->setStringValue("command", "leg");
+
+  CPPUNIT_ASSERT_EQUAL(string{"BUNAX"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+
+
+  pilot->setCourseTrue(fp->legAtIndex(2)->courseDeg());
+  pilot->flyGPSCourse(gps);
+  
+  ok = FGTestApi::runForTimeWithCheck(600.0, [fp]() {
+      return fp->currentIndex() == 4;
+  });
+  CPPUNIT_ASSERT(ok);
+  
+  // flying to BEBEV now
+  CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+  FGTestApi::runForTime(30.0);
 }
 
 
 void GPSTests::testDMEIntercept()
 {
-    FGTestApi::setUp::logPositionToKML("gps_dme_intercept");
+   // FGTestApi::setUp::logPositionToKML("gps_dme_intercept");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     auto fp = new FlightPlan;

@@ -35,6 +35,8 @@ extern double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const S
 namespace flightgear
 {
 
+const auto turnComputeDist = SG_NM_TO_METER * 4.0;
+
 // declared in routePath.cxx
 bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double r2, SGGeoc& result);
 
@@ -64,8 +66,21 @@ double greatCircleCrossTrackError(double distanceOriginToPosition,double courseD
 	return crossTrackError * SG_RAD_TO_NM;
 }
 
+SGGeod computeTurnCenter(double turnRadiusM, const SGGeod& basePos, double inboundTrack, double turnAngle)
+{
+   
+   // this is the heading half way through the turn. Perpendicular to
+   // this is our turn center
+   const auto halfTurnHeading = inboundTrack + (turnAngle * 0.5);
+   double p = copysign(90.0, turnAngle);
+   double h = halfTurnHeading + p;
+   SG_NORMALIZE_RANGE(h, 0.0, 360.0);
+     
+   const double tcOffset = turnRadiusM / cos(turnAngle * 0.5 * SG_DEGREES_TO_RADIANS);
+   return SGGeodesy::direct(basePos, h, tcOffset);
+}
 
-////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////s
 
 WayptController::~WayptController()
 {
@@ -315,23 +330,12 @@ public:
     }
     
     _flyByTurnRadius =  _rnav->turnRadiusNm() * SG_NM_TO_METER;
-    
-    // this is the heading half way through the turn. Perpendicular to
-    // this is our turn ceenter
-    const auto halfTurnHeading = _finalLegCourse + (_flyByTurnAngle * 0.5);
-    double p = copysign(90.0, _flyByTurnAngle);
-    double h = halfTurnHeading + p;
-    SG_NORMALIZE_RANGE(h, 0.0, 360.0);
-      
-    const double tcOffset = _flyByTurnRadius / cos(_flyByTurnAngle * 0.5 * SG_DEGREES_TO_RADIANS);
-    _flyByTurnCenter = SGGeodesy::direct(_waypt->position(), h, tcOffset);
+      _flyByTurnCenter = computeTurnCenter(_flyByTurnRadius, _waypt->position(), _finalLegCourse, _flyByTurnAngle);
     _doFlyBy = true;
   }
   
   bool updateInTurn()
   {
-      auto dl =  FGTestApi::DataLogger::instance();
-
     // find bearing to turn center
     // when it hits 90 off our track
     
@@ -343,7 +347,6 @@ public:
       auto a = bearingToTurnCenter - _finalLegCourse;
       SG_NORMALIZE_RANGE(a, -180.0, 180.0);
         if (fabs(a) < 90.0) {
-          dl->recordSamplePoint("turn-entry-bearing", a);
         return false; // keep flying normal leg
       }
       
@@ -355,9 +358,7 @@ public:
     const auto halfPointAngle = (_finalLegCourse + (_flyByTurnAngle * 0.5));
     auto b = bearingToTurnCenter - halfPointAngle;
     SG_NORMALIZE_RANGE(b, -180.0, 180.0);
-      
-      dl->recordSamplePoint("turn-exit-bearing", b);
-      
+            
     if (fabs(b) >= 90.0) {
       _toFlag = false;
       setDone();
@@ -377,14 +378,10 @@ public:
   
   void updateInEntryTurn()
   {
-      auto dl =  FGTestApi::DataLogger::instance();
-
-      
     auto bearingToTurnCenter = SGGeodesy::courseDeg(_rnav->position(), _flyByTurnCenter);
     auto distToTurnCenter = SGGeodesy::distanceM(_rnav->position(), _flyByTurnCenter);
   
     auto b = bearingToTurnCenter - _initialLegCourse;
-      dl->recordSamplePoint("turn-entry-bearing", b);
 
       SG_NORMALIZE_RANGE(b, -180.0, 180.0);
     if (fabs(b) >= 90.0) {
@@ -401,8 +398,6 @@ public:
 
   void update(double) override
   {
-      auto dl =  FGTestApi::DataLogger::instance();
-
     _courseOriginToAircraft			= SGGeodesy::courseDeg(_waypointOrigin,_rnav->position());
     _distanceOriginAircraftMetre 	= SGGeodesy::distanceM(_waypointOrigin,_rnav->position());
 
@@ -414,7 +409,6 @@ public:
       return;
     }
     
-    const auto turnComputeDist = SG_NM_TO_METER * 4.0;
     if (!_didComputeTurn && (_distanceAircraftTargetMetre < turnComputeDist)) {
       computeTurnAnticipation();
     }
@@ -742,14 +736,16 @@ public:
     }
   }
 
-  virtual void init()
+   void init() override
   {
     RadialIntercept* w = (RadialIntercept*) _waypt.get();
       _trueRadial = w->radialDegMagnetic() + _rnav->magvarDeg();
     _targetTrack = w->courseDegMagnetic() + _rnav->magvarDeg();
+      
+      _canFlyBy = !_waypt->flag(WPT_OVERFLIGHT) && _rnav->canFlyBy();
   }
   
-  virtual void update(double)
+   void update(double) override
   {
       SGGeoc c,
         geocPos = SGGeoc::fromGeod(_rnav->position()),
@@ -774,8 +770,16 @@ public:
       }
 
       _projectedPosition = SGGeod::fromGeoc(c);
-
-
+      _distanceToProjectedInterceptM =  SGGeodesy::distanceM(_rnav->position(), _projectedPosition);
+      if (!_didComputeTurn && (_distanceToProjectedInterceptM < turnComputeDist)) {
+          computeTurn();
+      }
+      
+      if (_doFlyBy) {
+          updateFlyByTurn();
+      }
+      
+      
     // note we want the outbound radial from the waypt, hence the ordering
     // of arguments to courseDeg
     double r = SGGeodesy::courseDeg(_waypt->position(), _rnav->position());
@@ -785,19 +789,91 @@ public:
       setDone();
     }
   }
+          
+    bool updateFlyByTurn()
+    {
+        // find bearing to turn center
+        // when it hits 90 off our track
+        
+        auto bearingToTurnCenter = SGGeodesy::courseDeg(_rnav->position(), _flyByTurnCenter);
+        auto distToTurnCenter = SGGeodesy::distanceM(_rnav->position(), _flyByTurnCenter);
+
+        if (!_flyByStarted) {
+          // check for the turn center being 90 degrees off one wing (start the turn)
+          auto a = bearingToTurnCenter - _targetTrack;
+          SG_NORMALIZE_RANGE(a, -180.0, 180.0);
+            if (fabs(a) < 90.0) {
+                return false;
+          }
+          
+          _flyByStarted = true;
+        }
+        
+        
+        // in the actual turn, our desired track is always pependicular to the
+        // bearing to the turn center we computed
+        _targetTrack = bearingToTurnCenter - copysign(90, _flyByTurnAngle);
+          
+        SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+        _crossTrackError = (distToTurnCenter - _flyByTurnRadius) * SG_METER_TO_NM;
+        return true;
+    }
+    
+    void computeTurn()
+    {
+        _didComputeTurn = true;
+        if (!_canFlyBy)
+            return;
+        
+        double inverseRadial = _trueRadial + 180.0;
+        SG_NORMALIZE_RANGE(inverseRadial, 0.0, 360.0);
+        _flyByTurnAngle = inverseRadial - _targetTrack;
+        SG_NORMALIZE_RANGE(_flyByTurnAngle, -180.0, 180.0);
+        
+        if (fabs(_flyByTurnAngle) > 120.0) {
+          // too sharp, no fly-by
+          return;
+        }
+        
+        _flyByTurnRadius =  _rnav->turnRadiusNm() * SG_NM_TO_METER;
+        _flyByTurnCenter = computeTurnCenter(_flyByTurnRadius, _projectedPosition, _targetTrack, _flyByTurnAngle);
+        _doFlyBy = true;
+    }
   
-  virtual double distanceToWayptM() const
+double distanceToWayptM() const override
   {
-    return SGGeodesy::distanceM(_rnav->position(), position());
+      return _distanceToProjectedInterceptM;
   }
 
-    virtual SGGeod position() const
+     SGGeod position() const override
     {
         return _projectedPosition;
     }
+    
+     double xtrackErrorNm() const override
+     {
+         if (!_flyByStarted)
+             return 0.0; // unless we're doing the fly-by, we're always on course
+         return _crossTrackError;
+     }
+
+    double courseDeviationDeg() const override
+     {
+         // guessed scaling factor
+         return xtrackErrorNm() * 10.0;
+     }
 private:
   double _trueRadial;
     SGGeod _projectedPosition;
+    bool _canFlyBy = false;
+    bool _didComputeTurn = false;
+    bool _doFlyBy = false;
+    double _distanceToProjectedInterceptM = 0.0;
+    SGGeod _flyByTurnCenter;
+    double _flyByTurnAngle;
+    double _flyByTurnRadius;
+    bool _flyByStarted = false;
+    double _crossTrackError = 0.0;
 };
 
 class DMEInterceptCtl : public WayptController
