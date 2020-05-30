@@ -28,6 +28,8 @@
 #include <Airports/runways.hxx>
 #include "Main/util.hxx" // for fgLowPass
 
+#include "test_suite/FGTestApi/TestDataLogger.hxx"
+
 extern double pointsKnownDistanceFromGC(const SGGeoc& a, const SGGeoc&b, const SGGeoc& d, double dist);
 
 namespace flightgear
@@ -243,64 +245,213 @@ public:
       throw sg_exception("LegWayptCtl doesn't work with dynamic waypoints");
     }
   }
-
+  
   virtual void init()
   {
-	bool isPreviousLegValid = false;
-
-	_waypointOrigin = _rnav->previousLegWaypointPosition(isPreviousLegValid);
-
-	_initialLegCourse 				= SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
-	_courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
-	_distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
-
-
-	// check reach the leg in 45Deg or going direct
-	bool canReachLeg = (fabs(_initialLegCourse -_courseAircraftToTarget) < 45.0);
-
-	if (isPreviousLegValid && canReachLeg) {
+    auto previousLeg = _rnav->previousLegData();
+    if (previousLeg) {
+      _waypointOrigin = previousLeg.value().position;
+      _initialLegCourse = SGGeodesy::courseDeg(_waypointOrigin,_waypt->position());
+    } else {
+      // capture current position
+      _waypointOrigin = _rnav->position();
+    }
+    
+    _courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
+    _distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
+    
+    
+    // check reach the leg in 45Deg or going direct
+    bool canReachLeg = (fabs(_initialLegCourse -_courseAircraftToTarget) < 45.0);
+    
+    if (previousLeg && canReachLeg) {
       _targetTrack = _initialLegCourse;
-	} else {
+    } else {
       // can't reach the leg with out a crazy turn, just go direct to the
       // destination waypt
       _targetTrack = _courseAircraftToTarget;
       _initialLegCourse = _courseAircraftToTarget;
       _waypointOrigin = _rnav->position();
-	}
+    }
+      
+  // turn angle depends on final leg course, not initial
+  // do this here so we have a chance of doing a fly-by at the end of the leg
+  _finalLegCourse = SGGeodesy::courseDeg(_waypt->position(), _waypointOrigin) + 180;
+  SG_NORMALIZE_RANGE(_finalLegCourse, 0.0, 360.0);
+    
+    // turn-in logic
+    if (previousLeg.has_value() && previousLeg.value().didFlyBy) {
+      _flyByTurnCenter = previousLeg.value().flyByTurnCenter;
+      _flyByTurnAngle = previousLeg.value().turnAngle;
+      _flyByTurnRadius = previousLeg.value().flyByRadius;
+      _entryFlyByActive = true;
+      SG_NORMALIZE_RANGE(_flyByTurnAngle, -180.0, 180.0);
+    }
+  }
+  
+  void computeTurnAnticipation()
+  {
+    _didComputeTurn = true;
+    
+    if (_waypt->flag(WPT_OVERFLIGHT)) {
+      return; // can't fly-by
+    }
+    
+    if (!_rnav->canFlyBy())
+      return;
+    
+    auto nextLegTrack = _rnav->nextLegTrack();
+    
+    if (!nextLegTrack.has_value()) {
+      return;
+    }
+    
+    _flyByTurnAngle = nextLegTrack.value() - _finalLegCourse;
+    SG_NORMALIZE_RANGE(_flyByTurnAngle, -180.0, 180.0);
+    
+    if (fabs(_flyByTurnAngle) > 120.0) {
+      // too sharp, don't anticipate
+      return;
+    }
+    
+    _flyByTurnRadius =  _rnav->turnRadiusNm() * SG_NM_TO_METER;
+    
+    // this is the heading half way through the turn. Perpendicular to
+    // this is our turn ceenter
+    const auto halfTurnHeading = _finalLegCourse + (_flyByTurnAngle * 0.5);
+    double p = copysign(90.0, _flyByTurnAngle);
+    double h = halfTurnHeading + p;
+    SG_NORMALIZE_RANGE(h, 0.0, 360.0);
+      
+    const double tcOffset = _flyByTurnRadius / cos(_flyByTurnAngle * 0.5 * SG_DEGREES_TO_RADIANS);
+    _flyByTurnCenter = SGGeodesy::direct(_waypt->position(), h, tcOffset);
+    _doFlyBy = true;
+  }
+  
+  bool updateInTurn()
+  {
+      auto dl =  FGTestApi::DataLogger::instance();
+
+    // find bearing to turn center
+    // when it hits 90 off our track
+    
+    auto bearingToTurnCenter = SGGeodesy::courseDeg(_rnav->position(), _flyByTurnCenter);
+    auto distToTurnCenter = SGGeodesy::distanceM(_rnav->position(), _flyByTurnCenter);
+
+    if (!_flyByStarted) {
+      // check for the turn center being 90 degrees off one wing (start the turn)
+      auto a = bearingToTurnCenter - _finalLegCourse;
+      SG_NORMALIZE_RANGE(a, -180.0, 180.0);
+        if (fabs(a) < 90.0) {
+          dl->recordSamplePoint("turn-entry-bearing", a);
+        return false; // keep flying normal leg
+      }
+      
+      _flyByStarted = true;
+    }
+    
+    // check for us passing the half-way point; that's when we should
+    // sequence to the next WP
+    const auto halfPointAngle = (_finalLegCourse + (_flyByTurnAngle * 0.5));
+    auto b = bearingToTurnCenter - halfPointAngle;
+    SG_NORMALIZE_RANGE(b, -180.0, 180.0);
+      
+      dl->recordSamplePoint("turn-exit-bearing", b);
+      
+    if (fabs(b) >= 90.0) {
+      _toFlag = false;
+      setDone();
+    }
+    
+    // in the actual turn, our desired track is always pependicular to the
+    // bearing to the turn center we computed
+    _targetTrack = bearingToTurnCenter - copysign(90, _flyByTurnAngle);
+      
+    SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+
+    _crossTrackError = (distToTurnCenter - _flyByTurnRadius) * SG_METER_TO_NM;
+    _courseDev = _crossTrackError * 10.0; // arbitrary guess for now
+    
+    return true;
+  }
+  
+  void updateInEntryTurn()
+  {
+      auto dl =  FGTestApi::DataLogger::instance();
+
+      
+    auto bearingToTurnCenter = SGGeodesy::courseDeg(_rnav->position(), _flyByTurnCenter);
+    auto distToTurnCenter = SGGeodesy::distanceM(_rnav->position(), _flyByTurnCenter);
+  
+    auto b = bearingToTurnCenter - _initialLegCourse;
+      dl->recordSamplePoint("turn-entry-bearing", b);
+
+      SG_NORMALIZE_RANGE(b, -180.0, 180.0);
+    if (fabs(b) >= 90.0) {
+      _entryFlyByActive = false;
+      return; // we're done with the entry turn
+    }
+    
+    _targetTrack = bearingToTurnCenter - copysign(90, _flyByTurnAngle);
+
+    SG_NORMALIZE_RANGE(_targetTrack, 0.0, 360.0);
+    _crossTrackError = (distToTurnCenter - _flyByTurnRadius) * SG_METER_TO_NM;
+    _courseDev = _crossTrackError * 10.0; // arbitrary guess for now
   }
 
-  virtual void update(double)
+  void update(double) override
   {
+      auto dl =  FGTestApi::DataLogger::instance();
+
     _courseOriginToAircraft			= SGGeodesy::courseDeg(_waypointOrigin,_rnav->position());
     _distanceOriginAircraftMetre 	= SGGeodesy::distanceM(_waypointOrigin,_rnav->position());
 
     _courseAircraftToTarget			= SGGeodesy::courseDeg(_rnav->position(),_waypt->position());
     _distanceAircraftTargetMetre 	= SGGeodesy::distanceM(_rnav->position(),_waypt->position());
 
+    if (_entryFlyByActive) {
+      updateInEntryTurn();
+      return;
+    }
+    
+    const auto turnComputeDist = SG_NM_TO_METER * 4.0;
+    if (!_didComputeTurn && (_distanceAircraftTargetMetre < turnComputeDist)) {
+      computeTurnAnticipation();
+    }
+        
+    if (_didComputeTurn && _doFlyBy) {
+      bool ok = updateInTurn();
+      if (ok) {
+        return;
+      }
+      
+      // otherwise we fall through
+    }
+    
     // from the Aviation Formulary
 #if 0
-      Suppose you are proceeding on a great circle route from A to B (course =crs_AB) and end up at D,
-      perhaps off course. (We presume that A is ot a pole!) You can calculate the course from A to D
-      (crs_AD) and the distance from A to D (dist_AD) using the formulae above. In terms of these the
-      cross track error, XTD, (distance off course) is given by
-      
-      XTD =asin(sin(dist_AD)*sin(crs_AD-crs_AB))
-      (positive XTD means right of course, negative means left)
-      (If the point A is the N. or S. Pole replace crs_AD-crs_AB with
-       lon_D-lon_B or lon_B-lon_D, respectively.)
+    Suppose you are proceeding on a great circle route from A to B (course =crs_AB) and end up at D,
+    perhaps off course. (We presume that A is ot a pole!) You can calculate the course from A to D
+    (crs_AD) and the distance from A to D (dist_AD) using the formulae above. In terms of these the
+    cross track error, XTD, (distance off course) is given by
+    
+    XTD =asin(sin(dist_AD)*sin(crs_AD-crs_AB))
+    (positive XTD means right of course, negative means left)
+    (If the point A is the N. or S. Pole replace crs_AD-crs_AB with
+     lon_D-lon_B or lon_B-lon_D, respectively.)
 #endif
     // however, just for fun, our convention for polarity of the cross-track
     // sign is opposite, so we add a -ve to the computation below.
-      
+    
     double distOriginAircraftRad = _distanceOriginAircraftMetre * SG_METER_TO_NM * SG_NM_TO_RAD;
     double xtkRad = asin(sin(distOriginAircraftRad) * sin((_courseOriginToAircraft - _initialLegCourse) * SG_DEGREES_TO_RADIANS));
-      
+    
     // convert to NM and flip sign for consistency with existing code.
     // since we derive the abeam point and course-deviation from this, and
     // thus the GPS cdi-deflection, if we don't fix this here, the sign of
     // all of those comes out backwards.
     _crossTrackError = -(xtkRad * SG_RAD_TO_NM);
-
+    
     /*
      The "along track distance", ATD, the distance from A along the course towards B
      to the point abeam D is given by:
@@ -324,6 +475,7 @@ public:
     _courseDev = _courseAircraftToTarget - _targetTrack;
     SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
 
+    
     bool isMinimumOverFlightDistanceReached = _distanceAircraftTargetMetre < _rnav->overflightDistanceM();
     bool isOverFlightConeArmed 				= _distanceAircraftTargetMetre < ( _rnav->overflightArmDistanceM() + _rnav->overflightDistanceM() );
     bool leavingOverFlightCone 				= (fabs(_courseDev) > _rnav->overflightArmAngleDeg());
@@ -343,6 +495,22 @@ public:
     }
   }
 
+  simgear::optional<RNAV::LegData> legData() const override
+  {
+    RNAV::LegData r;
+    r.position = _waypt->position();
+    if (_doFlyBy) {
+      // copy all the fly by paramters, so the next controller can
+      // smoothly link up
+      r.didFlyBy = true;
+      r.flyByRadius = _flyByTurnRadius;
+      r.flyByTurnCenter = _flyByTurnCenter;
+      r.turnAngle = _flyByTurnAngle;
+    }
+    
+    return r;
+  }
+  
   virtual double distanceToWayptM() const
   {
     return _distanceAircraftTargetMetre;
@@ -381,6 +549,7 @@ private:
    */
   SGGeod _waypointOrigin;
   double _initialLegCourse;
+  double _finalLegCourse;
   double _distanceOriginAircraftMetre;
   double _distanceAircraftTargetMetre;
   double _courseOriginToAircraft;
@@ -388,7 +557,14 @@ private:
   double _courseDev;
   bool _toFlag;
   double _crossTrackError;
-
+  
+  bool _didComputeTurn = false;
+  bool _doFlyBy = false;
+  SGGeod _flyByTurnCenter;
+  double _flyByTurnAngle;
+  double _flyByTurnRadius;
+  bool _entryFlyByActive = false;
+  bool _flyByStarted = false;
 };
 
 /**

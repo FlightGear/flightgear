@@ -60,7 +60,7 @@ static const char* makeTTWString(double TTW)
 // configuration helper object
 
 GPS::Config::Config() :
-  _enableTurnAnticipation(true),
+  _enableTurnAnticipation(false),
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
   _overflightDistance(0.02),
   _overflightArmDistance(1.0),
@@ -72,13 +72,12 @@ GPS::Config::Config() :
   _courseSelectable(false),
   _followLegTrackToFix(true)
 {
-  _enableTurnAnticipation = false;
 }
 
 void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
 {
   aOwner->tie(aCfg, "turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
-  aOwner->tie(aCfg, "turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
+  aOwner->tie(aCfg, "enable-fly-by", SGRawValuePointer<bool>(&_enableTurnAnticipation));
   aOwner->tie(aCfg, "wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
   aOwner->tie(aCfg, "hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
@@ -102,9 +101,6 @@ GPS::GPS ( SGPropertyNode *node, bool defaultGPSMode) :
   _mode("init"),
   _name(node->getStringValue("name", "gps")),
   _num(node->getIntValue("number", 0)),
-  _computeTurnData(false),
-  _anticipateTurn(false),
-  _inTurn(false),
   _callbackFlightPlanChanged(SGPropertyChangeCallback<GPS>(this,&GPS::routeManagerFlightPlanChanged,
                                                            fgGetNode("/autopilot/route-manager/signals/flightplan-changed", true))),
   _callbackRouteActivated(SGPropertyChangeCallback<GPS>(this,&GPS::routeActivated,
@@ -332,7 +328,9 @@ GPS::update (double delta_time_sec)
       
       _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
         
-      updateTurn();
+      if (_wayptController->isDone()) {
+        doSequence();
+      }
       updateRouteData();
     }
 
@@ -467,26 +465,47 @@ double GPS::selectedMagCourse()
   return _selectedCourse;
 }
 
-SGGeod GPS::previousLegWaypointPosition(bool& isValid)
+simgear::optional<double> GPS::nextLegTrack()
 {
-	FlightPlan::Leg* leg = _route->previousLeg();
-	if (leg){
-		Waypt* waypt = leg->waypoint();
-		if (waypt) {
-            isValid = true;
-            // ensure computations use runway end, not threshold
-            if (waypt->type() == "runway") {
-                RunwayWaypt* rwpt = static_cast<RunwayWaypt*>(waypt);
-                return rwpt->runway()->end();
-            }
-
-			return waypt->position();
-		}
-	}
-
-	isValid = false;
-    return SGGeod();
+    auto next = _route->nextLeg();
+    if (!next)
+        return {};
+    
+    return next->courseDeg();
 }
+
+simgear::optional<RNAV::LegData> GPS::previousLegData()
+{
+  // if the previous controller computed valid data,
+  // use that. This ensures fly-by turns work out, especially
+  if (_wp0Data.has_value())
+    return _wp0Data;
+  
+  // if we did not get data from the previous controller (eg, waypoint
+  // jumped or first waypoint), just compute the position
+  FlightPlan::Leg* leg = _route->previousLeg();
+  if (!leg) {
+    return {}; // no data
+  }
+  
+  LegData legData;
+  Waypt* waypt = leg->waypoint();
+  legData.position = waypt->position();
+  
+   // ensure computations use runway end, not threshold
+   if (waypt->type() == "runway") {
+       RunwayWaypt* rwpt = static_cast<RunwayWaypt*>(waypt);
+       legData.position =  rwpt->runway()->end();
+   }
+
+  return legData;
+}
+
+bool GPS::canFlyBy() const
+{
+    return _config.turnAnticipationEnabled();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
 void
@@ -560,6 +579,7 @@ GPS::updateTrackingBug()
 
 void GPS::currentWaypointChanged()
 {
+  _wp0Data.reset();
   if (!_route) {
     return;
   }
@@ -583,7 +603,12 @@ void GPS::currentWaypointChanged()
   }
   
   _currentWaypt = _route->currentLeg()->waypoint();
-    wp1Changed(); // rebuild the active controller
+  if (_wayptController && (_wayptController->waypoint() == _prevWaypt)) {
+    // capture leg data form the controller, before we destroy it
+    _wp0Data = _wayptController->legData();
+  }
+  
+  wp1Changed(); // rebuild the active controller
   _desiredCourse = getLegMagCourse();
   _desiredCourseNode->fireValueChanged();
 }
@@ -661,163 +686,10 @@ void GPS::endOfFlightPlan()
     cleared();
 }
 
-void GPS::updateTurn()
-{
-  bool printProgress = false;
-  
-  if (_computeTurnData) {
-    if (_last_speed_kts < 10) {
-      // need valid leg course and sensible ground speed to compute the turn
-      return;
-    }
-    
-    computeTurnData();
-    printProgress = true;
-  }
-  
-  if (!_anticipateTurn) {
-    updateOverflight();
-    return;
-  }
-
-  updateTurnData();
-  // find bearing to turn centre
-  double bearing, az2, distanceM;
-  SGGeodesy::inverse(_indicated_pos, _turnCentre, bearing, az2, distanceM);
-  double progress = computeTurnProgress(bearing);
-  
-  if (printProgress) {
-    SG_LOG(SG_INSTR, SG_INFO,"turn progress=" << progress);
-  }
-  
-  if (!_inTurn && (progress > 0.0)) {
-    beginTurn();
-  }
-  
-  if (_inTurn && !_turnSequenced && (progress > 0.5)) {
-    _turnSequenced = true;
-     SG_LOG(SG_INSTR, SG_INFO, "turn passed midpoint, sequencing");
-     doSequence();
-  }
-  
-  if (_inTurn && (progress >= 1.0)) {
-    endTurn();
-  }
-  
-  if (_inTurn) {
-    // drive deviation and desired course
-    double desiredCourse = bearing - copysign(90, _turnAngle);
-    SG_NORMALIZE_RANGE(desiredCourse, 0.0, 360.0);
-    double deviationNm = (distanceM * SG_METER_TO_NM) - _turnRadius;
-    double deviationDeg = desiredCourse - getMagTrack();
-    deviationNm = copysign(deviationNm, deviationDeg);
-    // FIXME
-    //_wp1_course_deviation_node->setDoubleValue(deviationDeg);
-    //_wp1_course_error_nm_node->setDoubleValue(deviationNm);
-    //_cdiDeflectionNode->setDoubleValue(deviationDeg);
-  }
-}
-
-void GPS::updateOverflight()
-{
-  if (_wayptController->isDone()) {
-      doSequence();
-      _computeTurnData = true;
-  }
-}
-
-void GPS::beginTurn()
-{
-  _inTurn = true;
-  _turnSequenced = false;
-  SG_LOG(SG_INSTR, SG_INFO, "beginning turn");
-}
-
-void GPS::endTurn()
-{
-  _inTurn = false;
-  SG_LOG(SG_INSTR, SG_INFO, "ending turn");
-  _computeTurnData = true;
-}
-
-double GPS::computeTurnProgress(double aBearing) const
-{
-  double startBearing = _turnStartBearing + copysign(90, _turnAngle);
-  return (aBearing - startBearing) / _turnAngle;
-}
-
-void GPS::computeTurnData()
-{
-  _computeTurnData = false;
-  if ((_mode != "leg") || !_route->nextLeg()) {
-    _anticipateTurn = false;
-    return;
-  }
-  
-  WayptRef next = _route->nextLeg()->waypoint();
-  if (next->flag(WPT_DYNAMIC) ||
-      !_config.turnAnticipationEnabled() ||
-      next->flag(WPT_OVERFLIGHT))
-  {
-    _anticipateTurn = false;
-    return;
-  }
-  
-  _turnStartBearing = _desiredCourse;
-// compute next leg course
-  RoutePath path(_route);
-  double crs = path.trackForIndex(_route->currentIndex() + 1);
-
-// compute offset bearing
-  _turnAngle = crs - _turnStartBearing;
-  SG_NORMALIZE_RANGE(_turnAngle, -180.0, 180.0);
-  double median = _turnStartBearing + (_turnAngle * 0.5);
-  double offsetBearing = median + copysign(90, _turnAngle);
-  SG_NORMALIZE_RANGE(offsetBearing, 0.0, 360.0);
-  
-  SG_LOG(SG_INSTR, SG_INFO, "GPS computeTurnData: in=" << _turnStartBearing <<
-    ", out=" << crs << "; turnAngle=" << _turnAngle << ", median=" << median 
-    << ", offset=" << offsetBearing);
-
-  SG_LOG(SG_INSTR, SG_INFO, "next leg is now:" << _currentWaypt->ident() << "->" << next->ident());
-
-  _turnPt = _currentWaypt->position();
-  _anticipateTurn = true;
-}
-
-void GPS::updateTurnData()
-{
-  // depends on ground speed, so needs to be updated per-frame
-  _turnRadius = computeTurnRadiusNm(_last_speed_kts);
-  
-  // compute the turn centre, based on the turn radius.
-  // key thing is to understand that we're working a right-angle triangle,
-  // where the right-angle is the point we start the turn. From that point,
-  // one side is the inbound course to the turn pt, and the other is the
-  // perpendicular line, of length 'r', to the turn centre.
-  // the triangle's hypotenuse, which we need to find, is the distance from the
-  // turn pt to the turn center (in the direction of the offset bearing)
-  // note that d - _turnRadius tell us how much we're 'cutting' the corner.
-  
-  double halfTurnAngle = fabs(_turnAngle * 0.5) * SG_DEGREES_TO_RADIANS;
-  double d = _turnRadius / cos(halfTurnAngle);
-  
- // SG_LOG(SG_INSTR, SG_INFO, "turnRadius=" << _turnRadius << ", d=" << d
- //   << " (cut distance=" << d - _turnRadius << ")");
-  
-  double median = _turnStartBearing + (_turnAngle * 0.5);
-  double offsetBearing = median + copysign(90, _turnAngle);
-  SG_NORMALIZE_RANGE(offsetBearing, 0.0, 360.0);
-  
-  double az2;
-  SGGeodesy::direct(_turnPt, offsetBearing, d * SG_NM_TO_METER, _turnCentre, az2); 
-}
-
 double GPS::turnRadiusNm(double groundSpeedKts)
 {
     return computeTurnRadiusNm(groundSpeedKts);
 }
-
 
 double GPS::computeTurnRadiusNm(double aGroundSpeedKts) const
 {
@@ -877,6 +749,7 @@ void GPS::wp1Changed()
 {
   if (!_currentWaypt)
     return;
+  
   if (_mode == "leg") {
     _wayptController.reset(WayptController::createForWaypt(this, _currentWaypt));
     if (_currentWaypt->type() == "hold") {
@@ -890,16 +763,16 @@ void GPS::wp1Changed()
   } else if (_mode == "dto") {
     _wayptController.reset(new DirectToController(this, _currentWaypt, _wp0_position));
   }
-
+  
   _wayptController->init();
   _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
-
+  
   if (_mode == "obs") {
     _legDistanceNm = -1.0;
   } else {
     _wayptController->update(0.0);
     _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
-
+    
     _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
     
     // synchronise these properties immediately
@@ -907,7 +780,7 @@ void GPS::wp1Changed()
     _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
     _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
     _currentWayptNode->setDoubleValue("altitude-ft", p.getElevationFt());
-      
+    
     _desiredCourse = getLegMagCourse();
   }
 }
@@ -1307,6 +1180,11 @@ void GPS::selectLegMode()
   }
 
   _mode = "leg";  
+
+// clear any previous leg data which might be hanging around
+// note this means you can mess up fly-by by toggling into and out LEG
+// mode, but this seems reasonable
+  _wp0Data.reset();
 
   // depending on the situation, this will either get over-written 
   // in routeManagerSequenced or not; either way it does no harm to

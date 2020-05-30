@@ -21,6 +21,7 @@
 #define FG_WAYPT_CONTROLLER_HXX
 
 #include <Navaids/waypoint.hxx>
+#include <simgear/misc/simgear_optional.hxx>
 
 namespace flightgear
 {
@@ -58,7 +59,12 @@ public:
    * device selected course (eg, from autopilot / MCP / OBS) in degrees
    */
   virtual double selectedMagCourse() = 0;
-
+    
+    virtual bool canFlyBy() const
+    {
+        return false;
+    }
+    
   /**
    * minimum distance to switch next waypoint.
    */
@@ -72,15 +78,31 @@ public:
      */
     virtual double overflightArmAngleDeg() = 0;
 
+    struct LegData {
+        SGGeod position;
+        bool didFlyBy = false;
+        SGGeod flyByTurnCenter;
+        double flyByRadius = 0.0;
+        double turnAngle = 0.0;
+    };
+    
   /**
    * device leg previous waypoint position(eg, from route manager)
    */
-  virtual SGGeod previousLegWaypointPosition(bool& isValid)= 0;
-
+  virtual simgear::optional<LegData> previousLegData()
+    {
+        return simgear::optional<LegData>();
+    }
+    
+    virtual simgear::optional<double> nextLegTrack()
+    {
+        return simgear::optional<double>{};
+    }
+     
   /**
    * @brief compute turn radius based on current ground-speed
    */
-  
+    
   double turnRadiusNm()
   {
     return turnRadiusNm(groundSpeedKts());
@@ -151,11 +173,24 @@ public:
    */
   virtual std::string status() const;
     
+    virtual simgear::optional<RNAV::LegData> legData() const
+    {
+        // defer to our subcontroller if it exists
+        if (_subController)
+            return _subController->legData();
+        
+        return simgear::optional<RNAV::LegData>();
+    }
+    
   /**
    * Static factory method, given a waypoint, return a controller bound
    * to it, of the appropriate type
    */
   static WayptController* createForWaypt(RNAV* rnav, const WayptRef& aWpt);
+    
+    WayptRef waypoint() const
+    { return _waypt; }
+    
 protected:
   WayptController(RNAV* aRNAV, const WayptRef& aWpt) :
     _waypt(aWpt),

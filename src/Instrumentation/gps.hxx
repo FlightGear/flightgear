@@ -76,15 +76,19 @@ public:
 
   // RNAV interface
     SGGeod position() override;
-    virtual double trackDeg();
-    virtual double groundSpeedKts();
-    virtual double vspeedFPM();
-    virtual double magvarDeg();
-    virtual double selectedMagCourse();
-    virtual double overflightDistanceM();
-    virtual double overflightArmDistanceM();
-    virtual double overflightArmAngleDeg();
-    virtual SGGeod previousLegWaypointPosition(bool& isValid);
+    double trackDeg() override;
+    double groundSpeedKts() override;
+    double vspeedFPM() override;
+    double magvarDeg() override;
+    double selectedMagCourse() override;
+    double overflightDistanceM() override;
+    double overflightArmDistanceM() override;
+    double overflightArmAngleDeg() override;
+    bool canFlyBy() const override;
+    
+    simgear::optional<LegData> previousLegData() override;
+    
+    simgear::optional<double> nextLegTrack() override;
 
     double turnRadiusNm(double groundSpeedKnots) override;
 private:
@@ -208,17 +212,7 @@ private:
     void updateTrackingBug();
     void updateRouteData();
     void driveAutopilot();
-
-    void updateTurn();
-    void updateOverflight();
-    void beginTurn();
-    void endTurn();
-
-    double computeTurnProgress(double aBearing) const;
-    void computeTurnData();
-    void updateTurnData();
-    double computeTurnRadiusNm(double aGroundSpeedKts) const;
-
+  
     /** Update one-shot things when WP1 / leg data change */
     void wp1Changed();
 
@@ -307,6 +301,7 @@ private:
 
     // true-bearing-error and mag-bearing-error
 
+    double computeTurnRadiusNm(double aGroundSpeedKts) const;
 
     /**
      * Tied-properties helper, record nodes which are tied for easy un-tie-ing
@@ -403,17 +398,8 @@ private:
     bool _searchNames; ///< set if we're searching names instead of idents
 #endif
 
-    // turn data
-    bool _computeTurnData; ///< do we need to update the turn data?
-    bool _anticipateTurn; ///< are we anticipating the next turn or not?
-    bool _inTurn; // is a turn in progress?
-    bool _turnSequenced; // have we sequenced the new leg?
-    double _turnAngle; // angle to turn through, in degrees
-    double _turnStartBearing; // bearing of inbound leg
-    double _turnRadius; // radius of turn in nm
-    SGGeod _turnPt;
-    SGGeod _turnCentre;
-
+    simgear::optional<RNAV::LegData> _wp0Data;
+    
     std::unique_ptr<flightgear::WayptController> _wayptController;
 
     flightgear::WayptRef _prevWaypt;

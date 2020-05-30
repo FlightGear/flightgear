@@ -78,7 +78,8 @@ typedef enum {
   /// waypoint prodcued by expanding a VIA segment
   WPT_VIA           = 1 << 12,
     
-    // waypoint should be hidden from maps, etc
+    /// waypoint should not be shown in UI displays, etc
+    /// this is used to implement FMSs which delete waypoints after passing them
     WPT_HIDDEN      = 1 << 13
 } WayptFlag;
 
