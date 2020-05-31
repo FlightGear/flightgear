@@ -613,7 +613,7 @@ void RNAVProcedureTests::testTransitionsSTAR()
 void RNAVProcedureTests::testLEBL_LARP2F()
 {
     auto lebl = FGAirport::findByIdent("LEBL");
-    auto sid = lebl->findSIDWithIdent("LARP2F.25L");
+    auto sid = lebl->findSIDWithIdent("LARP1F.25L");
     // procedures not loaded, abandon test
     if (!sid)
         return;
@@ -636,7 +636,7 @@ void RNAVProcedureTests::testLEBL_LARP2F()
     CPPUNIT_ASSERT_EQUAL(fp->legAtIndex(1)->waypoint()->position(), SGGeod::fromDeg(0, 0)); 
     CPPUNIT_ASSERT_EQUAL(std::string{"LARPA"}, fp->legAtIndex(8)->waypoint()->ident());
     double d = fp->legAtIndex(8)->distanceAlongRoute();
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(47.7, d, 1.0); // ensure the route didn't blow up
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(46.6, d, 1.0); // ensure the route didn't blow up
     
     FGTestApi::writeFlightPlanToKML(fp);
 
@@ -655,6 +655,8 @@ void RNAVProcedureTests::testLEBL_LARP2F()
     pilot->setCourseTrue(m_gpsNode->getDoubleValue("wp/leg-true-course-deg"));
     pilot->setSpeedKts(220);
     pilot->flyGPSCourse(m_gps);
+    pilot->setTargetAltitudeFtMSL(8000);
+    pilot->setVerticalFPM(1800);
     FGTestApi::runForTime(20.0);
     bool ok = FGTestApi::runForTimeWithCheck(180.0, [fp] () {
         if (fp->currentIndex() == 1) {
