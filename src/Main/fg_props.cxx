@@ -418,10 +418,19 @@ FGProperties::bind ()
   _tiedProperties.Tie<const char*>("/position/longitude-string", getLongitudeString);
 
     _headingMagnetic = fgGetNode("/orientation/heading-magnetic-deg", true);
+    _headingMagnetic->setDoubleValue(0.0);
+
     _trackMagnetic = fgGetNode("/orientation/track-magnetic-deg", true);
+    _trackMagnetic->setDoubleValue(0.0);
+
     _magVar = fgGetNode("/environment/magnetic-variation-deg", true);
+    _magVar->setDoubleValue(0.0);
+
     _trueHeading = fgGetNode("/orientation/heading-deg", true);
+    _trueHeading->setDoubleValue(0.0);
+
     _trueTrack = fgGetNode("/orientation/track-deg", true);
+    _trueTrack->setDoubleValue(0.0);
 }
 
 void
