@@ -373,6 +373,15 @@ FGProperties::init ()
 {
 }
 
+static SGPropertyNode_ptr initDoubleNode(const std::string& path, const double v)
+{
+    auto r = fgGetNode(path, true);
+    if (r->getType() == simgear::props::NONE) {
+        r->setDoubleValue(v);
+    }
+    return r;
+}
+
 void
 FGProperties::bind ()
 {
@@ -417,20 +426,11 @@ FGProperties::bind ()
   _tiedProperties.Tie<const char*>("/position/latitude-string", getLatitudeString);
   _tiedProperties.Tie<const char*>("/position/longitude-string", getLongitudeString);
 
-    _headingMagnetic = fgGetNode("/orientation/heading-magnetic-deg", true);
-    _headingMagnetic->setDoubleValue(0.0);
-
-    _trackMagnetic = fgGetNode("/orientation/track-magnetic-deg", true);
-    _trackMagnetic->setDoubleValue(0.0);
-
-    _magVar = fgGetNode("/environment/magnetic-variation-deg", true);
-    _magVar->setDoubleValue(0.0);
-
-    _trueHeading = fgGetNode("/orientation/heading-deg", true);
-    _trueHeading->setDoubleValue(0.0);
-
-    _trueTrack = fgGetNode("/orientation/track-deg", true);
-    _trueTrack->setDoubleValue(0.0);
+    _headingMagnetic = initDoubleNode("/orientation/heading-magnetic-deg", 0.0);
+    _trackMagnetic = initDoubleNode("/orientation/track-magnetic-deg", 0.0);
+    _magVar = initDoubleNode("/environment/magnetic-variation-deg", 0.0);
+    _trueHeading = initDoubleNode("/orientation/heading-deg", 0.0);
+    _trueTrack = initDoubleNode("/orientation/track-deg", 0.0);
 }
 
 void
