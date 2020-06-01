@@ -646,7 +646,10 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
         developerMode = simgear::strutils::to_bool(s);
     }
 
-    fgSetBool("/sim/developer-mode", developerMode);
+    auto node = fgGetNode("/sim/developer-mode", true);
+    // ensure this value survives reset
+    node->setAttribute(SGPropertyNode::PRESERVE, true);
+    node->setBoolValue(developerMode);
     sglog().setDeveloperMode(developerMode);
     
     static SimLogFileLine   simLogFileLine;
