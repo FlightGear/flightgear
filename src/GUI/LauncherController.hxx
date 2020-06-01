@@ -25,6 +25,7 @@
 #include <QUrl>
 #include <QModelIndex>
 #include <QSize>
+#include <QPointF>
 
 #include <simgear/package/Package.hxx>
 #include <simgear/package/Catalog.hxx>

@@ -2,6 +2,7 @@
 #define AIRCRAFTSEARCHFILTERMODEL_HXX
 
 #include <QSortFilterProxyModel>
+#include <QUrl>
 
 #include <simgear/props/props.hxx>
 

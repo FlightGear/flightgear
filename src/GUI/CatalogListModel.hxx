@@ -26,6 +26,7 @@
 #include <QDir>
 #include <QPixmap>
 #include <QStringList>
+#include <QUrl>
 
 #include <simgear/package/Root.hxx>
 #include <simgear/package/Catalog.hxx>
