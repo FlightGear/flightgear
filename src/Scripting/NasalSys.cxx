@@ -590,6 +590,28 @@ static naRef f_makeTimer(naContext c, naRef me, int argc, naRef* args)
   return nasal::to_nasal(c, timerObj);
 }
 
+static naRef f_makeSingleShot(naContext c, naRef me, int argc, naRef* args)
+{
+    if (!naIsNum(args[0])) {
+        naRuntimeError(c, "bad interval argument to makesingleshot");
+    }
+
+    naRef func, self = naNil();
+    if (naIsFunc(args[1])) {
+        func = args[1];
+    } else if ((argc == 3) && naIsFunc(args[2])) {
+        self = args[1];
+        func = args[2];
+    } else {
+        naRuntimeError(c, "bad function/self arguments to makesingleshot");
+    }
+
+    auto timerObj = new TimerObj(c, nasalSys, func, self, args[0].num);
+    timerObj->setSingleShot(true);
+    timerObj->start();
+    return nasal::to_nasal(c, timerObj);
+}
+
 static naRef f_maketimeStamp(naContext c, naRef me, int argc, naRef* args)
 {
     TimeStampObj* timeStampObj = new TimeStampObj(c);
@@ -946,33 +968,34 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 }
 
 // Table of extension functions.  Terminate with zeros.
-static struct { const char* name; naCFunction func; } funcs[] = {
-    { "getprop",   f_getprop },
-    { "setprop",   f_setprop },
-    { "print",     f_print },
-    { "logprint",  f_logprint },
-    { "_fgcommand", f_fgcommand },
-    { "settimer",  f_settimer },
-    { "maketimer", f_makeTimer },
-    { "_setlistener", f_setlistener },
-    { "removelistener", f_removelistener },
-    { "addcommand", f_addCommand },
-    { "removecommand", f_removeCommand },
-    { "_cmdarg",  f_cmdarg },
-    { "_interpolate",  f_interpolate },
-    { "rand",  f_rand },
-    { "srand",  f_srand },
-    { "abort", f_abort },
-    { "directory", f_directory },
-    { "resolvepath", f_resolveDataPath },
-    { "finddata", f_findDataDir },
-    { "parsexml", f_parsexml },
-    { "parse_markdown", f_parse_markdown },
-    { "md5", f_md5 },
-    { "systime", f_systime },
-    { "maketimestamp", f_maketimeStamp},
-    { 0, 0 }
-};
+static struct { const char* name; naCFunction func;
+} funcs[] = {
+    {"getprop", f_getprop},
+    {"setprop", f_setprop},
+    {"print", f_print},
+    {"logprint", f_logprint},
+    {"_fgcommand", f_fgcommand},
+    {"settimer", f_settimer},
+    {"maketimer", f_makeTimer},
+    {"makesingleshot", f_makeSingleShot},
+    {"_setlistener", f_setlistener},
+    {"removelistener", f_removelistener},
+    {"addcommand", f_addCommand},
+    {"removecommand", f_removeCommand},
+    {"_cmdarg", f_cmdarg},
+    {"_interpolate", f_interpolate},
+    {"rand", f_rand},
+    {"srand", f_srand},
+    {"abort", f_abort},
+    {"directory", f_directory},
+    {"resolvepath", f_resolveDataPath},
+    {"finddata", f_findDataDir},
+    {"parsexml", f_parsexml},
+    {"parse_markdown", f_parse_markdown},
+    {"md5", f_md5},
+    {"systime", f_systime},
+    {"maketimestamp", f_maketimeStamp},
+    {0, 0}};
 
 naRef FGNasalSys::cmdArgGhost()
 {
