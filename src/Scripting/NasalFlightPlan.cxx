@@ -750,6 +750,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
             return;
         }
 
+        if (naIsNil(value)) {
+            fp->setSID(fp->sid(), string{});
+            return;
+        }
+
         if (naIsString(value)) {
             const std::string s(naStr_data(value));
             Transition*       trans = nullptr;
@@ -815,6 +820,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
             return;
         }
 
+        if (naIsNil(value)) {
+            fp->setSTAR(fp->star(), string{});
+            return;
+        }
+
         if (naIsString(value)) {
             const std::string s(naStr_data(value));
             Transition*       trans = nullptr;
@@ -875,6 +885,11 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
             return;
         }
 
+        if (naIsNil(value)) {
+            fp->setApproach(fp->approach(), string{});
+            return;
+        }
+
         if (naIsString(value)) {
             const std::string s(naStr_data(value));
             Transition* trans = nullptr;
@@ -898,7 +913,7 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
             return;
         }
 
-        naRuntimeError(c, "bad argument type setting star_trans");
+        naRuntimeError(c, "bad argument type setting approach_trans");
     } else if (!strcmp(fieldName, "aircraftCategory")) {
         if (!naIsString(value)) naRuntimeError(c, "aircraftCategory must be a string");
         fp->setIcaoAircraftCategory(naStr_data(value));
