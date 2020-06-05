@@ -468,6 +468,12 @@ QQuickDrawable::QQuickDrawable() : d(new QQuickDrawablePrivate)
     }
 }
 
+QQuickDrawable::~QQuickDrawable()
+{
+    delete d->qmlEngine;
+    delete d->renderControl;
+}
+
 void QQuickDrawable::setup(osgViewer::GraphicsWindow *gw, osgViewer::Viewer *viewer)
 {
     osg::GraphicsContext* gc = gw;
@@ -514,12 +520,12 @@ void QQuickDrawable::setup(osgViewer::GraphicsWindow *gw, osgViewer::Viewer *vie
     d->renderControl->prepareThread(op->thread());
 #endif
     QObject::connect(d->renderControl, &QQuickRenderControl::sceneChanged,
-                     d, &QQuickDrawablePrivate::onSceneChanged);
+                     d.get(), &QQuickDrawablePrivate::onSceneChanged);
     QObject::connect(d->renderControl, &QQuickRenderControl::renderRequested,
-                     d, &QQuickDrawablePrivate::onRenderRequested);
+                     d.get(), &QQuickDrawablePrivate::onRenderRequested);
 
 
-    viewer->getEventHandlers().push_front(new QuickEventHandler(d));
+    viewer->getEventHandlers().push_front(new QuickEventHandler(d.get()));
 }
 
 void QQuickDrawable::drawImplementation(osg::RenderInfo& renderInfo) const
@@ -557,7 +563,7 @@ void QQuickDrawable::setSource(QUrl url)
     d->qmlComponent = new QQmlComponent(d->qmlEngine, url);
     if (d->qmlComponent->isLoading()) {
         QObject::connect(d->qmlComponent, &QQmlComponent::statusChanged,
-                         d, &QQuickDrawablePrivate::onComponentLoaded);
+                         d.get(), &QQuickDrawablePrivate::onComponentLoaded);
     } else {
         d->onComponentLoaded();
     }

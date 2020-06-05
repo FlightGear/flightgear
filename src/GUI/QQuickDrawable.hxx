@@ -19,6 +19,7 @@
 #ifndef FG_VIEWER_QUICK_DRAWABLE_HXX
 #define FG_VIEWER_QUICK_DRAWABLE_HXX
 
+#include <memory>
 #include <osg/Drawable>
 #include <QUrl>
 
@@ -50,7 +51,7 @@ public:
   void resize(int width, int height);
 
 private:
-  QQuickDrawablePrivate* d;
+  std::unique_ptr<QQuickDrawablePrivate> d;
 };
 
 #endif
