@@ -22,6 +22,11 @@ if(COMMAND cmake_policy)
     if(POLICY CMP0071)
         cmake_policy(SET CMP0071 NEW)
     endif()
+
+    # OpenGL VND policy : use the old definition for now, until we can audit this
+    if(POLICY CMP0072)
+        cmake_policy(SET CMP0071 OLD)
+    endif()
 endif()
 
 message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
