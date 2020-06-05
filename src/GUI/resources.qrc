@@ -1,33 +1,33 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="history-icon">history-icon.png</file>
-        <file alias="right-arrow-icon">arrow-right-icon.png</file>
-        <file alias="left-arrow-icon">arrow-left-icon.png</file>
+        <file alias="history-icon">assets/history-icon.png</file>
+        <file alias="right-arrow-icon">assets/arrow-right-icon.png</file>
+        <file alias="left-arrow-icon">assets/arrow-left-icon.png</file>
         <file alias="app-icon-large">../../icons/128x128/apps/flightgear.png</file>
-        <file alias="spinner">spinner.gif</file>
-        <file alias="heliport-icon">heliport-icon.png</file>
-        <file alias="seaport-icon">seaport-icon.png</file>
-        <file alias="vor-icon">vor-icon.png</file>
-        <file alias="vortac-icon">vortac-icon.png</file>
-        <file alias="waypoint-icon">waypoint-icon.png</file>
-        <file alias="ndb-icon">ndb-icon.png</file>
-        <file alias="airport-icon">airport-icon.png</file>
-        <file alias="airport-tower-icon">airport-tower-icon.png</file>
-        <file alias="vor-dme-icon">vor-dme-icon.png</file>
-        <file alias="seaport-tower-icon">seaport-tower-icon.png</file>
-        <file alias="ndb-small-icon">ndb-small-icon.png</file>
-        <file alias="ndb-large-icon">ndb-large-icon.png</file>
-        <file alias="airplane-icon">airplane-icon.png</file>
-        <file alias="airport-closed-icon">airport-closed-icon.png</file>
-        <file alias="preview-icon">preview-icon.png</file>
-        <file alias="settings-gear-white">settings-gear-white.png</file>
-        <file alias="toolbox-aircraft">toolbox-aircraft.png</file>
-        <file alias="toolbox-environment">toolbox-environment.png</file>
-        <file alias="toolbox-fly">toolbox-fly.png</file>
-        <file alias="toolbox-location">toolbox-location.png</file>
-        <file alias="toolbox-settings">toolbox-settings.png</file>
-        <file alias="toolbox-summary">toolbox-summary.png</file>
-        <file alias="toolbox-addons">toolbox-addons.png</file>
+        <file alias="spinner">assets/spinner.gif</file>
+        <file alias="heliport-icon">assets/heliport-icon.png</file>
+        <file alias="seaport-icon">assets/seaport-icon.png</file>
+        <file alias="vor-icon">assets/vor-icon.png</file>
+        <file alias="vortac-icon">assets/vortac-icon.png</file>
+        <file alias="waypoint-icon">assets/waypoint-icon.png</file>
+        <file alias="ndb-icon">assets/ndb-icon.png</file>
+        <file alias="airport-icon">assets/airport-icon.png</file>
+        <file alias="airport-tower-icon">assets/airport-tower-icon.png</file>
+        <file alias="vor-dme-icon">assets/vor-dme-icon.png</file>
+        <file alias="seaport-tower-icon">assets/seaport-tower-icon.png</file>
+        <file alias="ndb-small-icon">assets/ndb-small-icon.png</file>
+        <file alias="ndb-large-icon">assets/ndb-large-icon.png</file>
+        <file alias="airplane-icon">assets/airplane-icon.png</file>
+        <file alias="airport-closed-icon">assets/airport-closed-icon.png</file>
+        <file alias="preview-icon">assets/preview-icon.png</file>
+        <file alias="settings-gear-white">assets/settings-gear-white.png</file>
+        <file alias="toolbox-aircraft">assets/toolbox-aircraft.png</file>
+        <file alias="toolbox-environment">assets/toolbox-environment.png</file>
+        <file alias="toolbox-fly">assets/toolbox-fly.png</file>
+        <file alias="toolbox-location">assets/toolbox-location.png</file>
+        <file alias="toolbox-settings">assets/toolbox-settings.png</file>
+        <file alias="toolbox-summary">assets/toolbox-summary.png</file>
+        <file alias="toolbox-addons">assets/toolbox-addons.png</file>
         <file>qml/AircraftList.qml</file>
         <file>qml/AircraftRating.qml</file>
         <file>qml/ArrowButton.qml</file>
@@ -46,9 +46,9 @@
         <file>qml/ToggleSwitch.qml</file>
         <file>qml/RatingSlider.qml</file>
         <file>qml/PopupChoice.qml</file>
-        <file alias="up-down-arrow">up-down-arrow.png</file>
+        <file alias="up-down-arrow">assets/up-down-arrow.png</file>
         <file>qml/AircraftVariantChoice.qml</file>
-        <file alias="search-icon-small">search-icon-small.png</file>
+        <file alias="search-icon-small">assets/search-icon-small.png</file>
         <file>qml/AircraftRatingsPanel.qml</file>
         <file>qml/NoDefaultCatalogPanel.qml</file>
         <file>qml/ListHeaderBox.qml</file>
@@ -136,9 +136,9 @@
         <file alias="favourite-icon-outline">assets/icons8-christmas-star-outline.png</file>
     </qresource>
     <qresource prefix="/preview">
-        <file alias="close-icon">preview-close.png</file>
-        <file alias="left-arrow-icon">preview-left-arrow.png</file>
-        <file alias="right-arrow-icon">preview-right-arrow.png</file>
+        <file alias="close-icon">assets/preview-close.png</file>
+        <file alias="left-arrow-icon">assets/preview-left-arrow.png</file>
+        <file alias="right-arrow-icon">assets/preview-right-arrow.png</file>
     </qresource>
     <qresource prefix="/svg">
         <file alias="toolbox-fly">assets/icons8-airplane-take-off.svg</file>
