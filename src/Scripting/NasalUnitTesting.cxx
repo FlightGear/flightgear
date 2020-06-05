@@ -236,7 +236,7 @@ bool executeNasalTest(const SGPath& path)
     const auto source = file_in.read_all();
     
     string errors;
-    string fileName = "executeNasalTest: " + path.utf8Str();
+    string fileName = path.utf8Str();
     naRef code = parseTestFile(ctx, fileName.c_str(),
                        source.c_str(),
                        source.size(), errors);
@@ -261,12 +261,19 @@ bool executeNasalTest(const SGPath& path)
            if (naIsFunc(setUpFunc)) {
                nasalSys->callWithContext(ctx, setUpFunc, 0, nullptr ,localNS.get_naRef());
            }
-           
-           nasalSys->callWithContext(ctx, value.getValue<naRef>(), 0, nullptr, localNS.get_naRef());
+
+           const auto testName = value.getKey();
+           auto testFunc = value.getValue<naRef>();
+           if (!naIsFunc(testFunc)) {
+               SG_LOG(SG_NAVAID, SG_DEV_WARN, "Skipping non-function test member:" << testName);
+               continue;
+           }
+
+           nasalSys->callWithContext(ctx, testFunc, 0, nullptr, localNS.get_naRef());
            if (static_activeTest->failure) {
-               SG_LOG(SG_NASAL, SG_DEV_WARN, value.getKey() << ": Test failure:" << static_activeTest->failureMessage << "\n\tat: " << static_activeTest->failureFileName << ": " << static_activeTest->failLineNumber);
+               SG_LOG(SG_NASAL, SG_ALERT, testName << ": Test failure:" << static_activeTest->failureMessage << "\n\tat: " << static_activeTest->failureFileName << ": " << static_activeTest->failLineNumber);
            } else {
-               SG_LOG(SG_NASAL, SG_INFO, value.getKey() << ": Test passed");
+               SG_LOG(SG_NASAL, SG_ALERT, testName << ": Test passed");
            }
            
            if (naIsFunc(tearDown)) {
