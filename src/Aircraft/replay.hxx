@@ -33,6 +33,7 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/io/iostreams/gzcontainerfile.hxx>
 
 #include <MultiPlayer/multiplaymgr.hxx>
 
@@ -88,7 +89,7 @@ typedef std::vector < FGReplayMessages > replay_messages_type;
  *
  */
 
-class FGReplay : public SGSubsystem
+class FGReplay : public SGSubsystem, SGPropertyChangeListener
 {
 public:
     FGReplay ();
@@ -106,13 +107,14 @@ public:
 
     bool start(bool NewTape=false);
 
-    bool saveTape(const SGPropertyNode* ConfigData);
+    bool saveTape(const SGPropertyNode* ConfigData, bool continuous=false);
     bool loadTape(const SGPropertyNode* ConfigData);
 
 private:
     void clear();
     FGReplayData* record(double time);
     void interpolate(double time, const replay_list_type &list);
+    void replay(double time, size_t offset, size_t offset_old=0);
     void replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFrame=NULL);
     void guiMessage(const char* message);
     void loadMessages();
@@ -125,7 +127,7 @@ private:
     double get_end_time();
 
     bool listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory);
-    bool saveTape(const SGPath& Filename, SGPropertyNode* MetaData);
+    bool saveTape(const SGPath& Filename, SGPropertyNode* MetaData, bool continuous=false);
     bool loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserData);
 
     double sim_time;
@@ -160,7 +162,16 @@ private:
 
     FGFlightRecorder*   m_pRecorder;
     
-    FGMultiplayMgr*     m_MultiplayMgr;    
+    FGMultiplayMgr*     m_MultiplayMgr;
+    
+    void valueChanged(SGPropertyNode * node);
+    
+    // Things for replaying from uncompressed fgtape file.
+    std::ifstream               m_continuous_in;
+    std::map<double, size_t>    m_continuous_time_to_offset;
+
+    // For writing uncompressed fgtape file.
+    std::ofstream   m_continuous_out;
 };
 
 #endif // _FG_REPLAY_HXX

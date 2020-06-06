@@ -36,6 +36,7 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/stdint.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include <Main/fg_props.hxx>
 #include <MultiPlayer/mpmessages.hxx>
@@ -154,6 +155,90 @@ FGReplay::FGReplay() :
     m_pRecorder(new FGFlightRecorder("replay-config")),
     m_MultiplayMgr(globals->get_subsystem<FGMultiplayMgr>())
 {
+    SGPropertyNode* continuous = fgGetNode("/sim/replay/record-continuous", true);
+    SGPropertyNode* fdm = fgGetNode("/sim/signals/fdm-initialized", true);
+    continuous->addChangeListener(this, true /*initial*/);
+    fdm->addChangeListener(this, true /*initial*/);
+}
+
+static bool saveSetup(const SGPropertyNode* ConfigData, SGPath& p, SGPropertyNode_ptr& myMetaData, double Duration);
+
+static int PropertiesWrite(SGPropertyNode* root, std::ostream& out)
+{
+    stringstream buffer;
+    writeProperties(buffer, root, true /*write_all*/);
+    size_t buffer_len = buffer.str().size() + 1;
+    out.write(reinterpret_cast<char*>(&buffer_len), sizeof(buffer_len));
+    out.write(buffer.str().c_str(), buffer_len);
+    return 0;
+}
+
+static int PropertiesRead(std::istream& in, SGPropertyNode* node)
+{
+    size_t  buffer_len;
+    in.read(reinterpret_cast<char*>(&buffer_len), sizeof(buffer_len));
+    std::vector<char>   buffer( buffer_len);
+    in.read(&buffer.front(), buffer.size());
+    readProperties(&buffer.front(), buffer.size()-1, node);
+    return 0;
+}
+
+/* Reads uncompressed vector<char> from file. */
+static void VectorRead(std::istream& in, std::vector<char>& out)
+{
+    size_t length;
+    in.read(reinterpret_cast<char*>(&length), sizeof(length));
+    out.resize(length);
+    in.read(&out.front(), length);
+}
+
+static void popupTip(const char* message, int delay)
+{
+    SGPropertyNode_ptr args(new SGPropertyNode);
+    args->setStringValue("label", message);
+    args->setIntValue("delay", delay);
+    globals->get_commands()->execute("show-message", args);
+}
+
+void FGReplay::valueChanged(SGPropertyNode * node)
+{
+    bool    prop_continuous = fgGetBool("/sim/replay/record-continuous");
+    bool    prop_fdm = fgGetBool("/sim/signals/fdm-initialized");
+    
+    bool continuous = prop_continuous && prop_fdm;
+    if (continuous == ((m_continuous_out.is_open()) ? true : false)) {
+        // No change.
+        return;
+    }
+    
+    if (m_continuous_out) {
+        // Stop existing continuous recording.
+        m_continuous_out.close();
+        popupTip("Continuous record to file stopped", 5 /*delay*/);
+    }
+    
+    if (continuous) {
+        // Start continuous recording.
+        SGPath p;
+        SGPropertyNode_ptr myMetaData;
+        bool ok = saveSetup(NULL, p, myMetaData, 0 /*Duration*/);
+        if (!ok) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to start continuous recording");
+            popupTip("Continuous record to file failed to start", 5 /*delay*/);
+            return;
+        }
+        m_continuous_out.open(
+                p.c_str(),
+                std::ofstream::binary | std::ofstream::trunc
+                );
+        m_continuous_out.write(FlightRecorderFileMagic, strlen(FlightRecorderFileMagic)+1);
+        PropertiesWrite(myMetaData, m_continuous_out);
+        SGPropertyNode_ptr  Config( new SGPropertyNode);
+        m_pRecorder->getConfig(Config.get());
+        PropertiesWrite(Config, m_continuous_out);
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Starting continuous recording to " << p);
+        popupTip("Continuous record to file started", 5 /*delay*/);
+    }
 }
 
 /**
@@ -162,6 +247,9 @@ FGReplay::FGReplay() :
 
 FGReplay::~FGReplay()
 {
+    if (m_continuous_out.is_open()) {
+        m_continuous_out.close();
+    }
     clear();
 
     delete m_pRecorder;
@@ -468,6 +556,54 @@ static void MoveFrontMultiplayerPackets(replay_list_type& list)
  *  Update the saved data
  */
 
+/** Save raw replay data in a separate container */
+static bool
+saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData, size_t RecordSize, bool multiplayer)
+{
+    // get number of records in this stream
+    size_t Count = ReplayData.size();
+
+    // write container header for raw data
+    if (!output.writeContainerHeader(ReplayContainer::RawData, Count * RecordSize))
+    {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to save replay data. Cannot write data container. Disk full?");
+        return false;
+    }
+
+    // write the raw data (all records in the given list)
+    replay_list_type::const_iterator it = ReplayData.begin();
+    size_t CheckCount = 0;
+    while ((it != ReplayData.end())&&
+           !output.fail())
+    {
+        const FGReplayData* pRecord = *it++;
+        assert(RecordSize == pRecord->raw_data.size());
+        output.write(reinterpret_cast<const char*>(&pRecord->sim_time), sizeof(pRecord->sim_time));
+        output.write(&pRecord->raw_data.front(), pRecord->raw_data.size());
+
+        if (multiplayer) {
+            size_t  num_messages = pRecord->multiplayer_messages.size();
+            output.write(reinterpret_cast<const char*>(&num_messages), sizeof(num_messages));
+            for ( auto message: pRecord->multiplayer_messages) {
+                size_t message_size = message->size();
+                output.write(reinterpret_cast<const char*>(&message_size), sizeof(message_size));
+                output.write(&message->front(), message_size);
+            }
+        }
+        CheckCount++;
+    }
+
+    // Did we really write as much as we intended?
+    if (CheckCount != Count)
+    {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to save replay data. Expected to write " << Count << " records, but wrote " << CheckCount);
+        return false;
+    }
+
+    SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Saved " << CheckCount << " records of size " << RecordSize);
+    return !output.fail();
+}
+
 void
 FGReplay::update( double dt )
 {
@@ -628,6 +764,22 @@ FGReplay::update( double dt )
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "ReplaySystem: Inconsistent data!");
     }
+    
+    if (m_continuous_out.is_open()) {
+        m_continuous_out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
+        
+        size_t    aircraft_data_size = r->raw_data.size();
+        m_continuous_out.write(reinterpret_cast<char*>(&aircraft_data_size), sizeof(aircraft_data_size));
+        m_continuous_out.write(&r->raw_data.front(), r->raw_data.size());
+        
+        size_t    multiplayer_num = r->multiplayer_messages.size();
+        m_continuous_out.write(reinterpret_cast<char*>(&multiplayer_num), sizeof(multiplayer_num));
+        for ( size_t i=0; i<multiplayer_num; ++i) {
+            size_t  length = r->multiplayer_messages[i]->size();
+            m_continuous_out.write(reinterpret_cast<char*>(&length), sizeof(length));
+            m_continuous_out.write(&r->multiplayer_messages[i]->front(), length);
+        }
+    }
 
     if ( sim_time - st_front->sim_time > m_high_res_time )
     {
@@ -766,6 +918,36 @@ FGReplay::replay( double time ) {
     double t1, t2;
 
     replayMessage(time);
+    
+    if (!m_continuous_time_to_offset.empty()) {
+        // Replay from uncompressed recording file.
+        //
+        auto p = m_continuous_time_to_offset.lower_bound(time);
+        
+        if (p == m_continuous_time_to_offset.end()) {
+            // end.
+            --p;
+            replay( time, p->second);
+            return true;
+        }
+        
+        else if (p->first > time) {
+            // Look for preceding item.
+            if (p == m_continuous_time_to_offset.begin()) {
+                replay(time, p->second);
+                return false;
+            }
+            auto prev = p;
+            --prev;
+            replay( time, p->second, prev->second);
+            return false;
+        }
+        else {
+            // Exact match.
+            replay(time, p->second);
+            return false;
+        }
+    }
 
     if ( ! short_term.empty() ) {
         t1 = short_term.back()->sim_time;
@@ -829,9 +1011,58 @@ FGReplay::replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFra
     m_pRecorder->replay(time,pCurrentFrame,pOldFrame);
 }
 
+
+/* Reads a FGReplayData from uncompressed file. */
+static std::unique_ptr<FGReplayData> ReadFGReplayData(std::ifstream& in, size_t pos)
+{
+    /* Need to clear any eof bit, otherwise seekg() will not work (which is
+    pretty unhelpful). E.g. see:
+        https://stackoverflow.com/questions/16364301/whats-wrong-with-the-ifstream-seekg
+    */
+    in.clear();
+    in.seekg(pos);
+    
+    std::unique_ptr<FGReplayData>   ret(new FGReplayData);
+
+    in.read(reinterpret_cast<char*>(&ret->sim_time), sizeof(ret->sim_time));
+    VectorRead(in, ret->raw_data);
+
+    /* Multiplayer information is a vector of vectors. */
+    size_t  n;
+    in.read(reinterpret_cast<char*>(&n), sizeof(n));
+    ret->multiplayer_messages.resize(n);
+    for (size_t i=0; i<n; ++i) {
+        ret->multiplayer_messages[i].reset(new std::vector<char>);
+        VectorRead(in, *ret->multiplayer_messages[i]);
+    }
+    return ret;
+}
+
+/* Replays one iteration from uncompressed file. */
+void FGReplay::replay(double time, size_t offset, size_t offset_old)
+{
+    SG_LOG(SG_SYSTEMS, SG_BULK,
+            "FGReplay::replay():"
+            << " time=" << time
+            << " offset=" << offset
+            << " offset_old=" << offset_old
+            );
+    std::unique_ptr<FGReplayData> replay_data = ReadFGReplayData(m_continuous_in, offset);
+    std::unique_ptr<FGReplayData> replay_data_old;
+    if (offset_old) {
+        replay_data_old = ReadFGReplayData(m_continuous_in, offset_old);
+    }
+    m_pRecorder->replay(time, replay_data.get(), replay_data_old.get());
+}
+
 double
 FGReplay::get_start_time()
 {
+    if (!m_continuous_time_to_offset.empty()) {
+        double ret = m_continuous_time_to_offset.begin()->first;
+        return ret;
+    }
+    
     if ( ! long_term.empty() )
     {
         return long_term.front()->sim_time;
@@ -850,6 +1081,11 @@ FGReplay::get_start_time()
 double
 FGReplay::get_end_time()
 {
+    if (!m_continuous_time_to_offset.empty()) {
+        double ret = m_continuous_time_to_offset.rbegin()->first;
+        return ret;
+    }
+    
     if ( ! short_term.empty() )
     {
         return short_term.back()->sim_time;
@@ -857,54 +1093,6 @@ FGReplay::get_end_time()
     {
         return 0.0;
     } 
-}
-
-/** Save raw replay data in a separate container */
-static bool
-saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData, size_t RecordSize, bool multiplayer)
-{
-    // get number of records in this stream
-    size_t Count = ReplayData.size();
-
-    // write container header for raw data
-    if (!output.writeContainerHeader(ReplayContainer::RawData, Count * RecordSize))
-    {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to save replay data. Cannot write data container. Disk full?");
-        return false;
-    }
-
-    // write the raw data (all records in the given list)
-    replay_list_type::const_iterator it = ReplayData.begin();
-    size_t CheckCount = 0;
-    while ((it != ReplayData.end())&&
-           !output.fail())
-    {
-        const FGReplayData* pRecord = *it++;
-        assert(RecordSize == pRecord->raw_data.size());
-        output.write(reinterpret_cast<const char*>(&pRecord->sim_time), sizeof(pRecord->sim_time));
-        output.write(&pRecord->raw_data.front(), pRecord->raw_data.size());
-
-        if (multiplayer) {
-            size_t  num_messages = pRecord->multiplayer_messages.size();
-            output.write(reinterpret_cast<const char*>(&num_messages), sizeof(num_messages));
-            for ( auto message: pRecord->multiplayer_messages) {
-                size_t message_size = message->size();
-                output.write(reinterpret_cast<const char*>(&message_size), sizeof(message_size));
-                output.write(&message->front(), message_size);
-            }
-        }
-        CheckCount++;
-    }
-
-    // Did we really write as much as we intended?
-    if (CheckCount != Count)
-    {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to save replay data. Expected to write " << Count << " records, but wrote " << CheckCount);
-        return false;
-    }
-
-    SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Saved " << CheckCount << " records of size " << RecordSize);
-    return !output.fail();
 }
 
 /** Load raw replay data from a separate container */
@@ -926,6 +1114,8 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to load replay data. Expected data container, got " << Type);
         return false;
     }
+    
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "multiplayer=" << multiplayer << " RecordSize=" << RecordSize << " Type=" << Type << " Size=" << Size);
 
     // read the raw data
     size_t Count = Size / RecordSize;
@@ -971,18 +1161,21 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
 
 /** Write flight recorder tape with given filename and meta properties to disk */
 bool
-FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
+FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps, bool continuous)
 {
     bool ok = true;
 
     /* open output stream *******************************************/
     gzContainerWriter output(Filename, FlightRecorderFileMagic);
+    
     if (!output.good())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Cannot open file" << Filename);
         return false;
     }
 
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "writing MetaDataProps:");
+    writeProperties(std::cerr, MetaDataProps, true /*write_all*/);
     /* write meta data **********************************************/
     ok &= output.writeContainer(ReplayContainer::MetaData, MetaDataProps);
 
@@ -994,13 +1187,13 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
         m_pRecorder->getConfig(Config.get());
         ok &= output.writeContainer(ReplayContainer::Properties, Config.get());
     }
-
+    
     /* write raw data ***********************************************/
     if (Config)
     {
         size_t RecordSize = Config->getIntValue("recorder/record-size", 0);
-        SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Total signal count: " <<  Config->getIntValue("recorder/signal-count", 0)
-               << ", record size: " << RecordSize);
+        SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Config:recorder/signal-count=" <<  Config->getIntValue("recorder/signal-count", 0)
+               << " RecordSize: " << RecordSize);
         bool multiplayer = MetaDataProps->getBoolValue("meta/multiplayer", 0);
 
         if (ok)
@@ -1018,16 +1211,28 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps)
     return ok;
 }
 
-/** Write flight recorder tape to disk. User/script command. */
-bool
-FGReplay::saveTape(const SGPropertyNode* ConfigData)
+// Sets things up for writing to a normal or continuous fgtape file.
+//
+// On exit:
+//
+//      p: Contains path of the fgtape file.
+//
+//      myMetaData: points to a new SGPropertyNode containing information on
+//      aircraft type etc.
+//
+static bool saveSetup(const SGPropertyNode* ConfigData, SGPath& p, SGPropertyNode_ptr& myMetaData, double Duration)
 {
     const char* tapeDirectory = fgGetString("/sim/replay/tape-directory", "");
     const char* aircraftType  = fgGetString("/sim/aircraft", "unknown");
 
-    SGPropertyNode_ptr myMetaData = new SGPropertyNode();
+    myMetaData = new SGPropertyNode();
     SGPropertyNode* meta = myMetaData->getNode("meta", 0, true);
 
+    SG_LOG(SG_SYSTEMS, SG_BULK,
+            " ConfigData=" << ConfigData
+            << " tapeDirectory=" << tapeDirectory
+            << " aircraftType=" << aircraftType
+            );
     // add some data to the file - so we know for which aircraft/version it was recorded
     meta->setStringValue("aircraft-type",           aircraftType);
     meta->setStringValue("aircraft-description",    fgGetString("/sim/description", ""));
@@ -1039,7 +1244,7 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
     meta->setStringValue("aircraft-version", aircraft_version);
 
     // add information on the tape's recording duration
-    double Duration = get_end_time()-get_start_time();
+    //double Duration = get_end_time()-get_start_time();
     meta->setDoubleValue("tape-duration", Duration);
     char StrBuffer[30];
     printTimeStr(StrBuffer, Duration, false);
@@ -1047,18 +1252,19 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
 
     // add simulator version
     copyProperties(fgGetNode("/sim/version", 0, true), meta->getNode("version", 0, true));
-    if (ConfigData->getNode("user-data"))
+    if (ConfigData && ConfigData->getNode("user-data"))
     {
         copyProperties(ConfigData->getNode("user-data"), meta->getNode("user-data", 0, true));
     }
 
-    meta->setBoolValue("multiplayer", fgGetBool("/sim/replay/multiplayer", false));
+    bool multiplayer = fgGetBool("/sim/replay/multiplayer", false);
+    meta->setBoolValue("multiplayer", multiplayer);
 
     // store replay messages
     copyProperties(fgGetNode("/sim/replay/messages", 0, true), myMetaData->getNode("messages", 0, true));
 
     // generate file name (directory + aircraft type + date + time + suffix)
-    SGPath p(tapeDirectory);
+    p = SGPath(tapeDirectory);
     p.append(aircraftType);
     p.concat("-");
     time_t calendar_time = time(NULL);
@@ -1077,17 +1283,37 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Error, flight recorder tape file with same name already exists.");
         ok = false;
     }
+    return ok;
+}
+
+/** Write flight recorder tape to disk. User/script command. */
+bool
+FGReplay::saveTape(const SGPropertyNode* ConfigData, bool continuous)
+{
+    SGPath p;
+    SGPropertyNode_ptr myMetaData;
+    
+    bool ok = saveSetup(ConfigData, p, myMetaData, get_end_time()-get_start_time());
 
     if (ok)
-        ok &= saveTape(p, myMetaData.get());
+        ok &= saveTape(p, myMetaData.get(), continuous);
 
-    if (ok)
-        guiMessage("Flight recorder tape saved successfully!");
-    else
-        guiMessage("Failed to save tape! See log output.");
+    if (continuous) {
+        if (ok)
+            guiMessage("Flight recorder continuous started successfully!");
+        else
+            guiMessage("Flight recorder continuous start failed. See log output.");
+    }
+    else {
+        if (ok)
+            guiMessage("Flight recorder tape saved successfully!");
+        else
+            guiMessage("Failed to save tape! See log output.");
+    }
 
     return ok;
 }
+
 
 /** Read a flight recorder tape with given filename from disk and return meta properties.
  * Actual data and signal configuration is not read when in "Preview" mode.
@@ -1095,6 +1321,85 @@ FGReplay::saveTape(const SGPropertyNode* ConfigData)
 bool
 FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserData)
 {
+    {
+        /* Try to load as uncompressed first. */
+        m_continuous_in.open( Filename.str());
+        std::vector<char>   buffer(strlen( FlightRecorderFileMagic) + 1);
+        m_continuous_in.read(&buffer.front(), buffer.size());
+        if (strcmp(&buffer.front(), FlightRecorderFileMagic)) {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape prefix doesn't match FlightRecorderFileMagic: " << Filename);
+        }
+        else {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtap is uncompressed: " << Filename);
+            SGPropertyNode_ptr MetaDataProps = new SGPropertyNode();
+            PropertiesRead(m_continuous_in, MetaDataProps.get());
+            if (UserData) {
+                copyProperties(MetaDataProps->getNode("meta", 0, true), UserData);
+            }
+            SGPropertyNode_ptr Config = new SGPropertyNode();
+            PropertiesRead(m_continuous_in, Config.get());
+            
+            if (Preview) {
+                m_continuous_in.close();
+                return true;
+            }
+            
+            m_pRecorder->reinit(Config);
+            clear();
+            time_t t = time(NULL);
+            size_t  pos = 0;
+            for(;;)
+            {
+                pos = m_continuous_in.tellg();
+                m_continuous_in.seekg(pos);
+                double sim_time;
+                m_continuous_in.read(reinterpret_cast<char*>(&sim_time), sizeof(sim_time));
+                
+                SG_LOG(SG_SYSTEMS, SG_BULK,
+                        "pos=" << pos
+                        << " m_continuous_in.tellg()=" << m_continuous_in.tellg()
+                        << " sim_time=" << sim_time
+                        );
+                
+                size_t  length_aircraft;
+                m_continuous_in.read(reinterpret_cast<char*>(&length_aircraft), sizeof(length_aircraft));
+                m_continuous_in.seekg(length_aircraft, std::ios_base::cur);
+                
+                size_t  num_multiplayer;
+                m_continuous_in.read(reinterpret_cast<char*>(&num_multiplayer), sizeof(num_multiplayer));
+                for ( size_t i=0; i<num_multiplayer; ++i) {
+                    size_t length;
+                    m_continuous_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+                    m_continuous_in.seekg(length, std::ios_base::cur);
+                }
+                
+                SG_LOG(SG_SYSTEMS, SG_BULK, ""
+                        << " pos=" << pos
+                        << " sim_time=" << sim_time
+                        << " length_aircraft=" << length_aircraft
+                        << " num_multiplayer=" << num_multiplayer
+                        );
+                
+                if (!m_continuous_in) {
+                    break;
+                }
+                
+                m_continuous_time_to_offset[sim_time] = pos;
+            }
+            t = time(NULL) - t;
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexed uncompressed recording"
+                    << ". time taken: " << t << "s"
+                    << ". recording size: " << pos
+                    << ". numrecording items: " << m_continuous_time_to_offset.size()
+                    );
+            sim_time = get_end_time();
+            m_pRecorder->reinit(Config);
+            start(true);
+            return true;
+        }
+    }
+
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "Filename=" << Filename);
     bool ok = true;
 
     /* open input stream ********************************************/
@@ -1200,7 +1505,10 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
         if (ok)
         {
             size_t RecordSize = m_pRecorder->getRecordSize();
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "RecordSize=" << RecordSize);
             size_t OriginalSize = Config->getIntValue("recorder/record-size", 0);
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "OriginalSize=" << OriginalSize);
+            
             // check consistency - ugly things happen when data vs signals mismatch
             if ((OriginalSize != RecordSize)&&
                 (OriginalSize != 0))
@@ -1211,6 +1519,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
             }
 
             bool multiplayer = UserData->getBoolValue("multiplayer", 0);
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "multiplayer=" << multiplayer);
 
             if (ok)
                 ok &= loadRawReplayData(input, m_pRecorder, short_term,  RecordSize, multiplayer);
