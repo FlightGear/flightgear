@@ -194,7 +194,7 @@ protected:
     void setupRoot();
 
     SplashScreen* _splash;
-    QQuickDrawable* _quickDrawable;
+    QQuickDrawable* _quickDrawable = nullptr;
     flightgear::PUICamera* _puiCamera = nullptr;
 };
 

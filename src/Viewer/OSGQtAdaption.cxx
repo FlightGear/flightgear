@@ -117,10 +117,30 @@ QWindow* qtWindowFromOSG(osgViewer::GraphicsWindow* graphicsWindow)
 
 #endif
 
-void RetriveGraphicsThreadOperation::operator()(osg::GraphicsContext* context)
+class GraphicsFunctorWrapper : public osg::GraphicsOperation
 {
-    _result = QThread::currentThread();
-    _context = qtContextFromOSG(context);
+public:
+     GraphicsFunctorWrapper(const std::string& name, GraphicsFunctor gf) :
+        osg::GraphicsOperation(name, false),
+        _functor(gf)
+    {
+        
+    }
+    
+    void operator()(osg::GraphicsContext* gc) override
+    {
+        _functor(gc);
+    }
+    
+private:
+    GraphicsFunctor _functor;
+};
+
+osg::ref_ptr<osg::GraphicsOperation> makeGraphicsOp(const std::string& name, GraphicsFunctor func)
+{
+    osg::ref_ptr<osg::GraphicsOperation> r;
+    r = new GraphicsFunctorWrapper(name, func);
+    return r;
 }
 
 } // of namespace

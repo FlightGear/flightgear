@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <functional>
+#include <string>
+
 #include <osgViewer/GraphicsWindow>
 #include <osg/GraphicsContext>
 
@@ -29,25 +32,8 @@ namespace flightgear
 QOpenGLContext* qtContextFromOSG(osg::GraphicsContext* context);
 QWindow* qtWindowFromOSG(osgViewer::GraphicsWindow* graphicsWindow);
 
-/**
- * Helper run on Graphics thread to retrive its Qt wrapper
- */
-class RetriveGraphicsThreadOperation : public osg::GraphicsOperation
-{
-public:
-    RetriveGraphicsThreadOperation()
-        : osg::GraphicsOperation("RetriveGraphicsThread", false)
-    {
-    }
+using GraphicsFunctor = std::function<void(osg::GraphicsContext* context)>;
 
-    QThread* thread() const { return _result; }
-    QOpenGLContext* context() const { return _context; }
-
-    void operator()(osg::GraphicsContext* context) override;
-private:
-    QThread* _result = nullptr;
-    QOpenGLContext* _context = nullptr;
-};
-
+osg::ref_ptr<osg::GraphicsOperation> makeGraphicsOp(const std::string& name, GraphicsFunctor func);
 
 }

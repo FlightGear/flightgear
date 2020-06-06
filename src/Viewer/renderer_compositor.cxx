@@ -108,7 +108,7 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 
-#if defined(HAVE_QT)
+#if defined(ENABLE_QQ_UI)
 #include <GUI/QQuickDrawable.hxx>
 #endif
 
@@ -600,18 +600,18 @@ FGRenderer::setupView( void )
     stateSet->setAttributeAndModes(fog);
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
-    // plug in the GUI
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (guiCamera) {
-        osg::Geode* geode = new osg::Geode;
-        geode->addDrawable(new SGHUDDrawable);
+        osg::Geode* hudGeode = new osg::Geode;
+        hudGeode->addDrawable(new SGHUDDrawable);
+        guiCamera->addChild(hudGeode);
 
 #if defined(HAVE_PUI)
         _puiCamera = new flightgear::PUICamera;
         _puiCamera->init(guiCamera, viewer);
 #endif
 
-#if defined(HAVE_QT)
+#if defined(ENABLE_QQ_UI)
         std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
         auto graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(guiCamera->getGraphicsContext());
 
@@ -620,10 +620,12 @@ FGRenderer::setupView( void )
             _quickDrawable->setup(graphicsWindow, viewer);
 
             _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
-            geode->addDrawable(_quickDrawable);
+            
+            osg::Geode* qqGeode = new osg::Geode;
+            qqGeode->addDrawable(_quickDrawable);
+            guiCamera->addChild(qqGeode);
         }
 #endif
-        guiCamera->addChild(geode);
         guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
     }
 
@@ -803,7 +805,7 @@ FGRenderer::resize( int width, int height )
 
     // update splash node if present
     _splash->resize(width, height);
-#if defined(HAVE_QT)
+#if defined(ENABLE_QQ_UI)
     if (_quickDrawable) {
         _quickDrawable->resize(width, height);
     }

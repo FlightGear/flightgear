@@ -135,11 +135,16 @@ if (HAVE_QT)
                             ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::Svg SimGearCore)
     target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
+    target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::Svg SimGearCore)
 
-    add_library(fgqmlui QQuickDrawable.cxx
-                        QQuickDrawable.hxx
+    if (ENABLE_QQ_UI)
+      set(QQUI_SOURCES 
+        QQuickDrawable.cxx
+        QQuickDrawable.hxx)
+    endif()
+
+    add_library(fgqmlui 
                         QtQuickFGCanvasItem.cxx
                         QtQuickFGCanvasItem.hxx
                         PropertyItemModel.cxx
@@ -188,11 +193,17 @@ if (HAVE_QT)
                         PathUrlHelper.hxx
                         DialogStateController.cxx
                         DialogStateController.hxx
+                        ${QQUI_SOURCES}
                         )
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
-    target_link_libraries(fgqmlui Qt5::Quick Qt5::Widgets Qt5::Network Qt5::Qml SimGearCore)
+    target_link_libraries(fgqmlui Qt5::Quick Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Gui SimGearCore)
     target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
+
+    if (ENABLE_QQ_UI)
+      # this is a headers-only dependency, so we can include <private/qopenglcontext_p.h>
+      target_link_libraries(fgqmlui Qt5::GuiPrivate)
+    endif()
 
     if (TARGET fgfs_qm_files)
       add_dependencies(fglauncher fgfs_qm_files)

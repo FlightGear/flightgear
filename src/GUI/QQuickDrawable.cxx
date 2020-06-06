@@ -18,6 +18,8 @@
 
 #include "config.h"
 
+#include <simgear/compiler.h>
+
 #include "QQuickDrawable.hxx"
 
 #include <QQmlComponent>
@@ -25,6 +27,7 @@
 #include <QQmlEngine>
 #include <QQuickRenderControl>
 
+#include <QTimer>
 #include <QCoreApplication>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -32,6 +35,17 @@
 #include <QQuickWindow>
 #include <QSurfaceFormat>
 #include <QThread>
+
+
+// private Qt headers, needed to make glue work between Qt and OSG
+// graphics window unfortunately.
+#include <private/qopenglcontext_p.h>
+
+#if defined(SG_MAC)
+#  include "fake_qguiapp_p.h"
+#else
+#  include <private/qguiapplication_p.h>
+#endif
 
 #include <osg/GraphicsContext>
 #include <osgGA/GUIEventAdapter>
@@ -51,7 +65,6 @@
 #if defined(HAVE_PUI)
 #include <plib/pu.h>
 #endif
-
 
 using namespace osgGA;
 
@@ -103,32 +116,6 @@ const std::initializer_list<QtKey> keymapInit = {
 
 std::vector<QtKey> global_keymap;
 
-
-#if 0
-class SyncPolishOperation : public osg::Operation
-{
-public:
-    SyncPolishOperation(QQuickRenderControl* rc) :
-    renderControl(rc)
-    {
-        setKeep(true);
-    }
-    
-    virtual void operator () (osg::Object*) override
-    {
-        if (syncRequired) {
-            //syncRequired = false;
-
-        }
-
-        renderControl->polishItems();
-    }
-    
-    bool syncRequired = true;
-    QQuickRenderControl* renderControl;
-};
-#endif
-
 class CustomRenderControl : public QQuickRenderControl
 {
 public:
@@ -154,6 +141,17 @@ class QQuickDrawablePrivate : public QObject
 {
     Q_OBJECT
 public:
+    QQuickDrawablePrivate() :
+        renderControlInited(false)
+    {
+        
+    }
+    
+    ~QQuickDrawablePrivate()
+    {
+
+    }
+    
     CustomRenderControl* renderControl = nullptr;
 
     QQmlComponent* qmlComponent = nullptr;
@@ -171,20 +169,23 @@ public:
     // for making our adpoted context current
     QWindow* foreignOSGWindow = nullptr;
     QOpenGLContext* qtContext = nullptr;
-
+    osg::GraphicsContext* osgContext = nullptr;
+    
+    std::atomic_bool renderControlInited;
+    std::atomic_bool syncPending;
+    
     void frameEvent()
     {
         if (syncRequired) {
             renderControl->polishItems();
             syncRequired = false;
-
-            if (QOpenGLContext::currentContext() != qtContext) {
-                bool ok = qtContext->makeCurrent(foreignOSGWindow);
-                if (!ok) {
-                    SG_LOG(SG_GUI, SG_ALERT, "make current failed");
-                }
-            }
-            renderControl->sync();
+            syncPending = true;
+            
+            osgContext->add(flightgear::makeGraphicsOp("Sync QQ2 Render control", [this](osg::GraphicsContext*) {
+                QOpenGLContextPrivate::setCurrentContext(qtContext);
+                renderControl->sync();
+                syncPending = false;
+            }));
         }
     }
 public slots:
@@ -213,12 +214,29 @@ public slots:
             delete rootObject;
             return;
         }
-
+       
         // The root item is ready. Associate it with the window.
         rootItem->setParentItem(quickWindow->contentItem());
         syncRequired = true;
         rootItem->setWidth(quickWindow->width());
         rootItem->setHeight(quickWindow->height());
+    }
+    
+    void initRenderControl()
+    {
+        qtContext = flightgear::qtContextFromOSG(osgContext);
+                
+    #if QT_VERSION < 0x050600
+        SG_LOG(SG_GUI, SG_ALERT, "Qt < 5.6 was used to build FlightGear, multi-threading of QtQuick is not safe");
+    #else
+        renderControl->prepareThread(QThread::currentThread());
+    #endif
+                
+        QOpenGLContextPrivate::setCurrentContext(qtContext);
+        QOpenGLContextPrivate::get(qtContext)->surface = foreignOSGWindow;
+        renderControl->initialize(qtContext);
+        
+        renderControlInited = true;
     }
 
     void onSceneChanged()
@@ -230,7 +248,16 @@ public slots:
     {
         qWarning() << Q_FUNC_INFO;
     }
+    
+    void onWindowActiveFocusItemChanged()
+    {
+        if (quickWindow->activeFocusItem())
+            qInfo() << Q_FUNC_INFO << "Active focus item is now:" << quickWindow->activeFocusItem();
+        else
+            qInfo() << Q_FUNC_INFO << "Active focus cleared";
+    }
 };
+
 
 static QObject* fgqmlinstance_provider(QQmlEngine* engine, QJSEngine* scriptEngine)
 {
@@ -260,8 +287,11 @@ public:
     {
         SG_UNUSED(aNode);
         SG_UNUSED(root);
-        std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
-        _drawable->reload(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
+        
+        QTimer::singleShot(0, [this]() {
+            std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
+            _drawable->reload(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
+        });
         return true;
     }
 
@@ -341,6 +371,10 @@ public:
 
         case (GUIEventAdapter::KEYDOWN):
         case (GUIEventAdapter::KEYUP): {
+            if (!_drawable->quickWindow->activeFocusItem()) {
+                return false;
+            }
+            
             const bool isKeyRelease = (ea.getEventType() == GUIEventAdapter::KEYUP);
             const auto& key = osgKeyToQt(ea.getKey());
             QString s = key.s;
@@ -465,6 +499,8 @@ QQuickDrawable::QQuickDrawable() : d(new QQuickDrawablePrivate)
         qmlRegisterType<FGQmlPropertyNode>("FlightGear", 1, 0, "Property");
         qmlRegisterType<DialogStateController>("FlightGear", 1, 0, "DialogStateController");
     }
+    
+      globals->get_commands()->addCommandObject("reload-quick-gui", new ReloadCommand(this));
 }
 
 QQuickDrawable::~QQuickDrawable()
@@ -476,29 +512,22 @@ QQuickDrawable::~QQuickDrawable()
 void QQuickDrawable::setup(osgViewer::GraphicsWindow *gw, osgViewer::Viewer *viewer)
 {
     osg::GraphicsContext* gc = gw;
-    osg::ref_ptr<flightgear::RetriveGraphicsThreadOperation> op(new flightgear::RetriveGraphicsThreadOperation);
-    gc->add(op);
-    gc->runOperations();
 
-    // hopefully done now!
-
-    d->qtContext = op->context();
-
-    //  d->qtContext->setFormat(format);
-
+    // none of this stuff needs the context current, so we can do it
+    // all safely on the main thread
+    
     d->foreignOSGWindow = flightgear::qtWindowFromOSG(gw);
     // d->foreignOSGWindow->setFormat(format);
     d->foreignOSGWindow->setSurfaceType(QSurface::OpenGLSurface);
-
+    
+    // QWindow::requestActive would do QPA::makeKey, but on macOS this
+    // is a no-op for foreign windows. So we're going to manually set
+    // the focus window!
+    QGuiApplicationPrivate::focus_window = d->foreignOSGWindow;
+    
+    d->osgContext = gc;
     d->renderControl = new CustomRenderControl(d->foreignOSGWindow);
     d->quickWindow = new QQuickWindow(d->renderControl);
-
-
-    bool ok = d->qtContext->makeCurrent(d->foreignOSGWindow);
-    if (!ok) {
-        SG_LOG(SG_GUI, SG_ALERT, "context not current");
-    }
-
     d->quickWindow->setClearBeforeRendering(false);
 
     d->qmlEngine = new QQmlEngine;
@@ -511,13 +540,9 @@ void QQuickDrawable::setup(osgViewer::GraphicsWindow *gw, osgViewer::Viewer *vie
     if (!d->qmlEngine->incubationController())
         d->qmlEngine->setIncubationController(d->quickWindow->incubationController());
 
-    d->renderControl->initialize(d->qtContext);
-
-#if QT_VERSION < 0x050600
-    SG_LOG(SG_GUI, SG_ALERT, "Qt < 5.6 was used to build FlightGear, multi-threading of QtQuick is not safe");
-#else
-    d->renderControl->prepareThread(op->thread());
-#endif
+ //   QObject::connect(d->quickWindow, &QQuickWindow::activeFocusItemChanged,
+  //                    d.get(), &QQuickDrawablePrivate::onWindowActiveFocusItemChanged);
+    
     QObject::connect(d->renderControl, &QQuickRenderControl::sceneChanged,
                      d.get(), &QQuickDrawablePrivate::onSceneChanged);
     QObject::connect(d->renderControl, &QQuickRenderControl::renderRequested,
@@ -529,6 +554,14 @@ void QQuickDrawable::setup(osgViewer::GraphicsWindow *gw, osgViewer::Viewer *vie
 
 void QQuickDrawable::drawImplementation(osg::RenderInfo& renderInfo) const
 {
+    if (!d->renderControlInited) {
+        d->initRenderControl();
+    }
+    
+    if (QOpenGLContext::currentContext() != d->qtContext) {
+        QOpenGLContextPrivate::setCurrentContext(d->qtContext);
+    }
+    
     QOpenGLFunctions* glFuncs = d->qtContext->functions();
     // prepare any state QQ2 needs
     d->quickWindow->resetOpenGLState();
@@ -580,7 +613,7 @@ void QQuickDrawable::resize(int width, int height)
         d->rootItem->setHeight(logicalHeight);
     }
 
-    SG_LOG(SG_GUI, SG_INFO, "Resize:, lw=" << logicalWidth << ", lh=" << logicalHeight);
+//    SG_LOG(SG_GUI, SG_INFO, "Resize:, lw=" << logicalWidth << ", lh=" << logicalHeight);
     d->quickWindow->setGeometry(0, 0, logicalWidth, logicalHeight);
 }
 

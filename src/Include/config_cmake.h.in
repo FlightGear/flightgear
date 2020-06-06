@@ -51,6 +51,7 @@
 #cmakedefine ENABLE_PLIB_JOYSTICK
 
 #cmakedefine HAVE_QT
+#cmakedefine ENABLE_QQ_UI
 
 #cmakedefine HAVE_SYS_TIME_H
 #cmakedefine HAVE_SYS_TIMEB_H
