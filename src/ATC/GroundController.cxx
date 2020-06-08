@@ -220,17 +220,17 @@ void FGGroundController::updateAircraftInformation(int id, double lat, double lo
 
     // Search the activeTraffic vector to find a traffic vector with our id
     TrafficVectorIterator i = searchActiveTraffic(id);
-    TrafficVectorIterator current, closest;
    
     // update position of the current aircraft
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
-    } else {
-        i->setPositionAndHeading(lat, lon, heading, speed, alt);
-        current = i;
+    if (i == activeTraffic.end() || activeTraffic.empty()) {
+        SG_LOG(SG_GENERAL, SG_DEV_WARN,
+               "AI error: updating aircraft without traffic record at " << SG_ORIGIN << ", id=" << id);
+        return;
     }
-
+    
+    i->setPositionAndHeading(lat, lon, heading, speed, alt);
+    TrafficVectorIterator current = i;
+    
     setDt(getDt() + dt);
 
     // Update every three secs, but add some randomness
