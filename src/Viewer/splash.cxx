@@ -688,17 +688,17 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
         if (kbytesPending > 0) {
             if (kbytesPending > 1024) {
                 int mBytesPending = kbytesPending >> 10;
-                oss << " " << mBytesPending << "Mb";
+                oss << " " << mBytesPending << "MB";
             } else {
-                oss << " " << kbytesPending << "Kb";
+                oss << " " << kbytesPending << "KB";
             }
         }
         if (kbytesPerSec > 0) {
             if (kbytesPerSec > 100) {
                 double mbytesPerSec = kbytesPerSec / 1024.0;
-                oss << " - " << std::fixed << std::setprecision(1) << mbytesPerSec << "Mb/sec";
+                oss << " - " << std::fixed << std::setprecision(1) << mbytesPerSec << "MB/sec";
             } else {
-                oss << " - " << kbytesPerSec << " Kb/sec";
+                oss << " - " << kbytesPerSec << " KB/sec";
             }
         }
         fgSetString("/sim/startup/splash-progress-spinner", oss.str());
