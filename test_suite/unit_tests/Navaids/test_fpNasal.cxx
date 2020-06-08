@@ -252,3 +252,43 @@ void FPNasalTests::testApproachTransitionAPI()
     CPPUNIT_ASSERT_EQUAL(string{"LUL1C"}, fp->approachTransition()->ident());
     CPPUNIT_ASSERT_EQUAL(string{"ILS08L"}, fp->approach()->ident());
 }
+
+void FPNasalTests::testApproachTransitionAPIWithCloning()
+{
+    if (!static_haveProcedures) {
+        return;
+    }
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan();
+        fp.departure = airportinfo("EGLL");
+        fp.destination = airportinfo("EHAM");
+        fp.star = fp.destination.getStar("REDF1A");
+        fp.destination_runway = fp.destination.runway('06');
+                                      
+        var approach = fp.destination.getApproach("ILS06");
+        unitTest.assert(approach != nil, "No approach loaded");
+                                      
+        var trans = approach.transition('SUG2A');
+        unitTest.assert(trans != nil, "approach transition not found");
+                                      
+        fp.approach = trans;
+                  
+        unitTest.assert_equal(fp.approach.id, "ILS06", "Incorrect approach returned");
+        unitTest.assert_equal(fp.approach_trans.id, "SUG2A", "Incorrect transition returned");
+    )");
+
+    CPPUNIT_ASSERT(ok);
+
+    auto fp = rm->flightPlan();
+
+    CPPUNIT_ASSERT(fp->approach());
+    CPPUNIT_ASSERT_EQUAL(string{"SUG2A"}, fp->approachTransition()->ident());
+    CPPUNIT_ASSERT_EQUAL(string{"ILS06"}, fp->approach()->ident());
+    
+    auto fp2 = fp->clone("testplan2");
+    CPPUNIT_ASSERT_EQUAL(string{"ILS06"}, fp2->approach()->ident());
+    CPPUNIT_ASSERT_EQUAL(string{"SUG2A"}, fp2->approachTransition()->ident());
+}

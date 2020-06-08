@@ -34,6 +34,7 @@ class FPNasalTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testSIDTransitionAPI);
     CPPUNIT_TEST(testSTARTransitionAPI);
     CPPUNIT_TEST(testApproachTransitionAPI);
+    CPPUNIT_TEST(testApproachTransitionAPIWithCloning);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -50,4 +51,5 @@ public:
     void testSIDTransitionAPI();
     void testSTARTransitionAPI();
     void testApproachTransitionAPI();
+    void testApproachTransitionAPIWithCloning();
 };
