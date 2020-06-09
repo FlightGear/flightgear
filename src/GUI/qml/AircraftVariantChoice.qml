@@ -1,7 +1,6 @@
 import QtQuick 2.4
-import QtQuick.Window 2.0
 import "." // -> forces the qmldir to be loaded
-
+import FlightGear 1.0
 import FlightGear.Launcher 1.0
 
 
@@ -22,6 +21,9 @@ Rectangle {
     property alias aircraft: aircraftInfo.uri
     property alias currentIndex: aircraftInfo.variant
     property alias fontPixelSize: title.font.pixelSize
+
+    // allow users to control the font sizing
+    // (aircraft variants can have excessively long names)
     property int popupFontPixelSize: 0
 
     // expose this to avoid a second AircraftInfo in the compact delegate
@@ -29,17 +31,6 @@ Rectangle {
     readonly property string pathOnDisk: aircraftInfo.pathOnDisk
 
     signal selected(var index)
-
-
-
-
-//    Image {
-//        id: upDownIcon
-//        source: "qrc:///up-down-arrow"
-//        x: root.centerX + Math.min(title.implicitWidth * 0.5, title.width * 0.5)
-//        anchors.verticalCenter: parent.verticalCenter
-//        visible: __enabled
-//    }
 
     Row {
         anchors.centerIn: parent
@@ -85,16 +76,9 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         onClicked: {
-            var screenPos = _launcher.mapToGlobal(title, Qt.point(0, -title.height * currentIndex))
-            if (screenPos.y < 0) {
-                // if the popup would appear off the screen, use the first item
-                // position instead
-                screenPos = _launcher.mapToGlobal(title, Qt.point(0, 0))
-            }
-
-            var pop = popup.createObject(root, {x:screenPos.x, y:screenPos.y })
-            tracker.window = pop;
-            pop.show();
+            var hCenter = root.width / 2;
+            OverlayShared.globalOverlay.showOverlayAtItemOffset(popup, root,
+                                                                Qt.point(hCenter, root.height))
         }
     }
 
@@ -103,67 +87,17 @@ Rectangle {
         id: aircraftInfo
     }
 
-    PopupWindowTracker {
-        id: tracker
-    }
-
     Component {
         id: popup
-
-        Window {
-            id: popupFrame
-
-            width: root.width
-            flags: Qt.Popup
-            height: choicesColumn.childrenRect.height
-            color: "white"
-
-            Rectangle {
-                border.width: 1
-                border.color: Style.minorFrameColor
-                anchors.fill: parent
+        VariantMenu {
+            id: menu
+            aircraftUri: aircraftInfo.uri
+            popupFontPixelSize: root.popupFontPixelSize
+            
+            onSelect: {
+                aircraftInfo.variant = index;
+                root.selected(index)
             }
-
-            Column {
-                id: choicesColumn
-
-                Repeater {
-                    // would prefer the model to be conditional on visiblity,
-                    // but this trips up the Window sizing on Linux (Ubuntu at
-                    // least) and we get a mis-aligned origin
-                    model: aircraftInfo.variantNames
-
-                    delegate: Item {
-                        width: popupFrame.width
-                        height: choiceText.implicitHeight
-
-                        Text {
-                            id: choiceText
-                            text: modelData
-
-                            // allow override the size in case the title size is enormous
-                            font.pixelSize: (root.popupFontPixelSize > 0) ? root.popupFontPixelSize : title.font.pixelSize
-
-                            color: choiceArea.containsMouse ? Style.themeColor : Style.baseTextColor
-                            anchors {
-                                left: parent.left
-                                right: parent.right
-                                margins: 4
-                            }
-                        }
-
-                        MouseArea {
-                            id: choiceArea
-                            hoverEnabled: true
-                            anchors.fill: parent
-                            onClicked: {
-                                popupFrame.close()
-                                root.selected(model.index)
-                            }
-                        }
-                    } // of delegate Item
-                } // of Repeater
-            }
-        } // of popup frame
+        }
     } // of popup component
 }

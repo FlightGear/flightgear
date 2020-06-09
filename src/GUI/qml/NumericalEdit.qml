@@ -1,6 +1,5 @@
 import QtQuick 2.4
 import FlightGear 1.0
-import QtQuick.Window 2.0
 import FlightGear.Launcher 1.0
 import "."
 
@@ -89,10 +88,7 @@ FocusScope {
             units.selectedIndex = unitIndex;
             var newQuantity = q.convertToUnit(units.selectedUnit)
 
-            console.info("Changing text to:" + newQuantity.value.toFixed(units.numDecimals));
             edit.text = newQuantity.value.toFixed(units.numDecimals)
-
-            console.info("Change units commit:" + newQuantity.value)
             commit(newQuantity);
         } else {
             // not focused, easy
@@ -103,11 +99,8 @@ FocusScope {
 
     function showUnitsMenu()
     {
-
-        var screenPos = _launcher.mapToGlobal(editFrame, Qt.point(0, editFrame.height))
-        var pop = popup.createObject(root, {x:screenPos.x, y:screenPos.y })
-        tracker.window = pop;
-        pop.show();
+        OverlayShared.globalOverlay.showOverlayAtItemOffset(menu, root,
+                                                                Qt.point(editFrame.x, editFrame.height))
     }
 
     Component.onCompleted: {
@@ -329,73 +322,14 @@ FocusScope {
         }
     } // of frame rectangle
 
-    PopupWindowTracker {
-        id: tracker
-    }
-
     Component {
-        id: popup
-        Window {
-            id: unitSelectionPopup
-            flags: Qt.Popup
-            color: "white"
-            height: choicesColumn.childrenRect.height + Style.margin * 2
-            width: choicesColumn.width + Style.margin * 2
+        id: menu
 
-            Rectangle {
-                border.width: 1
-                border.color: Style.minorFrameColor
-                anchors.fill: parent
-            }
-
-            // choice layout column
-            Column {
-                id: choicesColumn
-                spacing: Style.margin
-                x: Style.margin
-                y: Style.margin
-                width: menuWidth
-
-
-                function calculateMenuWidth()
-                {
-                    var minWidth = 0;
-                    for (var i = 0; i < choicesRepeater.count; i++) {
-                        minWidth = Math.max(minWidth, choicesRepeater.itemAt(i).implicitWidth);
-                    }
-                    return minWidth;
-                }
-
-                readonly property int menuWidth: calculateMenuWidth()
-
-                // main item repeater
-                Repeater {
-                    id: choicesRepeater
-                    model: units
-                    delegate:
-                        Text {
-                            id: choiceText
-                            readonly property bool selected: units.selectedIndex === model.index
-
-                            text: model.longName
-                            height: implicitHeight + Style.margin
-                            font.pixelSize: Style.baseFontPixelSize
-                            color: choiceArea.containsMouse ? Style.themeColor : Style.baseTextColor
-
-                            MouseArea {
-                                id: choiceArea
-                                width: unitSelectionPopup.width // full width of the popup
-                                height: parent.height
-                                hoverEnabled: true
-
-                                onClicked: {
-                                    root.changeToUnits(model.index);
-                                    unitSelectionPopup.close();
-                                }
-                            }
-                        } // of Text delegate
-                } // text repeater
-            } // text column
+        OverlayMenu {
+            model: units
+            displayRole: "longName"
+            currentIndex: units.selectedIndex
+            onSelect: root.changeToUnits(index);
         }
-    } // of popup component
+    }
 }

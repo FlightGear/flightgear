@@ -6,25 +6,39 @@ Item {
     readonly property bool dismissOnClickOutside: activeOverlayLoader.item && activeOverlayLoader.item.hasOwnProperty("dismissOnClickOutside") ?
                                                  activeOverlayLoader.item.dismissOnClickOutside : false
 
+    property var __showPos: Qt.point(0,0)
+
     function showOverlay(comp)
     {
+        __showPos = Qt.point(0,0)
         activeOverlayLoader.sourceComponent = comp;
         activeOverlayLoader.visible = true;
+        activeOverlayLoader.x = __showPos.x;
+        activeOverlayLoader.y = __showPos.y;
     }
 
     function showOverlayAtItemOffset(comp, item, offset)
     {
-        var pt = mapFromItem(item, offset.x, offset.y)
+        __showPos = mapFromItem(item, offset.x, offset.y)
+        
         activeOverlayLoader.sourceComponent = comp;
         activeOverlayLoader.visible = true;
-        activeOverlayLoader.x = pt.x;
-        activeOverlayLoader.y = pt.y;
+        activeOverlayLoader.x = __showPos.x;
+        activeOverlayLoader.y = __showPos.y;
     }
 
     function dismissOverlay()
     {
         activeOverlayLoader.sourceComponent = null
         activeOverlayLoader.visible = false;
+    }
+
+    function verticalOverflowFor(itemHeight)
+    {
+        // assumes we fill the whole window, so anything
+        // extending past our bottom is overflowing
+        var ov = (itemHeight + activeOverlayLoader.y) - root.height;
+        return Math.max(ov, 0);
     }
 
     MouseArea {
@@ -38,29 +52,5 @@ Item {
     {
         id: activeOverlayLoader
         // no size, size to the component
-
-        onStatusChanged: {
-            if (status == Loader.Ready) {
-                if (item.hasOwnProperty("adjustYPosition")) {
-                    // setting position here doesn't work, so we use a 0-interval
-                    // timer to do it shortly afterwards
-                    adjustPosition.start();
-                }
-            }
-        }
-
-        function adjustY()
-        {
-            var overflowHeight = (y + item.height) - root.height;
-            if (overflowHeight > 0) {
-                activeOverlayLoader.y = Math.max(0, y - overflowHeight)
-            }
-        }
-
-        Timer {
-            id: adjustPosition
-            interval: 0
-            onTriggered: activeOverlayLoader.adjustY();
-        }
     }
 }

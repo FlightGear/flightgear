@@ -9,6 +9,7 @@ Rectangle {
     property int currentIndex: 0
     property string headerText: ""
     property int maximumPermittedHeight: 450
+    property string displayRole: "display"
 
     color: "white"
     border.width: 1
@@ -19,13 +20,16 @@ Rectangle {
 
     // Overlay control properties
     property bool dismissOnClickOutside: true
-    property bool adjustYPosition: true
+    property bool alignRightEdge: false
 
     signal select(var index);
 
     Component.onCompleted: {
         computeMenuWidth();
     }
+
+    y: -OverlayShared.globalOverlay.verticalOverflowFor(height)
+    x: alignRightEdge ? -width : 0
 
     function close()
     {

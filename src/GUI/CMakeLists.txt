@@ -161,8 +161,6 @@ if (HAVE_QT)
                         PreviewImageItem.hxx
                         ThumbnailImageItem.cxx
                         ThumbnailImageItem.hxx
-                        PopupWindowTracker.cxx
-                        PopupWindowTracker.hxx
                         QmlPropertyModel.hxx
                         QmlPropertyModel.cxx
                         QmlPositioned.hxx

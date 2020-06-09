@@ -44,7 +44,6 @@
 #include "NavaidSearchModel.hxx"
 #include "PathUrlHelper.hxx"
 #include "PixmapImageItem.hxx"
-#include "PopupWindowTracker.hxx"
 #include "PreviewImageItem.hxx"
 #include "QmlAircraftInfo.hxx"
 #include "QmlPositioned.hxx"
@@ -157,7 +156,6 @@ void LauncherController::initQML()
 
     qmlRegisterType<FileDialogWrapper>("FlightGear", 1, 0, "FileDialog");
     qmlRegisterType<QmlAircraftInfo>("FlightGear.Launcher", 1, 0, "AircraftInfo");
-    qmlRegisterType<PopupWindowTracker>("FlightGear.Launcher", 1, 0, "PopupWindowTracker");
 
     qmlRegisterUncreatableType<LocalAircraftCache>("FlightGear.Launcher", 1, 0, "LocalAircraftCache", "Aircraft cache");
     qmlRegisterUncreatableType<AircraftItemModel>("FlightGear.Launcher", 1, 0, "AircraftModel", "Built-in model");
