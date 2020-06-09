@@ -19,6 +19,7 @@
 #include "config.h"
 
 #include <simgear/compiler.h>
+#include <atomic>
 
 #include "QQuickDrawable.hxx"
 
