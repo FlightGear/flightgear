@@ -136,13 +136,7 @@ if(ENABLE_METAR)
 endif()
 
 if (MSVC)
-  if (TARGET Qt5::qmake)
-    # property is the full path to qmake.exe
-    get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
-    get_filename_component(_qt5_bin_dir ${_qt5_qmake_path} DIRECTORY)
-    file(TO_NATIVE_PATH "${_qt5_bin_dir}" _qt5_bin_dir_native)
-  endif()
-
+  file(TO_NATIVE_PATH "${FG_QT_BIN_DIR}" _qt5_bin_dir_native)
   file(TO_NATIVE_PATH "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/bin" _msvc_3rdparty_bin_dir)
   file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}" _install_bin_dir)
 
@@ -150,11 +144,7 @@ if (MSVC)
   VS_GLOBAL_LocalDebuggerEnvironment "PATH=${_install_bin_dir};${_msvc_3rdparty_bin_dir};${_qt5_bin_dir_native}")
 endif()
 
-if (TARGET Qt5::qmake)
-    get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
-    get_filename_component(_qt5_bin_dir ${_qt5_qmake_path} DIRECTORY)
-    get_filename_component(_qt5_root_dir ${_qt5_bin_dir} DIRECTORY)
-
+if (FG_QT_ROOT_DIR)
     # for QtPlatformHeaders
-    target_include_directories(fgfs PRIVATE ${_qt5_root_dir}/include)
+    target_include_directories(fgfs PRIVATE ${FG_QT_ROOT_DIR}/include)
 endif()

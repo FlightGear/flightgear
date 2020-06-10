@@ -377,6 +377,14 @@ if (ENABLE_QT)
         message(STATUS "Will enable Qt launcher GUI")
         set(HAVE_QT 1)
         include (Translations)
+
+        # extract the Qt root direction, since we need it for a few things
+        if (TARGET Qt5::qmake)
+            get_target_property(_qt5_qmake_path Qt5::qmake LOCATION)
+            get_filename_component(FG_QT_BIN_DIR ${_qt5_qmake_path} DIRECTORY)
+            get_filename_component(FG_QT_ROOT_DIR ${FG_QT_BIN_DIR} DIRECTORY)
+        endif()
+
     else()
         # don't try to build FGQCanvas if Qt wasn't found correctly
         set(ENABLE_FGQCANVAS OFF)
