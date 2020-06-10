@@ -126,7 +126,7 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
   c->setDeparture(_departureRunway);
   
   if (_approach) {
-    c->setApproach(_approach);
+    c->setApproach(_approach, _approachTransition);
   } else if (_destinationRunway) {
     c->setDestination(_destinationRunway);
   } else if (_destination) {
