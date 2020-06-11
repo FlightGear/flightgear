@@ -21,11 +21,9 @@
 #ifndef _JSSUPER_H
 #define _JSSUPER_H
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #define MAX_JOYSTICKS 8
 

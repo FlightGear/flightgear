@@ -20,7 +20,7 @@
      $Id: jsNone.cxx 1960 2004-09-21 11:45:55Z smokydiamond $
 */
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #ifdef __OpenBSD__
   #define TRUE JS_TRUE

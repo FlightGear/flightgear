@@ -21,7 +21,7 @@
      $Id: jsLinux.cxx 2017 2005-02-21 07:37:25Z bram $
 */
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #include <unistd.h>
 #include <linux/joystick.h>

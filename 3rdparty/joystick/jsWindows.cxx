@@ -23,7 +23,7 @@
 
 #include <string>
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #include <Windows.h>
 

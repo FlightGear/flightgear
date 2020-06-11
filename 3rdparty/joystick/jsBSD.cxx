@@ -36,7 +36,7 @@
  * would need to understand that.
  */
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #if defined(__NetBSD__) || defined(__FreeBSD__)
 #define HAVE_USB_JS	1

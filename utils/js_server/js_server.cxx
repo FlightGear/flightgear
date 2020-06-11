@@ -30,7 +30,8 @@
 #include <stdint.h>
 
 #include <plib/netSocket.h>
-#include <plib/js.h>
+
+#include "FlightGear_js.h"
 
 void usage(char * progname)
 {

@@ -22,7 +22,7 @@
 
 #include "config.h"
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #include <simgear/debug/logstream.hxx>
 

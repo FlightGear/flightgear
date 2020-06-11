@@ -31,7 +31,7 @@
 #include <memory> // for std::unique_ptr
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include <js.h>
+#include "FlightGear_js.h"
 
 ////////////////////////////////////////////////////////////////////////
 // The Joystick Input Class

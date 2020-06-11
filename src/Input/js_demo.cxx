@@ -1,6 +1,4 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>          
@@ -8,8 +6,7 @@
 #  include <unistd.h> // for usleep           
 #endif
 
-#include <string.h>		// plib/js.h should really include this !!!!!!
-#include <js.h>
+#include "FlightGear_js.h"
 
 #define Z 8
 

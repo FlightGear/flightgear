@@ -21,7 +21,7 @@
      $Id: jsMacOSX.cxx 2165 2011-01-22 22:56:03Z fayjf $
 */
 
-#include "js.h"
+#include "FlightGear_js.h"
 
 #include <mach/mach.h>
 #include <IOKit/IOKitLib.h>
