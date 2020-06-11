@@ -178,11 +178,17 @@ std::string FGJoystickInput::computeDeviceIndexName(const std::string& name,
     return os.str();
 }
 
-void FGJoystickInput::reinit() {
-  SG_LOG(SG_INPUT, SG_DEBUG, "Re-Initializing joystick bindings");
-  _remove(false);
-  FGJoystickInput::init();
-  FGJoystickInput::postinit();
+void FGJoystickInput::reinit()
+{
+    SG_LOG(SG_INPUT, SG_DEBUG, "Re-Initializing joystick bindings");
+    _remove(false);
+
+#if defined(SG_MAC)
+    jsShutdown();
+#endif
+
+    FGJoystickInput::init();
+    FGJoystickInput::postinit();
 }
 
 void FGJoystickInput::postinit()

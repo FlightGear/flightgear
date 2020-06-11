@@ -56,6 +56,8 @@ struct os_specific_s {
   long hat_min[_JS_MAX_HATS];
   long hat_max[_JS_MAX_HATS];
 
+  bool removed = false;
+
   void enumerateElements(jsJoystick* joy, CFTypeRef element);
   static void elementEnumerator( const void *element, void* vjs);
   /// callback for CFArrayApply
@@ -83,6 +85,11 @@ void jsInit()
 
 		findDevices(masterPort);
 	}
+}
+
+void jsShutdown()
+{
+    numDevices = -1;
 }
 
 /** open the IOKit connection, enumerate all the HID devices, add their
@@ -133,6 +140,11 @@ static void findDevices(mach_port_t masterPort)
 	IOObjectRelease(hidIterator);
 }
 
+static void joystickRemovalCallback(void* target, IOReturn result, void* refCon, void* sender)
+{
+    os_specific_s* ourJS = reinterpret_cast<os_specific_s*>(target);
+    ourJS->removed = true;
+}
 
 jsJoystick::jsJoystick(int ident) :
 	id(ident),
@@ -146,7 +158,14 @@ jsJoystick::jsJoystick(int ident) :
 		return;
 	}
 
-	os = new struct os_specific_s;
+    // since the JoystickINput code tries to re-open devices every few seconds,
+    // we need to watch out for removed devices here.
+    if (ioDevices[id] == 0) {
+        setError();
+        return;
+    }
+
+    os = new struct os_specific_s;
 	os->num_hats = 0;
 
 	// get the name now too
@@ -203,7 +222,9 @@ void jsJoystick::open()
 		return;
 	}
 
-	CFDictionaryRef props = getCFProperties(ioDevices[id]);
+    rv = (*(os->hidDev))->setRemovalCallback(os->hidDev, &joystickRemovalCallback, os, nullptr);
+
+    CFDictionaryRef props = getCFProperties(ioDevices[id]);
 
 	// recursively enumerate all the bits (buttons, axes, hats, ...)
 	CFTypeRef topLevelElement =
@@ -261,10 +282,16 @@ CFDictionaryRef getCFProperties(io_object_t ioDev)
 
 void jsJoystick::close()
 {
-	if (!os)
+    // check for double-close
+    if (!os)
 		return;
-	if (os->hidDev != NULL)  (*(os->hidDev))->close(os->hidDev);
-	if (os) delete os;
+
+    if (os->hidDev != NULL) (*(os->hidDev))->close(os->hidDev);
+
+    if (os) {
+        delete os;
+        os = nullptr;
+    }
 }
 
 /** element enumerator function : pass NULL for top-level*/
@@ -427,10 +454,24 @@ void os_specific_s::addHatElement(jsJoystick* joy, CFDictionaryRef hat)
 
 void jsJoystick::rawRead(int *buttons, float *axes)
 {
-  if (buttons)
-	  *buttons = 0;
+    if (!os)
+        return;
 
-	 IOHIDEventStruct hidEvent;
+    if (buttons)
+        *buttons = 0;
+
+    if (os->removed) {
+        setError();
+        close();
+
+        // clear out from the static array, in case someone tries to open us
+        // again
+        ioDevices[id] = 0;
+
+        return;
+    }
+
+     IOHIDEventStruct hidEvent;
 
 	for (int b=0; b<num_buttons; ++b) {
 		(*(os->hidDev))->getElementValue(os->hidDev, os->buttonCookies[b], &hidEvent);

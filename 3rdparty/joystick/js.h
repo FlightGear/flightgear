@@ -90,6 +90,7 @@ public:
 } ;
 
 extern void jsInit () ;
+void jsShutdown();
 
 void jsSetError(int, const std::string& msg);
 
