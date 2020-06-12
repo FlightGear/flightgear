@@ -94,10 +94,14 @@ FGFontCache::FGFontCache() :
 
 FGFontCache::~FGFontCache()
 {
-   PuFontMap::iterator it, end = _puFonts.end();
-   for (it = _puFonts.begin(); it != end; ++it)
-       delete it->second;
-   _puFonts.clear();
+    for (auto puFontIt : _cache) {
+        delete puFontIt.second;
+    }
+
+    // these were created i initializeFonts
+    for (auto texFontIt : _texFonts) {
+        delete texFontIt.second;
+    }
 }
 
 inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
@@ -115,12 +119,12 @@ inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
     return f1.slant < f2.slant;
 }
 
-struct FGFontCache::fnt *
+FGFontCache::FontCacheEntry*
 FGFontCache::getfnt(const std::string& fontName, float size, float slant)
 {
     FntParams fntParams(fontName, size, slant);
-    PuFontMap::iterator i = _puFonts.find(fntParams);
-    if (i != _puFonts.end())
+    PuFontMap::iterator i = _cache.find(fntParams);
+    if (i != _cache.end())
         return i->second;
     // fntTexFont s are all preloaded into the _texFonts map
     TexFontMap::iterator texi = _texFonts.find(fontName);
@@ -135,17 +139,21 @@ FGFontCache::getfnt(const std::string& fontName, float size, float slant)
             pufont = guifont->font;
         }
     }
-    fnt* f = new fnt;
+
+    auto f = new FontCacheEntry;
     if (pufont) {
         f->pufont = pufont;
     } else if (texfont) {
         f->texfont = texfont;
+        f->ownsPUFont = true; // ensure it gets cleaned up
         f->pufont = new puFont;
         f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
     } else {
         f->pufont = guifonts[0].font;
     }
-    _puFonts[fntParams] = f;
+
+    // insert into the cache
+    _cache[fntParams] = f;
     return f;
 }
 
@@ -223,11 +231,10 @@ bool FGFontCache::initializeFonts()
     return true;
 }
 
-FGFontCache::fnt::~fnt()
+FGFontCache::FontCacheEntry::~FontCacheEntry()
 {
-    if (texfont) { 
-        delete pufont; 
-        delete texfont;
+    if (ownsPUFont) {
+        delete pufont;
     }
 }
 

@@ -54,25 +54,29 @@ private:
     {
         bool operator() (const FntParams& f1, const FntParams& f2) const;
     };
-    struct fnt {
-        fnt(puFont *pu = 0) : pufont(pu), texfont(0) {}
-        ~fnt();
-        
+
+    struct FontCacheEntry {
+        FontCacheEntry(puFont* pu = 0) : pufont(pu), texfont(0) {}
+        ~FontCacheEntry();
+
         // Font used by plib GUI code
         puFont *pufont;
         // TXF font
         fntTexFont *texfont;
+
+        bool ownsPUFont = false;
     };
+
     // Path to the font directory
     SGPath _path;
 
     typedef std::map<const std::string, fntTexFont*> TexFontMap;
-    typedef std::map<const FntParams, fnt*, FntParamsLess> PuFontMap;
+    typedef std::map<const FntParams, FontCacheEntry*, FntParamsLess> PuFontMap;
     TexFontMap _texFonts;
-    PuFontMap _puFonts;
+    PuFontMap _cache;
 
     bool _initialized;
-    struct fnt *getfnt(const std::string& name, float size, float slant);
+    FontCacheEntry* getfnt(const std::string& name, float size, float slant);
     void init();
 
 public:
