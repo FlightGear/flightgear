@@ -348,7 +348,7 @@ public:
 
     const std::string& getCallSign() const
     { return _callsign; }
-    const ModelSearchOrder getSearchOrder() const {return _searchOrder;}
+    ModelSearchOrder getSearchOrder() const {return _searchOrder;}
 };
 
 typedef SGSharedPtr<FGAIBase> FGAIBasePtr;

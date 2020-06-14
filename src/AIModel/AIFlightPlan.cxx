@@ -264,7 +264,7 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
   return true;
 }
 
-FGAIWaypoint* const FGAIFlightPlan::getPreviousWaypoint( void ) const
+FGAIWaypoint* FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.begin()) {
     return 0;
@@ -274,14 +274,14 @@ FGAIWaypoint* const FGAIFlightPlan::getPreviousWaypoint( void ) const
   }
 }
 
-FGAIWaypoint* const FGAIFlightPlan::getCurrentWaypoint( void ) const
+FGAIWaypoint* FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.end())
       return 0;
   return *wpt_iterator;
 }
 
-FGAIWaypoint* const FGAIFlightPlan::getNextWaypoint( void ) const
+FGAIWaypoint* FGAIFlightPlan::getNextWaypoint( void ) const
 {
   wpt_vector_iterator i = waypoints.end();
   i--;  // end() points to one element after the last one. 

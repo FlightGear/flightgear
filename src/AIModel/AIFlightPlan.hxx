@@ -107,9 +107,9 @@ public:
 		 const std::string& airline);
    ~FGAIFlightPlan();
 
-   FGAIWaypoint* const getPreviousWaypoint( void ) const;
-   FGAIWaypoint* const getCurrentWaypoint( void ) const;
-   FGAIWaypoint* const getNextWaypoint( void ) const;
+   FGAIWaypoint* getPreviousWaypoint( void ) const;
+   FGAIWaypoint* getCurrentWaypoint( void ) const;
+   FGAIWaypoint* getNextWaypoint( void ) const;
    void IncrementWaypoint( bool erase );
    void DecrementWaypoint( bool erase );
 
