@@ -463,7 +463,7 @@ bool FGHIDDevice::parseUSBHIDDescriptor()
         {
             std::ostringstream byteString;
 
-            for (auto i=0; i<_rawXMLDescriptor.size(); ++i) {
+            for (unsigned i=0; i<_rawXMLDescriptor.size(); ++i) {
                 byteString << hexTable[_rawXMLDescriptor[i] >> 4];
                 byteString << hexTable[_rawXMLDescriptor[i] & 0x0f];
                 byteString << " ";
@@ -767,7 +767,7 @@ void FGHIDDevice::SendFeatureReport(unsigned int reportId, const std::string& da
     size_t len = std::min(data.length() + 1, sizeof(buf));
     buf[0] = reportId;
     memcpy(buf + 1, data.data(), len - 1);
-    size_t r = hid_send_feature_report(_device, buf, len);
+    int r = hid_send_feature_report(_device, buf, len);
     if (r < 0) {
         SG_LOG(SG_INPUT, SG_WARN, GetName() << ": FGHIDDevice: Sending feature report failed, error-string is:\n"
                << simgear::strutils::error_string(errno));
