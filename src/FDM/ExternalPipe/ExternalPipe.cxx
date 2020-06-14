@@ -184,9 +184,9 @@ static int write_binary( char cmd_type, FILE *pd, char *cmd, int len ) {
 
 
 static int write_property( FILE *pd, char *cmd ) {
-    int len = strlen(cmd);
 
 #ifdef HAVE_MKFIFO
+    int len = strlen(cmd);
     char *buf = new char[len + 1];
 
     memcpy( buf, cmd, len );
