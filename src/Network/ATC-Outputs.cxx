@@ -888,7 +888,7 @@ bool FGATCOutput::do_radio_display() {
         } else {
             // timer
             double time;
-            int hours, min, sec;
+            unsigned hours, min, sec;
             if ( adf_timer_mode->getIntValue() == 0 ) {
                 time = adf_flight_timer->getDoubleValue();
             } else {
@@ -900,7 +900,7 @@ bool FGATCOutput::do_radio_display() {
             min = (int)(time / 60.0);
             time -= min * 60.0;
             sec = (int)time;
-            int big, little;
+            unsigned big, little;
             if ( hours > 0 ) {
                 big = hours;
                 if ( big > 99 ) {

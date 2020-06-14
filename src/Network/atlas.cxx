@@ -88,7 +88,7 @@ bool FGAtlas::gen_message() {
     SGTime *t = globals->get_time_params();
 
     char utc[10];
-    sprintf( utc, "%02d%02d%02d", 
+    snprintf( utc, sizeof(utc), "%02d%02d%02d", 
 	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
     char lat[20];
@@ -101,7 +101,7 @@ bool FGAtlas::gen_message() {
     }
     deg = (int)(latd);
     min = (latd - (double)deg) * 60.0;
-    sprintf( lat, "%02d%06.3f,%c", abs(deg), min, dir);
+    snprintf( lat, sizeof(lat), "%02d%06.3f,%c", abs(deg), min, dir);
 
     char lon[20];
     double lond = fdm->get_Longitude() * SGD_RADIANS_TO_DEGREES;
@@ -113,41 +113,41 @@ bool FGAtlas::gen_message() {
     }
     deg = (int)(lond);
     min = (lond - (double)deg) * 60.0;
-    sprintf( lon, "%03d%06.3f,%c", abs(deg), min, dir);
+    snprintf( lon, sizeof(lon), "%03d%06.3f,%c", abs(deg), min, dir);
 
     char speed[10];
-    sprintf( speed, "%05.1f", fdm->get_V_equiv_kts() );
+    snprintf( speed, sizeof(speed), "%05.1f", fdm->get_V_equiv_kts() );
 
     char heading[10];
-    sprintf( heading, "%05.1f", fdm->get_Psi() * SGD_RADIANS_TO_DEGREES );
+    snprintf( heading, sizeof(heading), "%05.1f", fdm->get_Psi() * SGD_RADIANS_TO_DEGREES );
 
     char altitude_m[10];
-    sprintf( altitude_m, "%02d", 
+    snprintf( altitude_m, sizeof(altitude_m), "%02d", 
 	     (int)(fdm->get_Altitude() * SG_FEET_TO_METER) );
 
     char altitude_ft[10];
-    sprintf( altitude_ft, "%02d", (int)fdm->get_Altitude() );
+    snprintf( altitude_ft, sizeof(altitude_ft), "%02d", (int)fdm->get_Altitude() );
 
     char date[10];
-    sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday, 
+    snprintf( date, sizeof(date), "%02d%02d%02d", t->getGmt()->tm_mday, 
 	     t->getGmt()->tm_mon+1, t->getGmt()->tm_year );
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
-    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
+    snprintf( rmc, sizeof(rmc), "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
 	     utc, lat, lon, speed, heading, date );
-    sprintf( rmc_sum, "%02X", calc_atlas_cksum(rmc) );
+    snprintf( rmc_sum, sizeof(rmc_sum), "%02X", calc_atlas_cksum(rmc) );
 
-    sprintf( gga, "GPGGA,%s,%s,%s,1,,,%s,F,,,,",
+    snprintf( gga, sizeof(gga), "GPGGA,%s,%s,%s,1,,,%s,F,,,,",
 	     utc, lat, lon, altitude_ft );
-    sprintf( gga_sum, "%02X", calc_atlas_cksum(gga) );
+    snprintf( gga_sum, sizeof(gga_sum), "%02X", calc_atlas_cksum(gga) );
 
-    sprintf( patla, "PATLA,%.2f,%.1f,%.2f,%.1f,%.0f",
+    snprintf( patla, sizeof(patla), "PATLA,%.2f,%.1f,%.2f,%.1f,%.0f",
              _nav1_freq->getDoubleValue(),
              _nav1_sel_radial->getDoubleValue(),
              _nav2_freq->getDoubleValue(),
              _nav2_sel_radial->getDoubleValue(),
              _adf_freq->getDoubleValue() );
-    sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
+    snprintf( patla_sum, sizeof(patla_sum), "%02X", calc_atlas_cksum(patla) );
 
     SG_LOG( SG_IO, SG_DEBUG, rmc );
     SG_LOG( SG_IO, SG_DEBUG, gga );

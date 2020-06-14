@@ -83,7 +83,7 @@ bool FGNMEA::gen_message()
     SGTime *t = globals->get_time_params();
 
     char utc[10];
-    sprintf( utc, "%02d%02d%02d", 
+    snprintf( utc, sizeof(utc), "%02d%02d%02d", 
              t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
     char lat[20];
@@ -97,7 +97,7 @@ bool FGNMEA::gen_message()
         }
         deg = (int)(latd);
         min = (latd - (double)deg) * 60.0;
-        sprintf( lat, "%02d%07.4f,%c", abs(deg), min, dir);
+        snprintf( lat, sizeof(lat), "%02d%07.4f,%c", abs(deg), min, dir);
     }
 
     char lon[20];
@@ -111,7 +111,7 @@ bool FGNMEA::gen_message()
         }
         deg = (int)(lond);
         min = (lond - (double)deg) * 60.0;
-        sprintf( lon, "%03d%07.4f,%c", abs(deg), min, dir);
+        snprintf( lon, sizeof(lon), "%03d%07.4f,%c", abs(deg), min, dir);
     }
 
     double vn = fgGetDouble( "/velocities/speed-north-fps" );
@@ -122,7 +122,7 @@ bool FGNMEA::gen_message()
         double fps = sqrt( vn*vn + ve*ve );
         double mps = fps * SG_FEET_TO_METER;
         double kts = mps * SG_METER_TO_NM * 3600;
-        sprintf( speed, "%.1f", kts );
+        snprintf( speed, sizeof(speed), "%.1f", kts );
     }
 
     char heading[10];
@@ -131,7 +131,7 @@ bool FGNMEA::gen_message()
         if ( hdg_true < 0 ) {
           hdg_true += 360.0;
         }
-        sprintf( heading, "%.1f", hdg_true );
+        snprintf( heading, sizeof(heading), "%.1f", hdg_true );
     }
 
     double altitude_ft = mFdm.get_Altitude();
@@ -140,7 +140,7 @@ bool FGNMEA::gen_message()
     {
         int year = t->getGmt()->tm_year;
         while ( year >= 100 ) { year -= 100; }
-        sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday,
+        snprintf( date, sizeof(date), "%02d%02d%02d", t->getGmt()->tm_mday,
              t->getGmt()->tm_mon+1, year );
     }
 
@@ -153,14 +153,14 @@ bool FGNMEA::gen_message()
         } else {
             dir = 'E';
         }
-        sprintf( magvar, "%.1f,%c", magdeg, dir );
+        snprintf( magvar, sizeof(magvar), "%.1f,%c", magdeg, dir );
     }
 
     // RMC sentence
     if (mNmeaMessages & NMEA::GPRMC)
     {
         // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E,A*XX
-        sprintf( nmea, "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,A",
+        snprintf( nmea, sizeof(nmea), "$GPRMC,%s,A,%s,%s,%s,%s,%s,%s,A",
                  utc, lat, lon, speed, heading, date, magvar );
         add_with_checksum(nmea, 256);
     }
@@ -169,7 +169,7 @@ bool FGNMEA::gen_message()
     if (mNmeaMessages & NMEA::GPGGA)
     {
         // $GPGGA,HHMMSS,DDMM.MMMM,N,DDDMM.MMMM,W,1,NN,H.H,AAAA.A,M,GG.G,M,,*XX
-        sprintf( nmea, "$GPGGA,%s,%s,%s,1,08,0.9,%.1f,M,0.0,M,,",
+        snprintf( nmea, sizeof(nmea), "$GPGGA,%s,%s,%s,1,08,0.9,%.1f,M,0.0,M,,",
                  utc, lat, lon, altitude_ft * SG_FEET_TO_METER );
         add_with_checksum(nmea, 256);
     }
@@ -177,7 +177,7 @@ bool FGNMEA::gen_message()
     // GSA sentence (totally faked)
     if (mNmeaMessages & NMEA::GPGSA)
     {
-        sprintf( nmea, "%s%s",
+        snprintf( nmea, sizeof(nmea), "%s%s",
                 "$GPGSA,A,3,01,02,03,,05,,07,,09,,11,12,0.9,0.9,2.0*38", mLineFeed );
         SG_LOG( SG_IO, SG_DEBUG, nmea );
 
