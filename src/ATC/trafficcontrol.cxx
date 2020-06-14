@@ -84,7 +84,7 @@ TrafficVectorIterator searchActiveTraffic(TrafficVector& vec, int id)
 */
 time_t ActiveRunway::requestTimeSlot(time_t eta)
 {
-    time_t newEta;
+    time_t newEta = 0;
     // default separation - 60 seconds
     time_t separation = 60;
     //if (wakeCategory == "heavy_jet") {
@@ -870,7 +870,7 @@ string FGATCController::genTransponderCode(const string& fltRules)
         return string("1200");
     } else {
         char buffer[5];
-        snprintf(buffer, 5, "%d%d%d%d", rand() % 8, rand() % 8, rand() % 8,
+        snprintf(buffer, sizeof(buffer), "%d%d%d%d", rand() % 8, rand() % 8, rand() % 8,
                  rand() % 8);
         return string(buffer);
     }
