@@ -96,7 +96,7 @@ public:
             geom = QRectF{100, 100, 400, 400};
         }
 
-        WindowData winfo = {dinfo.id, dinfo.resource, geom};
+        WindowData winfo = {dinfo.id, dinfo.resource, geom, ""};
 
         beginInsertRows({}, _windowData.size(), _windowData.size());
         _windowData.push_back(winfo);
