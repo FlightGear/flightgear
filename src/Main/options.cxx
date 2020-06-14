@@ -1635,10 +1635,10 @@ struct OptionDesc {
     } fgOptionArray[] = {
 
     {"language",                     true,  OPTION_IGNORE, "", false, "", 0 },
-	{"console",                      false, OPTION_FUNC,   "", false, "", fgOptConsole },
-    {"launcher",                     false, OPTION_IGNORE,   "", false, "", 0 },
-    {"enable-sentry",                false, OPTION_IGNORE,   "", false, "", nullptr },
-    {"allow-nasal-from-sockets",     false, OPTION_IGNORE,   "", false, "", 0 },
+    {"console",                      false, OPTION_FUNC,   "", false, "", fgOptConsole },
+    {"launcher",                     false, OPTION_IGNORE, "", false, "", 0 },
+    {"enable-sentry",                false, OPTION_IGNORE, "", false, "", nullptr },
+    {"allow-nasal-from-sockets",     false, OPTION_IGNORE, "", false, "", 0 },
     {"disable-rembrandt",            false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", false, "", 0 },
     {"enable-rembrandt",             false, OPTION_BOOL,   "/sim/rendering/rembrandt/enabled", true, "", 0 },
     {"renderer",                     true,  OPTION_STRING, "/sim/rendering/rembrandt/renderer", false, "", 0 },
@@ -1707,7 +1707,7 @@ struct OptionDesc {
     {"pitch",                        true,  OPTION_DOUBLE, "/sim/presets/pitch-deg", false, "", 0 },
     {"glideslope",                   true,  OPTION_DOUBLE, "/sim/presets/glideslope-deg", false, "", 0 },
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
-    {"fg-root",                      true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"fg-root",                      true,  OPTION_IGNORE, "", false, "", 0 },
     {"fg-scenery",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFgScenery },
     {"terrain-engine",               true,  OPTION_STRING, "/sim/scenery/engine", false, "tilecache", 0 },
     {"lod-levels",                   true,  OPTION_STRING, "/sim/scenery/lod-levels", false, "1 3 5 7", 0 },
@@ -1717,8 +1717,8 @@ struct OptionDesc {
     {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
-    {"aircraft-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
-    {"state",                        true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"aircraft-dir",                 true,  OPTION_IGNORE, "", false, "", 0 },
+    {"state",                        true,  OPTION_IGNORE, "", false, "", 0 },
     {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
     {"max-fps",                      true,  OPTION_DOUBLE, "/sim/frame-rate-throttle-hz", false, "", 0 },
     {"speed",                        true,  OPTION_DOUBLE, "/sim/speed-up", false, "", 0 },
@@ -1759,9 +1759,9 @@ struct OptionDesc {
     {"materials-file",               true,  OPTION_STRING, "/sim/rendering/materials-file", false, "", 0 },
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
-    {"terrasync-dir",                true,  OPTION_IGNORE,   "", false, "", 0 },
-    {"download-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
-    {"texture-cache-dir",            true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"terrasync-dir",                true,  OPTION_IGNORE, "", false, "", 0 },
+    {"download-dir",                 true,  OPTION_IGNORE, "", false, "", 0 },
+    {"texture-cache-dir",            true,  OPTION_IGNORE, "", false, "", 0 },
     {"enable-texture-cache",         false, OPTION_BOOL,   "/sim/rendering/texture-cache/cache-enabled", true, "", 0 },
     {"disable-texture-cache",        false, OPTION_BOOL,   "/sim/rendering/texture-cache/cache-enabled", false, "", 0 },
     {"allow-nasal-read",             true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptAllowNasalRead },
@@ -1856,7 +1856,7 @@ struct OptionDesc {
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
-    {0}
+    {nullptr,                        false, 0,             nullptr, false, nullptr, nullptr}
 };
 
 
