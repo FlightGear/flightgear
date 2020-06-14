@@ -1765,21 +1765,28 @@ int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
         for(;;) {
         
             if (mReplayMessageQueue.empty()) {
-                // No recorded messages available, so look for chat messages
-                // only from <mSocket>.
+                // No recorded messages available, so look for live messages
+                // from <mSocket>.
                 //
                 int RecvStatus = GetMsgNetwork(msgBuf, SenderAddress);
                 if (RecvStatus == 0) {
                     // No recorded messages, and no live messages, so return 0.
                     return 0;
                 }
+                
+                // Always record all messages.
+                //
+                std::shared_ptr<std::vector<char>> data( new std::vector<char>(RecvStatus));
+                memcpy( &data->front(), msgBuf.Msg, RecvStatus);
+                mRecordMessageQueue.push_back(data);
+                
                 if (msgBuf.Header.MsgId == CHAT_MSG_ID) {
                     return RecvStatus;
                 }
+
                 // If we get here, there is a live message but it is a
                 // multiplayer aircraft position so we ignore it while
                 // replaying.
-                //
             }
             else {
                 // Replay recorded message, unless it is a chat message.
@@ -1789,7 +1796,7 @@ int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
                 assert(replayMessage->size() <= sizeof(msgBuf));
                 int length = replayMessage->size();
                 memcpy(&msgBuf.Msg, &replayMessage->front(), length);
-                // Don't return chat messages.
+                // Don't return recorded chat messages.
                 if (msgBuf.Header.MsgId != CHAT_MSG_ID) {
                     SG_LOG(SG_NETWORK, SG_INFO,
                             "replaying message length=" << replayMessage->size()

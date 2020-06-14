@@ -325,85 +325,112 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
         if (!ReplayData)
             return NULL;
     }
-    int Offset = 0;
+    
+    // When replaying, we are able to carry recording live multiplayer
+    // information. To make this work we need to record a stationay
+    // user aircraft, with information from the last live user aircraft
+    // FGReplayData. So we store the last live user aircraft information in
+    // this static vector.
+    //
+    static std::vector<char>    s_recent_raw_data;
+    
+    int in_replay = fgGetInt("/sim/replay/replay-state");
+    
     ReplayData->sim_time = SimTime;
-    ReplayData->raw_data.resize( m_TotalRecordSize);
-    char* pBuffer = &ReplayData->raw_data.front();
     
-    // 64bit aligned data first!
-    {
-        // capture doubles
-        double* pDoubles = (double*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureDouble.size();
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            pDoubles[i] = m_CaptureDouble[i].Signal->getDoubleValue();
-        }
-        Offset += SignalCount * sizeof(double);
+    if (in_replay) {
+        // Record the fixed position of live user aircraft at the point at
+        // which we started replay.
+        //
+        ReplayData->raw_data = s_recent_raw_data;
     }
-    
-    // 32bit aligned data comes second...
-    {
-        // capture floats
-        float* pFloats = (float*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureFloat.size();
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            pFloats[i] = m_CaptureFloat[i].Signal->getFloatValue();
-        }
-        Offset += SignalCount * sizeof(float);
-    }
-    
-    {
-        // capture integers (32bit aligned)
-        int* pInt = (int*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureInteger.size();
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            pInt[i] = m_CaptureInteger[i].Signal->getIntValue();
-        }
-        Offset += SignalCount * sizeof(int);
-    }
-    
-    // 16bit aligned data is next...
-    {
-        // capture 16bit short integers
-        short int* pShortInt = (short int*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureInt16.size();
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            pShortInt[i] = (short int) m_CaptureInt16[i].Signal->getIntValue();
-        }
-        Offset += SignalCount * sizeof(short int);
-    }
-    
-    // finally: byte aligned data is last...
-    {
-        // capture 8bit chars
-        signed char* pChar = (signed char*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureInt8.size();
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            pChar[i] = (signed char) m_CaptureInt8[i].Signal->getIntValue();
-        }
-        Offset += SignalCount * sizeof(signed char);
-    }
-    
-    {
-        // capture 1bit booleans (8bit aligned)
-        unsigned char* pFlags = (unsigned char*) &pBuffer[Offset];
-        unsigned int SignalCount = m_CaptureBool.size();
-        int Size = (SignalCount+7)/8;
-        Offset += Size;
-        memset(pFlags,0,Size);
-        for (unsigned int i=0; i<SignalCount; i++)
-        {
-            if (m_CaptureBool[i].Signal->getBoolValue())
-                pFlags[i>>3] |= 1 << (i&7);
-        }
-    }
+    else {
+        // Find live information about the user aircraft.
+        //
+        int Offset = 0;
+        ReplayData->raw_data.resize( m_TotalRecordSize);
+        char* pBuffer = &ReplayData->raw_data.front();
 
-    assert(Offset + sizeof(double) == m_TotalRecordSize);
+        // 64bit aligned data first!
+        {
+            // capture doubles
+            double* pDoubles = (double*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureDouble.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                pDoubles[i] = m_CaptureDouble[i].Signal->getDoubleValue();
+            }
+            Offset += SignalCount * sizeof(double);
+        }
+
+        // 32bit aligned data comes second...
+        {
+            // capture floats
+            float* pFloats = (float*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureFloat.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                pFloats[i] = m_CaptureFloat[i].Signal->getFloatValue();
+            }
+            Offset += SignalCount * sizeof(float);
+        }
+
+        {
+            // capture integers (32bit aligned)
+            int* pInt = (int*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureInteger.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                pInt[i] = m_CaptureInteger[i].Signal->getIntValue();
+            }
+            Offset += SignalCount * sizeof(int);
+        }
+
+        // 16bit aligned data is next...
+        {
+            // capture 16bit short integers
+            short int* pShortInt = (short int*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureInt16.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                pShortInt[i] = (short int) m_CaptureInt16[i].Signal->getIntValue();
+            }
+            Offset += SignalCount * sizeof(short int);
+        }
+
+        // finally: byte aligned data is last...
+        {
+            // capture 8bit chars
+            signed char* pChar = (signed char*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureInt8.size();
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                pChar[i] = (signed char) m_CaptureInt8[i].Signal->getIntValue();
+            }
+            Offset += SignalCount * sizeof(signed char);
+        }
+
+        {
+            // capture 1bit booleans (8bit aligned)
+            unsigned char* pFlags = (unsigned char*) &pBuffer[Offset];
+            unsigned int SignalCount = m_CaptureBool.size();
+            int Size = (SignalCount+7)/8;
+            Offset += Size;
+            memset(pFlags,0,Size);
+            for (unsigned int i=0; i<SignalCount; i++)
+            {
+                if (m_CaptureBool[i].Signal->getBoolValue())
+                    pFlags[i>>3] |= 1 << (i&7);
+            }
+        }
+
+        assert(Offset + sizeof(double) == m_TotalRecordSize);
+
+        // Update s_recent_raw_data so that we will be able to carry recording
+        // while replaying.
+        //
+        s_recent_raw_data = ReplayData->raw_data;
+    }
     
     // If m_ReplayMultiplayer is true, move all recent
     // multiplayer messages from m_MultiplayMgr into
@@ -422,6 +449,15 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
         }
     }
     ReplayData->UpdateStats();
+    
+    // Note that if we are replaying, <ReplayData> will contain the last live
+    // position of the live user aircraft, plus any multiplayer packets that
+    // have arrived recently.  If there were no recent multiplayer packets,
+    // then there's no actually no need to record anything (unless we're at the
+    // start of recording).
+    //
+    // But for now at least, we don't try to optimise the recording like that.
+    //
     
     return ReplayData;
 }

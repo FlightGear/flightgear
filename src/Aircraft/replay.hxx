@@ -151,6 +151,7 @@ private:
     SGPropertyNode_ptr replay_looped;
     SGPropertyNode_ptr replay_duration_act;
     SGPropertyNode_ptr speed_up;
+    SGPropertyNode_ptr replay_multiplayer;
     double replay_time_prev;    // Used to detect jumps while replaying.
 
     double m_high_res_time;    // default: 60 secs of high res data

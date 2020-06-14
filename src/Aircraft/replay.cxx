@@ -301,6 +301,7 @@ FGReplay::init()
     replay_looped        = fgGetNode("/sim/replay/looped",       true);
     replay_duration_act  = fgGetNode("/sim/replay/duration-act", true);
     speed_up             = fgGetNode("/sim/speed-up",            true);
+    replay_multiplayer   = fgGetNode("/sim/replay/multiplayer",  true);
 
     // alias to keep backward compatibility
     fgGetNode("/sim/freeze/replay-state", true)->alias(replay_master);
@@ -724,10 +725,24 @@ FGReplay::update( double dt )
             if (ResetTime)
                 replay_master->setIntValue(replay_state);
 
-            return; // don't record the replay session 
+            if (replay_multiplayer->getIntValue()) {
+                // Carry on recording while replaying.
+                break;
+            }
+            else {
+                // Don't record while replaying.
+                return;
+            }
         }
         case 2: // normal replay operation
-            return; // don't record the replay session
+            if (replay_multiplayer->getIntValue()) {
+                // Carry on recording while replaying.
+                break;
+            }
+            else {
+                // Don't record while replaying.
+                return;
+            }
         default:
             throw sg_range_exception("unknown FGReplay state");
     }
@@ -749,6 +764,9 @@ FGReplay::update( double dt )
         sim_time = new_sim_time;
     }
 
+    // We still record even if we are replaying, if /sim/replay/multiplayer is
+    // true.
+    //
     FGReplayData* r = record(sim_time);
     if (!r)
     {
