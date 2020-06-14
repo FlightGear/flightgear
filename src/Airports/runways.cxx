@@ -78,7 +78,7 @@ string FGRunway::reverseIdent(const string& aRunwayIdent)
 	  rn -= 36;
   }
   
-  sprintf(buf, "%02i", rn);
+  snprintf(buf, sizeof(buf), "%02i", rn);
   if(ident.size() == 3) {
     char suffix = toupper(ident[2]);
     if(suffix == 'L') {

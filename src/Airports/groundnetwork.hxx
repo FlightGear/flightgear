@@ -47,7 +47,7 @@ public:
     ~Block() {};
     int getId() { return id; };
     void updateTimeStamps(time_t bt, time_t now) { blocktime = (bt < blocktime) ? bt : blocktime; touch = now; };
-    const time_t getBlockTime() const { return blocktime; };
+    time_t getBlockTime() const { return blocktime; };
     time_t getTimeStamp() { return touch; };
     bool operator< (const Block &other) const { return blocktime < other.blocktime; };
 };
