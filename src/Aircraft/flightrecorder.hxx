@@ -86,7 +86,7 @@ private:
     FlightRecorder::TSignalList m_CaptureInt8;
     FlightRecorder::TSignalList m_CaptureBool;
 
-    int m_TotalRecordSize;
+    unsigned m_TotalRecordSize;
     std::string m_ConfigName;
     bool m_usingDefaultConfig;
     FGMultiplayMgr* m_MultiplayMgr;
