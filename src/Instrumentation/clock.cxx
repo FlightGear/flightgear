@@ -114,11 +114,11 @@ Clock::update (double delta_time_sec)
     while (hour >= 24)
         hour -= 24;
 
-    sprintf(_indicated_string, "%02d:%02d:%02d", hour, min, sec);
+    snprintf(_indicated_string, sizeof(_indicated_string), "%02d:%02d:%02d", hour, min, sec);
     _string_node->setStringValue(_indicated_string);
-    sprintf(_indicated_short_string, "%02d:%02d", hour, min);
+    snprintf(_indicated_short_string, sizeof(_indicated_short_string), "%02d:%02d", hour, min);
     _string_node1->setStringValue(_indicated_short_string);
-    sprintf(_local_short_string, "%02d:%02d", lhour, min);
+    snprintf(_local_short_string, sizeof(_local_short_string), "%02d:%02d", lhour, min);
     _string_node2->setStringValue(_local_short_string);
     _is_serviceable = true;
 

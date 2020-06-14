@@ -116,7 +116,7 @@ void KLN89CalPage::Update(double dt) {
 			if(!(_uLinePos == 3 && crsr && blink)) { _kln89->DrawText("--", 2, 13, 2); }
 		}
 		if(_alarmAnnotate && _alarmIn.hr() < 10) {
-            sprintf(buf, "%01i", _alarmIn.hr());
+            snprintf(buf, sizeof(buf), "%01i", _alarmIn.hr());
 			if(!(_uLinePos == 4 && crsr && blink)) { _kln89->DrawText((string)buf, 2, 11, 1); }
 			sprintf(buf, "%02i", _alarmIn.min());
 			if(!(_uLinePos == 5 && crsr && blink)) { _kln89->DrawText((string)buf, 2, 13, 1); }

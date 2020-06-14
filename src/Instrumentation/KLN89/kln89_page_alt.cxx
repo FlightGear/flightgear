@@ -52,7 +52,7 @@ void KLN89AltPage::Update(double dt) {
 				_kln89->_userBaroSetting = (int)((float)_kln89->_userBaroSetting * 0.0295301 * 100 + 0.5);
 			}
 			char buf[6];
-			snprintf(buf, 6, "%2i.%02i", _kln89->_userBaroSetting/100, _kln89->_userBaroSetting % 100);
+			snprintf(buf, sizeof(buf), "%2i.%02i", _kln89->_userBaroSetting/100, _kln89->_userBaroSetting % 100);
 			string s = buf;
 			if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 1 && _kln89->_blink)) {
 				_kln89->DrawText(s, 2, 7, 3);
@@ -69,7 +69,7 @@ void KLN89AltPage::Update(double dt) {
 				_kln89->_userBaroSetting = (int)(((float)_kln89->_userBaroSetting / 100.0) * 33.8637526 + 0.5);
 			}
 			char buf[5];
-			snprintf(buf, 5, "%4i", _kln89->_userBaroSetting);
+			snprintf(buf, sizeof(buf), "%4i", _kln89->_userBaroSetting);
 			string s = buf;
 			if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 1 && _kln89->_blink)) {
 				_kln89->DrawText(s, 2, 8, 3);

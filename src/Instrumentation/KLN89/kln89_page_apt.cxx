@@ -150,7 +150,7 @@ void KLN89AptPage::Update(double dt) {
 			if(hrDiff != 0) {
 				_kln89->DrawText(ap->getLongitude() >= 0.0 ? "+" : "-", 2, 3, 2);
 				char buf[3];
-				snprintf(buf, 3, "%02i", hrDiff);
+				snprintf(buf, sizeof(buf), "%02i", hrDiff);
 				_kln89->DrawText((string)buf, 2, 4, 2);
 				_kln89->DrawText("(   DT)", 2, 6, 2);
 				if(ap->getLongitude() >= 0.0) {
@@ -159,7 +159,7 @@ void KLN89AptPage::Update(double dt) {
 					hrDiff--;
 				}
 				_kln89->DrawText(ap->getLongitude() >= 0.0 ? "+" : "-", 2, 7, 2);
-				snprintf(buf, 3, "%02i", hrDiff);
+				snprintf(buf, sizeof(buf), "%02i", hrDiff);
 				_kln89->DrawText((string)buf, 2, 8, 2);
 			}
 			// I guess we can make a heuristic guess as to fuel availability from the runway sizes
