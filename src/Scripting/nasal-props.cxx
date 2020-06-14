@@ -30,7 +30,7 @@ static void propNodeGhostDestroy(void* ghost)
   if (!SGPropertyNode::put(prop)) delete prop;
 }
 
-naGhostType PropNodeGhostType = { propNodeGhostDestroy, "prop" };
+naGhostType PropNodeGhostType = { propNodeGhostDestroy, "prop", nullptr, nullptr };
 
 naRef propNodeGhostCreate(naContext c, SGPropertyNode* ghost)
 {
