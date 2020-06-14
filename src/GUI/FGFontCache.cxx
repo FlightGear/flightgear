@@ -67,7 +67,7 @@ const GuiFont guifonts[] = {
     { "HELVETICA_14", &FONT_HELVETICA_14 },
     { "HELVETICA_18", &PUFONT_HELVETICA_18 },
     { "SANS_12B",     &FONT_SANS_12B },
-    { 0 }
+    { nullptr,        nullptr }
 };
 
 const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])-1];
