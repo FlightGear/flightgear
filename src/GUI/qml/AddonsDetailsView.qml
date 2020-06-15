@@ -59,7 +59,7 @@ Rectangle {
 
                         StyledText {
                             id: addonName
-                            text: flickable.labelText("Module", mdx, "name");
+                            text: flickable.labelText(qsTr("Module"), mdx, "name");
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: flickable.getMeta(mdx, "name") != ""
@@ -67,7 +67,7 @@ Rectangle {
 
                         StyledText {
                             id: addonDescription
-                            text: flickable.labelText("Description", mdx, "long_description");
+                            text: flickable.labelText(qsTr("Description"), mdx, "long_description");
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: flickable.getMeta(mdx, "long_description") != ""
@@ -75,7 +75,7 @@ Rectangle {
 
                         StyledText {
                             id: addonId
-                            text: flickable.labelText("Id", mdx, "id");
+                            text: flickable.labelText(qsTr("Id"), mdx, "id");
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: flickable.getMeta(mdx, "id") != ""
@@ -83,7 +83,7 @@ Rectangle {
 
                         StyledText {
                             id: addonVersion
-                            text: flickable.labelText("Version", mdx, "version");
+                            text: flickable.labelText(qsTr("Version"), mdx, "version");
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: flickable.getMeta(mdx, "version") != ""
@@ -91,7 +91,7 @@ Rectangle {
 
                         StyledText {
                             id: minFgVersion
-                            text: flickable.labelText("Min FG Version", mdx, "minversion_fg");
+                            text: flickable.labelText(qsTr("Minimum FlightGear version"), mdx, "minversion_fg");
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: flickable.getMeta(mdx, "minversion_fg") != ""
@@ -99,7 +99,7 @@ Rectangle {
 
                         StyledText {
                             id: maxFgVersion
-                            text: flickable.labelText("Max FG Version", mdx, "maxversion_fg");
+                            text: flickable.labelText(qsTr("Maximum FlightGear version"), mdx, "maxversion_fg");
                             width: parent.width
                             wrapMode: Text.WordWrap
                             visible: flickable.getMeta(mdx, "maxversion_fg") != ""
@@ -107,7 +107,7 @@ Rectangle {
 
                         StyledText {
                             id: addonAuthors
-                            text: flickable.labelText("Authors", mdx, "authors");
+                            text: flickable.labelText(qsTr("Authors"), mdx, "authors");
                             width: parent.width
                             anchors.horizontalCenter: parent.horizontalCenter
                             wrapMode: Text.WordWrap
@@ -116,7 +116,7 @@ Rectangle {
 
                         StyledText {
                             id: addonMaintainers
-                            text: flickable.labelText("Maintainers", mdx, "maintainers");
+                            text: flickable.labelText(qsTr("Maintainers"), mdx, "maintainers");
                             width: parent.width
                             anchors.horizontalCenter: parent.horizontalCenter
                             wrapMode: Text.WordWrap

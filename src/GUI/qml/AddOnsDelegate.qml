@@ -15,7 +15,7 @@ Item {
     height: childrenRect.height
 
     function displayLabel(lbl) {
-             return qsTr("%1 %2").arg(lbl).arg((_addOns.modules.checkVersion(model.path) ? "" : " (disabled due to incompatible FG version)"));
+             return qsTr("%1 %2").arg(lbl).arg((_addOns.modules.checkVersion(model.path) ? "" : qsTr(" (disabled due to incompatible FG version)")));
     }
 
     Item {
