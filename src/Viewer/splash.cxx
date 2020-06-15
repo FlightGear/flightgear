@@ -706,9 +706,9 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
 
     // over-write the spinner
     if (!strncmp(identifier, "navdata-", 8)) {
-        std::ostringstream oss;
-        oss << percent << "% complete";
-        fgSetString("/sim/startup/splash-progress-spinner", oss.str());
+        const string percentText = globals->get_locale()->getLocalizedString("navdata-load-percent", "sys");
+        auto finalText = simgear::strutils::replace(percentText, "[VALUE]", to_string(percent));
+        fgSetString("/sim/startup/splash-progress-spinner", finalText);
     }
 
     if( fgGetString("/sim/startup/splash-progress-text") == text )
