@@ -16,7 +16,7 @@ if(WIN32)
 		)
 	endif()
 else()
-	include(FindPkgConfig)
+	find_package(PkgConfig QUIET)
 
 	if(PKG_CONFIG_FOUND)
 		# FIXME : clean this up once we requrie CMake 3.6
@@ -33,5 +33,5 @@ else()
 endif(WIN32)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(DBUS DEFAULT_MSG
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(DBus DEFAULT_MSG
 	DBUS_INCLUDE_DIRS DBUS_LIBRARIES)
