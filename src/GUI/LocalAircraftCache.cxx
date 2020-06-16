@@ -335,6 +335,7 @@ private:
                         variants.append(item);
                     }
                 } catch (sg_exception&) {
+                    qWarning() << "Problems occurred while parsing" << xmlChild.absoluteFilePath() << "(skipping)";
                     continue;
                 }
 
