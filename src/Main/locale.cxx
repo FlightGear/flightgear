@@ -183,8 +183,7 @@ FGLocale::findLocaleNode(const string& localeSpec)
 
 // Select the language. When no language is given (nullptr),
 // a default is determined matching the system locale.
-bool
-FGLocale::selectLanguage(const char *language)
+bool FGLocale::selectLanguage(const std::string& language)
 {
     string_list languages = getUserLanguage();
     if (languages.empty()) {
@@ -194,8 +193,8 @@ FGLocale::selectLanguage(const char *language)
     }
 
     // if we were passed a language option, try it first
-    if ((language != nullptr) && (std::strlen(language) > 0)) {
-        languages.insert(languages.begin(), string(language));
+    if (!language.empty()) {
+        languages.insert(languages.begin(), language);
     }
 
     _currentLocaleString = removeEncodingPart(languages[0]);
@@ -225,11 +224,9 @@ FGLocale::selectLanguage(const char *language)
     
     // load resource for system messages (translations for fgfs internal messages)
     loadResource("sys");
-
-    // load resource for atc messages
     loadResource("atc");
-
     loadResource("tips");
+    loadResource("weather-scenarios");
 
     _inited = true;
     if (!_currentLocale && !_currentLocaleString.empty()) {
@@ -239,6 +236,19 @@ FGLocale::selectLanguage(const char *language)
     }
 
     return true;
+}
+
+void FGLocale::clear()
+{
+    _inited = false;
+    _currentLocaleString.clear();
+
+    if (_currentLocale) {
+        // remove loaded strings, so we don't duplicate
+        _currentLocale->removeChild("strings");
+    }
+
+    _currentLocale.clear();
 }
 
 // Return the preferred language according to user choice and/or settings
@@ -329,7 +339,7 @@ FGLocale::loadResource(const char* resource)
 }
 
 std::string
-FGLocale::getLocalizedString(SGPropertyNode *localeNode, const char* id, const char* context, int index) const
+FGLocale::innerGetLocalizedString(SGPropertyNode* localeNode, const char* id, const char* context, int index) const
 {
     SGPropertyNode *n = localeNode->getNode("strings",0, true)->getNode(context);
     if (!n) {
@@ -345,6 +355,12 @@ FGLocale::getLocalizedString(SGPropertyNode *localeNode, const char* id, const c
 }
 
 std::string
+FGLocale::getLocalizedString(const std::string& id, const char* resource, const std::string& defaultValue)
+{
+    return getLocalizedString(id.c_str(), resource, defaultValue.c_str());
+}
+
+std::string
 FGLocale::getLocalizedString(const char* id, const char* resource, const char* Default)
 {
     assert(_inited);
@@ -352,14 +368,14 @@ FGLocale::getLocalizedString(const char* id, const char* resource, const char* D
     {
         std::string s;
         if (_currentLocale) {
-            s = getLocalizedString(_currentLocale, id, resource, 0);
+            s = innerGetLocalizedString(_currentLocale, id, resource, 0);
             if (!s.empty()) {
                 return s;
             }
         }
 
         if (_defaultLocale) {
-            s = getLocalizedString(_defaultLocale, id, resource, 0);
+            s = innerGetLocalizedString(_defaultLocale, id, resource, 0);
             if (!s.empty()) {
                 return s;
             }
@@ -376,14 +392,14 @@ FGLocale::getLocalizedStringWithIndex(const char* id, const char* resource, unsi
     if (id && resource) {
         std::string s;
         if (_currentLocale) {
-            s = getLocalizedString(_currentLocale, id, resource, index);
+            s = innerGetLocalizedString(_currentLocale, id, resource, index);
             if (!s.empty()) {
                 return s;
             }
         }
 
         if (_defaultLocale) {
-            s = getLocalizedString(_defaultLocale, id, resource, index);
+            s = innerGetLocalizedString(_defaultLocale, id, resource, index);
             if (!s.empty()) {
                 return s;
             }

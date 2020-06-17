@@ -61,10 +61,11 @@
 #include <Add-ons/AddonManager.hxx>
 
 
-#include <Main/options.hxx>
 #include <Main/fg_init.hxx>
-#include <Viewer/WindowBuilder.hxx>
+#include <Main/locale.hxx>
+#include <Main/options.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Viewer/WindowBuilder.hxx>
 
 #include "LauncherMainWindow.hxx"
 #include "LaunchConfig.hxx"
@@ -457,12 +458,15 @@ bool runLauncherDialog()
 
     // setup package language
     auto lang = options->valueForOption("language");
-    if (!lang.empty()) {
-        globals->packageRoot()->setLocale(lang);
-    } else {
+    if (lang.empty()) {
         const auto langName = QLocale::languageToString(QLocale{}.language());
-        globals->packageRoot()->setLocale(langName.toStdString());
+        lang = langName.toStdString();
     }
+
+    // we will re-do this later, but we want to access translated strings
+    // from within the launcher
+    globals->get_locale()->selectLanguage(lang);
+    globals->packageRoot()->setLocale(lang);
 
     // startup the HTTP system now since packages needs it
     FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
@@ -492,6 +496,7 @@ bool runLauncherDialog()
 
     // don't set scenery paths twice
     globals->clear_fg_scenery();
+    globals->get_locale()->clear();
 
     return true;
 }
