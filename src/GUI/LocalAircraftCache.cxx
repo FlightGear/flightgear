@@ -34,6 +34,7 @@
 #include <Main/globals.hxx>
 #include <Include/version.h>
 
+#include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -204,6 +205,39 @@ QVariant AircraftItem::status(int variant)
 
 }
 
+// ensure references to Aircraft/ foo are resolved. This happens when
+// aircraft reference a path (probably to themselves) in their -set.xml
+class CurrentScanDirProvider : public simgear::ResourceProvider
+{
+public:
+    CurrentScanDirProvider() : simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL) {}
+
+    ~CurrentScanDirProvider() = default;
+
+    SGPath resolve(const std::string& aResource, SGPath& aContext) const override
+    {
+        string_list pieces(sgPathBranchSplit(aResource));
+        if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
+            return SGPath{}; // not an Aircraft path
+        }
+
+        const std::string res(aResource, 9); // resource path with 'Aircraft/' removed
+        SGPath p = _currentScanPath / res;
+        if (p.exists())
+            return p;
+
+        return SGPath{};
+    }
+
+    void setCurrentPath(const SGPath& p)
+    {
+        _currentScanPath = p;
+    }
+
+private:
+    SGPath _currentScanPath;
+};
+
 class AircraftScanThread : public QThread
 {
     Q_OBJECT
@@ -212,10 +246,14 @@ public:
         m_dirs(dirsToScan),
         m_done(false)
     {
+        auto rm = simgear::ResourceManager::instance();
+        m_currentScanDir.reset(new CurrentScanDirProvider);
+        rm->addProvider(m_currentScanDir.get());
     }
 
     ~AircraftScanThread()
     {
+        simgear::ResourceManager::instance()->removeProvider(m_currentScanDir.get());
     }
 
     /** thread-safe access to items already scanned */
@@ -238,11 +276,13 @@ Q_SIGNALS:
     void addedItems();
 
 protected:
-    virtual void run()
+    void run() override
     {
         readCache();
 
         Q_FOREACH(QString d, m_dirs) {
+            const auto p = SGPath::fromUtf8(d.toUtf8().toStdString());
+            m_currentScanDir->setCurrentPath(p);
             scanAircraftDir(QDir(d));
             if (m_done) {
                 return;
@@ -334,8 +374,9 @@ private:
                     } else {
                         variants.append(item);
                     }
-                } catch (sg_exception&) {
-                    qWarning() << "Problems occurred while parsing" << xmlChild.absoluteFilePath() << "(skipping)";
+                } catch (sg_exception& e) {
+                    qWarning() << "Problems occurred while parsing" << xmlChild.absoluteFilePath() << "(skipping)"
+                               << "\n\t" << QString::fromStdString(e.what());
                     continue;
                 }
 
@@ -378,6 +419,7 @@ private:
     QMap<QString, AircraftItemPtr > m_nextCache;
 
     bool m_done;
+    std::unique_ptr<CurrentScanDirProvider> m_currentScanDir;
 };
 
 static std::unique_ptr<LocalAircraftCache> static_cacheInstance;
