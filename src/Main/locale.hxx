@@ -44,7 +44,7 @@ public:
      * Select the locale's primary language. When no language is given
      * (nullptr), a default is determined matching the system locale.
      */
-    bool selectLanguage(const char* language = nullptr);
+    bool selectLanguage(const std::string& language = {});
 
     /** Return the preferred language according to user choice and/or settings.
      *
@@ -72,6 +72,8 @@ public:
      */
     std::string getLocalizedString(const char* id, const char* resource,
                                    const char* Default = nullptr);
+
+    std::string getLocalizedString(const std::string& id, const char* resource, const std::string& defaultValue = {});
 
     /**
       * Obtain a list of strings from the localized resource matching the given identifier.
@@ -109,7 +111,12 @@ public:
      */
     static void utf8toLatin1        (std::string& s);
 
-
+    /**
+        * reset all data in the locale. This is needed to allow the launcher to use the code,
+                without disturbing the main behaviour. Afteer calling this you can do
+                        selectLangauge again without problems.
+     */
+    void clear();
 
 protected:
     /**
@@ -125,7 +132,7 @@ protected:
     /**
      * Obtain a single string from locale node matching the given identifier and context.
      */
-    std::string     getLocalizedString  (SGPropertyNode *localeNode, const char* id, const char* context, int index) const;
+    std::string innerGetLocalizedString(SGPropertyNode* localeNode, const char* id, const char* context, int index) const;
 
     /**
      * Obtain a list of strings from locale node matching the given identifier and context.

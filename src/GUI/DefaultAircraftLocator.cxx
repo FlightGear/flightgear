@@ -4,6 +4,7 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/locale.hxx>
 
 static SGPropertyNode_ptr loadXMLDefaults()
 {
@@ -100,8 +101,17 @@ WeatherScenariosModel::WeatherScenariosModel(QObject *pr) :
             }
 
             WeatherScenario ws;
-            ws.name = QString::fromStdString(scenario->getStringValue("name"));
-            ws.description = QString::fromStdString(scenario->getStringValue("description")).simplified();
+            const string wsId = scenario->getStringValue("id");
+            if (!wsId.empty()) {
+                // translated
+                auto locale = globals->get_locale();
+                ws.name = QString::fromStdString(locale->getLocalizedString(wsId + "-name", "weather-scenarios"));
+                ws.description = QString::fromStdString(locale->getLocalizedString(wsId + "-desc", "weather-scenarios"));
+            } else {
+                ws.name = QString::fromStdString(scenario->getStringValue("name"));
+                ws.description = QString::fromStdString(scenario->getStringValue("description")).simplified();
+            }
+
             ws.metar = QString::fromStdString(scenario->getStringValue("metar"));
             if (scenario->hasChild("local-weather")) {
                 ws.localWeatherTileManagement = QString::fromStdString(scenario->getStringValue("local-weather/tile-management"));
