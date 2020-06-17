@@ -231,11 +231,11 @@ FGLocale::selectLanguage(const char *language)
 
     loadResource("tips");
 
-    if (!_currentLocale)
-    {
-       SG_LOG(SG_GENERAL, SG_ALERT,
-              "System locale not found or no internationalization settings specified in defaults.xml. Using default (en)." );
-       return false;
+    _inited = true;
+    if (!_currentLocale && !_currentLocaleString.empty()) {
+        SG_LOG(SG_GENERAL, SG_WARN,
+               "System locale not found or no internationalization settings specified in defaults.xml. Using default (en).");
+        return false;
     }
 
     return true;
@@ -347,6 +347,7 @@ FGLocale::getLocalizedString(SGPropertyNode *localeNode, const char* id, const c
 std::string
 FGLocale::getLocalizedString(const char* id, const char* resource, const char* Default)
 {
+    assert(_inited);
     if (id && resource)
     {
         std::string s;
@@ -371,6 +372,7 @@ FGLocale::getLocalizedString(const char* id, const char* resource, const char* D
 std::string
 FGLocale::getLocalizedStringWithIndex(const char* id, const char* resource, unsigned int index) const
 {
+    assert(_inited);
     if (id && resource) {
         std::string s;
         if (_currentLocale) {
@@ -404,6 +406,7 @@ FGLocale::getLocalizedStrings(SGPropertyNode *localeNode, const char* id, const 
 
 size_t FGLocale::getLocalizedStringCount(const char* id, const char* resource) const
 {
+    assert(_inited);
     if (_currentLocale) {
         SGPropertyNode* resourceNode = _currentLocale->getNode("strings",0, true)->getNode(resource);
         if (resourceNode) {
@@ -427,6 +430,7 @@ size_t FGLocale::getLocalizedStringCount(const char* id, const char* resource) c
 simgear::PropertyList
 FGLocale::getLocalizedStrings(const char* id, const char* resource)
 {
+    assert(_inited);
     if (id && resource)
     {
         if (_currentLocale)
@@ -450,6 +454,7 @@ FGLocale::getLocalizedStrings(const char* id, const char* resource)
 const char*
 FGLocale::getDefaultFont(const char* fallbackFont)
 {
+    assert(_inited);
     const char* font = nullptr;
     if (_currentLocale)
     {
@@ -478,6 +483,7 @@ std::string FGLocale::localizedPrintf(const char* id, const char* resource, ... 
 
 std::string FGLocale::vlocalizedPrintf(const char* id, const char* resource, va_list args)
 {
+    assert(_inited);
     std::string format = getLocalizedString(id, resource);
     int len = ::vsnprintf(nullptr, 0, format.c_str(), args);
     char* buf = (char*) alloca(len);

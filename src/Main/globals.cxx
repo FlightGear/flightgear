@@ -787,15 +787,9 @@ static void tryAutosaveMigration(const SGPath& userDataPath, SGPropertyNode* pro
     // copy remaining props out
     copyProperties(&oldProps, props);
 
-    // inform the user
-    FGLocale *locale = globals->get_locale();
-    const auto title = locale->getLocalizedString("settings-migration-title", "sys", "Settings migrated");
-    const auto msg = locale->getLocalizedString("settings-migration-text", "sys",
-                                                "Saved settings were migrated from a previous version of FlightGear. "
-                                                "If you encounter any problems when using the system, try restoring "
-                                                "the default settings, before reporting a problem. "
-                                                "Saved settings can affect the appearance, performance and features of the simulator.");
-    flightgear::modalMessageBox(title, msg);
+    // we can't inform the user yet, becuase embedded resources and the locale
+    // are not done. So we set a flag and check it once those things are done.
+    fgSetBool("/sim/autosave-migration/did-migrate", true);
 }
 
 // Load user settings from the autosave file (normally in $FG_HOME)

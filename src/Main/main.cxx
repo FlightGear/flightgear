@@ -686,6 +686,19 @@ int fgMainInit( int argc, char **argv )
     SG_LOG(SG_GENERAL, SG_INFO,
            "EmbeddedResourceManager: selected locale '" << locale << "'");
 
+    if (fgGetBool("/sim/autosave-migration/did-migrate", false)) {
+        // inform the user we did migration. This is the earliest point
+        // we can do it, since now the locale is set
+        auto locale = globals->get_locale();
+        const auto title = locale->getLocalizedString("settings-migration-title", "sys", "Settings migrated");
+        const auto msg = locale->getLocalizedString("settings-migration-text", "sys",
+                                                    "Saved settings were migrated from a previous version of FlightGear. "
+                                                    "If you encounter any problems when using the system, try restoring "
+                                                    "the default settings, before reporting a problem. "
+                                                    "Saved settings can affect the appearance, performance and features of the simulator.");
+        flightgear::modalMessageBox(title, msg);
+    }
+
     // Copy the property nodes for the menus added by registered add-ons
     addons::AddonManager::instance()->addAddonMenusToFGMenubar();
 

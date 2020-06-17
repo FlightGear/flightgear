@@ -153,6 +153,8 @@ private:
      *  such part, return a copy of the input string.
      */
     static std::string removeEncodingPart(const std::string& locale);
+
+    bool _inited = false;
 };
 
 // global translation wrappers
