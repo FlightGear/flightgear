@@ -112,6 +112,7 @@ Item {
             model: root.model
             headerText: root.headerText
             onSelect: root.select(index)
+            displayRole: root.displayRole
         }
     }
 
