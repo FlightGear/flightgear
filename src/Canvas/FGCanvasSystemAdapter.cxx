@@ -85,11 +85,7 @@ namespace canvas
     {
       SGPath valid_path = fgValidatePath(p, false);
       if( !valid_path.isNull() )
-#if OSG_VERSION_LESS_THAN(3,4,0)
           return osgDB::readRefImageFile(valid_path.utf8Str());
-#else
-          return osgDB::readRefImageFile(valid_path.utf8Str());
-#endif
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: reading '" << path << "' denied");
     }
@@ -97,11 +93,7 @@ namespace canvas
     {
       SGPath tpath = globals->resolve_resource_path(path);
       if( !tpath.isNull() )
-#if OSG_VERSION_LESS_THAN(3,4,0)
-          return osgDB::readImageFile(tpath.utf8Str());
-#else
           return osgDB::readRefImageFile(tpath.utf8Str());
-#endif
 
       SG_LOG(SG_IO, SG_ALERT, "canvas::Image: No such image: '" << path << "'");
     }

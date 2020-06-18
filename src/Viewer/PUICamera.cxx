@@ -57,40 +57,6 @@
 
 using namespace flightgear;
 
-#if OSG_VERSION_LESS_THAN(3,4,0)
-
-// this class kindly provided by Wojtek Lewandowsk on ths OpenSceneGraph-users
-// mailing list from his code-archive, it's needed to poke the camera setup
-// after resizing the FBO backing storage, on OSG 3.2.x
-
-class PUICamera::UpdateViewportAndFBOAfterTextureResizeCallback : public osg::NodeCallback
-{
-public:
-    UpdateViewportAndFBOAfterTextureResizeCallback(bool dirty = false) : _dirty(dirty) {}
-    
-    void setDirty(bool dirty) { _dirty = dirty; }
-    bool getDirty() { return _dirty; }
-    
-    void operator()(osg::Node *node, osg::NodeVisitor *nv)
-    {
-        if (_dirty)
-        {
-            osgUtil::CullVisitor *cv = static_cast<osgUtil::CullVisitor *>(nv);
-            if (cv && node == cv->getCurrentRenderStage()->getCamera())
-            {
-                cv->getCurrentRenderStage()->setCameraRequiresSetUp(true);
-                _dirty = false;
-            }
-        }
-        
-        traverse(node, nv);
-    }
-protected:
-    bool _dirty;
-};
-
-#endif
-
 double static_pixelRatio = 1.0;
 
 class PUIDrawable : public osg::Drawable
@@ -326,11 +292,6 @@ void PUICamera::init(osg::Group* parent, osgViewer::Viewer* viewer)
     // set the camera's node mask, ensure the pick bit is clear
     setNodeMask(SG_NODEMASK_GUI_BIT);
 
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    _resizeCullCallback = new UpdateViewportAndFBOAfterTextureResizeCallback;
-    setCullCallback(_resizeCullCallback);
-#endif
-    
 // geode+drawable to call puDisplay, as a child of this FBO-camera
     osg::Geode* geode = new osg::Geode;
     geode->setName("PUIDrawableGeode");
@@ -393,13 +354,9 @@ void PUICamera::resizeUi(int width, int height)
     const int scaledHeight = static_cast<int>(height / static_pixelRatio);
     
     setViewport(0, 0, scaledWidth, scaledHeight);
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    manuallyResizeFBO(scaledWidth, scaledHeight);
-    _resizeCullCallback->setDirty(true);
-#else
+
     osg::Camera::resize(scaledWidth, scaledHeight);
     resizeAttachments(scaledWidth, scaledHeight);
-#endif
 
     const float puiZ = 1.0;
     // resize the full-screen quad

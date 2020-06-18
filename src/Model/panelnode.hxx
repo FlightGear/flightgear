@@ -32,13 +32,7 @@ public:
   
     void drawImplementation(osg::State& state) const;
 
-    virtual osg::BoundingBox
-#if OSG_VERSION_LESS_THAN(3,3,2)
-    computeBound()
-#else
-    computeBoundingBox()
-#endif
-    const;
+    osg::BoundingBox computeBoundingBox() const override;
 
 
     /** Return true, FGPanelNode does support accept(PrimitiveFunctor&). */

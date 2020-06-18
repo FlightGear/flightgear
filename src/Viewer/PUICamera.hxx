@@ -49,10 +49,6 @@ public:
     void init(osg::Group* parent, osgViewer::Viewer* viewer);
 
 private:
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    class UpdateViewportAndFBOAfterTextureResizeCallback;
-    UpdateViewportAndFBOAfterTextureResizeCallback* _resizeCullCallback = nullptr;
-#endif
     void manuallyResizeFBO(int width, int height);
 
     osg::Texture2D* _fboTexture = nullptr;

@@ -421,10 +421,8 @@ bool GraphicsWindowQt5::init( Qt::WindowFlags f )
     getState()->setGraphicsContext(this);
     getState()->setContextID( osg::GraphicsContext::createNewContextID() );
 
-#if OSG_VERSION_GREATER_OR_EQUAL(3, 4, 0)
     // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
-#endif
 
     return true;
 }
@@ -632,10 +630,8 @@ bool GraphicsWindowQt5::realizeImplementation()
         _window->show();
     }
 
-#if OSG_VERSION_GREATER_OR_EQUAL(3, 4, 0)
     // make sure the event queue has the correct window rectangle size and input range
     getEventQueue()->syncWindowRectangleWithGraphicsContext();
-#endif
 
     getEventQueue()->getCurrentEventState()->setMouseYOrientation(osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS);
 

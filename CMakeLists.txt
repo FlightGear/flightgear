@@ -297,7 +297,7 @@ endif()
 # check required dependencies
 find_package(Boost REQUIRED)
 find_package(OpenGL  REQUIRED)
-find_package(OpenSceneGraph 3.2.0 REQUIRED
+find_package(OpenSceneGraph 3.4.1 REQUIRED
   osgText
   osgSim
   osgDB

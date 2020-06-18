@@ -32,7 +32,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx> // for copyProperties
 #include <simgear/structure/OSGUtils.hxx>
-#include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 

@@ -314,13 +314,7 @@ FGPanelNode::drawImplementation(osg::State& state) const
   _panel->draw(state);
 }
 
-osg::BoundingBox
-#if OSG_VERSION_LESS_THAN(3,3,2)
-FGPanelNode::computeBound()
-#else
-FGPanelNode::computeBoundingBox()
-#endif
-const
+osg::BoundingBox FGPanelNode::computeBoundingBox() const
 {
 
   osg::Vec3 coords[3];

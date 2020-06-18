@@ -5,7 +5,6 @@
 #include <osg/Quat>
 #include <osgGA/GUIEventHandler>
 #include <osgViewer/ViewerEventHandlers>
-#include <simgear/structure/OSGVersion.hxx>
 
 #include <Main/fg_os.hxx>
 
@@ -34,8 +33,8 @@ public:
     virtual void init(const osgGA::GUIEventAdapter& ea,
 		      osgGA::GUIActionAdapter& us);
 #endif
-    virtual bool handle(const osgGA::GUIEventAdapter& ea,
-			osgGA::GUIActionAdapter& us);
+    bool handle(const osgGA::GUIEventAdapter& ea,
+			osgGA::GUIActionAdapter& us) override;
 
     void setIdleHandler(fgIdleHandler idleHandler)
 	{

@@ -577,10 +577,6 @@ int fgMainInit( int argc, char **argv )
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << JENKINS_BUILD_NUMBER << ":"
 			<< JENKINS_BUILD_ID);
 
-#if OSG_VERSION_LESS_THAN(3,4,1)
-    SG_LOG(SG_GENERAL, SG_ALERT, "Minimum supported OpenScenegraph is V3.4.1 - currently using " << osgGetVersion() << " This can cause fatal OSG 'final reference count' errors at runtime");
-#endif
-
     flightgear::addSentryTag("jenkins-build-number", std::to_string(JENKINS_BUILD_NUMBER));
     flightgear::addSentryTag("osg-version", osgGetVersion());
     

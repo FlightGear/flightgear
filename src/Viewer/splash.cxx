@@ -86,13 +86,10 @@ SplashScreen::~SplashScreen()
 void SplashScreen::createNodes()
 {
     std::string splashImage = selectSplashImage();
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    _splashImage = osgDB::readImageFile(splashImage);
-#else
+
     osg::ref_ptr<SGReaderWriterOptions> staticOptions = SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
     staticOptions->setLoadOriginHint(SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
     _splashImage = osgDB::readRefImageFile(splashImage, staticOptions);
-#endif
 
     if (!_splashImage){
         SG_LOG(SG_VIEW, SG_INFO, "Splash Image " << splashImage << " failed to load");
@@ -307,11 +304,7 @@ void SplashScreen::setupLogoImage()
     osg::ref_ptr<simgear::SGReaderWriterOptions> staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
     staticOptions->setLoadOriginHint(simgear::SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
 
-#if OSG_VERSION_LESS_THAN(3, 4, 0)
-    _logoImage = osgDB::readImageFile(logoPath.utf8Str(), staticOptions);
-#else
     _logoImage = osgDB::readRefImageFile(logoPath.utf8Str(), staticOptions);
-#endif
     if (!_logoImage) {
         SG_LOG(SG_VIEW, SG_INFO, "Splash logo image " << logoPath << " failed to load");
         return;
@@ -590,11 +583,7 @@ void SplashScreen::resize( int width, int height )
     _height = height;
 
     _splashQuadCamera->setViewport(0, 0, width, height);
-#if OSG_VERSION_LESS_THAN(3,4,0)
-    manuallyResizeFBO(width, height);
-#else
     _splashFBOCamera->resizeAttachments(width, height);
-#endif
     _splashFBOCamera->setViewport(0, 0, width, height);
     _splashFBOCamera->setProjectionMatrixAsOrtho2D(-width * 0.5, width * 0.5,
                                                    -height * 0.5, height * 0.5);

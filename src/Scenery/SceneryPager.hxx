@@ -27,8 +27,6 @@
 #include <osg/Group>
 #include <osgDB/DatabasePager>
 
-#include <simgear/structure/OSGVersion.hxx>
-
 namespace flightgear
 {
 class SceneryPager : public osgDB::DatabasePager
