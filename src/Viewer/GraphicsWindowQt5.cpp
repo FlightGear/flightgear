@@ -185,14 +185,6 @@ GLWindow::~GLWindow()
     }
 }
 
-#if QT_VERSION < 0x050500
-void GLWindow::requestUpdate()
-{
-    // mimic Qt 5.5's requestUpdate method
-    QTimer::singleShot(0, this, SLOT(processUpdateEvent()));
-}
-#endif
-
 bool GLWindow::event( QEvent* event )
 {
     if (event->type() == QEvent::WindowStateChange) {

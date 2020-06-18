@@ -280,9 +280,6 @@ void LauncherController::collectAircraftArgs()
         QString state = m_aircraftState;
         if ((m_aircraftState == "auto") && !m_selectedAircraftInfo->haveExplicitAutoState()) {
             state = selectAircraftStateAutomatically();
-#if QT_VERSION >= 0x050600
-            qInfo() << "doing launcher auto state selection, picked:" + state;
-#endif
         }
 
         if (!state.isEmpty()) {

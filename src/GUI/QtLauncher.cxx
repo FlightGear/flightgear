@@ -214,9 +214,7 @@ static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &conte
     sgDebugPriority mappedPriority = SG_WARN;
     switch (type) {
     case QtDebugMsg:    mappedPriority = SG_DEBUG; break;
-#if QT_VERSION >= 0x050500
     case QtInfoMsg:     mappedPriority = SG_INFO; break;
-#endif
     case QtWarningMsg:  mappedPriority = SG_WARN; break;
     case QtCriticalMsg: mappedPriority = SG_ALERT; break;
     case QtFatalMsg:    mappedPriority = SG_POPUP; break;
@@ -272,18 +270,16 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
 		// leave things unset here, so users can use env var
 		// QT_AUTO_SCREEN_SCALE_FACTOR=1 to enable it at runtime
 
-//#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
       //  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-//#endif
+        
         static_qApp.reset(new QApplication(s_argc, argv));
         static_qApp->setOrganizationName("FlightGear");
         static_qApp->setApplicationName("FlightGear");
         static_qApp->setOrganizationDomain("flightgear.org");
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 7, 0)
         static_qApp->setDesktopFileName(
           QStringLiteral("org.flightgear.FlightGear.desktop"));
-#endif
+
         QTranslator* fallbackTranslator = new QTranslator(static_qApp.get());
         if (!fallbackTranslator->load(QLatin1String(":/FlightGear_en_US.qm"))) {
             qWarning() << "Failed to load default (en) translations";

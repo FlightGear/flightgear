@@ -226,13 +226,7 @@ public slots:
     void initRenderControl()
     {
         qtContext = flightgear::qtContextFromOSG(osgContext);
-                
-    #if QT_VERSION < 0x050600
-        SG_LOG(SG_GUI, SG_ALERT, "Qt < 5.6 was used to build FlightGear, multi-threading of QtQuick is not safe");
-    #else
-        renderControl->prepareThread(QThread::currentThread());
-    #endif
-                
+        renderControl->prepareThread(QThread::currentThread());                
         QOpenGLContextPrivate::setCurrentContext(qtContext);
         QOpenGLContextPrivate::get(qtContext)->surface = foreignOSGWindow;
         renderControl->initialize(qtContext);
