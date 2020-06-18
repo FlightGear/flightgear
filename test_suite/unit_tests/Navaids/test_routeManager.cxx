@@ -392,7 +392,13 @@ void RouteManagerTests::testHiddenWaypoints()
     
     // ensure no visual path is generated for hidden waypoints
     RoutePath path(fp1);
+    
+    // no path should be generated between 2 and 3
     CPPUNIT_ASSERT(path.pathForIndex(3).empty());
+    
+    // no path should be generated between 3 and 4
+    CPPUNIT_ASSERT(path.pathForIndex(4).empty());
+    CPPUNIT_ASSERT(!path.pathForIndex(5).empty());
     
     
     bool ok = FGTestApi::executeNasal(R"(
