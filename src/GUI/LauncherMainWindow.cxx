@@ -85,13 +85,6 @@ LauncherMainWindow::LauncherMainWindow() :
     setResizeMode(QQuickView::SizeRootObjectToView);
     engine()->addImportPath("qrc:///");
 
-    // allow selecting different QML files based on the Qt version we are
-    // compiled against
-    auto selector = new QQmlFileSelector(engine(), this);
-#if QT_VERSION >= 0x050600
-    selector->setExtraSelectors({"qt56"});
-#endif
-
     QQmlContext* ctx = rootContext();
     ctx->setContextProperty("_launcher", m_controller);
     ctx->setContextProperty("_addOns", addOnsCtl);

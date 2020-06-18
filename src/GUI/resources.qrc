@@ -105,7 +105,6 @@
         <file>qml/Menu.qml</file>
         <file>qml/BaseMenuItem.qml</file>
         <file>qml/MenuItem.qml</file>
-        <file>qml/+qt56/MenuItem.qml</file>
         <file>qml/MenuDivider.qml</file>
         <file>qml/ToggleBox.qml</file>
         <file>qml/LocationAltitudeRow.qml</file>
