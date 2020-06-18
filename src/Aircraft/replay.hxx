@@ -107,7 +107,7 @@ public:
 
     bool start(bool NewTape=false);
 
-    bool saveTape(const SGPropertyNode* ConfigData, bool continuous=false);
+    bool saveTape(const SGPropertyNode* ConfigData);
     bool loadTape(const SGPropertyNode* ConfigData);
 
 private:
@@ -127,8 +127,15 @@ private:
     double get_end_time();
 
     bool listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory);
-    bool saveTape(const SGPath& Filename, SGPropertyNode* MetaData, bool continuous=false);
-    bool loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserData);
+    bool saveTape(const SGPath& Filename, SGPropertyNode_ptr MetaData);
+    bool loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta);
+    bool continuousWriteHeader(
+            std::ofstream&      out,
+            SGPropertyNode_ptr& myMetaData,
+            SGPropertyNode_ptr& Config,
+            const SGPath&       path
+            );
+    bool continuousWriteFrame(FGReplayData* r, std::ostream& out);
 
     double sim_time;
     double last_mt_time;
@@ -152,6 +159,8 @@ private:
     SGPropertyNode_ptr replay_duration_act;
     SGPropertyNode_ptr speed_up;
     SGPropertyNode_ptr replay_multiplayer;
+    SGPropertyNode_ptr recovery_period;
+    
     double replay_time_prev;    // Used to detect jumps while replaying.
 
     double m_high_res_time;    // default: 60 secs of high res data

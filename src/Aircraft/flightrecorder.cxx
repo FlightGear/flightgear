@@ -338,7 +338,7 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
     
     ReplayData->sim_time = SimTime;
     
-    if (in_replay) {
+    if (in_replay && !s_recent_raw_data.empty()) {
         // Record the fixed position of live user aircraft at the point at
         // which we started replay.
         //

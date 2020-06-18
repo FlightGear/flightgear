@@ -161,7 +161,6 @@ FGReplay::FGReplay() :
     fdm->addChangeListener(this, true /*initial*/);
 }
 
-static bool saveSetup(const SGPropertyNode* ConfigData, SGPath& p, SGPropertyNode_ptr& myMetaData, double Duration);
 
 static int PropertiesWrite(SGPropertyNode* root, std::ostream& out)
 {
@@ -200,6 +199,45 @@ static void popupTip(const char* message, int delay)
     globals->get_commands()->execute("show-message", args);
 }
 
+enum FGTapeType
+{
+    FGTapeType_NORMAL,
+    FGTapeType_CONTINUOUS,
+    FGTapeType_RECOVERY,
+};
+
+// Returns a path using different formats depending on <type>:
+//
+//  FGTapeType_NORMAL:      <tape-directory>/<aircraft-type>-<date>-<time>.fgtape
+//  FGTapeType_CONTINUOUS:  <tape-directory>/<aircraft-type>-<date>-<time>-continuous.fgtape
+//  FGTapeType_RECOVERY:    <tape-directory>/<aircraft-type>-recovery.fgtape
+//
+static SGPath makeSavePath(FGTapeType type)
+{
+    const char* tapeDirectory = fgGetString("/sim/replay/tape-directory", "");
+    const char* aircraftType  = fgGetString("/sim/aircraft", "unknown");
+    
+    SGPath  path = SGPath(tapeDirectory);
+    path.append(aircraftType);
+    path.concat("-");
+    if (type == FGTapeType_RECOVERY) {
+        path.concat("recovery");
+    }
+    else {
+        time_t calendar_time = time(NULL);
+        struct tm *local_tm;
+        local_tm = localtime( &calendar_time );
+        char time_str[256];
+        strftime( time_str, 256, "%Y%m%d-%H%M%S", local_tm);
+        path.concat(time_str);
+    }
+    if (type == FGTapeType_CONTINUOUS) {
+        path.concat("-continuous");
+    }
+    path.concat(".fgtape");
+    return path;
+}
+
 void FGReplay::valueChanged(SGPropertyNode * node)
 {
     bool    prop_continuous = fgGetBool("/sim/replay/record-continuous");
@@ -219,24 +257,16 @@ void FGReplay::valueChanged(SGPropertyNode * node)
     
     if (continuous) {
         // Start continuous recording.
-        SGPath p;
-        SGPropertyNode_ptr myMetaData;
-        bool ok = saveSetup(NULL, p, myMetaData, 0 /*Duration*/);
+        SGPropertyNode_ptr  MetaData;
+        SGPropertyNode_ptr  Config;
+        SGPath              path = makeSavePath(FGTapeType_CONTINUOUS);
+        bool ok = continuousWriteHeader(m_continuous_out, MetaData, Config, path);
         if (!ok) {
             SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to start continuous recording");
             popupTip("Continuous record to file failed to start", 5 /*delay*/);
             return;
         }
-        m_continuous_out.open(
-                p.c_str(),
-                std::ofstream::binary | std::ofstream::trunc
-                );
-        m_continuous_out.write(FlightRecorderFileMagic, strlen(FlightRecorderFileMagic)+1);
-        PropertiesWrite(myMetaData, m_continuous_out);
-        SGPropertyNode_ptr  Config( new SGPropertyNode);
-        m_pRecorder->getConfig(Config.get());
-        PropertiesWrite(Config, m_continuous_out);
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Starting continuous recording to " << p);
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Starting continuous recording to " << path);
         popupTip("Continuous record to file started", 5 /*delay*/);
     }
 }
@@ -302,6 +332,7 @@ FGReplay::init()
     replay_duration_act  = fgGetNode("/sim/replay/duration-act", true);
     speed_up             = fgGetNode("/sim/speed-up",            true);
     replay_multiplayer   = fgGetNode("/sim/replay/multiplayer",  true);
+    recovery_period      = fgGetNode("/sim/replay/recovery-period", true);
 
     // alias to keep backward compatibility
     fgGetNode("/sim/freeze/replay-state", true)->alias(replay_master);
@@ -605,6 +636,135 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
     return !output.fail();
 }
 
+
+// Sets things up for writing to a normal or continuous fgtape file.
+//
+//  Extra:
+//      NULL or extra information when we are called from fgdata gui, e.g. with
+//      the flight description entered by the user in the save dialogue.
+//  path:
+//      Path of fgtape file. We return nullptr if this file already exists.
+//  Duration:
+//      Duration of recording. Zero if we are starting a continuous recording.
+//
+//  Returns:
+//      A new SGPropertyNode containing meta child with information about the
+//      aircraft etc plus Extra's user-data if specified.
+//
+static SGPropertyNode_ptr saveSetup(
+        const SGPropertyNode*   Extra,
+        const SGPath&           path,
+        double                  Duration
+        )
+{
+    SGPropertyNode_ptr  MetaData;
+    if (path.exists())
+    {
+        // same timestamp!?
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Error, flight recorder tape file with same name already exists: " << path);
+        return MetaData;
+    }
+    
+    MetaData = new SGPropertyNode();
+    SGPropertyNode* meta = MetaData->getNode("meta", 0, true);
+
+    // add some data to the file - so we know for which aircraft/version it was recorded
+    meta->setStringValue("aircraft-type",           fgGetString("/sim/aircraft", "unknown"));
+    meta->setStringValue("aircraft-description",    fgGetString("/sim/description", ""));
+    meta->setStringValue("aircraft-fdm",            fgGetString("/sim/flight-model", ""));
+    meta->setStringValue("closest-airport-id",      fgGetString("/sim/airport/closest-airport-id", ""));
+    meta->setStringValue("aircraft-version",        fgGetString("/sim/aircraft-version", "(undefined)"));
+
+    // add information on the tape's recording duration
+    meta->setDoubleValue("tape-duration", Duration);
+    char StrBuffer[30];
+    printTimeStr(StrBuffer, Duration, false);
+    meta->setStringValue("tape-duration-str", StrBuffer);
+
+    // add simulator version
+    copyProperties(fgGetNode("/sim/version", 0, true), meta->getNode("version", 0, true));
+    if (Extra && Extra->getNode("user-data"))
+    {
+        copyProperties(Extra->getNode("user-data"), meta->getNode("user-data", 0, true));
+    }
+
+    bool multiplayer = fgGetBool("/sim/replay/multiplayer", false);
+    meta->setBoolValue("multiplayer", multiplayer);
+
+    // store replay messages
+    copyProperties(fgGetNode("/sim/replay/messages", 0, true), MetaData->getNode("messages", 0, true));
+
+    return MetaData;
+}
+
+// Opens continuous recording file and writes header.
+//
+// If MetaData is unset, we initialise it by calling saveSetup(). Otherwise
+// should be already set up.
+//
+// If Config is unset, we make it point to a new node populated by
+// m_pRecorder->getConfig(). Otherwise it should be already set up to point to
+// such information.
+//
+// If path_override is not "", we use it as the path (instead of the path
+// determined by saveSetup().
+//
+bool
+FGReplay::continuousWriteHeader(
+        std::ofstream&      out,
+        SGPropertyNode_ptr& MetaData,
+        SGPropertyNode_ptr& Config,
+        const SGPath&       path
+        )
+{
+    if (!MetaData) {
+        MetaData = saveSetup(NULL /*Extra*/, path, 0 /*Duration*/);
+        if (!MetaData) {
+            return false;
+        }
+    }
+    if (!Config) {
+        Config = new SGPropertyNode;
+        m_pRecorder->getConfig(Config.get());
+    }
+    
+    out.open(path.c_str(), std::ofstream::binary | std::ofstream::trunc);
+    out.write(FlightRecorderFileMagic, strlen(FlightRecorderFileMagic)+1);
+    PropertiesWrite(MetaData, out);
+    PropertiesWrite(Config, out);
+    if (!out) {
+        out.close();
+        return false;
+    }
+    return true;
+}
+
+
+// Writes one frame of continuous record information.
+//
+bool
+FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out)
+{
+    out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
+
+    size_t    aircraft_data_size = r->raw_data.size();
+    out.write(reinterpret_cast<char*>(&aircraft_data_size), sizeof(aircraft_data_size));
+    out.write(&r->raw_data.front(), r->raw_data.size());
+
+    size_t    multiplayer_num = r->multiplayer_messages.size();
+    out.write(reinterpret_cast<char*>(&multiplayer_num), sizeof(multiplayer_num));
+    for ( size_t i=0; i<multiplayer_num; ++i) {
+        size_t  length = r->multiplayer_messages[i]->size();
+        out.write(reinterpret_cast<char*>(&length), sizeof(length));
+        out.write(&r->multiplayer_messages[i]->front(), length);
+    }
+    
+    bool ok = true;
+    if (!out) ok = false;
+    return ok;
+}
+
+
 void
 FGReplay::update( double dt )
 {
@@ -627,6 +787,7 @@ FGReplay::update( double dt )
             (last_replay_state == 3))
         {
             // disable the replay system
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "End replay");
             current_replay_state = replay_master->getIntValue();
             replay_master->setIntValue(0);
             replay_time->setDoubleValue(0);
@@ -639,6 +800,19 @@ FGReplay::update( double dt )
                 fgSetBool("/sim/sound/enabled",true);
                 fgSetBool("/sim/replay/mute",false);
             }
+
+            // Close any continuous replay file that we have open.
+            //
+            // This allows the user to use the in-memory record/replay system,
+            // instead of replay always showing the continuous recording.
+            //
+            if (m_continuous_in.is_open()) {
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "Unloading continuous recording");
+                m_continuous_in.close();
+                m_continuous_time_to_offset.clear();
+            }
+            assert(m_continuous_time_to_offset.empty());
+
             guiMessage("Replay stopped. Your controls!");
         }
     }
@@ -775,6 +949,7 @@ FGReplay::update( double dt )
     }
 
     // update the short term list
+    assert(r->raw_data.size() != 0);
     short_term.push_back( r );
     FGReplayData *st_front = short_term.front();
 
@@ -784,18 +959,48 @@ FGReplay::update( double dt )
     }
     
     if (m_continuous_out.is_open()) {
-        m_continuous_out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
+        continuousWriteFrame(r, m_continuous_out);
+    }
+    
+    if (replay_state == 0)
+    {
+        // Update recovery tape.
+        //
+        double  recovery_period_s = recovery_period->getDoubleValue();
+        if (recovery_period_s > 0) {
         
-        size_t    aircraft_data_size = r->raw_data.size();
-        m_continuous_out.write(reinterpret_cast<char*>(&aircraft_data_size), sizeof(aircraft_data_size));
-        m_continuous_out.write(&r->raw_data.front(), r->raw_data.size());
-        
-        size_t    multiplayer_num = r->multiplayer_messages.size();
-        m_continuous_out.write(reinterpret_cast<char*>(&multiplayer_num), sizeof(multiplayer_num));
-        for ( size_t i=0; i<multiplayer_num; ++i) {
-            size_t  length = r->multiplayer_messages[i]->size();
-            m_continuous_out.write(reinterpret_cast<char*>(&length), sizeof(length));
-            m_continuous_out.write(&r->multiplayer_messages[i]->front(), length);
+            static time_t   s_last_recovery = 0;
+            time_t t = time(NULL);
+            
+            if (t - s_last_recovery >= recovery_period_s) {
+                s_last_recovery = t;
+
+                // We use static variables here to avoid calculating the same
+                // data each time we are called.
+                //
+                static SGPath               path = makeSavePath(FGTapeType_RECOVERY);
+                static SGPath               path_temp = SGPath( path.str() + "-");
+                static SGPropertyNode_ptr   MetaData;
+                static SGPropertyNode_ptr   Config;
+
+                SG_LOG(SG_SYSTEMS, SG_BULK, "Creating recovery file: " << path);
+                // We write to <path_temp> then rename to <path>, which should
+                // guarantee that there is always a valid recovery tape even if
+                // flightgear crashes or is killed while we are writing.
+                //
+                (void) remove(path_temp.c_str());
+                std::ofstream   out;
+                bool ok = true;
+                if (ok) ok = continuousWriteHeader(out, MetaData, Config, path_temp);
+                if (ok) ok = continuousWriteFrame(r, out);
+                out.close();
+                if (ok) {
+                    rename(path_temp.c_str(), path.c_str());
+                }
+                else {
+                    popupTip("Failed to update recovery file", 2 /*delay*/);
+                }
+            }
         }
     }
 
@@ -1179,7 +1384,7 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
 
 /** Write flight recorder tape with given filename and meta properties to disk */
 bool
-FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps, bool continuous)
+FGReplay::saveTape(const SGPath& Filename, SGPropertyNode_ptr MetaData)
 {
     bool ok = true;
 
@@ -1192,10 +1397,9 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps, bool c
         return false;
     }
 
-    SG_LOG(SG_SYSTEMS, SG_DEBUG, "writing MetaDataProps:");
-    writeProperties(std::cerr, MetaDataProps, true /*write_all*/);
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "writing MetaData:");
     /* write meta data **********************************************/
-    ok &= output.writeContainer(ReplayContainer::MetaData, MetaDataProps);
+    ok &= output.writeContainer(ReplayContainer::MetaData, MetaData.get());
 
     /* write flight recorder configuration **************************/
     SGPropertyNode_ptr Config;
@@ -1212,7 +1416,7 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps, bool c
         size_t RecordSize = Config->getIntValue("recorder/record-size", 0);
         SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Config:recorder/signal-count=" <<  Config->getIntValue("recorder/signal-count", 0)
                << " RecordSize: " << RecordSize);
-        bool multiplayer = MetaDataProps->getBoolValue("meta/multiplayer", 0);
+        bool multiplayer = MetaData->getBoolValue("meta/multiplayer", 0);
 
         if (ok)
             ok &= saveRawReplayData(output, short_term,  RecordSize, multiplayer);
@@ -1229,115 +1433,31 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode* MetaDataProps, bool c
     return ok;
 }
 
-// Sets things up for writing to a normal or continuous fgtape file.
-//
-// On exit:
-//
-//      p: Contains path of the fgtape file.
-//
-//      myMetaData: points to a new SGPropertyNode containing information on
-//      aircraft type etc.
-//
-static bool saveSetup(const SGPropertyNode* ConfigData, SGPath& p, SGPropertyNode_ptr& myMetaData, double Duration)
-{
-    const char* tapeDirectory = fgGetString("/sim/replay/tape-directory", "");
-    const char* aircraftType  = fgGetString("/sim/aircraft", "unknown");
-
-    myMetaData = new SGPropertyNode();
-    SGPropertyNode* meta = myMetaData->getNode("meta", 0, true);
-
-    SG_LOG(SG_SYSTEMS, SG_BULK,
-            " ConfigData=" << ConfigData
-            << " tapeDirectory=" << tapeDirectory
-            << " aircraftType=" << aircraftType
-            );
-    // add some data to the file - so we know for which aircraft/version it was recorded
-    meta->setStringValue("aircraft-type",           aircraftType);
-    meta->setStringValue("aircraft-description",    fgGetString("/sim/description", ""));
-    meta->setStringValue("aircraft-fdm",            fgGetString("/sim/flight-model", ""));
-    meta->setStringValue("closest-airport-id",      fgGetString("/sim/airport/closest-airport-id", ""));
-    const char* aircraft_version = fgGetString("/sim/aircraft-version", "");
-    if (aircraft_version[0]==0)
-        aircraft_version = "(undefined)";
-    meta->setStringValue("aircraft-version", aircraft_version);
-
-    // add information on the tape's recording duration
-    //double Duration = get_end_time()-get_start_time();
-    meta->setDoubleValue("tape-duration", Duration);
-    char StrBuffer[30];
-    printTimeStr(StrBuffer, Duration, false);
-    meta->setStringValue("tape-duration-str", StrBuffer);
-
-    // add simulator version
-    copyProperties(fgGetNode("/sim/version", 0, true), meta->getNode("version", 0, true));
-    if (ConfigData && ConfigData->getNode("user-data"))
-    {
-        copyProperties(ConfigData->getNode("user-data"), meta->getNode("user-data", 0, true));
-    }
-
-    bool multiplayer = fgGetBool("/sim/replay/multiplayer", false);
-    meta->setBoolValue("multiplayer", multiplayer);
-
-    // store replay messages
-    copyProperties(fgGetNode("/sim/replay/messages", 0, true), myMetaData->getNode("messages", 0, true));
-
-    // generate file name (directory + aircraft type + date + time + suffix)
-    p = SGPath(tapeDirectory);
-    p.append(aircraftType);
-    p.concat("-");
-    time_t calendar_time = time(NULL);
-    struct tm *local_tm;
-    local_tm = localtime( &calendar_time );
-    char time_str[256];
-    strftime( time_str, 256, "%Y%m%d-%H%M%S", local_tm);
-    p.concat(time_str);
-    p.concat(".fgtape");
-
-    bool ok = true;
-    // make sure we're not overwriting something
-    if (p.exists())
-    {
-        // same timestamp!?
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Error, flight recorder tape file with same name already exists.");
-        ok = false;
-    }
-    return ok;
-}
-
 /** Write flight recorder tape to disk. User/script command. */
 bool
-FGReplay::saveTape(const SGPropertyNode* ConfigData, bool continuous)
+FGReplay::saveTape(const SGPropertyNode* Extra)
 {
-    SGPath p;
-    SGPropertyNode_ptr myMetaData;
-    
-    bool ok = saveSetup(ConfigData, p, myMetaData, get_end_time()-get_start_time());
-
+    SGPath path = makeSavePath(FGTapeType_NORMAL);
+    SGPropertyNode_ptr MetaData = saveSetup(Extra, path, get_end_time()-get_start_time());
+    bool ok = false;
+    if (MetaData) {
+        ok = saveTape(path, MetaData);
+    }
     if (ok)
-        ok &= saveTape(p, myMetaData.get(), continuous);
-
-    if (continuous) {
-        if (ok)
-            guiMessage("Flight recorder continuous started successfully!");
-        else
-            guiMessage("Flight recorder continuous start failed. See log output.");
-    }
-    else {
-        if (ok)
-            guiMessage("Flight recorder tape saved successfully!");
-        else
-            guiMessage("Failed to save tape! See log output.");
-    }
+        guiMessage("Flight recorder tape saved successfully!");
+    else
+        guiMessage("Failed to save tape! See log output.");
 
     return ok;
 }
 
 
-/** Read a flight recorder tape with given filename from disk and return meta properties.
+/** Read a flight recorder tape with given filename from disk.
+ * Copies MetaData's "meta" node into MetaMeta out-param.
  * Actual data and signal configuration is not read when in "Preview" mode.
  */
 bool
-FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserData)
+FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta)
 {
     {
         /* Try to load as uncompressed first. */
@@ -1348,12 +1468,10 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape prefix doesn't match FlightRecorderFileMagic: " << Filename);
         }
         else {
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtap is uncompressed: " << Filename);
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape is uncompressed: " << Filename);
             SGPropertyNode_ptr MetaDataProps = new SGPropertyNode();
             PropertiesRead(m_continuous_in, MetaDataProps.get());
-            if (UserData) {
-                copyProperties(MetaDataProps->getNode("meta", 0, true), UserData);
-            }
+            copyProperties(MetaDataProps->getNode("meta", 0, true), &MetaMeta);
             SGPropertyNode_ptr Config = new SGPropertyNode();
             PropertiesRead(m_continuous_in, Config.get());
             
@@ -1364,6 +1482,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
             
             m_pRecorder->reinit(Config);
             clear();
+            fillRecycler();
             time_t t = time(NULL);
             size_t  pos = 0;
             for(;;)
@@ -1410,9 +1529,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
                     << ". recording size: " << pos
                     << ". numrecording items: " << m_continuous_time_to_offset.size()
                     );
-            sim_time = get_end_time();
-            m_pRecorder->reinit(Config);
-            start(true);
+            start(true /*NewTape*/);
             return true;
         }
     }
@@ -1454,7 +1571,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
             try
             {
                 readProperties(MetaData, Size-1, MetaDataProps);
-                copyProperties(MetaDataProps->getNode("meta", 0, true), UserData);
+                copyProperties(MetaDataProps->getNode("meta", 0, true), &MetaMeta);
             } catch (const sg_exception &e)
             {
               SG_LOG(SG_SYSTEMS, SG_ALERT, "Error reading flight recorder tape: " << Filename
@@ -1536,7 +1653,7 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode* UserDat
                        << ", expected size was " << OriginalSize << ".");
             }
 
-            bool multiplayer = UserData->getBoolValue("multiplayer", 0);
+            bool multiplayer = MetaMeta.getBoolValue("multiplayer", 0);
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "multiplayer=" << multiplayer);
 
             if (ok)
@@ -1625,11 +1742,11 @@ FGReplay::loadTape(const SGPropertyNode* ConfigData)
     }
     else
     {
-        SGPropertyNode* UserData = fgGetNode("/sim/gui/dialogs/flightrecorder/preview", true);
+        SGPropertyNode* MetaMeta = fgGetNode("/sim/gui/dialogs/flightrecorder/preview", true);
         tapeDirectory.append(tape);
         tapeDirectory.concat(".fgtape");
         SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Checking flight recorder file " << tapeDirectory << ", preview: " << Preview);
-        return loadTape(tapeDirectory, Preview, UserData);
+        return loadTape(tapeDirectory, Preview, *MetaMeta);
     }
 }
 
