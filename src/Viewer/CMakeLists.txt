@@ -1,12 +1,14 @@
 include(FlightGearComponent)
 
 set(SOURCES
+	CameraGroup.cxx
 	FGEventHandler.cxx
 	WindowBuilder.cxx
 	WindowSystemAdapter.cxx
 	fg_os_osgviewer.cxx
 	fgviewer.cxx
         ViewPropertyEvaluator.cxx
+	renderer.cxx
 	splash.cxx
 	view.cxx
 	viewmgr.cxx
@@ -34,14 +36,6 @@ endif()
 if (YES)
     list(APPEND HEADERS PUICamera.hxx)
     list(APPEND SOURCES PUICamera.cxx)
-endif()
-
-if (ENABLE_COMPOSITOR)
-  list(APPEND SOURCES CameraGroup_compositor.cxx renderer_compositor.cxx)
-  list(APPEND HEADERS CameraGroup_compositor.hxx renderer_compositor.hxx)
-else ()
-  list(APPEND SOURCES CameraGroup_legacy.cxx renderer_legacy.cxx renderingpipeline.cxx)
-  list(APPEND HEADERS CameraGroup_legacy.hxx renderer_legacy.hxx renderingpipeline.hxx)
 endif()
 
 flightgear_component(Viewer "${SOURCES}" "${HEADERS}")

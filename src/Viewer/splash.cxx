@@ -204,14 +204,6 @@ void SplashScreen::createNodes()
               nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
     }
 
-#if defined(ENABLE_COMPOSITOR)
-    auto compositorText = globals->get_locale()->getLocalizedString("compositor-enabled", "sys", "Compositor");
-    addText(geode, osg::Vec2(0.5f, 0.55f), 0.03,
-            compositorText,
-            osgText::Text::CENTER_CENTER,
-            nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
-#endif
-
 
     ///////////
 

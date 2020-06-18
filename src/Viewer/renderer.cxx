@@ -343,7 +343,8 @@ public:
 bool FGScenerySwitchCallback::scenery_enabled = false;
 
 FGRenderer::FGRenderer() :
-    _sky(NULL)
+    _sky(NULL),
+    MaximumTextureSize(0)
 {
 	_root = new osg::Group;
 	_root->setName("fakeRoot");
@@ -352,12 +353,48 @@ FGRenderer::FGRenderer() :
 
 FGRenderer::~FGRenderer()
 {
+    SGPropertyChangeListenerVec::iterator i = _listeners.begin();
+    for (; i != _listeners.end(); ++i) {
+        delete *i;
+    }
+
 	// replace the viewer's scene completely
     if (getViewer()) {
         getViewer()->setSceneData(new osg::Group);
     }
 
     delete _sky;
+}
+
+class PointSpriteListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        static SGSceneFeatures* sceneFeatures = SGSceneFeatures::instance();
+        sceneFeatures->setEnablePointSpriteLights(node->getIntValue());
+    }
+};
+
+class DistanceAttenuationListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        static SGSceneFeatures* sceneFeatures = SGSceneFeatures::instance();
+        sceneFeatures->setEnableDistanceAttenuationLights(node->getIntValue());
+    }
+};
+
+class DirectionalLightsListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        static SGSceneFeatures* sceneFeatures = SGSceneFeatures::instance();
+        sceneFeatures->setEnableTriangleDirectionalLights(node->getIntValue());
+    }
+};
+
+void
+FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
+{
+    _listeners.push_back(l);
+    fgAddChangeListener(l, path);
 }
 
 // Initialize various GL/view parameters
@@ -411,9 +448,6 @@ FGRenderer::init( void )
     _ysize         = fgGetNode("/sim/startup/ysize", true);
     _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
-    _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
-    _triangle_directional_lights = fgGetNode("/sim/rendering/triangle-directional-lights", true);
-    _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
     _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
 
     _altitude_ft = fgGetNode("/position/altitude-ft", true);
@@ -421,11 +455,15 @@ FGRenderer::init( void )
     _cloud_status = fgGetNode("/environment/clouds/status", true);
     _visibility_m = fgGetNode("/environment/visibility-m", true);
 
-    bool use_point_sprites = _point_sprites->getBoolValue();
-    bool distance_attenuation = _distance_attenuation->getBoolValue();
-    bool triangles = _triangle_directional_lights->getBoolValue();
+    // configure the lighting related parameters and add change listeners.
+    bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites", true);
+    bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation", false);
+    bool triangles = fgGetBool("/sim/rendering/triangle-directional-lights", true);
+    SGConfigureDirectionalLights(use_point_sprites, distance_attenuation, triangles);
 
-    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation, triangles );
+    addChangeListener(new PointSpriteListener,  "/sim/rendering/point-sprites");
+    addChangeListener(new DistanceAttenuationListener, "/sim/rendering/distance-attenuation");
+    addChangeListener(new DirectionalLightsListener, "/sim/rendering/triangle-directional-lights");
 
     if (const char* tc = fgGetString("/sim/rendering/texture-compression", NULL)) {
       if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||
@@ -654,13 +692,18 @@ FGRenderer::update( ) {
     {
         _splash_alpha->setDoubleValue(1.0);
 
-        GLint max_texture_size;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-        // abritrary range change as sometimes during init the device reports somewhat dubious values, so
-        // we know that the size must be greater than size and that probably 9999999 is unreasonably large
-        if (max_texture_size > 0 && max_texture_size < 9999999)
-            SGSceneFeatures::instance()->setMaxTextureSize(max_texture_size);
-
+        if (!MaximumTextureSize) {
+            osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+            if (guiCamera) {
+                GraphicsContext *gc = guiCamera->getGraphicsContext();
+                osg::GLExtensions* gl2ext = gc->getState()->get<osg::GLExtensions>();
+                if (gl2ext) {
+                    MaximumTextureSize = gl2ext->maxTextureSize;
+                    SGSceneFeatures::instance()->setMaxTextureSize(MaximumTextureSize);
+                    SG_LOG(SG_VIEW, SG_INFO, "FGRenderer:: Maximum texture size " << MaximumTextureSize);
+                }
+            }
+        }
         return;
     }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
@@ -676,11 +719,12 @@ FGRenderer::update( ) {
         double sAlpha = _splash_alpha->getDoubleValue();
         sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
-        _splash_alpha->setDoubleValue((sAlpha < 0) ? 0.0 : sAlpha);
 
         if (sAlpha <= 0.0) {
             flightgear::addSentryBreadcrumb("splash-screen fade out complete", "info");
         }
+
+        _splash_alpha->setDoubleValue((sAlpha < 0) ? 0.0 : sAlpha);
 
         syncPausePopupState();
         fgSetBool("/sim/menubar/overlap-hide", false);

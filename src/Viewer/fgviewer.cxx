@@ -34,7 +34,7 @@
 #include <Scenery/scenery.hxx>
 
 #include <Navaids/NavDataCache.hxx>
-#include <Viewer/renderer_compositor.hxx>
+#include <Viewer/renderer.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

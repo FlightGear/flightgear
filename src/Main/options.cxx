@@ -250,12 +250,6 @@ void fgSetDefaults ()
     v->setValueReadOnly("build-id", JENKINS_BUILD_ID);
     v->setValueReadOnly("hla-support", bool(FG_HAVE_HLA));
     v->setValueReadOnly("build-type", FG_BUILD_TYPE);
-#ifdef ENABLE_COMPOSITOR
-    static constexpr bool compositor_support = true;
-#else
-    static constexpr bool compositor_support = false;
-#endif
-    v->setValueReadOnly("compositor-support", compositor_support);
 
     char* envp = ::getenv( "http_proxy" );
     if( envp != nullptr )

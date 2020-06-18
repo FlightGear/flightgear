@@ -69,8 +69,6 @@
 
 #cmakedefine HAVE_QRC_TRANSLATIONS
 
-#cmakedefine ENABLE_COMPOSITOR
-
 #cmakedefine ENABLE_SWIFT
 
 #cmakedefine HAVE_SENTRY

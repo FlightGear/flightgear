@@ -81,6 +81,7 @@ osg::Node* FGCreateRedoutNode()
   stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
   stateSet->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 0, 1, false));
   stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+  stateSet->setRenderBinDetails(1000, "RenderBin");
 
   osg::Vec3Array* vertexArray = new osg::Vec3Array;
   vertexArray->push_back(osg::Vec3(-1, -1, 0));
@@ -101,7 +102,7 @@ osg::Node* FGCreateRedoutNode()
   camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
   camera->setProjectionMatrix(osg::Matrix::ortho2D(-1, 1, -1, 1));
   camera->setViewMatrix(osg::Matrix::identity());
-  camera->setRenderOrder(osg::Camera::POST_RENDER, 99);
+  camera->setRenderOrder(osg::Camera::NESTED_RENDER);
   camera->setClearMask(0);
   camera->setAllowEventFocus(false);
   camera->setCullingActive(false);
