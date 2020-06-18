@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQuick.Controls 2.2
 import FlightGear.Launcher 1.0 as FG
 import "."
 
@@ -44,12 +45,13 @@ Item {
 
     ListView {
         id: aircraftList
+        ScrollBar.vertical: ScrollBar {}
 
         anchors {
             left: parent.left
             top: parent.top
             bottom: parent.bottom
-            right: scrollbar.left
+            right: parent.right
             topMargin: Style.margin
         }
 
@@ -71,13 +73,5 @@ Item {
         // saved here becuase we need to reset highlightMoveDuration
         // when doing a progrmatic set
         readonly property int __realHighlightMoveDuration: 200
-    }
-
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        anchors.top: parent.top
-        height: aircraftList.height
-        flickable: aircraftList
     }
 }

@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.2
 import FlightGear.Launcher 1.0
 import "."
 
@@ -25,10 +26,11 @@ Rectangle {
         contentWidth: parent.width
         contentHeight: content.childrenRect.height
         boundsBehavior: Flickable.StopAtBounds
+        ScrollBar.vertical: ScrollBar {}
 
         Item {
             id: content
-            width: root.width - scrollbar.width
+            width: root.width
             height: childrenRect.height
 
             Column {
@@ -233,13 +235,4 @@ Rectangle {
         } // of main item
 
     } // of Flickable
-
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        anchors.top: parent.top
-        height: parent.height
-        flickable: flickable
-        visible: flickable.visibleArea.heightRatio < 1.0
-    }
 } // of Rect

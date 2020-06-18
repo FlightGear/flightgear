@@ -1,4 +1,6 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.2
+
 import FlightGear.Launcher 1.0
 import "."
 
@@ -7,7 +9,9 @@ Item {
     Flickable {
         id: flick
         height: parent.height
-        width: parent.width - scrollbar.width
+        width: parent.width 
+        ScrollBar.vertical: ScrollBar {}
+
         flickableDirection: Flickable.VerticalFlick
         contentHeight: contents.childrenRect.height
         function showDetails(index)
@@ -296,15 +300,6 @@ Item {
                 }
             } // of install-tarbal item
         } // of column
-
-    }
-
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        height: parent.height
-        flickable: flick
-        visible: flick.contentHeight > flick.height
     }
 }
 

@@ -1,4 +1,6 @@
 import QtQuick 2.0
+import QtQuick.Controls 2.2
+
 import FlightGear.Launcher 1.0 as FG
 
 Item {
@@ -41,6 +43,8 @@ Item {
         cellWidth: width / colCount
         cellHeight: 128 + Style.strutSize
         highlightMoveDuration: 0
+        
+        ScrollBar.vertical: ScrollBar {}
 
         readonly property int baseCellWidth: 172 + (Style.strutSize * 2)
         readonly property int colCount: Math.floor(width / baseCellWidth)
@@ -49,7 +53,7 @@ Item {
             left: parent.left
             top: parent.top
             bottom: parent.bottom
-            right: scrollbar.left
+            right: parent.right
             topMargin: Style.margin
         }
 
@@ -68,13 +72,5 @@ Item {
         clip: true
         focus: true
         highlight: highlight
-    }
-
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        anchors.top: parent.top
-        height: view.height
-        flickable: view
     }
 }

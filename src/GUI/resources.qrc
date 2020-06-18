@@ -34,7 +34,6 @@
         <file>qml/AircraftDownloadPanel.qml</file>
         <file>qml/Button.qml</file>
         <file>qml/AircraftWarningPanel.qml</file>
-        <file>qml/Scrollbar.qml</file>
         <file>qml/AircraftDetailsView.qml</file>
         <file>qml/AircraftFullDelegate.qml</file>
         <file>qml/AircraftCompactDelegate.qml</file>

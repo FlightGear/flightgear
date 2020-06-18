@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.2
 import FlightGear 1.0
 import "."
 
@@ -50,7 +51,7 @@ Rectangle {
         }
         if (root.haveHeader())
             minWidth = Math.max(minWidth, header.width);
-         flick.width = minWidth + scroller.width
+         flick.width = minWidth
     }
 
     function haveHeader()
@@ -61,7 +62,7 @@ Rectangle {
     Flickable {
         id: flick
         anchors.centerIn: parent
-
+        ScrollBar.vertical: ScrollBar {}
         height: Math.min(root.maximumPermittedHeight, contentHeight);
         contentHeight: itemsColumn.childrenRect.height
 
@@ -90,15 +91,5 @@ Rectangle {
                 }
             } // menu item repeater
         } // of menu contents column
-    }
-
-    Scrollbar {
-        id: scroller
-        flickable: flick
-        visible: flick.contentHeight > flick.height
-        anchors.right: root.right
-        anchors.rightMargin: 1
-        anchors.verticalCenter: parent.verticalCenter
-        height: flick.height
     }
 }

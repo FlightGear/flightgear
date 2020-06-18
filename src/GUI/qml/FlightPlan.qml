@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.2
 import FlightGear.Launcher 1.0
 import FlightGear 1.0
 import "."
@@ -12,9 +13,10 @@ Item {
     Flickable {
         id: flick
         height: parent.height
-        width: parent.width - scrollbar.width
+        width: parent.width
         flickableDirection: Flickable.VerticalFlick
         contentHeight: contents.childrenRect.height + Style.margin * 2
+        ScrollBar.vertical: ScrollBar {}
 
         Component.onCompleted: {
             if (_launcher.flightPlan.cruiseSpeed.value === 0.0) {
@@ -443,14 +445,6 @@ Item {
         } // of main column
 
     } // of flickable
-
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        height: parent.height
-        flickable: flick
-        visible: flick.contentHeight > flick.height
-    }
 
     Component {
         id: airportDetails
