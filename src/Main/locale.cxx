@@ -243,7 +243,7 @@ void FGLocale::clear()
     _inited = false;
     _currentLocaleString.clear();
 
-    if (_currentLocale) {
+    if (_currentLocale && (_currentLocale != _defaultLocale)) {
         // remove loaded strings, so we don't duplicate
         _currentLocale->removeChild("strings");
     }
@@ -294,8 +294,17 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
     }
     
     SGPropertyNode* stringNode = localeNode->getNode("strings", 0, true);
+    SGPropertyNode* resourceNode = stringNode->getNode(resource);
 
-    const char *path_str = stringNode->getStringValue(resource, nullptr);
+    if (!resourceNode)
+        return false;
+
+    if (resourceNode->getBoolValue("__loaded")) {
+        // already loaded previously
+        return true;
+    }
+
+    const char* path_str = resourceNode->getStringValue();
     if (!path_str)
     {
         SG_LOG(SG_GENERAL, SG_WARN, "No path in " << stringNode->getPath() << "/" << resource << ".");
@@ -310,7 +319,7 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
     // load the actual file
     try
     {
-        readProperties(path, stringNode->getNode(resource, 0, true));
+        readProperties(path, resourceNode);
     } catch (const sg_exception &e)
     {
         SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings from " << path <<
@@ -318,7 +327,9 @@ FGLocale::loadResource(SGPropertyNode* localeNode, const char* resource)
         return false;
     }
 
-   return true;
+    // set marker to indicate the data has been loaded
+    resourceNode->setBoolValue("__loaded", true);
+    return true;
 }
 
 // Load strings for requested resource (for current and default locale).
@@ -434,7 +445,11 @@ size_t FGLocale::getLocalizedStringCount(const char* id, const char* resource) c
     }
 
     if (_defaultLocale) {
-        size_t count = _defaultLocale->getNode("strings",0, true)->getNode(resource)->getChildren(id).size();
+        auto resourceNode = _defaultLocale->getNode("strings", 0, true)->getNode(resource);
+        if (!resourceNode)
+            return 0;
+
+        size_t count = resourceNode->getChildren(id).size();
         if (count > 0) {
             return count;
         }
