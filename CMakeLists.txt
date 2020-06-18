@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.10)
 
 include (CheckFunctionExists)
 include (CheckVariableExists)
@@ -6,27 +6,18 @@ include (CheckCSourceCompiles)
 include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 
-if(COMMAND cmake_policy)
-   if(POLICY CMP0054)
-       cmake_policy(SET CMP0054 NEW)
-   endif()
-   # Mac RPATH policy
-   if(POLICY CMP0042)
-       cmake_policy(SET CMP0042 NEW)
-   endif()
+cmake_policy(SET CMP0054 NEW)
+cmake_policy(SET CMP0042 NEW) # Mac RPATH policy
 
-    # AUTOMOC/AUTOUIC on generated files policy. Since we only
-    # generate resource files with fgrcc which don't use Qt,
-    # we set those files source property. See the help for this
-    # policy for more info
-    if(POLICY CMP0071)
-        cmake_policy(SET CMP0071 NEW)
-    endif()
+# AUTOMOC/AUTOUIC on generated files policy. Since we only
+# generate resource files with fgrcc which don't use Qt,
+# we set those files source property. See the help for this
+# policy for more info
+cmake_policy(SET CMP0071 NEW)
 
-    # OpenGL VND policy : use the old definition for now, until we can audit this
-    if(POLICY CMP0072)
-        cmake_policy(SET CMP0072 OLD)
-    endif()
+# OpenGL VND policy : use the old definition for now, until we can audit this
+if(POLICY CMP0072)
+    cmake_policy(SET CMP0072 OLD)
 endif()
 
 message("CMAKE Build type: ${CMAKE_BUILD_TYPE}")
@@ -53,12 +44,10 @@ if(APPLE)
 	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
 
-# let's use & require C++11 - note these are only functional with CMake 3.1
-# we do manual fallbacks for CMake 3.0 in the compilers section
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "Minimum OS X deployment version")
 
 project(FlightGear)
 
@@ -371,8 +360,8 @@ endif (USE_DBUS)
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    message(STATUS "Qt launcher enabled, checking for Qt >= 5.4 / qmake")
-    find_package(Qt5 5.4 COMPONENTS Widgets Gui Network Qml Quick Svg)
+    message(STATUS "Qt launcher enabled, checking for Qt >= 5.9 / qmake")
+    find_package(Qt5 5.9 COMPONENTS Widgets Gui Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
         message(STATUS "Will enable Qt launcher GUI")
         set(HAVE_QT 1)
@@ -468,10 +457,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS_CXX "-Wall")
     set(WARNING_FLAGS_C   "-Wall")
 
-    if (CMAKE_VERSION VERSION_LESS 3.1)
-       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    endif()
-
     if (X86 OR X86_64)
         set(SIMD_COMPILER_FLAGS "-msse2 -mfpmath=sse -ftree-vectorize -ftree-slp-vectorize")
     endif()
@@ -482,10 +467,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
      -Wno-redeclared-class-member \
      -Wno-inconsistent-missing-override \
      -Wno-unused-local-typedef")
-
-     if (CMAKE_VERSION VERSION_LESS 3.1)
-       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-     endif()
 
     # disabled by James - these cause weridness for multi-config generators
     # since they set thge flags for all configurations
