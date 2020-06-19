@@ -342,7 +342,7 @@ quint32 QmlAircraftInfo::numVariants() const
 QString QmlAircraftInfo::name() const
 {
     if (_item) {
-        return resolveItem()->description;
+        return resolveItem()->name();
     } else if (_package) {
         return QString::fromStdString(_package->nameForVariant(_variant));
     }
@@ -353,7 +353,7 @@ QString QmlAircraftInfo::name() const
 QString QmlAircraftInfo::description() const
 {
     if (_item) {
-        return resolveItem()->longDescription;
+        return resolveItem()->description();
     } else if (_package) {
         std::string longDesc = _package->getLocalisedProp("description", _variant);
         return QString::fromStdString(longDesc).simplified();
@@ -773,12 +773,12 @@ QStringList QmlAircraftInfo::variantNames() const
 {
     QStringList result;
     if (_item) {
-        result.append(_item->description);
+        result.append(_item->name());
         Q_FOREACH(auto v, _item->variants) {
-            if (v->description.isEmpty()) {
+            if (v->name().isEmpty()) {
                 qWarning() << Q_FUNC_INFO << "missing description for " << v->path;
             }
-            result.append(v->description);
+            result.append(v->name());
         }
     } else if (_package) {
         for (quint32 vindex = 0; vindex < _package->variants().size(); ++vindex) {

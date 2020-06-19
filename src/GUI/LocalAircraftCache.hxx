@@ -29,6 +29,8 @@
 #include <QDir>
 #include <QVariant>
 
+#include <simgear/props/props.hxx>
+
 class QDataStream;
 struct AircraftItem;
 class AircraftScanThread;
@@ -38,12 +40,16 @@ typedef QSharedPointer<AircraftItem> AircraftItemPtr;
 
 struct AircraftItem
 {
-    AircraftItem();
+    AircraftItem() = default;
 
     AircraftItem(QDir dir, QString filePath);
 
     // the file-name without -set.xml suffix
     QString baseName() const;
+
+    QString name() const;
+
+    QString description() const;
 
     void fromDataStream(QDataStream& ds);
 
@@ -53,8 +59,7 @@ struct AircraftItem
 
     bool excluded = false;
     QString path;
-    QString description;
-    QString longDescription;
+
     QString authors; // legacy authors data only
     int ratings[4] = {0, 0, 0, 0};
     QString variantOf;
@@ -72,7 +77,31 @@ struct AircraftItem
     QUrl wikipediaUrl;
     QUrl supportUrl;
     QVariant status(int variant);
+
+
 private:
+    struct LocalizedStrings {
+        QString locale;
+        QMap<QByteArray, QString> strings;
+    };
+
+    friend QDataStream& operator<<(QDataStream&, const LocalizedStrings&);
+    friend QDataStream& operator>>(QDataStream&, LocalizedStrings&);
+
+    using LocalizedStringsVec = QVector<LocalizedStrings>;
+
+    // store all localized strings. We need this to avoid rebuilding
+    // the cache when switching languages.
+    LocalizedStringsVec _localized;
+
+    // the resolved values for our strings, based on QLocale
+    // if we support dynamic switching of language, this would need to
+    // be flushed and re-computed
+    QMap<QByteArray, QString> _currentStrings;
+
+    void doLocalizeStrings();
+
+    void readLocalizedStrings(SGPropertyNode_ptr simNode);
 };
 
 class LocalAircraftCache : public QObject

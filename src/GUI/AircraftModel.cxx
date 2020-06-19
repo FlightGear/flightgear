@@ -277,11 +277,11 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
     if (role >= AircraftVariantDescriptionRole) {
         int variantIndex = role - AircraftVariantDescriptionRole;
         if (variantIndex == 0) {
-            return item->description;
+            return item->name();
         }
 
         Q_ASSERT(variantIndex < item->variants.size());
-        return item->variants.at(variantIndex)->description;
+        return item->variants.at(variantIndex)->name();
     }
 
     if (state.variant) {
@@ -292,11 +292,11 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
     }
 
     if (role == Qt::DisplayRole) {
-        if (item->description.isEmpty()) {
+        if (item->name().isEmpty()) {
             return tr("Missing description for: %1").arg(item->baseName());
         }
 
-        return item->description;
+        return item->name();
     } else if (role == AircraftPathRole) {
         return item->path;
     } else if (role == AircraftAuthorsRole) {
@@ -318,7 +318,7 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
         }
         return have;
     } else if (role == AircraftLongDescriptionRole) {
-        return item->longDescription;
+        return item->description();
     } else if (role == AircraftIsHelicopterRole) {
         return item->usesHeliports;
     } else if (role == AircraftIsSeaplaneRole) {
@@ -564,14 +564,14 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
 
         const QString path = uri.toLocalFile();
         if (item->path == path) {
-            return item->description;
+            return item->name();
         }
 
         // check variants too
         for (int vr=0; vr < item->variants.size(); ++vr) {
             auto variant = item->variants.at(vr);
             if (variant->path == path) {
-                return variant->description;
+                return variant->name();
             }
         }
     } else if (uri.scheme() == "package") {

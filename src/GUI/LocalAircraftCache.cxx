@@ -31,17 +31,28 @@
 #include <QSettings>
 #include <QDebug>
 
-#include <Main/globals.hxx>
 #include <Include/version.h>
+#include <Main/globals.hxx>
+#include <Main/locale.hxx>
 
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
-static quint32 CACHE_VERSION = 12;
+static quint32 CACHE_VERSION = 13;
 
-AircraftItem::AircraftItem()
+const std::vector<QByteArray> static_localizedStringTags = {"name", "desc"};
+
+QDataStream& operator<<(QDataStream& ds, const AircraftItem::LocalizedStrings& ls)
 {
+    ds << ls.locale << ls.strings;
+    return ds;
+}
+
+QDataStream& operator>>(QDataStream& ds, AircraftItem::LocalizedStrings& ls)
+{
+    ds >> ls.locale >> ls.strings;
+    return ds;
 }
 
 AircraftItem::AircraftItem(QDir dir, QString filePath)
@@ -62,10 +73,9 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
         return;
     }
 
-    description = sim->getStringValue("description");
-	// trim the description to ensure the alphabetical sort
-	// doesn't get thrown off by leading whitespace
-	description = description.trimmed();
+    LocalizedStrings ls;
+    ls.locale = "en";
+    ls.strings["name"] = QString::fromStdString(sim->getStringValue("description")).trimmed();
     authors = sim->getStringValue("author");
 
     if (sim->hasChild("rating")) {
@@ -77,7 +87,7 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
 
     if (sim->hasChild("long-description")) {
         // clean up any XML whitspace in the text.
-        longDescription = QString(sim->getStringValue("long-description")).simplified();
+        ls.strings["desc"] = QString(sim->getStringValue("long-description")).simplified();
     }
 
     if (sim->hasChild("variant-of")) {
@@ -132,6 +142,65 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
     homepageUrl = QUrl(QString::fromStdString(sim->getStringValue("urls/home-page")));
     supportUrl = QUrl(QString::fromStdString(sim->getStringValue("urls/support")));
     wikipediaUrl = QUrl(QString::fromStdString(sim->getStringValue("urls/wikipedia")));
+
+    _localized.push_front(ls);
+    readLocalizedStrings(sim);
+    doLocalizeStrings();
+}
+
+void AircraftItem::readLocalizedStrings(SGPropertyNode_ptr simNode)
+{
+    if (!simNode->hasChild("localized"))
+        return;
+
+    auto localeNode = simNode->getChild("localized");
+    const auto num = localeNode->nChildren();
+    for (int i = 0; i < num; i++) {
+        const SGPropertyNode* c = localeNode->getChild(i);
+
+        LocalizedStrings ls;
+        ls.locale = QString::fromStdString(c->getNameString());
+        if (c->hasChild("description")) {
+            ls.strings["name"] = QString::fromStdString(c->getStringValue("description"));
+        }
+        if (c->hasChild("long-description")) {
+            ls.strings["desc"] = QString::fromStdString(c->getStringValue("long-description")).simplified();
+        }
+
+        _localized.push_back(ls);
+    }
+}
+
+void AircraftItem::doLocalizeStrings()
+{
+    // default strings are always at the front
+    _currentStrings = _localized.front().strings;
+
+    const auto lang = QString::fromStdString(globals->get_locale()->getPreferredLanguage());
+    // find the matching locale
+    auto it = std::find_if(_localized.begin(), _localized.end(), [lang](const LocalizedStrings& ls) {
+        return ls.locale == lang;
+    });
+
+    if (it == _localized.end())
+        return; // nothing else to do
+
+    for (auto t : static_localizedStringTags) {
+        if (it->strings.contains(t)) {
+            // copy the value we found
+            _currentStrings[t] = it->strings.value(t);
+        }
+    } // of strings iteration
+}
+
+QString AircraftItem::name() const
+{
+    return _currentStrings.value("name");
+}
+
+QString AircraftItem::description() const
+{
+    return _currentStrings.value("desc");
 }
 
 QString AircraftItem::baseName() const
@@ -148,7 +217,7 @@ void AircraftItem::fromDataStream(QDataStream& ds)
         return;
     }
 
-    ds >> description >> longDescription >> authors >> variantOf >> isPrimary;
+    ds >> authors >> variantOf >> isPrimary;
     for (int i=0; i<4; ++i) ds >> ratings[i];
     ds >> previews;
     ds >> thumbnailPath;
@@ -156,6 +225,9 @@ void AircraftItem::fromDataStream(QDataStream& ds)
     ds >> needsMaintenance >> usesHeliports >> usesSeaports;
     ds >> homepageUrl >> supportUrl >> wikipediaUrl;
     ds >> tags;
+    ds >> _localized;
+
+    doLocalizeStrings();
 }
 
 void AircraftItem::toDataStream(QDataStream& ds) const
@@ -165,7 +237,7 @@ void AircraftItem::toDataStream(QDataStream& ds) const
         return;
     }
 
-    ds << description << longDescription << authors << variantOf << isPrimary;
+    ds << authors << variantOf << isPrimary;
     for (int i=0; i<4; ++i) ds << ratings[i];
     ds << previews;
     ds << thumbnailPath;
@@ -173,6 +245,7 @@ void AircraftItem::toDataStream(QDataStream& ds) const
     ds << needsMaintenance << usesHeliports << usesSeaports;
     ds << homepageUrl << supportUrl << wikipediaUrl;
     ds << tags;
+    ds << _localized;
 }
 
 int AircraftItem::indexOfVariant(QUrl uri) const
@@ -216,6 +289,7 @@ public:
 
     SGPath resolve(const std::string& aResource, SGPath& aContext) const override
     {
+        Q_UNUSED(aContext)
         string_list pieces(sgPathBranchSplit(aResource));
         if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
             return SGPath{}; // not an Aircraft path
