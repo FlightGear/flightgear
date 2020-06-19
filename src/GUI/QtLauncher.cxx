@@ -462,7 +462,7 @@ bool runLauncherDialog()
     // we will re-do this later, but we want to access translated strings
     // from within the launcher
     globals->get_locale()->selectLanguage(lang);
-    globals->packageRoot()->setLocale(lang);
+    globals->packageRoot()->setLocale(globals->get_locale()->getPreferredLanguage());
 
     // startup the HTTP system now since packages needs it
     FGHTTPClient* http = globals->add_new_subsystem<FGHTTPClient>();
