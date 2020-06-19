@@ -1134,7 +1134,6 @@ double RoutePath::distanceForVia(Via* via, int index) const
     WayptVec enrouteWaypoints = via->expandToWaypoints(prevIt->wpt);
     double dist = 0.0;
 
-    WayptVec::const_iterator it;
     SGGeod legStart = prevIt->wpt->position();
     for (auto wp : enrouteWaypoints) {
         dist += SGGeodesy::distanceM(legStart, wp->position());

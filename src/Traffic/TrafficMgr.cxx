@@ -774,7 +774,6 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
     char buffer[256];
     string buffString;
     vector <string> tokens, depTime,arrTime;
-    vector <string>::iterator it;
 
     sg_ifstream infile(infileName);
     while (1) {
