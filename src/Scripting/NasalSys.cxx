@@ -510,7 +510,7 @@ struct SimNasalLogFileLine : SGPropertyChangeListener
         SGPropertyNode* node = fgGetNode("/sim/nasal-log-file-line", true /*create*/);
         node->addChangeListener(this, true /*initial*/);
     }
-    virtual void valueChanged(SGPropertyNode* node) {
+    void valueChanged(SGPropertyNode* node) override {
         _file_line = node->getIntValue();
     }
     
