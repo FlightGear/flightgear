@@ -363,7 +363,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     }
 
     if (!level) {
-        SG_LOG(SG_INPUT, TREE, endl << "load " << file);
+        SG_LOG(SG_INPUT, TREE, "load " << file);
         _items.erase(_items.begin(), _items.end());
         _ladders.erase(_ladders.begin(), _ladders.end());
     } else if (level > MAXNEST) {
