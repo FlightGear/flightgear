@@ -1,9 +1,9 @@
-#include "AircraftSearchFilterModel.hxx"
+#include "AircraftProxyModel.hxx"
 
 #include <QSettings>
 #include <QDebug>
 
-#include "AircraftModel.hxx"
+#include "AircraftItemModel.hxx"
 #include "FavouriteAircraftData.hxx"
 
 #include <simgear/package/Package.hxx>

@@ -27,8 +27,8 @@
 #include <Main/fg_props.hxx>
 #include "version.h"
 
-#include "AircraftModel.hxx"
-#include "AircraftSearchFilterModel.hxx"
+#include "AircraftItemModel.hxx"
+#include "AircraftProxyModel.hxx"
 #include "AirportDiagram.hxx"
 #include "CarrierDiagram.hxx"
 #include "CarriersLocationModel.hxx"

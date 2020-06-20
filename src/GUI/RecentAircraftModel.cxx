@@ -3,7 +3,7 @@
 #include <QSettings>
 #include <QDebug>
 
-#include "AircraftModel.hxx"
+#include "AircraftItemModel.hxx"
 
 const int MAX_RECENT_AIRCRAFT = 20;
 

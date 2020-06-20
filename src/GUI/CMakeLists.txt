@@ -90,8 +90,8 @@ if (HAVE_QT)
                             NavaidDiagram.hxx
                             SetupRootDialog.cxx
                             SetupRootDialog.hxx
-                            AircraftModel.hxx
-                            AircraftModel.cxx
+                            AircraftItemModel.hxx
+                            AircraftItemModel.cxx
                             CatalogListModel.cxx
                             CatalogListModel.hxx
                             QtMessageBox.cxx
@@ -104,8 +104,8 @@ if (HAVE_QT)
                             LocationController.hxx
                             LauncherArgumentTokenizer.cxx
                             LauncherArgumentTokenizer.hxx
-                            AircraftSearchFilterModel.cxx
-                            AircraftSearchFilterModel.hxx
+                            AircraftProxyModel.cxx
+                            AircraftProxyModel.hxx
                             DefaultAircraftLocator.cxx
                             DefaultAircraftLocator.hxx
                             LaunchConfig.cxx

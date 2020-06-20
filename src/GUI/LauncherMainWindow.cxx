@@ -22,7 +22,6 @@
 #include "QtLauncher.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "LaunchConfig.hxx"
-#include "AircraftModel.hxx"
 #include "LocalAircraftCache.hxx"
 #include "LauncherController.hxx"
 #include "AddOnsController.hxx"
