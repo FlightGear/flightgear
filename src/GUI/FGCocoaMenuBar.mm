@@ -116,7 +116,7 @@ static void setFunctionKeyShortcut(const std::string& shortcut, NSMenuItem* item
     
   unichar ch[1];
   ch[0] = shortcutChar;
-  [item setKeyEquivalentModifierMask:NSFunctionKeyMask];
+  [item setKeyEquivalentModifierMask:NSEventModifierFlagFunction];
   [item setKeyEquivalent:[NSString stringWithCharacters:ch length:1]];
   
 }
@@ -148,9 +148,9 @@ static void setItemShortcutFromString(NSMenuItem* item, const string& s)
     simgear::strutils::lowercase(shortcut);
   [item setKeyEquivalent:[NSString stringWithCString:shortcut.c_str() encoding:NSUTF8StringEncoding]];
   NSUInteger modifiers = 0;
-  if (hasCtrl) modifiers |= NSControlKeyMask;
-  if (hasShift) modifiers |= NSShiftKeyMask;
-  if (hasAlt) modifiers |= NSAlternateKeyMask;
+  if (hasCtrl) modifiers |= NSEventModifierFlagControl;
+  if (hasShift) modifiers |= NSEventModifierFlagShift;
+  if (hasAlt) modifiers |= NSEventModifierFlagOption;
   
   [item setKeyEquivalentModifierMask:modifiers];
 }
