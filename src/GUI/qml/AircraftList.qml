@@ -17,8 +17,16 @@ FocusScope
         }
     }
 
+    state: "installed"
+
     Component.onCompleted: {
         _launcher.browseAircraftModel.loadRatingsSettings();
+
+        // if the user has favourites defined, default to that tab
+        if (_launcher.favouriteAircraftModel.count > 0) {
+            root.state = "favourites"
+            root.updateSelectionFromLauncher();
+        }
     }
 
     Rectangle
@@ -187,8 +195,6 @@ FocusScope
         text: qsTr("No aircraft updates available right now")
         visible: (root.state == "updates") && (_launcher.aircraftWithUpdatesModel.count == 0)
     }
-
-    state: "installed"
 
     states: [
         State {
