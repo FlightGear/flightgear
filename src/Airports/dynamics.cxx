@@ -49,7 +49,6 @@
 using std::string;
 using std::vector;
 using std::sort;
-using std::random_shuffle;
 
 // #define RUNWAY_FALLBACK_DEBUG
 
