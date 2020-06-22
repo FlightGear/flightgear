@@ -44,7 +44,7 @@ if(APPLE)
 	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "Minimum OS X deployment version")
@@ -497,7 +497,7 @@ if(WIN32)
         set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
         set(CMAKE_C_FLAGS_RELWITHDEBINFO "/Zi /O2 /Ob2 /D NDEBUG")
 
-        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
+        set(MSVC_FLAGS "/bigobj -DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS -D_HAS_STD_BYTE=0")
         if (X86)
             set(SIMD_COMPILER_FLAGS "/arch:SSE /arch:SSE2")
         endif()
@@ -508,11 +508,6 @@ if(WIN32)
           # symbols. This issue was fixed in OSG commit 15ec7e2ae7a8b983ecc44e1ce7363a9a9fa7da95
           set( MSVC_LD_FLAGS "/FORCE:MULTIPLE" )
         endif ()
-
-        if (${MSVC_VERSION} GREATER 1899)
-            # needed for debug builds with VS2015
-            set( MSVC_FLAGS "${MSVC_FLAGS} /bigobj" )
-        endif()
     endif(MSVC)
 
     set(NOMINMAX 1)
