@@ -41,18 +41,8 @@ namespace
 {
 struct GuiFont
 {
-    const char* name;
+    const std::string name;
     puFont *font;
-    struct Predicate
-        : public std::unary_function<const GuiFont, bool>
-    {
-        Predicate(const std::string& name_) : name(name_) {}
-        bool operator() (const GuiFont& f1) const
-        {
-            return (name == f1.name);
-        }
-        const std::string name;
-    };
 };
 
 const GuiFont guifonts[] = {
@@ -68,8 +58,6 @@ const GuiFont guifonts[] = {
     { "SANS_12B",     &FONT_SANS_12B },
     { 0 }
 };
-
-const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])-1];
 }
 
 FGFontCache* FGFontCache::instance()
@@ -103,19 +91,18 @@ FGFontCache::~FGFontCache()
     }
 }
 
-inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
-                                                   const FntParams& f2) const
+bool FGFontCache::FntParams::operator<(const FntParams& other) const
 {
-    int comp = f1.name.compare(f2.name);
+    int comp = name.compare(other.name);
     if (comp < 0)
         return true;
     else if (comp > 0)
         return false;
-    if (f1.size < f2.size)
+    if (size < other.size)
         return true;
-    else if (f1.size > f2.size)
+    else if (size > other.size)
         return false;
-    return f1.slant < f2.slant;
+    return slant < other.slant;
 }
 
 FGFontCache::FontCacheEntry*
@@ -132,9 +119,12 @@ FGFontCache::getfnt(const std::string& fontName, float size, float slant)
     if (texi != _texFonts.end()) {
         texfont = texi->second;
     } else {
-        const GuiFont* guifont = std::find_if(&guifonts[0], guifontsEnd,
-                                              GuiFont::Predicate(fontName));
-        if (guifont != guifontsEnd) {
+        auto guifont = std::find_if(guiFonts.begin(), guiFonts.end(),
+                                    [&fontName](const GuiFont& gf) {
+                                        return gf.name == fontName;
+                                    });
+
+        if (guifont != guiFonts.end()) {
             pufont = guifont->font;
         }
     }
@@ -148,7 +138,7 @@ FGFontCache::getfnt(const std::string& fontName, float size, float slant)
         f->pufont = new puFont;
         f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
     } else {
-        f->pufont = guifonts[0].font;
+        f->pufont = guiFonts.begin()->font;
     }
 
     // insert into the cache

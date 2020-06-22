@@ -48,11 +48,8 @@ private:
             : name(name_), size(size_), slant(slant_)
         {
         }
-    };
-    struct FntParamsLess
-        : public std::binary_function<const FntParams, const FntParams, bool>
-    {
-        bool operator() (const FntParams& f1, const FntParams& f2) const;
+
+        bool operator<(const FntParams& other) const;
     };
 
     struct FontCacheEntry {
@@ -71,7 +68,7 @@ private:
     SGPath _path;
 
     typedef std::map<const std::string, fntTexFont*> TexFontMap;
-    typedef std::map<const FntParams, FontCacheEntry*, FntParamsLess> PuFontMap;
+    typedef std::map<const FntParams, FontCacheEntry*> PuFontMap;
     TexFontMap _texFonts;
     PuFontMap _cache;
 
