@@ -284,7 +284,11 @@ public:
 
         simgear::requestConsole(); // ensure console is shown on Windows
 
-        std::sort(_aircraft.begin(), _aircraft.end(), ciLessLibC());
+        std::sort(_aircraft.begin(), _aircraft.end(),
+                  [](const std::string& lhs, const std::string& rhs) {
+                      return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ? 1 : 0;
+                  });
+
         cout << "Available aircraft:" << endl;
         for ( unsigned int i = 0; i < _aircraft.size(); i++ ) {
             cout << _aircraft[i] << endl;
@@ -352,16 +356,6 @@ private:
 
         return 0;
     }
-
-    // recommended in Meyers, Effective STL when internationalization and embedded
-    // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
-    struct ciLessLibC : public std::binary_function<string, string, bool>
-    {
-        bool operator()(const std::string &lhs, const std::string &rhs) const
-        {
-            return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ? 1 : 0;
-        }
-    };
 
     int _minStatus;
     string_list _aircraft;

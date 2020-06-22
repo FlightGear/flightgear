@@ -173,11 +173,11 @@ double testNan(double val)
 
     return val;
 }
+} // namespace
 
-struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
+void FGModelMgr::update(double dt)
 {
-    void operator()(FGModelMgr::Instance* instance) const
-    {
+    std::for_each(_instances.begin(), _instances.end(), [](FGModelMgr::Instance* instance) {
         SGModelPlacement* model = instance->model;
         double roll, pitch, heading;
         roll = pitch = heading = 0.0;
@@ -217,14 +217,7 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
             model->setHeadingDeg(heading);
 
         instance->model->update();
-    }
-};
-}
-
-void
-FGModelMgr::update (double dt)
-{
-    std::for_each(_instances.begin(), _instances.end(), UpdateFunctor());
+    });
 }
 
 void

@@ -1192,11 +1192,13 @@ void CameraGroup::resized()
 
 const CameraInfo* CameraGroup::getGUICamera() const
 {
-    ConstCameraIterator result
-        = std::find_if(camerasBegin(), camerasEnd(),
-                   FlagTester<CameraInfo>(GUI));
+    auto result = std::find_if(camerasBegin(), camerasEnd(),
+                               [](const osg::ref_ptr<CameraInfo>& cam) {
+                                   return cam->flags & GUI;
+                               });
+
     if (result == camerasEnd()) {
-        return NULL;
+        return nullptr;
     }
 
     return *result;

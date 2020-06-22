@@ -130,28 +130,5 @@ protected:
 
 };
 
-/**
- * Class for testing if flags are set in an object with a flags member.
- */
-template<typename T>
-class FlagTester : public std::unary_function<osg::ref_ptr<T>, bool>
-{
-public:
-    /** Initialize with flags to test for.
-     * @param flags logical or of flags to test.
-     */
-    FlagTester(unsigned flags_) : flags(flags_) {}
-    /** test operator
-     * @param obj An object with a flags member
-     * @return true if flags member of obj contains any of the flags
-     * (bitwise and with flags is nonzero).
-     */
-    bool operator() (const osg::ref_ptr<T>& obj)
-    {
-        return (obj->flags & flags) != 0;
-    }
-    unsigned flags;
-};
-
 }
 #endif
