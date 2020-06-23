@@ -28,8 +28,9 @@ Item {
         contentHeight: sectionColumn.childrenRect.height
         flickableDirection: Flickable.VerticalFlick
         height: parent.height
-        width: parent.width
-
+        width: parent.width - Style.margin * 2
+        x: Style.margin
+        
         ScrollBar.vertical: ScrollBar {}
 
         Column
