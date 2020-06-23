@@ -278,18 +278,23 @@ QVariant AircraftItem::status(int variant)
 
 }
 
-// ensure references to Aircraft/ foo are resolved. This happens when
+// ensure references to Aircraft/foo and <my-aircraft-dir>/foo are resolved. This happens when
 // aircraft reference a path (probably to themselves) in their -set.xml
-class CurrentScanDirProvider : public simgear::ResourceProvider
+class ScanDirProvider : public simgear::ResourceProvider
 {
 public:
-    CurrentScanDirProvider() : simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL) {}
+    ScanDirProvider() : simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL) {}
 
-    ~CurrentScanDirProvider() = default;
+    ~ScanDirProvider() = default;
 
     SGPath resolve(const std::string& aResource, SGPath& aContext) const override
     {
         Q_UNUSED(aContext)
+
+        SGPath ap = _currentAircraftPath / aResource;
+        if (ap.exists())
+            return ap;
+
         string_list pieces(sgPathBranchSplit(aResource));
         if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
             return SGPath{}; // not an Aircraft path
@@ -308,8 +313,14 @@ public:
         _currentScanPath = p;
     }
 
+    void setCurrentAircraftPath(const SGPath& p)
+    {
+        _currentAircraftPath = p;
+    }
+
 private:
     SGPath _currentScanPath;
+    SGPath _currentAircraftPath;
 };
 
 class AircraftScanThread : public QThread
@@ -321,7 +332,7 @@ public:
         m_done(false)
     {
         auto rm = simgear::ResourceManager::instance();
-        m_currentScanDir.reset(new CurrentScanDirProvider);
+        m_currentScanDir.reset(new ScanDirProvider);
         rm->addProvider(m_currentScanDir.get());
     }
 
@@ -423,6 +434,11 @@ private:
             QMap<QString, AircraftItemPtr> baseAircraft;
             QList<AircraftItemPtr> variants;
 
+            // ensure aircraft dir is available to simgear::ResourceProvider
+            // otherwise some aircraft -set.xml includes fail
+            const auto p = SGPath::fromUtf8(child.absoluteFilePath().toUtf8().toStdString());
+            m_currentScanDir->setCurrentAircraftPath(p);
+
             Q_FOREACH(QFileInfo xmlChild, childDir.entryInfoList(filters, QDir::Files)) {
                 try {
                     QString absolutePath = xmlChild.absoluteFilePath();
@@ -493,7 +509,7 @@ private:
     QMap<QString, AircraftItemPtr > m_nextCache;
 
     bool m_done;
-    std::unique_ptr<CurrentScanDirProvider> m_currentScanDir;
+    std::unique_ptr<ScanDirProvider> m_currentScanDir;
 };
 
 static std::unique_ptr<LocalAircraftCache> static_cacheInstance;
