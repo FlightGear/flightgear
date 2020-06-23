@@ -13,7 +13,9 @@ Item {
         contentHeight: sectionColumn.childrenRect.height
         flickableDirection: Flickable.VerticalFlick
         anchors.fill: parent
-
+        anchors.leftMargin: Style.margin
+        anchors.rightMargin: Style.margin
+        
         Column
         {
             id: sectionColumn
