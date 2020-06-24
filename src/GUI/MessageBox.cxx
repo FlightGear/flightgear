@@ -191,7 +191,10 @@ MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     int exitStatus)
 {
     fatalMessageBoxWithoutExit(caption, msg, moreText);
-    exit(exitStatus);
+    // we can't use exit() here or QGuiApplication crashes
+    // let's instead throw a sepcial exception which we catch
+    // in boostrap.
+    throw FatalErrorException{};
 }
 
 } // of namespace flightgear
