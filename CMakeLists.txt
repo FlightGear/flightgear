@@ -5,6 +5,7 @@ include (CheckVariableExists)
 include (CheckCSourceCompiles)
 include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
+include (CheckIncludeFileCXX)
 
 cmake_policy(SET CMP0054 NEW)
 cmake_policy(SET CMP0042 NEW) # Mac RPATH policy
@@ -379,7 +380,13 @@ if (ENABLE_QT)
         set(ENABLE_FGQCANVAS OFF)
     endif()
 
-    if (TARGET Qt5::GuiPrivate)
+    # we would ideally use TARGET::Qt5GuiPrivate but Fedora broke it
+    # perform a manual check instead
+    # see https://bugzilla.redhat.com/show_bug.cgi?id=1846613
+    set (CMAKE_REQUIRED_INCLUDES ${Qt5Gui_PRIVATE_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
+    check_include_file_cxx("private/qopenglcontext_p.h" REALLY_HAVE_QGUIPRIVATE)
+
+    if (REALLY_HAVE_QGUIPRIVATE)
         message(STATUS "Have QtGUI private headers")
         set(ENABLE_QQ_UI 1)
     else()
