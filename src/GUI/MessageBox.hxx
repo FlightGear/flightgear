@@ -7,6 +7,12 @@
 namespace flightgear
 {
 
+// special exception class used to signal an exit. Must not inherit
+// std::exception or similar, since we want to handle it specially
+class FatalErrorException
+{
+};
+
 enum MessageBoxResult
 {
     MSG_BOX_OK,

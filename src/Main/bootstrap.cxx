@@ -320,9 +320,10 @@ int main ( int argc, char **argv )
         flightgear::fatalMessageBoxWithoutExit("Fatal exception", e.what());
     } catch (const std::string &s) {
         flightgear::fatalMessageBoxWithoutExit("Fatal exception", s);
+    } catch (const flightgear::FatalErrorException&) {
+        // we already showed the message box, just carry on to exit
     } catch (const char *s) {
         std::cerr << "Fatal error (const char*): " << s << std::endl;
-
     } catch (...) {
         std::cerr << "Unknown exception in the main loop. Aborting..." << std::endl;
         if (errno)
