@@ -194,20 +194,18 @@ setLoggingPriority (const char * p)
 {
   if (p == 0)
       return;
+
   string priority = p;
-  if (priority == "bulk") {
-    sglog().set_log_priority(SG_BULK);
-  } else if (priority == "debug") {
-    sglog().set_log_priority(SG_DEBUG);
-  } else if (priority.empty() || priority == "info") { // default
-    sglog().set_log_priority(SG_INFO);
-  } else if (priority == "warn") {
-    sglog().set_log_priority(SG_WARN);
-  } else if (priority == "alert") {
-    sglog().set_log_priority(SG_ALERT);
+  if (priority.empty()) {
+      sglog().set_log_priority(SG_INFO);
   } else {
-    SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
+      try {
+          sglog().set_log_priority(logstream::priorityFromString(priority));
+      } catch (std::exception& e) {
+          SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority: " << priority);
+      }
   }
+
   SG_LOG(SG_GENERAL, SG_DEBUG, "Logging priority is " << getLoggingPriority());
 }
 
