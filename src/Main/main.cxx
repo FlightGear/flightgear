@@ -506,8 +506,18 @@ extern "C" {
 }
 #endif
 
-static void logToHome()
+static void logToHome(const std::string& pri)
 {
+    sgDebugPriority fileLogLevel = SG_INFO;
+    // https://sourceforge.net/p/flightgear/codetickets/2100/
+    if (!pri.empty()) {
+        try {
+            fileLogLevel = std::min(fileLogLevel, logstream::priorityFromString(pri));
+        } catch (std::exception& e) {
+            // let's not worry about this, and just log at INFO
+        }
+    }
+
     SGPath logPath = globals->get_fg_home();
     logPath.append("fgfs.log");
     if (logPath.exists()) {
@@ -518,7 +528,8 @@ static void logToHome()
         logPath = globals->get_fg_home();
         logPath.append("fgfs.log");
     }
-    sglog().logToFile(logPath, SG_ALL, SG_INFO);
+
+    sglog().logToFile(logPath, SG_ALL, fileLogLevel);
 }
 
 // Main top level initialization
@@ -563,7 +574,8 @@ int fgMainInit( int argc, char **argv )
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
         // now home is initialised, we can log to a file inside it
-        logToHome();
+        const auto level = flightgear::Options::getArgValue(argc, argv, "--log-level");
+        logToHome(level);
     }
 
     if (readOnlyFGHome) {

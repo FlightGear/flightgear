@@ -251,7 +251,6 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
     if (!qtInitDone) {
         qtInitDone = true;
 
-        sglog().setLogLevels( SG_ALL, SG_INFO );
         initQtResources(); // can't be called from a namespace
 
         s_argc = argc; // QApplication only stores a reference to argc,
