@@ -246,7 +246,7 @@ public:
                 snprintf(buffer, 16, "%d", acCounter);
                 requiredAircraft = buffer;
             }
-            SG_LOG(SG_AI, SG_DEBUG, "Adding flight: " << callsign << " "
+            SG_LOG(SG_AI, SG_BULK, "Adding flight: " << callsign << " "
                    << fltrules << " "
                    << departurePort << " "
                    << arrivalPort << " "
