@@ -506,6 +506,27 @@ extern "C" {
 }
 #endif
 
+static void rotateOldLogFiles()
+{
+    const int maxLogCount = 10;
+    const auto homePath = globals->get_fg_home();
+
+    for (int i = maxLogCount; i > 0; --i) {
+        const auto name = "fgfs_" + std::to_string(i - 1) + ".log";
+        SGPath curLogFile = homePath / name;
+        if (curLogFile.exists()) {
+            auto newName = "fgfs_" + std::to_string(i) + ".log";
+            curLogFile.rename(homePath / newName);
+        }
+    }
+
+    SGPath p = homePath / "fgfs.log";
+    if (!p.exists())
+        return;
+    SGPath log0Path = homePath / "fgfs_0.log";
+    p.rename(log0Path);
+}
+
 static void logToHome(const std::string& pri)
 {
     sgDebugPriority fileLogLevel = SG_INFO;
@@ -521,12 +542,7 @@ static void logToHome(const std::string& pri)
     SGPath logPath = globals->get_fg_home();
     logPath.append("fgfs.log");
     if (logPath.exists()) {
-        SGPath prevLogPath = globals->get_fg_home();
-        prevLogPath.append("fgfs_0.log");
-        logPath.rename(prevLogPath);
-        // bit strange, we need to restore the correct value of logPath now
-        logPath = globals->get_fg_home();
-        logPath.append("fgfs.log");
+        rotateOldLogFiles();
     }
 
     sglog().logToFile(logPath, SG_ALL, fileLogLevel);
