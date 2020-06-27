@@ -315,3 +315,20 @@ void FPNasalTests::testAirwaysAPI()
 
     CPPUNIT_ASSERT(ok);
 }
+
+void FPNasalTests::testTotalDistanceAPI()
+{
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan();
+        fp.departure = airportinfo("BIKF");
+        fp.destination = airportinfo("EGLL");
+        unitTest.assert_doubles_equal(1025.9, fp.totalDistanceNm, 0.1, "Distance assertion failed");
+    )");
+
+    CPPUNIT_ASSERT(ok);
+
+    auto fp = rm->flightPlan();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp->totalDistanceNm(), 1025.9, 0.1);
+}

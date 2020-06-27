@@ -632,6 +632,8 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
         *out = naNum(fp->indexOfFirstApproachWaypoint());
     else if (!strcmp(fieldName, "destination_runway_leg"))
         *out = naNum(fp->indexOfDestinationRunwayWaypoint());
+    else if (!strcmp(fieldName, "totalDistanceNm"))
+        *out = naNum(fp->totalDistanceNm());
 
     else {
         return nullptr;
