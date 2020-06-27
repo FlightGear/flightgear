@@ -292,3 +292,43 @@ void FPNasalTests::testApproachTransitionAPIWithCloning()
     CPPUNIT_ASSERT_EQUAL(string{"ILS06"}, fp2->approach()->ident());
     CPPUNIT_ASSERT_EQUAL(string{"SUG2A"}, fp2->approachTransition()->ident());
 }
+
+void FPNasalTests::testAirwaysAPI()
+{
+    bool ok = FGTestApi::executeNasal(R"(
+        var airwayIdent = "L620";
+        var airwayStore = airway(airwayIdent);
+        unitTest.assert(airwayStore != nil, "Airway " ~ airwayIdent ~ " not found");
+        unitTest.assert(airwayStore.id == airwayIdent, "Incorrect airway found");
+        
+        airwayIdent = "UL620";
+        var cln = findNavaidsByID("CLN")[0];
+        airwayStore = airway(airwayIdent, cln);
+        unitTest.assert(airwayStore != nil, "Airway " ~ airwayIdent ~ " not found");
+        unitTest.assert(airwayStore.id == airwayIdent, "Incorrect airway found");
+        
+        airwayIdent = "J547";
+        airwayStore = airway(airwayIdent);
+        unitTest.assert(airwayStore != nil, "Airway " ~ airwayIdent ~ " not found");
+        unitTest.assert(airwayStore.id == airwayIdent, "Incorrect airway found");
+    )");
+
+    CPPUNIT_ASSERT(ok);
+}
+
+void FPNasalTests::testTotalDistanceAPI()
+{
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan();
+        fp.departure = airportinfo("BIKF");
+        fp.destination = airportinfo("EGLL");
+        unitTest.assert_doubles_equal(1025.9, fp.totalDistanceNm, 0.1, "Distance assertion failed");
+    )");
+
+    CPPUNIT_ASSERT(ok);
+
+    auto fp = rm->flightPlan();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(fp->totalDistanceNm(), 1025.9, 0.1);
+}
