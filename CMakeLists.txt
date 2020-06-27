@@ -89,7 +89,7 @@ set(CMAKE_RELWITHDEBINFO_POSTFIX ""  CACHE STRING "add a postfix, usually empty 
 set(CMAKE_MINSIZEREL_POSTFIX     ""  CACHE STRING "add a postfix, usually empty on windows")
 
 # read 'version' file into a variable (stripping any newlines or spaces)
-file(READ version versionFile)
+file(READ flightgear-version versionFile)
 if (NOT versionFile)
     message(FATAL_ERROR "Unable to determine FlightGear version. Version file is missing.")
 endif()
