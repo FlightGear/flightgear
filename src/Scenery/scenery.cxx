@@ -71,7 +71,7 @@ class FGGroundPickCallback : public SGPickCallback {
 public:
   FGGroundPickCallback() : SGPickCallback(PriorityScenery)
   { }
-    
+
   virtual bool buttonPressed( int button,
                               const osgGA::GUIEventAdapter&,
                               const Info& info )
@@ -280,31 +280,39 @@ public:
     maskNode->getChild("models", 0, true)->addChangeListener(this, true);
     maskNode->getChild("aircraft", 0, true)->addChangeListener(this, true);
     maskNode->getChild("clouds", 0, true)->addChangeListener(this, true);
-    
+
     // legacy compatability option
     fgGetNode("/sim/rendering/draw-otw")->addChangeListener(this);
-    
+
     // badly named property, this is what is set by --enable/disable-clouds
     fgGetNode("/environment/clouds/status")->addChangeListener(this);
+
+    auto vpb_active = fgGetNode("/scenery/use-vpb");
+    vpb_active->addChangeListener(this);
+    SGSceneFeatures::instance()->setVPBActive(vpb_active->getBoolValue());
+    // SGSceneFeatures::instance()->setVPBActive(true);
   }
-  
+
   ~ScenerySwitchListener()
   {
     SGPropertyNode_ptr maskNode = fgGetNode("/sim/rendering/draw-mask");
     for (int i=0; i < maskNode->nChildren(); ++i) {
       maskNode->getChild(i)->removeChangeListener(this);
     }
-    
+
     fgGetNode("/sim/rendering/draw-otw")->removeChangeListener(this);
     fgGetNode("/environment/clouds/status")->removeChangeListener(this);
+    fgGetNode("/scenery/use-vpb")->removeChangeListener(this);
   }
-  
+
   virtual void valueChanged (SGPropertyNode * node)
   {
     bool b = node->getBoolValue();
     std::string name(node->getNameString());
-  
-    if (name == "terrain") {
+
+    if (name == "use-vpb") {
+        SGSceneFeatures::instance()->setVPBActive(b);
+    } else if (name == "terrain") {
       _scenery->scene_graph->setChildValue(_scenery->terrain_branch, b);
     } else if (name == "models") {
       _scenery->scene_graph->setChildValue(_scenery->models_branch, b);
@@ -346,7 +354,7 @@ FGScenery::~FGScenery()
 
 
 // Initialize the Scenery Management system
-void FGScenery::init() {    
+void FGScenery::init() {
     // Already set up.
     if (_inited)
         return;
@@ -377,17 +385,17 @@ void FGScenery::init() {
 // FGODGuage::set_aircraft_texture.
     interior_branch = new osg::Group;
     interior_branch->setName( "Interior" );
-    
+
     osg::LOD* interiorLOD = new osg::LOD;
     interiorLOD->addChild(interior_branch.get(), 0.0, 50.0);
     aircraft_branch->addChild( interiorLOD );
-    
+
     // Set up the particle system as a directly accessible branch of the scene graph.
     particles_branch = simgear::Particles::getCommonRoot();
     particles_branch->setName("Particles");
     scene_graph->addChild(particles_branch.get());
     simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
-  
+
     // Set up the precipitation system.
     precipitation_branch = new osg::Group;
     precipitation_branch->setName("Precipitation");
@@ -422,7 +430,7 @@ void FGScenery::reinit()
 void FGScenery::shutdown()
 {
     _terrain->shutdown();
-    
+
     scene_graph = NULL;
     terrain_branch = NULL;
     models_branch = NULL;
@@ -436,7 +444,7 @@ void FGScenery::shutdown()
 
 
 void FGScenery::update(double dt)
-{    
+{
     _terrain->update(dt);
 }
 
@@ -461,7 +469,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
                            const simgear::BVHMaterial** material,
                            const osg::Node* butNotFrom)
 {
-    return _terrain->get_elevation_m( geod, alt, material, 
+    return _terrain->get_elevation_m( geod, alt, material,
                                       butNotFrom );
 }
 
@@ -482,7 +490,7 @@ bool FGScenery::schedule_scenery(const SGGeod& position, double range_m, double 
 {
     return _terrain->schedule_scenery( position, range_m, duration );
 }
-    
+
 void FGScenery::materialLibChanged()
 {
     _terrain->materialLibChanged();
