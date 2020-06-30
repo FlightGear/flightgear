@@ -101,6 +101,8 @@ private:
      */
     PathList additional_data_paths;
 
+    PathList _dataPathsAfterFGRoot; ///< paths with a /lower/ prioirty than FGRoot
+
     // Users home directory for data
     SGPath fg_home;
 
@@ -214,7 +216,7 @@ public:
      */
     PathList get_data_paths(const std::string& suffix) const;
 
-    void append_data_path(const SGPath& path);
+    void append_data_path(const SGPath& path, bool afterFGRoot = false);
 
     /**
      * Given a path suffix (eg 'Textures' or 'AI/Traffic'), find the

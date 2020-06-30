@@ -173,7 +173,7 @@ static void initTerrasync()
     // add the terrasync root as a data path so data can be retrieved from it
     // (even if we are in read-only mode)
     SGPath terraSyncDir(globals->get_terrasync_dir());
-    globals->append_data_path(terraSyncDir);
+    globals->append_data_path(terraSyncDir, false /* = ahead of FG_ROOT */);
 
     if (fgGetBool("/sim/fghome-readonly", false)) {
         return;

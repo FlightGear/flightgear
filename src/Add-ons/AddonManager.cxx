@@ -204,9 +204,16 @@ AddonManager::registerAddon(const SGPath& addonPath)
   string msg = "Registered add-on '" + addon->getName() + "' (" + addonId +
                ") version " + addonVersion(addonId)->str() + "; "
                "base path is '" + addonRealPath.utf8Str() + "'";
-  // This preserves the registration order
-  _registeredAddons.push_back(std::move(addon));
-  SG_LOG(SG_GENERAL, SG_INFO, msg);
+
+  auto dataPath = addonRealPath / "FGData";
+  if (dataPath.exists()) {
+      SG_LOG(SG_GENERAL, SG_INFO, "Registering data path for add-on: " << addon->getName());
+      globals->append_data_path(dataPath, true /* after FG_ROOT */);
+  }
+    
+    // This preserves the registration order
+    _registeredAddons.push_back(addon);
+    SG_LOG(SG_GENERAL, SG_INFO, msg);
 
   return addonId;
 }
