@@ -208,6 +208,12 @@ AddonManager::registerAddon(const SGPath& addonPath)
   _registeredAddons.push_back(std::move(addon));
   SG_LOG(SG_GENERAL, SG_INFO, msg);
 
+  auto dataPath = addonRealPath / "FGData";
+  if (dataPath.exists()) {
+      SG_LOG(SG_GENERAL, SG_INFO, "Registering data path for add-on:" << addon->getName());
+      globals->append_data_path(dataPath, true /* after FG_ROOT */);
+  }
+
   return addonId;
 }
 

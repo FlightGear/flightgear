@@ -728,6 +728,20 @@ fgOptAddon(const char *arg)
 }
 
 static int
+fgOptAdditionalDataDir(const char* arg)
+{
+    const SGPath dataPath = SGPath::fromUtf8(arg);
+    if (!dataPath.exists()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "--data path not found:" << dataPath);
+        flightgear::fatalMessageBoxWithoutExit("FlightGear", "Data path not found");
+        return FG_OPTIONS_EXIT;
+    }
+
+    globals->append_data_path(dataPath, false /* = before FG_ROOT */);
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptVOR( const char * arg )
 {
     clearLocation();
@@ -1821,6 +1835,7 @@ struct OptionDesc {
     {"flight-plan",                  true,  OPTION_STRING,   "/autopilot/route-manager/file-path", false, "", NULL },
     {"config",                       true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"addon",                        true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptAddon },
+    {"data",                         true,  OPTION_FUNC | OPTION_MULTI, "", false, "", fgOptAdditionalDataDir },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },

@@ -302,6 +302,7 @@ PathList FGGlobals::get_data_paths() const
 {
     PathList r(additional_data_paths);
     r.push_back(fg_root);
+    r.insert(r.end(), _dataPathsAfterFGRoot.begin(), _dataPathsAfterFGRoot.end());
     return r;
 }
 
@@ -318,13 +319,23 @@ PathList FGGlobals::get_data_paths(const std::string& suffix) const
     return r;
 }
 
-void FGGlobals::append_data_path(const SGPath& path)
+void FGGlobals::append_data_path(const SGPath& path, bool afterFGRoot)
 {
     if (!path.exists()) {
         SG_LOG(SG_GENERAL, SG_WARN, "adding non-existant data path:" << path);
     }
 
-    additional_data_paths.push_back(path);
+    using RM = simgear::ResourceManager;
+    auto resManager = RM::instance();
+    if (afterFGRoot) {
+        _dataPathsAfterFGRoot.push_back(path);
+        // after FG_ROOT
+        resManager->addBasePath(path, static_cast<RM::Priority>(RM::PRIORITY_DEFAULT - 10));
+    } else {
+        additional_data_paths.push_back(path);
+        // after NORMAL prioirty, but ahead of FG_ROOT
+        resManager->addBasePath(path, static_cast<RM::Priority>(RM::PRIORITY_DEFAULT + 10));
+    }
 }
 
 SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
@@ -342,8 +353,15 @@ SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
         return rootPath;
     }
 
-    SG_LOG(SG_GENERAL, SG_WARN, "dir not found in any data path:" << pathSuffix);
-    return SGPath();
+    for (SGPath p : _dataPathsAfterFGRoot) {
+        p.append(pathSuffix);
+        if (p.exists()) {
+            return p;
+        }
+    }
+
+    SG_LOG(SG_IO, SG_WARN, "dir not found in any data path:" << pathSuffix);
+    return SGPath{};
 }
 
 void FGGlobals::append_fg_scenery (const PathList &paths)
