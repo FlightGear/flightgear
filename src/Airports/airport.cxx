@@ -354,22 +354,52 @@ FGTaxiwayList FGAirport::getTaxiways() const
 //------------------------------------------------------------------------------
 unsigned int FGAirport::numPavements() const
 {
-  loadTaxiways();
   return mPavements.size();
-}
-
-//------------------------------------------------------------------------------
-FGPavementRef FGAirport::getPavementByIndex(unsigned int aIndex) const
-{
-  loadTaxiways();
-  return loadById<FGPavement>(mPavements, aIndex);
 }
 
 //------------------------------------------------------------------------------
 FGPavementList FGAirport::getPavements() const
 {
-  loadTaxiways();
-  return loadAllById<FGPavement>(mPavements);
+  return mPavements;
+}
+
+void FGAirport::addPavement(FGPavementRef pavement)
+{
+  mPavements.push_back(pavement);
+}
+
+//------------------------------------------------------------------------------
+unsigned int FGAirport::numBoundary() const
+{
+  return mBoundary.size();
+}
+
+//------------------------------------------------------------------------------
+FGPavementList FGAirport::getBoundary() const
+{
+  return mBoundary;
+}
+
+void FGAirport::addBoundary(FGPavementRef boundary)
+{
+  mBoundary.push_back(boundary);
+}
+
+//------------------------------------------------------------------------------
+unsigned int FGAirport::numLineFeatures() const
+{
+  return mLineFeatures.size();
+}
+
+//------------------------------------------------------------------------------
+FGPavementList FGAirport::getLineFeatures() const
+{
+  return mLineFeatures;
+}
+
+void FGAirport::addLineFeature(FGPavementRef linefeature)
+{
+  mLineFeatures.push_back(linefeature);
 }
 
 //------------------------------------------------------------------------------
@@ -1001,7 +1031,7 @@ Transition *FGAirport::selectSIDByTransition(const FGRunway* runway,  const stri
     for (auto sid : mSIDs) {
         if (runway && !sid->isForRunway(runway))
             continue;
-        
+
         auto trans = sid->findTransitionByName(aIdent);
         if (trans) {
             return trans;
@@ -1028,7 +1058,7 @@ Transition *FGAirport::selectSTARByTransition(const FGRunway* runway, const stri
     for (auto star : mSTARs) {
         if (runway && !star->isForRunway(runway))
             continue;
-        
+
         auto trans = star->findTransitionByName(aIdent);
         if (trans) {
             return trans;

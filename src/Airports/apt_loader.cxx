@@ -30,6 +30,7 @@
 
 #include <simgear/compiler.h>
 
+#include <algorithm>
 #include <stdlib.h> // atof(), atoi()
 #include <string.h> // memchr()
 #include <ctype.h> // isspace()
@@ -225,74 +226,12 @@ void APTLoader::loadAirports()
        it != airportInfoMap.end(); it++) {
     // Full path to the apt.dat file this airport info comes from
     const string aptDat = it->second.file.utf8Str();
-    last_apt_id = it->first;    // this is just the current airport identifier
-    // The first line for this airport was already split over whitespace, but
-    // remains to be parsed for the most part.
-    parseAirportLine(it->second.rowCode, it->second.firstLineTokens);
-    const LinesList& lines = it->second.otherLines;
 
-    // Loop over the second and subsequent lines
-    for (LinesList::const_iterator linesIt = lines.begin();
-         linesIt != lines.end(); linesIt++) {
-      // Beware that linesIt->str may end with an '\r' character, see above!
-      unsigned int rowCode = linesIt->rowCode;
+    // this is just the current airport identifier
+    last_apt_id = it->first;
+    RawAirportInfo rawinfo = it->second;
 
-      if ( rowCode == 10 ) { // Runway v810
-        parseRunwayLine810(aptDat, linesIt->number,
-                           simgear::strutils::split(linesIt->str));
-      } else if ( rowCode == 100 ) { // Runway v850
-        parseRunwayLine850(aptDat, linesIt->number,
-                           simgear::strutils::split(linesIt->str));
-      } else if ( rowCode == 101 ) { // Water Runway v850
-        parseWaterRunwayLine850(aptDat, linesIt->number,
-                                simgear::strutils::split(linesIt->str));
-      } else if ( rowCode == 102 ) { // Helipad v850
-        parseHelipadLine850(aptDat, linesIt->number,
-                            simgear::strutils::split(linesIt->str));
-      } else if ( rowCode == 18 ) {
-        // beacon entry (ignore)
-      } else if ( rowCode == 14 ) {  // Viewpoint/control tower
-        parseViewpointLine(aptDat, linesIt->number,
-                           simgear::strutils::split(linesIt->str));
-      } else if ( rowCode == 19 ) {
-        // windsock entry (ignore)
-      } else if ( rowCode == 20 ) {
-        // Taxiway sign (ignore)
-      } else if ( rowCode == 21 ) {
-        // lighting objects (ignore)
-      } else if ( rowCode == 15 ) {
-        // custom startup locations (ignore)
-      } else if ( rowCode == 0 ) {
-        // ??
-      } else if ( rowCode >= 50 && rowCode <= 56) {
-        parseCommLine(aptDat, linesIt->number, rowCode,
-                      simgear::strutils::split(linesIt->str));
-      } else if ( rowCode == 110 ) {
-        pavement = true;
-        parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
-      } else if ( rowCode >= 111 && rowCode <= 114 ) {
-        if ( pavement )
-          parsePavementNodeLine850(aptDat, linesIt->number, rowCode,
-                                   simgear::strutils::split(linesIt->str));
-      } else if ( rowCode >= 115 && rowCode <= 116 ) {
-        // other pavement nodes (ignore)
-      } else if ( rowCode == 120 ) {
-        pavement = false;
-      } else if ( rowCode == 130 ) {
-        pavement = false;
-      } else if ( rowCode >= 1000 ) {
-        // airport traffic flow (ignore)
-      } else {
-        std::ostringstream oss;
-        string cleanedLine = cleanLine(linesIt->str);
-        oss << aptDat << ":" << linesIt->number << ": unknown row code " <<
-          rowCode;
-        SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")" );
-        throw sg_format_exception(oss.str(), cleanedLine);
-      }
-    } // of loop over the second and subsequent apt.dat lines for the airport
-
-    finishAirport(aptDat);
+    loadAirport(aptDat, last_apt_id, &rawinfo);
     nbLoadedAirports++;
 
     if ((nbLoadedAirports % 300) == 0) {
@@ -306,6 +245,140 @@ void APTLoader::loadAirports()
   SG_LOG( SG_GENERAL, SG_INFO,
           "Loaded data for " << nbLoadedAirports << " airports" );
 }
+
+// Parse and return specific apt.dat file containing a single airport.
+const FGAirport* APTLoader::loadAirportFromFile(std::string id, const SGPath& aptdb_file)
+{
+  std::size_t bytesReadSoFar = 10;
+  std::size_t totalSizeOfAllAptDatFiles = 100;
+
+  readAptDatFile(aptdb_file.str(), bytesReadSoFar, totalSizeOfAllAptDatFiles);
+
+  RawAirportInfo rawInfo = airportInfoMap[id];
+  return loadAirport(aptdb_file.c_str(), id, &rawInfo, true);
+}
+
+const FGAirport* APTLoader::loadAirport(const string aptDat, const std::string airportID, RawAirportInfo* airport_info, bool createFGAirport)
+{
+  // The first line for this airport was already split over whitespace, but
+  // remains to be parsed for the most part.
+  parseAirportLine(airport_info->rowCode, airport_info->firstLineTokens);
+  const LinesList& lines = airport_info->otherLines;
+
+  NodeBlock current_block = None;
+
+  // Loop over the second and subsequent lines
+  for (LinesList::const_iterator linesIt = lines.begin();
+       linesIt != lines.end(); linesIt++) {
+    // Beware that linesIt->str may end with an '\r' character, see above!
+    unsigned int rowCode = linesIt->rowCode;
+
+    if ( rowCode == 10 ) { // Runway v810
+      parseRunwayLine810(aptDat, linesIt->number,
+                         simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 100 ) { // Runway v850
+      parseRunwayLine850(aptDat, linesIt->number,
+                         simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 101 ) { // Water Runway v850
+      parseWaterRunwayLine850(aptDat, linesIt->number,
+                              simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 102 ) { // Helipad v850
+      parseHelipadLine850(aptDat, linesIt->number,
+                          simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 18 ) {
+      // beacon entry (ignore)
+    } else if ( rowCode == 14 ) {  // Viewpoint/control tower
+      parseViewpointLine(aptDat, linesIt->number,
+                         simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 19 ) {
+      // windsock entry (ignore)
+    } else if ( rowCode == 20 ) {
+      // Taxiway sign (ignore)
+    } else if ( rowCode == 21 ) {
+      // lighting objects (ignore)
+    } else if ( rowCode == 15 ) {
+      // custom startup locations (ignore)
+    } else if ( rowCode == 0 ) {
+      // ??
+    } else if ( rowCode >= 50 && rowCode <= 56) {
+      parseCommLine(aptDat, linesIt->number, rowCode,
+                    simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 110 ) {
+      current_block = Pavement;
+      parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
+    } else if ( rowCode >= 111 && rowCode <= 116 ) {
+      switch(current_block) {
+        case Pavement :
+          parseNodeLine850(&pavements, aptDat, linesIt->number, rowCode,
+                                   simgear::strutils::split(linesIt->str));
+          break;
+        case AirportBoundary :
+          parseNodeLine850(&airport_boundary, aptDat, linesIt->number, rowCode,
+                                          simgear::strutils::split(linesIt->str));
+          break;
+        case LinearFeature :
+          parseNodeLine850(&linear_feature, aptDat, linesIt->number, rowCode,
+                                        simgear::strutils::split(linesIt->str));
+          break;
+        default :
+        case None :
+          std::ostringstream oss;
+          string cleanedLine = cleanLine(linesIt->str);
+          oss << aptDat << ":" << linesIt->number << ": unexpected row code " <<
+            rowCode;
+          SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")" );
+          throw sg_format_exception(oss.str(), cleanedLine);
+          break;
+      }
+    } else if ( rowCode == 120 ) {
+      current_block = LinearFeature;
+    } else if ( rowCode == 130 ) {
+      current_block = AirportBoundary;
+    } else if ( rowCode >= 1000 ) {
+      // airport traffic flow (ignore)
+    } else {
+      std::ostringstream oss;
+      string cleanedLine = cleanLine(linesIt->str);
+      oss << aptDat << ":" << linesIt->number << ": unknown row code " <<
+        rowCode;
+      SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")" );
+      throw sg_format_exception(oss.str(), cleanedLine);
+    }
+  } // of loop over the second and subsequent apt.dat lines for the airport
+
+  finishAirport(aptDat);
+
+  if (createFGAirport) {
+    FGAirportRef airport = FGAirport::findByIdent(airportID);
+
+    std::for_each(
+      pavements.begin(),
+      pavements.end(),
+      [airport] (FGPavementRef p) { airport->addPavement(p); } );
+
+    std::for_each(
+      airport_boundary.begin(),
+      airport_boundary.end(),
+      [airport] (FGPavementRef p) { airport->addBoundary(p); } );
+
+    std::for_each(
+      linear_feature.begin(),
+      linear_feature.end(),
+      [airport] (FGPavementRef p) { airport->addLineFeature(p); } );
+
+    pavements.clear();
+    airport_boundary.clear();
+    linear_feature.clear();
+
+
+    return airport;
+
+  } else {
+    // No FGAirport requested
+    return NULL;
+  }
+}
+
 
 // Tell whether an apt.dat line is blank or a comment line
 bool APTLoader::isBlankOrCommentLine(const std::string& line)
@@ -482,6 +555,11 @@ void APTLoader::parseRunwayLine850(const string& aptDat, unsigned int lineNum,
 
   double width = atof( token[1].c_str() );
   int surface_code = atoi( token[2].c_str() );
+  int shoulder_code = atoi( token[3].c_str() );
+  float smoothness = atof( token[4].c_str() );
+  int center_lights = atoi( token[5].c_str() );
+  int edge_lights = atoi( token[6].c_str() );
+  int distance_remaining = atoi( token[7].c_str() );
 
   double lat_1 = atof( token[9].c_str() );
   double lon_1 = atof( token[10].c_str() );
@@ -513,17 +591,33 @@ void APTLoader::parseRunwayLine850(const string& aptDat, unsigned int lineNum,
   double stopway1 = atof( token[12].c_str() );
   double stopway2 = atof( token[21].c_str() );
 
+  int markings1 = atoi( token[13].c_str() );
+  int markings2 = atoi( token[22].c_str() );
+
+  int approach1 = atoi( token[14].c_str() );
+  int approach2 = atoi( token[23].c_str() );
+
+  int tdz1 = atoi( token[15].c_str() );
+  int tdz2 = atoi( token[24].c_str() );
+
+  int reil1 = atoi( token[16].c_str() );
+  int reil2 = atoi( token[25].c_str() );
+
   PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos_1,
                                          currentAirportPosID, heading_1, length,
-                                         width, displ_thresh1, stopway1,
-                                         surface_code);
+                                         width, displ_thresh1, stopway1, markings1,
+                                         approach1, tdz1, reil1,
+                                         surface_code, shoulder_code, smoothness,
+                                         center_lights, edge_lights, distance_remaining);
 
   PositionedID reciprocal = cache->insertRunway(
     FGPositioned::RUNWAY,
     rwy_no_2, pos_2,
     currentAirportPosID, heading_2, length,
-    width, displ_thresh2, stopway2,
-    surface_code);
+    width, displ_thresh2, stopway2, markings2,
+    approach2, tdz2, reil2,
+    surface_code, shoulder_code, smoothness,
+    center_lights, edge_lights, distance_remaining);
 
   cache->setRunwayReciprocal(rwy, reciprocal);
 }
@@ -563,9 +657,11 @@ void APTLoader::parseWaterRunwayLine850(const string& aptDat,
   const string& rwy_no_1(token[3]);
   const string& rwy_no_2(token[6]);
 
+  // For water runways we overload the edge_lights to indicate use of buoys,
+  // as they too will be objects.  Also, water runways don't have edge lights.
   PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no_1, pos_1,
                                          currentAirportPosID, heading_1, length,
-                                         width, 0.0, 0.0, 13);
+                                         width, 0.0, 0.0, 0, 0, 0, 0, 13, 0, 1.0, 0, 1, 0);
 
   PositionedID reciprocal = cache->insertRunway(
     FGPositioned::RUNWAY,
@@ -602,10 +698,15 @@ void APTLoader::parseHelipadLine850(const string& aptDat, unsigned int lineNum,
 
   const string& rwy_no(token[1]);
   int surface_code = atoi( token[7].c_str() );
+  int markings = atoi( token[8].c_str() );
+  int shoulder_code = atoi( token[9].c_str() );
+  float smoothness = atof( token[10].c_str() );
+  int edge_lights = atoi( token[11].c_str() );
 
   cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos,
-                      currentAirportPosID, heading, length,
-                      width, 0.0, 0.0, surface_code);
+    currentAirportPosID, heading, length,
+    width, 0.0, 0.0, markings, 0, 0, 0,
+    surface_code, shoulder_code, smoothness, 0, edge_lights, 0);
 }
 
 void APTLoader::parseViewpointLine(const string& aptDat, unsigned int lineNum,
@@ -636,12 +737,13 @@ void APTLoader::parsePavementLine850(const vector<string>& token)
   }
 }
 
-void APTLoader::parsePavementNodeLine850(const string& aptDat,
-                                         unsigned int lineNum, int rowCode,
-                                         const vector<string>& token)
+void APTLoader::parseNodeLine850(NodeList *nodelist,
+                                 const string& aptDat,
+                                 unsigned int lineNum, int rowCode,
+                                 const vector<string>& token)
 {
-  static const unsigned int minNbTokens[] = {3, 5, 3, 5};
-  assert(111 <= rowCode && rowCode <= 114);
+  static const unsigned int minNbTokens[] = {3, 5, 3, 5, 3, 5};
+  assert(111 <= rowCode && rowCode <= 116);
 
   if (token.size() < minNbTokens[rowCode-111]) {
     SG_LOG( SG_GENERAL, SG_WARN,
@@ -656,20 +758,37 @@ void APTLoader::parsePavementNodeLine850(const string& aptDat,
   SGGeod pos(SGGeod::fromDegFt(lon, lat, 0.0));
 
   FGPavement* pvt = 0;
-  if ( !pavement_ident.empty() ) {
+  if (( !pavement_ident.empty() ) || ( nodelist->size() == 0 )) {
     pvt = new FGPavement( 0, pavement_ident, pos );
-    pavements.push_back( pvt );
+    nodelist->push_back( pvt );
     pavement_ident = "";
   } else {
-    pvt = pavements.back();
+    pvt = nodelist->back();
   }
-  if ( rowCode == 112 || rowCode == 114 ) {
+
+  int paintCode = 0;
+  int lightCode = 0;
+
+  // Line information.  The 2nd last token is the painted line type. Last token
+  // is the light type of the segment.  Only applicable to codes 111-114.
+  if ((rowCode < 115) && (token.size() == (minNbTokens[rowCode-111] + 1))) {
+    // We've got a line paint code but no lighting code
+    paintCode = atoi(token[minNbTokens[rowCode-111]].c_str());
+  }
+
+  if ((rowCode < 115) && (token.size() == (minNbTokens[rowCode-111] + 2))) {
+    // We've got a line paint code and a lighting code
+    paintCode = atoi(token[minNbTokens[rowCode-111] -1].c_str());
+    lightCode = atoi(token[minNbTokens[rowCode-111]].c_str());
+  }
+
+  if ((rowCode == 112) || (rowCode == 114) || (rowCode == 116)) {
     double lat_b = atof( token[3].c_str() );
     double lon_b = atof( token[4].c_str() );
     SGGeod pos_b(SGGeod::fromDegFt(lon_b, lat_b, 0.0));
-    pvt->addBezierNode(pos, pos_b, rowCode == 114);
+    pvt->addBezierNode(pos, pos_b, (rowCode == 114) || (rowCode == 116), (rowCode == 114), paintCode, lightCode);
   } else {
-    pvt->addNode(pos, rowCode == 113);
+    pvt->addNode(pos, (rowCode == 113) || (rowCode == 115), (rowCode == 113), paintCode, lightCode);
   }
 }
 

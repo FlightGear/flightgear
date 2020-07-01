@@ -55,7 +55,7 @@ namespace Octree {
 
     class Airway;
     using AirwayRef = SGSharedPtr<Airway>;
-    
+
 class NavDataCache
 {
 public:
@@ -160,10 +160,20 @@ public:
   PositionedID insertAirport(FGPositioned::Type ty, const std::string& ident,
                              const std::string& name);
   void insertTower(PositionedID airportId, const SGGeod& pos);
-  PositionedID insertRunway(FGPositioned::Type ty, const std::string& ident,
-                          const SGGeod& pos, PositionedID apt,
-                          double heading, double length, double width, double displacedThreshold,
-                          double stopway, int surfaceCode);
+
+
+  PositionedID insertRunway(FGPositioned::Type ty, const string& ident,
+                             const SGGeod& pos, PositionedID apt,
+                             double heading, double length, double width, double displacedThreshold,
+                             double stopway, int markings, int approach, int tdz, int reil,
+                             int surfaceCode, int shoulder_code, float smoothness, int center_lights,
+                             int edge_lights, int distance_remaining);
+
+  PositionedID insertRunway(FGPositioned::Type ty, const string& ident,
+                            const SGGeod& pos, PositionedID apt,
+                            double heading, double length, double width, double displacedThreshold,
+                            double stopway, int surfaceCode);
+
   void setRunwayReciprocal(PositionedID runway, PositionedID recip);
   void setRunwayILS(PositionedID runway, PositionedID ils);
 
@@ -291,9 +301,9 @@ public:
    * in an airway
    */
   AirwayEdgeVec airwayEdgesFrom(int network, PositionedID pos);
-    
+
     AirwayRef loadAirway(int airwayID);
-    
+
     /**
      * Waypoints on the airway
      */

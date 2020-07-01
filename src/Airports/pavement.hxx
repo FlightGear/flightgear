@@ -1,4 +1,4 @@
-// pavement.hxx - class to represent complex taxiway specified in v850 apt.dat 
+// pavement.hxx - class to represent complex taxiway specified in v850 apt.dat
 //
 // Copyright (C) 2009 Frederic Bouvier
 //
@@ -38,21 +38,30 @@ public:
   {
     SGGeod mPos;
     bool mClose;
+    bool mLoop;
+    int mPaintCode;
+    int mLightCode;
     virtual ~NodeBase(){} // To enable RTTI
   };
-  struct SimpleNode : public NodeBase //111,113
+  struct SimpleNode : public NodeBase //111,113,115
   {
-    SimpleNode(const SGGeod &aPos, bool aClose) {
+    SimpleNode(const SGGeod &aPos, bool aClose, bool aLoop, int aPaintCode, int aLightCode) {
       mPos = aPos;
       mClose = aClose;
+      mLoop = aLoop;
+      mPaintCode = aPaintCode;
+      mLightCode = aLightCode;
     }
   };
-  struct BezierNode : public NodeBase //112,114
+  struct BezierNode : public NodeBase //112,114,116
   {
-    BezierNode(const SGGeod &aPos, const SGGeod &aCtrlPt, bool aClose) {
+    BezierNode(const SGGeod &aPos, const SGGeod &aCtrlPt, bool aClose, bool aLoop, int aPaintCode, int aLightCode) {
       mPos = aPos;
       mClose = aClose;
+      mLoop = aLoop;
       mControl = aCtrlPt;
+      mPaintCode = aPaintCode;
+      mLightCode = mLightCode;
     }
     SGGeod mControl;
   };
@@ -61,8 +70,8 @@ public:
 
   FGPavement(PositionedID aGuid, const std::string& aIdent, const SGGeod& aPos);
 
-  void addNode(const SGGeod &aPos, bool aClose = false);
-  void addBezierNode(const SGGeod &aPos, const SGGeod &aCtrlPt, bool aClose = false);
+  void addNode(const SGGeod &aPos, bool aClose = false, bool aLoop = false, int paintCode = 0, int lightCode = 0);
+  void addBezierNode(const SGGeod &aPos, const SGGeod &aCtrlPt, bool aClose = false, bool aLoop = false, int paintCode = 0, int lightCode = 0);
 
   const NodeList &getNodeList() const { return mNodes; }
 

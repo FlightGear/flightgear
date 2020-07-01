@@ -1816,7 +1816,9 @@ PositionedID
 NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
                            const SGGeod& pos, PositionedID apt,
                            double heading, double length, double width, double displacedThreshold,
-                           double stopway, int surfaceCode)
+                           double stopway, int markings, int approach, int tdz, int reil,
+                           int surfaceCode, int shoulder_code, float smoothness, int center_lights,
+                           int edge_lights, int distance_remaining)
 {
   // only runways are spatially indexed; don't bother indexing taxiways
   // or pavements
@@ -1831,8 +1833,29 @@ NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
   sqlite3_bind_int(d->insertRunway, 5, surfaceCode);
   sqlite3_bind_double(d->insertRunway, 6, displacedThreshold);
   sqlite3_bind_double(d->insertRunway, 7, stopway);
+  sqlite3_bind_int(d->insertRunway, 8, markings);
+  sqlite3_bind_int(d->insertRunway, 9,  approach);
+  sqlite3_bind_int(d->insertRunway, 10, tdz);
+  sqlite3_bind_int(d->insertRunway, 11, reil);
+  sqlite3_bind_int(d->insertRunway, 12, shoulder_code);
+  sqlite3_bind_double(d->insertRunway, 13, smoothness);
+  sqlite3_bind_int(d->insertRunway, 14, center_lights);
+  sqlite3_bind_int(d->insertRunway, 15, edge_lights);
+  sqlite3_bind_int(d->insertRunway, 116, distance_remaining);
 
   return d->execInsert(d->insertRunway);
+}
+
+PositionedID
+NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
+                           const SGGeod& pos, PositionedID apt,
+                           double heading, double length, double width, double displacedThreshold,
+                           double stopway, int surfaceCode)
+{
+  return insertRunway(ty, ident, pos, apt,
+                      heading, length, width, displacedThreshold,
+                      stopway, 0, 0, 0, 0,
+                      surfaceCode, 0, 0.0f, 0, 0, 0);
 }
 
 void NavDataCache::setRunwayReciprocal(PositionedID runway, PositionedID recip)

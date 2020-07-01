@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "airport.hxx"
 
 #include <simgear/compiler.h>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -57,6 +58,10 @@ public:
   // navdata cache (even in case of overlapping apt.dat files,
   // 'airportInfoMap' has only one entry per airport).
   void loadAirports();
+
+  // Load a specific airport defined in aptdb_file, and return a "rich" view
+  // of the airport including taxiways, pavement and line features.
+  const FGAirport* loadAirportFromFile(std::string id, const SGPath& aptdb_file);
 
 private:
   struct Line
@@ -88,9 +93,12 @@ private:
 
   typedef std::unordered_map<std::string, RawAirportInfo> AirportInfoMapType;
   typedef SGSharedPtr<FGPavement> FGPavementPtr;
+  typedef std::vector<FGPavementPtr> NodeList;
 
   APTLoader(const APTLoader&);            // disable copy constructor
   APTLoader& operator=(const APTLoader&); // disable copy-assignment operator
+
+  const FGAirport* loadAirport(const string aptDat, const std::string airportID, RawAirportInfo* airport_info, bool createFGAirport=false);
 
   // Tell whether an apt.dat line is blank or a comment line
   bool isBlankOrCommentLine(const std::string& line);
@@ -112,9 +120,11 @@ private:
   void parseViewpointLine(const std::string& aptDat, unsigned int lineNum,
                           const std::vector<std::string>& token);
   void parsePavementLine850(const std::vector<std::string>& token);
-  void parsePavementNodeLine850(
+  void parseNodeLine850(
+    NodeList *nodelist,
     const std::string& aptDat, unsigned int lineNum, int rowCode,
     const std::vector<std::string>& token);
+
   void parseCommLine(
     const std::string& aptDat, unsigned int lineNum, unsigned int rowCode,
     const std::vector<std::string>& token);
@@ -130,12 +140,17 @@ private:
   SGGeod tower;
 
   std::string pavement_ident;
-  bool pavement;
-  std::vector<FGPavementPtr> pavements;
+  NodeList pavements;
+  NodeList airport_boundary;
+  NodeList linear_feature;
 
   // Not an airport identifier in the sense of the apt.dat spec!
   PositionedID currentAirportPosID;
   NavDataCache* cache;
+
+  // Enum to keep track of whether we are tracking a pavement, airport boundary
+  // or linear feature when parsing the file.
+  enum NodeBlock { None, Pavement, AirportBoundary, LinearFeature};
 };
 
 bool metarDataLoad(const SGPath& path);

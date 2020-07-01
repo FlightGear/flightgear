@@ -45,10 +45,10 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
 {
     QVector2D ab(b - a);
     QVector2D ac(p - a);
-    
+
     // Squared length, to avoid a sqrt
     const qreal len2 = ab.lengthSquared();
-    
+
     // Line null, the projection can't exist, we return the first point
     if (qIsNull(len2)) {
         if (outT) {
@@ -56,10 +56,10 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
         }
         return (p - a).length();
     }
-    
+
     // Parametric value of the projection on the line
     const qreal t = (ac.x() * ab.x() + ac.y() * ab.y()) / len2;
-    
+
     if (t < 0.0) {
         // Point is before the first point
         if (outT) {
@@ -76,11 +76,11 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
         if (outT) {
             *outT = t;
         }
-        
+
         const QVector2D proj = a + t * ab;
         return (proj - p).length();
     }
-    
+
     return 0.0;
 }
 
@@ -345,13 +345,13 @@ void AirportDiagram::paintContents(QPainter* p)
         if ((r.runway == runwaySelection) || (r.runway->reciprocalRunway() == runwaySelection)) {
             color = Qt::yellow;
         }
-        
+
         p->setTransform(t);
 
         QPen pen(color);
         pen.setWidth(r.widthM);
         p->setPen(pen);
-        
+
         p->drawLine(r.p1, r.p2);
 
     // draw idents
@@ -361,7 +361,7 @@ void AirportDiagram::paintContents(QPainter* p)
         p->rotate(r.runway->headingDeg());
         // invert scaling factor so we can use screen pixel sizes here
         p->scale(1.0 / m_scale, 1.0/ m_scale);
-        
+
         p->setPen((r.runway == runwaySelection) ? Qt::yellow : Qt::magenta);
         p->drawText(QRect(-100, 5, 200, 200), ident, Qt::AlignHCenter | Qt::AlignTop);
 
@@ -657,8 +657,10 @@ void AirportDiagram::buildTaxiways()
 void AirportDiagram::buildPavements()
 {
     m_pavements.clear();
-    for (unsigned int pIndex=0; pIndex < m_airport->numPavements(); ++pIndex) {
-        FGPavementRef pave = m_airport->getPavementByIndex(pIndex);
+    auto pavementlist = m_airport->getPavements();
+    for (auto pvtiter = pavementlist.begin(); pvtiter != pavementlist.end(); ++pvtiter)
+    {
+        FGPavementRef pave = *pvtiter;
         if (pave->getNodeList().empty()) {
             continue;
         }

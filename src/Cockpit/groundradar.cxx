@@ -79,7 +79,7 @@ GroundRadar::~GroundRadar()
 
 void GroundRadar::update (double /* dt */)
 {
-  
+
 }
 
 void GroundRadar::valueChanged(SGPropertyNode*)
@@ -231,7 +231,7 @@ void GroundRadar::updateTexture()
     const double tower_lat = tower_location.getLatitudeDeg();
     const double tower_lon = tower_location.getLongitudeDeg();
     double scale = SG_METER_TO_NM * 200 / _range_node->getDoubleValue();
-  
+
     const FGAirport* apt = fgFindAirportID(airport_name);
     assert(apt);
 
@@ -248,10 +248,11 @@ void GroundRadar::updateTexture()
     osg::Geometry *pvt_geom = dynamic_cast<osg::Geometry *>(_geode->getDrawable(1));
     osg::Geometry::PrimitiveSetList &pvt_prim_list = pvt_geom->getPrimitiveSetList();
     pvt_prim_list.clear();
-    for (unsigned int i=0; i<apt->numPavements(); ++i)
+
+    auto pavementlist = airport->getPavements();
+    for (auto pvtiter = pavementlist.begin(); pvtiter != pavementlist.end(); ++pvtiter)
     {
-      FGPavement* pvt(apt->getPavementByIndex(i));
-      osg::ref_ptr<osg::Geometry> geom = addPavementGeometry(pvt, tower_lat, tower_lon, scale);
+      osg::ref_ptr<osg::Geometry> geom = addPavementGeometry(*pvtiter, tower_lat, tower_lon, scale);
       osg::Geometry::PrimitiveSetList &prim_list = geom->getPrimitiveSetList();
       osg::Vec3Array *vertices = dynamic_cast<osg::Vec3Array *>(geom->getVertexArray());
       size_t before = pvt_vertices->size(),

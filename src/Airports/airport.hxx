@@ -94,7 +94,7 @@ class FGAirport : public FGPositioned
     FGRunwayRef getActiveRunwayForUsage() const;
 
     FGAirportDynamicsRef getDynamics() const;
-    
+
     FGGroundNetwork* groundNetwork() const;
 
     unsigned int numRunways() const;
@@ -124,7 +124,7 @@ class FGAirport : public FGPositioned
       double ilsWeight;
     };
     FGRunwayRef findBestRunwayForHeading(double aHeading, struct FindBestRunwayForHeadingParams * parms = NULL ) const;
-    
+
     /**
      * return the most likely target runway based on a position.
      * Specifically, return the runway for which the course from aPos
@@ -133,7 +133,7 @@ class FGAirport : public FGPositioned
      * aiming towards.
      */
     FGRunwayRef findBestRunwayForPos(const SGGeod& aPos) const;
-    
+
     /**
      * Retrieve all runways at the airport, but excluding the reciprocal
      * runways. For example at KSFO this might return 1L, 1R, 28L and 28R,
@@ -151,7 +151,7 @@ class FGAirport : public FGPositioned
      * Retrieve all runways at the airport
      */
     FGRunwayList getRunways() const;
-    
+
      /**
      * Useful predicate for FMS/GPS/NAV displays and similar - check if this
      * aiport has a hard-surfaced runway of at least the specified length.
@@ -167,7 +167,17 @@ class FGAirport : public FGPositioned
     unsigned int numPavements() const;
     FGPavementRef getPavementByIndex(unsigned int aIndex) const;
     FGPavementList getPavements() const;
-    
+    void addPavement(FGPavementRef pavement);
+
+    unsigned int numBoundary() const;
+    FGPavementRef getBoundaryIndex(unsigned int aIndex) const;
+    FGPavementList getBoundary() const;
+    void addBoundary(FGPavementRef boundary);
+
+    unsigned int numLineFeatures() const;
+    FGPavementList getLineFeatures() const;
+    void addLineFeature(FGPavementRef linefeature);
+
     class AirportFilter : public Filter
     {
       public:
@@ -187,7 +197,7 @@ class FGAirport : public FGPositioned
           return true;
         }
      };
-     
+
      /**
       * Filter which passes heliports and seaports in addition to airports
       */
@@ -198,18 +208,18 @@ class FGAirport : public FGPositioned
          return SEAPORT;
        }
      };
-     
+
      class HardSurfaceFilter : public AirportFilter
      {
      public:
        HardSurfaceFilter(double minLengthFt = -1);
-       
+
        virtual bool passAirport(FGAirport* aApt) const;
-       
+
      private:
        double mMinLengthFt;
      };
-     
+
      /**
       * Filter which passes specified port type and in case of airport checks
       * if a runway larger the /sim/navdb/min-runway-lenght-ft exists.
@@ -234,11 +244,11 @@ class FGAirport : public FGPositioned
          double _min_runway_length_ft;
      };
 
-     
+
      void setProcedures(const std::vector<flightgear::SID*>& aSids,
       const std::vector<flightgear::STAR*>& aStars,
       const std::vector<flightgear::Approach*>& aApproaches);
-     
+
      void addSID(flightgear::SID* aSid);
       void addSTAR(flightgear::STAR* aStar);
       void addApproach(flightgear::Approach* aApp);
@@ -247,7 +257,7 @@ class FGAirport : public FGPositioned
       flightgear::SID* getSIDByIndex(unsigned int aIndex) const;
       flightgear::SID* findSIDWithIdent(const std::string& aIdent) const;
       flightgear::SIDList getSIDs() const;
-    
+
       flightgear::Transition* selectSIDByEnrouteTransition(FGPositioned* enroute) const;
       flightgear::Transition* selectSIDByTransition(const FGRunway* runway, const std::string& aIdent) const;
 
@@ -255,7 +265,7 @@ class FGAirport : public FGPositioned
       flightgear::STAR* getSTARByIndex(unsigned int aIndex) const;
       flightgear::STAR* findSTARWithIdent(const std::string& aIdent) const;
       flightgear::STARList getSTARs() const;
-    
+
       flightgear::Transition* selectSTARByEnrouteTransition(FGPositioned* enroute) const;
       flightgear::Transition* selectSTARByTransition(const FGRunway* runway, const std::string& aIdent) const;
 
@@ -266,48 +276,48 @@ class FGAirport : public FGPositioned
       (
         flightgear::ProcedureType type = flightgear::PROCEDURE_INVALID
       ) const;
-  
+
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
       * match for filter, and return it cast to FGAirport. The default filter
       * passes airports, but not seaports or heliports
       */
      static FGAirportRef findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter = NULL);
-     
+
      /**
-      * Helper to look up an FGAirport instance by unique ident. Throws an 
+      * Helper to look up an FGAirport instance by unique ident. Throws an
       * exception if the airport could not be found - so callers can assume
       * the result is non-NULL.
       */
      static FGAirportRef getByIdent(const std::string& aIdent);
-     
+
      /**
       * Helper to look up an FGAirport instance by unique ident. Returns NULL
       * if the airport could not be found.
       */
      static FGAirportRef findByIdent(const std::string& aIdent);
-     
+
      /**
       * Specialised helper to implement the AirportList dialog. Performs a
       * case-insensitive search on airport names and ICAO codes, and returns
-      * matches in a format suitable for use by a puaList. 
+      * matches in a format suitable for use by a puaList.
       */
      static char** searchNamesAndIdents(const std::string& aFilter);
-    
-    
+
+
     /**
      * Sort an FGPositionedList of airports by size (number of runways + length)
      * this is meant to prioritise more important airports.
      */
     static void sortBySize(FGPositionedList&);
-    
+
     flightgear::CommStationList commStationsOfType(FGPositioned::Type aTy) const;
-    
+
     flightgear::CommStationList commStations() const;
-    
+
     static void clearAirportsCache();
-    
-    
+
+
 #if defined(BUILDING_TESTSUITE)
     // helper to allow testing without needing a full Airports heirarchy
     void testSuiteInjectGroundnetXML(const SGPath& path);
@@ -318,29 +328,29 @@ private:
     // disable these
     FGAirport operator=(FGAirport &other);
     FGAirport(const FGAirport&);
-  
+
     /**
      * helper to read airport data from the scenery XML files.
      */
     void loadSceneryDefinitions() const;
-    
+
     /**
      * Helpers to process property data loaded from an ICAO.threshold.xml file
      */
     void readThresholdData(SGPropertyNode* aRoot);
     void processThreshold(SGPropertyNode* aThreshold);
-      
+
     void readILSData(SGPropertyNode* aRoot);
-  
+
     void validateTowerData() const;
-    
+
     /**
      * Helper to parse property data loaded from an ICAO.twr.xml file
      */
     void readTowerData(SGPropertyNode* aRoot);
-  
+
     PositionedIDVec itemsOfType(FGPositioned::Type ty) const;
-  
+
     std::string _name;
     bool _has_metar;
 
@@ -348,11 +358,11 @@ private:
     void loadHelipads() const;
     void loadTaxiways() const;
     void loadProcedures() const;
-    
+
     mutable bool mTowerDataLoaded;
     mutable bool mHasTower;
     mutable SGGeod mTowerPosition;
-  
+
     mutable bool mRunwaysLoaded;
     mutable bool mHelipadsLoaded;
     mutable bool mTaxiwaysLoaded;
@@ -362,15 +372,17 @@ private:
     bool mILSDataLoaded;
 
     mutable std::vector<FGRunwayRef> mRunways;
-  
+
     mutable PositionedIDVec mHelipads;
     mutable PositionedIDVec mTaxiways;
-    PositionedIDVec mPavements;
-    
+    std::vector<FGPavementRef> mPavements;
+    std::vector<FGPavementRef> mBoundary;
+    std::vector<FGPavementRef> mLineFeatures;
+
     typedef SGSharedPtr<flightgear::SID> SIDRef;
     typedef SGSharedPtr<flightgear::STAR> STARRef;
     typedef SGSharedPtr<flightgear::Approach> ApproachRef;
-    
+
     std::vector<SIDRef> mSIDs;
     std::vector<STARRef> mSTARs;
     std::vector<ApproachRef> mApproaches;
@@ -385,5 +397,3 @@ const FGAirport *fgFindAirportID( const std::string& id);
 double fgGetAirportElev( const std::string& id );
 
 #endif // _FG_SIMPLE_HXX
-
-
