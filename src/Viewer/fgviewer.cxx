@@ -33,6 +33,9 @@
 
 #include <Scenery/scenery.hxx>
 
+#include <Navaids/NavDataCache.hxx>
+#include <Viewer/renderer_compositor.hxx>
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/options.hxx>
@@ -110,8 +113,10 @@ fgviewerMain(int argc, char** argv)
     osg::ArgumentParser arguments(&argc, argv);
 
     // construct the viewer.
-    osgViewer::Viewer viewer(arguments);
-    osg::Camera* camera = viewer.getCamera();
+    FGRenderer* fgrenderer = new FGRenderer();
+    osgViewer::Viewer* viewer = new osgViewer::Viewer(arguments);
+    fgrenderer->setViewer(viewer);
+    osg::Camera* camera = viewer->getCamera();
     osgViewer::Renderer* renderer
         = static_cast<osgViewer::Renderer*>(camera->getRenderer());
     for (int i = 0; i < 2; ++i) {
@@ -126,7 +131,7 @@ fgviewerMain(int argc, char** argv)
     fog->setDensity(.0000001);
     cameraSS->setAttributeAndModes(fog);
     // ... for some reason, get rid of that FIXME!
-    viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
+    viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 
     // set up the camera manipulators.
     osgGA::KeySwitchMatrixManipulator* keyswitchManipulator;
@@ -140,18 +145,18 @@ fgviewerMain(int argc, char** argv)
                                                new osgGA::DriveManipulator);
     keyswitchManipulator->addMatrixManipulator('4', "Terrain",
                                                new osgGA::TerrainManipulator);
-    viewer.setCameraManipulator(keyswitchManipulator);
+    viewer->setCameraManipulator(keyswitchManipulator);
 
     // Usefull stats
-    viewer.addEventHandler(new osgViewer::HelpHandler);
-    viewer.addEventHandler(new osgViewer::StatsHandler);
-    viewer.addEventHandler( new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()) );
+    viewer->addEventHandler(new osgViewer::HelpHandler);
+    viewer->addEventHandler(new osgViewer::StatsHandler);
+    viewer->addEventHandler( new osgGA::StateSetManipulator(viewer->getCamera()->getOrCreateStateSet()) );
     // Same FIXME ...
-    // viewer.addEventHandler(new osgViewer::ThreadingHandler);
-    viewer.addEventHandler(new osgViewer::LODScaleHandler);
-    viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
+    // viewer->addEventHandler(new osgViewer::ThreadingHandler);
+    viewer->addEventHandler(new osgViewer::LODScaleHandler);
+    viewer->addEventHandler(new osgViewer::ScreenCaptureHandler);
 
-    viewer.addEventHandler(new GraphDumpHandler);
+    viewer->addEventHandler(new GraphDumpHandler);
 
     // Extract files to load from arguments now; this way fgInitConfig
     // won't choke on them.
@@ -168,8 +173,19 @@ fgviewerMain(int argc, char** argv)
     // A subset of full flightgear initialization.
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
-
     globals = new FGGlobals;
+    globals->set_renderer(fgrenderer);
+
+    SGPath dataPath = fgHomePath();
+    globals->set_fg_home(dataPath);
+
+    std::string s;
+    if (arguments.read("--fg-scenery", s)) {
+        globals->append_fg_scenery(SGPath::fromLocal8Bit(s.c_str()));
+    }
+    if (std::getenv("FG_SCENERY")) {
+      globals->append_fg_scenery(SGPath::fromEnv("FG_SCENERY"));
+    }
 
     int configResult = fgInitConfig(arguments.argc(), arguments.argv(), false);
     if (configResult == flightgear::FG_OPTIONS_ERROR) {
@@ -209,9 +225,23 @@ fgviewerMain(int argc, char** argv)
     options->setPropertyNode(globals->get_props());
     options->setPluginStringData("SimGear::PREVIEW", "ON");
 
-    FGScenery* scenery = globals->add_new_subsystem<FGScenery>();
+    // Now init the renderer, as we've got all the options, globals etc.
+    fgrenderer->init();
+
+    FGScenery* scenery = globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
     scenery->init();
     scenery->bind();
+
+    if (! flightgear::NavDataCache::instance()) {
+      flightgear::NavDataCache* cache = flightgear::NavDataCache::createInstance();
+      cache->updateListsOfDatFiles();
+      if (cache->isRebuildRequired()) {
+          while (cache->rebuild() != flightgear::NavDataCache::REBUILD_DONE) {
+            SGTimeStamp::sleepForMSec(1000);
+            std::cerr << "." << std::flush;
+          }
+      }
+    }
 
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
@@ -224,14 +254,14 @@ fgviewerMain(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // pass the loaded scene graph to the viewer.
-    viewer.setSceneData(loadedModel.get());
+    // pass the loaded scene graph to the viewer->
+    viewer->setSceneData(loadedModel.get());
 
-    int result = viewer.run();
-    
+    int result = viewer->run();
+
     // clear cache now, since it contains SimGear objects. Otherwise SG_LOG
     // calls during shutdown will cause crashes.
     osgDB::Registry::instance()->clearObjectCache();
-    
+
     return result;
 }
