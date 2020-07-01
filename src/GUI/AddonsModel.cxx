@@ -84,7 +84,17 @@ QVariant AddonsModel::get(int idx, int role) const
 {
     if (idx >= 0 && idx < m_addonsList.size()) {
         auto path = m_addonsList[idx];
+        if (!m_addonsMap.contains(path)) {
+            if ((role == PathRole) || (role == Qt::DisplayRole)) {
+                return path;
+            }
+
+            return {};
+        }
+
         auto addon = m_addonsMap[path].addon;
+        if (!addon)
+            return {};
 
         if (role == Qt::DisplayRole) {
             QString name = QString::fromStdString(addon->getName());
@@ -198,6 +208,9 @@ void AddonsModel::enable(int index, bool enable)
     }
 
     auto path = m_addonsList[index];
+    if (!m_addonsMap.contains(path))
+        return;
+
     m_addonsMap[path].enable = enable && checkVersion(path);
 
     emit modulesChanged();
@@ -206,6 +219,10 @@ void AddonsModel::enable(int index, bool enable)
 bool AddonsModel::checkVersion(QString path) const
 {
     using namespace simgear;
+
+    if (!m_addonsMap.contains(path)) {
+        return false;
+    }
 
     // Check that the FlightGear version satisfies the add-on requirements
     std::string minFGversion = m_addonsMap[path].addon->getMinFGVersionRequired();
