@@ -21,6 +21,7 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Airports/airport.hxx>
 #include <Navaids/FlightPlan.hxx>
@@ -111,6 +112,11 @@ void initStandardNasal(bool withCanvas)
     
     auto nasalNode = globals->get_props()->getNode("nasal", true);
     
+// load loadpriority.xml, for default modules load order
+
+    auto nasalLoadPriority = globals->get_props()->getNode("/sim/nasal-load-priority",true);
+    readProperties(globals->get_fg_root() / "Nasal/loadpriority.xml", nasalLoadPriority);
+
 // set various props to reduce Nasal errors
     auto props = globals->get_props();
     props->setStringValue("sim/flight-model", "null");
