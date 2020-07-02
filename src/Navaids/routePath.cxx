@@ -947,7 +947,15 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   if (w.wpt->flag(WPT_HIDDEN)) {
     return {};
   }
-  
+
+  // also hide the path if the prev WP is hidden
+  auto prevIt = d->previousValidWaypoint(index);
+  if (prevIt != d->waypoints.end()) {
+      if (prevIt->wpt->flag(WPT_HIDDEN)) {
+          return {};
+      }
+  }
+
   if (ty == "vectors") {
     // ideally we'd show a stippled line to connect the route?
     return {};
@@ -960,8 +968,8 @@ SGGeodVec RoutePath::pathForIndex(int index) const
   if (ty == "via") {
     return pathForVia(static_cast<Via*>(d->waypoints[index].wpt.get()), index);
   }
-  
-  auto prevIt = d->previousValidWaypoint(index);
+
+
   if (prevIt != d->waypoints.end()) {
     prevIt->turnExitPath(r);
     
