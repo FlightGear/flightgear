@@ -776,7 +776,7 @@ static naRef f_findDataDir(naContext c, naRef me, int argc, naRef* args)
     if(argc != 1 || !naIsString(args[0]))
         naRuntimeError(c, "bad arguments to findDataDir()");
 
-    SGPath p = globals->find_data_dir(naStr_data(args[0]));
+    SGPath p = globals->findDataPath(naStr_data(args[0]));
     std::string pdata = p.utf8Str();
     return naStr_fromdata(naNewString(c), const_cast<char*>(pdata.c_str()), pdata.length());
 }
