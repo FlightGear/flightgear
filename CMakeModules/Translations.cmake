@@ -35,10 +35,10 @@ function(translation_dir_list result curdir)
   set(${result} ${dirlist} PARENT_SCOPE)
 endfunction()
 
-translation_dir_list(LANGUAGES ${TRANSLATIONS_SRC_DIR})
-message(STATUS "Detected language files: ${LANGUAGES}")
-
 if (${do_translate})
+    translation_dir_list(LANGUAGES ${TRANSLATIONS_SRC_DIR})
+    message(STATUS "Detected language files: ${LANGUAGES}")
+
     set(translation_res "${PROJECT_BINARY_DIR}/translations.qrc")
 
     add_custom_target(fgfs_qm_files ALL)
