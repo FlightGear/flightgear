@@ -753,7 +753,7 @@ bool FGGeneric::close() {
 void
 FGGeneric::reinit()
 {
-    SGPath path = globals->find_data_dir("Protocol/" + file_name);
+    SGPath path = globals->findDataPath("Protocol/" + file_name);
     if (!path.exists()) {
         SG_LOG(SG_NETWORK, SG_WARN, "Couldn't find protocol file for '" << file_name << "'");
         return;

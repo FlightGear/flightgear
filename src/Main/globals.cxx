@@ -350,7 +350,7 @@ void FGGlobals::append_data_path(const SGPath& path, bool afterFGRoot)
     }
 }
 
-SGPath FGGlobals::find_data_dir(const std::string& pathSuffix) const
+SGPath FGGlobals::findDataPath(const std::string& pathSuffix) const
 {
     for (SGPath p : additional_data_paths) {
         p.append(pathSuffix);

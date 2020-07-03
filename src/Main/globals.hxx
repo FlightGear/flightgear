@@ -222,7 +222,7 @@ public:
      * Given a path suffix (eg 'Textures' or 'AI/Traffic'), find the
      * first data directory which defines it.
      */
-    SGPath find_data_dir(const std::string& pathSuffix) const;
+    SGPath findDataPath(const std::string& pathSuffix) const;
 
     const SGPath &get_fg_home () const { return fg_home; }
     void set_fg_home (const SGPath &home);
