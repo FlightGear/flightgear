@@ -41,29 +41,41 @@ LauncherMainWindow::LauncherMainWindow() :
    QMenuBar* mb = new QMenuBar();
 
    QMenu* fileMenu = mb->addMenu(tr("File"));
-   QAction* openAction = fileMenu->addAction(tr("Open saved configuration..."));
+   QAction* openAction = new QAction(tr("Open saved configuration..."));
+   openAction->setMenuRole(QAction::NoRole);
    connect(openAction, &QAction::triggered,
        m_controller, &LauncherController::openConfig);
 
-   QAction* saveAction = fileMenu->addAction(tr("Save configuration as..."));
+   QAction* saveAction = new QAction(tr("Save configuration as..."));
+   saveAction->setMenuRole(QAction::NoRole);
    connect(saveAction, &QAction::triggered,
        m_controller, &LauncherController::saveConfigAs);
 
+   fileMenu->addAction(openAction);
+   fileMenu->addAction(saveAction);
+
    QMenu* toolsMenu = mb->addMenu(tr("Tools"));
-   QAction* restoreDefaultsAction = toolsMenu->addAction(tr("Restore defaults..."));
+   QAction* restoreDefaultsAction = new QAction(tr("Restore defaults..."));
+   restoreDefaultsAction->setMenuRole(QAction::NoRole);
    connect(restoreDefaultsAction, &QAction::triggered,
 	   m_controller, &LauncherController::requestRestoreDefaults);
 
-   QAction* changeDataAction = toolsMenu->addAction(tr("Select data files location..."));
+   QAction* changeDataAction = new QAction(tr("Select data files location..."));
+   changeDataAction->setMenuRole(QAction::NoRole);
    connect(changeDataAction, &QAction::triggered,
 	   m_controller, &LauncherController::requestChangeDataPath);
 
-   QAction* viewCommandLineAction = toolsMenu->addAction(tr("View command-line"));
+   QAction* viewCommandLineAction = new QAction(tr("View command-line"));
    connect(viewCommandLineAction, &QAction::triggered,
            m_controller, &LauncherController::viewCommandLine);
+
+   toolsMenu->addAction(restoreDefaultsAction);
+   toolsMenu->addAction(changeDataAction);
+   toolsMenu->addAction(viewCommandLineAction);
 #endif
 
     QAction* qa = new QAction(this);
+    qa->setMenuRole(QAction::QuitRole); // will be addeed accordingly
     qa->setShortcut(QKeySequence("Ctrl+Q"));
     connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
 
