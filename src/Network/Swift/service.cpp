@@ -23,7 +23,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/commands.hxx>
 
-#define FGSWIFTBUS_API_VERSION 1;
+#define FGSWIFTBUS_API_VERSION 2;
 
 namespace FGSwiftBus {
 

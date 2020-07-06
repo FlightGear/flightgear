@@ -42,6 +42,8 @@ bool FGSwiftAircraftManager::addPlane(const std::string& callsign, const std::st
     this->removePlane(callsign); // Remove plane if already exists e.g. when rematching is done.
     auto curAircraft = new FGAISwiftAircraft(callsign, modelString);
     globals->get_subsystem<FGAIManager>()->attach(curAircraft);
+    // Init props after prop-root is assigned
+    curAircraft->initProps();
 
     aircraftByCallsign.insert(std::pair<std::string, FGAISwiftAircraft*>(callsign, curAircraft));
     return true;
@@ -122,4 +124,35 @@ double FGSwiftAircraftManager::getElevationAtPosition(const std::string &callsig
     }
     // Aircraft not found in list
     return std::numeric_limits<double>::quiet_NaN();
+}
+
+void FGSwiftAircraftManager::setPlanesTransponders(std::vector<std::string> callsigns, std::vector<int> codes, std::vector<bool> modeCs, std::vector<bool> idents)
+{
+    for (long unsigned int i = 0; i < callsigns.size(); i++)
+    {
+        auto it = aircraftByCallsign.find(callsigns.at(i));
+        if(it != aircraftByCallsign.end())
+        {
+            it->second->setPlaneTransponder(codes.at(i), modeCs.at(i), idents.at(i));
+        }
+    }
+}
+
+void FGSwiftAircraftManager::setPlanesSurfaces(std::vector<std::string> callsigns, std::vector<double> gears, std::vector<double> flaps,
+                                               std::vector<double> spoilers ,std::vector<double> speedBrakes, std::vector<double> slats,
+                                               std::vector<double> wingSweeps, std::vector<double> thrusts, std::vector<double> elevators,
+                                               std::vector<double> rudders, std::vector<double> ailerons, std::vector<bool> landLights,
+                                               std::vector<bool> taxiLights, std::vector<bool> beaconLights, std::vector<bool> strobeLights,
+                                               std::vector<bool> navLights, std::vector<int> lightPatterns)
+{
+    for (long unsigned int i = 0; i < callsigns.size(); i++)
+    {
+        auto it = aircraftByCallsign.find(callsigns.at(i));
+        if(it != aircraftByCallsign.end())
+        {
+            it->second->setPlaneSurface(gears.at(i), flaps.at(i), spoilers.at(i), speedBrakes.at(i), slats.at(i), wingSweeps.at(i), thrusts.at(i), elevators.at(i),
+                                        rudders.at(i), ailerons.at(i), landLights.at(i), taxiLights.at(i), beaconLights.at(i), strobeLights.at(i), navLights.at(i),
+                                        lightPatterns.at(i));
+        }
+    }
 }

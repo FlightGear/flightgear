@@ -94,7 +94,6 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
     const std::string   sender     = message.getSender();
     const dbus_uint32_t serial     = message.getSerial();
     const bool          wantsReply = message.wantsReply();
-    std::string         test       = message.getMethodName();
 
     if (message.getInterfaceName() == DBUS_INTERFACE_INTROSPECTABLE) {
         if (message.getMethodName() == "Introspect") {
@@ -206,8 +205,7 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
                 reply.appendArgument(verticalOffsets);
                 sendDBusMessage(reply);
             });
-        }
-        else if (message.getMethodName() == "getElevationAtPosition")
+        } else if (message.getMethodName() == "getElevationAtPosition")
         {
             std::string callsign;
             double latitudeDeg;
@@ -230,6 +228,65 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
                               reply.appendArgument(callsign);
                               reply.appendArgument(elevation);
                               sendDBusMessage(reply);
+                          });
+        } else if (message.getMethodName() == "setPlanesTransponders")
+        {
+            maybeSendEmptyDBusReply(wantsReply, sender, serial);
+            std::vector<std::string> callsigns;
+            std::vector<int> codes;
+            std::vector<bool> modeCs;
+            std::vector<bool> idents;
+            message.beginArgumentRead();
+            message.getArgument(callsigns);
+            message.getArgument(codes);
+            message.getArgument(modeCs);
+            message.getArgument(idents);
+            queueDBusCall([ = ]()
+                          {
+                            acm->setPlanesTransponders(callsigns, codes, modeCs, idents);
+                          });
+        } else if (message.getMethodName() == "setPlanesSurfaces")
+        {
+            maybeSendEmptyDBusReply(wantsReply, sender, serial);
+            std::vector<std::string> callsigns;
+            std::vector<double> gears;
+            std::vector<double> flaps;
+            std::vector<double> spoilers;
+            std::vector<double> speedBrakes;
+            std::vector<double> slats;
+            std::vector<double> wingSweeps;
+            std::vector<double> thrusts;
+            std::vector<double> elevators;
+            std::vector<double> rudders;
+            std::vector<double> ailerons;
+            std::vector<bool> landLights;
+            std::vector<bool> taxiLights;
+            std::vector<bool> beaconLights;
+            std::vector<bool> strobeLights;
+            std::vector<bool> navLights;
+            std::vector<int> lightPatterns;
+            message.beginArgumentRead();
+            message.getArgument(callsigns);
+            message.getArgument(gears);
+            message.getArgument(flaps);
+            message.getArgument(spoilers);
+            message.getArgument(speedBrakes);
+            message.getArgument(slats);
+            message.getArgument(wingSweeps);
+            message.getArgument(thrusts);
+            message.getArgument(elevators);
+            message.getArgument(rudders);
+            message.getArgument(ailerons);
+            message.getArgument(landLights);
+            message.getArgument(taxiLights);
+            message.getArgument(beaconLights);
+            message.getArgument(strobeLights);
+            message.getArgument(navLights);
+            message.getArgument(lightPatterns);
+            queueDBusCall([ = ]()
+                          {
+                            acm->setPlanesSurfaces(callsigns, gears, flaps, spoilers, speedBrakes, slats, wingSweeps, thrusts, elevators,
+                                              rudders, ailerons, landLights, taxiLights, beaconLights, strobeLights, navLights, lightPatterns);
                           });
         } else {
             // Unknown message. Tell DBus that we cannot handle it
