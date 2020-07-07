@@ -22,6 +22,8 @@
 // $Id$
 #include <osgDB/Registry>
 #include "airport.hxx"
+#include <simgear/scene/material/Effect.hxx>
+#include <simgear/scene/material/EffectGeode.hxx>
 
 namespace flightgear
 {
@@ -48,12 +50,12 @@ public:
 
 private:
     osg::Node* createAirport(const std::string airportId) const;
-    osg::Node* createRunway(const SGVec3f center, const osg::Vec3f up, const FGRunwayRef runway) const;
-    osg::Node* createPavement(const SGVec3f center, const osg::Vec3f up, const FGPavementRef pavement) const;
-    osg::Node* createBoundary(const SGVec3f center, const osg::Vec3f up, const FGPavementRef pavement) const;
-    osg::Node* createLine(const SGVec3f center, const osg::Vec3f up, const FGPavementRef pavement) const;
+    osg::Node* createRunway(const osg::Matrixd mat, const SGVec3f center, const FGRunwayRef runway, const osgDB::Options* options) const;
+    osg::Node* createPavement(const osg::Matrixd mat, const SGVec3f center, const FGPavementRef pavement, const osgDB::Options* options) const;
+    osg::Node* createBoundary(const osg::Matrixd mat, const SGVec3f center, const FGPavementRef pavement, const osgDB::Options* options) const;
+    osg::Node* createLine(const osg::Matrixd mat, const SGVec3f center, const FGPavementRef pavement, const osgDB::Options* options) const;
     osg::Vec4f getLineColor(const int aPaintCode) const;
-
+    osg::ref_ptr<simgear::Effect> getMaterialEffect(std::string material, const osgDB::Options* options) const;
 };
 
 }
