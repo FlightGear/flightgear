@@ -20,6 +20,12 @@
 #include <simgear/nasal/nasal.h>
 #include <simgear/xml/easyxml.hxx>
 
+/**
+  @breif wrapper for naEqual which recursively checks vec/hash equality
+    Probably not very performant.
+ */
+int nasalStructEqual(naContext ctx, naRef a, naRef b);
+
 class FGNasalListener : public SGPropertyChangeListener {
 public:
     FGNasalListener(SGPropertyNode* node, naRef code, FGNasalSys* nasal,

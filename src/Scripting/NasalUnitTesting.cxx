@@ -32,6 +32,8 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Scripting/NasalSys_private.hxx>
+
 #include <Main/fg_commands.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
@@ -106,7 +108,7 @@ static naRef f_assert_equal(const nasal::CallContext& ctx )
     naRef argB = ctx.requireArg<naRef>(1);
     auto msg = ctx.getArg<string>(2, "assert_equal failed");
 
-    bool same = naEqual(argA, argB);
+    bool same = nasalStructEqual(ctx.c_ctx(), argA, argB);
     if (!same) {
         string aStr = ctx.from_nasal<string>(argA);
         string bStr = ctx.from_nasal<string>(argB);
@@ -140,6 +142,15 @@ static naRef f_assert_doubles_equal(const nasal::CallContext& ctx )
     }
     
     return naNil();
+}
+
+static naRef f_equal(const nasal::CallContext& ctx)
+{
+    naRef argA = ctx.requireArg<naRef>(0);
+    naRef argB = ctx.requireArg<naRef>(1);
+
+    bool same = nasalStructEqual(ctx.c_ctx(), argA, argB);
+    return naNum(same);
 }
 
 //------------------------------------------------------------------------------
@@ -187,6 +198,7 @@ naRef initNasalUnitTestInSim(naRef nasalGlobals, naContext c)
     unitTest.set("fail", f_fail);
     unitTest.set("assert_equal", f_assert_equal);
     unitTest.set("assert_doubles_equal", f_assert_doubles_equal);
+    unitTest.set("equal", f_equal);
 
     globals->get_commands()->addCommand("nasal-test", &command_executeNasalTest);
     globals->get_commands()->addCommand("nasal-test-dir", &command_executeNasalTestDir);

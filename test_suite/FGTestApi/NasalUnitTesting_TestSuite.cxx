@@ -30,6 +30,9 @@
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
 
+#include <Scripting/NasalSys.hxx>
+#include <Scripting/NasalSys_private.hxx>
+
 #include <cppunit/TestAssert.h>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
@@ -50,9 +53,6 @@ static naRef f_assert(const nasal::CallContext& ctx )
     auto msg = ctx.getArg<string>(1, "assert failed:");
 
     CppUnit::Asserter::failIf(!pass, "assertion failed:" + msg, nasalSourceLine(ctx));
-    if (!pass) {
-        ctx.runtimeError(msg.c_str());
-    }
     return naNil();
 }
 
@@ -62,8 +62,6 @@ static naRef f_fail(const nasal::CallContext& ctx )
 
     CppUnit::Asserter::fail("assertion failed:" + msg,
                             nasalSourceLine(ctx));
-
-    ctx.runtimeError("Test failed: %s", msg.c_str());
     return naNil();
 }
 
@@ -73,7 +71,7 @@ static naRef f_assert_equal(const nasal::CallContext& ctx )
     naRef argB = ctx.requireArg<naRef>(1);
     auto msg = ctx.getArg<string>(2, "assert_equal failed");
 
-    bool same = naEqual(argA, argB);
+    bool same = nasalStructEqual(ctx.c_ctx(), argA, argB);
     if (!same) {
 
         string aStr = ctx.from_nasal<string>(argA);
@@ -81,10 +79,18 @@ static naRef f_assert_equal(const nasal::CallContext& ctx )
         msg += "; expected:" + aStr + ", actual:" + bStr;
 
         CppUnit::Asserter::fail(msg, nasalSourceLine(ctx));
-        ctx.runtimeError(msg.c_str());
     }
     
     return naNil();
+}
+
+static naRef f_equal(const nasal::CallContext& ctx)
+{
+    naRef argA = ctx.requireArg<naRef>(0);
+    naRef argB = ctx.requireArg<naRef>(1);
+
+    bool same = nasalStructEqual(ctx.c_ctx(), argA, argB);
+    return naNum(same);
 }
 
 static naRef f_assert_doubles_equal(const nasal::CallContext& ctx )
@@ -99,7 +105,6 @@ static naRef f_assert_doubles_equal(const nasal::CallContext& ctx )
     if (!same) {
         msg += "; expected:" + std::to_string(argA) + ", actual:" + std::to_string(argB);
         CppUnit::Asserter::fail(msg, nasalSourceLine(ctx));
-        ctx.runtimeError(msg.c_str());
     }
     
     return naNil();
@@ -114,6 +119,7 @@ naRef initNasalUnitTestCppUnit(naRef nasalGlobals, naContext c)
     unitTest.set("assert", f_assert);
     unitTest.set("fail", f_fail);
     unitTest.set("assert_equal", f_assert_equal);
+    unitTest.set("equal", f_equal);
     unitTest.set("assert_doubles_equal", f_assert_doubles_equal);
     
   return naNil();

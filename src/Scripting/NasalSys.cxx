@@ -1956,3 +1956,54 @@ naRef NasalXMLVisitor::make_string(const char* s, int n)
     return naStr_fromdata(naNewString(_c), const_cast<char *>(s),
                           n < 0 ? strlen(s) : n);
 }
+
+// like naEqual, but checks vector/hash recursively
+// note this will not tolerate a recursively defined Nasal structure
+// (such as globals.)
+int nasalStructEqual(naContext ctx, naRef a, naRef b)
+{
+    if (naIsVector(a) && naIsVector(b)) {
+        const int aSz = naVec_size(a),
+                  bSz = naVec_size(b);
+
+        if (aSz != bSz)
+            return 0;
+
+        for (int i = 0; i < aSz; ++i) {
+            int eq = nasalStructEqual(ctx, naVec_get(a, i), naVec_get(b, i));
+            if (!eq)
+                return 0;
+        }
+
+        // all elements equal, we're done
+        return 1;
+    }
+
+    if (naIsHash(a) && naIsHash(b)) {
+        naRef keysVec = naNewVector(ctx);
+        naHash_keys(keysVec, a);
+        const auto aSz = naVec_size(keysVec);
+
+        // first check key count, that's fast
+        if (aSz != naHash_size(b))
+            return 0;
+
+        for (int i = 0; i < aSz; i++) {
+            naRef key = naVec_get(keysVec, i);
+            naRef aValue, bValue;
+            if (!naHash_get(a, key, &aValue) || !naHash_get(b, key, &bValue)) {
+                return 0;
+            }
+
+            int eq = nasalStructEqual(ctx, aValue, bValue);
+            if (!eq) {
+                return 0;
+            }
+        }
+
+        // all values matched, we're good
+        return 1;
+    }
+
+    return naEqual(a, b);
+}
