@@ -195,7 +195,12 @@ public:
 
   static void setupGhost(nasal::Hash& addonsModule);
 
-private:
+  /**
+     * @brief update string values (description, etc) based on the active locale
+     */
+  void retranslate();
+
+  private:
   class Metadata;
   class MetadataParser;
 

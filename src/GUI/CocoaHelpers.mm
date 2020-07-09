@@ -194,7 +194,7 @@ QWindow* qtWindowFromOSG(osgViewer::GraphicsWindow* graphicsWindow)
     
 } // of namespace flightgear
 
-string_list FGLocale::getUserLanguage()
+string_list FGLocale::getUserLanguages()
 {
     CocoaAutoreleasePool ap;
     string_list result;
