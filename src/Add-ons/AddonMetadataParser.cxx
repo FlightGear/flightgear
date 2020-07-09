@@ -35,6 +35,9 @@
 #include "exceptions.hxx"
 #include "pointer_traits.hxx"
 
+#include <Main/globals.hxx>
+#include <Main/locale.hxx>
+
 namespace strutils = simgear::strutils;
 
 using std::string;
@@ -51,6 +54,23 @@ SGPath
 Addon::MetadataParser::getMetadataFile(const SGPath& addonPath)
 {
   return addonPath / "addon-metadata.xml";
+}
+
+static string getMaybeLocalized(const string& tag, SGPropertyNode* base, SGPropertyNode* lang)
+{
+    if (lang) {
+        auto n = lang->getChild(tag);
+        if (n) {
+            return strutils::strip(n->getStringValue());
+        }
+    }
+
+    auto n = base->getChild(tag);
+    if (n) {
+        return strutils::strip(n->getStringValue());
+    }
+
+    return {};
 }
 
 // Static method
@@ -121,6 +141,9 @@ Addon::MetadataParser::parseMetadataFile(const SGPath& addonPath)
       metadataFile.utf8Str() + "'");
   }
 
+  SGPropertyNode* localizedNode = addonNode->getChild("localized");
+  SGPropertyNode* langStringsNode = globals->get_locale()->selectLanguageNode(localizedNode);
+
   SGPropertyNode *idNode = addonNode->getChild("identifier");
   if (idNode == nullptr) {
     throw errors::error_loading_metadata_file(
@@ -147,7 +170,8 @@ Addon::MetadataParser::parseMetadataFile(const SGPath& addonPath)
       "no /addon/name node found in add-on metadata file '" +
       metadataFile.utf8Str() + "'");
   }
-  metadata.name = strutils::strip(nameNode->getStringValue());
+
+  metadata.name = getMaybeLocalized("name", addonNode, langStringsNode);
 
   // Require a non-empty name for the add-on
   if (metadata.name.empty()) {
@@ -170,19 +194,8 @@ Addon::MetadataParser::parseMetadataFile(const SGPath& addonPath)
   metadata.maintainers = parseContactsNode<Maintainer>(
     metadataFile, addonNode->getChild("maintainers"));
 
-  SGPropertyNode *shortDescNode = addonNode->getChild("short-description");
-  if (shortDescNode != nullptr) {
-    metadata.shortDescription = strutils::strip(shortDescNode->getStringValue());
-  } else {
-    metadata.shortDescription = string();
-  }
-
-  SGPropertyNode *longDescNode = addonNode->getChild("long-description");
-  if (longDescNode != nullptr) {
-    metadata.longDescription = strutils::strip(longDescNode->getStringValue());
-  } else {
-    metadata.longDescription = string();
-  }
+  metadata.shortDescription = getMaybeLocalized("short-description", addonNode, langStringsNode);
+  metadata.longDescription = getMaybeLocalized("long-description", addonNode, langStringsNode);
 
   std::tie(metadata.licenseDesignation, metadata.licenseFile,
            metadata.licenseUrl) = parseLicenseNode(addonPath, addonNode);

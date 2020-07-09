@@ -118,6 +118,12 @@ public:
      */
     void clear();
 
+    /**
+        @ brief given a node with children corresponding to different language / locale codes,
+        select one based on the user preferred langauge
+     */
+    SGPropertyNode_ptr selectLanguageNode(SGPropertyNode* langs) const;
+
 protected:
     /**
      * Find property node matching given language.
@@ -142,7 +148,7 @@ protected:
     /**
      * Obtain user's default language setting.
      */
-    string_list getUserLanguage();
+    string_list getUserLanguages();
 
     SGPropertyNode_ptr _intl;
     SGPropertyNode_ptr _currentLocale;
@@ -161,6 +167,11 @@ private:
      */
     static std::string removeEncodingPart(const std::string& locale);
 
+    // this is the ordered list of languages to try. It's the same as
+    // returned by getUserLanguages except if the user has used --langauge to
+    // override, that will be the first item.
+
+    string_list _languages;
     bool _inited = false;
 };
 

@@ -37,6 +37,8 @@
 #include "locale.hxx"
 #include "XLIFFParser.hxx"
 
+#include <Add-ons/AddonMetadataParser.hxx>
+
 using std::vector;
 using std::string;
 
@@ -67,11 +69,24 @@ string FGLocale::removeEncodingPart(const string& locale)
     return res;
 }
 
+string removeLocalePart(const string& locale)
+{
+    std::size_t pos = locale.find('_');
+    if (pos == string::npos) {
+        pos = locale.find('-');
+    }
+
+    if (pos == string::npos)
+        return {};
+
+    return locale.substr(0, pos);
+}
+
 #ifdef _WIN32
 
 
 string_list
-FGLocale::getUserLanguage()
+FGLocale::getUserLanguages()
 {
 	unsigned long bufSize = 128;
 	wchar_t* localeNameBuf = reinterpret_cast<wchar_t*>(alloca(bufSize));
@@ -119,7 +134,7 @@ FGLocale::getUserLanguage()
  * Determine locale/language settings on Linux/Unix.
  */
 string_list
-FGLocale::getUserLanguage()
+FGLocale::getUserLanguages()
 {
     string_list result;
     const char* langEnv = ::getenv("LANG");
@@ -171,9 +186,9 @@ FGLocale::findLocaleNode(const string& localeSpec)
         pos = language.find('-');
     }
 
-    if ((pos != string::npos) && (pos > 0))
-    {
-        node = findLocaleNode(language.substr(0, pos));
+    const auto justTheLanguage = removeLocalePart(language);
+    if (!justTheLanguage.empty()) {
+        node = findLocaleNode(justTheLanguage);
         if (node)
             return node;
     }
@@ -185,26 +200,26 @@ FGLocale::findLocaleNode(const string& localeSpec)
 // a default is determined matching the system locale.
 bool FGLocale::selectLanguage(const std::string& language)
 {
-    string_list languages = getUserLanguage();
-    if (languages.empty()) {
+    _languages = getUserLanguages();
+    if (_languages.empty()) {
         // Use plain C locale if nothing is available.
         SG_LOG(SG_GENERAL, SG_WARN, "Unable to detect system language" );
-        languages.push_back("C");
+        _languages.push_back("C");
     }
 
     // if we were passed a language option, try it first
     if (!language.empty()) {
-        languages.insert(languages.begin(), language);
+        _languages.insert(_languages.begin(), language);
     }
 
-    _currentLocaleString = removeEncodingPart(languages[0]);
+    _currentLocaleString = removeEncodingPart(_languages.front());
     if (_currentLocaleString == "C") {
         _currentLocaleString.clear();
     }
 
     _currentLocale = nullptr;
 
-    for (const string& lang: languages) {
+    for (const string& lang : _languages) {
         SG_LOG(SG_GENERAL, SG_DEBUG,
                "Trying to find locale for '" << lang << "'");
         _currentLocale = findLocaleNode(lang);
@@ -216,7 +231,7 @@ bool FGLocale::selectLanguage(const std::string& language)
             break;
         }
     }
-    
+
     if (_currentLocale && _currentLocale->hasChild("xliff")) {
         parseXLIFF(_currentLocale);
     }
@@ -242,6 +257,7 @@ void FGLocale::clear()
 {
     _inited = false;
     _currentLocaleString.clear();
+    _languages.clear();
 
     if (_currentLocale && (_currentLocale != _defaultLocale)) {
         // remove loaded strings, so we don't duplicate
@@ -584,4 +600,24 @@ std::string fgTrPrintfMsg(const char* key, ...)
     string r = globals->get_locale()->vlocalizedPrintf(key, "message", args);
     va_end(args);
     return r;
+}
+
+SGPropertyNode_ptr FGLocale::selectLanguageNode(SGPropertyNode* langs) const
+{
+    if (!langs)
+        return {};
+
+    for (auto l : _languages) {
+        const auto langNoEncoding = removeEncodingPart(l);
+        if (langs->hasChild(langNoEncoding)) {
+            return langs->getChild(langNoEncoding);
+        }
+
+        const auto justLang = removeLocalePart(langNoEncoding);
+        if (langs->hasChild(justLang)) {
+            return langs->getChild(justLang);
+        }
+    }
+
+    return {};
 }

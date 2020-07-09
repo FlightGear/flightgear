@@ -469,6 +469,14 @@ Addon::readMenubarItems(const SGPath& menuFile)
   return res;
 }
 
+void Addon::retranslate()
+{
+    Addon::Metadata metadata = MetadataParser::parseMetadataFile(_basePath);
+    setName(std::move(metadata.name));
+    setShortDescription(std::move(metadata.shortDescription));
+    setLongDescription(std::move(metadata.longDescription));
+}
+
 // Static method
 void Addon::setupGhost(nasal::Hash& addonsModule)
 {
