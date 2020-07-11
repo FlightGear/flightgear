@@ -168,8 +168,8 @@ private:
     static std::string removeEncodingPart(const std::string& locale);
 
     // this is the ordered list of languages to try. It's the same as
-    // returned by getUserLanguages except if the user has used --langauge to
-    // override, that will be the first item.
+    // returned by getUserLanguages(), except if the user has used
+    // --language to override, that will be the first item.
 
     string_list _languages;
     bool _inited = false;
