@@ -259,9 +259,11 @@ public:
 
         if (aircraft == LauncherController::Seaplane) {
             addType(FGPositioned::SEAPORT);
-        } else {
-            addType(FGPositioned::AIRPORT);
         }
+
+        // always add regular aiports, since they may contain helipads,
+        // and seaplanes may have wheels on their floats
+        addType(FGPositioned::AIRPORT);
     }
 
     virtual bool pass(FGPositioned* aPos) const
