@@ -147,8 +147,6 @@ Item {
                 font.pixelSize: Style.headingFontPixelSize
             }
 
-            // TODO - make clickable, jump to to the aircraft in the installed
-            // aircraft list
             ClickableText {
                 text: _launcher.selectedAircraftInfo.name === "" ?
                           qsTr("No aircraft selected") : _launcher.selectedAircraftInfo.name
