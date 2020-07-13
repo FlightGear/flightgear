@@ -228,6 +228,7 @@ void LocationController::setBaseLocation(QmlPositioned* pos)
         // disable offset when selecting a heliport
         if (m_airportLocation->isHeliport()) {
             m_onFinal = false;
+            m_useActiveRunway = false;
         }
     } else {
         m_airportLocation.clear();
@@ -293,20 +294,25 @@ QObjectList LocationController::airportRunways() const
         return {};
 
     QObjectList result;
-    if (m_airportLocation->isHeliport()) {
-        // helipads
-        for (unsigned int r=0; r<m_airportLocation->numHelipads(); ++r) {
-            auto p = new QmlPositioned(m_airportLocation->getHelipadByIndex(r).ptr());
-            QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
-            result.push_back(p);
-        }
-    } else {
-        // regular runways
-        for (unsigned int r=0; r<m_airportLocation->numRunways(); ++r) {
-            auto p = new QmlPositioned(m_airportLocation->getRunwayByIndex(r).ptr());
-            QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
-            result.push_back(p);
-        }
+    for (unsigned int r = 0; r < m_airportLocation->numRunways(); ++r) {
+        auto p = new QmlPositioned(m_airportLocation->getRunwayByIndex(r).ptr());
+        QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
+        result.push_back(p);
+    }
+
+    return result;
+}
+
+QObjectList LocationController::airportHelipads() const
+{
+    if (!m_airportLocation)
+        return {};
+
+    QObjectList result;
+    for (unsigned int r = 0; r < m_airportLocation->numHelipads(); ++r) {
+        auto p = new QmlPositioned(m_airportLocation->getHelipadByIndex(r).ptr());
+        QQmlEngine::setObjectOwnership(p, QQmlEngine::JavaScriptOwnership);
+        result.push_back(p);
     }
 
     return result;
@@ -469,12 +475,18 @@ void LocationController::restoreLocation(QVariantMap l)
 
             if (l.contains("location-apt-runway")) {
                 QString runway = l.value("location-apt-runway").toString().toUpper();
+                const auto runwayStr = runway.toStdString();
                 if (runway == QStringLiteral("ACTIVE")) {
                     m_useActiveRunway = true;
                 } else if (m_airportLocation->isHeliport()) {
-                    m_detailLocation = m_airportLocation->getHelipadByIdent(runway.toStdString());
+                    m_detailLocation = m_airportLocation->getHelipadByIdent(runwayStr);
                 } else {
-                    m_detailLocation = m_airportLocation->getRunwayByIdent(runway.toStdString());
+                    // could be a helipad at a regular airport
+                    if (m_airportLocation->hasHelipadWithIdent(runwayStr)) {
+                        m_detailLocation = m_airportLocation->getHelipadByIdent(runwayStr);
+                    } else {
+                        m_detailLocation = m_airportLocation->getRunwayByIdent(runwayStr);
+                    }
                 }
             } else if (l.contains("location-apt-parking")) {
                 QString parking = l.value("location-apt-parking").toString();
@@ -533,7 +545,7 @@ QVariantMap LocationController::saveLocation() const
                 locationSet.insert("location-apt-runway", "ACTIVE");
             } else if (m_detailLocation) {
                 const auto detailType = m_detailLocation->type();
-                if (detailType == FGPositioned::RUNWAY) {
+                if ((detailType == FGPositioned::RUNWAY) || (detailType == FGPositioned::HELIPAD)) {
                     locationSet.insert("location-apt-runway", QString::fromStdString(m_detailLocation->ident()));
                 } else if (detailType == FGPositioned::PARKING) {
                     locationSet.insert("location-apt-parking", QString::fromStdString(m_detailLocation->ident()));
@@ -614,7 +626,7 @@ void LocationController::setLocationProperties()
             // we can't set navaid here
         } else if (onRunway) {
             if (m_airportLocation->type() == FGPositioned::AIRPORT) {
-                // explicit runway choice
+                // explicit runway choice (this also works for helipads)
                 fgSetString("/sim/presets/runway", m_detailLocation->ident() );
                 fgSetBool("/sim/presets/runway-requested", true );
 
@@ -774,8 +786,9 @@ void LocationController::onCollectConfig()
 
     if (m_airportLocation) {
         m_config->setArg("airport", QString::fromStdString(m_airportLocation->ident()));
-        const bool onRunway = (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY));
-        const bool atParking = (m_detailLocation && (m_detailLocation->type() == FGPositioned::PARKING));
+        const auto ty = m_detailLocation ? m_detailLocation->type() : FGPositioned::INVALID;
+        const bool onRunway = (ty == FGPositioned::RUNWAY) || (ty == FGPositioned::HELIPAD);
+        const bool atParking = ty == FGPositioned::PARKING;
 
         if (m_useActiveRunway) {
             // pick by default
@@ -892,8 +905,11 @@ QString LocationController::description() const
     const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
 
     if (m_airportLocation) {
-        const bool onRunway = (m_detailLocation && (m_detailLocation->type() == FGPositioned::RUNWAY));
-        const bool atParking = (m_detailLocation && (m_detailLocation->type() == FGPositioned::PARKING));
+        const auto ty = m_detailLocation ? m_detailLocation->type() : FGPositioned::INVALID;
+        const bool onRunway = ty == FGPositioned::RUNWAY;
+        const bool onPad = ty == FGPositioned::HELIPAD;
+        const bool atParking = ty == FGPositioned::PARKING;
+
         QString locationOnAirport;
 
         if (m_useActiveRunway) {
@@ -910,6 +926,8 @@ QString LocationController::description() const
             } else {
                 locationOnAirport = tr("on %1").arg(runwayName);
             }
+        } else if (onPad) {
+            locationOnAirport = tr("on pad %1").arg(QString::fromStdString(m_detailLocation->ident()));
         } else if (atParking) {
             locationOnAirport = tr("at parking position %1").arg(QString::fromStdString(m_detailLocation->ident()));
         }

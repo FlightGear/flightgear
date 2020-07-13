@@ -24,6 +24,12 @@ Item {
             if (pos === null)
                 return;
 
+            // only allow selction of helipads if the aircraft type in
+            // use is a helicopter.
+            if ((pos.type == Positioned.Helipad) && (_launcher.aircraftType != LauncherController.Helicopter)) {
+                return;
+            }
+
             _location.setDetailLocation(pos)
             diagram.selection = pos
             syncUIFromController();
@@ -39,10 +45,13 @@ Item {
         if (_location.detail.type == Positioned.Parking) {
             parkingRadio.select()
             parkingChoice.syncCurrentIndex();
+        } else if (_location.detail.type === Positioned.Helipad) {
+            helipadRadio.select();
+            helipadChoice.syncCurrentIndex();
         } else {
             runwayRadio.select();
             runwayChoice.syncCurrentIndex();
-        }
+        } 
     }
 
     RadioButtonGroup {
@@ -100,6 +109,7 @@ Item {
             Row {
                 width: parent.width
                 spacing: Style.margin
+                visible: !root.isHeliport
 
                 RadioButton {
                     id: runwayRadio
@@ -112,7 +122,7 @@ Item {
                 }
 
                 StyledText {
-                    text: isHeliport ? qsTr("Pad") : qsTr("Runway")
+                    text: qsTr("Runway")
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -164,14 +174,12 @@ Item {
             ToggleBox {
                 id: onFinalBox
 
+                visible: !root.isHeliport
                 anchors.left: parent.left
                 anchors.leftMargin: Style.strutSize
                 height: onFinalContents.height + onFinalContents.y + Style.margin
                 anchors.right: parent.right
                 anchors.rightMargin: Style.margin
-
-                // no offset for helipads
-                visible: !isHeliport
 
                 enabled: runwayRadio.selected
                 selected: _location.onFinal
@@ -240,16 +248,67 @@ Item {
 
             ToggleSwitch {
                 x: Style.strutSize
-                // no localizer for helipads
-                visible: !isHeliport
                 enabled:runwayRadio.selected
-
+                visible: !root.isHeliport
                 // enable if selected runway has ILS
                 label: qsTr("Tune navigation radio (NAV1) to runway localizer")
                 checked: _location.tuneNAV1
 
                 onCheckedChanged: {
                     _location.tuneNAV1 = checked
+                }
+            }
+
+            // helipads row
+            Row {
+                width: parent.width
+                spacing: Style.margin
+                visible: (_launcher.aircraftType === LauncherController.Helicopter) && ( _location.airportHelipads.length > 0)
+
+                RadioButton {
+                    id: helipadRadio
+                    anchors.verticalCenter: parent.verticalCenter
+                    group: radioGroup
+
+                    onClicked: {
+                        if (selected) helipadChoice.setLocation();
+                    }
+                }
+
+                StyledText {
+                    text: qsTr("Pad")
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                PopupChoice {
+                    id: helipadChoice
+                    model: _location.airportHelipads
+                    displayRole: "ident"
+                    width: parent.width * 0.5
+                    anchors.verticalCenter: parent.verticalCenter
+                    enabled: helipadRadio.selected
+
+                    onCurrentIndexChanged: {
+                        setLocation();
+                    }
+
+                    function setLocation()
+                    {
+                        _location.setDetailLocation(_location.airportHelipads[currentIndex])
+                        diagram.selection = _location.airportHelipads[currentIndex] 
+                    }
+
+                    function syncCurrentIndex()
+                    {
+                        for (var i=0; i < _location.airportHelipads.length; ++i) {
+                            if (_location.airportHelipads[i].equals(_location.detail)) {
+                                currentIndex = i;
+                                return;
+                            }
+                        }
+
+                        currentIndex = 0;
+                    }
                 }
             }
 
