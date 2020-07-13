@@ -141,6 +141,11 @@ void AirportDiagram::setAirport(FGAirportRef apt)
                 addHelipad(pad);
             }
         } else {
+            for (unsigned int r = 0; r < apt->numHelipads(); ++r) {
+                FGHelipadRef pad = apt->getHelipadByIndex(r);
+                addHelipad(pad);
+            }
+
             for (unsigned int r=0; r<apt->numRunways(); ++r) {
                 addRunway(apt->getRunwayByIndex(r));
             }
@@ -555,11 +560,15 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
     me->accept();
     QTransform t(transform());
     double minWidth = 8.0 * unitLengthAfterMapping(t.inverted());
-#if 0
-    QImage img(width(), height(), QImage::Format_ARGB32);
-    QPainter imgPaint(&img);
-    imgPaint.setPen(QPen(Qt::cyan, 1));
-#endif
+
+    Q_FOREACH (const HelipadData& pad, m_helipads) {
+        QPainterPath pp = pathForHelipad(pad, t);
+        //imgPaint.drawPath(pp);
+        if (pp.contains(me->pos())) {
+            emit clicked(new QmlPositioned{pad.helipad});
+            return;
+        }
+    }
 
     Q_FOREACH(const RunwayData& r, m_runways) {
         QPainterPath pp = pathForRunway(r, t, minWidth);
@@ -582,14 +591,7 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
         }
     }
 
-    Q_FOREACH(const HelipadData& pad, m_helipads) {
-        QPainterPath pp = pathForHelipad(pad, t);
-        //imgPaint.drawPath(pp);
-        if (pp.contains(me->pos())) {
-            emit clicked(new QmlPositioned{pad.helipad});
-            return;
-        }
-    }
+
 #if 0
     img.save("/Users/jmt/Desktop/img.png");
 #endif
