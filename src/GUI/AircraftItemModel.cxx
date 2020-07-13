@@ -408,6 +408,10 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         if (!v.empty()) {
             return QString::fromStdString(v);
         }
+    } else if (role == AircraftIsHelicopterRole) {
+        return item->hasTag("helicopter");
+    } else if (role == AircraftIsSeaplaneRole) {
+        return item->hasTag("seaplane") || item->hasTag("floats");
     }
 
     return QVariant();
