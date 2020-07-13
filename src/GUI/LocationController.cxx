@@ -50,7 +50,7 @@
 
 using namespace flightgear;
 
-const unsigned int MAX_RECENT_LOCATIONS = 64;
+const unsigned int MAX_RECENT_LOCATIONS = 20;
 
 QVariant savePositionList(const FGPositionedList& posList)
 {
