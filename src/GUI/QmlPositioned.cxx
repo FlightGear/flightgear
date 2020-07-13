@@ -166,6 +166,8 @@ void QmlPositioned::setInner(FGPositionedRef p)
     } else {
         m_pos = p;
     }
+
+    emit infoChanged();
 }
 
 FGPositionedRef QmlPositioned::inner() const
