@@ -45,6 +45,7 @@ class LocationController : public QObject
 
     Q_PROPERTY(QList<QObject*> airportRunways READ airportRunways NOTIFY baseLocationChanged)
     Q_PROPERTY(QList<QObject*> airportParkings READ airportParkings NOTIFY baseLocationChanged)
+    Q_PROPERTY(QList<QObject*> airportHelipads READ airportHelipads NOTIFY baseLocationChanged)
 
     Q_PROPERTY(bool offsetEnabled READ offsetEnabled WRITE setOffsetEnabled NOTIFY offsetChanged)
     Q_PROPERTY(QuantityValue offsetRadial READ offsetRadial WRITE setOffsetRadial NOTIFY offsetChanged)
@@ -145,6 +146,7 @@ public:
     Q_INVOKABLE void addToRecent(QmlPositioned* pos);
 
     QObjectList airportRunways() const;
+    QObjectList airportHelipads() const;
     QObjectList airportParkings() const;
 
     Q_INVOKABLE void showHistoryInSearchModel();
