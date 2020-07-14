@@ -165,8 +165,7 @@ FGGlobals::FGGlobals() :
     channel_options_list( NULL ),
     initial_waypoints( NULL ),
     channellist( NULL ),
-    haveUserSettings(false),
-    _headless(false)
+    haveUserSettings(false)
 {
     SGPropertyNode* root = new SGPropertyNode;
     props = SGPropertyNode_ptr(root);
@@ -951,12 +950,12 @@ void FGGlobals::setPackageRoot(const SGSharedPtr<simgear::pkg::Root>& p)
 
 bool FGGlobals::is_headless()
 {
-    return _headless;
+    return flightgear::isHeadlessMode();
 }
 
 void FGGlobals::set_headless(bool mode)
 {
-    _headless = mode;
+    flightgear::setHeadlessMode(mode);
 }
 
 // end of globals.cxx

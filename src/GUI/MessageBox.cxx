@@ -43,6 +43,8 @@ using namespace simgear::strutils;
 
 namespace {
 
+static bool static_isHeadless = false;
+
 bool isCanvasImplementationRegistered()
 {
 	if (!globals) {
@@ -107,12 +109,22 @@ win32MessageBox(const std::string& caption,
 namespace flightgear
 {
 
+void setHeadlessMode(bool headless)
+{
+    static_isHeadless = headless;
+}
+
+bool isHeadlessMode()
+{
+    return static_isHeadless;
+}
+
 MessageBoxResult modalMessageBox(const std::string& caption,
     const std::string& msg,
     const std::string& moreText)
 {
     // Headless mode.
-    if (globals->is_headless()) {
+    if (static_isHeadless) {
         SG_LOG(SG_HEADLESS, SG_ALERT, "ModalMessageBox Caption: \"" << caption << "\"");
         SG_LOG(SG_HEADLESS, SG_ALERT, "ModalMessageBox Message: \"" << msg << "\"");
         if (!moreText.empty())
@@ -161,6 +173,15 @@ MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     const std::string& msg,
     const std::string& moreText)
 {
+    // Headless mode.
+    if (static_isHeadless) {
+        SG_LOG(SG_HEADLESS, SG_ALERT, "Fatal Error: \"" << caption << "\"");
+        SG_LOG(SG_HEADLESS, SG_ALERT, "Error Message: \"" << msg << "\"");
+        if (!moreText.empty())
+            SG_LOG(SG_HEADLESS, SG_ALERT, "\tMore text: \"" << moreText << "\"");
+        return MSG_BOX_OK;
+    }
+
 #if defined(SG_WINDOWS)
     return win32MessageBox(caption, msg, moreText);
 #elif defined(SG_MAC)

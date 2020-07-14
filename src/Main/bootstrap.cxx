@@ -233,6 +233,12 @@ int _bootstrap_OSInit;
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv )
 {
+    // we don't want to accidently show a GUI box and block startup in
+    // non_GUI setups, so check this value early here, before options are
+    // processed
+    const bool headless = flightgear::Options::checkForArg(argc, argv, "disable-gui");
+    flightgear::setHeadlessMode(headless);
+
 #ifdef ENABLE_SIMD
   if (!detectSIMD()) {
     flightgear::fatalMessageBoxThenExit(

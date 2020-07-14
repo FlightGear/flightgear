@@ -7,6 +7,10 @@
 namespace flightgear
 {
 
+// set a global value indicating we're in headless mode.
+void setHeadlessMode(bool headless);
+bool isHeadlessMode();
+
 // special exception class used to signal an exit. Must not inherit
 // std::exception or similar, since we want to handle it specially
 class FatalErrorException

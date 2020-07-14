@@ -1600,7 +1600,11 @@ fgOptLoadTape(const char* arg)
   return FG_OPTIONS_OK;
 }
 
-
+static int fgOptDisableGUI(const char*)
+{
+    globals->set_headless(true);
+    return FG_OPTIONS_OK;
+}
 
 /*
    option       has_param type        property         b_param s_param  func
@@ -1865,6 +1869,7 @@ struct OptionDesc {
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
+    {"disable-gui",                  false, OPTION_FUNC, "", false, "", fgOptDisableGUI },
     {nullptr,                        false, 0,             nullptr, false, nullptr, nullptr}
 };
 

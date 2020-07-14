@@ -159,8 +159,6 @@ private:
 
     SGSharedPtr<simgear::pkg::Root> _packageRoot;
 
-    bool _headless;
-
 public:
 
     FGGlobals();
