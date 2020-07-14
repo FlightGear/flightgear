@@ -57,18 +57,36 @@ PerformanceData::PerformanceData(PerformanceData* clone) :
 PerformanceData::~PerformanceData()
 {}
 
+// helper to try various names of a property, in order.
+static double readRenamedProp(SGPropertyNode_ptr db, const string_list& namesToTry, double defValue)
+{
+    for (const auto& n : namesToTry) {
+        auto node = db->getChild(n);
+        if (node) {
+            return node->getDoubleValue();
+        }
+    }
+
+    return defValue;
+}
+
 void PerformanceData::initFromProps(SGPropertyNode *db_node)
 {
 // read the values, using the existing values as defaults
   _acceleration = db_node->getDoubleValue("acceleration-kts-hour", _acceleration);
   _deceleration = db_node->getDoubleValue("deceleration-kts-hour", _deceleration);
   _climbRate    = db_node->getDoubleValue("climbrate-fpm", _climbRate);
-  _descentRate  = db_node->getDoubleValue("decentrate-fpm", _descentRate);
+
+  _climbRate = readRenamedProp(db_node, {"climb-rate-fpm", "climbrate-fpm"}, _climbRate);
+  _descentRate = readRenamedProp(db_node, {"descent-rate-fpm", "decentrate-fpm"}, _descentRate);
+
   _vRotate      = db_node->getDoubleValue("rotate-speed-kts", _vRotate);
   _vTakeOff     = db_node->getDoubleValue("takeoff-speed-kts", _vTakeOff);
   _vClimb       = db_node->getDoubleValue("climb-speed-kts", _vClimb);
   _vCruise      = db_node->getDoubleValue("cruise-speed-kts", _vCruise);
-  _vDescent     = db_node->getDoubleValue("decent-speed-kts", _vDescent);
+
+  _vDescent = readRenamedProp(db_node, {"descent-speed-kts", "decent-speed-kts"}, _vDescent);
+
   _vApproach    = db_node->getDoubleValue("approach-speed-kts", _vApproach);
   _vTouchdown   = db_node->getDoubleValue("touchdown-speed-kts", _vTouchdown);
   _vTaxi        = db_node->getDoubleValue("taxi-speed-kts", _vTaxi);
