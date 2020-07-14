@@ -29,6 +29,7 @@
 #include <cstddef>              // std::size_t
 #include <cassert>
 
+#include <simgear/misc/strutils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
@@ -41,6 +42,7 @@
 
 using std::vector;
 using std::string;
+namespace strutils = simgear::strutils;
 
 FGLocale::FGLocale(SGPropertyNode* root) :
 	_intl(root->getNode("/sim/intl", 0, true)),
@@ -179,13 +181,6 @@ FGLocale::findLocaleNode(const string& localeSpec)
     }
 
     // try country's default resource, i.e. "de_DE" => "de"
-    std::size_t pos = language.find('_');
-    if (pos == string::npos) {
-        // at least OS-X encodes these as en-GB and so on, so try hypens
-        // as well as underscores
-        pos = language.find('-');
-    }
-
     const auto justTheLanguage = removeLocalePart(language);
     if (!justTheLanguage.empty()) {
         node = findLocaleNode(justTheLanguage);
@@ -209,7 +204,8 @@ bool FGLocale::selectLanguage(const std::string& language)
 
     // if we were passed a language option, try it first
     if (!language.empty()) {
-        _languages.insert(_languages.begin(), language);
+        const auto normalizedLang = strutils::replace(language, "-", "_");
+        _languages.insert(_languages.begin(), normalizedLang);
     }
 
     _currentLocaleString = removeEncodingPart(_languages.front());
@@ -608,7 +604,10 @@ SGPropertyNode_ptr FGLocale::selectLanguageNode(SGPropertyNode* langs) const
         return {};
 
     for (auto l : _languages) {
-        const auto langNoEncoding = removeEncodingPart(l);
+        // Only accept the hyphen separator in PropertyList node names between
+        // language and territory
+        const auto langNoEncoding = strutils::replace(removeEncodingPart(l),
+                                                      "_", "-");
         if (langs->hasChild(langNoEncoding)) {
             return langs->getChild(langNoEncoding);
         }

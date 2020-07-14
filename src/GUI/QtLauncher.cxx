@@ -46,6 +46,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/package/Root.hxx>
 #include <simgear/package/Catalog.hxx>
 #include <simgear/package/Package.hxx>
@@ -296,7 +297,10 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         QTranslator* translator = new QTranslator(static_qApp.get());
         // check for --langauge=xx option and prefer that over QLocale
         // detection of the locale if it exists
-        auto lang = Options::getArgValue(argc, argv, "--language");
+        auto lang = simgear::strutils::replace(
+            Options::getArgValue(argc, argv, "--language"),
+            "-",
+            "_");
         if (!lang.empty()) {
             QString localeFile = "FlightGear_" + QString::fromStdString(lang);
             if (translator->load(localeFile, QLatin1String(":/"))) {
