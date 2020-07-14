@@ -73,6 +73,29 @@ static string getMaybeLocalized(const string& tag, SGPropertyNode* base, SGPrope
     return {};
 }
 
+static SGPropertyNode* getAndCheckLocalizedNode(SGPropertyNode* addonNode,
+                                                const SGPath& metadataFile)
+{
+    const auto localizedNode = addonNode->getChild("localized");
+    if (!localizedNode) {
+        return nullptr;
+    }
+
+    for (int i = 0; i < localizedNode->nChildren(); ++i) {
+        const auto node = localizedNode->getChild(i);
+        const string& name = node->getNameString();
+
+        if (name.find('_') != string::npos) {
+            throw errors::error_loading_metadata_file(
+                "underscores not allowed in names of children of <localized> "
+                "(in add-on metadata file '" + metadataFile.utf8Str() + "'); "
+                "hyphens should be used, as in 'fr-FR' or 'en-GB'");
+        }
+    }
+
+    return localizedNode;
+}
+
 // Static method
 Addon::Metadata
 Addon::MetadataParser::parseMetadataFile(const SGPath& addonPath)
@@ -141,7 +164,7 @@ Addon::MetadataParser::parseMetadataFile(const SGPath& addonPath)
       metadataFile.utf8Str() + "'");
   }
 
-  SGPropertyNode* localizedNode = addonNode->getChild("localized");
+  const auto localizedNode = getAndCheckLocalizedNode(addonNode, metadataFile);
   SGPropertyNode* langStringsNode = globals->get_locale()->selectLanguageNode(localizedNode);
 
   SGPropertyNode *idNode = addonNode->getChild("identifier");
