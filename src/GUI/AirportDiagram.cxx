@@ -107,6 +107,9 @@ AirportDiagram::AirportDiagram(QQuickItem* pr) :
     m_parkingIconLeftPath.lineTo(16, 16);
     m_parkingIconLeftPath.lineTo(0, 0);
 
+    m_helipadBoundsPath.moveTo(0, 0);
+    m_helipadBoundsPath.addEllipse(QPointF(0, 0), 16.0, 16.0);
+
     m_helipadIconPath.moveTo(0,0);
     m_helipadIconPath.addEllipse(QPointF(0, 0), 16.0, 16.0);
     m_helipadIconPath.addEllipse(QPointF(0, 0), 13.0, 13.0);
@@ -638,7 +641,7 @@ QPainterPath AirportDiagram::pathForHelipad(const HelipadData& h, const QTransfo
 {
     QTransform x = t;
     x.translate(h.pt.x(), h.pt.y());
-    return x.map(m_helipadIconPath);
+    return x.map(m_helipadBoundsPath);
 }
 
 void AirportDiagram::buildTaxiways()

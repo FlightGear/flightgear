@@ -142,7 +142,7 @@ private:
     QuantityValue m_approachDistance;
     bool m_approachExtensionEnabled = false;
 
-    QPainterPath m_helipadIconPath;
+    QPainterPath m_helipadIconPath, m_helipadBoundsPath;
     FGPositionedRef m_selection;
 };
 
