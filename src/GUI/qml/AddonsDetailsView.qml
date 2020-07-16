@@ -154,7 +154,7 @@ Rectangle {
 
                 ClickableText {
                     id: pathLabel
-                    text: flickable.labelText("Local file location", mdx, "path");
+                    text: flickable.labelText(qsTr("Local file location"), mdx, "path");
                     onClicked: {
                         // open the location
                         _addOns.openDirectory(flickable.getMeta(mdx, "path"))
