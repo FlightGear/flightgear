@@ -75,7 +75,6 @@ void PerformanceData::initFromProps(SGPropertyNode *db_node)
 // read the values, using the existing values as defaults
   _acceleration = db_node->getDoubleValue("acceleration-kts-hour", _acceleration);
   _deceleration = db_node->getDoubleValue("deceleration-kts-hour", _deceleration);
-  _climbRate    = db_node->getDoubleValue("climbrate-fpm", _climbRate);
 
   _climbRate = readRenamedProp(db_node, {"climb-rate-fpm", "climbrate-fpm"}, _climbRate);
   _descentRate = readRenamedProp(db_node, {"descent-rate-fpm", "decentrate-fpm"}, _descentRate);
