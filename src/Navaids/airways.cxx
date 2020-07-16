@@ -123,6 +123,7 @@ Airway::Airway(const std::string& aIdent,
   _topAltitudeFt(aTop),
   _bottomAltitudeFt(aBottom)
 {
+    assert((level == HighLevel) || (level == LowLevel));
     static_airwaysCache.push_back(this);
 }
 
@@ -302,15 +303,25 @@ AirwayRef Airway::findByIdent(const std::string& aIdent, Level level)
         return *it;
     }
 
-    NavDataCache* ndc = NavDataCache::instance();
-    int airwayId = ndc->findAirway(level, aIdent, false);
-    if (airwayId == 0) {
-        return {};
+    auto ndc = NavDataCache::instance();
+    int airwayId = 0;
+    if (level == Both) {
+        airwayId = ndc->findAirway(HighLevel, aIdent, false);
+        if (airwayId == 0) {
+            level = LowLevel; // not found in HighLevel, try LowLevel
+        } else {
+            level = HighLevel; // fix up, so Airway ctro see a valid value
+        }
     }
 
-    AirwayRef awy(new Airway(aIdent, level, airwayId, 0, 0));
-    static_airwaysCache.push_back(awy);
-    return awy;
+    if (airwayId == 0) {
+        airwayId = ndc->findAirway(level, aIdent, false);
+        if (airwayId == 0) {
+            return {};
+        }
+    }
+
+    return ndc->loadAirway(airwayId);
 }
 
     AirwayRef Airway::loadByCacheId(int cacheId)
@@ -321,14 +332,9 @@ AirwayRef Airway::findByIdent(const std::string& aIdent, Level level)
         if (it != static_airwaysCache.end()) {
             return *it;
         }
-        
-        NavDataCache* ndc = NavDataCache::instance();
-        AirwayRef awy = ndc->loadAirway(cacheId);
-        if (awy) {
-            static_airwaysCache.push_back(awy);
-        }
-        
-        return awy;
+
+        return NavDataCache::instance()->loadAirway(cacheId);
+        ;
     }
     
 void Airway::loadWaypoints() const
