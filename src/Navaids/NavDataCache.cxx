@@ -2252,13 +2252,15 @@ NavDataCache::findILS(PositionedID airport, const string& aRunway, const string&
 
 int NavDataCache::findAirway(int network, const string& aName, bool create)
 {
-  sqlite3_bind_int(d->findAirwayNet, 1, network);
-  sqlite_bind_stdstring(d->findAirwayNet, 2, aName);
+    assert((network == 1) || (network == 2));
 
-  int airway = 0;
-  if (d->execSelect(d->findAirwayNet)) {
-    // already exists
-    airway = sqlite3_column_int(d->findAirwayNet, 0);
+    sqlite3_bind_int(d->findAirwayNet, 1, network);
+    sqlite_bind_stdstring(d->findAirwayNet, 2, aName);
+
+    int airway = 0;
+    if (d->execSelect(d->findAirwayNet)) {
+        // already exists
+        airway = sqlite3_column_int(d->findAirwayNet, 0);
   } else if (create) {
     d->reset(d->insertAirway);
     sqlite_bind_stdstring(d->insertAirway, 1, aName);

@@ -302,7 +302,7 @@ void FPNasalTests::testAirwaysAPI()
         unitTest.assert(airwayStore.id == airwayIdent, "Incorrect airway found");
         
         airwayIdent = "UL620";
-        var cln = findNavaidsByID("CLN")[0];
+        var cln = findNavaidsByID("CLN", "VOR")[0];
         airwayStore = airway(airwayIdent, cln);
         unitTest.assert(airwayStore != nil, "Airway " ~ airwayIdent ~ " not found");
         unitTest.assert(airwayStore.id == airwayIdent, "Incorrect airway found");
