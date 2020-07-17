@@ -973,14 +973,17 @@ void LocationController::onCollectConfig()
             if (m_airportLocation->type() == FGPositioned::AIRPORT) {
                 m_config->setArg("runway", QString::fromStdString(m_detailLocation->ident()));
 
+                if (ty == FGPositioned::RUNWAY) {
                     // set nav-radio 1 based on selected runway
-                FGRunway* runway = static_cast<FGRunway*>(m_detailLocation.ptr());
-                if (runway->ILS()) {
-                    double mhz = runway->ILS()->get_freq() / 100.0;
-                    m_config->setArg("nav1", QString("%1:%2").arg(runway->headingDeg()).arg(mhz));
+                    auto runway = fgpositioned_cast<FGRunway>(m_detailLocation);
+                    if (runway->ILS()) {
+                        double mhz = runway->ILS()->get_freq() / 100.0;
+                        m_config->setArg("nav1", QString("%1:%2").arg(runway->headingDeg()).arg(mhz));
+                    }
+
+                    applyOnFinal();
                 }
 
-                applyOnFinal();
             } else if (m_airportLocation->type() == FGPositioned::HELIPORT) {
                 m_config->setArg("runway", QString::fromStdString(m_detailLocation->ident()));
             }
