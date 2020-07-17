@@ -90,7 +90,7 @@ public:
     float oil_px[FG_MAX_ENGINES];    // Oil pressure psi
 
     // Consumables
-    uint32_t num_tanks;    // Max number of fuel tanks
+    uint32_t num_tanks; // Max number of fuel tanks
     float fuel_quantity[FG_MAX_TANKS];
 
     // Gear status

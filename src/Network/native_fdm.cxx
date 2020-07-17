@@ -191,6 +191,11 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     for ( i = 0; i < net->num_tanks; ++i ) {
         SGPropertyNode *node = fgGetNode("/consumables/fuel/tank", i, true);
         net->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
+        net->tank_selected[i] = node->getBoolValue("selected");
+        net->capacity_m3[i] = node->getDoubleValue("capacity-m3");
+        net->unusable_m3[i] = node->getDoubleValue("unusable-m3");
+        net->density_kgpm3[i] = node->getDoubleValue("density-kgpm3");
+        net->level_m3[i] = node->getDoubleValue("level-m3");
     }
 
     // Gear and flaps
@@ -272,6 +277,11 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
 
         for ( i = 0; i < net->num_tanks; ++i ) {
             htonf(net->fuel_quantity[i]);
+            htonl(net->tank_selected[i]);
+            htond(net->capacity_m3[i]);
+            htond(net->unusable_m3[i]);
+            htond(net->density_kgpm3[i]);
+            htond(net->level_m3[i]);
         }
         net->num_tanks = htonl(net->num_tanks);
 
@@ -355,6 +365,11 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         net->num_tanks = htonl(net->num_tanks);
         for ( i = 0; i < net->num_tanks; ++i ) {
             htonf(net->fuel_quantity[i]);
+            htonl(net->tank_selected[i]);
+            htond(net->capacity_m3[i]);
+            htond(net->unusable_m3[i]);
+            htond(net->density_kgpm3[i]);
+            htond(net->level_m3[i]);
         }
 
         net->num_wheels = htonl(net->num_wheels);
@@ -455,8 +470,13 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 	for (i = 0; i < net->num_tanks; ++i ) {
 	    SGPropertyNode * node
 		= fgGetNode("/consumables/fuel/tank", i, true);
-	    node->setDoubleValue("level-gal_us", net->fuel_quantity[i] );
-	}
+        node->setDoubleValue("level-gal_us", net->fuel_quantity[i]);
+        node->setBoolValue("selected", net->tank_selected[i] > 0);
+        node->setDoubleValue("capacity-m3", net->capacity_m3[i]);
+        node->setDoubleValue("unusable-m3", net->unusable_m3[i]);
+        node->setDoubleValue("density-kgpm3", net->density_kgpm3[i]);
+        node->setDoubleValue("level-m3", net->level_m3[i]);
+    }
 
 	for (i = 0; i < net->num_wheels; ++i ) {
 	    SGPropertyNode * node = fgGetNode("/gear/gear", i, true);

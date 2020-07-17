@@ -90,8 +90,14 @@ public:
     float oil_px[FG_MAX_ENGINES];    // Oil pressure psi
 
     // Consumables
-    uint32_t num_tanks;		// Max number of fuel tanks
-    float fuel_quantity[FG_MAX_TANKS];
+    uint32_t num_tanks;                   // Max number of fuel tanks
+    float fuel_quantity[FG_MAX_TANKS];    // used by GPSsmooth and possibly others
+    uint32_t tank_selected[FG_MAX_TANKS]; // selected, capacity, usable, density and level required for multiple-pc setups to work
+    double capacity_m3[FG_MAX_TANKS];
+    double unusable_m3[FG_MAX_TANKS];
+    double density_kgpm3[FG_MAX_TANKS];
+    double level_m3[FG_MAX_TANKS];
+
 
     // Gear status
     uint32_t num_wheels;
