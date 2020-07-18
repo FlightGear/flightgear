@@ -241,9 +241,15 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             message.getArgument(codes);
             message.getArgument(modeCs);
             message.getArgument(idents);
+            std::vector<AircraftTransponder> transponders;
+            transponders.reserve(callsigns.size());
+            for(long unsigned int i = 0; i < callsigns.size(); i++)
+            {
+                transponders.emplace_back(callsigns.at(i), codes.at(i), modeCs.at(i), idents.at(i));
+            }
             queueDBusCall([ = ]()
                           {
-                            acm->setPlanesTransponders(callsigns, codes, modeCs, idents);
+                            acm->setPlanesTransponders(transponders);
                           });
         } else if (message.getMethodName() == "setPlanesSurfaces")
         {
@@ -283,10 +289,17 @@ DBusHandlerResult CTraffic::dbusMessageHandler(const CDBusMessage& message_)
             message.getArgument(strobeLights);
             message.getArgument(navLights);
             message.getArgument(lightPatterns);
+            std::vector<AircraftSurfaces> surfaces;
+            surfaces.reserve(callsigns.size());
+            for(long unsigned int i = 0; i < callsigns.size(); i++)
+            {
+                surfaces.emplace_back(callsigns.at(i), gears.at(i), flaps.at(i), spoilers.at(i), speedBrakes.at(i), slats.at(i),
+                                      wingSweeps.at(i), thrusts.at(i), elevators.at(i), rudders.at(i), ailerons.at(i),
+                                      landLights.at(i), taxiLights.at(i), beaconLights.at(i), strobeLights.at(i), navLights.at(i), lightPatterns.at(i));
+            }
             queueDBusCall([ = ]()
                           {
-                            acm->setPlanesSurfaces(callsigns, gears, flaps, spoilers, speedBrakes, slats, wingSweeps, thrusts, elevators,
-                                              rudders, ailerons, landLights, taxiLights, beaconLights, strobeLights, navLights, lightPatterns);
+                            acm->setPlanesSurfaces(surfaces);
                           });
         } else {
             // Unknown message. Tell DBus that we cannot handle it

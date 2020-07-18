@@ -38,15 +38,10 @@ public:
                                                         std::vector<double>& elevationsM, std::vector<double>& verticalOffsets) const;
     void                          removePlane(const std::string& callsign);
 	void removeAllPlanes();
-    void setPlanesTransponders(std::vector<std::string> callsigns, std::vector<int> codes, std::vector<bool> modeCs, std::vector<bool> idents);
+    void setPlanesTransponders(const std::vector<AircraftTransponder>& transponders);
 	double getElevationAtPosition(const std::string &callsign, const SGGeod& pos) const;
     bool                                                isInitialized() const;
-    void setPlanesSurfaces(std::vector<std::string> callsigns, std::vector<double> gears, std::vector<double> flaps,
-                                                   std::vector<double> spoilers ,std::vector<double> speedBrakes, std::vector<double> slats,
-                                                   std::vector<double> wingSweeps, std::vector<double> thrusts, std::vector<double> elevators,
-                                                   std::vector<double> rudders, std::vector<double> ailerons, std::vector<bool> landLights,
-                                                   std::vector<bool> taxiLights, std::vector<bool> beaconLights, std::vector<bool> strobeLights,
-                                                   std::vector<bool> navLights, std::vector<int> lightPatterns);
+    void setPlanesSurfaces(const std::vector<AircraftSurfaces>& surfaces);
 
 private:
     std::unordered_map<std::string, FGAISwiftAircraft*> aircraftByCallsign;

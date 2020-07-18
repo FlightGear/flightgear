@@ -65,27 +65,24 @@ double FGAISwiftAircraft::getGroundElevation(const SGGeod& pos) const
     return std::numeric_limits<double>::quiet_NaN();
 }
 
-void FGAISwiftAircraft::setPlaneSurface(double gear, double flaps, double spoilers, double speedBrake, double slats,
-                     double wingSweeps, double thrust, double elevator, double rudder, double aileron,
-                     bool landingLight, bool taxiLight, bool beaconLight, bool strobeLight, bool navLight,
-                     int lightPattern)
+void FGAISwiftAircraft::setPlaneSurface(const AircraftSurfaces& surfaces)
 {
-    m_gearNode->setDoubleValue(gear);
-    m_flapsIdentNode->setDoubleValue(flaps);
-    m_spoilerNode->setDoubleValue(spoilers);
-    m_speedBrakeNode->setDoubleValue(speedBrake);
-    m_landLightNode->setBoolValue(landingLight);
-    m_taxiLightNode->setBoolValue(taxiLight);
-    m_beaconLightNode->setBoolValue(beaconLight);
-    m_strobeLightNode->setBoolValue(strobeLight);
-    m_navLightNode->setBoolValue(navLight);
+    m_gearNode->setDoubleValue(surfaces.gear);
+    m_flapsIdentNode->setDoubleValue(surfaces.flaps);
+    m_spoilerNode->setDoubleValue(surfaces.spoilers);
+    m_speedBrakeNode->setDoubleValue(surfaces.spoilers);
+    m_landLightNode->setBoolValue(surfaces.landingLight);
+    m_taxiLightNode->setBoolValue(surfaces.taxiLight);
+    m_beaconLightNode->setBoolValue(surfaces.beaconLight);
+    m_strobeLightNode->setBoolValue(surfaces.strobeLight);
+    m_navLightNode->setBoolValue(surfaces.navLight);
 }
 
-void FGAISwiftAircraft::setPlaneTransponder(int code, bool modeC, bool ident)
+void FGAISwiftAircraft::setPlaneTransponder(const AircraftTransponder& transponder)
 {
-    m_transponderCodeNode->setIntValue(code);
-    m_transponderCModeNode->setBoolValue(modeC);
-    m_transponderIdentNode->setBoolValue(ident);
+    m_transponderCodeNode->setIntValue(transponder.code);
+    m_transponderCModeNode->setBoolValue(transponder.modeC);
+    m_transponderIdentNode->setBoolValue(transponder.ident);
 }
 
 void FGAISwiftAircraft::initProps()
@@ -95,22 +92,16 @@ void FGAISwiftAircraft::initProps()
     m_transponderCModeNode = _getProps()->getNode("swift/transponder/c-mode", true);
     m_transponderIdentNode = _getProps()->getNode("swift/transponder/ident", true);
 
-    m_gearNode = _getProps()->getNode("controls/gear/gear-down", true);
-    m_flapsIdentNode = _getProps()->getNode("controls/flight/flaps", true);
-    m_spoilerNode = _getProps()->getNode("controls/flight/spoilers", true);
-    m_speedBrakeNode = _getProps()->getNode("controls/flight/speedbrake", true);
-    m_landLightNode = _getProps()->getNode("controls/lighting/landing-lights", true);
+    m_gearNode = _getProps()->getNode("swift/gear/gear-down", true);
+    m_flapsIdentNode = _getProps()->getNode("swift/flight/flaps", true);
+    m_spoilerNode = _getProps()->getNode("swift/flight/spoilers", true);
+    m_speedBrakeNode = _getProps()->getNode("swift/flight/speedbrake", true);
 
-    // Untie NavLight property for explicit control (tied within FGAIBase)
-    m_navLightNode = _getProps()->getNode("controls/lighting/nav-lights", true);
-    if(m_navLightNode)
-    {
-        m_navLightNode->untie();
-    }
-
-    m_taxiLightNode = _getProps()->getNode("controls/lighting/taxi-light", true);
-    m_beaconLightNode = _getProps()->getNode("controls/lighting/beacon", true);
-    m_strobeLightNode = _getProps()->getNode("controls/lighting/strobe", true);
+    m_landLightNode = _getProps()->getNode("swift/lighting/landing-lights", true);
+    m_navLightNode = _getProps()->getNode("swift/lighting/nav-lights", true);
+    m_taxiLightNode = _getProps()->getNode("swift/lighting/taxi-light", true);
+    m_beaconLightNode = _getProps()->getNode("swift/lighting/beacon", true);
+    m_strobeLightNode = _getProps()->getNode("swift/lighting/strobe", true);
 }
 
 FGAISwiftAircraft::~FGAISwiftAircraft() = default;

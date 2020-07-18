@@ -23,8 +23,50 @@
 
 #include "AIBase.hxx"
 #include <string>
+#include <utility>
 
 using charPtr = const char*;
+
+struct AircraftTransponder
+{
+    AircraftTransponder(std::string  callsign, int code, bool modeC, bool ident)
+        : callsign(std::move(callsign)), code(code), modeC(modeC), ident(ident)
+    {}
+
+    std::string callsign;
+    int code;
+    bool modeC;
+    bool ident;
+};
+
+struct AircraftSurfaces
+{
+    AircraftSurfaces(std::string callsign, double gear, double flaps, double spoilers, double speedBrake, double slats, double wingSweeps,
+                     double thrust, double elevator, double rudder, double aileron, bool landingLight, bool taxiLight, bool beaconLight,
+                     bool strobeLight, bool navLight, int lightPattern)
+        : callsign(std::move(callsign)), gear(gear), flaps(flaps), spoilers(spoilers), speedBrake(speedBrake), slats(slats), wingSweeps(wingSweeps),
+        thrust(thrust), elevator(elevator), rudder(rudder), aileron(aileron), landingLight(landingLight), taxiLight(taxiLight), beaconLight(beaconLight),
+        strobeLight(strobeLight), navLight(navLight), lightPattern(lightPattern){}
+
+    std::string callsign;
+    double gear;
+    double flaps;
+    double spoilers;
+    double speedBrake;
+    double slats;
+    double wingSweeps;
+    double thrust;
+    double elevator;
+    double rudder;
+    double aileron;
+    bool landingLight;
+    bool taxiLight;
+    bool beaconLight;
+    bool strobeLight;
+    bool navLight;
+    int lightPattern;
+};
+
 
 
 class FGAISwiftAircraft : public FGAIBase
@@ -36,11 +78,8 @@ public:
     void update(double dt) override;
     double getGroundElevation(const SGGeod& pos) const;
     void initProps();
-    void setPlaneSurface(double gear, double flaps, double spoilers, double speedBrake, double slats,
-                         double wingSweeps, double thrust, double elevator, double rudder, double aileron,
-                         bool landingLight, bool taxiLight, bool beaconLight, bool strobeLight, bool navLight,
-                         int lightPattern);
-    void setPlaneTransponder(int code, bool modeC, bool ident);
+    void setPlaneSurface(const AircraftSurfaces& surfaces);
+    void setPlaneTransponder(const AircraftTransponder& transponder);
 
     const char* getTypeString() const override { return "swift"; }
 
