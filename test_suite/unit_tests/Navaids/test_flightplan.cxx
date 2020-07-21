@@ -926,7 +926,10 @@ void FlightplanTests::testCloningBasic()
     FlightPlanRef fp1 = makeTestFP("EGCC", "23L", "EHAM", "24",
                                    "TNT CLN");
     fp1->setIdent("testplan");
-    
+
+    fp1->setCruiseAltitudeFt(24000);
+    fp1->setCruiseSpeedKnots(448);
+
     auto fp2 = fp1->clone("testplan2");
 
     CPPUNIT_ASSERT(fp2->ident() == "testplan2");
@@ -934,6 +937,8 @@ void FlightplanTests::testCloningBasic()
     CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "23L");
     CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM");
     CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "24");
+    CPPUNIT_ASSERT_EQUAL(24000, fp2->cruiseAltitudeFt());
+    CPPUNIT_ASSERT_EQUAL(448, fp2->cruiseSpeedKnots());
 
     CPPUNIT_ASSERT_EQUAL(5, fp2->numLegs());
 
