@@ -140,6 +140,19 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
   c->_arrivalChanged = false;
   c->_departureChanged = false;
 
+  // copy cruise data
+  if (_cruiseFlightLevel > 0) {
+      c->setCruiseFlightLevel(_cruiseFlightLevel);
+  } else if (_cruiseAltitudeFt > 0) {
+      c->setCruiseAltitudeFt(_cruiseAltitudeFt);
+  }
+
+  if (_cruiseAirspeedMach > 0) {
+      c->setCruiseSpeedMach(_cruiseAirspeedMach);
+  } else if (_cruiseAirspeedKnots > 0) {
+      c->setCruiseSpeedKnots(_cruiseAirspeedKnots);
+  }
+
   c->_didLoadFP = true; // set the loaded flag to give delegates a chance
 
   // copy legs
