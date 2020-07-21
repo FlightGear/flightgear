@@ -38,22 +38,17 @@ using std::string;
  ****************************************************************************/
 static double processPosition(const string &pos)
 {
-  string prefix;
-  string subs;
-  string degree;
-  string decimal;
-  int sign = 1;
-  double value;
-  subs = pos;
-  prefix= subs.substr(0,1);
-  if (prefix == string("S") || (prefix == string("W")))
-    sign = -1;
-  subs    = subs.substr(1, subs.length());
-  degree  = subs.substr(0, subs.find(" ",0));
-  decimal = subs.substr(subs.find(" ",0), subs.length());
+    string subs{pos};
+    int sign = 1;
+    const auto prefix = subs.substr(0, 1);
+    if (prefix == "S" || (prefix == "W"))
+        sign = -1;
+    subs = subs.substr(1, subs.length()); // drop first character
+    const auto spacePos = subs.find(" ", 0);
+    const auto degree = subs.substr(0, spacePos);
+    const auto decimal = subs.substr(spacePos, subs.length());
 
-  value = sign * (atof(degree.c_str()) + atof(decimal.c_str())/60.0);
-  return value;
+    return sign * stoi(degree) + (stof(decimal) / 60.0);
 }
 
 FGGroundNetXMLLoader::FGGroundNetXMLLoader(FGGroundNetwork* net):
