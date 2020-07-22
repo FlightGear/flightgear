@@ -21,6 +21,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Main/locale.hxx>
 #include <Scenery/scenery.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/FGEventHandler.hxx>
@@ -37,6 +38,9 @@ void initScenery()
         SG_LOG(SG_GENERAL, SG_ALERT, "Cannot read the global defaults from \"" << defaultsXML.utf8Str() << "\".");
     fgLoadProps("defaults.xml", globals->get_props());
 
+    // otherwise fgSplashProgress will assert
+    globals->get_locale()->selectLanguage({});
+    
     // Set up the renderer.
     osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
     FGRenderer* render = globals->get_renderer();
