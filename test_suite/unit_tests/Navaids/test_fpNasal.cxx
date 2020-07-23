@@ -96,6 +96,97 @@ void FPNasalTests::testBasic()
     CPPUNIT_ASSERT_EQUAL(string{"COSTA VOR-DME"}, fp1->legAtIndex(3)->waypoint()->source()->name());
 }
 
+void FPNasalTests::testRestrictions()
+{
+    FlightPlanRef fp1 = makeTestFP("EGCC", "23L", "EHAM", "24",
+                                   "TNT CLN");
+    fp1->setIdent("testplan");
+
+    // setup the FP on the route-manager, so flightplan() call works
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    rm->setFlightPlan(fp1);
+    rm->activate();
+
+    // modify leg data dfrom Nasal
+    bool ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setAltitude(6000, 'AT');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    // check the value updated in the leg
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_AT, fp1->legAtIndex(3)->altitudeRestriction());
+    CPPUNIT_ASSERT_EQUAL(6000, fp1->legAtIndex(3)->altitudeFt());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setAltitude(6000, 'above');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_ABOVE, fp1->legAtIndex(3)->altitudeRestriction());
+    CPPUNIT_ASSERT_EQUAL(6000, fp1->legAtIndex(3)->altitudeFt());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setAltitude(6000, 'below');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_BELOW, fp1->legAtIndex(3)->altitudeRestriction());
+    CPPUNIT_ASSERT_EQUAL(6000, fp1->legAtIndex(3)->altitudeFt());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setAltitude(6000, 'delete');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_DELETE, fp1->legAtIndex(3)->altitudeRestriction());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setSpeed(250, 'at');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_AT, fp1->legAtIndex(3)->speedRestriction());
+    CPPUNIT_ASSERT_EQUAL(250, fp1->legAtIndex(3)->speedKts());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setSpeed(250, 'above');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_ABOVE, fp1->legAtIndex(3)->speedRestriction());
+    CPPUNIT_ASSERT_EQUAL(250, fp1->legAtIndex(3)->speedKts());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setSpeed(250, 'below');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_BELOW, fp1->legAtIndex(3)->speedRestriction());
+    CPPUNIT_ASSERT_EQUAL(250, fp1->legAtIndex(3)->speedKts());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setSpeed(250, 'delete');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_DELETE, fp1->legAtIndex(3)->speedRestriction());
+}
 
 void FPNasalTests::testSegfaultWaypointGhost() 
 {
