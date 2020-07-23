@@ -427,6 +427,8 @@ static RouteRestriction routeRestrictionFromArg(naRef arg)
     const std::string u = simgear::strutils::lowercase(naStr_data(arg));
     if (u == "computed") return RESTRICT_COMPUTED;
     if (u == "at") return RESTRICT_AT;
+    if (u == "above") return RESTRICT_ABOVE;
+    if (u == "below") return RESTRICT_BELOW;
     if (u == "mach") return SPEED_RESTRICT_MACH;
     if (u == "computed-mach") return SPEED_COMPUTED_MACH;
     if (u == "delete") return RESTRICT_DELETE;

@@ -30,6 +30,7 @@ class FPNasalTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(FPNasalTests);
     CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testRestrictions);
     CPPUNIT_TEST(testSegfaultWaypointGhost);
     CPPUNIT_TEST(testSIDTransitionAPI);
     CPPUNIT_TEST(testSTARTransitionAPI);
@@ -49,6 +50,7 @@ public:
 
     // The tests.
     void testBasic();
+    void testRestrictions();
     void testSegfaultWaypointGhost();
     void testSIDTransitionAPI();
     void testSTARTransitionAPI();
