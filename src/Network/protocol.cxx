@@ -81,6 +81,11 @@ bool FGProtocol::close() {
     return false;
 }
 
+// dummy reinit routine
+void FGProtocol::reinit()
+{
+    SG_LOG(SG_IO, SG_INFO, "dummy FGProtocol::reinit()");
+}
 
 // standard I/O channel close routine
 bool FGProtocol::gen_message() {

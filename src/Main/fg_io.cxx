@@ -383,6 +383,12 @@ FGProtocol* FGIO::add_channel(const string& config)
 void
 FGIO::reinit()
 {
+    SG_LOG(SG_IO, SG_INFO, "FGIO::reinit()");
+
+    std::for_each(io_channels.begin(), io_channels.end(), [](FGProtocol* p) {
+        SG_LOG(SG_IO, SG_INFO, "Restarting channel \"" << p->get_name() << "\"");
+        p->reinit();
+    });
 }
 
 // process any IO channel work
