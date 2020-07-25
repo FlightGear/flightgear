@@ -65,6 +65,7 @@ public:
     virtual bool open();
     virtual bool process();
     virtual bool close();
+    virtual void reinit();
 
     inline SGProtocolDir get_direction() const { return dir; }
     void set_direction( const string& d );
