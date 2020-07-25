@@ -37,8 +37,8 @@ class FGProtocol;
 class FGIO : public SGSubsystem
 {
 public:
-    FGIO();
-    ~FGIO();
+    FGIO() = default;
+    ~FGIO() = default;
 
     // Subsystem API.
     void bind() override;
@@ -63,6 +63,11 @@ private:
     
     FGProtocol* parse_port_config( const std::string& cfgstr );
     FGProtocol* parse_port_config( const string_list& tokens );
+
+    void addToPropertyTree(const string name, const string config);
+    void removeFromPropertyTree(const string name);
+    string generateName(const string protocol);
+
 private:
     // define the global I/O channel list
     //io_container global_io_list;

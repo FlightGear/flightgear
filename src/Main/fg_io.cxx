@@ -20,9 +20,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include <simgear/compiler.h>
 
@@ -74,18 +72,7 @@
 
 using std::atoi;
 using std::string;
-
-
-FGIO::FGIO()
-{
-}
-
-
-FGIO::~FGIO()
-{
-
-}
-
+using std::to_string;
 
 // configure a port based on the config string
 
@@ -253,6 +240,11 @@ FGIO::parse_port_config( const string_list& tokens )
     io->set_hz( hertz );
     SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
 
+    // name
+    const auto name = generateName(protocol);
+    io->set_name(name);
+    SG_LOG(SG_IO, SG_INFO, "  name = " << name);
+
     if ( medium == "serial" ) {
         if ( tokens.size() < 6) {
             SG_LOG( SG_IO, SG_ALERT, "Too few arguments for serial communications. " <<
@@ -350,7 +342,10 @@ FGIO::init()
     // original, which closes the port and frees up the fd ... doh!!!
 
     for (const auto config : *(globals->get_channel_options_list())) {
-        add_channel(config);
+        FGProtocol* p = add_channel(config);
+        if (p) {
+            addToPropertyTree(p->get_name(), config);
+        }
     } // of channel options iteration
     
     auto cmdMgr = globals->get_commands();
@@ -431,6 +426,7 @@ FGIO::shutdown()
         if ( p->is_enabled() ) {
             p->close();
         }
+        SG_LOG(SG_IO, SG_INFO, "Shutting down channel \"" << p->get_name() << "\"");
 
         delete p;
     }
@@ -477,8 +473,8 @@ bool FGIO::commandAddChannel(const SGPropertyNode * arg, SGPropertyNode * root)
         SG_LOG(SG_NETWORK, SG_WARN, "add-io-channel: missing 'config' argument");
         return false;
     }
-    
-    const string name = arg->getStringValue("name");
+
+    string name = arg->getStringValue("name");
     const string config = arg->getStringValue("config");
     auto protocol = add_channel(config);
     if (!protocol) {
@@ -487,13 +483,27 @@ bool FGIO::commandAddChannel(const SGPropertyNode * arg, SGPropertyNode * root)
     }
     
     if (!name.empty()) {
-        // TODO: add entry to /io/channels/<name>
-        
-        // set the name so we can find the protocol again in the
-        // future
-        protocol->set_name(name);
+        const string validName = simgear::strutils::makeStringSafeForPropertyName(name);
+        if (name.compare(validName) != 0) {
+            SG_LOG(SG_IO, SG_WARN, "add-io-channel: replaced illegal characters: " << name << " -> " << validName);
+        }
+        if (!validName.empty()) {
+            auto it = std::find_if(io_channels.begin(), io_channels.end(), [&validName](const FGProtocol* proto) {
+                return proto->get_name() == validName;
+            });
+
+            if (it != io_channels.end()) {
+                SG_LOG(SG_IO, SG_WARN, "add-io-channel: channel name \"" << validName << "\" already exists, using " << protocol->get_name());
+            } else {
+                // set custom name instead of auto-generated name:
+                SG_LOG(SG_IO, SG_INFO, "add-io-channel: setting name to \"" << validName << "\"");
+                protocol->set_name(validName);
+            }
+        }
     }
-    
+    // add entry to /io/channels/<name>
+    addToPropertyTree(protocol->get_name(), config);
+
     return true;
 }
 
@@ -511,7 +521,9 @@ bool FGIO::commandRemoveChannel(const SGPropertyNode * arg, SGPropertyNode * roo
         SG_LOG(SG_NETWORK, SG_WARN, "remove-io-channel: no channel with name:" + name);
         return false;
     }
-    
+
+    removeFromPropertyTree(name);
+
     FGProtocol* p = *it;
     if (p->is_enabled()) {
         p->close();
@@ -519,6 +531,38 @@ bool FGIO::commandRemoveChannel(const SGPropertyNode * arg, SGPropertyNode * roo
     delete p;
     io_channels.erase(it);
     return true;
+}
+
+string
+FGIO::generateName(const string protocol)
+{
+    string name;
+    // Find first unused name:
+    for (int i = 1; i < 1000; i++) {
+        name = protocol + "-" + to_string(i);
+
+        auto it = find_if(io_channels.begin(), io_channels.end(),
+                          [name](const FGProtocol* proto) { return proto->get_name() == name; });
+        if (it == io_channels.end()) {
+            break;
+        }
+    }
+    return name;
+}
+
+void FGIO::addToPropertyTree(const string name, const string config)
+{
+    auto channelNode = fgGetNode("/io/channels/" + name, true);
+    channelNode->setStringValue("config", config);
+    channelNode->setStringValue("name", name);
+}
+
+void FGIO::removeFromPropertyTree(const string name)
+{
+    auto node = fgGetNode("/io/channels");
+    if (node->hasChild(name)) {
+        node->removeChild(name);
+    }
 }
 
 
