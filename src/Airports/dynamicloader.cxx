@@ -48,7 +48,7 @@ static double processPosition(const string &pos)
     const auto degree = subs.substr(0, spacePos);
     const auto decimal = subs.substr(spacePos, subs.length());
 
-    return sign * stoi(degree) + (stof(decimal) / 60.0);
+    return sign * (stoi(degree) + (stof(decimal) / 60.0));
 }
 
 FGGroundNetXMLLoader::FGGroundNetXMLLoader(FGGroundNetwork* net):
