@@ -733,7 +733,8 @@ fgOptAdditionalDataDir(const char* arg)
     const SGPath dataPath = SGPath::fromUtf8(arg);
     if (!dataPath.exists()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "--data path not found:'" << dataPath << "'");
-        flightgear::fatalMessageBoxWithoutExit("FlightGear", "Data path not found");
+        flightgear::fatalMessageBoxWithoutExit(
+            "FlightGear", "Data path not found: '" + dataPath.utf8Str() + "'.");
         return FG_OPTIONS_EXIT;
     }
 
