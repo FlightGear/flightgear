@@ -101,7 +101,7 @@ private:
      */
     PathList additional_data_paths;
 
-    PathList _dataPathsAfterFGRoot; ///< paths with a /lower/ prioirty than FGRoot
+    PathList _dataPathsAfterFGRoot; ///< paths with a /lower/ priority than FGRoot
 
     // Users home directory for data
     SGPath fg_home;
