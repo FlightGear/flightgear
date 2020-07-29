@@ -947,6 +947,8 @@ static naRef procedureTpType(naContext c, ProcedureType ty)
     switch (ty) {
     case PROCEDURE_SID: return stringToNasal(c, "sid");
     case PROCEDURE_STAR: return stringToNasal(c, "star");
+    case PROCEDURE_TRANSITION: return stringToNasal(c, "transition");
+    case PROCEDURE_RUNWAY_TRANSITION: return stringToNasal(c, "rwy_transition");
     case PROCEDURE_APPROACH_VOR:
     case PROCEDURE_APPROACH_ILS:
     case PROCEDURE_APPROACH_RNAV:

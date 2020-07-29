@@ -1529,3 +1529,89 @@ void GPSTests::testDMEIntercept()
     CPPUNIT_ASSERT(ok);
    
 }
+
+void GPSTests::testFinalLegCourse()
+{
+    // FGTestApi::setUp::logPositionToKML("gps_final_course");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+    
+    // we can't use the standard function as it puts a waypoint on 
+    // the extended centerline
+    FGAirportRef depApt = FGAirport::getByIdent("EGAA");
+    fp->setDeparture(depApt->getRunwayByIdent("07"));
+
+
+    FGAirportRef destApt = FGAirport::getByIdent("EGPF");
+    fp->setDestination(destApt->getRunwayByIdent("23"));
+
+    // since we don't have the Nasal route-manager delegate, insert the
+    // runway waypoints manually
+    auto depRwy = new RunwayWaypt(fp->departureRunway(), fp);
+    depRwy->setFlag(WPT_DEPARTURE);
+    fp->insertWayptAtIndex(depRwy, -1);
+    
+    fp->insertWayptAtIndex(fp->waypointFromString("LISBO"), -1);
+    
+    auto destRwy = fp->destinationRunway();
+    fp->insertWayptAtIndex(new RunwayWaypt(destRwy, fp), -1);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    fp->setCurrentIndex(2);
+    
+    // position halfway between EGAA and EGPF
+    SGGeod initPos = fp->pointAlongRoute(1, -30.5);
+    FGTestApi::setPositionAndStabilise(initPos);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setStringValue("command", "leg");
+
+
+    // FGTestApi::writeFlightPlanToKML(fp);
+    // check that the final leg course doesn't fall back to 233 deg
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(37, gpsNode->getDoubleValue("desired-course-deg"), 2.0);
+}
+
+// Test to check the situation where you have two legs forming a straight line
+// with the current waypoint being the third waypoint
+void GPSTests::testCourseLegIntermediateWaypoint()
+{
+    // FGTestApi::setUp::logPositionToKML("gps_leg_course_intermediate");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = new FlightPlan;
+    rm->setFlightPlan(fp);
+
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EGAA", "25", "EGPH", "06", "LISBO BLACA");
+
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+
+    SGGeod decelPos = fp->pointAlongRoute(2, -15.0);
+    fp->insertWayptAtIndex(new BasicWaypt(decelPos, "DECEL", fp), 2);
+    fp->setCurrentIndex(3); // BLACA
+
+    // position halfway between EGAA and EGPF
+    SGGeod initPos = fp->pointAlongRoute(2, -5);
+    FGTestApi::setPositionAndStabilise(initPos);
+
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setStringValue("command", "leg");
+
+
+    // FGTestApi::writeFlightPlanToKML(fp);
+    // check that the leg course is correct
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, gpsNode->getDoubleValue("desired-course-deg"), 2.0);
+}
