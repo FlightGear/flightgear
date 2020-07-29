@@ -209,7 +209,7 @@ void FPNasalTests::testSIDTransitionAPI()
     }
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    
+
     bool ok = FGTestApi::executeNasal(R"(
         var fp = flightplan();
         fp.departure = airportinfo("KJFK");
@@ -222,11 +222,12 @@ void FPNasalTests::testSIDTransitionAPI()
 
         var trans = sid.transition('CANDR');
         unitTest.assert_equal(trans.id, "CANDR", "Couldn't find transition");
+        unitTest.assert_equal(trans.tp_type, "transition", "Procedure type incorrect");
 
         fp.sid = trans;
         fp.departure_runway = fp.departure.runway('13L')
     )");
-    
+
     CPPUNIT_ASSERT(ok);
     
     auto fp = rm->flightPlan();
@@ -328,11 +329,13 @@ void FPNasalTests::testApproachTransitionAPI()
                     
         unitTest.assert(trans != nil, "approach transition not found");
         unitTest.assert_equal(trans.id, "LUL1C", "Incorrect approach transition loaded");
+        unitTest.assert_equal(trans.tp_type, "transition", "Procedure type incorrect");
                                       
         fp.approach = trans;
                   
         unitTest.assert_equal(fp.approach.id, "ILS08L", "Incorrect approach returned");
         unitTest.assert_equal(fp.approach_trans.id, "LUL1C", "Incorrect transition returned");
+        unitTest.assert_equal(fp.approach_trans.tp_type, "transition", "Procedure type incorrect");
     )");
 
     CPPUNIT_ASSERT(ok);
@@ -369,6 +372,7 @@ void FPNasalTests::testApproachTransitionAPIWithCloning()
                   
         unitTest.assert_equal(fp.approach.id, "ILS06", "Incorrect approach returned");
         unitTest.assert_equal(fp.approach_trans.id, "SUG2A", "Incorrect transition returned");
+        unitTest.assert_equal(fp.approach_trans.tp_type, "transition", "Procedure type incorrect");
     )");
 
     CPPUNIT_ASSERT(ok);

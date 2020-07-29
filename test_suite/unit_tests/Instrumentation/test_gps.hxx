@@ -55,7 +55,8 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testRadialIntercept);
     CPPUNIT_TEST(testDMEIntercept);
     CPPUNIT_TEST(testFinalLegCourse);
-    
+    CPPUNIT_TEST(testCourseLegIntermediateWaypoint);
+
     CPPUNIT_TEST_SUITE_END();
 
     void setPositionAndStabilise(GPS* gps, const SGGeod& g);
@@ -90,6 +91,7 @@ public:
     void testRadialIntercept();
     void testDMEIntercept();
     void testFinalLegCourse();
+    void testCourseLegIntermediateWaypoint();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX
