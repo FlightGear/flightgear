@@ -40,12 +40,19 @@ Rectangle {
             id: content
             width: root.width
             height: childrenRect.height
+            y: Style.margin
 
             Column {
                 id: columnTop
                 width: content.width - (Style.margin * 2)
                 spacing: Style.margin
                 anchors.horizontalCenter: parent.horizontalCenter
+
+                AddOnsHeader {
+                    id: catalogHeader
+                    title: flickable.labelText(qsTr("Module"), mdx, "name");
+                    width: parent.width
+                }
 
                 // description + authors container
                 Item {
@@ -59,13 +66,6 @@ Rectangle {
                         anchors.right: parent.right
                         spacing: Style.margin
 
-                        StyledText {
-                            id: addonName
-                            text: flickable.labelText(qsTr("Module"), mdx, "name");
-                            width: parent.width
-                            wrapMode: Text.WordWrap
-                            visible: flickable.getMeta(mdx, "name") != ""
-                        }
 
                         StyledText {
                             id: addonDescription

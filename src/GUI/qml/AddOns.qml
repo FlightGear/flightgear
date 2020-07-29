@@ -44,6 +44,7 @@ Item {
             id: contents
             width: parent.width - (Style.margin * 2)
             x: Style.margin
+            y: Style.margin
             spacing: Style.margin
 
     //////////////////////////////////////////////////////////////////
