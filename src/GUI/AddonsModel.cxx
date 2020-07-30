@@ -111,7 +111,8 @@ QVariant AddonsModel::get(int idx, int role) const
             return path;
         }
         else if (role == VersionRole) {
-            return QString::fromStdString(addon->getVersion()->str());
+            const auto v = addon->getVersion()->str();
+            return QString::fromStdString(v);
         }
         else if (role == AuthorsRole) {
             QStringList authors;
@@ -147,10 +148,16 @@ QVariant AddonsModel::get(int idx, int role) const
             return tags;
         }
         else if (role == MinFGVersionRole) {
-            return QString::fromStdString(addon->getMinFGVersionRequired());
+            const auto v = addon->getMinFGVersionRequired();
+            if (v == "none")
+                return QStringLiteral("-");
+            return QString::fromStdString(v);
         }
         else if (role == MaxFGVersionRole) {
-            return QString::fromStdString(addon->getMaxFGVersionRequired());
+            const auto v = addon->getMaxFGVersionRequired();
+            if (v == "none")
+                return QStringLiteral("-");
+            return QString::fromStdString(v);
         }
         else if (role == HomePageRole) {
             return QUrl(QString::fromStdString(addon->getHomePage()));
