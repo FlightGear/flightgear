@@ -30,59 +30,58 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
-LauncherMainWindow::LauncherMainWindow() :
-    QQuickView()
+LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
 {
     setTitle("FlightGear " FLIGHTGEAR_VERSION);
 
     m_controller = new LauncherController(this, this);
     m_controller->initQML();
 
+    if (!inSimMode) {
 #if defined(Q_OS_MAC)
-   QMenuBar* mb = new QMenuBar();
+        QMenuBar* mb = new QMenuBar();
 
-   QMenu* fileMenu = mb->addMenu(tr("File"));
-   QAction* openAction = new QAction(tr("Open saved configuration..."));
-   openAction->setMenuRole(QAction::NoRole);
-   connect(openAction, &QAction::triggered,
-       m_controller, &LauncherController::openConfig);
+        QMenu* fileMenu = mb->addMenu(tr("File"));
+        QAction* openAction = new QAction(tr("Open saved configuration..."));
+        openAction->setMenuRole(QAction::NoRole);
+        connect(openAction, &QAction::triggered,
+                m_controller, &LauncherController::openConfig);
 
-   QAction* saveAction = new QAction(tr("Save configuration as..."));
-   saveAction->setMenuRole(QAction::NoRole);
-   connect(saveAction, &QAction::triggered,
-       m_controller, &LauncherController::saveConfigAs);
+        QAction* saveAction = new QAction(tr("Save configuration as..."));
+        saveAction->setMenuRole(QAction::NoRole);
+        connect(saveAction, &QAction::triggered,
+                m_controller, &LauncherController::saveConfigAs);
 
-   fileMenu->addAction(openAction);
-   fileMenu->addAction(saveAction);
+        fileMenu->addAction(openAction);
+        fileMenu->addAction(saveAction);
 
-   QMenu* toolsMenu = mb->addMenu(tr("Tools"));
-   QAction* restoreDefaultsAction = new QAction(tr("Restore defaults..."));
-   restoreDefaultsAction->setMenuRole(QAction::NoRole);
-   connect(restoreDefaultsAction, &QAction::triggered,
-	   m_controller, &LauncherController::requestRestoreDefaults);
+        QMenu* toolsMenu = mb->addMenu(tr("Tools"));
+        QAction* restoreDefaultsAction = new QAction(tr("Restore defaults..."));
+        restoreDefaultsAction->setMenuRole(QAction::NoRole);
+        connect(restoreDefaultsAction, &QAction::triggered,
+                m_controller, &LauncherController::requestRestoreDefaults);
 
-   QAction* changeDataAction = new QAction(tr("Select data files location..."));
-   changeDataAction->setMenuRole(QAction::NoRole);
-   connect(changeDataAction, &QAction::triggered,
-	   m_controller, &LauncherController::requestChangeDataPath);
+        QAction* changeDataAction = new QAction(tr("Select data files location..."));
+        changeDataAction->setMenuRole(QAction::NoRole);
+        connect(changeDataAction, &QAction::triggered,
+                m_controller, &LauncherController::requestChangeDataPath);
 
-   QAction* viewCommandLineAction = new QAction(tr("View command-line"));
-   connect(viewCommandLineAction, &QAction::triggered,
-           m_controller, &LauncherController::viewCommandLine);
+        QAction* viewCommandLineAction = new QAction(tr("View command-line"));
+        connect(viewCommandLineAction, &QAction::triggered,
+                m_controller, &LauncherController::viewCommandLine);
 
-   toolsMenu->addAction(restoreDefaultsAction);
-   toolsMenu->addAction(changeDataAction);
-   toolsMenu->addAction(viewCommandLineAction);
+        toolsMenu->addAction(restoreDefaultsAction);
+        toolsMenu->addAction(changeDataAction);
+        toolsMenu->addAction(viewCommandLineAction);
 #endif
 
-    QAction* qa = new QAction(this);
-    qa->setMenuRole(QAction::QuitRole); // will be addeed accordingly
-    qa->setShortcut(QKeySequence("Ctrl+Q"));
-    connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
+        QAction* qa = new QAction(this);
+        qa->setMenuRole(QAction::QuitRole); // will be addeed accordingly
+        qa->setShortcut(QKeySequence("Ctrl+Q"));
+        connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
+    }
 
     m_controller->initialRestoreSettings();
-
-    auto addOnsCtl = new AddOnsController(this, m_controller->config());
 
     ////////////
 #if defined(Q_OS_WIN)
@@ -98,10 +97,14 @@ LauncherMainWindow::LauncherMainWindow() :
 
     QQmlContext* ctx = rootContext();
     ctx->setContextProperty("_launcher", m_controller);
-    ctx->setContextProperty("_addOns", addOnsCtl);
     ctx->setContextProperty("_config", m_controller->config());
     ctx->setContextProperty("_location", m_controller->location());
     ctx->setContextProperty("_osName", osName);
+
+    if (!inSimMode) {
+        auto addOnsCtl = new AddOnsController(this, m_controller->config());
+        ctx->setContextProperty("_addOns", addOnsCtl);
+    }
 
 #if defined(ENABLE_COMPOSITOR)
     ctx->setContextProperty("_haveCompositor", true);
