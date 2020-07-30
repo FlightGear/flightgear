@@ -40,7 +40,7 @@ class LauncherMainWindow : public QQuickView
 {
     Q_OBJECT
 public:
-    LauncherMainWindow();
+    LauncherMainWindow(bool inSimMode);
     virtual ~LauncherMainWindow();
 
     bool execInApp();

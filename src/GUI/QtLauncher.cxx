@@ -485,7 +485,7 @@ bool runLauncherDialog()
     // try to initialise various Cocoa structures.
     flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
 
-    LauncherMainWindow dlg;
+    LauncherMainWindow dlg(false);
     if (options->isOptionSet("enable-fullscreen")) {
         dlg.showFullScreen();
     } else {
@@ -506,7 +506,7 @@ bool runLauncherDialog()
 
 bool runInAppLauncherDialog()
 {
-    LauncherMainWindow dlg;
+    LauncherMainWindow dlg(true);
     bool accepted = dlg.execInApp();
     if (!accepted) {
         return false;
