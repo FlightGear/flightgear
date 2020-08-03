@@ -1,9 +1,14 @@
-import Tix
-from Tkconstants import *
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from tkinter import tix as Tix
 from FlightGear import FlightGear
 
-import sys
+import os
 import socket
+import sys
+
+PROGNAME = os.path.basename(sys.argv[0])
 
 class PropertyField:
     def __init__(self, parent, prop, label):
@@ -20,14 +25,14 @@ class PropertyField:
         val = fgfs[self.prop]
         self.field.entry.delete(0,'end')
         self.field.entry.insert(0, val)
-    
+
 class PropertyPage(Tix.Frame):
     def __init__(self,parent,fgfs):
         Tix.Frame.__init__(self,parent)
         self.fgfs = fgfs
         self.pack( side=Tix.TOP, padx=2, pady=2, fill=Tix.BOTH, expand=1 )
         self.fields = []
-        
+
     def addField(self, prop, label):
         f = PropertyField(self, prop, label)
         self.fields.append(f)
@@ -143,7 +148,7 @@ class FGFSDemo(Tix.Frame):
         page.addField("/velocities/speed-down-fps", "Descent speed (fps):")
 
         self.nb.pack( expand=1, fill=Tix.BOTH, padx=5, pady=5, side=Tix.TOP )
-        
+
         self.QUIT = Tix.Button(self)
         self.QUIT['text'] = 'Quit'
         self.QUIT['command'] = self.quitcmd
@@ -163,23 +168,24 @@ class FGFSDemo(Tix.Frame):
 
 def main():
     if len(sys.argv) != 3:
-        print 'Usage: %s host port' % sys.argv[0]
+        print('Usage: {} host port'.format(PROGNAME))
         sys.exit(1)
 
     host = sys.argv[1]
     try:
         port = int( sys.argv[2] )
-    except ValueError, msg:
-        print 'Error: expected a number for port'
+    except ValueError:
+        print('Error: expected a number for the port argument, not {!r}'
+              .format(sys.argv[2]))
         sys.exit(1)
-    
+
     fgfs = None
     try:
         fgfs = FlightGear( host, port )
-    except socket.error, msg:
-        print 'Error connecting to flightgear:', msg[1]
+    except socket.error as msg:
+        print('Error connecting to flightgear:', msg.strerror)
         sys.exit(1)
-    
+
     root = Tix.Tk()
     app = FGFSDemo( fgfs, root )
     app.mainloop()

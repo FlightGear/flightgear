@@ -2,7 +2,6 @@ from telnetlib import Telnet
 import sys
 import socket
 import re
-from string import split, join
 import time
 
 __all__ = ["FlightGear"]
@@ -12,8 +11,7 @@ CRLF = '\r\n'
 class FGTelnet(Telnet):
     def __init__(self,host,port):
         Telnet.__init__(self,host,port)
-        self.prompt = []
-        self.prompt.append( re.compile('/[^>]*> ') )
+        self.prompt = [re.compile('/[^>]*> '.encode('utf-8'))]
         self.timeout = 5
         #Telnet.set_debuglevel(self,2)
 
@@ -64,16 +62,16 @@ class FGTelnet(Telnet):
 
     # Internal: send one command to FlightGear
     def _putcmd(self,cmd):
-        cmd = cmd + CRLF;
-        Telnet.write(self, cmd)
+        cmd = cmd + CRLF
+        Telnet.write(self, cmd.encode('utf-8'))
         return
 
     # Internal: get a response from FlightGear
     def _getresp(self):
-        (i,match,resp) = Telnet.expect(self, self.prompt, self.timeout)
+        (_i,_match,resp) = Telnet.expect(self, self.prompt, self.timeout)
         # Remove the terminating prompt.
         # Everything preceding it is the response.
-        return split(resp, '\n')[:-1]
+        return resp.decode('utf-8').split('\n')[:-1]
 
 class FlightGear:
     """FlightGear interface class.
@@ -97,20 +95,20 @@ class FlightGear:
     def __init__( self, host = 'localhost', port = 5500 ):
         try:
             self.telnet = FGTelnet(host,port)
-        except socket.error, msg:
+        except socket.error as msg:
             self.telnet = None
-            raise socket.error, msg
+            raise msg
 
     def __del__(self):
         # Ensure telnet connection is closed cleanly.
-        self.quit();
+        self.quit()
 
     def __getitem__(self,key):
         """Get a FlightGear property value.
         Where possible the value is converted to the equivalent Python type.
         """
         s = self.telnet.get(key)[0]
-        match = re.compile( '[^=]*=\s*\'([^\']*)\'\s*([^\r]*)\r').match( s )
+        match = re.compile( r'[^=]*=\s*\'([^\']*)\'\s*([^\r]*)\r').match( s )
         if not match:
             return None
         value,type = match.groups()
@@ -142,10 +140,10 @@ class FlightGear:
             self.telnet = None
 
     def view_next(self):
-        #move to next view
+        """Move to next view."""
         self.telnet.set( "/command/view/next", "true")
 
     def view_prev(self):
-        #move to next view
+        """Move to next view."""
         self.telnet.set( "/command/view/prev", "true")
 
