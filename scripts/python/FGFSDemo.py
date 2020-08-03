@@ -67,10 +67,10 @@ class FGFSDemo(Tix.Frame):
         page = PropertyPage( self.nb.sim, self.fgfs )
         self.pages['sim'] = page
         page.addField( '/sim/aircraft', 'Aircraft:')
-        page.addField( '/sim/startup/airport-id', 'Airport ID:')
+        page.addField( '/sim/presets/airport-id', 'Airport ID:')
         page.addField( '/sim/time/gmt', 'Current time (GMT):')
-        page.addField( '/sim/startup/trim', 'Trim on ground (true/false):')
-        page.addField( '/sim/sound/audible', 'Sound enabled (true/false):')
+        page.addField( '/sim/presets/trim', 'Trim on ground (true/false):')
+        page.addField( '/sim/sound/enabled', 'Sound enabled (true/false):')
         page.addField( '/sim/startup/browser-app', 'Web browser:')
 
         page = PropertyPage( self.nb.view, self.fgfs )
@@ -93,9 +93,9 @@ class FGFSDemo(Tix.Frame):
         self.pages['weather'] = page
         page.addField("/environment/wind-from-heading-deg",
                       "Wind direction (deg FROM):")
-        page.addField("/environment/params/base-wind-speed-kt",
+        page.addField("/environment/metar/base-wind-speed-kt",
                       "Wind speed (kt):")
-        page.addField("/environment/params/gust-wind-speed-kt",
+        page.addField("/environment/metar/gust-wind-speed-kt",
                       "Maximum gust (kt):")
         page.addField("/environment/wind-from-down-fps",
                       "Updraft (fps):")
@@ -106,31 +106,31 @@ class FGFSDemo(Tix.Frame):
 
         page = PropertyPage( self.nb.clouds, self.fgfs )
         self.pages['clouds'] = page
-        page.addField("/environment/clouds/layer[0]/type",
+        page.addField("/environment/clouds/layer[0]/layer-type",
                       "Layer 0 type:")
         page.addField("/environment/clouds/layer[0]/elevation-ft",
                       "Layer 0 height (ft):")
         page.addField("/environment/clouds/layer[0]/thickness-ft",
                       "Layer 0 thickness (ft):")
-        page.addField("/environment/clouds/layer[1]/type",
+        page.addField("/environment/clouds/layer[1]/layer-type",
                       "Layer 1 type:")
         page.addField("/environment/clouds/layer[1]/elevation-ft",
                       "Layer 1 height (ft):")
         page.addField("/environment/clouds/layer[1]/thickness-ft",
                       "Layer 1 thickness (ft):")
-        page.addField("/environment/clouds/layer[2]/type",
+        page.addField("/environment/clouds/layer[2]/layer-type",
                       "Layer 2 type:")
         page.addField("/environment/clouds/layer[2]/elevation-ft",
                       "Layer 2 height (ft):")
         page.addField("/environment/clouds/layer[2]/thickness-ft",
                       "Layer 2 thickness (ft):")
-        page.addField("/environment/clouds/layer[3]/type",
+        page.addField("/environment/clouds/layer[3]/layer-type",
                       "Layer 3 type:")
         page.addField("/environment/clouds/layer[3]/elevation-ft",
                       "Layer 3 height (ft):")
         page.addField("/environment/clouds/layer[3]/thickness-ft",
                       "Layer 3 thickness (ft):")
-        page.addField("/environment/clouds/layer[4]/type",
+        page.addField("/environment/clouds/layer[4]/layer-type",
                       "Layer 4 type:")
         page.addField("/environment/clouds/layer[4]/elevation-ft",
                       "Layer 4 height (ft):")
