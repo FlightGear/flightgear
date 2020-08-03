@@ -179,22 +179,6 @@ static void initTerrasync()
         return;
     }
 
-    // start TerraSync up now, so it can be synchronizing shared models
-    // and airports data in parallel with a nav-cache rebuild.
-    SGPath tsyncCache(terraSyncDir);
-    tsyncCache.append("terrasync-cache.xml");
-
-    // wipe the cache file if requested
-    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
-        SG_LOG(SG_GENERAL, SG_INFO, "restore-defaults requested, wiping terrasync update cache at " <<
-               tsyncCache);
-        if (tsyncCache.exists()) {
-            tsyncCache.remove();
-        }
-    }
-
-    fgSetString("/sim/terrasync/cache-path", tsyncCache.utf8Str());
-
     // make fg-root dir available so existing Scenery data can be copied, and
     // hence not downloaded again.
     fgSetString("/sim/terrasync/installation-dir", (globals->get_fg_root() / "Scenery").utf8Str());
