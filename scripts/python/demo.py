@@ -1,3 +1,6 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from FlightGear import FlightGear
 import time
 
@@ -9,13 +12,13 @@ def main():
         if fg['/sim/time/elapsed-sec'] > 5:
             break
         time.sleep(1.0)
-        print fg['/sim/time/elapsed-sec']
+        print(fg['/sim/time/elapsed-sec'])
 
 
     # parking brake on
     fg['/controls/parking-brake'] = 1
 
-    heading = fg['/orientation/heading-deg']
+    # heading = fg['/orientation/heading-deg']
 
     # Switch to external view for for 'walk around'.
     fg.view_next()

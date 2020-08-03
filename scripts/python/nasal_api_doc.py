@@ -37,7 +37,7 @@ def get_files(nasal_dir):
 	try:
 		os.stat(nasal_dir)
 	except:
-		print "The path does not exist"
+		print("The path does not exist")
 		sys.exit()
 	fgroot_dir = nasal_dir.rstrip('/').replace('Nasal','')
 	f_version = open(fgroot_dir+'version','rb')
@@ -55,10 +55,10 @@ def get_files(nasal_dir):
 	top_level.sort()
 	modules.sort()
 	if len(top_level) ==0:
-		print "This does not look like the correct $FGROOT/Nasal path"
+		print("This does not look like the correct $FGROOT/Nasal path")
 		sys.exit()
 	if len(modules)==0:
-		print "Warning: could not find any submodules"
+		print("Warning: could not find any submodules")
 	for f in top_level:
 		namespace=f.replace(".nas","")
 		functions=parse_file(nasal_dir + f)
@@ -136,7 +136,7 @@ def output_text(top_namespaces,modules,version):
 					buf+='<hr/>'
 				else:
 					tempComment = comment.replace('#','').replace('<','&lt;').replace('>','&gt;')
-					if string.strip(tempComment)!="":
+					if tempComment.strip()!="":
 						buf+= '<div class="comments">'+tempComment+'</div><br/>\n'
 			buf+='</div>\n'
 		if namespace[0] not in done2:
@@ -152,7 +152,7 @@ def parse_file(filename):
 	retval=[]
 	classname=""
 	for line in content:
-		match=re.search('^var\s+([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
+		match=re.search(r'^var\s+([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
 		if match!=None:
 			func_name=match.group(1)
 			comments=[]
@@ -172,7 +172,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search('^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j])!=None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -183,7 +183,7 @@ def parse_file(filename):
 			i+=1
 			continue
 
-		match3=re.search('^var\s*([A-Za-z0-9_-]+)\s*=\s*{\s*(\n|})',line)
+		match3=re.search(r'^var\s*([A-Za-z0-9_-]+)\s*=\s*{\s*(\n|})',line)
 		if match3!=None:
 			classname=match3.group(1)
 
@@ -198,7 +198,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search('^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j])!=None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -209,7 +209,7 @@ def parse_file(filename):
 			i+=1
 			continue
 
-		match2=re.search('^\s*([A-Za-z0-9_-]+)\s*:\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
+		match2=re.search(r'^\s*([A-Za-z0-9_-]+)\s*:\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
 		if match2!=None:
 			func_name=match2.group(1)
 			comments=[]
@@ -229,7 +229,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search('^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j])!=None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -242,7 +242,7 @@ def parse_file(filename):
 			i+=1
 			continue
 
-		match4=re.search('^([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=\n.-]*)\)?',line)
+		match4=re.search(r'^([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=\n.-]*)\)?',line)
 		if match4!=None:
 			classname=match4.group(1)
 			func_name=match4.group(2)
@@ -263,7 +263,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search('^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j])!=None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -281,7 +281,7 @@ def parse_file(filename):
 
 if __name__ == "__main__":
 	if len(sys.argv) <2:
-		print 'Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]'
+		print('Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]')
 		sys.exit()
 	else:
 		if sys.argv[1]=='parse':
@@ -291,5 +291,5 @@ if __name__ == "__main__":
 				nasal_path=sys.argv[2]
 			get_files(nasal_path)
 		else:
-			print 'Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]'
+			print('Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]')
 			sys.exit()
