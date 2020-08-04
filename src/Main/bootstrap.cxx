@@ -269,8 +269,10 @@ int main ( int argc, char **argv )
 #endif
 
 // if we're not using the normal crash-reported, install our
-// custom segfault handler on Linux, in debug builds
-#if !defined(SG_WINDOWS) && !defined(NDEBUG)
+// custom segfault handler on Linux, in debug builds.
+// NB On OpenBSD this seems to lose info about where the signal
+// happened, so is disabled.
+#if !defined(SG_WINDOWS) && !defined(NDEBUG) && !defined(__OpenBSD__)
     if (!flightgear::isSentryEnabled()) {
         signal(SIGSEGV, segfault_handler);
     }
