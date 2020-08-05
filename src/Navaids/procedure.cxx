@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <algorithm> // for reverse_copy
+#include <iterator>
 
 #include <simgear/structure/exception.hxx>
 
@@ -362,8 +363,7 @@ bool SID::route(FGRunwayRef aWay, Transition* trans, WayptVec& aPath)
   
   // SID waypoints (including transitions) are stored reversed, so we can
   // re-use the routing code. This is where we fix the ordering for client code
-  std::back_insert_iterator<WayptVec> bi(aPath);
-  std::reverse_copy(path.begin(), path.end(), bi);
+  std::reverse_copy(path.begin(), path.end(), std::back_inserter(aPath));
 
   return true;
 }
@@ -372,8 +372,7 @@ SID* SID::createTempSID(const std::string& aIdent, FGRunway* aRunway, const Wayp
 {
 // flip waypoints since SID stores them reversed
     WayptVec path;
-    std::back_insert_iterator<WayptVec> bi(path);
-    std::reverse_copy(aPath.begin(), aPath.end(), bi);
+    std::reverse_copy(aPath.begin(), aPath.end(), std::back_inserter(path));
     
     SID* sid = new SID(aIdent, aRunway->airport());
     sid->setCommon(path);
