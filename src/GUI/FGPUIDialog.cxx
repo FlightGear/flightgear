@@ -1077,9 +1077,9 @@ FGPUIDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeigh
         LogList* obj = new LogList(x, y, width, height, 20);
         string logClass = props->getStringValue("logclass");
         if (logClass == "terrasync") {
-          simgear::SGTerraSync* tsync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
-          if (tsync) {
-            obj->setBuffer(tsync->log());
+            auto tsync = globals->get_subsystem<simgear::SGTerraSync>();
+            if (tsync) {
+                obj->setBuffer(tsync->log());
           }
         } else {
           FGNasalSys* nasal = (FGNasalSys*) globals->get_subsystem("nasal");
