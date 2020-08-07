@@ -493,6 +493,11 @@ void FGTrafficManager::shutdown()
         cachefile.close();
     }
     scheduledAircraft.clear();
+
+    for (auto flight : flights) {
+        for (auto scheduled : flight.second)
+            delete scheduled;
+    }
     flights.clear();
 
     currAircraft = scheduledAircraft.begin();
