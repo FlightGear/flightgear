@@ -494,11 +494,10 @@ void FGTrafficManager::shutdown()
     }
     scheduledAircraft.clear();
 
-    // REVIEW: Memory Leak
-    //       60,200,752 (59,468,656 direct, 732,096 indirect) bytes in 285,907 blocks are definitely lost in loss record 15,499 of 15,501
-    // for (auto flight : flights[requiredAircraft]) {
-    //     delete flight;
-    // }
+    for (auto flight : flights) {
+        for (auto scheduled : flight.second)
+            delete scheduled;
+    }
     flights.clear();
 
     currAircraft = scheduledAircraft.begin();
