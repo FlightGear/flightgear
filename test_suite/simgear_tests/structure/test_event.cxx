@@ -118,3 +118,22 @@ void SimgearEventTests::testTaskRescheduleDuringRun()
 
     CPPUNIT_ASSERT_EQUAL(11, t1->_invokeCount);
 }
+
+
+void SimgearEventTests::testTaskRescheduleDuringRun2()
+{
+    auto t1 = new FakeNasalTimer("timer_bbb");
+    const std::initializer_list<double> times = {
+        0.02, 0.05, 0.02, 0.1, 0.02, 0.125, 0.05, 0.02
+    };
+    t1->_rescheduleTimes = times;
+    t1->_rescheduleTimes.push_back(30.0); // large final value
+
+    global_realTime = 0.0;
+    t1->start(1.0);
+
+    // running at 60Hz, check we don't miss any
+    runForTestTime(8.0, 60);
+
+    CPPUNIT_ASSERT_EQUAL(9, t1->_invokeCount);
+}

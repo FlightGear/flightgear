@@ -32,6 +32,7 @@ class SimgearEventTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(SimgearEventTests);
     CPPUNIT_TEST(testTaskRescheduleDuringRun);
+    CPPUNIT_TEST(testTaskRescheduleDuringRun2);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -45,6 +46,7 @@ public:
 
     // The tests.
     void testTaskRescheduleDuringRun();
+    void testTaskRescheduleDuringRun2();
 
 private:
     SGSharedPtr<SGEventMgr> _eventManager;
