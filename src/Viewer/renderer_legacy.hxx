@@ -137,7 +137,7 @@ protected:
 
 
     SGPropertyNode_ptr _splash_alpha;
-    SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation, _triangle_directional_lights;
+    SGPropertyNode_ptr _enhanced_lighting;
     SGPropertyNode_ptr _textures;
     SGPropertyNode_ptr _cloud_status, _visibility_m;
     SGPropertyNode_ptr _xsize, _ysize;

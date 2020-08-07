@@ -462,6 +462,30 @@ public:
     }
 };
 
+class PointSpriteListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        static SGSceneFeatures* sceneFeatures = SGSceneFeatures::instance();
+        sceneFeatures->setEnablePointSpriteLights(node->getIntValue());
+    }
+};
+
+class DistanceAttenuationListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        static SGSceneFeatures* sceneFeatures = SGSceneFeatures::instance();
+        sceneFeatures->setEnableDistanceAttenuationLights(node->getIntValue());
+    }
+};
+
+class DirectionalLightsListener : public SGPropertyChangeListener {
+public:
+    virtual void valueChanged(SGPropertyNode* node) {
+        static SGSceneFeatures* sceneFeatures = SGSceneFeatures::instance();
+        sceneFeatures->setEnableTriangleDirectionalLights(node->getIntValue());
+    }
+};
+
 void
 FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
 {
@@ -515,21 +539,22 @@ FGRenderer::init( void )
     _ysize         = fgGetNode("/sim/startup/ysize", true);
     _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
-    _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
-    _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
-    _triangle_directional_lights = fgGetNode("/sim/rendering/triangle-directional-lights", true);
-    _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
+    _horizon_effect = fgGetNode("/sim/rendering/horizon-effect", true);
 
     _altitude_ft = fgGetNode("/position/altitude-ft", true);
 
     _cloud_status = fgGetNode("/environment/clouds/status", true);
     _visibility_m = fgGetNode("/environment/visibility-m", true);
 
-    bool use_point_sprites = _point_sprites->getBoolValue();
-    bool distance_attenuation = _distance_attenuation->getBoolValue();
-    bool triangles = _triangle_directional_lights->getBoolValue();
+    // configure the lighting related parameters and add change listeners.
+    bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites", true);
+    bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation", false);
+    bool triangles = fgGetBool("/sim/rendering/triangle-directional-lights", true);
+    SGConfigureDirectionalLights(use_point_sprites, distance_attenuation, triangles);
 
-    SGConfigureDirectionalLights( use_point_sprites, distance_attenuation, triangles );
+    addChangeListener(new PointSpriteListener,  "/sim/rendering/point-sprites");
+    addChangeListener(new DistanceAttenuationListener, "/sim/rendering/distance-attenuation");
+    addChangeListener(new DirectionalLightsListener, "/sim/rendering/triangle-directional-lights");
 
     if (const char* tc = fgGetString("/sim/rendering/texture-compression", NULL)) {
       if (strcmp(tc, "false") == 0 || strcmp(tc, "off") == 0 ||
