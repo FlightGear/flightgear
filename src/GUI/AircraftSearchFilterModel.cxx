@@ -16,8 +16,6 @@ AircraftProxyModel::AircraftProxyModel(QObject *pr, QAbstractItemModel * source)
     setSortCaseSensitivity(Qt::CaseInsensitive);
     setFilterCaseSensitivity(Qt::CaseInsensitive);
 
-
-
     // important we sort on the primary name role and not Qt::DisplayRole
     // otherwise the aircraft jump when switching variant
     setSortRole(AircraftVariantDescriptionRole);
@@ -240,3 +238,27 @@ void AircraftProxyModel::saveRatingsSettings()
     settings.setValue("ratings-filter", vRatings);
 }
 
+///
+/// Custom sorting based on aircraft variants and URI
+///
+/// \param left first item to sort
+/// \param right second item to sort
+/// \return 0 when the items are equal, < 0 or > 0 when they differs
+bool AircraftProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const
+{
+    const QString variantLeft = left.data(AircraftVariantDescriptionRole).toString();
+    const QString variantRight = right.data(AircraftVariantDescriptionRole).toString();
+
+    // we're comparing by default by variantDescriptionRole but when the variantDescriptionRole
+    // is equal (e.g. two the same aircrafts installed from different sources - fgaddon + git)
+    // we sort them by the AircraftURIRole. This ensures that the order of the same
+    // items in the view is constant
+    const int c = QString::compare(variantLeft, variantRight, Qt::CaseInsensitive);
+    if (c == 0) {
+        const QString uriLeft = left.data(AircraftURIRole).toString();
+        const QString uriRight = right.data(AircraftURIRole).toString();
+        return QString::localeAwareCompare(uriLeft, uriRight) < 0;
+    } else {
+        return c < 0;
+    }
+}
