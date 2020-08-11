@@ -24,7 +24,7 @@
 
 #include <set>
 
-#include <simgear/structure/SGReferenced.hxx>
+#include <simgear/structure/SGWeakReferenced.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <ATC/trafficcontrol.hxx>
@@ -57,7 +57,7 @@ private:
   ParkingAssignmentPrivate* _sharedData;
 };
 
-class FGAirportDynamics : public SGReferenced
+class FGAirportDynamics : public SGWeakReferenced
 {
 
 private:
