@@ -359,7 +359,9 @@ FGElectricalSystem::FGElectricalSystem ( SGPropertyNode *node ) :
 }
 
 
-FGElectricalSystem::~FGElectricalSystem () {
+FGElectricalSystem::~FGElectricalSystem()
+{
+    SG_LOG(SG_SYSTEMS, SG_INFO, "Destroying elec system");
 }
 
 
@@ -426,8 +428,27 @@ void FGElectricalSystem::bind ()
 void FGElectricalSystem::unbind ()
 {
     _serviceable_node.reset();
+    _volts_out.reset();
+    _amps_out.reset();
 }
 
+void FGElectricalSystem::deleteComponents(comp_list& comps)
+{
+    std::for_each(comps.begin(), comps.end(),
+                  [](FGElectricalComponent* comp) {
+                      delete comp;
+                  });
+
+    comps.clear();
+}
+
+void FGElectricalSystem::shutdown()
+{
+    deleteComponents(suppliers);
+    deleteComponents(buses);
+    deleteComponents(outputs);
+    deleteComponents(connectors);
+}
 
 void FGElectricalSystem::update (double dt)
 {

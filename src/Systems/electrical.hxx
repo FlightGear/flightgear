@@ -66,7 +66,7 @@ protected:
 
 public:
     FGElectricalComponent();
-    virtual ~FGElectricalComponent() {}
+    virtual ~FGElectricalComponent() = default;
 
     inline const std::string& get_name() { return name; }
 
@@ -222,6 +222,7 @@ public:
     // Subsystem API.
     void bind() override;
     void init() override;
+    void shutdown() override;
     void unbind() override;
     void update(double dt) override;
 
@@ -238,6 +239,8 @@ protected:
     typedef vector<FGElectricalComponent *> comp_list;
 
 private:
+    void deleteComponents(comp_list& comps);
+
     std::string name;
     int num;
     std::string path;
