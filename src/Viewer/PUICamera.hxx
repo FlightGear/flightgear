@@ -30,6 +30,10 @@ namespace osgViewer {
 class Viewer;
 }
 
+namespace osgGA {
+class GUIEventHandler;
+}
+
 namespace flightgear
 {
 
@@ -39,6 +43,7 @@ public:
     static void initPUI();
     
     PUICamera();
+    virtual ~PUICamera();
 
     osg::Object* cloneType() const override { return new PUICamera; }
     osg::Object* clone(const osg::CopyOp&) const override { return new PUICamera; }
@@ -53,6 +58,7 @@ private:
 
     osg::Texture2D* _fboTexture = nullptr;
     osg::Geometry* _fullScreenQuad = nullptr;
+    osgGA::GUIEventHandler* _eventHandler = nullptr;
 
     static void puGetWindowSize(int *width, int *height);
     static int puGetWindow();
