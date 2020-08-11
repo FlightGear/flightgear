@@ -1294,20 +1294,26 @@ void fgStartNewReset()
     // preserve the event handler; re-creating it would entail fixing the
     // idle handler
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler = render->getEventHandler();
-    
+    // tell the event handler to drop properties, etc
+    eventHandler->clear();
+
     globals->set_renderer(NULL);
     globals->set_matlib(NULL);
-    
+
+    flightgear::unregisterMainLoopProperties();
+    FGReplayData::resetStatisticsProperties();
+
     simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();
     simgear::GlobalParticleCallback::setSwitch(NULL);
-    simgear::UniformFactory::instance()->reset();
-    
+    simgear::UniformFactory::instance()->reset();    
+
+    flightgear::addons::AddonManager::reset();
+
     globals->resetPropertyRoot();
     // otherwise channels are duplicated
     globals->get_channel_options_list()->clear();
 
-    flightgear::addons::AddonManager::reset();
     flightgear::addons::AddonManager::createInstance();
 
     fgInitConfig(0, NULL, true);
@@ -1360,8 +1366,6 @@ void fgStartNewReset()
     
     fgOSResetProperties();
 
-    FGReplayData::resetStatisticsProperties();
-
 // init some things manually
 // which do not follow the regular init pattern
     
@@ -1371,7 +1375,7 @@ void fgStartNewReset()
     globals->set_matlib( new SGMaterialLib );
     
 // terra-sync needs the property tree root, pass it back in
-    auto terra_sync = static_cast<simgear::SGTerraSync*>(subsystemManger->get_subsystem("terrasync"));
+    auto terra_sync = subsystemManger->get_subsystem<simgear::SGTerraSync>();
     if (terra_sync) {
         terra_sync->setRoot(globals->get_props());
     }

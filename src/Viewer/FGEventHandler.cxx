@@ -55,6 +55,12 @@ FGEventHandler::FGEventHandler() :
     _print = fgGetNode("/sim/rendering/print-statistics", true);
 }
 
+void FGEventHandler::clear()
+{
+    _display.clear();
+    _print.clear();
+}
+
 void FGEventHandler::reset()
 {
     _display = fgGetNode("/sim/rendering/on-screen-statistics", true);
