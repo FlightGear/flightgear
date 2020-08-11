@@ -796,10 +796,11 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
 
     if (action == 2)            // landing
     {
-        int nr = landing.size();
-        if (nr) {
+        if (!landing.empty()) {
             runway = chooseRwyByHeading(landing, heading);
-        } else {                //fallback
+        }
+        
+        if (runway.empty()) { //fallback
             runway = chooseRunwayFallback();
         }
     }

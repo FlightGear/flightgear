@@ -189,11 +189,14 @@ bool FGAirport::hasHelipadWithIdent(const std::string& aIdent) const
 //------------------------------------------------------------------------------
 FGRunwayRef FGAirport::getRunwayByIdent(const std::string& aIdent) const
 {
-  loadRunways();
-  for (auto rwy : mRunways) {
-    if (rwy->ident() == aIdent) {
-      return rwy;
-    }
+    if (aIdent.empty())
+        return {};
+
+    loadRunways();
+    for (auto rwy : mRunways) {
+        if (rwy->ident() == aIdent) {
+            return rwy;
+        }
   }
 
   SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
