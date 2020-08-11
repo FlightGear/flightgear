@@ -37,7 +37,6 @@ class Node;
 
 namespace simgear
 {
-class SGTerraSync;
 class SGReaderWriterOptions;
 }
 
@@ -73,12 +72,11 @@ private:
      * tile cache
      */
     TileCache tile_cache;
-    simgear::SGTerraSync* _terra_sync;
     
     class TileManagerListener;
     friend class TileManagerListener;
-    TileManagerListener* _listener;
-    
+    std::unique_ptr<TileManagerListener> _listener;
+
     // update various queues internal queues
     void update_queues(bool& isDownloadingScenery);
 
