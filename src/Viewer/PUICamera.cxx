@@ -43,6 +43,7 @@
 #include <Main/locale.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/FGEventHandler.hxx>
+#include <Viewer/renderer.hxx>
 
 #include <Input/input.hxx>
 #include <Input/FGMouseInput.hxx>
@@ -304,6 +305,16 @@ PUICamera::PUICamera() :
 {
 }
 
+PUICamera::~PUICamera()
+{
+    SG_LOG(SG_GL, SG_INFO, "Deleting PUI camera");
+
+    auto viewer = globals->get_renderer()->getViewer();
+    if (viewer) {
+        viewer->removeEventHandler(_eventHandler);
+    }
+}
+
 void PUICamera::init(osg::Group* parent, osgViewer::Viewer* viewer)
 {
     setName("PUI FBO camera");
@@ -378,7 +389,8 @@ void PUICamera::init(osg::Group* parent, osgViewer::Viewer* viewer)
     // push_front so we keep the order of event handlers the opposite of
     // the rendering order (i.e top-most UI layer has the front-most event
     // handler)
-    viewer->getEventHandlers().push_front(new PUIEventHandler(this));
+    _eventHandler = new PUIEventHandler(this);
+    viewer->getEventHandlers().push_front(_eventHandler);
 }
 
 // remove once we require OSG 3.4
