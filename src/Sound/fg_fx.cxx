@@ -90,16 +90,16 @@ void FGFX::unbind()
     {
         _smgr->remove(_refname);
     }
+
+    // because SGXmlSound has an owning ref back to us, we need to
+    // clear these here, or we will never get destroyed
+    std::for_each(_sound.begin(), _sound.end(), [](const SGXmlSound* snd) { delete snd; });
+    _sound.clear();
 }
 
 FGFX::~FGFX ()
 {
-    for (unsigned int i = 0; i < _sound.size(); i++ ) {
-        delete _sound[i];
-    }
-    _sound.clear();
 }
-
 
 void
 FGFX::init()
@@ -156,9 +156,7 @@ FGFX::init()
 void
 FGFX::reinit()
 {
-    for ( unsigned int i = 0; i < _sound.size(); i++ ) {
-        delete _sound[i];
-    }
+    std::for_each(_sound.begin(), _sound.end(), [](const SGXmlSound* snd) { delete snd; });
     _sound.clear();
     init();
 }
