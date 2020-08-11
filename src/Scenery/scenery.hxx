@@ -146,7 +146,7 @@ public:
     void materialLibChanged();
 private:
     // the terrain engine
-    FGTerrain* _terrain;
+    std::unique_ptr<FGTerrain> _terrain;
 
     // The state of the scene graph.
     bool _inited;
