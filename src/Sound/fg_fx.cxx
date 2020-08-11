@@ -31,6 +31,7 @@
 
 #include "fg_fx.hxx"
 
+#include <algorithm>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Sound/soundmanager.hxx>

@@ -26,6 +26,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <algorithm>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
