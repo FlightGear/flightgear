@@ -134,7 +134,9 @@ public:
             case(osgGA::GUIEventAdapter::PUSH):
             case(osgGA::GUIEventAdapter::RELEASE):
             {
-                FGMouseInput* mouseSubsystem = globals->get_subsystem<FGInput>()->get_subsystem<FGMouseInput>();
+                // during splash/reset, either of these can return nullptr
+                const auto input = globals->get_subsystem<FGInput>();
+                const auto mouseSubsystem = input ? input->get_subsystem<FGMouseInput>() : nullptr;
                 if (mouseSubsystem && !mouseSubsystem->isActiveModePassThrough()) {
                     return false;
                 }
