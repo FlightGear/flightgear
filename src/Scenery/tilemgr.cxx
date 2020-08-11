@@ -138,8 +138,6 @@ FGTileMgr::FGTileMgr():
     state( Start ),
     last_state( Running ),
     scheduled_visibility(100.0),
-    _terra_sync(NULL),
-    _listener(NULL),
     _visibilityMeters(fgGetNode("/environment/visibility-m", true)),
     _lodDetailed(fgGetNode("/sim/rendering/static-lod/detailed", true)),
     _lodRoughDelta(fgGetNode("/sim/rendering/static-lod/rough-delta", true)),
@@ -165,8 +163,7 @@ void FGTileMgr::init()
 
 void FGTileMgr::shutdown()
 {
-    delete _listener;
-    _listener = NULL;
+    _listener.reset();
 
     FGScenery* scenery = globals->get_scenery();
     if (scenery && scenery->get_terrain_branch()) {
@@ -181,11 +178,11 @@ void FGTileMgr::shutdown()
 void FGTileMgr::reinit()
 {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
-    _terra_sync = static_cast<simgear::SGTerraSync*> (globals->get_subsystem("terrasync"));
+    auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
 
-  // drops the previous options reference
+    // drops the previous options reference
     _options = new simgear::SGReaderWriterOptions;
-    _listener = new TileManagerListener(this);
+    _listener.reset(new TileManagerListener(this));
 
     materialLibChanged();
     _options->setPropertyNode(globals->get_props());
@@ -198,8 +195,8 @@ void FGTileMgr::reinit()
     }
     _options->setPluginStringData("SimGear::FG_ROOT", globals->get_fg_root().utf8Str());
 
-    if (_terra_sync) {
-      _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().utf8Str());
+    if (terraSync) {
+        _options->setPluginStringData("SimGear::TERRASYNC_ROOT", globals->get_terrasync_dir().utf8Str());
     }
 
     if (!_disableNasalHooks->getBoolValue())
@@ -353,6 +350,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     SGBucket b;
 
     int x, y;
+    auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
 
     /* schedule all tiles, use distance-based loading priority,
      * so tiles are loaded in innermost-to-outermost sequence. */
@@ -368,8 +366,8 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
             float priority = (-1.0) * (x*x+y*y);
             sched_tile( b, priority, true, 0.0 );
 
-            if (_terra_sync) {
-                _terra_sync->scheduleTile(b);
+            if (terraSync) {
+                terraSync->scheduleTile(b);
             }
         }
     }
@@ -622,7 +620,8 @@ bool FGTileMgr::isSceneryLoaded()
 
 bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const
 {
-    if (!_terra_sync) {
+    auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
+    if (!terraSync) {
         return false;
     }
 
@@ -630,5 +629,5 @@ bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const
     long int bucketIndex = simgear::strutils::to_int(nameWithoutExtension);
     SGBucket bucket(bucketIndex);
 
-    return _terra_sync->isTileDirPending(bucket.gen_base_path());
+    return terraSync->isTileDirPending(bucket.gen_base_path());
 }
