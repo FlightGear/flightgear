@@ -560,14 +560,14 @@ FGATCController::FGATCController()
 
 FGATCController::~FGATCController()
 {
-    FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+    auto mgr = globals->get_subsystem<FGATCManager>();
     mgr->removeController(this);
 }
 
 void FGATCController::init()
 {
     if (!initialized) {
-        FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+        auto mgr = globals->get_subsystem<FGATCManager>();
         mgr->addController(this);
         initialized = true;
     }
