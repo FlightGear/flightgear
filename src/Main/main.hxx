@@ -27,4 +27,11 @@ void fgResetIdleState();
 
 extern std::string hostname;
 
+namespace flightgear {
+
+void registerMainLoop();
+void unregisterMainLoopProperties();
+
+} // namespace flightgear
+
 #endif

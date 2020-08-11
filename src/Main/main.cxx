@@ -267,7 +267,9 @@ static void checkOpenGLVersion()
     } // of three parts
 }
 
-static void registerMainLoop()
+namespace flightgear {
+
+void registerMainLoop()
 {
     // stash current frame signal property
     frame_signal = fgGetNode("/sim/signals/frame", true);
@@ -275,6 +277,15 @@ static void registerMainLoop()
     nasal_gc_threaded_wait = fgGetNode("/sim/nasal-gc-threaded-wait", true);
     fgRegisterIdleHandler( fgMainLoop );
 }
+
+void unregisterMainLoopProperties()
+{
+    frame_signal.reset();
+    nasal_gc_threaded.reset();
+    nasal_gc_threaded_wait.reset();
+}
+
+} // namespace flightgear
 
 // This is the top level master main function that is registered as
 // our idle function
@@ -408,8 +419,8 @@ static void fgIdleFunction ( void ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/sceneryloaded", false);
-        registerMainLoop();
-        
+        flightgear::registerMainLoop();
+
         ngccn = new simgear::Notifications::NasalGarbageCollectionConfigurationNotification(nasal_gc_threaded->getBoolValue(), nasal_gc_threaded_wait->getBoolValue());
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(*ngccn);
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_started);
@@ -739,7 +750,8 @@ int fgMainInit( int argc, char **argv )
 
     // pass control off to the master event handler
     int result = fgOSMainLoop();
-    frame_signal.clear();
+    flightgear::unregisterMainLoopProperties();
+
     fgOSCloseWindow();
     fgShutdownHome();
     

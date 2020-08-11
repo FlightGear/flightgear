@@ -98,7 +98,8 @@ public:
     void setResizable(bool _resizable) { resizable = _resizable; }
 
     void reset();
-    
+    void clear();
+
     static int translateKey(const osgGA::GUIEventAdapter& ea);
     static int translateModifiers(const osgGA::GUIEventAdapter& ea);
 protected:
