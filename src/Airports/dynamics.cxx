@@ -18,15 +18,14 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <algorithm>
 #include <string>
 #include <vector>
 
 #include <simgear/compiler.h>
+#include <simgear/structure/SGWeakPtr.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -67,7 +66,10 @@ public:
 
   ~ParkingAssignmentPrivate()
   {
-    dynamics->releaseParking(parking);
+      FGAirportDynamicsRef strongRef = dynamics.lock();
+      if (strongRef) {
+          strongRef->releaseParking(parking);
+      }
   }
 
   void release()
@@ -84,7 +86,10 @@ public:
 
   unsigned int refCount;
   FGParkingRef parking;
-  FGAirportDynamicsRef dynamics;
+    
+// we don't want an owning ref here, otherwise we
+// have a circular ownership from AirportDynamics -> us
+  SGWeakPtr<FGAirportDynamics> dynamics;
 };
 
 ParkingAssignment::ParkingAssignment() :
