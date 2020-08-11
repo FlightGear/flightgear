@@ -51,7 +51,7 @@ class FGStgTerrain : public FGTerrain
 public:
 
     FGStgTerrain();
-    ~FGStgTerrain();
+    virtual ~FGStgTerrain();
 
     // Implementation of SGSubsystem.
     void init ( osg::Group* terrain );

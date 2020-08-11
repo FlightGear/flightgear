@@ -21,9 +21,7 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -232,6 +230,7 @@ FGStgTerrain::FGStgTerrain() :
 
 FGStgTerrain::~FGStgTerrain()
 {
+    SG_LOG(SG_TERRAIN, SG_INFO, "FGStgTerrain::dtor");
 }
 
 

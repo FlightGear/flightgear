@@ -49,8 +49,8 @@ class BVHMaterial;
 class FGTerrain
 {
 public:
-    FGTerrain() {};
-    ~FGTerrain() {};
+    FGTerrain() = default;
+    virtual ~FGTerrain() = default;
 
     // Implementation of SGSubsystem. - called from Scenery
     virtual void init ( osg::Group* terrain ) = 0;

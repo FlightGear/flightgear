@@ -407,12 +407,12 @@ void FGScenery::init() {
 
     if ( engine == "pagedLOD" ) {
 #ifdef ENABLE_GDAL
-        _terrain = new FGPgtTerrain();
+        _terrain.reset(new FGPgtTerrain);
 #else
-        _terrain = new FGStgTerrain();
+        _terrain.reset(new FGStgTerrain);
 #endif
     } else {
-        _terrain = new FGStgTerrain();
+        _terrain.reset(new FGStgTerrain);
     }
     _terrain->init( terrain_branch.get() );
 
@@ -437,6 +437,8 @@ void FGScenery::shutdown()
     aircraft_branch = NULL;
     particles_branch = NULL;
     precipitation_branch = NULL;
+
+    _terrain.reset();
 
     // Toggle the setup flag.
     _inited = false;
