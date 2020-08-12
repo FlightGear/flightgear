@@ -309,7 +309,10 @@ PUICamera::~PUICamera()
 {
     SG_LOG(SG_GL, SG_INFO, "Deleting PUI camera");
 
-    auto viewer = globals->get_renderer()->getViewer();
+    // depending on if we're doing shutdown or reset, various things can be
+    // null here.
+    auto renderer = globals->get_renderer();
+    auto viewer = renderer ? renderer->getViewer() : nullptr;
     if (viewer) {
         viewer->removeEventHandler(_eventHandler);
     }
