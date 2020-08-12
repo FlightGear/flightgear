@@ -336,6 +336,9 @@ public:
         class ThreadedGUISearchPrivate;
         std::unique_ptr<ThreadedGUISearchPrivate> d;
     };
+
+    void clearDynamicPositioneds();
+
 private:
   NavDataCache();
 
