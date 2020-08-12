@@ -104,6 +104,7 @@ jsJoystick::jsJoystick ( int ident )
 {
   id = ident ;
   os = new struct os_specific_s;
+  name [0] = '\0' ;
 
   sprintf ( os->fname, "/dev/input/js%d", ident ) ;
 
