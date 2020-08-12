@@ -717,6 +717,10 @@ FGProps::FGProps( const vector<string>& tokens )
  */
 FGProps::~FGProps()
 {
+    // ensure all channels are closed before our poller is destroyed
+    if (is_enabled()) {
+        close();
+    }
 }
 
 /**
