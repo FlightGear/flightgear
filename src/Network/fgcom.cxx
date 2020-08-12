@@ -95,6 +95,8 @@ void FGCom::iaxTextEvent(struct iaxc_ev_text text)
 
 FGCom::FGCom()
 {
+    _maxRange         = MAX_RANGE;
+    _minRange         = MIN_RANGE;
 }
 
 
@@ -195,7 +197,7 @@ void FGCom::init()
   _username         = _username_node->getStringValue();
   _password         = _password_node->getStringValue();
 
-  _currentCommFrequency = 0;
+    _currentCommFrequency = 0.0;
 
   _maxRange         = MAX_RANGE;
   _minRange         = MIN_RANGE;
@@ -341,7 +343,7 @@ void FGCom::setupCommFrequency(int channel) {
             SG_LOG(SG_IO, SG_INFO, "FGCom: disconnect as channel 0 " << _currentCallIdent);
             _currentCallIdent = -1;
         }
-        _currentCommFrequency = 0;
+        _currentCommFrequency = 0.0;
         return;
     }
 
@@ -376,18 +378,18 @@ void FGCom::setupCommFrequency(int channel) {
         _commFrequencyNode->removeChangeListener(this);
     SG_LOG(SG_IO, SG_INFO, "FGCom: setupCommFrequency invalid channel " << channel);
 
-    _currentCommFrequency = 0;
+    _currentCommFrequency = 0.0;
 }
 
 void FGCom::connectToCommFrequency() {
     // ensure that the current comm is still in range
-    if (_currentCallFrequency && !isInRange(_currentCallFrequency)) {
+    if ((_currentCallFrequency > 0.0) && !isInRange(_currentCallFrequency)) {
         SG_LOG(SG_IO, SG_WARN, "FGCom: call out of range of: " << _currentCallFrequency);
-        _currentCallFrequency = 0;
+        _currentCallFrequency = 0.0;
     }
 
     // don't connected (and disconnect if already connected) when tuned freq is 0
-    if (_currentCommFrequency < 1) {
+    if (_currentCommFrequency < 1.0) {
         if (_currentCallIdent != -1) {
             iaxc_dump_call_number(_currentCallIdent);
             SG_LOG(SG_IO, SG_INFO, "FGCom: disconnect as freq 0: current call " << _currentCallIdent);
