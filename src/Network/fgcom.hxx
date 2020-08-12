@@ -72,14 +72,14 @@ private:
     SGPropertyNode_ptr _mpTransmitFrequencyNode;              // sim/multiplay/comm-transmit-frequency-mhz
     SGPropertyNode_ptr _mpTransmitPowerNode;                  // sim/multiplay/comm-transmit-power-norm
 
-    double   _maxRange;
-    double   _minRange;
-    double   _currentCommFrequency;
-    double   _currentCallFrequency;
+    double   _maxRange = 0.0;
+    double   _minRange = 0.0;
+    double   _currentCommFrequency = 0.0;
+    double   _currentCallFrequency = 0.0;
     bool     _register = true;
     bool     _enabled = false;
     bool     _initialized = false;
-    int      _regId;
+    int      _regId = 0;
     int      _currentCallIdent = -1;
     //int      _callComm1;
     int      _listener_active = 0;
