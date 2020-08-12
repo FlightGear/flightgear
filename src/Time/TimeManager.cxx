@@ -141,7 +141,9 @@ void TimeManager::unbind()
     _frameRate.clear();
     _frameLatency.clear();
     _frameRateWorst.clear();
-    
+    _frameWait.clear();
+    _maxFrameRate.clear();
+
     _sceneryLoaded.clear();
     _modelHz.clear();
     _timeDelta.clear();

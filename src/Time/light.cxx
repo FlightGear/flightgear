@@ -206,6 +206,7 @@ void FGLight::unbind () {
     for (int i = 0; i < 4; ++i)
         _chromeProps[i] = SGPropertyNode_ptr();
     _sunAngleRad = SGPropertyNode_ptr();
+    _moonAngleRad.reset();
     _humidity = SGPropertyNode_ptr();
 }
 
