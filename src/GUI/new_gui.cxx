@@ -45,6 +45,8 @@
 using std::map;
 using std::string;
 
+extern void puCleanUpJunk(void);
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of NewGUI.
 ////////////////////////////////////////////////////////////////////////
@@ -108,6 +110,8 @@ NewGUI::shutdown()
     fgUntie("/sim/menubar/visibility");
     _menubar.reset();
     _dialog_props.clear();
+
+    puCleanUpJunk();
 }
 
 void
