@@ -1270,7 +1270,10 @@ void fgStartNewReset()
             // don't delete here, dropping the ref should be sufficient
         }
     } // of top-level groups iteration
-    
+
+    // drop any references to AI objects with TACAN
+    flightgear::NavDataCache::instance()->clearDynamicPositioneds();
+
     FGRenderer* render = globals->get_renderer();
     // needed or we crash in multi-threaded OSG mode
     render->getViewer()->stopThreading();

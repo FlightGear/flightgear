@@ -166,6 +166,11 @@ const SGVec3d& FGMobileNavRecord::cart() const
 }
 
 //------------------------------------------------------------------------------
+void FGMobileNavRecord::clearVehicle()
+{
+    _vehicle_node.clear();
+}
+
 void FGMobileNavRecord::updateVehicle()
 {
   _vehicle_node.clear();

@@ -1725,6 +1725,16 @@ void NavDataCache::abortTransaction()
   d->transactionAborted = true;
 }
 
+void NavDataCache::clearDynamicPositioneds()
+{
+    std::for_each(d->cache.begin(), d->cache.end(), [](PositionedCache::value_type& v) {
+        if (v.second->type() == FGPositioned::MOBILE_TACAN) {
+            auto mobile = fgpositioned_cast<FGMobileNavRecord>(v.second);
+            mobile->clearVehicle();
+        }
+    });
+}
+
 FGPositionedRef NavDataCache::loadById(PositionedID rowid)
 {
   if (rowid < 1) {

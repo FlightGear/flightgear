@@ -126,6 +126,11 @@ class FGMobileNavRecord:
   public FGNavRecord
 {
   public:
+      static bool isType(FGPositioned::Type ty)
+      {
+          return (ty == MOBILE_TACAN);
+      }
+
     FGMobileNavRecord( PositionedID aGuid,
                        Type type,
                        const std::string& ident,
@@ -142,7 +147,9 @@ class FGMobileNavRecord:
     void updateVehicle();
     void updatePos();
 
-  protected:
+    void clearVehicle();
+
+protected:
     SGTimeStamp _last_vehicle_update;
     SGPropertyNode_ptr _vehicle_node;
     double _initial_elevation_ft; // Elevation as given in the config file
