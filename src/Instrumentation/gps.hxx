@@ -70,6 +70,7 @@ public:
     void bind() override;
     void unbind() override;
     void update (double delta_time_sec) override;
+    void shutdown() override;
 
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "gps"; }

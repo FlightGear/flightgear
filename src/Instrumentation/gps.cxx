@@ -267,6 +267,7 @@ void
 GPS::unbind()
 {
   _tiedProperties.Untie();
+  _gpsNode.clear();
 }
 
 void
@@ -364,6 +365,14 @@ GPS::update (double delta_time_sec)
   
   _last_pos = _indicated_pos;
   _lastPosValid = !(_last_pos == SGGeod());
+}
+
+void GPS::shutdown()
+{
+    if (_route) {
+        _route->removeDelegate(this);
+        _route = nullptr;
+    }
 }
 
 void GPS::routeManagerFlightPlanChanged(SGPropertyNode*)
