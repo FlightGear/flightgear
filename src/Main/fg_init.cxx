@@ -61,12 +61,13 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
-#include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/material/Effect.hxx>
+#include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/model/particles.hxx>
-#include <simgear/scene/tsync/terrasync.hxx>
+#include <simgear/scene/tgdb/TreeBin.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 
 #include <simgear/package/Root.hxx>
 #include <simgear/package/Package.hxx>
@@ -1305,6 +1306,7 @@ void fgStartNewReset()
     flightgear::unregisterMainLoopProperties();
     FGReplayData::resetStatisticsProperties();
 
+    simgear::clearSharedTreeGeometry();
     simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();
     simgear::GlobalParticleCallback::setSwitch(NULL);
@@ -1315,6 +1317,18 @@ void fgStartNewReset()
     globals->resetPropertyRoot();
     // otherwise channels are duplicated
     globals->get_channel_options_list()->clear();
+
+    // IMPORTANT
+    // this is the low-water mark of the reset process.
+    // Subsystems (except the special ones), properties, OSG nodes, Effects
+    // should all be gone at this, except for special things, such as the
+    // splash node.
+    // From here onwards we're recreating early parts of main/init, before
+    // we restart the main loop.
+    // This is the place to check that instances of classes have all be
+    // cleaned up correctly. (Also, the OSG threads are all paused, we're back
+    // in single threaded mode)
+    /////////////////////
 
     flightgear::addons::AddonManager::createInstance();
 
