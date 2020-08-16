@@ -52,7 +52,7 @@ FGAIWaypoint::FGAIWaypoint() {
   crossat     = 0;
   finished    = 0;
   gear_down   = 0;
-  flaps_down  = 0;
+  flaps       = 0;
   on_ground   = 0;
   routeIndex  = 0;
   time_sec    = 0;
@@ -240,18 +240,51 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
   for (int i = 0; i < node->nChildren(); i++) {
     FGAIWaypoint* wpt = new FGAIWaypoint;
     SGPropertyNode * wpt_node = node->getChild(i);
-    wpt->setName       (wpt_node->getStringValue("name", "END"     ));
-    wpt->setLatitude   (wpt_node->getDoubleValue("lat", 0          ));
-    wpt->setLongitude  (wpt_node->getDoubleValue("lon", 0          ));
-    wpt->setAltitude   (wpt_node->getDoubleValue("alt", 0          ));
-    wpt->setSpeed      (wpt_node->getDoubleValue("ktas", 0         ));
-    wpt->setCrossat    (wpt_node->getDoubleValue("crossat", -10000 ));
-    wpt->setGear_down  (wpt_node->getBoolValue("gear-down", false  ));
-    wpt->setFlaps_down (wpt_node->getBoolValue("flaps-down", false ));
-    wpt->setOn_ground  (wpt_node->getBoolValue("on-ground", false  ));
-    wpt->setTime_sec   (wpt_node->getDoubleValue("time-sec", 0     ));
-    wpt->setTime       (wpt_node->getStringValue("time", ""        ));
-    wpt->setFinished   ((wpt->getName() == "END"));
+
+    bool gear, flaps;
+
+    // Calculate some default values if they are not set explicitly in the flightplan
+    if (wpt_node->getDoubleValue("ktas", 0) < 1.0f ) {
+      // Not moving so assume shut down.  
+      wpt->setPowerDownLights();
+      flaps   = false;
+      gear    = true;
+    } else if (wpt_node->getDoubleValue("alt", 0) > 10000.0f ) {
+      // Cruise flight;
+      wpt->setCruiseLights();
+      flaps   = false;
+      gear    = false;
+    } else if (wpt_node->getBoolValue("on-ground", false)) {
+      // On ground
+      wpt->setGroundLights();
+      flaps   = true;
+      gear    = true;
+    } else if (wpt_node->getDoubleValue("alt", 0) < 3000.0f ) {
+      // In the air below 3000 ft, so flaps and gear down.
+      wpt->setApproachLights();
+      flaps   = true;
+      gear    = true;
+    } else {
+      // In the air 3000-10000 ft
+      wpt->setApproachLights();
+      flaps   = false;
+      gear    = false;
+    }
+
+    wpt->setName         (wpt_node->getStringValue("name", "END"     ));
+    wpt->setLatitude     (wpt_node->getDoubleValue("lat", 0          ));
+    wpt->setLongitude    (wpt_node->getDoubleValue("lon", 0          ));
+    wpt->setAltitude     (wpt_node->getDoubleValue("alt", 0          ));
+    wpt->setSpeed        (wpt_node->getDoubleValue("ktas", 0         ));
+    wpt->setCrossat      (wpt_node->getDoubleValue("crossat", -10000 ));
+    wpt->setGear_down    (wpt_node->getBoolValue("gear-down", gear  ));
+    wpt->setFlaps        (wpt_node->getBoolValue("flaps-down", flaps ) ? 1.0 : 0.0);
+    wpt->setSpoilers     (wpt_node->getBoolValue("spoilers", false ) ? 1.0 : 0.0);
+    wpt->setSpeedBrakes  (wpt_node->getBoolValue("speedbrakes", false ) ? 1.0 : 0.0);
+    wpt->setOn_ground    (wpt_node->getBoolValue("on-ground", false  ));
+    wpt->setTime_sec     (wpt_node->getDoubleValue("time-sec", 0     ));
+    wpt->setTime         (wpt_node->getStringValue("time", ""        ));
+    wpt->setFinished     ((wpt->getName() == "END"));
     pushBackWaypoint( wpt );
   }
   if( getLastWaypoint()->getName().compare("END") != 0  ) {
@@ -356,16 +389,17 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
         lead_distance = 0.5;
         return;
   }
+
   if (speed < 25) {
-       turn_radius = ((360/30)*fabs(speed)) / (2*M_PI);
-  } else 
+      turn_radius = ((360/30)*fabs(speed)) / (2*M_PI);
+  } else {
       turn_radius = 0.1911 * speed * speed; // an estimate for 25 degrees bank
+  }
 
   double inbound = bearing;
   double outbound = getBearing(current, next);
   leadInAngle = fabs(inbound - outbound);
-  if (leadInAngle > 180.0) 
-    leadInAngle = 360.0 - leadInAngle;
+  if (leadInAngle > 180.0) leadInAngle = 360.0 - leadInAngle;
   //if (leadInAngle < 30.0) // To prevent lead_dist from getting so small it is skipped 
   //  leadInAngle = 30.0;
   
@@ -422,7 +456,14 @@ void FGAIFlightPlan::resetWaypoints()
       wpt->setPos         ( (*i)->getPos()        );
       wpt->setCrossat     ( (*i)->getCrossat()    );
       wpt->setGear_down   ( (*i)->getGear_down()  );
-      wpt->setFlaps_down  ( (*i)->getFlaps_down() );
+      wpt->setFlaps       ( (*i)->getFlaps()      );
+      wpt->setSpoilers    ( (*i)->getSpoilers()   );
+      wpt->setSpeedBrakes ( (*i)->getSpeedBrakes());
+      wpt->setBeaconLight ( (*i)->getBeaconLight() );
+      wpt->setLandingLight( (*i)->getLandingLight() );
+      wpt->setNavLight    ( (*i)->getNavLight()   );
+      wpt->setStrobeLight ( (*i)->getStrobeLight());
+      wpt->setTaxiLight   ( (*i)->getTaxiLight()  );
       wpt->setFinished    ( false                 );
       wpt->setOn_ground   ( (*i)->getOn_ground()  );
       SG_LOG(SG_AI, SG_DEBUG, "Recycling waypoint " << wpt->getName());

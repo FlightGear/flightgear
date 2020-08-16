@@ -4,6 +4,7 @@ set(SOURCES
 	AIAircraft.cxx
 	AIBallistic.cxx
 	AIBase.cxx
+	AIBaseAircraft.cxx
 	AICarrier.cxx
 	AIEscort.cxx
 	AIFlightPlan.cxx
@@ -28,6 +29,7 @@ set(HEADERS
 	AIAircraft.hxx
 	AIBallistic.hxx
 	AIBase.hxx
+	AIBaseAircraft.hxx
 	AICarrier.hxx
 	AIEscort.hxx
 	AIFlightPlan.hxx

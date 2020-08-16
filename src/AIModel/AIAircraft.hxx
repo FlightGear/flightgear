@@ -21,7 +21,7 @@
 #ifndef _FG_AIAircraft_HXX
 #define _FG_AIAircraft_HXX
 
-#include "AIBase.hxx"
+#include "AIBaseAircraft.hxx"
 
 #include <string>
 
@@ -32,7 +32,7 @@ class FGATCController;
 class FGATCInstruction;
 class FGAIWaypoint;
 
-class FGAIAircraft : public FGAIBase {
+class FGAIAircraft : public FGAIBaseAircraft {
 
 public:
     FGAIAircraft(FGAISchedule *ref=0);

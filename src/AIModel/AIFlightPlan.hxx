@@ -36,12 +36,20 @@ private:
    double crossat;
    bool finished;
    bool gear_down;
-   bool flaps_down;
+   double flaps;
+   double spoilers;
+   double speedbrakes;
    bool on_ground;
     int routeIndex;  // For AI/ATC purposes;
    double time_sec;
    double trackLength; // distance from previous FGAIWaypoint (for AI purposes);
    std::string time;
+   bool beacon_light;
+   bool landing_light;
+   bool nav_light;
+   bool strobe_light;
+   bool taxi_light;
+   bool cabin_light;
 
 public:
     FGAIWaypoint();
@@ -55,12 +63,33 @@ public:
     void setCrossat     (double val) { crossat     = val; };
     void setFinished    (bool   fin) { finished    = fin; };
     void setGear_down   (bool   grd) { gear_down   = grd; };
-    void setFlaps_down  (bool   fld) { flaps_down  = fld; };
+    void setFlaps       (double val) { flaps       = val; };
+    void setSpoilers    (double val) { spoilers    = val; };
+    void setSpeedBrakes (double val) { speedbrakes = val; };
     void setOn_ground   (bool   grn) { on_ground   = grn; };
     void setRouteIndex  (int    rte) { routeIndex  = rte; };
     void setTime_sec    (double ts ) { time_sec    = ts;  };
     void setTrackLength (double tl ) { trackLength = tl;  };
     void setTime        (const std::string& tme) { time        = tme; };
+    void setLights (bool beacon, bool cabin, bool ldg, bool nav, bool strobe, bool taxi) { 
+      beacon_light = beacon;
+      cabin_light = cabin; 
+      landing_light = ldg; 
+      nav_light = nav; 
+      strobe_light = strobe; 
+      taxi_light = taxi; };
+    //                                      beacon cabin  ldg    nav    strobe taxi
+    void setPowerDownLights()   { setLights(false, true,  false, false, false, false); };
+    void setGroundLights()      { setLights(true,  true,  false, true,  false, true ); };
+    void setCruiseLights()      { setLights(true,  true,  false, true,  true,  false); };
+    void setTakeOffLights()     { setLights(true,  false, true,  true,  true,  false); };
+    void setApproachLights()    { setLights(true,  false, true,  true,  true,  false); };
+    void setBeaconLight  (bool beacon) { beacon_light = beacon; };
+    void setCabinLight   (bool cabin)  { cabin_light = cabin;    };
+    void setLandingLight (bool ldg)    { landing_light = ldg;   };
+    void setNavLight     (bool nav)    { nav_light = nav;       };
+    void setStrobeLight  (bool strobe) { strobe_light = strobe; };
+    void setTaxiLight    (bool taxi)   { taxi_light = taxi;     };
 
     bool contains(const std::string& name);
 
@@ -73,13 +102,22 @@ public:
 
     double getCrossat    () { return crossat;     };
     bool   getGear_down  () { return gear_down;   };
-    bool   getFlaps_down () { return flaps_down;  };
+    double getFlaps      () { return flaps;       };
+    double getSpoilers   () { return spoilers;    };
+    double getSpeedBrakes() { return speedbrakes; };
     bool   getOn_ground  () { return on_ground;   };
+    bool   getInAir      () { return ! on_ground; };
     int    getRouteIndex () { return routeIndex;  };
     bool   isFinished    () { return finished;    };
     double getTime_sec   () { return time_sec;    };
     double getTrackLength() { return trackLength; };
     const std::string& getTime  () { return time;        };
+    bool   getBeaconLight() { return beacon_light; };
+    bool   getCabinLight() { return cabin_light; };
+    bool   getLandingLight() { return landing_light; };
+    bool   getNavLight()    { return nav_light;   };
+    bool   getStrobeLight() { return strobe_light;};
+    bool   getTaxiLight() { return taxi_light; };
 
   };
 
@@ -115,13 +153,13 @@ public:
 
    double getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const;
    int getLeg () const { return leg;};
-   
+
    void setLeadDistance(double speed, double bearing, FGAIWaypoint* current, FGAIWaypoint* next);
    void setLeadDistance(double distance_ft);
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(FGAIWaypoint* previous, FGAIWaypoint* next) const;
    double getBearing(const SGGeod& aPos, FGAIWaypoint* next) const;
-  
+
    double checkTrackLength(const std::string& wptName) const;
   time_t getStartTime() const { return start_time; }
    time_t getArrivalTime() const { return arrivalTime; }
@@ -137,7 +175,7 @@ public:
 
   double getLeadInAngle() const { return leadInAngle; }
   const std::string& getRunway() const;
-  
+
   void setRepeat(bool r) { repeat = r; }
   bool getRepeat(void) const { return repeat; }
   void restart(void);
@@ -162,7 +200,7 @@ public:
   FGAIFlightPlan* getSID() { return sid; };
   FGAIWaypoint *getWayPoint(int i) { return waypoints[i]; };
   FGAIWaypoint *getLastWaypoint() { return waypoints.back(); };
-  
+
   void shortenToFirst(unsigned int number, std::string name);
 
   void setGate(const ParkingAssignment& pka);
@@ -192,14 +230,14 @@ private:
   std::string name;
   bool isValid;
   FGAirportRef departure, arrival;
-  
+
   void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
   bool createClimb(FGAIAircraft *, bool, FGAirport *, FGAirport* arrival, double, double, const std::string&);
   bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
   bool createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
   bool createLanding(FGAIAircraft *, FGAirport *, const std::string&);
   bool createParking(FGAIAircraft *, FGAirport *, double radius);
-  void deleteWaypoints(); 
+  void deleteWaypoints();
   void resetWaypoints();
   void eraseLastWaypoint();
   void pushBackWaypoint(FGAIWaypoint *wpt);
@@ -210,22 +248,23 @@ private:
   bool createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
 
   double getTurnRadius(double, bool);
-        
+
   FGAIWaypoint* createOnGround(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
+  FGAIWaypoint* createOnRunway(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
   FGAIWaypoint* createInAir(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
   FGAIWaypoint* cloneWithPos(FGAIAircraft *, FGAIWaypoint* aWpt, const std::string& aName, const SGGeod& aPos);
   FGAIWaypoint* clone(FGAIWaypoint* aWpt);
-    
+
 
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
-  
+
   /**
    * look for and parse an PropertyList flight-plan file - essentially
    * a flat list waypoint objects, encoded to properties
    */
   bool parseProperties(const std::string& filename);
-  
+
   void createWaypoints(FGAIAircraft *ac,
                        double course,
                        time_t start,
@@ -240,7 +279,7 @@ private:
                        const std::string& fltType,
                        const std::string& acType,
                        const std::string& airline);
-  
+
  public:
   wpt_vector_iterator getFirstWayPoint() { return waypoints.begin(); };
   wpt_vector_iterator getLastWayPoint()  { return waypoints.end(); };

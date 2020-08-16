@@ -81,7 +81,7 @@ void FGSidStar::load(SGPath filename) {
           wpt->setSpeed       (wpt_node->getDoubleValue("ktas", 0));
           wpt->setCrossat     (wpt_node->getDoubleValue("crossat", -10000));
           wpt->setGear_down   (wpt_node->getBoolValue("gear-down", false));
-          wpt->setFlaps_down  (wpt_node->getBoolValue("flaps-down", false));
+          wpt->setFlaps       (wpt_node->getBoolValue("flaps-down", false) ? 0.5 : 0.0);  //  We'll assume all SIDS only require half flaps
           wpt->setOn_ground   (wpt_node->getBoolValue("on-ground", false));
           wpt->setTime_sec    (wpt_node->getDoubleValue("time-sec", 0));
           wpt->setTime        (wpt_node->getStringValue("time", ""));

@@ -21,7 +21,7 @@
 #include <src/Main/globals.hxx>
 
 
-FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::string& modelString) : FGAIBase(otStatic, false)
+FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::string& modelString) : FGAIBaseAircraft()
 {
     std::size_t  pos = modelString.find("/Aircraft/"); // Only supporting AI models from FGDATA/AI/Aircraft for now
     if(pos != std::string::npos)
@@ -67,15 +67,15 @@ double FGAISwiftAircraft::getGroundElevation(const SGGeod& pos) const
 
 void FGAISwiftAircraft::setPlaneSurface(const AircraftSurfaces& surfaces)
 {
-    m_gearNode->setDoubleValue(surfaces.gear);
-    m_flapsIdentNode->setDoubleValue(surfaces.flaps);
-    m_spoilerNode->setDoubleValue(surfaces.spoilers);
-    m_speedBrakeNode->setDoubleValue(surfaces.spoilers);
-    m_landLightNode->setBoolValue(surfaces.landingLight);
-    m_taxiLightNode->setBoolValue(surfaces.taxiLight);
-    m_beaconLightNode->setBoolValue(surfaces.beaconLight);
-    m_strobeLightNode->setBoolValue(surfaces.strobeLight);
-    m_navLightNode->setBoolValue(surfaces.navLight);
+    setGearPos(surfaces.gear);
+    setFlapsPos(surfaces.flaps);
+    setSpoilerPos(surfaces.spoilers);
+    setSpeedBrakePos(surfaces.spoilers);
+    setBeaconLight(surfaces.beaconLight);
+    setLandingLight(surfaces.landingLight);
+    setNavLight(surfaces.navLight);
+    setStrobeLight(surfaces.strobeLight);
+    setTaxiLight(surfaces.taxiLight);
 }
 
 void FGAISwiftAircraft::setPlaneTransponder(const AircraftTransponder& transponder)
@@ -91,17 +91,6 @@ void FGAISwiftAircraft::initProps()
     m_transponderCodeNode = _getProps()->getNode("swift/transponder/code", true);
     m_transponderCModeNode = _getProps()->getNode("swift/transponder/c-mode", true);
     m_transponderIdentNode = _getProps()->getNode("swift/transponder/ident", true);
-
-    m_gearNode = _getProps()->getNode("swift/gear/gear-down", true);
-    m_flapsIdentNode = _getProps()->getNode("swift/flight/flaps", true);
-    m_spoilerNode = _getProps()->getNode("swift/flight/spoilers", true);
-    m_speedBrakeNode = _getProps()->getNode("swift/flight/speedbrake", true);
-
-    m_landLightNode = _getProps()->getNode("swift/lighting/landing-lights", true);
-    m_navLightNode = _getProps()->getNode("swift/lighting/nav-lights", true);
-    m_taxiLightNode = _getProps()->getNode("swift/lighting/taxi-light", true);
-    m_beaconLightNode = _getProps()->getNode("swift/lighting/beacon", true);
-    m_strobeLightNode = _getProps()->getNode("swift/lighting/strobe", true);
 }
 
 FGAISwiftAircraft::~FGAISwiftAircraft() = default;

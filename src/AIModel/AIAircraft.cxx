@@ -56,7 +56,7 @@ using std::endl;
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
      /* HOT must be disabled for AI Aircraft,
       * otherwise traffic detection isn't working as expected.*/
-    FGAIBase(otAircraft, false),
+    FGAIBaseAircraft(),
     _performance(0)
 {
     trafficRef = ref;
@@ -134,7 +134,7 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 
 
 void FGAIAircraft::bind() {
-    FGAIBase::bind();
+    FGAIBaseAircraft::bind();
 
     tie("transponder-id",
         SGRawValueMethods<FGAIAircraft,const char*>(*this,
@@ -169,8 +169,8 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
 
  void FGAIAircraft::Run(double dt)
 {
-        bool outOfSight = false,
-        flightplanActive = true;
+     bool outOfSight = false,
+     flightplanActive = true;
      updatePrimaryTargetValues(dt, flightplanActive, outOfSight); // target hdg, alt, speed
      if (outOfSight) {
         return;
@@ -183,11 +183,8 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
      handleATCRequests(dt); // ATC also has a word to say
      updateSecondaryTargetValues(dt); // target roll, vertical speed, pitch
      updateActualState(dt);
-#if 0
-   // 25/11/12 - added but disabled, since setting properties isn't
-   // affecting the AI-model as expected.
+
      updateModelProperties(dt);
-#endif
    
     // We currently have one situation in which an AIAircraft object is used that is not attached to the
     // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
@@ -195,7 +192,7 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
     // enough
      if (manager){
         UpdateRadar(manager);
-    invisible = !manager->isVisible(pos);
+        invisible = !manager->isVisible(pos);
      }
   }
 
@@ -372,27 +369,52 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             fp->setLeadDistance(tgt_speed, tgt_heading, curr, next);
         }
 
+        // Calculate a target altitude for any leg in which at least one waypoint is in the air.
 
-        if (!(prev->getOn_ground()))  // only update the tgt altitude from flightplan if not on the ground
-        {
-            tgt_altitude_ft = prev->getAltitude();
+        if (prev->getInAir() && curr->getInAir()) {
+            // Completely in-air leg, so calculate the target altitude and VS.
             if (curr->getCrossat() > -1000.0) {
                 use_perf_vs = false;
-                // Distance to go in meters
-                double vert_dist_ft = curr->getCrossat() - altitude_ft;
-                double err_dist     = prev->getCrossat() - altitude_ft;
                 double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+                double vert_dist_ft = curr->getCrossat() - altitude_ft;            
+                double err_dist     = prev->getCrossat() - altitude_ft;
                 tgt_vs = calcVerticalSpeed(vert_dist_ft, dist_m, speed, err_dist);
-                
+                tgt_altitude_ft = curr->getCrossat();            
                 checkTcas();
-                tgt_altitude_ft = curr->getCrossat();
             } else {
                 use_perf_vs = true;
+                tgt_altitude_ft = prev->getCrossat();
             }
+        } else if (curr->getInAir()) {
+            // Take-off leg (prev is on ground)
+            if (curr->getCrossat() > -1000.0) {
+                // Altitude restriction
+                use_perf_vs = false;
+                double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+                double vert_dist_ft = curr->getCrossat() - altitude_ft;            
+                double err_dist     = - altitude_ft;
+                tgt_vs = calcVerticalSpeed(vert_dist_ft, dist_m, speed, err_dist);
+                tgt_altitude_ft = curr->getCrossat();
+            } else {
+                // no cross-at, so assume same as previous
+                use_perf_vs = true;
+                tgt_altitude_ft = prev->getCrossat();
+            }
+        } else if (prev->getInAir()) {
+            // Landing Leg (curr is on ground).
+
+            // Assume we want to touch down on the point, and not early!
+            use_perf_vs = false;
+            double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
+            double vert_dist_ft = curr->getAltitude() - altitude_ft;
+            double err_dist     = - altitude_ft;
+            tgt_vs = calcVerticalSpeed(vert_dist_ft, dist_m, speed, err_dist);
+            tgt_altitude_ft = curr->getAltitude();
         }
+
         AccelTo(prev->getSpeed());
         hdg_lock = alt_lock = true;
-        no_roll = prev->getOn_ground();
+        no_roll = (prev->getOn_ground() && curr->getOn_ground());
     }
 }
 
@@ -817,6 +839,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
               fp->getPreviousWaypoint()->setSpeed(tgt_speed);
           }
     }
+    
     if (lead_dist < fabs(2*speed)) {
       //don't skip over the waypoint
       lead_dist = fabs(2*speed);
@@ -1417,34 +1440,50 @@ double limitRateOfChange(double cur, double target, double maxDeltaSec, double d
   return (fabs(delta) < maxDelta) ? delta : copysign(maxDelta, delta);
 }
 
-// drive various properties in a semi-realistic fashion.
+// Drive various properties in a semi-realistic fashion.
+// Note that we assume that the properties are set at 
+// a waypoint rather than in the leg before.  So we need 
+// to use the  previous waypoint (i.e. the one just passed)
+// rather than the current one (i.e. the next one on the route)
 void FGAIAircraft::updateModelProperties(double dt)
 {
-  if (!props) {
+  if ((!fp) || (!fp->getPreviousWaypoint())) {
     return;
   }
   
-  SGPropertyNode* gear = props->getChild("gear", 0, true);
-  double targetGearPos = fp->getCurrentWaypoint()->getGear_down() ? 1.0 : 0.0;
-  if (!gear->hasValue("gear/position-norm")) {
-    gear->setDoubleValue("gear/position-norm", targetGearPos);
-  }
+  double targetGearPos = fp->getPreviousWaypoint()->getGear_down() ? 1.0 : 0.0;
+  double gearPos = getGearPos();
   
-  double gearPosNorm = gear->getDoubleValue("gear/position-norm");
-  if (gearPosNorm != targetGearPos) {
-    gearPosNorm += limitRateOfChange(gearPosNorm, targetGearPos, 0.1, dt);
-    if (gearPosNorm < 0.001) {
-      gearPosNorm = 0.0;
-    } else if (gearPosNorm > 0.999) {
-      gearPosNorm = 1.0;
+  if (gearPos != targetGearPos) {
+    gearPos = gearPos + limitRateOfChange(gearPos, targetGearPos, 0.1, dt);
+    if (gearPos < 0.001) {
+      gearPos = 0.0;
+    } else if (gearPos > 0.999) {
+      gearPos = 1.0;    
     }
-    
-    for (int i=0; i<6; ++i) {
-      SGPropertyNode* g = gear->getChild("gear", i, true);
-      g->setDoubleValue("position-norm", gearPosNorm);
-    } // of gear setting loop      
-  } // of gear in-transit
-  
-//  double flapPosNorm = props->getDoubleValue();
+    setGearPos(gearPos);
+  } 
+
+  double targetFlapsPos = fp->getPreviousWaypoint()->getFlaps();
+  double flapsPos = getFlapsPos();
+
+  if (flapsPos != targetFlapsPos) {
+    flapsPos = flapsPos + limitRateOfChange(flapsPos, targetFlapsPos, 0.05, dt);
+    if (flapsPos < 0.001) {        
+      flapsPos = 0.0;
+    } else if (flapsPos > 0.999) {
+      flapsPos = 1.0;
+    }
+    setFlapsPos(flapsPos);
+  }
+
+  setSpeedBrakePos(fp->getPreviousWaypoint()->getSpeedBrakes());
+  setSpoilerPos(fp->getPreviousWaypoint()->getSpoilers());
+  setCabinLight(fp->getPreviousWaypoint()->getCabinLight());
+  setBeaconLight(fp->getPreviousWaypoint()->getBeaconLight());
+  setLandingLight(fp->getPreviousWaypoint()->getLandingLight());
+  setNavLight(fp->getPreviousWaypoint()->getNavLight());
+  setStrobeLight(fp->getPreviousWaypoint()->getStrobeLight());
+  setTaxiLight(fp->getPreviousWaypoint()->getTaxiLight());
 }
 

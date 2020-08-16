@@ -21,7 +21,7 @@
 #define FLIGHTGEAR_AISWIFTAIRCRAFT_H
 
 
-#include "AIBase.hxx"
+#include "AIBaseAircraft.hxx"
 #include <string>
 #include <utility>
 
@@ -67,9 +67,7 @@ struct AircraftSurfaces
     int lightPattern;
 };
 
-
-
-class FGAISwiftAircraft : public FGAIBase
+class FGAISwiftAircraft : public FGAIBaseAircraft
 {
 public:
     FGAISwiftAircraft(const std::string& callsign, const std::string& modelString);
@@ -89,24 +87,6 @@ private:
     SGPropertyNode_ptr m_transponderCodeNode;
     SGPropertyNode_ptr m_transponderCModeNode;
     SGPropertyNode_ptr m_transponderIdentNode;
-
-    SGPropertyNode_ptr m_gearNode;
-    SGPropertyNode_ptr m_flapsIdentNode;
-    SGPropertyNode_ptr m_spoilerNode;
-    SGPropertyNode_ptr m_speedBrakeNode;
-    //SGPropertyNode_ptr m_slatsNode;
-    //SGPropertyNode_ptr m_wingSweepNode;
-    //SGPropertyNode_ptr m_thrustNode;
-    //SGPropertyNode_ptr m_elevatorNode;
-    //SGPropertyNode_ptr m_rudderNode;
-    //SGPropertyNode_ptr m_aileronNode;
-    SGPropertyNode_ptr m_landLightNode;
-    SGPropertyNode_ptr m_taxiLightNode;
-    SGPropertyNode_ptr m_beaconLightNode;
-    SGPropertyNode_ptr m_strobeLightNode;
-    SGPropertyNode_ptr m_navLightNode;
-    //SGPropertyNode_ptr m_lightPatternNode;
-
 };
 
 

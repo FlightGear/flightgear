@@ -664,7 +664,6 @@ bool FGAIBase::isa( object_type otype ) {
     return otype == _otype;
 }
 
-
 void FGAIBase::bind() {
     _tiedProperties.setRoot(props);
     tie("id", SGRawValueMethods<FGAIBase,int>(*this,
@@ -723,11 +722,9 @@ void FGAIBase::bind() {
     tie("radar/rotation", SGRawValuePointer<double>(&rotation));
     tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
     tie("subID", SGRawValuePointer<int>(&_subID));
-    tie("controls/lighting/nav-lights", SGRawValueFunctions<bool>(_isNight));
 
+    props->setStringValue("sim/model/path", model_path);
 
-    props->setBoolValue("controls/lighting/beacon", true);
-    props->setBoolValue("controls/lighting/strobe", true);
     props->setBoolValue("controls/glide-path", true);
 
     props->setStringValue("controls/flight/lateral-mode", "roll");
