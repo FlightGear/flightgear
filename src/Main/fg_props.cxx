@@ -229,7 +229,8 @@ setFreeze (bool f)
     frozen = f;
 
     // Pause the particle system
-    simgear::Particles::setFrozen(f);
+    auto p = simgear::ParticlesGlobalManager::instance();
+    p->setFrozen(f);
 }
 
 

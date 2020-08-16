@@ -383,11 +383,12 @@ void FGScenery::init() {
     aircraft_branch->addChild( interiorLOD );
     
     // Set up the particle system as a directly accessible branch of the scene graph.
-    particles_branch = simgear::Particles::getCommonRoot();
+    auto paricles = simgear::ParticlesGlobalManager::instance();
+    particles_branch = paricles->getCommonRoot();
     particles_branch->setName("Particles");
     scene_graph->addChild(particles_branch.get());
-    simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
-  
+    paricles->setSwitchNode(fgGetNode("/sim/rendering/particles", true));
+
     // Set up the precipitation system.
     precipitation_branch = new osg::Group;
     precipitation_branch->setName("Precipitation");
