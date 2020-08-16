@@ -266,8 +266,9 @@ FGEnvironmentMgr::update (double dt)
     SGGeod aircraftPos(globals->get_aircraft_position());
   _environment->set_elevation_ft( aircraftPos.getElevationFt() );
 
-  simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
-                                   _environment->get_wind_speed_kt() );
+  auto particlesManager = simgear::ParticlesGlobalManager::instance();
+  particlesManager->setWindFrom(_environment->get_wind_from_heading_deg(),
+                                _environment->get_wind_speed_kt());
   if( _cloudLayersDirty ) {
     _cloudLayersDirty = false;
     fgClouds->set_update_event( fgClouds->get_update_event()+1 );

@@ -1309,7 +1309,7 @@ void fgStartNewReset()
     simgear::clearSharedTreeGeometry();
     simgear::clearEffectCache();
     simgear::SGModelLib::resetPropertyRoot();
-    simgear::GlobalParticleCallback::setSwitch(NULL);
+    simgear::ParticlesGlobalManager::clear();
     simgear::UniformFactory::instance()->reset();    
 
     flightgear::addons::AddonManager::reset();
