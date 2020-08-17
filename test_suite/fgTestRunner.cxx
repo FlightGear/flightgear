@@ -55,8 +55,14 @@ int testRunner(const std::string& type, const std::string& title, char *subset, 
     // Execute the tests.
     if (subset == NULL)
         runner.run("", false, true, false);
-    else
-        runner.run(subset, false, true, false);
+    else {
+        std::stringstream testStream(subset);
+        std::string testName;
+        while( testStream.good() ) {
+            getline( testStream, testName, ',' );
+            runner.run(testName, false, true, false);
+        }
+    }
 
     // Clean up.
     delete testListener;

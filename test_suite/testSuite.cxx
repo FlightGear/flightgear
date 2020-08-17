@@ -44,7 +44,7 @@ void helpPrintout(std::ostream &stream) {
     stream << std::endl;
     stream << "    The -s, -u, -g, and -m options accept an optional argument to perform a" << std::endl;
     stream << "    subset of all tests.  This argument should either be the name of a test" << std::endl;
-    stream << "    suite or the full name of an individual test." << std::endl;
+    stream << "    suite, the full name of an individual test, or a comma separated list." << std::endl;
     stream << std::endl;
     stream << "    Full test names consist of the test suite name, the separator '::' and then" << std::endl;
     stream << "    the individual test name.  The test names can revealed with the verbose" << std::endl;
