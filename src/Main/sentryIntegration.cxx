@@ -20,10 +20,15 @@
 
 #include "sentryIntegration.hxx"
 
+#include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include <Include/version.h>
 #include <Main/fg_init.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 
 using namespace std;
 
@@ -36,6 +41,29 @@ static bool static_sentryEnabled = false;
 
 namespace flightgear
 {
+
+bool sentryReportCommand(const SGPropertyNode* args, SGPropertyNode* root)
+{
+    if (!static_sentryEnabled) {
+        SG_LOG(SG_GENERAL, SG_WARN, "Sentry.io not enabled at startup");
+        return false;
+    }
+
+    sentry_value_t exc = sentry_value_new_object();
+    sentry_value_set_by_key(exc, "type", sentry_value_new_string("Report"));
+
+    const string message = args->getStringValue("message");
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
+
+    sentry_value_t event = sentry_value_new_event();
+    sentry_value_set_by_key(event, "exception", exc);
+    // capture the C++ stack-trace. Probably not that useful but can't hurt
+    sentry_event_value_add_stacktrace(event, nullptr, 0);
+
+    sentry_capture_event(event);
+
+    return true;
+}
 
 void initSentry()
 {
@@ -68,6 +96,22 @@ void initSentry()
     
     sentry_init(options);
     static_sentryEnabled = true;
+}
+
+void delayedSentryInit()
+{
+    if (!static_sentryEnabled)
+        return;
+
+    // allow the user to opt-out of sentry.io features
+    if (!fgGetBool("/sim/startup/sentry-crash-reporting-enabled", true)) {
+        SG_LOG(SG_GENERAL, SG_INFO, "Disabling Sentry.io reporting");
+        sentry_shutdown();
+        static_sentryEnabled = false;
+        return;
+    }
+
+    globals->get_commands()->addCommand("sentry-report", &sentryReportCommand);
 }
 
 void shutdownSentry()
@@ -147,6 +191,10 @@ void initSentry()
 }
 
 void shutdownSentry()
+{
+}
+
+void delayedSentryInit()
 {
 }
 

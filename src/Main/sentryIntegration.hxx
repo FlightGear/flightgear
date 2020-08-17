@@ -27,6 +27,8 @@ void initSentry();
 
 void shutdownSentry();
 
+void delayedSentryInit();
+
 bool isSentryEnabled();
 
 void addSentryBreadcrumb(const std::string& msg, const std::string& level);

@@ -880,6 +880,8 @@ bool fgInitGeneral() {
 
     sgUserDataInit( globals->get_props() );
 
+    flightgear::delayedSentryInit();
+
     return true;
 }
 
