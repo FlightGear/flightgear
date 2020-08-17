@@ -94,6 +94,17 @@ void FPNasalTests::testBasic()
     CPPUNIT_ASSERT(ok);
     
     CPPUNIT_ASSERT_EQUAL(string{"COSTA VOR-DME"}, fp1->legAtIndex(3)->waypoint()->source()->name());
+
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan();
+        fp.clearAll();
+        unitTest.assert_equal(fp.getPlanSize(), 0);
+        unitTest.assert_equal(fp.current, -1);
+        unitTest.assert_equal(fp.departure, nil);
+        unitTest.assert_equal(fp.sid, nil);
+        unitTest.assert_equal(fp.cruiseSpeedKt, 0);
+    )");
+    CPPUNIT_ASSERT(ok);
 }
 
 void FPNasalTests::testRestrictions()

@@ -558,7 +558,7 @@ void FGRouteMgr::update( double dt )
 void FGRouteMgr::clearRoute()
 {
   if (_plan) {
-    _plan->clear();
+      _plan->clearLegs();
   }
 }
 

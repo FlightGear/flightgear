@@ -460,7 +460,7 @@ bool FlightPlanController::tryGenerateRoute()
         return false;
     }
 
-    _fp->clear();
+    _fp->clearLegs();
     _fp->insertWayptAtIndex(fromWp, -1);
     _fp->insertWayptsAtIndex(path, -1);
     _fp->insertWayptAtIndex(toWp, -1);
@@ -470,7 +470,7 @@ bool FlightPlanController::tryGenerateRoute()
 
 void FlightPlanController::clearRoute()
 {
-    _fp->clear();
+    _fp->clearAll();
 }
 
 QString FlightPlanController::icaoRoute() const
