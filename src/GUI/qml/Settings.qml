@@ -136,7 +136,9 @@ Item {
 
                 onApply: {
                     if (!showConsoleWin.hidden && showConsoleWin.checked) _config.setArg("console");
-                    if (!enableCrashReporting.hidden && enableCrashReporting.checked) _config.setArg("enable-sentry");
+                    if (!enableCrashReporting.hidden) {
+                        _config.setEnableDisableOption("sentry",  enableCrashReporting.checked);
+                    }
                 }
             }
 

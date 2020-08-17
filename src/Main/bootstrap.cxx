@@ -266,9 +266,7 @@ int main ( int argc, char **argv )
   _bootstrap_OSInit = 0;
     
 #if defined(HAVE_SENTRY)
-    if (flightgear::Options::checkForArg(argc, argv, "enable-sentry")) {
-        flightgear::initSentry();
-    }
+  flightgear::initSentry();
 #endif
 
 // if we're not using the normal crash-reported, install our
