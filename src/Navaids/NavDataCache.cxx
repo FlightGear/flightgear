@@ -2229,7 +2229,8 @@ NavDataCache::findAirportRunway(const std::string& aName)
 
   AirportRunwayPair result;
   sqlite_bind_stdstring(d->findAirportRunway, 1, parts[0]);
-  sqlite_bind_stdstring(d->findAirportRunway, 2, cleanRunwayNo(parts[1]));
+  const auto cleanedRunway = cleanRunwayNo(parts[1]);
+  sqlite_bind_stdstring(d->findAirportRunway, 2, cleanedRunway);
 
   if (d->execSelect(d->findAirportRunway)) {
     result = AirportRunwayPair(sqlite3_column_int64(d->findAirportRunway, 0),
