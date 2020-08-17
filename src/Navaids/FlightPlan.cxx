@@ -249,8 +249,32 @@ void FlightPlan::deleteIndex(int aIndex)
   
   unlockDelegates();
 }
-  
-void FlightPlan::clear()
+
+void FlightPlan::clearAll()
+{
+    lockDelegates();
+    _departure.clear();
+    _departureRunway = nullptr;
+    _destinationRunway = nullptr;
+    _destination.clear();
+    _sid.clear();
+    _sidTransition.clear();
+    _star.clear();
+    _starTransition.clear();
+    _approach.clear();
+    _approachTransition.clear();
+    _alternate.clear();
+
+    _cruiseAirspeedMach = 0.0;
+    _cruiseAirspeedKnots = 0;
+    _cruiseFlightLevel = 0;
+    _cruiseAltitudeFt = 0;
+
+    clearLegs();
+    unlockDelegates();
+}
+
+void FlightPlan::clearLegs()
 {
     // some badly behaved CDU implementations call clear on a Nasal timer
     // during startup.
@@ -1015,7 +1039,7 @@ bool FlightPlan::loadGpxFormat(const SGPath& path)
         return false;
     }
 
-    clear();
+    clearAll();
 
     // copy in case we need to modify
     WayptVec wps = gpxVisitor.waypoints();

@@ -1673,16 +1673,28 @@ static naRef f_flightplan_deleteWP(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
-static naRef f_flightplan_clearPlan(naContext c, naRef me, int argc, naRef* args)
+static naRef f_flightplan_clearLegs(naContext c, naRef me, int argc, naRef* args)
 {
     FlightPlan* fp = flightplanGhost(me);
     if (!fp) {
-        naRuntimeError(c, "flightplan.clearPlan called on non-flightplan object");
+        naRuntimeError(c, "flightplan.clearLegs called on non-flightplan object");
     }
 
-    fp->clear();
+    fp->clearLegs();
     return naNil();
 }
+
+static naRef f_flightplan_clearAll(naContext c, naRef me, int argc, naRef* args)
+{
+    FlightPlan* fp = flightplanGhost(me);
+    if (!fp) {
+        naRuntimeError(c, "flightplan.clearAll called on non-flightplan object");
+    }
+
+    fp->clearAll();
+    return naNil();
+}
+
 
 static naRef f_flightplan_clearWPType(naContext c, naRef me, int argc, naRef* args)
 {
@@ -2097,7 +2109,15 @@ naRef initNasalFlightPlan(naRef globals, naContext c)
     hashset(c, flightplanPrototype, "deleteWP", naNewFunc(c, naNewCCode(c, f_flightplan_deleteWP)));
     hashset(c, flightplanPrototype, "insertWPAfter", naNewFunc(c, naNewCCode(c, f_flightplan_insertWPAfter)));
     hashset(c, flightplanPrototype, "insertWaypoints", naNewFunc(c, naNewCCode(c, f_flightplan_insertWaypoints)));
-    hashset(c, flightplanPrototype, "cleanPlan", naNewFunc(c, naNewCCode(c, f_flightplan_clearPlan)));
+
+    auto f = naNewFunc(c, naNewCCode(c, f_flightplan_clearLegs));
+    hashset(c, flightplanPrototype, "cleanPlan", f); // original name for compat
+    // alias to a better name
+    hashset(c, flightplanPrototype, "clearLegs", f);
+
+
+    hashset(c, flightplanPrototype, "clearAll", naNewFunc(c, naNewCCode(c, f_flightplan_clearAll)));
+
     hashset(c, flightplanPrototype, "clearWPType", naNewFunc(c, naNewCCode(c, f_flightplan_clearWPType)));
     hashset(c, flightplanPrototype, "clone", naNewFunc(c, naNewCCode(c, f_flightplan_clone)));
 

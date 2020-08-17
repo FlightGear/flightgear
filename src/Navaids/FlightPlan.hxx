@@ -207,7 +207,8 @@ public:
   void insertWayptsAtIndex(const WayptVec& wps, int aIndex);
 
   void deleteIndex(int index);
-  void clear();
+  void clearAll();
+  void clearLegs();
   int clearWayptsWithFlag(WayptFlag flag);
 
   int currentIndex() const
