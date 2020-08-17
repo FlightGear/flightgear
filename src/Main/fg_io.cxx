@@ -314,6 +314,10 @@ FGIO::parse_port_config( const string_list& tokens )
         SG_LOG( SG_IO, SG_INFO, "  port = " << port );
         SG_LOG( SG_IO, SG_INFO, "  style = " << style );
 
+        if (hertz <= 0) {
+            SG_LOG(SG_IO, SG_ALERT, "Non-Positive Hz rate may block generic I/O ");
+        }
+
         io->set_io_channel( new SGSocket( hostname, port, style ) );
     }
     else
