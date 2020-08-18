@@ -85,13 +85,13 @@ void initSentry()
     sentry_options_set_database_pathw(options, homePathString.c_str());
     
     const auto logPath = (fgHomePath() / "fgfs.log").wstr();
-    sentry_options_add_attachmentw(options, "log", logPath.c_str());
+    sentry_options_add_attachmentw(options, logPath.c_str());
 #else
     const auto homePathString = dataPath.utf8Str();
     sentry_options_set_database_path(options, homePathString.c_str());
     
     const auto logPath = (fgHomePath() / "fgfs.log").utf8Str();
-    sentry_options_add_attachment(options, "log", logPath.c_str());
+    sentry_options_add_attachment(options, logPath.c_str());
 #endif
     
     sentry_init(options);
