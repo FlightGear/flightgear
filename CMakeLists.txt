@@ -495,8 +495,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
    set(WARNING_FLAGS_C "-Wall")
+endif()
 
-   if (ENABLE_ASAN)
+# ASan is enabled in SimGear's configuration, in case you are
+# wondering why there is no option() for it above.
+if (ENABLE_ASAN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
@@ -504,8 +507,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
 
     # needed for check_cxx_source_compiles
     set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=address")
- endif()
-
 endif()
 
 if(WIN32)
