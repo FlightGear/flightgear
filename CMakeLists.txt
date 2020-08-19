@@ -72,6 +72,7 @@ include(GNUInstallDirs)
 include( DetectDistro )
 include( DetectBrowser )
 include( ExportDebugSymbols )
+
 set(CMAKE_DEBUG_POSTFIX          "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX        ""  CACHE STRING "add a postfix, usually empty on windows")
 set(CMAKE_RELWITHDEBINFO_POSTFIX ""  CACHE STRING "add a postfix, usually empty on windows")
@@ -100,16 +101,11 @@ else()
     message(STATUS "Using default data directory for base package:  ${FG_DATA_DIR}")
 endif()
 
-# Change the default build type to something fast
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING
-        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-        FORCE)
-endif(NOT CMAKE_BUILD_TYPE)
-
 #####################################################################################
 # Configure library search paths
 #####################################################################################
+
+find_package(Threads REQUIRED)
 
 IF(APPLE)
     set(EVENT_INPUT_DEFAULT 1)
@@ -124,12 +120,11 @@ elseif(WIN32)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "bin")
     set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
     include(InstallRequiredSystemLibraries)
-    MESSAGE("Installing: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
+    message(STATUS "Installing: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
 
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 	${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR
 	${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
-    find_package(Threads REQUIRED)
     find_package(X11 REQUIRED)
 
     set(USE_DBUS_DEFAULT 1)
@@ -171,7 +166,6 @@ option(ENABLE_YASIM      "Set to ON to build FlightGear with YASIM FDM (default)
 option(ENABLE_JSBSIM     "Set to ON to build FlightGear with JSBSim FDM (default)" ON)
 option(EVENT_INPUT       "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_RTI        "Set to ON to build FlightGear with RTI support" OFF)
-option(ENABLE_PROFILE    "Set to ON to build FlightGear with gperftools profiling support" OFF)
 option(SYSTEM_SQLITE     "Set to ON to build FlightGear with the system's SQLite3 library" OFF)
 option(ENABLE_IAX        "Set to ON to build FlightGear with IAXClient/fgcom built-in (default)" ON)
 option(USE_DBUS          "Set to ON to build FlightGear with DBus screensaver interaction (default on Linux)" ${USE_DBUS_DEFAULT})
@@ -183,10 +177,9 @@ option(SYSTEM_CPPUNIT    "Set to ON to build Flightgear with the system's CppUni
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
-option(WITH_FGPANEL      "Set to ON to build the fgpanel application (default)" ON)
+option(WITH_FGPANEL      "Set to ON to build the fgpanel application" OFF)
 option(ENABLE_FGVIEWER   "Set to ON to build the fgviewer application (default)" ON)
 option(ENABLE_GPSSMOOTH  "Set to ON to build the GPSsmooth application (default)" ON)
-option(ENABLE_TERRASYNC  "Set to ON to build the terrasync application (default)" ON)
 option(ENABLE_FGJS       "Set to ON to build the fgjs application (default)" ON)
 option(ENABLE_JS_DEMO    "Set to ON to build the js_demo application (default)" ON)
 option(ENABLE_METAR      "Set to ON to build the metar application (default)" ON)
@@ -225,13 +218,8 @@ if(SP_FDMS)
     set(ENABLE_SP_FDM 1)
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include)
-endif()
-
 if(ENABLE_FGCOM)
   set(ENABLE_IAX 1)
-  include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib ) # for iaxclient.h
 endif()
 
 # Setup MSVC 3rd party directories
@@ -265,31 +253,7 @@ if(EVENT_INPUT)
     endif()
 endif(EVENT_INPUT)
 
-if (ENABLE_SWIFT)
-# DBUS
-
-    # our local FindDBus.cmake file uses pkg-config on non-Windows
-    # we want to ensure our local prefixes are searched, so set this
-    set(PKG_CONFIG_USE_CMAKE_PREFIX_PATH 1)
-
-    # unfortunately CMAKE_INSTALL_PREFIX is not searched, so add that manually
-    list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
-
-    find_package(DBus)
-
-    #libevent
-    find_package(LibEvent)
-
-    if (DBUS_FOUND AND LIBEVENT_FOUND)
-        message(STATUS "SWIFT support enabled")
-        list(APPEND PLATFORM_LIBS ${LIBEVENT_LIB})
-        # FIXME, make this target specific, not a global include setting
-        include_directories(${LIBEVENT_INCLUDE_DIR})
-    else()
-        message(WARNING "SWIFT support disabled, dbus and/or LibEvent not found")
-        set(ENABLE_SWIFT 0)
-    endif()
-endif()
+include(SetupSwiftLibraries)
 
 if (SYSTEM_CPPUNIT)
     find_package(CppUnit REQUIRED)
@@ -321,50 +285,25 @@ if (TARGET sentry::sentry)
     endif()
 endif()
 
-#if(${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD")
-#    include_directories("${CMAKE_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include")
-#endif()
-
 ##############################################################################
 ## Sqlite3 setup
 
 if (SYSTEM_SQLITE)
     find_package(SQLite3 REQUIRED)
     message(STATUS "Using system SQLite3 library")
-else()
-    set(SQLITE3_INCLUDED_DIR "${CMAKE_SOURCE_DIR}/3rdparty/sqlite3")
-    # this target is defined in src/Navaids/CMakeLists.txt
-    list(APPEND SQLITE3_LIBRARY fgsqlite3)
 endif (SYSTEM_SQLITE)
-
-# Sqlite always depends on the threading lib
-list(APPEND SQLITE3_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
 
 ##############################################################################
 ## DBus setup
-
 if (USE_DBUS)
-    include(FindPkgConfig)
-    if (PKG_CONFIG_FOUND)
-        pkg_check_modules(DBUS dbus-1)
-    endif (PKG_CONFIG_FOUND) #if we don't have pkg-config, assume we don't have libdbus-1-dev either http://packages.debian.org/sid/libdbus-1-dev
-    if (DBUS_FOUND)
-        set(HAVE_DBUS 1)
-        message(STATUS "Using DBus")
-        include_directories( ${DBUS_INCLUDE_DIRS})
-    else()
-        message(STATUS "DBus not found, screensaver control disabled")
-    endif (DBUS_FOUND)
-else()
+    find_package(DBus)
 endif (USE_DBUS)
 
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
-    message(STATUS "Qt launcher enabled, checking for Qt >= 5.9 / qmake")
     find_package(Qt5 5.9 COMPONENTS Widgets Gui Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
-        message(STATUS "Will enable Qt launcher GUI")
         set(HAVE_QT 1)
         include (Translations)
 
@@ -375,7 +314,9 @@ if (ENABLE_QT)
             get_filename_component(FG_QT_ROOT_DIR ${FG_QT_BIN_DIR} DIRECTORY)
         endif()
 
+        message(STATUS "Qt GUI enabled, found Qt at: ${FG_QT_ROOT_DIR}")
     else()
+        message(STATUS "Qt GUI disabled, Qt/qmake not found in PATH/CMAKE_PREFIX_PATH")
         # don't try to build FGQCanvas if Qt wasn't found correctly
         set(ENABLE_FGQCANVAS OFF)
     endif()
@@ -387,13 +328,11 @@ if (ENABLE_QT)
     check_include_file_cxx("private/qopenglcontext_p.h" REALLY_HAVE_QGUIPRIVATE)
 
     if (REALLY_HAVE_QGUIPRIVATE)
-        message(STATUS "Have QtGUI private headers")
         set(ENABLE_QQ_UI 1)
     else()
         message(STATUS "QtGui private headers not available.")
     endif()
 else()
-    message(STATUS "Qt support disabled")
     set(ENABLE_FGQCANVAS OFF)
 endif (ENABLE_QT)
 ##############################################################################
@@ -414,50 +353,13 @@ find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
 
 ##############################################################################
 
-check_include_file(unistd.h        HAVE_UNISTD_H)
-check_include_file(sys/time.h      HAVE_SYS_TIME_H)
-check_include_file(sys/timeb.h     HAVE_SYS_TIMEB_H)
-check_include_file(windows.h       HAVE_WINDOWS_H)
-check_function_exists(timegm       HAVE_TIMEGM)
-check_variable_exists(daylight     HAVE_DAYLIGHT)
-check_function_exists(ftime        HAVE_FTIME)
-check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
-
-if(ENABLE_PROFILE)
-    find_package(GooglePerfTools REQUIRED)
-    set(FG_HAVE_GPERFTOOLS 1)
-    message(STATUS "Built-in profiler using gperftools available")
-endif()
-
 if(ENABLE_RTI)
     message(STATUS "RTI: ENABLED")
     set(FG_HAVE_HLA 1)
-else()
-    message(STATUS "RTI: DISABLED")
 endif(ENABLE_RTI)
-
-if(ENABLE_GDAL)
-    find_package(GDAL 2.0.0 REQUIRED)
-endif(ENABLE_GDAL)
-include_directories(${GDAL_INCLUDE_DIR})
-
-if (ENABLE_OPENMP)
-    find_package(OpenMP)
-    if(OPENMP_FOUND)
-        message(STATUS "OpenMP: ENABLED")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    else()
-        message(STATUS "OpenMP: NOT FOUND")
-    endif()
-else()
-    message(STATUS "OpenMP: DISABLED")
-endif()
 
 if (ENABLE_SIMD)
   message(STATUS "SSE/SSE2 support: ENABLED")
-else()
-  message(STATUS "SSE/SSE2 support: DISABLED")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -474,17 +376,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
      -Wno-redeclared-class-member \
      -Wno-inconsistent-missing-override \
      -Wno-unused-local-typedef")
-
-    # disabled by James - these cause weridness for multi-config generators
-    # since they set thge flags for all configurations
-    # need to find a better way to adjust these
-     
-    # if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    #   set(CMAKE_C_FLAGS
-    #     "${CMAKE_C_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
-    #   set(CMAKE_CXX_FLAGS
-    #     "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer -fno-inline-functions")
-    # endif()
 
     # override CMake default RelWithDebInfo flags.
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -DNDEBUG")
@@ -551,39 +442,10 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS_C} ${MSVC_FLAGS} -D_REENTRAN
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS_CXX} ${MSVC_FLAGS} -D_REENTRANT ${BOOST_CXX_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 
-include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${OPENGL_INCLUDE_DIR}
-    ${SIMGEAR_INCLUDE_DIRS}
-    ${PLIB_INCLUDE_DIR}
-    ${SQLITE3_INCLUDED_DIR} )
-
-if (USE_AEONWAVE)
-    find_package(AAX REQUIRED)
-    include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
-        ${AAX_INCLUDE_DIR}
-    )
-else()
-    include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
-        ${OPENAL_INCLUDE_DIR}
-    )
-endif()
-
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/src)
-# following is needed, because config.h is include 'bare', whereas
-# version.h is included as <Include/version.h> - this should be cleaned up
-include_directories(${PROJECT_BINARY_DIR}/src)
-include_directories(${PROJECT_BINARY_DIR}/src/Include)
-
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include )
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include )
-
 add_definitions(-DHAVE_CONFIG_H)
+include (CheckPOSIXFeatures)
 
 set(FG_TEST_SUITE_DATA "${CMAKE_SOURCE_DIR}/test_suite/test_data")
-
-check_function_exists(mkfifo HAVE_MKFIFO)
 
 # configure a header file to pass some of the CMake settings
 # to the source code
@@ -600,6 +462,12 @@ configure_file (
 
 # Setup build.h header, each build
 include( GenerateBuildInfo )
+
+# global includes: these are used by every singl target, so we do set them globally
+# even though that's not stricly best practice
+include_directories(${PROJECT_BINARY_DIR}/src/Include)
+include_directories(${PROJECT_BINARY_DIR}/src) # for version.h
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
 add_subdirectory(3rdparty)
 add_subdirectory(utils)

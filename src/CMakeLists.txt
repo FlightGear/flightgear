@@ -1,6 +1,4 @@
 
-include_directories(${PROJECT_SOURCE_DIR})
-
 # note order here affects link order, and hence linking correctness
 # on systems with a traditional ld (eg, GNU ld on Linux)
 foreach( mylibfolder

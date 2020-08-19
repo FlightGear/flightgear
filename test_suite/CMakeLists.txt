@@ -111,8 +111,7 @@ setup_fgfs_embedded_resources()
 # Sort the sources and headers for MSVC.
 setup_msvc_grouping()
 
-# Additional search paths for includes.
-setup_fgfs_includes()
+
 
 # All sources and headers to be built into the test suite.
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
@@ -147,6 +146,8 @@ endif(ENABLE_AUTOTESTING)
 
 # Set up the target links.
 setup_fgfs_libraries(fgfs_test_suite)
+# Additional search paths for includes.
+setup_fgfs_includes(fgfs_test_suite)
 
 target_compile_definitions(fgfs_test_suite PUBLIC BUILDING_TESTSUITE)
 

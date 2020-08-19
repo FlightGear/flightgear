@@ -1,5 +1,5 @@
 add_executable(fgrcc fgrcc.cxx fgrcc.hxx)
-target_link_libraries(fgrcc SimGearCore ${PLATFORM_LIBS})
+target_link_libraries(fgrcc SimGearCore)
 
 # On Windows, make sure fgrcc can be run (it needs third-party libraries) in add_custom_target
 if(MSVC)

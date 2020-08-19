@@ -24,7 +24,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
 #include <Main/globals.hxx>
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 
 
 using std::string;

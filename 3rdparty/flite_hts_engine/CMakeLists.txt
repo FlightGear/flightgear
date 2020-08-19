@@ -2,14 +2,9 @@ if (SYSTEM_FLITE)
     set(Flite_FIND_REQUIRED TRUE)
     find_package(Flite)
 
-    include_directories(${FLITE_INCLUDE_DIR})
     message(STATUS "Using Flite includes at: ${FLITE_INCLUDE_DIR}")
     message(STATUS "Using Flite libraries: ${FLITE_LIBRARIES}")
 else()
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/include)
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/lang/cmulex)
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/lang/usenglish)
-
     set(FLITE_SOURCES
         flite/src/hrg/cst_ffeature.c
         flite/src/hrg/cst_item.c
@@ -65,33 +60,26 @@ else()
         flite/lang/usenglish/usenglish.c
     )
 
-    if (MSVC)
-        add_definitions( -DNO_UNION_INITIALIZATION )
-    endif ()
 endif()
 
-if (SYSTEM_HTS_ENGINE)
-    set(HTS_Engine_FIND_REQUIRED TRUE)
-    find_package(HtsEngine)
-
-    include_directories(${HTS_ENGINE_INCLUDE_DIR})
-    message(STATUS "Using HTS engine includes for Flite/HTS Engine at: ${HTS_ENGINE_INCLUDE_DIR}")
-else()
-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include)
-endif()
-
-
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include)
-
-add_definitions(-DFLITE_PLUS_HTS_ENGINE)
-
-add_library(flite_hts STATIC 
+add_library(flightgear_flite_hts STATIC 
     ${FLITE_SOURCES}
     ${FLITE_LANG_SOURCES}
     lib/flite_hts_engine.c
 )
 
+target_include_directories(flightgear_flite_hts PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include)
+target_compile_definitions(flightgear_flite_hts PRIVATE -DNO_UNION_INITIALIZATION -DFLITE_PLUS_HTS_ENGINE)
+
+# link against HTSEngine: either our own one, or the system one
+target_link_libraries(flightgear_flite_hts PUBLIC Flightgear::HTSEngine)
+
 if (SYSTEM_FLITE)
-    target_link_libraries(flite_hts ${FLITE_LIBRARIES})
+    target_link_libraries(flightgear_flite_hts Flightgear::Flite)
+else()
+    target_include_directories(flightgear_flite_hts PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/include)
+    target_include_directories(flightgear_flite_hts PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/lang/cmulex)
+    target_include_directories(flightgear_flite_hts PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/lang/usenglish)
 endif()
+
 

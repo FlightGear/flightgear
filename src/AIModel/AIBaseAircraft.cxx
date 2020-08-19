@@ -16,7 +16,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AIBaseAircraft.hxx"
-#include <src/Main/globals.hxx>
+
+#include <Main/globals.hxx>
 
 FGAIBaseAircraft::FGAIBaseAircraft() : FGAIBase(otStatic, false)
 {

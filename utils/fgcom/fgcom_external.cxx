@@ -25,9 +25,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <simgear/sg_inlines.h>
 #include <simgear/math/SGMath.hxx>
@@ -36,9 +34,9 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-#include <3rdparty/iaxclient/lib/iaxclient.h>
+#include <iaxclient.h>
 
-#include "fgcom.hxx"
+#include "fgcom_external.hxx"
 #include "positions.hxx" // provides _positionsData[];
 
 int         _port           = 16661;

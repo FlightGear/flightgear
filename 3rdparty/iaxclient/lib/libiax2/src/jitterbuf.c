@@ -138,7 +138,7 @@ static int history_put(jitterbuf *jb, long ts, long now, long ms)
 
 	/* check for drastic change in delay */
 	if (jb->info.conf.resync_threshold != -1) {
-		if (abs(delay - jb->info.last_delay) > threshold) {
+		if (labs(delay - jb->info.last_delay) > threshold) {
 			jb->info.cnt_delay_discont++;
 			if (jb->info.cnt_delay_discont > 3) {
 				/* resync the jitterbuffer */

@@ -20,7 +20,7 @@
 
 
 #include "PkgUriHandler.hxx"
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 
 #include <simgear/package/Root.hxx>
 #include <simgear/package/Catalog.hxx>

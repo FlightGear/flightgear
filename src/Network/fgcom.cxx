@@ -16,9 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+# include <config.h>
 
 #include "fgcom.hxx"
 
@@ -39,7 +37,7 @@
 #include <Airports/airport.hxx>
 #include <Navaids/navlist.hxx>
 
-#include <3rdparty/iaxclient/lib/iaxclient.h>
+#include <iaxclient.h>
 
 
 #define NUM_CALLS 4

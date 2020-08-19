@@ -32,8 +32,9 @@
 #include "PropertyChangeObserver.hxx"
 #include <Main/fg_props.hxx>
 #include <Include/version.h>
-#include <3rdparty/mongoose/mongoose.h>
-#include <3rdparty/cjson/cJSON.h>
+
+#include <mongoose.h>
+#include <cJSON.h>
 
 #include <string>
 #include <vector>

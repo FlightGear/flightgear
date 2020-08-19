@@ -23,7 +23,7 @@
 
 #include <Network/DNSClient.hxx>
 #include <Main/fg_props.hxx>
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 #include <cstdlib>
 
 #include "MPServerResolver.hxx"

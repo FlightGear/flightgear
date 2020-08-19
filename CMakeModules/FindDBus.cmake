@@ -19,19 +19,14 @@ else()
 	find_package(PkgConfig QUIET)
 
 	if(PKG_CONFIG_FOUND)
-		# FIXME : clean this up once we requrie CMake 3.6
-		if(CMAKE_VERSION VERSION_LESS 3.6)
-			pkg_check_modules(DBUS dbus-1)
-		else()
-			pkg_check_modules(DBUS IMPORTED_TARGET dbus-1)
-		endif()
+		pkg_check_modules(DBUS IMPORTED_TARGET dbus-1)
 	endif (PKG_CONFIG_FOUND)
 
 	if(DBUS_FOUND)
+		set_target_properties(PkgConfig::DBUS PROPERTIES IMPORTED_GLOBAL TRUE)
+
 		set(HAVE_DBUS 1)
+		# alias the PkgConfig name to standard one
+		add_library(DBus ALIAS PkgConfig::DBUS)
 	endif(DBUS_FOUND)
 endif(WIN32)
-
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(DBus DEFAULT_MSG
-	DBUS_INCLUDE_DIRS DBUS_LIBRARIES)

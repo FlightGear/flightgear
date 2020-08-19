@@ -1,6 +1,3 @@
-# CMakeLists.txt, for utils/iaxclient/lib - 20130925
-# even if we don't select the codec, speex is used for pre-processing audio
-set(ENABLE_SPEEX 1)
 
 set(IAXCLIENT_BASE_SOURCES
     audio_encode.c
@@ -9,7 +6,9 @@ set(IAXCLIENT_BASE_SOURCES
     codec_alaw.c
     codec_gsm.c
     codec_ulaw.c
+    codec_speex.c
     iaxclient_lib.c
+    spandsp/plc.c
 )
 
 set(LIBIAX2_SOURCES
@@ -19,17 +18,51 @@ set(LIBIAX2_SOURCES
     libiax2/src/md5.c
 )
 
+find_package(OpenAL REQUIRED)
+
+add_library(iaxclient_lib STATIC 
+    ${IAXCLIENT_BASE_SOURCES} ${LIBIAX2_SOURCES}
+)
+
+target_link_libraries(iaxclient_lib PRIVATE Threads::Threads ${OPENAL_LIBRARY})
+target_include_directories(iaxclient_lib PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib)
+target_include_directories(iaxclient_lib PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libiax2/src ${OPENAL_INCLUDE_DIR})
+
+target_compile_definitions(iaxclient_lib PRIVATE AUDIO_OPENAL=1 LIBIAX LIBVER="SVN 261")
+
+if (APPLE)
+    target_compile_definitions(iaxclient_lib PRIVATE MACOSX)
+endif(APPLE)
+
+if (WIN32)
+    target_sources(iaxclient_lib PRIVATE winfuncs.c)
+else()
+    target_sources(iaxclient_lib PRIVATE unixfuncs.c)
+endif(WIN32)
+
+
+if (MSVC)
+    # turn off various warnings
+    set(WFLAGS)
+    foreach(warning 4244 4305 4996)
+        list(APPEND WFLAGS "/wd${warning}")
+    endforeach()
+    target_compile_definitions(iaxclient_lib PRIVATE ${WFLAGS})
+endif ()
+
 if (SYSTEM_GSM)
     set(Gsm_FIND_REQUIRED TRUE)
     find_package(Gsm)
 endif(SYSTEM_GSM)
 
 if (GSM_FOUND)
-    include_directories(${GSM_INCLUDE_DIR})
     message(STATUS "Using GSM includes at: ${GSM_INCLUDE_DIR}")
     message(STATUS "Using GSM libraries: ${GSM_LIBRARIES}")
-else(GSM_FOUND)
-    set(GSM_SOURCES
+    target_include_directories(iaxclient_lib PRIVATE ${GSM_INCLUDE_DIR})
+    target_link_libraries(iaxclient_lib PRIVATE ${GSM_LIBRARIES})
+else()
+    # add local GSM files
+    target_sources(iaxclient_lib PRIVATE
         gsm/src/add.c
         gsm/src/code.c
         gsm/src/debug.c
@@ -49,117 +82,79 @@ else(GSM_FOUND)
         gsm/src/short_term.c
         gsm/src/table.c
     )
-endif(GSM_FOUND)
 
-if (WIN32)
-    list(APPEND IAXCLIENT_BASE_SOURCES winfuncs.c)
-else()
-    list(APPEND IAXCLIENT_BASE_SOURCES unixfuncs.c)
-endif(WIN32)
+    target_include_directories(iaxclient_lib PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/gsm/inc)
+    target_compile_definitions(iaxclient_lib PRIVATE HAS_STRING_H HAS_STDLIB_H)
+endif()
 
-if (ENABLE_SPEEX)
-    list(APPEND IAXCLIENT_BASE_SOURCES codec_speex.c)
+target_compile_definitions(iaxclient_lib PRIVATE CODEC_GSM)
 
-    if (SYSTEM_SPEEX)
-        set(Speex_FIND_REQUIRED TRUE)
-        set(Speexdsp_FIND_REQUIRED TRUE)
-        find_package(Speex)
-        find_package(Speexdsp)
-    endif(SYSTEM_SPEEX)
+if (SYSTEM_SPEEX)
+    set(Speex_FIND_REQUIRED TRUE)
+    set(Speexdsp_FIND_REQUIRED TRUE)
+    find_package(Speex)
+    find_package(Speexdsp)
+endif()
 
-    if (SPEEX_FOUND AND SPEEXDSP_FOUND)
-        include_directories(${SPEEX_INCLUDE_DIR} ${SPEEXDSP_INCLUDE_DIR})
-        message(STATUS "Using speex includes at: ${SPEEX_INCLUDE_DIR}")
-        message(STATUS "Using speex libraries: ${SPEEX_LIBRARIES}")
-        message(STATUS "Using speex extended library includes at: ${SPEEXDSP_INCLUDE_DIR}")
-        message(STATUS "Using speex extended library libraries: ${SPEEXDSP_LIBRARIES}")
-    else(SPEEX_FOUND AND SPEEXDSP_FOUND)
-        set(SPEEX_SOURCES
-            libspeex/bits.c
-            libspeex/cb_search.c
-            libspeex/exc_10_16_table.c
-            libspeex/exc_10_32_table.c
-            libspeex/exc_20_32_table.c
-            libspeex/exc_5_256_table.c
-            libspeex/exc_5_64_table.c
-            libspeex/exc_8_128_table.c
-            libspeex/filters.c
-            libspeex/gain_table.c
-            libspeex/gain_table_lbr.c
-            libspeex/hexc_10_32_table.c
-            libspeex/hexc_table.c
-            libspeex/high_lsp_tables.c
-            libspeex/jitter.c
-            libspeex/lbr_48k_tables.c
-            libspeex/lpc.c
-            libspeex/lsp.c
-            libspeex/lsp_tables_nb.c
-            libspeex/ltp.c
-            libspeex/math_approx.c
-            libspeex/mdf.c
-            libspeex/medfilter.c
-            libspeex/misc.c
-            libspeex/modes.c
-            libspeex/nb_celp.c
-            libspeex/preprocess.c
-            libspeex/quant_lsp.c
-            libspeex/sb_celp.c
-            libspeex/smallft.c
-            libspeex/speex.c
-            libspeex/speex_callbacks.c
-            libspeex/speex_header.c
-            libspeex/stereo.c
-            libspeex/vbr.c
-            libspeex/vq.c
-            )
+if (SPEEX_FOUND AND SPEEXDSP_FOUND)
     
-        include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include)
-    endif(SPEEX_FOUND AND SPEEXDSP_FOUND)
-endif(ENABLE_SPEEX)
+    message(STATUS "Using speex includes at: ${SPEEX_INCLUDE_DIR}")
+    message(STATUS "Using speex libraries: ${SPEEX_LIBRARIES}")
+    message(STATUS "Using speex extended library includes at: ${SPEEXDSP_INCLUDE_DIR}")
+    message(STATUS "Using speex extended library libraries: ${SPEEXDSP_LIBRARIES}")
 
-if (ENABLE_ALSA)
-    list(APPEND IAXCLIENT_BASE_SOURCES audio_alsa.c)
-endif(ENABLE_ALSA)
+    target_include_directories(iaxclient_lib PRIVATE ${SPEEX_INCLUDE_DIR} ${SPEEXDSP_INCLUDE_DIR})
+    target_link_libraries(iaxclient_lin PRIVATE ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
+else()
+    target_sources(iaxclient_lib PRIVATE
+        libspeex/bits.c
+        libspeex/cb_search.c
+        libspeex/exc_10_16_table.c
+        libspeex/exc_10_32_table.c
+        libspeex/exc_20_32_table.c
+        libspeex/exc_5_256_table.c
+        libspeex/exc_5_64_table.c
+        libspeex/exc_8_128_table.c
+        libspeex/filters.c
+        libspeex/gain_table.c
+        libspeex/gain_table_lbr.c
+        libspeex/hexc_10_32_table.c
+        libspeex/hexc_table.c
+        libspeex/high_lsp_tables.c
+        libspeex/jitter.c
+        libspeex/lbr_48k_tables.c
+        libspeex/lpc.c
+        libspeex/lsp.c
+        libspeex/lsp_tables_nb.c
+        libspeex/ltp.c
+        libspeex/math_approx.c
+        libspeex/mdf.c
+        libspeex/medfilter.c
+        libspeex/misc.c
+        libspeex/modes.c
+        libspeex/nb_celp.c
+        libspeex/preprocess.c
+        libspeex/quant_lsp.c
+        libspeex/sb_celp.c
+        libspeex/smallft.c
+        libspeex/speex.c
+        libspeex/speex_callbacks.c
+        libspeex/speex_header.c
+        libspeex/stereo.c
+        libspeex/vbr.c
+        libspeex/vq.c
+        )
 
-if (ENABLE_PORTAUDIO)
-    list(APPEND IAXCLIENT_BASE_SOURCES audio_portaudio.c)
-endif(ENABLE_PORTAUDIO)
+    target_include_directories(iaxclient_lib PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libspeex/include)
+endif()
 
-if (APPLE)
-    add_definitions(-DMACOSX)
-endif(APPLE)
+# never used for the moment
+# if (ENABLE_ALSA)
+#     target_sources(iaxclient_lib PRIVATE audio_alsa.c)
+# endif(ENABLE_ALSA)
 
-list(APPEND IAXCLIENT_BASE_SOURCES spandsp/plc.c)
-
-add_definitions(-DAUDIO_OPENAL=1)
-add_definitions(-DLIBIAX)
-
-# for GSM
-add_definitions(-DHAS_STRING_H -DHAS_STDLIB_H)
-add_definitions(-DCODEC_GSM)
-
-if (MSVC)
-    # turn off various warnings
-    set(WFLAGS)
-    foreach(warning 4244 4305 4996)
-        set(WFLAGS "${WFLAGS} /wd${warning}")
-    endforeach()
-    add_definitions(${WFLAGS})
-endif ()
-
-add_definitions( -DHAVE_CONFIG_H ) # to use fgfs config.h to get FG version, if needed
-add_definitions( -DLIBVER="SVN 261" ) # add an iaxclient_lib version string
-
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib)
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/libiax2/src)
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/iaxclient/lib/gsm/inc)
-
-add_library(iaxclient_lib STATIC 
-    ${IAXCLIENT_BASE_SOURCES} 
-    ${GSM_SOURCES} 
-    ${SPEEX_SOURCES}
-    ${LIBIAX2_SOURCES})
-
-target_link_libraries(iaxclient_lib ${CMAKE_THREAD_LIBS_INIT} ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES} ${GSM_LIBRARIES})
+# if (ENABLE_PORTAUDIO)
+#     target_sources(iaxclient_lib PRIVATE audio_portaudio.c)
+# endif(ENABLE_PORTAUDIO)
 
 # eof

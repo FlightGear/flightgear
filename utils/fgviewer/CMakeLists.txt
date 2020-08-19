@@ -47,9 +47,7 @@ if(X11_FOUND)
 endif()
 
 target_link_libraries(fgviewer
-        SimGearScene SimGearCore
-  ${OPENGL_LIBRARIES}
+        SimGearScene SimGearCore OpenGL::GL
         ${FGVIEWER_RTI_LIBRARIES}
-    ${GDAL_LIBRARY}
 )
 install(TARGETS fgviewer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

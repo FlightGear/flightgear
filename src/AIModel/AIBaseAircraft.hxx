@@ -27,7 +27,7 @@ class FGAIBaseAircraft : public FGAIBase {
 public:
     FGAIBaseAircraft();
 
-    void bind();
+    void bind() override;
 
     // Note that this is mapped to all 6 gear indices gear/gear[0..5]
     void setGearPos(double pos)      { m_gearPos = pos; };

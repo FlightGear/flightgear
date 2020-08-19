@@ -10,8 +10,7 @@ set(SOURCES
 	voice.cxx
 	voiceplayer.cxx
 	soundmanager.cxx
-	VoiceSynthesizer.cxx
-	flitevoice.cxx
+	
 	)
 
 set(HEADERS
@@ -29,3 +28,6 @@ set(HEADERS
 	)
 
 flightgear_component(Sound "${SOURCES}" "${HEADERS}")
+
+add_library(fgvoicesynth OBJECT VoiceSynthesizer.cxx flitevoice.cxx)
+target_link_libraries(fgvoicesynth PRIVATE flightgear_flite_hts SimGearScene)

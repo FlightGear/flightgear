@@ -66,8 +66,7 @@ setup_fgfs_embedded_resources()
 # Sort the sources and headers for MSVC.
 setup_msvc_grouping()
 
-# Additional search paths for includes.
-setup_fgfs_includes()
+
 
 # All sources and headers to be built into fgfs.
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
@@ -104,34 +103,16 @@ endif()
 # Set up the target links.
 setup_fgfs_libraries(fgfs)
 export_debug_symbols(fgfs)
-
-if (APPLE)
-    install(TARGETS fgfs BUNDLE DESTINATION .)
-else()
-    install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
+# Additional search paths for includes.
+setup_fgfs_includes(fgfs)
 
 if (TARGET sentry::sentry)
     target_link_libraries(fgfs sentry::sentry)
 endif()
 
-if (TARGET sentry_crashpad::handler)
-    if (APPLE)
-        # install inside the bundle
-        install(FILES $<TARGET_FILE:sentry_crashpad::handler> DESTINATION fgfs.app/Contents/MacOS OPTIONAL)
-    else()
-        # install in the bin-dir, next to the application binary
-        install(FILES $<TARGET_FILE:sentry_crashpad::handler> DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
-    endif()
-endif()
-
 if(ENABLE_METAR)
     add_executable(metar metar_main.cxx)
-    target_link_libraries(metar
-        SimGearScene SimGearCore
-        ${PLATFORM_LIBS}
-    )
-
+    target_link_libraries(metar SimGearScene)
     install(TARGETS metar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 

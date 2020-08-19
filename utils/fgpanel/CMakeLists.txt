@@ -81,7 +81,7 @@ target_link_libraries(fgpanel
   SimGearCore
   ${PNG_LIBRARIES}
   ${FREETYPE_LIBRARIES}
-  ${OPENGL_LIBRARIES}
+  OpenGL::GL
     ${GLUT_LIBRARIES}
     ${GLEW_LIBRARIES}
   )

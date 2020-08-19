@@ -25,29 +25,9 @@
 
 include(SelectLibraryConfigurations)
 
-set(save_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
-set(CMAKE_FIND_FRAMEWORK ONLY)
-FIND_PATH(PLIB_INCLUDE_DIR ul.h
-  PATH_SUFFIXES include/plib include
-  PATHS ${ADDITIONAL_LIBRARY_PATHS}
-)
-set(CMAKE_FIND_FRAMEWORK ${save_FIND_FRAMEWORK})
-
-if(NOT PLIB_INCLUDE_DIR)
-    FIND_PATH(PLIB_INCLUDE_DIR plib/ul.h
-      PATH_SUFFIXES include
-      HINTS $ENV{PLIBDIR}
-      PATHS ${ADDITIONAL_LIBRARY_PATHS}
-    )
-endif()
-
-message(STATUS ${PLIB_INCLUDE_DIR})
-
-# check for dynamic framework on Mac ()
-FIND_LIBRARY(PLIB_LIBRARIES
-  NAMES plib PLIB
-  HINTS
-  $ENV{PLIBDIR}
+FIND_PATH(PLIB_INCLUDE_DIR plib/ul.h
+  PATH_SUFFIXES include
+  HINTS $ENV{PLIBDIR}
   PATHS ${ADDITIONAL_LIBRARY_PATHS}
 )
 
@@ -97,35 +77,31 @@ macro(find_static_component comp libs)
     endif()
 endmacro()
 
-if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
-    set(PLIB_LIBRARIES "") # clear value
-
 # based on the contents of deps, add other required PLIB
 # static library dependencies. Eg PUI requires FNT
-    set(outDeps ${PLIB_FIND_COMPONENTS})
+  set(outDeps ${PLIB_FIND_COMPONENTS})
 
-    foreach(c ${PLIB_FIND_COMPONENTS})
-        if (${c} STREQUAL "pu")
-            # handle MSVC confusion over pu/pui naming, by removing
-            # 'pu' and then adding it back
-            list(REMOVE_ITEM outDeps "pu" "fnt" "sg")
-            list(APPEND outDeps ${PUNAME} "sg")
-        elseif (${c} STREQUAL "puaux")
-            list(APPEND outDeps ${PUNAME} "sg")
-        elseif (${c} STREQUAL "ssg")
-            list(APPEND outDeps "sg")
-        endif()
-    endforeach()
+  foreach(c ${PLIB_FIND_COMPONENTS})
+      if (${c} STREQUAL "pu")
+          # handle MSVC confusion over pu/pui naming, by removing
+          # 'pu' and then adding it back
+          list(REMOVE_ITEM outDeps "pu" "fnt" "sg")
+          list(APPEND outDeps ${PUNAME} "sg")
+      elseif (${c} STREQUAL "puaux")
+          list(APPEND outDeps ${PUNAME} "sg")
+      elseif (${c} STREQUAL "ssg")
+          list(APPEND outDeps "sg")
+      endif()
+  endforeach()
 
-    list(APPEND outDeps "ul") # everything needs ul
-    list(REMOVE_DUPLICATES outDeps) # clean up
+  list(APPEND outDeps "ul") # everything needs ul
+  list(REMOVE_DUPLICATES outDeps) # clean up
 
 
-    # look for traditional static libraries
-    foreach(component ${outDeps})
-        find_static_component(${component} PLIB_LIBRARIES)
-    endforeach()
-endif()
+  # look for traditional static libraries
+  foreach(component ${outDeps})
+      find_static_component(${component} PLIB_LIBRARIES)
+  endforeach()
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(PLIB DEFAULT_MSG PLIB_LIBRARIES PLIB_INCLUDE_DIR)

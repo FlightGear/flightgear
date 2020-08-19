@@ -1,6 +1,4 @@
 
-include_directories(${PROJECT_SOURCE_DIR}/3rdparty/hts_engine_API/include)
-
 set(HTS_ENGINE_SOURCES
     lib/HTS_audio.c
     lib/HTS_engine.c
@@ -17,3 +15,7 @@ set(HTS_ENGINE_SOURCES
 add_library(hts_engine STATIC 
     ${HTS_ENGINE_SOURCES}
 )
+
+target_include_directories(hts_engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_library(Flightgear::HTSEngine ALIAS hts_engine)

@@ -20,7 +20,7 @@
 
 #include "FlightHistoryUriHandler.hxx"
 #include "SimpleDOM.hxx"
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 
 #include <Aircraft/FlightHistory.hxx>
 #include <Main/fg_props.hxx>

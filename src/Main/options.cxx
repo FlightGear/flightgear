@@ -29,7 +29,7 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_dir.hxx>
 
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 
 #include <cmath>        // rint()
 #include <cstdio>

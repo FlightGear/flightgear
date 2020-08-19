@@ -22,7 +22,7 @@
 #define JSONPROPS_HXX_
 
 #include <simgear/props/props.hxx>
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 #include <string>
 
 namespace flightgear {

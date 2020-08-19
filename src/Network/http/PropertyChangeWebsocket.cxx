@@ -30,7 +30,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 
 namespace flightgear {
 namespace http {

@@ -23,7 +23,7 @@
 #include <Navaids/navrecord.hxx>
 #include <Airports/airport.hxx>
 #include <ATC/CommStation.hxx>
-#include <3rdparty/cjson/cJSON.h>
+#include <cJSON.h>
 
 using std::string;
 
