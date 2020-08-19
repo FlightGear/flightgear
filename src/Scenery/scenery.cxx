@@ -56,6 +56,7 @@
 #include <Viewer/renderer.hxx>
 #include <Main/fg_props.hxx>
 #include <GUI/MouseCursor.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include "scenery.hxx"
 #include "terrain_stg.hxx"
@@ -425,6 +426,7 @@ void FGScenery::init() {
 
 void FGScenery::reinit()
 {
+    flightgear::addSentryBreadcrumb("reloading scenery", "info");
     _terrain->reinit();
 }
 
