@@ -258,6 +258,11 @@ const FGAirport* APTLoader::loadAirportFromFile(std::string id, const SGPath& ap
   return loadAirport(aptdb_file.c_str(), id, &rawInfo, true);
 }
 
+static bool isCommLine(const int code)
+{
+    return ((code >= 50) && (code <= 56)) || ((code >= 1050) && (code <= 1056));
+}
+
 const FGAirport* APTLoader::loadAirport(const string aptDat, const std::string airportID, RawAirportInfo* airport_info, bool createFGAirport)
 {
   // The first line for this airport was already split over whitespace, but
@@ -300,14 +305,14 @@ const FGAirport* APTLoader::loadAirport(const string aptDat, const std::string a
       // custom startup locations (ignore)
     } else if ( rowCode == 0 ) {
       // ??
-    } else if ( rowCode >= 50 && rowCode <= 56) {
-      parseCommLine(aptDat, linesIt->number, rowCode,
-                    simgear::strutils::split(linesIt->str));
-    } else if ( rowCode == 110 ) {
-      current_block = Pavement;
-      parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
-    } else if ( rowCode >= 111 && rowCode <= 116 ) {
-      switch(current_block) {
+    } else if (isCommLine(rowCode)) {
+        parseCommLine(aptDat, linesIt->number, rowCode,
+                      simgear::strutils::split(linesIt->str));
+    } else if (rowCode == 110) {
+        current_block = Pavement;
+        parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
+    } else if (rowCode >= 111 && rowCode <= 116) {
+        switch (current_block) {
         case Pavement :
           parseNodeLine850(&pavements, aptDat, linesIt->number, rowCode,
                                    simgear::strutils::split(linesIt->str));
@@ -330,19 +335,18 @@ const FGAirport* APTLoader::loadAirport(const string aptDat, const std::string a
           throw sg_format_exception(oss.str(), cleanedLine);
           break;
       }
-    } else if ( rowCode == 120 ) {
-      current_block = LinearFeature;
-    } else if ( rowCode == 130 ) {
-      current_block = AirportBoundary;
-    } else if ( rowCode >= 1000 ) {
-      // airport traffic flow (ignore)
+    } else if (rowCode == 120) {
+        current_block = LinearFeature;
+    } else if (rowCode == 130) {
+        current_block = AirportBoundary;
+    } else if (rowCode >= 1000) {
+        // airport traffic flow (ignore)
     } else {
-      std::ostringstream oss;
-      string cleanedLine = cleanLine(linesIt->str);
-      oss << aptDat << ":" << linesIt->number << ": unknown row code " <<
-        rowCode;
-      SG_LOG( SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")" );
-      throw sg_format_exception(oss.str(), cleanedLine);
+        std::ostringstream oss;
+        string cleanedLine = cleanLine(linesIt->str);
+        oss << aptDat << ":" << linesIt->number << ": unknown row code " << rowCode;
+        SG_LOG(SG_GENERAL, SG_ALERT, oss.str() << " (" << cleanedLine << ")");
+        throw sg_format_exception(oss.str(), cleanedLine);
     }
   } // of loop over the second and subsequent apt.dat lines for the airport
 
@@ -814,8 +818,13 @@ void APTLoader::parseCommLine(const string& aptDat,
                                  rwy_lat_accum / (double)rwy_count,
                                  last_apt_elev);
 
-  // short int representing tens of kHz:
-  int freqKhz = atoi(token[1].c_str()) * 10;
+  const bool isAPT1000Code = rowCode > 1000;
+  if (isAPT1000Code) {
+      rowCode -= 1000;
+  }
+  // short int representing tens of kHz, or just kHz directly
+  int freqKhz = std::stoi(token[1]) * (isAPT1000Code ? 1 : 10);
+
   int rangeNm = 50;
   FGPositioned::Type ty;
 
