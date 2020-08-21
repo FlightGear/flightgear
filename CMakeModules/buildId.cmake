@@ -8,8 +8,8 @@ else()
 endif()
 
 find_package(Git)
-if (GIT_FOUND)
-    execute_process(COMMAND git --git-dir ${SRC}/.git rev-parse  HEAD
+if (Git_FOUND)
+    execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir ${SRC}/.git rev-parse  HEAD
         OUTPUT_VARIABLE REVISION
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     message(STATUS "Git revision is ${REVISION}")
