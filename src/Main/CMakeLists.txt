@@ -71,11 +71,6 @@ setup_msvc_grouping()
 # All sources and headers to be built into fgfs.
 get_property(FG_SOURCES GLOBAL PROPERTY FG_SOURCES)
 get_property(FG_HEADERS GLOBAL PROPERTY FG_HEADERS)
-get_property(EMBEDDED_RESOURCE_SOURCES GLOBAL PROPERTY EMBEDDED_RESOURCE_SOURCES)
-get_property(EMBEDDED_RESOURCE_HEADERS GLOBAL PROPERTY EMBEDDED_RESOURCE_HEADERS)
-
-set_source_files_properties(${EMBEDDED_RESOURCE_SOURCES} PROPERTIES GENERATED TRUE)
-set_source_files_properties(${EMBEDDED_RESOURCE_HEADERS} PROPERTIES GENERATED TRUE)
 
 # important we pass WIN32 here so the console is optional. Other
 # platforms ignore this option. If a console is needed we allocate
@@ -87,11 +82,9 @@ add_executable(fgfs
     ${MAIN_SOURCE}
     ${FG_SOURCES}
     ${FG_HEADERS}
-    ${EMBEDDED_RESOURCE_SOURCES}
-    ${EMBEDDED_RESOURCE_HEADERS}
 )
 
-add_dependencies(fgfs buildId embeddedresources)
+add_dependencies(fgfs buildId)
 # explicitly disable automoc for main fgfs target
 set_property(TARGET fgfs PROPERTY AUTOMOC OFF)
 

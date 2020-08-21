@@ -12,8 +12,7 @@ if(MSVC)
   endif()
 endif()
 
-add_custom_target(
-    embeddedresources
+add_custom_command(
     COMMAND
       fgrcc --root=${CMAKE_SOURCE_DIR}
             --output-cpp-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
@@ -21,9 +20,25 @@ add_custom_target(
             --output-header-file=${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
             --output-header-identifier=_FG_FLIGHTGEAR_EMBEDDED_RESOURCES
             ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
-    BYPRODUCTS
+    OUTPUT
       ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
       ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx
-    DEPENDS
+    MAIN_DEPENDENCY
       fgrcc ${CMAKE_SOURCE_DIR}/src/EmbeddedResources/FlightGear-resources.xml
+    COMMENT
+      "Re-generating embedded resources"
 )
+
+# set automatically by add_custom_command? 
+#set_source_files_properties(${EMBEDDED_RESOURCE_SOURCES} PROPERTIES GENERATED TRUE)
+#set_source_files_properties(${EMBEDDED_RESOURCE_HEADERS} PROPERTIES GENERATED TRUE)
+
+add_library(fgembeddedresources OBJECT 
+  ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
+  ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx)
+
+target_link_libraries(fgembeddedresources SimGearCore)
+
+# don't try to Automoc these files, it confuses the dependency logic
+set_property(TARGET fgembeddedresources PROPERTY AUTOMOC OFF)
+
