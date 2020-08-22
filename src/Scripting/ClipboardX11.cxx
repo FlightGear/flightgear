@@ -38,6 +38,7 @@ class ClipboardX11:
 {
   public:
     ClipboardX11():
+      // REVIEW: Memory Leak - 55,397 (104 direct, 55,293 indirect) bytes in 1 blocks are definitely lost
       _display( XOpenDisplay(NULL) ),
       _window( XCreateSimpleWindow(
         _display,
