@@ -2105,6 +2105,7 @@ Options::Options() :
 // build option map
   OptionDesc *desc = &fgOptionArray[ 0 ];
   while ( desc->option != 0 ) {
+    // REVIEW: Memory Leak - 15,768 bytes in 219 blocks are still reachable
     p->options[ desc->option ] = desc;
     ++desc;
   }
