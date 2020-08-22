@@ -1,7 +1,5 @@
 set(name fgcom)
 
-find_package(OpenAL REQUIRED)
-
 # Copy positions.txt content in const char* _positionsData[];
 file(READ utils/positions.txt POSITIONS_DATA)
 string(REGEX REPLACE "\n" "\"%

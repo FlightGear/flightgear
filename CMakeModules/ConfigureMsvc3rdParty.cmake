@@ -45,9 +45,6 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
 	    	set( BOOST_LIB lib )
     endif (CMAKE_CL_64)
 
-    set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/lib ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/lib  )
-    set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenScenegraph/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/OpenRTI/include ${MSVC_3RDPARTY_ROOT}/install/${OSG_MSVC}/SimGear/include)
-
     # ensure 3rdparty/lib/cmake is searched
     list(APPEND CMAKE_PREFIX_PATH ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR})
 
@@ -60,5 +57,4 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
         set(BOOST_INCLUDEDIR ${MSVC_ROOT_PARENT_DIR})
         message(STATUS "BOOST_INCLUDEDIR is ${BOOST_INCLUDEDIR}")
       endif()
-
 endif (MSVC AND MSVC_3RDPARTY_ROOT)
