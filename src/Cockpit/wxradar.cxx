@@ -242,6 +242,7 @@ wxRadarBg::init ()
 
     osg::Camera *camera = _odg->getCamera();
     camera->addChild(_radarGeode.get());
+    // REVIEW: Memory Leak - 277,296 (16 direct, 277,280 indirect) bytes in 1 blocks are definitely lost
     camera->addChild(_textGeode.get());
 
     updateFont();
