@@ -18,7 +18,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "AISwiftAircraft.h"
-#include <src/Main/globals.hxx>
+#include <Main/globals.hxx>
 
 
 FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::string& modelString) : FGAIBaseAircraft()

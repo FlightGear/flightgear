@@ -40,6 +40,10 @@ function(setup_fgfs_libraries target)
         ${PLIB_LIBRARIES}
     )
 
+    if (ENABLE_SWIFT)
+        target_link_libraries(${target} DBus libEvent)
+    endif()
+
     if (ENABLE_PLIB_JOYSTICK)
         target_link_libraries(${target} PLIBJoystick)
     endif()
