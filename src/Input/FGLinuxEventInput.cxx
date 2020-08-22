@@ -471,6 +471,7 @@ void FGLinuxEventInput::postinit()
 
   struct udev * udev = udev_new();
 
+  // REVIEW: Memory Leak - 55,004 (40 direct, 54,964 indirect) bytes in 1 blocks are definitely lost
   struct udev_enumerate *enumerate = udev_enumerate_new(udev);
   udev_enumerate_add_match_subsystem(enumerate, "input");
   udev_enumerate_scan_devices(enumerate);
