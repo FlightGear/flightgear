@@ -249,6 +249,7 @@ Node* Branch::childAtIndex(int childIndex) const
     if (d2 < LEAF_SIZE_SQR) {
       child = new Leaf(cb, childIdent);
     } else {
+      // REVIEW: Memory Leak - 9,152 bytes in 52 blocks are still reachable
       child = new Branch(cb, childIdent);
     }
 
