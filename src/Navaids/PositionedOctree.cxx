@@ -127,6 +127,7 @@ void Leaf::loadChildren()
 
   NavDataCache* cache = NavDataCache::instance();
   for (const auto& tp : cache->getOctreeLeafChildren(guid())) {
+    // REVIEW: Memory Leak - 1,728 bytes in 36 blocks are still reachable
     children.insert(children.end(), tp);
   } // of leaf members iteration
 
@@ -247,6 +248,7 @@ Node* Branch::childAtIndex(int childIndex) const
     int64_t childIdent = (_ident << 3) | childIndex;
 
     if (d2 < LEAF_SIZE_SQR) {
+      // REVIEW: Memory Leak - 480 bytes in 3 blocks are still reachable
       child = new Leaf(cb, childIdent);
     } else {
       // REVIEW: Memory Leak - 9,152 bytes in 52 blocks are still reachable
