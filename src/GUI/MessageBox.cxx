@@ -12,6 +12,7 @@
 #include <Main/globals.hxx>
 #include <Viewer/renderer.hxx>
 #include <GUI/new_gui.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include <osgViewer/Viewer>
 
@@ -173,6 +174,8 @@ MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     const std::string& msg,
     const std::string& moreText)
 {
+    flightgear::sentryReportFatalError(msg, moreText);
+
     // Headless mode.
     if (static_isHeadless) {
         SG_LOG(SG_HEADLESS, SG_ALERT, "Fatal Error: \"" << caption << "\"");
