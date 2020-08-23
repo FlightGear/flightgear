@@ -22,7 +22,9 @@ else()
 	endif()
 
 	if(libEvent_FOUND)
-		set_target_properties(PkgConfig::libEvent PROPERTIES IMPORTED_GLOBAL TRUE)
+		if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0") 
+			set_target_properties(PkgConfig::libEvent PROPERTIES IMPORTED_GLOBAL TRUE)
+		endif()
 
 		# alias the PkgConfig name to standard one
 		add_library(libEvent ALIAS PkgConfig::libEvent)

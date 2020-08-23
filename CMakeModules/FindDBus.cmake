@@ -18,12 +18,15 @@ if(WIN32)
 else()
 	find_package(PkgConfig QUIET)
 
+
 	if(PKG_CONFIG_FOUND)
 		pkg_check_modules(DBUS IMPORTED_TARGET dbus-1)
 	endif (PKG_CONFIG_FOUND)
 
 	if(DBUS_FOUND)
-		set_target_properties(PkgConfig::DBUS PROPERTIES IMPORTED_GLOBAL TRUE)
+		if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.11.0") 
+			set_target_properties(PkgConfig::DBUS PROPERTIES IMPORTED_GLOBAL TRUE)
+		endif()
 
 		set(HAVE_DBUS 1)
 		# alias the PkgConfig name to standard one

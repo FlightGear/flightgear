@@ -50,6 +50,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "Minimum OS X deployment version")
 
+if(${CMAKE_VERSION} VERSION_LESS "3.11.0") 
+    # override add_library to work around a missing feature in CMake 3.10
+    # see https://stackoverflow.com/questions/45401212/how-to-make-imported-target-global-afterwards
+    # for discussion of why we need this
+    function(add_library)
+        set(_args ${ARGN})
+        if ("${_args}" MATCHES ";IMPORTED")
+            list(APPEND _args GLOBAL)
+        endif()
+        _add_library(${_args})
+    endfunction()
+endif()
+
 project(FlightGear)
 
 # Define SRC_PARENT_DIR as the parent directory of the project source directory
