@@ -92,6 +92,7 @@ void FLITEVoiceSynthesizer::synthesize( SynthesizeRequest & request)
 }
 
 FLITEVoiceSynthesizer::FLITEVoiceSynthesizer(const std::string & voice)
+    // REVIEW: Memory Leak - 1,696 bytes in 4 blocks are definitely lost in loss record 6,145 of 6,440
     : _engine(new Flite_HTS_Engine), _worker(new FLITEVoiceSynthesizer::WorkerThread(this)), _volume(6.0)
 {
   _volume = fgGetDouble("/sim/sound/voice-synthesizer/volume", _volume );
