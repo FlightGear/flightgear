@@ -391,6 +391,7 @@ FGPUIMenuBar::add_enabled_listener(SGPropertyNode * node)
         node->setBoolValue("enabled", true);
 
     enable_item(node, node->getBoolValue("enabled"));
+    // REVIEW: Memory Leak - 3,920 (3,136 direct, 784 indirect) bytes in 98 blocks are definitely lost
     node->getNode("enabled")->addChangeListener(new EnabledListener());
 }
 
