@@ -207,14 +207,19 @@ FGGlobals::~FGGlobals()
 
     // stop OSG threading first, to avoid thread races while we tear down
     // scene-graph pieces
-    osg::ref_ptr<osgViewer::Viewer> vw(renderer->getViewer());
-    if (vw) {
-        // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
-        // explicitly stop trheading before we delete the renderer or
-        // viewMgr (which ultimately holds refs to the CameraGroup, and
-        // GraphicsContext)
-        vw->stopThreading();
+    // there are some scenarios where renderer is already gone.
+    osg::ref_ptr<osgViewer::Viewer> vw;
+    if (renderer) {
+        vw = renderer->getViewer();
+        if (vw) {
+            // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
+            // explicitly stop trheading before we delete the renderer or
+            // viewMgr (which ultimately holds refs to the CameraGroup, and
+            // GraphicsContext)
+            vw->stopThreading();
+        }
     }
+
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
 
@@ -229,14 +234,14 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->remove(FGScenery::staticSubsystemClassId());
 
     // renderer touches subsystems during its destruction
-    set_renderer(NULL);
+    set_renderer(nullptr);
 
     FGFontCache::shutdown();
     fgCancelSnapShot();
 
     delete subsystem_mgr;
-    subsystem_mgr = NULL; // important so ::get_subsystem returns NULL
-    vw = nullptr; // don't delete the viewer until now
+    subsystem_mgr = nullptr; // important so ::get_subsystem returns NULL
+    vw = nullptr;
     set_matlib(NULL);
 
     delete time_params;
