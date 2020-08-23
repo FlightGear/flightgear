@@ -107,6 +107,7 @@
 #include "renderer.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
+#include <Main/sentryIntegration.hxx>
 
 #if defined(ENABLE_QQ_UI)
 #include <GUI/QQuickDrawable.hxx>
@@ -676,6 +677,10 @@ FGRenderer::update( ) {
         sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
         _splash_alpha->setDoubleValue((sAlpha < 0) ? 0.0 : sAlpha);
+
+        if (sAlpha <= 0.0) {
+            flightgear::addSentryBreadcrumb("splash-screen fade out complete", "info");
+        }
 
         syncPausePopupState();
         fgSetBool("/sim/menubar/overlap-hide", false);
