@@ -214,6 +214,7 @@ wxRadarBg::init ()
     _geom->setVertexArray(_vertices);
     _texCoords = new osg::Vec2Array;
     _texCoords->setDataVariance(osg::Object::DYNAMIC);
+    // REVIEW: Memory Leak - 4,096 bytes in 1 blocks are indirectly lost
     _texCoords->reserve(128 * 4);
     _geom->setTexCoordArray(0, _texCoords);
     osg::Vec3Array *colors = new osg::Vec3Array;
