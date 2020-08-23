@@ -338,6 +338,9 @@ static void fgIdleFunction ( void ) {
             throw sg_exception("General initialization failed");
         }
 
+        // now we have commands up
+        flightgear::delayedSentryInit();
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the property-based built-in commands
         ////////////////////////////////////////////////////////////////////
