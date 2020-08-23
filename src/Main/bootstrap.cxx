@@ -320,7 +320,10 @@ int main ( int argc, char **argv )
             info = std::string("received from ") + t.getOrigin();
         flightgear::fatalMessageBoxWithoutExit(
           "Fatal exception", t.getFormattedMessage(), info);
+
+          flightgear::sentryReportException(t.getFormattedMessage()), t.getOrigin();
     } catch (const std::exception &e ) {
+        flightgear::sentryReportException(e.what());
         flightgear::fatalMessageBoxWithoutExit("Fatal exception", e.what());
     } catch (const std::string &s) {
         flightgear::fatalMessageBoxWithoutExit("Fatal exception", s);
@@ -329,6 +332,7 @@ int main ( int argc, char **argv )
     } catch (const char *s) {
         std::cerr << "Fatal error (const char*): " << s << std::endl;
     } catch (...) {
+        flightgear::sentryReportException("Unknown main loop exception");
         std::cerr << "Unknown exception in the main loop. Aborting..." << std::endl;
         if (errno)
             perror("Possible cause");
