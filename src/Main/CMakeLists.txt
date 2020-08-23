@@ -99,6 +99,13 @@ export_debug_symbols(fgfs)
 # Additional search paths for includes.
 setup_fgfs_includes(fgfs)
 
+# this has to live here for compatability with older CMake versions
+if (APPLE)
+    install(TARGETS fgfs BUNDLE DESTINATION .)
+else()
+    install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
 if (TARGET sentry::sentry)
     target_link_libraries(fgfs sentry::sentry)
 endif()
