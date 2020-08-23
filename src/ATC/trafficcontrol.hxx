@@ -331,13 +331,16 @@ public:
         distanceToFinal = 6.0 * SG_NM_TO_METER;
     };
 
-    std::string getRunwayName() {
+    const std::string& getRunwayName() const
+    {
         return rwy;
     };
-    int    getCleared   () {
+    int getCleared() const
+    {
         return currentlyCleared;
     };
-    double getApproachDistance() {
+    const double getApproachDistance() const
+    {
         return distanceToFinal;
     };
     //time_t getEstApproachTime() { return estimatedArrival; };
