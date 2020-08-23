@@ -66,6 +66,15 @@ else (HTS_ENGINE_LIBRARIES AND HTS_ENGINE_INCLUDE_DIRS)
     if (NOT HTS_Engine_FIND_QUIETLY)
       message(STATUS "Found HTS Engine: ${HTS_ENGINE_LIBRARIES}")
     endif (NOT HTS_Engine_FIND_QUIETLY)
+
+    if(NOT TARGET Flightgear::HTSEngine)
+      add_library(Flightgear::HTSEngine UNKNOWN IMPORTED)
+      set_target_properties(Flightgear::HTSEngine PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${HTS_ENGINE_INCLUDE_DIRS}"
+        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+          IMPORTED_LOCATION "${HTS_ENGINE_LIBRARY}")
+    endif()
+
   else (HTS_ENGINE_FOUND)
     if (HTS_Engine_FIND_REQUIRED)
 	    message(FATAL_ERROR "Could not find HTS Engine")
@@ -77,10 +86,3 @@ else (HTS_ENGINE_LIBRARIES AND HTS_ENGINE_INCLUDE_DIRS)
 
 endif (HTS_ENGINE_LIBRARIES AND HTS_ENGINE_INCLUDE_DIRS)
 
-if(NOT TARGET Flightgear::HTSEngine)
-      add_library(Flightgear::HTSEngine UNKNOWN IMPORTED)
-      set_target_properties(Flightgear::HTSEngine PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${HTS_ENGINE_INCLUDE_DIRS}"
-        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-          IMPORTED_LOCATION "${HTS_ENGINE_LIBRARY}")
-endif()

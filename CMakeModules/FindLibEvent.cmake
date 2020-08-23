@@ -21,7 +21,7 @@ else()
 		pkg_check_modules(libEvent QUIET IMPORTED_TARGET libevent)
 	endif()
 
-	if(LIBEVENT_FOUND)
+	if(libEvent_FOUND)
 		set_target_properties(PkgConfig::libEvent PROPERTIES IMPORTED_GLOBAL TRUE)
 
 		# alias the PkgConfig name to standard one

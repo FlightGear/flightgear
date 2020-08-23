@@ -104,7 +104,7 @@ if (SPEEX_FOUND AND SPEEXDSP_FOUND)
     message(STATUS "Using speex extended library libraries: ${SPEEXDSP_LIBRARIES}")
 
     target_include_directories(iaxclient_lib PRIVATE ${SPEEX_INCLUDE_DIR} ${SPEEXDSP_INCLUDE_DIR})
-    target_link_libraries(iaxclient_lin PRIVATE ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
+    target_link_libraries(iaxclient_lib PRIVATE ${SPEEX_LIBRARIES} ${SPEEXDSP_LIBRARIES})
 else()
     target_sources(iaxclient_lib PRIVATE
         libspeex/bits.c

@@ -107,6 +107,17 @@ else (FLITE_LIBRARIES AND FLITE_INCLUDE_DIRS)
     if (NOT Flite_FIND_QUIETLY)
       message(STATUS "Found Flite and needed components: ${FLITE_LIBRARIES}")
     endif (NOT Flite_FIND_QUIETLY)
+
+
+    if(NOT TARGET Flightgear::Flite)
+          add_library(Flightgear::Flite UNKNOWN IMPORTED)
+          set_target_properties(Flightgear::Flite PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${FLITE_INCLUDE_DIRS}"
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+              IMPORTED_LOCATION "${FLITE_LIBRARY}"
+              INTERFACE_LINK_LIBRARIES "${FLITE_USENGLISH_LIBRARY};${FLITE_CMU_US_KAL_LIBRARY};${FLITE_CMULEX_LIBRARY}")
+    endif()
+
   else (FLITE_FOUND)
     if (Flite_FIND_REQUIRED)
 	    message(FATAL_ERROR "Could not find Flite or all components of Flite")
@@ -117,12 +128,3 @@ else (FLITE_LIBRARIES AND FLITE_INCLUDE_DIRS)
   mark_as_advanced(FLITE_INCLUDE_DIRS FLITE_LIBRARIES)
 
 endif (FLITE_LIBRARIES AND FLITE_INCLUDE_DIRS)
-
-if(NOT TARGET Flightgear::Flite)
-      add_library(Flightgear::Flite UNKNOWN IMPORTED)
-      set_target_properties(Flightgear::Flite PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${FLITE_INCLUDE_DIRS}"
-        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-          IMPORTED_LOCATION "${FLITE_LIBRARY}"
-          INTERFACE_LINK_LIBRARIES ${FLITE_USENGLISH_LIBRARY} ${FLITE_CMU_US_KAL_LIBRARY} ${FLITE_CMULEX_LIBRARY})
-endif()

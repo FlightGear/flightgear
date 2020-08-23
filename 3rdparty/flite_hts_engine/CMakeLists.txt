@@ -75,7 +75,7 @@ target_compile_definitions(flightgear_flite_hts PRIVATE -DNO_UNION_INITIALIZATIO
 target_link_libraries(flightgear_flite_hts PUBLIC Flightgear::HTSEngine)
 
 if (SYSTEM_FLITE)
-    target_link_libraries(flightgear_flite_hts Flightgear::Flite)
+    target_link_libraries(flightgear_flite_hts PUBLIC Flightgear::Flite)
 else()
     target_include_directories(flightgear_flite_hts PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/include)
     target_include_directories(flightgear_flite_hts PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/flite/lang/cmulex)
