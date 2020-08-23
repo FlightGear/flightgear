@@ -463,8 +463,8 @@ configure_file (
 # Setup build.h header, each build
 include( GenerateBuildInfo )
 
-# global includes: these are used by every singl target, so we do set them globally
-# even though that's not stricly best practice
+# global includes: these are used by every single target, so we do set them globally
+# even though that's not strictly best practice
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
 include_directories(${PROJECT_BINARY_DIR}/src) # for version.h
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -482,15 +482,7 @@ add_subdirectory(scripts)
 ### MSVC startup project - ensure you can just hit build & run in MSVC
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT fgfs)
 
-#-----------------------------------------------------------------------------
-### uninstall target
-#-----------------------------------------------------------------------------
-CONFIGURE_FILE(
-    "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
-ADD_CUSTOM_TARGET(uninstall
-    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+include(Installation)
 
 # The test suite.
 enable_testing()
