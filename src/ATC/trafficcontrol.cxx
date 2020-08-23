@@ -1046,33 +1046,29 @@ void FGTowerController::signOff(int id)
 {
     // Search activeTraffic for a record matching our id
     TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    // If this aircraft has left the runway, we can clear the departure record for this runway
-    ActiveRunwayVecIterator rwy = activeRunways.begin();
-    if (! activeRunways.empty()) {
-        //while ((rwy->getRunwayName() != i->getRunway()) && (rwy != activeRunways.end())) {
-        while (rwy != activeRunways.end()) {
-            if (rwy->getRunwayName() == i->getRunway()) {
-                break;
-            }
-            rwy++;
-        }
-        if (rwy != activeRunways.end()) {
-            rwy->setCleared(0);
-            rwy->updatedepartureQueue();
-        } else {
-            SG_LOG(SG_ATC, SG_ALERT,
-                   "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff at " << SG_ORIGIN);
-        }
-    }
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
-    } else {
-        i->getAircraft()->resetTakeOffStatus();
-        i = activeTraffic.erase(i);
-        SG_LOG(SG_ATC, SG_DEBUG, "Signing off from tower controller");
+        return;
     }
+
+    const auto trafficRunway = i->getRunway();
+    auto runwayIt = std::find_if(activeRunways.begin(), activeRunways.end(),
+                                 [&trafficRunway](const ActiveRunway& ar) {
+                                     return ar.getRunwayName() == trafficRunway;
+                                 });
+
+    if (runwayIt != activeRunways.end()) {
+        runwayIt->setCleared(0);
+        runwayIt->updatedepartureQueue();
+    } else {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff at " << SG_ORIGIN);
+    }
+
+    i->getAircraft()->resetTakeOffStatus();
+    activeTraffic.erase(i);
+    SG_LOG(SG_ATC, SG_DEBUG, "Signing off from tower controller");
 }
 
 // NOTE:
