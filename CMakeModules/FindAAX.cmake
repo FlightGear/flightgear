@@ -18,6 +18,7 @@
 if (AAX_LIBRARY AND AAX_INCLUDE_DIR)
   # in cache already
   set(AAX_FOUND TRUE)
+  message(STATUS "Found AeonWave: ${AAX_LIBRARY}")
 else()
   find_path(AAX_INCLUDE_DIR aax/aax.h
     HINTS
@@ -58,13 +59,9 @@ else()
   endif()
 
   if (AAX_FOUND)
-    if (NOT Udns_FIND_QUIETLY)
-      message(STATUS "Found AeonWave: ${AAX_LIBRARIES}")
-    endif ()
+    message(STATUS "Found AeonWave: ${AAX_LIBRARY}")
   else ()
-    if (Udns_FIND_REQUIRED)
-      message(FATAL_ERROR "Could not find AeonWave")
-    endif ()
+    message(FATAL_ERROR "Could not find AeonWave")
   endif ()
 
   # show the AAX_INCLUDE_DIRS and AAX_LIBRARIES variables only in the advanced view
