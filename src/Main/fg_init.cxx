@@ -1225,6 +1225,7 @@ void fgStartReposition()
     master_freeze->setBoolValue(false);
   }
   fgSetBool("/sim/sceneryloaded",false);
+  flightgear::addSentryBreadcrumb("end of reposition", "info");
 }
 
 void fgStartNewReset()
@@ -1400,6 +1401,8 @@ void fgStartNewReset()
     fgSetBool("/sim/signals/reinit", false);
     fgSetBool("/sim/freeze/master", false);
     fgSetBool("/sim/sceneryloaded",false);
+
+    flightgear::addSentryBreadcrumb("end of reset", "info");
 }
 
 void fgInitPackageRoot()
