@@ -46,17 +46,20 @@ void fgOSDisableScreensaver()
     const char *app_name="org.flightgear";
     const char *inhibit_reason="Uses joystick input";
     
+    // REVIEW: Memory Leak - 2,056 bytes in 1 blocks are still reachable
     dbus_connection=dbus_bus_get(DBUS_BUS_SESSION,NULL);
     dbus_connection_set_exit_on_disconnect(dbus_connection,FALSE);//Don't close us if we lose the DBus connection
     
     //Two possible interfaces; we send on both, as that is easier than trying to determine which will work
     //GNOME: https://people.gnome.org/~mccann/gnome-session/docs/gnome-session.html
     dbus_inhibit_screenlock=dbus_message_new_method_call("org.gnome.SessionManager","/org/gnome/SessionManager","org.gnome.SessionManager","Inhibit");
+    // REVIEW: Memory Leak - 352 bytes in 1 blocks are indirectly lost
     dbus_message_append_args(dbus_inhibit_screenlock,DBUS_TYPE_STRING,&app_name,DBUS_TYPE_UINT32,&window_id,DBUS_TYPE_STRING,&inhibit_reason,DBUS_TYPE_UINT32,&inhibit_idle,DBUS_TYPE_INVALID);
     dbus_connection_send(dbus_connection,dbus_inhibit_screenlock,NULL);
     
     //KDE, GNOME 3.6+: http://standards.freedesktop.org/idle-inhibit-spec/0.1/re01.html
     dbus_inhibit_screenlock=dbus_message_new_method_call("org.freedesktop.ScreenSaver","/ScreenSaver","org.freedesktop.ScreenSaver","Inhibit");
+    // REVIEW: Memory Leak - 320 bytes in 1 blocks are still reachable
     dbus_message_append_args(dbus_inhibit_screenlock,DBUS_TYPE_STRING,&app_name,DBUS_TYPE_STRING,&inhibit_reason,DBUS_TYPE_INVALID);
     dbus_connection_send(dbus_connection,dbus_inhibit_screenlock,NULL);
     dbus_connection_flush(dbus_connection);
