@@ -142,6 +142,9 @@ setup_fgfs_libraries(fgfs_test_suite)
 # Additional search paths for includes.
 setup_fgfs_includes(fgfs_test_suite)
 
+# test codce includes its headers as test_suite/foo.h, so we need this
+target_include_directories(fgfs_test_suite PUBLIC ${PROJECT_SOURCE_DIR})
+
 target_compile_definitions(fgfs_test_suite PUBLIC BUILDING_TESTSUITE)
 
 # Additional libraries just for the test suite.
