@@ -59,7 +59,7 @@
 
 #include <Viewer/fgviewer.hxx>
 #include "main.hxx"
-#include <Include/build.h>
+#include <flightgearBuildId.h>
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>

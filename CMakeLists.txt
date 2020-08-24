@@ -467,7 +467,7 @@ configure_file (
     "${PROJECT_BINARY_DIR}/src/Include/config.h"
 )
 
-# Setup build.h header, each build
+# Setup flightgearBuildId.h header, each build
 include( GenerateBuildInfo )
 
 # global includes: these are used by every single target, so we do set them globally

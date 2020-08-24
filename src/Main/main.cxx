@@ -61,7 +61,7 @@
 #include <Viewer/renderer.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
-#include <Include/build.h>
+#include <flightgearBuildId.h>
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"

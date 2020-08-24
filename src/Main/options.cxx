@@ -80,7 +80,7 @@
 #include "AircraftDirVisitorBase.hxx"
 
 #include <osg/Version>
-#include <Include/build.h>
+#include <flightgearBuildId.h>
 #include <simgear/version.h>
 
 using std::string;

@@ -35,7 +35,7 @@
 #include <FDM/flightProperties.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Include/build.h>
+#include <flightgearBuildId.h>
 
 #include "flarm.hxx"
 

@@ -17,4 +17,4 @@ else()
     set(REVISION "none")
 endif()
 
-configure_file (${SRC}/src/Include/build.h.cmake-in ${DST})
+configure_file (${SRC}/src/Include/flightgearBuildId.h.cmake-in ${DST})
