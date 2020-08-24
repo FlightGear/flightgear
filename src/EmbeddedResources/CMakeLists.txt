@@ -33,7 +33,7 @@ add_custom_command(
 #set_source_files_properties(${EMBEDDED_RESOURCE_SOURCES} PROPERTIES GENERATED TRUE)
 #set_source_files_properties(${EMBEDDED_RESOURCE_HEADERS} PROPERTIES GENERATED TRUE)
 
-add_library(fgembeddedresources OBJECT 
+add_library(fgembeddedresources STATIC 
   ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.cxx
   ${CMAKE_BINARY_DIR}/src/EmbeddedResources/FlightGear-resources.hxx)
 
