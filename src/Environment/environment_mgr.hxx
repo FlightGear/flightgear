@@ -92,13 +92,13 @@ private:
     double get_cloud_layer_maxalpha (int index ) const;
     void set_cloud_layer_maxalpha (int index, double maxalpha);
 
-    FGEnvironment * _environment; // always the same, for now
-    FGClouds *fgClouds;
-    bool _cloudLayersDirty;
+    FGEnvironment * _environment = nullptr; // always the same, for now
+    FGClouds *fgClouds = nullptr;
+    bool _cloudLayersDirty = true;
     simgear::TiedPropertyList _tiedProperties;
-    SGPropertyChangeListener * _3dCloudsEnableListener;
-    FGEnvironmentMgrMultiplayerListener * _multiplayerListener;
-    SGSky* _sky;
+    SGPropertyChangeListener * _3dCloudsEnableListener = nullptr;
+    FGEnvironmentMgrMultiplayerListener * _multiplayerListener = nullptr;
+    SGSky* _sky = nullptr;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX
