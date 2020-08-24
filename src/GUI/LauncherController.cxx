@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "LauncherController.hxx"
 
 // Qt headers
@@ -25,7 +27,6 @@
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
-#include "version.h"
 
 #include "AircraftItemModel.hxx"
 #include "AircraftProxyModel.hxx"

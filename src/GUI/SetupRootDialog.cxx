@@ -37,7 +37,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>
-#include <Include/version.h>
 #include <Viewer/WindowBuilder.hxx>
 
 #include "QtLauncher.hxx"

@@ -18,14 +18,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+
 #include <iostream>
 
 #include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_init.hxx>
 
-#include <Include/version.h>
-#include "config.h"
 
 #include "dataStore.hxx"
 

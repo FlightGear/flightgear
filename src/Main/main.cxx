@@ -61,7 +61,6 @@
 #include <Viewer/renderer.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
 #include <Navaids/NavDataCache.hxx>
-#include <Include/version.h>
 #include <Include/build.h>
 
 #include "fg_commands.hxx"

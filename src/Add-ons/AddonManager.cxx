@@ -17,6 +17,8 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+#include "config.h"
+
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -33,7 +35,6 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
 
-#include <Include/version.h>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 

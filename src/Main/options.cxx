@@ -80,7 +80,6 @@
 #include "AircraftDirVisitorBase.hxx"
 
 #include <osg/Version>
-#include <Include/version.h>
 #include <Include/build.h>
 #include <simgear/version.h>
 

@@ -84,9 +84,7 @@
 #  pragma warning( disable: 4355 )
 #endif
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -105,8 +103,6 @@
 #include <simgear/structure/exception.hxx>
 
 using std::string;
-
-#include <Include/version.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // debug switches /////////////////////////////////////////////////////////////

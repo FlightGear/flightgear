@@ -16,8 +16,6 @@
 #include <QQmlError>
 #include <QQmlFileSelector>
 
-#include "version.h"
-
 // launcher headers
 #include "QtLauncher.hxx"
 #include "DefaultAircraftLocator.hxx"

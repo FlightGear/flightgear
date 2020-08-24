@@ -24,8 +24,7 @@
 #cmakedefine HAVE_MKFIFO
 
 #define VERSION "@FLIGHTGEAR_VERSION@"
-
-#define HAVE_VERSION_H 1 // version.h is assumed for CMake builds
+#define FLIGHTGEAR_VERSION "@FLIGHTGEAR_VERSION@"
 
 #cmakedefine ENABLE_UIUC_MODEL
 #cmakedefine ENABLE_LARCSIM

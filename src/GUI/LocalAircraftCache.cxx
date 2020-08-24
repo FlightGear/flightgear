@@ -31,7 +31,6 @@
 #include <QSettings>
 #include <QDebug>
 
-#include <Include/version.h>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
 

@@ -20,9 +20,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -37,7 +35,6 @@
 #include <FDM/flightProperties.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Include/version.h>
 #include <Include/build.h>
 
 #include "flarm.hxx"

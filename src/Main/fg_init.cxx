@@ -136,7 +136,6 @@
 #include <Network/DNSClient.hxx>
 #include <Network/fgcom.hxx>
 #include <Network/http/httpd.hxx>
-#include <Include/version.h>
 #include <Viewer/splash.hxx>
 #include <Viewer/CameraGroup.hxx>
 

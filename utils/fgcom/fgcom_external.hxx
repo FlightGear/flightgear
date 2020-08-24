@@ -50,7 +50,6 @@ typedef int ssize_t;
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include "version.h"
 
 #ifndef FGCOM_VERSION
 #ifdef FLIGHTGEAR_VERSION

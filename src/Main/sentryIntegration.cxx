@@ -25,7 +25,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
 
-#include <Include/version.h>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

@@ -51,9 +51,7 @@
 #  pragma warning( disable: 4355 )
 #endif
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -82,7 +80,6 @@ using std::string;
 
 #include <Airports/runways.hxx>
 #include <Airports/airport.hxx>
-#include <Include/version.h>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include "instrument_mgr.hxx"

@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include "QmlAircraftInfo.hxx"
 
 #include <QVariant>
@@ -10,7 +12,6 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <Include/version.h>
 #include <Main/globals.hxx>
 
 #include "LocalAircraftCache.hxx"

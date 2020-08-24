@@ -24,11 +24,7 @@
  *  "fgfs --igc=file,out,1,OutputFile.igc"
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
-#include <Include/version.h>
+#include "config.h"
 
 #include <stdio.h>  // sprintf
 #include <simgear/debug/logstream.hxx>

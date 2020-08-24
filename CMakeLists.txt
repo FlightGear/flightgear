@@ -467,12 +467,6 @@ configure_file (
     "${PROJECT_BINARY_DIR}/src/Include/config.h"
 )
 
-#and the same for the version header
-configure_file (
-    "${PROJECT_SOURCE_DIR}/src/Include/version.h.cmake-in"
-    "${PROJECT_BINARY_DIR}/src/Include/version.h"
-)
-
 # Setup build.h header, each build
 include( GenerateBuildInfo )
 
