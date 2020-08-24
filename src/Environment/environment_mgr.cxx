@@ -83,9 +83,6 @@ void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
 
 FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
-  fgClouds(nullptr),
-  _cloudLayersDirty(true),
-  _3dCloudsEnableListener(nullptr),
   _sky(globals->get_renderer()->getSky())
 {
   fgClouds = new FGClouds;
@@ -154,7 +151,7 @@ FGEnvironmentMgr::shutdown()
 {
   globals->get_event_mgr()->removeTask("updateClosestAirport");
   delete _multiplayerListener;
-  _multiplayerListener = NULL;
+  _multiplayerListener = nullptr;
   SGSubsystemGroup::shutdown();
 }
 
