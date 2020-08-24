@@ -135,7 +135,11 @@ if (HAVE_QT)
                             ${qml_sources})
 
     set_property(TARGET fglauncher PROPERTY AUTOMOC ON)
-    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
+    target_include_directories(fglauncher PRIVATE ${PROJECT_BINARY_DIR}/src/GUI )
+
+    # we include WindowBuilder.h which needs this
+    target_include_directories(fglauncher PRIVATE ${OPENSCENEGRAPH_INCLUDE_DIRS})
+
     target_link_libraries(fglauncher Qt5::Core Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Quick Qt5::Svg SimGearCore)
 
     if (ENABLE_QQ_UI)
@@ -196,8 +200,8 @@ if (HAVE_QT)
 
     set_property(TARGET fgqmlui PROPERTY AUTOMOC ON)
     target_link_libraries(fgqmlui Qt5::Quick Qt5::Widgets Qt5::Network Qt5::Qml Qt5::Gui SimGearCore)
-    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI)
-
+    target_include_directories(fgqmlui PRIVATE ${PROJECT_BINARY_DIR}/src/GUI ${OPENSCENEGRAPH_INCLUDE_DIRS})
+    
     if (ENABLE_QQ_UI)
       # this is a headers-only dependency, so we can include <private/qopenglcontext_p.h>
       target_link_libraries(fgqmlui Qt5::GuiPrivate)

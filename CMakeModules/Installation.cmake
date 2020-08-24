@@ -1,9 +1,4 @@
 
-if (APPLE)
-    install(TARGETS fgfs BUNDLE DESTINATION .)
-else()
-    install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
 
 if (TARGET sentry_crashpad::handler)
     if (APPLE)
