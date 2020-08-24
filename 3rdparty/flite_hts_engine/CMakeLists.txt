@@ -71,6 +71,10 @@ add_library(flightgear_flite_hts STATIC
 target_include_directories(flightgear_flite_hts PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/flite_hts_engine/include)
 target_compile_definitions(flightgear_flite_hts PRIVATE -DNO_UNION_INITIALIZATION -DFLITE_PLUS_HTS_ENGINE)
 
+if (X86_64)
+    target_compile_definitions(flightgear_flite_hts PRIVATE -DSIZEOF_VOID_P=8)
+endif()
+
 # link against HTSEngine: either our own one, or the system one
 target_link_libraries(flightgear_flite_hts PUBLIC Flightgear::HTSEngine)
 
