@@ -123,15 +123,19 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
     // Event handlers seem to be called even if the according event has already
     // been handled. Already handled events shouldn't be handled multiple times
     // so we need to exit here manually.
-    if(    ea.getHandled()
-           // Let mouse move events pass to correctly handle mouse cursor hide
-           // timeout while moving just on the canvas gui.
-           // TODO We should clean up the whole mouse input and make hide
-           //      timeout independent of the event handler which consumed the
-           //      event.
-        && ea.getEventType() != osgGA::GUIEventAdapter::MOVE
-        && ea.getEventType() != osgGA::GUIEventAdapter::DRAG )
-      return false;
+    if (ea.getHandled()
+        // Let mouse move events pass to correctly handle mouse cursor hide
+        // timeout while moving just on the canvas gui.
+        // TODO We should clean up the whole mouse input and make hide
+        //      timeout independent of the event handler which consumed the
+        //      event.
+
+        // if we see a release, still process for active pick callbacks
+        // https://sourceforge.net/p/flightgear/codetickets/2347/
+
+        && ea.getEventType() != osgGA::GUIEventAdapter::MOVE && ea.getEventType() != osgGA::GUIEventAdapter::DRAG && ea.getEventType() != osgGA::GUIEventAdapter::RELEASE) {
+        return false;
+    }
 
     int x = 0;
     int y = 0;

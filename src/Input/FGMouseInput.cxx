@@ -575,6 +575,12 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
 
       callbacks.pop_front();
     }
+
+    if (ea->getHandled()) {
+        // for https://sourceforge.net/p/flightgear/codetickets/2347/
+        // we cleared the active picks, but don't do further processing
+        return;
+    }
   }
 
   if (mode.pass_through) {
