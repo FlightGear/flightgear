@@ -830,7 +830,11 @@ static naRef f_removeCommand(naContext c, naRef me, int argc, naRef* args)
     if ((argc < 1) || !naIsString(args[0]))
         naRuntimeError(c, "bad argument to removecommand()");
 
-    globals->get_commands()->removeCommand(naStr_data(args[0]));
+    const string commandName(naStr_data(args[0]));
+    bool ok = nasalSys->removeCommand(commandName);
+    if (!ok) {
+        naRuntimeError(c, "Failed to remove command:%s", commandName.c_str());
+    }
     return naNil();
 }
 
@@ -1777,17 +1781,18 @@ void FGNasalSys::addCommand(naRef func, const std::string& name)
     _commands[name] = cmd;
 }
 
-void FGNasalSys::removeCommand(const std::string& name)
+bool FGNasalSys::removeCommand(const std::string& name)
 {
-    NasalCommandDict::iterator it = _commands.find(name);
+    auto it = _commands.find(name);
     if (it == _commands.end()) {
         SG_LOG(SG_NASAL, SG_WARN, "remove of unknwon command:" << name);
-        return;
+        return false;
     }
 
     // will delete the NasalCommand instance
-    globals->get_commands()->removeCommand(name);
+    bool ok = globals->get_commands()->removeCommand(name);
     _commands.erase(it);
+    return ok;
 }
 
 void FGNasalSys::addPersistentTimer(TimerObj* pto)

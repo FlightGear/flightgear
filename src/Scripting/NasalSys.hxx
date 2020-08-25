@@ -95,7 +95,7 @@ public:
     naRef getModule(const char* moduleName);
 
     void addCommand(naRef func, const std::string& name);
-    void removeCommand(const std::string& name);
+    bool removeCommand(const std::string& name);
 
     /**
      * Set member of specified hash to given value
