@@ -54,6 +54,7 @@
 #include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
+#include <Main/sentryIntegration.hxx>
 
 #if defined(HAVE_QT)
 #include "GraphicsWindowQt5.hxx"
@@ -220,6 +221,8 @@ void fgOSOpenWindow(bool stencil)
 
     std::string mode;
     mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
+    flightgear::addSentryTag("osg-thread-mode", mode);
+
     if (mode == "AutomaticSelection")
       viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
     else if (mode == "CullDrawThreadPerContext")
@@ -338,6 +341,7 @@ int fgOSMainLoop()
         viewer->frame( globals->get_sim_time_sec() );
     }
 
+    flightgear::addSentryBreadcrumb("main loop exited", "info");
     return status;
 }
 
