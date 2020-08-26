@@ -94,7 +94,7 @@ public:
 
     naRef getModule(const char* moduleName);
 
-    void addCommand(naRef func, const std::string& name);
+    bool addCommand(naRef func, const std::string& name);
     bool removeCommand(const std::string& name);
 
     /**
@@ -152,6 +152,12 @@ public:
     /// output somewhere (a UI, presumably)
     simgear::BufferedLogCallback* log() const
     { return _log.get(); }
+
+#if defined(BUILDING_TESTSUITE)
+    /// test-suite only API: retrieve all Nasal runtime errors which
+    /// occurred since we last called this
+    string_list getAndClearErrorList();
+#endif
 
 private:
     void initLogLevelConstants();

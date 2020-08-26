@@ -821,7 +821,12 @@ static naRef f_addCommand(naContext c, naRef me, int argc, naRef* args)
     if(argc != 2 || !naIsString(args[0]) || !naIsFunc(args[1]))
         naRuntimeError(c, "bad arguments to addcommand()");
 
-    nasalSys->addCommand(args[1], naStr_data(args[0]));
+    const string commandName(naStr_data(args[0]));
+    bool ok = nasalSys->addCommand(args[1], commandName);
+    if (!ok) {
+        naRuntimeError(c, "Failed to add command:%s : likely a duplicate name ", commandName.c_str());
+    }
+
     return naNil();
 }
 
@@ -1423,16 +1428,33 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
     loaded->setBoolValue(is_loaded);
 }
 
+#if defined(BUILDING_TESTSUITE)
+
+static string_list global_nasalErrors;
+
+string_list FGNasalSys::getAndClearErrorList()
+{
+    string_list r;
+    global_nasalErrors.swap(r);
+    return r;
+}
+#endif
+
 // Logs a runtime error, with stack trace, to the FlightGear log stream
 void FGNasalSys::logError(naContext context)
 {
     string errorMessage = naGetError(context);
+#if defined(BUILDING_TESTSUITE)
+    global_nasalErrors.push_back(errorMessage);
+#else
     SG_LOG(SG_NASAL, SG_ALERT, "Nasal runtime error: " << errorMessage);
 
     string_list nasalStack;
     logNasalStack(context, nasalStack);
     flightgear::sentryReportNasalError(errorMessage, nasalStack);
+#endif
 }
+
 
 void FGNasalSys::logNasalStack(naContext context, string_list& stack)
 {
@@ -1770,15 +1792,16 @@ void FGNasalSys::registerToUnload(FGNasalModelData *data)
     _unloadList.push(data);
 }
 
-void FGNasalSys::addCommand(naRef func, const std::string& name)
+bool FGNasalSys::addCommand(naRef func, const std::string& name)
 {
     if (_commands.find(name) != _commands.end()) {
         SG_LOG(SG_NASAL, SG_WARN, "duplicate add of command:" << name);
-        return;
+        return false;
     }
 
     NasalCommand* cmd = new NasalCommand(this, func, name);
     _commands[name] = cmd;
+    return true;
 }
 
 bool FGNasalSys::removeCommand(const std::string& name)

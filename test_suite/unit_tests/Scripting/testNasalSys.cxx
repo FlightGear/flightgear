@@ -22,8 +22,12 @@
 
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
+#include <simgear/structure/commands.hxx>
+
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
+
 #include <Scripting/NasalSys.hxx>
 
 #include <Main/FGInterpolator.hxx>
@@ -88,4 +92,61 @@ void NasalSysTests::testStructEquality()
 
     )");
     CPPUNIT_ASSERT(ok);
+}
+
+void NasalSysTests::testCommands()
+{
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    nasalSys->getAndClearErrorList();
+
+    fgSetInt("/foo/test", 7);
+    bool ok = FGTestApi::executeNasal(R"(
+     var f = func { 
+         var i = getprop('/foo/test');
+         setprop('foo/test', i + 4);
+     };
+                                      
+      addcommand('do-foo', f);
+      var ok = fgcommand('do-foo');
+      unitTest.assert(ok);
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(11, fgGetInt("/foo/test"));
+
+    SGPropertyNode_ptr args(new SGPropertyNode);
+    ok = globals->get_commands()->execute("do-foo", args);
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(15, fgGetInt("/foo/test"));
+
+    ok = FGTestApi::executeNasal(R"(
+       var g = func { print('fail'); };
+       addcommand('do-foo', g);
+    )");
+    CPPUNIT_ASSERT(ok);
+    auto errors = nasalSys->getAndClearErrorList();
+    CPPUNIT_ASSERT_EQUAL(1UL, errors.size());
+
+    // old command shoudl still be registered and work
+    ok = globals->get_commands()->execute("do-foo", args);
+    CPPUNIT_ASSERT(ok);
+    CPPUNIT_ASSERT_EQUAL(19, fgGetInt("/foo/test"));
+
+    ok = FGTestApi::executeNasal(R"(
+      removecommand('do-foo');
+   )");
+    CPPUNIT_ASSERT(ok);
+
+    ok = FGTestApi::executeNasal(R"(
+     var ok = fgcommand('do-foo');
+     unitTest.assert(!ok);
+  )");
+    CPPUNIT_ASSERT(ok);
+    errors = nasalSys->getAndClearErrorList();
+    CPPUNIT_ASSERT_EQUAL(0UL, errors.size());
+
+    // should fail, command is removed
+    ok = globals->get_commands()->execute("do-foo", args);
+    CPPUNIT_ASSERT(!ok);
+    CPPUNIT_ASSERT_EQUAL(19, fgGetInt("/foo/test"));
 }
