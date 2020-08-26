@@ -202,16 +202,16 @@ void  sentryReportFatalError(const std::string& msg, const std::string& more)
     if (!static_sentryEnabled)
         return;
 
-    sentry_value_t exc = sentry_value_new_object();
-    sentry_value_set_by_key(exc, "type", sentry_value_new_string("Fatal Error"));
-    sentry_value_set_by_key(exc, "message", sentry_value_new_string(msg.c_str()));
+    sentry_value_t msg = sentry_value_new_object();
+    sentry_value_set_by_key(msg, "type", sentry_value_new_string("Fatal Error"));
+    sentry_value_set_by_key(msg, "formatted", sentry_value_new_string(msg.c_str()));
 
     if (!more.empty()) {
-        sentry_value_set_by_key(exc, "more", sentry_value_new_string(more.c_str()));
+        sentry_value_set_by_key(msg, "more", sentry_value_new_string(more.c_str()));
     }
 
     sentry_value_t event = sentry_value_new_event();
-    sentry_value_set_by_key(event, "error", exc);
+    sentry_value_set_by_key(event, "message", msg);
     
     sentry_event_value_add_stacktrace(event, nullptr, 0);
     sentry_capture_event(event);
