@@ -91,6 +91,8 @@ add_library(flite_hts STATIC
     lib/flite_hts_engine.c
 )
 
+target_compile_definitions(flite_hts PRIVATE -DSIZEOF_VOID_P=${CMAKE_SIZEOF_VOID_P})
+
 if (SYSTEM_FLITE)
     target_link_libraries(flite_hts ${FLITE_LIBRARIES})
 endif()
