@@ -18,8 +18,10 @@ function(setup_fgfs_libraries target)
         target_link_libraries(${target} iaxclient_lib)
     endif()
 
-    if(TARGET DBus)
-        target_link_libraries(${target} DBus)
+    if(HAVE_DBUS)
+        # ALIAS doesn't work with CMake 3.10, so we need
+        # variable to store the target name
+        target_link_libraries(${target} ${dbus_target})
     endif()
 
     if(X11_FOUND)
@@ -41,7 +43,9 @@ function(setup_fgfs_libraries target)
     )
 
     if (ENABLE_SWIFT)
-        target_link_libraries(${target} DBus libEvent)
+        # ALIAS doesn't work with CMake 3.10, so we need
+        # variable to store the target name
+        target_link_libraries(${target} ${dbus_target} ${libEvent_target})
     endif()
 
     if (ENABLE_PLIB_JOYSTICK)
