@@ -115,7 +115,7 @@ fgviewerMain(int argc, char** argv)
     // construct the viewer.
     FGRenderer* fgrenderer = new FGRenderer();
     osgViewer::Viewer* viewer = new osgViewer::Viewer(arguments);
-    fgrenderer->setViewer(viewer);
+    fgrenderer->setView(viewer);
     osg::Camera* camera = viewer->getCamera();
     osgViewer::Renderer* renderer
         = static_cast<osgViewer::Renderer*>(camera->getRenderer());

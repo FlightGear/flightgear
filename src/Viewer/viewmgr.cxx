@@ -33,8 +33,12 @@
 
 #include <Main/fg_props.hxx>
 #include "view.hxx"
+#include "sview.hxx"
+#include "renderer_compositor.hxx"
 
 #include "CameraGroup.hxx"
+#include "Scenery/scenery.hxx"
+
 
 // Constructor
 FGViewMgr::FGViewMgr(void)
@@ -134,6 +138,7 @@ FGViewMgr::unbind ()
     _viewNumberProp.clear();
     
     ViewPropertyEvaluator::clear();
+    SviewClear();
 }
 
 void
@@ -155,6 +160,7 @@ FGViewMgr::update (double dt)
         cameraGroup->update(toOsg(currentView->getViewPosition()),
                             toOsg(currentView->getViewOrientation()));
     }
+    SviewUpdate(dt);
 }
 
 void FGViewMgr::clear()
@@ -220,6 +226,125 @@ FGViewMgr::prev_view()
     setCurrentViewIndex((_current - 1 + numViews) % numViews);
     _viewNumberProp->fireValueChanged();
     return get_current_view();
+}
+
+void FGViewMgr::clone_current_view()
+{
+    FGRenderer*                 renderer            = globals->get_renderer();
+    osgViewer::ViewerBase*      viewer_base         = renderer->getViewerBase();
+    osgViewer::CompositeViewer* composite_viewer    = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
+
+    if (!composite_viewer) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "FGViewMgr::clone_current_view() doing nothing because not composite-viewer mode not enabled.");
+        return;
+    }
+
+    SG_LOG(SG_GENERAL, SG_ALERT, "Attempting to clone current view.");
+    osgViewer::View*    rhs_view    = renderer->getView();
+    osg::Node*          scene_data  = rhs_view->getSceneData();
+
+    osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
+    assert(wsi);
+    unsigned int width, height;
+    wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(0), width, height);
+
+    osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+    
+    traits->x = 100;
+    traits->y = 100;
+    traits->width = 400;
+    traits->height = 300;
+    traits->windowDecoration = true;
+    traits->doubleBuffer = true;
+    traits->sharedContext = 0;
+    
+    traits->readDISPLAY();
+    if (traits->displayNum < 0)
+        traits->displayNum = 0;
+    if (traits->screenNum < 0)
+        traits->screenNum = 0;
+
+    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
+    int cbits = (bpp <= 16) ?  5 :  8;
+    int zbits = (bpp <= 16) ? 16 : 24;
+    traits->red = traits->green = traits->blue = cbits;
+    traits->depth = zbits;
+    
+    traits->mipMapGeneration = true;
+    traits->windowName = "FlightGear Cloned View";
+    traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
+    traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
+    traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
+    traits->stencil = 8;
+    
+    osg::ref_ptr<osg::GraphicsContext> gc = osg::GraphicsContext::createGraphicsContext(traits.get());
+    assert(gc.valid());
+
+    // need to ensure that the window is cleared make sure that the complete window is set the correct colour
+    // rather than just the parts of the window that are under the camera's viewports
+    gc->setClearColor(osg::Vec4f(0.2f,0.2f,0.6f,1.0f));
+    gc->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    osgViewer::View* view = new osgViewer::View();
+
+    view->setSceneData(scene_data);
+    view->setDatabasePager(FGScenery::getPagerSingleton());
+    
+    osg::Camera* rhs_camera = rhs_view->getCamera();
+    osg::Camera* camera = view->getCamera();
+    camera->setGraphicsContext(gc.get());
+
+    if (1) {
+        double left;
+        double right;
+        double bottom;
+        double top;
+        double zNear;
+        double zFar;
+        auto projection_matrix = rhs_camera->getProjectionMatrix();
+        bool ok = projection_matrix.getFrustum(left, right, bottom, top, zNear, zFar);
+        SG_LOG(SG_GENERAL, SG_ALERT, "projection_matrix:"
+                << " ok=" << ok
+                << " left=" << left
+                << " right=" << right
+                << " bottom=" << bottom
+                << " top=" << top
+                << " zNear=" << zNear
+                << " zFar=" << zFar
+                );
+    }
+    
+    camera->setProjectionMatrix(rhs_camera->getProjectionMatrix());
+    camera->setViewMatrix(rhs_camera->getViewMatrix());
+
+    /* This appears to avoid unhelpful culling of nearby objects. Though the above
+    SG_LOG() says zNear=0.1 zFar=120000, so not sure what's going on. */
+    camera->setComputeNearFarMode(osgUtil::CullVisitor::DO_NOT_COMPUTE_NEAR_FAR);
+    
+    /* from CameraGroup::buildGUICamera():
+    camera->setInheritanceMask(osg::CullSettings::ALL_VARIABLES
+                               & ~(osg::CullSettings::COMPUTE_NEAR_FAR_MODE
+                                   | osg::CullSettings::CULLING_MODE
+                                   | osg::CullSettings::CLEAR_MASK
+                                   ));
+    camera->setCullingMode(osg::CullSettings::NO_CULLING);
+    */
+
+    /* rhs_viewport seems to be null so this doesn't work.
+    osg::Viewport* rhs_viewport = rhs_view->getCamera()->getViewport();
+    SG_LOG(SG_GENERAL, SG_ALERT, "rhs_viewport=" << rhs_viewport);
+
+    osg::Viewport* viewport = new osg::Viewport(*rhs_viewport);
+
+    view->getCamera()->setViewport(viewport);
+    */
+    view->getCamera()->setViewport(0, 0, traits->width, traits->height);
+    
+    camera->setClearMask(0);
+    
+    view->setName("Cloned view");
+    composite_viewer->addView(view);
+    SviewAddClone(view);
 }
 
 void

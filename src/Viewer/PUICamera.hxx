@@ -19,6 +19,7 @@
 
 #include <osg/Camera>
 #include <osg/Version>
+#include <osgViewer/View>
 
 namespace osg
 {
@@ -51,7 +52,7 @@ public:
     // osg::Camera already defines a resize() so use this name
     void resizeUi(int width, int height);
 
-    void init(osg::Group* parent, osgViewer::Viewer* viewer);
+    void init(osg::Group* parent, osgViewer::View* view);
 
 private:
     void manuallyResizeFBO(int width, int height);

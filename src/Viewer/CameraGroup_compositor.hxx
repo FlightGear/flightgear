@@ -30,6 +30,7 @@
 #include <osg/Texture2D>
 #include <osg/TexGen>
 #include <osgUtil/RenderBin>
+#include <osgViewer/View>
 
 #include <simgear/scene/viewer/Compositor.hxx>
 
@@ -122,14 +123,14 @@ public:
     /** Create a camera group associated with an osgViewer::Viewer.
      * @param viewer the viewer
      */
-    CameraGroup(osgViewer::Viewer* viewer);
+    CameraGroup(osgViewer::View* viewer);
     virtual ~CameraGroup();
 
     /** Set the default CameraGroup, which is the only one that
      * matters at this time.
      * @param group the group to set.
      */
-    static void buildDefaultGroup(osgViewer::Viewer* viewer);
+    static void buildDefaultGroup(osgViewer::View* view);
     static void setDefault(CameraGroup* group) { _defaultGroup = group; }
     /** Get the default CameraGroup.
      * @return the default camera group.
@@ -138,7 +139,7 @@ public:
     /** Get the camera group's Viewer.
      * @return the viewer
      */
-    osgViewer::Viewer* getViewer() { return _viewer.get(); }
+    osgViewer::View* getView() { return _viewer.get(); }
     /** Create an osg::Camera from a property node and add it to the
      * camera group.
      * @param cameraNode the property node.
@@ -192,7 +193,7 @@ protected:
 
     typedef std::vector<osg::ref_ptr<CameraInfo>> CameraList;
     CameraList _cameras;
-    osg::ref_ptr<osgViewer::Viewer> _viewer;
+    osg::ref_ptr<osgViewer::View> _viewer;
     static osg::ref_ptr<CameraGroup> _defaultGroup;
     std::unique_ptr<CameraGroupListener> _listener;
 
@@ -206,7 +207,7 @@ protected:
      * @param wbuilder the window builder to be used for this camera group.
      * @param the camera group property node.
      */
-    static CameraGroup* buildCameraGroup(osgViewer::Viewer* viewer,
+    static CameraGroup* buildCameraGroup(osgViewer::View* viewer,
                                          SGPropertyNode* node);
 };
 

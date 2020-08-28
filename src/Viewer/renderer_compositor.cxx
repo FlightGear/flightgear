@@ -353,8 +353,8 @@ FGRenderer::FGRenderer() :
 FGRenderer::~FGRenderer()
 {
 	// replace the viewer's scene completely
-    if (getViewer()) {
-        getViewer()->setSceneData(new osg::Group);
+    if (getView()) {
+        getView()->setSceneData(new osg::Group);
     }
 
     delete _sky;
@@ -367,22 +367,23 @@ FGRenderer::preinit( void )
     // important that we reset the viewer sceneData here, to ensure the reference
     // time for everything is in sync; otherwise on reset the Viewer and
     // GraphicsWindow clocks are out of sync.
-    osgViewer::Viewer* viewer = getViewer();
-    viewer->setName("osgViewer");
+    osgViewer::View* view = getView();
+    view->setName("osgViewer");
     _viewerSceneRoot = new osg::Group;
     _viewerSceneRoot->setName("viewerSceneRoot");
-    viewer->setSceneData(_viewerSceneRoot);
+    view->setSceneData(_viewerSceneRoot);
+    view->setDatabasePager(FGScenery::getPagerSingleton());
 
     _quickDrawable = nullptr;
     _splash = new SplashScreen;
 	_viewerSceneRoot->addChild(_splash);
 
     _frameStamp = new osg::FrameStamp;
-    viewer->setFrameStamp(_frameStamp.get());
+    view->setFrameStamp(_frameStamp.get());
     // Scene doesn't seem to pass the frame stamp to the update
     // visitor automatically.
     _updateVisitor->setFrameStamp(_frameStamp.get());
-    viewer->setUpdateVisitor(_updateVisitor.get());
+    getViewerBase()->setUpdateVisitor(_updateVisitor.get());
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
 
     // hide the menubar if it overlaps the window, so the splash screen
@@ -399,6 +400,13 @@ FGRenderer::init( void )
 
     sgUserDataInit( globals->get_props() );
 
+    if (fgGetNode("/sim/rendering/composite-viewer-enabled", true)->getBoolValue()) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::CompositeViewer");
+        composite_viewer = new osgViewer::CompositeViewer;
+    }
+    else {
+        SG_LOG(SG_VIEW, SG_ALERT, "Not creating osgViewer::CompositeViewer");
+    }
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
     _position_finalized = fgGetNode("/sim/position-finalized", true);
 
@@ -504,7 +512,7 @@ void FGRenderer::setupRoot()
 void
 FGRenderer::setupView( void )
 {
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    osgViewer::View* view = globals->get_renderer()->getView();
     osg::initNotifyLevel();
 
     // The number of polygon-offset "units" to place between layers.  In
@@ -533,7 +541,7 @@ FGRenderer::setupView( void )
                   fgGetNode("/environment", true),
                   opt.get());
 
-    viewer->getCamera()
+    view->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 
 
@@ -609,7 +617,7 @@ FGRenderer::setupView( void )
 
 #if defined(HAVE_PUI)
         _puiCamera = new flightgear::PUICamera;
-        _puiCamera->init(guiCamera, viewer);
+        _puiCamera->init(guiCamera, view);
 #endif
 
 #if defined(ENABLE_QQ_UI)
@@ -618,7 +626,7 @@ FGRenderer::setupView( void )
 
         if (!rootQMLPath.empty()) {
             _quickDrawable = new QQuickDrawable;
-            _quickDrawable->setup(graphicsWindow, viewer);
+            _quickDrawable->setup(graphicsWindow, view);
 
             _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
             
@@ -663,7 +671,6 @@ FGRenderer::update( ) {
 
         return;
     }
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
 
     if (_splash_alpha->getDoubleValue()>0.0)
     {
@@ -704,38 +711,49 @@ FGRenderer::update( ) {
     // Force update of center dependent values ...
     current__view->set_dirty();
 
-    osg::Camera *camera = viewer->getCamera();
+    std::vector<osg::Camera*> cameras;
+    if (composite_viewer) {
+        unsigned n = composite_viewer->getNumViews();
+        for (unsigned i=0; i<n; ++i) {
+            cameras.push_back(composite_viewer->getView(i)->getCamera());
+        }
+    }
+    else {
+        cameras.push_back(viewer->getCamera());
+    }
+    for (osg::Camera* camera: cameras) {
 
-    osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 250000
-                          ? toOsg(l->adj_fog_color())
-                          // skydome ends at ~262000ft (default rendering)
-                          // ~328000 ft (ALS) and would produce a strange
-                          // looking greyish space -> black looks much
-                          // better :-)
-                          : osg::Vec4(0, 0, 0, 1);
-    camera->setClearColor(clear_color);
+        osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 250000
+                              ? toOsg(l->adj_fog_color())
+                              // skydome ends at ~262000ft (default rendering)
+                              // ~328000 ft (ALS) and would produce a strange
+                              // looking greyish space -> black looks much
+                              // better :-)
+                              : osg::Vec4(0, 0, 0, 1);
+        camera->setClearColor(clear_color);
 
-    updateSky();
+        updateSky();
 
-    // need to call the update visitor once
-    _frameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
-    _updateVisitor->setViewData(current__view->getViewPosition(),
-                                current__view->getViewOrientation());
-    SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
-    _updateVisitor->setLight(direction, l->scene_ambient(),
-                             l->scene_diffuse(), l->scene_specular(),
-                             l->adj_fog_color(),
-                             l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
-    _updateVisitor->setVisibility(actual_visibility);
-    simgear::GroundLightManager::instance()->update(_updateVisitor.get());
-    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
-    cullMask |= simgear::GroundLightManager::instance()
-        ->getLightNodeMask(_updateVisitor.get());
-    if (_panel_hotspots->getBoolValue())
-        cullMask |= simgear::PICK_BIT;
-    camera->setCullMask(cullMask);
-    camera->setCullMaskLeft(cullMask);
-    camera->setCullMaskRight(cullMask);
+        // need to call the update visitor once
+        _frameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
+        _updateVisitor->setViewData(current__view->getViewPosition(),
+                                    current__view->getViewOrientation());
+        SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
+        _updateVisitor->setLight(direction, l->scene_ambient(),
+                                 l->scene_diffuse(), l->scene_specular(),
+                                 l->adj_fog_color(),
+                                 l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
+        _updateVisitor->setVisibility(actual_visibility);
+        simgear::GroundLightManager::instance()->update(_updateVisitor.get());
+        osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
+        cullMask |= simgear::GroundLightManager::instance()
+            ->getLightNodeMask(_updateVisitor.get());
+        if (_panel_hotspots->getBoolValue())
+            cullMask |= simgear::PICK_BIT;
+        camera->setCullMask(cullMask);
+        camera->setCullMaskLeft(cullMask);
+        camera->setCullMaskRight(cullMask);
+    }
 }
 
 void
@@ -914,10 +932,56 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
     return result;
 }
 
-void
-FGRenderer::setViewer(osgViewer::Viewer* viewer_)
+osgViewer::ViewerBase* FGRenderer::getViewerBase()
 {
-    viewer = viewer_;
+    if (composite_viewer) {
+        return composite_viewer.get();
+    }
+    else {
+        return viewer.get();
+    }
+}
+
+osgViewer::View* FGRenderer::getView()
+{
+    if (composite_viewer) {
+        assert(composite_viewer->getNumViews());
+        return composite_viewer->getView(0);
+    }
+    else {
+        return viewer.get();
+    }
+}
+
+const osgViewer::View* FGRenderer::getView() const
+{
+    FGRenderer* this_ = const_cast<FGRenderer*>(this);
+    return this_->getView();
+}
+
+void
+FGRenderer::setView(osgViewer::View* view)
+{
+    if (composite_viewer) {
+        composite_viewer->addView(view);
+    }
+    else {
+        osgViewer::Viewer* viewer_ = dynamic_cast<osgViewer::Viewer*>(view);
+        assert(viewer_);
+        viewer = viewer_;
+    }
+}
+
+osg::FrameStamp*
+FGRenderer::getFrameStamp()
+{
+    if (composite_viewer) {
+        return composite_viewer->getFrameStamp();
+    }
+    else {
+        assert(viewer);
+        return viewer->getFrameStamp();
+    }
 }
 
 void
@@ -947,8 +1011,8 @@ FGRenderer::setPlanes( double zNear, double zFar )
 bool
 fgDumpSceneGraphToFile(const char* filename)
 {
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    return osgDB::writeNodeFile(*viewer->getSceneData(), filename);
+    osgViewer::View* view = globals->get_renderer()->getView();
+    return osgDB::writeNodeFile(*view->getSceneData(), filename);
 }
 
 bool
@@ -1155,14 +1219,14 @@ protected:
 
 bool printVisibleSceneInfo(FGRenderer* renderer)
 {
-    osgViewer::Viewer* viewer = renderer->getViewer();
+    osgViewer::View* view = renderer->getView();
     VisibleSceneInfoVistor vsv;
     Viewport* vp = 0;
-    if (!viewer->getCamera()->getViewport() && viewer->getNumSlaves() > 0) {
-        const osg::View::Slave& slave = viewer->getSlave(0);
+    if (!view->getCamera()->getViewport() && view->getNumSlaves() > 0) {
+        const osg::View::Slave& slave = view->getSlave(0);
         vp = slave._camera->getViewport();
     }
-    vsv.doTraversal(viewer->getCamera(), viewer->getSceneData(), vp);
+    vsv.doTraversal(view->getCamera(), view->getSceneData(), vp);
     return true;
 }
 

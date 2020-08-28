@@ -62,7 +62,7 @@ public:
     {
         mActualCursor = mCursor;
 
-        globals->get_renderer()->getViewer()->getWindows(mWindows);
+        globals->get_renderer()->getViewerBase()->getWindows(mWindows);
     }
 
     virtual void setCursor(Cursor aCursor)
@@ -160,7 +160,7 @@ FGMouseCursor* FGMouseCursor::instance()
 	#ifdef SG_WINDOWS
 	// set osgViewer cursor inherit, otherwise it will interefere
 		std::vector<osgViewer::GraphicsWindow*> gws;
-		globals->get_renderer()->getViewer()->getWindows(gws);
+		globals->get_renderer()->getViewerBase()->getWindows(gws);
 		for (auto gw : gws) {
             gw->setCursor(osgViewer::GraphicsWindow::InheritCursor);
         }

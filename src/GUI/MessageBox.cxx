@@ -61,11 +61,11 @@ bool isCanvasImplementationRegistered()
 HWND getMainViewerHWND()
 {
 	osgViewer::Viewer::Windows windows;
-	if (!globals || !globals->get_renderer() || !globals->get_renderer()->getViewer()) {
+	if (!globals || !globals->get_renderer() || !globals->get_renderer()->getViewerBase()) {
 		return 0;
 	}
 
-    globals->get_renderer()->getViewer()->getWindows(windows);
+    globals->get_renderer()->getViewerBase()->getWindows(windows);
     osgViewer::Viewer::Windows::const_iterator it = windows.begin();
     for(; it != windows.end(); ++it) {
         if (strcmp((*it)->className(), "GraphicsWindowWin32")) {

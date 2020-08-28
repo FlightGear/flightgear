@@ -196,8 +196,8 @@ typedef std::vector<SGPropertyNode_ptr> SGPropertyNodeVec;
 
 osg::ref_ptr<CameraGroup> CameraGroup::_defaultGroup;
 
-CameraGroup::CameraGroup(osgViewer::Viewer* viewer) :
-    _viewer(viewer)
+CameraGroup::CameraGroup(osgViewer::View* view) :
+    _viewer(view)
 {
 }
 
@@ -791,10 +791,10 @@ void CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setStats(0);
 }
 
-CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
+CameraGroup* CameraGroup::buildCameraGroup(osgViewer::View* view,
                                            SGPropertyNode* gnode)
 {
-    CameraGroup* cgroup = new CameraGroup(viewer);
+    CameraGroup* cgroup = new CameraGroup(view);
     cgroup->_listener.reset(new CameraGroupListener(cgroup, gnode));
 
     for (int i = 0; i < gnode->nChildren(); ++i) {
@@ -870,7 +870,7 @@ computeCameraIntersection(const CameraGroup *cgroup,
     osgUtil::IntersectionVisitor iv(picker);
     iv.setTraversalMask(simgear::PICK_BIT);
 
-    const_cast<CameraGroup *>(cgroup)->getViewer()->getCamera()->accept(iv);
+    const_cast<CameraGroup *>(cgroup)->getView()->getCamera()->accept(iv);
     if (picker->containsIntersections()) {
         intersections = picker->getIntersections();
         return true;
@@ -929,7 +929,7 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
     gw->getEventQueue()->mouseWarped(wx, wy);
     gw->requestWarpPointer(wx, wy);
     osgGA::GUIEventAdapter* eventState
-        = cgroup->getViewer()->getEventQueue()->getCurrentEventState();
+        = cgroup->getView()->getEventQueue()->getCurrentEventState();
     double viewerX
         = (eventState->getXmin()
            + ((wx / double(traits->width))
@@ -938,10 +938,10 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
         = (eventState->getYmin()
            + ((wyUp / double(traits->height))
               * (eventState->getYmax() - eventState->getYmin())));
-    cgroup->getViewer()->getEventQueue()->mouseWarped(viewerX, viewerY);
+    cgroup->getView()->getEventQueue()->mouseWarped(viewerX, viewerY);
 }
 
-void CameraGroup::buildDefaultGroup(osgViewer::Viewer* viewer)
+void CameraGroup::buildDefaultGroup(osgViewer::View* viewer)
 {
     // Look for windows, camera groups, and the old syntax of
     // top-level cameras

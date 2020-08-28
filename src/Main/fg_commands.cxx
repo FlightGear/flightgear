@@ -361,6 +361,19 @@ do_view_cycle (const SGPropertyNode * arg, SGPropertyNode * root)
   return true;
 }
 
+
+/**
+ * Built-in command: clone view.
+ */
+static bool
+do_view_clone (const SGPropertyNode * arg, SGPropertyNode * root)
+{
+  SG_LOG(SG_GENERAL, SG_ALERT, "do_view_clone() called");
+  globals->get_viewmgr()->clone_current_view();
+  return true;
+}
+
+
 /**
  * Built-in command: toggle a bool property value.
  *
@@ -948,6 +961,7 @@ static struct {
     { "save-tape", do_save_tape },
     { "load-tape", do_load_tape },
     { "view-cycle", do_view_cycle },
+    { "view-clone", do_view_clone },
     /*
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },

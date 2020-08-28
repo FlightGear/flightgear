@@ -60,6 +60,7 @@ void WindowBuilder::initWindowBuilder(bool stencil)
 
 WindowBuilder::WindowBuilder(bool stencil) : defaultCounter(0)
 {
+    SG_LOG(SG_VIEW, SG_ALERT, "stencil=" << stencil);
 #if defined (HAVE_QT)
     usingQtGraphicsWindow = fgGetBool("/sim/rendering/graphics-window-qt", false);
 #endif

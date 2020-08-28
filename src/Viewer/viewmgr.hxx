@@ -75,6 +75,12 @@ public:
     flightgear::View* next_view();
     flightgear::View* prev_view();
 
+    // Experimental. Only works if --compositer-viewer=1 was specified. Creates
+    // new window with clone of current view. As of 2020-08-04, the clone's eye
+    // position and view direction remain fixed, and scenery is not displayed
+    // correctly.
+    void clone_current_view();
+
     // setters
     void clear();
 

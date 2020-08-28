@@ -189,7 +189,7 @@ class NotifyLevelListener : public SGPropertyChangeListener
 public:
     void valueChanged(SGPropertyNode* node)
     {
-        osg::NotifySeverity severity = osg::WARN;
+        osg::NotifySeverity severity = osg::getNotifyLevel();
         string val = simgear::strutils::lowercase(node->getStringValue());
 
         if (val == "fatal") {
@@ -216,38 +216,67 @@ void fgOSOpenWindow(bool stencil)
 {
     osg::setNotifyHandler(new NotifyLogger);
 
-    viewer = new osgViewer::Viewer;
-    viewer->setDatabasePager(FGScenery::getPagerSingleton());
-
-    std::string mode;
-    mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
-    flightgear::addSentryTag("osg-thread-mode", mode);
-
-    if (mode == "AutomaticSelection")
-      viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
-    else if (mode == "CullDrawThreadPerContext")
-      viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
-    else if (mode == "DrawThreadPerContext")
-      viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
-    else if (mode == "CullThreadPerCameraDrawThreadPerContext")
-      viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
-    else
-      viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-    WindowBuilder::initWindowBuilder(stencil);
-    CameraGroup::buildDefaultGroup(viewer.get());
-
-    FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
-    WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-    if (wsa->windows.size() != 1) {
-        manipulator->setResizable(false);
+    if (dynamic_cast<osgViewer::CompositeViewer*>(globals->get_renderer()->getViewerBase())) {
+        /* We are using CompositeViewer. */
+        osgViewer::ViewerBase* viewer = globals->get_renderer()->getViewerBase();
+        osgViewer::View* view = new osgViewer::View;
+        globals->get_renderer()->setView(view);
+        assert(globals->get_renderer()->getView() == view);
+        view->setDatabasePager(FGScenery::getPagerSingleton());
+        
+        viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+        
+        WindowBuilder::initWindowBuilder(stencil);
+        CameraGroup::buildDefaultGroup(view);
+        
+        FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
+        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+        if (wsa->windows.size() != 1) {
+            manipulator->setResizable(false);
+        }
+        view->getCamera()->setProjectionResizePolicy(osg::Camera::FIXED);
+        view->addEventHandler(manipulator);
+        // Let FG handle the escape key with a confirmation
+        viewer->setKeyEventSetsDone(0);
+        // The viewer won't start without some root.
+        view->setSceneData(new osg::Group);
+        globals->get_renderer()->setView(view);
     }
-    viewer->getCamera()->setProjectionResizePolicy(osg::Camera::FIXED);
-    viewer->addEventHandler(manipulator);
-    // Let FG handle the escape key with a confirmation
-    viewer->setKeyEventSetsDone(0);
-    // The viewer won't start without some root.
-    viewer->setSceneData(new osg::Group);
-    globals->get_renderer()->setViewer(viewer.get());
+    else {
+        /* Not using CompositeViewer. */
+        viewer = new osgViewer::Viewer;
+        viewer->setDatabasePager(FGScenery::getPagerSingleton());
+
+        std::string mode;
+        mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
+        flightgear::addSentryTag("osg-thread-mode", mode);
+        
+        if (mode == "AutomaticSelection")
+          viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
+        else if (mode == "CullDrawThreadPerContext")
+          viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
+        else if (mode == "DrawThreadPerContext")
+          viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
+        else if (mode == "CullThreadPerCameraDrawThreadPerContext")
+          viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
+        else
+          viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+        WindowBuilder::initWindowBuilder(stencil);
+        CameraGroup::buildDefaultGroup(viewer.get());
+        
+        FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
+        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+        if (wsa->windows.size() != 1) {
+            manipulator->setResizable(false);
+        }
+        viewer->getCamera()->setProjectionResizePolicy(osg::Camera::FIXED);
+        viewer->addEventHandler(manipulator);
+        // Let FG handle the escape key with a confirmation
+        viewer->setKeyEventSetsDone(0);
+        // The viewer won't start without some root.
+        viewer->setSceneData(new osg::Group);
+        globals->get_renderer()->setView(viewer.get());
+    }
 }
 SGPropertyNode* simHost = 0, *simFrameCount, *simTotalHostTime, *simFrameResetCount, *frameWait;
 void fgOSResetProperties()
@@ -286,8 +315,9 @@ static int status = 0;
 
 void fgOSExit(int code)
 {
-    viewer->setDone(true);
-    viewer->getDatabasePager()->cancel();
+    FGRenderer* renderer = globals->get_renderer();
+    renderer->getViewerBase()->setDone(true);
+    renderer->getView()->getDatabasePager()->cancel();
     status = code;
 
     // otherwise we crash if OSG does logging during static destruction, eg
@@ -299,12 +329,13 @@ SGTimeStamp _lastUpdate;
 
 int fgOSMainLoop()
 {
-    viewer->setReleaseContextAtEndOfFrameHint(false);
-    if (!viewer->isRealized()) {
-        viewer->realize();
+    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
+    viewer_base->setReleaseContextAtEndOfFrameHint(false);
+    if (!viewer_base->isRealized()) {
+        viewer_base->realize();
     }
 
-    while (!viewer->done()) {
+    while (!viewer_base->done()) {
         fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
         if (idleFunc)
         {
@@ -338,7 +369,7 @@ int fgOSMainLoop()
             }
         }
         globals->get_renderer()->update();
-        viewer->frame( globals->get_sim_time_sec() );
+        viewer_base->frame( globals->get_sim_time_sec() );
     }
 
     flightgear::addSentryBreadcrumb("main loop exited", "info");
@@ -383,13 +414,14 @@ void fgOSInit(int* argc, char** argv)
 
 void fgOSCloseWindow()
 {
-    if (viewer) {
+    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
+    if (viewer_base) {
         // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
         // https://sourceforge.net/p/flightgear/codetickets/1830/
         // explicitly stop threading before we delete the renderer or
         // viewMgr (which ultimately holds refs to the CameraGroup, and
         // GraphicsContext)
-        viewer->stopThreading();
+        viewer_base->stopThreading();
     }
     FGScenery::resetPagerSingleton();
     flightgear::CameraGroup::setDefault(NULL);
@@ -399,8 +431,9 @@ void fgOSCloseWindow()
 
 void fgOSFullScreen()
 {
+    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
     std::vector<osgViewer::GraphicsWindow*> windows;
-    viewer->getWindows(windows);
+    viewer_base->getWindows(windows);
 
     if (windows.empty())
         return; // Huh?!?
@@ -543,12 +576,13 @@ static int _cursor = -1;
 
 void fgSetMouseCursor(int cursor)
 {
+    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
     _cursor = cursor;
-    if (!viewer)
+    if (!viewer_base)
         return;
 
     std::vector<osgViewer::GraphicsWindow*> windows;
-    viewer->getWindows(windows);
+    viewer_base->getWindows(windows);
     for (osgViewer::GraphicsWindow* gw : windows) {
         setMouseCursor(gw, cursor);
     }
