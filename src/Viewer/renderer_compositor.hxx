@@ -95,6 +95,7 @@ public:
 	void setPlanes( double zNear, double zFar );
 
 protected:
+    int composite_viewer_enabled = -1;
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;

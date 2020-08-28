@@ -289,6 +289,10 @@ void FGViewMgr::clone_current_view()
 
     view->setSceneData(scene_data);
     view->setDatabasePager(FGScenery::getPagerSingleton());
+        
+    // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
+    view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(false, false);
+    osg::GraphicsContext::createNewContextID();
     
     osg::Camera* rhs_camera = rhs_view->getCamera();
     osg::Camera* camera = view->getCamera();
@@ -343,7 +347,14 @@ void FGViewMgr::clone_current_view()
     camera->setClearMask(0);
     
     view->setName("Cloned view");
+    
+    // stop/start threading:
+    // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg54341.html
+    //
+    composite_viewer->stopThreading();
     composite_viewer->addView(view);
+    composite_viewer->startThreading();
+    
     SviewAddClone(view);
 }
 

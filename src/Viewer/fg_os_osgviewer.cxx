@@ -216,15 +216,39 @@ void fgOSOpenWindow(bool stencil)
 {
     osg::setNotifyHandler(new NotifyLogger);
 
-    if (dynamic_cast<osgViewer::CompositeViewer*>(globals->get_renderer()->getViewerBase())) {
+    auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(
+            globals->get_renderer()->getViewerBase()
+            );
+    if (composite_viewer) {
         /* We are using CompositeViewer. */
+        SG_LOG(SG_VIEW, SG_ALERT, "Using CompositeViewer");
         osgViewer::ViewerBase* viewer = globals->get_renderer()->getViewerBase();
+        SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::View");
         osgViewer::View* view = new osgViewer::View;
+        view->setFrameStamp(composite_viewer->getFrameStamp());
         globals->get_renderer()->setView(view);
         assert(globals->get_renderer()->getView() == view);
         view->setDatabasePager(FGScenery::getPagerSingleton());
         
-        viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+        // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
+        view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(false, false);
+        osg::GraphicsContext::createNewContextID();
+        
+        //viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+
+        std::string mode;
+        mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
+        SG_LOG( SG_VIEW, SG_INFO, "mode=" << mode);
+        if (mode == "AutomaticSelection")
+          viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
+        else if (mode == "CullDrawThreadPerContext")
+          viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
+        else if (mode == "DrawThreadPerContext")
+          viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
+        else if (mode == "CullThreadPerCameraDrawThreadPerContext")
+          viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
+        else
+          viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
         
         WindowBuilder::initWindowBuilder(stencil);
         CameraGroup::buildDefaultGroup(view);
@@ -244,6 +268,8 @@ void fgOSOpenWindow(bool stencil)
     }
     else {
         /* Not using CompositeViewer. */
+        SG_LOG(SG_VIEW, SG_ALERT, "Not CompositeViewer.");
+        SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::Viewer");
         viewer = new osgViewer::Viewer;
         viewer->setDatabasePager(FGScenery::getPagerSingleton());
 

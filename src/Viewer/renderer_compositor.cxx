@@ -361,6 +361,9 @@ FGRenderer::~FGRenderer()
 }
 
 // Initialize various GL/view parameters
+//
+// Note that this appears to be called *after* FGRenderer::init().
+//
 void
 FGRenderer::preinit( void )
 {
@@ -401,10 +404,12 @@ FGRenderer::init( void )
     sgUserDataInit( globals->get_props() );
 
     if (fgGetNode("/sim/rendering/composite-viewer-enabled", true)->getBoolValue()) {
+        composite_viewer_enabled = 1;
         SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::CompositeViewer");
         composite_viewer = new osgViewer::CompositeViewer;
     }
     else {
+        composite_viewer_enabled = 0;
         SG_LOG(SG_VIEW, SG_ALERT, "Not creating osgViewer::CompositeViewer");
     }
     _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
@@ -711,8 +716,10 @@ FGRenderer::update( ) {
     // Force update of center dependent values ...
     current__view->set_dirty();
 
+    assert(composite_viewer_enabled != -1);
     std::vector<osg::Camera*> cameras;
     if (composite_viewer) {
+        assert(!viewer);
         unsigned n = composite_viewer->getNumViews();
         for (unsigned i=0; i<n; ++i) {
             cameras.push_back(composite_viewer->getView(i)->getCamera());
@@ -944,6 +951,7 @@ osgViewer::ViewerBase* FGRenderer::getViewerBase()
 
 osgViewer::View* FGRenderer::getView()
 {
+    assert(composite_viewer_enabled != -1);
     if (composite_viewer) {
         assert(composite_viewer->getNumViews());
         return composite_viewer->getView(0);
@@ -962,8 +970,15 @@ const osgViewer::View* FGRenderer::getView() const
 void
 FGRenderer::setView(osgViewer::View* view)
 {
+    assert(composite_viewer_enabled != -1);
     if (composite_viewer) {
-        composite_viewer->addView(view);
+        if (composite_viewer->getNumViews() == 0) {
+            SG_LOG(SG_VIEW, SG_ALERT, "adding view to composite_viewer.");
+            view->setFrameStamp(composite_viewer->getFrameStamp());
+            composite_viewer->stopThreading();
+            composite_viewer->addView(view);
+            composite_viewer->startThreading();
+        }
     }
     else {
         osgViewer::Viewer* viewer_ = dynamic_cast<osgViewer::Viewer*>(view);
@@ -975,7 +990,9 @@ FGRenderer::setView(osgViewer::View* view)
 osg::FrameStamp*
 FGRenderer::getFrameStamp()
 {
+    assert(composite_viewer_enabled != -1);
     if (composite_viewer) {
+        assert(!viewer);
         return composite_viewer->getFrameStamp();
     }
     else {
