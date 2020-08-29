@@ -746,31 +746,33 @@ void FGSubmodelMgr::setOffsetPos(submodel* sm)
 
 void FGSubmodelMgr::valueChanged(SGPropertyNode *prop)
 {
-    return; // this isn't working atm
+    // REVIEW: This code has been dead for 10 years
 
-    const char* _model_added = _model_added_node->getStringValue();
+    // return; // this isn't working atm
 
-    std::basic_string <char>::size_type indexCh2b;
+    // const char* _model_added = _model_added_node->getStringValue();
 
-    string str2 = _model_added;
-    const char *cstr2b = "multiplayer";
-    indexCh2b = str2.find(cstr2b, 0);
+    // std::basic_string <char>::size_type indexCh2b;
 
-    // Ignoring Ballistic Objects; there are potentially too many
-    if (indexCh2b != string::npos ) {
-        //cout << "Submodels: model added - " << str2 <<" read path "<< endl;
-        //return;
-        SGPropertyNode *a_node = fgGetNode(_model_added, true);
-        SGPropertyNode *sub_node = a_node->getChild("sim", 0, true);
-        SGPropertyNode_ptr path_node = sub_node->getChild("path", 0, true);
-        SGPropertyNode_ptr callsign_node = a_node->getChild("callsign", 0, true);
+    // string str2 = _model_added;
+    // const char *cstr2b = "multiplayer";
+    // indexCh2b = str2.find(cstr2b, 0);
 
-        //const string& callsign = callsign_node->getStringValue();
-        //cout << "Submodels: model added - " << callsign <<" read callsign "<< endl;
-    }
-    else {
-        cout << "model added - " << str2 <<" returning " << endl;
-    }
+    // // Ignoring Ballistic Objects; there are potentially too many
+    // if (indexCh2b != string::npos ) {
+    //     //cout << "Submodels: model added - " << str2 <<" read path "<< endl;
+    //     //return;
+    //     SGPropertyNode *a_node = fgGetNode(_model_added, true);
+    //     SGPropertyNode *sub_node = a_node->getChild("sim", 0, true);
+    //     SGPropertyNode_ptr path_node = sub_node->getChild("path", 0, true);
+    //     SGPropertyNode_ptr callsign_node = a_node->getChild("callsign", 0, true);
+
+    //     //const string& callsign = callsign_node->getStringValue();
+    //     //cout << "Submodels: model added - " << callsign <<" read callsign "<< endl;
+    // }
+    // else {
+    //     cout << "model added - " << str2 <<" returning " << endl;
+    // }
 }
 
 void FGSubmodelMgr::setParentNode(int id)
