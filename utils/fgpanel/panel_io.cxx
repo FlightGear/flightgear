@@ -101,12 +101,13 @@
  */
 static FGCroppedTexture_ptr
 readTexture (const SGPropertyNode *node) {
+  SG_LOG(SG_COCKPIT, SG_DEBUG, "Read texture " << node->getName ());
+
   return new FGCroppedTexture (node->getStringValue ("path"),
                                node->getFloatValue ("x1"),
                                node->getFloatValue ("y1"),
                                node->getFloatValue ("x2", 1.0),
                                node->getFloatValue ("y2", 1.0));
-  SG_LOG(SG_COCKPIT, SG_DEBUG, "Read texture " << node->getName ());
 }
 
 /**

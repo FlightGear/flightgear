@@ -1140,10 +1140,9 @@ double DCLGPS::GetTimeToWaypoint(const string& id) {
 		const GPSWaypoint* wp = FindFirstByExactId(id);
 		if(wp == NULL) return(-1.0);
 		double distm = GetGreatCircleDistance(_gpsLat, _gpsLon, wp->lat, wp->lon);
-    delete wp;
+		delete wp;
 		return(distm / _groundSpeed_ms);
 	}
-	return(-1.0);	// Hopefully we never get here!
 }
 
 // Returns magnetic great-circle heading

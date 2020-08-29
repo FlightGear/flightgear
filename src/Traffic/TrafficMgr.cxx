@@ -523,10 +523,8 @@ bool FGTrafficManager::doDataSync()
         }
 
         trafficSyncRequested = false;
-        return true;
-
-        SG_LOG(SG_AI, SG_INFO, "Traffic files sync complete");
     }
+
     return true;
 }
 

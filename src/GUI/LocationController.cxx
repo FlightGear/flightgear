@@ -626,8 +626,6 @@ bool LocationController::shouldStartPaused() const
         // navaid, start paused
         return true;
     }
-
-    return false;
 }
 
 QVariantMap LocationController::saveLocation() const
@@ -1151,8 +1149,6 @@ QString LocationController::description() const
 
         return tr("%4 %1 %2 (%3)").arg(navaidType).arg(ident).arg(name).arg(offsetDesc);
     }
-
-    return tr("No location selected");
 }
 
 

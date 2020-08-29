@@ -248,8 +248,6 @@ string ATISEncoder::processTokenToken( SGPropertyNode_ptr token )
   }
   handler_t h = it->second;
   return (this->*h)( token );
-
-  token->getStringValue();
 }
 
 string ATISEncoder::processIfToken( SGPropertyNode_ptr token )

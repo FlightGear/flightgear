@@ -80,8 +80,6 @@ static double distanceToLineSegment(const QVector2D& p, const QVector2D& a,
         const QVector2D proj = a + t * ab;
         return (proj - p).length();
     }
-
-    return 0.0;
 }
 
 static double unitLengthAfterMapping(const QTransform& t)

@@ -2002,11 +2002,10 @@ public:
         } else if ( desc->has_param ) {
           SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' needs a parameter" );
           return FG_OPTIONS_ERROR;
-        } else {
-          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' does not have a parameter" );
-          return FG_OPTIONS_ERROR;
         }
-        break;
+
+        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' does not have a parameter" );
+        return FG_OPTIONS_ERROR;
 
       case OPTION_IGNORE:
         break;

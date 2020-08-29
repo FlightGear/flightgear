@@ -1685,7 +1685,6 @@ SGVec2d MapWidget::project(const SGGeod& geod) const
         SGQuatd orient = SGQuatd::fromLonLat(_projectionCenter);
         cartPt = orient.rotateBack(cartPt);
         return SGVec2d(cartPt.y(), cartPt.x()) * currentScale();
-        break;
     }
     } // of projection mode switch
     

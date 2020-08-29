@@ -225,11 +225,9 @@ private:
             return button;
         } else if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP) {
             return PU_SCROLL_UP_BUTTON;
-        } else {
-            return PU_SCROLL_DOWN_BUTTON;
         }
-        
-        return PU_NOBUTTON;
+
+        return PU_SCROLL_DOWN_BUTTON;
     }
 
     PUICamera*  _puiCamera = nullptr;
