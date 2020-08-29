@@ -40,8 +40,13 @@ def get_files(nasal_dir):
 		print("The path does not exist")
 		sys.exit()
 	fgroot_dir = nasal_dir.rstrip('/').replace('Nasal','')
-	f_version = open(fgroot_dir+'version','rb')
-	version = f_version.read(256).rstrip('\n')
+
+	try:
+		f_version = open(fgroot_dir+'version','rb')
+		version = f_version.read(256).rstrip('\n')
+	finally:
+		f_version.close()
+
 	top_level = []
 	modules = []
 	top_namespaces = []
@@ -146,14 +151,18 @@ def output_text(top_namespaces,modules,version):
 	fw.close()
 
 def parse_file(filename):
-	fr=open(filename,'rb')
-	content=fr.readlines()
+	try:
+		fr = open(filename,'rb')
+		content = fr.readlines()
+	finally:
+		fr.close()
+
 	i=0
 	retval=[]
 	classname=""
 	for line in content:
 		match=re.search(r'^var\s+([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
-		if match!=None:
+		if match is not None:
 			func_name=match.group(1)
 			comments=[]
 			param=match.group(2)
@@ -172,7 +181,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search(r'^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j]) is not None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -184,7 +193,7 @@ def parse_file(filename):
 			continue
 
 		match3=re.search(r'^var\s*([A-Za-z0-9_-]+)\s*=\s*{\s*(\n|})',line)
-		if match3!=None:
+		if match3 is not None:
 			classname=match3.group(1)
 
 			comments=[]
@@ -198,7 +207,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search(r'^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j]) is not None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -210,7 +219,7 @@ def parse_file(filename):
 			continue
 
 		match2=re.search(r'^\s*([A-Za-z0-9_-]+)\s*:\s*func\s*\(?([A-Za-z0-9_\s,=.\n-]*)\)?',line)
-		if match2!=None:
+		if match2 is not None:
 			func_name=match2.group(1)
 			comments=[]
 			param=match2.group(2)
@@ -229,7 +238,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search(r'^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j]) is not None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:
@@ -243,7 +252,7 @@ def parse_file(filename):
 			continue
 
 		match4=re.search(r'^([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\s*=\s*func\s*\(?([A-Za-z0-9_\s,=\n.-]*)\)?',line)
-		if match4!=None:
+		if match4 is not None:
 			classname=match4.group(1)
 			func_name=match4.group(2)
 			comments=[]
@@ -263,7 +272,7 @@ def parse_file(filename):
 					j-=1
 					count+=1
 					continue
-				if re.search(r'^\s*#',content[j])!=None:
+				if re.search(r'^\s*#',content[j]) is not None:
 					comments.append(content[j].rstrip('\n'))
 					j-=1
 				else:

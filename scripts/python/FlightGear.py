@@ -22,7 +22,7 @@ class FGTelnet(Telnet):
         """
         Returns a list of properties.
         """
-        if dir == None:
+        if dir is None:
             self._putcmd('ls')
         else:
             self._putcmd('ls %s' % dir )

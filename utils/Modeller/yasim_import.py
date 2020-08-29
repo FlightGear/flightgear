@@ -726,9 +726,11 @@ def load_yasim_config(path):
 			if o.name.startswith("YASim_"):
 				Item.scene.objects.unlink(o)
 
-		f = open(path)
-		Global.data = f.readlines()
-		f.close
+		try:
+			f = open(path)
+			Global.data = f.readlines()
+		finally:
+			f.close()
 
 		Global.path = path
 		Global.matrix = YASIM_MATRIX
