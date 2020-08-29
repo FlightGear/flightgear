@@ -67,7 +67,7 @@ QVariant PropertyItemModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return {};
 
-    if (index.row() >= _nodes.size())
+    if (static_cast<size_t>(index.row()) >= _nodes.size())
         return {};
 
     SGPropertyNode_ptr n = _nodes.at(index.row());

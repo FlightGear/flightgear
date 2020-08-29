@@ -126,7 +126,7 @@ int UnitsModel::rowCount(const QModelIndex &) const
 QVariant UnitsModel::data(const QModelIndex &index, int role) const
 {
     int row = index.row();
-    if ((row < 0) || (row >= m_enabledUnits.size()))
+    if ((row < 0) || (static_cast<size_t>(row) >= m_enabledUnits.size()))
         return {};
 
     const Units::Type u = m_enabledUnits.at(row);
@@ -267,10 +267,10 @@ void UnitsModel::setMode(Units::Mode mode)
 
 void UnitsModel::setSelectedIndex(int selectedIndex)
 {
-    if (m_activeIndex == selectedIndex)
+    if (m_activeIndex == static_cast<quint32>(selectedIndex))
         return;
 
-    if ((selectedIndex < 0) || (selectedIndex >= m_enabledUnits.size()))
+    if ((selectedIndex < 0) || (static_cast<size_t>(selectedIndex) >= m_enabledUnits.size()))
         return;
 
     m_activeIndex = selectedIndex;

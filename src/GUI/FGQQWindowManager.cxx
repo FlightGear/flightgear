@@ -134,10 +134,11 @@ public:
 
 QVariant WindowsModel::data(const QModelIndex& index, int role) const
 {
-    if ((index.row() < 0) || (index.row() >= _windowData.size()))
+    auto tRow = static_cast<size_t>(index.row());
+    if ((index.row() < 0) || (tRow >= _windowData.size()))
         return {};
 
-    const auto& d = _windowData.at(static_cast<size_t>(index.row()));
+    const auto& d = _windowData.at(tRow);
     switch (role) {
     case WindowId:
         return d.windowId;
@@ -157,10 +158,11 @@ QVariant WindowsModel::data(const QModelIndex& index, int role) const
 
 bool WindowsModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
-    if ((index.row() < 0) || (index.row() >= _windowData.size()))
+    auto tRow = static_cast<size_t>(index.row());
+    if ((index.row() < 0) || (tRow >= _windowData.size()))
         return false;
 
-    auto& d = _windowData[static_cast<size_t>(index.row())];
+    auto& d = _windowData[tRow];
     QSettings settings;
     if (role == WindowSize) {
         d.geometry.setSize(value.toSizeF());

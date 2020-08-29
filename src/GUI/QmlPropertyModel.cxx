@@ -193,7 +193,7 @@ QString FGQmlPropertyModel::childName() const
 QHash<int, QByteArray> FGQmlPropertyModel::roleNames() const
 {
     QHash<int, QByteArray> r;
-    for (int i = 0; i < d->_roles.size(); ++i) {
+    for (size_t i = 0; i < d->_roles.size(); ++i) {
         r[i] = QByteArray::fromStdString(d->_roles.at(i));
     }
     return r;
