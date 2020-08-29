@@ -61,7 +61,7 @@ public:
       mLoop = aLoop;
       mControl = aCtrlPt;
       mPaintCode = aPaintCode;
-      mLightCode = mLightCode;
+      mLightCode = aLightCode;
     }
     SGGeod mControl;
   };
