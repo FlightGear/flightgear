@@ -81,11 +81,12 @@ PlugInManager::unload( PlugInInfo &plugIn )
   {
     plugIn.m_interface->uninitialize( &TestFactoryRegistry::getRegistry() );
     delete plugIn.m_manager;
+    plugIn.m_manager = nullptr;
   }
   catch (...)
   {
     delete plugIn.m_manager;
-    plugIn.m_manager = NULL;
+    plugIn.m_manager = nullptr;
     throw;
   }
 }
