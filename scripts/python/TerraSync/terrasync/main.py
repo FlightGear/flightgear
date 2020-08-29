@@ -289,7 +289,7 @@ class HTTPDownloadRequest(HTTPGetCallback):
             raise NetworkError("for URL {url}: {error}"
                                .format(url=url, error=exc)) from exc
 
-        if self.mycallback != None:
+        if self.mycallback is not None:
             self.mycallback(self)
 
 

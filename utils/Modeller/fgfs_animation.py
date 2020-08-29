@@ -397,7 +397,7 @@ class mode:
 	def __init__(self, xml = None):
 		self.cursor = Blender.Window.GetCursorPos()
 		self.objects = [o for o in Blender.Object.GetSelected() if o.getType() == 'Mesh']
-		if xml != None:
+		if xml is not None:
 			BlenderSetup()
 			self.test()
 			self.execute(xml)
@@ -496,7 +496,7 @@ class texturedLights(mode):
 			lights.append(createLight(lightmesh, lightname + serial(i, len(verts))))
 
 		parent = object.getParent()
-		if parent != None:
+		if parent is not None:
 			parent.makeParent(lights)
 
 		for l in lights:

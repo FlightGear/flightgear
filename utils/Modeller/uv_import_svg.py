@@ -213,7 +213,7 @@ class import_svg(xml.sax.handler.ContentHandler):
 		currmat = self.matrices[-1]
 		if "transform" in attrs:
 			m = parse_transform(attrs["transform"])
-			if currmat != None:
+			if currmat is not None:
 				m.multiply(currmat)
 			self.matrices.append(m)
 		else:
