@@ -12,7 +12,7 @@
  * the GNU Lesser (Library) General Public License.
  */
 
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #include <unistd.h>
 #ifndef __USE_POSIX199309
 #define __USE_POSIX199309
