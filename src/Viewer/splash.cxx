@@ -212,6 +212,12 @@ void SplashScreen::createNodes()
             nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
 #endif
 
+    if (fgGetBool("/sim/rendering/composite-viewer-enabled")) {
+        addText(geode, osg::Vec2(0.5f, 0.65f), 0.03,
+                "CompositeViewer",
+                osgText::Text::CENTER_CENTER,
+                nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
+    }
 
     ///////////
 
