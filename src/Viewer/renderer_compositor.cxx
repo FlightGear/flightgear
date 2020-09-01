@@ -381,11 +381,17 @@ FGRenderer::preinit( void )
     _splash = new SplashScreen;
 	_viewerSceneRoot->addChild(_splash);
 
-    _frameStamp = new osg::FrameStamp;
-    view->setFrameStamp(_frameStamp.get());
+    if (composite_viewer) {
+        view->setFrameStamp(composite_viewer->getFrameStamp());
+    }
+    else {
+        _frameStamp = new osg::FrameStamp;
+        view->setFrameStamp(_frameStamp.get());
+    }
+    
     // Scene doesn't seem to pass the frame stamp to the update
     // visitor automatically.
-    _updateVisitor->setFrameStamp(_frameStamp.get());
+    _updateVisitor->setFrameStamp(getFrameStamp());
     getViewerBase()->setUpdateVisitor(_updateVisitor.get());
     fgSetDouble("/sim/startup/splash-alpha", 1.0);
 
@@ -742,7 +748,7 @@ FGRenderer::update( ) {
         updateSky();
 
         // need to call the update visitor once
-        _frameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
+        getFrameStamp()->setCalendarTime(*globals->get_time_params()->getGmt());
         _updateVisitor->setViewData(current__view->getViewPosition(),
                                     current__view->getViewOrientation());
         SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
@@ -974,7 +980,7 @@ FGRenderer::setView(osgViewer::View* view)
     if (composite_viewer) {
         if (composite_viewer->getNumViews() == 0) {
             SG_LOG(SG_VIEW, SG_ALERT, "adding view to composite_viewer.");
-            view->setFrameStamp(composite_viewer->getFrameStamp());
+            view->setFrameStamp(getFrameStamp());
             composite_viewer->stopThreading();
             composite_viewer->addView(view);
             composite_viewer->startThreading();
