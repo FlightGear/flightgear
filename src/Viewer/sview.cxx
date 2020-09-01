@@ -577,12 +577,13 @@ struct SviewViewClone : SviewView
             osg::Quat   orientation = toOsg(posdir.direction2);
 
             /* CameraGroup::update() */
-            osg::Matrix old_m = m_view->getCamera()->getViewMatrix();
+            auto camera = m_view->getCamera();
+            osg::Matrix old_m = camera->getViewMatrix();
             const osg::Matrix new_m(osg::Matrix::translate(-position)
                                          * osg::Matrix::rotate(orientation.inverse()));
             SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
             SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
-            m_view->getCamera()->setViewMatrix(new_m);
+            camera->setViewMatrix(new_m);
         }
         return valid;
     }
