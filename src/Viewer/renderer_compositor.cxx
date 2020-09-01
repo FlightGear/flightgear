@@ -737,6 +737,15 @@ FGRenderer::update( ) {
     }
     for (osg::Camera* camera: cameras) {
 
+        osg::Vec3d  eye;
+        osg::Vec3d  center;
+        osg::Vec3d  up;
+        camera->getViewMatrixAsLookAt( eye, center, up);
+        
+        SGVec3d eye2(eye._v[0], eye._v[1], eye._v[1]);
+        SGVec3d center2(center._v[0], center._v[1], center._v[1]);
+        auto center3 = SGQuatd::fromAngleAxis(0.0 /*Angle*/, center2);
+        
         osg::Vec4 clear_color = _altitude_ft->getDoubleValue() < 250000
                               ? toOsg(l->adj_fog_color())
                               // skydome ends at ~262000ft (default rendering)
@@ -750,8 +759,7 @@ FGRenderer::update( ) {
 
         // need to call the update visitor once
         getFrameStamp()->setCalendarTime(*globals->get_time_params()->getGmt());
-        _updateVisitor->setViewData(current__view->getViewPosition(),
-                                    current__view->getViewOrientation());
+        _updateVisitor->setViewData(eye2, center3);
         SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
         _updateVisitor->setLight(direction, l->scene_ambient(),
                                  l->scene_diffuse(), l->scene_specular(),
