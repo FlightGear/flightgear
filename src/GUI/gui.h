@@ -29,9 +29,9 @@
 #  include <config.h>
 #endif
 
-#include <plib/pu.h>
-
 #include <simgear/structure/exception.hxx>
+
+#include "FlightGear_pu.h"
 
 #define TR_HIRES_SNAP   1
 

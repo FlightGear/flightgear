@@ -20,7 +20,7 @@
 #define CANVASWIDGET_HXX_
 
 #include <Main/fg_props.hxx>
-#include <plib/pu.h>
+#include "FlightGear_pu.h"
 
 #include <simgear/canvas/canvas_fwd.hxx>
 

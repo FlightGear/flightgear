@@ -2,8 +2,7 @@
 #include <config.h>
 #endif
 
-#include <plib/pu.h>
-
+#include "FlightGear_pu.h"
 #include "fnt.h"
 
 

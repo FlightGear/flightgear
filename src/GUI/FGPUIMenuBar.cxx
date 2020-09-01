@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include <iostream>
-#include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGBinding.hxx>
 #include <simgear/props/props_io.hxx>
@@ -15,6 +14,7 @@
 
 #include "new_gui.hxx"
 #include "FGPUIMenuBar.hxx"
+#include "FlightGear_pu.h"
 
 using std::vector;
 using std::string;
