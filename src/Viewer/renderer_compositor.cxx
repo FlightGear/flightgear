@@ -382,7 +382,8 @@ FGRenderer::preinit( void )
 	_viewerSceneRoot->addChild(_splash);
 
     if (composite_viewer) {
-        view->setFrameStamp(composite_viewer->getFrameStamp());
+        // Nothing to do - composite_viewer->addView() will tell view to use
+        // composite_viewer's FrameStamp.
     }
     else {
         _frameStamp = new osg::FrameStamp;
