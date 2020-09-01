@@ -19,8 +19,7 @@
 
 // this is our one in 3rdparty
 #include "fnt.h"
-
-#include <plib/pu.h>
+#include "pu.h"
 
 #include <simgear/props/props.hxx>
 #include <simgear/misc/sg_dir.hxx>

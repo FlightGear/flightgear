@@ -21,7 +21,7 @@
 #include <config.h>
 #endif
 
-#include <plib/pu.h>
+#include <GUI/pu.h>
 #include <osg/GraphicsContext>
 
 #include <Viewer/renderer.hxx>

@@ -20,8 +20,7 @@
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 
-#include <plib/pu.h>
-
+#include <GUI/pu.h>
 #include <Main/fg_os.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>

@@ -7,8 +7,8 @@
 #include <simgear/props/props.hxx>
 
 #include <Navaids/positioned.hxx>
-#include <plib/pu.h>
 
+#include "pu.h"
 #include "FGPUIDialog.hxx"
 
 // forward decls

@@ -64,7 +64,7 @@
 #include <simgear/structure/commands.hxx>
 
 #if defined(HAVE_PUI)
-#include <plib/pu.h>
+#include "pu.h"
 #endif
 
 using namespace osgGA;

@@ -2,8 +2,7 @@
 #include <config.h>
 #endif
 
-#include <plib/pu.h>
-
+#include "pu.h"
 #include "fnt.h"
 
 

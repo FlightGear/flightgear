@@ -11,7 +11,7 @@
 #include <cstring>
 #include <sys/types.h>
 
-#include <plib/pu.h>
+#include "pu.h"
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>

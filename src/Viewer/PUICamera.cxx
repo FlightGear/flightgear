@@ -34,10 +34,9 @@
 #include <osgUtil/CullVisitor>
 #include <osgViewer/Viewer>
 
-#include <plib/pu.h>
-
 #include <simgear/scene/util/SGNodeMasks.hxx>
 
+#include <GUI/pu.h>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>

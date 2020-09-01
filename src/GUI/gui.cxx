@@ -39,8 +39,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <plib/pu.h>
-
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>

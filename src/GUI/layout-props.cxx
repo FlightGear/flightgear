@@ -2,9 +2,9 @@
 #  include <config.h>
 #endif
 
-#include <plib/pu.h>
 #include <simgear/props/props.hxx>
 
+#include "pu.h"
 #include "layout.hxx"
 
 // This file contains the code implementing the LayoutWidget class in
