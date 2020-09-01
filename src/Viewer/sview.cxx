@@ -524,6 +524,12 @@ struct SviewViewClone : SviewView
                         view_node->getStringValue("config/eye-pitch-deg-path")[0] ? 1 : 0,
                         view_node->getStringValue("config/eye-roll-deg-path")[0] ? 1 : 0
                         ));
+                /* Apply the current view rotation. */
+                m_eye.add_step(new SviewStepRotate(
+                        root->getDoubleValue("sim/current-view/heading-offset-deg"),
+                        root->getDoubleValue("sim/current-view/pitch-offset-deg"),
+                        root->getDoubleValue("sim/current-view/roll-offset-deg")
+                        ));
             }
             else {
                 /* E.g. pilot view. Move to the eye position.
@@ -536,13 +542,13 @@ struct SviewViewClone : SviewView
                         -view_node->getDoubleValue("config/y-offset-m"),
                         -view_node->getDoubleValue("config/x-offset-m")
                         ));
+                /* Apply the current view rotation. */
+                m_eye.add_step(new SviewStepRotate(
+                        root->getDoubleValue("sim/current-view/heading-offset-deg"),
+                        -root->getDoubleValue("sim/current-view/pitch-offset-deg"),
+                        root->getDoubleValue("sim/current-view/roll-offset-deg")
+                        ));
             }
-            /* Apply the current view rotation. */
-            m_eye.add_step(new SviewStepRotate(
-                    root->getDoubleValue("sim/current-view/heading-offset-deg"),
-                    root->getDoubleValue("sim/current-view/pitch-offset-deg"),
-                    root->getDoubleValue("sim/current-view/roll-offset-deg")
-                    ));
             if (at_model) {
                 /* E.g. Helicopter view. Move eye away from aircraft.
                 config/z-offset-m defaults to /sim/chase-distance-m (see
@@ -591,7 +597,9 @@ struct SviewViewClone : SviewView
             SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
         }
         SG_LOG(SG_VIEW, SG_ALERT, "removing m_view=" << m_view);
+        composite_viewer->stopThreading();
         composite_viewer->removeView(m_view);
+        composite_viewer->startThreading();
     }
     
     private:

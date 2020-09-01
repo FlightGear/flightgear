@@ -348,6 +348,8 @@ void FGViewMgr::clone_current_view()
     
     view->setName("Cloned view");
     
+    view->setFrameStamp(composite_viewer->getFrameStamp());
+    
     // stop/start threading:
     // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg54341.html
     //
