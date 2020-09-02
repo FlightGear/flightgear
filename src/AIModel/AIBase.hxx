@@ -137,6 +137,11 @@ public:
                              const simgear::BVHMaterial** material) const;
 
 
+    double getTrueHeadingDeg() const
+    {
+        return hdg;
+    }
+
     double _getCartPosX() const;
     double _getCartPosY() const;
     double _getCartPosZ() const;

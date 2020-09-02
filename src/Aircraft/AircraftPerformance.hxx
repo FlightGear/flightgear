@@ -55,6 +55,10 @@ public:
 
     double timeToCruise(double cruiseDistanceNm, int cruiseAltitudeFt) const;
 
+    static double groundSpeedForCAS(int altitudeFt, double cas);
+    static double machForCAS(int altitudeFt, double cas);
+    static double groundSpeedForMach(int altitudeFt, double mach);
+
 private:
     void readPerformanceData();
 

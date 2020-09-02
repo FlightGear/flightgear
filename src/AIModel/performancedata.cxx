@@ -1,7 +1,5 @@
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "performancedata.hxx"
 
@@ -13,6 +11,13 @@
 // also, the performance parameters can be tweaked a little to add some personality
 // to the AIAircraft.
 #define BRAKE_SETTING 1.6
+
+
+PerformanceData* PerformanceData::getDefaultData()
+{
+    static PerformanceData static_instance;
+    return &static_instance;
+}
 
 PerformanceData::PerformanceData() :
   _acceleration(4.0),
@@ -53,9 +58,6 @@ PerformanceData::PerformanceData(PerformanceData* clone) :
   _rollrate = clone->_rollrate;
   _maxbank = clone->_maxbank;
 }
-
-PerformanceData::~PerformanceData()
-{}
 
 // helper to try various names of a property, in order.
 static double readRenamedProp(SGPropertyNode_ptr db, const string_list& namesToTry, double defValue)

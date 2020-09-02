@@ -8,6 +8,7 @@ foreach( unit_test_category
         Navaids
         Instrumentation
         Scripting
+        AI
     )
 
     add_subdirectory(${unit_test_category})
