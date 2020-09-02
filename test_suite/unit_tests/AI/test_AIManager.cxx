@@ -87,3 +87,33 @@ void AIManagerTests::testBasic()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("orientation/heading-deg"), aiUserAircraft->getTrueHeadingDeg(), 1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("velocities/groundspeed-kt"), aiUserAircraft->getSpeed(), 1);
 }
+
+void AIManagerTests::testAircraftWaypoints()
+{
+    auto aim = globals->get_subsystem<FGAIManager>();
+
+    SGPropertyNode_ptr aircraftDefinition(new SGPropertyNode);
+    aircraftDefinition->setStringValue("type", "aircraft");
+    aircraftDefinition->setStringValue("callsign", "G-ARTA");
+    // set class for performance data
+
+    auto eggd = FGAirport::findByIdent("EGGD");
+    aircraftDefinition->setDoubleValue("heading", 90.0);
+    aircraftDefinition->setDoubleValue("latitude", eggd->geod().getLatitudeDeg());
+    aircraftDefinition->setDoubleValue("longitude", eggd->geod().getLongitudeDeg());
+    aircraftDefinition->setDoubleValue("altitude", 6000.0);
+    aircraftDefinition->setDoubleValue("speed", 250.0); // IAS or TAS?
+
+    auto ai = aim->addObject(aircraftDefinition);
+    CPPUNIT_ASSERT(ai);
+    CPPUNIT_ASSERT_EQUAL(FGAIBase::otAircraft, ai->getType());
+    CPPUNIT_ASSERT_EQUAL(std::string{"aircraft"}, std::string{ai->getTypeString()});
+
+    auto aiAircraft = static_cast<FGAIAircraft*>(ai.get());
+
+    const auto aiPos = aiAircraft->getGeodPos();
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(eggd->geod().getLatitudeDeg(), aiPos.getLatitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(eggd->geod().getLongitudeDeg(), aiPos.getLongitudeDeg(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(90.0, aiAircraft->getTrueHeadingDeg(), 1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(250.0, aiAircraft->getSpeed(), 1);
+}

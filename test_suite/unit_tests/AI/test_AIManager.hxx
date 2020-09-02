@@ -34,6 +34,7 @@ class AIManagerTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(AIManagerTests);
     CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testAircraftWaypoints);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -46,4 +47,5 @@ public:
 
     // The tests.
     void testBasic();
+    void testAircraftWaypoints();
 };
