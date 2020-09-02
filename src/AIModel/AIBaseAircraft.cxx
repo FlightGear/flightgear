@@ -19,7 +19,8 @@
 
 #include <Main/globals.hxx>
 
-FGAIBaseAircraft::FGAIBaseAircraft() : FGAIBase(otStatic, false)
+FGAIBaseAircraft::FGAIBaseAircraft(object_type ot) :
+    FGAIBase(ot, false)
 {
     m_gearPos = 0.0f;
     m_flapsPos = 0.0f;
