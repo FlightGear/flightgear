@@ -231,7 +231,7 @@ void fgOSOpenWindow(bool stencil)
         view->setDatabasePager(FGScenery::getPagerSingleton());
         
         // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
-        view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(false, false);
+        view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
         osg::GraphicsContext::createNewContextID();
         
         //viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);

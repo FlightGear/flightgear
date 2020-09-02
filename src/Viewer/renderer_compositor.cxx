@@ -414,6 +414,10 @@ FGRenderer::init( void )
         composite_viewer_enabled = 1;
         SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::CompositeViewer");
         composite_viewer = new osgViewer::CompositeViewer;
+        
+        // https://stackoverflow.com/questions/15207076/openscenegraph-and-multiple-viewers
+        composite_viewer->setReleaseContextAtEndOfFrameHint(false);
+        composite_viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
     }
     else {
         composite_viewer_enabled = 0;
@@ -989,7 +993,6 @@ FGRenderer::setView(osgViewer::View* view)
     if (composite_viewer) {
         if (composite_viewer->getNumViews() == 0) {
             SG_LOG(SG_VIEW, SG_ALERT, "adding view to composite_viewer.");
-            view->setFrameStamp(getFrameStamp());
             composite_viewer->stopThreading();
             composite_viewer->addView(view);
             composite_viewer->startThreading();

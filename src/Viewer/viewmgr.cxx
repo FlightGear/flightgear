@@ -291,7 +291,8 @@ void FGViewMgr::clone_current_view()
     view->setDatabasePager(FGScenery::getPagerSingleton());
         
     // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
-    view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(false, false);
+    // Passing (false, false) here seems to cause a hang on startup.
+    view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
     osg::GraphicsContext::createNewContextID();
     
     osg::Camera* rhs_camera = rhs_view->getCamera();
