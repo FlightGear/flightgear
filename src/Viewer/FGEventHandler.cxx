@@ -7,7 +7,7 @@
 #include <osg/Viewport>
 #include <osgViewer/Viewer>
 
-#include <GUI/pu.h>
+#include <GUI/FlightGear_pu.h>
 #include <Main/fg_props.hxx>
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"

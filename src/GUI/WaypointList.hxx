@@ -9,7 +9,6 @@
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/misc/strutils.hxx>
 
-#include "pu.h"
 #include "FGPUIDialog.hxx" // for GUI_ID
 
 // forward decls

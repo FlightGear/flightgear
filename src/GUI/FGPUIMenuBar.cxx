@@ -14,7 +14,7 @@
 
 #include "new_gui.hxx"
 #include "FGPUIMenuBar.hxx"
-#include "pu.h"
+#include "FlightGear_pu.h"
 
 using std::vector;
 using std::string;

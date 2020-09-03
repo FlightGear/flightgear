@@ -362,8 +362,8 @@ void FDMShell::createImplementation()
         _impl = new FGBalloonSim( dt );
     } else if ( model == "magic" ) {
         _impl = new FGMagicCarpet( dt );
-//  } else if ( model == "aisim" ) {
-//      _impl = new FGAISim( dt );
+    } else if ( model == "aisim" ) {
+        _impl = new FGAISim( dt );
     }
 #else
     else if (( model == "ada" )||(model == "acms")||( model == "balloon" )||( model == "magic" )||( model == "aisim" ))

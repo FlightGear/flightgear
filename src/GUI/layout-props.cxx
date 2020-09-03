@@ -4,7 +4,7 @@
 
 #include <simgear/props/props.hxx>
 
-#include "pu.h"
+#include "FlightGear_pu.h"
 #include "layout.hxx"
 
 // This file contains the code implementing the LayoutWidget class in

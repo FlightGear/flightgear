@@ -11,8 +11,6 @@
 #include <cstring>
 #include <sys/types.h>
 
-#include "pu.h"
-
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>

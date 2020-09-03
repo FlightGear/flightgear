@@ -7,7 +7,7 @@ set(SP_FDM_SOURCES
 	SP/Balloon.cxx
 	SP/BalloonSim.cpp
 	SP/MagicCarpet.cxx
-    SP/AISim.cpp
+	SP/AISim.cpp
 	)
 set (SP_FDM_HEADERS
 	SP/ACMS.hxx

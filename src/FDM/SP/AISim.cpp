@@ -48,7 +48,6 @@
 
 
 FGAISim::FGAISim(double dt) :
-    br(0),
     location_geod(0.0),
     NEDdot(0.0f),
     vUVW(0.0f),
@@ -63,22 +62,9 @@ FGAISim::FGAISim(double dt) :
     vUVWaero(0.0f),
     b_2U(0.0f),
     cbar_2U(0.0f),
-    velocity(0.0f),
-    mach(0.0f),
-    agl(0.0f),
-    WoW(true),
-    no_engines(0),
-    no_gears(0),
     cg(0.0f),
     I(0.0f),
-    S(0.0f),
-    cbar(0.0f),
-    b(0.0f),
-    m(0.0f),
-    gravity_ned(0.0f, 0.0f, AISIM_G),
-    rho(0.0f),
-    qbar(0.0f),
-    sigma(0.0f)
+    gravity_ned(0.0f, 0.0f, AISIM_G)
 {
     simd4x4::zeros(xCDYLT);
     simd4x4::zeros(xClmnT);
@@ -135,9 +121,12 @@ FGAISim::FGAISim(double dt) :
     // the aircraft on it's wheels.
     for (int i=0; i<no_gears; ++i) {
         // convert from structural frame to body frame
-        gear_pos[i] = simd4_t<float,3>(cg[X]-gear_pos[i][X], gear_pos[i][Y]-cg[Y], cg[Z]-gear_pos[i][Z])*INCHES_TO_FEET;
+        gear_pos[i] = simd4_t<float,3>( cg[X] - gear_pos[i][X],
+                                       -cg[Y] + gear_pos[i][Y],
+                                        cg[Z] - gear_pos[i][Z])*INCHES_TO_FEET;
         if (gear_pos[i][Z] < agl) agl = gear_pos[i][Z];
     }
+
     // Contact point at the Genter of Gravity
     if (no_gears > (AISIM_MAX-1)) no_gears = AISIM_MAX-1;
     gear_pos[no_gears] = cg*INCHES_TO_FEET;

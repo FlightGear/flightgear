@@ -31,7 +31,7 @@
 
 #include <simgear/structure/exception.hxx>
 
-#include "pu.h"
+#include "FlightGear_pu.h"
 
 #define TR_HIRES_SNAP   1
 

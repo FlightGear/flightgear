@@ -42,12 +42,12 @@
 # define SG_FEET_TO_METER               (1/SG_METER_TO_FEET)
 # define SGD_DEGREES_TO_RADIANS         0.0174532925
 # define SGD_RADIANS_TO_DEGREES         (1/SGD_DEGREES_TO_RADIANS)
-# define SGD_PI                         3.1415926535
+# define SGD_PI                         3.1415926536
 #endif
 
 // #define SG_DEGREES_TO_RADIANS 0.0174532925f
 
-// max. no. gears, maxi. no. engines
+// max. no. gears, max. no. engines
 #define AISIM_MAX       4
 #define AISIM_G         32.174f
 
@@ -173,7 +173,7 @@ private:
 
     /* aircraft normalized controls */
     float th;                           /* throttle command             */
-    float br;                           /* brake command                */
+    float br = 0.0f;                    /* brake command                */
 
     /* aircraft state */
     simd4_t<double,3> location_geod;    /* lat, lon, altitude           */
@@ -201,9 +201,10 @@ private:
     simd4_t<float,3> MT[AISIM_MAX];     /* thrust moment                */
     simd4_t<float,3> b_2U, cbar_2U;
     simd4_t<float,3> inv_m;
-    float velocity, mach;
-    float agl;
-    bool WoW;
+    float velocity = 0.0f;
+    float mach = 0.0f;
+    float agl = 0.0f;
+    bool WoW = true;
 
     /* dynamic coefficients (already multiplied with their value) */
     simd4_t<float,3> xCq, xCadot, xCp, xCr;
@@ -214,13 +215,16 @@ private:
 
     /* ---------------------------------------------------------------- */
     /* aircraft static data */
-    int no_engines, no_gears;
+    int no_engines = 0;
+    int no_gears = 0;
     simd4x4_t<float,4> mI, mIinv;       /* inertia matrix               */
     simd4_t<float,3> gear_pos[AISIM_MAX]; /* pos in structural frame    */
     simd4_t<float,3> cg;        /* center of gravity                    */
     simd4_t<float,4> I;         /* inertia                              */
-    float S, cbar, b;           /* wing area, mean average chord, span  */
-    float m;                    /* mass                                 */
+    float S = 0.0f;		/* wing area                            */
+    float cbar = 0.0f;          /* mean average chord                   */
+    float b = 0.0f;             /* wing span                            */
+    float m = 0.0f;             /* mass                                 */
 
     /* static coefficients, *_n is for normalized surface deflection    */
     float Cg_spring[AISIM_MAX]; /* gear spring coeffients               */
@@ -236,7 +240,9 @@ private:
     /* environment data */
     static float density[101], vsound[101];
     simd4_t<float,3> gravity_ned;
-    float rho, qbar, sigma;
+    float rho = 0.0f;
+    float qbar = 0.0f;
+    float sigma = 0.0f;
 };
 
 #endif // _FGAISim_HXX

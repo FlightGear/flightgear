@@ -36,7 +36,7 @@
 
 #include <simgear/scene/util/SGNodeMasks.hxx>
 
-#include <GUI/pu.h>
+#include <GUI/FlightGear_pu.h>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>

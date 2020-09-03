@@ -8,7 +8,6 @@
 
 #include <Navaids/positioned.hxx>
 
-#include "pu.h"
 #include "FGPUIDialog.hxx"
 
 // forward decls
