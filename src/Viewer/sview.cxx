@@ -530,6 +530,16 @@ struct SviewViewClone : SviewView
                         root->getDoubleValue("sim/current-view/pitch-offset-deg"),
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
                         ));
+                if (at_model) {
+                    /* E.g. Helicopter view. Move eye away from aircraft.
+                    config/z-offset-m defaults to /sim/chase-distance-m (see
+                    fgdata:defaults.xml) which is -ve, e.g. -25m. */
+                    m_eye.add_step(new SviewStepMove(
+                            view_node->getDoubleValue("config/z-offset-m"),
+                            view_node->getDoubleValue("config/y-offset-m"),
+                            view_node->getDoubleValue("config/x-offset-m")
+                            ));
+                }
             }
             else {
                 /* E.g. pilot view. Move to the eye position.
@@ -542,21 +552,23 @@ struct SviewViewClone : SviewView
                         -view_node->getDoubleValue("config/y-offset-m"),
                         -view_node->getDoubleValue("config/x-offset-m")
                         ));
-                /* Apply the current view rotation. */
+                /* Apply the current view rotation. On harrier-gr3 this
+                corrects initial view direction (which is pitch down by 15deg),
+                but seems to cause a problem where the cockpit rotates in a
+                small circle when the aircraft rolls. */
                 m_eye.add_step(new SviewStepRotate(
-                        root->getDoubleValue("sim/current-view/heading-offset-deg"),
-                        -root->getDoubleValue("sim/current-view/pitch-offset-deg"),
-                        root->getDoubleValue("sim/current-view/roll-offset-deg")
+                        -view_node->getDoubleValue("config/heading-offset-deg"),
+                        -view_node->getDoubleValue("config/pitch-offset-deg"),
+                        -view_node->getDoubleValue("config/roll-offset-deg")
                         ));
-            }
-            if (at_model) {
-                /* E.g. Helicopter view. Move eye away from aircraft.
-                config/z-offset-m defaults to /sim/chase-distance-m (see
-                fgdata:defaults.xml) which is -ve, e.g. -25m. */
-                m_eye.add_step(new SviewStepMove(
-                        view_node->getDoubleValue("config/z-offset-m"),
-                        view_node->getDoubleValue("config/y-offset-m"),
-                        view_node->getDoubleValue("config/x-offset-m")
+                /* Preserve the current user-supplied offset to view direction. */
+                m_eye.add_step(new SviewStepRotate(
+                        root->getDoubleValue("sim/current-view/heading-offset-deg")
+                                - view_node->getDoubleValue("config/heading-offset-deg"),
+                        -(root->getDoubleValue("sim/current-view/pitch-offset-deg")
+                                - view_node->getDoubleValue("config/pitch-offset-deg")),
+                        root->getDoubleValue("sim/current-view/roll-offset-deg")
+                                - view_node->getDoubleValue("config/roll-offset-deg")
                         ));
             }
             m_eye.add_step(new SviewStepFinal);
