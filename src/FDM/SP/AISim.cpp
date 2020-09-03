@@ -121,7 +121,7 @@ FGAISim::FGAISim(double dt) :
     // the aircraft on it's wheels.
     for (int i=0; i<no_gears; ++i) {
         // convert from structural frame to body frame
-        gear_pos[i] = simd4_t<float,3>( cg[X] - gear_pos[i][X],
+        gear_pos[i] = simd4_t<float,3>(-cg[X] - gear_pos[i][X],
                                        -cg[Y] + gear_pos[i][Y],
                                         cg[Z] - gear_pos[i][Z])*INCHES_TO_FEET;
         if (gear_pos[i][Z] < agl) agl = gear_pos[i][Z];
@@ -508,7 +508,7 @@ FGAISim::update_velocity(float v)
     float Sqbarcbar = Sqbar*cbar;
 
                                  /* Drag, Side,  Lift */
-    Coef2Force = simd4_t<float,3>(-Sqbar, Sqbar, -Sqbar, Sqbar);
+    Coef2Force = simd4_t<float,3>(Sqbar);
 
                                   /* Roll, Pitch,     Yaw */
     Coef2Moment = simd4_t<float,3>(Sbqbar, Sqbarcbar, Sbqbar, Sbqbar);
@@ -658,19 +658,11 @@ FGAISim::load(std::string path)
     CYr    =  0.262f;
     CYdr_n =  0.091f*dr_max;
 
-#if 0
     Clb    = -0.057f;
     Clp    = -0.613f;
     Clr    =  0.079f;
     Clda_n =  0.170f*da_max;
     Cldr_n =  0.01f*dr_max;
-#else
-    Clb    =  0.0;
-    Clp    =  0.0;
-    Clr    =  0.0f;
-    Clda_n =  0.0f*da_max;
-    Cldr_n =  0.0f*dr_max;
-#endif
 
     Cma    = -1.0f;
     Cmadot = -4.42f;
@@ -678,19 +670,11 @@ FGAISim::load(std::string path)
     Cmde_n = -1.05f*de_max;
     Cmdf_n = -0.059f*df_max;
 
-#if 0
     Cnb    =  0.0630f;
     Cnp    = -0.0028f;
     Cnr    = -0.0681f;
     Cnda_n = -0.0100f*da_max;
     Cndr_n = -0.0398f*dr_max;
-#else
-    Cnb    =  0.0f;
-    Cnp    =  0.0f;
-    Cnr    =  0.0f;
-    Cnda_n =  0.0f*da_max;
-    Cndr_n =  0.0f*dr_max;
-#endif
 
     return true;
 }

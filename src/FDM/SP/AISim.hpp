@@ -106,7 +106,7 @@ public:
         xClmnT.ptr()[AILERON][YAW] = Cnda_n*f;
     }
     inline void set_flaps_norm(float f) {
-        xCDYLT.ptr()[FLAPS][LIFT] = CLdf_n*f;
+        xCDYLT.ptr()[FLAPS][LIFT] = -CLdf_n*f;
         xCDYLT.ptr()[FLAPS][DRAG] = CDdf_n*std::abs(f);
         xClmnT.ptr()[FLAPS][PITCH] = Cmdf_n*f;
     }
