@@ -20,6 +20,8 @@
 #  include <config.h>
 #endif
 
+#include <iterator>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -300,7 +302,7 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
 FGAIWaypoint* FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.begin()) {
-    return 0;
+      return nullptr;
   } else {
     wpt_vector_iterator prev = wpt_iterator;
     return *(--prev);
@@ -310,20 +312,21 @@ FGAIWaypoint* FGAIFlightPlan::getPreviousWaypoint( void ) const
 FGAIWaypoint* FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.end())
-      return 0;
+      return nullptr;
   return *wpt_iterator;
 }
 
 FGAIWaypoint* FGAIFlightPlan::getNextWaypoint( void ) const
 {
-  wpt_vector_iterator i = waypoints.end();
-  i--;  // end() points to one element after the last one. 
-  if (wpt_iterator == i) {
-    return 0;
-  } else {
-    wpt_vector_iterator next = wpt_iterator;
-    return *(++next);
-  }
+    if (wpt_iterator == waypoints.end())
+        return nullptr;
+
+    wpt_vector_iterator last = waypoints.end() - 1;
+    if (wpt_iterator == last) {
+        return nullptr;
+    } else {
+        return *(wpt_iterator + 1);
+    }
 }
 
 void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
@@ -447,30 +450,35 @@ void FGAIFlightPlan::resetWaypoints()
 {
   if (waypoints.begin() == waypoints.end())
     return;
-  else
-    {
-      FGAIWaypoint *wpt = new FGAIWaypoint;
-      wpt_vector_iterator i = waypoints.end();
-      i--;
-      wpt->setName        ( (*i)->getName()       );
-      wpt->setPos         ( (*i)->getPos()        );
-      wpt->setCrossat     ( (*i)->getCrossat()    );
-      wpt->setGear_down   ( (*i)->getGear_down()  );
-      wpt->setFlaps       ( (*i)->getFlaps()      );
-      wpt->setSpoilers    ( (*i)->getSpoilers()   );
-      wpt->setSpeedBrakes ( (*i)->getSpeedBrakes());
-      wpt->setBeaconLight ( (*i)->getBeaconLight() );
-      wpt->setLandingLight( (*i)->getLandingLight() );
-      wpt->setNavLight    ( (*i)->getNavLight()   );
-      wpt->setStrobeLight ( (*i)->getStrobeLight());
-      wpt->setTaxiLight   ( (*i)->getTaxiLight()  );
-      wpt->setFinished    ( false                 );
-      wpt->setOn_ground   ( (*i)->getOn_ground()  );
-      SG_LOG(SG_AI, SG_DEBUG, "Recycling waypoint " << wpt->getName());
-      deleteWaypoints();
-      pushBackWaypoint(wpt);
-    }
+
+
+  FGAIWaypoint* wpt = new FGAIWaypoint;
+  wpt_vector_iterator i = waypoints.end();
+  i--;
+  wpt->setName((*i)->getName());
+  wpt->setPos((*i)->getPos());
+  wpt->setCrossat((*i)->getCrossat());
+  wpt->setGear_down((*i)->getGear_down());
+  wpt->setFlaps((*i)->getFlaps());
+  wpt->setSpoilers((*i)->getSpoilers());
+  wpt->setSpeedBrakes((*i)->getSpeedBrakes());
+  wpt->setBeaconLight((*i)->getBeaconLight());
+  wpt->setLandingLight((*i)->getLandingLight());
+  wpt->setNavLight((*i)->getNavLight());
+  wpt->setStrobeLight((*i)->getStrobeLight());
+  wpt->setTaxiLight((*i)->getTaxiLight());
+  wpt->setFinished(false);
+  wpt->setOn_ground((*i)->getOn_ground());
+  SG_LOG(SG_AI, SG_DEBUG, "Recycling waypoint " << wpt->getName());
+  deleteWaypoints();
+  pushBackWaypoint(wpt);
 }
+
+void FGAIFlightPlan::addWaypoint(FGAIWaypoint* wpt)
+{
+    pushBackWaypoint(wpt);
+}
+
 
 void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
 {

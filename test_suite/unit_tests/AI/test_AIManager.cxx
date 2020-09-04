@@ -28,7 +28,9 @@
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
 #include <AIModel/AIAircraft.hxx>
+#include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIManager.hxx>
+
 #include <Airports/airport.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -88,6 +90,48 @@ void AIManagerTests::testBasic()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("velocities/groundspeed-kt"), aiUserAircraft->getSpeed(), 1);
 }
 
+void AIManagerTests::testAIFlightPlan()
+{
+    std::unique_ptr<FGAIFlightPlan> aiFP(new FGAIFlightPlan);
+    aiFP->setName("Bob");
+    aiFP->setRunway("24");
+
+    CPPUNIT_ASSERT_EQUAL(string{"Bob"}, aiFP->getName());
+    CPPUNIT_ASSERT_EQUAL(string{"24"}, aiFP->getRunway());
+
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    auto wp1 = new FGAIWaypoint;
+    wp1->setName("testWp_0");
+    wp1->setOn_ground(true);
+    wp1->setGear_down(true);
+    wp1->setSpeed(100);
+
+    auto wp2 = new FGAIWaypoint;
+    wp2->setName("upImTheAir");
+    wp2->setOn_ground(false);
+    wp2->setGear_down(true);
+    wp2->setSpeed(150);
+
+
+    aiFP->addWaypoint(wp1);
+    aiFP->addWaypoint(wp2);
+
+    CPPUNIT_ASSERT_EQUAL(2, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp1, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    time_t startTime = 1498;
+    aiFP->setTime(startTime);
+    CPPUNIT_ASSERT(!aiFP->isActive(1400));
+    CPPUNIT_ASSERT(aiFP->isActive(1500));
+}
+
 void AIManagerTests::testAircraftWaypoints()
 {
     auto aim = globals->get_subsystem<FGAIManager>();
@@ -116,4 +160,7 @@ void AIManagerTests::testAircraftWaypoints()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(eggd->geod().getLongitudeDeg(), aiPos.getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(90.0, aiAircraft->getTrueHeadingDeg(), 1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(250.0, aiAircraft->getSpeed(), 1);
+
+    std::unique_ptr<FGAIFlightPlan> aiFP(new FGAIFlightPlan);
+    ai->setFlightPlan(std::move(aiFP));
 }

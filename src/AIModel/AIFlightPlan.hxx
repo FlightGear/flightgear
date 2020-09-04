@@ -191,7 +191,7 @@ public:
   void setRunway(const std::string& rwy) { activeRunway = rwy; };
   const char* getRunwayClassFromTrafficType(const std::string& fltType);
 
-  void addWaypoint(FGAIWaypoint* wpt) { waypoints.push_back(wpt); };
+  void addWaypoint(FGAIWaypoint* wpt);
 
   void setName(const std::string& n) { name = n; };
   const std::string& getName() { return name; };

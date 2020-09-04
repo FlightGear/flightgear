@@ -9,7 +9,7 @@ set(TESTSUITE_SOURCES
 
 set(TESTSUITE_HEADERS
     ${TESTSUITE_HEADERS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_AIManager.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_AIManager.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_traffic.hxx
     PARENT_SCOPE
 )
