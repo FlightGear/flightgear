@@ -32,11 +32,11 @@ public:
 
 private:
     struct EngRec {
-        char* prefix {nullptr};
+        std::string prefix;
         Thruster* eng {nullptr};
     };
     struct WeightRec {
-        char* prop {nullptr};
+        std::string prop;
         float size {0};
         int handle {0};
     };
