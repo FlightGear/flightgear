@@ -47,14 +47,12 @@ FGFDM::~FGFDM()
 {
     for(int i=0; i<_thrusters.size(); i++) {
         EngRec* er = (EngRec*)_thrusters.get(i);
-        delete[] er->prefix;
         delete er->eng;
         delete er;
     }
 
     for(int i=0; i<_weights.size(); i++) {
         WeightRec* wr = (WeightRec*)_weights.get(i);
-        delete[] wr->prop;
         delete wr;
     }
 
@@ -365,7 +363,7 @@ void FGFDM::getExternalInput(float dt)
 
         if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
-            sprintf(buf, "%s/rpm", er->prefix);
+            sprintf(buf, "%s/rpm", er->prefix.c_str());
             p->setOmega(fgGetFloat(buf, 500) * RPM2RAD);
         }
     }
@@ -373,7 +371,7 @@ void FGFDM::getExternalInput(float dt)
 
 // Linearly "seeks" a property by the specified fraction of the way to
 // the target value.  Used to emulate "slowly changing" output values.
-static void moveprop(SGPropertyNode* node, const char* prop,
+static void moveprop(SGPropertyNode* node, const std::string& prop,
                     float target, float frac)
 {
     float val = node->getFloatValue(prop);
@@ -875,7 +873,7 @@ void FGFDM::parsePropeller(const XMLAttributes* a)
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
     er->eng = thruster;
-    er->prefix = strdup(buf);
+    er->prefix = buf;
     _thrusters.add(er);
 
     _currObj = thruster;
@@ -933,7 +931,7 @@ void FGFDM::parseJet(const XMLAttributes* a)
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
     er->eng = j;
-    er->prefix = strdup(buf);
+    er->prefix = buf;
     _thrusters.add(er);
 }
 
@@ -1135,7 +1133,7 @@ void FGFDM::parseWeight(const XMLAttributes* a)
 
     float v[3];
     attrf_xyz(a, v);
-    wr->prop = strdup(a->getValue("mass-prop"));
+    wr->prop = std::string{a->getValue("mass-prop")};
     wr->size = attrf(a, "size", 0);
     wr->handle = _airplane.addWeight(v, wr->size);
     _weights.add(wr);

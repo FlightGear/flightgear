@@ -838,9 +838,9 @@ static naRef f_removeCommand(naContext c, naRef me, int argc, naRef* args)
     const string commandName(naStr_data(args[0]));
     bool ok = nasalSys->removeCommand(commandName);
     if (!ok) {
-        naRuntimeError(c, "Failed to remove command:%s", commandName.c_str());
+        return naNum(0);
     }
-    return naNil();
+    return naNum(1);
 }
 
 static naRef f_open(naContext c, naRef me, int argc, naRef* args)
