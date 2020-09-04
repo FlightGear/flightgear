@@ -102,7 +102,7 @@ public:
     inline void set_rudder_norm(float f) {
         xCDYLT.ptr()[RUDDER][SIDE] = CYdr_n*f;
         xClmnT.ptr()[RUDDER][ROLL] = Cldr_n*f;
-        xClmnT.ptr()[RUDDER][YAW] = Cndr_n*f;
+        xClmnT.ptr()[RUDDER][YAW] = -Cndr_n*f;
     }
     inline void set_elevator_norm(float f) {
         xClmnT.ptr()[ELEVATOR][PITCH] = Cmde_n*f;
@@ -178,22 +178,22 @@ private:
     aiMtx4 invert_inertia(aiMtx4 mtx);
 
     /* aircraft normalized controls */
-    float th;                           /* throttle command             */
-    float br = 0.0f;                    /* brake command                */
+    float th;                 /* throttle command             */
+    float br = 0.0f;          /* brake command                */
 
     /* aircraft state */
-    aiVec3d location_geod;    /* lat, lon, altitude           */
-    aiVec3 aXYZ;              /* local body accelrations      */
-    aiVec3 NEDdot;            /* North, East, Down velocity   */
-    aiVec3 vUVW;              /* fwd, side, down velocity     */
-    aiVec3 vUVWdot;           /* fwd, side, down accel.       */
-    aiVec3 vPQR;              /* roll, pitch, yaw rate        */
-    aiVec3 vPQRdot;           /* roll, pitch, yaw accel.      */
-    aiVec3 AOA;               /* alpha, beta                  */
-    aiVec3 AOAdot;            /* adot, bdot                   */
-    aiVec3 euler;             /* phi, theta, psi              */
-    aiVec3 euler_dot;         /* change in phi, theta, psi    */
-    aiVec3 wind_ned;          /* wind north, east, down       */
+    aiVec3d location_geod = 0.0;    /* lat, lon, altitude     */
+    aiVec3 aXYZ = 0.0f;       /* local body accelrations      */
+    aiVec3 NEDdot = 0.0f;     /* North, East, Down velocity   */
+    aiVec3 vUVW = 0.0f;       /* fwd, side, down velocity     */
+    aiVec3 vUVWdot = 0.0f;    /* fwd, side, down accel.       */
+    aiVec3 vPQR = 0.0f;       /* roll, pitch, yaw rate        */
+    aiVec3 vPQRdot = 0.0f;    /* roll, pitch, yaw accel.      */
+    aiVec3 AOA = 0.0f;        /* alpha, beta                  */
+    aiVec3 AOAdot = 0.0f;     /* adot, bdot                   */
+    aiVec3 euler = 0.0f;      /* phi, theta, psi              */
+    aiVec3 euler_dot = 0.0f;  /* change in phi, theta, psi    */
+    aiVec3 wind_ned = 0.0f;   /* wind north, east, down       */
 
     /* ---------------------------------------------------------------- */
     /* This should reduce the time spent in update() since controls     */
@@ -201,11 +201,12 @@ private:
     /* run 20 to 60 times (or more) per second                          */
 
     /* cache */
-    aiVec3 vUVWaero;          /* airmass relative to the body */
+    aiVec3 vUVWaero = 0.0f;   /* airmass relative to the body */
     aiVec3 FT[AISIM_MAX];     /* thrust force                 */
     aiVec3 FTM[AISIM_MAX];    /* thrust due to mach force     */
     aiVec3 MT[AISIM_MAX];     /* thrust moment                */
-    aiVec3 b_2U, cbar_2U;
+    aiVec3 b_2U = 0.0f;
+    aiVec3 cbar_2U = 0.0f;
     aiVec3 inv_m;
     float velocity = 0.0f;
     float mach = 0.0f;
@@ -213,7 +214,10 @@ private:
     bool WoW = true;
 
     /* dynamic coefficients (already multiplied with their value) */
-    aiVec3 xCq, xCadot, xCp, xCr;
+    aiVec3 xCq = 0.0f;
+    aiVec3 xCadot = 0.0f;
+    aiVec3 xCp = 0.0f;
+    aiVec3 xCr = 0.0f;
     aiMtx4 xCDYLT;
     aiMtx4 xClmnT;
     aiVec4 Coef2Force;
@@ -225,8 +229,8 @@ private:
     int no_gears = 0;
     aiMtx4 mI, mIinv;           /* inertia matrix                       */
     aiVec3 gear_pos[AISIM_MAX]; /* pos in structural frame              */
-    aiVec3 cg;                  /* center of gravity                    */
-    aiVec4 I;                   /* inertia                              */
+    aiVec3 cg = 0.0f;           /* center of gravity                    */
+    aiVec4 I = 0.0f;            /* inertia                              */
     float Sw = 0.0f;		/* wing area                            */
     float cbar = 0.0f;          /* mean average chord                   */
     float b = 0.0f;             /* wing span                            */
@@ -245,7 +249,7 @@ private:
 
     /* environment data */
     static float density[101], vsound[101];
-    aiVec3 gravity_ned;
+    aiVec3 gravity_ned = { 0.0f, 0.0f, AISIM_G };
     float rho = 0.0f;
     float qbar = 0.0f;
     float sigma = 0.0f;

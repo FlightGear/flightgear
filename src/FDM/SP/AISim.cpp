@@ -47,30 +47,10 @@
 #endif
 
 
-FGAISim::FGAISim(double dt) :
-    location_geod(0.0),
-    NEDdot(0.0f),
-    vUVW(0.0f),
-    vUVWdot(0.0f),
-    vPQR(0.0f),
-    vPQRdot(0.0f),
-    AOA(0.0f),
-    AOAdot(0.0f),
-    euler(0.0f),
-    euler_dot(0.0f),
-    wind_ned(0.0f),
-    vUVWaero(0.0f),
-    b_2U(0.0f),
-    cbar_2U(0.0f),
-    cg(0.0f),
-    I(0.0f),
-    gravity_ned(0.0f, 0.0f, AISIM_G)
+FGAISim::FGAISim(double dt)
 {
     simd4x4::zeros(xCDYLT);
     simd4x4::zeros(xClmnT);
-
-    xCq = xCadot = 0.0f;
-    xCp = xCr = 0.0f;
 
     for (int i=0; i<AISIM_MAX; ++i) {
         FT[i] = FTM[i] = MT[i] = 0.0f;
@@ -98,7 +78,7 @@ FGAISim::FGAISim(double dt) :
     set_alpha_rad(0.0f);
     set_beta_rad(0.0f);
 
-    /* useful constants */
+    /* useful constants assigned to a vector */
     xCp[SIDE] = CYp;
     xCr[SIDE] = CYr;
     xCp[ROLL] = Clp;
@@ -115,6 +95,7 @@ FGAISim::FGAISim(double dt) :
     xCDYLT.ptr()[MIN][LIFT] = -CLmin;
     xCDYLT.ptr()[MIN][DRAG] = -CDmin;
 
+    /* m is assigned in the load function */
     inv_m = 1.0f/m;
 
     // calculate the initial c.g. position above ground level to position
@@ -139,12 +120,12 @@ FGAISim::FGAISim(double dt) :
     simd4x4::translate(mcg, cg);
 
     mI = aiMtx4( I[XX],  0.0f, -I[XZ], 0.0f,
-                              0.0f, I[YY],   0.0f, 0.0f,
-                            -I[XZ],  0.0f,  I[ZZ], 0.0f,
-                              0.0f,  0.0f,   0.0f, 0.0f);
+                  0.0f, I[YY],   0.0f, 0.0f,
+                -I[XZ],  0.0f,  I[ZZ], 0.0f,
+                  0.0f,  0.0f,   0.0f, 0.0f);
     mIinv = invert_inertia(mI);
-//  mI *= mcg;
-//  mIinv *= matrix_inverse(mcg);
+    mI *= mcg;
+    mIinv *= matrix_inverse(mcg);
 }
 
 FGAISim::~FGAISim()
@@ -246,7 +227,6 @@ FGAISim::update(double ddt)
 
     float CL = CDYL[LIFT];
     CDYL += aiVec3(CDi*CL*CL, 0.0f, 0.0f);
-printf("CDYL:    %7.2f, %7.2f, %7.2f\n", CDYL[DRAG], CDYL[SIDE], CDYL[LIFT]);
 #if 0
  printf(" CLa: %6.3f, CLadot: %6.3f, CLq: %6.3f\n", xCDYLT.ptr()[ALPHA][LIFT],CLadot*adot,CLq*q);
  printf(" CDa: %6.3f, CDb:    %6.3f, CDi: %6.3f\n", xCDYLT.ptr()[ALPHA][DRAG],xCDYLT.ptr()[BETA][DRAG],CDi*CL*CL);
@@ -415,6 +395,25 @@ FGAISim::copy_to_AISim()
 bool
 FGAISim::copy_from_AISim()
 {
+    // Mass properties and geometry values
+//  _set_Inertias( m, I[XX], I[YY], I[ZZ], I[XZ] );
+    _set_CG_Position( cg[X], cg[Y], cg[Z]);
+
+    // Accelerations
+    _set_Accels_Body( vUVWdot[U], vUVWdot[V], vUVWdot[W] );
+
+    // Velocities
+    _set_V_equiv_kts( velocity*std::sqrt(sigma) * SG_FPS_TO_KT );
+    _set_V_calibrated_kts( std::sqrt( 2.0f*qbar*sigma/rho) * SG_FPS_TO_KT );
+    _set_V_ground_speed( simd4::magnitude(NEDdot) * SG_FPS_TO_KT );
+    _set_Mach_number( mach );
+
+    _set_Velocities_Local( NEDdot[NORTH], NEDdot[EAST], NEDdot[DOWN] );
+    _set_Velocities_Local_Airmass( vUVWaero[U], vUVWaero[V], vUVWaero[W] );
+    _set_Velocities_Body( vUVW[U], vUVW[V], vUVW[W] );
+    _set_Omega_Body( vPQR[P], vPQR[Q], vPQR[R] );
+    _set_Euler_Rates( euler_dot[PHI], euler_dot[THETA], euler_dot[PSI] );
+
     // Positions
     _set_Geodetic_Position( location_geod[LATITUDE], location_geod[LONGITUDE]);
 
@@ -425,30 +424,13 @@ FGAISim::copy_from_AISim()
     _update_ground_elev_at_pos();
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
     _set_Altitude( location_geod[ALTITUDE] );
-    _set_Altitude_AGL( location_geod[ALTITUDE] - get_Runway_altitude() );
+    _set_Altitude_AGL( location_geod[ALTITUDE] - get_Runway_altitude() - gear_pos[0][Z]);
 
-//  _set_Euler_Angles( roll, pitch, heading );
     float heading = euler[PSI];
-    if (heading < 0) heading += SGD_2PI;
+    if (heading < 0) heading += (2.0f*SG_PI);
     _set_Euler_Angles( euler[PHI], euler[THETA], heading );
     _set_Alpha( AOA[ALPHA] );
     _set_Beta(  AOA[BETA] );
-
-    // Velocities
-    _set_V_equiv_kts( velocity*std::sqrt(sigma) * SG_FPS_TO_KT );
-    _set_V_calibrated_kts( std::sqrt( 2*qbar*sigma/rho) * SG_FPS_TO_KT );
-    set_V_ground_speed_kt( simd4::magnitude(NEDdot) * SG_FPS_TO_KT );
-    _set_Mach_number( mach );
-
-    _set_Velocities_Local( NEDdot[NORTH], NEDdot[EAST], NEDdot[DOWN] );
-//  _set_Velocities_Local_Airmass( vUVWaero[U], vUVWaero[V], vUVWaero[W] );
-    _set_Velocities_Body( vUVW[U], vUVW[V], vUVW[W] );
-    _set_Omega_Body( vPQR[P], vPQR[Q], vPQR[R] );
-    _set_Euler_Rates( euler_dot[PHI], euler_dot[THETA], euler_dot[PSI] );
-
-    // Accelerations
-//  set_Accels_Omega( vPQRdot[P], vPQRdot[Q], vPQRdot[R] );
-    _set_Accels_Body( vUVWdot[U], vUVWdot[V], vUVWdot[W] );
 
     return true;
 }
@@ -615,28 +597,28 @@ FGAISim::load(std::string path)
     // gear ground contact points relative tot aero ref. pt. at (0,0,0)
     no_gears = 3;
     /* nose */
-    gear_pos[0][X] = -50.0f;
+    gear_pos[0][X] = -93.0f;
     gear_pos[0][Y] =   0.0f;
-    gear_pos[0][Z] = -78.9f;
+    gear_pos[0][Z] = -38.9f;
     Cg_spring[0] = 1800.0f;
     Cg_damp[0] = 600.0f;
     /* left */
-    gear_pos[1][X] =  15.0f;
-    gear_pos[1][Y] = -43.0f;
-    gear_pos[1][Z] = -74.9f;
+    gear_pos[1][X] =  -5.4f;
+    gear_pos[1][Y] = -38.0f;
+    gear_pos[1][Z] = -38.9f;
     Cg_spring[1] = 5400.0f;
     Cg_damp[1] = 1600.0f;
     /* right */
-    gear_pos[2][X] =  15.0f;
-    gear_pos[2][Y] =  43.0f;
-    gear_pos[2][Z] = -74.9f;
+    gear_pos[2][X] =  -5.4f;
+    gear_pos[2][Y] =  38.0f;
+    gear_pos[2][Z] = -38.9f;
     Cg_spring[2] = 5400.0f;
     Cg_damp[2] = 1600.0f;
 
-    float de_max = 24.0f*SGD_DEGREES_TO_RADIANS;
-    float dr_max = 16.0f*SGD_DEGREES_TO_RADIANS;
-    float da_max = 17.5f*SGD_DEGREES_TO_RADIANS;
-    float df_max = 30.0f*SGD_DEGREES_TO_RADIANS;
+    float de_max = 24.0f*SG_DEGREES_TO_RADIANS;
+    float dr_max = 16.0f*SG_DEGREES_TO_RADIANS;
+    float da_max = 17.5f*SG_DEGREES_TO_RADIANS;
+    float df_max = 30.0f*SG_DEGREES_TO_RADIANS;
 
     /* thuster / propulsion */
                      // (FWD,RIGHT,DOWN)
@@ -654,14 +636,14 @@ FGAISim::load(std::string path)
     simd4::normalize(dir);
     FT[0]  = dir * (CTmax * RPS*RPS * D*D*D*D);	// Thrust force
     FTM[0] = dir * (CTu/(RPS*D))*vsound[0];	// Thrust force due to Mach
-    MT[0]  = dir * (-Ixx*(2.0f*RPS*float(SGD_PI)));// Thrus moment
+    MT[0]  = dir * (-Ixx*(2.0f*RPS*float(SG_PI)));// Thrus moment
 // if propeller driven
 
     /* aerodynamic coefficients */
-    CLmin  =  0.007f;
+    CLmin  =  0.25f;
     CLa    =  4.72f;
-    CLadot =  1.70f;
-    CLq    =  3.90f;
+    CLadot =  1.7f;
+    CLq    =  3.9f;
     CLdf_n =  0.705f*df_max;
 
     CDmin  =  0.036f;
@@ -675,23 +657,23 @@ FGAISim::load(std::string path)
     CYr    =  0.21f;
     CYdr_n =  0.187f*dr_max;
 
-    Clb    = -0.322;          // -0.057f;
-    Clp    = -0.4840;         // -0.613f;
-    Clr    =  2.0f;           // 0.079f;
-    Clda_n =  0.229f*da_max;  // 0.170f*da_max;
-    Cldr_n =  0.0147f*dr_max; // 0.01f*dr_max;
+    Clb    = -0.057f;
+    Clp    = -0.613f;
+    Clr    =  0.079f;
+    Clda_n =  0.17f*da_max;
+    Cldr_n =  0.0147f*dr_max;
 
-    Cma    = -1.8f;           // -1.0f;
-    Cmadot = -5.2f;           // -4.42f;
-    Cmq    = -12.4f;          // -10.5f;
-    Cmde_n = -1.28f*de_max;   // -1.05f*de_max;
-    Cmdf_n = -0.2177f*df_max; // -0.059f*df_max;
+    Cma    = -1.8f;
+    Cmadot = -5.2f;
+    Cmq    = -12.4f;
+    Cmde_n = -1.05f*de_max;
+//  Cmdf_n = -0.2177f*df_max;
 
-    Cnb    =  0.065f;         //  0.0630f;
-    Cnp    = -0.03f;          // -0.0028f;
-    Cnr    = -0.099f;         // -0.0681f;
+    Cnb    =  0.063f;
+    Cnp    = -0.0028f;
+    Cnr    = -0.0937f;         // -0.0681f;
     Cnda_n = -0.0053f*da_max; // -0.0100f*da_max;
-    Cndr_n = -0.0657f*dr_max; // -0.0398f*dr_max;
+    Cndr_n = -0.043f*dr_max;
 
     return true;
 }
