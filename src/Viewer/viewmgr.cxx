@@ -228,7 +228,27 @@ FGViewMgr::prev_view()
     return get_current_view();
 }
 
+void FGViewMgr::view_push()
+{
+    SviewPush();
+}
+
 void FGViewMgr::clone_current_view()
+{
+    clone_internal("current");
+}
+
+void FGViewMgr::clone_last_pair()
+{
+    clone_internal("last_pair");
+}
+
+void FGViewMgr::clone_last_pair_double()
+{
+    clone_internal("last_pair_double");
+}
+
+void FGViewMgr::clone_internal(const std::string& type)
 {
     FGRenderer*                 renderer            = globals->get_renderer();
     osgViewer::ViewerBase*      viewer_base         = renderer->getViewerBase();
@@ -358,7 +378,18 @@ void FGViewMgr::clone_current_view()
     composite_viewer->addView(view);
     composite_viewer->startThreading();
     
-    SviewAddClone(view);
+    if (type == "last_pair") {
+        SviewAddLastPair(view);
+    }
+    else if (type == "last_pair_double") {
+        SviewAddDouble(view);
+    }
+    else if (type == "current") {
+        SviewAddClone(view);
+    }
+    else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "unrecognised type=" << type);
+    }
 }
 
 void

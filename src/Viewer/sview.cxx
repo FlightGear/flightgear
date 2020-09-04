@@ -46,6 +46,43 @@ The dynamic nature of step views allows view cloning with composite-viewer.
 #include <osgViewer/CompositeViewer>
 
 
+static std::ostream& operator << (std::ostream& out, const osg::Vec3f& vec)
+{
+    return out << "Vec3f{"
+            << " x=" << vec._v[0]
+            << " y=" << vec._v[1]
+            << " z=" << vec._v[2]
+            << "}";
+}
+
+static std::ostream& operator << (std::ostream& out, const osg::Quat& quat)
+{
+    return out << "Quat{"
+            << " x=" << quat._v[0]
+            << " y=" << quat._v[1]
+            << " z= " << quat._v[2]
+            << " w=" << quat._v[3]
+            << "}";
+}
+
+
+
+static std::ostream& operator << (std::ostream& out, const osg::Matrixd& matrix)
+{
+    osg::Vec3f  translation;
+    osg::Quat   rotation;
+    osg::Vec3f  scale;
+    osg::Quat   so;
+    matrix.decompose(translation, rotation, scale, so);
+    return out << "Matrixd {"
+            << " translation=" << translation
+            << " rotation=" << rotation
+            << " scale=" << scale
+            << " so=" << so
+            << "}";
+}
+
+
 /* Position and direction. */
 struct SviewPosDir
 {
@@ -64,6 +101,21 @@ struct SviewPosDir
     SGQuatd direction2;
 };
 
+std::ostream& operator<< (std::ostream& out, const SviewPosDir& posdir)
+{
+    out << "SviewPosDir {"
+            << " position=" << posdir.position
+            << " heading=" << posdir.heading
+            << " pitch=" << posdir.pitch
+            << " roll=" << posdir.roll
+            << " target=" << posdir.target
+            << " position2=" << posdir.position2
+            << " direction2=" << posdir.direction2
+            << "}"
+            ;
+    return out;
+}
+
 
 /* Abstract base class for a single view step. A view step modifies a
 SviewPosDir, e.g. translating the position and/or rotating the direction. */
@@ -71,10 +123,20 @@ struct SviewStep
 {
     /* Updates <posdir>. */
     virtual void evaluate(SviewPosDir& posdir) = 0;
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStep>";
+    }
     
     virtual ~SviewStep() {}
 };
 
+std::ostream& operator<< (std::ostream& out, const SviewStep& step)
+{
+    out << ' ' << typeid(step).name();
+    step.stream(out);
+    return out;
+}
 
 /* Sets position to aircraft origin and direction to aircraft's longitudal
 axis. */
@@ -90,6 +152,7 @@ struct SviewStepAircraft : SviewStep
         m_heading     = root->getNode("orientation/true-heading-deg");
         m_pitch       = root->getNode("orientation/pitch-deg");
         m_roll        = root->getNode("orientation/roll-deg");
+        SG_LOG(SG_VIEW, SG_ALERT, "m_longitude->getPath()=" << m_longitude->getPath());
     }
     
     void evaluate(SviewPosDir& posdir) override
@@ -103,6 +166,11 @@ struct SviewStepAircraft : SviewStep
         posdir.heading  = m_heading->getDoubleValue();
         posdir.pitch    = m_pitch->getDoubleValue();
         posdir.roll     = m_roll->getDoubleValue();
+    }
+    
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepAircraft>";
     }
     
     private:
@@ -155,6 +223,11 @@ struct SviewStepMove : SviewStep
         posdir.position = SGGeod::fromCart(position);
     }
     
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepMove>" << m_offset;
+    }
+    
     private:
     SGVec3d m_offset;
 };
@@ -183,6 +256,15 @@ struct SviewStepRotate : SviewStep
         posdir.roll += m_roll;
     }
     
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepRotate>"
+                << ' ' << m_heading
+                << ' ' << m_pitch
+                << ' ' << m_roll
+                ;
+    }
+    
     private:
     double  m_heading;
     double  m_pitch;
@@ -208,6 +290,15 @@ struct SviewStepDirectionMultiply : SviewStep
         posdir.roll *= m_roll;
     }
     
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepDirectionMultiply>"
+                << ' ' << m_heading
+                << ' ' << m_pitch
+                << ' ' << m_roll
+                ;
+    }
+    
     private:
     double  m_heading;
     double  m_pitch;
@@ -221,6 +312,11 @@ struct SviewStepCopyToTarget : SviewStep
     void evaluate(SviewPosDir& posdir) override
     {
         posdir.target = posdir.position;
+    }
+    
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepCopyToTarget>";
     }
 };
 
@@ -246,6 +342,15 @@ struct SviewStepNearestTower : SviewStep
                 m_altitude->getDoubleValue()
                 );
         SG_LOG(SG_VIEW, SG_BULK, "moved posdir.postion to: " << posdir.position);
+    }
+    
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepNearestTower>"
+                << ' ' << m_latitude
+                << ' ' << m_longitude
+                << ' ' << m_altitude
+                ;
     }
     
     SGPropertyNode_ptr m_latitude;
@@ -290,6 +395,12 @@ struct SviewStepTarget : SviewStep
         SG_LOG(SG_VIEW, SG_BULK, "have set posdir.position2: " << posdir.position2);
         SG_LOG(SG_VIEW, SG_BULK, "have set posdir.direction2: " << posdir.direction2);
     }
+    
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepTarget>";
+    }
+    
 };
 
 
@@ -321,6 +432,11 @@ struct SviewStepFinal : SviewStep
         
         posdir.position2 = position;
         posdir.direction2 = ec2body * q;
+    }
+    
+    virtual void stream(std::ostream& out) const
+    {
+        out << " <SviewStepFinal>";
     }
 };
 
@@ -375,10 +491,12 @@ struct SviewPos
         return add_step(std::shared_ptr<SviewStep>(step));
     }
     
-    void evaluate(SviewPosDir& posdir)
+    void evaluate(SviewPosDir& posdir, bool debug=false)
     {
+        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating m_name=" << m_name);
         for (auto step: m_steps) {
             step->evaluate(posdir);
+            if (debug) SG_LOG(SG_VIEW, SG_ALERT, "posdir=" << posdir);
         }
     };
     
@@ -386,63 +504,238 @@ struct SviewPos
     std::vector<std::shared_ptr<SviewStep>>   m_steps;
 };
 
-static std::ostream& operator << (std::ostream& out, const osg::Vec3f& vec)
+static std::ostream& operator << (std::ostream& out, const SviewPos& viewpos)
 {
-    return out << "Vec3f{"
-            << " x=" << vec._v[0]
-            << " y=" << vec._v[1]
-            << " z=" << vec._v[2]
-            << "}";
-}
-
-static std::ostream& operator << (std::ostream& out, const osg::Quat& quat)
-{
-    return out << "Quat{"
-            << " x=" << quat._v[0]
-            << " y=" << quat._v[1]
-            << " z= " << quat._v[2]
-            << " w=" << quat._v[3]
-            << "}";
-}
-
-
-
-static std::ostream& operator << (std::ostream& out, const osg::Matrixd& matrix)
-{
-    osg::Vec3f  translation;
-    osg::Quat   rotation;
-    osg::Vec3f  scale;
-    osg::Quat   so;
-    matrix.decompose(translation, rotation, scale, so);
-    return out << "Matrixd {"
-            << " translation=" << translation
-            << " rotation=" << rotation
-            << " scale=" << scale
-            << " so=" << so
-            << "}";
+    out << viewpos.m_name << " (" << viewpos.m_steps.size() << ")";
+    for (auto step: viewpos.m_steps) {
+        out << " " << *step;
+    }
+    return out;
 }
 
 
 struct SviewView
 {
+    SviewView(osgViewer::View* view)
+    :
+    m_view(view)
+    {
+    }
+    
+    virtual ~SviewView()
+    {
+        if (!m_view) {
+            return;
+        }
+        osgViewer::ViewerBase* viewer_base = m_view->getViewerBase();
+        auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
+        assert(composite_viewer);
+        for (unsigned i=0; i<composite_viewer->getNumViews(); ++i) {
+            osgViewer::View* view = composite_viewer->getView(i);
+            SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
+        }
+        SG_LOG(SG_VIEW, SG_ALERT, "removing m_view=" << m_view);
+        composite_viewer->stopThreading();
+        composite_viewer->removeView(m_view);
+        composite_viewer->startThreading();
+    }
+    
     /* Returns false if window has been closed. */
     virtual bool update(double dt) = 0;
     
-    virtual ~SviewView() {}
+    void posdir_to_view(SviewPosDir posdir)
+    {
+        /* FGViewMgr::update(). */
+        osg::Vec3d  position = toOsg(posdir.position2);
+        osg::Quat   orientation = toOsg(posdir.direction2);
+
+        /* CameraGroup::update() */
+        auto camera = m_view->getCamera();
+        osg::Matrix old_m = camera->getViewMatrix();
+        const osg::Matrix new_m(osg::Matrix::translate(-position)
+                                     * osg::Matrix::rotate(orientation.inverse()));
+        SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
+        SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
+        camera->setViewMatrix(new_m);
+    }
+        
+    osgViewer::View*    m_view = nullptr;    
+};
+
+
+struct SviewDouble : SviewView
+{
+    // <local> and <remote> should evaluate to position of local and remote
+    // aircraft. We ignore directions.
+    SviewDouble(
+            osgViewer::View* view,
+            const SviewPos& local,
+            const SviewPos& remote
+            )
+    :
+    SviewView(view),
+    m_local(local),
+    m_remote(remote)
+    {
+    }
+    
+    virtual bool update(double dt) override
+    {
+        bool valid = m_view->getCamera()->getGraphicsContext()->valid();
+        SG_LOG(SG_VIEW, SG_BULK, "valid=" << valid);
+        if (!valid) return false;
+        
+        bool debug = false;
+        if (1) {
+            time_t t = time(NULL) / 10;
+            //if (debug) SG_LOG(SG_VIEW, SG_ALERT, "m_debug_time=" << m_debug_time << " t=" << t);
+            if (t != m_debug_time) {
+                m_debug_time = t;
+                debug = true;
+            }
+        }
+
+        // Find positions of local and remote aircraft.
+        SviewPosDir posdir_local;
+        m_local.evaluate(posdir_local);
+        SviewPosDir posdir_remote;
+        m_remote.evaluate(posdir_remote);
+        
+        if (debug) {
+            SG_LOG(SG_VIEW, SG_ALERT, "    m_local: " << m_local << ": " << posdir_local);
+            SG_LOG(SG_VIEW, SG_ALERT, "    m_remote: " << m_remote << ": " << posdir_remote);
+        }
+        
+        // Create cartesian coordinates so we can calculate distance <s>.
+        SGVec3d local_pos = SGVec3d::fromGeod(posdir_local.target);
+        SGVec3d remote_pos = SGVec3d::fromGeod(posdir_remote.target);
+        double s = sqrt(distSqr(local_pos, remote_pos));
+        const double pi = 3.1415926;
+        
+        // Desired angle between local and remote in final view.
+        double a = 15 * pi / 180;
+        
+        // Distance of eye from local aircraft.
+        double r = 25; /* should use chase_distance. */
+        
+        // Find t, the distance of eye from remote aircraft. Have to be careful
+        // to cope when there is no solution if remote is too close.
+        double t_root_term = s*s - r*r*sin(a)*sin(a);
+        if (t_root_term < 0) t_root_term = 0;
+        double t = r * cos(a) + sqrt(t_root_term);
+        
+        // Now find theta, angle at local aircraft between vector to remote
+        // aircraft and vector to desired eye position. Again we have to cope
+        // when a solution is not possible.
+        double cos_theta = (s*s + r*r - t*t) / (2*r*s);
+        if (cos_theta > 1) cos_theta = 1;
+        if (cos_theta < -1) cos_theta = -1;
+        double theta = acos(cos_theta);
+        double theta_deg = theta * 180 / pi;
+        
+        // Now find the actual eye position. We do this by calculating heading
+        // and pitch from local aircraft to eye position, then using a
+        // SviewStepMove.
+        double delta_vertical = posdir_remote.target.getElevationM() - posdir_local.target.getElevationM();
+        double delta_horizontal = SGGeodesy::distanceM(posdir_local.target, posdir_remote.target);
+        double local_remote_angle = atan2(delta_vertical, delta_horizontal);
+        
+        posdir_local.heading = SGGeodesy::courseDeg(
+                posdir_local.target,
+                posdir_remote.target
+                );
+        posdir_local.pitch = (local_remote_angle + theta) * 180 / pi;
+        posdir_local.roll = 0;
+        auto move = SviewStepMove(r, 0, 0);
+        move.evaluate(posdir_local);
+        
+        // At this point, posdir_local.position is eye position, and
+        // posdir_remote.position is position of remote aircraft. We make
+        // posdir_local.direction2 point from this eye position to the remote
+        // aircraft.
+        //
+        // (Might be better to point to in-between the local and remote
+        // aircraft?)
+        if (1) {
+            double dheight_eye_target = posdir_remote.target.getElevationM() - posdir_local.position.getElevationM();
+            double eye_target_angle = asin(dheight_eye_target / t);
+            double eye_local_angle = pi - (local_remote_angle + theta);
+            //double dheight_eye_local = r * sin(eye_local_angle);
+            double eye_angle = (eye_target_angle - eye_local_angle) / 2;
+            //posdir_local.heading = SGGeodesy::courseDeg(posdir_local.position, posdir_remote.position);
+            posdir_local.pitch = eye_angle * 180 / pi;
+            //posdir_local.roll = 0;
+            auto stepfinal = SviewStepFinal();
+            stepfinal.evaluate(posdir_local);
+            posdir_to_view(posdir_local);
+        }
+        else {
+            posdir_local.target = posdir_remote.position;
+            auto eye_target = SviewStepTarget();
+            eye_target.evaluate(posdir_local);
+
+            posdir_to_view(posdir_local);
+        }
+        if (debug) {
+            SG_LOG(SG_VIEW, SG_ALERT, ""
+                    << " s=" << s
+                    << " a=" << a
+                    << " t_root_term=" << t_root_term
+                    << " t=" << t
+                    << " cos_theta=" << cos_theta
+                    << " theta_deg=" << theta_deg
+                    << " delta_vertical=" << delta_vertical
+                    << " delta_horizontal=" << delta_horizontal
+                    << " local_remote_angle=" << local_remote_angle
+                    << " posdir_local=" << posdir_local
+                    << " posdir_remote=" << posdir_remote
+                    );
+        }
+        return true;
+    }
+    
+    SviewPos    m_local;
+    SviewPos    m_remote;
+    time_t      m_debug_time = 0;
 };
 
 
 /* A clone of current view. */
 struct SviewViewClone : SviewView
 {
-    SviewViewClone(osgViewer::View* view)
+    SviewViewClone(osgViewer::View* view=nullptr)
     :
-    m_view(view)
+    SviewView(view)
     {
         SG_LOG(SG_VIEW, SG_INFO, "m_view=" << m_view);
         SGPropertyNode* root;
         SGPropertyNode* sim;
+        std::string     type;
         if (1) {
+            int view_number_raw = globals->get_props()->getIntValue("/sim/current-view/view-number-raw");
+            SGPropertyNode* n = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
+            std::string root_path = n->getStringValue("config/root");
+            root = globals->get_props()->getNode(root_path);
+            if (root_path == "" || root_path == "/") {
+                /* user aircraft */
+                sim = root->getNode("sim");
+            }
+            else {
+                sim = root->getNode("set/sim");
+            }
+            SG_LOG(SG_VIEW, SG_ALERT, "view_number_raw=" << view_number_raw);
+            SG_LOG(SG_VIEW, SG_ALERT, "root_path=" << root_path);
+            SG_LOG(SG_VIEW, SG_ALERT, "root=" << root);
+            SG_LOG(SG_VIEW, SG_ALERT, "sim=" << sim);
+            if (root) SG_LOG(SG_VIEW, SG_ALERT, "root->getPath()=" << root->getPath());
+            if (sim)  SG_LOG(SG_VIEW, SG_ALERT, "sim->getPath()=" << sim->getPath());
+            if (!root || !sim) {
+                return;
+            }
+            
+            type = n->getStringValue("type");
+        }
+        else if (1) {
             /* User aircraft. */
             root = globals->get_props();
             sim = root->getNode("sim");
@@ -451,11 +744,14 @@ struct SviewViewClone : SviewView
             root = globals->get_props()->getNode("ai/models/multiplayer[]");
             sim = root->getNode("ai/models/multiplayer[]/set/sim");
         }
+        
+        
         int view_number_raw = sim->getIntValue("current-view/view-number-raw");
         SGPropertyNode* view_node = sim->getNode("view", view_number_raw);
         
         if (view_node->getBoolValue("config/eye-fixed")) {
             /* E.g. Tower view. */
+            m_target.m_name = "eye-fixed";
             SG_LOG(SG_VIEW, SG_INFO, "eye-fixed");
             
             /* First move to centre of aircraft. */
@@ -497,17 +793,28 @@ struct SviewViewClone : SviewView
         }
         else {
             SG_LOG(SG_VIEW, SG_INFO, "not eye-fixed");
+            m_target.m_name = "!eye-fixed";
             /* E.g. Pilot view or Helicopter view. We assume eye position is
             relative to aircraft. */
-            m_eye.add_step(new SviewStepAircraft(root));
-            bool at_model = view_node->getBoolValue("config/at-model");
-            SG_LOG(SG_VIEW, SG_INFO, "at_model=" << at_model);
-            if (at_model) {
+            //bool at_model = view_node->getBoolValue("config/at-model");
+            //SG_LOG(SG_VIEW, SG_INFO, "at_model=" << at_model);
+            //if (at_model) {
+            if (type == "lookat") {
                 /* E.g. Helicopter view. Move to centre of aircraft.
                 
                 config/target-z-offset-m seems to be +ve when moving backwards
                 relative to the aircraft, so we need to negate the value we
                 pass to SviewStepMove(). */
+                
+                m_target.add_step(new SviewStepAircraft(root));
+                m_target.add_step(new SviewStepMove(
+                        -view_node->getDoubleValue("config/target-z-offset-m"),
+                        -view_node->getDoubleValue("config/target-y-offset-m"),
+                        -view_node->getDoubleValue("config/target-x-offset-m")
+                        ));
+                m_target.add_step(new SviewStepCopyToTarget);
+                
+                m_eye.add_step(new SviewStepAircraft(root));
                 m_eye.add_step(new SviewStepMove(
                         -view_node->getDoubleValue("config/target-z-offset-m"),
                         -view_node->getDoubleValue("config/target-y-offset-m"),
@@ -530,7 +837,8 @@ struct SviewViewClone : SviewView
                         root->getDoubleValue("sim/current-view/pitch-offset-deg"),
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
                         ));
-                if (at_model) {
+                //if (at_model) {
+                if (1) {
                     /* E.g. Helicopter view. Move eye away from aircraft.
                     config/z-offset-m defaults to /sim/chase-distance-m (see
                     fgdata:defaults.xml) which is -ve, e.g. -25m. */
@@ -547,6 +855,7 @@ struct SviewViewClone : SviewView
                 config/z-offset-m seems to be +ve when moving backwards
                 relative to the aircraft, so we need to negate the value we
                 pass to SviewStepMove(). */
+                m_eye.add_step(new SviewStepAircraft(root));
                 m_eye.add_step(new SviewStepMove(
                         -view_node->getDoubleValue("config/z-offset-m"),
                         -view_node->getDoubleValue("config/y-offset-m"),
@@ -573,64 +882,127 @@ struct SviewViewClone : SviewView
             }
             m_eye.add_step(new SviewStepFinal);
         }
+        SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+        SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
     }
     
+    SviewViewClone(
+            osgViewer::View* view,
+            const SviewPos& eye,
+            const SviewPos& target
+            )
+    :
+    SviewView(view),
+    m_eye(eye),
+    m_target(target)
+    {
+        m_target.add_step(new SviewStepCopyToTarget);
+        m_eye.add_step(new SviewStepTarget);
+        SG_LOG(SG_VIEW, SG_ALERT, "    m_eye:" << m_eye);
+        SG_LOG(SG_VIEW, SG_ALERT, "    m_target:" << m_target);
+        m_debug = true;
+        SG_LOG(SG_VIEW, SG_ALERT, "    m_debug:" << m_debug);
+    }
+
     bool update(double dt) override
     {
         bool valid = m_view->getCamera()->getGraphicsContext()->valid();
-        if (valid) {
-            SG_LOG(SG_VIEW, SG_BULK, "valid=" << valid);
-            SviewPosDir posdir;
-            m_target.evaluate(posdir);
-            m_eye.evaluate(posdir);
-
-            /* FGViewMgr::update(). */
-            osg::Vec3d  position = toOsg(posdir.position2);
-            osg::Quat   orientation = toOsg(posdir.direction2);
-
-            /* CameraGroup::update() */
-            auto camera = m_view->getCamera();
-            osg::Matrix old_m = camera->getViewMatrix();
-            const osg::Matrix new_m(osg::Matrix::translate(-position)
-                                         * osg::Matrix::rotate(orientation.inverse()));
-            SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
-            SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
-            camera->setViewMatrix(new_m);
+        SG_LOG(SG_VIEW, SG_BULK, "valid=" << valid);
+        if (!valid) return false;
+        
+        SviewPosDir posdir;
+        //static time_t t0 = time(NULL);
+        bool debug = false;
+        if (m_debug) {
+            time_t t = time(NULL) / 10;
+            //if (debug) SG_LOG(SG_VIEW, SG_ALERT, "m_debug_time=" << m_debug_time << " t=" << t);
+            if (t != m_debug_time) {
+                m_debug_time = t;
+                debug = true;
+            }
         }
-        return valid;
+        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating target:");
+        m_target.evaluate(posdir, debug);
+        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating eye:");
+        m_eye.evaluate(posdir, debug);
+
+        posdir_to_view(posdir);
+        return true;
     }
     
-    ~SviewViewClone()
-    {
-        osgViewer::ViewerBase* viewer_base = m_view->getViewerBase();
-        auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
-        assert(composite_viewer);
-        for (unsigned i=0; i<composite_viewer->getNumViews(); ++i) {
-            osgViewer::View* view = composite_viewer->getView(i);
-            SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
-        }
-        SG_LOG(SG_VIEW, SG_ALERT, "removing m_view=" << m_view);
-        composite_viewer->stopThreading();
-        composite_viewer->removeView(m_view);
-        composite_viewer->startThreading();
-    }
-    
-    private:
+    //private:
     
     SviewPos            m_eye;
     SviewPos            m_target;
-    osgViewer::View*    m_view;
+    bool                m_debug = false;
+    time_t              m_debug_time = 0;
 };
 
 
+/* Cloned views. */
 static std::vector<std::shared_ptr<SviewView>>  s_views;
 
+/* Recent views, for use by SviewAddLastPair(). */
+static std::deque<std::shared_ptr<SviewViewClone>>    s_recent_views;
+
+void SviewPush()
+{
+    if (s_recent_views.size() >= 2) {
+        s_recent_views.pop_front();
+    }
+    std::shared_ptr<SviewViewClone> v(new SviewViewClone);
+    s_recent_views.push_back(v);
+    SG_LOG(SG_VIEW, SG_ALERT, "Have pushed view: " << v);
+}
 
 void SviewAddClone(osgViewer::View* view)
 {
-    std::shared_ptr<SviewView> view_clone(new SviewViewClone(view));
-    s_views.push_back(view_clone);
+    std::shared_ptr<SviewViewClone> view_clone(new SviewViewClone(view));
+    s_views.push_back(view_clone);    
+}
+
+void SviewAddLastPair(osgViewer::View* view)
+{
+    if (s_recent_views.size() < 2) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
+        return;
+    }
+    auto it = s_recent_views.end();
+    auto target = (--it)->get();
+    auto eye    = (--it)->get();
+    if (!target || !eye) {
+        SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
+        return;
+    }
     
+    std::shared_ptr<SviewViewClone> view_clone(new SviewViewClone(
+            view,
+            eye->m_eye,
+            target->m_eye
+            ));
+    s_views.push_back(view_clone);
+}
+
+void SviewAddDouble(osgViewer::View* view)
+{
+    if (s_recent_views.size() < 2) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
+        return;
+    }
+    auto it = s_recent_views.end();
+    auto remote = (--it)->get();
+    auto local    = (--it)->get();
+    if (!local || !remote) {
+        SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
+        return;
+    }
+    
+    std::shared_ptr<SviewDouble> view_double(new SviewDouble(
+            view,
+            local->m_target,
+            remote->m_target
+            ));
+    s_views.push_back(view_double);
 }
 
 void SviewUpdate(double dt)
