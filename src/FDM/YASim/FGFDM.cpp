@@ -873,7 +873,7 @@ void FGFDM::parsePropeller(const XMLAttributes* a)
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
     er->eng = thruster;
-    er->prefix = strdup(buf);
+    er->prefix = buf;
     _thrusters.add(er);
 
     _currObj = thruster;
@@ -931,7 +931,7 @@ void FGFDM::parseJet(const XMLAttributes* a)
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
     er->eng = j;
-    er->prefix = strdup(buf);
+    er->prefix = buf;
     _thrusters.add(er);
 }
 
