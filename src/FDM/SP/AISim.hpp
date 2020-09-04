@@ -2,7 +2,7 @@
 //
 // Written by Erik Hofman, started November 2016
 //
-// Copyright (C) 2016,2017  Erik Hofman <erik@ehofman.com>
+// Copyright (C) 2016-2020 by Erik Hofman <erik@ehofman.com>
 //
 //
 // This program is free software; you can redistribute it and/or
@@ -71,6 +71,12 @@ private:
     enum { P=0, Q=1, R=2 };
     enum { U=0, V=1, W=2 };
 
+
+    using aiVec3d = simd4_t<double,3>;
+    using aiVec3 = simd4_t<float,3>;
+    using aiVec4 = simd4_t<float,4>;
+    using aiMtx4 = simd4x4_t<float,4>;
+
 public:
     FGAISim(double dt);
     ~FGAISim();
@@ -107,56 +113,56 @@ public:
     }
     inline void set_flaps_norm(float f) {
         xCDYLT.ptr()[FLAPS][LIFT] = -CLdf_n*f;
-        xCDYLT.ptr()[FLAPS][DRAG] = CDdf_n*std::abs(f);
+        xCDYLT.ptr()[FLAPS][DRAG] = -CDdf_n*std::abs(f);
         xClmnT.ptr()[FLAPS][PITCH] = Cmdf_n*f;
     }
     inline void set_throttle_norm(float f) { th = f; }
     inline void set_brake_norm(float f) { br = f; }
 
     /* (initial) state, local frame */
-    inline void set_location_geod(const simd4_t<double,3>& p) {
+    inline void set_location_geod(aiVec3d& p) {
         location_geod = p;
     }
     inline void set_location_geod(double lat, double lon, double alt) {
-        location_geod = simd4_t<double,3>(lat, lon, alt);
+        location_geod = aiVec3d(lat, lon, alt);
     }
     inline void set_altitude_asl_ft(float f) { location_geod[ALTITUDE] = f; };
     inline void set_altitude_agl_ft(float f) { agl = f; }
 
-    inline void set_euler_angles_rad(const simd4_t<float,3>& e) {
+    inline void set_euler_angles_rad(const aiVec3& e) {
         euler = e;
      }
     inline void set_euler_angles_rad(float phi, float theta, float psi) {
-        euler = simd4_t<float,3>(phi, theta, psi);
+        euler = aiVec3(phi, theta, psi);
     }
     inline void set_pitch_rad(float f) { euler[PHI] = f; }
     inline void set_roll_rad(float f) { euler[THETA] = f; }
     inline void set_heading_rad(float f) { euler[PSI] = f; }
 
-    void set_velocity_fps(const simd4_t<float,3>& v) { vUVW = v; }
+    void set_velocity_fps(const aiVec3& v) { vUVW = v; }
     void set_velocity_fps(float u, float v, float w) {
-        vUVW = simd4_t<float,3>(u, v, w);
+        vUVW = aiVec3(u, v, w);
     }
     void set_velocity_fps(float u) {
-        vUVW = simd4_t<float,3>(u, 0.0f, 0.0f);
+        vUVW = aiVec3(u, 0.0f, 0.0f);
     }
 
-    inline void set_wind_ned_fps(const simd4_t<float,3>& w) { wind_ned = w; }
+    inline void set_wind_ned_fps(const aiVec3& w) { wind_ned = w; }
     inline void set_wind_ned_fps(float n, float e, float d) {
-        wind_ned = simd4_t<float,3>(n, e, d);
+        wind_ned = aiVec3(n, e, d);
     }
 
     inline void set_alpha_rad(float f) {
-        xCDYLT.ptr()[ALPHA][DRAG] = CDa*std::abs(f);
         xCDYLT.ptr()[ALPHA][LIFT] = -CLa*f;
+        xCDYLT.ptr()[ALPHA][DRAG] = -CDa*std::abs(f);
         xClmnT.ptr()[ALPHA][PITCH] = Cma*f;
         AOA[ALPHA] = f;
     }
     inline void set_beta_rad(float f) {
-        xCDYLT.ptr()[BETA][DRAG] = CDb*std::abs(f);
+        xCDYLT.ptr()[BETA][DRAG] = -CDb*std::abs(f);
         xCDYLT.ptr()[BETA][SIDE] = CYb*f;
         xClmnT.ptr()[BETA][ROLL] = Clb*f;
-        xClmnT.ptr()[BETA][YAW] = Cnb*f;
+        xClmnT.ptr()[BETA][YAW] = -Cnb*f;
         AOA[BETA] = f;
     }
     inline float get_alpha_rad() {
@@ -168,26 +174,26 @@ public:
 
 private:
     void update_velocity(float v);
-    simd4x4_t<float,4> matrix_inverse(simd4x4_t<float,4> mtx);
-    simd4x4_t<float,4> invert_inertia(simd4x4_t<float,4> mtx);
+    aiMtx4 matrix_inverse(aiMtx4 mtx);
+    aiMtx4 invert_inertia(aiMtx4 mtx);
 
     /* aircraft normalized controls */
     float th;                           /* throttle command             */
     float br = 0.0f;                    /* brake command                */
 
     /* aircraft state */
-    simd4_t<double,3> location_geod;    /* lat, lon, altitude           */
-    simd4_t<float,3> aXYZ;              /* local body accelrations      */
-    simd4_t<float,3> NEDdot;            /* North, East, Down velocity   */
-    simd4_t<float,3> vUVW;              /* fwd, side, down velocity     */
-    simd4_t<float,3> vUVWdot;           /* fwd, side, down accel.       */
-    simd4_t<float,3> vPQR;              /* roll, pitch, yaw rate        */
-    simd4_t<float,3> vPQRdot;           /* roll, pitch, yaw accel.      */
-    simd4_t<float,3> AOA;               /* alpha, beta                  */
-    simd4_t<float,3> AOAdot;            /* adot, bdot                   */
-    simd4_t<float,3> euler;             /* phi, theta, psi              */
-    simd4_t<float,3> euler_dot;         /* change in phi, theta, psi    */
-    simd4_t<float,3> wind_ned;          /* wind north, east, down       */
+    aiVec3d location_geod;    /* lat, lon, altitude           */
+    aiVec3 aXYZ;              /* local body accelrations      */
+    aiVec3 NEDdot;            /* North, East, Down velocity   */
+    aiVec3 vUVW;              /* fwd, side, down velocity     */
+    aiVec3 vUVWdot;           /* fwd, side, down accel.       */
+    aiVec3 vPQR;              /* roll, pitch, yaw rate        */
+    aiVec3 vPQRdot;           /* roll, pitch, yaw accel.      */
+    aiVec3 AOA;               /* alpha, beta                  */
+    aiVec3 AOAdot;            /* adot, bdot                   */
+    aiVec3 euler;             /* phi, theta, psi              */
+    aiVec3 euler_dot;         /* change in phi, theta, psi    */
+    aiVec3 wind_ned;          /* wind north, east, down       */
 
     /* ---------------------------------------------------------------- */
     /* This should reduce the time spent in update() since controls     */
@@ -195,32 +201,32 @@ private:
     /* run 20 to 60 times (or more) per second                          */
 
     /* cache */
-    simd4_t<float,3> vUVWaero;          /* airmass relative to the body */
-    simd4_t<float,3> FT[AISIM_MAX];     /* thrust force                 */
-    simd4_t<float,3> FTM[AISIM_MAX];    /* thrust due to mach force     */
-    simd4_t<float,3> MT[AISIM_MAX];     /* thrust moment                */
-    simd4_t<float,3> b_2U, cbar_2U;
-    simd4_t<float,3> inv_m;
+    aiVec3 vUVWaero;          /* airmass relative to the body */
+    aiVec3 FT[AISIM_MAX];     /* thrust force                 */
+    aiVec3 FTM[AISIM_MAX];    /* thrust due to mach force     */
+    aiVec3 MT[AISIM_MAX];     /* thrust moment                */
+    aiVec3 b_2U, cbar_2U;
+    aiVec3 inv_m;
     float velocity = 0.0f;
     float mach = 0.0f;
     float agl = 0.0f;
     bool WoW = true;
 
     /* dynamic coefficients (already multiplied with their value) */
-    simd4_t<float,3> xCq, xCadot, xCp, xCr;
-    simd4x4_t<float,4> xCDYLT;
-    simd4x4_t<float,4> xClmnT;
-    simd4_t<float,4> Coef2Force;
-    simd4_t<float,4> Coef2Moment;
+    aiVec3 xCq, xCadot, xCp, xCr;
+    aiMtx4 xCDYLT;
+    aiMtx4 xClmnT;
+    aiVec4 Coef2Force;
+    aiVec4 Coef2Moment;
 
     /* ---------------------------------------------------------------- */
     /* aircraft static data */
     int no_engines = 0;
     int no_gears = 0;
-    simd4x4_t<float,4> mI, mIinv;       /* inertia matrix               */
-    simd4_t<float,3> gear_pos[AISIM_MAX]; /* pos in structural frame    */
-    simd4_t<float,3> cg;        /* center of gravity                    */
-    simd4_t<float,4> I;         /* inertia                              */
+    aiMtx4 mI, mIinv;           /* inertia matrix                       */
+    aiVec3 gear_pos[AISIM_MAX]; /* pos in structural frame              */
+    aiVec3 cg;                  /* center of gravity                    */
+    aiVec4 I;                   /* inertia                              */
     float S = 0.0f;		/* wing area                            */
     float cbar = 0.0f;          /* mean average chord                   */
     float b = 0.0f;             /* wing span                            */
@@ -239,7 +245,7 @@ private:
 
     /* environment data */
     static float density[101], vsound[101];
-    simd4_t<float,3> gravity_ned;
+    aiVec3 gravity_ned;
     float rho = 0.0f;
     float qbar = 0.0f;
     float sigma = 0.0f;

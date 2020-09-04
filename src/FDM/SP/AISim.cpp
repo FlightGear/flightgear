@@ -2,7 +2,7 @@
 //
 // Written by Erik Hofman, started November 2016
 //
-// Copyright (C) 2016,2017  Erik Hofman <erik@ehofman.com>
+// Copyright (C) 2016-2020 by Erik Hofman <erik@ehofman.com>
 //
 //
 // This program is free software; you can redistribute it and/or
@@ -121,7 +121,7 @@ FGAISim::FGAISim(double dt) :
     // the aircraft on it's wheels.
     for (int i=0; i<no_gears; ++i) {
         // convert from structural frame to body frame
-        gear_pos[i] = simd4_t<float,3>(-cg[X] - gear_pos[i][X],
+        gear_pos[i] = aiVec3(-cg[X] - gear_pos[i][X],
                                        -cg[Y] + gear_pos[i][Y],
                                         cg[Z] - gear_pos[i][Z])*INCHES_TO_FEET;
         if (gear_pos[i][Z] < agl) agl = gear_pos[i][Z];
@@ -134,11 +134,11 @@ FGAISim::FGAISim(double dt) :
     Cg_damp[no_gears] = 2000.0f;
     no_gears++;
 
-    simd4x4_t<float,4> mcg;
+    aiMtx4 mcg;
     simd4x4::unit(mcg);
     simd4x4::translate(mcg, cg);
 
-    mI = simd4x4_t<float,4>( I[XX],  0.0f, -I[XZ], 0.0f,
+    mI = aiMtx4( I[XX],  0.0f, -I[XZ], 0.0f,
                               0.0f, I[YY],   0.0f, 0.0f,
                             -I[XZ],  0.0f,  I[ZZ], 0.0f,
                               0.0f,  0.0f,   0.0f, 0.0f);
@@ -194,26 +194,28 @@ FGAISim::update(double ddt)
 
     /* Earth-to-Body-Axis Transformation Matrix */
     /* matrices to compensate for pitch, roll and heading */
-    simd4_t<float,3> vector = euler;
+    aiVec3 vector = euler;
     float angle = simd4::normalize(vector);
-    simd4x4_t<float,4> mNed2Body = simd4x4::rotation_matrix(angle, vector);
-    simd4x4_t<float,4> mBody2Ned = simd4x4::transpose(mNed2Body);
-    simd4_t<float,3> gravity_body = mNed2Body*gravity_ned;
+    aiMtx4 mNed2Body = simd4x4::rotation_matrix(angle, vector);
+    aiMtx4 mBody2Ned = simd4x4::transpose(mNed2Body);
+    aiVec3 gravity_body = mNed2Body*gravity_ned;
 
     /* Air-Relative velocity vector */
     vUVWaero = vUVW + mNed2Body*wind_ned;
     update_velocity( simd4::magnitude( simd4_t<float,2>(vUVWaero) ) );
 
-    simd4_t<float,3> WindAxis = AOA;
-    float alpha = (vUVWaero[W] == 0) ? 0 : std::atan2(vUVWaero[W], vUVWaero[U]);
+    aiVec3 WindAxis = AOA;
+    float alpha = std::atan2(vUVWaero[W], vUVWaero[U]);
     set_alpha_rad( _MINMAX(alpha, -0.0873f, 0.349f) );	// -5 to 20 degrees
 
     float beta = (velocity == 0) ? 0 : std::asin(vUVWaero[V]/velocity);
     set_beta_rad( _MINMAX(beta, -0.2618f, 0.2618f) );	// -15 to 15 degrees
     AOAdot = (AOA - WindAxis)*inv_dt;
 
-printf("velocity: %f, vUVWaero: %3.2f, %3.2f, %3.2f, mach: %3.2f\n", velocity, vUVWaero[0], vUVWaero[1], vUVWaero[2], mach);
-printf("agl: %5.4f, alpha: %5.4f, beta: %5.4f, adot: %5.4f, bdot: %5.4f\n", agl, AOA[ALPHA], AOA[BETA], AOAdot[ALPHA], AOAdot[BETA]);
+#if 0
+ printf("velocity: %f, vUVWaero: %3.2f, %3.2f, %3.2f, mach: %3.2f\n", velocity, vUVWaero[0], vUVWaero[1], vUVWaero[2], mach);
+ printf("agl: %5.4f, alpha: %5.4f, beta: %5.4f, adot: %5.4f, bdot: %5.4f\n", agl, AOA[ALPHA], AOA[BETA], AOAdot[ALPHA], AOAdot[BETA]);
+#endif
 
     /* Force and Moment Coefficients */
     /* Sum all Drag, Side, Lift, Roll, Pitch, Yaw and Thrust coefficients */
@@ -230,80 +232,86 @@ printf("agl: %5.4f, alpha: %5.4f, beta: %5.4f, adot: %5.4f, bdot: %5.4f\n", agl,
      * Clmn[ROLL]  = (Clp*p       + Clr*r)*b_2U;
      * Clmn[YAW]   = (Cnp*p       + Cnr*r)*b_2U;
      */
-    simd4_t<float,4> Ccbar2U = (xCq*q + xCadot*adot)*cbar_2U;
-    simd4_t<float,4> Cb2U    = (xCp*p + xCr*r      )*b_2U;
+    aiVec4 Ccbar2U = (xCq*q + xCadot*adot)*cbar_2U;
+    aiVec4 Cb2U    = (xCp*p + xCr*r      )*b_2U;
 
-    simd4_t<float,4> CDYL(0.0f, Cb2U[SIDE], Ccbar2U[LIFT]);
-    simd4_t<float,4> Clmn(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW]);
-    for (int i=0; i<4; ++i) {
-        CDYL += simd4_t<float,4>(xCDYLT.m4x4()[i]);
-        Clmn += simd4_t<float,4>(xClmnT.m4x4()[i]);
+    aiVec4 CDYL(0.0f, Cb2U[SIDE], Ccbar2U[LIFT]);
+    aiVec4 Clmn(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW]);
+    int i = 3;
+    do {
+        CDYL += static_cast<aiVec4>(xCDYLT.m4x4()[i]);
+        Clmn += static_cast<aiVec4>(xClmnT.m4x4()[i]);
     }
+    while(i--);
+
     float CL = CDYL[LIFT];
-    CDYL += simd4_t<float,3>(CDi*CL*CL, 0.0f, 0.0f);
+    CDYL += aiVec3(CDi*CL*CL, 0.0f, 0.0f);
 printf("CDYL:    %7.2f, %7.2f, %7.2f\n", CDYL[DRAG], CDYL[SIDE], CDYL[LIFT]);
 #if 0
-printf(" CLa: %6.3f, CLadot: %6.3f, CLq: %6.3f\n", xCDYLT.ptr()[ALPHA][LIFT],CLadot*adot,CLq*q);
-printf(" CDa: %6.3f, CDb:    %6.3f, CDi: %6.3f\n", xCDYLT.ptr()[ALPHA][DRAG],xCDYLT.ptr()[BETA][DRAG],CDi*CL*CL);
-printf(" CYb: %6.3f, CYp:    %6.3f, CYr: %6.3f\n", xCDYLT.ptr()[BETA][SIDE],CYp*p,CYr*r);
-printf(" Cma: %6.3f, Cmadot: %6.3f, Cmq: %6.3f\n", xClmnT.ptr()[ALPHA][PITCH],Cmadot*adot,Cmq*q);
-printf(" Clb: %6.3f, Clp:    %6.3f, Clr: %6.3f\n", xClmnT.ptr()[BETA][ROLL],Clp*p,Clr*r);
-printf(" Cnb: %6.3f, Cnp:    %6.3f, Cnr: %6.3f\n", xClmnT.ptr()[BETA][YAW],Cnp*p,Cnr*r);
+ printf(" CLa: %6.3f, CLadot: %6.3f, CLq: %6.3f\n", xCDYLT.ptr()[ALPHA][LIFT],CLadot*adot,CLq*q);
+ printf(" CDa: %6.3f, CDb:    %6.3f, CDi: %6.3f\n", xCDYLT.ptr()[ALPHA][DRAG],xCDYLT.ptr()[BETA][DRAG],CDi*CL*CL);
+ printf(" CYb: %6.3f, CYp:    %6.3f, CYr: %6.3f\n", xCDYLT.ptr()[BETA][SIDE],CYp*p,CYr*r);
+ printf(" Cma: %6.3f, Cmadot: %6.3f, Cmq: %6.3f\n", xClmnT.ptr()[ALPHA][PITCH],Cmadot*adot,Cmq*q);
+ printf(" Clb: %6.3f, Clp:    %6.3f, Clr: %6.3f\n", xClmnT.ptr()[BETA][ROLL],Clp*p,Clr*r);
+ printf(" Cnb: %6.3f, Cnp:    %6.3f, Cnr: %6.3f\n", xClmnT.ptr()[BETA][YAW],Cnp*p,Cnr*r);
 
-printf(" Cmde: %6.3f\n", xClmnT.ptr()[ELEVATOR][PITCH]);
-printf(" CYdr: %6.3f, Cldr:  %6.3f, Cndr: %6.3f\n", xCDYLT.ptr()[RUDDER][SIDE], xClmnT.ptr()[RUDDER][ROLL], xClmnT.ptr()[RUDDER][YAW]);
-printf(" Clda: %6.3f, CYda:  %6.3f\n", xClmnT.ptr()[AILERON][ROLL], xClmnT.ptr()[AILERON][YAW]);
-printf(" Cldf: %6.3f, CDdf:  %6.3f, Cmdf: %6.3f\n", xCDYLT.ptr()[FLAPS][LIFT], xCDYLT.ptr()[FLAPS][DRAG], xClmnT.ptr()[FLAPS][PITCH]);
+ printf(" Cmde: %6.3f\n", xClmnT.ptr()[ELEVATOR][PITCH]);
+ printf(" CYdr: %6.3f, Cldr:  %6.3f, Cndr: %6.3f\n", xCDYLT.ptr()[RUDDER][SIDE], xClmnT.ptr()[RUDDER][ROLL], xClmnT.ptr()[RUDDER][YAW]);
+ printf(" Clda: %6.3f, CYda:  %6.3f\n", xClmnT.ptr()[AILERON][ROLL], xClmnT.ptr()[AILERON][YAW]);
+ printf(" Cldf: %6.3f, CDdf:  %6.3f, Cmdf: %6.3f\n", xCDYLT.ptr()[FLAPS][LIFT], xCDYLT.ptr()[FLAPS][DRAG], xClmnT.ptr()[FLAPS][PITCH]);
 #endif
 
     /* State Accelerations (convert coefficients to forces and moments) */
-    simd4_t<float,3> FDYL = CDYL*Coef2Force;
-    simd4_t<float,3> Mlmn = Clmn*Coef2Moment;
+    aiVec3 FDYL = CDYL*Coef2Force;
+    aiVec3 Mlmn = Clmn*Coef2Moment;
 
     /* convert from wind axes to body axes */
     vector = AOA;
     angle = simd4::normalize(vector);
-    simd4x4_t<float,4> mWindBody = simd4x4::rotation_matrix(angle, vector);
-    simd4_t<float,3> FXYZ = mWindBody*FDYL;
+    aiMtx4 mWindBody = simd4x4::rotation_matrix(angle, vector);
+    aiVec3 FXYZ = mWindBody*FDYL;
 
     /* Thrust */
+
     for (int i=0; i<no_engines; ++i) {
         FXYZ += FT[i]*th + FTM[i]*mach;
-//      Mlmn += MT*th;
+//      Mlmn += MT[i]*th;
 
-printf("FDYL:    %7.2f, %7.2f, %7.2f\n", FDYL[DRAG], FDYL[SIDE], FDYL[LIFT]);
-printf("FT:   %10.2f, %7.2f, MT: %7.2f\n", FT[i][X]*th, FTM[i][X]*mach, MT[i][X]*th);
+#if 0
+ printf("FDYL:    %7.2f, %7.2f, %7.2f\n", FDYL[DRAG], FDYL[SIDE], FDYL[LIFT]);
+ printf("FT:   %10.2f, %7.2f, MT: %7.2f\n", FT[i][X]*th, FTM[i][X]*mach, MT[i][X]*th);
+#endif
     }
 
     /* gear forces */
     WoW = false;
     if (agl < 100.0f) {
         int WoW_main = 0;
-        simd4_t<float,3> cg_agl_neu(0.0f, 0.0f, agl);
+        aiVec3 cg_agl_neu(0.0f, 0.0f, agl);
         for (int i=0; i<no_gears; ++i) {
-            simd4_t<float,3> gear_ned = mBody2Ned*gear_pos[i];
-            simd4_t<float,3> lg_ground_neu = gear_ned + cg_agl_neu;
+            aiVec3 gear_ned = mBody2Ned*gear_pos[i];
+            aiVec3 lg_ground_neu = gear_ned + cg_agl_neu;
             if (lg_ground_neu[Z] < 0.0f) {         // weight on wheel
-                simd4_t<float,3> lg_vrot = simd4::cross(vPQR, gear_pos[i]);
-                simd4_t<float,3> lg_cg_vned = mBody2Ned*lg_vrot;
-                simd4_t<float,3> lg_vned = NEDdot + lg_cg_vned;
+                aiVec3 lg_vrot = simd4::cross(vPQR, gear_pos[i]);
+                aiVec3 lg_cg_vned = mBody2Ned*lg_vrot;
+                aiVec3 lg_vned = NEDdot + lg_cg_vned;
                 float Fn;
 
                 Fn = Cg_spring[i]*lg_ground_neu[Z] - Cg_damp[i]*lg_vned[Z];
                 if (Fn > 0.0f) Fn = 0.0f;
 
-                simd4_t<float,3> Fn_lg(0.0f, 0.0f, Fn);
-                simd4_t<float,3> mu_body(-0.02f-0.7f*br, 0.8f, 0.0f);
+                aiVec3 Fn_lg(0.0f, 0.0f, Fn);
+                aiVec3 mu_body(-0.02f-0.7f*br, 0.8f, 0.0f);
 
-                simd4_t<float,3> FLGear = mNed2Body*Fn_lg + vUVWaero*mu_body;
-//              simd4_t<float,3> MLGear = simd4::cross(gear_pos[i], FLGear);
-#if 0
-printf("FLGear[%i]: %10.2f %10.2f %10.2f\n",i,FLGear[0], FLGear[1], FLGear[2]);
-printf("MLGear[%i]: %10.2f %10.2f %10.2f\n",i,MLGear[0], MLGear[1], MLGear[2]);
-#endif
-
+                aiVec3 FLGear = mNed2Body*Fn_lg + vUVWaero*mu_body;
                 FXYZ += FLGear;
+
+                aiVec3 MLGear = simd4::cross(gear_pos[i], FLGear);
 //              Mlmn += MLGear;
+#if 0
+ printf("FLGear[%i]: %10.2f %10.2f %10.2f\n",i,FLGear[0], FLGear[1], FLGear[2]);
+ printf("MLGear[%i]: %10.2f %10.2f %10.2f\n",i,MLGear[0], MLGear[1], MLGear[2]);
+#endif
                 if (i<3) WoW_main++;
             }
             WoW = (WoW_main == 3);
@@ -312,8 +320,10 @@ printf("MLGear[%i]: %10.2f %10.2f %10.2f\n",i,MLGear[0], MLGear[1], MLGear[2]);
 
     /* local body accelrations */
     aXYZ = FXYZ*inv_m + gravity_body;
-printf("aXYZ:    %7.2f, %7.2f, %7.2f\n", aXYZ[X]/m, aXYZ[Y]/m, aXYZ[Z]/m);
-printf("Mlmn:    %7.2f, %7.2f, %7.2f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
+#if 0
+ printf("aXYZ:    %7.2f, %7.2f, %7.2f\n", aXYZ[X]/m, aXYZ[Y]/m, aXYZ[Z]/m);
+ printf("Mlmn:    %7.2f, %7.2f, %7.2f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
+#endif
 
     /* Dynamic Equations */
 
@@ -324,17 +334,20 @@ printf("Mlmn:    %7.2f, %7.2f, %7.2f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
     /* body-axis rotational accelerations: rolling, pitching, yawing */
     vPQRdot = mIinv*(Mlmn - vPQR*(mI*vPQR));
     vPQR += vPQRdot*dt;
-
-printf("PQRdot:  %7.2f, %7.2f, %7.2f\n", vPQRdot[P], vPQRdot[Q], vPQRdot[R]);
-printf("PQR:     %7.2f, %7.2f, %7.2f\n", vPQR[P], vPQR[Q], vPQR[R]);
-printf("UVWdot:  %7.2f, %7.2f, %7.2f\n", vUVWdot[U], vUVWdot[V], vUVWdot[W]);
-printf("UVW:     %7.2f, %7.2f, %7.2f\n", vUVW[U], vUVW[V], vUVW[W]);
+#if 0
+ printf("PQRdot:  %7.2f, %7.2f, %7.2f\n", vPQRdot[P], vPQRdot[Q], vPQRdot[R]);
+ printf("PQR:     %7.2f, %7.2f, %7.2f\n", vPQR[P], vPQR[Q], vPQR[R]);
+ printf("UVWdot:  %7.2f, %7.2f, %7.2f\n", vUVWdot[U], vUVWdot[V], vUVWdot[W]);
+ printf("UVW:     %7.2f, %7.2f, %7.2f\n", vUVW[U], vUVW[V], vUVW[W]);
+#endif
 
     /* position of center of mass wrt earth: north, east, down */
     NEDdot = mBody2Ned*vUVW;
-    simd4_t<float,3> NEDdist = NEDdot*dt;
-printf("NEDdot:  %7.2f, %7.2f, %7.2f\n", NEDdot[0], NEDdot[1], NEDdot[2]);
-printf("NEDdist: %7.2f, %7.2f, %7.2f\n", NEDdist[0], NEDdist[1], NEDdist[2]);
+    aiVec3 NEDdist = NEDdot*dt;
+#if 0
+ printf("NEDdot:  %7.2f, %7.2f, %7.2f\n", NEDdot[0], NEDdot[1], NEDdot[2]);
+ printf("NEDdist: %7.2f, %7.2f, %7.2f\n", NEDdist[0], NEDdist[1], NEDdist[2]);
+#endif
 
 #ifdef ENABLE_SP_FDM
     double dist = simd4::magnitude( simd4_t<float,2>(NEDdist) );
@@ -354,7 +367,9 @@ printf("NEDdist: %7.2f, %7.2f, %7.2f\n", NEDdist[0], NEDdist[1], NEDdist[2]);
     location_geod[Z] -= NEDdist[Z];
     set_altitude_agl_ft(location_geod[DOWN]);
 #endif
-printf("GEOD:    %7.2f, %7.2f, %7.2f\n", location_geod[0], location_geod[1], location_geod[2]);
+#if 0
+ printf("GEOD:    %7.2f, %7.2f, %7.2f\n", location_geod[0], location_geod[1], location_geod[2]);
+#endif
 
     /* angle of body wrt earth: phi (pitch), theta (roll), psi (heading) */
     float sin_p = std::sin(euler[PHI]);
@@ -368,7 +383,9 @@ printf("GEOD:    %7.2f, %7.2f, %7.2f\n", location_geod[0], location_geod[1], loc
 //  euler_dot[PHI] = p + (q*sin_p + r*cos_p)*sin_t/cos_t;
     euler_dot[PHI] = p + euler_dot[PSI]*sin_t;
     euler += euler_dot*dt;
-printf("euler:   %7.2f, %7.2f, %7.2f\n", euler[PHI], euler[THETA], euler[PSI]);
+#if 0
+ printf("euler:   %7.2f, %7.2f, %7.2f\n", euler[PHI], euler[THETA], euler[PSI]);
+#endif
 
 #ifdef ENABLE_SP_FDM
     copy_from_AISim();
@@ -507,11 +524,11 @@ FGAISim::update_velocity(float v)
     float Sbqbar = Sqbar*b;
     float Sqbarcbar = Sqbar*cbar;
 
-                                 /* Drag, Side,  Lift */
-    Coef2Force = simd4_t<float,3>(Sqbar);
+                     /* Drag, Side,  Lift, Thrust */
+    Coef2Force = aiVec3(Sqbar);
 
-                                  /* Roll, Pitch,     Yaw */
-    Coef2Moment = simd4_t<float,3>(Sbqbar, Sqbarcbar, Sbqbar, Sbqbar);
+                      /* Roll,   Pitch,     Yaw,    Thrust */
+    Coef2Moment = aiVec3(Sbqbar, Sqbarcbar, Sbqbar, Sbqbar);
 
     /* linear interpolation for speed of sound */
     float vs = ifract*vsound[idx] + fract*vsound[idx+1];
@@ -524,28 +541,28 @@ FGAISim::update_velocity(float v)
 }
 
 simd4x4_t<float,4>
-FGAISim::matrix_inverse(simd4x4_t<float,4> mtx)
+FGAISim::matrix_inverse(aiMtx4 mtx)
 {
-    simd4x4_t<float,4> dst;
-    simd4_t<float,4> v1, v2;
+    aiMtx4 dst;
+    aiVec4 v1, v2;
 
     dst = simd4x4::transpose(mtx);
 
-    v1 = simd4_t<float,4>(mtx.m4x4()[3]);
-    v2 = simd4_t<float,4>(mtx.m4x4()[0]);
+    v1 = static_cast<aiVec4>(mtx.m4x4()[3]);
+    v2 = static_cast<aiVec4>(mtx.m4x4()[0]);
     dst.ptr()[3][0] = -simd4::dot(v1, v2);
 
-    v2 = simd4_t<float,4>(mtx.m4x4()[1]);
+    v2 = static_cast<aiVec4>(mtx.m4x4()[1]);
     dst.ptr()[3][1] = -simd4::dot(v1, v2);
 
-    v2 = simd4_t<float,4>(mtx.m4x4()[2]);
+    v2 = static_cast<aiVec4>(mtx.m4x4()[2]);
     dst.ptr()[3][2] = -simd4::dot(v1, v2);
 
     return dst;
 }
 
 simd4x4_t<float,4>
-FGAISim::invert_inertia(simd4x4_t<float,4> mtx)
+FGAISim::invert_inertia(aiMtx4 mtx)
 {
     float Ixx, Iyy, Izz, Ixz;
     float k1, k3, k4, k6;
@@ -565,10 +582,10 @@ FGAISim::invert_inertia(simd4x4_t<float,4> mtx)
     k4 = (Izz*Ixx - Ixz*Ixz)*denom;
     k6 = Ixx*Iyy*denom;
 
-    return simd4x4_t<float,4>(   k1, 0.0f,   k3, 0.0f,
-                               0.0f,   k4, 0.0f, 0.0f,
-                                 k3, 0.0f,   k6, 0.0f,
-                               0.0f, 0.0f, 0.0f, 0.0f );
+    return aiMtx4(   k1, 0.0f,   k3, 0.0f,
+                 0.0f,   k4, 0.0f, 0.0f,
+                   k3, 0.0f,   k6, 0.0f,
+                 0.0f, 0.0f, 0.0f, 0.0f );
 }
 
 
@@ -623,7 +640,7 @@ FGAISim::load(std::string path)
 
     /* thuster / propulsion */
                      // (FWD,RIGHT,DOWN)
-    simd4_t<float,3> dir(1.0f,0.0f,0.0f);
+    aiVec3 dir(1.0f,0.0f,0.0f);
     no_engines = 1;
 
     CTmax  =  0.057f/144;
@@ -642,7 +659,7 @@ FGAISim::load(std::string path)
 
     /* aerodynamic coefficients */
     CLmin  =  0.307f;
-    CLa    =  5.13f;
+    CLa    =  4.72f;
     CLadot =  1.70f;
     CLq    =  3.90f;
     CLdf_n =  0.705f*df_max;
@@ -658,23 +675,23 @@ FGAISim::load(std::string path)
     CYr    =  0.262f;
     CYdr_n =  0.091f*dr_max;
 
-    Clb    = -0.057f;
-    Clp    = -0.613f;
-    Clr    =  0.079f;
-    Clda_n =  0.170f*da_max;
-    Cldr_n =  0.01f*dr_max;
+    Clb    = -0.322;          // -0.057f;
+    Clp    = -0.4840;         // -0.613f;
+    Clr    =  2.0f;           // 0.079f;
+    Clda_n =  0.229f*da_max;  // 0.170f*da_max;
+    Cldr_n =  0.0147f*dr_max; // 0.01f*dr_max;
 
-    Cma    = -1.0f;
-    Cmadot = -4.42f;
-    Cmq    = -10.5f;
-    Cmde_n = -1.05f*de_max;
-    Cmdf_n = -0.059f*df_max;
+    Cma    = -1.8f;           // -1.0f;
+    Cmadot = -7.27f;          // -4.42f;
+    Cmq    = -12.4f;          // -10.5f;
+    Cmde_n = -1.122f*de_max;  // -1.05f*de_max;
+    Cmdf_n = -0.2177f*df_max; // -0.059f*df_max;
 
-    Cnb    =  0.0630f;
-    Cnp    = -0.0028f;
-    Cnr    = -0.0681f;
-    Cnda_n = -0.0100f*da_max;
-    Cndr_n = -0.0398f*dr_max;
+    Cnb    = -0.0587f;        // -0.0630f;
+    Cnp    = -0.0278f;        // -0.0028f;
+    Cnr    = -0.0937f;        // -0.0681f;
+    Cnda_n = -0.0053f*da_max; // -0.0100f*da_max;
+    Cndr_n = -0.043f*dr_max;  // -0.0398f*dr_max;
 
     return true;
 }
