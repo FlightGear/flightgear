@@ -321,6 +321,25 @@ double computeMachFromIAS(int iasKnots, int altitudeFt)
     return M;
 }
 
+double AircraftPerformance::machForCAS(int altitudeFt, double cas)
+{
+    return computeMachFromIAS(static_cast<int>(cas), altitudeFt);
+}
+
+
+double AircraftPerformance::groundSpeedForCAS(int altitudeFt, double cas)
+{
+    return groundSpeedForMach(altitudeFt, computeMachFromIAS(cas, altitudeFt));
+}
+
+double AircraftPerformance::groundSpeedForMach(int altitudeFt, double mach)
+{
+    // CS = sound speed= 38.967854*sqrt(T+273.15)  where T is the OAT in celsius.
+    const double CS = 38.967854 * sqrt(oatKForAltitudeFt(altitudeFt));
+    const double TAS = mach * CS;
+    return TAS;
+}
+
 int AircraftPerformance::Bracket::gsForAltitude(int altitude) const
 {
     double M = 0.0;
@@ -330,10 +349,7 @@ int AircraftPerformance::Bracket::gsForAltitude(int altitude) const
         M = computeMachFromIAS(speedIASOrMach, altitude);
     }
 
-    // CS = sound speed= 38.967854*sqrt(T+273.15)  where T is the OAT in celsius.
-    const double CS = 38.967854 * sqrt(oatKForAltitudeFt(altitude));
-    const double TAS = M * CS;
-    return TAS;
+    return groundSpeedForMach(altitude, M);
 }
 
 double AircraftPerformance::Bracket::climbTime(int alt1, int alt2) const

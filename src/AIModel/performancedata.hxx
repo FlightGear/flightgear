@@ -1,9 +1,6 @@
 #ifndef PERFORMANCEDATA_HXX
 #define PERFORMANCEDATA_HXX
 
-#include <string>
-#include <map>
-
 class FGAIAircraft;
 class SGPropertyNode;
 
@@ -20,8 +17,8 @@ public:
     PerformanceData(PerformanceData* clone);
   
     void initFromProps(SGPropertyNode* props);
-  
-    ~PerformanceData();
+
+    ~PerformanceData() = default;
 
     double actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool needMaxBrake);
     double actualBankAngle(FGAIAircraft* ac, double tgt_roll, double dt);
@@ -32,24 +29,31 @@ public:
 
     bool gearExtensible(const FGAIAircraft* ac);
 
-    inline double climbRate        () { return _climbRate; };
-    inline double descentRate      () { return _descentRate; };
-    inline double vRotate          () { return _vRotate; };
-    inline double maximumBankAngle () { return _maxbank; };
-    inline double acceleration     () { return _acceleration; };
-    inline double deceleration     () { return _deceleration; };
-    inline double vTaxi            () { return _vTaxi; };
-    inline double vTakeoff         () { return _vTakeOff; };
-    inline double vClimb           () { return _vClimb; };
-    inline double vDescent         () { return _vDescent; };
-    inline double vApproach        () { return _vApproach; };
-    inline double vTouchdown       () { return _vTouchdown; };
-    inline double vCruise          () { return _vCruise; };
-    inline double wingSpan         () { return _wingSpan; };
-    inline double wingChord        () { return _wingChord; };
-    inline double weight           () { return _weight; };
-    
+    double climbRate() const { return _climbRate; };
+    double descentRate() const { return _descentRate; };
+    double vRotate() const { return _vRotate; };
+    double maximumBankAngle() const { return _maxbank; };
+    double acceleration() const { return _acceleration; };
+    double deceleration() const { return _deceleration; };
+    double vTaxi() const { return _vTaxi; };
+    double vTakeoff() const { return _vTakeOff; };
+    double vClimb() const { return _vClimb; };
+    double vDescent() const { return _vDescent; };
+    double vApproach() const { return _vApproach; };
+    double vTouchdown() const { return _vTouchdown; };
+    double vCruise() const { return _vCruise; };
+    double wingSpan() const { return _wingSpan; };
+    double wingChord() const { return _wingChord; };
+    double weight() const { return _weight; };
+
     double decelerationOnGround() const;
+
+    /**
+     @brief Last-resort fallback performance data. This is to avoid special-casing
+     logic in the AIAircraft code, by ensuring we always have a valid _performance pointer.
+     */
+    static PerformanceData* getDefaultData();
+
 private:
     double _acceleration;
     double _deceleration;

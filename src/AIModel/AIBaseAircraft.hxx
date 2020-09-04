@@ -25,7 +25,7 @@
 class FGAIBaseAircraft : public FGAIBase {
 
 public:
-    FGAIBaseAircraft();
+    FGAIBaseAircraft(object_type otype = FGAIBase::otAircraft);
 
     void bind() override;
 

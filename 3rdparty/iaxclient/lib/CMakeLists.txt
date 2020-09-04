@@ -55,7 +55,7 @@ if (SYSTEM_GSM)
     find_package(Gsm)
 endif(SYSTEM_GSM)
 
-if (GSM_FOUND)
+if (SYSTEM_GSM AND GSM_FOUND)
     message(STATUS "Using GSM includes at: ${GSM_INCLUDE_DIR}")
     message(STATUS "Using GSM libraries: ${GSM_LIBRARIES}")
     target_include_directories(iaxclient_lib PRIVATE ${GSM_INCLUDE_DIR})

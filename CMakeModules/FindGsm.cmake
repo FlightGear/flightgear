@@ -19,19 +19,15 @@ if (GSM_LIBRARIES AND GSM_INCLUDE_DIRS)
   # in cache already
   set(GSM_FOUND TRUE)
 else (GSM_LIBRARIES AND GSM_INCLUDE_DIRS)
-  # use pkg-config to get the directories and then use these values
-  # in the FIND_PATH() and FIND_LIBRARY() calls
-  #include(UsePkgConfig)
 
-  #FIXME pkgconfig does not work: return a carriage return that makes compilation failed
-  #pkgconfig(speex _GsmIncDir _GsmLinkDir _GsmLinkFlags _GsmCflags)
-
-  #set(GSM_DEFINITIONS ${_GsmCflags})
   set(GSM_DEFINITIONS "")
 
+  # gsm.h might be at $prefix/include/gsm/gsm.h, but our internal
+  # version is at inc/gsm.h, so we need to include that as a PATH_SUFFIX
+  # otherwise we get into a mess.
+  # see: https://sourceforge.net/p/flightgear/codetickets/2368/
   find_path(GSM_INCLUDE_DIR
     NAMES
-      gsm/gsm.h
       gsm.h
     PATHS
       ${_GsmIncDir}
@@ -39,6 +35,8 @@ else (GSM_LIBRARIES AND GSM_INCLUDE_DIRS)
       /usr/local/include
       /opt/local/include
       /sw/include
+    PATH_SUFFIXES
+      gsm
   )
 
   find_library(GSM_LIBRARY

@@ -53,11 +53,10 @@ using std::endl;
 
 //#include <Airports/trafficcontroller.hxx>
 
-FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
-     /* HOT must be disabled for AI Aircraft,
+FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI Aircraft,
       * otherwise traffic detection isn't working as expected.*/
-    FGAIBaseAircraft(),
-    _performance(0)
+                                                FGAIBaseAircraft(),
+                                                _performance(nullptr)
 {
     trafficRef = ref;
     if (trafficRef) {
@@ -98,7 +97,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     if (perfDB) {
         _performance = perfDB->getDefaultPerformance();
     } else {
-        SG_LOG(SG_AI, SG_ALERT, "no performance DB found");
+        SG_LOG(SG_AI, SG_DEV_ALERT, "no performance DB loaded");
+        _performance = PerformanceData::getDefaultData();
     }
 
     takeOffStatus = 0;
@@ -158,6 +158,11 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
     PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
     if (perfDB) {
         _performance = perfDB->getDataFor(acType, acclass);
+    }
+
+    if (!_performance) {
+        SG_LOG(SG_AI, SG_DEV_ALERT, "no AI performance data found for: " << acType << "/" << acclass);
+        _performance = PerformanceData::getDefaultData();
     }
 }
 

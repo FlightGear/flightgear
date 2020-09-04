@@ -25,6 +25,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/math/SGGeod.hxx>
 
+#include <Aircraft/AircraftPerformance.hxx> // for formulae
 #include <Main/globals.hxx>
 
 #include "TestDataLogger.hxx"
@@ -43,16 +44,10 @@ TestPilot::TestPilot(SGPropertyNode_ptr props) :
     _lonProp = _propRoot->getNode("position/longitude-deg", true);
     _altitudeProp = _propRoot->getNode("position/altitude-ft", true);
     _headingProp = _propRoot->getNode("orientation/heading-deg", true);
-    _speedKnotsProp = _propRoot->getNode("velocities/speed-knots", true);
+    _speedKnotsProp = _propRoot->getNode("velocities/airspeed-kt", true);
+    _speedMachProp = _propRoot->getNode("velocities/mach", true);
+    _groundspeedKnotsProp = _propRoot->getNode("velocities/groundspeed-kt", true);
     _verticalFPMProp = _propRoot->getNode("velocities/vertical-fpm", true);
-
-    
-    SGPropertyNode_ptr _latProp;
-    SGPropertyNode_ptr _lonProp;
-    SGPropertyNode_ptr _altitudeProp;
-    SGPropertyNode_ptr _headingProp;
-    SGPropertyNode_ptr _speedKnotsProp;
-    SGPropertyNode_ptr _verticalFPMProp;
     
     globals->add_subsystem("flight", this, SGSubsystemMgr::FDM);
 }
@@ -232,7 +227,12 @@ void TestPilot::updateValues(double dt)
     }
     
     SGGeod currentPos = globals->get_aircraft_position();
-    double d = _speedKnots * SG_KT_TO_MPS * dt;
+
+    const double M = flightgear::AircraftPerformance::machForCAS(currentPos.getElevationFt(), _speedKnots);
+    _speedMachProp->setDoubleValue(M);
+    const double gs = flightgear::AircraftPerformance::groundSpeedForMach(currentPos.getElevationFt(), M);
+    _groundspeedKnotsProp->setDoubleValue(gs);
+    double d = gs * SG_KT_TO_MPS * dt;
     SGGeod newPos = SGGeodesy::direct(currentPos, _trueCourseDeg, d);
     
     if (_altActive) {

@@ -62,6 +62,7 @@ public:
     void flyGPSCourseOffset(GPS *gps, double offsetNm);
 
     bool isOnHeading(double heading) const;
+
 private:
     enum class LateralMode
     {
@@ -77,7 +78,7 @@ private:
     SGPropertyNode_ptr _propRoot;
 
     double _trueCourseDeg = 0.0;
-    double _speedKnots = 0.0;
+    double _speedKnots = 0.0; // IAS
     double _vspeedFPM = 0.0;
 
     bool _turnActive = false;
@@ -96,7 +97,9 @@ private:
     SGPropertyNode_ptr _headingProp;
     SGPropertyNode_ptr _speedKnotsProp;
     SGPropertyNode_ptr _verticalFPMProp;
-    
+    SGPropertyNode_ptr _groundspeedKnotsProp;
+    SGPropertyNode_ptr _speedMachProp;
+
     SGPropertyNode_ptr _gpsNode;
     SGPropertyNode_ptr _gpsLegCourse;
     SGPropertyNode_ptr _courseErrorNm;
