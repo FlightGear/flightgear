@@ -30,8 +30,9 @@
 
 #include <simgear/compiler.h>
 // There is probably a better include than sg_geodesy to get the SG_NM_TO_METER...
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/props/propsfwd.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
@@ -213,6 +214,9 @@ public:
     double getLongitude() const {
         return longitude;
     };
+
+    SGGeod position() const;
+
     double getHeading  () const {
         return heading  ;
     };
@@ -379,6 +383,7 @@ private:
 
 protected:
     bool initialized;
+    bool _bound = false;
     bool available;
     time_t lastTransmission;
 
@@ -388,6 +393,7 @@ protected:
     std::string formatATCFrequency3_2(int );
     std::string genTransponderCode(const std::string& fltRules);
     bool isUserAircraft(FGAIAircraft*);
+    bool isReceiving(int radioFreq);
 
     void eraseDeadTraffic(TrafficVector& vec);
 public:
@@ -422,7 +428,12 @@ public:
     } AtcMsgDir;
     FGATCController();
     virtual ~FGATCController();
+
     void init();
+
+    // TODO: for James: make these actually work :)
+    void bind();
+    void unbind();
 
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,
@@ -449,8 +460,19 @@ public:
 
 
 private:
+    // helper to actually send a message
+    void doRadioTransmit(const std::string& text,
+                         bool groundToAir,
+                         FGTrafficRecord* traffic,
+                         int stationFreq,
+                         const FGAirportRef& stationAirport);
 
     AtcMsgDir lastTransmissionDirection;
+
+    SGPropertyNode_ptr _com_node;
+    SGPropertyNode_ptr _com1_node;
+    SGPropertyNode_ptr _radio_node;
+    SGPropertyNode_ptr _msgs_node;
 };
 
 /******************************************************************************
