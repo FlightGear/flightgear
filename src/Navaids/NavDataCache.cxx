@@ -1212,14 +1212,13 @@ NavDataCache::NavDataCache()
         os << "navdata_" << versionParts[0] << "_" << versionParts[1] << ".cache";
     }
 
-    homePath.append(os.str());
-
     // permit additional DB connections from the same process
     sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 
     for (int t=0; t < MAX_TRIES; ++t) {
+        SGPath cachePath = homePath / os.str();
         try {
-            d.reset(new NavDataCachePrivate(homePath, this));
+            d.reset(new NavDataCachePrivate(cachePath, this));
             d->init();
             //d->checkCacheFile();
             // reached this point with no exception, success
@@ -1239,14 +1238,14 @@ NavDataCache::NavDataCache()
             d.reset();
 
             // only wipe the existing if not readonly
-            if (!fgGetBool("/sim/fghome-readonly", false)) {
-                bool ok = homePath.remove();
+            if (cachePath.exists() && !fgGetBool("/sim/fghome-readonly", false)) {
+                bool ok = cachePath.remove();
                 if (!ok) {
                     SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: failed to remove previous cache file");
                     flightgear::fatalMessageBoxThenExit(
                       "Unable to re-create navigation cache",
                       "Attempting to remove the old cache failed.",
-                      "Location: "  + homePath.utf8Str());
+                      "Location: "  + cachePath.utf8Str());
                 }
             }
         }
