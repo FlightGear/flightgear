@@ -106,14 +106,14 @@ FGAISim::FGAISim(double dt) :
     xCp[YAW]  = Cnp;
     xCr[YAW]  = Cnr;
 
-    xCq[LIFT] = CLq;
-    xCadot[LIFT] = CLadot;
+    xCq[LIFT] = -CLq;
+    xCadot[LIFT] = -CLadot;
 
     xCq[PITCH] = Cmq;
     xCadot[PITCH] = Cmadot;
 
-    xCDYLT.ptr()[MIN][LIFT] = CLmin;
-    xCDYLT.ptr()[MIN][DRAG] = CDmin;
+    xCDYLT.ptr()[MIN][LIFT] = -CLmin;
+    xCDYLT.ptr()[MIN][DRAG] = -CDmin;
 
     inv_m = 1.0f/m;
 
@@ -520,7 +520,7 @@ FGAISim::update_velocity(float v)
     qbar = 0.5f*rho*v*v;
     sigma = rho/density[0];
 
-    float Sqbar = S*qbar;
+    float Sqbar = Sw*qbar;
     float Sbqbar = Sqbar*b;
     float Sqbarcbar = Sqbar*cbar;
 
@@ -593,7 +593,7 @@ bool
 FGAISim::load(std::string path)
 {
     /* defaults for the Cessna 172p */
-    S = 174.0f;
+    Sw = 174.0f;
     cbar = 4.90f;
     b = 35.8f;
 
@@ -610,7 +610,7 @@ FGAISim::load(std::string path)
     //  positions are in inches
     cg[X] =  -2.2f;
     cg[Y] =   0.0f;
-    cg[Z] = -22.5f;
+    cg[Z] = -20.9f;
 
     // gear ground contact points relative tot aero ref. pt. at (0,0,0)
     no_gears = 3;
@@ -658,22 +658,22 @@ FGAISim::load(std::string path)
 // if propeller driven
 
     /* aerodynamic coefficients */
-    CLmin  =  0.307f;
+    CLmin  =  0.007f;
     CLa    =  4.72f;
     CLadot =  1.70f;
     CLq    =  3.90f;
     CLdf_n =  0.705f*df_max;
 
-    CDmin  =  0.027f;
-    CDa    =  0.158f;
+    CDmin  =  0.036f;
+    CDa    =  0.13f;
     CDb    =  0.192f;
     CDi    =  0.0446f;
     CDdf_n =  0.052f*df_max;
 
     CYb    = -0.31f;
-    CYp    =  0.006f;
-    CYr    =  0.262f;
-    CYdr_n =  0.091f*dr_max;
+    CYp    = -0.037f;
+    CYr    =  0.21f;
+    CYdr_n =  0.187f*dr_max;
 
     Clb    = -0.322;          // -0.057f;
     Clp    = -0.4840;         // -0.613f;
@@ -682,16 +682,16 @@ FGAISim::load(std::string path)
     Cldr_n =  0.0147f*dr_max; // 0.01f*dr_max;
 
     Cma    = -1.8f;           // -1.0f;
-    Cmadot = -7.27f;          // -4.42f;
+    Cmadot = -5.2f;           // -4.42f;
     Cmq    = -12.4f;          // -10.5f;
-    Cmde_n = -1.122f*de_max;  // -1.05f*de_max;
+    Cmde_n = -1.28f*de_max;   // -1.05f*de_max;
     Cmdf_n = -0.2177f*df_max; // -0.059f*df_max;
 
-    Cnb    = -0.0587f;        // -0.0630f;
-    Cnp    = -0.0278f;        // -0.0028f;
-    Cnr    = -0.0937f;        // -0.0681f;
+    Cnb    =  0.065f;         //  0.0630f;
+    Cnp    = -0.03f;          // -0.0028f;
+    Cnr    = -0.099f;         // -0.0681f;
     Cnda_n = -0.0053f*da_max; // -0.0100f*da_max;
-    Cndr_n = -0.043f*dr_max;  // -0.0398f*dr_max;
+    Cndr_n = -0.0657f*dr_max; // -0.0398f*dr_max;
 
     return true;
 }

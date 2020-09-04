@@ -162,7 +162,7 @@ public:
         xCDYLT.ptr()[BETA][DRAG] = -CDb*std::abs(f);
         xCDYLT.ptr()[BETA][SIDE] = CYb*f;
         xClmnT.ptr()[BETA][ROLL] = Clb*f;
-        xClmnT.ptr()[BETA][YAW] = -Cnb*f;
+        xClmnT.ptr()[BETA][YAW] = Cnb*f;
         AOA[BETA] = f;
     }
     inline float get_alpha_rad() {
@@ -227,7 +227,7 @@ private:
     aiVec3 gear_pos[AISIM_MAX]; /* pos in structural frame              */
     aiVec3 cg;                  /* center of gravity                    */
     aiVec4 I;                   /* inertia                              */
-    float S = 0.0f;		/* wing area                            */
+    float Sw = 0.0f;		/* wing area                            */
     float cbar = 0.0f;          /* mean average chord                   */
     float b = 0.0f;             /* wing span                            */
     float m = 0.0f;             /* mass                                 */
