@@ -209,16 +209,16 @@ void AIManagerTests::testAIFlightPlan()
     CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
 
     // should put us back on the last waypoint
-    aiFP->DecrementWaypoint(false);
+    aiFP->DecrementWaypoint();
     CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
     CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getPreviousWaypoint());
     CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getCurrentWaypoint());
     CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
     CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
 
-    aiFP->DecrementWaypoint(false); // back to wp4
-    aiFP->DecrementWaypoint(false); // back to wp3
-    aiFP->DecrementWaypoint(false); // back to wp2
+    aiFP->DecrementWaypoint(); // back to wp4
+    aiFP->DecrementWaypoint(); // back to wp3
+    aiFP->DecrementWaypoint(); // back to wp2
 
     CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
     CPPUNIT_ASSERT_EQUAL(wp1, aiFP->getPreviousWaypoint());

@@ -409,7 +409,7 @@ void FGAIGroundVehicle::AdvanceFP(){
         }
 
         prev = curr;
-        fp->DecrementWaypoint(false);
+        fp->DecrementWaypoint();
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
 

@@ -374,23 +374,9 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
         wpt_iterator++;
 }
 
-void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
+void FGAIFlightPlan::DecrementWaypoint()
 {
-    if (eraseWaypoints)
-    {
-        if (wpt_iterator == waypoints.end())
-            wpt_iterator--;
-        else
-        if (!waypoints.empty())
-        {
-            delete *(waypoints.end()-1);
-            waypoints.erase(waypoints.end()-1);
-            wpt_iterator = waypoints.end();
-            wpt_iterator--;
-        }
-    }
-    else
-        wpt_iterator--;
+  wpt_iterator--;
 }
 
 void FGAIFlightPlan::eraseLastWaypoint()

@@ -161,7 +161,7 @@ public:
    FGAIWaypoint* getCurrentWaypoint( void ) const;
    FGAIWaypoint* getNextWaypoint( void ) const;
    void IncrementWaypoint( bool erase );
-   void DecrementWaypoint( bool erase );
+   void DecrementWaypoint();
 
    double getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const;
    int getLeg () const { return leg;};
