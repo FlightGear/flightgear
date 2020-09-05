@@ -167,6 +167,104 @@ void AIManagerTests::testAIFlightPlan()
     CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getCurrentWaypoint());
     CPPUNIT_ASSERT_EQUAL(wp3, aiFP->getNextWaypoint());
     CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    auto p3 = SGGeodesy::direct(diganWpt->geod(), 45, SG_NM_TO_METER * 4);
+    p3.setElevationFt(12000);
+    auto wp4 = new FGAIWaypoint;
+    wp4->setPos(p3);
+    wp4->setName("passDIGAN");
+    wp4->setSpeed(200);
+    aiFP->addWaypoint(wp4);
+
+    auto ingur = cache->findClosestWithIdent("INGUR", shannonVOR->geod(), nullptr);
+    auto p4 = ingur->geod();
+    p4.setElevationFt(16000);
+    auto wp5 = new FGAIWaypoint;
+    wp5->setPos(p4);
+    wp5->setName("INGUR");
+    wp5->setSpeed(250);
+    aiFP->addWaypoint(wp5);
+
+    aiFP->IncrementWaypoint(false);
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp3, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    // let's increment to the end
+    aiFP->IncrementWaypoint(false);
+    aiFP->IncrementWaypoint(false);
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    // one more increment 'off the end'
+    aiFP->IncrementWaypoint(false);
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
+
+    // should put us back on the last waypoint
+    aiFP->DecrementWaypoint(false);
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    aiFP->DecrementWaypoint(false); // back to wp4
+    aiFP->DecrementWaypoint(false); // back to wp3
+    aiFP->DecrementWaypoint(false); // back to wp2
+
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp1, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp3, aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    // restart to the beginning
+    aiFP->restart();
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp1, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getNextWaypoint());
+    CPPUNIT_ASSERT_EQUAL(0, aiFP->getLeg());
+
+    // test increment with delete
+    aiFP->IncrementWaypoint(true);
+    CPPUNIT_ASSERT_EQUAL(5, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp1, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp3, aiFP->getNextWaypoint());
+
+    aiFP->IncrementWaypoint(true);
+    CPPUNIT_ASSERT_EQUAL(4, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp2, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp3, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getNextWaypoint());
+
+    aiFP->IncrementWaypoint(true);
+    CPPUNIT_ASSERT_EQUAL(3, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp3, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getNextWaypoint());
+
+    // let's run up to the end and check nothing explodes
+    aiFP->IncrementWaypoint(true);
+    CPPUNIT_ASSERT_EQUAL(2, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp4, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
+
+    aiFP->IncrementWaypoint(true);
+    CPPUNIT_ASSERT_EQUAL(1, aiFP->getNrOfWayPoints());
+    CPPUNIT_ASSERT_EQUAL(wp5, aiFP->getPreviousWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getCurrentWaypoint());
+    CPPUNIT_ASSERT_EQUAL(static_cast<FGAIWaypoint*>(nullptr), aiFP->getNextWaypoint());
 }
 
 void AIManagerTests::testAIFlightPlanLoadXML()
