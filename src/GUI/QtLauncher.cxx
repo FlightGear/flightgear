@@ -223,7 +223,9 @@ static void simgearMessageOutput(QtMsgType type, const QMessageLogContext &conte
 
     static const char* nullFile = "";
     const char* file = context.file ? context.file : nullFile;
-    sglog().log(SG_GUI, mappedPriority, file, context.line, msg.toStdString());
+    const auto s = msg.toStdString();
+    // important we copy the file name here, since QMessageLogContext doesn't
+    sglog().logCopyingFilename(SG_GUI, mappedPriority, file, context.line, s);
     if (type == QtFatalMsg) {
         abort();
     }
