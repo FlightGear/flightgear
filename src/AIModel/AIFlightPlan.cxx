@@ -22,13 +22,14 @@
 
 #include <iterator>
 
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/structure/exception.hxx>
 #include <simgear/constants.h>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <Main/globals.hxx>
@@ -223,81 +224,106 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
 
 bool FGAIFlightPlan::parseProperties(const std::string& filename)
 {
-  SGPath path( globals->get_fg_root() );
-  path.append( "/AI/FlightPlans/" + filename );
-  if (!path.exists()) {
-    return false;
-  }
-  
-  SGPropertyNode root;
-  try {
-    readProperties(path, &root);
-  } catch (const sg_exception &e) {
-    SG_LOG(SG_AI, SG_ALERT, "Error reading AI flight plan: " << path
-           << "message:" << e.getFormattedMessage());
-    return false;
-  }
-  
-  SGPropertyNode * node = root.getNode("flightplan");
-  for (int i = 0; i < node->nChildren(); i++) {
-    FGAIWaypoint* wpt = new FGAIWaypoint;
-    SGPropertyNode * wpt_node = node->getChild(i);
-
-    bool gear, flaps;
-
-    // Calculate some default values if they are not set explicitly in the flightplan
-    if (wpt_node->getDoubleValue("ktas", 0) < 1.0f ) {
-      // Not moving so assume shut down.  
-      wpt->setPowerDownLights();
-      flaps   = false;
-      gear    = true;
-    } else if (wpt_node->getDoubleValue("alt", 0) > 10000.0f ) {
-      // Cruise flight;
-      wpt->setCruiseLights();
-      flaps   = false;
-      gear    = false;
-    } else if (wpt_node->getBoolValue("on-ground", false)) {
-      // On ground
-      wpt->setGroundLights();
-      flaps   = true;
-      gear    = true;
-    } else if (wpt_node->getDoubleValue("alt", 0) < 3000.0f ) {
-      // In the air below 3000 ft, so flaps and gear down.
-      wpt->setApproachLights();
-      flaps   = true;
-      gear    = true;
-    } else {
-      // In the air 3000-10000 ft
-      wpt->setApproachLights();
-      flaps   = false;
-      gear    = false;
+    SGPath fp = globals->findDataPath("AI/FlightPlans/" + filename);
+    if (!fp.exists()) {
+        SG_LOG(SG_AI, SG_WARN, "Couldn't find AI flightplan '" << filename << "'");
+        return false;
     }
 
-    wpt->setName         (wpt_node->getStringValue("name", "END"     ));
-    wpt->setLatitude     (wpt_node->getDoubleValue("lat", 0          ));
-    wpt->setLongitude    (wpt_node->getDoubleValue("lon", 0          ));
-    wpt->setAltitude     (wpt_node->getDoubleValue("alt", 0          ));
-    wpt->setSpeed        (wpt_node->getDoubleValue("ktas", 0         ));
-    wpt->setCrossat      (wpt_node->getDoubleValue("crossat", -10000 ));
-    wpt->setGear_down    (wpt_node->getBoolValue("gear-down", gear  ));
-    wpt->setFlaps        (wpt_node->getBoolValue("flaps-down", flaps ) ? 1.0 : 0.0);
-    wpt->setSpoilers     (wpt_node->getBoolValue("spoilers", false ) ? 1.0 : 0.0);
-    wpt->setSpeedBrakes  (wpt_node->getBoolValue("speedbrakes", false ) ? 1.0 : 0.0);
-    wpt->setOn_ground    (wpt_node->getBoolValue("on-ground", false  ));
-    wpt->setTime_sec     (wpt_node->getDoubleValue("time-sec", 0     ));
-    wpt->setTime         (wpt_node->getStringValue("time", ""        ));
-    wpt->setFinished     ((wpt->getName() == "END"));
-    pushBackWaypoint( wpt );
-  }
-  if( getLastWaypoint()->getName().compare("END") != 0  ) {
-    SG_LOG(SG_AI, SG_ALERT, "FGAIFlightPlan::Flightplan missing END node" );
-    return false;
-  }
-
-  
-  wpt_iterator = waypoints.begin();
-  return true;
+    return readFlightplan(fp);
 }
+
+bool FGAIFlightPlan::readFlightplan(const SGPath& file)
+{
+    sg_ifstream f(file);
+    return readFlightplan(f, file);
+}
+
+bool FGAIFlightPlan::readFlightplan(std::istream& stream, const sg_location& loc)
+{
+    SGPropertyNode root;
+    try {
+        readProperties(stream, &root);
+    } catch (const sg_exception& e) {
+        SG_LOG(SG_AI, SG_ALERT, "Error reading AI flight plan: " << loc.asString() << " message:" << e.getFormattedMessage());
+        return false;
+    }
+
+    SGPropertyNode* node = root.getNode("flightplan");
+    if (!node) {
+        SG_LOG(SG_AI, SG_ALERT, "Error reading AI flight plan: " << loc.asString() << ": no <flightplan> root element");
+        return false;
+    }
+
+    for (int i = 0; i < node->nChildren(); i++) {
+        FGAIWaypoint* wpt = new FGAIWaypoint;
+        SGPropertyNode* wpt_node = node->getChild(i);
+
+        bool gear, flaps;
+
+        // Calculate some default values if they are not set explicitly in the flightplan
+        if (wpt_node->getDoubleValue("ktas", 0) < 1.0f) {
+            // Not moving so assume shut down.
+            wpt->setPowerDownLights();
+            flaps = false;
+            gear = true;
+        } else if (wpt_node->getDoubleValue("alt", 0) > 10000.0f) {
+            // Cruise flight;
+            wpt->setCruiseLights();
+            flaps = false;
+            gear = false;
+        } else if (wpt_node->getBoolValue("on-ground", false)) {
+            // On ground
+            wpt->setGroundLights();
+            flaps = true;
+            gear = true;
+        } else if (wpt_node->getDoubleValue("alt", 0) < 3000.0f) {
+            // In the air below 3000 ft, so flaps and gear down.
+            wpt->setApproachLights();
+            flaps = true;
+            gear = true;
+        } else {
+            // In the air 3000-10000 ft
+            wpt->setApproachLights();
+            flaps = false;
+            gear = false;
+        }
+
+        wpt->setName(wpt_node->getStringValue("name", "END"));
+        wpt->setLatitude(wpt_node->getDoubleValue("lat", 0));
+        wpt->setLongitude(wpt_node->getDoubleValue("lon", 0));
+        wpt->setAltitude(wpt_node->getDoubleValue("alt", 0));
+        wpt->setSpeed(wpt_node->getDoubleValue("ktas", 0));
+        wpt->setCrossat(wpt_node->getDoubleValue("crossat", -10000));
+        wpt->setGear_down(wpt_node->getBoolValue("gear-down", gear));
+        wpt->setFlaps(wpt_node->getBoolValue("flaps-down", flaps) ? 1.0 : 0.0);
+        wpt->setSpoilers(wpt_node->getBoolValue("spoilers", false) ? 1.0 : 0.0);
+        wpt->setSpeedBrakes(wpt_node->getBoolValue("speedbrakes", false) ? 1.0 : 0.0);
+        wpt->setOn_ground(wpt_node->getBoolValue("on-ground", false));
+        wpt->setTime_sec(wpt_node->getDoubleValue("time-sec", 0));
+        wpt->setTime(wpt_node->getStringValue("time", ""));
+        wpt->setFinished((wpt->getName() == "END"));
+        pushBackWaypoint(wpt);
+    }
+
+    auto lastWp = getLastWaypoint();
+    if (!lastWp || lastWp->getName().compare("END") != 0) {
+        SG_LOG(SG_AI, SG_ALERT, "FGAIFlightPlan::Flightplan (" + loc.asString() + ") missing END node");
+        return false;
+    }
+
+
+    wpt_iterator = waypoints.begin();
+    return true;
+}
+
+FGAIWaypoint* FGAIFlightPlan::getLastWaypoint()
+{
+    if (waypoints.empty())
+        return nullptr;
+
+    return waypoints.back();
+};
 
 FGAIWaypoint* FGAIFlightPlan::getPreviousWaypoint( void ) const
 {

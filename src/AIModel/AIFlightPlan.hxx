@@ -22,11 +22,15 @@
 #include <vector>
 #include <string>
 
+#include <Airports/dynamics.hxx>
+#include <Navaids/positioned.hxx>
 #include <simgear/compiler.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
-#include <Navaids/positioned.hxx>
-#include <Airports/dynamics.hxx>
+#include <simgear/structure/exception.hxx>
+
+// forward decls
+class SGPath;
 
 class FGAIWaypoint {
 private:
@@ -145,6 +149,14 @@ public:
 		 const std::string& airline);
    ~FGAIFlightPlan();
 
+   /**
+     @brief read a flight-plan from a file.
+     All current contents of the flight-plan are replaxced, and the current waypoint is reset to the beginning
+     */
+   bool readFlightplan(const SGPath& file);
+
+   bool readFlightplan(std::istream& stream, const sg_location& loc = sg_location{});
+
    FGAIWaypoint* getPreviousWaypoint( void ) const;
    FGAIWaypoint* getCurrentWaypoint( void ) const;
    FGAIWaypoint* getNextWaypoint( void ) const;
@@ -199,7 +211,7 @@ public:
   void setSID(FGAIFlightPlan* fp) { sid = fp;};
   FGAIFlightPlan* getSID() { return sid; };
   FGAIWaypoint *getWayPoint(int i) { return waypoints[i]; };
-  FGAIWaypoint *getLastWaypoint() { return waypoints.back(); };
+  FGAIWaypoint* getLastWaypoint();
 
   void shortenToFirst(unsigned int number, std::string name);
 

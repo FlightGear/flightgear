@@ -36,6 +36,8 @@ class AIManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testBasic);
     CPPUNIT_TEST(testAIFlightPlan);
     CPPUNIT_TEST(testAircraftWaypoints);
+    CPPUNIT_TEST(testAIFlightPlanLoadXML);
+
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -50,4 +52,5 @@ public:
     void testBasic();
     void testAIFlightPlan();
     void testAircraftWaypoints();
+    void testAIFlightPlanLoadXML();
 };
