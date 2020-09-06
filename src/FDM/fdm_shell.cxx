@@ -107,11 +107,10 @@ void FDMShell::postinit()
         SG_LOG(SG_FLIGHT, SG_ALERT, "Failed to save initial FDM property state");
     }
 
-    _ai_mgr = dynamic_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
-    if (_ai_mgr)
-        SG_LOG(SG_FLIGHT, SG_INFO, "FDM connection to the AI manager: SUCCESS");
-    else
+    _ai_mgr = globals->get_subsystem<FGAIManager>();
+    if (!_ai_mgr) {
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT, "FDM connection to the AI manager: FAILED");
+    }
 }
 
 void FDMShell::shutdown()
