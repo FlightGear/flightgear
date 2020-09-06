@@ -23,6 +23,7 @@
 #include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
+#include "sview.hxx"
 
 #include <simgear/math/SGRect.hxx>
 #include <simgear/props/props.hxx>
@@ -703,6 +704,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
                                                 options);
     if (compositor) {
         info->compositor = compositor;
+        SviewSetCompositor(compositor);
     } else {
         throw sg_exception(std::string("Failed to create Compositor in path '") +
                            compositor_path + "'");

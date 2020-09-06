@@ -18,3 +18,13 @@ void SviewAddDouble(osgViewer::View* view);
 void SviewUpdate(double dt);
 
 void SviewClear();
+
+namespace simgear
+{
+    namespace compositor
+    {
+        class Compositor;
+    }
+}
+ 
+void SviewSetCompositor(simgear::compositor::Compositor* compositor);

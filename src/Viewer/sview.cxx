@@ -513,6 +513,9 @@ static std::ostream& operator << (std::ostream& out, const SviewPos& viewpos)
     return out;
 }
 
+#include <simgear/scene/viewer/Compositor.hxx>
+
+simgear::compositor::Compositor* s_compositor = nullptr;
 
 struct SviewView
 {
@@ -557,6 +560,14 @@ struct SviewView
         SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
         SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
         camera->setViewMatrix(new_m);
+        
+        if (0) {
+            /* This doesn't help rendering of textures - it merely seems to force the
+            main display to show the same view as this cloned view. */
+            osg::Matrixd    view_matrix = camera->getViewMatrix();
+            osg::Matrixd    projection_matrix = camera->getProjectionMatrix();
+            s_compositor->update(view_matrix, projection_matrix);
+        }
     }
         
     osgViewer::View*    m_view = nullptr;    
@@ -1022,4 +1033,10 @@ void SviewUpdate(double dt)
 void SviewClear()
 {
     s_views.clear();
+}
+
+
+void SviewSetCompositor(simgear::compositor::Compositor* compositor)
+{
+    s_compositor = compositor;
 }
