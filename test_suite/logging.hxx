@@ -25,7 +25,7 @@
 
 #include <sstream>
 
-#include <simgear/debug/logstream.hxx>
+#include <simgear/debug/LogCallback.hxx>
 
 
 // A logstream callback based on the simgear FileLogCallback class.

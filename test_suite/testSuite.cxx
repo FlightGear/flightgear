@@ -21,6 +21,8 @@
 #include <cstring>
 #include <iostream>
 
+#include <simgear/debug/logstream.hxx>
+
 #include "dataStore.hxx"
 #include "fgTestRunner.hxx"
 #include "formatting.hxx"

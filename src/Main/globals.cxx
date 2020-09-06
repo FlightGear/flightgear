@@ -459,7 +459,7 @@ void FGGlobals::set_terrasync_dir(const SGPath &path)
 {
   if (terrasync_dir.realpath() != SGPath(fgGetString("/sim/terrasync/scenery-dir")).realpath()) {
     // if they don't match, /sim/terrasync/scenery-dir has been set by something else
-    SG_LOG(SG_GENERAL, SG_ALERT, "/sim/terrasync/scenery-dir is no longer stored across runs: if you wish to keep using a non-standard Terrasync directory, use --terrasync-dir or the launcher's settings");
+    SG_LOG(SG_GENERAL, SG_WARN, "/sim/terrasync/scenery-dir is no longer stored across runs: if you wish to keep using a non-standard Terrasync directory, use --terrasync-dir or the launcher's settings");
   }
   SGPath abspath(path.realpath());
   terrasync_dir = abspath;
@@ -494,7 +494,7 @@ void FGGlobals::append_aircraft_path(const SGPath& path)
 {
   SGPath dirPath(path);
   if (!dirPath.exists()) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "aircraft path not found:" << path);
+    SG_LOG(SG_GENERAL, SG_WARN, "aircraft path not found:" << path);
     return;
   }
 

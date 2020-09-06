@@ -504,8 +504,9 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
 }
 
 // print() extension function.  Concatenates and prints its arguments
-// to the FlightGear log.  Uses the highest log level (SG_ALERT), to
-// make sure it appears.  Is there better way to do this?
+// to the FlightGear log.  Uses the mandatory log level (SG_MANDATORY_INFO), to
+// make sure it appears.  Users should be converted to use logprint() instead,
+// and specify a level explicitly.
 static naRef f_print(naContext c, naRef me, int argc, naRef* args)
 {
     string buf;
@@ -515,7 +516,24 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
         if(naIsNil(s)) continue;
         buf += naStr_data(s);
     }
-    SG_LOG(SG_NASAL, SG_ALERT, buf);
+ 
+    /* Copy what SG_LOG() does, but use nasal file:line instead of
+    our own __FILE__ and __LINE__. */
+    if (sglog().would_log(SG_NASAL, SG_MANDATORY_INFO)) {
+        int frame = 0;
+        const char* file = naStr_data(naGetSourceFile(c, 0));
+        if (simgear::strutils::ends_with( file, "/globals.nas")) {
+            /* This generally means have been called by globals.nas's
+            printf function; go one step up the stack so we give the
+            file:line of the caller of printf, which is generally more
+            useful. */
+            frame += 1;
+            file = naStr_data(naGetSourceFile(c, frame));
+        }
+        int line = naGetLine(c, frame);
+        sglog().logCopyingFilename(SG_NASAL, SG_MANDATORY_INFO, file, line, buf);
+    }
+
     return naNum(buf.length());
 }
 
@@ -1015,6 +1033,7 @@ void FGNasalSys::initLogLevelConstants()
     hashset(_globals, "LOG_ALERT", naNum(SG_ALERT));
     hashset(_globals, "DEV_WARN", naNum(SG_DEV_WARN));
     hashset(_globals, "DEV_ALERT", naNum(SG_DEV_ALERT));
+    hashset(_globals, "MANDATORY_INFO", naNum(SG_MANDATORY_INFO));
 }
 
 void FGNasalSys::setCmdArg(SGPropertyNode* aNode)

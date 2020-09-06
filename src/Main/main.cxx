@@ -448,7 +448,7 @@ void fgInitSecureMode()
 {
     bool secureMode = true;
     if (Options::sharedInstance()->isOptionSet("allow-nasal-from-sockets")) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "\n!! Network connections allowed to use Nasal !!\n"
+        SG_LOG(SG_GENERAL, SG_MANDATORY_INFO, "\n!! Network connections allowed to use Nasal !!\n"
        "Network connections will be allowed full access to the simulator \n"
        "including running arbitrary scripts. Ensure you have adequate security\n"
         "(such as a firewall which blocks external connections).\n");
@@ -576,7 +576,7 @@ int fgMainInit( int argc, char **argv )
 // show this message early, if we can
         auto r = flightgear::showLockFileDialog();
         if (r == flightgear::LockFileReset) {
-            SG_LOG( SG_GENERAL, SG_ALERT, "Deleting lock file at user request");
+            SG_LOG( SG_GENERAL, SG_MANDATORY_INFO, "Deleting lock file at user request");
             fgDeleteLockFile();
             fgSetBool("/sim/fghome-readonly", false);
         } else if (r == flightgear::LockFileQuit) {
