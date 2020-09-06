@@ -302,8 +302,8 @@ void FGViewMgr::clone_internal(const std::string& type)
 
     // need to ensure that the window is cleared make sure that the complete window is set the correct colour
     // rather than just the parts of the window that are under the camera's viewports
-    gc->setClearColor(osg::Vec4f(0.2f,0.2f,0.6f,1.0f));
-    gc->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //gc->setClearColor(osg::Vec4f(0.2f,0.2f,0.6f,1.0f));
+    //gc->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     osgViewer::View* view = new osgViewer::View();
 
@@ -365,7 +365,7 @@ void FGViewMgr::clone_internal(const std::string& type)
     */
     view->getCamera()->setViewport(0, 0, traits->width, traits->height);
     
-    camera->setClearMask(0);
+    //camera->setClearMask(0);
     
     view->setName("Cloned view");
     

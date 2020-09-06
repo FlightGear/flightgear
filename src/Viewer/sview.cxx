@@ -574,6 +574,9 @@ struct SviewView
 };
 
 
+// A view which keeps two aircraft visible, with one at a constant distance in
+// the foreground.
+//
 struct SviewDouble : SviewView
 {
     // <local> and <remote> should evaluate to position of local and remote
@@ -592,6 +595,50 @@ struct SviewDouble : SviewView
     
     virtual bool update(double dt) override
     {
+        /*
+        We choose eye position so that we show the local aircraft a fixed
+        amount below the view midpoint, and the remote aircraft the same fixed
+        amount above the view midpoint.
+        
+        L: middle of local aircraft.
+        R: middle of remote aircraft.
+        E: desired eye-point
+        
+          -----             R
+         /      \
+        E        |
+        |    L   | .................... H (horizon)
+        |        |
+         \      /
+           -----
+        
+        We require that:
+        
+            EL is local aircraft's chase-distance (though at the moment we use
+            a fixed value) so that local aircraft is in perfect view.
+
+            Angle LER is fixed to give good view of both aircraft in
+            window. (Should be related to the vertical angular size of the
+            window, but at the moment we use a fixed value.)
+        
+        We need to calculate angle RLE, and add to HLR, in order to find
+        position of E (eye). Then for view pitch we use midpoint of angle of ER
+        and angle EL, so that local and remote aircraft are symmetrically below
+        and above the centre of the view.
+        
+        We find angle RLE by using cosine rule twice in the triangle RLE:
+            ER^2 = EL^2 + LR^2 - 2*EL*LR*cos(RLE)
+            LR^2 = ER^2 + EL^2 - 2*ER*EL*cos(LER)
+        
+        Wen end up with a quadratic for ER with solution:
+            ER = EL * cos(LER) + sqrt(LR^2 - EL^22*sin(LER)^2)
+            (We discard the -sqrt because it ends up with ER being negative.)
+        
+        and:
+            cos(RLE) = (LR^2 + LE^2 - ER^2) / (2*LE*LR)
+        
+        So we can find RLE using acos().
+        */
         bool valid = m_view->getCamera()->getGraphicsContext()->valid();
         SG_LOG(SG_VIEW, SG_BULK, "valid=" << valid);
         if (!valid) return false;
@@ -617,87 +664,73 @@ struct SviewDouble : SviewView
             SG_LOG(SG_VIEW, SG_ALERT, "    m_remote: " << m_remote << ": " << posdir_remote);
         }
         
-        // Create cartesian coordinates so we can calculate distance <s>.
+        // Create cartesian coordinates so we can calculate distance <lr>.
         SGVec3d local_pos = SGVec3d::fromGeod(posdir_local.target);
         SGVec3d remote_pos = SGVec3d::fromGeod(posdir_remote.target);
-        double s = sqrt(distSqr(local_pos, remote_pos));
+        double lr = sqrt(distSqr(local_pos, remote_pos));
         const double pi = 3.1415926;
         
-        // Desired angle between local and remote in final view.
-        double a = 15 * pi / 180;
+        // Desired angle between local and remote aircraft in final view.
+        double ler = 15 * pi / 180;
         
         // Distance of eye from local aircraft.
-        double r = 25; /* should use chase_distance. */
+        double le = 25; /* should use chase_distance. */
         
-        // Find t, the distance of eye from remote aircraft. Have to be careful
-        // to cope when there is no solution if remote is too close.
-        double t_root_term = s*s - r*r*sin(a)*sin(a);
-        if (t_root_term < 0) t_root_term = 0;
-        double t = r * cos(a) + sqrt(t_root_term);
+        // Find <er>, the distance of eye from remote aircraft. Have to be
+        // careful to cope when there is no solution if remote is too close,
+        // and choose the +ve sqrt().
+        //
+        double er_root_term = lr*lr - le*le*sin(ler)*sin(ler);
+        if (er_root_term < 0) er_root_term = 0;
+        double er = le * cos(ler) + sqrt(er_root_term);
         
-        // Now find theta, angle at local aircraft between vector to remote
+        // Now find rle, angle at local aircraft between vector to remote
         // aircraft and vector to desired eye position. Again we have to cope
         // when a solution is not possible.
-        double cos_theta = (s*s + r*r - t*t) / (2*r*s);
-        if (cos_theta > 1) cos_theta = 1;
-        if (cos_theta < -1) cos_theta = -1;
-        double theta = acos(cos_theta);
-        double theta_deg = theta * 180 / pi;
+        double cos_rle = (lr*lr + le*le - er*er) / (2*le*lr);
+        if (cos_rle > 1) cos_rle = 1;
+        if (cos_rle < -1) cos_rle = -1;
+        double rle = acos(cos_rle);
+        double rle_deg = rle * 180 / pi;
         
         // Now find the actual eye position. We do this by calculating heading
-        // and pitch from local aircraft to eye position, then using a
-        // SviewStepMove.
-        double delta_vertical = posdir_remote.target.getElevationM() - posdir_local.target.getElevationM();
-        double delta_horizontal = SGGeodesy::distanceM(posdir_local.target, posdir_remote.target);
-        double local_remote_angle = atan2(delta_vertical, delta_horizontal);
-        
+        // and pitch from local aircraft L to eye position E, then using a
+        // temporary SviewStepMove.
+        double lr_vertical = posdir_remote.target.getElevationM() - posdir_local.target.getElevationM();
+        double lr_horizontal = SGGeodesy::distanceM(posdir_local.target, posdir_remote.target);
+        double hlr = atan2(lr_vertical, lr_horizontal);
         posdir_local.heading = SGGeodesy::courseDeg(
                 posdir_local.target,
                 posdir_remote.target
                 );
-        posdir_local.pitch = (local_remote_angle + theta) * 180 / pi;
+        posdir_local.pitch = (hlr + rle) * 180 / pi;
         posdir_local.roll = 0;
-        auto move = SviewStepMove(r, 0, 0);
+        auto move = SviewStepMove(le, 0, 0);
         move.evaluate(posdir_local);
         
-        // At this point, posdir_local.position is eye position, and
-        // posdir_remote.position is position of remote aircraft. We make
-        // posdir_local.direction2 point from this eye position to the remote
-        // aircraft.
-        //
-        // (Might be better to point to in-between the local and remote
-        // aircraft?)
-        if (1) {
-            double dheight_eye_target = posdir_remote.target.getElevationM() - posdir_local.position.getElevationM();
-            double eye_target_angle = asin(dheight_eye_target / t);
-            double eye_local_angle = pi - (local_remote_angle + theta);
-            //double dheight_eye_local = r * sin(eye_local_angle);
-            double eye_angle = (eye_target_angle - eye_local_angle) / 2;
-            //posdir_local.heading = SGGeodesy::courseDeg(posdir_local.position, posdir_remote.position);
-            posdir_local.pitch = eye_angle * 180 / pi;
-            //posdir_local.roll = 0;
-            auto stepfinal = SviewStepFinal();
-            stepfinal.evaluate(posdir_local);
-            posdir_to_view(posdir_local);
-        }
-        else {
-            posdir_local.target = posdir_remote.position;
-            auto eye_target = SviewStepTarget();
-            eye_target.evaluate(posdir_local);
-
-            posdir_to_view(posdir_local);
-        }
+        // At this point, posdir_local.position is eye position. We make
+        // posdir_local.direction2 point from this eye position to halfway
+        // between the remote and local aircraft.
+        double er_vertical = posdir_remote.target.getElevationM()
+                - posdir_local.position.getElevationM();
+        double her = asin(er_vertical / er);
+        double hel = (hlr + rle) - pi;
+        posdir_local.pitch = (her + hel) / 2 * 180 / pi;
+        auto stepfinal = SviewStepFinal();
+        stepfinal.evaluate(posdir_local);
+        posdir_to_view(posdir_local);
+        
         if (debug) {
             SG_LOG(SG_VIEW, SG_ALERT, ""
-                    << " s=" << s
-                    << " a=" << a
-                    << " t_root_term=" << t_root_term
-                    << " t=" << t
-                    << " cos_theta=" << cos_theta
-                    << " theta_deg=" << theta_deg
-                    << " delta_vertical=" << delta_vertical
-                    << " delta_horizontal=" << delta_horizontal
-                    << " local_remote_angle=" << local_remote_angle
+                    << " lr=" << lr
+                    << " ler=" << ler
+                    << " er_root_term=" << er_root_term
+                    << " er=" << er
+                    << " cos_rle=" << cos_rle
+                    << " rle_deg=" << rle_deg
+                    << " lr_vertical=" << lr_vertical
+                    << " lr_horizontal=" << lr_horizontal
+                    << " hlr=" << hlr
                     << " posdir_local=" << posdir_local
                     << " posdir_remote=" << posdir_remote
                     );
@@ -719,48 +752,53 @@ struct SviewViewClone : SviewView
     SviewView(view)
     {
         SG_LOG(SG_VIEW, SG_INFO, "m_view=" << m_view);
+        
+        SGPropertyNode* global_view;
         SGPropertyNode* root;
         SGPropertyNode* sim;
+        SGPropertyNode* view_config;
+        int             view_number_raw;
+        std::string     root_path;
         std::string     type;
-        if (1) {
-            int view_number_raw = globals->get_props()->getIntValue("/sim/current-view/view-number-raw");
-            SGPropertyNode* n = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
-            std::string root_path = n->getStringValue("config/root");
-            root = globals->get_props()->getNode(root_path);
-            if (root_path == "" || root_path == "/") {
-                /* user aircraft */
-                sim = root->getNode("sim");
-            }
-            else {
-                sim = root->getNode("set/sim");
-            }
-            SG_LOG(SG_VIEW, SG_ALERT, "view_number_raw=" << view_number_raw);
-            SG_LOG(SG_VIEW, SG_ALERT, "root_path=" << root_path);
-            SG_LOG(SG_VIEW, SG_ALERT, "root=" << root);
-            SG_LOG(SG_VIEW, SG_ALERT, "sim=" << sim);
-            if (root) SG_LOG(SG_VIEW, SG_ALERT, "root->getPath()=" << root->getPath());
-            if (sim)  SG_LOG(SG_VIEW, SG_ALERT, "sim->getPath()=" << sim->getPath());
-            if (!root || !sim) {
-                return;
-            }
-            
-            type = n->getStringValue("type");
-        }
-        else if (1) {
-            /* User aircraft. */
-            root = globals->get_props();
+        
+        // Unfortunately we need to look at things like
+        // /sim/view[]/config/eye-heading-deg-path, even when handling
+        // multiplayer aircraft.
+        //
+        global_view = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
+        
+        view_number_raw = globals->get_props()->getIntValue("/sim/current-view/view-number-raw");
+        
+        /* <root_path> is typically "" or /ai/models/multiplayer[]. */
+        root_path   = global_view->getStringValue("config/root");
+        type        = global_view->getStringValue("type");
+        
+        root = globals->get_props()->getNode(root_path);
+        if (root_path == "" || root_path == "/") {
+            /* user aircraft */
             sim = root->getNode("sim");
         }
         else {
-            root = globals->get_props()->getNode("ai/models/multiplayer[]");
-            sim = root->getNode("ai/models/multiplayer[]/set/sim");
+            /* Multiplayer sim is /ai/models/multiplayer[]/set/sim. */
+            sim = root->getNode("set/sim");
         }
         
+        {
+            SGPropertyNode* view_node   = sim->getNode("view", view_number_raw, true /*create*/);
+            view_config = view_node->getNode("config");
+        }
         
-        int view_number_raw = sim->getIntValue("current-view/view-number-raw");
-        SGPropertyNode* view_node = sim->getNode("view", view_number_raw);
+        SG_LOG(SG_VIEW, SG_ALERT, "view_number_raw=" << view_number_raw);
+        SG_LOG(SG_VIEW, SG_ALERT, "type=" << type);
+        SG_LOG(SG_VIEW, SG_ALERT, "root_path=" << root_path);
+        SG_LOG(SG_VIEW, SG_ALERT, "root=" << root);
+        SG_LOG(SG_VIEW, SG_ALERT, "sim=" << sim);
+        assert(root && sim);
+        SG_LOG(SG_VIEW, SG_ALERT, "root->getPath()=" << root->getPath());
+        SG_LOG(SG_VIEW, SG_ALERT, "sim->getPath()=" << sim->getPath());
+        SG_LOG(SG_VIEW, SG_ALERT, "view_config->getPath()=" << view_config->getPath());
         
-        if (view_node->getBoolValue("config/eye-fixed")) {
+        if (view_config->getBoolValue("eye-fixed")) {
             /* E.g. Tower view. */
             m_target.m_name = "eye-fixed";
             SG_LOG(SG_VIEW, SG_INFO, "eye-fixed");
@@ -768,10 +806,11 @@ struct SviewViewClone : SviewView
             /* First move to centre of aircraft. */
             m_target.add_step(new SviewStepAircraft(root));
             m_target.add_step(new SviewStepMove(
-                    -view_node->getDoubleValue("config/target-z-offset-m"),
-                    -view_node->getDoubleValue("config/target-y-offset-m"),
-                    -view_node->getDoubleValue("config/target-x-offset-m")
+                    -view_config->getDoubleValue("target-z-offset-m"),
+                    -view_config->getDoubleValue("target-y-offset-m"),
+                    -view_config->getDoubleValue("target-x-offset-m")
                     ));
+            SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
             
             /* Set pitch and roll to zero, otherwise view from tower (as
             calculated by SviewStepTarget) rolls/pitches with aircraft. */
@@ -780,6 +819,7 @@ struct SviewViewClone : SviewView
                     0 /* pitch */,
                     0 /* roll */
                     ));
+            SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
             
             /* Current position is the target, so add a step that copies it to
             SviewPosDir.target. */
@@ -818,19 +858,26 @@ struct SviewViewClone : SviewView
                 pass to SviewStepMove(). */
                 
                 m_target.add_step(new SviewStepAircraft(root));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+                
                 m_target.add_step(new SviewStepMove(
-                        -view_node->getDoubleValue("config/target-z-offset-m"),
-                        -view_node->getDoubleValue("config/target-y-offset-m"),
-                        -view_node->getDoubleValue("config/target-x-offset-m")
+                        -view_config->getDoubleValue("target-z-offset-m"),
+                        -view_config->getDoubleValue("target-y-offset-m"),
+                        -view_config->getDoubleValue("target-x-offset-m")
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+                
                 m_target.add_step(new SviewStepCopyToTarget);
                 
                 m_eye.add_step(new SviewStepAircraft(root));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                
                 m_eye.add_step(new SviewStepMove(
-                        -view_node->getDoubleValue("config/target-z-offset-m"),
-                        -view_node->getDoubleValue("config/target-y-offset-m"),
-                        -view_node->getDoubleValue("config/target-x-offset-m")
+                        -view_config->getDoubleValue("target-z-offset-m"),
+                        -view_config->getDoubleValue("target-y-offset-m"),
+                        -view_config->getDoubleValue("target-x-offset-m")
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
                 
                 /* Crudely preserve or don't preserve aircraft's heading,
                 pitch and roll; this enables us to mimic Helicopter and Chase
@@ -838,26 +885,30 @@ struct SviewViewClone : SviewView
                 in practise we only need to multiply current values by 0 or 1.
                 todo: add damping. */
                 m_eye.add_step(new SviewStepDirectionMultiply(
-                        view_node->getStringValue("config/eye-heading-deg-path")[0] ? 1 : 0,
-                        view_node->getStringValue("config/eye-pitch-deg-path")[0] ? 1 : 0,
-                        view_node->getStringValue("config/eye-roll-deg-path")[0] ? 1 : 0
+                        global_view->getStringValue("config/eye-heading-deg-path")[0] ? 1 : 0,
+                        global_view->getStringValue("config/eye-pitch-deg-path")[0] ? 1 : 0,
+                        global_view->getStringValue("config/eye-roll-deg-path")[0] ? 1 : 0
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                
                 /* Apply the current view rotation. */
                 m_eye.add_step(new SviewStepRotate(
                         root->getDoubleValue("sim/current-view/heading-offset-deg"),
                         root->getDoubleValue("sim/current-view/pitch-offset-deg"),
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
                 //if (at_model) {
                 if (1) {
                     /* E.g. Helicopter view. Move eye away from aircraft.
                     config/z-offset-m defaults to /sim/chase-distance-m (see
                     fgdata:defaults.xml) which is -ve, e.g. -25m. */
                     m_eye.add_step(new SviewStepMove(
-                            view_node->getDoubleValue("config/z-offset-m"),
-                            view_node->getDoubleValue("config/y-offset-m"),
-                            view_node->getDoubleValue("config/x-offset-m")
+                            view_config->getDoubleValue("z-offset-m"),
+                            view_config->getDoubleValue("y-offset-m"),
+                            view_config->getDoubleValue("x-offset-m")
                             ));
+                    SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
                 }
             }
             else {
@@ -868,28 +919,33 @@ struct SviewViewClone : SviewView
                 pass to SviewStepMove(). */
                 m_eye.add_step(new SviewStepAircraft(root));
                 m_eye.add_step(new SviewStepMove(
-                        -view_node->getDoubleValue("config/z-offset-m"),
-                        -view_node->getDoubleValue("config/y-offset-m"),
-                        -view_node->getDoubleValue("config/x-offset-m")
+                        -view_config->getDoubleValue("z-offset-m"),
+                        -view_config->getDoubleValue("y-offset-m"),
+                        -view_config->getDoubleValue("x-offset-m")
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                
                 /* Apply the current view rotation. On harrier-gr3 this
                 corrects initial view direction (which is pitch down by 15deg),
                 but seems to cause a problem where the cockpit rotates in a
                 small circle when the aircraft rolls. */
                 m_eye.add_step(new SviewStepRotate(
-                        -view_node->getDoubleValue("config/heading-offset-deg"),
-                        -view_node->getDoubleValue("config/pitch-offset-deg"),
-                        -view_node->getDoubleValue("config/roll-offset-deg")
+                        -view_config->getDoubleValue("heading-offset-deg"),
+                        -view_config->getDoubleValue("pitch-offset-deg"),
+                        -view_config->getDoubleValue("roll-offset-deg")
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                
                 /* Preserve the current user-supplied offset to view direction. */
                 m_eye.add_step(new SviewStepRotate(
                         root->getDoubleValue("sim/current-view/heading-offset-deg")
-                                - view_node->getDoubleValue("config/heading-offset-deg"),
+                                - view_config->getDoubleValue("heading-offset-deg"),
                         -(root->getDoubleValue("sim/current-view/pitch-offset-deg")
-                                - view_node->getDoubleValue("config/pitch-offset-deg")),
+                                - view_config->getDoubleValue("pitch-offset-deg")),
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
-                                - view_node->getDoubleValue("config/roll-offset-deg")
+                                - view_config->getDoubleValue("roll-offset-deg")
                         ));
+                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
             }
             m_eye.add_step(new SviewStepFinal);
         }
