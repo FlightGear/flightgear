@@ -24,7 +24,11 @@
 
 #include <cmath>
 #include <limits>
-#include <stdio.h>
+#include <cstdio>
+
+#include <string>
+#include <fstream>
+#include <streambuf>
 
 #ifdef ENABLE_SP_FDM
 # include <simgear/constants.h>
@@ -36,11 +40,13 @@
 # include <Main/fg_props.hxx>
 # include <Main/globals.hxx>
 # include <FDM/flight.hxx>
+# include <cJSON.h>
 #else
 # include "simd.hxx"
 # include "simd4x4.hxx"
 #endif
 
+#define FEET_TO_INCHES	12.0f
 #define INCHES_TO_FEET	0.08333333333f
 #ifndef _MINMAX
 # define _MINMAX(a,b,c)  (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
@@ -61,8 +67,10 @@ FGAISim::FGAISim(double dt)
 
 
 #ifdef ENABLE_SP_FDM
+    SGPath aircraft_path( fgGetString("/sim/aircraft-dir") );
     SGPropertyNode_ptr aero = fgGetNode("sim/aero", true);
-    load(aero->getStringValue());
+    aircraft_path.append(aero->getStringValue() );
+    load(aircraft_path.str());
 #else
     load("");
 #endif
@@ -103,8 +111,8 @@ FGAISim::FGAISim(double dt)
     for (int i=0; i<no_gears; ++i) {
         // convert from structural frame to body frame
         gear_pos[i] = aiVec3(-cg[X] - gear_pos[i][X],
-                                       -cg[Y] + gear_pos[i][Y],
-                                        cg[Z] - gear_pos[i][Z])*INCHES_TO_FEET;
+                             -cg[Y] + gear_pos[i][Y],
+                             -cg[Z] + gear_pos[i][Z]);
         if (gear_pos[i][Z] < agl) agl = gear_pos[i][Z];
     }
 
@@ -252,14 +260,14 @@ FGAISim::update(double ddt)
     aiVec3 FXYZ = mWindBody*FDYL;
 
     /* Thrust */
-
+    aiVec3 Cth = rho*th;
+    aiVec3 Cmach = rho*mach;
     for (int i=0; i<no_engines; ++i) {
-        FXYZ += FT[i]*th + FTM[i]*mach;
-//      Mlmn += MT[i]*th;
-
+        FXYZ += FT[i]*Cth + FTM[i]*Cmach;
+        Mlmn += MT[i]*Cth;
 #if 0
  printf("FDYL:    %7.2f, %7.2f, %7.2f\n", FDYL[DRAG], FDYL[SIDE], FDYL[LIFT]);
- printf("FT:   %10.2f, %7.2f, MT: %7.2f\n", FT[i][X]*th, FTM[i][X]*mach, MT[i][X]*th);
+ printf("FT:   %10.2f, %7.2f, MT: %7.2f\n", FT[i][X]*rho*th, FTM[i][X]*rho*mach, MT[i][X]*rho*th);
 #endif
     }
 
@@ -286,7 +294,7 @@ FGAISim::update(double ddt)
                 aiVec3 FLGear = mNed2Body*Fn_lg + vUVWaero*mu_body;
                 FXYZ += FLGear;
 
-                aiVec3 MLGear = simd4::cross(gear_pos[i], FLGear);
+//              aiVec3 MLGear = simd4::cross(gear_pos[i], FLGear);
 //              Mlmn += MLGear;
 #if 0
  printf("FLGear[%i]: %10.2f %10.2f %10.2f\n",i,FLGear[0], FLGear[1], FLGear[2]);
@@ -424,7 +432,7 @@ FGAISim::copy_from_AISim()
     _update_ground_elev_at_pos();
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
     _set_Altitude( location_geod[ALTITUDE] );
-    _set_Altitude_AGL( location_geod[ALTITUDE] - get_Runway_altitude() - gear_pos[0][Z]);
+    _set_Altitude_AGL( location_geod[ALTITUDE] - get_Runway_altitude());
 
     float heading = euler[PSI];
     if (heading < 0) heading += (2.0f*SG_PI);
@@ -565,115 +573,210 @@ FGAISim::invert_inertia(aiMtx4 mtx)
     k6 = Ixx*Iyy*denom;
 
     return aiMtx4(   k1, 0.0f,   k3, 0.0f,
-                 0.0f,   k4, 0.0f, 0.0f,
-                   k3, 0.0f,   k6, 0.0f,
-                 0.0f, 0.0f, 0.0f, 0.0f );
+                   0.0f,   k4, 0.0f, 0.0f,
+                     k3, 0.0f,   k6, 0.0f,
+                   0.0f, 0.0f, 0.0f, 0.0f );
 }
 
+
+std::map<std::string,float>
+FGAISim::jsonParse(const char *str)
+{
+    cJSON *json = ::cJSON_Parse(str);
+    jsonMap rv;
+    if (json)
+    {
+        for (int i=0; i<::cJSON_GetArraySize(json); ++i)
+        {
+            cJSON* cj = ::cJSON_GetArrayItem(json, i);
+            if (cj->string)
+            {
+                if (cj->valuedouble) {
+                    rv.emplace(cj->string, cj->valuedouble);
+                }
+                else if (cj->type == cJSON_Array)
+                {
+                    cJSON* child = cj->child;
+                    for (int j=0; child; child = child->next, ++j)
+                    {
+                        std::string str = cj->string;
+                        str += '[';
+                        str += std::to_string(j);
+                        str += ']';
+                        if (child->type == cJSON_Object)
+                        {
+                            cJSON* subchild = child->child;
+                            for (int k=0; subchild; subchild = subchild->next, ++k)
+                            {
+                                std::string substr = str;
+                                substr += '/';
+                                substr += subchild->string;
+
+                                if (subchild->type == cJSON_Array)
+                                {
+                                   cJSON* array = subchild->child;
+                                   for (int l=0; array; array = array->next, ++l)
+                                    {
+                                        std::string arraystr = substr;
+                                        arraystr += '[';
+                                        arraystr += std::to_string(l);
+                                        arraystr += ']';
+                                        rv.emplace(arraystr, array->valuedouble);
+                                    }
+                                }
+                                else {
+                                    rv.emplace(substr, subchild->valuedouble);
+                                }
+                            }
+                        }
+                        else {
+                            rv.emplace(str, child->valuedouble);
+                        }
+                    }
+                }
+            }
+        }
+        ::cJSON_Delete(json);
+    }
+    else
+    {
+        std::string err = ::cJSON_GetErrorPtr();
+        err = err.substr(0, 16);
+        err = "AISim: Can't parse Aircraft data around: "+err;
+        SG_LOG(SG_FLIGHT, SG_ALERT, err );
+    }
+    return rv;
+}
 
 bool
 FGAISim::load(std::string path)
 {
-    /* defaults for the Cessna 172p */
-    Sw = 174.0f;
-    cbar = 4.90f;
-    b = 35.8f;
+    path += ".fdm";
 
-    m = 2267.0f/AISIM_G;	// max: 2650.0f;
+    std::ifstream file(path);
+    std::string jsonString;
 
-    I[XX] = 948.0f;
-    I[YY] = 1346.0f;
-    I[ZZ] = 1967.0f;
+    file.seekg(0, std::ios::end);
+    jsonString.reserve(file.tellg());
+    file.seekg(0, std::ios::beg);
 
-    // Center of Gravity and gears are in the structural frame
-    //  X-axis is directed afterwards,
-    //  Y-axis is directed towards the right,
-    //  Z-axis is directed upwards
+    jsonString.assign((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+
+    jsonMap data = jsonParse(jsonString.c_str());
+
+    Sw   = data["Sw"];
+    cbar = data["cbar"];
+    b    = data["b"];
+
+    m = data["mass"]/AISIM_G;
+
+    I[XX] = data["Ixx"];
+    I[YY] = data["Iyy"];
+    I[ZZ] = data["Izz"];
+
+    // Center of gravity, gears and engines are in the structural frame
+    //  0: X-axis is directed afterwards,
+    //  1: Y-axis is directed towards the right,
+    //  2: Z-axis is directed upwards
     //  positions are in inches
-    cg[X] =  -2.2f;
-    cg[Y] =   0.0f;
-    cg[Z] = -20.9f;
+    cg[X] = data["cg[0]"];
+    cg[Y] = data["cg[1]"];
+    cg[Z] = data["cg[2]"];
 
     // gear ground contact points relative tot aero ref. pt. at (0,0,0)
     no_gears = 3;
     /* nose */
-    gear_pos[0][X] = -93.0f;
-    gear_pos[0][Y] =   0.0f;
-    gear_pos[0][Z] = -38.9f;
-    Cg_spring[0] = 1800.0f;
-    Cg_damp[0] = 600.0f;
+    gear_pos[0][X] = data["gear[0]/pos[0]"];
+    gear_pos[0][Y] = data["gear[0]/pos[1]"];
+    gear_pos[0][Z] = data["gear[0]/pos[2]"];
+    Cg_spring[0] = data["gear[0]/spring"];
+    Cg_damp[0] = data["gear[0]/damp"];
     /* left */
-    gear_pos[1][X] =  -5.4f;
-    gear_pos[1][Y] = -38.0f;
-    gear_pos[1][Z] = -38.9f;
-    Cg_spring[1] = 5400.0f;
-    Cg_damp[1] = 1600.0f;
+    gear_pos[1][X] = data["gear[1]/pos[0]"];
+    gear_pos[1][Y] = data["gear[1]/pos[1]"];
+    gear_pos[1][Z] = data["gear[1]/pos[2]"];
+    Cg_spring[1] = data["gear[1]/spring"];
+    Cg_damp[1] = data["gear[1]/damp"];
     /* right */
-    gear_pos[2][X] =  -5.4f;
-    gear_pos[2][Y] =  38.0f;
-    gear_pos[2][Z] = -38.9f;
-    Cg_spring[2] = 5400.0f;
-    Cg_damp[2] = 1600.0f;
-
-    float de_max = 24.0f*SG_DEGREES_TO_RADIANS;
-    float dr_max = 16.0f*SG_DEGREES_TO_RADIANS;
-    float da_max = 17.5f*SG_DEGREES_TO_RADIANS;
-    float df_max = 30.0f*SG_DEGREES_TO_RADIANS;
+    gear_pos[2][X] = data["gear[2]/pos[0]"];
+    gear_pos[2][Y] = data["gear[2]/pos[1]"];
+    gear_pos[2][Z] = data["gear[2]/pos[2]"];
+    Cg_spring[2] = data["gear[2]/spring"];
+    Cg_damp[2] = data["gear[2]/damp"];
+#if 0
+ for (int q=0; q<no_gears; ++q)
+   printf("%i: posZ %f, %f, %f, spring: %f, damp: %f\n", q, gear_pos[q][X], gear_pos[q][Y], gear_pos[q][Z], Cg_spring[q], Cg_damp[q]);
+#endif
 
     /* thuster / propulsion */
-                     // (FWD,RIGHT,DOWN)
-    aiVec3 dir(1.0f,0.0f,0.0f);
+    aiVec3 dir(data["engine[0]/dir[0]"],
+               data["engine[0]/dir[1]"],
+               data["engine[0]/dir[2]"]);
+    simd4::normalize(dir);
+
     no_engines = 1;
 
-    CTmax  =  0.057f/144;
-    CTu    = -0.096f;
+    CTmax  = data["engine[0]/CTmax"];
+    CTu    = data["engine[0]/CTu"];
 
-// if propeller driven
-    float D = 75.0f*INCHES_TO_FEET;
-    float RPS = 2700.0f/60.0f;
-    float Ixx = 1.67f;	// propeller
+    float D = data["engine[0]/D"]*INCHES_TO_FEET;
+    if (D) // if propeller driven
+    {
+        float RPM = data["engine[0]/RPM"]/60.0f;
+        float Ixx = data["engine[0]/Ixx"];
 
-    simd4::normalize(dir);
-    FT[0]  = dir * (CTmax * RPS*RPS * D*D*D*D);	// Thrust force
-    FTM[0] = dir * (CTu/(RPS*D))*vsound[0];	// Thrust force due to Mach
-    MT[0]  = dir * (-Ixx*(2.0f*RPS*float(SG_PI)));// Thrus moment
-// if propeller driven
+        FT[0]  = dir * (CTmax * RPM*RPM * D*D*D*D); // Thrust force
+        FTM[0] = dir * (CTu/(RPM*D))*vsound[0];     // Thrust force due to Mach
+        MT[0]  = dir * (-Ixx*(2.0f*RPM*SG_PI));     // Thrus moment
+    }
+    else
+    {
+        FT[0]  = dir * CTmax;                       // Thrust force
+        FTM[0] = dir * CTu*vsound[0];               // Thrust force due to Mach
+    }
+
+    float de_max = data["de_max"]*SG_DEGREES_TO_RADIANS;
+    float dr_max = data["dr_max"]*SG_DEGREES_TO_RADIANS;
+    float da_max = data["da_max"]*SG_DEGREES_TO_RADIANS;
+    float df_max = data["df_max"]*SG_DEGREES_TO_RADIANS;
 
     /* aerodynamic coefficients */
-    CLmin  =  0.25f;
-    CLa    =  4.72f;
-    CLadot =  1.7f;
-    CLq    =  3.9f;
-    CLdf_n =  0.705f*df_max;
+    CLmin  = data["CLmin"];
+    CLa    = data["CLa"];
+    CLadot = data["CLadot"];
+    CLq    = data["CLq"];
+    CLdf_n = data["CLdf"]*df_max;
 
-    CDmin  =  0.036f;
-    CDa    =  0.13f;
-    CDb    =  0.192f;
-    CDi    =  0.0446f;
-    CDdf_n =  0.052f*df_max;
+ 
+    CDmin  = data["CDmin"];
+    CDa    = data["CDa"];
+    CDb    = data["CDb"];
+    CDi    = data["CDi"];
+    CDdf_n = data["CDdf"]*df_max;
 
-    CYb    = -0.31f;
-    CYp    = -0.037f;
-    CYr    =  0.21f;
-    CYdr_n =  0.187f*dr_max;
+    CYb    = data["CYb"];
+    CYp    = data["CYp"];
+    CYr    = data["CYr"];
+    CYdr_n = data["CYdr"]*dr_max;
 
-    Clb    = -0.057f;
-    Clp    = -0.613f;
-    Clr    =  0.079f;
-    Clda_n =  0.17f*da_max;
-    Cldr_n =  0.0147f*dr_max;
+    Clb    = data["Clb"];
+    Clp    = data["Clp"];
+    Clr    = data["Clr"];
+    Clda_n = data["Clda"]*da_max;
+    Cldr_n = data["Cldr"]*dr_max;
 
-    Cma    = -1.8f;
-    Cmadot = -5.2f;
-    Cmq    = -12.4f;
-    Cmde_n = -1.05f*de_max;
-//  Cmdf_n = -0.2177f*df_max;
+    Cma    = data["Cma"];
+    Cmadot = data["Cmadot"];
+    Cmq    = data["Cmq"];
+    Cmde_n = data["Cmde"]*de_max;
+    Cmdf_n = data["Cmdf"]*df_max;
 
-    Cnb    =  0.063f;
-    Cnp    = -0.0028f;
-    Cnr    = -0.0937f;         // -0.0681f;
-    Cnda_n = -0.0053f*da_max; // -0.0100f*da_max;
-    Cndr_n = -0.043f*dr_max;
+    Cnb    = data["Cnb "];
+    Cnp    = data["Cnp"];
+    Cnr    = data["Cnr"];
+    Cnda_n = data["Cnda"]*da_max;
+    Cndr_n = data["Cndr"]*dr_max;
 
     return true;
 }

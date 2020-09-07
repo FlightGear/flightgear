@@ -30,6 +30,7 @@
 
 #include <string>
 #include <cmath>
+#include <map>
 
 #ifdef ENABLE_SP_FDM
 # include <simgear/math/simd.hxx>
@@ -76,6 +77,8 @@ private:
     using aiVec3 = simd4_t<float,3>;
     using aiVec4 = simd4_t<float,4>;
     using aiMtx4 = simd4x4_t<float,4>;
+
+    using jsonMap = std::map<std::string,float>;
 
 public:
     FGAISim(double dt);
@@ -173,6 +176,7 @@ public:
     }
 
 private:
+    std::map<std::string,float> jsonParse(const char *str);
     void update_velocity(float v);
     aiMtx4 matrix_inverse(aiMtx4 mtx);
     aiMtx4 invert_inertia(aiMtx4 mtx);
