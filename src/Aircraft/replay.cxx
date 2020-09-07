@@ -988,6 +988,7 @@ FGReplay::update( double dt )
                 // guarantee that there is always a valid recovery tape even if
                 // flightgear crashes or is killed while we are writing.
                 //
+                path.create_dir();
                 (void) remove(path_temp.c_str());
                 std::ofstream   out;
                 bool ok = true;
@@ -998,7 +999,8 @@ FGReplay::update( double dt )
                     rename(path_temp.c_str(), path.c_str());
                 }
                 else {
-                    popupTip("Failed to update recovery file", 2 /*delay*/);
+                    std::string message = "Failed to update recovery file: " + path.str();
+                    popupTip(message.c_str(), 3 /*delay*/);
                 }
             }
         }
