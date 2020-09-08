@@ -160,7 +160,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
 
     NewGUI* gui = globals->get_subsystem<NewGUI>();
     if (!gui || (fgGetBool("/sim/rendering/initialized", false) == false)) {
-        SG_LOG(SG_GENERAL, SG_ALERT, s);
+        SG_LOG(SG_GENERAL, SG_POPUP, s);
     } else {
         SGPropertyNode_ptr dlg = gui->getDialogProperties("popup");
         dlg->setStringValue("text/label", s  );
