@@ -23,6 +23,8 @@
 
 #include "config.h"
 
+#include <algorithm> // for std::clamp
+
 #include "viewmgr.hxx"
 #include "ViewPropertyEvaluator.hxx"
 
