@@ -22,6 +22,7 @@
 
 #include "logging.hxx"
 
+#include <simgear/debug/logstream.hxx>
 #include <simgear/debug/OsgIoCapture.hxx>
 
 
