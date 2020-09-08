@@ -89,6 +89,8 @@ public:
     bool getInternal() const { return _internal; }
     void setInternal( bool internal );
 
+    const std::string& getName() const { return _name; }
+
     // Reference geodetic position of view from position...
     //   These are the actual aircraft position (pilot in
     //   pilot view, model in model view).

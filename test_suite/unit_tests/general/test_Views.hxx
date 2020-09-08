@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Edward d'Auvergne
+ * Copyright (C) 2020 James Turner
  *
  * This file is part of the program FlightGear.
  *
@@ -17,9 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test-mktime.hxx"
-#include "test_Views.hxx"
+#pragma once
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(MktimeTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(ViewsTests, "Unit tests");
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <memory>
+
+#include <simgear/props/props.hxx>
+
+class ViewsTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(ViewsTests);
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST_SUITE_END();
+
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testBasic();
+};

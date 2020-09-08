@@ -35,10 +35,8 @@
 #include "CameraGroup.hxx"
 
 // Constructor
-FGViewMgr::FGViewMgr( void ) :
-  config_list(fgGetNode("/sim", true)->getChildren("view"))
+FGViewMgr::FGViewMgr(void)
 {
-    _current = fgGetInt("/sim/current-view/view-number");
 }
 
 // Destructor
@@ -55,6 +53,8 @@ FGViewMgr::init ()
     }
 
     _inited = true;
+    config_list = fgGetNode("/sim", true)->getChildren("view");
+    _current = fgGetInt("/sim/current-view/view-number");
 
     for (unsigned int i = 0; i < config_list.size(); i++) {
         SGPropertyNode* n = config_list[i];
@@ -147,10 +147,12 @@ FGViewMgr::update (double dt)
 
 // update the camera now
     osg::ref_ptr<flightgear::CameraGroup> cameraGroup = flightgear::CameraGroup::getDefault();
-    cameraGroup->setCameraParameters(currentView->get_v_fov(),
-                                     cameraGroup->getMasterAspectRatio());
-    cameraGroup->update(toOsg(currentView->getViewPosition()),
-                        toOsg(currentView->getViewOrientation()));
+    if (cameraGroup) {
+        cameraGroup->setCameraParameters(currentView->get_v_fov(),
+                                         cameraGroup->getMasterAspectRatio());
+        cameraGroup->update(toOsg(currentView->getViewPosition()),
+                            toOsg(currentView->getViewOrientation()));
+    }
 }
 
 void FGViewMgr::clear()
