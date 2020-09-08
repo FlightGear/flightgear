@@ -360,9 +360,9 @@ bool FGPanelNode::isVisible2d() const
   }
   
   if (_hideNonDefaultViews->getBoolValue()) {
-    if (globals->get_viewmgr()->get_current() != 0) {
-      return false;
-    }
+      if (globals->get_viewmgr()->getCurrentViewIndex() != 0) {
+          return false;
+      }
   }
   
   if (!_autoHide2d) {

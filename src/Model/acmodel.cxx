@@ -173,11 +173,11 @@ FGAircraftModel::unbind ()
 void
 FGAircraftModel::update (double dt)
 {
-  int view_number = globals->get_viewmgr()->get_current();
-  int is_internal = fgGetBool("/sim/current-view/internal");
+    int view_number = globals->get_viewmgr()->getCurrentViewIndex();
+    int is_internal = fgGetBool("/sim/current-view/internal");
 
-  if (view_number == 0 && !is_internal) {
-    _aircraft->setVisible(false);
+    if (view_number == 0 && !is_internal) {
+        _aircraft->setVisible(false);
   } else {
     _aircraft->setVisible(true);
   }

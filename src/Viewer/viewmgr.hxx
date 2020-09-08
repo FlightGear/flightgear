@@ -63,7 +63,8 @@ public:
 
     // getters
     inline int size() const { return views.size(); }
-    inline int get_current() const { return current; }
+
+    int getCurrentViewIndex() const;
 
     flightgear::View* get_current_view();
     const flightgear::View* get_current_view() const;
@@ -82,16 +83,15 @@ public:
 private:
     simgear::TiedPropertyList _tiedProperties;
 
-    int getView () const;
-    void setView (int newview);
+    void setCurrentViewIndex(int newview);
 
-    bool inited;
+    bool _inited = false;
     std::vector<SGPropertyNode_ptr> config_list;
     SGPropertyNode_ptr _viewNumberProp;
     typedef std::vector<flightgear::ViewPtr> viewer_list;
     viewer_list views;
 
-    int current;
+    int _current = 0;
 };
 
 #endif // _VIEWMGR_HXX
