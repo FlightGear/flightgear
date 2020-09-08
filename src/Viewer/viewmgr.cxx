@@ -21,9 +21,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "viewmgr.hxx"
 #include "ViewPropertyEvaluator.hxx"
@@ -38,10 +36,9 @@
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
-  inited(false),
   config_list(fgGetNode("/sim", true)->getChildren("view"))
 {
-    current = fgGetInt("/sim/current-view/view-number");
+    _current = fgGetInt("/sim/current-view/view-number");
 }
 
 // Destructor
@@ -52,24 +49,30 @@ FGViewMgr::~FGViewMgr( void )
 void
 FGViewMgr::init ()
 {
-  if (inited) {
-    SG_LOG(SG_VIEW, SG_WARN, "duplicate init of view manager");
-    return;
+    if (_inited) {
+        SG_LOG(SG_VIEW, SG_WARN, "duplicate init of view manager");
+        return;
+    }
+
+    _inited = true;
+
+    for (unsigned int i = 0; i < config_list.size(); i++) {
+        SGPropertyNode* n = config_list[i];
+        SGPropertyNode* config = n->getChild("config", 0, true);
+
+        flightgear::View* v = flightgear::View::createFromProperties(config, n->getIndex());
+        if (v) {
+            add_view(v);
+        } else {
+            SG_LOG(SG_VIEW, SG_DEV_WARN, "Failed to create view from:" << config->getPath());
+        }
   }
 
-  inited = true;
-
-  for (unsigned int i = 0; i < config_list.size(); i++) {
-    SGPropertyNode *n = config_list[i];
-    SGPropertyNode *config = n->getChild("config", 0, true);
-
-      flightgear::View* v = flightgear::View::createFromProperties(config, n->getIndex());
-      if (v) {
-          add_view(v);
-      }
+  if (get_current_view()) {
+      get_current_view()->bind();
+  } else {
+      SG_LOG(SG_VIEW, SG_DEV_WARN, "FGViewMgr::init: current view " << _current << " failed to create");
   }
-
-    get_current_view()->bind();
 }
 
 void
@@ -83,11 +86,11 @@ FGViewMgr::postinit()
 void
 FGViewMgr::shutdown()
 {
-    if (!inited) {
+    if (!_inited) {
         return;
     }
 
-    inited = false;
+    _inited = false;
     views.clear();
 }
 
@@ -108,7 +111,8 @@ FGViewMgr::bind()
 
 
     _tiedProperties.Tie("view-number", this,
-                        &FGViewMgr::getView, &FGViewMgr::setView, false);
+                        &FGViewMgr::getCurrentViewIndex,
+                        &FGViewMgr::setCurrentViewIndex, false);
     _viewNumberProp = _tiedProperties.getRoot()->getNode("view-number");
     _viewNumberProp->setAttribute(SGPropertyNode::ARCHIVE, false);
     _viewNumberProp->setAttribute(SGPropertyNode::PRESERVE, true);
@@ -157,20 +161,22 @@ void FGViewMgr::clear()
 flightgear::View*
 FGViewMgr::get_current_view()
 {
-    if ( current < (int)views.size() ) {
-        return views[current];
+    const auto numViews = static_cast<int>(views.size());
+    if ((_current >= 0) && (_current < numViews)) {
+        return views.at(_current);
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
 const flightgear::View*
 FGViewMgr::get_current_view() const
 {
-    if ( current < (int)views.size() ) {
-        return views[current];
+    const auto numViews = static_cast<int>(views.size());
+    if ((_current >= 0) && (_current < numViews)) {
+        return views.at(_current);
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -178,33 +184,38 @@ FGViewMgr::get_current_view() const
 flightgear::View*
 FGViewMgr::get_view( int i )
 {
-    if ( i < 0 ) { i = 0; }
-    if ( i >= (int)views.size() ) { i = views.size() - 1; }
-    return views[i];
+    const auto lastView = static_cast<int>(views.size()) - 1;
+    const int c = std::clamp(i, 0, lastView);
+    return views.at(c);
 }
 
 const flightgear::View*
 FGViewMgr::get_view( int i ) const
 {
-    if ( i < 0 ) { i = 0; }
-    if ( i >= (int)views.size() ) { i = views.size() - 1; }
-    return views[i];
+    const auto lastView = static_cast<int>(views.size()) - 1;
+    const int c = std::clamp(i, 0, lastView);
+    return views.at(c);
 }
 
 flightgear::View*
 FGViewMgr::next_view()
 {
-    setView((current+1 < (int)views.size()) ? (current + 1) : 0);
+    const auto numViews = static_cast<int>(views.size());
+    setCurrentViewIndex((_current + 1) % numViews);
     _viewNumberProp->fireValueChanged();
-    return views[current];
+    return get_current_view();
 }
 
 flightgear::View*
 FGViewMgr::prev_view()
 {
-    setView((0 < current) ? (current - 1) : (views.size() - 1));
+    const auto numViews = static_cast<int>(views.size());
+    // subtract 1, but add a full numViews, to ensure the integer
+    // modulo returns a +ve result; negative values mean something
+    // else to setCurrentViewIndex
+    setCurrentViewIndex((_current - 1 + numViews) % numViews);
     _viewNumberProp->fireValueChanged();
-    return views[current];
+    return get_current_view();
 }
 
 void
@@ -214,43 +225,44 @@ FGViewMgr::add_view( flightgear::View * v )
   v->init();
 }
 
-int FGViewMgr::getView () const
+int FGViewMgr::getCurrentViewIndex() const
 {
-  return current;
+    return _current;
 }
 
-void
-FGViewMgr::setView (int newview)
+void FGViewMgr::setCurrentViewIndex(int newview)
 {
-    if (newview == current) {
+    if (newview == _current) {
         return;
     }
 
     // negative numbers -> set view with node index -newview
     if (newview < 0) {
-	for (int i = 0; i < (int)config_list.size(); i++) {
-	    int index = -config_list[i]->getIndex();
-	    if (index == newview)
-		newview = i;
-	}
-	if (newview < 0)
-	    return;
+        for (int i = 0; i < (int)config_list.size(); i++) {
+            int index = -config_list[i]->getIndex();
+            if (index == newview)
+                newview = i;
+        }
+        if (newview < 0)
+            return;
     }
 
-    // if newview number too low wrap to last view...
-    if (newview < 0)
-	newview = (int)views.size() - 1;
-
-    // if newview number to high wrap to zero...
-    if (newview >= (int)views.size())
-	newview = 0;
+    // not sure it really makes sense to be doing this wrapping logic
+    // here, it could mask various strange inputs, But keeping for compat
+    // for now.
+    const auto numViews = static_cast<int>(views.size());
+    if (newview < 0) { // wrap to last
+        newview = numViews - 1;
+    } else if (newview >= numViews) { //  wrap to zero
+        newview = 0;
+    }
 
     if (get_current_view()) {
 	get_current_view()->unbind();
     }
 
     // set new view
-    current = newview;
+    _current = newview;
 
     if (get_current_view()) {
         get_current_view()->bind();
