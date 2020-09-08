@@ -1708,6 +1708,9 @@ int FGMultiplayMgr::GetMsgNetwork(MsgBuf& msgBuf, simgear::IPAddress& SenderAddr
         //  returned will only be that of the next
         //  packet waiting to be processed.
         //////////////////////////////////////////////////
+        if (!mSocket) {
+            return 0;
+        }
         int RecvStatus = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
                                   &SenderAddress);
         //////////////////////////////////////////////////
@@ -1832,8 +1835,9 @@ int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
 void
 FGMultiplayMgr::update(double dt)
 {
-  if (!mInitialised)
-    return;
+  // We carry on even if !mInitialised, in case we are replaying a multiplayer
+  // recording.
+  //
 
   /// Just for expiry
   long stamp = SGTimeStamp::now().getSeconds();
@@ -1847,7 +1851,8 @@ FGMultiplayMgr::update(double dt)
   }
 
   //////////////////////////////////////////////////
-  //  Read the receive socket and process any data
+  //  Read from receive socket and/or multiplayer
+  //  replay, and process any data.
   //////////////////////////////////////////////////
   ssize_t bytes;
   do {
