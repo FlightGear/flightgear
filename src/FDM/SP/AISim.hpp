@@ -130,7 +130,7 @@ public:
         location_geod = aiVec3d(lat, lon, alt);
     }
     inline void set_altitude_asl_ft(float f) { location_geod[ALTITUDE] = f; };
-    inline void set_altitude_agl_ft(float f) { agl = f; }
+    inline void set_altitude_agl_ft(float f) { cg_agl = f; }
 
     inline void set_euler_angles_rad(const aiVec3& e) {
         euler = e;
@@ -180,6 +180,7 @@ private:
     void update_velocity(float v);
     aiMtx4 matrix_inverse(aiMtx4 mtx);
     aiMtx4 invert_inertia(aiMtx4 mtx);
+    void struct_to_body(aiVec3 &pos);
 
     /* aircraft normalized controls */
     float th;                 /* throttle command             */
@@ -188,7 +189,7 @@ private:
     /* aircraft state */
     aiVec3d location_geod = 0.0;    /* lat, lon, altitude     */
     aiVec3 aXYZ = 0.0f;       /* local body accelrations      */
-    aiVec3 NEDdot = 0.0f;     /* North, East, Down velocity   */
+    aiVec3 vNEDdot = 0.0f;     /* North, East, Down velocity   */
     aiVec3 vUVW = 0.0f;       /* fwd, side, down velocity     */
     aiVec3 vUVWdot = 0.0f;    /* fwd, side, down accel.       */
     aiVec3 vPQR = 0.0f;       /* roll, pitch, yaw rate        */
@@ -204,7 +205,8 @@ private:
     /* change less often than the update function runs which  might     */
     /* run 20 to 60 times (or more) per second                          */
 
-    /* cache */
+    /* cache_ */
+    aiVec3 NEDdist;
     aiVec3 vUVWaero = 0.0f;   /* airmass relative to the body */
     aiVec3 FT[AISIM_MAX];     /* thrust force                 */
     aiVec3 FTM[AISIM_MAX];    /* thrust due to mach force     */
@@ -212,9 +214,10 @@ private:
     aiVec3 b_2U = 0.0f;
     aiVec3 cbar_2U = 0.0f;
     aiVec3 inv_m;
+    float altitude = 0.0f;
     float velocity = 0.0f;
     float mach = 0.0f;
-    float agl = 0.0f;
+    float cg_agl = 0.0f;
     bool WoW = true;
 
     /* dynamic coefficients (already multiplied with their value) */
@@ -229,21 +232,21 @@ private:
 
     /* ---------------------------------------------------------------- */
     /* aircraft static data */
-    int no_engines = 0;
-    int no_gears = 0;
-    aiMtx4 mI, mIinv;           /* inertia matrix                       */
-    aiVec3 gear_pos[AISIM_MAX]; /* pos in structural frame              */
-    aiVec3 cg = 0.0f;           /* center of gravity                    */
-    aiVec4 I = 0.0f;            /* inertia                              */
-    float Sw = 0.0f;		/* wing area                            */
-    float cbar = 0.0f;          /* mean average chord                   */
-    float b = 0.0f;             /* wing span                            */
-    float m = 0.0f;             /* mass                                 */
+    size_t no_engines = 0;
+    size_t no_contacts = 0;
+    aiMtx4 mI, mIinv;                /* inertia matrix                  */
+    aiVec3 engine_pos[AISIM_MAX];    /* pos in structural frame         */
+    aiVec3 contact_pos[AISIM_MAX];   /* pos in structural frame         */
+    aiVec3 cg = 0.0f;                /* center of gravity               */
+    aiVec4 I = 0.0f;                 /* inertia                         */
+    float Sw = 0.0f;		     /* wing area                       */
+    float cbar = 0.0f;               /* mean average chord              */
+    float b = 0.0f;                  /* wing span                       */
+    float m = 0.0f;                  /* mass                            */
 
     /* static coefficients, *_n is for normalized surface deflection    */
-    float Cg_spring[AISIM_MAX]; /* gear spring coeffients               */
-    float Cg_damp[AISIM_MAX];   /* gear damping coefficients            */
-    float CTmax, CTu;           /* thrust max, due to speed             */
+    float contact_spring[AISIM_MAX]; /* contact spring coeffients       */
+    float contact_damp[AISIM_MAX];   /* contact damping coefficients    */
     float CLmin, CLa, CLadot, CLq, CLdf_n;
     float CDmin, CDa, CDb, CDi, CDdf_n;
     float CYb, CYp, CYr, CYdr_n;
@@ -254,6 +257,7 @@ private:
     /* environment data */
     static float density[101], vsound[101];
     aiVec3 gravity_ned = { 0.0f, 0.0f, AISIM_G };
+    size_t alt_idx = -1;
     float rho = 0.0f;
     float qbar = 0.0f;
     float sigma = 0.0f;
