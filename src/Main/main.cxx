@@ -620,7 +620,7 @@ int fgMainInit( int argc, char **argv )
             SG_LOG( SG_GENERAL, SG_INFO, "This is OpenBSD; getrlimit() failed: " << strerror(errno));
         }
         else {
-            long long   required = 4LL * (1LL<<30);
+            unsigned long long   required = 4ULL * (1ULL<<30);
             if (rlimit.rlim_cur < required) {
                 SG_LOG( SG_GENERAL, SG_POPUP, ""
                         << "Max data segment (" << rlimit.rlim_cur << "bytes) too small.\n"
