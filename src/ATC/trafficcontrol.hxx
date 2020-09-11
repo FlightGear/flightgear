@@ -339,7 +339,7 @@ public:
     {
         return currentlyCleared;
     };
-    const double getApproachDistance() const
+    double getApproachDistance() const
     {
         return distanceToFinal;
     };
