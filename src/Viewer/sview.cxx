@@ -765,9 +765,8 @@ struct SviewViewClone : SviewView
         // /sim/view[]/config/eye-heading-deg-path, even when handling
         // multiplayer aircraft.
         //
-        global_view = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
-        
         view_number_raw = globals->get_props()->getIntValue("/sim/current-view/view-number-raw");
+        global_view = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
         
         /* <root_path> is typically "" or /ai/models/multiplayer[]. */
         root_path   = global_view->getStringValue("config/root");
