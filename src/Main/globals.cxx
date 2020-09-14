@@ -249,6 +249,13 @@ FGGlobals::~FGGlobals()
     delete initial_waypoints;
     delete channellist;
 
+    // delete commands before we release the property root
+    // this avoids crash where commands might be storing a propery
+    // ref/pointer.
+    // see https://sentry.io/organizations/flightgear/issues/1890563449
+    delete commands;
+    commands = nullptr;
+    
     simgear::PropertyObjectBase::setDefaultRoot(NULL);
     simgear::SGModelLib::resetPropertyRoot();
     delete locale;
@@ -258,7 +265,6 @@ FGGlobals::~FGGlobals()
 
     props.clear();
 
-    delete commands;
     delete simgear::ResourceManager::instance();
 }
 
