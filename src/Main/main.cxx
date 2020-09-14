@@ -548,9 +548,7 @@ static void logToHome(const std::string& pri)
 // Main top level initialization
 int fgMainInit( int argc, char **argv )
 {
-    // set default log level to 'info' for startup, we will revert to a lower
-    // level once startup is done.
-    sglog().setLogLevels( SG_ALL, SG_INFO );
+    sglog().setLogLevels( SG_ALL, SG_WARN );
     sglog().setStartupLoggingEnabled(true);
     
     globals = new FGGlobals;
