@@ -1,0 +1,50 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Richard Hughes <richard@hughsie.com> -->
+<!-- HOUSEKEEPING, REMOVE THIS COMMENT WHEN THIS GOES UPSTREAM
+BugReportURL: https://sourceforge.net/p/fgrun/support-requests/9/
+SentUpstream: 2014-09-17
+-->
+<component type="desktop-application">
+	<id>org.flightgear.FlightGear</id>
+	<name>FlightGear</name>
+	<summary>A free and highly sophisticated flight simulator</summary>
+	<summary xml:lang="pt_BR">Um simulador de voo gratuito e altamente sofisticado</summary>
+	<summary xml:lang="es">Un simulador de vuelo gratuito y altamente sofisticado</summary>
+	<metadata_license>CC0-1.0</metadata_license>
+	<description>
+		<p>FlightGear allows you to control over 400 aircraft, small and large in a range of situations, types of weather, seasons, day and night cycle. This includes single-engine propeller aircraft, large 4-engine passenger liners, experimental aircraft, classic and vintage aircraft and helicopters.</p>
+		<p xml:lang="pt_BR">FlightGear permite controlar mais de 400 aeronaves, pequenas e grandes em diversas situações, tipos de clima, estações do ano, ciclo diurno e noturno. Isso inclui aeronaves a hélice monomotor, grandes navios de passageiros de 4 motores, aeronaves experimentais, aeronaves clássicas e antigas e helicópteros.</p>
+		<p xml:lang="es">FlightGear permite controlar más de 400 aeronaves, pequeñas y grandes en diversas situaciones, tipos de clima, estaciones del año, ciclo diurno y nocturno. Esto incluye aviones a hélice monomotor, grandes buques de pasajeros de 4 motores, aeronaves experimentales, aeronaves clásicas y antiguas y helicópteros.</p>
+		<p>The FlightGear landscape covers the entire world and is downloaded as you fly. Visit any of the 20,000 airports with an accurate representation of	   airport buildings on many of the larger, international airports.</p>
+		<p xml:lang="pt_BR">A paisagem do FlightGear cobre o mundo inteiro e é baixada enquanto você voa. Visite qualquer um dos 20.000 aeroportos com uma representação precisa dos edifícios do aeroporto em muitos dos maiores aeroportos internacionais.</p>
+		<p xml:lang="es">El paisaje de FlightGear cubre el mundo entero y se descarga mientras vuela. Visite cualquiera de los 20.000 aeropuertos con una representación precisa de los edificios del aeropuerto en muchos de los mayores aeropuertos internacionales.</p>
+		<p>Most popular flight control hardware, such as yokes and sticks are supported. Multiple monitor setup and multiplayer is also featured.</p>
+		<p xml:lang="pt_BR">Mais popular hardware de controle de vôo, tais como yokes e sticks são suportados. Vários monitores de configuração e multiplayer também é destaque.</p>
+		<p xml:lang="es">Más populares hardware de control de vuelo, como yokes y sticks son compatibles. Varios monitores de configuración y multijugador también se destaca.</p>
+	</description>
+	<screenshots>
+		<screenshot type="default">
+			<image>http://wiki.flightgear.org/images/b/b3/SOTM-Feb18.jpg</image>
+		</screenshot>
+		<screenshot>
+			<image>http://wiki.flightgear.org/images/3/37/SOTY-2017.jpeg</image>
+		</screenshot>
+		<screenshot>
+			<image>http://wiki.flightgear.org/images/2/27/SOTM-Oct17.png</image>
+		</screenshot>
+	</screenshots>
+	<content_rating type="oars-1.1">
+		<content_attribute id="social-chat">intense</content_attribute>
+	</content_rating>
+	<project_license>GPL-2.0</project_license>
+	<developer_name>FlightGear Developers</developer_name>
+	<url type="homepage">https://www.flightgear.org/</url>
+	<url type="bugtracker">https://sourceforge.net/p/flightgear/codetickets/</url>
+	<url type="donation">https://store.flightgear.org/</url>
+	<url type="help">http://flightgear.sourceforge.net/getstart-en/getstart-en.html</url>
+	<url type="translate">http://wiki.flightgear.org/Howto:Translate_FlightGear</url>
+	<releases>
+		<release version="@FLIGHTGEAR_VERSION@" date="@FG_CMAKE_TIMESTAMP@" />
+	</releases>
+</component>
