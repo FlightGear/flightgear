@@ -254,6 +254,11 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
     if (!qtInitDone) {
         qtInitDone = true;
 
+        // Disable Qt 5.15 warnings about obsolete Connections/onFoo: syntax
+        // we cannot use the new syntax
+        // as long as we have to support Qt 5.9
+        qputenv("QT_LOGGING_RULES", "qt.qml.connections.warning=false");
+        
         initQtResources(); // can't be called from a namespace
 
         s_argc = argc; // QApplication only stores a reference to argc,
