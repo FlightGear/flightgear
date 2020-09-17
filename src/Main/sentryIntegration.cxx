@@ -78,6 +78,8 @@ void initSentry()
         sentry_options_set_release(options, "flightgear@" FLIGHTGEAR_VERSION);
     }
     
+    sentry_options_set_dist(options, std::to_string(JENKINS_BUILD_NUMBER))
+    
     SGPath dataPath = fgHomePath() / "sentry_db";
 #if defined(SG_WINDOWS)
     const auto homePathString = dataPath.wstr();

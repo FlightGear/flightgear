@@ -600,7 +600,6 @@ int fgMainInit( int argc, char **argv )
 	SG_LOG( SG_GENERAL, SG_INFO, "Jenkins number/ID " << JENKINS_BUILD_NUMBER << ":"
 			<< JENKINS_BUILD_ID);
 
-    flightgear::addSentryTag("jenkins-build-number", std::to_string(JENKINS_BUILD_NUMBER));
     flightgear::addSentryTag("osg-version", osgGetVersion());
     
 #ifdef __OpenBSD__
