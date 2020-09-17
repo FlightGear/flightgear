@@ -30,6 +30,8 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
+#include <build.h>
+
 using namespace std;
 
 // we don't want sentry enabled for the test suite
@@ -78,6 +80,9 @@ void initSentry()
     } else {
         sentry_options_set_release(options, "flightgear@" FLIGHTGEAR_VERSION);
     }
+    
+    const auto buildString = std::to_string(JENKINS_BUILD_NUMBER);
+    sentry_options_set_dist(options, buildString.c_str());
     
     SGPath dataPath = fgHomePath() / "sentry_db";
 #if defined(SG_WINDOWS)
