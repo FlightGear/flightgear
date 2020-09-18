@@ -20,6 +20,7 @@
 
 #include "sentryIntegration.hxx"
 
+#include <simgear/debug/LogCallback.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
@@ -40,6 +41,31 @@ using namespace std;
 static bool static_sentryEnabled = false;
 
 #include <sentry.h>
+
+namespace {
+
+class SentryLogCallback : public simgear::LogCallback
+{
+public:
+    SentryLogCallback() : simgear::LogCallback(SG_ALL, SG_WARN)
+    {
+    }
+
+    bool doProcessEntry(const simgear::LogEntry& e) override
+    {
+        // we need original priority here, so we don't record MANDATORY_INFO
+        // or DEV_ messages, which would get noisy.
+        const auto op = e.originalPriority;
+        if ((op != SG_WARN) && (op != SG_ALERT)) {
+            return true;
+        }
+
+        flightgear::addSentryBreadcrumb(e.message, (op == SG_WARN) ? "warning" : "error");
+        return true;
+    }
+};
+
+} // namespace
 
 namespace flightgear
 {
@@ -101,6 +127,8 @@ void initSentry()
     
     sentry_init(options);
     static_sentryEnabled = true;
+
+    sglog().addCallback(new SentryLogCallback);
 }
 
 void delayedSentryInit()
