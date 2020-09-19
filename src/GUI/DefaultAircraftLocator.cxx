@@ -10,11 +10,20 @@ static SGPropertyNode_ptr loadXMLDefaults()
 {
     SGPropertyNode_ptr root(new SGPropertyNode);
     const SGPath defaultsXML = globals->get_fg_root() / "defaults.xml";
-    readProperties(defaultsXML, root);
+    if (!defaultsXML.exists()) {
+        SG_LOG(SG_GUI, SG_POPUP, "Failed to find required data file (defaults.xml)");
+        return {};
+    }
+
+    const auto ok = readProperties(defaultsXML, root);
+    if (!ok) {
+        SG_LOG(SG_GUI, SG_POPUP, "Failed to read required data file (defaults.xml)");
+        return {};
+    }
 
     if (!root->hasChild("sim")) {
         SG_LOG(SG_GUI, SG_POPUP, "Failed to find /sim node in defaults.xml, broken");
-        return SGPropertyNode_ptr();
+        return {};
     }
 
     return root;
@@ -28,7 +37,8 @@ std::string defaultAirportICAO()
 {
     SGPropertyNode_ptr root = loadXMLDefaults();
     if (!root) {
-        return std::string();
+        return {};
+    }
     }
 
     std::string airportCode = root->getStringValue("/sim/presets/airport-id");
