@@ -151,12 +151,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #include <execinfo.h>
 #include <cxxabi.h>
 void segfault_handler(int signo) {
-  void *array[128];
-  size_t size;
 
   fprintf(stderr, "Error: caught signal %d:\n", signo);
 
   #ifndef __OpenBSD__
+  void *array[128];
+  size_t size;
   size = backtrace(array, 128);
   if (size) {
     char** list = backtrace_symbols(array, size);
