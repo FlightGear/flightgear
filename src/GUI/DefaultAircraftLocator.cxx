@@ -39,7 +39,6 @@ std::string defaultAirportICAO()
     if (!root) {
         return {};
     }
-    }
 
     std::string airportCode = root->getStringValue("/sim/presets/airport-id");
     return airportCode;
