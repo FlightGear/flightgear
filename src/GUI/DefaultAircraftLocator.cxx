@@ -2,6 +2,7 @@
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
@@ -15,8 +16,9 @@ static SGPropertyNode_ptr loadXMLDefaults()
         return {};
     }
 
-    const auto ok = readProperties(defaultsXML, root);
-    if (!ok) {
+    try {
+       readProperties(defaultsXML, root);
+    } catch (sg_exception& e) {
         SG_LOG(SG_GUI, SG_POPUP, "Failed to read required data file (defaults.xml)");
         return {};
     }
