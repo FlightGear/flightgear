@@ -20,6 +20,8 @@
 
 #include "sentryIntegration.hxx"
 
+#include <cstring> // for strcmp
+
 #include <simgear/debug/LogCallback.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
