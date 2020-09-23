@@ -27,6 +27,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
@@ -44,6 +45,33 @@ static bool static_sentryEnabled = false;
 #include <sentry.h>
 
 namespace {
+
+// this callback is invoked whenever an instance of sg_throwable is created.
+// therefore we can log the stack trace at that point
+void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, const sg_location& loc)
+{
+    if (!static_sentryEnabled)
+        return;
+
+    sentry_value_t exc = sentry_value_new_object();
+    sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(msg.c_str()));
+
+    if (!origin.empty()) {
+        sentry_value_set_by_key(exc, "origin", sentry_value_new_string(origin.c_str()));
+    }
+
+    if (loc.isValid()) {
+        const auto s = loc.asString();
+        sentry_value_set_by_key(exc, "location", sentry_value_new_string(s.c_str()));
+    }
+
+    sentry_value_t event = sentry_value_new_event();
+    sentry_value_set_by_key(event, "exception", exc);
+
+    sentry_event_value_add_stacktrace(event, nullptr, 0);
+    sentry_capture_event(event);
+}
 
 class SentryLogCallback : public simgear::LogCallback
 {
@@ -94,6 +122,23 @@ bool sentryReportCommand(const SGPropertyNode* args, SGPropertyNode* root)
     return true;
 }
 
+bool sentrySendError(const SGPropertyNode* args, SGPropertyNode* root)
+{
+    if (!static_sentryEnabled) {
+        SG_LOG(SG_GENERAL, SG_WARN, "Sentry.io not enabled at startup");
+        return false;
+    }
+
+    try {
+        throw sg_io_exception("Invalid flurlbe", sg_location("/Some/dummy/path/bar.txt", 100, 200));
+    } catch (sg_exception& e) {
+        SG_LOG(SG_GENERAL, SG_WARN, "caught dummy exception");
+    }
+
+    return true;
+}
+
+
 void initSentry()
 {
     sentry_options_t *options = sentry_options_new();
@@ -130,6 +175,7 @@ void initSentry()
     static_sentryEnabled = true;
 
     sglog().addCallback(new SentryLogCallback);
+    setThrowCallback(sentryTraceSimgearThrow);
 }
 
 void delayedSentryInit()
@@ -146,6 +192,7 @@ void delayedSentryInit()
     }
 
     globals->get_commands()->addCommand("sentry-report", &sentryReportCommand);
+    globals->get_commands()->addCommand("sentry-exception", &sentrySendError);
 }
 
 void shutdownSentry()
