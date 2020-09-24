@@ -219,7 +219,7 @@ void Autopilot::add_component( Component * component, double updateInterval )
       name = buf.str();
   }
   if( name != component->subsystemId() )
-    SG_LOG( SG_AUTOPILOT, SG_WARN, "Duplicate autopilot component " << component->subsystemId() << ", renamed to " << name );
+    SG_LOG( SG_AUTOPILOT, SG_DEV_WARN, "Duplicate autopilot component " << component->subsystemId() << ", renamed to " << name );
 
   set_subsystem( name.c_str(), component, updateInterval );
 }

@@ -172,7 +172,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode,
         SG_LOG
         (
           SG_AUTOPILOT,
-          SG_WARN,
+          SG_DEV_WARN,
           "Duplicate " << childName << " configuration name " << name
                                     << ", renamed to " << apName
         );
