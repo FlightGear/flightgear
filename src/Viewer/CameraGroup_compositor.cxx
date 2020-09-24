@@ -697,6 +697,9 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     osg::ref_ptr<SGReaderWriterOptions> options =
         SGReaderWriterOptions::fromPath(globals->get_fg_root());
     options->setPropertyNode(globals->get_props());
+    
+    SViewSetCompositorParams(options, compositor_path);
+    
     Compositor *compositor = Compositor::create(_viewer,
                                                 window->gc,
                                                 viewport,
@@ -704,7 +707,6 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
                                                 options);
     if (compositor) {
         info->compositor = compositor;
-        SviewSetCompositor(compositor);
     } else {
         throw sg_exception(std::string("Failed to create Compositor in path '") +
                            compositor_path + "'");

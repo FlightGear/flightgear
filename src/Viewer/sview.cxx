@@ -35,12 +35,15 @@ The dynamic nature of step views allows view cloning with composite-viewer.
 
 #include "sview.hxx"
 
+
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
+#include <Viewer/renderer_compositor.hxx>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/props/props.hxx>
-
-#include <Main/globals.hxx>
-
 #include <simgear/scene/util/OsgMath.hxx>
 
 #include <osgViewer/CompositeViewer>
@@ -515,7 +518,6 @@ static std::ostream& operator << (std::ostream& out, const SviewPos& viewpos)
 
 #include <simgear/scene/viewer/Compositor.hxx>
 
-simgear::compositor::Compositor* s_compositor = nullptr;
 
 struct SviewView
 {
@@ -560,17 +562,10 @@ struct SviewView
         SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
         SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
         camera->setViewMatrix(new_m);
-        
-        if (0) {
-            /* This doesn't help rendering of textures - it merely seems to force the
-            main display to show the same view as this cloned view. */
-            osg::Matrixd    view_matrix = camera->getViewMatrix();
-            osg::Matrixd    projection_matrix = camera->getProjectionMatrix();
-            s_compositor->update(view_matrix, projection_matrix);
-        }
     }
         
-    osgViewer::View*    m_view = nullptr;    
+    osgViewer::View*                    m_view = nullptr;
+    simgear::compositor::Compositor*    m_compositor = nullptr;
 };
 
 
@@ -1021,61 +1016,15 @@ void SviewPush()
     SG_LOG(SG_VIEW, SG_ALERT, "Have pushed view: " << v);
 }
 
-void SviewAddClone(osgViewer::View* view)
-{
-    std::shared_ptr<SviewViewClone> view_clone(new SviewViewClone(view));
-    s_views.push_back(view_clone);    
-}
-
-void SviewAddLastPair(osgViewer::View* view)
-{
-    if (s_recent_views.size() < 2) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
-        return;
-    }
-    auto it = s_recent_views.end();
-    auto target = (--it)->get();
-    auto eye    = (--it)->get();
-    if (!target || !eye) {
-        SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
-        return;
-    }
-    
-    std::shared_ptr<SviewViewClone> view_clone(new SviewViewClone(
-            view,
-            eye->m_eye,
-            target->m_eye
-            ));
-    s_views.push_back(view_clone);
-}
-
-void SviewAddDouble(osgViewer::View* view)
-{
-    if (s_recent_views.size() < 2) {
-        SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
-        return;
-    }
-    auto it = s_recent_views.end();
-    auto remote = (--it)->get();
-    auto local    = (--it)->get();
-    if (!local || !remote) {
-        SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
-        return;
-    }
-    
-    std::shared_ptr<SviewDouble> view_double(new SviewDouble(
-            view,
-            local->m_target,
-            remote->m_target
-            ));
-    s_views.push_back(view_double);
-}
 
 void SviewUpdate(double dt)
 {
     for (size_t i=0; i<s_views.size(); /* inc in loop*/) {
         bool valid = s_views[i]->update(dt);
         if (valid) {
+            const osg::Matrix& view_matrix = s_views[i]->m_view->getCamera()->getViewMatrix();
+            const osg::Matrix& projection_matrix = s_views[i]->m_view->getCamera()->getProjectionMatrix();
+            s_views[i]->m_compositor->update(view_matrix, projection_matrix);
             i += 1;
         }
         else {
@@ -1091,7 +1040,250 @@ void SviewClear()
 }
 
 
-void SviewSetCompositor(simgear::compositor::Compositor* compositor)
+static osg::ref_ptr<simgear::SGReaderWriterOptions> s_compositor_options;
+static std::string s_compositor_path;
+
+void SviewCreate(const std::string type)
 {
-    s_compositor = compositor;
+    FGRenderer*                 renderer            = globals->get_renderer();
+    osgViewer::ViewerBase*      viewer_base         = renderer->getViewerBase();
+    osgViewer::CompositeViewer* composite_viewer    = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
+
+    if (!composite_viewer) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "FGViewMgr::clone_current_view() doing nothing because not composite-viewer mode not enabled.");
+        return;
+    }
+
+    SG_LOG(SG_GENERAL, SG_ALERT, "Cloning current view.");
+    osgViewer::View*    rhs_view    = renderer->getView();
+    osg::Node*          scene_data  = rhs_view->getSceneData();
+    
+    SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
+
+    osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
+    assert(wsi);
+    unsigned int width, height;
+    wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(0), width, height);
+
+    osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+    
+    traits->x = 100;
+    traits->y = 100;
+    traits->width = 400;
+    traits->height = 300;
+    traits->windowDecoration = true;
+    traits->doubleBuffer = true;
+    traits->sharedContext = 0;
+    
+    traits->readDISPLAY();
+    if (traits->displayNum < 0)
+        traits->displayNum = 0;
+    if (traits->screenNum < 0)
+        traits->screenNum = 0;
+
+    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
+    int cbits = (bpp <= 16) ?  5 :  8;
+    int zbits = (bpp <= 16) ? 16 : 24;
+    traits->red = traits->green = traits->blue = cbits;
+    traits->depth = zbits;
+    
+    traits->mipMapGeneration = true;
+    traits->windowName = "FlightGear Cloned View";
+    traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
+    traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
+    traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
+    traits->stencil = 8;
+    
+    osg::ref_ptr<osg::GraphicsContext> gc = osg::GraphicsContext::createGraphicsContext(traits.get());
+    assert(gc.valid());
+
+    // need to ensure that the window is cleared make sure that the complete window is set the correct colour
+    // rather than just the parts of the window that are under the camera's viewports
+    //gc->setClearColor(osg::Vec4f(0.2f,0.2f,0.6f,1.0f));
+    //gc->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Using copy-constructor here doesn't seem to make any difference.
+    //osgViewer::View* view = new osgViewer::View(rhs_view);    
+    osgViewer::View* view = new osgViewer::View();
+
+    view->setSceneData(scene_data);
+    view->setDatabasePager(FGScenery::getPagerSingleton());
+        
+    // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
+    // Passing (false, false) here seems to cause a hang on startup.
+    view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
+    osg::GraphicsContext::createNewContextID();
+    
+    osg::Camera* rhs_camera = rhs_view->getCamera();
+    osg::Camera* camera = view->getCamera();
+    camera->setGraphicsContext(gc.get());
+
+    if (1) {
+        double left;
+        double right;
+        double bottom;
+        double top;
+        double zNear;
+        double zFar;
+        auto projection_matrix = rhs_camera->getProjectionMatrix();
+        bool ok = projection_matrix.getFrustum(left, right, bottom, top, zNear, zFar);
+        SG_LOG(SG_GENERAL, SG_ALERT, "projection_matrix:"
+                << " ok=" << ok
+                << " left=" << left
+                << " right=" << right
+                << " bottom=" << bottom
+                << " top=" << top
+                << " zNear=" << zNear
+                << " zFar=" << zFar
+                );
+    }
+    
+    camera->setProjectionMatrix(rhs_camera->getProjectionMatrix());
+    camera->setViewMatrix(rhs_camera->getViewMatrix());
+    camera->setCullMask(0xffffffff);
+    camera->setCullMaskLeft(0xffffffff);
+    camera->setCullMaskRight(0xffffffff);
+    
+    if (0) {
+        // There seem to be 3 slaves, but none of the, have a buffer attachement map.
+        for (unsigned i=0; i<rhs_view->getNumSlaves(); ++i) {
+            osg::View::Slave& slave = rhs_view->getSlave(i);
+            osg::ref_ptr<osg::Camera>   rhs_camera = slave._camera;
+            auto buffer_attachment_map = rhs_camera->getBufferAttachmentMap();
+            SG_LOG(SG_GENERAL, SG_ALERT, "i=" << i
+                    << " buffer_attachment_map.size()=" << buffer_attachment_map.size()
+                    );
+            auto it = buffer_attachment_map.begin();
+            if (it != buffer_attachment_map.end()) {
+                //auto it = buffer_attachment_map.find(osg::Camera::COLOR_BUFFER);
+                if (it != buffer_attachment_map.end()) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "calling camera->attach()"
+                            << " it->first=" << it->first
+                            );
+                    auto attachment = it->second;
+                    camera->attach(
+                            //osg::Camera::COLOR_BUFFER,
+                            it->first,
+                            attachment._texture,
+                            attachment._level,
+                            attachment._face,
+                            attachment._mipMapGeneration,
+                            attachment._multisampleSamples,
+                            attachment._multisampleColorSamples
+                            );
+                    break;
+                }
+            }
+        }
+    }
+    SG_LOG(SG_GENERAL, SG_ALERT, "");
+
+    /* This appears to avoid unhelpful culling of nearby objects. Though the above
+    SG_LOG() says zNear=0.1 zFar=120000, so not sure what's going on. */
+    camera->setComputeNearFarMode(osgUtil::CullVisitor::DO_NOT_COMPUTE_NEAR_FAR);
+    
+    /* from CameraGroup::buildGUICamera():
+    camera->setInheritanceMask(osg::CullSettings::ALL_VARIABLES
+                               & ~(osg::CullSettings::COMPUTE_NEAR_FAR_MODE
+                                   | osg::CullSettings::CULLING_MODE
+                                   | osg::CullSettings::CLEAR_MASK
+                                   ));
+    camera->setCullingMode(osg::CullSettings::NO_CULLING);
+    */
+
+    /* rhs_viewport seems to be null so this doesn't work.
+    osg::Viewport* rhs_viewport = rhs_view->getCamera()->getViewport();
+    SG_LOG(SG_GENERAL, SG_ALERT, "rhs_viewport=" << rhs_viewport);
+
+    osg::Viewport* viewport = new osg::Viewport(*rhs_viewport);
+
+    view->getCamera()->setViewport(viewport);
+    */
+    view->getCamera()->setViewport(0, 0, traits->width, traits->height);
+        
+    //camera->setClearMask(0);
+    
+    view->setName("Cloned view");
+    
+    view->setFrameStamp(composite_viewer->getFrameStamp());
+    
+    simgear::compositor::Compositor *compositor = simgear::compositor::Compositor::create(
+            view,
+            gc,
+            view->getCamera()->getViewport(),
+            s_compositor_path,
+            s_compositor_options
+            );
+    
+    // stop/start threading:
+    // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg54341.html
+    //
+    composite_viewer->stopThreading();
+    composite_viewer->addView(view);
+    composite_viewer->startThreading();
+    
+    SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
+    SG_LOG(SG_GENERAL, SG_ALERT, "view->getNumSlaves()=" << view->getNumSlaves());
+    
+    std::shared_ptr<SviewView>  view2;
+    if (type == "last_pair") {
+        if (s_recent_views.size() < 2) {
+            SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
+        }
+        else {
+            auto it = s_recent_views.end();
+            auto target = (--it)->get();
+            auto eye    = (--it)->get();
+            if (!target || !eye) {
+                SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
+                return;
+            }
+
+            view2.reset(new SviewViewClone(
+                    view,
+                    eye->m_eye,
+                    target->m_eye
+                    ));
+        }
+    }
+    else if (type == "last_pair_double") {
+        if (s_recent_views.size() < 2) {
+            SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
+        }
+        else {
+            auto it = s_recent_views.end();
+            auto remote = (--it)->get();
+            auto local    = (--it)->get();
+            if (!local || !remote) {
+                SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
+                return;
+            }
+
+            view2.reset(new SviewDouble(
+                    view,
+                    local->m_target,
+                    remote->m_target
+                    ));
+        }
+    }
+    else if (type == "current") {
+        view2.reset(new SviewViewClone(view));
+    }
+    else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "unrecognised type=" << type);
+    }
+    
+    if (view2) {
+        view2->m_compositor = compositor;
+        s_views.push_back(view2);
+    }
+}
+
+void SViewSetCompositorParams(
+        osg::ref_ptr<simgear::SGReaderWriterOptions> options,
+        const std::string& compositor_path
+        )
+{
+    s_compositor_options = options;
+    s_compositor_path = compositor_path;
 }

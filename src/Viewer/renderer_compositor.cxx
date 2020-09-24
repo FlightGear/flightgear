@@ -733,7 +733,9 @@ FGRenderer::update( ) {
         assert(!viewer);
         unsigned n = composite_viewer->getNumViews();
         for (unsigned i=0; i<n; ++i) {
-            cameras.push_back(composite_viewer->getView(i)->getCamera());
+            osgViewer::View* view = composite_viewer->getView(i);
+            osg::Camera* camera = view->getCamera();
+            cameras.push_back(camera);
         }
     }
     else {

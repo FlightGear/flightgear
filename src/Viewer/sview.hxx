@@ -1,30 +1,24 @@
 #pragma once
 
 #include <osgViewer/View>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 
 
-/* */
+/* Pushes current view to internal list used by SviewCreate() with 'last_pair'
+or 'last_pair_double'. */
 void SviewPush();
 
-/* Takes control the specified OSG view's camera, and makes it a clone of the
-currently active main view. */
-void SviewAddClone(osgViewer::View* view);
-
-void SviewAddLastPair(osgViewer::View* view);
-
-void SviewAddDouble(osgViewer::View* view);
-
-/* Update all views added by SviewAdd(). */
+/* Update all sviews. */
 void SviewUpdate(double dt);
 
 void SviewClear();
 
-namespace simgear
-{
-    namespace compositor
-    {
-        class Compositor;
-    }
-}
- 
-void SviewSetCompositor(simgear::compositor::Compositor* compositor);
+/* Opens a window showing a new view. */
+void SviewCreate(const std::string type);
+
+/* Should be called early on so that SviewCreate() can create new compositors.
+*/
+void SViewSetCompositorParams(
+        osg::ref_ptr<simgear::SGReaderWriterOptions> options,
+        const std::string& compositor_path
+        );
