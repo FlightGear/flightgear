@@ -55,16 +55,17 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
 
     sentry_value_t exc = sentry_value_new_object();
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
-    sentry_value_set_by_key(exc, "value", sentry_value_new_string(msg.c_str()));
 
+    string message = msg;
     if (!origin.empty()) {
-        sentry_value_set_by_key(exc, "origin", sentry_value_new_string(origin.c_str()));
+        message += " (from '" + origin + "')";
     }
 
     if (loc.isValid()) {
-        const auto s = loc.asString();
-        sentry_value_set_by_key(exc, "location", sentry_value_new_string(s.c_str()));
+        message += " at " + loc.asString();
     }
+
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
     sentry_value_set_by_key(event, "exception", exc);
@@ -87,6 +88,14 @@ public:
         const auto op = e.originalPriority;
         if ((op != SG_WARN) && (op != SG_ALERT)) {
             return true;
+        }
+
+        if (e.debugClass == SG_OSG) {
+            // white-list certain common OSG warnings to avoid filling up the
+            // breadcrumsb with noise
+            if (e.message == "PNG lib warning : iCCP: known incorrect sRGB profile") {
+                return true;
+            }
         }
 
         flightgear::addSentryBreadcrumb(e.message, (op == SG_WARN) ? "warning" : "error");
@@ -265,11 +274,13 @@ void sentryReportException(const std::string& msg, const std::string& location)
 
     sentry_value_t exc = sentry_value_new_object();
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
-    sentry_value_set_by_key(exc, "value", sentry_value_new_string(msg.c_str()));
 
+    string message = msg;
     if (!location.empty()) {
-        sentry_value_set_by_key(exc, "location", sentry_value_new_string(location.c_str()));
+        message += " at " + location;
     }
+
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
     sentry_value_set_by_key(event, "exception", exc);
@@ -284,13 +295,15 @@ void  sentryReportFatalError(const std::string& msg, const std::string& more)
     if (!static_sentryEnabled)
         return;
 
-    sentry_value_t sentryMsg = sentry_value_new_object();
-    sentry_value_set_by_key(sentryMsg, "type", sentry_value_new_string("Fatal Error"));
-    sentry_value_set_by_key(sentryMsg, "formatted", sentry_value_new_string(msg.c_str()));
+    sentry_value_t sentryMessage = sentry_value_new_object();
+    sentry_value_set_by_key(sentryMessage, "type", sentry_value_new_string("Fatal Error"));
 
+    string message = msg;
     if (!more.empty()) {
-        sentry_value_set_by_key(sentryMsg, "more", sentry_value_new_string(more.c_str()));
+        message += " (more: " + more + ")";
     }
+
+    sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string(message.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
     sentry_value_set_by_key(event, "message", sentryMsg);
