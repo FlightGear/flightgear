@@ -52,6 +52,10 @@
 #define AISIM_MAX       4
 #define AISIM_G         32.174f
 
+#ifndef _MINMAX
+# define _MINMAX(a,b,c)  (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
+#endif
+
 class FGAISim
 #ifdef ENABLE_SP_FDM
         : public FGInterface
@@ -67,12 +71,13 @@ private:
     enum { FLAPS=2, RUDDER=2, MIN=3, AILERON=3, ELEVATOR=3 };
     enum { DRAG=0, SIDE=1, LIFT=2 };
     enum { ROLL=0, PITCH=1, YAW=2, THRUST=3 };
+    enum { PHI=0, THETA, PSI };
     enum { ALPHA=0, BETA=1 };
-    enum { PHI, THETA, PSI };
     enum { P=0, Q=1, R=2 };
     enum { U=0, V=1, W=2 };
 
 
+    using aiVec2 = simd4_t<float,2>;
     using aiVec3d = simd4_t<double,3>;
     using aiVec3 = simd4_t<float,3>;
     using aiVec4 = simd4_t<float,4>;
@@ -119,8 +124,8 @@ public:
         xCDYLT.ptr()[FLAPS][DRAG] = -CDdf_n*std::abs(f);
         xClmnT.ptr()[FLAPS][PITCH] = Cmdf_n*f;
     }
-    inline void set_throttle_norm(float f) { th = f; }
-    inline void set_brake_norm(float f) { br = f; }
+    inline void set_throttle_norm(float f) { throttle = f; }
+    inline void set_brake_norm(float f) { mu_body[0] = -0.02f-0.7f*f; }
 
     /* (initial) state, local frame */
     inline void set_location_geod(aiVec3d& p) {
@@ -138,8 +143,8 @@ public:
     inline void set_euler_angles_rad(float phi, float theta, float psi) {
         euler = aiVec3(phi, theta, psi);
     }
-    inline void set_pitch_rad(float f) { euler[PHI] = f; }
-    inline void set_roll_rad(float f) { euler[THETA] = f; }
+    inline void set_roll_rad(float f) { euler[PHI] = f; }
+    inline void set_pitch_rad(float f) { euler[THETA] = f; }
     inline void set_heading_rad(float f) { euler[PSI] = f; }
 
     void set_velocity_fps(const aiVec3& v) { vUVW = v; }
@@ -156,12 +161,14 @@ public:
     }
 
     inline void set_alpha_rad(float f) {
+        f = _MINMAX(f, -0.25f, 0.25f);		// -14 to 14 degrees
         xCDYLT.ptr()[ALPHA][LIFT] = -CLa*f;
         xCDYLT.ptr()[ALPHA][DRAG] = -CDa*std::abs(f);
         xClmnT.ptr()[ALPHA][PITCH] = Cma*f;
         AOA[ALPHA] = f;
     }
     inline void set_beta_rad(float f) {
+        f = _MINMAX(f, -0.30f, 0.30f);		// -17 to 17 degrees
         xCDYLT.ptr()[BETA][DRAG] = -CDb*std::abs(f);
         xCDYLT.ptr()[BETA][SIDE] = CYb*f;
         xClmnT.ptr()[BETA][ROLL] = Clb*f;
@@ -183,41 +190,42 @@ private:
     void struct_to_body(aiVec3 &pos);
 
     /* aircraft normalized controls */
-    float th;                 /* throttle command             */
-    float br = 0.0f;          /* brake command                */
+    float throttle = 0.0f;    /* throttle command              */
 
     /* aircraft state */
-    aiVec3d location_geod = 0.0;    /* lat, lon, altitude     */
-    aiVec3 aXYZ = 0.0f;       /* local body accelrations      */
-    aiVec3 vNEDdot = 0.0f;     /* North, East, Down velocity   */
-    aiVec3 vUVW = 0.0f;       /* fwd, side, down velocity     */
-    aiVec3 vUVWdot = 0.0f;    /* fwd, side, down accel.       */
-    aiVec3 vPQR = 0.0f;       /* roll, pitch, yaw rate        */
-    aiVec3 vPQRdot = 0.0f;    /* roll, pitch, yaw accel.      */
-    aiVec3 AOA = 0.0f;        /* alpha, beta                  */
-    aiVec3 AOAdot = 0.0f;     /* adot, bdot                   */
-    aiVec3 euler = 0.0f;      /* phi, theta, psi              */
-    aiVec3 euler_dot = 0.0f;  /* change in phi, theta, psi    */
-    aiVec3 wind_ned = 0.0f;   /* wind north, east, down       */
+    aiVec3d location_geod = 0.0; /* lat, lon, altitude         */
+    aiVec3 XYZdot = 0.0f;     /* local body accelrations       */
+    aiVec3 vNED = 0.0f;       /* North, East, Down velocity    */
+    aiVec3 vUVW = 0.0f;       /* fwd, side, down velocity      */
+    aiVec3 vUVWdot = 0.0f;    /* fwd, side, down acceleration  */
+    aiVec3 vPQR = 0.0f;       /* roll, pitch, yaw rate         */
+    aiVec3 vPQRdot = 0.0f;    /* roll, pitch, yaw acceleration */
+    aiVec3 AOA = 0.0f;        /* alpha, beta                   */
+    aiVec3 AOAdot = 0.0f;     /* adot, bdot                    */
+    aiVec3 euler = 0.0f;      /* phi, theta, psi               */
+    aiVec3 euler_dot = 0.0f;  /* change in phi, theta, psi     */
+    aiVec3 wind_ned = 0.0f;   /* wind north, east, down        */
+    aiVec3 mu_body = { -0.02f, -0.8f, 0.0f };
 
     /* ---------------------------------------------------------------- */
     /* This should reduce the time spent in update() since controls     */
     /* change less often than the update function runs which  might     */
     /* run 20 to 60 times (or more) per second                          */
 
-    /* cache_ */
-    aiVec3 NEDdist;
-    aiVec3 vUVWaero = 0.0f;   /* airmass relative to the body */
-    aiVec3 FT[AISIM_MAX];     /* thrust force                 */
-    aiVec3 FTM[AISIM_MAX];    /* thrust due to mach force     */
-    aiVec3 MT[AISIM_MAX];     /* thrust moment                */
+    /* cache */
+    aiVec3 vUVWaero = 0.0f;   /* airmass relative to the body  */
+    aiVec3 FT[AISIM_MAX];     /* thrust force                  */
+    aiVec3 MT[AISIM_MAX];     /* thrust moment                 */
+    float n2[AISIM_MAX];
     aiVec3 b_2U = 0.0f;
     aiVec3 cbar_2U = 0.0f;
-    aiVec3 inv_m;
-    float altitude = 0.0f;
+    aiVec3 inv_mass;
+    float cg_agl = 0.0f;
+    float alpha = 0.0f;
+    float beta = 0.0f;
     float velocity = 0.0f;
     float mach = 0.0f;
-    float cg_agl = 0.0f;
+    double sl_radius = 0.0;
     bool WoW = true;
 
     /* dynamic coefficients (already multiplied with their value) */
@@ -234,15 +242,14 @@ private:
     /* aircraft static data */
     size_t no_engines = 0;
     size_t no_contacts = 0;
-    aiMtx4 mI, mIinv;                /* inertia matrix                  */
-    aiVec3 engine_pos[AISIM_MAX];    /* pos in structural frame         */
-    aiVec3 contact_pos[AISIM_MAX];   /* pos in structural frame         */
+    aiMtx4 mJ, mJinv;                /* inertia matrix                  */
+    aiVec3 contact_pos[AISIM_MAX+1]; /* pos in structural frame         */
+    aiVec3 mass = 0.0f;              /* mass                            */
     aiVec3 cg = 0.0f;                /* center of gravity               */
     aiVec4 I = 0.0f;                 /* inertia                         */
     float Sw = 0.0f;		     /* wing area                       */
     float cbar = 0.0f;               /* mean average chord              */
-    float b = 0.0f;                  /* wing span                       */
-    float m = 0.0f;                  /* mass                            */
+    float span = 0.0f;               /* wing span                       */
 
     /* static coefficients, *_n is for normalized surface deflection    */
     float contact_spring[AISIM_MAX]; /* contact spring coeffients       */

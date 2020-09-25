@@ -48,10 +48,6 @@
 # include "simd4x4.hxx"
 #endif
 
-#ifndef _MINMAX
-# define _MINMAX(a,b,c)  (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
-#endif
-
 #define FEET_TO_INCHES       12.0f
 #define INCHES_TO_FEET       (1.0f/FEET_TO_INCHES)
 
@@ -64,13 +60,16 @@ FGAISim::FGAISim(double dt)
     {
         contact_pos[i] = 0.0f;
         contact_spring[i] = contact_damp[i] = 0.0f;
-        FT[i] = FTM[i] = MT[i] = 0.0f;
+        FT[i] = MT[i] = 0.0f;
     }
 
 #ifdef ENABLE_SP_FDM
-    SGPath aircraft_path( fgGetString("/sim/aircraft-dir") );
+    SGPath aircraft_path( fgGetString("/sim/fg-root") );
     SGPropertyNode_ptr aero = fgGetNode("sim/aero", true);
-    aircraft_path.append(aero->getStringValue() );
+    aircraft_path.append("Aircraft-aisim");
+    aircraft_path.append(aero->getStringValue());
+    aircraft_path.concat(".json");
+
     load(aircraft_path.str());
 #else
     load("");
@@ -105,34 +104,36 @@ FGAISim::FGAISim(double dt)
     xCDYLT.ptr()[MIN][DRAG] = -CDmin;
 
     /* m is assigned in the load function */
-    inv_m = 1.0f/m;
+    inv_mass = aiVec3(1.0f)/mass;
 
     // calculate aircraft position when resting on the landing gear.
+    float cg_agl = -cg[Z];
     if (no_contacts)
     {
         for (size_t i=0; i<no_contacts; ++i) {
-            cg_agl -= contact_pos[i][Z];
+            cg_agl += contact_pos[i][Z];
         }
-        cg_agl *= FEET_TO_INCHES/static_cast<float>(no_contacts);
+        cg_agl /= static_cast<float>(no_contacts);
     }
+    set_altitude_agl_ft(cg_agl);
 
     // Contact point at the center of gravity
     contact_pos[no_contacts] = 0.0f;
-    contact_spring[no_contacts] = 20000.0f;
-    contact_damp[no_contacts] = 2000.0f;
+    contact_spring[no_contacts] = -20000.0f;
+    contact_damp[no_contacts] = -2000.0f;
     no_contacts++;
 
     aiMtx4 mcg;
     simd4x4::unit(mcg);
     simd4x4::translate(mcg, cg);
 
-    mI = aiMtx4( I[XX],  0.0f, -I[XZ], 0.0f,
+    mJ = aiMtx4( I[XX],  0.0f, -I[XZ], 0.0f,
                   0.0f, I[YY],   0.0f, 0.0f,
                 -I[XZ],  0.0f,  I[ZZ], 0.0f,
                   0.0f,  0.0f,   0.0f, 0.0f);
-    mIinv = invert_inertia(mI);
-    mI *= mcg;
-    mIinv *= matrix_inverse(mcg);
+    mJinv = invert_inertia(mJ);
+    mJ *= mcg;
+    mJinv *= matrix_inverse(mcg);
 }
 
 FGAISim::~FGAISim()
@@ -152,8 +153,8 @@ FGAISim::init()
     // now do init specific to the AISim
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting initializing AISim" );
 
-    // right now cg_agl holds the lowest contact point of the aircraft
-    set_Altitude( get_Altitude()-cg_agl );
+    // cg_agl holds the lowest contact point of the aircraft
+    set_Altitude( get_Altitude() + cg_agl );
     set_location_geod( get_Latitude(), get_Longitude(), get_Altitude() );
     set_euler_angles_rad( get_Phi(), get_Theta(), get_Psi() );
     set_velocity_fps( fgGetFloat("sim/presets/uBody-fps"),
@@ -177,33 +178,41 @@ FGAISim::update(double ddt)
     copy_to_AISim();
 #endif
 
+#if 0
+ printf("pitch:      % 7.5f, roll: % 7.5f, heading: % 7.5f\n", euler[THETA], euler[PHI], euler[PSI]);
+ printf("wind north: % 7.5f, east: % 7.5f, down:    % 7.5f\n", wind_ned[0], wind_ned[1], wind_ned[2]);
+#endif
+
     /* Earth-to-Body-Axis Transformation Matrix */
     /* matrices to compensate for pitch, roll and heading */
-    aiVec3 vector = euler;
-    float angle = simd4::normalize(vector);
-    aiMtx4 mNed2Body = simd4x4::rotation_matrix(angle, vector);
+    aiVec3 vector = euler; // simd4::normalize alters the vector
+    float  len = simd4::normalize(vector);
+    aiMtx4 mNed2Body = simd4x4::rotation_matrix(len, vector);
     aiMtx4 mBody2Ned = simd4x4::transpose(mNed2Body);
-    aiVec3 gravity_body = mNed2Body*gravity_ned;
+    aiVec3 wind = mNed2Body*wind_ned;
 
     /* Air-Relative velocity vector */
-    vUVWaero = vUVW + mNed2Body*wind_ned;
-    update_velocity( simd4::magnitude( simd4_t<float,2>(vUVWaero) ) );
+    vUVWaero = vUVW + wind;
+    update_velocity( simd4::magnitude( vUVWaero ) );
 
-    aiVec3 WindAxis = AOA;
-    float alpha = std::atan2(vUVWaero[W], vUVWaero[U]);
-    set_alpha_rad( _MINMAX(alpha, -0.25f, 0.25f) );	// -14 to 14 degrees
+    /* Wind angles */
+    aiVec3 prevAOA = AOA;
+    alpha = (vUVWaero[U] == 0.0f) ? 0.0f : std::atan2(vUVWaero[W], vUVWaero[U]);
+    set_alpha_rad( alpha );
 
-    float beta = (velocity == 0) ? 0 : std::asin(vUVWaero[V]/velocity);
-    set_beta_rad( _MINMAX(beta, -0.30f, 0.30f) );	// -17 to 17 degrees
-    AOAdot = (AOA - WindAxis)/dt;
+    beta = (velocity == 0.0f) ? 0.0f : std::asin(vUVWaero[V]/velocity);
+    set_beta_rad( beta );
+
+    /* set_alpha_rad and set_beta_rad set the new AOA */
+    AOAdot = (AOA - prevAOA)/dt;
 
 #if 0
- printf("velocity: %f, vUVWaero: %3.2f, %3.2f, %3.2f, mach: %3.2f\n", velocity, vUVWaero[0], vUVWaero[1], vUVWaero[2], mach);
+ printf("velocity: %f, vUVWaero: %3.2f, %3.2f, %3.2f, mach: %3.2f\n", velocity, vUVWaero[U], vUVWaero[V], vUVWaero[W], mach);
  printf("cg_agl: %5.4f, alpha: %5.4f, beta: %5.4f, adot: %5.4f, bdot: %5.4f\n", cg_agl, AOA[ALPHA], AOA[BETA], AOAdot[ALPHA], AOAdot[BETA]);
 #endif
 
     /* Force and Moment Coefficients */
-    /* Sum all Drag, Side, Lift, Roll, Pitch, Yaw and Thrust coefficients */
+    /* Sum all Drag, Side, Lift, Roll, Pitch and Yaw and Thrust coefficients */
     float p = vPQR[P];
     float q = vPQR[Q];
     float r = vPQR[R];
@@ -218,8 +227,10 @@ FGAISim::update(double ddt)
      * Clmn[YAW]   = (Cnp*p       + Cnr*r)*b_2U;
      */
     aiVec4 Ccbar2U = (xCq*q + xCadot*adot)*cbar_2U;
-    aiVec4 Cb2U    = (xCp*p + xCr*r      )*b_2U;
+    aiVec4 Cb2U    = (xCp*p       + xCr*r)*b_2U;
 
+    /* xCDYLT and xClmnT already have their factors applied */
+    /* in the functions in the header file.                 */
     aiVec4 CDYL(0.0f, Cb2U[SIDE], Ccbar2U[LIFT]);
     aiVec4 Clmn(Cb2U[ROLL], Ccbar2U[PITCH], Cb2U[YAW]);
     size_t i = 3;
@@ -232,6 +243,7 @@ FGAISim::update(double ddt)
     float CL = CDYL[LIFT];
     CDYL += aiVec3(CDi*CL*CL, 0.0f, 0.0f);
 #if 0
+ printf(" p: %6.3f, q: %6.3f, r: %6.3f, adot: %6.3f\n", p, q, r, adot);
  printf(" CLa: %6.3f, CLadot: %6.3f, CLq: %6.3f\n", xCDYLT.ptr()[ALPHA][LIFT],CLadot*adot,CLq*q);
  printf(" CDa: %6.3f, CDb:    %6.3f, CDi: %6.3f\n", xCDYLT.ptr()[ALPHA][DRAG],xCDYLT.ptr()[BETA][DRAG],CDi*CL*CL);
  printf(" CYb: %6.3f, CYp:    %6.3f, CYr: %6.3f\n", xCDYLT.ptr()[BETA][SIDE],CYp*p,CYr*r);
@@ -243,6 +255,7 @@ FGAISim::update(double ddt)
  printf(" CYdr: %6.3f, Cldr:  %6.3f, Cndr: %6.3f\n", xCDYLT.ptr()[RUDDER][SIDE], xClmnT.ptr()[RUDDER][ROLL], xClmnT.ptr()[RUDDER][YAW]);
  printf(" Clda: %6.3f, CYda:  %6.3f\n", xClmnT.ptr()[AILERON][ROLL], xClmnT.ptr()[AILERON][YAW]);
  printf(" Cldf: %6.3f, CDdf:  %6.3f, Cmdf: %6.3f\n", xCDYLT.ptr()[FLAPS][LIFT], xCDYLT.ptr()[FLAPS][DRAG], xClmnT.ptr()[FLAPS][PITCH]);
+ printf("\n");
 #endif
 
     /* State Accelerations (convert coefficients to forces and moments) */
@@ -251,101 +264,112 @@ FGAISim::update(double ddt)
 
     /* convert from wind axes to body axes */
     vector = AOA;
-    angle = simd4::normalize(vector);
-    aiMtx4 mWindBody = simd4x4::rotation_matrix(angle, vector);
-    aiVec3 FXYZ = mWindBody*FDYL;
+    len = simd4::normalize(vector);
+    aiMtx4 mWind2Body = simd4x4::rotation_matrix(len, vector);
+    aiVec3 FXYZ_body = mWind2Body*FDYL;
+
+    aiVec3 gravity_body = mNed2Body*gravity_ned;
+    FXYZ_body += gravity_body*mass;
 
     /* Thrust */
-    aiVec3 Cth = rho*th;
-    aiVec3 Cmach = rho*mach;
-    for (size_t i=0; i<no_engines; ++i)
+    float Cth = rho*throttle*throttle;
+    i = no_engines-1;
+    do
     {
-        FXYZ += FT[i]*Cth + FTM[i]*Cmach;
-        Mlmn += MT[i]*Cth;
-#if 0
- aiVec3 FTCth = FT[i]*Cth + FTM[i]*Cmach;
- aiVec3 MTCth = MT[i]*Cth;
- printf("FT[%i]: %5.4f, %5.4f, %5.4f\n", i, FTCth[X], FTCth[Y], FTCth[Z]);
- printf("MT[%i]: %5.4f, %7.2f, %5.4f\n", i, MTCth[ROLL], MTCth[PITCH], MTCth[YAW]);
-#endif
+        aiVec3 FEngine = FT[i]*(Cth*n2[i]);
+        aiVec3 MEngine = MT[i]*Cth;
 
+        FXYZ_body += FEngine;
+        Mlmn += MEngine;
+#if 0
+ printf("FT[%lu]: %5.4f, %5.4f, %5.4f\n", i, FEngine[X], FEngine[Y], FEngine[Z]);
+ printf("MT[%lu]: %5.4f, % 7.5f, %5.4f\n", i, MEngine[ROLL], MEngine[PITCH], MEngine[YAW]);
+#endif
     }
+    while (i--);
 #if 0
- printf("FXYZ: %5.4f, %5.4f, %5.4f\n", FXYZ[X], FXYZ[Y], FXYZ[Z]);
- printf("Mlmn: %5.4f, %7.2f, %5.4f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
+ printf("FXYZ: %5.4f, %5.4f, %5.4f\n", FXYZ_body[X], FXYZ_body[Y], FXYZ_body[Z]);
+ printf("Mlmn: %5.4f, % 7.5f, %5.4f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
 #endif
 
-    /* gear forces */
+    /* contact point (landing gear) forces and moments */
     WoW = false;
-    if (cg_agl < 10.0f)
+    if (no_contacts && cg_agl < 10.0f)
     {
         size_t WoW_main = 0;
-        aiVec3 cg_cg_agl_neu(0.0f, 0.0f, cg_agl);
-        for (size_t i=0; i<no_contacts; ++i)
+        i = 0;
+        do
         {
-            aiVec3 contact_ned = mBody2Ned*contact_pos[i];
-            aiVec3 lg_ground_neu = contact_ned + cg_cg_agl_neu;
-            if (lg_ground_neu[Z] < 0.0f)
+            aiVec3 lg_ground_ned = mBody2Ned*contact_pos[i];
+            if (lg_ground_ned[Z] > cg_agl)
             {   // weight on wheel
                 aiVec3 lg_vrot = simd4::cross(vPQR, contact_pos[i]);
                 aiVec3 lg_cg_vned = mBody2Ned*lg_vrot;
-                aiVec3 lg_vned = vNEDdot + lg_cg_vned;
-                float Fn;
+                aiVec3 lg_vned = vNED + lg_cg_vned;
+                float Fn = std::min((contact_spring[i]*lg_ground_ned[Z] +
+                                     contact_damp[i]*lg_vned[Z]), 0.0f);
 
-                Fn = contact_spring[i]*lg_ground_neu[Z] - contact_damp[i]*lg_vned[Z];
-                if (Fn > 0.0f) Fn = 0.0f;
+                aiVec3 Fgear(0.0f, 0.0f, Fn);
+                aiVec3 Fbody = mNed2Body*Fgear;
+                aiVec3 Fbrake = mu_body*Fbody;
 
-                aiVec3 Fn_lg(0.0f, 0.0f, Fn);
-                aiVec3 mu_body(-0.02f-0.7f*br, 0.8f, 0.0f);
-
-                aiVec3 FLGear = mNed2Body*Fn_lg + vUVWaero*mu_body;
-                FXYZ += FLGear;
+                aiVec3 FLGear = Fbody + Fbrake;
+                FXYZ_body += FLGear;
 
 //              aiVec3 MLGear = simd4::cross(contact_pos[i], FLGear);
 //              Mlmn += MLGear;
 #if 0
- printf("FLGear[%i]: %10.2f %10.2f %10.2f\n",i,FLGear[0], FLGear[1], FLGear[2]);
- printf("MLGear[%i]: %10.2f %10.2f %10.2f\n",i,MLGear[0], MLGear[1], MLGear[2]);
+ printf("gear: %lu: pos: % 3.2f % 3.2f % 3.2f\n", i,
+         lg_ground_ned[0], lg_ground_ned[1], lg_ground_ned[2]);
+ printf("   Fbody: % 7.2f % 7.2f % 7.2f\n", Fbody[0], Fbody[1], Fbody[2]);
+ printf("  Fbrake: % 7.2f % 7.2f % 7.2f\n", Fbrake[0], Fbrake[1], Fbrake[2]);
+ printf("   Fgear: % 7.2f % 7.2f % 7.2f\n", lg_ground_ned[0], lg_ground_ned[1], lg_ground_ned[2]);
+ printf("   Mgear: % 7.2f % 7.2f % 7.2f\n", MLGear[0], MLGear[1], MLGear[2]);
 #endif
                 if (i<3) WoW_main++;
             }
             WoW = (WoW_main == 3);
         }
+        while(++i < no_contacts);
     }
 
     /* local body accelrations */
-    aXYZ = FXYZ*inv_m + gravity_body;
+    XYZdot = FXYZ_body*inv_mass;
 #if 0
- printf("aXYZ:    %7.2f, %7.2f, %7.2f\n", aXYZ[X]/m, aXYZ[Y]/m, aXYZ[Z]/m);
- printf("Mlmn:    %7.2f, %7.2f, %7.2f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
+printf("AOAdot: %5.4f, AOA: %5.4f, up: XYZdot: % 7.5f, XYZ: % 7.5f, gravity: % 7.5f\n", AOAdot[ALPHA], AOA[ALPHA], XYZdot[Z], FXYZ_body[Z]/mass, gravity_body[DOWN]);
+#endif
+
+#if 0
+ printf("XYZdot   % 7.5f, % 7.5f, % 7.5f\n", XYZdot[X], XYZdot[Y], XYZdot[Z]);
+ printf("Mlmn:    % 7.5f, % 7.5f, % 7.5f\n", Mlmn[ROLL], Mlmn[PITCH], Mlmn[YAW]);
 #endif
 
     /* Dynamic Equations */
 
     /* body-axis translational accelerations: forward, sideward, upward */
-    vUVWdot = aXYZ - simd4::cross(vPQR, vUVW);
+    vUVWdot = XYZdot - simd4::cross(vPQR, vUVW);
     vUVW += vUVWdot*dt;
 
     /* body-axis rotational accelerations: rolling, pitching, yawing */
-    vPQRdot = mIinv*(Mlmn - vPQR*(mI*vPQR));
+    vPQRdot = mJinv*(Mlmn - vPQR*(mJ*vPQR));
     vPQR += vPQRdot*dt;
 #if 0
- printf("PQRdot:  %7.2f, %7.2f, %7.2f\n", vPQRdot[P], vPQRdot[Q], vPQRdot[R]);
- printf("PQR:     %7.2f, %7.2f, %7.2f\n", vPQR[P], vPQR[Q], vPQR[R]);
- printf("UVWdot:  %7.2f, %7.2f, %7.2f\n", vUVWdot[U], vUVWdot[V], vUVWdot[W]);
- printf("UVW:     %7.2f, %7.2f, %7.2f\n", vUVW[U], vUVW[V], vUVW[W]);
+ printf("PQRdot:  % 7.5f, % 7.5f, % 7.5f\n", vPQRdot[P], vPQRdot[Q], vPQRdot[R]);
+ printf("PQR:     % 7.5f, % 7.5f, % 7.5f\n", vPQR[P], vPQR[Q], vPQR[R]);
+ printf("UVWdot:  % 7.5f, % 7.5f, % 7.5f\n", vUVWdot[U], vUVWdot[V], vUVWdot[W]);
+ printf("UVW:     % 7.5f, % 7.5f, %1.7f\n", vUVW[U], vUVW[V], vUVW[W]);
 #endif
 
     /* position of center of mass wrt earth: north, east, down */
-    vNEDdot = mBody2Ned*vUVW;
-    NEDdist = vNEDdot*dt;
+    vNED = mBody2Ned*vUVW;
+    aiVec3 NEDdist = vNED*dt;
 #if 0
- printf("NEDdot:  %7.2f, %7.2f, %7.2f\n", vNEDdot[0], vNEDdot[1], vNEDdot[2]);
- printf("NEDdist: %7.2f, %7.2f, %7.2f\n", NEDdist[0], NEDdist[1], NEDdist[2]);
+ printf("vNED:    % 7.5f, % 7.5f, % 7.5f\n", vNED[NORTH], vNED[EAST], vNED[DOWN]);
+ printf("NEDdist: % 7.5f, % 7.5f, % 7.5f\n", NEDdist[NORTH], NEDdist[EAST], NEDdist[DOWN]);
 #endif
 
 #ifdef ENABLE_SP_FDM
-    double dist = simd4::magnitude( simd4_t<float,2>(NEDdist) );
+    double dist = simd4::magnitude( aiVec2(NEDdist) );
 
     double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
     geo_direct_wgs_84( 0.0, location_geod[LATITUDE] * SGD_RADIANS_TO_DEGREES,
@@ -363,23 +387,37 @@ FGAISim::update(double ddt)
     set_altitude_cg_agl_ft(location_geod[DOWN]);
 #endif
 #if 0
- printf("GEOD:    %7.2f, %7.2f, %7.2f\n", location_geod[0], location_geod[1], location_geod[2]);
+ printf("GEOD:    % 7.5f, % 7.5f, % 7.5f\n", location_geod[0], location_geod[1], location_geod[2]);
 #endif
 
-    /* angle of body wrt earth: phi (pitch), theta (roll), psi (heading) */
+#if 0
+{
+    vector = simd4::normalize(euler);
+    float len = simd4::normalize(vector);
+    aiMtx4 mWind2Body = simd4x4::rotation_matrix(len, vector);
+    euler_dot = mWind2Body*vPQR;
+    euler += euler_dot*dt;
+}
+#else
+    /* angle of body wrt earth: phi (roll), theta (pitch), psi (heading) */
     float sin_p = std::sin(euler[PHI]);
     float cos_p = std::cos(euler[PHI]);
     float sin_t = std::sin(euler[THETA]);
     float cos_t = std::cos(euler[THETA]);
     if (std::abs(cos_t) < 0.00001f) cos_t = std::copysign(0.00001f,cos_t);
 
-    euler_dot[PSI] =     (q*sin_p + r*cos_p)/cos_t;
+    if (cos_t == 0.0f) {
+        euler_dot[PSI] =  0.0f;
+    } else {
+        euler_dot[PSI] = (q*sin_p + r*cos_p)/cos_t;
+    }
     euler_dot[THETA] =    q*cos_p - r*sin_p;
-//  euler_dot[PHI] = p + (q*sin_p + r*cos_p)*sin_t/cos_t;
+/*  euler_dot[PHI] = p + (q*sin_p + r*cos_p)*sin_t/cos_t; */
     euler_dot[PHI] = p + euler_dot[PSI]*sin_t;
     euler += euler_dot*dt;
 #if 0
- printf("euler:   %7.2f, %7.2f, %7.2f\n", euler[PHI], euler[THETA], euler[PSI]);
+ printf("euler:   % 7.5f, % 7.5f, % 7.5f\n", euler[PHI], euler[THETA], euler[PSI]);
+#endif
 #endif
 
 #ifdef ENABLE_SP_FDM
@@ -401,7 +439,7 @@ FGAISim::copy_to_AISim()
 
 
     set_altitude_asl_ft(get_Altitude());
-    set_altitude_agl_ft(get_Altitude_AGL()-cg_agl);
+    set_altitude_agl_ft(get_Altitude_AGL());
 
 //  set_location_geod(get_Latitude(), get_Longitude(), altitde);
 //  set_velocity_fps(get_V_calibrated_kts());
@@ -413,7 +451,7 @@ bool
 FGAISim::copy_from_AISim()
 {
     // Mass properties and geometry values
-//  _set_Inertias( m, I[XX], I[YY], I[ZZ], I[XZ] );
+//  _set_Inertias( mass, I[XX], I[YY], I[ZZ], I[XZ] );
     _set_CG_Position( cg[X], cg[Y], cg[Z]);
 
     // Accelerations
@@ -422,11 +460,11 @@ FGAISim::copy_from_AISim()
     // Velocities
     _set_V_equiv_kts( velocity*std::sqrt(sigma) * SG_FPS_TO_KT );
     _set_V_calibrated_kts( std::sqrt( 2.0f*qbar*sigma/rho) * SG_FPS_TO_KT );
-    _set_V_ground_speed( simd4::magnitude(vNEDdot) * SG_FPS_TO_KT );
+    _set_V_ground_speed( simd4::magnitude(aiVec2(vNED)) * SG_FPS_TO_KT );
     _set_Mach_number( mach );
 
-    _set_Velocities_Local( vNEDdot[NORTH], vNEDdot[EAST], vNEDdot[DOWN] );
-    _set_Velocities_Local_Airmass( vUVWaero[U], vUVWaero[V], vUVWaero[W] );
+    _set_Velocities_Local( vNED[NORTH], vNED[EAST], vNED[DOWN] );
+//  _set_Velocities_Local_Airmass( vUVWaero[U], vUVWaero[V], vUVWaero[W] );
     _set_Velocities_Body( vUVW[U], vUVW[V], vUVW[W] );
     _set_Omega_Body( vPQR[P], vPQR[Q], vPQR[R] );
     _set_Euler_Rates( euler_dot[PHI], euler_dot[THETA], euler_dot[PSI] );
@@ -434,20 +472,22 @@ FGAISim::copy_from_AISim()
     // Positions
     double lon = location_geod[LONGITUDE];
     double lat_geod = location_geod[LATITUDE];
-    double sl_radius, lat_geoc;
-    altitude = location_geod[ALTITUDE];
-    sgGeodToGeoc(lat_geod, altitude, &sl_radius, &lat_geoc);
+    double altitude = location_geod[ALTITUDE];
+    double lat_geoc;
+
+    sgGeodToGeoc( lat_geod, altitude, &sl_radius, &lat_geoc );
     _set_Geocentric_Position( lat_geoc, lon, sl_radius+altitude );
-    _set_Geodetic_Position( lat_geod, lon, altitude);
 
-//  float heading = euler[PSI];
-//  if (heading < 0) heading += (2.0f*SG_PI);
-    _set_Euler_Angles( euler[PHI], euler[THETA], euler[PSI]); // heading );
+    _set_Geodetic_Position( lat_geod, lon, altitude );
 
-    _set_Altitude_AGL( altitude - get_Runway_altitude());
+    _set_Euler_Angles( euler[PHI], euler[THETA],
+                       SGMiscd::normalizePeriodic(0, SGD_2PI, euler[PSI]) );
 
-    _set_Alpha( AOA[ALPHA] );
-    _set_Beta(  AOA[BETA] );
+    set_altitude_agl_ft( altitude - get_Runway_altitude() );
+    _set_Altitude_AGL( cg_agl );
+
+//  _set_Alpha( alpha );
+//  _set_Beta(  beta );
 
 //  _set_Gamma_vert_rad( Gamma_vert_rad );
 
@@ -457,14 +497,14 @@ FGAISim::copy_from_AISim()
 
 //  _set_Static_temperature( Static_temperature );
 
-    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
+    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
 //  _set_Earth_position_angle( Earth_position_angle );
 
-    _set_Runway_altitude( get_Runway_altitude() );
+//  _set_Runway_altitude( get_Runway_altitude() );
 
-    _set_Climb_Rate( -vNEDdot[DOWN] );
+    _set_Climb_Rate( -vNED[DOWN] );
 
-//  _update_ground_elev_at_pos();
+    _update_ground_elev_at_pos();
 
     return true;
 }
@@ -472,10 +512,7 @@ FGAISim::copy_from_AISim()
 
 // ----------------------------------------------------------------------------
 
-#ifndef _MINMAX
-# define _MINMAX(a,b,c) (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
-#endif
-
+#define OMEGA_EARTH 	0.00007272205217f
 #define MAX_ALT		101
 
 // 1976 Standard Atmosphere - Density (slugs/ft2): 0 - 101,000 ft
@@ -528,7 +565,7 @@ FGAISim::update_velocity(float v)
     velocity = v;
 
     /* altitude related */
-    float alt_kft = _MINMAX(altitude/1000.0f, 0, MAX_ALT);
+    float alt_kft = _MINMAX(location_geod[ALTITUDE]/1000.0f, 0, MAX_ALT);
     float alt_idx = std::floor(alt_kft);
     size_t idx = static_cast<size_t>(alt_idx);
     float fract = alt_kft - alt_idx;
@@ -540,7 +577,7 @@ FGAISim::update_velocity(float v)
     sigma = rho/density[0];
 
     float Sqbar = Sw*qbar;
-    float Sbqbar = Sqbar*b;
+    float Sbqbar = Sqbar*span;
     float Sqbarcbar = Sqbar*cbar;
 
     Coef2Force = aiVec3(Sqbar);
@@ -552,9 +589,14 @@ FGAISim::update_velocity(float v)
     mach = v/vs;
 
     /*  useful semi-constants */
-    if (v < 0.0000001f) v = 0.0000001f;
-    b_2U = 0.5f*b/v;
-    cbar_2U = 0.5f*cbar/v;
+    if (v == 0.0f) {
+        cbar_2U = b_2U = 0.0f;
+    }
+    else
+    {
+        b_2U = 0.5f*span/v;
+        cbar_2U = 0.5f*cbar/v;
+    }
 }
 
 // structural: x is pos. aft., y is pos. right, z is pos. up. in inches.
@@ -688,8 +730,6 @@ FGAISim::jsonParse(const char *str)
 bool
 FGAISim::load(std::string path)
 {
-    path += ".json";
-
     std::ifstream file(path);
     std::string jsonString;
 
@@ -704,9 +744,9 @@ FGAISim::load(std::string path)
 
     Sw   = data["Sw"];
     cbar = data["cbar"];
-    b    = data["b"];
+    span = data["b"];
 
-    m = data["mass"]/AISIM_G;
+    mass = data["mass"]/AISIM_G;
 
     I[XX] = data["Ixx"];
     I[YY] = data["Iyy"];
@@ -725,7 +765,7 @@ FGAISim::load(std::string path)
     cg[Z] = data["cg[2]"];
     struct_to_body(cg);
 
-    // Gear ground contact points relative to c.g.
+    // Gear ground contact points relative to center of gravity.
     no_contacts = 0;
     do
     {
@@ -740,13 +780,13 @@ FGAISim::load(std::string path)
         contact_pos[i][Z] = data[gearstr + "/pos[2]"];
         struct_to_body(contact_pos[i]);
 
-        contact_spring[i] = data[gearstr + "/spring"];
-        contact_damp[i] = data[gearstr + "/damp"];
+        contact_spring[i] = -data[gearstr + "/spring"];
+        contact_damp[i] = -data[gearstr + "/damp"];
 #if 0
- printf("%i: posZ %f, %f, %f, spring: %f, damp: %f\n", q, contact_pos[q][X], contact_pos[q][Y], contact_pos[q][Z], contact_spring[q], contact_damp[q]);
+ printf("%lu: pos: % 3.2f, % 3.2f, % 3.2f, spring: % 7.1f, damp: % 7.1f\n", i, contact_pos[i][X], contact_pos[i][Y], contact_pos[i][Z], contact_spring[i], contact_damp[i]);
 #endif
     }
-    while (++no_contacts < (AISIM_MAX-1));
+    while (++no_contacts < AISIM_MAX);
 
     /* Thuster / propulsion locations relative to c.g. */
     no_engines = 0;
@@ -755,14 +795,14 @@ FGAISim::load(std::string path)
         size_t i = no_engines;
         std::string engstr = "engine[" + std::to_string(i) + "]";
 
-        float CTu   = data[engstr + "/CTu"];
-        float CTmax = data[engstr + "/CTmax"];
-        if (!CTmax) break;
+        float FTmax = data[engstr + "/FT_max"];
+        if (!FTmax) break;
 
-        engine_pos[i][0] = data[engstr + "/pos[0]"];
-        engine_pos[i][1] = data[engstr + "/pos[1]"];
-        engine_pos[i][2] = data[engstr + "/pos[2]"];
-        struct_to_body(engine_pos[i]);
+        aiVec3 pos;
+        pos[0] = data[engstr + "/pos[0]"];
+        pos[1] = data[engstr + "/pos[1]"];
+        pos[2] = data[engstr + "/pos[2]"];
+        struct_to_body(pos);
 
         // Thruster orientation is in the following sequence: pitch, roll, yaw
         aiVec3 orientation(data[engstr + "/dir[1]"],  // roll (degrees)
@@ -770,29 +810,29 @@ FGAISim::load(std::string path)
                            data[engstr + "/dir[2]"]); // yaw (degrees)
         orientation *= SG_DEGREES_TO_RADIANS;
 
-        float angle = simd4::normalize(orientation);
-        aiMtx4 mWindBody = simd4x4::rotation_matrix(angle, orientation);
-        aiVec3 dir = mWindBody*aiVec3(1.0f, 0.0f, 0.0f);
-#if 0
- printf("dir: %f %f %f\n", dir[0], dir[1], dir[2]);
-#endif
+        float len = simd4::normalize(orientation);
+        aiMtx4 mWind2Body = simd4x4::rotation_matrix(len, orientation);
+        aiVec3 dir = mWind2Body*aiVec3(1.0f, 0.0f, 0.0f);
+        aiVec3 rot = simd4::cross(pos, dir);
 
-        float D = data[engstr + "/D"]*INCHES_TO_FEET;
-        if (D) // if propeller driven
-        {
-            float RPM = data[engstr + "/RPM"]/60.0f;
-            float Ixx = data[engstr + "/Ixx"];
+        float rho = 0.002379f;
+//      float MTmax = data[engstr + "/MT_max"];
 
-            FT[i]  = dir * (CTmax * RPM*RPM * D*D*D*D); // Thrust force
-            FTM[i] = dir * (CTu/(RPM*D))*vsound[0];     // Thrust due to Mach
-            MT[i]  = dir * (-Ixx*(2.0f*RPM*SG_PI));     // Thrus moment
-            MT[i] += engine_pos[i];
+        float max_rpm = data[engstr + "/rpm_max"];
+        if (max_rpm == 0.0f) {
+             n2[i] = 1.0f;
         }
         else
         {
-            FT[i]  = dir * CTmax;                       // Thrust force
-            FTM[i] = dir * CTu*vsound[0];               // Thrust due to Mach
+            n2[i] = max_rpm/60.0f;
+            n2[i] *= n2[i];
         }
+
+        FTmax /= (rho*n2[i]);
+//      MTmax /= rho / max_rpm;
+
+        FT[i] = dir * FTmax;
+        MT[i] = rot * FT[i]; // + dir * MTmax;
     }
     while(++no_engines < AISIM_MAX);
 
