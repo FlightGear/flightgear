@@ -535,20 +535,22 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
     }
     if (snlfl._file_line) {
         /* Copy what SG_LOG() does, but use nasal file:line instead of
-        our own __FILE__ and __LINE__. */
-        if (sglog().would_log(SG_NASAL, SG_MANDATORY_INFO)) {
-            int frame = 0;
-            const char* file = naStr_data(naGetSourceFile(c, 0));
-            if (simgear::strutils::ends_with( file, "/globals.nas")) {
-                /* This generally means have been called by globals.nas's
-                printf function; go one step up the stack so we give the
-                file:line of the caller of printf, which is generally more
-                useful. */
-                frame += 1;
-                file = naStr_data(naGetSourceFile(c, frame));
-            }
-            int line = naGetLine(c, frame);
-            sglog().logCopyingFilename(SG_NASAL, SG_MANDATORY_INFO, file, line, buf);
+        our own __FILE__ and __LINE__. We don't (yet) attempt to find
+        the nasal function name. */
+        int frame = 0;
+        const char* file = naStr_data(naGetSourceFile(c, 0));
+        if (simgear::strutils::ends_with( file, "/globals.nas")) {
+            /* This generally means have been called by globals.nas's
+            printf function; go one step up the stack so we give the
+            file:line of the caller of printf, which is generally more
+            useful. */
+            frame += 1;
+            file = naStr_data(naGetSourceFile(c, frame));
+        }
+        int line = naGetLine(c, frame);
+        const char* function = "";
+        if (sglog().would_log(SG_NASAL, SG_MANDATORY_INFO, file, line, function)) {
+            sglog().logCopyingFilename(SG_NASAL, SG_MANDATORY_INFO, file, line, function, buf);
         }
     }  else {
         SG_LOG(SG_NASAL, SG_MANDATORY_INFO, buf);
@@ -572,11 +574,11 @@ static naRef f_logprint(naContext c, naRef me, int argc, naRef* args)
     if(naIsNil(s)) continue;
     buf += naStr_data(s);
   }
-// use the nasal source file and line for the message location, since
-// that's more useful than the location here!
+  // use the nasal source file and line for the message location, since
+  // that's more useful than the location here!
   sglog().logCopyingFilename(SG_NASAL, (sgDebugPriority)(int) priority.num,
                naStr_data(naGetSourceFile(c, 0)),
-               naGetLine(c, 0), buf);
+               naGetLine(c, 0), "" /*function*/, buf);
   return naNum(buf.length());
 }
 
