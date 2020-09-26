@@ -27,9 +27,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <iostream>
 #include <algorithm>
@@ -54,6 +52,7 @@
 #include "MPServerResolver.hxx"
 #include <FDM/flightProperties.hxx>
 #include <Time/TimeManager.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WS2tcpip.h>
@@ -1072,7 +1071,9 @@ FGMultiplayMgr::init (void)
   fgSetBool("/sim/multiplay/online", true);
   mInitialised = true;
 
-  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer mode active!");
+  
+  SG_LOG(SG_NETWORK, SG_MANDATORY_INFO, "Multiplayer mode active");
+  flightgear::addSentryTag("mp", "active");
 
   if (!fgGetBool("/sim/ai/enabled"))
   {
