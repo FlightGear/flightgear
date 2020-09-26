@@ -756,6 +756,11 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
         }
     }
 
+    if (!file.exists()) {
+        SG_LOG(SG_IO, SG_WARN, "loadxml: no such file:" << file);
+        return false;
+    }
+
     SGPath validated_path = fgValidatePath(file, false);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file << "' denied "
@@ -772,7 +777,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
     try {
         readProperties(validated_path, targetnode, true);
     } catch (const sg_exception &e) {
-        SG_LOG(SG_IO, SG_WARN, "loadxml: " << e.getFormattedMessage());
+        SG_LOG(SG_IO, SG_WARN, "loadxml exception: " << e.getFormattedMessage());
         return false;
     }
 
