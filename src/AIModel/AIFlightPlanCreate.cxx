@@ -291,7 +291,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     }
     
     FGTaxiRoute taxiRoute;
-    if ( runwayNode )
+    if ( runwayNode && node)
         taxiRoute = gn->findShortestRoute(node, runwayNode);
 
     // This may happen with buggy ground networks
