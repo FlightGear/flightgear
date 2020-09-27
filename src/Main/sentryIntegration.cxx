@@ -94,7 +94,9 @@ public:
         if (e.debugClass == SG_OSG) {
             // white-list certain common OSG warnings to avoid filling up the
             // breadcrumsb with noise
-            if (e.message == "PNG lib warning : iCCP: known incorrect sRGB profile") {
+            if ((e.message == "PNG lib warning : iCCP: known incorrect sRGB profile")
+             || (e.message == "PNG lib warning : iCCP: profile 'ICC Profile': 1000000h: invalid rendering intent"))
+            {
                 return true;
             }
         }
