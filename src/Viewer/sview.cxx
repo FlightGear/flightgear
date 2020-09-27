@@ -132,6 +132,8 @@ struct SviewStep
     }
     
     virtual ~SviewStep() {}
+    
+    std::string m_description;
 };
 
 std::ostream& operator<< (std::ostream& out, const SviewStep& step)
@@ -149,12 +151,16 @@ struct SviewStepAircraft : SviewStep
     aircraft, it should be /ai/models/multiplayer[]. */
     SviewStepAircraft(SGPropertyNode* root)
     {
-        m_longitude   = root->getNode("position/longitude-deg");
-        m_latitude    = root->getNode("position/latitude-deg");
-        m_altitude    = root->getNode("position/altitude-ft");
-        m_heading     = root->getNode("orientation/true-heading-deg");
-        m_pitch       = root->getNode("orientation/pitch-deg");
-        m_roll        = root->getNode("orientation/roll-deg");
+        m_longitude     = root->getNode("position/longitude-deg");
+        m_latitude      = root->getNode("position/latitude-deg");
+        m_altitude      = root->getNode("position/altitude-ft");
+        m_heading       = root->getNode("orientation/true-heading-deg");
+        m_pitch         = root->getNode("orientation/pitch-deg");
+        m_roll          = root->getNode("orientation/roll-deg");
+        m_description   = root->getStringValue("callsign");
+        if (m_description == "") {
+            m_description = "User aircraft";
+        }
         SG_LOG(SG_VIEW, SG_ALERT, "m_longitude->getPath()=" << m_longitude->getPath());
     }
     
@@ -335,6 +341,7 @@ struct SviewStepNearestTower : SviewStep
     m_longitude(sim->getNode("tower/longitude-deg")),
     m_altitude(sim->getNode("tower/altitude-ft"))
     {
+        m_description = "Nearest tower";
     }
     
     void evaluate(SviewPosDir& posdir) override
@@ -356,9 +363,9 @@ struct SviewStepNearestTower : SviewStep
                 ;
     }
     
-    SGPropertyNode_ptr m_latitude;
-    SGPropertyNode_ptr m_longitude;
-    SGPropertyNode_ptr m_altitude;
+    SGPropertyNode_ptr  m_latitude;
+    SGPropertyNode_ptr  m_longitude;
+    SGPropertyNode_ptr  m_altitude;
 };
 
 
@@ -484,6 +491,16 @@ struct SviewPos
     }
     #endif
     
+    const std::string& description()
+    {
+        if (m_name == "") {
+            if (!m_steps.empty()) {
+                m_name = m_steps.front()->m_description;
+            }
+        }
+        return m_name;
+    }
+    
     void add_step(std::shared_ptr<SviewStep> step)
     {
         m_steps.push_back(step);
@@ -525,7 +542,20 @@ struct SviewView
     :
     m_view(view)
     {
+        s_id += 1;
     }
+    
+    const std::string&  description2()
+    {
+        if (m_description2 == "") {
+            char    buffer[32];
+            snprintf(buffer, sizeof(buffer), "[%i] ", s_id);
+            m_description2 = buffer + description();
+        }
+        return m_description2;
+    }
+    
+    virtual const std::string& description() = 0;
     
     virtual ~SviewView()
     {
@@ -566,7 +596,12 @@ struct SviewView
         
     osgViewer::View*                    m_view = nullptr;
     simgear::compositor::Compositor*    m_compositor = nullptr;
+    std::string                         m_description2;
+    
+    static int s_id;
 };
+
+int SviewView::s_id = 0;
 
 
 // A view which keeps two aircraft visible, with one at a constant distance in
@@ -586,6 +621,14 @@ struct SviewDouble : SviewView
     m_local(local),
     m_remote(remote)
     {
+        auto eye = m_local.description();
+        auto target = m_remote.description();
+        m_description = "Double view " + eye + " - " + target;
+    }
+    
+    const std::string& description() override
+    {
+        return m_description;
     }
     
     virtual bool update(double dt) override
@@ -735,6 +778,7 @@ struct SviewDouble : SviewView
     
     SviewPos    m_local;
     SviewPos    m_remote;
+    std::string m_description;
     time_t      m_debug_time = 0;
 };
 
@@ -794,7 +838,6 @@ struct SviewViewClone : SviewView
         
         if (view_config->getBoolValue("eye-fixed")) {
             /* E.g. Tower view. */
-            m_target.m_name = "eye-fixed";
             SG_LOG(SG_VIEW, SG_INFO, "eye-fixed");
             
             /* First move to centre of aircraft. */
@@ -838,12 +881,8 @@ struct SviewViewClone : SviewView
         }
         else {
             SG_LOG(SG_VIEW, SG_INFO, "not eye-fixed");
-            m_target.m_name = "!eye-fixed";
             /* E.g. Pilot view or Helicopter view. We assume eye position is
             relative to aircraft. */
-            //bool at_model = view_node->getBoolValue("config/at-model");
-            //SG_LOG(SG_VIEW, SG_INFO, "at_model=" << at_model);
-            //if (at_model) {
             if (type == "lookat") {
                 /* E.g. Helicopter view. Move to centre of aircraft.
                 
@@ -892,7 +931,6 @@ struct SviewViewClone : SviewView
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
                         ));
                 SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
-                //if (at_model) {
                 if (1) {
                     /* E.g. Helicopter view. Move eye away from aircraft.
                     config/z-offset-m defaults to /sim/chase-distance-m (see
@@ -945,6 +983,13 @@ struct SviewViewClone : SviewView
         }
         SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
         SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+        
+        m_description = m_eye.description() + " - " + m_target.description();
+    }
+    
+    const std::string& description() override
+    {
+        return m_description;
     }
     
     SviewViewClone(
@@ -963,6 +1008,7 @@ struct SviewViewClone : SviewView
         SG_LOG(SG_VIEW, SG_ALERT, "    m_target:" << m_target);
         m_debug = true;
         SG_LOG(SG_VIEW, SG_ALERT, "    m_debug:" << m_debug);
+        m_description = m_eye.description() + " - " + m_target.description();
     }
 
     bool update(double dt) override
@@ -995,6 +1041,7 @@ struct SviewViewClone : SviewView
     
     SviewPos            m_eye;
     SviewPos            m_target;
+    std::string         m_description;
     bool                m_debug = false;
     time_t              m_debug_time = 0;
 };
@@ -1019,7 +1066,14 @@ void SviewPush()
 
 void SviewUpdate(double dt)
 {
+    bool verbose = 0;
     for (size_t i=0; i<s_views.size(); /* inc in loop*/) {
+        if (verbose) {
+            SG_LOG(SG_VIEW, SG_INFO, "updating i=" << i
+                    << ": " << s_views[i]->m_view
+                    << ' ' << s_views[i]->m_compositor
+                    );
+        }
         bool valid = s_views[i]->update(dt);
         if (valid) {
             const osg::Matrix& view_matrix = s_views[i]->m_view->getCamera()->getViewMatrix();
@@ -1028,8 +1082,24 @@ void SviewUpdate(double dt)
             i += 1;
         }
         else {
-            SG_LOG(SG_VIEW, SG_INFO, "deleting SviewView i=" << i);
-            s_views.erase(s_views.begin() + i);
+            auto pview = s_views.begin() + i;
+            SG_LOG(SG_VIEW, SG_INFO, "deleting SviewView i=" << i << ": " << (*pview)->description2());
+            for (size_t j=0; j<s_views.size(); ++j) {
+                SG_LOG(SG_VIEW, SG_INFO, "    " << j
+                        << ": " << s_views[j]->m_view
+                        << ' ' << s_views[j]->m_compositor
+                        );
+            }
+            
+            s_views.erase(pview);
+            
+            for (size_t j=0; j<s_views.size(); ++j) {
+                SG_LOG(SG_VIEW, SG_INFO, "    " << j
+                        << ": " << s_views[j]->m_view
+                        << ' ' << s_views[j]->m_compositor
+                        );
+            }
+            verbose = true;
         }
     }
 }
@@ -1060,6 +1130,68 @@ void SviewCreate(const std::string type)
     
     SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
 
+
+
+    // Using copy-constructor here doesn't seem to make any difference.
+    //osgViewer::View* view = new osgViewer::View(rhs_view);    
+    osgViewer::View* view = new osgViewer::View();
+
+
+    std::shared_ptr<SviewView>  view2;
+    if (type == "last_pair") {
+        if (s_recent_views.size() < 2) {
+            SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
+            return;
+        }
+        else {
+            auto it = s_recent_views.end();
+            auto target = (--it)->get();
+            auto eye    = (--it)->get();
+            if (!target || !eye) {
+                SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
+                return;
+            }
+
+            view2.reset(new SviewViewClone(
+                    view,
+                    eye->m_eye,
+                    target->m_eye
+                    ));
+        }
+    }
+    else if (type == "last_pair_double") {
+        if (s_recent_views.size() < 2) {
+            SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
+            return;
+        }
+        else {
+            auto it = s_recent_views.end();
+            auto remote = (--it)->get();
+            auto local    = (--it)->get();
+            if (!local || !remote) {
+                SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
+                return;
+            }
+
+            view2.reset(new SviewDouble(
+                    view,
+                    local->m_target,
+                    remote->m_target
+                    ));
+        }
+    }
+    else if (type == "current") {
+        view2.reset(new SviewViewClone(view));
+    }
+    else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "unrecognised type=" << type);
+        return;
+    }
+    
+
+
+
+
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     assert(wsi);
     unsigned int width, height;
@@ -1088,7 +1220,7 @@ void SviewCreate(const std::string type)
     traits->depth = zbits;
     
     traits->mipMapGeneration = true;
-    traits->windowName = "FlightGear Cloned View";
+    traits->windowName = "Flightgear " + view2->description2();
     traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
     traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
@@ -1101,10 +1233,6 @@ void SviewCreate(const std::string type)
     // rather than just the parts of the window that are under the camera's viewports
     //gc->setClearColor(osg::Vec4f(0.2f,0.2f,0.6f,1.0f));
     //gc->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Using copy-constructor here doesn't seem to make any difference.
-    //osgViewer::View* view = new osgViewer::View(rhs_view);    
-    osgViewer::View* view = new osgViewer::View();
 
     view->setSceneData(scene_data);
     view->setDatabasePager(FGScenery::getPagerSingleton());
@@ -1144,40 +1272,6 @@ void SviewCreate(const std::string type)
     camera->setCullMaskLeft(0xffffffff);
     camera->setCullMaskRight(0xffffffff);
     
-    if (0) {
-        // There seem to be 3 slaves, but none of the, have a buffer attachement map.
-        for (unsigned i=0; i<rhs_view->getNumSlaves(); ++i) {
-            osg::View::Slave& slave = rhs_view->getSlave(i);
-            osg::ref_ptr<osg::Camera>   rhs_camera = slave._camera;
-            auto buffer_attachment_map = rhs_camera->getBufferAttachmentMap();
-            SG_LOG(SG_GENERAL, SG_ALERT, "i=" << i
-                    << " buffer_attachment_map.size()=" << buffer_attachment_map.size()
-                    );
-            auto it = buffer_attachment_map.begin();
-            if (it != buffer_attachment_map.end()) {
-                //auto it = buffer_attachment_map.find(osg::Camera::COLOR_BUFFER);
-                if (it != buffer_attachment_map.end()) {
-                    SG_LOG(SG_GENERAL, SG_ALERT, "calling camera->attach()"
-                            << " it->first=" << it->first
-                            );
-                    auto attachment = it->second;
-                    camera->attach(
-                            //osg::Camera::COLOR_BUFFER,
-                            it->first,
-                            attachment._texture,
-                            attachment._level,
-                            attachment._face,
-                            attachment._mipMapGeneration,
-                            attachment._multisampleSamples,
-                            attachment._multisampleColorSamples
-                            );
-                    break;
-                }
-            }
-        }
-    }
-    SG_LOG(SG_GENERAL, SG_ALERT, "");
-
     /* This appears to avoid unhelpful culling of nearby objects. Though the above
     SG_LOG() says zNear=0.1 zFar=120000, so not sure what's going on. */
     camera->setComputeNearFarMode(osgUtil::CullVisitor::DO_NOT_COMPUTE_NEAR_FAR);
@@ -1215,6 +1309,9 @@ void SviewCreate(const std::string type)
             s_compositor_options
             );
     
+    view2->m_compositor = compositor;
+    s_views.push_back(view2);
+    
     // stop/start threading:
     // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg54341.html
     //
@@ -1224,59 +1321,6 @@ void SviewCreate(const std::string type)
     
     SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
     SG_LOG(SG_GENERAL, SG_ALERT, "view->getNumSlaves()=" << view->getNumSlaves());
-    
-    std::shared_ptr<SviewView>  view2;
-    if (type == "last_pair") {
-        if (s_recent_views.size() < 2) {
-            SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
-        }
-        else {
-            auto it = s_recent_views.end();
-            auto target = (--it)->get();
-            auto eye    = (--it)->get();
-            if (!target || !eye) {
-                SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
-                return;
-            }
-
-            view2.reset(new SviewViewClone(
-                    view,
-                    eye->m_eye,
-                    target->m_eye
-                    ));
-        }
-    }
-    else if (type == "last_pair_double") {
-        if (s_recent_views.size() < 2) {
-            SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
-        }
-        else {
-            auto it = s_recent_views.end();
-            auto remote = (--it)->get();
-            auto local    = (--it)->get();
-            if (!local || !remote) {
-                SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
-                return;
-            }
-
-            view2.reset(new SviewDouble(
-                    view,
-                    local->m_target,
-                    remote->m_target
-                    ));
-        }
-    }
-    else if (type == "current") {
-        view2.reset(new SviewViewClone(view));
-    }
-    else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "unrecognised type=" << type);
-    }
-    
-    if (view2) {
-        view2->m_compositor = compositor;
-        s_views.push_back(view2);
-    }
 }
 
 void SViewSetCompositorParams(
