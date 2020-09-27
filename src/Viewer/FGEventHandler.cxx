@@ -12,7 +12,9 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 #include "WindowSystemAdapter.hxx"
+#include "WindowBuilder.hxx"
 #include "renderer.hxx"
+#include "sview.hxx"
 
 #ifdef SG_MAC
 // hack - during interactive resize on Mac, OSG queues and then flushes
@@ -85,12 +87,18 @@ bool
 eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
                 int& x, int& y)
 {
+    flightgear::WindowBuilder* window_builder = flightgear::WindowBuilder::getWindowBuilder();
+    flightgear::GraphicsWindow* main_window = window_builder->getDefaultWindow();
+
     x = -1;
     y = -1;
 
     const osg::GraphicsContext* eventGC = ea.getGraphicsContext();
     if( !eventGC )
       return false; // TODO how can this happen?
+    if (eventGC != main_window->gc.get()) {
+      return false;
+    }
     const osg::GraphicsContext::Traits* traits = eventGC->getTraits();
     osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
     if (!guiCamera)
@@ -115,6 +123,20 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
         return false;
     }
 }
+
+/* A hack for when we are linked with OSG-3.4 and CompositeViewer is
+enabled. It seems that OSG-3.4 incorrectly calls our event handler for
+extra view windows (e.g. resize/close events), so we try to detect
+this. Unfortunately OSG also messes up <ea>'s graphics context pointer so this
+does't alwys work. */
+bool isMainWindow(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us)
+{
+    int x;
+    int y;
+    bool ret = eventToViewport(ea, us, x, y);
+    return ret;
+}
+
 }
 
 bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
@@ -224,6 +246,9 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
         SG_LOG(SG_VIEW, SG_DEBUG, "FGEventHandler::handle: RESIZE event " << ea.getWindowHeight() << " x " << ea.getWindowWidth() << ", resizable: " << resizable);
+        if (!isMainWindow(ea, us)) {
+            return true;
+        }
         CameraGroup::getDefault()->resized();
         if (resizable)
           globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());
@@ -236,6 +261,10 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
       #endif
         return true;
      case osgGA::GUIEventAdapter::CLOSE_WINDOW:
+        if (!isMainWindow(ea, us)) {
+            return true;
+        }
+        // Fall through.
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:
         fgOSExit(0);
         return true;
