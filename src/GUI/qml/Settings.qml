@@ -124,17 +124,14 @@ Item {
                         label: qsTr("Enable crash & error reporting")
                         description: qsTr("Send crash and error reports to the development team for analysis.")
                         defaultValue: true
-                        hidden: (_osName !== "win") && (_osName !== "mac")
-                        keywords: ["crash", "report", "telemetry"]
+                        keywords: ["crash", "report", "telemetry", "sentry", "segfault"]
                         setting: "enable-sentry"
                     }
                 ]
 
                 onApply: {
                     if (!showConsoleWin.hidden && showConsoleWin.checked) _config.setArg("console");
-                    if (!enableCrashReporting.hidden) {
-                        _config.setEnableDisableOption("sentry",  enableCrashReporting.checked);
-                    }
+                    _config.setEnableDisableOption("sentry",  enableCrashReporting.checked);
                 }
             }
 
