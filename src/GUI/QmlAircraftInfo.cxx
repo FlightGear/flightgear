@@ -600,7 +600,14 @@ void QmlAircraftInfo::checkForStates()
         return;
     }
 
-    auto states = readAircraftStates(SGPath::fromUtf8(path.toUtf8().toStdString()));
+    const auto sgp = SGPath::fromUtf8(path.toUtf8().toStdString());
+    if (!sgp.exists()) {
+        _statesModel.reset(new StatesModel);
+        emit infoChanged();
+        return;
+    }
+
+    auto states = readAircraftStates(sgp);
     if (states.empty()) {
         _statesModel.reset(new StatesModel);
         emit infoChanged();
