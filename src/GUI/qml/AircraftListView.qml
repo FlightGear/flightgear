@@ -7,6 +7,7 @@ Item {
 
     property alias model: aircraftList.model
     property alias header: aircraftList.header
+    property alias footer: aircraftList.footer
 
     signal showDetails(var uri);
 

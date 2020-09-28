@@ -6,6 +6,7 @@ Item {
 
     property alias model: view.model
     property alias header: view.header
+    property alias footer: view.footer
 
     signal showDetails(var uri);
 

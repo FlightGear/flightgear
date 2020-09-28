@@ -231,6 +231,8 @@ signals:
     void aircraftGridModeChanged(bool aircraftGridMode);
 
     void inAppChanged();
+    void installedAircraftCountChanged(int installedAircraftCount);
+
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
 
