@@ -1270,6 +1270,12 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
 
     int state = i->getState();
 
+    // Sentry FLIGHTGEAR-2Q : don't crash on null TrafficRef
+    if (!i->getAircraft()->getTrafficRef()) {
+        SG_LOG(SG_ATC, SG_ALERT, "AI traffic: updating aircraft without traffic ref");
+        return;
+    }
+
     // The user controlled aircraft should have crased here, because it doesn't have a traffic reference.
     // NOTE: if we create a traffic schedule for the user aircraft, we can use this to plan a flight.
     time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
