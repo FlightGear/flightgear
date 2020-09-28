@@ -284,7 +284,7 @@ Item {
             }
 
             AnimatedImage {
-                source: "qrc://linear-spinner"
+                source: "qrc:///linear-spinner"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.horizontalCenter
             }
