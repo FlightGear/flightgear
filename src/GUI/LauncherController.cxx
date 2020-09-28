@@ -133,6 +133,20 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
         const auto ws = static_cast<Qt::WindowState>(settings.value("window-state").toInt());
         m_window->setWindowState(ws);
     }
+
+    // count launches; we use this to trigger first-run and periodic notices
+    // in the UI.
+    m_launchCount = settings.value("launch-count", 0).toInt();
+    settings.setValue("launch-count", m_launchCount + 1);
+
+    std::ostringstream os;
+    string_list versionParts = simgear::strutils::split(FLIGHTGEAR_VERSION, ".");
+    if (versionParts.size() >= 2) {
+        // build a setting key like launch-count-2020-2
+        QString versionedCountKey = QString::fromStdString("launch-count-" + versionParts.at(0) + "-" + versionParts.at(1));
+        m_versionLaunchCount = settings.value(versionedCountKey, 0).toInt();
+        settings.setValue(versionedCountKey, m_versionLaunchCount + 1);
+    }
 }
 
 void LauncherController::initQML()

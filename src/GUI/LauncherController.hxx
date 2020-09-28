@@ -91,6 +91,10 @@ class LauncherController : public QObject
     Q_PROPERTY(bool inAppMode READ inApp NOTIFY inAppChanged)
 
     Q_PROPERTY(bool aircraftGridMode READ aircraftGridMode WRITE setAircraftGridMode NOTIFY aircraftGridModeChanged)
+
+    Q_PROPERTY(int launchCount READ launchCount CONSTANT);
+    Q_PROPERTY(int versionLaunchCount READ versionLaunchCount CONSTANT);
+
 public:
     explicit LauncherController(QObject *parent, QWindow* win);
 
@@ -202,6 +206,17 @@ public:
     {
         return m_inAppMode;
     }
+
+    int launchCount() const
+    {
+        return m_launchCount;
+    }
+
+    int versionLaunchCount() const
+    {
+        return m_versionLaunchCount;
+    }
+
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);
@@ -294,6 +309,8 @@ private:
 	bool m_keepRunningInAppMode = false;
     bool m_appModeResult = true;
     bool m_aircraftGridMode;
+    int m_launchCount = 0;
+    int m_versionLaunchCount = 0;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX

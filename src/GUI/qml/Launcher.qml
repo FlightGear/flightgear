@@ -43,6 +43,18 @@ Item {
     Component.onCompleted:
     {
        _launcher.minimumWindowSize = Qt.size(Style.strutSize * 12, sidebar.minimumHeight);
+
+        if (_launcher.versionLaunchCount == 0) {
+            popupOverlay.showOverlay(firstRun)
+        }
+    }
+
+    Component {
+        id: firstRun
+        FirstRun {
+            width: root.width
+            height: root.height
+        }
     }
 
     Connections {

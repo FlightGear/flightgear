@@ -130,9 +130,10 @@
         <file>qml/EnableDisableButton.qml</file>
         <file>qml/IconButton.qml</file>
         <file>qml/FavouriteToggleButton.qml</file>
-         <file>qml/VariantMenu.qml</file>
+        <file>qml/VariantMenu.qml</file>
         <file alias="favourite-icon-filled">assets/icons8-christmas-star-filled.png</file>
         <file alias="favourite-icon-outline">assets/icons8-christmas-star-outline.png</file>
+        <file>qml/FirstRun.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>
