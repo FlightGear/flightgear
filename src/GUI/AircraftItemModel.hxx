@@ -66,6 +66,8 @@ class AircraftItemModel : public QAbstractListModel
 {
     Q_OBJECT
 
+    Q_PROPERTY(int installedAircraftCount READ installedAircraftCount NOTIFY installedAircraftCountChanged)
+
 public:
 
     AircraftItemModel(QObject* pr);
@@ -107,12 +109,15 @@ public:
      */
     QString nameForAircraftURI(QUrl uri) const;
 
+    int installedAircraftCount() const;
 signals:
     void aircraftInstallFailed(QModelIndex index, QString errorMessage);
     
     void aircraftInstallCompleted(QModelIndex index);
     
     void contentsChanged();
+
+    void installedAircraftCountChanged();
 private slots:
     void onScanStarted();
     void onScanAddedItems(int count);

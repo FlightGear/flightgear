@@ -98,6 +98,8 @@ protected:
         if (aReason == STATUS_SUCCESS) {
             m_model->installSucceeded(mi);
         }
+
+        m_model->installedAircraftCountChanged();
     }
 
     void availablePackagesChanged() override
@@ -116,6 +118,7 @@ protected:
     {
         QModelIndex mi(indexForPackage(pkg));
         m_model->dataChanged(mi, mi);
+        m_model->installedAircraftCountChanged();
     }
 
 private:
@@ -593,6 +596,17 @@ QString AircraftItemModel::nameForAircraftURI(QUrl uri) const
     return {};
 }
 
+int AircraftItemModel::installedAircraftCount() const
+{
+    int c = m_cachedLocalAircraftCount;
+
+    for (const auto& cat : m_packageRoot->catalogs()) {
+        c += static_cast<int>(cat->installedPackages().size());
+    }
+
+    return c;
+}
+
 void AircraftItemModel::onScanAddedItems(int addedCount)
 {
     Q_UNUSED(addedCount)
@@ -606,6 +620,7 @@ void AircraftItemModel::onScanAddedItems(int addedCount)
     m_cachedLocalAircraftCount += newItemCount;
     endInsertRows();
     emit contentsChanged();
+    emit installedAircraftCountChanged();
 }
 
 void AircraftItemModel::onLocalCacheCleared()
@@ -619,6 +634,8 @@ void AircraftItemModel::onLocalCacheCleared()
         m_cachedLocalAircraftCount = 0;
         endRemoveRows();
     }
+
+    emit installedAircraftCountChanged();
 }
 
 void AircraftItemModel::installFailed(QModelIndex index, simgear::pkg::Delegate::StatusCode reason)
