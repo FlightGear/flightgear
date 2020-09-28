@@ -217,8 +217,7 @@ Item {
                             // set AW tile options
                             var s = _weatherScenarios.localWeatherData(index);
                             if (s.length === 0) {
-                                console.warn("Weather scenario " + _weatherScenarios.nameForItem(index)
-                                             + " does not specify local weather data");
+                               // local weather will use METAR
                             } else {
                                 _config.setProperty("/local-weather/tmp/tile-management", s[0]);
                                 _config.setProperty("/local-weather/tmp/tile-type", s[1]);
