@@ -146,7 +146,7 @@ void RunwayList::set(const std::string & tp, const std::string & lst)
     //    timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
     //    timeCopy = timeCopy.substr(2,timeCopy.length());
     type = tp;
-    for (const auto s : strutils::split(lst, ",")) {
+    for (const auto& s : strutils::split(lst, ",")) {
         auto ident = strutils::strip(s);
         // http://code.google.com/p/flightgear-bugs/issues/detail?id=1137
         if ((ident.size() < 2) || !isdigit(ident[1])) {

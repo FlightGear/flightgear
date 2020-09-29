@@ -210,7 +210,7 @@ void executeNasalTestsInDir(const SGPath& path)
 {
     simgear::Dir d(path);
     
-    for (const auto testFile : d.children(simgear::Dir::TYPE_FILE, "*.nut")) {
+    for (const auto& testFile : d.children(simgear::Dir::TYPE_FILE, "*.nut")) {
         SG_LOG(SG_NASAL, SG_INFO, "Processing test file " << testFile);
         
     } // of test files iteration
@@ -266,7 +266,7 @@ bool executeNasalTest(const SGPath& path)
     auto setUpFunc = localNS.get("setUp");
     auto tearDown = localNS.get("tearDown");
        
-   for (const auto& value : localNS) {
+   for (const auto value : localNS) {
        if (value.getKey().find("test_") == 0) {
            static_activeTest.reset(new ActiveTest);
            

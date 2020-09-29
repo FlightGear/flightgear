@@ -38,7 +38,7 @@ FGLogger::init ()
   std::vector<SGPropertyNode_ptr> children = logging->getChildren("log");
   _logs.reserve(children.size());
 
-  for (const auto child: children) {
+  for (const auto& child: children) {
     if (!child->getBoolValue("enabled", false))
         continue;
 
