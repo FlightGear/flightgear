@@ -1466,7 +1466,7 @@ void NavDataCache::doRebuild()
     }
 
 #ifdef SG_WINDOWS
-      SG_LOG(SG_NAVCACHE, SG_ALERT, "SKIPPING POI load on Windows");
+      SG_LOG(SG_NAVCACHE, SG_MANDATORY_INFO, "SKIPPING POI load on Windows");
 #else
       {
           Transaction txn(this);
