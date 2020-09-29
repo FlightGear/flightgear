@@ -212,16 +212,23 @@ void Autopilot::add_component( Component * component, double updateInterval )
   if( component == NULL ) return;
 
   // check for duplicate name
-  std::string name = component->subsystemId();
-  for( unsigned i = 0; get_subsystem( name.c_str() ) != NULL; i++ ) {
+  const auto originalName = string{component->subsystemId()};
+  std::string name = originalName;
+  if (name.empty()) {
+    name = "unnamed_autopilot";
+  } 
+
+  for( unsigned int i = 0; get_subsystem( name) != nullptr; i++ ) {
       std::ostringstream buf;
       buf <<  component->subsystemId() << "_" << i;
       name = buf.str();
   }
-  if( name != component->subsystemId() )
-    SG_LOG( SG_AUTOPILOT, SG_DEV_WARN, "Duplicate autopilot component " << component->subsystemId() << ", renamed to " << name );
 
-  set_subsystem( name.c_str(), component, updateInterval );
+  if (!originalName.empty() && (name != originalName)) {
+    SG_LOG( SG_AUTOPILOT, SG_DEV_WARN, "Duplicate autopilot component " << originalName << ", renamed to " << name );
+  }
+
+  set_subsystem( name, component, updateInterval );
 }
 
 void Autopilot::update( double dt ) 
