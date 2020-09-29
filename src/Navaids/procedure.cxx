@@ -168,7 +168,7 @@ string_list Approach::transitionIdents() const
 {
     string_list r;
     r.reserve(_transitions.size());
-    for (const auto t : _transitions) {
+    for (const auto& t : _transitions) {
         r.push_back(t.second->ident());
     }
     return r;

@@ -460,7 +460,7 @@ private:
 const int MAX_ZOOM = 12;
 const int SHOW_DETAIL_ZOOM = 8;
 const int SHOW_DETAIL2_ZOOM = 5;
-const int CURSOR_PAN_STEP = 32;
+//const int CURSOR_PAN_STEP = 32;
 
 MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   puObject(x,y,maxX, maxY)

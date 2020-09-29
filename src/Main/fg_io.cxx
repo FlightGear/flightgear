@@ -345,7 +345,7 @@ FGIO::init()
     // port onto the port list copies the structure and destroys the
     // original, which closes the port and frees up the fd ... doh!!!
 
-    for (const auto config : *(globals->get_channel_options_list())) {
+    for (const auto& config : *(globals->get_channel_options_list())) {
         FGProtocol* p = add_channel(config);
         if (p) {
             addToPropertyTree(p->get_name(), config);
