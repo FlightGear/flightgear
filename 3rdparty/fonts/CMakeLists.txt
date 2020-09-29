@@ -13,5 +13,4 @@ target_link_libraries(PLIBFont SimGearCore )
 target_include_directories(PLIBFont PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR} 
 	${OPENSCENEGRAPH_INCLUDE_DIRS})
-
-
+target_include_directories(PLIBFont PRIVATE ${PLIB_INCLUDE_DIR})

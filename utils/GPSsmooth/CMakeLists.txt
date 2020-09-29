@@ -1,4 +1,3 @@
-
 add_executable(GPSsmooth
     GPSsmooth.cxx GPSsmooth.hxx
     gps_main.cxx
@@ -15,6 +14,10 @@ add_executable(UGsmooth
     UGear_telnet.cxx UGear_telnet.hxx
     UGear_main.cxx
 )
+
+target_include_directories(GPSsmooth PRIVATE ${PLIB_INCLUDE_DIR})
+target_include_directories(MIDGsmooth PRIVATE ${PLIB_INCLUDE_DIR})
+target_include_directories(UGsmooth PRIVATE ${PLIB_INCLUDE_DIR})
 
 target_link_libraries(GPSsmooth
     SimGearCore
