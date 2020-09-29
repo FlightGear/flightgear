@@ -247,7 +247,7 @@ QVariant AircraftItemModel::data(const QModelIndex& index, int role) const
 
     if (role == AircraftIsFavouriteRole) {
         // recursive call here, hope that's okay
-        const auto uri = data(index, AircraftURIRole).toUrl();
+        const auto uri = data(index, AircraftPrimaryURIRole).toUrl();
         return FavouriteAircraftData::instance()->isFavourite(uri);
     }
 
@@ -285,6 +285,10 @@ QVariant AircraftItemModel::dataFromItem(AircraftItemPtr item, const DelegateSta
 
         Q_ASSERT(variantIndex < item->variants.size());
         return item->variants.at(variantIndex)->name();
+    }
+
+    if (role == AircraftPrimaryURIRole) {
+        return QUrl::fromLocalFile(item->path);
     }
 
     if (state.variant) {
@@ -400,6 +404,8 @@ QVariant AircraftItemModel::dataFromPackage(const PackageRef& item, const Delega
         return static_cast<int>(item->fileSizeBytes());
     } else if (role == AircraftURIRole) {
         return QUrl("package:" + QString::fromStdString(item->qualifiedVariantId(state.variant)));
+    } else if (role == AircraftPrimaryURIRole) {
+        return QUrl("package:" + QString::fromStdString(item->qualifiedId()));
     } else if (role == AircraftHasRatingsRole) {
         return item->properties()->hasChild("rating");
     } else if ((role >= AircraftRatingRole) && (role < AircraftVariantDescriptionRole)) {
@@ -439,7 +445,7 @@ bool AircraftItemModel::setData(const QModelIndex &index, const QVariant &value,
           emit dataChanged(index, index);
           return true;
       } else if (role == AircraftIsFavouriteRole) {
-          const auto uri = data(index, AircraftURIRole).toUrl();
+          const auto uri = data(index, AircraftPrimaryURIRole).toUrl();
           bool changed = FavouriteAircraftData::instance()->setFavourite(uri, value.toBool());
           if (changed) {
               emit dataChanged(index, index);

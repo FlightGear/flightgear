@@ -163,6 +163,25 @@ FocusScope
     }
 
     Component {
+        id: noFavouritesHeader
+        Rectangle {
+            visible: _launcher.favouriteAircraftModel.count === 0
+            width: aircraftContent.width
+            height: Style.strutSize
+
+            StyledText {
+                anchors.fill: parent
+                text: qsTr("No favourite aircraft selected: install some aircraft and mark them as favourites by clicking the \u2605")
+                wrapMode: Text.WordWrap
+                font.pixelSize: Style.headingFontPixelSize
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+    }
+
+
+    Component {
         id: emptyHeaderFooter
         Item {
         }
@@ -302,7 +321,7 @@ FocusScope
             PropertyChanges {
                 target: root
                 __model: _launcher.favouriteAircraftModel
-                __header: emptyHeaderFooter
+                __header: noFavouritesHeader
                 __footer: emptyHeaderFooter
             }
 

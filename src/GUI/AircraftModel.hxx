@@ -51,6 +51,7 @@ const int AircraftIsHelicopterRole = Qt::UserRole + 16;
 const int AircraftIsSeaplaneRole = Qt::UserRole + 17;
 const int AircraftPackageRefRole = Qt::UserRole + 19;
 const int AircraftIsFavouriteRole = Qt::UserRole + 20;
+const int AircraftPrimaryURIRole = Qt::UserRole + 21;
 
 const int AircraftStatusRole = Qt::UserRole + 22;
 const int AircraftMinVersionRole = Qt::UserRole + 23;
