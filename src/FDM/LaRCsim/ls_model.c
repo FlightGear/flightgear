@@ -204,6 +204,7 @@ void ls_model( SCALAR dt, int Initialize ) {
       basic_gear( dt, Initialize );
       break;
     case UIUC:
+#if ENABLE_UIUC_MODEL
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
       // During initialization period, re-initialize velocities
@@ -216,6 +217,7 @@ void ls_model( SCALAR dt, int Initialize ) {
       uiuc_gear_2_wrapper( dt, Initialize );
       uiuc_network_send_2_wrapper();
       uiuc_record_2_wrapper(dt);
+#endif
       break;
     }
 }

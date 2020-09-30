@@ -53,6 +53,7 @@
 
 --------------------------------------------------------------------------*/
 
+#if ENABLE_UIUC_MODEL
 
 #include <math.h>
 #include "ls_types.h"
@@ -121,3 +122,5 @@ void uiuc_network_send_2_wrapper()
 {
   uiuc_network_send_routine();
 }
+
+#endif // ENABLE_UIUC_MODEL
