@@ -36,7 +36,7 @@
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
-#if ENABLE_UIUC_MODEL
+#ifdef ENABLE_UIUC_MODEL
 # include <FDM/UIUCModel/uiuc_aircraft.h>
 #endif
 
@@ -319,7 +319,7 @@ void FGLaRCsim::update( double dt ) {
     fgSetDouble("/engines/engine/running", 1);
 
     // if flying uiuc, set some properties and over-ride some previous ones
-#if ENABLE_UIUC_MODEL
+#ifdef ENABLE_UIUC_MODEL
     if ( !strcmp(aero->getStringValue(), "uiuc")) {
 
       // surface positions and other general properties
@@ -760,7 +760,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Climb_Rate( -1 * V_down );
     // cout << "climb rate = " << -V_down * 60 << endl;
 
-#if ENABLE_UIUC_MODEL
+#ifdef ENABLE_UIUC_MODEL
     if ( !strcmp(aero->getStringValue(), "uiuc") ) {
         if (pilot_elev_no) {
             globals->get_controls()->set_elevator(Long_control);
