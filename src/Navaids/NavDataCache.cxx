@@ -1045,27 +1045,18 @@ void NavDataCache::NavDataCachePrivate::findDatFiles(
   NavDataCache::DatFileType datFileType)
 {
   NavDataCache::DatFilesGroupInfo result;
-  SGPath visitedPath;           // to avoid duplicates and time wasting
-  const string datFilesSubDir = "NavData/" +
-                               NavDataCache::datTypeStr[datFileType];
-  const PathList& sceneryPaths = globals->get_fg_scenery();
   result.datFileType = datFileType;
   result.totalSize = 0;
 
-  for (PathList::const_iterator dirsIt = sceneryPaths.begin();
-       dirsIt != sceneryPaths.end(); dirsIt++) {
-    if (dirsIt->isNull() || *dirsIt == visitedPath) {
-      continue;                 // duplicate or empty path
-    } else if (! dirsIt->isDir()) {
-      SG_LOG(SG_NAVCACHE, SG_WARN, *dirsIt <<
+  for (const auto& path: globals->get_fg_scenery()) {
+    if (! path.isDir()) {
+      SG_LOG(SG_NAVCACHE, SG_WARN, path <<
              ": given as a scenery path, but is not a directory");
-      visitedPath = *dirsIt;    // to avoid duplicate log messages
       continue;
     }
 
-    visitedPath = *dirsIt;
-    SGPath datFilesDir = visitedPath;
-    datFilesDir.append(datFilesSubDir);
+    const SGPath datFilesDir =
+      path / "NavData" / NavDataCache::datTypeStr[datFileType];
 
     if (datFilesDir.isDir()) {
       // Deterministic because the return value of simgear::Dir::children() is
@@ -1073,7 +1064,7 @@ void NavDataCache::NavDataCachePrivate::findDatFiles(
       const PathList files = simgear::Dir(datFilesDir).children(
         simgear::Dir::TYPE_FILE | simgear::Dir::NO_DOT_OR_DOTDOT);
 
-      for (auto f : files) {
+      for (const auto& f : files) {
         const std::string name = f.file();
         if (simgear::strutils::ends_with(name, ".dat") ||
             simgear::strutils::ends_with(name, ".dat.gz")) {
@@ -1082,7 +1073,7 @@ void NavDataCache::NavDataCachePrivate::findDatFiles(
         }
       }
     }
-  } // of loop over 'sceneryPaths'
+  } // of loop over the list of scenery paths
 
   // Add the default file (e.g., $FG_ROOT/Airports/apt.dat.gz), at least for
   // now
