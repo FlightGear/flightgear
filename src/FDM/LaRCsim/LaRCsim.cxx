@@ -34,9 +34,11 @@
 
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
-#include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
+#if ENABLE_UIUC_MODEL
+# include <FDM/UIUCModel/uiuc_aircraft.h>
+#endif
 
 #include "ls_cockpit.h"
 #include "ls_generic.h"
@@ -317,6 +319,7 @@ void FGLaRCsim::update( double dt ) {
     fgSetDouble("/engines/engine/running", 1);
 
     // if flying uiuc, set some properties and over-ride some previous ones
+#if ENABLE_UIUC_MODEL
     if ( !strcmp(aero->getStringValue(), "uiuc")) {
 
       // surface positions and other general properties
@@ -408,7 +411,6 @@ void FGLaRCsim::update( double dt ) {
       }
     }
 
-
     // add Gamma_horiz_deg to properties, mss 021213
     if (use_gamma_horiz_on_speed) {
       if (V_rel_wind > gamma_horiz_on_speed) {
@@ -421,6 +423,7 @@ void FGLaRCsim::update( double dt ) {
     else {
       fgSetDouble("/orientation/gamma-horiz-deg",  fgGetDouble("/orientation/heading-deg"));
     }
+#endif // ENABLE_UIUC_MODEL
     ls_update(multiloop);
 
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
@@ -757,6 +760,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Climb_Rate( -1 * V_down );
     // cout << "climb rate = " << -V_down * 60 << endl;
 
+#if ENABLE_UIUC_MODEL
     if ( !strcmp(aero->getStringValue(), "uiuc") ) {
         if (pilot_elev_no) {
             globals->get_controls()->set_elevator(Long_control);
@@ -777,6 +781,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
             //          controls.set_throttle(0,Throttle_pct);
         }
     }
+#endif
 
     return true;
 }

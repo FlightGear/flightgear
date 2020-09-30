@@ -297,8 +297,6 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
-#include "FDM/UIUCModel/uiuc_wrapper.h"
-
 #include "ls_types.h"
 #include "ls_constants.h"
 #include "ls_generic.h"
@@ -315,6 +313,9 @@ Initial Flight Gear revision.
 extern Model current_model;        /* defined in ls_model.c */
 extern SCALAR Simtime;                /* defined in ls_main.c */
 
+#if ENABLE_UIUC_MODEL
+# include "FDM/UIUCModel/uiuc_wrapper.h"
+
 void uiuc_init_vars() {
     static int init = 0;
 
@@ -325,7 +326,7 @@ void uiuc_init_vars() {
 
     uiuc_initial_init();
 }
-
+#endif
 
 void ls_step( SCALAR dt, int Initialize ) {
         static        int        inited = 0;
@@ -366,10 +367,11 @@ void ls_step( SCALAR dt, int Initialize ) {
 
 /* Initialize quaternions and transformation matrix from Euler angles */
         // Initialize UIUC aircraft model
+#if ENABLE_UIUC_MODEL
         if (current_model == UIUC) {
           uiuc_init_2_wrapper();
         }
-
+#endif
             e_0 = cos(Psi*0.5)*cos(Theta*0.5)*cos(Phi*0.5) 
                 + sin(Psi*0.5)*sin(Theta*0.5)*sin(Phi*0.5);
             e_1 = cos(Psi*0.5)*cos(Theta*0.5)*sin(Phi*0.5) 
@@ -388,11 +390,13 @@ void ls_step( SCALAR dt, int Initialize ) {
             T_local_to_body_32 = 2*(e_2*e_3 - e_0*e_1);
             T_local_to_body_33 = e_0*e_0 - e_1*e_1 - e_2*e_2 + e_3*e_3;
 
+#ifdef ENABLE_UIUC_MODEL
             // Initialize local velocities (V_north, V_east, V_down)
             // based on transformation matrix calculated above
             if (current_model == UIUC) {
               uiuc_local_vel_init();
             }
+#endif
 
 /*        Calculate local gravitation acceleration        */
 
