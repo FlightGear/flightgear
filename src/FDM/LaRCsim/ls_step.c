@@ -313,7 +313,7 @@ Initial Flight Gear revision.
 extern Model current_model;        /* defined in ls_model.c */
 extern SCALAR Simtime;                /* defined in ls_main.c */
 
-#if ENABLE_UIUC_MODEL
+#ifdef ENABLE_UIUC_MODEL
 # include "FDM/UIUCModel/uiuc_wrapper.h"
 
 void uiuc_init_vars() {
@@ -367,7 +367,7 @@ void ls_step( SCALAR dt, int Initialize ) {
 
 /* Initialize quaternions and transformation matrix from Euler angles */
         // Initialize UIUC aircraft model
-#if ENABLE_UIUC_MODEL
+#ifdef ENABLE_UIUC_MODEL
         if (current_model == UIUC) {
           uiuc_init_2_wrapper();
         }

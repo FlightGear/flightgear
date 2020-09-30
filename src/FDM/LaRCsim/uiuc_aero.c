@@ -53,7 +53,7 @@
 
 --------------------------------------------------------------------------*/
 
-#if ENABLE_UIUC_MODEL
+#ifdef ENABLE_UIUC_MODEL
 
 #include <math.h>
 #include "ls_types.h"
