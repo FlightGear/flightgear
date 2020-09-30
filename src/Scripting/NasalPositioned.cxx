@@ -659,7 +659,6 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 
   if(!scenery->get_elevation_m(geod, elev, &material)) {
-      SG_LOG(SG_TERRAIN, SG_DEV_WARN, "Nasal geodinfo() querying location with no loaded tiles:" << geod);
       return naNil();
   }
 
