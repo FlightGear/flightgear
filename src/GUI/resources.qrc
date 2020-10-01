@@ -28,6 +28,7 @@
         <file alias="toolbox-settings">assets/toolbox-settings.png</file>
         <file alias="toolbox-summary">assets/toolbox-summary.png</file>
         <file alias="toolbox-addons">assets/toolbox-addons.png</file>
+        <file alias="toolbox-help">assets/toolbox-help.png</file>
         <file>qml/AircraftList.qml</file>
         <file>qml/AircraftRating.qml</file>
         <file>qml/ArrowButton.qml</file>
@@ -134,6 +135,7 @@
         <file alias="favourite-icon-filled">assets/icons8-christmas-star-filled.png</file>
         <file alias="favourite-icon-outline">assets/icons8-christmas-star-outline.png</file>
         <file>qml/FirstRun.qml</file>
+        <file>qml/HelpSupport.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>
