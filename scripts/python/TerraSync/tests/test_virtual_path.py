@@ -303,7 +303,7 @@ class TestVirtualPathSpecific(unittest.TestCase):
 
     def test_isHashableType(self):
         p = VirtualPath("/foo")
-        self.assertTrue(isinstance(p, collections.Hashable))
+        self.assertTrue(isinstance(p, collections.abc.Hashable))
 
     def test_insideSet(self):
         l1 = [ VirtualPath("/foo/bar"),
@@ -354,7 +354,7 @@ class TestMutableVirtualPathSpecific(unittest.TestCase):
 
     def test_isNotHashableType(self):
         p = MutableVirtualPath("/foo")
-        self.assertFalse(isinstance(p, collections.Hashable))
+        self.assertFalse(isinstance(p, collections.abc.Hashable))
 
 
 if __name__ == "__main__":
