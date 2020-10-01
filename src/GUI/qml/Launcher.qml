@@ -25,6 +25,7 @@ Item {
         ListElement { title: qsTr("Settings"); pageSource: ""; iconPath: "qrc:///svg/toolbox-settings"; state:"settings" }
 
         ListElement { title: qsTr("Add-ons"); pageSource: "qrc:///qml/AddOns.qml"; iconPath: "qrc:///svg/toolbox-addons"; state:"loader" }
+        ListElement { title: qsTr("Help"); pageSource: "qrc:///qml/HelpSupport.qml"; iconPath: "qrc:///toolbox-help"; state:"loader" }
 
     }
 
