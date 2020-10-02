@@ -106,7 +106,7 @@ class VirtualPath:
         return type(self) == type(other) and self._path == other._path
 
     def __ne__(self, other):
-        return type(self) == type(other) and self._path != other._path
+        return type(self) != type(other) or self._path != other._path
 
     def __gt__(self, other):
         if isinstance(other, VirtualPath):
