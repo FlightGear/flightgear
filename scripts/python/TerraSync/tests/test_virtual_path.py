@@ -355,7 +355,3 @@ class TestMutableVirtualPathSpecific(unittest.TestCase):
     def test_isNotHashableType(self):
         p = MutableVirtualPath("/foo")
         self.assertFalse(isinstance(p, collections.abc.Hashable))
-
-
-if __name__ == "__main__":
-    unittest.main()
