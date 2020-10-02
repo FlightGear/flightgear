@@ -151,11 +151,8 @@ def output_text(top_namespaces,modules,version):
 	fw.close()
 
 def parse_file(filename):
-	try:
-		fr = open(filename,'rb')
+	with open(filename,'rb') as fr:
 		content = fr.readlines()
-	finally:
-		fr.close()
 
 	i=0
 	retval=[]
