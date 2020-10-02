@@ -22,7 +22,7 @@
 // I am not aware of any platforms that don't use 4 bytes for float
 // and 8 bytes for double.
 
-const uint32_t FG_NET_FDM_VERSION = 24;
+const uint32_t FG_NET_FDM_VERSION = 25;
 
 
 // Define a structure containing the top level flight dynamics model
