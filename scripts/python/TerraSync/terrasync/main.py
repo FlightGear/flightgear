@@ -556,26 +556,26 @@ class TerraSync:
 
     def handleDirindexFile(self, dirindexFile):
         dirIndex = dirindex.DirIndex(dirindexFile)
-        virtualBase = dirIndex.getPath()        # VirtualPath instance
+        virtualBase = dirIndex.path             # VirtualPath instance
         relativeBase = virtualBase.asRelative() # string, doesn't start with '/'
         serverFiles = []
         serverDirs = []
 
-        for file in dirIndex.getFiles():
+        for file in dirIndex.files:
             f = file['name']
             self.processFileEntry(virtualBase / f,
                                   join(relativeBase, f),
                                   file['hash'])
             serverFiles.append(f)
 
-        for subdir in dirIndex.getDirectories():
+        for subdir in dirIndex.directories:
             d = subdir['name']
             self.processDirectoryEntry(virtualBase / d,
                                        join(relativeBase, d),
                                        subdir['hash'])
             serverDirs.append(d)
 
-        for tarball in dirIndex.getTarballs():
+        for tarball in dirIndex.tarballs:
             # Tarballs are handled the same as normal files.
             f = tarball['name']
             self.processFileEntry(virtualBase / f,

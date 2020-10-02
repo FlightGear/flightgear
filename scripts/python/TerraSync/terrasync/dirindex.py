@@ -28,9 +28,9 @@ class DirIndex:
     """Parser for .dirindex files."""
 
     def __init__(self, dirIndexFile):
-        self.d = []
-        self.f = []
-        self.t = []
+        self.directories = []
+        self.files = []
+        self.tarballs = []
         self.version = 0
         self.path = None        # will be a VirtualPath instance when set
 
@@ -54,24 +54,19 @@ class DirIndex:
             tokens = line.split(':')
             if len(tokens) == 0:
                 continue
-
-            if tokens[0] == "version":
+            elif tokens[0] == "version":
                 self.version = int(tokens[1])
-
             elif tokens[0] == "path":
                 # This is relative to the repository root
                 self.path = VirtualPath(tokens[1])
-
             elif tokens[0] == "d":
-                self.d.append({ 'name': tokens[1], 'hash': tokens[2] })
-
+                self.directories.append({'name': tokens[1], 'hash': tokens[2]})
             elif tokens[0] == "f":
-                self.f.append({ 'name': tokens[1],
-                                'hash': tokens[2], 'size': int(tokens[3]) })
-
+                self.files.append({'name': tokens[1],
+                                   'hash': tokens[2], 'size': int(tokens[3])})
             elif tokens[0] == "t":
-                self.t.append({ 'name': tokens[1], 'hash': tokens[2],
-                                'size': int(tokens[3]) })
+                self.tarballs.append({'name': tokens[1], 'hash': tokens[2],
+                                      'size': int(tokens[3])})
 
     def _sanityCheck(self):
         if self.path is None:
@@ -81,19 +76,3 @@ class DirIndex:
             raise InvalidDirIndexFile(
                 "no 'path' field found; the first lines of this .dirindex file "
                 "follow:\n\n" + '\n'.join(firstLines))
-
-    def getVersion(self):
-        return self.version
-
-    def getPath(self):
-        return self.path
-
-    def getDirectories(self):
-        return self.d
-
-    def getTarballs(self):
-        return self.t
-
-    def getFiles(self):
-        return self.f
-

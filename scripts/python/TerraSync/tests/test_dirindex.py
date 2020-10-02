@@ -66,30 +66,10 @@ tarballs_in_sample_dirindex_1 = [
 class TestDirIndex(unittest.TestCase):
     """Unit tests for the DirIndex class."""
 
-    def setUp(self):
-        self.dirindex = DirIndex(testData("sample_dirindex_1"))
-
     def test_readFrom(self):
-        self.assertEqual(self.dirindex.version, 1)
-        self.assertEqual(self.dirindex.path, VirtualPath("some/path"))
-        self.assertEqual(self.dirindex.d, directories_in_sample_dirindex_1)
-        self.assertEqual(self.dirindex.f, files_in_sample_dirindex_1)
-        self.assertEqual(self.dirindex.t, tarballs_in_sample_dirindex_1)
-
-    def test_getVersion(self):
-        self.assertEqual(self.dirindex.getVersion(), 1)
-
-    def test_getPath(self):
-        self.assertEqual(self.dirindex.getPath(), VirtualPath("some/path"))
-
-    def test_getDirectories(self):
-        self.assertEqual(self.dirindex.getDirectories(),
-                         directories_in_sample_dirindex_1)
-
-    def test_getTarballs(self):
-        self.assertEqual(self.dirindex.getTarballs(),
-                         tarballs_in_sample_dirindex_1)
-
-    def test_getFiles(self):
-        self.assertEqual(self.dirindex.getFiles(),
-                         files_in_sample_dirindex_1)
+        d = DirIndex(testData("sample_dirindex_1"))
+        self.assertEqual(d.version, 1)
+        self.assertEqual(d.path, VirtualPath("some/path"))
+        self.assertEqual(d.directories, directories_in_sample_dirindex_1)
+        self.assertEqual(d.files, files_in_sample_dirindex_1)
+        self.assertEqual(d.tarballs, tarballs_in_sample_dirindex_1)
