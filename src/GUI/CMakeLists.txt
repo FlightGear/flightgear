@@ -130,6 +130,8 @@ if (HAVE_QT)
                             CarriersLocationModel.hxx
                             FavouriteAircraftData.cxx
                             FavouriteAircraftData.hxx
+                            UpdateChecker.cxx
+                            UpdateChecker.hxx
                             ${uic_sources}
                             ${qrc_sources}
                             ${qml_sources})

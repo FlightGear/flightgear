@@ -57,6 +57,7 @@
 #include "StackController.hxx"
 #include "ThumbnailImageItem.hxx"
 #include "UnitsModel.hxx"
+#include "UpdateChecker.hxx"
 
 using namespace simgear::pkg;
 
@@ -154,6 +155,7 @@ void LauncherController::initQML()
     qmlRegisterUncreatableType<LauncherController>("FlightGear.Launcher", 1, 0, "LauncherController", "no");
     qmlRegisterUncreatableType<LocationController>("FlightGear.Launcher", 1, 0, "LocationController", "no");
     qmlRegisterUncreatableType<FlightPlanController>("FlightGear.Launcher", 1, 0, "FlightPlanController", "no");
+    qmlRegisterUncreatableType<UpdateChecker>("FlightGear.Launcher", 1, 0, "UpdateChecker", "for enums");
 
     qmlRegisterType<LauncherArgumentTokenizer>("FlightGear.Launcher", 1, 0, "ArgumentTokenizer");
     qmlRegisterUncreatableType<QAbstractItemModel>("FlightGear.Launcher", 1, 0, "QAIM", "no");
