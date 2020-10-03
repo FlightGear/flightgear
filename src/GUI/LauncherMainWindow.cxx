@@ -27,7 +27,7 @@
 #include "LauncherController.hxx"
 #include "AddOnsController.hxx"
 #include "LocationController.hxx"
-
+#include "UpdateChecker.hxx"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -108,6 +108,9 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     ctx->setContextProperty("_config", m_controller->config());
     ctx->setContextProperty("_location", m_controller->location());
     ctx->setContextProperty("_osName", osName);
+
+    auto updater = new UpdateChecker(this);
+    ctx->setContextProperty("_updates", updater);
 
     if (!inSimMode) {
         auto addOnsCtl = new AddOnsController(this, m_controller->config());
