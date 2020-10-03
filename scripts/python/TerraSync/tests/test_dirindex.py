@@ -28,6 +28,7 @@
 import os
 import unittest
 from terrasync.dirindex import DirIndex
+from terrasync.exceptions import InvalidDirIndexFile
 from terrasync.virtual_path import VirtualPath
 
 
@@ -66,10 +67,28 @@ tarballs_in_sample_dirindex_1 = [
 class TestDirIndex(unittest.TestCase):
     """Unit tests for the DirIndex class."""
 
-    def test_readFrom(self):
-        d = DirIndex(testData("sample_dirindex_1"))
+    def test_constructor(self):
+        d = DirIndex(testData("good", "sample_dirindex_1"))
         self.assertEqual(d.version, 1)
         self.assertEqual(d.path, VirtualPath("some/path"))
         self.assertEqual(d.directories, directories_in_sample_dirindex_1)
         self.assertEqual(d.files, files_in_sample_dirindex_1)
         self.assertEqual(d.tarballs, tarballs_in_sample_dirindex_1)
+
+        for stem in ("path_starts_with_slash",
+                     "path_contains_a_backslash",
+                     "dotdot_in_path",
+                     "slash_in_directory_name",
+                     "slash_in_file_name",
+                     "slash_in_tarball_name",
+                     "backslash_in_directory_name",
+                     "backslash_in_file_name",
+                     "backslash_in_tarball_name",
+                     "directory_name_is_double_colon",
+                     "file_name_is_double_colon",
+                     "tarball_name_is_double_colon"):
+            with self.assertRaises(InvalidDirIndexFile):
+                DirIndex(testData("bad", "bad_dirindex_" + stem))
+
+        with self.assertRaises(UnicodeDecodeError):
+            d = DirIndex(testData("bad", "bad_dirindex_encoding"))

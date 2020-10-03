@@ -1,9 +1,11 @@
+# Comment line
 version:1
 path:some/path
 time:20200926-10:38Z
 d:Airports:8a93b5d8a2b04d2fb8de4ef58ad02f9e8819d314
 d:Models:bee221c9d2621dc9b69cd9e0ad7dd0605f6ea928
 d:Objects:10ae32c986470fa55b56b8eefbc6ed565cce0642
+# Other comment line
 d:Terrain:e934024dc0f959f9a433e47c646d256630052c2e
 d:Buildings:19060725efc2a301fa6844991e2922d42d8de5e2
 d:Pylons:378b3dd58ce3058f2992b70aa5ecf8947a4d7f9e
