@@ -80,7 +80,10 @@ def removeDirectoryTree(base, whatToRemove):
             "Unexpected base path for removeDirectoryTree(): {!r}".format(base)
     absPath = os.path.abspath(whatToRemove)
 
-    if _removeDirectoryTree_dangerous_cre.match(absPath):
+    if not os.path.isfile(join(absPath, ".dirindex")):
+        raise UserError("refusing to recursively delete '{}' because "
+                        "it does not contain a .dirindex file".format(absPath))
+    elif _removeDirectoryTree_dangerous_cre.match(absPath):
         raise UserError("in order to protect your data, refusing to "
                         "recursively delete '{}'".format(absPath))
     else:
@@ -540,6 +543,8 @@ class TerraSync:
             if not self.quick:
                 self.handleDirindexFile(localDirIndex)
         elif self.inSyncMode():
+            if os.path.isfile(localFullPath):
+                os.unlink(localFullPath) # file on server became a directory
             if not os.path.exists(localFullPath):
                 os.makedirs(localFullPath)
 
