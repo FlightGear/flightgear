@@ -18,11 +18,12 @@
 
 // launcher headers
 #include "QtLauncher.hxx"
+#include "AddOnsController.hxx"
+#include "AircraftItemModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "LaunchConfig.hxx"
 #include "LocalAircraftCache.hxx"
 #include "LauncherController.hxx"
-#include "AddOnsController.hxx"
 #include "LocationController.hxx"
 #include "UpdateChecker.hxx"
 

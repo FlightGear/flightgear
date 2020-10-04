@@ -51,6 +51,7 @@ void AircraftProxyModel::setAircraftFilterString(QString s)
     }
 
     invalidate();
+    emit countChanged();
 }
 
 int AircraftProxyModel::indexForURI(QUrl uri) const
@@ -79,6 +80,7 @@ void AircraftProxyModel::setRatingFilterEnabled(bool e)
     invalidate();
     emit ratingsFilterEnabledChanged();
     emit summaryTextChanged();
+    emit countChanged();
 }
 
 QString AircraftProxyModel::summaryText() const
