@@ -149,7 +149,7 @@ FocusScope
         Rectangle {
             visible: _launcher.searchAircraftModel.count === 0
             width: aircraftContent.width
-            height: Style.strutSize
+            height: visible ? Style.strutSize : 0
 
             StyledText {
                 anchors.fill: parent
@@ -167,7 +167,7 @@ FocusScope
         Rectangle {
             visible: _launcher.favouriteAircraftModel.count === 0
             width: aircraftContent.width
-            height: Style.strutSize
+            height: visible ? Style.strutSize : 0
 
             StyledText {
                 anchors.fill: parent

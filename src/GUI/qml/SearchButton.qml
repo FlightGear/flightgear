@@ -105,6 +105,10 @@ FocusScope
                     buttonText.selectAll();
                 }
             }
+
+            onDoubleClicked: {
+                buttonText.selectAll();
+            }
         }
 
 
