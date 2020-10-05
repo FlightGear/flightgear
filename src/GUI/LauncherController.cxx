@@ -882,3 +882,12 @@ QUrl LauncherController::flyIconUrl() const
 
     return QUrl{"qrc:///svg/toolbox-fly"};
 }
+
+QUrl LauncherController::urlToDataPath(QString relPath) const
+{
+    QString absFilePath = QString::fromStdString(globals->get_fg_root().utf8Str());
+    if (!relPath.startsWith("/")) {
+        relPath.prepend("/");
+    }
+    return QUrl::fromLocalFile(absFilePath + relPath);
+}
