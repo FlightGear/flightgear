@@ -139,15 +139,17 @@ FGFX::init()
     node = root.getNode("fx");
     if(node) {
         for (int i = 0; i < node->nChildren(); ++i) {
-            SGXmlSound *soundfx = new SGXmlSound();
+            std::unique_ptr<SGXmlSound> soundfx{new SGXmlSound};
   
             try {
-                soundfx->init( _props, node->getChild(i), this, _avionics,
+                bool ok = soundfx->init( _props, node->getChild(i), this, _avionics,
                                path.dir() );
-                _sound.push_back( soundfx );
+                if (ok) {
+                    // take the pointer out of the unique ptr so it's not deleted
+                    _sound.push_back( soundfx.release() );
+                }
             } catch ( sg_exception &e ) {
                 SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
-                delete soundfx;
             }
         }
     }
