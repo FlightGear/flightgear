@@ -410,7 +410,19 @@ FGRenderer::init( void )
 
     sgUserDataInit( globals->get_props() );
 
-    if (fgGetNode("/sim/rendering/composite-viewer-enabled", true)->getBoolValue()) {
+    SGPropertyNode* composite_viewer_enabled_prop = fgGetNode("/sim/rendering/composite-viewer-enabled", true);
+    // After we've read composite_viewer_enabled_prop here, changing its value
+    // will have no affect, so mark it as read-only for clarity.
+    composite_viewer_enabled_prop->setAttributes(SGPropertyNode::READ);
+    if (composite_viewer_enabled_prop->getBoolValue()) {
+        const char* osg_version = osgGetVersion();
+        if (simgear::strutils::starts_with(osg_version, "3.4")) {
+            SG_LOG( SG_GENERAL, SG_POPUP,
+                    "CompositeViewer is enabled and requires OpenSceneGraph-3.6, but\n"
+                    " Flightgear has been built with OpenSceneGraph-" << osg_version << ".\n"
+                    " There may be problems when opening/closing extra view windows.\n"
+                    );
+        }
         composite_viewer_enabled = 1;
         SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::CompositeViewer");
         composite_viewer = new osgViewer::CompositeViewer;
