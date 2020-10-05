@@ -153,6 +153,13 @@ public:
     Q_INVOKABLE QVariant loadUISetting(QString name, QVariant defaultValue) const;
     Q_INVOKABLE void saveUISetting(QString name, QVariant value) const;
 
+    /**
+     * @brief urlToDataPath - convetr  a FGData path into a gloabl file:/// URL suitable for Qt.openExternally()
+     * @param relPath - the path rlative to FG_ROOT
+     * @return a file QUrl
+     */
+    Q_INVOKABLE QUrl urlToDataPath(QString relPath) const;
+
     LaunchConfig* config() const
     { return m_config; }
 

@@ -93,10 +93,10 @@ Item {
 
                 readonly property string forumLink: "href=\"http://forum.flightgear.org\"";
 
-                text: qsTr("Welcome to FlightGear, the open-source flight simulator. " +
-                           "Everything in this software is the work of volunteers; we hope " +
-                           "you enjoy it. If you find problems, or would like to contribute, " +
-                           "please <a %1>visit our user forum</a>.").arg(forumLink)
+                text: qsTr("Welcome to FlightGear, the open source flight simulator. " +
+                           "This software is the work of volunteers. we hope you enjoy it. " +
+                           "If you find problems, or would like to contribute, " +
+                           "please <a %1>visit our forum</a>.").arg(forumLink)
 
                 onLinkActivated: {
                     Qt.openUrlExternally(link)
