@@ -1100,8 +1100,13 @@ void fgCreateSubsystems(bool duringReset) {
 #ifdef ENABLE_IAX
     ////////////////////////////////////////////////////////////////////
     // Initialize the FGCom subsystem.
+    // very important this goes in the SOUND group, since IAXClient
+    // depends on OpenAL, which is shutdown when the SOUND group
+    // shutdown.
+    // Sentry: FLIGHTGEAR-66
+
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("fgcom", new FGCom);
+    globals->add_new_subsystem<FGCom>(SGSubsystemMgr::SOUND);
 #endif
 
     {
