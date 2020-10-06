@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QTimer>
 
 #include <simgear/package/Install.hxx>
 #include <simgear/package/Root.hxx>
@@ -79,16 +80,6 @@ private:
     QmlAircraftInfo* p;
 };
 
-void QmlAircraftInfo::Delegate::finishInstall(InstallRef aInstall, StatusCode aReason)
-{
-    Q_UNUSED(aReason)
-    if (aInstall->package() == p->packageRef()) {
-        p->_cachedProps.reset();
-        p->checkForStates();
-        p->infoChanged();
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////
 
 
@@ -104,22 +95,14 @@ struct StateInfo
 
 using AircraftStateVec = std::vector<StateInfo>;
 
-static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
+static bool readAircraftStates(const SGPropertyNode_ptr root, AircraftStateVec& result)
 {
-    SGPropertyNode_ptr root(new SGPropertyNode);
-    try {
-        readProperties(setXMLPath, root);
-    } catch (sg_exception&) {
-        // malformed include or XML, just bail
-        return {};
-    }
-
+    result.clear();
     if (!root->getNode("sim/state")) {
-        return {};
+        return false; // no states
     }
 
     auto nodes = root->getNode("sim")->getChildren("state");
-    AircraftStateVec result;
     result.reserve(nodes.size());
     for (auto cn : nodes) {
         string_list stateNames;
@@ -138,7 +121,7 @@ static AircraftStateVec readAircraftStates(const SGPath& setXMLPath)
                          });
     }
 
-    return result;
+    return true;
 }
 
 QString humanNameFromStateTag(const std::string& tag)
@@ -169,15 +152,27 @@ class StatesModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    StatesModel()
+    StatesModel(QObject* pr) : QAbstractListModel(pr)
     {
     }
 
-    StatesModel(const AircraftStateVec& states) :
-        _data(states)
+    void clear()
     {
+        beginResetModel();
+        _data.clear();
+        _explicitAutoState = false;
+        endResetModel();
+    }
+
+    void initWithStates(const AircraftStateVec& states)
+    {
+        beginResetModel();
+        _data = states;
+        _explicitAutoState = false;
+
         // we use an empty model for aircraft with no states defined
         if (states.empty()) {
+            endResetModel();
             return;
         }
 
@@ -195,6 +190,8 @@ public:
         } else {
             _data.insert(_data.begin(), {{"auto"}, {}, tr("Select state based on startup position.")});
         }
+
+        endResetModel();
     }
 
     Q_INVOKABLE int indexForTag(QString s) const
@@ -299,6 +296,22 @@ private:
     AircraftStateVec _data;
     bool _explicitAutoState = false;
 };
+
+////////////////////////////////////////////////////////////////////////////
+
+void QmlAircraftInfo::Delegate::finishInstall(InstallRef aInstall, StatusCode aReason)
+{
+    Q_UNUSED(aReason)
+    if (aInstall->package() == p->packageRef()) {
+        p->_cachedProps.reset();
+        if (p->_statesModel) {
+            p->_statesModel->clear();
+        }
+        p->_statesChecked = false;
+        p->infoChanged();
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -592,53 +605,49 @@ AircraftItemPtr QmlAircraftInfo::resolveItem() const
     return _item;
 }
 
-void QmlAircraftInfo::checkForStates()
+void QmlAircraftInfo::validateStates() const
 {
-    QString path = pathOnDisk();
-    if (path.isEmpty()) {
-        _statesModel.reset(new StatesModel);
-        emit infoChanged();
-        return;
+    // after calling this, StatesModel must exist, but can be empty
+    if (!_statesModel) {
+        _statesModel = new StatesModel(const_cast<QmlAircraftInfo*>(this));
     }
 
-    const auto sgp = SGPath::fromUtf8(path.toUtf8().toStdString());
-    if (!sgp.exists()) {
-        _statesModel.reset(new StatesModel);
-        emit infoChanged();
+    if (_statesChecked)
         return;
-    }
 
-    auto states = readAircraftStates(sgp);
-    if (states.empty()) {
-        _statesModel.reset(new StatesModel);
-        emit infoChanged();
+    validateLocalProps();
+    if (!_cachedProps)
         return;
-    }
 
-    _statesModel.reset(new StatesModel(states));
-    emit infoChanged();
+    AircraftStateVec statesData;
+    readAircraftStates(_cachedProps, statesData);
+    _statesModel->initWithStates(statesData);
+    _statesChecked = true;
 }
 
 void QmlAircraftInfo::validateLocalProps() const
 {
     if (!_cachedProps) {
-        SGPath path;
-        if (_item) {
-            path = resolveItem()->path.toUtf8().toStdString();
-        } else if (_package) {
-            auto install = _package->existingInstall();
-            if (!install.valid())
-                return;
+        // clear any previous states if we're reusing this object
+        if (_statesModel)
+            _statesModel->clear();
 
-            path = install->path();
-        }
+        _statesChecked = false;
 
+        SGPath path = SGPath::fromUtf8(pathOnDisk().toStdString());
         if (!path.exists())
             return;
         _cachedProps = new SGPropertyNode;
-        try {
-            readProperties(path, _cachedProps);
-        } catch (sg_exception&) {
+        auto r = LocalAircraftCache::instance()->readAircraftProperties(path, _cachedProps);
+        if (r == LocalAircraftCache::ParseSetXMLResult::Retry) {
+            _cachedProps.reset();
+
+            // give the AircraftScsn threa d abit more time
+            QTimer::singleShot(2000, this, &QmlAircraftInfo::retryValidateLocalProps);
+        } else if (r == LocalAircraftCache::ParseSetXMLResult::Ok) {
+            // we're good
+        } else {
+            // failure
             _cachedProps.reset();
         }
     }
@@ -651,8 +660,10 @@ void QmlAircraftInfo::setUri(QUrl u)
 
     _item.clear();
     _package.clear();
-    _statesModel.reset(new StatesModel);
     _cachedProps.clear();
+    _statesChecked = false;
+    if (_statesModel)
+        _statesModel->clear();
 
     if (u.isLocalFile()) {
         _item = LocalAircraftCache::instance()->findItemWithUri(u);
@@ -679,8 +690,6 @@ void QmlAircraftInfo::setUri(QUrl u)
         }
     }
 
-    checkForStates();
-
     emit uriChanged();
     emit infoChanged();
     emit downloadChanged();
@@ -702,8 +711,9 @@ void QmlAircraftInfo::setVariant(quint32 variant)
 
     _variant = variant;
     _cachedProps.clear();
-
-    checkForStates();
+    _statesChecked = false;
+    if (_statesModel)
+        _statesModel->clear();
 
     emit infoChanged();
     emit variantChanged(_variant);
@@ -720,6 +730,12 @@ void QmlAircraftInfo::onFavouriteChanged(QUrl u)
         return;
 
     emit favouriteChanged();
+}
+
+void QmlAircraftInfo::retryValidateLocalProps()
+{
+    qInfo() << Q_FUNC_INFO << "Retrying validation of local props for:" << uri();
+    validateLocalProps();
 }
 
 QVariant QmlAircraftInfo::packageAircraftStatus(simgear::pkg::PackageRef p)
@@ -806,22 +822,26 @@ bool QmlAircraftInfo::isPackaged() const
 
 bool QmlAircraftInfo::hasStates() const
 {
+    validateStates();
     return !_statesModel->isEmpty();
 }
 
 bool QmlAircraftInfo::hasState(QString name) const
 {
+    validateStates();
     return _statesModel->hasState(name);
 }
 
 bool QmlAircraftInfo::haveExplicitAutoState() const
 {
+    validateStates();
     return _statesModel->hasExplicitAuto();
 }
 
 StatesModel *QmlAircraftInfo::statesModel()
 {
-    return _statesModel.data();
+    validateStates();
+    return _statesModel;
 }
 
 QuantityValue QmlAircraftInfo::cruiseSpeed() const
@@ -886,11 +906,13 @@ QString QmlAircraftInfo::icaoType() const
 
 bool QmlAircraftInfo::isSpeedBelowLimits(QuantityValue speed) const
 {
+    Q_UNUSED(speed)
     return true;
 }
 
 bool QmlAircraftInfo::isAltitudeBelowLimits(QuantityValue speed) const
 {
+    Q_UNUSED(speed)
     return true;
 }
 
