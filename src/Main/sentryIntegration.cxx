@@ -93,9 +93,12 @@ public:
 
         if (e.debugClass == SG_OSG) {
             // white-list certain common OSG warnings to avoid filling up the
-            // breadcrumsb with noise
+            // breadcrumbs with noise
             if ((e.message == "PNG lib warning : iCCP: known incorrect sRGB profile")
-             || (e.message == "PNG lib warning : iCCP: profile 'ICC Profile': 1000000h: invalid rendering intent"))
+             || (e.message == "PNG lib warning : iCCP: profile 'ICC Profile': 1000000h: invalid rendering intent")
+             || (e.message.find("osgDB ac3d reader: detected surface with less than 3") == 0)
+             || (e.message.find("osgDB ac3d reader: detected line with less than 2") == 0)
+            )
             {
                 return true;
             }
