@@ -278,6 +278,11 @@ QVariant AircraftItem::status(int variant)
 
 }
 
+namespace {
+
+static std::unique_ptr<LocalAircraftCache> static_cacheInstance;
+
+
 // ensure references to Aircraft/foo and <my-aircraft-dir>/foo are resolved. This happens when
 // aircraft reference a path (probably to themselves) in their -set.xml
 class ScanDirProvider : public simgear::ResourceProvider
@@ -321,6 +326,34 @@ public:
 private:
     SGPath _currentScanPath;
     SGPath _currentAircraftPath;
+};
+
+class OtherAircraftDirsProvider : public simgear::ResourceProvider
+{
+public:
+    OtherAircraftDirsProvider() : simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_NORMAL) {}
+
+    ~OtherAircraftDirsProvider() = default;
+
+    SGPath resolve(const std::string& aResource, SGPath& aContext) const override
+    {
+        if (aResource.find("Aircraft/") != 0) {
+            return SGPath{}; // not an aircraft path
+        }
+
+        const std::string res(aResource, 9); // resource path with 'Aircraft/' removed
+
+        Q_UNUSED(aContext)
+        QStringList paths = LocalAircraftCache::instance()->paths();
+        Q_FOREACH(auto p, paths) {
+            const auto sp = SGPath::fromUtf8(p.toUtf8().toStdString()) / res;
+           // qWarning() << "OADP: trying:" << QString::fromStdString(sp.utf8Str());
+            if (sp.exists())
+                return sp;
+        }
+
+        return SGPath{};
+    }
 };
 
 class AircraftScanThread : public QThread
@@ -512,7 +545,17 @@ private:
     std::unique_ptr<ScanDirProvider> m_currentScanDir;
 };
 
-static std::unique_ptr<LocalAircraftCache> static_cacheInstance;
+} // of anonymous namespace
+
+
+class LocalAircraftCache::AircraftCachePrivate
+{
+public:
+    QStringList m_paths;
+    std::unique_ptr<AircraftScanThread> m_scanThread;
+    QVector<AircraftItemPtr> m_items;
+    std::unique_ptr<OtherAircraftDirsProvider> m_otherDirsProvider;
+};
 
 LocalAircraftCache* LocalAircraftCache::instance()
 {
@@ -523,33 +566,48 @@ LocalAircraftCache* LocalAircraftCache::instance()
     return static_cacheInstance.get();
 }
 
-LocalAircraftCache::LocalAircraftCache()
+LocalAircraftCache::LocalAircraftCache() :
+    d(new AircraftCachePrivate)
 {
-
+    d->m_otherDirsProvider.reset(new OtherAircraftDirsProvider);
+    auto rm = simgear::ResourceManager::instance();
+    rm->addProvider(d->m_otherDirsProvider.get());
 }
 
 LocalAircraftCache::~LocalAircraftCache()
 {
     abandonCurrentScan();
+    if (simgear::ResourceManager::haveInstance()) {
+        simgear::ResourceManager::instance()->removeProvider(d->m_otherDirsProvider.get());
+    } else {
+        // resource manager will already have destroyed the provider. Awkward
+        // ownership model :(
+        d->m_otherDirsProvider.release();
+    }
 }
 
 void LocalAircraftCache::setPaths(QStringList paths)
 {
-    if (paths == m_paths) {
+    if (paths == d->m_paths) {
         return;
     }
 
-    m_items.clear();
+    d->m_items.clear();
     emit cleared();
-    m_paths = paths;
+    d->m_paths = paths;
+}
+
+QStringList LocalAircraftCache::paths() const
+{
+    return d->m_paths;
 }
 
 void LocalAircraftCache::scanDirs()
 {
     abandonCurrentScan();
-    m_items.clear();
+    d->m_items.clear();
 
-    QStringList dirs = m_paths;
+    QStringList dirs = d->m_paths;
 
     for (SGPath ap : globals->get_aircraft_paths()) {
         dirs << QString::fromStdString(ap.utf8Str());
@@ -558,40 +616,40 @@ void LocalAircraftCache::scanDirs()
     SGPath rootAircraft = globals->get_fg_root() / "Aircraft";
     dirs << QString::fromStdString(rootAircraft.utf8Str());
 
-    m_scanThread.reset(new AircraftScanThread(dirs));
-    connect(m_scanThread.get(), &AircraftScanThread::finished, this,
+    d->m_scanThread.reset(new AircraftScanThread(dirs));
+    connect(d->m_scanThread.get(), &AircraftScanThread::finished, this,
             &LocalAircraftCache::onScanFinished);
     // force a queued connection here since we the scan thread object still
     // belongs to the same thread as us, and hence this would otherwise be
     // a direct connection
-    connect(m_scanThread.get(), &AircraftScanThread::addedItems,
+    connect(d->m_scanThread.get(), &AircraftScanThread::addedItems,
             this, &LocalAircraftCache::onScanResults,
             Qt::QueuedConnection);
-    m_scanThread->start();
+    d->m_scanThread->start();
 
     emit scanStarted();
 }
 
 int LocalAircraftCache::itemCount() const
 {
-    return m_items.size();
+    return d->m_items.size();
 }
 
 QVector<AircraftItemPtr> LocalAircraftCache::allItems() const
 {
-    return m_items;
+    return d->m_items;
 }
 
 AircraftItemPtr LocalAircraftCache::itemAt(int index) const
 {
-    return m_items.at(index);
+    return d->m_items.at(index);
 }
 
 int LocalAircraftCache::findIndexWithUri(QUrl aircraftUri) const
 {
     QString path = aircraftUri.toLocalFile();
-    for (int row=0; row < m_items.size(); ++row) {
-        const AircraftItemPtr item(m_items.at(row));
+    for (int row=0; row < d->m_items.size(); ++row) {
+        const AircraftItemPtr item(d->m_items.at(row));
         if (item->path == path) {
             return row;
         }
@@ -612,8 +670,8 @@ AircraftItemPtr LocalAircraftCache::primaryItemFor(AircraftItemPtr item) const
     if (!item || item->variantOf.isEmpty())
         return item;
 
-    for (int row=0; row < m_items.size(); ++row) {
-        const AircraftItemPtr p(m_items.at(row));
+    for (int row=0; row < d->m_items.size(); ++row) {
+        const AircraftItemPtr p(d->m_items.at(row));
         if (p->baseName() == item->variantOf) {
             return p;
         }
@@ -626,7 +684,7 @@ AircraftItemPtr LocalAircraftCache::findItemWithUri(QUrl aircraftUri) const
 {
     int index = findIndexWithUri(aircraftUri);
     if (index >= 0) {
-        return m_items.at(index);
+        return d->m_items.at(index);
     }
 
     return {};
@@ -634,37 +692,37 @@ AircraftItemPtr LocalAircraftCache::findItemWithUri(QUrl aircraftUri) const
 
 void LocalAircraftCache::abandonCurrentScan()
 {
-    if (m_scanThread) {
+    if (d->m_scanThread) {
         // don't fire onScanFinished when the thread ends
-        disconnect(m_scanThread.get(), &AircraftScanThread::finished, this,
+        disconnect(d->m_scanThread.get(), &AircraftScanThread::finished, this,
                 &LocalAircraftCache::onScanFinished);
 
-        m_scanThread->setDone();
-        if (!m_scanThread->wait(2000)) {
+        d->m_scanThread->setDone();
+        if (!d->m_scanThread->wait(2000)) {
             qWarning() << Q_FUNC_INFO << "scan thread failed to terminate";
         }
-        m_scanThread.reset();
+        d->m_scanThread.reset();
     }
 }
 
 
 void LocalAircraftCache::onScanResults()
 {
-    if (!m_scanThread) {
+    if (!d->m_scanThread) {
         return;
     }
 
-    QVector<AircraftItemPtr> newItems = m_scanThread->items();
+    QVector<AircraftItemPtr> newItems = d->m_scanThread->items();
     if (newItems.isEmpty())
         return;
 
-    m_items+=newItems;
+    d->m_items+=newItems;
     emit addedItems(newItems.size());
 }
 
 void LocalAircraftCache::onScanFinished()
 {
-    m_scanThread.reset();
+    d->m_scanThread.reset();
     emit scanCompleted();
 }
 
@@ -699,6 +757,48 @@ int LocalAircraftCache::ratingFromProperties(SGPropertyNode* node, int ratingInd
     const char* names[] = {"FDM", "systems", "cockpit", "model"};
     assert((ratingIndex >= 0) && (ratingIndex < 4));
     return node->getIntValue(names[ratingIndex]);
+}
+
+LocalAircraftCache::ParseSetXMLResult
+LocalAircraftCache::readAircraftProperties(const SGPath &setPath, SGPropertyNode_ptr props)
+{
+    // it woudld be race-y to touch the reosurce provider while the scan thread is running
+    // and our provider would confuse current-aircraft-dir lookups as well. Since we
+    // can't do thread-specific reosurce providers, we just bail here.
+    if (d->m_scanThread) {
+        return ParseSetXMLResult::Retry;
+    }
+
+    auto rm = simgear::ResourceManager::instance();
+
+    // ensure aircraft relative paths in the -set.xml parsing work
+
+    std::unique_ptr<ScanDirProvider> dp{new ScanDirProvider};
+    rm->addProvider(dp.get());
+
+    // we want to know the aircraft directory the aircraft lives in. This might
+    // be a manually added path (for local aircraft) or the install dir for the
+    // hangar (for packaged aircraft). Becuase -set.xml files are always found at
+    // /some/path/foobarAircraft/<aircraft-name>/some-set.xml, and the path we
+    // we want here is /some/path/foodbarAircraft, we use dirPath twice, and this
+    // works any kind of installed aircraft
+    const SGPath aircraftDirPath = setPath.dirPath().dirPath();
+    dp->setCurrentPath(aircraftDirPath);
+
+    dp->setCurrentAircraftPath(setPath);
+
+    ParseSetXMLResult result = ParseSetXMLResult::Failed;
+    try {
+        readProperties(setPath, props);
+        result = ParseSetXMLResult::Ok;
+    } catch (sg_exception& e) {
+        // malformed include or XML
+        qWarning() << "Problems occurred while parsing" << QString::fromStdString(setPath.utf8Str())
+                   << "\n\t" << QString::fromStdString(e.getFormattedMessage());
+    }
+
+    rm->removeProvider(dp.get());
+    return result;
 }
 
 #include "LocalAircraftCache.moc"

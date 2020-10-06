@@ -33,7 +33,6 @@
 
 class QDataStream;
 struct AircraftItem;
-class AircraftScanThread;
 class SGPropertyNode;
 
 typedef QSharedPointer<AircraftItem> AircraftItemPtr;
@@ -114,6 +113,7 @@ public:
 
 
     void setPaths(QStringList paths);
+    QStringList paths() const;
 
     void scanDirs();
 
@@ -161,6 +161,20 @@ public:
 
     // rating order is FDM, Systems, Cockpit, External model
     static int ratingFromProperties(SGPropertyNode* node, int ratingIndex);
+
+    enum class ParseSetXMLResult {
+        Ok,
+        Failed,
+        Retry  ///< aircraft scan in progress, try again later
+    };
+    /**
+     * @brief readAircraftProperties - helper to parse a -set.xml, but with the correct
+     * path setup (root, aircradft dirs, current aircraft dir)
+     * @param path : full path to the -set.xml file
+     * @param props : property node to be populated
+     * @return status indication
+     */
+    ParseSetXMLResult readAircraftProperties(const SGPath& path, SGPropertyNode_ptr props);
 signals:
 
     void scanStarted();
@@ -180,10 +194,8 @@ private:
 
     void abandonCurrentScan();
 
-    QStringList m_paths;
-    std::unique_ptr<AircraftScanThread> m_scanThread;
-    QVector<AircraftItemPtr> m_items;
-
+    class AircraftCachePrivate;
+    std::unique_ptr<AircraftCachePrivate> d;
 };
 
 #endif // LOCALAIRCRAFTCACHE_HXX

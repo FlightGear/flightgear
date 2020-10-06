@@ -57,7 +57,7 @@ class QmlAircraftInfo : public QObject
     Q_PROPERTY(QString icaoType READ icaoType NOTIFY infoChanged)
 
     Q_PROPERTY(bool hasStates READ hasStates NOTIFY infoChanged)
-    Q_PROPERTY(StatesModel* statesModel READ statesModel NOTIFY infoChanged)
+    Q_PROPERTY(StatesModel* statesModel READ statesModel CONSTANT)
 
     Q_PROPERTY(bool favourite READ favourite WRITE setFavourite NOTIFY favouriteChanged)
 public:
@@ -147,10 +147,12 @@ public slots:
 
 private slots:
     void onFavouriteChanged(QUrl u);
+    void retryValidateLocalProps();
+
 private:
     AircraftItemPtr resolveItem() const;
-    void checkForStates();
 
+    void validateStates() const;
     void validateLocalProps() const;
 
     class Delegate;
@@ -160,7 +162,11 @@ private:
     AircraftItemPtr _item;
     quint32 _variant = 0;
     quint64 _downloadBytes = 0;
-    QScopedPointer<StatesModel> _statesModel;
+
+    /// either null or owned by us
+    mutable StatesModel* _statesModel = nullptr;
+
+    mutable bool _statesChecked = false;
 
     /// if the aircraft is locally installed, this is the cached
     /// parsed contents of the -set.xml.
