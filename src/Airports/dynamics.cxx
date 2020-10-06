@@ -845,7 +845,7 @@ void FGAirportDynamics::getActiveRunway(const string & trafficType,
                                         double heading)
 {
     bool ok = innerGetActiveRunway(trafficType, action, runway, heading);
-    if (!ok) {
+    if (!ok || runway.empty()) {
         runway = chooseRunwayFallback();
     }
 }
@@ -853,7 +853,13 @@ void FGAirportDynamics::getActiveRunway(const string & trafficType,
 string FGAirportDynamics::chooseRunwayFallback()
 {
     FGRunway *rwy = _ap->getActiveRunwayForUsage();
-    return rwy ? rwy->ident() : std::string();
+    if (!rwy) {
+        SG_LOG(SG_AI, SG_WARN, "FGAirportDynamics::chooseRunwayFallback failed at " << _ap->ident());
+
+        // let's use runway 0
+        return _ap->getRunwayByIndex(0)->ident();
+    }
+    return rwy->ident();
 }
 
 double FGAirportDynamics::getElevation() const

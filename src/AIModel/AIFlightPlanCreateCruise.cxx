@@ -296,6 +296,10 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   const string& rwyClass = getRunwayClassFromTrafficType(fltType);
   double heading = ac->getTrafficRef()->getCourse();
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
+  if (!arr->hasRunwayWithIdent(activeRunway)) {
+      return false;
+  }
+
   FGRunway* rwy = arr->getRunwayByIdent(activeRunway);
   assert( rwy != NULL );
   // begin descent 110km out
