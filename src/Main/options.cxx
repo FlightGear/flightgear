@@ -2999,8 +2999,14 @@ OptionResult Options::setupRoot(int argc, char** argv)
         SG_LOG(SG_GENERAL, SG_INFO, "set from FG_ROOT env var: fg_root = " << root );
     } else {
 #if defined(HAVE_QT)
-        root = SetupRootDialog::restoreUserSelectedRoot();
+        auto restoreResult = SetupRootDialog::restoreUserSelectedRoot(root);
+        if (restoreResult == SetupRootDialog::UserExit) {
+            return FG_OPTIONS_EXIT;
+        } else if (restoreResult == SetupRootDialog::UseDefault) {
+            root = SGPath{}; // clear any value, so we fall through in root.isNull() below
+        }
 #endif
+
         if (root.isNull()) {
             usingDefaultRoot = true;
             root = platformDefaultRoot();
