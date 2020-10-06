@@ -566,10 +566,10 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
             //cerr << " Cloning waypoint " << endl;
         }
     } else {
-        FGRunway* runway = apt->getRunwayByIdent(activeRunway);
-        if (!runway)
+        if (!apt->hasRunwayWithIdent(activeRunway))
             return false;
-        
+
+        FGRunwayRef runway = apt->getRunwayByIdent(activeRunway);
         SGGeod cur = runway->end();
         if (!waypoints.empty()) {
           cur = waypoints.back()->getPos();
@@ -614,9 +614,10 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double heading = ac->getTrafficRef()->getCourse();
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
-    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
-    if (!rwy)
+    if (!apt->hasRunwayWithIdent(activeRunway))
         return false;
+
+    FGRunwayRef rwy = apt->getRunwayByIdent(activeRunway);
 
     // Create a slow descent path that ends 250 lateral to the runway.
     double initialTurnRadius = getTurnRadius(vDescent, true);
