@@ -96,7 +96,7 @@ bool SetupRootDialog::runDialog(PromptState prompt)
 }
 
 
-SGPath SetupRootDialog::restoreUserSelectedRoot()
+SetupRootDialog::RestoreResult SetupRootDialog::restoreUserSelectedRoot(SGPath& sgpath)
 {
     QSettings settings;
     QString path = settings.value(rootPathKey()).toString();
@@ -104,39 +104,40 @@ SGPath SetupRootDialog::restoreUserSelectedRoot()
     if (ask || (path == QStringLiteral("!ask"))) {
         bool ok = runDialog(ManualChoiceRequested);
         if (!ok) {
-            exit(-1);
+            return UserExit;
         }
 
-        // run dialog either exit()s or sets fg_root, so this
-        // behaviour is safe and correct.
-        return globals->get_fg_root();
+        sgpath = globals->get_fg_root();
+        return UserSelected;
     }
 
     if (path.isEmpty()) {
-        return SGPath{}; // use the default path
+        return UseDefault;
     }
 
     if (validatePath(path) && validateVersion(path)) {
-        return SGPath::fromUtf8(path.toStdString());
-    } else {
-        // we have an existing path but it's invalid.
-        // let's see if the default root is acceptable, in which case we will
-        // switch to it. (This gives a more friendly upgrade experience).
-        if (defaultRootAcceptable()) {
-            return SGPath{}; // use the default path
-        }
-
-        // okay, we don't have an acceptable FG_DATA anywhere we can find, we
-        // have to ask the user what they want to do.
-        bool ok = runDialog(VersionCheckFailed);
-        if (!ok) {
-            exit(-1);
-        }
-
-        // run dialog either exit()s or sets fg_root, so this
-        // behaviour is safe and correct.
-        return globals->get_fg_root();
+        sgpath = SGPath::fromUtf8(path.toStdString());
+        return RestoredOk;
     }
+
+    // we have an existing path but it's invalid.
+    // let's see if the default root is acceptable, in which case we will
+    // switch to it. (This gives a more friendly upgrade experience).
+    if (defaultRootAcceptable()) {
+        return UseDefault;
+    }
+
+    // okay, we don't have an acceptable FG_DATA anywhere we can find, we
+    // have to ask the user what they want to do.
+    bool ok = runDialog(VersionCheckFailed);
+    if (!ok) {
+        return UserExit;
+    }
+
+    // run dialog sets fg_root, so this
+    // behaviour is safe and correct.
+    sgpath = globals->get_fg_root();
+    return UserSelected;
 }
 
 void SetupRootDialog::askRootOnNextLaunch()

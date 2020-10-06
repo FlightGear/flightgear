@@ -40,8 +40,15 @@ public:
 
     static bool runDialog(bool usingDefaultRoot);
 
-    static SGPath restoreUserSelectedRoot();
-    
+    enum RestoreResult {
+        RestoredOk,
+        UserExit,
+        UserSelected,
+        UseDefault
+    };
+
+    static RestoreResult restoreUserSelectedRoot(SGPath& path);
+
     static void askRootOnNextLaunch();
     
     static QString rootPathKey();
