@@ -1235,7 +1235,7 @@ void FGAIAircraft::updateVerticalSpeedTarget(double dt) {
             } else {
                 tgt_vs = std::max(tgt_altitude_ft - altitude_ft, -_performance->descentRate());
             }
-        } else if (fp) {
+        } else if (fp->getCurrentWaypoint()) {
             double vert_dist_ft = fp->getCurrentWaypoint()->getCrossat() - altitude_ft;
             double err_dist     = 0; //prev->getCrossat() - altitude_ft;
             double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), fp->getCurrentWaypoint());
@@ -1252,9 +1252,13 @@ void FGAIAircraft::updateVerticalSpeedTarget(double dt) {
             if (fabs(tgt_vs) < fabs(min_vs))
                 tgt_vs = min_vs;*/
             //cerr << "target vs : after " << tgt_vs << endl;
+        } else {
+            // avoid crashes when fp has no current waypoint
+            // eg see FLIGHTGEAR-68 on sentry; we crashed in getCrossat()
+            tgt_vs = 0.0;
         }
-    } //else 
-    //    tgt_vs = 0.0;
+    }
+
     checkTcas();
 }
 
