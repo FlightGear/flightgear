@@ -501,7 +501,7 @@ bool FGAIAircraft::loadNextLeg(double distance) {
     } else {
         double cruiseAlt = trafficRef->getCruiseAlt() * 100;
 
-        fp->create (this,
+        bool ok = fp->create (this,
                     dep,
                     arr,
                     leg+1,
@@ -515,6 +515,10 @@ bool FGAIAircraft::loadNextLeg(double distance) {
                     acType,
                     company,
                     distance);
+
+        if (!ok) {
+            SG_LOG(SG_AI, SG_WARN, "Failed to create waypoints for leg:" << leg+1);
+        }
        //cerr << "created  leg " << leg << " for " << trafficRef->getCallSign() << endl;
     }
     return true;

@@ -378,7 +378,7 @@ FGPavementList FGAirport::getPavements() const
 //------------------------------------------------------------------------------
 FGRunwayRef FGAirport::getActiveRunwayForUsage() const
 {
-  FGEnvironmentMgr* envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
+  auto envMgr = globals->get_subsystem<FGEnvironmentMgr>();
 
   // This forces West-facing rwys to be used in no-wind situations
   // which is consistent with Flightgear's initial setup.
