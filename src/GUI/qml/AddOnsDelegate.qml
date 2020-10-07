@@ -75,6 +75,8 @@ Item {
                 anchors.rightMargin: Style.margin
                 height: contentRect.height
 
+                font.strikeout: !model.enable
+
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
             }

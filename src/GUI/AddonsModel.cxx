@@ -208,18 +208,24 @@ QHash<int, QByteArray> AddonsModel::roleNames() const
     return m_roleToName;
 }
 
-void AddonsModel::enable(int index, bool enable)
+void AddonsModel::enable(int row, bool enable)
 {
-    if ((index < 0) || (index >= m_addonsList.size())) {
+    if ((row < 0) || (row >= m_addonsList.size())) {
         return;
     }
 
-    auto path = m_addonsList[index];
+    auto path = m_addonsList[row];
     if (!m_addonsMap.contains(path))
         return;
 
-    m_addonsMap[path].enable = enable && checkVersion(path);
+    const bool wasEnabled = m_addonsMap[path].enable;
+    const bool nowEnabled = enable && checkVersion(path);
+    if (wasEnabled == nowEnabled)
+        return;
 
+    m_addonsMap[path].enable = nowEnabled;
+    const auto mindex = index(row, 0);
+    emit dataChanged(mindex, mindex, {EnableRole});
     emit modulesChanged();
 }
 
