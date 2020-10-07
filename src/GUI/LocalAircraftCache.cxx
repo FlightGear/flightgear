@@ -55,13 +55,14 @@ QDataStream& operator>>(QDataStream& ds, AircraftItem::LocalizedStrings& ls)
     return ds;
 }
 
-AircraftItem::AircraftItem(QDir dir, QString filePath)
+bool AircraftItem::initFromFile(QDir dir, QString filePath)
 {
     SGPropertyNode root;
     readProperties(filePath.toStdString(), &root);
 
     if (!root.hasChild("sim")) {
-        throw sg_io_exception(std::string("Malformed -set.xml file"), filePath.toStdString());
+        qWarning() << "-set.xml has no <sim> element" << filePath;
+        return false;
     }
 
     SGPropertyNode_ptr sim = root.getNode("sim");
@@ -70,7 +71,7 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
     pathModTime = QFileInfo(path).lastModified();
     if (sim->getBoolValue("exclude-from-gui", false)) {
         excluded = true;
-        return;
+        return false;
     }
 
     LocalizedStrings ls;
@@ -146,6 +147,8 @@ AircraftItem::AircraftItem(QDir dir, QString filePath)
     _localized.push_front(ls);
     readLocalizedStrings(sim);
     doLocalizeStrings();
+
+    return true;
 }
 
 void AircraftItem::readLocalizedStrings(SGPropertyNode_ptr simNode)
@@ -483,7 +486,11 @@ private:
                         item = m_cachedItems.value(absolutePath);
                     } else {
                         // scan the cached item
-                        item = AircraftItemPtr(new AircraftItem(childDir, absolutePath));
+                        item = AircraftItemPtr(new AircraftItem);
+                        bool ok = item->initFromFile(childDir, absolutePath);
+                        if (!ok) {
+                            continue;
+                        }
                     }
 
                     m_nextCache[absolutePath] = item;

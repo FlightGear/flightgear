@@ -41,7 +41,7 @@ struct AircraftItem
 {
     AircraftItem() = default;
 
-    AircraftItem(QDir dir, QString filePath);
+    bool initFromFile(QDir dir, QString filePath);
 
     // the file-name without -set.xml suffix
     QString baseName() const;
