@@ -204,7 +204,7 @@ struct SviewStepMove : SviewStep
 {
     SviewStepMove(double forward, double up, double right)
     :
-    m_offset(right, -up, -forward)
+    m_offset(-right, -up, -forward)
     {
         SG_LOG(SG_VIEW, SG_INFO, "forward=" << forward << " up=" << up << " right=" << right);
     }
