@@ -284,7 +284,7 @@ FGEnvironmentMgr::updateClosestAirport()
   FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
   if( nearestAirport == NULL )
   {
-    SG_LOG(SG_ENVIRONMENT,SG_WARN,"FGEnvironmentMgr::update: No airport within 100NM range");
+    SG_LOG(SG_ENVIRONMENT,SG_INFO,"FGEnvironmentMgr::update: No airport within 100NM range");
   }
   else
   {
