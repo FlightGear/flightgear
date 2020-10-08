@@ -5,7 +5,7 @@ import "."
 Item {
     id: root
 
-    readonly property string forumLink: "href=\"http://forum.flightgear.org\"";
+    readonly property string forumLink: "href=\"https://forum.flightgear.org\"";
     readonly property string forumHelpLink: "href=\"https://forum.flightgear.org/viewforum.php?f=17\"";
 
     readonly property string wikiLink: "href=\"http://wiki.flightgear.org/Portal:User\"";
