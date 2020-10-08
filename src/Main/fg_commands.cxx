@@ -735,6 +735,10 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
     if (file.extension() != "xml")
         file.concat(".xml");
 
+    // some Nasal uses loadxml to also speculatively probe for existence of
+    // files. This flag allows us not to be noisy in the logs, in that case.
+    const bool quiet = arg->getBoolValue("quiet", false);
+
     std::string icao = arg->getStringValue("icao");
     if (icao.empty()) {
         if (file.isRelative()) {
@@ -743,28 +747,32 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
               file = absPath;
           else
           {
-              SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '"
-                          << file << "'.");
+              if (!quiet) {
+                  SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '" << file << "'.");
+              }
               return false;
           }
         }
     } else {
         if (!XMLLoader::findAirportData(icao, file.utf8Str(), file)) {
-          SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for "
-            << file << " at ICAO:" << icao);
+            if (!quiet) {
+                SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for " << file << " at ICAO:" << icao);
+            }
           return false;
         }
     }
 
     if (!file.exists()) {
-        SG_LOG(SG_IO, SG_WARN, "loadxml: no such file:" << file);
+        if (!quiet) {
+            SG_LOG(SG_IO, SG_WARN, "loadxml: no such file:" << file);
+        }
         return false;
     }
 
     SGPath validated_path = fgValidatePath(file, false);
     if (validated_path.isNull()) {
-        SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file << "' denied "
-                "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, pass them to --allow-nasal-read)");
+        SG_LOG(SG_IO, quiet ? SG_DEV_WARN : SG_ALERT, "loadxml: reading '" << file << "' denied "
+                                                                                      "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, pass them to --allow-nasal-read)");
         return false;
     }
 
@@ -777,7 +785,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
     try {
         readProperties(validated_path, targetnode, true);
     } catch (const sg_exception &e) {
-        SG_LOG(SG_IO, SG_WARN, "loadxml exception: " << e.getFormattedMessage());
+        SG_LOG(SG_IO, quiet ? SG_DEV_WARN : SG_WARN, "loadxml exception: " << e.getFormattedMessage());
         return false;
     }
 

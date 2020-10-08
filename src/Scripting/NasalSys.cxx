@@ -858,7 +858,7 @@ static naRef ftype(naContext ctx, const SGPath& f)
 }
 
 // io.stat with UTF-8 path support, replaces the default one in
-// Nasal iolib.c which does not hsupport UTF-8 paths
+// Nasal iolib.c which does not support UTF-8 paths
 static naRef f_custom_stat(naContext ctx, naRef me, int argc, naRef* args)
 {
     naRef pathArg = argc > 0 ? naStringValue(ctx, args[0]) : naNil();
