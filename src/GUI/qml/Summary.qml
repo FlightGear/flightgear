@@ -35,7 +35,8 @@ Item {
         }
 
         onUrlsListChanged: {
-            __currentUrl = 0;
+            var len = preview.urlsList.length;
+            __currentUrl = Math.floor(Math.random() * len)
         }
 
         Timer {
