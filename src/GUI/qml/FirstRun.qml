@@ -91,7 +91,7 @@ Item {
                 color: "white"
                 wrapMode: Text.WordWrap
 
-                readonly property string forumLink: "href=\"http://forum.flightgear.org\"";
+                readonly property string forumLink: "href=\"https://forum.flightgear.org\"";
 
                 text: qsTr("Welcome to FlightGear, the open source flight simulator. " +
                            "This software is the work of volunteers. we hope you enjoy it. " +
@@ -112,8 +112,7 @@ Item {
                 readonly property string gplLink: "href=\"https://www.gnu.org/licenses/gpl-3.0.html\"";
 
                 text: qsTr("FlightGear is Free software, licensed under the <a %1>GNU General Public License</a>. " +
-                           "This means you are are free to use the software, customise it, or make fixes to it, so long as " +
-                           "you share your changes with the community.").arg(gplLink)
+                           "You are free to use, customize and fix the software; and share your changes with the community.").arg(gplLink)
 
                 onLinkActivated: {
                     Qt.openUrlExternally(link)
