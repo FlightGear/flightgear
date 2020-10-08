@@ -50,11 +50,16 @@ string_list defaultSplashScreenPaths()
 {
     string_list result;
     SGPath tpath = globals->get_fg_root() / "Textures";
-    simgear::Dir d(tpath);
-    for (auto c : d.children(simgear::Dir::TYPE_FILE, ".png")) {
-        if (c.file_base().find("Splash") == 0) {
-            result.push_back(c.utf8Str());
-        }
+    auto paths = simgear::Dir(tpath).children(simgear::Dir::TYPE_FILE);
+    paths.erase(std::remove_if(paths.begin(), paths.end(), [](const SGPath& p) {
+        const auto f = p.file();
+        if (f.find("Splash") != 0) return true;
+        const auto ext = p.extension();
+        return ext != "png" && ext != "jpg";
+    }), paths.end());
+
+    for (auto c : paths) {
+        result.push_back(c.utf8Str());
     }
 
     return result;

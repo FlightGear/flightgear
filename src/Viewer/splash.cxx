@@ -45,6 +45,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 
 #include <Main/globals.hxx>
@@ -460,13 +461,24 @@ std::string SplashScreen::selectSplashImage()
         return paths.at(index).utf8Str();
     }
 
-    // no splash screen specified - select random image
+    // no splash screen specified - use one of the default ones
     SGPath tpath = globals->get_fg_root() / "Textures";
-    int num = (int)(sg_random() * 3.0 + 1.0);
-    std::ostringstream oss;
-    oss << "Splash" << num << ".png";
-    tpath.append(oss.str());
-    return tpath.utf8Str();
+    paths = simgear::Dir(tpath).children(simgear::Dir::TYPE_FILE);
+    paths.erase(std::remove_if(paths.begin(), paths.end(), [](const SGPath& p) {
+        const auto f = p.file();
+        if (f.find("Splash") != 0) return true;
+        const auto ext = p.extension();
+        return ext != "png" && ext != "jpg";
+    }), paths.end());
+
+    if (!paths.empty()) {
+        // Select a random useable texture
+        const int index = (int)(sg_random() * paths.size());
+        return paths.at(index).utf8Str();
+    }
+
+    SG_LOG(SG_GUI, SG_ALERT, "Couldn't find any splash screens at all");
+    return {};
 }
 
 void SplashScreen::doUpdate()
