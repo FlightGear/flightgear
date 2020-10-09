@@ -122,6 +122,19 @@ public:
                 _plan->insertWayptAtIndex(w, insertIndex++);
             }
         }
+        
+        if (_plan->approach()) {
+            WayptVec approachRoute;
+            bool ok = _plan->approach()->routeFromVectors(approachRoute);
+            if (!ok)
+                throw sg_exception("failed to route approach");
+            int insertIndex = leg->index();
+            for (auto w : approachRoute) {
+                w->setFlag(WPT_ARRIVAL);
+                w->setFlag(WPT_GENERATED);
+                _plan->insertWayptAtIndex(w, insertIndex++);
+            }
+        }
     }
     
     
@@ -350,6 +363,30 @@ void FlightplanTests::testRoutePathVec()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec2.front().getLatitudeDeg(), 0.01);
 
     //CPPUNIT_ASSERT(vec.front()
+}
+
+void FlightplanTests::testRoutePathFinalLegVQPR15()
+{
+    // test behaviour of RoutePath when the last leg prior to the arrival runway
+    // is beyond the runway. This occurs in Paro RNAVZ15 approach.
+    
+    if (!static_haveProcedures)
+        return;
+    
+    static_factory = std::make_shared<TestFPDelegateFactory>();
+    FlightPlan::registerDelegateFactory(static_factory);
+    
+    FlightPlanRef f = new FlightPlan;
+    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
+    
+    auto vidp = FGAirport::findByIdent("VIDP");
+    f->setDeparture(vidp->getRunwayByIdent("09"));
+    
+    auto vqpr = FGAirport::findByIdent("VQPR");
+    f->setDestination(vqpr->getRunwayByIdent("15"));
+    f->setApproach(vqpr->findApproachWithIdent("RNVZ15"));
+    RoutePath rtepath(f);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1100, rtepath.distanceForIndex(14), 100); // calculated from raw lat lon. 
 }
 
 void FlightplanTests::testRoutPathWpt0Midflight()
@@ -1064,6 +1101,4 @@ void FlightplanTests::testCloningProcedures() {
     
     CPPUNIT_ASSERT_EQUAL(fp2->star()->ident(), string{"EEL1A"});
     CPPUNIT_ASSERT_EQUAL(fp2->starTransition()->ident(), string{"BEDUM"});
-
-
 }

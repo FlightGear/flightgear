@@ -40,6 +40,7 @@ class FlightplanTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testBug1814);
     CPPUNIT_TEST(testRoutPathWpt0Midflight);
     CPPUNIT_TEST(testRoutePathVec);
+    CPPUNIT_TEST(testRoutePathFinalLegVQPR15);
     CPPUNIT_TEST(testLoadSaveMachRestriction);
     CPPUNIT_TEST(testOnlyDiscontinuityRoute);
     CPPUNIT_TEST(testBasicDiscontinuity);
@@ -76,6 +77,7 @@ public:
     void testBug1814();
     void testRoutPathWpt0Midflight();
     void testRoutePathVec();
+    void testRoutePathFinalLegVQPR15();
     void testLoadSaveMachRestriction();
     void testBasicDiscontinuity();
     void testOnlyDiscontinuityRoute();
