@@ -440,14 +440,16 @@ void fgOSInit(int* argc, char** argv)
 
 void fgOSCloseWindow()
 {
-    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
-    if (viewer_base) {
-        // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
-        // https://sourceforge.net/p/flightgear/codetickets/1830/
-        // explicitly stop threading before we delete the renderer or
-        // viewMgr (which ultimately holds refs to the CameraGroup, and
-        // GraphicsContext)
-        viewer_base->stopThreading();
+    if (globals && globals->get_renderer()) {
+        osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
+        if (viewer_base) {
+            // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
+            // https://sourceforge.net/p/flightgear/codetickets/1830/
+            // explicitly stop threading before we delete the renderer or
+            // viewMgr (which ultimately holds refs to the CameraGroup, and
+            // GraphicsContext)
+            viewer_base->stopThreading();
+        }
     }
     FGScenery::resetPagerSingleton();
     flightgear::CameraGroup::setDefault(NULL);
@@ -602,8 +604,10 @@ static int _cursor = -1;
 
 void fgSetMouseCursor(int cursor)
 {
-    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
     _cursor = cursor;
+    if (!globals || !globals->get_renderer())
+        return;
+    osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
     if (!viewer_base)
         return;
 
