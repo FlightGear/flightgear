@@ -1100,6 +1100,11 @@ void SviewUpdate(double dt)
             i += 1;
         }
         else {
+            // This doesn't work reliably. We seem to sometimes get valid=false
+            // when a different window from s_views[i] is closed. And sometimes
+            // OSG seems to end up sending a close-window even to the main
+            // window when the user has closed a sview window.
+            //
             auto pview = s_views.begin() + i;
             SG_LOG(SG_VIEW, SG_INFO, "deleting SviewView i=" << i << ": " << (*pview)->description2());
             for (size_t j=0; j<s_views.size(); ++j) {
@@ -1135,7 +1140,7 @@ struct EventHandler : osgGA::EventHandler
 {
     bool handle(osgGA::Event* event, osg::Object* object, osg::NodeVisitor* nv) override
     {
-        SG_LOG(SG_GENERAL, SG_ALERT, "sview event handler called...");
+        SG_LOG(SG_GENERAL, SG_DEBUG, "sview event handler called...");
         return true;
     }
 };
@@ -1375,6 +1380,12 @@ std::shared_ptr<SviewView> SviewCreateInternal(
     
     SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
     SG_LOG(SG_GENERAL, SG_ALERT, "view->getNumSlaves()=" << view->getNumSlaves());
+    
+    SG_LOG(SG_VIEW, SG_ALERT, "have added extra view. views are now:");
+    for (unsigned i=0; i<composite_viewer->getNumViews(); ++i) {
+        osgViewer::View* view = composite_viewer->getView(i);
+        SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
+    }
     
     return view2;
 }
