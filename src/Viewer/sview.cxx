@@ -40,6 +40,8 @@ The dynamic nature of step views allows view cloning with composite-viewer.
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Viewer/renderer_compositor.hxx>
+#include <Viewer/WindowBuilder.hxx>
+#include <Viewer/WindowSystemAdapter.hxx>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMath.hxx>
@@ -47,6 +49,7 @@ The dynamic nature of step views allows view cloning with composite-viewer.
 #include <simgear/scene/util/OsgMath.hxx>
 
 #include <osgViewer/CompositeViewer>
+#include <osg/GraphicsContext>
 
 
 static std::ostream& operator << (std::ostream& out, const osg::Vec3f& vec)
@@ -536,6 +539,8 @@ static std::ostream& operator << (std::ostream& out, const SviewPos& viewpos)
 #include <simgear/scene/viewer/Compositor.hxx>
 
 
+static void ShowViews();
+
 struct SviewView
 {
     SviewView(osgViewer::View* view)
@@ -569,6 +574,7 @@ struct SviewView
             osgViewer::View* view = composite_viewer->getView(i);
             SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
         }
+        //ShowViews();  // unsafe because we are being removed from s_views.
         SG_LOG(SG_VIEW, SG_ALERT, "removing m_view=" << m_view);
         composite_viewer->stopThreading();
         composite_viewer->removeView(m_view);
@@ -847,7 +853,7 @@ struct SviewViewClone : SviewView
                     -view_config->getDoubleValue("target-y-offset-m"),
                     -view_config->getDoubleValue("target-x-offset-m")
                     ));
-            SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+            SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
             
             /* Set pitch and roll to zero, otherwise view from tower (as
             calculated by SviewStepTarget) rolls/pitches with aircraft. */
@@ -856,7 +862,7 @@ struct SviewViewClone : SviewView
                     0 /* pitch */,
                     0 /* roll */
                     ));
-            SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+            SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
             
             /* Current position is the target, so add a step that copies it to
             SviewPosDir.target. */
@@ -891,26 +897,26 @@ struct SviewViewClone : SviewView
                 pass to SviewStepMove(). */
                 
                 m_target.add_step(new SviewStepAircraft(root));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
                 
                 m_target.add_step(new SviewStepMove(
                         -view_config->getDoubleValue("target-z-offset-m"),
                         -view_config->getDoubleValue("target-y-offset-m"),
                         -view_config->getDoubleValue("target-x-offset-m")
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
                 
                 m_target.add_step(new SviewStepCopyToTarget);
                 
                 m_eye.add_step(new SviewStepAircraft(root));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 
                 m_eye.add_step(new SviewStepMove(
                         -view_config->getDoubleValue("target-z-offset-m"),
                         -view_config->getDoubleValue("target-y-offset-m"),
                         -view_config->getDoubleValue("target-x-offset-m")
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 
                 /* Crudely preserve or don't preserve aircraft's heading,
                 pitch and roll; this enables us to mimic Helicopter and Chase
@@ -922,7 +928,7 @@ struct SviewViewClone : SviewView
                         global_view->getStringValue("config/eye-pitch-deg-path")[0] ? 1 : 0,
                         global_view->getStringValue("config/eye-roll-deg-path")[0] ? 1 : 0
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 
                 /* Apply the current view rotation. */
                 m_eye.add_step(new SviewStepRotate(
@@ -930,7 +936,7 @@ struct SviewViewClone : SviewView
                         root->getDoubleValue("sim/current-view/pitch-offset-deg"),
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 if (1) {
                     /* E.g. Helicopter view. Move eye away from aircraft.
                     config/z-offset-m defaults to /sim/chase-distance-m (see
@@ -940,7 +946,7 @@ struct SviewViewClone : SviewView
                             view_config->getDoubleValue("y-offset-m"),
                             view_config->getDoubleValue("x-offset-m")
                             ));
-                    SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                    SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 }
             }
             else {
@@ -955,7 +961,7 @@ struct SviewViewClone : SviewView
                         -view_config->getDoubleValue("y-offset-m"),
                         -view_config->getDoubleValue("x-offset-m")
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 
                 /* Apply the current view rotation. On harrier-gr3 this
                 corrects initial view direction (which is pitch down by 15deg),
@@ -966,7 +972,7 @@ struct SviewViewClone : SviewView
                         -view_config->getDoubleValue("pitch-offset-deg"),
                         -view_config->getDoubleValue("roll-offset-deg")
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 
                 /* Preserve the current user-supplied offset to view direction. */
                 m_eye.add_step(new SviewStepRotate(
@@ -977,7 +983,7 @@ struct SviewViewClone : SviewView
                         root->getDoubleValue("sim/current-view/roll-offset-deg")
                                 - view_config->getDoubleValue("roll-offset-deg")
                         ));
-                SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
             }
             m_eye.add_step(new SviewStepFinal);
         }
@@ -1053,6 +1059,18 @@ static std::vector<std::shared_ptr<SviewView>>  s_views;
 /* Recent views, for use by SviewAddLastPair(). */
 static std::deque<std::shared_ptr<SviewViewClone>>    s_recent_views;
 
+
+static void ShowViews()
+{
+    for (auto view: s_views) {
+        if (!view) SG_LOG(SG_GENERAL, SG_ALERT, "    view is null");
+        else {
+            const osg::GraphicsContext* vgc = (view->m_compositor) ? view->m_compositor->getGraphicsContext() : nullptr;
+            SG_LOG(SG_GENERAL, SG_ALERT, "    gc=" << vgc);
+        }
+    }
+}
+
 void SviewPush()
 {
     if (s_recent_views.size() >= 2) {
@@ -1113,15 +1131,29 @@ void SviewClear()
 static osg::ref_ptr<simgear::SGReaderWriterOptions> s_compositor_options;
 static std::string s_compositor_path;
 
-void SviewCreate(const std::string type)
+struct EventHandler : osgGA::EventHandler
 {
+    bool handle(osgGA::Event* event, osg::Object* object, osg::NodeVisitor* nv) override
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "sview event handler called...");
+        return true;
+    }
+};
+
+
+std::shared_ptr<SviewView> SviewCreateInternal(
+        const std::string& type,
+        osg::ref_ptr<osg::GraphicsContext> gc
+        )
+{
+    bool gc0 = (gc) ? true : false;
     FGRenderer*                 renderer            = globals->get_renderer();
     osgViewer::ViewerBase*      viewer_base         = renderer->getViewerBase();
     osgViewer::CompositeViewer* composite_viewer    = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
 
     if (!composite_viewer) {
         SG_LOG(SG_GENERAL, SG_ALERT, "FGViewMgr::clone_current_view() doing nothing because not composite-viewer mode not enabled.");
-        return;
+        return nullptr;
     }
 
     SG_LOG(SG_GENERAL, SG_ALERT, "Cloning current view.");
@@ -1135,13 +1167,16 @@ void SviewCreate(const std::string type)
     // Using copy-constructor here doesn't seem to make any difference.
     //osgViewer::View* view = new osgViewer::View(rhs_view);    
     osgViewer::View* view = new osgViewer::View();
-
-
+    if (!gc) {
+        EventHandler* event_handler = new EventHandler;
+        view->addEventHandler(event_handler);
+    }
+    
     std::shared_ptr<SviewView>  view2;
     if (type == "last_pair") {
         if (s_recent_views.size() < 2) {
             SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
-            return;
+            return nullptr;
         }
         else {
             auto it = s_recent_views.end();
@@ -1149,7 +1184,7 @@ void SviewCreate(const std::string type)
             auto eye    = (--it)->get();
             if (!target || !eye) {
                 SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
-                return;
+                return nullptr;
             }
 
             view2.reset(new SviewViewClone(
@@ -1162,7 +1197,7 @@ void SviewCreate(const std::string type)
     else if (type == "last_pair_double") {
         if (s_recent_views.size() < 2) {
             SG_LOG(SG_VIEW, SG_ALERT, "Need two cloned views");
-            return;
+            return nullptr;
         }
         else {
             auto it = s_recent_views.end();
@@ -1170,7 +1205,7 @@ void SviewCreate(const std::string type)
             auto local    = (--it)->get();
             if (!local || !remote) {
                 SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
-                return;
+                return nullptr;
             }
 
             view2.reset(new SviewDouble(
@@ -1185,49 +1220,66 @@ void SviewCreate(const std::string type)
     }
     else {
         SG_LOG(SG_GENERAL, SG_ALERT, "unrecognised type=" << type);
-        return;
+        return nullptr;
     }
     
-
-
-
-
-    osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
-    assert(wsi);
-    unsigned int width, height;
-    wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(0), width, height);
-
-    osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
+    osg::ref_ptr<const osg::GraphicsContext::Traits> traits;
     
-    traits->x = 100;
-    traits->y = 100;
-    traits->width = 400;
-    traits->height = 300;
-    traits->windowDecoration = true;
-    traits->doubleBuffer = true;
-    traits->sharedContext = 0;
-    
-    traits->readDISPLAY();
-    if (traits->displayNum < 0)
-        traits->displayNum = 0;
-    if (traits->screenNum < 0)
-        traits->screenNum = 0;
+    if (gc) {
+        traits = gc->getTraits();
+    }
+    else {
+        osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
+        assert(wsi);
+        flightgear::WindowBuilder* window_builder = flightgear::WindowBuilder::getWindowBuilder();
+        flightgear::GraphicsWindow* main_window = window_builder->getDefaultWindow();
+        osg::ref_ptr<osg::GraphicsContext> main_gc = main_window->gc;
+        const osg::GraphicsContext::Traits* main_traits = main_gc->getTraits();
 
-    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
-    int cbits = (bpp <= 16) ?  5 :  8;
-    int zbits = (bpp <= 16) ? 16 : 24;
-    traits->red = traits->green = traits->blue = cbits;
-    traits->depth = zbits;
-    
-    traits->mipMapGeneration = true;
-    traits->windowName = "Flightgear " + view2->description2();
-    traits->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
-    traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
-    traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
-    traits->stencil = 8;
-    
-    osg::ref_ptr<osg::GraphicsContext> gc = osg::GraphicsContext::createGraphicsContext(traits.get());
-    assert(gc.valid());
+        unsigned width;
+        unsigned height;
+        wsi->getScreenResolution(osg::GraphicsContext::ScreenIdentifier(0), width, height);
+
+        osg::GraphicsContext::Traits*  traits2 = new osg::GraphicsContext::Traits;
+        traits = traits2;
+
+        traits2->x = 100;
+        traits2->y = 100;
+
+        // We set aspect ratio of new window same as that of the main window; this
+        // allows us to use main window's projection matrix directly. Presumably
+        // we could calculate a suitable projection matrix to match an arbitrary
+        // aspect ratio, but i don't know the maths well enough to do this.
+        //
+        traits2->width  = main_traits->width / 2; //400;
+        traits2->height = main_traits->height / 2; //300;
+        traits2->windowDecoration = true;
+        traits2->doubleBuffer = true;
+        traits2->sharedContext = 0;
+
+        traits2->readDISPLAY();
+        if (traits2->displayNum < 0)
+            traits2->displayNum = 0;
+        if (traits2->screenNum < 0)
+            traits2->screenNum = 0;
+
+        int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
+        int cbits = (bpp <= 16) ?  5 :  8;
+        int zbits = (bpp <= 16) ? 16 : 24;
+        traits2->red = traits2->green = traits2->blue = cbits;
+        traits2->depth = zbits;
+
+        traits2->mipMapGeneration = true;
+        traits2->windowName = "Flightgear " + view2->description2();
+        traits2->sampleBuffers = fgGetInt("/sim/rendering/multi-sample-buffers", traits2->sampleBuffers);
+        traits2->samples = fgGetInt("/sim/rendering/multi-samples", traits2->samples);
+        traits2->vsync = fgGetBool("/sim/rendering/vsync-enable", traits2->vsync);
+        traits2->stencil = 8;
+
+        gc = osg::GraphicsContext::createGraphicsContext(traits2);
+        assert(gc.valid());
+        
+    }
 
     // need to ensure that the window is cleared make sure that the complete window is set the correct colour
     // rather than just the parts of the window that are under the camera's viewports
@@ -1310,7 +1362,9 @@ void SviewCreate(const std::string type)
             );
     
     view2->m_compositor = compositor;
-    s_views.push_back(view2);
+    if (!gc0) {
+        s_views.push_back(view2);
+    }
     
     // stop/start threading:
     // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg54341.html
@@ -1321,6 +1375,21 @@ void SviewCreate(const std::string type)
     
     SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
     SG_LOG(SG_GENERAL, SG_ALERT, "view->getNumSlaves()=" << view->getNumSlaves());
+    
+    return view2;
+}
+
+void SviewCreate(const std::string& type)
+{
+    SviewCreateInternal(type, nullptr /*gc*/);
+}
+
+std::shared_ptr<SviewView> SviewCreate(
+        const std::string& type,
+        osg::ref_ptr<osg::GraphicsContext> gc
+        )
+{
+    return SviewCreateInternal(type, gc);
 }
 
 void SViewSetCompositorParams(
@@ -1330,4 +1399,22 @@ void SViewSetCompositorParams(
 {
     s_compositor_options = options;
     s_compositor_path = compositor_path;
+}
+
+bool SviewGC(const osg::GraphicsContext* gc)
+{
+    SG_LOG(SG_GENERAL, SG_ALERT, "gc=" << gc);
+    for (auto view: s_views) {
+        const osg::GraphicsContext* vgc = (view->m_compositor) ? view->m_compositor->getGraphicsContext() : nullptr;
+        SG_LOG(SG_GENERAL, SG_ALERT, "    gc=" << vgc);
+    }
+    for (auto view: s_views) {
+        const osg::GraphicsContext* vgc = (view->m_compositor) ? view->m_compositor->getGraphicsContext() : nullptr;
+        if (vgc == gc) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "gc=" << gc << ": returning true");
+            return true;
+        }
+    }
+    SG_LOG(SG_GENERAL, SG_ALERT, "gc=" << gc << ": returning false");
+    return false;
 }
