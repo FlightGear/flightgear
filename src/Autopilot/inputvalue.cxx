@@ -180,8 +180,20 @@ double InputValue::get_value() const
     if (_expression) {
         // compute the expression value
         value = _expression->getValue(NULL);
+
+        if (SGMiscd::isNaN(value)) {
+            SG_LOG(SG_AUTOPILOT, SG_DEV_ALERT, "AP input: read NaN from expression");
+        }
     } else if( _property != NULL ) {
         value = _property->getDoubleValue();
+
+        if (SGMiscd::isNaN(value)) {
+            SG_LOG(SG_AUTOPILOT, SG_DEV_ALERT, "AP input: read NaN from:" << _property->getPath() );
+        }
+    } else {
+        if (SGMiscd::isNaN(value)) {
+            SG_LOG(SG_AUTOPILOT, SG_DEV_ALERT, "AP input is NaN." );
+        }
     }
     
     if( _scale ) 
@@ -205,8 +217,7 @@ double InputValue::get_value() const
     if( _periodical ) {
       value = _periodical->normalize( value );
     }
-    if (SGMiscd::isNaN(value))
-        SG_LOG(SG_AUTOPILOT, SG_ALERT, "input is NaN." );
+
     return _abs ? fabs(value) : value;
 }
 
