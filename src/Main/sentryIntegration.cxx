@@ -37,10 +37,37 @@
 
 using namespace std;
 
+bool doesStringMatchPrefixes(const std::string& s, const std::initializer_list<const char*>& prefixes)
+{
+    if (s.empty())
+        return false;
+
+
+    for (auto c  : prefixes) {
+        if (s.find(c) == 0)
+            return true;
+    }
+
+    return false;
+}
+
+auto OSG_messageWhitelist = {
+     "PNG lib warning : iCCP: known incorrect sRGB profile",
+     "PNG lib warning : iCCP: profile 'ICC Profile': 1000000h: invalid rendering intent",
+     "osgDB ac3d reader: detected surface with less than 3",
+     "osgDB ac3d reader: detected line with less than 2"
+};
+
+auto XML_messageWhitelist = {
+     "Cannot open file",
+     "not well-formed (invalid token)",
+};
+
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
 
 static bool static_sentryEnabled = false;
+thread_local bool perThread_reportXMLParseErrors = true;
 
 #include <sentry.h>
 
@@ -52,6 +79,15 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
 {
     if (!static_sentryEnabled)
         return;
+
+// don't report the exceptions raised by easyxml.cxx, if this per-thread
+// flag is set. This avoids a lot of errors when the launcher scans 
+// directories containing many aircraft of unknown origin/quality
+// if the user tries to fly with one, we'll still get an error then,
+// but that's a real failure point (from the user PoV)
+    if (!perThread_reportXMLParseErrors && doesStringMatchPrefixes(msg, XML_messageWhitelist)) {
+        return;
+    }
 
     sentry_value_t exc = sentry_value_new_object();
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
@@ -90,17 +126,8 @@ public:
             return true;
         }
 
-        if (e.debugClass == SG_OSG) {
-            // white-list certain common OSG warnings to avoid filling up the
-            // breadcrumbs with noise
-            if ((e.message == "PNG lib warning : iCCP: known incorrect sRGB profile")
-             || (e.message == "PNG lib warning : iCCP: profile 'ICC Profile': 1000000h: invalid rendering intent")
-             || (e.message.find("osgDB ac3d reader: detected surface with less than 3") == 0)
-             || (e.message.find("osgDB ac3d reader: detected line with less than 2") == 0)
-            )
-            {
-                return true;
-            }
+        if ((e.debugClass == SG_OSG) && doesStringMatchPrefixes(e.message, OSG_messageWhitelist)) {
+            return true;
         }
 
         flightgear::addSentryBreadcrumb(e.message, (op == SG_WARN) ? "warning" : "error");
@@ -317,6 +344,11 @@ void  sentryReportFatalError(const std::string& msg, const std::string& more)
     sentry_capture_event(event);
 }
 
+void sentryThreadReportXMLErrors(bool report)
+{
+    perThread_reportXMLParseErrors = report;
+}
+
 } // of namespace
 
 #else
@@ -360,6 +392,10 @@ void sentryReportException(const std::string&, const  std::string&)
 }
 
 void sentryReportFatalError(const std::string&, const std::string&)
+{
+}
+
+void sentryThreadReportXMLErrors(bool)
 {
 }
 
