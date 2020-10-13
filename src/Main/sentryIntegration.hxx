@@ -43,5 +43,18 @@ void sentryReportException(const std::string& msg, const std::string& location =
 
 void sentryReportFatalError(const std::string& msg, const std::string& more = {});
 
+/**
+ * @brief helper to allow per-thread supression of 
+ * error reports based on XML parse/include errors. 
+ * This is to reduce noise from the launhcer scanning large
+ * directories of non-fixlbe aircraft, in a helper thread.
+ * 
+ * We do it at this level since we don't want to modify
+ * the SimGear XML parser, so we set a thread-local flag
+ * and use it to avoid reporting the exception when it
+ * occurs.
+ */
+void sentryThreadReportXMLErrors(bool report);
+
 } // of namespace flightgear
 

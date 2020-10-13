@@ -34,6 +34,7 @@
 #include <Include/version.h>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/props_io.hxx>
@@ -400,6 +401,11 @@ protected:
     void run() override
     {
         readCache();
+
+        // avoid filling up Sentry with many reports
+        // from unmaintained aircraft. We'll still fail if soemeone tries
+        // to use the aircraft, but that's 100x less common.
+        flightgear::sentryThreadReportXMLErrors(false);
 
         Q_FOREACH(QString d, m_dirs) {
             const auto p = SGPath::fromUtf8(d.toUtf8().toStdString());
