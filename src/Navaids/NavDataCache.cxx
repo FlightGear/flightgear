@@ -1048,7 +1048,20 @@ void NavDataCache::NavDataCachePrivate::findDatFiles(
   result.datFileType = datFileType;
   result.totalSize = 0;
 
-  for (const auto& path: globals->get_fg_scenery()) {
+  // we don't always add FG_ROOT/Scenery to the path list. But if it exists,
+  // we want to pick up NavData files from it, since we have shipped
+  // scenery (for BIKF) which uses newer data than the default files
+  // in Airports/
+  auto paths = globals->get_fg_scenery();
+  const auto fgrootScenery = globals->get_fg_root() / "Scenery";
+  if (fgrootScenery.exists()) {
+    auto it = std::find(paths.begin(), paths.end(), fgrootScenery);
+    if (it == paths.end()) {
+       paths.push_back(fgrootScenery);
+    }
+  }
+
+  for (const auto& path: paths) {
     if (! path.isDir()) {
       SG_LOG(SG_NAVCACHE, SG_WARN, path <<
              ": given as a scenery path, but is not a directory");
