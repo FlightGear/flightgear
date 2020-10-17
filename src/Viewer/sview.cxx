@@ -158,6 +158,10 @@ struct SviewStepAircraft : SviewStep
     // it should be /ai/models/multiplayer[].
     SviewStepAircraft(SGPropertyNode* root)
     {
+        // todo: set up a listener or something so that we cope when
+        // multiplayer callsign disapears then reappears in a different index
+        // of /ai/models/multiplayer[].
+        //
         m_longitude     = root->getNode("position/longitude-deg");
         m_latitude      = root->getNode("position/latitude-deg");
         m_altitude      = root->getNode("position/altitude-ft");
