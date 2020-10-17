@@ -887,7 +887,7 @@ no_profiling_support()
   SG_LOG
   (
     SG_GENERAL,
-    SG_WARN,
+    SG_ALERT,
     "No profiling support! Install gperftools and reconfigure/rebuild fgfs."
   );
 }
