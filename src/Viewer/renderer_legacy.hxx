@@ -10,6 +10,9 @@
 #include <osg/Matrix>
 #include <osg/Vec3>
 
+#include <osgViewer/CompositeViewer>
+#include <osgViewer/Viewer>
+
 #include "renderingpipeline.hxx"
 
 namespace osg
@@ -68,6 +71,12 @@ public:
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     PickList pick(const osg::Vec2& windowPos);
+    
+    /* Allow compilation with CompositeViewer-aware code. */
+    osgViewer::ViewerBase* getViewerBase() { return dynamic_cast<osgViewer::ViewerBase*>(viewer.get()); }
+    osgViewer::View* getView() { return viewer.get(); }
+    void setView(osgViewer::View* view) { viewer = dynamic_cast<osgViewer::Viewer*>(view); }
+    osg::FrameStamp* getFrameStamp() { return viewer->getFrameStamp(); }
 
     /** Get and set the OSG Viewer object, if any.
      */

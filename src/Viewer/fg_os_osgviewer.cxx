@@ -219,7 +219,9 @@ void fgOSOpenWindow(bool stencil)
     auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(
             globals->get_renderer()->getViewerBase()
             );
-    if (composite_viewer) {
+    if (0) {}
+    #ifdef ENABLE_COMPOSITOR
+    else if (composite_viewer) {
         /* We are using CompositeViewer. */
         SG_LOG(SG_VIEW, SG_ALERT, "Using CompositeViewer");
         osgViewer::ViewerBase* viewer = globals->get_renderer()->getViewerBase();
@@ -266,6 +268,7 @@ void fgOSOpenWindow(bool stencil)
         view->setSceneData(new osg::Group);
         globals->get_renderer()->setView(view);
     }
+    #endif
     else {
         /* Not using CompositeViewer. */
         SG_LOG(SG_VIEW, SG_ALERT, "Not CompositeViewer.");

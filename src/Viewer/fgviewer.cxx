@@ -34,8 +34,11 @@
 #include <Scenery/scenery.hxx>
 
 #include <Navaids/NavDataCache.hxx>
-#include <Viewer/renderer_compositor.hxx>
-
+#ifdef ENABLE_COMPOSITOR
+    #include <Viewer/renderer_compositor.hxx>
+#else
+    #include <Viewer/renderer_legacy.hxx>
+#endif
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/options.hxx>

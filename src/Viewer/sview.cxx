@@ -34,6 +34,7 @@
 
 #include "sview.hxx"
 
+#ifdef ENABLE_COMPOSITOR
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -1468,3 +1469,49 @@ bool SviewGC(const osg::GraphicsContext* gc)
     SG_LOG(SG_GENERAL, SG_ALERT, "gc=" << gc << ": returning false");
     return false;
 }
+
+#else
+
+// Not a compositor build - do nothing.
+//
+
+void SviewPush()
+{
+}
+
+void SviewUpdate(double dt)
+{
+}
+
+void SviewClear()
+{
+}
+
+osgViewer::View* SviewGetOsgView(std::shared_ptr<SviewView> view)
+{
+    return nullptr;
+}
+
+std::shared_ptr<SviewView> SviewCreate(
+        const std::string& type,
+        osg::ref_ptr<osg::GraphicsContext> gc
+        )
+{
+    return nullptr;
+}
+
+void SViewSetCompositorParams(
+        osg::ref_ptr<simgear::SGReaderWriterOptions> options,
+        const std::string& compositor_path
+        )
+{
+}
+
+bool SviewGC(const osg::GraphicsContext* gc)
+{
+    return false;
+}
+
+
+
+#endif
