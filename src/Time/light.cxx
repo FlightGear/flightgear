@@ -48,55 +48,9 @@
 #include "light.hxx"
 #include "bodysolver.hxx"
 
-// Constructor
-FGLight::FGLight ()
-    : _ambient_tbl( NULL ),
-      _diffuse_tbl( NULL ),
-      _specular_tbl( NULL ),
-      _sky_tbl( NULL ),
-      _sun_lon(0),
-      _sun_lat(0),
-      _moon_lon(0),
-      _moon_gc_lat(0),
-      _sun_vec(0, 0, 0, 0),
-      _moon_vec(0, 0, 0, 0),
-      _sun_vec_inv(0, 0, 0, 0),
-      _moon_vec_inv(0, 0, 0, 0),
-      _sun_angle(0),
-      _moon_angle(0),
-      _prev_sun_angle(0),
-      _sun_rotation(0),
-      _moon_rotation(0),
-      _scene_ambient(0, 0, 0, 0),
-      _scene_diffuse(0, 0, 0, 0),
-      _scene_specular(0, 0, 0, 0),
-      _scene_chrome(0, 0, 0, 0),
-      _sun_color(1, 1, 1, 0),
-      _sky_color(0, 0, 0, 0),
-      _fog_color(0, 0, 0, 0),
-      _cloud_color(0, 0, 0, 0),
-      _adj_fog_color(0, 0, 0, 0),
-      _adj_sky_color(0, 0, 0, 0),
-      _saturation(1.0),
-      _scattering(0.8),
-      _overcast(0.0),
-      _dt_total(0)
-{
-}
-
-// Destructor
-FGLight::~FGLight ()
-{
-    delete _ambient_tbl;
-    delete _diffuse_tbl;
-    delete _specular_tbl;
-    delete _sky_tbl;
-}
-
-
 // initialize lighting tables
 void FGLight::init () {
-    SG_LOG( SG_EVENT, SG_INFO, 
+    SG_LOG( SG_EVENT, SG_INFO,
             "Initializing Lighting interpolation tables." );
 
     // build the path names of the lookup tables
@@ -105,21 +59,21 @@ void FGLight::init () {
     // initialize ambient, diffuse and specular tables
     SGPath ambient_path = path;
     ambient_path.append( "Lighting/ambient" );
-    _ambient_tbl = new SGInterpTable( ambient_path );
+    _ambient_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( ambient_path ));
 
     SGPath diffuse_path = path;
     diffuse_path.append( "Lighting/diffuse" );
-    _diffuse_tbl = new SGInterpTable( diffuse_path );
+    _diffuse_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( diffuse_path ));
 
     SGPath specular_path = path;
     specular_path.append( "Lighting/specular" );
-    _specular_tbl = new SGInterpTable( specular_path );
-    
+    _specular_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( specular_path ));
+
     // initialize sky table
     SGPath sky_path = path;
     sky_path.append( "Lighting/sky" );
-    _sky_tbl = new SGInterpTable( sky_path );
-    
+    _sky_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( sky_path ));
+
     // update all solar system body positions of interest
     globals->get_event_mgr()->addTask("updateObjects", this,
                             &FGLight::updateObjects, 0.5 );
@@ -130,10 +84,10 @@ void FGLight::reinit () {
     _prev_sun_angle = -9999.0;
     _dt_total = 0;
 
-    delete _ambient_tbl;
-    delete _diffuse_tbl;
-    delete _specular_tbl;
-    delete _sky_tbl;
+    _ambient_tbl.reset();
+    _diffuse_tbl.reset();
+    _specular_tbl.reset();
+    _sky_tbl.reset();
 
     init();
 
@@ -154,6 +108,8 @@ void FGLight::bind () {
     _sunAngleRad->setDoubleValue(_sun_angle);
     _moonAngleRad = prop->getNode("/sim/time/moon-angle-rad", true);
     _moonAngleRad->setDoubleValue(_moon_angle);
+    _tideLevelNorm = prop->getNode("/sim/time/tide-level-norm", true);
+    _tideLevelNorm->setDoubleValue(_tide_level_norm);
     _humidity = fgGetNode("/environment/relative-humidity", true);
 
     // Read Only
@@ -202,7 +158,7 @@ void FGLight::bind () {
 
 void FGLight::unbind () {
     _tiedProperties.Untie();
-    
+
     for (int i = 0; i < 4; ++i)
         _chromeProps[i] = SGPropertyNode_ptr();
     _sunAngleRad = SGPropertyNode_ptr();
@@ -372,7 +328,7 @@ void FGLight::update_adj_fog_color () {
 
     // determine horizontal angle between current view direction and sun
     // since _sun_rotation is relative to South, and heading is in the local frame
-    // we need to account for the 180 degrees offset and differing signs 
+    // we need to account for the 180 degrees offset and differing signs
     // hence the negation and SGD_PI adjustment.
     double hor_rotation = -_sun_rotation - SGD_PI - heading + heading_offset;
     if (hor_rotation < 0 )
@@ -406,6 +362,9 @@ void FGLight::updateObjects()
     // update the moon position
     updateBodyPos("moon", &_moon_lon, &_moon_gc_lat, &_moon_vec, &_moon_vec_inv,
                   &_moon_angle, _moonAngleRad, &_moon_rotation);
+
+    _tide_level_norm = _moon_angle/SGD_PI;
+    _tideLevelNorm->setDoubleValue(_tide_level_norm);
 }
 
 // update the position of one solar system body
@@ -447,10 +406,10 @@ void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
     // Get direction to the body in the local frame.
     SGVec3d local_vec = hlOr.transform(nbody);
 
-    // Angle from South. 
+    // Angle from South.
     // atan2(y,x) returns the angle between the positive X-axis
     // and the vector with the origin at 0, going through (x,y)
-    // Since the local frame coordinates have x-positive pointing Nord and 
+    // Since the local frame coordinates have x-positive pointing Nord and
     // y-positive pointing East we need to negate local_vec.x()
     // rotation is positive counterclockwise from South (body in the East)
     // and negative clockwise from South (body in the West)
@@ -458,7 +417,7 @@ void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
 
     // cout << "  Sky needs to rotate = " << rotation << " rads = "
     //      << rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
-  
+
     AngleRad->setDoubleValue(*angle);
 }
 
