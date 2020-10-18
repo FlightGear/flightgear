@@ -496,6 +496,16 @@ FGRenderer::addChangeListener(SGPropertyChangeListener* l, const char* path)
 void
 FGRenderer::init( void )
 {
+    SGPropertyNode* composite_viewer_enabled_prop = fgGetNode("/sim/rendering/composite-viewer-enabled", true);
+    if (composite_viewer_enabled_prop->getBoolValue()) {
+        composite_viewer_enabled_prop->setBoolValue(false);
+        SG_LOG( SG_GENERAL, SG_POPUP,
+                "CompositeViewer not available because this is\n"
+                "a non-Compositor build.\n"
+                );
+    }
+    composite_viewer_enabled_prop->setAttributes(SGPropertyNode::READ);
+
     if (!eventHandler)
         eventHandler = new FGEventHandler();
 
