@@ -94,8 +94,8 @@ Item {
                 readonly property string forumLink: "href=\"https://forum.flightgear.org\"";
 
                 text: qsTr("Welcome to FlightGear, the open source flight simulator. " +
-                           "This software is the work of volunteers. we hope you enjoy it. " +
-                           "If you find problems, or would like to contribute, " +
+                           "This software is the work of volunteers. We hope you enjoy it. " +
+                           "If you find problems or would like to contribute, " +
                            "please <a %1>visit our forum</a>.").arg(forumLink)
 
                 onLinkActivated: {
