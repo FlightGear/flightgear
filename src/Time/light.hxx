@@ -73,7 +73,6 @@ private:
     // (in radians)
     double _sun_angle = 0.0 , _moon_angle = 0.0;
     double _prev_sun_angle = 0.0;
-    double _tide_level_norm = 0;
 
     // the rotation around our vertical axis of the sun (relative to
     // due south with positive numbers going in the counter clockwise
@@ -108,6 +107,7 @@ private:
 
     double _dt_total = 0.0;
 
+    void update_tide();
     void update_sky_color ();
     void update_adj_fog_color ();
 

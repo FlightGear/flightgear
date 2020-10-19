@@ -108,8 +108,6 @@ void FGLight::bind () {
     _sunAngleRad->setDoubleValue(_sun_angle);
     _moonAngleRad = prop->getNode("/sim/time/moon-angle-rad", true);
     _moonAngleRad->setDoubleValue(_moon_angle);
-    _tideLevelNorm = prop->getNode("/sim/time/tide-level-norm", true);
-    _tideLevelNorm->setDoubleValue(_tide_level_norm);
     _humidity = fgGetNode("/environment/relative-humidity", true);
 
     // Read Only
@@ -362,9 +360,6 @@ void FGLight::updateObjects()
     // update the moon position
     updateBodyPos("moon", &_moon_lon, &_moon_gc_lat, &_moon_vec, &_moon_vec_inv,
                   &_moon_angle, _moonAngleRad, &_moon_rotation);
-
-    _tide_level_norm = _moon_angle/SGD_PI;
-    _tideLevelNorm->setDoubleValue(_tide_level_norm);
 }
 
 // update the position of one solar system body
