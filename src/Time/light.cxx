@@ -59,20 +59,20 @@ void FGLight::init () {
     // initialize ambient, diffuse and specular tables
     SGPath ambient_path = path;
     ambient_path.append( "Lighting/ambient" );
-    _ambient_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( ambient_path ));
+    _ambient_tbl = std::make_unique<SGInterpTable>( ambient_path );
 
     SGPath diffuse_path = path;
     diffuse_path.append( "Lighting/diffuse" );
-    _diffuse_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( diffuse_path ));
+    _diffuse_tbl = std::make_unique<SGInterpTable>( diffuse_path );
 
     SGPath specular_path = path;
     specular_path.append( "Lighting/specular" );
-    _specular_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( specular_path ));
+    _specular_tbl = std::make_unique<SGInterpTable>( specular_path );
 
     // initialize sky table
     SGPath sky_path = path;
     sky_path.append( "Lighting/sky" );
-    _sky_tbl = std::unique_ptr<SGInterpTable>(new SGInterpTable( sky_path ));
+    _sky_tbl = std::make_unique<SGInterpTable>( sky_path );
 
     // update all solar system body positions of interest
     globals->get_event_mgr()->addTask("updateObjects", this,
