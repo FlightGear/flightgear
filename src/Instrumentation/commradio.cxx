@@ -81,6 +81,9 @@ private:
 AtisSpeaker::AtisSpeaker()
 {
   _synthesizeRequest.listener = this;
+  if (!fgHasNode("/sim/atis/speed"))    fgSetDouble("/sim/atis/speed", 1);
+  if (!fgHasNode("/sim/atis/pitch"))    fgSetDouble("/sim/atis/pitch", 1);
+  if (!fgHasNode("/sim/atis/enabled"))  fgSetBool("/sim/atis/enabled", true);
 }
 
 AtisSpeaker::~AtisSpeaker()
@@ -115,9 +118,9 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
       hash += *i;
     }
 
-    _synthesizeRequest.speed = (hash % 16) / 16.0;
-    _synthesizeRequest.pitch = (hash % 16) / 16.0;
-
+    _synthesizeRequest.speed = (hash % 16) / 16.0 * fgGetDouble("/sim/atis/speed", 1);
+    _synthesizeRequest.pitch = (hash % 16) / 16.0 * fgGetDouble("/sim/atis/pitch", 1);
+    
     if( starts_with( _stationId, "K" ) || starts_with( _stationId, "C" ) ||
             starts_with( _stationId, "P" ) ) {
         voice = FLITEVoiceSynthesizer::getVoicePath("cmu_us_arctic_slt");
@@ -133,7 +136,7 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
   FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
   assert(smgr != NULL);
 
-  SG_LOG(SG_INSTR, SG_DEBUG,"AtisSpeaker voice is " << voice );
+  SG_LOG(SG_INSTR, SG_DEBUG,"node->getPath()=" << node->getPath() << " AtisSpeaker voice is " << voice );
   FLITEVoiceSynthesizer * synthesizer = dynamic_cast<FLITEVoiceSynthesizer*>(smgr->getSynthesizer(voice));
 
   synthesizer->synthesize(_synthesizeRequest);
@@ -484,6 +487,10 @@ private:
     PropertyObject<bool> _addNoise;
     PropertyObject<double> _cutoffSignalQuality;
 
+    SGPropertyNode_ptr          _atis_enabled_node;
+    bool                        _atis_enabled_prev;
+    SGSharedPtr<SGSoundSample>  _atis_sample;
+
     std::string _soundPrefix;
     void stopAudio();
     void updateAudio();
@@ -514,6 +521,8 @@ void CommRadioImpl::bind()
 
   _volume_norm = PropertyObject<double>(_rootNode->getNode("volume", true));
   _atis = PropertyObject<string>(_rootNode->getNode("atis", true));
+  if (!fgHasNode("/sim/atis/enabled")) fgSetBool("/sim/atis/enabled", true);
+  _atis_enabled_node = fgGetNode("/sim/atis/enabled");
   _addNoise = PropertyObject<bool>(_rootNode->getNode("add-noise", true));
   _cutoffSignalQuality = PropertyObject<double>(_rootNode->getNode("cutoff-signal-quality", true));
 
@@ -682,15 +691,38 @@ void CommRadioImpl::updateAudio()
     noiseSample = noise;
   }
   
+  bool atis_enabled = _atis_enabled_node->getBoolValue();
+  int atis_delta = 0;
+  if (atis_enabled and !_atis_enabled_prev) atis_delta = 1;
+  if (!atis_enabled and _atis_enabled_prev) atis_delta = -1;
+  
   if (_atisSpeaker.hasSpokenAtis()) {
     // the speaker has created a new atis sample
     // remove previous atis sample
     _sampleGroup->remove(atisRef);
-    
-    SGSharedPtr<SGSoundSample> sample = _atisSpeaker.getSpokenAtis();
-    _sampleGroup->add(sample, atisRef);
-    _sampleGroup->play_looped(atisRef);
+    if (!atis_delta and atis_enabled) atis_delta = 1;
   }
+  if (atis_delta == 1) {
+    // Start play of atis text. We store the most recent sample in _atis_sample
+    // so that we can resume if /sim/atis/enabled is changed from false to
+    // true.
+    SGSharedPtr<SGSoundSample> sample = _atisSpeaker.getSpokenAtis();
+    if (sample) _atis_sample = sample;
+    else sample = _atis_sample;
+    if (sample) {
+      SG_LOG(SG_INSTR, SG_DEBUG, "starting looped play of atis sample.");
+      _sampleGroup->add(sample, atisRef);
+      _sampleGroup->play_looped(atisRef);
+    }
+    else {
+      SG_LOG(SG_INSTR, SG_DEBUG, "no atis sample available");
+    }
+  }
+  if (atis_delta == -1) {
+    // Stop play of atis text.
+    _sampleGroup->remove(atisRef);
+  }
+  _atis_enabled_prev = atis_enabled;
   
   // adjust volumes
   const bool doSquelch = (_signalQuality_norm < _cutoffSignalQuality);

@@ -112,8 +112,8 @@ FLITEVoiceSynthesizer::~FLITEVoiceSynthesizer()
 SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, double volume, double speed, double pitch )
 {
   SG_CLAMP_RANGE( volume, 0.0, 1.0 );
-  SG_CLAMP_RANGE( speed, 0.0, 1.0 );
-  SG_CLAMP_RANGE( pitch, 0.0, 1.0 );
+  SG_CLAMP_RANGE( speed, 0.0, 10.0 );
+  SG_CLAMP_RANGE( pitch, 0.0, 10.0 );
   HTS_Engine_set_volume( &_engine->engine, _volume );
   HTS_Engine_set_speed( &_engine->engine, 0.8 + 0.4 * speed );
   HTS_Engine_add_half_tone(&_engine->engine, -4.0 + 8.0 * pitch );
