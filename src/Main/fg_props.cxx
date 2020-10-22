@@ -278,6 +278,7 @@ setDateString (const char * date_string)
 
 				// Scan for basic ISO format
 				// YYYY-MM-DDTHH:MM:SS
+  new_time.tm_isdst = 0;
   int ret = sscanf(date_string, "%d-%d-%dT%d:%d:%d",
 		   &(new_time.tm_year), &(new_time.tm_mon),
 		   &(new_time.tm_mday), &(new_time.tm_hour),
@@ -292,7 +293,6 @@ setDateString (const char * date_string)
 	   << " not in YYYY-MM-DDTHH:MM:SS format; skipped");
     return;
   }
-
 				// OK, it looks like we got six
 				// values, one way or another.
   new_time.tm_year -= 1900;
