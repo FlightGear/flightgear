@@ -50,11 +50,10 @@ public:
     static const char* staticSubsystemClassId() { return "tides"; }
 
 private:
-    // the rotation between the celestial object and the local horizontal
-    // (in radians)
-    double _prev_moon_rotation = -9999.0;
+    double _prev_moon_lon = -9999.0;
     double _tide_level = 0;
 
+    SGPropertyNode_ptr viewLon;
     SGPropertyNode_ptr _tideLevelNorm;
     SGPropertyNode_ptr _tideAnimation;
 };

@@ -29,21 +29,23 @@
 #include "bodysolver.hxx"
 
 void FGTide::reinit() {
-    _prev_moon_rotation = -9999.0;
+    _prev_moon_lon = -9999.0;
 }
 
 void FGTide::bind()
 {
-    SGPropertyNode *prop = globals->get_props();
+    SGPropertyNode *props = globals->get_props();
 
-    _tideAnimation = prop->getNode("/environment/sea/surface/delta-T-tide", true);
+    viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
+    _tideAnimation = props->getNode("/environment/sea/surface/delta-T-tide", true);
 
-    _tideLevelNorm = prop->getNode("/sim/time/tide-level-norm", true);
+    _tideLevelNorm = props->getNode("/sim/time/tide-level-norm", true);
     _tideLevelNorm->setDoubleValue(_tide_level);
 }
 
 void FGTide::unbind()
 {
+    viewLon.reset();
     _tideLevelNorm.reset();
     _tideAnimation.reset();
 }
@@ -51,19 +53,21 @@ void FGTide::unbind()
 void FGTide::update(double dt)
 {
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    double moon_rotation = l->get_moon_rotation();
-    if (fabs(_prev_moon_rotation - moon_rotation) > (SGD_PI/180.0))
+    double moon_lon = l->get_moon_lon();
+    if (fabs(_prev_moon_lon - moon_lon) > (SGD_PI/180.0))
     {
-//      double sun_rotation = _sunAngleRad->getDoubleValue();
-        _prev_moon_rotation = moon_rotation;
+        _prev_moon_lon = moon_lon;
 
-        // Angles range from 0.0 (straight up) to pi (straight down).
-        // The sun and moon rotate once every day (approximately) but tides
-        // happen twice a day.
-        _tide_level = cos(2.0*moon_rotation);
+        double sun_lon = l->get_sun_lon();
+        double viewer_lon = viewLon->getDoubleValue();
+
+        _tide_level = cos(2.0*(moon_lon - viewer_lon));
+        _tide_level += 0.1*cos(2.0*(sun_lon - viewer_lon));
+        if (_tide_level < -1.0) _tide_level = -1.0;
+        else if (_tide_level > 1.0) _tide_level = 1.0;
 
         _tideLevelNorm->setDoubleValue(_tide_level);
-        _tideAnimation->setDoubleValue(0.5 + 0.5*_tide_level);
+        _tideAnimation->setDoubleValue(0.5 - 0.5*_tide_level);
     }
 }
 
