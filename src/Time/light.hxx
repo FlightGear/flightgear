@@ -107,7 +107,6 @@ private:
 
     double _dt_total = 0.0;
 
-    void update_tide();
     void update_sky_color ();
     void update_adj_fog_color ();
 
@@ -125,7 +124,6 @@ private:
 
     SGPropertyNode_ptr _sunAngleRad;
     SGPropertyNode_ptr _moonAngleRad;
-    SGPropertyNode_ptr _tideLevelNorm;
 
     SGPropertyNode_ptr _humidity;
 
