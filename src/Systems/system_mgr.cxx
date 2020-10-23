@@ -36,6 +36,10 @@ FGSystemMgr::FGSystemMgr ()
 
     if (path_n) {
         SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
+        if (!config.exists()) {
+                SG_LOG( SG_SYSTEMS, SG_DEV_ALERT, "System model file not found:" << config);
+            return;
+        }
 
         SG_LOG( SG_SYSTEMS, SG_INFO, "Reading systems from "
                 << config );

@@ -73,6 +73,11 @@ void FGInstrumentMgr::init()
   }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
+  if (!config.exists()) {
+    SG_LOG(SG_COCKPIT, SG_DEV_ALERT, "Missing instrumentation file at:" << config);
+    return;
+  }
+
   SG_LOG( SG_COCKPIT, SG_INFO, "Reading instruments from " << config );
 
   try {
