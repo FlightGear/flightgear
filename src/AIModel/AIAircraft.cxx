@@ -1321,7 +1321,9 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
     FGAIWaypoint* curr = fp->getCurrentWaypoint();
     if (!curr) {
         SG_LOG(SG_AI, SG_WARN, "FGAIAircraft::reachedEndOfCruise: no current waypoint");
-        return false;
+
+        // return true (=done) here, so we don't just get stuck on this forever
+        return true;
     }
     
     if (curr->getName() == string("BOD")) {
