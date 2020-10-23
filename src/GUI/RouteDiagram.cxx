@@ -48,6 +48,8 @@ void RouteDiagram::setFlightplan(FlightPlanController *fp)
     }
 
     m_flightplan = fp;
+    m_activeLegIndex = 0;
+
     emit flightplanChanged(fp);
 
     if (fp) {
@@ -75,6 +77,11 @@ void RouteDiagram::setActiveLegIndex(int activeLegIndex)
 {
     if (m_activeLegIndex == activeLegIndex)
         return;
+
+    if ((activeLegIndex < 0) || (activeLegIndex >= numLegs())) {
+        qWarning() << Q_FUNC_INFO << "invalid leg index" << activeLegIndex;
+        return;
+    }
 
     m_activeLegIndex = activeLegIndex;
     emit legIndexChanged(m_activeLegIndex);
@@ -132,7 +139,9 @@ void RouteDiagram::fpChanged()
 {
     FlightPlanRef fp = m_flightplan->flightplan();
     m_path.reset(new RoutePath(fp));
-    if (fp) {
+    m_activeLegIndex = 0;
+
+    if (fp && (fp->numLegs() > 0)) {
         const double halfLegDistance = m_path->distanceForIndex(m_activeLegIndex) * 0.5;
         m_projectionCenter = m_path->positionForDistanceFrom(m_activeLegIndex, halfLegDistance);
     }
