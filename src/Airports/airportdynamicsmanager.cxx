@@ -103,6 +103,9 @@ FGAirportDynamicsRef AirportDynamicsManager::find(const std::string &icao)
 
 FGAirportDynamicsRef AirportDynamicsManager::find(const FGAirportRef& apt)
 {
+    if (!apt)
+        return {};
+
     return find(apt->ident());
 }
 
