@@ -484,6 +484,11 @@ void FGSubmodelMgr::setData(int id, const string& path, bool serviceable, const 
     SGPropertyNode root;
 
     SGPath config = globals->resolve_aircraft_path(path);
+    if (!config.exists()) {
+        SG_LOG(SG_AI, SG_DEV_ALERT, "missing AI submodels file: " << config);
+        return;
+    }
+
     try {
         SG_LOG(SG_AI, SG_DEBUG,
                 "Submodels: Trying to read AI submodels file: " << config);

@@ -63,6 +63,11 @@ void CockpitDisplayManager::init()
   }
 
   SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
+  if (!config.exists()) {
+    SG_LOG(SG_COCKPIT, SG_DEV_ALERT, "CockpitDisplaysManager: Missing instrumentation file at:" << config);
+    return;
+  }
+
   SG_LOG( SG_COCKPIT, SG_INFO, "Reading cockpit displays from " << config );
 
   try {
