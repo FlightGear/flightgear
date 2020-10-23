@@ -496,6 +496,13 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
     }
+
+    // this is Sentry issue FLIGHTGEAR-DS : happens after reposition,
+    // likely firstFlight is false, but activeRunway is stale
+    if (!apt->hasRunwayWithIdent(activeRunway)) {
+        SG_LOG(SG_AI, SG_WARN, "FGAIFlightPlan::createTakeOff: invalid active runway:" << activeRunway);
+        return false;
+    }
   
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
     if (!rwy)
