@@ -44,11 +44,7 @@ function(_check_candidate_msvc_path pathToCheck)
             ${pathToCheck}
         NO_DEFAULT_PATH
     )
-
-    # for testing, remove me later.
-    message(STATUS "Found FreeType header at: ${_freeTypeHeader}")
-    message(STATUS "Found ZLib DLL at: ${_zlibDll}")
-
+    
     if (_freeTypeHeader AND _zlibDll)
         set(_FOUND_3RDPARTY_DIR "${_freeTypeHeader}" PARENT_SCOPE)
 
