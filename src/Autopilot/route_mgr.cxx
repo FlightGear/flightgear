@@ -805,6 +805,14 @@ void FGRouteMgr::jumpToIndex(int index)
   if (!_plan) {
     return;
   }
+
+  // this method is tied() to current-wp property, but FlightPlan::setCurrentIndex
+  // will throw on invalid input, so guard against invalid values here.
+  // See Sentry FLIGHTGEAR-71
+  if ((index < -1) || (index >= _plan->numLegs())) {
+    SG_LOG(SG_AUTOPILOT, SG_WARN, "FGRouteMgr::jumpToIndex: ignoring invalid index:" << index);
+    return;
+  }
   
   _plan->setCurrentIndex(index);
 }
