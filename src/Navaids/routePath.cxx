@@ -1153,6 +1153,11 @@ double RoutePath::distanceForVia(Via* via, int index) const
 
 double RoutePath::trackForIndex(int index) const
 {
+    const auto sz = static_cast<int>(d->waypoints.size());
+    if ((index < 0) || (index >= sz)) {
+        return 0.0;
+    }
+
     if (d->waypoints[index].skipped)
         return trackForIndex(index - 1);
 
@@ -1165,6 +1170,11 @@ double RoutePath::trackForIndex(int index) const
 
 double RoutePath::distanceForIndex(int index) const
 {
+    const auto sz = static_cast<int>(d->waypoints.size());
+    if ((index < 0) || (index >= sz)) {
+        return 0.0;
+    }
+
   return d->waypoints[index].pathDistanceM;
 }
 
