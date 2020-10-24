@@ -382,9 +382,13 @@ private:
             SG_LOG(SG_AI, SG_DEBUG, "parsing traffic in:" << p);
             simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
             for (const auto& xml : trafficFiles) {
-                readXML(xml, *this);
-                if (_cancelThread) {
-                    return;
+                try {
+                    readXML(xml, *this);
+                    if (_cancelThread) {
+                        return;
+                    }
+                } catch (sg_exception& e) {
+                    SG_LOG(SG_AI, SG_WARN, "XML error parsing traffic file:" << xml << "\n\t" << e.getFormattedMessage());
                 }
             }
         } // of sub-directories iteration
