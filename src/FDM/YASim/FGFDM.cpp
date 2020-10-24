@@ -466,6 +466,7 @@ void FGFDM::setOutputProperties(float dt)
         float tmp[3];
         t->getThrust(tmp);
         float lbs = Math::mag3(tmp) * (KG2LBS/9.8);
+        if (tmp[0] < 0) lbs = -lbs; // Show negative thrust in properties.
         tp._prop_thrust->setFloatValue(lbs); // Deprecated name
         tp._thrust_lbs->setFloatValue(lbs);
         tp._fuel_flow_gph->setFloatValue(
