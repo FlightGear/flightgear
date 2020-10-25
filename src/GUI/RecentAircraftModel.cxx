@@ -7,13 +7,14 @@
 
 const int MAX_RECENT_AIRCRAFT = 20;
 
+const QString recentAircraftKey = "recent-aircraft-2020";
 
 RecentAircraftModel::RecentAircraftModel(AircraftItemModel* acModel, QObject* pr) :
     QAbstractListModel(pr),
     m_aircraftModel(acModel)
 {
     QSettings settings;
-    const QStringList urls = settings.value("recent-aircraft").toStringList();
+    const QStringList urls = settings.value(recentAircraftKey).toStringList();
     m_data = QUrl::fromStringList(urls);
 
     connect(m_aircraftModel, &AircraftItemModel::contentsChanged,
@@ -23,7 +24,7 @@ RecentAircraftModel::RecentAircraftModel(AircraftItemModel* acModel, QObject* pr
 void RecentAircraftModel::saveToSettings()
 {
     QSettings settings;
-    settings.setValue("recent-aircraft", QUrl::toStringList(m_data));
+    settings.setValue(recentAircraftKey, QUrl::toStringList(m_data));
 }
 
 QUrl RecentAircraftModel::uriAt(int index) const

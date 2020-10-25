@@ -6,17 +6,20 @@
 
 const int MAX_RECENT_LOCATIONS = 20;
 
+// avoid clashng with previous versions, with incompatible data
+const QString recentLocationsKey = "recent-locations-2020";
+
 RecentLocationsModel::RecentLocationsModel(QObject* pr) :
     QAbstractListModel(pr)
 {
     QSettings settings;
-    m_data = settings.value("recent-location-sets").toList();
+    m_data = settings.value(recentLocationsKey).toList();
 }
 
 void RecentLocationsModel::saveToSettings()
 {
     QSettings settings;
-    settings.setValue("recent-location-sets", m_data);
+    settings.setValue(recentLocationsKey, m_data);
 }
 
 QVariantMap RecentLocationsModel::locationAt(int index) const
