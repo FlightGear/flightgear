@@ -128,7 +128,7 @@ void FGGroundNetXMLLoader::startParking(const XMLAttributes &atts)
     else if (attname == "pushBackRoute") {
       const string attrVal = atts.getValue(i);
       try {
-          if (attrVal == "None") {
+          if (attrVal.empty() || (attrVal == "None")) {
               pushBackRoute = -2;
           } else {
               pushBackRoute = simgear::strutils::readNonNegativeInt<int>(attrVal);
