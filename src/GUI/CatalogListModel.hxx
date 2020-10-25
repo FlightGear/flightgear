@@ -67,7 +67,7 @@ public:
 
     Q_INVOKABLE void refreshCatalog(int index);
 
-    Q_INVOKABLE void installDefaultCatalog();
+    Q_INVOKABLE void installDefaultCatalog(bool showAddFeedback);
 
     // returns the index of the new catalog
     Q_INVOKABLE void addCatalogByUrl(QUrl url);
@@ -84,7 +84,7 @@ public:
         Refreshing,
         NetworkError,
         NotFoundOnServer,
-        IncomaptbleVersion,
+        IncompatibleVersion,
         HTTPForbidden,
         InvalidData,
         UnknownError,

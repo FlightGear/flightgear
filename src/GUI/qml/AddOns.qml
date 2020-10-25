@@ -73,12 +73,25 @@ Item {
                         }
                     }
 
+                    Item {
+                        id: bottomDivider
+                        height: Style.margin
+                        width: parent.width
+
+                        Rectangle {
+                            color: Style.frameColor
+                            height: 1
+                            width: parent.width - Style.strutSize
+                            anchors.centerIn: parent
+                        }
+                    }
+
                     ClickableText {
                         visible: !_addOns.isOfficialHangarRegistered && !addCatalogPanel.isActive
                         anchors { left: parent.left; right: parent.right; margins: Style.margin }
                         text : qsTr("The official FlightGear aircraft hangar is not set up. To add it, click here.");
                         onClicked:  {
-                            _addOns.catalogs.installDefaultCatalog()
+                            _addOns.catalogs.installDefaultCatalog(true)
                         }
                     }
 
