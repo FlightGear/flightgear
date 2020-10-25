@@ -21,8 +21,10 @@
 #ifndef FG_HTTP_CLIENT_HXX
 #define FG_HTTP_CLIENT_HXX
 
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/io/HTTPClient.hxx>
+#include <simgear/package/Catalog.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+
 #include <memory>
 
 class FGHTTPClient : public SGSubsystem
@@ -46,7 +48,7 @@ public:
     simgear::HTTP::Client const* client() const { return _http.get(); }
 
     bool isDefaultCatalogInstalled() const;
-    void addDefaultCatalog();
+    simgear::pkg::CatalogRef addDefaultCatalog();
 
     std::string getDefaultCatalogId() const;
     std::string getDefaultCatalogUrl() const;

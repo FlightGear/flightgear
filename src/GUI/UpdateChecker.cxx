@@ -135,6 +135,7 @@ void UpdateChecker::receivedUpdateXML(QByteArray body)
     const auto s = body.toStdString();
 
     QSettings settings;
+    auto nc = LauncherNotificationsController::instance();
 
     try {
         const char* buffer = s.c_str();
@@ -156,6 +157,8 @@ void UpdateChecker::receivedUpdateXML(QByteArray body)
                 m_updateUri = QUrl(QString::fromStdString(newVersionUri));
                 emit statusChanged(m_status);
 
+                nc->postNotification("flightgear-update-major", QUrl{"qrc:///qml/NewVersionNotification.qml"});
+
                 return; // don't consider minor updates
             }
         }
@@ -172,6 +175,8 @@ void UpdateChecker::receivedUpdateXML(QByteArray body)
                 const std::string newVersionUri = props->getStringValue("download-uri");
                 m_updateUri = QUrl(QString::fromStdString(newVersionUri));
                 emit statusChanged(m_status);
+
+                nc->postNotification("flightgear-update-point", QUrl{"qrc:///qml/NewVersionNotification.qml"});
             }
         }
     } catch (const sg_exception &e) {
