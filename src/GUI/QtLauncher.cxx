@@ -53,13 +53,14 @@
 #include <simgear/package/Install.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
-#include <Navaids/NavDataCache.hxx>
-#include <Navaids/navrecord.hxx>
-#include <Navaids/SHPParser.hxx>
-#include <Airports/airport.hxx>
 #include <Add-ons/AddonManager.hxx>
+#include <Airports/airport.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
+#include <Navaids/NavDataCache.hxx>
+#include <Navaids/SHPParser.hxx>
+#include <Navaids/navrecord.hxx>
 
 
 #include <Main/fg_init.hxx>
@@ -68,10 +69,11 @@
 #include <Network/HTTPClient.hxx>
 #include <Viewer/WindowBuilder.hxx>
 
-#include "LauncherMainWindow.hxx"
 #include "LaunchConfig.hxx"
-#include "UnitsModel.hxx"
+#include "LauncherMainWindow.hxx"
+#include "LocalAircraftCache.hxx"
 #include "PathListModel.hxx"
+#include "UnitsModel.hxx"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -504,6 +506,10 @@ bool runLauncherDialog()
         return false; // quit
     }
 
+    // avoid a race-y crash on the locale, if a scan thread is
+    // still running: this reset will cancel any running scan
+    LocalAircraftCache::reset();
+
     // don't set scenery paths twice
     globals->clear_fg_scenery();
     globals->get_locale()->clear();
@@ -537,6 +543,8 @@ static const char* static_lockFileDialog_Info =
 
 LockFileDialogResult showLockFileDialog()
 {
+    flightgear::addSentryBreadcrumb("showing lock-file dialog", "info");
+
     QString title = qApp->translate("LockFileDialog", static_lockFileDialog_Title);
     QString text = qApp->translate("LockFileDialog", static_lockFileDialog_Text);
     QString infoText = qApp->translate("LockFileDialog", static_lockFileDialog_Info);
