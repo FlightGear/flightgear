@@ -76,14 +76,24 @@ Item {
             }
 
             StyledText {
+                id: normalDescription
                 visible: model.status === CatalogListModel.Ok
                 width: parent.width
                 text: model.description
                 wrapMode: Text.WordWrap
             }
 
+            StyledText {
+                id: badVersionDescription
+                visible: model.status === CatalogListModel.IncompatibleVersion
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: qsTr("This hangar is not compatible with this version of FlightGear")
+            }
+
             ClickableText {
-                visible: model.status !== CatalogListModel.Ok
+                id: errorDescription
+                visible: (model.status !== CatalogListModel.Ok) && (model.status !== CatalogListModel.IncompatibleVersion)
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: qsTr("This hangar is currently disabled due to a problem. " +

@@ -198,12 +198,16 @@ void CatalogListModel::refreshCatalog(int index)
     m_catalogs.at(static_cast<size_t>(index))->refresh();
 }
 
-void CatalogListModel::installDefaultCatalog()
+void CatalogListModel::installDefaultCatalog(bool showAddFeedback)
 {
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
-    m_newlyAddedCatalog = Catalog::createFromUrl(m_packageRoot, http->getDefaultCatalogUrl());
-    emit isAddingCatalogChanged();
-    emit statusOfAddingCatalogChanged();
+    auto cat = Catalog::createFromUrl(m_packageRoot, http->getDefaultCatalogUrl());
+    if (showAddFeedback) {
+      cat = m_newlyAddedCatalog;
+      emit isAddingCatalogChanged();
+      emit statusOfAddingCatalogChanged();
+    }
+
     resetData();
 }
 
@@ -316,7 +320,7 @@ CatalogListModel::CatalogStatus CatalogListModel::translateStatusForCatalog(Cata
     case Delegate::FAIL_DOWNLOAD:       return NetworkError;
     case Delegate::STATUS_IN_PROGRESS:  return Refreshing;
     case Delegate::FAIL_NOT_FOUND:      return NotFoundOnServer;
-    case Delegate::FAIL_VERSION:        return IncomaptbleVersion;
+    case Delegate::FAIL_VERSION:        return IncompatibleVersion;
     case Delegate::FAIL_HTTP_FORBIDDEN: return HTTPForbidden;
     case Delegate::FAIL_VALIDATION:     return InvalidData;
     default:
