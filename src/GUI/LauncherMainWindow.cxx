@@ -19,14 +19,16 @@
 #include "version.h"
 
 // launcher headers
-#include "QtLauncher.hxx"
+#include "AddOnsController.hxx"
+#include "AircraftModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "LaunchConfig.hxx"
-#include "AircraftModel.hxx"
-#include "LocalAircraftCache.hxx"
 #include "LauncherController.hxx"
-#include "AddOnsController.hxx"
+#include "LauncherNotificationsController.hxx"
+#include "LauncherPackageDelegate.hxx"
+#include "LocalAircraftCache.hxx"
 #include "LocationController.hxx"
+#include "QtLauncher.hxx"
 #include "UpdateChecker.hxx"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -82,6 +84,8 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
         connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
     }
 
+    connect(this, &QQuickView::statusChanged, this, &LauncherMainWindow::onQuickStatusChanged);
+
     m_controller->initialRestoreSettings();
 
     ////////////
@@ -112,6 +116,12 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     auto updater = new UpdateChecker(this);
     ctx->setContextProperty("_updates", updater);
 
+    auto packageDelegate = new LauncherPackageDelegate(this);
+    ctx->setContextProperty("_packages", packageDelegate);
+
+    auto notifications = new LauncherNotificationsController{this, engine()};
+    ctx->setContextProperty("_notifications", notifications);
+
     if (!inSimMode) {
         auto addOnsCtl = new AddOnsController(this, m_controller->config());
         ctx->setContextProperty("_addOns", addOnsCtl);
@@ -129,25 +139,22 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     setSource(QUrl("qrc:///qml/Launcher.qml"));
 }
 
-#if 0
-void LauncherMainWindow::onQuickStatusChanged(QQuickWidget::Status status)
+void LauncherMainWindow::onQuickStatusChanged(QQuickView::Status status)
 {
-    if (status == QQuickWidget::Error) {
-        QQuickWidget* qw = qobject_cast<QQuickWidget*>(sender());
+    if (status == QQuickView::Error) {
         QString errorString;
 
-        Q_FOREACH(auto err, qw->errors()) {
+        Q_FOREACH (auto err, errors()) {
             errorString.append("\n" + err.toString());
         }
 
-        QMessageBox::critical(this, "UI loading failures.",
-                              tr("Problems occurred loading the user interface. This is often due to missing modules on your system. "
+        QMessageBox::critical(nullptr, "UI loading failures.",
+                              tr("Problems occurred loading the user interface. This is usually due to missing modules on your system. "
                                  "Please report this error to the FlightGear developer list or forum, and take care to mention your system "
-                                 "distribution, etc. Please also include the information provided below.\n")
-                              + errorString);
+                                 "distribution, etc. Please also include the information provided below.\n") +
+                                  errorString);
     }
 }
-#endif
 
 LauncherMainWindow::~LauncherMainWindow()
 {

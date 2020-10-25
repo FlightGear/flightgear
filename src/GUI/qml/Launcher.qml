@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtQml 2.4
 import FlightGear 1.0
 import "."
 
@@ -147,6 +148,18 @@ Item {
         }
 
         source: "qrc:///qml/Summary.qml"
+    }
+
+    NotificationArea {
+        id: notifications
+        // only show on the summary page
+        visible: sidebar.selectedPage === 0
+
+        anchors {
+            right: parent.right
+            top: parent.top
+            bottom: parent.bottom
+        }
     }
 
     function selectPage(index)

@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtQml 2.4
 import FlightGear.Launcher 1.0
 import "."
 
@@ -77,54 +78,7 @@ Item {
         styleColor: "black"
     }
 
-    Row {
-        spacing: Style.margin
-        anchors {
-            left: logoText.left
-            right: logoText.right
-        }
-
-        // anchoring to logoText bottom doesn't work as expected because of
-        // dynamic text sizing, so bind it manually
-        y: logoText.y + Style.margin + logoText.contentHeight
-
-        id: updateMessage
-
-        visible: _updates.status != UpdateChecker.NoUpdate
-
-        readonly property string msg: (_updates.status == UpdateChecker.MajorUpdate) ?
-                                          qsTr("A new release of FlightGear is available (%1): click for more information")
-                                        : qsTr("Updated version %1 is available: click here to download")
-
-        ClickableText {
-            text: parent.msg.arg(_updates.updateVersion)
-            baseTextColor: "white"
-            style: Text.Outline
-            styleColor: "black"
-            font.bold: true
-            font.pixelSize: Style.headingFontPixelSize
-
-            onClicked: {
-                _launcher.launchUrl(_updates.updateUri);
-            }
-        }
-
-        ClickableText {
-            text: qsTr("(or click to ignore this)")
-            baseTextColor: "white"
-            style: Text.Outline
-            styleColor: "black"
-            font.bold: true
-            font.pixelSize: Style.headingFontPixelSize
-
-            onClicked: {
-               _updates.ignoreUpdate();
-            }
-        }
-    }
-
     ClickableText {
-        visible: !updateMessage.visible
         anchors {
             left: logoText.left
             right: logoText.right
@@ -362,5 +316,5 @@ Item {
                 width: 1; height: 1
             }
         }
-    }
+    } // of summary box
 }

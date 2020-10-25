@@ -112,6 +112,7 @@
         <file>qml/LocationAltitudeRow.qml</file>
         <file>qml/CatalogDelegate.qml</file>
         <file alias="clear-text-icon">assets/icons8-clear-symbol-26.png</file>
+        <file alias="white-delete-icon">assets/white-cross-icon.png</file>
         <file>qml/FlightPlan.qml</file>
         <file>qml/PlainTextEditBox.qml</file>
         <file>qml/HeaderBox.qml</file>
@@ -138,6 +139,11 @@
         <file alias="favourite-icon-outline">assets/icons8-christmas-star-outline.png</file>
         <file>qml/FirstRun.qml</file>
         <file>qml/HelpSupport.qml</file>
+        <file>qml/NotificationArea.qml</file>
+        <file>qml/NewVersionNotification.qml</file>
+        <file>qml/DidMigrateOfficialCatalogNotification.qml</file>
+        <file>qml/DidMigrateOtherCatalogNotification.qml</file>
+
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>

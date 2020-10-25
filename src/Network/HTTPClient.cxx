@@ -123,12 +123,15 @@ bool FGHTTPClient::isDefaultCatalogInstalled() const
     return getDefaultCatalog().valid();
 }
 
-void FGHTTPClient::addDefaultCatalog()
+pkg::CatalogRef FGHTTPClient::addDefaultCatalog()
 {
     pkg::CatalogRef defaultCatalog = getDefaultCatalog();
     if (!defaultCatalog.valid()) {
-      pkg::Catalog::createFromUrl(globals->packageRoot(), getDefaultCatalogUrl());
+        auto cat = pkg::Catalog::createFromUrl(globals->packageRoot(), getDefaultCatalogUrl());
+        return cat;
     }
+
+    return defaultCatalog;
 }
 
 std::string FGHTTPClient::getDefaultCatalogId() const
