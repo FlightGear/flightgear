@@ -133,7 +133,6 @@ bool Approach::route(FGRunwayRef runway, WayptRef aIAF, WayptVec& aWps)
         // warn and just use the primary waypoints down below
         SG_LOG(SG_NAVAID, SG_INFO, "approach " << ident() << " has no transition " <<
                "for IAF: " << aIAF->ident());
-        return false;
       }
     }
   }
@@ -168,7 +167,7 @@ string_list Approach::transitionIdents() const
 {
     string_list r;
     r.reserve(_transitions.size());
-    for (const auto t : _transitions) {
+    for (const auto& t : _transitions) {
         r.push_back(t.second->ident());
     }
     return r;
@@ -290,7 +289,14 @@ bool ArrivalDeparture::commonRoute(Transition* t, WayptVec& aPath, FGRunwayRef a
   }
   
   RunwayTransitionMap::iterator r = _runways.find(aRwy);
-  assert(r != _runways.end());
+  if (r == _runways.end()) {
+      // runway doesn't match STAR/SID; this may be intentional (cf. EDDF
+      // transitions), so we have to cater for it: we will just return at this
+      // point, and trust the calling code to insert VECTORS or select an
+      // appropriate approach transition.
+      return true;
+  }
+
   if (!r->second) {
     // no transitions specified. Not great, but not
     // much we can do about it. Calling code will insert VECTORS to the approach
