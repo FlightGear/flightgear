@@ -114,6 +114,10 @@ void Propeller::calc(float density, float v, float omega,
         torque = tau0 - tau0 * (lambda - 1) / (lambdaWM - 1);
         torque *= 0.5f * density * V2 * _f0;
     }
+    
+    if (_propfeather) {
+        thrust = 0;
+    }
 
     *thrustOut = thrust;
     *torqueOut = torque;
