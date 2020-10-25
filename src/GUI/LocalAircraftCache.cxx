@@ -578,6 +578,11 @@ LocalAircraftCache* LocalAircraftCache::instance()
     return static_cacheInstance.get();
 }
 
+void LocalAircraftCache::reset()
+{
+    static_cacheInstance.reset();
+}
+
 LocalAircraftCache::LocalAircraftCache() :
     d(new AircraftCachePrivate)
 {

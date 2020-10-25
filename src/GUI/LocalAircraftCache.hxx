@@ -110,6 +110,7 @@ public:
     ~LocalAircraftCache();
 
     static LocalAircraftCache* instance();
+    static void reset();
 
 
     void setPaths(QStringList paths);
