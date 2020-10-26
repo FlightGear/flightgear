@@ -1231,7 +1231,7 @@ void FGAIAircraft::updateVerticalSpeedTarget(double dt) {
             } else {
                 tgt_vs = std::max(tgt_altitude_ft - altitude_ft, -_performance->descentRate());
             }
-        } else {
+        } else if (fp) {
             double vert_dist_ft = fp->getCurrentWaypoint()->getCrossat() - altitude_ft;
             double err_dist     = 0; //prev->getCrossat() - altitude_ft;
             double dist_m       = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), fp->getCurrentWaypoint());
