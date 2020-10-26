@@ -50,19 +50,23 @@ void FGTide::unbind()
     _tideAnimation.reset();
 }
 
+#include <Main/fg_props.hxx>
 void FGTide::update(double dt)
 {
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    double moon_lon = l->get_moon_lon();
-    if (fabs(_prev_moon_lon - moon_lon) > (SGD_PI/180.0))
+
+    // Don't know where the 60 degrees offset comes from but it matches
+    // the tides perfectly (at EHAL). Something to figure out.
+    double viewer_lon = (viewLon->getDoubleValue() + 60.0)*SGD_PI/180.0;
+    double moon_lon = l->get_moon_lon() - viewer_lon;
+    if (fabs(_prev_moon_lon - moon_lon) > (SGD_PI/360.0))
     {
         _prev_moon_lon = moon_lon;
 
-        double sun_lon = l->get_sun_lon();
-        double viewer_lon = viewLon->getDoubleValue();
+        double sun_lon = l->get_sun_lon() - viewer_lon;
+        _tide_level = cos(2.0*moon_lon);
+        _tide_level += 0.15*cos(2.0*sun_lon);
 
-        _tide_level = cos(2.0*(moon_lon - viewer_lon));
-        _tide_level += 0.1*cos(2.0*(sun_lon - viewer_lon));
         if (_tide_level < -1.0) _tide_level = -1.0;
         else if (_tide_level > 1.0) _tide_level = 1.0;
 
