@@ -114,9 +114,10 @@ private:
     void updateObjects();
 
     // update the position of one solar system body
-    void updateBodyPos(const char *body, double *lon, double *lat,
-       SGVec4f *vec, SGVec4f *vec_inv, double *angle, SGPropertyNode_ptr AngleRad,
-       double *rotation);
+    void updateBodyPos(bool sun_not_moon, double& lon, double& lat,
+       SGVec4f& vec, SGVec4f& vec_inv,
+       double& angle, SGPropertyNode_ptr AngleRad,
+       double& rotation);
 
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.

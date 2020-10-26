@@ -50,16 +50,18 @@ static const time_t step_secs = 60;
  * solar system body is directly overhead.  (lat, lon are reported in
  * radians) */
 
-void fgBodyPositionGST(double gst, double *lon, double *lat, const char *body) {
+void fgBodyPositionGST(double gst, double& lon, double& lat, bool sun_not_moon) {
     /* time_t  ssue;           seconds since unix epoch */
-    /* double *lat;            (return) latitude        */
-    /* double *lon;            (return) longitude       */
+    /* double& lat;            (return) latitude        */
+    /* double& lon;            (return) longitude       */
 
     double tmp;
 
-    SGPropertyNode* body_node = fgGetNode("/ephemeris/" + std::string(body));
+    std::string body = sun_not_moon ? "sun" : "moon";
+    SGPropertyNode* body_node = fgGetNode("/ephemeris/" + body);
     assert(body_node);
-    double xs = body_node->getDoubleValue("xs");
+    double xs = sun_not_moon ? body_node->getDoubleValue("xs")
+                             : body_node->getDoubleValue("xg");
     //double ys = body_node->getDoubleValue("ys");
     double ye = body_node->getDoubleValue("ye");
     double ze = body_node->getDoubleValue("ze");
@@ -71,16 +73,17 @@ void fgBodyPositionGST(double gst, double *lon, double *lat, const char *body) {
     double signedPI = (tmp < 0.0) ? -SGD_PI : SGD_PI;
     tmp = fmod(tmp+signedPI, SGD_2PI) - signedPI;
 
-    *lon = tmp;
-    *lat = dec;
+    lon = tmp;
+    lat = dec;
 }
 
-static double body_angle( const SGTime &t, const SGVec3d& world_up, const char* body) {
+static double body_angle( const SGTime &t, const SGVec3d& world_up, bool sun_not_moon) {
+    const char *body = sun_not_moon ? "sun" : "moon";
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating " << body << " position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t.getGst() );
 
     double lon, gc_lat;
-    fgBodyPositionGST( t.getGst(), &lon, &gc_lat, body );
+    fgBodyPositionGST( t.getGst(), lon, gc_lat, body );
     SGVec3d bodypos = SGVec3d::fromGeoc(SGGeoc::fromRadM(lon, gc_lat,
                                                         SGGeodesy::EQURAD));
 
@@ -121,7 +124,7 @@ time_t fgTimeSecondsUntilBodyAngle( time_t cur_time,
                                    const SGGeod& loc,
                                    double target_angle_deg,
                                    bool ascending,
-                                   const char *body )
+                                   bool sun_not_moon )
 {
     SGVec3d world_up = SGVec3d::fromGeod(loc);
     SGTime t = SGTime( loc, SGPath(), 0 );
@@ -135,7 +138,7 @@ time_t fgTimeSecondsUntilBodyAngle( time_t cur_time,
           secs += step_secs )
     {
         t.update( loc, secs, 0 );
-        double angle_deg = body_angle( t, world_up, body );
+        double angle_deg = body_angle( t, world_up, sun_not_moon );
         double diff = fabs( angle_deg - target_angle_deg );
         if ( diff < best_diff ) {
             if ( last_angle <= 180.0 && ascending

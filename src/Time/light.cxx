@@ -354,34 +354,42 @@ void FGLight::update_adj_fog_color () {
 void FGLight::updateObjects()
 {
     // update the sun position
-    updateBodyPos("sun", &_sun_lon, &_sun_lat, &_sun_vec, &_sun_vec_inv,
-                  &_sun_angle, _sunAngleRad, &_sun_rotation);
+    bool sun_not_moon = true;
+    updateBodyPos(sun_not_moon, _sun_lon, _sun_lat,
+                  _sun_vec, _sun_vec_inv,
+                  _sun_angle, _sunAngleRad,
+                  _sun_rotation);
 
     // update the moon position
-    updateBodyPos("moon", &_moon_lon, &_moon_gc_lat, &_moon_vec, &_moon_vec_inv,
-                  &_moon_angle, _moonAngleRad, &_moon_rotation);
+    sun_not_moon = false;
+    updateBodyPos(sun_not_moon, _moon_lon, _moon_gc_lat,
+                  _moon_vec, _moon_vec_inv,
+                  _moon_angle, _moonAngleRad,
+                  _moon_rotation);
 }
 
 // update the position of one solar system body
-void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
-       SGVec4f *vec, SGVec4f *vec_inv, double *angle, SGPropertyNode_ptr AngleRad,
-       double *rotation)
+void FGLight::updateBodyPos(bool sun_not_moon, double& lon, double& lat,
+       SGVec4f& vec, SGVec4f& vec_inv,
+       double& angle, SGPropertyNode_ptr AngleRad,
+       double& rotation)
 {
     SGTime *t = globals->get_time_params();
 
-    fgBodyPositionGST(t->getGst(), lon, lat, body);
+    // returns lon and lat based on GST
+    fgBodyPositionGST(t->getGst(), lon, lat, sun_not_moon);
 
     // It might seem that gc_lat needs to be converted to geodetic
     // latitude here, but it doesn't. The body latitude is the latitude
     // of the point on the earth where the up vector has the same
     // angle from geocentric Z as the body direction. But geodetic
     // latitude is defined as 90 - angle of up vector from Z!
-    SGVec3d bodypos = SGVec3d::fromGeoc(SGGeoc::fromRadM(*lon, *lat,
+    SGVec3d bodypos = SGVec3d::fromGeoc(SGGeoc::fromRadM(lon, lat,
                                                           SGGeodesy::EQURAD));
 
     // update the body vector
-    *vec = SGVec4f(toVec3f(normalize(bodypos)), 0);
-    *vec_inv = - *vec;
+    vec = SGVec4f(toVec3f(normalize(bodypos)), 0);
+    vec_inv = - vec;
 
     // calculate the body's relative angle to local up
     SGQuatd hlOr =  SGQuatd::fromLonLat( globals->get_view_position() );
@@ -393,10 +401,10 @@ void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
 
     SGVec3d nbody = normalize(bodypos);
     SGVec3d nup = normalize(world_up);
-    *angle = acos( dot( nup, nbody ) );
+    angle = acos( dot( nup, nbody ) );
 
-    double signedPI = (*angle < 0.0) ? -SGD_PI : SGD_PI;
-    *angle = fmod(*angle+signedPI, SGD_2PI) - signedPI;
+    double signedPI = (angle < 0.0) ? -SGD_PI : SGD_PI;
+    angle = fmod(angle+signedPI, SGD_2PI) - signedPI;
 
     // Get direction to the body in the local frame.
     SGVec3d local_vec = hlOr.transform(nbody);
@@ -408,12 +416,12 @@ void FGLight::updateBodyPos(const char *body, double *lon, double *lat,
     // y-positive pointing East we need to negate local_vec.x()
     // rotation is positive counterclockwise from South (body in the East)
     // and negative clockwise from South (body in the West)
-    *rotation = atan2(local_vec.y(), -local_vec.x());
+    rotation = atan2(local_vec.y(), -local_vec.x());
 
     // cout << "  Sky needs to rotate = " << rotation << " rads = "
     //      << rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
 
-    AngleRad->setDoubleValue(*angle);
+    AngleRad->setDoubleValue(angle);
 }
 
 
