@@ -28,6 +28,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/io/iostreams/sgstream.hxx>
 
 #include <Include/version.h>
 #include <Main/fg_init.hxx>
@@ -62,6 +63,7 @@ auto OSG_messageWhitelist = {
 auto XML_messageWhitelist = {
      "Cannot open file",
      "not well-formed (invalid token)",
+     "mismatched tag (from 'SimGear XML Parser')"
 };
 
 // we don't want sentry enabled for the test suite
@@ -213,6 +215,38 @@ void initSentry()
     sentry_options_add_attachment(options, logPath.c_str());
 #endif
     
+    sentry_value_t user = sentry_value_new_object();
+
+    const auto uuidPath = fgHomePath() / "sentry_uuid.txt";
+    bool generateUuid = true;
+    std::string uuid;
+    if (uuidPath.exists()) {
+        sg_ifstream f(uuidPath);
+        std::getline(f, uuid);
+        // if we read enough bytes, that this is a valid UUID, then accept it
+        if ( uuid.length() >= 36) {
+            generateUuid = false;
+        }
+    }
+
+    // we need to generate a new UUID
+    if (generateUuid) {
+        // use the Sentry APi to generate one
+        sentry_uuid_t su = sentry_uuid_new_v4();
+        char bytes[38];
+        sentry_uuid_as_string(&su, bytes);
+        bytes[37] = 0;
+
+        uuid = std::string{bytes};
+        // write it back to disk for next time
+        sg_ofstream f(uuidPath);
+        f << uuid << endl;
+    }
+
+    sentry_value_t userUuidV = sentry_value_new_string(uuid.c_str());
+    sentry_value_set_by_key(user, "id", userUuidV);
+    sentry_set_user(user);
+
     sentry_init(options);
     static_sentryEnabled = true;
 
