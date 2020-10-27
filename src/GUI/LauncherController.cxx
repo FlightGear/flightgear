@@ -459,6 +459,13 @@ void LauncherController::updateSelectedAircraft()
         }
     }
 
+    if (!m_aircraftState.isEmpty()) {
+      if (!m_selectedAircraftInfo->hasState(m_aircraftState)) {
+        m_aircraftState.clear();
+        emit selectedAircraftStateChanged();
+      }
+    }
+
     emit canFlyChanged();
 }
 
