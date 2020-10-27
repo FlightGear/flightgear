@@ -139,7 +139,7 @@ Item {
 
                 Button {
                     invertColor: true
-                    text: qsTrId("Okay");
+                    text: qsTr("Okay");
                     anchors.right: parent.right
 
                     onClicked: {
