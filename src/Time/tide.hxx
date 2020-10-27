@@ -54,6 +54,7 @@ private:
     double _tide_level = 0;
 
     SGPropertyNode_ptr viewLon;
+    SGPropertyNode_ptr viewLat;
     SGPropertyNode_ptr _tideLevelNorm;
     SGPropertyNode_ptr _tideAnimation;
 };

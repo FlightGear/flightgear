@@ -37,6 +37,8 @@ void FGTide::bind()
     SGPropertyNode *props = globals->get_props();
 
     viewLon = props->getNode("sim/current-view/viewer-lon-deg", true);
+    viewLat = props->getNode("sim/current-view/viewer-lat-deg", true);
+
     _tideAnimation = props->getNode("/environment/sea/surface/delta-T-tide", true);
 
     _tideLevelNorm = props->getNode("/sim/time/tide-level-norm", true);
@@ -46,6 +48,8 @@ void FGTide::bind()
 void FGTide::unbind()
 {
     viewLon.reset();
+    viewLat.reset();
+
     _tideLevelNorm.reset();
     _tideAnimation.reset();
 }
@@ -56,8 +60,14 @@ void FGTide::update(double dt)
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
 
     // Don't know where the 60 degrees offset comes from but it matches
-    // the tides perfectly (at EHAL). Something to figure out.
-    double viewer_lon = (viewLon->getDoubleValue() + 60.0)*SGD_PI/180.0;
+    // the tides perfectly at EHAL. Something to figure out.
+    // Eureka: It was the latitude (53.45 degrees north).
+    // It turns out that the moon is draging the tide with an almost
+    // perfect 45 degrees 'bow-wave' along the equator. Tests at SMBQ
+    // (0 degrees latitude) confirmed this finding.
+    double viewer_lon = (viewLon->getDoubleValue()
+                         + fabs( viewLat->getDoubleValue() )
+                        ) * SGD_DEGREES_TO_RADIANS;
     double moon_lon = l->get_moon_lon() - viewer_lon;
     if (fabs(_prev_moon_lon - moon_lon) > (SGD_PI/360.0))
     {
