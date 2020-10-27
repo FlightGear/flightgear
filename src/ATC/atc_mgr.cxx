@@ -191,19 +191,20 @@ void FGATCManager::postinit()
             userAircraft->setTakeOffStatus(2);
         } else {
             // We're on the ground somewhere. Handle this case later.
-            
+
             // important : we are on the ground, so reset the AIFlightPlan back to
-            // an empty one. Otherwise, in the reposition case, we end up with a
+            // a dummy one. Otherwise, in the reposition case, we end up with a
             // stale flight-plan which confuses other code (eg, PositionInit::finalizeForParking)
             // see unit test: PosInitTests::testRepositionAtOccupied
+            fp.reset(FGAIFlightPlan::createDummyUserPlan());
             userAircraft->FGAIBase::setFlightPlan(std::move(fp));
             controller = nullptr;
             
             initSucceeded = true; // should be false?
             return;
         }
-        
-        if (fp) {
+
+        if (fp && !fp->empty()) {
             fp->getLastWaypoint()->setName( fp->getLastWaypoint()->getName() + string("legend"));
         }
      } else {
@@ -222,7 +223,9 @@ void FGATCManager::postinit()
     
     if (controller) {
         FGAIFlightPlan* plan = userAircraft->GetFlightPlan();
-        controller->announcePosition(userAircraft->getID(), plan, plan->getCurrentWaypoint()->getRouteIndex(),
+        const int routeIndex = (plan && plan->getCurrentWaypoint()) ? plan->getCurrentWaypoint()->getRouteIndex() : 0;
+        controller->announcePosition(userAircraft->getID(), plan,
+                                     routeIndex,
                                      userAircraft->_getLatitude(),
                                      userAircraft->_getLongitude(),
                                      userAircraft->_getHeading(),
@@ -319,7 +322,6 @@ void FGATCManager::update ( double time ) {
         // user should be able to select a new route, but for now just shut down the
         // system. 
         if (size < 3) {
-            SG_LOG(SG_ATC, SG_INFO, "Shutting down the atc_mgr - ran out of waypoints");
             return;
         }
 #if 0

@@ -327,12 +327,15 @@ FGAIWaypoint* FGAIFlightPlan::getLastWaypoint()
 
 FGAIWaypoint* FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
-  if (wpt_iterator == waypoints.begin()) {
-      return nullptr;
-  } else {
-    wpt_vector_iterator prev = wpt_iterator;
-    return *(--prev);
-  }
+    if (empty())
+        return nullptr;
+
+    if (wpt_iterator == waypoints.begin()) {
+        return nullptr;
+    } else {
+        wpt_vector_iterator prev = wpt_iterator;
+        return *(--prev);
+    }
 }
 
 FGAIWaypoint* FGAIFlightPlan::getCurrentWaypoint( void ) const
@@ -357,6 +360,9 @@ FGAIWaypoint* FGAIFlightPlan::getNextWaypoint( void ) const
 
 void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 {
+    if (empty())
+        return;
+
     if (eraseWaypoints)
     {
         if (wpt_iterator == waypoints.begin())
@@ -376,11 +382,17 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 
 void FGAIFlightPlan::DecrementWaypoint()
 {
-  wpt_iterator--;
+    if (empty())
+        return;
+
+    wpt_iterator--;
 }
 
 void FGAIFlightPlan::eraseLastWaypoint()
 {
+    if (empty())
+        return;
+
     delete (waypoints.back());
     waypoints.pop_back();;
     wpt_iterator = waypoints.begin();
@@ -558,4 +570,16 @@ FGAirportRef FGAIFlightPlan::departureAirport() const
 FGAirportRef FGAIFlightPlan::arrivalAirport() const
 {
     return arrival;
+}
+
+FGAIFlightPlan* FGAIFlightPlan::createDummyUserPlan()
+{
+    FGAIFlightPlan* fp = new FGAIFlightPlan;
+    fp->isValid = false;
+    return fp;
+}
+
+bool FGAIFlightPlan::empty() const
+{
+    return waypoints.empty();
 }

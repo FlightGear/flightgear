@@ -150,6 +150,12 @@ public:
    ~FGAIFlightPlan();
 
    /**
+        @brief create a neatrly empty FlightPlan for the user aircraft, based
+     on the current position and route-manager data.
+     */
+   static FGAIFlightPlan* createDummyUserPlan();
+   /**
+    
      @brief read a flight-plan from a file.
      All current contents of the flight-plan are replaxced, and the current waypoint is reset to the beginning
      */
@@ -220,6 +226,9 @@ public:
 
     FGAirportRef departureAirport() const;
     FGAirportRef arrivalAirport() const;
+
+    bool empty() const;
+
 private:
   FGAIFlightPlan *sid;
   typedef std::vector <FGAIWaypoint*> wpt_vector_type;
