@@ -256,11 +256,15 @@ void FGATCManager::reposition()
 // available again. postinit() will recompute a new value if required
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
     auto userAircraft = aiManager->getUserAircraft();
-    if (userAircraft && userAircraft->GetFlightPlan()) {
-        auto userAIFP = userAircraft->GetFlightPlan();
-        userAIFP->setGate({}); // clear any assignment
+    if (userAircraft) {
+        if (userAircraft->GetFlightPlan()) {
+              auto userAIFP = userAircraft->GetFlightPlan();
+              userAIFP->setGate({}); // clear any assignment
+          }
+
+        userAircraft->clearATCController();
     }
-    
+
     postinit(); // critical for position-init logic
 }
 
