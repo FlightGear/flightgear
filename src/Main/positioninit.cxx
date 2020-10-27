@@ -600,6 +600,10 @@ bool initPosition()
 
   bool set_pos = false;
 
+  // clear this value, so we don't preserve an old value and confuse
+  // the ATC manager. We will set it again if it's valid
+  fgSetString("/sim/atc/runway", "");
+
   // If glideslope is specified, then calculate offset-distance or
   // altitude relative to glide slope if either of those was not
   // specified.
@@ -683,9 +687,6 @@ bool initPosition()
     // until position finalisation
     // the rest of the work happens in finalizePosFromParkpos
     if ( airportParkingSetVicinity( apt ) ) {
-      // set tower position
-      fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
-      fgSetString("/sim/tower/airport-id",  apt.c_str());
       set_pos = true;
     }
   }
@@ -693,10 +694,6 @@ bool initPosition()
   if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
     // An airport + runway is requested
     if ( fgSetPosFromAirportIDandRwy( apt, rwy_no, rwy_req ) ) {
-      // set tower position (a little off the heading for single
-      // runway airports)
-      fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
-      fgSetString("/sim/tower/airport-id",  apt.c_str());
       set_pos = true;
     }
   }
@@ -704,12 +701,16 @@ bool initPosition()
   if ( !set_pos && !apt.empty() ) {
     // An airport is requested (find runway closest to hdg)
     if ( setPosFromAirportIDandHdg( apt, hdg ) ) {
-      // set tower position (a little off the heading for single
-      // runway airports)
-      fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
-      fgSetString("/sim/tower/airport-id",  apt.c_str());
       set_pos = true;
     }
+  }
+
+  // if an airport ID was requested, set closest-airport-id
+  // and tower based upon it.
+  if (!apt.empty() && set_pos) {
+      // set tower position
+      fgSetString("/sim/airport/closest-airport-id", apt.c_str());
+      fgSetString("/sim/tower/airport-id", apt.c_str());
   }
 
   if (original_hdg < 9990.0) {

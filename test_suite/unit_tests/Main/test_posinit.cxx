@@ -177,10 +177,6 @@ void PosInitTests::testAirportAltitudeOffsetStartup()
 
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     initPosition();
-    
-    
-    
-    initPosition();
 
     SGGeod expectedPos = SGGeodesy::direct(FGAirport::getByIdent("EDDF")->geod(), 270, 5 * SG_NM_TO_METER);
     checkPosition(expectedPos, 5000.0);
@@ -614,6 +610,53 @@ void PosInitTests::testAirportRepositionAirport()
     checkOnGround();
 
    
+}
+
+// this simulates what the C172 preflight tutorial does,
+// where the user is likely at a random airport (on a runway), and starts
+// the preflight tutorial, which repositions them to a ramp location
+// at PHTO
+void PosInitTests::testAirportRunwayRepositionAirport()
+{
+    {
+        Options* opts = Options::sharedInstance();
+        opts->setShouldLoadDefaultConfig(false);
+        const char* args[] = {"dummypath", "--airport=EDDS", "--runway=07"};
+        opts->init(3, (char**)args, SGPath());
+        opts->processOptions();
+    }
+
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
+    CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
+    checkRunway(std::string("07"));
+    initPosition();
+    simulateFinalizePosition();
+
+    checkClosestAirport(std::string("EDDS"));
+    checkPosition(FGAirport::getByIdent("EDDS")->geod(), 10000.0);
+
+    // Now re-position to PHTO runway
+    // Reset the Lat/Lon as these will be used in preference to the airport ID
+    fgSetDouble("/sim/presets/longitude-deg", -155.0597483);
+    fgSetDouble("/sim/presets/latitude-deg", 19.71731272);
+    fgSetString("/sim/presets/airport-id", "PHTO");
+    fgSetDouble("/sim/presets/heading-deg", 125);
+    fgSetBool("/sim/presets/on-ground", true);
+    fgSetBool("/sim/presets/runway-requested", true);
+    fgSetBool("/sim/presets/airport-requested", true);
+    fgSetBool("/sim/presets/parking-requested", true);
+
+    simulateStartReposition();
+    finalizePosition();
+
+    FGTestApi::runForTime(1.0);
+
+    checkClosestAirport(std::string("PHTO"));
+    checkPosition(FGAirport::getByIdent("PHTO")->geod(), 5000.0);
+    checkHeading(125);
+    checkOnGround();
+
+    FGTestApi::runForTime(1.0);
 }
 
 void PosInitTests::testParkInvalid()

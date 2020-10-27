@@ -264,24 +264,27 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
   return true;
 }
 
-FGAIWaypoint* const FGAIFlightPlan::getPreviousWaypoint( void ) const
+FGAIWaypoint* FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
-  if (wpt_iterator == waypoints.begin()) {
-    return 0;
-  } else {
-    wpt_vector_iterator prev = wpt_iterator;
-    return *(--prev);
-  }
+    if (empty())
+        return nullptr;
+
+    if (wpt_iterator == waypoints.begin()) {
+        return nullptr;
+    } else {
+        wpt_vector_iterator prev = wpt_iterator;
+        return *(--prev);
+    }
 }
 
-FGAIWaypoint* const FGAIFlightPlan::getCurrentWaypoint( void ) const
+FGAIWaypoint* FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.end())
       return 0;
   return *wpt_iterator;
 }
 
-FGAIWaypoint* const FGAIFlightPlan::getNextWaypoint( void ) const
+FGAIWaypoint* FGAIFlightPlan::getNextWaypoint( void ) const
 {
   wpt_vector_iterator i = waypoints.end();
   i--;  // end() points to one element after the last one. 
@@ -295,6 +298,9 @@ FGAIWaypoint* const FGAIFlightPlan::getNextWaypoint( void ) const
 
 void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 {
+    if (empty())
+        return;
+
     if (eraseWaypoints)
     {
         if (wpt_iterator == waypoints.begin())
@@ -314,6 +320,9 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 
 void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
 {
+    if (empty())
+        return;
+
     if (eraseWaypoints)
     {
         if (wpt_iterator == waypoints.end())
@@ -333,6 +342,9 @@ void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
 
 void FGAIFlightPlan::eraseLastWaypoint()
 {
+    if (empty())
+        return;
+
     delete (waypoints.back());
     waypoints.pop_back();;
     wpt_iterator = waypoints.begin();
@@ -497,4 +509,16 @@ FGAirportRef FGAIFlightPlan::departureAirport() const
 FGAirportRef FGAIFlightPlan::arrivalAirport() const
 {
     return arrival;
+}
+
+FGAIFlightPlan* FGAIFlightPlan::createDummyUserPlan()
+{
+    FGAIFlightPlan* fp = new FGAIFlightPlan;
+    fp->isValid = false;
+    return fp;
+}
+
+bool FGAIFlightPlan::empty() const
+{
+    return waypoints.empty();
 }

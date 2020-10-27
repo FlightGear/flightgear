@@ -107,9 +107,16 @@ public:
 		 const std::string& airline);
    ~FGAIFlightPlan();
 
-   FGAIWaypoint* const getPreviousWaypoint( void ) const;
-   FGAIWaypoint* const getCurrentWaypoint( void ) const;
-   FGAIWaypoint* const getNextWaypoint( void ) const;
+   /**
+        @brief create a neatrly empty FlightPlan for the user aircraft, based
+     on the current position and route-manager data.
+     */
+   static FGAIFlightPlan* createDummyUserPlan();
+
+   FGAIWaypoint* getPreviousWaypoint( void ) const;
+   FGAIWaypoint* getCurrentWaypoint( void ) const;
+   FGAIWaypoint* getNextWaypoint( void ) const;
+
    void IncrementWaypoint( bool erase );
    void DecrementWaypoint( bool erase );
 
@@ -170,6 +177,9 @@ public:
 
     FGAirportRef departureAirport() const;
     FGAirportRef arrivalAirport() const;
+
+    bool empty() const;
+
 private:
   FGAIFlightPlan *sid;
   typedef std::vector <FGAIWaypoint*> wpt_vector_type;
