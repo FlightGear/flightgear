@@ -2,7 +2,7 @@ import QtQuick 2.4
 import QtQml 2.4
 
 import FlightGear.Launcher 1.0
-import ".."
+import "."
 
 Item {
     id: root
@@ -91,11 +91,13 @@ Item {
 
     Column {
         id: notificationsColumn
+        // height of this is determined by content. This is important
+        // so the mouse area above only blocks clicks near active
+        // notifciations
 
         anchors {
             right: parent.right
             top: parent.top
-            bottom: parent.bottom
             left: parent.left
             margins: Style.strutSize
         }
