@@ -191,18 +191,26 @@ std::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
                runway->ident() << ", MP is enabled so computing hold short position to avoid runway incursion");
 
         FGGroundNetwork* groundNet = runway->airport()->groundNetwork();
-        // add a margin, try to keep the entire aeroplane comfortable off the
-        // runway.
-        double margin = startOffset + (runway->widthM() * 1.5);
-        FGTaxiNodeRef taxiNode = groundNet ? groundNet->findNearestNodeOffRunway(pos, runway, margin) : FGTaxiNodeRef{};
-        if (taxiNode) {
-            // set this so multiplayer.nas can inform the user
-            fgSetBool("/sim/presets/avoided-mp-runway", true);
-            return std::make_tuple(taxiNode->geod(), SGGeodesy::courseDeg(taxiNode->geod(), pos));
+        
+        if (groundNet) {
+            // add a margin, try to keep the entire aeroplane comfortable off the
+            // runway.
+            double margin = startOffset + (runway->widthM() * 1.5);
+            FGTaxiNodeRef taxiNode = groundNet->findNearestNodeOffRunway(pos, runway, margin);
+            if (taxiNode) {
+                // set this so multiplayer.nas can inform the user
+                fgSetBool("/sim/presets/avoided-mp-runway", true);
+                return std::make_tuple(taxiNode->geod(), SGGeodesy::courseDeg(taxiNode->geod(), pos));
+            }
+            else {
+                // if we couldn't find a suitable taxi-node, give up. Guessing a position
+                // causes too much pain (starting in the water or similar bad things)
+                SG_LOG( SG_GENERAL, SG_POPUP, "Unable to position off runway because groundnet has no taxi node.");
+            }
         }
-
-        // if we couldn't find a suitable taxi-node, give up. Guessing a position
-        // causes too much pain (starting in the water or similar bad things)
+        else {
+            SG_LOG( SG_GENERAL, SG_POPUP, "Unable to position off runway because no groundnet.");
+        }
     }
 
     return std::make_tuple(pos, runway->headingDeg());
