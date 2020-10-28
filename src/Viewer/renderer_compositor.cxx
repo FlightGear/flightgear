@@ -649,18 +649,21 @@ FGRenderer::setupView( void )
 #endif
 
 #if defined(ENABLE_QQ_UI)
-        std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
-        auto graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(guiCamera->getGraphicsContext());
+        osgViewer::Viewer* viewer = dynamic_cast<osgViewer::Viewer*>(view);
+        if (viewer) {
+            std::string rootQMLPath = fgGetString("/sim/gui/qml-root-path");
+            auto graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(guiCamera->getGraphicsContext());
 
-        if (!rootQMLPath.empty()) {
-            _quickDrawable = new QQuickDrawable;
-            _quickDrawable->setup(graphicsWindow, view);
+            if (!rootQMLPath.empty()) {
+                _quickDrawable = new QQuickDrawable;
+                _quickDrawable->setup(graphicsWindow, viewer);
 
-            _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
-            
-            osg::Geode* qqGeode = new osg::Geode;
-            qqGeode->addDrawable(_quickDrawable);
-            guiCamera->addChild(qqGeode);
+                _quickDrawable->setSource(QUrl::fromLocalFile(QString::fromStdString(rootQMLPath)));
+
+                osg::Geode* qqGeode = new osg::Geode;
+                qqGeode->addDrawable(_quickDrawable);
+                guiCamera->addChild(qqGeode);
+            }
         }
 #endif
         guiCamera->insertChild(0, FGPanelNode::create2DPanelNode());
