@@ -481,12 +481,10 @@ Item {
         }
     }
 
-    Button {
+    BackButton {
         id: backButton
         anchors { left: parent.left; top: parent.top; margins: Style.margin }
-        width: Style.strutSize
         visible: detailLoader.visible
-        text: "< Back"
         onClicked: {
             detailLoader.sourceComponent = null
         }

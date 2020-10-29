@@ -323,13 +323,10 @@ Item {
         }
     }
 
-    Button {
+    BackButton {
         id: backButton
-
         anchors { left: parent.left; top: parent.top; margins: Style.margin }
-        width: Style.strutSize
         visible: detailLoader.visible
-        text: qsTr("< Back")
         onClicked: root.backToSearch();
     }
 }

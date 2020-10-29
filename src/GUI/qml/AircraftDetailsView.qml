@@ -38,9 +38,14 @@ Rectangle {
                 spacing: Style.margin
                 anchors.horizontalCenter: parent.horizontalCenter
 
+                Item { // top padding
+                    width: parent.width
+                    height: Style.margin
+                }
+
                 AircraftVariantChoice {
                     id: headingBox
-                    fontPixelSize: 30
+                    fontPixelSize: Style.headingFontPixelSize * 2
                     popupFontPixelSize: Style.headingFontPixelSize
 
                     anchors {
