@@ -555,7 +555,7 @@ static naRef f_logprint(naContext c, naRef me, int argc, naRef* args)
   }
 // use the nasal source file and line for the message location, since
 // that's more useful than the location here!
-  sglog().log(SG_NASAL, (sgDebugPriority)(int) priority.num,
+  sglog().logCopyingFilename(SG_NASAL, (sgDebugPriority)(int) priority.num,
                naStr_data(naGetSourceFile(c, 0)),
                naGetLine(c, 0), buf);
   return naNum(buf.length());
