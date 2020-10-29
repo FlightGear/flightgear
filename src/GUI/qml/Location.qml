@@ -262,7 +262,7 @@ Item {
         anchors.topMargin: Style.margin
     }
 
-    ListView {
+    ScrolledListView {
         id: searchView
         anchors.top: headerSplit.bottom
         anchors.topMargin: Style.margin

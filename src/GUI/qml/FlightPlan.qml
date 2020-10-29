@@ -9,7 +9,7 @@ Item {
     // same name as Summary page
     signal showSelectedLocation();
 
-    Flickable {
+    ScrolledFlickable {
         id: flick
         height: parent.height
         width: parent.width - scrollbar.width
@@ -444,7 +444,7 @@ Item {
 
     } // of flickable
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         height: parent.height

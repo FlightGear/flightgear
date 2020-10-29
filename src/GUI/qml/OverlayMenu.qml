@@ -58,7 +58,7 @@ Rectangle {
         return headerText !== "";
     }
 
-    Flickable {
+    ScrolledFlickable {
         id: flick
         anchors.centerIn: parent
 
@@ -92,7 +92,7 @@ Rectangle {
         } // of menu contents column
     }
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scroller
         flickable: flick
         visible: flick.contentHeight > flick.height

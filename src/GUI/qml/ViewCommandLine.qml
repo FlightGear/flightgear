@@ -24,7 +24,7 @@ Item {
         }
     }
 
-    Flickable {
+    ScrolledFlickable {
         id: flick
         anchors {
             left: parent.left
@@ -52,7 +52,7 @@ Item {
         }
     }
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         height: flick.height

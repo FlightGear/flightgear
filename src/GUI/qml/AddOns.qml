@@ -4,7 +4,8 @@ import "."
 
 Item {
      id: root
-    Flickable {
+
+    ScrolledFlickable {
         id: flick
         height: parent.height
         width: parent.width - scrollbar.width
@@ -313,7 +314,7 @@ Item {
 
     }
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         height: parent.height

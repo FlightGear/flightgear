@@ -54,6 +54,8 @@ private slots:
 
 private:
     LauncherController* m_controller;
+
+    bool checkQQC2Availability();
 };
 
 #endif // of LAUNCHER_MAIN_WINDOW_HXX

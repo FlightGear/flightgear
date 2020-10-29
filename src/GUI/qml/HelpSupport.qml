@@ -10,7 +10,7 @@ Item {
 
     readonly property string wikiLink: "href=\"http://wiki.flightgear.org/Portal:User\"";
 
-    Flickable
+    ScrolledFlickable
     {
         id: flick
 
@@ -84,7 +84,7 @@ Item {
 
     } // of flickable
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         height: flick.height

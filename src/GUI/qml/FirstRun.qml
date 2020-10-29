@@ -13,7 +13,7 @@ Item {
 
     }
 
-    Flickable {
+    ScrolledFlickable {
         id: flick
 
         contentHeight: textColumn.childrenRect.height + imageClipFrame.height + (Style.strutSize * 2)
@@ -152,7 +152,7 @@ Item {
     } // of Flickable
 
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         height: flick.height

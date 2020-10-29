@@ -17,7 +17,7 @@ Rectangle {
         id: aircraft
     }
 
-    Flickable
+    ScrolledFlickable
     {
         id: flickable
 
@@ -239,7 +239,7 @@ Rectangle {
 
     } // of Flickable
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         anchors.top: parent.top

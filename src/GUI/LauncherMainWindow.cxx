@@ -84,6 +84,8 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
         connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
     }
 
+    const bool haveQQC2 = checkQQC2Availability();
+
     connect(this, &QQuickView::statusChanged, this, &LauncherMainWindow::onQuickStatusChanged);
 
     m_controller->initialRestoreSettings();
@@ -97,6 +99,7 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     const QString osName("unix");
 #endif
 
+
     setResizeMode(QQuickView::SizeRootObjectToView);
     engine()->addImportPath("qrc:///");
 
@@ -106,6 +109,13 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
 #if QT_VERSION >= 0x050600
     selector->setExtraSelectors({"qt56"});
 #endif
+
+#if QT_VERSION >= 0x050700
+    if (haveQQC2) {
+      selector->setExtraSelectors({"qt56", "qt57"});
+    }
+#endif
+
 
     QQmlContext* ctx = rootContext();
     ctx->setContextProperty("_launcher", m_controller);
@@ -137,6 +147,26 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     ctx->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
     setSource(QUrl("qrc:///qml/Launcher.qml"));
+}
+
+bool LauncherMainWindow::checkQQC2Availability()
+{
+  QQmlComponent comp(engine());
+  comp.setData(R"(
+               import QtQuick.Controls 2.0
+               ScrollBar {
+               }
+               )", {});
+  if (comp.isError()) {
+    return false;
+  }
+
+
+  auto item = comp.create();
+  const bool haveQQC2 = (item != nullptr);
+  if (item)
+    item->deleteLater();
+  return haveQQC2;
 }
 
 void LauncherMainWindow::onQuickStatusChanged(QQuickView::Status status)

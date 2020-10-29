@@ -20,7 +20,7 @@ Item {
                                                 renderSection.summary());
     }
 
-    Flickable
+    ScrolledFlickable
     {
         id: settingsFlick
         contentHeight: sectionColumn.childrenRect.height
@@ -539,7 +539,7 @@ Item {
         } // of Column
     } // of Flickable
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         height: settingsFlick.height

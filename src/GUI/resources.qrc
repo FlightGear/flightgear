@@ -36,7 +36,7 @@
         <file>qml/AircraftDownloadPanel.qml</file>
         <file>qml/Button.qml</file>
         <file>qml/AircraftWarningPanel.qml</file>
-        <file>qml/Scrollbar.qml</file>
+        <file>qml/FGCompatScrollbar.qml</file>
         <file>qml/AircraftDetailsView.qml</file>
         <file>qml/AircraftFullDelegate.qml</file>
         <file>qml/AircraftCompactDelegate.qml</file>
@@ -145,6 +145,14 @@
         <file>qml/DidMigrateOfficialCatalogNotification.qml</file>
         <file>qml/DidMigrateOtherCatalogNotification.qml</file>
         <file>qml/BackButton.qml</file>
+        <file>qml/ScrolledFlickable.qml</file>
+        <file>qml/ScrolledListView.qml</file>
+        <file>qml/ScrolledGridView.qml</file>
+        <file>qml/+qt57/ScrolledFlickable.qml</file>
+        <file>qml/+qt57/ScrolledListView.qml</file>
+        <file>qml/+qt57/ScrolledGridView.qml</file>
+        <file>qml/+qt57/FGCompatScrollbar.qml</file>
+
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>

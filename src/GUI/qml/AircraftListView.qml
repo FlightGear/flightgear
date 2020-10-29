@@ -43,7 +43,7 @@ Item {
         }
     }
 
-    ListView {
+    ScrolledListView {
         id: aircraftList
 
         anchors {
@@ -74,7 +74,7 @@ Item {
         readonly property int __realHighlightMoveDuration: 200
     }
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         anchors.top: parent.top

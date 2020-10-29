@@ -37,7 +37,7 @@ Item {
         }
     }
 
-    GridView {
+    ScrolledGridView {
         id: view
         cellWidth: width / colCount
         cellHeight: 128 + Style.strutSize
@@ -71,7 +71,7 @@ Item {
         highlight: highlight
     }
 
-    Scrollbar {
+    FGCompatScrollbar {
         id: scrollbar
         anchors.right: parent.right
         anchors.top: parent.top
