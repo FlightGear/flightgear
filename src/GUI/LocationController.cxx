@@ -1044,24 +1044,25 @@ void LocationController::setNavRadioOption()
     }
 }
 
-QString compassPointFromHeading(int heading)
+QString LocationController::compassPointFromHeading(int heading) const
 {
     const int labelArc = 360 / 8;
     heading += (labelArc >> 1);
     SG_NORMALIZE_RANGE(heading, 0, 359);
 
+    //
     switch (heading / labelArc) {
-    case 0: return "N";
-    case 1: return "NE";
-    case 2: return "E";
-    case 3: return "SE";
-    case 4: return "S";
-    case 5: return "SW";
-    case 6: return "W";
-    case 7: return "NW";
+    case 0: return tr("N");
+    case 1: return tr("NE");
+    case 2: return tr("E");
+    case 3: return tr("SE");
+    case 4: return tr("S");
+    case 5: return tr("SW");
+    case 6: return tr("W");
+    case 7: return tr("NW");
     }
 
-    return QString();
+    return {};
 }
 
 QString LocationController::description() const
@@ -1114,7 +1115,7 @@ QString LocationController::description() const
         } else if (m_useAvailableParking) {
             locationOnAirport = tr("at an available parking position");
         } else if (onRunway) {
-            QString runwayName = QString("runway %1").arg(QString::fromStdString(m_detailLocation->ident()));
+            QString runwayName = tr("runway %1").arg(QString::fromStdString(m_detailLocation->ident()));
 
             if (m_onFinal) {
                 locationOnAirport = tr("on %2-mile final to %1").arg(runwayName).arg(offsetNm);

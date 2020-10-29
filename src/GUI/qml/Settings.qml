@@ -80,8 +80,8 @@ Item {
                 function summary()
                 {
                     var result = [];
-                    if (startPaused.checked) result.push("paused");
-                    if (!showConsoleWin.hidden && showConsoleWin.checked) result.push("console");
+                    if (startPaused.checked) result.push(qsTr("paused"));
+                    if (!showConsoleWin.hidden && showConsoleWin.checked) result.push(qsTr("console"));
                     return result;
                 }
 
@@ -156,7 +156,7 @@ Item {
                 function summary()
                 {
                     var result = [];
-                    if (enableMP.checked) result.push("multi-player");
+                    if (enableMP.checked) result.push(qsTr("multi-player"));
                     return result;
                 }
 
@@ -294,7 +294,7 @@ Item {
                 function summary()
                 {
                     var result = [];
-                    if (terrasync.checked) result.push("scenery downloads");
+                    if (terrasync.checked) result.push(qsTr("scenery downloads"));
                     return result;
                 }
 
@@ -367,7 +367,7 @@ Item {
                 function summary()
                 {
                     var result = [];
-                    if (fullscreen.checked) result.push("full-screen");
+                    if (fullscreen.checked) result.push(qsTr("full-screen"));
                     return result;
                 }
 
@@ -431,7 +431,7 @@ Item {
                 {
                     var result = [];
                     if (rembrandt) result.push(qsTr("Rembrandt"));
-                    else if (alsEnabled) result.push("ALS");
+                    else if (alsEnabled) result.push(qsTr("ALS"));
                     if (msaaEnabled) result.push(qsTr("anti-aliasing"));
                     return result;
                 }
