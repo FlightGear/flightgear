@@ -265,7 +265,7 @@ public:
       }
 
       int openFlags = readOnly ? SQLITE_OPEN_READONLY :
-        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       std::string pathUtf8 = path.utf8Str();
       int result = sqlite3_open_v2(pathUtf8.c_str(), &db, openFlags, NULL);
       if (result == SQLITE_MISUSE) {
@@ -2009,6 +2009,10 @@ int NavDataCache::getOctreeBranchChildren(int64_t octreeNodeId)
 
 void NavDataCache::defineOctreeNode(Octree::Branch* pr, Octree::Node* nd)
 {
+  if (isReadOnly()) {
+    return;
+  }
+  
   sqlite3_bind_int64(d->insertOctree, 1, nd->guid());
   d->execInsert(d->insertOctree);
 
