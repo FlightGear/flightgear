@@ -55,6 +55,7 @@ public:
     inline double getMPProtocolClockSec() const { return _mpProtocolClock; }
     inline double getSteadyClockSec() const { return _steadyClock; }
 
+    double getSimSpeedUpFactor() const;
 private:
     /**
      * Ensure a consistent update-rate using a combination of

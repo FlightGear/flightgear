@@ -464,6 +464,10 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
             << _warp->getIntValue() );
 }
 
+double TimeManager::getSimSpeedUpFactor() const
+{
+    return _simTimeFactor->getDoubleValue();
+}
 
 // Register the subsystem.
 SGSubsystemMgr::Registrant<TimeManager> registrantTimeManager(
