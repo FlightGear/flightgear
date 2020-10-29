@@ -18,7 +18,7 @@
 
 // launcher headers
 #include "AddOnsController.hxx"
-#include "AircraftModel.hxx"
+#include "AircraftItemModel.hxx"
 #include "DefaultAircraftLocator.hxx"
 #include "LaunchConfig.hxx"
 #include "LauncherController.hxx"
