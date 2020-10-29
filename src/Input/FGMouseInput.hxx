@@ -72,6 +72,8 @@ public:
 private:
     void processMotion(int x, int y, const osgGA::GUIEventAdapter* ea);
 
+    bool isRightDragLookActive() const;
+
     class FGMouseInputPrivate;
     std::unique_ptr<FGMouseInputPrivate> d;
 };

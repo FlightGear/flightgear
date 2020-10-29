@@ -551,6 +551,12 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     return;
   }
 
+  if (isRightDragLookActive() && (updown == MOUSE_BUTTON_DOWN)) {
+      // when spring-loaded mode is active, don't do scene selection for picks
+      // https://sourceforge.net/p/flightgear/codetickets/2108/
+      return;
+  }
+
   // Pass on to PUI and the panel if
   // requested, and return if one of
   // them consumes the event.
@@ -619,12 +625,10 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
 
   mouse &m = d->mice[0];
   int modeIndex = m.current_mode;
-  // are we in spring-loaded look mode?
-  if (!d->rightClickModeCycle && m.nModes > 3) {
-    if (m.mouse_button_nodes[2]->getBoolValue()) {
+
+  if (isRightDragLookActive()) {
       // right mouse is down, force look mode
       modeIndex = 3;
-    }
   }
 
   if (modeIndex == 0) {
@@ -723,6 +727,20 @@ bool FGMouseInput::isActiveModePassThrough() const
     }
 
     return m.modes[mode].pass_through;
+}
+
+bool FGMouseInput::isRightDragLookActive() const
+{
+    if (!d) {
+        return false;
+    }
+
+    const auto& m = d->mice[0];
+    if (!d->rightClickModeCycle && m.nModes > 3) {
+        return m.mouse_button_nodes[2]->getBoolValue();
+    }
+
+    return false;
 }
 
 
