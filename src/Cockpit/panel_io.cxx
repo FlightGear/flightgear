@@ -842,7 +842,13 @@ fgReadPanel (const string &relative_path)
 {
   SGPath path = globals->resolve_aircraft_path(relative_path);
   SGPropertyNode root;
-  
+
+  if (!path.exists()) {
+      auto msg = string{"Missing panel file: "} + relative_path;
+      guiErrorMessage(msg.c_str());
+      return nullptr;
+  }
+
   try {
     readProperties(path, &root);
   } catch (const sg_exception &e) {
