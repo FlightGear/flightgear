@@ -171,11 +171,9 @@ Rectangle {
                     text: " "
                 }
 
-                Button
+                BackButton
                 {
-                    width: Style.strutSize
                     id: backButton
-                    text: "< Back"
                     onClicked: root.goBack();
                 }
 

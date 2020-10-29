@@ -352,11 +352,9 @@ FocusScope
         anchors.fill: parent
         visible: false
 
-        Button {
-            anchors { left: parent.left; top: parent.top; margins: Style.margin }
-            width: Style.strutSize
+        BackButton {
             id: backButton
-            text: "< Back"
+            anchors { left: parent.left; top: parent.top; margins: Style.margin }
             onClicked: root.goBack();
         }
     }
