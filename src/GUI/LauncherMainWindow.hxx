@@ -53,6 +53,8 @@ private slots:
     void onQuickStatusChanged(QQuickView::Status status);
 
 private:
+    bool checkQQC2Availability();
+
     LauncherController* m_controller;
 };
 

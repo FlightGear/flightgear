@@ -82,6 +82,13 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
         connect(qa, &QAction::triggered, m_controller, &LauncherController::quit);
     }
 
+    if (!checkQQC2Availability()) {
+        QMessageBox::critical(nullptr, "Missing required component",
+                              tr("Your system is missing a required UI component (QtQuick Controls 2). "
+                                 "This normally occurs on Linux platforms where Qt is split into many small packages. "
+                                 "On Ubuntu/Debian systems, the package is called 'qml-module-qtquick-controls2'"));
+    }
+
     connect(this, &QQuickView::statusChanged, this, &LauncherMainWindow::onQuickStatusChanged);
 
     m_controller->initialRestoreSettings();
@@ -145,6 +152,27 @@ void LauncherMainWindow::onQuickStatusChanged(QQuickView::Status status)
                                  "distribution, etc. Please also include the information provided below.\n") +
                                   errorString);
     }
+}
+
+bool LauncherMainWindow::checkQQC2Availability()
+{
+    QQmlComponent comp(engine());
+    comp.setData(R"(
+               import QtQuick.Controls 2.0
+               ScrollBar {
+               }
+               )",
+                 {});
+    if (comp.isError()) {
+        return false;
+    }
+
+
+    auto item = comp.create();
+    const bool haveQQC2 = (item != nullptr);
+    if (item)
+        item->deleteLater();
+    return haveQQC2;
 }
 
 LauncherMainWindow::~LauncherMainWindow()
