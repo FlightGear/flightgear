@@ -521,7 +521,9 @@ static void rotateOldLogFiles()
     if (!p.exists())
         return;
     SGPath log0Path = homePath / "fgfs_0.log";
-    p.rename(log0Path);
+    if (!p.rename(log0Path)) {
+        std::cerr << "Failed to rename " << p.str() << " to " << log0Path.str() << std::endl;
+    }
 }
 
 static void logToHome(const std::string& pri)
@@ -558,6 +560,9 @@ int fgMainInit( int argc, char **argv )
                                 "Flightgear was unable to create the lock file in FG_HOME");
     }
     
+    std::cerr << "DidInitHome" << std::endl;
+
+    
 #if defined(HAVE_QT)
     flightgear::initApp(argc, argv);
 #endif
@@ -587,10 +592,12 @@ int fgMainInit( int argc, char **argv )
         // now home is initialised, we can log to a file inside it
         const auto level = flightgear::Options::getArgValue(argc, argv, "--log-level");
         logToHome(level);
+        std::cerr << "DidLogToHome" << std::endl;
     }
 
     if (readOnlyFGHome) {
         flightgear::addSentryTag("fghome-readonly", "true");
+        std::cerr << "Read-Only-Home" << std::endl;
     }
 
     std::string version(FLIGHTGEAR_VERSION);

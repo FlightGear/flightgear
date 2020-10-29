@@ -288,6 +288,8 @@ int main ( int argc, char **argv )
     if (flightgear::Options::checkForArg(argc, argv, "uninstall")) {
         return fgUninstall();
     }
+    
+    std::cerr << "Boostrap-1" << std::endl;
 
     bool fgviewer = flightgear::Options::checkForArg(argc, argv, "fgviewer");
     int exitStatus = EXIT_FAILURE;
@@ -307,6 +309,9 @@ int main ( int argc, char **argv )
 #endif
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
+        
+        std::cerr << "Boostrap-2" << std::endl;
+
         if (fgviewer) {
             exitStatus = fgviewerMain(argc, argv);
         } else {
