@@ -935,6 +935,10 @@ void RoutePath::commonInit()
 
 SGGeodVec RoutePath::pathForIndex(int index) const
 {
+  if ((index < 0) || (index >= static_cast<int>(d->waypoints.size()))) {
+    return {};
+  }
+
   const WayptData& w(d->waypoints[index]);
   const std::string& ty(w.wpt->type());
   SGGeodVec r;
@@ -1029,6 +1033,10 @@ void RoutePath::interpolateGreatCircle(const SGGeod& aFrom, const SGGeod& aTo, S
 
 SGGeod RoutePath::positionForIndex(int index) const
 {
+  if ((index < 0) || (index >= static_cast<int>(d->waypoints.size()))) {
+    return {};
+  }
+
   return d->waypoints[index].pos;
 }
 
@@ -1096,9 +1104,8 @@ SGGeodVec RoutePath::pathForHold(Hold* hold) const
 
 double RoutePath::computeDistanceForIndex(int index) const
 {
-    if ((index < 0) || (index >= (int) d->waypoints.size())) {
-        throw sg_range_exception("waypt index out of range",
-                                 "RoutePath::computeDistanceForIndex");
+    if ((index < 0) || (index >= static_cast<int>(d->waypoints.size()))) {
+      return 0.0;
     }
 
     auto it = d->waypoints.begin() + index;
