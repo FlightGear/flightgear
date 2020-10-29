@@ -215,6 +215,11 @@ void APTLoader::readAptDatFile(const SGPath &aptdb_file,
   throwExceptionIfStreamError(in, aptdb_file);
 }
 
+static bool isCommLine(const int code)
+{
+    return ((code >= 50) && (code <= 56)) || ((code >= 1050) && (code <= 1056));
+}
+
 void APTLoader::loadAirports()
 {
   AirportInfoMapType::size_type nbLoadedAirports = 0;
@@ -264,7 +269,7 @@ void APTLoader::loadAirports()
         // custom startup locations (ignore)
       } else if ( rowCode == 0 ) {
         // ??
-      } else if ( rowCode >= 50 && rowCode <= 56) {
+      } else if ( isCommLine(rowCode)) {
         parseCommLine(aptDat, linesIt->number, rowCode,
                       simgear::strutils::split(linesIt->str));
       } else if ( rowCode == 110 ) {
@@ -695,8 +700,13 @@ void APTLoader::parseCommLine(const string& aptDat,
                                  rwy_lat_accum / (double)rwy_count,
                                  last_apt_elev);
 
+  const bool isAPT1000Code = rowCode > 1000;
+  if (isAPT1000Code) {
+      rowCode -= 1000;
+  }
+
   // short int representing tens of kHz:
-  int freqKhz = atoi(token[1].c_str()) * 10;
+  int freqKhz = std::stoi(token[1]) * (isAPT1000Code ? 1 : 10);
   int rangeNm = 50;
   FGPositioned::Type ty;
 
