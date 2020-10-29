@@ -1,4 +1,6 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.2
+
 import FlightGear 1.0
 import FlightGear.Launcher 1.0
 import "."
@@ -271,6 +273,7 @@ Item {
         model: root.locationModel
         delegate: locationSearchDelegate
         clip: true
+        ScrollBar.vertical: ScrollBar {}
 
         header: Item {
             visible: !root.showCarriers && _location.searchModel.isSearchActive

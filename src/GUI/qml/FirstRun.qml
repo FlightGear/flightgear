@@ -1,4 +1,6 @@
 import QtQuick 2.4
+import QtQuick.Controls 2.2
+
 import FlightGear 1.0
 import FlightGear.Launcher 1.0
 import "."
@@ -18,6 +20,8 @@ Item {
 
         contentHeight: textColumn.childrenRect.height + imageClipFrame.height + (Style.strutSize * 2)
         flickableDirection: Flickable.VerticalFlick
+
+        ScrollBar.vertical: ScrollBar {}
 
         anchors.fill: parent
 
@@ -150,14 +154,5 @@ Item {
         } // of column
 
     } // of Flickable
-
-
-    Scrollbar {
-        id: scrollbar
-        anchors.right: parent.right
-        height: flick.height
-        flickable: flick
-        visible: flick.contentHeight > flick.height
-    }
 
 } // of Item
