@@ -30,18 +30,19 @@
 #include <QDoubleValidator>
 #include <QDataStream>
 #include <QDebug>
+#include <QGuiApplication>
 
 namespace
 {
 
 struct UnitData
 {
-    UnitData(QString sn, QString ln, QString metrics, bool pfx = false) :
+    UnitData(const char* sn, const char* ln, QString metrics, bool pfx = false) :
         shortName(sn), longName(ln),
         maxTextForMetrics(metrics),
         isPrefix(pfx) {}
 
-    UnitData(QString sn, QString ln,
+    UnitData(const char* sn, const char* ln,
              QString metrics,
              bool pfx,
              double min, double max,
@@ -56,8 +57,8 @@ struct UnitData
         decimals(dps)
     {}
 
-    QString shortName;
-    QString longName;
+    const char* shortName;
+    const char* longName;
     QString maxTextForMetrics;
     bool isPrefix = false;
     bool valueWraps = false;
@@ -69,23 +70,23 @@ struct UnitData
 
 std::vector<UnitData> static_unitData = {
     { "", "", "" }, // noUnits
-    { "ft", "feet above sea-level (MSL)", "000000", false, -2000, 180000, 50},
-    { "ft AGL", "feet above ground level (AGL)", "000000", false, 0, 180000, 50},
-    { "ft above field", "feet above airfield", "000000", false, 0, 180000, 50},
-    { "FL", "Flight-level", "000", true /* prefix */, 0.0, 500.0, 5.0},
-    { "m", "meters above sea-level (MSL)", "000000", false, -500, 100000, 50},
-    { "kts", "Knots", "9999", false, 0, 999999, 10.0},
-    { "M", "Mach", "00.000", true /* prefix */, 0.0, 99.0, 0.05, false /* no wrap */, 3 /* decimal places */},
-    { "KM/H", "Kilometers/hour", "9999", false, 0, 999999, 10.0},
-    { "°True", "degrees true", "000", false, 0, 359, 5.0, true /* wraps */},
-    { "°Mag", "degrees magnetic", "000", false, 0, 359, 5.0, true /* wraps */},
-    { "UTC", "Universal coordinated time", ""},
-    { "Local", "Local time", ""},
-    { "Nm", "Nautical miles", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
-    { "Km", "Kilometers", "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
+    { QT_TRANSLATE_NOOP("UnitsModel", "ft"), QT_TRANSLATE_NOOP("UnitsModel", "feet above sea-level (MSL)"), "000000", false, -2000, 180000, 50},
+    { QT_TRANSLATE_NOOP("UnitsModel", "ft AGL"),  QT_TRANSLATE_NOOP("UnitsModel", "feet above ground level (AGL)"), "000000", false, 0, 180000, 50},
+    { QT_TRANSLATE_NOOP("UnitsModel", "ft above field"),  QT_TRANSLATE_NOOP("UnitsModel", "feet above airfield"), "000000", false, 0, 180000, 50},
+    { QT_TRANSLATE_NOOP("UnitsModel", "FL"),  QT_TRANSLATE_NOOP("UnitsModel", "Flight-level"), "000", true /* prefix */, 0.0, 500.0, 5.0},
+    { QT_TRANSLATE_NOOP("UnitsModel", "m"),  QT_TRANSLATE_NOOP("UnitsModel", "meters above sea-level (MSL)"), "000000", false, -500, 100000, 50},
+    { QT_TRANSLATE_NOOP("UnitsModel", "kts"),  QT_TRANSLATE_NOOP("UnitsModel", "Knots"), "9999", false, 0, 999999, 10.0},
+    { QT_TRANSLATE_NOOP("UnitsModel", "M"),  QT_TRANSLATE_NOOP("UnitsModel", "Mach"), "00.000", true /* prefix */, 0.0, 99.0, 0.05, false /* no wrap */, 3 /* decimal places */},
+    { QT_TRANSLATE_NOOP("UnitsModel", "KM/H"),  QT_TRANSLATE_NOOP("UnitsModel", "Kilometers/hour"), "9999", false, 0, 999999, 10.0},
+    { QT_TRANSLATE_NOOP("UnitsModel", "°True"),  QT_TRANSLATE_NOOP("UnitsModel", "degrees true"), "000", false, 0, 359, 5.0, true /* wraps */},
+    { QT_TRANSLATE_NOOP("UnitsModel", "°Mag"),  QT_TRANSLATE_NOOP("UnitsModel", "degrees magnetic"), "000", false, 0, 359, 5.0, true /* wraps */},
+    { QT_TRANSLATE_NOOP("UnitsModel", "UTC"),  QT_TRANSLATE_NOOP("UnitsModel", "Universal coordinated time"), ""},
+    { QT_TRANSLATE_NOOP("UnitsModel", "Local"),  QT_TRANSLATE_NOOP("UnitsModel", "Local time"), ""},
+    { QT_TRANSLATE_NOOP("UnitsModel", "Nm"),  QT_TRANSLATE_NOOP("UnitsModel", "Nautical miles"), "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
+    { QT_TRANSLATE_NOOP("UnitsModel", "Km"),  QT_TRANSLATE_NOOP("UnitsModel", "Kilometers"), "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
 
-    { "MHz", "MHz", "00000", false, 105, 140, 0.025, false /* no wrap */, 3 /* decimal places */},
-    { "KHz", "KHz", "00000", false, 200, 400, 1.0, false /* no wrap */, 0 /* decimal places */}
+    {  QT_TRANSLATE_NOOP("UnitsModel", "MHz"),  QT_TRANSLATE_NOOP("UnitsModel", "MHz"), "00000", false, 105, 140, 0.025, false /* no wrap */, 3 /* decimal places */},
+    {  QT_TRANSLATE_NOOP("UnitsModel", "KHz"),  QT_TRANSLATE_NOOP("UnitsModel", "KHz"), "00000", false, 200, 400, 1.0, false /* no wrap */, 0 /* decimal places */}
 
 };
 
@@ -115,6 +116,8 @@ const int UnitValueWrapsRole = Qt::UserRole + 7;
 
 UnitsModel::UnitsModel()
 {
+
+
     m_enabledUnits = static_modeData.at(m_mode);
 }
 
@@ -133,8 +136,12 @@ QVariant UnitsModel::data(const QModelIndex &index, int role) const
     const UnitData& ud = static_unitData.at(u);
 
     switch (role) {
-    case Qt::DisplayRole: return ud.shortName;
-    case UnitLongNameRole: return ud.longName;
+    case Qt::DisplayRole:
+      return qApp->translate("UnitsModel", ud.shortName);
+
+    case UnitLongNameRole:
+      return qApp->translate("UnitsModel", ud.longName);
+
     case UnitIsPrefixRole: return ud.isPrefix;
     case UnitMinValueRole: return ud.minValue;
     case UnitMaxValueRole: return ud.maxValue;
@@ -189,7 +196,7 @@ QString UnitsModel::shortText() const
 {
     const auto u = m_enabledUnits.at(m_activeIndex);
     const UnitData& ud = static_unitData.at(u);
-    return ud.shortName;
+    return qApp->translate("UnitsModel",ud.shortName);
 }
 
 Units::Type UnitsModel::selectedUnit() const
@@ -427,7 +434,7 @@ QString QuantityValue::toString() const
     const auto& data = static_unitData.at(unit);
     int dp = data.decimals;
     QString prefix;
-    QString suffix = data.shortName;
+    QString suffix = qApp->translate("UnitsModel", data.shortName);
     if (data.isPrefix)
         std::swap(prefix, suffix);
 

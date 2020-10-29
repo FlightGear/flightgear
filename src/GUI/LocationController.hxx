@@ -237,6 +237,8 @@ private:
     void applyAirspeed();
     void applyOnFinal();
 
+    QString compassPointFromHeading(int heading) const;
+
     NavaidSearchModel* m_searchModel = nullptr;
     CarriersLocationModel* m_carriersModel = nullptr;
 
