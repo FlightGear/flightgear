@@ -113,23 +113,6 @@ public:
     return agl;
   }
 
-  double GetTerrainGeoCentRadius(double t, const FGLocation& l) const override {
-    double contact[3], normal[3], vel[3], angularVel[3];
-    mInterface->get_agl_ft(t, l, SG_METER_TO_FEET*2, contact,
-                           normal, vel, angularVel);
-    return sqrt(contact[0]*contact[0]+contact[1]*contact[1]+contact[2]*contact[2]);
-  }
-
-  double GetSeaLevelRadius(const FGLocation& l) const override {
-    double seaLevelRadius, latGeoc;
-
-    sgGeodToGeoc(l.GetGeodLatitudeRad(), l.GetGeodAltitude(),
-                 &seaLevelRadius, &latGeoc);
-
-    return seaLevelRadius * SG_METER_TO_FEET;
-  }
-
-  void SetTerrainGeoCentRadius(double radius) override {}
 private:
   FGJSBsim* mInterface;
 };
@@ -200,9 +183,6 @@ FGJSBsim::FGJSBsim( double dt )
     fdmex = new FGFDMExec( PropertyManager );
     fdmex->Hold();
 
-    // Register ground callback.
-    fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
-
     Atmosphere      = fdmex->GetAtmosphere();
     Winds           = fdmex->GetWinds();
     FCS             = fdmex->GetFCS();
@@ -215,6 +195,9 @@ FGJSBsim::FGJSBsim( double dt )
     Aerodynamics    = fdmex->GetAerodynamics();
     GroundReactions = fdmex->GetGroundReactions();
     Accelerations   = fdmex->GetAccelerations();
+
+    // Register ground callback.
+    Inertial->SetGroundCallback( new FGFSGroundCallback(this) );
 
     fgic=fdmex->GetIC();
     needTrim=true;

@@ -133,7 +133,7 @@ bool FGMassBalance::Load(Element* document)
   Name = "Mass Properties Model: " + document->GetAttributeValue("name");
 
   // Perform base class Pre-Load
-  if (!FGModel::Load(document, true))
+  if (!FGModel::Upload(document, true))
     return false;
 
   SetAircraftBaseInertias(ReadInertiaMatrix(document));
@@ -247,9 +247,9 @@ bool FGMassBalance::Run(bool Holding)
   k5 = (Ixy*Ixz + Iyz*Ixx)*denom;
   k6 = (Ixx*Iyy - Ixy*Ixy)*denom;
 
-  mJinv.InitMatrix( k1, k2, k3,
-                    k2, k4, k5,
-                    k3, k5, k6 );
+  mJinv = { k1, k2, k3,
+            k2, k4, k5,
+            k3, k5, k6 };
 
   RunPostFunctions();
 

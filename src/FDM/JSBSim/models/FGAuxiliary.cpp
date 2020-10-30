@@ -46,6 +46,7 @@ INCLUDES
 #include "initialization/FGInitialCondition.h"
 #include "FGFDMExec.h"
 #include "input_output/FGPropertyManager.h"
+#include "FGInertial.h"
 
 using namespace std;
 
@@ -202,7 +203,7 @@ bool FGAuxiliary::Run(bool Holding)
     vcas = veas = 0.0;
 
   vPilotAccel.InitMatrix();
-  vNcg = in.vBodyAccel/in.SLGravity;
+  vNcg = in.vBodyAccel/in.StandardGravity;
   // Nz is Acceleration in "g's", along normal axis (-Z body axis)
   Nz = -vNcg(eZ);
   Ny =  vNcg(eY);
@@ -213,7 +214,7 @@ bool FGAuxiliary::Run(bool Holding)
   vNwcg = mTb2w * vNcg;
   vNwcg(eZ) = 1.0 - vNwcg(eZ);
 
-  vPilotAccelN = vPilotAccel / in.SLGravity;
+  vPilotAccelN = vPilotAccel / in.StandardGravity;
 
   // VRP computation
   vLocationVRP = in.vLocation.LocalToLocation( in.Tb2l * in.VRPBody );
@@ -279,33 +280,25 @@ double FGAuxiliary::GetNlf(void) const
 
 double FGAuxiliary::GetLongitudeRelativePosition(void) const
 {
-  FGLocation source(FDMExec->GetIC()->GetLongitudeRadIC(),
-                    FDMExec->GetIC()->GetLatitudeRadIC(),
-                    in.vLocation.GetSeaLevelRadius());
-  return source.GetDistanceTo(in.vLocation.GetLongitude(),
-                              FDMExec->GetIC()->GetLatitudeRadIC()) * fttom;
+  return in.vLocation.GetDistanceTo(FDMExec->GetIC()->GetLongitudeRadIC(),
+                                    in.vLocation.GetLatitude())* fttom;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double FGAuxiliary::GetLatitudeRelativePosition(void) const
 {
-  FGLocation source(FDMExec->GetIC()->GetLongitudeRadIC(),
-                    FDMExec->GetIC()->GetLatitudeRadIC(),
-                    in.vLocation.GetSeaLevelRadius());
-  return source.GetDistanceTo(FDMExec->GetIC()->GetLongitudeRadIC(),
-                              in.vLocation.GetLatitude()) * fttom;
+  return in.vLocation.GetDistanceTo(in.vLocation.GetLongitude(),
+                                    FDMExec->GetIC()->GetLatitudeRadIC())* fttom;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double FGAuxiliary::GetDistanceRelativePosition(void) const
 {
-  FGLocation source(FDMExec->GetIC()->GetLongitudeRadIC(),
-                    FDMExec->GetIC()->GetLatitudeRadIC(),
-                    in.vLocation.GetSeaLevelRadius());
-  return source.GetDistanceTo(in.vLocation.GetLongitude(),
-                              in.vLocation.GetLatitude()) * fttom;
+  FGInitialCondition *ic = FDMExec->GetIC();
+  return in.vLocation.GetDistanceTo(ic->GetLongitudeRadIC(),
+                                    ic->GetLatitudeRadIC())* fttom;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

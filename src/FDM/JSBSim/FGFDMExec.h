@@ -41,6 +41,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <memory>
+#include <random>
+
 #include "models/FGPropagate.h"
 #include "models/FGOutput.h"
 #include "math/FGTemplateFunc.h"
@@ -84,7 +87,7 @@ CLASS DOCUMENTATION
     executive is subsequently directed to load the chosen aircraft specification
     file:
 
-    @code
+    @code{.cpp}
     fdmex = new FGFDMExec( ... );
     result = fdmex->LoadModel( ... );
     @endcode
@@ -100,7 +103,7 @@ CLASS DOCUMENTATION
     from JSBSim. The state variables are used to drive the instrument displays
     and to place the vehicle model in world space for visual rendering:
 
-    @code
+    @code{.cpp}
     copy_to_JSBsim(); // copy control inputs to JSBSim
     fdmex->RunIC(); // loop JSBSim once w/o integrating
     copy_from_JSBsim(); // update the bus
@@ -108,7 +111,7 @@ CLASS DOCUMENTATION
 
     Once initialization is complete, cyclic execution proceeds:
 
-    @code
+    @code{.cpp}
     copy_to_JSBsim(); // copy control inputs to JSBSim
     fdmex->Run(); // execute JSBSim
     copy_from_JSBsim(); // update the bus
@@ -123,7 +126,7 @@ CLASS DOCUMENTATION
     file can be supplied to the stub program. Scripting (see FGScript) provides
     a way to supply command inputs to the simulation:
 
-    @code
+    @code{.cpp}
     FDMExec = new JSBSim::FGFDMExec();
     FDMExec->LoadScript( ScriptName ); // the script loads the aircraft and ICs
     result = FDMExec->Run();
@@ -249,15 +252,6 @@ public:
       @return true if successful */
   bool RunIC(void);
 
-  /** Sets the ground callback pointer. For optimal memory management, a shared
-      pointer is used internally that maintains a reference counter. The calling
-      application must therefore use FGGroundCallback_ptr 'smart pointers' to
-      manage their copy of the ground callback.
-      @param gc A pointer to a ground callback object
-      @see FGGroundCallback
-   */
-  void SetGroundCallback(FGGroundCallback* gc) { FGLocation::SetGroundCallback(gc); }
-
   /** Loads an aircraft model.
       @param AircraftPath path to the aircraft/ directory. For instance:
       "aircraft". Under aircraft, then, would be directories for various
@@ -361,12 +355,6 @@ public:
   FGInput* GetInput(void)              {return (FGInput*)Models[eInput];}
   /// Returns the FGOutput pointer.
   FGOutput* GetOutput(void)            {return (FGOutput*)Models[eOutput];}
-  /** Get a pointer to the ground callback currently used. It is recommanded
-      to store the returned pointer in a 'smart pointer' FGGroundCallback_ptr.
-      @return A pointer to the current ground callback object.
-      @see FGGroundCallback
-   */
-  FGGroundCallback* GetGroundCallback(void) {return FGLocation::GetGroundCallback();}
   /// Retrieves the script object
   FGScript* GetScript(void) {return Script;}
   /// Returns a pointer to the FGInitialCondition object
@@ -536,17 +524,14 @@ public:
   /** Sets the current sim time.
       @param cur_time the current time
       @return the current simulation time.      */
-  double Setsim_time(double cur_time) {
-    sim_time = cur_time;
-    GetGroundCallback()->SetTime(sim_time);
-    return sim_time;
-  }
+  double Setsim_time(double cur_time);
 
   /** Sets the integration time step for the simulation executive.
       @param delta_t the time step in seconds.     */
   void Setdt(double delta_t) { dT = delta_t; }
 
-  /** Sets the root directory where JSBSim starts looking for its system directories.
+  /** Sets the root directory where JSBSim starts looking for its system
+      directories.
       @param rootDir the string containing the root directory. */
   void SetRootDir(const SGPath& rootDir) {RootDir = rootDir;}
 
@@ -557,14 +542,7 @@ public:
   /** Increments the simulation time if not in Holding mode. The Frame counter
       is also incremented.
       @return the new simulation time.     */
-  double IncrTime(void) {
-    if (!holding && !IntegrationSuspended()) {
-      sim_time += dT;
-      GetGroundCallback()->SetTime(sim_time);
-      Frame++;
-    }
-    return sim_time;
-  }
+  double IncrTime(void);
 
   /** Retrieves the current frame count. */
   unsigned int GetFrame(void) const {return Frame;}
@@ -595,6 +573,9 @@ public:
     TemplateFunctions[name] = new FGTemplateFunc(this, el);
   }
 
+  const std::shared_ptr<std::default_random_engine>& GetRandomEngine(void) const
+  { return RandomEngine; }
+
 private:
   unsigned int Frame;
   unsigned int IdFDM;
@@ -606,7 +587,6 @@ private:
   bool holding;
   bool IncrementThenHolding;
   int TimeStepsUntilHold;
-  int RandomSeed;
   bool Constructing;
   bool modelLoaded;
   bool IsChild;
@@ -651,6 +631,9 @@ private:
 
   bool HoldDown;
 
+  int RandomSeed;
+  std::shared_ptr<std::default_random_engine> RandomEngine;
+
   // The FDM counter is used to give each child FDM an unique ID. The root FDM
   // has the ID 0
   unsigned int*      FDMctr;
@@ -670,6 +653,7 @@ private:
   void LoadModelConstants(void);
   bool Allocate(void);
   bool DeAllocate(void);
+  void InitializeModels(void);
   int GetDisperse(void) const {return disperse;}
   SGPath GetFullPath(const SGPath& name) {
     if (name.isRelative())

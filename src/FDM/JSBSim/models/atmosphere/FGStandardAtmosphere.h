@@ -101,7 +101,7 @@ public:
   FGStandardAtmosphere(FGFDMExec*);
 
   /// Destructor
-  virtual ~FGStandardAtmosphere();
+  ~FGStandardAtmosphere() override;
 
   bool InitModel(void) override;
 

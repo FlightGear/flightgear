@@ -38,8 +38,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "simgear/structure/SGSharedPtr.hxx"
-
 namespace JSBSim {
 
 class FGLocation;
@@ -61,7 +59,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGroundCallback : public SGReferenced
+class FGGroundCallback
 {
 public:
 
@@ -97,36 +95,28 @@ public:
                             FGColumnVector3& w) const
   { return GetAGLevel(time, location, contact, normal, v, w); }
 
-  /** Compute the local terrain radius
-      @param t simulation time
-      @param location location
-   */
-  virtual double GetTerrainGeoCentRadius(double t, const FGLocation& location) const = 0;
-
-  /** Compute the local terrain radius
-      @param location location
-   */
-  virtual double GetTerrainGeoCentRadius(const FGLocation& location) const
-  { return GetTerrainGeoCentRadius(time, location); }
-
-  /** Return the sea level radius
-      @param location location
-   */
-  virtual double GetSeaLevelRadius(const FGLocation& location) const = 0;
-
-  /** Set the local terrain radius.
+  /** Set the terrain elevation.
       Only needs to be implemented if JSBSim should be allowed
       to modify the local terrain radius (see the default implementation)
    */
-  virtual void SetTerrainGeoCentRadius(double radius)  {}
+  virtual void SetTerrainElevation(double h) {}
 
+  /** Set the planet semimajor and semiminor axes.
+      Only needs to be implemented if JSBSim should be allowed to modify
+      the planet dimensions.
+   */
+  virtual void SetEllipse(double semimajor, double semiminor) {}
+
+  /** Set the simulation time.
+      The elapsed time can be used by the ground callbck to assess the planet
+      rotation or the movement of objects.
+      @param _time elapsed time in seconds since the simulation started.
+   */
   void SetTime(double _time) { time = _time; }
 
 protected:
   double time;
 };
-
-typedef SGSharedPtr<FGGroundCallback> FGGroundCallback_ptr;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // The default sphere earth implementation:
@@ -135,25 +125,23 @@ typedef SGSharedPtr<FGGroundCallback> FGGroundCallback_ptr;
 class FGDefaultGroundCallback : public FGGroundCallback
 {
 public:
-  explicit FGDefaultGroundCallback(double referenceRadius) :
-    mSeaLevelRadius(referenceRadius), mTerrainLevelRadius(referenceRadius) {}
+  explicit FGDefaultGroundCallback(double semiMajor, double semiMinor) :
+    a(semiMajor), b(semiMinor) {}
 
   double GetAGLevel(double t, const FGLocation& location,
                     FGLocation& contact,
                     FGColumnVector3& normal, FGColumnVector3& v,
                     FGColumnVector3& w) const override;
 
-  void SetTerrainGeoCentRadius(double radius) override
-  {  mTerrainLevelRadius = radius;}
-  double GetTerrainGeoCentRadius(double t, const FGLocation& location) const override
-  { return mTerrainLevelRadius; }
+  void SetTerrainElevation(double h) override
+  { mTerrainElevation = h; }
 
-  double GetSeaLevelRadius(const FGLocation& location) const override
-  {return mSeaLevelRadius; }
+  void SetEllipse(double semimajor, double semiminor) override
+  { a = semimajor; b = semiminor; }
 
 private:
-   double mSeaLevelRadius;
-   double mTerrainLevelRadius;
+  double a, b;
+  double mTerrainElevation = 0.0;
 };
 
 }

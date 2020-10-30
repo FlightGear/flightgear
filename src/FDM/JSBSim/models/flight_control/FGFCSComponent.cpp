@@ -51,7 +51,6 @@ CLASS IMPLEMENTATION
 
 FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 {
-  Element *input_element,*init_element, *clip_el;
   Input = Output = delay_time = 0.0;
   delay = index = 0;
   ClipMin = ClipMax = new FGRealValue(0.0);
@@ -111,14 +110,14 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 
   Name = element->GetAttributeValue("name");
 
-  init_element = element->FindElement("init");
+  Element *init_element = element->FindElement("init");
   while (init_element) {
     InitNodes.push_back(new FGPropertyValue(init_element->GetDataLine(),
                                             PropertyManager ));
     init_element = element->FindNextElement("init");
   }
   
-  input_element = element->FindElement("input");
+  Element *input_element = element->FindElement("input");
   while (input_element) {
     InputNodes.push_back(new FGPropertyValue(input_element->GetDataLine(),
                                              PropertyManager ));
@@ -137,9 +136,12 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
       throw(string("Invalid output property name in flight control definition"));
     }
     OutputNodes.push_back(OutputNode);
-    // Initialize to a sensible value.
+    // If the node has just been created then it must be initialized to a
+    // sensible value since FGPropertyNode::GetNode() does not take care of
+    // that.  If the node was already existing, its current value is kept
+    // unchanged.
     if (!node_exists)
-        OutputNode->setDoubleValue(Output);
+      OutputNode->setDoubleValue(Output);
     out_elem = element->FindNextElement("output");
   }
 
@@ -162,7 +164,7 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
     for (unsigned int i=0; i<delay; i++) output_array[i] = 0.0;
   }
 
-  clip_el = element->FindElement("clipto");
+  Element *clip_el = element->FindElement("clipto");
   if (clip_el) {
     Element* el = clip_el->FindElement("min");
     if (!el) {
@@ -220,10 +222,17 @@ void FGFCSComponent::SetOutput(void)
 
 void FGFCSComponent::Delay(void)
 {
-  output_array[index] = Output;
-  if ((unsigned int)index == delay-1) index = 0;
-  else index++;
-  Output = output_array[index];
+  if (fcs->GetTrimStatus()) {
+    // Update the whole history while trim routines are executing.
+    // Don't want to model delays while calculating a trim solution.
+    std::fill(output_array.begin(), output_array.end(), Output);
+  }
+  else {
+    output_array[index] = Output;
+    if ((unsigned int)index == delay-1) index = 0;
+    else index++;
+    Output = output_array[index];
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,10 +245,10 @@ void FGFCSComponent::Clip(void)
     double range = vmax - vmin;
 
     if (range < 0.0) {
-        cerr << "Trying to clip with a max value (" << vmax << ") from "
-             << ClipMax->GetName() << " lower than the min value (" << vmin
-             << ") from " << ClipMin->GetName() << "." << endl
-             << "Clipping is ignored." << endl;
+      cerr << "Trying to clip with a max value " << ClipMax->GetName()
+           << " lower than the min value " << ClipMin->GetName()
+           << endl;
+      throw("JSBSim aborts");
       return;
     }
 
@@ -276,6 +285,10 @@ void FGFCSComponent::bind(Element* el)
 
   if (node) {
     OutputNodes.push_back(node);
+    // If the node has just been created then it must be initialized to a
+    // sensible value since FGPropertyNode::GetNode() does not take care of
+    // that.  If the node was already existing, its current value is kept
+    // unchanged.
     if (!node_exists)
       node->setDoubleValue(Output);
   }

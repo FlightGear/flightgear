@@ -57,7 +57,7 @@ Element_ptr FGModelLoader::Open(Element *el)
 
   if (!fname.empty()) {
     FGXMLFileRead XMLFileRead;
-    SGPath path(SGPath::fromUtf8(fname));
+    SGPath path(SGPath::fromUtf8(fname.c_str()));
 
     if (path.isRelative())
       path = model->FindFullPathName(path);

@@ -49,6 +49,7 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 class FGInitialCondition;
+class FGInertial;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -143,7 +144,7 @@ public:
       - integrator, rotational position = Trapezoidal
       - integrator, translational position = Trapezoidal
       @param Executive a pointer to the parent executive object */
-  FGPropagate(FGFDMExec* Executive);
+  explicit FGPropagate(FGFDMExec* Executive);
 
   /// Destructor
   ~FGPropagate();
@@ -182,7 +183,7 @@ public:
   const FGColumnVector3& GetVel(void) const { return vVel; }
 
   /** Retrieves the body frame vehicle velocity vector.
-      The vector returned is represented by an FGColumnVector reference. The vector
+      The vector returned is represented by an FGColumnVector3 reference. The vector
       for the velocity in Body frame is organized (Vx, Vy, Vz). The vector
       is 1-based, so that the first element can be retrieved using the "()" operator.
       In other words, vUVW(1) is Vx. Various convenience enumerators are defined
@@ -196,7 +197,7 @@ public:
   /** Retrieves the body angular rates vector, relative to the ECEF frame.
       Retrieves the body angular rates (p, q, r), which are calculated by integration
       of the angular acceleration.
-      The vector returned is represented by an FGColumnVector reference. The vector
+      The vector returned is represented by an FGColumnVector3 reference. The vector
       for the angular velocity in Body frame is organized (P, Q, R). The vector
       is 1-based, so that the first element can be retrieved using the "()" operator.
       In other words, vPQR(1) is P. Various convenience enumerators are defined
@@ -324,7 +325,7 @@ public:
       units ft
       @return The current altitude above sea level in feet.
   */
-  double GetAltitudeASL(void) const { return VState.vLocation.GetAltitudeASL(); }
+  double GetAltitudeASL(void) const;
 
   /** Returns the current altitude above sea level.
       This function returns the altitude above sea level.
@@ -436,7 +437,7 @@ public:
   const FGColumnVector3& GetTerrainAngularVelocity(void) const { return LocalTerrainAngularVelocity; }
   void RecomputeLocalTerrainVelocity();
 
-  double GetTerrainElevation(void) const { return GetLocalTerrainRadius() - VState.vLocation.GetSeaLevelRadius(); }
+  double GetTerrainElevation(void) const;
   double GetDistanceAGL(void)  const;
   double GetDistanceAGLKm(void)  const;
   double GetRadius(void) const {
@@ -571,11 +572,7 @@ public:
     VState.vInertialPosition = Tec2i * VState.vLocation;
   }
 
-  void SetAltitudeASL(double altASL)
-  {
-    VState.vLocation.SetAltitudeASL(altASL);
-    UpdateVehicleState();
-  }
+  void SetAltitudeASL(double altASL);
   void SetAltitudeASLmeters(double altASL) { SetAltitudeASL(altASL/fttom); }
 
   void SetTerrainElevation(double tt);
@@ -623,6 +620,7 @@ private:
 
   struct VehicleState VState;
 
+  FGInertial* Inertial = nullptr;
   FGColumnVector3 vVel;
   FGMatrix33 Tec2b;
   FGMatrix33 Tb2ec;

@@ -74,7 +74,7 @@ CLASS IMPLEMENTATION
 // Constructor
 
 FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr)
-  : Root(root), FDMctr(fdmctr)
+  : Root(root), RandomEngine(new default_random_engine), FDMctr(fdmctr)
 {
   Frame           = 0;
   IC              = nullptr;
@@ -197,15 +197,29 @@ FGFDMExec::~FGFDMExec()
   }
 
   for (unsigned int i=1; i<ChildFDMList.size(); i++) delete ChildFDMList[i]->exec;
-  ChildFDMList.clear();
-
-  PropertyCatalog.clear();
-  
-  SetGroundCallback(0);
 
   if (FDMctr != 0) (*FDMctr)--;
 
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGFDMExec::Setsim_time(double cur_time) {
+  sim_time = cur_time;
+  Inertial->SetTime(sim_time);
+  return sim_time;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGFDMExec::IncrTime(void) {
+  if (!holding && !IntegrationSuspended()) {
+    sim_time += dT;
+    Inertial->SetTime(sim_time);
+    Frame++;
+  }
+  return sim_time;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -221,7 +235,6 @@ bool FGFDMExec::Allocate(void)
   // Note that this does not affect the order in which the models will be
   // executed later.
   Models[eInertial]          = new FGInertial(this);
-  SetGroundCallback(new FGDefaultGroundCallback(static_cast<FGInertial*>(Models[eInertial])->GetRefRadius()));
 
   // See the eModels enum specification in the header file. The order of the
   // enums specifies the order of execution. The Models[] vector is the primary
@@ -263,13 +276,7 @@ bool FGFDMExec::Allocate(void)
   LoadPlanetConstants();
 
   // Initialize models
-  for (unsigned int i = 0; i < Models.size(); i++) {
-    // The Input/Output models must not be initialized prior to IC loading
-    if (i == eInput || i == eOutput) continue;
-
-    LoadInputs(i);
-    Models[i]->InitModel();
-  }
+  InitializeModels();
 
   IC = new FGInitialCondition(this);
   IC->bind(instance);
@@ -277,6 +284,19 @@ bool FGFDMExec::Allocate(void)
   modelLoaded = false;
 
   return result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::InitializeModels(void)
+{
+  for (unsigned int i = 0; i < Models.size(); i++) {
+    // The Input/Output models must not be initialized prior to IC loading
+    if (i == eInput || i == eOutput) continue;
+
+    LoadInputs(i);
+    Models[i]->InitModel();
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -511,7 +531,7 @@ void FGFDMExec::LoadPlanetConstants(void)
   Accelerations->in.vOmegaPlanet = Inertial->GetOmegaPlanet();
   Propagate->in.SemiMajor        = Inertial->GetSemimajor();
   Propagate->in.SemiMinor        = Inertial->GetSemiminor();
-  Auxiliary->in.SLGravity        = Inertial->SLgravity();
+  Auxiliary->in.StandardGravity  = Inertial->GetStandardGravity();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -526,8 +546,6 @@ void FGFDMExec::LoadModelConstants(void)
   Auxiliary->in.Wingspan         = Aircraft->GetWingSpan();
   Auxiliary->in.Wingchord        = Aircraft->Getcbar();
   GroundReactions->in.vXYZcg     = MassBalance->GetXYZcg();
-
-  LoadPlanetConstants();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -587,13 +605,7 @@ void FGFDMExec::ResetToInitialConditions(int mode)
 
   if (mode == 1) Output->SetStartNewOutput();
 
-  for (unsigned int i = 0; i < Models.size(); i++) {
-    // The Input/Output models will be initialized during the RunIC() execution
-    if (i == eInput || i == eOutput) continue;
-
-    LoadInputs(i);
-    Models[i]->InitModel();
-  }
+  InitializeModels();
 
   if (Script)
     Script->ResetEvents();
@@ -705,10 +717,23 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
 
     if (IsChild) debug_lvl = 0;
 
+    // Process the planet element. This element is OPTIONAL.
+    element = document->FindElement("planet");
+    if (element) {
+      result = Models[eInertial]->Load(element);
+      if (!result) {
+        cerr << endl << "Planet element has problems in file " << aircraftCfgFileName << endl;
+        return result;
+      }
+      // Reload the planet constants and re-initialize the models.
+      LoadPlanetConstants();
+      InitializeModels();
+    }
+
     // Process the metrics element. This element is REQUIRED.
     element = document->FindElement("metrics");
     if (element) {
-      result = ((FGAircraft*)Models[eAircraft])->Load(element);
+      result = Models[eAircraft]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft metrics element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -721,7 +746,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the mass_balance element. This element is REQUIRED.
     element = document->FindElement("mass_balance");
     if (element) {
-      result = ((FGMassBalance*)Models[eMassBalance])->Load(element);
+      result = Models[eMassBalance]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft mass_balance element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -734,7 +759,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the ground_reactions element. This element is REQUIRED.
     element = document->FindElement("ground_reactions");
     if (element) {
-      result = ((FGGroundReactions*)Models[eGroundReactions])->Load(element);
+      result = Models[eGroundReactions]->Load(element);
       if (!result) {
         cerr << endl << element->ReadFrom()
              << "Aircraft ground_reactions element has problems in file "
@@ -749,7 +774,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the external_reactions element. This element is OPTIONAL.
     element = document->FindElement("external_reactions");
     if (element) {
-      result = ((FGExternalReactions*)Models[eExternalReactions])->Load(element);
+      result = Models[eExternalReactions]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft external_reactions element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -759,7 +784,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the buoyant_forces element. This element is OPTIONAL.
     element = document->FindElement("buoyant_forces");
     if (element) {
-      result = ((FGBuoyantForces*)Models[eBuoyantForces])->Load(element);
+      result = Models[eBuoyantForces]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft buoyant_forces element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -769,19 +794,20 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the propulsion element. This element is OPTIONAL.
     element = document->FindElement("propulsion");
     if (element) {
-      result = ((FGPropulsion*)Models[ePropulsion])->Load(element);
+      auto propulsion = static_cast<FGPropulsion*>(Models[ePropulsion]);
+      result = propulsion->Load(element);
       if (!result) {
         cerr << endl << "Aircraft propulsion element has problems in file " << aircraftCfgFileName << endl;
         return result;
       }
-      for (unsigned int i=0; i<((FGPropulsion*)Models[ePropulsion])->GetNumEngines(); i++)
+      for (unsigned int i=0; i < propulsion->GetNumEngines(); i++)
         ((FGFCS*)Models[eSystems])->AddThrottle();
     }
 
     // Process the system element[s]. This element is OPTIONAL, and there may be more than one.
     element = document->FindElement("system");
     while (element) {
-      result = ((FGFCS*)Models[eSystems])->Load(element);
+      result = Models[eSystems]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft system element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -792,7 +818,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the autopilot element. This element is OPTIONAL.
     element = document->FindElement("autopilot");
     if (element) {
-      result = ((FGFCS*)Models[eSystems])->Load(element);
+      result = Models[eSystems]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft autopilot element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -802,7 +828,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the flight_control element. This element is OPTIONAL.
     element = document->FindElement("flight_control");
     if (element) {
-      result = ((FGFCS*)Models[eSystems])->Load(element);
+      result = Models[eSystems]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft flight_control element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -812,7 +838,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     // Process the aerodynamics element. This element is OPTIONAL, but almost always expected.
     element = document->FindElement("aerodynamics");
     if (element) {
-      result = ((FGAerodynamics*)Models[eAerodynamics])->Load(element);
+      result = Models[eAerodynamics]->Load(element);
       if (!result) {
         cerr << endl << "Aircraft aerodynamics element has problems in file " << aircraftCfgFileName << endl;
         return result;
@@ -1145,6 +1171,7 @@ void FGFDMExec::SRand(int sr)
 {
   RandomSeed = sr;
   gaussian_random_number_phase = 0;
+  RandomEngine->seed(sr);
   srand(RandomSeed);
 }
 

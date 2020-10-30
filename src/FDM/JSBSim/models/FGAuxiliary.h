@@ -262,7 +262,7 @@ public:
     double DistanceAGL;
     double Wingspan;
     double Wingchord;
-    double SLGravity;
+    double StandardGravity;
     double Mass;
     FGMatrix33 Tl2b;
     FGMatrix33 Tb2l;
