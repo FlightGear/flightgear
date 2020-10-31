@@ -136,7 +136,7 @@ Item {
                 PopupChoice {
                     id: flightRules
                     label: qsTr("Flight rules:")
-                    model: ["VFR", "IFR"] // initially IFR (Y), initially VFR (Z)
+                    model: [qsTr("VFR"), qsTr("IFR")] // initially IFR (Y), initially VFR (Z)
 
                     Component.onCompleted: {
                         select(_launcher.flightPlan.flightRules);
@@ -377,6 +377,8 @@ Item {
 
                 TimeEdit {
                     id: enrouteEstimate
+                    isDuration: true
+
                     label: qsTr("Estimated enroute time:")
 
                     Component.onCompleted: {

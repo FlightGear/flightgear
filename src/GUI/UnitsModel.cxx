@@ -86,7 +86,7 @@ std::vector<UnitData> static_unitData = {
     { QT_TRANSLATE_NOOP("UnitsModel", "Km"),  QT_TRANSLATE_NOOP("UnitsModel", "Kilometers"), "00000", false, 0, 999999, 1.0, false /* no wrap */, 1 /* decimal places */},
 
     {  QT_TRANSLATE_NOOP("UnitsModel", "MHz"),  QT_TRANSLATE_NOOP("UnitsModel", "MHz"), "00000", false, 105, 140, 0.025, false /* no wrap */, 3 /* decimal places */},
-    {  QT_TRANSLATE_NOOP("UnitsModel", "KHz"),  QT_TRANSLATE_NOOP("UnitsModel", "KHz"), "00000", false, 200, 400, 1.0, false /* no wrap */, 0 /* decimal places */}
+    {  QT_TRANSLATE_NOOP("UnitsModel", "kHz"),  QT_TRANSLATE_NOOP("UnitsModel", "kHz"), "00000", false, 200, 400, 1.0, false /* no wrap */, 0 /* decimal places */}
 
 };
 
