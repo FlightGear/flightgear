@@ -11,6 +11,8 @@ FocusScope {
     property bool live: false
     property alias unitsMode: units.mode
 
+    readonly property int microPadding: 2
+
     UnitsModel {
         id: units
     }
@@ -185,7 +187,7 @@ FocusScope {
         anchors.margins: Style.margin
 
         height: edit.implicitHeight + Style.margin
-        width: edit.width + prefix.width + suffix.width + upDownArea.width + Style.margin * 2
+        width: edit.width + prefix.width + suffix.width + upDownArea.width + Style.margin * 2 + (microPadding * 2)
         radius: Style.roundRadius
         border.color: root.enable ? (edit.activeFocus ? Style.frameColor : Style.minorFrameColor) : Style.disabledMinorFrameColor
         border.width: 1
@@ -207,6 +209,8 @@ FocusScope {
             enabled: root.enabled
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: prefix.right
+            anchors.leftMargin: microPadding
+
             selectByMouse: true
             width: metrics.width
             horizontalAlignment: Text.AlignRight
@@ -252,6 +256,8 @@ FocusScope {
             enabled: root.enabled
             anchors.baseline: edit.baseline
             anchors.right: upDownArea.left
+            anchors.rightMargin: microPadding
+
             text: visible ? units.shortText : ""
             onClicked: root.showUnitsMenu();
             clickable: (units.numChoices > 1)
