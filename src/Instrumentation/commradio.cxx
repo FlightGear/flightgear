@@ -693,14 +693,14 @@ void CommRadioImpl::updateAudio()
   
   bool atis_enabled = _atis_enabled_node->getBoolValue();
   int atis_delta = 0;
-  if (atis_enabled and !_atis_enabled_prev) atis_delta = 1;
-  if (!atis_enabled and _atis_enabled_prev) atis_delta = -1;
+  if (atis_enabled && !_atis_enabled_prev) atis_delta = 1;
+  if (!atis_enabled && _atis_enabled_prev) atis_delta = -1;
   
   if (_atisSpeaker.hasSpokenAtis()) {
     // the speaker has created a new atis sample
     // remove previous atis sample
     _sampleGroup->remove(atisRef);
-    if (!atis_delta and atis_enabled) atis_delta = 1;
+    if (!atis_delta && atis_enabled) atis_delta = 1;
   }
   if (atis_delta == 1) {
     // Start play of atis text. We store the most recent sample in _atis_sample
