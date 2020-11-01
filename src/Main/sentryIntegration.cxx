@@ -372,7 +372,7 @@ void  sentryReportFatalError(const std::string& msg, const std::string& more)
     sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string(message.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
-    sentry_value_set_by_key(event, "message", sentryMsg);
+    sentry_value_set_by_key(event, "message", sentryMessage);
     
     sentry_event_value_add_stacktrace(event, nullptr, 0);
     sentry_capture_event(event);
