@@ -30,6 +30,7 @@
         <file alias="toolbox-addons">assets/toolbox-addons.png</file>
         <file alias="toolbox-help">assets/toolbox-help.png</file>
         <file alias="back-icon">assets/icons8-back-arrow-50.png</file>
+        <file alias="scroll-down-icon-white">assets/icons8-scroll-down-50.png</file>
         <file>qml/AircraftList.qml</file>
         <file>qml/AircraftRating.qml</file>
         <file>qml/ArrowButton.qml</file>
@@ -143,6 +144,7 @@
         <file>qml/DidMigrateOfficialCatalogNotification.qml</file>
         <file>qml/DidMigrateOtherCatalogNotification.qml</file>
         <file>qml/BackButton.qml</file>
+        <file>qml/ScrollToBottomHint.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>
