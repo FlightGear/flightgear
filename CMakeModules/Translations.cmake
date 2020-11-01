@@ -64,8 +64,16 @@ if (${do_translate})
 
         add_dependencies(fgfs_qm_files fgfs_${LANG}_qm)
 
-        # local path needed here, not absolute
-        file(APPEND ${translation_res} "<file>FlightGear_${LANG}.qm</file>\n")
+        # fix for bug https://sourceforge.net/p/flightgear/codetickets/2406/
+        # ensure we expose the English translations in a 'short' form, so that
+        # the QTranslator search order finds it
+        if (${LANG} STREQUAL "en_US")
+            message(STATUS "Wibble")
+            file(APPEND ${translation_res} "<file alias=\"FlightGear_en.qm\">FlightGear_${LANG}.qm</file>\n")
+        else()
+            # local path needed here, not absolute
+            file(APPEND ${translation_res} "<file>FlightGear_${LANG}.qm</file>\n")
+        endif()
     endforeach()
 
     file(APPEND ${translation_res} "</qresource>\n</RCC>")
