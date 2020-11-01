@@ -160,4 +160,13 @@ Item {
         visible: flick.contentHeight > flick.height
     }
 
+    ScrollToBottomHint {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: Style.strutSize
+
+        atTheBottom: flick.contentY >= (flick.contentHeight - flick.height)
+        timeout: 10 * 1000
+    }
+
 } // of Item
