@@ -416,19 +416,19 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
   if ( offset_type == "real" ) {
       warp = 0;
   } else if ( offset_type == "dawn" ) {
-      warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 90.0, true, "sun" );
+      warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 90.0, true, true );
   } else if ( offset_type == "morning" ) {
-     warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 75.0, true, "sun" );
+     warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 75.0, true, true );
   } else if ( offset_type == "noon" ) {
-     warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 0.0, true, "sun" );
+     warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 0.0, true, true );
   } else if ( offset_type == "afternoon" ) {
-    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 75.0, false, "sun" );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 75.0, false, true );
   } else if ( offset_type == "dusk" ) {
-    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 90.0, false, "sun" );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 90.0, false, true );
   } else if ( offset_type == "evening" ) {
-    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 100.0, false, "sun" );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 100.0, false, true );
   } else if ( offset_type == "midnight" ) {
-    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 180.0, false, "sun" );
+    warp = fgTimeSecondsUntilBodyAngle( cur_time, loc, 180.0, false, true );
   } else if ( offset_type == "system-offset" ) {
     warp = offset;
     orig_warp = 0;
@@ -464,6 +464,10 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
             << _warp->getIntValue() );
 }
 
+double TimeManager::getSimSpeedUpFactor() const
+{
+    return _simTimeFactor->getDoubleValue();
+}
 
 // Register the subsystem.
 SGSubsystemMgr::Registrant<TimeManager> registrantTimeManager(

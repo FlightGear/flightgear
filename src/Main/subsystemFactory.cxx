@@ -114,6 +114,7 @@ SGSubsystem* createSubsystemByName(const std::string& name)
 #ifdef ENABLE_SWIFT
     MAKE_SUB(SwiftConnection, "swift");
 #endif
+    MAKE_SUB(FGLight, "tides");
     MAKE_SUB(FGLight, "lighting");
     MAKE_SUB(FGAircraftModel, "aircraft-model");
     MAKE_SUB(FGModelMgr, "model-manager");

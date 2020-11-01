@@ -115,6 +115,7 @@
 #include <Sound/voice.hxx>
 #include <Sound/soundmanager.hxx>
 #include <Systems/system_mgr.hxx>
+#include <Time/tide.hxx>
 #include <Time/light.hxx>
 #include <Time/TimeManager.hxx>
 
@@ -1123,6 +1124,7 @@ void fgCreateSubsystems(bool duringReset) {
     if (!duringReset) {
         globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
         globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+        globals->add_subsystem("tides", new FGTide );
     }
 
     globals->add_new_subsystem<FGAircraftModel>(SGSubsystemMgr::DISPLAY);

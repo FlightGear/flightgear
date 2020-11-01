@@ -51,7 +51,7 @@ time_t fgTimeSecondsUntilBodyAngle( time_t cur_time,
                                    const SGGeod& loc,
                                    double target_angle_deg,
                                    bool ascending,
-                                   const char *body );
+                                   bool sun_not_moon );
 
 /**
  * given a particular time expressed in side real time at prime
@@ -59,7 +59,7 @@ time_t fgTimeSecondsUntilBodyAngle( time_t cur_time,
  * solar system body is directly overhead.  (lat, lon are reported in
  * radians)
  */
-void fgBodyPositionGST(double gst, double *lon, double *lat, const char *body);
+void fgBodyPositionGST(double gst, double& lon, double& lat, bool sun_not_moon);
 
 
 #endif /* _BODYSOLVER_HXX */

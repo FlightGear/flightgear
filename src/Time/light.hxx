@@ -49,60 +49,63 @@ private:
     /*
      * Lighting look up tables (based on sun angle with local horizon)
      */
-    SGInterpTable *_ambient_tbl, *_diffuse_tbl, *_specular_tbl;
-    SGInterpTable *_sky_tbl;
+    std::unique_ptr<SGInterpTable> _ambient_tbl, _diffuse_tbl, _specular_tbl;
+    std::unique_ptr<SGInterpTable> _sky_tbl;
 
     /**
      * position of the sun and moon in various forms
      */
 
     // in geocentric coordinates
-    double _sun_lon, _sun_lat;
-    double _moon_lon, _moon_gc_lat;
+    double _sun_lon = 0.0, _sun_lat = 0.0;
+    double _moon_lon = 0.0, _moon_gc_lat = 0.0;
 
     // (in view coordinates)
-    SGVec4f _sun_vec, _moon_vec;
+    SGVec4f _sun_vec = {0, 0, 0, 0};
+    SGVec4f _moon_vec = {0, 0, 0, 0};
+
 
     // inverse (in view coordinates)
-    SGVec4f _sun_vec_inv, _moon_vec_inv;
+    SGVec4f _sun_vec_inv = {0, 0, 0, 0};
+    SGVec4f _moon_vec_inv = {0, 0, 0, 0};
 
     // the angle between the celestial object and the local horizontal
     // (in radians)
-    double _sun_angle, _moon_angle;
-    double _prev_sun_angle;
+    double _sun_angle = 0.0 , _moon_angle = 0.0;
+    double _prev_sun_angle = 0.0;
 
     // the rotation around our vertical axis of the sun (relative to
     // due south with positive numbers going in the counter clockwise
     // direction.)  This is the direction we'd need to face if we
     // wanted to travel towards celestial object.
-    double _sun_rotation, _moon_rotation;
+    double _sun_rotation = 0.0, _moon_rotation = 0.0;
 
     /**
      * Derived lighting values
      */
 
     // ambient, diffuse and specular component
-    SGVec4f _scene_ambient;
-    SGVec4f _scene_diffuse;
-    SGVec4f _scene_specular;
-    SGVec4f _scene_chrome;
+    SGVec4f _scene_ambient = {0, 0, 0, 0};
+    SGVec4f _scene_diffuse = {0, 0, 0, 0};
+    SGVec4f _scene_specular = {0, 0, 0, 0};
+    SGVec4f _scene_chrome = {0, 0, 0, 0};
 
     // clear sky, fog and cloud color
-    SGVec4f _sun_color;
-    SGVec4f _sky_color;
-    SGVec4f _fog_color;
-    SGVec4f _cloud_color;
+    SGVec4f _sun_color = {1, 1, 1, 0};
+    SGVec4f _sky_color = {0, 0, 0, 0};
+    SGVec4f _fog_color = {0, 0, 0, 0};
+    SGVec4f _cloud_color = {0, 0, 0, 0};
 
     // clear sky and fog color adjusted for sunset effects
-    SGVec4f _adj_fog_color;
-    SGVec4f _adj_sky_color;
+    SGVec4f _adj_fog_color = {0, 0, 0, 0};
+    SGVec4f _adj_sky_color = {0, 0, 0, 0};
 
     // input parameters affected by the weather system
-    float _saturation;
-    float _scattering;
-    float _overcast;
+    float _saturation = 1.0f;
+    float _scattering = 0.8f;
+    float _overcast = 0.0f;
 
-    double _dt_total;
+    double _dt_total = 0.0;
 
     void update_sky_color ();
     void update_adj_fog_color ();
@@ -111,9 +114,10 @@ private:
     void updateObjects();
 
     // update the position of one solar system body
-    void updateBodyPos(const char *body, double *lon, double *lat,
-       SGVec4f *vec, SGVec4f *vec_inv, double *angle, SGPropertyNode_ptr AngleRad,
-       double *rotation);
+    void updateBodyPos(bool sun_not_moon, double& lon, double& lat,
+       SGVec4f& vec, SGVec4f& vec_inv,
+       double& angle, SGPropertyNode_ptr AngleRad,
+       double& rotation);
 
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.
@@ -136,8 +140,8 @@ private:
     }
 
 public:
-    FGLight ();
-    virtual ~FGLight ();
+    FGLight () = default;
+    virtual ~FGLight () = default;
 
     // Subsystem API.
     void bind() override;
