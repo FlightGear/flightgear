@@ -39,6 +39,7 @@
 #include <QProcess>
 #include <QTranslator>
 #include <QMessageBox>
+#include <QPointer>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -187,6 +188,10 @@ public:
         connect(this, &QThread::finished, this, &NaturalEarthDataLoaderThread::onFinished);
     }
 
+    void abandon()
+    {
+        m_abandoned = true;
+    }
 protected:
     void run() override
     {
@@ -199,6 +204,9 @@ protected:
 private:
     Q_SLOT void onFinished()
     {
+        if (m_abandoned)
+            return;
+
         flightgear::PolyLineList::const_iterator begin = m_parsedLines.begin() + m_lineInsertCount;
         unsigned int numToAdd = std::min<unsigned int>(1000U, static_cast<unsigned int>(m_parsedLines.size()) - m_lineInsertCount);
         flightgear::PolyLineList::const_iterator end = begin + numToAdd;
@@ -228,6 +236,7 @@ private:
 
     flightgear::PolyLineList m_parsedLines;
     unsigned int m_lineInsertCount;
+    bool m_abandoned = false;
 };
 
 } // of anonymous namespace
@@ -511,7 +520,7 @@ bool runLauncherDialog()
     // will happen as normal
     http->init();
 
-    NaturalEarthDataLoaderThread* naturalEarthLoader = new NaturalEarthDataLoaderThread;
+    QPointer<NaturalEarthDataLoaderThread> naturalEarthLoader = new NaturalEarthDataLoaderThread;
     naturalEarthLoader->start();
 
     // avoid double Apple menu and other weirdness if both Qt and OSG
@@ -528,6 +537,12 @@ bool runLauncherDialog()
     int appResult = qApp->exec();
     if (appResult <= 0) {
         return false; // quit
+    }
+
+    // avoid crashes / NavCache races if the loader is still running after
+    // the launcher exits
+    if (naturalEarthLoader) {
+        naturalEarthLoader->abandon();
     }
 
     // avoid a race-y crash on the locale, if a scan thread is
