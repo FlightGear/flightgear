@@ -191,7 +191,7 @@ std::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
                runway->ident() << ", MP is enabled so computing hold short position to avoid runway incursion");
 
         FGGroundNetwork* groundNet = runway->airport()->groundNetwork();
-        
+
         if (groundNet) {
             // add a margin, try to keep the entire aeroplane comfortable off the
             // runway.
@@ -205,11 +205,11 @@ std::tuple<SGGeod, double> runwayStartPos(FGRunwayRef runway)
             else {
                 // if we couldn't find a suitable taxi-node, give up. Guessing a position
                 // causes too much pain (starting in the water or similar bad things)
-                SG_LOG( SG_GENERAL, SG_POPUP, "Unable to position off runway because groundnet has no taxi node.");
+                SG_LOG( SG_GENERAL, SG_ALERT, "Unable to position off runway because groundnet has no taxi node.");
             }
         }
         else {
-            SG_LOG( SG_GENERAL, SG_POPUP, "Unable to position off runway because no groundnet.");
+            SG_LOG( SG_GENERAL, SG_ALERT, "Unable to position off runway because no groundnet.");
         }
     }
 
