@@ -441,7 +441,7 @@ NewGUI::setStyle (void)
     //puSetDefaultStyle();
 
     
-    if (1) {
+    if (0) {
         // Re-read gui/style/*.xml files so that one can edit them and see the
         // results without restarting flightgear.
         SGPath  p(globals->get_fg_root(), "gui/styles");
