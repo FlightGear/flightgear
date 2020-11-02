@@ -72,9 +72,13 @@ AddOnsController::AddOnsController(LauncherMainWindow *parent, LaunchConfig* con
         settings.setArrayIndex(i);
 
         QString path = settings.value("path").toString();
-        m_addonModulePaths.push_back( path );
         const SGPath addonPath(path.toStdString());
+        if (!addonPath.exists()) {
+            // drop non-existing paths on load
+            continue;
+        }
 
+        m_addonModulePaths.push_back( path );
         bool enable = settings.value("enable").toBool();
 
         try {
