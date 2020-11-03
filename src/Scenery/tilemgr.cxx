@@ -625,6 +625,12 @@ bool FGTileMgr::isTileDirSyncing(const std::string& tileFileName) const
         return false;
     }
 
+    // if Models is syncing, also wait for it, since otherwise
+    // we get load errors
+    if (terraSync->isDataDirPending("Models")) {
+        return true;
+    }
+
     std::string nameWithoutExtension = tileFileName.substr(0, tileFileName.size() - 4);
     long int bucketIndex = simgear::strutils::to_int(nameWithoutExtension);
     SGBucket bucket(bucketIndex);
