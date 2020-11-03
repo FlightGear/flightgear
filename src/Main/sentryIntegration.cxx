@@ -63,7 +63,8 @@ auto OSG_messageWhitelist = {
 auto XML_messageWhitelist = {
      "Cannot open file",
      "not well-formed (invalid token)",
-     "mismatched tag (from 'SimGear XML Parser')"
+     "mismatched tag (from 'SimGear XML Parser')",
+     "syntax error (from 'SimGear XML Parser')"
 };
 
 // we don't want sentry enabled for the test suite
