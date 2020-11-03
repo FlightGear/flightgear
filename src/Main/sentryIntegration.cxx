@@ -133,9 +133,24 @@ public:
             return true;
         }
 
+        if (e.message == _lastLoggedMessage) {
+            _lastLoggedCount++;
+            return true;
+        }
+
+        if (_lastLoggedCount > 0) {
+            flightgear::addSentryBreadcrumb("(repeats " + std::to_string(_lastLoggedCount) + " times)", "info");
+            _lastLoggedCount = 0;
+        }
+
+        _lastLoggedMessage = e.message;
         flightgear::addSentryBreadcrumb(e.message, (op == SG_WARN) ? "warning" : "error");
         return true;
     }
+
+private:
+    std::string _lastLoggedMessage;
+    int _lastLoggedCount = 0;
 };
 
 } // namespace
