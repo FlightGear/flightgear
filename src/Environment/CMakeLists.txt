@@ -6,6 +6,7 @@ set(SOURCES
 	environment_ctrl.cxx
 	environment_mgr.cxx
 	ephemeris.cxx
+        climate.cxx
 	fgclouds.cxx
 	fgmetar.cxx
 	metarairportfilter.cxx
@@ -26,6 +27,7 @@ set(HEADERS
 	environment_mgr.hxx
 	ephemeris.hxx
 	fgclouds.hxx
+        climate.hxx
 	fgmetar.hxx
 	metarairportfilter.hxx
 	metarproperties.hxx

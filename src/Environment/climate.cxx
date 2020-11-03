@@ -99,7 +99,7 @@ void FGClimate::update_day_factor()
     else if (lon < 0.0) lon += 360.0;
 
     // noon is when lon == 180.0
-    _day_noon = 1.0 - (fabs(lon) - 180.0)/180.0;
+    _day_noon = 1.0 - fabs(lon - 180.0)/180.0;
 }
 
 // The seasons are currently based purely on where the sun's perpendicular

@@ -48,6 +48,7 @@
 #include "terrainsampler.hxx"
 #include "Airports/airport.hxx"
 #include "gravity.hxx"
+#include "climate.hxx"
 #include "magvarmanager.hxx"
 
 class FG3DCloudsListener : public SGPropertyChangeListener {
@@ -109,6 +110,7 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   delete fgClouds;
   delete _3dCloudsEnableListener;
   delete _environment;
+  delete _climate;
 }
 
 struct FGEnvironmentMgrMultiplayerListener : SGPropertyChangeListener {
@@ -260,8 +262,13 @@ FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
 
-    SGGeod aircraftPos(globals->get_aircraft_position());
+  SGGeod aircraftPos(globals->get_aircraft_position());
   _environment->set_elevation_ft( aircraftPos.getElevationFt() );
+
+  if (!_climate)
+    _climate = new FGClimate(aircraftPos);
+  else
+    _climate->update(aircraftPos);
 
   auto particlesManager = simgear::ParticlesGlobalManager::instance();
   particlesManager->setWindFrom(_environment->get_wind_from_heading_deg(),

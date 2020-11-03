@@ -29,6 +29,7 @@
 #include <cmath>
 
 class FGEnvironment;
+class FGClimate;
 class FGClouds;
 class FGPrecipitationMgr;
 class SGSky;
@@ -92,6 +93,7 @@ private:
     double get_cloud_layer_maxalpha (int index ) const;
     void set_cloud_layer_maxalpha (int index, double maxalpha);
 
+    FGClimate * _climate = nullptr;
     FGEnvironment * _environment = nullptr; // always the same, for now
     FGClouds *fgClouds = nullptr;
     bool _cloudLayersDirty = true;
