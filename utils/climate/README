@@ -1,0 +1,21 @@
+-- Data Source:
+http://koeppen-geiger.vu-wien.ac.at/present.htm
+
+Download "code with raster file:   Map_KG-Global.R"
+
+
+-- Bulding:
+g++ asc2a.cpp texture.cxx -o asc2a -lGL -lz -losg
+
+
+-- Workflow:
+1. Convert the ESRI grid to ASCII using R:
+   https://groups.google.com/forum/#!topic/maxent/OrTBUvqOXaE
+
+2. Run asc2a to convert the ASCII file to a single channel rgb file:
+  ./asc2a <infile>.asc <outfile>.rgb
+
+3. Use your favorite image processing package to convert from rgb to png
+   to compress it 40x compared to the ESRI grid image and 110x compared to
+   the ASCII file.
+
