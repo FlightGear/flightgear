@@ -68,6 +68,10 @@ public:
 
 MPServerResolver::~MPServerResolver ()
 {
+    if (_priv->_dnsRequest) {
+        _priv->_dnsRequest->cancel();
+    }
+
   delete _priv;
 }
 
@@ -188,8 +192,9 @@ MPServerResolver::run ()
       break;
 
     case MPServerResolver_priv::DONE:
-      onSuccess ();
-      return;
+        _priv->_dnsRequest.clear();
+        onSuccess();
+        return;
   }
 
   // Relinguish control, call me back on the next frame
