@@ -25,6 +25,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/SGVec3.hxx>
 #include <simgear/math/SGVec4.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/constants.h>
 
 #include "Main/fg_props.hxx"
@@ -36,44 +37,60 @@
 // The map is provided with a spatial resolution of 0.5 degree (3km).
 // http://koeppen-geiger.vu-wien.ac.at/present.htm
 
-FGClimate::FGClimate(double lat, double lon)
+FGClimate::FGClimate(const SGGeod& position)
 {
-    SGPath image_path( fgGetString("/sim/fg-root") );
-    image_path.append("Geodata/koppen-geiger.png");
+    SGPath img_path = globals->get_fg_root() / "Geodata" / "koppen-geiger.png";
 
-    image = osgDB::readImageFile(image_path.str());
-    _image_width = image->s();
-    _image_height = image->t();
+    image = osgDB::readImageFile(img_path.utf8Str());	
+    if (image)
+    {
+        _image_width = image->s();
+        _image_height = image->t();
+        _epsilon = 360.0/_image_width;
+    }
 
-    _epsilon = _image_width/360.0;
-    update(lat, lon);
+    update(position);
 }
 
 // Set all environment parameters based on the koppen-classicfication
 // https://en.wikipedia.org/wiki/K%C3%B6ppen_climate_classification
-void FGClimate::update(double lat, double lon)
+void FGClimate::update(const SGGeod& position)
 {
-    _latitude_deg  = lat*SGD_RADIANS_TO_DEGREES;
-    _longitude_deg = lon*SGD_RADIANS_TO_DEGREES;
+    FGLight *l = globals->get_subsystem<FGLight>();
+    if (!l) return; // e.g. during unit-testing
 
-    if (fabs(_prev_lat - _latitude_deg) > _epsilon ||
-        fabs(_prev_lon - _longitude_deg) > _epsilon)
+    _sun_longitude_deg = l->get_sun_lon()*SGD_RADIANS_TO_DEGREES;
+    _sun_latitude_deg = l->get_sun_lat()*SGD_RADIANS_TO_DEGREES;
+
+    pos = position;
+    double latitude_deg  = pos.getLatitudeDeg();
+    double longitude_deg = pos.getLongitudeDeg();
+
+    _adj_latitude_deg = latitude_deg - _sun_latitude_deg;
+    _adj_longitude_deg = _sun_longitude_deg - longitude_deg;
+    if (_adj_longitude_deg < 0.0) _adj_longitude_deg += 360.0;
+    else if (_adj_longitude_deg >= 360.0) _adj_longitude_deg -= 360.0;
+
+    if (fabs(_prev_lat - _adj_latitude_deg) > _epsilon ||
+        fabs(_prev_lon - _adj_longitude_deg) > _epsilon)
     {
-        _prev_lat = _latitude_deg;
-        _prev_lon = _longitude_deg;
+        _prev_lat = _adj_latitude_deg;
+        _prev_lon = _adj_longitude_deg;
 
-        light = static_cast<FGLight*>(globals->get_subsystem("lighting"));
         update_day_factor();
         update_season_factor();
- 
+
         // from lat/lon to screen coordinates
-        double s = 180.0 + _longitude_deg;
-        double t =  90.0 + _latitude_deg;
+        double x = 180.0 + longitude_deg;
+        double y =  90.0 + latitude_deg;
 
-        _col = static_cast<int>(s * _image_width/360.0);
-        _row = static_cast<int>(t * _image_height/180.0);
+        _col = static_cast<int>(x * _image_width/360.0);
+        _row = static_cast<int>(y * _image_height/180.0);
 
-        osg::Vec4f color = image->getColor(_col, _row);
+        osg::Vec4f color;
+        if (image) {
+            color = image->getColor(_col, _row);
+        }
 
         // convert from color shades to koppen-classicfication
         _classicfication = static_cast<int>( 255.0*color[0]/4.0 );
@@ -83,23 +100,22 @@ void FGClimate::update(double lat, double lon)
         else if (_classicfication < 9) set_dry();
         else if (_classicfication < 18) set_temperate();
         else if (_classicfication < 30) set_continetal();
-        else if (_classicfication < 32)set_polar();
+        else if (_classicfication < 32) set_polar();
         else set_ocean();
 
         set_environment();
+
+#if REPORT_TO_CONSOLE
+        report();
+#endif
     }
 }
 
 // returns 0.0 for night up to 1.0 for noon
 void FGClimate::update_day_factor()
 {
-    double lon = light->get_sun_lon()*SGD_RADIANS_TO_DEGREES - _longitude_deg;
-
-    if (lon > 360.0) lon -= 360.0;
-    else if (lon < 0.0) lon += 360.0;
-
     // noon is when lon == 180.0
-    _day_noon = 1.0 - fabs(lon - 180.0)/180.0;
+    _day_noon = fabs(_adj_longitude_deg - 180.0)/180.0;
 }
 
 // The seasons are currently based purely on where the sun's perpendicular
@@ -110,10 +126,20 @@ void FGClimate::update_day_factor()
 // returns 0.0 for winter up to 1.0 for summer
 void FGClimate::update_season_factor()
 {
-  double sign = (_latitude_deg >= 0.0) ? 1.0 : -1.0;
-  double sun_lat = light->get_sun_lat()*SGD_RADIANS_TO_DEGREES;
+    double latitude_deg = pos.getLatitudeDeg();
+    double sign = latitude_deg >= 0.0 ? 1.0 : -1.0;
+    _season_summer = (23.5 + sign*_sun_latitude_deg)/(2.0*23.5);
 
-   _season_summer = 0.5 + sign*sun_lat/(2.0*23.5);
+    _season_autumn = 0.0;
+    if (latitude_deg*_sun_latitude_deg < 0.0) // autumn
+    {
+        _season_autumn = 2.0*(1.0 - _season_summer) - 1.0;
+        if (_season_autumn < 0.0) _season_autumn = 0.0;
+        else if (_season_autumn > 1.0) _season_autumn = 1.0;
+
+        double lat_fact = 6.0 - 12.0*fabs(latitude_deg)/90.0;
+        _season_autumn *= (0.5 - 0.5*sin(atan(SGD_2PI*lat_fact)));
+    }
 }
 
 
@@ -137,14 +163,17 @@ void FGClimate::set_ocean()
     double summer_temp_pole = -8.0;
     double winter_temp_pole = -48.0;
     double temp_pole = summer*summer_temp_pole + winter*winter_temp_pole;
- 
-    double fact_lat = fabs(_latitude_deg)/90.0;
-    double ifact_lat = 1.0 - fact_lat;
 
-    _temperature = ifact_lat*temp_equator + fact_lat*temp_pole;
+    double lat_fact = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
+    double ifact_lat = 1.0 - lat_fact;
+
+    _temperature_sl = ifact_lat*temp_equator + lat_fact*temp_pole;
+
+    double temp_mean_equator = 0.5*(day_temp_equator + night_temp_equator);
+    _temperature_mean = ifact_lat*temp_mean_equator + lat_fact*temp_pole;
 
     // relative humidity based on latitude
-    _relative_humidity = 0.8 - 0.7*fact_lat;
+    _relative_humidity = 0.8 - 0.7*lat_fact;
 
     // steady winds
     _wind = 3.0;
@@ -174,15 +203,18 @@ void FGClimate::set_tropical()
     double temp_equator = day*day_temp_equator + night*night_temp_equator;
 
     // winter temperatures are three-quarter of the summer temperatures
-    _temperature = 0.75*temp_equator + 0.25*summer*temp_equator;
+    _temperature_mean = 0.5*(day_temp_equator + night_temp_equator);
+    _temperature_sl = 0.75*temp_equator + 0.25*summer*temp_equator;
+    _temperature_gl = _temperature_sl;
 
     // relative humidity based on latitude
-    double fact_lat = fabs(_latitude_deg)/90.0;
-    _relative_humidity = 0.8 - 0.7*fact_lat;
+    double latitude_deg = pos.getLatitudeDeg();
+    double lat_fact = fabs(latitude_deg)/90.0;
+    _relative_humidity = 0.8 - 0.7*lat_fact;
 
     // wind based on latitude (0.0 - 15 degrees)
-    fact_lat = std::max(abs(_latitude_deg), 15.0)/15.0;
-    _wind = 3.0*fact_lat*fact_lat;
+    lat_fact = std::max(abs(latitude_deg), 15.0)/15.0;
+    _wind = 3.0*lat_fact*lat_fact;
 
     double monsoon;
     double monsoon_precipitation = _total_annual_precipitation;
@@ -197,12 +229,12 @@ void FGClimate::set_tropical()
         _wind = 2.0*monsoon*_wind;
         break;
     case 3: // As: equatorial, summer dry
-        monsoon = 0.5 + 0.5*cos(SGD_2PI*winter/12.0);
+        monsoon = 0.5 + 0.5*atan(cos(SGD_2PI*winter/12.0));
         _precipitation = monsoon*monsoon_precipitation;
         _wind = 2.0*monsoon*_wind;
         break;
     case 4: // Aw: equatorial, winter dry
-        monsoon = 0.5 - 0.5*cos(SGD_2PI*winter/12.0);
+        monsoon = 0.5 - 0.5*atan(cos(SGD_2PI*winter/12.0));
         _precipitation = monsoon*monsoon_precipitation;
         _wind = 2.0*monsoon*_wind;
         break;
@@ -227,11 +259,16 @@ void FGClimate::set_dry()
     double temp_day_winter = temp_day_summer - temp_night_summer;
     double temp_night_winter = 0.0;
 
-    _temperature = winter*(day*temp_day_winter + night*temp_night_winter)
-                 + summer*(day*temp_day_summer + night*temp_night_summer);
+    _temperature_gl = winter*(day*temp_day_winter + night*temp_night_winter)
+                    + summer*(day*temp_day_summer + night*temp_night_summer);
     if (_classicfication == 6 || _classicfication == 8) { 	// cold arid
-        _temperature -= 14.0;
+        _temperature_mean -= 14.0;
+        _temperature_gl -= 14.0;
     }
+    _temperature_sl = _temperature_gl;
+
+    double temp_mean_winter = 0.5*(temp_day_winter + temp_night_winter);
+    _temperature_mean = summer*temp_avg_summer + winter*temp_mean_winter;
 
     // low relative humidity
     _relative_humidity = 0.25;
@@ -250,6 +287,9 @@ void FGClimate::set_dry()
 
 void FGClimate::set_temperate()
 {
+    set_ocean(); // for now
+
+    _temperature_gl = _temperature_sl;
     switch(_classicfication)
     {
     case 9: // Cfa: warm temperature, fully humid hot summer
@@ -268,6 +308,9 @@ void FGClimate::set_temperate()
 
 void FGClimate::set_continetal()
 {
+    set_ocean(); // for now
+
+    _temperature_gl = _temperature_sl;
     switch(_classicfication)
     {
     case 18: // Dfa: snow, fully humid, hot summer
@@ -290,12 +333,16 @@ void FGClimate::set_continetal()
 void FGClimate::set_polar()
 {
     set_ocean();
+
+    // polar climate also occurs high in the mountains
     switch(_classicfication)
     {
     case 30: // EF: polar frost
-        _temperature += 16.0;
+        _temperature_gl = _temperature_sl+16.0;
         break;
     case 31: // ET: polar tundra
+        _temperature_gl = _temperature_sl;
+        break;
     default:
         break;
     }
@@ -303,14 +350,157 @@ void FGClimate::set_polar()
 
 void FGClimate::set_environment()
 {
-    double fact = fabs(_latitude_deg)/90.0;
-    double frost = _temperature > 0.0 ? 0.0 : fact*fact*fact;
-    _snow_level = 7500.0 - 8000*fact;
-    _snow_thickness = fact*fact;
-    _ice_cover = 0.3*frost;
+    double latitude_deg = pos.getLatitudeDeg();
+    double lat_fact = pow(fabs(latitude_deg)/90.0, 2.5);
+    double snow_fact, precipitation;
 
-    double precipitation = 12.0*_precipitation/_total_annual_precipitation;
-    _dust_cover = 1.0 - sqrtf(precipitation);
-    _wetness = precipitation*precipitation*precipitation;
-    _lichen_cover = 0.0;
+    // snow chance based on latitude, mean temperature and monthly precipitation
+    if (_precipitation < 60.0) {
+        precipitation = 0.0;
+    }
+    else
+    {
+        precipitation = _precipitation - 60.0;
+        precipitation = (precipitation > 240.0) ? 1.0 : precipitation/240.0;
+    }
+
+    if (_temperature_mean > 5.0 || precipitation < 0.1) {
+        snow_fact = 0.0;
+    }
+    else
+    {
+        snow_fact = fabs(_temperature_mean) - 5.0;
+        snow_fact = (snow_fact > 10.0) ? 1.0 : snow_fact/10.0;
+        snow_fact *= precipitation;
+    }
+
+    _snow_level = (7500.0 - 8000.0*lat_fact)*(1.0 - snow_fact);
+    _snow_thickness = pow(snow_fact, 2.0);
+    _ice_cover = pow(lat_fact, 2.5);
+
+    if (_precipitation < 20.0 && _total_annual_precipitation < 240.0)
+    {
+        _dust_cover = 0.3 - 0.3*sqrtf(_precipitation/20.0);
+        _lichen_cover = 0.0;
+        _wetness = 0.0;
+    }
+    else
+    {
+        double wetness = _precipitation - 20.0;
+        wetness = 12.0*wetness/_total_annual_precipitation;
+        _wetness = pow(wetness, 3.0);
+
+        _lichen_cover = 0.0;
+        _dust_cover = 0.0;
+    }
+
+    if (_environment_adjust)
+    {
+        fgSetDouble("/environment/snow-level-m", _snow_level);
+        fgSetDouble("/environment/surface/snow-thickness-factor", _snow_thickness);
+        fgSetDouble("/environment/sea/surface/ice-cover", _ice_cover);
+        fgSetDouble("/environment/surface/dust-cover-factor", _dust_cover);
+        fgSetDouble("/environment/surface/wetness-set", _wetness);
+        fgSetDouble("/environment/surface/lichen-cover-factor", _lichen_cover);
+        fgSetDouble("/environment/season", 2.0*_season_autumn);
+    }
 }
+
+#if REPORT_TO_CONSOLE
+void FGClimate::report()
+{
+    const std::string description[32] = {
+      "Ocean",
+      "Equatorial, fully humid",
+      "Equatorial, monsoonal",
+      "Equatorial, summer dry",
+      "Equatorial, winter dry",
+      "Arid, steppe, hot arid",
+      "Arid, steppe, cold arid",
+      "Arid, desert, hot arid",
+      "Arid, desert, cold arid",
+      "Warm temperature, fully humid hot summer",
+      "Warm temperature, fully humid, warm summer",
+      "Warm temperature, fully humid, cool summer",
+      "Warm temperature, summer dry, hot summer",
+      "Warm temperature, summer dry, warm summer",
+      "Warm temperature, summer dry, cool summer",
+      "Warm temperature, winter dry, hot summer",
+      "Warm temperature, winter dry, warm summer",
+      "Warm temperature, winter dry, cool summer",
+      "Snow, fully humid, hot summer",
+      "Snow, fully humid, warm summer, warm summer",
+      "Snow, fully humid, cool summer, cool summer",
+      "Snow, fully humid, extremely continetal",
+      "Snow, summer dry, hot summer",
+      "Snow, summer dry, warm summer",
+      "Snow, summer dry, cool summer",
+      "Snow, summer dry, extremely continetal",
+      "Snow, winter dry, hot summer",
+      "Snow, winter dry, warm summer",
+      "Snow, winter dry, cool summer",
+      "Snow, winter dry, extremely continetal",
+      "Polar frost",
+      "Polar tundra"
+    };
+    const std::string koppen_str[32] = {
+      "Ocean",
+      "Af", "Am", "As", "Aw",
+      "BSh", "BSk", "BWh", "BWk",
+      "Cfa", "Cfb", "Cfc",
+      "Csa", "Csb", "Csc",
+      "Cwa", "Cwb", "Cwc",
+      "Dfa", "Dfb", "Dfc", "Dfd",
+      "Dsa", "Dsb", "Dsc", "Dsd",
+      "Dwa", "Dwb", "Dwc", "Dwd",
+      "EF", "ET"
+    };
+
+    struct tm *t = globals->get_time_params()->getGmt();
+
+    std::cout << "===============================================" << std::endl;
+    std::cout << "Climate report for:" << std::endl;
+    std::cout << "  Date: " << sgTimeFormatTime(t) << " GMT" << std::endl;
+    std::cout << "  Sun Latitude:    " << _sun_latitude_deg << " deggrees"
+              << std::endl;
+    std::cout << "  Sun Longitude:   " << _sun_longitude_deg << " deggrees"
+              << std::endl;
+    std::cout << "  Viewer Latitude:  " << pos.getLatitudeDeg() << " deggrees"
+              << " (adjusted: " << _adj_latitude_deg << ")" << std::endl;
+    std::cout << "  Viewer Longitude: " << pos.getLongitudeDeg() << " deggrees"
+              << " (adjusted: " << _adj_longitude_deg << ")" << std::endl;
+    std::cout << std::endl;
+    std::cout << "  Köppen classification: " << koppen_str[_classicfication]
+              << std::endl;
+    std::cout << "  Description: " << description[_classicfication]
+              << std::endl << std::endl;
+    std::cout << "  Season (0.0 = winter .. 1.0 = summer): " << _season_summer
+              << std::endl;
+    std::cout << "  Daytime....(0.0 = night .. 1.0 = day): " << _day_noon
+              << std::endl;
+    std::cout << "  Seal level temperature: " << _temperature_sl << " deg. C."
+              << std::endl;
+    std::cout << "  Ground temperature:     " << _temperature_gl << " deg. C."
+              << std::endl;
+    std::cout << "  Monthly Precipitation:  " << _precipitation << " mm"
+              << std::endl;
+    std::cout << "  Annual precipitation:   " << _total_annual_precipitation
+              << " mm" << std::endl;
+    std::cout << "  Dew point: " << _dew_point << " deg. C." << std::endl;
+    std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
+    std::cout << "  Snow level: " << _snow_level << " meters" << std::endl;
+    std::cout << "  Snow Thickness (0.0 = thin .. 1.0 = thick): "
+              << _snow_thickness << std::endl;
+    std::cout << "  Ice cover......(0.0 = none .. 1.0 = thick): " << _ice_cover
+              << std::endl;
+    std::cout << "  Dust cover.....(0.0 = none .. 1.0 = dusty): " << _dust_cover
+              << std::endl;
+    std::cout << "  Wetness........(0.0 = dry  .. 1.0 = wet):   " << _wetness
+              << std::endl;
+    std::cout << "  Lichen cover...(0.0 = none .. 1.0 = muddy): "
+              << _lichen_cover << std::endl;
+    std::cout << "  Autumn (0.0 = summer .. 1.0 = late autumn): "
+              << _season_autumn << std::endl;
+    std::cout << "===============================================" << std::endl;
+}
+#endif // REPORT_TO_CONSOLE

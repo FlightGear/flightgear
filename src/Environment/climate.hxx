@@ -29,6 +29,8 @@
 // #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/math/SGGeod.hxx>
 
+#define REPORT_TO_CONSOLE	false
+
 /*
  * Update environment parameters based on the Köppen-Geiger climate
  * map of the world based on lattitude and longitude.
@@ -38,16 +40,10 @@ class FGLight;
 
 class FGClimate {
 public:
-    FGClimate(double lat, double lon);
-    FGClimate(const SGGeod& pos) :
-        FGClimate(pos.getLatitudeRad(), pos.getLongitudeRad()) {};
-
+    FGClimate(const SGGeod& position);
     virtual ~FGClimate() = default;
 
-    void update(double lat, double lon);
-    inline void update(const SGGeod& pos) {
-        update(pos.getLatitudeRad(), pos.getLongitudeRad());
-    }
+    void update(const SGGeod& position);
 
     double get_snow_level_m() { return _snow_level; }
     double get_snow_thickness() { return _snow_thickness; }
@@ -57,11 +53,15 @@ public:
     double get_lichen_cover() { return _lichen_cover; }
 
     double get_dew_point_degc() { return _dew_point; }
-    double get_temperature_degc() { return _temperature; }
+    double get_temperature_degc() { return _temperature_gl; }
     double get_humidity_pct() { return _relative_humidity; }
     double get_wind_kmh() { return _wind; }
 
 private:
+#if REPORT_TO_CONSOLE
+    void report();
+#endif
+
     void set_ocean();
     void set_dry();
     void set_tropical();
@@ -73,28 +73,32 @@ private:
     void update_day_factor();
     void update_season_factor();
 
-    FGLight *light = nullptr;
-
     osg::ref_ptr<osg::Image> image;
     int _image_width = 0;
     int _image_height = 0;
 
-    double _epsilon = 0.0;
+    double _epsilon = 1.0;
     double _prev_lat = -99999.0;
     double _prev_lon = -99999.0;
 
-    double _latitude_deg = 0.0;
-    double _longitude_deg = 0.0;
+    SGGeod pos;
+
+    double _sun_latitude_deg = 0.0;
+    double _sun_longitude_deg = 0.0;
+
+    double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
+    double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
     double _day_noon = 1.0;
     double _season_summer = 1.0;
+    double _season_autumn = 0.0;
 
     int _col = 0;			// screen coordinates
     int _row = 0;
     int _classicfication = 0;		// Köppen-Geiger classicfication
  
     // environment
-    bool _environment_adjust = false;	// enable automatic adjestments
+    bool _environment_adjust = true;	// enable automatic adjestments
     double _snow_level = 7500.0;	// in meters
     double _snow_thickness = 0.0;	// 0.0 = thin, 1.0 = thick
     double _ice_cover = 0.0;		// 0.0 = none, 1.0 = thick
@@ -107,7 +111,9 @@ private:
     double _relative_humidity = 0.6;	// 0.0 = dry, 1.0 is fully humid
 
     double _dew_point = 0.5;
-    double _temperature = 20.0;		// sea level temperature in deg. C.
+    double _temperature_gl = 20.0;	// ground level temperature in deg. C.
+    double _temperature_sl = 20.0;	// seal level temperature in deg. C.
+    double _temperature_mean = 20.0;	// mean temperature in deg. C.
     double _precipitation = 0.0; // minimal average precipitation in mm/month
     double _wind = 3.0;			// wind in km/h
 
