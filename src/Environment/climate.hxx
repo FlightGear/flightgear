@@ -91,7 +91,8 @@ private:
 
     double _day_noon = 1.0;
     double _season_summer = 1.0;
-    double _season_autumn = 0.0;
+    double _season_winter = 0.0;
+    bool _autumn = false;
 
     int _col = 0;			// screen coordinates
     int _row = 0;

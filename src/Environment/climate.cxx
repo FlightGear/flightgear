@@ -41,7 +41,7 @@ FGClimate::FGClimate(const SGGeod& position)
 {
     SGPath img_path = globals->get_fg_root() / "Geodata" / "koppen-geiger.png";
 
-    image = osgDB::readImageFile(img_path.utf8Str());	
+    image = osgDB::readImageFile(img_path.utf8Str());
     if (image)
     {
         _image_width = image->s();
@@ -54,6 +54,7 @@ FGClimate::FGClimate(const SGGeod& position)
 
 // Set all environment parameters based on the koppen-classicfication
 // https://en.wikipedia.org/wiki/K%C3%B6ppen_climate_classification
+// http://vectormap.si.edu/Climate.htm
 void FGClimate::update(const SGGeod& position)
 {
     FGLight *l = globals->get_subsystem<FGLight>();
@@ -74,6 +75,13 @@ void FGClimate::update(const SGGeod& position)
     if (fabs(_prev_lat - _adj_latitude_deg) > _epsilon ||
         fabs(_prev_lon - _adj_longitude_deg) > _epsilon)
     {
+        _autumn = false;
+        if ((latitude_deg*_sun_latitude_deg < 0.0) // autumn + spring
+              && (_adj_latitude_deg > _prev_lat)) // autumn
+        {
+            _autumn = true;
+        }
+
         _prev_lat = _adj_latitude_deg;
         _prev_lon = _adj_longitude_deg;
 
@@ -127,19 +135,15 @@ void FGClimate::update_day_factor()
 void FGClimate::update_season_factor()
 {
     double latitude_deg = pos.getLatitudeDeg();
-    double sign = latitude_deg >= 0.0 ? 1.0 : -1.0;
+    double sign = latitude_deg >= 0.0 ? 1.0 : -1.0; // hemisphere
     _season_summer = (23.5 + sign*_sun_latitude_deg)/(2.0*23.5);
 
-    _season_autumn = 0.0;
-    if (latitude_deg*_sun_latitude_deg < 0.0) // autumn
-    {
-        _season_autumn = 2.0*(1.0 - _season_summer) - 1.0;
-        if (_season_autumn < 0.0) _season_autumn = 0.0;
-        else if (_season_autumn > 1.0) _season_autumn = 1.0;
+    _season_winter = 2.0*(1.0 - _season_summer) - 1.0;
+    if (_season_winter < 0.0) _season_winter = 0.0;
+    else if (_season_winter > 1.0) _season_winter = 1.0;
 
-        double lat_fact = 6.0 - 12.0*fabs(latitude_deg)/90.0;
-        _season_autumn *= (0.5 - 0.5*sin(atan(SGD_2PI*lat_fact)));
-    }
+    double lat_fact = 6.0 - 12.0*fabs(latitude_deg)/90.0;
+    _season_winter *= (0.5 - 0.5*sin(atan(SGD_2PI*lat_fact)));
 }
 
 
@@ -285,49 +289,188 @@ void FGClimate::set_dry()
     _precipitation = winter*2.0*avg_precipitation;
 }
 
+// https://en.wikipedia.org/wiki/Temperate_climate
 void FGClimate::set_temperate()
 {
     set_ocean(); // for now
 
-    _temperature_gl = _temperature_sl;
+    double day = _day_noon;
+    double night = 1.0 - day;
+
+    double summer = _season_summer;
+    double winter = 1.0 - summer;
+
+    double temp_avg_summer = _temperature_sl;
+    double temp_avg_winter = _temperature_sl;
     switch(_classicfication)
     {
     case 9: // Cfa: warm temperature, fully humid hot summer
-    case 10: // Cfb: warm temperature, fully humid, warm summer
-    case 11: // Cfc: warm temperature, fully humid, cool summer
     case 12: // Csa: warm temperature, summer dry, hot summer
-    case 13: // Csb: warm temperature, summer dry, warm summer
-    case 14: // Csc: warm temperature, summer dry, cool summer
     case 15: // Cwa: warm temperature, winter dry, hot summer
+        temp_avg_winter = 11.0;
+        temp_avg_summer = 27.0;
+        break;
+    case 10: // Cfb: warm temperature, fully humid, warm summer
+    case 13: // Csb: warm temperature, summer dry, warm summer
     case 16: // Cwb: warm temperature, winter dry, warm summer
+        temp_avg_winter = 2.0;
+        temp_avg_summer = 17.0;
+        break;
+    case 11: // Cfc: warm temperature, fully humid, cool summer
+    case 14: // Csc: warm temperature, summer dry, cool summer
     case 17: // Cwc: warm temperature, winter dry, cool summer
+        temp_avg_winter = 0.1;
+        temp_avg_summer = 11.2;
+        break;
     default:
         break;
     }
+
+    switch(_classicfication)
+    {
+    case 9: // Cfa: warm temperature, fully humid hot summer
+        _precipitation = 60.0 + 63.0*summer;
+        _relative_humidity = 0.6 + 0.3*summer;
+        break;
+    case 10: // Cfb: warm temperature, fully humid, warm summer
+        _precipitation = 44.0 + 22.0*(winter + _season_winter);
+        _relative_humidity = 0.8;
+        break;
+    case 11: // Cfc: warm temperature, fully humid, cool summer
+        _precipitation = 44.0 + 22.0*(winter + _season_winter);
+        _relative_humidity = 0.8;
+        break;
+    case 12: // Csa: warm temperature, summer dry, hot summer
+        _precipitation = 70.0 - 45.0*summer;
+        break;
+    case 13: // Csb: warm temperature, summer dry, warm summer
+        _precipitation = 120.0 - 100.0*summer;
+        break;
+    case 14: // Csc: warm temperature, summer dry, cool summer
+        _precipitation = 300.0 - 280.0*summer;
+        break;
+    case 15: // Cwa: warm temperature, winter dry, hot summer
+        _precipitation = 10.0 + 290.0*summer;
+        break;
+    case 16: // Cwb: warm temperature, winter dry, warm summer
+        _precipitation = 10.0 + 240.0*summer;
+        break;
+    case 17: // Cwc: warm temperature, winter dry, cool summer
+        _precipitation = 10.0 + 180.0*summer;
+        break;
+    default:
+        break;
+    }
+
+    double temp_night_summer = (temp_avg_summer < 0.0) ? 2.0*temp_avg_summer
+                                                       : 0.5*temp_avg_summer;
+    double temp_day_summer = (temp_avg_summer < 0.0) ? 0.5*temp_avg_summer
+                                                     : 2.0*temp_avg_summer;
+    double temp_night_winter = (temp_avg_winter < 0.0) ? 2.0*temp_avg_winter
+                                                       : 0.5*temp_avg_winter;
+    double temp_day_winter = (temp_avg_winter < 0.0) ? 0.5*temp_avg_winter
+                                                     : 2.0*temp_avg_winter;
+    _temperature_gl = winter*(night*temp_night_winter + day*temp_day_winter) +
+                      summer*(night*temp_night_summer + day*temp_day_summer);
+   _temperature_sl = _temperature_gl;
 }
 
 void FGClimate::set_continetal()
 {
     set_ocean(); // for now
 
-    _temperature_gl = _temperature_sl;
+    double day = _day_noon;
+    double night = 1.0 - day;
+
+    double summer = _season_summer;
+    double winter = 1.0 - summer;
+
+    double temp_avg_summer = _temperature_sl;
+    double temp_avg_winter = _temperature_sl;
     switch(_classicfication)
     {
-    case 18: // Dfa: snow, fully humid, hot summer
-    case 19: // Dfb: snow, fully humid, warm summer, warm summer
-    case 20: // Dfc: snow, fully humid, cool summer, cool summer
-    case 21: // Dfd: snow, fully humid, extremely continetal
-    case 22: // Dsa: snow, summer dry, hot summer
-    case 23: // Dsb: snow, summer dry, warm summer
-    case 24: // Dsc: snow, summer dry, cool summer
-    case 25: // Dsd: snow, summer dry, extremely continetal
-    case 26: // Dwa: snow, winter dry, hot summer
-    case 27: // Dwb: snow, winter dry, warm summer
-    case 28: // Dwc: snow, winter dry, cool summer
-    case 29: // Dwd: snow, winter dry, extremely continetal
+    case 18: // Cfa: warm temperature, fully humid hot summer
+    case 22: // Csa: warm temperature, summer dry, hot summer
+    case 26: // Cwa: warm temperature, winter dry, hot summer
+        temp_avg_winter = -2.3;
+        temp_avg_summer = 27.0;
+        break;
+    case 19: // Cfb: warm temperature, fully humid, warm summer
+    case 23: // Csb: warm temperature, summer dry, warm summer
+    case 27: // Cwb: warm temperature, winter dry, warm summer
+        temp_avg_winter = -4.0;
+        temp_avg_summer = 22.5;
+        break;
+    case 20: // Cfc: warm temperature, fully humid, cool summer
+    case 24: // Csc: warm temperature, summer dry, cool summer
+    case 28: // Cwc: warm temperature, winter dry, cool summer
+        temp_avg_winter = -15.0;
+        temp_avg_summer = 17.5;
+        break;
+    case 21: // Cfd: warm temperature, fully humid, cool summer
+    case 25: // Csd: warm temperature, summer dry, cool summer
+    case 29: // Cwd: warm temperature, winter dry, cool summer
+        temp_avg_winter = -35.0;
+        temp_avg_summer = 25.0;
+        break;
     default:
         break;
     }
+
+    switch(_classicfication)
+    {
+    case 18: // Dfa: snow, fully humid, hot summer
+        _precipitation = 65.0 - 33.0*summer;
+        break;
+    case 19: // Dfb: snow, fully humid, warm summer, warm summer
+        _precipitation = 50.0 - 40.0*summer;
+        break;
+    case 20: // Dfc: snow, fully humid, cool summer, cool summer
+        _precipitation = 50.0 - 25.0*summer;
+        break;
+    case 21: // Dfd: snow, fully humid, extremely continetal
+        _precipitation = 35.0 - 30.0*summer;
+        break;
+    case 22: // Dsa: snow, summer dry, hot summer
+        _precipitation = 50.0 - 40.0*summer;
+        break;
+    case 23: // Dsb: snow, summer dry, warm summer
+        _precipitation = 70.0 - 55.0*summer;
+        break;
+    case 24: // Dsc: snow, summer dry, cool summer
+        _precipitation = 65.0 - 33.0*summer;
+        break;
+    case 25: // Dsd: snow, summer dry, extremely continetal
+        _precipitation = 70.0 - 55.0*summer;
+        break;
+    case 26: // Dwa: snow, winter dry, hot summer
+        _precipitation = 5.0 + 170.0*summer;
+        break;
+    case 27: // Dwb: snow, winter dry, warm summer
+        _precipitation = 5.0 + 120.0*summer;
+        break;
+    case 28: // Dwc: snow, winter dry, cool summer
+        _precipitation = 10.0 + 100.0*summer;
+        break;
+    case 29: // Dwd: snow, winter dry, extremely continetal
+        _precipitation = 10.0 + 55.0*summer;
+        break;
+    default:
+        break;
+    }
+
+    double temp_night_summer = (temp_avg_summer < 0.0) ? 2.0*temp_avg_summer
+                                                       : 0.5*temp_avg_summer;
+    double temp_day_summer = (temp_avg_summer < 0.0) ? 0.5*temp_avg_summer
+                                                     : 2.0*temp_avg_summer;
+    double temp_night_winter = (temp_avg_winter < 0.0) ? 2.0*temp_avg_winter
+                                                       : 0.5*temp_avg_winter;
+    double temp_day_winter = (temp_avg_winter < 0.0) ? 0.5*temp_avg_winter
+                                                     : 2.0*temp_avg_winter;
+    _temperature_gl = winter*(night*temp_night_winter + day*temp_day_winter) +
+                      summer*(night*temp_night_summer + day*temp_day_summer);
+   _temperature_sl = _temperature_gl;
+
 }
 
 void FGClimate::set_polar()
@@ -402,7 +545,10 @@ void FGClimate::set_environment()
         fgSetDouble("/environment/surface/dust-cover-factor", _dust_cover);
         fgSetDouble("/environment/surface/wetness-set", _wetness);
         fgSetDouble("/environment/surface/lichen-cover-factor", _lichen_cover);
-        fgSetDouble("/environment/season", 2.0*_season_autumn);
+        if (_autumn)
+            fgSetDouble("/environment/season", 2.0*_season_winter);
+        else
+            fgSetDouble("/environment/season", 0.0);
     }
 }
 
@@ -489,7 +635,7 @@ void FGClimate::report()
     std::cout << "  Dew point: " << _dew_point << " deg. C." << std::endl;
     std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
     std::cout << "  Snow level: " << _snow_level << " meters" << std::endl;
-    std::cout << "  Snow Thickness (0.0 = thin .. 1.0 = thick): "
+    std::cout << "  Snow Thickness.(0.0 = thin .. 1.0 = thick): "
               << _snow_thickness << std::endl;
     std::cout << "  Ice cover......(0.0 = none .. 1.0 = thick): " << _ice_cover
               << std::endl;
@@ -497,10 +643,10 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Wetness........(0.0 = dry  .. 1.0 = wet):   " << _wetness
               << std::endl;
-    std::cout << "  Lichen cover...(0.0 = none .. 1.0 = muddy): "
+    std::cout << "  Lichen cover...(0.0 = none .. 1.0 = mossy): "
               << _lichen_cover << std::endl;
-    std::cout << "  Autumn (0.0 = summer .. 1.0 = late autumn): "
-              << _season_autumn << std::endl;
+    std::cout << "  Season (0.0 = summer .. 1.0 = late autumn): "
+              << _season_winter << std::endl;
     std::cout << "===============================================" << std::endl;
 }
 #endif // REPORT_TO_CONSOLE
