@@ -61,6 +61,13 @@ private:
 #if REPORT_TO_CONSOLE
     void report();
 #endif
+    // interpolate val (from 0.0 to 1.0) between min and max
+    double linear(double val, double min, double max);
+    double season_short(double val, double min, double max);
+    double season_even(double val, double min, double max);
+    double season_long_low(double val, double min, double max);
+    double season_long_high(double val, double min, double max);
+    double monsoonal(double val, double min, double max);
 
     void set_ocean();
     void set_dry();

@@ -142,8 +142,8 @@ void FGClimate::update_season_factor()
     if (_season_winter < 0.0) _season_winter = 0.0;
     else if (_season_winter > 1.0) _season_winter = 1.0;
 
-    double lat_fact = 6.0 - 12.0*fabs(latitude_deg)/90.0;
-    _season_winter *= (0.5 - 0.5*sin(atan(SGD_2PI*lat_fact)));
+    double fact_lat = 6.0 - 12.0*fabs(latitude_deg)/90.0;
+    _season_winter *= (0.5 - 0.5*sin(atan(SGD_2PI*fact_lat)));
 }
 
 
@@ -152,32 +152,29 @@ void FGClimate::set_ocean()
     _total_annual_precipitation = 990.0; // use the global value, for now.
 
     double day = _day_noon;
-    double night = 1.0 - day;
-
     double summer = _season_summer;
-    double winter = 1.0 - summer;
 
     // temperature based on latitude, season and time of day
     // the equator does not really have seasons, only day and night
-    double day_temp_equator = 31.0;
-    double night_temp_equator = 23.0;
-    double temp_equator = day*day_temp_equator + night*night_temp_equator;
+    double temp_equator_max = 31.0;
+    double temp_equator_min = 23.0;
+    double temp_equator = season_even(day, temp_equator_min, temp_equator_max);
 
     // the poles do not really have day or night, only seasons
-    double summer_temp_pole = -8.0;
-    double winter_temp_pole = -48.0;
-    double temp_pole = summer*summer_temp_pole + winter*winter_temp_pole;
+    double temp_summer_pole = -8.0;
+    double temp_winter_pole = -48.0;
+    double temp_pole = season_even(summer, temp_winter_pole, temp_summer_pole);
 
-    double lat_fact = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
-    double ifact_lat = 1.0 - lat_fact;
+    double fact_lat = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
+    double ifact_lat = 1.0 - fact_lat;
 
-    _temperature_sl = ifact_lat*temp_equator + lat_fact*temp_pole;
+    _temperature_sl = season_even(ifact_lat, temp_pole, temp_equator);
 
-    double temp_mean_equator = 0.5*(day_temp_equator + night_temp_equator);
-    _temperature_mean = ifact_lat*temp_mean_equator + lat_fact*temp_pole;
+    double temp_mean_equator = 0.5*(temp_equator_max + temp_equator_min);
+    _temperature_mean = season_even(ifact_lat, temp_pole, temp_mean_equator);
 
     // relative humidity based on latitude
-    _relative_humidity = 0.8 - 0.7*lat_fact;
+    _relative_humidity = season_even(fact_lat, 0.1, 0.8);
 
     // steady winds
     _wind = 3.0;
@@ -197,50 +194,43 @@ void FGClimate::set_tropical()
 //  double avg_precipitation = 100.0 - (_total_annual_precipitation/25.0);
 
     double day = _day_noon;
-    double night = 1.0 - day;
 
     double summer = _season_summer;
     double winter = 1.0 - summer;
 
-    double day_temp_equator = 31.0;
-    double night_temp_equator = 23.0;
-    double temp_equator = day*day_temp_equator + night*night_temp_equator;
+    double temp_equator_max = 31.0;
+    double temp_equator_min = 23.0;
+    double temp_equator = season_even(day, temp_equator_min, temp_equator_max);
 
     // winter temperatures are three-quarter of the summer temperatures
-    _temperature_mean = 0.5*(day_temp_equator + night_temp_equator);
-    _temperature_sl = 0.75*temp_equator + 0.25*summer*temp_equator;
+    _temperature_sl = season_even(summer, 0.75*temp_equator, temp_equator);
     _temperature_gl = _temperature_sl;
 
     // relative humidity based on latitude
     double latitude_deg = pos.getLatitudeDeg();
-    double lat_fact = fabs(latitude_deg)/90.0;
-    _relative_humidity = 0.8 - 0.7*lat_fact;
+    double fact_lat = fabs(latitude_deg)/90.0;
+    _relative_humidity = season_even(fact_lat, 0.1, 0.8);
 
     // wind based on latitude (0.0 - 15 degrees)
-    lat_fact = std::max(abs(latitude_deg), 15.0)/15.0;
-    _wind = 3.0*lat_fact*lat_fact;
+    fact_lat = std::max(abs(latitude_deg), 15.0)/15.0;
+    _wind = 3.0*fact_lat*fact_lat;
 
-    double monsoon;
-    double monsoon_precipitation = _total_annual_precipitation;
     switch(_classicfication)
     {
     case 1: // Af: equatorial, fully humid
-        _precipitation = 60.0 + sqrt(summer)*40.0;
+        _precipitation = season_even(winter, 150.0, 280.0);
         break;
     case 2: // Am: equatorial, monsoonal
-        monsoon = cos(atan(6 + 12.0*winter)); // monsoon around the 6th month
-        _precipitation = monsoon*monsoon_precipitation;
-        _wind = 2.0*monsoon*_wind;
+        _precipitation = season_even(summer, 75.0, 320.0);
+        _wind *= 2.0*_precipitation/320.0;
         break;
     case 3: // As: equatorial, summer dry
-        monsoon = 0.5 + 0.5*atan(cos(SGD_2PI*winter/12.0));
-        _precipitation = monsoon*monsoon_precipitation;
-        _wind = 2.0*monsoon*_wind;
+        _precipitation = season_even(0.5*summer + 0.5 - 0.5*_season_winter , 35.0, 150.0);
+        _wind *= 2.0*_precipitation/350.0;
         break;
     case 4: // Aw: equatorial, winter dry
-        monsoon = 0.5 - 0.5*atan(cos(SGD_2PI*winter/12.0));
-        _precipitation = monsoon*monsoon_precipitation;
-        _wind = 2.0*monsoon*_wind;
+        _precipitation = season_even(summer, 10.0, 230.0);
+        _wind *= 2.0*_precipitation/230.0;
         break;
     default:
         break;
@@ -252,19 +242,20 @@ void FGClimate::set_tropical()
 void FGClimate::set_dry()
 {
     double day = _day_noon;
-    double night = 1.0 - day;
 
     double summer = _season_summer;
     double winter = 1.0 - summer;
 
-    double temp_avg_summer = 32.0;
+    double temp_mean_summer = 32.0;
     double temp_day_summer  = 41.0;
-    double temp_night_summer = 2.0*temp_avg_summer - temp_day_summer;
+    double temp_night_summer = 2.0*temp_mean_summer - temp_day_summer;
     double temp_day_winter = temp_day_summer - temp_night_summer;
     double temp_night_winter = 0.0;
 
-    _temperature_gl = winter*(day*temp_day_winter + night*temp_night_winter)
-                    + summer*(day*temp_day_summer + night*temp_night_summer);
+    double temp_winter = season_even(day, temp_night_winter, temp_day_winter);
+    double temp_summer = season_even(day, temp_night_summer, temp_day_summer);
+    _temperature_gl = season_even(summer, temp_winter, temp_summer);
+
     if (_classicfication == 6 || _classicfication == 8) { 	// cold arid
         _temperature_mean -= 14.0;
         _temperature_gl -= 14.0;
@@ -272,7 +263,7 @@ void FGClimate::set_dry()
     _temperature_sl = _temperature_gl;
 
     double temp_mean_winter = 0.5*(temp_day_winter + temp_night_winter);
-    _temperature_mean = summer*temp_avg_summer + winter*temp_mean_winter;
+    _temperature_mean =  season_even(summer, temp_mean_winter, temp_mean_summer);
 
     // low relative humidity
     _relative_humidity = 0.25;
@@ -292,209 +283,202 @@ void FGClimate::set_dry()
 // https://en.wikipedia.org/wiki/Temperate_climate
 void FGClimate::set_temperate()
 {
-    set_ocean(); // for now
-
     double day = _day_noon;
-    double night = 1.0 - day;
 
     double summer = _season_summer;
     double winter = 1.0 - summer;
 
-    double temp_avg_summer = _temperature_sl;
-    double temp_avg_winter = _temperature_sl;
+    double temp_min = _temperature_sl;
+    double temp_max = _temperature_sl;
+    double precipitation = _precipitation;
+    double relative_humidity = _relative_humidity;
     switch(_classicfication)
     {
     case 9: // Cfa: warm temperature, fully humid hot summer
-    case 12: // Csa: warm temperature, summer dry, hot summer
-    case 15: // Cwa: warm temperature, winter dry, hot summer
-        temp_avg_winter = 11.0;
-        temp_avg_summer = 27.0;
+        temp_min = season_even(summer, -3.0, 20.0);
+        temp_max = season_even(summer, 10.0, 33.0);
+        precipitation = season_even(summer, 60.0, 123.0);
+        relative_humidity = season_even(summer, 0.6, 0.9);
         break;
     case 10: // Cfb: warm temperature, fully humid, warm summer
-    case 13: // Csb: warm temperature, summer dry, warm summer
-    case 16: // Cwb: warm temperature, winter dry, warm summer
-        temp_avg_winter = 2.0;
-        temp_avg_summer = 17.0;
+        temp_min = season_even(summer, -3.0, 10.0);
+        temp_max = season_even(summer, 5.0, 25.0);
+        precipitation = linear(0.5*(summer + _season_winter), 44.0, 88.0);
+        relative_humidity = 0.8;
         break;
     case 11: // Cfc: warm temperature, fully humid, cool summer
+        temp_min = season_long_low(summer, -3.0, 8.0);
+        temp_max = season_long_low(summer, 2.0, 14.0);
+        precipitation = season_even(winter, 44.0, 88.0);
+        relative_humidity = 0.8;
+        break;
+    case 12: // Csa: warm temperature, summer dry, hot summer
+        temp_min = season_even(summer, 2.0, 16.0);
+        temp_max = season_even(summer, 12.0, 33.0);
+        precipitation = season_long_low(summer, 25.0, 70.0);
+        break;
+    case 13: // Csb: warm temperature, summer dry, warm summer
+        temp_min = linear(summer, -4.0, 10.0);
+        temp_max = linear(summer, 6.0, 27.0);
+        precipitation = season_short(winter, 25.0, 120.0);
+        break;
     case 14: // Csc: warm temperature, summer dry, cool summer
+        temp_min = season_even(summer, -4.0, 5.0);
+        temp_max = season_even(summer, 5.0, 16.0);
+        precipitation = season_even(summer, 60.0, 95.0);
+        break;
+    case 15: // Cwa: warm temperature, winter dry, hot summer
+        temp_min = season_even(summer, 4.0, 20.0);
+        temp_max = season_long_low(summer, 15.0, 30.0);
+        precipitation = season_long_low(summer, 10.0, 320.0);
+        break;
+    case 16: // Cwb: warm temperature, winter dry, warm summer
+        temp_min = season_even(summer, 1.0, 13.0);
+        temp_max = season_long_low(summer, 15.0, 27.0);
+        precipitation = season_long_low(summer, 10.0, 250.0);
+        break;
     case 17: // Cwc: warm temperature, winter dry, cool summer
-        temp_avg_winter = 0.1;
-        temp_avg_summer = 11.2;
+        temp_min = season_long_high(winter, -9.0, 6.0);
+        temp_max = season_long_high(winter, 6.0, 17.0);
+        precipitation = season_long_low(summer, 10.0, 200.0);
         break;
     default:
         break;
     }
 
-    switch(_classicfication)
-    {
-    case 9: // Cfa: warm temperature, fully humid hot summer
-        _precipitation = 60.0 + 63.0*summer;
-        _relative_humidity = 0.6 + 0.3*summer;
-        break;
-    case 10: // Cfb: warm temperature, fully humid, warm summer
-        _precipitation = 44.0 + 22.0*(winter + _season_winter);
-        _relative_humidity = 0.8;
-        break;
-    case 11: // Cfc: warm temperature, fully humid, cool summer
-        _precipitation = 44.0 + 22.0*(winter + _season_winter);
-        _relative_humidity = 0.8;
-        break;
-    case 12: // Csa: warm temperature, summer dry, hot summer
-        _precipitation = 70.0 - 45.0*summer;
-        break;
-    case 13: // Csb: warm temperature, summer dry, warm summer
-        _precipitation = 120.0 - 100.0*summer;
-        break;
-    case 14: // Csc: warm temperature, summer dry, cool summer
-        _precipitation = 300.0 - 280.0*summer;
-        break;
-    case 15: // Cwa: warm temperature, winter dry, hot summer
-        _precipitation = 10.0 + 290.0*summer;
-        break;
-    case 16: // Cwb: warm temperature, winter dry, warm summer
-        _precipitation = 10.0 + 240.0*summer;
-        break;
-    case 17: // Cwc: warm temperature, winter dry, cool summer
-        _precipitation = 10.0 + 180.0*summer;
-        break;
-    default:
-        break;
-    }
+    _temperature_gl = season_even(day, temp_min, temp_max);
+    _temperature_sl = _temperature_gl;
 
-    double temp_night_summer = (temp_avg_summer < 0.0) ? 2.0*temp_avg_summer
-                                                       : 0.5*temp_avg_summer;
-    double temp_day_summer = (temp_avg_summer < 0.0) ? 0.5*temp_avg_summer
-                                                     : 2.0*temp_avg_summer;
-    double temp_night_winter = (temp_avg_winter < 0.0) ? 2.0*temp_avg_winter
-                                                       : 0.5*temp_avg_winter;
-    double temp_day_winter = (temp_avg_winter < 0.0) ? 0.5*temp_avg_winter
-                                                     : 2.0*temp_avg_winter;
-    _temperature_gl = winter*(night*temp_night_winter + day*temp_day_winter) +
-                      summer*(night*temp_night_summer + day*temp_day_summer);
-   _temperature_sl = _temperature_gl;
+    _temperature_mean = 0.5*(temp_min + temp_max);
+    _precipitation = precipitation;
+    _relative_humidity = relative_humidity;
+    _wind = 3.0;
 }
 
 void FGClimate::set_continetal()
 {
-    set_ocean(); // for now
-
     double day = _day_noon;
-    double night = 1.0 - day;
-
     double summer = _season_summer;
-    double winter = 1.0 - summer;
 
-    double temp_avg_summer = _temperature_sl;
-    double temp_avg_winter = _temperature_sl;
-    switch(_classicfication)
-    {
-    case 18: // Cfa: warm temperature, fully humid hot summer
-    case 22: // Csa: warm temperature, summer dry, hot summer
-    case 26: // Cwa: warm temperature, winter dry, hot summer
-        temp_avg_winter = -2.3;
-        temp_avg_summer = 27.0;
-        break;
-    case 19: // Cfb: warm temperature, fully humid, warm summer
-    case 23: // Csb: warm temperature, summer dry, warm summer
-    case 27: // Cwb: warm temperature, winter dry, warm summer
-        temp_avg_winter = -4.0;
-        temp_avg_summer = 22.5;
-        break;
-    case 20: // Cfc: warm temperature, fully humid, cool summer
-    case 24: // Csc: warm temperature, summer dry, cool summer
-    case 28: // Cwc: warm temperature, winter dry, cool summer
-        temp_avg_winter = -15.0;
-        temp_avg_summer = 17.5;
-        break;
-    case 21: // Cfd: warm temperature, fully humid, cool summer
-    case 25: // Csd: warm temperature, summer dry, cool summer
-    case 29: // Cwd: warm temperature, winter dry, cool summer
-        temp_avg_winter = -35.0;
-        temp_avg_summer = 25.0;
-        break;
-    default:
-        break;
-    }
-
+    double temp_max = _temperature_sl;
+    double temp_min = _temperature_sl;
     switch(_classicfication)
     {
     case 18: // Dfa: snow, fully humid, hot summer
-        _precipitation = 65.0 - 33.0*summer;
+        temp_min = season_even(summer, -15.0, 13.0);
+        temp_max = season_even(summer, -5.0, 30.0);
+        _precipitation = season_even(summer, 25.0, 65.0);
         break;
     case 19: // Dfb: snow, fully humid, warm summer, warm summer
-        _precipitation = 50.0 - 40.0*summer;
+        temp_min = season_even(summer, -17.5, 10.0);
+        temp_max = season_even(summer, -7.5, 25.0);
+        _precipitation = season_even(summer, 30.0, 70.0);
         break;
     case 20: // Dfc: snow, fully humid, cool summer, cool summer
+        temp_min = season_even(summer, -30.0, 4.0);
+        temp_max = season_even(summer, -20.0, 15.0);
+        _precipitation = season_even(summer, 22.0, 68.0);
         _precipitation = 50.0 - 25.0*summer;
         break;
     case 21: // Dfd: snow, fully humid, extremely continetal
-        _precipitation = 35.0 - 30.0*summer;
+        temp_min = season_short(summer, -45.0, 4.0);
+        temp_max = season_short(summer, -35.0, 10.0);
+        _precipitation = season_long_low(summer, 7.5, 45.0);
         break;
     case 22: // Dsa: snow, summer dry, hot summer
-        _precipitation = 50.0 - 40.0*summer;
+        temp_min = season_even(summer, -10.0, 10.0);
+        temp_max = season_even(summer, 0.0, 30.0);
+        _precipitation = season_long_high(summer, 2.0, 70.0);
         break;
     case 23: // Dsb: snow, summer dry, warm summer
-        _precipitation = 70.0 - 55.0*summer;
+        temp_min = season_even(summer, -15.0, 6.0);
+        temp_max = season_even(summer, -4.0, 25.0);
+        _precipitation = season_long_high(summer, 12.0, 73.0);
         break;
     case 24: // Dsc: snow, summer dry, cool summer
-        _precipitation = 65.0 - 33.0*summer;
+        temp_min = season_even(summer, -27.5, 2.0);
+        temp_max = season_even(summer, -4.0, 15.0);
+        _precipitation = season_long_low(summer, 32.5, 45.0);
         break;
     case 25: // Dsd: snow, summer dry, extremely continetal
-        _precipitation = 70.0 - 55.0*summer;
+        temp_min = season_even(summer, -11.5, -6.5);
+        temp_max = season_even(summer, 14.0, 27.0);
+        _precipitation = season_long_low(summer, 5.0, 90.0);
         break;
     case 26: // Dwa: snow, winter dry, hot summer
-        _precipitation = 5.0 + 170.0*summer;
+        temp_min = season_even(summer, -18.0, 16.5);
+        temp_max = season_even(summer, -5.0, 25.0);
+        _precipitation = season_long_low(summer, 5.0, 180.0);
         break;
     case 27: // Dwb: snow, winter dry, warm summer
-        _precipitation = 5.0 + 120.0*summer;
+        temp_min = season_even(summer, -28.0, 10.0);
+        temp_max = season_even(summer, -12.5, 22.5);
+        _precipitation = season_long_low(summer, 10.0, 140.0);
         break;
     case 28: // Dwc: snow, winter dry, cool summer
-        _precipitation = 10.0 + 100.0*summer;
+        temp_min = season_even(summer, -33.0, 5.0);
+        temp_max = season_even(summer, -20.0, 20.0);
+        _precipitation = season_long_low(summer, 10.0, 110.0);
         break;
     case 29: // Dwd: snow, winter dry, extremely continetal
-        _precipitation = 10.0 + 55.0*summer;
+        temp_min = season_even(summer, -57.5, 0.0);
+        temp_max = season_even(summer, -43.0, 15.0);
+        _precipitation = season_even(summer, 8.0, 63.0);
         break;
     default:
         break;
     }
 
-    double temp_night_summer = (temp_avg_summer < 0.0) ? 2.0*temp_avg_summer
-                                                       : 0.5*temp_avg_summer;
-    double temp_day_summer = (temp_avg_summer < 0.0) ? 0.5*temp_avg_summer
-                                                     : 2.0*temp_avg_summer;
-    double temp_night_winter = (temp_avg_winter < 0.0) ? 2.0*temp_avg_winter
-                                                       : 0.5*temp_avg_winter;
-    double temp_day_winter = (temp_avg_winter < 0.0) ? 0.5*temp_avg_winter
-                                                     : 2.0*temp_avg_winter;
-    _temperature_gl = winter*(night*temp_night_winter + day*temp_day_winter) +
-                      summer*(night*temp_night_summer + day*temp_day_summer);
-   _temperature_sl = _temperature_gl;
+    _temperature_gl = season_even(day, temp_min, temp_max);
+    _temperature_sl = _temperature_gl;
 
+    _temperature_mean = 0.5*(temp_min + temp_max);
+    _precipitation = _precipitation;
+    _wind = 3.0;
+
+    double fact_lat = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
+    _relative_humidity = season_even(fact_lat, 0.1, 0.8);
 }
 
 void FGClimate::set_polar()
 {
-    set_ocean();
+    double day = _day_noon;
+    double summer = _season_summer;
 
     // polar climate also occurs high in the mountains
+    double temp_max = _temperature_sl;
+    double temp_min = _temperature_sl;
     switch(_classicfication)
     {
     case 30: // EF: polar frost
-        _temperature_gl = _temperature_sl+16.0;
+        temp_min = season_long_low(summer, -35.0, -6.0);
+        temp_max = season_long_low(summer, -32.5, 0.0);
+        _precipitation = season_even(summer, 50.0, 80.0);
         break;
     case 31: // ET: polar tundra
-        _temperature_gl = _temperature_sl;
+        temp_min = season_even(summer, -30.0, 0.0);
+        temp_max = season_even(summer, -22.5, 8.0);
+        _precipitation = season_even(summer, 15.0, 45.0);
         break;
     default:
         break;
     }
+
+    _temperature_gl = season_even(day, temp_min, temp_max);
+    _temperature_sl = _temperature_gl;
+
+    _temperature_mean = 0.5*(temp_min + temp_max);
+    _precipitation = _precipitation;
+    _wind = 3.0;
+
+    double fact_lat = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
+    _relative_humidity = season_even(fact_lat, 0.1, 0.8);
 }
 
 void FGClimate::set_environment()
 {
     double latitude_deg = pos.getLatitudeDeg();
-    double lat_fact = pow(fabs(latitude_deg)/90.0, 2.5);
+    double fact_lat = pow(fabs(latitude_deg)/90.0, 2.5);
     double snow_fact, precipitation;
 
     // snow chance based on latitude, mean temperature and monthly precipitation
@@ -517,9 +501,9 @@ void FGClimate::set_environment()
         snow_fact *= precipitation;
     }
 
-    _snow_level = (7500.0 - 8000.0*lat_fact)*(1.0 - snow_fact);
+    _snow_level = (7500.0 - 8000.0*fact_lat)*(1.0 - snow_fact);
     _snow_thickness = pow(snow_fact, 2.0);
-    _ice_cover = pow(lat_fact, 2.5);
+    _ice_cover = pow(fact_lat, 2.5);
 
     if (_precipitation < 20.0 && _total_annual_precipitation < 240.0)
     {
@@ -551,6 +535,57 @@ void FGClimate::set_environment()
             fgSetDouble("/environment/season", 0.0);
     }
 }
+
+// val is the progress indicator between 0.0 and 1.0
+double FGClimate::linear(double val, double min, double max)
+{
+    double diff = max-min;
+    return min + val*diff;
+}
+
+// google: y =0.5-0.5*atan(cos(x))
+// the short low season is round 0.0, the short high season around 1.0
+double FGClimate::season_short(double val, double min, double max)
+{
+    double diff = max-min;
+    return min + diff*(0.5 - 0.5*cos(SGD_PI*val));
+}
+
+// google: y =0.5-0.6366*atan(cos(x))
+// the medium long low season is round 0.0, medium long high season round 1.0
+double FGClimate::season_even(double val, double min, double max)
+{
+    double diff = max-min;
+    return min + diff*(0.5 - 0.6366*atan(cos(SGD_PI*val)));
+}
+
+// google: y=0.5-0.5*cos(x^1.5)
+// 2.145 = pow(SGD_PI, 1.0/1.5)
+// the long low season is around 0.0, the short high season around 1.0
+double FGClimate::season_long_low(double val, double min, double max)
+{
+    double diff = max-min;
+    return min + diff*(0.5 - 0.5*cos(pow(2.145*val, 1.5)));
+}
+
+// google: y=0.5+0.5*cos(x^1.5)
+// 2.145 = pow(SGD_PI, 1.0/1.5)
+// the long high season is around 0.0, the short low season around 1.0
+double FGClimate::season_long_high(double val, double min, double max)
+{
+    double diff = max-min;
+    return min + diff*(0.5 + 0.5*cos(pow(2.145*val, 1.5)));
+}
+
+// goole: y=cos(atan(x*x))
+// the monsoon is around 0.0
+double FGClimate::monsoonal(double val, double min, double max)
+{
+    double diff = max-min;
+    val = 2.0*SGD_2PI*(1.0-val);
+    return min + diff*cos(atan(val*val));
+}
+
 
 #if REPORT_TO_CONSOLE
 void FGClimate::report()
