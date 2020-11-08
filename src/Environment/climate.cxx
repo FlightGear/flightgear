@@ -211,6 +211,8 @@ void FGClimate::set_tropical()
     double summer = _season_summer;
     double winter = 1.0 - summer;
 
+    double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
+
     // wind based on latitude (0.0 - 15 degrees)
     double latitude_deg = pos.getLatitudeDeg();
     double fact_lat = std::max(abs(latitude_deg), 15.0)/15.0;
@@ -226,27 +228,27 @@ void FGClimate::set_tropical()
         temp_night = triangular(summer, 20.0, 22.5);
         temp_day = triangular(summer, 29.5, 32.5);
         precipitation = season_even(winter, 150.0, 280.0);
-        relative_humidity = season_even(summer, 0.75, 0.85);
+        relative_humidity = triangular(humidity_fact, 0.75, 0.85);
         break;
     case 2: // Am: equatorial, monsoonal
         temp_night = triangular(summer, 17.5, 22.5);
         temp_day = triangular(summer, 27.5, 32.5);
         precipitation = season_even(summer, 75.0, 320.0);
-        relative_humidity = season_even(summer, 0.75, 0.85);
+        relative_humidity = triangular(humidity_fact, 0.75, 0.85);
         wind *= 2.0*_precipitation/320.0;
         break;
     case 3: // As: equatorial, summer dry
         temp_night = season_long_high(summer, 15.0, 22.5);
         temp_day = triangular(summer, 27.5, 35.0);
-        precipitation = season_even(0.5*summer + 0.5 - 0.5*_season_transistional , 35.0, 150.0);
-        relative_humidity = season_even(summer, 0.60, 0.80);
+        precipitation = season_even(summer , 35.0, 150.0);
+        relative_humidity = triangular(humidity_fact, 0.60, 0.80);
         wind *= 2.0*_precipitation/350.0;
         break;
     case 4: // Aw: equatorial, winter dry
         temp_night = season_long_high(summer, 15.0, 22.5);
         temp_day = triangular(summer, 27.5, 35.0);
         precipitation = season_even(summer, 10.0, 230.0);
-        relative_humidity = season_even(summer, 0.60, 0.80);
+        relative_humidity = triangular(humidity_fact, 0.60, 0.80);
         wind *= 2.0*_precipitation/230.0;
         break;
     default:
@@ -268,7 +270,11 @@ void FGClimate::set_tropical()
 void FGClimate::set_dry()
 {
     double day = _day_noon;
+
     double summer = _season_summer;
+    double winter = 1.0 - summer;
+
+    double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
     _total_annual_precipitation = 100.0;
     if (_classicfication == 5 || _classicfication == 6) {	// steppe
@@ -285,25 +291,25 @@ void FGClimate::set_dry()
         temp_night = season_long_high(summer, 10.0, 22.0);
         temp_day = triangular(summer, 27.5, 35.0);
         precipitation = season_long_low(summer, 8.0, 117.0);
-        relative_humidity = season_long_low(summer, 0.20, 0.30);
+        relative_humidity = triangular(humidity_fact, 0.20, 0.30);
         break;
     case 6: // BSk: arid, steppe, cold arid
         temp_night = season_even(summer, -14.0, 12.0);
         temp_day = season_even(summer, 0.0, 30.0);
         precipitation = season_even(summer, 15.0, 34.0);
-        relative_humidity = season_even(summer, 0.48, 0.67);
+        relative_humidity = season_even(humidity_fact, 0.48, 0.67);
         break;
     case 7: // BWh: arid, desert, hot arid
         temp_night = season_even(summer, 7.5, 22.0);
         temp_day = season_even(summer, 22.5, 37.5);
         precipitation = monsoonal(summer, 3.0, 18.0);
-        relative_humidity = monsoonal(summer, 0.25, 0.55);
+        relative_humidity = monsoonal(humidity_fact, 0.25, 0.55);
         break;
     case 8: // BWk: arid, desert, cold arid
         temp_night = season_even(summer, -15.0, 15.0);
         temp_day = season_even(summer, -2.0, 30.0);
         precipitation = linear(summer, 4.0, 14.0);
-        relative_humidity = linear(summer, 0.45, 0.61);
+        relative_humidity = linear(humidity_fact, 0.45, 0.61);
         break;
     default:
         break;
@@ -327,6 +333,8 @@ void FGClimate::set_temperate()
     double summer = _season_summer;
     double winter = 1.0 - summer;
 
+    double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
+
     double temp_night = _temperature_sl;
     double temp_day = _temperature_sl;
     double precipitation = _precipitation;
@@ -337,55 +345,55 @@ void FGClimate::set_temperate()
         temp_night = season_even(summer, -3.0, 20.0);
         temp_day = season_even(summer, 10.0, 33.0);
         precipitation = season_even(summer, 60.0, 123.0);
-        relative_humidity = season_even(summer, 0.65, 0.80);
+        relative_humidity = season_even(humidity_fact, 0.65, 0.80);
         break;
     case 10: // Cfb: warm temperature, fully humid, warm summer
         temp_night = season_even(summer, -3.0, 10.0);
         temp_day = season_even(summer, 5.0, 25.0);
         precipitation = linear(0.5*(summer+_season_transistional), 44.0, 88.0);
-        relative_humidity = season_even(summer, 0.68, 0.87);
+        relative_humidity = season_even(humidity_fact, 0.68, 0.87);
         break;
     case 11: // Cfc: warm temperature, fully humid, cool summer
         temp_night = season_long_low(summer, -3.0, 8.0);
         temp_day = season_long_low(summer, 2.0, 14.0);
         precipitation = season_even(winter, 44.0, 88.0);
-        relative_humidity = season_even(summer, 0.70, 0.85);
+        relative_humidity = season_long_low(humidity_fact, 0.70, 0.85);
         break;
     case 12: // Csa: warm temperature, summer dry, hot summer
         temp_night = season_even(summer, 2.0, 16.0);
         temp_day = season_even(summer, 12.0, 33.0);
         precipitation = season_long_low(winter, 25.0, 70.0);
-        relative_humidity = season_even(winter, 0.58, 0.72);
+        relative_humidity = season_even(humidity_fact, 0.58, 0.72);
         break;
     case 13: // Csb: warm temperature, summer dry, warm summer
         temp_night = linear(summer, -4.0, 10.0);
         temp_day = linear(summer, 6.0, 27.0);
         precipitation = season_short(winter, 25.0, 120.0);
-        relative_humidity = season_even(winter, 0.50, 0.72);
+        relative_humidity = linear(humidity_fact, 0.50, 0.72);
         break;
     case 14: // Csc: warm temperature, summer dry, cool summer
         temp_night = season_even(summer, -4.0, 5.0);
         temp_day = season_even(summer, 5.0, 16.0);
         precipitation = season_even(winter, 60.0, 95.0);
-        relative_humidity = season_even(winter, 0.55, 0.75);
+        relative_humidity = season_even(humidity_fact, 0.55, 0.75);
         break;
     case 15: // Cwa: warm temperature, winter dry, hot summer
         temp_night = season_even(summer, 4.0, 20.0);
         temp_day = season_long_low(summer, 15.0, 30.0);
         precipitation = season_long_low(summer, 10.0, 320.0);
-        relative_humidity = season_even(summer, 0.60, 0.79);
+        relative_humidity = season_even(humidity_fact, 0.60, 0.79);
         break;
     case 16: // Cwb: warm temperature, winter dry, warm summer
         temp_night = season_even(summer, 1.0, 13.0);
         temp_day = season_long_low(summer, 15.0, 27.0);
         precipitation = season_long_low(summer, 10.0, 250.0);
-        relative_humidity = season_even(summer, 0.58, 0.72);
+        relative_humidity = season_even(humidity_fact, 0.58, 0.72);
         break;
     case 17: // Cwc: warm temperature, winter dry, cool summer
         temp_night = season_long_high(summer, -9.0, 6.0);
         temp_day = season_long_high(summer, 6.0, 17.0);
         precipitation = season_long_low(summer, 10.0, 200.0);
-        relative_humidity = season_even(summer, 0.50, 0.58);
+        relative_humidity = season_long_high(humidity_fact, 0.50, 0.58);
         break;
     default:
         break;
@@ -406,8 +414,11 @@ void FGClimate::set_temperate()
 void FGClimate::set_continetal()
 {
     double day = _day_noon;
+
     double summer = _season_summer;
     double winter = 1.0 - summer;
+
+    double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
     double temp_day = _temperature_sl;
     double temp_night = _temperature_sl;
@@ -419,67 +430,67 @@ void FGClimate::set_continetal()
         temp_night = season_even(summer, -15.0, 13.0);
         temp_day = season_even(summer, -5.0, 30.0);
         precipitation = season_even(summer, 25.0, 65.0);
-        relative_humidity = season_even(summer, 0.68, 0.72);
+        relative_humidity = season_even(humidity_fact, 0.68, 0.72);
         break;
     case 19: // Dfb: snow, fully humid, warm summer, warm summer
         temp_night = season_even(summer, -17.5, 10.0);
         temp_day = season_even(summer, -7.5, 25.0);
         precipitation = season_even(summer, 30.0, 70.0);
-        relative_humidity = season_even(summer, 0.69, 0.81);
+        relative_humidity = season_even(humidity_fact, 0.69, 0.81);
         break;
     case 20: // Dfc: snow, fully humid, cool summer, cool summer
         temp_night = season_even(summer, -30.0, 4.0);
         temp_day = season_even(summer, -20.0, 15.0);
         precipitation = season_even(summer, 22.0, 68.0);
-        relative_humidity = season_even(summer, 0.70, 0.88);
+        relative_humidity = season_even(humidity_fact, 0.70, 0.88);
         break;
     case 21: // Dfd: snow, fully humid, extremely continetal
         temp_night = season_short(summer, -45.0, 4.0);
         temp_day = season_short(summer, -35.0, 10.0);
         precipitation = season_long_low(summer, 7.5, 45.0);
-        relative_humidity = season_long_low(summer, 0.80, 0.90);
+        relative_humidity = season_short(humidity_fact, 0.80, 0.90);
         break;
     case 22: // Dsa: snow, summer dry, hot summer
         temp_night = season_even(summer, -10.0, 10.0);
         temp_day = season_even(summer, 0.0, 30.0);
         precipitation = season_long_high(winter, 2.0, 70.0);
-        relative_humidity = season_long_high(winter, 0.48, 0.58);
+        relative_humidity = season_even(humidity_fact, 0.48, 0.58);
         break;
     case 23: // Dsb: snow, summer dry, warm summer
         temp_night = season_even(summer, -15.0, 6.0);
         temp_day = season_even(summer, -4.0, 25.0);
         precipitation = season_long_high(winter, 12.0, 73.0);
-        relative_humidity = season_long_high(winter, 0.50, 0.68);
+        relative_humidity = season_even(humidity_fact, 0.50, 0.68);
         break;
     case 24: // Dsc: snow, summer dry, cool summer
         temp_night = season_even(summer, -27.5, 2.0);
         temp_day = season_even(summer, -4.0, 15.0);
         precipitation = season_long_low(summer, 32.5, 45.0);
-        relative_humidity = season_long_low(summer, 0.50, 0.60);
+        relative_humidity = season_even(humidity_fact, 0.50, 0.60);
         break;
     case 25: // Dsd: snow, summer dry, extremely continetal
         temp_night = season_even(summer, -11.5, -6.5);
         temp_day = season_even(summer, 14.0, 27.0);
         precipitation = season_long_low(summer, 5.0, 90.0);
-        relative_humidity = season_long_low(summer, 0.48, 0.62);
+        relative_humidity = season_even(humidity_fact, 0.48, 0.62);
         break;
     case 26: // Dwa: snow, winter dry, hot summer
         temp_night = season_even(summer, -18.0, 16.5);
         temp_day = season_even(summer, -5.0, 25.0);
         precipitation = season_long_low(summer, 5.0, 180.0);
-        relative_humidity = season_long_low(summer, 0.60, 0.68);
+        relative_humidity = season_even(humidity_fact, 0.60, 0.68);
         break;
     case 27: // Dwb: snow, winter dry, warm summer
         temp_night = season_even(summer, -28.0, 10.0);
         temp_day = season_even(summer, -12.5, 22.5);
         precipitation = season_long_low(summer, 10.0, 140.0);
-        relative_humidity = season_long_low(summer, 0.60, 0.72);
+        relative_humidity = season_even(humidity_fact, 0.60, 0.72);
         break;
     case 28: // Dwc: snow, winter dry, cool summer
         temp_night = season_even(summer, -33.0, 5.0);
         temp_day = season_even(summer, -20.0, 20.0);
         precipitation = season_long_low(summer, 10.0, 110.0);
-        relative_humidity = season_long_low(summer, 0.60, 0.78);
+        relative_humidity = season_even(humidity_fact, 0.60, 0.78);
         break;
     case 29: // Dwd: snow, winter dry, extremely continetal
         temp_night = season_even(summer, -57.5, 0.0);
@@ -507,7 +518,11 @@ void FGClimate::set_continetal()
 void FGClimate::set_polar()
 {
     double day = _day_noon;
+
     double summer = _season_summer;
+    double winter = 1.0 - summer;
+
+    double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
     // polar climate also occurs high in the mountains
     double temp_day = _temperature_sl;
@@ -520,13 +535,13 @@ void FGClimate::set_polar()
         temp_night = season_long_low(summer, -35.0, -6.0);
         temp_day = season_long_low(summer, -32.5, 0.0);
         precipitation = season_even(summer, 50.0, 80.0);
-        relative_humidity = season_even(summer, 0.65, 0.75);
+        relative_humidity = season_long_low(humidity_fact, 0.65, 0.75);
         break;
     case 31: // ET: polar tundra
         temp_night = season_even(summer, -30.0, 0.0);
         temp_day = season_even(summer, -22.5, 8.0);
         precipitation = season_even(summer, 15.0, 45.0);
-        relative_humidity = season_even(summer, 0.60, 0.88);
+        relative_humidity = season_even(humidity_fact, 0.60, 0.88);
         break;
     default:
         break;
@@ -748,7 +763,7 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Annual precipitation:  " << _total_annual_precipitation
               << " mm" << std::endl;
-    std::cout << "  Rel. humidity: "<< _relative_humidity*100.0 << " %"
+    std::cout << "  Relative humidity:     " << _relative_humidity*100.0 << " %"
               << std::endl;
     std::cout << "  Dew point: " << _dew_point << " deg. C." << std::endl;
     std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
