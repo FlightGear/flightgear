@@ -141,12 +141,14 @@ public:
         listenToNode("znear", 0.1f);
         listenToNode("zfar", 120000.0f);
         listenToNode("near-field", 100.0f);
+        listenToNode("lod", 1.5f);
     }
 
     virtual ~CameraGroupListener() {
         unlisten("znear");
         unlisten("zfar");
         unlisten("near-field");
+        unlisten("lod");
     }
 
     virtual void valueChanged(SGPropertyNode* prop) {
@@ -156,6 +158,9 @@ public:
             _cameraGroup->_zFar = prop->getFloatValue();
         } else if (!strcmp(prop->getName(), "near-field")) {
             _cameraGroup->_nearField = prop->getFloatValue();
+        } else if (!strcmp(prop->getName(), "lod")) {
+            const float new_lod = prop->getFloatValue();
+            _cameraGroup->_viewer->getCamera()->setLODScale(new_lod);
         }
     }
 private:
