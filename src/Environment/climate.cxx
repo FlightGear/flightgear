@@ -123,8 +123,16 @@ void FGClimate::update(const SGGeod& position)
         else if (_classicfication < 32) set_polar();
         else set_ocean();
 
+        // Relative humidity decreases linearly with an increase in altitude at
+        // an average of 4% per kilometer
+        double alt_km = pos.getElevationM()/1000.0;
+        _relative_humidity -= 0.04*alt_km;
+
         // Mark G. Lawrence:
         _dew_point = _temperature_gl - ((100.0 - 100.0*_relative_humidity)/5.0);
+
+        // The temperature decreases by about 5.3°C per kilometer
+        _temperature_sl = _temperature_gl + 5.3*alt_km;
 
         set_environment();
 
@@ -167,25 +175,23 @@ void FGClimate::set_ocean()
 
     // temperature based on latitude, season and time of day
     // the equator does not really have seasons, only day and night
-    double temp_equator_max = 31.0;
-    double temp_equator_min = 23.0;
-    double temp_equator = season_even(day, temp_equator_min, temp_equator_max);
+    double temp_equator_day = 31.0;
+    double temp_equator_night = 23.0;
+    double temp_equator = season_even(day, temp_equator_night, temp_equator_day);
 
     // the poles do not really have day or night, only seasons
-    double temp_summer_pole = -8.0;
-    double temp_winter_pole = -48.0;
-    double temp_pole = season_even(summer, temp_winter_pole, temp_summer_pole);
+    double temp_pole = season_even(summer, -48.0, -8.0);
 
     double fact_lat = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
     double ifact_lat = 1.0 - fact_lat;
 
-    _temperature_sl = season_even(ifact_lat, temp_pole, temp_equator);
+    _temperature_gl = season_even(ifact_lat, temp_pole, temp_equator);
 
-    double temp_mean_equator = 0.5*(temp_equator_max + temp_equator_min);
+    double temp_mean_equator = 0.5*(temp_equator_day + temp_equator_night);
     _temperature_mean = season_even(ifact_lat, temp_pole, temp_mean_equator);
 
     // relative humidity based on latitude
-    _relative_humidity = season_even(fact_lat, 0.1, 0.8);
+    _relative_humidity = triangular(fabs(fact_lat-0.5), 0.70, 0.87);
 
     // steady winds
     _wind = 3.0;
@@ -218,8 +224,8 @@ void FGClimate::set_tropical()
     double fact_lat = std::max(abs(latitude_deg), 15.0)/15.0;
     double wind = 3.0*fact_lat*fact_lat;
 
-    double temp_night = _temperature_sl;
-    double temp_day = _temperature_sl;
+    double temp_night = _temperature_gl;
+    double temp_day = _temperature_gl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity;
     switch(_classicfication)
@@ -257,7 +263,6 @@ void FGClimate::set_tropical()
 
     _temperature_gl = season_even(day, temp_night, temp_day);
     _temperature_mean = 0.5*(temp_night + temp_day);
-    _temperature_sl = _temperature_gl;
 
     _relative_humidity = relative_humidity;
     _precipitation = precipitation;
@@ -281,8 +286,8 @@ void FGClimate::set_dry()
         _total_annual_precipitation *= 2.0;
     }
 
-    double temp_night = _temperature_sl;
-    double temp_day = _temperature_sl;
+    double temp_night = _temperature_gl;
+    double temp_day = _temperature_gl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity;
     switch(_classicfication)
@@ -317,7 +322,6 @@ void FGClimate::set_dry()
 
     _temperature_gl = season_even(day, temp_night, temp_day);
     _temperature_mean = 0.5*(temp_night + temp_day);
-    _temperature_sl = _temperature_gl;
 
     _relative_humidity = relative_humidity;
     _precipitation = precipitation;
@@ -335,8 +339,8 @@ void FGClimate::set_temperate()
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
-    double temp_night = _temperature_sl;
-    double temp_day = _temperature_sl;
+    double temp_night = _temperature_gl;
+    double temp_day = _temperature_gl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity;
     switch(_classicfication)
@@ -401,7 +405,6 @@ void FGClimate::set_temperate()
 
     _temperature_gl = season_even(day, temp_night, temp_day);
     _temperature_mean = 0.5*(temp_night + temp_day);
-    _temperature_sl = _temperature_gl;
 
     _relative_humidity = relative_humidity;
     _precipitation = precipitation;
@@ -420,8 +423,8 @@ void FGClimate::set_continetal()
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
-    double temp_day = _temperature_sl;
-    double temp_night = _temperature_sl;
+    double temp_day = _temperature_gl;
+    double temp_night = _temperature_gl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity;
     switch(_classicfication)
@@ -504,7 +507,6 @@ void FGClimate::set_continetal()
 
     _temperature_gl = season_even(day, temp_night, temp_day);
     _temperature_mean = 0.5*(temp_night + temp_day);
-    _temperature_sl = _temperature_gl;
 
     _relative_humidity = relative_humidity;
     _precipitation = precipitation;
@@ -525,8 +527,8 @@ void FGClimate::set_polar()
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
     // polar climate also occurs high in the mountains
-    double temp_day = _temperature_sl;
-    double temp_night = _temperature_sl;
+    double temp_day = _temperature_gl;
+    double temp_night = _temperature_gl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity;
     switch(_classicfication)
@@ -549,7 +551,6 @@ void FGClimate::set_polar()
 
     _temperature_gl = season_even(day, temp_night, temp_day);
     _temperature_mean = 0.5*(temp_night + temp_day);
-    _temperature_sl = _temperature_gl;
 
     _relative_humidity = relative_humidity;
     _precipitation = precipitation;
