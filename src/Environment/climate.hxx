@@ -29,7 +29,7 @@
 // #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/math/SGGeod.hxx>
 
-#define REPORT_TO_CONSOLE	false
+#define REPORT_TO_CONSOLE  0
 
 /*
  * Update environment parameters based on the Köppen-Geiger climate
@@ -63,6 +63,7 @@ private:
 #endif
     // interpolate val (from 0.0 to 1.0) between min and max
     double linear(double val, double min, double max);
+    double triangular(double val, double min, double max);
     double season_short(double val, double min, double max);
     double season_even(double val, double min, double max);
     double season_long_low(double val, double min, double max);
@@ -98,11 +99,10 @@ private:
 
     double _day_noon = 1.0;
     double _season_summer = 1.0;
-    double _season_winter = 0.0;
-    bool _autumn = false;
+    double _season_transistional = 0.0;
+    bool _has_autumn = false;
+    bool _is_autumn = false;
 
-    int _col = 0;			// screen coordinates
-    int _row = 0;
     int _classicfication = 0;		// Köppen-Geiger classicfication
  
     // environment
