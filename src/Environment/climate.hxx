@@ -26,7 +26,7 @@
 #include <osg/ref_ptr>
 #include <osg/Image>
 
-// #include <simgear/structure/SGReferenced.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/SGGeod.hxx>
 
 #define REPORT_TO_CONSOLE  0
@@ -52,9 +52,9 @@ public:
     double get_wetness() { return _wetness; }
     double get_lichen_cover() { return _lichen_cover; }
 
-    double get_dew_point_degc() { return _dew_point; }
+    double get_dewpoint_degc() { return _dewpoint_gl; }
     double get_temperature_degc() { return _temperature_gl; }
-    double get_humidity_pct() { return _relative_humidity; }
+    double get_humidity_pct() { return _relative_humidity_gl; }
     double get_wind_kmh() { return _wind; }
 
 private:
@@ -81,6 +81,8 @@ private:
     void update_day_factor();
     void update_season_factor();
 
+    simgear::TiedPropertyList _tiedProperties;
+
     osg::ref_ptr<osg::Image> image;
     int _image_width = 0;
     int _image_height = 0;
@@ -90,6 +92,7 @@ private:
     double _prev_lon = -99999.0;
 
     SGGeod pos;
+    SGPropertyNode_ptr _ground_elev_node;
 
     double _sun_latitude_deg = 0.0;
     double _sun_longitude_deg = 0.0;
@@ -106,7 +109,7 @@ private:
     int _classicfication = 0;		// Köppen-Geiger classicfication
  
     // environment
-    bool _environment_adjust = true;	// enable automatic adjestments
+    bool _environment_adjust = false;	// enable automatic adjestments
     double _snow_level = 7500.0;	// in meters
     double _snow_thickness = 0.0;	// 0.0 = thin, 1.0 = thick
     double _ice_cover = 0.0;		// 0.0 = none, 1.0 = thick
@@ -116,17 +119,18 @@ private:
 
     // weather
     bool _weather_update = false;	// enable weather updates
-    double _relative_humidity = 0.6;	// 0.0 = dry, 1.0 is fully humid
+    double _relative_humidity_sl = 60.0;	// 0.0 = dry, 1.0 is fully humid
+    double _relative_humidity_gl = 60.0;
 
-    double _dew_point = 0.5;
+    double _dewpoint_gl = 5.0;
+    double _dewpoint_sl = 5.0;
     double _temperature_gl = 20.0;	// ground level temperature in deg. C.
     double _temperature_sl = 20.0;	// seal level temperature in deg. C.
-    double _temperature_mean = 20.0;	// mean temperature in deg. C.
+    double _temperature_mean_gl = 20.0;	// mean temperature in deg. C.
+    double _temperature_mean_sl = 20.0;
     double _precipitation = 0.0; // minimal average precipitation in mm/month
     double _wind = 3.0;			// wind in km/h
-
-    // total annual precipitation in mm/month
-    double _total_annual_precipitation = 990.0; // global
+    double _precipitation_annual = 990.0; // global
 };
 
 #endif // _FGCLIMATE_HXX
