@@ -1200,11 +1200,11 @@ struct EventHandler : osgGA::EventHandler
         if (ea) {
             osgGA::GUIEventAdapter::EventType et = ea->getEventType();
             if (et != osgGA::GUIEventAdapter::FRAME) {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "sview event handler called. ea->getEventType()=" << ea->getEventType());
+                SG_LOG(SG_GENERAL, SG_BULK, "sview event handler called. ea->getEventType()=" << ea->getEventType());
             }
         }
         else {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "sview event handler called...");
+            SG_LOG(SG_GENERAL, SG_BULK, "sview event handler called...");
         }
         return true;
     }
