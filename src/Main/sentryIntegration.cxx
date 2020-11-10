@@ -57,7 +57,8 @@ auto OSG_messageWhitelist = {
      "PNG lib warning : iCCP: known incorrect sRGB profile",
      "PNG lib warning : iCCP: profile 'ICC Profile': 1000000h: invalid rendering intent",
      "osgDB ac3d reader: detected surface with less than 3",
-     "osgDB ac3d reader: detected line with less than 2"
+     "osgDB ac3d reader: detected line with less than 2",
+     "Detected particle system using segment(s) with less than 2 vertices"
 };
 
 auto XML_messageWhitelist = {
