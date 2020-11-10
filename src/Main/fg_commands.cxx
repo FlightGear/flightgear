@@ -33,6 +33,7 @@
 #include <Environment/presets.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <GUI/gui.h>
+#include <Main/sentryIntegration.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -782,12 +783,17 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
     else
         targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
 
+    // don't report Sentry errors for Nasal-loaded XML, since it makes
+    // for very noisy reports
+    flightgear::sentryThreadReportXMLErrors(false);
     try {
         readProperties(validated_path, targetnode, true);
     } catch (const sg_exception &e) {
         SG_LOG(SG_IO, quiet ? SG_DEV_WARN : SG_WARN, "loadxml exception: " << e.getFormattedMessage());
+        flightgear::sentryThreadReportXMLErrors(true);
         return false;
     }
+    flightgear::sentryThreadReportXMLErrors(true);
 
     return true;
 }
