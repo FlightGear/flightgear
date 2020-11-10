@@ -805,6 +805,8 @@ LocalAircraftCache::readAircraftProperties(const SGPath &setPath, SGPropertyNode
     dp->setCurrentAircraftPath(setPath);
 
     ParseSetXMLResult result = ParseSetXMLResult::Failed;
+    flightgear::sentryThreadReportXMLErrors(false);
+
     try {
         readProperties(setPath, props);
         result = ParseSetXMLResult::Ok;
@@ -815,6 +817,7 @@ LocalAircraftCache::readAircraftProperties(const SGPath &setPath, SGPropertyNode
     }
 
     rm->removeProvider(dp.get());
+    flightgear::sentryThreadReportXMLErrors(true);
     return result;
 }
 
