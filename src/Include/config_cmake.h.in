@@ -25,6 +25,9 @@
 
 #define VERSION "@FLIGHTGEAR_VERSION@"
 
+#define FLIGHTGEAR_MAJOR_VERSION @FG_VERSION_MAJOR@
+#define FLIGHTGEAR_MINOR_VERSION @FG_VERSION_MINOR@
+
 #define HAVE_VERSION_H 1 // version.h is assumed for CMake builds
 
 #cmakedefine ENABLE_UIUC_MODEL
