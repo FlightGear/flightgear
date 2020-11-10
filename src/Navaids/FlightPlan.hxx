@@ -420,8 +420,8 @@ private:
   bool loadGpxFormat(const SGPath& path);
   bool loadPlainTextFormat(const SGPath& path);
 
-  void loadVersion1XMLRoute(SGPropertyNode_ptr routeData);
-  void loadVersion2XMLRoute(SGPropertyNode_ptr routeData);
+  bool loadVersion1XMLRoute(SGPropertyNode_ptr routeData);
+  bool loadVersion2XMLRoute(SGPropertyNode_ptr routeData);
   void loadXMLRouteHeader(SGPropertyNode_ptr routeData);
   WayptRef parseVersion1XMLWaypt(SGPropertyNode* aWP);
 
