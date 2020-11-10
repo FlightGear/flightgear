@@ -179,6 +179,8 @@ void FGDeviceConfigurationMap::refreshCacheForFile(const SGPath& path)
   }
   
   auto cache = flightgear::NavDataCache::instance();
-  cache->stampCacheFile(path);
-  cache->writeStringListProperty(path.utf8Str(), names);
+  if (!cache->isReadOnly()) {
+      cache->stampCacheFile(path);
+      cache->writeStringListProperty(path.utf8Str(), names);
+  }
 }

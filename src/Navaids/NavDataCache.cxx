@@ -235,6 +235,7 @@ public:
                const string& ident, const SGGeod& pos) :
     FGPositioned(guid, FGPositioned::TOWER, ident, pos)
   {
+      SG_UNUSED(airport);
   }
 };
 
@@ -2622,11 +2623,17 @@ NavDataCache::Transaction::Transaction(NavDataCache* cache) :
     _committed(false)
 {
     assert(cache);
-    _instance->beginTransaction();
+    if (!cache->isReadOnly()) {
+      _instance->beginTransaction();
+    }
 }
 
 NavDataCache::Transaction::~Transaction()
 {
+    if (_instance->isReadOnly()) {
+        return;
+    }
+
     if (!_committed) {
         SG_LOG(SG_NAVCACHE, SG_INFO, "aborting cache transaction!");
         _instance->abortTransaction();
@@ -2635,6 +2642,10 @@ NavDataCache::Transaction::~Transaction()
 
 void NavDataCache::Transaction::commit()
 {
+    if (_instance->isReadOnly()) {
+        return;
+    }
+        
     assert(!_committed);
     _committed = true;
     _instance->commitTransaction();
