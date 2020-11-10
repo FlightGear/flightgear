@@ -1081,14 +1081,16 @@ bool FlightPlan::loadXmlFormat(const SGPath& path)
   {
     try {
       int version = routeData->getIntValue("version", 1);
+      bool ok = false;
       if (version == 1) {
-        loadVersion1XMLRoute(routeData);
+        ok = loadVersion1XMLRoute(routeData);
       } else if (version == 2) {
-        loadVersion2XMLRoute(routeData);
+        ok = loadVersion2XMLRoute(routeData);
       } else {
-        throw sg_io_exception("unsupported XML route version");
+        SG_LOG(SG_NAVAID, SG_POPUP, "Unsupported flight plan version " << version << " loading " << path);
       }
-      return true;
+
+      return ok;
     } catch (sg_exception& e) {
       SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
              << "'. " << e.getMessage());
@@ -1188,8 +1190,11 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
   } // of cruise data loading
 }
 
-void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
+bool FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
 {
+    if (!routeData->hasChild("route"))
+        return false;
+
   loadXMLRouteHeader(routeData);
   
   // route nodes
@@ -1219,10 +1224,14 @@ void FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
     } // of route iteration
   }
   _waypointsChanged = true;
+  return true;
 }
 
-void FlightPlan::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
+bool FlightPlan::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
 {
+    if (!routeData->hasChild("route"))
+        return false;
+
   loadXMLRouteHeader(routeData);
   
   // _legs nodes
@@ -1234,6 +1243,7 @@ void FlightPlan::loadVersion1XMLRoute(SGPropertyNode_ptr routeData)
     _legs.push_back(l);
   } // of route iteration
   _waypointsChanged = true;
+  return true;
 }
 
 WayptRef FlightPlan::parseVersion1XMLWaypt(SGPropertyNode* aWP)
