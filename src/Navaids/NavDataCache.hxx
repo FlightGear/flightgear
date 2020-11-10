@@ -109,6 +109,8 @@ public:
    */
     bool isRebuildRequired();
 
+    static bool isAnotherProcessRebuilding();
+
     enum RebuildPhase
     {
         REBUILD_UNKNOWN = 0,
