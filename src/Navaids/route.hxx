@@ -208,16 +208,16 @@ protected:
   /**
    * Persistence helper - read node properties from a file
    */
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  
-  /**
+    virtual bool initFromProperties(SGPropertyNode_ptr aProp);
+
+    /**
    * Persistence helper - save this element to a node
    */
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
-  typedef Waypt* (FactoryFunction)(RouteBase* aOwner) ;
-  static void registerFactory(const std::string aNodeType, FactoryFunction* aFactory);
-  
+    virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+
+    typedef Waypt*(FactoryFunction)(RouteBase* aOwner);
+    static void registerFactory(const std::string aNodeType, FactoryFunction* aFactory);
+
     double _altitudeFt = 0.0;
 	double _speed = 0.0; // knots IAS or mach
 	RouteRestriction _altRestrict = RESTRICT_NONE;

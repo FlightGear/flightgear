@@ -47,18 +47,20 @@ BasicWaypt::BasicWaypt(RouteBase* aOwner) :
 {
 }
 
-void BasicWaypt::initFromProperties(SGPropertyNode_ptr aProp)
+bool BasicWaypt::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("lon") || !aProp->hasChild("lat")) {
-    throw sg_io_exception("missing lon/lat properties", 
-      "BasicWaypt::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "missing lon/lat properties");
+      return false;
   }
 
-  Waypt::initFromProperties(aProp);
+  if (!Waypt::initFromProperties(aProp))
+      return false;
 
   _pos = SGGeod::fromDeg(aProp->getDoubleValue("lon"), 
     aProp->getDoubleValue("lat"));
   _ident = aProp->getStringValue("ident");
+  return true;
 }
 
 void BasicWaypt::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -102,15 +104,16 @@ std::string NavaidWaypoint::ident() const
   return _navaid->ident();
 }
 
-void NavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
+bool NavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("ident")) {
-    throw sg_io_exception("missing navaid value", 
-      "NavaidWaypoint::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "missing navaid ident");
+      return false;
   }
-  
-  Waypt::initFromProperties(aProp);
-  
+
+  if (!Waypt::initFromProperties(aProp))
+      return false;
+
   std::string idn(aProp->getStringValue("ident"));
   SGGeod p;
   if (aProp->hasChild("lon")) {
@@ -121,8 +124,8 @@ void NavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
   // is it sufficent just to ignore DMEs, actually?
   FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, nullptr);
   if (!nav) {
-    throw sg_io_exception("unknown navaid ident:" + idn, 
-      "NavaidWaypoint::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "unknown navdaid ident:" << idn);
+      return false;
   }
 
   if (p.isValid() && (SGGeodesy::distanceM(nav->geod(), p) > 4000)) {
@@ -130,12 +133,12 @@ void NavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
       // in this case, throw an exception here so we fall back to using
       // a basic waypoint
       // see https://sourceforge.net/p/flightgear/codetickets/1814/
-      throw sg_io_exception("Waypoint navaid for ident:" + idn +
-                            " is too far from specified lat/lon in flight-plan",
-                            "NavaidWaypoint::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "Waypoint navaid for ident:" << idn << " is too far from the specified lat/lon");
+      return false;
   }
   
   _navaid = nav;
+  return true;
 }
 
 void NavaidWaypoint::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -170,17 +173,20 @@ void OffsetNavaidWaypoint::init()
   _geod = SGGeod::fromGeodFt(offset, _altitudeFt);
 }
 
-void OffsetNavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
+bool OffsetNavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("radial-deg") || !aProp->hasChild("distance-nm")) {
-    throw sg_io_exception("missing radial/offset distance",
-      "OffsetNavaidWaypoint::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "missing radial/offset distance creating offset waypoint");
+      return false;
   }
-  
-  NavaidWaypoint::initFromProperties(aProp);
+
+  if (!NavaidWaypoint::initFromProperties(aProp))
+      return false;
+
   _radial = aProp->getDoubleValue("radial-deg");
   _distanceNm = aProp->getDoubleValue("distance-nm");
   init();
+  return true;
 }
 
 void OffsetNavaidWaypoint::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -224,17 +230,31 @@ double RunwayWaypt::headingRadialDeg() const
   return _runway->headingDeg();
 }
 
-void RunwayWaypt::initFromProperties(SGPropertyNode_ptr aProp)
+bool RunwayWaypt::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("icao") || !aProp->hasChild("ident")) {
-    throw sg_io_exception("missing values: icao or ident", 
-      "RunwayWaypoint::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "missing ICAO/ident on runway waypoint");
+      return false;
   }
-  
-  Waypt::initFromProperties(aProp);
+
+  if (!Waypt::initFromProperties(aProp))
+      return false;
+
   std::string idn(aProp->getStringValue("ident"));
   const FGAirport* apt = FGAirport::getByIdent(aProp->getStringValue("icao"));
-  _runway = apt->getRunwayByIdent(aProp->getStringValue("ident"));
+  if (!apt) {
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "Unknown airport:" << aProp->getStringValue("icao"));
+      return false;
+  }
+
+  const std::string ident = aProp->getStringValue("ident");
+  if (!apt->hasRunwayWithIdent(ident)) {
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "Unknown runway " << ident << " at " << aProp->getStringValue("icao"));
+      return false;
+  }
+
+  _runway = apt->getRunwayByIdent(ident);
+  return true;
 }
 
 void RunwayWaypt::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -286,20 +306,18 @@ void Hold::setLeftHanded()
 {
   _righthanded = false;
 }
-  
-void Hold::initFromProperties(SGPropertyNode_ptr aProp)
-{
-  BasicWaypt::initFromProperties(aProp);
-  
-  if (!aProp->hasChild("lon") || !aProp->hasChild("lat")) {
-    throw sg_io_exception("missing lon/lat properties", 
-      "Hold::initFromProperties");
-  }
 
-  _righthanded = aProp->getBoolValue("right-handed");
-  _isDistance = aProp->getBoolValue("is-distance");
-  _bearing = aProp->getDoubleValue("inbound-radial-deg");
-  _holdTD = aProp->getDoubleValue("td");
+bool Hold::initFromProperties(SGPropertyNode_ptr aProp)
+{
+    if (!BasicWaypt::initFromProperties(aProp))
+        return false;
+
+    _righthanded = aProp->getBoolValue("right-handed");
+    _isDistance = aProp->getBoolValue("is-distance");
+    _bearing = aProp->getDoubleValue("inbound-radial-deg");
+    _holdTD = aProp->getDoubleValue("td");
+
+    return true;
 }
 
 void Hold::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -328,16 +346,19 @@ HeadingToAltitude::HeadingToAltitude(RouteBase* aOwner) :
 {
 }
 
-void HeadingToAltitude::initFromProperties(SGPropertyNode_ptr aProp)
+bool HeadingToAltitude::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("heading-deg")) {
-    throw sg_io_exception("missing heading/alt properties", 
-      "HeadingToAltitude::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "Missing heading property creating HdgToAlt waypoint");
+      return false;
   }
 
-  Waypt::initFromProperties(aProp);
+  if (!Waypt::initFromProperties(aProp))
+      return false;
+
   _magHeading = aProp->getDoubleValue("heading-deg");
   _ident = aProp->getStringValue("ident");
+  return true;
 }
 
 void HeadingToAltitude::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -365,20 +386,23 @@ DMEIntercept::DMEIntercept(RouteBase* aOwner) :
 {
 }
 
-void DMEIntercept::initFromProperties(SGPropertyNode_ptr aProp)
+bool DMEIntercept::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("lon") || !aProp->hasChild("lat")) {
-    throw sg_io_exception("missing lon/lat properties", 
-      "DMEIntercept::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "Missing lat/lom properties creating DMEIntc waypoint");
+      return false;
   }
 
-  Waypt::initFromProperties(aProp);
+  if (!Waypt::initFromProperties(aProp))
+      return false;
+
   _pos = SGGeod::fromDeg(aProp->getDoubleValue("lon"), aProp->getDoubleValue("lat"));
   _ident = aProp->getStringValue("ident");
 // check it's a real DME?
   _magCourse = aProp->getDoubleValue("course-deg");
   _dmeDistanceNm = aProp->getDoubleValue("dme-distance-nm");
-  
+
+  return true;
 }
 
 void DMEIntercept::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -409,21 +433,24 @@ RadialIntercept::RadialIntercept(RouteBase* aOwner) :
   Waypt(aOwner)
 {
 }
-  
-void RadialIntercept::initFromProperties(SGPropertyNode_ptr aProp)
+
+bool RadialIntercept::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("lon") || !aProp->hasChild("lat")) {
-    throw sg_io_exception("missing lon/lat properties", 
-      "RadialIntercept::initFromProperties");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "Missing lat/lom properties creating RadialIntercept waypoint");
+      return false;
   }
 
-  Waypt::initFromProperties(aProp);
+  if (!Waypt::initFromProperties(aProp))
+      return false;
+
   _pos = SGGeod::fromDeg(aProp->getDoubleValue("lon"), aProp->getDoubleValue("lat"));
   _ident = aProp->getStringValue("ident");
 // check it's a real VOR?
   _magCourse = aProp->getDoubleValue("course-deg");
   _radial = aProp->getDoubleValue("radial-deg");
-  
+
+  return true;
 }
 
 void RadialIntercept::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -465,21 +492,21 @@ string ATCVectors::ident() const
   return "VECTORS-" + _facility->ident();
 }
 
-void ATCVectors::initFromProperties(SGPropertyNode_ptr aProp)
-{  
-  if (!aProp->hasChild("icao")) {
-    throw sg_io_exception("missing icao propertie", 
-      "ATCVectors::initFromProperties");
-  }
+bool ATCVectors::initFromProperties(SGPropertyNode_ptr aProp)
+{
+    if (!Waypt::initFromProperties(aProp))
+        return false;
 
-  Waypt::initFromProperties(aProp);
-  _facility = FGAirport::getByIdent(aProp->getStringValue("icao"));
+    _facility = FGAirport::getByIdent(aProp->getStringValue("icao"));
+    return true;
 }
 
 void ATCVectors::writeToProperties(SGPropertyNode_ptr aProp) const
 {
   Waypt::writeToProperties(aProp);
-  aProp->setStringValue("icao", _facility->ident());
+  if (_facility) {
+      aProp->setStringValue("icao", _facility->ident());
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -505,8 +532,9 @@ string Discontinuity::ident() const
     return "DISCONTINUITY";
 }
 
-void Discontinuity::initFromProperties(SGPropertyNode_ptr aProp)
+bool Discontinuity::initFromProperties(SGPropertyNode_ptr aProp)
 {
+    return true;
 }
 
 void Discontinuity::writeToProperties(SGPropertyNode_ptr aProp) const
@@ -542,21 +570,22 @@ Via::~Via()
 {
 }
 
-void Via::initFromProperties(SGPropertyNode_ptr aProp)
+bool Via::initFromProperties(SGPropertyNode_ptr aProp)
 {
     if (!aProp->hasChild("airway") || !aProp->hasChild("to")) {
-        throw sg_io_exception("missing airway/to properties",
-                              "Via::initFromProperties");
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "Missingairway/to properties on Via wp");
+        return false;
     }
 
-    Waypt::initFromProperties(aProp);
+    if (!Waypt::initFromProperties(aProp))
+        return false;
 
     const std::string ident = aProp->getStringValue("airway");
     const Airway::Level level = static_cast<Airway::Level>(aProp->getIntValue("level", Airway::Both));
     _airway = Airway::findByIdent(ident, level);
     if (!_airway) {
-        throw sg_io_exception("unknown airway ident: '" + ident + "'",
-                              "Via::initFromProperties");
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "VIA: unknown airway:" << ident);
+        return false;
     }
 
     std::string idn(aProp->getStringValue("to"));
@@ -568,8 +597,8 @@ void Via::initFromProperties(SGPropertyNode_ptr aProp)
 
     FGPositionedRef nav = FGPositioned::findClosestWithIdent(idn, p, nullptr);
     if (!nav) {
-        throw sg_io_exception("unknown navaid ident:" + idn,
-                              "Via::initFromProperties");
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "VIA TO navaid: " << idn << " not found");
+        return false;
     }
     
     if (!_airway->containsNavaid(nav)) {
@@ -578,6 +607,7 @@ void Via::initFromProperties(SGPropertyNode_ptr aProp)
     }
 
     _to = nav;
+    return true;
 }
 
 void Via::writeToProperties(SGPropertyNode_ptr aProp) const

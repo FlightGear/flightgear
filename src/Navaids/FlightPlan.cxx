@@ -1210,6 +1210,10 @@ bool FlightPlan::loadVersion2XMLRoute(SGPropertyNode_ptr routeData)
   if (routeNode.valid()) {
     for (auto wpNode : routeNode->getChildren("wp")) {
         auto wp = Waypt::createFromProperties(this, wpNode);
+        if (!wp) {
+            continue;
+        }
+
       LegRef l = new Leg{this, wp};
       // sync leg restrictions with waypoint ones
         if (wp->speedRestriction() != RESTRICT_NONE) {
