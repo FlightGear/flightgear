@@ -100,24 +100,52 @@ void initNavCache()
     const char* baseLabelKey = QT_TRANSLATE_NOOP("initNavCache", "Initialising navigation data, this may take several minutes");
     QString baseLabel= qApp->translate("initNavCache", baseLabelKey);
 
+    const auto wflags = Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::MSWindowsFixedSizeDialogHint;
+
+    if (NavDataCache::isAnotherProcessRebuilding()) {
+        const char* waitForOtherMsg = QT_TRANSLATE_NOOP("initNavCache", "Another copy of FlightGear is creating the navigation database. Waiting for it to finish.");
+        QString m = qApp->translate("initNavCache", waitForOtherMsg);
+
+        QProgressDialog waitForRebuild(m,
+                                       QString() /* cancel text */,
+                                       0, 0, Q_NULLPTR,
+                                       wflags);
+        waitForRebuild.setWindowModality(Qt::WindowModal);
+        waitForRebuild.setMinimumWidth(600);
+        waitForRebuild.setAutoReset(false);
+        waitForRebuild.setAutoClose(false);
+        waitForRebuild.show();
+
+        QTimer updateTimer;
+        updateTimer.setInterval(500);
+
+        QObject::connect(&updateTimer, &QTimer::timeout, [&waitForRebuild]() {
+            if (!NavDataCache::isAnotherProcessRebuilding()) {
+                waitForRebuild.done(0);
+                return;
+            }
+        });
+
+        updateTimer.start(); // timer won't actually run until we process events
+        waitForRebuild.exec();
+        updateTimer.stop();
+    }
+
     NavDataCache* cache = NavDataCache::createInstance();
     if (cache->isRebuildRequired()) {
         QProgressDialog rebuildProgress(baseLabel,
-                                       QString() /* cancel text */,
-                                       0, 100, Q_NULLPTR,
-                                       Qt::Dialog
-                                           | Qt::CustomizeWindowHint
-                                           | Qt::WindowTitleHint
-                                           | Qt::WindowSystemMenuHint
-                                           | Qt::MSWindowsFixedSizeDialogHint);
+                                        QString() /* cancel text */,
+                                        0, 100, Q_NULLPTR,
+                                        wflags);
         rebuildProgress.setWindowModality(Qt::WindowModal);
         rebuildProgress.setMinimumWidth(600);
         rebuildProgress.setAutoReset(false);
         rebuildProgress.setAutoClose(false);
         rebuildProgress.show();
-    
+
         QTimer updateTimer;
         updateTimer.setInterval(100);
+
         QObject::connect(&updateTimer, &QTimer::timeout, [&cache, &rebuildProgress, &baseLabel]() {
             auto phase = cache->rebuild();
             if (phase == NavDataCache::REBUILD_DONE) {
