@@ -146,6 +146,8 @@
         <file>qml/DownloadsInDocumentsWarning.qml</file>
         <file>qml/BackButton.qml</file>
         <file>qml/ScrollToBottomHint.qml</file>
+        <file>qml/GettingStartedTipLayer.qml</file>
+        <file>qml/GettingStartedTipDisplay.qml</file>
     </qresource>
     <qresource prefix="/preview">
         <file alias="close-icon">assets/preview-close.png</file>

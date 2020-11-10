@@ -12,7 +12,7 @@ Text {
 
     wrapMode: Text.WordWrap
     font.pixelSize: Style.subHeadingFontPixelSize
-    color: "white"
+    color: Style.themeContrastTextColor
 
     onLinkActivated: {
         _launcher.requestUpdateAllAircraft();

@@ -243,6 +243,7 @@ signals:
     void inAppChanged();
     void installedAircraftCountChanged(int installedAircraftCount);
 
+    void didResetGettingStartedTips();
 public slots:
     void setSelectedAircraft(QUrl selectedAircraft);
 
@@ -262,6 +263,8 @@ public slots:
     void openConfig();
     void saveConfigAs();
     void setAircraftGridMode(bool aircraftGridMode);
+
+    void resetGettingStartedTips();
 
 private slots:
 

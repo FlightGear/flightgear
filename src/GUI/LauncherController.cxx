@@ -59,6 +59,10 @@
 #include "ThumbnailImageItem.hxx"
 #include "UnitsModel.hxx"
 #include "UpdateChecker.hxx"
+#include "GettingStartedTipsController.hxx"
+#include "GettingStartedTip.hxx"
+#include "TipBackgroundBox.hxx"
+#include "GettingStartedScope.hxx"
 
 using namespace simgear::pkg;
 
@@ -198,6 +202,11 @@ void LauncherController::initQML()
     qmlRegisterType<ModelDataExtractor>("FlightGear", 1, 0, "ModelDataExtractor");
 
     qmlRegisterSingletonType(QUrl("qrc:/qml/OverlayShared.qml"), "FlightGear", 1, 0, "OverlayShared");
+
+    qmlRegisterType<GettingStartedScope>("FlightGear", 1, 0, "GettingStartedScope");
+    qmlRegisterType<GettingStartedTipsController>("FlightGear", 1, 0, "GettingStartedController");
+    qmlRegisterType<GettingStartedTip>("FlightGear", 1, 0, "GettingStartedTip");
+    qmlRegisterType<TipBackgroundBox>("FlightGear", 1, 0, "TipBackgroundBox");
 
     QNetworkDiskCache* diskCache = new QNetworkDiskCache(this);
     SGPath cachePath = globals->get_fg_home() / "PreviewsCache";
@@ -874,6 +883,18 @@ void LauncherController::setAircraftGridMode(bool aircraftGridMode)
     settings.setValue("aircraftGridMode", aircraftGridMode);
     m_aircraftGridMode = aircraftGridMode;
     emit aircraftGridModeChanged(m_aircraftGridMode);
+}
+
+void LauncherController::resetGettingStartedTips()
+{
+    {
+        QSettings settings;
+        settings.beginGroup("GettingStarted-DontShow");
+        settings.remove(""); // remove all keys in the current group
+        settings.endGroup();
+    } // ensure settings are written, before we emit the signal
+
+    emit didResetGettingStartedTips();
 }
 
 void LauncherController::setMinWindowSize(QSize sz)

@@ -75,6 +75,7 @@
 #include "LocalAircraftCache.hxx"
 #include "PathListModel.hxx"
 #include "UnitsModel.hxx"
+#include "GettingStartedTip.hxx"
 
 #if defined(SG_MAC)
 #include <GUI/CocoaHelpers.h>
@@ -110,6 +111,7 @@ void initNavCache()
         const char* waitForOtherMsg = QT_TRANSLATE_NOOP("initNavCache", "Another copy of FlightGear is creating the navigation database. Waiting for it to finish.");
         QString m = qApp->translate("initNavCache", waitForOtherMsg);
 
+        addSentryBreadcrumb("Launcher: showing wait for other process NavCache rebuild dialog", "info");
         QProgressDialog waitForRebuild(m,
                                        QString() /* cancel text */,
                                        0, 0, Q_NULLPTR,
@@ -133,6 +135,7 @@ void initNavCache()
         updateTimer.start(); // timer won't actually run until we process events
         waitForRebuild.exec();
         updateTimer.stop();
+        addSentryBreadcrumb("Launcher: done waiting for other process NavCache rebuild dialog", "info");
     }
 
     NavDataCache* cache = NavDataCache::createInstance();

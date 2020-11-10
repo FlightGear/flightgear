@@ -107,6 +107,25 @@ Item {
                     model.activeVariant = index
                     root.select(model.uri)
                 }
+
+                GettingStartedTip {
+                    tipId: "aircraftVariantTip"
+                    enabled: model.variantCount > 0
+                    standalone: true
+
+                    Component.onCompleted: {
+                        if (enabled) {
+                           showOneShot();
+                        }
+                    }
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        top: parent.bottom
+                    }
+                    arrow: GettingStartedTip.TopCenter
+                    text: qsTr("Click here to select different variants or models of this aircraft")
+                }
             }
         }
 

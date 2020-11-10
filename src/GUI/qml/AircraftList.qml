@@ -1,5 +1,6 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
+import FlightGear 1.0
 import "." // -> forces the qmldir to be loaded
 
 FocusScope
@@ -30,6 +31,8 @@ FocusScope
         }
     }
 
+    GettingStartedScope.controller: tipsLayer.controller
+
     Rectangle
     {
         id: tabBar
@@ -43,6 +46,17 @@ FocusScope
             anchors.leftMargin: Style.margin
             gridMode: !_launcher.aircraftGridMode
             onClicked: _launcher.aircraftGridMode = !_launcher.aircraftGridMode
+
+            GettingStartedTip {
+                tipId: "gridModeTip"
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.bottom
+                }
+                arrow: GettingStartedTip.TopLeft
+                text: qsTr("Click here to switch between grid and list mode")
+            }
         }
 
         Row {
@@ -57,6 +71,18 @@ FocusScope
                     root.updateSelectionFromLauncher();
                 }
                 active: root.state == "installed"
+
+                GettingStartedTip {
+                    tipId: "installedAircraftTip"
+                    nextTip: "gridModeTip"
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        top: parent.bottom
+                    }
+                    arrow: GettingStartedTip.TopCenter
+                    text: qsTr("Use this tab to view installed aircraft")
+                }
             }
 
             TabButton {
@@ -77,6 +103,18 @@ FocusScope
                     root.updateSelectionFromLauncher();
                 }
                 active: root.state == "browse"
+
+                GettingStartedTip {
+                    tipId: "browseTip"
+                    nextTip: "searchAircraftTip"
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        top: parent.bottom
+                    }
+                    arrow: GettingStartedTip.TopCenter
+                    text: qsTr("Use this tab to view available aircraft to download")
+                }
             }
 
             TabButton {
@@ -107,6 +145,18 @@ FocusScope
             }
 
             active: root.state == "search"
+
+            GettingStartedTip {
+                tipId: "searchAircraftTip"
+                nextTip: "installedAircraftTip"
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.bottom
+                }
+                arrow: GettingStartedTip.TopRight
+                text: qsTr("Enter text here to search aircraft names and descriptions.")
+            }
         }
     }
 
@@ -123,6 +173,7 @@ FocusScope
         id: ratingsHeader
         AircraftRatingsPanel {
             width: aircraftContent.width
+            tips: tipsLayer
             onClearSelection: {
                 _launcher.selectedAircraft = "";
                 root.updateSelectionFromLauncher()
@@ -347,6 +398,13 @@ FocusScope
         detailsView.visible = false;
     }
 
+    // we don't want our tips to interfere with the details views
+    GettingStartedTipLayer {
+        id: tipsLayer
+        anchors.fill: parent
+        scopeId: "aircraft"
+    }
+
     AircraftDetailsView {
         id: detailsView
         anchors.fill: parent
@@ -358,5 +416,7 @@ FocusScope
             onClicked: root.goBack();
         }
     }
+
+
 }
 

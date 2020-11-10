@@ -2,6 +2,7 @@ import QtQuick 2.4
 import QtQuick.Controls 2.2
 
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 import "."
 
 Item {
@@ -53,6 +54,20 @@ Item {
 
                 onLinkActivated: {
                     Qt.openUrlExternally(link)
+                }
+            }
+
+            Text {
+                width: parent.width
+                font.pixelSize: Style.baseFontPixelSize * 1.5
+                color: Style.baseTextColor
+                wrapMode: Text.WordWrap
+
+                text: qsTr("<p>For help using this launcher, <a %1>try enabling the getting started hints</a>.</p>\n").arg("href=\"enable-tips\"");
+
+                onLinkActivated: {
+                    // reset tips, so they are shown again
+                   _launcher.resetGettingStartedTips();
                 }
             }
 

@@ -201,6 +201,14 @@ if (HAVE_QT)
                         PathUrlHelper.hxx
                         DialogStateController.cxx
                         DialogStateController.hxx
+                        GettingStartedTip.hxx
+                        GettingStartedTip.cxx
+                        GettingStartedTipsController.cxx
+                        GettingStartedTipsController.hxx
+                        TipBackgroundBox.cxx
+                        TipBackgroundBox.hxx
+                        GettingStartedScope.hxx
+                        GettingStartedScope.cxx
                         ${QQUI_SOURCES}
                         )
 

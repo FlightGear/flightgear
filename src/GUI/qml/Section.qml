@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import "."
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 
 Item {
     id: root
@@ -10,7 +11,6 @@ Item {
     property string settingGroup: ""
     property string summary: ""
     readonly property bool haveAdvancedSettings: anyAdvancedSettings(contents)
-
 
     implicitWidth: parent.width
     implicitHeight: headerRect.height + contentBox.height + (Style.margin * 2)
@@ -89,6 +89,18 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             height: parent.height
             visible: root.haveAdvancedSettings
+
+            GettingStartedTip {
+                tipId: "expandSectionTip"
+                enabled: root.haveAdvancedSettings
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.bottom
+                }
+                arrow: GettingStartedTip.TopRight
+                text: qsTr("Click here to show advanced settings in this section")
+            }
         }
     }
 
