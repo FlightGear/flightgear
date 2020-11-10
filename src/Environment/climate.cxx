@@ -118,8 +118,6 @@ void FGClimate::reinit()
     _precipitation = -99999.0;
     _wind = -99999.0;
     _precipitation_annual = -99999.0;
-
-    update(0.0);
 }
 
 // Set all environment parameters based on the koppen-classicfication
@@ -141,9 +139,12 @@ void FGClimate::update(double dt)
     if (_adj_longitude_deg < 0.0) _adj_longitude_deg += 360.0;
     else if (_adj_longitude_deg >= 360.0) _adj_longitude_deg -= 360.0;
 
-    if (fabs(_prev_lat - _adj_latitude_deg) > _epsilon ||
-        fabs(_prev_lon - _adj_longitude_deg) > _epsilon)
+    double diff_pos = fabs(_prev_lat - _adj_latitude_deg) +
+                      fabs(_prev_lon - _adj_longitude_deg);
+    if (diff_pos > _epsilon )
     {
+        if (diff_pos > 1.0) reinit();
+
         _is_autumn = false;
         if ((latitude_deg*_sun_latitude_deg < 0.0) // autumn + spring
               && (_adj_latitude_deg > _prev_lat)) // autumn
