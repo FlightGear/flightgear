@@ -236,8 +236,8 @@ WayptRef Waypt::createInstance(RouteBase* aOwner, const std::string& aTypeName)
 WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp)
 {
   if (!aProp->hasChild("type")) {
-    throw sg_io_exception("bad props node, no type provided",
-      "Waypt::createFromProperties");
+      SG_LOG(SG_GENERAL, SG_WARN, "Bad waypoint node: missing type");
+      return {};
   }
 
   flightgear::AirwayRef via;
@@ -250,22 +250,24 @@ WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp
       }
   }
 
-  try {
     WayptRef nd(createInstance(aOwner, aProp->getStringValue("type")));
-    nd->initFromProperties(aProp);
-    return nd;
-  } catch (sg_exception& e) {
-    SG_LOG(SG_GENERAL, SG_WARN, "failed to create waypoint, trying basic:" << e.getMessage());
-  }
+    if (nd->initFromProperties(aProp)) {
+        return nd;
+    }
+    SG_LOG(SG_GENERAL, SG_WARN, "failed to create waypoint, trying basic");
 
-// if we failed to make the waypoint, try again making a basic waypoint.
-// this handles the case where a navaid waypoint is missing, for example
-// we also reject navaids that don't look correct (too far form the specified
-// lat-lon, eg see https://sourceforge.net/p/flightgear/codetickets/1814/ )
-// and again fallback to here.
-  WayptRef nd(new BasicWaypt(aOwner));
-  nd->initFromProperties(aProp);
-  return nd;
+
+    // if we failed to make the waypoint, try again making a basic waypoint.
+    // this handles the case where a navaid waypoint is missing, for example
+    // we also reject navaids that don't look correct (too far form the specified
+    // lat-lon, eg see https://sourceforge.net/p/flightgear/codetickets/1814/ )
+    // and again fallback to here.
+    WayptRef bw(new BasicWaypt(aOwner));
+    if (bw->initFromProperties(aProp)) {
+        return bw;
+    }
+
+    return {}; // total failure
 }
 
 void Waypt::saveAsNode(SGPropertyNode* n) const
@@ -274,7 +276,7 @@ void Waypt::saveAsNode(SGPropertyNode* n) const
   writeToProperties(n);
 }
 
-void Waypt::initFromProperties(SGPropertyNode_ptr aProp)
+bool Waypt::initFromProperties(SGPropertyNode_ptr aProp)
 {
   if (aProp->hasChild("generated")) {
     setFlag(WPT_GENERATED, aProp->getBoolValue("generated"));
@@ -314,7 +316,7 @@ void Waypt::initFromProperties(SGPropertyNode_ptr aProp)
     _speed = aProp->getDoubleValue("speed");
   }
 
-
+  return true;
 }
 
 void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const

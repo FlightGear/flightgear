@@ -44,10 +44,10 @@ public:
 
     std::string icaoDescription() const override;
 protected:
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+    bool initFromProperties(SGPropertyNode_ptr aProp) override;
+    void writeToProperties(SGPropertyNode_ptr aProp) const override;
 
-  virtual std::string type() const
+    virtual std::string type() const
     { return "basic"; } 
 
   SGGeod _pos;
@@ -72,12 +72,13 @@ public:
     { return _navaid; }
     
   virtual std::string ident() const;
-protected:	
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+
+  protected:
+  bool initFromProperties(SGPropertyNode_ptr aProp) override;
+  void writeToProperties(SGPropertyNode_ptr aProp) const override;
 
   virtual std::string type() const
-    { return "navaid"; }
+  { return "navaid"; }
     
   FGPositionedRef _navaid;
 };
@@ -93,10 +94,10 @@ public:
     { return _geod; }
 
 protected:
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
-  virtual std::string type() const
+    bool initFromProperties(SGPropertyNode_ptr aProp) override;
+    void writeToProperties(SGPropertyNode_ptr aProp) const override;
+
+    virtual std::string type() const
     { return "offset-navaid"; }
     
 private:
@@ -132,9 +133,9 @@ public:
 protected:	
   virtual std::string type() const
     { return "runway"; }
-  
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+
+    bool initFromProperties(SGPropertyNode_ptr aProp) override;
+    void writeToProperties(SGPropertyNode_ptr aProp) const override;
 
 private:
   FGRunway* _runway;
@@ -169,10 +170,10 @@ public:
   virtual double headingRadialDeg() const
   { return inboundRadial(); }
 protected:
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
-  virtual std::string type() const
+    bool initFromProperties(SGPropertyNode_ptr aProp) override;
+    void writeToProperties(SGPropertyNode_ptr aProp) const override;
+
+    virtual std::string type() const
     { return "hold"; }
     
 private:
@@ -188,10 +189,10 @@ public:
   HeadingToAltitude(RouteBase* aOwner, const std::string& aIdent, double aMagHdg);
   
   HeadingToAltitude(RouteBase* aOwner);
-  
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
+
+  bool initFromProperties(SGPropertyNode_ptr aProp) override;
+  void writeToProperties(SGPropertyNode_ptr aProp) const override;
+
   virtual std::string type() const
     { return "hdgToAlt"; }
 
@@ -221,10 +222,10 @@ public:
     double aCourseDeg, double aDistanceNm);
   
   DMEIntercept(RouteBase* aOwner);
-  
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
+
+  bool initFromProperties(SGPropertyNode_ptr aProp) override;
+  void writeToProperties(SGPropertyNode_ptr aProp) const override;
+
   virtual std::string type() const
     { return "dmeIntercept"; }
 
@@ -256,10 +257,10 @@ public:
     double aCourseDeg, double aRadialDeg);
   
   RadialIntercept(RouteBase* aOwner);
-  
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
+
+  bool initFromProperties(SGPropertyNode_ptr aProp) override;
+  void writeToProperties(SGPropertyNode_ptr aProp) const override;
+
   virtual std::string type() const
     { return "radialIntercept"; }
 
@@ -296,10 +297,10 @@ public:
   virtual ~ATCVectors();
   
   ATCVectors(RouteBase* aOwner);
-  
-  virtual void initFromProperties(SGPropertyNode_ptr aProp);
-  virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
-  
+
+  bool initFromProperties(SGPropertyNode_ptr aProp) override;
+  void writeToProperties(SGPropertyNode_ptr aProp) const override;
+
   virtual std::string type() const
     { return "vectors"; }
 
@@ -326,8 +327,8 @@ public:
     virtual ~Discontinuity();
     Discontinuity(RouteBase* aOwner);
 
-    virtual void initFromProperties(SGPropertyNode_ptr aProp);
-    virtual void writeToProperties(SGPropertyNode_ptr aProp) const;
+    bool initFromProperties(SGPropertyNode_ptr aProp) override;
+    void writeToProperties(SGPropertyNode_ptr aProp) const override;
 
     virtual std::string type() const
     { return "discontinuity"; }
@@ -348,7 +349,7 @@ public:
     Via(RouteBase* aOwner, AirwayRef airway, FGPositionedRef to);
     virtual ~Via();
 
-    void initFromProperties(SGPropertyNode_ptr aProp) override;
+    bool initFromProperties(SGPropertyNode_ptr aProp) override;
     void writeToProperties(SGPropertyNode_ptr aProp) const override;
 
     std::string type() const override
