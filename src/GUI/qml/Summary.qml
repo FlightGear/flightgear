@@ -1,6 +1,8 @@
 import QtQuick 2.4
 import QtQml 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
+
 import "."
 
 Item {
@@ -8,6 +10,8 @@ Item {
 
     signal showSelectedAircraft();
     signal showSelectedLocation();
+
+    GettingStartedScope.controller: tips.controller
 
     Rectangle {
         anchors.fill: parent
@@ -149,8 +153,6 @@ Item {
                 font.pixelSize: Style.headingFontPixelSize
             }
 
-            // TODO - make clickable, jump to to the aircraft in the installed
-            // aircraft list
             ClickableText {
                 text: _launcher.selectedAircraftInfo.name === "" ?
                           qsTr("No aircraft selected") : _launcher.selectedAircraftInfo.name
@@ -166,6 +168,18 @@ Item {
                 enabled: !_launcher.aircraftHistory.isEmpty
                 onSelected: {
                     _launcher.selectedAircraft = _launcher.aircraftHistory.uriAt(index)
+                }
+
+                GettingStartedTip {
+                    tipId: "aircraftHistoryTip"
+                    nextTip: "locationHistoryTip"
+                    arrow: GettingStartedTip.BottomRight
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.top
+                    }
+                    text: qsTr("Click here to select a recently used aircraft.")
                 }
             }
 
@@ -241,6 +255,27 @@ Item {
                             _launcher.selectedAircraftState = model.tagForState(index);
                         }
                     }
+
+                    GettingStartedTip {
+                        id: aircraftStateTip
+                        tipId: "aircraftStateTip"
+                        arrow: GettingStartedTip.LeftCenter
+                        enabled: stateSelectionGroup.visible
+                        standalone: true
+
+                        // show as a one-shot tip, first time we're enabled
+                        onEnabledChanged: {
+                            if (enabled) {
+                                tips.showOneShot(this)
+                            }
+                        }
+
+                        x: parent.implicitWidth
+                        anchors {
+                            verticalCenter: parent.verticalCenter
+                        }
+                        text: qsTr("Use this menu to choose the starting state of the aircraft")
+                    }
                 }
 
                 StyledText {
@@ -283,6 +318,17 @@ Item {
                 font.pixelSize: Style.headingFontPixelSize
                 width: summaryGrid.middleColumnWidth
                 onClicked: root.showSelectedLocation()
+
+                GettingStartedTip {
+                    tipId: "currentLocationTextTip"
+                    anchors {
+                        top: parent.bottom
+                        left: parent.left
+                        leftMargin: Style.strutSize
+                    }
+                    arrow: GettingStartedTip.TopLeft
+                    text: qsTr("Click this description to view and change the current location.")
+                }
             }
 
             HistoryPopup {
@@ -291,6 +337,16 @@ Item {
                 enabled: !_launcher.aircraftHistory.isEmpty && !_location.skipFromArgs
                 onSelected: {
                     _launcher.restoreLocation(_launcher.locationHistory.locationAt(index))
+                }
+
+                GettingStartedTip {
+                    tipId: "locationHistoryTip"
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.top
+                    }
+                    arrow: GettingStartedTip.BottomRight
+                    text: qsTr("Click here to access recently used locations")
                 }
             }
 
@@ -317,4 +373,10 @@ Item {
             }
         }
     } // of summary box
+
+    GettingStartedTipLayer {
+        id: tips
+        anchors.fill: parent
+        scopeId: "summary"
+    }
 }

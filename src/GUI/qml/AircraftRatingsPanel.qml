@@ -1,11 +1,15 @@
 import QtQuick 2.2
 import FlightGear.Launcher 1.0 as FG
+import FlightGear 1.0
+
 import "."
 
 ListHeaderBox
 {
     id: root
     signal clearSelection();
+
+    GettingStartedScope.controller: tips.controller
 
     contents: [
 
@@ -44,6 +48,23 @@ ListHeaderBox
                 root.clearSelection();
                 editRatingsPanel.visible = true
 
+            }
+
+            Component.onCompleted: {
+                editTip.showOneShot()
+            }
+
+            GettingStartedTip {
+                id: editTip
+                tipId: "editRatingsTip"
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.bottom
+                }
+                standalone: true
+                arrow: GettingStartedTip.TopRight
+                text: qsTr("Click here to change which aircraft are shown or hidden based on their ratings")
             }
         },
 

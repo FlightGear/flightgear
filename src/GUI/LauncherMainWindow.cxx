@@ -31,6 +31,7 @@
 #include "LocationController.hxx"
 #include "QtLauncher.hxx"
 #include "UpdateChecker.hxx"
+#include "GettingStartedTip.hxx"
 
 #include <Main/sentryIntegration.hxx>
 

@@ -7,6 +7,7 @@ Item {
     height: visible ? contentBox.height + (Style.margin * 2) : 0
     z: 100
 
+    property GettingStartedTipLayer tips
     property alias contents: contentBox.children
 
     Rectangle {

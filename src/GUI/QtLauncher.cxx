@@ -77,6 +77,7 @@
 #include "LocalAircraftCache.hxx"
 #include "PathListModel.hxx"
 #include "UnitsModel.hxx"
+#include "GettingStartedTip.hxx"
 
 using namespace flightgear;
 using namespace simgear::pkg;
@@ -108,6 +109,7 @@ void initNavCache()
         const char* waitForOtherMsg = QT_TRANSLATE_NOOP("initNavCache", "Another copy of FlightGear is creating the navigation database. Waiting for it to finish.");
         QString m = qApp->translate("initNavCache", waitForOtherMsg);
 
+        addSentryBreadcrumb("Launcher: showing wait for other process NavCache rebuild dialog", "info");
         QProgressDialog waitForRebuild(m,
                                        QString() /* cancel text */,
                                        0, 0, Q_NULLPTR,
@@ -131,6 +133,7 @@ void initNavCache()
         updateTimer.start(); // timer won't actually run until we process events
         waitForRebuild.exec();
         updateTimer.stop();
+        addSentryBreadcrumb("Launcher: done waiting for other process NavCache rebuild dialog", "info");
     }
 
     NavDataCache* cache = NavDataCache::createInstance();
@@ -395,6 +398,15 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
             static_qApp->installTranslator(translator);
         } else {
             delete translator;
+        }
+
+        // temporary code: only enable getting-started tips for English, to give translators time to
+        // catch up
+        if (!lang.empty()) {
+            GettingStartedTip::setGlobalTipsEnabled(simgear::strutils::starts_with(lang, "en"));
+        } else {
+            QLocale currentLocale;
+            GettingStartedTip::setGlobalTipsEnabled(currentLocale.name().startsWith("en"));
         }
 
         // reset numeric / collation locales as described at:

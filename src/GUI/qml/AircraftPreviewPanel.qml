@@ -1,5 +1,7 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
+import "." // -> forces the qmldir to be loaded
 
 Rectangle {
     id: root
@@ -66,7 +68,7 @@ Rectangle {
                 height: 8
                 width: 8
                 radius: 4
-                color: (model.index == root.activePreview) ? "white" : "#cfcfcf"
+                color: (model.index == root.activePreview) ? "white" : Style.themeColor
             }
         }
     }
@@ -106,6 +108,15 @@ Rectangle {
             onClicked: {
                 root.activePreview = Math.min(root.activePreview + 1, root.previews.length - 1)
             }
+        }
+
+        GettingStartedTip {
+            anchors {
+                verticalCenter: parent.verticalCenter
+                right: parent.left
+            }
+            arrow: GettingStartedTip.RightCenter
+            text: qsTr("Click here to cycle through preview images")
         }
     }
 }

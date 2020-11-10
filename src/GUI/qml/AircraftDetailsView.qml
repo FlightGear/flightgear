@@ -1,5 +1,6 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 import "."
 
 Rectangle {
@@ -23,15 +24,18 @@ Rectangle {
 
         anchors.fill: parent
         contentWidth: parent.width
-        contentHeight: content.childrenRect.height
+        contentHeight: content.height
         boundsBehavior: Flickable.StopAtBounds
 
         Item {
             id: content
             width: root.width - scrollbar.width
-            height: childrenRect.height
+            height: contentColumn.childrenRect.height
+
+            GettingStartedScope.controller: tipsLayer.controller
 
             Column {
+                id: contentColumn
                 width: content.width - (Style.margin * 2)
                 spacing: Style.margin
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -170,6 +174,15 @@ Rectangle {
                         onToggle: {
                             aircraft.favourite = on;
                         }
+
+                        GettingStartedTip {
+                            anchors {
+                                verticalCenter: parent.verticalCenter
+                                left: parent.right
+                            }
+                            arrow: GettingStartedTip.LeftCenter
+                            text: qsTr("Click here to mark this as a favourite aircraft")
+                        }
                     }
 
                     Grid {
@@ -235,8 +248,13 @@ Rectangle {
                 }
 
             } // main layout column
-        } // of main item
 
+            GettingStartedTipLayer {
+                id: tipsLayer
+                anchors.fill: parent
+                scopeId: "aircraft-details"
+            }
+        } // of main item
     } // of Flickable
 
     FGCompatScrollbar {

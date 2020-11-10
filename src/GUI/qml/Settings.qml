@@ -1,5 +1,6 @@
 import QtQuick 2.4
 import FlightGear.Launcher 1.0
+import FlightGear 1.0
 import "."
 
 Item {
@@ -34,6 +35,8 @@ Item {
             id: sectionColumn
             width: parent.width
 
+            GettingStartedScope.controller: tips.controller
+
             Item {
                 // top margin
                 width: parent.width
@@ -62,6 +65,18 @@ Item {
                     autoSubmitTimeout: 250
                     onSearch: {
                         _launcher.settingsSearchTerm = term
+                    }
+
+                    GettingStartedTip {
+                        tipId: "searchSettingsTip"
+                        nextTip: "expandSectionTip"
+
+                        anchors {
+                            horizontalCenter: parent.horizontalCenter
+                            top: parent.bottom
+                        }
+                        arrow: GettingStartedTip.TopRight
+                        text: qsTr("Enter text here to search for a setting")
                     }
                 }
             }
@@ -537,6 +552,12 @@ Item {
                 ]
             }
         } // of Column
+
+        GettingStartedTipLayer {
+            id: tips
+            anchors.fill: parent
+            scopeId: "settings"
+        }
     } // of Flickable
 
     FGCompatScrollbar {
