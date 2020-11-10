@@ -391,6 +391,11 @@ void FGElectricalSystem::init () {
 
     if ( path.length() ) {
         SGPath config = globals->resolve_aircraft_path(path);
+        if (!config.exists()) {
+            SG_LOG( SG_SYSTEMS, SG_ALERT,  "Failed to find electrical system model: " << config );
+            return;
+        }
+
         // load an obsolete xml configuration
         SG_LOG( SG_SYSTEMS, SG_DEV_WARN,
                 "Reading deprecated xml electrical system model from\n    "
