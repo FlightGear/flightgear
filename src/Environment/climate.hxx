@@ -29,7 +29,7 @@
 #include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/SGGeod.hxx>
 
-#define REPORT_TO_CONSOLE  0
+#define REPORT_TO_CONSOLE	0
 
 /*
  * Update environment parameters based on the Köppen-Geiger climate
@@ -38,12 +38,18 @@
 
 class FGLight;
 
-class FGClimate {
+#define MAX_CLIMATE_CLASSES	32
+
+class FGClimate : public SGSubsystem {
 public:
-    FGClimate(const SGGeod& position);
+    FGClimate();
     virtual ~FGClimate() = default;
 
-    void update(const SGGeod& position);
+    void bind() override;
+    void init() override;
+    void reinit() override;
+    void unbind() override;
+    void update(double dt) override;;
 
     double get_snow_level_m() { return _snow_level; }
     double get_snow_thickness() { return _snow_thickness; }
@@ -58,9 +64,16 @@ public:
     double get_wind_kmh() { return _wind; }
 
 private:
+    static const std::string _classification[MAX_CLIMATE_CLASSES];
+    static const std::string _description[MAX_CLIMATE_CLASSES];
+
 #if REPORT_TO_CONSOLE
     void report();
 #endif
+    inline void _set(double& prev, double val) {
+        prev = (prev < -1000.0) ? val : 0.95*prev + 0.05*val;
+    }
+
     // interpolate val (from 0.0 to 1.0) between min and max
     double linear(double val, double min, double max);
     double triangular(double val, double min, double max);
@@ -81,18 +94,21 @@ private:
     void update_day_factor();
     void update_season_factor();
 
+    SGPropertyNode_ptr _rootNode;
     simgear::TiedPropertyList _tiedProperties;
 
+    SGPropertyNode_ptr _metarSnowLevelNode;
+    SGPropertyNode_ptr _positionLatitudeNode;
+    SGPropertyNode_ptr _positionLongitudeNode;
+    SGPropertyNode_ptr _ground_elev_node;
+
     osg::ref_ptr<osg::Image> image;
-    int _image_width = 0;
-    int _image_height = 0;
+    double _image_width = 0;
+    double _image_height = 0;
 
     double _epsilon = 1.0;
     double _prev_lat = -99999.0;
     double _prev_lon = -99999.0;
-
-    SGGeod pos;
-    SGPropertyNode_ptr _ground_elev_node;
 
     double _sun_latitude_deg = 0.0;
     double _sun_longitude_deg = 0.0;
@@ -106,8 +122,8 @@ private:
     bool _has_autumn = false;
     bool _is_autumn = false;
 
-    int _classicfication = 0;		// Köppen-Geiger classicfication
- 
+    int _code = 0;			// Köppen-Geiger classicfication
+
     // environment
     bool _environment_adjust = false;	// enable automatic adjestments
     double _snow_level = 7500.0;	// in meters
@@ -119,18 +135,18 @@ private:
 
     // weather
     bool _weather_update = false;	// enable weather updates
-    double _relative_humidity_sl = 60.0;	// 0.0 = dry, 1.0 is fully humid
-    double _relative_humidity_gl = 60.0;
+    double _relative_humidity_sl = -99999.0;// 0.0 = dry, 1.0 is fully humid
+    double _relative_humidity_gl = -99999.0;
 
-    double _dewpoint_gl = 5.0;
-    double _dewpoint_sl = 5.0;
-    double _temperature_gl = 20.0;	// ground level temperature in deg. C.
-    double _temperature_sl = 20.0;	// seal level temperature in deg. C.
-    double _temperature_mean_gl = 20.0;	// mean temperature in deg. C.
-    double _temperature_mean_sl = 20.0;
-    double _precipitation = 0.0; // minimal average precipitation in mm/month
-    double _wind = 3.0;			// wind in km/h
-    double _precipitation_annual = 990.0; // global
+    double _dewpoint_gl = -99999.0;
+    double _dewpoint_sl = -99999.0;
+    double _temperature_gl = -99999.0;	// ground level temperature in deg. C.
+    double _temperature_sl = -99999.0;	// seal level temperature in deg. C.
+    double _temperature_mean_gl = -99999.0; // mean temperature in deg. C.
+    double _temperature_mean_sl = -99999.0;
+    double _precipitation = -99999.0; // minimal avg. precipitation in mm/month
+    double _wind = -99999.0;		// wind in km/h
+    double _precipitation_annual = -99999.0; // global
 };
 
 #endif // _FGCLIMATE_HXX

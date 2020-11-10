@@ -90,6 +90,7 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   _3dCloudsEnableListener = new FG3DCloudsListener(fgClouds);
   set_subsystem("controller", Environment::LayerInterpolateController::createInstance( fgGetNode("/environment/config", true ) ));
 
+  set_subsystem("climate", new FGClimate);
   set_subsystem("precipitation", new FGPrecipitationMgr);
   set_subsystem("realwx", Environment::RealWxController::createInstance( fgGetNode("/environment/realwx", true ) ), 1.0 );
   set_subsystem("terrainsampler", Environment::TerrainSampler::createInstance( fgGetNode("/environment/terrain", true ) ));
@@ -110,7 +111,6 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   delete fgClouds;
   delete _3dCloudsEnableListener;
   delete _environment;
-  delete _climate;
 }
 
 struct FGEnvironmentMgrMultiplayerListener : SGPropertyChangeListener {
@@ -260,15 +260,11 @@ FGEnvironmentMgr::unbind ()
 void
 FGEnvironmentMgr::update (double dt)
 {
+  SGGeod aircraftPos(globals->get_aircraft_position());
+
   SGSubsystemGroup::update(dt);
 
-  SGGeod aircraftPos(globals->get_aircraft_position());
   _environment->set_elevation_ft( aircraftPos.getElevationFt() );
-
-  if (!_climate)
-    _climate = new FGClimate(aircraftPos);
-  else
-    _climate->update(aircraftPos);
 
   auto particlesManager = simgear::ParticlesGlobalManager::instance();
   particlesManager->setWindFrom(_environment->get_wind_from_heading_deg(),

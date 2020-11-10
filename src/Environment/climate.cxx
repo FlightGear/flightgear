@@ -47,21 +47,35 @@
 //   applications. Bull. Amer. Meteor. Soc., 86, 225-233.
 //   doi: http://dx.doi.org/10.1175/BAMS-86-2-225
 
-FGClimate::FGClimate(const SGGeod& position)
+FGClimate::FGClimate()
 {
     SGPath img_path = globals->get_fg_root() / "Geodata" / "koppen-geiger.png";
 
     image = osgDB::readImageFile(img_path.utf8Str());
     if (image)
     {
-        _image_width = image->s();
-        _image_height = image->t();
-        _epsilon = 360.0/_image_width;
+        _image_width = static_cast<double>( image->s() );
+        _image_height = static_cast<double>( image->t() );
+        _epsilon = 36.0/_image_width;
     }
+}
 
+void FGClimate::init()
+{
+    _metarSnowLevelNode = fgGetNode("/environment/params/metar-updates-snow-level", true);
+
+    _positionLatitudeNode = fgGetNode("/position/latitude-deg", true);
+    _positionLongitudeNode= fgGetNode("/position/longitude-deg", true);
     _ground_elev_node = fgGetNode("/position/ground-elev-ft", true );
+}
 
-    _tiedProperties.setRoot( fgGetNode("/environment/climate", true) );
+void FGClimate::bind()
+{
+    _rootNode = fgGetNode("/environment/climate", true);
+    _rootNode->getNode("description", true)->setStringValue(_description[_code]);
+    _rootNode->getNode("classification", true)->setStringValue(_classification[_code]);
+
+    _tiedProperties.setRoot( _rootNode );
 
     // environment properties
     _tiedProperties.Tie( "environment-update", &_environment_adjust );
@@ -80,14 +94,38 @@ FGClimate::FGClimate(const SGGeod& position)
     _tiedProperties.Tie( "precipitation-annual-mm", & _precipitation_annual);
     _tiedProperties.Tie( "snow-level-m", &_snow_level);
     _tiedProperties.Tie( "wind-kmph", &_wind);
+}
 
-    update(position);
+void FGClimate::unbind ()
+{
+  _tiedProperties.Untie();
+}
+
+void FGClimate::reinit()
+{
+    _prev_lat = -99999.0;
+    _prev_lon = -99999.0;
+
+    _relative_humidity_sl = -99999.0;
+    _relative_humidity_gl = -99999.0;
+
+    _dewpoint_gl = -99999.0;
+    _dewpoint_sl = -99999.0;
+    _temperature_gl = -99999.0;
+    _temperature_sl = -99999.0;
+    _temperature_mean_gl = -99999.0;
+    _temperature_mean_sl = -99999.0;
+    _precipitation = -99999.0;
+    _wind = -99999.0;
+    _precipitation_annual = -99999.0;
+
+    update(0.0);
 }
 
 // Set all environment parameters based on the koppen-classicfication
 // https://en.wikipedia.org/wiki/K%C3%B6ppen_climate_classification
 // http://vectormap.si.edu/Climate.htm
-void FGClimate::update(const SGGeod& position)
+void FGClimate::update(double dt)
 {
     FGLight *l = globals->get_subsystem<FGLight>();
     if (!l) return; // e.g. during unit-testing
@@ -95,9 +133,8 @@ void FGClimate::update(const SGGeod& position)
     _sun_longitude_deg = l->get_sun_lon()*SGD_RADIANS_TO_DEGREES;
     _sun_latitude_deg = l->get_sun_lat()*SGD_RADIANS_TO_DEGREES;
 
-    pos = position;
-    double latitude_deg  = pos.getLatitudeDeg();
-    double longitude_deg = pos.getLongitudeDeg();
+    double latitude_deg  = _positionLatitudeNode->getDoubleValue();
+    double longitude_deg = _positionLongitudeNode->getDoubleValue();
 
     _adj_latitude_deg = latitude_deg - _sun_latitude_deg;
     _adj_longitude_deg = _sun_longitude_deg - longitude_deg;
@@ -120,30 +157,39 @@ void FGClimate::update(const SGGeod& position)
         update_day_factor();
         update_season_factor();
 
+        _code = 0; // Ocean
         osg::Vec4f color;
         if (image)
         {
             // from lat/lon to screen coordinates
             double x = 180.0 + longitude_deg;
             double y =  90.0 + latitude_deg;
-            double s, t;
+            double xs = x * _image_width/360.0;
+            double yt = y * _image_height/180.0;
+            double rxs = round(xs);
+            double ryt = round(yt);
 
-            s = static_cast<int>(x * static_cast<double>(_image_width)/360.0);
-            t = static_cast<int>(y * static_cast<double>(_image_height)/180.0);
+            int xoffs = (rxs < xs) ? -1 : 1;
+            int yoffs = (ryt < yt) ? -1 : 1;
 
+            int s = static_cast<int>(rxs + xoffs);
+            int t = static_cast<int>(ryt + yoffs);
             color = image->getColor(s, t);
+
+            // convert from color shades to koppen-classicfication
+            _code = static_cast<int>(255.0f*color[0]/4.0f);
+
+            if (_code == 0) set_ocean();
+            else if (_code < 5) set_tropical();
+            else if (_code < 9) set_dry();
+            else if (_code < 18) set_temperate();
+            else if (_code < 30) set_continetal();
+            else if (_code < 32) set_polar();
+            else set_ocean();
         }
 
-        // convert from color shades to koppen-classicfication
-        _classicfication = static_cast<int>( 255.0f*color[0]/4.0f );
-
-        if (_classicfication == 0) set_ocean();
-        else if (_classicfication < 5) set_tropical();
-        else if (_classicfication < 9) set_dry();
-        else if (_classicfication < 18) set_temperate();
-        else if (_classicfication < 30) set_continetal();
-        else if (_classicfication < 32) set_polar();
-        else set_ocean();
+        _rootNode->getNode("description")->setStringValue(_description[_code]);
+        _rootNode->getNode("classification")->setStringValue(_classification[_code]);
 
         double alt_km;
         alt_km = _ground_elev_node->getDoubleValue()*SG_FEET_TO_METER/1000.0;
@@ -182,7 +228,7 @@ void FGClimate::update_day_factor()
 //                        to distinguish between the two use the _autumn flag.
 void FGClimate::update_season_factor()
 {
-    double latitude_deg = pos.getLatitudeDeg();
+    double latitude_deg = _positionLatitudeNode->getDoubleValue();
     double sign = latitude_deg >= 0.0 ? 1.0 : -1.0; // hemisphere
 
     _season_summer = (23.5 + sign*_sun_latitude_deg)/(2.0*23.5);
@@ -207,19 +253,20 @@ void FGClimate::set_ocean()
     // the poles do not really have day or night, only seasons
     double temp_pole = season_even(summer, -48.0, -8.0);
 
-    double fact_lat = pow(fabs(pos.getLatitudeDeg())/90.0, 2.5);
+    double latitude_deg = _positionLatitudeNode->getDoubleValue();
+    double fact_lat = pow(fabs(latitude_deg)/90.0, 2.5);
     double ifact_lat = 1.0 - fact_lat;
 
-    _temperature_gl = season_even(ifact_lat, temp_pole, temp_equator);
+    _set(_temperature_gl, season_even(ifact_lat, temp_pole, temp_equator));
 
     double temp_mean_equator = 0.5*(temp_equator_day + temp_equator_night);
-    _temperature_mean_gl = season_even(ifact_lat, temp_pole, temp_mean_equator);
+    _set(_temperature_mean_gl, season_even(ifact_lat, temp_pole, temp_mean_equator));
 
     // relative humidity based on latitude
-    _relative_humidity_gl = triangular(fabs(fact_lat-0.5), 70.0, 87.0);
+    _set(_relative_humidity_gl, triangular(fabs(fact_lat-0.5), 70.0, 87.0));
 
     // steady winds
-    _wind = 3.0;
+    _set(_wind, 3.0);
 
     // no autumn
     _has_autumn = false;
@@ -227,16 +274,13 @@ void FGClimate::set_ocean()
     // average precipitation
     _precipitation_annual = 990.0; // global average
     double avg_precipitation = 100.0 - (_precipitation_annual/25.0);
-    _precipitation = avg_precipitation;
+    _set(_precipitation, avg_precipitation);
 }
 
 // https://en.wikipedia.org/wiki/Tropical_rainforest_climate
 // https://en.wikipedia.org/wiki/Tropical_monsoon_climate
 void FGClimate::set_tropical()
 {
-    // weather
-    _precipitation_annual = 3000.0;
-
     double day = _day_noon;
 
     double summer = _season_summer;
@@ -245,7 +289,7 @@ void FGClimate::set_tropical()
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
     // wind based on latitude (0.0 - 15 degrees)
-    double latitude_deg = pos.getLatitudeDeg();
+    double latitude_deg = _positionLatitudeNode->getDoubleValue();
     double fact_lat = std::max(abs(latitude_deg), 15.0)/15.0;
     double wind = 3.0*fact_lat*fact_lat;
 
@@ -253,7 +297,7 @@ void FGClimate::set_tropical()
     double temp_day = _temperature_sl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity_gl;
-    switch(_classicfication)
+    switch(_code)
     {
     case 1: // Af: equatorial, fully humid
         temp_night = triangular(summer, 20.0, 22.5);
@@ -286,13 +330,16 @@ void FGClimate::set_tropical()
         break;
     }
 
-    _temperature_gl = season_even(day, temp_night, temp_day);
-    _temperature_mean_gl = 0.5*(temp_night + temp_day);
+    _set(_temperature_gl, season_even(day, temp_night, temp_day));
+    _set(_temperature_mean_gl, 0.5*(temp_night + temp_day));
 
-    _relative_humidity_gl = relative_humidity;
-    _precipitation = precipitation;
+    _set(_relative_humidity_gl, relative_humidity);
+
+    _set(_precipitation_annual, 3000.0);
+    _set(_precipitation, precipitation);
+
     _has_autumn = false;
-    _wind = wind;
+    _set(_wind, wind);
 }
 
 // https://en.wikipedia.org/wiki/Desert_climate
@@ -306,16 +353,11 @@ void FGClimate::set_dry()
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
-    _precipitation_annual = 100.0;
-    if (_classicfication == 5 || _classicfication == 6) {	// steppe
-        _precipitation_annual *= 2.0;
-    }
-
     double temp_night = _temperature_sl;
     double temp_day = _temperature_sl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity_gl;
-    switch(_classicfication)
+    switch(_code)
     {
     case 5: // BSh: arid, steppe, hot arid
         temp_night = season_long_high(summer, 10.0, 22.0);
@@ -345,13 +387,19 @@ void FGClimate::set_dry()
         break;
     }
 
-    _temperature_gl = season_even(day, temp_night, temp_day);
-    _temperature_mean_gl = 0.5*(temp_night + temp_day);
+    _set(_temperature_gl, season_even(day, temp_night, temp_day));
+    _set(_temperature_mean_gl, 0.5*(temp_night + temp_day));
 
-    _relative_humidity_gl = relative_humidity;
-    _precipitation = precipitation;
+    _set(_relative_humidity_gl, relative_humidity);
+
+    if (_code == 5 || _code == 6) {     // steppe
+        _set(_precipitation_annual, 200.0);
+    } else {
+        _set(_precipitation_annual, 100.0);
+    }
+    _set(_precipitation, precipitation);
     _has_autumn = false;
-    _wind = 3.0;
+    _set(_wind, 3.0);
 }
 
 // https://en.wikipedia.org/wiki/Temperate_climate
@@ -368,7 +416,7 @@ void FGClimate::set_temperate()
     double temp_day = _temperature_sl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity_gl;
-    switch(_classicfication)
+    switch(_code)
     {
     case 9: // Cfa: warm temperature, fully humid hot summer
         temp_night = season_even(summer, -3.0, 20.0);
@@ -428,13 +476,16 @@ void FGClimate::set_temperate()
         break;
     }
 
-    _temperature_gl = season_even(day, temp_night, temp_day);
-    _temperature_mean_gl = 0.5*(temp_night + temp_day);
+    _set(_temperature_gl, season_even(day, temp_night, temp_day));
+    _set(_temperature_mean_gl, 0.5*(temp_night + temp_day));
 
-    _relative_humidity_gl = relative_humidity;
-    _precipitation = precipitation;
+    _set(_relative_humidity_gl, relative_humidity);
+
+    _set(_precipitation_annual, 990.0);
+    _set(_precipitation, precipitation);
+
     _has_autumn = true;
-    _wind = 3.0;
+    _set(_wind, 3.0);
 
 }
 
@@ -452,7 +503,7 @@ void FGClimate::set_continetal()
     double temp_night = _temperature_sl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity_gl;
-    switch(_classicfication)
+    switch(_code)
     {
     case 18: // Dfa: snow, fully humid, hot summer
         temp_night = season_even(summer, -15.0, 13.0);
@@ -530,13 +581,16 @@ void FGClimate::set_continetal()
         break;
     }
 
-    _temperature_gl = season_even(day, temp_night, temp_day);
-    _temperature_mean_gl = 0.5*(temp_night + temp_day);
+    _set(_temperature_gl, season_even(day, temp_night, temp_day));
+    _set(_temperature_mean_gl, 0.5*(temp_night + temp_day));
 
-    _relative_humidity_gl = relative_humidity;
-    _precipitation = precipitation;
+    _set(_relative_humidity_gl, relative_humidity);
+
+    _set(_precipitation_annual, 990.0);
+    _set(_precipitation, precipitation);
+
     _has_autumn = true;
-    _wind = 3.0;
+    _set(_wind, 3.0);
 }
 
 void FGClimate::set_polar()
@@ -553,7 +607,7 @@ void FGClimate::set_polar()
     double temp_night = _temperature_sl;
     double precipitation = _precipitation;
     double relative_humidity = _relative_humidity_gl;
-    switch(_classicfication)
+    switch(_code)
     {
     case 30: // EF: polar frost
         temp_night = season_long_low(summer, -35.0, -6.0);
@@ -571,18 +625,21 @@ void FGClimate::set_polar()
         break;
     }
 
-    _temperature_gl = season_even(day, temp_night, temp_day);
-    _temperature_mean_gl = 0.5*(temp_night + temp_day);
+    _set(_temperature_gl, season_even(day, temp_night, temp_day));
+    _set(_temperature_mean_gl, 0.5*(temp_night + temp_day));
 
-    _relative_humidity_gl = relative_humidity;
-    _precipitation = precipitation;
+    _set(_relative_humidity_gl, relative_humidity);
+
+    _set(_precipitation_annual, 990.0);
+    _set(_precipitation, precipitation);
+
     _has_autumn = false;
-    _wind = 3.0;
+    _set(_wind, 3.0);
 }
 
 void FGClimate::set_environment()
 {
-    double latitude_deg = pos.getLatitudeDeg();
+    double latitude_deg = _positionLatitudeNode->getDoubleValue();
     double fact_lat = pow(fabs(latitude_deg)/90.0, 2.5);
     double snow_fact, precipitation;
 
@@ -629,9 +686,21 @@ void FGClimate::set_environment()
         _lichen_cover = 0.5*pow(wetness*cover, 1.5);
     }
 
+    if (_weather_update)
+    {
+        fgSetDouble("/environment/relative-humidity", _relative_humidity_gl);
+        fgSetDouble("/environment/dewpoint-sea-level-degc", _dewpoint_sl);
+        fgSetDouble("/environment/dewpoint-degc", _dewpoint_gl);
+        fgSetDouble("/environment/temperature-sea-level-degc", _temperature_sl);
+        fgSetDouble("/environment/temperature-degc", _temperature_gl);
+        fgSetDouble("/environment/wind-speed-kt", _wind*SG_KMH_TO_MPS*SG_MPS_TO_KT);
+    }
+
     if (_environment_adjust)
     {
-        fgSetDouble("/environment/snow-level-m", _snow_level);
+        if (!_metarSnowLevelNode->getBoolValue()) {
+            fgSetDouble("/environment/snow-level-m", _snow_level);
+        }
         fgSetDouble("/environment/surface/snow-thickness-factor", _snow_thickness);
         fgSetDouble("/environment/sea/surface/ice-cover", _ice_cover);
         fgSetDouble("/environment/surface/dust-cover-factor", _dust_cover);
@@ -643,6 +712,55 @@ void FGClimate::set_environment()
             fgSetDouble("/environment/season", 0.0);
     }
 }
+
+// ---------------------------------------------------------------------------
+const std::string FGClimate::_classification[MAX_CLIMATE_CLASSES] = {
+    "Ocean",
+    "Af", "Am", "As", "Aw",
+    "BSh", "BSk", "BWh", "BWk",
+    "Cfa", "Cfb", "Cfc",
+    "Csa", "Csb", "Csc",
+    "Cwa", "Cwb", "Cwc",
+    "Dfa", "Dfb", "Dfc", "Dfd",
+    "Dsa", "Dsb", "Dsc", "Dsd",
+    "Dwa", "Dwb", "Dwc", "Dwd",
+    "EF", "ET"
+};
+
+const std::string FGClimate::_description[MAX_CLIMATE_CLASSES] = {
+    "Ocean",
+    "Equatorial, fully humid",
+    "Equatorial, monsoonal",
+    "Equatorial, summer dry",
+    "Equatorial, winter dry",
+    "Arid, steppe, hot arid",
+    "Arid, steppe, cold arid",
+    "Arid, desert, hot arid",
+    "Arid, desert, cold arid",
+    "Warm temperature, fully humid hot summer",
+    "Warm temperature, fully humid, warm summer",
+    "Warm temperature, fully humid, cool summer",
+    "Warm temperature, summer dry, hot summer",
+    "Warm temperature, summer dry, warm summer",
+    "Warm temperature, summer dry, cool summer",
+    "Warm temperature, winter dry, hot summer",
+    "Warm temperature, winter dry, warm summer",
+    "Warm temperature, winter dry, cool summer",
+    "Snow, fully humid, hot summer",
+    "Snow, fully humid, warm summer",
+    "Snow, fully humid, cool summer",
+    "Snow, fully humid, extremely continetal",
+    "Snow, summer dry, hot summer",
+    "Snow, summer dry, warm summer",
+    "Snow, summer dry, cool summer",
+    "Snow, summer dry, extremely continetal",
+    "Snow, winter dry, hot summer",
+    "Snow, winter dry, warm summer",
+    "Snow, winter dry, cool summer",
+    "Snow, winter dry, extremely continetal",
+    "Polar frost",
+    "Polar tundra"
+};
 
 // val is the progress indicator between 0.0 and 1.0
 double FGClimate::linear(double val, double min, double max)
@@ -703,57 +821,9 @@ double FGClimate::monsoonal(double val, double min, double max)
     return min + diff*cos(atan(val*val));
 }
 
-
 #if REPORT_TO_CONSOLE
 void FGClimate::report()
 {
-    const std::string description[32] = {
-      "Ocean",
-      "Equatorial, fully humid",
-      "Equatorial, monsoonal",
-      "Equatorial, summer dry",
-      "Equatorial, winter dry",
-      "Arid, steppe, hot arid",
-      "Arid, steppe, cold arid",
-      "Arid, desert, hot arid",
-      "Arid, desert, cold arid",
-      "Warm temperature, fully humid hot summer",
-      "Warm temperature, fully humid, warm summer",
-      "Warm temperature, fully humid, cool summer",
-      "Warm temperature, summer dry, hot summer",
-      "Warm temperature, summer dry, warm summer",
-      "Warm temperature, summer dry, cool summer",
-      "Warm temperature, winter dry, hot summer",
-      "Warm temperature, winter dry, warm summer",
-      "Warm temperature, winter dry, cool summer",
-      "Snow, fully humid, hot summer",
-      "Snow, fully humid, warm summer, warm summer",
-      "Snow, fully humid, cool summer, cool summer",
-      "Snow, fully humid, extremely continetal",
-      "Snow, summer dry, hot summer",
-      "Snow, summer dry, warm summer",
-      "Snow, summer dry, cool summer",
-      "Snow, summer dry, extremely continetal",
-      "Snow, winter dry, hot summer",
-      "Snow, winter dry, warm summer",
-      "Snow, winter dry, cool summer",
-      "Snow, winter dry, extremely continetal",
-      "Polar frost",
-      "Polar tundra"
-    };
-    const std::string koppen_str[32] = {
-      "Ocean",
-      "Af", "Am", "As", "Aw",
-      "BSh", "BSk", "BWh", "BWk",
-      "Cfa", "Cfb", "Cfc",
-      "Csa", "Csb", "Csc",
-      "Cwa", "Cwb", "Cwc",
-      "Dfa", "Dfb", "Dfc", "Dfd",
-      "Dsa", "Dsb", "Dsc", "Dsd",
-      "Dwa", "Dwb", "Dwc", "Dwd",
-      "EF", "ET"
-    };
-
     struct tm *t = globals->get_time_params()->getGmt();
 
     std::cout << "===============================================" << std::endl;
@@ -763,14 +833,16 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Sun longitude:   " << _sun_longitude_deg << " deg."
               << std::endl;
-    std::cout << "  Viewer latitude:  " << pos.getLatitudeDeg() << " deg."
+    std::cout << "  Viewer latitude:  "
+              << _positionLatitudeNode->getDoubleValue() << " deg."
               << " (adjusted: " << _adj_latitude_deg << ")" << std::endl;
-    std::cout << "  Viewer longitude: " << pos.getLongitudeDeg() << " deg."
+    std::cout << "  Viewer longitude: "
+              << _positionLongitudeNode->getDoubleValue() << " deg."
               << " (adjusted: " << _adj_longitude_deg << ")" << std::endl;
     std::cout << std::endl;
-    std::cout << "  Köppen classification: " << koppen_str[_classicfication]
+    std::cout << "  Köppen classification: " << _classification[_code]
               << std::endl;
-    std::cout << "  Description: " << description[_classicfication]
+    std::cout << "  Description: " << _description[_code]
               << std::endl << std::endl;
     std::cout << "  Season (0.0 = winter .. 1.0 = summer): " << _season_summer
               << std::endl;
