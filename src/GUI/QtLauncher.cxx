@@ -174,6 +174,7 @@ void initNavCache()
         updateTimer.start(); // timer won't actually run until we process events
         rebuildProgress.exec();
         updateTimer.stop();
+        flightgear::addSentryBreadcrumb("Launcher nav-cache rebuild complete", "info");
     }
 }
 

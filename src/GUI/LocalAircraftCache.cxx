@@ -399,6 +399,7 @@ Q_SIGNALS:
 protected:
     void run() override
     {
+        flightgear::addSentryBreadcrumb("AircraftScan started", "info");
         readCache();
 
         // avoid filling up Sentry with many reports
@@ -416,6 +417,7 @@ protected:
         }
 
         writeCache();
+        flightgear::addSentryBreadcrumb("AircraftScan finished", "info");
     }
 
 private:
