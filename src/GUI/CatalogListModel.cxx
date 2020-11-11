@@ -201,9 +201,9 @@ void CatalogListModel::refreshCatalog(int index)
 void CatalogListModel::installDefaultCatalog(bool showAddFeedback)
 {
     FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
-    auto cat = Catalog::createFromUrl(m_packageRoot, http->getDefaultCatalogUrl());
+    CatalogRef cat = Catalog::createFromUrl(m_packageRoot, http->getDefaultCatalogUrl());
     if (showAddFeedback) {
-      cat = m_newlyAddedCatalog;
+      m_newlyAddedCatalog = cat;
       emit isAddingCatalogChanged();
       emit statusOfAddingCatalogChanged();
     }
