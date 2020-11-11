@@ -64,6 +64,7 @@ FGClimate::FGClimate()
 
 void FGClimate::init()
 {
+    _monthNode = fgGetNode("/sim/time/utc/month", true);
     _metarSnowLevelNode = fgGetNode("/environment/params/metar-updates-snow-level", true);
 
     _positionLatitudeNode = fgGetNode("/position/latitude-deg", true);
@@ -154,12 +155,12 @@ void FGClimate::update(double dt)
     {
         if (diff_pos > 1.0) reinit();
 
-        _is_autumn = false;
-        if ((latitude_deg*_sun_latitude_deg < 0.0) // autumn + spring
-              && (_adj_latitude_deg > _prev_lat)) // autumn
-        {
-            _is_autumn = true;
-        }
+         double north = latitude_deg >= 0.0 ? 1.0 : -1.0; // hemisphere
+         if (north) {
+             _is_autumn = (_monthNode->getIntValue() > 6) ? true : false;
+         } else {
+             _is_autumn = (_monthNode->getIntValue() <= 6) ? true : false;
+         }
 
         _prev_lat = _adj_latitude_deg;
         _prev_lon = _adj_longitude_deg;
