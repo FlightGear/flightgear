@@ -71,17 +71,17 @@ private:
     void report();
 #endif
     inline void _set(double& prev, double val) {
-        prev = (prev < -1000.0) ? val : 0.95*prev + 0.05*val;
+        prev = (prev < -1000.0) ? val : 0.99*prev + 0.01*val;
     }
 
     // interpolate val (from 0.0 to 1.0) between min and max
-    double linear(double val, double min, double max);
-    double triangular(double val, double min, double max);
-    double season_short(double val, double min, double max);
-    double season_even(double val, double min, double max);
-    double season_long_low(double val, double min, double max);
-    double season_long_high(double val, double min, double max);
-    double monsoonal(double val, double min, double max);
+    double linear(double val, double min, double max, double offs = 0.0);
+    double triangular(double val, double min, double max, double offs = 0.0);
+    double season_even(double val, double min, double max, double offs = 0.0);
+    double season_long(double val, double min, double max, double offs = 0.0);
+    double season_long_low(double val, double min, double max, double offs = 0.0);
+    double season_long_high(double val, double min, double max, double offs = 0.0);
+    double monsoonal(double val, double min, double max, double offs = 0.0);
 
     void set_ocean();
     void set_dry();
@@ -116,6 +116,7 @@ private:
     double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
+    double _year = 0.0;
     double _day_noon = 1.0;
     double _season_summer = 1.0;
     double _season_transistional = 0.0;
@@ -126,12 +127,12 @@ private:
 
     // environment
     bool _environment_adjust = false;	// enable automatic adjestments
-    double _snow_level = 7500.0;	// in meters
-    double _snow_thickness = 0.0;	// 0.0 = thin, 1.0 = thick
-    double _ice_cover = 0.0;		// 0.0 = none, 1.0 = thick
-    double _dust_cover = 0.0;		// 0.0 = none, 1.0 = dusty
-    double _wetness = 0.0;		// 0.0 = dry, 1.0 = wet
-    double _lichen_cover = 0.0;		// 0.0 = none, 1.0 = mossy
+    double _snow_level = -99999.0;	// in meters
+    double _snow_thickness = -99999.0;	// 0.0 = thin, 1.0 = thick
+    double _ice_cover = -99999.0;	// 0.0 = none, 1.0 = thick
+    double _dust_cover = -99999.0;	// 0.0 = none, 1.0 = dusty
+    double _wetness = -99999.0;		// 0.0 = dry, 1.0 = wet
+    double _lichen_cover = -99999.0;	// 0.0 = none, 1.0 = mossy
 
     // weather
     bool _weather_update = false;	// enable weather updates
