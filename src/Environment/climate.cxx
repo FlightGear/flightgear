@@ -527,7 +527,6 @@ void FGClimate::set_continetal()
         temp_night = season_even(summer, -17.5, 10.0, MONTH);
         temp_day = season_even(summer, -7.5, 25.0, MONTH);
         precipitation = season_even(summer, 30.0, 70.0, MONTH);
-printf("### precipitation: %f\n", precipitation);
         relative_humidity = season_even(humidity_fact, 69.0, 81.0, MONTH);
         break;
     case 20: // Dfc: snow, fully humid, cool summer, cool summer
@@ -601,7 +600,6 @@ printf("### precipitation: %f\n", precipitation);
 
     _set(_precipitation_annual, 990.0);
     _set(_precipitation, precipitation);
-printf("## _precipitation: %f\n", _precipitation);
 
     _has_autumn = true;
     _set(_wind, 3.0);
