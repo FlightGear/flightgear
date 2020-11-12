@@ -121,8 +121,8 @@ private:
     double _day_noon = 1.0;
     double _season_summer = 1.0;
     double _season_transistional = 0.0;
+    double _is_autumn = 0.0;
     bool _has_autumn = false;
-    bool _is_autumn = false;
 
     int _code = 0;			// Köppen-Geiger classicfication
 
