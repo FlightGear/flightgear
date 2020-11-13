@@ -47,7 +47,7 @@
 //   applications. Bull. Amer. Meteor. Soc., 86, 225-233.
 //   doi: http://dx.doi.org/10.1175/BAMS-86-2-225
 
-#define MONTH	(1.0/6.0)
+#define MONTH	(1.0/12.0)
 
 FGClimate::FGClimate()
 {
@@ -122,6 +122,7 @@ void FGClimate::reinit()
     _wind = -99999.0;
     _precipitation_annual = -99999.0;
 
+    _is_autumn = -99999.0;
     _snow_level = -99999.0;
     _snow_thickness = -99999.0;
     _ice_cover = -99999.0;
@@ -136,10 +137,11 @@ void FGClimate::reinit()
 void FGClimate::update(double dt)
 {
     FGLight *l = globals->get_subsystem<FGLight>();
-    if (!l) return; // e.g. during unit-testing
-
-    _sun_longitude_deg = l->get_sun_lon()*SGD_RADIANS_TO_DEGREES;
-    _sun_latitude_deg = l->get_sun_lat()*SGD_RADIANS_TO_DEGREES;
+    if (l)
+    {
+        _sun_longitude_deg = l->get_sun_lon()*SGD_RADIANS_TO_DEGREES;
+        _sun_latitude_deg = l->get_sun_lat()*SGD_RADIANS_TO_DEGREES;
+    }
 
     double latitude_deg  = _positionLatitudeNode->getDoubleValue();
     double longitude_deg = _positionLongitudeNode->getDoubleValue();
@@ -244,9 +246,9 @@ void FGClimate::update_season_factor()
 
     _season_summer = (23.5 + sign*_sun_latitude_deg)/(2.0*23.5);
 
-    _year = (_is_autumn > 0.05) ? 1.0-0.5*_season_summer :  0.5*_season_summer;
+    _seasons_year = (_is_autumn > 0.05) ? 1.0-0.5*_season_summer :  0.5*_season_summer;
 
-    _season_transistional = 2.5*(1.0 - _season_summer) - 1.0;
+    _season_transistional = 2.0*(1.0 - _season_summer) - 1.0;
     if (_season_transistional < 0.0) _season_transistional = 0.0;
     else if (_season_transistional > 1.0) _season_transistional = 1.0;
 }
@@ -297,7 +299,7 @@ void FGClimate::set_tropical()
     double day = _day_noon;
 
     double summer = _season_summer;
-    double winter = 1.0 - summer;
+    double winter = -summer;
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
@@ -321,7 +323,7 @@ void FGClimate::set_tropical()
     case 2: // Am: equatorial, monsoonal
         temp_night = triangular(summer, 17.5, 22.5, MONTH);
         temp_day = triangular(summer, 27.5, 32.5, MONTH);
-        precipitation = season_even(summer, 75.0, 320.0, MONTH);
+        precipitation = linear(summer, 45.0, 340.0, MONTH);
         relative_humidity = triangular(humidity_fact, 75.0, 85.0, MONTH);
         wind *= 2.0*_precipitation/320.0;
         break;
@@ -362,7 +364,7 @@ void FGClimate::set_dry()
     double day = _day_noon;
 
     double summer = _season_summer;
-    double winter = 1.0 - summer;
+    double winter = -summer;
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
@@ -421,7 +423,7 @@ void FGClimate::set_temperate()
     double day = _day_noon;
 
     double summer = _season_summer;
-    double winter = 1.0 - summer;
+    double winter = -summer;
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
@@ -440,7 +442,7 @@ void FGClimate::set_temperate()
     case 10: // Cfb: warm temperature, fully humid, warm summer
         temp_night = season_even(summer, -3.0, 10.0, 1.5*MONTH);
         temp_day = season_even(summer, 5.0, 25.0, 1.5*MONTH);
-        precipitation = linear(_year, 65.0, 90.0, 0.5*MONTH);
+        precipitation = season_even(winter, 65.0, 90.0, 3.5*MONTH);
         relative_humidity = season_even(humidity_fact, 68.0, 87.0, 1.5*MONTH);
         break;
     case 11: // Cfc: warm temperature, fully humid, cool summer
@@ -508,7 +510,7 @@ void FGClimate::set_continetal()
     double day = _day_noon;
 
     double summer = _season_summer;
-    double winter = 1.0 - summer;
+    double winter = -summer;
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
@@ -611,7 +613,7 @@ void FGClimate::set_polar()
     double day = _day_noon;
 
     double summer = _season_summer;
-    double winter = 1.0 - summer;
+    double winter = -summer;
 
     double humidity_fact = season_even(winter, 0.5, 1.0-0.5*day);
 
@@ -625,13 +627,13 @@ void FGClimate::set_polar()
     case 30: // EF: polar frost
         temp_night = season_long_low(summer, -35.0, -6.0, MONTH);
         temp_day = season_long_low(summer, -32.5, 0.0, MONTH);
-        precipitation = season_even(_year, 50.0, 80.0, 1.5*MONTH);
+        precipitation = linear(summer, 50.0, 80.0, 2.5*MONTH);
         relative_humidity = season_long_low(humidity_fact, 65.0, 75.0, MONTH);
         break;
     case 31: // ET: polar tundra
         temp_night = season_even(summer, -30.0, 0.0, MONTH);
         temp_day = season_even(summer, -22.5, 8.0, 1.5*MONTH);
-        precipitation = season_even(summer, 15.0, 45.0, 2*MONTH);
+        precipitation = season_even(summer, 15.0, 45.0, 2.0*MONTH);
         relative_humidity = season_even(humidity_fact, 60.0, 88.0, MONTH);
         break;
     default:
@@ -696,12 +698,12 @@ void FGClimate::set_environment()
     else
     {
         double wetness = std::max(_precipitation - 20.0, 0.0);
-        wetness = std::min(wetness/_precipitation_annual, 1.0);
+        wetness = powf(sin(atan(12.0*wetness/990.0)), 2.0);
 
         _set(_dust_cover, 0.0);
 
         if (_temperature_mean_gl < 5.0) {
-            _set(_snow_thickness, pow(wetness, 0.5));
+            _set(_snow_thickness, wetness);
         } else {
             _set(_snow_thickness, 0.0);
         }
@@ -736,8 +738,8 @@ void FGClimate::set_environment()
         fgSetDouble("/environment/surface/dust-cover-factor", _dust_cover);
         fgSetDouble("/environment/surface/wetness-set", _wetness);
         fgSetDouble("/environment/surface/lichen-cover-factor", _lichen_cover);
-        if (_has_autumn && _is_autumn > 0.05)
-            fgSetDouble("/environment/season", 2.0*_is_autumn*_season_transistional);
+        if (_has_autumn && _is_autumn > 0.01)
+            fgSetDouble("/environment/season", std::min(3.0*_is_autumn*_season_transistional, 2.0));
         else
             fgSetDouble("/environment/season", 0.0);
     }
@@ -797,9 +799,11 @@ const std::string FGClimate::_description[MAX_CLIMATE_CLASSES] = {
 double FGClimate::linear(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val += fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
     return min + val*diff;
 }
 
@@ -808,10 +812,12 @@ double FGClimate::linear(double val, double min, double max, double offs)
 double FGClimate::triangular(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val -= fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
-    val = 1.0 - fabs(-1.0 + 2*val);
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
+    val = 1.0 - fabs(-1.0 + 2.0*val);
     return min + val*diff;
 }
 
@@ -820,10 +826,12 @@ double FGClimate::triangular(double val, double min, double max, double offs)
 double FGClimate::season_even(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val -= fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
-    return min + diff*(0.5 + 0.5*cos(SGD_PI*val));
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
+    return min + diff*(0.5 - 0.5*cos(SGD_PI*val));
 }
 
 // google: y=0.5-0.6366*atan(cos(x))
@@ -831,10 +839,12 @@ double FGClimate::season_even(double val, double min, double max, double offs)
 double FGClimate::season_long(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val -= fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
-    return min + diff*(0.5 + 0.6366*atan(cos(SGD_PI*val)));
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
+    return min + diff*(0.5 - 0.6366*atan(cos(SGD_PI*val)));
 }
 
 // google: y=0.5-0.5*cos(x^1.5)
@@ -843,10 +853,12 @@ double FGClimate::season_long(double val, double min, double max, double offs)
 double FGClimate::season_long_low(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val -= fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
-    return min + diff*(0.5 + 0.5*cos(pow(2.145*val, 1.5)));
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
+    return min + diff*(0.5 - 0.5*cos(pow(2.145*val, 1.5)));
 }
 
 // google: y=0.5+0.5*cos(x^1.5)
@@ -855,10 +867,12 @@ double FGClimate::season_long_low(double val, double min, double max, double off
 double FGClimate::season_long_high(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val -= fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
-    return max + diff*(0.5 - 0.5*cos(pow(2.14503 - 2.14503*val, 1.5)));
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
+    return max - diff*(0.5 - 0.5*cos(pow(2.14503 - 2.14503*val, 1.5)));
 }
 
 // goole: y=cos(atan(x*x))
@@ -866,11 +880,59 @@ double FGClimate::season_long_high(double val, double min, double max, double of
 double FGClimate::monsoonal(double val, double min, double max, double offs)
 {
     double diff = max-min;
-    val -= fmod(offs, 1.0);
-    if (val > 1.0) val -= 1.0;
-    else if (val < 1.0) val += 1.0;
+
+    val = (val >= 0.0) ? fmod(fabs(_seasons_year + offs), 1.0)
+                       : fmod(fabs(1.0 - _seasons_year - offs), 1.0);
+    val = (val > 0.5)  ? 2.0 - 2.0*val : 2.0*val;
+
     val = 2.0*SGD_2PI*(1.0-val);
     return min + diff*cos(atan(val*val));
+}
+
+void FGClimate::test()
+{
+    double offs = 0.5;
+
+    printf("month:\t\t");
+    for (int month=0; month<12; ++month) {
+        printf("%5i", month+1);
+    }
+
+    printf("\nlinear:\t\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", linear(month/12.0, 0.0, 1.0, offs) );
+    }
+
+    printf("\ntriangular:\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", triangular(month/12.0, 0.0, 1.0, offs) );
+    }
+
+    printf("\neven:\t\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", season_even(month/12.0, 0.0, 1.0, offs) );
+    }
+
+    printf("\nlong:\t\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", season_long(month/12.0, 0.0, 1.0, offs) );
+    }
+
+    printf("\nlong low:\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", season_long_low(month/12.0, 0.0, 1.0, offs) );
+    }
+
+    printf("\nlong high:\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", season_long_high(month/12.0, 0.0, 1.0, offs) );
+    }
+
+    printf("\nmonsoonal:\t");
+    for (int month=0; month<12; ++month) {
+        printf(" %-3.2f", monsoonal(month/12.0, 0.0, 1.0, offs) );
+    }
+    printf("\n");
 }
 
 #if REPORT_TO_CONSOLE
@@ -896,7 +958,7 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Description: " << _description[_code]
               << std::endl << std::endl;
-    std::cout << "  Year:                                  " << _year
+    std::cout << "  Year (0.25 = spring .. 0.75 = autumn): " << _seasons_year
               << std::endl;
     std::cout << "  Season (0.0 = winter .. 1.0 = summer): " << _season_summer
               << std::endl;

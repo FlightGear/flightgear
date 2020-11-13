@@ -63,6 +63,7 @@ public:
     double get_humidity_pct() { return _relative_humidity_gl; }
     double get_wind_kmh() { return _wind; }
 
+    void test();
 private:
     static const std::string _classification[MAX_CLIMATE_CLASSES];
     static const std::string _description[MAX_CLIMATE_CLASSES];
@@ -117,11 +118,11 @@ private:
     double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
-    double _year = 0.0;
     double _day_noon = 1.0;
     double _season_summer = 1.0;
     double _season_transistional = 0.0;
-    double _is_autumn = 0.0;
+    double _seasons_year = 0.0;
+    double _is_autumn = -99999.0;
     bool _has_autumn = false;
 
     int _code = 0;			// Köppen-Geiger classicfication
