@@ -367,6 +367,12 @@ void AddOnsController::collectArgs()
         settings.setArrayIndex(i);
 
         QString path = settings.value("path").toString();
+        const SGPath addonPath(path.toStdString());
+        if (!addonPath.exists()) {
+            // don't pass missing paths
+            continue;
+        }
+
         bool enable = settings.value("enable").toBool();
         if (enable) {
             m_config->setArg("addon", path);
