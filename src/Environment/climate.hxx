@@ -76,8 +76,11 @@ private:
     }
 
     // interpolate val (from 0.0 to 1.0) between min and max
-    double linear(double val, double min, double max, double offs = 0.0);
-    double triangular(double val, double min, double max, double offs = 0.0);
+    double linear(double val, double min, double max);
+    double triangular(double val, double min, double max);
+
+    double season_linear(double val, double min, double max, double offs = 0.0);
+    double season_triangular(double val, double min, double max, double offs = 0.0);
     double season_even(double val, double min, double max, double offs = 0.0);
     double season_long(double val, double min, double max, double offs = 0.0);
     double season_long_low(double val, double min, double max, double offs = 0.0);
@@ -92,6 +95,7 @@ private:
     void set_polar();
     void set_environment();
 
+    void update_daylight();
     void update_day_factor();
     void update_season_factor();
 
@@ -119,6 +123,7 @@ private:
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
     double _day_noon = 1.0;
+    double _day_light = 1.0;
     double _season_summer = 1.0;
     double _season_transistional = 0.0;
     double _seasons_year = 0.0;
