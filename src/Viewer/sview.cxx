@@ -1369,6 +1369,8 @@ std::shared_ptr<SviewView> SviewCreate(
     osg::Camera* rhs_camera = rhs_view->getCamera();
     osg::Camera* camera = view->getCamera();
     camera->setGraphicsContext(gc.get());
+    // HACK: Don't render again to the screen
+    camera->setNodeMask(0);
 
     if (1) {
         double left;
