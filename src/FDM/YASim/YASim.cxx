@@ -47,6 +47,7 @@ YASim::YASim(double dt) :
 
     _fdm->getAirplane()->getModel()->setGroundCallback( new FGGround(this) );
     _fdm->getAirplane()->getModel()->getIntegrator()->setInterval(_dt);
+    _fdm->getAirplane()->getModel()->setWakeGroup(get_wake_group());
 }
 
 YASim::~YASim()
@@ -272,8 +273,6 @@ void YASim::update(double dt)
                                                   inducedWakeVelocity.y(),
                                                   inducedWakeVelocity.z());
 
-    reset_wake_group();
-
     // Track time increments.
     FGGround* gr
       = (FGGround*)_fdm->getAirplane()->getModel()->getGroundCallback();
@@ -289,6 +288,8 @@ void YASim::update(double dt)
     // Increment the local sim time
     _simTime += dt;
     gr->setTimeOffset(_simTime);
+    _updatePositionM(cartPos);
+    reset_wake_group();
 }
 
 void YASim::copyToYASim(bool copyState)

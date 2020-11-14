@@ -72,6 +72,8 @@ Model::Model()
     _gefyN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-y", true);
     _gefzN = fgGetNode("/fdm/yasim/debug/ground-effect/ge-f-z", true);
     _wgdistN = fgGetNode("/fdm/yasim/debug/ground-effect/wing-gnd-dist", true);
+
+    _ai_wake_enabled = fgGetNode("/fdm/ai-wake/enabled", true);
 }
 
 Model::~Model()
@@ -485,6 +487,21 @@ void Model::localWind(const float* pos, const yasim::State* s, float* out, float
         Math::add3(_wind, lwind, lwind);
     } else {
         Math::set3(_wind, lwind);
+    }
+
+    if (_ai_wake_enabled->getBoolValue()) {
+        SGVec3d gpos;
+        Math::tmul33(s->orient, pos, tmp);
+        for(int i=0; i<3; i++) {
+            gpos[i] = s->pos[i] + tmp[i];
+        }
+        SGGeoc geoc = SGGeoc::fromCart(gpos);
+        SGQuatd Te2l = SGQuatd::fromLonLatRad(geoc.getLongitudeRad(),
+                                              geoc.getLatitudeRad());
+        SGVec3d iwind = Te2l.transform(_ai_wake_group->getInducedVelocityAt(gpos*SG_METER_TO_FEET));
+        lwind[0] += iwind[0];
+        lwind[1] += iwind[1];
+        lwind[2] += iwind[2];
     }
 
     // Convert to local coordinates

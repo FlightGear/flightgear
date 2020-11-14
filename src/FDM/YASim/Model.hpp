@@ -9,6 +9,12 @@
 #include "Rotor.hpp"
 #include "Atmosphere.hpp"
 #include <simgear/props/props.hxx>
+#include <simgear/math/SGGeodesy.hxx>
+#include <simgear/math/SGVec3.hxx>
+#include <simgear/math/SGGeoc.hxx>
+#include <simgear/math/SGQuat.hxx>
+#include <map>
+#include <FDM/AIWake/AIWakeGroup.hxx>
 
 namespace yasim {
 
@@ -80,6 +86,8 @@ public:
     virtual void calcForces(State* s);
     virtual void newState(State* s);
 
+    void setWakeGroup(const AIWakeGroup& wg) { _ai_wake_group = &wg; }
+
 private:
     void initRotorIteration();
     void calcGearForce(Gear* g, float* v, float* rot, float* ground);
@@ -130,6 +138,9 @@ private:
     SGPropertyNode_ptr _gefyN;
     SGPropertyNode_ptr _gefzN;
     SGPropertyNode_ptr _wgdistN;
+
+    SGPropertyNode_ptr _ai_wake_enabled;
+    AIWakeGroup const* _ai_wake_group;
 };
 
 }; // namespace yasim

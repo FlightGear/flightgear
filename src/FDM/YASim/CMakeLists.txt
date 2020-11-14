@@ -38,10 +38,10 @@ set(SOURCES
 
 flightgear_component(YASim  "${SOURCES}")
 
-add_executable(yasim yasim-test.cpp ${COMMON})
-add_executable(yasim-proptest proptest.cpp ${COMMON})
+# add_executable(yasim yasim-test.cpp ${COMMON})
+# add_executable(yasim-proptest proptest.cpp ${COMMON})
 
-target_link_libraries(yasim SimGearCore)
-target_link_libraries(yasim-proptest SimGearCore)
+# target_link_libraries(yasim SimGearCore)
+# target_link_libraries(yasim-proptest SimGearCore)
 
-install(TARGETS yasim yasim-proptest RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+# install(TARGETS yasim yasim-proptest RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
