@@ -63,7 +63,7 @@ osgViewer::View* SviewGetOsgView(std::shared_ptr<SviewView> view);
 // 
 std::shared_ptr<SviewView> SviewCreate(
         const std::string& type,
-        osg::ref_ptr<osg::GraphicsContext> gc=nullptr,
+        //osg::ref_ptr<osg::GraphicsContext> gc=nullptr,
         osg::ref_ptr<osg::Texture2D> texture=nullptr
         );
 

@@ -1216,10 +1216,11 @@ struct EventHandler : osgGA::EventHandler
 
 std::shared_ptr<SviewView> SviewCreate(
         const std::string& type,
-        osg::ref_ptr<osg::GraphicsContext> gc,
+        //osg::ref_ptr<osg::GraphicsContext> gc,
         osg::ref_ptr<osg::Texture2D> texture
         )
-{    
+{
+    osg::ref_ptr<osg::GraphicsContext> gc;
     FGRenderer* renderer = globals->get_renderer();
     osgViewer::ViewerBase* viewer_base = renderer->getViewerBase();
     
@@ -1236,7 +1237,7 @@ std::shared_ptr<SviewView> SviewCreate(
     SG_LOG(SG_GENERAL, SG_ALERT, "rhs_view->getNumSlaves()=" << rhs_view->getNumSlaves());
 
     osgViewer::View* view = new osgViewer::View();
-    if (!gc) {
+    if (!texture) {
         EventHandler* event_handler = new EventHandler;
         view->addEventHandler(event_handler);
     }
@@ -1290,11 +1291,20 @@ std::shared_ptr<SviewView> SviewCreate(
     
     osg::ref_ptr<const osg::GraphicsContext::Traits> traits;
     
-    if (gc) {
-        traits = gc->getTraits();
+    if (texture) {
+        flightgear::WindowBuilder* window_builder = flightgear::WindowBuilder::getWindowBuilder();
+        flightgear::GraphicsWindow* main_window = window_builder->getDefaultWindow();
+        
+        gc = main_window->gc;
+        
+        //traits = new osg::GraphicsContext::Traits;
+        //*traits = *main_window->gc;
+        //traits->width = 200;
+        //traits->height = 200;
+        SG_LOG(SG_VIEW, SG_ALERT, "using main window's gc");
     }
     else {
-        // Now gc specified so we create a new window.
+        // No gc specified so we create a new window.
         
         osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
         assert(wsi);
@@ -1407,7 +1417,12 @@ std::shared_ptr<SviewView> SviewCreate(
     // 
     // view->getCamera()->setViewport(viewport);
     //
-    view->getCamera()->setViewport(0, 0, traits->width, traits->height);
+    if (texture) {
+        view->getCamera()->setViewport(0, 0, texture->getTextureWidth(), texture->getTextureHeight());
+    }
+    else {
+        view->getCamera()->setViewport(0, 0, traits->width, traits->height);
+    }
         
     view->setName("Cloned view");
     
@@ -1446,13 +1461,12 @@ std::shared_ptr<SviewView> SviewCreate(
 
 static std::shared_ptr<SviewView> s_canvas_view_factory(
     const std::string& type,
-    osg::ref_ptr<osg::GraphicsContext> gc,
+    //osg::ref_ptr<osg::GraphicsContext> gc,
     osg::ref_ptr<osg::Texture2D> texture
     )
 {
-    assert(gc);
     assert(texture);
-    return SviewCreate(type, gc, texture);
+    return SviewCreate(type, texture);
 }
 
 void SViewSetCompositorParams(
