@@ -1219,9 +1219,7 @@ std::shared_ptr<SviewView> SviewCreate(
         osg::ref_ptr<osg::GraphicsContext> gc,
         osg::ref_ptr<osg::Texture2D> texture
         )
-{
-    bool gc0 = (gc) ? true : false;
-    
+{    
     FGRenderer* renderer = globals->get_renderer();
     osgViewer::ViewerBase* viewer_base = renderer->getViewerBase();
     
@@ -1420,8 +1418,8 @@ std::shared_ptr<SviewView> SviewCreate(
             gc,
             view->getCamera()->getViewport(),
             s_compositor_path,
-            s_compositor_options/*,
-            texture*/
+            s_compositor_options,
+            texture
             );
     
     view2->m_compositor = compositor;
