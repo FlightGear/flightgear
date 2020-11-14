@@ -7,12 +7,13 @@ set(SOURCES
 	WindowSystemAdapter.cxx
 	fg_os_osgviewer.cxx
 	fgviewer.cxx
-        ViewPropertyEvaluator.cxx
+    ViewPropertyEvaluator.cxx
 	renderer.cxx
 	splash.cxx
 	view.cxx
 	viewmgr.cxx
 	sview.cxx
+	GraphicsPresets.cxx
 	)
 
 set(HEADERS
@@ -26,6 +27,7 @@ set(HEADERS
 	view.hxx
 	viewmgr.hxx
 	sview.hxx
+	GraphicsPresets.hxx
 	)
 
 if (Qt5Core_FOUND)

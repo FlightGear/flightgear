@@ -427,6 +427,7 @@ void FGScenery::init() {
 void FGScenery::reinit()
 {
     flightgear::addSentryBreadcrumb("reloading scenery", "info");
+    fgSetBool("/sim/rendering/scenery-reload-required", false);
     _terrain->reinit();
 }
 

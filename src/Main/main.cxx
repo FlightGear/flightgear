@@ -50,17 +50,18 @@
 #include <simgear/emesary/notifications.hxx>
 
 #include <Add-ons/AddonManager.hxx>
+#include <GUI/MessageBox.hxx>
+#include <GUI/gui.h>
 #include <Main/locale.hxx>
 #include <Model/panelnode.hxx>
+#include <Navaids/NavDataCache.hxx>
 #include <Scenery/scenery.hxx>
 #include <Sound/soundmanager.hxx>
 #include <Time/TimeManager.hxx>
-#include <GUI/gui.h>
-#include <GUI/MessageBox.hxx>
-#include <Viewer/splash.hxx>
-#include <Viewer/renderer.hxx>
+#include <Viewer/GraphicsPresets.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
-#include <Navaids/NavDataCache.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/splash.hxx>
 #include <flightgearBuildId.h>
 
 #include "fg_commands.hxx"
@@ -727,7 +728,11 @@ int fgMainInit( int argc, char **argv )
     // Copy the property nodes for the menus added by registered add-ons
     addons::AddonManager::instance()->addAddonMenusToFGMenubar();
 
+    auto presets = globals->add_new_subsystem<flightgear::GraphicsPresets>(SGSubsystemMgr::DISPLAY);
+    presets->applyInitialPreset();
+
     // Initialize the Window/Graphics environment.
+
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
 

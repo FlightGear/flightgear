@@ -124,21 +124,22 @@
 #if defined(ENABLE_SWIFT)
 #include <Network/Swift/swift_connection.hxx>
 #endif
-#include <FDM/fdm_shell.hxx>
-#include <Environment/ephemeris.hxx>
-#include <Environment/environment_mgr.hxx>
-#include <Viewer/renderer.hxx>
-#include <Viewer/viewmgr.hxx>
-#include <Viewer/FGEventHandler.hxx>
-#include <Navaids/NavDataCache.hxx>
-#include <Instrumentation/HUD/HUD.hxx>
 #include <Cockpit/cockpitDisplayManager.hxx>
-#include <Network/HTTPClient.hxx>
+#include <Environment/environment_mgr.hxx>
+#include <Environment/ephemeris.hxx>
+#include <FDM/fdm_shell.hxx>
+#include <Instrumentation/HUD/HUD.hxx>
+#include <Navaids/NavDataCache.hxx>
 #include <Network/DNSClient.hxx>
+#include <Network/HTTPClient.hxx>
 #include <Network/fgcom.hxx>
 #include <Network/http/httpd.hxx>
-#include <Viewer/splash.hxx>
 #include <Viewer/CameraGroup.hxx>
+#include <Viewer/FGEventHandler.hxx>
+#include <Viewer/GraphicsPresets.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/splash.hxx>
+#include <Viewer/viewmgr.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
