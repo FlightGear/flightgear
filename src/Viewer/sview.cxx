@@ -34,6 +34,8 @@
 
 #include "sview.hxx"
 
+#include "config.h"
+
 #ifdef ENABLE_COMPOSITOR
 
 #include <Main/fg_props.hxx>
@@ -43,6 +45,7 @@
 #include <Viewer/WindowBuilder.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
 
+#include <simgear/canvas/elements/CanvasView.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/props/props.hxx>
@@ -1213,7 +1216,8 @@ struct EventHandler : osgGA::EventHandler
 
 std::shared_ptr<SviewView> SviewCreate(
         const std::string& type,
-        osg::ref_ptr<osg::GraphicsContext> gc
+        osg::ref_ptr<osg::GraphicsContext> gc,
+        osg::ref_ptr<osg::Texture2D> texture
         )
 {
     bool gc0 = (gc) ? true : false;
@@ -1416,13 +1420,12 @@ std::shared_ptr<SviewView> SviewCreate(
             gc,
             view->getCamera()->getViewport(),
             s_compositor_path,
-            s_compositor_options
+            s_compositor_options/*,
+            texture*/
             );
     
     view2->m_compositor = compositor;
-    if (!gc0) {
-        s_views.push_back(view2);
-    }
+    s_views.push_back(view2);
     
     // stop/start threading:
     // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg54341.html
@@ -1443,6 +1446,17 @@ std::shared_ptr<SviewView> SviewCreate(
     return view2;
 }
 
+static std::shared_ptr<SviewView> s_canvas_view_factory(
+    const std::string& type,
+    osg::ref_ptr<osg::GraphicsContext> gc,
+    osg::ref_ptr<osg::Texture2D> texture
+    )
+{
+    assert(gc);
+    assert(texture);
+    return SviewCreate(type, gc, texture);
+}
+
 void SViewSetCompositorParams(
         osg::ref_ptr<simgear::SGReaderWriterOptions> options,
         const std::string& compositor_path
@@ -1450,6 +1464,7 @@ void SViewSetCompositorParams(
 {
     s_compositor_options = options;
     s_compositor_path = compositor_path;
+    simgear::canvas::View::register_sview_factory(s_canvas_view_factory);
 }
 
 bool SviewGC(const osg::GraphicsContext* gc)
@@ -1469,6 +1484,7 @@ bool SviewGC(const osg::GraphicsContext* gc)
     SG_LOG(SG_GENERAL, SG_ALERT, "gc=" << gc << ": returning false");
     return false;
 }
+
 
 #else
 

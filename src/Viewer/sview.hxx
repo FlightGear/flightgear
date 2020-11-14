@@ -55,12 +55,16 @@ osgViewer::View* SviewGetOsgView(std::shared_ptr<SviewView> view);
 //     If null we create a new window which is managed internally and the
 //     returned SviewView can be ignored.
 //
+// texture:
+//     Must be null if <gc> is null. Otherwise must be non-null.
+//
 // The returned std::shared_ptr<SviewView> can be passed to SviewGetOsgView()
 // to get the osgViewer::View if required.
 // 
 std::shared_ptr<SviewView> SviewCreate(
         const std::string& type,
-        osg::ref_ptr<osg::GraphicsContext> gc=nullptr
+        osg::ref_ptr<osg::GraphicsContext> gc=nullptr,
+        osg::ref_ptr<osg::Texture2D> texture=nullptr
         );
 
 
