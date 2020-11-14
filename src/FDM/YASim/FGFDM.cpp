@@ -91,6 +91,11 @@ Airplane* FGFDM::getAirplane()
     return &_airplane;
 }
 
+Turbulence* FGFDM::getTurbulence()
+{
+    return _turb;
+}
+
 void FGFDM::init()
 {
     //reset id generator, needed on simulator reset/re-init

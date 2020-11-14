@@ -30,6 +30,8 @@
 #include "PropEngine.hpp"
 #include "PistonEngine.hpp"
 
+#include <FDM/AIWake/AIWakeGroup.hxx>
+
 #include "YASim.hxx"
 
 using namespace yasim;
@@ -260,6 +262,17 @@ void YASim::update(double dt)
     float vr = _fdm->getVehicleRadius();
     vr += 2.0*FT2M*dt*Math::mag3(v);
     prepare_ground_cache_m( _simTime, _simTime + dt, xyz, vr );
+
+    // capture wakes
+    const auto wakeGroup = get_wake_group();
+
+    SGVec3d cartPos(xyz);
+    SGVec3d inducedWakeVelocity = wakeGroup.getInducedVelocityAt(cartPos);
+    _fdm->getTurbulence()->setWakeInducedVelocity(inducedWakeVelocity.x(),
+                                                  inducedWakeVelocity.y(),
+                                                  inducedWakeVelocity.z());
+
+    reset_wake_group();
 
     // Track time increments.
     FGGround* gr

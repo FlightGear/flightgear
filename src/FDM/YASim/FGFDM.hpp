@@ -30,6 +30,8 @@ public:
 
     float getVehicleRadius(void) const { return _vehicle_radius; }
 
+    Turbulence* getTurbulence();
+
 private:
     struct EngRec {
         std::string prefix;

@@ -177,6 +177,10 @@ void Turbulence::getTurbulence(double* loc, float alt, float* up,
     }
 }
 
+void Turbulence::setWakeInducedVelocity(float x, float y, float z)
+{
+}
+
 // Associates a random number in the range [-1:1] with a given lattice
 // point.
 float Turbulence::lattice(unsigned int x, unsigned int y)

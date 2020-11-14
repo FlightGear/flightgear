@@ -9,6 +9,8 @@ public:
     void getTurbulence(double* loc, float alt, float* up, float* turbOut);
     void offset(float* dist);
 
+    void setWakeInducedVelocity(float x, float y, float z);
+
 private:
     unsigned int hashrand(unsigned int i);
     float lattice(unsigned int x, unsigned int y);
