@@ -60,13 +60,13 @@ void AIWakeGroup::AddAI(FGAIAircraft* ai)
     SGGeoc geoc = SGGeoc::fromCart(data.position);
     SGQuatd Te2l = SGQuatd::fromLonLatRad(geoc.getLongitudeRad(),
                                           geoc.getLatitudeRad());
-    data.Te2b = Te2l * SGQuatd::fromYawPitchRollDeg(ai->_getHeading(),
-                                                    ai->getPitch(), 0.0);
+    data.Te2b = Te2l * ai->getOrientation();;
+    SGVec3d Velocity = ai->getNEDVelocity();
 
-    double hVel = ai->getSpeed()*SG_KT_TO_FPS;
-    double vVel = ai->getVerticalSpeed()/60;
+    double hVel = sqrt(Velocity[0]*Velocity[0]+Velocity[1]*Velocity[1]);
+    double vVel = Velocity[2];
     double gamma = atan2(vVel, hVel);
-    double vel = sqrt(hVel*hVel + vVel*vVel);
+    double vel = norm(Velocity);
     double weight = perfData->weight();
     _aiWakeData[id].mesh->computeAoA(vel, _density_slugft->getDoubleValue(),
                                      weight*cos(gamma));

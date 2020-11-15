@@ -132,6 +132,10 @@ public:
 
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
+    // Orientation in the local NED frame
+    SGQuatd getOrientation() const;
+    // Velocity in ft/s in the local NED frame
+    SGVec3d getNEDVelocity() const;
 
     bool getGroundElevationM(const SGGeod& pos, double& elev,
                              const simgear::BVHMaterial** material) const;

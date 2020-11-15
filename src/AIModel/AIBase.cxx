@@ -853,6 +853,23 @@ SGVec3d FGAIBase::getCartPos() const {
     return cartPos;
 }
 
+SGQuatd FGAIBase::getOrientation() const {
+    SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+    return orient;
+}
+
+SGVec3d FGAIBase::getNEDVelocity() const {
+    // TODO: account for the wind before computing the ground velocity.
+    double vs_fps = vs/-60.; // in NED frame positive is down.
+    double vel = speed * SG_KT_TO_FPS;
+    double heading = hdg * SG_DEGREES_TO_RADIANS;
+    double vg = sqrt(vel*vel - vs_fps*vs_fps); // ground speed.
+    // Assuming that the AI does not drift i.e. that the velocity heading is
+    // the same than the AI heading.
+    SGVec3d velocity( vg*cos(heading), vg*sin(heading), vs/-60.);
+    return velocity;
+}
+
 bool FGAIBase::getGroundElevationM(const SGGeod& pos, double& elev,
                                    const simgear::BVHMaterial** material) const {
     return globals->get_scenery()->get_elevation_m(pos, elev, material,
