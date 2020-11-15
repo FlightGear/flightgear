@@ -183,11 +183,8 @@ void FGClimate::update(double dt)
             double rxs = round(xs);
             double ryt = round(yt);
 
-            int xoffs = (rxs < xs) ? -1 : 1;
-            int yoffs = (ryt < yt) ? -1 : 1;
-
-            int s = static_cast<int>(rxs + xoffs);
-            int t = static_cast<int>(ryt + yoffs);
+            int s = static_cast<int>(rxs);
+            int t = static_cast<int>(ryt);
             color = image->getColor(s, t);
 
             // convert from color shades to koppen-classicfication
