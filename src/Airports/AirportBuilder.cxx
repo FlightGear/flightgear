@@ -95,12 +95,14 @@ osgDB::ReaderWriter::ReadResult AirportBuilder::readNode(const std::string& file
   SG_LOG( SG_GENERAL, SG_DEBUG, "Pavements : " << airport->numPavements());
   SG_LOG( SG_GENERAL, SG_DEBUG, "Line Features : " << airport->numLineFeatures());
 
-  const SGVec3f center = SGVec3f::fromGeod(airport->geod());
+  const SGGeod zeroAltitudeCenter = SGGeod::fromDegM(airport->getLongitude(), airport->getLatitude(), 0.0f);
+
+  const SGVec3f center = SGVec3f::fromGeod(zeroAltitudeCenter);
 
   // Create a matrix operation that will center the airport facing the z axis
   // We cannot also perform the translate to the center of the airport as we
   // hit floating point precision issues, so we do that separately.
-  osg::Matrixd mat = osg::Matrix(toOsg(SGQuatd::fromLonLat(airport->geod())));
+  osg::Matrixd mat = osg::Matrix(toOsg(SGQuatd::fromLonLat(zeroAltitudeCenter)));
   mat.preMultRotate(osg::Quat(0.0, 1.0, 0.0, 0.0));
 
   std::vector<osg::Node*> nodeList;
