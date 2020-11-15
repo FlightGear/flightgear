@@ -151,7 +151,9 @@ private:
     double _temperature_gl = -99999.0;	// ground level temperature in deg. C.
     double _temperature_sl = -99999.0;	// seal level temperature in deg. C.
     double _temperature_mean_gl = -99999.0; // mean temperature in deg. C.
-    double _temperature_mean_sl = -99999.0;
+    double _temperature_mean_sl = -99999.0; // mean temperature at sea level
+    double _temperature_water = -99999.0; // mean temperature of water
+    double _temperature_seawater = -99999.0; // mean temperature of sea water
     double _precipitation = -99999.0; // minimal avg. precipitation in mm/month
     double _wind = -99999.0;		// wind in km/h
     double _precipitation_annual = -99999.0; // global
