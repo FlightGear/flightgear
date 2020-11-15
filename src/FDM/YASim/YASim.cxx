@@ -443,10 +443,9 @@ void YASim::copyFromYASim()
 
     // position
     double lat, lon, alt;
-    sgCartToGeod(s->pos, &lat, &lon, &alt);
-    _set_Geodetic_Position(lat, lon, alt*M2FT);
     SGVec3d cartPos(s->pos);
     _updatePositionM(cartPos);
+    sgCartToGeod(s->pos, &lat, &lon, &alt);
     double groundlevel_m = get_groundlevel_m(lat, lon, alt);
     _set_Runway_altitude(groundlevel_m*SG_METER_TO_FEET);
     _set_Altitude_AGL((alt-groundlevel_m)*SG_METER_TO_FEET);
