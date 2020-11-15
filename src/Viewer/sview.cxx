@@ -1371,6 +1371,8 @@ std::shared_ptr<SviewView> SviewCreate(
     camera->setGraphicsContext(gc.get());
     // HACK: Don't render again to the screen
     camera->setNodeMask(0);
+    // Disable input
+    camera->setAllowEventFocus(false);
 
     if (1) {
         double left;
