@@ -41,6 +41,7 @@
 #include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/util/OptionsReadFileCallback.hxx>
+#include <simgear/scene/util/SGSceneFeatures.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 
 namespace sg = simgear;
@@ -134,6 +135,10 @@ main(int argc, char** argv)
                << "Probably FG_ROOT is not properly set.");
     }
 
+    bool use_vpb = arguments.read("--use-vpb");
+    props->setBoolValue("/scenery/use-vpb", use_vpb);
+    SGSceneFeatures::instance()->setVPBActive(use_vpb);
+
     /// now set up the simgears required model stuff
 
     simgear::ResourceManager::instance()->addBasePath(fg_root, simgear::ResourceManager::PRIORITY_DEFAULT);
@@ -176,13 +181,17 @@ main(int argc, char** argv)
     props->getNode("sim/rendering/random-objects", true)->setBoolValue(false);
     props->getNode("sim/rendering/random-vegetation", true)->setBoolValue(false);
 
+    std::string bvhFile = "w180s90-360x180.spt";
+    if (arguments.read("--tile-file", s))
+        bvhFile = s;
+
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
     arguments.writeErrorMessages(std::cerr);
 
     // Get the whole world bvh tree
     SGSharedPtr<sg::BVHNode> node;
-    node = sg::BVHPageNodeOSG::load("w180s90-360x180.spt", options);
+    node = sg::BVHPageNodeOSG::load(bvhFile, options);
 
     // if no model has been successfully loaded report failure.
     if (!node.valid()) {

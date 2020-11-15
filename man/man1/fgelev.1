@@ -15,12 +15,13 @@
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.TH FGELEV 1 2017-06-04 FlightGear "FlightGear man pages"
+.TH FGELEV 1 2020-11-15 FlightGear "FlightGear man pages"
 .SH NAME
 fgelev \- Compute FlightGear scenery elevation for a given list of points
 .SH SYNOPSIS
 \fBfgelev\fR [\fB\-\-expire\fR \fInum\fR] [\fB\-\-print\-solidness\fR]
 [\fB\-\-fg\-root\fR \fIrootdir\fR] [\fB\-\-fg\-scenery\fR \fIscenerydir\fR]
+[--tile-file osgbfilename] [--use-vpb]
 .SH DESCRIPTION
 .B fgelev
 is a standalone utility that, given a list of points on standard input, prints
@@ -102,6 +103,14 @@ uses the path specified in the
 environment variable or, absent that, the
 .B Scenery
 subdirectory inside \fB$FG_ROOT\fR.
+.TP
+\fB\-\-tile\-file\fR \fIosgbfilename\fR
+Use a specific tile file when searching for elevation details, instead
+of scanning through the whole world.
+.TP
+\fB\-\-use\-vpb\fR
+If specified, enables WS3.0 scenery behaviour, searching under the vpb/
+subdirectory.
 .SH "EXIT STATUS"
 .B fgelev
 exits with
