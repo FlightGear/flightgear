@@ -1291,11 +1291,19 @@ std::shared_ptr<SviewView> SviewCreate(
     
     osg::ref_ptr<const osg::GraphicsContext::Traits> traits;
     
+    int width = 0;
+    int height = 0;
+    
     if (texture) {
         flightgear::WindowBuilder* window_builder = flightgear::WindowBuilder::getWindowBuilder();
         flightgear::GraphicsWindow* main_window = window_builder->getDefaultWindow();
         
         gc = main_window->gc;
+        
+        
+        const osg::GraphicsContext::Traits* main_traits = gc->getTraits();
+        width = main_traits->width / 2;
+        height = main_traits->height / 2;
         
         //traits = new osg::GraphicsContext::Traits;
         //*traits = *main_window->gc;
@@ -1326,6 +1334,8 @@ std::shared_ptr<SviewView> SviewCreate(
         //
         traits2->width  = main_traits->width / 2;
         traits2->height = main_traits->height / 2;
+        width = traits2->width;
+        height = traits2->height;
         traits2->windowDecoration = true;
         traits2->doubleBuffer = true;
         traits2->sharedContext = 0;
@@ -1422,7 +1432,8 @@ std::shared_ptr<SviewView> SviewCreate(
     // view->getCamera()->setViewport(viewport);
     //
     if (texture) {
-        view->getCamera()->setViewport(0, 0, texture->getTextureWidth(), texture->getTextureHeight());
+        
+        view->getCamera()->setViewport(0, 0, width, height);
     }
     else {
         view->getCamera()->setViewport(0, 0, traits->width, traits->height);
