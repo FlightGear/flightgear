@@ -76,16 +76,16 @@ private:
     }
 
     // interpolate val (from 0.0 to 1.0) between min and max
+    double daytime(double val, double offset = 0.0);
+    double season(double val, double offset = 0.0);
+
     double linear(double val, double min, double max);
     double triangular(double val, double min, double max);
-
-    double season_linear(double val, double min, double max, double offs = 0.0);
-    double season_triangular(double val, double min, double max, double offs = 0.0);
-    double season_even(double val, double min, double max, double offs = 0.0);
-    double season_long(double val, double min, double max, double offs = 0.0);
-    double season_long_low(double val, double min, double max, double offs = 0.0);
-    double season_long_high(double val, double min, double max, double offs = 0.0);
-    double monsoonal(double val, double min, double max, double offs = 0.0);
+    double sinusoidal(double val, double min, double max);
+    double even(double val, double min, double max);
+    double long_low(double val, double min, double max);
+    double long_high(double val, double min, double max);
+    double monsoonal(double val, double min, double max);
 
     void set_ocean();
     void set_dry();
@@ -122,6 +122,7 @@ private:
     double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
+    double _daytime = 0.0;
     double _day_noon = 1.0;
     double _day_light = 1.0;
     double _season_summer = 1.0;
