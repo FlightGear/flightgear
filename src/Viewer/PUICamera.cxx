@@ -275,13 +275,13 @@ PUICamera::~PUICamera()
     // depending on if we're doing shutdown or reset, various things can be
     // null here.
     auto renderer = globals->get_renderer();
-    auto viewer = renderer ? renderer->getViewer() : nullptr;
-    if (viewer) {
-        viewer->removeEventHandler(_eventHandler);
+    auto view = renderer ? renderer->getView() : nullptr;
+    if (view) {
+        view->removeEventHandler(_eventHandler);
     }
 }
 
-void PUICamera::init(osg::Group* parent, osgViewer::Viewer* viewer)
+void PUICamera::init(osg::Group* parent, osgViewer::View* view)
 {
     setName("PUI FBO camera");
     
@@ -351,7 +351,7 @@ void PUICamera::init(osg::Group* parent, osgViewer::Viewer* viewer)
     // the rendering order (i.e top-most UI layer has the front-most event
     // handler)
     _eventHandler = new PUIEventHandler(this);
-    viewer->getEventHandlers().push_front(_eventHandler);
+    view->getEventHandlers().push_front(_eventHandler);
 }
 
 // remove once we require OSG 3.4

@@ -12,6 +12,7 @@ set(SOURCES
 	splash.cxx
 	view.cxx
 	viewmgr.cxx
+	sview.cxx
 	)
 
 set(HEADERS
@@ -24,6 +25,7 @@ set(HEADERS
 	splash.hxx
 	view.hxx
 	viewmgr.hxx
+	sview.hxx
 	)
 
 if (Qt5Core_FOUND)

@@ -76,8 +76,8 @@ public:
 
         if (_pagedLODMaximumProp->getType() == simgear::props::NONE) {
             // not set, use OSG default / environment value variable
-            osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
-            int current = viewer->getDatabasePager()->getTargetMaximumNumberOfPageLOD();
+            osg::ref_ptr<osgViewer::View> view(globals->get_renderer()->getView());
+            int current = view->getDatabasePager()->getTargetMaximumNumberOfPageLOD();
             _pagedLODMaximumProp->setIntValue(current);
         }
         _pagedLODMaximumProp->addChangeListener(this, true);
@@ -106,9 +106,9 @@ public:
             _manager->_enableCache = prop->getBoolValue();
         } else if (prop == _pagedLODMaximumProp) {
             int                             v = prop->getIntValue();
-            osg::ref_ptr<osgViewer::Viewer> viewer(globals->get_renderer()->getViewer());
-            if (viewer) {
-              osgDB::DatabasePager* pager = viewer->getDatabasePager();
+            osg::ref_ptr<osgViewer::View> view(globals->get_renderer()->getView());
+            if (view) {
+              osgDB::DatabasePager* pager = view->getDatabasePager();
               if (pager) pager->setTargetMaximumNumberOfPageLOD(v);
             }
         } else if (prop == _lodDetailed || prop == _lodBareDelta || prop == _lodRoughDelta) {
@@ -344,7 +344,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
 
     // update timestamps, so all tiles scheduled now are *newer* than any tile previously loaded
     osg::FrameStamp* framestamp
-            = globals->get_renderer()->getViewer()->getFrameStamp();
+            = globals->get_renderer()->getFrameStamp();
     tile_cache.set_current_time(framestamp->getReferenceTime());
 
     SGBucket b;
@@ -379,8 +379,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
  */
 void FGTileMgr::update_queues(bool& isDownloadingScenery)
 {
-    osg::FrameStamp* framestamp
-        = globals->get_renderer()->getViewer()->getFrameStamp();
+    osg::FrameStamp* framestamp = globals->get_renderer()->getFrameStamp();
     double current_time = framestamp->getReferenceTime();
     double vis = _visibilityMeters->getDoubleValue();
     TileEntry *e;

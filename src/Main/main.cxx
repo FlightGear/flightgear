@@ -743,10 +743,6 @@ int fgMainInit( int argc, char **argv )
     fntInit();
     globals->get_renderer()->preinit();
 
-#if defined(ENABLE_COMPOSITOR)
-    flightgear::addSentryTag("compositor", "yes");
-#endif
-
     if (fgGetBool("/sim/ati-viewport-hack", true)) {
         SG_LOG(SG_GENERAL, SG_WARN, "Enabling ATI/AMD viewport hack");
         flightgear::addSentryTag("ati-viewport-hack", "enabled");

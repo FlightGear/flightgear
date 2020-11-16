@@ -10,6 +10,9 @@
 #include <osg/Vec2>
 #include <osg/Vec3>
 
+#include <osgViewer/CompositeViewer>
+
+
 namespace osg
 {
 class Camera;
@@ -61,12 +64,20 @@ public:
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     PickList pick(const osg::Vec2& windowPos);
+    
+    /* Returns either composite_viewer or viewer. */
+    osgViewer::ViewerBase* getViewerBase();
 
     /** Get and set the OSG Viewer object, if any.
      */
-    osgViewer::Viewer* getViewer() { return viewer.get(); }
-    const osgViewer::Viewer* getViewer() const { return viewer.get(); }
-    void setViewer(osgViewer::Viewer* viewer);
+    osgViewer::View* getView();
+    const osgViewer::View* getView() const;
+    void setView(osgViewer::View* view);
+
+    /** Calls osgViewer::CompositeViewer::getFrameStamp() if we are using
+    composite viewer, otherwise osgViewer::Viewer::getFrameStamp(). */
+    osg::FrameStamp* getFrameStamp();
+
     /** Get and set the manipulator object, if any.
      */
     flightgear::FGEventHandler* getEventHandler() { return eventHandler.get(); }
@@ -84,7 +95,9 @@ public:
 	void setPlanes( double zNear, double zFar );
 
 protected:
+    int composite_viewer_enabled = -1;
     osg::ref_ptr<osgViewer::Viewer> viewer;
+    osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
 
     osg::ref_ptr<osg::FrameStamp> _frameStamp;

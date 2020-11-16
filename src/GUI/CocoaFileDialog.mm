@@ -85,7 +85,7 @@ void CocoaFileDialog::exec()
 // it window-modal.
     NSWindow* cocoaWindow = nil;
     std::vector<osgViewer::GraphicsWindow*> windows;
-    globals->get_renderer()->getViewer()->getWindows(windows);
+    globals->get_renderer()->getViewerBase()->getWindows(windows);
 
     for (auto gw : windows) {
         // OSG doesn't use RTTI, so no dynamic cast. Let's check the class type

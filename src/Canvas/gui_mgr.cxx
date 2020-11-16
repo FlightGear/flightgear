@@ -672,7 +672,7 @@ void GUIMgr::init()
 
   _event_handler = new GUIEventHandler(desktop);
   globals->get_renderer()
-         ->getViewer()
+         ->getView()
          ->getEventHandlers()
          // GUI is on top of everything so lets install as first event handler
          .push_front( _event_handler );
@@ -706,7 +706,7 @@ void GUIMgr::shutdown()
   if( _event_handler )
   {
     globals->get_renderer()
-           ->getViewer()
+           ->getView()
            ->removeEventHandler( _event_handler );
     _event_handler = 0;
   }

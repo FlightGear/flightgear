@@ -1617,6 +1617,7 @@ where:
              OPTION_INT     - property is an integer
              OPTION_CHANNEL - name of option is the name of a channel
              OPTION_FUNC    - the option trigger a function
+ property  :
  b_param   : if type==OPTION_BOOL,
              value set to the property (has_param is false for boolean)
  s_param   : if type==OPTION_STRING,
@@ -1870,6 +1871,7 @@ struct OptionDesc {
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {"disable-gui",                  false, OPTION_FUNC, "", false, "", fgOptDisableGUI },
+    {"composite-viewer",             true,  OPTION_INT,    "/sim/rendering/composite-viewer-enabled", "", "", nullptr},
     {nullptr,                        false, 0,             nullptr, false, nullptr, nullptr}
 };
 

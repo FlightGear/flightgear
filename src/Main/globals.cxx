@@ -195,15 +195,15 @@ FGGlobals::~FGGlobals()
     // stop OSG threading first, to avoid thread races while we tear down
     // scene-graph pieces
     // there are some scenarios where renderer is already gone.
-    osg::ref_ptr<osgViewer::Viewer> vw;
+    osg::ref_ptr<osgViewer::ViewerBase> vb;
     if (renderer) {
-        vw = renderer->getViewer();
-        if (vw) {
+        vb = renderer->getViewerBase();
+        if (vb) {
             // https://code.google.com/p/flightgear-bugs/issues/detail?id=1291
             // explicitly stop trheading before we delete the renderer or
             // viewMgr (which ultimately holds refs to the CameraGroup, and
             // GraphicsContext)
-            vw->stopThreading();
+            vb->stopThreading();
         }
     }
 
@@ -212,9 +212,10 @@ FGGlobals::~FGGlobals()
 
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
-    if (vw && vw->getDatabasePager()) {
-        vw->getDatabasePager()->cancel();
-        vw->getDatabasePager()->clear();
+    osgViewer::View* v = renderer->getView();
+    if (v && v->getDatabasePager()) {
+        v->getDatabasePager()->cancel();
+        v->getDatabasePager()->clear();
     }
 
     osgDB::Registry::instance()->clearObjectCache();
@@ -230,7 +231,7 @@ FGGlobals::~FGGlobals()
 
     delete subsystem_mgr;
     subsystem_mgr = nullptr; // important so ::get_subsystem returns NULL
-    vw = nullptr;
+    vb = nullptr;
     set_matlib(NULL);
 
     delete time_params;

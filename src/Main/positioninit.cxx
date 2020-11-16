@@ -436,7 +436,7 @@ static InitPosResult setInitialPosFromCarrier( const string& carrier )
 static InitPosResult checkCarrierSceneryLoaded(const SGSharedPtr<FGAICarrier> carrierRef)
 {
     SGVec3d cartPos = carrierRef->getCartPos();
-    auto framestamp = globals->get_renderer()->getViewer()->getFrameStamp();
+    auto framestamp = globals->get_renderer()->getFrameStamp();
     simgear::CheckSceneryVisitor csnv(globals->get_scenery()->getPager(),
                                       toOsg(cartPos),
                                       100.0 /* range in metres */,

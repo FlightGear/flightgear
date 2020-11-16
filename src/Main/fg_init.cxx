@@ -1283,7 +1283,7 @@ void fgStartNewReset()
 
     FGRenderer* render = globals->get_renderer();
     // needed or we crash in multi-threaded OSG mode
-    render->getViewer()->stopThreading();
+    render->getViewerBase()->stopThreading();
     
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
@@ -1294,8 +1294,8 @@ void fgStartNewReset()
     
     // don't cancel the pager until after shutdown, since AIModels (and
     // potentially others) can queue delete requests on the pager.
-    render->getViewer()->getDatabasePager()->cancel();
-    render->getViewer()->getDatabasePager()->clear();
+    render->getView()->getDatabasePager()->cancel();
+    render->getView()->getDatabasePager()->clear();
     
     osgDB::Registry::instance()->clearObjectCache();
     // Pager requests depend on this, so don't clear it until now
@@ -1376,7 +1376,7 @@ void fgStartNewReset()
     eventHandler->reset();
     globals->set_renderer(render);
     render->init();
-    render->setViewer(viewer.get());
+    render->setView(viewer.get());
 
     sgUserDataInit( globals->get_props() );
 

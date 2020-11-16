@@ -213,7 +213,7 @@ public:
     if ( NULL == osgDB::Registry::instance()->getReaderWriterForExtension(_type))
     throw sg_format_exception("Unsupported image type: " + type, type);
 
-    osg::Camera * camera = findLastCamera(globals->get_renderer()->getViewer(), window);
+    osg::Camera * camera = findLastCamera(globals->get_renderer()->getViewerBase(), window);
     if ( NULL == camera)
     throw sg_error("Can't find a camera for window '" + window + "'");
 

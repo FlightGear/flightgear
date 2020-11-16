@@ -33,8 +33,12 @@
 
 #include <Main/fg_props.hxx>
 #include "view.hxx"
+#include "sview.hxx"
+#include "renderer.hxx"
 
 #include "CameraGroup.hxx"
+#include "Scenery/scenery.hxx"
+
 
 // Constructor
 FGViewMgr::FGViewMgr(void)
@@ -134,6 +138,7 @@ FGViewMgr::unbind ()
     _viewNumberProp.clear();
     
     ViewPropertyEvaluator::clear();
+    SviewClear();
 }
 
 void
@@ -155,6 +160,7 @@ FGViewMgr::update (double dt)
         cameraGroup->update(toOsg(currentView->getViewPosition()),
                             toOsg(currentView->getViewOrientation()));
     }
+    SviewUpdate(dt);
 }
 
 void FGViewMgr::clear()
@@ -220,6 +226,33 @@ FGViewMgr::prev_view()
     setCurrentViewIndex((_current - 1 + numViews) % numViews);
     _viewNumberProp->fireValueChanged();
     return get_current_view();
+}
+
+void FGViewMgr::view_push()
+{
+    SviewPush();
+}
+
+void FGViewMgr::clone_current_view()
+{
+    clone_internal("current");
+}
+
+void FGViewMgr::clone_last_pair()
+{
+    clone_internal("last_pair");
+}
+
+void FGViewMgr::clone_last_pair_double()
+{
+    clone_internal("last_pair_double");
+}
+
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
+
+void FGViewMgr::clone_internal(const std::string& type)
+{
+    SviewCreate(type);
 }
 
 void

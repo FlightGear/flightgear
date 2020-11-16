@@ -45,7 +45,7 @@ void initScenery()
     osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer;
     FGRenderer* render = globals->get_renderer();
     render->init();
-    render->setViewer(viewer.get());
+    render->setView(viewer.get());
 
     // Start up the scenery subsystem.
     globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);

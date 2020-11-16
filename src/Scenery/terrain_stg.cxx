@@ -371,7 +371,7 @@ bool FGStgTerrain::scenery_available(const SGGeod& position, double range_m)
     
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
     osg::FrameStamp* framestamp
-            = globals->get_renderer()->getViewer()->getFrameStamp();
+            = globals->get_renderer()->getFrameStamp();
 
     FGScenery* pSceneryManager = globals->get_scenery();
     simgear::CheckSceneryVisitor csnv(pSceneryManager->getPager(), toOsg(p), range_m, framestamp);
