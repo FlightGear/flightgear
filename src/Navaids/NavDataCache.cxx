@@ -239,6 +239,23 @@ public:
   }
 };
 
+// useful for debugging 'hanging' queries: look for a statement
+// which starts but never completes
+#if 0
+int traceCallback(unsigned int traceCode, void* ctx, void* p, void* x)
+{
+    if (traceCode == SQLITE_TRACE_STMT) {
+        SG_LOG(SG_NAVCACHE, SG_WARN, "step:" << p << " text=" << (char*)x);
+    }
+    else if (traceCode == SQLITE_TRACE_PROFILE) {
+        int64_t* nanoSecs = (int64_t*)x;
+        SG_LOG(SG_NAVCACHE, SG_WARN, "profile:" << p << " took " << *nanoSecs);
+    }
+
+    return 0;
+}
+#endif
+
 class NavDataCache::NavDataCachePrivate
 {
 public:
@@ -292,6 +309,9 @@ public:
           throw sg_exception("Nav-cache file opened but is not writeable");
       }
 
+  // enable tracing for debugging stuck queries
+   //   sqlite3_trace_v2(db, SQLITE_TRACE_STMT | SQLITE_TRACE_PROFILE, traceCallback, this);
+
     sqlite3_stmt_ptr checkTables =
       prepare("SELECT count(*) FROM sqlite_master WHERE name='properties'");
 
@@ -305,6 +325,8 @@ public:
       initTables();
       didCreate = true;
     }
+
+    reset(checkTables);
 
     readPropertyQuery = prepare("SELECT value FROM properties WHERE key=?");
     writePropertyQuery = prepare("INSERT INTO properties (key, value) VALUES (?,?)");
