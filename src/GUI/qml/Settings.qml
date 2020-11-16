@@ -427,63 +427,46 @@ Item {
                 width: parent.width
                 settingGroup: "render"
 
-                readonly property bool rembrandt: !_haveCompositor && (renderer.selectedIndex == 2)
                 readonly property bool alsEnabled: (renderer.selectedIndex == 1)
-                readonly property bool msaaEnabled: !rembrandt && (msaa.selectedIndex > 0)
+                readonly property bool msaaEnabled: (msaa.selectedIndex > 0)
 
                 function summary()
                 {
                     var result = [];
-                    if (rembrandt) result.push(qsTr("Rembrandt"));
-                    else if (alsEnabled) result.push(qsTr("ALS"));
+                    if (alsEnabled) result.push(qsTr("ALS"));
                     if (msaaEnabled) result.push(qsTr("anti-aliasing"));
                     return result;
                 }
 
-                readonly property var __traditionalRendererChoices: [qsTr("Default"),
-                    qsTr("Atmospheric Light Scattering"),
-                    qsTr("Rembrandt")]
-
-                readonly property var __compositorRendererChoices: [qsTr("Default"),
-                    qsTr("Atmospheric Light Scattering"),
-                    qsTr("Low-spec")]
+                readonly property var __rendererChoices: [qsTr("Default"),
+                    qsTr("Atmospheric Light Scattering")]
 
                 readonly property string __defaultRenderDesc: qsTr("The default renderer provides standard visuals with maximum compatibility.")
                 readonly property string __alsRenderDesc: qsTr("The ALS renderer uses a sophisticated physical atmospheric model and several " +
                                                                "other effects to give realistic rendering of large distances.")
-                readonly property string __rembrandtDesc: qsTr("Rembrandt is a configurable multi-pass renderer which supports shadow-maps, cinematic " +
-                                                               "effects and more. However, not all aircraft appear correctly and performance will " +
-                                                               "depend greatly on your system hardware.")
-                readonly property string __lowSpecDesc: qsTr("The low-spec renderer ensures maximum performance on older computers.")
 
-                readonly property var descriptions: _haveCompositor
-                                                    ? [__defaultRenderDesc, __alsRenderDesc, __lowSpecDesc]
-                                                    : [__defaultRenderDesc, __alsRenderDesc, __rembrandtDesc]
+                readonly property var descriptions: [__defaultRenderDesc, __alsRenderDesc]
 
                 contents: [
                     SettingsComboBox {
                         id: renderer
                         label: qsTr("Renderer")
-                        choices: _haveCompositor
-                                 ? renderSection.__compositorRendererChoices
-                                 : renderSection.__traditionalRendererChoices
+                        choices: renderSection.__rendererChoices
                         description: renderSection.descriptions[selectedIndex]
                         defaultIndex: 1
                         setting: "renderer"
-                        keywords: ["als", "rembrandt", "render", "shadow", "low-spec", "graphics", "performance"]
+                        keywords: ["als", "render", "shadow", "low-spec", "graphics", "performance"]
                     },
 
                     SettingsComboBox {
                         id: msaa
                         label: qsTr("Anti-aliasing")
                         setting: "aa"
-                        description: renderSection.rembrandt? qsTr("Anti-aliasing is disabled when Rembrandt is enabled.")
-                             : qsTr("Anti-aliasing improves the appearance of high-contrast edges and lines. " +
+                        description: qsTr("Anti-aliasing improves the appearance of high-contrast edges and lines. " +
                             "This is especially noticeable on sloping or diagonal edges. " +
                             "Higher settings can reduce performance.")
                         keywords: ["msaa", "anti", "aliasing", "multi", "sample"]
                         choices: [qsTr("Off"), "2x", "4x"]
-                        enabled: !renderSection.rembrandt
                         property var data: [0, 2, 4];
                         defaultIndex: 0
                     },
@@ -510,17 +493,8 @@ Item {
                         _config.setProperty("/sim/rendering/multi-samples", msaa.data[msaa.selectedIndex])
                     }
 
-                    if (_haveCompositor) {
-                        if (alsEnabled) {
-                            _config.setArg("compositor", "Compositor/als");
-                        } else if (renderer.selectedIndex == 2) {
-                            _config.setArg("compositor", "Compositor/low-spec")
-                        }
-                    } else {
-                        _config.setEnableDisableOption("rembrandt",  rembrandt);
-                        if (alsEnabled) {
-                            _config.setProperty("/sim/rendering/shaders/skydome", true);
-                        }
+                    if (alsEnabled) {
+                        _config.setProperty("/sim/rendering/shaders/skydome", true);
                     }
 
                     _config.setProperty("/sim/rendering/texture-cache/cache-enabled", compressTextures.value);

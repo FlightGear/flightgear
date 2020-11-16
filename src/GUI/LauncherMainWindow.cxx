@@ -125,8 +125,6 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
         ctx->setContextProperty("_addOns", addOnsCtl);
     }
 
-    ctx->setContextProperty("_haveCompositor", true);
-
     auto weatherScenariosModel = new flightgear::WeatherScenariosModel(this);
     ctx->setContextProperty("_weatherScenarios", weatherScenariosModel);
 
