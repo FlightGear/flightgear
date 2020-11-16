@@ -1781,7 +1781,7 @@ void NavDataCache::commitTransaction()
         break;
       }
 
-      SGTimeStamp::sleepForMSec(++retries * 10);
+      SGTimeStamp::sleepForMSec(++retries * 100);
       SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache contention on commit, will retry:" << retries);
     } // of retry loop for DB busy
 
@@ -2083,8 +2083,15 @@ FGPositionedRef NavDataCache::findClosestWithIdent( const string& aIdent,
 
 int NavDataCache::getOctreeBranchChildren(int64_t octreeNodeId)
 {
-  sqlite3_bind_int64(d->getOctreeChildren, 1, octreeNodeId);
-  d->execSelect1(d->getOctreeChildren);
+    sqlite3_bind_int64(d->getOctreeChildren, 1, octreeNodeId);
+    if (!d->execSelect(d->getOctreeChildren)) {
+        // this can occur when in read-only mode: we don't add
+        // new Octree nodes to the real DB (only in memory),
+        // but will still call this code speculatively.
+        // see the early-return just below in defineOctreeNode
+        return 0;
+    }   
+
   int children = sqlite3_column_int(d->getOctreeChildren, 0);
   d->reset(d->getOctreeChildren);
   return children;
