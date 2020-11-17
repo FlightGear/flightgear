@@ -63,6 +63,9 @@ public:
     double get_humidity_pct() { return _relative_humidity_gl; }
     double get_wind_kmh() { return _wind; }
 
+    bool getEnvironmentUpdate() const { return _environment_adjust; }
+    void setEnvironmentUpdate(bool value);
+
     void test();
 private:
     static const std::string _classification[MAX_CLIMATE_CLASSES];
