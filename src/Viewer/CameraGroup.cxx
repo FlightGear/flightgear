@@ -140,14 +140,12 @@ public:
         _cameraGroup(cg) {
         listenToNode("znear", 0.1f);
         listenToNode("zfar", 120000.0f);
-        listenToNode("near-field", 100.0f);
         listenToNode("lod", 1.5f);
     }
 
     virtual ~CameraGroupListener() {
         unlisten("znear");
         unlisten("zfar");
-        unlisten("near-field");
         unlisten("lod");
     }
 
@@ -156,8 +154,6 @@ public:
             _cameraGroup->_zNear = prop->getFloatValue();
         } else if (!strcmp(prop->getName(), "zfar")) {
             _cameraGroup->_zFar = prop->getFloatValue();
-        } else if (!strcmp(prop->getName(), "near-field")) {
-            _cameraGroup->_nearField = prop->getFloatValue();
         } else if (!strcmp(prop->getName(), "lod")) {
             const float new_lod = prop->getFloatValue();
             _cameraGroup->_viewer->getCamera()->setLODScale(new_lod);
@@ -237,8 +233,8 @@ void CameraGroup::update(const osg::Vec3d& position,
                     osg::Matrix R = view_matrix;
 
                     // The already known projection and view matrix of the parent camera
-                    osg::Matrix pP = info->relativeCameraParent->viewMatrix;
-                    osg::Matrix pR = info->relativeCameraParent->projMatrix;
+                    osg::Matrix pP = info->relativeCameraParent->projMatrix;
+                    osg::Matrix pR = info->relativeCameraParent->viewMatrix;
 
                     // And the projection matrix derived from P0 so that the
                     // reference points match
@@ -541,7 +537,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         }
     }
     osg::Matrix pOff;
-    unsigned parentCameraIndex = ~0u;
+    CameraInfo *parentInfo = nullptr;
     osg::Vec2d parentReference[2];
     osg::Vec2d thisReference[2];
     SGPropertyNode* projectionNode = 0;
@@ -587,7 +583,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double right = 0.5*physicalWidth - xoff;
         double bottom = -0.5*physicalHeight - yoff;
         double top = 0.5*physicalHeight - yoff;
-        pOff.makeFrustum(left, right, bottom, top, zNear, zNear*1000);
+        pOff.makeFrustum(left, right, bottom, top, zNear, zNear + 20000);
         cameraFlags |= CameraInfo::PROJECTION_ABSOLUTE | CameraInfo::ENABLE_MASTER_ZOOM;
     } else if ((projectionNode = cameraNode->getNode("right-of-perspective"))
                || (projectionNode = cameraNode->getNode("left-of-perspective"))
@@ -595,17 +591,14 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
                || (projectionNode = cameraNode->getNode("below-perspective"))
                || (projectionNode = cameraNode->getNode("reference-points-perspective"))) {
         std::string name = projectionNode->getStringValue("parent-camera");
-        for (unsigned i = 0; i < _cameras.size(); ++i) {
-            if (_cameras[i]->name != name)
-                continue;
-            parentCameraIndex = i;
-        }
-        if (_cameras.size() <= parentCameraIndex) {
+        auto it = std::find_if(_cameras.begin(), _cameras.end(),
+                               [&name](const auto &c) { return c->name == name; });
+        if (it == _cameras.end()) {
             SG_LOG(SG_VIEW, SG_ALERT, "CameraGroup::buildCamera: "
                    "failed to find parent camera for relative camera!");
             return;
         }
-        const CameraInfo* parentInfo = _cameras[parentCameraIndex];
+        parentInfo = (*it);
         if (projectionNode->getNameString() == "right-of-perspective") {
             double tmp = (parentInfo->physicalWidth + 2*parentInfo->bezelWidthRight)/parentInfo->physicalWidth;
             parentReference[0] = osg::Vec2d(tmp, -1);
@@ -674,8 +667,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     info->bezelHeightBottom = bezelHeightBottom;
     info->bezelWidthLeft = bezelWidthLeft;
     info->bezelWidthRight = bezelWidthRight;
-    if (parentCameraIndex < _cameras.size())
-        info->relativeCameraParent = _cameras[parentCameraIndex];
+    info->relativeCameraParent = parentInfo;
     info->parentReference[0] = parentReference[0];
     info->parentReference[1] = parentReference[1];
     info->thisReference[0] = thisReference[0];
