@@ -70,7 +70,8 @@ void FGClimate::init()
 
     _positionLatitudeNode = fgGetNode("/position/latitude-deg", true);
     _positionLongitudeNode= fgGetNode("/position/longitude-deg", true);
-    _ground_elev_node = fgGetNode("/position/ground-elev-ft", true );
+
+    _ground_elev_node = fgGetNode("/environment/terrain/area[0]/enabled", true);
 }
 
 void FGClimate::bind()
@@ -206,8 +207,15 @@ void FGClimate::update(double dt)
         _rootNode->getNode("description")->setStringValue(_description[_code]);
         _rootNode->getNode("classification")->setStringValue(_classification[_code]);
 
-        double alt_km;
-        alt_km = _ground_elev_node->getDoubleValue()*SG_FEET_TO_METER/1000.0;
+        double alt_ft;
+        if (_ground_elev_node->getBoolValue() &&
+            fgGetBool("/environment/terrain/area[0]/output/valid"))
+        {
+            alt_ft = fgGetDouble("/environment/terrain/area[0]/output/alt-median-ft");
+        } else {
+            alt_ft = fgGetDouble("/position/ground-elev-ft");
+        }
+        double alt_km = alt_ft*SG_FEET_TO_METER/1000.0;
 
         // Relative humidity decreases with an average of 4% per kilometer
         _relative_humidity_sl = std::min(_relative_humidity_gl + 4.0*alt_km, 100.0);
