@@ -107,6 +107,7 @@ private:
     simgear::TiedPropertyList _tiedProperties;
 
     SGPropertyNode_ptr _monthNode;
+    SGPropertyNode_ptr _gravityNode;
     SGPropertyNode_ptr _metarSnowLevelNode;
     SGPropertyNode_ptr _positionLatitudeNode;
     SGPropertyNode_ptr _positionLongitudeNode;

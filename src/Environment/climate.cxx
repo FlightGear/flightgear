@@ -46,6 +46,11 @@
 //   the dewpoint temperature in moist air: A simple conversion and
 //   applications. Bull. Amer. Meteor. Soc., 86, 225-233.
 //   doi: http://dx.doi.org/10.1175/BAMS-86-2-225
+//
+// *  A Simple Accurate Formula for Calculating Saturation Vapor Pressure of
+//    Water and Ice. Jianhua Huang, J. Appl. Meteor. Climatol. (2018) 57 (6):
+//    1265–1272. https://doi.org/10.1175/JAMC-D-17-0334.1
+
 
 #define HOUR	(0.5/24.0)
 #define MONTH	(1.0/12.0)
@@ -72,6 +77,7 @@ void FGClimate::init()
     _positionLongitudeNode= fgGetNode("/position/longitude-deg", true);
 
     _ground_elev_node = fgGetNode("/environment/terrain/area[0]/enabled", true);
+    _gravityNode = fgGetNode("/environment/gravitational-acceleration-mps2", true);
 }
 
 void FGClimate::bind()
@@ -194,7 +200,7 @@ void FGClimate::update(double dt)
             color = image->getColor(s, t);
 
             // convert from color shades to koppen-classicfication
-            _code = static_cast<int>(255.0f*color[0]/4.0f);
+            _code = static_cast<int>((255.0f*color[0]+0.5)/4.0f);
 
             if (_code == 0) set_ocean();
             else if (_code < 5) set_tropical();
@@ -287,33 +293,36 @@ void FGClimate::update_season_factor()
 // https://en.wikipedia.org/wiki/Density_of_air#Humid_air
 void FGClimate::update_air_pressure()
 {
-    // Saturation vapor pressure
+    // saturation vapor pressure for water, Jianhua Huang:
     double Tc = _temperature_gl;
-    double Psat = 6.1078*pow(10.0, 7.5*Tc/(Tc+273.3));
+    double Psat = exp(34.494 - 4924.99/(Tc+237.1))/pow(Tc + 105.0, 1.57);
 
-    // Vapor pressure of water
-    double Pv = _relative_humidity_gl*Psat;
+    // vapor pressure of water
+    double Pv = 0.01*_relative_humidity_gl*Psat;
 
     // pressure at altitude
-    static const double P0 = 101325.0;
-    static const double T0 = 288.15;
-    static const double g = 9.80665;
-    static const double L = 0.0065;
-    static const double R = 8.31447;
-    static const double M = 0.0289654;
+    static const double R0 = 8.314462618; // Universal gas constant
+    static const double P0 = 101325.0;    // Sea level standard atm. pressure
+    static const double T0 = 288.15;      // Sea level standard temperature
+    static const double L = 0.0065;       // Temperature lapse rate
+    static const double M = 0.0289654;    // Molar mass of dry air
 
     double h = _alt_km;
-    double P = P0*pow(1.0 - L*h/T0, g*M/(R*L));
+    double g = _gravityNode->getDoubleValue();
+    double P = P0*pow(1.0 - L*h/T0, g*M/(L*R0));
 
     // partial pressure of dry air
     double Pd = P - Pv;
-    _air_pressure = 0.01*Pd;	// hPa
 
+    // air pressure
+    _air_pressure = 0.01*(Pd+Psat);	// hPa
+
+    // air density
     static const double Md = 0.0289654;
     static const double Mv = 0.018016;
     double Tk = Tc + 273.15;
 
-    _air_density = (Pd*Md + Pv*Mv)/(R*Tk);
+    _air_density = (Pd*Md + Pv*Mv)/(Tk*R0);
 }
 
 
@@ -1107,7 +1116,7 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Year (0.25 = spring .. 0.75 = autumn): " << _seasons_year
               << std::endl << std::endl;
-    td::cout << "  Dewpoint:              " << _dewpoint_gl << " deg. C."
+    std::cout << "  Dewpoint:              " << _dewpoint_gl << " deg. C."
               << std::endl;
     std::cout << "  Ground temperature:    " << _temperature_gl << " deg. C."
               << std::endl;
@@ -1126,7 +1135,7 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Relative humidity:     " << _relative_humidity_gl << " %"
               << std::endl;
-    std::cout << "  Air PRessuer:          " << _air_pressure << " hPa"
+    std::cout << "  Air Pressure:          " << _air_pressure << " hPa"
               << std::endl;
     std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
     std::cout << "  Snow level: " << _snow_level << " m." << std::endl;
