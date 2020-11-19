@@ -51,6 +51,7 @@ public:
     void unbind() override;
     void update(double dt) override;;
 
+    std::string get_metar();
     double get_snow_level_m() { return _snow_level; }
     double get_snow_thickness() { return _snow_thickness; }
     double get_ice_cover() { return _ice_cover; }
@@ -152,7 +153,8 @@ private:
     bool _weather_update = false;	// enable weather updates
     double _relative_humidity_sl = -99999.0;// 0.0 = dry, 1.0 is fully humid
     double _relative_humidity_gl = -99999.0;
-    double _air_pressure = 0.0;		// air pressure in hPa
+    double _air_pressure_gl = 0.0;	// ground level air pressure in hPa
+    double _air_pressure_sl = 0.0;	// sea level air pressure in hPa
     double _air_density = 0.0;		// air density in kg/m2
     double _dewpoint_gl = -99999.0;
     double _dewpoint_sl = -99999.0;

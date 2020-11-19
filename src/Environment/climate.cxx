@@ -93,7 +93,8 @@ void FGClimate::bind()
 
     // weather properties
     _tiedProperties.Tie( "weather-update", &_weather_update);
-    _tiedProperties.Tie( "pressure-hpa", &_air_pressure);
+    _tiedProperties.Tie( "pressure-hpa", &_air_pressure_gl);
+    _tiedProperties.Tie( "pressure-sea-level-hpa", &_air_pressure_gl);
     _tiedProperties.Tie( "relative-humidity", &_relative_humidity_gl);
     _tiedProperties.Tie( "relative-humidity-sea-level", &_relative_humidity_sl);
     _tiedProperties.Tie( "dewpoint-degc", &_dewpoint_gl);
@@ -315,7 +316,8 @@ void FGClimate::update_air_pressure()
     double Pd = P - Pv;
 
     // air pressure
-    _air_pressure = 0.01*(Pd+Psat);	// hPa
+    _air_pressure_gl = 0.01*(Pd+Psat);	// hPa
+    _air_pressure_sl = 0.01*(P0-Pv+Psat);
 
     // air density
     static const double Md = 0.0289654;
@@ -897,6 +899,41 @@ void FGClimate::setEnvironmentUpdate(bool value)
     }
 }
 
+std::string FGClimate::get_metar()
+{
+    std::stringstream m;
+
+    m << std::fixed << std::setprecision(0);
+    m << "XXXX ";
+
+    m << fgGetInt("/sim/time/utc/month");
+    m << fgGetInt("/sim/time/utc/hour");
+    m << fgGetInt("/sim/time/utc/minute");
+    m << "Z AUTO";
+
+    m << " 000" << setw(2) << std::setfill('0') << _wind << "KMH ";
+
+    if (_temperature_gl < 0.0) {
+        m << "M" << setw(2) << std::setfill('0') << fabs(_temperature_gl);
+    } else {
+        m << setw(2) << std::setfill('0') << _temperature_gl;
+    }
+
+    m << "/";
+
+    if (_dewpoint_gl < 0.0) {
+        m << "M" << setw(2) << std::setfill('0') << fabs(_dewpoint_gl);
+    } else {
+        m << setw(2) << std::setfill('0') << _dewpoint_gl;
+    }
+
+    m << " Q" << _air_pressure_sl;
+
+    m << " NOSIG";
+
+    return m.str();
+}
+
 // ---------------------------------------------------------------------------
 
 const std::string FGClimate::_classification[MAX_CLIMATE_CLASSES] = {
@@ -1135,7 +1172,9 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Relative humidity:     " << _relative_humidity_gl << " %"
               << std::endl;
-    std::cout << "  Air Pressure:          " << _air_pressure << " hPa"
+    std::cout << "  Ground Air Pressure:   " << _air_pressure_gl << " hPa"
+              << std::endl;
+    std::cout << "  Sea level Air Pressure: " << _air_pressure_sl << " hPa"
               << std::endl;
     std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
     std::cout << "  Snow level: " << _snow_level << " m." << std::endl;
@@ -1151,7 +1190,8 @@ void FGClimate::report()
               << _lichen_cover << std::endl;
     std::cout << "  Season (0.0 = summer .. 1.0 = late autumn): "
               << ((_has_autumn && _is_autumn > 0.05) ? _season_transistional : 0.0)
-              << std::endl;
+              << std::endl << std::endl;
+    std::cout << "  METAR: " << get_metar() << std::endl;
     std::cout << "===============================================" << std::endl;
 }
 #endif // REPORT_TO_CONSOLE
