@@ -87,6 +87,7 @@ void FGClimate::bind()
 
     // weather properties
     _tiedProperties.Tie( "weather-update", &_weather_update);
+    _tiedProperties.Tie( "pressure-hpa", &_air_pressure);
     _tiedProperties.Tie( "relative-humidity", &_relative_humidity_gl);
     _tiedProperties.Tie( "relative-humidity-sea-level", &_relative_humidity_sl);
     _tiedProperties.Tie( "dewpoint-degc", &_dewpoint_gl);
@@ -215,15 +216,15 @@ void FGClimate::update(double dt)
         } else {
             alt_ft = fgGetDouble("/position/ground-elev-ft");
         }
-        double alt_km = alt_ft*SG_FEET_TO_METER/1000.0;
+        _alt_km = alt_ft*SG_FEET_TO_METER/1000.0;
 
         // Relative humidity decreases with an average of 4% per kilometer
-        _relative_humidity_sl = std::min(_relative_humidity_gl + 4.0*alt_km, 100.0);
+        _relative_humidity_sl = std::min(_relative_humidity_gl + 4.0*_alt_km, 100.0);
 
         // The temperature decreases by about 9.8°C per kilometer
-        _temperature_sl = _temperature_gl + 9.8*alt_km;
-        _temperature_mean_sl = _temperature_mean_gl + 9.8*alt_km;
-        _temperature_seawater = _temperature_water + 9.8*alt_km;
+        _temperature_sl = _temperature_gl + 9.8*_alt_km;
+        _temperature_mean_sl = _temperature_mean_gl + 9.8*_alt_km;
+        _temperature_seawater = _temperature_water + 9.8*_alt_km;
 
         _set(_snow_level, 1000.0*_temperature_mean_sl/9.8);
 
@@ -232,6 +233,7 @@ void FGClimate::update(double dt)
         _dewpoint_gl = _temperature_gl - ((100.0 - _relative_humidity_gl)/5.0);
 
         set_environment();
+        update_air_pressure();
 
 #if REPORT_TO_CONSOLE
         report();
@@ -280,6 +282,38 @@ void FGClimate::update_season_factor()
     _season_transistional = 2.0*(1.0 - _season_summer) - 1.0;
     if (_season_transistional < 0.0) _season_transistional = 0.0;
     else if (_season_transistional > 1.0) _season_transistional = 1.0;
+}
+
+// https://en.wikipedia.org/wiki/Density_of_air#Humid_air
+void FGClimate::update_air_pressure()
+{
+    // Saturation vapor pressure
+    double Tc = _temperature_gl;
+    double Psat = 6.1078*pow(10.0, 7.5*Tc/(Tc+273.3));
+
+    // Vapor pressure of water
+    double Pv = _relative_humidity_gl*Psat;
+
+    // pressure at altitude
+    static const double P0 = 101325.0;
+    static const double T0 = 288.15;
+    static const double g = 9.80665;
+    static const double L = 0.0065;
+    static const double R = 8.31447;
+    static const double M = 0.0289654;
+
+    double h = _alt_km;
+    double P = P0*pow(1.0 - L*h/T0, g*M/(R*L));
+
+    // partial pressure of dry air
+    double Pd = P - Pv;
+    _air_pressure = 0.01*Pd;	// hPa
+
+    static const double Md = 0.0289654;
+    static const double Mv = 0.018016;
+    double Tk = Tc + 273.15;
+
+    _air_density = (Pd*Md + Pv*Mv)/(R*Tk);
 }
 
 
@@ -1073,6 +1107,8 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Year (0.25 = spring .. 0.75 = autumn): " << _seasons_year
               << std::endl << std::endl;
+    td::cout << "  Dewpoint:              " << _dewpoint_gl << " deg. C."
+              << std::endl;
     std::cout << "  Ground temperature:    " << _temperature_gl << " deg. C."
               << std::endl;
     std::cout << "  Sea level temperature: " << _temperature_sl << " deg. C."
@@ -1090,7 +1126,7 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Relative humidity:     " << _relative_humidity_gl << " %"
               << std::endl;
-    std::cout << "  Dewpoint:              " << _dewpoint_gl << " deg. C."
+    std::cout << "  Air PRessuer:          " << _air_pressure << " hPa"
               << std::endl;
     std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
     std::cout << "  Snow level: " << _snow_level << " m." << std::endl;

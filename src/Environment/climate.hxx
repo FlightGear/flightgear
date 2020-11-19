@@ -101,6 +101,7 @@ private:
     void update_daylight();
     void update_day_factor();
     void update_season_factor();
+    void update_air_pressure();
 
     SGPropertyNode_ptr _rootNode;
     simgear::TiedPropertyList _tiedProperties;
@@ -125,6 +126,7 @@ private:
     double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
+    double _alt_km = 0.0;
     double _daytime = 0.0;
     double _day_noon = 1.0;
     double _day_light = 1.0;
@@ -149,7 +151,8 @@ private:
     bool _weather_update = false;	// enable weather updates
     double _relative_humidity_sl = -99999.0;// 0.0 = dry, 1.0 is fully humid
     double _relative_humidity_gl = -99999.0;
-
+    double _air_pressure = 0.0;		// air pressure in hPa
+    double _air_density = 0.0;		// air density in kg/m2
     double _dewpoint_gl = -99999.0;
     double _dewpoint_sl = -99999.0;
     double _temperature_gl = -99999.0;	// ground level temperature in deg. C.
