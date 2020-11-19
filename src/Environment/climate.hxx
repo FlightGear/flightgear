@@ -59,10 +59,23 @@ public:
     double get_wetness() { return _wetness; }
     double get_lichen_cover() { return _lichen_cover; }
 
+    double get_relative_humidity_pct() { return _relative_humidity_gl; }
+    double get_relative_humidity_sl_pct() { return _relative_humidity_sl; }
+    double get_air_pressure_hpa() { return _air_pressure_gl; }
+    double get_air_pressure_sl_hpa() { return _air_pressure_sl; }
+    double get_air_density_kg_m2() { return _air_density; }
     double get_dewpoint_degc() { return _dewpoint_gl; }
+    double get_dewpoint_sl_degc() { return _dewpoint_sl; }
     double get_temperature_degc() { return _temperature_gl; }
-    double get_humidity_pct() { return _relative_humidity_gl; }
+    double get_temperature_sl_degc() { return _temperature_sl; }
+    double get_temperature_mean_degc() { return _temperature_mean_gl; }
+    double get_temperature_mean_sl_degc() { return _temperature_mean_sl; }
+    double get_temperature_water_degc() { return _temperature_water; }
+    double get_temperature_seawater_degc() { return _temperature_seawater; }
+    double get_precipitation_month() { return _precipitation; }
     double get_wind_kmh() { return _wind; }
+    double get_wind_direction_deg() { return _wind_direction; }
+    double get_precipitation_annual() { return _precipitation_annual; }
 
     bool getEnvironmentUpdate() const { return _environment_adjust; }
     void setEnvironmentUpdate(bool value);
@@ -103,6 +116,7 @@ private:
     void update_day_factor();
     void update_season_factor();
     void update_air_pressure();
+    void update_wind_direction();
 
     SGPropertyNode_ptr _rootNode;
     simgear::TiedPropertyList _tiedProperties;
@@ -166,6 +180,7 @@ private:
     double _temperature_seawater = -99999.0; // mean temperature of sea water
     double _precipitation = -99999.0; // minimal avg. precipitation in mm/month
     double _wind = -99999.0;		// wind in km/h
+    double _wind_direction = -99999.0;	// wind direction
     double _precipitation_annual = -99999.0; // global
 };
 

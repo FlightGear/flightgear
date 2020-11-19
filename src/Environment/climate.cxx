@@ -108,6 +108,7 @@ void FGClimate::bind()
     _tiedProperties.Tie( "precipitation-annual-mm", & _precipitation_annual);
     _tiedProperties.Tie( "snow-level-m", &_snow_level);
     _tiedProperties.Tie( "wind-kmph", &_wind);
+    _tiedProperties.Tie( "wind-direction-deg", &_wind_direction);
 }
 
 void FGClimate::unbind ()
@@ -133,6 +134,7 @@ void FGClimate::reinit()
     _temperature_seawater = -99999.0;
     _precipitation = -99999.0;
     _wind = -99999.0;
+    _wind_direction = -99999.0;
     _precipitation_annual = -99999.0;
 
     _is_autumn = -99999.0;
@@ -215,6 +217,9 @@ void FGClimate::update(double dt)
         _rootNode->getNode("description")->setStringValue(_description[_code]);
         _rootNode->getNode("classification")->setStringValue(_classification[_code]);
 
+        update_air_pressure();
+        update_wind_direction();
+
         double alt_ft;
         if (_ground_elev_node->getBoolValue() &&
             fgGetBool("/environment/terrain/area[0]/output/valid"))
@@ -240,7 +245,6 @@ void FGClimate::update(double dt)
         _dewpoint_gl = _temperature_gl - ((100.0 - _relative_humidity_gl)/5.0);
 
         set_environment();
-        update_air_pressure();
 
 #if REPORT_TO_CONSOLE
         report();
@@ -325,6 +329,44 @@ void FGClimate::update_air_pressure()
     double Tk = Tc + 273.15;
 
     _air_density = (Pd*Md + Pv*Mv)/(Tk*R0);
+}
+
+// https://sites.google.com/site/gitakrishnareach/home/global-wind-patterns
+void FGClimate::update_wind_direction()
+{
+    double latitude_deg = _positionLatitudeNode->getDoubleValue();
+    if (latitude_deg > 60.0)
+    {
+       double val = 1.0 - (latitude_deg - 60.0)/30.0;
+       _wind_direction = linear(val, 0.0, 90.0);
+    }
+    else if (latitude_deg > 30.0)
+    {
+       double val = (latitude_deg - 30.0)/30.0;
+       _wind_direction = linear(val, 180.0, 270.0);
+    }
+    else if (latitude_deg > 0)
+    {
+      double val = 1.0 - latitude_deg/30.0;
+       _wind_direction = linear(val, 0.0, 90.0);
+    }
+    else if (latitude_deg > -30.0)
+    {
+      double val = -latitude_deg/30.0;
+       _wind_direction = linear(val, 90.0, 180.0);
+    }
+    else if (latitude_deg > -60.0)
+    {
+       double val = 1.0 - (latitude_deg + 30.0)/30.0;
+       _wind_direction = linear(val, -90.0, 0.0);
+    }
+    else
+    {
+       double val = (latitude_deg + 60.0)/30.0;
+       _wind_direction = linear(val, 90.0, 180.0);
+    }
+
+    if (_wind_direction < 0.0) _wind_direction += 360.0;
 }
 
 
@@ -906,12 +948,13 @@ std::string FGClimate::get_metar()
     m << std::fixed << std::setprecision(0);
     m << "XXXX ";
 
-    m << fgGetInt("/sim/time/utc/month");
-    m << fgGetInt("/sim/time/utc/hour");
-    m << fgGetInt("/sim/time/utc/minute");
-    m << "Z AUTO";
+    m << setw(2) << std::setfill('0') << fgGetInt("/sim/time/utc/day");
+    m << setw(2) << std::setfill('0') << fgGetInt("/sim/time/utc/hour");
+    m << setw(2) << std::setfill('0') << fgGetInt("/sim/time/utc/minute");
+    m << "Z AUTO ";
 
-    m << " 000" << setw(2) << std::setfill('0') << _wind << "KMH ";
+    m << setw(3) << std::setfill('0') << _wind_direction;
+    m << setw(2) << std::setfill('0') << _wind << "KMH ";
 
     if (_temperature_gl < 0.0) {
         m << "M" << setw(2) << std::setfill('0') << fabs(_temperature_gl);
@@ -1176,7 +1219,9 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Sea level Air Pressure: " << _air_pressure_sl << " hPa"
               << std::endl;
-    std::cout << "  Wind: " << _wind << " km/h" << std::endl << std::endl;
+    std::cout << "  Wind: " << _wind << " km/h" << std::endl;
+    std::cout << "  Wind direction: " << _wind_direction << " degrees"
+              << std::endl;
     std::cout << "  Snow level: " << _snow_level << " m." << std::endl;
     std::cout << "  Snow thickness.(0.0 = thin .. 1.0 = thick): "
               << _snow_thickness << std::endl;
