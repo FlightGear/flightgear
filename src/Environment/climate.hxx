@@ -116,7 +116,7 @@ private:
     void update_day_factor();
     void update_season_factor();
     void update_air_pressure();
-    void update_wind_direction();
+    void update_wind();
 
     SGPropertyNode_ptr _rootNode;
     simgear::TiedPropertyList _tiedProperties;
