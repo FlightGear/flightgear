@@ -51,7 +51,6 @@ public:
     void unbind() override;
     void update(double dt) override;;
 
-    std::string get_metar();
     double get_snow_level_m() { return _snow_level; }
     double get_snow_thickness() { return _snow_thickness; }
     double get_ice_cover() { return _ice_cover; }
@@ -61,9 +60,8 @@ public:
 
     double get_relative_humidity_pct() { return _relative_humidity_gl; }
     double get_relative_humidity_sl_pct() { return _relative_humidity_sl; }
-    double get_air_pressure_hpa() { return _air_pressure_gl; }
-    double get_air_pressure_sl_hpa() { return _air_pressure_sl; }
-    double get_air_density_kg_m2() { return _air_density; }
+    double get_pressure_hpa() { return _pressure_gl; }
+    double get_pressure_sl_hpa() { return _pressure_sl; }
     double get_dewpoint_degc() { return _dewpoint_gl; }
     double get_dewpoint_sl_degc() { return _dewpoint_sl; }
     double get_temperature_degc() { return _temperature_gl; }
@@ -79,6 +77,8 @@ public:
 
     bool getEnvironmentUpdate() const { return _environment_adjust; }
     void setEnvironmentUpdate(bool value);
+
+    const char* get_metar() const;
 
     void test();
 private:
@@ -115,7 +115,7 @@ private:
     void update_daylight();
     void update_day_factor();
     void update_season_factor();
-    void update_air_pressure();
+    void update_pressure();
     void update_wind();
 
     SGPropertyNode_ptr _rootNode;
@@ -142,7 +142,7 @@ private:
     double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
-    double _alt_km = 0.0;
+    double _elevation_m = 0.0;
     double _daytime = 0.0;
     double _day_noon = 1.0;
     double _day_light = 1.0;
@@ -167,9 +167,10 @@ private:
     bool _weather_update = false;	// enable weather updates
     double _relative_humidity_sl = -99999.0;// 0.0 = dry, 1.0 is fully humid
     double _relative_humidity_gl = -99999.0;
-    double _air_pressure_gl = 0.0;	// ground level air pressure in hPa
-    double _air_pressure_sl = 0.0;	// sea level air pressure in hPa
-    double _air_density = 0.0;		// air density in kg/m2
+    double _pressure_gl = 0.0;		// ground level air pressure in hPa
+    double _pressure_sl = 0.0;		// sea level air pressure in hPa
+    double _wind_speed = 0.0;		// wind in meters per second
+    double _wind_direction = -99999.0;	// wind direction in degrees
     double _dewpoint_gl = -99999.0;
     double _dewpoint_sl = -99999.0;
     double _temperature_gl = -99999.0;	// ground level temperature in deg. C.
@@ -179,9 +180,9 @@ private:
     double _temperature_water = -99999.0; // mean temperature of water
     double _temperature_seawater = -99999.0; // mean temperature of sea water
     double _precipitation = -99999.0; // minimal avg. precipitation in mm/month
-    double _wind_speed = -99999.0;	// wind in meters per second
-    double _wind_direction = -99999.0;	// wind direction in degrees
     double _precipitation_annual = -99999.0; // global
+
+    char _metar[256] = "";
 };
 
 #endif // _FGCLIMATE_HXX

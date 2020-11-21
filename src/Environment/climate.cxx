@@ -20,6 +20,8 @@
 //
 // $Id$
 
+#include <cstring>
+
 #include <osgDB/ReadFile>
 
 #include <simgear/misc/sg_path.hxx>
@@ -31,6 +33,8 @@
 #include "Main/fg_props.hxx"
 #include "Time/light.hxx"
 
+#include "environment.hxx"
+#include "atmosphere.hxx"
 #include "climate.hxx"
 
 // Based on "World Map of the Köppen-Geiger climate classification"
@@ -91,10 +95,13 @@ void FGClimate::bind()
     // environment properties
     _tiedProperties.Tie( "environment-update", this, &FGClimate::getEnvironmentUpdate, &FGClimate::setEnvironmentUpdate);
 
+    // METAR
+    _tiedProperties.Tie("data", this, &FGClimate::get_metar);
+
     // weather properties
     _tiedProperties.Tie( "weather-update", &_weather_update);
-    _tiedProperties.Tie( "pressure-hpa", &_air_pressure_gl);
-    _tiedProperties.Tie( "pressure-sea-level-hpa", &_air_pressure_gl);
+    _tiedProperties.Tie( "pressure-hpa", &_pressure_gl);
+    _tiedProperties.Tie( "pressure-sea-level-hpa", &_pressure_gl);
     _tiedProperties.Tie( "relative-humidity", &_relative_humidity_gl);
     _tiedProperties.Tie( "relative-humidity-sea-level", &_relative_humidity_sl);
     _tiedProperties.Tie( "dewpoint-degc", &_dewpoint_gl);
@@ -133,7 +140,6 @@ void FGClimate::reinit()
     _temperature_water = -99999.0;
     _temperature_seawater = -99999.0;
     _precipitation = -99999.0;
-    _wind_speed = -99999.0;
     _wind_direction = -99999.0;
     _precipitation_annual = -99999.0;
 
@@ -218,32 +224,51 @@ void FGClimate::update(double dt)
         _rootNode->getNode("description")->setStringValue(_description[_code]);
         _rootNode->getNode("classification")->setStringValue(_classification[_code]);
 
-        // must be after the climate functions
-        update_air_pressure();
-
-        double alt_ft;
+        double elevation_ft;
+// unfortunatelly terrain sampling is highly unreliable when changing position
+#if 0
         if (_ground_elev_node->getBoolValue() &&
             fgGetBool("/environment/terrain/area[0]/output/valid"))
         {
-            alt_ft = fgGetDouble("/environment/terrain/area[0]/output/alt-median-ft");
+            elevation_ft = fgGetDouble("/environment/terrain/area[0]/output/alt-mean-ft");
         } else {
-            alt_ft = fgGetDouble("/position/ground-elev-ft");
+            elevation_ft = fgGetDouble("/position/ground-elev-ft");
         }
-        _alt_km = alt_ft*SG_FEET_TO_METER/1000.0;
+#endif
+        elevation_ft = fgGetDouble("/position/ground-elev-ft");
+        _elevation_m = elevation_ft*SG_FEET_TO_METER;
 
-        // Relative humidity decreases with an average of 4% per kilometer
-        _relative_humidity_sl = std::min(_relative_humidity_gl + 4.0*_alt_km, 100.0);
+        // must be after the climate functions and calculation of _elevation_m
+        update_pressure();
 
-        // The temperature decreases by about 9.8°C per kilometer
-        _temperature_sl = _temperature_gl + 9.8*_alt_km;
-        _temperature_mean_sl = _temperature_mean_gl + 9.8*_alt_km;
-        _temperature_seawater = _temperature_water + 9.8*_alt_km;
 
-        _set(_snow_level, 1000.0*_temperature_mean_sl/9.8);
+        // borowed from metarproperties.cxx and Environment.cxx
+        // calculate sea level temperature, dewpoint and pressure
+        FGEnvironment dummy; // instantiate a dummy so we can leech a method
+        dummy.set_live_update(false);
+        dummy.set_elevation_ft(elevation_ft);
+        dummy.set_dewpoint_degc(_dewpoint_gl);
+        dummy.set_pressure_inhg(_pressure_gl*atmodel::mbar/atmodel::inHg);
+
+        dummy.set_live_update(true);
+        dummy.set_temperature_degc(_temperature_gl);
+
+        _dewpoint_sl = dummy.get_dewpoint_sea_level_degc();
+        _relative_humidity_sl = dummy.get_relative_humidity();
+        _temperature_sl = dummy.get_temperature_sea_level_degc();
+        _pressure_sl = dummy.get_pressure_sea_level_inhg()*atmodel::inHg/atmodel::mbar;
+
+        dummy.set_temperature_degc(_temperature_mean_gl);
+        _temperature_mean_sl = dummy.get_temperature_sea_level_degc();
+
+        dummy.set_temperature_degc(_temperature_water);
+        _temperature_seawater = dummy.get_temperature_sea_level_degc();
 
         // Mark G. Lawrence:
         _dewpoint_sl = _temperature_sl - ((100.0 - _relative_humidity_sl)/5.0);
         _dewpoint_gl = _temperature_gl - ((100.0 - _relative_humidity_gl)/5.0);
+
+        _set(_snow_level, 1000.0*_temperature_mean_sl/9.8);
 
         set_environment();
 
@@ -297,23 +322,23 @@ void FGClimate::update_season_factor()
 }
 
 // https://en.wikipedia.org/wiki/Density_of_air#Humid_air
-void FGClimate::update_air_pressure()
+void FGClimate::update_pressure()
 {
     // saturation vapor pressure for water, Jianhua Huang:
-    double Tc = _temperature_gl;
+    double Tc = _temperature_gl ? _temperature_gl : 1e-9;
     double Psat = exp(34.494 - 4924.99/(Tc+237.1))/pow(Tc + 105.0, 1.57);
 
     // vapor pressure of water
     double Pv = 0.01*_relative_humidity_gl*Psat;
 
-    // pressure at altitude
+    // pressure at elevation_itude
     static const double R0 = 8.314462618; // Universal gas constant
     static const double P0 = 101325.0;    // Sea level standard atm. pressure
     static const double T0 = 288.15;      // Sea level standard temperature
     static const double L = 0.0065;       // Temperature lapse rate
     static const double M = 0.0289654;    // Molar mass of dry air
 
-    double h = _alt_km;
+    double h = _elevation_m/1000.0;
     double g = _gravityNode->getDoubleValue();
     double P = P0*pow(1.0 - L*h/T0, g*M/(L*R0));
 
@@ -321,15 +346,7 @@ void FGClimate::update_air_pressure()
     double Pd = P - Pv;
 
     // air pressure
-    _air_pressure_gl = 0.01*(Pd+Psat);	// hPa
-    _air_pressure_sl = 0.01*(P0-Pv+Psat);
-
-    // air density
-    static const double Md = 0.0289654;
-    static const double Mv = 0.018016;
-    double Tk = Tc + 273.15;
-
-    _air_density = (Pd*Md + Pv*Mv)/(Tk*R0);
+    _pressure_gl = 0.01*(Pd+Psat);	// hPa
 }
 
 // https://sites.google.com/site/gitakrishnareach/home/global-wind-patterns
@@ -951,7 +968,7 @@ void FGClimate::setEnvironmentUpdate(bool value)
     }
 }
 
-std::string FGClimate::get_metar()
+const char* FGClimate::get_metar() const
 {
     std::stringstream m;
 
@@ -980,11 +997,14 @@ std::string FGClimate::get_metar()
         m << setw(2) << std::setfill('0') << _dewpoint_gl;
     }
 
-    m << " Q" << _air_pressure_sl;
+    m << " Q" << _pressure_sl;
 
     m << " NOSIG";
 
-    return m.str();
+   char *rv = std::strncpy((char*)&_metar, m.str().c_str(), 255);
+   rv[255] = '\0';
+
+    return rv;
 }
 
 // ---------------------------------------------------------------------------
@@ -1225,9 +1245,9 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Relative humidity:     " << _relative_humidity_gl << " %"
               << std::endl;
-    std::cout << "  Ground Air Pressure:   " << _air_pressure_gl << " hPa"
+    std::cout << "  Ground Air Pressure:   " << _pressure_gl << " hPa"
               << std::endl;
-    std::cout << "  Sea level Air Pressure: " << _air_pressure_sl << " hPa"
+    std::cout << "  Sea level Air Pressure: " << _pressure_sl << " hPa"
               << std::endl;
     std::cout << "  Wind speed:     " << _wind_speed << " m/s = "
               << _wind_speed*SG_MPS_TO_KT << " kt" << std::endl;
