@@ -86,7 +86,7 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
         return;
 
 // don't report the exceptions raised by easyxml.cxx, if this per-thread
-// flag is set. This avoids a lot of errors when the launcher scans 
+// flag is set. This avoids frequent errors when the launcher scans
 // directories containing many aircraft of unknown origin/quality
 // if the user tries to fly with one, we'll still get an error then,
 // but that's a real failure point (from the user PoV)
@@ -98,12 +98,20 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
 
     string message = msg;
+
     if (!origin.empty()) {
-        message += " (from '" + origin + "')";
+        sentry_value_t ov = sentry_value_new_string(origin.c_str());
+        sentry_set_context("origin", ov);
+    } else {
+        sentry_remove_context("origin");
     }
 
     if (loc.isValid()) {
-        message += " at " + loc.asString();
+        const auto ls = loc.asString();
+        sentry_value_t locV = sentry_value_new_string(ls.c_str());
+        sentry_set_context("location", locV);
+    } else {
+        sentry_remove_context("location");
     }
 
     sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
@@ -232,7 +240,6 @@ void initSentry()
     sentry_options_add_attachment(options, logPath.c_str());
 #endif
     
-    sentry_value_t user = sentry_value_new_object();
 
     const auto uuidPath = fgHomePath() / "sentry_uuid.txt";
     bool generateUuid = true;
@@ -260,12 +267,13 @@ void initSentry()
         f << uuid << endl;
     }
 
+    sentry_init(options);
+    static_sentryEnabled = true;
+
+    sentry_value_t user = sentry_value_new_object();
     sentry_value_t userUuidV = sentry_value_new_string(uuid.c_str());
     sentry_value_set_by_key(user, "id", userUuidV);
     sentry_set_user(user);
-
-    sentry_init(options);
-    static_sentryEnabled = true;
 
     sglog().addCallback(new SentryLogCallback);
     setThrowCallback(sentryTraceSimgearThrow);
