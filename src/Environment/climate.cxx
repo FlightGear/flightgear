@@ -107,7 +107,7 @@ void FGClimate::bind()
     _tiedProperties.Tie( "precipitation-month-mm", &_precipitation);
     _tiedProperties.Tie( "precipitation-annual-mm", & _precipitation_annual);
     _tiedProperties.Tie( "snow-level-m", &_snow_level);
-    _tiedProperties.Tie( "wind-kmph", &_wind);
+    _tiedProperties.Tie( "wind-speed-mps", &_wind_speed);
     _tiedProperties.Tie( "wind-direction-deg", &_wind_direction);
 }
 
@@ -133,7 +133,7 @@ void FGClimate::reinit()
     _temperature_water = -99999.0;
     _temperature_seawater = -99999.0;
     _precipitation = -99999.0;
-    _wind = -99999.0;
+    _wind_speed = -99999.0;
     _wind_direction = -99999.0;
     _precipitation_annual = -99999.0;
 
@@ -341,41 +341,41 @@ void FGClimate::update_wind()
     {
        double val = 1.0 - (latitude_deg - 60.0)/30.0;
        _set(_wind_direction, linear(val, 0.0, 90.0));
-       if (_code == 0) _wind = linear(val, 18.0, 36.0);
+       if (_code == 0) _wind_speed = linear(val, 6.0, 10.0);
     }
     else if (latitude_deg > 30.0)
     {
        double val = (latitude_deg - 30.0)/30.0;
        _set(_wind_direction, linear(val, 180.0, 270.0));
-       if (_code == 0) _wind = linear(val, 14.0, 36.0);
-       else _wind = linear(1.0 - val, 10.0, 18.0);
+       if (_code == 0) _wind_speed = linear(val, 5.0, 10.0);
+       else _wind_speed = linear(1.0 - val, 3.0, 5.0);
     }
     else if (latitude_deg > 0)
     {
       double val = 1.0 - latitude_deg/30.0;
       _set(_wind_direction, linear(val, 0.0, 90.0));
-      if (_code == 0) _wind = triangular(val, 14.0, 22.5);
-      else _wind = triangular(fabs(val - 0.5), 10.0, 18.5);
+      if (_code == 0) _wind_speed = triangular(val, 5.0, 7.0);
+      else _wind_speed = triangular(fabs(val - 0.5), 3.0, 5.0);
     }
     else if (latitude_deg > -30.0)
     {
       double val = -latitude_deg/30.0;
       _set(_wind_direction, linear(val, 90.0, 180.0));
-      if (_code == 0) _wind = triangular(val, 14.0, 22.5);
-      else _wind = triangular(fabs(val - 0.5), 10.0, 18.5);
+      if (_code == 0) _wind_speed = triangular(val, 5.0, 7.0);
+      else _wind_speed = triangular(fabs(val - 0.5), 3.0, 5.0);
     }
     else if (latitude_deg > -60.0)
     {
        double val = 1.0 - (latitude_deg + 30.0)/30.0;
        _set(_wind_direction, linear(val, -90.0, 0.0));
-       if (_code == 0) _wind = linear(val, 14.0, 36.0);
-       else _wind = linear(1.0 - val, 10.0, 20.0);
+       if (_code == 0) _wind_speed = linear(val, 5.0, 10.0);
+       else _wind_speed = linear(1.0 - val, 3.0, 6.0);
     }
     else
     {
        double val = (latitude_deg + 60.0)/30.0;
        _wind_direction = linear(val, 90.0, 180.0);
-       if (_code == 0) _wind = linear(1.0 - val, 18.0, 36.0);
+       if (_code == 0) _wind_speed = linear(1.0 - val, 5.0, 10.0);
     }
 
     if (_wind_direction < 0.0) _wind_direction += 360.0;
@@ -433,10 +433,10 @@ void FGClimate::set_tropical()
     double hmax = sinusoidal(season(winter), 0.86, 1.0);
     double humidity = linear(daytime(day, -9.0*HOUR), hmin, hmax);
 
-    // wind based on latitude (0.0 - 15 degrees)
+    // wind speed based on latitude (0.0 - 15 degrees)
     double latitude_deg = _positionLatitudeNode->getDoubleValue();
     double fact_lat = std::max(abs(latitude_deg), 15.0)/15.0;
-    double wind = 11.0*fact_lat*fact_lat;
+    double wind_speed = 3.0*fact_lat*fact_lat;
 
     double temp_water = _temperature_water;
     double temp_night = _temperature_sl;
@@ -458,7 +458,7 @@ void FGClimate::set_tropical()
         temp_water = triangular(season(summer, MONTH), 22.0, 27.5);
         precipitation = linear(season(summer, MONTH), 45.0, 340.0);
         relative_humidity = triangular(humidity, 75.0, 85.0);
-        wind *= 2.0*_precipitation/340.0;
+        wind_speed *= 2.0*_precipitation/340.0;
         break;
     case 3: // As: equatorial, summer dry
         temp_night = long_high(season(summer, .15*MONTH), 15.0, 22.5);
@@ -466,7 +466,7 @@ void FGClimate::set_tropical()
         temp_water = triangular(season(summer, 2.0*MONTH), 21.5, 26.5);
         precipitation = sinusoidal(season(summer, 2.0*MONTH), 35.0, 150.0);
         relative_humidity = triangular(humidity, 60.0, 80.0);
-        wind *= 2.0*_precipitation/150.0;
+        wind_speed *= 2.0*_precipitation/150.0;
         break;
     case 4: // Aw: equatorial, winter dry
         temp_night = long_high(season(summer, 1.5*MONTH), 15.0, 22.5);
@@ -474,7 +474,7 @@ void FGClimate::set_tropical()
         temp_water = triangular(season(summer, 2.0*MONTH), 21.5, 28.5);
         precipitation = sinusoidal(season(summer, 2.0*MONTH), 10.0, 230.0);
         relative_humidity = triangular(humidity, 60.0, 80.0);
-        wind *= 2.0*_precipitation/230.0;
+        wind_speed *= 2.0*_precipitation/230.0;
         break;
     default:
         break;
@@ -490,7 +490,7 @@ void FGClimate::set_tropical()
     _set(_precipitation, precipitation);
 
     _has_autumn = false;
-    _wind = wind;
+    _wind_speed = wind_speed;
 }
 
 // https://en.wikipedia.org/wiki/Desert_climate
@@ -698,7 +698,7 @@ void FGClimate::set_continetal()
         temp_water = sinusoidal(season(summer, 2.0*MONTH), -10.0, 12.5);
         precipitation = linear(season(summer, 1.5*MONTH), 22.0, 68.0);
         relative_humidity = sinusoidal(humidity, 70.0, 88.0);
-        _wind = 11.0;
+        _wind_speed = 3.0;
         break;
     case 21: // Dfd: snow, fully humid, extremely continetal
         temp_night = sinusoidal(season(summer, MONTH), -45.0, 4.0);
@@ -804,7 +804,7 @@ void FGClimate::set_polar()
         temp_water = long_low(season(summer, 2.0*MONTH), -27.5, -3.5);
         precipitation = linear(season(summer, 2.5*MONTH), 50.0, 80.0);
         relative_humidity = long_low(humidity, 65.0, 75.0);
-        _wind = 20.0;
+        _wind_speed = 5.5;
         break;
     case 31: // ET: polar tundra
         temp_night = sinusoidal(season(summer, MONTH), -30.0, 0.0);
@@ -812,7 +812,7 @@ void FGClimate::set_polar()
         temp_water = sinusoidal(season(summer, 2.0*MONTH), -15.0, 5.0);
         precipitation = sinusoidal(season(summer, 2.0*MONTH), 15.0, 45.0);
         relative_humidity = sinusoidal(humidity, 60.0, 88.0);
-        _wind = 14.5;
+        _wind_speed = 4.0;
         break;
     default:
         break;
@@ -907,7 +907,7 @@ void FGClimate::set_environment()
         fgSetDouble("/environment/dewpoint-degc", _dewpoint_gl);
         fgSetDouble("/environment/temperature-sea-level-degc", _temperature_sl);
         fgSetDouble("/environment/temperature-degc", _temperature_gl);
-        fgSetDouble("/environment/wind-speed-kt", _wind*SG_KMH_TO_MPS*SG_MPS_TO_KT);
+        fgSetDouble("/environment/wind-speed-mps", _wind_speed);
     }
 
     if (_environment_adjust)
@@ -964,7 +964,7 @@ std::string FGClimate::get_metar()
     m << "Z AUTO ";
 
     m << setw(3) << std::setfill('0') << _wind_direction;
-    m << setw(2) << std::setfill('0') << _wind << "KMH ";
+    m << setw(2) << std::setfill('0') << _wind_speed << "MPS ";
 
     if (_temperature_gl < 0.0) {
         m << "M" << setw(2) << std::setfill('0') << fabs(_temperature_gl);
@@ -1229,10 +1229,11 @@ void FGClimate::report()
               << std::endl;
     std::cout << "  Sea level Air Pressure: " << _air_pressure_sl << " hPa"
               << std::endl;
-    std::cout << "  Wind: " << _wind << " km/h" << std::endl;
+    std::cout << "  Wind speed:     " << _wind_speed << " m/s = "
+              << _wind_speed*SG_MPS_TO_KT << " kt" << std::endl;
     std::cout << "  Wind direction: " << _wind_direction << " degrees"
               << std::endl;
-    std::cout << "  Snow level: " << _snow_level << " m." << std::endl;
+    std::cout << "  Snow level:     " << _snow_level << " m." << std::endl;
     std::cout << "  Snow thickness.(0.0 = thin .. 1.0 = thick): "
               << _snow_thickness << std::endl;
     std::cout << "  Ice cover......(0.0 = none .. 1.0 = thick): " << _ice_cover

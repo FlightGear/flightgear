@@ -73,7 +73,7 @@ public:
     double get_temperature_water_degc() { return _temperature_water; }
     double get_temperature_seawater_degc() { return _temperature_seawater; }
     double get_precipitation_month() { return _precipitation; }
-    double get_wind_kmh() { return _wind; }
+    double get_wind_mps() { return _wind_speed; }
     double get_wind_direction_deg() { return _wind_direction; }
     double get_precipitation_annual() { return _precipitation_annual; }
 
@@ -179,8 +179,8 @@ private:
     double _temperature_water = -99999.0; // mean temperature of water
     double _temperature_seawater = -99999.0; // mean temperature of sea water
     double _precipitation = -99999.0; // minimal avg. precipitation in mm/month
-    double _wind = -99999.0;		// wind in km/h
-    double _wind_direction = -99999.0;	// wind direction
+    double _wind_speed = -99999.0;	// wind in meters per second
+    double _wind_direction = -99999.0;	// wind direction in degrees
     double _precipitation_annual = -99999.0; // global
 };
 
