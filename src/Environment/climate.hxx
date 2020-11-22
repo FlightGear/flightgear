@@ -41,6 +41,25 @@ class FGLight;
 #define MAX_CLIMATE_CLASSES	32
 
 class FGClimate : public SGSubsystem {
+private:
+    struct _ground_tile {
+        SGGeod pos;
+
+        double elevation_m = 0.0;
+        double temperature = -99999.0;
+        double temperature_mean = -99999.0;
+        double temperature_water = -99999.0;
+        double relative_humidity = -99999.0;
+        double precipitation_annual = -99999.0;
+        double precipitation = -99999.0;
+        bool has_autumn = false;
+
+        double dewpoint = -99999.0;
+        double pressure = 0.0;
+
+    } _ground_tile;
+    using ClimateTile = struct _ground_tile;
+
 public:
     FGClimate();
     virtual ~FGClimate() = default;
@@ -58,22 +77,23 @@ public:
     double get_wetness() { return _wetness; }
     double get_lichen_cover() { return _lichen_cover; }
 
-    double get_relative_humidity_pct() { return _relative_humidity_gl; }
-    double get_relative_humidity_sl_pct() { return _relative_humidity_sl; }
-    double get_pressure_hpa() { return _pressure_gl; }
-    double get_pressure_sl_hpa() { return _pressure_sl; }
-    double get_dewpoint_degc() { return _dewpoint_gl; }
-    double get_dewpoint_sl_degc() { return _dewpoint_sl; }
-    double get_temperature_degc() { return _temperature_gl; }
-    double get_temperature_sl_degc() { return _temperature_sl; }
-    double get_temperature_mean_degc() { return _temperature_mean_gl; }
-    double get_temperature_mean_sl_degc() { return _temperature_mean_sl; }
-    double get_temperature_water_degc() { return _temperature_water; }
-    double get_temperature_seawater_degc() { return _temperature_seawater; }
-    double get_precipitation_month() { return _precipitation; }
+    double get_relative_humidity_pct() { return _gl.relative_humidity; }
+    double get_relative_humidity_sea_level_pct() { return _sl.relative_humidity; }
+    double get_pressure_hpa() { return _gl.pressure; }
+    double get_pressure_sea_leevel_hpa() { return _sl.pressure; }
+    double get_dewpoint_degc() { return _gl.dewpoint; }
+    double get_dewpoint_sl_degc() { return _sl.dewpoint; }
+    double get_temperature_degc() { return _gl.temperature; }
+    double get_temperature_sea_leevel_degc() { return _sl.temperature; }
+    double get_temperature_mean_degc() { return _gl.temperature_mean; }
+    double get_temperature_mean_sea_level_degc() { return _sl.temperature_mean; }
+    double get_temperature_water_degc() { return _gl.temperature_water; }
+    double get_temperature_seawater_degc() { return _sl.temperature_water; }
+    double get_precipitation_month() { return _gl.precipitation; }
+    double get_precipitation_annual() { return _gl.precipitation_annual; }
+
     double get_wind_mps() { return _wind_speed; }
     double get_wind_direction_deg() { return _wind_direction; }
-    double get_precipitation_annual() { return _precipitation_annual; }
 
     bool getEnvironmentUpdate() const { return _environment_adjust; }
     void setEnvironmentUpdate(bool value);
@@ -126,7 +146,6 @@ private:
     SGPropertyNode_ptr _metarSnowLevelNode;
     SGPropertyNode_ptr _positionLatitudeNode;
     SGPropertyNode_ptr _positionLongitudeNode;
-    SGPropertyNode_ptr _ground_elev_node;
 
     osg::ref_ptr<osg::Image> image;
     double _image_width = 0;
@@ -142,7 +161,6 @@ private:
     double _adj_latitude_deg = 0.0;	// viewer lat adjusted for sun lat
     double _adj_longitude_deg = 0.0;	// viewer lat adjusted for sun lon
 
-    double _elevation_m = 0.0;
     double _daytime = 0.0;
     double _day_noon = 1.0;
     double _day_light = 1.0;
@@ -150,9 +168,9 @@ private:
     double _season_transistional = 0.0;
     double _seasons_year = 0.0;
     double _is_autumn = -99999.0;
-    bool _has_autumn = false;
 
-    int _code = 0;			// Köppen-Geiger classicfication
+    // Köppen-Geiger classicfications
+    ClimateTile _tiles[3][3];
 
     // environment
     bool _environment_adjust = false;	// enable automatic adjestments
@@ -164,23 +182,13 @@ private:
     double _lichen_cover = -99999.0;	// 0.0 = none, 1.0 = mossy
 
     // weather
+    int _code = 0;			// Köppen-Geiger classicfication
+    ClimateTile _gl;			// ground level parameters
+
+    ClimateTile _sl;			// sea level parameters
     bool _weather_update = false;	// enable weather updates
-    double _relative_humidity_sl = -99999.0;// 0.0 = dry, 1.0 is fully humid
-    double _relative_humidity_gl = -99999.0;
-    double _pressure_gl = 0.0;		// ground level air pressure in hPa
-    double _pressure_sl = 0.0;		// sea level air pressure in hPa
     double _wind_speed = 0.0;		// wind in meters per second
     double _wind_direction = -99999.0;	// wind direction in degrees
-    double _dewpoint_gl = -99999.0;
-    double _dewpoint_sl = -99999.0;
-    double _temperature_gl = -99999.0;	// ground level temperature in deg. C.
-    double _temperature_sl = -99999.0;	// seal level temperature in deg. C.
-    double _temperature_mean_gl = -99999.0; // mean temperature in deg. C.
-    double _temperature_mean_sl = -99999.0; // mean temperature at sea level
-    double _temperature_water = -99999.0; // mean temperature of water
-    double _temperature_seawater = -99999.0; // mean temperature of sea water
-    double _precipitation = -99999.0; // minimal avg. precipitation in mm/month
-    double _precipitation_annual = -99999.0; // global
 
     char _metar[256] = "";
 };
