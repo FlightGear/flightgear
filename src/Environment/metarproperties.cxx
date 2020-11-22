@@ -211,16 +211,22 @@ const char* MetarProperties::get_metar() const
 void MetarProperties::set_metar( const char * metarString )
 {
     SGSharedPtr<FGMetar> m;
-    if ((metarString == NULL) || (strlen(metarString) == 0)) {
+    if (!metarString) {
         setMetar(m);
         return;
     }
     
+    std::string trimmedMetar = simgear::strutils::strip(std::string{metarString});
+    if (trimmedMetar.empty()) {
+        setMetar(m);
+        return;
+    }
+
     try {
-        m = new FGMetar( metarString );
+        m = new FGMetar(trimmedMetar);
     }
     catch( sg_io_exception& ) {
-        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << metarString );
+        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar:'" << trimmedMetar << "'");
         _metarValidNode->setBoolValue(false);
         return;
     }
