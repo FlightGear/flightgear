@@ -204,12 +204,13 @@ void SplashScreen::createNodes()
               nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
     }
 
-    if (fgGetBool("/sim/rendering/composite-viewer-enabled")) {
-        addText(geode, osg::Vec2(0.5f, 0.65f), 0.03,
-                "CompositeViewer",
-                osgText::Text::CENTER_CENTER,
-                nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
-    }
+    addText(geode, osg::Vec2(0.5f, 0.65f), 0.03,
+            fgGetBool("/sim/rendering/composite-viewer-enabled")
+                ? "CompositeViewer enabled"
+                : "CompositeViewer disabled\n(enable with --composite-viewer=1)"
+                ,
+            osgText::Text::CENTER_CENTER,
+            nullptr, -1.0, osg::Vec4(1.0, 0.0, 0.0, 1.0));
 
     ///////////
 
