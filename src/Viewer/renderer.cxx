@@ -1023,7 +1023,12 @@ osgViewer::ViewerBase* FGRenderer::getViewerBase()
 
 osgViewer::View* FGRenderer::getView()
 {
-    assert(composite_viewer_enabled != -1);
+    /* Would like to assert that FGRenderer::init() has always been called
+    before we are called, with:
+        assert(composite_viewer_enabled != -1);
+    But this fails if user specifies -h, when we are called by
+    FGGlobals::~FGGlobals().
+    */
     if (composite_viewer) {
         assert(composite_viewer->getNumViews());
         return composite_viewer->getView(0);
