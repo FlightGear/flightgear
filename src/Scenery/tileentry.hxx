@@ -29,6 +29,9 @@
 # error This library requires C++
 #endif
 
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+
 #include <simgear/compiler.h>
 
 #include <vector>
@@ -36,6 +39,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/util/OrthophotoManager.hxx>
 
 #include <osg/ref_ptr>
 #include <osgDB/ReaderWriter>
@@ -59,6 +63,8 @@ private:
     // Reference to DatabaseRequest object set and used by the
     // osgDB::DatabasePager.
     osg::ref_ptr<osg::Referenced> _databaseRequest;
+    // Overlay image/orthophoto for this tile
+    simgear::OrthophotoRef _orthophoto;
 
     /**
      * This value is used by the tile scheduler/loader to load tiles
@@ -71,6 +77,9 @@ private:
     bool _current_view;
     /** Time when tile expires. */
     double _time_expired;
+
+    void _create_orthophoto();
+    void _free_orthophoto();
 
 public:
 

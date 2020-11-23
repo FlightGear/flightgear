@@ -219,7 +219,7 @@ QString AddOnsController::addSceneryPath() const
     SGPath p(path.toStdString());
     bool isValid = false;
 
-    for (const auto& dir: {"Objects", "Terrain", "Buildings", "Roads", "Pylons", "NavData", "Airports"}) {
+    for (const auto& dir: {"Objects", "Terrain", "Buildings", "Roads", "Pylons", "NavData", "Airports", "Orthophotos"}) {
         if ((p / dir).exists()) {
             isValid = true;
             break;
@@ -232,7 +232,7 @@ QString AddOnsController::addSceneryPath() const
         mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         mb.setDefaultButton(QMessageBox::No);
         mb.setInformativeText(tr("Added scenery should contain at least one of the following "
-                                 "folders: Objects, Terrain, Buildings, Roads, Pylons, NavData, Airports."));
+                                 "folders: Objects, Terrain, Buildings, Roads, Pylons, NavData, Airports, Orthophotos."));
         mb.exec();
 
         if (mb.result() == QMessageBox::No) {
