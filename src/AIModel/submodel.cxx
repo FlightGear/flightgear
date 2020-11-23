@@ -391,6 +391,13 @@ void FGSubmodelMgr::transform(submodel *sm)
     IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
     IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
 
+    // For submodels affected by wind, convert ground speed to airspeed by subtracting wind.
+    // Since the wind frame is inverted (wind_*from*_{east,north}), the wind values are added.
+    if (sm->wind) {
+        IC.speed_east_fps += IC.wind_from_east;
+        IC.speed_north_fps += IC.wind_from_north;
+    }
+
     userpos.setLatitudeDeg(IC.lat);
     userpos.setLongitudeDeg(IC.lon);
     userpos.setElevationFt(IC.alt);
