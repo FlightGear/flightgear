@@ -44,10 +44,19 @@ const int MAX_MP_PROTOCOL_VERSION = 2;
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#include "mpirc.hxx"
+#include "cpdlc.hxx"
+
+const std::string MPIRC_SERVER_HOST_DEFAULT {"mpirc.flightgear.org"};
+const std::string MPIRC_SERVER_HOST_PROPERTY {"/network/mpirc/server-host"};
+const std::string MPIRC_SERVER_PORT_PROPERTY {"/network/mpirc/server-port"};
+const std::string MPIRC_NICK_PREFIX {"MP_IRC_"};
+
 struct FGExternalMotionData;
 class MPPropertyListener;
 struct T_MsgHdr;
 class FGAIMultiplayer;
+
 
 class FGMultiplayMgr : public SGSubsystem
 {
@@ -69,7 +78,7 @@ public:
     void SendTextMessage(const std::string &sMsgText);
     // receiver
 
-  FGAIMultiplayer* getMultiplayer(const std::string& callsign);
+    FGAIMultiplayer* getMultiplayer(const std::string& callsign);
 
     std::shared_ptr<vector<char>> popMessageHistory();
     void pushMessageHistory(std::shared_ptr<vector<char>> message);
@@ -77,8 +86,11 @@ public:
     // Remove motion information for all multiplayer aircraft, e.g. when
     // scrubbing during replay.
     void ClearMotion();
+    CPDLCManager *getCPDLC() { return _cpdlc.get(); };
 
 private:
+    std::unique_ptr<IRCConnection> _mpirc;
+    std::unique_ptr<CPDLCManager> _cpdlc;
     friend class MPPropertyListener;
 
     void setPropertiesChanged()
@@ -132,7 +144,7 @@ private:
     SGPropertyNode *pMultiPlayRange;
     SGPropertyNode *pMultiPlayTransmitPropertyBase;
     SGPropertyNode *pReplayState;
-
+   
     typedef std::map<unsigned int, const struct IdPropertyList*> PropertyDefinitionMap;
     PropertyDefinitionMap mPropertyDefinition;
 

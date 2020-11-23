@@ -33,16 +33,17 @@
 #include <algorithm>
 #include <cstring>
 #include <errno.h>
+#include <memory>
 
-#include <simgear/misc/stdint.hxx>
-#include <simgear/misc/sg_dir.hxx>
-#include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/stdint.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/event_mgr.hxx>
-#include <simgear/misc/strutils.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIMultiplayer.hxx>
@@ -58,6 +59,7 @@
 #include <WS2tcpip.h>
 #endif
 using namespace std;
+
 
 #define MAX_PACKET_SIZE 1200
 #define MAX_TEXT_SIZE 768 // Increased for 2017.3 to allow for long Emesary messages.
@@ -945,6 +947,86 @@ do_multiplayer_refreshserverlist (const SGPropertyNode * arg, SGPropertyNode * r
 
 //////////////////////////////////////////////////////////////////////
 //
+//  CPDLC commands: cpdlc-connect, cpdlc-send-msg, cpdlc-disconnect
+//
+//////////////////////////////////////////////////////////////////////
+
+static bool do_cpdlc_connect(const SGPropertyNode* arg, SGPropertyNode* root)
+{
+    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    if (!self) {
+        SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+        return false;
+    }
+
+    // check for atc argument
+    std::string authority = arg->getStringValue("atc");
+    // otherwise see if we got a property name to read out
+    if (!authority.size()) {
+        std::string name = arg->getStringValue("property");
+        if (name.size()) {
+            SGPropertyNode* pNode = globals->get_props()->getNode(name);
+            if (!pNode) { return false; }
+            authority = pNode->getStringValue();
+        }
+    }
+
+    if (self->getCPDLC()) {
+        return self->getCPDLC()->connect(authority);
+    }
+    return false;
+}
+
+static bool do_cpdlc_send_msg(const SGPropertyNode* arg, SGPropertyNode* root)
+{
+    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    if (!self) {
+        SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+        return false;
+    }
+
+    // check for message argument
+    std::string message = arg->getStringValue("message");
+    // otherwise see if we got a property name to read out
+    if (!message.size()) {
+        std::string name = arg->getStringValue("property");
+        if (name.size()) {
+            SGPropertyNode* pNode = globals->get_props()->getNode(name);
+            if (!pNode) { return false; }
+            message = pNode->getStringValue();
+        }
+    }
+    if (self->getCPDLC()) {
+        return self->getCPDLC()->send(message);
+    }
+    return false;
+}
+
+static bool do_cpdlc_next_msg(const SGPropertyNode* arg, SGPropertyNode* root)
+{
+    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    if (!self) {
+        SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+        return false;
+    }
+    if (self->getCPDLC()) self->getCPDLC()->getMessage();
+    return true;
+}
+
+static bool do_cpdlc_disconnect(const SGPropertyNode* arg, SGPropertyNode* root)
+{
+    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    if (!self) {
+        SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
+        return false;
+    }
+    if (self->getCPDLC()) self->getCPDLC()->disconnect();
+    return true;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+//
 //  MultiplayMgr constructor
 //
 //////////////////////////////////////////////////////////////////////
@@ -956,6 +1038,13 @@ FGMultiplayMgr::FGMultiplayMgr()
   globals->get_commands()->addCommand("multiplayer-connect", do_multiplayer_connect);
   globals->get_commands()->addCommand("multiplayer-disconnect", do_multiplayer_disconnect);
   globals->get_commands()->addCommand("multiplayer-refreshserverlist", do_multiplayer_refreshserverlist);
+
+  globals->get_commands()->addCommand("cpdlc-connect", do_cpdlc_connect);
+  globals->get_commands()->addCommand("cpdlc-send", do_cpdlc_send_msg);
+  globals->get_commands()->addCommand("cpdlc-next-message", do_cpdlc_next_msg);
+  globals->get_commands()->addCommand("cpdlc-disconnect", do_cpdlc_disconnect);
+
+
   pXmitLen = fgGetNode("/sim/multiplay/last-xmit-packet-len", true);
   pProtocolVersion = fgGetNode("/sim/multiplay/protocol-version", true);
   pMultiPlayDebugLevel = fgGetNode("/sim/multiplay/debug-level", true);
@@ -963,6 +1052,8 @@ FGMultiplayMgr::FGMultiplayMgr()
   pMultiPlayRange = fgGetNode("/sim/multiplay/visibility-range-nm", true);
   pMultiPlayRange->setIntValue(100);
   pReplayState = fgGetNode("/sim/replay/replay-state", true);
+
+
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -976,6 +1067,11 @@ FGMultiplayMgr::~FGMultiplayMgr()
    globals->get_commands()->removeCommand("multiplayer-connect");
    globals->get_commands()->removeCommand("multiplayer-disconnect");
    globals->get_commands()->removeCommand("multiplayer-refreshserverlist");
+
+   globals->get_commands()->removeCommand("cpdlc-connect");
+   globals->get_commands()->removeCommand("cpdlc-send");
+   globals->get_commands()->removeCommand("cpdlc-next-message");
+   globals->get_commands()->removeCommand("cpdlc-disconnect");
 } // FGMultiplayMgr::~FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -1080,6 +1176,16 @@ FGMultiplayMgr::init (void)
       // multiplayer depends on AI module
       fgSetBool("/sim/ai/enabled", true);
   }
+
+  // MP IRC CONNECTION SETUP
+  std::string host = fgHasNode(MPIRC_SERVER_HOST_PROPERTY) ? fgGetString(MPIRC_SERVER_HOST_PROPERTY) : MPIRC_SERVER_HOST_DEFAULT;
+  std::string port = fgHasNode(MPIRC_SERVER_PORT_PROPERTY) ? fgGetString(MPIRC_SERVER_PORT_PROPERTY) : IRC_DEFAULT_PORT;
+  SG_LOG(SG_NETWORK, SG_DEBUG, "Creating socket to MP IRC service " + host + " on port " + port);
+
+  _mpirc = std::make_unique<IRCConnection>(MPIRC_NICK_PREFIX + mCallsign, host, port);
+  _mpirc->setupProperties("/network/mpirc/");
+
+  _cpdlc = std::make_unique<CPDLCManager>(_mpirc.get());
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 
@@ -1113,7 +1219,13 @@ FGMultiplayMgr::shutdown (void)
   }
 
   mInitialised = false;
-} // FGMultiplayMgr::Close(void)
+
+  if (_cpdlc) _cpdlc->disconnect();
+  if (_mpirc) _mpirc->quit();
+
+  _cpdlc.reset();
+  _mpirc.reset();
+} // FGMultiplayMgr::shutdown(void)
 //////////////////////////////////////////////////////////////////////
 
 void
@@ -1827,7 +1939,7 @@ int FGMultiplayMgr::GetMsg(MsgBuf& msgBuf, simgear::IPAddress& SenderAddress)
 
 //////////////////////////////////////////////////////////////////////
 //
-//  Name: ProcessData
+//  Name: update
 //  Description: Processes data waiting at the receive socket. The
 //  processing ends when there is no more data at the socket.
 //
@@ -1926,7 +2038,14 @@ FGMultiplayMgr::update(double dt)
     } else
       ++it;
   }
-} // FGMultiplayMgr::ProcessData(void)
+
+  if (_mpirc) {
+      _mpirc->update();
+  }
+  if (_cpdlc) {
+      _cpdlc->update();
+  }
+} // FGMultiplayMgr::update(void)
 //////////////////////////////////////////////////////////////////////
 
 void FGMultiplayMgr::ClearMotion()
