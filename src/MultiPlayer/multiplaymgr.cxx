@@ -67,8 +67,9 @@ using namespace std;
 #define MAX_PACKET_SIZE 1200
 #define MAX_TEXT_SIZE 768 // Increased for 2017.3 to allow for long Emesary messages.
 /*
- * With the MP2017(V2) protocol it should be possible to transmit using a different type/encoding than the property has,
- * so it should be possible to transmit a bool as
+ * With the MP2017(V2) protocol it is possible to transmit using a different type/encoding than the property has,
+ * for example a 32 bit int can be transmitted as a 16bit short int or a float transmitted in 16bits with appropriate precision.
+ * The TransmissionType defines how a property should be transmitted.
  */
 enum TransmissionType {
     TT_ASIS = 0, // transmit as defined in the property. This is the default
