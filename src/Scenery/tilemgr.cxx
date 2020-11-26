@@ -205,10 +205,12 @@ void FGTileMgr::reinit()
     double detailed = fgGetDouble("/sim/rendering/static-lod/detailed", SG_OBJECT_RANGE_DETAILED);
     double rough    = fgGetDouble("/sim/rendering/static-lod/rough-delta", SG_OBJECT_RANGE_ROUGH) + detailed;
     double bare     = fgGetDouble("/sim/rendering/static-lod/bare", SG_OBJECT_RANGE_BARE) + rough;
+    double tile_min_expiry = fgGetDouble("/sim/rendering/plod-minimum-expiry-time-secs", SG_TILE_MIN_EXPIRY);
 
     _options->setPluginStringData("SimGear::LOD_RANGE_BARE", std::to_string(bare));
     _options->setPluginStringData("SimGear::LOD_RANGE_ROUGH", std::to_string(rough));
     _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", std::to_string(detailed));
+    _options->setPluginStringData("SimGear::PAGED_LOD_EXPIRY", std::to_string(tile_min_expiry));
 
     string_list scenerySuffixes;
     for (auto node : fgGetNode("/sim/rendering/", true)->getChildren("scenery-path-suffix")) {
