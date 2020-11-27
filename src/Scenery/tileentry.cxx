@@ -84,7 +84,7 @@ void TileEntry::_create_orthophoto() {
 }
 
 void TileEntry::_free_orthophoto() {
-    if (_orthophoto) {
+    if (_orthophoto && tile_bucket.isValid()) {
         simgear::OrthophotoManager::instance()->unregisterOrthophoto(tile_bucket.gen_index());
     }
 }
