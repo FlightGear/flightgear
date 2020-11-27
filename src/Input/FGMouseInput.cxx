@@ -551,11 +551,6 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     return;
   }
 
-  if (isRightDragLookActive() && (updown == MOUSE_BUTTON_DOWN)) {
-      // when spring-loaded mode is active, don't do scene selection for picks
-      // https://sourceforge.net/p/flightgear/codetickets/2108/
-      return;
-  }
 
   // Pass on to PUI and the panel if
   // requested, and return if one of
@@ -564,7 +559,14 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   osg::Vec2d windowPos;
   flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
 
-  SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
+  SGSceneryPicks pickList;
+
+  if (isRightDragLookActive() && (updown == MOUSE_BUTTON_DOWN)) {
+      // when spring-loaded mode is active, don't do scene selection for picks
+      // https://sourceforge.net/p/flightgear/codetickets/2108/
+  } else {
+      pickList = globals->get_renderer()->pick(windowPos);
+  }
 
   if( updown == MOUSE_BUTTON_UP )
   {
