@@ -969,9 +969,9 @@ struct SviewViewEyeTarget : SviewView
                 doesn't work if aircraft has non-zero roll. We need to use
                 SGQuatd - see View::recalcLookFrom(). */
                 m_eye.add_step(new SviewStepRotate(
-                        -view_config->getDoubleValue("heading-offset-deg"),
+                        view_config->getDoubleValue("heading-offset-deg"),
                         -view_config->getDoubleValue("pitch-offset-deg"),
-                        -view_config->getDoubleValue("roll-offset-deg")
+                        view_config->getDoubleValue("roll-offset-deg")
                         ));
                 SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
                 
