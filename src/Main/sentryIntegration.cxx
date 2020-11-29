@@ -64,8 +64,8 @@ auto OSG_messageWhitelist = {
 auto XML_messageWhitelist = {
      "Cannot open file",
      "not well-formed (invalid token)",
-     "mismatched tag (from 'SimGear XML Parser')",
-     "syntax error (from 'SimGear XML Parser')",
+     "mismatched tag",
+     "syntax error",
      "Root element name is"
 };
 
@@ -106,14 +106,17 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
 
     string message = msg;
+    sentry_value_t info = sentry_value_new_object();
     if (!origin.empty()) {
-        message += " (from '" + origin + "')";
+        sentry_value_set_by_key(info, "origin", sentry_value_new_string(origin.c_str()));
     }
 
     if (loc.isValid()) {
-        message += " at " + loc.asString();
+        const auto ls = loc.asString();
+        sentry_value_set_by_key(info, "location", sentry_value_new_string(ls.c_str()));
     }
 
+    sentry_set_context("what", info);
     sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
