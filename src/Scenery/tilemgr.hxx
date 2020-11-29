@@ -27,7 +27,6 @@
 #include <simgear/compiler.h>
 
 #include <simgear/bucket/newbucket.hxx>
-#include <simgear/scene/util/OrthophotoManager.hxx>
 #include "SceneryPager.hxx"
 #include "tilecache.hxx"
 
