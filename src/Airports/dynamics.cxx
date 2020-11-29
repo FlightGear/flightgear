@@ -26,6 +26,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/SGWeakPtr.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -811,7 +812,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         }
     }
 
-    return true;
+    return !runway.empty();
 }
 
 string FGAirportDynamics::chooseRwyByHeading(stringVec rwys,
@@ -853,10 +854,18 @@ void FGAirportDynamics::getActiveRunway(const string & trafficType,
 
 string FGAirportDynamics::chooseRunwayFallback()
 {
+    if (_ap->numRunways() == 0) {
+        SG_LOG(SG_AI, SG_WARN, "FGAirportDynamics: asked for runway at probable heliport, check for a bogus schedule referencing:" << _ap->ident());
+
+        // by throwing, we should cause the AIManager to shut down this flight, which
+        // is what need; the calling code assumes AITraffic has a valid runway, and
+        // we just don't
+        throw sg_exception("No runways available at airport", _ap->ident());
+    }
+
     FGRunway *rwy = _ap->getActiveRunwayForUsage();
     if (!rwy) {
-        SG_LOG(SG_AI, SG_WARN, "FGAirportDynamics::chooseRunwayFallback failed at " << _ap->ident());
-
+        SG_LOG(SG_AI, SG_WARN, "FGAirportDynamics::chooseRunwayFallback failed at " << _ap->ident()); 
         // let's use runway 0
         return _ap->getRunwayByIndex(0)->ident();
     }
