@@ -79,7 +79,6 @@ private:
     double _time_expired;
 
     void _create_orthophoto();
-    void _free_orthophoto();
 
 public:
 

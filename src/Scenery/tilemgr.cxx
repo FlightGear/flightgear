@@ -180,8 +180,6 @@ void FGTileMgr::reinit()
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
     auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
 
-    simgear::OrthophotoManager::instance()->unregisterAll();
-
     // drops the previous options reference
     _options = new simgear::SGReaderWriterOptions;
     _listener.reset(new TileManagerListener(this));

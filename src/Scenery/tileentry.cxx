@@ -83,12 +83,6 @@ void TileEntry::_create_orthophoto() {
     }
 }
 
-void TileEntry::_free_orthophoto() {
-    if (_orthophoto && tile_bucket.isValid()) {
-        simgear::OrthophotoManager::instance()->unregisterOrthophoto(tile_bucket.gen_index());
-    }
-}
-
 // Destructor
 TileEntry::~TileEntry ()
 {
@@ -135,7 +129,5 @@ TileEntry::removeFromSceneGraph()
             parent->removeChild( _node.get() );
         }
     }
-
-    _free_orthophoto();
 }
 
