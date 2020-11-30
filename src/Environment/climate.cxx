@@ -890,6 +890,7 @@ void FGClimate::set_environment()
     _rootNode->setDoubleValue("seasons-year-pct", _seasons_year*100.0);
     _rootNode->setDoubleValue("season-autumn-pct", ((_gl.has_autumn && _is_autumn > 0.05) ? _season_transistional : 0.0));
 
+#if 0
     if (_weather_update)
     {
         fgSetDouble("/environment/relative-humidity", _gl.relative_humidity);
@@ -899,6 +900,7 @@ void FGClimate::set_environment()
         fgSetDouble("/environment/temperature-degc", _gl.temperature);
         fgSetDouble("/environment/wind-speed-mps", _wind_speed);
     }
+#endif
 
     if (_environment_adjust)
     {
