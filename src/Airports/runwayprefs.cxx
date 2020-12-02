@@ -21,10 +21,9 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -197,7 +196,6 @@ void RunwayGroup::setActive(const FGAirport * airport,
                             double maxTail,
                             double maxCross, stringVec * currentlyActive)
 {
-
     FGRunway *rwy;
     int activeRwys = rwyList.size();    // get the number of runways active
     int nrOfPreferences;
@@ -210,121 +208,145 @@ void RunwayGroup::setActive(const FGAirport * airport,
     //stringVec names;
     int bestMatch = 0, bestChoice = 0;
 
-    if (activeRwys > 0) {
-        // Now downward iterate across all the possible preferences
-        // starting by the least preferred choice working toward the most preferred choice
+    if (activeRwys == 0) {
+        active = -1;
+        nrActive = 0;
+        return;
+    }
 
-        nrOfPreferences = rwyList[0].getRwyList()->size();
-        bool validSelection = true;
-        bool foundValidSelection = false;
-        for (int i = nrOfPreferences - 1; i >= 0; i--) {
-            int match = 0;
+    // Now downward iterate across all the possible preferences
+    // starting by the least preferred choice working toward the most preferred choice
 
-
-            // Test each runway listed in the preference to see if it's possible to use
-            // If one runway of the selection isn't allowed, we need to exclude this
-            // preference, however, we don't want to stop right there, because we also
-            // don't want to randomly swap runway preferences, unless there is a need to.
-            //
-            validSelection = true;
-
-            for (int j = 0; j < activeRwys; j++) {
-                std::string ident(rwyList[j].getRwyList(i));
-                if (!airport->hasRunwayWithIdent(ident)) {
-                    SG_LOG(SG_GENERAL, SG_WARN,
-                           "no such runway:" << ident << " at " <<
-                           airport->ident());
-                    continue;
-                }
-
-                rwy = airport->getRunwayByIdent(ident);
-
-                //cerr << "Succes" << endl;
-                hdgDiff = fabs(windHeading - rwy->headingDeg());
-                name    = rwy->name();
+    nrOfPreferences = rwyList[0].getPreferredRunways().size();
+    bool validSelection = true;
+    bool foundValidSelection = false;
+    for (int i = nrOfPreferences - 1; i >= 0; i--) {
+        int match = 0;
 
 
-                if (hdgDiff > 180)
-                    hdgDiff = 360 - hdgDiff;
-                //cerr << "Heading diff: " << hdgDiff << endl;
-                hdgDiff *= ((2 * M_PI) / 360.0);        // convert to radians
-                crossWind = windSpeed * sin(hdgDiff);
-                tailWind = -windSpeed * cos(hdgDiff);
-                //cerr << "Runway : " << rwy->name() << ": " << rwy->headingDeg() << endl;
-                //cerr << ". Tailwind : " << tailWind;
-                //cerr << ". Crosswnd : " << crossWind;
-                if ((tailWind > maxTail) || (crossWind > maxCross)) {
-                    //cerr << ". [Invalid] " << endl;
-                    validSelection = false;
-                } else {
-                    //cerr << ". [Valid] ";
-                }
-                //cerr << endl;
-                for (stringVecIterator it = currentlyActive->begin();
-                     it != currentlyActive->end(); it++) {
-                    //cerr << "Checking : \"" << (*it) << "\". vs \"" << name << "\"" << endl;
-                    if ((*it) == name) {
-                        match++;
-                    }
-                }
-            }                   // of active runways iteration
+        // Test each runway listed in the preference to see if it's possible to use
+        // If one runway of the selection isn't allowed, we need to exclude this
+        // preference, however, we don't want to stop right there, because we also
+        // don't want to randomly swap runway preferences, unless there is a need to.
+        //
+        validSelection = true;
 
-            if (validSelection) {
-                //cerr << "Valid selection  : " << i << endl;;
-                foundValidSelection = true;
-                if (match >= bestMatch) {
-                    bestMatch = match;
-                    bestChoice = i;
+        for (int j = 0; j < activeRwys; j++) {
+            const auto& currentRunwayPrefs = rwyList.at(j).getPreferredRunways();
+
+            // if this rwyList has shorter preferences vec than the first one,
+            // don't crash accesing an invalid index.
+            // see https://sourceforge.net/p/flightgear/codetickets/2439/
+            if (currentRunwayPrefs.size() <= i) {
+                validSelection = false;
+                continue;
+            }
+
+            const auto& ident(currentRunwayPrefs.at(i));
+            if (!airport->hasRunwayWithIdent(ident)) {
+                SG_LOG(SG_GENERAL, SG_WARN,
+                       "no such runway:" << ident << " at " << airport->ident());
+                validSelection = false;
+                continue;
+            }
+
+            rwy = airport->getRunwayByIdent(ident);
+
+            //cerr << "Succes" << endl;
+            hdgDiff = fabs(windHeading - rwy->headingDeg());
+            name = rwy->name();
+
+
+            if (hdgDiff > 180)
+                hdgDiff = 360 - hdgDiff;
+            //cerr << "Heading diff: " << hdgDiff << endl;
+            hdgDiff *= ((2 * M_PI) / 360.0); // convert to radians
+            crossWind = windSpeed * sin(hdgDiff);
+            tailWind = -windSpeed * cos(hdgDiff);
+            //cerr << "Runway : " << rwy->name() << ": " << rwy->headingDeg() << endl;
+            //cerr << ". Tailwind : " << tailWind;
+            //cerr << ". Crosswnd : " << crossWind;
+            if ((tailWind > maxTail) || (crossWind > maxCross)) {
+                //cerr << ". [Invalid] " << endl;
+                validSelection = false;
+            } else {
+                //cerr << ". [Valid] ";
+            }
+            //cerr << endl;
+            for (stringVecIterator it = currentlyActive->begin();
+                 it != currentlyActive->end(); it++) {
+                //cerr << "Checking : \"" << (*it) << "\". vs \"" << name << "\"" << endl;
+                if ((*it) == name) {
+                    match++;
                 }
             }
-            //cerr << "Preference " << i << "Match " << match << " bestMatch " << bestMatch << " choice " << bestChoice << " valid selection " << validSelection << endl;
+        } // of active runways iteration
+
+        if (validSelection) {
+            //cerr << "Valid selection  : " << i << endl;;
+            foundValidSelection = true;
+            if (match >= bestMatch) {
+                bestMatch = match;
+                bestChoice = i;
+            }
         }
-        if (foundValidSelection) {
-            //cerr << "Valid runay selection : " << bestChoice << endl;
-            nrActive = activeRwys;
-            active = bestChoice;
+        //cerr << "Preference " << i << "Match " << match << " bestMatch " << bestMatch << " choice " << bestChoice << " valid selection " << validSelection << endl;
+    }
+
+    if (foundValidSelection) {
+        //cerr << "Valid runay selection : " << bestChoice << endl;
+        nrActive = activeRwys;
+        active = bestChoice;
+        return;
+    }
+
+    // If this didn't work, due to heavy winds, try again
+    // but select only one landing and one takeoff runway.
+    choice[0] = 0;
+    choice[1] = 0;
+    for (int i = activeRwys - 1; i; i--) {
+        if (rwyList[i].getType() == std::string("landing"))
+            choice[0] = i;
+        if (rwyList[i].getType() == std::string("takeoff"))
+            choice[1] = i;
+    }
+    //cerr << "Choosing " << choice[0] << " for landing and " << choice[1] << "for takeoff" << endl;
+    nrOfPreferences = rwyList[0].getPreferredRunways().size();
+    for (int i = 0; i < nrOfPreferences; i++) {
+        bool validSelection = true;
+        for (int j = 0; j < 2; j++) {
+            const auto& currentRunwayPrefs = rwyList.at(choice[j]).getPreferredRunways();
+            if (i >= currentRunwayPrefs.size()) {
+                validSelection = false;
+                continue;
+            }
+
+            const auto& name = currentRunwayPrefs.at(i);
+            if (!airport->hasRunwayWithIdent(name)) {
+                validSelection = false;
+                continue;
+            }
+
+            rwy = airport->getRunwayByIdent(name);
+            //cerr << "Succes" << endl;
+            hdgDiff = fabs(windHeading - rwy->headingDeg());
+            if (hdgDiff > 180)
+                hdgDiff = 360 - hdgDiff;
+            hdgDiff *= ((2 * M_PI) / 360.0); // convert to radians
+            crossWind = windSpeed * sin(hdgDiff);
+            tailWind = -windSpeed * cos(hdgDiff);
+            if ((tailWind > maxTail) || (crossWind > maxCross)) {
+                validSelection = false;
+            }
+        }
+
+        if (validSelection) {
+            //cerr << "Valid runay selection : " << i << endl;
+            active = i;
+            nrActive = 2;
             return;
         }
-        // If this didn't work, due to heavy winds, try again
-        // but select only one landing and one takeoff runway.
-        choice[0] = 0;
-        choice[1] = 0;
-        for (int i = activeRwys - 1; i; i--) {
-            if (rwyList[i].getType() == std::string("landing"))
-                choice[0] = i;
-            if (rwyList[i].getType() == std::string("takeoff"))
-                choice[1] = i;
-        }
-        //cerr << "Choosing " << choice[0] << " for landing and " << choice[1] << "for takeoff" << endl;
-        nrOfPreferences = rwyList[0].getRwyList()->size();
-        for (int i = 0; i < nrOfPreferences; i++) {
-            bool validSelection = true;
-            for (int j = 0; j < 2; j++) {
-                name = rwyList[choice[j]].getRwyList(i);
-                rwy = airport->getRunwayByIdent(name);
-
-                //cerr << "Succes" << endl;
-                hdgDiff = fabs(windHeading - rwy->headingDeg());
-                if (hdgDiff > 180)
-                    hdgDiff = 360 - hdgDiff;
-                hdgDiff *= ((2 * M_PI) / 360.0);        // convert to radians
-                crossWind = windSpeed * sin(hdgDiff);
-                tailWind = -windSpeed * cos(hdgDiff);
-                if ((tailWind > maxTail) || (crossWind > maxCross))
-                    validSelection = false;
-
-
-            }
-            if (validSelection) {
-                //cerr << "Valid runay selection : " << i << endl;
-                active = i;
-                nrActive = 2;
-                return;
-            }
-        }
     }
-    active = -1;
-    nrActive = 0;
 }
 
 void RunwayGroup::getActive(int i, std::string & name, std::string & type)
@@ -332,11 +354,22 @@ void RunwayGroup::getActive(int i, std::string & name, std::string & type)
     if (i == -1) {
         return;
     }
-    if (nrActive == (int) rwyList.size()) {
-        name = rwyList[i].getRwyList(active);
+
+    if (i >= nrActive) {
+        SG_LOG(SG_AI, SG_DEV_ALERT, "RunwayGroup::getActive: invalid index " << i);
+        return;
+    }
+
+    // nrActive is either the full size of the list *or* two, if we
+    // fell back due to heavy winds
+    const bool usingFullList = nrActive == (int)rwyList.size();
+    if (usingFullList) {
+        const auto& runways = rwyList.at(i).getPreferredRunways();
+        name = runways.at(active);
         type = rwyList[i].getType();
     } else {
-        name = rwyList[choice[i]].getRwyList(active);
+        const auto& runways = rwyList.at(choice[i]).getPreferredRunways();
+        name = runways.at(active);
         type = rwyList[choice[i]].getType();
     }
 }
@@ -396,15 +429,15 @@ ScheduleTime *FGRunwayPreference::getSchedule(const char *trafficType)
 
 RunwayGroup *FGRunwayPreference::getGroup(const std::string & groupName)
 {
-    PreferenceListIterator i = preferences.begin();
-    if (preferences.begin() == preferences.end())
-        return 0;
-    while (!(i == preferences.end() || i->getName() == groupName))
-        i++;
-    if (i != preferences.end())
-        return &(*i);
-    else
-        return 0;
+    auto it = std::find_if(preferences.begin(), preferences.end(),
+                           [&groupName](const RunwayGroup& g) {
+                               return g.getName() == groupName;
+                           });
+
+    if (it == preferences.end())
+        return nullptr;
+
+    return &(*it); // not thrilled about this, but ok
 }
 
 std::string FGRunwayPreference::getId()
