@@ -79,8 +79,7 @@ public:
   void clear();
 
   std::string getType() { return type; };
-  stringVec *getRwyList() { return &preferredRunways;    };
-  std::string getRwyList(int j) { return preferredRunways[j]; };
+  const stringVec& getPreferredRunways() const { return preferredRunways; };
 };
 
 /*****************************************************************************/
@@ -90,12 +89,12 @@ class RunwayGroup
 private:
   std::string name;
   RunwayListVec rwyList;
-  int active;
+  int active = -1;
   //stringVec runwayNames;
   int choice[2];
-  int nrActive;
+  int nrActive = 0;
 
-public:
+  public:
   RunwayGroup() {};
   RunwayGroup(const RunwayGroup &other);
   RunwayGroup &operator= (const RunwayGroup &other);
@@ -107,7 +106,7 @@ public:
   int getNrActiveRunways() { return nrActive;};
   void getActive(int i, std::string& name, std::string& type);
 
-  std::string getName() { return name; };
+  const std::string& getName() const { return name; };
   void clear() { rwyList.clear(); }; 
   //void add(string, string);
 };
