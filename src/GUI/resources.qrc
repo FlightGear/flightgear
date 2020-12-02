@@ -145,6 +145,7 @@
         <file>qml/NewVersionNotification.qml</file>
         <file>qml/DidMigrateOfficialCatalogNotification.qml</file>
         <file>qml/DidMigrateOtherCatalogNotification.qml</file>
+        <file>qml/DownloadsInDocumentsWarning.qml</file>
         <file>qml/BackButton.qml</file>
         <file>qml/ScrolledFlickable.qml</file>
         <file>qml/ScrolledListView.qml</file>

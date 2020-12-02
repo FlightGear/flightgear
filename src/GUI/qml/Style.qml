@@ -23,6 +23,8 @@ QtObject
     readonly property string disabledMinorFrameColor: "#afafaf"
 
     readonly property string baseTextColor: "#2f2f2f"
+    readonly property string themeContrastTextColor: "#efefef"
+    readonly property string themeContrastLinkColor: baseTextColor
 
     readonly property int baseFontPixelSize: 12
     readonly property int subHeadingFontPixelSize: 14
