@@ -4,16 +4,16 @@
 
 // Qt headers
 #include <QDebug>
-#include <QSettings>
+#include <QDesktopServices>
+#include <QFileDialog>
+#include <QJSEngine>
+#include <QMessageBox>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
-#include <QDesktopServices>
-#include <QMessageBox>
-#include <QSettings>
-#include <QQuickWindow>
-#include <QQmlComponent>
 #include <QPushButton>
-#include <QFileDialog>
+#include <QQmlComponent>
+#include <QQuickWindow>
+#include <QSettings>
 
 // simgear headers
 #include <simgear/package/Install.hxx>
@@ -38,6 +38,7 @@
 #include "HoverArea.hxx"
 #include "LaunchConfig.hxx"
 #include "LauncherArgumentTokenizer.hxx"
+#include "LauncherNotificationsController.hxx"
 #include "LocationController.hxx"
 #include "MPServersModel.h"
 #include "ModelDataExtractor.hxx"
@@ -148,6 +149,8 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
         m_versionLaunchCount = settings.value(versionedCountKey, 0).toInt();
         settings.setValue(versionedCountKey, m_versionLaunchCount + 1);
     }
+
+    QTimer::singleShot(2000, this, &LauncherController::checkForOldDownloadDir);
 }
 
 void LauncherController::initQML()
@@ -895,4 +898,45 @@ QUrl LauncherController::urlToDataPath(QString relPath) const
         relPath.prepend("/");
     }
     return QUrl::fromLocalFile(absFilePath + relPath);
+}
+
+void LauncherController::checkForOldDownloadDir()
+{
+#if defined(Q_OS_WIN)
+    auto options = flightgear::Options::sharedInstance();
+    if (options->valueForOption("download-dir") != std::string{}) {
+        return; // if we're using a custom value, nothing to do
+    }
+
+    if (haveOldWindowsDownloadDir()) {
+        // the notifications logic handles 'don't show again' lgoic internally,
+        // so we can always trigger this check
+        auto nc = LauncherNotificationsController::instance();
+        QJSValue args = nc->jsEngine()->newObject();
+
+        const auto oldPath = SGPath::documents() / "FlightGear";
+        const auto newPath = flightgear::defaultDownloadDir();
+
+        const QUrl oldLocURI = QUrl::fromLocalFile(QString::fromStdString(oldPath.utf8Str()));
+        const QUrl newLocURI = QUrl::fromLocalFile(QString::fromStdString(newPath.utf8Str()));
+
+        args.setProperty("oldLocation", oldLocURI.toString());
+        args.setProperty("newLocation", newLocURI.toString());
+        args.setProperty("persistent-dismiss", true);
+
+        nc->postNotification("have-old-downloads-location", QUrl{"qrc:///qml/DownloadsInDocumentsWarning.qml"}, args);
+    }
+#endif
+}
+
+bool LauncherController::haveOldWindowsDownloadDir() const
+{
+    const SGPath p = SGPath::documents() / "FlightGear";
+    if ((p / "TerraSync").exists() || (p / "Aircraft").exists()) {
+        return true;
+    }
+
+    // tex-cache dir is created by default, so check if it's populated
+    simgear::Dir texCacheDir(p / "TextureCache");
+    return (texCacheDir.exists() && !texCacheDir.isEmpty());
 }

@@ -2529,16 +2529,9 @@ string_list Options::valuesForOption(const std::string& key) const
 SGPath defaultDownloadDir()
 {
 #if defined(SG_WINDOWS)
-    SGPath p(SGPath::documents());
-    if (p.isNull()) {
-        SG_LOG(SG_IO, SG_ALERT, "Failed to locate user's Documents directory, will default to FG_HOME");
-        // fall through to standard get_fg_home codepath
-    }
-    else {
-        return p / "FlightGear";
-    }
+    const SGPath p = SGPath::home() / "FlightGear" / "Downloads";
+    return p;
 #endif
-
     return globals->get_fg_home();
 }
 

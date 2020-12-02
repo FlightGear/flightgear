@@ -35,6 +35,12 @@ Item {
                 color: "white"
             }
 
+            // capture mouse events
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+            }
+
             Loader {
                 // height is not anchored, can float
                 anchors {

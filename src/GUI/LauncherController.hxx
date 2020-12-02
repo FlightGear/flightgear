@@ -268,6 +268,9 @@ private slots:
 
     void saveAircraft();
     void restoreAircraft();
+
+    void checkForOldDownloadDir();
+
 private:
     /**
      * Check if the passed index is the selected aircraft, and if so, refresh
@@ -286,6 +289,7 @@ private:
     void collectAircraftArgs();
 
     QString selectAircraftStateAutomatically();
+    bool haveOldWindowsDownloadDir() const;
 
 private:
     QWindow* m_window = nullptr;
