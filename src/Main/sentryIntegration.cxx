@@ -65,7 +65,8 @@ auto XML_messageWhitelist = {
      "Cannot open file",
      "not well-formed (invalid token)",
      "mismatched tag",
-     "syntax error"
+     "syntax error",
+     "no element found"
 };
 
 // we don't want sentry enabled for the test suite
