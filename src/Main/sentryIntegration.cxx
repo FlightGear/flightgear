@@ -24,6 +24,7 @@
 
 #include <simgear/debug/LogCallback.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
@@ -160,6 +161,24 @@ private:
     int _lastLoggedCount = 0;
 };
 
+void sentrySimgearReportCallback(const string& msg, const string& more, bool isFatal)
+{
+    sentry_value_t exc = sentry_value_new_object();
+    if (isFatal) {
+        sentry_value_set_by_key(exc, "type", sentry_value_new_string("Fatal Error"));
+    } else {
+        sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
+    }
+
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(msg.c_str()));
+
+    sentry_value_t event = sentry_value_new_event();
+    sentry_value_set_by_key(event, "exception", exc);
+
+    sentry_event_value_add_stacktrace(event, nullptr, 0);
+    sentry_capture_event(event);
+}
+
 } // namespace
 
 namespace flightgear
@@ -274,6 +293,7 @@ void initSentry()
 
     sglog().addCallback(new SentryLogCallback);
     setThrowCallback(sentryTraceSimgearThrow);
+    simgear::setErrorReportCallback(sentrySimgearReportCallback);
 }
 
 void delayedSentryInit()
