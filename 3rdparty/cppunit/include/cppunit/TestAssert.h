@@ -15,6 +15,7 @@
 #pragma GCC system_header
 #endif
 
+using namespace std::string_literals;
 
 CPPUNIT_NS_BEGIN
 
@@ -511,7 +512,7 @@ void assertGreaterEqual( const T& expected,
          cpputMsg_.addDetail( "Actual  : " +                                  \
                               CPPUNIT_EXTRACT_EXCEPTION_TYPE_( e,             \
                                           "std::exception or derived") );     \
-         cpputMsg_.addDetail( std::string("What()  : ") + e.what() );         \
+         cpputMsg_.addDetail( "What()  : "s + e.what() );                     \
       } catch ( ... ) {                                                       \
          cpputMsg_.addDetail( "Actual  : unknown.");                          \
       }                                                                       \
@@ -559,7 +560,7 @@ void assertGreaterEqual( const T& expected,
          cpputMsg_.addDetail( "Caught: " +                                    \
                               CPPUNIT_EXTRACT_EXCEPTION_TYPE_( e,             \
                                           "std::exception or derived" ) );    \
-         cpputMsg_.addDetail( std::string("What(): ") + e.what() );           \
+         cpputMsg_.addDetail( "What(): "s + e.what() );                       \
          CPPUNIT_NS::Asserter::fail( cpputMsg_,                               \
                                      CPPUNIT_SOURCELINE() );                  \
       } catch ( ... ) {                                                       \

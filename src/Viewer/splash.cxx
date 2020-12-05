@@ -61,6 +61,7 @@
 
 static const char* LICENSE_URL_TEXT = "Licensed under the GNU GPL. See http://www.flightgear.org for more information";
 
+using namespace std::string_literals;
 using namespace simgear;
 
 class SplashScreenUpdateCallback : public osg::NodeCallback {
@@ -149,8 +150,8 @@ void SplashScreen::createNodes()
 
     if (_legacySplashScreenMode) {
         addText(geode, osg::Vec2(0.025f, 0.025f), 0.03,
-                std::string("FlightGear ") + fgGetString("/sim/version/flightgear") +
-                std::string(" ") + std::string(LICENSE_URL_TEXT),
+                "FlightGear "s + fgGetString("/sim/version/flightgear") +
+                " "s + std::string(LICENSE_URL_TEXT),
                 osgText::Text::LEFT_TOP,
                 nullptr,
                 0.9);
@@ -164,7 +165,7 @@ void SplashScreen::createNodes()
                 nullptr,
                 0.6);
 
-        addText(geode, osg::Vec2(0.025f, 0.025f), 0.10, std::string("FlightGear ") + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
+        addText(geode, osg::Vec2(0.025f, 0.025f), 0.10, "FlightGear "s + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
 
         if (!_aircraftLogoVertexArray) {
             addText(geode, osg::Vec2(0.025f, 0.935f), 0.10,
@@ -677,7 +678,7 @@ void fgSplashProgress( const char *identifier, unsigned int percent )
     text = globals->get_locale()->getLocalizedString(identifier, "sys");
 
     if( text.empty() )
-      text = std::string("<incomplete language resource>: ") + identifier;
+      text = "<incomplete language resource>: "s + identifier;
   }
 
     if (!strcmp(identifier,"downloading-scenery")) {

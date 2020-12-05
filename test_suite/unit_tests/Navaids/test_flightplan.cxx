@@ -21,6 +21,7 @@
 
 #include <Airports/airport.hxx>
 
+using namespace std::string_literals;
 using namespace flightgear;
 
 static bool static_haveProcedures = false;
@@ -204,7 +205,7 @@ TestFPDelegate* TestFPDelegateFactory::delegateForPlan(FlightPlan* fp)
 // Set up function for each test.
 void FlightplanTests::setUp()
 {
-    FGTestApi::setUp::initTestGlobals("flightplan");
+    FGTestApi::setUp::initTestGlobals("flightplan"s);
     FGTestApi::setUp::initNavDataCache();
     
     SGPath proceduresPath = SGPath::fromEnv("FG_PROCEDURES_PATH");
@@ -241,34 +242,34 @@ static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& d
 
 void FlightplanTests::testBasic()
 {
-    FlightPlanRef fp1 = makeTestFP("EGCC", "23L", "EHAM", "24",
-                                   "TNT CLN");
-    fp1->setIdent("testplan");
+    FlightPlanRef fp1 = makeTestFP("EGCC"s, "23L"s, "EHAM"s, "24"s,
+                                   "TNT CLN"s);
+    fp1->setIdent("testplan"s);
 
-    CPPUNIT_ASSERT(fp1->ident() == "testplan");
-    CPPUNIT_ASSERT(fp1->departureAirport()->ident() == "EGCC");
-    CPPUNIT_ASSERT(fp1->departureRunway()->ident() == "23L");
-    CPPUNIT_ASSERT(fp1->destinationAirport()->ident() == "EHAM");
-    CPPUNIT_ASSERT(fp1->destinationRunway()->ident() == "24");
+    CPPUNIT_ASSERT(fp1->ident() == "testplan"s);
+    CPPUNIT_ASSERT(fp1->departureAirport()->ident() == "EGCC"s);
+    CPPUNIT_ASSERT(fp1->departureRunway()->ident() == "23L"s);
+    CPPUNIT_ASSERT(fp1->destinationAirport()->ident() == "EHAM"s);
+    CPPUNIT_ASSERT(fp1->destinationRunway()->ident() == "24"s);
 
     CPPUNIT_ASSERT_EQUAL(5, fp1->numLegs());
 
-    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "23L");
+    CPPUNIT_ASSERT(fp1->legAtIndex(0)->waypoint()->source()->ident() == "23L"s);
 
-    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->ident() == "TNT");
-    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->name() == "TRENT VOR-DME");
+    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->ident() == "TNT"s);
+    CPPUNIT_ASSERT(fp1->legAtIndex(1)->waypoint()->source()->name() == "TRENT VOR-DME"s);
 
-    CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->ident() == "CLN");
-    CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->name() == "CLACTON VOR-DME");
+    CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->ident() == "CLN"s);
+    CPPUNIT_ASSERT(fp1->legAtIndex(2)->waypoint()->source()->name() == "CLACTON VOR-DME"s);
 
-    CPPUNIT_ASSERT(fp1->legAtIndex(4)->waypoint()->source()->ident() == "24");
+    CPPUNIT_ASSERT(fp1->legAtIndex(4)->waypoint()->source()->ident() == "24"s);
 
 }
 
 void FlightplanTests::testRoutePathBasic()
 {
-    FlightPlanRef fp1 = makeTestFP("EGHI", "20", "EDDM", "08L",
-                                   "SFD LYD BNE CIV ELLX LUX SAA KRH WLD");
+    FlightPlanRef fp1 = makeTestFP("EGHI"s, "20"s, "EDDM"s, "08L"s,
+                                   "SFD LYD BNE CIV ELLX LUX SAA KRH WLD"s);
 
 
     RoutePath rtepath(fp1);
@@ -284,10 +285,10 @@ void FlightplanTests::testRoutePathBasic()
     // check some leg parameters
 
     // BOLOUGNE SUR MER, near LFAY (AMIENS)
-    FGNavRecordRef bne = FGNavList::findByFreq(113.8, FGAirport::getByIdent("LFAY")->geod());
+    FGNavRecordRef bne = FGNavList::findByFreq(113.8, FGAirport::getByIdent("LFAY"s)->geod());
 
     // CHIEVRES
-    FGNavRecordRef civ = FGNavList::findByFreq(113.2, FGAirport::getByIdent("EBCI")->geod());
+    FGNavRecordRef civ = FGNavList::findByFreq(113.2, FGAirport::getByIdent("EBCI"s)->geod());
 
     double distM = SGGeodesy::distanceM(bne->geod(), civ->geod());
     double trackDeg = SGGeodesy::courseDeg(bne->geod(), civ->geod());
@@ -302,8 +303,8 @@ void FlightplanTests::testRoutePathBasic()
 
 void FlightplanTests::testRoutePathSkipped()
 {
-    FlightPlanRef fp1 = makeTestFP("EHAM", "24", "EDDM", "08L",
-                                   "EHEH KBO TAU FFM FFM/100/0.01 FFM/120/0.02 WUR WLD");
+    FlightPlanRef fp1 = makeTestFP("EHAM"s, "24"s, "EDDM"s, "08L"s,
+                                   "EHEH KBO TAU FFM FFM/100/0.01 FFM/120/0.02 WUR WLD"s);
 
 
     RoutePath rtepath(fp1);
@@ -324,8 +325,8 @@ void FlightplanTests::testRoutePathSkipped()
 
 void FlightplanTests::testRoutePathTrivialFlightPlan()
 {
-    FlightPlanRef fp1 = makeTestFP("EGPH", "24", "EGPH", "06",
-                                   "");
+    FlightPlanRef fp1 = makeTestFP("EGPH"s, "24"s, "EGPH"s, "06"s,
+                                   ""s);
 
 
     RoutePath rtepath(fp1);
@@ -341,14 +342,14 @@ void FlightplanTests::testRoutePathTrivialFlightPlan()
 
 void FlightplanTests::testRoutePathVec()
 {
-    FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
-                                   "ROKME WOVAB");
+    FlightPlanRef fp1 = makeTestFP("KNUQ"s, "14L"s, "PHNL"s, "22R"s,
+                                   "ROKME WOVAB"s);
     RoutePath rtepath(fp1);
 
     SGGeodVec vec = rtepath.pathForIndex(0);
 
-    FGAirportRef ksfo = FGAirport::findByIdent("KSFO");
-    FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME", ksfo->geod()));
+    FGAirportRef ksfo = FGAirport::findByIdent("KSFO"s);
+    FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME"s, ksfo->geod()));
     auto depRwy = fp1->departureRunway();
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(depRwy->geod().getLongitudeDeg(), vec.front().getLongitudeDeg(), 0.01);
@@ -379,12 +380,12 @@ void FlightplanTests::testRoutePathFinalLegVQPR15()
     FlightPlanRef f = new FlightPlan;
     auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
     
-    auto vidp = FGAirport::findByIdent("VIDP");
-    f->setDeparture(vidp->getRunwayByIdent("09"));
+    auto vidp = FGAirport::findByIdent("VIDP"s);
+    f->setDeparture(vidp->getRunwayByIdent("09"s));
     
-    auto vqpr = FGAirport::findByIdent("VQPR");
-    f->setDestination(vqpr->getRunwayByIdent("15"));
-    f->setApproach(vqpr->findApproachWithIdent("RNVZ15"));
+    auto vqpr = FGAirport::findByIdent("VQPR"s);
+    f->setDestination(vqpr->getRunwayByIdent("15"s));
+    f->setApproach(vqpr->findApproachWithIdent("RNVZ15"s));
     RoutePath rtepath(f);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(1100, rtepath.distanceForIndex(14), 100); // calculated from raw lat lon. 
 }
@@ -394,8 +395,8 @@ void FlightplanTests::testRoutPathWpt0Midflight()
     // test behaviour of RoutePath when WP0 is not a runway
     // happens for the Airbus ND which removes past wpts when sequencing
 
-    FlightPlanRef fp1 = makeTestFP("KNUQ", "14L", "PHNL", "22R",
-                                   "ROKME WOVAB");
+    FlightPlanRef fp1 = makeTestFP("KNUQ"s, "14L"s, "PHNL"s, "22R"s,
+                                   "ROKME WOVAB"s);
     // actually delete leg 0 so we start at ROKME
     fp1->deleteIndex(0);
 
@@ -403,8 +404,8 @@ void FlightplanTests::testRoutPathWpt0Midflight()
 
     SGGeodVec vec = rtepath.pathForIndex(0);
 
-    FGAirportRef ksfo = FGAirport::findByIdent("KSFO");
-    FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME", ksfo->geod()));
+    FGAirportRef ksfo = FGAirport::findByIdent("KSFO"s);
+    FGFixRef rokme = fgpositioned_cast<FGFix>(FGPositioned::findClosestWithIdent("ROKME"s, ksfo->geod()));
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLongitudeDeg(), vec.front().getLongitudeDeg(), 0.01);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(rokme->geod().getLatitudeDeg(), vec.front().getLatitudeDeg(), 0.01);
@@ -418,45 +419,45 @@ void FlightplanTests::testRoutPathWpt0Midflight()
 
 void FlightplanTests::testBasicAirways()
 {
-    Airway* awy = Airway::findByIdent("J547", Airway::HighLevel);
-    CPPUNIT_ASSERT_EQUAL(awy->ident(), std::string("J547"));
+    Airway* awy = Airway::findByIdent("J547"s, Airway::HighLevel);
+    CPPUNIT_ASSERT_EQUAL(awy->ident(), "J547"s);
 
-    FGAirportRef kord = FGAirport::findByIdent("KORD");
+    FGAirportRef kord = FGAirport::findByIdent("KORD"s);
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(kord);
 
-    CPPUNIT_ASSERT(awy->findEnroute("KITOK"));
-    CPPUNIT_ASSERT(awy->findEnroute("LESUB"));
+    CPPUNIT_ASSERT(awy->findEnroute("KITOK"s));
+    CPPUNIT_ASSERT(awy->findEnroute("LESUB"s));
 
-    auto wpt = awy->findEnroute("FNT");
+    auto wpt = awy->findEnroute("FNT"s);
     CPPUNIT_ASSERT(wpt);
-    CPPUNIT_ASSERT(wpt->ident() == "FNT");
-    CPPUNIT_ASSERT(wpt->source() == FGNavRecord::findClosestWithIdent("FNT", kord->geod()));
+    CPPUNIT_ASSERT(wpt->ident() == "FNT"s);
+    CPPUNIT_ASSERT(wpt->source() == FGNavRecord::findClosestWithIdent("FNT"s, kord->geod()));
 
-    auto wptKUBBS = f->waypointFromString("KUBBS");
-    auto wptFNT = f->waypointFromString("FNT");
+    auto wptKUBBS = f->waypointFromString("KUBBS"s);
+    auto wptFNT = f->waypointFromString("FNT"s);
 
     CPPUNIT_ASSERT(awy->canVia(wptKUBBS, wptFNT));
 
     WayptVec path = awy->via(wptKUBBS, wptFNT);
     CPPUNIT_ASSERT_EQUAL(4, static_cast<int>(path.size()));
 
-    CPPUNIT_ASSERT_EQUAL(std::string("PMM"), path.at(0)->ident());
-    CPPUNIT_ASSERT_EQUAL(std::string("HASTE"), path.at(1)->ident());
-    CPPUNIT_ASSERT_EQUAL(std::string("DEWIT"), path.at(2)->ident());
-    CPPUNIT_ASSERT_EQUAL(std::string("FNT"), path.at(3)->ident());
+    CPPUNIT_ASSERT_EQUAL("PMM"s, path.at(0)->ident());
+    CPPUNIT_ASSERT_EQUAL("HASTE"s, path.at(1)->ident());
+    CPPUNIT_ASSERT_EQUAL("DEWIT"s, path.at(2)->ident());
+    CPPUNIT_ASSERT_EQUAL("FNT"s, path.at(3)->ident());
 }
 
 void FlightplanTests::testAirwayNetworkRoute()
 {
-    FGAirportRef egph = FGAirport::findByIdent("EGPH");
+    FGAirportRef egph = FGAirport::findByIdent("EGPH"s);
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(egph);
 
     auto highLevelNet = Airway::highLevel();
 
-    auto wptTLA = f->waypointFromString("TLA");
-    auto wptCNA = f->waypointFromString("CNA");
+    auto wptTLA = f->waypointFromString("TLA"s);
+    auto wptCNA = f->waypointFromString("CNA"s);
 
     WayptVec route;
     bool ok = highLevelNet->route(wptTLA, wptCNA, route);
@@ -467,10 +468,10 @@ void FlightplanTests::testAirwayNetworkRoute()
 
 void FlightplanTests::testParseICAORoute()
 {
-    FGAirportRef kord = FGAirport::findByIdent("KORD");
+    FGAirportRef kord = FGAirport::findByIdent("KORD"s);
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(kord);
-    f->setDestination(FGAirport::findByIdent("KSAN"));
+    f->setDestination(FGAirport::findByIdent("KSAN"s));
 
     const char* route = "DCT JOT J26 IRK J96 SLN J18 GCK J96 CIM J134 GUP J96 KEYKE J134 DRK J78 LANCY J96 PKE";
   //  const char* route = "DCT KUBBS J547 FNT Q824 HOCKE Q905 SIKBO Q907 MIILS N400A TUDEP NATW GISTI DCT SLANY UL9 DIKAS UL18 GAVGO UL9 KONAN UL607 UBIDU Y863 RUDUS T109 HAREM T104 ANORA STAR";
@@ -485,10 +486,10 @@ void FlightplanTests::testParseICANLowLevelRoute()
 {
     const char* route = "DCT DPA V6 IOW V216 LAA V210 GOSIP V83 ACHES V210 BLOKE V83 ALS V210 RSK V95 INW V12 HOXOL V264 OATES V12 JUWSO V264 PKE";
 
-    FGAirportRef kord = FGAirport::findByIdent("KORD");
+    FGAirportRef kord = FGAirport::findByIdent("KORD"s);
     FlightPlanRef f = new FlightPlan;
     f->setDeparture(kord);
-    f->setDestination(FGAirport::findByIdent("KSAN"));
+    f->setDestination(FGAirport::findByIdent("KSAN"s));
 
     bool ok = f->parseICAORouteString(route);
     CPPUNIT_ASSERT(ok);
@@ -536,7 +537,7 @@ void FlightplanTests::testBug1814()
     CPPUNIT_ASSERT(ok);
 
     auto leg = f->legAtIndex(1);
-    CPPUNIT_ASSERT_EQUAL(std::string("SIGUL"), leg->waypoint()->ident());
+    CPPUNIT_ASSERT_EQUAL("SIGUL"s, leg->waypoint()->ident());
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(137, leg->distanceNm(), 0.5);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(101, f->legAtIndex(2)->distanceNm(), 0.5);
@@ -614,8 +615,8 @@ void FlightplanTests::testLoadSaveMachRestriction()
 
 void FlightplanTests::testBasicDiscontinuity()
 {
-    FlightPlanRef fp1 = makeTestFP("LIRF", "34L", "LEBL", "25R",
-                                   "ESINO GITRI BALEN MUREN TOSNU");
+    FlightPlanRef fp1 = makeTestFP("LIRF"s, "34L"s, "LEBL"s, "25R"s,
+                                   "ESINO GITRI BALEN MUREN TOSNU"s);
 
     const auto tdBefore = fp1->totalDistanceNm();
     
@@ -666,11 +667,11 @@ void FlightplanTests::testBasicDiscontinuity()
 void FlightplanTests::testOnlyDiscontinuityRoute()
 {
     FlightPlanRef f = new FlightPlan;
-    FGAirportRef depApt = FGAirport::getByIdent("LFBD");
+    FGAirportRef depApt = FGAirport::getByIdent("LFBD"s);
     f->setDeparture(depApt);
 
 
-    FGAirportRef destApt = FGAirport::getByIdent("EHAM");
+    FGAirportRef destApt = FGAirport::getByIdent("EHAM"s);
     f->setDestination(destApt);
 
     f->insertWayptAtIndex(new Discontinuity(f), 0);
@@ -682,13 +683,13 @@ void FlightplanTests::testOnlyDiscontinuityRoute()
    // CPPUNIT_ASSERT_DOUBLES_EQUAL(rp1.distanceForIndex(0), d, 0.5);
     
     // start inserting waypoints ahead of the DISCON, Boeing FPL style
-    WayptRef wpt = f->waypointFromString("LMG");
+    WayptRef wpt = f->waypointFromString("LMG"s);
     f->insertWayptAtIndex(wpt, 0);
     
-    wpt = f->waypointFromString("KUKOR");
+    wpt = f->waypointFromString("KUKOR"s);
     f->insertWayptAtIndex(wpt, 1);
     
-    wpt = f->waypointFromString("EPL");
+    wpt = f->waypointFromString("EPL"s);
     f->insertWayptAtIndex(wpt, 2);
 }
 
@@ -698,7 +699,7 @@ void FlightplanTests::testLeadingWPDynamic()
     // plan has no departure, so this discon is floating
     f->insertWayptAtIndex(new Discontinuity(f), 0);
     
-    auto ha = new HeadingToAltitude(f, "TO_3000", 90);
+    auto ha = new HeadingToAltitude(f, "TO_3000"s, 90);
     ha->setAltitude(3000, RESTRICT_AT);
     f->insertWayptAtIndex(ha, 1);
     
@@ -710,14 +711,14 @@ void FlightplanTests::testLeadingWPDynamic()
 void FlightplanTests::testRadialIntercept()
 {
     // replicate AJO1R departure
-    FlightPlanRef f = makeTestFP("LFKC", "36", "LIRF", "25", "BUNAX BEBEV AJO");
+    FlightPlanRef f = makeTestFP("LFKC"s, "36"s, "LIRF"s, "25"s, "BUNAX BEBEV AJO"s);
     
     // set BUNAX as overflight
     f->legAtIndex(1)->waypoint()->setFlag(WPT_OVERFLIGHT);
-    f->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(8.78333, 42.566), "KC502", f), 1);
+    f->insertWayptAtIndex(new BasicWaypt(SGGeod::fromDeg(8.78333, 42.566), "KC502"s, f), 1);
 
     SGGeod pos = SGGeod::fromDeg(8.445556,42.216944);
-    auto intc = new RadialIntercept(f, "INTC", pos, 230, 5);
+    auto intc = new RadialIntercept(f, "INTC"s, pos, 230, 5);
     f->insertWayptAtIndex(intc, 3); // between BUNAX and BEBEV
     
     RoutePath rtepath(f);
@@ -731,7 +732,7 @@ void FlightplanTests::loadFGFPWithoutDepartureArrival()
 
     FlightPlanRef f = new FlightPlan;
     
-    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_without_dep_arr.fgfp";
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_without_dep_arr.fgfp"s;
     {
         sg_ofstream s(fgfpPath);
         s << R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -797,7 +798,7 @@ void FlightplanTests::loadFGFPWithEmbeddedProcedures()
 
     FlightPlanRef f = new FlightPlan;
     
-    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_with_dep_arr.fgfp";
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_with_dep_arr.fgfp"s;
     {
         sg_ofstream s(fgfpPath);
         s << R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -876,7 +877,7 @@ void FlightplanTests::loadFGFPWithOldProcedures()
     
     FlightPlanRef f = new FlightPlan;
     
-    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_old_procedure_idents.fgfp";
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_old_procedure_idents.fgfp"s;
     {
         sg_ofstream s(fgfpPath);
         s << R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -903,8 +904,8 @@ void FlightplanTests::loadFGFPWithOldProcedures()
         )";
     }
     
-    auto kjfk = FGAirport::findByIdent("KJFK");
-    auto eham = FGAirport::findByIdent("EHAM");
+    auto kjfk = FGAirport::findByIdent("KJFK"s);
+    auto eham = FGAirport::findByIdent("EHAM"s);
     CPPUNIT_ASSERT(f->load(fgfpPath));
     
     CPPUNIT_ASSERT(f->sid() == nullptr);
@@ -918,7 +919,7 @@ void FlightplanTests::loadFGFPWithProcedureIdents()
     
     FlightPlanRef f = new FlightPlan;
     
-    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_procedure_idents.fgfp";
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_procedure_idents.fgfp"s;
     {
         sg_ofstream s(fgfpPath);
         s << R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -947,41 +948,41 @@ void FlightplanTests::loadFGFPWithProcedureIdents()
         )";
     }
     
-    auto kjfk = FGAirport::findByIdent("KJFK");
-    auto eham = FGAirport::findByIdent("EHAM");
+    auto kjfk = FGAirport::findByIdent("KJFK"s);
+    auto eham = FGAirport::findByIdent("EHAM"s);
     CPPUNIT_ASSERT(f->load(fgfpPath));
     
-    CPPUNIT_ASSERT_EQUAL(f->sid()->ident(), string{"DEEZZ5.13L"});
-    CPPUNIT_ASSERT_EQUAL(f->sidTransition()->ident(), string{"CANDR"});
+    CPPUNIT_ASSERT_EQUAL(f->sid()->ident(), "DEEZZ5.13L"s);
+    CPPUNIT_ASSERT_EQUAL(f->sidTransition()->ident(), "CANDR"s);
     
-    CPPUNIT_ASSERT_EQUAL(f->star()->ident(), string{"EEL1A"});
-    CPPUNIT_ASSERT_EQUAL(f->starTransition()->ident(), string{"KUBAT"});
+    CPPUNIT_ASSERT_EQUAL(f->star()->ident(), "EEL1A"s);
+    CPPUNIT_ASSERT_EQUAL(f->starTransition()->ident(), "KUBAT"s);
 }
 
 void FlightplanTests::testCloningBasic()
 {
-    FlightPlanRef fp1 = makeTestFP("EGCC", "23L", "EHAM", "24",
-                                   "TNT CLN");
-    fp1->setIdent("testplan");
+    FlightPlanRef fp1 = makeTestFP("EGCC"s, "23L"s, "EHAM"s, "24"s,
+                                   "TNT CLN"s);
+    fp1->setIdent("testplan"s);
 
     fp1->setCruiseAltitudeFt(24000);
     fp1->setCruiseSpeedKnots(448);
 
-    auto fp2 = fp1->clone("testplan2");
+    auto fp2 = fp1->clone("testplan2"s);
 
-    CPPUNIT_ASSERT(fp2->ident() == "testplan2");
-    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGCC");
-    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "23L");
-    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM");
-    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "24");
+    CPPUNIT_ASSERT(fp2->ident() == "testplan2"s);
+    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGCC"s);
+    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "23L"s);
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM"s);
+    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "24"s);
     CPPUNIT_ASSERT_EQUAL(24000, fp2->cruiseAltitudeFt());
     CPPUNIT_ASSERT_EQUAL(448, fp2->cruiseSpeedKnots());
 
     CPPUNIT_ASSERT_EQUAL(5, fp2->numLegs());
 
-    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "23L");
-    CPPUNIT_ASSERT(fp2->legAtIndex(1)->waypoint()->source()->ident() == "TNT");
-    CPPUNIT_ASSERT(fp2->legAtIndex(2)->waypoint()->source()->ident() == "CLN");
+    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "23L"s);
+    CPPUNIT_ASSERT(fp2->legAtIndex(1)->waypoint()->source()->ident() == "TNT"s);
+    CPPUNIT_ASSERT(fp2->legAtIndex(2)->waypoint()->source()->ident() == "CLN"s);
 
 }
 
@@ -992,7 +993,7 @@ void FlightplanTests::testCloningFGFP()
 
     FlightPlanRef fp1 = new FlightPlan;
     
-    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_cloning.fgfp";
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_cloning.fgfp"s;
     {
         sg_ofstream s(fgfpPath);
         s << R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -1058,14 +1059,14 @@ void FlightplanTests::testCloningFGFP()
     CPPUNIT_ASSERT(!secondDelegate->sawArrivalChange);
     CPPUNIT_ASSERT(!secondDelegate->sawDepartureChange);
     
-    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EDDM");
-    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R");
-    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EDDF");
+    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EDDM"s);
+    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R"s);
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EDDF"s);
 
-    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(0)->waypoint()->source()->ident(), string{"08R"});
-    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(1)->waypoint()->source()->ident(), string{"GIVMI"});
-    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(5)->waypoint()->source()->ident(), string{"PSA"});
-    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(6)->waypoint()->source()->ident(), string{"EDDF"});
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(0)->waypoint()->source()->ident(), "08R"s);
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(1)->waypoint()->source()->ident(), "GIVMI"s);
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(5)->waypoint()->source()->ident(), "PSA"s);
+    CPPUNIT_ASSERT_EQUAL(fp2->legAtIndex(6)->waypoint()->source()->ident(), "EDDF"s);
     CPPUNIT_ASSERT_EQUAL(7, fp2->numLegs());
     
 }
@@ -1078,27 +1079,27 @@ void FlightplanTests::testCloningProcedures() {
     static_factory = std::make_shared<TestFPDelegateFactory>();
     FlightPlan::registerDelegateFactory(static_factory);
     
-    auto egkk = FGAirport::findByIdent("EGKK");
-    auto sid = egkk->findSIDWithIdent("SAM3P");
+    auto egkk = FGAirport::findByIdent("EGKK"s);
+    auto sid = egkk->findSIDWithIdent("SAM3P"s);
     
-    FlightPlanRef fp1 = makeTestFP("EGKK", "08R", "EHAM", "18R",
-                                   "");
+    FlightPlanRef fp1 = makeTestFP("EGKK"s, "08R"s, "EHAM"s, "18R"s,
+                                   ""s);
     auto ourDelegate = TestFPDelegateFactory::delegateForPlan(fp1);
     
     fp1->setSID(sid);
-    auto eham = FGAirport::findByIdent("EHAM");
-    auto eel1A = eham->findSTARWithIdent("EEL1A");
-    fp1->setSTAR(eel1A, "BEDUM");
+    auto eham = FGAirport::findByIdent("EHAM"s);
+    auto eel1A = eham->findSTARWithIdent("EEL1A"s);
+    fp1->setSTAR(eel1A, "BEDUM"s);
     
     auto fp2 = fp1->clone();
-    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGKK");
-    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R");
-    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM");
-    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "18R");
+    CPPUNIT_ASSERT(fp2->departureAirport()->ident() == "EGKK"s);
+    CPPUNIT_ASSERT(fp2->departureRunway()->ident() == "08R"s);
+    CPPUNIT_ASSERT(fp2->destinationAirport()->ident() == "EHAM"s);
+    CPPUNIT_ASSERT(fp2->destinationRunway()->ident() == "18R"s);
 
-    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "08R");
-    CPPUNIT_ASSERT_EQUAL(fp2->sid()->ident(), string{"SAM3P"});
+    CPPUNIT_ASSERT(fp2->legAtIndex(0)->waypoint()->source()->ident() == "08R"s);
+    CPPUNIT_ASSERT_EQUAL(fp2->sid()->ident(), "SAM3P"s);
     
-    CPPUNIT_ASSERT_EQUAL(fp2->star()->ident(), string{"EEL1A"});
-    CPPUNIT_ASSERT_EQUAL(fp2->starTransition()->ident(), string{"BEDUM"});
+    CPPUNIT_ASSERT_EQUAL(fp2->star()->ident(), "EEL1A"s);
+    CPPUNIT_ASSERT_EQUAL(fp2->starTransition()->ident(), "BEDUM"s);
 }

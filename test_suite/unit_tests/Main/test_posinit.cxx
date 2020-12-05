@@ -44,6 +44,7 @@
 
 #include "ATC/atc_mgr.hxx"
 
+using namespace std::string_literals;
 using namespace flightgear;
 
 void PosInitTests::setUp()
@@ -160,8 +161,8 @@ void PosInitTests::testAirportOnlyStartup()
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     initPosition();
 
-    checkClosestAirport(std::string("EDDF"));
-    checkPosition(FGAirport::getByIdent("EDDF")->geod(), 10000.0);
+    checkClosestAirport("EDDF"s);
+    checkPosition(FGAirport::getByIdent("EDDF"s)->geod(), 10000.0);
 }
 
 void PosInitTests::testAirportAltitudeOffsetStartup()
@@ -197,10 +198,10 @@ void PosInitTests::testAirportAndRunwayStartup()
 
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
-    checkRunway(std::string("25C"));
+    checkRunway("25C"s);
     initPosition();
 
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     checkPosition(FGAirport::getByIdent("EDDF")->geod(), 10000.0);
     checkHeading(250.0);
 }
@@ -238,7 +239,7 @@ void PosInitTests::testAirportAndParkingStartup()
     auto parking = apt->groundNetwork()->findParkingByName("V266");
     CPPUNIT_ASSERT(parking != nullptr);
     
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     checkPosition(parking->geod(), 20);
 }
 
@@ -255,7 +256,7 @@ void PosInitTests::testAirportAndAvailableParkingStartup()
     
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/runway-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/parkpos") == std::string("AVAILABLE"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/parkpos") == "AVAILABLE"s);
     initPosition();
 
     simulateFinalizePosition();
@@ -266,7 +267,7 @@ void PosInitTests::testAirportAndAvailableParkingStartup()
     auto dynamics =  FGAirport::getByIdent("EDDF");
     auto parking = dynamics->groundNetwork()->findParkingByName(assignedParking);
     
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     // Anywhere around EDDF will do!
     checkPosition(FGAirport::getByIdent("EDDF")->geod(), 10000.0);
     checkPosition(parking->geod(), 20.0);
@@ -284,11 +285,11 @@ void PosInitTests::testAirportAndMetarStartup()
 
     initPosition();
 
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == std::string("LOWI"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == "LOWI"s);
     double dist = SGGeodesy::distanceM(globals->get_aircraft_position(),
                                        FGAirport::getByIdent("LOWI")->geod());
     CPPUNIT_ASSERT(dist < 10000);
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("sim/atc/runway") == std::string("26"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("sim/atc/runway") == "26"s);
 }
 
 void PosInitTests::testAirportRunwayOffsetGlideslopeStartup()
@@ -304,11 +305,11 @@ void PosInitTests::testAirportRunwayOffsetGlideslopeStartup()
 
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/runway") == std::string("25C"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/runway") == "25C"s);
     CPPUNIT_ASSERT(globals->get_props()->getIntValue("/sim/presets/offset-distance-nm") == 5);
     initPosition();
 
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == std::string("EDDF"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == "EDDF"s);
 
     double crs = FGAirport::getByIdent("EDDF")->getRunwayByIdent("25C")->headingDeg() -180.0;
 
@@ -335,11 +336,11 @@ void PosInitTests::testAirportRunwayOffsetAltitudeStartup()
 
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/runway") == std::string("25C"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/runway") == "25C"s);
     CPPUNIT_ASSERT(globals->get_props()->getIntValue("/sim/presets/offset-distance-nm") == 5);
     initPosition();
 
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == std::string("EDDF"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/airport/closest-airport-id") == "EDDF"s);
 
     double crs = FGAirport::getByIdent("EDDF")->getRunwayByIdent("25C")->headingDeg() -180.0;
 
@@ -364,7 +365,7 @@ void PosInitTests::testVOROnlyStartup()
     }
 
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/airport-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/vor-id") == std::string("JFK"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/vor-id") == "JFK"s);
     initPosition();
 
     FGNavList::TypeFilter filter(FGPositioned::Type::VOR);
@@ -416,7 +417,7 @@ void PosInitTests::testFixOnlyStartup()
     }
 
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/airport-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/fix") == std::string("FOLER"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/fix") == "FOLER"s);
     initPosition();
 
     FGNavList::TypeFilter filter(FGPositioned::Type::FIX);
@@ -441,7 +442,7 @@ void PosInitTests::testFixOffsetAltitudeHeadingStartup()
 
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/runway-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/fix") == std::string("FOLER"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/fix") == "FOLER"s);
     CPPUNIT_ASSERT(globals->get_props()->getIntValue("/sim/presets/offset-distance-nm") == 5);
     initPosition();
 
@@ -469,7 +470,7 @@ void PosInitTests::testNDBOnlyStartup()
     }
 
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/airport-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/ndb-id") == std::string("HHI"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/ndb-id") == "HHI"s);
     initPosition();
 
     FGNavList::TypeFilter filter(FGPositioned::Type::NDB);
@@ -494,7 +495,7 @@ void PosInitTests::testNDBOffsetAltitudeHeadingStartup()
 
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(! fgGetBool("/sim/presets/runway-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/ndb-id") == std::string("HHI"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/ndb-id") == "HHI"s);
     //CPPUNIT_ASSERT(globals->get_props()->getIntValue("/sim/presets/offset-distance-nm") == 5);
     initPosition();
 
@@ -586,10 +587,10 @@ void PosInitTests::testAirportRepositionAirport()
 
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
-    checkRunway(std::string("25C"));
+    checkRunway("25C"s);
     initPosition();
 
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     checkPosition(FGAirport::getByIdent("EDDF")->geod(), 10000.0);
     checkHeading(250.0);
 
@@ -604,7 +605,7 @@ void PosInitTests::testAirportRepositionAirport()
     fgSetString("/sim/presets/runway", "12");
     initPosition();
 
-    checkClosestAirport(std::string("KHAF"));
+    checkClosestAirport("KHAF"s);
     checkPosition(FGAirport::getByIdent("KHAF")->geod(), 5000.0);
     checkHeading(137.0); // Lots of magnetic variation in SF Bay area!
     checkOnGround();
@@ -628,11 +629,11 @@ void PosInitTests::testAirportRunwayRepositionAirport()
 
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/runway-requested"));
-    checkRunway(std::string("07"));
+    checkRunway("07"s);
     initPosition();
     simulateFinalizePosition();
 
-    checkClosestAirport(std::string("EDDS"));
+    checkClosestAirport("EDDS"s);
     checkPosition(FGAirport::getByIdent("EDDS")->geod(), 10000.0);
 
     // Now re-position to PHTO runway
@@ -651,7 +652,7 @@ void PosInitTests::testAirportRunwayRepositionAirport()
 
     FGTestApi::runForTime(1.0);
 
-    checkClosestAirport(std::string("PHTO"));
+    checkClosestAirport("PHTO"s);
     checkPosition(FGAirport::getByIdent("PHTO")->geod(), 5000.0);
     checkHeading(125);
     checkOnGround();
@@ -682,7 +683,7 @@ void PosInitTests::testParkInvalid()
     fgSetBool("/environment/metar/valid", true);
     
     simulateFinalizePosition();
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     // we should be on the best runway, let's see
     auto runway = apt->getRunwayByIdent("36");
     checkPosition(runway->threshold());
@@ -716,7 +717,7 @@ void PosInitTests::testParkAtOccupied()
     
     simulateFinalizePosition();
     
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     
 
     // we should be on the best runway, let's see
@@ -755,7 +756,7 @@ void PosInitTests::testRepositionAtParking()
     fgSetDouble("/sim/presets/heading-deg",  9990.00);
     fgSetString("/sim/presets/parkpos", "V266");
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/parkpos") == std::string("V266"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/parkpos") == "V266"s);
     
     simulateStartReposition();
     finalizePosition();
@@ -763,7 +764,7 @@ void PosInitTests::testRepositionAtParking()
    auto apt = FGAirport::getByIdent("EDDF");
    auto parking = apt->groundNetwork()->findParkingByName("V266");
 
-   checkClosestAirport(std::string("EDDF"));
+   checkClosestAirport("EDDF"s);
    checkPosition(parking->geod(), 10.0);
    checkOnGround();
 
@@ -776,7 +777,7 @@ void PosInitTests::testRepositionAtParking()
     fgSetDouble("/sim/presets/heading-deg",  9990.00);
     fgSetString("/sim/presets/parkpos", "AVAILABLE");
     CPPUNIT_ASSERT(fgGetBool("/sim/presets/airport-requested"));
-    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/parkpos") == std::string("AVAILABLE"));
+    CPPUNIT_ASSERT(globals->get_props()->getStringValue("/sim/presets/parkpos") == "AVAILABLE"s);
     
     simulateStartReposition();
     finalizePosition();
@@ -786,7 +787,7 @@ void PosInitTests::testRepositionAtParking()
 
     parking = apt->groundNetwork()->findParkingByName(assignedParking);
 
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     checkPosition(parking->geod(), 20.0);
     
 }
@@ -814,7 +815,7 @@ void PosInitTests::testRepositionAtSameParking()
       auto parking = apt->groundNetwork()->findParkingByName("V266");
       CPPUNIT_ASSERT(parking != nullptr);
       
-      checkClosestAirport(std::string("EDDF"));
+      checkClosestAirport("EDDF"s);
       checkPosition(parking->geod(), 20);
 /////////
     fgSetDouble("/sim/presets/longitude-deg", -9990.00);
@@ -858,7 +859,7 @@ void PosInitTests::testRepositionAtOccupied()
     
     simulateFinalizePosition();
     
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     checkPosition(parking1->geod(), 20);
 
 //////////
@@ -908,7 +909,7 @@ void PosInitTests::testRepositionAtInvalid()
 
     simulateFinalizePosition();
 
-    checkClosestAirport(std::string("EDDF"));
+    checkClosestAirport("EDDF"s);
     checkPosition(parking1->geod(), 20);
 
     //////////

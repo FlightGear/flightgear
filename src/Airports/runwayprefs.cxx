@@ -39,6 +39,7 @@
 #include "runwayprefs.hxx"
 #include "airport.hxx"
 
+using namespace std::string_literals;
 using namespace simgear;
 
 /******************************************************************************
@@ -112,7 +113,8 @@ std::string ScheduleTime::getName(time_t dayStart)
         //couldn't find one so return 0;
         //cerr << "Returning 0 " << endl;
     }
-    return std::string("");
+
+    return ""s;
 }
 
 /******************************************************************************
@@ -305,9 +307,9 @@ void RunwayGroup::setActive(const FGAirport * airport,
     choice[0] = 0;
     choice[1] = 0;
     for (int i = activeRwys - 1; i; i--) {
-        if (rwyList[i].getType() == std::string("landing"))
+        if (rwyList[i].getType() == "landing"s)
             choice[0] = i;
-        if (rwyList[i].getType() == std::string("takeoff"))
+        if (rwyList[i].getType() == "takeoff"s)
             choice[1] = i;
     }
     //cerr << "Choosing " << choice[0] << " for landing and " << choice[1] << "for takeoff" << endl;

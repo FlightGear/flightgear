@@ -43,6 +43,7 @@
 
 namespace Instrumentation {
 
+using namespace std::string_literals;
 using simgear::PropertyObject;
 
 /* --------------The Navigation Indicator ----------------------------- */
@@ -380,7 +381,7 @@ double VOR::ServiceVolume::adjustRange( double height_ft, double nominalRange_nm
 
 VOR::VOR( SGPropertyNode_ptr rootNode) :
     NavRadioComponentWithIdent("vor", rootNode,
-                               new VORAudioIdent(getIdentString(std::string("vor"),
+                               new VORAudioIdent(getIdentString("vor"s,
                                                                 rootNode->getIndex()))),
   _totalTime(0.0),
   _radial( rootNode->getNode(_name,true)->getNode("radial",true) ),
@@ -527,7 +528,7 @@ double LOC::ServiceVolume::adjustRange( double azimuthAngle_deg, double elevatio
 }
 
 LOC::LOC( SGPropertyNode_ptr rootNode) :
-    NavRadioComponentWithIdent("loc", rootNode, new LOCAudioIdent(getIdentString(std::string("loc"),
+    NavRadioComponentWithIdent("loc", rootNode, new LOCAudioIdent(getIdentString("loc"s,
                                                                                  rootNode->getIndex()))),
   _serviceVolume(),
   _localizerOffset_norm( rootNode->getNode(_name,true)->getNode("offset-norm",true) ),
@@ -854,7 +855,7 @@ NavRadioImpl::NavRadioImpl( SGPropertyNode_ptr node ) :
   _legacy( this ),
   _name(node->getStringValue("name", "nav")),
   _num(node->getIntValue("number", 0)),
-  _rootNode(fgGetNode( std::string("/instrumentation/") + _name, _num, true)),
+  _rootNode(fgGetNode( "/instrumentation/"s + _name, _num, true)),
   _useFrequencyFormatter( _rootNode->getNode("frequencies/selected-mhz",true), _rootNode->getNode("frequencies/selected-mhz-fmt",true), 0.05, 108.0, 118.0 ),
   _stbyFrequencyFormatter( _rootNode->getNode("frequencies/standby-mhz",true), _rootNode->getNode("frequencies/standby-mhz-fmt",true), 0.05, 108.0, 118.0 ),
   _navIndicator(_rootNode),
