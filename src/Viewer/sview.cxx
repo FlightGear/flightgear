@@ -6,10 +6,10 @@ of explicit steps. Steps can move to the origin of the user aircraft or a
 multiplayer aircraft, or modify the current position by a fixed vector (e.g.
 to move from aircraft origin to the pilot's eyepoint), or rotate the current
 direction by a fixed transformation etc. We can also have a step that sets the
-direction to point to a previously-calculated position.
+direction to point to a previously-calculated target position.
 
-This is similar to what is already done by the View code, but making the
-individual steps explicit gives us more flexibility.
+This is similar to what is already done by FlightGear's existing View code, but
+making the individual steps explicit gives us more flexibility.
 
 The dynamic nature of step views allows view cloning with composite-viewer.
 
@@ -47,6 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/viewer/Compositor.hxx>
 
@@ -93,12 +94,20 @@ static std::ostream& operator << (std::ostream& out, const osg::Matrixd& matrix)
 calculating final camera position/orientation. */
 struct SviewPosDir
 {
+    SviewPosDir()
+    :
+    heading(0),
+    pitch(0),
+    roll(0)
+    {
+    }
+    
     SGGeod  position;
     double  heading;
     double  pitch;
     double  roll;
     
-    /* Only used by SviewStepTarget; usually will be from a previously
+    /* Only used by SviewStepFinalToTarget; usually will be from a previously
     evaluated Sview. */
     SGGeod  target;
     
@@ -148,33 +157,69 @@ struct SviewStep
     }
 };
 
+struct Callsign
+/* Info about aircraft with a particular callsign. "" means the user
+aircraft. We use the user aircraft if specified callsign does not exist.
+
+update() must be called before m_root is dereferenced. */
+{
+    Callsign(const std::string& callsign)
+    :
+    m_callsign(callsign)
+    {
+    }
+    
+    bool update()
+    /* Returns true if we have changed m_root. */
+    {
+        if (m_callsign == "") {
+            if (m_root) return false;
+        }
+        else if (m_root && m_root->getStringValue("callsign") == m_callsign) {
+            return false;
+        }
+        m_root = nullptr;
+        if (m_callsign != "") {
+            /* Find multiplayer with matching callsign. */
+            SGPropertyNode* c = globals->get_props()->getNode("ai/models/callsigns")->getNode(m_callsign);
+            if (c) {
+                int i = c->getIntValue();
+                m_root = globals->get_props()->getNode("ai/models/multiplayer", i);
+                assert(m_root);
+            }
+        }
+        if (!m_root) {
+            /* Default to user aircraft. */
+            m_root = globals->get_props();
+        }
+        return true;
+    }
+    
+    std::string         m_callsign;
+    SGPropertyNode_ptr  m_root;
+    
+};
 
 /* A step that sets position to aircraft origin and direction to aircraft's
 longitudal axis. */
 struct SviewStepAircraft : SviewStep
 {
-    /* For the user aircraft, <root> should be /. For a multiplayer aircraft,
-    it should be /ai/models/multiplayer[]. */
-    SviewStepAircraft(SGPropertyNode* root)
+    SviewStepAircraft(const std::string& callsign)
+    :
+    m_callsign(callsign)
     {
-        /* todo: set up a listener or something so that we cope when
-        multiplayer callsign disapears then reappears in a different index of
-        /ai/models/multiplayer[]. */
-        m_longitude     = root->getNode("position/longitude-deg");
-        m_latitude      = root->getNode("position/latitude-deg");
-        m_altitude      = root->getNode("position/altitude-ft");
-        m_heading       = root->getNode("orientation/true-heading-deg");
-        m_pitch         = root->getNode("orientation/pitch-deg");
-        m_roll          = root->getNode("orientation/roll-deg");
-        m_description   = root->getStringValue("callsign");
-        if (m_description == "") {
-            m_description = "User aircraft";
-        }
-        SG_LOG(SG_VIEW, SG_ALERT, "m_longitude->getPath()=" << m_longitude->getPath());
     }
     
     void evaluate(SviewPosDir& posdir) override
     {
+        if (m_callsign.update()) {
+            m_longitude     = m_callsign.m_root->getNode("position/longitude-deg");
+            m_latitude      = m_callsign.m_root->getNode("position/latitude-deg");
+            m_altitude      = m_callsign.m_root->getNode("position/altitude-ft");
+            m_heading       = m_callsign.m_root->getNode("orientation/true-heading-deg");
+            m_pitch         = m_callsign.m_root->getNode("orientation/pitch-deg");
+            m_roll          = m_callsign.m_root->getNode("orientation/roll-deg");
+        }
         posdir.position = SGGeod::fromDegFt(
                 m_longitude->getDoubleValue(),
                 m_latitude->getDoubleValue(),
@@ -188,10 +233,12 @@ struct SviewStepAircraft : SviewStep
     
     virtual void stream(std::ostream& out) const
     {
-        out << " <SviewStepAircraft>";
+        out << " <SviewStepAircraft:" + m_callsign.m_callsign + ">";
     }
     
     private:
+    
+    Callsign            m_callsign;
     
     SGPropertyNode_ptr  m_longitude;
     SGPropertyNode_ptr  m_latitude;
@@ -210,7 +257,7 @@ struct SviewStepMove : SviewStep
 {
     SviewStepMove(double forward, double up, double right)
     :
-    m_offset(right, up, forward)
+    m_offset(-right, -up, -forward)
     {
         SG_LOG(SG_VIEW, SG_INFO, "forward=" << forward << " up=" << up << " right=" << right);
     }
@@ -270,8 +317,8 @@ struct SviewStepRotate : SviewStep
     void evaluate(SviewPosDir& posdir) override
     {
         /* Should we use SGQuatd to evaluate things? */
-        posdir.heading += -m_heading;
-        posdir.pitch += -m_pitch;
+        posdir.heading += m_heading;
+        posdir.pitch += m_pitch;
         posdir.roll += m_roll;
     }
     
@@ -324,8 +371,9 @@ struct SviewStepDirectionMultiply : SviewStep
     double  m_roll;
 };
 
-/* Copies current position to posdir.target. Used by SviewEyeTarget() to make
-current position be available as target later on, e.g. by SviewStepTarget. */
+/* Copies current position to posdir.target. Used by SviewEyeTarget()
+to make current position be available as target later on, e.g. by
+SviewStepFinalToTarget. */
 struct SviewStepCopyToTarget : SviewStep
 {
     void evaluate(SviewPosDir& posdir) override
@@ -339,48 +387,49 @@ struct SviewStepCopyToTarget : SviewStep
     }
 };
 
-
 /* Move position to nearest tower. */
 struct SviewStepNearestTower : SviewStep
 {
-    /* For user aircraft <sim> should be /sim; for multiplayer aircraft it
-    should be ai/models/multiplayer[]/sim. */
-    SviewStepNearestTower(SGPropertyNode* sim)
+    SviewStepNearestTower(const std::string& callsign)
     :
-    m_latitude(sim->getNode("tower/latitude-deg")),
-    m_longitude(sim->getNode("tower/longitude-deg")),
-    m_altitude(sim->getNode("tower/altitude-ft"))
+    m_callsign(callsign)
     {
         m_description = "Nearest tower";
     }
     
     void evaluate(SviewPosDir& posdir) override
     {
+        if (m_callsign.update()) {
+            m_latitude = m_callsign.m_root->getNode("sim/tower/latitude-deg", true /*create*/);
+            m_longitude = m_callsign.m_root->getNode("sim/tower/longitude-deg", true /*create*/);
+            m_altitude = m_callsign.m_root->getNode("sim/tower/altitude-ft", true /*create*/);
+        }
         posdir.position = SGGeod::fromDegFt(
                 m_longitude->getDoubleValue(),
                 m_latitude->getDoubleValue(),
                 m_altitude->getDoubleValue()
                 );
+        posdir.heading = 0;
+        posdir.pitch = 0;
+        posdir.roll = 0;
         SG_LOG(SG_VIEW, SG_BULK, "moved posdir.postion to: " << posdir.position);
     }
     
     virtual void stream(std::ostream& out) const
     {
-        out << " <SviewStepNearestTower>"
-                << ' ' << m_latitude
-                << ' ' << m_longitude
-                << ' ' << m_altitude
-                ;
+        out << " <SviewStepNearestTower:" + m_callsign.m_callsign + ">";
     }
     
+    Callsign            m_callsign;
     SGPropertyNode_ptr  m_latitude;
     SGPropertyNode_ptr  m_longitude;
     SGPropertyNode_ptr  m_altitude;
 };
 
 
-/* Rotates view direction to point at a previously-calculated target. */
-struct SviewStepTarget : SviewStep
+/* Rotates view direction to point at a previously-calculated target. Should be
+final step if not SviewStepFinal. */
+struct SviewStepFinalToTarget : SviewStep
 {
     /* Alters posdir.direction to point to posdir.target. */
     void evaluate(SviewPosDir& posdir) override
@@ -419,19 +468,45 @@ struct SviewStepTarget : SviewStep
     
     virtual void stream(std::ostream& out) const
     {
-        out << " <SviewStepTarget>";
+        out << " <SviewStepFinalToTarget>";
     }
     
 };
 
 
-/* Converts position, heading, pitch and roll into position2 and direction2,
-which will be used to set the camera parameters. */
+/*
+Applies optional rotation (see View::recalcLookFrom) and then converts position
+and direction into position2 and direction2, which will be used to set the
+camera parameters.
+
+default_heading etc are for future when we have implemented event handling to
+modify the view in response to mouse movements.
+*/
 struct SviewStepFinal : SviewStep
 {
+    SviewStepFinal(
+            double heading=0,
+            double pitch=0,
+            double roll=0,
+            double default_heading=0,
+            double default_pitch=0,
+            double default_roll=0
+            )
+    :
+    m_heading(heading),
+    m_pitch(pitch),
+    m_roll(roll),
+    m_default_heading(default_heading),
+    m_default_pitch(default_pitch),
+    m_default_roll(default_roll)
+    {
+        SG_LOG(SG_VIEW, SG_INFO, "heading=" << heading << " pitch=" << pitch << " roll=" << roll);
+    }
+    
     void evaluate(SviewPosDir& posdir) override
     {
         /* See View::recalcLookFrom(). */
+        SGQuatd rotation = SGQuatd::fromYawPitchRollDeg(-m_heading, m_pitch, m_roll);
         
         /* The rotation rotating from the earth centerd frame to the horizontal
         local frame. */
@@ -454,178 +529,41 @@ struct SviewStepFinal : SviewStep
         SGQuatd q(-0.5, -0.5, 0.5, 0.5);
         
         posdir.position2 = position;
-        posdir.direction2 = ec2body * q;
+        posdir.direction2 = ec2body * rotation * q;
     }
     
     virtual void stream(std::ostream& out) const
     {
         out << " <SviewStepFinal>";
     }
+    
+    private:
+    double  m_heading;
+    double  m_pitch;
+    double  m_roll;
+    double  m_default_heading;
+    double  m_default_pitch;
+    double  m_default_roll;
 };
 
-
-/* Contains a list of SviewStep's that are used to evaluate a SviewPosDir
-(position and orientation)
-*/
-struct SviewSteps
+/* A step that takes the SviewPosDir's eye and target positions and treats
+them as local and remote points respectively. We choose an eye position and
+direction such that the local and remote points are both visible, with the
+original eye position in the foreground at a fixed distance. */
+struct SviewStepDouble : SviewStep
 {
-    const std::string& description()
+    SviewStepDouble()
     {
-        if (m_name == "") {
-            if (!m_steps.empty()) {
-                m_name = m_steps.front()->m_description;
-            }
-        }
-        return m_name;
+        m_local_chase_distance = 25;
+        m_angle_rad = 15 * 3.14159265 / 180;
     }
     
-    void add_step(std::shared_ptr<SviewStep> step)
+    SviewStepDouble(SGPropertyNode* config)
     {
-        m_steps.push_back(step);
+        m_local_chase_distance = config->getDoubleValue("chase-distance");
+        m_angle_rad = config->getDoubleValue("angle") * 3.14159265 / 180;
     }
-    
-    void add_step(SviewStep* step)
-    {
-        return add_step(std::shared_ptr<SviewStep>(step));
-    }
-    
-    void evaluate(SviewPosDir& posdir, bool debug=false)
-    {
-        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating m_name=" << m_name);
-        for (auto step: m_steps) {
-            step->evaluate(posdir);
-            if (debug) SG_LOG(SG_VIEW, SG_ALERT, "posdir=" << posdir);
-        }
-    };
-    
-    std::string m_name;
-    std::vector<std::shared_ptr<SviewStep>>   m_steps;
-    
-    friend std::ostream& operator << (std::ostream& out, const SviewSteps& viewpos)
-    {
-        out << viewpos.m_name << " (" << viewpos.m_steps.size() << ")";
-        for (auto step: viewpos.m_steps) {
-            out << " " << *step;
-        }
-        return out;
-    }
-};
-
-
-static void ShowViews();
-
-
-/* Base class for views.
-*/
-struct SviewView
-{
-    SviewView(osgViewer::View* osg_view)
-    :
-    m_osg_view(osg_view)
-    {
-        s_id += 1;
-    }
-    
-    /* Description that also includes integer identifier. */
-    const std::string&  description2()
-    {
-        if (m_description2 == "") {
-            char    buffer[32];
-            snprintf(buffer, sizeof(buffer), "[%i] ", s_id);
-            m_description2 = buffer + description();
-        }
-        return m_description2;
-    }
-    
-    /* Description of this view, used in window title etc. */
-    virtual const std::string& description() = 0;
-    
-    virtual ~SviewView()
-    {
-        if (!m_osg_view) {
-            return;
-        }
-        osgViewer::ViewerBase* viewer_base = m_osg_view->getViewerBase();
-        auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
-        assert(composite_viewer);
-        for (unsigned i=0; i<composite_viewer->getNumViews(); ++i) {
-            osgViewer::View* view = composite_viewer->getView(i);
-            SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
-        }
-        //ShowViews();  /* unsafe because we are being removed from s_views. */
-        SG_LOG(SG_VIEW, SG_ALERT, "removing m_osg_view=" << m_osg_view);
-        composite_viewer->stopThreading();
-        composite_viewer->removeView(m_osg_view);
-        composite_viewer->startThreading();
-    }
-    
-    /* Returns false if window has been closed. */
-    virtual bool update(double dt) = 0;
-    
-    /* Sets this view's camera position/orientation from <posdir>. */
-    void posdir_to_view(SviewPosDir posdir)
-    {
-        /* FGViewMgr::update(). */
-        osg::Vec3d  position    = toOsg(posdir.position2);
-        osg::Quat   orientation = toOsg(posdir.direction2);
-
-        osg::Camera* camera = m_osg_view->getCamera();
-        osg::Matrix old_m = camera->getViewMatrix();
-        /* This calculation is copied from CameraGroup::update(). As of
-        2020-10-10 we don't yet update the projection matrix so views cannot
-        zoom. */
-        const osg::Matrix new_m(
-                osg::Matrix::translate(-position)
-                * osg::Matrix::rotate(orientation.inverse())
-                );
-        SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
-        SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
-        camera->setViewMatrix(new_m);
-    }
-        
-    osgViewer::View*                    m_osg_view = nullptr;
-    simgear::compositor::Compositor*    m_compositor = nullptr;
-    std::string                         m_description2;
-    
-    static int s_id;
-};
-
-int SviewView::s_id = 0;
-
-
-/* A view which keeps two aircraft visible, with one at a constant distance in
-the foreground.
-*/
-struct SviewDouble : SviewView
-{
-    /* <local> and <remote> should evaluate to position of local and remote
-    aircraft. We ignore directions in <local> and <remote> - we are only
-    interested in the two positions. */
-    SviewDouble(
-            osgViewer::View* view,
-            const SviewSteps& steps_local,
-            const SviewSteps& steps_remote,
-            double local_chase_distance=25,
-            double angle_deg=15
-            )
-    :
-    SviewView(view),
-    m_steps_local(steps_local),
-    m_steps_remote(steps_remote),
-    m_local_chase_distance(local_chase_distance),
-    m_angle_rad(angle_deg * 3.1415926 / 180)
-    {
-        const std::string eye = m_steps_local.description();
-        const std::string target = m_steps_remote.description();
-        m_description = "Double view " + eye + " - " + target;
-    }
-    
-    const std::string& description() override
-    {
-        return m_description;
-    }
-    
-    virtual bool update(double dt) override
+    void evaluate(SviewPosDir& posdir) override
     {
         /*
         We choose eye position so that we show the local aircraft a fixed
@@ -671,30 +609,22 @@ struct SviewDouble : SviewView
         
         So we can find RLE using acos().
         */
-        
-        bool valid = m_osg_view->getCamera()->getGraphicsContext()->valid();
-        SG_LOG(SG_VIEW, SG_BULK, "valid=" << valid);
-        if (!valid) return false;
-        
         bool debug = false;
-        if (0) {
-            time_t t = time(NULL) / 10;
-            //if (debug) SG_LOG(SG_VIEW, SG_ALERT, "m_debug_time=" << m_debug_time << " t=" << t);
-            if (t != m_debug_time) {
-                m_debug_time = t;
-                debug = true;
-            }
+        static time_t t0 = 0;
+        time_t t = time(NULL);
+        if (0 && t - t0 > 3) {
+            t0 = t;
+            debug = true;
         }
-
-        /* Find positions of local and remote aircraft. */
-        SviewPosDir posdir_local;
-        SviewPosDir posdir_remote;
-        m_steps_local.evaluate(posdir_local);
-        m_steps_remote.evaluate(posdir_remote);
+        
+        SviewPosDir posdir_remote = posdir;
+        SviewPosDir posdir_local = posdir;
+        posdir_local.target = posdir_local.position;
         
         if (debug) {
-            SG_LOG(SG_VIEW, SG_ALERT, "    m_steps_local: " << m_steps_local << ": " << posdir_local);
-            SG_LOG(SG_VIEW, SG_ALERT, "    m_steps_remote: " << m_steps_remote << ": " << posdir_remote);
+            SG_LOG(SG_VIEW, SG_ALERT, " posdir       =" << posdir);
+            SG_LOG(SG_VIEW, SG_ALERT, " posdir_local =" << posdir_local);
+            SG_LOG(SG_VIEW, SG_ALERT, " posdir_remote=" << posdir_remote);
         }
         
         /* Create cartesian coordinates so we can calculate distance <lr>. */
@@ -741,7 +671,7 @@ struct SviewDouble : SviewView
                 );
         posdir_local.pitch = (hlr + rle) * 180 / pi;
         posdir_local.roll = 0;
-        auto move = SviewStepMove(-le, 0, 0);
+        auto move = SviewStepMove(le, 0, 0);
         move.evaluate(posdir_local);
         
         /* At this point, posdir_local.position is eye position. We make
@@ -754,7 +684,7 @@ struct SviewDouble : SviewView
         posdir_local.pitch = (her + hel) / 2 * 180 / pi;
         auto stepfinal = SviewStepFinal();
         stepfinal.evaluate(posdir_local);
-        posdir_to_view(posdir_local);
+        posdir = posdir_local;
         
         if (debug) {
             SG_LOG(SG_VIEW, SG_ALERT, ""
@@ -771,259 +701,443 @@ struct SviewDouble : SviewView
                     << " posdir_remote=" << posdir_remote
                     );
         }
-        return true;
     }
     
-    SviewSteps  m_steps_local;
-    SviewSteps  m_steps_remote;
-    double      m_local_chase_distance;
-    double      m_angle_rad;
+    double m_local_chase_distance;
+    double m_angle_rad;
+};
+
+/* Contains a list of SviewStep's that are used to evaluate a SviewPosDir
+(position and orientation)
+*/
+struct SviewSteps
+{
+    void add_step(std::shared_ptr<SviewStep> step)
+    {
+        m_steps.push_back(step);
+    }
     
-    std::string m_description;
-    time_t      m_debug_time = 0;
+    void add_step(SviewStep* step)
+    {
+        return add_step(std::shared_ptr<SviewStep>(step));
+    }
+    
+    void evaluate(SviewPosDir& posdir, bool debug=false)
+    {
+        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating m_name=" << m_name);
+        for (auto step: m_steps) {
+            step->evaluate(posdir);
+            if (debug) SG_LOG(SG_VIEW, SG_ALERT, "posdir=" << posdir);
+        }
+    };
+    
+    std::string m_name;
+    std::vector<std::shared_ptr<SviewStep>>   m_steps;
+    
+    friend std::ostream& operator << (std::ostream& out, const SviewSteps& viewpos)
+    {
+        out << viewpos.m_name << " (" << viewpos.m_steps.size() << ")";
+        for (auto step: viewpos.m_steps) {
+            out << " " << *step;
+        }
+        return out;
+    }
 };
 
 
-/* A view defined by an eye and target. Used for clones of main window views.
+/* Base class for views.
 */
+struct SviewView
+{
+    SviewView(osgViewer::View* osg_view)
+    :
+    m_osg_view(osg_view)
+    {
+        s_id += 1;
+    }
+    
+    /* Description that also includes integer identifier. */
+    const std::string  description2()
+    {
+        char    buffer[32];
+        snprintf(buffer, sizeof(buffer), "[%i] ", s_id);
+        return buffer + description();
+    }
+    
+    /* Description of this view, used in window title etc. */
+    virtual const std::string description() = 0;
+    
+    virtual ~SviewView()
+    {
+        if (!m_osg_view) {
+            return;
+        }
+        osgViewer::ViewerBase* viewer_base = m_osg_view->getViewerBase();
+        auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
+        assert(composite_viewer);
+        for (unsigned i=0; i<composite_viewer->getNumViews(); ++i) {
+            osgViewer::View* view = composite_viewer->getView(i);
+            SG_LOG(SG_VIEW, SG_ALERT, "composite_viewer view i=" << i << " view=" << view);
+        }
+        SG_LOG(SG_VIEW, SG_ALERT, "removing m_osg_view=" << m_osg_view);
+        composite_viewer->stopThreading();
+        composite_viewer->removeView(m_osg_view);
+        composite_viewer->startThreading();
+    }
+    
+    /* Returns false if window has been closed. */
+    virtual bool update(double dt) = 0;
+    
+    /* Sets this view's camera position/orientation from <posdir>. */
+    void posdir_to_view(SviewPosDir posdir)
+    {
+        /* FGViewMgr::update(). */
+        osg::Vec3d  position    = toOsg(posdir.position2);
+        osg::Quat   orientation = toOsg(posdir.direction2);
+
+        osg::Camera* camera = m_osg_view->getCamera();
+        osg::Matrix old_m = camera->getViewMatrix();
+        /* This calculation is copied from CameraGroup::update(). As of
+        2020-10-10 we don't yet update the projection matrix so views cannot
+        zoom. */
+        const osg::Matrix new_m(
+                osg::Matrix::translate(-position)
+                * osg::Matrix::rotate(orientation.inverse())
+                );
+        SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
+        SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
+        camera->setViewMatrix(new_m);
+    }
+        
+    osgViewer::View*                    m_osg_view = nullptr;
+    simgear::compositor::Compositor*    m_compositor = nullptr;
+    
+    static int s_id;
+};
+
+int SviewView::s_id = 0;
+
+/* A view defined by a series of steps that defines an eye and a target. Used
+for clones of main window views. */
 struct SviewViewEyeTarget : SviewView
 {
-    /* Construct as a clone of the current view in /sim/current-view/. We look
-    in /sim/current-view/ to get view parameters, and from them we construct
-    eye and target steps. */
-    SviewViewEyeTarget(osgViewer::View* view)
+    SviewViewEyeTarget(osgViewer::View* view, SGPropertyNode* config)
     :
     SviewView(view)
     {
-        SG_LOG(SG_VIEW, SG_INFO, "m_osg_view=" << m_osg_view);
-        
-        SGPropertyNode* global_view;
-        SGPropertyNode* root;
-        SGPropertyNode* sim;
-        SGPropertyNode* view_config;
-        int             view_number_raw;
-        std::string     root_path;
-        std::string     type;
-        
-        /* Unfortunately we need to look at things like
-        /sim/view[]/config/eye-heading-deg-path, even when handling multiplayer
-        aircraft. */
-        view_number_raw = globals->get_props()->getIntValue("/sim/current-view/view-number-raw");
-        global_view = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
-        
-        /* <root_path> is typically "" or /ai/models/multiplayer[]. */
-        root_path   = global_view->getStringValue("config/root");
-        type        = global_view->getStringValue("type");
-        
-        root = globals->get_props()->getNode(root_path);
-        if (root_path == "" || root_path == "/") {
-            /* user aircraft. */
-            sim = root->getNode("sim");
-        }
-        else {
-            /* Multiplayer sim is /ai/models/multiplayer[]/set/sim. */
-            sim = root->getNode("set/sim");
-        }
-        
-        {
-            SGPropertyNode* view_node   = sim->getNode("view", view_number_raw, true /*create*/);
-            view_config = view_node->getNode("config");
-        }
-        
-        SG_LOG(SG_VIEW, SG_ALERT, "view_number_raw=" << view_number_raw);
-        SG_LOG(SG_VIEW, SG_ALERT, "type=" << type);
-        SG_LOG(SG_VIEW, SG_ALERT, "root_path=" << root_path);
-        SG_LOG(SG_VIEW, SG_ALERT, "root=" << root);
-        SG_LOG(SG_VIEW, SG_ALERT, "sim=" << sim);
-        assert(root && sim);
-        SG_LOG(SG_VIEW, SG_ALERT, "root->getPath()=" << root->getPath());
-        SG_LOG(SG_VIEW, SG_ALERT, "sim->getPath()=" << sim->getPath());
-        SG_LOG(SG_VIEW, SG_ALERT, "view_config->getPath()=" << view_config->getPath());
-        
-        if (view_config->getBoolValue("eye-fixed")) {
-            /* E.g. Tower view. */
-            SG_LOG(SG_VIEW, SG_INFO, "eye-fixed");
-            
-            /* Add a step to move to centre of aircraft. */
-            m_target.add_step(new SviewStepAircraft(root));
-            m_target.add_step(new SviewStepMove(
-                    view_config->getDoubleValue("target-z-offset-m"),
-                    view_config->getDoubleValue("target-y-offset-m"),
-                    view_config->getDoubleValue("target-x-offset-m")
-                    ));
-            SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
-            
-            /* Add a step to set pitch and roll to zero, otherwise view from
-            tower (as calculated by SviewStepTarget) rolls/pitches with
-            aircraft. */
-            m_target.add_step(new SviewStepDirectionMultiply(
-                    1 /* heading */,
-                    0 /* pitch */,
-                    0 /* roll */
-                    ));
-            SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
-            
-            /* Current position is the target, so add a step that copies it to
-            SviewPosDir.target. */
-            m_target.add_step(new SviewStepCopyToTarget);
-            
-            /* Added steps to set .m_eye up so that it looks from the nearest
-            tower. */
-            m_eye.add_step(new SviewStepNearestTower(sim));
-            m_eye.add_step(new SviewStepTarget);
-            
-            /* Add a step that moves towards the target a little to avoid eye
-            being inside the tower walls.
+        if (!strcmp(config->getStringValue("type"), "legacy")) {
+            std::string callsign = config->getStringValue("callsign");
+            std::string callsign_desc = (callsign == "") ? "" : ": " + callsign;
+            SG_LOG(SG_VIEW, SG_ALERT, "callsign=" << callsign);
 
-            [At some point it might be good to make this movement not change
-            the height too.] */
-            m_eye.add_step(new SviewStepMove(30, 0, 0));
-        }
-        else {
-            SG_LOG(SG_VIEW, SG_INFO, "not eye-fixed");
-            
-            /* E.g. Pilot view or Helicopter view. We assume eye position is
-            relative to aircraft. */
-            if (type == "lookat") {
-                /* E.g. Helicopter view. Move to centre of aircraft.
-                config/target-z-offset-m seems to be +ve when moving backwards
-                relative to the aircraft, so we need to negate the value we
-                pass to SviewStepMove(). */
-                m_target.add_step(new SviewStepAircraft(root));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
+            if (config->getBoolValue("view/config/eye-fixed")) {
+                SG_LOG(SG_VIEW, SG_ALERT, "eye-fixed");
+                m_steps.m_name = std::string() + "legacy tower" + callsign_desc;
                 
-                m_target.add_step(new SviewStepMove(
-                        view_config->getDoubleValue("target-z-offset-m"),
-                        view_config->getDoubleValue("target-y-offset-m"),
-                        view_config->getDoubleValue("target-x-offset-m")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_target=" << m_target);
-                
-                m_target.add_step(new SviewStepCopyToTarget);
-                
-                m_eye.add_step(new SviewStepAircraft(root));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
-                
-                m_eye.add_step(new SviewStepMove(
-                        view_config->getDoubleValue("target-z-offset-m"),
-                        view_config->getDoubleValue("target-y-offset-m"),
-                        view_config->getDoubleValue("target-x-offset-m")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
-                
-                /* Add a step that crudely preserves or don't preserve
-                aircraft's heading, pitch and roll; this enables us to mimic
-                Helicopter and Chase views. In theory we should evaluate the
-                specified paths, but in practise we only need to multiply
-                current values by 0 or 1.
+                if (!strcmp(config->getStringValue("view/type"), "lookat")) {
+                    /* E.g. Tower view. */
 
-                todo: add damping. */
-                m_eye.add_step(new SviewStepDirectionMultiply(
-                        global_view->getStringValue("config/eye-heading-deg-path")[0] ? 1 : 0,
-                        global_view->getStringValue("config/eye-pitch-deg-path")[0] ? 1 : 0,
-                        global_view->getStringValue("config/eye-roll-deg-path")[0] ? 1 : 0
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
-                
-                /* Add a step that applies the current view rotation. */
-                m_eye.add_step(new SviewStepRotate(
-                        root->getDoubleValue("sim/current-view/heading-offset-deg"),
-                        root->getDoubleValue("sim/current-view/pitch-offset-deg"),
-                        root->getDoubleValue("sim/current-view/roll-offset-deg")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
-                
-                /* Add step that moves eye away from aircraft.
-                config/z-offset-m defaults to /sim/chase-distance-m (see
-                fgdata:defaults.xml) which is -ve, e.g. -25m. */
-                m_eye.add_step(new SviewStepMove(
-                        -view_config->getDoubleValue("z-offset-m"),
-                        -view_config->getDoubleValue("y-offset-m"),
-                        -view_config->getDoubleValue("x-offset-m")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
+                    /* Add a step to move to centre of aircraft. target offsets appear
+                    to have reversed sign compared to what we require. */
+                    m_steps.add_step(new SviewStepAircraft(callsign));
+                    m_steps.add_step(new SviewStepMove(
+                            -config->getDoubleValue("view/config/target-z-offset-m"),
+                            -config->getDoubleValue("view/config/target-y-offset-m"),
+                            -config->getDoubleValue("view/config/target-x-offset-m")
+                            ));
+
+                    /* Add a step to set pitch and roll to zero, otherwise
+                    view from tower (as calculated by SviewStepFinalToTarget)
+                    rolls/pitches with aircraft. */
+                    m_steps.add_step(new SviewStepDirectionMultiply(
+                            1 /* heading */,
+                            0 /* pitch */,
+                            0 /* roll */
+                            ));
+
+                    /* Current position is the target, so add a step that copies it to
+                    SviewPosDir.target. */
+                    m_steps.add_step(new SviewStepCopyToTarget);
+
+                    /* Added steps to set .m_eye up so that it looks from the nearest
+                    tower. */
+                    m_steps.add_step(new SviewStepNearestTower(callsign));
+                    m_steps.add_step(new SviewStepFinalToTarget);
+
+                    /* Add a step that moves towards the target a little to avoid eye
+                    being inside the tower walls.
+
+                    [At some point it might be good to make this movement not change
+                    the height too.] */
+                    m_steps.add_step(new SviewStepMove(-10, 0, 0));
+                }
+                else {
+                    /* E.g. Tower view look from. */
+                    m_steps.add_step(new SviewStepNearestTower(callsign));
+                    
+                    /* Looks like Tower view look from's heading-offset is reversed. */
+                    m_steps.add_step(new SviewStepRotate(
+                            -globals->get_props()->getDoubleValue("sim/current-view/heading-offset-deg"),
+                            globals->get_props()->getDoubleValue("sim/current-view/pitch-offset-deg"),
+                            globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg")
+                            ));
+                    
+                    m_steps.add_step(new SviewStepMove(-10, 0, 0));
+                    
+                    m_steps.add_step(new SviewStepFinal);
+                }
             }
             else {
-                /* E.g. pilot view.
-
-                Add steps to move to the pilot's eye position.
-
-                config/z-offset-m seems to be +ve when moving backwards
-                relative to the aircraft, so we need to negate the value we
-                pass to SviewStepMove(). */
-                m_eye.add_step(new SviewStepAircraft(root));
-                m_eye.add_step(new SviewStepMove(
-                        view_config->getDoubleValue("z-offset-m"),
-                        view_config->getDoubleValue("y-offset-m"),
-                        view_config->getDoubleValue("x-offset-m")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
+                SG_LOG(SG_VIEW, SG_ALERT, "not eye-fixed");
+                /* E.g. Pilot view or Helicopter view. */
                 
-                /* Add a step to apply the current view rotation. E.g. on
-                harrier-gr3 this corrects initial view direction (which is
-                pitch down by 15deg).
+                SGPropertyNode* global_sim_view = globals->get_props()
+                        ->getNode("sim/view", config->getIntValue("view-number-raw"));
 
-                However this doesn't work properly - the cockpit rotates
-                in a small circle when the aircraft rolls. This is because
-                SviewStepRotate's simple application of heading/pitch/roll
-                doesn't work if aircraft has non-zero roll. We need to use
-                SGQuatd - see View::recalcLookFrom(). */
-                m_eye.add_step(new SviewStepRotate(
-                        view_config->getDoubleValue("heading-offset-deg"),
-                        -view_config->getDoubleValue("pitch-offset-deg"),
-                        view_config->getDoubleValue("roll-offset-deg")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
-                
-                /* Add a step to preserve the current user-supplied offset to
-                view direction. */
-                m_eye.add_step(new SviewStepRotate(
-                        root->getDoubleValue("sim/current-view/heading-offset-deg")
-                                - view_config->getDoubleValue("heading-offset-deg"),
-                        -(root->getDoubleValue("sim/current-view/pitch-offset-deg")
-                                - view_config->getDoubleValue("pitch-offset-deg")),
-                        root->getDoubleValue("sim/current-view/roll-offset-deg")
-                                - view_config->getDoubleValue("roll-offset-deg")
-                        ));
-                SG_LOG(SG_VIEW, SG_DEBUG, "m_eye=" << m_eye);
+                if (!strcmp(global_sim_view->getStringValue("type"), "lookat")) {
+                    /* E.g. Helicopter view and Chase views. */
+                    m_steps.m_name = std::string() + "legacy helicopter/chase" + callsign_desc;
+                    m_steps.add_step(new SviewStepAircraft(callsign));
+                    
+                    /* Move to centre of aircraft. config/target-z-offset-m
+                    seems to use +ve to indicate movement backwards relative
+                    to the aircraft, so we need to negate the value we pass to
+                    SviewStepMove(). */
+                    m_steps.add_step(new SviewStepMove(
+                            -config->getDoubleValue("view/config/target-z-offset-m"),
+                            -config->getDoubleValue("view/config/target-y-offset-m"),
+                            -config->getDoubleValue("view/config/target-x-offset-m")
+                            ));
+
+                    m_steps.add_step(new SviewStepCopyToTarget);
+
+                    /* Add a step that crudely preserves or don't preserve
+                    aircraft's heading, pitch and roll; this enables us to mimic
+                    Helicopter and Chase views. In theory we should evaluate the
+                    specified paths, but in practise we only need to multiply
+                    current values by 0 or 1.
+
+                    todo: add damping. */
+                    assert(global_sim_view);
+                    m_steps.add_step(new SviewStepDirectionMultiply(
+                            global_sim_view->getStringValue("config/eye-heading-deg-path")[0] ? 1 : 0,
+                            global_sim_view->getStringValue("config/eye-pitch-deg-path")[0] ? 1 : 0,
+                            global_sim_view->getStringValue("config/eye-roll-deg-path")[0] ? 1 : 0
+                            ));
+
+                    /* Add a step that applies the current view rotation. We
+                    use -ve heading and pitch because in the legacy
+                    viewing system's Helicopter view etc, increments to
+                    heading-offset-deg and pitch-offset-deg actually correspond
+                    to a decreasing actual heading and pitch values. */
+                    m_steps.add_step(new SviewStepRotate(
+                            -globals->get_props()->getDoubleValue("sim/current-view/heading-offset-deg"),
+                            -globals->get_props()->getDoubleValue("sim/current-view/pitch-offset-deg"),
+                            globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg")
+                            ));
+
+                    /* Add step that moves eye away from aircraft.
+                    config/z-offset-m defaults to /sim/chase-distance-m (see
+                    fgdata:defaults.xml) which is -ve, e.g. -25m. */
+                    m_steps.add_step(new SviewStepMove(
+                            config->getDoubleValue("view/config/z-offset-m"),
+                            config->getDoubleValue("view/config/y-offset-m"),
+                            config->getDoubleValue("view/config/x-offset-m")
+                            ));
+                    
+                    /* Finally add a step that converts
+                    lat,lon,height,heading,pitch,roll into SGVec3d position and
+                    SGQuatd orientation. */
+                    m_steps.add_step(new SviewStepFinal);
+                }
+                else {
+                    /* E.g. pilot view.
+
+                    Add steps to move to the pilot's eye position.
+
+                    config/z-offset-m seems to be +ve when moving backwards
+                    relative to the aircraft, so we need to negate the value we
+                    pass to SviewStepMove(). */
+                    m_steps.m_name = std::string() + "legacy pilot" + callsign_desc;
+                    m_steps.add_step(new SviewStepAircraft(callsign));
+                    m_steps.add_step(new SviewStepMove(
+                            -config->getDoubleValue("view/config/z-offset-m"),
+                            -config->getDoubleValue("view/config/y-offset-m"),
+                            -config->getDoubleValue("view/config/x-offset-m")
+                            ));
+                    
+                    double current_heading_offset = globals->get_props()->getDoubleValue("sim/current-view/heading-offset-deg");
+                    double current_pitch_offset   = globals->get_props()->getDoubleValue("sim/current-view/pitch-offset-deg");
+                    double current_roll_offset    = globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg");
+                    double default_heading_offset = config->getDoubleValue("view/config/heading-offset-deg");
+                    double default_pitch_offset   = config->getDoubleValue("view/config/pitch-offset-deg");
+                    double default_roll_offset    = config->getDoubleValue("view/config/roll-offset-deg");
+
+                    /* Final step applies rotation. */
+                    m_steps.add_step(new SviewStepFinal(
+                            current_heading_offset,
+                            current_pitch_offset,
+                            current_roll_offset,
+                            default_heading_offset,
+                            default_pitch_offset,
+                            default_roll_offset
+                            ));
+                    SG_LOG(SG_VIEW, SG_ALERT, "m_steps=" << m_steps);
+                }
             }
-            
-            /* Finally add a step that converts
-            lat,lon,height,heading,pitch,roll into SGVec3d position and SGQuatd
-            orientation. */
-            m_eye.add_step(new SviewStepFinal);
         }
-        SG_LOG(SG_VIEW, SG_ALERT, "m_eye=" << m_eye);
-        SG_LOG(SG_VIEW, SG_ALERT, "m_target=" << m_target);
-        
-        m_description = m_eye.description() + " - " + m_target.description();
+        else {
+            /* New-style Sview specification, where each step is specified for
+            us. */
+            simgear::PropertyList steps = config->getChildren("step");
+            if (steps.empty()) {
+                throw std::runtime_error(std::string() + "No steps specified");
+            }
+            bool    finalised = false;
+            for (SGPropertyNode* step: steps) {
+                finalised = false;
+                const char* type = step->getStringValue("type");
+                if (0) {}
+                else if (!strcmp(type, "aircraft")) {
+                    std::string callsign = step->getStringValue("callsign");
+                    m_steps.add_step(new SviewStepAircraft(callsign));
+                    if (callsign != "") {
+                        m_steps.m_name += " callsign=" + callsign;
+                    }
+                }
+                else if (!strcmp(type, "move")) {
+                    m_steps.add_step(new SviewStepMove(
+                            step->getDoubleValue("forward"),
+                            step->getDoubleValue("up"),
+                            step->getDoubleValue("right")
+                            ));
+                }
+                else if (!strcmp(type, "direction-multiply")) {
+                    m_steps.add_step(new SviewStepDirectionMultiply(
+                            step->getDoubleValue("heading"),
+                            step->getDoubleValue("pitch"),
+                            step->getDoubleValue("roll")
+                            ));
+               }
+               else if (!strcmp(type, "copy-to-target")) {
+                    m_steps.add_step(new SviewStepCopyToTarget);
+                }
+                else if (!strcmp(type, "nearest-tower")) {
+                    std::string callsign = step->getStringValue("callsign");
+                    m_steps.add_step(new SviewStepNearestTower(callsign));
+                    m_steps.m_name += " tower";
+                    if (callsign != "") m_steps.m_name += " callsign=" + callsign;
+                }
+                else if (!strcmp(type, "rotate")) {
+                    m_steps.add_step(new SviewStepRotate(
+                            step->getDoubleValue("heading"),
+                            step->getDoubleValue("pitch"),
+                            step->getDoubleValue("roll")
+                            ));
+                }
+                else if (!strcmp(type, "rotate-current-view")) {
+                    m_steps.add_step(new SviewStepRotate(
+                            globals->get_props()->getDoubleValue("heading"),
+                            globals->get_props()->getDoubleValue("pitch"),
+                            globals->get_props()->getDoubleValue("roll")
+                            ));
+                }
+                else if (!strcmp(type, "rotate-to-target")) {
+                    m_steps.add_step(new SviewStepFinalToTarget);
+                    finalised = true;
+                }
+                else if (!strcmp(type, "double")) {
+                    m_steps.add_step(new SviewStepDouble(step));
+                    finalised = true;
+                    m_steps.m_name += " double";
+                }           
+                else {
+                    throw std::runtime_error(std::string() + "Unrecognised step name: '" + type + "'");
+                }
+            }
+            if (!finalised) {
+                m_steps.add_step(new SviewStepFinal);
+            }
+        }
+        SG_LOG(SG_VIEW, SG_ALERT, "m_steps=" << m_steps);
     }
-    
-    const std::string& description() override
-    {
-        return m_description;
-    }
-    
-    /* Construct from separate eye and target definitions. */
+
+    /* Construct from two step sequences. */
     SviewViewEyeTarget(
             osgViewer::View* view,
-            const SviewSteps& eye,
-            const SviewSteps& target
+            SGPropertyNode* config,
+            SviewSteps& a,
+            SviewSteps& b
             )
     :
-    SviewView(view),
-    m_eye(eye),
-    m_target(target)
+    SviewView(view)
     {
-        m_target.add_step(new SviewStepCopyToTarget);
-        m_eye.add_step(new SviewStepTarget);
-        SG_LOG(SG_VIEW, SG_ALERT, "    m_eye:" << m_eye);
-        SG_LOG(SG_VIEW, SG_ALERT, "    m_target:" << m_target);
-        m_debug = true;
-        SG_LOG(SG_VIEW, SG_ALERT, "    m_debug:" << m_debug);
-        m_description = m_eye.description() + " - " + m_target.description();
+        const char* type = config->getStringValue("type");
+        if (!type) {
+            throw std::runtime_error("double-type not specified");
+        }
+        if (!strcmp(type, "last_pair")) {
+            /* todo: remove steps that have no affect on the target/eye that we are
+            interested in. */
+            SviewSteps& eye = a;
+            SviewSteps& target = b;
+            m_steps.m_name = std::string() + " pair: " + eye.m_name + " - " + target.m_name;
+            for (auto step: target.m_steps) {
+                if (0
+                        || dynamic_cast<SviewStepCopyToTarget*>(step.get())
+                        || dynamic_cast<SviewStepFinal*>(step.get())
+                        || dynamic_cast<SviewStepFinalToTarget*>(step.get())
+                        ) {
+                    continue;
+                }
+                m_steps.add_step(step);
+            }
+            m_steps.add_step(new SviewStepCopyToTarget);
+
+            for (auto step: eye.m_steps) {
+                if (0
+                        || dynamic_cast<SviewStepCopyToTarget*>(step.get())
+                        || dynamic_cast<SviewStepFinal*>(step.get())
+                        || dynamic_cast<SviewStepFinalToTarget*>(step.get())
+                        ) {
+                    continue;
+                }
+                m_steps.add_step(step);
+            }
+            m_steps.add_step(new SviewStepFinalToTarget);
+            SG_LOG(SG_VIEW, SG_ALERT, "    m_steps:" << m_steps);
+        }
+        else if (!strcmp(type, "last_pair_double")) {
+            SviewSteps& local = a;
+            SviewSteps& remote = b;
+            m_steps.m_name = std::string() + " double: " + local.m_name + " - " + remote.m_name;
+            for (auto step: remote.m_steps) {
+                m_steps.add_step(step);
+                if (dynamic_cast<SviewStepCopyToTarget*>(step.get())) {
+                    break;
+                }
+            }
+            m_steps.add_step(new SviewStepCopyToTarget);
+
+            for (auto step: local.m_steps) {
+                if (dynamic_cast<SviewStepCopyToTarget*>(step.get())) {
+                    break;
+                }
+                m_steps.add_step(step);
+            }
+            m_steps.add_step(new SviewStepDouble);
+            SG_LOG(SG_VIEW, SG_ALERT, "    m_steps:" << m_steps);
+        }
+        else {
+            throw std::runtime_error(std::string("Unrecognised double view: ") + type);
+        }
     }
 
+    const std::string description() override
+    {
+        return m_steps.m_name;
+    }
+    
     bool update(double dt) override
     {
         bool valid = m_osg_view->getCamera()->getGraphicsContext()->valid();
@@ -1040,18 +1154,14 @@ struct SviewViewEyeTarget : SviewView
                 debug = true;
             }
         }
-        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating target:");
-        m_target.evaluate(posdir, debug);
-        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating eye:");
-        m_eye.evaluate(posdir, debug);
+        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating m_steps:");
+        m_steps.evaluate(posdir, debug);
 
         posdir_to_view(posdir);
         return true;
     }
     
-    SviewSteps          m_eye;
-    SviewSteps          m_target;
-    std::string         m_description;
+    SviewSteps          m_steps;
     bool                m_debug = false;
     time_t              m_debug_time = 0;
 };
@@ -1064,15 +1174,47 @@ static std::vector<std::shared_ptr<SviewView>>  s_views;
 static std::deque<std::shared_ptr<SviewViewEyeTarget>>    s_recent_views;
 
 
-static void ShowViews()
+/* Returns an independent property tree that defines an Sview that is a copy of
+the current view. */
+static SGPropertyNode_ptr SviewConfigForCurrentView()
 {
-    for (auto view: s_views) {
-        if (!view) SG_LOG(SG_GENERAL, SG_ALERT, "    view is null");
-        else {
-            const osg::GraphicsContext* vgc = (view->m_compositor) ? view->m_compositor->getGraphicsContext() : nullptr;
-            SG_LOG(SG_GENERAL, SG_ALERT, "    gc=" << vgc);
-        }
+    SGPropertyNode_ptr  config = new SGPropertyNode;
+    int view_number_raw = globals->get_props()->getIntValue("/sim/current-view/view-number-raw");
+    config->setIntValue("view-number-raw", view_number_raw);
+    SGPropertyNode* global_view = globals->get_props()->getNode("/sim/view", view_number_raw /*index*/, true /*create*/);
+    std::string root_path = global_view->getStringValue("config/root");   /* "" or /ai/models/multiplayer[]. */
+    SGPropertyNode* root = globals->get_props()->getNode(root_path);
+    std::string callsign = root->getStringValue("callsign");
+    
+    config->setStringValue("type", "legacy");
+    config->setStringValue("callsign", callsign);
+    SGPropertyNode* config_view = config->getNode("view", true /*create*/);
+    if (callsign == "") {
+        /* User aircraft. */
+        globals->get_props()->getNode("/sim/view", view_number_raw)->copy(config_view);
     }
+    else {
+        /* Multiplayer aircraft. */
+        root->getNode("set/sim/view", view_number_raw)->copy(config_view);
+    }
+    
+    config->setDoubleValue(
+            "direction-delta/heading",
+            globals->get_props()->getDoubleValue("sim/current-view/heading-offset-deg")
+            );
+    config->setDoubleValue(
+            "direction-delta/pitch",
+            globals->get_props()->getDoubleValue("sim/current-view/pitch-offset-deg")
+            );
+    config->setDoubleValue(
+            "direction-delta/roll",
+            globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg")
+            );
+    
+    config->setDoubleValue("zoom-delta", 1);
+    
+    SG_LOG(SG_VIEW, SG_ALERT, "returning:\n" << writePropertiesInline(config, true /*write_all*/));
+    return config;
 }
 
 
@@ -1083,7 +1225,8 @@ void SviewPush()
     }
     /* Make a dummy view whose eye and target members will copy the current
     view. */
-    std::shared_ptr<SviewViewEyeTarget> v(new SviewViewEyeTarget(nullptr /*view*/));
+    SGPropertyNode_ptr config = SviewConfigForCurrentView();
+    std::shared_ptr<SviewViewEyeTarget> v(new SviewViewEyeTarget(nullptr /*view*/, config));
     s_recent_views.push_back(v);
     SG_LOG(SG_VIEW, SG_ALERT, "Have pushed view: " << v);
 }
@@ -1164,16 +1307,8 @@ struct EventHandler : osgGA::EventHandler
     }
 };
 
-
-std::shared_ptr<SviewView> SviewCreate(const std::string& type)
-{
-    /*
-    We create various things:
-        An osgViewer::View, added to the global osgViewer::CompositeViewer.
-        An osg::GraphicsContext (has associated top-level window).
-        A simgear::compositor::Compositor.
-    */
-
+std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
+{    
     FGRenderer* renderer = globals->get_renderer();
     osgViewer::ViewerBase* viewer_base = renderer->getViewerBase();
     osgViewer::CompositeViewer* composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(viewer_base);
@@ -1182,8 +1317,6 @@ std::shared_ptr<SviewView> SviewCreate(const std::string& type)
         return nullptr;
     }
 
-    SG_LOG(SG_GENERAL, SG_ALERT, "Creating new view type=" << type);
-    
     osgViewer::View* main_view = renderer->getView();
     osg::Node* scene_data = main_view->getSceneData();
     
@@ -1193,13 +1326,21 @@ std::shared_ptr<SviewView> SviewCreate(const std::string& type)
     EventHandler* event_handler = new EventHandler;
     view->addEventHandler(event_handler);
     
+    assert(config);
+    
     std::shared_ptr<SviewView>  sview_view;
-
-    if (0) {}
-    else if (type == "current") {
-        sview_view.reset(new SviewViewEyeTarget(view));
+    
+    const char* type = config->getStringValue("type");
+    SG_LOG(SG_VIEW, SG_ALERT, "type=" << type);
+    if (0) {
     }
-    else if (type == "last_pair") {
+    else if (!strcmp(type, "current")) {
+        SGPropertyNode_ptr config2 = SviewConfigForCurrentView();
+        config->copy(config2);
+        config2->setStringValue("type", "legacy"); /* restore it after copy() sets to "current". */
+        sview_view.reset(new SviewViewEyeTarget(view, config2));
+    }
+    else if (!strcmp(type, "last_pair")) {
         if (s_recent_views.size() < 2) {
             SG_LOG(SG_VIEW, SG_ALERT, "Need two pushed views");
             return nullptr;
@@ -1207,13 +1348,9 @@ std::shared_ptr<SviewView> SviewCreate(const std::string& type)
         auto it = s_recent_views.end();
         std::shared_ptr<SviewViewEyeTarget> target = *(--it);
         std::shared_ptr<SviewViewEyeTarget> eye    = *(--it);
-        if (!target || !eye) {
-            SG_LOG(SG_VIEW, SG_ALERT, "target=" << target << " eye=" << eye);
-            return nullptr;
-        }
-        sview_view.reset(new SviewViewEyeTarget(view, eye->m_eye, target->m_eye));
+        sview_view.reset(new SviewViewEyeTarget(view, config, eye->m_steps, target->m_steps));
     }
-    else if (type == "last_pair_double") {
+    else if (!strcmp(type, "last_pair_double")) {
         if (s_recent_views.size() < 2) {
             SG_LOG(SG_VIEW, SG_ALERT, "Need two pushed views");
             return nullptr;
@@ -1221,15 +1358,11 @@ std::shared_ptr<SviewView> SviewCreate(const std::string& type)
         auto it = s_recent_views.end();
         std::shared_ptr<SviewViewEyeTarget> remote = *(--it);
         std::shared_ptr<SviewViewEyeTarget> local    = *(--it);
-        if (!local || !remote) {
-            SG_LOG(SG_VIEW, SG_ALERT, "remote=" << local << " remote=" << remote);
-            return nullptr;
-        }
-        sview_view.reset(new SviewDouble(view, local->m_target, remote->m_target));
+        sview_view.reset(new SviewViewEyeTarget(view, config, local->m_steps, remote->m_steps));
     }
     else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "unrecognised type=" << type);
-        return nullptr;
+        SG_LOG(SG_VIEW, SG_ALERT, "config is:\n" << writePropertiesInline(config, true /*write_all*/));
+        sview_view.reset(new SviewViewEyeTarget(view, config));
     }
     
     osg::ref_ptr<osg::GraphicsContext::Traits> traits = new osg::GraphicsContext::Traits;
@@ -1246,16 +1379,16 @@ std::shared_ptr<SviewView> SviewCreate(const std::string& type)
         const osg::GraphicsContext::Traits* main_traits = main_gc->getTraits();
 
         /* Arbitrary initial position of new window. */
-        traits->x = 100;
-        traits->y = 100;
+        traits->x = config->getIntValue("window-x", 100);
+        traits->y = config->getIntValue("window-y", 100);
 
         /* We set new window size as fraction of main window. This keeps the
         aspect ratio of new window same as that of the main window which allows
         us to use main window's projection matrix directly. Presumably we could
         calculate a suitable projection matrix to match an arbitrary aspect
         ratio, but i don't know the maths well enough to do this. */
-        traits->width  = main_traits->width / 2;
-        traits->height = main_traits->height / 2;
+        traits->width  = config->getIntValue("window-width", main_traits->width / 2);
+        traits->height = config->getIntValue("window-height", main_traits->height / 2);
         traits->windowDecoration = true;
         traits->doubleBuffer = true;
         traits->sharedContext = 0;
@@ -1383,6 +1516,12 @@ std::shared_ptr<SviewView> SviewCreate(const std::string& type)
     
     return sview_view;
 }
+
+std::shared_ptr<SviewView> SviewCreate(const SGPropertyNode* config)
+{
+    return SviewCreate(const_cast<SGPropertyNode*>(config));
+}
+
 
 void SViewSetCompositorParams(
         osg::ref_ptr<simgear::SGReaderWriterOptions> options,

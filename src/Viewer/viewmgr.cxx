@@ -247,27 +247,35 @@ void FGViewMgr::view_push()
     SviewPush();
 }
 
-void FGViewMgr::clone_current_view()
+void s_clone_internal(const SGPropertyNode* config, const std::string& type)
 {
-    clone_internal("current");
+    SGPropertyNode_ptr  config2 = new SGPropertyNode;
+    const_cast<SGPropertyNode*>(config)->copy(config2);
+    config2->setStringValue("type", type);
+    SviewCreate(config2);
 }
 
-void FGViewMgr::clone_last_pair()
+void FGViewMgr::clone_current_view(const SGPropertyNode* config)
 {
-    clone_internal("last_pair");
+    s_clone_internal(config, "current");
 }
 
-void FGViewMgr::clone_last_pair_double()
+void FGViewMgr::clone_last_pair(const SGPropertyNode* config)
 {
-    clone_internal("last_pair_double");
+    s_clone_internal(config, "last_pair");
+}
+
+void FGViewMgr::clone_last_pair_double(const SGPropertyNode* config)
+{
+    s_clone_internal(config, "last_pair_double");
+}
+
+void FGViewMgr::view_new(const SGPropertyNode* config)
+{
+    SviewCreate(config);
 }
 
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
-
-void FGViewMgr::clone_internal(const std::string& type)
-{
-    SviewCreate(type);
-}
 
 void
 FGViewMgr::add_view( flightgear::View * v )

@@ -381,7 +381,7 @@ static bool
 do_view_clone (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   SG_LOG(SG_GENERAL, SG_ALERT, "do_view_clone() called");
-  globals->get_viewmgr()->clone_current_view();
+  globals->get_viewmgr()->clone_current_view(arg);
   return true;
 }
 
@@ -393,7 +393,7 @@ static bool
 do_view_last_pair (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   SG_LOG(SG_GENERAL, SG_ALERT, "do_view_last_pair() called");
-  globals->get_viewmgr()->clone_last_pair();
+  globals->get_viewmgr()->clone_last_pair(arg);
   return true;
 }
 
@@ -405,9 +405,22 @@ static bool
 do_view_last_pair_double (const SGPropertyNode * arg, SGPropertyNode * root)
 {
   SG_LOG(SG_GENERAL, SG_ALERT, "do_view_last_pair_double() called");
-  globals->get_viewmgr()->clone_last_pair_double();
+  globals->get_viewmgr()->clone_last_pair_double(arg);
   return true;
 }
+
+
+/**
+ * Built-in command: double view last pair.
+ */
+static bool
+do_view_new (const SGPropertyNode * arg, SGPropertyNode * root)
+{
+  SG_LOG(SG_GENERAL, SG_ALERT, "do_view_new() called");
+  globals->get_viewmgr()->view_new(arg);
+  return true;
+}
+
 
 /**
  * Built-in command: toggle a bool property value.
@@ -1000,6 +1013,7 @@ static struct {
     { "view-clone", do_view_clone },
     { "view-last-pair", do_view_last_pair },
     { "view-last-pair-double", do_view_last_pair_double },
+    { "view-new", do_view_new },
     /*
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },

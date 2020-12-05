@@ -81,12 +81,14 @@ public:
     // Experimental. Only works if --compositer-viewer=1 was specified. Creates
     // new window with clone of current view. As of 2020-09-03, the clone's
     // scenery is not displayed correctly.
-    void clone_current_view();
+    void clone_current_view(const SGPropertyNode* config);
     
     // 
-    void clone_last_pair();
+    void clone_last_pair(const SGPropertyNode* config);
 
-    void clone_last_pair_double();
+    void clone_last_pair_double(const SGPropertyNode* config);
+    
+    void view_new(const SGPropertyNode* config);
 
     // setters
     void clear();
@@ -97,7 +99,6 @@ private:
     simgear::TiedPropertyList _tiedProperties;
 
     void setCurrentViewIndex(int newview);
-    void clone_internal(const std::string& type);
 
     bool _inited = false;
     std::vector<SGPropertyNode_ptr> config_list;
