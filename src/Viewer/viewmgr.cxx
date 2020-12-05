@@ -68,6 +68,19 @@ FGViewMgr::init ()
 
     _inited = true;
 
+    // Ensure that /sim/chase-distance-m is negative if it is specified.
+    // E.g. see https://sourceforge.net/p/flightgear/codetickets/2454/
+    //
+    SGPropertyNode* chase_distance_node = fgGetNode("/sim/chase-distance-m");
+    if (chase_distance_node) {
+        double chase_distance = chase_distance_node->getDoubleValue();
+        if (chase_distance > 0) {
+            chase_distance = -chase_distance;
+            SG_LOG(SG_VIEW, SG_ALERT, "sim/chase-distance-m is positive; correcting to " << chase_distance);
+            chase_distance_node->setDoubleValue(chase_distance);
+        }
+    }
+
     for (unsigned int i = 0; i < config_list.size(); i++) {
         SGPropertyNode* n = config_list[i];
         SGPropertyNode* config = n->getChild("config", 0, true);

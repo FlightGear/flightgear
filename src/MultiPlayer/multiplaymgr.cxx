@@ -2567,8 +2567,21 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   if (set) {
     SGPropertyNode* sim = set->getChild("sim");
     if (sim) {
-      /* Override <sim_chase_distance_m> if present. */
-      sim_chase_distance_m = sim->getDoubleValue("chase-distance-m", sim_chase_distance_m);
+      /* Set <sim_chase_distance_m> to a default if not present. We
+      also force the value to be negative - positive values reverse the
+      affects of vertical mouse movements which isn't helpful; also see:
+      https://sourceforge.net/p/flightgear/codetickets/2454/ */
+      SGPropertyNode* sim_chase_distance_node = sim->getChild("chase-distance-m");
+      if (sim_chase_distance_node) {
+        sim_chase_distance_m = sim_chase_distance_node->getDoubleValue();
+        if (sim_chase_distance_m > 0) {
+          sim_chase_distance_m = -sim_chase_distance_m;
+          SG_LOG(SG_VIEW, SG_ALERT,
+                "Multiplayer aircraft's " << sim_chase_distance_node->getPath()
+                << " is positive; correcting to: " << sim_chase_distance_m);
+        }
+      }
+      SG_LOG(SG_VIEW, SG_DEBUG, "setting to " << sim_chase_distance_m << ": " << global_sim->getPath());
       global_sim->setDoubleValue("chase-distance-m", sim_chase_distance_m);
       
       simgear::PropertyList   views = sim->getChildren("view");
