@@ -112,12 +112,12 @@ void NasalSysTests::testCommands()
     )");
     CPPUNIT_ASSERT(ok);
 
-    CPPUNIT_ASSERT_EQUAL(11, fgGetInt("/foo/test"));
+    CPPUNIT_ASSERT_EQUAL(7, fgGetInt("/foo/test"));
 
     SGPropertyNode_ptr args(new SGPropertyNode);
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(ok);
-    CPPUNIT_ASSERT_EQUAL(15, fgGetInt("/foo/test"));
+    CPPUNIT_ASSERT_EQUAL(11, fgGetInt("/foo/test"));
 
     ok = FGTestApi::executeNasal(R"(
        var g = func { print('fail'); };
@@ -125,9 +125,9 @@ void NasalSysTests::testCommands()
     )");
     CPPUNIT_ASSERT(ok);
     auto errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(1UL, errors.size());
+    CPPUNIT_ASSERT_EQUAL(1UL, static_cast<unsigned long>(errors.size()));
 
-    // old command shoudl still be registered and work
+    // old command should still be registered and work
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(ok);
     CPPUNIT_ASSERT_EQUAL(19, fgGetInt("/foo/test"));
@@ -143,7 +143,7 @@ void NasalSysTests::testCommands()
   )");
     CPPUNIT_ASSERT(ok);
     errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(0UL, errors.size());
+    CPPUNIT_ASSERT_EQUAL(0UL, static_cast<unsigned long>(errors.size()));
 
     // should fail, command is removed
     ok = globals->get_commands()->execute("do-foo", args);
