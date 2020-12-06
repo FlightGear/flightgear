@@ -21,6 +21,8 @@
 #include <Main/fg_props.hxx>
 #include <osg/Version>
 
+#include <GUI/MessageBox.hxx>
+
 #include <sstream>
 #include <limits>
 
@@ -360,21 +362,28 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
         = WindowSystemAdapter::getWSA()->findWindow(defaultWindowName);
     if (defaultWindow)
         return defaultWindow;
+
+    // create if it, if necessary
     GraphicsContext::Traits* traits
         = new GraphicsContext::Traits(*defaultTraits);
     traits->windowName = "FlightGear";
 
     setMacPoseAsStandaloneApp(traits);
 
+    // this may be the point, where we discover OpenGL is broken on the
+    // system.
     GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
-    if (gc) {
-        defaultWindow = WindowSystemAdapter::getWSA()
-            ->registerWindow(gc, defaultWindowName);
-        return defaultWindow;
-    } else {
-        SG_LOG(SG_VIEW, SG_ALERT, "getDefaultWindow: failed to create GraphicsContext");
-        return 0;
+    if (!gc) {
+        flightgear::fatalMessageBoxThenExit("Unable to create window",
+                                            "FlightGear was unable to create a window supporting 3D rendering (OpenGL). "
+                                            "This is normally due to outdated graphics drivers, please check if updates are available. ",
+                                            "Depending on your OS and graphics chipset, updates might come from AMD, nVidia or Intel.");
+        return nullptr; // unreachable anyway
     }
+
+    defaultWindow = WindowSystemAdapter::getWSA()->registerWindow(gc, defaultWindowName);
+    return defaultWindow;
+
 }
 
 void WindowBuilder::setPoseAsStandaloneApp(bool b)
