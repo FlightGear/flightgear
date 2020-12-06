@@ -575,6 +575,7 @@ int fgMainInit( int argc, char **argv )
         auto r = flightgear::showLockFileDialog();
         if (r == flightgear::LockFileReset) {
             SG_LOG( SG_GENERAL, SG_MANDATORY_INFO, "Deleting lock file at user request");
+            flightgear::addSentryBreadcrumb("deleting lock-file at user request", "info");
             fgDeleteLockFile();
             fgSetBool("/sim/fghome-readonly", false);
         } else if (r == flightgear::LockFileQuit) {
