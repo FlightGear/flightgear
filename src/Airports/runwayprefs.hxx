@@ -89,12 +89,12 @@ class RunwayGroup
 private:
   std::string name;
   RunwayListVec rwyList;
-  int active;
+  int active = -1;
   //stringVec runwayNames;
   int choice[2];
-  int nrActive;
+  int nrActive = 0;
 
-public:
+  public:
   RunwayGroup() {};
   RunwayGroup(const RunwayGroup &other);
   RunwayGroup &operator= (const RunwayGroup &other);

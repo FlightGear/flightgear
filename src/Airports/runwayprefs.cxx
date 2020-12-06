@@ -349,6 +349,10 @@ void RunwayGroup::setActive(const FGAirport * airport,
             return;
         }
     }
+
+    // failed to find any valid runways
+    active = -1;
+    nrActive = 0;
 }
 
 void RunwayGroup::getActive(int i, std::string & name, std::string & type)
