@@ -320,6 +320,7 @@ Item {
 
                 Button {
                     text: qsTr("View route")
+                    enabled: _launcher.flightPlan.legs.numLegs > 0
                     onClicked: {
                         detailLoader.airportGuid = 0
                         detailLoader.sourceComponent = routeDetails;
