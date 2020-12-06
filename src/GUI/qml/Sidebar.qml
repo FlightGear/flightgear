@@ -70,7 +70,7 @@ Rectangle {
 
     SidebarButton {
         id: flyButton
-        label: qsTr("Fly!")
+        label: _launcher.flyButtonLabel
         anchors.bottom: parent.bottom
         enabled: _launcher.canFly
         disabledText: qsTr("The selected aircraft is not installed or has updates pending")
