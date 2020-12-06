@@ -32,12 +32,15 @@ const int LegAltitudeTypeRole = Qt::UserRole + 8;
 class LegsModel : public QAbstractListModel
 {
     Q_OBJECT
+
+    Q_PROPERTY(int numLegs READ numLegs NOTIFY numLegsChanged)
 public:
     void setFlightPlan(flightgear::FlightPlanRef f)
     {
         beginResetModel();
         _fp = f;
         endResetModel();
+        emit numLegsChanged();
     }
 
     int rowCount(const QModelIndex &parent) const override
@@ -132,6 +135,7 @@ public:
     {
         beginResetModel();
         endResetModel();
+        numLegsChanged();
     }
 
     QHash<int, QByteArray> roleNames() const override
@@ -151,6 +155,14 @@ public:
 
         return result;
     }
+
+    int numLegs() const
+    {
+        return _fp->numLegs();
+    }
+
+signals:
+    void numLegsChanged();
 
 private:
     flightgear::FlightPlanRef _fp;
