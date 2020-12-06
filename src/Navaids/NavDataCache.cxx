@@ -49,6 +49,9 @@
 #if defined(SG_WINDOWS)
 #define WIN32_LEAN_AND_MEAN // less crap :)
 #include <Windows.h>
+#else
+#  include <sys/file.h>
+#include <unistd.h>
 #endif
 
 // SimGear
@@ -1395,34 +1398,91 @@ bool NavDataCache::isRebuildRequired()
 
 #if defined(SG_WINDOWS)
 static HANDLE static_fgNavCacheRebuildMutex = nullptr;
+#else
+const std::string static_rebuildLockFile = "fgfs_cache_rebuild.lock";
+static int static_rebuildLockFileFd = -1;
 #endif
 
+enum RebuildLockStatus {
+    RebuildLockFailed = 0,
+    RebuildLockAlreadyLocked,
+    RebuildLockOk
+};
 
-NavDataCache::RebuildPhase NavDataCache::rebuild()
+RebuildLockStatus accquireRebuildLock()
 {
 #if defined(SG_WINDOWS)
     if (static_fgNavCacheRebuildMutex == nullptr) {
         // avoid multiple copies racing on the nav-cache build
         static_fgNavCacheRebuildMutex = CreateMutexA(nullptr, FALSE, "org.flightgear.fgfs.rebuild-navcache");
         if (static_fgNavCacheRebuildMutex == nullptr) {
-            flightgear::fatalMessageBoxThenExit("Multiple copies of Flightgear initializing",
-                                                "Failed to create mutex for nav-cache rebuild protection:" + std::to_string(GetLastError()));
-        } else if (GetLastError() == ERROR_ALREADY_EXISTS) {
-            flightgear::fatalMessageBoxThenExit("Multiple copies of Flightgear initializing",
-                                                "Multiple copies of FlightGear are trying to initialise the same navigation database. "
-                                                "This means something has gone badly wrong: please report this error.");
+            SG_LOG(SG_IO, SG_ALERT, "Failed to create NavCache rebuild mutex");
+            return RebuildLockFailed;
+        }
+
+        if (GetLastError() == ERROR_ALREADY_EXISTS) {
+            return RebuildLockAlreadyLocked;
         }
 
         // accquire the mutex, so that other processes can check the status.
         const int result = WaitForSingleObject(static_fgNavCacheRebuildMutex, 100);
         if (result != WAIT_OBJECT_0) {
-            flightgear::fatalMessageBoxThenExit("Multiple copies of Flightgear initializing",
-                                                "Failed to lock mutex for nav-cache rebuild protection:" + std::to_string(GetLastError()));
+            SG_LOG(SG_IO, SG_ALERT, "Failed to lock NavCache rebuild mutex:" << GetLastError());
+            return RebuildLockFailed;
         }
     }
-#endif
+#else
+    SGPath lockPath(globals->get_fg_home(), static_rebuildLockFile);
+    std::string ps = lockPath.utf8Str();
+    static_rebuildLockFileFd = ::open(ps.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (static_rebuildLockFileFd < 0) {
+        SG_LOG(SG_IO, SG_ALERT, "Failed to create rebuild lock file (" << lockPath << "):" << simgear::strutils::error_string(errno));
+        return RebuildLockFailed;
+    }
+    int err = ::flock(static_rebuildLockFileFd, LOCK_EX | LOCK_NB);
+    if (err < 0) {
+        if (errno == EWOULDBLOCK) {
+            return RebuildLockAlreadyLocked;
+        }
 
+        SG_LOG(SG_IO, SG_ALERT, "Failed to lock file (" << lockPath << "):" << simgear::strutils::error_string(errno));
+        return RebuildLockFailed;
+    }
+
+#endif
+    return RebuildLockOk;
+}
+
+static void releaseRebuildLock()
+{
+#if defined(SG_WINDOWS)
+    ReleaseMutex(static_fgNavCacheRebuildMutex);
+#else
+    int err = ::flock(static_rebuildLockFileFd, LOCK_UN);
+    if (err < 0) {
+        SG_LOG(SG_IO, SG_ALERT, "Failed to unlock rebuild file:" << simgear::strutils::error_string(errno));
+    }
+
+    ::close(static_rebuildLockFileFd);
+    SGPath lockPath(globals->get_fg_home(), static_rebuildLockFile);
+    lockPath.remove();
+#endif
+}
+
+
+NavDataCache::RebuildPhase NavDataCache::rebuild()
+{
     if (!d->rebuilder.get()) {
+        auto r = accquireRebuildLock();
+        if (r == RebuildLockAlreadyLocked) {
+            flightgear::fatalMessageBoxThenExit("Multiple copies of Flightgear initializing",
+                                                "Multiple copies of FlightGear are trying to initialise the same navigation database. "
+                                                "This means something has gone badly wrong: please report this error.");
+        } else if (r == RebuildLockFailed) {
+            flightgear::fatalMessageBoxThenExit("Multiple copies of Flightgear initializing",
+                                                "Failed to initialise NavCache rebuild protection");
+        }
+
         d->rebuilder.reset(new RebuildThread(this));
         d->rebuilder->start();
     }
@@ -1431,9 +1491,7 @@ NavDataCache::RebuildPhase NavDataCache::rebuild()
     RebuildPhase phase = d->rebuilder->currentPhase();
     if (phase == REBUILD_DONE) {
         d->rebuilder.reset(); // all done!
-#if defined(SG_WINDOWS)
-        ReleaseMutex(static_fgNavCacheRebuildMutex);
-#endif
+        releaseRebuildLock();
     }
     return phase;
 }
@@ -1470,7 +1528,31 @@ bool NavDataCache::isAnotherProcessRebuilding()
     // the GU should wait.
     return true;
 #else
-    return false; // not implemented on macOS / Linux for now
+    SGPath lockPath(globals->get_fg_home(), static_rebuildLockFile);
+    std::string ps = lockPath.utf8Str();
+    static_rebuildLockFileFd = ::open(ps.c_str(), O_RDONLY, 0644);
+    if (static_rebuildLockFileFd < 0) {
+        if (errno == ENOENT) {
+            return false; // no such file, easy
+        }
+
+        SG_LOG(SG_IO, SG_ALERT, "Error opening lock file:" << simgear::strutils::error_string(errno));
+        return false;
+    }
+
+    int err = ::flock(static_rebuildLockFileFd, LOCK_EX | LOCK_NB);
+    if (err < 0) {
+        if (errno == EWOULDBLOCK) {
+            return true;
+        }
+
+        SG_LOG(SG_IO, SG_ALERT, "Error querying lock file:" << simgear::strutils::error_string(errno));
+        return false;
+    }
+
+    // release it again, so any *other* waiting copies can also succeed
+    ::flock(static_rebuildLockFileFd, LOCK_UN);
+    return false;
 #endif
 }
 
