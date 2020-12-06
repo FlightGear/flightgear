@@ -146,6 +146,9 @@ struct GeneralInitOperation : public GraphicsContextOperation
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
         simRendering->setIntValue("max-texture-size", tmp);
 
+        glGetIntegerv(GL_MAX_TEXTURE_UNITS, &tmp);
+        simRendering->setIntValue("max-texture-units", tmp);
+
         glGetIntegerv( GL_DEPTH_BITS, &tmp );
         simRendering->setIntValue("depth-buffer-bits", tmp);
         
