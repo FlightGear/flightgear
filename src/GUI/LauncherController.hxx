@@ -87,7 +87,8 @@ class LauncherController : public QObject
 	Q_PROPERTY(QSize minimumWindowSize READ minWindowSize WRITE setMinWindowSize NOTIFY minWindowSizeChanged)
 
     Q_PROPERTY(QUrl flyIconUrl READ flyIconUrl NOTIFY selectedAircraftChanged)
-    
+    Q_PROPERTY(QUrl flyButtonLabel READ flyButtonLabel NOTIFY selectedAircraftChanged)
+
     Q_PROPERTY(bool inAppMode READ inApp NOTIFY inAppChanged)
 
     Q_PROPERTY(bool aircraftGridMode READ aircraftGridMode WRITE setAircraftGridMode NOTIFY aircraftGridModeChanged)
@@ -224,6 +225,7 @@ public:
         return m_versionLaunchCount;
     }
 
+    QString flyButtonLabel() const;
 signals:
 
     void selectedAircraftChanged(QUrl selectedAircraft);

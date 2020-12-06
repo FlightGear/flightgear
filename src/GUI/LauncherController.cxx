@@ -891,6 +891,19 @@ QUrl LauncherController::flyIconUrl() const
     return QUrl{"qrc:///svg/toolbox-fly"};
 }
 
+QString LauncherController::flyButtonLabel() const
+{
+    if (m_aircraftType == Helicopter) {
+        return tr("Fly!", "For a helicopter");
+    } else if (m_selectedAircraftInfo) {
+        if (m_selectedAircraftInfo->hasTag("spaceship")) {
+            return tr("Fly!", "For a spaceship");
+        }
+    }
+
+    return tr("Fly!");
+}
+
 QUrl LauncherController::urlToDataPath(QString relPath) const
 {
     QString absFilePath = QString::fromStdString(globals->get_fg_root().utf8Str());
