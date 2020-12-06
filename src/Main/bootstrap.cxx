@@ -253,6 +253,7 @@ int main ( int argc, char **argv )
   // See Microsoft MSDN #ms680621: "GUI apps should specify SEM_NOOPENFILEERRORBOX"
   SetErrorMode(SEM_NOOPENFILEERRORBOX);
 
+  std::cerr << "Boostrap-0" << std::endl;
   hostname = ::getenv( "COMPUTERNAME" );
 #else
   // Unix(alike) systems
@@ -265,7 +266,9 @@ int main ( int argc, char **argv )
   _bootstrap_OSInit = 0;
     
 #if defined(HAVE_SENTRY)
+  std::cerr << "Will init sentry" << std::endl;
   flightgear::initSentry();
+  std::cerr << "Did init sentry" << std::endl;
 #endif
 
 // if we're not using the normal crash-reported, install our
@@ -279,6 +282,7 @@ int main ( int argc, char **argv )
 #endif
 
     initFPE(flightgear::Options::checkForArg(argc, argv, "enable-fpe"));
+    std::cerr << "Did init FPE" << std::endl;
 
     // pick up all user locale settings, but force C locale for numerical/sorting
     // conversions because we have lots of code which assumes standard
