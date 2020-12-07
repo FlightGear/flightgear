@@ -197,7 +197,7 @@ void FGClimate::update(double dt)
             color = image->getColor(s, t);
 
             // convert from color shades to koppen-classicfication
-            _code = static_cast<int>((255.0f*color[0]+0.5)/4.0f);
+            _code = static_cast<int>(floorf(255.0f*color[0]/4.0f));
             _gl.elevation_m = 5600.0*color[1];
 
             if (_code == 0) set_ocean();
