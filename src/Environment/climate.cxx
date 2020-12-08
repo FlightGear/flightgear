@@ -199,10 +199,10 @@ void FGClimate::update(double dt)
             // convert from color shades to koppen-classicfication
             _gl.elevation_m = 5600.0*color[1];
             _code = static_cast<int>(floorf(255.0f*color[0]/4.0f), 32.0);
-            if (_code > MAX_CLIMATE_CLASSES)
+            if (_code >= MAX_CLIMATE_CLASSES)
             {
                 SG_LOG(SG_ENVIRONMENT, SG_WARN, "Climate Koppen code exceeds the maximum");
-                _code = MAX_CLIMATE_CLASSES;
+                _code = MAX_CLIMATE_CLASSES-1;
             }
 
             if (_code == 0) set_ocean();
