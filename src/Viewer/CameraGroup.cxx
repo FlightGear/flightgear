@@ -258,7 +258,8 @@ void CameraGroup::update(const osg::Vec3d& position,
         }
 
         osg::Matrix new_proj_matrix = proj_matrix;
-        if ((info->flags & CameraInfo::FIXED_NEAR_FAR) == 0) {
+        if ((info->flags & CameraInfo::GUI) == 0 &&
+            (info->flags & CameraInfo::FIXED_NEAR_FAR) == 0) {
             makeNewProjMat(proj_matrix, _zNear, _zFar, new_proj_matrix);
         }
 
