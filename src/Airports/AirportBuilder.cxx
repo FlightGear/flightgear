@@ -584,7 +584,7 @@ osg::ref_ptr<Effect> AirportBuilder::getMaterialEffect(std::string material, con
 
   if (sgOpts->getMaterialLib()) {
     const SGGeod loc = SGGeod(sgOpts->getLocation());
-    SGMaterialCache* matcache = sgOpts->getMaterialLib()->generateMatCache(loc);
+    SGMaterialCache* matcache = sgOpts->getMaterialLib()->generateMatCache(loc, sgOpts);
     SGMaterial* mat = matcache->find(material);
     delete matcache;
 
