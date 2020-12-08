@@ -34,6 +34,7 @@
 #include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/viewer/Compositor.hxx>
+#include <simgear/scene/viewer/CompositorUtil.hxx>
 
 #include <algorithm>
 #include <cstring>
@@ -256,9 +257,14 @@ void CameraGroup::update(const osg::Vec3d& position,
             proj_matrix = masterProj * info->projOffset;
         }
 
+        osg::Matrix new_proj_matrix = proj_matrix;
+        if ((info->flags & CameraInfo::FIXED_NEAR_FAR) == 0) {
+            makeNewProjMat(proj_matrix, _zNear, _zFar, new_proj_matrix);
+        }
+
         info->viewMatrix = view_matrix;
-        info->projMatrix = proj_matrix;
-        info->compositor->update(view_matrix, proj_matrix);
+        info->projMatrix = new_proj_matrix;
+        info->compositor->update(view_matrix, new_proj_matrix);
     }
 }
 
