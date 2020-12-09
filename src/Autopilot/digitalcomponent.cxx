@@ -24,6 +24,8 @@
 #include "digitalcomponent.hxx"
 #include <Main/fg_props.hxx>
 
+#include <simgear/misc/strutils.hxx>
+
 using std::string;
 using namespace FGXMLAutopilot;
 
@@ -91,12 +93,16 @@ bool DigitalComponent::configure( SGPropertyNode& cfg_node,
     if( (n = cfg_node.getNode("inverted")) != NULL )
       o->setInverted( n->getBoolValue() );
 
-    if( (n = cfg_node.getNode("property")) != NULL )
-      o->setProperty( prop_root.getNode(n->getStringValue(), true) );
-
-    if( cfg_node.nChildren() == 0 )
-      o->setProperty( prop_root.getNode(cfg_node.getStringValue(), true) );
-
+      if( (n = cfg_node.getNode("property")) != NULL ) {
+          const auto trimmed = simgear::strutils::strip(n->getStringValue());
+          o->setProperty( prop_root.getNode(trimmed, true) );
+      }
+      
+      if( cfg_node.nChildren() == 0 ) {
+          const auto trimmed = simgear::strutils::strip(cfg_node.getStringValue());
+          o->setProperty( prop_root.getNode(trimmed, true) );
+      }
+      
     return true;
   } 
 

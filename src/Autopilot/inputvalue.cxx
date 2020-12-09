@@ -22,6 +22,8 @@
 
 #include "inputvalue.hxx"
 
+#include <simgear/misc/strutils.hxx>
+
 using namespace FGXMLAutopilot;
 
 //------------------------------------------------------------------------------
@@ -131,7 +133,9 @@ void InputValue::parse( SGPropertyNode& prop_root,
   if(    (n = cfg.getChild("property"))
       || (n = cfg.getChild("prop"    )) )
   {
-    _property = prop_root.getNode(n->getStringValue(), true);
+      // tolerate leading & trailing whitespace from XML, in the property name
+      const auto trimmed = simgear::strutils::strip(n->getStringValue());
+    _property = prop_root.getNode(trimmed, true);
     if( valueNode )
     {
       // initialize property with given value

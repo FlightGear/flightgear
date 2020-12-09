@@ -23,6 +23,8 @@
 #include "analogcomponent.hxx"
 #include <Main/fg_props.hxx>
 
+#include <simgear/misc/strutils.hxx>
+
 using namespace FGXMLAutopilot;
 
 AnalogComponent::AnalogComponent() :
@@ -65,23 +67,23 @@ bool AnalogComponent::configure( SGPropertyNode& cfg_node,
     bool found = false;
     for( int i = 0; i < cfg_node.nChildren(); ++i )
     {
-      SGPropertyNode& child = *cfg_node.getChild(i);
-      const std::string& name = child.getNameString();
+      SGPropertyNode* child = cfg_node.getChild(i);
+      const std::string& name = child->getNameString();
 
       // Allow "prop" for backwards compatiblity
       if( name != "property" && name != "prop" )
         continue;
 
-      _output_list.push_back( prop_root.getNode(child.getStringValue(), true) );
+        const auto trimmed = simgear::strutils::strip(child->getStringValue());
+      _output_list.push_back( prop_root.getNode(trimmed, true) );
       found = true;
     }
 
     // no <prop> elements, text node of <output> is property name
-    if( !found )
-      _output_list.push_back
-      (
-        prop_root.getNode(cfg_node.getStringValue(), true)
-      );
+      if( !found ) {
+          const auto trimmed = simgear::strutils::strip(cfg_node.getStringValue());
+          _output_list.push_back(prop_root.getNode(trimmed, true));
+      }
 
     return true;
   }

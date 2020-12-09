@@ -28,6 +28,8 @@
 #include "digitalfilter.hxx"
 #include <deque>
 
+#include <simgear/misc/strutils.hxx>
+
 namespace FGXMLAutopilot
 {
 
@@ -472,7 +474,7 @@ bool ExponentialFilterImplementation::configure( SGPropertyNode& cfg_node,
   }
 
   if (cfg_name == "type" ) {
-    std::string type(cfg_node.getStringValue());
+      std::string type = simgear::strutils::strip(cfg_node.getStringValue());
     _isSecondOrder = type == "double-exponential";
   }
 
@@ -746,7 +748,7 @@ bool DigitalFilter::configure( SGPropertyNode& prop_root,
     componentForge["damped-oscillation" ] = digitalFilterFactory<DampedOscillationFilterImplementation>;
   }
 
-  const std::string type = cfg.getStringValue("type");
+  const auto type = simgear::strutils::strip(cfg.getStringValue("type"));
   DigitalFilterMap::iterator component_factory = componentForge.find(type);
   if( component_factory == componentForge.end() )
   {
@@ -785,7 +787,7 @@ bool DigitalFilter::configure( SGPropertyNode& cfg_node,
 {
   if( cfg_name == "initialize-to" )
   {
-    std::string s( cfg_node.getStringValue() );
+      const auto s = simgear::strutils::strip(cfg_node.getStringValue());
     if( s == "input" )
       _initializeTo = INITIALIZE_INPUT;
     else if( s == "output" )
