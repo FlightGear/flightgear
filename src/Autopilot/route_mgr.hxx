@@ -102,7 +102,14 @@ public:
     bool saveRoute(const SGPath& p);
     bool loadRoute(const SGPath& p);
 
-    flightgear::WayptRef waypointFromString(const std::string& target);
+    /**
+        @brief Buiild a waypoint from a string description. Passed to the FlightPlan code to do
+     the actual parsing, see that method for details of syntax.
+     
+        Insert position is used to indicate which existing route waypoint(s) to use, to select between
+     ambiguous names.
+     */
+    flightgear::WayptRef waypointFromString(const std::string& target, int insertPosition);
 
 private:
     bool commandDefineUserWaypoint(const SGPropertyNode * arg, SGPropertyNode * root);

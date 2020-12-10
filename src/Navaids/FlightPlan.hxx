@@ -330,35 +330,40 @@ public:
   SGGeod pointAlongRoute(int aIndex, double aOffsetNm) const;
 
   /**
-   * Create a WayPoint from a string in the following format:
-   *  - simple identifier
-   *  - decimal-lon,decimal-lat
-   *  - airport-id/runway-id
-   *  - navaid/radial-deg/offset-nm
-   */
-  WayptRef waypointFromString(const std::string& target);
+        given a waypoint index, find a point at a normalised offset, which must be [-1 .. 1]
+                eg an offset of -0.5 will be half-way between aIndex and the preceeding waypoint,
+        and an offset of 0.3 will be 30% of the distance from aIndex to the next waypoint.
+     */
+  SGGeod pointAlongRouteNorm(int aIndex, double aOffsetNorm) const;
 
-    /**
+  /**
+   * Create a WayPoint from a string in the following format:
+   *  -
+   *  'vicinity' specifies the search area, to disambiguate navaids, etc with duplicate names
+   */
+  WayptRef waypointFromString(const std::string& target, const SGGeod& vicinity = SGGeod::invalid());
+
+  /**
      * attempt to replace the route waypoints (and potentially the SID and
      * STAR) based on an ICAO standard route string, i.e item 15.
      * Returns true if the rotue was parsed successfully (and this flight
      * plan modified accordingly) or false if the string could not be
      * parsed.
      */
-    bool parseICAORouteString(const std::string& routeData);
+  bool parseICAORouteString(const std::string& routeData);
 
-    std::string asICAORouteString() const;
+  std::string asICAORouteString() const;
 
-// ICAO flight-plan data
-    void setFlightRules(ICAOFlightRules rules);
-    ICAOFlightRules flightRules() const;
-    
-    void setFlightType(ICAOFlightType type);
-    ICAOFlightType flightType() const;
-    
-    void setCallsign(const std::string& callsign);
-    std::string callsign() const
-    { return _callsign; }
+  // ICAO flight-plan data
+  void setFlightRules(ICAOFlightRules rules);
+  ICAOFlightRules flightRules() const;
+
+  void setFlightType(ICAOFlightType type);
+  ICAOFlightType flightType() const;
+
+  void setCallsign(const std::string& callsign);
+  std::string callsign() const
+  { return _callsign; }
     
     void setRemarks(const std::string& remarks);
     std::string remarks() const

@@ -30,10 +30,11 @@
 #include <simgear/compiler.h>
 #include "route_mgr.hxx"
 
-#include <simgear/misc/strutils.hxx>
-#include <simgear/structure/exception.hxx>
-#include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/structure/commands.hxx>
+#include <simgear/structure/exception.hxx>
+
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/sg_inlines.h>
 
@@ -55,6 +56,7 @@
 
 using namespace flightgear;
 using std::string;
+namespace su = simgear::strutils;
 
 static bool commandLoadFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
@@ -120,7 +122,9 @@ static bool commandSetActiveWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 static bool commandInsertWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  const bool haveIndex = arg->hasChild("index");
   int index = arg->getIntValue("index");
+
   std::string ident(arg->getStringValue("id"));
   int alt = arg->getIntValue("altitude-ft", -999);
   int ias = arg->getIntValue("speed-knots", -999);
@@ -186,12 +190,24 @@ static bool commandInsertWaypt(const SGPropertyNode* arg, SGPropertyNode *)
       wp = new NavaidWaypoint((FGAirport*) apt, NULL);
     }
   } else if (arg->hasChild("text")) {
-    wp = self->waypointFromString(arg->getStringValue("text"));
-  } else if (!(pos == SGGeod())) {
-    // just a raw lat/lon
-    wp = new BasicWaypt(pos, ident, NULL);
+      const auto t = su::strip(arg->getStringValue("text"));
+      if (pos.isValid()) {
+          // if 'pos' is valid, use it as the search vicinity
+          wp = self->flightPlan()->waypointFromString(t, pos);
+      } else {
+          const int searchIndex = haveIndex ? index : -1;
+          wp = self->waypointFromString(t, searchIndex);
+      }
+
+      if (!wp) { // failed to build waypoint
+          SG_LOG(SG_AUTOPILOT, SG_WARN, "insert-waypoint failed: couldn't parse waypoint from '" << t << "'");
+          return false;
+      }
+  } else if (pos.isValid()) {
+      // just a raw lat/lon
+      wp = new BasicWaypt(pos, ident, NULL);
   } else {
-    return false; // failed to build waypoint
+      return false; // failed to build waypoint
   }
 
   FlightPlan::Leg* leg = self->flightPlan()->insertWayptAtIndex(wp, index);
@@ -392,10 +408,12 @@ void FGRouteMgr::postinit()
   if (waypoints) {
     string_list::iterator it;
     for (it = waypoints->begin(); it != waypoints->end(); ++it) {
-      WayptRef w = waypointFromString(*it);
-      if (w) {
-        _plan->insertWayptAtIndex(w, -1);
-      }
+        WayptRef w = waypointFromString(*it, -1);
+        if (w) {
+            _plan->insertWayptAtIndex(w, -1);
+        } else {
+            SG_LOG(SG_AUTOPILOT, SG_WARN, "Failed to create waypoint from '" << *it << "'");
+        }
     }
     
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loaded initial waypoints:" << numLegs());
@@ -722,54 +740,62 @@ void FGRouteMgr::update_mirror()
 //
 void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
 {
-    const char *s = prop->getStringValue();
-    if (strlen(s) == 0) {
-      return;
+    const auto input = su::uppercase(su::strip(prop->getStringValue()));
+    if (input.empty()) {
+        return;
     }
-    
-    if (!strcmp(s, "@CLEAR"))
+
+    if (input == "@CLEAR") {
         mgr->clearRoute();
-    else if (!strcmp(s, "@ACTIVATE"))
+    } else if (input == "@ACTIVATE") {
         mgr->activate();
-    else if (!strcmp(s, "@LOAD")) {
-      SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
-      mgr->loadRoute(path);
-    } else if (!strcmp(s, "@SAVE")) {
-      SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
-      SGPath authorizedPath = fgValidatePath(path, true /* write */);
+    } else if (input == "@LOAD") {
+        SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
+        mgr->loadRoute(path);
+    } else if (input == "@SAVE") {
+        SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
+        SGPath authorizedPath = fgValidatePath(path, true /* write */);
 
-      if (!authorizedPath.isNull()) {
-        mgr->saveRoute(authorizedPath);
-      } else {
-        std::string msg =
-          "The route manager was asked to write the flightplan to '" +
-          path.utf8Str() + "', but this path is not authorized for writing. " +
-          "Please choose another location, for instance in the $FG_HOME/Export "
-          "folder (" + (globals->get_fg_home() / "Export").utf8Str() + ").";
+        if (!authorizedPath.isNull()) {
+            mgr->saveRoute(authorizedPath);
+        } else {
+            std::string msg =
+                "The route manager was asked to write the flightplan to '" +
+                path.utf8Str() + "', but this path is not authorized for writing. " +
+                "Please choose another location, for instance in the $FG_HOME/Export "
+                "folder (" +
+                (globals->get_fg_home() / "Export").utf8Str() + ").";
 
-        SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
-        modalMessageBox("FlightGear", "Unable to write to the specified file",
-                        msg);
-      }
-    } else if (!strcmp(s, "@NEXT")) {
-      mgr->jumpToIndex(mgr->currentIndex() + 1);
-    } else if (!strcmp(s, "@PREVIOUS")) {
-      mgr->jumpToIndex(mgr->currentIndex() - 1);
-    } else if (!strncmp(s, "@JUMP", 5)) {
-      mgr->jumpToIndex(atoi(s + 5));
-    } else if (!strncmp(s, "@DELETE", 7))
-        mgr->removeLegAtIndex(atoi(s + 7));
-    else if (!strncmp(s, "@INSERT", 7)) {
-        char *r;
-        int pos = strtol(s + 7, &r, 10);
-        if (*r++ != ':')
+            SG_LOG(SG_AUTOPILOT, SG_ALERT, msg);
+            modalMessageBox("FlightGear", "Unable to write to the specified file",
+                            msg);
+        }
+    } else if (input == "@NEXT") {
+        mgr->jumpToIndex(mgr->currentIndex() + 1);
+    } else if (input == "@PREVIOUS") {
+        mgr->jumpToIndex(mgr->currentIndex() - 1);
+    } else if (su::starts_with(input, "@JUMP")) {
+        const int index = stoi(input.substr(5));
+        mgr->jumpToIndex(index);
+    } else if (su::starts_with(input, "@DELETE")) {
+        const int index = stoi(input.substr(7));
+        mgr->removeLegAtIndex(index);
+    } else if (su::starts_with(input, "@INSERT")) {
+        size_t pos = 0;
+        const auto arg = input.substr(7); // input without prefix
+        const int index = stoi(arg, &pos, 10);
+        if (arg.at(pos) != ':') {
+            SG_LOG(SG_AUTOPILOT, SG_WARN, "@INSERT: couldn't parse index from:'" << input << "'");
             return;
-        while (isspace(*r))
-            r++;
-        if (*r)
-            mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(r), pos);
-    } else
-      mgr->flightPlan()->insertWayptAtIndex(mgr->waypointFromString(s), -1);
+        }
+
+        const auto wpString = su::strip(arg.substr(pos + 1));
+        const auto newWp = mgr->waypointFromString(wpString, index);
+        mgr->flightPlan()->insertWayptAtIndex(newWp, index);
+    } else {
+        const auto newWp = mgr->waypointFromString(input, -1);
+        mgr->flightPlan()->insertWayptAtIndex(newWp, -1);
+    }
 }
 
 bool FGRouteMgr::activate()
@@ -1172,9 +1198,26 @@ void FGRouteMgr::setSTAR(const std::string& aIdent)
   }
 }
 
-WayptRef FGRouteMgr::waypointFromString(const std::string& target)
+WayptRef FGRouteMgr::waypointFromString(const std::string& target, int insertPosition)
 {
-  return _plan->waypointFromString(target);
+    SGGeod vicinity;
+    if (insertPosition < 0) { // appending, not inserting
+        insertPosition = _plan->numLegs();
+        if (insertPosition > 0) {
+            // if we have at least one existing leg, use its position
+            // for the search vicinity
+            vicinity = _plan->pointAlongRoute(insertPosition - 1, 0.0);
+        }
+    } else {
+        // if we're somewhere in the middle of the route compute a search
+        // vicinity halfwya between the previous waypoint and the one we are
+        // inserting at, i.e th emiddle of the leg.
+        // if we're at the beginning, just use zero of course.
+        const double normOffset = (insertPosition > 0) ? -0.5 : 0.0;
+        vicinity = _plan->pointAlongRouteNorm(insertPosition, normOffset);
+    }
+
+    return _plan->waypointFromString(target, vicinity);
 }
 
 double FGRouteMgr::getDepartureFieldElevation() const

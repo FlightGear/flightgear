@@ -93,7 +93,9 @@ void RouteManagerTests::testBasic()
                                    "CLN IDESI RINIS VALKO RIVER RTM EKROS");
     fp1->setIdent("testplan");
     fp1->setCruiseFlightLevel(360);
-    
+
+    CPPUNIT_ASSERT_EQUAL("RIVER"s, fp1->legAtIndex(5)->waypoint()->ident());
+
     auto rm = globals->get_subsystem<FGRouteMgr>();
     rm->setFlightPlan(fp1);
     
@@ -499,7 +501,8 @@ void RouteManagerTests::testHoldFromNasal()
     CPPUNIT_ASSERT_EQUAL(std::string{"leg-to-hold"}, std::string{statusNode->getStringValue()});
     
     // check we're on the leg
-    
+    CPPUNIT_ASSERT_EQUAL(std::string{"NELSON VOR-DME"}, fp1->legAtIndex(2)->waypoint()->source()->name());
+
     auto wbPos = fp1->legAtIndex(3)->waypoint()->position();
     auto nsPos = fp1->legAtIndex(2)->waypoint()->position();
     const double crsToWB = SGGeodesy::courseDeg(globals->get_aircraft_position(), wbPos);
@@ -822,4 +825,39 @@ void RouteManagerTests::testRouteWithApproachProcedures()
     //    )");
     //
     //    CPPUNIT_ASSERT(ok);
+}
+
+void RouteManagerTests::testsSelectNavaid()
+{
+    // this captures the issue at:
+    // https://sourceforge.net/p/flightgear/codetickets/2372/
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+
+    FlightPlanRef f = new FlightPlan;
+    rm->setFlightPlan(f);
+
+    auto usss = FGAirport::findByIdent("USSS");
+    auto eddh = FGAirport::findByIdent("EDDH");
+    f->setDeparture(usss); // Yekaterinberg
+    f->setDestination(eddh);
+
+    auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
+    rmNode->setStringValue("input", "@INSERT1:UUDD");
+    rmNode->setStringValue("input", "@INSERT2:UKKM");
+    rmNode->setStringValue("input", "@INSERT2:IP");
+    rmNode->setStringValue("input", "@INSERT3:OD");
+
+    auto leg = f->legAtIndex(2);
+    auto wp1 = leg->waypoint();
+    CPPUNIT_ASSERT_EQUAL(wp1->ident(), string{"IP"});
+    CPPUNIT_ASSERT_EQUAL(wp1->source()->name(), string{"ZAKHAROVKA NDB"});
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(227, leg->courseDeg(), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(59, leg->distanceNm(), 0.5);
+
+    leg = f->legAtIndex(3);
+    auto wp2 = leg->waypoint();
+    CPPUNIT_ASSERT_EQUAL(wp2->ident(), string{"OD"});
+    CPPUNIT_ASSERT_EQUAL(wp2->source()->name(), string{"BRYANSK NDB"});
 }

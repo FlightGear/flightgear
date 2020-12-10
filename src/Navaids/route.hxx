@@ -158,7 +158,19 @@ public:
    * Factory method
    */
   static WayptRef createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp);
-  
+
+  /**
+        Create a waypoint from the route manager's standard string format:
+     *  - simple identifier
+     *  - decimal-lon,decimal-lat
+     *  - airport-id/runway-id
+     *  - navaid/radial-deg/offset-nm
+     */
+  static WayptRef createFromString(RouteBase* aOwner, const std::string& s, const SGGeod& vicinity);
+
+  static WayptRef fromLatLonString(RouteBase* aOwner, const std::string& target);
+
+
   void saveAsNode(SGPropertyNode* node) const;
   
   /**

@@ -1324,8 +1324,12 @@ bool FlightPlan::loadPlainTextFormat(const SGPath& path)
       if (line.empty() || (line[0] == '#')) {
         continue; // ignore empty/comment lines
       }
-      
-      WayptRef w = waypointFromString(line);
+
+      SGGeod vicinity;
+      if (!_legs.empty()) {
+          vicinity = _legs.back()->waypoint()->position();
+      }
+      WayptRef w = waypointFromString(line, vicinity);
       if (!w) {
         throw sg_io_exception("Failed to create waypoint from line '" + line + "'.");
       }
@@ -1346,181 +1350,22 @@ double FlightPlan::magvarDegAt(const SGGeod& pos) const
   double jd = globals->get_time_params()->getJD();
   return sgGetMagVar(pos, jd) * SG_RADIANS_TO_DEGREES;
 }
-  
 
-namespace
+WayptRef FlightPlan::waypointFromString(const string& tgt, const SGGeod& vicinity)
 {
-
-WayptRef intersectionFromString(FGPositionedRef p1,
-                                const SGGeod& basePosition,
-                                const double magvar,
-                                const string_list& pieces)
-{
-    assert(pieces.size() == 4);
-    // navid/radial/navid/radial notation
-    FGPositionedRef p2 = FGPositioned::findClosestWithIdent(pieces[2], basePosition);
-    if (!p2) {
-      SG_LOG( SG_NAVAID, SG_INFO, "Unable to find FGPositioned with ident:" << pieces[2]);
-      return nullptr;
-    }
-
-    double r1 = atof(pieces[1].c_str()),
-    r2 = atof(pieces[3].c_str());
-    r1 += magvar;
-    r2 += magvar;
-
-    SGGeod intersection;
-    bool ok = SGGeodesy::radialIntersection(p1->geod(), r1, p2->geod(), r2, intersection);
-    if (!ok) {
-      SG_LOG(SG_NAVAID, SG_INFO, "no valid intersection for:" << pieces[0]
-              << "/" << pieces[2]);
-      return NULL;
-    }
-
-    std::string name = p1->ident() + "-" + p2->ident();
-    return new BasicWaypt(intersection, name, nullptr);
-}
-
-WayptRef wayptFromLonLatString(const std::string& target)
-{
-    // permit lat,lon/radial/offset format
-    string_list pieces(simgear::strutils::split(target, "/"));
-    if ((pieces.size() != 1) && (pieces.size() != 3)) {
-        return {};
-    }
-    
-    SGGeod g;
-    const bool defaultToLonLat = true; // parseStringAsGeod would otherwise default to lat,lon
-    if (!simgear::strutils::parseStringAsGeod(pieces[0], &g, defaultToLonLat)) {
-        return {};
-    }
-    
-    if (pieces.size() == 3) {
-        // process offset
-        const double bearing = std::stod(pieces[1]);
-        const double distanceNm = std::stod(pieces[2]);
-        g = SGGeodesy::direct(g, bearing, distanceNm * SG_NM_TO_METER);
-    }
-    
-    // build a short name
-    const int lonDeg = static_cast<int>(g.getLongitudeDeg());
-    const int latDeg = static_cast<int>(g.getLatitudeDeg());
-
-    char buf[32];
-    char ew = (lonDeg < 0) ? 'W' : 'E';
-    char ns = (latDeg < 0) ? 'S' : 'N';
-    snprintf(buf, 32, "%c%03d%c%03d", ew, std::abs(lonDeg), ns, std::abs(latDeg));
-
-    return new BasicWaypt(g, buf, nullptr);
-}
-
-WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
-{
-    assert(target.find("VIA ") == 0);
-    string_list pieces(simgear::strutils::split(target, "/"));
-    if ((pieces.size() != 4) || (pieces[2] != "TO")) {
-        SG_LOG( SG_NAVAID, SG_WARN, "Malformed VIA specification string:" << target);
-        return nullptr;
-    }
-    
-    // TO navaid is pieces[3]
-    FGPositionedRef nav = FGPositioned::findClosestWithIdent(pieces[3], basePosition, nullptr);
-    if (!nav) {
-        SG_LOG( SG_NAVAID, SG_WARN, "TO navaid:" << pieces[3] << " unknown");
-        return nullptr;
-    }
-    
-    // airway ident is pieces[1]
-    AirwayRef airway = Airway::findByIdentAndNavaid(pieces[1], nav);
-    if (!airway) {
-        SG_LOG( SG_NAVAID, SG_WARN, "Unknown airway:" << pieces[1]);
-        return nullptr;
-    }
-
-    return new Via(nullptr, airway, nav);
-}
-
-} // of anonymous namespace
-
-WayptRef FlightPlan::waypointFromString(const string& tgt )
-{
-  string target = simgear::strutils::uppercase(tgt);
-  // extract altitude
-  double altFt = 0.0;
-  RouteRestriction altSetting = RESTRICT_NONE;
-  
-  size_t pos = target.find( '@' );
-  if ( pos != string::npos ) {
-    altFt = atof( target.c_str() + pos + 1 );
-    target = target.substr( 0, pos );
-    if ( !strcmp(fgGetString("/sim/startup/units"), "meter") )
-      altFt *= SG_METER_TO_FEET;
-    altSetting = RESTRICT_AT;
-  }
-  
-  // check for lon,lat
-    WayptRef wpt = wayptFromLonLatString(target);
-
-  SGGeod basePosition;
-  if (_legs.empty()) {
-    // route is empty, use departure position / aircraft position
-    basePosition = _departure ? _departure->geod() : globals->get_aircraft_position();
-  } else {
-    basePosition = _legs.back()->waypoint()->position();
-  }
-  
-  const double magvar = magvarDegAt(basePosition);
-
-  if (wpt) {
-      // already handled in the lat/lon test above
-  } else if (target.find("VIA ") == 0) {
-      wpt = viaFromString(basePosition, target);
-  } else {
-      string_list pieces(simgear::strutils::split(target, "/"));
-      FGPositionedRef p = FGPositioned::findClosestWithIdent(pieces.front(), basePosition);
-      if (!p) {
-        SG_LOG( SG_NAVAID, SG_INFO, "Unable to find FGPositioned with ident:" << pieces.front());
-        return nullptr;
-      }
-
-      if (pieces.size() == 1) {
-        wpt = new NavaidWaypoint(p, this);
-      } else if (pieces.size() == 3) {
-        // navaid/radial/distance-nm notation
-        double radial = atof(pieces[1].c_str()),
-        distanceNm = atof(pieces[2].c_str());
-        radial += magvar;
-        wpt = new OffsetNavaidWaypoint(p, this, radial, distanceNm);
-      } else if (pieces.size() == 2) {
-        FGAirport* apt = dynamic_cast<FGAirport*>(p.ptr());
-        if (!apt) {
-          SG_LOG(SG_NAVAID, SG_INFO, "Waypoint is not an airport:" << pieces.front());
-          return nullptr;
+    SGGeod basePosition = vicinity;
+    if (!vicinity.isValid()) {
+        // compute basePosition using some heuristics
+        if (_legs.empty()) {
+            // route is empty, use departure position / aircraft position
+            basePosition = _departure ? _departure->geod() : globals->get_aircraft_position();
+        } else {
+            basePosition = _legs.back()->waypoint()->position();
         }
+    }
 
-        if (!apt->hasRunwayWithIdent(pieces[1])) {
-          SG_LOG(SG_NAVAID, SG_INFO, "No runway: " << pieces[1] << " at " << pieces[0]);
-          return nullptr;
-        }
-
-        FGRunway* runway = apt->getRunwayByIdent(pieces[1]);
-        wpt = new NavaidWaypoint(runway, this);
-      } else if (pieces.size() == 4) {
-        wpt = intersectionFromString(p, basePosition, magvar, pieces);
-      }
-  }
-  
-  if (!wpt) {
-    SG_LOG(SG_NAVAID, SG_INFO, "Unable to parse waypoint:" << target);
-    return nullptr;
-  }
-  
-  if (altSetting != RESTRICT_NONE) {
-    wpt->setAltitude(altFt, altSetting);
-  }
-  return wpt;
+    return Waypt::createFromString(this, tgt, basePosition);
 }
-
 
 void FlightPlan::activate()
 {
@@ -1788,7 +1633,31 @@ SGGeod FlightPlan::pointAlongRoute(int aIndex, double aOffsetNm) const
     RoutePath rp(this);
     return rp.positionForDistanceFrom(aIndex, aOffsetNm * SG_NM_TO_METER);
 }
-    
+
+SGGeod FlightPlan::pointAlongRouteNorm(int aIndex, double aOffsetNorm) const
+{
+    RoutePath rp(this);
+    if (fabs(aOffsetNorm) > 1.0) {
+        SG_LOG(SG_AUTOPILOT, SG_ALERT, "FlightPlan::pointAlongRouteNorm: called with invalid arg:" << aOffsetNorm);
+        return rp.positionForIndex(aIndex);
+    }
+
+    const bool forwards = (aOffsetNorm >= 0.0);
+    double d = 0.0;
+    if (forwards) {
+        d = rp.distanceForIndex(aIndex + 1);
+    } else {
+        d = rp.distanceForIndex(aIndex);
+    }
+
+    // in degenerate cases, just use basic position of index
+    if (d <= 0.0) {
+        return rp.positionForIndex(aIndex);
+    }
+
+    return rp.positionForDistanceFrom(aIndex, d * aOffsetNorm);
+}
+
 void FlightPlan::lockDelegates()
 {
   if (_delegateLock == 0) {

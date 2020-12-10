@@ -1187,7 +1187,16 @@ double RoutePath::distanceForIndex(int index) const
 
 double RoutePath::distanceBetweenIndices(int from, int to) const
 {
-  return d->distanceBetweenIndices(from, to);
+    if (from < 0) {
+        from = 0;
+    }
+
+    const auto sz = static_cast<int>(d->waypoints.size());
+    if (to >= sz) {
+        to = sz - 1;
+    }
+
+    return d->distanceBetweenIndices(from, to);
 }
 
 SGGeod RoutePath::positionForDistanceFrom(int index, double distanceM) const
