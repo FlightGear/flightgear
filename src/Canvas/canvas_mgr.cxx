@@ -22,8 +22,10 @@
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalModelData.hxx>
 #include <Viewer/CameraGroup.hxx>
+#include <Model/modelmgr.hxx>
 
 #include <simgear/canvas/Canvas.hxx>
+#include <simgear/scene/model/placement.hxx>
 
 namespace sc = simgear::canvas;
 
@@ -52,6 +54,31 @@ static sc::Placements addSceneObjectPlacement( SGPropertyNode* placement,
     canvas->getCullCallback(),
     canvas
   );
+}
+
+
+//------------------------------------------------------------------------------
+static sc::Placements addDynamicModelPlacement(SGPropertyNode* placement,
+                                              sc::CanvasPtr canvas)
+{
+    const string dyn_model_path = placement->getStringValue("model-path");
+    if (dyn_model_path.empty())
+        return {};
+
+    auto  modelmgr = globals->get_subsystem<FGModelMgr>();
+    if (!modelmgr)
+        return {};
+
+    FGModelMgr::Instance* model_instance = modelmgr->findInstanceByNodePath(dyn_model_path);
+    if (!model_instance || !model_instance->model || !model_instance->model->getSceneGraph())
+        return {};
+
+    return FGODGauge::set_texture(
+        model_instance->model->getSceneGraph(),
+        placement,
+        canvas->getTexture(),
+        canvas->getCullCallback(),
+        canvas);
 }
 
 //------------------------------------------------------------------------------
@@ -85,6 +112,7 @@ void CanvasMgr::init()
           });
           
           sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
+          sc::Canvas::addPlacementFactory("dynamic-model", &addDynamicModelPlacement);
       }
   }
   simgear::canvas::CanvasMgr::init();
@@ -97,6 +125,7 @@ void CanvasMgr::shutdown()
 
   sc::Canvas::removePlacementFactory("object");
   sc::Canvas::removePlacementFactory("scenery-object");
+  sc::Canvas::removePlacementFactory("dynamic-model");
 
     _gui_camera = 0;
 }

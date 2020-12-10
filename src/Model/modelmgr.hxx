@@ -12,6 +12,8 @@
 #include <simgear/compiler.h>    // for SG_USING_STD
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#include <Scripting/NasalModelData.hxx>
+
 // Don't pull in headers, since we don't need them here.
 class SGPropertyNode;
 class SGModelPlacement;
@@ -23,6 +25,7 @@ class SGModelPlacement;
 class FGModelMgr : public SGSubsystem
 {
 public:
+
     /**
      * A dynamically-placed model using properties.
      *
@@ -38,9 +41,8 @@ public:
      */
     struct Instance
     {
-        Instance ();
         virtual ~Instance ();
-        SGModelPlacement * model;
+        SGModelPlacement * model = nullptr;
         SGPropertyNode_ptr node;
         SGPropertyNode_ptr lon_deg_node;
         SGPropertyNode_ptr lat_deg_node;
@@ -48,7 +50,10 @@ public:
         SGPropertyNode_ptr roll_deg_node;
         SGPropertyNode_ptr pitch_deg_node;
         SGPropertyNode_ptr heading_deg_node;
-        bool shadow;
+        SGPropertyNode_ptr loaded_node;
+        bool shadow = false;
+
+        bool checkLoaded() const;
     };
 
     FGModelMgr ();
@@ -85,6 +90,15 @@ public:
      * NOTE: the manager will delete the instance as well.
      */
     virtual void remove_instance (Instance * instance);
+
+
+     /**
+     * Finds an instance in the model manager from a given node path in the property tree.
+     * A possible path could be "models/model[0]"
+     *
+     * NOTE: the manager will delete the instance as well.
+     */
+    Instance* findInstanceByNodePath(const std::string& nodePath) const;
 
 private:
     /**

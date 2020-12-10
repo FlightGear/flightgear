@@ -25,13 +25,59 @@
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
+#include <osg/ProxyNode>
 
 #include "modelmgr.hxx"
 
 using namespace simgear;
 
-// OSGFIXME
-// extern SGShadowVolume *shadows;
+namespace {
+
+class CheckInstanceModelLoadedVisitor : public osg::NodeVisitor
+{
+public:
+    CheckInstanceModelLoadedVisitor() :
+        osg::NodeVisitor(osg::NodeVisitor::NODE_VISITOR, osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+    {}
+    
+    ~CheckInstanceModelLoadedVisitor() = default;
+
+    void apply(osg::Node& node) override
+    {
+        if (!_loaded)
+            return;
+        traverse(node);
+    }
+    
+    void apply(osg::ProxyNode& node) override
+    {
+        if (!_loaded)
+            return;
+
+        for (unsigned i = 0; i < node.getNumFileNames(); ++i) {
+            if (node.getFileName(i).empty())
+                continue;
+            
+            // Check if this is already loaded.
+            if (i < node.getNumChildren() && node.getChild(i))
+                continue;
+
+            _loaded=false;
+            return;
+        }
+        traverse(node);
+    }
+
+    bool isLoaded() const
+    {
+        return _loaded;
+    }
+
+private:
+    bool _loaded = true;
+};
+
+} // of anonymous namespace
 
 FGModelMgr::FGModelMgr ()
 {
@@ -76,6 +122,10 @@ FGModelMgr::add_model (SGPropertyNode * node)
   const char *model_path = node->getStringValue("path", "Models/Geometry/glider.ac");
   osg::Node *object;
 
+  Instance * instance = new Instance;
+  instance->loaded_node = node->addChild("loaded");
+  instance->loaded_node->setBoolValue(false);
+    
   try {
       std::string fullPath = simgear::SGModelLib::findDataFile(model_path);
       object = SGModelLib::loadDeferredModel(fullPath, globals->get_props());
@@ -85,7 +135,6 @@ FGModelMgr::add_model (SGPropertyNode * node)
     return;
   }
 
-  Instance * instance = new Instance;
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
   instance->node = node;
@@ -217,6 +266,7 @@ void FGModelMgr::update(double dt)
             model->setHeadingDeg(heading);
 
         instance->model->update();
+        instance->checkLoaded();
     });
 }
 
@@ -239,31 +289,55 @@ FGModelMgr::remove_instance (Instance * instance)
     }
 }
 
-
+FGModelMgr::Instance*
+FGModelMgr::findInstanceByNodePath(const std::string& node_path) const
+{
+    if (node_path.empty())
+        return nullptr;
+
+    SGPropertyNode* node = fgGetNode(node_path, false);
+    if (!node)
+        return nullptr;
+    
+    auto it = std::find_if(_instances.begin(), _instances.end(),
+                           [node](const Instance* instance)
+    { return instance->node == node; });
+    
+    if (it == _instances.end()) {
+        return nullptr;
+    }
+    
+    return *it;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGModelMgr::Instance
 ////////////////////////////////////////////////////////////////////////
 
-FGModelMgr::Instance::Instance ()
-  : model(0),
-    node(0),
-    lon_deg_node(0),
-    lat_deg_node(0),
-    elev_ft_node(0),
-    roll_deg_node(0),
-    pitch_deg_node(0),
-    heading_deg_node(0),
-    shadow(false)
-{
-}
-
 FGModelMgr::Instance::~Instance ()
 {
-  delete model;
+    delete model;
 }
 
+bool FGModelMgr::Instance::checkLoaded() const
+{
+    if (!model)
+        return false;
+    
+    if (loaded_node->getBoolValue()) {
+        return true;
+    }
+    
+    CheckInstanceModelLoadedVisitor cilv;
+    model->getSceneGraph()->accept(cilv);
+    const bool loadedNow = cilv.isLoaded();
+    
+    if (loadedNow) {
+        loaded_node->setBoolValue(true);
+    }
+    return loadedNow;
+}
 
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGModelMgr::Listener
 ////////////////////////////////////////////////////////////////////////
