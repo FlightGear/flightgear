@@ -192,24 +192,31 @@ void TimeManager::valueChanged(SGPropertyNode* aProp)
 
 void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 {
-  // Update the elapsed time.
-  if (_firstUpdate) {
-    _lastStamp.stamp();
+    const double modelHz = _modelHz->getDoubleValue();
 
-    // we initialise the mp protocol clock  with the system clock.
-    _systemStamp.systemClockHoursAndMinutes();
-    _steadyClock = _systemStamp.toSecs();
+    // Update the elapsed time.
+    if (_firstUpdate) {
+        _lastStamp.stamp();
 
-    _firstUpdate = false;
-    _lastClockFreeze = _clockFreeze->getBoolValue();
+        // Initialise the mp protocol / steady  clock with the system clock.
+        // later, the clock follows steps of 1/modelHz (120 by default),
+        // so the MP clock remains aligned to these boundaries
+
+        _systemStamp.systemClockHoursAndMinutes();
+        const double systemStamp = _systemStamp.toSecs();
+        _steadyClock = floor(systemStamp * modelHz) / modelHz;
+
+        // initialize the remainder with offset from the system clock
+        _dtRemainder = systemStamp - _steadyClock;
+
+        _firstUpdate = false;
+        _lastClockFreeze = _clockFreeze->getBoolValue();
   }
 
   bool wait_for_scenery = !_sceneryLoaded->getBoolValue();
   if (!wait_for_scenery) {
     throttleUpdateRate();
-  }
-  else
-  {
+  } else {
       // suppress framerate while initial scenery isn't loaded yet (splash screen still active) 
       _lastFrameTime=0;
       _frameCount = 0;
@@ -253,7 +260,6 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     
   SGSubsystemGroup* fdmGroup = 
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
-  double modelHz = _modelHz->getDoubleValue();
   fdmGroup->set_fixed_update_time(1.0 / modelHz);
 
 // round the real time down to a multiple of 1/model-hz.
