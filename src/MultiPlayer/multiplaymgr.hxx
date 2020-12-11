@@ -96,7 +96,7 @@ private:
 
     void findProperties();
 
-    void Send();
+    void Send(double currentMPTime);
     void SendMyPosition(const FGExternalMotionData& motionInfo);
     short get_scaled_short(double v, double scale);
 
@@ -141,8 +141,8 @@ private:
     MPPropertyListener* mListener;
 
     double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
-    double mTimeUntilSend;
-    
+    double mNextTransmitTime = 0.0;
+
     std::deque<std::shared_ptr<std::vector<char>>>  mRecordMessageQueue;
     std::deque<std::shared_ptr<std::vector<char>>>  mReplayMessageQueue;
 };

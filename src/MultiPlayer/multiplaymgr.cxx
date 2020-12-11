@@ -34,6 +34,7 @@
 #include <cstring>
 #include <errno.h>
 
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/stdint.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -1008,13 +1009,14 @@ FGMultiplayMgr::init (void)
   short txPort = fgGetInt("/sim/multiplay/txport", 5000);
   string txAddress = fgGetString("/sim/multiplay/txhost");
 
-  int hz = fgGetInt("/sim/multiplay/tx-rate-hz", 10);
-  if (hz < 1) {
-    hz = 10;
+  int txRateHz = fgGetInt("/sim/multiplay/tx-rate-hz", 10);
+  if (txRateHz < 1) {
+      txRateHz = 10;
   }
 
-  mDt = 1.0 / hz;
-  mTimeUntilSend = 0.0;
+  mDt = 1.0 / txRateHz;
+  mNextTransmitTime = sg_random() * mDt;
+  SG_LOG(SG_NETWORK, SG_DEBUG, "initial MP time: " << mNextTransmitTime);
 
   mCallsign = fgGetString("/sim/multiplay/callsign");
   fgGetNode("/sim/multiplay/callsign", true)->setAttribute(SGPropertyNode::PRESERVE, true);
@@ -1835,9 +1837,13 @@ FGMultiplayMgr::update(double dt)
   //////////////////////////////////////////////////
   //  Send if required
   //////////////////////////////////////////////////
-  mTimeUntilSend -= dt;
-  if (mTimeUntilSend <= 0.0) {
-    Send();
+  //the mp protocol time is immune to pause, warp and  time accel
+  const double mpTime = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
+
+  // the mpTime is not monotonic (adjustable offset), going back in time will
+  // also trigger a send
+  if ((mpTime >= mNextTransmitTime) || (mpTime < (mNextTransmitTime - 2.0 * mDt))) {
+      Send(mpTime);
   }
 
   //////////////////////////////////////////////////
@@ -1926,30 +1932,15 @@ void FGMultiplayMgr::ClearMotion()
     }
 }
 
-void
-FGMultiplayMgr::Send()
+void FGMultiplayMgr::Send(double mpTime)
 {
     using namespace simgear;
 
     findProperties();
 
-    // smooth the send rate, by adjusting based on the 'remainder' time, which
-    // is how -ve mTimeUntilSend is. Watch for large values and ignore them,
-    // however.
-    if ((mTimeUntilSend < 0.0) && (fabs(mTimeUntilSend) < mDt)) {
-        mTimeUntilSend = mDt + mTimeUntilSend;
-    }
-    else {
-        mTimeUntilSend = mDt;
-    }
-
-    // we are now using a time immune to pause, warp etc as timestamp.
-    double mp_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
-
-    //    static double lastTime = 0.0;
-
-       // SG_LOG(SG_GENERAL, SG_INFO, "actual mp dt=" << mp_time - lastTime);
-    //    lastTime = mp_time;
+    // Try to stick to a grid with the sending rate as step,
+    // based on the MP protocol clock.
+    mNextTransmitTime += floor(1.0 + (mpTime - mNextTransmitTime) / mDt) * mDt;
 
     FlightProperties ifce;
 
@@ -1961,7 +1952,7 @@ FGMultiplayMgr::Send()
     // note that the simulation time is updated before calling all the
     // update methods. Thus it contains the time intervals *end* time.
     // The FDM is already run, so the states belong to that time.
-    motionInfo.time = mp_time;
+    motionInfo.time = mpTime;
     motionInfo.lag = mDt;
 
     // These are for now converted from lat/lon/alt and euler angles.
