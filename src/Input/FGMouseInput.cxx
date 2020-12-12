@@ -39,6 +39,7 @@
 #include "FGButton.hxx"
 #include "Main/globals.hxx"
 #include <Viewer/renderer.hxx>
+#include <Viewer/sview.hxx>
 #include <Model/panelnode.hxx>
 #include <Cockpit/panel.hxx>
 #include <Viewer/FGEventHandler.hxx>
@@ -630,6 +631,10 @@ void FGMouseInput::processMotion(int x, int y, const osgGA::GUIEventAdapter* ea)
 {
   if (!d->activePickCallbacks[0].empty()) {
     d->doMouseMoveWithCallbacks(ea);
+    return;
+  }
+
+  if (SviewMouseMotion(x, y, *ea)) {
     return;
   }
 

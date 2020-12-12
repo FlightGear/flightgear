@@ -130,6 +130,9 @@ An sview-step is:
             "rotate":
                 heading, pitch, roll:
                     Values used to rotate direction.
+                fixed:
+                    If false (the default), mouse drags modify heading and
+                    pitch.
             "rotate-current-view":
                 Rotate view direction by current /sim/current-view/....
             "rotate-to-target":
@@ -209,4 +212,15 @@ Examples:
         </step>
 */
 std::shared_ptr<SviewView> SviewCreate(const SGPropertyNode* config);
+
+
+#include <simgear/scene/viewer/Compositor.hxx>
+
+/* If event is for an Sview window, returns the window's Compositor; otherwise
+returns nullptr. */
+simgear::compositor::Compositor* SviewGetEventViewport(const osgGA::GUIEventAdapter& ea);
+
+/* If event is for an Sview window, handles it and returns true. Otherwise
+returns false. */
+bool SviewMouseMotion(int x, int y, const osgGA::GUIEventAdapter& ea);
 

@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Viewer/FGEventHandler.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/WindowBuilder.hxx>
 #include <Viewer/WindowSystemAdapter.hxx>
@@ -139,6 +140,10 @@ struct SviewStep
 {
     /* Updates <posdir>. */
     virtual void evaluate(SviewPosDir& posdir) = 0;
+    
+    virtual void mouse_drag(double delta_x, double delta_y)
+    {
+    }
     
     virtual void stream(std::ostream& out) const
     {
@@ -305,11 +310,12 @@ E.g. can be used to preserve direction (relative to aircraft) of Helicopter
 view at the time it was cloned. */
 struct SviewStepRotate : SviewStep
 {
-    SviewStepRotate(double heading=0, double pitch=0, double roll=0)
+    SviewStepRotate(double heading, double pitch, double roll, bool fixed=false)
     :
     m_heading(heading),
     m_pitch(pitch),
-    m_roll(roll)
+    m_roll(roll),
+    m_fixed(fixed)
     {
         SG_LOG(SG_VIEW, SG_INFO, "heading=" << heading << " pitch=" << pitch << " roll=" << roll);
     }
@@ -320,6 +326,20 @@ struct SviewStepRotate : SviewStep
         posdir.heading += m_heading;
         posdir.pitch += m_pitch;
         posdir.roll += m_roll;
+    }
+    
+    void mouse_drag(double delta_x, double delta_y) override
+    {
+        if (m_fixed) {
+            return;
+        }
+        m_heading += delta_x;
+        m_pitch += delta_y;
+        SG_LOG(SG_VIEW, SG_DEBUG, " delta_x=" << delta_x << " delta_y=" << delta_y
+                << ":"
+                << " m_heading=" << m_heading
+                << " m_pitch=" << m_pitch
+                );
     }
     
     virtual void stream(std::ostream& out) const
@@ -335,6 +355,7 @@ struct SviewStepRotate : SviewStep
     double  m_heading;
     double  m_pitch;
     double  m_roll;
+    bool    m_fixed;
 };
 
 /* Multiply heading, pitch and roll by constants. */
@@ -485,14 +506,15 @@ modify the view in response to mouse movements.
 struct SviewStepFinal : SviewStep
 {
     SviewStepFinal(
-            double heading=0,
-            double pitch=0,
-            double roll=0,
-            double default_heading=0,
-            double default_pitch=0,
-            double default_roll=0
+            double heading,
+            double pitch,
+            double roll,
+            double default_heading,
+            double default_pitch,
+            double default_roll
             )
     :
+    m_orientation(true),
     m_heading(heading),
     m_pitch(pitch),
     m_roll(roll),
@@ -501,6 +523,12 @@ struct SviewStepFinal : SviewStep
     m_default_roll(default_roll)
     {
         SG_LOG(SG_VIEW, SG_INFO, "heading=" << heading << " pitch=" << pitch << " roll=" << roll);
+    }
+    
+    SviewStepFinal()
+    :
+    m_orientation(false)
+    {
     }
     
     void evaluate(SviewPosDir& posdir) override
@@ -532,18 +560,27 @@ struct SviewStepFinal : SviewStep
         posdir.direction2 = ec2body * rotation * q;
     }
     
+    void mouse_drag(double delta_x, double delta_y) override
+    {
+        if (m_orientation) {
+            m_heading += delta_x;
+            m_pitch += delta_y;
+        }
+    }
+    
     virtual void stream(std::ostream& out) const
     {
         out << " <SviewStepFinal>";
     }
     
     private:
-    double  m_heading;
-    double  m_pitch;
-    double  m_roll;
-    double  m_default_heading;
-    double  m_default_pitch;
-    double  m_default_roll;
+    bool    m_orientation;
+    double  m_heading = 0;
+    double  m_pitch = 0;
+    double  m_roll = 0;
+    double  m_default_heading = 0;
+    double  m_default_pitch = 0;
+    double  m_default_roll = 0;
 };
 
 /* A step that takes the SviewPosDir's eye and target positions and treats
@@ -788,6 +825,8 @@ struct SviewView
     /* Returns false if window has been closed. */
     virtual bool update(double dt) = 0;
     
+    virtual void mouse_drag(double delta_x, double delta_y) = 0;
+    
     /* Sets this view's camera position/orientation from <posdir>. */
     void posdir_to_view(SviewPosDir posdir)
     {
@@ -808,9 +847,13 @@ struct SviewView
         SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
         camera->setViewMatrix(new_m);
     }
-        
+    
     osgViewer::View*                    m_osg_view = nullptr;
     simgear::compositor::Compositor*    m_compositor = nullptr;
+    
+    bool                                m_mouse_button2;
+    double                              m_mouse_x = 0;
+    double                              m_mouse_y = 0;
     
     static int s_id;
 };
@@ -828,10 +871,10 @@ struct SviewViewEyeTarget : SviewView
         if (!strcmp(config->getStringValue("type"), "legacy")) {
             std::string callsign = config->getStringValue("callsign");
             std::string callsign_desc = (callsign == "") ? "" : ": " + callsign;
-            SG_LOG(SG_VIEW, SG_ALERT, "callsign=" << callsign);
+            SG_LOG(SG_VIEW, SG_INFO, "callsign=" << callsign);
 
             if (config->getBoolValue("view/config/eye-fixed")) {
-                SG_LOG(SG_VIEW, SG_ALERT, "eye-fixed");
+                SG_LOG(SG_VIEW, SG_INFO, "eye-fixed");
                 m_steps.m_name = std::string() + "legacy tower" + callsign_desc;
                 
                 if (!strcmp(config->getStringValue("view/type"), "lookat")) {
@@ -888,7 +931,7 @@ struct SviewViewEyeTarget : SviewView
                 }
             }
             else {
-                SG_LOG(SG_VIEW, SG_ALERT, "not eye-fixed");
+                SG_LOG(SG_VIEW, SG_INFO, "not eye-fixed");
                 /* E.g. Pilot view or Helicopter view. */
                 
                 SGPropertyNode* global_sim_view = globals->get_props()
@@ -982,7 +1025,7 @@ struct SviewViewEyeTarget : SviewView
                             default_pitch_offset,
                             default_roll_offset
                             ));
-                    SG_LOG(SG_VIEW, SG_ALERT, "m_steps=" << m_steps);
+                    SG_LOG(SG_VIEW, SG_INFO, "m_steps=" << m_steps);
                 }
             }
         }
@@ -1032,7 +1075,8 @@ struct SviewViewEyeTarget : SviewView
                     m_steps.add_step(new SviewStepRotate(
                             step->getDoubleValue("heading"),
                             step->getDoubleValue("pitch"),
-                            step->getDoubleValue("roll")
+                            step->getDoubleValue("roll"),
+                            step->getBoolValue("fixed")
                             ));
                 }
                 else if (!strcmp(type, "rotate-current-view")) {
@@ -1105,7 +1149,7 @@ struct SviewViewEyeTarget : SviewView
                 m_steps.add_step(step);
             }
             m_steps.add_step(new SviewStepFinalToTarget);
-            SG_LOG(SG_VIEW, SG_ALERT, "    m_steps:" << m_steps);
+            SG_LOG(SG_VIEW, SG_INFO, "    m_steps:" << m_steps);
         }
         else if (!strcmp(type, "last_pair_double")) {
             SviewSteps& local = a;
@@ -1126,11 +1170,12 @@ struct SviewViewEyeTarget : SviewView
                 m_steps.add_step(step);
             }
             m_steps.add_step(new SviewStepDouble);
-            SG_LOG(SG_VIEW, SG_ALERT, "    m_steps:" << m_steps);
+            SG_LOG(SG_VIEW, SG_INFO, "    m_steps:" << m_steps);
         }
         else {
             throw std::runtime_error(std::string("Unrecognised double view: ") + type);
         }
+        SG_LOG(SG_VIEW, SG_ALERT, "m_steps=" << m_steps);
     }
 
     const std::string description() override
@@ -1148,17 +1193,23 @@ struct SviewViewEyeTarget : SviewView
         bool debug = false;
         if (m_debug) {
             time_t t = time(NULL) / 10;
-            //if (debug) SG_LOG(SG_VIEW, SG_ALERT, "m_debug_time=" << m_debug_time << " t=" << t);
             if (t != m_debug_time) {
                 m_debug_time = t;
                 debug = true;
             }
         }
-        if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating m_steps:");
+        if (debug) SG_LOG(SG_VIEW, SG_INFO, "evaluating m_steps:");
         m_steps.evaluate(posdir, debug);
 
         posdir_to_view(posdir);
         return true;
+    }
+    
+    void mouse_drag(double delta_x, double delta_y) override
+    {
+        for (auto step: m_steps.m_steps) {
+            step->mouse_drag(delta_x, delta_y);
+        }
     }
     
     SviewSteps          m_steps;
@@ -1213,7 +1264,7 @@ static SGPropertyNode_ptr SviewConfigForCurrentView()
     
     config->setDoubleValue("zoom-delta", 1);
     
-    SG_LOG(SG_VIEW, SG_ALERT, "returning:\n" << writePropertiesInline(config, true /*write_all*/));
+    SG_LOG(SG_VIEW, SG_INFO, "returning:\n" << writePropertiesInline(config, true /*write_all*/));
     return config;
 }
 
@@ -1307,6 +1358,8 @@ struct EventHandler : osgGA::EventHandler
     }
 };
 
+#include "Viewer/FGEventHandler.hxx"
+
 std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
 {    
     FGRenderer* renderer = globals->get_renderer();
@@ -1323,7 +1376,8 @@ std::shared_ptr<SviewView> SviewCreate(SGPropertyNode* config)
     SG_LOG(SG_GENERAL, SG_ALERT, "main_view->getNumSlaves()=" << main_view->getNumSlaves());
 
     osgViewer::View* view = new osgViewer::View();
-    EventHandler* event_handler = new EventHandler;
+    //EventHandler* event_handler = new EventHandler;
+    flightgear::FGEventHandler* event_handler = globals->get_renderer()->getEventHandler();
     view->addEventHandler(event_handler);
     
     assert(config);
@@ -1522,6 +1576,16 @@ std::shared_ptr<SviewView> SviewCreate(const SGPropertyNode* config)
     return SviewCreate(const_cast<SGPropertyNode*>(config));
 }
 
+simgear::compositor::Compositor* SviewGetEventViewport(const osgGA::GUIEventAdapter& ea)
+{
+    const osg::GraphicsContext* gc = ea.getGraphicsContext();
+    for (std::shared_ptr<SviewView> sview_view: s_views) {
+        if (sview_view->m_compositor->getGraphicsContext() == gc) {
+            return sview_view->m_compositor;
+        }
+    }
+    return nullptr;
+}
 
 void SViewSetCompositorParams(
         osg::ref_ptr<simgear::SGReaderWriterOptions> options,
@@ -1531,3 +1595,35 @@ void SViewSetCompositorParams(
     s_compositor_options = options;
     s_compositor_path = compositor_path;
 }
+
+bool SviewMouseMotion(int x, int y, const osgGA::GUIEventAdapter& ea)
+{
+    const osg::GraphicsContext* gc = ea.getGraphicsContext();
+    std::shared_ptr<SviewView>  sview_view;
+    for (auto v: s_views) {
+        if (v->m_compositor->getGraphicsContext() == gc) {
+            sview_view = v;
+            break;
+        }
+    }
+    if (!sview_view) {
+        return false;
+    }
+    double xx;
+    double yy;
+    flightgear::eventToWindowCoords(&ea, xx, yy);
+    
+    SG_LOG(SG_GENERAL, SG_DEBUG, "sview_view=" << sview_view.get() << " xx=" << xx << " yy=" << yy);
+    bool button2 = globals->get_props()->getBoolValue("/devices/status/mice/mouse/button[2]");
+    if (button2 && sview_view->m_mouse_button2) {
+        /* Button2 drag. */
+        SG_LOG(SG_GENERAL, SG_DEBUG, "button2:" << " xx=" << xx << " yy=" << yy);
+        sview_view->mouse_drag(xx - sview_view->m_mouse_x, yy - sview_view->m_mouse_y);
+    }
+    sview_view->m_mouse_button2 = button2;
+    sview_view->m_mouse_x = xx;
+    sview_view->m_mouse_y = yy;
+    
+    return true;
+}
+

@@ -79,14 +79,23 @@ void FGEventHandler::init(const osgGA::GUIEventAdapter& ea,
 }
 #endif
 
-// Calculate event coordinates in the viewport of the GUI camera, if
-// possible. Otherwise return false and (-1, -1).
 namespace
 {
-bool
+enum WindowType
+{
+    WindowType_NONE,
+    WindowType_MAIN,
+    WindowType_SVIEW
+};
+
+// Calculate event coordinates in the viewport of the GUI camera, if
+// possible. Otherwise sets (x, y) to (-1, -1).
+WindowType
 eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
                 int& x, int& y)
 {
+    WindowType  ret = WindowType_NONE;
+    
     flightgear::WindowBuilder* window_builder = flightgear::WindowBuilder::getWindowBuilder();
     flightgear::GraphicsWindow* main_window = window_builder->getDefaultWindow();
 
@@ -95,17 +104,33 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
 
     const osg::GraphicsContext* eventGC = ea.getGraphicsContext();
     if( !eventGC )
-      return false; // TODO how can this happen?
-    if (eventGC != main_window->gc.get()) {
-      return false;
-    }
+      return WindowType_NONE; // TODO how can this happen?
     const osg::GraphicsContext::Traits* traits = eventGC->getTraits();
-    osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
-    if (!guiCamera)
-        return false;
-    osg::Viewport* vport = guiCamera->getViewport();
-    if (!vport)
-        return false;
+    
+    osg::Viewport* vport;
+    
+    if (eventGC == main_window->gc.get()) {
+        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+        if (!guiCamera)
+            return WindowType_NONE;
+        vport = guiCamera->getViewport();
+        if (!vport)
+            return WindowType_NONE;
+        ret = WindowType_MAIN;
+    }
+    else {
+        simgear::compositor::Compositor* compositor = SviewGetEventViewport(ea);
+        if (!compositor) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "SviewGetEventViewport() returned nullptr");
+            return WindowType_NONE;
+        }
+        vport = compositor->getViewport();
+        if (!vport) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "compositor->getViewport() is nullptr");
+            return WindowType_NONE;
+        }
+        ret = WindowType_SVIEW;
+    }
     
     // Scale x, y to the dimensions of the window
     double wx = (((ea.getX() - ea.getXmin()) / (ea.getXmax() - ea.getXmin()))
@@ -118,10 +143,8 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
         // downwards".
         x = wx - vport->x();
         y = vport->height() - (wy - vport->y());
-        return true;
-    } else {
-        return false;
     }
+    return ret;
 }
 
 /* A hack for when we are linked with OSG-3.4 and CompositeViewer is
@@ -133,8 +156,7 @@ bool isMainWindow(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us)
 {
     int x;
     int y;
-    bool ret = eventToViewport(ea, us, x, y);
-    return ret;
+    return eventToViewport(ea, us, x, y) == WindowType_MAIN;
 }
 
 }
@@ -180,7 +202,8 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
     case osgGA::GUIEventAdapter::PUSH:
     case osgGA::GUIEventAdapter::RELEASE:
     {
-        bool mainWindow = eventToViewport(ea, us, x, y);
+        WindowType window_type = eventToViewport(ea, us, x, y);
+        bool mainWindow = (window_type == WindowType_MAIN);
         int button = 0;
         switch (ea.getButton()) {
         case osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON:
@@ -201,8 +224,9 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
     }
     case osgGA::GUIEventAdapter::SCROLL:
     {
-        bool mainWindow = eventToViewport(ea, us, x, y);
-
+        WindowType window_type = eventToViewport(ea, us, x, y);
+        bool mainWindow = (window_type == WindowType_MAIN);
+        
         int button;
         if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_2D) {
             if (ea.getScrollingDeltaY() > 0)
@@ -241,7 +265,7 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         // that with osgViewer.
         if (mouseWarped)
             return true;
-        if (eventToViewport(ea, us, x, y) && mouseMotionHandler)
+        if (eventToViewport(ea, us, x, y) != WindowType_NONE && mouseMotionHandler)
             (*mouseMotionHandler)(x, y, &ea);
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
