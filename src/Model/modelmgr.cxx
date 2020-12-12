@@ -284,8 +284,8 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
     return;
 
   // search instance by node and remove it from scenegraph
-    std::vector<Instance *>::iterator it = _mgr->_instances.begin();
-    std::vector<Instance *>::iterator end = _mgr->_instances.end();
+  std::vector<Instance *>::iterator it = _mgr->_instances.begin();
+  std::vector<Instance *>::iterator end = _mgr->_instances.end();
 
   for (; it != end; ++it) {
     Instance *instance = *it;
