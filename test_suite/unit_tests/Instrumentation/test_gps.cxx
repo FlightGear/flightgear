@@ -1614,4 +1614,17 @@ void GPSTests::testCourseLegIntermediateWaypoint()
     // FGTestApi::writeFlightPlanToKML(fp);
     // check that the leg course is correct
     CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, gpsNode->getDoubleValue("desired-course-deg"), 2.0);
+
+    auto legToDecel = fp->legAtIndex(2);
+    auto legToBlaca = fp->legAtIndex(3);
+
+    auto wpNode = gpsNode->getChild("wp", 0, true);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, legToDecel->courseDeg(), 1.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, legToBlaca->courseDeg(), 1.0);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, gpsNode->getDoubleValue("desired-course-deg"), 2.0);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, wpNode->getDoubleValue("leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, wpNode->getDoubleValue("leg-mag-course-deg"), 0.5);
 }
