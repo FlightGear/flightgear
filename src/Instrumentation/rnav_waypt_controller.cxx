@@ -450,9 +450,24 @@ public:
      ATD=acos(cos(dist_AD)/cos(XTD))
      */
     double atd = acos(cos(distOriginAircraftRad) / cos(xtkRad));
+
+    // fix sign of ATD, if we are 'behind' the waypoint origin, rather than
+    // in front of it. We need to set a -ve sign on atd, otherwise we compute
+    // an abeamPoint ahead of the waypoint origin, potentially so far ahead
+    // that the computed track is backwards.
+    // see test-case GPSTests::testCourseLegIntermediateWaypoint
+    // for this happening
+    {
+        double x = _courseOriginToAircraft - _initialLegCourse;
+        SG_NORMALIZE_RANGE(x, -180.0, 180.0);
+        if (fabs(x) > 90.0) {
+            atd = -atd;
+        }
+    }
+
     const double atdM = atd * SG_RAD_TO_NM * SG_NM_TO_METER;
     SGGeod abeamPoint = SGGeodesy::direct(_waypointOrigin, _initialLegCourse, atdM);
-    
+
     // if we're close to the target point, we enter something similar to the VOR zone
     // of confusion. Force target track to the final course from the origin.
     if (_distanceAircraftTargetMetre < (SG_NM_TO_METER * 2.0)) {
