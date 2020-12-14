@@ -1600,10 +1600,9 @@ void GPSTests::testCourseLegIntermediateWaypoint()
 
     SGGeod decelPos = fp->pointAlongRoute(2, -15.0);
     fp->insertWayptAtIndex(new BasicWaypt(decelPos, "DECEL", fp), 2);
-    fp->setCurrentIndex(3); // BLACA
+    fp->setCurrentIndex(2); // DECEL
 
-    // position halfway between EGAA and EGPF
-    SGGeod initPos = fp->pointAlongRoute(2, -5);
+    SGGeod initPos = fp->pointAlongRouteNorm(1, 0.1);
     FGTestApi::setPositionAndStabilise(initPos);
 
     auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
@@ -1624,7 +1623,24 @@ void GPSTests::testCourseLegIntermediateWaypoint()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, legToBlaca->courseDeg(), 1.0);
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, gpsNode->getDoubleValue("desired-course-deg"), 2.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.0, wpNode->getDoubleValue("leg-true-course-deg"), 0.5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.0, wpNode->getDoubleValue("leg-mag-course-deg"), 0.5);
 
+    fp->setCurrentIndex(3); // BLACA
+
+    FGTestApi::runForTime(0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, gpsNode->getDoubleValue("desired-course-deg"), 2.0);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, wpNode->getDoubleValue("leg-true-course-deg"), 0.5);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(56.5, wpNode->getDoubleValue("leg-mag-course-deg"), 0.5);
+
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(initPos);
+    pilot->setCourseTrue(fp->legAtIndex(2)->courseDeg());
+    pilot->setSpeedKts(280);
+    pilot->flyGPSCourse(gps);
+
+    bool ok = FGTestApi::runForTimeWithCheck(1200.0, [fp]() {
+        return fp->currentIndex() == 4;
+    });
+    CPPUNIT_ASSERT(ok);
 }
