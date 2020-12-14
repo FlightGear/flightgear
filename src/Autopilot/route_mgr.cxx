@@ -121,29 +121,40 @@ static bool commandSetActiveWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 
 static bool commandInsertWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
-  const bool haveIndex = arg->hasChild("index");
-  int index = arg->getIntValue("index");
+    FGRouteMgr* self = globals->get_subsystem<FGRouteMgr>();
+    const bool haveIndex = arg->hasChild("index");
+    int index = arg->getIntValue("index");
 
-  std::string ident(arg->getStringValue("id"));
-  int alt = arg->getIntValue("altitude-ft", -999);
-  int ias = arg->getIntValue("speed-knots", -999);
-  
-  WayptRef wp;
-// lat/lon may be supplied to narrow down navaid search, or to specify
-// a raw waypoint
-  SGGeod pos;
-  if (arg->hasChild("longitude-deg")) {
-    pos = SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
-                               arg->getDoubleValue("latitude-deg"));
+    std::string ident(arg->getStringValue("id"));
+    int alt = arg->getIntValue("altitude-ft", -999);
+    int ias = arg->getIntValue("speed-knots", -999);
+
+    WayptRef wp;
+    // lat/lon may be supplied to narrow down navaid search, or to specify
+    // a raw waypoint
+    SGGeod pos = SGGeod::invalid();
+    if (arg->hasChild("longitude-deg")) {
+        pos = SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
+                              arg->getDoubleValue("latitude-deg"));
   }
   
   if (arg->hasChild("navaid")) {
-    FGPositionedRef p = FGPositioned::findClosestWithIdent(arg->getStringValue("navaid"), pos);
-    
+      if (!pos.isValid()) {
+          pos = self->flightPlan()->vicinityForInsertIndex(haveIndex ? index : -1 /* append */);
+      }
+
+      FGPositioned::TypeFilter filter({FGPositioned::Type::NDB, FGPositioned::Type::VOR,
+                                       FGPositioned::Type::FIX, FGPositioned::Type::WAYPOINT});
+
+      FGPositionedRef p = FGPositioned::findClosestWithIdent(arg->getStringValue("navaid"), pos, &filter);
+      if (!p) {
+          SG_LOG(SG_AUTOPILOT, SG_WARN, "Unable to find navaid with ident:" << arg->getStringValue("navaid"));
+          return false;
+      }
+
     if (arg->hasChild("navaid", 1)) {
       // intersection of two radials
-      FGPositionedRef p2 = FGPositioned::findClosestWithIdent(arg->getStringValue("navaid[1]"), pos);
+      FGPositionedRef p2 = FGPositioned::findClosestWithIdent(arg->getStringValue("navaid[1]"), pos, &filter);
       if (!p2) {
         SG_LOG( SG_AUTOPILOT, SG_INFO, "Unable to find FGPositioned with ident:" << arg->getStringValue("navaid[1]"));
         return false;
@@ -1200,24 +1211,7 @@ void FGRouteMgr::setSTAR(const std::string& aIdent)
 
 WayptRef FGRouteMgr::waypointFromString(const std::string& target, int insertPosition)
 {
-    SGGeod vicinity;
-    if (insertPosition < 0) { // appending, not inserting
-        insertPosition = _plan->numLegs();
-        if (insertPosition > 0) {
-            // if we have at least one existing leg, use its position
-            // for the search vicinity
-            vicinity = _plan->pointAlongRoute(insertPosition - 1, 0.0);
-        }
-    } else {
-        // if we're somewhere in the middle of the route compute a search
-        // vicinity halfwya between the previous waypoint and the one we are
-        // inserting at, i.e th emiddle of the leg.
-        // if we're at the beginning, just use zero of course.
-        const double normOffset = (insertPosition > 0) ? -0.5 : 0.0;
-        vicinity = _plan->pointAlongRouteNorm(insertPosition, normOffset);
-    }
-
-    return _plan->waypointFromString(target, vicinity);
+    return _plan->waypointFromString(target, _plan->vicinityForInsertIndex(insertPosition));
 }
 
 double FGRouteMgr::getDepartureFieldElevation() const

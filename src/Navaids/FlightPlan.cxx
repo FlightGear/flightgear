@@ -1351,6 +1351,27 @@ double FlightPlan::magvarDegAt(const SGGeod& pos) const
   return sgGetMagVar(pos, jd) * SG_RADIANS_TO_DEGREES;
 }
 
+SGGeod FlightPlan::vicinityForInsertIndex(int aIndex) const
+{
+    if (aIndex < 0) { // appending, not inserting
+        const int n = numLegs();
+        if (n > 0) {
+            // if we have at least one existing leg, use its position
+            // for the search vicinity
+            return pointAlongRoute(n - 1, 0.0);
+        }
+
+        return SGGeod::invalid();
+    }
+
+    // if we're somewhere in the middle of the route compute a search
+    // vicinity halfway between the previous waypoint and the one we are
+    // inserting at, i.e the middle of the leg.
+    // if we're at the beginning, just use zero of course.
+    const double normOffset = (aIndex > 0) ? -0.5 : 0.0;
+    return pointAlongRouteNorm(aIndex, normOffset);
+}
+
 WayptRef FlightPlan::waypointFromString(const string& tgt, const SGGeod& vicinity)
 {
     SGGeod basePosition = vicinity;

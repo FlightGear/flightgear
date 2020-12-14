@@ -3,8 +3,9 @@
 #include <memory>
 #include <cstring>
 
-#include <simgear/misc/sg_dir.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/structure/commands.hxx>
 
 #include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
@@ -615,6 +616,59 @@ void RouteManagerTests::loadGPX()
     CPPUNIT_ASSERT_EQUAL(std::string{"KBOS"}, wp2->waypoint()->ident());
 }
 
+const std::string flightPlanXMLData =
+    R"(<?xml version="1.0" encoding="UTF-8"?>
+    <PropertyList>
+      <version type="int">2</version>
+      <departure>
+        <airport type="string">EDDM</airport>
+        <runway type="string">08R</runway>
+      </departure>
+      <destination>
+        <airport type="string">EDDF</airport>
+      </destination>
+      <route>
+        <wp>
+          <type type="string">runway</type>
+          <departure type="bool">true</departure>
+          <ident type="string">08R</ident>
+          <icao type="string">EDDM</icao>
+        </wp>
+        <wp n="1">
+          <type type="string">navaid</type>
+          <ident type="string">GIVMI</ident>
+          <lon type="double">11.364700</lon>
+          <lat type="double">48.701100</lat>
+        </wp>
+        <wp n="2">
+          <type type="string">navaid</type>
+          <ident type="string">ERNAS</ident>
+          <lon type="double">11.219400</lon>
+          <lat type="double">48.844700</lat>
+        </wp>
+        <wp n="3">
+          <type type="string">navaid</type>
+          <ident type="string">TALAL</ident>
+          <lon type="double">11.085300</lon>
+          <lat type="double">49.108300</lat>
+        </wp>
+        <wp n="4">
+          <type type="string">navaid</type>
+          <ident type="string">ERMEL</ident>
+          <lon type="double">11.044700</lon>
+          <lat type="double">49.187800</lat>
+        </wp>
+        <wp n="5">
+          <type type="string">navaid</type>
+          <ident type="string">PSA</ident>
+          <lon type="double">9.348300</lon>
+          <lat type="double">49.862200</lat>
+        </wp>
+      </route>
+    </PropertyList>
+)";
+
+
 // The same test as above, but for a file exported from the route manager or online
 void RouteManagerTests::loadFGFP()
 {
@@ -626,56 +680,7 @@ void RouteManagerTests::loadFGFP()
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp.fgfp";
     {
         sg_ofstream s(fgfpPath);
-        s << R"(<?xml version="1.0" encoding="UTF-8"?>
-            <PropertyList>
-              <version type="int">2</version>
-              <departure>
-                <airport type="string">EDDM</airport>
-                <runway type="string">08R</runway>
-              </departure>
-              <destination>
-                <airport type="string">EDDF</airport>
-              </destination>
-              <route>
-                <wp>
-                  <type type="string">runway</type>
-                  <departure type="bool">true</departure>
-                  <ident type="string">08R</ident>
-                  <icao type="string">EDDM</icao>
-                </wp>
-                <wp n="1">
-                  <type type="string">navaid</type>
-                  <ident type="string">GIVMI</ident>
-                  <lon type="double">11.364700</lon>
-                  <lat type="double">48.701100</lat>
-                </wp>
-                <wp n="2">
-                  <type type="string">navaid</type>
-                  <ident type="string">ERNAS</ident>
-                  <lon type="double">11.219400</lon>
-                  <lat type="double">48.844700</lat>
-                </wp>
-                <wp n="3">
-                  <type type="string">navaid</type>
-                  <ident type="string">TALAL</ident>
-                  <lon type="double">11.085300</lon>
-                  <lat type="double">49.108300</lat>
-                </wp>
-                <wp n="4">
-                  <type type="string">navaid</type>
-                  <ident type="string">ERMEL</ident>
-                  <lon type="double">11.044700</lon>
-                  <lat type="double">49.187800</lat>
-                </wp>
-                <wp n="5">
-                  <type type="string">navaid</type>
-                  <ident type="string">PSA</ident>
-                  <lon type="double">9.348300</lon>
-                  <lat type="double">49.862200</lat>
-                </wp>
-              </route>
-            </PropertyList>
-        )";
+        s << flightPlanXMLData;
     }
     
     CPPUNIT_ASSERT(f->load(fgfpPath));
@@ -860,4 +865,58 @@ void RouteManagerTests::testsSelectNavaid()
     auto wp2 = leg->waypoint();
     CPPUNIT_ASSERT_EQUAL(wp2->ident(), string{"OD"});
     CPPUNIT_ASSERT_EQUAL(wp2->source()->name(), string{"BRYANSK NDB"});
+}
+
+void RouteManagerTests::testCommandAPI()
+{
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_2.fgfp";
+    {
+        sg_ofstream s(fgfpPath);
+        s << flightPlanXMLData;
+    }
+
+    {
+        SGPropertyNode_ptr args(new SGPropertyNode);
+        args->setStringValue("path", fgfpPath.utf8Str());
+        CPPUNIT_ASSERT(globals->get_commands()->execute("load-flightplan", args));
+    }
+
+    auto f = rm->flightPlan();
+    CPPUNIT_ASSERT_EQUAL(7, f->numLegs());
+
+    CPPUNIT_ASSERT(!f->isActive());
+
+    {
+        SGPropertyNode_ptr args(new SGPropertyNode);
+        CPPUNIT_ASSERT(globals->get_commands()->execute("activate-flightplan", args));
+    }
+
+    CPPUNIT_ASSERT(f->isActive());
+
+    {
+        SGPropertyNode_ptr args(new SGPropertyNode);
+        args->setIntValue("index", 3);
+        CPPUNIT_ASSERT(globals->get_commands()->execute("set-active-waypt", args));
+    }
+
+    CPPUNIT_ASSERT_EQUAL(3, f->currentIndex());
+
+    {
+        SGPropertyNode_ptr args(new SGPropertyNode);
+        args->setIntValue("index", 4);
+        args->setStringValue("navaid", "WLD");
+
+        // let's build an offset waypoint for fun
+        args->setDoubleValue("offset-nm", 10.0);
+        args->setDoubleValue("radial", 30);
+        CPPUNIT_ASSERT(globals->get_commands()->execute("insert-waypt", args));
+    }
+
+    auto waldaWpt = f->legAtIndex(4)->waypoint();
+    auto waldaVOR = waldaWpt->source();
+    CPPUNIT_ASSERT_EQUAL(string{"WALDA VOR-DME"}, waldaVOR->name());
+
+    auto d = SGGeodesy::distanceNm(waldaVOR->geod(), waldaWpt->position());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, d, 0.1);
 }

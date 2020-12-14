@@ -337,6 +337,16 @@ public:
   SGGeod pointAlongRouteNorm(int aIndex, double aOffsetNorm) const;
 
   /**
+    @brief given an index to insert a waypoint into the plan, find the geographical vicinity.
+        This is used to aid disambiguration searches, etc: see the vicinity paramter to 'waypointFromString'
+        below, for example
+     
+     When aIndex is negative, the vicinity used is the end of the current flight-plan, i.e appending to
+     the waypoints rather than appending.
+     */
+  SGGeod vicinityForInsertIndex(int aIndex) const;
+
+  /**
    * Create a WayPoint from a string in the following format:
    *  -
    *  'vicinity' specifies the search area, to disambiguate navaids, etc with duplicate names

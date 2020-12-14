@@ -45,6 +45,7 @@ class RouteManagerTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testRouteWithProcedures);
     CPPUNIT_TEST(testRouteWithApproachProcedures);
     CPPUNIT_TEST(testsSelectNavaid);
+    CPPUNIT_TEST(testCommandAPI);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -72,6 +73,7 @@ public:
     void testRouteWithProcedures();
     void testRouteWithApproachProcedures();
     void testsSelectNavaid();
+    void testCommandAPI();
 
 private:
     GPS* m_gps = nullptr;
