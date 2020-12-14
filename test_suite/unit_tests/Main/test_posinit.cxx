@@ -266,6 +266,7 @@ void PosInitTests::testAirportAndAvailableParkingStartup()
     
     auto dynamics =  FGAirport::getByIdent("EDDF");
     auto parking = dynamics->groundNetwork()->findParkingByName(assignedParking);
+    CPPUNIT_ASSERT(parking);
     
     checkClosestAirport("EDDF"s);
     // Anywhere around EDDF will do!
@@ -763,7 +764,7 @@ void PosInitTests::testRepositionAtParking()
     
    auto apt = FGAirport::getByIdent("EDDF");
    auto parking = apt->groundNetwork()->findParkingByName("V266");
-
+   CPPUNIT_ASSERT(parking);
    checkClosestAirport("EDDF"s);
    checkPosition(parking->geod(), 10.0);
    checkOnGround();
@@ -852,7 +853,7 @@ void PosInitTests::testRepositionAtOccupied()
     
     auto apt = FGAirport::getByIdent("EDDF");
     auto parking1 = apt->groundNetwork()->findParkingByName("F235");
-         
+    CPPUNIT_ASSERT(parking1);
   
     fgSetDouble("/environment/metar/base-wind-dir-deg",  350.0);
     fgSetBool("/environment/metar/valid", true);
@@ -902,7 +903,7 @@ void PosInitTests::testRepositionAtInvalid()
 
     auto apt = FGAirport::getByIdent("EDDF");
     auto parking1 = apt->groundNetwork()->findParkingByName("F235");
-         
+    CPPUNIT_ASSERT(parking1);
 
     fgSetDouble("/environment/metar/base-wind-dir-deg",  350.0);
     fgSetBool("/environment/metar/valid", true);
