@@ -25,18 +25,19 @@ import hashlib
 import os
 import re
 import shutil
+import ssl
 import sys
 import time
 import urllib
 
 from urllib.parse import urlparse, urljoin
-from http.client import HTTPConnection, _CS_IDLE, HTTPException
+from http.client import HTTPConnection, HTTPSConnection, HTTPException
 from os import listdir
 from os.path import isfile, isdir, join
 
 from . import dirindex
 from .exceptions import UserError, NetworkError, RepoDataError, \
-                        InvalidDirIndexFile
+                        InvalidDirIndexFile, UnsupportedURLScheme
 from .virtual_path import VirtualPath
 
 
@@ -120,7 +121,8 @@ class HTTPGetCallback:
                     by HTTPGetter.get().
 
         """
-        self.callback = callback
+        if callback is not None:
+            self.callback = callback
         self.src = src
 
 class HTTPGetter:
@@ -130,7 +132,16 @@ class HTTPGetter:
         self.maxPending = maxPending
         self.requests = []
         self.pendingRequests = []
-        self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc)
+
+        if self.parsedBaseUrl.scheme == "http":
+            self.httpConnection = HTTPConnection(self.parsedBaseUrl.netloc)
+        elif self.parsedBaseUrl.scheme == "https":
+            context = ssl.create_default_context()
+            self.httpConnection = HTTPSConnection(self.parsedBaseUrl.netloc,
+                                                  context=context)
+        else:
+            raise UnsupportedURLScheme(self.parsedBaseUrl.scheme)
+
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
 
     def assemblePath(self, httpGetCallback):
@@ -151,7 +162,6 @@ class HTTPGetter:
         return urljoin(baseUrl + '/', httpGetCallback.src.asRelative())
 
     def doGet(self, httpGetCallback):
-        conn = self.httpConnection
         pathOnServer = self.assemblePath(httpGetCallback)
         self.httpConnection.request("GET", pathOnServer, None,
                                     self.httpRequestHeaders)
@@ -183,10 +193,9 @@ class HTTPGetter:
 
 
 class HTTPDownloadRequest(HTTPGetCallback):
-    def __init__(self, terrasync, src, dst, callback = None ):
+    def __init__(self, src, dst, callback=None):
         """Initialize an HTTPDownloadRequest instance.
 
-        terrasync -- a TerraSync instance
         src       -- a VirtualPath instance (corresponding to the path
                      on the server for which a GET request is to be
                      issued)
@@ -199,8 +208,7 @@ class HTTPDownloadRequest(HTTPGetCallback):
                      instance. Its return value is ignored.
 
         """
-        super().__init__(src, self.callback)
-        self.terrasync = terrasync
+        HTTPGetCallback.__init__(self, src, None)
         self.dst = dst
         self.mycallback = callback
 
@@ -241,7 +249,7 @@ class HTTPSocketRequest(HTTPGetCallback):
                (presumably a file)
 
         """
-        HTTPGetCallback.__init__(self, src, self.callback)
+        HTTPGetCallback.__init__(self, src, None)
 
     def callback(self, url, httpResponse):
         # Same comment as for HTTPDownloadRequest.callback()
@@ -511,7 +519,7 @@ class TerraSync:
                 removeDirectoryTree(self.target, localFullPath)
 
             print("Downloading '{}'".format(virtualPath))
-            request = HTTPDownloadRequest(self, virtualPath, localFullPath)
+            request = HTTPDownloadRequest(virtualPath, localFullPath)
             self.httpGetter.get(request)
         else:
             self.abortCheckMode(failedCheckReason, virtualPath)
@@ -548,8 +556,7 @@ class TerraSync:
             if not os.path.exists(localFullPath):
                 os.makedirs(localFullPath)
 
-            request = HTTPDownloadRequest(self,
-                                          virtualPath / ".dirindex",
+            request = HTTPDownloadRequest(virtualPath / ".dirindex",
                                           localDirIndex,
                                           self.handleDirindexRequest)
             self.httpGetter.get(request)

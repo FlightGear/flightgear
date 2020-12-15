@@ -65,6 +65,10 @@ class NetworkError(TerraSyncPyException):
      """Exception raised when getting a network error even after retrying."""
      ExceptionShortDescription = "Network error"
 
+class UnsupportedURLScheme(TerraSyncPyException):
+     """Exception raised when asked to handle an unsupported URL scheme."""
+     ExceptionShortDescription = "Unsupported URL scheme"
+
 class RepoDataError(TerraSyncPyException):
      """
      Exception raised when getting invalid data from the TerraSync repository."""
