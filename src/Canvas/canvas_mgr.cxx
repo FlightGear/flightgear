@@ -72,25 +72,27 @@ CanvasMgr::CanvasMgr():
 //----------------------------------------------------------------------------
 void CanvasMgr::init()
 {
-  _gui_camera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
-    if (_gui_camera.valid()) {
-        // add our two placement factories
-        sc::Canvas::addPlacementFactory
-        (
-          "object",
-          boost::bind
+  flightgear::CameraGroup* camera_group = flightgear::CameraGroup::getDefault();
+  if (camera_group) {
+    _gui_camera = flightgear::getGUICamera(camera_group);
+      if (_gui_camera.valid()) {
+          // add our two placement factories
+          sc::Canvas::addPlacementFactory
           (
-            &FGODGauge::set_aircraft_texture,
-            _1,
-            boost::bind(&sc::Canvas::getTexture, _2),
-            boost::bind(&sc::Canvas::getCullCallback, _2),
-            _2
-          )
-        );
-        
-        sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
-    }
+            "object",
+            boost::bind
+            (
+              &FGODGauge::set_aircraft_texture,
+              _1,
+              boost::bind(&sc::Canvas::getTexture, _2),
+              boost::bind(&sc::Canvas::getCullCallback, _2),
+              _2
+            )
+          );
 
+          sc::Canvas::addPlacementFactory("scenery-object", &addSceneObjectPlacement);
+      }
+  }
   simgear::canvas::CanvasMgr::init();
 }
 
