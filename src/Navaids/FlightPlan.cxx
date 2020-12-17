@@ -1325,13 +1325,21 @@ bool FlightPlan::loadPlainTextFormat(const SGPath& path)
         continue; // ignore empty/comment lines
       }
 
+      // prevent Sentry error 'FLIGHTGEAR-J6', when we try loading XML
+      // data here
+      if (simgear::strutils::starts_with(line, "<?xml")) {
+          return false;
+      }
+
       SGGeod vicinity;
       if (!_legs.empty()) {
           vicinity = _legs.back()->waypoint()->position();
       }
       WayptRef w = waypointFromString(line, vicinity);
       if (!w) {
-        throw sg_io_exception("Failed to create waypoint from line '" + line + "'.");
+          SG_LOG(SG_NAVAID, SG_ALERT, "Failed to create waypoint from '" << line << "' in " << path);
+          _legs.clear();
+          return false;
       }
       
       _legs.push_back(LegRef{new Leg(this, w)});
