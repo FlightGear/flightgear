@@ -85,9 +85,10 @@
 #include <iostream>
 #include <cstring>
 
+#include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
-#include <Main/fg_props.hxx>
 
 #include "uiuc_aircraft.h"
 #include "uiuc_coefficients.h"
@@ -159,8 +160,12 @@ void uiuc_initial_init ()
 
 void uiuc_defaults_inits ()
 {
-  if (aircraft_ == 0)
-    aircraft_ = new AIRCRAFT;
+    if (aircraft_ == 0) {
+        // becuase we're getting crashes about aircraft_ being null, add
+        // an explicit breadcrumb at this point
+        flightgear::addSentryBreadcrumb("UIUC aircraf created", "info");
+        aircraft_ = new AIRCRAFT;
+    }
 
   // set defaults and initialize (called once from uiuc_init_2_wrapper)
 
