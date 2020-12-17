@@ -71,7 +71,7 @@ auto XML_messageWhitelist = {
 };
 
 // we don't want sentry enabled for the test suite
-#if 1 || defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
+#if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
 
 static bool static_sentryEnabled = false;
 thread_local bool perThread_reportXMLParseErrors = true;
