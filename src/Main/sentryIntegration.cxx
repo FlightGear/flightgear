@@ -219,6 +219,21 @@ void sentrySimgearReportCallback(const string& msg, const string& more, bool isF
     sentry_capture_event(event);
 }
 
+void sentryReportBadAlloc()
+{
+    sentry_value_t sentryMessage = sentry_value_new_object();
+    sentry_value_set_by_key(sentryMessage, "type", sentry_value_new_string("Fatal Error"));
+    sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string("bad allocation"));
+
+    sentry_value_t event = sentry_value_new_event();
+    sentry_value_set_by_key(event, "message", sentryMessage);
+
+    sentry_event_value_add_stacktrace(event, nullptr, 0);
+    sentry_capture_event(event);
+
+    std::set_new_handler(nullptr);
+}
+
 } // namespace
 
 namespace flightgear
@@ -334,6 +349,8 @@ void initSentry()
     sglog().addCallback(new SentryLogCallback);
     setThrowCallback(sentryTraceSimgearThrow);
     simgear::setErrorReportCallback(sentrySimgearReportCallback);
+
+    std::set_new_handler(sentryReportBadAlloc);
 }
 
 void delayedSentryInit()
