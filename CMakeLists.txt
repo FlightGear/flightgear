@@ -43,6 +43,8 @@ if(APPLE)
 	# when building, don't use the install RPATH already
 	# (but later on when installing)
 	SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+elseif (UNIX AND NOT CYGWIN)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE CACHE BOOL "Append linker search paths to the runtime search path")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
