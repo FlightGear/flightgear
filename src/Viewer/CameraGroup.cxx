@@ -689,10 +689,16 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         // If no width or height has been specified, fill the entire window
         viewportNode->getDoubleValue("width", window->gc->getTraits()->width),
         viewportNode->getDoubleValue("height",window->gc->getTraits()->height));
-    std::string default_compositor =
-        fgGetString("/sim/rendering/default-compositor", "Compositor/default");
-    std::string compositor_path =
-        cameraNode->getStringValue("compositor", default_compositor.c_str());
+
+    std::string compositor_path = cameraNode->getStringValue("compositor", "");
+    if (compositor_path.empty()) {
+        compositor_path = fgGetString("/sim/rendering/default-compositor",
+                                      "Compositor/default");
+    } else {
+        // Store the custom path in case we need to reload later
+        info->compositor_path = compositor_path;
+    }
+
     osg::ref_ptr<SGReaderWriterOptions> options =
         SGReaderWriterOptions::fromPath(globals->get_fg_root());
     options->setPropertyNode(globals->get_props());
@@ -705,7 +711,7 @@ void CameraGroup::buildCamera(SGPropertyNode* cameraNode)
                                                 compositor_path,
                                                 options);
     if (compositor) {
-        info->compositor = compositor;
+        info->compositor.reset(compositor);
     } else {
         throw sg_exception(std::string("Failed to create Compositor in path '") +
                            compositor_path + "'");
@@ -787,7 +793,7 @@ void CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     info->name = "GUI camera";
     info->viewOffset = osg::Matrix::identity();
     info->projOffset = osg::Matrix::identity();
-    info->compositor = compositor;
+    info->compositor.reset(compositor);
     _cameras.push_back(info);
 
     // Disable statistics for the GUI camera.
@@ -942,6 +948,36 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
            + ((wyUp / double(traits->height))
               * (eventState->getYmax() - eventState->getYmin())));
     cgroup->getView()->getEventQueue()->mouseWarped(viewerX, viewerY);
+}
+
+void reloadCompositors(CameraGroup *cgroup)
+{
+    for (auto &info : cgroup->_cameras) {
+        // Ignore the GUI camera
+        if (info->flags & CameraInfo::GUI)
+            continue;
+        // Get the viewport and the graphics context from the old Compositor
+        osg::ref_ptr<osg::Viewport> viewport = info->compositor->getViewport();
+        osg::ref_ptr<osg::GraphicsContext> gc =
+            info->compositor->getGraphicsContext();
+        osg::ref_ptr<SGReaderWriterOptions> options =
+            SGReaderWriterOptions::fromPath(globals->get_fg_root());
+        options->setPropertyNode(globals->get_props());
+
+        cgroup->_viewer->getViewerBase()->stopThreading();
+        // Force deletion
+        info->compositor.reset(nullptr);
+        // Then replace it with a new instance
+        std::string compositor_path = info->compositor_path.empty() ?
+            fgGetString("/sim/rendering/default-compositor", "Compositor/default") :
+            info->compositor_path;
+        info->compositor.reset(Compositor::create(cgroup->_viewer,
+                                                  gc,
+                                                  viewport,
+                                                  compositor_path,
+                                                  options));
+        cgroup->_viewer->getViewerBase()->startThreading();
+    }
 }
 
 void CameraGroup::buildDefaultGroup(osgViewer::View* viewer)

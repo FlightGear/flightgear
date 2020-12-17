@@ -114,7 +114,12 @@ struct CameraInfo : public osg::Referenced
     osg::Matrix viewMatrix, projMatrix;
     /** The Compositor used to manage the pipeline of this camera.
      */
-    osg::ref_ptr<simgear::compositor::Compositor> compositor;
+    std::unique_ptr<simgear::compositor::Compositor> compositor;
+    /** Compositor path. Used to recreate the pipeline when reloading.
+     * If the path is empty, it means that this camera isn't using a custom
+     * Compositor path and should use the default one.
+     */
+    std::string compositor_path;
 };
 
 class CameraGroup : public osg::Referenced
@@ -190,6 +195,7 @@ protected:
                                      const osg::Vec2d& windowPos,
                                      osgUtil::LineSegmentIntersector::Intersections&
                                      intersections);
+    friend void reloadCompositors(CameraGroup *cgroup);
 
     typedef std::vector<osg::ref_ptr<CameraInfo>> CameraList;
     CameraList _cameras;
@@ -236,6 +242,11 @@ bool computeIntersections(const CameraGroup* cgroup,
  * @param y y window coordinate of pointer, in "y down" coordinates.
  */
 void warpGUIPointer(CameraGroup* cgroup, int x, int y);
+
+/** Force a reload of all Compositor instances in the CameraGroup,
+ * except the one used by the GUI camera.
+ */
+void reloadCompositors(CameraGroup *cgroup);
 
 }
 

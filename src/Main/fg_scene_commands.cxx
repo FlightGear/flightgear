@@ -34,6 +34,7 @@
 #include <Sound/sample_queue.hxx>
 #include <Airports/xmlloader.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Viewer/CameraGroup.hxx>
 #include <Viewer/viewmgr.hxx>
 #include <Viewer/view.hxx>
 #include <Environment/presets.hxx>
@@ -215,6 +216,15 @@ do_hires_screen_capture (const SGPropertyNode * arg, SGPropertyNode * root)
   return true;
 }
 
+/**
+ * Reload all Compositor instances in the default CameraGroup.
+ */
+static bool
+do_reload_compositor(const SGPropertyNode*, SGPropertyNode*)
+{
+    flightgear::reloadCompositors(flightgear::CameraGroup::getDefault());
+    return true;
+}
 
 /**
  * Reload the tile cache.
@@ -544,6 +554,7 @@ static struct {
     { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
     { "reload-materials", do_materials_reload },
+    { "reload-compositor", do_reload_compositor },
     { "open-launcher", do_open_launcher },
     { 0, 0 }			// zero-terminated
 };
