@@ -71,7 +71,7 @@ auto XML_messageWhitelist = {
 };
 
 // we don't want sentry enabled for the test suite
-#if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
+#if 1 || defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
 
 static bool static_sentryEnabled = false;
 thread_local bool perThread_reportXMLParseErrors = true;
@@ -177,6 +177,21 @@ void sentrySimgearReportCallback(const string& msg, const string& more, bool isF
 
     sentry_event_value_add_stacktrace(event, nullptr, 0);
     sentry_capture_event(event);
+}
+
+void sentryReportBadAlloc()
+{
+    sentry_value_t sentryMessage = sentry_value_new_object();
+    sentry_value_set_by_key(sentryMessage, "type", sentry_value_new_string("Fatal Error"));
+    sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string("bad allocation"));
+
+    sentry_value_t event = sentry_value_new_event();
+    sentry_value_set_by_key(event, "message", sentryMessage);
+
+    sentry_event_value_add_stacktrace(event, nullptr, 0);
+    sentry_capture_event(event);
+
+    std::set_new_handler(nullptr);
 }
 
 } // namespace
@@ -294,6 +309,8 @@ void initSentry()
     sglog().addCallback(new SentryLogCallback);
     setThrowCallback(sentryTraceSimgearThrow);
     simgear::setErrorReportCallback(sentrySimgearReportCallback);
+
+    std::set_new_handler(sentryReportBadAlloc);
 }
 
 void delayedSentryInit()
