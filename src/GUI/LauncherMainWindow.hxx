@@ -51,6 +51,7 @@ public:
 
 private slots:
     void onQuickStatusChanged(QQuickView::Status status);
+    void renderTheadSceneGraphInitialized();
 
 private:
     LauncherController* m_controller;
