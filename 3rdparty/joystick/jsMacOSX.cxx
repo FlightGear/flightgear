@@ -167,8 +167,9 @@ jsJoystick::jsJoystick(int ident) :
 
     os = new struct os_specific_s;
 	os->num_hats = 0;
+    os->hidDev = nullptr;
 
-	// get the name now too
+    // get the name now too
 	CFDictionaryRef properties = getCFProperties(ioDevices[id]);
 	CFTypeRef ref = CFDictionaryGetValue (properties, CFSTR(kIOHIDProductKey));
 	if (!ref)
