@@ -761,7 +761,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // cout << "climb rate = " << -V_down * 60 << endl;
 
 #ifdef ENABLE_UIUC_MODEL
-    if ( !strcmp(aero->getStringValue(), "uiuc") ) {
+    if (!strcmp(aero->getStringValue(), "uiuc") && aircraft_) {
         if (pilot_elev_no) {
             globals->get_controls()->set_elevator(Long_control);
             globals->get_controls()->set_elevator_trim(Long_trim);
