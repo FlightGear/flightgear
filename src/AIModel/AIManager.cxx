@@ -28,11 +28,12 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/SGBinding.hxx>
 
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
-#include <Airports/airport.hxx>
-#include <Scripting/NasalSys.hxx>
 #include <Add-ons/AddonManager.hxx>
+#include <Airports/airport.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"
@@ -211,7 +212,10 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
     
     auto scenariosNode = root->getNode("/sim/ai/scenarios", true);
     SGPropertyNode_ptr sNode;
-    
+
+    // don't report XML errors while loading scenarios, to Sentry
+    flightgear::sentryThreadReportXMLErrors(false);
+
     try {
         SGPropertyNode_ptr scenarioProps(new SGPropertyNode);
         readProperties(xmlPath, scenarioProps);
@@ -246,7 +250,8 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
         SG_LOG(SG_AI, SG_WARN, "Skipping malformed scenario file:" << xmlPath);
         sNode.reset();
     }
-    
+
+    flightgear::sentryThreadReportXMLErrors(true);
     return sNode;
 }
 
