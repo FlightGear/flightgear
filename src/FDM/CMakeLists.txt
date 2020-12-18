@@ -173,7 +173,7 @@ if(ENABLE_LARCSIM)
 	endforeach()
 endif()
 
-flightgear_component(FDM "${SOURCES}")
+flightgear_component(FDM "${SOURCES}" "${HEADERS}")
 
 if(ENABLE_YASIM)
 	add_subdirectory(YASim)

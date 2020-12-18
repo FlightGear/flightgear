@@ -63,11 +63,12 @@
 #include <FDM/YASim/YASim.hxx>
 #endif
 
+#include <GUI/MessageBox.hxx>
+#include <Main/sentryIntegration.hxx>
+
 using std::string;
 
-FDMShell::FDMShell() :
-  _tankProperties( fgGetNode("/consumables/fuel", true) ),
-  _dataLogging(false)
+FDMShell::FDMShell() : _tankProperties(fgGetNode("/consumables/fuel", true))
 {
 }
 
@@ -93,6 +94,10 @@ void FDMShell::init()
   // AI aerodynamic wake interaction
   _max_radius_nm    = _props->getNode("fdm/ai-wake/max-radius-nm",          true);
   _ai_wake_enabled  = _props->getNode("fdm/ai-wake/enabled",                true);
+
+  _nanCheckFailed = false;
+  fgSetBool("/sim/fdm-nan-failure", false);
+  _lastValidPos = SGGeod::invalid();
 
   createImplementation();
 }
@@ -170,7 +175,11 @@ void FDMShell::update(double dt)
   if (!_impl) {
     return;
   }
-  
+
+  if (_nanCheckFailed) {
+      return;
+  }
+
   if (!_impl->get_inited()) {
     // Check for scenery around the aircraft.
     double lon = fgGetDouble("/sim/presets/longitude-deg");
@@ -263,6 +272,8 @@ void FDMShell::update(double dt)
           // replay is active
           break;
   }
+
+  validateOutputProperties();
 }
 
 FGInterface* FDMShell::getInterface() const
@@ -390,6 +401,36 @@ void FDMShell::createImplementation()
     }
 }
 
+void FDMShell::validateOutputProperties()
+{
+    if (_nanCheckFailed)
+        return;
+
+    const auto p = globals->get_aircraft_position();
+    if (SGMisc<double>::isNaN(p.getLatitudeDeg()) ||
+        SGMisc<double>::isNaN(p.getLongitudeDeg()) ||
+        SGMisc<double>::isNaN(p.getElevationFt())) {
+        SG_LOG(SG_FLIGHT, SG_ALERT, "FDM position became invalid. Last valid position was:" << _lastValidPos);
+        _nanCheckFailed = true;
+    } else {
+        _lastValidPos = p;
+    }
+
+    if (SGMisc<double>::isNaN(_impl->get_V_true_kts())) {
+        SG_LOG(SG_FLIGHT, SG_ALERT, "FDM velocity became invalid");
+        _nanCheckFailed = true;
+    }
+
+    if (_nanCheckFailed) {
+        flightgear::sentryReportException("FDM NaN check failed");
+
+        flightgear::modalMessageBox("Flight dynamics error",
+                                    "The flight dynamics model (FDM) has become invalid. The simulation will be stopped, so you can restart at a new location.");
+        fgSetBool("/sim/fdm-nan-failure", true);
+        fgSetBool("/sim/freeze/master", true);
+        fgSetBool("/sim/freeze/clock", true);
+    }
+}
 
 // Register the subsystem.
 SGSubsystemMgr::Registrant<FDMShell> registrantFDMShell(
