@@ -65,7 +65,8 @@ auto XML_messageWhitelist = {
      "Cannot open file",
      "not well-formed (invalid token)",
      "mismatched tag (from 'SimGear XML Parser')",
-     "syntax error (from 'SimGear XML Parser')"
+     "syntax error (from 'SimGear XML Parser')",
+     "Root element name is"
 };
 
 auto exception_messageWhitelist = {
