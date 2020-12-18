@@ -272,7 +272,11 @@ public:
         FGMouseCursor::Cursor cur = FGMouseCursor::CURSOR_CLOSED_HAND;
 
         osg::Vec2d windowPos;
-        flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+        const bool ok = flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+        if (!ok) {
+            SG_LOG(SG_GUI, SG_WARN, "doMouseMoveWithCallbacks: ignoring mouse move with missing context/traits");
+            return;
+        }
 
         SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
         if(pickList.empty())
@@ -557,7 +561,11 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
   // them consumes the event.
 
   osg::Vec2d windowPos;
-  flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+  bool ok = flightgear::eventToWindowCoords(ea, windowPos.x(), windowPos.y());
+  if (!ok) {
+      SG_LOG(SG_GUI, SG_WARN, "Ignoring mouse click with null context/traits");
+      return;
+  }
 
   SGSceneryPicks pickList;
 
