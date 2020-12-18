@@ -66,6 +66,7 @@ auto XML_messageWhitelist = {
      "not well-formed (invalid token)",
      "mismatched tag",
      "syntax error",
+     "no element found",
      "Root element name is"
 };
 
