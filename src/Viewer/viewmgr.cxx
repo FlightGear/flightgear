@@ -81,6 +81,18 @@ FGViewMgr::init ()
         }
     }
 
+    config_list = fgGetNode("/sim", true)->getChildren("view");
+    _current = fgGetInt("/sim/current-view/view-number");
+    if (_current != 0 && (_current < 0 || _current >= (int) views.size())) {
+        SG_LOG(SG_VIEW, SG_ALERT,
+                "Invalid /sim/current-view/view-number=" << _current
+                << ". views.size()=" << views.size()
+                << ". Will assert false and use zero."
+                );
+        assert(0);
+        _current = 0;
+    }
+
     for (unsigned int i = 0; i < config_list.size(); i++) {
         SGPropertyNode* n = config_list[i];
         SGPropertyNode* config = n->getChild("config", 0, true);
@@ -186,23 +198,16 @@ void FGViewMgr::clear()
 flightgear::View*
 FGViewMgr::get_current_view()
 {
-    const auto numViews = static_cast<int>(views.size());
-    if ((_current >= 0) && (_current < numViews)) {
-        return views.at(_current);
-    } else {
+    if (views.empty())
         return nullptr;
-    }
+    assert(_current >= 0 && _current < (int) views.size());
+    return views[_current];
 }
 
 const flightgear::View*
 FGViewMgr::get_current_view() const
 {
-    const auto numViews = static_cast<int>(views.size());
-    if ((_current >= 0) && (_current < numViews)) {
-        return views.at(_current);
-    } else {
-        return nullptr;
-    }
+    return const_cast<FGViewMgr*>(this)->get_current_view();
 }
 
 
@@ -260,7 +265,6 @@ void FGViewMgr::setCurrentViewIndex(int newview)
     if (newview == _current) {
         return;
     }
-
     // negative numbers -> set view with node index -newview
     if (newview < 0) {
         for (int i = 0; i < (int)config_list.size(); i++) {
@@ -268,25 +272,28 @@ void FGViewMgr::setCurrentViewIndex(int newview)
             if (index == newview)
                 newview = i;
         }
-        if (newview < 0)
+        if (newview < 0) {
+            SG_LOG(SG_VIEW, SG_ALERT,
+                    "Failed to find -ve newview=" << newview
+                    << ". Will assert false and ignore."
+                    );
+            assert(0);
             return;
+        }
     }
-
-    // not sure it really makes sense to be doing this wrapping logic
-    // here, it could mask various strange inputs, But keeping for compat
-    // for now.
-    const auto numViews = static_cast<int>(views.size());
-    if (newview < 0) { // wrap to last
-        newview = numViews - 1;
-    } else if (newview >= numViews) { //  wrap to zero
-        newview = 0;
+    if (newview < 0 || newview >= (int) views.size()) {
+        SG_LOG(SG_VIEW, SG_ALERT, "Invalid newview=" << newview
+                << ". views.size()=" << views.size()
+                << ". Will assert false and ignore."
+                );
+        assert(0);
+        return;
     }
 
     if (get_current_view()) {
-	get_current_view()->unbind();
+	    get_current_view()->unbind();
     }
 
-    // set new view
     _current = newview;
 
     if (get_current_view()) {
