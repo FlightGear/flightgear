@@ -23,7 +23,9 @@
 #ifndef FG_FDM_SHELL_HXX
 #define FG_FDM_SHELL_HXX
 
+#include <simgear/math/SGGeod.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+
 #include "TankProperties.hxx"
 
 // forward decls
@@ -61,10 +63,16 @@ public:
 private:
     void createImplementation();
 
+    void validateOutputProperties();
+
+private:
     TankPropertiesList _tankProperties;
     SGSharedPtr<FGInterface> _impl;
     SGPropertyNode_ptr _props; // root property tree for this FDM instance
-    bool _dataLogging;
+    bool _dataLogging = false;
+
+    bool _nanCheckFailed = false; ///< set when we detect NaN output from the impl
+    SGGeod _lastValidPos;
 
     SGPropertyNode_ptr _wind_north, _wind_east,_wind_down;
     SGPropertyNode_ptr _control_fdm_atmo,_temp_degc,_pressure_inhg;

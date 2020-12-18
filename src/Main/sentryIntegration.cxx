@@ -68,6 +68,9 @@ auto XML_messageWhitelist = {
      "syntax error (from 'SimGear XML Parser')"
 };
 
+auto exception_messageWhitelist = {
+    "position is invalid, NaNs"};
+
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
 
@@ -91,6 +94,10 @@ void sentryTraceSimgearThrow(const std::string& msg, const std::string& origin, 
 // if the user tries to fly with one, we'll still get an error then,
 // but that's a real failure point (from the user PoV)
     if (!perThread_reportXMLParseErrors && doesStringMatchPrefixes(msg, XML_messageWhitelist)) {
+        return;
+    }
+
+    if (doesStringMatchPrefixes(msg, exception_messageWhitelist)) {
         return;
     }
 
