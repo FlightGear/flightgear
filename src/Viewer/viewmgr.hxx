@@ -75,19 +75,16 @@ public:
     flightgear::View* next_view();
     flightgear::View* prev_view();
 
+    // Support for extra view windows. This only works if --compositer-viewer=1 was specified.
     //
+    
+    // Calls SviewPush().
     void view_push();
     
-    // Experimental. Only works if --compositer-viewer=1 was specified. Creates
-    // new window with clone of current view. As of 2020-09-03, the clone's
-    // scenery is not displayed correctly.
+    // These all end up calling SviewCreate().
     void clone_current_view(const SGPropertyNode* config);
-    
-    // 
     void clone_last_pair(const SGPropertyNode* config);
-
     void clone_last_pair_double(const SGPropertyNode* config);
-    
     void view_new(const SGPropertyNode* config);
 
     // setters
