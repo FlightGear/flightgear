@@ -466,11 +466,15 @@ void FGEventHandler::handleStats(osgGA::GUIActionAdapter& us)
     }
 }
 
-void eventToWindowCoords(const osgGA::GUIEventAdapter* ea,
+bool eventToWindowCoords(const osgGA::GUIEventAdapter* ea,
                          double& x, double& y)
 {
     using namespace osg;
     const GraphicsContext* gc = ea->getGraphicsContext();
+    if (!gc || !gc->getTraits()) {
+        return false;
+    }
+
     const GraphicsContext::Traits* traits = gc->getTraits() ;
     // Scale x, y to the dimensions of the window
     x = (((ea->getX() - ea->getXmin()) / (ea->getXmax() - ea->getXmin()))
@@ -479,23 +483,8 @@ void eventToWindowCoords(const osgGA::GUIEventAdapter* ea,
          * (double)traits->height);
     if (ea->getMouseYOrientation() == osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS)
         y = (double)traits->height - y;
+
+    return true;
 }
 
-#if 0
-void eventToWindowCoordsYDown(const osgGA::GUIEventAdapter* ea,
-                              double& x, double& y)
-{
-    using namespace osg;
-    const GraphicsContext* gc = ea->getGraphicsContext();
-    const GraphicsContext::Traits* traits = gc->getTraits() ;
-    // Scale x, y to the dimensions of the window
-    x = (((ea->getX() - ea->getXmin()) / (ea->getXmax() - ea->getXmin()))
-         * (double)traits->width);
-    y = (((ea->getY() - ea->getYmin()) / (ea->getYmax() - ea->getYmin()))
-         * (double)traits->height);
-    if (ea->getMouseYOrientation() == osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS)
-        y = (double)traits->height - y;
-}
-#endif
-    
 }

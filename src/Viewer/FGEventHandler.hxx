@@ -124,8 +124,6 @@ protected:
     SGPropertyNode_ptr _display, _print;
 };
 
-void eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);
-void eventToWindowCoordsYDown(const osgGA::GUIEventAdapter* ea,
-                              double& x, double& y);
+bool eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);
 }
 #endif
