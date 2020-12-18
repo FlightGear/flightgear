@@ -122,7 +122,9 @@ private:
 
     void removeDeadItem(FGAIBase* base);
 
+    // Returns true on success, e.g. returns false if scenario is already loaded.
     bool loadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
+    
     bool unloadScenarioCommand(const SGPropertyNode* args, SGPropertyNode* root);
     bool addObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root);
     bool removeObjectCommand(const SGPropertyNode* arg, const SGPropertyNode* root);
