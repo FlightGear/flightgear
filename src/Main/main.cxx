@@ -48,6 +48,7 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/emesary/Emesary.hxx>
 #include <simgear/emesary/notifications.hxx>
+#include <simgear/debug/logdelta.hxx>
 
 #include <Add-ons/AddonManager.hxx>
 #include <GUI/MessageBox.hxx>
@@ -548,6 +549,17 @@ static void logToHome(const std::string& pri)
     sglog().logToFile(logPath, SG_ALL, fileLogLevel);
 }
 
+struct SGLogDeltasListener : SGPropertyChangeListener
+{
+    void valueChanged(SGPropertyNode* node) override
+    {
+        const char* value = node->getStringValue();
+        std::cerr << __FILE__ << ":" << __LINE__ << ": sglogdeltas value=" << value << "\n";
+        logDeltaSet(value);
+    }
+};
+static SGLogDeltasListener s_sglogdeltas_listener;
+
 // Main top level initialization
 int fgMainInit( int argc, char **argv )
 {
@@ -587,6 +599,16 @@ int fgMainInit( int argc, char **argv )
         }
     }
 #endif
+    
+    {
+        SGPropertyNode* sglogdeltas = globals->get_props()->getNode("/sim/sg-log-deltas", true /*create*/);
+        assert(sglogdeltas);
+        sglogdeltas->addChangeListener(&s_sglogdeltas_listener, false /*initial*/);
+        const char* sglogdeltas_value = getenv("SG_LOG_DELTAS");
+        if (sglogdeltas_value) {
+            sglogdeltas->setStringValue(sglogdeltas_value);
+        }
+    }
     
     const bool readOnlyFGHome = fgGetBool("/sim/fghome-readonly");
     if (!readOnlyFGHome) {
