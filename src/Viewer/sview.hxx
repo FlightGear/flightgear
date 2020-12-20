@@ -144,6 +144,12 @@ An sview-step is:
                     Distance to move from eye.
                 angle:
                     Angle to maintain between eye and target.
+            "agl":
+                Tilt and zoom to keep ground immediately below the aircraft
+                visible.
+                callsign:
+                    Use chase distance of specified aircraft as a measure of
+                    its size, to ensure entire aircraft is visible.
 
 Examples:
 

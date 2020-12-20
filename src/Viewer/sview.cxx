@@ -52,9 +52,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/viewer/Compositor.hxx>
 
-#include <osgViewer/CompositeViewer>
+#include <osg/CameraView>
 #include <osg/GraphicsContext>
+#include <osgViewer/CompositeViewer>
 
+static const double pi = 3.141592653589793238463;
 
 static std::ostream& operator << (std::ostream& out, const osg::Vec3f& vec)
 {
@@ -116,6 +118,11 @@ struct SviewPosDir
     osg::Camera's view matrix. */
     SGVec3d position2;
     SGQuatd direction2;
+    
+    /* If a step sets either/both of these to non-zero, the view will alter
+    zoom to accomodate the required field of views (in degreea). */
+    double fov_h = 0;
+    double fov_v = 0;
     
     friend std::ostream& operator<< (std::ostream& out, const SviewPosDir& posdir)
     {
@@ -304,7 +311,8 @@ struct SviewStepMove : SviewStep
     SGVec3d m_offset;
 };
 
-/* Modifies heading, pitch and roll by fixed amounts; does not change position.
+/* Modifies heading, pitch and roll by fixed amounts; does not change
+position. Optionally implements a mouse drag handler which pans/tilts the view.
 
 E.g. can be used to preserve direction (relative to aircraft) of Helicopter
 view at the time it was cloned. */
@@ -583,6 +591,144 @@ struct SviewStepFinal : SviewStep
     double  m_default_roll = 0;
 };
 
+/* Change angle and field of view so that we can see an aircraft and the ground
+immediately below it. */
+struct SviewStepAGL : SviewStep
+{
+    SviewStepAGL(const std::string& callsign)
+    :
+    m_callsign(callsign)
+    {
+    }
+    
+    void evaluate(SviewPosDir& posdir) override
+    {
+        if (m_callsign.update()) {
+            m_chase_distance = -25;
+            if (m_callsign.m_callsign == "") {
+                m_chase_distance = globals->get_props()->getDoubleValue("/sim/chase-distance-m", m_chase_distance);
+            }
+            else {
+                m_chase_distance = m_callsign.m_root->getDoubleValue("set/sim/chase-distance-m", m_chase_distance);
+            }
+        }
+        double _fov_user_deg = 30;
+        double _configFOV_deg = 30;
+        /* Some aircraft appear to have elevation that is slightly below ground
+        level when on the ground, e.g. SenecaII, which makes get_elevation_m()
+        fail. So we pass a slightly incremented elevation. */
+        double                      ground_altitude = 0;
+        const simgear::BVHMaterial* material = NULL;
+        SGGeod                      target0 = posdir.target;
+        SGGeod                      target_plus = posdir.target;
+        target_plus.setElevationM(target_plus.getElevationM() + 1);
+        bool ok = globals->get_scenery()->get_elevation_m(target_plus, ground_altitude, &material);
+        if (ok) {
+            m_ground_altitude = ground_altitude;
+        }
+        else {
+            /* get_elevation_m() can fail if scenery has been un-cached, which
+            appears to happen quite often with remote multiplayer aircraft, so
+            we preserve the previous ground altitude to give some consistency
+            and avoid confusing zooming when switching between views. */
+            ground_altitude = m_ground_altitude;
+        }
+        
+        double    h_distance = SGGeodesy::distanceM(posdir.position, posdir.target);
+        if (h_distance == 0) {
+            /* Not sure this should ever happen, but we need to handle this
+            here otherwise we'll get divide-by-zero. */
+        }
+        else {
+            /* Find vertical region we want to be able to see. */
+            double  relative_height_target = posdir.target.getElevationM() - posdir.position.getElevationM();
+            double  relative_height_ground = ground_altitude - posdir.position.getElevationM();
+
+            /* We expand the field of view so that it hopefully shows the whole
+            aircraft and a little more of the ground.
+
+            We use chase-distance as a crude measure of the aircraft's
+            size. There doesn't seem to be any more definitive information.
+
+            We damp our measure of ground level, to avoid the view jumping around
+            if an aircraft flies over buildings. */
+
+            relative_height_ground -= 2;
+
+            double    aircraft_size_vertical = fabs(m_chase_distance) * 0.3;
+            double    aircraft_size_horizontal = fabs(m_chase_distance) * 0.9;
+
+            double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
+            double    relative_height_ground_ = relative_height_ground;
+            //_lookat_agl_damping.updateTarget(relative_height_ground);
+            if (relative_height_ground > relative_height_target) {
+                /* Damping of relative_height_ground can result in it being
+                temporarily above the aircraft, so we ensure the aircraft is
+                visible. */
+                //_lookat_agl_damping.reset(relative_height_ground_);
+                relative_height_ground = relative_height_ground_;
+            }
+
+            /* Not implemented yet: apply scaling from user field of view
+            setting, altering only relative_height_ground so that the aircraft
+            is always in view. */
+            {
+                double  delta = relative_height_target_plus - relative_height_ground;
+                delta *= (_fov_user_deg / _configFOV_deg);
+                relative_height_ground = relative_height_target_plus - delta;
+            }
+
+            double  angle_v_target = atan(relative_height_target_plus / h_distance);
+            double  angle_v_ground = atan(relative_height_ground / h_distance);
+
+            /* The target we want to use is determined by the midpoint of the two
+            angles we've calculated. */
+            double  angle_v_mid = (angle_v_target + angle_v_ground) / 2;
+            double posdir_target_old_elevation = posdir.target.getElevationM();
+            posdir.target.setElevationM(posdir.position.getElevationM() + h_distance * tan(angle_v_mid));
+
+            /* Set required vertical field of view. We use fabs to avoid
+            things being upside down if target is below ground level (e.g. new
+            multiplayer aircraft are briefly at -9999ft). */
+            double  fov_v = fabs(angle_v_target - angle_v_ground);
+
+            /* Set required horizontal field of view so that we can see entire
+            horizontal extent of the aircraft (assuming worst case where
+            airplane is horizontal and square-on to viewer). */
+            double  fov_h = 2 * atan(aircraft_size_horizontal / 2 / h_distance);
+            
+            posdir.fov_v = fov_v * 180 / pi;
+            posdir.fov_h = fov_h * 180 / pi;
+
+            bool verbose = false;
+            if (0) {
+                static time_t t0 = 0;
+                time_t t = time(NULL);
+                if (0 && t - t0 >= 3) {
+                    t0 = t;
+                    verbose = true;
+            }
+            if (verbose) SG_LOG(SG_VIEW, SG_ALERT, ""
+                    << " target0=" << target0
+                    << " fov_v=" << fov_v * 180/pi
+                    << " ground_altitude=" << ground_altitude
+                    << " relative_height_target_plus=" << relative_height_target_plus
+                    << " h_distance=" << h_distance
+                    << " relative_height_ground=" << relative_height_ground
+                    << " m_chase_distance=" << m_chase_distance
+                    << " angle_v_mid=" << angle_v_mid * 180/pi
+                    << " posdir_target_old_elevation=" << posdir_target_old_elevation
+                    << " posdir.target=" << posdir.target
+                    );
+          }
+        }
+    }
+    
+    double      m_chase_distance;
+    Callsign    m_callsign;
+    double      m_ground_altitude = 0;
+};
+
 /* A step that takes the SviewPosDir's eye and target positions and treats
 them as local and remote points respectively. We choose an eye position and
 direction such that the local and remote points are both visible, with the
@@ -592,13 +738,13 @@ struct SviewStepDouble : SviewStep
     SviewStepDouble()
     {
         m_local_chase_distance = 25;
-        m_angle_rad = 15 * 3.14159265 / 180;
+        m_angle_rad = 15 * pi / 180;
     }
     
     SviewStepDouble(SGPropertyNode* config)
     {
         m_local_chase_distance = config->getDoubleValue("chase-distance");
-        m_angle_rad = config->getDoubleValue("angle") * 3.14159265 / 180;
+        m_angle_rad = config->getDoubleValue("angle") * pi / 180;
     }
     void evaluate(SviewPosDir& posdir) override
     {
@@ -668,7 +814,6 @@ struct SviewStepDouble : SviewStep
         SGVec3d local_pos = SGVec3d::fromGeod(posdir_local.target);
         SGVec3d remote_pos = SGVec3d::fromGeod(posdir_remote.target);
         double lr = sqrt(distSqr(local_pos, remote_pos));
-        const double pi = 3.1415926;
         
         /* Desired angle between local and remote aircraft in final view. */
         double ler = m_angle_rad;
@@ -836,9 +981,7 @@ struct SviewView
 
         osg::Camera* camera = m_osg_view->getCamera();
         osg::Matrix old_m = camera->getViewMatrix();
-        /* This calculation is copied from CameraGroup::update(). As of
-        2020-10-10 we don't yet update the projection matrix so views cannot
-        zoom. */
+        /* This calculation is copied from CameraGroup::update(). */
         const osg::Matrix new_m(
                 osg::Matrix::translate(-position)
                 * osg::Matrix::rotate(orientation.inverse())
@@ -846,6 +989,51 @@ struct SviewView
         SG_LOG(SG_VIEW, SG_BULK, "old_m: " << old_m);
         SG_LOG(SG_VIEW, SG_BULK, "new_m: " << new_m);
         camera->setViewMatrix(new_m);
+        
+        if (posdir.fov_v || posdir.fov_h) {
+            /* Update zoom to accomodate required vertical/horizontal field of
+            views. */
+            double fovy;
+            double aspect_ratio;
+            double zNear;
+            double zFar;
+            camera->getProjectionMatrixAsPerspective(fovy, aspect_ratio, zNear, zFar);
+            if (posdir.fov_v) {
+                camera->setProjectionMatrixAsPerspective(
+                        posdir.fov_v,
+                        aspect_ratio,
+                        zNear,
+                        zFar
+                        );
+                if (posdir.fov_h) {
+                    /* Increase fov if necessary so that we include both
+                    fov_h and fov_v. */
+                    double aspect_ratio;
+                    camera->getProjectionMatrixAsPerspective(
+                            fovy,
+                            aspect_ratio,
+                            zNear,
+                            zFar
+                            );
+                    if (fovy * aspect_ratio < posdir.fov_h) {
+                        camera->setProjectionMatrixAsPerspective(
+                                posdir.fov_v * posdir.fov_h / (fovy * aspect_ratio),
+                                aspect_ratio,
+                                zNear,
+                                zFar
+                                );
+                    }
+                }
+            }
+            else {
+                camera->setProjectionMatrixAsPerspective(
+                        posdir.fov_h / aspect_ratio,
+                        aspect_ratio,
+                        zNear,
+                        zFar
+                        );
+            }
+        }
     }
     
     osgViewer::View*                    m_osg_view = nullptr;
@@ -905,6 +1093,11 @@ struct SviewViewEyeTarget : SviewView
                     /* Added steps to set .m_eye up so that it looks from the nearest
                     tower. */
                     m_steps.add_step(new SviewStepNearestTower(callsign));
+                    
+                    if (config->getBoolValue("view/config/lookat-agl")) {
+                        SG_LOG(SG_VIEW, SG_ALERT, "lookat-agl");
+                        m_steps.add_step(new SviewStepAGL(callsign));
+                    }
                     m_steps.add_step(new SviewStepFinalToTarget);
 
                     /* Add a step that moves towards the target a little to avoid eye
@@ -1094,7 +1287,11 @@ struct SviewViewEyeTarget : SviewView
                     m_steps.add_step(new SviewStepDouble(step));
                     finalised = true;
                     m_steps.m_name += " double";
-                }           
+                }
+                else if (!strcmp(type, "agl")) {
+                    const char* callsign = step->getStringValue("callsign");
+                    m_steps.add_step(new SviewStepAGL(callsign));
+                }
                 else {
                     throw std::runtime_error(std::string() + "Unrecognised step name: '" + type + "'");
                 }
