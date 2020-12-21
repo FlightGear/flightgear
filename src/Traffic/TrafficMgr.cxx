@@ -74,6 +74,7 @@
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 #include "TrafficMgr.hxx"
 
@@ -127,8 +128,9 @@ public:
     return _isFinished;
   }
 
-  virtual void run()
+  void run() override
   {
+      flightgear::sentryThreadReportXMLErrors(false);
       for (const auto& p : _trafficDirPaths) {
           parseTrafficDir(p);
           if (_cancelThread) {
