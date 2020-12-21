@@ -146,7 +146,7 @@ SviewPosDir, e.g. translating the position and/or rotating the direction. */
 struct SviewStep
 {
     /* Updates <posdir>. */
-    virtual void evaluate(SviewPosDir& posdir) = 0;
+    virtual void evaluate(SviewPosDir& posdir, double dt=0) = 0;
     
     virtual void mouse_drag(double delta_x, double delta_y)
     {
@@ -222,7 +222,7 @@ struct SviewStepAircraft : SviewStep
     {
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         if (m_callsign.update()) {
             m_longitude     = m_callsign.m_root->getNode("position/longitude-deg");
@@ -274,7 +274,7 @@ struct SviewStepMove : SviewStep
         SG_LOG(SG_VIEW, SG_INFO, "forward=" << forward << " up=" << up << " right=" << right);
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         /* These calculations are copied from View::recalcLookFrom(). */
 
@@ -328,7 +328,7 @@ struct SviewStepRotate : SviewStep
         SG_LOG(SG_VIEW, SG_INFO, "heading=" << heading << " pitch=" << pitch << " roll=" << roll);
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         /* Should we use SGQuatd to evaluate things? */
         posdir.heading += m_heading;
@@ -378,7 +378,7 @@ struct SviewStepDirectionMultiply : SviewStep
         SG_LOG(SG_VIEW, SG_INFO, "heading=" << heading << " pitch=" << pitch << " roll=" << roll);
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         posdir.heading *= m_heading;
         posdir.pitch *= m_pitch;
@@ -405,7 +405,7 @@ to make current position be available as target later on, e.g. by
 SviewStepFinalToTarget. */
 struct SviewStepCopyToTarget : SviewStep
 {
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         posdir.target = posdir.position;
     }
@@ -426,7 +426,7 @@ struct SviewStepNearestTower : SviewStep
         m_description = "Nearest tower";
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         if (m_callsign.update()) {
             m_latitude = m_callsign.m_root->getNode("sim/tower/latitude-deg", true /*create*/);
@@ -461,7 +461,7 @@ final step if not SviewStepFinal. */
 struct SviewStepFinalToTarget : SviewStep
 {
     /* Alters posdir.direction to point to posdir.target. */
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         /* See View::recalcLookAt(). */
         
@@ -539,7 +539,7 @@ struct SviewStepFinal : SviewStep
     {
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         /* See View::recalcLookFrom(). */
         SGQuatd rotation = SGQuatd::fromYawPitchRollDeg(-m_heading, m_pitch, m_roll);
@@ -591,17 +591,47 @@ struct SviewStepFinal : SviewStep
     double  m_default_roll = 0;
 };
 
+
+/* Generic damping support. Improved version of class in view.hxx and view.cxx.
+
+We model dx/dt = (target-current)/damping_time, do damping_time is time for
+value to change by a factor or e. */
+struct Damping {
+
+    Damping(double damping_time, double current=0)
+    :
+    m_damping_time(damping_time),
+    m_current(current)
+    {}
+    double  update(double target, double dt)
+    {
+        const double e = 2.718281828459045;
+        m_current = target - (target - m_current) * pow(e, -dt/m_damping_time);
+        return m_current;
+    }
+    double reset(double current)
+    {
+        m_current = current;
+        return m_current;
+    }
+
+    private:
+        double  m_damping_time;
+        double  m_current;
+};
+
 /* Change angle and field of view so that we can see an aircraft and the ground
 immediately below it. */
 struct SviewStepAGL : SviewStep
 {
-    SviewStepAGL(const std::string& callsign)
+    SviewStepAGL(const std::string& callsign, double damping_time)
     :
-    m_callsign(callsign)
+    m_callsign(callsign),
+    relative_height_ground_damping(damping_time)
     {
     }
     
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         if (m_callsign.update()) {
             m_chase_distance = -25;
@@ -636,97 +666,96 @@ struct SviewStepAGL : SviewStep
         
         double    h_distance = SGGeodesy::distanceM(posdir.position, posdir.target);
         if (h_distance == 0) {
-            /* Not sure this should ever happen, but we need to handle this
+            /* Not sure this should ever happen, but we need to cope with this
             here otherwise we'll get divide-by-zero. */
+            return;
         }
-        else {
-            /* Find vertical region we want to be able to see. */
-            double  relative_height_target = posdir.target.getElevationM() - posdir.position.getElevationM();
-            double  relative_height_ground = ground_altitude - posdir.position.getElevationM();
+        /* Find vertical region we want to be able to see. */
+        double  relative_height_target = posdir.target.getElevationM() - posdir.position.getElevationM();
+        double  relative_height_ground = ground_altitude - posdir.position.getElevationM();
 
-            /* We expand the field of view so that it hopefully shows the whole
-            aircraft and a little more of the ground.
+        /* We expand the field of view so that it hopefully shows the whole
+        aircraft and a little more of the ground.
 
-            We use chase-distance as a crude measure of the aircraft's
-            size. There doesn't seem to be any more definitive information.
+        We use chase-distance as a crude measure of the aircraft's
+        size. There doesn't seem to be any more definitive information.
 
-            We damp our measure of ground level, to avoid the view jumping around
-            if an aircraft flies over buildings. */
+        We damp our measure of ground level, to avoid the view jumping around
+        if an aircraft flies over buildings. */
 
-            relative_height_ground -= 2;
+        relative_height_ground -= 2;
 
-            double    aircraft_size_vertical = fabs(m_chase_distance) * 0.3;
-            double    aircraft_size_horizontal = fabs(m_chase_distance) * 0.9;
+        double    aircraft_size_vertical = fabs(m_chase_distance) * 0.3;
+        double    aircraft_size_horizontal = fabs(m_chase_distance) * 0.9;
 
-            double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
-            double    relative_height_ground_ = relative_height_ground;
-            //_lookat_agl_damping.updateTarget(relative_height_ground);
-            if (relative_height_ground > relative_height_target) {
-                /* Damping of relative_height_ground can result in it being
-                temporarily above the aircraft, so we ensure the aircraft is
-                visible. */
-                //_lookat_agl_damping.reset(relative_height_ground_);
-                relative_height_ground = relative_height_ground_;
-            }
-
-            /* Not implemented yet: apply scaling from user field of view
-            setting, altering only relative_height_ground so that the aircraft
-            is always in view. */
-            {
-                double  delta = relative_height_target_plus - relative_height_ground;
-                delta *= (_fov_user_deg / _configFOV_deg);
-                relative_height_ground = relative_height_target_plus - delta;
-            }
-
-            double  angle_v_target = atan(relative_height_target_plus / h_distance);
-            double  angle_v_ground = atan(relative_height_ground / h_distance);
-
-            /* The target we want to use is determined by the midpoint of the two
-            angles we've calculated. */
-            double  angle_v_mid = (angle_v_target + angle_v_ground) / 2;
-            double posdir_target_old_elevation = posdir.target.getElevationM();
-            posdir.target.setElevationM(posdir.position.getElevationM() + h_distance * tan(angle_v_mid));
-
-            /* Set required vertical field of view. We use fabs to avoid
-            things being upside down if target is below ground level (e.g. new
-            multiplayer aircraft are briefly at -9999ft). */
-            double  fov_v = fabs(angle_v_target - angle_v_ground);
-
-            /* Set required horizontal field of view so that we can see entire
-            horizontal extent of the aircraft (assuming worst case where
-            airplane is horizontal and square-on to viewer). */
-            double  fov_h = 2 * atan(aircraft_size_horizontal / 2 / h_distance);
-            
-            posdir.fov_v = fov_v * 180 / pi;
-            posdir.fov_h = fov_h * 180 / pi;
-
-            bool verbose = false;
-            if (0) {
-                static time_t t0 = 0;
-                time_t t = time(NULL);
-                if (0 && t - t0 >= 3) {
-                    t0 = t;
-                    verbose = true;
-            }
-            if (verbose) SG_LOG(SG_VIEW, SG_ALERT, ""
-                    << " target0=" << target0
-                    << " fov_v=" << fov_v * 180/pi
-                    << " ground_altitude=" << ground_altitude
-                    << " relative_height_target_plus=" << relative_height_target_plus
-                    << " h_distance=" << h_distance
-                    << " relative_height_ground=" << relative_height_ground
-                    << " m_chase_distance=" << m_chase_distance
-                    << " angle_v_mid=" << angle_v_mid * 180/pi
-                    << " posdir_target_old_elevation=" << posdir_target_old_elevation
-                    << " posdir.target=" << posdir.target
-                    );
-          }
+        double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
+        double    relative_height_ground_ = relative_height_ground;
+        relative_height_ground = relative_height_ground_damping.update(relative_height_ground, dt);
+        if (relative_height_ground > relative_height_target) {
+            /* Damping of relative_height_ground can result in it being
+            temporarily above the aircraft, so we ensure the aircraft is
+            visible. */
+            relative_height_ground = relative_height_ground_damping.reset(relative_height_ground_);
         }
+
+        /* Not implemented yet: apply scaling from user field of view
+        setting, altering only relative_height_ground so that the aircraft
+        is always in view. */
+        {
+            double  delta = relative_height_target_plus - relative_height_ground;
+            delta *= (_fov_user_deg / _configFOV_deg);
+            relative_height_ground = relative_height_target_plus - delta;
+        }
+
+        double  angle_v_target = atan(relative_height_target_plus / h_distance);
+        double  angle_v_ground = atan(relative_height_ground / h_distance);
+
+        /* The target we want to use is determined by the midpoint of the two
+        angles we've calculated. */
+        double  angle_v_mid = (angle_v_target + angle_v_ground) / 2;
+        double posdir_target_old_elevation = posdir.target.getElevationM();
+        posdir.target.setElevationM(posdir.position.getElevationM() + h_distance * tan(angle_v_mid));
+
+        /* Set required vertical field of view. We use fabs to avoid
+        things being upside down if target is below ground level (e.g. new
+        multiplayer aircraft are briefly at -9999ft). */
+        double  fov_v = fabs(angle_v_target - angle_v_ground);
+
+        /* Set required horizontal field of view so that we can see entire
+        horizontal extent of the aircraft (assuming worst case where
+        airplane is horizontal and square-on to viewer). */
+        double  fov_h = 2 * atan(aircraft_size_horizontal / 2 / h_distance);
+
+        posdir.fov_v = fov_v * 180 / pi;
+        posdir.fov_h = fov_h * 180 / pi;
+
+        bool verbose = false;
+        if (0) {
+            static time_t t0 = 0;
+            time_t t = time(NULL);
+            if (0 && t - t0 >= 3) {
+                t0 = t;
+                verbose = true;
+            }
+        }
+        if (verbose) SG_LOG(SG_VIEW, SG_ALERT, ""
+                << " target0=" << target0
+                << " fov_v=" << fov_v * 180/pi
+                << " ground_altitude=" << ground_altitude
+                << " relative_height_target_plus=" << relative_height_target_plus
+                << " h_distance=" << h_distance
+                << " relative_height_ground=" << relative_height_ground
+                << " m_chase_distance=" << m_chase_distance
+                << " angle_v_mid=" << angle_v_mid * 180/pi
+                << " posdir_target_old_elevation=" << posdir_target_old_elevation
+                << " posdir.target=" << posdir.target
+                );
     }
     
     double      m_chase_distance;
     Callsign    m_callsign;
     double      m_ground_altitude = 0;
+    Damping     relative_height_ground_damping;
 };
 
 /* A step that takes the SviewPosDir's eye and target positions and treats
@@ -746,7 +775,7 @@ struct SviewStepDouble : SviewStep
         m_local_chase_distance = config->getDoubleValue("chase-distance");
         m_angle_rad = config->getDoubleValue("angle") * pi / 180;
     }
-    void evaluate(SviewPosDir& posdir) override
+    void evaluate(SviewPosDir& posdir, double dt) override
     {
         /*
         We choose eye position so that we show the local aircraft a fixed
@@ -854,7 +883,7 @@ struct SviewStepDouble : SviewStep
         posdir_local.pitch = (hlr + rle) * 180 / pi;
         posdir_local.roll = 0;
         auto move = SviewStepMove(le, 0, 0);
-        move.evaluate(posdir_local);
+        move.evaluate(posdir_local, 0 /*dt*/);
         
         /* At this point, posdir_local.position is eye position. We make
         posdir_local.direction2 point from this eye position to halfway between
@@ -865,7 +894,7 @@ struct SviewStepDouble : SviewStep
         double hel = (hlr + rle) - pi;
         posdir_local.pitch = (her + hel) / 2 * 180 / pi;
         auto stepfinal = SviewStepFinal();
-        stepfinal.evaluate(posdir_local);
+        stepfinal.evaluate(posdir_local, 0 /*dt*/);
         posdir = posdir_local;
         
         if (debug) {
@@ -904,11 +933,11 @@ struct SviewSteps
         return add_step(std::shared_ptr<SviewStep>(step));
     }
     
-    void evaluate(SviewPosDir& posdir, bool debug=false)
+    void evaluate(SviewPosDir& posdir, double dt, bool debug=false)
     {
         if (debug) SG_LOG(SG_VIEW, SG_ALERT, "evaluating m_name=" << m_name);
         for (auto step: m_steps) {
-            step->evaluate(posdir);
+            step->evaluate(posdir, dt);
             if (debug) SG_LOG(SG_VIEW, SG_ALERT, "posdir=" << posdir);
         }
     };
@@ -1095,8 +1124,10 @@ struct SviewViewEyeTarget : SviewView
                     m_steps.add_step(new SviewStepNearestTower(callsign));
                     
                     if (config->getBoolValue("view/config/lookat-agl")) {
+                        double damping = config->getDoubleValue("view/config/lookat-agl-damping");
+                        double damping_time = log(10) / damping;
                         SG_LOG(SG_VIEW, SG_ALERT, "lookat-agl");
-                        m_steps.add_step(new SviewStepAGL(callsign));
+                        m_steps.add_step(new SviewStepAGL(callsign, damping_time));
                     }
                     m_steps.add_step(new SviewStepFinalToTarget);
 
@@ -1290,7 +1321,8 @@ struct SviewViewEyeTarget : SviewView
                 }
                 else if (!strcmp(type, "agl")) {
                     const char* callsign = step->getStringValue("callsign");
-                    m_steps.add_step(new SviewStepAGL(callsign));
+                    double damping_time = step->getDoubleValue("damping-time");
+                    m_steps.add_step(new SviewStepAGL(callsign, damping_time));
                 }
                 else {
                     throw std::runtime_error(std::string() + "Unrecognised step name: '" + type + "'");
@@ -1396,7 +1428,7 @@ struct SviewViewEyeTarget : SviewView
             }
         }
         if (debug) SG_LOG(SG_VIEW, SG_INFO, "evaluating m_steps:");
-        m_steps.evaluate(posdir, debug);
+        m_steps.evaluate(posdir, dt, debug);
 
         posdir_to_view(posdir);
         return true;

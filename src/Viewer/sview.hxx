@@ -89,6 +89,10 @@ config:
             view:
                 A legacy <view>...</view> tree, e.g. deep copy of /sim/view[]
                 or /ai/models/multiplayer[]/set/sim/view[].
+                
+                Note that agl damping_time is calculated as log(10) /
+                view/config/lookat-agl-damping, for backwards compatibility
+                with legacy view code.
             callsign:
                 "" if user aircraft, else multiplayer aircraft's callsign.
             view-number-raw:
@@ -150,6 +154,11 @@ An sview-step is:
                 callsign:
                     Use chase distance of specified aircraft as a measure of
                     its size, to ensure entire aircraft is visible.
+                damping-time:
+                    Ground level is damped as dx/dt =
+                    (x_actual-x)/damping_time, and damping_time is the time in
+                    seconds for the damped value to change by a factor of e
+                    (2.71).
 
 Examples:
 
