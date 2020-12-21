@@ -330,6 +330,13 @@ public:
   SGGeod pointAlongRoute(int aIndex, double aOffsetNm) const;
 
   /**
+        given a waypoint index, find a point at a normalised offset, which must be [-1 .. 1]
+                eg an offset of -0.5 will be half-way between aIndex and the preceeding waypoint,
+        and an offset of 0.3 will be 30% of the distance from aIndex to the next waypoint.
+     */
+  SGGeod pointAlongRouteNorm(int aIndex, double aOffsetNorm) const;
+
+  /**
    * Create a WayPoint from a string in the following format:
    *  - simple identifier
    *  - decimal-lon,decimal-lat

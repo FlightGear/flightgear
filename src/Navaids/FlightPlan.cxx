@@ -1796,7 +1796,31 @@ SGGeod FlightPlan::pointAlongRoute(int aIndex, double aOffsetNm) const
     RoutePath rp(this);
     return rp.positionForDistanceFrom(aIndex, aOffsetNm * SG_NM_TO_METER);
 }
-    
+
+SGGeod FlightPlan::pointAlongRouteNorm(int aIndex, double aOffsetNorm) const
+{
+    RoutePath rp(this);
+    if (fabs(aOffsetNorm) > 1.0) {
+        SG_LOG(SG_AUTOPILOT, SG_ALERT, "FlightPlan::pointAlongRouteNorm: called with invalid arg:" << aOffsetNorm);
+        return rp.positionForIndex(aIndex);
+    }
+
+    const bool forwards = (aOffsetNorm >= 0.0);
+    double d = 0.0;
+    if (forwards) {
+        d = rp.distanceForIndex(aIndex + 1);
+    } else {
+        d = rp.distanceForIndex(aIndex);
+    }
+
+    // in degenerate cases, just use basic position of index
+    if (d <= 0.0) {
+        return rp.positionForIndex(aIndex);
+    }
+
+    return rp.positionForDistanceFrom(aIndex, d * aOffsetNorm);
+}
+
 void FlightPlan::lockDelegates()
 {
   if (_delegateLock == 0) {
