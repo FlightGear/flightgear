@@ -33,7 +33,8 @@ class TrafficTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(TrafficTests);
-    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testTrafficManager);
+    CPPUNIT_TEST(testPushback);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -45,5 +46,6 @@ public:
     void tearDown();
 
     // The tests.
-    void testBasic();
+    void testTrafficManager();
+    void testPushback();
 };

@@ -70,7 +70,8 @@ public:
 
     void setAcType(const std::string& ac) { acType = ac; };
     const std::string& getAcType() const { return acType; }
-  
+
+    const std::string& getCompany() const { return company; }
     void setCompany(const std::string& comp) { company = comp;};
 
     void announcePositionToController(); //TODO have to be public?

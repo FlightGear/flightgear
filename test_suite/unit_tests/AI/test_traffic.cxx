@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+
 #include "test_traffic.hxx"
 
 #include <cstring>
@@ -26,6 +28,18 @@
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
+#include <AIModel/AIAircraft.hxx>
+#include <AIModel/AIFlightPlan.hxx>
+#include <AIModel/AIManager.hxx>
+#include <AIModel/performancedb.hxx>
+#include <Airports/airport.hxx>
+#include <Airports/airportdynamicsmanager.hxx>
+#include <Traffic/TrafficMgr.hxx>
+
+#include <ATC/atc_mgr.hxx>
+
+#include <Main/globals.hxx>
+
 /////////////////////////////////////////////////////////////////////////////
 
 // Set up function for each test.
@@ -33,6 +47,27 @@ void TrafficTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("Traffic");
     FGTestApi::setUp::initNavDataCache();
+
+
+    auto props = globals->get_props();
+    props->setBoolValue("sim/ai/enabled", true);
+    props->setBoolValue("sim/signals/fdm-initialized", false);
+
+
+    // ensure EDDF has a valid ground net for parking testing
+    FGAirport::clearAirportsCache();
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+    egph->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "EGPH.groundnet.xml");
+
+
+    globals->add_new_subsystem<PerformanceDB>();
+    globals->add_new_subsystem<FGATCManager>();
+    globals->add_new_subsystem<FGAIManager>();
+    globals->add_new_subsystem<flightgear::AirportDynamicsManager>();
+
+    globals->get_subsystem_mgr()->bind();
+    globals->get_subsystem_mgr()->init();
+    globals->get_subsystem_mgr()->postinit();
 }
 
 // Clean up after each test.
@@ -41,6 +76,61 @@ void TrafficTests::tearDown()
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
-void TrafficTests::testBasic()
+void TrafficTests::testPushback()
 {
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+    FGAirportRef lfbd = FGAirport::getByIdent("LFBD");
+
+    FGAISchedule* schedule = new FGAISchedule;
+
+    FGAIAircraft* aiAircraft = new FGAIAircraft{schedule};
+
+    // TODO: select a parking stand? or ...
+    const SGGeod position = egph->geod();
+
+    aiAircraft->setPerformance("jet_transport", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    //   aiAircraft->setPath(modelPath.c_str());
+    //aircraft->setFlightPlan(flightPlanName);
+    aiAircraft->setLatitude(position.getLatitudeDeg());
+    aiAircraft->setLongitude(position.getLongitudeDeg());
+    //aiAircraft->setAltitude(flight->getCruiseAlt()*100); // convert from FL to feet
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+
+    const string flightPlanName = egph->getId() + "-" + lfbd->getId() + ".xml";
+
+    const int radius = 18.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 285;
+
+    const double crs = SGGeodesy::courseDeg(egph->geod(), lfbd->geod()); // direct course
+    time_t departureTime;
+    time(&departureTime); // now
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs, departureTime,
+                                                          egph, lfbd, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, "gate",
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany()));
+
+    if (fp->isValidPlan()) {
+        aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+        globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+    }
+}
+
+void TrafficTests::testTrafficManager()
+{
+    auto tfc = globals->add_new_subsystem<FGTrafficManager>();
+
+    // specify traffic files to read
+
+    tfc->bind();
+    tfc->init();
 }
