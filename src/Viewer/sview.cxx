@@ -141,6 +141,51 @@ struct SviewPosDir
 };
 
 
+/* Generic damping support. Improved version of class in view.hxx and view.cxx.
+
+We model dx/dt = (target-current)/damping_time, do damping_time is time for
+value to change by a factor or e. */
+struct Damping {
+
+    /* If m_wrap_max is non-zero, we wrap to ensure values are always between 0
+    and m_wrap_max. E.g. use m_wrap_max=360 for an angle. */
+    Damping(double damping_time, double wrap_max=0, double current=0)
+    :
+    m_damping_time(damping_time),
+    m_current(current),
+    m_wrap_max(wrap_max)
+    {}
+    
+    /* Updates and returns new smoothed value. */
+    double  update(double dt, double target)
+    {
+        const double e = 2.718281828459045;
+        double delta = target - m_current;
+        if (m_wrap_max) {
+            if (delta < -m_wrap_max/2)  delta += m_wrap_max;
+            if (delta >= m_wrap_max/2)  delta -= m_wrap_max;
+        }
+        m_current = target - delta * pow(e, -dt/m_damping_time);
+        if (m_wrap_max) {
+            if (m_current < 0)  m_current += m_wrap_max;
+            if (m_current >= m_wrap_max)  m_current -= m_wrap_max;
+        }
+        return m_current;
+    }
+    
+    /* Forces current value to be <current>. */
+    double reset(double current)
+    {
+        m_current = current;
+        return m_current;
+    }
+
+    private:
+        double  m_damping_time;
+        double  m_current;
+        double  m_wrap_max;
+};
+
 /* Abstract base class for a single view step. A view step modifies a
 SviewPosDir, e.g. translating the position and/or rotating the direction. */
 struct SviewStep
@@ -318,22 +363,32 @@ E.g. can be used to preserve direction (relative to aircraft) of Helicopter
 view at the time it was cloned. */
 struct SviewStepRotate : SviewStep
 {
-    SviewStepRotate(double heading, double pitch, double roll, bool fixed=false)
+    SviewStepRotate(
+            double heading,
+            double pitch,
+            double roll,
+            bool fixed=false,
+            double damping_heading=0,
+            double damping_pitch=0,
+            double damping_roll=0
+            )
     :
     m_heading(heading),
     m_pitch(pitch),
     m_roll(roll),
-    m_fixed(fixed)
+    m_fixed(fixed),
+    m_damping_heading(damping_heading, 360 /*m_wrap_max*/),
+    m_damping_pitch(damping_pitch, 360 /*m_wrap_max*/),
+    m_damping_roll(damping_roll, 360 /*m_wrap_max*/)
     {
         SG_LOG(SG_VIEW, SG_INFO, "heading=" << heading << " pitch=" << pitch << " roll=" << roll);
     }
     
     void evaluate(SviewPosDir& posdir, double dt) override
     {
-        /* Should we use SGQuatd to evaluate things? */
-        posdir.heading += m_heading;
-        posdir.pitch += m_pitch;
-        posdir.roll += m_roll;
+        posdir.heading  = m_damping_heading.update(dt, posdir.heading + m_heading);
+        posdir.pitch    = m_damping_pitch.update(dt, posdir.pitch + m_pitch);
+        posdir.roll     = m_damping_roll.update(dt, posdir.roll + m_roll);
     }
     
     void mouse_drag(double delta_x, double delta_y) override
@@ -364,6 +419,9 @@ struct SviewStepRotate : SviewStep
     double  m_pitch;
     double  m_roll;
     bool    m_fixed;
+    Damping m_damping_heading;
+    Damping m_damping_pitch;
+    Damping m_damping_roll;
 };
 
 /* Multiply heading, pitch and roll by constants. */
@@ -592,34 +650,6 @@ struct SviewStepFinal : SviewStep
 };
 
 
-/* Generic damping support. Improved version of class in view.hxx and view.cxx.
-
-We model dx/dt = (target-current)/damping_time, do damping_time is time for
-value to change by a factor or e. */
-struct Damping {
-
-    Damping(double damping_time, double current=0)
-    :
-    m_damping_time(damping_time),
-    m_current(current)
-    {}
-    double  update(double target, double dt)
-    {
-        const double e = 2.718281828459045;
-        m_current = target - (target - m_current) * pow(e, -dt/m_damping_time);
-        return m_current;
-    }
-    double reset(double current)
-    {
-        m_current = current;
-        return m_current;
-    }
-
-    private:
-        double  m_damping_time;
-        double  m_current;
-};
-
 /* Change angle and field of view so that we can see an aircraft and the ground
 immediately below it. */
 struct SviewStepAGL : SviewStep
@@ -690,7 +720,7 @@ struct SviewStepAGL : SviewStep
 
         double    relative_height_target_plus = relative_height_target + aircraft_size_vertical;
         double    relative_height_ground_ = relative_height_ground;
-        relative_height_ground = relative_height_ground_damping.update(relative_height_ground, dt);
+        relative_height_ground = relative_height_ground_damping.update(dt, relative_height_ground);
         if (relative_height_ground > relative_height_target) {
             /* Damping of relative_height_ground can result in it being
             temporarily above the aircraft, so we ensure the aircraft is
@@ -1075,6 +1105,14 @@ struct SviewView
     static int s_id;
 };
 
+/* Converts legacy damping values (e.g. at-model-heading-damping) to a damping
+time suitable for use by our Damping class. */
+static double legacy_damping_time(double damping)
+{
+    if (damping <= 0)  return 0;
+    return 1 / damping;
+}
+
 int SviewView::s_id = 0;
 
 /* A view defined by a series of steps that defines an eye and a target. Used
@@ -1125,7 +1163,7 @@ struct SviewViewEyeTarget : SviewView
                     
                     if (config->getBoolValue("view/config/lookat-agl")) {
                         double damping = config->getDoubleValue("view/config/lookat-agl-damping");
-                        double damping_time = log(10) / damping;
+                        double damping_time = log(10) * legacy_damping_time(damping);
                         SG_LOG(SG_VIEW, SG_ALERT, "lookat-agl");
                         m_steps.add_step(new SviewStepAGL(callsign, damping_time));
                     }
@@ -1156,7 +1194,7 @@ struct SviewViewEyeTarget : SviewView
             }
             else {
                 SG_LOG(SG_VIEW, SG_INFO, "not eye-fixed");
-                /* E.g. Pilot view or Helicopter view. */
+                /* E.g. Pilot view and Helicopter/Chase views. */
                 
                 SGPropertyNode* global_sim_view = globals->get_props()
                         ->getNode("sim/view", config->getIntValue("view-number-raw"));
@@ -1182,9 +1220,7 @@ struct SviewViewEyeTarget : SviewView
                     aircraft's heading, pitch and roll; this enables us to mimic
                     Helicopter and Chase views. In theory we should evaluate the
                     specified paths, but in practise we only need to multiply
-                    current values by 0 or 1.
-
-                    todo: add damping. */
+                    current values by 0 or 1. */
                     assert(global_sim_view);
                     m_steps.add_step(new SviewStepDirectionMultiply(
                             global_sim_view->getStringValue("config/eye-heading-deg-path")[0] ? 1 : 0,
@@ -1197,10 +1233,18 @@ struct SviewViewEyeTarget : SviewView
                     viewing system's Helicopter view etc, increments to
                     heading-offset-deg and pitch-offset-deg actually correspond
                     to a decreasing actual heading and pitch values. */
+                    double  damping_heading = legacy_damping_time(config->getDoubleValue("view/config/at-model-heading-damping"));
+                    double  damping_pitch = legacy_damping_time(config->getDoubleValue("view/config/at-model-pitch-damping"));
+                    double  damping_roll = legacy_damping_time(config->getDoubleValue("view/config/at-model-roll-damping"));
+                    
                     m_steps.add_step(new SviewStepRotate(
                             -globals->get_props()->getDoubleValue("sim/current-view/heading-offset-deg"),
                             -globals->get_props()->getDoubleValue("sim/current-view/pitch-offset-deg"),
-                            globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg")
+                            globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg"),
+                            false /*fixed*/,
+                            damping_heading,
+                            damping_pitch,
+                            damping_roll
                             ));
 
                     /* Add step that moves eye away from aircraft.
@@ -1208,14 +1252,16 @@ struct SviewViewEyeTarget : SviewView
                     fgdata:defaults.xml) which is -ve, e.g. -25m. */
                     m_steps.add_step(new SviewStepMove(
                             config->getDoubleValue("view/config/z-offset-m"),
-                            config->getDoubleValue("view/config/y-offset-m"),
+                            -config->getDoubleValue("view/config/y-offset-m"),
                             config->getDoubleValue("view/config/x-offset-m")
                             ));
+                    
+                    m_steps.add_step(new SviewStepFinalToTarget);
                     
                     /* Finally add a step that converts
                     lat,lon,height,heading,pitch,roll into SGVec3d position and
                     SGQuatd orientation. */
-                    m_steps.add_step(new SviewStepFinal);
+                    //m_steps.add_step(new SviewStepFinal);
                 }
                 else {
                     /* E.g. pilot view.

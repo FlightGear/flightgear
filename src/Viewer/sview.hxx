@@ -105,6 +105,10 @@ config:
                 pitch
                 roll
             zoom-delta: modification to default zoom.
+            
+            Chase view seems to be slightly different from the real legacy
+            view, possibly because the viewpoint correction config/y-offset-m
+            is applied after rotation instead of before.
 
         "sview" or not specified:
             List of sview-step's.
