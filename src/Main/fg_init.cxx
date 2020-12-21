@@ -881,6 +881,7 @@ bool fgInitGeneral() {
     fgSetBool("/sim/startup/stderr-to-terminal", isatty(2) != 0 );
 
     sgUserDataInit( globals->get_props() );
+    flightgear::addSentryTag("have-reset", "no");
 
     return true;
 }
@@ -1236,6 +1237,8 @@ void fgStartReposition()
 
 void fgStartNewReset()
 {
+    flightgear::addSentryTag("have-reset", "yes");
+
     // save user settings now, so that USERARCIVE-d values changes since the
     // last init are recorded and hence re-loaded when we fgInitConfig down
     // later in this function. Otherwise all such settings are lost.
