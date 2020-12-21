@@ -68,7 +68,8 @@ auto XML_messageWhitelist = {
      "mismatched tag",
      "syntax error",
      "no element found",
-     "Root element name is"
+     "Root element name is",
+     "Failed to open file"
 };
 
 auto exception_messageWhitelist = {

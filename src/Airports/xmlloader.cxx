@@ -36,6 +36,7 @@
 #include "runwayprefs.hxx"
 
 #include <Navaids/NavDataCache.hxx>
+#include <Main/sentryIntegration.hxx>
 
 using std::string;
 
@@ -53,33 +54,39 @@ void XMLLoader::load(FGGroundNetwork* net)
   SGTimeStamp t;
   t.stamp();
   try {
+      flightgear::sentryThreadReportXMLErrors(false);
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
 
+  flightgear::sentryThreadReportXMLErrors(true);
   SG_LOG(SG_NAVAID, SG_DEBUG, "parsing groundnet XML took " << t.elapsedMSec());
 }
 
 void XMLLoader::loadFromStream(FGGroundNetwork* net, std::istream& inData)
 {
   try {
+      flightgear::sentryThreadReportXMLErrors(false);
       FGGroundNetXMLLoader visitor(net);
       readXML(inData, visitor);
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
+  flightgear::sentryThreadReportXMLErrors(true);
 }
 
 void XMLLoader::loadFromPath(FGGroundNetwork* net, const SGPath& path)
 {
   try {
+      flightgear::sentryThreadReportXMLErrors(false);
       FGGroundNetXMLLoader visitor(net);
       readXML(path, visitor);
   } catch (sg_exception& e) {
     SG_LOG(SG_NAVAID, SG_DEV_WARN, "parsing groundnet XML failed:" << e.getFormattedMessage());
   }
+  flightgear::sentryThreadReportXMLErrors(true);
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
