@@ -42,9 +42,190 @@
 using namespace FlightRecorder;
 using std::string;
 
+
+// Appends raw data to <out>.
+static void s_Append(std::vector<char>& out, const void* data, size_t data_len)
+{
+    size_t pos = out.size();
+    out.resize(pos + data_len);
+    memcpy(&out[pos], data, data_len);
+}
+
+// Appends int16 number to <out>.
+static void s_AppendNumber(std::vector<char>& out, int16_t number)
+{
+    s_Append(out, &number, sizeof(number));
+}
+
+// Appends string to <out> as int16 length followed by chars.
+static void s_AppendString(std::vector<char>& out, const std::string& s)
+{
+    s_AppendNumber(out, s.size());
+    s_Append(out, s.c_str(), s.size());
+}
+
+// Updates property <b> so that it is identical to property <a> and writes
+// information on all differences (creation, value changes and deletion) to
+// <out>.
+//
+// We call ourselves recursively for child nodes.
+//
+// We are careful to preserve indices.
+//
+// We treat all property values as text.
+//
+static void s_RecordPropertyDiffs(
+        std::vector<char>& out,
+        SGPropertyNode* a,
+        SGPropertyNode* b,
+        const std::vector<const char*>* path_exclude_prefixes
+        )
+{
+    assert(a);
+    assert(b);
+    assert(!strcmp(a->getName(), b->getName()));
+    assert(a->getPath() == b->getPath());
+    assert(a->getIndex() == b->getIndex());
+    
+    if (path_exclude_prefixes) {
+        for (const char* path_exclude_prefix: *path_exclude_prefixes) {
+            if (simgear::strutils::starts_with(a->getPath(true /*simplify*/), path_exclude_prefix)) {
+                SG_LOG(SG_SYSTEMS, SG_BULK, "Ignoring: " << a->getPath(true /*simplify*/));
+                return;
+            }
+        }
+    }
+    // If values differ, write a's value to out and change b's value to a's value.
+    const char* a_value = a->getStringValue();
+    const char* b_value = b->getStringValue();
+    if (strcmp(a_value, b_value)) {
+        // Values are different so write out node <a> and update b.
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "recording property change:"
+                << a->getPath()
+                << ": "   << b->getStringValue()
+                << " => " << a->getStringValue()
+                );
+        s_AppendString(out, a->getPath(true /*simplify*/));
+        s_AppendString(out, a->getStringValue());
+        b->setStringValue(a_value);
+    }
+    
+    // Look at all child nodes of <b>, removing any that are not in <a>.
+    int bn = b->nChildren();
+    for (int i=0; i<bn; ++i) {
+        SGPropertyNode* bc = b->getChild(i);
+        SGPropertyNode* ac = a->getChild(bc->getName(), bc->getIndex(), false /*create*/);
+        if (!ac) {
+            // Child node is in b but not in a; we write out special
+            // information about the deleted node and remove from b.
+            s_AppendString(out, "");
+            s_AppendString(out, bc->getPath(true /*simplify*/));
+            b->removeChild(bc);
+        }
+    }
+    
+    // Look at all child nodes of <a>, copying across to <b> as required.
+    //
+    int an = a->nChildren();
+    for (int i=0; i<an; ++i) {
+        SGPropertyNode* ac = a->getChild(i);
+        SGPropertyNode* bc = b->getChild(ac->getName(), ac->getIndex(), true /*create*/);
+        // Recurse.
+        s_RecordPropertyDiffs(out, ac, bc, path_exclude_prefixes);
+    }
+}
+
+
+// Takes care of writing extra-properties to FGReplayData if we are doing a
+// Continuous recording with extra-properties.
+//
+// We write different properties depending on properties such as
+// /sim/replay/record-main-view.
+//
+struct RecordExtraProperties
+{
+    RecordExtraProperties()
+    :
+    m_record_extra_properties(fgGetNode("/sim/replay/record-extra-properties", true /*create*/)),
+    m_record_main_window(fgGetNode("/sim/replay/record-main-window", true /*create*/)),
+    m_record_main_view(fgGetNode("/sim/replay/record-main-view", true /*create*/)),
+    m_record_extra_properties_paths(fgGetNode("/sim/replay/record-extra-properties-paths", true /*create*/))
+    {
+    }
+    
+    // Added info about property changes to *ReplayData if we are recording
+    // them.
+    //
+    void capture(SGPropertyNode_ptr RecordExtraPropertiesReference, FGReplayData* ReplayData)
+    {
+        if (m_record_extra_properties->getBoolValue()) {
+            // Record extra properties specified in
+            // /sim/replay/record-extra-properties-paths/path[].
+            //
+            auto paths = m_record_extra_properties_paths->getChildren("path");
+            for (SGPropertyNode* n: paths) {
+                // We don't try to handle indices or deletion for top-level
+                // property node.
+                //
+                std::string path = n->getStringValue();
+                SGPropertyNode* a = globals->get_props()->getNode(path, false /*create*/);
+                if (!a) {
+                    SG_LOG(SG_SYSTEMS, SG_ALERT, "property does not exist: " << path);
+                    continue;
+                }
+                SGPropertyNode* b = RecordExtraPropertiesReference->getNode(path, true /*create*/);
+                s_RecordPropertyDiffs(ReplayData->extra_properties, a, b, NULL /*path_exclude_prefixes*/);
+            }
+        }
+        
+        if (m_record_main_window->getBoolValue()) {
+            // Record size/position of main window.
+            //
+            static std::vector<const char*> s_paths = {
+                    "sim/startup/xpos",
+                    "sim/startup/ypos",
+                    "sim/startup/xsize",
+                    "sim/startup/ysize"
+                    };
+            for (const char* path: s_paths) {
+                SGPropertyNode* a = globals->get_props()->getNode(path, true /*create*/);
+                SGPropertyNode* b = RecordExtraPropertiesReference->getNode(path, true /*create*/);
+                s_RecordPropertyDiffs(ReplayData->extra_properties, a, b, NULL /*path_exclude_prefixes*/);
+            }
+        }
+        
+        if (m_record_main_view->getBoolValue()) {
+            // Record main window view.
+            //
+            static std::vector<const char*> s_excludes = {
+                    "/sim/current-view/debug/",
+                    "/sim/current-view/raw-orientation",
+                    "/sim/current-view/viewer-"
+                    };
+            const char* path = "sim/current-view";
+            SGPropertyNode* a = globals->get_props()->getNode(path, true /*create*/);
+            SGPropertyNode* b = RecordExtraPropertiesReference->getNode(path, true /*create*/);
+            s_RecordPropertyDiffs(ReplayData->extra_properties, a, b, &s_excludes);
+        }
+    }
+    
+    private:
+    
+    SGPropertyNode_ptr  m_record_extra_properties;
+    SGPropertyNode_ptr  m_record_main_window;
+    SGPropertyNode_ptr  m_record_main_view;
+    SGPropertyNode_ptr  m_record_extra_properties_paths;
+};
+
+static std::shared_ptr<RecordExtraProperties>   s_record_extra_properties;
+
+
+
 FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
     m_RecorderNode(fgGetNode("/sim/flight-recorder", true)),
     m_ReplayMultiplayer(fgGetNode("/sim/replay/multiplayer", true)),
+    m_RecordContinuous(fgGetNode("/sim/replay/record-continuous", true)),
+    m_RecordExtraProperties(fgGetNode("/sim/replay/record-extra-properties", true)),
     m_TotalRecordSize(0),
     m_ConfigName(pConfigName),
     m_usingDefaultConfig(false),
@@ -54,6 +235,7 @@ FGFlightRecorder::FGFlightRecorder(const char* pConfigName) :
 
 FGFlightRecorder::~FGFlightRecorder()
 {
+    s_record_extra_properties.reset();
 }
 
 void
@@ -122,6 +304,8 @@ FGFlightRecorder::reinit(SGPropertyNode_ptr ConfigNode)
     // expose size of actual flight recorder record
     m_RecorderNode->setIntValue("record-size", m_TotalRecordSize);
     SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: record size is " << m_TotalRecordSize << " bytes");
+    
+    s_record_extra_properties.reset(new RecordExtraProperties);
 }
 
 /** Check if SignalList already contains the given property */
@@ -448,6 +632,17 @@ FGFlightRecorder::capture(double SimTime, FGReplayData* ReplayData)
             ReplayData->multiplayer_messages.push_back( MultiplayerMessage);
         }
     }
+    
+    // Add extra properties if we are doing continuous recording.
+    //
+    if (m_RecordContinuous->getBoolValue()) {
+        if (!m_RecordExtraPropertiesReference) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "m_RecordPropertiesReference is null");
+            m_RecordExtraPropertiesReference = new SGPropertyNode;
+        }
+        s_record_extra_properties->capture(m_RecordExtraPropertiesReference, ReplayData);
+    }
+    
     ReplayData->UpdateStats();
     
     // Note that if we are replaying, <ReplayData> will contain the last live
@@ -500,10 +695,36 @@ weighting(TInterpolation interpolation, double ratio, double v1,double v2)
     }
 }
 
+void
+FGFlightRecorder::resetExtraProperties()
+{
+    SG_LOG(SG_SYSTEMS, SG_ALERT, "Clearing m_RecordExtraPropertiesReference");
+    m_RecordExtraPropertiesReference = nullptr;
+}
+
+// Converts string to int, ignoring errors and doing nothing if out-para <out>
+// is null.
+static void setInt(const std::string& value, int* out)
+{
+    if (!out) return;
+    try {
+        *out = std::stoi(value);
+    }
+    catch (std::exception& e) {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Ignoring failed conversion of '" << value << "' to int: " << e.what());
+    }
+}
+
 /** Replay.
  * Restore all properties with data from given buffer. */
 void
-FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const FGReplayData* _pLastBuffer)
+FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
+        const FGReplayData* _pLastBuffer,
+        int* main_window_xpos,
+        int* main_window_ypos,
+        int* main_window_xsize,
+        int* main_window_ysize
+        )
 {
     const char* pLastBuffer = (_pLastBuffer) ? &_pLastBuffer->raw_data.front() : nullptr;
     const char* pBuffer = (_pNextBuffer) ? &_pNextBuffer->raw_data.front() : nullptr;
@@ -611,7 +832,7 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
             m_CaptureBool[i].Signal->setBoolValue(0 != (pFlags[i>>3] & (1 << (i&7))));
         }
     }
-    
+
     // Replay any multiplayer messages. But don't send the same multiplayer
     // messages repeatedly when we are called with a timestamp that ends up
     // picking the same _pNextBuffer as last time.
@@ -621,6 +842,73 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer, const
         _pNextBuffer_prev = _pNextBuffer;
         for (auto multiplayer_message: _pNextBuffer->multiplayer_messages) {
             m_MultiplayMgr->pushMessageHistory(multiplayer_message);
+        }
+    }
+    
+    // Replay property changes.
+    //
+    
+    bool    replay_extra_property_removal = globals->get_props()->getBoolValue("sim/replay/replay-extra-property-removal");
+    bool    replay_extra_property_changes = globals->get_props()->getBoolValue("sim/replay/replay-extra-property-changes");
+    bool    replay_main_view = globals->get_props()->getBoolValue("sim/replay/replay-main-view");
+    bool    replay_main_window_position = globals->get_props()->getBoolValue("sim/replay/replay-main-window-position");
+    bool    replay_main_window_size = globals->get_props()->getBoolValue("sim/replay/replay-main-window-size");
+    
+    if (replay_extra_property_removal) {
+        for (auto extra_property_removed_path: _pNextBuffer->replay_extra_property_removals) {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "replaying extra property removal: " << extra_property_removed_path);
+            globals->get_props()->removeChild(extra_property_removed_path);
+        }
+    }
+    
+    // Apply any changes to /sim/current-view/view-number* first. This is a
+    // hack to avoid problems where setting view-number appears to make the
+    // view code change other things such as pitch-offset-deg internally. So if
+    // the recorded property changes list view-number after pitch-offset-deg,
+    // we will end up overwriting the recorded change to pitch-offset-deg.
+    //
+    // The ultimate cause of this problem is that pitch-offset-deg is a tied
+    // property so when recording we don't always pick up all changes.
+    //
+    if (replay_main_view) {
+        for (auto prop_change: _pNextBuffer->replay_extra_property_changes) {
+            const std::string& path = prop_change.first;
+            const std::string& value = prop_change.second;
+            if (simgear::strutils::starts_with(path, "/sim/current-view/view-number")) {
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "*** SimTime=" << SimTime << " replaying view " << path << "=" << value);
+                globals->get_props()->setStringValue(path, value);
+            }
+        }
+    }
+    
+    for (auto prop_change: _pNextBuffer->replay_extra_property_changes) {
+        const std::string& path = prop_change.first;
+        const std::string& value = prop_change.second;
+        
+        if (0) {}
+        else if (path == "/sim/startup/xpos") {
+            if (replay_main_window_position) setInt(value, main_window_xpos);
+        }
+        else if (path == "/sim/startup/ypos") {
+            if (replay_main_window_position) setInt(value, main_window_ypos);
+        }
+        else if (path == "/sim/startup/xsize") {
+           if (replay_main_window_size) setInt(value, main_window_xsize);
+        }
+        else if (path == "/sim/startup/ysize") {
+            if (replay_main_window_size) setInt(value, main_window_ysize);
+        }
+        else if (simgear::strutils::starts_with(path, "/sim/current-view/")) {
+            if (replay_main_view) {
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "SimTime=" << SimTime
+                        << " replaying view change: " << path << "=" << value);
+                globals->get_props()->setStringValue(path, value);
+            }
+        }
+        else if (replay_extra_property_changes) {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "SimTime=" << SimTime
+                    << " replaying extra_property change: " << path << "=" << value);
+            globals->get_props()->setStringValue(path, value);
         }
     }
 }

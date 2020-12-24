@@ -50,6 +50,9 @@ struct FGReplayData {
     
     // Incoming multiplayer messages.
     std::vector<std::shared_ptr<std::vector<char>>> multiplayer_messages;
+    std::vector<char>                               extra_properties;
+    std::map<std::string, std::string>              replay_extra_property_changes;
+    std::vector<std::string>                        replay_extra_property_removals;
     
     // Updates static statistics defined below. 
     void UpdateStats();
@@ -81,6 +84,15 @@ typedef struct {
     std::string speaker;
 } FGReplayMessages;
 
+enum FGTapeType
+{
+    FGTapeType_NORMAL,
+    FGTapeType_CONTINUOUS,
+    FGTapeType_RECOVERY,
+};
+
+struct FGFrameInfo;
+    
 typedef std::deque < FGReplayData *> replay_list_type;
 typedef std::vector < FGReplayMessages > replay_messages_type;
 
@@ -114,8 +126,27 @@ private:
     void clear();
     FGReplayData* record(double time);
     void interpolate(double time, const replay_list_type &list);
-    void replay(double time, size_t offset, size_t offset_old=0);
-    void replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFrame=NULL);
+    void replay(
+            double time,
+            size_t offset,
+            size_t offset_old,
+            bool replay_signals,
+            bool replay_multiplayer,
+            bool replay_extra_properties,
+            int* xpos=nullptr,
+            int* ypos=nullptr,
+            int* xsize=nullptr,
+            int* ysize=nullptr
+            );
+    void replay(
+            double time,
+            FGReplayData* pCurrentFrame,
+            FGReplayData* pOldFrame=nullptr,
+            int* xpos=nullptr,
+            int* ypos=nullptr,
+            int* xsize=nullptr,
+            int* ysize=nullptr
+            );
     void guiMessage(const char* message);
     void loadMessages();
     void fillRecycler();
@@ -129,13 +160,12 @@ private:
     bool listTapes(bool SameAircraftFilter, const SGPath& tapeDirectory);
     bool saveTape(const SGPath& Filename, SGPropertyNode_ptr MetaData);
     bool loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta);
-    bool continuousWriteHeader(
+    SGPropertyNode_ptr continuousWriteHeader(
             std::ofstream&      out,
-            SGPropertyNode_ptr& myMetaData,
-            SGPropertyNode_ptr& Config,
-            const SGPath&       path
+            const SGPath&       path,
+            FGTapeType          tape_type
             );
-    bool continuousWriteFrame(FGReplayData* r, std::ostream& out);
+    bool continuousWriteFrame(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr meta);
 
     double sim_time;
     double last_mt_time;
@@ -161,6 +191,11 @@ private:
     SGPropertyNode_ptr replay_multiplayer;
     SGPropertyNode_ptr recovery_period;
     
+    SGPropertyNode_ptr  m_sim_startup_xpos;
+    SGPropertyNode_ptr  m_sim_startup_ypos;
+    SGPropertyNode_ptr  m_sim_startup_xsize;
+    SGPropertyNode_ptr  m_sim_startup_ysize;
+    
     double replay_time_prev;    // Used to detect jumps while replaying.
 
     double m_high_res_time;    // default: 60 secs of high res data
@@ -177,11 +212,16 @@ private:
     void valueChanged(SGPropertyNode * node);
     
     // Things for replaying from uncompressed fgtape file.
-    std::ifstream               m_continuous_in;
-    std::map<double, size_t>    m_continuous_time_to_offset;
+    std::ifstream                   m_continuous_in;
+    bool                            m_continuous_in_multiplayer;
+    bool                            m_continuous_in_extra_properties;
+    std::map<double, FGFrameInfo>   m_continuous_in_time_to_frameinfo;
+    SGPropertyNode_ptr              m_continuous_in_config;
+    double                          m_continuous_in_time_last;
 
     // For writing uncompressed fgtape file.
-    std::ofstream   m_continuous_out;
+    SGPropertyNode_ptr  m_continuous_out_config;
+    std::ofstream       m_continuous_out;
 };
 
 #endif // _FG_REPLAY_HXX

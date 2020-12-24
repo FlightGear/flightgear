@@ -58,7 +58,8 @@ public:
 
     void setupView();
 
-    void resize(int width, int height );
+    void resize(int width, int height);
+    void resize(int width, int height, int x, int y);
 
     void update();
 
@@ -116,6 +117,7 @@ protected:
     SGPropertyNode_ptr _textures;
     SGPropertyNode_ptr _cloud_status, _visibility_m;
     SGPropertyNode_ptr _xsize, _ysize;
+    SGPropertyNode_ptr _xpos, _ypos;
     SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
     SGPropertyNode_ptr _virtual_cockpit;
     SGTimeStamp _splash_time;

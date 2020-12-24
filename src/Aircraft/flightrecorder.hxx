@@ -57,11 +57,19 @@ public:
     void            reinit              (void);
     void            reinit              (SGPropertyNode_ptr ConfigNode);
     FGReplayData*   capture             (double SimTime, FGReplayData* pRecycledBuffer);
+    
+    // Updates main_window_* out-params if we find window move/resize events
+    // and replay of such events is enabled.
     void            replay              (double SimTime, const FGReplayData* pNextBuffer,
-                                         const FGReplayData* pLastBuffer = NULL);
-
+                                         const FGReplayData* pLastBuffer,
+                                         int* main_window_xpos,
+                                         int* main_window_ypos,
+                                         int* main_window_xsize,
+                                         int* main_window_ysize
+                                         );
     int             getRecordSize       (void) { return m_TotalRecordSize;}
     void            getConfig           (SGPropertyNode* root);
+    void            resetExtraProperties();
 
 private:
     SGPropertyNode_ptr getDefault(void);
@@ -78,7 +86,14 @@ private:
     SGPropertyNode_ptr m_RecorderNode;
     SGPropertyNode_ptr m_ConfigNode;
     SGPropertyNode_ptr m_ReplayMultiplayer;
-
+    SGPropertyNode_ptr m_RecordContinuous;
+    SGPropertyNode_ptr m_RecordExtraProperties;
+    
+    // This contains copy of all properties that we are recording, so that we
+    // can send only differences.
+    //
+    SGPropertyNode_ptr m_RecordExtraPropertiesReference;
+    
     FlightRecorder::TSignalList m_CaptureDouble;
     FlightRecorder::TSignalList m_CaptureFloat;
     FlightRecorder::TSignalList m_CaptureInteger;

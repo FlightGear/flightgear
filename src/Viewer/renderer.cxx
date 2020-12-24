@@ -498,6 +498,8 @@ FGRenderer::init( void )
 
     _xsize         = fgGetNode("/sim/startup/xsize", true);
     _ysize         = fgGetNode("/sim/startup/ysize", true);
+    _xpos          = fgGetNode("/sim/startup/xpos", true);
+    _ypos          = fgGetNode("/sim/startup/ypos", true);
     _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
     _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
@@ -905,16 +907,14 @@ FGRenderer::updateSky()
 }
 
 void
-FGRenderer::resize( int width, int height )
+FGRenderer::resize( int width, int height, int x, int y )
 {
-    int curWidth = _xsize->getIntValue(),
-        curHeight = _ysize->getIntValue();
     SG_LOG(SG_VIEW, SG_DEBUG, "FGRenderer::resize: new size " << width << " x " << height);
-    if ((curHeight != height) || (curWidth != width)) {
     // must guard setting these, or PLIB-PUI fails with too many live interfaces
-        _xsize->setIntValue(width);
-        _ysize->setIntValue(height);
-    }
+    if (width != _xsize->getIntValue()) _xsize->setIntValue(width);
+    if (height != _ysize->getIntValue()) _ysize->setIntValue(height);
+    if (x != _xpos->getIntValue()) _xpos->setIntValue(x);
+    if (y != _ypos->getIntValue()) _ypos->setIntValue(y);
 
     // update splash node if present
     _splash->resize(width, height);
@@ -923,6 +923,12 @@ FGRenderer::resize( int width, int height )
         _quickDrawable->resize(width, height);
     }
 #endif
+}
+
+void
+FGRenderer::resize( int width, int height )
+{
+    resize(width, height, _xpos->getIntValue(), _ypos->getIntValue());
 }
 
 typedef osgUtil::LineSegmentIntersector::Intersection Intersection;

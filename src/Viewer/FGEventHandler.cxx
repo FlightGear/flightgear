@@ -161,6 +161,26 @@ bool isMainWindow(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us)
 
 }
 
+void FGEventHandler::setWindowRectangleInteriorWithCorrection(osgViewer::GraphicsWindow* window, int x, int y, int width, int height)
+{
+    // Store (x y) in our state so that our handle() event handler can
+    // compare the requested position with the actual position and update
+    // (m_setWindowRectangle_delta_x m_setWindowRectangle_delta_y) accordingly.
+    //
+    SG_LOG(SG_VIEW, SG_DEBUG, "FGEventHandler::setWindowRectangle(): pos=(" << x << " " << y << ")"
+            << " delta=(" << m_setWindowRectangle_delta_x << " " << m_setWindowRectangle_delta_y << ")"
+            );
+    m_setWindowRectangle_called = true;
+    m_setWindowRectangle_called_x = x;
+    m_setWindowRectangle_called_y = y;
+    window->setWindowRectangle(
+            x - m_setWindowRectangle_delta_x,
+            y - m_setWindowRectangle_delta_y,
+            width,
+            height
+            );
+}
+
 bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
                             osgGA::GUIActionAdapter& us)
 {
@@ -274,8 +294,29 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
             return true;
         }
         CameraGroup::getDefault()->resized();
-        if (resizable)
-          globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());
+        if (resizable) {
+            if (m_setWindowRectangle_called) {
+                // Update m_setWindowRectangle_delta_x and
+                // m_setWindowRectangle_delta_y so that our
+                // setWindowRectangle() compensates for the window furniture
+                // differences in future calls.
+                //
+                m_setWindowRectangle_called = false;
+                int error_x = ea.getWindowX() - m_setWindowRectangle_called_x;
+                int error_y = ea.getWindowY() - m_setWindowRectangle_called_y;
+                SG_LOG(SG_VIEW, SG_BULK, "m_setWindowRectangle_called is set:"
+                        << " m_setWindowRectangle_delta=("
+                        << m_setWindowRectangle_delta_x << " " << m_setWindowRectangle_delta_y << ")"
+                        << " m_setWindowRectangle_called_=("
+                        << m_setWindowRectangle_called_x << " " << m_setWindowRectangle_called_y << ")"
+                        << " ea.getWindow=(" << ea.getWindowX() << " " << ea.getWindowY() << ")"
+                        << " error=(" << error_x << " " << error_y << ")"
+                        );
+                m_setWindowRectangle_delta_x += error_x;
+                m_setWindowRectangle_delta_y += error_y;
+          }
+          globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight(), ea.getWindowX(), ea.getWindowY());
+        }
         statsHandler->handle(ea, us);
       #ifdef SG_MAC
         // work around OSG Cocoa-Viewer issue with resize event handling,

@@ -99,6 +99,11 @@ public:
 
     void reset();
     void clear();
+    
+    // Wrapper for osgViewer::GraphicsWindow::setWindowRectangle() that takes
+    // coordinates excluding window furniture.
+    //
+    void setWindowRectangleInteriorWithCorrection(osgViewer::GraphicsWindow* window, int x, int y, int width, int height);
 
     static int translateKey(const osgGA::GUIEventAdapter& ea);
     static int translateModifiers(const osgGA::GUIEventAdapter& ea);
@@ -122,6 +127,12 @@ protected:
     void handleStats(osgGA::GUIActionAdapter& us);
     bool changeStatsCameraRenderOrder;
     SGPropertyNode_ptr _display, _print;
+private:
+    bool m_setWindowRectangle_called = false;
+    int m_setWindowRectangle_called_x = 0;
+    int m_setWindowRectangle_called_y = 0;
+    int m_setWindowRectangle_delta_x = 0;
+    int m_setWindowRectangle_delta_y = 0;
 };
 
 bool eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);

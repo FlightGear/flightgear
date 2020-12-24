@@ -29,6 +29,8 @@
 #include <float.h>
 #include <string.h>
 
+#include <osgViewer/ViewerBase>
+
 #include <simgear/constants.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
@@ -40,6 +42,8 @@
 
 #include <Main/fg_props.hxx>
 #include <MultiPlayer/mpmessages.hxx>
+#include <Viewer/renderer.hxx>
+#include <Viewer/FGEventHandler.hxx>
 
 #include "replay.hxx"
 #include "flightrecorder.hxx"
@@ -146,6 +150,10 @@ FGReplay::FGReplay() :
     last_lt_time(0.0),
     last_msg_time(0),
     last_replay_state(0),
+    m_sim_startup_xpos(fgGetNode("sim/startup/xpos", true)),
+    m_sim_startup_ypos(fgGetNode("sim/startup/ypos", true)),
+    m_sim_startup_xsize(fgGetNode("sim/startup/xsize", true)),
+    m_sim_startup_ysize(fgGetNode("sim/startup/ysize", true)),
     replay_time_prev(-1.0),
     m_high_res_time(60.0),
     m_medium_res_time(600.0),
@@ -166,7 +174,7 @@ static int PropertiesWrite(SGPropertyNode* root, std::ostream& out)
 {
     stringstream buffer;
     writeProperties(buffer, root, true /*write_all*/);
-    size_t buffer_len = buffer.str().size() + 1;
+    uint32_t    buffer_len = buffer.str().size() + 1;
     out.write(reinterpret_cast<char*>(&buffer_len), sizeof(buffer_len));
     out.write(buffer.str().c_str(), buffer_len);
     return 0;
@@ -174,7 +182,7 @@ static int PropertiesWrite(SGPropertyNode* root, std::ostream& out)
 
 static int PropertiesRead(std::istream& in, SGPropertyNode* node)
 {
-    size_t  buffer_len;
+    uint32_t    buffer_len;
     in.read(reinterpret_cast<char*>(&buffer_len), sizeof(buffer_len));
     std::vector<char>   buffer( buffer_len);
     in.read(&buffer.front(), buffer.size());
@@ -182,13 +190,24 @@ static int PropertiesRead(std::istream& in, SGPropertyNode* node)
     return 0;
 }
 
-/* Reads uncompressed vector<char> from file. */
-static void VectorRead(std::istream& in, std::vector<char>& out)
+/* Reads uncompressed vector<char> from file. Throws if length field is
+longer than <max_length>. */
+template<typename SizeType>
+static SizeType VectorRead(std::istream& in, std::vector<char>& out, uint32_t max_length=(1<<31))
 {
-    size_t length;
+    SizeType    length;
     in.read(reinterpret_cast<char*>(&length), sizeof(length));
+    if (sizeof(length) + length > max_length) {
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "recording data vector too long."
+                << " max_length=" << max_length
+                << " sizeof(length)=" << sizeof(length)
+                << " length=" << length
+                );
+        throw std::runtime_error("Failed to read vector in recording");
+    }
     out.resize(length);
     in.read(&out.front(), length);
+    return sizeof(length) + length;
 }
 
 static void popupTip(const char* message, int delay)
@@ -199,12 +218,6 @@ static void popupTip(const char* message, int delay)
     globals->get_commands()->execute("show-message", args);
 }
 
-enum FGTapeType
-{
-    FGTapeType_NORMAL,
-    FGTapeType_CONTINUOUS,
-    FGTapeType_RECOVERY,
-};
 
 // Returns a path using different formats depending on <type>:
 //
@@ -212,29 +225,31 @@ enum FGTapeType
 //  FGTapeType_CONTINUOUS:  <tape-directory>/<aircraft-type>-<date>-<time>-continuous.fgtape
 //  FGTapeType_RECOVERY:    <tape-directory>/<aircraft-type>-recovery.fgtape
 //
-static SGPath makeSavePath(FGTapeType type)
+static SGPath makeSavePath(FGTapeType type, SGPath* path_timeless=nullptr)
 {
     const char* tapeDirectory = fgGetString("/sim/replay/tape-directory", "");
     const char* aircraftType  = fgGetString("/sim/aircraft", "unknown");
-    
+    if (path_timeless) *path_timeless = "";
     SGPath  path = SGPath(tapeDirectory);
     path.append(aircraftType);
-    path.concat("-");
     if (type == FGTapeType_RECOVERY) {
-        path.concat("recovery");
+        path.concat("-recovery");
     }
     else {
+        if (path_timeless) *path_timeless = path;
         time_t calendar_time = time(NULL);
         struct tm *local_tm;
         local_tm = localtime( &calendar_time );
         char time_str[256];
-        strftime( time_str, 256, "%Y%m%d-%H%M%S", local_tm);
+        strftime( time_str, 256, "-%Y%m%d-%H%M%S", local_tm);
         path.concat(time_str);
     }
     if (type == FGTapeType_CONTINUOUS) {
         path.concat("-continuous");
+        if (path_timeless) path_timeless->concat("-continuous");
     }
     path.concat(".fgtape");
+    if (path_timeless) path_timeless->concat(".fgtape");
     return path;
 }
 
@@ -249,22 +264,37 @@ void FGReplay::valueChanged(SGPropertyNode * node)
         return;
     }
     
-    if (m_continuous_out) {
+    if (m_continuous_out.is_open()) {
         // Stop existing continuous recording.
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Stopping continuous recording");
         m_continuous_out.close();
         popupTip("Continuous record to file stopped", 5 /*delay*/);
     }
     
     if (continuous) {
         // Start continuous recording.
-        SGPropertyNode_ptr  MetaData;
-        SGPropertyNode_ptr  Config;
-        SGPath              path = makeSavePath(FGTapeType_CONTINUOUS);
-        bool ok = continuousWriteHeader(m_continuous_out, MetaData, Config, path);
-        if (!ok) {
+        SGPath              path_timeless;
+        SGPath              path = makeSavePath(FGTapeType_CONTINUOUS, &path_timeless);
+        m_continuous_out_config = continuousWriteHeader(m_continuous_out, path, FGTapeType_CONTINUOUS);
+        if (!m_continuous_out_config) {
             SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to start continuous recording");
             popupTip("Continuous record to file failed to start", 5 /*delay*/);
             return;
+        }
+        
+        SG_LOG(SG_SYSTEMS, SG_ALERT, "Starting continuous recording");
+        
+        // Make a convenience link to the recording. E.g.
+        // harrier-gr3-continuous.fgtape ->
+        // harrier-gr3-20201224-005034-continuous.fgtape.
+        //
+        // Link destination is in same directory as link so we use leafname
+        // path.file().
+        //
+        path_timeless.remove();
+        bool ok = path_timeless.makeLink(path.file());
+        if (!ok) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to create link " << path_timeless.c_str() << " => " << path.file());
         }
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "Starting continuous recording to " << path);
         popupTip("Continuous record to file started", 5 /*delay*/);
@@ -331,7 +361,7 @@ FGReplay::init()
     replay_looped        = fgGetNode("/sim/replay/looped",       true);
     replay_duration_act  = fgGetNode("/sim/replay/duration-act", true);
     speed_up             = fgGetNode("/sim/speed-up",            true);
-    replay_multiplayer   = fgGetNode("/sim/replay/multiplayer",  true);
+    replay_multiplayer   = fgGetNode("/sim/replay/record-multiplayer",  true);
     recovery_period      = fgGetNode("/sim/replay/recovery-period", true);
 
     // alias to keep backward compatibility
@@ -590,7 +620,7 @@ static void MoveFrontMultiplayerPackets(replay_list_type& list)
 
 /** Save raw replay data in a separate container */
 static bool
-saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData, size_t RecordSize, bool multiplayer)
+saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData, size_t RecordSize, SGPropertyNode* meta)
 {
     // get number of records in this stream
     size_t Count = ReplayData.size();
@@ -602,7 +632,7 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
         return false;
     }
 
-    // write the raw data (all records in the given list)
+    // read the raw data (all records in the given list)
     replay_list_type::const_iterator it = ReplayData.begin();
     size_t CheckCount = 0;
     while ((it != ReplayData.end())&&
@@ -613,13 +643,20 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
         output.write(reinterpret_cast<const char*>(&pRecord->sim_time), sizeof(pRecord->sim_time));
         output.write(&pRecord->raw_data.front(), pRecord->raw_data.size());
 
-        if (multiplayer) {
-            size_t  num_messages = pRecord->multiplayer_messages.size();
-            output.write(reinterpret_cast<const char*>(&num_messages), sizeof(num_messages));
-            for ( auto message: pRecord->multiplayer_messages) {
-                size_t message_size = message->size();
-                output.write(reinterpret_cast<const char*>(&message_size), sizeof(message_size));
-                output.write(&message->front(), message_size);
+        for (auto data: meta->getNode("meta")->getChildren("data")) {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "data->getStringValue()=" << data->getStringValue());
+            if (!strcmp(data->getStringValue(), "multiplayer")) {
+                uint32_t length = 0;
+                for (auto message: pRecord->multiplayer_messages){
+                    length += sizeof(uint16_t) + message->size();
+                }
+                output.write(reinterpret_cast<const char*>(&length), sizeof(length));
+                for (auto message: pRecord->multiplayer_messages) {
+                    uint16_t message_size = message->size();
+                    output.write(reinterpret_cast<const char*>(&message_size), sizeof(message_size));
+                    output.write(&message->front(), message_size);
+                }
+                break;
             }
         }
         CheckCount++;
@@ -639,34 +676,36 @@ saveRawReplayData(gzContainerWriter& output, const replay_list_type& ReplayData,
 
 // Sets things up for writing to a normal or continuous fgtape file.
 //
-//  Extra:
+//  extra:
 //      NULL or extra information when we are called from fgdata gui, e.g. with
 //      the flight description entered by the user in the save dialogue.
 //  path:
 //      Path of fgtape file. We return nullptr if this file already exists.
-//  Duration:
+//  duration:
 //      Duration of recording. Zero if we are starting a continuous recording.
-//
+//  tape_type:
+//      
 //  Returns:
-//      A new SGPropertyNode containing meta child with information about the
-//      aircraft etc plus Extra's user-data if specified.
+//      A new SGPropertyNode suitable as prefix of recording. If
+//      extra:user-data exists, it will appear as meta/user-data.
 //
 static SGPropertyNode_ptr saveSetup(
-        const SGPropertyNode*   Extra,
+        const SGPropertyNode*   extra,
         const SGPath&           path,
-        double                  Duration
+        double                  duration,
+        FGTapeType              tape_type
         )
 {
-    SGPropertyNode_ptr  MetaData;
+    SGPropertyNode_ptr  config;
     if (path.exists())
     {
         // same timestamp!?
         SG_LOG(SG_SYSTEMS, SG_ALERT, "Error, flight recorder tape file with same name already exists: " << path);
-        return MetaData;
+        return config;
     }
     
-    MetaData = new SGPropertyNode();
-    SGPropertyNode* meta = MetaData->getNode("meta", 0, true);
+    config = new SGPropertyNode;
+    SGPropertyNode* meta = config->getNode("meta", 0 /*index*/, true /*create*/);
 
     // add some data to the file - so we know for which aircraft/version it was recorded
     meta->setStringValue("aircraft-type",           fgGetString("/sim/aircraft", "unknown"));
@@ -676,25 +715,43 @@ static SGPropertyNode_ptr saveSetup(
     meta->setStringValue("aircraft-version",        fgGetString("/sim/aircraft-version", "(undefined)"));
 
     // add information on the tape's recording duration
-    meta->setDoubleValue("tape-duration", Duration);
+    meta->setDoubleValue("tape-duration", duration);
     char StrBuffer[30];
-    printTimeStr(StrBuffer, Duration, false);
+    printTimeStr(StrBuffer, duration, false);
     meta->setStringValue("tape-duration-str", StrBuffer);
 
     // add simulator version
     copyProperties(fgGetNode("/sim/version", 0, true), meta->getNode("version", 0, true));
-    if (Extra && Extra->getNode("user-data"))
+    if (extra && extra->getNode("user-data"))
     {
-        copyProperties(Extra->getNode("user-data"), meta->getNode("user-data", 0, true));
+        copyProperties(extra->getNode("user-data"), meta->getNode("user-data", 0, true));
     }
 
-    bool multiplayer = fgGetBool("/sim/replay/multiplayer", false);
-    meta->setBoolValue("multiplayer", multiplayer);
+    // We always record signals.
+    config->addChild("data")->setStringValue("signals");
+    
+    if (tape_type == FGTapeType_CONTINUOUS) {
+        if (fgGetBool("/sim/replay/record-multiplayer", false)) {
+            config->addChild("data")->setStringValue("multiplayer");
+        }
+        if (0
+                || fgGetBool("/sim/replay/record-extra-properties", false)
+                || fgGetBool("/sim/replay/record-main-window", false)
+                || fgGetBool("/sim/replay/record-main-view", false)
+                ) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Adding data[]=extra-properties."
+                    << " record-extra-properties=" << fgGetBool("/sim/replay/record-extra-properties", false)
+                    << " record-main-window=" << fgGetBool("/sim/replay/record-main-window", false)
+                    << " record-main-view=" << fgGetBool("/sim/replay/record-main-view", false)
+                    );
+            config->addChild("data")->setStringValue("extra-properties");
+        }
+    }
 
     // store replay messages
-    copyProperties(fgGetNode("/sim/replay/messages", 0, true), MetaData->getNode("messages", 0, true));
+    copyProperties(fgGetNode("/sim/replay/messages", 0, true), meta->getNode("messages", 0, true));
 
-    return MetaData;
+    return config;
 }
 
 // Opens continuous recording file and writes header.
@@ -709,54 +766,77 @@ static SGPropertyNode_ptr saveSetup(
 // If path_override is not "", we use it as the path (instead of the path
 // determined by saveSetup().
 //
-bool
-FGReplay::continuousWriteHeader(
+SGPropertyNode_ptr FGReplay::continuousWriteHeader(
         std::ofstream&      out,
-        SGPropertyNode_ptr& MetaData,
-        SGPropertyNode_ptr& Config,
-        const SGPath&       path
+        const SGPath&       path,
+        FGTapeType          tape_type
         )
 {
-    if (!MetaData) {
-        MetaData = saveSetup(NULL /*Extra*/, path, 0 /*Duration*/);
-        if (!MetaData) {
-            return false;
-        }
-    }
-    if (!Config) {
-        Config = new SGPropertyNode;
-        m_pRecorder->getConfig(Config.get());
-    }
+    SGPropertyNode_ptr  config = saveSetup(NULL /*Extra*/, path, 0 /*Duration*/, tape_type);
+    SGPropertyNode* signals = config->getNode("signals", true /*create*/);
+    m_pRecorder->getConfig(signals);
     
     out.open(path.c_str(), std::ofstream::binary | std::ofstream::trunc);
     out.write(FlightRecorderFileMagic, strlen(FlightRecorderFileMagic)+1);
-    PropertiesWrite(MetaData, out);
-    PropertiesWrite(Config, out);
+    PropertiesWrite(config, out);
+    
+    if (tape_type == FGTapeType_CONTINUOUS) {
+        // Ensure that all recorded properties are written in first frame.
+        //
+        m_pRecorder->resetExtraProperties();
+    }
+    
     if (!out) {
         out.close();
-        return false;
+        config = nullptr;
     }
-    return true;
+    return config;
 }
 
 
 // Writes one frame of continuous record information.
 //
 bool
-FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out)
+FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr config)
 {
+    SG_LOG(SG_SYSTEMS, SG_BULK, "writing frame."
+            << " out.tellp()=" << out.tellp()
+            << " r->sim_time=" << r->sim_time
+            );
     out.write(reinterpret_cast<char*>(&r->sim_time), sizeof(r->sim_time));
 
-    size_t    aircraft_data_size = r->raw_data.size();
-    out.write(reinterpret_cast<char*>(&aircraft_data_size), sizeof(aircraft_data_size));
-    out.write(&r->raw_data.front(), r->raw_data.size());
-
-    size_t    multiplayer_num = r->multiplayer_messages.size();
-    out.write(reinterpret_cast<char*>(&multiplayer_num), sizeof(multiplayer_num));
-    for ( size_t i=0; i<multiplayer_num; ++i) {
-        size_t  length = r->multiplayer_messages[i]->size();
-        out.write(reinterpret_cast<char*>(&length), sizeof(length));
-        out.write(&r->multiplayer_messages[i]->front(), length);
+    for (auto data: config->getChildren("data")) {
+        const char* data_type = data->getStringValue();
+        if (!strcmp(data_type, "signals")) {
+            uint32_t    signals_size = r->raw_data.size();
+            out.write(reinterpret_cast<char*>(&signals_size), sizeof(signals_size));
+            out.write(&r->raw_data.front(), r->raw_data.size());
+        }
+        else if (!strcmp(data_type, "multiplayer")) {
+            uint32_t    length = 0;
+            for (auto message: r->multiplayer_messages) {
+                length += sizeof(uint16_t) + message->size();
+            }
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "data_type=" << data_type << " out.tellp()=" << out.tellp()
+                    << " length=" << length);
+            out.write(reinterpret_cast<const char*>(&length), sizeof(length));
+            for (auto message: r->multiplayer_messages) {
+                uint16_t message_size = message->size();
+                out.write(reinterpret_cast<const char*>(&message_size), sizeof(message_size));
+                out.write(&message->front(), message_size);
+            }
+        }
+        else if (!strcmp(data_type, "extra-properties")) {
+            uint32_t    length = r->extra_properties.size();
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "data_type=" << data_type << " out.tellp()=" << out.tellp()
+                    << " length=" << length);
+            out.write(reinterpret_cast<char*>(&length), sizeof(length));
+            out.write(&r->extra_properties[0], length);
+        }
+        else {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "unrecognised data_type=" << data_type);
+            assert(0);
+        }
     }
     
     bool ok = true;
@@ -764,6 +844,13 @@ FGReplay::continuousWriteFrame(FGReplayData* r, std::ostream& out)
     return ok;
 }
 
+struct FGFrameInfo
+{
+    size_t  offset;
+    bool    has_signals = false;
+    bool    has_multiplayer = false;
+    bool    has_extra_properties = false;
+};
 
 void
 FGReplay::update( double dt )
@@ -809,9 +896,9 @@ FGReplay::update( double dt )
             if (m_continuous_in.is_open()) {
                 SG_LOG(SG_SYSTEMS, SG_DEBUG, "Unloading continuous recording");
                 m_continuous_in.close();
-                m_continuous_time_to_offset.clear();
+                m_continuous_in_time_to_frameinfo.clear();
             }
-            assert(m_continuous_time_to_offset.empty());
+            assert(m_continuous_in_time_to_frameinfo.empty());
 
             guiMessage("Replay stopped. Your controls!");
         }
@@ -959,7 +1046,7 @@ FGReplay::update( double dt )
     }
     
     if (m_continuous_out.is_open()) {
-        continuousWriteFrame(r, m_continuous_out);
+        continuousWriteFrame(r, m_continuous_out, m_continuous_out_config);
     }
     
     if (replay_state == 0)
@@ -976,6 +1063,8 @@ FGReplay::update( double dt )
                 s_last_recovery = t;
             }
             
+            // Write recovery recording periodically.
+            //
             if (t - s_last_recovery >= recovery_period_s) {
                 s_last_recovery = t;
 
@@ -984,7 +1073,7 @@ FGReplay::update( double dt )
                 //
                 static SGPath               path = makeSavePath(FGTapeType_RECOVERY);
                 static SGPath               path_temp = SGPath( path.str() + "-");
-                static SGPropertyNode_ptr   MetaData;
+                //static SGPropertyNode_ptr   MetaData;
                 static SGPropertyNode_ptr   Config;
 
                 SG_LOG(SG_SYSTEMS, SG_BULK, "Creating recovery file: " << path);
@@ -996,8 +1085,9 @@ FGReplay::update( double dt )
                 (void) remove(path_temp.c_str());
                 std::ofstream   out;
                 bool ok = true;
-                if (ok) ok = continuousWriteHeader(out, MetaData, Config, path_temp);
-                if (ok) ok = continuousWriteFrame(r, out);
+                SGPropertyNode_ptr config = continuousWriteHeader(out, path_temp, FGTapeType_RECOVERY);
+                if (!config) ok = false;
+                if (ok) ok = continuousWriteFrame(r, out, config);
                 out.close();
                 if (ok) {
                     rename(path_temp.c_str(), path.c_str());
@@ -1140,6 +1230,7 @@ FGReplay::interpolate( double time, const replay_list_type &list)
  *  Returns true when replay sequence has finished, false otherwise.
  */
 
+
 bool
 FGReplay::replay( double time ) {
     // cout << "replay: " << time << " ";
@@ -1148,34 +1239,159 @@ FGReplay::replay( double time ) {
 
     replayMessage(time);
     
-    if (!m_continuous_time_to_offset.empty()) {
-        // Replay from uncompressed recording file.
+    if (!m_continuous_in_time_to_frameinfo.empty()) {
+        // We are replaying a continuous recording.
         //
-        auto p = m_continuous_time_to_offset.lower_bound(time);
         
-        if (p == m_continuous_time_to_offset.end()) {
-            // end.
-            --p;
-            replay( time, p->second);
-            return true;
+        // We need to detect whether replay() updates the values for the main
+        // window's position and size.
+        int xpos0 = m_sim_startup_xpos->getIntValue();
+        int ypos0 = m_sim_startup_xpos->getIntValue();
+        int xsize0 = m_sim_startup_xpos->getIntValue();
+        int ysize0 = m_sim_startup_xpos->getIntValue();
+        
+        int xpos = xpos0;
+        int ypos = ypos0;
+        int xsize = xsize0;
+        int ysize = ysize0;
+        
+        double  t_begin = m_continuous_in_time_last;
+        if (m_continuous_in_extra_properties) {
+            // Continuous recording has property changes.
+            //
+            if (time < m_continuous_in_time_last) {
+                // We have gone backwards; need to replay all property changes
+                // from t=0.
+                t_begin = -1;
+            }
         }
         
+        double  multiplayer_recent = 3;
+        if (m_continuous_in_multiplayer) {
+            double  t = std::max(0.0, time - multiplayer_recent);
+            t_begin = std::min(t_begin, t);
+        }
+        
+        // Replay property changes for all t in t_prop_begin < t < time, and multiplayer
+        // changes for most recent multiplayer_recent seconds.
+        //
+        for (auto p = m_continuous_in_time_to_frameinfo.upper_bound(t_begin);
+                p != m_continuous_in_time_to_frameinfo.end();
+                ++p)
+        {
+            if (p->first >= time) break;
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Replaying extra property changes."
+                    << " m_continuous_in_time_last=" << m_continuous_in_time_last
+                    << " time=" << time
+                    << " t_begin=" << t_begin
+                    << " p->first=" << p->first
+                    << " p->second.offset=" << p->second.offset
+                    );
+            
+            // Replaying a frame is expensive because we read frame data
+            // from disc each time. So we only replay this frame if it has
+            // extra_properties, or if it has multiplayer packets and we are
+            // within <multiplayer_recent> seconds of current time.
+            //
+            bool    replay_this_frame = p->second.has_extra_properties;
+            if (!replay_this_frame) {
+                if (p->first > time - multiplayer_recent) {
+                    if (p->second.has_multiplayer) {
+                        replay_this_frame = true;
+                    }
+                }
+            }
+            if (replay_this_frame) {
+                replay(
+                        p->first,
+                        p->second.offset,
+                        0 /*offset_old*/,
+                        false /*replay_signals*/,
+                        p->first > time - multiplayer_recent /*replay_multiplayer*/,
+                        true /*replay_extra_properties*/,
+                        &xpos,
+                        &ypos,
+                        &xsize,
+                        &ysize
+                        );
+            }
+        }
+        
+        // Replay from uncompressed recording file.
+        //
+        auto p = m_continuous_in_time_to_frameinfo.lower_bound(time);
+        bool ret = false;
+        
+        size_t  offset;
+        size_t  offset_prev = 0;
+        
+        if (p == m_continuous_in_time_to_frameinfo.end()) {
+            // We are at end of recording; replay last frame.
+            --p;
+            offset = p->second.offset;
+            ret = true;
+        }
         else if (p->first > time) {
             // Look for preceding item.
-            if (p == m_continuous_time_to_offset.begin()) {
-                replay(time, p->second);
-                return false;
+            if (p == m_continuous_in_time_to_frameinfo.begin()) {
+                // <time> is before beginning of recording.
+                offset = p->second.offset;
             }
-            auto prev = p;
-            --prev;
-            replay( time, p->second, prev->second);
-            return false;
+            else {
+                // Interpolate between items that straddle <time>.
+                auto prev = p;
+                --prev;
+                offset_prev = prev->second.offset;
+                offset = p->second.offset;
+            }
         }
         else {
             // Exact match.
-            replay(time, p->second);
-            return false;
+            offset = p->second.offset;
         }
+        replay(
+                time,
+                offset,
+                offset_prev /*offset_old*/,
+                true /*replay_signals*/,
+                true /*replay_multiplayer*/,
+                true /*replay_extra_properties*/,
+                &xpos,
+                &ypos,
+                &xsize,
+                &ysize
+                );
+        
+        if (0
+                || xpos != xpos0
+                || ypos != ypos0
+                || xsize != xsize0
+                || ysize != ysize0
+                ) {
+            // Move/resize the main window to reflect the updated values.
+            globals->get_props()->setIntValue("/sim/startup/xpos", xpos);
+            globals->get_props()->setIntValue("/sim/startup/ypos", ypos);
+            globals->get_props()->setIntValue("/sim/startup/xsize", xsize);
+            globals->get_props()->setIntValue("/sim/startup/ysize", ysize);
+            
+            osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
+            if (viewer_base) {
+                std::vector<osgViewer::GraphicsWindow*> windows;
+                viewer_base->getWindows(windows);
+                osgViewer::GraphicsWindow* window = windows[0];
+
+                // We use FGEventHandler::setWindowRectangle() to move the
+                // window, because it knows how to convert from window work-area
+                // coordinates to window-including-furniture coordinates.
+                //
+                flightgear::FGEventHandler* event_handler = globals->get_renderer()->getEventHandler();
+                event_handler->setWindowRectangleInteriorWithCorrection(window, xpos, ypos, xsize, ysize);
+            }
+        }
+        
+        m_continuous_in_time_last = time;
+        
+        return ret;
     }
 
     if ( ! short_term.empty() ) {
@@ -1235,40 +1451,138 @@ FGReplay::replay( double time ) {
  * given two FGReplayData elements and a time, interpolate between them
  */
 void
-FGReplay::replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFrame)
+FGReplay::replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFrame,
+        int* xpos, int* ypos, int* xsize, int* ysize)
 {
-    m_pRecorder->replay(time,pCurrentFrame,pOldFrame);
+    m_pRecorder->replay(time, pCurrentFrame, pOldFrame, xpos, ypos, xsize, ysize);
 }
 
+static int16_t read_int16(std::ifstream& in, size_t& pos)
+{
+    int16_t a;
+    in.read(reinterpret_cast<char*>(&a), sizeof(a));
+    pos += sizeof(a);
+    return a;
+}
+static std::string read_string(std::ifstream& in, size_t& pos)
+{
+    int16_t length = read_int16(in, pos);
+    std::vector<char>   path(length);
+    in.read(&path[0], length);
+    pos += length;
+    std::string ret(&path[0], length);
+    return ret;
+}
 
-/* Reads a FGReplayData from uncompressed file. */
-static std::unique_ptr<FGReplayData> ReadFGReplayData(std::ifstream& in, size_t pos)
+/* Reads extra-property change items in next <length> bytes. Throws if we don't
+exactly read <length> bytes. */
+static void ReadFGReplayDataExtraProperties(std::ifstream& in, FGReplayData* replay_data, uint32_t length)
+{
+    SG_LOG(SG_SYSTEMS, SG_BULK, "reading extra-properties. length=" << length);
+    size_t pos=0;
+    for(;;) {
+        if (pos == length) {
+            break;
+        }
+        if (pos > length) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Overrun while reading extra-properties:"
+                    " length=" << length << ": pos=" << pos);
+            assert(0);
+        }
+        SG_LOG(SG_SYSTEMS, SG_BULK, "length=" << length<< " pos=" << pos);
+        std::string path = read_string(in, pos);
+        if (path == "") {
+            path = read_string(in, pos);
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "property deleted: " << path);
+            replay_data->replay_extra_property_removals.push_back(path);
+        }
+        else {
+            std::string value = read_string(in, pos);
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "property changed: " << path << "=" << value);
+            replay_data->replay_extra_property_changes[path] = value;
+        }
+    }
+}
+
+/* Reads all or part of a FGReplayData from uncompressed file. */
+static std::unique_ptr<FGReplayData> ReadFGReplayData(
+        std::ifstream& in,
+        size_t pos,
+        SGPropertyNode* config,
+        bool load_signals,
+        bool load_multiplayer,
+        bool load_extra_properties
+        )
 {
     /* Need to clear any eof bit, otherwise seekg() will not work (which is
     pretty unhelpful). E.g. see:
         https://stackoverflow.com/questions/16364301/whats-wrong-with-the-ifstream-seekg
     */
+    SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame. pos=" << pos);
     in.clear();
     in.seekg(pos);
     
     std::unique_ptr<FGReplayData>   ret(new FGReplayData);
 
     in.read(reinterpret_cast<char*>(&ret->sim_time), sizeof(ret->sim_time));
-    VectorRead(in, ret->raw_data);
 
-    /* Multiplayer information is a vector of vectors. */
-    size_t  n;
-    in.read(reinterpret_cast<char*>(&n), sizeof(n));
-    ret->multiplayer_messages.resize(n);
-    for (size_t i=0; i<n; ++i) {
-        ret->multiplayer_messages[i].reset(new std::vector<char>);
-        VectorRead(in, *ret->multiplayer_messages[i]);
+    for (auto data: config->getChildren("data")) {
+        const char* data_type = data->getStringValue();
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "in.tellg()=" << in.tellg() << " data_type=" << data_type);
+        uint32_t    length;
+        in.read(reinterpret_cast<char*>(&length), sizeof(length));
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "length=" << length);
+        if (load_signals && !strcmp(data_type, "signals")) {
+            ret->raw_data.resize(length);
+            in.read(&ret->raw_data.front(), ret->raw_data.size());
+        }
+        else if (load_multiplayer && !strcmp(data_type, "multiplayer")) {
+            /* Multiplayer information is a vector of vectors. */
+            ret->multiplayer_messages.clear();
+            uint32_t pos = 0;
+            for(;;) {
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "length=" << length << " pos=" << pos);
+                assert(pos <= length);
+                if (pos == length) {
+                    break;
+                }
+                std::shared_ptr<std::vector<char>>  v(new std::vector<char>);
+                ret->multiplayer_messages.push_back(v);
+                pos += VectorRead<uint16_t>(in, *ret->multiplayer_messages.back(), length - pos);
+            }
+        }
+        else if (load_extra_properties && !strcmp(data_type, "extra-properties")) {
+            ReadFGReplayDataExtraProperties(in, ret.get(), length);
+        }
+        else {
+            SG_LOG(SG_GENERAL, SG_BULK, "Skipping unrecognised data: " << data_type);
+            in.seekg(length, std::ios_base::cur);
+        }
     }
+    
     return ret;
 }
 
-/* Replays one iteration from uncompressed file. */
-void FGReplay::replay(double time, size_t offset, size_t offset_old)
+// Replays one frame from uncompressed file. <offset> and <offset_old>
+// are offsets in file of frames that are >= and < <time> respectively.
+// <offset_old> may be 0, in which case it is ignored.
+//
+// We load the frame(s) from disc, omitting some data depending on
+// replay_signals, replay_multiplayer and replay_extra_properties. Then call
+// m_pRecorder->replay(), which updates the global state.
+//
+void FGReplay::replay(
+        double time,
+        size_t offset,
+        size_t offset_old,
+        bool replay_signals,
+        bool replay_multiplayer,
+        bool replay_extra_properties,
+        int* xpos,
+        int* ypos,
+        int* xsize,
+        int* ysize
+        )
 {
     SG_LOG(SG_SYSTEMS, SG_BULK,
             "FGReplay::replay():"
@@ -1276,19 +1590,40 @@ void FGReplay::replay(double time, size_t offset, size_t offset_old)
             << " offset=" << offset
             << " offset_old=" << offset_old
             );
-    std::unique_ptr<FGReplayData> replay_data = ReadFGReplayData(m_continuous_in, offset);
+    std::unique_ptr<FGReplayData> replay_data = ReadFGReplayData(
+            m_continuous_in,
+            offset,
+            m_continuous_in_config,
+            replay_signals,
+            replay_multiplayer,
+            replay_extra_properties
+            );
     std::unique_ptr<FGReplayData> replay_data_old;
     if (offset_old) {
-        replay_data_old = ReadFGReplayData(m_continuous_in, offset_old);
+        replay_data_old = ReadFGReplayData(
+                m_continuous_in,
+                offset_old,
+                m_continuous_in_config,
+                replay_signals,
+                replay_multiplayer,
+                replay_extra_properties
+                );
     }
-    m_pRecorder->replay(time, replay_data.get(), replay_data_old.get());
+    m_pRecorder->replay(time, replay_data.get(), replay_data_old.get(), xpos, ypos, xsize, ysize);
 }
 
 double
 FGReplay::get_start_time()
 {
-    if (!m_continuous_time_to_offset.empty()) {
-        double ret = m_continuous_time_to_offset.begin()->first;
+    if (!m_continuous_in_time_to_frameinfo.empty()) {
+        double ret = m_continuous_in_time_to_frameinfo.begin()->first;
+        SG_LOG(SG_SYSTEMS, SG_DEBUG,
+                "ret=" << ret
+                << " m_continuous_in_time_to_frameinfo is "
+                << m_continuous_in_time_to_frameinfo.begin()->first
+                << ".."
+                << m_continuous_in_time_to_frameinfo.rbegin()->first
+                );
         return ret;
     }
     
@@ -1310,8 +1645,15 @@ FGReplay::get_start_time()
 double
 FGReplay::get_end_time()
 {
-    if (!m_continuous_time_to_offset.empty()) {
-        double ret = m_continuous_time_to_offset.rbegin()->first;
+    if (!m_continuous_in_time_to_frameinfo.empty()) {
+        double ret = m_continuous_in_time_to_frameinfo.rbegin()->first;
+        SG_LOG(SG_SYSTEMS, SG_DEBUG,
+                "ret=" << ret
+                << " m_continuous_in_time_to_frameinfo is "
+                << m_continuous_in_time_to_frameinfo.begin()->first
+                << ".."
+                << m_continuous_in_time_to_frameinfo.rbegin()->first
+                );
         return ret;
     }
     
@@ -1361,12 +1703,21 @@ loadRawReplayData(gzContainerReader& input, FGFlightRecorder* pRecorder, replay_
         ReplayData.push_back(pBuffer);
 
         if (multiplayer) {
-            size_t  num_messages = 0;
-            input.read(reinterpret_cast<char*>(&num_messages), sizeof(num_messages));
-            for (size_t i=0; i<num_messages; ++i) {
-                size_t  message_size;
+            uint32_t    length;
+            input.read(reinterpret_cast<char*>(&length), sizeof(length));
+            uint32_t    pos = 0;
+            for(;;) {
+                if (pos == length) break;
+                assert(pos < length);
+                uint16_t message_size;
                 input.read(reinterpret_cast<char*>(&message_size), sizeof(message_size));
-                std::shared_ptr<std::vector<char>>  message(new std::vector<char>(message_size));
+                pos += sizeof(message_size) + message_size;
+                if (pos > length) {
+                    SG_LOG(SG_SYSTEMS, SG_ALERT, "Tape appears to have corrupted multiplayer data");
+                    return false;
+                }
+                auto message = std::make_shared<std::vector<char>>(message_size);
+                //std::shared_ptr<std::vector<char>>  message(new std::vector<char>(message_size));
                 input.read(&message->front(), message_size);
                 pBuffer->multiplayer_messages.push_back( message);
             }
@@ -1422,14 +1773,14 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode_ptr MetaData)
         size_t RecordSize = Config->getIntValue("recorder/record-size", 0);
         SG_LOG(SG_SYSTEMS, MY_SG_DEBUG, "Config:recorder/signal-count=" <<  Config->getIntValue("recorder/signal-count", 0)
                << " RecordSize: " << RecordSize);
-        bool multiplayer = MetaData->getBoolValue("meta/multiplayer", 0);
+        //bool multiplayer = MetaData->getBoolValue("meta/multiplayer", 0);
 
         if (ok)
-            ok &= saveRawReplayData(output, short_term,  RecordSize, multiplayer);
+            ok &= saveRawReplayData(output, short_term,  RecordSize, MetaData);
         if (ok)
-            ok &= saveRawReplayData(output, medium_term, RecordSize, multiplayer);
+            ok &= saveRawReplayData(output, medium_term, RecordSize, MetaData);
         if (ok)
-            ok &= saveRawReplayData(output, long_term,   RecordSize, multiplayer);
+            ok &= saveRawReplayData(output, long_term,   RecordSize, MetaData);
         Config = 0;
     }
 
@@ -1443,11 +1794,26 @@ FGReplay::saveTape(const SGPath& Filename, SGPropertyNode_ptr MetaData)
 bool
 FGReplay::saveTape(const SGPropertyNode* Extra)
 {
-    SGPath path = makeSavePath(FGTapeType_NORMAL);
-    SGPropertyNode_ptr MetaData = saveSetup(Extra, path, get_end_time()-get_start_time());
+    SGPath path_timeless;
+    SGPath path = makeSavePath(FGTapeType_NORMAL, &path_timeless);
+    SGPropertyNode_ptr MetaData = saveSetup(Extra, path, get_end_time()-get_start_time(), FGTapeType_NORMAL);
     bool ok = false;
     if (MetaData) {
         ok = saveTape(path, MetaData);
+        if (ok) {
+            // Make a convenience link to the recording. E.g.
+            // harrier-gr3.fgtape ->
+            // harrier-gr3-20201224-005034.fgtape.
+            //
+            // Link destination is in same directory as link so we use leafname
+            // path.file().
+            //
+            path_timeless.remove();
+            ok = path_timeless.makeLink(path.file());
+            if (!ok) {
+                SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to create link " << path_timeless.c_str() << " => " << path.file());
+            }
+        }
     }
     if (ok)
         guiMessage("Flight recorder tape saved successfully!");
@@ -1465,34 +1831,60 @@ FGReplay::saveTape(const SGPropertyNode* Extra)
 bool
 FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMeta)
 {
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "loading Preview=" << Preview << " Filename=" << Filename);
     {
-        /* Try to load as uncompressed first. */
-        m_continuous_in.open( Filename.str());
+        /* Try to load as uncompressed Continuous recording first. */
+        std::ifstream   in_preview;
+        std::ifstream&  in(Preview ? in_preview : m_continuous_in);
+        in.open( Filename.str());
+        if (!in) {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to open Filename=" << Filename);
+            return false;
+        }
         std::vector<char>   buffer(strlen( FlightRecorderFileMagic) + 1);
-        m_continuous_in.read(&buffer.front(), buffer.size());
+        in.read(&buffer.front(), buffer.size());
         if (strcmp(&buffer.front(), FlightRecorderFileMagic)) {
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape prefix doesn't match FlightRecorderFileMagic: " << Filename);
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "fgtape prefix doesn't match FlightRecorderFileMagic: '" << &buffer.front() << "'");
+            in.close();
         }
         else {
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "fgtape is uncompressed: " << Filename);
-            SGPropertyNode_ptr MetaDataProps = new SGPropertyNode();
-            PropertiesRead(m_continuous_in, MetaDataProps.get());
-            copyProperties(MetaDataProps->getNode("meta", 0, true), &MetaMeta);
-            SGPropertyNode_ptr Config = new SGPropertyNode();
-            PropertiesRead(m_continuous_in, Config.get());
-            
+            m_continuous_in_config = new SGPropertyNode;
+            try {
+                PropertiesRead(in, m_continuous_in_config.get());
+            }
+            catch (std::exception& e) {
+                SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to read Config properties in: " << Filename);
+                in.close();
+                return false;
+            }
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "m_continuous_in_config is:\n"
+                    << writePropertiesInline(m_continuous_in_config, true /*write_all*/) << "\n");
+            copyProperties(m_continuous_in_config->getNode("meta", 0, true), &MetaMeta);
             if (Preview) {
-                m_continuous_in.close();
+                in.close();
                 return true;
             }
-            
-            m_pRecorder->reinit(Config);
+            m_pRecorder->reinit(m_continuous_in_config);
             clear();
             fillRecycler();
             time_t t = time(NULL);
             size_t  pos = 0;
+            m_continuous_in_time_last = -1;
+            m_continuous_in_time_to_frameinfo.clear();
+            int num_frames_extra_properties = 0;
+            int num_frames_multiplayer = 0;
+            // Read entire recording and build up in-memory cache of simulator
+            // time to file offset, so we can handle random access.
+            //
+            // We also cache any frames that modify extra-properties.
+            //
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexing Continuous recording " << Filename);
             for(;;)
             {
+                SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame."
+                        << " m_continuous_in.tellg()=" << m_continuous_in.tellg()
+                        );
                 pos = m_continuous_in.tellg();
                 m_continuous_in.seekg(pos);
                 double sim_time;
@@ -1503,38 +1895,62 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
                         << " m_continuous_in.tellg()=" << m_continuous_in.tellg()
                         << " sim_time=" << sim_time
                         );
+                FGFrameInfo frameinfo;
+                frameinfo.offset = pos;
                 
-                size_t  length_aircraft;
-                m_continuous_in.read(reinterpret_cast<char*>(&length_aircraft), sizeof(length_aircraft));
-                m_continuous_in.seekg(length_aircraft, std::ios_base::cur);
-                
-                size_t  num_multiplayer;
-                m_continuous_in.read(reinterpret_cast<char*>(&num_multiplayer), sizeof(num_multiplayer));
-                for ( size_t i=0; i<num_multiplayer; ++i) {
-                    size_t length;
+                //bool frame_has_property_changes = false;
+                auto datas = m_continuous_in_config->getChildren("data");
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "datas.size()=" << datas.size());
+                for (auto data: datas) {
+                    uint32_t    length;
                     m_continuous_in.read(reinterpret_cast<char*>(&length), sizeof(length));
+                    SG_LOG(SG_SYSTEMS, SG_BULK,
+                            "m_continuous_in.tellg()=" << m_continuous_in.tellg()
+                            << " Skipping data_type=" << data->getStringValue()
+                            << " length=" << length
+                            );
                     m_continuous_in.seekg(length, std::ios_base::cur);
+                    if (length) {
+                        if (!strcmp(data->getStringValue(), "signals")) {
+                            frameinfo.has_signals = true;
+                        }
+                        else if (!strcmp(data->getStringValue(), "multiplayer")) {
+                            frameinfo.has_multiplayer = true;
+                            ++num_frames_multiplayer;
+                        }
+                        else if (!strcmp(data->getStringValue(), "extra-properties")) {
+                            frameinfo.has_extra_properties = true;
+                            ++num_frames_extra_properties;
+                        }
+                    }
                 }
-                
                 SG_LOG(SG_SYSTEMS, SG_BULK, ""
                         << " pos=" << pos
                         << " sim_time=" << sim_time
-                        << " length_aircraft=" << length_aircraft
-                        << " num_multiplayer=" << num_multiplayer
+                        << " num_frames_multiplayer=" << num_frames_multiplayer
+                        << " num_frames_extra_properties=" << num_frames_extra_properties
                         );
                 
                 if (!m_continuous_in) {
+                    // EOF; we need to cope if last frame is incomplete, as
+                    // this can easily happen if Flightgear was killed while
+                    // recording.
                     break;
                 }
                 
-                m_continuous_time_to_offset[sim_time] = pos;
+                m_continuous_in_time_to_frameinfo[sim_time] = frameinfo;
             }
             t = time(NULL) - t;
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Indexed uncompressed recording"
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Indexed uncompressed recording"
                     << ". time taken: " << t << "s"
                     << ". recording size: " << pos
-                    << ". numrecording items: " << m_continuous_time_to_offset.size()
+                    << ". Number of frames: " << m_continuous_in_time_to_frameinfo.size()
+                    << ". num_frames_multiplayer: " << num_frames_multiplayer
+                    << ". num_frames_extra_properties: " << num_frames_extra_properties
                     );
+            fgSetInt("/sim/replay/continuous-stats-num-frames", m_continuous_in_time_to_frameinfo.size());
+            fgSetInt("/sim/replay/continuous-stats-num-frames-extra-properties", num_frames_extra_properties);
+            fgSetInt("/sim/replay/continuous-stats-num-frames-multiplayer", num_frames_multiplayer);
             start(true /*NewTape*/);
             return true;
         }
@@ -1659,9 +2075,13 @@ FGReplay::loadTape(const SGPath& Filename, bool Preview, SGPropertyNode& MetaMet
                        << ", expected size was " << OriginalSize << ".");
             }
 
-            bool multiplayer = MetaMeta.getBoolValue("multiplayer", 0);
-            SG_LOG(SG_SYSTEMS, SG_DEBUG, "multiplayer=" << multiplayer);
-
+            bool multiplayer = false;
+            for (auto data: MetaMeta.getChildren("data")) {
+                if (!strcmp(data->getStringValue(), "multiplayer")) {
+                    multiplayer = true;
+                }
+            }
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "multiplayer=" << multiplayer);
             if (ok)
                 ok &= loadRawReplayData(input, m_pRecorder, short_term,  RecordSize, multiplayer);
             if (ok)
