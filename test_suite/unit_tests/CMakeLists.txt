@@ -9,6 +9,7 @@ foreach( unit_test_category
         Instrumentation
         Scripting
         AI
+        Autopilot
     )
 
     add_subdirectory(${unit_test_category})

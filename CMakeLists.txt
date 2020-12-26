@@ -303,6 +303,8 @@ endif (USE_DBUS)
 ##############################################################################
 ## Qt5 setup setup
 if (ENABLE_QT)
+    set(CMAKE_AUTOMOC ON)
+
     find_package(Qt5 5.9 COMPONENTS Widgets Gui Network Qml Quick Svg)
     if (Qt5Widgets_FOUND)
         set(HAVE_QT 1)

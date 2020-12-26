@@ -201,6 +201,26 @@ public:
   double compute(  double dt, double input );
   virtual void initialize( double initvalue );
 };
+
+class CoherentNoiseFilterImplementation : public DigitalFilterImplementation
+{
+protected:
+    InputValueList _amplitude;
+
+    std::vector<double> _discreteValues;
+    bool _absoluteVal = false;
+    size_t _numDiscreteValues = 1024;
+
+    bool configure(SGPropertyNode& cfg_node,
+                   const std::string& cfg_name,
+                   SGPropertyNode& prop_root) override;
+
+public:
+    CoherentNoiseFilterImplementation();
+    double compute(double dt, double input) override;
+    void initialize(double initvalue) override;
+};
+
 /* --------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------- */
 
@@ -703,6 +723,66 @@ bool LeadLagFilterImplementation::configure( SGPropertyNode& cfg_node,
   }
   return false;
 }
+
+
+/* --------------------------------------------------------------------------------- */
+
+CoherentNoiseFilterImplementation::CoherentNoiseFilterImplementation() : _amplitude(1.0),
+                                                                         _numDiscreteValues(1024)
+{
+}
+
+void CoherentNoiseFilterImplementation::initialize(double initvalue)
+{
+    // allocate the array one bigger so we don't need to worry about
+    // wrapping.bound checking the discrete +1 lookup
+    _discreteValues.resize(_numDiscreteValues + 1);
+    std::generate(_discreteValues.begin(), _discreteValues.end(), []() {
+        return (sg_random() * 2.0) - 1.0;
+    });
+}
+
+static double lerp(double a, double b, double t)
+{
+    return (a * (1.0 - t)) + (b * t);
+}
+
+double CoherentNoiseFilterImplementation::compute(double dt, double input)
+{
+    const double a = _amplitude.get_value();
+
+    const double t = input * _numDiscreteValues;
+    const int i = static_cast<int>(floor(t)) % _numDiscreteValues;
+    const auto v0 = _discreteValues.at(i);
+    const auto v1 = _discreteValues.at(i + 1);
+
+    const auto weight = t - floor(t);
+    const double output = lerp(v0, v1, weight);
+
+    return _absoluteVal ? fabs(output) * a : output * a;
+}
+
+//------------------------------------------------------------------------------
+bool CoherentNoiseFilterImplementation::configure(SGPropertyNode& cfg_node,
+                                                  const std::string& cfg_name,
+                                                  SGPropertyNode& prop_root)
+{
+    if (cfg_name == "discrete-resolution") {
+        _numDiscreteValues = cfg_node.getIntValue();
+        return true;
+    }
+
+    if (cfg_name == "amplitude") {
+        _amplitude.push_back(new InputValue(prop_root, cfg_node, 1.0));
+        return true;
+    }
+
+    if (cfg_name == "absolute") {
+        _absoluteVal = cfg_node.getBoolValue();
+    }
+    return false;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Digital Filter Component Implementation                                    */
 /* -------------------------------------------------------------------------- */
@@ -746,6 +826,7 @@ bool DigitalFilter::configure( SGPropertyNode& prop_root,
     componentForge["lead-lag"           ] = digitalFilterFactory<LeadLagFilterImplementation>;
     componentForge["integrator"         ] = digitalFilterFactory<IntegratorFilterImplementation>;
     componentForge["damped-oscillation" ] = digitalFilterFactory<DampedOscillationFilterImplementation>;
+    componentForge["coherent-noise"] = digitalFilterFactory<CoherentNoiseFilterImplementation>;
   }
 
   const auto type = simgear::strutils::strip(cfg.getStringValue("type"));
