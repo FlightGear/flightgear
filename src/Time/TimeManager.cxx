@@ -112,6 +112,8 @@ void TimeManager::init()
     _simTimeDelta = fgGetNode("sim/time/delta-sec", true);
     _mpProtocolClockNode = fgGetNode("sim/time/mp-clock-sec", true);
     _steadyClockNode = fgGetNode("sim/time/steady-clock-sec", true);
+    _frameTimeOffsetNode = fgGetNode("sim/time/frame-time-offset-ms", true);
+    _dtRemainderNode = fgGetNode("sim/time/dt-remainder-sec", true);
     _mpClockOffset = fgGetNode("sim/time/mp-clock-offset-sec", true);
     _steadyClockDrift = fgGetNode("sim/time/steady-clock-drift-ms", true);
     _computeDrift = fgGetNode("sim/time/compute-clock-drift", true);
@@ -146,6 +148,8 @@ void TimeManager::unbind()
     _simTimeDelta.clear();
     _mpProtocolClockNode.clear();
     _steadyClockNode.clear();
+    _frameTimeOffsetNode.clear();
+    _dtRemainderNode.clear();
     _mpClockOffset.clear();
     _steadyClockDrift.clear();
     _computeDrift.clear();
@@ -205,6 +209,10 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
         _systemStamp.systemClockHoursAndMinutes();
         const double systemStamp = _systemStamp.toSecs();
         _steadyClock = floor(systemStamp * modelHz) / modelHz;
+
+        // add offset if defined
+        const double frameOffsetMsec = _frameTimeOffsetNode->getDoubleValue();
+        _steadyClock += frameOffsetMsec / 1000.0;
 
         // initialize the remainder with offset from the system clock
         _dtRemainder = systemStamp - _steadyClock;
@@ -288,6 +296,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   _steadyClock += mpProtocolDt;
   _mpProtocolClock = _steadyClock + _mpClockOffset->getDoubleValue();
 
+  _dtRemainderNode->setDoubleValue(_dtRemainder);
   _steadyClockNode->setDoubleValue(_steadyClock);
   _mpProtocolClockNode->setDoubleValue(_mpProtocolClock);
 
@@ -378,19 +387,21 @@ void TimeManager::computeFrameRate()
 
 void TimeManager::throttleUpdateRate()
 {
-  double throttle_hz = _maxFrameRate->getDoubleValue();
+    const double throttleHz = _maxFrameRate->getDoubleValue();
+    // no delay required.
+    if (throttleHz <= 0) {
+        _frameWait->setDoubleValue(0);
+        return;
+    }
 
-  // no delay required.
-  if (throttle_hz <= 0)
-  {
-      _frameWait->setDoubleValue(0);
-      return;
-  }
-  SGTimeStamp frameWaitStart = SGTimeStamp::now();
+    const double modelHz = _modelHz->getDoubleValue();
+    SGTimeStamp frameWaitStart = SGTimeStamp::now();
 
-  // sleep for exactly 1/hz seconds relative to the past valid timestamp
-  SGTimeStamp::sleepUntil(_lastStamp + SGTimeStamp::fromSec(1 / throttle_hz));
-  _frameWait->setDoubleValue(frameWaitStart.elapsedMSec());
+    // we want to sleep until just after the next ideal timestamp wanted, we will
+    // gain time from a 1/Hz step if the last timestamp was late.
+    const double t = (round(modelHz / throttleHz) / modelHz) - _dtRemainder;
+    SGTimeStamp::sleepUntil(_lastStamp + SGTimeStamp::fromSec(t));
+    _frameWait->setDoubleValue(frameWaitStart.elapsedMSec());
 }
 
 // periodic time updater wrapper
