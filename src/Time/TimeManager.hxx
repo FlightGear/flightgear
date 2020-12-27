@@ -91,6 +91,8 @@ private:
     SGPropertyNode_ptr _simTimeFactor;
     SGPropertyNode_ptr _mpProtocolClockNode;
     SGPropertyNode_ptr _steadyClockNode;
+    SGPropertyNode_ptr _frameTimeOffsetNode;
+    SGPropertyNode_ptr _dtRemainderNode;
     SGPropertyNode_ptr _mpClockOffset;
     SGPropertyNode_ptr _steadyClockDrift;
     SGPropertyNode_ptr _computeDrift;
