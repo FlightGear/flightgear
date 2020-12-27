@@ -43,7 +43,7 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
     m_controller = new LauncherController(this, this);
     m_controller->initQML();
 
-    // use a direct connection to be notified synchronosu when the render thread
+    // use a direct connection to be notified synchronously when the render thread
     // starts OpenGL. We use this to log the OpenGL information from the
     // context at that time, for tracing purposes.
     connect(this, &QQuickWindow::sceneGraphInitialized,
@@ -232,11 +232,12 @@ void LauncherMainWindow::renderTheadSceneGraphInitialized()
         return;
     }
 
+    std::string renderer = (char*)glGetString(GL_RENDERER);
     // capture this to help with debugging this crash:
     // https://sentry.io/share/issue/f98e38dceb4241dbaeed944d6ce4d746/
     // https://bugreports.qt.io/browse/QTBUG-69703
     flightgear::addSentryTag("qt-gl-vendor", (char*)glGetString(GL_VENDOR));
-    flightgear::addSentryTag("qt-gl-renderer", (char*)glGetString(GL_RENDERER));
+    flightgear::addSentryTag("qt-gl-renderer", renderer.c_str());
     flightgear::addSentryTag("qt-gl-version", (char*)glGetString(GL_VERSION));
     flightgear::addSentryTag("qt-glsl-version", (char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
