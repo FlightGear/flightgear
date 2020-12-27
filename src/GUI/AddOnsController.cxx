@@ -12,6 +12,7 @@
 #include <simgear/package/Catalog.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
 #include <Network/HTTPClient.hxx>
 
 #include "Add-ons/Addon.hxx"
@@ -150,6 +151,8 @@ QString AddOnsController::addAircraftPath() const
         if (mb.result() == QMessageBox::No) {
             return {};
         }
+
+        flightgear::addSentryBreadcrumb("User continued adding add-on with invalid path", "info");
     }
 
     m_aircraftPaths->appendPath(path);

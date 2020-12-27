@@ -235,13 +235,14 @@ public:
         try {
           readProperties(setFile, globals->get_props());
         } catch ( const sg_exception &e ) {
-          SG_LOG(SG_INPUT, SG_ALERT,
-                 "Error reading aircraft: " << e.getFormattedMessage());
-          flightgear::fatalMessageBoxWithoutExit(
-            "Error reading aircraft",
-            "An error occured reading the requested aircraft (" + aircraft + ")",
-            e.getFormattedMessage());
-          return false;
+            SG_LOG(SG_IO, SG_ALERT,
+                   "Error reading aircraft: " << e.getFormattedMessage());
+            SG_LOG(SG_IO, SG_ALERT, "aircraft dir is:" << aircraftDir);
+            flightgear::fatalMessageBoxWithoutExit(
+                "Error reading aircraft",
+                "An error occured reading the requested aircraft (" + aircraft + ")",
+                e.getFormattedMessage());
+            return false;
         }
 
         checkAircraftMinVersion();
@@ -262,14 +263,16 @@ public:
     }
     
     if (!checkCache()) {
-      // prepare cache for re-scan
-      SGPropertyNode *n = _cache->getNode("fg-root", true);
-      n->setStringValue(globals->get_fg_root().utf8Str());
-      n->setAttribute(SGPropertyNode::USERARCHIVE, true);
-      n = _cache->getNode("fg-aircraft", true);
-      n->setStringValue(getAircraftPaths().c_str());
-      n->setAttribute(SGPropertyNode::USERARCHIVE, true);
-      _cache->removeChildren("aircraft");
+        flightgear::addSentryBreadcrumb("Scanning aircraft paths", "info");
+
+        // prepare cache for re-scan
+        SGPropertyNode* n = _cache->getNode("fg-root", true);
+        n->setStringValue(globals->get_fg_root().utf8Str());
+        n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+        n = _cache->getNode("fg-aircraft", true);
+        n->setStringValue(getAircraftPaths().c_str());
+        n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+        _cache->removeChildren("aircraft");
   
         visitAircraftPaths();
     }
@@ -277,6 +280,9 @@ public:
     if (_foundPath.isNull()) {
       SG_LOG(SG_GENERAL, SG_ALERT,
              "Cannot find the specified aircraft: '" << aircraft << "'");
+
+      SG_LOG(SG_GENERAL, SG_ALERT, "\tin paths:" << SGPath::join(globals->get_aircraft_paths(), ";"));
+
       flightgear::fatalMessageBoxWithoutExit(
         "Aircraft not found",
         "The requested aircraft (" + aircraft + ") could not be found "
@@ -337,8 +343,9 @@ private:
       SGPath xml(cache[i]->getStringValue("path", ""));
       xml.append(name);
       if (xml.exists()) {
-        _foundPath = xml;
-        return true;
+          flightgear::addSentryBreadcrumb("Found aircraft via cache", "info");
+          _foundPath = xml;
+          return true;
       } 
       
       return false;
