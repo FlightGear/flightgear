@@ -9,12 +9,13 @@
 #include <QMenu>
 #include <QMenuBar>
 
-#include <QQuickItem>
-#include <QQmlEngine>
+#include <QOpenGLContext>
 #include <QQmlComponent>
 #include <QQmlContext>
+#include <QQmlEngine>
 #include <QQmlError>
 #include <QQmlFileSelector>
+#include <QQuickItem>
 
 // launcher headers
 #include "AddOnsController.hxx"
@@ -30,6 +31,8 @@
 #include "UpdateChecker.hxx"
 #include "GettingStartedTip.hxx"
 
+#include <Main/sentryIntegration.hxx>
+
 //////////////////////////////////////////////////////////////////////////////
 
 LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
@@ -38,6 +41,13 @@ LauncherMainWindow::LauncherMainWindow(bool inSimMode) : QQuickView()
 
     m_controller = new LauncherController(this, this);
     m_controller->initQML();
+
+    // use a direct connection to be notified synchronously when the render thread
+    // starts OpenGL. We use this to log the OpenGL information from the
+    // context at that time, for tracing purposes.
+    connect(this, &QQuickWindow::sceneGraphInitialized,
+            this, &LauncherMainWindow::renderTheadSceneGraphInitialized,
+            Qt::DirectConnection);
 
     if (!inSimMode) {
 #if defined(Q_OS_MAC)
@@ -195,3 +205,28 @@ bool LauncherMainWindow::execInApp()
     return m_controller->inAppResult();
 }
 
+// this slot runs in the context of the render thread. Don't modify
+void LauncherMainWindow::renderTheadSceneGraphInitialized()
+{
+    auto qContext = QOpenGLContext::currentContext();
+    if (!qContext) {
+        qWarning() << Q_FUNC_INFO << "No current OpenGL context";
+        return;
+    }
+
+    std::string renderer = (char*)glGetString(GL_RENDERER);
+    // capture this to help with debugging this crash:
+    // https://sentry.io/share/issue/f98e38dceb4241dbaeed944d6ce4d746/
+    // https://bugreports.qt.io/browse/QTBUG-69703
+    flightgear::addSentryTag("qt-gl-vendor", (char*)glGetString(GL_VENDOR));
+    flightgear::addSentryTag("qt-gl-renderer", renderer.c_str());
+    flightgear::addSentryTag("qt-gl-version", (char*)glGetString(GL_VERSION));
+    flightgear::addSentryTag("qt-glsl-version", (char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    const char* gltype[] = {"Desktop", "GLES 2", "GLES 1"};
+    flightgear::addSentryTag("qt-gl-module-type", gltype[QOpenGLContext::openGLModuleType()]);
+
+    // if necessary, borrow more code from:
+    // https://code.qt.io/cgit/qt/qtbase.git/tree/examples/opengl/contextinfo/widget.cpp?h=5.15#n358
+    // to expand what this reports
+}

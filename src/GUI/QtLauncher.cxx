@@ -25,21 +25,23 @@
 #include <locale.h>
 
 // Qt
-#include <QtGlobal>
-#include <QString>
-#include <QProgressDialog>
+#include <QApplication>
+#include <QDebug>
 #include <QDir>
 #include <QFileInfo>
-#include <QTimer>
-#include <QDebug>
-#include <QSettings>
-#include <QUrl>
-#include <QApplication>
-#include <QThread>
-#include <QProcess>
-#include <QTranslator>
 #include <QMessageBox>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
 #include <QPointer>
+#include <QProcess>
+#include <QProgressDialog>
+#include <QSettings>
+#include <QString>
+#include <QThread>
+#include <QTimer>
+#include <QTranslator>
+#include <QUrl>
+#include <QtGlobal>
 
 // Simgear
 #include <simgear/timing/timestamp.hxx>
@@ -247,6 +249,35 @@ private:
     bool m_abandoned = false;
 };
 
+bool checkForWorkingOpenGL()
+{
+    QSurfaceFormat fmt;
+    fmt.setProfile(QSurfaceFormat::CompatibilityProfile);
+    fmt.setMajorVersion(2);
+    fmt.setMinorVersion(1);
+
+    QOpenGLContext ctx;
+    ctx.setFormat(fmt);
+    if (!ctx.create()) {
+        return false;
+    }
+
+    QOffscreenSurface offSurface;
+    offSurface.setFormat(ctx.format()); // ensure it's compatible
+    offSurface.create();
+    if (!ctx.makeCurrent(&offSurface)) {
+        return false;
+    }
+
+    std::string renderer = (char*)glGetString(GL_RENDERER);
+    if (renderer == "GDI Generic") {
+        flightgear::addSentryBreadcrumb("Detected GDI generic renderer", "info");
+        return false;
+    }
+
+    return true;
+}
+
 } // of anonymous namespace
 
 static void initQtResources()
@@ -411,6 +442,7 @@ void initQSettings()
         qRegisterMetaType<QuantityValue>();
         qRegisterMetaTypeStreamOperators<QuantityValue>("QuantityValue");
 
+
         qSettingsInitDone = true;
         string fgHome = globals->get_fg_home().utf8Str();
 
@@ -501,6 +533,13 @@ void launcherSetSceneryPaths()
 
 bool runLauncherDialog()
 {
+    if (!checkForWorkingOpenGL()) {
+        QMessageBox::critical(nullptr, "Failed to find graphics drivers",
+                              "This computer is missing suitable graphics drivers (OpenGL) to run FlightGear. "
+                              "Please download and install drivers from your graphics card vendor.");
+        return false;
+    }
+
     // Used for NavDataCache initialization: needed to find the apt.dat files
     launcherSetSceneryPaths();
     // startup the nav-cache now. This pre-empts normal startup of

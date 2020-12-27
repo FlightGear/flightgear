@@ -51,6 +51,7 @@ public:
 
 private slots:
     void onQuickStatusChanged(QQuickView::Status status);
+    void renderTheadSceneGraphInitialized();
 
 private:
     bool checkQQC2Availability();
