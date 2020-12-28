@@ -69,6 +69,7 @@ auto XML_messageWhitelist = {
      "syntax error",
      "no element found",
      "Root element name is",
+     "XML or text declaration not at start of entity",
      "Failed to open file"
 };
 
