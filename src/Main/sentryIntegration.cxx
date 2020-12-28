@@ -73,7 +73,9 @@ auto XML_messageWhitelist = {
 };
 
 auto exception_messageWhitelist = {
-    "position is invalid, NaNs"};
+    "position is invalid, NaNs",    ///< avoid spam when NaNs occur
+    "bad AI flight plan"            ///< adjusting logic to avoid this is tricky
+};
 
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
