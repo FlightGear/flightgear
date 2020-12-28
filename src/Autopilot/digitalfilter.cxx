@@ -26,7 +26,9 @@
 //
 
 #include "digitalfilter.hxx"
+
 #include <deque>
+#include <algorithm>
 
 #include <simgear/misc/strutils.hxx>
 
