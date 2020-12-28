@@ -195,7 +195,13 @@ do_null (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_nasal (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    return ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(arg, root);
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    if (!nasalSys) {
+        SG_LOG(SG_GUI, SG_ALERT, "do_nasal command: Nasal subsystem not found");
+        return false;
+    }
+
+    return nasalSys->handleCommand(arg, root);
 }
 
 /**
