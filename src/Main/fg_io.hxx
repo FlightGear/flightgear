@@ -59,10 +59,10 @@ public:
     static bool isMultiplayerRequested();
 
 private:
-    FGProtocol* add_channel(const std::string& config);
+    FGProtocol* add_channel(const std::string& config, bool& o_ok);
     
-    FGProtocol* parse_port_config( const std::string& cfgstr );
-    FGProtocol* parse_port_config( const string_list& tokens );
+    FGProtocol* parse_port_config( const std::string& cfgstr, bool& o_ok );
+    FGProtocol* parse_port_config( const string_list& tokens, bool& o_ok );
 
     void addToPropertyTree(const string name, const string config);
     void removeFromPropertyTree(const string name);

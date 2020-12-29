@@ -77,7 +77,7 @@ using std::to_string;
 // configure a port based on the config string
 
 FGProtocol*
-FGIO::parse_port_config( const string& config )
+FGIO::parse_port_config( const string& config, bool& o_ok )
 {
     SG_LOG( SG_IO, SG_INFO, "Parse I/O channel request: " << config );
     string_list tokens = simgear::strutils::split( config, "," );
@@ -85,15 +85,17 @@ FGIO::parse_port_config( const string& config )
     {
         SG_LOG( SG_IO, SG_ALERT,
                 "Port configuration error: empty config string" );
+        o_ok = false;
         return nullptr;
     }
     
-    return parse_port_config(tokens);
+    return parse_port_config(tokens, o_ok);
 }
 
 FGProtocol*
-FGIO::parse_port_config( const string_list& tokens )
+FGIO::parse_port_config( const string_list& tokens, bool& o_ok )
 {
+    o_ok = false;
     const string protocol = tokens[0];
     SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
@@ -116,6 +118,7 @@ FGIO::parse_port_config( const string_list& tokens )
                 fgSetBool( "/input/atcsim/ignore-pedal-controls", false );
             }
             atcsim->set_path_names(tokens[2], tokens[3], tokens[4], tokens[5]);
+            o_ok = true;
             return atcsim;
         } else if ( protocol == "atlas" ) {
             io = new FGAtlas;
@@ -151,6 +154,7 @@ FGIO::parse_port_config( const string_list& tokens )
             io = new FGNMEA();
         } else if ( protocol == "props" || protocol == "telnet" ) {
             io = new FGProps( tokens );
+            o_ok = true;
             return io;
         } else if ( protocol == "pve" ) {
             io = new FGPVE;
@@ -189,11 +193,12 @@ FGIO::parse_port_config( const string_list& tokens )
                 fgSetInt("/sim/multiplay/txport", port);
                 fgSetString("/sim/multiplay/txhost", host.c_str());
             }
-
+            o_ok = true;
             return NULL;
         }
 #if FG_HAVE_HLA
         else if ( protocol == "hla" ) {
+            o_ok = true;
             return new FGHLA(tokens);
         }
         else if ( protocol == "hla-local" ) {
@@ -208,6 +213,7 @@ FGIO::parse_port_config( const string_list& tokens )
             HLA_tokens.insert(HLA_tokens.begin(), "60");
             HLA_tokens.insert(HLA_tokens.begin(), "bi");
             HLA_tokens.push_back("fg-local.xml");
+            o_ok = true;
             return new FGHLA(HLA_tokens);
         }
 #endif
@@ -326,7 +332,7 @@ FGIO::parse_port_config( const string_list& tokens )
         delete io;
         return nullptr;
     }
-
+    if (io) o_ok = true;
     return io;
 }
 
@@ -346,9 +352,16 @@ FGIO::init()
     // original, which closes the port and frees up the fd ... doh!!!
 
     for (const auto& config : *(globals->get_channel_options_list())) {
-        FGProtocol* p = add_channel(config);
-        if (p) {
-            addToPropertyTree(p->get_name(), config);
+        bool ok;
+        FGProtocol* p = add_channel(config, ok);
+        SG_LOG( SG_IO, SG_DEBUG, "add_channel() with config=" << config << " => ok=" << ok << " p=" << p);
+        if (ok) {
+            if (p) {
+                addToPropertyTree(p->get_name(), config);
+            }
+        }
+        else {
+            SG_LOG( SG_IO, SG_ALERT, "add_channel() failed. config=" << config);
         }
     } // of channel options iteration
     
@@ -358,13 +371,17 @@ FGIO::init()
 }
 
 // add another I/O channel
-FGProtocol* FGIO::add_channel(const string& config)
+FGProtocol* FGIO::add_channel(const string& config, bool& o_ok)
 {
     // parse the configuration string and store the results in the
     // appropriate FGIOChannel structure
-    FGProtocol *p = parse_port_config( config );
-    if (!p)
+    FGProtocol *p = parse_port_config( config, o_ok );
+    if (!o_ok)
     {
+        SG_LOG(SG_IO, SG_ALERT, "Failed to parse config=" << config);
+        return nullptr;
+    }
+    if (!p) {
         return nullptr;
     }
 
@@ -480,10 +497,14 @@ bool FGIO::commandAddChannel(const SGPropertyNode * arg, SGPropertyNode * root)
 
     string name = arg->getStringValue("name");
     const string config = arg->getStringValue("config");
-    auto protocol = add_channel(config);
-    if (!protocol) {
+    bool ok;
+    auto protocol = add_channel(config, ok);
+    if (!ok) {
         SG_LOG(SG_NETWORK, SG_WARN, "add-io-channel: adding channel failed");
         return false;
+    }
+    if (!protocol) {
+        return true;
     }
     
     if (!name.empty()) {
