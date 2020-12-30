@@ -92,7 +92,7 @@ FGfdmSocket::FGfdmSocket(const string& address, int port, int protocol)
   if (!LoadWinSockDLL(debug_lvl)) return;
   #endif
 
-  struct addrinfo hints = { 0 };
+  struct addrinfo hints = {};
   hints.ai_family = AF_INET;
   if (protocol == ptUDP)
     hints.ai_socktype = SOCK_DGRAM;
