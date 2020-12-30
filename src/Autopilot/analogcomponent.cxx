@@ -74,7 +74,7 @@ bool AnalogComponent::configure( SGPropertyNode& cfg_node,
       if( name != "property" && name != "prop" )
         continue;
 
-        const auto trimmed = simgear::strutils::strip(child->getStringValue());
+      const auto trimmed = simgear::strutils::strip(child->getStringValue());
       _output_list.push_back( prop_root.getNode(trimmed, true) );
       found = true;
     }
