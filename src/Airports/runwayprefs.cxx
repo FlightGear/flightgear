@@ -239,7 +239,7 @@ void RunwayGroup::setActive(const FGAirport * airport,
             // if this rwyList has shorter preferences vec than the first one,
             // don't crash accesing an invalid index.
             // see https://sourceforge.net/p/flightgear/codetickets/2439/
-            if (currentRunwayPrefs.size() <= i) {
+            if ((int) currentRunwayPrefs.size() <= i) {
                 validSelection = false;
                 continue;
             }
@@ -318,7 +318,7 @@ void RunwayGroup::setActive(const FGAirport * airport,
         bool validSelection = true;
         for (int j = 0; j < 2; j++) {
             const auto& currentRunwayPrefs = rwyList.at(choice[j]).getPreferredRunways();
-            if (i >= currentRunwayPrefs.size()) {
+            if (i >= (int) currentRunwayPrefs.size()) {
                 validSelection = false;
                 continue;
             }
