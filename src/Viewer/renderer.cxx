@@ -602,7 +602,7 @@ FGRenderer::setupView( void )
     opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
-                  463.3, 361.8,
+                  463.3, 361.6,
                   *ephemerisSub->data(),
                   fgGetNode("/environment", true),
                   opt.get());
@@ -876,7 +876,8 @@ FGRenderer::updateSky()
     sstate.spin      = l->get_sun_rotation();
     sstate.gst       = globals->get_time_params()->getGst();
     sstate.sun_dist  = 50000.0 * sun_horiz_eff;
-    sstate.moon_dist = 40000.0 * moon_horiz_eff;
+    sstate.moon_dist_bare = 40000.0;
+    sstate.moon_dist_factor = moon_horiz_eff;
     sstate.sun_angle = l->get_sun_angle();
 
     SGSkyColor scolor;
