@@ -1,4 +1,5 @@
 import QtQuick 2.4
+import QtQml 2.4
 import FlightGear.Launcher 1.0
 import "."
 
@@ -150,10 +151,10 @@ Item {
                     SettingLineEdit {
                         id: customMETAR
 
-                        property bool __cachedValid: true
+                        property bool isMETARValid: false
 
                         function revalidate() {
-                            __cachedValid = _launcher.validateMetarString(value);
+                            isMETARValid = _launcher.validateMetarString(value);
                         }
 
                         hidden: !weatherScenario.isCustomMETAR
@@ -162,7 +163,7 @@ Item {
                         placeholder: "XXXX 012345Z 28035G50KT 250V300 9999 TSRA SCT022CB BKN030 13/09 Q1005"
                         useFullWidth: true
                         setting: "custom-metar"
-                        description: __cachedValid ? qsTr("Enter a custom METAR string, e.g: '%1'").arg(placeholder)
+                        description: isMETARValid ? qsTr("Enter a custom METAR string, e.g: '%1'").arg(placeholder)
                                                    : qsTr("The entered METAR string doesn't seem to be valid.")
 
                         onValueChanged: {
@@ -203,7 +204,9 @@ Item {
                         }
                     } else {
                         if (weatherScenario.isCustomMETAR) {
-                            _config.setArg("metar", customMETAR.value)
+                            if (customMETAR.isMETARValid && (customMETAR.value != "")) {
+                                _config.setArg("metar", customMETAR.value)
+                            }
                         } else {
                             _config.setArg("metar", _weatherScenarios.metarForItem(index))
                         }
