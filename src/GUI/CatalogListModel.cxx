@@ -35,6 +35,7 @@
 // FlightGear
 #include <Main/globals.hxx>
 #include <Network/HTTPClient.hxx>
+#include <Main/sentryIntegration.hxx>
 
 using namespace simgear::pkg;
 
@@ -219,6 +220,7 @@ void CatalogListModel::addCatalogByUrl(QUrl url)
     }
 
     m_newlyAddedCatalog = Catalog::createFromUrl(m_packageRoot, url.toString().toStdString());
+    flightgear::addSentryBreadcrumb("CatalogListModel: Adding catalog " + url.toString().toStdString(), "info");
     resetData();
     emit isAddingCatalogChanged();
 }
@@ -247,12 +249,13 @@ void CatalogListModel::finalizeAddCatalog()
         return;
     }
 
+    flightgear::addSentryBreadcrumb("CatalogListModel: finalziing add of:" + m_newlyAddedCatalog->id(), "info");
+
     const int row = static_cast<int>(std::distance(m_catalogs.begin(), it));
     m_newlyAddedCatalog.clear();
     emit isAddingCatalogChanged();
     emit statusOfAddingCatalogChanged();
     emit dataChanged(index(row), index(row));
-
 }
 
 void CatalogListModel::abandonAddCatalog()
