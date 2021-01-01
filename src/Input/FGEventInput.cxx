@@ -481,22 +481,18 @@ unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
 
   inputDevice->Configure( deviceNode );
 
-  try {	
     bool ok = inputDevice->Open();
-      if (ok) {
-          input_devices[ deviceNode->getIndex() ] = inputDevice;
-      } else {
-          throw sg_exception("Opening input device failed");
-      }
-  }
-  catch( ... ) {
-    SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetUniqueName()  );
-    delete  inputDevice;
-    return INVALID_DEVICE_INDEX;
-  }
+    if (!ok) {
+        // TODO repot a better error here, to the user
+        SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetUniqueName());
+        delete inputDevice;
+        return INVALID_DEVICE_INDEX;
+    }
 
-  SG_LOG(SG_INPUT, SG_DEBUG, "using InputDevice " << inputDevice->GetUniqueName()  );
-  return deviceNode->getIndex();
+    input_devices[deviceNode->getIndex()] = inputDevice;
+
+    SG_LOG(SG_INPUT, SG_DEBUG, "using InputDevice " << inputDevice->GetUniqueName());
+    return deviceNode->getIndex();
 }
 
 void FGEventInput::RemoveDevice( unsigned index )
