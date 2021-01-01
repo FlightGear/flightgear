@@ -381,12 +381,22 @@ void LocationController::showHistoryInSearchModel()
 	locs.erase(it, locs.end());
 
 	// prepend them
-	FGAirportRef apt = FGAirport::findByIdent(tutorialICAO);
-	locs.insert(locs.begin(), apt);
+    FGAirportRef apt = FGAirport::findByIdent(tutorialICAO);
+    if (apt) {
+        locs.insert(locs.begin(), apt);
+    } else {
+        qWarning() << Q_FUNC_INFO << "couldn't find tutorial airport for:" << QString::fromStdString(tutorialICAO);
+    }
 
-	apt = FGAirport::findByIdent(defaultICAO);
-	locs.insert(locs.begin(), apt);
+    apt = FGAirport::findByIdent(defaultICAO);
+    if (apt) {
+        locs.insert(locs.begin(), apt);
+    } else {
+        qWarning() << Q_FUNC_INFO << "couldn't find default airport for:" << QString::fromStdString(defaultICAO);
+    }
 
+    // Sentry FLIGHTGEAR-1BM indicates we are somtimes passing null pointers
+    // in this list; checks above are an attempt to diagnose this.
     m_searchModel->setItems(locs);
 }
 
@@ -1155,6 +1165,12 @@ QString LocationController::description() const
 
 void LocationController::addToRecent(FGPositionedRef pos)
 {
+    if (!pos) {
+        // ensure null positiones don't get added, could cause
+        // Sentry FLIGHTGEAR-1BM
+        return;
+    }
+
     auto it = std::find(m_recentLocations.begin(),
                         m_recentLocations.end(), pos);
     if (it != m_recentLocations.end()) {
