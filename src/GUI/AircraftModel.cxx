@@ -144,7 +144,7 @@ void PackageDelegate::catalogRefreshed(CatalogRef aCatalog, StatusCode aReason)
         m_model->refreshPackages();
     } else if (aReason ==  FAIL_VERSION) {
         // silent about this
-    } else {
+    } else if (aCatalog) {
         qWarning() << "failed refresh of"
             << QString::fromStdString(aCatalog->url()) << ":" << aReason << endl;
     }

@@ -26,6 +26,7 @@
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
 #include "version.h"
+#include <Main/sentryIntegration.hxx>
 
 #include "AircraftModel.hxx"
 #include "AircraftSearchFilterModel.hxx"
@@ -329,6 +330,7 @@ void LauncherController::restoreAircraft()
 
 void LauncherController::doRun()
 {
+    flightgear::addSentryBreadcrumb("Launcher: fly!", "info");
     flightgear::Options* opt = flightgear::Options::sharedInstance();
     m_config->reset();
     m_config->collect();

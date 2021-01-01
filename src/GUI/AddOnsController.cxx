@@ -302,6 +302,7 @@ void AddOnsController::officialCatalogAction(QString s)
         QSettings settings;
         settings.setValue("hide-official-catalog-message", true);
     } else if (s == "add-official") {
+        flightgear::addSentryBreadcrumb("user requested to add the default catalog", "info");
         m_catalogs->installDefaultCatalog(false);
     }
 
