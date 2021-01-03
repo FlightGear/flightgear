@@ -190,6 +190,7 @@ void FDMShell::update(double dt)
     const auto startUpPositionFialized = fgGetBool("/sim/position-finalized", false);
     if (startUpPositionFialized && globals->get_scenery()->scenery_available(geod, range)) {
         SG_LOG(SG_FLIGHT, SG_INFO, "Scenery loaded, will init FDM");
+        flightgear::addSentryBreadcrumb("Doing init+bind of the FDM", "info");
         _impl->init();
         if (_impl->get_bound()) {
           _impl->unbind();
@@ -399,6 +400,8 @@ void FDMShell::createImplementation()
                 + ("' is not available with this binary (deprecated/disabled).\n"
                    "If you still need it, please rebuild FlightGear and enable its support."));
     }
+
+    flightgear::addSentryBreadcrumb("Did create FDM implementation", "info");
 }
 
 void FDMShell::validateOutputProperties()
