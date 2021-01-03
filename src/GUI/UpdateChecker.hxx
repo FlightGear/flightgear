@@ -24,6 +24,8 @@
 #include <QByteArray>
 #include <QUrl>
 
+#include <simgear/io/HTTPRequest.hxx>
+
 class UpdateChecker : public QObject
 {
     Q_OBJECT
@@ -33,6 +35,7 @@ class UpdateChecker : public QObject
     Q_PROPERTY(QString updateVersion READ updateVersion NOTIFY statusChanged)
 public:
     explicit UpdateChecker(QObject *parent = nullptr);
+    ~UpdateChecker();
 
     enum Status {
         NoUpdate,
@@ -75,5 +78,7 @@ private:
 
     Status m_status = NoUpdate;
     QUrl m_updateUri;
+
+    simgear::HTTP::Request_ptr m_request;
 };
 
