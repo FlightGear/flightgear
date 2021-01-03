@@ -55,8 +55,6 @@ private:
 
     void onDone() override
     {
-
-
         int response = responseCode();
         if (response == 200) {
             // send response to the main thread for processing
@@ -105,10 +103,19 @@ UpdateChecker::UpdateChecker(QObject *parent) : QObject(parent)
 
         // definitiely want to ensure HTTPS for this.
         std::string uri = "https://download.flightgear.org/builds/" + _majorMinorVersion + "/updates.xml";
-        auto req = new UpdateXMLRequest(this, uri);
-        http->makeRequest(req);
+        m_request = new UpdateXMLRequest(this, uri);
+        http->makeRequest(m_request);
     } else {
         // nothing to do
+    }
+}
+
+UpdateChecker::~UpdateChecker()
+{
+    if (m_request) {
+        auto http = globals->get_subsystem<FGHTTPClient>();
+        http->client()->cancelRequest(m_request);
+        m_request.clear();
     }
 }
 
