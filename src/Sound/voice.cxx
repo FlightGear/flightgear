@@ -161,7 +161,7 @@ FGFestivalVoice::FGFestivalVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node)
 		throw string("no connection to `") + host + ':' + port + '\'';
 
 	{
-		_sock->writestring("(SayText \"\")\015\012");
+		_sock->writestring("(+ 1 2)\015\012");
 		char buf[4];
 		int len = _sock->read(buf, 3);
 		if (len != 3 || buf[0] != 'L' || buf[1] != 'P')
