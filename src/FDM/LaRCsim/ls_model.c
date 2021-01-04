@@ -159,6 +159,9 @@ Initial Flight Gear revision.
         OUTPUTS:
 
 --------------------------------------------------------------------------*/
+
+#include "config.h"
+
 #include <stdio.h>
 
 #include "ls_types.h"
@@ -209,7 +212,10 @@ void ls_model( SCALAR dt, int Initialize ) {
       subsystems( dt, Initialize );
       // During initialization period, re-initialize velocities
       // and euler angles
-      if (Initialize !=0) uiuc_init_2_wrapper();
+      if (Initialize != 0) {
+          uiuc_init_2_wrapper();
+      }
+
       uiuc_network_recv_2_wrapper();
       uiuc_engine_2_wrapper( dt, Initialize );
       uiuc_wind_2_wrapper( dt, Initialize );

@@ -20,9 +20,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include <cmath>
 #include <cfloat>
@@ -931,26 +929,24 @@ void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth,
 }
 */
 
-void FGLaRCsim::set_Static_pressure(double p) { 
-    SG_LOG( SG_FLIGHT, SG_INFO, 
-            "FGLaRCsim::set_Static_pressure: " << p  );
-    SG_LOG( SG_FLIGHT, SG_INFO, 
-            "LaRCsim does not support externally supplied atmospheric data" );
+void FGLaRCsim::set_Static_pressure(double p) {
+    SG_LOG(SG_FLIGHT, SG_BULK,
+           "FGLaRCsim::set_Static_pressure: " << p);
+    SG_LOG(SG_FLIGHT, SG_BULK,
+           "LaRCsim does not support externally supplied atmospheric data");
 }
 
-void FGLaRCsim::set_Static_temperature(double T) { 
-    SG_LOG( SG_FLIGHT, SG_INFO, 
-            "FGLaRCsim::set_Static_temperature: " << T  );
-    SG_LOG( SG_FLIGHT, SG_INFO, 
-            "LaRCsim does not support externally supplied atmospheric data" );
-
+void FGLaRCsim::set_Static_temperature(double T) {
+    SG_LOG(SG_FLIGHT, SG_BULK,
+           "FGLaRCsim::set_Static_temperature: " << T);
+    SG_LOG(SG_FLIGHT, SG_BULK,
+           "LaRCsim does not support externally supplied atmospheric data");
 }
 
 void FGLaRCsim::set_Density(double rho) {
-    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Density: " << rho  );
-    SG_LOG( SG_FLIGHT, SG_INFO, 
-            "LaRCsim does not support externally supplied atmospheric data" );
-
+    SG_LOG(SG_FLIGHT, SG_BULK, "FGLaRCsim::set_Density: " << rho);
+    SG_LOG(SG_FLIGHT, SG_BULK,
+           "LaRCsim does not support externally supplied atmospheric data");
 }
 
 

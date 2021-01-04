@@ -53,6 +53,8 @@
 
 --------------------------------------------------------------------------*/
 
+#include "config.h"
+
 #ifdef ENABLE_UIUC_MODEL
 
 #include <math.h>
