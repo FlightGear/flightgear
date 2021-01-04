@@ -297,6 +297,8 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
+#include "config.h"
+
 #include "ls_types.h"
 #include "ls_constants.h"
 #include "ls_generic.h"
