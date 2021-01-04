@@ -214,6 +214,14 @@ void FGATCDialogNew::init() {
     globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
 }
 
+void FGATCDialogNew::shutdown()
+{
+    auto commands = globals->get_commands();
+    commands->removeCommand("ATC-dialog");
+    commands->removeCommand("ATC-freq-search");
+    commands->removeCommand("ATC-freq-display");
+}
+
 // Display the ATC popup dialog box with options relevant to the users current situation.
 //
 // So, the first thing we need to do is check the frequency that our pilot's nav radio
@@ -240,6 +248,15 @@ void FGATCDialogNew::removeEntry(int nr) {
 void FGATCDialogNew::PopupDialog() {
     dialogVisible = !dialogVisible;
     return;
+}
+
+void FGATCDialogNew::hackyReset()
+{
+    if (_instance) {
+        _instance->shutdown();
+        delete _instance;
+        _instance = nullptr;
+    }
 }
 
 void FGATCDialogNew::update(double dt) {

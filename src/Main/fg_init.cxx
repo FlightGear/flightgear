@@ -1265,6 +1265,11 @@ void fgStartNewReset()
     
     subsystemManger->shutdown();
     subsystemManger->unbind();
+
+    // hack fix for many reset crashes relating to the static instance
+    // of this class. Will be fixed better for future versions by making
+    // this a proper subsystem.
+    FGATCDialogNew::hackyReset();
     
     // remove most subsystems, with a few exceptions.
     for (int g=0; g<SGSubsystemMgr::MAX_GROUPS; ++g) {
