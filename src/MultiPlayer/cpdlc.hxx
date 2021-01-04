@@ -35,12 +35,6 @@
 #include <simgear/io/sg_socket.hxx> 
 #include "mpirc.hxx"
 
-const std::string CPDLC_IRC_SERVER {"mpirc.flightgear.org"};
-const std::string CPDLC_MSGPREFIX_CONNECT {"___CPDLC_CONNECT___"};
-const std::string CPDLC_MSGPREFIX_MSG {"___CPDLC_MSG___"};
-const std::string CPDLC_MSGPREFIX_DISCONNECT {"___CPDLC_DISCONNECT___"};
-
-
 enum CPDLCStatus {
     CPDLC_OFFLINE,
     CPDLC_CONNECTING,

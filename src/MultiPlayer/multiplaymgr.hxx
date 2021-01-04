@@ -44,8 +44,8 @@ const int MAX_MP_PROTOCOL_VERSION = 2;
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include "mpirc.hxx"
-#include "cpdlc.hxx"
+class IRCConnection;
+class CPDLCManager;
 
 const std::string MPIRC_SERVER_HOST_DEFAULT {"mpirc.flightgear.org"};
 const std::string MPIRC_SERVER_HOST_PROPERTY {"/network/mpirc/server-host"};

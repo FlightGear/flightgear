@@ -26,6 +26,11 @@
 #include "cpdlc.hxx"
 #include <Main/fg_props.hxx>
 
+const std::string CPDLC_IRC_SERVER {"mpirc.flightgear.org"};
+const std::string CPDLC_MSGPREFIX_CONNECT {"___CPDLC_CONNECT___"};
+const std::string CPDLC_MSGPREFIX_MSG {"___CPDLC_MSG___"};
+const std::string CPDLC_MSGPREFIX_DISCONNECT {"___CPDLC_DISCONNECT___"};
+
 ///////////////////////////////////////////////////////////////////////////////
 // CPDLCManager
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,29 +70,30 @@ bool CPDLCManager::connect(const std::string authority = "")
 {
     // ensure we get an authority on first call but do not accept a change before 
     // resetting _data_authority in disconnect()
-    if (!_data_authority.size()) {
-        if (!authority.size()) {
+    if (_data_authority.empty()) {
+        if (authority.empty()) {
             SG_LOG(SG_NETWORK, SG_WARN, "cpdlcConnect not possible: empty argument!");
             return false;
         } else {
             _data_authority = authority;
         }
     }
-    if (authority.size() && authority != _data_authority) {
+    if (!authority.empty() && authority != _data_authority) {
         SG_LOG(SG_NETWORK, SG_WARN, "cpdlcConnect: cannot change authority now, use disconnect first!");
         return false;
     }
 
     // launch IRC connection as needed
     if (!_irc->isConnected()) {
-        SG_LOG(SG_NETWORK, SG_DEV_WARN, "Connecting to IRC server...");
+        SG_LOG(SG_NETWORK, SG_INFO, "Connecting to IRC server...");
         if (!_irc->login()) {
+            SG_LOG(SG_NETWORK, SG_WARN, "IRC login failed.");
             return false;
         }
         _status = CPDLC_WAIT_IRC_READY;
         return true;        
     } else if (_irc->isReady() && _status != CPDLC_ONLINE) {
-        SG_LOG(SG_NETWORK, SG_DEV_WARN, "CPDLC send connect");
+        SG_LOG(SG_NETWORK, SG_INFO, "CPDLC sending 'connect'");
         _status = CPDLC_CONNECTING;
         _pStatus->setIntValue(_status);
         return _irc->sendPrivmsg(_data_authority, CPDLC_MSGPREFIX_CONNECT);
@@ -97,7 +103,7 @@ bool CPDLCManager::connect(const std::string authority = "")
 
 void CPDLCManager::disconnect()
 {
-    if (_irc && _irc->isConnected() && _data_authority.size()) {
+    if (_irc && _irc->isConnected() && !_data_authority.empty()) {
         _irc->sendPrivmsg(_data_authority, CPDLC_MSGPREFIX_DISCONNECT);
     }
     _data_authority = "";
@@ -137,7 +143,7 @@ void CPDLCManager::update()
     if (_irc) {
         if (_irc->isConnected()) {
             if (_status == CPDLC_WAIT_IRC_READY && _irc->isReady()) {
-                SG_LOG(SG_NETWORK, SG_DEV_WARN, "CPDLC IRC ready, connecting...");
+                SG_LOG(SG_NETWORK, SG_INFO, "CPDLC IRC ready, connecting...");
                 connect();
             }
             if (_irc->hasMessage()) {
@@ -155,9 +161,9 @@ void CPDLCManager::update()
 // process incoming message
 void CPDLCManager::processMessage(struct IRCMessage message)
 {
-    SG_LOG(SG_NETWORK, SG_INFO, "CPDLC message");
     // connection accepted by ATC, or new data authority (been transferred)
     if (message.textline.find(CPDLC_MSGPREFIX_CONNECT) == 0) {
+        SG_LOG(SG_NETWORK, SG_INFO, "CPDLC got connected.");
         _data_authority = message.sender;
         _pDataAuthority->setStringValue(_data_authority); // make this known to ACFT
         _status = CPDLC_ONLINE;
@@ -171,11 +177,13 @@ void CPDLCManager::processMessage(struct IRCMessage message)
     // connection rejected, or terminated by ATC
     if (message.textline.find(CPDLC_MSGPREFIX_DISCONNECT) == 0) {
         if (message.sender == _data_authority) {
+            SG_LOG(SG_NETWORK, SG_INFO, "CPDLC got disconnect.");
             disconnect();
         }
     }
     // store valid message in queue for later retrieval by aircraft
     else if (message.textline.find(CPDLC_MSGPREFIX_MSG) == 0) {
+        SG_LOG(SG_NETWORK, SG_INFO, "CPDLC message");
         _incoming_messages.push_back(message);
         _pNewMessage->setBoolValue(1);
     }

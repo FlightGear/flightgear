@@ -27,8 +27,16 @@
 #include <Main/fg_props.hxx>
 
 const std::string IRC_TEST_CHANNEL{"#mptest"}; // for development
+const std::string IRC_MSG_TERMINATOR {"\r\n"};
+// https://www.alien.net.au/irc/irc2numerics.html
+const std::string IRC_RPL_WELCOME {"001"};
+const std::string IRC_RPL_YOURID {"042"};
+const std::string IRC_RPL_MOTD {"372"};
+const std::string IRC_RPL_MOTDSTART {"375"};
+const std::string IRC_RPL_ENDOFMOTD {"376"};
+const std::string IRC_ERR_NOSUCHNICK {"401"};
 
-IRCConnection::IRCConnection(const std::string nickname, const std::string servername, const std::string port) : SGSocket(servername, port, "tcp"),
+IRCConnection::IRCConnection(const std::string &nickname, const std::string &servername, const std::string &port) : SGSocket(servername, port, "tcp"),
                                                                                                                  _nickname(nickname)
 {
 }
@@ -50,14 +58,15 @@ void IRCConnection::setupProperties(std::string path)
 }
 
 
-bool IRCConnection::login(const std::string nickname)
+bool IRCConnection::login(const std::string &nickname)
 {
     if (!_connected && !connect()) {
         return false;
     }
-    if (nickname.length()) {
+    if (!nickname.empty()) {
         _nickname = nickname;
     } else {
+        SG_LOG(SG_NETWORK, SG_WARN, "IRC login requires nickname argument.");
         return false;
     } 
 
@@ -86,9 +95,12 @@ void IRCConnection::quit()
     disconnect();
 }
 
-bool IRCConnection::sendPrivmsg(const std::string recipient, const std::string textline)
+bool IRCConnection::sendPrivmsg(const std::string &recipient, const std::string &textline)
 {
-    if (!_logged_in) return false;
+    if (!_logged_in) {
+        SG_LOG(SG_NETWORK, SG_WARN, "IRC 'privmsg' command unvailable. Login first!");
+        return false;
+    }
     std::string line("PRIVMSG ");
     line += recipient;
     line += " :";
@@ -99,14 +111,18 @@ bool IRCConnection::sendPrivmsg(const std::string recipient, const std::string t
         if (_pIRCReturnCode) _pIRCReturnCode->setStringValue("");
         return true;
     } else {
+        SG_LOG(SG_NETWORK, SG_WARN, "IRC send privmsg failed.");
         return false;
     }
 }
 
 // join an IRC channel
-bool IRCConnection::join(const std::string channel)
+bool IRCConnection::join(const std::string &channel)
 {
-    if (!_logged_in) return false;
+    if (!_logged_in) {
+        SG_LOG(SG_NETWORK, SG_WARN, "IRC 'join' command unvailable. Login first!");
+        return false;
+    }
     std::string lines("JOIN ");
     lines += channel;
     lines += IRC_MSG_TERMINATOR;
@@ -114,9 +130,12 @@ bool IRCConnection::join(const std::string channel)
 }
 
 // leave an IRC channel
-bool IRCConnection::part(const std::string channel)
+bool IRCConnection::part(const std::string &channel)
 {
-    if (!_logged_in) return false;
+    if (!_logged_in) {
+        SG_LOG(SG_NETWORK, SG_WARN, "IRC 'part' command unvailable. Login first!");
+        return false;
+    }
     std::string lines("PART ");
     lines += channel;
     lines += IRC_MSG_TERMINATOR;
@@ -145,7 +164,9 @@ void IRCConnection::update()
 // open a connection to IRC server
 bool IRCConnection::connect()
 {
-    if (_connected) return false;
+    if (_connected) {
+        return true;
+    }
 
     _connected = open(SG_IO_OUT);
     if (_connected) {
@@ -168,7 +189,8 @@ void IRCConnection::disconnect()
         SG_LOG(SG_NETWORK, SG_INFO, "IRCConnection::disconnect");
     }
 }
-void IRCConnection::pong(const std::string recipient)
+
+void IRCConnection::pong(const std::string &recipient)
 {
     if (!_connected) return;
     std::string line("PONG ");
@@ -287,6 +309,7 @@ bool IRCConnection::parseReceivedLine(std::string line)
 
         // TODO: anything sensitive here that we should handle?
         // e.g. IRC user has disconnected and username == {current-cpdlc-authority}
+        return false;
     }
     return true;
 }
