@@ -54,6 +54,8 @@
 #include <FDM/flightProperties.hxx>
 #include <Time/TimeManager.hxx>
 #include <Main/sentryIntegration.hxx>
+#include "mpirc.hxx"
+#include "cpdlc.hxx"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WS2tcpip.h>
@@ -836,7 +838,7 @@ static inline bool IsIncludedInPacket(int filter_base, int property_id)
 //  rxport: incoming port number (default: 5000)
 //////////////////////////////////////////////////////////////////////
 static bool do_multiplayer_connect(const SGPropertyNode * arg, SGPropertyNode * root) {
-   FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
+   const auto self = globals->get_subsystem<FGMultiplayMgr>();
    if (!self) {
       SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
       return false;
@@ -871,7 +873,7 @@ static bool do_multiplayer_connect(const SGPropertyNode * arg, SGPropertyNode * 
 //  none
 //////////////////////////////////////////////////////////////////////
 static bool do_multiplayer_disconnect(const SGPropertyNode * arg, SGPropertyNode * root) {
-   FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem("mp");
+   const auto self = globals->get_subsystem<FGMultiplayMgr>();
    if (!self) {
       SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
       return false;
@@ -895,7 +897,7 @@ do_multiplayer_refreshserverlist (const SGPropertyNode * arg, SGPropertyNode * r
 {
   using namespace simgear;
 
-  FGMultiplayMgr * self = (FGMultiplayMgr*) globals->get_subsystem ("mp");
+  const auto self = globals->get_subsystem<FGMultiplayMgr>();
   if (!self) {
     SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
     return false;
@@ -953,7 +955,7 @@ do_multiplayer_refreshserverlist (const SGPropertyNode * arg, SGPropertyNode * r
 
 static bool do_cpdlc_connect(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    const auto self = globals->get_subsystem<FGMultiplayMgr>();
     if (!self) {
         SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
         return false;
@@ -962,9 +964,9 @@ static bool do_cpdlc_connect(const SGPropertyNode* arg, SGPropertyNode* root)
     // check for atc argument
     std::string authority = arg->getStringValue("atc");
     // otherwise see if we got a property name to read out
-    if (!authority.size()) {
+    if (authority.empty()) {
         std::string name = arg->getStringValue("property");
-        if (name.size()) {
+        if (!name.empty()) {
             SGPropertyNode* pNode = globals->get_props()->getNode(name);
             if (!pNode) { return false; }
             authority = pNode->getStringValue();
@@ -979,7 +981,7 @@ static bool do_cpdlc_connect(const SGPropertyNode* arg, SGPropertyNode* root)
 
 static bool do_cpdlc_send_msg(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    const auto self = globals->get_subsystem<FGMultiplayMgr>();
     if (!self) {
         SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
         return false;
@@ -988,9 +990,9 @@ static bool do_cpdlc_send_msg(const SGPropertyNode* arg, SGPropertyNode* root)
     // check for message argument
     std::string message = arg->getStringValue("message");
     // otherwise see if we got a property name to read out
-    if (!message.size()) {
+    if (message.empty()) {
         std::string name = arg->getStringValue("property");
-        if (name.size()) {
+        if (!name.empty()) {
             SGPropertyNode* pNode = globals->get_props()->getNode(name);
             if (!pNode) { return false; }
             message = pNode->getStringValue();
@@ -1004,7 +1006,7 @@ static bool do_cpdlc_send_msg(const SGPropertyNode* arg, SGPropertyNode* root)
 
 static bool do_cpdlc_next_msg(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    const auto self = globals->get_subsystem<FGMultiplayMgr>();
     if (!self) {
         SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
         return false;
@@ -1015,7 +1017,7 @@ static bool do_cpdlc_next_msg(const SGPropertyNode* arg, SGPropertyNode* root)
 
 static bool do_cpdlc_disconnect(const SGPropertyNode* arg, SGPropertyNode* root)
 {
-    FGMultiplayMgr* self = (FGMultiplayMgr*)globals->get_subsystem("mp");
+    const auto self = globals->get_subsystem<FGMultiplayMgr>();
     if (!self) {
         SG_LOG(SG_NETWORK, SG_WARN, "Multiplayer subsystem not available.");
         return false;
@@ -1178,8 +1180,8 @@ FGMultiplayMgr::init (void)
   }
 
   // MP IRC CONNECTION SETUP
-  std::string host = fgHasNode(MPIRC_SERVER_HOST_PROPERTY) ? fgGetString(MPIRC_SERVER_HOST_PROPERTY) : MPIRC_SERVER_HOST_DEFAULT;
-  std::string port = fgHasNode(MPIRC_SERVER_PORT_PROPERTY) ? fgGetString(MPIRC_SERVER_PORT_PROPERTY) : IRC_DEFAULT_PORT;
+  std::string host = fgGetString(MPIRC_SERVER_HOST_PROPERTY, MPIRC_SERVER_HOST_DEFAULT);
+  std::string port = fgGetString(MPIRC_SERVER_PORT_PROPERTY, IRC_DEFAULT_PORT);
   SG_LOG(SG_NETWORK, SG_DEBUG, "Creating socket to MP IRC service " + host + " on port " + port);
 
   _mpirc = std::make_unique<IRCConnection>(MPIRC_NICK_PREFIX + mCallsign, host, port);

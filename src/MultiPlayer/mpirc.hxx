@@ -35,15 +35,6 @@
 #include <simgear/io/sg_socket.hxx> 
 
 const std::string IRC_DEFAULT_PORT {"6667"};
-const std::string IRC_MSG_TERMINATOR {"\r\n"};
-// https://www.alien.net.au/irc/irc2numerics.html
-const std::string IRC_RPL_WELCOME {"001"};
-const std::string IRC_RPL_YOURID {"042"};
-const std::string IRC_RPL_MOTD {"372"};
-const std::string IRC_RPL_MOTDSTART {"375"};
-const std::string IRC_RPL_ENDOFMOTD {"376"};
-const std::string IRC_ERR_NOSUCHNICK {"401"};
-
 const int IRC_BUFFER_SIZE = 1024;
 
 struct IRCMessage {
@@ -64,19 +55,19 @@ struct IRCMessage {
 class IRCConnection : SGSocket
 {
 public:
-    IRCConnection(const std::string nickname, const std::string servername, const std::string port = IRC_DEFAULT_PORT);
+    IRCConnection(const std::string &nickname, const std::string &servername, const std::string &port = IRC_DEFAULT_PORT);
     ~IRCConnection();
     
-    void setupProperties(const std::string path);
+    void setupProperties(std::string path);
     void update();
 
-    bool login(const std::string nickname);
+    bool login(const std::string &nickname);
     bool login();
     void quit();
 
-    bool sendPrivmsg(const std::string recipient, const std::string textline);
-    bool join(const std::string channel);
-    bool part(const std::string channel);
+    bool sendPrivmsg(const std::string &recipient, const std::string &textline);
+    bool join(const std::string &channel);
+    bool part(const std::string &channel);
     
 
     bool isConnected() const { return _connected; }
@@ -87,14 +78,14 @@ public:
 private:
     bool connect();
     void disconnect();
-    void pong(const std::string recipient);
+    void pong(const std::string &recipient);
     bool parseReceivedLine(std::string irc_line);
 
     bool _connected {false}; // TCP session ok
     bool _logged_in {false}; // IRC login completed
     std::string _nickname {""};
     char _read_buffer[IRC_BUFFER_SIZE];
-    std::deque<struct IRCMessage> _incoming_private_messages;
+    std::deque<IRCMessage> _incoming_private_messages;
 
     SGPropertyNode *_pReadyFlag {nullptr};
     SGPropertyNode *_pMessageCountIn {nullptr};
