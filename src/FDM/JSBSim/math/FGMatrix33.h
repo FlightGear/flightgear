@@ -42,6 +42,7 @@ INCLUDES
 
 #include <string>
 #include <iosfwd>
+#include <stdexcept>
 
 #include "FGColumnVector3.h"
 
@@ -65,10 +66,12 @@ CLASS DOCUMENTATION
 DECLARATION: MatrixException
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class MatrixException //: public FGJSBBase
+// changed by James to inherit std::runtime_error, so that if this
+// gets thrown, we can actually catch it.
+class MatrixException : public std::runtime_error
 {
 public:
-  std::string Message;
+    MatrixException(const std::string& msg) : std::runtime_error{msg} { }
 };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

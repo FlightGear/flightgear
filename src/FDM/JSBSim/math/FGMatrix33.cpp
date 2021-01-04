@@ -437,9 +437,7 @@ FGMatrix33 FGMatrix33::operator/(const double scalar) const
     Quot.data[5] = data[5] * tmp;
     Quot.data[8] = data[8] * tmp;
   } else {
-    MatrixException mE;
-    mE.Message = "Attempt to divide by zero in method FGMatrix33::operator/(const double scalar)";
-    throw mE;
+      throw MatrixException{"Attempt to divide by zero in method FGMatrix33::operator/(const double scalar)"};
   }
   return Quot;
 }
@@ -460,9 +458,7 @@ FGMatrix33& FGMatrix33::operator/=(const double scalar)
     data[5] *= tmp;
     data[8] *= tmp;
   } else {
-    MatrixException mE;
-    mE.Message = "Attempt to divide by zero in method FGMatrix33::operator/=(const double scalar)";
-    throw mE;
+      throw MatrixException{"Attempt to divide by zero in method FGMatrix33::operator/=(const double scalar)"};
   }
   return *this;
 }
