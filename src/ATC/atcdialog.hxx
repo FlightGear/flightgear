@@ -35,6 +35,11 @@
 class NewGUI;
 class SGPropertyNode;
 
+/**
+ * despite looking like a subsystem, this is not, at the moment.
+ * So don't assume it has subsystem semantics or behaviour.
+ * For 'next' we're fixing this, but it's too complex a change for 2020.3
+ */
 class FGATCDialogNew
 {
 private:
@@ -52,6 +57,7 @@ public:
     void frequencyDisplay(const std::string& ident);
   
     void init();
+    void shutdown();
 
     void update(double dt);
     void PopupDialog();
@@ -63,6 +69,14 @@ public:
         return true;
     }
   
+    /**
+     * hacky fix for various crashes on reset: give a way to reset instance
+     * back to null-ptr, so that we get a new instance created. 
+     * Without this, we crash in various exciting ways due to stale pointers
+     * 
+     */
+    static void hackyReset();
+
     // Generate new instance of FGATCDialogNew if it hasn't yet been generated
 	// Call constructor and init() functions
 	// If it has been generated, will return that instance
