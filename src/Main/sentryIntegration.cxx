@@ -71,7 +71,15 @@ auto XML_messageWhitelist = {
 };
 
 auto exception_messageWhitelist = {
-    "position is invalid, NaNs"};
+    "position is invalid, NaNs",    ///< avoid spam when NaNs occur
+    "bad AI flight plan",           ///< adjusting logic to avoid this is tricky
+    "couldn't find shader",         ///< handled seperately
+
+    /// supress noise from user-entered METAR values : we special case
+    /// when live metar fails to parse
+    "metar data bogus",
+    "metar data incomplete"
+};
 
 // we don't want sentry enabled for the test suite
 #if defined(HAVE_SENTRY) && !defined(BUILDING_TESTSUITE)
@@ -167,8 +175,32 @@ private:
     int _lastLoggedCount = 0;
 };
 
+const auto missingShaderPrefix = string{"Missing shader"};
+
+string_list anon_missingShaderList;
+
+bool isNewMissingShader(const std::string& path)
+{
+    auto it = std::find(anon_missingShaderList.begin(), anon_missingShaderList.end(), path);
+    if (it != anon_missingShaderList.end()) {
+        return false;
+    }
+
+    anon_missingShaderList.push_back(path);
+    return true;
+}
+
 void sentrySimgearReportCallback(const string& msg, const string& more, bool isFatal)
 {
+    // don't duplicate reports for missing shaders, once per sessions
+    // is sufficient
+    using simgear::strutils::starts_with;
+    if (starts_with(msg, missingShaderPrefix)) {
+        if (!isNewMissingShader(more)) {
+            return;
+        }
+    }
+
     sentry_value_t exc = sentry_value_new_object();
     if (isFatal) {
         sentry_value_set_by_key(exc, "type", sentry_value_new_string("Fatal Error"));
@@ -390,12 +422,14 @@ void sentryReportException(const std::string& msg, const std::string& location)
     sentry_value_t exc = sentry_value_new_object();
     sentry_value_set_by_key(exc, "type", sentry_value_new_string("Exception"));
 
-    string message = msg;
-    if (!location.empty()) {
-        message += " at " + location;
-    }
 
-    sentry_value_set_by_key(exc, "value", sentry_value_new_string(message.c_str()));
+    sentry_value_t info = sentry_value_new_object();
+    if (!location.empty()) {
+        sentry_value_set_by_key(info, "location", sentry_value_new_string(location.c_str()));
+    }
+    sentry_set_context("what", info);
+
+    sentry_value_set_by_key(exc, "value", sentry_value_new_string(msg.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
     sentry_value_set_by_key(event, "exception", exc);
@@ -413,12 +447,13 @@ void  sentryReportFatalError(const std::string& msg, const std::string& more)
     sentry_value_t sentryMessage = sentry_value_new_object();
     sentry_value_set_by_key(sentryMessage, "type", sentry_value_new_string("Fatal Error"));
 
-    string message = msg;
+    sentry_value_t info = sentry_value_new_object();
     if (!more.empty()) {
-        message += " (more: " + more + ")";
+        sentry_value_set_by_key(info, "more", sentry_value_new_string(more.c_str()));
     }
 
-    sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string(message.c_str()));
+    sentry_set_context("what", info);
+    sentry_value_set_by_key(sentryMessage, "formatted", sentry_value_new_string(msg.c_str()));
 
     sentry_value_t event = sentry_value_new_event();
     sentry_value_set_by_key(event, "message", sentryMessage);
