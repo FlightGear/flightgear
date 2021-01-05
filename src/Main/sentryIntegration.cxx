@@ -77,6 +77,7 @@ auto exception_messageWhitelist = {
     "position is invalid, NaNs",    ///< avoid spam when NaNs occur
     "bad AI flight plan",           ///< adjusting logic to avoid this is tricky
     "couldn't find shader",         ///< handled seperately
+    "unable to find add-on metadata file",
 
     /// supress noise from user-entered METAR values : we special case
     /// when live metar fails to parse
