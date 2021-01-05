@@ -42,6 +42,7 @@
 #include "fgmetar.hxx"
 #include <Network/HTTPClient.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/sentryIntegration.hxx>
 
 namespace Environment {
 
@@ -128,6 +129,7 @@ void LiveMetarProperties::handleMetarData( const std::string & data )
     }
     catch( sg_io_exception  &) {
         SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << data );
+        flightgear::sentryReportException("Failed to parse live METAR", data);
         _failure = true;
         return;
     }
