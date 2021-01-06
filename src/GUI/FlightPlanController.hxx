@@ -19,6 +19,7 @@ class FlightPlanController : public QObject
     Q_OBJECT
 
     Q_PROPERTY(bool enabled MEMBER _enabled NOTIFY enabledChanged)
+    Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
 
     Q_PROPERTY(QString callsign READ callsign WRITE setCallsign NOTIFY infoChanged)
     Q_PROPERTY(QString remarks READ remarks WRITE setRemarks NOTIFY infoChanged)
@@ -78,6 +79,8 @@ public:
     QuantityValue cruiseAltitude() const;
     void setCruiseAltitude(QuantityValue alt);
 
+    QString description() const;
+
     QmlPositioned* departure() const;
     QmlPositioned* destination() const;
     QmlPositioned* alternate() const;
@@ -113,6 +116,7 @@ signals:
     void waypointsChanged();
     
     void enabledChanged(bool enabled);
+    void descriptionChanged(QString description);
 
 public slots:
 

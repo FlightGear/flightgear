@@ -8,6 +8,7 @@ Item {
 
     signal showSelectedAircraft();
     signal showSelectedLocation();
+    signal showFlightPlan();
 
     Rectangle {
         anchors.fill: parent
@@ -261,7 +262,7 @@ Item {
                 } // of connections
             }
 
-             Item {
+            Item {
                 width: 1; height: 1
                 visible: stateSelectionGroup.visible
             }
@@ -290,6 +291,28 @@ Item {
                 onSelected: {
                     _launcher.restoreLocation(_launcher.locationHistory.locationAt(index))
                 }
+            }
+
+            // flight plan summary row
+            StyledText {
+                id: flightPlanLabel
+                text: qsTr("Flight Plan:")
+                horizontalAlignment: Text.AlignRight
+                font.pixelSize: Style.headingFontPixelSize
+                visible: _launcher.flightPlan.enabled
+            }
+
+            ClickableText {
+                text: _launcher.flightPlan.description
+                font.pixelSize: Style.headingFontPixelSize
+                width: summaryGrid.middleColumnWidth
+                onClicked: root.showFlightPlan()
+                visible: _launcher.flightPlan.enabled
+            }
+
+            Item { // padding item for flight plan row
+                width: 1; height: 1
+                visible: _launcher.flightPlan.enabled
             }
 
             // settings summary row
