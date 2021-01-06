@@ -235,6 +235,7 @@ Item {
 
                 ClickableText {
                     width: parent.width
+                    color: Style.destructiveActionColor 
                     text: qsTr("The flight-plan departure airport (%1) is different to the " +
                                "initial location (%2). Click here to set the initial location to " +
                                "the flight-plan's airport.").

@@ -1,9 +1,11 @@
 #include "FlightPlanController.hxx"
 
-#include <QDebug>
+#include <Main/options.hxx>
 #include <QAbstractListModel>
-#include <QQmlComponent>
+#include <QDebug>
 #include <QFileDialog>
+#include <QQmlComponent>
+#include <QSettings>
 #include <QTimer>
 
 #include <simgear/misc/sg_path.hxx>
@@ -290,11 +292,19 @@ void FlightPlanController::onRestore()
     _enabled = _config->getValueForKey("", "fp-enabled", false).toBool();
     emit enabledChanged(_enabled);
 
-    std::string planXML = _config->getValueForKey("", "fp", QString()).toString().toStdString();
-    if (!planXML.empty()) {
-        std::istringstream ss(planXML);
-        _fp->load(ss);
-        emit infoChanged();
+    // if the user specified --flight-plan, load that one
+    auto options = flightgear::Options::sharedInstance();
+    std::string fpArgPath = options->valueForOption("flight-plan");
+    SGPath fp = SGPath::fromUtf8(fpArgPath);
+    if (fp.exists()) {
+        loadFromPath(QString::fromStdString(fpArgPath));
+    } else {
+        std::string planXML = _config->getValueForKey("", "fp", QString()).toString().toStdString();
+        if (!planXML.empty()) {
+            std::istringstream ss(planXML);
+            _fp->load(ss);
+            emit infoChanged();
+        }
     }
 }
 
@@ -324,6 +334,19 @@ void FlightPlanController::setCruiseAltitude(QuantityValue alt)
     }
 
     emit infoChanged();
+}
+
+QString FlightPlanController::description() const
+{
+    if (_fp->numLegs() == 0) {
+        return tr("No flight-plan");
+    }
+
+    return tr("From %1 (%2) to %3 (%4)")
+        .arg(departure()->ident())
+        .arg(departure()->name())
+        .arg(destination()->ident())
+        .arg(destination()->name());
 }
 
 QmlPositioned *FlightPlanController::departure() const
@@ -507,23 +530,35 @@ void FlightPlanController::computeDuration()
 
 bool FlightPlanController::loadPlan()
 {
+    QSettings settings;
+    QString lastUsedDir = settings.value("flightplan-lastdir", "").toString();
+
     QString file = QFileDialog::getOpenFileName(nullptr, tr("Load a flight-plan"),
-       {}, "*.fgfp *.gpx");
+                                                lastUsedDir, "*.fgfp *.gpx");
     if (file.isEmpty())
         return false;
+
+    QFileInfo fi(file);
+    settings.setValue("flightplan-lastdir", fi.absolutePath());
 
     return loadFromPath(file);
 }
 
 void FlightPlanController::savePlan()
 {
+    QSettings settings;
+    QString lastUsedDir = settings.value("flightplan-lastdir", "").toString();
+
     QString file = QFileDialog::getSaveFileName(nullptr, tr("Save flight-plan"),
-       {}, "*.fgfp");
+                                                lastUsedDir, "*.fgfp");
     if (file.isEmpty())
         return;
     if (!file.endsWith(".fgfp")) {
         file += ".fgfp";
     }
+
+    QFileInfo fi(file);
+    settings.setValue("flightplan-lastdir", fi.absolutePath());
 
     saveToPath(file);
 }

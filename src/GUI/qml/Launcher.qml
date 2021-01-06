@@ -175,6 +175,7 @@ Item {
         ignoreUnknownSignals: true
         onShowSelectedAircraft: root.selectPage(1)
         onShowSelectedLocation: root.selectPage(2)
+        onShowFlightPlan: root.enterFlightPlan()
     }
 
     Menu {
