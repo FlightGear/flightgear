@@ -171,16 +171,19 @@ FGFestivalVoice::FGFestivalVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node)
 
 		SG_LOG(SG_SOUND, SG_INFO, "VOICE: connection to Festival server on `"
 				<< host << ':' << port << "' established");
-
-		setVolume(_volume = _volumeNode->getDoubleValue());
-		setPitch(_pitch = _pitchNode->getDoubleValue());
-		setSpeed(_speed = _speedNode->getDoubleValue());
 	}
 
-	string preamble = node->getStringValue("preamble", "");
-	if (!preamble.empty())
-		pushMessage(preamble);
-  node->getNode("text", true)->addChangeListener(this);
+    const string preamble = node->getStringValue("preamble", "");
+    if (!preamble.empty()) {
+        pushMessage(preamble);
+    }
+
+    // set these after sending any preamble, since it may reset them
+    setVolume(_volume = _volumeNode->getDoubleValue());
+    setPitch(_pitch = _pitchNode->getDoubleValue());
+    setSpeed(_speed = _speedNode->getDoubleValue());
+
+    node->getNode("text", true)->addChangeListener(this);
 }
 
 
