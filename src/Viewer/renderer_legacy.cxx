@@ -1446,7 +1446,7 @@ FGRenderer::setupView( void )
     opt = SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
-                  463.3, 361.8,
+                  232.5, 180.8,
                   *ephemerisSub->data(),
                   fgGetNode("/environment", true),
                   opt.get());

@@ -519,16 +519,29 @@ FGRenderer::setupView( void )
     Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
 
 
-    // The sun and moon diameters are scaled down numbers of the
-    // actual diameters. This was needed to fit both the sun and the
-    // moon within the distance to the far clip plane.
-    // Moon diameter:    3,476 kilometers
-    // Sun diameter: 1,390,000 kilometers
+    // The sun and moon radius are scaled down numbers of the actual
+    // diameters. This is needed to fit both the sun and the moon
+    // within the distance to the far clip plane.
+    // 
+    // Their distance to the observer is specified in FGRendered::updateSky() and
+    // set to 40000 for the Moon semi-mayor axis, 50000 for the mean
+    // Earth-Sun distance (1AU). The location of the stars is
+    // specified below in the call to sky->build() (80000).
+    //
+    // Mean Moon radius: 1,737.4 kilometers
+    // Moon Semi-mayor axis: 384,399 km
+    // => Rendered Moon radius = 1,737.4 / 384,399 * 40000 = 232.5
+    //
+    // Photosphere Sun radius: 695,700 kilometers
+    // 1UA = 149,597,870.700 km
+    // => Rendered Sun radius = 695,700/149,597,870.700 * 50000 = 180.8
+    //
+
     osg::ref_ptr<simgear::SGReaderWriterOptions> opt;
     opt = simgear::SGReaderWriterOptions::fromPath(globals->get_fg_root());
     opt->setPropertyNode(globals->get_props());
     _sky->build( 80000.0, 80000.0,
-                  463.3, 361.8,
+                  232.5, 180.8,
                   *ephemerisSub->data(),
                   fgGetNode("/environment", true),
                   opt.get());
@@ -750,11 +763,8 @@ FGRenderer::updateSky()
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
 
-    // The sun and moon distances are scaled down versions
-    // of the actual distance to get both the moon and the sun
-    // within the range of the far clip plane.
-    // Moon distance:    384,467 kilometers
-    // Sun distance: 150,000,000 kilometers
+    // The sun and moon distances are scaled down versions of the
+    // actual distance. See FGRenderer::setupView() for more details.
 
     double sun_horiz_eff, moon_horiz_eff;
     if (_horizon_effect->getBoolValue()) {
