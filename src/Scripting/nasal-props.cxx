@@ -345,6 +345,23 @@ T makeVecFromVector(naRef vector)
     return vec;
 }
 
+static std::string s_val_description(naRef val)
+{
+    std::ostringstream message;
+    if (naIsNil(val))           message << "nil";
+    else if (naIsNum(val))      message << "num:" << naNumValue(val).num;
+    else if (naIsString(val))   message << "string:" << naStr_data(val);
+    else if (naIsScalar(val))   message << "scalar";
+    else if (naIsVector(val))   message << "vector";
+    else if (naIsHash(val))     message << "hash";
+    else if (naIsFunc(val))     message << "func";
+    else if (naIsCode(val))     message << "code";
+    else if (naIsCCode(val))    message << "ccode";
+    else if (naIsGhost(val))    message << "ghost";
+    else message << "?";
+    return message.str();
+}
+
 // Helper function to set the value of a node; returns true if it succeeded or
 // false if it failed.  <val> can be a string, number, or a
 // vector or numbers (for SGVec3D/4D types).
@@ -359,16 +376,15 @@ static naRef f_setValueHelper(naContext c, SGPropertyNode_ptr node, naRef val) {
             result = node->setValue(makeVecFromVector<SGVec4d>(val));
         else
             naRuntimeError(c, "props.setValue() vector value has wrong size");
-    } else {
-        if(!naIsNum(val))
-            naRuntimeError(c, "props.setValue() with non-number");
-
+    } else if(naIsNum(val)) {
         double d = naNumValue(val).num;
         if (SGMisc<double>::isNaN(d)) {
             naRuntimeError(c, "props.setValue() passed a NaN");
         }
 
         result = node->setDoubleValue(d);
+    } else {
+        naRuntimeError(c, "props.setValue() called with unsupported value %s", s_val_description(val).c_str());
     }
     return naNum(result);
 }
