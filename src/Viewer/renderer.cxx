@@ -863,31 +863,15 @@ FGRenderer::updateSky()
     // The sun and moon distances are scaled down versions of the
     // actual distance. See FGRenderer::setupView() for more details.
 
-    double sun_horiz_eff, moon_horiz_eff;
-    if (_horizon_effect->getBoolValue()) {
-        sun_horiz_eff
-        = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_sun_angle()),
-                                     0.0),
-                     0.33) / 3.0;
-        moon_horiz_eff
-        = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_moon_angle()),
-                                     0.0),
-                     0.33)/3.0;
-    } else {
-        sun_horiz_eff = moon_horiz_eff = 1.0;
-    }
-
-
-
     SGSkyState sstate;
     sstate.pos       = globals->get_current_view()->getViewPosition();
     sstate.pos_geod  = globals->get_current_view()->getPosition();
     sstate.ori       = globals->get_current_view()->getViewOrientation();
     sstate.spin      = l->get_sun_rotation();
     sstate.gst       = globals->get_time_params()->getGst();
-    sstate.sun_dist  = 50000.0 * sun_horiz_eff;
+    sstate.sun_dist  = 50000.0;
     sstate.moon_dist_bare = 40000.0;
-    sstate.moon_dist_factor = moon_horiz_eff;
+    sstate.moon_dist_factor = 1.0;
     sstate.sun_angle = l->get_sun_angle();
 
     SGSkyColor scolor;
