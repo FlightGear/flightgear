@@ -84,8 +84,9 @@ WayptController::~WayptController()
 {
 }
 
-void WayptController::init()
+bool WayptController::init()
 {
+    return true;
 }
   
 bool WayptController::isDone() const
@@ -178,10 +179,11 @@ public:
       throw sg_exception("BasicWayptCtrl doesn't work with dynamic waypoints");
     }
   }
-  
-  virtual void init()
+
+  bool init() override
   {
     _targetTrack = SGGeodesy::courseDeg(_rnav->position(), _waypt->position());
+    return true;
   }
 
   virtual void update(double)
@@ -258,8 +260,8 @@ public:
       throw sg_exception("LegWayptCtl doesn't work with dynamic waypoints");
     }
   }
-  
-  virtual void init()
+
+  bool init() override
   {
     auto previousLeg = _rnav->previousLegData();
     if (previousLeg) {
@@ -300,6 +302,8 @@ public:
       _entryFlyByActive = true;
       SG_NORMALIZE_RANGE(_flyByTurnAngle, -180.0, 180.0);
     }
+
+    return true;
   }
   
   void computeTurnAnticipation()
@@ -589,11 +593,15 @@ public:
     _courseDev(0.0)
   {
   }
-  
-  virtual void init()
+
+  bool init() override
   {
     _runway = static_cast<RunwayWaypt*>(_waypt.get())->runway();
+    if (!_runway) {
+        return false;
+    }
     _targetTrack = _runway->headingDeg();
+    return true;
   }
 
   virtual void update(double)
@@ -664,11 +672,12 @@ public:
     }
   }
 
-  virtual void init()
+  bool init() override
   {
     HeadingToAltitude* w = (HeadingToAltitude*) _waypt.get();
     _targetTrack = w->headingDegMagnetic() + _rnav->magvarDeg();
       _filteredFPM = _lastFPM = _rnav->vspeedFPM();
+      return true;
   }
   
   virtual void update(double dt)
@@ -749,13 +758,15 @@ public:
     }
   }
 
-   void init() override
+  bool init() override
   {
     RadialIntercept* w = (RadialIntercept*) _waypt.get();
       _trueRadial = w->radialDegMagnetic() + _rnav->magvarDeg();
     _targetTrack = w->courseDegMagnetic() + _rnav->magvarDeg();
       
       _canFlyBy = !_waypt->flag(WPT_OVERFLIGHT) && _rnav->canFlyBy();
+
+      return true;
   }
   
    void update(double) override
@@ -900,10 +911,11 @@ public:
     }
   }
 
-  virtual void init()
+  bool init() override
   {
     _dme  = (DMEIntercept*) _waypt.get();
     _targetTrack = _dme->courseDegMagnetic() + _rnav->magvarDeg();
+    return true;
   }
   
   virtual void update(double)
@@ -960,7 +972,7 @@ HoldCtl::HoldCtl(RNAV* aRNAV, const WayptRef& aWpt) :
     }
 }
 
-void HoldCtl::init()
+bool HoldCtl::init()
 {
   _segmentEnd = _waypt->position();
   _state = LEG_TO_HOLD;
@@ -968,6 +980,8 @@ void HoldCtl::init()
   // use leg controller to fly us to the hold point - this also gives
   // the normal legl behaviour if the hold is not enabled
   setSubController(new LegWayptCtl(_rnav, _waypt));
+
+  return true;
 }
   
 void HoldCtl::computeEntry()
@@ -1293,9 +1307,9 @@ public:
   {
   }
 
-  virtual void init()
+  bool init() override
   {
- 
+      return true;
   }
   
   virtual void update(double)
@@ -1327,13 +1341,15 @@ DirectToController::DirectToController(RNAV* aRNAV, const WayptRef& aWpt, const 
 {
 }
 
-void DirectToController::init()
+bool DirectToController::init()
 {
   if (_waypt->flag(WPT_DYNAMIC)) {
-    throw sg_exception("can't direct-to a dynamic waypoint");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "can't use a dynamic waypoint for direct-to: " << _waypt->ident());
+      return false;
   }
 
   _targetTrack = SGGeodesy::courseDeg(_origin, _waypt->position());
+  return true;
 }
 
 void DirectToController::update(double)
@@ -1401,13 +1417,15 @@ OBSController::OBSController(RNAV* aRNAV, const WayptRef& aWpt) :
 {
 }
 
-void OBSController::init()
+bool OBSController::init()
 {
   if (_waypt->flag(WPT_DYNAMIC)) {
-    throw sg_exception("can't use a dynamic waypoint for OBS mode");
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "can't use a dynamic waypoint for OBS mode" << _waypt->ident());
+      return false;
   }
   
   _targetTrack = _rnav->selectedMagCourse() + _rnav->magvarDeg();
+  return true;
 }
 
 void OBSController::update(double)

@@ -772,8 +772,16 @@ void GPS::wp1Changed()
   } else if (_mode == "dto") {
     _wayptController.reset(new DirectToController(this, _currentWaypt, _wp0_position));
   }
-  
-  _wayptController->init();
+
+  const bool ok = _wayptController->init();
+  if (!ok) {
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "GPS failed to init RNAV controller for waypoint " << _currentWaypt->ident());
+      _wayptController.reset();
+      _mode.clear();
+      _gpsNode->setStringValue("rnav-controller-status", "");
+      return;
+  }
+
   _gpsNode->setStringValue("rnav-controller-status", _wayptController->status());
   
   if (_mode == "obs") {
