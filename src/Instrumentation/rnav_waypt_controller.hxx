@@ -119,8 +119,8 @@ class WayptController
 {
 public:
   virtual ~WayptController();
-  
-  virtual void init();
+
+  virtual bool init();
 
   virtual void update(double dt) = 0;
 
@@ -227,8 +227,8 @@ class DirectToController : public WayptController
 {
 public:
   DirectToController(RNAV* aRNAV, const WayptRef& aWpt, const SGGeod& aOrigin);
-  
-  virtual void init();
+
+  bool init() override;
   virtual void update(double dt);
   virtual double distanceToWayptM() const;  
   virtual double xtrackErrorNm() const;  
@@ -249,8 +249,8 @@ class OBSController : public WayptController
 {
 public:
   OBSController(RNAV* aRNAV, const WayptRef& aWpt);
-  
-  virtual void init();
+
+  bool init() override;
   virtual void update(double dt);
   virtual double distanceToWayptM() const;  
   virtual double xtrackErrorNm() const;  
@@ -317,8 +317,8 @@ public:
   
   void setHoldCount(int count);
   void exitHold();
-    
-  void init() override;
+
+  bool init() override;
   void update(double) override;
   
   double distanceToWayptM() const override;
