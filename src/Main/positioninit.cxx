@@ -723,7 +723,6 @@ bool initPosition()
 
   if (original_hdg < 9990.0) {
     // The user-set heading may be overridden by the setPosFromAirportID above.
-    SG_LOG(SG_GENERAL, SG_ALERT, "Setting heading preset to  : " << original_hdg);
     hdg_preset->setDoubleValue(original_hdg);
   }
 
