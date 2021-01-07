@@ -86,7 +86,7 @@ void applyInitialState()
         SG_LOG(SG_AIRCRAFT, SG_WARN, "missing state node for:" << nm);
         std::string aircraft = fgGetString("/sim/aircraft");
         modalMessageBox("Unknown aircraft state",
-                                    "The selected aircraft (" + aircraft + ") does not have a stage '" + nm + "')");
+                                    "The selected aircraft (" + aircraft + ") does not have a state '" + nm + "'");
 
         return;
     }
