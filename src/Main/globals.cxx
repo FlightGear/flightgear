@@ -657,6 +657,9 @@ FGGlobals::resetPropertyRoot()
 {
     delete locale;
 
+    // avoid a warning when we processOptions after reset
+    terrasync_dir = SGPath{};
+
     cleanupListeners();
 
     // we don't strictly need to clear these (they will be reset when we
