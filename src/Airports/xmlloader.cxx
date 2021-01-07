@@ -125,8 +125,17 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
     return false;
   }
 
-  SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: loading from " << path);
-  readXML(path, aVisitor);
-  return true;
+    bool readXMLOk = true;
+    try {
+        flightgear::sentryThreadReportXMLErrors(false);
+        SG_LOG(SG_NAVAID, SG_DEBUG, "loadAirportXMLDataIntoVisitor: loading from " << path);
+        readXML(path, aVisitor);
+    } catch (sg_exception& e) {
+        readXMLOk = false;
+        SG_LOG(SG_NAVAID, SG_WARN, "XML errors trying to read:" << path);
+    }
+    
+    flightgear::sentryThreadReportXMLErrors(true);
+    return readXMLOk;
 }
 
