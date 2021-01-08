@@ -1886,8 +1886,10 @@ bool SviewMouseMotion(int x, int y, const osgGA::GUIEventAdapter& ea)
     }
     double xx;
     double yy;
-    flightgear::eventToWindowCoords(&ea, xx, yy);
-    
+    if (!flightgear::eventToWindowCoords(&ea, xx, yy)) {
+        return false;
+    }
+
     SG_LOG(SG_GENERAL, SG_DEBUG, "sview_view=" << sview_view.get() << " xx=" << xx << " yy=" << yy);
     bool button2 = globals->get_props()->getBoolValue("/devices/status/mice/mouse/button[2]");
     if (button2 && sview_view->m_mouse_button2) {

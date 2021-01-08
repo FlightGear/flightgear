@@ -165,7 +165,6 @@ public:
     {
         tooltipTimeoutDone = false;
         hoverPickScheduled = false;
-        tooltipsEnabled = false;
 
         fgGetNode("/sim/mouse/hide-cursor", true )->addChangeListener(this, true);
         fgGetNode("/sim/mouse/cursor-timeout-sec", true )->addChangeListener(this, true);
@@ -173,8 +172,14 @@ public:
         fgGetNode("/sim/mouse/tooltip-delay-msec", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/click-shows-tooltip", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/tooltips-enabled", true)->addChangeListener(this, true);
+        fgGetNode("/sim/mouse/tooltip-commands-registered", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/drag-sensitivity", true)->addChangeListener(this, true);
         fgGetNode("/sim/mouse/invert-mouse-wheel", true)->addChangeListener(this, true);
+    }
+
+    bool areTooltipsEnabled() const
+    {
+        return _tooltipsEnabled && _tooltipsCommandsRegistered;
     }
 
     void centerMouseCursor(mouse& m)
@@ -261,10 +266,9 @@ public:
         }
 
         FGMouseCursor::instance()->setCursor(cur);
-        if (!didPick) {
-          SGPropertyNode_ptr args(new SGPropertyNode);
-          globals->get_commands()->execute("update-hover", args, nullptr);
-
+        if (!didPick && areTooltipsEnabled()) {
+            SGPropertyNode_ptr args(new SGPropertyNode);
+            globals->get_commands()->execute("update-hover", args, nullptr);
         }
     }
 
@@ -303,7 +307,7 @@ public:
     }
 
     // implement the property-change-listener interfacee
-    virtual void valueChanged( SGPropertyNode * node )
+    void valueChanged(SGPropertyNode* node) override
     {
         if (node->getNameString() == "drag-sensitivity") {
             SGKnobAnimation::setDragSensitivity(node->getDoubleValue());
@@ -320,7 +324,9 @@ public:
         } else if (node->getNameString() == "click-shows-tooltip") {
             clickTriggersTooltip = node->getBoolValue();
         } else if (node->getNameString() == "tooltips-enabled") {
-            tooltipsEnabled = node->getBoolValue();
+            _tooltipsEnabled = node->getBoolValue();
+        } else if (node->getNameString() == "tooltip-commands-registered") {
+            _tooltipsCommandsRegistered = node->getBoolValue();
         }
     }
 
@@ -334,7 +340,9 @@ public:
     bool clickTriggersTooltip;
     int tooltipDelayMsec, cursorTimeoutMsec;
     bool rightClickModeCycle;
-    bool tooltipsEnabled;
+
+    bool _tooltipsEnabled = false;
+    bool _tooltipsCommandsRegistered = false; ///< avoid errors if the mouse moves before Nasal init
 
     SGPropertyNode_ptr xSizeNode;
     SGPropertyNode_ptr ySizeNode;
@@ -500,10 +508,9 @@ void FGMouseInput::update ( double dt )
     d->hoverPickScheduled = false;
   }
 
-  if ( !d->tooltipTimeoutDone &&
-      d->tooltipsEnabled &&
-      (m.timeSinceLastMove.elapsedMSec() > d->tooltipDelayMsec))
-  {
+  if (!d->tooltipTimeoutDone &&
+      d->areTooltipsEnabled() &&
+      (m.timeSinceLastMove.elapsedMSec() > d->tooltipDelayMsec)) {
       d->tooltipTimeoutDone = true;
       SGPropertyNode_ptr arg(new SGPropertyNode);
       globals->get_commands()->execute("tooltip-timeout", arg, nullptr);
@@ -606,11 +613,11 @@ void FGMouseInput::doMouseClick (int b, int updown, int x, int y, bool mainWindo
     if (updown == MOUSE_BUTTON_DOWN) {
       d->activePickCallbacks.init( b, ea );
 
-      if (d->clickTriggersTooltip) {
-            SGPropertyNode_ptr args(new SGPropertyNode);
-            args->setStringValue("reason", "click");
-            globals->get_commands()->execute("tooltip-timeout", args, nullptr);
-            d->tooltipTimeoutDone = true;
+      if (d->clickTriggersTooltip && d->areTooltipsEnabled()) {
+          SGPropertyNode_ptr args(new SGPropertyNode);
+          args->setStringValue("reason", "click");
+          globals->get_commands()->execute("tooltip-timeout", args, nullptr);
+          d->tooltipTimeoutDone = true;
       }
     } else {
       // do a hover pick now, to fix up cursor
