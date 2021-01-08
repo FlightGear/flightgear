@@ -226,7 +226,6 @@ bool FGAIFlightPlan::parseProperties(const std::string& filename)
 {
     SGPath fp = globals->findDataPath("AI/FlightPlans/" + filename);
     if (!fp.exists()) {
-        SG_LOG(SG_AI, SG_WARN, "Couldn't find AI flightplan '" << filename << "'");
         return false;
     }
 

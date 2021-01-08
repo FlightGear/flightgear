@@ -360,7 +360,6 @@ SGPath FGGlobals::findDataPath(const std::string& pathSuffix) const
         }
     }
 
-    SG_LOG(SG_IO, SG_WARN, "not found in any data path: '" << pathSuffix << "'");
     return SGPath{};
 }
 
