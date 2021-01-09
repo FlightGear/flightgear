@@ -351,6 +351,17 @@ FGRenderer::FGRenderer() :
     _updateVisitor = new SGUpdateVisitor;
 }
 
+FGRenderer::FGRenderer(osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer) :
+    composite_viewer(composite_viewer),
+    _sky(NULL),
+    MaximumTextureSize(0)
+{
+	_root = new osg::Group;
+	_root->setName("fakeRoot");
+    _updateVisitor = new SGUpdateVisitor;
+}
+
+
 FGRenderer::~FGRenderer()
 {
     SGPropertyChangeListenerVec::iterator i = _listeners.begin();
@@ -462,7 +473,12 @@ FGRenderer::init( void )
         }
         composite_viewer_enabled = 1;
         SG_LOG(SG_VIEW, SG_ALERT, "Creating osgViewer::CompositeViewer");
-        composite_viewer = new osgViewer::CompositeViewer;
+        if (composite_viewer) {
+            // reinit.
+        }
+        else {
+            composite_viewer = new osgViewer::CompositeViewer;
+        }
         
         // https://stackoverflow.com/questions/15207076/openscenegraph-and-multiple-viewers
         composite_viewer->setReleaseContextAtEndOfFrameHint(false);
@@ -1014,6 +1030,11 @@ osgViewer::ViewerBase* FGRenderer::getViewerBase()
     else {
         return viewer.get();
     }
+}
+
+osg::ref_ptr<osgViewer::CompositeViewer> FGRenderer::getCompositeViewer()
+{
+    return composite_viewer;
 }
 
 osgViewer::View* FGRenderer::getView()

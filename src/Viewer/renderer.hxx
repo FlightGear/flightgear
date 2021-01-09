@@ -50,6 +50,7 @@ class FGRenderer {
 public:
 
     FGRenderer();
+    FGRenderer(osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer);
     ~FGRenderer();
 
     void preinit();
@@ -67,6 +68,9 @@ public:
     
     /* Returns either composite_viewer or viewer. */
     osgViewer::ViewerBase* getViewerBase();
+    
+    /** For handling reset. */
+    osg::ref_ptr<osgViewer::CompositeViewer> getCompositeViewer();
 
     /** Get and set the OSG Viewer object, if any.
      */

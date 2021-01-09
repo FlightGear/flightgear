@@ -1288,7 +1288,13 @@ void fgStartNewReset()
     FGRenderer* render = globals->get_renderer();
     // needed or we crash in multi-threaded OSG mode
     render->getViewerBase()->stopThreading();
-    
+
+    osg::ref_ptr<osgViewer::CompositeViewer> composite_viewer = render->getCompositeViewer();
+    osg::ref_ptr<osgViewer::View> composite_viewer_view;
+    if (composite_viewer) {
+        composite_viewer_view = render->getView();
+    }
+        
     // order is important here since tile-manager shutdown needs to
     // access the scenery object
     subsystemManger->remove(FGScenery::staticSubsystemClassId());
@@ -1375,21 +1381,39 @@ void fgStartNewReset()
     fgInitAircraftPaths(true);
     fgInitAircraft(true);
     
-    render = new FGRenderer;
+    render = new FGRenderer(composite_viewer);
     render->setEventHandler(eventHandler);
     eventHandler->reset();
     globals->set_renderer(render);
     render->init();
-    render->setView(viewer.get());
+    
+    if (composite_viewer) {
+        render->setView(composite_viewer_view);
+    }
+    else {
+        render->setView(viewer.get());
+    }
 
     sgUserDataInit( globals->get_props() );
 
-    viewer->getDatabasePager()->setUpThreads(20, 1);
-    
-    // must do this before preinit for Rembrandthe
-    flightgear::CameraGroup::buildDefaultGroup(viewer.get());
-    render->preinit();
-    viewer->startThreading();
+    if (composite_viewer) {
+        composite_viewer_view->getDatabasePager()->setUpThreads(20, 1);
+        flightgear::CameraGroup::buildDefaultGroup(composite_viewer_view);
+        composite_viewer_view->setFrameStamp(composite_viewer->getFrameStamp());
+        composite_viewer_view->setDatabasePager(FGScenery::getPagerSingleton());
+        composite_viewer_view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
+        osg::GraphicsContext::createNewContextID();
+        render->setView(composite_viewer_view);
+        render->preinit();
+        composite_viewer->startThreading();
+    }
+    else {
+        viewer->getDatabasePager()->setUpThreads(20, 1);
+        // must do this before preinit for Rembrandthe
+        flightgear::CameraGroup::buildDefaultGroup(viewer.get());
+        render->preinit();
+        viewer->startThreading();
+    }
     
     fgOSResetProperties();
 
