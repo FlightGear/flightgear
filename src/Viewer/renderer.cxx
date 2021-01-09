@@ -1154,6 +1154,7 @@ public:
     }
 
     VisibleSceneInfoVistor(const VisibleSceneInfoVistor& rhs)
+    :  osg::Object(rhs), NodeVisitor(rhs), CullStack(rhs)
     {
     }
 
