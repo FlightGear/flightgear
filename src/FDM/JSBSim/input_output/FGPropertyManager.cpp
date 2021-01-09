@@ -327,7 +327,7 @@ void FGPropertyManager::Untie (const string &name)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
+void FGPropertyManager::Tie (const string &name, bool *pointer)
 {
   SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
@@ -335,7 +335,7 @@ void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
     return;
   }
 
-  if (!property->tie(SGRawValuePointer<bool>(pointer), useDefault))
+  if (!property->tie(SGRawValuePointer<bool>(pointer), false))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
@@ -345,8 +345,7 @@ void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::Tie (const string &name, int *pointer,
-                                          bool useDefault )
+void FGPropertyManager::Tie (const string &name, int *pointer)
 {
   SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
@@ -354,7 +353,7 @@ void FGPropertyManager::Tie (const string &name, int *pointer,
     return;
   }
 
-  if (!property->tie(SGRawValuePointer<int>(pointer), useDefault))
+  if (!property->tie(SGRawValuePointer<int>(pointer), false))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
@@ -364,8 +363,7 @@ void FGPropertyManager::Tie (const string &name, int *pointer,
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::Tie (const string &name, long *pointer,
-                                          bool useDefault )
+void FGPropertyManager::Tie (const string &name, long *pointer)
 {
   SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
@@ -373,7 +371,7 @@ void FGPropertyManager::Tie (const string &name, long *pointer,
     return;
   }
 
-  if (!property->tie(SGRawValuePointer<long>(pointer), useDefault))
+  if (!property->tie(SGRawValuePointer<long>(pointer), false))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
@@ -383,8 +381,7 @@ void FGPropertyManager::Tie (const string &name, long *pointer,
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::Tie (const string &name, float *pointer,
-                                          bool useDefault )
+void FGPropertyManager::Tie (const string &name, float *pointer)
 {
   SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
@@ -392,7 +389,7 @@ void FGPropertyManager::Tie (const string &name, float *pointer,
     return;
   }
 
-  if (!property->tie(SGRawValuePointer<float>(pointer), useDefault))
+  if (!property->tie(SGRawValuePointer<float>(pointer), false))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);
@@ -402,7 +399,7 @@ void FGPropertyManager::Tie (const string &name, float *pointer,
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropertyManager::Tie (const string &name, double *pointer, bool useDefault)
+void FGPropertyManager::Tie (const string &name, double *pointer)
 {
   SGPropertyNode* property = root->getNode(name.c_str(), true);
   if (!property) {
@@ -410,7 +407,7 @@ void FGPropertyManager::Tie (const string &name, double *pointer, bool useDefaul
     return;
   }
 
-  if (!property->tie(SGRawValuePointer<double>(pointer), useDefault))
+  if (!property->tie(SGRawValuePointer<double>(pointer), false))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else {
     tied_properties.push_back(property);

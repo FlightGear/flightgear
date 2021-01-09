@@ -244,17 +244,17 @@ void FGBuoyantForces::bind(void)
   typedef double (FGBuoyantForces::*PGF)(int) const;
   typedef void   (FGBuoyantForces::*PSF)(int, double);
   PropertyManager->Tie("moments/l-buoyancy-lbsft", this, eL,
-                       (PGF)&FGBuoyantForces::GetMoments, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetMoments, (PSF)nullptr);
   PropertyManager->Tie("moments/m-buoyancy-lbsft", this, eM,
-                       (PGF)&FGBuoyantForces::GetMoments, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetMoments, (PSF)nullptr);
   PropertyManager->Tie("moments/n-buoyancy-lbsft", this, eN,
-                       (PGF)&FGBuoyantForces::GetMoments, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetMoments, (PSF)nullptr);
   PropertyManager->Tie("forces/fbx-buoyancy-lbs", this, eX,
-                       (PGF)&FGBuoyantForces::GetForces, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetForces, (PSF)nullptr);
   PropertyManager->Tie("forces/fby-buoyancy-lbs", this, eY,
-                       (PGF)&FGBuoyantForces::GetForces, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetForces, (PSF)nullptr);
   PropertyManager->Tie("forces/fbz-buoyancy-lbs", this, eZ,
-                       (PGF)&FGBuoyantForces::GetForces, (PSF)0, false);
+                       (PGF)&FGBuoyantForces::GetForces, (PSF)nullptr);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
