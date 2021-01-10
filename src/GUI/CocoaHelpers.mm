@@ -24,6 +24,7 @@
 
 // standard
 #include <string>
+#include <dlfcn.h>
 
 // OS
 
@@ -264,3 +265,30 @@ void cocoaRegisterTerminateHandler()
 }
 
 
+
+bool cocoaIsRunningTranslocated()
+{
+    // #define NSAppKitVersionNumber10_11 1404
+    if (floor(NSAppKitVersionNumber) <= 1404) {
+        return false;
+    }
+
+    void *handle = dlopen("/System/Library/Frameworks/Security.framework/Security", RTLD_LAZY);
+    if (handle == NULL) {
+        return false;
+    }
+
+    bool isTranslocated = false;
+    using SecIsTranslocatedFunc = Boolean (*)(CFURLRef path, bool *isTranslocated, CFErrorRef * __nullable error);
+
+    SecIsTranslocatedFunc f = reinterpret_cast<SecIsTranslocatedFunc>(dlsym(handle, "SecTranslocateIsTranslocatedURL"));
+    if (f != NULL) {
+        auto url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+        f(url, &isTranslocated, NULL);
+
+        CFRelease(url);
+    }
+
+    dlclose(handle);
+    return isTranslocated;
+}
