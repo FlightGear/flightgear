@@ -46,4 +46,12 @@ void transformToForegroundApp();
  */
 void cocoaRegisterTerminateHandler();
 
+/**
+ * @brief helper to detect if we're running translocated or not.
+ * Google 'Gatekeep app translation' for more info about this; basically it
+ * happens when the user runs us directly from the DMG, and this makes
+ * for very nasty file paths.
+ */
+bool cocoaIsRunningTranslocated();
+
 #endif // of FG_GUI_COCOA_HELPERS_H

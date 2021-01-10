@@ -79,6 +79,10 @@
 #include "UnitsModel.hxx"
 #include "GettingStartedTip.hxx"
 
+#if defined(SG_MAC)
+#include <GUI/CocoaHelpers.h>
+#endif
+
 using namespace flightgear;
 using namespace simgear::pkg;
 using std::string;
@@ -413,6 +417,20 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         // http://doc.qt.io/qt-5/qcoreapplication.html#details
         ::setlocale(LC_NUMERIC, "C");
         ::setlocale(LC_COLLATE, "C");
+
+
+#if defined(SG_MAC)
+        if (cocoaIsRunningTranslocated()) {
+            addSentryBreadcrumb("did show translocation warning", "info");
+            const char* titleKey = QT_TRANSLATE_NOOP("macTranslationWarning", "Application running from download location");
+            const char* key = QT_TRANSLATE_NOOP("macTranslationWarning", "FlightGear is running from the download image. For better performance and to avoid potential problems, "
+                                                "please copy FlightGear to some other location, such as your desktop or Applications folder.");
+            QString msg = qApp->translate("macTranslationWarning", key);
+            QString title = qApp->translate("macTranslationWarning", titleKey);
+
+            QMessageBox::warning(nullptr, title, msg);
+        }
+#endif
     }
 
     if (doInitQSettings) {
