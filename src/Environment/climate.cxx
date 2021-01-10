@@ -2,7 +2,7 @@
 //
 // Written by Erik Hofman, started October 2020
 //
-// Copyright (C) 2020 by Erik Hofman <erik@ehofman.com>
+// Copyright (C) 2020-2021 by Erik Hofman <erik@ehofman.com>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -167,9 +167,9 @@ void FGClimate::update(double dt)
 
          double north = latitude_deg >= 0.0 ? 1.0 : -1.0; // hemisphere
          if (north) {
-             _set(_is_autumn, (_monthNode->getIntValue() > 6) ? 1.0 : 0.0);
+             _is_autumn = (_monthNode->getIntValue() > 6) ? 1.0 : 0.0;
          } else {
-             _set(_is_autumn, (_monthNode->getIntValue() <= 6) ? 1.0 : 0.0);
+             _is_autumn = (_monthNode->getIntValue() <= 6) ? 1.0 : 0.0;
          }
 
         _prev_lat = _adj_latitude_deg;
@@ -893,7 +893,7 @@ void FGClimate::set_environment()
     _rootNode->setDoubleValue("day-noon-pct", _day_noon*100.0);
     _rootNode->setDoubleValue("season-summer-pct", _season_summer*100.0);
     _rootNode->setDoubleValue("seasons-year-pct", _seasons_year*100.0);
-    _rootNode->setDoubleValue("season-autumn-pct", ((_gl.has_autumn && _is_autumn > 0.05) ? _season_transistional : 0.0));
+    _rootNode->setDoubleValue("season-autumn-pct", ((_gl.has_autumn && _is_autumn > 0.05) ? _season_transistional*100.0 : 0.0));
 
 #if 0
     if (_weather_update)
@@ -917,10 +917,20 @@ void FGClimate::set_environment()
         fgSetDouble("/environment/surface/dust-cover-factor", _dust_cover);
         fgSetDouble("/environment/surface/wetness-set", _wetness);
         fgSetDouble("/environment/surface/lichen-cover-factor", _lichen_cover);
-        if (_gl.has_autumn && _is_autumn > 0.01)
-            fgSetDouble("/environment/season", std::min(3.0*_is_autumn*_season_transistional, 2.0));
+
+        double season = std::min(3.0*_season_transistional, 2.0);
+        if (_gl.has_autumn && season > 0.01)
+        {
+            if (_is_autumn > 0.01) {	// autumn
+                fgSetDouble("/environment/season", _is_autumn*season);
+            } else { 			// sping
+                fgSetDouble("/environment/season", 1.5+0.25*season);
+            }
+        }
         else
+        {
             fgSetDouble("/environment/season", 0.0);
+        }
     }
 }
 
