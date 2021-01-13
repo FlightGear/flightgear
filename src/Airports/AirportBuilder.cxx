@@ -29,15 +29,21 @@
 
 #include <osg/Geode>
 #include <osg/Geometry>
+#include <osgTerrain/Terrain>
+#include <osgTerrain/TerrainTechnique>
 
 #include <simgear/scene/material/Effect.hxx>
 #include <simgear/scene/material/EffectGeode.hxx>
+#include <simgear/scene/model/BoundingVolumeBuildVisitor.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
+#include <simgear/scene/tgdb/VPBTechnique.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/scene/util/SGReaderWriterOptions.hxx>
-#include <simgear/math/SGGeodesy.hxx>
+#include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include <Airports/apt_loader.hxx>
+#include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
 #include "airport.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
@@ -86,14 +92,14 @@ osgDB::ReaderWriter::ReadResult AirportBuilder::readNode(const std::string& file
   const FGAirport* airport = aptLoader.loadAirportFromFile(airportId, aptFile);
   if (! airport) return ReadResult::FILE_NOT_HANDLED;
 
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Building airport : "  << airportId << " " << airport->getName());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Lat/Lon : "  << airport->getLatitude() << ", " << airport->getLongitude());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Elevation : "  << airport->getElevation());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Runways   : " << airport->numRunways());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Helipads  : " << airport->numHelipads());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Taxiways  : " << airport->numTaxiways());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Pavements : " << airport->numPavements());
-  SG_LOG( SG_GENERAL, SG_DEBUG, "Line Features : " << airport->numLineFeatures());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Building airport : "  << airportId << " " << airport->getName());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Lat/Lon : "  << airport->getLatitude() << ", " << airport->getLongitude());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Elevation : "  << airport->getElevation());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Runways   : " << airport->numRunways());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Helipads  : " << airport->numHelipads());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Taxiways  : " << airport->numTaxiways());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Pavements : " << airport->numPavements());
+  SG_LOG( SG_TERRAIN, SG_DEBUG, "Line Features : " << airport->numLineFeatures());
 
   const SGGeod zeroAltitudeCenter = SGGeod::fromDegM(airport->getLongitude(), airport->getLatitude(), 0.0f);
 
@@ -132,7 +138,21 @@ osgDB::ReaderWriter::ReadResult AirportBuilder::readNode(const std::string& file
                 lineList.end(),
                 [&, mat, center, options] (FGPavementRef p) { group->addChild(this->createLine(mat, center, p, options)); } );
 
-  return group;
+  // Place the airport in the correct location.
+  osg::Matrix matrix = makeZUpFrame(SGGeod::fromDegFt(airport->getLongitude(), airport->getLatitude(), airport->getElevation()));
+  osg::MatrixTransform* matrixTransform;
+  matrixTransform = new osg::MatrixTransform(matrix);
+  matrixTransform->setDataVariance(osg::Object::STATIC);
+  matrixTransform->addChild(group);
+
+  // Create a BVH at this point, as we need it to determine how to flatten the terrain mesh.
+  BoundingVolumeBuildVisitor bvhBuilder(false);
+  matrixTransform->accept(bvhBuilder);
+
+  // Add the airport to the list of elevation constraints for the scenery
+  simgear::VPBTechnique::addElevationConstraint(matrixTransform, globals->get_scenery()->get_terrain_branch());
+
+  return matrixTransform;
 }
 
 osg::Node* AirportBuilder::createRunway(const osg::Matrixd mat, const SGVec3f center, const FGRunwayRef runway, const osgDB::Options* options) const
@@ -594,7 +614,7 @@ osg::ref_ptr<Effect> AirportBuilder::getMaterialEffect(std::string material, con
   }
 
   SG_LOG( SG_TERRAIN, SG_ALERT, "Unable to get effect for " << material);
-  makeChild(effectProp, "inherits-from")->setStringValue("Effects/model-default");
+  makeChild(effectProp, "inherits-from")->setStringValue("Effects/terrain-default");
   effectProp->addChild("default")->setBoolValue(true);
   effect = makeEffect(effectProp, true, sgOpts);
   return effect;
