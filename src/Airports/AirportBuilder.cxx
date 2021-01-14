@@ -145,13 +145,6 @@ osgDB::ReaderWriter::ReadResult AirportBuilder::readNode(const std::string& file
   matrixTransform->setDataVariance(osg::Object::STATIC);
   matrixTransform->addChild(group);
 
-  // Create a BVH at this point, as we need it to determine how to flatten the terrain mesh.
-  BoundingVolumeBuildVisitor bvhBuilder(false);
-  matrixTransform->accept(bvhBuilder);
-
-  // Add the airport to the list of elevation constraints for the scenery
-  simgear::VPBTechnique::addElevationConstraint(matrixTransform, globals->get_scenery()->get_terrain_branch());
-
   return matrixTransform;
 }
 
