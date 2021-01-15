@@ -179,7 +179,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 
         } else if (( name == "transponder" ) || ( name == "KT-70" )) {
             if  (name == "KT-70") {
-                SG_LOG(SG_INSTR, SG_WARN, "KT-70 legacy instrument compatibility. "
+                SG_LOG(SG_INSTR, SG_DEV_WARN, "KT-70 legacy instrument compatibility. "
                        "Please update aircraft to use transponder directly");
                 // force configuration into compatibility mode
                 node->setBoolValue("kt70-compatibility", true);
