@@ -25,7 +25,6 @@
 #include "TimeManager.hxx"
 
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/lowleveltime.h>
 #include <simgear/structure/commands.hxx>
@@ -84,7 +83,7 @@ void TimeManager::init()
   _warp = fgGetNode("/sim/time/warp", true);
   _warp->addChangeListener(this);
   _maxFrameRate  = fgGetNode("/sim/frame-rate-throttle-hz", true);
-
+  _localTimeStringNode = fgGetNode("/sim/time/local-time-string", true);
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   
   SGPath zone(globals->get_fg_root());
@@ -93,9 +92,6 @@ void TimeManager::init()
   _impl = new SGTime(globals->get_aircraft_position(), zone, _timeOverride->getLongValue());
   
   _warpDelta->setDoubleValue(0.0);
-  
-  globals->get_event_mgr()->addTask("updateLocalTime", this,
-                            &TimeManager::updateLocalTime, 30*60 );
   updateLocalTime();
   
   _impl->update(globals->get_aircraft_position(), _timeOverride->getLongValue(),
@@ -180,7 +176,6 @@ void TimeManager::shutdown()
   delete _impl;
   _impl = NULL;
   _inited = false;
-  globals->get_event_mgr()->removeTask("updateLocalTime");
 }
 
 void TimeManager::valueChanged(SGPropertyNode* aProp)
@@ -359,11 +354,18 @@ void TimeManager::update(double dt)
         _warp->setDoubleValue(_warp->getDoubleValue() + warpOffset);
     }
 
+    const auto d2 = distSqr(_lastTimeZoneCheckPosition, globals->get_aircraft_position_cart());
+    const auto oneNmSqr = SG_NM_TO_METER * SG_NM_TO_METER;
+    if (d2 > oneNmSqr) {
+        updateLocalTime();
+    }
+
   _lastClockFreeze = freeze;
   _impl->update(globals->get_aircraft_position(),
                _timeOverride->getLongValue(),
                _warp->getIntValue());
 
+  updateLocalTimeString();
   computeFrameRate();
 }
 
@@ -405,7 +407,26 @@ void TimeManager::throttleUpdateRate()
 // periodic time updater wrapper
 void TimeManager::updateLocalTime() 
 {
-  _impl->updateLocal(globals->get_aircraft_position(), globals->get_fg_root() / "Timezone");
+    _lastTimeZoneCheckPosition = globals->get_aircraft_position_cart();
+    _impl->updateLocal(globals->get_aircraft_position(), globals->get_fg_root() / "Timezone");
+    // synchronous update, since somebody might need that
+    updateLocalTimeString();
+}
+
+void TimeManager::updateLocalTimeString()
+{
+    time_t cur_time = _impl->get_cur_time();
+    struct tm* aircraftLocalTime = fgLocaltime(&cur_time, _impl->get_zonename());
+    static char buf[16];
+    snprintf(buf, 16, "%.2d:%.2d:%.2d",
+             aircraftLocalTime->tm_hour,
+             aircraftLocalTime->tm_min, aircraftLocalTime->tm_sec);
+
+    // check against current string to avoid changes all the time
+    const char* s = _localTimeStringNode->getStringValue();
+    if (strcmp(s, buf) != 0) {
+        _localTimeStringNode->setStringValue(buf);
+    }
 }
 
 void TimeManager::initTimeOffset()

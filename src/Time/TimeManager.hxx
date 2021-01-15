@@ -21,8 +21,9 @@
 #ifndef FG_TIME_TIMEMANAGER_HXX
 #define FG_TIME_TIMEMANAGER_HXX
 
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGVec3.hxx>
 
 // forward decls
 class SGTime;
@@ -56,6 +57,7 @@ public:
     inline double getSteadyClockSec() const { return _steadyClock; }
 
     double getSimSpeedUpFactor() const;
+
 private:
     // test class is a friend so we can fake elapsed system time
     friend class TimeManagerTests;
@@ -72,6 +74,8 @@ private:
     void computeFrameRate();
 
     void updateLocalTime();
+
+    void updateLocalTimeString();
 
     // set up a time offset (aka warp) if one is specified
     void initTimeOffset();
@@ -97,6 +101,7 @@ private:
     SGPropertyNode_ptr _computeDrift;
     SGPropertyNode_ptr _frameWait;
     SGPropertyNode_ptr _maxFrameRate;
+    SGPropertyNode_ptr _localTimeStringNode;
 
     bool _lastClockFreeze;
     bool _adjustWarpOnUnfreeze;
@@ -110,6 +115,9 @@ private:
     double _mpProtocolClock;
     double _steadyClock;
     int _frameCount;
+
+    // we update TZ after moving more than a threshold distance
+    SGVec3d _lastTimeZoneCheckPosition;
 
     SGPropertyNode_ptr _sceneryLoaded;
     SGPropertyNode_ptr _modelHz;
