@@ -712,9 +712,9 @@ void FGSubmodelMgr::loadSubmodels()
 SGVec3d FGSubmodelMgr::getCartOffsetPos(submodel* sm) const
 {
     // Transform to the right coordinate frame, configuration is done in
-    // the x-forward, y-right, z-up coordinates (feet), computation
-    // in the simulation usual body x-forward, y-right, z-down coordinates
-    // (meters) )
+    // either x-backward, y-right, z-up coordinates (meter),
+    // or (deprecated) x-forward, y-right, z-up coordinates (feet).
+    // computation in the simulation usual body x-forward, y-right, z-down coordinates (meters)
     SGVec3d offset;
     if (sm->offsets_in_meter) {
         offset = SGVec3d(-sm->x_offset->get_value(),
@@ -736,11 +736,6 @@ SGVec3d FGSubmodelMgr::getCartOffsetPos(submodel* sm) const
        IC.elevation,
        IC.roll);
 
-    // postrotate by any pitch/heasing/roll offset
-    hlTrans *= SGQuatd::fromYawPitchRollDeg(sm->yaw_offset->get_value(),
-                                            sm->pitch_offset->get_value(),
-                                            0.0);
-    
     // The offset converted to the usual body fixed coordinate system
     // rotated to the earth-fixed coordinates axis
     SGVec3d off = hlTrans.backTransform(offset);
