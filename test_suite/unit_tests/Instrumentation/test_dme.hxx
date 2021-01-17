@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Edward d'Auvergne
+ * Copyright (C) 2021 James Turner <james@flightgear.org>
  *
  * This file is part of the program FlightGear.
  *
@@ -17,38 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
 
-#ifndef _FG_NAVRADIO_UNIT_TESTS_HXX
-#define _FG_NAVRADIO_UNIT_TESTS_HXX
-
-
-#include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+#include <simgear/structure/SGSharedPtr.hxx>
 
-class FGNavRadio;
+class DME;
 class SGGeod;
-class SGSubsystem;
 
-// The flight plan unit tests.
-class NavRadioTests : public CppUnit::TestFixture
+// The DME unit tests.
+class DMEReceiverTests : public CppUnit::TestFixture
 {
     // Set up the test suite.
-    CPPUNIT_TEST_SUITE(NavRadioTests);
+    CPPUNIT_TEST_SUITE(DMEReceiverTests);
     CPPUNIT_TEST(testBasic);
-    CPPUNIT_TEST(testCDIDeflection);
-    
-    CPPUNIT_TEST(testILSBasic);
-    CPPUNIT_TEST(testGS);
-    CPPUNIT_TEST(testILSFalseCourse);
-    CPPUNIT_TEST(testILSPaired);
-    CPPUNIT_TEST(testILSAdjacentPaired);
-    CPPUNIT_TEST(testGlideslopeLongDistance);
-
-    CPPUNIT_TEST(testNewRadioBasic);
+    CPPUNIT_TEST(testRCFN_04DME);
 
     CPPUNIT_TEST_SUITE_END();
 
-    void setPositionAndStabilise(SGSubsystem* r, const SGGeod& g);
+    void setPositionAndStabilise(DME* r, const SGGeod& g);
+
+    SGSharedPtr<DME> setupStandardDME();
 
 public:
     // Set up function for each test.
@@ -59,16 +49,5 @@ public:
 
     // The tests.
     void testBasic();
-    void testCDIDeflection();
-    
-    void testILSBasic();
-    void testGS();
-    void testILSFalseCourse();
-    void testILSPaired();
-    void testILSAdjacentPaired();
-    void testGlideslopeLongDistance();
-
-    void testNewRadioBasic();
+    void testRCFN_04DME();
 };
-
-#endif  // _FG_NAVRADIO_UNIT_TESTS_HXX

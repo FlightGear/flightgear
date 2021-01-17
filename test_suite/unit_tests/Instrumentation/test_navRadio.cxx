@@ -6,11 +6,14 @@
 #include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 
+#include <Main/globals.hxx>
+
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
 
 #include <Instrumentation/navradio.hxx>
+#include <Instrumentation/newnavradio.hxx>
 
 // Set up function for each test.
 void NavRadioTests::setUp()
@@ -26,7 +29,7 @@ void NavRadioTests::tearDown()
     FGTestApi::tearDown::shutdownTestGlobals();
 }
 
-void NavRadioTests::setPositionAndStabilise(FGNavRadio* r, const SGGeod& g)
+void NavRadioTests::setPositionAndStabilise(SGSubsystem* r, const SGGeod& g)
 {
     FGTestApi::setPosition(g);
     for (int i=0; i<60; ++i) {
@@ -474,5 +477,29 @@ void NavRadioTests::testGlideslopeLongDistance()
     p.setElevationFt(4000);
     setPositionAndStabilise(r.get(), p);
     CPPUNIT_ASSERT_EQUAL(false, node->getBoolValue("gs-in-range"));
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
+}
+
+void NavRadioTests::testNewRadioBasic()
+{
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", "navtest");
+    configNode->setIntValue("number", 2);
+    std::unique_ptr<SGSubsystem> r(Instrumentation::NavRadio::createInstance(configNode));
+
+    r->bind();
+    r->init();
+
+    SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation/navtest[2]");
+    node->setBoolValue("serviceable", true);
+    // needed for the radio to power up
+    globals->get_props()->setDoubleValue("systems/electrical/outputs/nav", 6.0);
+    node->setDoubleValue("frequencies/selected-mhz", 113.8);
+
+    SGGeod pos = SGGeod::fromDegFt(-3.352780, 55.499199, 20000);
+    setPositionAndStabilise(r.get(), pos);
+
+    CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("operable"));
+    CPPUNIT_ASSERT(!strcmp("TLA", node->getStringValue("nav-id")));
     CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
 }
