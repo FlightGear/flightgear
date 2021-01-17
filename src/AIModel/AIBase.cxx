@@ -252,9 +252,6 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
         setSMPath(submodels->getStringValue("path", ""));
     }
 
-    // By default, scenarios include the full path to any aircraft.
-    _searchOrder = DATA_ONLY;
-
     string searchOrder = scFileNode->getStringValue("search-order", "");
     if (!searchOrder.empty()) {
         if (searchOrder == "DATA_ONLY") {
