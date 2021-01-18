@@ -38,6 +38,7 @@
 
 #include <ATC/atc_mgr.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 /////////////////////////////////////////////////////////////////////////////
@@ -127,7 +128,15 @@ void TrafficTests::testPushback()
 
 void TrafficTests::testTrafficManager()
 {
+    fgSetBool("/sim/traffic-manager/enabled", true);
+    fgSetBool("/sim/ai/enabled", true);
+    fgSetBool("/environment/realwx/enabled", false);
+    fgSetBool("/environment/metar/valid", false);
+    fgSetBool("/sim/traffic-manager/active", true);
+    fgSetBool("/sim/terrasync/ai-data-update-now", false);
+
     auto tfc = globals->add_new_subsystem<FGTrafficManager>();
+
 
     // specify traffic files to read
 
