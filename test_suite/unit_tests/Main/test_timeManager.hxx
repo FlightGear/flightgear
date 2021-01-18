@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Edward d'Auvergne
+ * Copyright (C) 2021 James Turner <james@flightgear.org>
  *
  * This file is part of the program FlightGear.
  *
@@ -17,12 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_autosaveMigration.hxx"
-#include "test_posinit.hxx"
-#include "test_timeManager.hxx"
+
+#pragma once
+
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/TestFixture.h>
 
 
-// Set up the unit tests.
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AutosaveMigrationTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(PosInitTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TimeManagerTests, "Unit tests");
+// The unit tests.
+class TimeManagerTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(TimeManagerTests);
+    CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testBasic();
+};
