@@ -19,6 +19,8 @@
 
 #include "test_AIManager.hxx"
 #include "test_traffic.hxx"
+#include "test_submodels.hxx"
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIManagerTests, "Unit tests");
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TrafficTests, "Unit tests");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(SubmodelsTests, "Unit tests");

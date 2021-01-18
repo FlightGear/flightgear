@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<PropertyList>
+  <submodel n="0">
+    <name>testLoadXML</name>
+    <model>Models/Geometry/null.ac</model>
+    <trigger>ai/submodels/submodel[0]/trigger</trigger>
+    <speed>100</speed>
+    <speed-prop>ai/submodels/submodel[0]/speed</speed-prop>
+    <count>42</count>
+    <repeat>true</repeat>
+    <delay>0.5</delay>
+    <offsets>
+      <x-m>2</x-m>
+      <y-m>0</y-m>
+      <z-m>0</z-m>
+      <heading-deg>90</heading-deg>
+      <pitch-deg>45</pitch-deg>
+    </offsets>
+    <life>1</life>
+    <buoyancy>10</buoyancy>
+    <wind>true</wind>
+    <weight>3</weight>
+    <contents>ai/submodels/submodel[0]/content</contents>
+    <cd>0.2</cd>
+    <eda>0.1</eda>
+    <aero-stabilized>false</aero-stabilized>
+    <external-force>true</external-force>
+    <force-path>ai/submodels/submodel[0]/force</force-path>
+    <force-stabilized>true</force-stabilized>
+    <no-roll>true</no-roll>
+    <random>true</random>
+    <randomness>
+      <azimuth>5</azimuth>
+      <elevation>5</elevation>
+      <cd>0.1</cd>
+      <life>0.2</life>
+    </randomness>
+    <collision>true</collision>
+    <fuze-range>1</fuze-range>
+    <impact>true</impact>
+    <expiry>true</expiry>
+    <impact-reports>ai/submodels/submodel[0]/report</impact-reports>
+    <slaved>true</slaved>
+  </submodel>
+
+  <submodel n="1">
+    <name>testRelease</name>
+    <model>Models/Geometry/null.ac</model>
+    <trigger>ai/submodels/submodel[1]/trigger</trigger>
+    <count>-1</count>
+    <repeat>false</repeat>
+    <delay>1</delay>
+    <life>10</life>
+  </submodel>
+
+  <submodel n="2">
+    <name>testInitialState</name>
+    <model>Models/Geometry/null.ac</model>
+    <trigger>ai/submodels/submodel[2]/trigger</trigger>
+    <speed>100</speed>
+    <repeat>false</repeat>
+    <delay>-1</delay>
+    <count>-1</count>
+    <aero-stabilised>false</aero-stabilised>
+    <wind>true</wind>
+    <offsets>
+      <x-m>10</x-m>
+      <y-m>6</y-m>
+      <z-m>1</z-m>
+      <heading-deg>30</heading-deg>
+      <pitch-deg>50</pitch-deg>
+    </offsets>
+    <life>10</life>
+  </submodel>
+</PropertyList>
