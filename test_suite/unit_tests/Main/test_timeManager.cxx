@@ -20,14 +20,18 @@
 
 #include "test_timeManager.hxx"
 
+#include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/testGlobals.hxx"
 
-#include <simgear/props/props_io.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/props/props_io.hxx>
+#include <simgear/timing/sg_time.hxx>
 
-#include "Main/globals.hxx"
 #include "Main/fg_props.hxx"
+#include "Main/globals.hxx"
+#include <Airports/airport.hxx>
+#include <Time/TimeManager.hxx>
 
 using namespace flightgear;
 
@@ -36,7 +40,7 @@ using namespace flightgear;
 void TimeManagerTests::setUp()
 {
     FGTestApi::setUp::initTestGlobals("timeManager");
-
+    FGTestApi::setUp::initNavDataCache();
 }
 
 
@@ -49,53 +53,129 @@ void TimeManagerTests::tearDown()
 
 void TimeManagerTests::testBasic()
 {
-    // SGPath testUserDataPath = globals->get_fg_home() / "test_autosave_migrate";
-    // if (!testUserDataPath.exists()) {
-    //     SGPath p = testUserDataPath / "foo";
-    //     p.create_dir(0755);
-    // }
+    auto timeManager = new TimeManager;
 
-    // simgear::Dir homeDir(testUserDataPath);
-    // for (auto path : homeDir.children(simgear::Dir::TYPE_FILE, ".xml")) {
-    //     path.remove();
-    // }
+    // set standard values
+    fgSetBool("/sim/freeze", false);
+    fgSetBool("/sim/sceneryloaded", true);
+    fgSetDouble("/sim/model-hz", 120.0);
 
-    // writeLegacyAutosave(testUserDataPath, 2016, 1);
+    timeManager->bind();
+    timeManager->init();
+    timeManager->postinit();
 
-    // const string_list versionParts = simgear::strutils::split(VERSION, ".");
-    // CPPUNIT_ASSERT(versionParts.size() == 3);
-    // const int currentMajor = simgear::strutils::to_int(versionParts[0]);
-    // const int currentMinor = simgear::strutils::to_int(versionParts[1]);
+    double simDt, realDt;
+    // first run: values are zero
+    timeManager->computeTimeDeltas(simDt, realDt);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, simDt, 1.0e-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, realDt, 1.0e-6);
 
-    // // none of these should not be read
-    // writeLegacyAutosave2(testUserDataPath, 2016, 0);
-    // writeLegacyAutosave2(testUserDataPath, currentMajor, currentMinor + 1);
-    // writeLegacyAutosave2(testUserDataPath, currentMajor+1, currentMinor + 1);
+    // manually modify the 'last time' to check delta computation
+    timeManager->_lastStamp = SGTimeStamp::now() - SGTimeStamp::fromMSec(25);
+    timeManager->computeTimeDeltas(simDt, realDt);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.025, simDt, 1.0e-3);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.025, realDt, 1.0e-3);
 
-    // SGPath p = globals->autosaveFilePath(testUserDataPath);
-    // if (p.exists()) {
-    //     CPPUNIT_ASSERT(p.remove());
-    // }
+    timeManager->update(simDt);
+}
 
-    // // write some blck-list rules to property tree
-    // SGPropertyNode_ptr blacklist = fgGetNode("/sim/autosave-migration/blacklist", true);
-    // blacklist->addChild("path")->setStringValue("/sim[0]/presets[0]/*");
-    // blacklist->addChild("path")->setStringValue("/sim[0]/rendering[0]/texture-");
-    // blacklist->addChild("path")->setStringValue("/views[0]/view[*]/old-prop");
-    // blacklist->addChild("path")->setStringValue("/sim[0]/gui");
+void TimeManagerTests::testFreezeUnfreeze()
+{
+    auto timeManager = new TimeManager;
 
-    // // execute method under test
-    // globals->loadUserSettings(testUserDataPath);
+    // set standard values
+    fgSetBool("/sim/freeze/clock", false);
+    fgSetBool("/sim/sceneryloaded", true);
+    fgSetDouble("/sim/model-hz", 120.0);
 
-    // CPPUNIT_ASSERT_EQUAL((int)globals->get_props()->getNode("sim")->getChildren("presets").size(), 2);
-    // CPPUNIT_ASSERT_EQUAL((int)globals->get_props()->getNode("sim")->getChildren("gui").size(), 0);
+    timeManager->bind();
+    timeManager->init();
+    timeManager->postinit();
 
-    // CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/window-height"), 42);
-    // CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/presets/foo"), 0);
-    // CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/presets[1]/foo"), 13);
+    double simDt, realDt;
+    // first run: values are zero
+    timeManager->computeTimeDeltas(simDt, realDt);
 
-    // CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("some-setting"), 888);
+    SGTimeStamp n;
 
-    // // if this is not zero, one of the bad autosaves was read
-    // CPPUNIT_ASSERT_EQUAL(globals->get_props()->getIntValue("sim/bad"), 0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, simDt, 1.0e-6);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, realDt, 1.0e-6);
+
+    timeManager->_lastStamp = SGTimeStamp::now() - SGTimeStamp::fromMSec(15);
+    timeManager->computeTimeDeltas(simDt, realDt);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.008333, simDt, 1.0e-5);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.008333, realDt, 1.0e-5);
+
+    fgSetBool("/sim/freeze/clock", true);
+    timeManager->_lastStamp = SGTimeStamp::now() - SGTimeStamp::fromMSec(20);
+    timeManager->computeTimeDeltas(simDt, realDt);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, simDt, 1.0e-5); // sim time should not advance
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.025, realDt, 1.0e-5);
+}
+
+void TimeManagerTests::testTimeZones()
+{
+    auto vabb = fgFindAirportID("VABB");
+    FGTestApi::setPositionAndStabilise(vabb->geod());
+
+
+    auto timeManager = new TimeManager;
+
+    // set standard values
+    fgSetBool("/sim/freeze", false);
+    fgSetBool("/sim/sceneryloaded", true);
+    fgSetDouble("/sim/model-hz", 120.0);
+
+    timeManager->bind();
+    timeManager->init();
+    timeManager->postinit();
+
+    // fake Unix time by setting this; it will then
+    // set the 'current unix time' passed to SGTime
+    const auto testDate = 314611200L;
+    fgSetInt("/sim/time/cur-time-override", testDate);
+
+    timeManager->update(0.0);
+
+    CPPUNIT_ASSERT_EQUAL(18000L, globals->get_time_params()->get_local_offset());
+
+    auto gmt = globals->get_time_params()->getGmt();
+    CPPUNIT_ASSERT_EQUAL(79, gmt->tm_year);
+    CPPUNIT_ASSERT_EQUAL(11, gmt->tm_mon);
+    CPPUNIT_ASSERT_EQUAL(21, gmt->tm_mday);
+
+
+    // relocate to somewhere, check the time values update
+}
+
+void TimeManagerTests::testSpecifyTimeOffset()
+{
+    // disabled for now since this code depends on epehmeris as well
+    // to define sun position
+    return;
+
+    auto timeManager = new TimeManager;
+
+    // set standard values
+    fgSetBool("/sim/freeze", false);
+    fgSetBool("/sim/sceneryloaded", true);
+    fgSetDouble("/sim/model-hz", 120.0);
+
+    timeManager->bind();
+    timeManager->init();
+    timeManager->postinit();
+
+    const auto testDate = 314611200L;
+    fgSetInt("/sim/time/cur-time-override", testDate);
+
+    auto uudd = fgFindAirportID("UUDD");
+    FGTestApi::setPositionAndStabilise(uudd->geod());
+
+    timeManager->setTimeOffset("dawn", 0);
+
+    timeManager->update(0.0);
+
+    auto localTime = globals->get_time_params()->get_cur_time();
+
+    CPPUNIT_ASSERT_EQUAL(0L, localTime);
 }

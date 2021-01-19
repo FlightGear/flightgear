@@ -30,6 +30,9 @@ class TimeManagerTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(TimeManagerTests);
     CPPUNIT_TEST(testBasic);
+    CPPUNIT_TEST(testTimeZones);
+    CPPUNIT_TEST(testFreezeUnfreeze);
+    CPPUNIT_TEST(testSpecifyTimeOffset);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -41,4 +44,7 @@ public:
 
     // The tests.
     void testBasic();
+    void testTimeZones();
+    void testFreezeUnfreeze();
+    void testSpecifyTimeOffset();
 };
