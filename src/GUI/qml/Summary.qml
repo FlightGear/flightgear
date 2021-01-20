@@ -180,7 +180,7 @@ Item {
                         horizontalCenter: parent.horizontalCenter
                         bottom: parent.top
                     }
-                    text: qsTr("Click here to select a recently used aircraft.")
+                    text: qsTr("Access recently used aircraft.")
                 }
             }
 
@@ -275,7 +275,7 @@ Item {
                         anchors {
                             verticalCenter: parent.verticalCenter
                         }
-                        text: qsTr("Use this menu to choose the starting state of the aircraft")
+                        text: qsTr("Choose the starting condition of the aircraft")
                     }
                 }
 
@@ -328,7 +328,7 @@ Item {
                         leftMargin: Style.strutSize
                     }
                     arrow: GettingStartedTip.TopLeft
-                    text: qsTr("Click this description to view and change the current location.")
+                    text: qsTr("Click to view and change the current location.")
                 }
             }
 
@@ -347,7 +347,7 @@ Item {
                         bottom: parent.top
                     }
                     arrow: GettingStartedTip.BottomRight
-                    text: qsTr("Click here to access recently used locations")
+                    text: qsTr("Access recently used locations")
                 }
             }
 

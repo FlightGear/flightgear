@@ -1,5 +1,7 @@
 import QtQuick 2.4
-
+import QtQml 2.4
+import FlightGear.Launcher 1.0
+import FlightGear 1.0
 import "."
 
 Rectangle {
@@ -22,6 +24,8 @@ Rectangle {
     {
         selectedPage = index
     }
+
+    GettingStartedScope.controller: tips.controller
 
     Column {
         id: mainColumn
@@ -47,6 +51,20 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: root.showMenu()
+            }
+
+
+            GettingStartedTip {
+                id: menuTip
+                tipId: "sidebarMenuTip"
+                arrow: GettingStartedTip.TopLeft
+
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    horizontalCenterOffset: Style.margin
+                    top: parent.bottom
+                }
+                text: qsTr("Access additional options here")
             }
         }
 
@@ -76,5 +94,11 @@ Rectangle {
         disabledText: qsTr("The selected aircraft is not installed or has updates pending")
         icon: _launcher.flyIconUrl
         onClicked: _launcher.fly();
+    }
+
+    GettingStartedTipLayer {
+        id: tips
+        anchors.fill: parent
+        scopeId: "sidebar"
     }
 }

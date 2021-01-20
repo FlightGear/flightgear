@@ -119,6 +119,9 @@ private:
     QTimer* _notMovingTimeout = nullptr;
 };
 
+// static used to ensure only one controller is active at a time
+static QPointer<GettingStartedTipsController> static_activeController;
+
 GettingStartedTipsController::GettingStartedTipsController(QObject *parent) : QObject(parent)
 {
     // observer for the tip item
@@ -207,6 +210,10 @@ void GettingStartedTipsController::showOneShotTip(GettingStartedTip *tip)
         return;
     }
 
+    if (static_activeController != this) {
+        return;
+    }
+
     QSettings settings;
     settings.beginGroup("GettingStarted-DontShow");
     if (settings.value(tip->tipId()).toBool()) {
@@ -229,6 +236,7 @@ void GettingStartedTipsController::tipsWereReset()
     bool a = shouldShowScope();
     if (a != _scopeActive) {
         _scopeActive = a;
+        static_activeController = this; // we became active
         emit activeChanged();
         currentTipUpdated();
     }
@@ -411,7 +419,12 @@ void GettingStartedTipsController::close()
     if (_oneShotTip) {
         disconnect(_oneShotTip, nullptr, this, nullptr);
         _oneShotTip = nullptr;
+        static_activeController.clear();
     } else {
+        if (_scopeActive) {
+            static_activeController.clear();
+        }
+
         QSettings settings;
         settings.beginGroup("GettingStarted-DontShow");
         settings.setValue(_scopeId, true);
@@ -445,12 +458,19 @@ void GettingStartedTipsController::setScopeId(QString scopeId)
 
     _scopeId = scopeId;
     _scopeActive = shouldShowScope();
+    if (_scopeActive) {
+        static_activeController = this;
+    }
     emit scopeIdChanged(_scopeId);
     emit activeChanged();
 }
 
 bool GettingStartedTipsController::shouldShowScope() const
 {
+    if (static_activeController && (static_activeController != this)) {
+        return false;
+    }
+
     if (_scopeId.isEmpty())
         return true;
 
