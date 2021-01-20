@@ -13,6 +13,7 @@ Item {
 
     property bool showCarriers: false
     readonly property var locationModel: showCarriers ? _location.carriersModel : _location.searchModel
+    GettingStartedScope.controller: tips.controller
 
     function backToSearch()
     {
@@ -239,6 +240,18 @@ Item {
               this.icon = "qrc:///svg/icon-carrier"
             }
         }
+
+        GettingStartedTip {
+            tipId: "locationCarriersList"
+
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                horizontalCenterOffset:  -Style.margin
+                top: parent.bottom
+            }
+            arrow: GettingStartedTip.TopRight
+            text: qsTr("View available aircraft carriers to start at.")
+        }
     }
 
     StyledText {
@@ -305,6 +318,12 @@ Item {
                 wrapMode: Text.WordWrap
             }
         }
+    }
+
+    GettingStartedTipLayer {
+        id: tips
+        anchors.fill: parent
+        scopeId: "location"
     }
 
     // scrollbar

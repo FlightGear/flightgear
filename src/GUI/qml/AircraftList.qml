@@ -52,10 +52,11 @@ FocusScope
 
                 anchors {
                     horizontalCenter: parent.horizontalCenter
+                    horizontalCenterOffset: Style.margin
                     top: parent.bottom
                 }
                 arrow: GettingStartedTip.TopLeft
-                text: qsTr("Click here to switch between grid and list mode")
+                text: qsTr("Toggle between grid and list view")
             }
         }
 
@@ -81,7 +82,7 @@ FocusScope
                         top: parent.bottom
                     }
                     arrow: GettingStartedTip.TopCenter
-                    text: qsTr("Use this tab to view installed aircraft")
+                    text: qsTr("Use this button to view installed aircraft")
                 }
             }
 
@@ -113,7 +114,7 @@ FocusScope
                         top: parent.bottom
                     }
                     arrow: GettingStartedTip.TopCenter
-                    text: qsTr("Use this tab to view available aircraft to download")
+                    text: qsTr("View available aircraft to download")
                 }
             }
 
@@ -155,7 +156,7 @@ FocusScope
                     top: parent.bottom
                 }
                 arrow: GettingStartedTip.TopRight
-                text: qsTr("Enter text here to search aircraft names and descriptions.")
+                text: qsTr("Enter text to search aircraft names and descriptions.")
             }
         }
     }
