@@ -21,6 +21,7 @@
 #include "sentryIntegration.hxx"
 
 #include <cstring> // for strcmp
+#include <algorithm>
 
 #include <simgear/debug/LogCallback.hxx>
 #include <simgear/debug/logstream.hxx>
