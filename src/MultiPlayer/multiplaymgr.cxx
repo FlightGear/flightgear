@@ -1034,6 +1034,7 @@ static bool do_cpdlc_disconnect(const SGPropertyNode* arg, SGPropertyNode* root)
 //////////////////////////////////////////////////////////////////////
 FGMultiplayMgr::FGMultiplayMgr()
 {
+  mPropertiesChanged = false;
   mInitialised   = false;
   mHaveServer    = false;
   mListener = NULL;
