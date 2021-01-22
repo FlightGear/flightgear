@@ -177,6 +177,7 @@ static void initTerrasync()
     globals->append_data_path(terraSyncDir, false /* = ahead of FG_ROOT */);
 
     if (fgGetBool("/sim/fghome-readonly", false)) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "initTerrasync() failing because /sim/fghome-readonly is true");
         return;
     }
 
