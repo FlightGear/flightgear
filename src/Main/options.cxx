@@ -1780,7 +1780,6 @@ struct OptionDesc {
     {"units-feet",                   false, OPTION_STRING, "/sim/startup/units", false, "feet", 0 },
     {"units-meters",                 false, OPTION_STRING, "/sim/startup/units", false, "meters", 0 },
     {"timeofday",                    true,  OPTION_STRING, "/sim/startup/time-offset-type", false, "noon", 0 },
-    {"season",                       true,  OPTION_STRING, "/sim/startup/season", false, "summer", 0 },
     {"time-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptTimeOffset },
     {"time-match-real",              false, OPTION_STRING, "/sim/startup/time-offset-type", false, "system-offset", 0 },
     {"time-match-local",             false, OPTION_STRING, "/sim/startup/time-offset-type", false, "latitude-offset", 0 },
