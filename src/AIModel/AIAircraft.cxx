@@ -79,6 +79,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     tgt_speed = 0;
     speed = 0;
     groundTargetSpeed = 0;
+    spinCounter = 0;
 
     // set heading and altitude locks
     hdg_lock = false;

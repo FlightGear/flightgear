@@ -950,6 +950,7 @@ do_multiplayer_refreshserverlist (const SGPropertyNode * arg, SGPropertyNode * r
 //////////////////////////////////////////////////////////////////////
 FGMultiplayMgr::FGMultiplayMgr()
 {
+  mPropertiesChanged = false;
   mInitialised   = false;
   mHaveServer    = false;
   mListener = NULL;
