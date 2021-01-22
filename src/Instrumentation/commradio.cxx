@@ -500,7 +500,8 @@ private:
 
 CommRadioImpl::CommRadioImpl(SGPropertyNode_ptr node) :
   _metarBridge(new MetarBridge),
-  _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer)
+  _signalQualityComputer(new SimpleDistanceSquareSignalQualityComputer),
+  _atis_enabled_prev(false)
 {
   // set a special value to indicate we don't require a power supply node
   // by default
