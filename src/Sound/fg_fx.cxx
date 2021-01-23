@@ -159,9 +159,11 @@ FGFX::init()
 void
 FGFX::reinit()
 {
+    SGSampleGroup::stop();
     std::for_each(_sound.begin(), _sound.end(), [](const SGXmlSound* snd) { delete snd; });
     _sound.clear();
     init();
+    SGSampleGroup::resume();
 }
 
 
