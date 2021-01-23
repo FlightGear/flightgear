@@ -427,37 +427,16 @@ Item {
                 width: parent.width
                 settingGroup: "render"
 
-                readonly property bool alsEnabled: (renderer.selectedIndex == 1)
                 readonly property bool msaaEnabled: (msaa.selectedIndex > 0)
 
                 function summary()
                 {
                     var result = [];
-                    if (alsEnabled) result.push(qsTr("ALS"));
                     if (msaaEnabled) result.push(qsTr("anti-aliasing"));
                     return result;
                 }
 
-                readonly property var __rendererChoices: [qsTr("Default"),
-                    qsTr("Atmospheric Light Scattering")]
-
-                readonly property string __defaultRenderDesc: qsTr("The default renderer provides standard visuals with maximum compatibility.")
-                readonly property string __alsRenderDesc: qsTr("The ALS renderer uses a sophisticated physical atmospheric model and several " +
-                                                               "other effects to give realistic rendering of large distances.")
-
-                readonly property var descriptions: [__defaultRenderDesc, __alsRenderDesc]
-
-                contents: [
-                    SettingsComboBox {
-                        id: renderer
-                        label: qsTr("Renderer")
-                        choices: renderSection.__rendererChoices
-                        description: renderSection.descriptions[selectedIndex]
-                        defaultIndex: 1
-                        setting: "renderer"
-                        keywords: ["als", "render", "shadow", "low-spec", "graphics", "performance"]
-                    },
-
+                contents: [         
                     SettingsComboBox {
                         id: msaa
                         label: qsTr("Anti-aliasing")
@@ -474,7 +453,7 @@ Item {
                     SettingCheckbox {
                         id: compressTextures
                         setting: "texture-compression"
-                        keywords: ["texture", "compresseion", "memory", "dxt", "cache"]
+                        keywords: ["texture", "compression", "memory", "dxt", "cache"]
                         // no option, since we need to set a property
                         advanced: true
 
@@ -491,10 +470,6 @@ Item {
                     if (msaaEnabled) {
                         _config.setProperty("/sim/rendering/multi-sample-buffers", 1)
                         _config.setProperty("/sim/rendering/multi-samples", msaa.data[msaa.selectedIndex])
-                    }
-
-                    if (alsEnabled) {
-                        _config.setProperty("/sim/rendering/shaders/skydome", true);
                     }
 
                     _config.setProperty("/sim/rendering/texture-cache/cache-enabled", compressTextures.value);
