@@ -714,7 +714,11 @@ double GPS::computeTurnRadiusNm(double aGroundSpeedKts) const
 
 void GPS::updateRouteData()
 {
-  double totalDistance = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
+    double totalDistance = 0.0;
+    // waypt controller might be null: Sentry-Id: FLIGHTGEAR-FFX
+    if (_wayptController) {
+        totalDistance = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
+    }
 
     if (_route) {
         // walk all waypoints from wp2 to route end, and sum
