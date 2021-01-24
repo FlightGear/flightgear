@@ -745,7 +745,8 @@ int fgInitAircraft(bool reinit)
 
     SGSharedPtr<Root> pkgRoot(globals->packageRoot());
     SGPropertyNode* aircraftProp = fgGetNode("/sim/aircraft", true);
-    string aircraftId(aircraftProp->getStringValue());
+    const string fullyQualifiedAircraftId = fgGetString("/sim/aircraft-id");
+    string aircraftId = fullyQualifiedAircraftId.empty() ? aircraftProp->getStringValue() : fullyQualifiedAircraftId;
 
     flightgear::addSentryTag("aircraft", aircraftId);
         
@@ -757,6 +758,11 @@ int fgInitAircraft(bool reinit)
     if (acftPackage) {
         if (acftPackage->isInstalled()) {
             SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft from package:" << acftPackage->qualifiedId());
+            // if we resolved a non-qualified ID, set the full one back to /sim/aircraft-id
+            fgSetString("/sim/aircraft-id", acftPackage->qualifiedId());
+
+            // replace this tag, so we know which hangar is in use
+            flightgear::addSentryTag("aircraft", acftPackage->qualifiedId());
 
             // set catalog path so intra-package dependencies within the catalog
             // are resolved correctly.
