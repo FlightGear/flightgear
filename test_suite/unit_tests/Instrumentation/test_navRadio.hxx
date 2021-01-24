@@ -27,7 +27,6 @@
 
 class FGNavRadio;
 class SGGeod;
-class SGSubsystem;
 
 // The flight plan unit tests.
 class NavRadioTests : public CppUnit::TestFixture
@@ -35,20 +34,23 @@ class NavRadioTests : public CppUnit::TestFixture
     // Set up the test suite.
     CPPUNIT_TEST_SUITE(NavRadioTests);
     CPPUNIT_TEST(testBasic);
-    CPPUNIT_TEST(testCDIDeflection);
-    
-    CPPUNIT_TEST(testILSBasic);
+
+    CPPUNIT_TEST(callNavRadioCDI);
+    CPPUNIT_TEST(callNewNavRadioCDI);
+    CPPUNIT_TEST(callNavRadioILS);
+    CPPUNIT_TEST(callNewNavRadioILS);
+    CPPUNIT_TEST(callNavRadioGS);
+    CPPUNIT_TEST(callNewNavRadioGS);
+
     CPPUNIT_TEST(testGS);
     CPPUNIT_TEST(testILSFalseCourse);
     CPPUNIT_TEST(testILSPaired);
     CPPUNIT_TEST(testILSAdjacentPaired);
     CPPUNIT_TEST(testGlideslopeLongDistance);
 
-    CPPUNIT_TEST(testNewRadioBasic);
-
     CPPUNIT_TEST_SUITE_END();
 
-    void setPositionAndStabilise(SGSubsystem* r, const SGGeod& g);
+    void setPositionAndStabilise(FGNavRadio* r, const SGGeod& g);
 
 public:
     // Set up function for each test.
@@ -57,18 +59,24 @@ public:
     // Clean up after each test.
     void tearDown();
 
+    std::string formatFrequency(double f);
+
     // The tests.
     void testBasic();
-    void testCDIDeflection();
-    
-    void testILSBasic();
+
+    void callNavRadioCDI();
+    void callNewNavRadioCDI();
+    void callNavRadioILS();
+    void callNewNavRadioILS();
+    void callNavRadioGS();
+    void callNewNavRadioGS();
+
     void testGS();
     void testILSFalseCourse();
     void testILSPaired();
     void testILSAdjacentPaired();
     void testGlideslopeLongDistance();
-
-    void testNewRadioBasic();
 };
+
 
 #endif  // _FG_NAVRADIO_UNIT_TESTS_HXX
