@@ -2254,10 +2254,21 @@ OptionResult Options::initAircraft()
   }
 
   if (!aircraft.empty()) {
+      fgSetString("/sim/aircraft-id", aircraft);
+      const auto lastDotPos = aircraft.rfind('.');
+      if (lastDotPos != string::npos) {
+          // ensure /sim/aircraft is only the local ID, not the fully-qualified ID
+          // otherwise some existing logic gets confused.
+          fgSetString("/sim/aircraft", aircraft.substr(lastDotPos + 1));
+      } else {
+          fgSetString("/sim/aircraft", aircraft);
+      }
+
     SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
-    fgSetString("/sim/aircraft", aircraft.c_str() );
   } else {
     SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
+    // ensure aircraft-id is valid
+    fgSetString("/sim/aircraft-id", fgGetString("/sim/aircraft"));
   }
 
   if (p->showAircraft) {
