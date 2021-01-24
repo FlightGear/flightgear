@@ -3,6 +3,7 @@ foreach( system_test_category
         FDM
         Instrumentation
         Navaids
+        Main
     )
 
     add_subdirectory(${system_test_category})

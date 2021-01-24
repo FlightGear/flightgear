@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<PropertyList>
+    <id>org.fg.test.catalog1</id>
+    <description>First test catalog</description>
+    <url>http://localhost:2000/catalogTest1/catalog.xml</url>
+    <catalog-version>4</catalog-version>
+
+    <version>*</version>
+   
+
+    <package>
+        <id>bob</id>
+        <name>The Bob Craft</name>
+        <revision type="int">8</revision>
+        <file-size-bytes type="int">593</file-size-bytes>
+
+        <md5>a469c4b837f0521db48616cfe65ac1ea</md5>
+        <url>http://localhost:2000/catalogTest1/alpha.zip</url>
+
+        <dir>bobCraft</dir>
+
+    </package>
+
+</PropertyList>
