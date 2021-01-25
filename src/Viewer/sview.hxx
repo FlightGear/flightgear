@@ -58,20 +58,11 @@ Returns:
 
 As of 2020-11-17, extra views have various limitations including:
 
-    No event handling, so no panning, zooming etc.
+    No key event handling, so no zooming with x/X.
     
-    Tower View AGL is like Tower View so no zooming to keep ground visible.
-    
-    Cockpit view has a incorrect calculation giving slightly incorrect
-    translation when rolling.
-    
-    No damping in chase views.
-    
-    Hard-coded chase distances.
-
 config:
     width, height:
-        Size of new window. Defaults are half main window.
+        Size of new window. Defaults are half main window width and height.
     x, y:
         Position of new window.
     type:
@@ -162,7 +153,7 @@ An sview-step is:
                     Ground level is damped as dx/dt =
                     (x_actual-x)/damping_time, and damping_time is the time in
                     seconds for the damped value to change by a factor of e
-                    (2.71).
+                    (2.71...).
 
 Examples:
 
