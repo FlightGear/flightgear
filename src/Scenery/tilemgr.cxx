@@ -206,11 +206,17 @@ void FGTileMgr::reinit()
     double rough    = fgGetDouble("/sim/rendering/static-lod/rough-delta", SG_OBJECT_RANGE_ROUGH) + detailed;
     double bare     = fgGetDouble("/sim/rendering/static-lod/bare", SG_OBJECT_RANGE_BARE) + rough;
     double tile_min_expiry = fgGetDouble("/sim/rendering/plod-minimum-expiry-time-secs", SG_TILE_MIN_EXPIRY);
+    double sample_ratio = fgGetDouble("/scenery/elevation-mesh/sample-ratio", 1.0);
+    double vertical_scale = fgGetDouble("/scenery/elevation-mesh/vertical-scale", 1.0);
+    double vertical_constraint_gap = fgGetDouble("/scenery/elevation-mesh/constraint-gap-m", 1.0);
 
     _options->setPluginStringData("SimGear::LOD_RANGE_BARE", std::to_string(bare));
     _options->setPluginStringData("SimGear::LOD_RANGE_ROUGH", std::to_string(rough));
     _options->setPluginStringData("SimGear::LOD_RANGE_DETAILED", std::to_string(detailed));
     _options->setPluginStringData("SimGear::PAGED_LOD_EXPIRY", std::to_string(tile_min_expiry));
+    _options->setPluginStringData("SimGear::ELEV_MESH_SAMPLE_RATIO", std::to_string(sample_ratio));
+    _options->setPluginStringData("SimGear::ELEV_MESH_VERTICAL_SCALE", std::to_string(vertical_scale));
+    _options->setPluginStringData("SimGear::ELEV_MESH_CONSTRAINT_GAP", std::to_string(vertical_constraint_gap));
 
     string_list scenerySuffixes;
     for (auto node : fgGetNode("/sim/rendering/", true)->getChildren("scenery-path-suffix")) {
