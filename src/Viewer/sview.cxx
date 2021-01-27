@@ -193,7 +193,8 @@ struct SviewStep
     /* Updates <posdir>. */
     virtual void evaluate(SviewPosDir& posdir, double dt=0) = 0;
     
-    virtual void mouse_drag(double delta_x, double delta_y)
+    /* Modify view angle. */
+    virtual void mouse_drag(double delta_x_deg, double delta_y_deg)
     {
     }
     
@@ -391,14 +392,16 @@ struct SviewStepRotate : SviewStep
         posdir.roll     = m_damping_roll.update(dt, posdir.roll + m_roll);
     }
     
-    void mouse_drag(double delta_x, double delta_y) override
+    void mouse_drag(double delta_x_deg, double delta_y_deg) override
     {
         if (m_fixed) {
             return;
         }
-        m_heading += delta_x;
-        m_pitch += delta_y;
-        SG_LOG(SG_VIEW, SG_DEBUG, " delta_x=" << delta_x << " delta_y=" << delta_y
+        m_heading += delta_x_deg;
+        m_pitch += delta_y_deg;
+        SG_LOG(SG_VIEW, SG_DEBUG,
+                " delta_x_deg=" << delta_x_deg
+                << " delta_y_deg=" << delta_y_deg
                 << ":"
                 << " m_heading=" << m_heading
                 << " m_pitch=" << m_pitch
@@ -626,11 +629,11 @@ struct SviewStepFinal : SviewStep
         posdir.direction2 = ec2body * rotation * q;
     }
     
-    void mouse_drag(double delta_x, double delta_y) override
+    void mouse_drag(double delta_x_deg, double delta_y_deg) override
     {
         if (m_orientation) {
-            m_heading += delta_x;
-            m_pitch += delta_y;
+            m_heading += delta_x_deg;
+            m_pitch += delta_y_deg;
         }
     }
     
@@ -1029,7 +1032,7 @@ struct SviewView
     /* Returns false if window has been closed. */
     virtual bool update(double dt) = 0;
     
-    virtual void mouse_drag(double delta_x, double delta_y) = 0;
+    virtual void mouse_drag(double delta_x_deg, double delta_y_deg) = 0;
     
     /* Sets this view's camera position/orientation from <posdir>. */
     void posdir_to_view(SviewPosDir posdir)
@@ -1480,10 +1483,10 @@ struct SviewViewEyeTarget : SviewView
         return true;
     }
     
-    void mouse_drag(double delta_x, double delta_y) override
+    void mouse_drag(double delta_x_deg, double delta_y_deg) override
     {
         for (auto step: m_steps.m_steps) {
-            step->mouse_drag(delta_x, delta_y);
+            step->mouse_drag(delta_x_deg, delta_y_deg);
         }
     }
     
@@ -1894,8 +1897,30 @@ bool SviewMouseMotion(int x, int y, const osgGA::GUIEventAdapter& ea)
     bool button2 = globals->get_props()->getBoolValue("/devices/status/mice/mouse/button[2]");
     if (button2 && sview_view->m_mouse_button2) {
         /* Button2 drag. */
-        SG_LOG(SG_GENERAL, SG_DEBUG, "button2:" << " xx=" << xx << " yy=" << yy);
-        sview_view->mouse_drag(xx - sview_view->m_mouse_x, yy - sview_view->m_mouse_y);
+        double  delta_x = xx - sview_view->m_mouse_x;
+        double  delta_y = yy - sview_view->m_mouse_y;
+        if (delta_x || delta_y) {
+            /* Convert delta (which is mouse movement in pixels) to a change
+            in viewing angle in degrees. We do this using the fov and window
+            size so that the result is the image moving as though it was being
+            panned by the mouse movement. So angle changes are smaller for
+            high zoom values or small windows, making high zoom views easy to
+            control. */
+            osg::Camera* camera = sview_view->m_osg_view->getCamera();
+            double fov_y;
+            double aspect_ratio;
+            double z_near;
+            double z_far;
+            camera->getProjectionMatrixAsPerspective(fov_y, aspect_ratio, z_near, z_far);
+            double fov_x = fov_y * aspect_ratio;
+            
+            simgear::compositor::Compositor*    compositor = sview_view->m_compositor;
+            osg::Viewport*                      viewport = compositor->getViewport();
+            double delta_x_deg = delta_x / viewport->width() * fov_x;
+            double delta_y_deg = delta_y / viewport->height() * fov_y;
+
+            sview_view->mouse_drag(delta_x_deg, delta_y_deg);
+        }
     }
     sview_view->m_mouse_button2 = button2;
     sview_view->m_mouse_x = xx;
