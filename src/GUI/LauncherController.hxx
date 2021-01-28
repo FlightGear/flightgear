@@ -328,6 +328,7 @@ private:
     bool m_aircraftGridMode;
     int m_launchCount = 0;
     int m_versionLaunchCount = 0;
+    bool m_flyRequested = false;
 };
 
 #endif // LAUNCHERCONTROLLER_HXX
