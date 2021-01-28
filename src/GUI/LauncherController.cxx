@@ -599,6 +599,13 @@ void LauncherController::setEnvironmentSummary(QStringList environmentSummary)
 
 void LauncherController::fly()
 {
+    // avoid duplicate calls to fly, if the user's system is slow, and they
+    // generate multiple clicks / events before the qApp->exit() fires.
+    // without this, we can apply options, etc twice which breaks.
+    if (m_flyRequested)
+        return;
+    m_flyRequested = true;
+
 	if (m_inAppMode) {
 		doApply();
 		m_keepRunningInAppMode = false;
