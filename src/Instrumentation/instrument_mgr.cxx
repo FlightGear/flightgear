@@ -166,7 +166,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new MagCompass( node ) );
 
         } else if ( name == "marker-beacon" ) {
-            set_subsystem( id, new FGMarkerBeacon( node ), 0.2 );
+            set_subsystem(id, new FGMarkerBeacon(node));
 
         } else if ( name == "comm-radio" ) {
             set_subsystem( id, Instrumentation::CommRadio::createInstance( node ) );
@@ -179,8 +179,8 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 
         } else if (( name == "transponder" ) || ( name == "KT-70" )) {
             if  (name == "KT-70") {
-                SG_LOG(SG_INSTR, SG_WARN, "KT-70 legacy instrument compatibility. "
-                       "Please update aircraft to use transponder directly");
+                SG_LOG(SG_INSTR, SG_DEV_ALERT, "KT-70 legacy instrument compatibility. "
+                                               "Please update aircraft to use transponder directly");
                 // force configuration into compatibility mode
                 node->setBoolValue("kt70-compatibility", true);
             }

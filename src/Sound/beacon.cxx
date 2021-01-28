@@ -123,3 +123,41 @@ FGBeacon * FGBeacon::instance()
     }
     return _instance;
 }
+
+static const uint64_t sizeToUSec = 1000000UL / FGBeacon::BYTES_PER_SECOND;
+
+FGBeacon::BeaconTiming FGBeacon::getTimingForInner() const
+{
+    BeaconTiming r;
+
+    const uint64_t ditLen = INNER_DIT_LEN * sizeToUSec;
+    r.durationUSec = ditLen;
+    r.periodsUSec[0] = ditLen / 2;
+    r.periodsUSec[1] = ditLen / 2;
+    return r;
+}
+
+FGBeacon::BeaconTiming FGBeacon::getTimingForMiddle() const
+{
+    BeaconTiming r;
+    const uint64_t ditLen = MIDDLE_DIT_LEN * sizeToUSec;
+    const uint64_t dahLen = MIDDLE_DAH_LEN * sizeToUSec;
+
+    r.durationUSec = MIDDLE_SIZE * sizeToUSec;
+    r.periodsUSec[0] = ditLen;
+    r.periodsUSec[1] = ditLen;
+    r.periodsUSec[2] = (dahLen * 3) / 4;
+    r.periodsUSec[3] = dahLen - r.periodsUSec[2];
+    return r;
+}
+
+FGBeacon::BeaconTiming FGBeacon::getTimingForOuter() const
+{
+    BeaconTiming r;
+    const uint64_t dahLen = OUTER_DAH_LEN * sizeToUSec;
+
+    r.durationUSec = dahLen;
+    r.periodsUSec[0] = (dahLen * 3) / 4;
+    r.periodsUSec[1] = dahLen - r.periodsUSec[0];
+    return r;
+}

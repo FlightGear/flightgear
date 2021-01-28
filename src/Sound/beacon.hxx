@@ -24,6 +24,8 @@
 #ifndef _BEACON_HXX
 #define _BEACON_HXX
 
+#include <array>
+
 #include "soundgenerator.hxx"
 
 #include <simgear/compiler.h>
@@ -103,7 +105,15 @@ public:
     SGSoundSample *get_inner() { return inner; }
     SGSoundSample *get_middle() { return middle; }
     SGSoundSample *get_outer() { return outer; }
-   
+
+    struct BeaconTiming {
+        uint64_t durationUSec;
+        std::array<uint64_t, 4> periodsUSec;
+    };
+
+    BeaconTiming getTimingForInner() const;
+    BeaconTiming getTimingForMiddle() const;
+    BeaconTiming getTimingForOuter() const;
 };
 
 

@@ -37,18 +37,49 @@
 #include <Sound/beacon.hxx>
 
 #include <string>
+
 using std::string;
+
+
+static SGSoundSample* createSampleForBeacon(FGMarkerBeacon::fgMkrBeacType ty)
+{
+    switch (ty) {
+    case FGMarkerBeacon::INNER:
+        return FGBeacon::instance()->get_inner();
+    case FGMarkerBeacon::MIDDLE:
+        return FGBeacon::instance()->get_middle();
+    case FGMarkerBeacon::OUTER:
+        return FGBeacon::instance()->get_outer();
+    default:
+        return nullptr;
+    }
+}
+
+static string sampleNameForBeacon(FGMarkerBeacon::fgMkrBeacType ty)
+{
+    switch (ty) {
+    case FGMarkerBeacon::INNER: return "inner-marker";
+    case FGMarkerBeacon::MIDDLE: return "middle-marker";
+    case FGMarkerBeacon::OUTER: return "outer-marker";
+    default:
+        return {};
+    }
+}
 
 // Constructor
 FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
-    outer_blink(false),
-    middle_blink(false),
-    inner_blink(false),
     _time_before_search_sec(0.0)
 {
     // backwards-compatability supply path
     setDefaultPowerSupplyPath("/systems/electrical/outputs/nav[0]");
     readConfig(node, "marker-beacon");
+
+    string blinkMode = node->getStringValue("blink-mode");
+    if (blinkMode == "standard") {
+        _blinkMode = BlinkMode::Standard;
+    } else if (blinkMode == "continuous") {
+        _blinkMode = BlinkMode::Continuous;
+    }
 }
 
 
@@ -66,9 +97,6 @@ FGMarkerBeacon::init ()
     
     // Inputs
     sound_working = fgGetNode("/sim/sound/working", true);
-    lon_node = fgGetNode("/position/longitude-deg", true);
-    lat_node = fgGetNode("/position/latitude-deg", true);
-    alt_node = fgGetNode("/position/altitude-ft", true);
     audio_btn = node->getChild("audio-btn", 0, true);
     audio_vol = node->getChild("volume", 0, true);
 
@@ -76,8 +104,14 @@ FGMarkerBeacon::init ()
         audio_btn->setBoolValue( true );
 
     SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
-    _sgr = smgr->find("avionics", true);
-    _sgr->tie_to_listener();
+    if (smgr) {
+        _audioSampleGroup = smgr->find("avionics", true);
+        _audioSampleGroup->tie_to_listener();
+
+        sound_working->addChangeListener(this);
+        audio_btn->addChangeListener(this);
+        audio_vol->addChangeListener(this);
+    }
 
     reinit();
 }
@@ -85,9 +119,9 @@ FGMarkerBeacon::init ()
 void
 FGMarkerBeacon::reinit ()
 {
-    blink.stamp();
-    outer_marker = middle_marker = inner_marker = false;
     _time_before_search_sec = 0.0;
+    _lastBeacon = NOBEACON;
+    updateOutputProperties(false);
 }
 
 void
@@ -95,14 +129,9 @@ FGMarkerBeacon::bind ()
 {
     string branch = nodePath();
 
-    fgTie((branch + "/inner").c_str(), this,
-          &FGMarkerBeacon::get_inner_blink);
-
-    fgTie((branch + "/middle").c_str(), this,
-          &FGMarkerBeacon::get_middle_blink);
-
-    fgTie((branch + "/outer").c_str(), this,
-          &FGMarkerBeacon::get_outer_blink);
+    _innerBlinkNode = fgGetNode(branch + "/inner", true);
+    _middleBlinkNode = fgGetNode(branch + "/middle", true);
+    _outerBlinkNode = fgGetNode(branch + "/outer", true);
 }
 
 
@@ -114,62 +143,97 @@ FGMarkerBeacon::unbind ()
     fgUntie((branch + "/inner").c_str());
     fgUntie((branch + "/middle").c_str());
     fgUntie((branch + "/outer").c_str());
-    
+
+    if (_audioSampleGroup) {
+        sound_working->removeChangeListener(this);
+        audio_btn->removeChangeListener(this);
+        audio_vol->removeChangeListener(this);
+    }
+
     AbstractInstrument::unbind();
 }
-
 
 // Update the various nav values based on position and valid tuned in navs
 void
 FGMarkerBeacon::update(double dt)
 {
-    // On timeout, scan again, this needs to run every iteration no
-    // matter what the power or serviceable state.  If power is turned
-    // off or the unit becomes unserviceable while a beacon sound is
-    // playing, the search() routine still needs to be called so the
-    // sound effect can be properly disabled.
+    if (!isServiceableAndPowered()) {
+        _lastBeacon = NOBEACON;
+        stopAudio();
+        updateOutputProperties(false);
+        return;
+    }
 
     _time_before_search_sec -= dt;
     if ( _time_before_search_sec < 0 ) {
         search();
     }
 
-    if ( isServiceableAndPowered()  && sound_working->getBoolValue()) {
+    if (_audioPropertiesChanged) {
+        updateAudio();
+    }
 
-        // marker beacon blinking
-        bool light_on = ( outer_blink || middle_blink || inner_blink );
-        SGTimeStamp current = SGTimeStamp::now();
+    if (_lastBeacon != NOBEACON) {
+        // compute blink to match audio
+        // we use our own timing here (instead of dt) since audio rate is not affected
+        // by pause or time acceleration, so this should stay in sync.
+        const int elapasedUSec = (SGTimeStamp::now() - _audioStartTime).toUSecs();
 
-        if ( light_on && blink + SGTimeStamp::fromUSec(400000) < current ) {
-            light_on = false;
-            blink = current;
-        } else if ( !light_on && blink + SGTimeStamp::fromUSec(100000) < current ) {
-            light_on = true;
-            blink = current;
+        bool on = true;
+        if (_blinkMode != BlinkMode::Continuous) {
+            int t = elapasedUSec % _beaconTiming.durationUSec;
+            for (int i = 0; i < 4; i++) {
+                t -= _beaconTiming.periodsUSec.at(i);
+                if (t < 0) {
+                    // if value is negative, current time is within this
+                    // period, so we are finished.
+                    break;
+                }
+
+                // each period, the sense flips
+                on = !on;
+            } // of periods iteration
         }
 
-        if ( outer_marker ) {
-            outer_blink = light_on;
-        } else {
-            outer_blink = false;
-        }
+        updateOutputProperties(on);
+    }
+}
 
-        if ( middle_marker ) {
-            middle_blink = light_on;
-        } else {
-            middle_blink = false;
-        }
+static void lazyChangeBoolProp(SGPropertyNode* node, bool v)
+{
+    if (node->getBoolValue() != v) {
+        node->setBoolValue(v);
+    }
+}
 
-        if ( inner_marker ) {
-            inner_blink = light_on;
-        } else {
-            inner_blink = false;
-        }
+void FGMarkerBeacon::updateOutputProperties(bool on)
+{
+    // map our beacon nodes to indices which correspond to the fgMkrBeacType enum
+    // this allows to use '_lastBeacon' to select whhich index should be on
+    // we set all other ones to off to ensure consistency in weird cases, eg
+    // going from one beaon type to another in a single update.
+    SGPropertyNode* beacons[4] = {nullptr, _innerBlinkNode.get(), _middleBlinkNode.get(), _outerBlinkNode.get()};
+    for (int b = INNER; b <= OUTER; b++) {
+        const bool bOn = on && (_lastBeacon == b);
+        lazyChangeBoolProp(beacons[b], bOn);
+    }
+}
 
-        // cout << outer_blink << " " << middle_blink << " "
-        //      << inner_blink << endl;
-    } else {
-        inner_blink = middle_blink = outer_blink = false;
+void FGMarkerBeacon::updateAudio()
+{
+    _audioPropertiesChanged = false;
+    if (!_audioSampleGroup)
+        return;
+
+    float volume = audio_vol->getFloatValue();
+    if (!audio_btn->getBoolValue()) {
+        // mute rather than stop, so we don't lose sync with the visual blink
+        volume = 0.0;
+    }
+
+    SGSoundSample* mkr = _audioSampleGroup->find(sampleNameForBeacon(_lastBeacon));
+    if (mkr) {
+        mkr->set_volume(volume);
     }
 }
 
@@ -215,31 +279,24 @@ static bool check_beacon_range( const SGGeod& pos,
 class BeaconFilter : public FGPositioned::Filter
 {
 public:
-  virtual FGPositioned::Type minType() const {
-    return FGPositioned::OM;
-  }
+    FGPositioned::Type minType() const override
+    {
+        return FGPositioned::OM;
+    }
 
-  virtual FGPositioned::Type maxType()  const {
-    return FGPositioned::IM;
-  }
-
+    FGPositioned::Type maxType() const override
+    {
+        return FGPositioned::IM;
+    }
 };
 
 // Update current nav/adf radio stations based on current postition
 void FGMarkerBeacon::search()
 {
     // reset search time
-    _time_before_search_sec = 1.0;
+    _time_before_search_sec = 0.5;
 
-    static fgMkrBeacType last_beacon = NOBEACON;
-
-    SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-                                   lat_node->getDoubleValue(),
-                                   alt_node->getDoubleValue());
-
-    ////////////////////////////////////////////////////////////////////////
-    // Beacons.
-    ////////////////////////////////////////////////////////////////////////
+    const SGGeod pos = globals->get_aircraft_position();
 
     // get closest marker beacon - within a 1nm cutoff
     BeaconFilter filter;
@@ -258,87 +315,82 @@ void FGMarkerBeacon::search()
         inrange = check_beacon_range( pos, b.ptr() );
     }
 
-    outer_marker = middle_marker = inner_marker = false;
-
     if ( b == NULL || !inrange || !isServiceableAndPowered())
     {
-        // cout << "no marker" << endl;
-        _sgr->stop( "outer-marker" );
-        _sgr->stop( "middle-marker" );
-        _sgr->stop( "inner-marker" );
-    } else {
+        beacon_type = NOBEACON;
+    }
 
-        string current_sound_name;
+    changeBeaconType(beacon_type);
+}
 
-        if ( beacon_type == OUTER ) {
-            outer_marker = true;
-            current_sound_name = "outer-marker";
-            // cout << "OUTER MARKER" << endl;
-            if ( last_beacon != OUTER ) {
-                if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = FGBeacon::instance()->get_outer();
-                    if ( sound ) {
-                        _sgr->add( sound, current_sound_name );
-                    }
-                }
-            }
-            if ( audio_btn->getBoolValue() ) {
-                if ( !_sgr->is_playing(current_sound_name) ) {
-                    _sgr->play_looped( current_sound_name );
-                }
-            } else {
-                _sgr->stop( current_sound_name );
-            }
-        } else if ( beacon_type == MIDDLE ) {
-            middle_marker = true;
-            current_sound_name = "middle-marker";
-            // cout << "MIDDLE MARKER" << endl;
-            if ( last_beacon != MIDDLE ) {
-                if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = FGBeacon::instance()->get_middle();
-                    if ( sound ) {
-                        _sgr->add( sound, current_sound_name );
-                    }
-                }
-            }
-            if ( audio_btn->getBoolValue() ) {
-                if ( !_sgr->is_playing(current_sound_name) ) {
-                    _sgr->play_looped( current_sound_name );
-                }
-            } else {
-                _sgr->stop( current_sound_name );
-            }
-        } else if ( beacon_type == INNER ) {
-            inner_marker = true;
-            current_sound_name = "inner-marker";
-            // cout << "INNER MARKER" << endl;
-            if ( last_beacon != INNER ) {
-                if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = FGBeacon::instance()->get_inner();
-                    if ( sound ) {
-                        _sgr->add( sound, current_sound_name );
-                    }
-                }
-            }
-            if ( audio_btn->getBoolValue() ) {
-                if ( !_sgr->is_playing(current_sound_name) ) {
-                    _sgr->play_looped( current_sound_name );
-                }
-            } else {
-                _sgr->stop( current_sound_name );
+void FGMarkerBeacon::changeBeaconType(fgMkrBeacType newType)
+{
+    if (newType == _lastBeacon)
+        return;
+
+    _lastBeacon = newType;
+    stopAudio(); // stop any existing playback
+
+    if (newType == NOBEACON) {
+        updateOutputProperties(false);
+        return;
+    }
+
+    if (_blinkMode == BlinkMode::Standard) {
+        // get correct timings from the sounds generator
+        switch (newType) {
+        case INNER:
+            _beaconTiming = FGBeacon::instance()->getTimingForInner();
+            break;
+        case MIDDLE:
+            _beaconTiming = FGBeacon::instance()->getTimingForMiddle();
+            break;
+        case OUTER:
+            _beaconTiming = FGBeacon::instance()->getTimingForOuter();
+            break;
+        default:
+            break;
+        }
+    } else if (_blinkMode == BlinkMode::BackwardsCompatible) {
+        // older FG versions used same timing for alll beacon types :(
+        _beaconTiming = FGBeacon::BeaconTiming{};
+        _beaconTiming.durationUSec = 500000;
+        _beaconTiming.periodsUSec[0] = 400000;
+        _beaconTiming.periodsUSec[1] = 100000;
+    }
+
+
+    if (_audioSampleGroup) {
+        // create sample as required
+        const auto name = sampleNameForBeacon(newType);
+        if (!_audioSampleGroup->exists(name)) {
+            SGSoundSample* sound = createSampleForBeacon(newType);
+            if (sound) {
+                _audioSampleGroup->add(sound, name);
             }
         }
-        // cout << "VOLUME " << audio_vol->getDoubleValue() << endl;
-        SGSoundSample * mkr = _sgr->find( current_sound_name );
-        if (mkr)
-            mkr->set_volume( audio_vol->getFloatValue() );
+
+        _audioSampleGroup->play_looped(name);
+        updateAudio(); // sync volume+mute now
     }
 
-    if ( inrange ) {
-        last_beacon = beacon_type;
-    } else {
-        last_beacon = NOBEACON;
+    // we use this timing for visuals as well, so do this even if we have
+    // no audio sample group
+    _audioStartTime.stamp();
+}
+
+void FGMarkerBeacon::stopAudio()
+{
+    if (_audioSampleGroup) {
+        _audioSampleGroup->stop("outer-marker");
+        _audioSampleGroup->stop("middle-marker");
+        _audioSampleGroup->stop("inner-marker");
     }
+}
+
+void FGMarkerBeacon::valueChanged(SGPropertyNode* val)
+{
+    _audioPropertiesChanged = true;
 }
 
 // Register the subsystem.

@@ -27,34 +27,14 @@
 #include <simgear/compiler.h>
 
 #include <Instrumentation/AbstractInstrument.hxx>
+#include <Sound/beacon.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 class SGSampleGroup;
 
-class FGMarkerBeacon : public AbstractInstrument
+class FGMarkerBeacon : public AbstractInstrument,
+                       public SGPropertyChangeListener
 {
-    // Inputs
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr alt_node;
-    SGPropertyNode_ptr audio_btn;
-    SGPropertyNode_ptr audio_vol;
-    SGPropertyNode_ptr sound_working;
-
-    bool outer_marker;
-    bool middle_marker;
-    bool inner_marker;
-
-    SGTimeStamp blink;
-    bool outer_blink;
-    bool middle_blink;
-    bool inner_blink;
-
-    // internal periodic station search timer
-    double _time_before_search_sec;
-
-    SGSharedPtr<SGSampleGroup> _sgr;
-
 public:
     enum fgMkrBeacType {
         NOBEACON = 0,
@@ -78,10 +58,43 @@ public:
 
     void search ();
 
-    // Marker Beacon Accessors
-    inline bool get_inner_blink () const { return inner_blink; }
-    inline bool get_middle_blink () const { return middle_blink; }
-    inline bool get_outer_blink () const { return outer_blink; }
+    void valueChanged(SGPropertyNode* val) override;
+
+private:
+    // Inputs
+    SGPropertyNode_ptr audio_btn;
+    SGPropertyNode_ptr audio_vol;
+    SGPropertyNode_ptr sound_working;
+
+    SGPropertyNode_ptr _innerBlinkNode;
+    SGPropertyNode_ptr _middleBlinkNode;
+    SGPropertyNode_ptr _outerBlinkNode;
+
+    bool _audioPropertiesChanged = true;
+
+    // internal periodic station search timer
+    double _time_before_search_sec = 0.0;
+
+    SGTimeStamp _audioStartTime;
+    SGSharedPtr<SGSampleGroup> _audioSampleGroup;
+
+    enum class BlinkMode {
+        BackwardsCompatible, ///< all beacons use the OM blink rate
+        Standard,            ///< beacones use the correct blink for their type
+        Continuous           ///< blink disabled, so aircraft can do its own blink
+    };
+
+    BlinkMode _blinkMode = BlinkMode::BackwardsCompatible;
+
+    void changeBeaconType(fgMkrBeacType newType);
+
+    void updateAudio();
+    void stopAudio();
+    void updateOutputProperties(bool on);
+
+    fgMkrBeacType _lastBeacon;
+
+    FGBeacon::BeaconTiming _beaconTiming;
 };
 
 
