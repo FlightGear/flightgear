@@ -335,7 +335,7 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
             static_qApp->installTranslator(fallbackTranslator);
         }
 
-        qInfo() << "UI languages:" << QLocale().uiLanguages();
+        qWarning() << "UI languages:" << QLocale().uiLanguages();
         
         QTranslator* translator = new QTranslator(static_qApp.get());
         // check for --langauge=xx option and prefer that over QLocale
@@ -356,7 +356,7 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
         } else if (translator->load(QLocale(), QLatin1String("FlightGear"), QLatin1String("_"), QLatin1String(":/"))) {
             // QLocale().name() looks like ' "it_IT" ' (without the outer
             // quotes) when running FG on Linux with LANG=it_IT.UTF-8.
-            qInfo() << "Loaded translations for locale" << QLocale().name();
+            qWarning() << "Loaded translations for locale" << QLocale().name();
             static_qApp->installTranslator(translator);
         } else {
             delete translator;
