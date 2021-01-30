@@ -1136,7 +1136,7 @@ struct SviewViewEyeTarget : SviewView
                 m_steps.m_name = std::string() + "legacy tower" + callsign_desc;
                 
                 if (!strcmp(config->getStringValue("view/type"), "lookat")) {
-                    /* E.g. Tower view. */
+                    /* E.g. Tower view or Tower view AGL. */
 
                     /* Add a step to move to centre of aircraft. target offsets appear
                     to have reversed sign compared to what we require. */
@@ -1172,12 +1172,11 @@ struct SviewViewEyeTarget : SviewView
                     }
                     m_steps.add_step(new SviewStepFinalToTarget);
 
-                    /* Add a step that moves towards the target a little to avoid eye
-                    being inside the tower walls.
-
-                    [At some point it might be good to make this movement not change
-                    the height too.] */
-                    m_steps.add_step(new SviewStepMove(-10, 0, 0));
+                    /* Would be nice to add a step that moves towards the
+                    target a little, like we do with Tower view look from. But
+                    simply adding a SviewStepMove doesn't work because the
+                    preceding SviewStepFinalToTarget has finalised the view
+                    angle etc. */
                 }
                 else {
                     /* E.g. Tower view look from. */
@@ -1189,8 +1188,13 @@ struct SviewViewEyeTarget : SviewView
                             globals->get_props()->getDoubleValue("sim/current-view/pitch-offset-deg"),
                             globals->get_props()->getDoubleValue("sim/current-view/roll-offset-deg")
                             ));
-                    
-                    m_steps.add_step(new SviewStepMove(-10, 0, 0));
+                    /* Move forward a little as though one was walking towards
+                    the window inside the tower; this might improve view of
+                    aircraft near the tower on the ground. Ideally each tower
+                    would have a 'diameter' property, but for now we just use
+                    a hard-coded value. Also it would be nice to make this
+                    movement not change the height. */
+                    m_steps.add_step(new SviewStepMove(1, 0, 0));
                     
                     m_steps.add_step(new SviewStepFinal);
                 }
