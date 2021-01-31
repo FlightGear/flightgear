@@ -34,6 +34,7 @@ from urllib.parse import urlparse, urljoin
 from http.client import HTTPConnection, HTTPSConnection, HTTPException
 from os import listdir
 from os.path import isfile, isdir, join
+from base64 import b64encode
 
 from . import dirindex
 from .exceptions import UserError, NetworkError, RepoDataError, \
@@ -126,7 +127,7 @@ class HTTPGetCallback:
         self.src = src
 
 class HTTPGetter:
-    def __init__(self, baseUrl, maxPending=10):
+    def __init__(self, baseUrl, maxPending=10, auth=""):
         self.baseUrl = baseUrl
         self.parsedBaseUrl = urlparse(baseUrl)
         self.maxPending = maxPending
@@ -143,6 +144,8 @@ class HTTPGetter:
             raise UnsupportedURLScheme(self.parsedBaseUrl.scheme)
 
         self.httpRequestHeaders = headers = {'Host':self.parsedBaseUrl.netloc,'Content-Length':0,'Connection':'Keep-Alive','User-Agent':'FlightGear terrasync.py'}
+        if( auth and not auth.isspace() ):
+            self.httpRequestHeaders['Authorization'] = 'Basic %s' % b64encode(auth.encode("utf-8")).decode("ascii")
 
     def assemblePath(self, httpGetCallback):
         """Return the path-on-server for the file to download.
@@ -438,10 +441,11 @@ class TerraSync:
         check, sync = range(2)
 
     def __init__(self, mode, doReport, url, target, quick, removeOrphan,
-                 downloadBoundaries):
+                 downloadBoundaries, auth):
         self.mode = self.Mode[mode]
         self.doReport = doReport
         self.setUrl(url).setTarget(target)
+        self.auth = auth
         self.quick = quick
         self.removeOrphan = removeOrphan
         self.httpGetter = None
@@ -479,7 +483,7 @@ class TerraSync:
             localSubdir = ""
 
         assert not os.path.isabs(localSubdir), repr(localSubdir)
-        self.httpGetter = HTTPGetter(self.url)
+        self.httpGetter = HTTPGetter(baseUrl=self.url,auth=self.auth)
 
         # Get the hash of the .dirindex file for 'virtualSubdir'
         try:
@@ -650,6 +654,10 @@ def parseCommandLine():
                         default="http://flightgear.sourceforge.net/scenery",
                         help="server URL [default: %(default)s]")
 
+    parser.add_argument("-a", "--auth", dest="auth", metavar="user:password",
+                        default="", help="""\
+      authentication credentials for basic auth [default: empty, no authentication]""")
+
     parser.add_argument("-t", "--target", dest="target", metavar="DIR",
                         default=".", help="""\
       directory where to store the files [default: the current directory]""")
@@ -724,7 +732,7 @@ def main():
     terraSync = TerraSync(args.mode, args.report, args.url, args.target,
                           args.quick, args.removeOrphan,
                           DownloadBoundaries(args.top, args.left, args.bottom,
-                                             args.right))
+                                             args.right),args.auth)
     report = terraSync.start(args.virtualSubdir)
 
     if args.report:
