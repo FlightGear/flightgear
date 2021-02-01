@@ -165,6 +165,8 @@ class HTTPGetter:
         return urljoin(baseUrl + '/', httpGetCallback.src.asRelative())
 
     def doGet(self, httpGetCallback):
+        time.sleep(1.25)    # throttle the rate
+
         pathOnServer = self.assemblePath(httpGetCallback)
         self.httpConnection.request("GET", pathOnServer, None,
                                     self.httpRequestHeaders)
