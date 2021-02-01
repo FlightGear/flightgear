@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 James Turner
+ * Copyright (C) 2021 Keith Paterson
  *
  * This file is part of the program FlightGear.
  *
@@ -17,14 +17,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_AIFlightPlan.hxx"
-#include "test_AIManager.hxx"
-#include "test_groundnet.hxx"
-#include "test_traffic.hxx"
-#include "test_submodels.hxx"
+#pragma once
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIFlightPlanTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(AIManagerTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(GroundnetTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TrafficTests, "Unit tests");
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(SubmodelsTests, "Unit tests");
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
+
+#include <memory>
+
+#include <simgear/props/props.hxx>
+
+class SGGeod;
+
+// The AI flight plan unit tests.
+class AIFlightPlanTests : public CppUnit::TestFixture
+{
+    // Set up the test suite.
+    CPPUNIT_TEST_SUITE(AIFlightPlanTests);
+    CPPUNIT_TEST(testAIFlightPlan);
+    CPPUNIT_TEST(testAIFlightPlanLoadXML);
+    CPPUNIT_TEST_SUITE_END();
+
+
+public:
+    // Set up function for each test.
+    void setUp();
+
+    // Clean up after each test.
+    void tearDown();
+
+    // The tests.
+    void testAIFlightPlan();
+    void testAIFlightPlanLoadXML();
+};
