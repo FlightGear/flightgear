@@ -226,6 +226,10 @@ void jsJoystick::open()
     rv = (*(os->hidDev))->setRemovalCallback(os->hidDev, &joystickRemovalCallback, os, nullptr);
 
     CFDictionaryRef props = getCFProperties(ioDevices[id]);
+	if (!props) {
+		// TODO ERROR REPORT
+		return;
+	}
 
 	// recursively enumerate all the bits (buttons, axes, hats, ...)
 	CFTypeRef topLevelElement =
@@ -354,9 +358,8 @@ void os_specific_s::parseElement(jsJoystick* joy, CFDictionaryRef element)
 					//printf(" hat\n");
 					/*joy->os->*/addHatElement(joy, (CFDictionaryRef) element);
 					break;
-
-				default:
-					SG_LOG(SG_INPUT, SG_WARN, "input type element has weird usage:" << usage);
+		default:
+			SG_LOG(SG_INPUT, SG_INFO, "jsJoystick: input type element has unhandled usage:" << usage);
 		break;
 			}
 		} else if (page == kHIDPage_Simulation) {
@@ -368,15 +371,15 @@ void os_specific_s::parseElement(jsJoystick* joy, CFDictionaryRef element)
 					/*joy->os->*/addAxisElement(joy, (CFDictionaryRef) element);
 					break;
 				default:
-					SG_LOG(SG_INPUT, SG_WARN, "Simulation page input type element has weird usage:" << usage);
+					SG_LOG(SG_INPUT, SG_WARN, "jsJoystick: Simulation page input type element has weird usage:" << usage);
 			}
 		} else if (page == kHIDPage_Button) {
 			//printf(" button\n");
 			/*joy->os->*/addButtonElement(joy, (CFDictionaryRef) element);
 		} else if (page == kHIDPage_PID) {
-			SG_LOG(SG_INPUT, SG_WARN, "Force feedback and related data ignored");
+			SG_LOG(SG_INPUT, SG_INFO, "jsJoystick: Force feedback and related data ignored");
 		} else
-			SG_LOG(SG_INPUT, SG_WARN, "input type element has weird usage:" << usage);
+			SG_LOG(SG_INPUT, SG_INFO, "jsJoystick: input type element has unhnadled HID page:" << page);
 		break;
 
 	case kIOHIDElementTypeCollection:
