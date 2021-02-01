@@ -253,8 +253,18 @@ private:
     bool m_abandoned = false;
 };
 
-bool checkForWorkingOpenGL()
+enum class OpenGLStatus
 {
+    OpenGL21,
+    Unknown,
+    GDIGeneric,
+    Intel14
+};
+
+OpenGLStatus checkForWorkingOpenGL()
+{
+    // request an OpenGL comptability profile, version 2.1
+    // anything lower and we'll crash
     QSurfaceFormat fmt;
     fmt.setProfile(QSurfaceFormat::CompatibilityProfile);
     fmt.setMajorVersion(2);
@@ -263,23 +273,29 @@ bool checkForWorkingOpenGL()
     QOpenGLContext ctx;
     ctx.setFormat(fmt);
     if (!ctx.create()) {
-        return false;
+        return OpenGLStatus::Unknown;
     }
 
     QOffscreenSurface offSurface;
     offSurface.setFormat(ctx.format()); // ensure it's compatible
     offSurface.create();
     if (!ctx.makeCurrent(&offSurface)) {
-        return false;
+        return OpenGLStatus::Unknown;
     }
 
     std::string renderer = (char*)glGetString(GL_RENDERER);
     if (renderer == "GDI Generic") {
         flightgear::addSentryBreadcrumb("Detected GDI generic renderer", "info");
-        return false;
+        return OpenGLStatus::GDIGeneric;
+    } else if (simgear::strutils::starts_with(renderer, "Intel")) {
+        if (ctx.format().majorVersion() < 2) {
+            flightgear::addSentryBreadcrumb("Detected Intel < 2.1 renderer", "info");
+            return OpenGLStatus::Intel14;
+        }
+        // not worried about 2.0
     }
 
-    return true;
+    return OpenGLStatus::OpenGL21;
 }
 
 } // of anonymous namespace
@@ -359,8 +375,9 @@ void initApp(int& argc, char** argv, bool doInitQSettings)
 		// leave things unset here, so users can use env var
 		// QT_AUTO_SCREEN_SCALE_FACTOR=1 to enable it at runtime
 
-      //  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        
+#if !defined (SG_WINDOWS)
+        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
         static_qApp.reset(new QApplication(s_argc, argv));
         static_qApp->setOrganizationName("FlightGear");
         static_qApp->setApplicationName("FlightGear");
@@ -537,7 +554,8 @@ void launcherSetSceneryPaths()
 
 bool runLauncherDialog()
 {
-    if (!checkForWorkingOpenGL()) {
+    auto glCheckResult = checkForWorkingOpenGL();
+    if (glCheckResult != OpenGLStatus::OpenGL21) {
         QMessageBox::critical(nullptr, "Failed to find graphics drivers",
                               "This computer is missing suitable graphics drivers (OpenGL) to run FlightGear. "
                               "Please download and install drivers from your graphics card vendor.");
