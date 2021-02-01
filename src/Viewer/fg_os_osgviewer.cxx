@@ -327,6 +327,7 @@ void fgOSResetProperties()
     }
 
     DisplaySettings * displaySettings = DisplaySettings::instance();
+    fgTie("/sim/rendering/osg-displaysettings/split-stereo-autoadjust-aspect-ratio", displaySettings, &DisplaySettings::getSplitStereoAutoAdjustAspectRatio, &DisplaySettings::setSplitStereoAutoAdjustAspectRatio );
     fgTie("/sim/rendering/osg-displaysettings/eye-separation", displaySettings, &DisplaySettings::getEyeSeparation, &DisplaySettings::setEyeSeparation );
     fgTie("/sim/rendering/osg-displaysettings/screen-distance", displaySettings, &DisplaySettings::getScreenDistance, &DisplaySettings::setScreenDistance );
     fgTie("/sim/rendering/osg-displaysettings/screen-width", displaySettings, &DisplaySettings::getScreenWidth, &DisplaySettings::setScreenWidth );
