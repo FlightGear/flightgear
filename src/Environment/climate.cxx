@@ -918,7 +918,7 @@ void FGClimate::set_environment()
         fgSetDouble("/environment/surface/wetness-set", _wetness);
         fgSetDouble("/environment/surface/lichen-cover-factor", _lichen_cover);
 
-        double season = std::min(3.0*_season_transistional, 2.0);
+        double season = 1.7*std::pow(_season_transistional, 4.0);
         if (_gl.has_autumn && season > 0.01)
         {
             if (_is_autumn > 0.01) {	// autumn
